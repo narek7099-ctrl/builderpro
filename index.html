@@ -473,7 +473,9 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
   #est-embed .e-slddisp,#est-embed .e-sd{margin-bottom:8px;}
   #est-embed .e-sldval,#est-embed .e-sv{font-size:36px;}
 }
-</style>
+.nav-acts{display:flex;align-items:center;gap:12px;}
+.nav-login{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:.2s;}
+.nav-login:hover{color:#fff;border-color:#0099ff;box-shadow:0 0 16px rgba(0,150,255,.35);}</style>
 </head>
 <body>
 
@@ -498,6 +500,9 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
       <li><a href="#contact">Contact</a></li>
     </ul>
     <div class="nav-acts">
+    <a href="https://app.builderpro-os.com" target="_blank" rel="noopener" class="nav-login" title="Client Login" aria-label="Client Login">
+     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+</a>
       <a href="#booking" class="btn btn-p" style="padding:10px 22px;font-size:12px">Book a Demo</a>
     </div>
     <button class="nav-mob btn-o" style="padding:8px 14px;font-size:13px;border:1px solid var(--border);border-radius:8px;color:var(--muted);background:transparent;" onclick="document.getElementById('mobMenu').classList.toggle('open')">☰</button>
@@ -2553,6 +2558,40 @@ document.addEventListener('click', function(e) {
 function openRooferlyModal(){document.getElementById('rooferlyModal').classList.add('open');}
 function closeRooferlyModal(){document.getElementById('rooferlyModal').classList.remove('open');}
 </script>
+<script>
+/* === Atlas website chat — offline scripted mode (no API, no errors) === */
+(function(){
+  function atlasReply(text){
+    var t = (text||'').toLowerCase();
+    if(/(price|cost|how much|quote|estimate|\$)/.test(t))
+      return "Great question! Roof pricing depends on size, material, and pitch. The fastest way to get a real number is our instant Roof Estimator — tap \u201CTry Roof Estimator\u201D on this page and enter your address. Want a person to walk you through it? Tap \u201CBook a Demo\u201D up top.";
+    if(/(inspect|leak|repair|fix|damage|storm|hail|wind|roof problem)/.test(t))
+      return "Sorry to hear that \u2014 roof issues are stressful. We can get a free inspection scheduled fast. Tap \u201CBook a Demo\u201D at the top and pick a time, and our team takes it from there.";
+    if(/(service|offer|what.*do|how.*work)/.test(t))
+      return "We help roofing companies capture and book every lead automatically \u2014 AI that answers calls and texts 24/7, instant estimates, and automated follow-up. Want to see it live? Tap \u201CBook a Demo\u201D.";
+    if(/(hour|open|time|available|when|night|weekend)/.test(t))
+      return "Atlas runs 24/7 \u2014 even nights and weekends. For a live walkthrough with our team, book a quick demo using the button at the top.";
+    if(/(human|agent|person|talk|call|contact|speak|someone)/.test(t))
+      return "Happy to connect you with a real person \u2014 tap \u201CBook a Demo\u201D at the top, or use the Contact section below, and we\u2019ll reach out quickly.";
+    if(/^(hi|hello|hey|yo|sup|good morning|good afternoon)/.test(t))
+      return "Hey! I\u2019m Atlas \uD83D\uDC4B I can help with roofing questions, pricing, or booking an inspection. What\u2019s going on with your roof?";
+    return "I can help with that! For pricing tap \u201CTry Roof Estimator\u201D; to talk with our team tap \u201CBook a Demo\u201D at the top. What would you like to do?";
+  }
+  window.sendMessage = function(text){
+    var quick=document.getElementById('atlasQuick'); if(quick) quick.style.display='none';
+    addAtlasMsg('user', text);
+    showTyping();
+    var input=document.getElementById('atlasInput'), send=document.getElementById('atlasSend');
+    if(input) input.disabled=true; if(send) send.disabled=true;
+    setTimeout(function(){
+      removeTyping();
+      addAtlasMsg('atlas', atlasReply(text));
+      if(input){ input.disabled=false; input.focus(); } if(send) send.disabled=false;
+    }, 700 + Math.random()*500);
+  };
+})();
+</script>
 
+  
 </body>
 </html>
