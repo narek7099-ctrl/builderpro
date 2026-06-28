@@ -2559,24 +2559,76 @@ function openRooferlyModal(){document.getElementById('rooferlyModal').classList.
 function closeRooferlyModal(){document.getElementById('rooferlyModal').classList.remove('open');}
 </script>
 <script>
-/* === Atlas website chat — offline scripted mode (no API, no errors) === */
+/* ===========================================================
+   ATLAS — scripted brain for the BuilderPro site popup
+   Baked-in identity, FAQs, qualifying flow + booking push.
+   Paste this BELOW your existing Atlas script, before </body>.
+   =========================================================== */
 (function(){
-  function atlasReply(text){
-    var t = (text||'').toLowerCase();
-    if(/(price|cost|how much|quote|estimate|\$)/.test(t))
-      return "Great question! Roof pricing depends on size, material, and pitch. The fastest way to get a real number is our instant Roof Estimator — tap \u201CTry Roof Estimator\u201D on this page and enter your address. Want a person to walk you through it? Tap \u201CBook a Demo\u201D up top.";
-    if(/(inspect|leak|repair|fix|damage|storm|hail|wind|roof problem)/.test(t))
-      return "Sorry to hear that \u2014 roof issues are stressful. We can get a free inspection scheduled fast. Tap \u201CBook a Demo\u201D at the top and pick a time, and our team takes it from there.";
-    if(/(service|offer|what.*do|how.*work)/.test(t))
-      return "We help roofing companies capture and book every lead automatically \u2014 AI that answers calls and texts 24/7, instant estimates, and automated follow-up. Want to see it live? Tap \u201CBook a Demo\u201D.";
-    if(/(hour|open|time|available|when|night|weekend)/.test(t))
-      return "Atlas runs 24/7 \u2014 even nights and weekends. For a live walkthrough with our team, book a quick demo using the button at the top.";
-    if(/(human|agent|person|talk|call|contact|speak|someone)/.test(t))
-      return "Happy to connect you with a real person \u2014 tap \u201CBook a Demo\u201D at the top, or use the Contact section below, and we\u2019ll reach out quickly.";
-    if(/^(hi|hello|hey|yo|sup|good morning|good afternoon)/.test(t))
-      return "Hey! I\u2019m Atlas \uD83D\uDC4B I can help with roofing questions, pricing, or booking an inspection. What\u2019s going on with your roof?";
-    return "I can help with that! For pricing tap \u201CTry Roof Estimator\u201D; to talk with our team tap \u201CBook a Demo\u201D at the top. What would you like to do?";
+
+  // ---- Atlas knowledge (edit these freely) ----
+  var BIZ = {
+    services: "roof inspections, roof repair, roof replacement, and leak repair",
+    area: "the local city area",
+    hours: "Monday\u2013Friday, 8am\u20136pm, with emergency service available",
+    inspection: "Roof inspections are free and take about 30 minutes.",
+    bookHint: "Tap \u201CBook a Demo\u201D at the top to grab a time, or tell me a bit about your roof and I\u2019ll point you the right way."
+  };
+
+  var atlasState = { askedNeed:false };
+
+  function reply(raw){
+    var t = (raw||'').toLowerCase();
+
+    if(/^(hi|hello|hey|yo|sup|good (morning|afternoon|evening))\b/.test(t))
+      return "Hey there! \uD83D\uDC4B I\u2019m Atlas, your roofing assistant. Are you dealing with a leak, storm damage, or just looking to get your roof checked out?";
+
+    if(/(leak|leaking|water|dripping|emergency|urgent|caving|collapse)/.test(t))
+      return "That sounds urgent \u2014 let\u2019s not let it get worse. We can schedule an urgent inspection fast (and inspections are free). " + BIZ.bookHint;
+
+    if(/(storm|hail|wind|tree|branch|missing shingle|shingles? (off|gone)|damage)/.test(t))
+      return "Storm damage is exactly what we handle. The first step is a free 30-minute inspection so we know what we\u2019re dealing with. Want me to get you booked? " + BIZ.bookHint;
+
+    if(/(price|cost|how much|quote|estimate|expensive|afford|financ)/.test(t))
+      return "Great question \u2014 roofing cost depends on size, material, and the damage, so the honest answer is it needs a quick look. The inspection is free, and you\u2019ll get a real number. Want an instant ballpark now? Tap \u201CTry Roof Estimator\u201D on this page.";
+
+    if(/(inspect|inspection|check|look at|assess|evaluate)/.test(t))
+      return BIZ.inspection + " I can help you get one on the calendar \u2014 " + BIZ.bookHint;
+
+    if(/(how long|time|duration|take long)/.test(t))
+      return "Most inspections take about 30 minutes, and they\u2019re free. Want to book one?";
+
+    if(/(free|cost.*inspect|inspect.*cost)/.test(t))
+      return "Yes \u2014 inspections are completely free and take about 30 minutes. Shall I help you schedule one?";
+
+    if(/(service|offer|do you (do|provide|handle)|what.*do you|repair|replace|replacement)/.test(t))
+      return "We handle " + BIZ.services + ". Whatever\u2019s going on with your roof, it starts with a free inspection. " + BIZ.bookHint;
+
+    if(/(hour|open|when.*open|available|schedule|time.*you|weekend|today|now)/.test(t))
+      return "We\u2019re available " + BIZ.hours + ". Want me to help you grab an inspection time?";
+
+    if(/(area|serve|location|where.*you|near me|my city|zip|town)/.test(t))
+      return "We serve " + BIZ.area + ". Tell me your city and I can confirm \u2014 or just tap \u201CBook a Demo\u201D and we\u2019ll take it from there.";
+
+    if(/(insurance|claim|adjuster|covered)/.test(t))
+      return "Many roof repairs and replacements are covered by insurance, especially after storm damage. We can walk you through it during your free inspection. Want to get one booked?";
+
+    if(/(human|person|agent|talk to|call me|speak|representative|real)/.test(t))
+      return "Of course \u2014 the fastest way is to tap \u201CBook a Demo\u201D at the top and pick a time, and a real team member will take care of you. Want me to point you there?";
+
+    if(/^(yes|yeah|yep|sure|ok|okay|book|schedule|sounds good|please)\b/.test(t))
+      return "Awesome \uD83D\uDE4C \u2014 tap \u201CBook a Demo\u201D at the top of the page to pick your time. It only takes a minute, and you\u2019re all set.";
+
+    if(/(thank|thanks|appreciate|bye|goodbye)/.test(t))
+      return "You\u2019re welcome! Whenever you\u2019re ready, tap \u201CBook a Demo\u201D to lock in your free inspection. Talk soon! \uD83D\uDC4B";
+
+    if(!atlasState.askedNeed){
+      atlasState.askedNeed = true;
+      return "Happy to help with that! Quick question so I point you right \u2014 is this about a leak, storm damage, an estimate, or a general roof check?";
+    }
+    return "Got it. The best next step is a free 30-minute inspection so we can take a real look. " + BIZ.bookHint;
   }
+
   window.sendMessage = function(text){
     var quick=document.getElementById('atlasQuick'); if(quick) quick.style.display='none';
     addAtlasMsg('user', text);
@@ -2585,13 +2637,12 @@ function closeRooferlyModal(){document.getElementById('rooferlyModal').classList
     if(input) input.disabled=true; if(send) send.disabled=true;
     setTimeout(function(){
       removeTyping();
-      addAtlasMsg('atlas', atlasReply(text));
+      addAtlasMsg('atlas', reply(text));
       if(input){ input.disabled=false; input.focus(); } if(send) send.disabled=false;
-    }, 700 + Math.random()*500);
+    }, 650 + Math.random()*500);
   };
 })();
 </script>
-
   
 </body>
 </html>
