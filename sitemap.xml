@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://builderpro-os.com/</loc></url>
-  <url><loc>https://builderpro-os.com/ai-receptionist-for-roofing-contractors/</loc></url>
-  <url><loc>https://builderpro-os.com/missed-call-text-back-for-roofers/</loc></url>
-  <url><loc>https://builderpro-os.com/roofing-lead-generation/</loc></url>
+  <url><loc>https://builderpro-os.com/</loc><lastmod>2026-06-29</lastmod><priority>1.0</priority></url>
+  <url><loc>https://builderpro-os.com/roof-estimator-tool.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority></url>
+  <url><loc>https://builderpro-os.com/roofing-lead-generation.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority></url>
+  <url><loc>https://builderpro-os.com/ai-receptionist-for-roofers.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority></url>
+  <url><loc>https://builderpro-os.com/roofing-crm-software.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority></url>
+  <url><loc>https://builderpro-os.com/missed-call-text-back.html</loc><lastmod>2026-06-29</lastmod><priority>0.8</priority></url>
 </urlset>
