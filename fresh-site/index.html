@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuilderPro — Book More Roofing Jobs, On Autopilot</title>
+<meta name="description" content="BuilderPro is the AI-powered growth system for roofing contractors. Answer every call, text back every missed lead, and book more inspections — 24/7.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BUILDERPRO — "DAYLIGHT" — fresh standalone build
+   Self-contained. Plug-in slots marked with [data-plugin].
+   ============================================================ */
+:root{
+  --bg:#FBF6F0; --bg-2:#F4ECE3; --paper:#FFFFFF;
+  --ink:#1E2E34; --text:#4C5C64; --muted:#7C8990;
+  --teal:#12857A; --teal-d:#0E6E64; --teal-soft:#E1F0ED;
+  --coral:#F26B4E; --coral-d:#E1553A; --coral-soft:#FCE0D7;
+  --gold:#E5A400; --green:#1FA971; --border:#EBE2D8;
+  --r-sm:14px; --r:20px; --r-lg:28px; --r-xl:36px;
+  --sh-1:0 2px 8px rgba(30,46,52,.05);
+  --sh-2:0 10px 30px rgba(30,46,52,.08);
+  --sh-3:0 24px 60px rgba(30,46,52,.12);
+  --sh-coral:0 12px 30px rgba(242,107,78,.28);
+  --maxw:1200px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{background:var(--bg);color:var(--ink);font-family:'Manrope',sans-serif;line-height:1.6;overflow-x:hidden;position:relative;}
+a{text-decoration:none;color:inherit;}
+img,svg{display:block;max-width:100%;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+h1,h2,h3,h4{font-family:'Sora',sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1.05;color:var(--ink);}
+
+/* aurora backdrop */
+body::before{
+  content:'';position:fixed;inset:-25%;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(36% 40% at 18% 20%,rgba(18,133,122,.16),transparent 70%),
+    radial-gradient(32% 36% at 84% 16%,rgba(242,107,78,.14),transparent 70%),
+    radial-gradient(44% 44% at 72% 84%,rgba(18,133,122,.10),transparent 72%),
+    radial-gradient(40% 40% at 26% 88%,rgba(242,107,78,.08),transparent 72%);
+  filter:blur(50px);
+  animation:aurora 26s ease-in-out infinite alternate;
+}
+@keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(0,-2%,0) scale(1.06)}100%{transform:translate3d(0,1%,0) scale(1.02)}}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+.sec{padding:110px 0;position:relative;}
+.eye{display:inline-flex;align-items:center;gap:8px;background:var(--teal-soft);color:var(--teal-d);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 15px;border-radius:999px;margin-bottom:20px;}
+.eye::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--coral);}
+.h-sec{font-size:clamp(32px,4.6vw,50px);}
+.h-sec em{color:var(--coral);font-style:normal;}
+.lead{font-size:18px;color:var(--text);max-width:560px;}
+.tc{text-align:center;}
+.tc .lead{margin-left:auto;margin-right:auto;}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font-weight:700;font-size:15px;border-radius:999px;padding:14px 28px;transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s,background .2s,color .2s,border-color .2s;white-space:nowrap;}
+.btn-p{background:var(--coral);color:#fff;box-shadow:var(--sh-coral);}
+.btn-p:hover{background:var(--coral-d);transform:translateY(-3px);box-shadow:0 16px 38px rgba(242,107,78,.4);}
+.btn-o{background:#fff;color:var(--ink);border:1px solid var(--border);box-shadow:var(--sh-1);}
+.btn-o:hover{border-color:var(--teal);color:var(--teal);transform:translateY(-3px);}
+.btn-lg{padding:17px 36px;font-size:16px;}
+.btn svg{width:18px;height:18px;}
+
+/* ---------- NAV ---------- */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:background .4s,box-shadow .4s,backdrop-filter .4s;}
+nav.solid{background:rgba(251,246,240,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 1px 0 var(--border);}
+.nav-i{max-width:var(--maxw);margin:0 auto;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:var(--ink);}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--teal-d));display:flex;align-items:center;justify-content:center;box-shadow:0 5px 14px rgba(18,133,122,.35);}
+.logo-mark svg{width:20px;height:20px;stroke:#fff;}
+.logo .wm{font-family:'Sora',sans-serif;font-weight:800;}
+.logo .wm b{color:var(--teal);font-weight:800;}
+.nav-links{display:flex;gap:30px;list-style:none;font-weight:600;font-size:15px;color:var(--text);}
+.nav-links a{transition:color .2s;}
+.nav-links a:hover{color:var(--teal);}
+.nav-acts{display:flex;align-items:center;gap:12px;}
+.nav-mob{display:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:#fff;align-items:center;justify-content:center;}
+.nav-mob svg{width:22px;height:22px;stroke:var(--ink);}
+#mobMenu{display:none;position:fixed;top:70px;left:14px;right:14px;z-index:99;background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-3);padding:14px;flex-direction:column;gap:4px;}
+#mobMenu.open{display:flex;}
+#mobMenu a{padding:12px 14px;border-radius:12px;font-weight:600;color:var(--text);}
+#mobMenu a:hover{background:var(--bg-2);}
+#mobMenu .btn{margin-top:6px;}
+
+/* ---------- HERO ---------- */
+.hero{padding:150px 0 40px;}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--border);box-shadow:var(--sh-1);border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;color:var(--teal-d);margin-bottom:26px;}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(31,169,113,.5);animation:pulse 2s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,169,113,.5)}70%{box-shadow:0 0 0 8px rgba(31,169,113,0)}100%{box-shadow:0 0 0 0 rgba(31,169,113,0)}}
+.hero h1{font-size:clamp(42px,5.4vw,72px);line-height:1.02;margin-bottom:22px;}
+.hero h1 em{color:var(--coral);font-style:normal;}
+.hero-sub{font-size:19px;color:var(--text);max-width:520px;margin-bottom:34px;}
+.hero-acts{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px;}
+.hero-trust{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:14px;font-weight:600;}
+.stars{color:var(--gold);letter-spacing:2px;font-size:15px;}
+
+/* floating visual */
+.hero-visual{position:relative;min-height:430px;}
+.card-fx{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-3);}
+.hv-main{position:relative;z-index:2;margin:20px 6% 0;padding:22px;animation:floaty 6s ease-in-out infinite;}
+.hv-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.hv-av{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--teal),var(--teal-d));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(18,133,122,.3);}
+.hv-av svg{width:24px;height:24px;stroke:#fff;}
+.hv-name{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;}
+.hv-live{font-size:12px;color:var(--green);font-weight:700;display:flex;align-items:center;gap:6px;}
+.hv-row{display:flex;margin-bottom:10px;}
+.bub{border-radius:15px;padding:11px 15px;font-size:13.5px;line-height:1.5;max-width:88%;}
+.bub-in{background:var(--teal-soft);color:var(--ink);border-bottom-left-radius:5px;}
+.bub-me{background:var(--bg-2);color:var(--text);margin-left:auto;border-bottom-right-radius:5px;}
+.typing{display:inline-flex;gap:4px;padding:12px 15px;}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:tb 1s infinite;}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tb{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+.pill{position:absolute;z-index:3;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--border);border-radius:999px;box-shadow:var(--sh-2);padding:11px 16px;font-weight:700;font-size:13px;}
+.pill .dot{width:9px;height:9px;border-radius:50%;}
+.pill-a{top:-6px;right:0;animation:floaty 5s ease-in-out .4s infinite;}
+.pill-b{bottom:8px;left:-2%;animation:floaty 5.6s ease-in-out .9s infinite;}
+.pill-c{bottom:34%;right:-3%;animation:floaty 6.4s ease-in-out .2s infinite;}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-2);margin-top:56px;overflow:hidden;}
+.stat{padding:26px 24px;text-align:center;border-right:1px solid var(--border);}
+.stat:last-child{border-right:none;}
+.stat-n{font-family:'Sora',sans-serif;font-weight:800;font-size:34px;color:var(--ink);line-height:1;}
+.stat-l{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:8px;font-weight:600;}
+
+/* ---------- MARQUEE ---------- */
+.mq{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#fff;padding:16px 0;overflow:hidden;}
+.mq-track{display:flex;gap:44px;width:max-content;animation:mq 32s linear infinite;}
+.mq:hover .mq-track{animation-play-state:paused;}
+@keyframes mq{to{transform:translateX(-50%)}}
+.mq-item{display:flex;align-items:center;gap:11px;font-weight:600;font-size:14px;color:var(--muted);white-space:nowrap;}
+.mq-item b{color:var(--teal);font-weight:700;}
+.mq-item .d{width:5px;height:5px;border-radius:50%;background:var(--coral);}
+
+/* ---------- FEATURES (bento) ---------- */
+.bento{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.fcard{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:30px;box-shadow:var(--sh-1);transition:transform .4s cubic-bezier(.16,1,.3,1),box-shadow .4s,border-color .3s;}
+.fcard:hover{transform:translateY(-8px);box-shadow:var(--sh-3);border-color:var(--teal-soft);}
+.fcard.wide{grid-column:span 2;}
+.ficon{width:54px;height:54px;border-radius:15px;background:var(--teal-soft);color:var(--teal-d);display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
+.ficon svg{width:26px;height:26px;stroke:var(--teal-d);}
+.fcard h3{font-size:20px;margin-bottom:9px;}
+.fcard p{color:var(--muted);font-size:15px;}
+.fbar{width:30px;height:3px;background:var(--coral);border-radius:2px;margin-top:18px;}
+
+/* ---------- ATLAS ---------- */
+#atlas{background:var(--bg-2);}
+.atlas-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center;margin-top:56px;}
+.orb-wrap{display:flex;flex-direction:column;align-items:center;gap:26px;}
+.orb{width:300px;height:300px;position:relative;display:flex;align-items:center;justify-content:center;}
+.orb-glow{position:absolute;inset:22%;border-radius:50%;background:radial-gradient(circle,rgba(18,133,122,.28),transparent 68%);}
+.ring{position:absolute;border-radius:50%;border:1px solid rgba(18,133,122,.18);animation:spin 16s linear infinite;}
+.ring.r1{width:190px;height:190px;}
+.ring.r2{width:250px;height:250px;animation-duration:22s;animation-direction:reverse;}
+.ring.r3{width:300px;height:300px;animation-duration:30s;border-color:rgba(18,133,122,.1);}
+.ring i{position:absolute;top:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--coral);}
+.ring.r2 i{background:var(--teal);}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orb-core{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-d));display:flex;align-items:center;justify-content:center;box-shadow:0 14px 40px rgba(18,133,122,.45);animation:breathe 3.5s ease-in-out infinite;}
+.orb-core svg{width:44px;height:44px;stroke:#fff;}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.cap{display:flex;gap:15px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh-1);transition:transform .35s,box-shadow .35s,border-color .3s;margin-bottom:12px;}
+.cap:hover{transform:translateX(8px);box-shadow:var(--sh-2);border-color:var(--teal-soft);}
+.cap-i{width:40px;height:40px;flex-shrink:0;border-radius:11px;background:var(--teal-soft);color:var(--teal-d);display:flex;align-items:center;justify-content:center;}
+.cap-i svg{width:20px;height:20px;stroke:var(--teal-d);}
+.cap h4{font-size:15.5px;margin-bottom:3px;}
+.cap p{font-size:13.5px;color:var(--muted);}
+
+/* ---------- STEPS ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px;counter-reset:s;}
+.step{position:relative;background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:34px 28px;box-shadow:var(--sh-1);}
+.step-n{font-family:'Sora',sans-serif;font-weight:800;font-size:15px;color:#fff;width:38px;height:38px;border-radius:12px;background:var(--coral);display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:var(--sh-coral);}
+.step h3{font-size:19px;margin-bottom:9px;}
+.step p{color:var(--muted);font-size:15px;}
+
+/* ---------- PLUG-IN SLOT ---------- */
+.slot{position:relative;background:#fff;border:2px dashed var(--teal-soft);border-radius:var(--r-lg);min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:48px 28px;box-shadow:var(--sh-1);overflow:hidden;}
+.slot::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(50% 60% at 50% 0%,var(--teal-soft),transparent 70%);opacity:.5;}
+.slot-badge{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--teal-soft);color:var(--teal-d);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 15px;border-radius:999px;}
+.slot h3{position:relative;font-size:24px;}
+.slot p{position:relative;color:var(--muted);max-width:440px;}
+.slot .frame-dots{position:absolute;top:16px;left:18px;display:flex;gap:6px;}
+.slot .frame-dots span{width:11px;height:11px;border-radius:50%;background:var(--border);}
+
+/* ---------- TESTIMONIALS ---------- */
+#testimonials{background:var(--bg-2);}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:52px;}
+.tcard{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:28px;box-shadow:var(--sh-1);transition:transform .4s,box-shadow .4s;}
+.tcard:hover{transform:translateY(-6px);box-shadow:var(--sh-3);}
+.tcard .stars{margin-bottom:14px;display:block;}
+.tq{font-size:15px;color:var(--text);line-height:1.65;margin-bottom:20px;}
+.tauth{display:flex;align-items:center;gap:12px;}
+.tav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;}
+.tn{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;}
+.tr{font-size:13px;color:var(--muted);}
+
+/* ---------- PRICING ---------- */
+.pgrid{display:grid;grid-template-columns:1fr 1.08fr 1fr;gap:22px;align-items:start;margin-top:52px;}
+.pcard{background:#fff;border:1px solid var(--border);border-radius:var(--r-xl);padding:34px 30px;box-shadow:var(--sh-1);transition:transform .4s,box-shadow .4s;position:relative;}
+.pcard:hover{transform:translateY(-8px);box-shadow:var(--sh-3);}
+.pcard.pop{border:2px solid var(--coral);box-shadow:0 0 0 2px var(--coral),var(--sh-2);}
+.pop-tag{position:absolute;top:20px;right:20px;background:var(--coral);color:#fff;font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:5px 13px;border-radius:999px;}
+.p-name{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:14px;}
+.p-price{font-family:'Sora',sans-serif;font-weight:800;font-size:56px;color:var(--ink);line-height:1;}
+.p-price sup{font-size:24px;color:var(--coral);vertical-align:top;}
+.p-per{font-size:13px;color:var(--muted);margin:8px 0 18px;letter-spacing:.05em;text-transform:uppercase;}
+.p-trial{background:#E4F5EC;color:#0F8A56;font-weight:700;font-size:13px;border-radius:999px;padding:8px 14px;margin-bottom:20px;display:inline-block;}
+.p-feats{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;}
+.p-feats li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;color:var(--text);}
+.p-feats svg{width:18px;height:18px;stroke:var(--teal);flex-shrink:0;margin-top:1px;}
+.p-btn{display:block;width:100%;text-align:center;border-radius:999px;padding:14px;font-weight:700;}
+
+/* ---------- CTA ---------- */
+.cta{background:linear-gradient(135deg,var(--teal),var(--teal-d));border-radius:var(--r-xl);padding:64px 40px;text-align:center;color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh-3);}
+.cta::before{content:'';position:absolute;inset:0;background:radial-gradient(50% 80% at 80% 0%,rgba(242,107,78,.35),transparent 70%);}
+.cta h2{color:#fff;font-size:clamp(28px,4vw,44px);position:relative;margin-bottom:16px;}
+.cta p{position:relative;color:rgba(255,255,255,.85);font-size:18px;max-width:520px;margin:0 auto 28px;}
+.cta .btn-p{position:relative;background:#fff;color:var(--teal-d);}
+.cta .btn-p:hover{background:var(--coral);color:#fff;}
+
+/* ---------- FAQ ---------- */
+.faq{max-width:800px;margin:52px auto 0;display:flex;flex-direction:column;gap:12px;}
+.qa{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:box-shadow .3s;}
+.qa.open{box-shadow:var(--sh-2);}
+.qa-q{width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px;font-family:'Sora',sans-serif;font-weight:700;font-size:16px;color:var(--ink);}
+.qa-q svg{width:20px;height:20px;stroke:var(--teal);flex-shrink:0;transition:transform .3s;}
+.qa.open .qa-q svg{transform:rotate(45deg);}
+.qa-a{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.qa-a p{padding:0 24px 22px;color:var(--text);font-size:15px;}
+
+/* ---------- FOOTER ---------- */
+footer{background:#1B2A30;color:rgba(255,255,255,.6);padding:70px 0 36px;margin-top:0;}
+.f-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
+.f-logo{display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:#fff;margin-bottom:14px;}
+.f-logo span{color:#4FD1C0;}
+.f-desc{font-size:14px;max-width:280px;line-height:1.7;}
+.f-h{font-family:'Sora',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:16px;}
+.f-links{display:flex;flex-direction:column;gap:11px;}
+.f-links a{font-size:14px;color:rgba(255,255,255,.65);transition:color .2s;}
+.f-links a:hover{color:#fff;}
+.f-bot{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:13px;color:rgba(255,255,255,.45);}
+
+/* ---------- reveal ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);}
+.reveal.in{opacity:1;transform:none;}
+.d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;}
+  .reveal{opacity:1;transform:none;}
+}
+
+/* ---------- responsive ---------- */
+@media(max-width:920px){
+  .nav-links,.nav-acts .btn{display:none;}
+  .nav-mob{display:flex;}
+  .hero-grid,.atlas-grid{grid-template-columns:1fr;gap:44px;}
+  .hero{padding:120px 0 30px;text-align:center;}
+  .hero-sub{margin-left:auto;margin-right:auto;}
+  .hero-acts,.hero-trust{justify-content:center;}
+  .hero-visual{max-width:460px;margin:0 auto;}
+  .bento{grid-template-columns:1fr 1fr;}
+  .fcard.wide{grid-column:span 2;}
+  .steps,.tgrid{grid-template-columns:1fr;}
+  .pgrid{grid-template-columns:1fr;max-width:440px;margin-left:auto;margin-right:auto;}
+  .f-grid{grid-template-columns:1fr 1fr;gap:32px;}
+}
+@media(max-width:560px){
+  .sec{padding:80px 0;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .stat:nth-child(2){border-right:none;}
+  .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--border);}
+  .bento{grid-template-columns:1fr;}
+  .fcard.wide{grid-column:span 1;}
+  .f-grid{grid-template-columns:1fr;}
+  .cta{padding:44px 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ======== NAV ======== -->
+<nav id="nav">
+  <div class="nav-i">
+    <a href="#top" class="logo">
+      <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 5l9 15"/><path d="M8.5 20 12 13l3.5 7"/></svg></span>
+      <span class="wm">Builder<b>Pro</b></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#atlas">Atlas AI</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="nav-acts">
+      <a href="#pricing" class="btn btn-o" style="padding:11px 20px">Sign in</a>
+      <a href="#book" class="btn btn-p" style="padding:11px 22px">Book a demo</a>
+    </div>
+    <button class="nav-mob" aria-label="Menu" onclick="document.getElementById('mobMenu').classList.toggle('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</nav>
+<div id="mobMenu">
+  <a href="#features" onclick="closeMob()">Features</a>
+  <a href="#atlas" onclick="closeMob()">Atlas AI</a>
+  <a href="#how" onclick="closeMob()">How it works</a>
+  <a href="#pricing" onclick="closeMob()">Pricing</a>
+  <a href="#faq" onclick="closeMob()">FAQ</a>
+  <a href="#book" class="btn btn-p" onclick="closeMob()">Book a demo</a>
+</div>
+
+<span id="top"></span>
+<!-- ======== HERO ======== -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="hero-badge"><span class="pulse"></span> Built exclusively for roofing contractors</div>
+        <h1>Book more roofing<br>jobs, <em>on autopilot.</em></h1>
+        <p class="hero-sub">BuilderPro answers every call, texts back missed leads, and books inspections around the clock — so your crew stays on roofs, not on the phone.</p>
+        <div class="hero-acts">
+          <a href="#book" class="btn btn-p btn-lg">Book a free demo</a>
+          <a href="#estimator" class="btn btn-o btn-lg">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 5l9 15"/><path d="M8.5 20 12 13l3.5 7"/></svg>
+            Try the roof estimator
+          </a>
+        </div>
+        <div class="hero-trust"><span class="stars">★★★★★</span> Answers every lead in seconds — day or night</div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="card-fx hv-main">
+          <div class="hv-head">
+            <div class="hv-av"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3.5"/><path d="M12 8V4.5M9.5 4.5h5"/><circle cx="9.3" cy="13.8" r="1.1" fill="#fff" stroke="none"/><circle cx="14.7" cy="13.8" r="1.1" fill="#fff" stroke="none"/><path d="M9.5 17h5"/></svg></div>
+            <div><div class="hv-name">Atlas AI</div><div class="hv-live"><span class="pulse"></span> Answering your calls</div></div>
+          </div>
+          <div class="hv-row"><div class="bub bub-me">Just missed a call from a roofing lead</div></div>
+          <div class="hv-row"><div class="bub bub-in">On it — texted them back, answered their questions, and booked an inspection for Tuesday at 10am.</div></div>
+          <div class="hv-row"><div class="typing"><i></i><i></i><i></i></div></div>
+        </div>
+        <div class="pill pill-a"><span class="dot" style="background:var(--green)"></span> New lead captured</div>
+        <div class="pill pill-b"><span class="dot" style="background:var(--coral)"></span> Inspection booked</div>
+        <div class="pill pill-c"><span class="dot" style="background:var(--teal)"></span> Review request sent</div>
+      </div>
+    </div>
+    <div class="stats reveal">
+      <div class="stat"><div class="stat-n" data-count="24">24/7</div><div class="stat-l">AI on your phones</div></div>
+      <div class="stat"><div class="stat-n" data-count="10">10+</div><div class="stat-l">Automations included</div></div>
+      <div class="stat"><div class="stat-n" style="font-size:28px">Instant</div><div class="stat-l">Reply to every lead</div></div>
+      <div class="stat"><div class="stat-n">3–4</div><div class="stat-l">Days to go live</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ======== MARQUEE ======== -->
+<div class="mq" aria-hidden="true">
+  <div class="mq-track" id="mqTrack">
+    <!-- filled by JS (duplicated for seamless loop) -->
+  </div>
+</div>
+
+<!-- ======== FEATURES ======== -->
+<section class="sec" id="features">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:56px">
+      <span class="eye reveal">Everything included</span>
+      <h2 class="h-sec reveal d1">Everything your business<br><em>needs to win.</em></h2>
+    </div>
+    <div class="bento">
+      <div class="fcard wide reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="2.5" y="13.5" width="4" height="6" rx="1.5"/><rect x="17.5" y="13.5" width="4" height="6" rx="1.5"/><path d="M20 19.5a4 4 0 0 1-4 3.5h-2"/></svg></div>
+        <h3>Atlas AI Receptionist</h3>
+        <p>Atlas answers every missed call, handles questions in your business's voice, and books inspections 24/7 — so a missed call never becomes a lost job.</p>
+        <div class="fbar"></div>
+      </div>
+      <div class="fcard reveal d1">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 10-12h-7z"/></svg></div>
+        <h3>10+ Automations</h3>
+        <p>Instant follow-ups, nurture sequences, and review requests fire at exactly the right moment — no manual work.</p>
+        <div class="fbar"></div>
+      </div>
+      <div class="fcard reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M8.5 15l2.2 2.2L15 13"/></svg></div>
+        <h3>Smart Booking</h3>
+        <p>Schedules inspections, sends confirmations, and handles reschedules automatically.</p>
+        <div class="fbar"></div>
+      </div>
+      <div class="fcard reveal d1">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></div>
+        <h3>Website + Google</h3>
+        <p>A custom-built site and Google Business Profile tuned to dominate local roofing search.</p>
+        <div class="fbar"></div>
+      </div>
+      <div class="fcard wide reveal d2">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6.5 20v-6M12 20V8M17.5 20v-9"/></svg></div>
+        <h3>Tracking &amp; Reporting</h3>
+        <p>A real-time dashboard shows exactly where every lead came from, what's converting, and where your next job is coming from — no guesswork, no spreadsheets.</p>
+        <div class="fbar"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== ATLAS ======== -->
+<section class="sec" id="atlas">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:10px">
+      <span class="eye reveal">Meet your AI</span>
+      <h2 class="h-sec reveal d1">Introducing <em>Atlas.</em></h2>
+      <p class="lead reveal d2" style="margin-top:14px">The AI brain behind BuilderPro. It handles calls, automations, bookings, and follow-ups — around the clock, without a single day off.</p>
+    </div>
+    <div class="atlas-grid">
+      <div class="orb-wrap reveal">
+        <div class="orb">
+          <div class="ring r3"><i></i></div>
+          <div class="ring r2"><i></i></div>
+          <div class="ring r1"><i></i></div>
+          <div class="orb-glow"></div>
+          <div class="orb-core"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3.5"/><path d="M12 8V4.5M9.5 4.5h5"/><circle cx="9.3" cy="13.8" r="1.1" fill="#fff" stroke="none"/><circle cx="14.7" cy="13.8" r="1.1" fill="#fff" stroke="none"/><path d="M9.5 17h5"/></svg></div>
+        </div>
+        <a href="#book" class="btn btn-p btn-lg">Chat with Atlas</a>
+      </div>
+      <div class="reveal d1">
+        <div class="cap"><div class="cap-i"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 2.5v5h5M20.5 2.5l-5.5 5.5M5 4h2.6a1 1 0 0 1 1 .8l.7 3a1 1 0 0 1-.3 1L7.3 10.3a12 12 0 0 0 5.4 5.4l1.5-1.7a1 1 0 0 1 1-.3l3 .7a1 1 0 0 1 .8 1V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></div><div><h4>Answers every missed call</h4><p>Greets callers, answers questions, and keeps them from calling a competitor.</p></div></div>
+        <div class="cap"><div class="cap-i"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8 8 0 0 1-11.5 7.2L3 21l2.3-6.5A8 8 0 1 1 21 11.5z"/><path d="M8.5 10.5h7M8.5 14h4"/></svg></div><div><h4>Instant missed-call text-back</h4><p>Every missed call triggers a personal text within seconds — before they hang up.</p></div></div>
+        <div class="cap"><div class="cap-i"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M8.5 15l2.2 2.2L15 13"/></svg></div><div><h4>Books &amp; manages appointments</h4><p>Schedules inspections, sends confirmations, handles cancellations autonomously.</p></div></div>
+        <div class="cap"><div class="cap-i"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="9" height="9" rx="2.5"/><path d="M12 2.5V6M12 18v3.5M2.5 12H6M18 12h3.5M4.8 4.8 7 7M17 17l2.2 2.2M19.2 4.8 17 7M7 17l-2.2 2.2"/></svg></div><div><h4>Learns your business</h4><p>Trained on your services, pricing, and FAQs — every reply sounds like you, not a bot.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== HOW IT WORKS ======== -->
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:6px">
+      <span class="eye reveal">Live in days, not months</span>
+      <h2 class="h-sec reveal d1">Up and running in <em>three steps.</em></h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><div class="step-n">1</div><h3>We build your system</h3><p>Website, Google profile, Atlas AI, and automations — set up and tailored to your roofing business in 3–4 days.</p></div>
+      <div class="step reveal d1"><div class="step-n">2</div><h3>Atlas goes to work</h3><p>Every call answered, every missed lead texted back, every inspection booked — automatically, 24/7.</p></div>
+      <div class="step reveal d2"><div class="step-n">3</div><h3>You book more jobs</h3><p>Watch leads turn into booked inspections on a live dashboard while your crew stays on the roof.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== ESTIMATOR (PLUG-IN SLOT) ======== -->
+<section class="sec" id="estimator">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:44px">
+      <span class="eye reveal">Instant roof estimate</span>
+      <h2 class="h-sec reveal d1">Measure any roof from <em>space.</em></h2>
+      <p class="lead reveal d2" style="margin-top:14px">Homeowners trace their roof on a satellite map and get an instant estimate — a lead in your pipeline before they ever pick up the phone.</p>
+    </div>
+    <div class="slot reveal d1" data-plugin="roof-estimator">
+      <div class="frame-dots"><span></span><span></span><span></span></div>
+      <div class="slot-badge">Plug-in slot</div>
+      <h3>Roof Estimator mounts here</h3>
+      <p>Your existing satellite estimator tool drops straight into this container — styling already matches. No redesign needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======== TESTIMONIALS ======== -->
+<section class="sec" id="testimonials">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:6px">
+      <span class="eye reveal">Loved by roofers</span>
+      <h2 class="h-sec reveal d1">Crews that stopped <em>missing calls.</em></h2>
+    </div>
+    <div class="tgrid">
+      <div class="tcard reveal"><span class="stars">★★★★★</span><p class="tq">"We used to lose half our leads to voicemail. Atlas books inspections while we're up on a roof. Paid for itself in the first week."</p><div class="tauth"><div class="tav">MJ</div><div><div class="tn">Mike Johnson</div><div class="tr">Johnson Roofing, Dallas TX</div></div></div></div>
+      <div class="tcard reveal d1"><span class="stars">★★★★★</span><p class="tq">"The missed-call text-back alone changed our business. Customers reply in seconds and we close way more of them."</p><div class="tauth"><div class="tav">SR</div><div><div class="tn">Sara Reyes</div><div class="tr">Summit Exteriors, Phoenix AZ</div></div></div></div>
+      <div class="tcard reveal d2"><span class="stars">★★★★★</span><p class="tq">"Went live in four days. The dashboard shows exactly where every job comes from. Feels like I hired a full office staff."</p><div class="tauth"><div class="tav">DW</div><div><div class="tn">Derek Wallace</div><div class="tr">Wallace &amp; Sons Roofing, Tampa FL</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== PRICING ======== -->
+<section class="sec" id="pricing">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:6px">
+      <span class="eye reveal">Simple pricing</span>
+      <h2 class="h-sec reveal d1">Three plans. <em>One mission.</em></h2>
+      <p class="lead reveal d2" style="margin-top:14px">Start with a 14-day trial. See it booking jobs before you pay a monthly fee.</p>
+    </div>
+    <div class="pgrid">
+      <div class="pcard reveal">
+        <div class="p-name">Foundation</div>
+        <div class="p-price"><sup>$</sup>499</div>
+        <div class="p-per">per month after trial</div>
+        <span class="p-trial">✓ 14-day free trial</span>
+        <ul class="p-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Custom website + hosting</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Google Business setup</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Missed-call text-back</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> 5 lead automations</li>
+        </ul>
+        <a href="#book" class="btn btn-o p-btn">Start free trial</a>
+      </div>
+      <div class="pcard pop reveal d1">
+        <div class="pop-tag">Most popular</div>
+        <div class="p-name">Growth</div>
+        <div class="p-price"><sup>$</sup>899</div>
+        <div class="p-per">per month after trial</div>
+        <span class="p-trial">✓ 14-day free trial</span>
+        <ul class="p-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Everything in Foundation</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Atlas AI Receptionist 24/7</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> 10+ lead automations</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Satellite roof estimator</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Advanced lead funnels</li>
+        </ul>
+        <a href="#book" class="btn btn-p p-btn">Start free trial</a>
+      </div>
+      <div class="pcard reveal d2">
+        <div class="p-name">Enterprise</div>
+        <div class="p-price"><sup>$</sup>1999</div>
+        <div class="p-per">per month after trial</div>
+        <span class="p-trial">✓ 14-day free trial</span>
+        <ul class="p-feats">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Everything in Growth</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Full marketing campaigns</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Paid ads management</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg> Dedicated account manager</li>
+        </ul>
+        <a href="#book" class="btn btn-o p-btn">Talk to sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== BOOK / CTA (PLUG-IN SLOT) ======== -->
+<section class="sec" id="book">
+  <div class="wrap">
+    <div class="cta reveal">
+      <h2>Ready to stop missing jobs?</h2>
+      <p>Book a 15-minute demo and watch Atlas answer a call live. Your booking calendar plugs in right here.</p>
+      <a href="#" class="btn btn-p btn-lg" onclick="return false">Book my free demo</a>
+      <div style="position:relative;margin-top:34px" data-plugin="booking-calendar">
+        <div class="slot" style="min-height:180px;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#fff">
+          <div class="slot-badge" style="background:rgba(255,255,255,.18);color:#fff">Plug-in slot</div>
+          <p style="color:rgba(255,255,255,.85)">Booking calendar &amp; order forms mount here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FAQ ======== -->
+<section class="sec" id="faq">
+  <div class="wrap">
+    <div class="tc" style="margin-bottom:6px">
+      <span class="eye reveal">Questions</span>
+      <h2 class="h-sec reveal d1">Good to <em>know.</em></h2>
+    </div>
+    <div class="faq">
+      <div class="qa reveal"><button class="qa-q">How fast can I go live?<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><div class="qa-a"><p>Most roofing businesses are fully live in 3–4 days — website, Google profile, Atlas AI, and automations all set up for you.</p></div></div>
+      <div class="qa reveal"><button class="qa-q">Do I need to be technical?<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><div class="qa-a"><p>Not at all. It's done-for-you. We build and manage everything; you just take the booked inspections.</p></div></div>
+      <div class="qa reveal"><button class="qa-q">Does Atlas sound like a robot?<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><div class="qa-a"><p>No. Atlas is trained on your services, pricing, and FAQs, so every call and text sounds like your business — professional and on-brand.</p></div></div>
+      <div class="qa reveal"><button class="qa-q">Is there a long-term contract?<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><div class="qa-a"><p>No long-term contracts. Start with a 14-day trial and see it working before you pay a monthly fee.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FOOTER ======== -->
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div>
+        <div class="f-logo"><span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 5l9 15"/><path d="M8.5 20 12 13l3.5 7"/></svg></span><span class="wm" style="color:#fff">Builder<b style="color:#4FD1C0">Pro</b></span></div>
+        <p class="f-desc">The AI-powered growth system built exclusively for roofing contractors. Answer every call, book more jobs, grow on autopilot.</p>
+      </div>
+      <div><div class="f-h">Product</div><div class="f-links"><a href="#features">Features</a><a href="#atlas">Atlas AI</a><a href="#estimator">Roof estimator</a><a href="#pricing">Pricing</a></div></div>
+      <div><div class="f-h">Company</div><div class="f-links"><a href="#">About</a><a href="#">Careers</a><a href="#book">Book a demo</a><a href="#">Contact</a></div></div>
+      <div><div class="f-h">Legal</div><div class="f-links"><a href="#">Privacy</a><a href="#">Terms</a></div></div>
+    </div>
+    <div class="f-bot">
+      <div>© <span id="yr"></span> BuilderPro. All rights reserved.</div>
+      <div>Built for roofers who'd rather be on a roof.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// year
+document.getElementById('yr').textContent = new Date().getFullYear();
+// mobile menu
+function closeMob(){document.getElementById('mobMenu').classList.remove('open');}
+// nav solid on scroll
+const nav=document.getElementById('nav');
+const onScroll=()=>nav.classList.toggle('solid',window.scrollY>20);
+onScroll();addEventListener('scroll',onScroll,{passive:true});
+// marquee build (duplicated for seamless -50% loop)
+(function(){
+  const items=['Atlas AI Receptionist','Missed-Call Text-Back','10+ Automations','Satellite Roof Estimator','Google Business Setup','Custom Website','Smart Booking','Lead Funnels','Live Dashboard'];
+  const make=()=>items.map(t=>`<div class="mq-item"><span class="d"></span>${t}</div>`).join('');
+  document.getElementById('mqTrack').innerHTML=make()+make();
+})();
+// scroll reveal
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.14,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+// faq accordion
+document.querySelectorAll('.qa-q').forEach(q=>{
+  q.addEventListener('click',()=>{
+    const qa=q.parentElement, a=q.nextElementSibling, open=qa.classList.contains('open');
+    document.querySelectorAll('.qa').forEach(x=>{x.classList.remove('open');x.querySelector('.qa-a').style.maxHeight=null;});
+    if(!open){qa.classList.add('open');a.style.maxHeight=a.scrollHeight+'px';}
+  });
+});
+</script>
+</body>
+</html>
