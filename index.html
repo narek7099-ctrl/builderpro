@@ -3785,5 +3785,260 @@ body.bpx-open #cur,body.bpx-open #cur-r{display:none !important;}
 </script>
 <!-- ================= END CLIENT PORTAL OVERLAY ================= -->
 
+<!-- ============================================================
+     BUILDERPRO OS — "BLUEPRINT & COPPER" LIGHT THEME LAYER  (v1)
+     Append-only restyle. No HTML structure / JS / embeds touched.
+     Grounded in the roofing trade: blueprint paper + slate + copper.
+     ============================================================ -->
+<style id="relight-bp-copper">
+:root{
+  /* new light identity — overrides the dark tokens above */
+  --bg:#ECEFF3;            /* blueprint paper */
+  --bg-2:#E3E8EF;          /* deeper band for alternating sections */
+  --paper:#FFFFFF;         /* panels / cards */
+  --ink:#16222E;           /* slate text */
+  --white:#16222E;         /* remap: var(--white) was primary text */
+  --text:#3C4A57;          /* body copy */
+  --muted:#5D6E7E;         /* captions / labels */
+  --blue:#1E5BD6;          /* structural blueprint blue */
+  --blue-l:#2E6BE6;
+  --cyan:#1E5BD6;
+  --copper:#B5652E;        /* SIGNATURE accent */
+  --copper-d:#9A5324;
+  --green:#0F9D58;
+  --gold:#E0A100;
+  --red:#D4443B;
+  --border:#D5DEE6;        /* hairline slate */
+  --border-s:#E1E7ED;
+  --card:#FFFFFF;
+  --card-h:#FFFFFF;
+  --footer-bg:#14202B;     /* deliberate dark anchor */
+}
+
+/* ---- base ---- */
+body{background:var(--bg);color:var(--ink);}
+/* faint blueprint grid, drawn under everything */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(30,91,214,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(30,91,214,.045) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 0%,transparent 75%);
+          mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 0%,transparent 75%);
+}
+
+/* kill the dark particle canvas + hero beams; retire dark glows softly */
+#bgCanvas{display:none!important;}
+.beam{display:none!important;}
+.glo{filter:blur(100px);opacity:.5;}
+.gb{background:radial-gradient(ellipse,rgba(30,91,214,.10),transparent 70%);}
+.gc{background:radial-gradient(ellipse,rgba(30,91,214,.07),transparent 70%);}
+.gg{background:radial-gradient(ellipse,rgba(15,157,88,.08),transparent 70%);}
+.gr{background:radial-gradient(ellipse,rgba(181,101,46,.10),transparent 70%);}
+
+/* custom cursor: copper, visible on light (no screen blend) */
+#cur{background:var(--copper);mix-blend-mode:normal;}
+#cur-r{border-color:rgba(181,101,46,.45);}
+
+/* ---- NAV ---- */
+nav.solid{background:rgba(255,255,255,.85)!important;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+.logo{color:var(--ink);}
+.logo span{color:var(--copper);}
+.logo-dot{background:var(--copper);box-shadow:0 0 10px rgba(181,101,46,.5);}
+.nav-links{color:var(--muted);}
+.nav-links a:hover{color:var(--ink);}
+.nav-mob{color:var(--ink);}
+.nav-login{border-color:var(--border);color:var(--muted);}
+.nav-login:hover{color:var(--ink);border-color:var(--copper);box-shadow:0 0 14px rgba(181,101,46,.25);}
+#mobMenu{background:rgba(255,255,255,.98)!important;border-bottom:1px solid var(--border);}
+#mobMenu a{color:var(--text);}
+@media(max-width:980px){
+  #mobMenu{border-top:2px dashed rgba(181,101,46,.3);}
+  #mobMenu a:not(.btn){border-bottom:1px dashed var(--border);}
+}
+
+/* ---- BUTTONS: primary = copper (the one bold place) ---- */
+.btn::before{background:linear-gradient(rgba(255,255,255,.12),transparent);}
+.btn-p{background:linear-gradient(90deg,var(--copper),#C9743C);color:#fff;box-shadow:0 6px 18px rgba(181,101,46,.28);}
+.btn-p:hover{box-shadow:0 12px 30px rgba(181,101,46,.4),0 4px 12px rgba(0,0,0,.12);transform:translateY(-3px);}
+.btn-o{background:#fff;border:1px solid var(--border);color:var(--ink);}
+.btn-o:hover{border-color:var(--copper);color:var(--copper);background:#fff;}
+
+/* ---- TYPOGRAPHY ---- */
+.eye{color:var(--copper);font-weight:700;position:relative;padding-left:26px;}
+.eye::before{content:'';position:absolute;left:0;top:50%;width:18px;height:2px;background:var(--copper);transform:translateY(-50%);}
+.d1,.d2,.d3{color:var(--ink);}
+.d1 em,.d2 em{color:var(--copper);}
+.body{color:var(--text);}
+.small{color:var(--muted);}
+.rule{background:var(--copper);}
+
+/* ---- HERO ---- */
+.hero-badge{background:#fff;border:1px solid var(--border);color:var(--copper);box-shadow:0 2px 10px rgba(20,34,43,.05);}
+.hero-title{color:var(--ink);}
+.hero-title em{color:var(--copper);text-shadow:none;}
+.hero-sub{color:var(--text);}
+.hero-stats{background:#fff;border:1px solid var(--border);box-shadow:0 18px 50px rgba(20,34,43,.08);backdrop-filter:none;}
+.hstat{border-right:1px solid var(--border);}
+.hstat-n{color:var(--ink);}
+.hstat-l{color:var(--muted);}
+.scroll-line{background:linear-gradient(to bottom,transparent,var(--copper),transparent);}
+.scroll-txt{color:var(--muted);}
+
+/* ---- MARQUEE ---- */
+.mq-wrap{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.mq-item{color:var(--muted);}
+.mq-item span{color:var(--ink);}
+.mq-dot{background:var(--copper);}
+
+/* ---- BADGES / TAGS ---- */
+.badge{background:#fff;border:1px solid var(--border);color:var(--muted);}
+.tag.tb{background:rgba(30,91,214,.08);border:1px solid rgba(30,91,214,.2);color:var(--blue);}
+.tag.tg{background:rgba(15,157,88,.1);border:1px solid rgba(15,157,88,.25);color:var(--green);}
+.tag.tr{background:rgba(181,101,46,.1);border:1px solid rgba(181,101,46,.25);color:var(--copper);}
+
+/* ---- CARDS ---- */
+.card,.card-sm{background:#fff;border:1px solid var(--border);box-shadow:0 2px 12px rgba(20,34,43,.04);}
+.card::after{background:linear-gradient(135deg,rgba(30,91,214,.04),transparent 60%);}
+.card:hover{background:#fff;border-color:var(--copper);box-shadow:0 24px 60px rgba(20,34,43,.12),0 0 0 1px rgba(181,101,46,.12);}
+
+/* ---- ABOUT ---- */
+.live-feed .lf-item,.lf-item{background:#fff;border:1px solid var(--border);color:var(--text);animation:none;}
+.lf-item{background:rgba(15,157,88,.05);border-color:rgba(15,157,88,.18);}
+.lt{color:var(--muted);}
+.stat-circle{background:#fff;border:1px solid var(--border);}
+.sc-n{color:var(--copper);}
+.sc-l{color:var(--muted);}
+
+/* ---- FEATURES ---- */
+.fi{background:rgba(30,91,214,.08);border:1px solid rgba(30,91,214,.18);}
+.ft{color:var(--ink);}
+.fa{background:var(--copper);}
+
+/* ---- ATLAS ---- */
+.atlas-orb{background:radial-gradient(ellipse,rgba(30,91,214,.14),rgba(30,91,214,.05) 40%,transparent 70%);}
+.ao-inner{background:radial-gradient(ellipse,rgba(30,91,214,.16),rgba(30,91,214,.06) 50%,transparent 70%);box-shadow:0 0 50px rgba(30,91,214,.15);}
+.ao-core{background:linear-gradient(135deg,var(--blue),#3E7BF0);box-shadow:0 8px 30px rgba(30,91,214,.35);}
+.ar{border-color:rgba(30,91,214,.16);}
+.ar3{border-color:rgba(30,91,214,.08);}
+.ar-dot{background:var(--copper);}
+.atlas-cap{background:#fff;border:1px solid var(--border);}
+.atlas-cap:hover{background:#fff;border-color:var(--copper);box-shadow:0 8px 26px rgba(20,34,43,.1);}
+.ac-icon{background:rgba(30,91,214,.08);border:1px solid rgba(30,91,214,.18);}
+.ac-t{color:var(--ink);}
+.ac-s{color:var(--muted);}
+.chat-wrap{background:#fff;border:1px solid var(--border);box-shadow:0 6px 24px rgba(20,34,43,.06);}
+.cav-a{background:linear-gradient(135deg,var(--blue),#3E7BF0);}
+.cav-u{background:#EEF2F6;}
+.cb-a{background:rgba(30,91,214,.08);border:1px solid rgba(30,91,214,.16);color:var(--text);}
+.cb-u{background:#F1F4F7;border:1px solid var(--border);color:var(--muted);}
+
+/* ---- SERVICES FLOW ---- */
+.fl-item{border-bottom:1px solid var(--border);}
+.fl-n{color:rgba(181,101,46,.28);}
+.fl-item:hover .fl-n{color:var(--copper);}
+.fl-t{color:var(--ink);}
+
+/* ---- ESTIMATOR outer frame (inner app left as-is: reads as a device screen) ---- */
+.est-wrap{background:#fff;border:1px solid var(--border);box-shadow:0 30px 70px rgba(20,34,43,.14);}
+.est-hdr{background:#F5F7F9;border-bottom:1px solid var(--border);}
+.est-tbar{color:var(--muted);}
+.cal-wrap{background:#fff;border:1px solid var(--border);}
+.cal-hdr{background:#F5F7F9;border-bottom:1px solid var(--border);}
+.cal-ttl{color:var(--ink);}
+
+/* ---- TESTIMONIALS ---- */
+.tcard{background:#fff;border:1px solid var(--border);box-shadow:0 2px 12px rgba(20,34,43,.04);}
+.tcard:hover{border-color:var(--copper);box-shadow:0 20px 50px rgba(20,34,43,.12);}
+.t-stars{color:var(--gold);}
+.t-q{color:var(--text);}
+.t-av{background:rgba(30,91,214,.1);border:1px solid var(--border);}
+.t-n{color:var(--ink);}
+.t-r{color:var(--muted);}
+
+/* ---- PRICING ---- */
+.pc{background:#fff;border:1px solid var(--border);box-shadow:0 4px 18px rgba(20,34,43,.05);}
+.pc::before{background:linear-gradient(135deg,rgba(30,91,214,.04),transparent 60%);}
+.pc:hover{box-shadow:0 26px 70px rgba(20,34,43,.14);}
+.pc.pop{background:#fff;border-color:var(--copper);box-shadow:0 0 0 1px rgba(181,101,46,.25),0 16px 50px rgba(181,101,46,.14);}
+.pc.pop:hover{box-shadow:0 30px 80px rgba(20,34,43,.16),0 0 0 1px rgba(181,101,46,.3);}
+.pop-badge{background:linear-gradient(90deg,var(--copper),#C9743C);color:#fff;}
+.pc-eye{color:var(--muted);}
+.pc-name{color:var(--ink);}
+.pc-price{color:var(--ink);}
+.pc-price sup{color:var(--copper);}
+.pc-period{color:var(--muted);}
+.pc-setup{background:#F5F7F9;border:1px solid var(--border);color:var(--text);}
+.pf{color:var(--text);}
+.pfc{color:var(--green);}
+.pc-btn-p{background:linear-gradient(90deg,var(--copper),#C9743C);color:#fff;box-shadow:0 6px 18px rgba(181,101,46,.28);}
+.pc-btn-p:hover{box-shadow:0 12px 30px rgba(181,101,46,.4);}
+.pc-btn-o{background:#fff;border:1px solid var(--border);color:var(--ink);}
+.pc-btn-o:hover{border-color:var(--copper);color:var(--copper);background:#fff;}
+.trial-bar{background:rgba(15,157,88,.1);border:1px solid rgba(15,157,88,.25);color:#0B7A44;}
+
+/* ---- MODALS (plan order forms) ---- */
+.modal-overlay{background:rgba(20,34,43,.55);}
+.modal{background:#fff;border:1px solid var(--border);box-shadow:0 40px 100px rgba(20,34,43,.3);}
+.modal-hdr{border-bottom:1px solid var(--border);}
+.modal-title{color:var(--ink);}
+.modal-close{background:#F1F4F7;border:1px solid var(--border);color:var(--muted);}
+.modal-close:hover{background:rgba(212,68,59,.12);border-color:rgba(212,68,59,.3);color:var(--red);}
+
+/* ---- CONTACT FORM ---- */
+.cf{background:#fff;border:1px solid var(--border);box-shadow:0 6px 24px rgba(20,34,43,.06);}
+.fl{color:var(--muted);}
+.fi2{background:#F6F8FA;border:1px solid var(--border);color:var(--ink);}
+.fi2:focus{border-color:var(--copper);background:#fff;}
+.fi2::placeholder{color:var(--muted);}
+
+/* ---- FAQ ---- */
+.faq-item{background:#fff!important;border:1px solid var(--border)!important;}
+.faq-q{color:var(--ink)!important;}
+.faq-a{color:var(--text)!important;}
+
+/* ---- ROOFERLY PARTNERSHIP (keep teal identity, lighten container) ---- */
+.partnership-strip{background:linear-gradient(135deg,#F4F8F9,#EAF2F4);border:1px solid rgba(42,143,163,.28);}
+.ps-name{color:var(--ink);}
+.ps-text strong{color:var(--ink);}
+.ps-text p{color:var(--text);}
+.rooferly-badge{color:#1A7A8A;}
+.rooferly-modal{background:#fff!important;border:1px solid rgba(42,143,163,.3);}
+.rm-ft{color:var(--ink);}
+.rm-fs{color:var(--muted);}
+.rm-close{background:#F1F4F7;border:1px solid var(--border);color:var(--muted);}
+
+/* ---- DIVIDER as copper chalk-line with end ticks ---- */
+.divider{background:linear-gradient(90deg,transparent,var(--copper),transparent);opacity:.5;}
+
+/* ---- FOOTER (deliberate dark anchor) ---- */
+footer{background:var(--footer-bg)!important;border-top:1px solid rgba(255,255,255,.08);}
+.f-logo{color:#fff;}
+.f-logo span{color:#D98A55;}
+.f-desc{color:rgba(255,255,255,.55);}
+.f-ct{color:rgba(255,255,255,.55);}
+.f-link{color:rgba(255,255,255,.6);}
+.f-link:hover{color:#fff;}
+.f-bot{border-top:1px solid rgba(255,255,255,.08);}
+.f-copy{color:rgba(255,255,255,.45);}
+
+/* ---- LEGAL PAGES ---- */
+.legal-page{background:var(--bg)!important;}
+.legal-nav{background:rgba(255,255,255,.92)!important;border-bottom:1px solid var(--border);}
+.legal-h1{color:var(--ink);}
+.legal-date{color:var(--muted);}
+.legal-h2{color:var(--copper);border-bottom:1px solid var(--border);}
+.legal-p,.legal-ul li{color:var(--text);}
+.legal-highlight{background:rgba(30,91,214,.06);border:1px solid rgba(30,91,214,.16);}
+
+/* ---- alternating section bands + override dark inline section backgrounds ---- */
+#about,#services,#testimonials,#faq{background:var(--bg-2);}
+#atlas{background:var(--bg)!important;}
+#booking{background:var(--bg-2)!important;}
+
+/* generic guard: any element with a dark inline hex bg used as a panel shell */
+[style*="background:#080e1f"]{background:#fff!important;}
+</style>
+
 </body>
 </html>
