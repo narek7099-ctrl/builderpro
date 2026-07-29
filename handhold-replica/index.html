@@ -180,6 +180,58 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:30px;}
 .f-col a:hover{color:#000;}
 .f-bot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12.5px;color:var(--grey-l);flex-wrap:wrap;gap:10px;}
 
+.logos-row .lg svg{width:18px;height:18px;}
+
+/* ==== light dashboard section ==== */
+.dash-sec{padding:70px 0 40px;}
+.dash-head{text-align:center;max-width:560px;margin:0 auto 34px;}
+.dash-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.6vw,42px);letter-spacing:-.02em;line-height:1.1;}
+.dash-head p{margin-top:14px;color:var(--grey);font-size:15.5px;}
+.dash{max-width:1080px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 40px 90px rgba(20,30,60,.12);overflow:hidden;display:grid;grid-template-columns:196px 1fr;font-size:13px;}
+.dside{background:#fbfaf7;border-right:1px solid var(--line);padding:16px 12px;}
+.dbrand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;padding:6px 8px 14px;letter-spacing:-.01em;}
+.dbrand .m{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#5b8bff,#1b56ee);}
+.dnav-lab{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--grey-l);padding:12px 8px 6px;}
+.dnav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:#54545a;margin-bottom:1px;}
+.dnav a svg{width:16px;height:16px;stroke:#9a9aa0;fill:none;stroke-width:1.8;}
+.dnav a.on{background:#eef3ff;color:#1b56ee;font-weight:600;}
+.dnav a.on svg{stroke:#2f6bff;}
+.dnav a .badge{margin-left:auto;background:#ff5c5c;color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:1px 6px;}
+.dmain{padding:16px 18px;background:#fff;min-width:0;}
+.dtop{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.dtop .tt{font-weight:700;font-size:16px;letter-spacing:-.01em;}
+.dsearch{flex:1;max-width:240px;background:#f5f4f0;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:12px;color:#9a9aa0;display:flex;gap:8px;align-items:center;}
+.dsearch svg{width:13px;height:13px;stroke:#9a9aa0;fill:none;stroke-width:2;}
+.dbtn{background:#2f6bff;color:#fff;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:600;margin-left:auto;display:flex;align-items:center;gap:6px;}
+.dbtn svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2;}
+.duser{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;}
+.duser .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffd9c2,#ff9d6b);}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:14px;}
+.kpi .l{font-size:11px;color:var(--grey);margin-bottom:8px;}
+.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.kpi .d{font-size:11px;color:#1faa5a;margin-top:5px;font-weight:600;}
+.dcharts{display:grid;grid-template-columns:1fr 156px;gap:12px;margin-bottom:12px;}
+.panel{border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0;}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.pt{font-size:12.5px;font-weight:600;}
+.legend{display:flex;gap:12px;font-size:10px;color:var(--grey);}
+.legend i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;}
+.spark .v{font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.spark .l{font-size:11px;color:var(--grey);margin-bottom:10px;}
+.dbottom{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;}
+.donuts{display:flex;gap:10px;justify-content:space-between;margin-top:6px;}
+.donut{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;flex:1;}
+.donut .dv{font-size:14px;font-weight:700;}
+.donut .dl{font-size:10px;color:var(--grey);}
+.donut svg{width:58px;height:58px;}
+@media(max-width:860px){
+  .dash{grid-template-columns:1fr;}
+  .dside{display:none;}
+  .kpis{grid-template-columns:1fr 1fr;}
+  .dcharts,.dbottom{grid-template-columns:1fr;}
+}
+
 /* reveal */
 .rv{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
 .rv.in{opacity:1;transform:none;}
@@ -225,16 +277,98 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:30px;}
 <div class="logos">
   <div class="wrap">
     <div class="logos-row rv">
-      <span class="lg"><span class="m"></span>aikido</span>
-      <span class="lg"><span class="m"></span>Parim</span>
+      <span class="lg"><svg viewBox="0 0 24 24" fill="#111"><path d="M4 17 12 7l8 10-3 0-5-6.4L7 17z"/></svg>aikido</span>
+      <span class="lg"><svg viewBox="0 0 24 24" fill="#111"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="9" cy="9" r="1.6" fill="#fff"/><circle cx="15" cy="9" r="1.6" fill="#fff"/><rect x="7.4" y="13" width="9" height="2.4" rx="1.2" fill="#fff"/></svg>Parim</span>
       <span class="lg italic">LIVEFORCE</span>
-      <span class="lg"><span class="m"></span>parcelu</span>
-      <span class="lg"><span class="m"></span>finbite</span>
-      <span class="lg"><span class="m"></span>ParcelTracker</span>
-      <span class="lg"><span class="m"></span>WHALE</span>
+      <span class="lg">parcelly<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" style="width:14px;margin-left:3px"><path d="M12 3l7 4v6l-7 4-7-4V7z"/></svg></span>
+      <span class="lg"><svg viewBox="0 0 24 24" fill="#111"><rect x="4" y="4" width="4" height="4"/><rect x="10" y="6" width="3" height="3"/><rect x="5" y="11" width="3" height="3"/><rect x="11" y="12" width="4" height="4"/><rect x="7" y="16" width="2.5" height="2.5"/></svg>finbite</span>
+      <span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 20 7v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Parcel&nbsp;Tracker</span>
+      <span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"><path d="M4 10c2 5 14 5 16 0"/><path d="M4 10c0-2 2-3 4-3"/></svg>WHALE</span>
     </div>
   </div>
 </div>
+
+<!-- ===== light dashboard section ===== -->
+<section class="dash-sec">
+  <div class="wrap">
+    <div class="dash-head rv">
+      <h2>Every conversation, on one dashboard</h2>
+      <p>Track demos, qualified leads, and revenue in real time — all in a single, calm view.</p>
+    </div>
+    <div class="dash rv">
+      <aside class="dside">
+        <div class="dbrand"><span class="m"></span>Overview</div>
+        <div class="dnav-lab">Main</div>
+        <nav class="dnav">
+          <a class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+          <a><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 19v-6M12 19v-9M16 19v-4"/></svg>Dashboard</a>
+          <a><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></svg>Spreadsheets</a>
+          <a><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg>Administration</a>
+          <a><svg viewBox="0 0 24 24"><path d="M4 15l4-5 4 3 4-6 4 4"/><path d="M4 20h16"/></svg>Sales</a>
+          <a><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>Scheduler</a>
+        </nav>
+        <div class="dnav-lab">Help</div>
+        <nav class="dnav">
+          <a><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 1 1-3.5-6.6L21 4v5h-5"/></svg>Messages<span class="badge">3</span></a>
+          <a><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5A1.5 1.5 0 0 0 20 18.5z"/></svg>Library</a>
+          <a><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5L9 4.9a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L5 9.9a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h4.9l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>Settings</a>
+        </nav>
+      </aside>
+      <div class="dmain">
+        <div class="dtop">
+          <span class="tt">Overview</span>
+          <span class="dsearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search</span>
+          <button class="dbtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Generate report</button>
+          <span class="duser"><span class="av"></span>Austin R.</span>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="l">Sales</div><div class="v">$27,632</div><div class="d">▲ 5.9% vs last year</div></div>
+          <div class="kpi"><div class="l">Purchase</div><div class="v">$20,199</div><div class="d">▲ 6.0% vs last year</div></div>
+          <div class="kpi"><div class="l">Return</div><div class="v">$110</div><div class="d">▲ 1.8% vs last year</div></div>
+          <div class="kpi"><div class="l">Marketing</div><div class="v">$12,632</div><div class="d">▲ 2.5% vs last year</div></div>
+        </div>
+
+        <div class="dcharts">
+          <div class="panel">
+            <div class="ph"><span class="pt">Sales figures</span><span class="legend"><span><i style="background:#2f6bff"></i>Marketing</span><span><i style="background:#33bd63"></i>Direct</span></span></div>
+            <svg viewBox="0 0 620 190" width="100%" height="180" preserveAspectRatio="none" id="lineChart"></svg>
+          </div>
+          <div class="panel spark">
+            <div class="l">Orders this year</div>
+            <div class="v">10,254</div>
+            <div class="d" style="font-size:11px;color:#1faa5a;font-weight:600;margin:4px 0 12px">▲ 1.9%</div>
+            <svg viewBox="0 0 130 54" width="100%" height="54" preserveAspectRatio="none" id="sparkChart"></svg>
+          </div>
+        </div>
+
+        <div class="dbottom">
+          <div class="panel">
+            <div class="ph"><span class="pt">Average total sales</span><span class="legend">2017–2018</span></div>
+            <div class="donuts">
+              <div class="donut">
+                <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#2f6bff" stroke-width="6" stroke-linecap="round" stroke-dasharray="46 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg>
+                <div><div class="dv">$82,980</div><div class="dl">46% · Sales</div></div>
+              </div>
+              <div class="donut">
+                <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#ff9d6b" stroke-width="6" stroke-linecap="round" stroke-dasharray="74 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg>
+                <div><div class="dv">28,548</div><div class="dl">74% · Impressions</div></div>
+              </div>
+              <div class="donut">
+                <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#33bd63" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg>
+                <div><div class="dv">14,006</div><div class="dl">14% · Products</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ph"><span class="pt">Sales report</span><span class="legend"><span><i style="background:#2f6bff"></i>Online</span><span><i style="background:#bcd0ff"></i>Offline</span></span></div>
+            <svg viewBox="0 0 300 130" width="100%" height="120" id="barChart"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section>
   <div class="wrap">
@@ -395,6 +529,33 @@ addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>4),{passive:t
 // reveal
 const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12,rootMargin:'0px 0px -30px 0px'});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+// dashboard charts
+(function(){
+  const smooth=(pts)=>{let d='M'+pts[0][0]+' '+pts[0][1];for(let i=0;i<pts.length-1;i++){const [x0,y0]=pts[i],[x1,y1]=pts[i+1];const cx=(x0+x1)/2;d+=` C${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`;}return d;}
+  const scale=(arr,w,h,pad,min,max)=>arr.map((v,i)=>[pad+i*(w-2*pad)/(arr.length-1), h-pad-((v-min)/(max-min))*(h-2*pad)]);
+  const line=document.getElementById('lineChart');
+  if(line){
+    const W=620,H=190,pad=16,min=0,max=100;
+    const a=[35,42,38,52,48,68,74,62,70,58,66,60];
+    const b=[20,28,34,30,44,40,55,50,58,52,64,70];
+    let grid='';for(let i=1;i<5;i++){const y=pad+i*(H-2*pad)/5;grid+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#f0efe9"/>`;}
+    const pa=scale(a,W,H,pad,min,max),pb=scale(b,W,H,pad,min,max);
+    const area=smooth(pa)+`L${W-pad} ${H-pad} L${pad} ${H-pad} Z`;
+    const peak=pa[5];
+    line.innerHTML=grid
+      +`<defs><linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6bff" stop-opacity=".16"/><stop offset="1" stop-color="#2f6bff" stop-opacity="0"/></linearGradient></defs>`
+      +`<path d="${area}" fill="url(#lg2)"/>`
+      +`<path d="${smooth(pb)}" fill="none" stroke="#33bd63" stroke-width="2.4"/>`
+      +`<path d="${smooth(pa)}" fill="none" stroke="#2f6bff" stroke-width="2.4"/>`
+      +`<line x1="${peak[0]}" y1="${pad}" x2="${peak[0]}" y2="${H-pad}" stroke="#c9c8c2" stroke-dasharray="3 3"/>`
+      +`<circle cx="${peak[0]}" cy="${peak[1]}" r="4" fill="#fff" stroke="#2f6bff" stroke-width="2.5"/>`
+      +`<g><rect x="${peak[0]-32}" y="${peak[1]-30}" width="64" height="22" rx="5" fill="#0c0c0d"/><text x="${peak[0]}" y="${peak[1]-15}" fill="#fff" font-size="10" font-family="Inter" text-anchor="middle">$27,632 Aug</text></g>`;
+  }
+  const spark=document.getElementById('sparkChart');
+  if(spark){const s=[30,22,34,26,40,32,48,38,44];const ps=scale(s,130,54,4,0,50);spark.innerHTML=`<path d="${smooth(ps)}" fill="none" stroke="#2f6bff" stroke-width="2"/><circle cx="${ps[ps.length-1][0]}" cy="${ps[ps.length-1][1]}" r="3" fill="#2f6bff"/>`;}
+  const bar=document.getElementById('barChart');
+  if(bar){const W=300,H=130,pad=14,n=8,gap=10;const bw=(W-2*pad-gap*(n-1))/n;const on=[46,60,38,72,54,66,48,58],off=[20,26,18,30,22,28,20,24];const max=110;let s='';for(let i=0;i<n;i++){const x=pad+i*(bw+gap);const ov=(on[i]/max)*(H-2*pad),ff=(off[i]/max)*(H-2*pad);const total=ov+ff;s+=`<rect x="${x}" y="${H-pad-ff}" width="${bw}" height="${ff}" fill="#bcd0ff" rx="2"/><rect x="${x}" y="${H-pad-total}" width="${bw}" height="${ov}" fill="#2f6bff" rx="2"/>`;}bar.innerHTML=s;}
+})();
 // faq
 document.querySelectorAll('.qa-q').forEach(q=>q.addEventListener('click',()=>{
   const qa=q.parentElement,a=q.nextElementSibling,open=qa.classList.contains('open');
