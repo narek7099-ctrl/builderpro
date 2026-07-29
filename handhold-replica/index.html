@@ -522,37 +522,47 @@ document.getElementById('yr').textContent=new Date().getFullYear();
 // nav border on scroll
 const nav=document.getElementById('nav');
 addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>4),{passive:true});
-// build the flowing wave — crisp blue+cream twirling ribbon, seamless loop
+// build the flowing wave — twisting cream/blue ribbon, ~1:1 with reference.
+// Colour tracks vertical position (cream crests, blue troughs); band pinches
+// at the twist points and swells at crests; grain + feathered edges.
 (function(){
-  const W=2400,H=340,mid=172,period=560,amp=72;
-  // ribbon between two sine edges (variable thickness for a twist feel)
-  function ribbon(ph,off,thk){
+  const W=2400,H=340,mid=172,P=600,amp=78,base=118;
+  const wave=x=>Math.sin((x/P)*2*Math.PI)*amp + Math.sin((x/P)*4*Math.PI+0.6)*amp*0.14;
+  const thick=x=>base*(0.34+0.66*Math.abs(Math.sin((x/P)*2*Math.PI))); // pinch at crossings
+  function ribbon(){
     let d='';
-    for(let x=0;x<=W;x+=14){const t=mid+Math.sin((x/period)*2*Math.PI+ph)*amp+off-thk/2;d+=(x===0?'M':'L')+x+' '+t.toFixed(1)+' ';}
-    for(let x=W;x>=0;x-=14){const b=mid+Math.sin((x/period)*2*Math.PI+ph)*amp+off+thk/2;d+='L'+x+' '+b.toFixed(1)+' ';}
+    for(let x=0;x<=W;x+=8){const y=mid+wave(x)-thick(x)/2;d+=(x===0?'M':'L')+x+' '+y.toFixed(1)+' ';}
+    for(let x=W;x>=0;x-=8){const y=mid+wave(x)+thick(x)/2;d+='L'+x+' '+y.toFixed(1)+' ';}
     return d+'Z';
   }
+  // highlight follows the centreline, sitting just above it
+  function centre(off){let d='';for(let x=0;x<=W;x+=8){const y=mid+wave(x)+off;d+=(x===0?'M':'L')+x+' '+y.toFixed(1)+' ';}return d;}
+  const rb=ribbon();
   const svg=document.getElementById('waveSvg');
   svg.innerHTML=`
     <defs>
-      <linearGradient id="wg" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#efe0a4"/>
-        <stop offset="0.11" stop-color="#e6d693"/>
-        <stop offset="0.26" stop-color="#3f77ff"/>
-        <stop offset="0.38" stop-color="#1b56ee"/>
-        <stop offset="0.5" stop-color="#7aa0ff"/>
-        <stop offset="0.6" stop-color="#efe0a4"/>
-        <stop offset="0.75" stop-color="#3f77ff"/>
-        <stop offset="0.88" stop-color="#1b56ee"/>
-        <stop offset="1" stop-color="#bcd2ff"/>
+      <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f5edcb"/>
+        <stop offset="0.14" stop-color="#efe1a6"/>
+        <stop offset="0.28" stop-color="#e8dc9c"/>
+        <stop offset="0.40" stop-color="#c3cdf1"/>
+        <stop offset="0.48" stop-color="#6b90fb"/>
+        <stop offset="0.58" stop-color="#3b74ff"/>
+        <stop offset="0.74" stop-color="#2a60f4"/>
+        <stop offset="1" stop-color="#1f50e0"/>
       </linearGradient>
-      <filter id="soft" x="-5%" y="-40%" width="110%" height="180%"><feGaussianBlur stdDeviation="2.4"/></filter>
-      <filter id="glow" x="-8%" y="-60%" width="116%" height="220%"><feGaussianBlur stdDeviation="16"/></filter>
+      <filter id="soft" x="-6%" y="-60%" width="112%" height="220%"><feGaussianBlur stdDeviation="1.7"/></filter>
+      <filter id="glow" x="-10%" y="-90%" width="120%" height="280%"><feGaussianBlur stdDeviation="20"/></filter>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0"/></filter>
+      <clipPath id="wclip"><path d="${rb}"/></clipPath>
     </defs>
-    <path d="${ribbon(0,0,150)}" fill="url(#wg)" opacity=".22" filter="url(#glow)"/>
-    <path d="${ribbon(0,0,96)}" fill="url(#wg)" filter="url(#soft)"/>
-    <path d="${ribbon(0,-24,3)}" fill="none" stroke="#ffffff" stroke-width="3" opacity=".7" filter="url(#soft)"/>
-    <path d="${ribbon(0,26,2)}" fill="none" stroke="#0f3ec9" stroke-width="2" opacity=".22" filter="url(#soft)"/>
+    <path d="${rb}" fill="url(#wg)" opacity=".28" filter="url(#glow)"/>
+    <g filter="url(#soft)">
+      <path d="${rb}" fill="url(#wg)"/>
+      <g clip-path="url(#wclip)"><rect x="0" y="0" width="${W}" height="${H}" filter="url(#grain)" opacity=".14"/></g>
+      <path d="${centre(-16)}" fill="none" stroke="#ffffff" stroke-width="3.5" opacity=".55" stroke-linecap="round"/>
+      <path d="${centre(-2)}" fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".35"/>
+    </g>
   `;
 })();
 // reveal
