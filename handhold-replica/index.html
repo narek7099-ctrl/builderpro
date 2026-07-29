@@ -57,10 +57,9 @@ nav.solid{border-color:var(--line);}
 .hero-acts{display:flex;gap:11px;justify-content:center;}
 
 /* wave signature */
-.wave{position:relative;width:100%;height:340px;margin-top:-6px;overflow:hidden;}
-.wave svg{position:absolute;top:0;left:0;height:100%;width:200%;animation:flow 18s linear infinite;}
-@keyframes flow{to{transform:translateX(-50%)}}
-.wave::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#fff 0,transparent 8%,transparent 92%,#fff 100%);pointer-events:none;}
+.wave{position:relative;width:100%;height:360px;margin-top:-6px;overflow:hidden;}
+.wave canvas{position:absolute;inset:0;width:100%;height:100%;}
+.wave::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#fff 0,transparent 7%,transparent 93%,#fff 100%);pointer-events:none;}
 
 /* logo cloud */
 .logos{padding:26px 0 8px;}
@@ -84,13 +83,17 @@ section{padding:90px 0;}
 .fl:last-child{border-bottom:1px solid var(--line);}
 .fl b{font-weight:600;font-size:15px;color:var(--ink);}
 .fl p{color:var(--grey);font-size:14px;margin-top:5px;max-width:340px;}
-.mesh{border-radius:22px;height:400px;position:relative;overflow:hidden;box-shadow:0 30px 70px rgba(20,30,60,.10);
-  background:
-    radial-gradient(60% 55% at 78% 22%,rgba(47,107,255,.9),transparent 60%),
-    radial-gradient(55% 50% at 20% 30%,rgba(244,231,189,.95),transparent 62%),
-    radial-gradient(70% 60% at 30% 90%,rgba(255,238,190,.85),transparent 60%),
-    radial-gradient(60% 60% at 90% 85%,rgba(120,160,255,.6),transparent 60%),
-    linear-gradient(135deg,#fbf6e6,#eef2ff);}
+.mesh{border-radius:22px;height:400px;position:relative;overflow:hidden;box-shadow:0 30px 70px rgba(20,30,60,.10);background:#f3f0ff;}
+.mesh .blob{position:absolute;width:70%;height:70%;border-radius:50%;filter:blur(46px);opacity:.9;will-change:transform;}
+.mesh .b1{background:#f6e7ad;left:-12%;top:-14%;animation:drift1 15s ease-in-out infinite;}
+.mesh .b2{background:#4b7bff;right:-14%;top:2%;animation:drift2 18s ease-in-out infinite;}
+.mesh .b3{background:#ff9e73;left:2%;bottom:-18%;animation:drift3 21s ease-in-out infinite;}
+.mesh .b4{background:#9fc0ff;right:-6%;bottom:-8%;width:60%;height:60%;animation:drift4 17s ease-in-out infinite;}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,20%) scale(1.18)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.1)}}
+@keyframes drift3{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(30%,-16%) scale(.92)}}
+@keyframes drift4{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-16%,-22%) scale(1.16)}}
+@media(prefers-reduced-motion:reduce){.mesh .blob{animation:none;}}
 .chip{position:absolute;background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.7);border-radius:14px;box-shadow:0 12px 30px rgba(20,30,60,.12);padding:14px 16px;font-size:12.5px;}
 .chip .ct{display:flex;align-items:center;gap:7px;color:#555;font-weight:600;margin-bottom:9px;}
 .chip .ct .av{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#7fa8ff,#2f6bff);}
@@ -293,7 +296,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:30px;}
     <a class="btn btn-dark" href="#"><span class="dot"></span> See AI demo</a>
     <a class="btn btn-light" href="#">Try for free</a>
   </div>
-  <div class="wave" aria-hidden="true"><svg id="waveSvg" viewBox="0 0 2400 340" preserveAspectRatio="none"></svg></div>
+  <div class="wave" aria-hidden="true"><canvas id="waveCanvas"></canvas></div>
 </header>
 
 <div class="logos">
@@ -410,6 +413,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:30px;}
         </div>
       </div>
       <div class="mesh pop">
+        <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><span class="blob b4"></span>
         <div class="chip info">
           <div class="ct"><span class="av"></span> Visitor info</div>
           <div class="grid">
@@ -522,48 +526,77 @@ document.getElementById('yr').textContent=new Date().getFullYear();
 // nav border on scroll
 const nav=document.getElementById('nav');
 addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>4),{passive:true});
-// build the flowing wave — twisting cream/blue ribbon, ~1:1 with reference.
-// Colour tracks vertical position (cream crests, blue troughs); band pinches
-// at the twist points and swells at crests; grain + feathered edges.
+// Flowing wave — canvas + rAF. Two independent time phases:
+//  - shape phase: sum of sines advancing at different rates -> undulates in
+//    place (breathes) instead of translating sideways.
+//  - twist phase: a travelling wave that decides how far blue "fills" each
+//    slice from the bottom, so the colour flows along the ribbon.
 (function(){
-  const W=2400,H=340,mid=172,P=600,amp=78,base=118;
-  const wave=x=>Math.sin((x/P)*2*Math.PI)*amp + Math.sin((x/P)*4*Math.PI+0.6)*amp*0.14;
-  const thick=x=>base*(0.34+0.66*Math.abs(Math.sin((x/P)*2*Math.PI))); // pinch at crossings
-  function ribbon(){
-    let d='';
-    for(let x=0;x<=W;x+=8){const y=mid+wave(x)-thick(x)/2;d+=(x===0?'M':'L')+x+' '+y.toFixed(1)+' ';}
-    for(let x=W;x>=0;x-=8){const y=mid+wave(x)+thick(x)/2;d+='L'+x+' '+y.toFixed(1)+' ';}
-    return d+'Z';
+  const cv=document.getElementById('waveCanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W=0,H=0,dpr=1;
+  // noise tile for grain (built once)
+  const noise=document.createElement('canvas');noise.width=noise.height=140;
+  (function(){const nc=noise.getContext('2d'),img=nc.createImageData(140,140),d=img.data;
+    for(let i=0;i<d.length;i+=4){const v=Math.random()*255;d[i]=d[i+1]=d[i+2]=v;d[i+3]=14;}nc.putImageData(img,0,0);})();
+  const pat=ctx.createPattern(noise,'repeat');
+  function resize(){const r=cv.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);
+    cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);W=r.width;H=r.height;ctx.setTransform(dpr,0,0,dpr,0,0);}
+  resize();addEventListener('resize',resize,{passive:true});
+
+  const cream=[244,235,201], creamHi=[248,241,214], paleB=[150,178,250], blue=[59,116,255], deepB=[27,80,224];
+  const mix=(a,b,t)=>`rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
+
+  function frame(ts){
+    const t=ts/1000;
+    const mid=H*0.52, A1=H*0.24, A2=H*0.05, base=H*0.34;
+    const Lx=Math.max(520,W*0.62);              // primary wavelength
+    const k1=2*Math.PI/Lx, k2=2*Math.PI/(Lx*0.5);
+    const w1=0.55, w2=-0.9, wt=1.15, kt=2*Math.PI/(Lx*0.9);
+    ctx.clearRect(0,0,W,H);
+    const step=6;
+    // build slice geometry once
+    const xs=[],yc=[],th=[];
+    for(let x=-step;x<=W+step;x+=step){
+      const ph=k1*x+w1*t;
+      const y=mid+Math.sin(ph)*A1+Math.sin(k2*x+w2*t+0.6)*A2;
+      const thick=base*(0.32+0.68*Math.abs(Math.sin(ph)));
+      xs.push(x);yc.push(y);th.push(thick);
+    }
+    // soft glow underlay
+    ctx.save();ctx.filter='blur(18px)';ctx.globalAlpha=.28;
+    ctx.beginPath();
+    for(let i=0;i<xs.length;i++){const yt=yc[i]-th[i]/2;i?ctx.lineTo(xs[i],yt):ctx.moveTo(xs[i],yt);}
+    for(let i=xs.length-1;i>=0;i--){ctx.lineTo(xs[i],yc[i]+th[i]/2);}
+    ctx.closePath();ctx.fillStyle='#4b7bff';ctx.fill();ctx.restore();
+    // coloured slices with travelling blue fill + slight edge feather
+    ctx.save();ctx.filter='blur(1.4px)';
+    for(let i=0;i<xs.length-1;i++){
+      const x=xs[i], yt=yc[i]-th[i]/2, yb=yc[i]+th[i]/2, h=yb-yt;
+      const b=0.5+0.5*Math.sin(kt*x-wt*t);          // 0..1 travels along ribbon
+      const boundary=1-(0.28+0.62*b);               // where cream gives way to blue
+      const g=ctx.createLinearGradient(0,yt,0,yb);
+      g.addColorStop(0,mix(creamHi,cream,.4));
+      g.addColorStop(Math.max(0,boundary-0.14),mix(cream,paleB,.15));
+      g.addColorStop(Math.min(1,boundary+0.02),mix(paleB,blue,.5));
+      g.addColorStop(1,deepB?`rgb(${deepB[0]},${deepB[1]},${deepB[2]})`:'#1b50e0');
+      ctx.fillStyle=g;
+      ctx.fillRect(x, yt, (xs[i+1]-x)+1.2, h);
+    }
+    ctx.restore();
+    // grain, clipped to ribbon
+    ctx.save();ctx.beginPath();
+    for(let i=0;i<xs.length;i++){const yt=yc[i]-th[i]/2;i?ctx.lineTo(xs[i],yt):ctx.moveTo(xs[i],yt);}
+    for(let i=xs.length-1;i>=0;i--){ctx.lineTo(xs[i],yc[i]+th[i]/2);}
+    ctx.closePath();ctx.clip();ctx.globalAlpha=.5;ctx.fillStyle=pat;ctx.fillRect(0,0,W,H);ctx.restore();
+    // centreline highlight
+    ctx.save();ctx.filter='blur(1.2px)';ctx.beginPath();
+    for(let i=0;i<xs.length;i++){const y=yc[i]-th[i]*0.14;i?ctx.lineTo(xs[i],y):ctx.moveTo(xs[i],y);}
+    ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2.4;ctx.lineCap='round';ctx.stroke();ctx.restore();
+    if(!reduce) requestAnimationFrame(frame);
   }
-  // highlight follows the centreline, sitting just above it
-  function centre(off){let d='';for(let x=0;x<=W;x+=8){const y=mid+wave(x)+off;d+=(x===0?'M':'L')+x+' '+y.toFixed(1)+' ';}return d;}
-  const rb=ribbon();
-  const svg=document.getElementById('waveSvg');
-  svg.innerHTML=`
-    <defs>
-      <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#f5edcb"/>
-        <stop offset="0.14" stop-color="#efe1a6"/>
-        <stop offset="0.28" stop-color="#e8dc9c"/>
-        <stop offset="0.40" stop-color="#c3cdf1"/>
-        <stop offset="0.48" stop-color="#6b90fb"/>
-        <stop offset="0.58" stop-color="#3b74ff"/>
-        <stop offset="0.74" stop-color="#2a60f4"/>
-        <stop offset="1" stop-color="#1f50e0"/>
-      </linearGradient>
-      <filter id="soft" x="-6%" y="-60%" width="112%" height="220%"><feGaussianBlur stdDeviation="1.7"/></filter>
-      <filter id="glow" x="-10%" y="-90%" width="120%" height="280%"><feGaussianBlur stdDeviation="20"/></filter>
-      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0"/></filter>
-      <clipPath id="wclip"><path d="${rb}"/></clipPath>
-    </defs>
-    <path d="${rb}" fill="url(#wg)" opacity=".28" filter="url(#glow)"/>
-    <g filter="url(#soft)">
-      <path d="${rb}" fill="url(#wg)"/>
-      <g clip-path="url(#wclip)"><rect x="0" y="0" width="${W}" height="${H}" filter="url(#grain)" opacity=".14"/></g>
-      <path d="${centre(-16)}" fill="none" stroke="#ffffff" stroke-width="3.5" opacity=".55" stroke-linecap="round"/>
-      <path d="${centre(-2)}" fill="none" stroke="#ffffff" stroke-width="1.4" opacity=".35"/>
-    </g>
-  `;
+  requestAnimationFrame(frame);
 })();
 // reveal
 const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12,rootMargin:'0px 0px -30px 0px'});
