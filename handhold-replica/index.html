@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>handhold — A dedicated guide for every buyer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ==== handhold.io visual replica — self-contained ==== */
+:root{
+  --ink:#0c0c0d; --ink-2:#26262a; --grey:#6a6a70; --grey-l:#9a9aa0;
+  --line:#e9e8e3; --line-2:#f0efe9; --bg:#ffffff; --bar:#f4f2ec;
+  --blue:#2f6bff; --blue-d:#1b56ee; --cream:#f4e7bd;
+  --pill:#111114;
+  --serif:'Newsreader',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+img,svg{display:block;}
+.serif{font-family:var(--serif);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 32px;}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;border-radius:999px;padding:11px 20px;transition:.2s;white-space:nowrap;}
+.btn-dark{background:var(--pill);color:#fff;}
+.btn-dark:hover{background:#2a2a30;}
+.btn-light{background:#fff;color:var(--ink);border:1px solid var(--line);}
+.btn-light:hover{border-color:#d8d7d1;background:#fafaf8;}
+.btn .dot{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#7fa8ff 60%,#2f6bff);}
+
+/* announcement bar */
+.bar{background:var(--bar);border-bottom:1px solid var(--line);text-align:center;font-size:12.5px;color:#54544f;padding:7px 16px;}
+.bar a{text-decoration:underline;text-underline-offset:2px;color:#2c2c2a;}
+
+/* nav */
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s;}
+nav.solid{border-color:var(--line);}
+.nav-i{max-width:1120px;margin:0 auto;padding:15px 32px;display:flex;align-items:center;justify-content:space-between;}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:21px;font-weight:400;letter-spacing:-.01em;}
+.brand svg{width:20px;height:20px;}
+.nav-r{display:flex;align-items:center;gap:26px;font-size:14px;color:#333;}
+.nav-r .lk{display:flex;align-items:center;gap:5px;color:#333;transition:color .2s;}
+.nav-r .lk:hover{color:#000;}
+.nav-r .lk svg{width:13px;height:13px;opacity:.6;}
+.nav-mob{display:none;}
+
+/* hero */
+.hero{text-align:center;padding:92px 20px 0;position:relative;}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6.4vw,76px);line-height:1.04;letter-spacing:-.02em;color:var(--ink);}
+.hero .sub{margin:22px auto 30px;color:var(--grey);font-size:16px;max-width:440px;}
+.hero-acts{display:flex;gap:11px;justify-content:center;}
+
+/* wave signature */
+.wave{position:relative;width:100%;height:340px;margin-top:-6px;overflow:hidden;}
+.wave svg{position:absolute;top:0;left:0;height:100%;width:200%;animation:flow 18s linear infinite;}
+@keyframes flow{to{transform:translateX(-50%)}}
+.wave::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#fff 0,transparent 8%,transparent 92%,#fff 100%);pointer-events:none;}
+
+/* logo cloud */
+.logos{padding:26px 0 8px;}
+.logos-row{display:flex;align-items:center;justify-content:center;gap:46px;flex-wrap:wrap;filter:grayscale(1);opacity:.62;}
+.logos-row .lg{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;color:#1a1a1a;letter-spacing:-.01em;}
+.logos-row .lg .m{width:19px;height:19px;border-radius:5px;background:#111;display:inline-block;}
+.logos-row .lg.italic{font-style:italic;font-weight:800;}
+
+/* section scaffolding */
+section{padding:90px 0;}
+.sec-head{max-width:560px;}
+.sec-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.8vw,44px);line-height:1.08;letter-spacing:-.02em;}
+.sec-head p{margin-top:14px;color:var(--grey);font-size:15.5px;max-width:430px;}
+.label{display:inline-block;font-size:13px;color:#555;background:#f4f3ee;border:1px solid var(--line);border-radius:7px;padding:5px 11px;margin-bottom:18px;}
+
+/* split feature */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-top:38px;}
+.split h3{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.1;letter-spacing:-.02em;margin-bottom:30px;}
+.flist{display:flex;flex-direction:column;}
+.fl{padding:18px 0;border-top:1px solid var(--line);}
+.fl:last-child{border-bottom:1px solid var(--line);}
+.fl b{font-weight:600;font-size:15px;color:var(--ink);}
+.fl p{color:var(--grey);font-size:14px;margin-top:5px;max-width:340px;}
+.mesh{border-radius:22px;height:400px;position:relative;overflow:hidden;box-shadow:0 30px 70px rgba(20,30,60,.10);
+  background:
+    radial-gradient(60% 55% at 78% 22%,rgba(47,107,255,.9),transparent 60%),
+    radial-gradient(55% 50% at 20% 30%,rgba(244,231,189,.95),transparent 62%),
+    radial-gradient(70% 60% at 30% 90%,rgba(255,238,190,.85),transparent 60%),
+    radial-gradient(60% 60% at 90% 85%,rgba(120,160,255,.6),transparent 60%),
+    linear-gradient(135deg,#fbf6e6,#eef2ff);}
+.chip{position:absolute;background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.7);border-radius:14px;box-shadow:0 12px 30px rgba(20,30,60,.12);padding:14px 16px;font-size:12.5px;}
+.chip .ct{display:flex;align-items:center;gap:7px;color:#555;font-weight:600;margin-bottom:9px;}
+.chip .ct .av{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#7fa8ff,#2f6bff);}
+.chip .grid{display:grid;grid-template-columns:auto auto;gap:6px 16px;color:#333;}
+.chip .grid span b{font-weight:600;}
+.chip.info{top:44%;left:50%;transform:translateX(-50%);width:74%;}
+
+/* create-agent block */
+.ca-grid{display:grid;grid-template-columns:1.35fr .9fr;gap:22px;margin-top:8px;}
+.ca-card{background:#fbfaf7;border:1px solid var(--line);border-radius:22px;padding:40px 34px;text-align:center;}
+.ca-card h3{font-family:var(--serif);font-weight:400;font-size:30px;letter-spacing:-.02em;}
+.ca-card .cs{color:var(--grey);font-size:14px;margin-top:8px;}
+.orbs{display:flex;justify-content:center;gap:14px;margin:30px 0 26px;}
+.orb{width:118px;height:118px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+.orb.o1{background:radial-gradient(circle at 40% 35%,#ffd9c2,#ff9d6b 70%,#f2794a);}
+.orb.o2{background:radial-gradient(circle at 40% 35%,#fff0c2,#ffd25e 70%,#f2b23a);}
+.orb.o3{background:radial-gradient(circle at 40% 35%,#c9f5d4,#63d98a 70%,#33bd63);}
+.eq{display:flex;align-items:center;gap:3px;height:34px;}
+.eq i{width:4px;background:rgba(0,0,0,.72);border-radius:2px;animation:eq 1s ease-in-out infinite;}
+.eq i:nth-child(1){height:40%;animation-delay:0s}.eq i:nth-child(2){height:80%;animation-delay:.1s}.eq i:nth-child(3){height:55%;animation-delay:.2s}.eq i:nth-child(4){height:95%;animation-delay:.15s}.eq i:nth-child(5){height:45%;animation-delay:.25s}.eq i:nth-child(6){height:70%;animation-delay:.05s}
+@keyframes eq{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+.ca-form{display:flex;gap:8px;max-width:400px;margin:0 auto;}
+.ca-form input{flex:1;border:1px solid var(--line);border-radius:999px;padding:11px 18px;font-family:inherit;font-size:14px;outline:none;}
+.ca-form input:focus{border-color:#c9c8c2;}
+.ca-note{font-size:12px;color:var(--grey-l);margin-bottom:14px;}
+.side-cards{display:flex;flex-direction:column;gap:14px;}
+.side-card{background:#fbfaf7;border:1px solid var(--line);border-radius:18px;padding:22px 24px;flex:1;display:flex;flex-direction:column;justify-content:center;}
+.side-card h4{font-family:var(--serif);font-weight:400;font-size:21px;letter-spacing:-.01em;margin-bottom:8px;}
+.side-card p{color:var(--grey);font-size:13px;}
+
+/* testimonial */
+.tst{border-top:1px solid var(--line);padding-top:56px;}
+.tst .lab{font-size:14px;color:var(--grey);margin-bottom:20px;}
+.tst blockquote{font-family:var(--serif);font-weight:400;font-size:clamp(24px,3.2vw,34px);line-height:1.28;letter-spacing:-.015em;max-width:760px;}
+.tst-foot{display:flex;align-items:center;justify-content:space-between;margin-top:34px;}
+.tst-auth{display:flex;align-items:center;gap:12px;}
+.tst-auth .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#cbd8ff,#8aa8ff);}
+.tst-auth b{font-size:14px;font-weight:600;display:block;}
+.tst-auth span{font-size:13px;color:var(--grey);}
+.arrows{display:flex;gap:8px;}
+.arrows button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#444;transition:.2s;}
+.arrows button:hover{background:#f5f4f0;}
+
+/* stats */
+.stats{display:grid;grid-template-columns:auto auto 1fr;gap:48px;align-items:start;border-top:1px solid var(--line);padding-top:48px;margin-top:70px;}
+.stat .n{font-family:var(--serif);font-weight:400;font-size:52px;letter-spacing:-.02em;line-height:1;}
+.stat p{color:var(--grey);font-size:13.5px;margin-top:8px;max-width:150px;}
+.stat-q{justify-self:end;max-width:340px;}
+.stat-q p{font-family:var(--serif);font-size:16px;line-height:1.5;color:#2a2a2c;}
+.stat-q .who{display:flex;align-items:center;gap:10px;margin-top:14px;justify-content:flex-end;}
+.stat-q .who .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d8ffe0,#8ae0a0);}
+.stat-q .who b{font-size:13px;}.stat-q .who span{font-size:12px;color:var(--grey);}
+
+/* demo card */
+.demo{background:linear-gradient(180deg,#f6f3ec,#efece3);border-radius:26px;height:440px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.demo .head3d{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 42% 38%,#fff 0,#e9e0ff 30%,#bcd0ff 60%,#8aa8e6 100%);box-shadow:0 20px 50px rgba(80,90,140,.25),inset 0 -8px 20px rgba(120,120,180,.3);margin-bottom:22px;filter:saturate(1.05);}
+.demo .lab{font-size:13px;color:#666;margin-bottom:6px;}
+.demo h3{font-family:var(--serif);font-weight:400;font-size:34px;letter-spacing:-.02em;}
+.demo .ds{color:var(--grey);font-size:14px;margin:8px 0 18px;}
+.sphere{position:absolute;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff,#f0e8d8 60%,#e2d6bf);box-shadow:0 10px 24px rgba(0,0,0,.06);}
+.s1{width:36px;height:36px;top:22%;left:34%;}.s2{width:26px;height:26px;top:30%;right:30%;}
+.s3{width:42px;height:42px;bottom:24%;left:28%;}.s4{width:30px;height:30px;bottom:30%;right:27%;}
+.demo-input{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:min(360px,80%);display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 8px 8px 16px;box-shadow:0 8px 20px rgba(0,0,0,.06);font-size:13px;color:#888;}
+.demo-input .go{margin-left:auto;width:28px;height:28px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;}
+
+/* FAQ */
+.faq{max-width:760px;margin:0 auto;}
+.faq .lab{font-size:14px;color:var(--grey);margin-bottom:18px;}
+.qa{border-top:1px solid var(--line);}
+.qa:last-child{border-bottom:1px solid var(--line);}
+.qa-q{width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 4px;font-family:var(--serif);font-size:21px;font-weight:400;letter-spacing:-.01em;color:var(--ink);}
+.qa-q .pm{position:relative;width:16px;height:16px;flex-shrink:0;}
+.qa-q .pm::before,.qa-q .pm::after{content:'';position:absolute;background:#333;transition:transform .3s,opacity .3s;}
+.qa-q .pm::before{top:7px;left:0;width:16px;height:2px;}
+.qa-q .pm::after{left:7px;top:0;width:2px;height:16px;}
+.qa.open .qa-q .pm::after{transform:scaleY(0);opacity:0;}
+.qa-a{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.qa-a p{padding:0 4px 24px;color:var(--grey);font-size:15px;max-width:600px;}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:30px;}
+.f-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:36px;}
+.f-brand{font-family:var(--serif);font-size:22px;display:flex;align-items:center;gap:9px;}
+.f-brand p{font-family:var(--sans);font-size:13px;color:var(--grey);max-width:240px;margin-top:12px;}
+.f-cols{display:flex;gap:60px;flex-wrap:wrap;}
+.f-col h5{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--grey-l);margin-bottom:14px;}
+.f-col a{display:block;font-size:14px;color:#333;margin-bottom:10px;transition:.2s;}
+.f-col a:hover{color:#000;}
+.f-bot{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12.5px;color:var(--grey-l);flex-wrap:wrap;gap:10px;}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1);}
+.rv.in{opacity:1;transform:none;}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;}.wave svg{animation:none;}}
+
+@media(max-width:860px){
+  .nav-r .lk{display:none;}
+  .split,.ca-grid,.stats{grid-template-columns:1fr;gap:34px;}
+  .stat-q{justify-self:start;}.stat-q .who{justify-content:flex-start;}
+  .demo .head3d{width:120px;height:120px;}
+  section{padding:64px 0;}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">We raised €3M to grow your revenue on autopilot. <a href="#">Read the announcement</a></div>
+
+<nav id="nav">
+  <div class="nav-i">
+    <a href="#" class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V6.5a1.5 1.5 0 0 1 3 0V11m0-1.5V5a1.5 1.5 0 0 1 3 0v5m0-.5V6a1.5 1.5 0 0 1 3 0v6.5c0 3.6-2.4 6.5-6 6.5s-6-2.4-6-5.5V11a1.5 1.5 0 0 1 3 0Z"/></svg>
+      handhold
+    </a>
+    <div class="nav-r">
+      <a class="lk" href="#">Resources <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></a>
+      <a class="lk" href="#">Sign in</a>
+      <a class="btn btn-dark" href="#">Try for free</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <h1 class="rv">A dedicated guide<br>for every buyer</h1>
+  <p class="sub rv">AI agents running tailored demos &amp; onboarding 24/7</p>
+  <div class="hero-acts rv">
+    <a class="btn btn-dark" href="#"><span class="dot"></span> See AI demo</a>
+    <a class="btn btn-light" href="#">Try for free</a>
+  </div>
+  <div class="wave" aria-hidden="true"><svg id="waveSvg" viewBox="0 0 2400 340" preserveAspectRatio="none"></svg></div>
+</header>
+
+<div class="logos">
+  <div class="wrap">
+    <div class="logos-row rv">
+      <span class="lg"><span class="m"></span>aikido</span>
+      <span class="lg"><span class="m"></span>Parim</span>
+      <span class="lg italic">LIVEFORCE</span>
+      <span class="lg"><span class="m"></span>parcelu</span>
+      <span class="lg"><span class="m"></span>finbite</span>
+      <span class="lg"><span class="m"></span>ParcelTracker</span>
+      <span class="lg"><span class="m"></span>WHALE</span>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head rv">
+      <h2>Deploy agents across<br>your customer journey</h2>
+      <p>Most buyer journeys are full of hurdles, each contributing to drop-off. Let our agents handhold your prospects from intent to activation.</p>
+    </div>
+
+    <div class="split">
+      <div class="rv">
+        <span class="label">Inbound Q&amp;A agent</span>
+        <h3>Help leads validate<br>with AI chat</h3>
+        <div class="flist">
+          <div class="fl"><b>Engages visitors and answers their questions</b></div>
+          <div class="fl"><b>Qualifies leads and nudges them towards next steps</b></div>
+          <div class="fl"><b>Retains memory and passes context</b><p>Remembers every conversation and seamlessly shares context across agents for a continuous experience.</p></div>
+        </div>
+      </div>
+      <div class="mesh rv">
+        <div class="chip info">
+          <div class="ct"><span class="av"></span> Visitor info</div>
+          <div class="grid">
+            <span><b>Nova Commerce</b></span><span>$8M ARR</span>
+            <span>38 employees</span><span>Multi-product offering</span>
+            <span>Goal: reduce sales cycle</span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="ca-grid">
+      <div class="ca-card rv">
+        <h3>Create your own agent</h3>
+        <div class="cs">Generate a sample demo agent from your website</div>
+        <div class="orbs">
+          <div class="orb o1"><div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="orb o2"><div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="orb o3"><div class="eq"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        </div>
+        <div class="ca-note">No account needed. No cost. Create your own agent in minutes.</div>
+        <div class="ca-form">
+          <input type="text" placeholder="Enter your company website">
+          <button class="btn btn-dark">Generate your agent</button>
+        </div>
+      </div>
+      <div class="side-cards">
+        <div class="side-card rv"><h4>Live 24/7</h4><p>Always available to interact with visitors.</p></div>
+        <div class="side-card rv"><h4>Multilingual</h4><p>Supports 50+ languages.</p></div>
+        <div class="side-card rv"><h4>Personalised for each prospect</h4><p>Adapts every session to the buyer.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="tst rv">
+      <div class="lab">What our customers say about us</div>
+      <blockquote>Our demo agent helps leads quickly validate whether Parcel Tracker is the right fit for them, so when they appear in our CRM, our sales team has the context required to bring them over the line.</blockquote>
+      <div class="tst-foot">
+        <div class="tst-auth"><span class="av"></span><div><b>Arthur Zargaryan</b><span>CEO at Parcel Tracker</span></div></div>
+        <div class="arrows">
+          <button aria-label="Previous"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button aria-label="Next"><svg viewBox="0 0 24 24" width="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat rv"><div class="n">60%</div><p>reduction in bad-fit sales calls</p></div>
+      <div class="stat rv"><div class="n">20%</div><p>month-on-month increase in total SQLs</p></div>
+      <div class="stat-q rv">
+        <p>"Our sales reps are less occupied with bad-fit leads, creating extra capacity for outbound, and handhold's agents have been super useful for coverage outside of regular business hours."</p>
+        <div class="who"><span class="av"></span><div><b>Aaidan Reynolds</b> <span>&nbsp;Head of Growth at Parim</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="demo rv">
+      <span class="sphere s1"></span><span class="sphere s2"></span><span class="sphere s3"></span><span class="sphere s4"></span>
+      <div class="head3d"></div>
+      <div class="lab">AI Demo</div>
+      <h3>See Handhold in action</h3>
+      <div class="ds">Let our agent walk you through our product</div>
+      <a class="btn btn-dark" href="#"><span class="dot"></span> Start demo</a>
+      <div class="demo-input">What does Handhold do? <span class="go">↑</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="faq">
+      <div class="lab rv">Frequently Asked Questions</div>
+      <div class="qa rv"><button class="qa-q">How long does it take to set up?<span class="pm"></span></button><div class="qa-a"><p>Most teams are live in a day. Point handhold at your website and it generates a tailored demo agent automatically — no engineering work required.</p></div></div>
+      <div class="qa rv"><button class="qa-q">Which languages are supported?<span class="pm"></span></button><div class="qa-a"><p>Agents converse in 50+ languages and automatically adapt to each visitor.</p></div></div>
+      <div class="qa rv"><button class="qa-q">Does it integrate with my CRM?<span class="pm"></span></button><div class="qa-a"><p>Yes. Qualified leads and full conversation context are passed straight into your CRM so your sales team picks up where the agent left off.</p></div></div>
+      <div class="qa rv"><button class="qa-q">How are the agents trained?<span class="pm"></span></button><div class="qa-a"><p>Agents learn from your website and product content, so every answer stays on-brand and accurate.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="f-top">
+      <div>
+        <div class="f-brand"><svg viewBox="0 0 24 24" width="20" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V6.5a1.5 1.5 0 0 1 3 0V11m0-1.5V5a1.5 1.5 0 0 1 3 0v5m0-.5V6a1.5 1.5 0 0 1 3 0v6.5c0 3.6-2.4 6.5-6 6.5s-6-2.4-6-5.5V11a1.5 1.5 0 0 1 3 0Z"/></svg> handhold</div>
+        <p>AI agents running tailored demos &amp; onboarding for every buyer, 24/7.</p>
+      </div>
+      <div class="f-cols">
+        <div class="f-col"><h5>Product</h5><a href="#">Demos</a><a href="#">Onboarding</a><a href="#">Q&amp;A agent</a><a href="#">Pricing</a></div>
+        <div class="f-col"><h5>Company</h5><a href="#">About</a><a href="#">Careers</a><a href="#">Blog</a><a href="#">Contact</a></div>
+        <div class="f-col"><h5>Legal</h5><a href="#">Privacy</a><a href="#">Terms</a></div>
+      </div>
+    </div>
+    <div class="f-bot"><span>© <span id="yr"></span> handhold</span><span>A dedicated guide for every buyer</span></div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent=new Date().getFullYear();
+// nav border on scroll
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>4),{passive:true});
+// build the flowing wave (blue + cream ribbon, seamless 2-period loop)
+(function(){
+  const W=2400,H=340,mid=180,period=600,amp=64,thick=118;
+  const pts=(off,ph)=>{let d='';for(let x=0;x<=W;x+=20){const y=mid+Math.sin((x/period)*2*Math.PI+ph)*amp+off;d+=(x===0?'M':'L')+x+' '+y.toFixed(1)+' ';}return d;}
+  // ribbon = area between top and bottom sine edges
+  const top=pts(-thick/2,0);
+  let bottom='';for(let x=W;x>=0;x-=20){const y=mid+Math.sin((x/period)*2*Math.PI)*amp+thick/2;bottom+='L'+x+' '+y.toFixed(1)+' ';}
+  const ribbon=top+bottom+'Z';
+  const svg=document.getElementById('waveSvg');
+  svg.innerHTML=`
+    <defs>
+      <linearGradient id="wg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#f4e7bd"/>
+        <stop offset="0.16" stop-color="#e9dca8"/>
+        <stop offset="0.32" stop-color="#2f6bff"/>
+        <stop offset="0.5" stop-color="#5b8bff"/>
+        <stop offset="0.62" stop-color="#f4e7bd"/>
+        <stop offset="0.8" stop-color="#2f6bff"/>
+        <stop offset="1" stop-color="#cfe0ff"/>
+      </linearGradient>
+      <filter id="wb" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+    </defs>
+    <path d="${ribbon}" fill="url(#wg)" filter="url(#wb)" opacity=".92"/>
+    <path d="${pts(-6,0.5)}" fill="none" stroke="#ffffff" stroke-width="10" opacity=".5" filter="url(#wb)"/>
+  `;
+})();
+// reveal
+const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+// faq
+document.querySelectorAll('.qa-q').forEach(q=>q.addEventListener('click',()=>{
+  const qa=q.parentElement,a=q.nextElementSibling,open=qa.classList.contains('open');
+  document.querySelectorAll('.qa').forEach(x=>{x.classList.remove('open');x.querySelector('.qa-a').style.maxHeight=null;});
+  if(!open){qa.classList.add('open');a.style.maxHeight=a.scrollHeight+'px';}
+}));
+</script>
+</body>
+</html>
