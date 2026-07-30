@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360" viewBox="0 0 720 360">
+  <defs>
+    <linearGradient id="bpLg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8bff"/><stop offset="1" stop-color="#1b56ee"/></linearGradient>
+    <style>.wm{font-family:Georgia,'Times New Roman',serif;} .os{fill:#2f6bff;} .cap{font-family:Arial,sans-serif;font-size:12px;letter-spacing:1px;fill:#9a9aa0;}</style>
+  </defs>
+  <rect width="720" height="360" fill="#ffffff"/>
+  <rect x="360" y="0" width="360" height="360" fill="#0c0c0d"/>
+
+  <!-- big mark -->
+  <g transform="translate(60,70)">
+    <rect x="1" y="1" width="118" height="118" rx="30" fill="url(#bpLg)"/>
+    <path d="M26 56 L60 26 L94 56" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="36" y="72" width="14" height="18" rx="4" fill="#fff" opacity=".82"/>
+    <rect x="53" y="63" width="14" height="27" rx="4" fill="#fff"/>
+    <rect x="70" y="54" width="14" height="36" rx="4" fill="#fff" opacity=".82"/>
+  </g>
+  <text x="60" y="235" class="cap">THE MARK · roofline + growth</text>
+
+  <!-- lockup on light -->
+  <g transform="translate(200,108)">
+    <rect x="1" y="1" width="46" height="46" rx="12" fill="url(#bpLg)"/>
+    <path d="M10 22 L24 10 L38 22" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="14" y="28" width="5.4" height="7" rx="1.6" fill="#fff" opacity=".82"/>
+    <rect x="21" y="24.5" width="5.4" height="10.5" rx="1.6" fill="#fff"/>
+    <rect x="28" y="21" width="5.4" height="14" rx="1.6" fill="#fff" opacity=".82"/>
+    <text x="60" y="34" class="wm" font-size="30" fill="#0c0c0d">BuilderPro <tspan class="os">OS</tspan></text>
+  </g>
+  <text x="200" y="235" class="cap">HORIZONTAL LOCKUP · light</text>
+
+  <!-- lockup on dark -->
+  <g transform="translate(392,150)">
+    <rect x="1" y="1" width="46" height="46" rx="12" fill="url(#bpLg)"/>
+    <path d="M10 22 L24 10 L38 22" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="14" y="28" width="5.4" height="7" rx="1.6" fill="#fff" opacity=".82"/>
+    <rect x="21" y="24.5" width="5.4" height="10.5" rx="1.6" fill="#fff"/>
+    <rect x="28" y="21" width="5.4" height="14" rx="1.6" fill="#fff" opacity=".82"/>
+    <text x="60" y="34" class="wm" font-size="30" fill="#ffffff">BuilderPro <tspan fill="#7fa8ff">OS</tspan></text>
+  </g>
+
+  <!-- small sizes on dark -->
+  <g transform="translate(430,232)">
+    <rect x="0" y="0" width="30" height="30" rx="8" fill="url(#bpLg)"/>
+    <path d="M6.5 15 L15 7 L23.5 15" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="9" y="18.5" width="3.6" height="5" rx="1" fill="#fff" opacity=".82"/>
+    <rect x="13.6" y="16" width="3.6" height="7.5" rx="1" fill="#fff"/>
+    <rect x="18.2" y="14" width="3.6" height="9.5" rx="1" fill="#fff" opacity=".82"/>
+  </g>
+  <g transform="translate(480,238)">
+    <rect x="0" y="0" width="20" height="20" rx="5.5" fill="url(#bpLg)"/>
+    <path d="M4.3 10 L10 4.6 L15.7 10" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="6" y="12.3" width="2.4" height="3.4" rx=".7" fill="#fff" opacity=".82"/>
+    <rect x="9.1" y="10.6" width="2.4" height="5.1" rx=".7" fill="#fff"/>
+    <rect x="12.2" y="9.3" width="2.4" height="6.4" rx=".7" fill="#fff" opacity=".82"/>
+  </g>
+  <text x="392" y="300" class="cap" fill="#6a6a70">SCALES DOWN CLEANLY · favicon-safe</text>
+</svg>
