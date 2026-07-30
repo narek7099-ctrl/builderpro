@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="560" viewBox="0 0 820 560">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fa8ff"/><stop offset="1" stop-color="#1b56ee"/></linearGradient>
+    <linearGradient id="gTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9cc0ff"/><stop offset="1" stop-color="#6f9dff"/></linearGradient>
+    <linearGradient id="gL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6bff"/><stop offset="1" stop-color="#1741c8"/></linearGradient>
+    <linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4d84ff"/><stop offset="1" stop-color="#2258ee"/></linearGradient>
+    <style>
+      .wm{font-family:Georgia,'Times New Roman',serif;font-size:26px;fill:#0c0c0d;}
+      .os{fill:#2f6bff;}
+      .lab{font-family:Arial,sans-serif;font-size:12px;letter-spacing:1.5px;fill:#111;font-weight:bold;}
+      .sub{font-family:Arial,sans-serif;font-size:11px;fill:#6a6a70;}
+      .num{font-family:Arial,sans-serif;font-size:13px;fill:#2f6bff;font-weight:bold;}
+    </style>
+  </defs>
+  <rect width="820" height="560" fill="#ffffff"/>
+  <text x="40" y="46" font-family="Georgia,serif" font-size="24" fill="#0c0c0d">BuilderPro OS — logo concepts</text>
+  <line x1="40" y1="62" x2="780" y2="62" stroke="#e9e8e3"/>
+
+  <!-- ============ A: Isometric block ============ -->
+  <g transform="translate(70,100)">
+    <!-- iso building block with roof notch -->
+    <polygon points="48,10 86,32 48,54 10,32" fill="url(#gTop)"/>
+    <polygon points="10,32 48,54 48,92 10,70" fill="url(#gL)"/>
+    <polygon points="86,32 48,54 48,92 86,70" fill="url(#gR)"/>
+    <path d="M28 32 L48 20 L68 32" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="55" y="222" class="num">1</text>
+  <text x="72" y="222" class="lab">ISO BLOCK</text>
+  <text x="72" y="240" class="sub">3D “operating system” building block</text>
+  <g transform="translate(180,120)">
+    <polygon points="24,5 43,16 24,27 5,16" fill="url(#gTop)"/>
+    <polygon points="5,16 24,27 24,46 5,35" fill="url(#gL)"/>
+    <polygon points="43,16 24,27 24,46 43,35" fill="url(#gR)"/>
+    <text x="58" y="30" class="wm">BuilderPro <tspan class="os">OS</tspan></text>
+  </g>
+
+  <!-- ============ B: Chat-bubble peak (Atlas) ============ -->
+  <g transform="translate(470,100)">
+    <path d="M48 8 L86 36 V70 a12 12 0 0 1 -12 12 H44 l-12 12 v-12 H22 a12 12 0 0 1 -12 -12 V36 Z" fill="url(#g1)"/>
+    <circle cx="34" cy="54" r="4.5" fill="#fff"/>
+    <circle cx="48" cy="54" r="4.5" fill="#fff"/>
+    <circle cx="62" cy="54" r="4.5" fill="#fff"/>
+  </g>
+  <text x="455" y="222" class="num">2</text>
+  <text x="472" y="222" class="lab">ATLAS BUBBLE</text>
+  <text x="472" y="240" class="sub">roof-topped chat bubble — the AI that answers</text>
+  <g transform="translate(580,120)">
+    <path d="M24 4 L43 18 V37 a6 6 0 0 1 -6 6 H22 l-6 6 v-6 H11 a6 6 0 0 1 -6 -6 V18 Z" fill="url(#g1)"/>
+    <circle cx="17" cy="27" r="2.3" fill="#fff"/><circle cx="24" cy="27" r="2.3" fill="#fff"/><circle cx="31" cy="27" r="2.3" fill="#fff"/>
+    <text x="58" y="30" class="wm">BuilderPro <tspan class="os">OS</tspan></text>
+  </g>
+
+  <!-- ============ C: Hex shield + peak + spark ============ -->
+  <g transform="translate(70,320)">
+    <polygon points="48,6 85,27 85,69 48,90 11,69 11,27" fill="url(#g1)"/>
+    <path d="M28 58 L48 40 L68 58" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M48 20 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4 Z" fill="#fff"/>
+  </g>
+  <text x="55" y="432" class="num">3</text>
+  <text x="72" y="432" class="lab">SHIELD MARK</text>
+  <text x="72" y="450" class="sub">hex shield = trust + premium, roof + AI spark</text>
+  <g transform="translate(180,340)">
+    <polygon points="24,4 43,15 43,35 24,46 5,35 5,15" fill="url(#g1)"/>
+    <path d="M14 30 L24 21 L34 30" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="58" y="30" class="wm">BuilderPro <tspan class="os">OS</tspan></text>
+  </g>
+
+  <!-- ============ D: Negative-space arrow house ============ -->
+  <g transform="translate(470,320)">
+    <path fill="url(#g1)" fill-rule="evenodd" d="M8 8 h80 a12 12 0 0 1 12 12 v56 a12 12 0 0 1 -12 12 H8 a12 12 0 0 1 -12 -12 V20 A12 12 0 0 1 8 8 Z
+      M48 24 L74 44 V72 H58 V54 L48 46 L38 54 V72 H22 V44 Z" transform="translate(4,0)"/>
+    <path d="M52 74 V60 M52 60 l-7 7 M52 60 l7 7" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <text x="455" y="432" class="num">4</text>
+  <text x="472" y="432" class="lab">GROWTH HOUSE</text>
+  <text x="472" y="450" class="sub">house cut from the badge, upward arrow inside</text>
+  <g transform="translate(580,340)">
+    <path fill="url(#g1)" fill-rule="evenodd" d="M6 4 h40 a6 6 0 0 1 6 6 v28 a6 6 0 0 1 -6 6 H6 a6 6 0 0 1 -6 -6 V10 A6 6 0 0 1 6 4 Z
+      M26 13 L39 23 V37 H31 V28 L26 24 L21 28 V37 H13 V23 Z"/>
+    <path d="M28 38 V31 M28 31 l-3.5 3.5 M28 31 l3.5 3.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="62" y="30" class="wm">BuilderPro <tspan class="os">OS</tspan></text>
+  </g>
+
+  <line x1="40" y1="500" x2="780" y2="500" stroke="#e9e8e3"/>
+  <text x="40" y="528" class="sub">Tell me a number (1–4) — or mix ideas. I can also shift color (warm amber roof accent), shape, or try a bolder monogram “B”.</text>
+</svg>
