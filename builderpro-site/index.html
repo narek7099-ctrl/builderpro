@@ -64,8 +64,10 @@ nav.solid{border-color:var(--line);}
 
 /* hero */
 .hero{text-align:center;padding:80px 20px 0;position:relative;}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#555;background:#f4f3ee;border:1px solid var(--line);border-radius:999px;padding:6px 14px;margin-bottom:22px;}
-.hero-badge .bdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(31,170,90,.18);}
+.hero-badge{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:#3a3a3f;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 16px 5px 6px;margin-bottom:24px;box-shadow:0 2px 12px rgba(20,30,60,.05);}
+.hero-badge .hb-ico{width:24px;height:24px;border-radius:7px;background:var(--blue-l);display:flex;align-items:center;justify-content:center;}
+.hero-badge .hb-ico svg{width:15px;height:15px;}
+.hero-badge b{color:var(--ink);font-weight:600;}
 .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6.4vw,76px);line-height:1.04;letter-spacing:-.02em;color:var(--ink);}
 .hero h1 em{font-style:italic;color:var(--blue);}
 .hero .sub{margin:22px auto 30px;color:var(--grey);font-size:16px;max-width:480px;}
@@ -223,7 +225,7 @@ section{padding:88px 0;}
 </div>
 
 <header class="hero" id="home">
-  <div class="hero-badge rv"><span class="bdot"></span> Built exclusively for roofing contractors</div>
+  <div class="hero-badge rv"><span class="hb-ico"><svg aria-hidden="true"><use href="#bpMark"/></svg></span> Built exclusively for <b>roofing contractors</b></div>
   <h1 class="rv">Book more jobs.<br><em>Automatically.</em></h1>
   <p class="sub rv">The complete AI-powered growth system. Website, Google Business, Atlas AI receptionist, and lead automation — all done for you, all running 24/7.</p>
   <div class="hero-acts rv">
