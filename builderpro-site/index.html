@@ -241,10 +241,6 @@ section{padding:88px 0;}
   <div class="wave" aria-hidden="true"><canvas id="waveCanvas"></canvas></div>
 </header>
 
-<div class="mq-wrap">
-  <div class="mq-inner" id="mqInner"></div>
-</div>
-
 <div class="logos">
   <div class="wrap">
     <div class="logos-cap rv">Trusted by roofing crews across the country</div>
@@ -1279,13 +1275,6 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 document.getElementById('yr').textContent=new Date().getFullYear();
 var nav=document.getElementById('nav');
 addEventListener('scroll',function(){nav.classList.toggle('solid',scrollY>4);},{passive:true});
-
-/* ---- marquee ---- */
-(function(){
-  var items=['Atlas AI Receptionist','Missed Call Text-Back','AI Automations','Satellite Roof Estimator','Google Business Setup','Elite Custom Website','Smart Booking System','Lead Capture Funnels','Analytics Dashboard'];
-  var h='';for(var r=0;r<2;r++){for(var i=0;i<items.length;i++){h+='<span class="mq-item"><span class="mq-dot"></span>'+items[i]+'</span>';}}
-  document.getElementById('mqInner').innerHTML=h;
-})();
 
 /* ---- wave ---- */
 (function(){
