@@ -476,6 +476,13 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
 .nav-acts{display:flex;align-items:center;gap:12px;}
 .nav-login{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);color:var(--muted);text-decoration:none;transition:.2s;}
 .nav-login:hover{color:#fff;border-color:#0099ff;box-shadow:0 0 16px rgba(0,150,255,.35);}</style>
+
+<style id="bpi-icons">
+.bpi{width:1.05em;height:1.05em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-0.15em;flex-shrink:0}
+.fi,.ac-icon,.book-c .ic,.em,.e-oi-em,.rm-ficon,.cal-ttl,.feed-lab,.cav-a,.amsg-av-a{color:var(--blue,#2f6bff)}
+.cav-u,.amsg-av-u{color:#8a8578}
+.ap-av,#atlas-chat-btn,#atlasSend{color:#fff}
+</style>
 </head>
 <body>
 
@@ -598,7 +605,7 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
       <div class="reveal-r">
         <div style="position:relative">
           <div style="background:linear-gradient(135deg,rgba(0,40,120,.5),rgba(0,10,40,.8));border:1px solid var(--border);border-radius:20px;padding:28px;margin-right:40px">
-            <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px">⚡ Live System Activity</div>
+            <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Live System Activity</div>
             <div class="live-feed">
               <div class="lf-item"><div class="lp"></div>New lead captured — Mike Johnson, Dallas TX<div class="lt">Just now</div></div>
               <div class="lf-item"><div class="lp"></div>Atlas AI answered call — Roof estimate inquiry<div class="lt">2m ago</div></div>
@@ -661,9 +668,9 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
         </div>
         <div class="chat-wrap" style="width:100%;max-width:380px">
           <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px"><div class="bdot"></div>Atlas — Live</div>
-          <div class="cmr"><div class="cav cav-u">👷</div><div class="cb cb-u">"Hey I just missed a call from a roofing lead"</div></div>
-          <div class="cmr"><div class="cav cav-a">🤖</div><div class="cb cb-a">Already handled it! I texted them back instantly, answered their questions, and they've booked an inspection for Tuesday at 10am. ✓</div></div>
-          <div class="cmr"><div class="cav cav-a">🤖</div><div class="cb cb-a"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></div></div>
+          <div class="cmr"><div class="cav cav-u"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 16v-4a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v4"/></svg></div><div class="cb cb-u">"Hey I just missed a call from a roofing lead"</div></div>
+          <div class="cmr"><div class="cav cav-a"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><div class="cb cb-a">Already handled it! I texted them back instantly, answered their questions, and they've booked an inspection for Tuesday at 10am. ✓</div></div>
+          <div class="cmr"><div class="cav cav-a"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><div class="cb cb-a"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></div></div>
         </div>
       </div>
       <div class="reveal-r">
@@ -680,7 +687,7 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
         <!-- Try Atlas CTA -->
         <div style="margin-top:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <button onclick="toggleAtlas()" class="btn btn-p btn-lg" style="gap:10px;flex:1;justify-content:center;animation:glowbtn2 2.5s ease-in-out infinite;letter-spacing:.5px;text-transform:none;font-family:'Barlow',sans-serif;">
-            <span>🤖</span> Chat With Atlas
+            <span><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span> Chat With Atlas
           </button>
         </div>
       </div>
@@ -708,10 +715,10 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
         <div class="fl-item"><div class="fl-n">04</div><div><div class="fl-t">Job Booked ✓</div><p class="small" style="margin-top:4px">Atlas handles scheduling, confirmations, and follow-ups. You show up to the inspection — that's it.</p></div></div>
       </div>
       <div class="reveal-r" style="display:flex;flex-direction:column;gap:14px">
-        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0">🤖</div><div class="ft" style="margin:0">AI Smart Receptionist</div></div><p class="small">Answers missed calls using your business info, highlights the customer's issue, and books inspections.</p></div>
-        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0">⚡</div><div class="ft" style="margin:0">AI Automations</div></div><p class="small">10+ automations set up for your company — messages and emails sent automatically based on lead stage.</p></div>
-        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0">🌐</div><div class="ft" style="margin:0">Website & Google Business</div></div><p class="small">Custom advanced website + full GBP setup to dominate local search and build trust instantly.</p></div>
-        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0">📊</div><div class="ft" style="margin:0">Analytics & Reporting</div></div><p class="small">Real-time dashboard showing exactly where leads come from and what's converting.</p></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><div class="ft" style="margin:0">AI Smart Receptionist</div></div><p class="small">Answers missed calls using your business info, highlights the customer's issue, and books inspections.</p></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="ft" style="margin:0">AI Automations</div></div><p class="small">10+ automations set up for your company — messages and emails sent automatically based on lead stage.</p></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div><div class="ft" style="margin:0">Website & Google Business</div></div><p class="small">Custom advanced website + full GBP setup to dominate local search and build trust instantly.</p></div>
+        <div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:10px"><div class="fi" style="margin:0;width:40px;height:40px;flex-shrink:0"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div><div class="ft" style="margin:0">Analytics & Reporting</div></div><p class="small">Real-time dashboard showing exactly where leads come from and what's converting.</p></div>
       </div>
     </div>
   </div>
@@ -730,9 +737,9 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
     </div>
     <div class="reveal" style="max-width:920px;margin:0 auto">
       <div class="g3" style="margin-bottom:24px">
-        <div class="card-sm tc"><div style="font-size:22px;margin-bottom:6px">🛰</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:4px">Satellite Imagery</div><div class="small">Real aerial data for accurate measurements</div></div>
-        <div class="card-sm tc"><div style="font-size:22px;margin-bottom:6px">⚡</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:4px">Instant Estimates</div><div class="small">Results generated in seconds</div></div>
-        <div class="card-sm tc"><div style="font-size:22px;margin-bottom:6px">📋</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:4px">Lead Capture</div><div class="small">Collects contact info before showing results</div></div>
+        <div class="card-sm tc"><div style="font-size:22px;margin-bottom:6px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg></div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:4px">Satellite Imagery</div><div class="small">Real aerial data for accurate measurements</div></div>
+        <div class="card-sm tc"><div style="font-size:22px;margin-bottom:6px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:4px">Instant Estimates</div><div class="small">Results generated in seconds</div></div>
+        <div class="card-sm tc"><div style="font-size:22px;margin-bottom:6px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div><div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:4px">Lead Capture</div><div class="small">Collects contact info before showing results</div></div>
       </div>
       <div class="est-wrap">
         <div class="est-hdr">
@@ -754,11 +761,11 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
   <div class="wrap">
     <div class="tc reveal" style="margin-bottom:40px"><span class="eye">Testimonials</span><h2 class="d3">What Contractors Say</h2></div>
     <div class="ttrack reveal">
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"The automation is the best part. Follow-ups happen without us doing anything and we've already noticed more booked jobs."</div><div class="t-auth"><div class="t-av">👷</div><div><div class="t-n">Daniel Ruiz</div><div class="t-r">Project Manager</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"Before BuilderPro we were losing jobs every week from missed calls. Atlas handles all of that now while we're on the roof."</div><div class="t-auth"><div class="t-av">🏠</div><div><div class="t-n">Mike R.</div><div class="t-r">Roofing Contractor</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"Our Google presence went from nonexistent to top 3 in our area. The website and GBP setup made a massive difference."</div><div class="t-auth"><div class="t-av">⭐</div><div><div class="t-n">Jessica T.</div><div class="t-r">Business Owner</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★☆</div><div class="t-q">"We were live in less than a week. The booking system keeps everything organized and I'm not playing phone tag anymore."</div><div class="t-auth"><div class="t-av">🔨</div><div><div class="t-n">Ethan W.</div><div class="t-r">General Contractor</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"The missed call text-back alone was worth it. Leads that used to go cold now get a response before I know I missed the call."</div><div class="t-auth"><div class="t-av">📱</div><div><div class="t-n">Carlos M.</div><div class="t-r">Roofing Contractor</div></div></div></div>
+      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"The automation is the best part. Follow-ups happen without us doing anything and we've already noticed more booked jobs."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 16v-4a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v4"/></svg></div><div><div class="t-n">Daniel Ruiz</div><div class="t-r">Project Manager</div></div></div></div>
+      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"Before BuilderPro we were losing jobs every week from missed calls. Atlas handles all of that now while we're on the roof."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div><div class="t-n">Mike R.</div><div class="t-r">Roofing Contractor</div></div></div></div>
+      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"Our Google presence went from nonexistent to top 3 in our area. The website and GBP setup made a massive difference."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg></div><div><div class="t-n">Jessica T.</div><div class="t-r">Business Owner</div></div></div></div>
+      <div class="tcard"><div class="t-stars">★★★★☆</div><div class="t-q">"We were live in less than a week. The booking system keeps everything organized and I'm not playing phone tag anymore."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 12 7.5 19.5a2.1 2.1 0 0 1-3-3L12 9"/><path d="M17.6 6.4 21 9.8 18 13l-7-7 3.2-3.2a2 2 0 0 1 2.8 0z"/></svg></div><div><div class="t-n">Ethan W.</div><div class="t-r">General Contractor</div></div></div></div>
+      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"The missed call text-back alone was worth it. Leads that used to go cold now get a response before I know I missed the call."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg></div><div><div class="t-n">Carlos M.</div><div class="t-r">Roofing Contractor</div></div></div></div>
     </div>
   </div>
 </section>
@@ -798,7 +805,7 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
 
       <!-- 899 POPULAR -->
       <div class="pc pop">
-        <div class="pop-badge">⭐ Most Popular</div>
+        <div class="pop-badge"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg> Most Popular</div>
         <div class="pc-eye">Growth Plan</div>
         <div class="pc-name">BuilderPro OS</div>
         <div class="pc-price"><sup>$</sup>899</div>
@@ -908,17 +915,17 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
     <!-- What to expect strip -->
     <div class="g3 reveal" style="margin-bottom:40px">
       <div class="card-sm" style="text-align:center">
-        <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,60,160,.28);border:1px solid rgba(0,100,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px">🖥</div>
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,60,160,.28);border:1px solid rgba(0,100,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:6px">Live System Demo</div>
         <div class="small">Full BuilderPro OS shown live — built around your business.</div>
       </div>
       <div class="card-sm" style="text-align:center">
-        <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,60,160,.28);border:1px solid rgba(0,100,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px">🤖</div>
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,60,160,.28);border:1px solid rgba(0,100,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:6px">Atlas AI Walkthrough</div>
         <div class="small">See Atlas handle calls and bookings for a roofing company.</div>
       </div>
       <div class="card-sm" style="text-align:center">
-        <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,60,160,.28);border:1px solid rgba(0,100,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px">💬</div>
+        <div style="width:42px;height:42px;border-radius:10px;background:rgba(0,60,160,.28);border:1px solid rgba(0,100,255,.22);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 12px"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fff;margin-bottom:6px">Your Questions Answered</div>
         <div class="small">20 minutes, no pressure. Walk away knowing if it fits.</div>
       </div>
@@ -937,16 +944,16 @@ footer{background:rgba(0,3,12,.95);border-top:1px solid var(--border-s);padding:
         </div>
         <div class="ps-sep"></div>
         <div class="ps-text">
-          <strong>🤝 BuilderPro OS × Rooferly — Official Partners</strong>
+          <strong><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> BuilderPro OS × Rooferly — Official Partners</strong>
           <p>As an official Rooferly partner, BuilderPro OS clients get direct access to Rooferly's contractor marketplace — so your business is visible to homeowners actively searching for roofers. Growth plan includes Rooferly Pro. Agency plan includes Rooferly Premium.</p>
         </div>
-        <button class="ps-btn" onclick="openRooferlyModal()">🏠 Learn About Rooferly →</button>
+        <button class="ps-btn" onclick="openRooferlyModal()"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Learn About Rooferly →</button>
       </div>
     </div>
     <!-- Full-width horizontal calendar -->
     <div class="cal-wrap reveal" style="width:100%">
       <div class="cal-hdr">
-        <div class="cal-ttl">📅 Select Your Demo Time</div>
+        <div class="cal-ttl"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> Select Your Demo Time</div>
         <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green)"><div class="bdot"></div>Spots Available</div>
       </div>
       <iframe src="https://api.leadconnectorhq.com/widget/booking/ITa3jRpsPlVtCu5vnWjQ" style="width:100%;min-height:700px;border:none;overflow:hidden;display:block;" scrolling="no" id="ITa3jRpsPlVtCu5vnWjQ_1780018288650" title="Book a BuilderPro OS Demo"></iframe>
@@ -1405,12 +1412,12 @@ function closeLegal(id){document.getElementById(id).classList.remove('open');doc
 
 <button id="atlas-chat-btn" onclick="toggleAtlas()" title="Chat with Atlas AI">
   <div class="btn-ping"></div>
-  🤖
+  <svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
 </button>
 
 <div id="atlas-panel">
   <div class="ap-hdr">
-    <div class="ap-avatar">🤖</div>
+    <div class="ap-avatar"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
     <div class="ap-info">
       <div class="ap-name">Atlas AI</div>
       <div class="ap-status"><div class="bdot"></div>Online — BuilderPro OS</div>
@@ -1419,14 +1426,14 @@ function closeLegal(id){document.getElementById(id).classList.remove('open');doc
   </div>
   <div class="ap-msgs" id="atlasMsgs"></div>
   <div class="ap-quick" id="atlasQuick">
-    <button class="ap-qbtn" onclick="sendQuick('I need a roof inspection')">🏠 Need an Inspection</button>
-    <button class="ap-qbtn" onclick="sendQuick('How much does a roof cost?')">💰 Pricing Info</button>
-    <button class="ap-qbtn" onclick="sendQuick('Storm damage to my roof')">⛈ Storm Damage</button>
-    <button class="ap-qbtn" onclick="sendQuick('What services do you offer?')">📋 Services</button>
+    <button class="ap-qbtn" onclick="sendQuick('I need a roof inspection')"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Need an Inspection</button>
+    <button class="ap-qbtn" onclick="sendQuick('How much does a roof cost?')"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pricing Info</button>
+    <button class="ap-qbtn" onclick="sendQuick('Storm damage to my roof')"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg> Storm Damage</button>
+    <button class="ap-qbtn" onclick="sendQuick('What services do you offer?')"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg> Services</button>
   </div>
   <div class="ap-input-wrap">
     <input type="text" id="atlasInput" placeholder="Ask Atlas anything about roofing..." onkeydown="if(event.key==='Enter')sendAtlas()">
-    <button id="atlasSend" onclick="sendAtlas()">➤</button>
+    <button id="atlasSend" onclick="sendAtlas()"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
   </div>
 </div>
 
@@ -1505,7 +1512,7 @@ function addAtlasMsg(role, text) {
   div.className = 'amsg' + (role === 'user' ? ' user' : '');
   const av = document.createElement('div');
   av.className = 'amsg-av ' + (role === 'atlas' ? 'amsg-av-a' : 'amsg-av-u');
-  av.textContent = role === 'atlas' ? '🤖' : '👤';
+  av.textContent = role === 'atlas' ? '<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>' : '<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>';
   const bubble = document.createElement('div');
   bubble.className = 'amsg-b ' + (role === 'atlas' ? 'amsg-b-a' : 'amsg-b-u');
   bubble.textContent = text;
@@ -1523,7 +1530,7 @@ function showTyping() {
   div.id = 'atlasTyping';
   const av = document.createElement('div');
   av.className = 'amsg-av amsg-av-a';
-  av.textContent = '🤖';
+  av.textContent = '<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>';
   const t = document.createElement('div');
   t.className = 'ap-typing';
   t.innerHTML = '<span></span><span></span><span></span>';
@@ -2149,11 +2156,11 @@ shell.innerHTML = `
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'pitch','flat')"><div class="e-oi-em">➖</div><div class="e-oi-info"><div class="e-oi-lbl">Flat / Nearly Flat</div><div class="e-oi-desc">0–2/12 pitch · Typically TPO, EPDM or gravel roofs</div></div><div class="e-oi-tag">No add'l cost</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'pitch','low')"><div class="e-oi-em">🔹</div><div class="e-oi-info"><div class="e-oi-lbl">Low Slope</div><div class="e-oi-desc">2–4/12 pitch · Gentle slope, easy to walk on</div></div><div class="e-oi-tag">+8%</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'pitch','medium')"><div class="e-oi-em">🔺</div><div class="e-oi-info"><div class="e-oi-lbl">Medium Slope</div><div class="e-oi-desc">4–7/12 pitch · Most common residential pitch</div></div><div class="e-oi-tag">+20%</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'pitch','steep')"><div class="e-oi-em">⛰</div><div class="e-oi-info"><div class="e-oi-lbl">Steep Slope</div><div class="e-oi-desc">7–10/12 pitch · Requires safety harness equipment</div></div><div class="e-oi-tag">+38%</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'pitch','very-steep')"><div class="e-oi-em">🏔</div><div class="e-oi-info"><div class="e-oi-lbl">Very Steep</div><div class="e-oi-desc">10+/12 pitch · High complexity, premium labor cost</div></div><div class="e-oi-tag">+60%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','flat')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15h16"/><path d="M4 11h16"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Flat / Nearly Flat</div><div class="e-oi-desc">0–2/12 pitch · Typically TPO, EPDM or gravel roofs</div></div><div class="e-oi-tag">No add'l cost</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','low')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 21 9"/><path d="M3 18h18"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Low Slope</div><div class="e-oi-desc">2–4/12 pitch · Gentle slope, easy to walk on</div></div><div class="e-oi-tag">+8%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','medium')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18 13 7l7 11"/><path d="M4 18h16"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Medium Slope</div><div class="e-oi-desc">4–7/12 pitch · Most common residential pitch</div></div><div class="e-oi-tag">+20%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','steep')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 20 6-11 4 6 3-4 5 9Z"/><path d="m8 12 1.2-1.5 1.3 2"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Steep Slope</div><div class="e-oi-desc">7–10/12 pitch · Requires safety harness equipment</div></div><div class="e-oi-tag">+38%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','very-steep')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 20 6-12 4 7 2-3 8 8Z"/><path d="m7 13 1-2 1.5 2.5"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Very Steep</div><div class="e-oi-desc">10+/12 pitch · High complexity, premium labor cost</div></div><div class="e-oi-tag">+60%</div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -2174,9 +2181,9 @@ shell.innerHTML = `
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'stories','1')"><div class="e-oi-em">🏠</div><div class="e-oi-info"><div class="e-oi-lbl">1 Story</div><div class="e-oi-desc">Single level · Standard access · No additional cost</div></div><div class="e-oi-tag">Base price</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'stories','2')"><div class="e-oi-em">🏘</div><div class="e-oi-info"><div class="e-oi-lbl">2 Stories</div><div class="e-oi-desc">Two levels · Extension ladders and staging required</div></div><div class="e-oi-tag">+14%</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'stories','3')"><div class="e-oi-em">🏢</div><div class="e-oi-info"><div class="e-oi-lbl">3+ Stories</div><div class="e-oi-desc">Three or more levels · Premium staging required</div></div><div class="e-oi-tag">+28%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'stories','1')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">1 Story</div><div class="e-oi-desc">Single level · Standard access · No additional cost</div></div><div class="e-oi-tag">Base price</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'stories','2')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V11l4.5-3 4.5 3v10"/><path d="M12 21V13l4-2.5 4 2.5v8"/><path d="M2 21h20"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">2 Stories</div><div class="e-oi-desc">Two levels · Extension ladders and staging required</div></div><div class="e-oi-tag">+14%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'stories','3')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h.01M12 7h.01M15 7h.01M9 11h.01M12 11h.01M15 11h.01M9 15h.01M15 15h.01"/><path d="M10 21v-4h4v4"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">3+ Stories</div><div class="e-oi-desc">Three or more levels · Premium staging required</div></div><div class="e-oi-tag">+28%</div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -2197,10 +2204,10 @@ shell.innerHTML = `
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'project','full-replace')"><div class="e-oi-em">🔄</div><div class="e-oi-info"><div class="e-oi-lbl">Full Replacement</div><div class="e-oi-desc">Remove existing roof completely, install new system</div></div><div class="e-oi-tag">Full estimate</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','overlay')"><div class="e-oi-em">➕</div><div class="e-oi-info"><div class="e-oi-lbl">Re-Roof / Overlay</div><div class="e-oi-desc">New shingles over existing layer — only if 1 layer currently</div></div><div class="e-oi-tag">~18% less</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','repair')"><div class="e-oi-em">🔧</div><div class="e-oi-info"><div class="e-oi-lbl">Partial Repair</div><div class="e-oi-desc">Fix damaged section, storm damage, or active leak</div></div><div class="e-oi-tag">~25–35% of full</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em">🏗</div><div class="e-oi-info"><div class="e-oi-lbl">New Construction</div><div class="e-oi-desc">Brand new home build — no tear-off required</div></div><div class="e-oi-tag">~8% less</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','full-replace')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Full Replacement</div><div class="e-oi-desc">Remove existing roof completely, install new system</div></div><div class="e-oi-tag">Full estimate</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','overlay')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Re-Roof / Overlay</div><div class="e-oi-desc">New shingles over existing layer — only if 1 layer currently</div></div><div class="e-oi-tag">~18% less</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','repair')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Partial Repair</div><div class="e-oi-desc">Fix damaged section, storm damage, or active leak</div></div><div class="e-oi-tag">~25–35% of full</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">New Construction</div><div class="e-oi-desc">Brand new home build — no tear-off required</div></div><div class="e-oi-tag">~8% less</div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -2221,10 +2228,10 @@ shell.innerHTML = `
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em">🚨</div><div class="e-oi-info"><div class="e-oi-lbl">Emergency — ASAP</div><div class="e-oi-desc">Active leak or damage causing immediate risk to the home</div></div><div class="e-oi-tag" style="color:var(--red)">Priority</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em">⚡</div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–2 Weeks</div><div class="e-oi-desc">Urgent but not an emergency — needs attention soon</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em">📅</div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–3 Months</div><div class="e-oi-desc">Planning ahead — no immediate emergency</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em">🔄</div><div class="e-oi-info"><div class="e-oi-lbl">Flexible — No Rush</div><div class="e-oi-desc">Just exploring options and getting estimates for now</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18v-6a5 5 0 0 1 10 0v6"/><path d="M5 18h14a1 1 0 0 1 1 1v2H4v-2a1 1 0 0 1 1-1z"/><path d="M12 3V5"/><path d="m18.5 6-1.4 1.4"/><path d="m5.5 6 1.4 1.4"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Emergency — ASAP</div><div class="e-oi-desc">Active leak or damage causing immediate risk to the home</div></div><div class="e-oi-tag" style="color:var(--red)">Priority</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–2 Weeks</div><div class="e-oi-desc">Urgent but not an emergency — needs attention soon</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–3 Months</div><div class="e-oi-desc">Planning ahead — no immediate emergency</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Flexible — No Rush</div><div class="e-oi-desc">Just exploring options and getting estimates for now</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -2245,11 +2252,11 @@ shell.innerHTML = `
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'damages','active-leak')"><div class="e-oi-em">💧</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Active Leak</div><div class="e-oi-desc">Water is currently entering the home — needs immediate attention</div></div><div class="e-oi-tag" style="color:var(--red)">Urgent</div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'damages','storm-damage')"><div class="e-oi-em">⛈</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Storm Damage</div><div class="e-oi-desc">Wind, hail, or tree damage — may be covered by insurance</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'damages','visible-damage')"><div class="e-oi-em">🔍</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Visible Damage</div><div class="e-oi-desc">Missing shingles, sagging, or visible deterioration</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'damages','no-damage')"><div class="e-oi-em">✅</div><div class="e-oi-info"><div class="e-oi-lbl">No — Roof is Intact</div><div class="e-oi-desc">No known damage — proactive replacement or upgrade</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'damages','unsure')"><div class="e-oi-em">❓</div><div class="e-oi-info"><div class="e-oi-lbl">Not Sure</div><div class="e-oi-desc">Haven't had it inspected — not sure of the condition</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','active-leak')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s6 6.4 6 10.8A6 6 0 0 1 6 13.8C6 9.4 12 3 12 3z"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Active Leak</div><div class="e-oi-desc">Water is currently entering the home — needs immediate attention</div></div><div class="e-oi-tag" style="color:var(--red)">Urgent</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','storm-damage')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Storm Damage</div><div class="e-oi-desc">Wind, hail, or tree damage — may be covered by insurance</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','visible-damage')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Visible Damage</div><div class="e-oi-desc">Missing shingles, sagging, or visible deterioration</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','no-damage')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">No — Roof is Intact</div><div class="e-oi-desc">No known damage — proactive replacement or upgrade</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','unsure')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Not Sure</div><div class="e-oi-desc">Haven't had it inspected — not sure of the condition</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -2270,10 +2277,10 @@ shell.innerHTML = `
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'insurance','yes-filed')"><div class="e-oi-em">📋</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Claim Already Filed</div><div class="e-oi-desc">I've already started the claim with my insurance company</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'insurance','yes-planning')"><div class="e-oi-em">📞</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Planning to File</div><div class="e-oi-desc">I believe I have a valid claim but haven't contacted insurance yet</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'insurance','maybe')"><div class="e-oi-em">🤔</div><div class="e-oi-info"><div class="e-oi-lbl">Maybe — Not Sure</div><div class="e-oi-desc">I'm not sure if I should file — would like guidance</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'insurance','no')"><div class="e-oi-em">💳</div><div class="e-oi-info"><div class="e-oi-lbl">No — Paying Out of Pocket</div><div class="e-oi-desc">This is not an insurance claim — I'm self-funding the project</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','yes-filed')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Claim Already Filed</div><div class="e-oi-desc">I've already started the claim with my insurance company</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','yes-planning')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Planning to File</div><div class="e-oi-desc">I believe I have a valid claim but haven't contacted insurance yet</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','maybe')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">Maybe — Not Sure</div><div class="e-oi-desc">I'm not sure if I should file — would like guidance</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','no')"><div class="e-oi-em"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg></div><div class="e-oi-info"><div class="e-oi-lbl">No — Paying Out of Pocket</div><div class="e-oi-desc">This is not an insurance claim — I'm self-funding the project</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -2652,13 +2659,13 @@ function eHandleSlider(v) {
 function eUpdateSlider(v){ document.getElementById('e-sld').value=v; eHandleSlider(v); }
 
 /* MATERIALS */
-var E_ICONS={'asphalt-3tab':'🏚','asphalt-arch':'🏠','asphalt-designer':'🏡','metal-ribbed':'⚡','metal-standing':'🔩','tile-concrete':'🧱','tile-clay':'🪴','flat-tpo':'⬜','flat-epdm':'⬛','flat-modbit':'🔲','wood-shake':'🪵','slate-synthetic':'💎','slate-natural':'🪨','shingles-solar':'☀️'};
+var E_ICONS={'asphalt-3tab':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22v-6h6v6"/><path d="M13 12.5 12 14l1 1.5"/></svg>','asphalt-arch':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>','asphalt-designer':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>','metal-ribbed':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>','metal-standing':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v2"/><circle cx="12" cy="6" r="2.5"/><path d="M12 8.5V21"/><path d="M9.5 11 12 13l2.5-2"/><path d="M9.5 15 12 17l2.5-2"/></svg>','tile-concrete':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="1"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M12 3v6"/><path d="M8 9v6"/><path d="M16 9v6"/></svg>','tile-clay':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22V12"/><path d="M12 12c0-3 2-5 5-5-1 3-2 5-5 5z"/><path d="M12 14c0-3-2-5-5-5 1 3 2 5 5 5z"/></svg>','flat-tpo':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1"/></svg>','flat-epdm':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1" style="fill:currentColor;stroke:none"/></svg>','flat-modbit':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>','wood-shake':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12a4 4 0 0 1 0 8H4a4 4 0 0 0 0-8z"/><path d="M16 8a4 4 0 0 1 0 8"/><path d="M4 12h.01"/></svg>','slate-synthetic':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>','slate-natural':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15 8 8l5-2 6 4 0 5-4 3H7z"/><path d="m8 8 3 3 2-2"/></svg>','shingles-solar':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'};
 function eBuildMats() {
   var l=document.getElementById('e-matlist'), html='';
   Object.keys(E_CONFIG.pricing).forEach(function(k){
     var v=E_CONFIG.pricing[k];
     html+='<div class="e-oi" onclick="ePick(this,\'material\',\''+k+'\')">'
-      +'<div class="e-oi-em">'+(E_ICONS[k]||'🏠')+'</div>'
+      +'<div class="e-oi-em">'+(E_ICONS[k]||'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>')+'</div>'
       +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
       +'<div class="e-oi-desc">$'+v.low+'–$'+v.high+'/sq installed · '+v.note+'</div></div>'
       +'<div class="e-oi-radio">✓</div></div>';
@@ -2803,19 +2810,19 @@ document.addEventListener('click', function(e) {
     <div class="rm-body">
       <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue-l);margin-bottom:16px;font-weight:700">What Rooferly Includes</div>
       <div class="rm-feature">
-        <div class="rm-ficon">📍</div>
+        <div class="rm-ficon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 0 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
         <div><div class="rm-ft">Local Marketplace Listing</div><div class="rm-fs">Your business appears to homeowners searching for roofing contractors in your service area — qualified, ready-to-hire leads.</div></div>
       </div>
       <div class="rm-feature">
-        <div class="rm-ficon">⭐</div>
+        <div class="rm-ficon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg></div>
         <div><div class="rm-ft">Verified Reviews & Ratings</div><div class="rm-fs">Build credibility with a verified profile showcasing your reviews, completed jobs, and specialties to build instant trust.</div></div>
       </div>
       <div class="rm-feature">
-        <div class="rm-ficon">🎯</div>
+        <div class="rm-ficon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
         <div><div class="rm-ft">Smart Homeowner Matching</div><div class="rm-fs">Rooferly's algorithm matches your business to the right homeowners based on service type, location, and availability.</div></div>
       </div>
       <div class="rm-feature">
-        <div class="rm-ficon">📞</div>
+        <div class="rm-ficon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
         <div><div class="rm-ft">Direct Lead Requests</div><div class="rm-fs">Homeowners can request quotes directly through your Rooferly profile — leads flow straight into your BuilderPro OS pipeline.</div></div>
       </div>
       <div style="margin-top:24px;background:rgba(0,20,60,.5);border:1px solid rgba(42,143,163,.2);border-radius:14px;padding:18px 20px;">
