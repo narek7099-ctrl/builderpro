@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BuilderPro OS — Book more roofing jobs, on autopilot</title>
-<meta name="description" content="BuilderPro OS is the complete AI-powered growth system for roofing contractors. Atlas AI answers every call, texts back missed leads, and books inspections 24/7.">
+<meta name="description" content="BuilderPro OS is the complete AI-powered growth system for contractors. Atlas AI answers every call, texts back missed leads, and books inspections 24/7.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -47,7 +47,7 @@ nav.solid{border-color:var(--line);}
 .nav-i{max-width:var(--maxw);margin:0 auto;padding:15px 32px;display:flex;align-items:center;justify-content:space-between;}
 .brand{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:21px;font-weight:400;letter-spacing:-.01em;}
 .brand svg{width:20px;height:20px;}
-.brand .bpmark{width:26px;height:26px;flex-shrink:0;}
+.brand .bpmark{width:26px;height:31px;flex-shrink:0;margin-top:-1px;}
 .bpmark{flex-shrink:0;}
 .brand span{color:var(--blue);font-weight:500;}
 .nav-r{display:flex;align-items:center;gap:24px;font-size:14px;color:#333;}
@@ -118,6 +118,16 @@ section{padding:88px 0;}
 .fcard .fi{width:44px;height:44px;border-radius:11px;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:16px;}
 .fcard .ft{font-family:var(--serif);font-weight:400;font-size:21px;letter-spacing:-.01em;margin-bottom:8px;}
 .fcard p{color:var(--grey);font-size:13.5px;line-height:1.6;}
+.fcard .fi.fi3{background:none;width:50px;height:50px;border-radius:0;overflow:visible;margin-bottom:14px;}
+.g3d{width:50px;height:50px;display:block;overflow:visible;}
+.feat-card:hover .fi.fi3{transform:none;background:none;}
+/* advanced staggered reveal + hover for features grid */
+#features .g6 .fcard{opacity:0;transform:translateY(30px) scale(.975);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1),box-shadow .35s ease,border-color .35s ease;}
+#features .g6 .fcard.in{opacity:1;transform:none;}
+#features .g6 .fcard .fi{transition:background .3s ease,color .3s ease,transform .35s cubic-bezier(.22,1,.36,1);}
+#features .g6 .fcard:hover{transform:translateY(-6px);box-shadow:0 26px 60px rgba(47,107,255,.15);border-color:rgba(47,107,255,.38);}
+#features .g6 .fcard:hover .fi{background:var(--blue);color:#fff;transform:scale(1.08) rotate(-3deg);}
+@media(prefers-reduced-motion:reduce){#features .g6 .fcard{opacity:1;transform:none;transition:none;}}
 
 /* split / two-col */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
@@ -201,6 +211,7 @@ section{padding:88px 0;}
   </symbol>
 </svg>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="g3body" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#84a9ff"/><stop offset=".55" stop-color="#3b74ff"/><stop offset="1" stop-color="#1741c8"/></linearGradient><linearGradient id="g3gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".75"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient><filter id="g3sh" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="2.4" stdDeviation="2.4" flood-color="#12318f" flood-opacity=".42"/></filter></defs></svg>
 <div class="bar">New: Atlas AI now books inspections while you're on the roof. <a href="#booking">See what's new</a></div>
 
 <nav id="nav">
@@ -233,7 +244,7 @@ section{padding:88px 0;}
 </div>
 
 <header class="hero" id="home">
-  <div class="hero-badge rv"><span class="hb-ico"><svg aria-hidden="true"><use href="#bpMark"/></svg></span><span>Built exclusively for <b>roofing contractors</b></span></div>
+  <div class="hero-badge rv"><span class="hb-ico"><svg aria-hidden="true"><use href="#bpMark"/></svg></span><span>Built exclusively for <b>contractors</b></span></div>
   <h1 class="rv">Book more jobs.<br><em>Automatically.</em></h1>
   <p class="sub rv">The complete AI-powered growth system. Website, Google Business, Atlas AI receptionist, and lead automation — all done for you, all running 24/7.</p>
   <div class="hero-acts rv">
@@ -251,17 +262,10 @@ section{padding:88px 0;}
 
 <div class="logos">
   <div class="wrap">
-    <div class="logos-cap rv">Trusted by roofing crews across the country</div>
-    <div class="logos-row rv">
-      <span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 4l9 8"/><path d="M5.5 11V20h13v-9"/></svg>Summit&nbsp;Roofing</span>
-      <span class="lg"><svg viewBox="0 0 24 24" fill="#111"><path d="M4 18 12 6l8 12-3 0L12 10 7 18z"/></svg>Apex&nbsp;Exteriors</span>
-      <span class="lg italic">IRONCLAD</span>
-      <span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></svg>StormGuard</span>
-      <span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 12 5l9 8M8 20v-6h8v6"/></svg>RidgeLine</span>
-      <span class="lg"><svg viewBox="0 0 24 24" fill="#111"><path d="M12 3 21 9v2l-9-6-9 6V9z"/><path d="M5 12h14v8H5z" fill="none" stroke="#111" stroke-width="1.8"/></svg>Peak&nbsp;&amp;&nbsp;Gable</span>
-    </div>
-  </div>
-</div>
+    <div class="logos-cap rv">Contractors we support</div>
+    <div class="logos-row rv"><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M6 17v2M18 17v2M6.5 11h3.5M14 11h3.5M6.5 13.5h2"/></svg>HVAC</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 12 4l9 8"/><path d="M5.5 11V20h13v-9"/></svg>Roofing</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.5h18M3 15h18M10 4v5.5M15 9.5V15M8 15v5"/></svg>Flooring</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="11" height="5" rx="1"/><path d="M15 7.5h4v3h-6v3"/><rect x="11" y="13.5" width="4" height="6.5" rx="1"/></svg>Painting</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-5"/><path d="M12 16c-3.3 0-5.5-2.6-5.5-5.5C6.5 7 8.5 4.5 12 3c3.5 1.5 5.5 4 5.5 7.5C17.5 13.4 15.3 16 12 16z"/></svg>Landscaping</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M12 3v18M8.5 8h.5M15 8h.5"/></svg>Cabinets</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="1"/><path d="M7 8v3M11 8v3M15 8v3M19 8v3"/></svg>Trim</span><span class="lg"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16c2 0 2-1.4 4-1.4S8 16 10 16s2-1.4 4-1.4S16 16 18 16s2-1.4 4-1.4"/><path d="M7 12V6h2.5M17 12V6h-2.5"/></svg>Pools</span></div></div>
+              </div>
+
 <style>
 /* ==== marketing dashboard (the model) ==== */
 .dash-sec{padding:70px 0 40px;}
@@ -289,16 +293,17 @@ section{padding:88px 0;}
 .duser .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#ffd9c2,#ff9d6b);}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
 .kpi{border:1px solid var(--line);border-radius:12px;padding:14px;}
-.kpi .l{font-size:11px;color:var(--grey);margin-bottom:8px;}
-.kpi .v{font-size:22px;font-weight:700;letter-spacing:-.02em;}
-.kpi .d{font-size:11px;color:#1faa5a;margin-top:5px;font-weight:600;}
+.kpi .l{font-size:11px;color:var(--grey);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+.kpi .v{font-family:var(--serif);font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:1;}
+.kpi .v.blue{color:var(--blue);}
+.kpi .d{font-size:11px;color:#1faa5a;margin-top:7px;font-weight:600;}
 .dcharts{display:grid;grid-template-columns:1fr 156px;gap:12px;margin-bottom:12px;}
 .panel{border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0;}
 .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .pt{font-size:12.5px;font-weight:600;}
 .legend{display:flex;gap:12px;font-size:10px;color:var(--grey);}
 .legend i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;}
-.spark .v{font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.spark .v{font-family:var(--sans);font-size:22px;font-weight:700;letter-spacing:-.02em;}
 .spark .l{font-size:11px;color:var(--grey);margin-bottom:10px;}
 .dbottom{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;}
 .donuts{display:flex;gap:10px;justify-content:space-between;margin-top:6px;}
@@ -306,84 +311,61 @@ section{padding:88px 0;}
 .donut .dv{font-size:14px;font-weight:700;}
 .donut .dl{font-size:10px;color:var(--grey);}
 .donut svg{width:58px;height:58px;}
-@media(max-width:860px){
-  .dash{grid-template-columns:1fr;}
-  .dside{display:none;}
-  .kpis{grid-template-columns:1fr 1fr;}
-  .dcharts,.dbottom{grid-template-columns:1fr;}
-}
+@media(max-width:860px){.dash{grid-template-columns:1fr;}.dside{display:none;}.kpis{grid-template-columns:1fr 1fr;}.dcharts,.dbottom{grid-template-columns:1fr!important;}}
 </style>
-
 <!-- ===== marketing dashboard (model) ===== -->
 <section class="dash-sec" id="dashboard">
   <div class="wrap">
     <div class="dash-head rv">
       <h2>Every lead and job, on one dashboard</h2>
-      <p>Track calls, booked inspections, and revenue in real time — all in a single, calm view. It's the same dashboard your BuilderPro portal gives you.</p>
+      <p>Track calls, booked jobs, and revenue in real time — all in a single, calm view. It's the same dashboard your BuilderPro portal gives you.</p>
     </div>
     <div class="dash pop">
       <aside class="dside">
-        <div class="dbrand"><span class="m"></span>Overview</div>
-        <div class="dnav-lab">Main</div>
+        <div class="dbrand"><span class="m"></span>BuilderPro</div>
+        <div class="dnav-lab">Menu</div>
         <nav class="dnav">
-          <a class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
-          <a><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 19v-6M12 19v-9M16 19v-4"/></svg>Analytics</a>
+          <a class="on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard</a>
+          <a><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messaging<span class="badge">3</span></a>
           <a><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Contacts</a>
-          <a><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M8 3v4M16 3v4"/></svg>Calendar</a>
-          <a><svg viewBox="0 0 24 24"><path d="M4 15l4-5 4 3 4-6 4 4"/><path d="M4 20h16"/></svg>Sales</a>
-        </nav>
-        <div class="dnav-lab">Help</div>
-        <nav class="dnav">
-          <a><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 1 1-3.5-6.6L21 4v5h-5"/></svg>Messages<span class="badge">3</span></a>
-          <a><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5L9 4.9a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L5 9.9a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.4 2.5h4.9l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>Settings</a>
+          <a><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendar</a>
+          <a><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Close Deals</a>
+          <a><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>Automations</a>
         </nav>
       </aside>
       <div class="dmain">
         <div class="dtop">
-          <span class="tt">Overview</span>
+          <span class="tt">Dashboard</span>
           <span class="dsearch"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search</span>
           <button class="dbtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Generate report</button>
           <span class="duser"><span class="av"></span>Austin R.</span>
         </div>
         <div class="kpis">
-          <div class="kpi"><div class="l">Leads captured</div><div class="v">342</div><div class="d">▲ 18% vs last month</div></div>
-          <div class="kpi"><div class="l">Inspections booked</div><div class="v">128</div><div class="d">▲ 12% vs last month</div></div>
-          <div class="kpi"><div class="l">Jobs won</div><div class="v">47</div><div class="d">▲ 9% vs last month</div></div>
-          <div class="kpi"><div class="l">Revenue</div><div class="v">$286k</div><div class="d">▲ 14% vs last month</div></div>
+          <div class="kpi"><div class="l">New leads this month</div><div class="v">342</div><div class="d">&#9650; 18% vs last month</div></div>
+          <div class="kpi"><div class="l">Jobs booked</div><div class="v">128</div><div class="d">&#9650; 12% vs last month</div></div>
+          <div class="kpi"><div class="l">Pipeline value</div><div class="v blue">$412k</div><div class="d">&#9650; 22% vs last month</div></div>
+          <div class="kpi"><div class="l">Missed calls saved</div><div class="v">63</div><div class="d">&#9650; 9% vs last month</div></div>
         </div>
         <div class="dcharts">
           <div class="panel">
-            <div class="ph"><span class="pt">Bookings</span><span class="legend"><span><i style="background:#2f6bff"></i>Calls</span><span><i style="background:#33bd63"></i>Web</span></span></div>
+            <div class="ph"><span class="pt">Bookings over time</span><span class="legend"><span><i style="background:#2f6bff"></i>Calls</span><span><i style="background:#33bd63"></i>Web</span></span></div>
             <svg viewBox="0 0 620 190" width="100%" height="180" preserveAspectRatio="none" id="lineChart"></svg>
           </div>
           <div class="panel spark">
             <div class="l">Jobs this year</div>
             <div class="v">512</div>
-            <div class="d" style="font-size:11px;color:#1faa5a;font-weight:600;margin:4px 0 12px">▲ 1.9%</div>
+            <div class="d" style="font-size:11px;color:#1faa5a;font-weight:600;margin:4px 0 12px">&#9650; 1.9%</div>
             <svg viewBox="0 0 130 54" width="100%" height="54" preserveAspectRatio="none" id="sparkChart"></svg>
           </div>
         </div>
-        <div class="dbottom">
+        <div class="dbottom" style="grid-template-columns:1fr">
           <div class="panel">
             <div class="ph"><span class="pt">Where leads come from</span><span class="legend">last 90 days</span></div>
             <div class="donuts">
-              <div class="donut">
-                <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#2f6bff" stroke-width="6" stroke-linecap="round" stroke-dasharray="46 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg>
-                <div><div class="dv">157</div><div class="dl">46% · Google</div></div>
-              </div>
-              <div class="donut">
-                <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#ff9d6b" stroke-width="6" stroke-linecap="round" stroke-dasharray="74 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg>
-                <div><div class="dv">109</div><div class="dl">32% · Referral</div></div>
-              </div>
-              <div class="donut">
-                <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#33bd63" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg>
-                <div><div class="dv">76</div><div class="dl">22% · Storm ads</div></div>
-              </div>
+              <div class="donut"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#2f6bff" stroke-width="6" stroke-linecap="round" stroke-dasharray="46 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg><div><div class="dv">157</div><div class="dl">46% &middot; Google</div></div></div>
+              <div class="donut"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#ff9d6b" stroke-width="6" stroke-linecap="round" stroke-dasharray="74 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg><div><div class="dv">109</div><div class="dl">32% &middot; Referral</div></div></div>
+              <div class="donut"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="#33bd63" stroke-width="6" stroke-linecap="round" stroke-dasharray="14 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg><div><div class="dv">76</div><div class="dl">22% &middot; Paid ads</div></div></div>
             </div>
-          </div>
-          <div class="panel">
-            <div class="ph"><span class="pt">Revenue by month</span><span class="legend"><span><i style="background:#2f6bff"></i>Booked</span><span><i style="background:#bcd0ff"></i>Pipeline</span></span></div>
-            <svg viewBox="0 0 300 130" width="100%" height="120" id="barChart"></svg>
           </div>
         </div>
       </div>
@@ -396,18 +378,66 @@ section{padding:88px 0;}
 <!-- ===== FEATURES ===== -->
 <section id="features">
   <div class="wrap">
-    <div class="sec-head center rv">
-      <span class="eye">Expert strategies</span>
-      <h2>Everything your business<br><em>needs to win</em></h2>
-      <p>Most roofing leads slip through the cracks — a missed call, a slow reply, a forgotten follow-up. BuilderPro OS catches every one, from first call to booked inspection.</p>
-    </div>
-    <div class="g6">
-      <div class="fcard rv"><div class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="ft">AI Automations</div><p>10+ automations that instantly respond to leads at every stage — no manual follow-up ever required.</p></div>
-      <div class="fcard rv"><div class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><div class="ft">Atlas AI Receptionist</div><p>Atlas answers every missed call, handles questions, and books inspections 24/7 using your business info.</p></div>
-      <div class="fcard rv"><div class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></div><div class="ft">Smart Booking System</div><p>Works with Atlas to organize appointments, track status, and send automatic follow-ups.</p></div>
-      <div class="fcard rv"><div class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div><div class="ft">SEO &amp; Website</div><p>Custom-designed advanced website + Google Business Profile setup to dominate local search.</p></div>
-      <div class="fcard rv"><div class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="ft">Marketing Funnels</div><p>Free estimate forms, instant callback, and lead capture funnels crafted to convert visitors into jobs.</p></div>
-      <div class="fcard rv"><div class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div><div class="ft">Tracking &amp; Reporting</div><p>Real-time dashboard showing exactly where leads come from, what converts, and where to improve.</p></div>
+<style>
+/* ===== needs-to-win hub (pinned) ===== */
+.feat-pin{height:480vh;position:relative;}
+.feat-pin .pin-stage{flex-direction:column;justify-content:center;gap:24px;padding:58px 0 22px;}
+.feat-head{max-width:600px;}
+.feat-hub-wrap .feat-card.fcard{padding:20px 22px;}
+.fh-col{gap:18px;}
+@media(max-width:820px){.feat-pin .pin-stage{gap:20px;padding:20px 0;}.fh-col{gap:18px;}}
+.feat-hub-wrap{display:grid;grid-template-columns:1fr minmax(260px,300px) 1fr;gap:26px;align-items:center;width:100%;max-width:1160px;margin:0 auto;}
+.fh-col{display:flex;flex-direction:column;gap:24px;}
+.feat-card{position:relative;opacity:0;transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1),box-shadow .35s ease,border-color .35s ease;}
+.fh-left .feat-card{transform:translateX(84px) scale(.9);}
+.fh-right .feat-card{transform:translateX(-84px) scale(.9);}
+.feat-card.show{opacity:1;transform:none;}
+.feat-card .fi{transition:background .3s ease,color .3s ease,transform .35s cubic-bezier(.22,1,.36,1);}
+.feat-card.show:hover{transform:translateY(-5px);box-shadow:0 26px 60px rgba(47,107,255,.15);border-color:rgba(47,107,255,.38);}
+.feat-card:hover .fi{background:var(--blue);color:#fff;transform:scale(1.08) rotate(-3deg);}
+.feat-card::after{content:"";position:absolute;top:50%;width:36px;height:2px;transform:scaleX(0);transition:transform .5s .15s ease;}
+.fh-left .feat-card::after{right:-36px;transform-origin:left;background:linear-gradient(90deg,rgba(47,107,255,.7),rgba(47,107,255,0));}
+.fh-right .feat-card::after{left:-36px;transform-origin:right;background:linear-gradient(270deg,rgba(47,107,255,.7),rgba(47,107,255,0));}
+.feat-card.show::after{transform:scaleX(1);}
+.feat-hub{display:flex;flex-direction:column;align-items:center;gap:15px;justify-self:center;}
+.fh-core{position:relative;width:300px;height:300px;perspective:960px;}
+.fh-core::before{content:"";position:absolute;inset:14%;border-radius:50%;background:radial-gradient(circle,rgba(47,107,255,.16),rgba(47,107,255,0) 72%);}
+.fh-cube{position:absolute;top:50%;left:50%;width:152px;height:152px;margin:-76px;transform-style:preserve-3d;--tz:calc(76px + (var(--open,0) * 104px));animation:cubeSpin 22s linear infinite;}
+.cube-face{position:absolute;top:50%;left:50%;width:152px;height:152px;margin:-76px;display:grid;place-items:center;border-radius:20px;background:linear-gradient(135deg,rgba(93,139,255,.12),rgba(47,107,255,.26));border:1px solid rgba(47,107,255,.42);box-shadow:inset 0 0 30px rgba(47,107,255,.18);transition:opacity .45s ease;}
+.cube-face svg{width:42px;height:42px;stroke:var(--blue);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.cf-front{transform:translateZ(var(--tz));}
+.cf-back{transform:rotateY(180deg) translateZ(var(--tz));}
+.cf-right{transform:rotateY(90deg) translateZ(var(--tz));}
+.cf-left{transform:rotateY(-90deg) translateZ(var(--tz));}
+.cf-top{transform:rotateX(90deg) translateZ(var(--tz));}
+.cf-bottom{transform:rotateX(-90deg) translateZ(var(--tz));}
+@keyframes cubeSpin{from{transform:rotateX(-22deg) rotateY(0);}to{transform:rotateX(-22deg) rotateY(360deg);}}
+@media(prefers-reduced-motion:reduce){.fh-cube{animation:none;transform:rotateX(-22deg) rotateY(-28deg);}}
+.fh-label{text-align:center;}
+.fh-label b{font-family:var(--serif);font-weight:400;font-size:19px;display:block;letter-spacing:-.01em;}
+.fh-label span{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-l);}
+@media(max-width:820px){
+  .feat-pin{height:auto;}
+  .feat-hub-wrap{grid-template-columns:1fr;gap:18px;max-width:460px;}
+  .feat-hub{order:-1;margin-bottom:4px;}
+  .fh-col{gap:18px;}
+  .feat-card{opacity:1!important;transform:none!important;}
+  .feat-card::after{display:none;}
+}
+@media(prefers-reduced-motion:reduce){.feat-card{opacity:1;transform:none;}.fh-core .ring,.fh-core .pulse{animation:none;}}
+</style>
+    <div class="pin-wrap feat-pin">
+      <div class="pin-stage">
+        <div class="sec-head center feat-head" style="margin:0">
+          <span class="eye">Expert strategies</span>
+          <h2>Everything your business <em>needs to win</em></h2>
+        </div>
+        <div class="feat-hub-wrap">
+          <div class="fh-col fh-left"><div class="feat-card fcard" data-i="0"><div class="fi fi3"><svg class="g3d" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="36" height="36" rx="11" fill="url(#g3body)" filter="url(#g3sh)"/><path d="M9 15 C16 9 32 9 39 15 L39 22 C32 26.5 16 26.5 9 22 Z" fill="url(#g3gloss)" opacity=".55"/><rect x="6" y="5" width="36" height="36" rx="11" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1"/><path d="M26 11 L16.5 25.5 H23 L21.5 37 L31.5 22 H25 Z" fill="#ffffff"/></svg></div><div class="ft">AI Automations</div><p>10+ automations that instantly respond to leads at every stage — no manual follow-up ever required.</p></div><div class="feat-card fcard" data-i="2"><div class="fi fi3"><svg class="g3d" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="36" height="36" rx="11" fill="url(#g3body)" filter="url(#g3sh)"/><path d="M9 15 C16 9 32 9 39 15 L39 22 C32 26.5 16 26.5 9 22 Z" fill="url(#g3gloss)" opacity=".55"/><rect x="6" y="5" width="36" height="36" rx="11" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1"/><rect x="13.5" y="15" width="21" height="19" rx="3.2" fill="none" stroke="#ffffff" stroke-width="2.3"/><path d="M13.5 21 H34.5 M20 12 V17 M28 12 V17" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" fill="none"/></svg></div><div class="ft">Smart Booking System</div><p>Works with Atlas to organize appointments, track status, and send automatic follow-ups.</p></div><div class="feat-card fcard" data-i="4"><div class="fi fi3"><svg class="g3d" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="36" height="36" rx="11" fill="url(#g3body)" filter="url(#g3sh)"/><path d="M9 15 C16 9 32 9 39 15 L39 22 C32 26.5 16 26.5 9 22 Z" fill="url(#g3gloss)" opacity=".55"/><rect x="6" y="5" width="36" height="36" rx="11" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1"/><circle cx="24" cy="23.5" r="10.5" fill="none" stroke="#ffffff" stroke-width="2.3"/><circle cx="24" cy="23.5" r="6.2" fill="none" stroke="#ffffff" stroke-width="2.3"/><circle cx="24" cy="23.5" r="2.2" fill="#ffffff"/></svg></div><div class="ft">Marketing Funnels</div><p>Free estimate forms, instant callback, and lead capture funnels crafted to convert visitors into jobs.</p></div></div>
+          <div class="feat-hub"><div class="fh-core"><div class="fh-cube" id="featCube"><div class="cube-face cf-front" data-i="0"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="cube-face cf-right" data-i="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></div><div class="cube-face cf-top" data-i="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></div><div class="cube-face cf-left" data-i="3"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div><div class="cube-face cf-bottom" data-i="4"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="cube-face cf-back" data-i="5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div></div></div></div>
+          <div class="fh-col fh-right"><div class="feat-card fcard" data-i="1"><div class="fi fi3"><svg class="g3d" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="36" height="36" rx="11" fill="url(#g3body)" filter="url(#g3sh)"/><path d="M9 15 C16 9 32 9 39 15 L39 22 C32 26.5 16 26.5 9 22 Z" fill="url(#g3gloss)" opacity=".55"/><rect x="6" y="5" width="36" height="36" rx="11" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1"/><path d="M24 11 L26.4 21.6 L37 24 L26.4 26.4 L24 37 L21.6 26.4 L11 24 L21.6 21.6 Z" fill="#ffffff"/><path d="M32 12 L32.9 15.1 L36 16 L32.9 16.9 L32 20 L31.1 16.9 L28 16 L31.1 15.1 Z" fill="#ffffff"/></svg></div><div class="ft">Atlas AI Receptionist</div><p>Atlas answers every missed call, handles questions, and books inspections 24/7 using your business info.</p></div><div class="feat-card fcard" data-i="3"><div class="fi fi3"><svg class="g3d" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="36" height="36" rx="11" fill="url(#g3body)" filter="url(#g3sh)"/><path d="M9 15 C16 9 32 9 39 15 L39 22 C32 26.5 16 26.5 9 22 Z" fill="url(#g3gloss)" opacity=".55"/><rect x="6" y="5" width="36" height="36" rx="11" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1"/><circle cx="24" cy="23.5" r="10.5" fill="none" stroke="#ffffff" stroke-width="2.3"/><path d="M24 13c5.2 6 5.2 15 0 21M24 13c-5.2 6-5.2 15 0 21M13.5 23.5h21" stroke="#ffffff" stroke-width="2.3" fill="none" stroke-linecap="round"/></svg></div><div class="ft">SEO &amp; Website</div><p>Custom-designed advanced website + Google Business Profile setup to dominate local search.</p></div><div class="feat-card fcard" data-i="5"><div class="fi fi3"><svg class="g3d" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="5" width="36" height="36" rx="11" fill="url(#g3body)" filter="url(#g3sh)"/><path d="M9 15 C16 9 32 9 39 15 L39 22 C32 26.5 16 26.5 9 22 Z" fill="url(#g3gloss)" opacity=".55"/><rect x="6" y="5" width="36" height="36" rx="11" fill="none" stroke="#ffffff" stroke-opacity=".4" stroke-width="1"/><rect x="14.5" y="24" width="4.4" height="10" rx="1.6" fill="#ffffff"/><rect x="21.8" y="18.5" width="4.4" height="15.5" rx="1.6" fill="#ffffff"/><rect x="29.1" y="14" width="4.4" height="20" rx="1.6" fill="#ffffff"/></svg></div><div class="ft">Tracking &amp; Reporting</div><p>Real-time dashboard showing exactly where leads come from, what converts, and where to improve.</p></div></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -415,6 +445,54 @@ section{padding:88px 0;}
 <div class="divider"></div>
 
 <!-- ===== ATLAS AI ===== -->
+<style>
+/* Atlas blob + inline chat */
+.atlas-stage{display:flex;flex-direction:column;align-items:center;}
+.net-wrap{position:relative;width:340px;height:340px;max-width:86vw;border:0;background:none;padding:0;cursor:pointer;display:block;transition:transform .5s cubic-bezier(.22,1,.36,1);}
+.net-wrap::before{content:'';position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(47,107,255,.12),rgba(47,107,255,0) 68%);}
+.net-wrap:hover{transform:scale(1.04);}
+.net-wrap canvas{width:100%;height:100%;display:block;position:relative;}
+.net-wrap:focus-visible{outline:3px solid var(--blue);outline-offset:6px;border-radius:50%;}
+.blob-hint{cursor:pointer;}
+.blob-hint{margin-top:4px;display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--grey);transition:opacity .35s,max-height .35s,margin .35s;max-height:40px;}
+.blob-hint.hide{opacity:0;max-height:0;margin-top:0;pointer-events:none;overflow:hidden;}
+.blob-cta{font-weight:700;color:var(--blue);}
+.atlas-inline{width:100%;max-width:560px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px rgba(20,30,60,.10);overflow:hidden;max-height:0;opacity:0;transform:translateY(12px);transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s,transform .45s,margin .45s;}
+.atlas-inline.open{max-height:640px;opacity:1;transform:none;margin-top:22px;}
+.ai-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#f6f9ff,transparent);}
+.ai-orb-sm{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 38% 32%,#cfe0ff,#3b74ff 90%);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(47,107,255,.3);}
+.ai-orb-sm svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-name{font-weight:700;font-size:15px;}
+.ai-status{font-size:12px;color:var(--grey);display:flex;align-items:center;gap:6px;}
+.ai-x{margin-left:auto;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--grey);font-size:19px;line-height:1;cursor:pointer;flex-shrink:0;}
+.ai-x:hover{background:#f5f4f0;color:#333;}
+.ai-msgs{padding:18px;display:flex;flex-direction:column;gap:12px;min-height:170px;max-height:300px;overflow-y:auto;text-align:left;}
+.ai-m{display:flex;gap:10px;max-width:90%;}
+.ai-m.user{margin-left:auto;flex-direction:row-reverse;}
+.ai-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ai-av.a{background:var(--blue-l);color:var(--blue);}
+.ai-av.u{background:#f1efe9;color:#8a8578;}
+.ai-av svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-bub{padding:10px 14px;border-radius:15px;font-size:13.5px;line-height:1.5;}
+.ai-m.a .ai-bub{background:#f3f6fc;border-bottom-left-radius:4px;color:#26262a;}
+.ai-m.user .ai-bub{background:var(--blue);color:#fff;border-bottom-right-radius:4px;}
+.ai-quick{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 14px;}
+.ai-quick button{background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:12px;color:#444;cursor:pointer;transition:.2s;font-family:inherit;}
+.ai-quick button:hover{border-color:var(--blue);color:var(--blue);}
+.ai-bar{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line);background:var(--card);}
+.ai-bar input{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 15px;font-family:inherit;font-size:14px;outline:none;color:#111114;}
+.ai-bar input::placeholder{color:#9a9aa0;}
+.ai-bar input:focus{border-color:var(--blue);}
+.ai-send{width:44px;height:44px;border-radius:12px;background:var(--blue);color:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.2s;}
+.ai-send:hover{background:var(--blue-d);}
+.ai-send svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:12px 14px;background:#f3f6fc;border-radius:15px;border-bottom-left-radius:4px;}
+.ai-typing span{width:7px;height:7px;border-radius:50%;background:#9db4e6;animation:aiblink 1.2s infinite;}
+.ai-typing span:nth-child(2){animation-delay:.18s;}
+.ai-typing span:nth-child(3){animation-delay:.36s;}
+@keyframes aiblink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+@media(max-width:520px){.net-wrap{width:280px;height:280px;}}
+</style>
 <section id="atlas">
   <div class="wrap">
     <div class="sec-head center rv" style="margin-bottom:48px">
@@ -422,28 +500,28 @@ section{padding:88px 0;}
       <h2>Introducing <em>Atlas</em></h2>
       <p>The AI brain behind your entire BuilderPro OS system. Handles calls, automations, bookings, and follow-ups — around the clock, without a single day off.</p>
     </div>
-    <div class="g2">
-      <div class="rv">
-        <div class="atlas-orb">
-          <div class="ar ar3"><span class="ar-dot"></span></div>
-          <div class="ar ar2"><span class="ar-dot"></span></div>
-          <div class="ar ar1"><span class="ar-dot"></span></div>
-          <div class="ao-inner"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
+    <div class="atlas-stage rv">
+      <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with Atlas AI">
+        <canvas id="atlasNet" aria-hidden="true"></canvas>
+      </button>
+      <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to talk to Atlas</span></div>
+
+      <div class="atlas-inline" id="atlasInline">
+        <div class="ai-head">
+          <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
+          <div><div class="ai-name">Atlas</div><div class="ai-status"><span class="bdot"></span> Online &middot; replies instantly</div></div>
+          <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close chat">&times;</button>
         </div>
-        <div class="chat-wrap">
-          <div class="chat-lab"><span class="bdot"></span> Atlas — live</div>
-          <div class="cmr u"><div class="cav cav-u"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 16v-4a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v4"/></svg></div><div class="cb cb-u">Hey, I just missed a call from a roofing lead</div></div>
-          <div class="cmr"><div class="cav cav-a"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><div class="cb cb-a">Already handled it! I texted them back instantly, answered their questions, and they've booked an inspection for Tuesday at 10am. ✓</div></div>
+        <div class="ai-msgs" id="aiMsgs"></div>
+        <div class="ai-quick" id="aiQuick">
+          <button type="button" onclick="aiQuick('How much does a new roof cost?')">Roof cost?</button>
+          <button type="button" onclick="aiQuick('I have storm damage')">Storm damage</button>
+          <button type="button" onclick="aiQuick('Book an inspection')">Book inspection</button>
         </div>
-      </div>
-      <div class="rv">
-        <span class="eye">What Atlas does</span>
-        <h3 style="font-family:var(--serif);font-weight:400;font-size:32px;letter-spacing:-.02em;line-height:1.1;margin-bottom:20px">Your 24/7<br>AI employee</h3>
-        <div class="atlas-cap"><div class="ac-icon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><div><div class="ac-t">Answers every missed call</div><div class="ac-s">Greets callers, answers questions, and keeps them from calling a competitor.</div></div></div>
-        <div class="atlas-cap"><div class="ac-icon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg></div><div><div class="ac-t">Instant missed-call text-back</div><div class="ac-s">Every missed call triggers a personalized text within seconds.</div></div></div>
-        <div class="atlas-cap"><div class="ac-icon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></div><div><div class="ac-t">Books &amp; manages appointments</div><div class="ac-s">Schedules inspections, sends confirmations, handles reschedules autonomously.</div></div></div>
-        <div class="atlas-cap"><div class="ac-icon"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 4 9.5 3 3 0 0 0 6 15a3 3 0 0 0 6 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20 9.5 3 3 0 0 1 18 15a3 3 0 0 1-6 .5"/></svg></div><div><div class="ac-t">Learns your business</div><div class="ac-s">Trained on your services, pricing, and FAQs — every response sounds like you.</div></div></div>
-        <button onclick="toggleAtlas()" class="btn btn-blue" style="margin-top:24px"><span><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span> Chat with Atlas</button>
+        <div class="ai-bar">
+          <input id="aiInput" type="text" autocomplete="off" placeholder="Ask Atlas anything about your roof&hellip;" onkeydown="if(event.key==='Enter')aiSend()">
+          <button class="ai-send" type="button" onclick="aiSend()" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
       </div>
     </div>
   </div>
@@ -454,28 +532,65 @@ section{padding:88px 0;}
 <!-- ===== SERVICES / HOW IT WORKS ===== -->
 <section id="services">
   <div class="wrap">
-    <div class="g2" style="align-items:start">
-      <div class="rv">
-        <span class="eye">How it works</span>
-        <h2 style="font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.8vw,44px);letter-spacing:-.02em;line-height:1.08;margin-bottom:28px">Lead in.<br><em style="font-style:italic;color:var(--blue)">Job booked.</em></h2>
-        <div class="fl-item"><div class="fl-n">01</div><div><div class="fl-t">Lead captured</div><p>Your elite website and Google Business Profile pull in warm leads 24/7 through search, forms, and funnels.</p></div></div>
-        <div class="fl-item"><div class="fl-n">02</div><div><div class="fl-t">Instant response</div><p>Atlas AI texts back instantly — before they even consider calling a competitor, you're already in conversation.</p></div></div>
-        <div class="fl-item"><div class="fl-n">03</div><div><div class="fl-t">Auto qualified</div><p>10+ automations nurture and sort leads automatically. Only serious prospects make it to your calendar.</p></div></div>
-        <div class="fl-item"><div class="fl-n">04</div><div><div class="fl-t">Job booked ✓</div><p>Atlas handles scheduling, confirmations, and follow-ups. You show up to the inspection — that's it.</p></div></div>
-      </div>
-      <div class="rv side-stack">
-        <div class="feed-card" style="margin-bottom:34px">
-          <div class="feed-lab"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Live system activity</div>
-          <div class="lf-item"><span class="lp"></span>New lead captured — Mike Johnson, Dallas TX<div class="lt">Just now</div></div>
-          <div class="lf-item"><span class="lp"></span>Atlas AI answered call — roof estimate inquiry<div class="lt">2m ago</div></div>
-          <div class="lf-item"><span class="lp"></span>Inspection booked — Sarah M., Tue at 2pm<div class="lt">5m ago</div></div>
-          <div class="lf-item"><span class="lp"></span>Follow-up sent — lead nurture sequence #3<div class="lt">9m ago</div></div>
-          <div class="feed-mini"><div><div class="sc-n">12</div><div class="sc-l">Leads today</div></div><div><div class="sc-n">4</div><div class="sc-l">Booked</div></div></div>
-        </div>
-        <div class="side-card2"><div class="sh"><span class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><b>AI Smart Receptionist</b></div><p>Answers missed calls using your business info, highlights the customer's issue, and books inspections.</p></div>
-        <div class="side-card2"><div class="sh"><span class="fi"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span><b>Website &amp; Google Business</b></div><p>Custom advanced website + full GBP setup to dominate local search and build trust instantly.</p></div>
-      </div>
+<style>
+/* ===== How-it-works scroll pipeline ===== */
+#services .wrap{max-width:1080px}
+.pipe{display:grid;grid-template-columns:1.05fr 1fr;gap:54px;align-items:center;margin:0}.pin-wrap{position:relative;height:340vh}.pin-stage{position:sticky;top:0;min-height:100vh;display:flex;align-items:center}.pin-stage .pipe{width:100%}
+.pipe-visual{position:relative;height:430px;border-radius:26px;background:radial-gradient(120% 120% at 50% 0%,#f4f8ff,#ffffff 70%);border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 70px rgba(20,30,60,.08)}
+.pv-stage{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transform:scale(.94);transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1);}
+.pv-stage.on{opacity:1;transform:none}
+.pv-svg{width:74%;max-width:340px;height:auto;overflow:visible}
+.pv-cap{position:absolute;left:0;right:0;bottom:22px;text-align:center;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-l);font-weight:600}
+.pipe-steps{display:flex;flex-direction:column;gap:40px;position:relative;padding:20px 0}
+.pstep{position:relative;padding:22px 24px;border:1px solid var(--line);border-radius:18px;background:#fff;transition:all .4s cubic-bezier(.22,1,.36,1);opacity:.55}
+.pstep.on{opacity:1;border-color:rgba(47,107,255,.4);box-shadow:0 18px 44px rgba(47,107,255,.12)}
+.pstep .ps-head{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.ps-num{width:38px;height:38px;flex-shrink:0;border-radius:11px;background:var(--blue-l);color:var(--blue);font-family:var(--serif);font-size:17px;font-weight:500;display:flex;align-items:center;justify-content:center;transition:.4s}
+.pstep.on .ps-num{background:var(--blue);color:#fff;box-shadow:0 8px 20px rgba(47,107,255,.35)}
+.ps-t{font-size:17px;font-weight:600}
+.pstep p{font-size:14px;color:var(--grey);line-height:1.55;padding-left:52px}
+.pipe-rail{position:absolute;left:42px;top:60px;bottom:60px;width:2px;background:var(--line-2);border-radius:2px;z-index:0}
+.pipe-rail span{position:absolute;left:0;top:0;width:100%;height:0;background:linear-gradient(180deg,#7aa0ff,var(--blue));border-radius:2px;transition:height .5s ease}
+@media (prefers-reduced-motion:reduce){.pv-anim *{animation:none!important}}
+@media(max-width:820px){
+  .pin-wrap{height:auto}
+  .pin-stage{position:static;min-height:0;display:block}
+  .pipe{grid-template-columns:1fr;gap:20px;align-items:start}
+  .pipe-visual{position:sticky;top:74px;height:260px;order:-1}
+  .pipe-rail{display:none}
+  .pstep p{padding-left:0}
+}
+/* --- shared svg anim helpers --- */
+.pv-svg .plate{fill:#eef3ff}
+.pv-svg .card{fill:#fff;stroke:#d9e3ff}
+@keyframes lcfly{0%{transform:translate(var(--dx),var(--dy)) scale(.6);opacity:0}25%{opacity:1}70%{opacity:1}100%{transform:translate(0,0) scale(.35);opacity:0}}
+.lc-dot{transform-box:fill-box;transform-origin:center;animation:lcfly 2.8s ease-in infinite}
+@keyframes lcpulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.lc-card{transform-box:fill-box;transform-origin:center;animation:lcpulse 3s ease-in-out infinite}
+@keyframes bubpop{0%{transform:scale(.2);opacity:0}30%{transform:scale(1.06);opacity:1}45%{transform:scale(1)}88%{opacity:1}100%{opacity:0}}
+.ir-reply{transform-box:fill-box;transform-origin:left bottom;animation:bubpop 2.6s ease-in-out infinite}
+@keyframes boltflash{0%,60%,100%{opacity:.25}72%{opacity:1}}
+.ir-bolt{animation:boltflash 2.6s ease-in-out infinite}
+@keyframes drop{0%{transform:translateY(-34px);opacity:0}20%{opacity:1}75%{opacity:1}100%{transform:translateY(34px);opacity:0}}
+.fn-dot{transform-box:fill-box;animation:drop 2.6s ease-in infinite}
+@keyframes okpop{0%,55%{transform:scale(0);opacity:0}70%{transform:scale(1.15);opacity:1}82%{transform:scale(1)}100%{transform:scale(1);opacity:1}}
+.fn-ok{transform-box:fill-box;transform-origin:center;animation:okpop 2.6s ease-in-out infinite}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cal-check{stroke-dasharray:44;stroke-dashoffset:44;animation:draw 1.1s ease forwards;animation-delay:.3s}
+.pv-stage.on .cal-check{animation:draw 1.1s ease forwards}
+@keyframes calpop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.cal-badge{transform-box:fill-box;transform-origin:center;animation:calpop .6s ease .15s both}
+</style>
+
+    <div class="sec-head center rv" style="margin:0 auto 8px">
+      <span class="eye">How it works</span>
+      <h2>Lead in. <em>Job booked.</em></h2>
+      <p>Scroll the pipeline — watch a cold lead move from first touch to a booked inspection, automatically.</p>
     </div>
+    <div class="pin-wrap rv"><div class="pin-stage"><div class="pipe">
+      <div class="pipe-visual pv-anim"><div class="pv-stage on" data-i="0"><svg class="pv-svg" viewBox="0 0 220 200" fill="none"><ellipse class="plate" cx="110" cy="156" rx="72" ry="15"/><g class="lc-card"><rect class="card" x="68" y="66" width="84" height="60" rx="12"/><circle cx="90" cy="88" r="10" fill="#2f6bff"/><rect x="108" y="82" width="34" height="6" rx="3" fill="#c9d8ff"/><rect x="108" y="94" width="24" height="5" rx="2.5" fill="#e6edfc"/><rect x="80" y="110" width="60" height="7" rx="3.5" fill="#eef3ff"/></g><circle class="lc-dot" cx="110" cy="96" r="4.2" style="--dx:-92px;--dy:-46px;animation-delay:0s"/><circle class="lc-dot" cx="110" cy="96" r="3.2" style="--dx:96px;--dy:-30px;animation-delay:0.6s"/><circle class="lc-dot" cx="110" cy="96" r="3.6" style="--dx:-86px;--dy:44px;animation-delay:1.1s"/><circle class="lc-dot" cx="110" cy="96" r="3" style="--dx:88px;--dy:52px;animation-delay:1.7s"/><circle class="lc-dot" cx="110" cy="96" r="2.8" style="--dx:-4px;--dy:-78px;animation-delay:2.2s"/></svg><div class="pv-cap">Lead captured</div></div><div class="pv-stage" data-i="1"><svg class="pv-svg" viewBox="0 0 220 200" fill="none"><ellipse class="plate" cx="110" cy="162" rx="58" ry="13"/><rect class="card" x="82" y="42" width="56" height="104" rx="12"/><rect x="88" y="52" width="44" height="74" rx="5" fill="#f4f8ff"/><rect x="86" y="132" width="48" height="8" rx="4" fill="#eef3ff"/><g class="ir-bub"><rect x="92" y="60" width="30" height="13" rx="6.5" fill="#e2e9fb"/></g><g class="ir-reply"><rect x="98" y="80" width="30" height="13" rx="6.5" fill="#2f6bff"/></g><path class="ir-bolt" d="M156 54 l-13 20 h8 l-5 18 17-24 h-9 z" fill="#2f6bff"/></svg><div class="pv-cap">Instant response</div></div><div class="pv-stage" data-i="2"><svg class="pv-svg" viewBox="0 0 220 200" fill="none"><path class="plate" d="M62 74 H158 L124 116 V140 H96 V116 Z" stroke="#c9d8ff"/><path d="M62 74 H158" stroke="#7aa0ff" stroke-width="3" stroke-linecap="round"/><circle class="fn-dot" cx="96" cy="66" r="3.4" fill="#2f6bff" style="animation-delay:0s"/><circle class="fn-dot" cx="110" cy="66" r="3.4" fill="#2f6bff" style="animation-delay:0.5s"/><circle class="fn-dot" cx="124" cy="66" r="3.4" fill="#2f6bff" style="animation-delay:1.0s"/><circle class="fn-dot" cx="103" cy="66" r="3.4" fill="#2f6bff" style="animation-delay:1.5s"/><circle class="fn-dot" cx="117" cy="66" r="3.4" fill="#2f6bff" style="animation-delay:2.0s"/><g class="fn-ok"><circle cx="110" cy="162" r="13" fill="#1faa5a"/><path d="M104 162 l4 4 8 -9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g></svg><div class="pv-cap">Auto qualified</div></div><div class="pv-stage" data-i="3"><svg class="pv-svg" viewBox="0 0 220 200" fill="none"><ellipse class="plate" cx="110" cy="162" rx="64" ry="13"/><rect class="card" x="62" y="56" width="96" height="84" rx="14"/><path d="M62 74 V70 a14 14 0 0 1 14 -14 h68 a14 14 0 0 1 14 14 v4 Z" fill="#2f6bff"/><rect x="80" y="50" width="6" height="12" rx="3" fill="#2f6bff"/><rect x="134" y="50" width="6" height="12" rx="3" fill="#2f6bff"/><rect x="76" y="84" width="12" height="11" rx="3" fill="#dbe4ff"/><rect x="96" y="84" width="12" height="11" rx="3" fill="#dbe4ff"/><rect x="116" y="84" width="12" height="11" rx="3" fill="#dbe4ff"/><rect x="136" y="84" width="12" height="11" rx="3" fill="#dbe4ff"/><rect x="76" y="102" width="12" height="11" rx="3" fill="#dbe4ff"/><rect x="96" y="102" width="12" height="11" rx="3" fill="#dbe4ff"/><g class="cal-badge"><circle cx="128" cy="114" r="18" fill="#1faa5a"/><path class="cal-check" d="M120 114 l6 6 11 -13" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g></svg><div class="pv-cap">Job booked</div></div></div>
+      <div class="pipe-steps"><div class="pipe-rail"><span></span></div><div class="pstep on" data-i="0"><div class="ps-head"><div class="ps-num">01</div><div class="ps-t">Lead captured</div></div><p>Your elite website and Google Business Profile pull in warm leads 24/7 through search, forms, and funnels.</p></div><div class="pstep" data-i="1"><div class="ps-head"><div class="ps-num">02</div><div class="ps-t">Instant response</div></div><p>Atlas AI texts back instantly — before they even consider calling a competitor, you’re already in conversation.</p></div><div class="pstep" data-i="2"><div class="ps-head"><div class="ps-num">03</div><div class="ps-t">Auto qualified</div></div><p>10+ automations nurture and sort leads automatically. Only serious prospects make it to your calendar.</p></div><div class="pstep" data-i="3"><div class="ps-head"><div class="ps-num">04</div><div class="ps-t">Job booked</div></div><p>Atlas handles scheduling, confirmations, and follow-ups. You show up to the inspection — that’s it.</p></div></div>
+    </div></div></div>
   </div>
 </section>
 
@@ -558,7 +673,8 @@ section{padding:88px 0;}
 .pricing-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;align-items:start;}
 .pc{background:#fff;border:1px solid var(--line);border-radius:22px;padding:32px 28px;position:relative;}
 .pc.pop{border-color:var(--blue);box-shadow:0 30px 70px rgba(47,107,255,.14);}
-.pop-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:600;letter-spacing:.04em;padding:5px 14px;border-radius:999px;}
+.pop-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:600;letter-spacing:.04em;padding:5px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.pop-badge svg{width:12px;height:12px;vertical-align:0;flex-shrink:0;}
 .pc-eye{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:8px;}
 .pc-name{font-family:var(--serif);font-size:24px;letter-spacing:-.01em;margin-bottom:10px;}
 .pc-price{font-family:var(--serif);font-size:58px;letter-spacing:-.02em;line-height:1;}
@@ -568,6 +684,10 @@ section{padding:88px 0;}
 .pc-setup{font-size:12px;color:var(--grey);line-height:1.5;margin-bottom:16px;}
 .pc-setup strong{color:var(--ink);}
 .pc-feats{display:flex;flex-direction:column;gap:9px;margin-bottom:22px;}
+.pc-cost{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;padding:2px 14px;margin-bottom:18px;background:#fbfaf7;}
+.pcost-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;font-size:12.5px;color:var(--grey);border-bottom:1px solid var(--line-2);}
+.pcost-row:last-child{border-bottom:none;}
+.pcost-row b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .pf{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:#333;}
 .pfc{color:var(--blue);font-weight:700;flex-shrink:0;}
 .pc-badge2{margin-top:6px;padding-top:12px;border-top:1px dashed var(--line);font-size:12px;color:var(--grey);}
@@ -722,22 +842,64 @@ section{padding:88px 0;}
   </div>
 </section>
 
-<div class="divider"></div>
-
-<!-- ===== TESTIMONIALS ===== -->
-<section id="testimonials" style="padding-bottom:60px">
+<style>
+/* build a custom calculator */
+.cc-sec{padding:0 0 4px;margin-top:-18px;}
+.cc-card{max-width:1000px;margin:0 auto;background:linear-gradient(180deg,#f5f9ff,#ffffff 70%);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 70px rgba(20,30,60,.08);padding:38px 40px;display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;}
+.cc-left h2{font-family:var(--serif);font-weight:400;font-size:clamp(26px,3vw,36px);letter-spacing:-.02em;line-height:1.1;margin:8px 0 14px;}
+.cc-left h2 em{font-style:italic;color:var(--blue);}
+.cc-left p{color:var(--grey);font-size:15px;line-height:1.6;}
+.cc-pts{list-style:none;margin:18px 0 0;display:flex;flex-direction:column;gap:10px;}
+.cc-pts li{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:var(--ink-2);}
+.cc-pts .pfc{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px;}
+.cc-form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 12px 34px rgba(20,30,60,.06);}
+.cc-form label{display:block;font-size:13px;font-weight:600;margin:13px 0 5px;}
+.cc-form label:first-child{margin-top:0;}
+.cc-form input,.cc-form select{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;background:#fff;color:#111114;}
+.cc-form input::placeholder{color:#9a9aa0;}
+.cc-form input:focus,.cc-form select:focus{border-color:var(--blue);}
+.cc-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cc-ok{display:none;margin-top:14px;background:rgba(31,170,90,.1);color:#178048;font-size:13.5px;font-weight:600;padding:11px 14px;border-radius:10px;text-align:center;}
+.cc-ok.show{display:block;}
+@media(max-width:820px){.cc-card{grid-template-columns:1fr;gap:26px;padding:28px 24px;}.cc-row2{grid-template-columns:1fr;}}
+</style>
+<section class="cc-sec" id="custom-calculator">
   <div class="wrap">
-    <div class="sec-head center rv"><span class="eye">Testimonials</span><h2>What contractors say</h2></div>
-    <div class="ttrack rv">
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"We used to lose half our leads to voicemail. Atlas books inspections while we're up on a roof — it paid for itself the first week."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 16v-4a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v4"/></svg></div><div><div class="t-n">Mike Johnson</div><div class="t-r">Johnson Roofing — Dallas, TX</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"The automation is the best part. Follow-ups happen without us doing anything and we've already noticed more booked jobs."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div><div class="t-n">Daniel Ruiz</div><div class="t-r">Project Manager</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"Our Google presence went from nonexistent to top 3 in our area. The website and GBP setup made a massive difference."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg></div><div><div class="t-n">Jessica T.</div><div class="t-r">Business Owner</div></div></div></div>
-      <div class="tcard"><div class="t-stars">★★★★★</div><div class="t-q">"The missed-call text-back alone was worth it. Leads that used to go cold now get a response before I know I missed the call."</div><div class="t-auth"><div class="t-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg></div><div><div class="t-n">Carlos M.</div><div class="t-r">Roofing Contractor</div></div></div></div>
+    <div class="cc-card rv">
+      <div class="cc-left">
+        <span class="eye">More on the way</span>
+        <h2>A calculator for<br><em>every trade</em></h2>
+        <p>The roof estimator above is just the first. We're building instant-quote calculators for every trade — HVAC, flooring, painting, landscaping, cabinets, and more — and they'll all live right here. Tell us your trade and we'll let you know the moment yours goes live.</p>
+        <ul class="cc-pts">
+          <li><span class="pfc">✓</span>Priced around your services &amp; margins</li>
+          <li><span class="pfc">✓</span>Embedded on your site to capture leads 24/7</li>
+          <li><span class="pfc">✓</span>Built, tested, and managed for you</li>
+        </ul>
+      </div>
+      <form class="cc-form" onsubmit="return ccSubmit(event)">
+        <label>Your trade</label>
+        <select required>
+          <option value="" disabled selected>Select your trade…</option>
+          <option>HVAC</option><option>Roofing</option><option>Flooring</option><option>Painting</option>
+          <option>Landscaping</option><option>Cabinets</option><option>Trim</option><option>Pools</option><option>Other</option>
+        </select>
+        <label>What should the calculator estimate?</label>
+        <input required placeholder="e.g. price per sq ft, install per unit, project total">
+        <label>Typical job value</label>
+        <input placeholder="e.g. $3,000 – $15,000">
+        <div class="cc-row2">
+          <div><label>Business name</label><input required placeholder="Smith Services"></div>
+          <div><label>Email</label><input type="email" required placeholder="you@business.com"></div>
+        </div>
+        <button class="btn btn-blue" type="submit" style="width:100%;justify-content:center;margin-top:16px">Notify me when it's ready</button>
+        <div class="cc-ok" id="ccOk">✓ You're on the list — we'll reach out the moment your trade's calculator is live.</div>
+      </form>
     </div>
   </div>
 </section>
 
 <div class="divider"></div>
+
 
 <!-- ===== PRICING ===== -->
 <section id="pricing">
@@ -759,14 +921,12 @@ section{padding:88px 0;}
           <div class="pf"><span class="pfc">✓</span>Custom website built &amp; hosted</div>
           <div class="pf"><span class="pfc">✓</span>Google Business Profile setup</div>
           <div class="pf"><span class="pfc">✓</span>Missed call text-back</div>
-          <div class="pf"><span class="pfc">✓</span>5 lead automations</div>
           <div class="pf"><span class="pfc">✓</span>Basic booking system</div>
-          <div class="pf"><span class="pfc">✓</span>Analytics dashboard</div>
         </div>
         <button class="pc-btn pc-btn-o" onclick="openPlan('Foundation','$499/mo')">Get started →</button>
       </div>
       <div class="pc pop">
-        <div class="pop-badge"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg> Most popular</div>
+        <div class="pop-badge"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>Most popular</div>
         <div class="pc-eye">Growth plan</div>
         <div class="pc-name">BuilderPro OS</div>
         <div class="pc-price"><sup>$</sup>899</div>
@@ -779,30 +939,32 @@ section{padding:88px 0;}
           <div class="pf"><span class="pfc">✓</span>10+ lead automations</div>
           <div class="pf"><span class="pfc">✓</span>Smart booking system</div>
           <div class="pf"><span class="pfc">✓</span>Satellite roof estimator</div>
+          <div class="pf"><span class="pfc">✓</span>Analytics dashboard</div>
+          <div class="pf"><span class="pfc">✓</span>AI search ranking (SEO)</div>
           <div class="pf"><span class="pfc">✓</span>Advanced lead funnels</div>
           <div class="pf"><span class="pfc">✓</span>Priority support + monthly review</div>
-          <div class="pc-badge2"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Includes <b>Rooferly Pro</b> — featured placement in the contractor marketplace.</div>
         </div>
         <button class="pc-btn pc-btn-p" onclick="openPlan('BuilderPro OS','$899/mo')">Start my trial →</button>
       </div>
       <div class="pc">
-        <div class="pc-eye">Elite plan</div>
+        <div class="pc-eye">Performance plan</div>
         <div class="pc-name">Enterprise</div>
-        <div class="pc-price"><sup>$</sup>1999</div>
-        <div class="pc-period">per month after trial</div>
-        <div class="trial-bar">✓ 14-day free trial included</div>
-        <div class="pc-setup">One-time <strong>$499</strong> setup fee covers domain, phone number, A2P &amp; brand registration.</div>
+        <div class="pc-price" style="font-size:40px"><sup style="top:6px">$</sup>85–450</div>
+        <div class="pc-period">per qualified lead</div>
+        <div class="trial-bar">✓ Flexible budget — scale anytime</div>
+        <div class="pc-setup">A done-for-you growth engine. You only pay for genuinely qualified leads — pre-screened by our AI system — plus ad spend and management.</div>
+        <div class="pc-cost">
+          <div class="pcost-row"><span>Qualified lead</span><b>$85–450</b></div>
+          <div class="pcost-row"><span>Google Ads budget</span><b>$1k–5k / mo</b></div>
+          <div class="pcost-row"><span>Management retainer</span><b>$1,000 / mo</b></div>
+        </div>
         <div class="pc-feats">
           <div class="pf"><span class="pfc">✓</span>Everything in BuilderPro OS</div>
-          <div class="pf"><span class="pfc">✓</span>Full marketing campaign setup</div>
-          <div class="pf"><span class="pfc">✓</span>Paid ads management</div>
-          <div class="pf"><span class="pfc">✓</span>Advanced CRM buildout</div>
-          <div class="pf"><span class="pfc">✓</span>Custom AI training</div>
-          <div class="pf"><span class="pfc">✓</span>Weekly strategy calls</div>
-          <div class="pf"><span class="pfc">✓</span>Dedicated account manager</div>
-          <div class="pc-badge2"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Includes <b>Rooferly Premium</b> — top marketplace priority.</div>
+          <div class="pf"><span class="pfc">✓</span>Paid ads management &amp; optimization</div>
+          <div class="pf"><span class="pfc">✓</span>Advanced CRM + custom AI training</div>
+          <div class="pf"><span class="pfc">✓</span>Weekly strategy calls &amp; dedicated manager</div>
         </div>
-        <button class="pc-btn pc-btn-o" onclick="openPlan('Enterprise','$1,999/mo')">Get started →</button>
+        <button class="pc-btn pc-btn-o" onclick="openPlan('Enterprise','Performance-based')">Get a custom quote →</button>
       </div>
     </div>
     <p style="text-align:center;margin-top:24px;font-size:13px;color:var(--grey)">All plans include no long-term contracts · Cancel anytime · System live in 3–4 days</p>
@@ -862,8 +1024,10 @@ section{padding:88px 0;}
 .cf{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px;max-width:680px;margin:36px auto 0;}
 .cf .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .cf label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px;}
-.cf input,.cf textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 15px;font-family:inherit;font-size:14px;outline:none;background:#fff;}
+.cf input,.cf textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 15px;font-family:inherit;font-size:14px;outline:none;background:#fff;color:#111114;}
+.cf input::placeholder,.cf textarea::placeholder{color:#9a9aa0;}
 .cf input:focus,.cf textarea:focus{border-color:var(--blue);}
+.cf input:-webkit-autofill,.cf input:-webkit-autofill:focus,.cf textarea:-webkit-autofill{-webkit-text-fill-color:#111114;caret-color:#111114;box-shadow:0 0 0 1000px #fff inset;transition:background-color 9999s ease-in-out 0s;}
 @media(max-width:600px){.cf .row2{grid-template-columns:1fr;}}
 
 /* ==== faq ==== */
@@ -935,12 +1099,8 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     </div>
     <div class="book-3up rv">
       <div class="book-c"><div class="ic"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div><b>Live system demo</b><p>Full BuilderPro OS shown live — built around your business.</p></div>
-      <div class="book-c"><div class="ic"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><b>Atlas AI walkthrough</b><p>See Atlas handle calls and bookings for a roofing company.</p></div>
+      <div class="book-c"><div class="ic"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></div><b>Atlas AI walkthrough</b><p>See Atlas handle calls and bookings for a roofing company.</p></div>
       <div class="book-c"><div class="ic"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></div><b>Your questions answered</b><p>20 minutes, no pressure. Walk away knowing if it fits.</p></div>
-    </div>
-    <div class="partner rv">
-      <div class="pm"><svg viewBox="0 0 24 24"><path d="M3 12L12 4L21 12V20H15V15H9V20H3V12Z"/></svg></div>
-      <div class="ptxt"><b><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg> BuilderPro OS × Rooferly — Official Partners</b><p>As an official Rooferly partner, BuilderPro OS clients get direct access to Rooferly's contractor marketplace — so your business is visible to homeowners actively searching for roofers.</p></div>
     </div>
     <div class="cal-shell rv">
       <div class="cal-hdr"><div class="cal-ttl"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> Select your demo time</div><div class="est-live"><span class="bdot"></span> Spots available</div></div>
@@ -999,11 +1159,11 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <div class="faq">
       <div class="qa rv"><button class="qa-q">What exactly is included in the $899/mo plan?<span class="pm"></span></button><div class="qa-a"><p>Everything your roofing business needs to capture and convert leads — a custom-built website, full Google Business Profile setup, Atlas AI Receptionist running 24/7, missed call text-back, 10+ lead automations, smart booking system, satellite roof estimator, lead capture funnels, and a real-time analytics dashboard. One flat price, no hidden add-ons.</p></div></div>
       <div class="qa rv"><button class="qa-q">How fast will my system be live?<span class="pm"></span></button><div class="qa-a"><p>Most clients are fully live in 3 to 4 days. We handle everything — building your website, setting up your Google Business Profile, training Atlas on your business, and activating all automations. You just show up to the onboarding call.</p></div></div>
-      <div class="qa rv"><button class="qa-q">What is the setup fee and what does it cover?<span class="pm"></span></button><div class="qa-a"><p>The one-time setup fee covers the real hard costs of getting your system built: domain registration, your business phone number, A2P 10DLC carrier registration (required for SMS), and brand registration. The $499 Foundation plan has a $59 setup fee, the $899 BuilderPro OS plan has a $199 setup fee, and the $1,999 Enterprise plan has a $499 setup fee.</p></div></div>
+      <div class="qa rv"><button class="qa-q">What is the setup fee and what does it cover?<span class="pm"></span></button><div class="qa-a"><p>The one-time setup fee covers the real hard costs of getting your system built: domain registration, your business phone number, A2P 10DLC carrier registration (required for SMS), and brand registration. The $499 Foundation plan has a $59 setup fee and the $899 BuilderPro OS plan has a $199 setup fee. The Enterprise plan is performance-based — you pay per qualified lead plus your ad budget and a monthly management retainer — so its setup is scoped to your campaign.</p></div></div>
       <div class="qa rv"><button class="qa-q">What does Atlas AI actually do?<span class="pm"></span></button><div class="qa-a"><p>Atlas is your 24/7 AI receptionist. When you miss a call, Atlas texts the caller back within seconds, answers questions about your services, qualifies leads, and books inspections directly into your calendar. Atlas is trained on your specific business so it sounds like your company, not a generic bot.</p></div></div>
       <div class="qa rv"><button class="qa-q">Is there a contract or can I cancel anytime?<span class="pm"></span></button><div class="qa-a"><p>No long-term contracts. You can cancel anytime. We earn your business every month by delivering results — not by locking you into a 12-month agreement.</p></div></div>
       <div class="qa rv"><button class="qa-q">How does the 14-day trial work?<span class="pm"></span></button><div class="qa-a"><p>You pay the one-time setup fee today, we get everything built and live within 3–4 days, and then your 14-day trial begins. You use the full system completely live with real leads. At the end of 14 days, if you want to continue, your monthly billing starts. If not, you walk away with no additional charges.</p></div></div>
-      <div class="qa rv"><button class="qa-q">What's the difference between the $499 and $899 plans?<span class="pm"></span></button><div class="qa-a"><p>The $499 Foundation plan gives you the core setup — website, Google Business Profile, missed call text-back, 5 automations, and basic booking. The $899 BuilderPro OS plan adds Atlas AI Receptionist, 10+ automations, the satellite roof estimator, advanced lead funnels, and priority support with monthly results reviews.</p></div></div>
+      <div class="qa rv"><button class="qa-q">What's the difference between the $499 and $899 plans?<span class="pm"></span></button><div class="qa-a"><p>The $499 Foundation plan gives you the core setup — website, Google Business Profile, missed call text-back, and basic booking. The $899 BuilderPro OS plan adds Atlas AI Receptionist, 10+ automations, the satellite roof estimator, AI search ranking, the analytics dashboard, advanced lead funnels, and priority support with monthly results reviews.</p></div></div>
       <div class="qa rv"><button class="qa-q">Do I need to be tech-savvy to use this?<span class="pm"></span></button><div class="qa-a"><p>No. Everything is done for you. We build it, set it up, and manage it. You'll get a simple dashboard where you can see your leads, booked appointments, and performance — but you don't need to touch anything technical.</p></div></div>
       <div class="qa rv"><button class="qa-q">What is the Satellite Roof Estimator?<span class="pm"></span></button><div class="qa-a"><p>An AI-powered tool embedded on your website that lets homeowners enter their address and get an instant roof estimate using real satellite imagery. Before showing the result, it captures their name, phone, and email — so every estimate request becomes a qualified lead automatically sent to your system.</p></div></div>
     </div>
@@ -1016,11 +1176,11 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <div class="fg-grid">
       <div>
         <div class="f-logo"><svg class="bpmark" width="24" height="24" aria-label="BuilderPro OS"><use href="#bpMark"/></svg> BuilderPro <span>OS</span></div>
-        <p class="f-desc">The complete AI-powered growth system for roofing contractors. Book more jobs. Miss zero leads. All done for you.</p>
+        <p class="f-desc">The complete AI-powered growth system for contractors. Book more jobs. Miss zero leads. All done for you.</p>
         <div class="f-social"><a href="#">Instagram</a><a href="#">Facebook</a></div>
       </div>
       <div><div class="f-ct">Platform</div><div class="f-links"><a href="#features">Features</a><a href="#atlas">Atlas AI</a><a href="#services">Services</a><a href="#estimator">Roof estimator</a><a href="#pricing">Pricing</a></div></div>
-      <div><div class="f-ct">Company</div><div class="f-links"><a href="#services">About us</a><a href="#testimonials">Testimonials</a><a href="#booking">Book a demo</a><a href="#contact">Contact us</a></div></div>
+      <div><div class="f-ct">Company</div><div class="f-links"><a href="#services">About us</a><a href="#booking">Book a demo</a><a href="#contact">Contact us</a></div></div>
       <div><div class="f-ct">Get started</div><div class="f-links"><a href="#booking" class="btn btn-dark" style="justify-content:center">Book a demo</a><a href="#pricing" class="btn btn-light" style="justify-content:center;margin-top:8px">View pricing</a></div><div style="font-size:12.5px;color:var(--grey);margin-top:12px;line-height:1.7">14-day trial · Live in 3–4 days<br>No long-term contracts</div></div>
     </div>
     <div class="f-bot">
@@ -1215,10 +1375,10 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 </style>
 
 <!-- ===== ATLAS CHATBOT ===== -->
-<button id="atlas-chat-btn" onclick="toggleAtlas()" title="Chat with Atlas AI"><span class="ping"></span><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></button>
+<button id="atlas-chat-btn" onclick="toggleAtlas()" title="Chat with Atlas AI"><span class="ping"></span><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></button>
 <div id="atlas-panel">
   <div class="ap-hdr">
-    <div class="ap-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
+    <div class="ap-av"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></div>
     <div><div class="ap-name">Atlas AI</div><div class="ap-status"><span class="bdot"></span> Online — BuilderPro OS</div></div>
     <button class="ap-close" onclick="toggleAtlas()">✕</button>
   </div>
@@ -1249,10 +1409,10 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <input type="email" id="bpxEmail" placeholder="you@company.com">
         <label>Password</label>
         <input type="password" id="bpxPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')bpDoAuth()">
-        <a class="bpx-forgot" onclick="alert('A reset link would be sent to your email. (Demo)')">Forgot password?</a>
+        <a class="bpx-forgot" onclick="bpForgot()">Forgot password?</a>
         <button class="bpx-btn" onclick="bpDoAuth()">Sign In</button>
         <div class="bpx-msg" id="bpxAuthMsg"></div>
-        <div class="bpx-hint">Demo portal — enter any email &amp; password to explore the client dashboard.</div>
+        <div class="bpx-hint">Sign in with your BuilderPro account to see your live leads, messages, and jobs.</div>
       </div>
       <div class="bpx-foot2">Powered by BuilderPro OS</div>
     </div>
@@ -1278,6 +1438,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     </main>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ---- basics ---- */
 document.getElementById('yr').textContent=new Date().getFullYear();
@@ -1313,7 +1474,7 @@ addEventListener('scroll',function(){nav.classList.toggle('solid',scrollY>4);},{
     var g=geom(t),mid=H*0.52,half=H*0.30;
     ctx.clearRect(0,0,W,H);
     var cg=ctx.createLinearGradient(0,mid-half,0,mid+half);
-    cg.addColorStop(0,'#f5edcb');cg.addColorStop(.5,'#ecdf9e');cg.addColorStop(1,'#dfe0c0');
+    cg.addColorStop(0,'#d6e6ff');cg.addColorStop(.5,'#aecaff');cg.addColorStop(1,'#c3d8ff');
     trace(g,g.top,g.bot);ctx.fillStyle=cg;ctx.fill();
     var bg=ctx.createLinearGradient(0,mid-half*0.4,0,mid+half);
     bg.addColorStop(0,'#7aa0ff');bg.addColorStop(.4,'#3b74ff');bg.addColorStop(1,'#1f50e0');
@@ -1332,6 +1493,22 @@ addEventListener('scroll',function(){nav.classList.toggle('solid',scrollY>4);},{
 /* ---- reveal ---- */
 var rio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');rio.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -30px 0px'});
 document.querySelectorAll('.rv,.pop').forEach(function(el){rio.observe(el);});
+
+/* ---- staggered cascade reveal for the features grid ---- */
+(function(){
+  var grid=document.querySelector('#features .g6');
+  if(!grid)return;
+  var cards=[].slice.call(grid.querySelectorAll('.fcard'));
+  var gio=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        cards.forEach(function(c,i){ setTimeout(function(){c.classList.add('in');}, i*95); });
+        gio.unobserve(e.target);
+      }
+    });
+  },{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+  gio.observe(grid);
+})();
 
 /* ---- chart helpers + marketing dashboard charts ---- */
 function smoothPath(pts){var d='M'+pts[0][0]+' '+pts[0][1];for(var i=0;i<pts.length-1;i++){var x0=pts[i][0],y0=pts[i][1],x1=pts[i+1][0],y1=pts[i+1][1];var cx=(x0+x1)/2;d+=' C'+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1;}return d;}
@@ -1544,13 +1721,13 @@ function toggleAtlas(){
 function addAtlasMsg(role,text){
   var msgs=document.getElementById('atlasMsgs');
   var d=document.createElement('div');d.className='amsg'+(role==='user'?' user':'');
-  d.innerHTML='<div class="amsg-av amsg-av-'+(role==='atlas'?'a':'u')+'">'+(role==='atlas'?'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>')+'</div><div class="amsg-b amsg-b-'+(role==='atlas'?'a':'u')+'"></div>';
+  d.innerHTML='<div class="amsg-av amsg-av-'+(role==='atlas'?'a':'u')+'">'+(role==='atlas'?'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg>':'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>')+'</div><div class="amsg-b amsg-b-'+(role==='atlas'?'a':'u')+'"></div>';
   d.querySelector('.amsg-b').textContent=text;
   msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
 }
 function atlasTyping(on){
   var msgs=document.getElementById('atlasMsgs');
-  if(on){var d=document.createElement('div');d.className='amsg';d.id='atlasTyping';d.innerHTML='<div class="amsg-av amsg-av-a"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div><div class="ap-typing"><span></span><span></span><span></span></div>';msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
+  if(on){var d=document.createElement('div');d.className='amsg';d.id='atlasTyping';d.innerHTML='<div class="amsg-av amsg-av-a"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></div><div class="ap-typing"><span></span><span></span><span></span></div>';msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;}
   else{var t=document.getElementById('atlasTyping');if(t)t.remove();}
 }
 function atlasReply(text){
@@ -1572,19 +1749,149 @@ function sendMessage(text){
 function sendQuick(t){document.getElementById('atlasQuick').style.display='none';sendMessage(t);}
 function sendAtlas(){var i=document.getElementById('atlasInput'),t=i.value.trim();if(!t)return;i.value='';sendMessage(t);}
 
+/* ===== Atlas inline blob chat (Introducing Atlas section) ===== */
+var aiStarted=false;
+function openAtlasInline(){
+  var w=document.getElementById('atlasInline');if(!w)return;
+  if(!w.classList.contains('open')){
+    w.classList.add('open');
+    document.getElementById('atlasHint').classList.add('hide');
+    document.getElementById('atlasBlobBtn').classList.add('active');
+  }
+  if(!aiStarted){aiStarted=true;setTimeout(function(){aiAdd('atlas',"Hey! I'm Atlas — your AI roofing assistant. Ask me about pricing, storm damage, materials, or booking an inspection. What's on your mind?");},320);}
+  setTimeout(function(){var i=document.getElementById('aiInput');if(i)i.focus();},480);
+}
+function closeAtlasInline(){
+  var w=document.getElementById('atlasInline');if(!w)return;
+  w.classList.remove('open');
+  document.getElementById('atlasBlobBtn').classList.remove('active');
+  document.getElementById('atlasHint').classList.remove('hide');
+}
+function aiAdd(role,text){
+  var m=document.getElementById('aiMsgs');
+  var robot='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg>';
+  var user='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>';
+  var d=document.createElement('div');d.className='ai-m '+(role==='atlas'?'a':'user');
+  d.innerHTML='<div class="ai-av '+(role==='atlas'?'a':'u')+'">'+(role==='atlas'?robot:user)+'</div><div class="ai-bub"></div>';
+  d.querySelector('.ai-bub').textContent=text;
+  m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+function aiTyping(on){
+  var m=document.getElementById('aiMsgs');
+  if(on){var d=document.createElement('div');d.className='ai-m a';d.id='aiTyping';
+    d.innerHTML='<div class="ai-av a"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></div><div class="ai-typing"><span></span><span></span><span></span></div>';
+    m.appendChild(d);m.scrollTop=m.scrollHeight;}
+  else{var t=document.getElementById('aiTyping');if(t)t.remove();}
+}
+function aiSend(){
+  var i=document.getElementById('aiInput'),t=i.value.trim();if(!t)return;i.value='';
+  var q=document.getElementById('aiQuick');if(q)q.style.display='none';
+  aiAdd('user',t);aiTyping(true);
+  setTimeout(function(){aiTyping(false);aiAdd('atlas',atlasReply(t));},850);
+}
+function aiQuick(t){var q=document.getElementById('aiQuick');if(q)q.style.display='none';aiAdd('user',t);aiTyping(true);setTimeout(function(){aiTyping(false);aiAdd('atlas',atlasReply(t));},850);}
+
+/* circular particle network (plexus) on white */
+(function(){
+  var cv=document.getElementById('atlasNet');if(!cv)return;
+  var ctx=cv.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2);
+  var W=0,H=0,cx=0,cy=0,R=0,pts=[],LINK=96,mouse={x:-999,y:-999};
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function size(){
+    var r=cv.getBoundingClientRect();W=r.width;H=r.height;
+    cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+    cx=W/2;cy=H/2;R=Math.min(W,H)/2-4;
+    var N=Math.max(40,Math.round(Math.PI*R*R/1500));
+    pts=[];for(var i=0;i<N;i++){
+      var a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*R*0.94;
+      pts.push({x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr,vx:(Math.random()-.5)*.32,vy:(Math.random()-.5)*.32,r:Math.random()*1.5+.9});
+    }
+  }
+  function step(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
+    var i,j,a,b,dx,dy,d,o,nx,ny,dot;
+    for(i=0;i<pts.length;i++){a=pts[i];a.x+=a.vx;a.y+=a.vy;
+      dx=a.x-cx;dy=a.y-cy;d=Math.sqrt(dx*dx+dy*dy);
+      if(d>R-2){ // reflect off circular boundary
+        nx=dx/d;ny=dy/d;dot=a.vx*nx+a.vy*ny;a.vx-=2*dot*nx;a.vy-=2*dot*ny;
+        a.x=cx+nx*(R-3);a.y=cy+ny*(R-3);
+      }
+    }
+    // node-to-node links
+    for(i=0;i<pts.length;i++)for(j=i+1;j<pts.length;j++){
+      a=pts[i];b=pts[j];dx=a.x-b.x;dy=a.y-b.y;d=Math.sqrt(dx*dx+dy*dy);
+      if(d<LINK){o=(1-d/LINK)*.42;ctx.strokeStyle='rgba(47,107,255,'+o+')';ctx.lineWidth=.7;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+    }
+    // links to cursor
+    for(i=0;i<pts.length;i++){a=pts[i];dx=a.x-mouse.x;dy=a.y-mouse.y;d=Math.sqrt(dx*dx+dy*dy);
+      if(d<130){o=(1-d/130)*.6;ctx.strokeStyle='rgba(27,86,238,'+o+')';ctx.lineWidth=.9;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(mouse.x,mouse.y);ctx.stroke();}}
+    // nodes
+    ctx.shadowColor='rgba(47,107,255,.6)';ctx.shadowBlur=6;
+    for(i=0;i<pts.length;i++){a=pts[i];ctx.beginPath();ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+      ctx.fillStyle='#2f6bff';ctx.fill();}
+    ctx.shadowBlur=0;
+    ctx.restore();
+    if(!reduce)requestAnimationFrame(step);
+  }
+  cv.addEventListener('mousemove',function(e){var r=cv.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;});
+  cv.addEventListener('mouseleave',function(){mouse.x=-999;mouse.y=-999;});
+  size();window.addEventListener('resize',size);step();
+})();
+
 /* ==================== CLIENT PORTAL ==================== */
-function bpOpenPortal(){document.getElementById('bpx').classList.add('open');document.body.style.overflow='hidden';}
+/* ---- live backend (Supabase auth + GoHighLevel data) ---- */
+var BP_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
+var BP_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+var BP_SB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(BP_URL,BP_ANON):null;
+var BP_LIVE=!!BP_SB;
+var GHL_DASH_URL=BP_URL+'/functions/v1/ghl-dashboard';
+var GHL_CONTACTS_URL=BP_URL+'/functions/v1/ghl-contacts';
+var GHL_CAL_URL=BP_URL+'/functions/v1/ghl-calendar';
+var GHL_MSG_URL=BP_URL+'/functions/v1/ghl-messaging';
+var GHL_OPP_URL=BP_URL+'/functions/v1/ghl-opportunities';
+var BP_HED={'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'};
+function bpApi(url,payload){return fetch(url,{method:'POST',headers:BP_HED,body:JSON.stringify(payload||{})}).then(function(r){return r.json();});}
+function bpNum(x){return x!=null?Number(x).toLocaleString():'—';}
+function bpSet(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+function bpFriendly(m){if(!m)return 'Something went wrong. Please try again.';if(/invalid login/i.test(m))return 'Incorrect email or password.';if(/rate limit/i.test(m))return 'Too many attempts. Please wait a moment and try again.';return m;}
+
+function bpOpenPortal(){
+  document.getElementById('bpx').classList.add('open');document.body.style.overflow='hidden';
+  if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){bpEnterPortal(r.data.session.user.email);}}).catch(function(){});}
+}
 function bpClose(){document.getElementById('bpx').classList.remove('open');document.body.style.overflow='';}
-function bpDoAuth(){
-  var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
-  if(!email||!pw){msg.className='bpx-msg err';msg.textContent='Please enter your email and password.';return;}
-  msg.className='bpx-msg';
-  document.getElementById('bpxUemail').textContent=email;
+function bpEnterPortal(email){
+  document.getElementById('bpxUemail').textContent=email||'';
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
   bpBuildMobbar();bpNav('dashboard');
 }
+function bpDoAuth(){
+  var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
+  if(!email||!pw){msg.className='bpx-msg err';msg.textContent='Please enter your email and password.';return;}
+  msg.className='bpx-msg';
+  /* Preview / no Supabase script — fall back to a demo session so the UI still explores. */
+  if(!BP_LIVE){bpEnterPortal(email);return;}
+  var btn=document.querySelector('#bpxLogin .bpx-btn');if(btn){btn.disabled=true;btn.textContent='Signing in…';}
+  BP_SB.auth.signInWithPassword({email:email,password:pw}).then(function(r){
+    if(r.error)throw r.error;bpEnterPortal(r.data.user.email);
+  }).catch(function(e){msg.className='bpx-msg err';msg.textContent=bpFriendly(e&&e.message);})
+  .then(function(){if(btn){btn.disabled=false;btn.textContent='Sign In';}});
+}
+function bpForgot(){
+  var email=document.getElementById('bpxEmail').value.trim(),msg=document.getElementById('bpxAuthMsg');
+  if(!email){msg.className='bpx-msg err';msg.textContent='Enter your email above, then tap Forgot password.';return;}
+  if(!BP_LIVE){msg.className='bpx-msg';msg.textContent='If an account exists for that email, a reset link is on its way.';return;}
+  BP_SB.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname}).then(function(){
+    msg.className='bpx-msg';msg.textContent='If an account exists for that email, a reset link is on its way. Check your inbox.';
+  }).catch(function(e){msg.className='bpx-msg err';msg.textContent=bpFriendly(e&&e.message);});
+}
 function bpLogout(){
+  if(BP_LIVE){BP_SB.auth.signOut().catch(function(){});}
   document.getElementById('bpxApp').classList.remove('on');
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
@@ -1613,24 +1920,68 @@ function bpDashboard(){
   var fh='';funnel.forEach(function(f){fh+='<div class="bpx-frow"><div class="bpx-fname">'+f.n+'</div><div class="bpx-fbarwrap"><div class="bpx-fbar" style="width:'+f.w+'%"></div></div><div class="bpx-fcount">'+f.v+'</div></div>';});
   document.getElementById('bpxViewArea').innerHTML=
     '<div class="bpx-stats">'
-    +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">342</div><div class="note">▲ 18% vs last month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val">128</div><div class="note">▲ 12% vs last month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Pipeline value</div><div class="val blue">$412k</div><div class="note">▲ 22% vs last month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Missed calls saved</div><div class="val">63</div><div class="note">▲ 9% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val" id="bpxSNew">342</div><div class="note">▲ 18% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val" id="bpxSBooked">128</div><div class="note">▲ 12% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Pipeline value</div><div class="val blue" id="bpxSPipe">$412k</div><div class="note">▲ 22% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Missed calls saved</div><div class="val" id="bpxSMiss">63</div><div class="note">▲ 9% vs last month</div></div>'
     +'</div>'
     +'<div class="bpx-row">'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Bookings over time<span class="lg2">last 12 weeks</span></div>'
-        +'<svg viewBox="0 0 620 190" width="100%" height="190" preserveAspectRatio="none">'+grid
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Bookings over time<span class="lg2" id="bpxLineTag">last 12 weeks</span></div>'
+        +'<div id="bpxLineWrap"><svg viewBox="0 0 620 190" width="100%" height="190" preserveAspectRatio="none">'+grid
         +'<path d="'+smoothPath(line2)+'" fill="none" stroke="#33bd63" stroke-width="2.4"/>'
-        +'<path d="'+smoothPath(line)+'" fill="none" stroke="#2f6bff" stroke-width="2.4"/></svg>'
-        +'<div class="legend" style="margin-top:8px"><span><i style="background:#2f6bff;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Calls</span> &nbsp;<span><i style="background:#33bd63;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Web</span></div></div>'
+        +'<path d="'+smoothPath(line)+'" fill="none" stroke="#2f6bff" stroke-width="2.4"/></svg></div>'
+        +'<div class="legend" style="margin-top:8px"><span><i style="background:#2f6bff;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Leads</span> &nbsp;<span><i style="background:#33bd63;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Booked</span></div></div>'
       +'<div class="bpx-panel"><div class="bpx-ptitle">Where leads come from</div><div class="bpx-donuts">'
         +bpDonut(46,'#2f6bff','157','46% Google')+bpDonut(32,'#ff9d6b','109','32% Referral')+bpDonut(22,'#33bd63','76','22% Ads')
       +'</div></div>'
     +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2">this month</span></div>'+fh+'</div>';
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2" id="bpxFunTag">this month</span></div><div id="bpxFunnel">'+fh+'</div></div>';
+  if(BP_LIVE)bpDashLive();
 }
+function bpFunnelRows(items){
+  if(!items||!items.length)return '';
+  var max=1;items.forEach(function(x){if((x.count||0)>max)max=x.count;});
+  var h='';items.forEach(function(x){var w=Math.max(Math.round((x.count||0)/max*100),(x.count>0?4:0));h+='<div class="bpx-frow"><div class="bpx-fname">'+x.stage+'</div><div class="bpx-fbarwrap"><div class="bpx-fbar" style="width:'+w+'%"></div></div><div class="bpx-fcount">'+bpNum(x.count)+'</div></div>';});
+  return h;
+}
+function bpDashLive(){
+  bpApi(GHL_DASH_URL,{}).then(function(d){
+    if(!d)return;
+    if(d.newLeadsMonth!=null)bpSet('bpxSNew',bpNum(d.newLeadsMonth));
+    if(d.wonClosedJobs!=null)bpSet('bpxSBooked',bpNum(d.wonClosedJobs));
+    if(d.pipelineValue!=null)bpSet('bpxSPipe','$'+Number(d.pipelineValue).toLocaleString());
+    if(d.missedCallsRecoveredMonth!=null)bpSet('bpxSMiss',bpNum(d.missedCallsRecoveredMonth));
+    if(d.funnel&&d.funnel.length){var f=document.getElementById('bpxFunnel');if(f)f.innerHTML=bpFunnelRows(d.funnel);}
+    var lw=document.getElementById('bpxLineWrap');
+    if(lw&&d.leadsOverTime&&d.leadsOverTime.length){
+      var lead=d.leadsOverTime.map(function(x){return x.count||0;});
+      var booked=(d.bookedOverTime||[]).map(function(x){return x.count||0;});
+      var all=lead.concat(booked),mx=Math.max.apply(null,all.concat([1]));
+      var g='';for(var i=1;i<5;i++){var y=16+i*(190-32)/5;g+='<line x1="16" y1="'+y+'" x2="604" y2="'+y+'" stroke="#f0efe9"/>';}
+      var svg='<svg viewBox="0 0 620 190" width="100%" height="190" preserveAspectRatio="none">'+g
+        +(booked.length?'<path d="'+smoothPath(scalePts(booked,620,190,16,0,mx))+'" fill="none" stroke="#33bd63" stroke-width="2.4"/>':'')
+        +'<path d="'+smoothPath(scalePts(lead,620,190,16,0,mx))+'" fill="none" stroke="#2f6bff" stroke-width="2.4"/></svg>';
+      lw.innerHTML=svg;
+    }
+    bpSet('bpxLineTag','live');bpSet('bpxFunTag','live');
+  }).catch(function(){});
+}
+function bpEsc(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function bpContacts(){
+  if(!BP_LIVE){bpContactsMock();return;}
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th></tr></thead><tbody id="bpxCbody"><tr><td colspan="5" style="padding:22px;color:#8a97a0">Loading your contacts…</td></tr></tbody></table></div>';
+  bpApi(GHL_DASH_URL,{view:'contacts'}).then(function(d){
+    var list=(d&&d.contactsList)||[],b=document.getElementById('bpxCbody');if(!b)return;
+    if(!list.length){b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">No contacts yet.</td></tr>';return;}
+    var h='';list.forEach(function(c){
+      var tags='';(c.tags||[]).forEach(function(t){tags+='<span class="bpx-pill new" style="margin-right:4px">'+bpEsc(t)+'</span>';});
+      var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+      h+='<tr><td class="bpx-cname">'+bpEsc(c.name)+'</td><td>'+bpEsc(c.phone)+'</td><td>'+bpEsc(c.email)+'</td><td>'+(tags||'<span style="color:#8a97a0">—</span>')+'</td><td style="color:#8a97a0">'+added+'</td></tr>';
+    });
+    b.innerHTML=h;
+  }).catch(function(){var b=document.getElementById('bpxCbody');if(b)b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">Could not load contacts right now. Please try again shortly.</td></tr>';});
+}
+function bpContactsMock(){
   var rows=[['Mike Johnson','(214) 555-0142','Storm damage','new','Google'],['Sarah Malik','(602) 555-0198','Full replacement','booked','Referral'],['Dana Meyers','(469) 555-0110','Roof estimate','new','Estimator'],['Carlos Rivera','(480) 555-0173','Repair — leak','pending','Google'],['Jessica Tran','(714) 555-0155','New construction','booked','Ads'],['Ethan Wells','(972) 555-0128','Inspection','new','Website'],['Nina Patel','(619) 555-0187','Insurance claim','pending','Referral']];
   var h='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Interest</th><th>Status</th><th>Source</th></tr></thead><tbody>';
   rows.forEach(function(r){h+='<tr><td class="bpx-cname">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td><span class="bpx-pill '+r[3]+'">'+r[3]+'</span></td><td>'+r[4]+'</td></tr>';});
@@ -1643,6 +1994,46 @@ var BP_CONVOS=[
   {n:'Carlos Rivera',p:'Can someone call me today?',msgs:[['in','I have a leak in my ceiling, is this an emergency?'],['out','It can be — let\'s get you scheduled fast. Can someone reach you at this number today?'],['in','Can someone call me today?']]}
 ];
 function bpMessaging(){
+  if(!BP_LIVE){bpMessagingMock();return;}
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpxConvList"><div style="padding:16px;color:#8a97a0">Loading…</div></div><div class="bpx-thread" id="bpxThread"><div style="padding:22px;color:#8a97a0">Select a conversation to view messages.</div></div></div>';
+  bpApi(GHL_MSG_URL,{action:'list'}).then(function(d){
+    _bpLiveConvos=(d&&d.conversations)||[];var el=document.getElementById('bpxConvList');if(!el)return;
+    if(!_bpLiveConvos.length){el.innerHTML='<div style="padding:16px;color:#8a97a0">No conversations yet.</div>';return;}
+    var h='';_bpLiveConvos.forEach(function(c){h+='<div class="bpx-conv" id="bpxConv-'+c.id+'" onclick="bpOpenLiveConv(\''+c.id+'\')"><div class="cn">'+bpEsc(c.name)+(c.unread?' <span class="bpx-pill new">'+c.unread+'</span>':'')+'</div><div class="cp">'+(c.dir==='outbound'?'You: ':'')+bpEsc(c.last||'—')+'</div></div>';});
+    el.innerHTML=h;
+  }).catch(function(){var el=document.getElementById('bpxConvList');if(el)el.innerHTML='<div style="padding:16px;color:#8a97a0">Could not load conversations.</div>';});
+}
+var _bpLiveConvos=[],_bpCurConv=null,_bpMsgType='SMS';
+function bpOpenLiveConv(id){
+  _bpCurConv=null;_bpLiveConvos.forEach(function(c){if(c.id===id)_bpCurConv=c;});if(!_bpCurConv)return;
+  document.querySelectorAll('#bpxConvList .bpx-conv').forEach(function(el){el.classList.remove('sel');});
+  var cur=document.getElementById('bpxConv-'+id);if(cur)cur.classList.add('sel');
+  _bpMsgType=_bpCurConv.phone?'SMS':'Email';
+  var info=(_bpCurConv.phone||'')+(_bpCurConv.phone&&_bpCurConv.email?' · ':'')+(_bpCurConv.email||'');
+  document.getElementById('bpxThread').innerHTML='<div class="bpx-thead">'+bpEsc(_bpCurConv.name)+' <span style="color:#8a97a0;font-weight:400;font-size:12px">'+bpEsc(info)+'</span></div><div class="bpx-tbody" id="bpxTbody"><div style="padding:18px;color:#8a97a0">Loading messages…</div></div><div class="bpx-reply"><input id="bpxReplyIn" placeholder="Type a reply…" onkeydown="if(event.key===\'Enter\')bpSendLive()"><button onclick="bpSendLive()">Send</button></div>';
+  bpLoadThread(id);
+}
+function bpLoadThread(id){
+  bpApi(GHL_MSG_URL,{action:'thread',id:id}).then(function(d){
+    var msgs=(d&&d.messages)||[],b=document.getElementById('bpxTbody');if(!b)return;
+    if(!msgs.length){b.innerHTML='<div style="padding:18px;color:#8a97a0">No messages yet. Send the first one below.</div>';return;}
+    var h='';msgs.forEach(function(m){
+      if(m.activity){h+='<div style="text-align:center;color:#8a97a0;font-size:11px;margin:6px 0">'+bpEsc(m.activity)+'</div>';return;}
+      if(!m.body)return;
+      h+='<div class="bpx-bub '+(m.dir==='outbound'?'out':'in')+'">'+bpEsc(m.body)+'</div>';
+    });
+    b.innerHTML=h;b.scrollTop=b.scrollHeight;
+  }).catch(function(){var b=document.getElementById('bpxTbody');if(b)b.innerHTML='<div style="padding:18px;color:#8a97a0">Could not load messages.</div>';});
+}
+function bpSendLive(){
+  var inp=document.getElementById('bpxReplyIn');if(!inp||!_bpCurConv)return;
+  var text=inp.value.trim();if(!text)return;inp.disabled=true;
+  bpApi(GHL_MSG_URL,{action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your BuilderPro team'}).then(function(res){
+    if(res&&res.ok){inp.value='';setTimeout(function(){bpLoadThread(_bpCurConv.id);},800);}
+    else{alert('Could not send'+(res&&res.status?(' ('+res.status+')'):'')+'. Please try again.');}
+  }).catch(function(){alert('Could not send. Please try again.');}).then(function(){inp.disabled=false;inp.focus();});
+}
+function bpMessagingMock(){
   var list='';BP_CONVOS.forEach(function(c,i){list+='<div class="bpx-conv'+(i===0?' sel':'')+'" onclick="bpOpenConv('+i+')"><div class="cn">'+c.n+'</div><div class="cp">'+c.p+'</div></div>';});
   document.getElementById('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpxConvList">'+list+'</div><div class="bpx-thread" id="bpxThread"></div></div>';
   bpOpenConv(0);
@@ -1660,6 +2051,22 @@ function bpSendReply(inp){
   inp.value='';body.scrollTop=body.scrollHeight;
 }
 function bpCalendar(){
+  if(!BP_LIVE){bpCalendarMock();return;}
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-upnext"><div class="bpx-ptitle" style="font-size:16px;margin-bottom:14px">Upcoming inspections</div><div id="bpxUpList"><div style="padding:14px;color:#8a97a0">Loading your calendar…</div></div></div>';
+  bpApi(GHL_CAL_URL,{action:'list',cal:'inspection'}).then(function(d){
+    var events=(d&&d.events)||[],el=document.getElementById('bpxUpList');if(!el)return;
+    var now=Date.now();
+    var up=events.filter(function(e){return new Date(e.start).getTime()>=now-3600000;}).sort(function(a,b){return new Date(a.start)-new Date(b.start);}).slice(0,10);
+    if(!up.length){el.innerHTML='<div style="padding:14px;color:#8a97a0">No upcoming appointments.</div>';return;}
+    var mn=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],h='';
+    up.forEach(function(e){var dt=new Date(e.start);
+      var time=dt.toLocaleDateString('en-US',{weekday:'short'})+' · '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+(e.title?(' — '+bpEsc(e.title)):'');
+      h+='<div class="bpx-uprow"><div class="bpx-update"><div class="mo">'+mn[dt.getMonth()]+'</div><div class="dy">'+dt.getDate()+'</div></div><div style="flex:1"><div class="bpx-upname">'+bpEsc(e.title||'Appointment')+(e.address?' <span style="color:#8a97a0;font-weight:400">· '+bpEsc(e.address)+'</span>':'')+'</div><div class="bpx-uptime">'+time+'</div></div><span class="bpx-pill booked">'+bpEsc(e.status||'Confirmed')+'</span></div>';
+    });
+    el.innerHTML=h;
+  }).catch(function(){var el=document.getElementById('bpxUpList');if(el)el.innerHTML='<div style="padding:14px;color:#8a97a0">Could not load your calendar right now.</div>';});
+}
+function bpCalendarMock(){
   var appts=[['AUG','12','Mike Johnson','Tue · 10:00 AM — Storm inspection'],['AUG','14','Sarah Malik','Thu · 2:00 PM — Full roof measure'],['AUG','15','Nina Patel','Fri · 9:30 AM — Insurance inspection'],['AUG','18','Jessica Tran','Mon · 11:00 AM — New build consult'],['AUG','20','Ethan Wells','Wed · 3:30 PM — Annual inspection']];
   var h='<div class="bpx-upnext"><div class="bpx-ptitle" style="font-size:16px;margin-bottom:14px">Upcoming inspections</div>';
   appts.forEach(function(a){h+='<div class="bpx-uprow"><div class="bpx-update"><div class="mo">'+a[0]+'</div><div class="dy">'+a[1]+'</div></div><div style="flex:1"><div class="bpx-upname">'+a[2]+'</div><div class="bpx-uptime">'+a[3]+'</div></div><span class="bpx-pill booked">Confirmed</span></div>';});
@@ -1670,7 +2077,33 @@ var BP_DEALS=[{id:'d1',n:'Robert Hayes',ph:'(214) 555-0166',v:14200},{id:'d2',n:
 var BP_WON=[{n:'Tom Sullivan',ph:'(602) 555-0133',v:16400,d:'Aug 3, 2026'},{n:'Priya Shah',ph:'(714) 555-0102',v:11250,d:'Jul 28, 2026'}];
 function bpMoney(n){return '$'+Number(n).toLocaleString('en-US');}
 function bpCloseDeals(){
-  bpDrawDeals();
+  if(!BP_LIVE){bpDrawDeals();return;}
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-sec-h">Ready to close</div><div class="bpx-sec-p">These homeowners have their estimate and are deciding. When one signs, mark it won — it updates your pipeline instantly.</div><div id="bpxDealList"><div class="bpx-cd-card"><div>Loading your deals…</div></div></div><div class="bpx-sec-h" style="margin-top:26px">Confirmed jobs</div><div class="bpx-sec-p">Deals you\'ve closed and marked won.</div><div id="bpxWonList"><div class="bpx-cd-card"><div>Loading…</div></div></div>';
+  bpApi(GHL_OPP_URL,{action:'list'}).then(function(d){_bpLiveDeals=(d&&d.opportunities)||[];bpDrawLiveDeals();}).catch(function(){var el=document.getElementById('bpxDealList');if(el)el.innerHTML='<div class="bpx-cd-card"><div>Couldn\'t load deals right now. Please refresh in a moment.</div></div>';});
+  bpApi(GHL_OPP_URL,{action:'won_list'}).then(function(d){bpDrawLiveWon((d&&d.opportunities)||[]);}).catch(function(){var el=document.getElementById('bpxWonList');if(el)el.innerHTML='<div class="bpx-cd-card"><div>Couldn\'t load confirmed jobs.</div></div>';});
+}
+var _bpLiveDeals=[];
+function bpDrawLiveDeals(){
+  var el=document.getElementById('bpxDealList');if(!el)return;
+  if(!_bpLiveDeals.length){el.innerHTML='<div class="bpx-cd-card"><div>No deals in Decision Pending right now.</div></div>';return;}
+  var h='';_bpLiveDeals.forEach(function(o){h+='<div class="bpx-cd-card" id="bpxDeal-'+o.opportunityId+'"><div><div class="bpx-cd-name">'+bpEsc(o.name||'Unknown')+'</div><div class="bpx-cd-meta">'+(o.phone?'<span>'+bpEsc(o.phone)+'</span>':'')+(o.value?'<span class="bpx-cd-val">'+bpMoney(o.value)+'</span>':'')+'</div></div><button class="bpx-cd-btn" onclick="bpMarkWonLive(\''+o.opportunityId+'\',\''+(o.contactId||'')+'\')">Mark as won</button></div>';});
+  el.innerHTML=h;
+}
+function bpDrawLiveWon(list){
+  var el=document.getElementById('bpxWonList');if(!el)return;
+  if(!list.length){el.innerHTML='<div class="bpx-cd-card"><div>No confirmed jobs yet. When you mark a deal won, it\'ll show here.</div></div>';return;}
+  var h='';list.forEach(function(o){var won=o.wonAt?(' <span>Won '+new Date(o.wonAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span>'):'';h+='<div class="bpx-cd-card" style="opacity:.92"><div><div class="bpx-cd-name">'+bpEsc(o.name||'Unknown')+'</div><div class="bpx-cd-meta">'+(o.phone?'<span>'+bpEsc(o.phone)+'</span>':'')+(o.value?'<span class="bpx-cd-val">'+bpMoney(o.value)+'</span>':'')+won+'</div></div><span class="bpx-pill won">✓ Won</span></div>';});
+  el.innerHTML=h;
+}
+function bpMarkWonLive(oppId,contactId){
+  var card=document.getElementById('bpxDeal-'+oppId),btn=card?card.querySelector('.bpx-cd-btn'):null;
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  bpApi(GHL_OPP_URL,{action:'won',opportunityId:oppId,contactId:contactId}).then(function(d){
+    if(d&&d.ok){
+      _bpLiveDeals=_bpLiveDeals.filter(function(x){return x.opportunityId!==oppId;});bpDrawLiveDeals();
+      bpApi(GHL_OPP_URL,{action:'won_list'}).then(function(w){bpDrawLiveWon((w&&w.opportunities)||[]);}).catch(function(){});
+    }else{if(btn){btn.disabled=false;btn.textContent='Mark as won';}alert('Something went wrong marking that deal won. Please try again.');}
+  }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Mark as won';}alert('Network issue. Please try again in a moment.');});
 }
 function bpDrawDeals(){
   var h='<div class="bpx-sec-h">Ready to close</div><div class="bpx-sec-p">These homeowners have their estimate and are deciding. When one signs, mark it won — it updates your pipeline instantly.</div><div id="bpxDealList">';
@@ -1703,6 +2136,73 @@ function bpAutomations(){
   });
   document.getElementById('bpxViewArea').innerHTML=h;
 }
+</script>
+<script>
+(function(){
+  var steps=[].slice.call(document.querySelectorAll('#services .pstep'));
+  var stages=[].slice.call(document.querySelectorAll('#services .pv-stage'));
+  var fill=document.querySelector('#services .pipe-rail span');
+  var wrap=document.querySelector('#services .pin-wrap');
+  if(!steps.length)return;
+  var N=steps.length, last=-1;
+  function setActive(i){
+    if(i===last)return; last=i;
+    steps.forEach(function(s,k){s.classList.toggle('on',k===i);});
+    stages.forEach(function(s,k){s.classList.toggle('on',k===i);});
+    if(fill)fill.style.height=((i+1)/N*100)+'%';
+  }
+  var mobile=window.matchMedia('(max-width:820px)').matches;
+  if(wrap && !mobile){
+    function onScroll(){
+      var vh=window.innerHeight, total=wrap.offsetHeight - vh;
+      var top=wrap.getBoundingClientRect().top;
+      var scrolled=Math.min(Math.max(-top,0), total>0?total:0);
+      var prog = total>0 ? scrolled/total : 0;
+      var i=Math.min(N-1, Math.floor(prog*N));
+      setActive(i);
+    }
+    window.addEventListener('scroll',onScroll,{passive:true});
+    window.addEventListener('resize',onScroll);
+    onScroll();
+  } else {
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting) setActive(+e.target.dataset.i); });
+    },{rootMargin:'-46% 0px -46% 0px',threshold:0});
+    steps.forEach(function(s){io.observe(s);});
+    setActive(0);
+  }
+})();
+</script>
+<script>
+(function(){
+  var wrap=document.querySelector('#features .feat-pin');
+  if(!wrap)return;
+  var cards=[].slice.call(document.querySelectorAll('#features .feat-card'));
+  cards.sort(function(a,b){return (+a.dataset.i)-(+b.dataset.i);});
+  var cube=document.getElementById('featCube');
+  var faces=cube?[].slice.call(cube.querySelectorAll('.cube-face')):[];
+  faces.sort(function(a,b){return (+a.dataset.i)-(+b.dataset.i);});
+  var N=cards.length,last=-1;
+  function set(r){
+    if(r===last)return; last=r;
+    cards.forEach(function(c,i){c.classList.toggle('show',i<r);});
+    faces.forEach(function(fc,i){fc.style.opacity=(i<r)?'0':'1';});
+  }
+  if(window.matchMedia('(max-width:820px)').matches){ set(N); return; }
+  function onScroll(){
+    var vh=window.innerHeight,total=wrap.offsetHeight-vh,top=wrap.getBoundingClientRect().top;
+    var scrolled=Math.min(Math.max(-top,0),total>0?total:0);
+    var prog=total>0?scrolled/total:0;
+    if(cube)cube.style.setProperty('--open',prog.toFixed(3));
+    set(Math.min(N,Math.floor(prog*(N+1))));
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  onScroll();
+})();
+</script>
+<script>
+function ccSubmit(e){e.preventDefault();var f=e.target;document.getElementById('ccOk').classList.add('show');var b=f.querySelector('button[type="submit"]');b.textContent='Request sent ✓';b.disabled=true;b.style.opacity='.7';return false;}
 </script>
 </body>
 </html>
