@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://builderpro-os.com/sitemap.xml
