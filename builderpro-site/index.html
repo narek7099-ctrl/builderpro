@@ -13098,9 +13098,6 @@ function bpAutomations(){
     ctx.strokeStyle='rgba(47,107,255,'+(0.9*charge).toFixed(3)+')';
     ctx.shadowColor='rgba(47,107,255,0.55)';ctx.shadowBlur=18;
     ctx.stroke();ctx.shadowBlur=0;
-    var px=((t*72)%(W+60))-30,py=yAt(px,t);
-    ctx.beginPath();ctx.arc(px,py,4.4,0,6.2832);
-    ctx.fillStyle='#fff';ctx.shadowColor='rgba(47,107,255,0.95)';ctx.shadowBlur=17;ctx.fill();ctx.shadowBlur=0;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
