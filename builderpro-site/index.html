@@ -225,6 +225,7 @@ section{padding:88px 0;}
       <a class="lk" href="#features">Features</a>
       <a class="lk" href="#atlas">Atlas AI</a>
       <a class="lk" href="#estimator">Estimator</a>
+      <a class="lk" href="#sites">Websites</a>
       <a class="lk" href="#pricing">Pricing</a>
       <a class="lk" href="#contact">Contact</a>
       <a href="#" onclick="bpOpenPortal();return false;" class="nav-login" title="Client Login" aria-label="Client Login">
@@ -239,6 +240,7 @@ section{padding:88px 0;}
   <a href="#features" onclick="this.closest('#mobMenu').classList.remove('open')">Features</a>
   <a href="#atlas" onclick="this.closest('#mobMenu').classList.remove('open')">Atlas AI</a>
   <a href="#estimator" onclick="this.closest('#mobMenu').classList.remove('open')">Estimator</a>
+  <a href="#sites" onclick="this.closest('#mobMenu').classList.remove('open')">Websites</a>
   <a href="#pricing" onclick="this.closest('#mobMenu').classList.remove('open')">Pricing</a>
   <a href="#" onclick="bpOpenPortal();this.closest('#mobMenu').classList.remove('open');return false;">Client Login</a>
   <a href="#booking" class="btn btn-dark" onclick="this.closest('#mobMenu').classList.remove('open')">Book a demo</a>
@@ -459,7 +461,7 @@ section{padding:88px 0;}
 .blob-hint.hide{opacity:0;max-height:0;margin-top:0;pointer-events:none;overflow:hidden;}
 .blob-cta{font-weight:700;color:var(--blue);}
 .atlas-inline{width:100%;max-width:560px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px rgba(20,30,60,.10);overflow:hidden;max-height:0;opacity:0;transform:translateY(12px);transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s,transform .45s,margin .45s;}
-.atlas-inline.open{max-height:640px;opacity:1;transform:none;margin-top:22px;}
+.atlas-inline.open{max-height:760px;opacity:1;transform:none;margin-top:22px;}
 .ai-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#f6f9ff,transparent);}
 .ai-orb-sm{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 38% 32%,#cfe0ff,#3b74ff 90%);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(47,107,255,.3);}
 .ai-orb-sm svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -492,36 +494,86 @@ section{padding:88px 0;}
 .ai-typing span:nth-child(2){animation-delay:.18s;}
 .ai-typing span:nth-child(3){animation-delay:.36s;}
 @keyframes aiblink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+/* build-your-Atlas wizard */
+.ai-wiz{padding:20px 20px 18px;text-align:left;}
+.ai-wiz-prog{font-size:12px;color:var(--grey);margin-bottom:14px;}
+.ai-wiz-prog b{color:var(--blue);}
+.ai-wq{display:none;animation:aiwfade .35s ease;}
+.ai-wq.on{display:block;}
+@keyframes aiwfade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.ai-wq-h{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:-.01em;margin-bottom:5px;}
+.ai-wq-s{font-size:13px;color:var(--grey);margin-bottom:16px;}
+.ai-wq-opts{display:flex;flex-wrap:wrap;gap:8px;}
+.ai-wopt{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 15px;font-size:13.5px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:.18s;font-family:inherit;}
+.ai-wopt:hover{border-color:#c9c8c2;}
+.ai-wopt.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue);font-weight:600;}
+.ai-wopt.wide{width:100%;text-align:left;display:flex;flex-direction:column;gap:2px;}
+.ai-wopt.wide b{font-size:14px;font-weight:600;}
+.ai-wopt.wide span{font-size:12px;color:var(--grey);font-weight:400;}
+.ai-wopt.wide.on span{color:var(--blue);}
+.ai-win{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 15px;font-family:inherit;font-size:15px;outline:none;background:#fff;color:#111114;}
+.ai-win::placeholder{color:#9a9aa0;}
+.ai-win:focus{border-color:var(--blue);}
+.ai-wiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;}
+.ai-wiz-back{background:none;border:0;color:var(--grey);font-size:14px;cursor:pointer;font-family:inherit;padding:8px 4px;}
+.ai-wiz-next{background:var(--blue);color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:.2s;}
+.ai-wiz-next:hover{background:var(--blue-d);}
+.ai-wiz-next:disabled{opacity:.4;cursor:not-allowed;}
 @media(max-width:520px){.net-wrap{width:280px;height:280px;}}
 </style>
 <section id="atlas">
   <div class="wrap">
     <div class="sec-head center rv" style="margin-bottom:48px">
       <span class="eye">Meet your AI</span>
-      <h2>Introducing <em>Atlas</em></h2>
-      <p>The AI brain behind your entire BuilderPro OS system. Handles calls, automations, bookings, and follow-ups — around the clock, without a single day off.</p>
+      <h2>Build your own <em>Atlas</em></h2>
+      <p>Atlas is the AI brain behind your BuilderPro OS — answering calls, texts, and bookings 24/7. Answer 3 quick questions and meet the version built for <em>your</em> trade.</p>
     </div>
     <div class="atlas-stage rv">
       <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with Atlas AI">
         <canvas id="atlasNet" aria-hidden="true"></canvas>
       </button>
-      <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to talk to Atlas</span></div>
+      <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to build your Atlas</span></div>
 
       <div class="atlas-inline" id="atlasInline">
         <div class="ai-head">
           <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
-          <div><div class="ai-name">Atlas</div><div class="ai-status"><span class="bdot"></span> Online &middot; replies instantly</div></div>
-          <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close chat">&times;</button>
+          <div><div class="ai-name" id="aiName">Build your Atlas</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">3 quick questions</span></div></div>
+          <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close">&times;</button>
         </div>
-        <div class="ai-msgs" id="aiMsgs"></div>
-        <div class="ai-quick" id="aiQuick">
-          <button type="button" onclick="aiQuick('How much does a new roof cost?')">Roof cost?</button>
-          <button type="button" onclick="aiQuick('I have storm damage')">Storm damage</button>
-          <button type="button" onclick="aiQuick('Book an inspection')">Book inspection</button>
+
+        <!-- wizard -->
+        <div class="ai-wiz" id="aiWiz">
+          <div class="ai-wiz-prog">Step <b id="aiWizStep">1</b> of 3</div>
+          <div class="ai-wq on" data-q="1">
+            <div class="ai-wq-h">What's your trade?</div>
+            <div class="ai-wq-s">Atlas tailors itself to your industry — pick yours.</div>
+            <div class="ai-wq-opts" id="aiTrades"></div>
+            <div id="aiOtherWrap" style="display:none;margin-top:10px"><input id="aiOther" class="ai-win" placeholder="Type your trade…" oninput="aiWizCheck()"></div>
+          </div>
+          <div class="ai-wq" data-q="2">
+            <div class="ai-wq-h">What's your business name?</div>
+            <div class="ai-wq-s">So Atlas answers as your company — not a generic bot.</div>
+            <input id="aiBiz" class="ai-win" placeholder="e.g. Summit Exteriors" oninput="aiWizCheck()">
+          </div>
+          <div class="ai-wq" data-q="3">
+            <div class="ai-wq-h">How should Atlas sound?</div>
+            <div class="ai-wq-s">Pick the voice that fits your brand.</div>
+            <div class="ai-wq-opts" id="aiTones"></div>
+          </div>
+          <div class="ai-wiz-nav">
+            <button class="ai-wiz-back" id="aiWizBack" type="button" onclick="aiWizGo(-1)" style="visibility:hidden">← Back</button>
+            <button class="ai-wiz-next" id="aiWizNext" type="button" onclick="aiWizNext()" disabled>Continue →</button>
+          </div>
         </div>
-        <div class="ai-bar">
-          <input id="aiInput" type="text" autocomplete="off" placeholder="Ask Atlas anything about your roof&hellip;" onkeydown="if(event.key==='Enter')aiSend()">
-          <button class="ai-send" type="button" onclick="aiSend()" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+
+        <!-- personalized chat -->
+        <div class="ai-chat" id="aiChat" style="display:none">
+          <div class="ai-msgs" id="aiMsgs"></div>
+          <div class="ai-quick" id="aiQuick"></div>
+          <div class="ai-bar">
+            <input id="aiInput" type="text" autocomplete="off" placeholder="Ask Atlas anything&hellip;" onkeydown="if(event.key==='Enter')aiSend()">
+            <button class="ai-send" type="button" onclick="aiSend()" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+          </div>
         </div>
       </div>
     </div>
@@ -11573,6 +11625,182 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 
 <div class="divider"></div>
 
+<!-- ===== WEBSITE MODELS ===== -->
+<style>
+.wm-sec{padding:12px 0 4px;}
+.wm-form{max-width:760px;margin:30px auto 0;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 50px rgba(20,30,60,.07);padding:22px;}
+.wm-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end;}
+.wm-fld label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink-2);}
+.wm-fld input{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 14px;font-family:inherit;font-size:14px;outline:none;background:#fff;color:#111114;}
+.wm-fld input::placeholder{color:#9a9aa0;}
+.wm-fld input:focus{border-color:var(--blue);}
+.wm-go{background:var(--blue);color:#fff;border:0;border-radius:11px;padding:12px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.2s;height:44px;}
+.wm-go:hover{background:var(--blue-d);}
+.wm-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
+.wm-chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--grey);cursor:pointer;font-family:inherit;transition:.18s;}
+.wm-chip:hover{border-color:var(--blue);color:var(--blue);}
+.wm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:34px;}
+.wm-card{opacity:0;transform:translateY(26px) scale(.97);}
+.wm-card.in{animation:wmIn .7s cubic-bezier(.16,1,.3,1) forwards;}
+@keyframes wmIn{to{opacity:1;transform:none;}}
+.wm-card:hover .wm-site{transform:translateY(-4px);}
+.wm-chrome{display:flex;align-items:center;gap:9px;background:#e9edf3;border:1px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;padding:9px 12px;}
+.wm-dots{display:flex;gap:5px;}
+.wm-dots i{width:8px;height:8px;border-radius:50%;background:#c3ccd8;}
+.wm-dots i:first-child{background:#ff5f57;}.wm-dots i:nth-child(2){background:#febc2e;}.wm-dots i:nth-child(3){background:#28c840;}
+.wm-addr{flex:1;background:#fff;border-radius:6px;font-size:10.5px;color:#8a94a3;padding:3px 9px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wm-badge{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);}
+.wm-site{position:relative;height:290px;border:1px solid var(--line);border-radius:0 0 14px 14px;overflow:hidden;transition:transform .35s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;}
+.wm-blob{position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(34px);opacity:.55;top:-40px;right:-50px;animation:wmFloat 7s ease-in-out infinite;}
+@keyframes wmFloat{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-18px,22px) scale(1.12);}}
+.wm-nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;}
+.wm-logo{font-weight:800;font-size:13px;letter-spacing:-.01em;}
+.wm-nav nav{display:flex;gap:9px;}
+.wm-nav nav span{width:16px;height:3px;border-radius:2px;opacity:.5;}
+.wm-navcta{font-size:10px;font-weight:700;padding:5px 11px;border-radius:999px;}
+.wm-hero{position:relative;z-index:2;padding:8px 18px 0;flex:1;}
+.wm-eye{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;opacity:.85;}
+.wm-h{font-size:22px;line-height:1.08;letter-spacing:-.02em;margin-bottom:8px;font-weight:800;}
+.wm-sub{font-size:11px;line-height:1.5;opacity:.72;margin-bottom:14px;max-width:88%;}
+.wm-btns{display:flex;gap:8px;align-items:center;}
+.wm-cta{font-size:11px;font-weight:700;padding:8px 15px;border-radius:8px;position:relative;overflow:hidden;}
+.wm-cta::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:wmShine 3.4s ease-in-out infinite;}
+@keyframes wmShine{0%{left:-60%;}55%,100%{left:130%;}}
+.wm-ghost{font-size:11px;font-weight:600;opacity:.7;}
+.wm-strip{position:relative;z-index:2;display:flex;gap:8px;padding:14px 18px 16px;margin-top:auto;}
+.wm-strip span{flex:1;height:34px;border-radius:8px;opacity:.5;}
+/* themes */
+.wm-midnight{background:#0c1222;color:#eaf0ff;}
+.wm-midnight .wm-blob{background:radial-gradient(circle,#3b74ff,#7b3bff);}
+.wm-midnight .wm-nav nav span{background:#eaf0ff;}
+.wm-midnight .wm-navcta{background:#5b86ff;color:#0c1222;}
+.wm-midnight .wm-eye{color:#7ea2ff;}
+.wm-midnight .wm-cta{background:#5b86ff;color:#0c1222;}
+.wm-midnight .wm-strip span{background:#1c2740;}
+.wm-daylight{background:#fbfaf7;color:#141a2e;}
+.wm-daylight .wm-blob{background:radial-gradient(circle,#9dc0ff,#2f6bff);opacity:.32;}
+.wm-daylight .wm-nav nav span{background:#141a2e;}
+.wm-daylight .wm-navcta{background:#2f6bff;color:#fff;}
+.wm-daylight .wm-eye{color:#2f6bff;}
+.wm-daylight .wm-h{font-family:var(--serif);font-weight:400;}
+.wm-daylight .wm-cta{background:#2f6bff;color:#fff;}
+.wm-daylight .wm-strip span{background:#eceae3;}
+.wm-aurora{background:linear-gradient(135deg,#2338c8,#6a3bff 55%,#b23bff);color:#fff;}
+.wm-aurora .wm-blob{background:radial-gradient(circle,#6ff,#3b74ff);opacity:.4;}
+.wm-aurora .wm-nav nav span{background:#fff;}
+.wm-aurora .wm-navcta{background:#fff;color:#3a2ad0;}
+.wm-aurora .wm-eye{color:#dfe6ff;}
+.wm-aurora .wm-cta{background:#fff;color:#3a2ad0;}
+.wm-aurora .wm-strip span{background:rgba(255,255,255,.22);}
+.wm-minimal{background:#ffffff;color:#111;}
+.wm-minimal .wm-blob{background:radial-gradient(circle,#ddd,#f4f4f4);opacity:.7;}
+.wm-minimal .wm-nav nav span{background:#111;}
+.wm-minimal .wm-navcta{border:1px solid #111;}
+.wm-minimal .wm-eye{color:#111;}
+.wm-minimal .wm-h{font-weight:300;letter-spacing:-.03em;}
+.wm-minimal .wm-cta{background:#111;color:#fff;}
+.wm-minimal .wm-strip span{background:#f0f0f0;}
+.wm-slate{background:#f2f5f9;color:#1f2937;}
+.wm-slate .wm-blob{background:radial-gradient(circle,#7fd1c9,#2f8fb0);opacity:.3;}
+.wm-slate .wm-nav{background:#1f2937;margin:-0 0 6px;padding:13px 16px;}
+.wm-slate .wm-logo{color:#fff;}
+.wm-slate .wm-nav nav span{background:#fff;}
+.wm-slate .wm-navcta{background:#12b3a6;color:#04201d;}
+.wm-slate .wm-eye{color:#0e8f86;}
+.wm-slate .wm-cta{background:#12b3a6;color:#04201d;}
+.wm-slate .wm-strip span{background:#e0e6ee;}
+.wm-sunset{background:linear-gradient(160deg,#fff3e6,#ffe1cc 60%,#e9ecff);color:#3a2418;}
+.wm-sunset .wm-blob{background:radial-gradient(circle,#ff9e5e,#ff5e8a);opacity:.4;}
+.wm-sunset .wm-nav nav span{background:#3a2418;}
+.wm-sunset .wm-navcta{background:#ff7a3d;color:#fff;}
+.wm-sunset .wm-eye{color:#e0602f;}
+.wm-sunset .wm-cta{background:#ff7a3d;color:#fff;}
+.wm-sunset .wm-strip span{background:rgba(255,140,80,.22);}
+.wm-note{text-align:center;color:var(--grey);font-size:13px;margin-top:24px;}
+.wm-note a{color:var(--blue);font-weight:600;}
+@media(max-width:900px){.wm-grid{grid-template-columns:repeat(2,1fr);}.wm-row{grid-template-columns:1fr 1fr;}.wm-go{grid-column:1/-1;}}
+@media(max-width:560px){.wm-grid{grid-template-columns:1fr;}.wm-row{grid-template-columns:1fr;}}
+</style>
+<section class="wm-sec" id="sites">
+  <div class="wrap">
+    <div class="sec-head center rv">
+      <span class="eye">Website models</span>
+      <h2>See your website<br><em>before you buy</em></h2>
+      <p>Answer a couple of quick questions and watch six website concepts build themselves around your business. Love one? We build it for real — live in 3–4 days.</p>
+    </div>
+    <div class="wm-form rv">
+      <div class="wm-row">
+        <div class="wm-fld"><label>Your trade</label><input id="wmTrade" placeholder="e.g. HVAC, Roofing, Pools"></div>
+        <div class="wm-fld"><label>Business name</label><input id="wmBiz" placeholder="e.g. Summit Exteriors"></div>
+        <div class="wm-fld"><label>City / area <span style="color:var(--grey-l);font-weight:400">(optional)</span></label><input id="wmCity" placeholder="e.g. Austin"></div>
+        <button class="wm-go" onclick="wmGen()">Generate 6 sites →</button>
+      </div>
+      <div class="wm-chips" id="wmChips"></div>
+    </div>
+    <div class="wm-grid" id="wmGrid"></div>
+    <div class="wm-note" id="wmNote" style="display:none">These are live concepts generated in your browser. <a href="#booking">Book a demo</a> and we'll build the one you love — for real.</div>
+  </div>
+</section>
+<script>
+(function(){
+  var chips=['HVAC','Roofing','Flooring','Painting','Landscaping','Cabinets','Trim','Pools'];
+  var el=document.getElementById('wmChips');
+  if(el){var h='';chips.forEach(function(c){h+='<button type="button" class="wm-chip" onclick="wmChip(\''+c+'\')">'+c+'</button>';});el.innerHTML=h;}
+})();
+function wmChip(t){document.getElementById('wmTrade').value=t;}
+var WM=[
+  {k:'midnight',name:'Midnight'},{k:'daylight',name:'Daylight'},{k:'aurora',name:'Aurora'},
+  {k:'minimal',name:'Minimal'},{k:'slate',name:'Slate'},{k:'sunset',name:'Sunset'}
+];
+function wmCap(s){return s.replace(/\b\w/g,function(c){return c.toUpperCase();});}
+function wmGen(){
+  var trade=(document.getElementById('wmTrade').value.trim()||'contracting');
+  var biz=(document.getElementById('wmBiz').value.trim()||'Your Company');
+  var city=document.getElementById('wmCity').value.trim();
+  var tl=trade, tC=wmCap(trade);
+  var url=biz.toLowerCase().replace(/[^a-z0-9]/g,'')||'yourcompany';
+  var eyeCity=city?(city.toUpperCase()):'LICENSED & INSURED';
+  var heads=[
+    'Powering homes with expert '+tl+'.',
+    (city?city+"'s neighborhood ":'Your neighborhood ')+tl+' experts.',
+    tC+', done brilliantly'+(city?' in '+city:'')+'.',
+    'Precise '+tl+'. No surprises.',
+    'Trusted '+tl+' for '+(city?city+' ':'')+'homeowners.',
+    'Fast, friendly '+tl+" you'll love."
+  ];
+  var subs=[
+    'Book online in seconds. Upfront pricing, expert crews, and work that lasts.',
+    'Free estimates, honest advice, and a team your neighbors already trust.',
+    'A modern experience from first click to finished job — all in one place.',
+    'Clear quotes, clean work, on-time every time. That is the whole promise.',
+    'Fully licensed and insured, with hundreds of 5-star local reviews.',
+    'Same-week availability and friendly techs who treat your home like their own.'
+  ];
+  var grid=document.getElementById('wmGrid');
+  var html='';
+  WM.forEach(function(t,i){
+    html+='<div class="wm-card" style="animation-delay:'+(i*110)+'ms">'
+      +'<div class="wm-chrome"><span class="wm-dots"><i></i><i></i><i></i></span><span class="wm-addr">'+url+'.com</span><span class="wm-badge">'+t.name+'</span></div>'
+      +'<div class="wm-site wm-'+t.k+'">'
+        +'<div class="wm-blob"></div>'
+        +'<div class="wm-nav"><span class="wm-logo">'+wmEsc(biz)+'</span><nav><span></span><span></span><span></span></nav><span class="wm-navcta">Call now</span></div>'
+        +'<div class="wm-hero"><div class="wm-eye">'+wmEsc(tC)+' &middot; '+wmEsc(eyeCity)+'</div>'
+          +'<h3 class="wm-h">'+wmEsc(heads[i])+'</h3><p class="wm-sub">'+wmEsc(subs[i])+'</p>'
+          +'<div class="wm-btns"><span class="wm-cta">Get a free quote</span><span class="wm-ghost">See our work</span></div></div>'
+        +'<div class="wm-strip"><span></span><span></span><span></span></div>'
+      +'</div></div>';
+  });
+  grid.innerHTML=html;
+  document.getElementById('wmNote').style.display='block';
+  requestAnimationFrame(function(){
+    var cards=grid.querySelectorAll('.wm-card');for(var i=0;i<cards.length;i++)cards[i].classList.add('in');
+  });
+  grid.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function wmEsc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+
+<div class="divider"></div>
 
 <!-- ===== PRICING ===== -->
 <section id="pricing">
@@ -11668,6 +11896,8 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .partner .ptxt b{font-size:14px;display:block;margin-bottom:4px;}
 .partner .ptxt p{font-size:13px;color:var(--grey);line-height:1.55;}
 .cal-shell{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 30px 70px rgba(20,30,60,.09);}
+.cal-embed{padding:8px 8px 4px;background:#fff;min-height:720px;}
+.cal-embed iframe{border-radius:12px;}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);}
 .cal-ttl{font-weight:600;font-size:15px;}
 .cal-grid{display:grid;grid-template-columns:1.3fr 1fr;}
@@ -11776,22 +12006,14 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
       <div class="book-c"><div class="ic"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></div><b>Your questions answered</b><p>20 minutes, no pressure. Walk away knowing if it fits.</p></div>
     </div>
     <div class="cal-shell rv">
-      <div class="cal-hdr"><div class="cal-ttl"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> Select your demo time</div><div class="est-live"><span class="bdot"></span> Spots available</div></div>
-      <div class="cal-grid">
-        <div class="cal-left">
-          <div class="cal-nav"><button onclick="calMove(-1)">‹</button><div class="cal-month" id="calMonth"></div><button onclick="calMove(1)">›</button></div>
-          <div class="cal-dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
-          <div class="cal-days" id="calDays"></div>
-        </div>
-        <div class="cal-right">
-          <div class="sel-date" id="calSelDate">Pick a date to see available times</div>
-          <div class="cal-slots" id="calSlots"></div>
-          <button class="btn btn-blue cal-confirm" id="calConfirm" style="width:100%;justify-content:center;display:none" onclick="calBook()">Confirm booking</button>
-        </div>
+      <div class="cal-hdr"><div class="cal-ttl"><svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> Select your demo time</div><div class="est-live"><span class="bdot"></span> Live scheduler</div></div>
+      <div class="cal-embed">
+        <iframe src="https://api.leadconnectorhq.com/widget/booking/ITa3jRpsPlVtCu5vnWjQ" allow="payment" style="width:100%;border:none;overflow:hidden;min-height:720px;display:block" scrolling="no" id="ITa3jRpsPlVtCu5vnWjQ_1786407045191" title="Book your BuilderPro demo"></iframe>
       </div>
     </div>
   </div>
 </section>
+<script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>
 
 <div class="divider"></div>
 
@@ -12382,7 +12604,7 @@ function calBook(){
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   document.querySelector('.cal-right').innerHTML='<div class="msuccess"><div class="ic">✓</div><div style="font-family:var(--serif);font-size:22px;margin-bottom:6px">Demo booked!</div><p style="font-size:13.5px;color:var(--grey);line-height:1.6">You\'re confirmed for <b>'+months[calSel.getMonth()]+' '+calSel.getDate()+'</b> at <b>'+calSlot+'</b>. We\'ll send a confirmation and reminder by text.</p></div>';
 }
-calRender();
+if(document.getElementById('calDays'))calRender();
 
 /* ==================== ATLAS CHATBOT (local demo) ==================== */
 var atlasOpen=false,atlasStarted=false;
@@ -12423,17 +12645,76 @@ function sendMessage(text){
 function sendQuick(t){document.getElementById('atlasQuick').style.display='none';sendMessage(t);}
 function sendAtlas(){var i=document.getElementById('atlasInput'),t=i.value.trim();if(!t)return;i.value='';sendMessage(t);}
 
-/* ===== Atlas inline blob chat (Introducing Atlas section) ===== */
+/* ===== Atlas inline "build your AI" wizard + chat ===== */
+var aiState={trade:'',biz:'',tone:'Friendly',step:1};
+var AI_TRADES=['HVAC','Roofing','Flooring','Painting','Landscaping','Cabinets','Trim','Pools','Other'];
+var AI_TONES=[{v:'Friendly',d:'Warm and approachable'},{v:'Professional',d:'Polished and precise'},{v:'Bold',d:'Confident and high-energy'}];
+function aiWizRender(){
+  var tr=document.getElementById('aiTrades');
+  if(tr&&!tr.innerHTML){var h='';AI_TRADES.forEach(function(t){h+='<button type="button" class="ai-wopt" data-k="trade" onclick="aiWizPick(this,\'trade\',\''+t+'\')">'+t+'</button>';});tr.innerHTML=h;}
+  var tn=document.getElementById('aiTones');
+  if(tn&&!tn.innerHTML){var h2='';AI_TONES.forEach(function(t){h2+='<button type="button" class="ai-wopt wide" data-k="tone" onclick="aiWizPick(this,\'tone\',\''+t.v+'\')"><b>'+t.v+'</b><span>'+t.d+'</span></button>';});tn.innerHTML=h2;}
+}
+function aiWizPick(el,k,v){
+  el.parentElement.querySelectorAll('.ai-wopt').forEach(function(o){o.classList.remove('on');});
+  el.classList.add('on');aiState[k]=v;
+  if(k==='trade'){
+    var ow=document.getElementById('aiOtherWrap');ow.style.display=(v==='Other')?'block':'none';
+    if(v==='Other'){var oi=document.getElementById('aiOther');if(oi){oi.value='';setTimeout(function(){oi.focus();},50);}}
+  }
+  aiWizCheck();
+}
+function aiWizCheck(){
+  var ok=false;
+  if(aiState.step===1){ok = aiState.trade && (aiState.trade!=='Other' || (document.getElementById('aiOther').value.trim().length>1));}
+  else if(aiState.step===2){ok = document.getElementById('aiBiz').value.trim().length>0;}
+  else ok=!!aiState.tone;
+  document.getElementById('aiWizNext').disabled=!ok;
+}
+function aiWizShow(){
+  document.querySelectorAll('#aiWiz .ai-wq').forEach(function(q){q.classList.toggle('on',+q.getAttribute('data-q')===aiState.step);});
+  document.getElementById('aiWizStep').textContent=aiState.step;
+  document.getElementById('aiWizBack').style.visibility=aiState.step>1?'visible':'hidden';
+  document.getElementById('aiWizNext').textContent=aiState.step===3?'Build my Atlas ✨':'Continue →';
+  aiWizCheck();
+}
+function aiWizGo(dir){aiState.step=Math.max(1,Math.min(3,aiState.step+dir));aiWizShow();}
+function aiWizNext(){
+  if(aiState.step===1 && aiState.trade==='Other'){aiState.trade=document.getElementById('aiOther').value.trim()||'your trade';}
+  if(aiState.step===2){aiState.biz=document.getElementById('aiBiz').value.trim();}
+  if(aiState.step<3){aiWizGo(1);return;}
+  aiBuildAtlas();
+}
 var aiStarted=false;
+function aiTradeLower(){return (aiState.trade||'contracting');}
+function aiBuildAtlas(){
+  document.getElementById('aiWiz').style.display='none';
+  document.getElementById('aiChat').style.display='block';
+  document.getElementById('aiName').textContent=(aiState.biz||'Your')+' · Atlas';
+  document.getElementById('aiStatus').textContent='Online · trained on your '+aiTradeLower()+' business';
+  var q=document.getElementById('aiQuick');
+  q.style.display='';
+  q.innerHTML='<button type="button" onclick="aiQuick(\'How much does it cost?\')">Pricing?</button>'
+    +'<button type="button" onclick="aiQuick(\'Can I book an appointment?\')">Book a visit</button>'
+    +'<button type="button" onclick="aiQuick(\'Are you available this week?\')">Availability</button>';
+  document.getElementById('aiMsgs').innerHTML='';
+  var biz=aiState.biz||('your '+aiTradeLower()+' company');
+  var greet;
+  if(aiState.tone==='Professional')greet="Hello, and thank you for contacting "+biz+". I'm Atlas, your AI assistant. I can provide pricing guidance, answer questions about our "+aiTradeLower()+" services, and schedule your appointment. How may I help?";
+  else if(aiState.tone==='Bold')greet="Hey! 👋 You've reached "+biz+" — I'm Atlas, and I get things done. Ready to answer questions, ballpark your "+aiTradeLower()+" pricing, and lock in your appointment right now. What do you need?";
+  else greet="Hi there! Thanks for reaching out to "+biz+" 😊 I'm Atlas, your "+aiTradeLower()+" assistant. I can answer questions, give you a ballpark price, and book your appointment anytime. What can I help with?";
+  setTimeout(function(){aiTyping(true);},250);
+  setTimeout(function(){aiTyping(false);aiAdd('atlas',greet);var i=document.getElementById('aiInput');if(i)i.focus();},1000);
+}
 function openAtlasInline(){
   var w=document.getElementById('atlasInline');if(!w)return;
+  aiWizRender();
   if(!w.classList.contains('open')){
     w.classList.add('open');
     document.getElementById('atlasHint').classList.add('hide');
     document.getElementById('atlasBlobBtn').classList.add('active');
   }
-  if(!aiStarted){aiStarted=true;setTimeout(function(){aiAdd('atlas',"Hey! I'm Atlas — your AI roofing assistant. Ask me about pricing, storm damage, materials, or booking an inspection. What's on your mind?");},320);}
-  setTimeout(function(){var i=document.getElementById('aiInput');if(i)i.focus();},480);
+  if(!aiStarted){aiStarted=true;aiState.step=1;aiWizShow();}
 }
 function closeAtlasInline(){
   var w=document.getElementById('atlasInline');if(!w)return;
@@ -12461,9 +12742,18 @@ function aiSend(){
   var i=document.getElementById('aiInput'),t=i.value.trim();if(!t)return;i.value='';
   var q=document.getElementById('aiQuick');if(q)q.style.display='none';
   aiAdd('user',t);aiTyping(true);
-  setTimeout(function(){aiTyping(false);aiAdd('atlas',atlasReply(t));},850);
+  setTimeout(function(){aiTyping(false);aiAdd('atlas',aiReply(t));},850);
 }
-function aiQuick(t){var q=document.getElementById('aiQuick');if(q)q.style.display='none';aiAdd('user',t);aiTyping(true);setTimeout(function(){aiTyping(false);aiAdd('atlas',atlasReply(t));},850);}
+function aiQuick(t){var q=document.getElementById('aiQuick');if(q)q.style.display='none';aiAdd('user',t);aiTyping(true);setTimeout(function(){aiTyping(false);aiAdd('atlas',aiReply(t));},850);}
+function aiReply(text){
+  var t=text.toLowerCase(),trade=aiTradeLower(),biz=aiState.biz||('our team');
+  if(/cost|price|how much|estimate|quote/.test(t))return "Great question! "+ (biz.charAt(0).toUpperCase()+biz.slice(1)) +"'s "+trade+" pricing depends on the scope of the job. Tell me a bit about what you need and I'll give you a ballpark — or I can book a free on-site estimate so you get an exact number.";
+  if(/book|appointment|schedule|visit|inspect/.test(t))return "Absolutely — I can get you on the calendar. What day works best this week? I'll confirm your "+trade+" appointment and send a reminder by text.";
+  if(/available|this week|today|when|open/.test(t))return "We've got openings this week! I can usually schedule a "+trade+" visit within a day or two. Want me to grab the next available slot for you?";
+  if(/service|offer|do you|what can|help/.test(t))return "We handle all things "+trade+" — from quick fixes to full projects. Tell me what's going on and I'll point you in the right direction or get you booked with "+biz+".";
+  if(/hi|hello|hey|thanks|thank you/.test(t))return "Happy to help! I'm Atlas for "+biz+". Ask me about pricing, availability, or booking a "+trade+" appointment — I'm here 24/7.";
+  return "I'm Atlas, "+biz+"'s AI assistant for all things "+trade+". I can answer questions, give you a ballpark price, or book your appointment. What would you like to do?";
+}
 
 /* circular particle network (plexus) on white */
 (function(){
