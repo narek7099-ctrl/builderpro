@@ -13156,5 +13156,556 @@ function ccSubmit(e){
 }
 html{ overflow-x:clip; }
 </style>
+<style>
+/* ===== Restored dashboard views (light theme) ===== */
+.bpx-btn{background:var(--blue);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.bpx-btn:hover{background:#1b56ee;}
+.bpx-btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+.bpx-btn.ghost:hover{border-color:var(--blue);color:var(--blue);background:#fff;}
+.bpx-btn.danger{background:#dc2626;color:#fff;}
+.bpx-btn.danger:hover{background:#b91c1c;}
+.bpx-btn:disabled{opacity:.6;cursor:default;}
+.bpx-addbtn{background:var(--blue);color:#fff;border:0;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.bpx-addbtn:hover{background:#1b56ee;}
+.bpx-rowbtn{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;margin-left:6px;font-family:inherit;}
+.bpx-rowbtn:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-rowbtn.del:hover{border-color:#dc2626;color:#dc2626;}
+.bpx-tag{display:inline-block;background:var(--soft);border:1px solid var(--line);color:var(--grey);font-size:11px;padding:2px 8px;border-radius:999px;margin-right:4px;}
+
+/* contacts */
+.bpx-chead{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;}
+.bpx-csearch{flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
+.bpx-csearch:focus{outline:none;border-color:var(--blue);}
+.bpx-cwrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow-x:auto;}
+.bpx-ctable{width:100%;border-collapse:collapse;font-size:13.5px;}
+.bpx-ctable th{text-align:left;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--grey);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);}
+.bpx-ctable td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:middle;}
+.bpx-ctable tr:last-child td{border-bottom:0;}
+.bpx-cname{font-weight:600;color:var(--ink);}
+.bpx-cempty{padding:22px;text-align:center;color:var(--grey);}
+
+/* calendar */
+.bpx-caltoggle{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:16px;}
+.bpx-caltoggle button{border:0;background:transparent;padding:8px 18px;border-radius:999px;font-size:13px;font-weight:600;color:var(--grey);cursor:pointer;font-family:inherit;}
+.bpx-caltoggle button.on{background:var(--blue);color:#fff;}
+.bpx-calhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.bpx-calnav{display:flex;align-items:center;gap:10px;}
+.bpx-calnav button{width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;font-size:18px;cursor:pointer;color:var(--ink);line-height:1;}
+.bpx-calnav button:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-calmonth{font-family:var(--serif),Georgia,serif;font-size:20px;font-weight:600;min-width:170px;text-align:center;}
+.bpx-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.bpx-dow{text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);padding:4px 0;}
+.bpx-day{background:#fff;border:1px solid var(--line);border-radius:10px;min-height:92px;padding:7px;overflow:hidden;}
+.bpx-day.empty{background:transparent;border:0;}
+.bpx-day.today{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue);}
+.bpx-daynum{font-size:12px;font-weight:600;color:var(--grey);margin-bottom:4px;}
+.bpx-day.today .bpx-daynum{color:var(--blue);}
+.bpx-appt{background:#eef3ff;color:#1b56ee;border-radius:6px;padding:3px 6px;font-size:11px;font-weight:600;margin-bottom:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bpx-appt:hover{background:var(--blue);color:#fff;}
+.bpx-upnext h3{font-size:15px;font-weight:600;margin:24px 0 12px;}
+.bpx-upstatus{font-size:11px;font-weight:600;text-transform:capitalize;color:#15803d;background:#eafaf0;border-radius:999px;padding:4px 10px;white-space:nowrap;align-self:center;}
+
+/* booking slots */
+.bpx-slotwrap{max-height:230px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;padding:10px;margin:6px 0;}
+.bpx-slotday{font-size:12px;font-weight:700;color:var(--ink);margin:8px 0 6px;}
+.bpx-slots{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.bpx-slot{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;background:#fff;}
+.bpx-slot:hover{border-color:var(--blue);}
+.bpx-slot.sel{background:var(--blue);color:#fff;border-color:var(--blue);}
+.bpx-slotempty{color:var(--grey);font-size:13px;padding:10px;text-align:center;}
+
+/* modal */
+.bpx-modal{position:fixed;inset:0;z-index:3000;background:rgba(10,15,30,.5);display:flex;align-items:center;justify-content:center;padding:20px;}
+.bpx-modalcard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px rgba(20,30,60,.25);}
+.bpx-modalcard h3{font-family:var(--serif),Georgia,serif;font-size:22px;font-weight:600;margin-bottom:6px;}
+.bpx-modalcard label{display:block;font-size:12px;font-weight:600;color:var(--grey);margin:12px 0 5px;}
+.bpx-modalcard input,.bpx-modalcard select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
+.bpx-modalcard input:focus,.bpx-modalcard select:focus{outline:none;border-color:var(--blue);}
+.bpx-modalcard .row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap;}
+.bpx-sub{color:var(--grey);font-size:14px;line-height:1.5;margin-top:4px;}
+.bpx-mmsg{font-size:13px;font-weight:600;margin-top:10px;min-height:16px;}
+
+@media(max-width:600px){
+  .bpx-grid{gap:3px;}
+  .bpx-day{min-height:56px;padding:4px;border-radius:7px;}
+  .bpx-daynum{font-size:10px;}
+  .bpx-appt{font-size:9px;padding:2px 3px;}
+  .bpx-calmonth{font-size:16px;min-width:120px;}
+  .bpx-caltoggle button{padding:7px 14px;}
+}
+
+</style>
+<script>
+/* ===== Restored full Contacts + two-calendar Booking (ported) ===== */
+function q(id){return document.getElementById(id);}
+var _bpContacts=[];
+
+/* ==== bpRenderContacts ==== */
+  function bpRenderContacts(){
+    q('bpxViewArea').innerHTML=
+      '<div class="bpx-chead"><input class="bpx-csearch" style="margin-bottom:0;max-width:420px" id="bpx-csearch" type="text" placeholder="Search by name, phone, email, or tag\u2026" oninput="bpFilterContacts(this.value)"><button class="bpx-addbtn" onclick="bpOpenAdd()">+ New Contact</button></div>'
+      +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th><th></th></tr></thead><tbody id="bpx-cbody"><tr><td colspan="6" class="bpx-cempty">Loading your contacts\u2026</td></tr></tbody></table></div>';
+    bpLoadContacts();
+  }
+
+/* ==== bpLoadContacts ==== */
+  async function bpLoadContacts(){
+    try{
+      var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})});
+      var d=await r.json();
+      _bpContacts=d.contactsList||[];
+      bpDrawContacts(_bpContacts);
+    }catch(e){
+      var b=q('bpx-cbody'); if(b) b.innerHTML='<tr><td colspan="5" class="bpx-cempty">Could not load contacts right now. Please try again shortly.</td></tr>';
+    }
+  }
+
+/* ==== bpDrawContacts ==== */
+  function bpDrawContacts(list){
+    var b=q('bpx-cbody'); if(!b) return;
+    if(!list.length){ b.innerHTML='<tr><td colspan="6" class="bpx-cempty">No contacts found.</td></tr>'; return; }
+    var html='';
+    for(var i=0;i<list.length;i++){
+      var c=list[i];
+      var tags=''; for(var j=0;j<(c.tags||[]).length;j++){ tags+='<span class="bpx-tag">'+bpEsc(c.tags[j])+'</span>'; }
+      var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+      html+='<tr><td class="bpx-cname">'+bpEsc(c.name)+'</td><td>'+bpEsc(c.phone)+'</td><td>'+bpEsc(c.email)+'</td><td>'+(tags||'<span style="color:var(--mu)">\u2014</span>')+'</td><td style="color:var(--mu)">'+added+'</td><td style="white-space:nowrap"><button class="bpx-rowbtn" onclick="bpOpenEdit(\''+c.id+'\')">Edit</button><button class="bpx-rowbtn del" onclick="bpOpenDelete(\''+c.id+'\')">Delete</button></td></tr>';
+    }
+    b.innerHTML=html;
+  }
+
+/* ==== bpFilterContacts ==== */
+  window.bpFilterContacts=function(q){
+    q=(q||'').toLowerCase().trim();
+    if(!q){ bpDrawContacts(_bpContacts); return; }
+    var f=_bpContacts.filter(function(c){
+      return (c.name||'').toLowerCase().indexOf(q)>=0 || (c.phone||'').toLowerCase().indexOf(q)>=0 || (c.email||'').toLowerCase().indexOf(q)>=0 || (c.tags||[]).join(' ').toLowerCase().indexOf(q)>=0;
+    });
+    bpDrawContacts(f);
+  };
+
+/* ==== bpFind ==== */
+  function bpFind(id){ for(var i=0;i<_bpContacts.length;i++){ if(_bpContacts[i].id===id) return _bpContacts[i]; } return null; }
+
+/* ==== bpOpenAdd ==== */
+
+  window.bpOpenAdd=function(){
+    bpModal('<h3>New Contact</h3>'+bpField('bpx-f-name','Name','','Full name')+bpField('bpx-f-phone','Phone','','Phone number')+bpField('bpx-f-email','Email','','Email address')+'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpSaveContact(null)">Create</button></div>');
+  };
+  window.bpOpenEdit=function(id){
+    var c=bpFind(id); if(!c) return;
+    bpModal('<h3>Edit Contact</h3>'+bpField('bpx-f-name','Name',c.name,'Full name')+bpField('bpx-f-phone','Phone',c.phone,'Phone number')+bpField('bpx-f-email','Email',c.email,'Email address')+'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpSaveContact(\''+id+'\')">Save</button></div>');
+  };
+  window.bpOpenDelete=function(id){
+    var c=bpFind(id); if(!c) return;
+    bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
+  };
+  async function bpWrite(payload){
+    return fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
+  }
+  window.bpSaveContact=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    var name=q('bpx-f-name').value.trim(), phone=q('bpx-f-phone').value.trim(), email=q('bpx-f-email').value.trim();
+    if(!name && !phone && !email){ msg.style.color='#dc2626'; msg.textContent='Enter at least a name, phone, or email.'; return; }
+    btn.disabled=true; btn.textContent='Saving\u2026';
+    try{
+      var res=id? await bpWrite({action:'update',id:id,name:name,phone:phone,email:email}) : await bpWrite({action:'create',name:name,phone:phone,email:email});
+      if(res.ok){ msg.style.color='#15803d'; msg.textContent='Saved.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },600); }
+      else { msg.style.color='#dc2626'; msg.textContent='Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent=id?'Save':'Create'; }
+    }catch(e){ msg.style.color='#dc2626'; msg.textContent='Could not save. Please try again.'; btn.disabled=false; btn.textContent=id?'Save':'Create'; }
+  };
+  window.bpDeleteContact=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    btn.disabled=true; btn.textContent='Deleting\u2026';
+    try{
+      var res=await bpWrite({action:'delete',id:id});
+      if(res.ok){ msg.style.color='#15803d'; msg.textContent='Deleted.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },600); }
+      else { msg.style.color='#dc2626'; msg.textContent='Could not delete'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent='Delete'; }
+    }catch(e){ msg.style.color='#dc2626'; msg.textContent='Could not delete. Please try again.'; btn.disabled=false; btn.textContent='Delete'; }
+  };
+  var _bpCalDate=new Date(); var _bpEvents=[]; var _bpCalKind='inspection';
+  function bpRenderCalendar(){
+    q('bpxViewArea').innerHTML=
+      '<div class="bpx-caltoggle"><button id="bpx-ct-insp" class="'+(_bpCalKind==='inspection'?'on':'')+'" onclick="bpCalKind(\'inspection\')">Inspections</button><button id="bpx-ct-jobs" class="'+(_bpCalKind==='jobs'?'on':'')+'" onclick="bpCalKind(\'jobs\')">Jobs</button></div>'
+      +'<div class="bpx-calhead"><div class="bpx-calnav"><button onclick="bpCalMove(-1)">\u2039</button><div class="bpx-calmonth" id="bpx-calmonth"></div><button onclick="bpCalMove(1)">\u203a</button></div><div style="display:flex;gap:.5rem"><button class="bpx-addbtn" style="background:var(--soft);border:1px solid var(--line);color:var(--ink)" onclick="bpCalToday()">Today</button><button class="bpx-addbtn" onclick="bpOpenBook()">'+(_bpCalKind==='jobs'?'+ Book Job':'+ Book Appointment')+'</button></div></div>'
+      +'<div id="bpx-calgrid"></div>'
+      +'<div class="bpx-upnext"><h3>Upcoming '+(_bpCalKind==='jobs'?'Jobs':'Appointments')+'</h3><div id="bpx-upnext"></div></div>';
+    bpLoadCalendar();
+  }
+  window.bpCalKind=function(k){ _bpCalKind=k; _bpCalDate=new Date(); bpRenderCalendar(); };
+  window.bpCalMove=function(d){ _bpCalDate.setMonth(_bpCalDate.getMonth()+d); bpDrawCalendar(); };
+  window.bpCalToday=function(){ _bpCalDate=new Date(); bpDrawCalendar(); };
+  async function bpLoadCalendar(){
+    try{
+      var r=await fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:_bpCalKind})});
+      var d=await r.json();
+      _bpEvents=(d.events||[]);
+      bpDrawCalendar();
+    }catch(e){ var g=q('bpx-calgrid'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
+  }
+  function bpFmtTime(iso){ try{ var dt=new Date(iso); return dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+  function bpDrawCalendar(){
+    var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var y=_bpCalDate.getFullYear(), m=_bpCalDate.getMonth();
+    q('bpx-calmonth').textContent=mn[m]+' '+y;
+    var first=new Date(y,m,1), startDow=first.getDay(), days=new Date(y,m+1,0).getDate();
+    var today=new Date(); var isThisMonth=(today.getFullYear()===y&&today.getMonth()===m);
+    // bucket events by day (local)
+    var byDay={};
+    for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
+    var html='<div class="bpx-grid">';
+    var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for(var i=0;i<7;i++) html+='<div class="bpx-dow">'+dow[i]+'</div>';
+    for(var i=0;i<startDow;i++) html+='<div class="bpx-day empty"></div>';
+    for(var dnum=1;dnum<=days;dnum++){
+      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'');
+      html+='<div class="'+cls+'"><div class="bpx-daynum">'+dnum+'</div>';
+      var evs=byDay[dnum]||[];
+      for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')">'+bpFmtTime(evs[j].start)+' '+bpEsc(evs[j].title)+'</div>'; }
+      html+='</div>';
+    }
+    html+='</div>';
+    q('bpx-calgrid').innerHTML=html;
+    // upcoming list (future only)
+    var now=Date.now(); var up=_bpEvents.filter(function(e){ return new Date(e.start).getTime()>=now-3600000; }).slice(0,8);
+    var uh='';
+    if(!up.length){ uh='<div class="bpx-cempty" style="padding:1rem">No upcoming appointments.</div>'; }
+    for(var i=0;i<up.length;i++){ var dt=new Date(up[i].start); uh+='<div class="bpx-uprow"><div class="bpx-update"><span class="mo">'+dt.toLocaleDateString('en-US',{month:'short'})+'</span><span class="dy">'+dt.getDate()+'</span></div><div style="flex:1;min-width:0"><div class="bpx-upname">'+bpEsc(up[i].title)+'</div><div class="bpx-uptime">'+dt.toLocaleDateString('en-US',{weekday:'long'})+' \u00b7 '+bpFmtTime(up[i].start)+(up[i].address?(' \u00b7 '+bpEsc(up[i].address)):'')+'</div></div><span class="bpx-upstatus">'+bpEsc(up[i].status||'confirmed')+'</span></div>'; }
+    q('bpx-upnext').innerHTML=uh;
+  }
+  function bpFindEv(id){ for(var i=0;i<_bpEvents.length;i++){ if(_bpEvents[i].id===id) return _bpEvents[i]; } return null; }
+  function bpLAOffset(dateStr,timeStr){ try{ var probe=new Date(dateStr+'T'+(timeStr||'12:00')+':00'); var tz=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',timeZoneName:'longOffset'}).formatToParts(probe).find(function(x){return x.type==='timeZoneName';}).value; return (tz.replace('GMT','')||'-08:00'); }catch(e){ return '-08:00'; } }
+  function bpFormatLA(d){ var g={}; new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(function(x){g[x.type]=x.value;}); var off; try{ off=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',timeZoneName:'longOffset'}).formatToParts(d).find(function(x){return x.type==='timeZoneName';}).value.replace('GMT',''); }catch(e){ off='-08:00'; } if(g.hour==='24') g.hour='00'; return g.year+'-'+g.month+'-'+g.day+'T'+g.hour+':'+g.minute+':00'+(off||'-08:00'); }
+  function bpLAParts(iso){ var f=bpFormatLA(new Date(iso)); return {date:f.slice(0,10), time:f.slice(11,16)}; }
+  function bpMkISO(dateStr,timeStr){ return dateStr+'T'+timeStr+':00'+bpLAOffset(dateStr,timeStr); }
+  function bpSlotMsg(res){ var m=''; try{ m=JSON.parse(res.detail||'{}').message||''; }catch(e){} if(/no longer available|not available/i.test(m)) return 'That time isn\'t available. Please pick another.'; return 'Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; }
+  async function bpCalWrite(payload){ if(payload.cal===undefined) payload.cal=_bpCalKind; return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}); }
+  var _bpSlotSel=null;
+  async function bpLoadSlots(containerId){
+    var el=q(containerId); if(!el) return;
+    el.innerHTML='<div class="bpx-slotempty">Finding open times\u2026</div>';
+    try{
+      var res=await bpCalWrite({action:'slots'});
+      if(!res.ok || !res.slots){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; return; }
+      var dates=Object.keys(res.slots).sort();
+      var html=''; var any=false;
+      for(var i=0;i<dates.length;i++){
+        var arr=res.slots[dates[i]]||[]; if(!arr.length) continue; any=true;
+        var dLbl=new Date(dates[i]+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+        html+='<div class="bpx-slotday">'+dLbl+'</div><div class="bpx-slots">';
+        for(var j=0;j<arr.length;j++){ var t=new Date(arr[j]).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); html+='<div class="bpx-slot" data-iso="'+arr[j]+'" onclick="bpPickSlot(this)">'+t+'</div>'; }
+        html+='</div>';
+      }
+      el.innerHTML=any?html:'<div class="bpx-slotempty">No open times in the next few weeks.</div>';
+    }catch(e){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; }
+  }
+  window.bpPickSlot=function(node){
+    var wrap=node.closest('.bpx-slotwrap'); if(wrap){ var all=wrap.querySelectorAll('.bpx-slot'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel'); }
+    node.classList.add('sel'); _bpSlotSel=node.getAttribute('data-iso');
+  };
+
+/* ==== bpSaveContact ==== */
+  window.bpSaveContact=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    var name=q('bpx-f-name').value.trim(), phone=q('bpx-f-phone').value.trim(), email=q('bpx-f-email').value.trim();
+    if(!name && !phone && !email){ msg.style.color='#dc2626'; msg.textContent='Enter at least a name, phone, or email.'; return; }
+    btn.disabled=true; btn.textContent='Saving\u2026';
+    try{
+      var res=id? await bpWrite({action:'update',id:id,name:name,phone:phone,email:email}) : await bpWrite({action:'create',name:name,phone:phone,email:email});
+      if(res.ok){ msg.style.color='#15803d'; msg.textContent='Saved.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },600); }
+      else { msg.style.color='#dc2626'; msg.textContent='Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent=id?'Save':'Create'; }
+    }catch(e){ msg.style.color='#dc2626'; msg.textContent='Could not save. Please try again.'; btn.disabled=false; btn.textContent=id?'Save':'Create'; }
+  };
+
+/* ==== bpOpenEdit ==== */
+  window.bpOpenEdit=function(id){
+    var c=bpFind(id); if(!c) return;
+    bpModal('<h3>Edit Contact</h3>'+bpField('bpx-f-name','Name',c.name,'Full name')+bpField('bpx-f-phone','Phone',c.phone,'Phone number')+bpField('bpx-f-email','Email',c.email,'Email address')+'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpSaveContact(\''+id+'\')">Save</button></div>');
+  };
+
+/* ==== bpOpenDelete ==== */
+  window.bpOpenDelete=function(id){
+    var c=bpFind(id); if(!c) return;
+    bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
+  };
+
+/* ==== bpDeleteContact ==== */
+  window.bpDeleteContact=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    btn.disabled=true; btn.textContent='Deleting\u2026';
+    try{
+      var res=await bpWrite({action:'delete',id:id});
+      if(res.ok){ msg.style.color='#15803d'; msg.textContent='Deleted.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },600); }
+      else { msg.style.color='#dc2626'; msg.textContent='Could not delete'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent='Delete'; }
+    }catch(e){ msg.style.color='#dc2626'; msg.textContent='Could not delete. Please try again.'; btn.disabled=false; btn.textContent='Delete'; }
+  };
+  var _bpCalDate=new Date(); var _bpEvents=[]; var _bpCalKind='inspection';
+
+/* ==== bpRenderCalendar ==== */
+  function bpRenderCalendar(){
+    q('bpxViewArea').innerHTML=
+      '<div class="bpx-caltoggle"><button id="bpx-ct-insp" class="'+(_bpCalKind==='inspection'?'on':'')+'" onclick="bpCalKind(\'inspection\')">Inspections</button><button id="bpx-ct-jobs" class="'+(_bpCalKind==='jobs'?'on':'')+'" onclick="bpCalKind(\'jobs\')">Jobs</button></div>'
+      +'<div class="bpx-calhead"><div class="bpx-calnav"><button onclick="bpCalMove(-1)">\u2039</button><div class="bpx-calmonth" id="bpx-calmonth"></div><button onclick="bpCalMove(1)">\u203a</button></div><div style="display:flex;gap:.5rem"><button class="bpx-addbtn" style="background:var(--soft);border:1px solid var(--line);color:var(--ink)" onclick="bpCalToday()">Today</button><button class="bpx-addbtn" onclick="bpOpenBook()">'+(_bpCalKind==='jobs'?'+ Book Job':'+ Book Appointment')+'</button></div></div>'
+      +'<div id="bpx-calgrid"></div>'
+      +'<div class="bpx-upnext"><h3>Upcoming '+(_bpCalKind==='jobs'?'Jobs':'Appointments')+'</h3><div id="bpx-upnext"></div></div>';
+    bpLoadCalendar();
+  }
+
+/* ==== bpCalKind ==== */
+  window.bpCalKind=function(k){ _bpCalKind=k; _bpCalDate=new Date(); bpRenderCalendar(); };
+
+/* ==== bpCalMove ==== */
+  window.bpCalMove=function(d){ _bpCalDate.setMonth(_bpCalDate.getMonth()+d); bpDrawCalendar(); };
+
+/* ==== bpCalToday ==== */
+  window.bpCalToday=function(){ _bpCalDate=new Date(); bpDrawCalendar(); };
+
+/* ==== bpLoadCalendar ==== */
+  async function bpLoadCalendar(){
+    try{
+      var r=await fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:_bpCalKind})});
+      var d=await r.json();
+      _bpEvents=(d.events||[]);
+      bpDrawCalendar();
+    }catch(e){ var g=q('bpx-calgrid'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
+  }
+
+/* ==== bpFmtTime ==== */
+  function bpFmtTime(iso){ try{ var dt=new Date(iso); return dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+
+/* ==== bpDrawCalendar ==== */
+  function bpDrawCalendar(){
+    var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var y=_bpCalDate.getFullYear(), m=_bpCalDate.getMonth();
+    q('bpx-calmonth').textContent=mn[m]+' '+y;
+    var first=new Date(y,m,1), startDow=first.getDay(), days=new Date(y,m+1,0).getDate();
+    var today=new Date(); var isThisMonth=(today.getFullYear()===y&&today.getMonth()===m);
+    // bucket events by day (local)
+    var byDay={};
+    for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
+    var html='<div class="bpx-grid">';
+    var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for(var i=0;i<7;i++) html+='<div class="bpx-dow">'+dow[i]+'</div>';
+    for(var i=0;i<startDow;i++) html+='<div class="bpx-day empty"></div>';
+    for(var dnum=1;dnum<=days;dnum++){
+      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'');
+      html+='<div class="'+cls+'"><div class="bpx-daynum">'+dnum+'</div>';
+      var evs=byDay[dnum]||[];
+      for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')">'+bpFmtTime(evs[j].start)+' '+bpEsc(evs[j].title)+'</div>'; }
+      html+='</div>';
+    }
+    html+='</div>';
+    q('bpx-calgrid').innerHTML=html;
+    // upcoming list (future only)
+    var now=Date.now(); var up=_bpEvents.filter(function(e){ return new Date(e.start).getTime()>=now-3600000; }).slice(0,8);
+    var uh='';
+    if(!up.length){ uh='<div class="bpx-cempty" style="padding:1rem">No upcoming appointments.</div>'; }
+    for(var i=0;i<up.length;i++){ var dt=new Date(up[i].start); uh+='<div class="bpx-uprow"><div class="bpx-update"><span class="mo">'+dt.toLocaleDateString('en-US',{month:'short'})+'</span><span class="dy">'+dt.getDate()+'</span></div><div style="flex:1;min-width:0"><div class="bpx-upname">'+bpEsc(up[i].title)+'</div><div class="bpx-uptime">'+dt.toLocaleDateString('en-US',{weekday:'long'})+' \u00b7 '+bpFmtTime(up[i].start)+(up[i].address?(' \u00b7 '+bpEsc(up[i].address)):'')+'</div></div><span class="bpx-upstatus">'+bpEsc(up[i].status||'confirmed')+'</span></div>'; }
+    q('bpx-upnext').innerHTML=uh;
+  }
+
+/* ==== bpFindEv ==== */
+  function bpFindEv(id){ for(var i=0;i<_bpEvents.length;i++){ if(_bpEvents[i].id===id) return _bpEvents[i]; } return null; }
+
+/* ==== bpApptClick ==== */
+
+  window.bpApptClick=function(id){
+    var e=bpFindEv(id); if(!e) return; var dt=new Date(e.start);
+    bpModal('<h3>'+bpEsc(e.title)+'</h3>'
+      +'<div class="bpx-sub">'+dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+bpFmtTime(e.start)+'</div>'
+      +(e.address?'<div style="color:var(--mu);font-size:.85rem;margin-top:.4rem">'+bpEsc(e.address)+'</div>':'')
+      +'<div style="color:var(--mu);font-size:.8rem;margin-top:.6rem">Status: '+bpEsc(e.status)+'</div>'
+      +'<div class="row" style="flex-wrap:wrap"><button class="bpx-btn" onclick="bpOpenReschedule(\''+id+'\')">Reschedule</button><button class="bpx-btn ghost" onclick="bpOpenApptEdit(\''+id+'\')">Edit</button></div>'
+      +'<div class="row"><button class="bpx-btn danger" onclick="bpOpenApptCancel(\''+id+'\')">Cancel Appointment</button><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
+  };
+
+/* ==== bpOpenBook ==== */
+  window.bpOpenBook=async function(){
+    bpModal('<h3>Book\u2026</h3><div class="bpx-sub">Loading your contacts\u2026</div>');
+    await bpEnsureContacts();
+    var opts=''; for(var i=0;i<_bpContacts.length;i++){ opts+='<option value="'+_bpContacts[i].id+'">'+bpEsc(_bpContacts[i].name)+'</option>'; }
+    var contactSel='<label>Contact</label><select id="bpx-bk-contact" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'+(opts||'<option value="">No contacts found</option>')+'</select>';
+    if(_bpCalKind==='jobs'){
+      var d=new Date(Date.now()+86400000); var dd=bpFormatLA(d).slice(0,10);
+      bpModal('<h3>Book Job</h3>'+contactSel
+        +'<label>Job Title</label><input id="bpx-bk-title" value="Roofing Job">'
+        +'<label>Address</label><input id="bpx-bk-addr" placeholder="Job site location">'
+        +'<label>Date</label><input type="date" id="bpx-bk-date" value="'+dd+'">'
+        +'<label>Start Time</label><input type="time" id="bpx-bk-time" value="09:00">'
+        +'<label>Duration</label><select id="bpx-bk-dur" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit"><option value="30">30 minutes</option><option value="60">1 hour</option><option value="120">2 hours</option><option value="180" selected>3 hours</option><option value="240">4 hours</option><option value="360">6 hours</option><option value="480">Full day (8 hours)</option></select>'
+        +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBookJob()">Book Job</button></div>');
+    } else {
+      bpModal('<h3>Book Appointment</h3>'+contactSel
+        +'<label>Title</label><input id="bpx-bk-title" value="Roof Inspection">'
+        +'<label>Address</label><input id="bpx-bk-addr" placeholder="On-site location">'
+        +'<label>Pick an open time</label><div class="bpx-slotwrap" id="bpx-bk-slots"></div>'
+        +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBook()">Book</button></div>');
+      _bpSlotSel=null; bpLoadSlots('bpx-bk-slots');
+    }
+  };
+
+/* ==== bpLoadSlots ==== */
+  async function bpLoadSlots(containerId){
+    var el=q(containerId); if(!el) return;
+    el.innerHTML='<div class="bpx-slotempty">Finding open times\u2026</div>';
+    try{
+      var res=await bpCalWrite({action:'slots'});
+      if(!res.ok || !res.slots){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; return; }
+      var dates=Object.keys(res.slots).sort();
+      var html=''; var any=false;
+      for(var i=0;i<dates.length;i++){
+        var arr=res.slots[dates[i]]||[]; if(!arr.length) continue; any=true;
+        var dLbl=new Date(dates[i]+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+        html+='<div class="bpx-slotday">'+dLbl+'</div><div class="bpx-slots">';
+        for(var j=0;j<arr.length;j++){ var t=new Date(arr[j]).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); html+='<div class="bpx-slot" data-iso="'+arr[j]+'" onclick="bpPickSlot(this)">'+t+'</div>'; }
+        html+='</div>';
+      }
+      el.innerHTML=any?html:'<div class="bpx-slotempty">No open times in the next few weeks.</div>';
+    }catch(e){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; }
+  }
+
+/* ==== bpPickSlot ==== */
+  window.bpPickSlot=function(node){
+    var wrap=node.closest('.bpx-slotwrap'); if(wrap){ var all=wrap.querySelectorAll('.bpx-slot'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel'); }
+    node.classList.add('sel'); _bpSlotSel=node.getAttribute('data-iso');
+  };
+
+/* ==== bpSlotMsg ==== */
+  function bpSlotMsg(res){ var m=''; try{ m=JSON.parse(res.detail||'{}').message||''; }catch(e){} if(/no longer available|not available/i.test(m)) return 'That time isn\'t available. Please pick another.'; return 'Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; }
+
+/* ==== bpDoBook ==== */
+  window.bpDoBook=async function(){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    var cid=q('bpx-bk-contact').value;
+    if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a contact.'; return; }
+    if(!_bpSlotSel){ msg.style.color='#dc2626'; msg.textContent='Pick an open time above.'; return; }
+    var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+3600000));
+    btn.disabled=true; btn.textContent='Booking\u2026';
+    var res=await bpCalWrite({action:'create',cal:'inspection',contactId:cid,startTime:startISO,endTime:endISO,title:q('bpx-bk-title').value.trim()||'Roof Inspection',address:q('bpx-bk-addr').value.trim()});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Book'; }
+  };
+
+/* ==== bpDoBookJob ==== */
+  window.bpDoBookJob=async function(){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    var cid=q('bpx-bk-contact').value, date=q('bpx-bk-date').value, time=q('bpx-bk-time').value, dur=parseInt(q('bpx-bk-dur').value,10)||60;
+    if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a contact.'; return; }
+    if(!date||!time){ msg.style.color='#dc2626'; msg.textContent='Pick a date and start time.'; return; }
+    var startISO=bpMkISO(date,time); var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+dur*60000));
+    btn.disabled=true; btn.textContent='Booking\u2026';
+    var res=await bpCalWrite({action:'create',cal:'jobs',contactId:cid,startTime:startISO,endTime:endISO,title:q('bpx-bk-title').value.trim()||'Roofing Job',address:q('bpx-bk-addr').value.trim(),ignoreValidation:true});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Job booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Book Job'; }
+  };
+
+  var _bpConvos=[]; var _bpCurConv=null; var _bpMsgType='SMS';
+
+/* ==== bpOpenApptCancel ==== */
+
+  window.bpOpenApptCancel=function(id){
+    var e=bpFindEv(id); if(!e) return;
+    bpModal('<h3>Cancel Appointment</h3><div class="bpx-sub">Cancel <b style="color:var(--ink)">'+bpEsc(e.title)+'</b>? This removes it from your calendar and can\'t be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Keep it</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDoApptCancel(\''+id+'\')">Cancel Appointment</button></div>');
+  };
+  window.bpDoApptCancel=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    btn.disabled=true; btn.textContent='Cancelling\u2026';
+    var res=await bpCalWrite({action:'delete',id:id});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Cancelled.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent='Could not cancel'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent='Cancel Appointment'; }
+  };
+
+/* ==== bpDoApptCancel ==== */
+  window.bpDoApptCancel=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    btn.disabled=true; btn.textContent='Cancelling\u2026';
+    var res=await bpCalWrite({action:'delete',id:id});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Cancelled.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent='Could not cancel'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent='Cancel Appointment'; }
+  };
+
+/* ==== bpOpenApptEdit ==== */
+
+  window.bpOpenApptEdit=function(id){
+    var e=bpFindEv(id); if(!e) return;
+    bpModal('<h3>Edit Appointment</h3><label>Title</label><input id="bpx-ed-title" value="'+bpEsc(e.title)+'"><label>Address</label><input id="bpx-ed-addr" value="'+bpEsc(e.address||'')+'"><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoApptEdit(\''+id+'\')">Save</button></div>');
+  };
+  window.bpDoApptEdit=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    btn.disabled=true; btn.textContent='Saving\u2026';
+    var res=await bpCalWrite({action:'update',id:id,title:q('bpx-ed-title').value.trim(),address:q('bpx-ed-addr').value.trim()});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Saved.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Save'; }
+  };
+
+/* ==== bpDoApptEdit ==== */
+  window.bpDoApptEdit=async function(id){
+    var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    btn.disabled=true; btn.textContent='Saving\u2026';
+    var res=await bpCalWrite({action:'update',id:id,title:q('bpx-ed-title').value.trim(),address:q('bpx-ed-addr').value.trim()});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Saved.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Save'; }
+  };
+
+/* ==== bpOpenReschedule ==== */
+
+  window.bpOpenReschedule=function(id){
+    var e=bpFindEv(id); if(!e) return; _bpSlotSel=null;
+    bpModal('<h3>Reschedule</h3><div class="bpx-sub">'+bpEsc(e.title)+' \u2014 pick a new open time</div><div class="bpx-slotwrap" id="bpx-rs-slots"></div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoReschedule(\''+id+'\')">Save</button></div>');
+    bpLoadSlots('bpx-rs-slots');
+  };
+  window.bpDoReschedule=async function(id){
+    var e=bpFindEv(id); var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    if(!_bpSlotSel){ msg.style.color='#dc2626'; msg.textContent='Pick an open time above.'; return; }
+    var durMs=Math.max(new Date(e.end).getTime()-new Date(e.start).getTime(),1800000);
+    var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+durMs));
+    btn.disabled=true; btn.textContent='Saving\u2026';
+    var res=await bpCalWrite({action:'update',id:id,startTime:startISO,endTime:endISO});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Rescheduled.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Save'; }
+  };
+
+/* ==== bpDoReschedule ==== */
+  window.bpDoReschedule=async function(id){
+    var e=bpFindEv(id); var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    if(!_bpSlotSel){ msg.style.color='#dc2626'; msg.textContent='Pick an open time above.'; return; }
+    var durMs=Math.max(new Date(e.end).getTime()-new Date(e.start).getTime(),1800000);
+    var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+durMs));
+    btn.disabled=true; btn.textContent='Saving\u2026';
+    var res=await bpCalWrite({action:'update',id:id,startTime:startISO,endTime:endISO});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Rescheduled.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Save'; }
+  };
+
+/* ==== bpMkISO ==== */
+  function bpMkISO(dateStr,timeStr){ return dateStr+'T'+timeStr+':00'+bpLAOffset(dateStr,timeStr); }
+
+/* ==== bpLAOffset ==== */
+  function bpLAOffset(dateStr,timeStr){ try{ var probe=new Date(dateStr+'T'+(timeStr||'12:00')+':00'); var tz=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',timeZoneName:'longOffset'}).formatToParts(probe).find(function(x){return x.type==='timeZoneName';}).value; return (tz.replace('GMT','')||'-08:00'); }catch(e){ return '-08:00'; } }
+
+/* ==== bpLAParts ==== */
+  function bpLAParts(iso){ var f=bpFormatLA(new Date(iso)); return {date:f.slice(0,10), time:f.slice(11,16)}; }
+
+/* ==== bpFormatLA ==== */
+  function bpFormatLA(d){ var g={}; new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(function(x){g[x.type]=x.value;}); var off; try{ off=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',timeZoneName:'longOffset'}).formatToParts(d).find(function(x){return x.type==='timeZoneName';}).value.replace('GMT',''); }catch(e){ off='-08:00'; } if(g.hour==='24') g.hour='00'; return g.year+'-'+g.month+'-'+g.day+'T'+g.hour+':'+g.minute+':00'+(off||'-08:00'); }
+
+/* ==== bpModal ==== */
+  function bpModal(html){ var m=document.createElement('div'); m.className='bpx-modal'; m.id='bpx-modal'; m.innerHTML='<div class="bpx-modalcard">'+html+'</div>'; m.onclick=function(e){ if(e.target===m) bpCloseModal(); }; document.getElementById('bpx').appendChild(m); }
+
+/* ==== bpCloseModal ==== */
+  window.bpCloseModal=function(){ var m=q('bpx-modal'); if(m) m.remove(); };
+
+/* ==== bpField ==== */
+  function bpField(id,label,val,ph){ return '<label>'+label+'</label><input id="'+id+'" value="'+bpEsc(val||'')+'" placeholder="'+ph+'">'; }
+
+/* ==== bpMsg ==== */
+  function bpMsg(id,t,x){ var el=q(id); el.className='bpx-msg '+t; el.textContent=x; }
+
+async function bpEnsureContacts(){ if(_bpContacts&&_bpContacts.length) return; try{ var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})}); var d=await r.json(); _bpContacts=d.contactsList||[]; }catch(e){} }
+
+function bpContacts(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpContactsMock(); return; } bpRenderContacts(); }
+function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarMock(); return; } bpRenderCalendar(); }
+
+</script>
 </body>
 </html>
