@@ -12096,6 +12096,9 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 .bpx-mini.alt:hover{border-color:var(--blue);background:var(--blue-l);}
 .bpx-siteframe{border:1px solid var(--line);border-radius:12px;overflow:hidden;height:420px;background:#f4f2ec;}
 .bpx-siteframe iframe{width:100%;height:100%;border:0;display:block;}
+.bpx-siteframe:fullscreen{height:100vh;width:100vw;border-radius:0;border:0;background:#fff;}
+.bpx-siteframe:-webkit-full-screen{height:100vh;width:100vw;border-radius:0;border:0;background:#fff;}
+.bpx-siteframe:fullscreen iframe,.bpx-siteframe:-webkit-full-screen iframe{height:100vh;}
 .bpx-siteph{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--grey);font-size:13.5px;padding:24px;}
 /* My Calculator */
 .bpx-calc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
@@ -12968,11 +12971,12 @@ function bpWebsite(){
     +bpTile('Conversion rate','6.7%',true)
     +bpTile('Avg. time on page','1m 52s')
     +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Your website<span class="bpx-site-ctl"><input id="bpSiteUrl" class="bpx-urlin" placeholder="yourbusiness.com" value="'+bpEsc(url)+'"><button class="bpx-mini" onclick="bpSaveSite()">Preview</button><a class="bpx-mini alt" id="bpSiteOpen" href="'+(url?('https://'+bpEsc(url)):'#')+'" target="_blank" rel="noopener">Open ↗</a></span></div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Your website<span class="bpx-site-ctl"><input id="bpSiteUrl" class="bpx-urlin" placeholder="yourbusiness.com" value="'+bpEsc(url)+'"><button class="bpx-mini" onclick="bpSaveSite()">Preview</button><a class="bpx-mini alt" id="bpSiteOpen" href="'+(url?('https://'+bpEsc(url)):'#')+'" target="_blank" rel="noopener">Open ↗</a><button class="bpx-mini alt" onclick="bpSiteFull()">Fullscreen ⛶</button></span></div>'
       +'<div class="bpx-siteframe" id="bpSiteFrame">'+(url?('<iframe src="https://'+bpEsc(url)+'" title="Your website" loading="lazy"></iframe>'):'<div class="bpx-siteph">Enter your website address above and hit <b>Preview</b> to see your live site right here.</div>')+'</div></div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Visitors over time<span class="lg2">last 12 weeks</span></div>'
       +'<svg viewBox="0 0 620 150" width="100%" height="150" preserveAspectRatio="none">'+grid+'<path d="'+smoothPath(line)+'" fill="none" stroke="#2f6bff" stroke-width="2.4"/></svg></div>';
 }
+function bpSiteFull(){var f=document.getElementById('bpSiteFrame');if(!f)return;var fsEl=document.fullscreenElement||document.webkitFullscreenElement;if(fsEl){(document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document);return;}(f.requestFullscreen||f.webkitRequestFullscreen||f.msRequestFullscreen||function(){}).call(f);}
 function bpSaveSite(){
   var v=(document.getElementById('bpSiteUrl').value||'').trim().replace(/^https?:\/\//,'').replace(/\/$/,'');
   localStorage.setItem('bpSiteUrl',v);
