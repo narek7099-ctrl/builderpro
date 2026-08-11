@@ -96,6 +96,39 @@ footer{border-top:1px solid var(--line);background:var(--soft);padding:50px 0 40
 .fcopy{text-align:center;font-size:12.5px;color:var(--grey-l);line-height:1.7;}
 .fcopy a{color:var(--blue);}
 :focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:4px;}
+/* ---- tablet ---- */
+@media(max-width:820px){
+  .nav-i{padding:12px 22px;}
+  .grid3{grid-template-columns:1fr 1fr;}
+}
+/* ---- mobile ---- */
+@media(max-width:600px){
+  .bar{font-size:11.5px;padding:7px 14px;line-height:1.4;}
+  .nav-i{padding:11px 18px;gap:10px;}
+  .brand{font-size:18px;gap:7px;}
+  .brand .bpmark{width:22px;height:22px;}
+  nav .btn-dark{padding:9px 15px;font-size:13px;}
+  .hero{padding:46px 0 38px;}
+  h1{font-size:clamp(34px,10vw,44px);}
+  .lead{font-size:16px;margin:18px auto 26px;max-width:100%;}
+  .hero-cta{gap:10px;}
+  .hero-cta .btn{width:100%;max-width:340px;}
+  section.blk{padding:44px 0;}
+  h2{font-size:clamp(27px,7.6vw,34px);}
+  .sub{font-size:15.5px;}
+  .grid3{grid-template-columns:1fr;gap:14px;}
+  .card{padding:22px;border-radius:16px;}
+  .estbox{border-radius:16px;}
+  .estbody{padding:30px 20px;}
+  .estbig{font-size:clamp(40px,13vw,56px);}
+  .step{gap:14px;padding:18px 0;}
+  .stepn{font-size:30px;width:38px;}
+  .stept{font-size:16px;}
+  .ctaband{padding:40px 22px;border-radius:20px;}
+  .ctaband .btn{width:100%;max-width:340px;}
+  .xrow{gap:8px;}
+  .xlink{font-size:12px;padding:7px 13px;}
+}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
 </style>
 </head>
