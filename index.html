@@ -197,6 +197,10 @@ section{padding:88px 0;}
 .ap-av,#atlas-chat-btn,#atlasSend{color:#fff}
 .ao-inner .bpi{stroke-width:1.6}
 </style>
+<style>
+@media(min-width:641px){.bpx-stats.six{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.bpx-stats.six{grid-template-columns:1fr 1fr;}}
+</style>
 </head>
 <body>
 
@@ -12753,11 +12757,13 @@ function bpDashboard(){
   var funnel=[{n:'Website visitors',v:1240,w:100},{n:'Leads captured',v:342,w:64},{n:'Conversations',v:268,w:48},{n:'Inspections booked',v:128,w:30},{n:'Jobs won',v:47,w:14}];
   var fh='';funnel.forEach(function(f){fh+='<div class="bpx-frow"><div class="bpx-fname">'+f.n+'</div><div class="bpx-fbarwrap"><div class="bpx-fbar" style="width:'+f.w+'%"></div></div><div class="bpx-fcount">'+f.v+'</div></div>';});
   document.getElementById('bpxViewArea').innerHTML=
-    '<div class="bpx-stats">'
+    '<div class="bpx-stats six">'
     +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val" id="bpxSNew">342</div><div class="note">▲ 18% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val" id="bpxSBooked">128</div><div class="note">▲ 12% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Pipeline value</div><div class="val blue" id="bpxSPipe">$412k</div><div class="note">▲ 22% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Missed calls saved</div><div class="val" id="bpxSMiss">63</div><div class="note">▲ 9% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Appointments booked</div><div class="val" id="bpxSAppts">—</div><div class="note">this month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Total customers</div><div class="val" id="bpxSCust">—</div><div class="note">all time</div></div>'
     +'</div>'
     +'<div class="bpx-row">'
       +'<div class="bpx-panel"><div class="bpx-ptitle">Bookings over time<span class="lg2" id="bpxLineTag">last 12 weeks</span></div>'
@@ -12785,6 +12791,8 @@ function bpDashLive(){
     if(d.wonClosedJobs!=null)bpSet('bpxSBooked',bpNum(d.wonClosedJobs));
     if(d.pipelineValue!=null)bpSet('bpxSPipe','$'+Number(d.pipelineValue).toLocaleString());
     if(d.missedCallsRecoveredMonth!=null)bpSet('bpxSMiss',bpNum(d.missedCallsRecoveredMonth));
+    if(d.appointmentsBookedMonth!=null)bpSet('bpxSAppts',bpNum(d.appointmentsBookedMonth));
+    if(d.totalContacts!=null)bpSet('bpxSCust',bpNum(d.totalContacts));
     if(d.funnel&&d.funnel.length){var f=document.getElementById('bpxFunnel');if(f)f.innerHTML=bpFunnelRows(d.funnel);}
     var lw=document.getElementById('bpxLineWrap');
     if(lw&&d.leadsOverTime&&d.leadsOverTime.length){
