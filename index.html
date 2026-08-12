@@ -13707,5 +13707,100 @@ function bpContacts(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpContactsM
 function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarMock(); return; } bpRenderCalendar(); }
 
 </script>
+<style>
+/* messaging: Text/Email tabs + extras (light theme) */
+.bpx-tabs{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--line);}
+.bpx-mtab{padding:6px 15px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--grey);cursor:pointer;border:1px solid var(--line);background:#fff;}
+.bpx-mtab:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-mtab.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.bpx-tempty{padding:26px 18px;text-align:center;color:var(--grey);font-size:13.5px;}
+.bpx-unread{display:inline-block;background:var(--blue);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:999px;padding:0 5px;margin-left:6px;}
+.bpx-sysmsg{align-self:center;text-align:center;color:var(--grey);font-size:11.5px;margin:6px 0;background:var(--soft);border-radius:999px;padding:3px 12px;}
+.bpx-bub.fail{opacity:.75;outline:1px solid #dc2626;}
+.bpx-bub .bt{font-size:10px;color:var(--grey);margin-top:4px;}
+.bpx-bub.out .bt{color:rgba(255,255,255,.8);}
+.bpx-reply input:disabled{background:var(--soft);color:var(--grey);cursor:not-allowed;}
+
+</style>
+<script>
+/* ===== Restored Messaging: Text/Email + GHL ===== */
+/* ==== bpRenderMessaging ==== */
+  function bpRenderMessaging(){
+    q('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpx-convlist"><div class="bpx-slotempty" style="padding:1rem">Loading\u2026</div></div><div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty">Select a conversation to view messages.</div></div></div>';
+    bpLoadConvos();
+  }
+
+/* ==== bpLoadConvos ==== */
+  async function bpLoadConvos(){
+    try{
+      var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
+      var d=await r.json(); _bpConvos=d.conversations||[];
+      var el=q('bpx-convlist');
+      if(!_bpConvos.length){ el.innerHTML='<div class="bpx-slotempty" style="padding:1rem">No conversations yet.</div>'; return; }
+      var html='';
+      for(var i=0;i<_bpConvos.length;i++){ var c=_bpConvos[i];
+        html+='<div class="bpx-conv" id="conv-'+c.id+'" onclick="bpOpenConv(\''+c.id+'\')"><div class="cn">'+bpEsc(c.name)+(c.unread?'<span class="bpx-unread">'+c.unread+'</span>':'')+'</div><div class="cp">'+(c.dir==='outbound'?'You: ':'')+bpEsc(c.last||'\u2014')+'</div></div>';
+      }
+      el.innerHTML=html;
+    }catch(e){ q('bpx-convlist').innerHTML='<div class="bpx-slotempty" style="padding:1rem">Could not load conversations.</div>'; }
+  }
+
+/* ==== bpOpenConv ==== */
+  window.bpOpenConv=async function(id){
+    _bpCurConv=null; for(var i=0;i<_bpConvos.length;i++){ if(_bpConvos[i].id===id) _bpCurConv=_bpConvos[i]; }
+    if(!_bpCurConv) return;
+    var cs=document.querySelectorAll('#bpx-convlist .bpx-conv'); for(var i=0;i<cs.length;i++) cs[i].classList.remove('sel');
+    var cur=q('conv-'+id); if(cur) cur.classList.add('sel');
+    var hasEmail=!!_bpCurConv.email, hasPhone=!!_bpCurConv.phone;
+    _bpMsgType = hasPhone?'SMS':'Email';
+    var contactInfo=(_bpCurConv.phone?_bpCurConv.phone:'')+(_bpCurConv.phone&&_bpCurConv.email?'  \u00b7  ':'')+(_bpCurConv.email?_bpCurConv.email:'');
+    q('bpx-thread').innerHTML=
+      '<div class="bpx-thead">'+bpEsc(_bpCurConv.name)+' <span style="color:var(--mu);font-weight:400;font-size:.8rem">'+bpEsc(contactInfo)+'</span></div>'
+      +'<div class="bpx-tabs"><div class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">Text</div><div class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">Email</div></div>'
+      +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages\u2026</div></div>'
+      +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message\u2026" onkeydown="if(event.key===\'Enter\')bpSendMsg()"><button onclick="bpSendMsg()">Send</button></div>';
+    bpSetMsgType(_bpMsgType);
+    bpLoadThread(id);
+  };
+
+/* ==== bpLoadThread ==== */
+  async function bpLoadThread(id){
+    try{
+      var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'thread',id:id})});
+      var d=await r.json(); var msgs=d.messages||[]; var b=q('bpx-tbody'); if(!b) return;
+      if(!msgs.length){ b.innerHTML='<div class="bpx-tempty">No messages yet. Send the first one below.</div>'; return; }
+      var html='';
+      for(var i=0;i<msgs.length;i++){ var m=msgs[i];
+        if(m.activity){ html+='<div class="bpx-sysmsg">'+bpEsc(m.activity)+'</div>'; continue; }
+        if(!m.body) continue;
+        var cls='bpx-bub '+(m.dir==='outbound'?'out':'in')+(m.status==='failed'?' fail':'');
+        var t=m.date?new Date(m.date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+        html+='<div class="'+cls+'">'+bpEsc(m.body)+'<div class="bt">'+t+(m.status==='failed'?' \u00b7 failed':'')+'</div></div>';
+      }
+      b.innerHTML=html; b.scrollTop=b.scrollHeight;
+    }catch(e){ var b=q('bpx-tbody'); if(b) b.innerHTML='<div class="bpx-tempty">Could not load messages.</div>'; }
+  };
+
+/* ==== bpSetMsgType ==== */
+  window.bpSetMsgType=function(t){ _bpMsgType=t; var a=q('tab-SMS'),b=q('tab-Email'); if(a)a.classList.toggle('on',t==='SMS'); if(b)b.classList.toggle('on',t==='Email'); var inp=q('bpx-replyin'); if(!inp) return; var missing=(t==='Email'&&!_bpCurConv.email)||(t==='SMS'&&!_bpCurConv.phone); if(missing){ inp.placeholder=(t==='Email'?'No email on file for this contact':'No phone on file for this contact'); inp.disabled=true; } else { inp.disabled=false; inp.placeholder=(t==='Email'?'Type an email\u2026':'Type a text\u2026'); } };
+
+/* ==== bpSendMsg ==== */
+  window.bpSendMsg=async function(){
+    var inp=q('bpx-replyin'); if(!inp||!_bpCurConv) return;
+    var text=inp.value.trim(); if(!text) return;
+    inp.disabled=true;
+    try{
+      var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your roofer'})}).then(function(r){return r.json();});
+      if(res.ok){ inp.value=''; setTimeout(function(){ bpLoadThread(_bpCurConv.id); },800); }
+      else { alert('Could not send'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'); }
+    }catch(e){ alert('Could not send. Please try again.'); }
+    inp.disabled=false; inp.focus();
+  };
+
+
+
+function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagingMock(); return; } bpRenderMessaging(); }
+
+</script>
 </body>
 </html>
