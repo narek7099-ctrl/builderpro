@@ -13810,5 +13810,187 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
 function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagingMock(); return; } bpRenderMessaging(); }
 
 </script>
+<style>
+/* ===== Premium SaaS look: Contacts + Messaging ===== */
+.bpx-av{border-radius:50%;color:#fff;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;letter-spacing:.02em;box-shadow:0 1px 3px rgba(20,30,60,.18);}
+
+/* --- Contacts --- */
+.bpx-chead{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;}
+.bpx-searchwrap{position:relative;flex:1;min-width:220px;max-width:460px;}
+.bpx-searchwrap .bpx-si{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--grey-l);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none;}
+.bpx-csearch{width:100%;padding:11px 14px 11px 40px;border:1px solid var(--line);border-radius:11px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);transition:.15s;}
+.bpx-csearch:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+.bpx-chead-r{display:flex;align-items:center;gap:14px;}
+.bpx-count{font-size:12.5px;color:var(--grey);font-weight:500;white-space:nowrap;}
+.bpx-cwrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.05);}
+.bpx-ctable{width:100%;border-collapse:collapse;font-size:13.5px;}
+.bpx-ctable thead th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--grey-l);font-weight:600;padding:13px 16px;background:var(--soft);border-bottom:1px solid var(--line);}
+.bpx-ctable td{padding:12px 16px;border-bottom:1px solid var(--line-2);vertical-align:middle;}
+.bpx-ctable tbody tr{transition:background .12s;}
+.bpx-ctable tbody tr:hover{background:var(--soft);}
+.bpx-ctable tr:last-child td{border-bottom:0;}
+.bpx-cnamecell{display:flex;align-items:center;gap:11px;}
+.bpx-cname{font-weight:600;color:var(--ink);letter-spacing:-.01em;}
+.bpx-cmuted{color:var(--grey);}
+.bpx-ctable td:nth-child(2){white-space:nowrap;}
+.bpx-dash{color:var(--grey-l);}
+.bpx-cact{white-space:nowrap;text-align:right;}
+.bpx-iconbtn{width:32px;height:32px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--grey);margin-left:6px;transition:.15s;vertical-align:middle;}
+.bpx-iconbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.bpx-iconbtn:hover{border-color:var(--blue);color:var(--blue);background:#fff;}
+.bpx-iconbtn.del:hover{border-color:#dc2626;color:#dc2626;}
+.bpx-tag{display:inline-block;background:#eef3ff;border:1px solid rgba(47,107,255,.18);color:#1b56ee;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;margin-right:5px;}
+.bpx-addbtn{background:var(--blue);color:#fff;border:0;border-radius:11px;padding:10px 17px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 2px 8px rgba(47,107,255,.28);transition:.15s;}
+.bpx-addbtn:hover{background:#1b56ee;transform:translateY(-1px);box-shadow:0 5px 14px rgba(47,107,255,.34);}
+
+/* --- Messaging --- */
+.bpx-inbox{display:grid;grid-template-columns:320px 1fr;gap:16px;height:560px;}
+.bpx-convlist{background:#fff;border:1px solid var(--line);border-radius:16px;overflow-y:auto;box-shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.05);padding:6px;}
+.bpx-conv{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;cursor:pointer;transition:background .12s;border-bottom:0;}
+.bpx-conv:hover{background:var(--soft);}
+.bpx-conv.sel{background:#eef3ff;}
+.bpx-conv-main{flex:1;min-width:0;}
+.bpx-conv-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+.bpx-conv-name{font-weight:600;font-size:14px;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bpx-conv-time{font-size:11px;color:var(--grey-l);white-space:nowrap;flex-shrink:0;}
+.bpx-conv-prev{font-size:12.5px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.bpx-conv.unreadrow .bpx-conv-prev{color:var(--ink);font-weight:500;}
+.bpx-unread{background:var(--blue);color:#fff;font-size:10.5px;font-weight:700;min-width:19px;height:19px;line-height:19px;text-align:center;border-radius:999px;padding:0 6px;flex-shrink:0;}
+.bpx-thread{background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.05);}
+.bpx-thead{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);}
+.bpx-thead-name{font-weight:700;font-size:15px;letter-spacing:-.01em;}
+.bpx-thead-sub{font-size:12px;color:var(--grey);margin-top:1px;}
+.bpx-tabs{display:flex;gap:8px;padding:11px 18px;border-bottom:1px solid var(--line);background:var(--soft);}
+.bpx-mtab{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--grey);cursor:pointer;border:1px solid var(--line);background:#fff;font-family:inherit;transition:.15s;}
+.bpx-mtab svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
+.bpx-mtab:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-mtab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(47,107,255,.25);}
+.bpx-tbody{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:3px;background:linear-gradient(180deg,#fbfbfa,#fff);}
+.bpx-bub{max-width:74%;padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.45;margin-top:6px;box-shadow:0 1px 2px rgba(20,30,60,.06);}
+.bpx-bub.out{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:5px;}
+.bpx-bub.in{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px;}
+.bpx-bub .bt{font-size:10px;margin-top:4px;opacity:.75;}
+.bpx-bub.out .bt{color:rgba(255,255,255,.85);}
+.bpx-bub.in .bt{color:var(--grey-l);}
+.bpx-sysmsg{align-self:center;text-align:center;color:var(--grey);font-size:11px;margin:10px 0;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 13px;}
+.bpx-tempty{margin:auto;text-align:center;color:var(--grey);font-size:14px;padding:30px;}
+.bpx-tempty .big{font-size:34px;margin-bottom:10px;opacity:.5;}
+.bpx-reply{border-top:1px solid var(--line);padding:13px 14px;display:flex;gap:10px;align-items:center;background:#fff;}
+.bpx-reply input{flex:1;border:1px solid var(--line);border-radius:999px;padding:11px 17px;font-family:inherit;font-size:13.5px;outline:none;transition:.15s;}
+.bpx-reply input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+.bpx-reply input:disabled{background:var(--soft);color:var(--grey-l);}
+.bpx-sendbtn{width:42px;height:42px;border:0;border-radius:50%;background:var(--blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(47,107,255,.3);transition:.15s;}
+.bpx-sendbtn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.bpx-sendbtn:hover{background:#1b56ee;transform:translateY(-1px);}
+@media(max-width:820px){.bpx-inbox{grid-template-columns:1fr;height:auto;}.bpx-convlist{max-height:300px;}.bpx-thread{min-height:420px;}}
+
+</style>
+<script>
+/* ===== Premium SaaS UI overrides: Contacts + Messaging ===== */
+function bpAvatar(name,size){
+  var n=(name||'?').trim(); var parts=n.split(/\s+/);
+  var init=(((parts[0]||'')[0]||'')+((parts[1]||'')[0]||''))||(n[0]||'?');
+  init=init.toUpperCase();
+  var colors=['#2f6bff','#7c3aed','#0891b2','#0d9488','#d97706','#dc2626','#db2777','#4f46e5','#2563eb','#059669'];
+  var h=0; for(var i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))>>>0;}
+  var c=colors[h%colors.length]; var s=size||36;
+  return '<span class="bpx-av" style="background:'+c+';width:'+s+'px;height:'+s+'px;font-size:'+Math.round(s*0.4)+'px">'+bpEsc(init)+'</span>';
+}
+function bpMsgTime(c){
+  var d=c.date||c.time||c.lastMessageDate||c.updatedAt; if(!d)return '';
+  var dt=new Date(d); if(isNaN(dt.getTime()))return '';
+  var diff=(Date.now()-dt.getTime())/1000;
+  if(diff<3600)return Math.max(1,Math.floor(diff/60))+'m';
+  if(diff<86400)return Math.floor(diff/3600)+'h';
+  if(diff<604800)return dt.toLocaleDateString('en-US',{weekday:'short'});
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+/* ---------- Contacts ---------- */
+function bpRenderContacts(){
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-chead">'
+      +'<div class="bpx-searchwrap"><svg class="bpx-si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'
+        +'<input class="bpx-csearch" id="bpx-csearch" type="text" placeholder="Search name, phone, email, or tag" oninput="bpFilterContacts(this.value)"></div>'
+      +'<div class="bpx-chead-r"><span class="bpx-count" id="bpx-ccount"></span><button class="bpx-addbtn" onclick="bpOpenAdd()">+ New contact</button></div>'
+    +'</div>'
+    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th><th></th></tr></thead>'
+      +'<tbody id="bpx-cbody"><tr><td colspan="6" class="bpx-cempty">Loading your contacts…</td></tr></tbody></table></div>';
+  bpLoadContacts();
+}
+function bpDrawContacts(list){
+  var b=q('bpx-cbody'); if(!b) return;
+  var cc=q('bpx-ccount'); if(cc) cc.textContent=list.length+(list.length===1?' contact':' contacts');
+  if(!list.length){ b.innerHTML='<tr><td colspan="6" class="bpx-cempty">No contacts found.</td></tr>'; return; }
+  var EDIT='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>';
+  var TRASH='<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+  var html='';
+  for(var i=0;i<list.length;i++){
+    var c=list[i];
+    var tags=''; for(var j=0;j<(c.tags||[]).length;j++){ tags+='<span class="bpx-tag">'+bpEsc(c.tags[j])+'</span>'; }
+    var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    html+='<tr>'
+      +'<td><div class="bpx-cnamecell">'+bpAvatar(c.name||'?',34)+'<span class="bpx-cname">'+bpEsc(c.name||'—')+'</span></div></td>'
+      +'<td class="bpx-cmuted">'+(c.phone?bpEsc(c.phone):'<span class="bpx-dash">—</span>')+'</td>'
+      +'<td class="bpx-cmuted">'+(c.email?bpEsc(c.email):'<span class="bpx-dash">—</span>')+'</td>'
+      +'<td>'+(tags||'<span class="bpx-dash">—</span>')+'</td>'
+      +'<td class="bpx-cmuted">'+(added||'<span class="bpx-dash">—</span>')+'</td>'
+      +'<td class="bpx-cact"><button class="bpx-iconbtn" title="Edit" onclick="bpOpenEdit(\''+c.id+'\')">'+EDIT+'</button>'
+        +'<button class="bpx-iconbtn del" title="Delete" onclick="bpOpenDelete(\''+c.id+'\')">'+TRASH+'</button></td>'
+    +'</tr>';
+  }
+  b.innerHTML=html;
+}
+
+/* ---------- Messaging ---------- */
+function bpRenderMessaging(){
+  q('bpxViewArea').innerHTML='<div class="bpx-inbox">'
+    +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
+    +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big">💬</div>Select a conversation to view messages.</div></div>'
+  +'</div>';
+  bpLoadConvos();
+}
+async function bpLoadConvos(){
+  try{
+    var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
+    var d=await r.json(); _bpConvos=d.conversations||[];
+    var el=q('bpx-convlist');
+    if(!_bpConvos.length){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">No conversations yet.</div>'; return; }
+    var html='';
+    for(var i=0;i<_bpConvos.length;i++){ var c=_bpConvos[i]; var t=bpMsgTime(c);
+      html+='<div class="bpx-conv'+(c.unread?' unreadrow':'')+'" id="conv-'+c.id+'" onclick="bpOpenConv(\''+c.id+'\')">'
+        +bpAvatar(c.name||'?',40)
+        +'<div class="bpx-conv-main"><div class="bpx-conv-top"><span class="bpx-conv-name">'+bpEsc(c.name||'Unknown')+'</span>'+(t?'<span class="bpx-conv-time">'+t+'</span>':'')+'</div>'
+        +'<div class="bpx-conv-prev">'+(c.dir==='outbound'?'You: ':'')+bpEsc(c.last||'—')+'</div></div>'
+        +(c.unread?'<span class="bpx-unread">'+c.unread+'</span>':'')
+      +'</div>';
+    }
+    el.innerHTML=html;
+  }catch(e){ q('bpx-convlist').innerHTML='<div class="bpx-tempty" style="padding:24px">Could not load conversations.</div>'; }
+}
+window.bpOpenConv=async function(id){
+  _bpCurConv=null; for(var i=0;i<_bpConvos.length;i++){ if(_bpConvos[i].id===id) _bpCurConv=_bpConvos[i]; }
+  if(!_bpCurConv) return;
+  var cs=document.querySelectorAll('#bpx-convlist .bpx-conv'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('sel');
+  var cur=q('conv-'+id); if(cur) cur.classList.add('sel');
+  var hasPhone=!!_bpCurConv.phone; _bpMsgType = hasPhone?'SMS':'Email';
+  var info=(_bpCurConv.phone||'')+(_bpCurConv.phone&&_bpCurConv.email?'  ·  ':'')+(_bpCurConv.email||'');
+  var CHAT='<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.5 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 013.5 11.5 8.5 8.5 0 0112 3a8.5 8.5 0 019 8.5z"/></svg>';
+  var MAIL='<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>';
+  var SEND='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+  q('bpx-thread').innerHTML=
+    '<div class="bpx-thead">'+bpAvatar(_bpCurConv.name||'?',38)
+      +'<div><div class="bpx-thead-name">'+bpEsc(_bpCurConv.name||'Unknown')+'</div>'
+      +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div></div>'
+    +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
+      +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
+    +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages…</div></div>'
+    +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message…" onkeydown="if(event.key===\'Enter\')bpSendMsg()">'
+      +'<button class="bpx-sendbtn" title="Send" onclick="bpSendMsg()">'+SEND+'</button></div>';
+  bpSetMsgType(_bpMsgType);
+  bpLoadThread(id);
+};
+
+</script>
 </body>
 </html>
