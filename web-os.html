@@ -67,9 +67,11 @@ svg{display:block;}
 
 /* ============ reusable ============ */
 .mark{filter:drop-shadow(0 4px 14px var(--purple-glow));}
-.brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-weight:600;letter-spacing:-.01em;}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-weight:600;letter-spacing:-.02em;}
 .brand .w{color:var(--ink);}
-.brand .o{color:var(--purple-b);}
+.brand .o{color:var(--purple-b);margin-left:1px;}
+.os-brand2 .o{color:var(--purple-b);margin-left:1px;}
+.os-brand2 .w{color:var(--ink);}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;font-weight:600;font-size:14px;padding:12px 20px;transition:.2s;}
 .btn-primary{background:linear-gradient(135deg,var(--purple-b),var(--purple-d));color:#fff;box-shadow:0 10px 30px -8px var(--purple-glow);}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 16px 40px -8px var(--purple-glow);}
@@ -86,7 +88,9 @@ nav.top .brand{font-size:20px;}
 .nav-links a:hover{color:var(--ink);}
 @media(max-width:760px){.nav-links a{display:none;}}
 
-.hero{position:relative;padding:96px 0 80px;text-align:center;}
+.hero{position:relative;padding:110px 0 90px;text-align:center;}
+.hero > *{position:relative;z-index:2;}
+.hero .strand{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:100vw;height:calc(100% + 80px);z-index:1;pointer-events:none;}
 .hero .chip{margin-bottom:26px;}
 .hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(40px,7vw,74px);line-height:1.02;letter-spacing:-.03em;background:linear-gradient(180deg,#fff 30%,#c9bfe4);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .hero h1 em{font-style:normal;background:linear-gradient(120deg,var(--purple-b),#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent;}
@@ -284,7 +288,7 @@ footer .in{display:flex;justify-content:space-between;align-items:center;flex-wr
 <!-- ============ LANDING ============ -->
 <nav class="top">
   <div class="wrap in">
-    <a href="#" class="brand"><svg class="mark" width="28" height="28" aria-label="Web OS"><use href="#cubeMark"/></svg><span class="w">Web</span>&nbsp;<span class="o">OS</span></a>
+    <a href="#" class="brand"><svg class="mark" width="28" height="28" aria-label="Web OS"><use href="#cubeMark"/></svg><span class="wm"><span class="w">Web</span><span class="o">OS</span></span></a>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#preview">Dashboard</a>
@@ -294,6 +298,7 @@ footer .in{display:flex;justify-content:space-between;align-items:center;flex-wr
 </nav>
 
 <header class="hero wrap">
+  <canvas class="strand" id="strandCv"></canvas>
   <div class="reveal"><span class="chip">● Live · running 24/7</span></div>
   <h1 class="reveal">Your whole business,<br><em>one calm dashboard</em></h1>
   <p class="reveal">Web OS brings every lead, message, booking and deal into a single, focused view — so nothing slips through the cracks.</p>
@@ -334,7 +339,7 @@ footer .in{display:flex;justify-content:space-between;align-items:center;flex-wr
 
 <footer>
   <div class="wrap in">
-    <a href="#" class="brand" style="font-size:17px"><svg class="mark" width="22" height="22"><use href="#cubeMark"/></svg><span class="w">Web</span>&nbsp;<span class="o">OS</span></a>
+    <a href="#" class="brand" style="font-size:17px"><svg class="mark" width="22" height="22"><use href="#cubeMark"/></svg><span class="wm"><span class="w">Web</span><span class="o">OS</span></span></a>
     <span>© <span id="yr"></span> Web OS. All systems running.</span>
   </div>
 </footer>
@@ -346,7 +351,7 @@ footer .in{display:flex;justify-content:space-between;align-items:center;flex-wr
   <!-- login -->
   <div class="os-auth" id="osLogin">
     <div class="os-authwrap">
-      <div class="os-brand2"><svg class="mark" width="34" height="34" aria-label="Web OS"><use href="#cubeMark"/></svg><span class="w">Web</span>&nbsp;<span class="o">OS</span></div>
+      <div class="os-brand2"><svg class="mark" width="34" height="34" aria-label="Web OS"><use href="#cubeMark"/></svg><span class="wm"><span class="w">Web</span><span class="o">OS</span></span></div>
       <div class="os-card">
         <h1>Welcome back</h1>
         <div class="os-sub">Sign in to your Web OS dashboard.</div>
@@ -365,7 +370,7 @@ footer .in{display:flex;justify-content:space-between;align-items:center;flex-wr
   <!-- app -->
   <div class="os-app" id="osApp">
     <aside class="os-side">
-      <div class="os-brand2"><svg class="mark" width="30" height="30" aria-label="Web OS"><use href="#cubeMark"/></svg><span class="w">Web</span>&nbsp;<span class="o">OS</span></div>
+      <div class="os-brand2"><svg class="mark" width="30" height="30" aria-label="Web OS"><use href="#cubeMark"/></svg><span class="wm"><span class="w">Web</span><span class="o">OS</span></span></div>
       <nav class="os-nav" id="osNav">
         <a class="on" data-view="dashboard" onclick="osNav('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span>Dashboard</span></a>
         <a data-view="messaging" onclick="osNav('messaging')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messaging</span></a>
@@ -388,6 +393,44 @@ footer .in{display:flex;justify-content:space-between;align-items:center;flex-wr
 
 <script>
 document.getElementById('yr').textContent=new Date().getFullYear();
+
+/* ===== flowing strand (garrizmudze-style ribbon) ===== */
+(function(){
+  var cv=document.getElementById('strandCv');if(!cv)return;
+  var ctx=cv.getContext('2d');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W=0,H=0,dpr=1;
+  function resize(){var r=cv.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.max(1,r.width*dpr);cv.height=Math.max(1,r.height*dpr);W=r.width;H=r.height;ctx.setTransform(dpr,0,0,dpr,0,0);}
+  resize();addEventListener('resize',resize,{passive:true});
+  var strands=[
+    {amp:0.20,y:0.50,k:0.0044,k2:0.0110,sp:0.30,sp2:-0.46,th:24,c:['#4c1d95','#a855f7','#e879f9'],op:0.85,ph:0},
+    {amp:0.26,y:0.53,k:0.0038,k2:0.0092,sp:0.24,sp2:0.38,th:15,c:['#3b0f7a','#7c3aed','#c084fc'],op:0.55,ph:2.1},
+    {amp:0.32,y:0.47,k:0.0031,k2:0.0074,sp:0.19,sp2:-0.30,th:9,c:['#2a0a5e','#6d28d9','#a855f7'],op:0.38,ph:4.3}
+  ];
+  function drawStrand(s,t){
+    var midY=H*s.y,amp=Math.min(H*s.amp,150),step=6,top=[],bot=[];
+    for(var x=0;x<=W+step;x+=step){
+      var y=midY+Math.sin(x*s.k+t*s.sp+s.ph)*amp+Math.sin(x*s.k2-t*s.sp2+s.ph)*amp*0.34;
+      var th=s.th*(0.45+0.55*Math.abs(Math.sin(x*s.k*0.7+t*s.sp*0.5+s.ph)));
+      top.push([x,y-th]);bot.push([x,y+th]);
+    }
+    ctx.beginPath();ctx.moveTo(top[0][0],top[0][1]);
+    for(var i=1;i<top.length;i++)ctx.lineTo(top[i][0],top[i][1]);
+    for(var j=bot.length-1;j>=0;j--)ctx.lineTo(bot[j][0],bot[j][1]);
+    ctx.closePath();
+    var g=ctx.createLinearGradient(0,0,W,0);
+    g.addColorStop(0,s.c[0]);g.addColorStop(0.5,s.c[1]);g.addColorStop(1,s.c[2]);
+    ctx.globalAlpha=s.op;ctx.fillStyle=g;ctx.shadowColor=s.c[1];ctx.shadowBlur=38;ctx.fill();
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
+  function frame(t){ctx.clearRect(0,0,W,H);ctx.globalCompositeOperation='lighter';for(var i=0;i<strands.length;i++)drawStrand(strands[i],t);ctx.globalCompositeOperation='source-over';}
+  if(reduce){frame(0);return;}
+  var running=false,last=0;
+  function loop(ts){if(!running)return;if(ts-last>=24){last=ts;frame(ts/1000);}requestAnimationFrame(loop);}
+  var io=new IntersectionObserver(function(e){if(e[0].isIntersecting){if(!running){running=true;requestAnimationFrame(loop);}}else running=false;},{threshold:0});
+  io.observe(cv);
+  document.addEventListener('visibilitychange',function(){if(document.hidden)running=false;else if(!running){running=true;requestAnimationFrame(loop);}});
+})();
 
 /* reveal on scroll */
 var rio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');rio.unobserve(e.target);}});},{threshold:.12});
