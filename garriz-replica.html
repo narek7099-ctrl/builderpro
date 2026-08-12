@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Garri Zmudze</title>
+<meta name="description" content="Uniting biotech, web3 and longevity into modern health.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e7e6e2;          /* warm light grey ground */
+  --bg-2:#dedcd7;
+  --ink:#14130f;         /* near-black */
+  --ink-2:#3a382f;
+  --muted:#6f6d64;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:var(--serif);
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+a{color:inherit;text-decoration:none;}
+
+/* ===== rotating DNA helix ===== */
+.stage{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.helix-wrap{position:absolute;top:50%;left:50%;width:150vmax;height:150vmax;transform:translate(-50%,-50%) rotate(-26deg);}
+#dna{width:100%;height:100%;display:block;}
+
+/* soft vignette to fade helix into the ground at edges */
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 42%, transparent 55%, var(--bg) 92%);}
+
+/* ===== top bar ===== */
+header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:26px 40px;}
+.logo{font-size:22px;letter-spacing:.01em;}
+.logo .a{font-weight:500;}
+.logo .b{font-style:italic;font-weight:400;}
+nav{display:flex;gap:34px;}
+nav a{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);opacity:.9;transition:opacity .2s;}
+nav a:hover{opacity:.5;}
+@media(max-width:640px){nav{gap:18px;}nav a{font-size:11px;letter-spacing:.1em;}header{padding:20px;}}
+
+/* ===== hero content ===== */
+.hero{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;padding:0 24px;}
+.hero h1{
+  font-size:clamp(34px,5.4vw,74px);
+  font-weight:400;
+  line-height:1.04;
+  letter-spacing:-.018em;
+  text-align:center;
+  max-width:min(900px,92vw);
+  text-wrap:balance;
+}
+.hero h1 em{font-style:italic;font-weight:400;}
+
+/* ===== bottom-left blurb ===== */
+.blurb{position:fixed;left:40px;bottom:34px;z-index:15;max-width:340px;}
+.blurb p{font-family:var(--sans);font-size:15px;line-height:1.5;color:var(--ink-2);}
+.blurb p em{font-family:var(--serif);font-style:italic;font-size:16px;}
+.featured{margin-top:20px;}
+.featured .lab{font-family:var(--sans);font-size:11px;letter-spacing:.02em;color:var(--muted);margin-bottom:9px;}
+.press{display:flex;align-items:center;gap:16px;flex-wrap:wrap;opacity:.82;}
+.press span{font-size:13px;color:var(--ink);white-space:nowrap;}
+.press .forbes{font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.01em;}
+.press .bi{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.02em;text-transform:uppercase;line-height:1.05;}
+.press .ct{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;}
+.press .lt{font-family:var(--sans);font-size:12px;}
+.press .lt b{font-weight:700;}
+.press .sifted{font-family:var(--serif);font-style:italic;font-weight:500;font-size:15px;}
+.press .lb{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;}
+@media(max-width:640px){.blurb{left:20px;right:20px;bottom:20px;max-width:none;}.press{gap:12px;}}
+
+@media(prefers-reduced-motion:reduce){.helix-wrap{transform:translate(-50%,-50%) rotate(-26deg);}}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="helix-wrap"><canvas id="dna"></canvas></div>
+</div>
+
+<header>
+  <a href="#" class="logo"><span class="a">Garri</span> <span class="b">Zmudze</span></a>
+  <nav>
+    <a href="#">Insights</a>
+    <a href="#">Investments</a>
+    <a href="#">Contact</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h1>Uniting biotech, web3 and longevity into <em>modern&nbsp;health.</em></h1>
+</div>
+
+<div class="blurb">
+  <p>Garri Zmudze is a renowned expert in transformative <em>health</em> technologies.</p>
+  <div class="featured">
+    <div class="lab">Featured in:</div>
+    <div class="press">
+      <span class="forbes">Forbes</span>
+      <span class="bi">Business<br>Insider</span>
+      <span class="ct">Cointelegraph</span>
+      <span class="lt"><b>Longevity</b>Technology</span>
+      <span class="sifted">sifted</span>
+      <span class="lb">Labiotech</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('dna');
+  var ctx=cv.getContext('2d');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W=0,H=0,dpr=1;
+  function resize(){
+    var r=cv.getBoundingClientRect();
+    dpr=Math.min(devicePixelRatio||1,2);
+    W=r.width;H=r.height;
+    cv.width=Math.max(1,W*dpr);cv.height=Math.max(1,H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();addEventListener('resize',resize,{passive:true});
+
+  function lerp(a,b,t){return a+(b-a)*t;}
+
+  function draw(time){
+    ctx.clearRect(0,0,W,H);
+    var cx=W*0.5;
+    var N=210;                         // samples per strand
+    var R=Math.min(W,H)*0.115;         // helix radius
+    var pitch=(H*1.5)/N;               // vertical spacing
+    var startY=(H-pitch*N)/2;
+    var step=0.115;                    // twist per sample (radians)
+    var rot=time*0.22;                 // rotation over time
+
+    // precompute strand points
+    var A=[],B=[];
+    for(var i=0;i<N;i++){
+      var y=startY+i*pitch, a=i*step+rot;
+      A.push({x:cx+Math.cos(a)*R,y:y,z:Math.sin(a)});
+      B.push({x:cx+Math.cos(a+Math.PI)*R,y:y,z:Math.sin(a+Math.PI)});
+    }
+    // build depth-sorted drawables: backbone segments (tubes) + rungs
+    var items=[];
+    for(var i=0;i<N-1;i++){
+      items.push({t:'s',p:A[i],q:A[i+1],z:(A[i].z+A[i+1].z)/2});
+      items.push({t:'s',p:B[i],q:B[i+1],z:(B[i].z+B[i+1].z)/2});
+      if(i%3===0)items.push({t:'r',p:A[i],q:B[i],z:(A[i].z+B[i].z)/2});
+    }
+    items.sort(function(p,q){return p.z-q.z;});   // back-to-front
+
+    ctx.lineCap='round';ctx.lineJoin='round';
+    for(var k=0;k<items.length;k++){
+      var it=items[k],d=(it.z+1)/2;               // 0 back .. 1 front
+      if(it.t==='r'){
+        var cc=Math.round(lerp(150,200,d));
+        ctx.strokeStyle='rgba('+cc+','+cc+','+(cc-6)+','+lerp(.45,.9,d)+')';
+        ctx.lineWidth=lerp(3,6,d);
+      }else{
+        var edge=Math.round(lerp(150,250,d));
+        // soft top-lit shading along the tube
+        var g=ctx.createLinearGradient(it.p.x,it.p.y-8,it.p.x,it.p.y+8);
+        g.addColorStop(0,'rgb(255,255,255)');
+        g.addColorStop(1,'rgb('+edge+','+edge+','+(edge-6)+')');
+        ctx.strokeStyle=g;
+        ctx.lineWidth=lerp(9,20,d);
+      }
+      ctx.beginPath();ctx.moveTo(it.p.x,it.p.y);ctx.lineTo(it.q.x,it.q.y);ctx.stroke();
+    }
+  }
+
+  if(reduce){draw(0);return;}
+  var last=0;
+  function loop(ts){
+    if(ts-last>=24){last=ts;draw(ts/1000);}
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
