@@ -12771,8 +12771,8 @@ function bpDashboard(){
         +'<path d="'+smoothPath(line2)+'" fill="none" stroke="#33bd63" stroke-width="2.4"/>'
         +'<path d="'+smoothPath(line)+'" fill="none" stroke="#2f6bff" stroke-width="2.4"/></svg></div>'
         +'<div class="legend" style="margin-top:8px"><span><i style="background:#2f6bff;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Leads</span> &nbsp;<span><i style="background:#33bd63;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Booked</span></div></div>'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Where leads come from</div><div class="bpx-donuts">'
-        +bpDonut(46,'#2f6bff','157','46% Google')+bpDonut(32,'#ff9d6b','109','32% Referral')+bpDonut(22,'#33bd63','76','22% Ads')
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Missed-call recovery<span class="lg2" id="bpxRecTag">this month</span></div><div class="bpx-donuts" id="bpxRecovery">'
+        +bpDonut(0,'#2f6bff','0','Calls recovered')+bpDonut(0,'#7bc8ff','0','Texts recovered')+bpDonut(0,'#33bd63','0','Reactivated')
       +'</div></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2" id="bpxFunTag">this month</span></div><div id="bpxFunnel">'+fh+'</div></div>';
@@ -12793,6 +12793,7 @@ function bpDashLive(){
     if(d.missedCallsRecoveredMonth!=null)bpSet('bpxSMiss',bpNum(d.missedCallsRecoveredMonth));
     if(d.appointmentsBookedMonth!=null)bpSet('bpxSAppts',bpNum(d.appointmentsBookedMonth));
     if(d.totalContacts!=null)bpSet('bpxSCust',bpNum(d.totalContacts));
+    if(d.recovery){var rc=d.recovery,tt=(rc.calls||0)+(rc.texts||0)+(rc.reactivated||0),pc=function(v){return tt>0?Math.round(v/tt*100):0;},rel=document.getElementById('bpxRecovery');if(rel)rel.innerHTML=bpDonut(pc(rc.calls||0),'#2f6bff',bpNum(rc.calls||0),'Calls recovered')+bpDonut(pc(rc.texts||0),'#7bc8ff',bpNum(rc.texts||0),'Texts recovered')+bpDonut(pc(rc.reactivated||0),'#33bd63',bpNum(rc.reactivated||0),'Reactivated');}
     if(d.funnel&&d.funnel.length){var f=document.getElementById('bpxFunnel');if(f)f.innerHTML=bpFunnelRows(d.funnel);}
     var lw=document.getElementById('bpxLineWrap');
     if(lw&&d.leadsOverTime&&d.leadsOverTime.length){
