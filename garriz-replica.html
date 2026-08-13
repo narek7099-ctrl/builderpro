@@ -10,182 +10,275 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#e7e6e2;          /* warm light grey ground */
-  --bg-2:#dedcd7;
-  --ink:#14130f;         /* near-black */
-  --ink-2:#3a382f;
-  --muted:#6f6d64;
+  --light:#e7e6e2; --light-2:#dedcd7;
+  --dark:#0b0b0c; --dark-2:#141416;
+  --ink:#14130f; --ink-2:#3a382f; --muted:#6f6d64;
+  --paper:#f4f3ef; --chalk:#eceae4; --chalk-2:#9c9a92;
+  --teal-a:#0e5a4f; --teal-b:#1aa793;
   --serif:'Fraunces',Georgia,'Times New Roman',serif;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;}
-body{
-  font-family:var(--serif);
-  background:var(--bg);
-  color:var(--ink);
-  -webkit-font-smoothing:antialiased;
-  overflow:hidden;
-}
+html{scroll-behavior:smooth;}
+body{font-family:var(--serif);background:var(--light);color:var(--ink);-webkit-font-smoothing:antialiased;}
 a{color:inherit;text-decoration:none;}
+section{position:relative;}
+em{font-style:italic;}
 
-/* ===== rotating DNA helix ===== */
-.stage{position:fixed;inset:0;z-index:0;overflow:hidden;}
+/* ===== header (inverts light/dark on scroll) ===== */
+header{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:24px 40px;transition:color .4s ease;color:var(--ink);mix-blend-mode:normal;}
+header.on-dark{color:var(--chalk);}
+.logo{font-size:22px;letter-spacing:.01em;position:relative;height:26px;display:flex;align-items:center;}
+.logo .full{transition:opacity .35s;}
+.logo .mono{position:absolute;left:0;font-weight:600;opacity:0;transition:opacity .35s;}
+.logo .full .a{font-weight:500;}
+.logo .full .b{font-style:italic;}
+header.on-dark .logo .full{opacity:0;}
+header.on-dark .logo .mono{opacity:1;}
+nav{display:flex;gap:34px;}
+nav a{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;opacity:.9;transition:opacity .2s;}
+nav a:hover{opacity:.5;}
+@media(max-width:640px){header{padding:18px 20px;}nav{gap:16px;}nav a{font-size:10.5px;letter-spacing:.1em;}}
+
+/* ===== hero ===== */
+.hero{height:100vh;overflow:hidden;background:var(--light);}
+.stage{position:absolute;inset:0;z-index:0;overflow:hidden;}
 .helix-wrap{position:absolute;top:50%;left:50%;width:150vmax;height:150vmax;transform:translate(-50%,-50%) rotate(-26deg);}
 #dna{width:100%;height:100%;display:block;}
-
-/* soft vignette to fade helix into the ground at edges */
-.stage::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(120% 90% at 50% 42%, transparent 55%, var(--bg) 92%);}
-
-/* ===== top bar ===== */
-header{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:26px 40px;}
-.logo{font-size:22px;letter-spacing:.01em;}
-.logo .a{font-weight:500;}
-.logo .b{font-style:italic;font-weight:400;}
-nav{display:flex;gap:34px;}
-nav a{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);opacity:.9;transition:opacity .2s;}
-nav a:hover{opacity:.5;}
-@media(max-width:640px){nav{gap:18px;}nav a{font-size:11px;letter-spacing:.1em;}header{padding:20px;}}
-
-/* ===== hero content ===== */
-.hero{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;padding:0 24px;}
-.hero h1{
-  font-size:clamp(34px,5.4vw,74px);
-  font-weight:400;
-  line-height:1.04;
-  letter-spacing:-.018em;
-  text-align:center;
-  max-width:min(900px,92vw);
-  text-wrap:balance;
-}
-.hero h1 em{font-style:italic;font-weight:400;}
-
-/* ===== bottom-left blurb ===== */
-.blurb{position:fixed;left:40px;bottom:34px;z-index:15;max-width:340px;}
+.stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 42%, transparent 55%, var(--light) 92%);}
+.hero-mid{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 24px;pointer-events:none;}
+.hero-mid h1{font-size:clamp(34px,5.4vw,74px);font-weight:400;line-height:1.04;letter-spacing:-.018em;text-align:center;max-width:min(900px,92vw);text-wrap:balance;}
+.blurb{position:absolute;left:40px;bottom:34px;z-index:15;max-width:340px;}
 .blurb p{font-family:var(--sans);font-size:15px;line-height:1.5;color:var(--ink-2);}
-.blurb p em{font-family:var(--serif);font-style:italic;font-size:16px;}
+.blurb p em{font-family:var(--serif);font-size:16px;}
 .featured{margin-top:20px;}
-.featured .lab{font-family:var(--sans);font-size:11px;letter-spacing:.02em;color:var(--muted);margin-bottom:9px;}
+.featured .lab{font-family:var(--sans);font-size:11px;color:var(--muted);margin-bottom:9px;}
 .press{display:flex;align-items:center;gap:16px;flex-wrap:wrap;opacity:.82;}
-.press span{font-size:13px;color:var(--ink);white-space:nowrap;}
-.press .forbes{font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.01em;}
-.press .bi{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.02em;text-transform:uppercase;line-height:1.05;}
+.press span{font-size:13px;white-space:nowrap;}
+.press .forbes{font-weight:600;font-size:16px;}
+.press .bi{font-family:var(--sans);font-weight:700;font-size:11px;text-transform:uppercase;line-height:1.05;}
 .press .ct{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;}
-.press .lt{font-family:var(--sans);font-size:12px;}
-.press .lt b{font-weight:700;}
-.press .sifted{font-family:var(--serif);font-style:italic;font-weight:500;font-size:15px;}
+.press .lt{font-family:var(--sans);font-size:12px;}.press .lt b{font-weight:700;}
+.press .sifted{font-style:italic;font-weight:500;font-size:15px;}
 .press .lb{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;}
 @media(max-width:640px){.blurb{left:20px;right:20px;bottom:20px;max-width:none;}.press{gap:12px;}}
 
-@media(prefers-reduced-motion:reduce){.helix-wrap{transform:translate(-50%,-50%) rotate(-26deg);}}
+/* ===== generic section shells ===== */
+.pad{padding:120px 40px;}
+.dark{background:var(--dark);color:var(--chalk);}
+.light{background:var(--light);color:var(--ink);}
+.center{text-align:center;}
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1);}
+.reveal.in{opacity:1;transform:none;}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;}}
+
+/* ===== "Meet" + portrait + bio ===== */
+.meet{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:56px;text-align:center;padding:120px 24px;}
+.meet .big{font-size:clamp(60px,13vw,190px);font-weight:300;line-height:.9;letter-spacing:-.03em;}
+.bio-line{font-size:clamp(24px,3.4vw,46px);font-weight:400;line-height:1.18;max-width:16ch;letter-spacing:-.01em;}
+.portrait{width:min(360px,80vw);aspect-ratio:3/3.6;border-radius:2px;position:relative;overflow:hidden;background:linear-gradient(180deg,#26262a,#0e0e10);}
+.portrait svg{position:absolute;inset:0;width:100%;height:100%;}
+.portrait .cap{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-family:var(--sans);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(236,234,228,.5);}
+
+/* ===== credentials ===== */
+.creds{max-width:1040px;margin:0 auto;}
+.cred{display:grid;grid-template-columns:60px 200px 1fr;gap:28px;align-items:start;padding:38px 0;border-top:1px solid rgba(236,234,228,.14);}
+.cred:first-child{border-top:0;}
+.cred .no{font-family:var(--sans);font-size:13px;color:var(--chalk-2);padding-top:6px;}
+.cred .lab{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);padding-top:5px;}
+.cred .body{font-size:clamp(19px,2.2vw,27px);line-height:1.35;letter-spacing:-.01em;color:#d9d7cf;}
+@media(max-width:760px){.cred{grid-template-columns:1fr;gap:10px;}.cred .no{padding-top:0;}}
+
+/* ===== collaboration (light) ===== */
+.collab{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;text-align:center;padding:140px 24px;}
+.collab .kicker{font-size:clamp(30px,4.4vw,60px);font-weight:400;letter-spacing:-.02em;}
+.ink-blob{width:min(300px,64vw);aspect-ratio:1;}
+.collab .statement{font-size:clamp(30px,4.6vw,64px);font-weight:400;line-height:1.1;letter-spacing:-.02em;max-width:16ch;}
+
+/* ===== investment walls ===== */
+.wall{display:grid;grid-template-columns:1fr;gap:40px;max-width:1240px;margin:0 auto;align-items:center;}
+@media(min-width:900px){.wall{grid-template-columns:300px 1fr;gap:56px;}}
+.wall h2{font-size:clamp(34px,5vw,68px);font-weight:400;line-height:1.02;letter-spacing:-.02em;}
+.grid-logos{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:760px){.grid-logos{grid-template-columns:repeat(2,1fr);}}
+.tile{aspect-ratio:16/7;border:1px solid rgba(236,234,228,.10);border-radius:6px;display:flex;align-items:center;justify-content:center;padding:10px;background:rgba(255,255,255,.02);font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.02em;color:#cfcdc6;text-align:center;transition:.25s;}
+.tile:hover{background:rgba(255,255,255,.06);border-color:rgba(236,234,228,.2);color:#fff;}
+
+/* ===== teal group cards ===== */
+.cards{display:grid;grid-template-columns:1fr;gap:16px;max-width:1240px;margin:0 auto;}
+@media(min-width:860px){.cards{grid-template-columns:repeat(3,1fr);}}
+.tcard{aspect-ratio:16/13;border-radius:8px;background:linear-gradient(150deg,var(--teal-b),var(--teal-a));display:grid;grid-template-columns:1fr 1fr;place-items:center;gap:18px;padding:30px;}
+.tcard.solo{grid-template-columns:1fr;}
+.tcard .co{font-family:var(--sans);font-weight:700;font-size:clamp(14px,1.4vw,18px);color:#f2fbf9;text-align:center;letter-spacing:-.01em;opacity:.95;}
+.tcard.solo .co{font-family:var(--serif);font-weight:600;font-size:clamp(28px,3.4vw,44px);letter-spacing:-.02em;}
+
+/* ===== contact / footer ===== */
+.contact{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center;padding:120px 24px;}
+.contact h2{font-size:clamp(44px,8vw,120px);font-weight:300;letter-spacing:-.03em;line-height:.95;}
+.contact a.mail{font-size:clamp(20px,2.6vw,32px);border-bottom:1px solid currentColor;padding-bottom:3px;}
+.foot{display:flex;justify-content:space-between;align-items:center;padding:30px 40px;font-family:var(--sans);font-size:12px;color:var(--chalk-2);flex-wrap:wrap;gap:12px;border-top:1px solid rgba(236,234,228,.12);}
 </style>
 </head>
 <body>
 
-<div class="stage">
-  <div class="helix-wrap"><canvas id="dna"></canvas></div>
-</div>
-
-<header>
-  <a href="#" class="logo"><span class="a">Garri</span> <span class="b">Zmudze</span></a>
+<header id="hdr">
+  <a href="#top" class="logo">
+    <span class="full"><span class="a">Garri</span> <span class="b">Zmudze</span></span>
+    <span class="mono">G.</span>
+  </a>
   <nav>
-    <a href="#">Insights</a>
-    <a href="#">Investments</a>
-    <a href="#">Contact</a>
+    <a href="#investments">Insights</a>
+    <a href="#investments">Investments</a>
+    <a href="#contact">Contact</a>
   </nav>
 </header>
 
-<div class="hero">
-  <h1>Uniting biotech, web3 and longevity into <em>modern&nbsp;health.</em></h1>
-</div>
-
-<div class="blurb">
-  <p>Garri Zmudze is a renowned expert in transformative <em>health</em> technologies.</p>
-  <div class="featured">
-    <div class="lab">Featured in:</div>
-    <div class="press">
-      <span class="forbes">Forbes</span>
-      <span class="bi">Business<br>Insider</span>
-      <span class="ct">Cointelegraph</span>
-      <span class="lt"><b>Longevity</b>Technology</span>
-      <span class="sifted">sifted</span>
-      <span class="lb">Labiotech</span>
+<!-- 1 · HERO -->
+<section class="hero" id="top" data-theme="light">
+  <div class="stage"><div class="helix-wrap"><canvas id="dna"></canvas></div></div>
+  <div class="hero-mid"><h1>Uniting biotech, web3 and longevity into <em>modern&nbsp;health.</em></h1></div>
+  <div class="blurb">
+    <p>Garri Zmudze is a renowned expert in transformative <em>health</em> technologies.</p>
+    <div class="featured">
+      <div class="lab">Featured in:</div>
+      <div class="press">
+        <span class="forbes">Forbes</span>
+        <span class="bi">Business<br>Insider</span>
+        <span class="ct">Cointelegraph</span>
+        <span class="lt"><b>Longevity</b>Technology</span>
+        <span class="sifted">sifted</span>
+        <span class="lb">Labiotech</span>
+      </div>
     </div>
   </div>
-</div>
+</section>
+
+<!-- 2 · MEET + PORTRAIT + BIO -->
+<section class="dark meet" data-theme="dark">
+  <div class="big reveal">Meet</div>
+  <p class="bio-line reveal">Garri Zmudze invests in and advises <em>deeptech</em> companies. He is building a sector-wide movement for <em>well-being</em> and <em>longevity.</em></p>
+  <div class="portrait reveal">
+    <svg viewBox="0 0 300 360" preserveAspectRatio="xMidYMid slice" aria-label="Portrait placeholder">
+      <defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33333a"/><stop offset="1" stop-color="#0c0c0e"/></linearGradient></defs>
+      <rect width="300" height="360" fill="url(#pg)"/>
+      <circle cx="150" cy="140" r="58" fill="#0c0c0e" opacity=".55"/>
+      <path d="M60 360 C60 268 100 232 150 232 C200 232 240 268 240 360 Z" fill="#0c0c0e" opacity=".55"/>
+    </svg>
+    <div class="cap">Portrait — replace with photo</div>
+  </div>
+</section>
+
+<!-- 3 · CREDENTIALS -->
+<section class="dark pad" data-theme="dark">
+  <div class="creds">
+    <div class="cred reveal"><div class="no">01</div><div class="lab">Board Member</div><div class="body">Garri has also embraced a new opportunity to extend his impact by joining as an executive board member at the Sheba Longevity Center, contributing to their pioneering efforts in longevity research and innovation.</div></div>
+    <div class="cred reveal"><div class="no">02</div><div class="lab">Investor &amp; Advisor</div><div class="body">Garri also joins promising startups as an advisor and angel investor, with several successful exits across biotech and emerging tech companies, including Insilico Medicine, Deep Longevity, and Basepaws.</div></div>
+    <div class="cred reveal"><div class="no">03</div><div class="lab">Industry Expert</div><div class="body">He is sought-after for his biotech and web3 experience, advising enterprises like Cointelegraph, PsyMed Ventures, the Healthy Longevity Medicine Society, and more. He is also a member of the Longevity Biotechnology Association.</div></div>
+  </div>
+</section>
+
+<!-- 4 · COLLABORATION (light) -->
+<section class="light collab" data-theme="light">
+  <div class="kicker reveal">Building a movement for daily <em>well-being.</em></div>
+  <svg class="ink-blob reveal" viewBox="0 0 300 300" aria-hidden="true">
+    <defs>
+      <filter id="ink"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.016" numOctaves="4" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="46"/></filter>
+      <radialGradient id="ig" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#8f8f8f"/><stop offset=".6" stop-color="#3a3a3a"/><stop offset="1" stop-color="#111"/></radialGradient>
+    </defs>
+    <g filter="url(#ink)"><circle cx="150" cy="150" r="92" fill="url(#ig)"/></g>
+  </svg>
+  <p class="statement reveal">We cannot pursue a new approach to health alone. It requires <em>collaboration</em> between founders, investors, researchers, patients, <em>and more.</em></p>
+</section>
+
+<!-- 5 · ANGEL INVESTOR WALL -->
+<section class="dark pad" id="investments" data-theme="dark">
+  <div class="wall">
+    <h2 class="reveal">Angel Investor</h2>
+    <div class="grid-logos reveal">
+      <div class="tile">Insilico Medicine</div><div class="tile">Deep Longevity</div><div class="tile">Basepaws</div><div class="tile">Longenesis</div>
+      <div class="tile">turn.bio</div><div class="tile">Proton Intelligence</div><div class="tile">glyphic.bio</div><div class="tile">HelixNano</div>
+      <div class="tile">Rubedo Life Sciences</div><div class="tile">Catena Bio</div><div class="tile">ANI Biome</div><div class="tile">PsyMed Ventures</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · LONGEVC & ANIVC WALL -->
+<section class="dark pad" data-theme="dark">
+  <div class="wall">
+    <h2 class="reveal">LongeVC &amp; AniVC Investments</h2>
+    <div class="grid-logos reveal">
+      <div class="tile">FinanceAsia</div><div class="tile">Sheba Longevity</div><div class="tile">Healthy Longevity Society</div><div class="tile">Deep Longevity</div>
+      <div class="tile">Insilico Medicine</div><div class="tile">Longevity Biotech Assn.</div><div class="tile">Cointelegraph</div><div class="tile">Basepaws</div>
+      <div class="tile">turn.bio</div><div class="tile">Longenesis</div><div class="tile">glyphic.bio</div><div class="tile">Proton Intelligence</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · TEAL GROUP CARDS -->
+<section class="dark pad" data-theme="dark">
+  <div class="cards">
+    <div class="tcard reveal"><div class="co">Proton<br>Intelligence</div><div class="co">glyphic.bio</div><div class="co">Longenesis</div><div class="co">turn.bio</div></div>
+    <div class="tcard solo reveal"><div class="co">FinanceAsia</div></div>
+    <div class="tcard reveal"><div class="co">HelixNano</div><div class="co">Rubedo</div><div class="co">Catena Bio</div><div class="co">ANI Biome</div></div>
+  </div>
+</section>
+
+<!-- 8 · CONTACT / FOOTER -->
+<section class="dark contact" id="contact" data-theme="dark">
+  <h2 class="reveal">Let's build<br><em>modern health.</em></h2>
+  <a class="mail reveal" href="mailto:hello@garrizmudze.com">hello@garrizmudze.com</a>
+</section>
+<footer class="dark foot" data-theme="dark">
+  <span>© <span id="yr"></span> Garri Zmudze</span>
+  <span>Insights · Investments · Contact</span>
+</footer>
 
 <script>
+document.getElementById('yr').textContent=new Date().getFullYear();
+
+/* ===== DNA helix (pseudo-3D canvas) ===== */
 (function(){
-  var cv=document.getElementById('dna');
+  var cv=document.getElementById('dna');if(!cv)return;
   var ctx=cv.getContext('2d');
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var W=0,H=0,dpr=1;
-  function resize(){
-    var r=cv.getBoundingClientRect();
-    dpr=Math.min(devicePixelRatio||1,2);
-    W=r.width;H=r.height;
-    cv.width=Math.max(1,W*dpr);cv.height=Math.max(1,H*dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
+  var W=0,H=0,dpr=1,vis=true;
+  function resize(){var r=cv.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=Math.max(1,W*dpr);cv.height=Math.max(1,H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
   resize();addEventListener('resize',resize,{passive:true});
-
   function lerp(a,b,t){return a+(b-a)*t;}
-
   function draw(time){
     ctx.clearRect(0,0,W,H);
-    var cx=W*0.5;
-    var N=210;                         // samples per strand
-    var R=Math.min(W,H)*0.115;         // helix radius
-    var pitch=(H*1.5)/N;               // vertical spacing
-    var startY=(H-pitch*N)/2;
-    var step=0.115;                    // twist per sample (radians)
-    var rot=time*0.22;                 // rotation over time
-
-    // precompute strand points
+    var cx=W*0.5,N=210,R=Math.min(W,H)*0.115,pitch=(H*1.5)/N,startY=(H-pitch*N)/2,step=0.115,rot=time*0.22;
     var A=[],B=[];
-    for(var i=0;i<N;i++){
-      var y=startY+i*pitch, a=i*step+rot;
-      A.push({x:cx+Math.cos(a)*R,y:y,z:Math.sin(a)});
-      B.push({x:cx+Math.cos(a+Math.PI)*R,y:y,z:Math.sin(a+Math.PI)});
-    }
-    // build depth-sorted drawables: backbone segments (tubes) + rungs
+    for(var i=0;i<N;i++){var y=startY+i*pitch,a=i*step+rot;A.push({x:cx+Math.cos(a)*R,y:y,z:Math.sin(a)});B.push({x:cx+Math.cos(a+Math.PI)*R,y:y,z:Math.sin(a+Math.PI)});}
     var items=[];
-    for(var i=0;i<N-1;i++){
-      items.push({t:'s',p:A[i],q:A[i+1],z:(A[i].z+A[i+1].z)/2});
-      items.push({t:'s',p:B[i],q:B[i+1],z:(B[i].z+B[i+1].z)/2});
-      if(i%3===0)items.push({t:'r',p:A[i],q:B[i],z:(A[i].z+B[i].z)/2});
-    }
-    items.sort(function(p,q){return p.z-q.z;});   // back-to-front
-
+    for(var i=0;i<N-1;i++){items.push({t:'s',p:A[i],q:A[i+1],z:(A[i].z+A[i+1].z)/2});items.push({t:'s',p:B[i],q:B[i+1],z:(B[i].z+B[i+1].z)/2});if(i%3===0)items.push({t:'r',p:A[i],q:B[i],z:(A[i].z+B[i].z)/2});}
+    items.sort(function(p,q){return p.z-q.z;});
     ctx.lineCap='round';ctx.lineJoin='round';
-    for(var k=0;k<items.length;k++){
-      var it=items[k],d=(it.z+1)/2;               // 0 back .. 1 front
-      if(it.t==='r'){
-        var cc=Math.round(lerp(150,200,d));
-        ctx.strokeStyle='rgba('+cc+','+cc+','+(cc-6)+','+lerp(.45,.9,d)+')';
-        ctx.lineWidth=lerp(3,6,d);
-      }else{
-        var edge=Math.round(lerp(150,250,d));
-        // soft top-lit shading along the tube
-        var g=ctx.createLinearGradient(it.p.x,it.p.y-8,it.p.x,it.p.y+8);
-        g.addColorStop(0,'rgb(255,255,255)');
-        g.addColorStop(1,'rgb('+edge+','+edge+','+(edge-6)+')');
-        ctx.strokeStyle=g;
-        ctx.lineWidth=lerp(9,20,d);
-      }
+    for(var k=0;k<items.length;k++){var it=items[k],d=(it.z+1)/2;
+      if(it.t==='r'){var cc=Math.round(lerp(150,200,d));ctx.strokeStyle='rgba('+cc+','+cc+','+(cc-6)+','+lerp(.45,.9,d)+')';ctx.lineWidth=lerp(3,6,d);}
+      else{var e=Math.round(lerp(150,250,d));var g=ctx.createLinearGradient(it.p.x,it.p.y-8,it.p.x,it.p.y+8);g.addColorStop(0,'rgb(255,255,255)');g.addColorStop(1,'rgb('+e+','+e+','+(e-6)+')');ctx.strokeStyle=g;ctx.lineWidth=lerp(9,20,d);}
       ctx.beginPath();ctx.moveTo(it.p.x,it.p.y);ctx.lineTo(it.q.x,it.q.y);ctx.stroke();
     }
   }
-
   if(reduce){draw(0);return;}
   var last=0;
-  function loop(ts){
-    if(ts-last>=24){last=ts;draw(ts/1000);}
-    requestAnimationFrame(loop);
-  }
+  function loop(ts){if(vis&&ts-last>=24){last=ts;draw(ts/1000);}requestAnimationFrame(loop);}
+  var io=new IntersectionObserver(function(e){vis=e[0].isIntersecting;},{threshold:0});io.observe(cv);
   requestAnimationFrame(loop);
 })();
+
+/* ===== reveal on scroll ===== */
+var rio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');rio.unobserve(e.target);}});},{threshold:.16});
+document.querySelectorAll('.reveal').forEach(function(el){rio.observe(el);});
+
+/* ===== header theme inversion by section ===== */
+var hdr=document.getElementById('hdr');
+var sio=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+    if(e.isIntersecting){hdr.classList.toggle('on-dark',e.target.getAttribute('data-theme')==='dark');}
+  });
+},{rootMargin:'-48px 0px -95% 0px',threshold:0});
+document.querySelectorAll('section[data-theme]').forEach(function(s){sio.observe(s);});
 </script>
 </body>
 </html>
