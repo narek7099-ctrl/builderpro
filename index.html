@@ -12194,7 +12194,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <a data-view="calculator" onclick="bpNav('calculator')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3"/></svg><span>My Calculator</span></a>
         <a data-view="automations" onclick="bpNav('automations')"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg><span>Automations</span></a>
       </nav>
-      <div class="bpx-user2"><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
+      <div class="bpx-user2"><div class="bpx-themerow"><span>🌙 Dark mode</span><button class="bpx-switch" id="bpxThemeSw" onclick="bpToggleTheme()" role="switch" aria-label="Toggle dark mode"><span class="bpx-switch-k"></span></button></div><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
     </aside>
     <main class="bpx-main">
       <div class="bpx-mobbar" id="bpxMobbar"></div>
@@ -14269,6 +14269,62 @@ window.bpSchedOneConfirm=async function(){
   else { msg.style.color='#dc2626'; msg.textContent='Could not schedule. Please try again.'; btn.disabled=false; }
 };
 
+</script>
+<style>
+/* ===== Dashboard theme switch ===== */
+.bpx-themerow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;font-size:13px;color:var(--grey);font-weight:500;}
+.bpx-switch{width:46px;height:26px;border-radius:999px;background:var(--line);border:none;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;padding:0;}
+.bpx-switch .bpx-switch-k{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.bpx-switch.on{background:var(--blue);}
+.bpx-switch.on .bpx-switch-k{transform:translateX(20px);}
+
+/* ===== Dark mode (scoped to the portal) ===== */
+#bpx.bpx-dark{
+  --bg:#0e1420; --card:#131a27; --soft:#1a2230;
+  --line:#29323f; --line-2:#222a36;
+  --ink:#e7ecf3; --grey:#9aa6b6; --grey-l:#6d7887; --mu:#9aa6b6;
+  --blue:#3b74ff; --blue-d:#6f9dff; --blue-l:#1e2b46;
+  color:var(--ink);
+}
+#bpx.bpx-dark .bpx-panel,#bpx.bpx-dark .bpx-stat,#bpx.bpx-dark .bpx-cwrap,#bpx.bpx-dark .bpx-convlist,
+#bpx.bpx-dark .bpx-thread,#bpx.bpx-dark .bpx-modalcard,#bpx.bpx-dark .bpx-day,#bpx.bpx-dark .bpx-uprow,
+#bpx.bpx-dark .bpx-slot,#bpx.bpx-dark .bpx-calnav button,#bpx.bpx-dark .bpx-iconbtn,#bpx.bpx-dark .bpx-mtab,
+#bpx.bpx-dark .bpx-csearch,#bpx.bpx-dark .bpx-reply,#bpx.bpx-dark .bpx-reply input,#bpx.bpx-dark .bpx-clockbtn,
+#bpx.bpx-dark .bpx-ghostbtn,#bpx.bpx-dark .bpx-logout,#bpx.bpx-dark .bpx-bulk-tabs button,
+#bpx.bpx-dark .bpx-sched-cancel,#bpx.bpx-dark .bpx-mini,#bpx.bpx-dark .bpx-calc-sel,#bpx.bpx-dark .bpx-card,
+#bpx.bpx-dark .bpx-cd-card,#bpx.bpx-dark .bpx-auto-card,#bpx.bpx-dark .bpx-mobbar,#bpx.bpx-dark .bpx-btn.ghost,
+#bpx.bpx-dark .bpx-modalcard input,#bpx.bpx-dark .bpx-modalcard select,#bpx.bpx-dark .bpx-modalcard textarea,
+#bpx.bpx-dark #bpxLogin input{
+  background:#161d2b !important; border-color:var(--line) !important; color:var(--ink);
+}
+#bpx.bpx-dark .bpx-iconbtn:hover,#bpx.bpx-dark .bpx-ghostbtn:hover,#bpx.bpx-dark .bpx-mtab:hover,
+#bpx.bpx-dark .bpx-btn.ghost:hover,#bpx.bpx-dark .bpx-calnav button:hover,#bpx.bpx-dark .bpx-slot:hover{background:#1e2636 !important;}
+#bpx.bpx-dark .bpx-nav a{color:var(--grey);}
+#bpx.bpx-dark .bpx-nav a:hover{background:#1a2230;}
+#bpx.bpx-dark .bpx-nav{background:transparent !important;backdrop-filter:none !important;border-bottom:none !important;}
+#bpx.bpx-dark .bpx-bub.in{background:#1b2433 !important;border-color:var(--line);color:var(--ink);}
+#bpx.bpx-dark .bpx-tbody{background:#0f1622;}
+#bpx.bpx-dark .bpx-tag{background:#1e2b46;border-color:#2c3b5c;color:#8fb0ff;}
+#bpx.bpx-dark .bpx-appt{background:#1e2b46;color:#9dbaff;}
+#bpx.bpx-dark .bpx-appt:hover{background:var(--blue);color:#fff;}
+#bpx.bpx-dark .bpx-conv.sel{background:#1a2740;}
+#bpx.bpx-dark .bpx-sysmsg{background:#161d2b;border-color:var(--line);color:var(--grey);}
+#bpx.bpx-dark .bpx-upstatus{background:#12291d;color:#4ade80;}
+#bpx.bpx-dark .bpx-sched-badge.SMS{background:#1e2b46;color:#8fb0ff;}
+#bpx.bpx-dark .bpx-sched-badge.Email{background:#241a3a;color:#c4a3ff;}
+#bpx.bpx-dark .bpx-modal{background:rgba(0,0,0,.62);}
+#bpx.bpx-dark .bpx-fbarwrap{background:#1a2230;}
+#bpx.bpx-dark .bpx-when-note,#bpx.bpx-dark .bpx-ga-note{background:#161d2b;border-color:var(--line);}
+/* SVG charts / donuts: darken only the light track + gridlines, keep colored data */
+#bpx.bpx-dark circle[stroke="#eef0f4"]{stroke:#26303f;}
+#bpx.bpx-dark line[stroke="#f0efe9"]{stroke:#232b38;}
+#bpx.bpx-dark .bpx-logout{color:var(--ink);}
+
+</style>
+<script>
+function bpApplyTheme(t){var d=t==='dark';var el=document.getElementById('bpx');if(el)el.classList.toggle('bpx-dark',d);var sw=document.getElementById('bpxThemeSw');if(sw)sw.classList.toggle('on',d);try{localStorage.setItem('bpxTheme',t);}catch(e){}}
+window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&el.classList.contains('bpx-dark');bpApplyTheme(d?'light':'dark');};
+(function(){try{bpApplyTheme(localStorage.getItem('bpxTheme')||'light');}catch(e){}})();
 </script>
 </body>
 </html>
