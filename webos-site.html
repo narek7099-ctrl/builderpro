@@ -175,7 +175,13 @@ nav a:hover{opacity:.5;}
 .bpx-logout{width:100%;padding:9px;background:#fff;border:1px solid var(--line);border-radius:9px;font-weight:600;font-size:13px;color:#444;}
 .bpx-logout:hover{border-color:var(--blue);color:var(--blue);}
 .bpx-main{padding:26px 30px;overflow-x:hidden;}
-.bpx-mhdr{margin-bottom:22px;}
+.bpx-mhdr{margin-bottom:22px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.bpx-hdr-action{display:flex;gap:8px;}
+.bpx-hdr-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;color:#141417;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.bpx-hdr-btn:hover{border-color:var(--blue);color:var(--blue-d);}
+.bpx-hdr-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;}
+.bpx-bulk-back{display:inline-block;font-size:13px;color:var(--blue);cursor:pointer;margin-bottom:14px;}
+.bpx-bulk-back:hover{text-decoration:underline;}
 .bpx-mhdr h1{font-family:var(--serif);font-weight:400;font-size:30px;letter-spacing:-.02em;}
 .bpx-mhdr p{color:var(--grey);font-size:14px;margin-top:3px;}
 .bpx-mobbar{display:none;}
@@ -361,14 +367,12 @@ nav a:hover{opacity:.5;}
         <a data-view="messaging" onclick="bpNav('messaging')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messaging</span></a>
         <a data-view="contacts" onclick="bpNav('contacts')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Contacts</span></a>
         <a data-view="calendar" onclick="bpNav('calendar')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></a>
-        <a data-view="bulkemail" onclick="bpNav('bulkemail')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span>Bulk Email</span></a>
-        <a data-view="bulkmsg" onclick="bpNav('bulkmsg')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h7M8 13h4"/></svg><span>Bulk Message</span></a>
       </nav>
       <div class="bpx-user2"><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
     </aside>
     <main class="bpx-main">
       <div class="bpx-mobbar" id="bpxMobbar"></div>
-      <div class="bpx-mhdr"><h1 id="bpxVtitle">Dashboard</h1><p id="bpxVsub">Your Web OS overview.</p></div>
+      <div class="bpx-mhdr"><div><h1 id="bpxVtitle">Dashboard</h1><p id="bpxVsub">Your Web OS overview.</p></div><div class="bpx-hdr-action" id="bpxHdrAction"></div></div>
       <div id="bpxViewArea"></div>
     </main>
   </div>
@@ -725,7 +729,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer Web OS captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},bulkemail:{t:'Bulk Email',s:'Send one email to a whole segment of your contacts.'},bulkmsg:{t:'Bulk Message',s:'Text a whole segment of your contacts at once.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer Web OS captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'}};
 function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
@@ -735,7 +739,9 @@ function bpNav(v){
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,bulkemail:bpBulkEmail,bulkmsg:bpBulkMessage}[v])();
+  ({dashboard:bpDashboard,messaging:function(){(window._bpDemo&&window.bpMessagingMock?bpMessagingMock:bpMessaging)();},contacts:function(){(window._bpDemo&&window.bpContactsMock?bpContactsMock:bpContacts)();},calendar:function(){(window._bpDemo&&window.bpCalendarMock?bpCalendarMock:bpCalendar)();}}[v])();
+  var _act=document.getElementById('bpxHdrAction');
+  if(_act){_act.innerHTML=(v==='messaging')?'<button class="bpx-hdr-btn" onclick="bpBulkView(\'email\')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Bulk Email</button><button class="bpx-hdr-btn" onclick="bpBulkView(\'sms\')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Bulk Message</button>':'';}
   document.querySelector('.bpx-main').scrollTop=0;
 }
 function bpDonut(pct,color,val,label){
@@ -2026,6 +2032,7 @@ function bpBulkView(kind){
     var live=(typeof BP_LIVE!=='undefined'&&BP_LIVE);
     document.getElementById('bpxViewArea').innerHTML=
       '<div class="bpx-bulk">'
+      +'<a class="bpx-bulk-back" onclick="bpNav(\'messaging\')">\u2190 Back to inbox</a>'
       +'<div class="bpx-sec-h">'+(isEmail?'Bulk email':'Bulk message')+'</div>'
       +'<div class="bpx-sec-p">'+(isEmail?'Send one email to a whole segment of your contacts. Delivered through your GoHighLevel account.':'Send one text to a whole segment of your contacts. Delivered through your GoHighLevel account.')+'</div>'
       +'<div class="row"><label>Audience</label><select id="bpBulkTag" onchange="bpBulkUpdate(\''+kind+'\')">'+opts+'</select></div>'
