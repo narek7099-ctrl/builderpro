@@ -532,27 +532,33 @@ document.getElementById('yr').textContent=new Date().getFullYear();
   var tilt=new THREE.Group();tilt.rotation.z=-26*Math.PI/180;scene.add(tilt);
   var spin=new THREE.Group();tilt.add(spin);
 
-  var RAD=0.5, HEIGHT=32, TURNS=1.2;   // near-straight bundle axis (small = less squiggle)
-  var BRAID=0.95, BRAID_TURNS=7;       // wider bundle + clearer spiralling around each other
-  // each strand orbits a common spiralling centre → the 3 lines braid around one another
-  class Strand extends THREE.Curve{
+  var RAD=1.7, HEIGHT=30, TURNS=5;
+  class Helix extends THREE.Curve{
     constructor(phase){super();this.phase=phase;}
     getPoint(t,opt){
-      var A=t*TURNS*Math.PI*2;                       // shared big spiral (same for all strands)
-      var B=this.phase+t*BRAID_TURNS*Math.PI*2;       // fast wind, offset per strand
+      var a=this.phase+t*TURNS*Math.PI*2;
       var v=opt||new THREE.Vector3();
-      return v.set(Math.cos(A)*RAD+Math.cos(B)*BRAID,(t-0.5)*HEIGHT,Math.sin(A)*RAD+Math.sin(B)*BRAID);
+      return v.set(Math.cos(a)*RAD,(t-0.5)*HEIGHT,Math.sin(a)*RAD);
     }
   }
-  // 3 thin glossy light-purple "data streams" braiding together
-  var STREAM_COLORS=[0xd8b4fe,0xc4b5fd,0xb794f6];
-  var STREAMS=3;
-  for(var i=0;i<STREAMS;i++){
-    var ph=(i/STREAMS)*Math.PI*2;
-    var col=STREAM_COLORS[i%STREAM_COLORS.length];
-    var sm=new THREE.MeshStandardMaterial({color:col,metalness:0.2,roughness:0.28,emissive:col,emissiveIntensity:0.12});
-    var geo=new THREE.TubeGeometry(new Strand(ph),520,0.15,16,false);
-    spin.add(new THREE.Mesh(geo,sm));
+  // double helix in brand purple: two backbone strands + base-pair rungs
+  var backMat=new THREE.MeshStandardMaterial({color:0x9b6cf2,metalness:0.15,roughness:0.34,emissive:0x6d28d9,emissiveIntensity:0.10});
+  [0,Math.PI].forEach(function(ph){
+    var geo=new THREE.TubeGeometry(new Helix(ph),420,0.34,20,false);
+    spin.add(new THREE.Mesh(geo,backMat));
+  });
+  var rungMat=new THREE.MeshStandardMaterial({color:0xc4b5fd,metalness:0.1,roughness:0.42,emissive:0x8b5cf6,emissiveIntensity:0.08});
+  var hA=new Helix(0),hB=new Helix(Math.PI),pa=new THREE.Vector3(),pb=new THREE.Vector3();
+  var RUNGS=46, up=new THREE.Vector3(0,1,0), dir=new THREE.Vector3(), mid=new THREE.Vector3(), quat=new THREE.Quaternion();
+  var rungGeo=new THREE.CylinderGeometry(0.12,0.12,1,10,1);
+  for(var i=1;i<RUNGS;i++){
+    var t=i/RUNGS;hA.getPoint(t,pa);hB.getPoint(t,pb);
+    dir.subVectors(pb,pa);var len=dir.length();dir.normalize();
+    var m=new THREE.Mesh(rungGeo,rungMat);
+    mid.addVectors(pa,pb).multiplyScalar(0.5);m.position.copy(mid);
+    quat.setFromUnitVectors(up,dir);m.quaternion.copy(quat);
+    m.scale.set(1,len,1);
+    spin.add(m);
   }
 
   function resize(){
