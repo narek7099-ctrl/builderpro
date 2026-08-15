@@ -387,6 +387,91 @@ nav a:hover{opacity:.5;}
 
 #bpx{--soft:#f5f5f7;--mu:#6b6b73;--ink:#141417;}
 #bpx.dark{--soft:#221f2a;--mu:#9c99ab;--ink:#e9e7f0;}
+
+/* Atlas blob + inline chat */
+.atlas-stage{display:flex;flex-direction:column;align-items:center;}
+.net-wrap{position:relative;width:340px;height:340px;max-width:86vw;border:0;background:none;padding:0;cursor:pointer;display:block;transition:transform .5s cubic-bezier(.22,1,.36,1);}
+.net-wrap::before{content:'';position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(139,92,246,.12),rgba(139,92,246,0) 68%);}
+.net-wrap:hover{transform:scale(1.04);}
+.net-wrap canvas{width:100%;height:100%;display:block;position:relative;}
+.net-wrap:focus-visible{outline:3px solid var(--blue);outline-offset:6px;border-radius:50%;}
+.blob-hint{cursor:pointer;}
+.blob-hint{margin-top:4px;display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--grey);transition:opacity .35s,max-height .35s,margin .35s;max-height:40px;}
+.blob-hint.hide{opacity:0;max-height:0;margin-top:0;pointer-events:none;overflow:hidden;}
+.blob-cta{font-weight:700;color:var(--blue);}
+.atlas-inline{width:100%;max-width:560px;margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px rgba(20,30,60,.10);overflow:hidden;max-height:0;opacity:0;transform:translateY(12px);transition:max-height .55s cubic-bezier(.22,1,.36,1),opacity .4s,transform .45s,margin .45s;}
+.atlas-inline.open{max-height:760px;opacity:1;transform:none;margin-top:22px;}
+.ai-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#f6f2fe,transparent);}
+.ai-orb-sm{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 38% 32%,#e9dcff,#7c3aed 90%);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(139,92,246,.3);}
+.ai-orb-sm svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-name{font-weight:700;font-size:15px;}
+.ai-status{font-size:12px;color:var(--grey);display:flex;align-items:center;gap:6px;}
+.ai-x{margin-left:auto;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--grey);font-size:19px;line-height:1;cursor:pointer;flex-shrink:0;}
+.ai-x:hover{background:#f5f4f0;color:#333;}
+.ai-msgs{padding:18px;display:flex;flex-direction:column;gap:12px;min-height:170px;max-height:300px;overflow-y:auto;text-align:left;}
+.ai-m{display:flex;gap:10px;max-width:90%;}
+.ai-m.user{margin-left:auto;flex-direction:row-reverse;}
+.ai-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ai-av.a{background:var(--blue-l);color:var(--blue);}
+.ai-av.u{background:#f1efe9;color:#8a8578;}
+.ai-av svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-bub{padding:10px 14px;border-radius:15px;font-size:13.5px;line-height:1.5;}
+.ai-m.a .ai-bub{background:#f2ecfb;border-bottom-left-radius:4px;color:#26262a;}
+.ai-m.user .ai-bub{background:var(--blue);color:#fff;border-bottom-right-radius:4px;}
+.ai-quick{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 14px;}
+.ai-quick button{background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;font-size:12px;color:#444;cursor:pointer;transition:.2s;font-family:inherit;}
+.ai-quick button:hover{border-color:var(--blue);color:var(--blue);}
+.ai-bar{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line);background:var(--card);}
+.ai-bar input{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 15px;font-family:inherit;font-size:14px;outline:none;color:#111114;}
+.ai-bar input::placeholder{color:#9a9aa0;}
+.ai-bar input:focus{border-color:var(--blue);}
+.ai-send{width:44px;height:44px;border-radius:12px;background:var(--blue);color:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.2s;}
+.ai-send:hover{background:var(--blue-d);}
+.ai-send svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-typing{display:flex;gap:4px;align-items:center;padding:12px 14px;background:#f2ecfb;border-radius:15px;border-bottom-left-radius:4px;}
+.ai-typing span{width:7px;height:7px;border-radius:50%;background:#b9a6e6;animation:aiblink 1.2s infinite;}
+.ai-typing span:nth-child(2){animation-delay:.18s;}
+.ai-typing span:nth-child(3){animation-delay:.36s;}
+@keyframes aiblink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+/* build-your-Atlas wizard */
+.ai-wiz{padding:20px 20px 18px;text-align:left;}
+.ai-wiz-prog{font-size:12px;color:var(--grey);margin-bottom:14px;}
+.ai-wiz-prog b{color:var(--blue);}
+.ai-wq{display:none;animation:aiwfade .35s ease;}
+.ai-wq.on{display:block;}
+@keyframes aiwfade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.ai-wq-h{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:-.01em;margin-bottom:5px;}
+.ai-wq-s{font-size:13px;color:var(--grey);margin-bottom:16px;}
+.ai-wq-opts{display:flex;flex-wrap:wrap;gap:8px;}
+.ai-wopt{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 15px;font-size:13.5px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:.18s;font-family:inherit;}
+.ai-wopt:hover{border-color:#c9c8c2;}
+.ai-wopt.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue);font-weight:600;}
+.ai-wopt.wide{width:100%;text-align:left;display:flex;flex-direction:column;gap:2px;}
+.ai-wopt.wide b{font-size:14px;font-weight:600;}
+.ai-wopt.wide span{font-size:12px;color:var(--grey);font-weight:400;}
+.ai-wopt.wide.on span{color:var(--blue);}
+.ai-win{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px 15px;font-family:inherit;font-size:15px;outline:none;background:#fff;color:#111114;}
+.ai-win::placeholder{color:#9a9aa0;}
+.ai-win:focus{border-color:var(--blue);}
+.ai-wiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;}
+.ai-wiz-back{background:none;border:0;color:var(--grey);font-size:14px;cursor:pointer;font-family:inherit;padding:8px 4px;}
+.ai-wiz-next{background:var(--blue);color:#fff;border:0;border-radius:999px;padding:11px 22px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;transition:.2s;}
+.ai-wiz-next:hover{background:var(--blue-d);}
+.ai-wiz-next:disabled{opacity:.4;cursor:not-allowed;}
+@media(max-width:520px){.net-wrap{width:280px;height:280px;}}
+
+/* ===== AI builder section ===== */
+.ai-section{padding:120px 24px;}
+#aiSection{--blue:#8b5cf6;--blue-d:#6d28d9;--blue-l:#f1ecfb;--bg:#ffffff;--card:#faf9fc;--line:#e7e6ec;--grey:#6b6b73;--ink-2:#3a3a40;--serif:'Fraunces',Georgia,serif;--sans:'Inter',system-ui,sans-serif;}
+.ai-sechead{text-align:center;max-width:660px;margin:0 auto 44px;}
+.ai-sechead .eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cube);margin-bottom:14px;}
+.ai-sechead h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4.6vw,52px);letter-spacing:-.02em;}
+.ai-sechead h2 em{font-style:italic;}
+.ai-sechead p{font-family:var(--sans);color:var(--ink-2);font-size:17px;margin-top:14px;line-height:1.5;}
+.bdot{width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block;animation:bdotpulse 1.8s infinite;}
+@keyframes bdotpulse{0%{box-shadow:0 0 0 0 rgba(139,92,246,.5);}70%{box-shadow:0 0 0 7px rgba(139,92,246,0);}100%{box-shadow:0 0 0 0 rgba(139,92,246,0);}}
+.net-wrap.active{transform:scale(.96);}
+
 </style>
 
 </style>
@@ -548,6 +633,64 @@ nav a:hover{opacity:.5;}
     <div class="tcard solo reveal"><div class="co">Web OS</div></div>
     <div class="tcard reveal"><div class="co">Close Deals</div><div class="co">Reports</div><div class="co">Booking</div><div class="co">Reviews</div></div>
   </div>
+</section>
+
+<!-- AI BUILDER -->
+<section class="light ai-section" id="aiSection" data-theme="light">
+  <div class="ai-sechead reveal">
+    <div class="eyebrow">Meet your AI</div>
+    <h2>Build your own <em>AI receptionist</em></h2>
+    <p>It answers calls, texts and books appointments 24/7. Answer 3 quick questions and meet the version built for your business.</p>
+  </div>
+    <div class="atlas-stage reveal">
+      <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with your AI">
+        <canvas id="atlasNet" aria-hidden="true"></canvas>
+      </button>
+      <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to build your AI</span></div>
+
+      <div class="atlas-inline" id="atlasInline">
+        <div class="ai-head">
+          <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
+          <div><div class="ai-name" id="aiName">Build your AI</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">3 quick questions</span></div></div>
+          <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close">&times;</button>
+        </div>
+
+        <!-- wizard -->
+        <div class="ai-wiz" id="aiWiz">
+          <div class="ai-wiz-prog">Step <b id="aiWizStep">1</b> of 3</div>
+          <div class="ai-wq on" data-q="1">
+            <div class="ai-wq-h">What's your industry?</div>
+            <div class="ai-wq-s">Your AI tailors itself to your industry — pick yours.</div>
+            <div class="ai-wq-opts" id="aiTrades"></div>
+            <div id="aiOtherWrap" style="display:none;margin-top:10px"><input id="aiOther" class="ai-win" placeholder="Type your trade…" oninput="aiWizCheck()"></div>
+          </div>
+          <div class="ai-wq" data-q="2">
+            <div class="ai-wq-h">What's your business name?</div>
+            <div class="ai-wq-s">So your AI answers as your company — not a generic bot.</div>
+            <input id="aiBiz" class="ai-win" placeholder="e.g. Sharp Cuts" oninput="aiWizCheck()">
+          </div>
+          <div class="ai-wq" data-q="3">
+            <div class="ai-wq-h">How should your AI sound?</div>
+            <div class="ai-wq-s">Pick the voice that fits your brand.</div>
+            <div class="ai-wq-opts" id="aiTones"></div>
+          </div>
+          <div class="ai-wiz-nav">
+            <button class="ai-wiz-back" id="aiWizBack" type="button" onclick="aiWizGo(-1)" style="visibility:hidden">← Back</button>
+            <button class="ai-wiz-next" id="aiWizNext" type="button" onclick="aiWizNext()" disabled>Continue →</button>
+          </div>
+        </div>
+
+        <!-- personalized chat -->
+        <div class="ai-chat" id="aiChat" style="display:none">
+          <div class="ai-msgs" id="aiMsgs"></div>
+          <div class="ai-quick" id="aiQuick"></div>
+          <div class="ai-bar">
+            <input id="aiInput" type="text" autocomplete="off" placeholder="Ask your AI anything&hellip;" onkeydown="if(event.key==='Enter')aiSend()">
+            <button class="ai-send" type="button" onclick="aiSend()" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
 </section>
 
 <!-- PRICING -->
@@ -2291,4 +2434,165 @@ function bpCalDemoEvents(){
            mk(t+4,9,0,'Follow-up — Sam Carter',''),
            mk(t+6,16,0,'New client intake — Maya Patel','Office') ];
 }
+</script>
+<script>
+var aiState={trade:'',biz:'',tone:'Friendly',step:1};
+var AI_TRADES=['Auto','Medical','Barbershop','E-commerce','Tech','Salon','Fitness','Restaurant','Other'];
+var AI_TONES=[{v:'Friendly',d:'Warm and approachable'},{v:'Professional',d:'Polished and precise'},{v:'Bold',d:'Confident and high-energy'}];
+function aiWizRender(){
+  var tr=document.getElementById('aiTrades');
+  if(tr&&!tr.innerHTML){var h='';AI_TRADES.forEach(function(t){h+='<button type="button" class="ai-wopt" data-k="trade" onclick="aiWizPick(this,\'trade\',\''+t+'\')">'+t+'</button>';});tr.innerHTML=h;}
+  var tn=document.getElementById('aiTones');
+  if(tn&&!tn.innerHTML){var h2='';AI_TONES.forEach(function(t){h2+='<button type="button" class="ai-wopt wide" data-k="tone" onclick="aiWizPick(this,\'tone\',\''+t.v+'\')"><b>'+t.v+'</b><span>'+t.d+'</span></button>';});tn.innerHTML=h2;}
+}
+function aiWizPick(el,k,v){
+  el.parentElement.querySelectorAll('.ai-wopt').forEach(function(o){o.classList.remove('on');});
+  el.classList.add('on');aiState[k]=v;
+  if(k==='trade'){
+    var ow=document.getElementById('aiOtherWrap');ow.style.display=(v==='Other')?'block':'none';
+    if(v==='Other'){var oi=document.getElementById('aiOther');if(oi){oi.value='';setTimeout(function(){oi.focus();},50);}}
+  }
+  aiWizCheck();
+}
+function aiWizCheck(){
+  var ok=false;
+  if(aiState.step===1){ok = aiState.trade && (aiState.trade!=='Other' || (document.getElementById('aiOther').value.trim().length>1));}
+  else if(aiState.step===2){ok = document.getElementById('aiBiz').value.trim().length>0;}
+  else ok=!!aiState.tone;
+  document.getElementById('aiWizNext').disabled=!ok;
+}
+function aiWizShow(){
+  document.querySelectorAll('#aiWiz .ai-wq').forEach(function(q){q.classList.toggle('on',+q.getAttribute('data-q')===aiState.step);});
+  document.getElementById('aiWizStep').textContent=aiState.step;
+  document.getElementById('aiWizBack').style.visibility=aiState.step>1?'visible':'hidden';
+  document.getElementById('aiWizNext').textContent=aiState.step===3?'Build my AI ✨':'Continue →';
+  aiWizCheck();
+}
+function aiWizGo(dir){aiState.step=Math.max(1,Math.min(3,aiState.step+dir));aiWizShow();}
+function aiWizNext(){
+  if(aiState.step===1 && aiState.trade==='Other'){aiState.trade=document.getElementById('aiOther').value.trim()||'your trade';}
+  if(aiState.step===2){aiState.biz=document.getElementById('aiBiz').value.trim();}
+  if(aiState.step<3){aiWizGo(1);return;}
+  aiBuildAtlas();
+}
+var aiStarted=false;
+function aiTradeLower(){return (aiState.trade||'business');}
+function aiBuildAtlas(){
+  document.getElementById('aiWiz').style.display='none';
+  document.getElementById('aiChat').style.display='block';
+  document.getElementById('aiName').textContent=(aiState.biz||'Your')+' · Nova';
+  document.getElementById('aiStatus').textContent='Online · trained on your '+aiTradeLower()+' business';
+  var q=document.getElementById('aiQuick');
+  q.style.display='';
+  q.innerHTML='<button type="button" onclick="aiQuick(\'How much does it cost?\')">Pricing?</button>'
+    +'<button type="button" onclick="aiQuick(\'Can I book an appointment?\')">Book a visit</button>'
+    +'<button type="button" onclick="aiQuick(\'Are you available this week?\')">Availability</button>';
+  document.getElementById('aiMsgs').innerHTML='';
+  var biz=aiState.biz||('your '+aiTradeLower()+' company');
+  var greet;
+  if(aiState.tone==='Professional')greet="Hello, and thank you for contacting "+biz+". I'm Nova, your AI assistant. I can provide pricing guidance, answer questions about our "+aiTradeLower()+" services, and schedule your appointment. How may I help?";
+  else if(aiState.tone==='Bold')greet="Hey! 👋 You've reached "+biz+" — I'm Nova, and I get things done. Ready to answer questions, ballpark your "+aiTradeLower()+" pricing, and lock in your appointment right now. What do you need?";
+  else greet="Hi there! Thanks for reaching out to "+biz+" 😊 I'm Nova, your "+aiTradeLower()+" assistant. I can answer questions, give you a ballpark price, and book your appointment anytime. What can I help with?";
+  setTimeout(function(){aiTyping(true);},250);
+  setTimeout(function(){aiTyping(false);aiAdd('atlas',greet);var i=document.getElementById('aiInput');if(i)i.focus();},1000);
+}
+function openAtlasInline(){
+  var w=document.getElementById('atlasInline');if(!w)return;
+  aiWizRender();
+  if(!w.classList.contains('open')){
+    w.classList.add('open');
+    document.getElementById('atlasHint').classList.add('hide');
+    document.getElementById('atlasBlobBtn').classList.add('active');
+  }
+  if(!aiStarted){aiStarted=true;aiState.step=1;aiWizShow();}
+}
+function closeAtlasInline(){
+  var w=document.getElementById('atlasInline');if(!w)return;
+  w.classList.remove('open');
+  document.getElementById('atlasBlobBtn').classList.remove('active');
+  document.getElementById('atlasHint').classList.remove('hide');
+}
+function aiAdd(role,text){
+  var m=document.getElementById('aiMsgs');
+  var robot='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg>';
+  var user='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>';
+  var d=document.createElement('div');d.className='ai-m '+(role==='atlas'?'a':'user');
+  d.innerHTML='<div class="ai-av '+(role==='atlas'?'a':'u')+'">'+(role==='atlas'?robot:user)+'</div><div class="ai-bub"></div>';
+  d.querySelector('.ai-bub').textContent=text;
+  m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+function aiTyping(on){
+  var m=document.getElementById('aiMsgs');
+  if(on){var d=document.createElement('div');d.className='ai-m a';d.id='aiTyping';
+    d.innerHTML='<div class="ai-av a"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></div><div class="ai-typing"><span></span><span></span><span></span></div>';
+    m.appendChild(d);m.scrollTop=m.scrollHeight;}
+  else{var t=document.getElementById('aiTyping');if(t)t.remove();}
+}
+function aiSend(){
+  var i=document.getElementById('aiInput'),t=i.value.trim();if(!t)return;i.value='';
+  var q=document.getElementById('aiQuick');if(q)q.style.display='none';
+  aiAdd('user',t);aiTyping(true);
+  setTimeout(function(){aiTyping(false);aiAdd('atlas',aiReply(t));},850);
+}
+function aiQuick(t){var q=document.getElementById('aiQuick');if(q)q.style.display='none';aiAdd('user',t);aiTyping(true);setTimeout(function(){aiTyping(false);aiAdd('atlas',aiReply(t));},850);}
+function aiReply(text){
+  var t=text.toLowerCase(),trade=aiTradeLower(),biz=aiState.biz||('our team');
+  if(/cost|price|how much|estimate|quote/.test(t))return "Great question! "+ (biz.charAt(0).toUpperCase()+biz.slice(1)) +"'s "+trade+" pricing depends on the scope of the job. Tell me a bit about what you need and I'll give you a ballpark — or I can book a free on-site estimate so you get an exact number.";
+  if(/book|appointment|schedule|visit|inspect/.test(t))return "Absolutely — I can get you on the calendar. What day works best this week? I'll confirm your "+trade+" appointment and send a reminder by text.";
+  if(/available|this week|today|when|open/.test(t))return "We've got openings this week! I can usually schedule a "+trade+" visit within a day or two. Want me to grab the next available slot for you?";
+  if(/service|offer|do you|what can|help/.test(t))return "We handle all things "+trade+" — from quick fixes to full projects. Tell me what's going on and I'll point you in the right direction or get you booked with "+biz+".";
+  if(/hi|hello|hey|thanks|thank you/.test(t))return "Happy to help! I'm Nova for "+biz+". Ask me about pricing, availability, or booking a "+trade+" appointment — I'm here 24/7.";
+  return "I'm Nova, "+biz+"'s AI assistant for all things "+trade+". I can answer questions, give you a ballpark price, or book your appointment. What would you like to do?";
+}
+
+/* circular particle network (plexus) on white */
+(function(){
+  var cv=document.getElementById('atlasNet');if(!cv)return;
+  var ctx=cv.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2);
+  var W=0,H=0,cx=0,cy=0,R=0,pts=[],LINK=96,mouse={x:-999,y:-999};
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function size(){
+    var r=cv.getBoundingClientRect();W=r.width;H=r.height;
+    cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+    cx=W/2;cy=H/2;R=Math.min(W,H)/2-4;
+    var N=Math.max(40,Math.round(Math.PI*R*R/1500));
+    pts=[];for(var i=0;i<N;i++){
+      var a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*R*0.94;
+      pts.push({x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr,vx:(Math.random()-.5)*.32,vy:(Math.random()-.5)*.32,r:Math.random()*1.5+.9});
+    }
+  }
+  function step(){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
+    var i,j,a,b,dx,dy,d,o,nx,ny,dot;
+    for(i=0;i<pts.length;i++){a=pts[i];a.x+=a.vx;a.y+=a.vy;
+      dx=a.x-cx;dy=a.y-cy;d=Math.sqrt(dx*dx+dy*dy);
+      if(d>R-2){ // reflect off circular boundary
+        nx=dx/d;ny=dy/d;dot=a.vx*nx+a.vy*ny;a.vx-=2*dot*nx;a.vy-=2*dot*ny;
+        a.x=cx+nx*(R-3);a.y=cy+ny*(R-3);
+      }
+    }
+    // node-to-node links
+    for(i=0;i<pts.length;i++)for(j=i+1;j<pts.length;j++){
+      a=pts[i];b=pts[j];dx=a.x-b.x;dy=a.y-b.y;d=Math.sqrt(dx*dx+dy*dy);
+      if(d<LINK){o=(1-d/LINK)*.42;ctx.strokeStyle='rgba(139,92,246,'+o+')';ctx.lineWidth=.7;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+    }
+    // links to cursor
+    for(i=0;i<pts.length;i++){a=pts[i];dx=a.x-mouse.x;dy=a.y-mouse.y;d=Math.sqrt(dx*dx+dy*dy);
+      if(d<130){o=(1-d/130)*.6;ctx.strokeStyle='rgba(124,58,237,'+o+')';ctx.lineWidth=.9;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(mouse.x,mouse.y);ctx.stroke();}}
+    // nodes
+    ctx.shadowColor='rgba(139,92,246,.6)';ctx.shadowBlur=6;
+    for(i=0;i<pts.length;i++){a=pts[i];ctx.beginPath();ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+      ctx.fillStyle='#8b5cf6';ctx.fill();}
+    ctx.shadowBlur=0;
+    ctx.restore();
+    if(!reduce)requestAnimationFrame(step);
+  }
+  cv.addEventListener('mousemove',function(e){var r=cv.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;});
+  cv.addEventListener('mouseleave',function(){mouse.x=-999;mouse.y=-999;});
+  size();window.addEventListener('resize',size);step();
+})();
 </script>
