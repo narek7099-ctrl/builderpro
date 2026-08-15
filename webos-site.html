@@ -145,7 +145,7 @@ nav a:hover{opacity:.5;}
 .bpx-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
 .bpx-wrap{width:100%;max-width:400px;}
 .bpx-brand2{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:22px;font-family:var(--serif);font-size:24px;}
-.bpx-brand2 .mk{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#5b8bff,#1b56ee);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:18px;}
+.bpx-brand2 .mk{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#5b8bff,var(--blue-d));color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:700;font-size:18px;}
 .bpx-brand2 span{color:var(--blue);}
 .bpx-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px 30px;box-shadow:0 30px 70px rgba(20,30,60,.10);}
 .bpx-card h1{font-family:var(--serif);font-weight:400;font-size:26px;letter-spacing:-.01em;margin-bottom:6px;}
@@ -1007,7 +1007,7 @@ function bpNav(v){
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
-  ({dashboard:bpDashboard,messaging:function(){(window._bpDemo&&window.bpMessagingMock?bpMessagingMock:bpMessaging)();},contacts:function(){(window._bpDemo&&window.bpContactsMock?bpContactsMock:bpContacts)();},calendar:bpCalendar}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar}[v])();
   var _act=document.getElementById('bpxHdrAction');
   if(_act){_act.innerHTML=(v==='messaging')?'<button class="bpx-hdr-btn" onclick="bpBulkView(\'email\')"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Bulk Email</button><button class="bpx-hdr-btn" onclick="bpBulkView(\'sms\')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Bulk Message</button>':'';}
   document.querySelector('.bpx-main').scrollTop=0;
@@ -1432,14 +1432,14 @@ function ccSubmit(e){
 <style>
 /* ===== Restored dashboard views (light theme) ===== */
 .bpx-btn{background:var(--blue);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
-.bpx-btn:hover{background:#1b56ee;}
+.bpx-btn:hover{background:var(--blue-d);}
 .bpx-btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
 .bpx-btn.ghost:hover{border-color:var(--blue);color:var(--blue);background:#fff;}
 .bpx-btn.danger{background:#dc2626;color:#fff;}
 .bpx-btn.danger:hover{background:#b91c1c;}
 .bpx-btn:disabled{opacity:.6;cursor:default;}
 .bpx-addbtn{background:var(--blue);color:#fff;border:0;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
-.bpx-addbtn:hover{background:#1b56ee;}
+.bpx-addbtn:hover{background:var(--blue-d);}
 .bpx-rowbtn{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;margin-left:6px;font-family:inherit;}
 .bpx-rowbtn:hover{border-color:var(--blue);color:var(--blue);}
 .bpx-rowbtn.del:hover{border-color:#dc2626;color:#dc2626;}
@@ -1523,6 +1523,7 @@ var _bpContacts=[];
 
 /* ==== bpLoadContacts ==== */
   async function bpLoadContacts(){
+    if(window._bpDemo){ if(!_bpContacts||!_bpContacts.length){ _bpContacts=(window._bpBulkMock||[]).map(function(c){return {id:c.id,name:c.name,phone:c.phone,email:c.email,tags:(c.tags||[]).slice(),dateAdded:new Date(Date.now()-Math.random()*12e9).toISOString()};}); } bpDrawContacts(_bpContacts); return; }
     try{
       var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})});
       var d=await r.json();
@@ -1574,6 +1575,12 @@ var _bpContacts=[];
     bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your Web OS system? This cannot be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
   };
   async function bpWrite(payload){
+    if(window._bpDemo){
+      if(payload.action==='create'){ _bpContacts.unshift({id:'c'+Date.now(),name:payload.name,phone:payload.phone,email:payload.email,tags:[],dateAdded:new Date().toISOString()}); }
+      else if(payload.action==='update'){ for(var i=0;i<_bpContacts.length;i++){ if(_bpContacts[i].id===payload.id){ _bpContacts[i].name=payload.name; _bpContacts[i].phone=payload.phone; _bpContacts[i].email=payload.email; } } }
+      else if(payload.action==='delete'){ _bpContacts=_bpContacts.filter(function(c){return c.id!==payload.id;}); }
+      return {ok:true};
+    }
     return fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
   }
   window.bpSaveContact=async function(id){
@@ -2039,6 +2046,13 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
 
 /* ==== bpLoadThread ==== */
   async function bpLoadThread(id){
+    if(window._bpDemo){
+      var b=q('bpx-tbody'); if(!b) return;
+      if(!window._bpThreads) window._bpThreads={};
+      var arr=window._bpThreads[id]; if(!arr){ arr=[{dir:'inbound',body:'Hi! I had a quick question.',date:Date.now()-5400000},{dir:'outbound',body:'Of course — how can I help?',date:Date.now()-3600000}]; window._bpThreads[id]=arr; }
+      var html=''; for(var i=0;i<arr.length;i++){ var m=arr[i]; var t=new Date(m.date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); html+='<div class="bpx-bub '+(m.dir==='outbound'?'out':'in')+'">'+bpEsc(m.body)+'<div class="bt">'+t+'</div></div>'; }
+      b.innerHTML=html; b.scrollTop=b.scrollHeight; return;
+    }
     try{
       var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'thread',id:id})});
       var d=await r.json(); var msgs=d.messages||[]; var b=q('bpx-tbody'); if(!b) return;
@@ -2063,8 +2077,13 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
     var inp=q('bpx-replyin'); if(!inp||!_bpCurConv) return;
     var text=inp.value.trim(); if(!text) return;
     inp.disabled=true;
+    if(window._bpDemo){
+      if(!window._bpThreads) window._bpThreads={};
+      var arr=window._bpThreads[_bpCurConv.id]||[]; arr.push({dir:'outbound',body:(_bpMsgType==='Email'?'✉ ':'')+text,date:Date.now()}); window._bpThreads[_bpCurConv.id]=arr;
+      inp.value=''; bpLoadThread(_bpCurConv.id); inp.disabled=false; inp.focus(); return;
+    }
     try{
-      var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your roofer'})}).then(function(r){return r.json();});
+      var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your team'})}).then(function(r){return r.json();});
       if(res.ok){ inp.value=''; setTimeout(function(){ bpLoadThread(_bpCurConv.id); },800); }
       else { alert('Could not send'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'); }
     }catch(e){ alert('Could not send. Please try again.'); }
@@ -2085,7 +2104,7 @@ function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagin
 .bpx-searchwrap{position:relative;flex:1;min-width:220px;max-width:460px;}
 .bpx-searchwrap .bpx-si{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--grey-l);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none;}
 .bpx-csearch{width:100%;padding:11px 14px 11px 40px;border:1px solid var(--line);border-radius:11px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);transition:.15s;}
-.bpx-csearch:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+.bpx-csearch:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(139,92,246,.12);}
 .bpx-chead-r{display:flex;align-items:center;gap:14px;}
 .bpx-count{font-size:12.5px;color:var(--grey);font-weight:500;white-space:nowrap;}
 .bpx-cwrap{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.05);}
@@ -2105,16 +2124,16 @@ function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagin
 .bpx-iconbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .bpx-iconbtn:hover{border-color:var(--blue);color:var(--blue);background:#fff;}
 .bpx-iconbtn.del:hover{border-color:#dc2626;color:#dc2626;}
-.bpx-tag{display:inline-block;background:#eef3ff;border:1px solid rgba(47,107,255,.18);color:#1b56ee;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;margin-right:5px;}
-.bpx-addbtn{background:var(--blue);color:#fff;border:0;border-radius:11px;padding:10px 17px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 2px 8px rgba(47,107,255,.28);transition:.15s;}
-.bpx-addbtn:hover{background:#1b56ee;transform:translateY(-1px);box-shadow:0 5px 14px rgba(47,107,255,.34);}
+.bpx-tag{display:inline-block;background:var(--blue-l);border:1px solid rgba(139,92,246,.18);color:var(--blue-d);font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;margin-right:5px;}
+.bpx-addbtn{background:var(--blue);color:#fff;border:0;border-radius:11px;padding:10px 17px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;box-shadow:0 2px 8px rgba(139,92,246,.28);transition:.15s;}
+.bpx-addbtn:hover{background:var(--blue-d);transform:translateY(-1px);box-shadow:0 5px 14px rgba(139,92,246,.34);}
 
 /* --- Messaging --- */
 .bpx-inbox{display:grid;grid-template-columns:320px 1fr;gap:16px;height:560px;}
 .bpx-convlist{background:#fff;border:1px solid var(--line);border-radius:16px;overflow-y:auto;box-shadow:0 1px 2px rgba(20,30,60,.04),0 8px 24px rgba(20,30,60,.05);padding:6px;}
 .bpx-conv{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;cursor:pointer;transition:background .12s;border-bottom:0;}
 .bpx-conv:hover{background:var(--soft);}
-.bpx-conv.sel{background:#eef3ff;}
+.bpx-conv.sel{background:var(--blue-l);}
 .bpx-conv-main{flex:1;min-width:0;}
 .bpx-conv-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
 .bpx-conv-name{font-weight:600;font-size:14px;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -2130,7 +2149,7 @@ function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagin
 .bpx-mtab{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--grey);cursor:pointer;border:1px solid var(--line);background:#fff;font-family:inherit;transition:.15s;}
 .bpx-mtab svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;}
 .bpx-mtab:hover{border-color:var(--blue);color:var(--blue);}
-.bpx-mtab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(47,107,255,.25);}
+.bpx-mtab.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(139,92,246,.25);}
 .bpx-tbody{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:3px;background:linear-gradient(180deg,#fbfbfa,#fff);}
 .bpx-bub{max-width:74%;padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.45;margin-top:6px;box-shadow:0 1px 2px rgba(20,30,60,.06);}
 .bpx-bub.out{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:5px;}
@@ -2143,11 +2162,11 @@ function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagin
 .bpx-tempty .big{font-size:34px;margin-bottom:10px;opacity:.5;}
 .bpx-reply{border-top:1px solid var(--line);padding:13px 14px;display:flex;gap:10px;align-items:center;background:#fff;}
 .bpx-reply input{flex:1;border:1px solid var(--line);border-radius:999px;padding:11px 17px;font-family:inherit;font-size:13.5px;outline:none;transition:.15s;}
-.bpx-reply input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+.bpx-reply input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(139,92,246,.12);}
 .bpx-reply input:disabled{background:var(--soft);color:var(--grey-l);}
-.bpx-sendbtn{width:42px;height:42px;border:0;border-radius:50%;background:var(--blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(47,107,255,.3);transition:.15s;}
+.bpx-sendbtn{width:42px;height:42px;border:0;border-radius:50%;background:var(--blue);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(139,92,246,.3);transition:.15s;}
 .bpx-sendbtn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.bpx-sendbtn:hover{background:#1b56ee;transform:translateY(-1px);}
+.bpx-sendbtn:hover{background:var(--blue-d);transform:translateY(-1px);}
 @media(max-width:820px){.bpx-inbox{grid-template-columns:1fr;height:auto;}.bpx-convlist{max-height:300px;}.bpx-thread{min-height:420px;}}
 
 </style>
@@ -2217,6 +2236,12 @@ function bpRenderMessaging(){
   bpLoadConvos();
 }
 async function bpLoadConvos(){
+  if(window._bpDemo){
+    _bpConvos=(window._bpBulkMock||[]).map(function(c,i){return {id:c.id,contactId:c.id,name:c.name,phone:c.phone,email:c.email,last:['Thanks!','Sounds good — see you then','Can you call me today?','Got it, appreciate it','Perfect, thank you!'][i%5],dir:(i%2)?'outbound':'inbound',unread:i===0?2:0};});
+    var el=q('bpx-convlist'); var html='';
+    for(var i=0;i<_bpConvos.length;i++){ var c=_bpConvos[i]; html+='<div class="bpx-conv'+(c.unread?' unreadrow':'')+'" id="conv-'+c.id+'" onclick="bpOpenConv(\''+c.id+'\')">'+bpAvatar(c.name||'?',40)+'<div class="bpx-conv-main"><div class="bpx-conv-top"><span class="bpx-conv-name">'+bpEsc(c.name)+'</span></div><div class="bpx-conv-prev">'+(c.dir==='outbound'?'You: ':'')+bpEsc(c.last)+'</div></div>'+(c.unread?'<span class="bpx-unread">'+c.unread+'</span>':'')+'</div>'; }
+    el.innerHTML=html; return;
+  }
   try{
     var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
     var d=await r.json(); _bpConvos=d.conversations||[];
