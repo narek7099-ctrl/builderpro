@@ -316,6 +316,29 @@ nav a:hover{opacity:.5;}
 .bpx-bulk-stat{font-size:13px;color:var(--grey);margin-top:8px;}
 .bpx-bulk-done{margin-top:10px;color:var(--green);font-weight:600;font-size:14px;}
 .bpx-bulk-note{font-size:12.5px;color:var(--grey);background:var(--blue-l);border-radius:10px;padding:10px 12px;margin-top:16px;}
+
+/* ===== pricing ===== */
+.pricing{padding:120px 24px;}
+.pricing .phead{text-align:center;max-width:660px;margin:0 auto 54px;}
+.pricing h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4.6vw,54px);letter-spacing:-.02em;}
+.pricing .phead p{font-family:var(--sans);color:var(--ink-2);font-size:17px;margin-top:14px;}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1160px;margin:0 auto;align-items:start;}
+@media(max-width:920px){.plans{grid-template-columns:1fr;max-width:440px;}}
+.plan{background:#fff;border:1px solid rgba(20,20,25,.09);border-radius:20px;padding:34px 28px;display:flex;flex-direction:column;}
+.plan.pop{border-color:var(--cube);box-shadow:0 34px 80px -34px rgba(124,58,237,.45);position:relative;}
+.plan .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 15px;border-radius:999px;white-space:nowrap;}
+.plan .pname{font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--cube);}
+.plan .price{font-family:var(--serif);font-size:46px;letter-spacing:-.02em;line-height:1;margin:14px 0 4px;}
+.plan .price span{font-family:var(--sans);font-size:15px;font-weight:500;color:var(--ink-2);letter-spacing:0;}
+.plan .pdesc{font-family:var(--sans);font-size:14px;color:var(--ink-2);line-height:1.5;min-height:42px;margin-bottom:20px;}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin:0 0 28px;flex:1;padding:0;}
+.plan li{font-family:var(--sans);font-size:14px;color:#26262c;display:flex;gap:10px;align-items:flex-start;line-height:1.4;}
+.plan li svg{width:17px;height:17px;flex-shrink:0;margin-top:1px;color:var(--cube);}
+.plan .pbtn{display:block;text-align:center;font-family:var(--sans);font-weight:600;font-size:15px;padding:13px;border-radius:12px;border:1px solid var(--cube);color:var(--cube);cursor:pointer;background:#fff;transition:.2s;}
+.plan .pbtn:hover{background:var(--cube);color:#fff;}
+.plan.pop .pbtn{background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;border-color:transparent;}
+.plan.pop .pbtn:hover{opacity:.92;}
+.pricing .pnote{text-align:center;font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:28px;max-width:640px;margin-left:auto;margin-right:auto;}
 </style>
 
 </style>
@@ -385,7 +408,7 @@ nav a:hover{opacity:.5;}
   </a>
   <nav>
     <a href="#features">Features</a>
-    <a href="#features">Product</a>
+    <a href="#pricing">Pricing</a>
     <a href="#contact">Contact</a>
     <a href="#" onclick="bpOpenPortal();return false;" style="color:var(--cube)">Log in</a>
   </nav>
@@ -476,6 +499,59 @@ nav a:hover{opacity:.5;}
     <div class="tcard solo reveal"><div class="co">Web OS</div></div>
     <div class="tcard reveal"><div class="co">Close Deals</div><div class="co">Reports</div><div class="co">Booking</div><div class="co">Reviews</div></div>
   </div>
+</section>
+
+<!-- PRICING -->
+<section class="light pricing" id="pricing" data-theme="light">
+  <div class="phead reveal">
+    <h2>Simple, all-in pricing</h2>
+    <p>One system for your whole business. Start lean, scale into growth and paid acquisition when you're ready.</p>
+  </div>
+  <div class="plans">
+    <div class="plan reveal">
+      <div class="pname">Foundation</div>
+      <div class="price">$299<span>/mo</span></div>
+      <div class="pdesc">Everything you need to get online and taking bookings.</div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Google Business Profile setup</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Custom website</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Booking system</span></li>
+      </ul>
+      <a class="pbtn" href="#contact">Get started</a>
+    </div>
+    <div class="plan pop reveal">
+      <div class="badge">Most popular</div>
+      <div class="pname">Growth</div>
+      <div class="price">$699<span>/mo</span></div>
+      <div class="pdesc">The full operating system — capture, nurture and convert on autopilot.</div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Everything in Foundation</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>AI Receptionist (24/7)</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>10+ lead automations</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Smart booking system</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Custom lead funnels</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Analytics dashboard</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>AI search ranking (SEO)</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Advanced lead funnels</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Priority support + monthly review</span></li>
+      </ul>
+      <a class="pbtn" href="#contact">Get started</a>
+    </div>
+    <div class="plan reveal">
+      <div class="pname">Pro</div>
+      <div class="price">$1,500<span>/mo +ad spend</span></div>
+      <div class="pdesc">Done-for-you growth with managed paid acquisition and creative.</div>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Everything in Growth</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Managed Google Ads — from $1,000/mo budget</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Managed Meta Ads — from $500/mo budget</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Commercial video production — from $1,000</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>Dedicated growth strategist</span></li>
+      </ul>
+      <a class="pbtn" href="#contact">Talk to sales</a>
+    </div>
+  </div>
+  <p class="pnote">Pro starts at $1,500/mo plus ad spend — ad budgets are flexible and billed to your accounts. No long-term contracts.</p>
 </section>
 
 <!-- CONTRACTOR CALLOUT -->
