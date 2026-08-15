@@ -12189,7 +12189,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <a data-view="messaging" onclick="bpNav('messaging')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messaging</span></a>
         <a data-view="contacts" onclick="bpNav('contacts')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Contacts</span></a>
         <a data-view="calendar" onclick="bpNav('calendar')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></a>
-        <a data-view="closedeals" onclick="bpNav('closedeals')"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>Close Deals</span></a>
+        <a data-view="closedeals" onclick="bpNav('closedeals')"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>Close Deals</span></a><a data-view="activejobs" onclick="bpNav('activejobs')"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>Active Jobs</span></a><a data-view="finances" onclick="bpNav('finances')"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Finances</span></a>
         
         <a data-view="calculator" onclick="bpNav('calculator')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3"/></svg><span>My Calculator</span></a>
         <a data-view="automations" onclick="bpNav('automations')"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg><span>Automations</span></a>
@@ -12733,7 +12733,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},automations:{t:'Automations',s:'The systems working for you 24/7.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Jobs',s:'Won jobs you’re working on — mark them done and log costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — stored on your device.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},automations:{t:'Automations',s:'The systems working for you 24/7.'}};
 function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
@@ -12743,7 +12743,7 @@ function bpNav(v){
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,calculator:bpCalculator,automations:bpAutomations}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,calculator:bpCalculator,automations:bpAutomations}[v])();
   document.querySelector('.bpx-main').scrollTop=0;
 }
 function bpDonut(pct,color,val,label){
@@ -14325,6 +14325,239 @@ window.bpSchedOneConfirm=async function(){
 function bpApplyTheme(t){var d=t==='dark';var el=document.getElementById('bpx');if(el)el.classList.toggle('bpx-dark',d);var sw=document.getElementById('bpxThemeSw');if(sw)sw.classList.toggle('on',d);try{localStorage.setItem('bpxTheme',t);}catch(e){}}
 window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&el.classList.contains('bpx-dark');bpApplyTheme(d?'light':'dark');};
 (function(){try{bpApplyTheme(localStorage.getItem('bpxTheme')||'light');}catch(e){}})();
+</script>
+<style>
+/* ===== Active Jobs + Finances ===== */
+.bpx-jobtabs{display:flex;gap:8px;}
+.bpx-jt{padding:8px 15px;border-radius:999px;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--grey);cursor:pointer;font-family:inherit;transition:.15s;}
+.bpx-jt:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-jt.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.bpx-donebtn{background:var(--blue);color:#fff;border:0;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;margin-left:6px;font-family:inherit;}
+.bpx-donebtn:hover{background:#1b56ee;}
+.bpx-js{font-size:12px;color:var(--grey);margin-top:1px;}
+.bpx-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:#eef3ff;color:#1b56ee;white-space:nowrap;}
+.bpx-badge.warn{background:#fff4e6;color:#b45309;}
+.bpx-r,th.bpx-r,td.bpx-r{text-align:right !important;}
+.bpx-num{font-variant-numeric:tabular-nums;font-weight:600;}
+.bpx-pos{color:#15803d;font-weight:600;} .bpx-neg{color:#dc2626;font-weight:600;}
+.bpx-mgood{color:#15803d;font-weight:700;} .bpx-mok{color:#b45309;font-weight:700;}
+/* mark-done / cost modal */
+.bpx-hint{font-size:11.5px;color:var(--blue);margin-top:5px;cursor:pointer;font-weight:600;display:inline-block;}
+.bpx-exprow{display:grid;grid-template-columns:1fr 120px 40px;gap:8px;margin-top:8px;align-items:center;}
+.bpx-exprow select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink);}
+.bpx-expamt{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:13px;background:#fff;color:var(--ink);}
+.bpx-exprm{width:36px;flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;color:var(--grey);font-size:18px;line-height:1;}
+.bpx-exprm:hover{border-color:#dc2626;color:#dc2626;}
+.bpx-addexp{font-size:12.5px;color:var(--blue);font-weight:600;margin-top:10px;cursor:pointer;display:inline-block;}
+.bpx-jd-sum{margin-top:16px;padding:13px 15px;background:var(--soft);border-radius:11px;font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
+.bpx-jd-sum b{font-variant-numeric:tabular-nums;}
+.bpx-skip{font-size:12.5px;color:var(--grey);cursor:pointer;align-self:center;}
+.bpx-skip:hover{color:var(--blue);}
+/* finances category bars */
+.bpx-fincat{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:13.5px;}
+.bpx-fincat:last-child{border-bottom:0;}
+.bpx-fincat .nm{width:120px;color:var(--grey);flex-shrink:0;}
+.bpx-fincat .bar{flex:1;height:9px;border-radius:999px;background:var(--line-2);overflow:hidden;}
+.bpx-fincat .bar i{display:block;height:100%;border-radius:999px;background:var(--blue);}
+.bpx-fincat .amt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:74px;text-align:right;}
+.bpx-finrow-btns{display:flex;gap:8px;}
+.bpx-empty2{padding:26px;text-align:center;color:var(--grey);font-size:13.5px;}
+/* dark */
+#bpx.bpx-dark .bpx-jt{background:#161d2b !important;border-color:var(--line);color:var(--grey);}
+#bpx.bpx-dark .bpx-jt.on{background:var(--blue) !important;color:#fff;}
+#bpx.bpx-dark .bpx-badge{background:#1e2b46;color:#8fb0ff;}
+#bpx.bpx-dark .bpx-badge.warn{background:#3a2a12;color:#f0b666;}
+#bpx.bpx-dark .bpx-exprm{background:#161d2b;border-color:var(--line);color:var(--grey);}
+#bpx.bpx-dark .bpx-exprow select,#bpx.bpx-dark .bpx-expamt{background:#161d2b !important;border-color:var(--line);color:var(--ink);}
+
+</style>
+<script>
+/* ===== Active Jobs + Finances (BuilderPro-native, stored on-device) ===== */
+function bpJobsGet(){try{return JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){return[];}}
+function bpJobsSet(a){try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){}}
+function bpFinGet(){try{return JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){return[];}}
+function bpFinSet(a){try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){}}
+function bpMoneyFmt(n){return '$'+Math.round(+n||0).toLocaleString();}
+function bpParseMoney(s){return +String(s==null?'':s).replace(/[^0-9.]/g,'')||0;}
+function bpJobExp(j){return (j.expenses||[]).reduce(function(s,e){return s+(+e.amt||0);},0);}
+function bpAgo(ts){if(!ts)return '—';var d=Math.floor((Date.now()-ts)/86400000);return d<=0?'today':(d===1?'yesterday':d+'d ago');}
+function bpCatList(){return ['Materials','Labor / crew','Subcontractor','Ads','Fuel','Tools','Permits','Overhead','Other'];}
+function bpCatOpts(sel){return bpCatList().map(function(c){return '<option'+(c===sel?' selected':'')+'>'+c+'</option>';}).join('');}
+function bpJobCell(j){return '<div class="bpx-cnamecell">'+bpAvatar(j.name||'?',34)+'<div><div class="bpx-cname">'+bpEsc(j.name||'Job')+'</div><div class="bpx-js">'+bpEsc(j.title||'Job')+'</div></div></div>';}
+
+/* Won deal -> Active Job (hook both mock + live mark-won) */
+function bpJobFromDeal(o){
+  var jobs=bpJobsGet();
+  if(o.dealId && jobs.some(function(j){return j.dealId===o.dealId;})) return;
+  jobs.unshift({id:'j'+Date.now()+Math.floor(Math.random()*1000),name:o.name||'Job',phone:o.phone||'',title:o.title||'Job',estimate:+o.estimate||0,collected:null,status:'active',expenses:[],dealId:o.dealId||null,contactId:o.contactId||null,wonAt:Date.now(),doneAt:null});
+  bpJobsSet(jobs);
+}
+(function(){
+  var mw=window.bpMarkWon, mwl=window.bpMarkWonLive;
+  if(typeof mw==='function'){ window.bpMarkWon=function(id){ var d=null; try{ d=BP_DEALS.filter(function(x){return x.id===id;})[0]; }catch(e){} var r=mw.apply(this,arguments); if(d) bpJobFromDeal({name:d.n,phone:d.ph,estimate:d.v,dealId:id}); return r; }; }
+  if(typeof mwl==='function'){ window.bpMarkWonLive=function(oppId,contactId){ var d=null; try{ d=(_bpLiveDeals||[]).filter(function(x){return (x.id||x.opportunityId)===oppId;})[0]; }catch(e){} var r=mwl.apply(this,arguments); var nm=d?(d.name||d.n||d.contactName||'Job'):'Job'; var v=d?(+d.value||+d.v||+d.monetaryValue||0):0; bpJobFromDeal({name:nm,phone:(d&&(d.phone||d.ph))||'',estimate:v,dealId:oppId,contactId:contactId}); return r; }; }
+})();
+
+/* ---------- Active Jobs ---------- */
+var _bpJobTab='active', _bpJobDoneId=null, _bpJobExpDraft=[];
+function bpActiveJobs(){
+  var jobs=bpJobsGet();
+  var active=jobs.filter(function(j){return j.status==='active';});
+  var done=jobs.filter(function(j){return j.status==='done';});
+  var rows, head;
+  if(_bpJobTab==='active'){
+    head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Won</th><th>Status</th><th></th></tr>';
+    rows=active.length?active.map(function(j){
+      return '<tr><td>'+bpJobCell(j)+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
+        +'<td class="bpx-r"><button class="bpx-donebtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
+    }).join(''):'<tr><td colspan="5" class="bpx-empty2">No active jobs yet. When you mark a deal <b>Won</b> in Close Deals it shows up here — or add one manually.</td></tr>';
+  } else {
+    head='<tr><th>Job</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th><th></th></tr>';
+    rows=done.length?done.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
+      return '<tr><td>'+bpJobCell(j)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'<span class="bpx-mut">—</span>')+'</td>'
+        +'<td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(e)+'</td>'
+        +'<td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td>'
+        +'<td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td>'
+        +'<td class="bpx-r"><button class="bpx-rowbtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Edit</button></td></tr>';
+    }).join(''):'<tr><td colspan="6" class="bpx-empty2">No completed jobs yet.</td></tr>';
+  }
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
+      +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
+      +'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div>'
+    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+}
+window.bpJobTab=function(t){_bpJobTab=t;bpActiveJobs();};
+window.bpAddJobOpen=function(){
+  bpModal('<h3>Add a job</h3><div class="bpx-sub">For a job that didn’t come through the pipeline.</div>'
+    +'<label>Customer name</label><input id="bpx-nj-name" placeholder="Full name">'
+    +'<label>Job</label><input id="bpx-nj-title" placeholder="e.g. Roof replacement">'
+    +'<label>Estimate (optional)</label><input id="bpx-nj-est" placeholder="$0">'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpAddJobSave()">Add job</button></div>');
+};
+window.bpAddJobSave=function(){
+  var nm=(q('bpx-nj-name')||{}).value||''; nm=nm.trim();
+  if(!nm){ q('bpx-mmsg').style.color='#dc2626'; q('bpx-mmsg').textContent='Enter a customer name.'; return; }
+  var jobs=bpJobsGet();
+  jobs.unshift({id:'j'+Date.now()+Math.floor(Math.random()*1000),name:nm,phone:'',title:((q('bpx-nj-title')||{}).value||'Job').trim()||'Job',estimate:bpParseMoney((q('bpx-nj-est')||{}).value),collected:null,status:'active',expenses:[],dealId:null,wonAt:Date.now(),doneAt:null});
+  bpJobsSet(jobs); bpCloseModal(); bpActiveJobs();
+};
+window.bpJobDoneOpen=function(id){
+  var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
+  _bpJobDoneId=id;
+  _bpJobExpDraft=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt};});
+  if(!_bpJobExpDraft.length) _bpJobExpDraft=[{cat:'Materials',amt:''}];
+  bpModal('<h3>'+(j.status==='done'?'Edit job':'Mark job done')+' — '+bpEsc(j.name)+'</h3>'
+    +'<div class="bpx-sub">'+bpEsc(j.title||'Job')+' · everything below is optional.</div>'
+    +'<label>What did you collect?</label><input id="bpx-jd-col" placeholder="$0" value="'+(j.collected!=null?bpMoneyFmt(j.collected):'')+'" oninput="bpJobSum()">'
+    +'<div class="bpx-hint" onclick="bpJobUseEst()">↳ Use the estimate ('+bpMoneyFmt(j.estimate)+')</div>'
+    +'<label>Expenses (optional)</label><div id="bpx-jd-exps"></div><div class="bpx-addexp" onclick="bpJobExpAdd()">+ Add expense</div>'
+    +'<div class="bpx-jd-sum" id="bpx-jd-sum"></div>'
+    +'<div class="row" style="justify-content:space-between;align-items:center">'
+      +'<span class="bpx-skip" onclick="bpJobDoneSave(\''+id+'\',true)">'+(j.status==='done'?'':'Skip — just mark done')+'</span>'
+      +'<span style="display:flex;gap:10px"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpJobDoneSave(\''+id+'\',false)">'+(j.status==='done'?'Save':'Save & complete')+'</button></span></div>');
+  bpJobExpRender();
+};
+function bpJobExpRender(){
+  var el=q('bpx-jd-exps'); if(!el) return;
+  el.innerHTML=_bpJobExpDraft.map(function(e,i){
+    return '<div class="bpx-exprow"><select onchange="_bpJobExpDraft['+i+'].cat=this.value">'+bpCatOpts(e.cat)+'</select>'
+      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpJobExpDraft['+i+'].amt=this.value;bpJobSum()">'
+      +'<button class="bpx-exprm" onclick="bpJobExpDel('+i+')">×</button></div>';
+  }).join('');
+  bpJobSum();
+}
+window.bpJobExpAdd=function(){ _bpJobExpDraft.push({cat:'Labor / crew',amt:''}); bpJobExpRender(); };
+window.bpJobExpDel=function(i){ _bpJobExpDraft.splice(i,1); if(!_bpJobExpDraft.length)_bpJobExpDraft=[{cat:'Materials',amt:''}]; bpJobExpRender(); };
+window.bpJobSum=function(){
+  var col=bpParseMoney((q('bpx-jd-col')||{}).value);
+  var exp=_bpJobExpDraft.reduce(function(s,e){return s+bpParseMoney(e.amt);},0);
+  var p=col-exp, el=q('bpx-jd-sum'); if(!el) return;
+  el.innerHTML='<span>Profit on this job</span><b class="'+(p>=0?'bpx-pos':'bpx-neg')+'">'+bpMoneyFmt(p)+(col>0?' · '+Math.round(p/col*100)+'% margin':'')+'</b>';
+};
+window.bpJobUseEst=function(){ var j=bpJobsGet().filter(function(x){return x.id===_bpJobDoneId;})[0]; if(j){ q('bpx-jd-col').value=bpMoneyFmt(j.estimate); bpJobSum(); } };
+window.bpJobDoneSave=function(id,skip){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return;
+  if(!skip){
+    var col=bpParseMoney((q('bpx-jd-col')||{}).value);
+    j.collected= col>0 ? col : (j.collected!=null?j.collected:null);
+    j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
+  }
+  j.status='done'; j.doneAt=j.doneAt||Date.now();
+  bpJobsSet(jobs); bpCloseModal(); bpActiveJobs();
+};
+
+/* ---------- Finances ---------- */
+var _bpFinTab='all';
+function bpFinData(){
+  var jobs=bpJobsGet(), fin=bpFinGet(), inc=[], exp=[], catTot={};
+  jobs.forEach(function(j){
+    if(j.collected!=null && j.collected>0) inc.push({name:(j.title||'Job')+' — '+j.name,type:'Job',amt:+j.collected,when:j.doneAt||j.wonAt});
+    (j.expenses||[]).forEach(function(e){ exp.push({name:e.cat+' — '+j.name,type:e.cat,amt:+e.amt||0,when:j.doneAt||j.wonAt}); catTot[e.cat]=(catTot[e.cat]||0)+(+e.amt||0); });
+  });
+  fin.forEach(function(f){
+    if(f.kind==='income') inc.push({name:f.note||'Income',type:'Manual',amt:+f.amount||0,when:f.when});
+    else { exp.push({name:f.note||f.category||'Expense',type:f.category||'Other',amt:+f.amount||0,when:f.when}); catTot[f.category||'Other']=(catTot[f.category||'Other']||0)+(+f.amount||0); }
+  });
+  var income=inc.reduce(function(s,x){return s+x.amt;},0);
+  var expense=exp.reduce(function(s,x){return s+x.amt;},0);
+  return {inc:inc,exp:exp,catTot:catTot,income:income,expense:expense,net:income-expense,jobs:jobs};
+}
+function bpFinances(){
+  var d=bpFinData();
+  var margin=d.income>0?Math.round(d.net/d.income*100):0;
+  var cats=Object.keys(d.catTot).sort(function(a,b){return d.catTot[b]-d.catTot[a];});
+  var cmax=Math.max.apply(null,cats.map(function(c){return d.catTot[c];}).concat([1]));
+  var ccol={ 'Materials':'#2f6bff','Labor / crew':'#f59e0b','Subcontractor':'#7c3aed','Ads':'#15803d','Fuel':'#6a6a70','Tools':'#0d9488','Permits':'#db2777','Overhead':'#dc2626','Other':'#9a9aa0' };
+  var catHtml=cats.length?cats.map(function(c){return '<div class="bpx-fincat"><span class="nm">'+bpEsc(c)+'</span><span class="bar"><i style="width:'+Math.max(6,Math.round(d.catTot[c]/cmax*100))+'%;background:'+(ccol[c]||'#2f6bff')+'"></i></span><span class="amt">'+bpMoneyFmt(d.catTot[c])+'</span></div>';}).join(''):'<div class="bpx-empty2">No expenses logged yet.</div>';
+  // ledger
+  var all=d.inc.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:1,w:x.when};}).concat(d.exp.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:-1,w:x.when};}));
+  if(_bpFinTab==='income') all=all.filter(function(x){return x.s>0;});
+  if(_bpFinTab==='expense') all=all.filter(function(x){return x.s<0;});
+  all.sort(function(a,b){return (b.w||0)-(a.w||0);});
+  var ledHtml=all.length?all.slice(0,12).map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    return '<tr><td>'+bpEsc(x.n)+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td></tr>';
+  }).join(''):'<tr><td colspan="4" class="bpx-empty2">Nothing logged yet. Mark a job done with what you collected, or use <b>+ Add income</b>.</td></tr>';
+  // per-job
+  var pj=d.jobs.filter(function(j){return j.status==='done';});
+  var pjHtml=pj.length?pj.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
+    return '<tr><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Complete a job to see its margin here.</td></tr>';
+
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-stats">'
+    +'<div class="bpx-stat"><div class="lbl">Income</div><div class="val">'+bpMoneyFmt(d.income)+'</div><div class="note">to date</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Expenses</div><div class="val">'+bpMoneyFmt(d.expense)+'</div><div class="note">to date</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Net profit</div><div class="val blue">'+bpMoneyFmt(d.net)+'</div><div class="note">income − expenses</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Margin</div><div class="val">'+margin+'%</div><div class="note">of income</div></div>'
+    +'</div>'
+    +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
+    +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
+      +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
+      +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs</span></div>'
+      +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table>'
+      +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Stored on this device.</div></div>';
+}
+window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
+window.bpFinAddOpen=function(kind){
+  var isExp=kind==='expense';
+  bpModal('<h3>Add '+(isExp?'expense':'income')+'</h3><div class="bpx-sub">'+(isExp?'A cost not tied to a specific job (rent, software, fuel…).':'Money in that didn’t come from a tracked job (cash job, deposit…).')+'</div>'
+    +'<label>Amount</label><input id="bpx-fa-amt" placeholder="$0">'
+    +(isExp?'<label>Category</label><select id="bpx-fa-cat" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px;background:#fff;color:var(--ink)">'+bpCatOpts('Materials')+'</select>':'')
+    +'<label>Note</label><input id="bpx-fa-note" placeholder="'+(isExp?'e.g. ABC Supply':'e.g. Cash job — fascia')+'">'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpFinAddSave(\''+kind+'\')">Add</button></div>');
+};
+window.bpFinAddSave=function(kind){
+  var amt=bpParseMoney((q('bpx-fa-amt')||{}).value);
+  if(!amt){ q('bpx-mmsg').style.color='#dc2626'; q('bpx-mmsg').textContent='Enter an amount.'; return; }
+  var fin=bpFinGet();
+  fin.unshift({id:'f'+Date.now(),kind:kind,amount:amt,category:(q('bpx-fa-cat')||{}).value||'Other',note:((q('bpx-fa-note')||{}).value||'').trim(),when:Date.now()});
+  bpFinSet(fin); bpCloseModal(); bpFinances();
+};
+
 </script>
 </body>
 </html>
