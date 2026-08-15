@@ -357,6 +357,33 @@ nav a:hover{opacity:.5;}
 .bpx-qstatus.sent{background:rgba(34,160,107,.14);color:var(--green);}
 .bpx-qcancel{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#444;}
 .bpx-qcancel:hover{border-color:#c23c34;color:#c23c34;}
+
+/* ===== dashboard dark mode ===== */
+.bpx-theme{position:fixed;top:16px;right:70px;z-index:11;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--line);color:var(--grey);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.bpx-theme:hover{color:var(--blue);border-color:var(--blue);}
+.bpx-theme svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;}
+.bpx-theme .sun{display:none;}
+#bpx.dark .bpx-theme .moon{display:none;}
+#bpx.dark .bpx-theme .sun{display:block;}
+#bpx.dark{
+  --bg:#0f0e13; --card:#17161d; --line:#2b2933; --line-2:#221f2a;
+  --grey:#9c99ab; --grey-l:#6f6c7d; --ink-2:#c9c6d6; --blue-l:rgba(139,92,246,.18); --green:#34d399;
+  color:#e9e7f0;
+}
+/* surfaces that were hardcoded white */
+#bpx.dark .bpx-card,#bpx.dark .bpx-stat,#bpx.dark .bpx-panel,#bpx.dark .bpx-cd-card,#bpx.dark .bpx-uprow,#bpx.dark .bpx-convlist,#bpx.dark .bpx-thread,#bpx.dark .bpx-cal,#bpx.dark .bpx-cwrap,#bpx.dark .bpx-day,#bpx.dark .bpx-slot,#bpx.dark .bpx-modalcard,#bpx.dark .bpx-qitem,#bpx.dark .bpx-auto-card,#bpx.dark .bpx-hdr-btn,#bpx.dark .bpx-logout,#bpx.dark .bpx-iconbtn,#bpx.dark .bpx-mtab,#bpx.dark .bpx-mobbar,#bpx.dark .bpx-qcancel{background:var(--card);color:var(--ink-2);}
+/* form fields */
+#bpx.dark input,#bpx.dark select,#bpx.dark textarea{background:var(--card);color:#e9e7f0;border-color:var(--line);}
+#bpx.dark input::placeholder,#bpx.dark textarea::placeholder{color:var(--grey-l);}
+/* dark text that was hardcoded */
+#bpx.dark .bpx-hdr-btn,#bpx.dark .bpx-qmeta,#bpx.dark .bpx-cname,#bpx.dark .bpx-stat .val,#bpx.dark .bpx-mhdr h1,#bpx.dark .bpx-sec-h{color:#e9e7f0;}
+#bpx.dark .bpx-close{background:#1c1a23;color:#c8c5d4;border-color:var(--line);}
+/* nav + misc */
+#bpx.dark .bpx-nav a{color:var(--grey);}
+#bpx.dark .bpx-nav a:hover,#bpx.dark .bpx-conv:hover,#bpx.dark .bpx-conv.sel,#bpx.dark .bpx-table tr:hover td{background:var(--blue-l);}
+#bpx.dark .bpx-mobbar a{color:var(--grey);}
+#bpx.dark .bpx-bub.in{background:#221f2a;color:#e9e7f0;}
+#bpx.dark .bpx-card{box-shadow:0 30px 70px rgba(0,0,0,.5);}
 </style>
 
 </style>
@@ -380,6 +407,7 @@ nav a:hover{opacity:.5;}
 <!-- ===== WEB OS PORTAL ===== -->
 <div id="bpx">
   <button class="bpx-close" onclick="bpClose()">×</button>
+  <button class="bpx-theme" onclick="bpToggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode"><svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
   <!-- login -->
   <div class="bpx-auth" id="bpxLogin">
     <div class="bpx-wrap">
@@ -2243,4 +2271,10 @@ function bpBulkTick(){
 setInterval(bpBulkTick, 15000);
 setTimeout(bpBulkTick, 4000);
 
+</script>
+
+<script>
+function bpApplyTheme(t){var el=document.getElementById('bpx');if(!el)return;el.classList.toggle('dark',t==='dark');try{localStorage.setItem('webos_theme',t);}catch(e){}}
+function bpToggleTheme(){var el=document.getElementById('bpx');bpApplyTheme(el&&el.classList.contains('dark')?'light':'dark');}
+(function(){try{var t=localStorage.getItem('webos_theme');if(t==='dark')bpApplyTheme('dark');}catch(e){}})();
 </script>
