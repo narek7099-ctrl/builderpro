@@ -534,31 +534,23 @@ document.getElementById('yr').textContent=new Date().getFullYear();
 
   var RAD=1.7, HEIGHT=30, TURNS=5;
   class Helix extends THREE.Curve{
-    constructor(phase){super();this.phase=phase;}
+    constructor(phase,radius){super();this.phase=phase;this.radius=radius;}
     getPoint(t,opt){
       var a=this.phase+t*TURNS*Math.PI*2;
       var v=opt||new THREE.Vector3();
-      return v.set(Math.cos(a)*RAD,(t-0.5)*HEIGHT,Math.sin(a)*RAD);
+      return v.set(Math.cos(a)*this.radius,(t-0.5)*HEIGHT,Math.sin(a)*this.radius);
     }
   }
-  var mat=new THREE.MeshStandardMaterial({color:0xf2f2f4,metalness:0.0,roughness:0.42});
-  [0,Math.PI].forEach(function(ph){
-    var geo=new THREE.TubeGeometry(new Helix(ph),420,0.34,20,false);
-    spin.add(new THREE.Mesh(geo,mat));
-  });
-  // base-pair rungs
-  var rungMat=new THREE.MeshStandardMaterial({color:0xdedee2,metalness:0.0,roughness:0.5});
-  var hA=new Helix(0),hB=new Helix(Math.PI),pa=new THREE.Vector3(),pb=new THREE.Vector3();
-  var RUNGS=46, up=new THREE.Vector3(0,1,0), dir=new THREE.Vector3(), mid=new THREE.Vector3(), quat=new THREE.Quaternion();
-  var rungGeo=new THREE.CylinderGeometry(0.12,0.12,1,10,1);
-  for(var i=1;i<RUNGS;i++){
-    var t=i/RUNGS;hA.getPoint(t,pa);hB.getPoint(t,pb);
-    dir.subVectors(pb,pa);var len=dir.length();dir.normalize();
-    var m=new THREE.Mesh(rungGeo,rungMat);
-    mid.addVectors(pa,pb).multiplyScalar(0.5);m.position.copy(mid);
-    quat.setFromUnitVectors(up,dir);m.quaternion.copy(quat);
-    m.scale.set(1,len,1);
-    spin.add(m);
+  // a bundle of thin glossy purple "data streams" spiralling together (no rungs)
+  var STREAM_COLORS=[0xc084fc,0xa855f7,0x8b5cf6,0x7c3aed,0x9333ea,0x6d28d9];
+  var STREAMS=6;
+  for(var i=0;i<STREAMS;i++){
+    var ph=(i/STREAMS)*Math.PI*2;
+    var rad=RAD*(0.72+0.28*((i%3)/2));            // interleave at a few radii for depth
+    var col=STREAM_COLORS[i%STREAM_COLORS.length];
+    var sm=new THREE.MeshStandardMaterial({color:col,metalness:0.25,roughness:0.3,emissive:col,emissiveIntensity:0.09});
+    var geo=new THREE.TubeGeometry(new Helix(ph,rad),360,0.13,14,false);
+    spin.add(new THREE.Mesh(geo,sm));
   }
 
   function resize(){
