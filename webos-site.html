@@ -532,8 +532,8 @@ document.getElementById('yr').textContent=new Date().getFullYear();
   var tilt=new THREE.Group();tilt.rotation.z=-26*Math.PI/180;scene.add(tilt);
   var spin=new THREE.Group();tilt.add(spin);
 
-  var RAD=1.7, HEIGHT=30, TURNS=5;   // big shared spiral (bundle path)
-  var BRAID=0.46, BRAID_TURNS=8;     // how far / how often the strands wind around each other
+  var RAD=0.55, HEIGHT=32, TURNS=1.4;  // near-straight bundle axis (small = less squiggle)
+  var BRAID=0.5, BRAID_TURNS=5;        // gentle winding of strands around each other
   // each strand orbits a common spiralling centre → the 3 lines braid around one another
   class Strand extends THREE.Curve{
     constructor(phase){super();this.phase=phase;}
