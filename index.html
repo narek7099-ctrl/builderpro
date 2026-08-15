@@ -14075,5 +14075,200 @@ window.bpBulkSend=async function(){
 };
 
 </script>
+<style>
+/* ===== Scheduled sends ===== */
+.bpx-msgbar-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.bpx-ghostbtn{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:10px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;}
+.bpx-ghostbtn:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-modalcard input[type=datetime-local]{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
+.bpx-modalcard input[type=datetime-local]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+.bpx-clockbtn{width:42px;height:42px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--grey);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.bpx-clockbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.bpx-clockbtn:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-when-note{font-size:12px;color:var(--grey);margin-top:8px;background:var(--soft);border:1px dashed var(--line);border-radius:9px;padding:9px 12px;line-height:1.5;}
+.bpx-when-note a{color:var(--blue);font-weight:600;}
+.bpx-schedlist{display:flex;flex-direction:column;gap:9px;margin-top:8px;max-height:340px;overflow-y:auto;}
+.bpx-schedrow{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;}
+.bpx-schedrow .si{flex:1;min-width:0;}
+.bpx-sched-when{font-weight:700;font-size:13.5px;letter-spacing:-.01em;}
+.bpx-sched-meta{font-size:12px;color:var(--grey);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bpx-sched-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:999px;flex-shrink:0;}
+.bpx-sched-badge.SMS{background:#eef3ff;color:#1b56ee;}
+.bpx-sched-badge.Email{background:#f3e8ff;color:#7c3aed;}
+.bpx-sched-status{font-size:11px;font-weight:600;color:var(--grey-l);text-transform:capitalize;}
+.bpx-sched-cancel{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--grey);cursor:pointer;flex-shrink:0;}
+.bpx-sched-cancel:hover{border-color:#dc2626;color:#dc2626;}
+.bpx-sched-empty{padding:22px;text-align:center;color:var(--grey);font-size:13.5px;}
+
+</style>
+<script>
+/* ===== Scheduled sends: broadcast scheduling + per-conversation + manager ===== */
+var SCHED_URL=BP_URL+'/functions/v1/ghl-schedule';
+var _bpBulkWhen='now'; var _bpSchedOne=null;
+function bpDtLocal(d){var p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function bpFmtSched(iso){try{return new Date(iso).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return iso;}}
+var BPSCHED_NOTE='<div class="bpx-when-note">Scheduling isn’t set up yet. Deploy the <b>ghl-schedule</b> worker (see <b>supabase/functions/ghl-schedule/SETUP.md</b>) to enable it. <b>Send now</b> works regardless.</div>';
+
+/* Messaging header with Broadcast + Scheduled */
+function bpRenderMessaging(){
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-msgbar"><div class="bpx-msgbar-t">Conversations</div>'
+      +'<div class="bpx-msgbar-btns"><button class="bpx-ghostbtn" onclick="bpSchedListOpen()">🕒 Scheduled</button>'
+      +'<button class="bpx-addbtn" onclick="bpBulkOpen()">✉ Broadcast</button></div></div>'
+    +'<div class="bpx-inbox">'
+      +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
+      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big">💬</div>Select a conversation to view messages.</div></div>'
+    +'</div>';
+  bpLoadConvos();
+}
+
+/* Broadcast composer + When */
+window.bpBulkOpen=async function(){
+  bpModal('<h3>Broadcast</h3><div class="bpx-sub">Loading your contacts…</div>');
+  await bpEnsureContacts();
+  var tags={}; _bpContacts.forEach(function(c){(c.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});});
+  var tagOpts=Object.keys(tags).sort().map(function(t){return '<option value="tag:'+bpEsc(t)+'">Tag: '+bpEsc(t)+' ('+tags[t]+')</option>';}).join('');
+  _bpBulkChan='SMS'; _bpBulkWhen='now';
+  bpModal('<h3>Broadcast</h3><div class="bpx-sub">Send a text or email to many contacts — now or scheduled.</div>'
+    +'<label>Channel</label><div class="bpx-bulk-tabs"><button id="bk-ch-SMS" class="on" onclick="bpBulkChan(\'SMS\')">Text (SMS)</button><button id="bk-ch-Email" onclick="bpBulkChan(\'Email\')">Email</button></div>'
+    +'<div id="bk-subwrap" style="display:none"><label>Subject</label><input id="bk-subject" placeholder="Subject line"></div>'
+    +'<label>Send to</label><select id="bk-aud" onchange="bpBulkCount()"><option value="__all">All contacts</option>'+tagOpts+'</select>'
+    +'<label>Message</label><textarea id="bk-msg" placeholder="Type your message…"></textarea>'
+    +'<label>When</label><div class="bpx-bulk-tabs"><button id="bk-when-now" class="on" onclick="bpBulkWhen(\'now\')">Send now</button><button id="bk-when-later" onclick="bpBulkWhen(\'later\')">Schedule</button></div>'
+    +'<div id="bk-whenwrap" style="display:none;margin-top:8px"><input type="datetime-local" id="bk-sendat"></div>'
+    +'<div class="bpx-bulk-count" id="bk-count"></div>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bk-send" onclick="bpBulkSend()">Send broadcast</button></div>');
+  bpBulkCount();
+};
+window.bpBulkWhen=function(w){
+  _bpBulkWhen=w;
+  var a=q('bk-when-now'),b=q('bk-when-later'); if(a)a.classList.toggle('on',w==='now'); if(b)b.classList.toggle('on',w==='later');
+  var wr=q('bk-whenwrap'); if(wr) wr.style.display=(w==='later')?'block':'none';
+  var dt=q('bk-sendat'); if(dt && !dt.value){ dt.value=bpDtLocal(new Date(Date.now()+3600000)); }
+  var btn=q('bk-send'); if(btn) btn.textContent=(w==='later')?'Schedule broadcast':'Send broadcast';
+};
+window.bpBulkSend=async function(){
+  var btn=q('bk-send'), msg=q('bpx-mmsg');
+  var text=((q('bk-msg')||{}).value||'').trim();
+  var subEl=q('bk-subject'); var subject=(_bpBulkChan==='Email'&&subEl)?subEl.value.trim():'A quick note from your contractor';
+  if(!text){ msg.style.color='#dc2626'; msg.textContent='Type a message first.'; return; }
+  if(_bpBulkChan==='Email' && !subject){ msg.style.color='#dc2626'; msg.textContent='Add a subject line for the email.'; return; }
+  var recips=bpBulkRecipients();
+  if(!recips.length){ msg.style.color='#dc2626'; msg.textContent='No contacts match that audience for this channel.'; return; }
+
+  if(_bpBulkWhen==='later'){
+    var dtv=(q('bk-sendat')||{}).value;
+    if(!dtv){ msg.style.color='#dc2626'; msg.textContent='Pick a date and time.'; return; }
+    var when=new Date(dtv);
+    if(isNaN(when.getTime())||when.getTime()<Date.now()+30000){ msg.style.color='#dc2626'; msg.textContent='Pick a time in the future.'; return; }
+    var aud=(q('bk-aud')||{}).value||'__all';
+    var label=(aud.indexOf('tag:')===0?('Tag: '+aud.slice(4)):'All contacts');
+    btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Scheduling…';
+    var res=await bpSchedCreate({channel:_bpBulkChan,subject:subject,message:text,contactIds:recips.map(function(c){return c.id;}),sendAt:when.toISOString(),label:'Broadcast · '+label});
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Scheduled '+recips.length+' message'+(recips.length===1?'':'s')+' for '+bpFmtSched(when.toISOString())+'.'; btn.textContent='Scheduled ✓'; }
+    else if(res.notConfigured){ msg.innerHTML=BPSCHED_NOTE; btn.disabled=false; }
+    else { msg.style.color='#dc2626'; msg.textContent='Could not schedule. Please try again.'; btn.disabled=false; }
+    return;
+  }
+  // send now
+  btn.disabled=true; var ok=0, fail=0;
+  for(var i=0;i<recips.length;i++){
+    msg.style.color='var(--grey)'; msg.textContent='Sending '+(i+1)+' of '+recips.length+'…';
+    try{
+      var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpBulkChan,contactId:recips[i].id,message:text,subject:subject})}).then(function(x){return x.json();});
+      if(r && r.ok) ok++; else fail++;
+    }catch(e){ fail++; }
+    await new Promise(function(res){ setTimeout(res,250); });
+  }
+  msg.style.color=(fail?'#d97706':'#15803d');
+  msg.textContent='Done — sent '+ok+' message'+(ok===1?'':'s')+(fail?(', '+fail+' failed'):'')+'.';
+  btn.disabled=false; btn.textContent='Send another';
+};
+
+/* shared create helper */
+async function bpSchedCreate(payload){
+  try{
+    var r=await fetch(SCHED_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(Object.assign({action:'create'},payload))});
+    if(r.status===404) return {ok:false,notConfigured:true};
+    var d=await r.json().catch(function(){return null;});
+    if(d && d.ok) return {ok:true,item:d.item};
+    return {ok:false,error:(d&&d.error)||'error'};
+  }catch(e){ return {ok:false,notConfigured:true}; }
+}
+
+/* Scheduled manager */
+window.bpSchedListOpen=async function(){
+  bpModal('<h3>Scheduled sends</h3><div class="bpx-sub">Messages and emails queued to go out.</div><div class="bpx-schedlist" id="bpx-schedlist"><div class="bpx-sched-empty">Loading…</div></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
+  try{
+    var r=await fetch(SCHED_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
+    if(r.status===404){ q('bpx-schedlist').innerHTML=BPSCHED_NOTE; return; }
+    var d=await r.json(); var items=(d&&d.items)||[];
+    var pending=items.filter(function(x){return x.status==='pending';});
+    var el=q('bpx-schedlist'); if(!el) return;
+    if(!pending.length){ el.innerHTML='<div class="bpx-sched-empty">No scheduled sends. Use <b>Broadcast → Schedule</b> or the 🕒 in a conversation.</div>'; return; }
+    el.innerHTML=pending.map(function(x){var n=(x.contact_ids||[]).length;
+      return '<div class="bpx-schedrow" id="sched-'+x.id+'"><span class="bpx-sched-badge '+x.channel+'">'+(x.channel==='Email'?'Email':'SMS')+'</span>'
+        +'<div class="si"><div class="bpx-sched-when">'+bpFmtSched(x.send_at)+'</div>'
+        +'<div class="bpx-sched-meta">'+bpEsc(x.label||'Message')+' · '+n+' recipient'+(n===1?'':'s')+' · “'+bpEsc((x.message||'').slice(0,42))+((x.message||'').length>42?'…':'')+'”</div></div>'
+        +'<button class="bpx-sched-cancel" onclick="bpSchedCancel(\''+x.id+'\')">Cancel</button></div>';
+    }).join('');
+  }catch(e){ var el2=q('bpx-schedlist'); if(el2) el2.innerHTML=BPSCHED_NOTE; }
+};
+window.bpSchedCancel=async function(id){
+  try{ await fetch(SCHED_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'cancel',id:id})}); }catch(e){}
+  var row=q('sched-'+id); if(row) row.remove();
+  var el=q('bpx-schedlist'); if(el && !el.querySelector('.bpx-schedrow')) el.innerHTML='<div class="bpx-sched-empty">No scheduled sends.</div>';
+};
+
+/* Per-conversation scheduling: rebuild the conversation with a clock button */
+window.bpOpenConv=async function(id){
+  _bpCurConv=null; for(var i=0;i<_bpConvos.length;i++){ if(_bpConvos[i].id===id) _bpCurConv=_bpConvos[i]; }
+  if(!_bpCurConv) return;
+  var cs=document.querySelectorAll('#bpx-convlist .bpx-conv'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('sel');
+  var cur=q('conv-'+id); if(cur) cur.classList.add('sel');
+  var hasPhone=!!_bpCurConv.phone; _bpMsgType=hasPhone?'SMS':'Email';
+  var info=(_bpCurConv.phone||'')+(_bpCurConv.phone&&_bpCurConv.email?'  ·  ':'')+(_bpCurConv.email||'');
+  var CHAT='<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.5 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 013.5 11.5 8.5 8.5 0 0112 3a8.5 8.5 0 019 8.5z"/></svg>';
+  var MAIL='<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>';
+  var SEND='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+  var CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  q('bpx-thread').innerHTML=
+    '<div class="bpx-thead">'+bpAvatar(_bpCurConv.name||'?',38)
+      +'<div><div class="bpx-thead-name">'+bpEsc(_bpCurConv.name||'Unknown')+'</div>'
+      +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div></div>'
+    +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
+      +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
+    +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages…</div></div>'
+    +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message…" onkeydown="if(event.key===\'Enter\')bpSendMsg()">'
+      +'<button class="bpx-clockbtn" title="Schedule for later" onclick="bpSchedOneOpen()">'+CLOCK+'</button>'
+      +'<button class="bpx-sendbtn" title="Send" onclick="bpSendMsg()">'+SEND+'</button></div>';
+  bpSetMsgType(_bpMsgType);
+  bpLoadThread(id);
+};
+window.bpSchedOneOpen=function(){
+  var inp=q('bpx-replyin'); var text=inp?inp.value.trim():'';
+  if(!text){ if(inp){inp.focus();inp.placeholder='Type a message first, then schedule…';} return; }
+  if(!_bpCurConv){ return; }
+  _bpSchedOne={text:text,channel:_bpMsgType,contactId:_bpCurConv.contactId,name:_bpCurConv.name};
+  bpModal('<h3>Schedule '+(_bpMsgType==='Email'?'email':'text')+'</h3>'
+    +'<div class="bpx-sub">To <b style="color:var(--ink)">'+bpEsc(_bpCurConv.name||'this contact')+'</b> — “'+bpEsc(text.slice(0,80))+(text.length>80?'…':'')+'”</div>'
+    +'<label>Send at</label><input type="datetime-local" id="bk1-sendat" value="'+bpDtLocal(new Date(Date.now()+3600000))+'">'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bk1-send" onclick="bpSchedOneConfirm()">Schedule</button></div>');
+};
+window.bpSchedOneConfirm=async function(){
+  var msg=q('bpx-mmsg'), btn=q('bk1-send'); var dtv=(q('bk1-sendat')||{}).value;
+  if(!dtv){ msg.style.color='#dc2626'; msg.textContent='Pick a date and time.'; return; }
+  var when=new Date(dtv);
+  if(isNaN(when.getTime())||when.getTime()<Date.now()+30000){ msg.style.color='#dc2626'; msg.textContent='Pick a time in the future.'; return; }
+  btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Scheduling…';
+  var res=await bpSchedCreate({channel:_bpSchedOne.channel,subject:'A note from your contractor',message:_bpSchedOne.text,contactIds:[_bpSchedOne.contactId],sendAt:when.toISOString(),label:_bpSchedOne.name||'Contact'});
+  if(res.ok){ msg.style.color='#15803d'; msg.textContent='Scheduled for '+bpFmtSched(when.toISOString())+'.'; var ri=q('bpx-replyin'); if(ri) ri.value=''; setTimeout(bpCloseModal,900); }
+  else if(res.notConfigured){ msg.innerHTML=BPSCHED_NOTE; btn.disabled=false; }
+  else { msg.style.color='#dc2626'; msg.textContent='Could not schedule. Please try again.'; btn.disabled=false; }
+};
+
+</script>
 </body>
 </html>
