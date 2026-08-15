@@ -532,24 +532,26 @@ document.getElementById('yr').textContent=new Date().getFullYear();
   var tilt=new THREE.Group();tilt.rotation.z=-26*Math.PI/180;scene.add(tilt);
   var spin=new THREE.Group();tilt.add(spin);
 
-  var RAD=1.7, HEIGHT=30, TURNS=5;
-  class Helix extends THREE.Curve{
-    constructor(phase,radius){super();this.phase=phase;this.radius=radius;}
+  var RAD=1.7, HEIGHT=30, TURNS=5;   // big shared spiral (bundle path)
+  var BRAID=0.46, BRAID_TURNS=8;     // how far / how often the strands wind around each other
+  // each strand orbits a common spiralling centre → the 3 lines braid around one another
+  class Strand extends THREE.Curve{
+    constructor(phase){super();this.phase=phase;}
     getPoint(t,opt){
-      var a=this.phase+t*TURNS*Math.PI*2;
+      var A=t*TURNS*Math.PI*2;                       // shared big spiral (same for all strands)
+      var B=this.phase+t*BRAID_TURNS*Math.PI*2;       // fast wind, offset per strand
       var v=opt||new THREE.Vector3();
-      return v.set(Math.cos(a)*this.radius,(t-0.5)*HEIGHT,Math.sin(a)*this.radius);
+      return v.set(Math.cos(A)*RAD+Math.cos(B)*BRAID,(t-0.5)*HEIGHT,Math.sin(A)*RAD+Math.sin(B)*BRAID);
     }
   }
-  // a bundle of thin glossy purple "data streams" spiralling together (no rungs)
-  var STREAM_COLORS=[0xc084fc,0xa855f7,0x8b5cf6,0x7c3aed,0x9333ea,0x6d28d9];
-  var STREAMS=6;
+  // 3 thin glossy light-purple "data streams" braiding together
+  var STREAM_COLORS=[0xd8b4fe,0xc4b5fd,0xb794f6];
+  var STREAMS=3;
   for(var i=0;i<STREAMS;i++){
     var ph=(i/STREAMS)*Math.PI*2;
-    var rad=RAD*(0.72+0.28*((i%3)/2));            // interleave at a few radii for depth
     var col=STREAM_COLORS[i%STREAM_COLORS.length];
-    var sm=new THREE.MeshStandardMaterial({color:col,metalness:0.25,roughness:0.3,emissive:col,emissiveIntensity:0.09});
-    var geo=new THREE.TubeGeometry(new Helix(ph,rad),360,0.13,14,false);
+    var sm=new THREE.MeshStandardMaterial({color:col,metalness:0.2,roughness:0.28,emissive:col,emissiveIntensity:0.12});
+    var geo=new THREE.TubeGeometry(new Strand(ph),520,0.15,16,false);
     spin.add(new THREE.Mesh(geo,sm));
   }
 
