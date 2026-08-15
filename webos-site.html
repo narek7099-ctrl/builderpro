@@ -339,6 +339,24 @@ nav a:hover{opacity:.5;}
 .plan.pop .pbtn{background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;border-color:transparent;}
 .plan.pop .pbtn:hover{opacity:.92;}
 .pricing .pnote{text-align:center;font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:28px;max-width:640px;margin-left:auto;margin-right:auto;}
+
+/* ===== bulk scheduling + queue ===== */
+.bpx-when{display:flex;gap:8px;}
+.bpx-when button{border:1px solid var(--line);background:#fff;color:#141417;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.bpx-when button.on{border-color:var(--blue);color:var(--blue-d);background:var(--blue-l);}
+.bpx-sched-row{margin-top:10px;}
+.bpx-sched-row input{max-width:260px;}
+.bpx-queue{margin-top:28px;}
+.bpx-queue h4{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey);margin-bottom:10px;}
+.bpx-qitem{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 15px;margin-bottom:8px;}
+.bpx-qmeta{font-size:13.5px;font-weight:600;color:#141417;}
+.bpx-qmeta .sub{font-size:12px;font-weight:400;color:var(--grey);margin-top:2px;}
+.bpx-qright{display:flex;gap:9px;align-items:center;}
+.bpx-qstatus{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;}
+.bpx-qstatus.pending{background:var(--blue-l);color:var(--blue-d);}
+.bpx-qstatus.sent{background:rgba(34,160,107,.14);color:var(--green);}
+.bpx-qcancel{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#444;}
+.bpx-qcancel:hover{border-color:#c23c34;color:#c23c34;}
 </style>
 
 </style>
@@ -2097,6 +2115,15 @@ function bpBulkUpdate(kind){
   if(btn)btn.textContent='Send to '+n;
   if(cnt)cnt.textContent=n+' recipient'+(n===1?'':'s');
 }
+function bpBulkWhen(kind,mode){
+  var now=document.getElementById('bpWhenNow'), later=document.getElementById('bpWhenLater'), row=document.getElementById('bpSchedRow'), btn=document.getElementById('bpBulkSendBtn');
+  var later_on=(mode==='later');
+  if(now)now.classList.toggle('on',!later_on);
+  if(later)later.classList.toggle('on',later_on);
+  if(row)row.style.display=later_on?'block':'none';
+  var n=bpBulkRecipients(kind,_bpBulkTag).length;
+  if(btn)btn.textContent=(later_on?'Schedule for ':'Send to ')+n;
+}
 function bpBulkView(kind){
   var render=function(){
     _bpBulkTag='__all__';
@@ -2108,49 +2135,112 @@ function bpBulkView(kind){
     var live=(typeof BP_LIVE!=='undefined'&&BP_LIVE);
     document.getElementById('bpxViewArea').innerHTML=
       '<div class="bpx-bulk">'
-      +'<a class="bpx-bulk-back" onclick="bpNav(\'messaging\')">\u2190 Back to inbox</a>'
+      +'<a class="bpx-bulk-back" onclick="bpNav(\'messaging\')">← Back to inbox</a>'
       +'<div class="bpx-sec-h">'+(isEmail?'Bulk email':'Bulk message')+'</div>'
-      +'<div class="bpx-sec-p">'+(isEmail?'Send one email to a whole segment of your contacts. Delivered through your GoHighLevel account.':'Send one text to a whole segment of your contacts. Delivered through your GoHighLevel account.')+'</div>'
+      +'<div class="bpx-sec-p">'+(isEmail?'Send an email to a whole segment of your contacts — now or scheduled. Delivered through your GoHighLevel account.':'Send a text to a whole segment of your contacts — now or scheduled. Delivered through your GoHighLevel account.')+'</div>'
       +'<div class="row"><label>Audience</label><select id="bpBulkTag" onchange="bpBulkUpdate(\''+kind+'\')">'+opts+'</select></div>'
       +(isEmail?'<div class="row"><label>Subject</label><input id="bpBulkSubject" placeholder="Your subject line"></div>':'')
-      +'<div class="row"><label>'+(isEmail?'Email':'Text message')+'</label><textarea id="bpBulkBody" placeholder="'+(isEmail?'Write your email\u2026':'Write your text\u2026')+'"></textarea></div>'
+      +'<div class="row"><label>'+(isEmail?'Email':'Text message')+'</label><textarea id="bpBulkBody" placeholder="'+(isEmail?'Write your email…':'Write your text…')+'"></textarea></div>'
+      +'<div class="row"><label>When</label><div class="bpx-when"><button type="button" id="bpWhenNow" class="on" onclick="bpBulkWhen(\''+kind+'\',\'now\')">Send now</button><button type="button" id="bpWhenLater" onclick="bpBulkWhen(\''+kind+'\',\'later\')">Schedule</button></div><div class="bpx-sched-row" id="bpSchedRow" style="display:none"><input type="datetime-local" id="bpSchedAt"></div></div>'
       +'<button class="bpx-bulk-send" id="bpBulkSendBtn" onclick="bpBulkSend(\''+kind+'\')">Send to '+n+'</button>'
       +'<span class="bpx-bulk-count" id="bpBulkCount">'+n+' recipient'+(n===1?'':'s')+'</span>'
       +'<div id="bpBulkResult"></div>'
-      +(live?'':'<div class="bpx-bulk-note">Preview mode \u2014 sending is simulated here. On your live site this sends through GoHighLevel.</div>')
+      +(live?'':'<div class="bpx-bulk-note">Preview mode — sending is simulated here. On your live site this sends through GoHighLevel.</div>')
+      +'<div class="bpx-queue" id="bpBulkQueue"></div>'
       +'</div>';
+    bpBulkRenderQueue();
   };
   if(typeof BP_LIVE!=='undefined' && BP_LIVE && !(typeof _bpContacts!=='undefined' && _bpContacts && _bpContacts.length) && typeof bpEnsureContacts==='function'){
-    document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel">Loading your contacts\u2026</div>';
+    document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel">Loading your contacts…</div>';
     bpEnsureContacts().then(render).catch(render);
   } else render();
 }
 function bpBulkEmail(){ bpBulkView('email'); }
 function bpBulkMessage(){ bpBulkView('sms'); }
-function bpBulkSend(kind){
-  var recips=bpBulkRecipients(kind,_bpBulkTag);
-  var body=(document.getElementById('bpBulkBody')||{}).value; body=(body||'').trim();
-  var subject=kind==='email' ? (((document.getElementById('bpBulkSubject')||{}).value||'').trim()||'A note from our team') : '';
-  var res=document.getElementById('bpBulkResult');
-  if(!body){ res.innerHTML='<div class="bpx-bulk-stat" style="color:#c23c34">Write a '+(kind==='email'?'message':'text')+' first.</div>'; return; }
-  if(!recips.length){ res.innerHTML='<div class="bpx-bulk-stat" style="color:#c23c34">No recipients with a '+(kind==='email'?'email':'phone')+' in this audience.</div>'; return; }
-  var btn=document.getElementById('bpBulkSendBtn'); if(btn){btn.disabled=true;}
+
+/* run one send job: iterate recipients, POST action:'send' per contact (or simulate offline) */
+function bpBulkExecute(kind,tag,subject,body,resEl,cb){
+  var recips=bpBulkRecipients(kind,tag);
   var live=(typeof BP_LIVE!=='undefined'&&BP_LIVE);
   var total=recips.length, sent=0, failed=0, i=0, active=0, CONC=4;
-  function prog(){ res.innerHTML='<div class="bpx-bulk-prog"><div class="bar" style="width:'+Math.round((sent+failed)/total*100)+'%"></div></div><div class="bpx-bulk-stat">Sent '+sent+' / '+total+(failed?(' \u00b7 '+failed+' failed'):'')+'</div>'; }
-  function done(){ res.innerHTML+='<div class="bpx-bulk-done">\u2713 '+(kind==='email'?'Emails':'Texts')+' sent to '+sent+' contact'+(sent===1?'':'s')+(failed?(' \u00b7 '+failed+' failed'):'')+'.</div>'; if(btn)btn.disabled=false; }
+  function prog(){ if(!resEl)return; resEl.innerHTML='<div class="bpx-bulk-prog"><div class="bar" style="width:'+(total?Math.round((sent+failed)/total*100):100)+'%"></div></div><div class="bpx-bulk-stat">Sent '+sent+' / '+total+(failed?(' · '+failed+' failed'):'')+'</div>'; }
+  function fin(){ if(resEl)resEl.innerHTML+='<div class="bpx-bulk-done">✓ '+(kind==='email'?'Emails':'Texts')+' sent to '+sent+' contact'+(sent===1?'':'s')+(failed?(' · '+failed+' failed'):'')+'.</div>'; if(cb)cb(sent,failed,total); }
+  if(!total){ if(cb)cb(0,0,0); return; }
   prog();
   function one(c){
     if(live && !window._bpDemo && typeof bpApi==='function'){
-      return bpApi(GHL_MSG_URL,{action:'send',msgType:kind==='email'?'Email':'SMS',contactId:c.id,message:body,subject:subject}).then(function(r){ if(r&&r.error) throw r.error; });
+      var payload={action:'send',msgType:kind==='email'?'Email':'SMS',contactId:c.id,message:body,subject:subject};
+      return bpApi(GHL_MSG_URL,payload).then(function(r){ if(r&&r.error) throw r.error; });
     }
-    return new Promise(function(rs){ setTimeout(rs,110); });
+    return new Promise(function(rs){ setTimeout(rs,90); });
   }
   function next(){
-    if(i>=recips.length){ if(active===0) done(); return; }
+    if(i>=recips.length){ if(active===0) fin(); return; }
     var c=recips[i++]; active++;
     one(c).then(function(){sent++;}).catch(function(){failed++;}).then(function(){ active--; prog(); next(); });
   }
   for(var k=0;k<CONC;k++) next();
 }
+function bpBulkSend(kind){
+  var body=(document.getElementById('bpBulkBody')||{}).value; body=(body||'').trim();
+  var subject=kind==='email' ? (((document.getElementById('bpBulkSubject')||{}).value||'').trim()||'A note from our team') : '';
+  var res=document.getElementById('bpBulkResult');
+  var later=document.getElementById('bpWhenLater'); var isLater=later&&later.classList.contains('on');
+  if(!body){ res.innerHTML='<div class="bpx-bulk-stat" style="color:#c23c34">Write a '+(kind==='email'?'message':'text')+' first.</div>'; return; }
+  var recips=bpBulkRecipients(kind,_bpBulkTag);
+  if(!recips.length){ res.innerHTML='<div class="bpx-bulk-stat" style="color:#c23c34">No recipients with a '+(kind==='email'?'email':'phone')+' in this audience.</div>'; return; }
+  if(isLater){
+    var v=(document.getElementById('bpSchedAt')||{}).value;
+    if(!v){ res.innerHTML='<div class="bpx-bulk-stat" style="color:#c23c34">Pick a date and time to schedule.</div>'; return; }
+    var at=new Date(v).getTime();
+    if(!(at>Date.now()+30000)){ res.innerHTML='<div class="bpx-bulk-stat" style="color:#c23c34">Choose a time at least a minute in the future.</div>'; return; }
+    var q=bpQLoad();
+    q.push({id:'j'+Date.now()+Math.floor(Math.random()*1000),kind:kind,tag:_bpBulkTag,subject:subject,body:body,sendAt:at,count:recips.length,status:'pending'});
+    bpQSave(q); bpBulkRenderQueue();
+    res.innerHTML='<div class="bpx-bulk-done">✓ Scheduled — '+(kind==='email'?'email':'text')+' to '+recips.length+' contact'+(recips.length===1?'':'s')+' on '+bpQFmt(at)+'.</div>';
+    var bd=document.getElementById('bpBulkBody'); if(bd)bd.value='';
+    return;
+  }
+  var btn=document.getElementById('bpBulkSendBtn'); if(btn){btn.disabled=true;}
+  bpBulkExecute(kind,_bpBulkTag,subject,body,res,function(){ if(btn)btn.disabled=false; });
+}
+
+/* ===== scheduled queue (fires while the dashboard is open) ===== */
+function bpQLoad(){ try{return JSON.parse(localStorage.getItem('webos_bulkq')||'[]');}catch(e){return[];} }
+function bpQSave(q){ try{localStorage.setItem('webos_bulkq',JSON.stringify(q));}catch(e){} }
+function bpQFmt(ms){ try{return new Date(ms).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return '';} }
+function bpQCancel(id){ var q=bpQLoad().filter(function(j){return j.id!==id;}); bpQSave(q); bpBulkRenderQueue(); }
+function bpBulkRenderQueue(){
+  var el=document.getElementById('bpBulkQueue'); if(!el) return;
+  var q=bpQLoad().sort(function(a,b){return a.sendAt-b.sendAt;});
+  if(!q.length){ el.innerHTML=''; return; }
+  var h='<h4>Scheduled sends</h4>';
+  q.forEach(function(j){
+    var aud=(j.tag==='__all__')?'All contacts':('Tagged: '+j.tag);
+    h+='<div class="bpx-qitem"><div><div class="bpx-qmeta">'+(j.kind==='email'?'Email':'Text')+' · '+j.count+' recipient'+(j.count===1?'':'s')+'</div><div class="sub">'+aud+' · '+bpQFmt(j.sendAt)+(j.result?(' · '+j.result):'')+'</div></div><div class="bpx-qright">'
+      +(j.status==='pending'?'<span class="bpx-qstatus pending">Scheduled</span><button class="bpx-qcancel" onclick="bpQCancel(\''+j.id+'\')">Cancel</button>':'<span class="bpx-qstatus sent">Sent</span>')
+      +'</div></div>';
+  });
+  el.innerHTML=h;
+}
+var _bpTicking={};
+function bpBulkTick(){
+  var q=bpQLoad(); if(!q.length) return;
+  var now=Date.now();
+  q.forEach(function(j){
+    if(j.status==='pending' && j.sendAt<=now && !_bpTicking[j.id]){
+      _bpTicking[j.id]=true;
+      var run=function(){
+        bpBulkExecute(j.kind,j.tag,j.subject,j.body,null,function(sent,failed,total){
+          var q2=bpQLoad(); for(var k=0;k<q2.length;k++){ if(q2[k].id===j.id){ q2[k].status='sent'; q2[k].count=total; q2[k].result='Sent '+sent+'/'+total+(failed?(' · '+failed+' failed'):''); } }
+          bpQSave(q2); delete _bpTicking[j.id]; bpBulkRenderQueue();
+        });
+      };
+      if((typeof BP_LIVE!=='undefined'&&BP_LIVE)&&!window._bpDemo&&typeof bpEnsureContacts==='function'){ bpEnsureContacts().then(run).catch(run); } else run();
+    }
+  });
+}
+setInterval(bpBulkTick, 15000);
+setTimeout(bpBulkTick, 4000);
+
 </script>
