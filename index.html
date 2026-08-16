@@ -14608,14 +14608,6 @@ window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&
 (function(){try{bpApplyTheme(localStorage.getItem('bpxTheme')||'light');}catch(e){}})();
 
 /* ===== Settings ===== */
-var BP_SET_URL="https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ghl-settings";
-var BP_SET_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
-// Pushes the saved settings into GoHighLevel (business profile + custom values).
-// Fails silently/gracefully if the ghl-settings edge function isn't deployed yet.
-window.bpSettingsSyncGHL=function(payload){
-  return fetch(BP_SET_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_SET_ANON,'apikey':BP_SET_ANON,'Content-Type':'application/json'},body:JSON.stringify(Object.assign({action:'sync'},payload))})
-    .then(function(r){return r.json();}).catch(function(){return{ok:false,error:'offline'};});
-};
 function bpSettingsGet(){try{return JSON.parse(localStorage.getItem('bpSettings')||'{}');}catch(e){return{};}}
 function bpSettingsSet(o){try{localStorage.setItem('bpSettings',JSON.stringify(o));}catch(e){}}
 var BPDAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
@@ -14678,16 +14670,7 @@ window.bpSettingsSave=function(){
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   var data={company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}};
   bpSettingsSet(data);
-  var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ✓';}
-  // Sync to GHL (logo stays on-device). Update the status line with the result.
-  var gpayload={company:data.company,hours:data.hours,autoReply:data.autoReply,owner:data.owner};
-  delete gpayload.company.logo;
-  bpSettingsSyncGHL(gpayload).then(function(res){
-    if(!m)return;
-    if(res&&res.ok){m.style.color='#15803d';m.textContent='Saved ✓ · synced to GHL';}
-    else{m.style.color='#b45309';m.textContent='Saved on device ✓ · GHL sync unavailable';}
-    setTimeout(function(){if(m)m.textContent='';},3200);
-  });
+  var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ✓';setTimeout(function(){if(m)m.textContent='';},2200);}
 };
 </script>
 </body>
