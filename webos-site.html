@@ -39,7 +39,10 @@ header.on-dark .logo .mono{opacity:1;}
 nav{display:flex;gap:34px;}
 nav a{font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;opacity:.9;transition:opacity .2s;}
 nav a:hover{opacity:.5;}
-@media(max-width:640px){header{padding:18px 20px;}nav{gap:16px;}nav a{font-size:10.5px;letter-spacing:.1em;}}
+header{flex-wrap:nowrap;gap:12px;}
+nav{flex-wrap:nowrap;white-space:nowrap;}
+@media(max-width:760px){header{padding:18px 22px;}.logo{font-size:19px;}.logo .cube{width:23px;height:23px;}nav{gap:15px;}nav a{font-size:10px;letter-spacing:.08em;}}
+@media(max-width:480px){header{padding:13px 15px;}.logo{font-size:16px;}.logo .full{gap:7px;}.logo .cube{width:19px;height:19px;}nav{gap:9px;}nav a{font-size:9px;letter-spacing:.03em;}}
 
 /* ===== hero (pins while the DNA zooms on scroll) ===== */
 .hero{height:175vh;background:var(--light);}
