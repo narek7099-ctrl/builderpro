@@ -14575,7 +14575,29 @@ window.bpFinAddSave=function(kind){
 .bpx-fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
 .bpx-fld2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .bpx-set-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;max-width:520px;}
-#bpx.bpx-dark .bpx-fld input{background:#161d2b !important;border-color:var(--line);color:var(--ink);}
+.bpx-fld textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);resize:vertical;min-height:76px;line-height:1.5;}
+.bpx-fld textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+.bpx-fldhint{font-size:11.5px;color:var(--grey-l);margin-top:6px;line-height:1.4;}
+/* logo */
+.bpx-logo-row{display:flex;align-items:center;gap:14px;}
+.bpx-logo-pv{width:64px;height:64px;border-radius:12px;border:1px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:11px;color:var(--grey-l);}
+.bpx-logo-pv img{width:100%;height:100%;object-fit:cover;}
+.bpx-logo-btns{display:flex;gap:8px;}
+.bpx-logo-up,.bpx-logo-rm{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit;}
+.bpx-logo-up:hover{border-color:var(--blue);color:var(--blue);}
+.bpx-logo-rm:hover{border-color:#dc2626;color:#dc2626;}
+/* hours */
+.bpx-hrs-row{display:grid;grid-template-columns:96px 22px 1fr;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-2);}
+.bpx-hrs-row:last-child{border-bottom:0;}
+.bpx-hrs-day{font-size:13px;font-weight:600;color:var(--ink);}
+.bpx-hrs-times{display:flex;align-items:center;gap:8px;}
+.bpx-hrs-times input{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);}
+.bpx-hrs-times .sep{color:var(--grey-l);font-size:12px;}
+.bpx-hrs-closed{font-size:12.5px;color:var(--grey-l);}
+.bpx-hrs-ck{width:17px;height:17px;accent-color:var(--blue);cursor:pointer;}
+#bpx.bpx-dark .bpx-fld input,#bpx.bpx-dark .bpx-fld textarea,#bpx.bpx-dark .bpx-hrs-times input{background:#161d2b !important;border-color:var(--line);color:var(--ink);}
+#bpx.bpx-dark .bpx-logo-up,#bpx.bpx-dark .bpx-logo-rm{background:#161d2b;border-color:var(--line);color:var(--ink);}
+#bpx.bpx-dark .bpx-logo-pv{background:#161d2b;border-color:var(--line);}
 </style>
 <script>
 /* ===== moon/sun theme toggle (light=moon, dark=sun) ===== */
@@ -14588,29 +14610,65 @@ window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&
 /* ===== Settings ===== */
 function bpSettingsGet(){try{return JSON.parse(localStorage.getItem('bpSettings')||'{}');}catch(e){return{};}}
 function bpSettingsSet(o){try{localStorage.setItem('bpSettings',JSON.stringify(o));}catch(e){}}
+var BPDAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
+var BPLOGO='';
+function bpHrsDefault(){var h={};BPDAYS.forEach(function(d){var wk=d[0]!=='sat'&&d[0]!=='sun';h[d[0]]={open:wk,from:'08:00',to:'17:00'};});return h;}
 function bpSettings(){
-  var s=bpSettingsGet(),c=s.company||{},o=s.owner||{};
+  var s=bpSettingsGet(),c=s.company||{},o=s.owner||{},h=s.hours||bpHrsDefault();
+  BPLOGO=c.logo||'';
   var f=function(id,label,val,ph,type){return '<div class="bpx-fld"><label>'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+bpEsc(val||'')+'" placeholder="'+ph+'"></div>';};
+  var hrsRows=BPDAYS.map(function(d){var dh=h[d[0]]||{open:false,from:'08:00',to:'17:00'};
+    return '<div class="bpx-hrs-row"><span class="bpx-hrs-day">'+d[1]+'</span>'
+      +'<input type="checkbox" class="bpx-hrs-ck" id="hrs-'+d[0]+'-o" '+(dh.open?'checked':'')+' onchange="bpHrsToggle(\''+d[0]+'\')">'
+      +'<span class="bpx-hrs-times" id="hrs-'+d[0]+'-t">'
+        +(dh.open?('<input type="time" id="hrs-'+d[0]+'-from" value="'+(dh.from||'08:00')+'"><span class="sep">to</span><input type="time" id="hrs-'+d[0]+'-to" value="'+(dh.to||'17:00')+'">'):'<span class="bpx-hrs-closed">Closed</span>')
+      +'</span></div>';
+  }).join('');
+  var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
   q('bpxViewArea').innerHTML=
     '<div class="bpx-set-grid">'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Business</div>'
+      +'<div class="bpx-fld"><label>Logo</label><div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
+        +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
+        +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>'
+        +'<div class="bpx-fldhint">Square image works best. Appears on your dashboard and estimates.</div></div>'
       +f('set-cname','Business name',c.name,'Acme Roofing')
       +f('set-ctrade','Trade / type',c.trade,'Roofing')
       +'<div class="bpx-fld2">'+f('set-cphone','Phone',c.phone,'(555) 555-5555','tel')+f('set-cemail','Email',c.email,'you@company.com','email')+'</div>'
       +f('set-cweb','Website',c.website,'yourcompany.com','url')
       +f('set-caddr','Address',c.address,'123 Main St, City, ST')
+      +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover — e.g. Austin, 78701, 78704')
+      +f('set-clic','License # (optional)',c.license,'License / insurance #')
+    +'</div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Business hours</div>'
+      +hrsRows
+      +'<div class="bpx-fldhint">Used for booking windows and to power after-hours auto-replies.</div>'
+    +'</div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Auto-reply message</div>'
+      +'<div class="bpx-fld"><label>Sent on a missed call or after-hours message</label><textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'! We missed you but we\'ll text you right back. What can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>'
+        +'<div class="bpx-fldhint">Leave blank to use BuilderPro’s default recovery text.</div></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Owner</div>'
       +f('set-oname','Owner name',o.name,'Full name')
       +f('set-oemail','Owner email',o.email,'owner@company.com','email')
       +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
-      +'<div style="font-size:12px;color:var(--grey-l);margin-top:16px;line-height:1.5">Saved on this device. Used to personalize your dashboard, messages, and estimates.</div>'
+      +'<div class="bpx-fldhint" style="margin-top:14px">Saved on this device. Used to personalize your dashboard, messages, and estimates.</div>'
     +'</div></div>'
     +'<div class="bpx-set-foot"><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
 }
+window.bpHrsToggle=function(day){var ck=q('hrs-'+day+'-o');var t=q('hrs-'+day+'-t');if(!ck||!t)return;
+  if(ck.checked){t.innerHTML='<input type="time" id="hrs-'+day+'-from" value="08:00"><span class="sep">to</span><input type="time" id="hrs-'+day+'-to" value="17:00">';}
+  else{t.innerHTML='<span class="bpx-hrs-closed">Closed</span>';}
+};
+window.bpLogoPick=function(e){var file=e.target.files&&e.target.files[0];if(!file)return;
+  if(file.size>1200000){alert('Please choose an image under ~1MB.');return;}
+  var r=new FileReader();r.onload=function(){BPLOGO=r.result;var pv=q('set-logopv');if(pv)pv.innerHTML='<img id="set-logoimg" src="'+BPLOGO+'">';};r.readAsDataURL(file);
+};
+window.bpLogoRemove=function(){BPLOGO='';var pv=q('set-logopv');if(pv)pv.innerHTML='<span id="set-logoimg">Logo</span>';var fi=q('set-logofile');if(fi)fi.value='';};
 window.bpSettingsSave=function(){
   var g=function(id){var e=q(id);return e?e.value.trim():'';};
-  bpSettingsSet({company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr')},owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
+  var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
+  bpSettingsSet({company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
   var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ✓';setTimeout(function(){if(m)m.textContent='';},2200);}
 };
 </script>
