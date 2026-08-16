@@ -14608,8 +14608,36 @@ window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&
 (function(){try{bpApplyTheme(localStorage.getItem('bpxTheme')||'light');}catch(e){}})();
 
 /* ===== Settings ===== */
+// Backed by Supabase table `client_settings` (keyed to the logged-in client),
+// with localStorage as an instant/offline cache. Logo stays local only (big).
+var BP_SET_SBURL="https://ttzwzouhiwdwamuimhpo.supabase.co";
+var BP_SET_SBANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+var bpSetSB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(BP_SET_SBURL,BP_SET_SBANON):null;
+async function bpSetUser(){if(!bpSetSB)return null;try{var r=await bpSetSB.auth.getSession();return r.data&&r.data.session?r.data.session.user:null;}catch(e){return null;}}
 function bpSettingsGet(){try{return JSON.parse(localStorage.getItem('bpSettings')||'{}');}catch(e){return{};}}
 function bpSettingsSet(o){try{localStorage.setItem('bpSettings',JSON.stringify(o));}catch(e){}}
+// Pull this client's saved settings from the server; refresh the form if open.
+async function bpSettingsPull(){
+  var u=await bpSetUser(); if(!u)return;
+  try{
+    var r=await bpSetSB.from('client_settings').select('data').eq('user_id',u.id).maybeSingle();
+    if(r&&r.data&&r.data.data){
+      var merged=r.data.data, local=bpSettingsGet();
+      if(local.company&&local.company.logo){merged.company=merged.company||{};if(!merged.company.logo)merged.company.logo=local.company.logo;}
+      bpSettingsSet(merged);
+      if(document.querySelector('.bpx-set-grid'))bpSettings();
+    }
+  }catch(e){}
+}
+// Push settings to the server (logo excluded to keep rows small).
+async function bpSettingsPush(data){
+  var u=await bpSetUser(); if(!u)return false;
+  var srv=JSON.parse(JSON.stringify(data)); if(srv.company)delete srv.company.logo;
+  try{
+    var r=await bpSetSB.from('client_settings').upsert({user_id:u.id,email:u.email,data:srv,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    return !r.error;
+  }catch(e){return false;}
+}
 var BPDAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
 var BPLOGO='';
 function bpHrsDefault(){var h={};BPDAYS.forEach(function(d){var wk=d[0]!=='sat'&&d[0]!=='sun';h[d[0]]={open:wk,from:'08:00',to:'17:00'};});return h;}
@@ -14655,6 +14683,7 @@ function bpSettings(){
       +'<div class="bpx-fldhint" style="margin-top:14px">Saved on this device. Used to personalize your dashboard, messages, and estimates.</div>'
     +'</div></div>'
     +'<div class="bpx-set-foot"><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
+  bpSettingsPull();
 }
 window.bpHrsToggle=function(day){var ck=q('hrs-'+day+'-o');var t=q('hrs-'+day+'-t');if(!ck||!t)return;
   if(ck.checked){t.innerHTML='<input type="time" id="hrs-'+day+'-from" value="08:00"><span class="sep">to</span><input type="time" id="hrs-'+day+'-to" value="17:00">';}
@@ -14670,7 +14699,12 @@ window.bpSettingsSave=function(){
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   var data={company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}};
   bpSettingsSet(data);
-  var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ✓';setTimeout(function(){if(m)m.textContent='';},2200);}
+  var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ✓';}
+  bpSettingsPush(data).then(function(ok){
+    if(!m)return;
+    m.style.color='#15803d';m.textContent=ok?'Saved ✓ · synced':'Saved on device ✓';
+    setTimeout(function(){if(m)m.textContent='';},2600);
+  });
 };
 </script>
 </body>
