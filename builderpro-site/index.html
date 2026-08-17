@@ -11624,6 +11624,7 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .calc-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:left;box-shadow:0 1px 2px rgba(20,30,60,.04),0 14px 34px rgba(20,30,60,.06);}
 .calc-ill{height:148px;border-radius:14px;background:linear-gradient(155deg,#eef3ff,#e2ebff);display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
 .calc-ill svg{width:58px;height:58px;stroke:var(--blue);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.calc-ill .iso{width:172px;height:172px;stroke:none;fill:initial;overflow:visible;}
 .calc-name{font-family:var(--serif);font-size:22px;letter-spacing:-.01em;margin-bottom:6px;}
 .calc-desc{font-size:13.5px;color:var(--grey);line-height:1.55;margin-bottom:16px;}
 .calc-feats{display:flex;flex-direction:column;gap:11px;border-top:1px solid var(--line);padding-top:15px;}
@@ -11644,7 +11645,18 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
     <div class="calc-grid rv">
 
       <div class="calc-card">
-        <div class="calc-ill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/><path d="M9 20v-6h6v6"/></svg></div>
+        <div class="calc-ill"><svg class="iso" viewBox="0 0 200 200" aria-hidden="true">
+<polygon points="54,80 100,103 100,143 54,120" fill="#6d90ff"/>
+<polygon points="100,103 146,80 146,120 100,143" fill="#4c6fe0"/>
+<polygon points="61.4,90.9 69.6,95 69.6,107.8 61.4,103.7" fill="#dbe7ff"/>
+<polygon points="77,98.7 85.3,102.8 85.3,115.6 77,111.5" fill="#dbe7ff"/>
+<polygon points="123,99.5 133.1,94.4 133.1,108.4 123,113.5" fill="#dbe7ff"/>
+<polygon points="103.7,115.2 112.9,110.6 112.9,136.6 103.7,141.2" fill="#33478f"/>
+<polygon points="54,80 100,57 100,42" fill="#9db6ff"/>
+<polygon points="100,57 146,80 100,42" fill="#7f9dff"/>
+<polygon points="54,80 100,103 100,42" fill="#5f7fe6"/>
+<polygon points="100,103 146,80 100,42" fill="#4a6bd8"/>
+</svg></div>
         <div class="calc-name">Roofing calculator</div>
         <p class="calc-desc">Homeowners enter their address and get an instant roof replacement or repair ballpark — then book.</p>
         <div class="calc-feats">
@@ -11656,7 +11668,22 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
       </div>
 
       <div class="calc-card">
-        <div class="calc-ill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16c1.5 0 1.5 1.5 3 1.5S8 16 9.5 16s1.5 1.5 3 1.5S14 16 15.5 16s1.5 1.5 3 1.5S20 16 21.5 16"/><path d="M2 20c1.5 0 1.5 1.5 3 1.5S8 20 9.5 20s1.5 1.5 3 1.5S14 20 15.5 20s1.5 1.5 3 1.5S20 20 21.5 20"/><path d="M6 15V5a2 2 0 0 1 4 0"/><path d="M14 15V5a2 2 0 0 1 4 0v1"/><path d="M6 9h4"/></svg></div>
+        <div class="calc-ill"><svg class="iso" viewBox="0 0 200 200" aria-hidden="true">
+<polygon points="46,112 100,139 100,149 46,122" fill="#c7cfe0"/>
+<polygon points="100,139 154,112 154,122 100,149" fill="#b4bccf"/>
+<polygon points="100,85 154,112 100,139 46,112" fill="#e2e8f4"/>
+<polygon points="100,89 142,110 100,131 58,110" fill="#2f83e0"/>
+<polygon points="100,91 140,110 100,129 60,110" fill="#5bb4ff"/>
+<polygon points="60,110 100,129 100,136 60,117" fill="#3f95ee"/>
+<polygon points="100,129 140,110 140,117 100,136" fill="#2f83e0"/>
+<ellipse cx="88" cy="106" rx="9" ry="4" fill="#8fd0ff" opacity=".6"/>
+<ellipse cx="114" cy="114" rx="7" ry="3.2" fill="#8fd0ff" opacity=".5"/>
+<ellipse cx="70" cy="112" rx="19" ry="6" fill="#43506e" opacity=".14"/>
+<polygon points="72,91.5 89,100 89,90 72,83" fill="#8f82ff"/>
+<polygon points="55,100 72,108.5 72,112.5 55,104" fill="#6a58f0"/>
+<polygon points="72,108.5 89,100 89,104 72,112.5" fill="#5c48e0"/>
+<polygon points="55,100 72,91.5 89,100 72,108.5" fill="#7c6bff"/>
+</svg></div>
         <div class="calc-name">Pool calculator</div>
         <p class="calc-desc">Buyers pick pool size, features and finishes and see a real build estimate before they ever call.</p>
         <div class="calc-feats">
@@ -11668,7 +11695,22 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
       </div>
 
       <div class="calc-card">
-        <div class="calc-ill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22V12"/><path d="M12 12c0-3 2-5 5-5 0 3-2 5-5 5Z"/><path d="M12 14c0-3-2-5-5-5 0 3 2 5 5 5Z"/><path d="M12 9c0-2.5 1.5-4.5 4-4.5C16 7 14.5 9 12 9Z"/><path d="M4 22h16"/></svg></div>
+        <div class="calc-ill"><svg class="iso" viewBox="0 0 200 200" aria-hidden="true">
+<polygon points="44,120 100,148 100,160 44,132" fill="#8a5a3c"/>
+<polygon points="100,148 156,120 156,132 100,160" fill="#714526"/>
+<polygon points="100,92 156,120 100,148 44,120" fill="#43c07d"/>
+<polygon points="100,111.5 109,116 100,120.5 91,116" fill="#e6e0d0"/>
+<polygon points="100,123.5 109,128 100,132.5 91,128" fill="#e6e0d0"/>
+<polygon points="100,135.5 109,140 100,144.5 91,140" fill="#e6e0d0"/>
+<ellipse cx="126" cy="128" rx="7" ry="3.4" fill="#2f9d5f"/>
+<ellipse cx="126" cy="126" rx="7" ry="6.4" fill="#34a866"/>
+<rect x="72" y="98" width="4.5" height="15" rx="1.5" fill="#7a4b2b"/>
+<ellipse cx="74.2" cy="98" rx="15" ry="13" fill="#2b955a"/>
+<ellipse cx="70" cy="93" rx="9" ry="8" fill="#43c07d"/>
+<circle cx="60" cy="128" r="5.5" fill="#34a866"/>
+<circle cx="118" cy="106" r="2" fill="#7c6bff"/>
+<circle cx="66" cy="122" r="2" fill="#7c6bff"/>
+</svg></div>
         <div class="calc-name">Landscaping calculator</div>
         <p class="calc-desc">Prospects choose their yard size and services and get a design &amp; maintenance quote on the spot.</p>
         <div class="calc-feats">
