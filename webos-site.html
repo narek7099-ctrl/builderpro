@@ -102,7 +102,8 @@ nav{flex-wrap:nowrap;white-space:nowrap;}
 /* ===== collaboration (light) ===== */
 .collab{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:44px;text-align:center;padding:140px 24px;}
 .collab .kicker{font-size:clamp(30px,4.4vw,60px);font-weight:400;letter-spacing:-.02em;}
-.ink-blob{width:min(300px,64vw);aspect-ratio:1;}
+.blob-wrap{width:min(300px,64vw);aspect-ratio:1;transition:transform .3s cubic-bezier(.2,.7,.2,1);will-change:transform;transform-style:preserve-3d;}
+.ink-blob{width:100%;height:100%;display:block;}
 .collab .statement{font-size:clamp(30px,4.6vw,64px);font-weight:400;line-height:1.1;letter-spacing:-.02em;max-width:16ch;}
 
 /* ===== investment walls ===== */
@@ -126,6 +127,26 @@ nav{flex-wrap:nowrap;white-space:nowrap;}
 .contact{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center;padding:120px 24px;}
 .contact h2{font-size:clamp(44px,8vw,120px);font-weight:300;letter-spacing:-.03em;line-height:.95;}
 .contact a.mail{font-size:clamp(20px,2.6vw,32px);border-bottom:1px solid currentColor;padding-bottom:3px;}
+/* contact form */
+.contact .c-head{font-size:clamp(34px,5.4vw,64px);font-weight:300;letter-spacing:-.03em;line-height:1;}
+.contact .c-sub{font-family:var(--sans);font-size:16px;color:#b8b6c2;max-width:440px;line-height:1.55;}
+.cform{width:100%;max-width:560px;background:#141318;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:30px 30px 34px;text-align:left;box-shadow:0 40px 100px -50px #000;}
+.cform .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:560px){.cform .row2{grid-template-columns:1fr;}}
+.cform label{display:block;font-family:var(--sans);font-size:12.5px;font-weight:600;color:#d7d5e0;margin:14px 0 6px;}
+.cform .row2>div:first-child label,.cform .row2>div:last-child label{margin-top:0;}
+.cform input,.cform select,.cform textarea{width:100%;background:#1d1c23;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;font-family:var(--sans);font-size:14px;color:#f0eff5;outline:none;transition:border-color .2s;}
+.cform input::placeholder,.cform textarea::placeholder{color:#77758a;}
+.cform input:focus,.cform select:focus,.cform textarea:focus{border-color:var(--cube);}
+.cform select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2377758a' stroke-width='2.4'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.cform textarea{min-height:110px;resize:vertical;line-height:1.5;}
+.cform .c-btn{width:100%;margin-top:20px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;border:0;border-radius:12px;padding:14px;font-family:var(--sans);font-weight:600;font-size:15px;cursor:pointer;transition:opacity .2s;}
+.cform .c-btn:hover{opacity:.92;}
+.cform .c-btn:disabled{opacity:.6;cursor:default;}
+.cform .c-ok{display:none;margin-top:16px;background:rgba(34,160,107,.14);border:1px solid rgba(52,211,153,.35);color:#5be0a4;border-radius:10px;padding:12px 14px;font-family:var(--sans);font-size:13.5px;}
+.cform .c-ok.show{display:block;}
+.cform .c-alt{margin-top:14px;text-align:center;font-family:var(--sans);font-size:12.5px;color:#8b8998;}
+.cform .c-alt a{color:var(--cube);border-bottom:1px solid currentColor;}
 .foot{display:flex;justify-content:space-between;align-items:center;padding:30px 40px;font-family:var(--sans);font-size:12px;color:var(--chalk-2);flex-wrap:wrap;gap:12px;border-top:1px solid rgba(236,234,228,.12);}
 
 
@@ -588,6 +609,12 @@ footer.foot a:hover{color:#fff;}
 .lc-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4.6vw,52px);letter-spacing:-.02em;}
 .lc-head h2 em{font-style:italic;}
 .lc-head p{font-family:var(--sans);color:var(--ink-2);font-size:17px;margin-top:14px;line-height:1.5;}
+.leadcap.dark{background:#0d0d0f;}
+.leadcap.dark .lc-head p{color:#b9b7c4;}
+.leadcap.dark .lc-card{background:#17161c;border-color:rgba(255,255,255,.08);}
+.leadcap.dark .lc-card h3{color:#f0eff5;}
+.leadcap.dark .lc-card p{color:#b3b1bf;}
+.leadcap.dark .lc-art{background:radial-gradient(120% 90% at 50% 30%, #232230, #171620);}
 .lc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1140px;margin:0 auto;}
 @media(max-width:900px){.lc-grid{grid-template-columns:1fr;max-width:440px;}}
 .lc-card{background:#fff;border:1px solid rgba(20,20,25,.09);border-radius:20px;padding:22px 22px 24px;transition:.22s;}
@@ -785,7 +812,7 @@ footer.foot a:hover{color:#fff;}
 </section>
 
 <!-- LEAD CAPTURE -->
-<section class="light leadcap" id="leadcap" data-theme="light">
+<section class="dark leadcap" id="leadcap" data-theme="dark">
   <div class="lc-head reveal">
     <div class="eyebrow">Lead capture</div>
     <h2>Turn visitors into <em>booked leads.</em></h2>
@@ -793,13 +820,13 @@ footer.foot a:hover{color:#fff;}
   </div>
   <div class="lc-grid">
     <div class="lc-card reveal">
-      <div class="lc-art auto"><svg viewBox="0 0 230 185" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g transform="translate(92.5,72.6)"><polygon points="75.34,45.75 41.57,65.25 41.57,49.50 75.34,30.00" fill="#6d28d9"/><polygon points="-36.37,20.25 41.57,65.25 41.57,49.50 -36.37,4.50" fill="#7c3aed"/><polygon points="-2.60,-15.00 75.34,30.00 41.57,49.50 -36.37,4.50" fill="#a855f7"/><polygon points="53.91,21.38 26.63,37.12 26.63,21.38 53.91,5.62" fill="#8f6cf0"/><polygon points="-14.94,13.12 26.63,37.12 26.63,21.38 -14.94,-2.62" fill="#a98bf5"/><polygon points="12.34,-18.38 53.91,5.62 26.63,21.38 -14.94,-2.62" fill="#c9b8fb"/><polygon points="-11.69,13.50 22.08,33.00 22.08,21.00 -11.69,1.50" fill="#2a2632"/><polygon points="50.66,21.75 28.58,34.50 28.58,22.50 50.66,9.75" fill="#2a2632"/><polygon points="72.75,44.25 64.95,48.75 64.95,42.75 72.75,38.25" fill="#f5d06a"/><g transform="matrix(4.85,2.80,0,-5.60,-21.0,30.4)"><circle r="1" fill="#1f1c27"/><circle r="0.46" fill="#4a4556"/></g><g transform="matrix(4.85,2.80,0,-5.60,25.7,57.4)"><circle r="1" fill="#1f1c27"/><circle r="0.46" fill="#4a4556"/></g></g></svg></div>
+      <div class="lc-art auto"><svg viewBox="0 0 230 185" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g transform="translate(92.5,72.6)"><polygon points="75.34,45.75 41.57,65.25 41.57,49.50 75.34,30.00" fill="#6d28d9"/><polygon points="-36.37,20.25 41.57,65.25 41.57,49.50 -36.37,4.50" fill="#7c3aed"/><polygon points="-2.60,-15.00 75.34,30.00 41.57,49.50 -36.37,4.50" fill="#a855f7"/><polygon points="53.91,21.38 26.63,37.12 26.63,21.38 53.91,5.62" fill="#8f6cf0"/><polygon points="-14.94,13.12 26.63,37.12 26.63,21.38 -14.94,-2.62" fill="#a98bf5"/><polygon points="12.34,-18.38 53.91,5.62 26.63,21.38 -14.94,-2.62" fill="#c9b8fb"/><polygon points="-11.69,13.50 22.08,33.00 22.08,21.00 -11.69,1.50" fill="#2a2632"/><polygon points="50.66,21.75 28.58,34.50 28.58,22.50 50.66,9.75" fill="#2a2632"/><polygon points="72.75,44.25 64.95,48.75 64.95,42.75 72.75,38.25" fill="#f5d06a"/><polygon points="57.16,53.25 49.36,57.75 49.36,51.75 57.16,47.25" fill="#f5d06a"/><g transform="matrix(4.85,2.80,0,-5.60,-21.0,30.4)"><circle r="1" fill="#1f1c27"/><circle r="0.46" fill="#4a4556"/></g><g transform="matrix(4.85,2.80,0,-5.60,25.7,57.4)"><circle r="1" fill="#1f1c27"/><circle r="0.46" fill="#4a4556"/></g></g></svg></div>
       <h3>Automotive calculator</h3>
       <p>Instant repair & service quotes — drivers pick their vehicle and see a ballpark, then book.</p>
       <span class="lc-tag">● Live embed</span>
     </div>
     <div class="lc-card reveal">
-      <div class="lc-art nail"><svg viewBox="0 0 230 185" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g transform="translate(109.9,102.1)"><polygon points="20.78,31.50 0.00,43.50 0.00,36.00 20.78,24.00" fill="#8b8799"/><polygon points="-20.78,31.50 0.00,43.50 0.00,36.00 -20.78,24.00" fill="#a29fb2"/><polygon points="0.00,12.00 20.78,24.00 0.00,36.00 -20.78,24.00" fill="#c7c4d2"/><polygon points="6.50,24.00 0.00,27.75 0.00,9.75 6.50,6.00" fill="#9a97a8"/><polygon points="-6.50,24.00 0.00,27.75 0.00,9.75 -6.50,6.00" fill="#b7b4c4"/><polygon points="0.00,2.25 6.50,6.00 0.00,9.75 -6.50,6.00" fill="#d7d5e0"/><polygon points="31.18,6.00 0.00,24.00 0.00,15.75 31.18,-2.25" fill="#6d28d9"/><polygon points="-31.18,6.00 0.00,24.00 0.00,15.75 -31.18,-2.25" fill="#8b5cf6"/><polygon points="0.00,-20.25 31.18,-2.25 0.00,15.75 -31.18,-2.25" fill="#a855f7"/><polygon points="10.39,9.75 1.30,15.00 1.30,-16.50 10.39,-21.75" fill="#6d28d9"/><polygon points="-29.88,-3.00 1.30,15.00 1.30,-16.50 -29.88,-34.50" fill="#8b5cf6"/><polygon points="-20.78,-39.75 10.39,-21.75 1.30,-16.50 -29.88,-34.50" fill="#a855f7"/><polygon points="31.44,-2.10 10.65,9.90 10.65,3.60 31.44,-8.40" fill="#8f6cf0"/><polygon points="5.20,6.75 10.65,9.90 10.65,3.60 5.20,0.45" fill="#a98bf5"/><polygon points="25.98,-11.55 31.44,-8.40 10.65,3.60 5.20,0.45" fill="#c9b8fb"/><rect x="52.6" y="-3.0" width="4" height="48" rx="2" fill="#b7b4c4"/><ellipse cx="54.6" cy="-17.0" rx="17" ry="23" fill="#3b3a46"/><ellipse cx="54.6" cy="-17.0" rx="13" ry="19" fill="#dfe6f0"/><ellipse cx="54.6" cy="-17.0" rx="13" ry="19" fill="url(#mg)"/></g></svg></div>
+      <div class="lc-art nail"><svg viewBox="0 0 230 185" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g transform="translate(109.9,102.1)"><polygon points="20.78,31.50 0.00,43.50 0.00,36.00 20.78,24.00" fill="#8b8799"/><polygon points="-20.78,31.50 0.00,43.50 0.00,36.00 -20.78,24.00" fill="#a29fb2"/><polygon points="0.00,12.00 20.78,24.00 0.00,36.00 -20.78,24.00" fill="#c7c4d2"/><polygon points="6.50,24.00 0.00,27.75 0.00,9.75 6.50,6.00" fill="#9a97a8"/><polygon points="-6.50,24.00 0.00,27.75 0.00,9.75 -6.50,6.00" fill="#b7b4c4"/><polygon points="0.00,2.25 6.50,6.00 0.00,9.75 -6.50,6.00" fill="#d7d5e0"/><polygon points="31.18,6.00 0.00,24.00 0.00,15.75 31.18,-2.25" fill="#6d28d9"/><polygon points="-31.18,6.00 0.00,24.00 0.00,15.75 -31.18,-2.25" fill="#8b5cf6"/><polygon points="0.00,-20.25 31.18,-2.25 0.00,15.75 -31.18,-2.25" fill="#a855f7"/><polygon points="10.39,9.75 1.30,15.00 1.30,-16.50 10.39,-21.75" fill="#6d28d9"/><polygon points="-29.88,-3.00 1.30,15.00 1.30,-16.50 -29.88,-34.50" fill="#8b5cf6"/><polygon points="-20.78,-39.75 10.39,-21.75 1.30,-16.50 -29.88,-34.50" fill="#a855f7"/><polygon points="31.44,-2.10 10.65,9.90 10.65,3.60 31.44,-8.40" fill="#8f6cf0"/><polygon points="5.20,6.75 10.65,9.90 10.65,3.60 5.20,0.45" fill="#a98bf5"/><polygon points="25.98,-11.55 31.44,-8.40 10.65,3.60 5.20,0.45" fill="#c9b8fb"/><rect x="52.6" y="-20.0" width="4" height="44" rx="2" fill="#b7b4c4"/><ellipse cx="54.6" cy="-34.0" rx="17" ry="23" fill="#3b3a46"/><ellipse cx="54.6" cy="-34.0" rx="13" ry="19" fill="#dfe6f0"/><ellipse cx="54.6" cy="-34.0" rx="13" ry="19" fill="url(#mg)"/></g></svg></div>
       <h3>Nail & salon calculator</h3>
       <p>Service and package pricing that quotes and books an appointment in a couple taps.</p>
       <span class="lc-tag">● Live embed</span>
@@ -879,13 +906,13 @@ footer.foot a:hover{color:#fff;}
 <!-- 4 · STATEMENT (light) -->
 <section class="light collab" data-theme="light">
   <div class="kicker scrub">Built for the way your team actually <em>works.</em></div>
-  <svg class="ink-blob reveal" viewBox="0 0 300 300" aria-hidden="true">
+  <div class="blob-wrap reveal" id="blobWrap"><svg class="ink-blob" viewBox="0 0 300 300" aria-hidden="true">
     <defs>
       <filter id="ink"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.016" numOctaves="4" seed="7" result="n"><animate attributeName="baseFrequency" dur="16s" values="0.010 0.013;0.017 0.020;0.010 0.013" repeatCount="indefinite"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="46"/></filter>
       <radialGradient id="ig" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#8f8f8f"/><stop offset=".6" stop-color="#3a3a3a"/><stop offset="1" stop-color="#111"/></radialGradient>
     </defs>
     <g filter="url(#ink)"><circle cx="150" cy="150" r="92" fill="url(#ig)"/></g>
-  </svg>
+  </svg></div>
   <p class="statement scrub">You can't run a business across scattered tools and sticky notes. Web OS brings your leads, messages, calendar and deals into <em>one place.</em></p>
 </section>
 
@@ -913,9 +940,30 @@ footer.foot a:hover{color:#fff;}
 
 <!-- 8 · CONTACT / FOOTER -->
 <section class="dark contact" id="contact" data-theme="dark">
-  <h2 class="reveal">Run your business on<br><em>Web OS.</em></h2>
-  <a class="mail reveal" href="mailto:hello@webos.io">hello@webos.io</a>
-  <button class="reveal" onclick="bpOpenPortal()" style="margin-top:8px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:#fff;border-radius:12px;padding:14px 26px;font-family:var(--sans);font-weight:600;font-size:15px;cursor:pointer">Open your dashboard →</button>
+  <h2 class="c-head reveal">Let's build your<br><em>Web OS.</em></h2>
+  <p class="c-sub reveal">Tell us about your business and we'll set up your dashboard, website and lead capture — usually within a week.</p>
+  <form class="cform reveal" id="cform" onsubmit="return wcSubmit(event)">
+    <div class="row2">
+      <div><label>Name</label><input id="wcName" required placeholder="Jordan Lee"></div>
+      <div><label>Business name</label><input id="wcBiz" required placeholder="Lee Auto Care"></div>
+    </div>
+    <div class="row2">
+      <div><label>Email</label><input id="wcEmail" type="email" required placeholder="you@business.com"></div>
+      <div><label>Phone</label><input id="wcPhone" type="tel" placeholder="(555) 123-4567"></div>
+    </div>
+    <label>Your industry</label>
+    <select id="wcIndustry" required>
+      <option value="" disabled selected>Select your industry…</option>
+      <option>Auto</option><option>Medical</option><option>Barbershop</option><option>Salon</option>
+      <option>E-commerce</option><option>Tech</option><option>Real estate</option><option>Cleaning</option>
+      <option>Law</option><option>Other</option>
+    </select>
+    <label>What do you need?</label>
+    <textarea id="wcMsg" placeholder="e.g. a booking site + a price calculator + missed-call text-back"></textarea>
+    <button class="c-btn" id="wcBtn" type="submit">Request my setup</button>
+    <div class="c-ok" id="wcOk">✓ Request received — we'll reach out shortly to get you set up.</div>
+    <div class="c-alt">Prefer email? <a href="mailto:hello@webos.io">hello@webos.io</a> · Already a client? <a href="#" onclick="bpOpenPortal();return false;">Open your dashboard</a></div>
+  </form>
 </section>
 <footer class="dark foot" data-theme="dark">
   <span>© <span id="yr"></span> Web OS</span>
@@ -950,7 +998,31 @@ footer.foot a:hover{color:#fff;}
     <div class="legal-section"><div class="legal-h2">Termination</div><p class="legal-p">We reserve the right to suspend or terminate accounts that violate these Terms. Users may cancel their subscription at any time according to their billing terms.</p></div>
   </div>
 </div>
-<script>function openLegal(id){var e=document.getElementById(id);if(e){e.classList.add('open');document.body.style.overflow='hidden';}}function closeLegal(id){var e=document.getElementById(id);if(e){e.classList.remove('open');document.body.style.overflow='';}}</script>
+<script>function openLegal(id){var e=document.getElementById(id);if(e){e.classList.add('open');document.body.style.overflow='hidden';}}function closeLegal(id){var e=document.getElementById(id);if(e){e.classList.remove('open');document.body.style.overflow='';}}
+function wcSubmit(ev){
+  ev.preventDefault();
+  var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};
+  var lead={name:g('wcName'),business:g('wcBiz'),email:g('wcEmail'),phone:g('wcPhone'),industry:g('wcIndustry'),message:g('wcMsg'),at:new Date().toISOString()};
+  var btn=document.getElementById('wcBtn'); if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  var done=function(){
+    var ok=document.getElementById('wcOk'); if(ok)ok.classList.add('show');
+    if(btn){btn.textContent='Request sent ✓';}
+    var f=document.getElementById('cform');
+    if(f){['wcName','wcBiz','wcEmail','wcPhone','wcMsg'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});var s=document.getElementById('wcIndustry');if(s)s.selectedIndex=0;}
+    setTimeout(function(){if(btn){btn.disabled=false;btn.textContent='Request my setup';}},4000);
+  };
+  try{
+    var q=JSON.parse(localStorage.getItem('webos_leads')||'[]'); q.push(lead); localStorage.setItem('webos_leads',JSON.stringify(q));
+  }catch(e){}
+  try{
+    if(window.BP_LIVE&&window.BP_SB){
+      window.BP_SB.from('web_leads').insert(lead).then(function(){done();},function(){done();});
+      return false;
+    }
+  }catch(e){}
+  done();
+  return false;
+}
 
 <script>
 console.warn('Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation'),
@@ -1064,6 +1136,29 @@ document.getElementById('yr').textContent=new Date().getFullYear();
 /* ===== reveal on scroll ===== */
 var rio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');rio.unobserve(e.target);}});},{threshold:.16});
 document.querySelectorAll('.reveal').forEach(function(el){rio.observe(el);});
+
+/* ===== floating rock reacts to the cursor ===== */
+(function(){
+  var wrap=document.getElementById('blobWrap');
+  if(!wrap||window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  var tx=0,ty=0,cx=0,cy=0,raf=0;
+  function tick(){
+    cx+=(tx-cx)*0.12; cy+=(ty-cy)*0.12;
+    wrap.style.transform='perspective(700px) translate3d('+cx.toFixed(2)+'px,'+cy.toFixed(2)+'px,0) rotateX('+(-cy*0.22).toFixed(2)+'deg) rotateY('+(cx*0.22).toFixed(2)+'deg)';
+    if(Math.abs(tx-cx)>0.1||Math.abs(ty-cy)>0.1){raf=requestAnimationFrame(tick);}else{raf=0;}
+  }
+  function move(e){
+    var r=wrap.getBoundingClientRect();
+    var px=e.clientX-(r.left+r.width/2), py=e.clientY-(r.top+r.height/2);
+    var d=Math.max(r.width,600);
+    tx=Math.max(-46,Math.min(46,px/d*90));
+    ty=Math.max(-46,Math.min(46,py/d*90));
+    if(!raf)raf=requestAnimationFrame(tick);
+  }
+  function leave(){tx=0;ty=0;if(!raf)raf=requestAnimationFrame(tick);}
+  window.addEventListener('mousemove',move,{passive:true});
+  window.addEventListener('mouseleave',leave,{passive:true});
+})();
 
 /* ===== header theme inversion by section ===== */
 var hdr=document.getElementById('hdr');
