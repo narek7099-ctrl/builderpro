@@ -598,6 +598,14 @@ footer.foot a:hover{color:#fff;}
 .lc-card h3{font-family:var(--serif);font-weight:600;font-size:20px;margin-bottom:7px;}
 .lc-card p{font-family:var(--sans);font-size:14.5px;color:var(--ink-2);line-height:1.5;margin-bottom:14px;}
 .lc-tag{font-family:var(--sans);font-size:11.5px;font-weight:600;color:var(--cube);}
+.lc-any{max-width:1140px;margin:20px auto 0;background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;border-radius:20px;padding:34px 36px;display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;}
+.lc-any-mk{width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:300;line-height:1;flex-shrink:0;}
+.lc-any-body h3{font-family:var(--serif);font-weight:400;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.01em;margin-bottom:8px;}
+.lc-any-body p{font-family:var(--sans);font-size:15px;line-height:1.55;color:rgba(255,255,255,.85);max-width:760px;}
+.lc-any-body p em{font-style:italic;color:#fff;}
+.lc-any-tags{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;}
+.lc-any-tags span{font-family:var(--sans);font-size:12.5px;font-weight:500;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:6px 13px;}
+@media(max-width:640px){.lc-any{grid-template-columns:1fr;gap:16px;padding:26px 22px;}.lc-any-mk{width:48px;height:48px;font-size:28px;}}
 </style>
 
 </style>
@@ -680,7 +688,7 @@ footer.foot a:hover{color:#fff;}
   <div class="stage"><canvas id="dna3d"></canvas></div>
   <div class="hero-mid"><h1>Every lead, message and job in <em>one&nbsp;calm system.</em></h1></div>
   <div class="blurb">
-    <p>Web OS is the all-in-one operating system for auto shops, clinics, barbershops, e-commerce and tech teams — every <em>lead</em> in one place.</p>
+    <p>Web OS is the all-in-one operating system for auto shops, clinics, barbershops, salons, cleaning crews, law firms, e-commerce and tech teams — every <em>lead</em> in one place.</p>
     <div class="featured">
       <div class="lab">Built for:</div>
       <div class="press">
@@ -691,6 +699,8 @@ footer.foot a:hover{color:#fff;}
         <span class="sifted">tech</span>
         <span class="lb">Salons</span>
         <span class="ct">Real estate</span>
+        <span class="lb">Cleaning</span>
+        <span class="ct">Law</span>
       </div>
     </div>
   </div>
@@ -779,7 +789,7 @@ footer.foot a:hover{color:#fff;}
   <div class="lc-head reveal">
     <div class="eyebrow">Lead capture</div>
     <h2>Turn visitors into <em>booked leads.</em></h2>
-    <p>Interactive calculators and 3D experiences, embedded on your site — so people get an instant answer and you get their details.</p>
+    <p>Custom calculators and 3D experiences, built for your industry and embedded on your site — so people get an instant answer and you get their details. The three below are just examples.</p>
   </div>
   <div class="lc-grid">
     <div class="lc-card reveal">
@@ -799,6 +809,16 @@ footer.foot a:hover{color:#fff;}
       <h3>3D real estate</h3>
       <p>Interactive 3D property tours buyers can spin and explore — capturing serious leads.</p>
       <span class="lc-tag">● Interactive 3D</span>
+    </div>
+  </div>
+  <div class="lc-any reveal">
+    <div class="lc-any-mk" aria-hidden="true">＋</div>
+    <div class="lc-any-body">
+      <h3>…and anything else you can imagine.</h3>
+      <p>Auto, salon and real estate are just three. Tell us your industry — cleaning, law, medical, fitness, whatever it is — and we build <em>any</em> interactive calculator or 3D experience you want, custom to your business, with every lead wired straight into your dashboard.</p>
+    </div>
+    <div class="lc-any-tags">
+      <span>Price calculators</span><span>Quote builders</span><span>3D configurators</span><span>Product tours</span><span>Booking flows</span><span>ROI tools</span><span>+ your idea</span>
     </div>
   </div>
 </section>
@@ -885,7 +905,7 @@ footer.foot a:hover{color:#fff;}
 <section class="light contractor" data-theme="light">
   <div class="ct-inner reveal">
     <div class="ct-eyebrow">Run a contracting business?</div>
-    <h2>Web OS is for auto, medical, barbershops, real estate, e‑commerce and tech.<br><em>Contractors have their own OS.</em></h2>
+    <h2>Web OS is for auto, medical, barbershops, salons, real estate, cleaning, law, e‑commerce and tech.<br><em>Contractors have their own OS.</em></h2>
     <p>If you're a roofer, HVAC, electrician, plumber, or remodeler, BuilderPro OS is purpose‑built for the trades — estimators, missed‑call text‑back and job pipelines included.</p>
     <a class="ct-btn" href="index.html">Check out BuilderPro OS →</a>
   </div>
