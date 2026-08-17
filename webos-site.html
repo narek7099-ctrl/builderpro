@@ -2794,6 +2794,7 @@ function aiBuildAtlas(){
     +'<button type="button" onclick="aiQuick(\'Can I book an appointment?\')">Book a visit</button>'
     +'<button type="button" onclick="aiQuick(\'Are you available this week?\')">Availability</button>';
   document.getElementById('aiMsgs').innerHTML='';
+  aiHistory=[];
   var biz=aiState.biz||('your '+aiTradeLower()+' company');
   var greet;
   if(aiState.tone==='Professional')greet="Hello, and thank you for contacting "+biz+". I'm Nova, your AI assistant. I can provide pricing guidance, answer questions about our "+aiTradeLower()+" services, and schedule your appointment. How may I help?";
@@ -2834,13 +2835,34 @@ function aiTyping(on){
     m.appendChild(d);m.scrollTop=m.scrollHeight;}
   else{var t=document.getElementById('aiTyping');if(t)t.remove();}
 }
+var aiHistory=[];
+/* Ask the real brain (Supabase ai-chat edge function → Claude). Falls back to the
+   local canned reply if the backend is unreachable, so the demo always responds. */
+function aiBrainAsk(message,fallback){
+  return new Promise(function(resolve){
+    var base=(typeof BP_URL!=='undefined'&&BP_URL)?BP_URL:'';
+    if(!base){resolve(fallback(message));return;}
+    var ctrl=new AbortController(),to=setTimeout(function(){ctrl.abort();},14000);
+    fetch(base+'/functions/v1/ai-chat',{method:'POST',signal:ctrl.signal,
+      headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},
+      body:JSON.stringify({message:message,history:aiHistory.slice(-10),
+        business:{name:aiState.biz||('a '+aiTradeLower()+' business'),industry:aiState.trade||'',tone:aiState.tone||'Friendly',assistant_name:'Nova'}})
+    }).then(function(r){return r.ok?r.json():Promise.reject();})
+      .then(function(j){clearTimeout(to);resolve((j&&j.reply)?j.reply:fallback(message));})
+      .catch(function(){clearTimeout(to);resolve(fallback(message));});
+  });
+}
+function aiConverse(t){
+  aiHistory.push({role:'user',content:t});
+  aiAdd('user',t);aiTyping(true);
+  aiBrainAsk(t,aiReply).then(function(reply){aiTyping(false);aiAdd('atlas',reply);aiHistory.push({role:'assistant',content:reply});});
+}
 function aiSend(){
   var i=document.getElementById('aiInput'),t=i.value.trim();if(!t)return;i.value='';
   var q=document.getElementById('aiQuick');if(q)q.style.display='none';
-  aiAdd('user',t);aiTyping(true);
-  setTimeout(function(){aiTyping(false);aiAdd('atlas',aiReply(t));},850);
+  aiConverse(t);
 }
-function aiQuick(t){var q=document.getElementById('aiQuick');if(q)q.style.display='none';aiAdd('user',t);aiTyping(true);setTimeout(function(){aiTyping(false);aiAdd('atlas',aiReply(t));},850);}
+function aiQuick(t){var q=document.getElementById('aiQuick');if(q)q.style.display='none';aiConverse(t);}
 function aiReply(text){
   var t=text.toLowerCase(),trade=aiTradeLower(),biz=aiState.biz||('our team');
   if(/cost|price|how much|estimate|quote/.test(t))return "Great question! "+ (biz.charAt(0).toUpperCase()+biz.slice(1)) +"'s "+trade+" pricing depends on the scope of the job. Tell me a bit about what you need and I'll give you a ballpark — or I can book a free on-site estimate so you get an exact number.";
