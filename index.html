@@ -13299,6 +13299,45 @@ var _bpContacts=[];
 /* ==== map a Supabase contacts row to the shape the UI expects ==== */
   function bpMapContact(r){ return {id:r.id,name:r.name||'',phone:r.phone||'',email:r.email||'',tags:r.tags||[],dateAdded:r.date_added}; }
 
+  /* ==== one-time GHL -> Supabase migration (run while GHL API still works) ==== */
+  window.bpMigrateFromGHL=async function(onLog){
+    var log=onLog||function(m){console.log('[migrate] '+m);};
+    if(typeof BP_SB==='undefined' || !BP_SB){ log('Not connected to Supabase — sign in first.'); return; }
+    var H={'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'};
+    try{
+      var r=await fetch(GHL_DASH_URL,{method:'POST',headers:H,body:JSON.stringify({view:'contacts'})});
+      var d=await r.json(); var list=d.contactsList||[];
+      if(list.length){ var rows=list.map(function(c){return {name:c.name||'',phone:c.phone||'',email:c.email||'',tags:c.tags||[],date_added:c.dateAdded||new Date().toISOString()};});
+        var ins=await BP_SB.from('contacts').insert(rows); if(ins.error) throw ins.error; log('Imported '+rows.length+' contacts.'); }
+      else log('No GHL contacts found.');
+    }catch(e){ log('Contacts import failed: '+(e.message||e)); }
+    try{
+      var kinds=['jobs','inspection'], total=0;
+      for(var k=0;k<kinds.length;k++){
+        var rr=await fetch(GHL_CAL_URL,{method:'POST',headers:H,body:JSON.stringify({action:'list',cal:kinds[k]})});
+        var dd=await rr.json(); var evs=dd.events||[];
+        if(evs.length){ var arows=evs.map(function(e){return {title:e.title||'Appointment',address:e.address||'',kind:kinds[k],start_at:e.start,status:e.status||'confirmed',contact_name:e.contactName||''};});
+          var ai=await BP_SB.from('appointments').insert(arows); if(ai.error) throw ai.error; total+=arows.length; }
+      }
+      log('Imported '+total+' appointments.');
+    }catch(e){ log('Appointments import failed: '+(e.message||e)); }
+    try{
+      var cr=await fetch(GHL_MSG_URL,{method:'POST',headers:H,body:JSON.stringify({action:'list'})});
+      var cd=await cr.json(); var convos=cd.conversations||[], cnt=0;
+      for(var i=0;i<convos.length;i++){ var cv=convos[i];
+        var cins=await BP_SB.from('conversations').insert({contact_name:cv.name||'',phone:cv.phone||'',email:cv.email||'',last_message:cv.last||'',last_dir:cv.dir||'inbound',unread:cv.unread||0}).select().single();
+        if(cins.error||!cins.data) continue; var convoId=cins.data.id; cnt++;
+        try{ var tr=await fetch(GHL_MSG_URL,{method:'POST',headers:H,body:JSON.stringify({action:'thread',id:cv.id})});
+          var td=await tr.json(); var msgs=td.messages||[];
+          if(msgs.length){ var mrows=msgs.map(function(m){return {conversation_id:convoId,direction:m.direction||m.dir||'inbound',msg_type:m.msgType||'SMS',body:m.body||m.message||'',created_at:m.date||m.dateAdded||new Date().toISOString()};});
+            await BP_SB.from('messages').insert(mrows); }
+        }catch(e){}
+      }
+      log('Imported '+cnt+' conversations.');
+    }catch(e){ log('Messages import failed: '+(e.message||e)); }
+    log('Migration complete — refresh your dashboard.');
+  };
+
 /* ==== bpLoadContacts (Supabase-native; GHL only as a fallback) ==== */
   async function bpLoadContacts(){
     if(typeof BP_SB!=='undefined' && BP_SB){
@@ -13402,6 +13441,14 @@ var _bpContacts=[];
   window.bpCalMove=function(d){ _bpCalDate.setMonth(_bpCalDate.getMonth()+d); bpDrawCalendar(); };
   window.bpCalToday=function(){ _bpCalDate=new Date(); bpDrawCalendar(); };
   async function bpLoadCalendar(){
+    if(typeof BP_SB!=='undefined' && BP_SB){
+      try{
+        var res=await BP_SB.from('appointments').select('*').eq('kind',_bpCalKind).order('start_at',{ascending:true});
+        if(res.error) throw res.error;
+        _bpEvents=(res.data||[]).map(function(a){return {id:a.id,start:a.start_at,title:a.title,address:a.address,status:a.status};});
+        bpDrawCalendar(); return;
+      }catch(e){ /* fall through to GHL */ }
+    }
     try{
       var r=await fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:_bpCalKind})});
       var d=await r.json();
@@ -13445,7 +13492,41 @@ var _bpContacts=[];
   function bpLAParts(iso){ var f=bpFormatLA(new Date(iso)); return {date:f.slice(0,10), time:f.slice(11,16)}; }
   function bpMkISO(dateStr,timeStr){ return dateStr+'T'+timeStr+':00'+bpLAOffset(dateStr,timeStr); }
   function bpSlotMsg(res){ var m=''; try{ m=JSON.parse(res.detail||'{}').message||''; }catch(e){} if(/no longer available|not available/i.test(m)) return 'That time isn\'t available. Please pick another.'; return 'Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; }
-  async function bpCalWrite(payload){ if(payload.cal===undefined) payload.cal=_bpCalKind; return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}); }
+  function bpGenSlots(){
+    var slots={}, now=new Date(), booked={}, added=0;
+    for(var i=0;i<_bpEvents.length;i++){ booked[new Date(_bpEvents[i].start).getTime()]=1; }
+    for(var dd=1; dd<=21 && added<48; dd++){
+      var day=new Date(now.getFullYear(),now.getMonth(),now.getDate()+dd);
+      var dow=day.getDay(); if(dow===0||dow===6) continue;
+      var key=day.getFullYear()+'-'+('0'+(day.getMonth()+1)).slice(-2)+'-'+('0'+day.getDate()).slice(-2);
+      for(var h=9; h<=16; h++){
+        var t=new Date(day.getFullYear(),day.getMonth(),day.getDate(),h,0,0);
+        if(booked[t.getTime()]) continue;
+        (slots[key]=slots[key]||[]).push(t.toISOString()); added++;
+      }
+    }
+    return slots;
+  }
+  async function bpCalWrite(payload){
+    if(payload.cal===undefined) payload.cal=_bpCalKind;
+    if(typeof BP_SB!=='undefined' && BP_SB){
+      try{
+        if(payload.action==='slots'){ return {ok:true,slots:bpGenSlots()}; }
+        if(payload.action==='create'){
+          var row={title:payload.title||'Appointment',address:payload.address||'',kind:payload.cal,start_at:payload.startTime,end_at:payload.endTime,status:'confirmed'};
+          var c=bpFind(payload.contactId); if(c) row.contact_name=c.name;
+          if(payload.contactId && /^[0-9a-f-]{36}$/i.test(payload.contactId)) row.contact_id=payload.contactId;
+          var ins=await BP_SB.from('appointments').insert(row); if(ins.error) throw ins.error; return {ok:true};
+        }
+        if(payload.action==='update'){
+          var upd={}; if(payload.title!==undefined)upd.title=payload.title; if(payload.address!==undefined)upd.address=payload.address; if(payload.startTime!==undefined)upd.start_at=payload.startTime; if(payload.endTime!==undefined)upd.end_at=payload.endTime;
+          var up=await BP_SB.from('appointments').update(upd).eq('id',payload.id); if(up.error) throw up.error; return {ok:true};
+        }
+        if(payload.action==='delete'){ var del=await BP_SB.from('appointments').delete().eq('id',payload.id); if(del.error) throw del.error; return {ok:true}; }
+      }catch(e){ /* fall through to GHL */ }
+    }
+    return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
+  }
   var _bpSlotSel=null;
   async function bpLoadSlots(containerId){
     var el=q(containerId); if(!el) return;
@@ -13528,6 +13609,14 @@ var _bpContacts=[];
 
 /* ==== bpLoadCalendar ==== */
   async function bpLoadCalendar(){
+    if(typeof BP_SB!=='undefined' && BP_SB){
+      try{
+        var res=await BP_SB.from('appointments').select('*').eq('kind',_bpCalKind).order('start_at',{ascending:true});
+        if(res.error) throw res.error;
+        _bpEvents=(res.data||[]).map(function(a){return {id:a.id,start:a.start_at,title:a.title,address:a.address,status:a.status};});
+        bpDrawCalendar(); return;
+      }catch(e){ /* fall through to GHL */ }
+    }
     try{
       var r=await fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:_bpCalKind})});
       var d=await r.json();
