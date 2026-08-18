@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Agency Command Center</title>
+<style>
+:root{--bg:#0e0e13;--card:#17161d;--line:#2a2833;--ink:#eceaf3;--mut:#9b98a8;--pri:#7c5cff;--pri2:#5b86f5;--ok:#34d399;--danger:#f2555a;--soft:#1d1c25;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+button{font:inherit;cursor:pointer;}
+input,select,textarea{font:inherit;}
+.hidden{display:none!important;}
+a{color:var(--pri2);}
+/* login */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login .card{width:100%;max-width:360px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;}
+.login h1{font-size:20px;margin-bottom:4px;}
+.login p{color:var(--mut);font-size:13px;margin-bottom:18px;}
+.login label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px;}
+.login input{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:11px 13px;color:var(--ink);outline:none;}
+.login input:focus{border-color:var(--pri);}
+.login button{width:100%;margin-top:18px;background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border:0;border-radius:10px;padding:12px;font-weight:600;}
+.login .err{color:var(--danger);font-size:13px;margin-top:10px;min-height:1em;}
+/* app */
+.app{min-height:100vh;display:grid;grid-template-rows:auto auto 1fr;}
+.top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);}
+.top .brand{font-weight:700;letter-spacing:-.01em;}
+.top .brand span{color:var(--pri);}
+.top .who{margin-left:auto;color:var(--mut);font-size:12px;}
+.top .out{background:var(--soft);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 12px;font-size:12px;}
+/* AI bar */
+.ai{padding:14px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(124,92,255,.08),transparent);}
+.ai .row{display:flex;gap:8px;}
+.ai input{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink);outline:none;}
+.ai input:focus{border-color:var(--pri);}
+.ai .go{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;border:0;border-radius:10px;padding:0 20px;font-weight:600;}
+.ai .hint{color:var(--mut);font-size:12px;margin-top:8px;}
+.plan{margin-top:12px;background:var(--card);border:1px solid var(--pri);border-radius:12px;padding:14px;}
+.plan .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--pri);margin-bottom:6px;}
+.plan .sum{font-size:15px;margin-bottom:6px;}
+.plan .op{font-family:ui-monospace,monospace;font-size:12px;color:var(--mut);word-break:break-all;margin-bottom:12px;}
+.plan .clarify{color:#f0b866;font-size:13px;margin-bottom:12px;}
+.plan .btns{display:flex;gap:8px;}
+.plan .approve{background:var(--ok);color:#04231a;border:0;border-radius:9px;padding:10px 18px;font-weight:700;}
+.plan .cancel{background:var(--soft);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 18px;}
+/* body */
+.wrap{display:grid;grid-template-columns:210px 1fr;min-height:0;}
+.side{border-right:1px solid var(--line);padding:16px 12px;background:var(--card);}
+.side .loc{margin-bottom:16px;}
+.side .loc label{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.side select{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--ink);outline:none;}
+.nav{display:flex;flex-direction:column;gap:2px;}
+.nav button{text-align:left;background:none;border:0;color:var(--mut);border-radius:9px;padding:9px 12px;font-weight:500;}
+.nav button.on{background:var(--soft);color:var(--ink);}
+.main{padding:20px;overflow:auto;}
+.main h2{font-size:18px;margin-bottom:12px;}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.bar input{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--ink);outline:none;}
+.btn{background:var(--soft);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 14px;font-weight:600;}
+.btn.pri{background:linear-gradient(135deg,var(--pri),var(--pri2));border:0;color:#fff;}
+.btn.dng{border-color:rgba(242,85,90,.5);color:var(--danger);}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);padding:9px 10px;border-bottom:1px solid var(--line);}
+td{padding:10px;border-bottom:1px solid var(--soft);}
+tr:hover td{background:rgba(255,255,255,.02);}
+.rowbtn{background:var(--soft);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:5px 10px;font-size:12px;margin-left:6px;}
+.rowbtn.dng{color:var(--danger);border-color:rgba(242,85,90,.4);}
+.muted{color:var(--mut);}
+.out-log{margin-top:14px;background:#0a0a0e;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:ui-monospace,monospace;font-size:12px;color:#9fe6c4;white-space:pre-wrap;max-height:220px;overflow:auto;}
+.empty{color:var(--mut);padding:24px;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div class="card">
+    <h1>Agency Command Center</h1>
+    <p>Private. Sign in with your admin account.</p>
+    <label>Email</label>
+    <input type="email" id="email" placeholder="you@email.com">
+    <label>Password</label>
+    <input type="password" id="pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app hidden" id="app">
+  <div class="top">
+    <div class="brand">Agency<span> · Command Center</span></div>
+    <div class="who" id="who"></div>
+    <button class="out" onclick="doLogout()">Sign out</button>
+  </div>
+
+  <div class="ai">
+    <div class="row">
+      <input id="cmd" placeholder="Tell me what to do — e.g. “add a client called Joe's HVAC”, “tag John Smith as hot lead”, “text contact … ‘we’re on our way’”" onkeydown="if(event.key==='Enter')planCmd()">
+      <button class="go" onclick="planCmd()">Plan it</button>
+    </div>
+    <div class="hint">I’ll show you exactly what I’ll do and wait for your approval before touching anything.</div>
+    <div id="planBox"></div>
+  </div>
+
+  <div class="wrap">
+    <aside class="side">
+      <div class="loc">
+        <label>Client (sub-account)</label>
+        <select id="locSel" onchange="onLocChange()"><option value="">Loading…</option></select>
+      </div>
+      <nav class="nav" id="nav">
+        <button data-tab="clients" class="on" onclick="go('clients')">Clients</button>
+        <button data-tab="contacts" onclick="go('contacts')">Contacts</button>
+        <button data-tab="conversations" onclick="go('conversations')">Conversations</button>
+        <button data-tab="pipelines" onclick="go('pipelines')">Pipelines & Workflows</button>
+      </nav>
+    </aside>
+    <main class="main" id="view"></main>
+  </div>
+</div>
+
+<script>
+var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
+var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+var TOKEN=localStorage.getItem('agency_tok')||'';
+var EMAIL=localStorage.getItem('agency_email')||'';
+var LOCS=[], CURLOC='', TAB='clients', PLAN=null;
+
+function el(id){return document.getElementById(id);}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+/* ---------- auth (direct Supabase REST, no library) ---------- */
+async function doLogin(){
+  var err=el('loginErr');err.textContent='';
+  var email=el('email').value.trim(), pass=el('pass').value;
+  if(!email||!pass){err.textContent='Enter your email and password.';return;}
+  try{
+    var r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
+    var d=await r.json();
+    if(!r.ok||!d.access_token){err.textContent=(d.error_description||d.msg||'Sign-in failed.');return;}
+    TOKEN=d.access_token; EMAIL=email;
+    localStorage.setItem('agency_tok',TOKEN); localStorage.setItem('agency_email',EMAIL);
+    startApp();
+  }catch(e){err.textContent='Network error — try again.';}
+}
+function doLogout(){TOKEN='';localStorage.removeItem('agency_tok');location.reload();}
+
+/* ---------- call the secure agency function ---------- */
+async function api(op,args,command){
+  var r=await fetch(SB_URL+'/functions/v1/agency',{method:'POST',
+    headers:{'Authorization':'Bearer '+TOKEN,'apikey':SB_ANON,'Content-Type':'application/json'},
+    body:JSON.stringify(command!==undefined?{op:op,command:command}:{op:op,args:args||{}})});
+  if(r.status===403){doLogout();throw new Error('Session expired — sign in again.');}
+  return r.json();
+}
+
+/* ---------- AI command bar: plan -> approve -> execute ---------- */
+async function planCmd(){
+  var cmd=el('cmd').value.trim(); if(!cmd) return;
+  el('planBox').innerHTML='<div class="plan"><div class="muted">Thinking…</div></div>';
+  try{
+    var res=await api('ai.plan',null,cmd);
+    var p=res.plan||{};
+    if(p.error){el('planBox').innerHTML='<div class="plan"><div class="clarify">Could not plan that: '+esc(p.error)+'</div></div>';return;}
+    PLAN=p;
+    var clar=p.clarify?'<div class="clarify">⚠ '+esc(p.clarify)+'</div>':'';
+    el('planBox').innerHTML='<div class="plan"><div class="lbl">Proposed action — approve to run</div>'
+      +'<div class="sum">'+esc(p.summary||'(no summary)')+'</div>'
+      +'<div class="op">'+esc(p.op||'')+' '+esc(JSON.stringify(p.args||{}))+'</div>'
+      +clar
+      +'<div class="btns"><button class="approve" onclick="approvePlan()">Approve &amp; run</button><button class="cancel" onclick="cancelPlan()">Cancel</button></div></div>';
+  }catch(e){el('planBox').innerHTML='<div class="plan"><div class="clarify">'+esc(e.message)+'</div></div>';}
+}
+function cancelPlan(){PLAN=null;el('planBox').innerHTML='';el('cmd').value='';}
+async function approvePlan(){
+  if(!PLAN||!PLAN.op)return;
+  el('planBox').innerHTML='<div class="plan"><div class="muted">Running…</div></div>';
+  try{
+    var res=await api(PLAN.op,PLAN.args||{});
+    var okTxt=res.ok?'✓ Done.':('✗ GHL returned '+(res.status||'error'));
+    el('planBox').innerHTML='<div class="plan"><div class="sum">'+okTxt+'</div><div class="op">'+esc(JSON.stringify(res.data)).slice(0,600)+'</div><div class="btns"><button class="cancel" onclick="cancelPlan()">Close</button></div></div>';
+    el('cmd').value=''; PLAN=null;
+    go(TAB); // refresh the current view
+  }catch(e){el('planBox').innerHTML='<div class="plan"><div class="clarify">'+esc(e.message)+'</div></div>';}
+}
+
+/* ---------- boot ---------- */
+async function startApp(){
+  el('login').classList.add('hidden'); el('app').classList.remove('hidden');
+  el('who').textContent=EMAIL;
+  await loadLocations();
+  go('clients');
+}
+async function loadLocations(){
+  try{
+    var res=await api('locations.list',{});
+    var arr=(res.data&&(res.data.locations||res.data))||[];
+    LOCS=Array.isArray(arr)?arr:[];
+    var sel=el('locSel');
+    if(!LOCS.length){sel.innerHTML='<option value="">No clients found</option>';return;}
+    sel.innerHTML=LOCS.map(function(l){return '<option value="'+esc(l.id)+'">'+esc(l.name||l.id)+'</option>';}).join('');
+    CURLOC=LOCS[0].id;
+  }catch(e){el('locSel').innerHTML='<option value="">Auth/API error</option>';}
+}
+function onLocChange(){CURLOC=el('locSel').value;if(TAB!=='clients')go(TAB);}
+function go(tab){
+  TAB=tab;
+  var btns=el('nav').querySelectorAll('button'); for(var i=0;i<btns.length;i++) btns[i].classList.toggle('on',btns[i].getAttribute('data-tab')===tab);
+  if(tab==='clients')viewClients();
+  else if(tab==='contacts')viewContacts();
+  else if(tab==='conversations')viewConversations();
+  else if(tab==='pipelines')viewPipelines();
+}
+
+/* ---------- Clients ---------- */
+function viewClients(){
+  var rows=LOCS.map(function(l){return '<tr><td>'+esc(l.name||'—')+'</td><td class="muted">'+esc(l.id)+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delClient(\''+esc(l.id)+'\',\''+esc((l.name||'').replace(/\x27/g,""))+'\')">Remove</button></td></tr>';}).join('');
+  el('view').innerHTML='<h2>Clients ('+LOCS.length+')</h2>'
+    +'<div class="bar"><input id="nc-name" placeholder="New client name"><input id="nc-phone" placeholder="Phone (optional)"><button class="btn pri" onclick="addClient()">+ Add client</button></div>'
+    +'<table><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" class="empty">No clients yet.</td></tr>')+'</tbody></table>'
+    +'<div class="out-log hidden" id="log"></div>';
+}
+async function addClient(){
+  var name=el('nc-name').value.trim(); if(!name){logMsg('Enter a client name.');return;}
+  logMsg('Adding '+name+'…');
+  var res=await api('locations.create',{name:name,phone:el('nc-phone').value.trim()});
+  logMsg(res.ok?('✓ Added '+name):('✗ '+JSON.stringify(res.data).slice(0,300)));
+  if(res.ok){await loadLocations();viewClients();}
+}
+async function delClient(id,name){
+  if(!confirm('Remove client "'+name+'"? This deletes the sub-account in GHL.'))return;
+  var res=await api('locations.delete',{id:id});
+  if(res.ok){await loadLocations();viewClients();}else alert('Delete failed: '+JSON.stringify(res.data).slice(0,200));
+}
+
+/* ---------- Contacts ---------- */
+async function viewContacts(){
+  if(!CURLOC){el('view').innerHTML='<h2>Contacts</h2><div class="empty">Pick a client first.</div>';return;}
+  el('view').innerHTML='<h2>Contacts</h2>'
+    +'<div class="bar"><input id="cs" placeholder="Search…" oninput="filterContacts(this.value)"><input id="nn" placeholder="Name"><input id="np" placeholder="Phone"><input id="ne" placeholder="Email"><button class="btn pri" onclick="addContact()">+ Add</button></div>'
+    +'<table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody id="cbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table>';
+  var res=await api('contacts.list',{locationId:CURLOC});
+  window._cts=(res.data&&(res.data.contacts||res.data))||[];
+  drawContacts(window._cts);
+}
+function drawContacts(list){
+  var b=el('cbody'); if(!b)return;
+  if(!list.length){b.innerHTML='<tr><td colspan="4" class="empty">No contacts.</td></tr>';return;}
+  b.innerHTML=list.map(function(c){var nm=c.contactName||((c.firstName||'')+' '+(c.lastName||'')).trim()||c.name||'—';
+    return '<tr><td>'+esc(nm)+'</td><td>'+esc(c.phone||'')+'</td><td>'+esc(c.email||'')+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delContact(\''+esc(c.id)+'\')">Delete</button></td></tr>';}).join('');
+}
+function filterContacts(q){q=(q||'').toLowerCase();drawContacts((window._cts||[]).filter(function(c){return JSON.stringify(c).toLowerCase().indexOf(q)>=0;}));}
+async function addContact(){
+  var name=el('nn').value.trim(); if(!name){alert('Enter a name.');return;}
+  var res=await api('contacts.create',{locationId:CURLOC,name:name,phone:el('np').value.trim(),email:el('ne').value.trim()});
+  if(res.ok)viewContacts();else alert('Add failed: '+JSON.stringify(res.data).slice(0,200));
+}
+async function delContact(id){
+  if(!confirm('Delete this contact?'))return;
+  var res=await api('contacts.delete',{id:id});
+  if(res.ok)viewContacts();else alert('Delete failed.');
+}
+
+/* ---------- Conversations ---------- */
+async function viewConversations(){
+  if(!CURLOC){el('view').innerHTML='<h2>Conversations</h2><div class="empty">Pick a client first.</div>';return;}
+  el('view').innerHTML='<h2>Conversations</h2><div id="convs" class="muted">Loading…</div>';
+  var res=await api('conversations.list',{locationId:CURLOC});
+  var arr=(res.data&&(res.data.conversations||res.data))||[];
+  if(!arr.length){el('convs').innerHTML='<div class="empty">No conversations.</div>';return;}
+  el('convs').innerHTML='<table><thead><tr><th>Contact</th><th>Last message</th></tr></thead><tbody>'+arr.map(function(c){
+    return '<tr><td>'+esc(c.fullName||c.contactName||c.name||'—')+'</td><td class="muted">'+esc((c.lastMessageBody||c.last||'').slice(0,80))+'</td></tr>';}).join('')+'</tbody></table>';
+}
+
+/* ---------- Pipelines & Workflows ---------- */
+async function viewPipelines(){
+  if(!CURLOC){el('view').innerHTML='<h2>Pipelines & Workflows</h2><div class="empty">Pick a client first.</div>';return;}
+  el('view').innerHTML='<h2>Pipelines & Workflows</h2><div id="pp" class="muted">Loading…</div>';
+  var pipes=await api('pipelines.list',{locationId:CURLOC});
+  var wfs=await api('workflows.list',{locationId:CURLOC});
+  var pl=(pipes.data&&(pipes.data.pipelines||pipes.data))||[];
+  var wl=(wfs.data&&(wfs.data.workflows||wfs.data))||[];
+  el('pp').innerHTML=
+    '<h3 style="margin:6px 0 8px;font-size:14px">Pipelines</h3>'+(pl.length?'<table><tbody>'+pl.map(function(p){return '<tr><td>'+esc(p.name||p.id)+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None.</div>')
+    +'<h3 style="margin:18px 0 8px;font-size:14px">Workflows (enroll contacts via the command bar)</h3>'+(wl.length?'<table><thead><tr><th>Name</th><th>ID</th></tr></thead><tbody>'+wl.map(function(w){return '<tr><td>'+esc(w.name||'—')+'</td><td class="muted">'+esc(w.id)+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None. (Build workflows in GHL; enroll contacts here.)</div>');
+}
+
+function logMsg(m){var l=el('log'); if(l){l.classList.remove('hidden'); l.textContent+=(l.textContent?'\n':'')+m;}}
+
+/* auto-login if we already have a token */
+if(TOKEN){startApp();}
+</script>
+</body>
+</html>
