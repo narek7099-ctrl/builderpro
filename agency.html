@@ -149,13 +149,21 @@ async function doLogin(){
 function doLogout(){TOKEN='';localStorage.removeItem('agency_tok');location.reload();}
 
 /* ---------- call the secure agency function ---------- */
+var LAST={status:0,body:null};
 async function api(op,args,command){
-  var r=await fetch(SB_URL+'/functions/v1/agency',{method:'POST',
+  var r;
+  try{ r=await fetch(SB_URL+'/functions/v1/agency',{method:'POST',
     headers:{'Authorization':'Bearer '+TOKEN,'apikey':SB_ANON,'Content-Type':'application/json'},
-    body:JSON.stringify(command!==undefined?{op:op,command:command}:{op:op,args:args||{}})});
-  if(r.status===403){doLogout();throw new Error('Session expired — sign in again.');}
-  return r.json();
+    body:JSON.stringify(command!==undefined?{op:op,command:command}:{op:op,args:args||{}})}); }
+  catch(e){ LAST={status:-1,body:'network error: '+(e.message||e)}; throw new Error('Could not reach the agency function (network/CORS). Is it deployed as "agency"?'); }
+  LAST.status=r.status;
+  var body; try{ body=await r.json(); }catch(e){ try{ body={__raw:(await r.text()).slice(0,500)}; }catch(_){ body={__raw:'(no body)'}; } }
+  LAST.body=body;
+  if(r.status===403){ throw new Error('403 not authorized — check ADMIN_EMAILS includes your email. ('+JSON.stringify(body).slice(0,160)+')'); }
+  if(r.status>=500){ throw new Error('Function error '+r.status+' — check the agency function’s secrets. ('+JSON.stringify(body).slice(0,160)+')'); }
+  return body;
 }
+function diagHTML(){ return '<div class="out-log" style="margin-top:14px">Diagnostics — paste this to Claude:\nHTTP '+LAST.status+'\n'+esc(JSON.stringify(LAST.body,null,2)).slice(0,900)+'</div>'; }
 
 /* ---------- AI command bar: plan -> approve -> execute ---------- */
 async function planCmd(){
@@ -194,16 +202,18 @@ async function startApp(){
   await loadLocations();
   go('clients');
 }
+var LOAD_ERR='';
 async function loadLocations(){
+  LOAD_ERR='';
   try{
     var res=await api('locations.list',{});
     var arr=(res.data&&(res.data.locations||res.data))||[];
     LOCS=Array.isArray(arr)?arr:[];
     var sel=el('locSel');
-    if(!LOCS.length){sel.innerHTML='<option value="">No clients found</option>';return;}
+    if(!LOCS.length){ sel.innerHTML='<option value="">No clients found</option>'; if(res.ok===false) LOAD_ERR='GHL returned HTTP '+res.status; return; }
     sel.innerHTML=LOCS.map(function(l){return '<option value="'+esc(l.id)+'">'+esc(l.name||l.id)+'</option>';}).join('');
     CURLOC=LOCS[0].id;
-  }catch(e){el('locSel').innerHTML='<option value="">Auth/API error</option>';}
+  }catch(e){ el('locSel').innerHTML='<option value="">Error</option>'; LOAD_ERR=e.message; }
 }
 function onLocChange(){CURLOC=el('locSel').value;if(TAB!=='clients')go(TAB);}
 function go(tab){
@@ -221,6 +231,7 @@ function viewClients(){
   el('view').innerHTML='<h2>Clients ('+LOCS.length+')</h2>'
     +'<div class="bar"><input id="nc-name" placeholder="New client name"><input id="nc-phone" placeholder="Phone (optional)"><button class="btn pri" onclick="addClient()">+ Add client</button></div>'
     +'<table><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" class="empty">No clients yet.</td></tr>')+'</tbody></table>'
+    +((!LOCS.length)?('<div style="color:#f0b866;margin-top:12px">'+esc(LOAD_ERR||'No clients returned.')+'</div>'+diagHTML()):'')
     +'<div class="out-log hidden" id="log"></div>';
 }
 async function addClient(){
