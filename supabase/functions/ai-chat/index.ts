@@ -1,16 +1,15 @@
-// ai-chat — gives Nova (Web OS) and Atlas (BuilderPro) a real brain.
-//
-// It loads a business's knowledge from the `ai_brain` table (by slug) and/or takes
-// live business context from the request, builds a system prompt, and calls Claude.
-// The Anthropic API key stays here as a secret and never reaches the browser.
+// ai-chat — gives Nova (Web OS) and Atlas (BuilderPro) a real brain, using Google
+// Gemini's FREE tier. Loads a business's knowledge from `ai_brain` (by slug) and/or
+// live request context, builds a system prompt, and calls Gemini. The API key stays
+// server-side and never reaches the browser.
 //
 // Deploy:
 //   supabase functions deploy ai-chat --no-verify-jwt
-//   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+//   supabase secrets set GEMINI_API_KEY=AIza...        (free key from aistudio.google.com)
 // (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-const AI_MODEL = Deno.env.get("AI_MODEL") ?? "claude-haiku-4-5-20251001";
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.0-flash";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -73,7 +72,7 @@ function buildSystem(brain: Record<string, unknown> | null, live: Record<string,
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
-  if (!ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY not set" }, 500);
+  if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY not set" }, 500);
 
   let payload: {
     message?: string;
@@ -93,30 +92,38 @@ Deno.serve(async (req) => {
   const brain = payload.slug ? await loadBrain(payload.slug) : null;
   const system = buildSystem(brain, payload.business ?? null);
 
+  // Gemini uses roles "user" and "model" (not "assistant").
   const history = Array.isArray(payload.history) ? payload.history.slice(-10) : [];
-  const messages = [
+  const contents = [
     ...history
       .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
-      .map((m) => ({ role: m.role, content: String(m.content).slice(0, 2000) })),
-    { role: "user", content: message },
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: String(m.content).slice(0, 2000) }],
+      })),
+    { role: "user", parts: [{ text: message }] },
   ];
 
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const url =
+      `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const r = await fetch(url, {
       method: "POST",
-      headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ model: AI_MODEL, max_tokens: 400, system, messages }),
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents,
+        generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
+      }),
     });
     if (!r.ok) {
       const detail = await r.text();
       return json({ error: "model error", detail: detail.slice(0, 400) }, 502);
     }
     const data = await r.json();
-    const reply = (data?.content?.[0]?.text ?? "").trim() ||
+    const reply =
+      (data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "")
+        .trim() ||
       "I'm here to help — could you tell me a bit more about what you need?";
     return json({ reply });
   } catch (e) {

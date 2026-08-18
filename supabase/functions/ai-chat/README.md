@@ -1,7 +1,8 @@
 # ai-chat — the brain behind Nova (Web OS) & Atlas (BuilderPro)
 
-Turns the chatbots from canned keyword replies into real, per-business AI. The
-Anthropic API key lives only in this function (server-side) — never in the page.
+Turns the chatbots from canned keyword replies into real, per-business AI using
+Google **Gemini's free tier**. The API key lives only in this function
+(server-side) — never in the page.
 
 ## What it does
 1. Reads a business's knowledge from the `ai_brain` table (by `slug`) and/or from
@@ -22,10 +23,10 @@ supabase db push            # applies supabase/migrations/20260817000000_ai_brai
 # 2. deploy the function
 supabase functions deploy ai-chat --no-verify-jwt
 
-# 3. set the secret (get a key at console.anthropic.com)
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-# optional: pick a model (default claude-haiku-4-5-20251001)
-supabase secrets set AI_MODEL=claude-haiku-4-5-20251001
+# 3. set the secret (get a FREE key at https://aistudio.google.com/apikey)
+supabase secrets set GEMINI_API_KEY=AIza...
+# optional: pick a model (default gemini-2.0-flash)
+supabase secrets set AI_MODEL=gemini-2.0-flash
 ```
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically — no need to set them.
