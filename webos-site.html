@@ -1802,9 +1802,20 @@ var _bpContacts=[];
     bpLoadContacts();
   }
 
-/* ==== bpLoadContacts ==== */
+/* ==== map a Supabase contacts row to the shape the UI expects ==== */
+  function bpMapContact(r){ return {id:r.id,name:r.name||'',phone:r.phone||'',email:r.email||'',tags:r.tags||[],dateAdded:r.date_added}; }
+
+/* ==== bpLoadContacts (Supabase-native; GHL only as a fallback) ==== */
   async function bpLoadContacts(){
     if(window._bpDemo){ if(!_bpContacts||!_bpContacts.length){ _bpContacts=(window._bpBulkMock||[]).map(function(c){return {id:c.id,name:c.name,phone:c.phone,email:c.email,tags:(c.tags||[]).slice(),dateAdded:new Date(Date.now()-Math.random()*12e9).toISOString()};}); } bpDrawContacts(_bpContacts); return; }
+    if(BP_SB){
+      try{
+        var res=await BP_SB.from('contacts').select('*').order('date_added',{ascending:false});
+        if(res.error) throw res.error;
+        _bpContacts=(res.data||[]).map(bpMapContact);
+        bpDrawContacts(_bpContacts); return;
+      }catch(e){ /* fall through to GHL */ }
+    }
     try{
       var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})});
       var d=await r.json();
@@ -1861,6 +1872,13 @@ var _bpContacts=[];
       else if(payload.action==='update'){ for(var i=0;i<_bpContacts.length;i++){ if(_bpContacts[i].id===payload.id){ _bpContacts[i].name=payload.name; _bpContacts[i].phone=payload.phone; _bpContacts[i].email=payload.email; } } }
       else if(payload.action==='delete'){ _bpContacts=_bpContacts.filter(function(c){return c.id!==payload.id;}); }
       return {ok:true};
+    }
+    if(BP_SB){
+      try{
+        if(payload.action==='create'){ var ins=await BP_SB.from('contacts').insert({name:payload.name,phone:payload.phone,email:payload.email}); if(ins.error) throw ins.error; return {ok:true}; }
+        if(payload.action==='update'){ var up=await BP_SB.from('contacts').update({name:payload.name,phone:payload.phone,email:payload.email}).eq('id',payload.id); if(up.error) throw up.error; return {ok:true}; }
+        if(payload.action==='delete'){ var del=await BP_SB.from('contacts').delete().eq('id',payload.id); if(del.error) throw del.error; return {ok:true}; }
+      }catch(e){ /* fall through to GHL */ }
     }
     return fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
   }

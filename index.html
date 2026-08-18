@@ -13296,8 +13296,19 @@ var _bpContacts=[];
     bpLoadContacts();
   }
 
-/* ==== bpLoadContacts ==== */
+/* ==== map a Supabase contacts row to the shape the UI expects ==== */
+  function bpMapContact(r){ return {id:r.id,name:r.name||'',phone:r.phone||'',email:r.email||'',tags:r.tags||[],dateAdded:r.date_added}; }
+
+/* ==== bpLoadContacts (Supabase-native; GHL only as a fallback) ==== */
   async function bpLoadContacts(){
+    if(typeof BP_SB!=='undefined' && BP_SB){
+      try{
+        var res=await BP_SB.from('contacts').select('*').order('date_added',{ascending:false});
+        if(res.error) throw res.error;
+        _bpContacts=(res.data||[]).map(bpMapContact);
+        bpDrawContacts(_bpContacts); return;
+      }catch(e){ /* fall through to GHL */ }
+    }
     try{
       var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})});
       var d=await r.json();
@@ -13349,6 +13360,13 @@ var _bpContacts=[];
     bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
   };
   async function bpWrite(payload){
+    if(typeof BP_SB!=='undefined' && BP_SB){
+      try{
+        if(payload.action==='create'){ var ins=await BP_SB.from('contacts').insert({name:payload.name,phone:payload.phone,email:payload.email}); if(ins.error) throw ins.error; return {ok:true}; }
+        if(payload.action==='update'){ var up=await BP_SB.from('contacts').update({name:payload.name,phone:payload.phone,email:payload.email}).eq('id',payload.id); if(up.error) throw up.error; return {ok:true}; }
+        if(payload.action==='delete'){ var del=await BP_SB.from('contacts').delete().eq('id',payload.id); if(del.error) throw del.error; return {ok:true}; }
+      }catch(e){ /* fall through to GHL */ }
+    }
     return fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
   }
   window.bpSaveContact=async function(id){
