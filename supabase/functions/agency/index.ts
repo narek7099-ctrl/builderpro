@@ -18,6 +18,7 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.0-flash";
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const GHL_HEADERS = { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" };
 
@@ -29,18 +30,22 @@ const cors = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
 // --- who is calling? verify the Supabase user token and check the allowlist ---
-async function requireAdmin(req: Request): Promise<{ ok: boolean; email?: string }> {
+async function requireAdmin(req: Request): Promise<{ ok: boolean; email: string; reason: string }> {
   const auth = req.headers.get("authorization") ?? "";
   const token = auth.replace(/^Bearer\s+/i, "");
-  if (!token || !SB_URL) return { ok: false };
+  if (!token) return { ok: false, email: "", reason: "no token sent" };
+  if (!SB_URL) return { ok: false, email: "", reason: "SUPABASE_URL missing" };
+  if (!ADMIN_EMAILS.length) return { ok: false, email: "", reason: "ADMIN_EMAILS not set (spelling? all caps?)" };
   try {
-    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: token } });
-    if (!r.ok) return { ok: false };
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: SB_ANON } });
+    if (!r.ok) return { ok: false, email: "", reason: `token lookup failed (${r.status})` };
     const u = await r.json();
     const email = (u?.email ?? "").toLowerCase();
-    return { ok: email && ADMIN_EMAILS.includes(email), email };
-  } catch {
-    return { ok: false };
+    if (!email) return { ok: false, email: "", reason: "no email on token" };
+    if (!ADMIN_EMAILS.includes(email)) return { ok: false, email, reason: `${email} not in ADMIN_EMAILS [${ADMIN_EMAILS.join(", ")}]` };
+    return { ok: true, email, reason: "ok" };
+  } catch (e) {
+    return { ok: false, email: "", reason: "verify error: " + String(e).slice(0, 80) };
   }
 }
 
@@ -123,7 +128,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
 
   const admin = await requireAdmin(req);
-  if (!admin.ok) return json({ error: "not authorized" }, 403);
+  if (!admin.ok) return json({ error: "not authorized", reason: admin.reason }, 403);
 
   let body: { op?: string; args?: Record<string, string>; command?: string };
   try { body = await req.json(); } catch { return json({ error: "invalid JSON" }, 400); }
