@@ -116,6 +116,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button data-tab="contacts" onclick="go('contacts')">Contacts</button>
         <button data-tab="conversations" onclick="go('conversations')">Conversations</button>
         <button data-tab="pipelines" onclick="go('pipelines')">Pipelines & Workflows</button>
+        <button data-tab="forms" onclick="go('forms')">Forms & Submissions</button>
+        <button data-tab="fields" onclick="go('fields')">Custom Fields</button>
+        <button data-tab="calendars" onclick="go('calendars')">Calendars</button>
       </nav>
     </aside>
     <main class="main" id="view"></main>
@@ -260,6 +263,9 @@ function go(tab){
   else if(tab==='contacts')viewContacts();
   else if(tab==='conversations')viewConversations();
   else if(tab==='pipelines')viewPipelines();
+  else if(tab==='forms')viewForms();
+  else if(tab==='fields')viewFields();
+  else if(tab==='calendars')viewCalendars();
 }
 
 /* ---------- Clients ---------- */
@@ -448,6 +454,63 @@ async function dealStatus(id,status){
   var res=await api('opportunities.status',{id:id,status:status});
   if(!res.ok)alert('Status change failed: '+JSON.stringify(res.data).slice(0,200));
 }
+
+/* ---------- Forms & Submissions ---------- */
+async function viewForms(){
+  if(!CURLOC){el('view').innerHTML='<h2>Forms</h2><div class="empty">Pick a client first.</div>';return;}
+  el('view').innerHTML='<h2>Forms &amp; Submissions</h2><div class="muted" style="margin-bottom:10px">Form design is built in GHL; here you can see forms and the leads they captured.</div><div id="fm">Loading…</div>';
+  var res; try{ res=await api('forms.list',{}); }catch(e){ el('fm').innerHTML=viewErr(e); return; }
+  if(res.ok===false){ el('fm').innerHTML=viewErr(null,res); return; }
+  var forms=(res.data&&(res.data.forms||res.data))||[]; if(!Array.isArray(forms))forms=[];
+  var sub; try{ sub=await api('forms.submissions',{}); }catch(e){ sub={data:{}}; }
+  var subs=(sub.data&&(sub.data.submissions||sub.data))||[]; if(!Array.isArray(subs))subs=[];
+  el('fm').innerHTML='<h3 style="font-size:14px;margin:6px 0 8px">Forms ('+forms.length+')</h3>'
+    +(forms.length?'<table><tbody>'+forms.map(function(f){return '<tr><td>'+esc(f.name||f.id)+'</td><td class="muted">'+esc(f.id)+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None.</div>')
+    +'<h3 style="font-size:14px;margin:18px 0 8px">Recent submissions ('+subs.length+')</h3>'
+    +(subs.length?'<table><thead><tr><th>Contact</th><th>Form</th><th>When</th></tr></thead><tbody>'+subs.slice(0,50).map(function(s){return '<tr><td>'+esc(s.contactName||s.name||(s.contact&&s.contact.name)||'—')+'</td><td class="muted">'+esc(s.formName||s.formId||'')+'</td><td class="muted">'+esc((s.createdAt||s.dateAdded||'').slice(0,10))+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">No submissions.</div>');
+}
+
+/* ---------- Custom Fields ---------- */
+async function viewFields(){
+  if(!CURLOC){el('view').innerHTML='<h2>Custom Fields</h2><div class="empty">Pick a client first.</div>';return;}
+  el('view').innerHTML='<h2>Custom Fields</h2>'
+    +'<div class="bar"><input id="cf-name" placeholder="New field name"><select id="cf-type" class="btn" style="padding:9px"><option value="TEXT">Text</option><option value="NUMERICAL">Number</option><option value="PHONE">Phone</option><option value="EMAIL">Email</option><option value="DATE">Date</option><option value="LARGE_TEXT">Large text</option></select><button class="btn pri" onclick="addField()">+ Add field</button></div>'
+    +'<div id="cflist">Loading…</div>';
+  loadFields();
+}
+async function loadFields(){
+  var res; try{ res=await api('customfields.list',{}); }catch(e){ el('cflist').innerHTML=viewErr(e); return; }
+  if(res.ok===false){ el('cflist').innerHTML=viewErr(null,res); return; }
+  var f=(res.data&&(res.data.customFields||res.data))||[]; if(!Array.isArray(f))f=[];
+  el('cflist').innerHTML=f.length?'<table><thead><tr><th>Name</th><th>Type</th><th></th></tr></thead><tbody>'+f.map(function(x){return '<tr><td>'+esc(x.name||'—')+'</td><td class="muted">'+esc(x.dataType||'')+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delField(\''+esc(x.id)+'\')">Delete</button></td></tr>';}).join('')+'</tbody></table>':'<div class="muted">No custom fields.</div>';
+}
+async function addField(){
+  var name=el('cf-name').value.trim(); if(!name){alert('Enter a field name.');return;}
+  var res=await api('customfields.create',{name:name,dataType:el('cf-type').value});
+  if(res.ok)viewFields();else alert('Add failed: '+JSON.stringify(res.data).slice(0,200));
+}
+async function delField(id){ if(!confirm('Delete this custom field?'))return; var res=await api('customfields.delete',{id:id}); if(res.ok)viewFields();else alert('Delete failed.'); }
+
+/* ---------- Calendars ---------- */
+async function viewCalendars(){
+  if(!CURLOC){el('view').innerHTML='<h2>Calendars</h2><div class="empty">Pick a client first.</div>';return;}
+  el('view').innerHTML='<h2>Calendars</h2>'
+    +'<div class="bar"><input id="cal-name" placeholder="New calendar name"><input id="cal-dur" placeholder="Slot mins (30)" style="width:120px"><button class="btn pri" onclick="addCal()">+ Add calendar</button></div>'
+    +'<div id="callist">Loading…</div>';
+  loadCals();
+}
+async function loadCals(){
+  var res; try{ res=await api('calendars.list',{}); }catch(e){ el('callist').innerHTML=viewErr(e); return; }
+  if(res.ok===false){ el('callist').innerHTML=viewErr(null,res); return; }
+  var c=(res.data&&(res.data.calendars||res.data))||[]; if(!Array.isArray(c))c=[];
+  el('callist').innerHTML=c.length?'<table><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>'+c.map(function(x){return '<tr><td>'+esc(x.name||'—')+'</td><td class="muted">'+esc(x.id)+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delCal(\''+esc(x.id)+'\')">Delete</button></td></tr>';}).join('')+'</tbody></table>':'<div class="muted">No calendars.</div>';
+}
+async function addCal(){
+  var name=el('cal-name').value.trim(); if(!name){alert('Enter a calendar name.');return;}
+  var res=await api('calendars.create',{name:name,slotDuration:el('cal-dur').value.trim()||'30'});
+  if(res.ok)viewCalendars();else alert('Add failed: '+JSON.stringify(res.data).slice(0,200));
+}
+async function delCal(id){ if(!confirm('Delete this calendar?'))return; var res=await api('calendars.delete',{id:id}); if(res.ok)viewCalendars();else alert('Delete failed.'); }
 
 function logMsg(m){var l=el('log'); if(l){l.classList.remove('hidden'); l.textContent+=(l.textContent?'\n':'')+m;}}
 

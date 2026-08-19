@@ -105,6 +105,41 @@ function opToRequest(op: string, a: Record<string, string> = {}): { method: stri
     // notes & tasks on a contact
     case "notes.create":       return { method: "POST", path: `/contacts/${a.contactId}/notes`, body: { body: a.body } };
     case "tasks.create":       return { method: "POST", path: `/contacts/${a.contactId}/tasks`, body: { title: a.title, body: a.body ?? "", dueDate: a.dueDate, completed: false } };
+    // forms (read-only: builder is UI-only, but submissions + list are available)
+    case "forms.list":         return { method: "GET", path: `/forms/?locationId=${a.locationId}&limit=100` };
+    case "forms.submissions":  return { method: "GET", path: `/forms/submissions?locationId=${a.locationId}&limit=100${a.formId ? `&formId=${a.formId}` : ""}` };
+    // custom fields (fully editable)
+    case "customfields.list":   return { method: "GET", path: `/locations/${a.locationId}/customFields` };
+    case "customfields.create": return { method: "POST", path: `/locations/${a.locationId}/customFields`, body: { name: a.name, dataType: a.dataType ?? "TEXT", placeholder: a.placeholder, model: a.model ?? "contact" } };
+    case "customfields.update": return { method: "PUT", path: `/locations/${a.locationId}/customFields/${a.id}`, body: { name: a.name, placeholder: a.placeholder } };
+    case "customfields.delete": return { method: "DELETE", path: `/locations/${a.locationId}/customFields/${a.id}` };
+    // custom values (fully editable)
+    case "customvalues.list":   return { method: "GET", path: `/locations/${a.locationId}/customValues` };
+    case "customvalues.create": return { method: "POST", path: `/locations/${a.locationId}/customValues`, body: { name: a.name, value: a.value } };
+    case "customvalues.update": return { method: "PUT", path: `/locations/${a.locationId}/customValues/${a.id}`, body: { name: a.name, value: a.value } };
+    case "customvalues.delete": return { method: "DELETE", path: `/locations/${a.locationId}/customValues/${a.id}` };
+    // calendars (fully editable)
+    case "calendars.list":   return { method: "GET", path: `/calendars/?locationId=${a.locationId}` };
+    case "calendars.create": return { method: "POST", path: `/calendars/`, body: { locationId: a.locationId, name: a.name, description: a.description, slotDuration: a.slotDuration ? Number(a.slotDuration) : 30 } };
+    case "calendars.update": return { method: "PUT", path: `/calendars/${a.id}`, body: { name: a.name, description: a.description } };
+    case "calendars.delete": return { method: "DELETE", path: `/calendars/${a.id}` };
+    // appointments (calendar events)
+    case "appointments.list":   return { method: "GET", path: `/calendars/events?locationId=${a.locationId}${a.calendarId ? `&calendarId=${a.calendarId}` : ""}${a.startTime ? `&startTime=${a.startTime}` : ""}${a.endTime ? `&endTime=${a.endTime}` : ""}` };
+    case "appointments.create": return { method: "POST", path: `/calendars/events/appointments`, body: { locationId: a.locationId, calendarId: a.calendarId, contactId: a.contactId, startTime: a.startTime, endTime: a.endTime, title: a.title } };
+    case "appointments.update": return { method: "PUT", path: `/calendars/events/appointments/${a.id}`, body: { startTime: a.startTime, endTime: a.endTime, title: a.title } };
+    case "appointments.delete": return { method: "DELETE", path: `/calendars/events/${a.id}` };
+    // tags (account-level, editable)
+    case "tags.list":   return { method: "GET", path: `/locations/${a.locationId}/tags` };
+    case "tags.create": return { method: "POST", path: `/locations/${a.locationId}/tags`, body: { name: a.name } };
+    case "tags.delete": return { method: "DELETE", path: `/locations/${a.locationId}/tags/${a.id}` };
+    // products & prices (editable)
+    case "products.list":   return { method: "GET", path: `/products/?locationId=${a.locationId}&limit=100` };
+    case "products.create": return { method: "POST", path: `/products/`, body: { locationId: a.locationId, name: a.name, productType: a.productType ?? "SERVICE", description: a.description } };
+    case "products.update": return { method: "PUT", path: `/products/${a.id}`, body: { locationId: a.locationId, name: a.name, description: a.description } };
+    case "products.delete": return { method: "DELETE", path: `/products/${a.id}?locationId=${a.locationId}` };
+    // opportunity delete + users
+    case "opportunities.delete": return { method: "DELETE", path: `/opportunities/${a.id}` };
+    case "users.list": return { method: "GET", path: `/users/?locationId=${a.locationId}` };
     default: return null;
   }
 }
@@ -115,6 +150,14 @@ contacts.list{locationId,query?} · contacts.create{locationId,name,phone?,email
 conversations.list{locationId} · conversations.messages{id} · conversations.send{contactId,type(SMS|Email),message}
 pipelines.list{locationId} · opportunities.list{locationId} · opportunities.create{locationId,pipelineId,pipelineStageId,name,contactId?,monetaryValue?} · opportunities.move{id,pipelineId,pipelineStageId} · opportunities.status{id,status(open|won|lost|abandoned)}
 workflows.list{locationId} · workflows.enroll{contactId,workflowId} · notes.create{contactId,body} · tasks.create{contactId,title,dueDate?}
+forms.list{locationId} · forms.submissions{locationId,formId?}
+customfields.list{locationId} · customfields.create{locationId,name,dataType?} · customfields.update{locationId,id,name} · customfields.delete{locationId,id}
+customvalues.list{locationId} · customvalues.create{locationId,name,value} · customvalues.update{locationId,id,name,value} · customvalues.delete{locationId,id}
+calendars.list{locationId} · calendars.create{locationId,name,slotDuration?} · calendars.update{id,name} · calendars.delete{id}
+appointments.list{locationId,calendarId?} · appointments.create{locationId,calendarId,contactId,startTime,endTime,title} · appointments.update{id,startTime?,endTime?,title?} · appointments.delete{id}
+tags.list{locationId} · tags.create{locationId,name} · tags.delete{locationId,id}
+products.list{locationId} · products.create{locationId,name} · products.update{id,locationId,name} · products.delete{id,locationId}
+opportunities.delete{id} · users.list{locationId}
 `.trim();
 
 async function callGHL(op: string, args: Record<string, string>) {
