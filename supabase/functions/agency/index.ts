@@ -78,7 +78,11 @@ function opToRequest(op: string, a: Record<string, string> = {}): { method: stri
     // clients / sub-accounts
     case "locations.list":   return { method: "GET", path: `/locations/search?companyId=${GHL_COMPANY_ID}&limit=100` };
     case "locations.create": return { method: "POST", path: `/locations/`, body: { companyId: GHL_COMPANY_ID, name: a.name, phone: a.phone, address: a.address, city: a.city, state: a.state, country: a.country ?? "US" } };
-    case "locations.update": return { method: "PUT", path: `/locations/${a.id}`, body: { companyId: GHL_COMPANY_ID, name: a.name } };
+    case "locations.update": {
+      const b: Record<string, string> = { companyId: GHL_COMPANY_ID };
+      ["name","phone","email","address","city","state","postalCode","website","timezone","country","firstName","lastName","companyName"].forEach((k) => { if (a[k] !== undefined && a[k] !== "") b[k] = a[k]; });
+      return { method: "PUT", path: `/locations/${a.id}`, body: b };
+    }
     case "locations.delete": return { method: "DELETE", path: `/locations/${a.id}?companyId=${GHL_COMPANY_ID}&deleteTwilioAccount=false` };
     // contacts (need locationId)
     case "contacts.list":    return { method: "GET", path: `/contacts/?locationId=${a.locationId}&limit=100${a.query ? `&query=${encodeURIComponent(a.query)}` : ""}` };
@@ -106,7 +110,7 @@ function opToRequest(op: string, a: Record<string, string> = {}): { method: stri
 }
 
 const OP_CATALOG = `
-locations.list · locations.create{name,phone?,address?,city?,state?} · locations.update{id,name} · locations.delete{id}
+locations.list · locations.create{name,phone?,address?,city?,state?} · locations.update{id,name?,phone?,email?,address?,city?,state?,postalCode?,website?,timezone?} · locations.delete{id}
 contacts.list{locationId,query?} · contacts.create{locationId,name,phone?,email?} · contacts.update{id,name?,phone?,email?} · contacts.delete{id} · contacts.tag{id,tags}
 conversations.list{locationId} · conversations.messages{id} · conversations.send{contactId,type(SMS|Email),message}
 pipelines.list{locationId} · opportunities.list{locationId} · opportunities.create{locationId,pipelineId,pipelineStageId,name,contactId?,monetaryValue?} · opportunities.move{id,pipelineId,pipelineStageId} · opportunities.status{id,status(open|won|lost|abandoned)}
