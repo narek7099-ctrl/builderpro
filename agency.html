@@ -149,13 +149,27 @@ async function doLogin(){
 function doLogout(){TOKEN='';localStorage.removeItem('agency_tok');location.reload();}
 
 /* ---------- call the secure agency function ---------- */
+/* Supabase function slugs are case-sensitive; try the known name, then alternates. */
+var FN_NAMES=['Agency','agency'];
+var FN=localStorage.getItem('agency_fn')||FN_NAMES[0];
 var LAST={status:0,body:null};
-async function api(op,args,command){
-  var r;
-  try{ r=await fetch(SB_URL+'/functions/v1/agency',{method:'POST',
+async function callFn(name,payload){
+  return fetch(SB_URL+'/functions/v1/'+name,{method:'POST',
     headers:{'Authorization':'Bearer '+TOKEN,'apikey':SB_ANON,'Content-Type':'application/json'},
-    body:JSON.stringify(command!==undefined?{op:op,command:command}:{op:op,args:args||{}})}); }
-  catch(e){ LAST={status:-1,body:'network error: '+(e.message||e)}; throw new Error('Could not reach the agency function (network/CORS). Is it deployed as "agency"?'); }
+    body:JSON.stringify(payload)});
+}
+async function api(op,args,command){
+  var payload=(command!==undefined?{op:op,command:command}:{op:op,args:args||{}});
+  var r=null,lastErr=null;
+  var tries=[FN].concat(FN_NAMES.filter(function(n){return n!==FN;}));
+  for(var i=0;i<tries.length;i++){
+    try{
+      var resp=await callFn(tries[i],payload);
+      if(resp.status===404){ lastErr='404 at /'+tries[i]; continue; }   // wrong slug, try next
+      r=resp; FN=tries[i]; localStorage.setItem('agency_fn',FN); break;
+    }catch(e){ lastErr='network error: '+(e.message||e); }
+  }
+  if(!r){ LAST={status:-1,body:lastErr||'not reachable'}; throw new Error('Could not reach the agency function. Tried: '+tries.join(', ')+' — '+(lastErr||'')); }
   LAST.status=r.status;
   var body; try{ body=await r.json(); }catch(e){ try{ body={__raw:(await r.text()).slice(0,500)}; }catch(_){ body={__raw:'(no body)'}; } }
   LAST.body=body;
