@@ -172,7 +172,10 @@ async function callFn(name,payload){
     body:JSON.stringify(payload)});
 }
 async function api(op,args,command,_retried){
-  var payload=(command!==undefined?{op:op,command:command}:{op:op,args:args||{}});
+  args=args||{};
+  // sub-account ops need a locationId so the function can use the right client token
+  if(command===undefined && op.indexOf('locations.')!==0 && !args.locationId && CURLOC) args.locationId=CURLOC;
+  var payload=(command!==undefined?{op:op,command:command}:{op:op,args:args});
   var r=null,lastErr=null;
   var tries=[FN].concat(FN_NAMES.filter(function(n){return n!==FN;}));
   for(var i=0;i<tries.length;i++){
