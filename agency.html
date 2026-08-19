@@ -263,8 +263,24 @@ function go(tab){
 }
 
 /* ---------- Clients ---------- */
+function fld(id,label,val){return '<label style="display:block;font-size:12px;color:var(--mut);margin:10px 0 4px">'+esc(label)+'</label><input id="'+id+'" value="'+esc(val||'')+'" style="width:100%;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--ink);outline:none">';}
+function editClient(id){
+  var l=LOCS.filter(function(x){return x.id===id;})[0]; if(!l)return;
+  el('view').innerHTML='<h2>Edit client</h2><div style="max-width:480px">'
+    +fld('ec-name','Business name',l.name)+fld('ec-phone','Phone',l.phone)+fld('ec-email','Email',l.email)
+    +fld('ec-website','Website',l.website)+fld('ec-address','Address',l.address)+fld('ec-city','City',l.city)
+    +fld('ec-state','State',l.state)+fld('ec-postalCode','Postal code',l.postalCode)
+    +'<div class="bar" style="margin-top:14px"><button class="btn pri" onclick="saveClient(\''+esc(id)+'\')">Save changes</button><button class="btn" onclick="viewClients()">Cancel</button></div><div id="ecerr"></div></div>';
+}
+async function saveClient(id){
+  var g=function(k){var e=el('ec-'+k);return e?e.value.trim():'';};
+  var args={id:id,name:g('name'),phone:g('phone'),email:g('email'),website:g('website'),address:g('address'),city:g('city'),state:g('state'),postalCode:g('postalCode')};
+  var res=await api('locations.update',args);
+  if(res.ok){ await loadLocations(); viewClients(); }
+  else el('ecerr').innerHTML='<div style="color:#f0b866;margin-top:12px">Save failed: '+esc(JSON.stringify(res.data).slice(0,200))+'</div>'+diagHTML();
+}
 function viewClients(){
-  var rows=LOCS.map(function(l){return '<tr><td>'+esc(l.name||'—')+'</td><td class="muted">'+esc(l.id)+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delClient(\''+esc(l.id)+'\',\''+esc((l.name||'').replace(/\x27/g,""))+'\')">Remove</button></td></tr>';}).join('');
+  var rows=LOCS.map(function(l){return '<tr><td>'+esc(l.name||'—')+'</td><td class="muted">'+esc(l.id)+'</td><td style="text-align:right;white-space:nowrap"><button class="rowbtn" onclick="editClient(\''+esc(l.id)+'\')">Edit</button><button class="rowbtn dng" onclick="delClient(\''+esc(l.id)+'\',\''+esc((l.name||'').replace(/\x27/g,""))+'\')">Remove</button></td></tr>';}).join('');
   el('view').innerHTML='<h2>Clients ('+LOCS.length+')</h2>'
     +'<div class="bar"><input id="nc-name" placeholder="New client name"><input id="nc-phone" placeholder="Phone (optional)"><button class="btn pri" onclick="addClient()">+ Add client</button></div>'
     +'<table><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" class="empty">No clients yet.</td></tr>')+'</tbody></table>'
