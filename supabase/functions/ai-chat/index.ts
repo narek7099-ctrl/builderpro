@@ -9,7 +9,7 @@
 // (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically.)
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
-const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.0-flash";
+const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.5-flash";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
