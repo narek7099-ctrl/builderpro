@@ -271,17 +271,26 @@ async function ensureWorkflows(){
   window._wfs=(res.data&&(res.data.workflows||res.data))||[];
   return window._wfs;
 }
+function viewErr(e,res){
+  var msg=(e&&e.message)||(res&&res.ok===false?('GHL HTTP '+res.status):'')||'Something went wrong.';
+  return '<div style="color:#f0b866;margin-top:12px">'+esc(msg)+'</div>'+diagHTML();
+}
 async function viewContacts(){
   if(!CURLOC){el('view').innerHTML='<h2>Contacts</h2><div class="empty">Pick a client first.</div>';return;}
-  await ensureWorkflows();
-  var wfOpts='<option value="">Enroll selected in workflow…</option>'+(window._wfs||[]).map(function(w){return '<option value="'+esc(w.id)+'">'+esc(w.name||w.id)+'</option>';}).join('');
   el('view').innerHTML='<h2>Contacts</h2>'
     +'<div class="bar"><input id="cs" placeholder="Search…" oninput="filterContacts(this.value)"><input id="nn" placeholder="Name"><input id="np" placeholder="Phone"><input id="ne" placeholder="Email"><button class="btn pri" onclick="addContact()">+ Add</button></div>'
-    +'<div class="bar" style="align-items:center"><span class="muted" id="selcount">0 selected</span><input id="bulktags" placeholder="tags, comma separated"><button class="btn" onclick="bulkTag()">Tag selected</button><select id="bulkwf" class="btn" style="padding:9px 10px">'+wfOpts+'</select><button class="btn" onclick="bulkEnroll()">Enroll</button></div>'
-    +'<table><thead><tr><th style="width:28px"><input type="checkbox" id="chkall" onchange="toggleAll(this.checked)"></th><th>Name</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody id="cbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>';
-  var res=await api('contacts.list',{locationId:CURLOC});
-  window._cts=(res.data&&(res.data.contacts||res.data))||[];
-  drawContacts(window._cts);
+    +'<div class="bar" style="align-items:center"><span class="muted" id="selcount">0 selected</span><input id="bulktags" placeholder="tags, comma separated"><button class="btn" onclick="bulkTag()">Tag selected</button><select id="bulkwf" class="btn" style="padding:9px 10px"><option value="">Enroll selected in workflow…</option></select><button class="btn" onclick="bulkEnroll()">Enroll</button></div>'
+    +'<table><thead><tr><th style="width:28px"><input type="checkbox" id="chkall" onchange="toggleAll(this.checked)"></th><th>Name</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody id="cbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>'
+    +'<div id="cterr"></div>';
+  try{
+    var res=await api('contacts.list',{locationId:CURLOC});
+    if(res.ok===false){ el('cbody').innerHTML='<tr><td colspan="5" class="empty">Couldn’t load contacts.</td></tr>'; el('cterr').innerHTML=viewErr(null,res); return; }
+    window._cts=(res.data&&(res.data.contacts||res.data))||[];
+    if(!Array.isArray(window._cts))window._cts=[];
+    drawContacts(window._cts);
+  }catch(e){ el('cbody').innerHTML='<tr><td colspan="5" class="empty">Couldn’t load contacts.</td></tr>'; el('cterr').innerHTML=viewErr(e); return; }
+  // workflows for the Enroll dropdown (best-effort; don't block the list)
+  try{ await ensureWorkflows(); var sel=el('bulkwf'); if(sel) sel.innerHTML='<option value="">Enroll selected in workflow…</option>'+(window._wfs||[]).map(function(w){return '<option value="'+esc(w.id)+'">'+esc(w.name||w.id)+'</option>';}).join(''); }catch(e){}
 }
 function drawContacts(list){
   var b=el('cbody'); if(!b)return;
@@ -334,8 +343,12 @@ async function delContact(id){
 async function viewConversations(){
   if(!CURLOC){el('view').innerHTML='<h2>Conversations</h2><div class="empty">Pick a client first.</div>';return;}
   el('view').innerHTML='<h2>Conversations</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div id="convs" class="muted">Loading…</div><div id="thread" class="muted">Pick a conversation.</div></div>';
-  var res=await api('conversations.list',{locationId:CURLOC});
+  var res;
+  try{ res=await api('conversations.list',{locationId:CURLOC}); }
+  catch(e){ el('convs').innerHTML=viewErr(e); return; }
+  if(res.ok===false){ el('convs').innerHTML=viewErr(null,res); return; }
   var arr=(res.data&&(res.data.conversations||res.data))||[];
+  if(!Array.isArray(arr))arr=[];
   window._convs=arr;
   if(!arr.length){el('convs').innerHTML='<div class="empty">No conversations.</div>';return;}
   el('convs').innerHTML='<table><tbody>'+arr.map(function(c,i){
@@ -364,12 +377,16 @@ async function sendMsg(){
 async function viewPipelines(){
   if(!CURLOC){el('view').innerHTML='<h2>Pipelines & Workflows</h2><div class="empty">Pick a client first.</div>';return;}
   el('view').innerHTML='<h2>Pipelines & Workflows</h2><div id="pp" class="muted">Loading…</div>';
-  var pipes=await api('pipelines.list',{locationId:CURLOC});
-  var opps=await api('opportunities.list',{locationId:CURLOC});
-  var wfs=await api('workflows.list',{locationId:CURLOC});
-  var pl=(pipes.data&&(pipes.data.pipelines||pipes.data))||[];
-  var ol=(opps.data&&(opps.data.opportunities||opps.data))||[];
-  var wl=(wfs.data&&(wfs.data.workflows||wfs.data))||[];
+  var pipes,opps,wfs;
+  try{
+    pipes=await api('pipelines.list',{locationId:CURLOC});
+    opps=await api('opportunities.list',{locationId:CURLOC});
+    wfs=await api('workflows.list',{locationId:CURLOC});
+  }catch(e){ el('pp').innerHTML=viewErr(e); return; }
+  if(pipes.ok===false&&opps.ok===false){ el('pp').innerHTML=viewErr(null,pipes); return; }
+  var pl=(pipes.data&&(pipes.data.pipelines||pipes.data))||[]; if(!Array.isArray(pl))pl=[];
+  var ol=(opps.data&&(opps.data.opportunities||opps.data))||[]; if(!Array.isArray(ol))ol=[];
+  var wl=(wfs.data&&(wfs.data.workflows||wfs.data))||[]; if(!Array.isArray(wl))wl=[];
   window._pipes=pl;
   // build stage lookups
   var stageName={}; pl.forEach(function(p){(p.stages||[]).forEach(function(s){stageName[s.id]=s.name;});});
