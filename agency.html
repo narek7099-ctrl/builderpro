@@ -150,8 +150,8 @@ function doLogout(){TOKEN='';localStorage.removeItem('agency_tok');location.relo
 
 /* ---------- call the secure agency function ---------- */
 /* Supabase function slugs are case-sensitive; try the known name, then alternates. */
-var FN_NAMES=['Agency','agency'];
-var FN=localStorage.getItem('agency_fn')||FN_NAMES[0];
+var FN_NAMES=['AGENCY','Agency','agency'];
+var FN=FN_NAMES[0]; localStorage.removeItem('agency_fn');
 var LAST={status:0,body:null};
 async function callFn(name,payload){
   return fetch(SB_URL+'/functions/v1/'+name,{method:'POST',
