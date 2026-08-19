@@ -72,8 +72,14 @@ function opToRequest(op: string, a: Record<string, string> = {}): { method: stri
     // pipelines / opportunities / workflows
     case "pipelines.list":     return { method: "GET", path: `/opportunities/pipelines?locationId=${a.locationId}` };
     case "opportunities.list": return { method: "GET", path: `/opportunities/search?location_id=${a.locationId}&limit=50` };
+    case "opportunities.create": return { method: "POST", path: `/opportunities/`, body: { locationId: a.locationId, pipelineId: a.pipelineId, pipelineStageId: a.pipelineStageId, name: a.name, status: a.status ?? "open", contactId: a.contactId, monetaryValue: a.monetaryValue ? Number(a.monetaryValue) : undefined } };
+    case "opportunities.move":   return { method: "PUT", path: `/opportunities/${a.id}`, body: { pipelineId: a.pipelineId, pipelineStageId: a.pipelineStageId } };
+    case "opportunities.status": return { method: "PUT", path: `/opportunities/${a.id}/status`, body: { status: a.status } };
     case "workflows.list":     return { method: "GET", path: `/workflows/?locationId=${a.locationId}` };
     case "workflows.enroll":   return { method: "POST", path: `/contacts/${a.contactId}/workflow/${a.workflowId}`, body: {} };
+    // notes & tasks on a contact
+    case "notes.create":       return { method: "POST", path: `/contacts/${a.contactId}/notes`, body: { body: a.body } };
+    case "tasks.create":       return { method: "POST", path: `/contacts/${a.contactId}/tasks`, body: { title: a.title, body: a.body ?? "", dueDate: a.dueDate, completed: false } };
     default: return null;
   }
 }
@@ -82,7 +88,8 @@ const OP_CATALOG = `
 locations.list · locations.create{name,phone?,address?,city?,state?} · locations.update{id,name} · locations.delete{id}
 contacts.list{locationId,query?} · contacts.create{locationId,name,phone?,email?} · contacts.update{id,name?,phone?,email?} · contacts.delete{id} · contacts.tag{id,tags}
 conversations.list{locationId} · conversations.messages{id} · conversations.send{contactId,type(SMS|Email),message}
-pipelines.list{locationId} · opportunities.list{locationId} · workflows.list{locationId} · workflows.enroll{contactId,workflowId}
+pipelines.list{locationId} · opportunities.list{locationId} · opportunities.create{locationId,pipelineId,pipelineStageId,name,contactId?,monetaryValue?} · opportunities.move{id,pipelineId,pipelineStageId} · opportunities.status{id,status(open|won|lost|abandoned)}
+workflows.list{locationId} · workflows.enroll{contactId,workflowId} · notes.create{contactId,body} · tasks.create{contactId,title,dueDate?}
 `.trim();
 
 async function callGHL(op: string, args: Record<string, string>) {
