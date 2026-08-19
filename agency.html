@@ -226,10 +226,12 @@ async function loadLocations(){
     var sel=el('locSel');
     if(!LOCS.length){ sel.innerHTML='<option value="">No clients found</option>'; if(res.ok===false) LOAD_ERR='GHL returned HTTP '+res.status; return; }
     sel.innerHTML=LOCS.map(function(l){return '<option value="'+esc(l.id)+'">'+esc(l.name||l.id)+'</option>';}).join('');
-    CURLOC=LOCS[0].id;
+    var saved=localStorage.getItem('agency_loc');
+    CURLOC=(saved&&LOCS.some(function(l){return l.id===saved;}))?saved:LOCS[0].id;
+    sel.value=CURLOC;
   }catch(e){ el('locSel').innerHTML='<option value="">Error</option>'; LOAD_ERR=e.message; }
 }
-function onLocChange(){CURLOC=el('locSel').value;if(TAB!=='clients')go(TAB);}
+function onLocChange(){CURLOC=el('locSel').value;localStorage.setItem('agency_loc',CURLOC);window._wfs=null;if(TAB!=='clients')go(TAB);}
 function go(tab){
   TAB=tab;
   var btns=el('nav').querySelectorAll('button'); for(var i=0;i<btns.length;i++) btns[i].classList.toggle('on',btns[i].getAttribute('data-tab')===tab);
@@ -262,22 +264,61 @@ async function delClient(id,name){
 }
 
 /* ---------- Contacts ---------- */
+function cName(c){return c.contactName||((c.firstName||'')+' '+(c.lastName||'')).trim()||c.name||'—';}
+async function ensureWorkflows(){
+  if(window._wfs) return window._wfs;
+  var res=await api('workflows.list',{locationId:CURLOC});
+  window._wfs=(res.data&&(res.data.workflows||res.data))||[];
+  return window._wfs;
+}
 async function viewContacts(){
   if(!CURLOC){el('view').innerHTML='<h2>Contacts</h2><div class="empty">Pick a client first.</div>';return;}
+  await ensureWorkflows();
+  var wfOpts='<option value="">Enroll selected in workflow…</option>'+(window._wfs||[]).map(function(w){return '<option value="'+esc(w.id)+'">'+esc(w.name||w.id)+'</option>';}).join('');
   el('view').innerHTML='<h2>Contacts</h2>'
     +'<div class="bar"><input id="cs" placeholder="Search…" oninput="filterContacts(this.value)"><input id="nn" placeholder="Name"><input id="np" placeholder="Phone"><input id="ne" placeholder="Email"><button class="btn pri" onclick="addContact()">+ Add</button></div>'
-    +'<table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody id="cbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table>';
+    +'<div class="bar" style="align-items:center"><span class="muted" id="selcount">0 selected</span><input id="bulktags" placeholder="tags, comma separated"><button class="btn" onclick="bulkTag()">Tag selected</button><select id="bulkwf" class="btn" style="padding:9px 10px">'+wfOpts+'</select><button class="btn" onclick="bulkEnroll()">Enroll</button></div>'
+    +'<table><thead><tr><th style="width:28px"><input type="checkbox" id="chkall" onchange="toggleAll(this.checked)"></th><th>Name</th><th>Phone</th><th>Email</th><th></th></tr></thead><tbody id="cbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>';
   var res=await api('contacts.list',{locationId:CURLOC});
   window._cts=(res.data&&(res.data.contacts||res.data))||[];
   drawContacts(window._cts);
 }
 function drawContacts(list){
   var b=el('cbody'); if(!b)return;
-  if(!list.length){b.innerHTML='<tr><td colspan="4" class="empty">No contacts.</td></tr>';return;}
-  b.innerHTML=list.map(function(c){var nm=c.contactName||((c.firstName||'')+' '+(c.lastName||'')).trim()||c.name||'—';
-    return '<tr><td>'+esc(nm)+'</td><td>'+esc(c.phone||'')+'</td><td>'+esc(c.email||'')+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delContact(\''+esc(c.id)+'\')">Delete</button></td></tr>';}).join('');
+  if(!list.length){b.innerHTML='<tr><td colspan="5" class="empty">No contacts.</td></tr>';return;}
+  b.innerHTML=list.map(function(c){var nm=cName(c);
+    return '<tr><td><input type="checkbox" class="csel" value="'+esc(c.id)+'" onchange="selCount()"></td><td>'+esc(nm)+'</td><td>'+esc(c.phone||'')+'</td><td>'+esc(c.email||'')+'</td>'
+      +'<td style="text-align:right;white-space:nowrap"><button class="rowbtn" onclick="noteContact(\''+esc(c.id)+'\')">Note</button><button class="rowbtn" onclick="taskContact(\''+esc(c.id)+'\')">Task</button><button class="rowbtn dng" onclick="delContact(\''+esc(c.id)+'\')">Delete</button></td></tr>';}).join('');
+  selCount();
 }
 function filterContacts(q){q=(q||'').toLowerCase();drawContacts((window._cts||[]).filter(function(c){return JSON.stringify(c).toLowerCase().indexOf(q)>=0;}));}
+function toggleAll(on){var b=document.querySelectorAll('.csel');for(var i=0;i<b.length;i++)b[i].checked=on;selCount();}
+function selCount(){var n=document.querySelectorAll('.csel:checked').length;var s=el('selcount');if(s)s.textContent=n+' selected';}
+function selectedIds(){var r=[],b=document.querySelectorAll('.csel:checked');for(var i=0;i<b.length;i++)r.push(b[i].value);return r;}
+async function bulkTag(){
+  var ids=selectedIds(); if(!ids.length){alert('Select contacts first.');return;}
+  var tags=el('bulktags').value.trim(); if(!tags){alert('Enter tags.');return;}
+  if(!confirm('Tag '+ids.length+' contact(s) with: '+tags+'?'))return;
+  var ok=0; for(var i=0;i<ids.length;i++){var res=await api('contacts.tag',{id:ids[i],tags:tags}); if(res.ok)ok++;}
+  alert('Tagged '+ok+' of '+ids.length+'.'); viewContacts();
+}
+async function bulkEnroll(){
+  var ids=selectedIds(); if(!ids.length){alert('Select contacts first.');return;}
+  var wf=el('bulkwf').value; if(!wf){alert('Pick a workflow.');return;}
+  if(!confirm('Enroll '+ids.length+' contact(s) into the selected workflow?'))return;
+  var ok=0; for(var i=0;i<ids.length;i++){var res=await api('workflows.enroll',{contactId:ids[i],workflowId:wf}); if(res.ok)ok++;}
+  alert('Enrolled '+ok+' of '+ids.length+'.');
+}
+async function noteContact(id){
+  var body=prompt('Note for this contact:'); if(!body)return;
+  var res=await api('notes.create',{contactId:id,body:body}); alert(res.ok?'Note added.':'Failed: '+JSON.stringify(res.data).slice(0,160));
+}
+async function taskContact(id){
+  var title=prompt('Task title:'); if(!title)return;
+  var due=prompt('Due date (YYYY-MM-DD), or leave blank:')||'';
+  var args={contactId:id,title:title}; if(due)args.dueDate=due+'T09:00:00.000Z';
+  var res=await api('tasks.create',args); alert(res.ok?'Task created.':'Failed: '+JSON.stringify(res.data).slice(0,160));
+}
 async function addContact(){
   var name=el('nn').value.trim(); if(!name){alert('Enter a name.');return;}
   var res=await api('contacts.create',{locationId:CURLOC,name:name,phone:el('np').value.trim(),email:el('ne').value.trim()});
@@ -292,25 +333,66 @@ async function delContact(id){
 /* ---------- Conversations ---------- */
 async function viewConversations(){
   if(!CURLOC){el('view').innerHTML='<h2>Conversations</h2><div class="empty">Pick a client first.</div>';return;}
-  el('view').innerHTML='<h2>Conversations</h2><div id="convs" class="muted">Loading…</div>';
+  el('view').innerHTML='<h2>Conversations</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div id="convs" class="muted">Loading…</div><div id="thread" class="muted">Pick a conversation.</div></div>';
   var res=await api('conversations.list',{locationId:CURLOC});
   var arr=(res.data&&(res.data.conversations||res.data))||[];
+  window._convs=arr;
   if(!arr.length){el('convs').innerHTML='<div class="empty">No conversations.</div>';return;}
-  el('convs').innerHTML='<table><thead><tr><th>Contact</th><th>Last message</th></tr></thead><tbody>'+arr.map(function(c){
-    return '<tr><td>'+esc(c.fullName||c.contactName||c.name||'—')+'</td><td class="muted">'+esc((c.lastMessageBody||c.last||'').slice(0,80))+'</td></tr>';}).join('')+'</tbody></table>';
+  el('convs').innerHTML='<table><tbody>'+arr.map(function(c,i){
+    return '<tr style="cursor:pointer" onclick="openThread('+i+')"><td><div>'+esc(c.fullName||c.contactName||c.name||'—')+'</div><div class="muted" style="font-size:12px">'+esc((c.lastMessageBody||c.last||'').slice(0,60))+'</div></td></tr>';}).join('')+'</tbody></table>';
+}
+async function openThread(i){
+  var c=(window._convs||[])[i]; if(!c)return;
+  window._curConv=c;
+  el('thread').classList.remove('muted');
+  el('thread').innerHTML='<div style="font-weight:600;margin-bottom:8px">'+esc(c.fullName||c.contactName||c.name||'—')+'</div><div id="tmsgs" class="muted">Loading…</div>'
+    +'<div class="bar" style="margin-top:10px"><select id="mtype" class="btn" style="padding:9px"><option>SMS</option><option>Email</option></select><input id="mbody" placeholder="Type a message…" style="flex:1"><button class="btn pri" onclick="sendMsg()">Send</button></div>';
+  var res=await api('conversations.messages',{id:c.id});
+  var msgs=(res.data&&(res.data.messages&&(res.data.messages.messages||res.data.messages)||res.data))||[];
+  if(!Array.isArray(msgs))msgs=[];
+  el('tmsgs').innerHTML=msgs.length?msgs.map(function(m){var out=(m.direction==='outbound');return '<div style="margin:6px 0;text-align:'+(out?'right':'left')+'"><span style="display:inline-block;background:'+(out?'var(--pri)':'var(--soft)')+';color:'+(out?'#fff':'var(--ink)')+';padding:7px 11px;border-radius:10px;max-width:80%">'+esc(m.body||m.message||'')+'</span></div>';}).join(''):'<div class="muted">No messages.</div>';
+}
+async function sendMsg(){
+  var c=window._curConv; if(!c)return;
+  var body=el('mbody').value.trim(); if(!body)return;
+  var cid=c.contactId||c.contact_id; if(!cid){alert('No contact id on this conversation.');return;}
+  var res=await api('conversations.send',{contactId:cid,type:el('mtype').value,message:body});
+  if(res.ok){el('mbody').value='';alert('Sent.');}else alert('Send failed: '+JSON.stringify(res.data).slice(0,200));
 }
 
-/* ---------- Pipelines & Workflows ---------- */
+/* ---------- Pipelines & Workflows (move deals between stages) ---------- */
 async function viewPipelines(){
   if(!CURLOC){el('view').innerHTML='<h2>Pipelines & Workflows</h2><div class="empty">Pick a client first.</div>';return;}
   el('view').innerHTML='<h2>Pipelines & Workflows</h2><div id="pp" class="muted">Loading…</div>';
   var pipes=await api('pipelines.list',{locationId:CURLOC});
+  var opps=await api('opportunities.list',{locationId:CURLOC});
   var wfs=await api('workflows.list',{locationId:CURLOC});
   var pl=(pipes.data&&(pipes.data.pipelines||pipes.data))||[];
+  var ol=(opps.data&&(opps.data.opportunities||opps.data))||[];
   var wl=(wfs.data&&(wfs.data.workflows||wfs.data))||[];
+  window._pipes=pl;
+  // build stage lookups
+  var stageName={}; pl.forEach(function(p){(p.stages||[]).forEach(function(s){stageName[s.id]=s.name;});});
+  function stageSelect(o){
+    var p=pl.filter(function(x){return x.id===o.pipelineId;})[0]||pl[0]; if(!p)return '';
+    var opts=(p.stages||[]).map(function(s){return '<option value="'+esc(s.id)+'"'+(s.id===o.pipelineStageId?' selected':'')+'>'+esc(s.name)+'</option>';}).join('');
+    return '<select class="btn" style="padding:7px" onchange="moveDeal(\''+esc(o.id)+'\',\''+esc(p.id)+'\',this.value)">'+opts+'</select>';
+  }
   el('pp').innerHTML=
-    '<h3 style="margin:6px 0 8px;font-size:14px">Pipelines</h3>'+(pl.length?'<table><tbody>'+pl.map(function(p){return '<tr><td>'+esc(p.name||p.id)+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None.</div>')
-    +'<h3 style="margin:18px 0 8px;font-size:14px">Workflows (enroll contacts via the command bar)</h3>'+(wl.length?'<table><thead><tr><th>Name</th><th>ID</th></tr></thead><tbody>'+wl.map(function(w){return '<tr><td>'+esc(w.name||'—')+'</td><td class="muted">'+esc(w.id)+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None. (Build workflows in GHL; enroll contacts here.)</div>');
+    '<h3 style="margin:6px 0 8px;font-size:14px">Opportunities ('+ol.length+') — change the stage to move a deal</h3>'
+    +(ol.length?'<table><thead><tr><th>Deal</th><th>Value</th><th>Stage</th><th>Status</th></tr></thead><tbody>'+ol.map(function(o){
+        return '<tr><td>'+esc(o.name||o.contact&&o.contact.name||'—')+'</td><td class="muted">'+(o.monetaryValue?('$'+o.monetaryValue):'')+'</td><td>'+stageSelect(o)+'</td>'
+          +'<td><select class="btn" style="padding:7px" onchange="dealStatus(\''+esc(o.id)+'\',this.value)">'+['open','won','lost','abandoned'].map(function(s){return '<option'+(o.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></td></tr>';}).join('')+'</tbody></table>':'<div class="muted">No opportunities.</div>')
+    +'<h3 style="margin:20px 0 8px;font-size:14px">Pipelines</h3>'+(pl.length?'<table><tbody>'+pl.map(function(p){return '<tr><td>'+esc(p.name||p.id)+'<span class="muted" style="font-size:12px"> — '+((p.stages||[]).length)+' stages</span></td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None.</div>')
+    +'<h3 style="margin:20px 0 8px;font-size:14px">Workflows</h3>'+(wl.length?'<table><thead><tr><th>Name</th><th>ID</th></tr></thead><tbody>'+wl.map(function(w){return '<tr><td>'+esc(w.name||'—')+'</td><td class="muted">'+esc(w.id)+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">None. Build workflows in GHL; enroll contacts from the Contacts tab.</div>');
+}
+async function moveDeal(id,pipelineId,stageId){
+  var res=await api('opportunities.move',{id:id,pipelineId:pipelineId,pipelineStageId:stageId});
+  if(!res.ok)alert('Move failed: '+JSON.stringify(res.data).slice(0,200));
+}
+async function dealStatus(id,status){
+  var res=await api('opportunities.status',{id:id,status:status});
+  if(!res.ok)alert('Status change failed: '+JSON.stringify(res.data).slice(0,200));
 }
 
 function logMsg(m){var l=el('log'); if(l){l.classList.remove('hidden'); l.textContent+=(l.textContent?'\n':'')+m;}}
