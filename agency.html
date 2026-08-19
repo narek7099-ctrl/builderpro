@@ -126,6 +126,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
 var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
 var TOKEN=localStorage.getItem('agency_tok')||'';
+var RTOK=localStorage.getItem('agency_rtok')||'';
 var EMAIL=localStorage.getItem('agency_email')||'';
 var LOCS=[], CURLOC='', TAB='clients', PLAN=null;
 
@@ -141,12 +142,24 @@ async function doLogin(){
     var r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'apikey':SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pass})});
     var d=await r.json();
     if(!r.ok||!d.access_token){err.textContent=(d.error_description||d.msg||'Sign-in failed.');return;}
-    TOKEN=d.access_token; EMAIL=email;
-    localStorage.setItem('agency_tok',TOKEN); localStorage.setItem('agency_email',EMAIL);
+    TOKEN=d.access_token; RTOK=d.refresh_token||''; EMAIL=email;
+    localStorage.setItem('agency_tok',TOKEN); localStorage.setItem('agency_rtok',RTOK); localStorage.setItem('agency_email',EMAIL);
     startApp();
   }catch(e){err.textContent='Network error — try again.';}
 }
-function doLogout(){TOKEN='';localStorage.removeItem('agency_tok');location.reload();}
+function doLogout(){TOKEN='';RTOK='';localStorage.removeItem('agency_tok');localStorage.removeItem('agency_rtok');location.reload();}
+/* refresh the Supabase access token when it expires (~1h) so the tool never locks up */
+async function refreshToken(){
+  if(!RTOK) return false;
+  try{
+    var r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:RTOK})});
+    var d=await r.json();
+    if(!r.ok||!d.access_token) return false;
+    TOKEN=d.access_token; RTOK=d.refresh_token||RTOK;
+    localStorage.setItem('agency_tok',TOKEN); localStorage.setItem('agency_rtok',RTOK);
+    return true;
+  }catch(e){ return false; }
+}
 
 /* ---------- call the secure agency function ---------- */
 /* Supabase function slugs are case-sensitive; try the known name, then alternates. */
@@ -158,7 +171,7 @@ async function callFn(name,payload){
     headers:{'Authorization':'Bearer '+TOKEN,'apikey':SB_ANON,'Content-Type':'application/json'},
     body:JSON.stringify(payload)});
 }
-async function api(op,args,command){
+async function api(op,args,command,_retried){
   var payload=(command!==undefined?{op:op,command:command}:{op:op,args:args||{}});
   var r=null,lastErr=null;
   var tries=[FN].concat(FN_NAMES.filter(function(n){return n!==FN;}));
@@ -173,6 +186,11 @@ async function api(op,args,command){
   LAST.status=r.status;
   var body; try{ body=await r.json(); }catch(e){ try{ body={__raw:(await r.text()).slice(0,500)}; }catch(_){ body={__raw:'(no body)'}; } }
   LAST.body=body;
+  // expired login token → silently refresh and retry once
+  if(r.status===403 && body && /token lookup failed/i.test(body.reason||'') && !_retried){
+    if(await refreshToken()) return api(op,args,command,true);
+    doLogout(); throw new Error('Your session expired — please sign in again.');
+  }
   if(r.status===403){ throw new Error('403 not authorized — check ADMIN_EMAILS includes your email. ('+JSON.stringify(body).slice(0,160)+')'); }
   if(r.status>=500){ throw new Error('Function error '+r.status+' — check the agency function’s secrets. ('+JSON.stringify(body).slice(0,160)+')'); }
   return body;
