@@ -12,7 +12,8 @@
 //   supabase functions deploy agency --no-verify-jwt
 //   supabase secrets set GHL_API_KEY=... GHL_COMPANY_ID=... GEMINI_API_KEY=AIza... ADMIN_EMAILS=you@email.com
 
-const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
+const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";        // agency-level token (locations)
+const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";            // sub-account token fallback
 const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.5-flash";
@@ -20,7 +21,27 @@ const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
-const GHL_HEADERS = { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" };
+const ghlHeaders = (token: string) => ({ Authorization: `Bearer ${token}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
+
+// Agency tokens can't read a sub-account's data; mint (and cache) a location-scoped
+// token from the agency token. Falls back to GHL_TOKEN, then the agency token.
+const locTokenCache: Record<string, string> = {};
+async function locationToken(locationId: string): Promise<string> {
+  if (!locationId) return GHL_API_KEY;
+  if (locTokenCache[locationId]) return locTokenCache[locationId];
+  try {
+    const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId }).toString(),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.access_token) { locTokenCache[locationId] = d.access_token; return d.access_token; }
+    }
+  } catch { /* fall through */ }
+  return GHL_TOKEN || GHL_API_KEY;
+}
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -96,9 +117,11 @@ async function callGHL(op: string, args: Record<string, string>) {
   const spec = opToRequest(op, args);
   if (!spec) return json({ error: `unknown op: ${op}` }, 400);
   if (!GHL_API_KEY) return json({ error: "GHL_API_KEY not set" }, 500);
+  // locations.* are agency-level; everything else is sub-account data → use a location token.
+  const token = op.startsWith("locations.") ? GHL_API_KEY : await locationToken(args.locationId || "");
   const r = await fetch(`${GHL_BASE}${spec.path}`, {
     method: spec.method,
-    headers: GHL_HEADERS,
+    headers: ghlHeaders(token),
     body: spec.body !== undefined ? JSON.stringify(spec.body) : undefined,
   });
   const text = await r.text();
