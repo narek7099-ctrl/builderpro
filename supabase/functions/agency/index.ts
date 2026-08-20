@@ -176,27 +176,38 @@ async function callGHL(op: string, args: Record<string, string>) {
   return json({ ok: r.ok, status: r.status, data });
 }
 
-async function aiPlan(command: string) {
+async function aiChat(command: string, history: Array<{ role: string; content: string }>) {
   if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY not set" }, 500);
   const system =
-    `You translate an agency owner's plain-English command into ONE action against their GoHighLevel account.\n` +
-    `Choose exactly one op from this catalog and fill its args. Never invent ops or args.\n\nOPS:\n${OP_CATALOG}\n\n` +
-    `Reply ONLY as compact JSON: {"op":"<op>","args":{...},"summary":"<one sentence describing exactly what will happen>","confidence":0-1,"clarify":"<a question if the command is ambiguous, else empty>"}.\n` +
-    `If a required id/locationId isn't known, put a placeholder and set clarify to ask for it. Destructive ops (delete) must have a clear summary.`;
+    `You are the AI operator assistant inside an agency owner's private GoHighLevel command center. ` +
+    `You help them run their agency: clients (sub-accounts), contacts, conversations, deals/pipelines, calendars, forms, custom fields, tags, products, and more.\n\n` +
+    `You do TWO things:\n` +
+    `1) CHAT — answer questions, explain, give advice, be conversational and helpful.\n` +
+    `2) ACT — perform ONE action from the ops catalog when the user wants something done.\n\n` +
+    `Rules:\n` +
+    `- If the user asks something that needs live data (counts, lists, "what's in…"), choose the matching READ op (a *.list / *.messages / *.submissions op) and set readonly=true. The app will run it and send you the data so you can answer.\n` +
+    `- For CHANGES (create/update/delete/send/move/enroll/tag/book), propose the action with readonly=false. The owner approves before it runs.\n` +
+    `- If you're just answering/chatting, use mode "reply".\n` +
+    `- Never invent ops or ids. If you need an id you don't have, ask in "text".\n\n` +
+    `OPS:\n${OP_CATALOG}\n\n` +
+    `Respond ONLY as compact JSON: {"mode":"reply"|"action","text":"<friendly message to show the user — always include this>","op":"<op or empty>","args":{...},"summary":"<what the action does>","readonly":true|false}.`;
+  const contents = [
+    ...(Array.isArray(history) ? history : [])
+      .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
+      .slice(-14)
+      .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content).slice(0, 3000) }] })),
+    { role: "user", parts: [{ text: command }] },
+  ];
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
   const r = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: "user", parts: [{ text: command }] }],
-      generationConfig: { temperature: 0.1, responseMimeType: "application/json" },
-    }),
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.3, responseMimeType: "application/json" } }),
   });
   if (!r.ok) return json({ error: "planner error", detail: (await r.text()).slice(0, 300) }, 502);
   const d = await r.json();
   const raw = d?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "{}";
-  let plan: unknown; try { plan = JSON.parse(raw); } catch { plan = { error: "could not parse plan", raw }; }
+  let plan: unknown; try { plan = JSON.parse(raw); } catch { plan = { mode: "reply", text: raw || "(no reply)" }; }
   return json({ plan });
 }
 
@@ -207,10 +218,10 @@ Deno.serve(async (req) => {
   const admin = await requireAdmin(req);
   if (!admin.ok) return json({ error: "not authorized", reason: admin.reason }, 403);
 
-  let body: { op?: string; args?: Record<string, string>; command?: string };
+  let body: { op?: string; args?: Record<string, string>; command?: string; history?: Array<{ role: string; content: string }> };
   try { body = await req.json(); } catch { return json({ error: "invalid JSON" }, 400); }
 
-  if (body.op === "ai.plan") return aiPlan((body.command ?? "").slice(0, 1000));
+  if (body.op === "ai.plan") return aiChat((body.command ?? "").slice(0, 2000), body.history ?? []);
   if (!body.op) return json({ error: "op required" }, 400);
   return callGHL(body.op, body.args ?? {});
 });

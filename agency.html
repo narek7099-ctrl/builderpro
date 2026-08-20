@@ -45,6 +45,18 @@ a{color:var(--pri2);}
 .plan .btns{display:flex;gap:8px;}
 .plan .approve{background:var(--ok);color:#04231a;border:0;border-radius:9px;padding:10px 18px;font-weight:700;}
 .plan .cancel{background:var(--soft);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 18px;}
+/* chat */
+.chatlog{max-height:300px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;}
+.chatlog:empty{display:none;}
+.cmsg{max-width:82%;padding:9px 13px;border-radius:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;}
+.cmsg.user{align-self:flex-end;background:var(--pri);color:#fff;border-bottom-right-radius:4px;}
+.cmsg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px;}
+.actcard{margin-top:8px;background:var(--soft);border:1px solid var(--pri);border-radius:10px;padding:11px;}
+.actcard .op{font-family:ui-monospace,monospace;font-size:11px;color:var(--mut);word-break:break-all;margin:6px 0 10px;}
+.actcard .btns{display:flex;gap:8px;}
+.actcard .approve{background:var(--ok);color:#04231a;border:0;border-radius:8px;padding:8px 16px;font-weight:700;}
+.actcard .cancel{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 16px;}
+.actcard .clarify{color:#f0b866;font-size:13px;margin-bottom:8px;}
 /* body */
 .wrap{display:grid;grid-template-columns:210px 1fr;min-height:0;}
 .side{border-right:1px solid var(--line);padding:16px 12px;background:var(--card);}
@@ -97,12 +109,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 
   <div class="ai">
+    <div id="chatlog" class="chatlog"></div>
     <div class="row">
-      <input id="cmd" placeholder="Tell me what to do — e.g. “add a client called Joe's HVAC”, “tag John Smith as hot lead”, “text contact … ‘we’re on our way’”" onkeydown="if(event.key==='Enter')planCmd()">
-      <button class="go" onclick="planCmd()">Plan it</button>
+      <input id="cmd" placeholder="Ask me anything, or tell me what to do…" onkeydown="if(event.key==='Enter')chatSend()">
+      <button class="go" onclick="chatSend()">Send</button>
     </div>
-    <div class="hint">I’ll show you exactly what I’ll do and wait for your approval before touching anything.</div>
-    <div id="planBox"></div>
+    <div class="hint">I can answer questions and take actions — I’ll always ask before changing anything.</div>
   </div>
 
   <div class="wrap">
@@ -178,7 +190,7 @@ async function api(op,args,command,_retried){
   args=args||{};
   // sub-account ops need a locationId so the function can use the right client token
   if(command===undefined && op.indexOf('locations.')!==0 && !args.locationId && CURLOC) args.locationId=CURLOC;
-  var payload=(command!==undefined?{op:op,command:command}:{op:op,args:args});
+  var payload=(command!==undefined?{op:op,command:command,history:(args&&args.history)||[]}:{op:op,args:args});
   var r=null,lastErr=null;
   var tries=[FN].concat(FN_NAMES.filter(function(n){return n!==FN;}));
   for(var i=0;i<tries.length;i++){
@@ -203,34 +215,53 @@ async function api(op,args,command,_retried){
 }
 function diagHTML(){ return '<div class="out-log" style="margin-top:14px">Diagnostics — paste this to Claude:\nHTTP '+LAST.status+'\n'+esc(JSON.stringify(LAST.body,null,2)).slice(0,900)+'</div>'; }
 
-/* ---------- AI command bar: plan -> approve -> execute ---------- */
-async function planCmd(){
-  var cmd=el('cmd').value.trim(); if(!cmd) return;
-  el('planBox').innerHTML='<div class="plan"><div class="muted">Thinking…</div></div>';
-  try{
-    var res=await api('ai.plan',null,cmd);
-    var p=res.plan||{};
-    if(p.error){el('planBox').innerHTML='<div class="plan"><div class="clarify">Could not plan that: '+esc(p.error)+'</div></div>';return;}
-    PLAN=p;
-    var clar=p.clarify?'<div class="clarify">⚠ '+esc(p.clarify)+'</div>':'';
-    el('planBox').innerHTML='<div class="plan"><div class="lbl">Proposed action — approve to run</div>'
-      +'<div class="sum">'+esc(p.summary||'(no summary)')+'</div>'
-      +'<div class="op">'+esc(p.op||'')+' '+esc(JSON.stringify(p.args||{}))+'</div>'
-      +clar
-      +'<div class="btns"><button class="approve" onclick="approvePlan()">Approve &amp; run</button><button class="cancel" onclick="cancelPlan()">Cancel</button></div></div>';
-  }catch(e){el('planBox').innerHTML='<div class="plan"><div class="clarify">'+esc(e.message)+'</div></div>';}
+/* ---------- AI chat: ask questions + take actions (with approval) ---------- */
+var CHAT=[];
+function chatAdd(role,html){ var l=el('chatlog'); var d=document.createElement('div'); d.className='cmsg '+role; d.innerHTML=html; l.appendChild(d); l.scrollTop=l.scrollHeight; return d; }
+async function chatSend(){
+  var t=el('cmd').value.trim(); if(!t) return; el('cmd').value='';
+  chatAdd('user',esc(t)); CHAT.push({role:'user',content:t});
+  var node=chatAdd('bot','<span class="muted">…</span>');
+  await chatTurn(t,node,0);
 }
-function cancelPlan(){PLAN=null;el('planBox').innerHTML='';el('cmd').value='';}
-async function approvePlan(){
-  if(!PLAN||!PLAN.op)return;
-  el('planBox').innerHTML='<div class="plan"><div class="muted">Running…</div></div>';
+async function chatTurn(userText,node,depth){
+  var res;
+  try{ res=await api('ai.plan',{history:CHAT.slice(-14)},userText); }
+  catch(e){ node.innerHTML='<span style="color:#f0b866">'+esc(e.message)+'</span>'; return; }
+  var p=res.plan||{};
+  var text=p.text||'';
+  if(p.mode==='action' && p.op){
+    if(p.readonly && depth<1){
+      // read data automatically, then answer using it
+      node.innerHTML=esc(text||'Let me check…');
+      var r; try{ r=await api(p.op,p.args||{}); }catch(e){ node.innerHTML=esc(text||'')+'<br><span style="color:#f0b866">'+esc(e.message)+'</span>'; return; }
+      if(text) CHAT.push({role:'assistant',content:text});
+      CHAT.push({role:'user',content:'(data from '+p.op+'): '+JSON.stringify(r.data).slice(0,3500)});
+      var n2=chatAdd('bot','<span class="muted">…</span>');
+      return chatTurn('Answer my question using that data. Be concise and specific.',n2,depth+1);
+    }
+    // a change → show approval card
+    if(text) CHAT.push({role:'assistant',content:text});
+    node.innerHTML=(text?esc(text)+'<br>':'')
+      +'<div class="actcard"><div class="muted" style="font-size:12px">'+esc(p.summary||p.op)+'</div>'
+      +'<div class="op">'+esc(p.op)+' '+esc(JSON.stringify(p.args||{}))+'</div>'
+      +'<div class="btns"><button class="approve">Approve &amp; run</button><button class="cancel">Cancel</button></div></div>';
+    var card=node.querySelector('.actcard');
+    card.querySelector('.approve').onclick=function(){ runAction(p,card); };
+    card.querySelector('.cancel').onclick=function(){ card.innerHTML='<span class="muted">Cancelled.</span>'; };
+  }else{
+    node.innerHTML=esc(text||'(no reply)');
+    CHAT.push({role:'assistant',content:text||''});
+  }
+}
+async function runAction(p,card){
+  card.innerHTML='<span class="muted">Running…</span>';
   try{
-    var res=await api(PLAN.op,PLAN.args||{});
-    var okTxt=res.ok?'✓ Done.':('✗ GHL returned '+(res.status||'error'));
-    el('planBox').innerHTML='<div class="plan"><div class="sum">'+okTxt+'</div><div class="op">'+esc(JSON.stringify(res.data)).slice(0,600)+'</div><div class="btns"><button class="cancel" onclick="cancelPlan()">Close</button></div></div>';
-    el('cmd').value=''; PLAN=null;
-    go(TAB); // refresh the current view
-  }catch(e){el('planBox').innerHTML='<div class="plan"><div class="clarify">'+esc(e.message)+'</div></div>';}
+    var r=await api(p.op,p.args||{});
+    card.innerHTML=(r.ok!==false)?'✓ Done.':('✗ '+esc(JSON.stringify(r.data).slice(0,300)));
+    CHAT.push({role:'user',content:'(result of '+p.op+'): '+((r.ok!==false)?'success':'failed — '+JSON.stringify(r.data).slice(0,300))});
+    if(r.ok!==false) go(TAB);
+  }catch(e){ card.innerHTML='<span style="color:#f0b866">'+esc(e.message)+'</span>'; }
 }
 
 /* ---------- boot ---------- */
