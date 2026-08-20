@@ -224,10 +224,14 @@ async function chatSend(){
   var node=chatAdd('bot','<span class="muted">…</span>');
   await chatTurn(t,node,0);
 }
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
 async function chatTurn(userText,node,depth){
-  var res;
-  try{ res=await api('ai.plan',{history:CHAT.slice(-14)},userText); }
-  catch(e){ node.innerHTML='<span style="color:#f0b866">'+esc(e.message)+'</span>'; return; }
+  var res,err;
+  for(var attempt=0;attempt<3;attempt++){
+    try{ res=await api('ai.plan',{history:CHAT.slice(-14)},userText); err=null; break; }
+    catch(e){ err=e; if(/503|high demand|overloaded|UNAVAILABLE|429|rate/i.test(e.message||'')){ node.innerHTML='<span class="muted">Model busy — retrying…</span>'; await sleep(1500*(attempt+1)); continue; } break; }
+  }
+  if(err){ node.innerHTML='<span style="color:#f0b866">'+esc(err.message)+'</span>'; return; }
   var p=res.plan||{};
   var text=p.text||'';
   if(p.mode==='action' && p.op){
