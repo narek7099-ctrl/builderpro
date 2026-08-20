@@ -16,7 +16,7 @@ const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";        // agency-level to
 const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";            // sub-account token fallback
 const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
-const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.5-flash";
+const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.5-flash-lite";
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
