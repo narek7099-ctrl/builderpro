@@ -20,7 +20,43 @@ const AI_MODEL = Deno.env.get("AI_MODEL") ?? "gemini-2.5-flash-lite";
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const GHL_CLIENT_ID = Deno.env.get("GHL_CLIENT_ID") ?? "";
+const GHL_CLIENT_SECRET = Deno.env.get("GHL_CLIENT_SECRET") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
+
+// Agency OAuth token (from the marketplace app install) — refreshed as needed.
+// This is what lets us mint a token for ANY sub-account, no per-client setup.
+let _agencyTok: { token: string; exp: number } | null = null;
+async function agencyOAuthToken(): Promise<string> {
+  if (_agencyTok && _agencyTok.exp > Date.now() + 60000) return _agencyTok.token;
+  if (!SB_URL || !SB_SERVICE) return "";
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/ghl_oauth?id=eq.1&select=*`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+    const rows = await r.json();
+    const row = Array.isArray(rows) && rows.length ? rows[0] : null;
+    if (!row?.refresh_token) return "";
+    const exp = row.expires_at ? Date.parse(row.expires_at) : 0;
+    if (row.access_token && exp > Date.now() + 60000) { _agencyTok = { token: row.access_token, exp }; return row.access_token; }
+    // refresh
+    if (!GHL_CLIENT_ID || !GHL_CLIENT_SECRET) return row.access_token ?? "";
+    const rr = await fetch(`${GHL_BASE}/oauth/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: new URLSearchParams({ client_id: GHL_CLIENT_ID, client_secret: GHL_CLIENT_SECRET, grant_type: "refresh_token", refresh_token: row.refresh_token, user_type: "Company" }).toString(),
+    });
+    const d = await rr.json();
+    if (!rr.ok || !d.access_token) return row.access_token ?? "";
+    const newExp = Date.now() + (Number(d.expires_in || 86400) - 60) * 1000;
+    _agencyTok = { token: d.access_token, exp: newExp };
+    await fetch(`${SB_URL}/rest/v1/ghl_oauth?id=eq.1`, {
+      method: "PATCH",
+      headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token ?? row.refresh_token, expires_at: new Date(newExp).toISOString(), updated_at: new Date().toISOString() }),
+    });
+    return d.access_token;
+  } catch { return ""; }
+}
 const ghlHeaders = (token: string) => ({ Authorization: `Bearer ${token}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
 
 // Agency tokens can't read a sub-account's data; mint (and cache) a location-scoped
@@ -32,11 +68,12 @@ async function locationToken(locationId: string): Promise<string> {
   // 1) an explicit per-sub-account token secret: GHL_TOKEN_<locationId>
   const perLoc = Deno.env.get("GHL_TOKEN_" + locationId);
   if (perLoc) { locTokenCache[locationId] = perLoc; return perLoc; }
-  // 2) try to mint one from the agency token (works only with OAuth apps)
+  // 2) mint one using the agency OAuth token (scales to unlimited clients, no setup)
   try {
+    const minter = (await agencyOAuthToken()) || GHL_API_KEY;
     const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      headers: { Authorization: `Bearer ${minter}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId }).toString(),
     });
     if (r.ok) {
