@@ -29,6 +29,10 @@ const locTokenCache: Record<string, string> = {};
 async function locationToken(locationId: string): Promise<string> {
   if (!locationId) return GHL_API_KEY;
   if (locTokenCache[locationId]) return locTokenCache[locationId];
+  // 1) an explicit per-sub-account token secret: GHL_TOKEN_<locationId>
+  const perLoc = Deno.env.get("GHL_TOKEN_" + locationId);
+  if (perLoc) { locTokenCache[locationId] = perLoc; return perLoc; }
+  // 2) try to mint one from the agency token (works only with OAuth apps)
   try {
     const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
       method: "POST",
