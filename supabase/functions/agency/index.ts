@@ -207,7 +207,54 @@ appointments.list{locationId,calendarId?} · appointments.create{locationId,cale
 tags.list{locationId} · tags.create{locationId,name} · tags.delete{locationId,id}
 products.list{locationId} · products.create{locationId,name} · products.update{id,locationId,name} · products.delete{id,locationId}
 opportunities.delete{id} · users.list{locationId}
+onboard.full{name,phone?,email?,snapshotId?,industry?,tone?,services?,pricing?,hours?,faqs?,inviteEmail?} — fully sets up a NEW client: creates from snapshot, personalizes it, and builds their AI receptionist. Use when the user wants to onboard/set up a new client.
 `.trim();
+
+// Full client onboarding in one call: create (from snapshot) → personalize custom
+// values → create their AI receptionist brain → optionally invite a teammate.
+async function onboardFull(a: Record<string, string>) {
+  const steps: string[] = [];
+  if (!a.name) return json({ ok: false, error: "name required" }, 400);
+  // 1) create the sub-account (optionally from a snapshot = full template)
+  const createBody: Record<string, unknown> = { companyId: GHL_COMPANY_ID, name: a.name, phone: a.phone, email: a.email, address: a.address, city: a.city, state: a.state, country: a.country ?? "US", timezone: a.timezone };
+  if (a.snapshotId) createBody.snapshotId = a.snapshotId;
+  const cr = await fetch(`${GHL_BASE}/locations/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify(createBody) });
+  const cd = await cr.json().catch(() => ({}));
+  if (!cr.ok) return json({ ok: false, step: "create", status: cr.status, data: cd });
+  const locationId = cd?.id || cd?.location?.id || cd?._id || "";
+  steps.push("Created client" + (a.snapshotId ? " from your snapshot (pipelines, workflows, forms, calendars)" : ""));
+  if (!locationId) return json({ ok: true, partial: true, steps, note: "created, but GHL didn't return a location id", data: cd });
+
+  // 2) personalize: set business custom values the snapshot's automations use
+  try {
+    const lt = await locationToken(locationId);
+    const cv = async (name: string, value?: string) => { if (value) { try { await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { method: "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name, value }) }); } catch { /* ignore */ } } };
+    await cv("Business Name", a.name); await cv("Business Phone", a.phone); await cv("Business Email", a.email);
+    steps.push("Set business custom values (name / phone / email)");
+  } catch { /* ignore */ }
+
+  // 3) create the client's AI receptionist brain (Nova/Atlas)
+  if (SB_URL && SB_SERVICE) {
+    try {
+      const rb = await fetch(`${SB_URL}/rest/v1/ai_brain?on_conflict=slug`, {
+        method: "POST",
+        headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify({ slug: locationId, is_demo: false, assistant_name: a.assistant_name || "Nova", business_name: a.name, industry: a.industry || "", tone: a.tone || "Friendly", services: a.services || "", pricing: a.pricing || "", hours: a.hours || "", phone: a.phone || "", booking_url: a.booking_url || "", faqs: a.faqs || "", custom_instructions: a.custom_instructions || "" }),
+      });
+      if (rb.ok) steps.push("Created their AI receptionist brain (slug = " + locationId + ")");
+    } catch { /* ignore */ }
+  }
+
+  // 4) optionally invite a teammate to the new sub-account
+  if (a.inviteEmail) {
+    try {
+      const ur = await fetch(`${GHL_BASE}/users/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify({ companyId: GHL_COMPANY_ID, locationIds: [locationId], firstName: a.inviteFirstName || "", lastName: a.inviteLastName || "", email: a.inviteEmail, type: "account", role: "admin" }) });
+      if (ur.ok) steps.push("Invited teammate " + a.inviteEmail);
+    } catch { /* ignore */ }
+  }
+
+  return json({ ok: true, locationId, steps });
+}
 
 async function callGHL(op: string, args: Record<string, string>) {
   const spec = opToRequest(op, args);
@@ -272,6 +319,7 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return json({ error: "invalid JSON" }, 400); }
 
   if (body.op === "ai.plan") return aiChat((body.command ?? "").slice(0, 2000), body.history ?? []);
+  if (body.op === "onboard.full") return onboardFull(body.args ?? {});
   if (!body.op) return json({ error: "op required" }, 400);
   return callGHL(body.op, body.args ?? {});
 });

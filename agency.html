@@ -325,9 +325,17 @@ function viewClients(){
   el('view').innerHTML='<h2>Clients ('+LOCS.length+')</h2>'
     +'<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px">'
     +'<div style="font-weight:600;margin-bottom:8px">Onboard a new client</div>'
-    +'<div class="bar"><input id="nc-name" placeholder="Business name"><input id="nc-phone" placeholder="Phone"><input id="nc-email" placeholder="Email"></div>'
-    +'<div class="bar" style="align-items:center"><span class="muted" style="font-size:12px">Load template:</span><select id="nc-snap" class="btn" style="padding:9px;min-width:200px"><option value="">Loading snapshots…</option></select><button class="btn pri" onclick="addClient()">+ Create client</button></div>'
-    +'<div class="muted" style="font-size:12px;margin-top:6px">Picking a snapshot instantly sets the client up with your pipelines, workflows, forms, and calendars.</div>'
+    +'<div class="bar"><input id="nc-name" placeholder="Business name *"><input id="nc-phone" placeholder="Phone"><input id="nc-email" placeholder="Email"></div>'
+    +'<div class="bar" style="align-items:center"><span class="muted" style="font-size:12px">Template:</span><select id="nc-snap" class="btn" style="padding:9px;min-width:180px"><option value="">Loading…</option></select><input id="nc-industry" placeholder="Industry (e.g. Roofing)"><select id="nc-tone" class="btn" style="padding:9px"><option>Friendly</option><option>Professional</option><option>Bold</option></select></div>'
+    +'<div style="margin:6px 0"><a class="muted" style="font-size:12px;cursor:pointer" onclick="var e=document.getElementById(\'nc-adv\');e.style.display=e.style.display===\'none\'?\'block\':\'none\'">▸ AI receptionist details (optional)</a></div>'
+    +'<div id="nc-adv" style="display:none">'
+    +'<div class="bar"><input id="nc-services" placeholder="Services offered"><input id="nc-pricing" placeholder="Pricing / ranges"></div>'
+    +'<div class="bar"><input id="nc-hours" placeholder="Hours"><input id="nc-invite" placeholder="Invite teammate email (optional)"></div>'
+    +'<textarea id="nc-faqs" placeholder="Key FAQs the AI should know" style="width:100%;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px;color:var(--ink);min-height:60px"></textarea>'
+    +'</div>'
+    +'<div class="bar" style="margin-top:10px"><button class="btn pri" onclick="fullOnboard()">✨ Create &amp; fully set up</button><button class="btn" onclick="addClient()">Quick create only</button></div>'
+    +'<div class="muted" style="font-size:12px;margin-top:6px">Full setup: creates the client from your snapshot, personalizes it, and builds their AI receptionist — all at once.</div>'
+    +'<div id="nc-result" style="margin-top:10px"></div>'
     +'</div>'
     +'<table><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" class="empty">No clients yet.</td></tr>')+'</tbody></table>'
     +((!LOCS.length)?('<div style="color:#f0b866;margin-top:12px">'+esc(LOAD_ERR||'No clients returned.')+'</div>'+diagHTML()):'')
@@ -342,14 +350,33 @@ async function loadSnapshots(){
     sel.innerHTML='<option value="">No template (blank client)</option>'+s.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name||x.id)+'</option>';}).join('');
   }catch(e){ var sel=el('nc-snap'); if(sel)sel.innerHTML='<option value="">No template (blank client)</option>'; }
 }
+function ncVal(id){var e=el(id);return e?e.value.trim():'';}
 async function addClient(){
-  var name=el('nc-name').value.trim(); if(!name){logMsg('Enter a business name.');return;}
-  var args={name:name,phone:el('nc-phone').value.trim(),email:el('nc-email').value.trim()};
+  var name=ncVal('nc-name'); if(!name){logMsg('Enter a business name.');return;}
+  var args={name:name,phone:ncVal('nc-phone'),email:ncVal('nc-email')};
   var snap=el('nc-snap'); if(snap&&snap.value)args.snapshotId=snap.value;
   logMsg('Creating '+name+(args.snapshotId?' from template…':'…'));
   var res=await api('locations.create',args);
   logMsg(res.ok?('✓ Created '+name+(args.snapshotId?' with your full template loaded.':'.')):('✗ '+JSON.stringify(res.data).slice(0,300)));
   if(res.ok){await loadLocations();viewClients();}
+}
+async function fullOnboard(){
+  var name=ncVal('nc-name'); if(!name){alert('Enter a business name.');return;}
+  var snap=el('nc-snap');
+  var args={name:name,phone:ncVal('nc-phone'),email:ncVal('nc-email'),industry:ncVal('nc-industry'),tone:(el('nc-tone')?el('nc-tone').value:'Friendly'),services:ncVal('nc-services'),pricing:ncVal('nc-pricing'),hours:ncVal('nc-hours'),faqs:ncVal('nc-faqs'),inviteEmail:ncVal('nc-invite')};
+  if(snap&&snap.value)args.snapshotId=snap.value;
+  var out=el('nc-result'); out.innerHTML='<span class="muted">Setting up '+esc(name)+'… this can take a few seconds.</span>';
+  try{
+    var res=await api('onboard.full',args);
+    if(res.ok){
+      var stepsHtml=(res.steps||[]).map(function(s){return '✓ '+esc(s);}).join('<br>');
+      out.innerHTML='<div style="background:var(--soft);border:1px solid var(--ok);border-radius:9px;padding:11px;color:var(--ok);font-size:13px">'+(stepsHtml||'Done.')+'</div>';
+      await loadLocations();
+      setTimeout(function(){ viewClients(); },1800);
+    }else{
+      out.innerHTML='<div style="color:#f0b866">Setup failed at '+esc(res.step||'?')+': '+esc(JSON.stringify(res.data||res.error).slice(0,300))+'</div>'+diagHTML();
+    }
+  }catch(e){ out.innerHTML='<div style="color:#f0b866">'+esc(e.message)+'</div>'; }
 }
 async function delClient(id,name){
   if(!confirm('Remove client "'+name+'"? This deletes the sub-account in GHL.'))return;
