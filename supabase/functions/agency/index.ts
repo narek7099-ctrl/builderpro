@@ -118,7 +118,15 @@ function opToRequest(op: string, a: Record<string, string> = {}): { method: stri
   switch (op) {
     // clients / sub-accounts
     case "locations.list":   return { method: "GET", path: `/locations/search?companyId=${GHL_COMPANY_ID}&limit=100` };
-    case "locations.create": return { method: "POST", path: `/locations/`, body: { companyId: GHL_COMPANY_ID, name: a.name, phone: a.phone, address: a.address, city: a.city, state: a.state, country: a.country ?? "US" } };
+    case "snapshots.list":   return { method: "GET", path: `/snapshots/?companyId=${GHL_COMPANY_ID}` };
+    case "locations.create": {
+      const b: Record<string, unknown> = { companyId: GHL_COMPANY_ID, name: a.name, phone: a.phone, address: a.address, city: a.city, state: a.state, country: a.country ?? "US", timezone: a.timezone };
+      if (a.email) b.email = a.email;
+      if (a.firstName) b.firstName = a.firstName;
+      if (a.lastName) b.lastName = a.lastName;
+      if (a.snapshotId) b.snapshotId = a.snapshotId;   // instantly load your full template into the new client
+      return { method: "POST", path: `/locations/`, body: b };
+    }
     case "locations.update": {
       const b: Record<string, string> = { companyId: GHL_COMPANY_ID };
       ["name","phone","email","address","city","state","postalCode","website","timezone","country","firstName","lastName","companyName"].forEach((k) => { if (a[k] !== undefined && a[k] !== "") b[k] = a[k]; });
@@ -186,7 +194,7 @@ function opToRequest(op: string, a: Record<string, string> = {}): { method: stri
 }
 
 const OP_CATALOG = `
-locations.list · locations.create{name,phone?,address?,city?,state?} · locations.update{id,name?,phone?,email?,address?,city?,state?,postalCode?,website?,timezone?} · locations.delete{id}
+locations.list · snapshots.list · locations.create{name,phone?,email?,address?,city?,state?,timezone?,snapshotId?} (snapshotId loads your full template — pipelines, workflows, forms, calendars — into the new client) · locations.update{id,name?,phone?,email?,address?,city?,state?,postalCode?,website?,timezone?} · locations.delete{id}
 contacts.list{locationId,query?} · contacts.create{locationId,name,phone?,email?} · contacts.update{id,name?,phone?,email?} · contacts.delete{id} · contacts.tag{id,tags}
 conversations.list{locationId} · conversations.messages{id} · conversations.send{contactId,type(SMS|Email),message}
 pipelines.list{locationId} · opportunities.list{locationId} · opportunities.create{locationId,pipelineId,pipelineStageId,name,contactId?,monetaryValue?} · opportunities.move{id,pipelineId,pipelineStageId} · opportunities.status{id,status(open|won|lost|abandoned)}
@@ -206,7 +214,8 @@ async function callGHL(op: string, args: Record<string, string>) {
   if (!spec) return json({ error: `unknown op: ${op}` }, 400);
   if (!GHL_API_KEY) return json({ error: "GHL_API_KEY not set" }, 500);
   // locations.* are agency-level; everything else is sub-account data → use a location token.
-  const token = op.startsWith("locations.") ? GHL_API_KEY : await locationToken(args.locationId || "");
+  const agencyLevel = op.startsWith("locations.") || op.startsWith("snapshots.");
+  const token = agencyLevel ? GHL_API_KEY : await locationToken(args.locationId || "");
   const r = await fetch(`${GHL_BASE}${spec.path}`, {
     method: spec.method,
     headers: ghlHeaders(token),

@@ -323,16 +323,32 @@ async function saveClient(id){
 function viewClients(){
   var rows=LOCS.map(function(l){return '<tr><td>'+esc(l.name||'—')+'</td><td class="muted">'+esc(l.id)+'</td><td style="text-align:right;white-space:nowrap"><button class="rowbtn" onclick="editClient(\''+esc(l.id)+'\')">Edit</button><button class="rowbtn dng" onclick="delClient(\''+esc(l.id)+'\',\''+esc((l.name||'').replace(/\x27/g,""))+'\')">Remove</button></td></tr>';}).join('');
   el('view').innerHTML='<h2>Clients ('+LOCS.length+')</h2>'
-    +'<div class="bar"><input id="nc-name" placeholder="New client name"><input id="nc-phone" placeholder="Phone (optional)"><button class="btn pri" onclick="addClient()">+ Add client</button></div>'
+    +'<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px">'
+    +'<div style="font-weight:600;margin-bottom:8px">Onboard a new client</div>'
+    +'<div class="bar"><input id="nc-name" placeholder="Business name"><input id="nc-phone" placeholder="Phone"><input id="nc-email" placeholder="Email"></div>'
+    +'<div class="bar" style="align-items:center"><span class="muted" style="font-size:12px">Load template:</span><select id="nc-snap" class="btn" style="padding:9px;min-width:200px"><option value="">Loading snapshots…</option></select><button class="btn pri" onclick="addClient()">+ Create client</button></div>'
+    +'<div class="muted" style="font-size:12px;margin-top:6px">Picking a snapshot instantly sets the client up with your pipelines, workflows, forms, and calendars.</div>'
+    +'</div>'
     +'<table><thead><tr><th>Name</th><th>ID</th><th></th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" class="empty">No clients yet.</td></tr>')+'</tbody></table>'
     +((!LOCS.length)?('<div style="color:#f0b866;margin-top:12px">'+esc(LOAD_ERR||'No clients returned.')+'</div>'+diagHTML()):'')
     +'<div class="out-log hidden" id="log"></div>';
+  loadSnapshots();
+}
+async function loadSnapshots(){
+  try{
+    var res=await api('snapshots.list',{});
+    var s=(res.data&&(res.data.snapshots||res.data))||[]; if(!Array.isArray(s))s=[];
+    var sel=el('nc-snap'); if(!sel)return;
+    sel.innerHTML='<option value="">No template (blank client)</option>'+s.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name||x.id)+'</option>';}).join('');
+  }catch(e){ var sel=el('nc-snap'); if(sel)sel.innerHTML='<option value="">No template (blank client)</option>'; }
 }
 async function addClient(){
-  var name=el('nc-name').value.trim(); if(!name){logMsg('Enter a client name.');return;}
-  logMsg('Adding '+name+'…');
-  var res=await api('locations.create',{name:name,phone:el('nc-phone').value.trim()});
-  logMsg(res.ok?('✓ Added '+name):('✗ '+JSON.stringify(res.data).slice(0,300)));
+  var name=el('nc-name').value.trim(); if(!name){logMsg('Enter a business name.');return;}
+  var args={name:name,phone:el('nc-phone').value.trim(),email:el('nc-email').value.trim()};
+  var snap=el('nc-snap'); if(snap&&snap.value)args.snapshotId=snap.value;
+  logMsg('Creating '+name+(args.snapshotId?' from template…':'…'));
+  var res=await api('locations.create',args);
+  logMsg(res.ok?('✓ Created '+name+(args.snapshotId?' with your full template loaded.':'.')):('✗ '+JSON.stringify(res.data).slice(0,300)));
   if(res.ok){await loadLocations();viewClients();}
 }
 async function delClient(id,name){
