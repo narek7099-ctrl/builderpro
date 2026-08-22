@@ -237,13 +237,23 @@ async function onboardFull(a: Record<string, string>) {
     steps.push("Set business custom values (name / phone / email)");
   } catch { /* ignore */ }
 
+  // 2.5) find the client's first calendar (from the snapshot) so their AI can book
+  let bookingCalId = "";
+  try {
+    const lt2 = await locationToken(locationId);
+    const calR = await fetch(`${GHL_BASE}/calendars/?locationId=${locationId}`, { headers: ghlHeaders(lt2) });
+    const calD = await calR.json();
+    const cals = calD?.calendars || [];
+    if (Array.isArray(cals) && cals.length) { bookingCalId = cals[0].id; steps.push("Linked their booking calendar (" + (cals[0].name || bookingCalId) + ")"); }
+  } catch { /* ignore */ }
+
   // 3) create the client's AI receptionist brain (Nova/Atlas)
   if (SB_URL && SB_SERVICE) {
     try {
       const rb = await fetch(`${SB_URL}/rest/v1/ai_brain?on_conflict=slug`, {
         method: "POST",
         headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
-        body: JSON.stringify({ slug: locationId, is_demo: false, assistant_name: a.assistant_name || "Nova", business_name: a.name, industry: a.industry || "", tone: a.tone || "Friendly", services: a.services || "", pricing: a.pricing || "", hours: a.hours || "", phone: a.phone || "", booking_url: a.booking_url || "", faqs: a.faqs || "", custom_instructions: a.custom_instructions || "" }),
+        body: JSON.stringify({ slug: locationId, is_demo: false, ghl_location_id: locationId, booking_calendar_id: bookingCalId, assistant_name: a.assistant_name || "Nova", business_name: a.name, industry: a.industry || "", tone: a.tone || "Friendly", services: a.services || "", pricing: a.pricing || "", hours: a.hours || "", phone: a.phone || "", booking_url: a.booking_url || "", faqs: a.faqs || "", custom_instructions: a.custom_instructions || "" }),
       });
       if (rb.ok) steps.push("Created their AI receptionist brain (slug = " + locationId + ")");
     } catch { /* ignore */ }
@@ -274,7 +284,7 @@ async function brainSave(a: Record<string, string>) {
   if (!slug) return json({ ok: false, error: "slug required" }, 400);
   if (!SB_URL || !SB_SERVICE) return json({ ok: false, error: "supabase not configured" }, 500);
   const row: Record<string, unknown> = { slug, is_demo: false };
-  ["assistant_name","business_name","industry","tone","services","pricing","hours","service_area","phone","booking_url","faqs","custom_instructions"].forEach((k) => { if (a[k] !== undefined) row[k] = a[k]; });
+  ["assistant_name","business_name","industry","tone","services","pricing","hours","service_area","phone","booking_url","faqs","custom_instructions","booking_calendar_id","ghl_location_id"].forEach((k) => { if (a[k] !== undefined) row[k] = a[k]; });
   const r = await fetch(`${SB_URL}/rest/v1/ai_brain?on_conflict=slug`, {
     method: "POST",
     headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" },
@@ -345,7 +355,46 @@ async function clientHealth(a: Record<string, string>) {
   if (SB_URL && SB_SERVICE) { try { const b = await fetch(`${SB_URL}/rest/v1/ai_brain?slug=eq.${encodeURIComponent(id)}&select=slug`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }); const br = await b.json(); loc.hasBrain = Array.isArray(br) && br.length > 0; } catch { /* skip */ } }
   return json({ ok: true, data: loc });
 }
-async function callGHL(op: string, args: Record<string, string>) {
+// ---- persistent memory for the command-center AI ----
+const sbHeaders = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
+async function memorySave(email: string, a: Record<string, string>) {
+  if (!a.note) return json({ ok: false, error: "note required" }, 400);
+  const r = await fetch(`${SB_URL}/rest/v1/ai_memory`, { method: "POST", headers: { ...sbHeaders, Prefer: "return=representation" }, body: JSON.stringify({ owner_email: email, note: String(a.note).slice(0, 2000) }) });
+  const d = await r.json().catch(() => ({}));
+  return json({ ok: r.ok, data: Array.isArray(d) ? d[0] : d });
+}
+async function memoryList(email: string) {
+  const r = await fetch(`${SB_URL}/rest/v1/ai_memory?owner_email=eq.${encodeURIComponent(email)}&select=*&order=created_at.desc&limit=100`, { headers: sbHeaders });
+  return json({ ok: r.ok, data: await r.json().catch(() => []) });
+}
+async function memoryDelete(email: string, a: Record<string, string>) {
+  if (!a.id) return json({ ok: false, error: "id required" }, 400);
+  const r = await fetch(`${SB_URL}/rest/v1/ai_memory?id=eq.${encodeURIComponent(a.id)}&owner_email=eq.${encodeURIComponent(email)}`, { method: "DELETE", headers: sbHeaders });
+  return json({ ok: r.ok });
+}
+async function loadMemories(email: string): Promise<string> {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/ai_memory?owner_email=eq.${encodeURIComponent(email)}&select=note&order=created_at.desc&limit=40`, { headers: sbHeaders });
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) return "";
+    return rows.map((m: { note: string }) => "- " + m.note).join("\n");
+  } catch { return ""; }
+}
+
+// ---- audit log: record every write action (fire-and-forget) ----
+function isWriteOp(op: string): boolean {
+  return !/\.(list|messages|submissions|get)$/.test(op) && op !== "dashboard.stats" && op !== "client.health" && op !== "ai.plan";
+}
+function audit(actor: string, op: string, args: unknown, ok: boolean, status: number) {
+  if (!SB_URL || !SB_SERVICE) return;
+  fetch(`${SB_URL}/rest/v1/audit_log`, { method: "POST", headers: sbHeaders, body: JSON.stringify({ actor, op, args: args ?? {}, ok, status }) }).catch(() => {});
+}
+async function auditList() {
+  const r = await fetch(`${SB_URL}/rest/v1/audit_log?select=*&order=created_at.desc&limit=100`, { headers: sbHeaders });
+  return json({ ok: r.ok, data: await r.json().catch(() => []) });
+}
+
+async function callGHL(op: string, args: Record<string, string>, actor = "") {
   const spec = opToRequest(op, args);
   if (!spec) return json({ error: `unknown op: ${op}` }, 400);
   if (!GHL_API_KEY) return json({ error: "GHL_API_KEY not set" }, 500);
@@ -359,24 +408,61 @@ async function callGHL(op: string, args: Record<string, string>) {
   });
   const text = await r.text();
   let data: unknown; try { data = JSON.parse(text); } catch { data = text; }
+  if (isWriteOp(op)) audit(actor, op, args, r.ok, r.status);
   return json({ ok: r.ok, status: r.status, data });
 }
 
-async function aiChat(command: string, history: Array<{ role: string; content: string }>) {
+// ---- batch: run a multi-step plan in one approved call ----
+async function runBatch(steps: Array<{ op: string; args?: Record<string, string> }>, actor: string) {
+  const results: Array<{ op: string; ok: boolean; status?: number; data?: unknown }> = [];
+  for (const s of (steps || []).slice(0, 10)) {
+    if (!s?.op) continue;
+    try {
+      const resp = await callGHL(s.op, s.args ?? {}, actor);
+      const body = await resp.json();
+      results.push({ op: s.op, ok: body.ok !== false, status: body.status, data: body.data });
+      if (body.ok === false) break;   // stop the chain on the first failure
+    } catch (e) {
+      results.push({ op: s.op, ok: false, data: String(e).slice(0, 200) });
+      break;
+    }
+  }
+  return json({ ok: results.every((r) => r.ok), results });
+}
+
+// Gemini call with retries — free tier throws 503/429 under load.
+async function gemini(body: unknown): Promise<Response> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  let r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  for (let i = 0; i < 2 && (r.status === 503 || r.status === 429); i++) {
+    await new Promise((res) => setTimeout(res, 1200 * (i + 1)));
+    r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  }
+  return r;
+}
+
+async function aiChat(command: string, history: Array<{ role: string; content: string }>, email: string) {
   if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY not set" }, 500);
+  const memories = await loadMemories(email);
   const system =
     `You are the AI operator assistant inside an agency owner's private GoHighLevel command center. ` +
     `You help them run their agency: clients (sub-accounts), contacts, conversations, deals/pipelines, calendars, forms, custom fields, tags, products, and more.\n\n` +
-    `You do TWO things:\n` +
-    `1) CHAT — answer questions, explain, give advice, be conversational and helpful.\n` +
-    `2) ACT — perform ONE action from the ops catalog when the user wants something done.\n\n` +
+    (memories ? `THINGS THE OWNER TOLD YOU TO REMEMBER (always respect these):\n${memories}\n\n` : "") +
+    `You do THREE things:\n` +
+    `1) CHAT — answer questions, explain, give advice, be conversational.\n` +
+    `2) ACT — perform ONE action from the ops catalog.\n` +
+    `3) PLAN — for multi-part requests, propose a SEQUENCE of steps (up to 8). The owner approves once and every step runs in order.\n\n` +
     `Rules:\n` +
-    `- If the user asks something that needs live data (counts, lists, "what's in…"), choose the matching READ op (a *.list / *.messages / *.submissions op) and set readonly=true. The app will run it and send you the data so you can answer.\n` +
+    `- If the user asks something that needs live data (counts, lists, "what's in…"), choose the matching READ op (a *.list / *.messages / *.submissions op) and set readonly=true. The app runs it and sends you the data so you can answer.\n` +
     `- For CHANGES (create/update/delete/send/move/enroll/tag/book), propose the action with readonly=false. The owner approves before it runs.\n` +
+    `- If a request needs SEVERAL changes ("create a client AND add a calendar AND tag…"), use mode "plan" with steps:[{op,args,summary},...] in execution order. Steps run top to bottom; a step CANNOT use an id created by an earlier step in the same plan — if a later step needs a new id, stop the plan there and say you'll continue after it runs.\n` +
+    `- When the owner says "remember …" or states a lasting preference, ACT with op memory.save{note} (readonly=false).\n` +
     `- If you're just answering/chatting, use mode "reply".\n` +
     `- Never invent ops or ids. If you need an id you don't have, ask in "text".\n\n` +
-    `OPS:\n${OP_CATALOG}\n\n` +
-    `Respond ONLY as compact JSON: {"mode":"reply"|"action","text":"<friendly message to show the user — always include this>","op":"<op or empty>","args":{...},"summary":"<what the action does>","readonly":true|false}.`;
+    `OPS:\n${OP_CATALOG}\n` +
+    `memory.save{note} — permanently remember a fact/preference the owner tells you · memory.list — see saved memories · memory.delete{id}\n` +
+    `audit.list — recent actions taken in this command center. readonly.\n\n` +
+    `Respond ONLY as compact JSON: {"mode":"reply"|"action"|"plan","text":"<friendly message — always include>","op":"<op or empty>","args":{...},"steps":[{"op":"..","args":{..},"summary":".."}],"summary":"<what the action/plan does>","readonly":true|false}. Omit steps unless mode is "plan".`;
   const contents = [
     ...(Array.isArray(history) ? history : [])
       .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
@@ -384,12 +470,7 @@ async function aiChat(command: string, history: Array<{ role: string; content: s
       .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content).slice(0, 3000) }] })),
     { role: "user", parts: [{ text: command }] },
   ];
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.3, responseMimeType: "application/json" } }),
-  });
+  const r = await gemini({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { temperature: 0.3, responseMimeType: "application/json" } });
   if (!r.ok) return json({ error: "planner error", detail: (await r.text()).slice(0, 300) }, 502);
   const d = await r.json();
   const raw = d?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "{}";
@@ -407,12 +488,17 @@ Deno.serve(async (req) => {
   let body: { op?: string; args?: Record<string, string>; command?: string; history?: Array<{ role: string; content: string }> };
   try { body = await req.json(); } catch { return json({ error: "invalid JSON" }, 400); }
 
-  if (body.op === "ai.plan") return aiChat((body.command ?? "").slice(0, 2000), body.history ?? []);
-  if (body.op === "onboard.full") return onboardFull(body.args ?? {});
+  if (body.op === "ai.plan") return aiChat((body.command ?? "").slice(0, 2000), body.history ?? [], admin.email);
+  if (body.op === "onboard.full") { const resp = await onboardFull(body.args ?? {}); audit(admin.email, "onboard.full", body.args, true, 200); return resp; }
   if (body.op === "dashboard.stats") return dashboardStats();
   if (body.op === "client.health") return clientHealth(body.args ?? {});
   if (body.op === "brain.get") return brainGet(body.args ?? {});
-  if (body.op === "brain.save") return brainSave(body.args ?? {});
+  if (body.op === "brain.save") { const resp = await brainSave(body.args ?? {}); audit(admin.email, "brain.save", { slug: (body.args ?? {}).slug }, true, 200); return resp; }
+  if (body.op === "memory.save") return memorySave(admin.email, body.args ?? {});
+  if (body.op === "memory.list") return memoryList(admin.email);
+  if (body.op === "memory.delete") return memoryDelete(admin.email, body.args ?? {});
+  if (body.op === "audit.list") return auditList();
+  if (body.op === "batch") return runBatch((body as { steps?: Array<{ op: string; args?: Record<string, string> }> }).steps ?? [], admin.email);
   if (!body.op) return json({ error: "op required" }, 400);
-  return callGHL(body.op, body.args ?? {});
+  return callGHL(body.op, body.args ?? {}, admin.email);
 });

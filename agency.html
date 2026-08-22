@@ -132,6 +132,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button data-tab="forms" onclick="go('forms')">Forms & Submissions</button>
         <button data-tab="fields" onclick="go('fields')">Custom Fields</button>
         <button data-tab="calendars" onclick="go('calendars')">Calendars</button>
+        <button data-tab="activity" onclick="go('activity')">Activity & Memory</button>
       </nav>
     </aside>
     <main class="main" id="view"></main>
@@ -191,7 +192,7 @@ async function api(op,args,command,_retried){
   args=args||{};
   // sub-account ops need a locationId so the function can use the right client token
   if(command===undefined && op.indexOf('locations.')!==0 && !args.locationId && CURLOC) args.locationId=CURLOC;
-  var payload=(command!==undefined?{op:op,command:command,history:(args&&args.history)||[]}:{op:op,args:args});
+  var payload=(command!==undefined?{op:op,command:command,history:(args&&args.history)||[]}:(op==='batch'?{op:'batch',steps:args.steps||[]}:{op:op,args:args}));
   var r=null,lastErr=null;
   var tries=[FN].concat(FN_NAMES.filter(function(n){return n!==FN;}));
   for(var i=0;i<tries.length;i++){
@@ -235,6 +236,18 @@ async function chatTurn(userText,node,depth){
   if(err){ node.innerHTML='<span style="color:#f0b866">'+esc(err.message)+'</span>'; return; }
   var p=res.plan||{};
   var text=p.text||'';
+  if(p.mode==='plan' && Array.isArray(p.steps) && p.steps.length){
+    // multi-step plan → one approval runs every step in order
+    if(text) CHAT.push({role:'assistant',content:text});
+    var list=p.steps.map(function(s,i){return '<div id="st-'+i+'" style="margin:3px 0"><span class="muted">'+(i+1)+'.</span> '+esc(s.summary||s.op)+' <span class="muted" style="font-size:11px">('+esc(s.op)+')</span></div>';}).join('');
+    node.innerHTML=(text?esc(text)+'<br>':'')
+      +'<div class="actcard"><div style="font-weight:600;margin-bottom:6px">'+esc(p.summary||'Plan — '+p.steps.length+' steps')+'</div>'+list
+      +'<div class="btns" style="margin-top:10px"><button class="approve">Approve all &amp; run</button><button class="cancel">Cancel</button></div></div>';
+    var card2=node.querySelector('.actcard');
+    card2.querySelector('.approve').onclick=function(){ runPlanSteps(p.steps,card2); };
+    card2.querySelector('.cancel').onclick=function(){ card2.innerHTML='<span class="muted">Cancelled.</span>'; };
+    return;
+  }
   if(p.mode==='action' && p.op){
     if(p.readonly && depth<1){
       // read data automatically, then answer using it
@@ -258,6 +271,21 @@ async function chatTurn(userText,node,depth){
     node.innerHTML=esc(text||'(no reply)');
     CHAT.push({role:'assistant',content:text||''});
   }
+}
+async function runPlanSteps(steps,card){
+  var btns=card.querySelector('.btns'); if(btns)btns.innerHTML='<span class="muted">Running…</span>';
+  try{
+    var r=await api('batch',{steps:steps});
+    var results=(r&&r.results)||[];
+    for(var i=0;i<steps.length;i++){
+      var row=card.querySelector('#st-'+i); if(!row)continue;
+      var res=results[i];
+      row.innerHTML=(res? (res.ok?'✅ ':'❌ '):'⏭ ')+row.innerHTML.replace(/^([✅❌⏭] )?/,'');
+    }
+    if(btns)btns.innerHTML=(r&&r.ok)?'<span style="color:var(--ok)">✓ All '+results.length+' steps done.</span>':'<span style="color:#f0b866">Stopped — a step failed. '+esc(JSON.stringify((results.filter(function(x){return x&&!x.ok;})[0]||{}).data||'').slice(0,200))+'</span>';
+    CHAT.push({role:'user',content:'(plan results): '+JSON.stringify(results.map(function(x){return {op:x.op,ok:x.ok};}))});
+    go(TAB);
+  }catch(e){ if(btns)btns.innerHTML='<span style="color:#f0b866">'+esc(e.message)+'</span>'; }
 }
 async function runAction(p,card){
   card.innerHTML='<span class="muted">Running…</span>';
@@ -303,7 +331,34 @@ function go(tab){
   else if(tab==='forms')viewForms();
   else if(tab==='fields')viewFields();
   else if(tab==='calendars')viewCalendars();
+  else if(tab==='activity')viewActivity();
 }
+
+/* ---------- Activity (audit log) + AI Memory ---------- */
+async function viewActivity(){
+  el('view').innerHTML='<h2>Activity &amp; Memory</h2>'
+    +'<h3 style="font-size:14px;margin:6px 0 8px">🧠 What your AI remembers</h3><div id="memlist" class="muted">Loading…</div>'
+    +'<div class="bar" style="margin-top:8px"><input id="mem-new" placeholder="Teach it something to remember forever…" style="flex:1"><button class="btn pri" onclick="addMemory()">Remember</button></div>'
+    +'<h3 style="font-size:14px;margin:20px 0 8px">📜 Recent actions (audit log)</h3><div id="audlist" class="muted">Loading…</div>';
+  try{
+    var m=await api('memory.list',{});
+    var rows=(m.data||[]);
+    el('memlist').innerHTML=rows.length?'<table><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.note)+'</td><td class="muted" style="font-size:11px;white-space:nowrap">'+esc((x.created_at||'').slice(0,10))+'</td><td style="text-align:right"><button class="rowbtn dng" onclick="delMemory(\''+esc(x.id)+'\')">Forget</button></td></tr>';}).join('')+'</tbody></table>':'<div class="muted">Nothing yet — tell the AI "remember that…" or add one below.</div>';
+    el('memlist').classList.remove('muted');
+  }catch(e){ el('memlist').innerHTML=viewErr(e); }
+  try{
+    var a=await api('audit.list',{});
+    var logs=(a.data||[]);
+    el('audlist').innerHTML=logs.length?'<table><thead><tr><th>When</th><th>Action</th><th>Details</th><th>OK</th></tr></thead><tbody>'+logs.map(function(x){return '<tr><td class="muted" style="white-space:nowrap">'+esc((x.created_at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.op)+'</td><td class="muted" style="font-size:12px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(JSON.stringify(x.args||{}).slice(0,120))+'</td><td>'+(x.ok?'✅':'❌')+'</td></tr>';}).join('')+'</tbody></table>':'<div class="muted">No actions recorded yet. (Run the SQL migration if this errors.)</div>';
+    el('audlist').classList.remove('muted');
+  }catch(e){ el('audlist').innerHTML=viewErr(e); }
+}
+async function addMemory(){
+  var n=el('mem-new').value.trim(); if(!n)return;
+  var r=await api('memory.save',{note:n});
+  if(r.ok!==false)viewActivity(); else alert('Save failed.');
+}
+async function delMemory(id){ var r=await api('memory.delete',{id:id}); if(r.ok!==false)viewActivity(); }
 
 /* ---------- Dashboard (cross-client KPIs) ---------- */
 function money(n){n=Number(n||0);return '$'+n.toLocaleString('en-US');}
@@ -375,11 +430,20 @@ async function viewBrain(id){
     +fld('br-booking_url','Booking link',b.booking_url)
     +ta('br-faqs','FAQs',b.faqs,'Common questions + answers')
     +ta('br-custom_instructions','Extra instructions',b.custom_instructions,'Anything special the AI should always do')
+    +'<div style="margin-top:16px;padding:12px;background:var(--soft);border:1px solid var(--pri);border-radius:10px"><div style="font-weight:600;margin-bottom:4px">⚡ Receptionist powers</div><div class="muted" style="font-size:12px;margin-bottom:6px">With these set, this AI can capture leads into GHL, check real availability, and book appointments.</div>'
+    +fld('br-ghl_location_id','GHL location id (enables actions)',b.ghl_location_id||id)
+    +'<label style="display:block;font-size:12px;color:var(--mut);margin:10px 0 4px">Booking calendar</label><select id="br-booking_calendar_id" class="btn" style="padding:9px;width:100%"><option value="">Loading calendars…</option></select></div>'
     +'<div class="bar" style="margin-top:14px"><button class="btn pri" onclick="saveBrain(\''+esc(id)+'\')">Save brain</button><button class="btn" onclick="viewHealth(\''+esc(id)+'\')">Back to health</button></div><div id="brerr"></div></div>';
+  // load this client's calendars into the booking picker
+  try{
+    var cr=await api('calendars.list',{locationId:id});
+    var cals=(cr.data&&(cr.data.calendars||cr.data))||[]; if(!Array.isArray(cals))cals=[];
+    var sel=el('br-booking_calendar_id'); if(sel) sel.innerHTML='<option value="">None (no booking)</option>'+cals.map(function(c){return '<option value="'+esc(c.id)+'"'+((b.booking_calendar_id===c.id)?' selected':'')+'>'+esc(c.name||c.id)+'</option>';}).join('');
+  }catch(e){ var sel2=el('br-booking_calendar_id'); if(sel2)sel2.innerHTML='<option value="'+esc(b.booking_calendar_id||'')+'">'+esc(b.booking_calendar_id||'None')+'</option>'; }
 }
 async function saveBrain(id){
   var g=function(k){var e=el('br-'+k);return e?(e.value||'').trim():'';};
-  var args={slug:id,assistant_name:g('assistant_name'),business_name:g('business_name'),industry:g('industry'),tone:(el('br-tone')?el('br-tone').value:'Friendly'),services:g('services'),pricing:g('pricing'),hours:g('hours'),phone:g('phone'),booking_url:g('booking_url'),faqs:g('faqs'),custom_instructions:g('custom_instructions')};
+  var args={slug:id,assistant_name:g('assistant_name'),business_name:g('business_name'),industry:g('industry'),tone:(el('br-tone')?el('br-tone').value:'Friendly'),services:g('services'),pricing:g('pricing'),hours:g('hours'),phone:g('phone'),booking_url:g('booking_url'),faqs:g('faqs'),custom_instructions:g('custom_instructions'),ghl_location_id:g('ghl_location_id'),booking_calendar_id:(el('br-booking_calendar_id')?el('br-booking_calendar_id').value:'')};
   var out=el('brerr'); out.innerHTML='<span class="muted">Saving…</span>';
   try{ var res=await api('brain.save',args);
     out.innerHTML=(res.ok!==false)?'<div style="color:var(--ok);margin-top:10px">✓ Saved. The client\'s AI now uses this.</div>':('<div style="color:#f0b866;margin-top:10px">Save failed: '+esc(JSON.stringify(res.data).slice(0,200))+'</div>'+diagHTML());
