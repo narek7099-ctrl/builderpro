@@ -290,8 +290,8 @@ async function dashboardStats() {
   const lr = await fetch(`${GHL_BASE}/locations/search?companyId=${GHL_COMPANY_ID}&limit=100`, { headers: ghlHeaders(GHL_API_KEY) });
   const ld = await lr.json().catch(() => ({}));
   const locs = (ld?.locations || ld || []) as Array<Record<string, string>>;
-  const list = Array.isArray(locs) ? locs : [];
-  const rows = await Promise.all(list.map(async (l) => {
+  const rowsIn = Array.isArray(locs) ? locs : [];
+  const rows = await Promise.all(rowsIn.map(async (l) => {
     const id = l.id;
     const out: Record<string, unknown> = { id, name: l.name || id, contacts: null, openDeals: null, pipelineValue: 0, wonValue: 0, hasBrain: false };
     try {
@@ -315,17 +315,21 @@ async function dashboardStats() {
   return json({ ok: true, data: rows });
 }
 
+// shared cache of locations for clientHealth's phone lookup
+let locList: Array<Record<string, string>> = [];
+async function refreshLocList() { try { const lr = await fetch(`${GHL_BASE}/locations/search?companyId=${GHL_COMPANY_ID}&limit=100`, { headers: ghlHeaders(GHL_API_KEY) }); const ld = await lr.json(); const l = ld?.locations || ld || []; locList = Array.isArray(l) ? l : []; } catch { /* skip */ } }
+
 // ---- per-client setup health: what's configured vs missing ----
 async function clientHealth(a: Record<string, string>) {
   const id = a.locationId || a.id || "";
   if (!id) return json({ ok: false, error: "locationId required" }, 400);
   const loc = { hasPhone: false, pipelines: 0, calendars: 0, customValues: 0, workflows: 0, hasBrain: false };
   try {
-    if (!list.length) await refreshLocList();
+    if (!locList.length) await refreshLocList();
     const tok = await locationToken(id);
     const h = ghlHeaders(tok);
     const get = async (p: string) => { try { return await (await fetch(`${GHL_BASE}${p}`, { headers: h })).json(); } catch { return {}; } };
-    const li = (list.find((x) => x.id === id) as Record<string, string>) || {};
+    const li = (locList.find((x) => x.id === id) as Record<string, string>) || {};
     const [pi, ca, cv, wf] = await Promise.all([
       get(`/opportunities/pipelines?locationId=${id}`),
       get(`/calendars/?locationId=${id}`),
@@ -341,10 +345,6 @@ async function clientHealth(a: Record<string, string>) {
   if (SB_URL && SB_SERVICE) { try { const b = await fetch(`${SB_URL}/rest/v1/ai_brain?slug=eq.${encodeURIComponent(id)}&select=slug`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }); const br = await b.json(); loc.hasBrain = Array.isArray(br) && br.length > 0; } catch { /* skip */ } }
   return json({ ok: true, data: loc });
 }
-// shared cache of locations for clientHealth's phone lookup
-let list: Array<Record<string, string>> = [];
-async function refreshLocList() { try { const lr = await fetch(`${GHL_BASE}/locations/search?companyId=${GHL_COMPANY_ID}&limit=100`, { headers: ghlHeaders(GHL_API_KEY) }); const ld = await lr.json(); const l = ld?.locations || ld || []; list = Array.isArray(l) ? l : []; } catch { /* skip */ } }
-
 async function callGHL(op: string, args: Record<string, string>) {
   const spec = opToRequest(op, args);
   if (!spec) return json({ error: `unknown op: ${op}` }, 400);
