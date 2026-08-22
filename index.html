@@ -14139,5 +14139,57 @@ window.bpOpenConv=async function(id){
 };
 
 </script>
+
+<script>
+/* ==== In-dashboard AI assistant (owner mode): knows YOUR data, navigates for you ==== */
+(function(){
+  var A_NAME="Atlas", A_BRAND="BuilderPro", A_NAV=[{"key": "dashboard", "label": "Dashboard", "desc": "leads, bookings and revenue at a glance"}, {"key": "messaging", "label": "Messaging", "desc": "texts and emails with leads in one inbox"}, {"key": "contacts", "label": "Contacts", "desc": "every lead and customer, add/import here"}, {"key": "calendar", "label": "Calendar", "desc": "upcoming inspections and appointments"}, {"key": "closedeals", "label": "Close Deals", "desc": "homeowners deciding on their estimate"}, {"key": "calculator", "label": "My Calculator", "desc": "preview the estimator and edit pricing"}, {"key": "automations", "label": "Automations", "desc": "the systems working 24/7"}];
+  var css=document.createElement('style');
+  css.textContent='.oaw-btn{position:fixed;right:18px;bottom:18px;z-index:99999;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;background:linear-gradient(135deg,#7c5cff,#5b86f5);color:#fff;font-size:22px;box-shadow:0 8px 24px rgba(92,80,255,.45);display:none}'
+  +'.oaw-panel{position:fixed;right:18px;bottom:84px;z-index:99999;width:min(360px,calc(100vw - 36px));max-height:min(520px,70vh);background:#14131b;border:1px solid #2a2833;border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.5);font:14px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;color:#eceaf3}'
+  +'.oaw-head{padding:12px 14px;background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(91,134,245,.12));font-weight:700;display:flex;align-items:center;gap:8px}.oaw-head span{color:#9b98a8;font-weight:400;font-size:12px}'
+  +'.oaw-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px}'
+  +'.oaw-m{max-width:85%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}.oaw-m.u{align-self:flex-end;background:#7c5cff;color:#fff;border-bottom-right-radius:4px}.oaw-m.b{align-self:flex-start;background:#1d1c25;border:1px solid #2a2833;border-bottom-left-radius:4px}'
+  +'.oaw-in{display:flex;gap:8px;padding:10px;border-top:1px solid #2a2833}.oaw-in input{flex:1;background:#1d1c25;border:1px solid #2a2833;border-radius:9px;padding:9px 12px;color:#eceaf3;outline:none;font:inherit}.oaw-in button{background:linear-gradient(135deg,#7c5cff,#5b86f5);border:0;border-radius:9px;color:#fff;padding:0 14px;font-weight:600;cursor:pointer}';
+  document.head.appendChild(css);
+  var btn=document.createElement('button');btn.className='oaw-btn';btn.innerHTML='&#10024;';btn.title='Ask '+A_NAME;
+  var pan=document.createElement('div');pan.className='oaw-panel';
+  pan.innerHTML='<div class="oaw-head">&#10024; '+A_NAME+' <span>&mdash; your '+A_BRAND+' assistant</span></div><div class="oaw-log" id="oawLog"></div><div class="oaw-in"><input id="oawIn" placeholder="Ask about bookings, contacts, or where to find things&hellip;"><button id="oawGo">&#8594;</button></div>';
+  document.body.appendChild(btn);document.body.appendChild(pan);
+  var HIST=[],open=false;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function add(role,text){var l=document.getElementById('oawLog');var d=document.createElement('div');d.className='oaw-m '+(role==='user'?'u':'b');d.innerHTML=esc(text);l.appendChild(d);l.scrollTop=l.scrollHeight;return d;}
+  btn.onclick=function(){open=!open;pan.style.display=open?'flex':'none';
+    if(open&&!HIST.length){add('bot','Hi! I\'m '+A_NAME+'. Ask me about your bookings, contacts, unread messages — or where to find anything in your dashboard.');}
+    if(open)setTimeout(function(){var i=document.getElementById('oawIn');if(i)i.focus();},50);};
+  /* only show the assistant while the portal is open + signed in */
+  setInterval(function(){
+    var app=document.getElementById('bpxApp');
+    var on=!!(app&&app.classList.contains('on'));
+    btn.style.display=on?'block':'none';
+    if(!on&&open){open=false;pan.style.display='none';}
+  },700);
+  async function send(){
+    var inp=document.getElementById('oawIn');var t=(inp.value||'').trim();if(!t)return;inp.value='';
+    add('user',t);HIST.push({role:'user',content:t});
+    var node=add('bot','…');
+    try{
+      var tok='';
+      if(window.BP_SB&&BP_SB.auth){var s=await BP_SB.auth.getSession();tok=(s&&s.data&&s.data.session&&s.data.session.access_token)||'';}
+      if(!tok){node.textContent='Please sign in to your dashboard first.';return;}
+      var r=await fetch((window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co')+'/functions/v1/ai-chat',{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
+        body:JSON.stringify({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV})});
+      var d=await r.json();
+      var reply=d.reply||d.error||'Sorry, something went wrong.';
+      node.textContent=reply;HIST.push({role:'assistant',content:reply});
+      if(d.navigate&&typeof window.bpNav==='function'){try{bpNav(d.navigate);}catch(e){}}
+    }catch(e){node.textContent='Connection issue — please try again.';}
+  }
+  document.getElementById('oawGo').onclick=send;
+  document.getElementById('oawIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
+})();
+</script>
+
 </body>
 </html>

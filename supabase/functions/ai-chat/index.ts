@@ -126,6 +126,105 @@ async function actBook(locId: string, calId: string, a: Record<string, string>):
   return r.ok ? `BOOKED ✓ appointment at ${a.startTime} (id ${d?.id || "?"}).` : `Booking failed (HTTP ${r.status}): ${JSON.stringify(d).slice(0, 150)}`;
 }
 
+// ===================== OWNER MODE =====================
+// The same Nova/Atlas, but inside the BuilderPro / Web OS client dashboard:
+// it knows the logged-in business owner's OWN data (their contacts, bookings,
+// conversations from the Supabase tables) and helps them navigate the portal.
+
+async function verifyUser(req: Request): Promise<{ id: string; email: string } | null> {
+  const auth = req.headers.get("authorization") ?? "";
+  const token = auth.replace(/^Bearer\s+/i, "");
+  if (!token || !SB_URL || !SB_SERVICE) return null;
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: SB_SERVICE } });
+    if (!r.ok) return null;
+    const u = await r.json();
+    return u?.id ? { id: u.id, email: u.email ?? "" } : null;
+  } catch { return null; }
+}
+
+// Pull a live snapshot of THIS owner's business from the Supabase tables the
+// dashboard itself uses (RLS-equivalent: we filter by owner id server-side).
+async function ownerSnapshot(uid: string): Promise<string> {
+  const q = async (path: string) => {
+    try { const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: sbHeaders }); return r.ok ? await r.json() : []; } catch { return []; }
+  };
+  const enc = encodeURIComponent(uid);
+  const nowIso = new Date().toISOString();
+  const [contacts, upcoming, convos] = await Promise.all([
+    q(`contacts?owner=eq.${enc}&select=name,phone,email,tags,date_added&order=date_added.desc&limit=8`),
+    q(`appointments?owner=eq.${enc}&select=title,contact_name,kind,start_at,status,address&start_at=gte.${encodeURIComponent(nowIso)}&order=start_at.asc&limit=8`),
+    q(`conversations?owner=eq.${enc}&select=contact_name,last_message,last_dir,unread,last_at&order=last_at.desc&limit=8`),
+  ]);
+  const cCount = await (async () => { try { const r = await fetch(`${SB_URL}/rest/v1/contacts?owner=eq.${enc}&select=id`, { headers: { ...sbHeaders, Prefer: "count=exact", Range: "0-0" } }); return r.headers.get("content-range")?.split("/")[1] ?? String((contacts as unknown[]).length); } catch { return "?"; } })();
+  const unread = (convos as Array<{ unread?: number }>).reduce((n, c) => n + (Number(c.unread) || 0), 0);
+  const fmtA = (a: Record<string, string>) => `• ${a.start_at?.slice(0, 16).replace("T", " ")} — ${a.title || "Appointment"}${a.contact_name ? " with " + a.contact_name : ""}${a.status && a.status !== "confirmed" ? " (" + a.status + ")" : ""}`;
+  const fmtC = (c: Record<string, string>) => `• ${c.name || "—"}${c.phone ? " · " + c.phone : ""}${Array.isArray(c.tags) && c.tags.length ? " [" + (c.tags as unknown as string[]).join(", ") + "]" : ""}`;
+  const fmtM = (m: Record<string, string>) => `• ${m.contact_name || "—"}${Number(m.unread) ? " (" + m.unread + " unread)" : ""}: "${(m.last_message || "").slice(0, 60)}"`;
+  return (
+    `LIVE BUSINESS DATA (the owner's real numbers — use these to answer):\n` +
+    `Total contacts: ${cCount}. Unread messages: ${unread}.\n\n` +
+    `UPCOMING APPOINTMENTS:\n${(upcoming as Array<Record<string, string>>).map(fmtA).join("\n") || "(none scheduled)"}\n\n` +
+    `RECENT CONTACTS:\n${(contacts as Array<Record<string, string>>).map(fmtC).join("\n") || "(none yet)"}\n\n` +
+    `RECENT CONVERSATIONS:\n${(convos as Array<Record<string, string>>).map(fmtM).join("\n") || "(none yet)"}\n`
+  );
+}
+
+function ownerSystem(assistant: string, brand: string, navList: string, snapshot: string): string {
+  return (
+    `You are ${assistant}, the built-in AI assistant inside the ${brand} client dashboard. ` +
+    `The person you're talking to is the BUSINESS OWNER (your boss's client) using their private portal — NOT a website visitor. ` +
+    `Help them: understand their numbers, find things, and get around the dashboard.\n\n` +
+    `DASHBOARD SECTIONS you can send them to:\n${navList}\n\n` +
+    snapshot + `\n` +
+    `Today's date: ${new Date().toISOString().slice(0, 10)}.\n\n` +
+    `Rules:\n` +
+    `- Answer questions about their bookings, contacts, and messages from the LIVE DATA above — be specific (names, times, counts).\n` +
+    `- When they want to see or do something a section covers ("where do I add a contact?", "show my calendar"), include a navigate action to that section and tell them what they'll find there.\n` +
+    `- If the data doesn't cover something, say so plainly and point them to the right section — never invent numbers.\n` +
+    `- Friendly, concise: 1–4 short sentences, plain text (no markdown).\n\n` +
+    `Respond ONLY as JSON: {"reply":"<message>","navigate":null|"<section key from the list>"}`
+  );
+}
+
+async function handleOwner(req: Request, payload: { message?: string; history?: Array<{ role: string; content: string }>; assistant?: string; brand?: string; nav?: Array<{ key: string; label: string; desc?: string }> }) {
+  const user = await verifyUser(req);
+  if (!user) return json({ error: "not signed in", reply: "Please sign in to your dashboard first." }, 401);
+  const message = (payload.message ?? "").toString().slice(0, 2000).trim();
+  if (!message) return json({ error: "message required" }, 400);
+
+  const assistant = (payload.assistant || "Nova").slice(0, 40);
+  const brand = (payload.brand || "Web OS").slice(0, 60);
+  const nav = Array.isArray(payload.nav) && payload.nav.length ? payload.nav : [
+    { key: "dashboard", label: "Dashboard", desc: "leads, bookings and revenue at a glance" },
+    { key: "messaging", label: "Messaging", desc: "texts and emails with leads" },
+    { key: "contacts", label: "Contacts", desc: "every lead and customer" },
+    { key: "calendar", label: "Calendar", desc: "upcoming appointments and jobs" },
+  ];
+  const navList = nav.slice(0, 12).map((n) => `- "${n.key}" → ${n.label}${n.desc ? ": " + n.desc : ""}`).join("\n");
+  const snapshot = await ownerSnapshot(user.id);
+  const system = ownerSystem(assistant, brand, navList, snapshot);
+
+  const history = (Array.isArray(payload.history) ? payload.history : [])
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
+    .slice(-10)
+    .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content).slice(0, 2000) }] }));
+
+  const r = await gemini({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [...history, { role: "user", parts: [{ text: message }] }],
+    generationConfig: { maxOutputTokens: 400, temperature: 0.5, responseMimeType: "application/json" },
+  });
+  if (!r.ok) return json({ error: "model error", detail: (await r.text()).slice(0, 300) }, 502);
+  const data = await r.json();
+  const raw = (data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "").trim();
+  let out: { reply?: string; navigate?: string | null };
+  try { out = JSON.parse(raw); } catch { out = { reply: raw || "I'm here — what would you like to check?", navigate: null }; }
+  const allowed = new Set(nav.map((n) => n.key));
+  return json({ reply: out.reply || "I'm here — what would you like to check?", navigate: out.navigate && allowed.has(out.navigate) ? out.navigate : null });
+}
+// =================== end OWNER MODE ===================
+
 function buildSystem(b: Record<string, string>, canAct: boolean, hasCal: boolean): string {
   const name = b.business_name || b.name || "this business";
   const assistant = b.assistant_name || "Nova";
@@ -167,8 +266,12 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
   if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY not set" }, 500);
 
-  let payload: { message?: string; slug?: string; business?: Record<string, string> | null; history?: Array<{ role: string; content: string }> };
+  let payload: { mode?: string; message?: string; slug?: string; business?: Record<string, string> | null; history?: Array<{ role: string; content: string }>; assistant?: string; brand?: string; nav?: Array<{ key: string; label: string; desc?: string }> };
   try { payload = await req.json(); } catch { return json({ error: "invalid JSON" }, 400); }
+
+  // owner mode: the logged-in business owner chatting inside their dashboard
+  if (payload.mode === "owner") return handleOwner(req, payload);
+
   const message = (payload.message ?? "").toString().slice(0, 2000).trim();
   if (!message) return json({ error: "message required" }, 400);
 
