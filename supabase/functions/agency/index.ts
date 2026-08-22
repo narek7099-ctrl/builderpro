@@ -208,6 +208,10 @@ tags.list{locationId} · tags.create{locationId,name} · tags.delete{locationId,
 products.list{locationId} · products.create{locationId,name} · products.update{id,locationId,name} · products.delete{id,locationId}
 opportunities.delete{id} · users.list{locationId}
 onboard.full{name,phone?,email?,snapshotId?,industry?,tone?,services?,pricing?,hours?,faqs?,inviteEmail?} — fully sets up a NEW client: creates from snapshot, personalizes it, and builds their AI receptionist. Use when the user wants to onboard/set up a new client.
+dashboard.stats — cross-client KPIs (contacts, open deals, pipeline & won value per client). readonly.
+client.health{locationId} — what's configured for a client (pipelines, calendars, custom values, workflows, AI brain, phone). readonly.
+brain.get{slug} — read a client's AI receptionist knowledge (slug = the client's locationId). readonly.
+brain.save{slug,business_name?,industry?,tone?,services?,pricing?,hours?,phone?,booking_url?,faqs?,custom_instructions?,assistant_name?} — update a client's AI receptionist knowledge.
 `.trim();
 
 // Full client onboarding in one call: create (from snapshot) → personalize custom
@@ -255,6 +259,91 @@ async function onboardFull(a: Record<string, string>) {
 
   return json({ ok: true, locationId, steps });
 }
+
+// ---- AI brain (client's receptionist knowledge) stored in Supabase ----
+async function brainGet(a: Record<string, string>) {
+  const slug = a.slug || a.locationId || "";
+  if (!slug) return json({ ok: false, error: "slug required" }, 400);
+  if (!SB_URL || !SB_SERVICE) return json({ ok: false, error: "supabase not configured" }, 500);
+  const r = await fetch(`${SB_URL}/rest/v1/ai_brain?slug=eq.${encodeURIComponent(slug)}&select=*`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+  const rows = await r.json().catch(() => []);
+  return json({ ok: true, data: Array.isArray(rows) && rows.length ? rows[0] : null });
+}
+async function brainSave(a: Record<string, string>) {
+  const slug = a.slug || a.locationId || "";
+  if (!slug) return json({ ok: false, error: "slug required" }, 400);
+  if (!SB_URL || !SB_SERVICE) return json({ ok: false, error: "supabase not configured" }, 500);
+  const row: Record<string, unknown> = { slug, is_demo: false };
+  ["assistant_name","business_name","industry","tone","services","pricing","hours","service_area","phone","booking_url","faqs","custom_instructions"].forEach((k) => { if (a[k] !== undefined) row[k] = a[k]; });
+  const r = await fetch(`${SB_URL}/rest/v1/ai_brain?on_conflict=slug`, {
+    method: "POST",
+    headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify(row),
+  });
+  const d = await r.json().catch(() => ({}));
+  return json({ ok: r.ok, status: r.status, data: Array.isArray(d) ? d[0] : d });
+}
+
+// ---- cross-client dashboard: counts per sub-account for the home view ----
+async function dashboardStats() {
+  if (!GHL_API_KEY) return json({ ok: false, error: "GHL_API_KEY not set" }, 500);
+  const lr = await fetch(`${GHL_BASE}/locations/search?companyId=${GHL_COMPANY_ID}&limit=100`, { headers: ghlHeaders(GHL_API_KEY) });
+  const ld = await lr.json().catch(() => ({}));
+  const locs = (ld?.locations || ld || []) as Array<Record<string, string>>;
+  const list = Array.isArray(locs) ? locs : [];
+  const rows = await Promise.all(list.map(async (l) => {
+    const id = l.id;
+    const out: Record<string, unknown> = { id, name: l.name || id, contacts: null, openDeals: null, pipelineValue: 0, wonValue: 0, hasBrain: false };
+    try {
+      const tok = await locationToken(id);
+      const h = ghlHeaders(tok);
+      // contacts total (limit=1, read meta.total)
+      try { const c = await (await fetch(`${GHL_BASE}/contacts/?locationId=${id}&limit=1`, { headers: h })).json(); out.contacts = c?.meta?.total ?? (Array.isArray(c?.contacts) ? c.contacts.length : null); } catch { /* skip */ }
+      // opportunities: open count + pipeline/won value
+      try {
+        const o = await (await fetch(`${GHL_BASE}/opportunities/search?location_id=${id}&limit=100`, { headers: h })).json();
+        const opps = (o?.opportunities || []) as Array<Record<string, string>>;
+        let open = 0, pv = 0, wv = 0;
+        (Array.isArray(opps) ? opps : []).forEach((op) => { const v = Number(op.monetaryValue || 0) || 0; if (op.status === "open") { open++; pv += v; } if (op.status === "won") wv += v; });
+        out.openDeals = o?.meta?.total ?? open; out.pipelineValue = pv; out.wonValue = wv;
+      } catch { /* skip */ }
+    } catch { /* skip */ }
+    // does this client have an AI brain?
+    if (SB_URL && SB_SERVICE) { try { const b = await fetch(`${SB_URL}/rest/v1/ai_brain?slug=eq.${encodeURIComponent(id)}&select=slug`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }); const br = await b.json(); out.hasBrain = Array.isArray(br) && br.length > 0; } catch { /* skip */ } }
+    return out;
+  }));
+  return json({ ok: true, data: rows });
+}
+
+// ---- per-client setup health: what's configured vs missing ----
+async function clientHealth(a: Record<string, string>) {
+  const id = a.locationId || a.id || "";
+  if (!id) return json({ ok: false, error: "locationId required" }, 400);
+  const loc = { hasPhone: false, pipelines: 0, calendars: 0, customValues: 0, workflows: 0, hasBrain: false };
+  try {
+    if (!list.length) await refreshLocList();
+    const tok = await locationToken(id);
+    const h = ghlHeaders(tok);
+    const get = async (p: string) => { try { return await (await fetch(`${GHL_BASE}${p}`, { headers: h })).json(); } catch { return {}; } };
+    const li = (list.find((x) => x.id === id) as Record<string, string>) || {};
+    const [pi, ca, cv, wf] = await Promise.all([
+      get(`/opportunities/pipelines?locationId=${id}`),
+      get(`/calendars/?locationId=${id}`),
+      get(`/locations/${id}/customValues`),
+      get(`/workflows/?locationId=${id}`),
+    ]);
+    loc.hasPhone = !!(li.phone);
+    loc.pipelines = (pi?.pipelines || []).length || 0;
+    loc.calendars = (ca?.calendars || []).length || 0;
+    loc.customValues = (cv?.customValues || []).length || 0;
+    loc.workflows = (wf?.workflows || []).length || 0;
+  } catch { /* skip */ }
+  if (SB_URL && SB_SERVICE) { try { const b = await fetch(`${SB_URL}/rest/v1/ai_brain?slug=eq.${encodeURIComponent(id)}&select=slug`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }); const br = await b.json(); loc.hasBrain = Array.isArray(br) && br.length > 0; } catch { /* skip */ } }
+  return json({ ok: true, data: loc });
+}
+// shared cache of locations for clientHealth's phone lookup
+let list: Array<Record<string, string>> = [];
+async function refreshLocList() { try { const lr = await fetch(`${GHL_BASE}/locations/search?companyId=${GHL_COMPANY_ID}&limit=100`, { headers: ghlHeaders(GHL_API_KEY) }); const ld = await lr.json(); const l = ld?.locations || ld || []; list = Array.isArray(l) ? l : []; } catch { /* skip */ } }
 
 async function callGHL(op: string, args: Record<string, string>) {
   const spec = opToRequest(op, args);
@@ -320,6 +409,10 @@ Deno.serve(async (req) => {
 
   if (body.op === "ai.plan") return aiChat((body.command ?? "").slice(0, 2000), body.history ?? []);
   if (body.op === "onboard.full") return onboardFull(body.args ?? {});
+  if (body.op === "dashboard.stats") return dashboardStats();
+  if (body.op === "client.health") return clientHealth(body.args ?? {});
+  if (body.op === "brain.get") return brainGet(body.args ?? {});
+  if (body.op === "brain.save") return brainSave(body.args ?? {});
   if (!body.op) return json({ error: "op required" }, 400);
   return callGHL(body.op, body.args ?? {});
 });

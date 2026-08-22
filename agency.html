@@ -124,7 +124,8 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <select id="locSel" onchange="onLocChange()"><option value="">Loading…</option></select>
       </div>
       <nav class="nav" id="nav">
-        <button data-tab="clients" class="on" onclick="go('clients')">Clients</button>
+        <button data-tab="dashboard" class="on" onclick="go('dashboard')">📊 Dashboard</button>
+        <button data-tab="clients" onclick="go('clients')">Clients</button>
         <button data-tab="contacts" onclick="go('contacts')">Contacts</button>
         <button data-tab="conversations" onclick="go('conversations')">Conversations</button>
         <button data-tab="pipelines" onclick="go('pipelines')">Pipelines & Workflows</button>
@@ -273,7 +274,7 @@ async function startApp(){
   el('login').classList.add('hidden'); el('app').classList.remove('hidden');
   el('who').textContent=EMAIL;
   await loadLocations();
-  go('clients');
+  go('dashboard');
 }
 var LOAD_ERR='';
 async function loadLocations(){
@@ -294,13 +295,95 @@ function onLocChange(){CURLOC=el('locSel').value;localStorage.setItem('agency_lo
 function go(tab){
   TAB=tab;
   var btns=el('nav').querySelectorAll('button'); for(var i=0;i<btns.length;i++) btns[i].classList.toggle('on',btns[i].getAttribute('data-tab')===tab);
-  if(tab==='clients')viewClients();
+  if(tab==='dashboard')viewDashboard();
+  else if(tab==='clients')viewClients();
   else if(tab==='contacts')viewContacts();
   else if(tab==='conversations')viewConversations();
   else if(tab==='pipelines')viewPipelines();
   else if(tab==='forms')viewForms();
   else if(tab==='fields')viewFields();
   else if(tab==='calendars')viewCalendars();
+}
+
+/* ---------- Dashboard (cross-client KPIs) ---------- */
+function money(n){n=Number(n||0);return '$'+n.toLocaleString('en-US');}
+function kpi(label,val){return '<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:150px;flex:1"><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.06em">'+esc(label)+'</div><div style="font-size:26px;font-weight:700;margin-top:4px">'+val+'</div></div>';}
+async function viewDashboard(){
+  el('view').innerHTML='<h2>Agency Dashboard</h2><div id="dash" class="muted">Crunching numbers across all your clients…</div>';
+  var res; try{ res=await api('dashboard.stats',{}); }catch(e){ el('dash').innerHTML=viewErr(e); return; }
+  if(res.ok===false){ el('dash').innerHTML=viewErr(null,res); return; }
+  var rows=(res.data||[]); if(!Array.isArray(rows))rows=[];
+  var tC=0,tD=0,tPV=0,tWV=0,brains=0;
+  rows.forEach(function(r){ tC+=Number(r.contacts||0); tD+=Number(r.openDeals||0); tPV+=Number(r.pipelineValue||0); tWV+=Number(r.wonValue||0); if(r.hasBrain)brains++; });
+  var cards='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">'
+    +kpi('Clients',rows.length)+kpi('Total contacts',tC)+kpi('Open deals',tD)+kpi('Pipeline value',money(tPV))+kpi('Won value',money(tWV))+kpi('AI receptionists',brains+' / '+rows.length)+'</div>';
+  var table='<table><thead><tr><th>Client</th><th>Contacts</th><th>Open deals</th><th>Pipeline</th><th>Won</th><th>AI brain</th><th></th></tr></thead><tbody>'
+    +rows.map(function(r){
+      return '<tr><td>'+esc(r.name)+'</td><td>'+(r.contacts==null?'—':r.contacts)+'</td><td>'+(r.openDeals==null?'—':r.openDeals)+'</td><td class="muted">'+money(r.pipelineValue)+'</td><td class="muted">'+money(r.wonValue)+'</td>'
+        +'<td>'+(r.hasBrain?'<span style="color:var(--ok)">✓ set</span>':'<span style="color:#f0b866">missing</span>')+'</td>'
+        +'<td style="text-align:right;white-space:nowrap"><button class="rowbtn" onclick="jumpClient(\''+esc(r.id)+'\',\'health\')">Health</button><button class="rowbtn" onclick="jumpClient(\''+esc(r.id)+'\',\'brain\')">Brain</button></td></tr>';
+    }).join('')+'</tbody></table>';
+  el('dash').classList.remove('muted');
+  el('dash').innerHTML=cards+table+'<div class="muted" style="font-size:12px;margin-top:10px">Counts read live from GoHighLevel. Empty clients show 0. Set an AI brain from the Clients tab or the Brain button.</div>';
+}
+function jumpClient(id,what){
+  CURLOC=id; var sel=el('locSel'); if(sel)sel.value=id; localStorage.setItem('agency_loc',id); window._wfs=null;
+  if(what==='health')viewHealth(id); else if(what==='brain')viewBrain(id);
+}
+
+/* ---------- Setup Health (per-client checklist) ---------- */
+function healthRow(ok,label,detail){return '<tr><td style="width:34px;font-size:16px">'+(ok?'✅':'⚠️')+'</td><td>'+esc(label)+'</td><td class="muted">'+esc(detail||'')+'</td></tr>';}
+async function viewHealth(id){
+  id=id||CURLOC; if(!id){el('view').innerHTML='<h2>Setup Health</h2><div class="empty">Pick a client first.</div>';return;}
+  var name=(LOCS.filter(function(x){return x.id===id;})[0]||{}).name||id;
+  el('view').innerHTML='<h2>Setup Health — '+esc(name)+'</h2><div id="hl" class="muted">Checking what\'s set up…</div>';
+  var res; try{ res=await api('client.health',{locationId:id}); }catch(e){ el('hl').innerHTML=viewErr(e); return; }
+  if(res.ok===false){ el('hl').innerHTML=viewErr(null,res); return; }
+  var d=res.data||{};
+  var done=[d.hasBrain,d.pipelines>0,d.calendars>0,d.customValues>0,d.hasPhone,d.workflows>0].filter(Boolean).length;
+  el('hl').classList.remove('muted');
+  el('hl').innerHTML='<div class="muted" style="margin-bottom:10px">'+done+' of 6 set up</div>'
+    +'<table><tbody>'
+    +healthRow(d.hasBrain,'AI receptionist brain',d.hasBrain?'Ready — answers on the client dashboard':'Not set — click Brain to create it')
+    +healthRow(d.pipelines>0,'Sales pipeline',(d.pipelines||0)+' pipeline(s)')
+    +healthRow(d.calendars>0,'Booking calendar',(d.calendars||0)+' calendar(s)')
+    +healthRow(d.customValues>0,'Business info (custom values)',(d.customValues||0)+' value(s)')
+    +healthRow(d.hasPhone,'Phone number','on the sub-account')
+    +healthRow(d.workflows>0,'Automations (workflows)',(d.workflows||0)+' workflow(s)')
+    +'</tbody></table>'
+    +'<div class="bar" style="margin-top:14px"><button class="btn pri" onclick="viewBrain(\''+esc(id)+'\')">🧠 Edit AI brain</button><button class="btn" onclick="go(\'calendars\')">Add calendar</button><button class="btn" onclick="go(\'clients\')">Back to clients</button></div>';
+}
+
+/* ---------- Client AI Brain editor ---------- */
+function ta(id,label,val,ph){return '<label style="display:block;font-size:12px;color:var(--mut);margin:10px 0 4px">'+esc(label)+'</label><textarea id="'+id+'" placeholder="'+esc(ph||'')+'" style="width:100%;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--ink);outline:none;min-height:54px">'+esc(val||'')+'</textarea>';}
+async function viewBrain(id){
+  id=id||CURLOC; if(!id){el('view').innerHTML='<h2>AI Brain</h2><div class="empty">Pick a client first.</div>';return;}
+  var name=(LOCS.filter(function(x){return x.id===id;})[0]||{}).name||id;
+  el('view').innerHTML='<h2>AI Receptionist Brain — '+esc(name)+'</h2><div class="muted" style="margin-bottom:10px">This is the knowledge the client\'s AI answers from on their dashboard. Slug = <code>'+esc(id)+'</code>.</div><div id="br" class="muted">Loading…</div>';
+  var res; try{ res=await api('brain.get',{slug:id}); }catch(e){ el('br').innerHTML=viewErr(e); return; }
+  var b=(res&&res.data)||{};
+  el('br').classList.remove('muted');
+  el('br').innerHTML='<div style="max-width:560px">'
+    +fld('br-assistant_name','Assistant name',b.assistant_name||'Nova')
+    +fld('br-business_name','Business name',b.business_name||name)
+    +fld('br-industry','Industry',b.industry)
+    +'<label style="display:block;font-size:12px;color:var(--mut);margin:10px 0 4px">Tone</label><select id="br-tone" class="btn" style="padding:9px;width:100%">'+['Friendly','Professional','Bold','Casual'].map(function(t){return '<option'+((b.tone===t)?' selected':'')+'>'+t+'</option>';}).join('')+'</select>'
+    +ta('br-services','Services offered',b.services,'What they sell / do')
+    +ta('br-pricing','Pricing / ranges',b.pricing,'Ballpark prices the AI can quote')
+    +fld('br-hours','Hours',b.hours)
+    +fld('br-phone','Phone',b.phone||( (LOCS.filter(function(x){return x.id===id;})[0]||{}).phone )||'')
+    +fld('br-booking_url','Booking link',b.booking_url)
+    +ta('br-faqs','FAQs',b.faqs,'Common questions + answers')
+    +ta('br-custom_instructions','Extra instructions',b.custom_instructions,'Anything special the AI should always do')
+    +'<div class="bar" style="margin-top:14px"><button class="btn pri" onclick="saveBrain(\''+esc(id)+'\')">Save brain</button><button class="btn" onclick="viewHealth(\''+esc(id)+'\')">Back to health</button></div><div id="brerr"></div></div>';
+}
+async function saveBrain(id){
+  var g=function(k){var e=el('br-'+k);return e?(e.value||'').trim():'';};
+  var args={slug:id,assistant_name:g('assistant_name'),business_name:g('business_name'),industry:g('industry'),tone:(el('br-tone')?el('br-tone').value:'Friendly'),services:g('services'),pricing:g('pricing'),hours:g('hours'),phone:g('phone'),booking_url:g('booking_url'),faqs:g('faqs'),custom_instructions:g('custom_instructions')};
+  var out=el('brerr'); out.innerHTML='<span class="muted">Saving…</span>';
+  try{ var res=await api('brain.save',args);
+    out.innerHTML=(res.ok!==false)?'<div style="color:var(--ok);margin-top:10px">✓ Saved. The client\'s AI now uses this.</div>':('<div style="color:#f0b866;margin-top:10px">Save failed: '+esc(JSON.stringify(res.data).slice(0,200))+'</div>'+diagHTML());
+  }catch(e){ out.innerHTML='<div style="color:#f0b866;margin-top:10px">'+esc(e.message)+'</div>'; }
 }
 
 /* ---------- Clients ---------- */
@@ -321,7 +404,7 @@ async function saveClient(id){
   else el('ecerr').innerHTML='<div style="color:#f0b866;margin-top:12px">Save failed: '+esc(JSON.stringify(res.data).slice(0,200))+'</div>'+diagHTML();
 }
 function viewClients(){
-  var rows=LOCS.map(function(l){return '<tr><td>'+esc(l.name||'—')+'</td><td class="muted">'+esc(l.id)+'</td><td style="text-align:right;white-space:nowrap"><button class="rowbtn" onclick="editClient(\''+esc(l.id)+'\')">Edit</button><button class="rowbtn dng" onclick="delClient(\''+esc(l.id)+'\',\''+esc((l.name||'').replace(/\x27/g,""))+'\')">Remove</button></td></tr>';}).join('');
+  var rows=LOCS.map(function(l){return '<tr><td>'+esc(l.name||'—')+'</td><td class="muted">'+esc(l.id)+'</td><td style="text-align:right;white-space:nowrap"><button class="rowbtn" onclick="jumpClient(\''+esc(l.id)+'\',\'health\')">Health</button><button class="rowbtn" onclick="jumpClient(\''+esc(l.id)+'\',\'brain\')">Brain</button><button class="rowbtn" onclick="editClient(\''+esc(l.id)+'\')">Edit</button><button class="rowbtn dng" onclick="delClient(\''+esc(l.id)+'\',\''+esc((l.name||'').replace(/\x27/g,""))+'\')">Remove</button></td></tr>';}).join('');
   el('view').innerHTML='<h2>Clients ('+LOCS.length+')</h2>'
     +'<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px">'
     +'<div style="font-weight:600;margin-bottom:8px">Onboard a new client</div>'
