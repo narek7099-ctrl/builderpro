@@ -12748,6 +12748,7 @@ function bpEnterPortal(email){
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
   bpBuildMobbar();bpNav('dashboard');
+  bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); });
 }
 function bpDoAuth(){
   var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
@@ -12775,12 +12776,13 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Jobs',s:'Won jobs you’re working on — mark them done and log costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — stored on your device.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},automations:{t:'Automations',s:'The systems working for you 24/7.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Jobs',s:'Won jobs you’re working on — mark them done and log costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},automations:{t:'Automations',s:'The systems working for you 24/7.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
 }
 function bpNav(v){
+  window._bpCurView=v;
   document.querySelectorAll('#bpxNav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
@@ -14415,10 +14417,30 @@ window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&
 </style>
 <script>
 /* ===== Active Jobs + Finances (BuilderPro-native, stored on-device) ===== */
-function bpJobsGet(){try{return JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){return[];}}
-function bpJobsSet(a){try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){}}
-function bpFinGet(){try{return JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){return[];}}
-function bpFinSet(a){try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){}}
+/* Jobs + finances are cloud-backed per client (Supabase portal_finance row);
+   localStorage is only the offline/instant cache. */
+var _bpJobs=null,_bpFin=null,_bpFinLoaded=false;
+function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} return _bpJobs; }
+function bpJobsSet(a){ _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} return _bpFin; }
+function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpFinCloudPush(){
+  if(!BP_LIVE) return;
+  BP_SB.from('portal_finance').upsert({jobs:bpJobsGet(),fin:bpFinGet()}).then(function(){}).catch(function(){});
+}
+function bpFinCloudLoad(){
+  if(!BP_LIVE||_bpFinLoaded) return Promise.resolve();
+  return BP_SB.from('portal_finance').select('jobs,fin').maybeSingle().then(function(r){
+    _bpFinLoaded=true;
+    if(r&&r.data){
+      _bpJobs=Array.isArray(r.data.jobs)?r.data.jobs:[]; _bpFin=Array.isArray(r.data.fin)?r.data.fin:[];
+      try{localStorage.setItem('bpJobs',JSON.stringify(_bpJobs));localStorage.setItem('bpFin',JSON.stringify(_bpFin));}catch(e){}
+    }else if(r&&!r.error){
+      /* first login on the cloud: migrate whatever this device already had */
+      bpFinCloudPush();
+    }
+  }).catch(function(){});
+}
 function bpMoneyFmt(n){return '$'+Math.round(+n||0).toLocaleString();}
 function bpParseMoney(s){return +String(s==null?'':s).replace(/[^0-9.]/g,'')||0;}
 function bpJobExp(j){return (j.expenses||[]).reduce(function(s,e){return s+(+e.amt||0);},0);}
@@ -14521,13 +14543,24 @@ window.bpJobSum=function(){
 window.bpJobUseEst=function(){ var j=bpJobsGet().filter(function(x){return x.id===_bpJobDoneId;})[0]; if(j){ q('bpx-jd-col').value=bpMoneyFmt(j.estimate); bpJobSum(); } };
 window.bpJobDoneSave=function(id,skip){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return;
+  var wasDone=(j.status==='done');
   if(!skip){
     var col=bpParseMoney((q('bpx-jd-col')||{}).value);
     j.collected= col>0 ? col : (j.collected!=null?j.collected:null);
     j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
   }
   j.status='done'; j.doneAt=j.doneAt||Date.now();
-  bpJobsSet(jobs); bpCloseModal(); bpActiveJobs();
+  bpJobsSet(jobs); bpCloseModal();
+  /* first time this job is completed: tag the contact job-complete in GHL */
+  if(!wasDone && j.contactId && BP_LIVE){
+    BP_SB.auth.getSession().then(function(s){
+      var t=s&&s.data&&s.data.session&&s.data.session.access_token; if(!t) return;
+      return fetch(BP_URL+'/functions/v1/job-complete',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+        body:JSON.stringify({contactId:j.contactId})});
+    }).catch(function(){});
+  }
+  if(window._bpCurView==='finances') bpFinances(); else bpActiveJobs();
 };
 
 /* ---------- Finances ---------- */
@@ -14564,8 +14597,8 @@ function bpFinances(){
   // per-job
   var pj=d.jobs.filter(function(j){return j.status==='done';});
   var pjHtml=pj.length?pj.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
-    return '<tr><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
-  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Complete a job to see its margin here.</td></tr>';
+    return '<tr style="cursor:pointer" onclick="bpJobDoneOpen(\''+j.id+'\')" title="Tap to add income & expenses"><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a job done in Active Jobs and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
   q('bpxViewArea').innerHTML=
     '<div class="bpx-stats">'
@@ -14580,7 +14613,7 @@ function bpFinances(){
       +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs</span></div>'
       +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table>'
-      +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Stored on this device.</div></div>';
+      +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Tap a job to add income &amp; expenses. Synced to your account.</div></div>';
 }
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
 window.bpFinAddOpen=function(kind){
