@@ -25,7 +25,7 @@ button{background:linear-gradient(135deg,#7c5cff,#5b86f5);color:#fff;border:0;bo
 <div id="tests"></div>
 <div id="verdict"></div>
 <script>
-var URLBASE='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-chat';
+var URLBASE='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-response';
 function box(name){var d=document.createElement('div');d.className='test';d.innerHTML='<div class="name">'+name+'</div><div class="status">Running…</div><div class="out"></div>';document.getElementById('tests').appendChild(d);return d;}
 function setr(d,cls,status,out){d.querySelector('.status').className='status '+cls;d.querySelector('.status').textContent=status;d.querySelector('.out').textContent=out||'';}
 async function tryFetch(opts){
@@ -46,7 +46,7 @@ async function runAll(){
   var r1=await tryFetch({method:'GET'});
   if(r1.status===-1){setr(d1,'bad','✗ Network failure — could not reach Supabase at all',r1.text);findings.push('network');}
   else if(r1.status===401){setr(d1,'bad','✗ 401 — JWT verification is still ON (redeploy after toggling it off)',r1.text.slice(0,300));findings.push('jwt');}
-  else if(r1.status===404){setr(d1,'bad','✗ 404 — no function named ai-chat (check the slug, it is case-sensitive)',r1.text.slice(0,300));findings.push('notfound');}
+  else if(r1.status===404){setr(d1,'bad','✗ 404 — no function named ai-response (check the slug, it is case-sensitive)',r1.text.slice(0,300));findings.push('notfound');}
   else if(r1.status===405||/POST only/.test(r1.text)){setr(d1,'ok','✓ Function is deployed and JWT is off',r1.text.slice(0,200));}
   else setr(d1,'warn','Got HTTP '+r1.status,r1.text.slice(0,300));
 
@@ -77,7 +77,7 @@ async function runAll(){
   }else{
     var msg='';
     if(findings.indexOf('jwt')>=0)msg='JWT verification is still enforced. In Supabase: Edge Functions → ai-chat → turn Verify JWT OFF, then press <b>Deploy</b> again — the toggle only applies on deploy.';
-    else if(findings.indexOf('notfound')>=0)msg='The function is not deployed under the name <b>ai-chat</b> (exact lowercase). Check the function name in Supabase.';
+    else if(findings.indexOf('notfound')>=0)msg='The function is not deployed under the name <b>ai-response</b> (exact lowercase). Check the function name in Supabase.';
     else if(findings.some(function(f){return f.indexOf('fnerr:')===0;}))msg='The function is running but erroring — screenshot test 2’s red box and send it to Claude.';
     else if(findings.indexOf('timeout')>=0||findings.indexOf('network')>=0)msg='Could not reach Supabase from this device — check your connection, or the function is crashing on boot (see its Logs in Supabase).';
     else msg='See the red boxes above — screenshot this page and send it to Claude.';

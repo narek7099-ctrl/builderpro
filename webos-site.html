@@ -2710,7 +2710,7 @@ window.bpOpenConv=async function(id){
       var tok='';
       if(window.BP_SB&&BP_SB.auth){var s=await BP_SB.auth.getSession();tok=(s&&s.data&&s.data.session&&s.data.session.access_token)||'';}
       if(!tok){node.textContent='Please sign in to your dashboard first.';return;}
-      var r=await fetch((window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co')+'/functions/v1/ai-chat',{
+      var r=await fetch((window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co')+'/functions/v1/ai-response',{
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
         body:JSON.stringify({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV})});
       var d=await r.json();
@@ -3002,7 +3002,7 @@ function aiBrainAsk(message,fallback){
     var base=(typeof BP_URL!=='undefined'&&BP_URL)?BP_URL:'';
     if(!base){resolve(fallback(message));return;}
     var ctrl=new AbortController(),to=setTimeout(function(){ctrl.abort();},14000);
-    fetch(base+'/functions/v1/ai-chat',{method:'POST',signal:ctrl.signal,
+    fetch(base+'/functions/v1/ai-response',{method:'POST',signal:ctrl.signal,
       headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},
       body:JSON.stringify({message:message,history:aiHistory.slice(-10),
         business:{name:aiState.biz||('a '+aiTradeLower()+' business'),industry:aiState.trade||'',tone:aiState.tone||'Friendly',assistant_name:'Nova'}})
