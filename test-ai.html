@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>AI Brain Diagnostics</title>
+<style>
+body{background:#0e0e13;color:#eceaf3;font:16px/1.6 -apple-system,BlinkMacSystemFont,sans-serif;padding:20px;max-width:720px;margin:0 auto}
+h1{font-size:20px;margin-bottom:4px}
+p.sub{color:#9b98a8;font-size:13px;margin-bottom:20px}
+.test{background:#17161d;border:1px solid #2a2833;border-radius:12px;padding:14px;margin-bottom:12px}
+.test .name{font-weight:700;margin-bottom:6px}
+.test .status{font-size:14px;margin-bottom:6px}
+.ok{color:#34d399}.bad{color:#f2555a}.warn{color:#f0b866}
+.out{background:#0a0a0e;border:1px solid #2a2833;border-radius:8px;padding:10px;font-family:ui-monospace,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto;color:#9fe6c4}
+button{background:linear-gradient(135deg,#7c5cff,#5b86f5);color:#fff;border:0;border-radius:10px;padding:12px 20px;font:inherit;font-weight:700;margin-bottom:18px}
+.verdict{background:#17161d;border:1px solid #7c5cff;border-radius:12px;padding:14px;margin-top:6px;font-size:15px}
+</style>
+</head>
+<body>
+<h1>🔬 AI Brain Diagnostics</h1>
+<p class="sub">Tap the button. Screenshot the results and send them to Claude.</p>
+<button onclick="runAll()">Run all tests</button>
+<div id="tests"></div>
+<div id="verdict"></div>
+<script>
+var URLBASE='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-chat';
+function box(name){var d=document.createElement('div');d.className='test';d.innerHTML='<div class="name">'+name+'</div><div class="status">Running…</div><div class="out"></div>';document.getElementById('tests').appendChild(d);return d;}
+function setr(d,cls,status,out){d.querySelector('.status').className='status '+cls;d.querySelector('.status').textContent=status;d.querySelector('.out').textContent=out||'';}
+async function tryFetch(opts){
+  var ctrl=new AbortController();var to=setTimeout(function(){ctrl.abort();},20000);
+  try{
+    var r=await fetch(URLBASE,Object.assign({signal:ctrl.signal},opts));
+    clearTimeout(to);
+    var text=await r.text();
+    return {status:r.status,text:text};
+  }catch(e){clearTimeout(to);return {status:-1,text:String(e)};}
+}
+async function runAll(){
+  document.getElementById('tests').innerHTML='';document.getElementById('verdict').innerHTML='';
+  var findings=[];
+
+  // 1: is the function reachable at all? (GET should answer "POST only" if alive + JWT off)
+  var d1=box('1 · Function reachable (GET)');
+  var r1=await tryFetch({method:'GET'});
+  if(r1.status===-1){setr(d1,'bad','✗ Network failure — could not reach Supabase at all',r1.text);findings.push('network');}
+  else if(r1.status===401){setr(d1,'bad','✗ 401 — JWT verification is still ON (redeploy after toggling it off)',r1.text.slice(0,300));findings.push('jwt');}
+  else if(r1.status===404){setr(d1,'bad','✗ 404 — no function named ai-chat (check the slug, it is case-sensitive)',r1.text.slice(0,300));findings.push('notfound');}
+  else if(r1.status===405||/POST only/.test(r1.text)){setr(d1,'ok','✓ Function is deployed and JWT is off',r1.text.slice(0,200));}
+  else setr(d1,'warn','Got HTTP '+r1.status,r1.text.slice(0,300));
+
+  // 2: visitor chat (what the homepage Atlas/Nova send)
+  var d2=box('2 · Visitor chat (homepage Atlas/Nova)');
+  var t0=Date.now();
+  var r2=await tryFetch({method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:'do you do roof repairs?',business:{name:'BuilderPro',industry:'Roofing',assistant_name:'Atlas',tone:'Friendly'}})});
+  var secs=((Date.now()-t0)/1000).toFixed(1);
+  var j2=null;try{j2=JSON.parse(r2.text);}catch(e){}
+  if(r2.status===200&&j2&&j2.reply){setr(d2,'ok','✓ Real AI answered in '+secs+'s',j2.reply);}
+  else if(j2&&j2.error){setr(d2,'bad','✗ Function error: '+j2.error,(j2.detail||r2.text).slice(0,400));findings.push('fnerr:'+j2.error);}
+  else if(r2.status===-1){setr(d2,'bad','✗ Timed out / network error after '+secs+'s',r2.text);findings.push('timeout');}
+  else {setr(d2,'bad','✗ HTTP '+r2.status,r2.text.slice(0,400));findings.push('http'+r2.status);}
+
+  // 3: with the demo brain slug
+  var d3=box('3 · Demo brain (slug demo-roofing)');
+  var r3=await tryFetch({method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:'what services do you offer?',slug:'demo-roofing'})});
+  var j3=null;try{j3=JSON.parse(r3.text);}catch(e){}
+  if(r3.status===200&&j3&&j3.reply)setr(d3,'ok','✓ Brain lookup works',j3.reply);
+  else setr(d3,'warn','HTTP '+r3.status,(r3.text||'').slice(0,400));
+
+  // verdict
+  var v=document.getElementById('verdict');
+  if(!findings.length){
+    v.className='verdict';v.innerHTML='🎉 <b>Everything works.</b> The homepage bots should give real answers now — if they still seem generic, the page in your browser is cached: close the tab fully and reopen the site.';
+  }else{
+    var msg='';
+    if(findings.indexOf('jwt')>=0)msg='JWT verification is still enforced. In Supabase: Edge Functions → ai-chat → turn Verify JWT OFF, then press <b>Deploy</b> again — the toggle only applies on deploy.';
+    else if(findings.indexOf('notfound')>=0)msg='The function is not deployed under the name <b>ai-chat</b> (exact lowercase). Check the function name in Supabase.';
+    else if(findings.some(function(f){return f.indexOf('fnerr:')===0;}))msg='The function is running but erroring — screenshot test 2’s red box and send it to Claude.';
+    else if(findings.indexOf('timeout')>=0||findings.indexOf('network')>=0)msg='Could not reach Supabase from this device — check your connection, or the function is crashing on boot (see its Logs in Supabase).';
+    else msg='See the red boxes above — screenshot this page and send it to Claude.';
+    v.className='verdict';v.innerHTML='🩺 <b>Diagnosis:</b> '+msg;
+  }
+}
+</script>
+</body>
+</html>
