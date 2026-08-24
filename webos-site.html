@@ -1251,6 +1251,7 @@ function bpEnterPortal(email){
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
   bpBuildMobbar();bpNav('dashboard');
+  bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); });
 }
 function bpDoAuth(){
   var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
@@ -1278,12 +1279,13 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer Web OS captures for you.'},calendar:{t:'Calendar',s:'Your appointments and bookings at a glance.'},activejobs:{t:'Active Jobs',s:'Jobs you\'re working on — mark them done and log costs.'},finances:{t:'Finances',s:'Income, expenses and profit at a glance.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer Web OS captures for you.'},calendar:{t:'Calendar',s:'Your appointments and bookings at a glance.'},activejobs:{t:'Active Jobs',s:'Jobs you\'re working on — mark them done and log costs.'},finances:{t:'Finances',s:'Income, expenses and profit — synced to your account.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
 }
 function bpNav(v){
+  window._bpCurView=v;
   document.querySelectorAll('#bpxNav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
@@ -3084,10 +3086,29 @@ function aiReply(text){
 })();
 </script>
 <script>
-function bpJobsGet(){try{return JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){return[];}}
-function bpJobsSet(a){try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){}}
-function bpFinGet(){try{return JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){return[];}}
-function bpFinSet(a){try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){}}
+/* Jobs + finances are cloud-backed per client (Supabase portal_finance row);
+   localStorage is only the offline/instant cache. */
+var _bpJobs=null,_bpFin=null,_bpFinLoaded=false;
+function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} return _bpJobs; }
+function bpJobsSet(a){ _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} return _bpFin; }
+function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpFinCloudPush(){
+  if(!window.BP_LIVE||!window.BP_SB) return;
+  BP_SB.from('portal_finance').upsert({jobs:bpJobsGet(),fin:bpFinGet()}).then(function(){}).catch(function(){});
+}
+function bpFinCloudLoad(){
+  if(!window.BP_LIVE||!window.BP_SB||_bpFinLoaded) return Promise.resolve();
+  return BP_SB.from('portal_finance').select('jobs,fin').maybeSingle().then(function(r){
+    _bpFinLoaded=true;
+    if(r&&r.data){
+      _bpJobs=Array.isArray(r.data.jobs)?r.data.jobs:[]; _bpFin=Array.isArray(r.data.fin)?r.data.fin:[];
+      try{localStorage.setItem('bpJobs',JSON.stringify(_bpJobs));localStorage.setItem('bpFin',JSON.stringify(_bpFin));}catch(e){}
+    }else if(r&&!r.error){
+      bpFinCloudPush();
+    }
+  }).catch(function(){});
+}
 function bpMoneyFmt(n){return '$'+Math.round(+n||0).toLocaleString();}
 function bpParseMoney(s){return +String(s==null?'':s).replace(/[^0-9.]/g,'')||0;}
 function bpJobExp(j){return (j.expenses||[]).reduce(function(s,e){return s+(+e.amt||0);},0);}
@@ -3196,8 +3217,18 @@ window.bpJobDoneSave=function(id,skip){
     j.collected= col>0 ? col : (j.collected!=null?j.collected:null);
     j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
   }
+  var wasDone=(j.status==='done');
   j.status='done'; j.doneAt=j.doneAt||Date.now();
-  bpJobsSet(jobs); bpCloseModal(); bpActiveJobs();
+  bpJobsSet(jobs); bpCloseModal();
+  if(!wasDone && j.contactId && window.BP_LIVE && window.BP_SB){
+    BP_SB.auth.getSession().then(function(sn){
+      var t=sn&&sn.data&&sn.data.session&&sn.data.session.access_token; if(!t) return;
+      return fetch(BP_URL+'/functions/v1/job-complete',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+        body:JSON.stringify({contactId:j.contactId})});
+    }).catch(function(){});
+  }
+  if(window._bpCurView==='finances') bpFinances(); else bpActiveJobs();
 };
 
 /* ---------- Finances ---------- */
@@ -3235,8 +3266,8 @@ function bpFinances(){
   // per-job
   var pj=d.jobs.filter(function(j){return j.status==='done';});
   var pjHtml=pj.length?pj.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
-    return '<tr><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
-  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Complete a job to see its margin here.</td></tr>';
+    return '<tr style="cursor:pointer" onclick="bpJobDoneOpen(\''+j.id+'\')" title="Tap to add income & expenses"><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a job done in Active Jobs and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
   q('bpxViewArea').innerHTML=
     '<div class="bpx-stats">'
@@ -3246,12 +3277,12 @@ function bpFinances(){
     +'<div class="bpx-stat"><div class="lbl">Margin</div><div class="val">'+margin+'%</div><div class="note">of income</div></div>'
     +'</div>'
     +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
-    +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
+    +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs — tap one to add income &amp; costs</span></div>'
+      +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Other income &amp; expenses<span class="lg2">money outside your pipeline</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
       +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
-      +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs</span></div>'
-      +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table>'
-      +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Stored on this device.</div></div>';
+      +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table>'
+      +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Tap a job to add income &amp; expenses. Synced to your account.</div></div>';
 }
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
 window.bpFinAddOpen=function(kind){
