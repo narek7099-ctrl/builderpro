@@ -14632,14 +14632,15 @@ window.bpFinAddSave=function(kind){
 #bpx.bpx-dark .bpx-themebtn{background:#1a2230;border-color:var(--line);color:#f0b666;}
 #bpx.bpx-dark .bpx-close{background:#1a2230 !important;border-color:var(--line) !important;color:var(--grey) !important;}
 /* settings */
-.bpx-set-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:16px;max-width:640px;}
-.bpx-set-div{border-top:1px solid var(--line);margin:24px 0 20px;}
+.bpx-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;max-width:980px;align-items:start;}
+@media(max-width:900px){.bpx-set-grid{grid-template-columns:1fr;max-width:640px;}}
 .bpx-fld{margin-bottom:14px;} .bpx-fld:last-child{margin-bottom:0;}
 .bpx-fld label{display:block;font-size:12px;font-weight:600;color:var(--grey);margin-bottom:5px;}
 .bpx-fld input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
 .bpx-fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
 .bpx-fld2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.bpx-set-foot{display:block;max-width:640px;}
+.bpx-set-foot{display:block;max-width:980px;}
+@media(max-width:900px){.bpx-set-foot{max-width:640px;}}
 .bpx-set-foot .bpx-mmsg{display:block;text-align:center;min-height:18px;margin-bottom:8px;}
 .bpx-set-foot .bpx-btn{width:100%;padding:15px;font-size:15px;}
 .bpx-fld textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);resize:vertical;min-height:76px;line-height:1.5;}
@@ -14744,13 +14745,16 @@ function bpSettings(){
       +f('set-caddr','Address',c.address,'123 Main St, City, ST')
       +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover — e.g. Austin, 78701, 78704')
       +f('set-clic','License # (optional)',c.license,'License / insurance #')
-    +'<div class="bpx-set-div"></div><div class="bpx-ptitle">Business hours</div>'
+    +'</div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Business hours</div>'
       +hrsRows
       +'<div class="bpx-fldhint">Used for booking windows and to power after-hours auto-replies.</div>'
-    +'<div class="bpx-set-div"></div><div class="bpx-ptitle">Auto-reply message</div>'
+    +'</div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Auto-reply message</div>'
       +'<div class="bpx-fld"><label>Sent on a missed call or after-hours message</label><textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'! We missed you but we\'ll text you right back. What can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>'
         +'<div class="bpx-fldhint">Leave blank to use BuilderPro’s default recovery text.</div></div>'
-    +'<div class="bpx-set-div"></div><div class="bpx-ptitle">Owner</div>'
+    +'</div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Owner</div>'
       +f('set-oname','Owner name',o.name,'Full name')
       +f('set-oemail','Owner email',o.email,'owner@company.com','email')
       +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
@@ -14787,16 +14791,17 @@ window.bpSettingsSave=function(){
 (function(){
   var A_NAME="Atlas", A_BRAND="BuilderPro", A_NAV=[{"key": "dashboard", "label": "Dashboard", "desc": "leads, bookings and revenue at a glance"}, {"key": "messaging", "label": "Messaging", "desc": "texts and emails with leads, broadcasts and scheduling"}, {"key": "contacts", "label": "Contacts", "desc": "every lead and customer, add/import here"}, {"key": "calendar", "label": "Calendar", "desc": "upcoming inspections and appointments"}, {"key": "activejobs", "label": "Active Jobs", "desc": "jobs currently in progress"}, {"key": "finances", "label": "Finances", "desc": "income, expenses and per-job profit"}, {"key": "closedeals", "label": "Close Deals", "desc": "homeowners deciding on their estimate"}, {"key": "calculator", "label": "My Calculator", "desc": "preview the estimator and edit pricing"}, {"key": "settings", "label": "Settings", "desc": "business details, logo, hours, auto-reply"}];
   var css=document.createElement('style');
-  css.textContent='.oaw-btn{position:fixed;right:18px;bottom:18px;z-index:99999;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;background:linear-gradient(135deg,#7c5cff,#5b86f5);color:#fff;font-size:22px;box-shadow:0 8px 24px rgba(92,80,255,.45);display:none}'
-  +'.oaw-panel{position:fixed;right:18px;bottom:84px;z-index:99999;width:min(360px,calc(100vw - 36px));max-height:min(520px,70vh);background:#14131b;border:1px solid #2a2833;border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.5);font:14px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;color:#eceaf3}'
-  +'.oaw-head{padding:12px 14px;background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(91,134,245,.12));font-weight:700;display:flex;align-items:center;gap:8px}.oaw-head span{color:#9b98a8;font-weight:400;font-size:12px}'
+  css.textContent='.oaw-btn{position:fixed;right:18px;bottom:18px;z-index:99999;width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;background:linear-gradient(135deg,#2f6bff,#1e4fd6);display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(47,107,255,.4)}'
+  +'.oaw-btn svg{display:block}'
+  +'.oaw-panel{position:fixed;right:18px;bottom:86px;z-index:99999;width:min(360px,calc(100vw - 36px));max-height:min(520px,70vh);background:#ffffff;border:1px solid #e3e8f4;border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.18);font:14px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;color:#17181c}'
+  +'.oaw-head{padding:12px 14px;background:linear-gradient(135deg,#eef3ff,#f7faff);font-weight:700;display:flex;align-items:center;gap:8px;color:#1e4fd6}.oaw-head span{color:#5f6470;font-weight:400;font-size:12px}'
   +'.oaw-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px}'
-  +'.oaw-m{max-width:85%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}.oaw-m.u{align-self:flex-end;background:#7c5cff;color:#fff;border-bottom-right-radius:4px}.oaw-m.b{align-self:flex-start;background:#1d1c25;border:1px solid #2a2833;border-bottom-left-radius:4px}'
-  +'.oaw-in{display:flex;gap:8px;padding:10px;border-top:1px solid #2a2833}.oaw-in input{flex:1;background:#1d1c25;border:1px solid #2a2833;border-radius:9px;padding:9px 12px;color:#eceaf3;outline:none;font:inherit}.oaw-in button{background:linear-gradient(135deg,#7c5cff,#5b86f5);border:0;border-radius:9px;color:#fff;padding:0 14px;font-weight:600;cursor:pointer}';
+  +'.oaw-m{max-width:85%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}.oaw-m.u{align-self:flex-end;background:#2f6bff;color:#fff;border-bottom-right-radius:4px}.oaw-m.b{align-self:flex-start;background:#f2f5fb;border:1px solid #e3e8f4;border-bottom-left-radius:4px}'
+  +'.oaw-in{display:flex;gap:8px;padding:10px;border-top:1px solid #e3e8f4}.oaw-in input{flex:1;background:#f5f7fc;border:1px solid #e3e8f4;border-radius:9px;padding:9px 12px;color:#17181c;outline:none;font:inherit}.oaw-in button{background:linear-gradient(135deg,#2f6bff,#1e4fd6);border:0;border-radius:9px;color:#fff;padding:0 14px;font-weight:600;cursor:pointer}';
   document.head.appendChild(css);
-  var btn=document.createElement('button');btn.className='oaw-btn';btn.innerHTML='&#10024;';btn.title='Ask '+A_NAME;
+  var btn=document.createElement('button');btn.className='oaw-btn';btn.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14.5a2 2 0 0 1-2 2H8l-4.5 4V5a2 2 0 0 1 2-2H19a2 2 0 0 1 2 2z"/><path d="M12.2 6.2l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4-2.4-1.1 2.4-1.1z" fill="#fff" stroke="none"/></svg>';btn.title='Ask '+A_NAME;
   var pan=document.createElement('div');pan.className='oaw-panel';
-  pan.innerHTML='<div class="oaw-head">&#10024; '+A_NAME+' <span>&mdash; your '+A_BRAND+' assistant</span></div><div class="oaw-log" id="oawLog"></div><div class="oaw-in"><input id="oawIn" placeholder="Ask about bookings, contacts, or where to find things&hellip;"><button id="oawGo">&#8594;</button></div>';
+  pan.innerHTML='<div class="oaw-head">'+A_NAME+' <span>&mdash; your '+A_BRAND+' assistant</span></div><div class="oaw-log" id="oawLog"></div><div class="oaw-in"><input id="oawIn" placeholder="Ask about bookings, contacts, or where to find things&hellip;"><button id="oawGo">&#8594;</button></div>';
   document.body.appendChild(btn);document.body.appendChild(pan);
   var HIST=[],open=false;
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -14804,13 +14809,14 @@ window.bpSettingsSave=function(){
   btn.onclick=function(){open=!open;pan.style.display=open?'flex':'none';
     if(open&&!HIST.length){add('bot','Hi! I\'m '+A_NAME+'. Ask me about your bookings, contacts, unread messages — or where to find anything in your dashboard.');}
     if(open)setTimeout(function(){var i=document.getElementById('oawIn');if(i)i.focus();},50);};
-  /* only show the assistant while the portal is open + signed in */
+  /* show ONLY while the portal overlay is open AND signed in — never on the homepage */
   setInterval(function(){
     var app=document.getElementById('bpxApp');
-    var on=!!(app&&app.classList.contains('on'));
-    btn.style.display=on?'block':'none';
+    var ov=document.getElementById('bpx');
+    var on=!!(app&&app.classList.contains('on'))&&!!(ov&&ov.classList.contains('open'));
+    btn.style.display=on?'flex':'none';
     if(!on&&open){open=false;pan.style.display='none';}
-  },700);
+  },600);
   async function send(){
     var inp=document.getElementById('oawIn');var t=(inp.value||'').trim();if(!t)return;inp.value='';
     add('user',t);HIST.push({role:'user',content:t});
