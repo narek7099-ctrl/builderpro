@@ -14787,33 +14787,33 @@ window.bpSettingsSave=function(){
 </script>
 
 <script>
-/* ==== LEAD RADAR — permit-driven lead map with trade modes & heat scoring ==== */
+/* ==== LEAD RADAR v2 — permit-driven lead map: trade modes, heat scoring,
+       storm overlay (hail boosts roofing), ranked hot list + bulk add ==== */
 var RADAR_CITIES={
-  austin:{name:'Austin, TX',lat:30.2672,lng:-97.7431,zoom:11,
+  austin:{name:'Austin, TX',lat:30.2672,lng:-97.7431,zoom:11,wfo:'EWX',
     api:'https://data.austintexas.gov/resource/3syk-w9eu.json',
     date:'issued_date',descf:['description','permit_type_desc','work_class'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return r.original_address1||'';}},
-  chicago:{name:'Chicago, IL',lat:41.8781,lng:-87.6298,zoom:11,
+  chicago:{name:'Chicago, IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
     api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',
     date:'issue_date',descf:['work_description','permit_type'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return [r.street_number,r.street_direction,r.street_name].filter(Boolean).join(' ');}},
-  demo:{name:'Demo City',lat:32.7767,lng:-96.7970,zoom:11}
+  demo:{name:'Demo City',lat:32.7767,lng:-96.7970,zoom:11,wfo:''}
 };
-/* per-trade: keywords in old permits + the age window when replacement is due */
 var RADAR_TRADES={
-  roofing:{l:'Roofing',kw:['ROOF','REROOF','SHINGLE'],lo:15,hi:30,peak:22,unit:'roof'},
+  roofing:{l:'Roofing',kw:['ROOF','REROOF','SHINGLE'],lo:15,hi:30,peak:22,unit:'roof',storm:true},
   hvac:{l:'HVAC',kw:['HVAC','FURNACE','HEAT PUMP','AIR COND','MECHANICAL'],lo:12,hi:25,peak:17,unit:'system'},
   waterheater:{l:'Water Heater',kw:['WATER HEATER'],lo:8,hi:16,peak:11,unit:'water heater'},
-  painting:{l:'Painting',kw:['SIDING','STUCCO','FACADE','EXTERIOR'],lo:7,hi:18,peak:11,unit:'exterior'},
+  painting:{l:'Painting',kw:['SIDING','STUCCO','FACADE','EXTERIOR'],lo:7,hi:18,peak:11,unit:'exterior',storm:true},
   landscaping:{l:'Landscaping',kw:['POOL','IRRIGATION','SPRINKLER','DECK','PATIO','FENCE'],lo:8,hi:25,peak:14,unit:'outdoor work'},
   countertops:{l:'Countertops',kw:['KITCHEN','CABINET'],lo:12,hi:30,peak:18,unit:'kitchen'},
   trim:{l:'Trim & Carpentry',kw:['REMODEL','ADDITION','INTERIOR'],lo:12,hi:30,peak:18,unit:'interior'},
-  windows:{l:'Windows & Doors',kw:['WINDOW','DOOR REPLACE'],lo:15,hi:30,peak:20,unit:'windows'}
+  windows:{l:'Windows & Doors',kw:['WINDOW','DOOR REPLACE'],lo:15,hi:30,peak:20,unit:'windows',storm:true}
 };
 var _rdCity=localStorage.getItem('bpRadarCity')||'austin', _rdTrade=localStorage.getItem('bpRadarTrade')||'roofing';
-var _rdMap=null,_rdLayer=null,_rdLeads=[],_rdLoading=false;
+var _rdMap=null,_rdLayer=null,_rdStormLayer=null,_rdLeads=[],_rdStorms=[],_rdStormOn=false,_rdMin=25,_rdAdded={};
 
 function rdColor(sc){return sc>=75?'#e11d48':sc>=55?'#f59e0b':sc>=35?'#eab308':'#3b82f6';}
 function rdLabel(sc){return sc>=75?'HOT':sc>=55?'Warm':sc>=35?'Cool':'Watch';}
@@ -14822,24 +14822,37 @@ function rdScore(age,t){
   var spread=Math.max(t.peak-t.lo,t.hi-t.peak);
   return Math.round(45+55*(1-Math.abs(age-t.peak)/spread));
 }
+function rdKm(a,b,c,d){var R=6371,dl=(c-a)*Math.PI/180,dg=(d-b)*Math.PI/180;
+  var x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dg/2)*Math.sin(dg/2);
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 
 function bpRadar(){
   var cities=Object.keys(RADAR_CITIES).map(function(k){return '<option value="'+k+'"'+(k===_rdCity?' selected':'')+'>'+RADAR_CITIES[k].name+'</option>';}).join('');
   var chips=Object.keys(RADAR_TRADES).map(function(k){var t=RADAR_TRADES[k];
-    return '<button class="bpx-jt rd-chip'+(k===_rdTrade?' on':'')+'" onclick="rdSetTrade(\''+k+'\')">'+t.l+'</button>';}).join('');
+    return '<button class="bpx-jt rd-chip'+(k===_rdTrade?' on':'')+'" data-rdt="'+k+'" onclick="rdSetTrade(\''+k+'\')">'+t.l+'</button>';}).join('');
   q('bpxViewArea').innerHTML=
     '<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
     +'<select class="bpx-rowbtn" style="padding:8px 12px;font-size:13px" onchange="rdSetCity(this.value)">'+cities+'</select></div>'
     +'<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px">'
       +'<span><i class="rd-dot" style="background:#e11d48"></i> Hot (75+)</span><span><i class="rd-dot" style="background:#f59e0b"></i> Warm</span>'
       +'<span><i class="rd-dot" style="background:#eab308"></i> Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i> Watch</span>'
+      +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
+      +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: off</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
-    +'<div id="rdMap" style="height:520px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
-    +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Scored from public building-permit records — e.g. a roof permitted 22 years ago is due. Tap a dot for details, then add it to Contacts for your door-knock or mail route.</div>';
+    +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list</span>'
+      +'<button class="bpx-addbtn" style="float:right;font-size:12.5px;padding:8px 14px" onclick="rdAddAllHot()">+ Add all hot to Contacts</button></div>'
+      +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
+    +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Scored from public building-permit records; storm overlay adds recent hail/wind reports (NWS local storm reports) and boosts nearby homes. Tap a dot or row to work the lead.</div>';
   rdEnsureLeaflet(rdRefresh);
 }
-window.rdSetTrade=function(k){_rdTrade=k;localStorage.setItem('bpRadarTrade',k);document.querySelectorAll('.rd-chip').forEach(function(b){b.classList.toggle('on',b.textContent===RADAR_TRADES[k].l);});rdRefresh();};
-window.rdSetCity=function(k){_rdCity=k;localStorage.setItem('bpRadarCity',k);var c=RADAR_CITIES[k];if(_rdMap)_rdMap.setView([c.lat,c.lng],c.zoom);rdRefresh();};
+window.rdSetTrade=function(k){_rdTrade=k;localStorage.setItem('bpRadarTrade',k);
+  document.querySelectorAll('.rd-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rdt')===k);});rdRefresh();};
+window.rdSetCity=function(k){_rdCity=k;localStorage.setItem('bpRadarCity',k);var c=RADAR_CITIES[k];if(_rdMap)_rdMap.setView([c.lat,c.lng],c.zoom);_rdStorms=[];rdRefresh();};
+window.rdSetMin=function(v){_rdMin=+v;rdDraw();};
+window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
+  var b=q('rdStormBtn');if(b)b.innerHTML='&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off');
+  if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
 
 function rdEnsureLeaflet(cb){
   if(window.L){cb();return;}
@@ -14853,18 +14866,18 @@ function rdInitMap(){
   if(_rdMap){ _rdMap.remove(); _rdMap=null; }
   _rdMap=L.map('rdMap',{scrollWheelZoom:true}).setView([c.lat,c.lng],c.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(_rdMap);
+  _rdStormLayer=L.layerGroup().addTo(_rdMap);
   _rdLayer=L.layerGroup().addTo(_rdMap);
 }
 function rdRefresh(){
   if(!window.L) return;
   if(!_rdMap||!document.getElementById('rdMap')||!document.getElementById('rdMap')._leaflet_id) rdInitMap();
-  _rdLayer.clearLayers();
   var cnt=q('rdCount'); if(cnt)cnt.textContent='Scanning permits…';
-  if(_rdCity==='demo'){ rdRender(rdDemoLeads()); return; }
-  rdFetch().then(function(leads){
-    if(!leads.length){ if(cnt)cnt.textContent='No matches — showing demo data'; rdRender(rdDemoLeads()); }
-    else rdRender(leads);
-  }).catch(function(){ if(cnt)cnt.textContent='Live feed unavailable — demo data'; rdRender(rdDemoLeads()); });
+  var done=function(leads,demo){_rdLeads=leads; if(demo&&cnt)cnt.textContent='Live feed unavailable — demo data';
+    if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
+  if(_rdCity==='demo'){ done(rdDemoLeads(),false); return; }
+  rdFetch().then(function(leads){ if(!leads.length) done(rdDemoLeads(),true); else done(leads,false); })
+    .catch(function(){ done(rdDemoLeads(),true); });
 }
 function rdFetch(){
   var c=RADAR_CITIES[_rdCity], t=RADAR_TRADES[_rdTrade];
@@ -14883,8 +14896,8 @@ function rdFetch(){
       var age=(Date.now()-dt.getTime())/31557600000;
       var sc=rdScore(age,t); if(sc<25)return;
       var desc=''; c.descf.forEach(function(f){if(!desc&&r[f])desc=String(r[f]);});
-      leads.push({lat:lat,lng:lng,score:sc,age:Math.round(age),year:dt.getFullYear(),
-        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90)});
+      leads.push({lat:lat,lng:lng,base:sc,score:sc,age:Math.round(age),year:dt.getFullYear(),
+        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false});
     });
     leads.sort(function(a,b){return b.score-a.score;});
     return leads.slice(0,400);
@@ -14894,39 +14907,115 @@ function rdDemoLeads(){
   var c=RADAR_CITIES[_rdCity], t=RADAR_TRADES[_rdTrade], out=[], seed=42;
   function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647;}
   var streets=['Oakwood Dr','Maple Ave','Cedar Ln','Sunset Blvd','Ridge Rd','Elm St','Willow Way','Prairie Dr','Highland Ave','Creekside Ct'];
-  for(var i=0;i<120;i++){
-    var age=Math.round(t.lo+rnd()*(t.hi-t.lo));
+  for(var i=0;i<130;i++){
+    var age=t.lo+rnd()*(t.hi-t.lo); age=Math.round(t.lo+(age-t.lo)*(0.4+0.6*rnd()));
     var sc=rdScore(age,t); if(sc<25)continue;
-    out.push({lat:c.lat+(rnd()-0.5)*0.22,lng:c.lng+(rnd()-0.5)*0.28,score:sc,age:age,
+    out.push({lat:c.lat+(rnd()-0.5)*0.22,lng:c.lng+(rnd()-0.5)*0.28,base:sc,score:sc,age:age,
       year:new Date().getFullYear()-age,addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],
-      desc:t.kw[0].toLowerCase()+' permit (demo)'});
+      desc:t.kw[0].toLowerCase()+' permit (demo)',storm:false});
   }
   return out.sort(function(a,b){return b.score-a.score;});
 }
-function rdRender(leads){
-  _rdLeads=leads;
+/* recent hail/wind local storm reports (NWS via Iowa Environmental Mesonet) */
+function rdFetchStorms(){
+  var c=RADAR_CITIES[_rdCity];
+  var ets=new Date(), sts=new Date(Date.now()-45*86400000);
+  var fmt=function(d){return d.toISOString().slice(0,16)+'Z';};
+  if(_rdCity==='demo'||!c.wfo){ _rdStorms=rdDemoStorms(); return Promise.resolve(); }
+  var url='https://mesonet.agron.iastate.edu/geojson/lsr.geojson?inc_ap=yes&wfos='+c.wfo+'&sts='+fmt(sts)+'&ets='+fmt(ets);
+  return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(g){
+    var out=[];
+    ((g&&g.features)||[]).forEach(function(f){
+      var p=f.properties||{}, tt=String(p.typetext||'').toUpperCase();
+      if(tt.indexOf('HAIL')<0&&tt.indexOf('TSTM WND')<0&&tt.indexOf('THUNDERSTORM WIND')<0)return;
+      var co=(f.geometry&&f.geometry.coordinates)||null; if(!co)return;
+      out.push({lat:co[1],lng:co[0],type:tt.indexOf('HAIL')>=0?'Hail':'Wind',mag:p.magnitude||'',when:(p.valid||'').slice(0,10)});
+    });
+    _rdStorms=out.slice(0,120);
+    if(!_rdStorms.length)_rdStorms=rdDemoStorms();
+  }).catch(function(){_rdStorms=rdDemoStorms();});
+}
+function rdDemoStorms(){
+  var c=RADAR_CITIES[_rdCity], out=[], seed=7;
+  function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647;}
+  for(var i=0;i<6;i++)out.push({lat:c.lat+(rnd()-0.5)*0.18,lng:c.lng+(rnd()-0.5)*0.24,type:rnd()>0.4?'Hail':'Wind',mag:(1+rnd()*1.5).toFixed(2),when:'recent (demo)'});
+  return out;
+}
+function rdDraw(){
+  if(!_rdMap)return;
+  _rdLayer.clearLayers(); _rdStormLayer.clearLayers();
   var t=RADAR_TRADES[_rdTrade];
-  leads.forEach(function(p,i){
-    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:'#fff',weight:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
-    m.bindPopup('<div style="font:13px/1.5 -apple-system,sans-serif;min-width:190px">'
-      +'<b>'+bpEsc(p.addr)+'</b><br>'
-      +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span><br>'
-      +'Last '+t.unit+' permit: <b>'+p.year+'</b> ('+p.age+' yrs ago)<br>'
-      +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
-      +'<button onclick="rdAddLead('+i+')" style="margin-top:7px;background:#2f6bff;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">+ Add to Contacts</button></div>');
+  /* storm boost: +15 within 3km of a recent report (storm-sensitive trades) */
+  _rdLeads.forEach(function(p){
+    p.storm=false; p.score=p.base;
+    if(_rdStormOn&&t.storm){
+      for(var i=0;i<_rdStorms.length;i++){
+        if(rdKm(p.lat,p.lng,_rdStorms[i].lat,_rdStorms[i].lng)<=3){p.storm=true;p.score=Math.min(100,p.base+15);break;}
+      }
+    }
+  });
+  if(_rdStormOn){
+    _rdStorms.forEach(function(sv){
+      _rdStormLayer.addLayer(L.circle([sv.lat,sv.lng],{radius:3000,color:'#f97316',weight:1,fillColor:'#f97316',fillOpacity:.13}));
+      _rdStormLayer.addLayer(L.circleMarker([sv.lat,sv.lng],{radius:4,color:'#fff',weight:1,fillColor:'#f97316',fillOpacity:1})
+        .bindPopup('<b>'+sv.type+' report</b>'+(sv.mag?' · '+sv.mag:'')+'<br><span style="color:#6a6a70;font-size:11.5px">'+sv.when+'</span>'));
+    });
+  }
+  var shown=_rdLeads.filter(function(p){return p.score>=_rdMin;});
+  shown.forEach(function(p){
+    var i=_rdLeads.indexOf(p);
+    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:p.storm?'#f97316':'#fff',weight:p.storm?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
+    m.bindPopup(rdPopup(p,i,t));
     _rdLayer.addLayer(m);
   });
-  var cnt=q('rdCount'); if(cnt)cnt.textContent=leads.length+' prospects · '+leads.filter(function(x){return x.score>=75;}).length+' hot';
+  /* ranked list */
+  var list=q('rdList');
+  if(list){
+    var top=shown.slice(0,15);
+    list.innerHTML=top.length?top.map(function(p,r){var i=_rdLeads.indexOf(p);
+      return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+(p.storm?' <span title="recent storm nearby">⛈️</span>':'')+'</td>'
+        +'<td class="bpx-mut" style="font-size:12.5px">Last '+t.unit+': '+p.year+' · '+p.age+' yrs</td>'
+        +'<td class="bpx-r"><span style="padding:2px 10px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11.5px">'+p.score+'</span></td>'
+        +'<td class="bpx-r"><button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">'+(_rdAdded[p.addr]?'✓ Added':'+ Add')+'</button></td></tr>';
+    }).join(''):'<tr><td colspan="5" class="bpx-empty2">Nothing above the score filter — lower the min score.</td></tr>';
+  }
+  var cnt=q('rdCount');
+  if(cnt)cnt.textContent=shown.length+' prospects · '+shown.filter(function(x){return x.score>=75;}).length+' hot'+(_rdStormOn?' · '+_rdStorms.length+' storm reports':'');
 }
+function rdPopup(p,i,t){
+  return '<div style="font:13px/1.5 -apple-system,sans-serif;min-width:190px">'
+    +'<b>'+bpEsc(p.addr)+'</b><br>'
+    +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span>'
+    +(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':'')+'<br>'
+    +'Last '+t.unit+' permit: <b>'+p.year+'</b> ('+p.age+' yrs ago)<br>'
+    +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
+    +'<button onclick="rdAddLead('+i+')" style="margin-top:7px;background:#2f6bff;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">'+(_rdAdded[p.addr]?'✓ Added':'+ Add to Contacts')+'</button></div>';
+}
+window.rdFocus=function(i){var p=_rdLeads[i];if(!p||!_rdMap)return;_rdMap.setView([p.lat,p.lng],15);
+  _rdLayer.eachLayer(function(l){var ll=l.getLatLng&&l.getLatLng();if(ll&&Math.abs(ll.lat-p.lat)<1e-9&&Math.abs(ll.lng-p.lng)<1e-9)l.openPopup();});};
 window.rdAddLead=function(i){
   var p=_rdLeads[i]; if(!p)return;
   var t=RADAR_TRADES[_rdTrade];
-  var note='Lead Radar ('+t.l+'): last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old. Score '+p.score+' ('+rdLabel(p.score)+').';
+  var note='Lead Radar ('+t.l+'): last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old. Score '+p.score+' ('+rdLabel(p.score)+')'+(p.storm?' · recent storm nearby':'')+'.';
   if(window.BP_LIVE&&window.BP_SB){
     BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note}).then(function(r){
-      alert(r&&r.error?'Could not save — are you signed in?':'✓ Added '+p.addr+' to Contacts');
+      if(r&&r.error){alert('Could not save — are you signed in?');return;}
+      _rdAdded[p.addr]=1; rdDraw();
     }).catch(function(){alert('Could not save — network issue.');});
   }else alert('Sign in to save prospects to Contacts.');
+};
+window.rdAddAllHot=function(){
+  var hot=_rdLeads.filter(function(p){return p.score>=75&&!_rdAdded[p.addr];}).slice(0,25);
+  if(!hot.length){alert('No new hot prospects to add.');return;}
+  if(!confirm('Add '+hot.length+' hot prospects to Contacts (tagged radar)?'))return;
+  if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in first.');return;}
+  var t=RADAR_TRADES[_rdTrade];
+  var rows=hot.map(function(p){return {name:p.addr,tags:['radar',_rdTrade],notes:'Lead Radar ('+t.l+'): last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old. Score '+p.score+'.'};});
+  BP_SB.from('contacts').insert(rows).then(function(r){
+    if(r&&r.error){alert('Save failed — are you signed in?');return;}
+    hot.forEach(function(p){_rdAdded[p.addr]=1;}); rdDraw();
+    alert('✓ Added '+rows.length+' prospects to Contacts.');
+  }).catch(function(){alert('Network issue — try again.');});
 };
 var rdCss=document.createElement('style');
 rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.rd-chip{margin:2px 0}';
