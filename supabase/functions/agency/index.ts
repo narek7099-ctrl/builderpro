@@ -212,6 +212,7 @@ dashboard.stats — cross-client KPIs (contacts, open deals, pipeline & won valu
 client.health{locationId} — what's configured for a client (pipelines, calendars, custom values, workflows, AI brain, phone). readonly.
 brain.get{slug} — read a client's AI receptionist knowledge (slug = the client's locationId). readonly.
 brain.save{slug,business_name?,industry?,tone?,services?,pricing?,hours?,phone?,booking_url?,faqs?,custom_instructions?,assistant_name?} — update a client's AI receptionist knowledge.
+radar.assign{email,trade,zips(comma-separated),city?} — grant a client an exclusive Lead Radar territory (their portal login email). radar.list — all territories. readonly. radar.remove{email} — revoke a territory.
 `.trim();
 
 // Full client onboarding in one call: create (from snapshot) → personalize custom
@@ -355,6 +356,31 @@ async function clientHealth(a: Record<string, string>) {
   if (SB_URL && SB_SERVICE) { try { const b = await fetch(`${SB_URL}/rest/v1/ai_brain?slug=eq.${encodeURIComponent(id)}&select=slug`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }); const br = await b.json(); loc.hasBrain = Array.isArray(br) && br.length > 0; } catch { /* skip */ } }
   return json({ ok: true, data: loc });
 }
+// ---- Lead Radar territories: exclusive trade+zips slots sold per client ----
+async function radarAssign(a: Record<string, string>) {
+  const email = (a.email ?? "").toLowerCase().trim();
+  if (!email) return json({ ok: false, error: "email required" }, 400);
+  const zips = String(a.zips ?? "").split(",").map((z) => z.trim()).filter(Boolean);
+  const row = { email, trade: a.trade || "roofing", zips, city: a.city || "austin", active: a.active !== "false", updated_at: new Date().toISOString() };
+  const r = await fetch(`${SB_URL}/rest/v1/radar_territories?on_conflict=email`, {
+    method: "POST",
+    headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify(row),
+  });
+  const d = await r.json().catch(() => ({}));
+  return json({ ok: r.ok, data: Array.isArray(d) ? d[0] : d });
+}
+async function radarList() {
+  const r = await fetch(`${SB_URL}/rest/v1/radar_territories?select=*&order=updated_at.desc`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+  return json({ ok: r.ok, data: await r.json().catch(() => []) });
+}
+async function radarRemove(a: Record<string, string>) {
+  const email = (a.email ?? "").toLowerCase().trim();
+  if (!email) return json({ ok: false, error: "email required" }, 400);
+  const r = await fetch(`${SB_URL}/rest/v1/radar_territories?email=eq.${encodeURIComponent(email)}`, { method: "DELETE", headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+  return json({ ok: r.ok });
+}
+
 // ---- persistent memory for the command-center AI ----
 const sbHeaders = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
 async function memorySave(email: string, a: Record<string, string>) {
@@ -494,6 +520,9 @@ Deno.serve(async (req) => {
   if (body.op === "client.health") return clientHealth(body.args ?? {});
   if (body.op === "brain.get") return brainGet(body.args ?? {});
   if (body.op === "brain.save") { const resp = await brainSave(body.args ?? {}); audit(admin.email, "brain.save", { slug: (body.args ?? {}).slug }, true, 200); return resp; }
+  if (body.op === "radar.assign") { const resp = await radarAssign(body.args ?? {}); audit(admin.email, "radar.assign", body.args, true, 200); return resp; }
+  if (body.op === "radar.list") return radarList();
+  if (body.op === "radar.remove") { const resp = await radarRemove(body.args ?? {}); audit(admin.email, "radar.remove", body.args, true, 200); return resp; }
   if (body.op === "memory.save") return memorySave(admin.email, body.args ?? {});
   if (body.op === "memory.list") return memoryList(admin.email);
   if (body.op === "memory.delete") return memoryDelete(admin.email, body.args ?? {});
