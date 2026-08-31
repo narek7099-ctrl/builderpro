@@ -12807,8 +12807,36 @@ function bpDashboard(){
         +bpDonut(0,'#2f6bff','0','Calls recovered')+bpDonut(0,'#7bc8ff','0','Texts recovered')+bpDonut(0,'#33bd63','0','Reactivated')
       +'</div></div>'
     +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2" id="bpxFunTag">this month</span></div><div id="bpxFunnel">'+fh+'</div></div>';
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2" id="bpxFunTag">this month</span></div><div id="bpxFunnel">'+fh+'</div></div>'
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">🎯 Lead Radar<span class="lg2">homes near you that need your work</span></div><div id="bpxRadarCard" class="bpx-mut" style="font-size:13.5px">Checking your territory…</div></div>';
   if(BP_LIVE)bpDashLive();
+  bpDashRadar();
+}
+/* Lead Radar summary card on the dashboard */
+function bpDashRadar(){
+  var el=q('bpxRadarCard'); if(!el) return;
+  var upsell='<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div style="flex:1;min-width:220px">Lead Radar finds the homes in your area most likely to need your trade — scored from public permit records and storm reports. Territories are <b>exclusive</b>: one contractor per trade, per area.</div><button class="bpx-btn" style="padding:11px 18px" onclick="bpNav(\'leadradar\')">See the map</button></div>';
+  if(!(window.BP_LIVE&&window.BP_SB)){ el.innerHTML=upsell; el.classList.remove('bpx-mut'); return; }
+  BP_SB.from('radar_territories').select('*').maybeSingle().then(function(r){
+    el.classList.remove('bpx-mut');
+    if(!(r&&r.data&&r.data.active)){ el.innerHTML=upsell; return; }
+    var terr=r.data, tr=(typeof RADAR_TRADES!=='undefined'&&RADAR_TRADES[terr.trade])?RADAR_TRADES[terr.trade]:{l:terr.trade};
+    el.innerHTML='<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:220px"><b>Your territory:</b> '+bpEsc((terr.zips||[]).join(', ')||terr.city)+' · '+bpEsc(tr.l||terr.trade)
+      +'<div id="bpxRadarStat" style="margin-top:4px;color:#5f6470;font-size:13px">Counting prospects…</div></div>'
+      +'<button class="bpx-btn" style="padding:11px 18px" onclick="bpNav(\'leadradar\')">Open Lead Radar</button></div>';
+    /* quick count using the radar engine (loads its config only, no map) */
+    try{
+      _rdTerr=terr;_rdTerrLoaded=true;
+      _rdCity=(RADAR_CITIES[terr.city]?terr.city:'austin');
+      _rdTrade=(RADAR_TRADES[terr.trade]?terr.trade:'roofing');
+      rdFetch().then(function(leads){
+        var st=q('bpxRadarStat'); if(!st)return;
+        var hot=leads.filter(function(x){return x.score>=75;}).length;
+        st.innerHTML=leads.length?('<b style="color:#e11d48">'+hot+' hot</b> of '+leads.length+' prospects on your map right now'):'Scanning your area — open the map to see prospects.';
+      }).catch(function(){var st=q('bpxRadarStat');if(st)st.textContent='Open the map to scan your area.';});
+    }catch(e){}
+  }).catch(function(){ el.innerHTML=upsell; el.classList.remove('bpx-mut'); });
 }
 function bpFunnelRows(items){
   if(!items||!items.length)return '';
