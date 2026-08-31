@@ -14878,6 +14878,11 @@ function bpRadar(){
   rdRenderShell();
 }
 function rdLocked(){
+  if(window.BP_LIVE&&window.BP_SB){BP_SB.auth.getSession().then(function(r){
+    var em=r&&r.data&&r.data.session&&r.data.session.user&&r.data.session.user.email;
+    var el=document.getElementById('rdWhoami');
+    if(el)el.textContent=em?('Signed in as: '+em+' — territories are matched to this exact email.'):'Not signed in.';
+  }).catch(function(){});}
   q('bpxViewArea').innerHTML=
     '<div style="max-width:560px;margin:30px auto;text-align:center;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:38px 30px">'
     +'<div style="font-size:40px;margin-bottom:10px">🔒</div>'
@@ -14886,7 +14891,8 @@ function rdLocked(){
     +'<p style="color:#5f6470;font-size:14px;margin-bottom:20px">Territories start at <b>$300/mo</b> per area. Ask us which zips near you are still open.</p>'
     +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
     +'<a class="bpx-btn" style="text-decoration:none" href="mailto:narek7099@gmail.com?subject=Lead%20Radar%20territory">Check my area</a>'
-    +'<button class="bpx-btn ghost" onclick="_rdDemoOK=true;_rdCity=\'demo\';bpRadar()">Preview with demo data</button></div></div>';
+    +'<button class="bpx-btn ghost" onclick="_rdDemoOK=true;_rdCity=\'demo\';bpRadar()">Preview with demo data</button></div>'
+    +'<div id="rdWhoami" style="margin-top:16px;font-size:12px;color:#9a9aa0"></div></div>';
 }
 function rdRenderShell(){
   var t=RADAR_TRADES[_rdTrade];
