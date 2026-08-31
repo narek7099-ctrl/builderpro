@@ -14824,6 +14824,13 @@ var RADAR_CITIES={
     latf:'latitude',lngf:'longitude',
     addr:function(r){return r.original_address1||'';},
     zipf:['original_zip','zip','zipcode']},
+  la:{name:'Los Angeles, CA',lat:34.1866,lng:-118.4009,zoom:12,wfo:'LOX',
+    api:'https://data.lacity.org/resource/yv23-pmwf.json',
+    date:'issue_date',descf:['work_description','permit_type','permit_sub_type'],
+    latf:'latitude',lngf:'longitude',
+    pt:function(r){var la=r.latitude||(r.location_1&&r.location_1.latitude),lo=r.longitude||(r.location_1&&r.location_1.longitude);return [la,lo];},
+    addr:function(r){return [r.address_start,r.street_direction,r.street_name,r.street_suffix].filter(Boolean).join(' ')||r.primary_address||'';},
+    zipf:['zip_code','zip']},
   chicago:{name:'Chicago, IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
     api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',
     date:'issue_date',descf:['work_description','permit_type'],
@@ -14946,13 +14953,14 @@ function rdFetch(){
   var from=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
   var to=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
   var kwWhere='('+t.kw.slice(0,4).map(function(k){return "upper("+c.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
-  var where=c.date+" > '"+from+"' AND "+c.date+" < '"+to+"' AND "+kwWhere+" AND "+c.latf+" IS NOT NULL";
+  var where=c.date+" > '"+from+"' AND "+c.date+" < '"+to+"' AND "+kwWhere+(c.pt?'':" AND "+c.latf+" IS NOT NULL");
   var url=c.api+'?$where='+encodeURIComponent(where)+'&$limit=700&$order='+c.date+'%20DESC';
   return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(rows){
     var leads=[];
     (rows||[]).forEach(function(r){
       if(!rdZipOK(r,c))return;
-      var lat=parseFloat(r[c.latf]),lng=parseFloat(r[c.lngf]);
+      var _ll=c.pt?c.pt(r):[r[c.latf],r[c.lngf]];
+      var lat=parseFloat(_ll[0]),lng=parseFloat(_ll[1]);
       if(!isFinite(lat)||!isFinite(lng))return;
       var dt=new Date(r[c.date]); if(isNaN(dt))return;
       var age=(Date.now()-dt.getTime())/31557600000;
