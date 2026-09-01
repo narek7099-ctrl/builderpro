@@ -14823,20 +14823,20 @@ var RADAR_CITIES={
     date:'issued_date',descf:['description','permit_type_desc','work_class'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return r.original_address1||'';},
-    zipf:['original_zip','zip','zipcode']},
+    zipf:['original_zip','zip','zipcode'],idf:['permit_number','permit_num','permittype'],portal:'https://abc.austintexas.gov/web/permit/public-search-other',portalName:'City of Austin permit search'},
   la:{name:'Los Angeles, CA',cityName:'Los Angeles',state:'CA',lat:34.1866,lng:-118.4009,zoom:12,wfo:'LOX',
     api:'https://data.lacity.org/resource/yv23-pmwf.json',
     date:'issue_date',descf:['work_description','permit_type','permit_sub_type'],
     latf:'latitude',lngf:'longitude',
     pt:function(r){var la=r.latitude||(r.location_1&&r.location_1.latitude),lo=r.longitude||(r.location_1&&r.location_1.longitude);return [la,lo];},
     addr:function(r){return [r.address_start,r.street_direction,r.street_name,r.street_suffix].filter(Boolean).join(' ')||r.primary_address||'';},
-    zipf:['zip_code','zip']},
+    zipf:['zip_code','zip'],idf:['pcis_permit_','permit_nbr','permit_number'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records'},
   chicago:{name:'Chicago, IL',cityName:'Chicago',state:'IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
     api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',
     date:'issue_date',descf:['work_description','permit_type'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return [r.street_number,r.street_direction,r.street_name].filter(Boolean).join(' ');},
-    zipf:['zip_code','contact_1_zipcode','zip']},
+    zipf:['zip_code','contact_1_zipcode','zip'],idf:['permit_','id','permit_number'],portal:'https://webapps1.chicago.gov/buildingrecords/',portalName:'City of Chicago building records'},
   demo:{name:'Demo City',lat:32.7767,lng:-96.7970,zoom:11,wfo:'',zipf:[]}
 };
 var RADAR_TRADES={
@@ -14917,6 +14917,8 @@ function rdRenderShell(){
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
+    +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
+    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
@@ -14949,9 +14951,10 @@ function rdRefresh(){
   if(!window.L) return;
   if(!_rdMap||!document.getElementById('rdMap')||!document.getElementById('rdMap')._leaflet_id) rdInitMap();
   var cnt=q('rdCount'); if(cnt)cnt.textContent='Scanning permits…';
-  var done=function(leads,demo){_rdLeads=leads; if(demo&&cnt)cnt.textContent='Live feed unavailable — demo data';
+  var done=function(leads,demo){_rdLeads=leads; window._rdIsDemo=demo||_rdCity==='demo';
+    if(demo&&cnt)cnt.textContent='Live feed unavailable — demo data';
     if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
-  if(_rdCity==='demo'){ done(rdDemoLeads(),false); return; }
+  if(_rdCity==='demo'){ done(rdDemoLeads(),true); return; }
   rdFetch().then(function(leads){ if(!leads.length) done(rdDemoLeads(),true); else done(leads,false); })
     .catch(function(){ done(rdDemoLeads(),true); });
 }
@@ -14971,6 +14974,7 @@ function rdFetch(){
     var url=c.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+c.date+'%20DESC';
     return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();});
   }
+  function permitId(r){var id='';(c.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
   function rowLead(r,kind){
     if(!rdZipOK(r,c))return null;
     var _ll=c.pt?c.pt(r):[r[c.latf],r[c.lngf]];
@@ -14983,7 +14987,7 @@ function rdFetch(){
       var sc=rdScore(age,t); if(sc<25)return null;
       return {lat:lat,lng:lng,base:sc,score:sc,age:Math.round(age),year:dt.getFullYear(),kind:'due',
         why:'Last '+t.unit+' permit '+dt.getFullYear()+' — '+Math.round(age)+' yrs old, due for replacement',
-        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false};
+        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(r)};
     }
     // active-project signal: match description to an adjacent rule
     var up=desc.toUpperCase(), rule=null;
@@ -14992,7 +14996,7 @@ function rdFetch(){
     var months=Math.max(0,Math.round(age*12));
     return {lat:lat,lng:lng,base:rule.sc,score:rule.sc,age:Math.round(age),year:dt.getFullYear(),kind:'project',
       why:rule.label+' ('+(months<=1?'this month':months+' months ago')+')',
-      addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false};
+      addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(r)};
   }
   var dueFrom=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
   var dueTo=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
@@ -15019,7 +15023,7 @@ function rdDemoLeads(){
     out.push({lat:c.lat+(rnd()-0.5)*0.22,lng:c.lng+(rnd()-0.5)*0.28,base:sc,score:sc,age:age,kind:'due',
       why:'Last '+t.unit+' permit '+(new Date().getFullYear()-age)+' — '+age+' yrs old, due for replacement',
       year:new Date().getFullYear()-age,addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],
-      desc:t.kw[0].toLowerCase()+' permit (demo)',storm:false});
+      desc:t.kw[0].toLowerCase()+' permit (demo)',storm:false,demo:true});
   }
   (t.adj||[]).forEach(function(a,ai){
     for(var j2=0;j2<6;j2++){
@@ -15027,7 +15031,7 @@ function rdDemoLeads(){
       out.push({lat:c.lat+(rnd()-0.5)*0.2,lng:c.lng+(rnd()-0.5)*0.26,base:a.sc,score:a.sc,age:0,kind:'project',
         why:a.label+' ('+mo+' months ago)',year:new Date().getFullYear(),
         addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],
-        desc:a.kw[0].toLowerCase()+' permit (demo)',storm:false});
+        desc:a.kw[0].toLowerCase()+' permit (demo)',storm:false,demo:true});
     }
   });
   return out.sort(function(a,b){return b.score-a.score;});
@@ -15058,6 +15062,9 @@ function rdDemoStorms(){
 }
 function rdDraw(){
   if(!_rdMap)return;
+  var db=q('rdDemoBanner'),tr2=q('rdTrust');
+  if(db)db.style.display=window._rdIsDemo?'block':'none';
+  if(tr2)tr2.style.display=window._rdIsDemo?'none':'block';
   _rdLayer.clearLayers(); _rdStormLayer.clearLayers();
   var t=RADAR_TRADES[_rdTrade];
   _rdLeads.forEach(function(p){
@@ -15113,6 +15120,8 @@ function rdPopup(p,i,t){
     +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">🔨 active project</span>':'')+'<br>'
     +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span><br>'
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
+    +'<a onclick="rdEvidence('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📋 More info — see the permit record</a>'
+    +'<div id="rdEv'+i+'" style="display:none"></div><br>'
     +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🔍 Owner lookup (public records)</a>'
     +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📱 Reveal owner info</a>':'')
     +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn+'</div>';
@@ -15146,6 +15155,44 @@ window.rdReveal=function(i){
       BP_SB.from('contacts').update(upd).eq('name',p.addr).then(function(){}).catch(function(){});
     }
   }).catch(function(){ var b2=document.getElementById('rdRev'+i); if(b2) b2.innerHTML='<span style="color:#b45309">Network issue — try again.</span>'; });
+};
+window.rdEvidence=function(i){
+  var p=_rdLeads[i]; if(!p) return;
+  var box=document.getElementById('rdEv'+i); if(!box) return;
+  if(box.style.display==='block'){box.style.display='none';return;}
+  var c=RADAR_CITIES[_rdCity]||{};
+  var h='';
+  if(p.demo){
+    h='<div style="margin:6px 0;padding:8px 10px;background:#fff7ed;border-radius:8px;color:#92400e">This is a <b>demo dot</b> — illustrative only, no real permit behind it.</div>';
+  }else if(p.raw){
+    var pretty={permit_number:'Permit #',permit_num:'Permit #',pcis_permit_:'Permit #',permit_:'Permit #',permit_nbr:'Permit #',
+      permit_type:'Type',permit_type_desc:'Type',permittype:'Type',permit_sub_type:'Subtype',work_class:'Work class',
+      description:'Description',work_description:'Description',issued_date:'Issued',issue_date:'Issued',
+      declared_valuation:'Declared value',reported_cost:'Reported cost',valuation:'Valuation',
+      applicant:'Applicant',contractor_name:'Contractor',contact_1_name:'Contact',original_address1:'Address',status_current:'Status',status:'Status'};
+    var shown=0, rows='';
+    Object.keys(pretty).forEach(function(k){
+      var v=p.raw[k]; if(v==null||v===''||typeof v==='object')return;
+      v=String(v); if(k.indexOf('date')>=0||k==='issued_date'||k==='issue_date')v=v.slice(0,10);
+      rows+='<tr><td style="color:#6a6a70;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">'+pretty[k]+'</td><td style="word-break:break-word">'+bpEsc(v.slice(0,180))+'</td></tr>';
+      shown++;
+    });
+    if(!shown){Object.keys(p.raw).slice(0,8).forEach(function(k){var v=p.raw[k];if(v==null||typeof v==='object')return;rows+='<tr><td style="color:#6a6a70;padding:2px 8px 2px 0">'+bpEsc(k)+'</td><td>'+bpEsc(String(v).slice(0,140))+'</td></tr>';});}
+    var verify='';
+    if(p.pid&&c.api&&(c.idf||[]).length){
+      var idField=(c.idf||[]).filter(function(f){return p.raw[f];})[0];
+      if(idField) verify+='<a href="'+c.api+'?'+idField+'='+encodeURIComponent(p.pid)+'" target="_blank" rel="noopener" style="color:#2f6bff">View raw city record ↗</a>';
+    }
+    if(c.portal) verify+=(verify?' · ':'')+'<a href="'+c.portal+'" target="_blank" rel="noopener" style="color:#2f6bff">'+bpEsc(c.portalName||'Official permit search')+' ↗</a>';
+    h='<div style="margin:6px 0;padding:8px 10px;background:#f2f5fb;border-radius:8px;font-size:11.5px">'
+      +'<div style="font-weight:700;margin-bottom:4px;color:#15803d">✓ Public record — how we know</div>'
+      +'<table style="border-collapse:collapse">'+rows+'</table>'
+      +(verify?'<div style="margin-top:6px">'+verify+'</div>':'')
+      +'</div>';
+  }else{
+    h='<div style="margin:6px 0;color:#6a6a70">Record details unavailable for this dot.</div>';
+  }
+  box.innerHTML=h; box.style.display='block';
 };
 window.rdFocus=function(i){var p=_rdLeads[i];if(!p||!_rdMap)return;_rdMap.setView([p.lat,p.lng],15);
   _rdLayer.eachLayer(function(l){var ll=l.getLatLng&&l.getLatLng();if(ll&&Math.abs(ll.lat-p.lat)<1e-9&&Math.abs(ll.lng-p.lng)<1e-9)l.openPopup();});};
