@@ -14840,14 +14840,22 @@ var RADAR_CITIES={
   demo:{name:'Demo City',lat:32.7767,lng:-96.7970,zoom:11,wfo:'',zipf:[]}
 };
 var RADAR_TRADES={
-  roofing:{l:'Roofing',kw:['ROOF','REROOF','SHINGLE'],lo:15,hi:30,peak:22,unit:'roof',storm:true},
-  hvac:{l:'HVAC',kw:['HVAC','FURNACE','HEAT PUMP','AIR COND','MECHANICAL'],lo:12,hi:25,peak:17,unit:'system'},
-  waterheater:{l:'Water Heater',kw:['WATER HEATER'],lo:8,hi:16,peak:11,unit:'water heater'},
-  painting:{l:'Painting',kw:['SIDING','STUCCO','FACADE','EXTERIOR'],lo:7,hi:18,peak:11,unit:'exterior',storm:true},
-  landscaping:{l:'Landscaping',kw:['POOL','IRRIGATION','SPRINKLER','DECK','PATIO','FENCE'],lo:8,hi:25,peak:14,unit:'outdoor work'},
-  countertops:{l:'Countertops',kw:['KITCHEN','CABINET'],lo:12,hi:30,peak:18,unit:'kitchen'},
-  trim:{l:'Trim & Carpentry',kw:['REMODEL','ADDITION','INTERIOR'],lo:12,hi:30,peak:18,unit:'interior'},
-  windows:{l:'Windows & Doors',kw:['WINDOW','DOOR REPLACE'],lo:15,hi:30,peak:20,unit:'windows',storm:true}
+  roofing:{l:'Roofing',kw:['ROOF','REROOF','SHINGLE'],lo:15,hi:30,peak:22,unit:'roof',storm:true,
+    adj:[{kw:['SOLAR','PHOTOVOLT','PV SYSTEM'],label:'Solar permit just filed — roof should be inspected/replaced BEFORE panels go on',sc:88}]},
+  hvac:{l:'HVAC',kw:['HVAC','FURNACE','HEAT PUMP','AIR COND','MECHANICAL'],lo:12,hi:25,peak:17,unit:'system',
+    adj:[{kw:['ADDITION','ADU','ACCESSORY DWELLING'],label:'Room addition underway — new square footage needs heating & cooling',sc:85}]},
+  waterheater:{l:'Water Heater',kw:['WATER HEATER'],lo:8,hi:16,peak:11,unit:'water heater',
+    adj:[{kw:['ADDITION','ADU','ACCESSORY DWELLING'],label:'Addition/ADU underway — often needs a new or larger water heater',sc:70}]},
+  painting:{l:'Painting',kw:['SIDING','STUCCO','FACADE','EXTERIOR'],lo:7,hi:18,peak:11,unit:'exterior',storm:true,
+    adj:[{kw:['ADDITION','ADU','REMODEL','ACCESSORY DWELLING'],label:'Remodel/addition in progress — paint is the finishing step',sc:82},{kw:['DRYWALL'],label:'Drywall work permitted — interior paint next',sc:75}]},
+  landscaping:{l:'Landscaping',kw:['IRRIGATION','SPRINKLER','LANDSCAP'],lo:8,hi:25,peak:14,unit:'outdoor work',
+    adj:[{kw:['POOL','SPA'],label:'Pool/spa being built — construction tears up the yard, landscaping is next',sc:90},{kw:['ADDITION','ADU','ACCESSORY DWELLING'],label:'Construction underway — yard will need repair & relandscaping',sc:75}]},
+  countertops:{l:'Countertops',kw:['KITCHEN','CABINET'],lo:12,hi:30,peak:18,unit:'kitchen',
+    adj:[{kw:['KITCHEN REMODEL','REMODEL KITCHEN','KITCHEN'],label:'Kitchen remodel permitted — countertops are the finishing step',sc:85}]},
+  trim:{l:'Trim & Carpentry',kw:['REMODEL','ADDITION','INTERIOR'],lo:12,hi:30,peak:18,unit:'interior',
+    adj:[{kw:['ADDITION','ADU','REMODEL'],label:'Remodel/addition underway — trim & finish carpentry comes last',sc:78}]},
+  windows:{l:'Windows & Doors',kw:['WINDOW','DOOR REPLACE'],lo:15,hi:30,peak:20,unit:'windows',storm:true,
+    adj:[{kw:['ADDITION','ADU'],label:'Addition underway — new openings need matching windows & doors',sc:65}]}
 };
 var _rdCity='demo', _rdTrade='roofing';
 var _rdMap=null,_rdLayer=null,_rdStormLayer=null,_rdLeads=[],_rdStorms=[],_rdStormOn=false,_rdMin=25;
@@ -14905,6 +14913,7 @@ function rdRenderShell(){
     +'<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px">'
       +'<span><i class="rd-dot" style="background:#e11d48"></i> Hot (75+)</span><span><i class="rd-dot" style="background:#f59e0b"></i> Warm</span>'
       +'<span><i class="rd-dot" style="background:#eab308"></i> Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i> Watch</span>'
+      +'<span><i class="rd-dot" style="background:#fff;border:2.5px solid #7c3aed;box-sizing:border-box"></i> Active project</span>'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
@@ -14956,27 +14965,48 @@ function rdZipOK(row,c){
 function rdFetch(){
   var c=RADAR_CITIES[_rdCity], t=RADAR_TRADES[_rdTrade];
   var now=new Date();
-  var from=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
-  var to=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
-  var kwWhere='('+t.kw.slice(0,4).map(function(k){return "upper("+c.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
-  var where=c.date+" > '"+from+"' AND "+c.date+" < '"+to+"' AND "+kwWhere+(c.pt?'':" AND "+c.latf+" IS NOT NULL");
-  var url=c.api+'?$where='+encodeURIComponent(where)+'&$limit=700&$order='+c.date+'%20DESC';
-  return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(rows){
-    var leads=[];
-    (rows||[]).forEach(function(r){
-      if(!rdZipOK(r,c))return;
-      var _ll=c.pt?c.pt(r):[r[c.latf],r[c.lngf]];
-      var lat=parseFloat(_ll[0]),lng=parseFloat(_ll[1]);
-      if(!isFinite(lat)||!isFinite(lng))return;
-      var dt=new Date(r[c.date]); if(isNaN(dt))return;
-      var age=(Date.now()-dt.getTime())/31557600000;
-      var sc=rdScore(age,t); if(sc<25)return;
-      var desc=''; c.descf.forEach(function(f){if(!desc&&r[f])desc=String(r[f]);});
-      leads.push({lat:lat,lng:lng,base:sc,score:sc,age:Math.round(age),year:dt.getFullYear(),
-        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false});
-    });
+  function q1(from,to,kws,limit){
+    var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+c.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
+    var where=c.date+" > '"+from+"' AND "+c.date+" < '"+to+"' AND "+kwWhere+(c.pt?'':" AND "+c.latf+" IS NOT NULL");
+    var url=c.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+c.date+'%20DESC';
+    return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();});
+  }
+  function rowLead(r,kind){
+    if(!rdZipOK(r,c))return null;
+    var _ll=c.pt?c.pt(r):[r[c.latf],r[c.lngf]];
+    var lat=parseFloat(_ll[0]),lng=parseFloat(_ll[1]);
+    if(!isFinite(lat)||!isFinite(lng))return null;
+    var dt=new Date(r[c.date]); if(isNaN(dt))return null;
+    var desc=''; c.descf.forEach(function(f){if(!desc&&r[f])desc=String(r[f]);});
+    var age=(Date.now()-dt.getTime())/31557600000;
+    if(kind==='due'){
+      var sc=rdScore(age,t); if(sc<25)return null;
+      return {lat:lat,lng:lng,base:sc,score:sc,age:Math.round(age),year:dt.getFullYear(),kind:'due',
+        why:'Last '+t.unit+' permit '+dt.getFullYear()+' — '+Math.round(age)+' yrs old, due for replacement',
+        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false};
+    }
+    // active-project signal: match description to an adjacent rule
+    var up=desc.toUpperCase(), rule=null;
+    (t.adj||[]).forEach(function(a){ if(!rule&&a.kw.some(function(k){return up.indexOf(k)>=0;})) rule=a; });
+    if(!rule)return null;
+    var months=Math.max(0,Math.round(age*12));
+    return {lat:lat,lng:lng,base:rule.sc,score:rule.sc,age:Math.round(age),year:dt.getFullYear(),kind:'project',
+      why:rule.label+' ('+(months<=1?'this month':months+' months ago')+')',
+      addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false};
+  }
+  var dueFrom=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
+  var dueTo=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
+  var recFrom=new Date(Date.now()-274*86400000).toISOString().slice(0,10);   // last ~9 months
+  var recTo=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  var adjKws=[]; (t.adj||[]).forEach(function(a){adjKws=adjKws.concat(a.kw);});
+  var jobs=[ q1(dueFrom,dueTo,t.kw,600).catch(function(){return [];}) ];
+  if(adjKws.length) jobs.push(q1(recFrom,recTo,adjKws,300).catch(function(){return [];}));
+  return Promise.all(jobs).then(function(res){
+    var leads=[], seen={};
+    (res[0]||[]).forEach(function(r){var p=rowLead(r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
+    ((res[1])||[]).forEach(function(r){var p=rowLead(r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     leads.sort(function(a,b){return b.score-a.score;});
-    return leads.slice(0,400);
+    return leads.slice(0,450);
   });
 }
 function rdDemoLeads(){
@@ -14986,10 +15016,20 @@ function rdDemoLeads(){
   for(var i=0;i<130;i++){
     var age=t.lo+rnd()*(t.hi-t.lo); age=Math.round(t.lo+(age-t.lo)*(0.4+0.6*rnd()));
     var sc=rdScore(age,t); if(sc<25)continue;
-    out.push({lat:c.lat+(rnd()-0.5)*0.22,lng:c.lng+(rnd()-0.5)*0.28,base:sc,score:sc,age:age,
+    out.push({lat:c.lat+(rnd()-0.5)*0.22,lng:c.lng+(rnd()-0.5)*0.28,base:sc,score:sc,age:age,kind:'due',
+      why:'Last '+t.unit+' permit '+(new Date().getFullYear()-age)+' — '+age+' yrs old, due for replacement',
       year:new Date().getFullYear()-age,addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],
       desc:t.kw[0].toLowerCase()+' permit (demo)',storm:false});
   }
+  (t.adj||[]).forEach(function(a,ai){
+    for(var j2=0;j2<6;j2++){
+      var mo=1+Math.floor(rnd()*8);
+      out.push({lat:c.lat+(rnd()-0.5)*0.2,lng:c.lng+(rnd()-0.5)*0.26,base:a.sc,score:a.sc,age:0,kind:'project',
+        why:a.label+' ('+mo+' months ago)',year:new Date().getFullYear(),
+        addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],
+        desc:a.kw[0].toLowerCase()+' permit (demo)',storm:false});
+    }
+  });
   return out.sort(function(a,b){return b.score-a.score;});
 }
 function rdFetchStorms(){
@@ -15038,7 +15078,8 @@ function rdDraw(){
   var shown=_rdLeads.filter(function(p){return p.score>=_rdMin;});
   shown.forEach(function(p){
     var i=_rdLeads.indexOf(p);
-    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:p.storm?'#f97316':'#fff',weight:p.storm?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
+    var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':'#fff');
+    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:ring,weight:(p.storm||p.kind==='project')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
     m.bindPopup(rdPopup(p,i,t));
     _rdLayer.addLayer(m);
   });
@@ -15051,7 +15092,7 @@ function rdDraw(){
       else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">📞 Contacted</button>';
       else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
       return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+(p.storm?' <span title="recent storm nearby">⛈️</span>':'')+'</td>'
-        +'<td class="bpx-mut" style="font-size:12.5px">Last '+t.unit+': '+p.year+' · '+p.age+' yrs</td>'
+        +'<td class="bpx-mut" style="font-size:12.5px">'+(p.kind==='project'?'🔨 ':'')+bpEsc((p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs')).slice(0,80))+'</td>'
         +'<td class="bpx-r"><span style="padding:2px 10px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11.5px">'+p.score+'</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap">'+act+'</td></tr>';
     }).join(''):'<tr><td colspan="5" class="bpx-empty2">Nothing above the score filter — lower the min score.</td></tr>';
@@ -15068,8 +15109,9 @@ function rdPopup(p,i,t){
   return '<div style="font:13px/1.5 -apple-system,sans-serif;min-width:200px">'
     +'<b>'+bpEsc(p.addr)+'</b><br>'
     +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span>'
-    +(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':'')+'<br>'
-    +'Last '+t.unit+' permit: <b>'+p.year+'</b> ('+p.age+' yrs ago)<br>'
+    +(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':'')
+    +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">🔨 active project</span>':'')+'<br>'
+    +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span><br>'
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
     +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🔍 Owner lookup (public records)</a>'
     +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📱 Reveal owner info</a>':'')
