@@ -14818,20 +14818,20 @@ window.bpSettingsSave=function(){
 /* ==== LEAD RADAR v3 — exclusive territories, GHL two-stage tag flow,
        storm overlay, ranked hot list, owner lookup ==== */
 var RADAR_CITIES={
-  austin:{name:'Austin, TX',lat:30.2672,lng:-97.7431,zoom:11,wfo:'EWX',
+  austin:{name:'Austin, TX',cityName:'Austin',state:'TX',lat:30.2672,lng:-97.7431,zoom:11,wfo:'EWX',
     api:'https://data.austintexas.gov/resource/3syk-w9eu.json',
     date:'issued_date',descf:['description','permit_type_desc','work_class'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return r.original_address1||'';},
     zipf:['original_zip','zip','zipcode']},
-  la:{name:'Los Angeles, CA',lat:34.1866,lng:-118.4009,zoom:12,wfo:'LOX',
+  la:{name:'Los Angeles, CA',cityName:'Los Angeles',state:'CA',lat:34.1866,lng:-118.4009,zoom:12,wfo:'LOX',
     api:'https://data.lacity.org/resource/yv23-pmwf.json',
     date:'issue_date',descf:['work_description','permit_type','permit_sub_type'],
     latf:'latitude',lngf:'longitude',
     pt:function(r){var la=r.latitude||(r.location_1&&r.location_1.latitude),lo=r.longitude||(r.location_1&&r.location_1.longitude);return [la,lo];},
     addr:function(r){return [r.address_start,r.street_direction,r.street_name,r.street_suffix].filter(Boolean).join(' ')||r.primary_address||'';},
     zipf:['zip_code','zip']},
-  chicago:{name:'Chicago, IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
+  chicago:{name:'Chicago, IL',cityName:'Chicago',state:'IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
     api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',
     date:'issue_date',descf:['work_description','permit_type'],
     latf:'latitude',lngf:'longitude',
@@ -15071,8 +15071,40 @@ function rdPopup(p,i,t){
     +(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':'')+'<br>'
     +'Last '+t.unit+' permit: <b>'+p.year+'</b> ('+p.age+' yrs ago)<br>'
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
-    +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🔍 Owner lookup (public records)</a><br>'+btn+'</div>';
+    +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🔍 Owner lookup (public records)</a>'
+    +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📱 Reveal owner info</a>':'')
+    +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn+'</div>';
 }
+window.rdReveal=function(i){
+  var p=_rdLeads[i]; if(!p) return;
+  if(p.owner){ return; }
+  if(!confirm('Look up the owner\'s name & phone for '+p.addr+'? Each lookup uses a paid data credit (~$0.10).')) return;
+  var box=document.getElementById('rdRev'+i); if(box) box.innerHTML='<span style="color:#6a6a70">Looking up…</span>';
+  var c=RADAR_CITIES[_rdCity]||{};
+  BP_SB.auth.getSession().then(function(sn){
+    var tok=sn&&sn.data&&sn.data.session&&sn.data.session.access_token; if(!tok) throw 0;
+    return fetch((window.BP_URL||'')+'/functions/v1/skip-trace',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
+      body:JSON.stringify({street:p.addr,city:c.cityName||'',state:c.state||'',zip:(_rdTerr&&_rdTerr.zips&&_rdTerr.zips[0])||''})});
+  }).then(function(r){return r.json();}).then(function(d){
+    var box2=document.getElementById('rdRev'+i); if(!box2) return;
+    if(!d||d.ok===false){ box2.innerHTML='<span style="color:#b45309">'+((d&&d.error)||'Lookup failed')+'</span>'; return; }
+    if(!d.found){ box2.innerHTML='<span style="color:#6a6a70">No owner match found.</span>'; return; }
+    p.owner=d;
+    var ph=(d.phones||[]).map(function(x){return x.number+(x.dnc?' <span style="color:#b45309">(DNC — do not cold-call)</span>':'');}).join('<br>');
+    box2.innerHTML='<div style="margin-top:5px;padding:7px 9px;background:#f2f5fb;border-radius:8px"><b>'+bpEsc(d.name||'Owner')+'</b>'
+      +(ph?'<br>'+ph:'')+((d.emails||[]).length?'<br>'+bpEsc(d.emails.join(', ')):'')
+      +'<div style="color:#6a6a70;margin-top:3px">For calls & mail only — not automated texts.</div></div>';
+    /* if this prospect was added, enrich the saved contact */
+    if(_rdAdded[p.addr]&&window.BP_SB){
+      var upd={};
+      if(d.name) upd.name=d.name+' — '+p.addr;
+      if(d.phones&&d.phones[0]) upd.phone=d.phones[0].number;
+      if(d.emails&&d.emails[0]) upd.email=d.emails[0];
+      BP_SB.from('contacts').update(upd).eq('name',p.addr).then(function(){}).catch(function(){});
+    }
+  }).catch(function(){ var b2=document.getElementById('rdRev'+i); if(b2) b2.innerHTML='<span style="color:#b45309">Network issue — try again.</span>'; });
+};
 window.rdFocus=function(i){var p=_rdLeads[i];if(!p||!_rdMap)return;_rdMap.setView([p.lat,p.lng],15);
   _rdLayer.eachLayer(function(l){var ll=l.getLatLng&&l.getLatLng();if(ll&&Math.abs(ll.lat-p.lat)<1e-9&&Math.abs(ll.lng-p.lng)<1e-9)l.openPopup();});};
 function rdFn(action,payload){
