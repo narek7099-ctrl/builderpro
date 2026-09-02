@@ -12830,7 +12830,9 @@ function bpDashRadar(){
       _rdTerr=terr;_rdTerrLoaded=true;
       _rdCity=(RADAR_CITIES[terr.city]?terr.city:'austin');
       _rdTrade=(RADAR_TRADES[terr.trade]?terr.trade:'roofing');
+      var _dg=window._rdDiag,_dr=window._rdDrop;
       rdFetch().then(function(leads){
+        window._rdDiag=_dg;window._rdDrop=_dr;
         var st=q('bpxRadarStat'); if(!st)return;
         var hot=leads.filter(function(x){return x.score>=75;}).length;
         st.innerHTML=leads.length?('<b style="color:#e11d48">'+hot+' hot</b> of '+leads.length+' prospects on your map right now'):'Scanning your area — open the map to see prospects.';
@@ -14817,6 +14819,7 @@ window.bpSettingsSave=function(){
 <script>
 /* ==== LEAD RADAR v3 — exclusive territories, GHL two-stage tag flow,
        storm overlay, ranked hot list, owner lookup ==== */
+var RADAR_VER='v3.8';
 var RADAR_CITIES={
   austin:{name:'Austin, TX',cityName:'Austin',state:'TX',lat:30.2672,lng:-97.7431,zoom:11,wfo:'EWX',
     api:'https://data.austintexas.gov/resource/3syk-w9eu.json',
@@ -14930,7 +14933,7 @@ function rdRenderShell(){
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
-    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
+    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
@@ -15120,7 +15123,7 @@ function rdDraw(){
   if(db){db.style.display=window._rdIsDemo?'block':'none';
     if(window._rdIsDemo&&_rdCity!=='demo'&&(window._rdDiag||[]).length){
       var drop=window._rdDrop||{};
-      db.innerHTML='⚠️ DEMO DATA — live feed came back empty. <span style="font-weight:400">Diagnostics (screenshot this for Claude):</span>'
+      db.innerHTML='⚠️ DEMO DATA ('+RADAR_VER+') — live feed came back empty. <span style="font-weight:400">Diagnostics (screenshot this for Claude):</span>'
         +(window._rdDiag||[]).map(function(d){return '<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">'+bpEsc(d.api)+' → HTTP '+d.status+' · rows '+d.rows+' · kept '+(d.kept==null?'?':d.kept)+(d.err?' · '+bpEsc(d.err):'')+'</div>';}).join('')
         +'<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">dropped — zip:'+(drop.zip||0)+' coords:'+(drop.coords||0)+' date:'+(drop.date||0)+' rule:'+(drop.rule||0)+' score:'+(drop.score||0)+'</div>'
         +(window._rdProbe?'<div style="font-family:ui-monospace,monospace;font-size:10px;font-weight:400;margin-top:5px;word-break:break-all;background:#fff;border-radius:6px;padding:6px">SAMPLE ROW: '+bpEsc(window._rdProbe)+'</div>':'');
