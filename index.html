@@ -14834,6 +14834,12 @@ var RADAR_CITIES={
     recent:{api:'https://data.lacity.org/resource/pi9x-tg5x.json',
       date:'issue_date',descf:['work_desc','permit_type','permit_sub_type','use_desc'],
       latf:'lat',lngf:'lon',
+      pt:function(r){
+        var g=r.geolocation||r.location||{};
+        var la=r.lat||g.latitude||(g.coordinates&&g.coordinates[1]);
+        var lo=r.lon||g.longitude||(g.coordinates&&g.coordinates[0]);
+        return [la,lo];
+      },
       addr:function(r){return r.primary_address||'';},
       zipf:['zip_code'],idf:['permit_nbr'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records'}},
   chicago:{name:'Chicago, IL',cityName:'Chicago',state:'IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
@@ -14992,15 +14998,15 @@ function rdFetch(){
   function qZip(cfg,from,to,kws,limit,zip){
     var zf=(cfg.zipf&&cfg.zipf[0])||'';
     if(!zip||!zf) return q1(cfg,from,to,kws,limit,'','');
+    function tier3(){ return q1(cfg,from,to,kws,Math.max(limit,1000),'',' [citywide]'); }
+    function tier2(){
+      return q1(cfg,from,to,kws,limit,' AND '+zf+'='+zip,' ['+zip+' num]')
+        .then(function(rows){ return (rows&&rows.length)?rows:tier3(); })
+        .catch(function(e2){ if(e2&&e2.code&&e2.code!==400) throw e2; return tier3(); });
+    }
     return q1(cfg,from,to,kws,limit," AND "+zf+" like '"+zip+"%'",' ['+zip+' txt]')
-      .catch(function(e){
-        if(e&&e.code&&e.code!==400) throw e;   /* 403 etc: no point retrying variants */
-        return q1(cfg,from,to,kws,limit,' AND '+zf+'='+zip,' ['+zip+' num]')
-          .catch(function(e2){
-            if(e2&&e2.code&&e2.code!==400) throw e2;
-            return q1(cfg,from,to,kws,Math.max(limit,1000),'',' [citywide]');
-          });
-      });
+      .then(function(rows){ return (rows&&rows.length)?rows:tier2(); })
+      .catch(function(e){ if(e&&e.code&&e.code!==400) throw e; return tier2(); });
   }
   function qAll(cfg,from,to,kws,limit){
     var zips=terrZips.length?terrZips:[''];
