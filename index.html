@@ -14832,7 +14832,7 @@ var RADAR_CITIES={
     addr:function(r){return [r.address_start,r.street_direction,r.street_name,r.street_suffix].filter(Boolean).join(' ')||r.primary_address||'';},
     zipf:['zip_code','zip'],idf:['pcis_permit','pcis_permit_'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records',
     recent:{api:'https://data.lacity.org/resource/pi9x-tg5x.json',
-      date:'issue_date',descf:['work_desc','permit_type','permit_sub_type','use_desc'],
+      date:'issue_date',descf:['work_desc','permit_type','permit_sub_type','use_desc'],kwf:['work_desc','permit_type'],
       latf:'lat',lngf:'lon',
       pt:function(r){
         var g=r.geolocation||r.location||{};
@@ -14852,7 +14852,8 @@ var RADAR_CITIES={
 };
 var RADAR_TRADES={
   roofing:{l:'Roofing',kw:['ROOF','REROOF','SHINGLE'],lo:15,hi:30,peak:22,unit:'roof',storm:true,
-    adj:[{kw:['SOLAR','PHOTOVOLT','PV SYSTEM'],label:'Solar permit just filed — roof should be inspected/replaced BEFORE panels go on',sc:88}]},
+    adj:[{kw:['SOLAR','PHOTOVOLT','PV SYSTEM'],label:'Solar permit just filed — roof should be inspected/replaced BEFORE panels go on',sc:88},
+         {kw:['ADDITION','ADU','ACCESSORY DWELLING'],label:'Addition/ADU permitted — the new structure needs roofing tied into the old, a natural full-reroof moment',sc:70}]},
   hvac:{l:'HVAC',kw:['HVAC','FURNACE','HEAT PUMP','AIR COND','MECHANICAL'],lo:12,hi:25,peak:17,unit:'system',
     adj:[{kw:['ADDITION','ADU','ACCESSORY DWELLING'],label:'Room addition underway — new square footage needs heating & cooling',sc:85}]},
   waterheater:{l:'Water Heater',kw:['WATER HEATER'],lo:8,hi:16,peak:11,unit:'water heater',
@@ -14991,7 +14992,9 @@ function rdFetch(){
   window._rdDiag=[];
   var terrZips=((_rdTerr&&_rdTerr.zips)||[]).slice(0,3);
   function q1(cfg,from,to,kws,limit,zipClause,tag){
-    var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+cfg.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
+    var kwFields=cfg.kwf||[cfg.descf[0]];
+    var kwParts=[]; kws.slice(0,6).forEach(function(k){kwFields.slice(0,2).forEach(function(f){kwParts.push("upper("+f+") like '%"+k+"%'");});});
+    var kwWhere='('+kwParts.join(' OR ')+')';
     var where=cfg.date+" > '"+from+"' AND "+cfg.date+" < '"+to+"' AND "+kwWhere+(cfg.pt?'':" AND "+cfg.latf+" IS NOT NULL")+(zipClause||'');
     var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC';
     var d={api:(cfg.api.split('/resource/')[1]||cfg.api)+(tag||''),status:'?',rows:'?',err:''};
@@ -15037,7 +15040,8 @@ function rdFetch(){
         why:'Last '+t.unit+' permit '+dt.getFullYear()+' — '+Math.round(age)+' yrs old, due for replacement',
         addr:(cfg.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(cfg,r)};
     }
-    var up=desc.toUpperCase(), rule=null;
+    var hay=''; cfg.descf.forEach(function(f){if(r[f])hay+=' '+String(r[f]);});
+    var up=hay.toUpperCase(), rule=null;
     (t.adj||[]).forEach(function(a){ if(!rule&&a.kw.some(function(k){return up.indexOf(k)>=0;})) rule=a; });
     if(!rule){window._rdDrop.rule++;return null;}
     var months=Math.max(0,Math.round(age*12));
@@ -15047,7 +15051,7 @@ function rdFetch(){
   }
   var dueFrom=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
   var dueTo=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
-  var recFrom=new Date(Date.now()-274*86400000).toISOString().slice(0,10);   // last ~9 months
+  var recFrom=new Date(Date.now()-730*86400000).toISOString().slice(0,10);   // last ~24 months
   var recTo=new Date(Date.now()+86400000).toISOString().slice(0,10);
   var adjKws=[]; (t.adj||[]).forEach(function(a){adjKws=adjKws.concat(a.kw);});
   var jobs=[ qAll(base,dueFrom,dueTo,t.kw,600) ];
