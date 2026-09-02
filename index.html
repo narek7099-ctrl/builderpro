@@ -14976,22 +14976,35 @@ function rdFetch(){
   var now=new Date();
   window._rdDiag=[];
   var terrZips=((_rdTerr&&_rdTerr.zips)||[]).slice(0,3);
-  function q1(cfg,from,to,kws,limit,zip){
+  function q1(cfg,from,to,kws,limit,zipClause,tag){
     var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+cfg.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
-    var where=cfg.date+" > '"+from+"' AND "+cfg.date+" < '"+to+"' AND "+kwWhere+(cfg.pt?'':" AND "+cfg.latf+" IS NOT NULL");
-    var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC'
-      +(zip?'&$q='+encodeURIComponent(zip):'');   /* server-side: only rows mentioning this zip */
-    var d={api:(cfg.api.split('/resource/')[1]||cfg.api)+(zip?' ['+zip+']':''),status:'?',rows:'?',err:''};
+    var where=cfg.date+" > '"+from+"' AND "+cfg.date+" < '"+to+"' AND "+kwWhere+(cfg.pt?'':" AND "+cfg.latf+" IS NOT NULL")+(zipClause||'');
+    var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC';
+    var d={api:(cfg.api.split('/resource/')[1]||cfg.api)+(tag||''),status:'?',rows:'?',err:''};
     window._rdDiag.push(d);
     return fetch(url).then(function(r){
       d.status=r.status;
-      if(!r.ok){return r.text().then(function(t){d.err=t.slice(0,220);throw 0;});}
+      if(!r.ok){return r.text().then(function(t){d.err=t.slice(0,220);throw {code:r.status};});}
       return r.json().then(function(rows){d.rows=rows.length;return rows;});
-    },function(e){d.status='network';d.err=String(e).slice(0,120);throw 0;});
+    },function(e){d.status=d.status==='?'?'network':d.status;d.err=d.err||String(e).slice(0,120);throw e;});
+  }
+  /* tiered zip narrowing: text LIKE → numeric equality → city-wide (client filter) */
+  function qZip(cfg,from,to,kws,limit,zip){
+    var zf=(cfg.zipf&&cfg.zipf[0])||'';
+    if(!zip||!zf) return q1(cfg,from,to,kws,limit,'','');
+    return q1(cfg,from,to,kws,limit," AND "+zf+" like '"+zip+"%'",' ['+zip+' txt]')
+      .catch(function(e){
+        if(e&&e.code&&e.code!==400) throw e;   /* 403 etc: no point retrying variants */
+        return q1(cfg,from,to,kws,limit,' AND '+zf+'='+zip,' ['+zip+' num]')
+          .catch(function(e2){
+            if(e2&&e2.code&&e2.code!==400) throw e2;
+            return q1(cfg,from,to,kws,Math.max(limit,1000),'',' [citywide]');
+          });
+      });
   }
   function qAll(cfg,from,to,kws,limit){
     var zips=terrZips.length?terrZips:[''];
-    return Promise.all(zips.map(function(z){return q1(cfg,from,to,kws,limit,z).catch(function(){return [];});}))
+    return Promise.all(zips.map(function(z){return qZip(cfg,from,to,kws,limit,z).catch(function(){return [];});}))
       .then(function(parts){var out=[];parts.forEach(function(p){out=out.concat(p||[]);});return out;});
   }
   function permitId(cfg,r){var id='';(cfg.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
