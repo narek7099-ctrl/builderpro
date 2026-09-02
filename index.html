@@ -14830,7 +14830,12 @@ var RADAR_CITIES={
     latf:'latitude',lngf:'longitude',
     pt:function(r){var la=r.latitude||(r.location_1&&r.location_1.latitude),lo=r.longitude||(r.location_1&&r.location_1.longitude);return [la,lo];},
     addr:function(r){return [r.address_start,r.street_direction,r.street_name,r.street_suffix].filter(Boolean).join(' ')||r.primary_address||'';},
-    zipf:['zip_code','zip'],idf:['pcis_permit_','permit_nbr','permit_number'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records'},
+    zipf:['zip_code','zip'],idf:['pcis_permit','pcis_permit_'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records',
+    recent:{api:'https://data.lacity.org/resource/pi9x-tg5x.json',
+      date:'issue_date',descf:['work_desc','permit_type','permit_sub_type','use_desc'],
+      latf:'lat',lngf:'lon',
+      addr:function(r){return r.primary_address||'';},
+      zipf:['zip_code'],idf:['permit_nbr'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records'}},
   chicago:{name:'Chicago, IL',cityName:'Chicago',state:'IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
     api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',
     date:'issue_date',descf:['work_description','permit_type'],
@@ -14966,49 +14971,49 @@ function rdZipOK(row,c){
   return zips.indexOf(z)>=0;
 }
 function rdFetch(){
-  var c=RADAR_CITIES[_rdCity], t=RADAR_TRADES[_rdTrade];
+  var base=RADAR_CITIES[_rdCity], t=RADAR_TRADES[_rdTrade];
+  var recentCfg=base.recent||base;   // some cities split old/new permit datasets
   var now=new Date();
-  function q1(from,to,kws,limit){
-    var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+c.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
-    var where=c.date+" > '"+from+"' AND "+c.date+" < '"+to+"' AND "+kwWhere+(c.pt?'':" AND "+c.latf+" IS NOT NULL");
-    var url=c.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+c.date+'%20DESC';
+  function q1(cfg,from,to,kws,limit){
+    var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+cfg.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
+    var where=cfg.date+" > '"+from+"' AND "+cfg.date+" < '"+to+"' AND "+kwWhere+(cfg.pt?'':" AND "+cfg.latf+" IS NOT NULL");
+    var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC';
     return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();});
   }
-  function permitId(r){var id='';(c.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
-  function rowLead(r,kind){
-    if(!rdZipOK(r,c))return null;
-    var _ll=c.pt?c.pt(r):[r[c.latf],r[c.lngf]];
+  function permitId(cfg,r){var id='';(cfg.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
+  function rowLead(cfg,r,kind){
+    if(!rdZipOK(r,cfg))return null;
+    var _ll=cfg.pt?cfg.pt(r):[r[cfg.latf],r[cfg.lngf]];
     var lat=parseFloat(_ll[0]),lng=parseFloat(_ll[1]);
     if(!isFinite(lat)||!isFinite(lng))return null;
-    var dt=new Date(r[c.date]); if(isNaN(dt))return null;
-    var desc=''; c.descf.forEach(function(f){if(!desc&&r[f])desc=String(r[f]);});
+    var dt=new Date(r[cfg.date]); if(isNaN(dt))return null;
+    var desc=''; cfg.descf.forEach(function(f){if(!desc&&r[f])desc=String(r[f]);});
     var age=(Date.now()-dt.getTime())/31557600000;
     if(kind==='due'){
       var sc=rdScore(age,t); if(sc<25)return null;
       return {lat:lat,lng:lng,base:sc,score:sc,age:Math.round(age),year:dt.getFullYear(),kind:'due',
         why:'Last '+t.unit+' permit '+dt.getFullYear()+' — '+Math.round(age)+' yrs old, due for replacement',
-        addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(r)};
+        addr:(cfg.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(cfg,r)};
     }
-    // active-project signal: match description to an adjacent rule
     var up=desc.toUpperCase(), rule=null;
     (t.adj||[]).forEach(function(a){ if(!rule&&a.kw.some(function(k){return up.indexOf(k)>=0;})) rule=a; });
     if(!rule)return null;
     var months=Math.max(0,Math.round(age*12));
     return {lat:lat,lng:lng,base:rule.sc,score:rule.sc,age:Math.round(age),year:dt.getFullYear(),kind:'project',
       why:rule.label+' ('+(months<=1?'this month':months+' months ago')+')',
-      addr:(c.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(r)};
+      addr:(cfg.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(cfg,r)};
   }
   var dueFrom=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
   var dueTo=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
   var recFrom=new Date(Date.now()-274*86400000).toISOString().slice(0,10);   // last ~9 months
   var recTo=new Date(Date.now()+86400000).toISOString().slice(0,10);
   var adjKws=[]; (t.adj||[]).forEach(function(a){adjKws=adjKws.concat(a.kw);});
-  var jobs=[ q1(dueFrom,dueTo,t.kw,600).catch(function(){return [];}) ];
-  if(adjKws.length) jobs.push(q1(recFrom,recTo,adjKws,300).catch(function(){return [];}));
+  var jobs=[ q1(base,dueFrom,dueTo,t.kw,600).catch(function(){return [];}) ];
+  if(adjKws.length) jobs.push(q1(recentCfg,recFrom,recTo,adjKws,300).catch(function(){return [];}));
   return Promise.all(jobs).then(function(res){
     var leads=[], seen={};
-    (res[0]||[]).forEach(function(r){var p=rowLead(r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
-    ((res[1])||[]).forEach(function(r){var p=rowLead(r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
+    (res[0]||[]).forEach(function(r){var p=rowLead(base,r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
+    ((res[1])||[]).forEach(function(r){var p=rowLead(recentCfg,r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     leads.sort(function(a,b){return b.score-a.score;});
     return leads.slice(0,450);
   });
@@ -15169,7 +15174,8 @@ window.rdEvidence=function(i){
       permit_type:'Type',permit_type_desc:'Type',permittype:'Type',permit_sub_type:'Subtype',work_class:'Work class',
       description:'Description',work_description:'Description',issued_date:'Issued',issue_date:'Issued',
       declared_valuation:'Declared value',reported_cost:'Reported cost',valuation:'Valuation',
-      applicant:'Applicant',contractor_name:'Contractor',contact_1_name:'Contact',original_address1:'Address',status_current:'Status',status:'Status'};
+      applicant:'Applicant',contractor_name:'Contractor',contact_1_name:'Contact',original_address1:'Address',status_current:'Status',status:'Status',
+      permit_nbr:'Permit #',pcis_permit:'Permit #',primary_address:'Address',work_desc:'Description',use_desc:'Use',square_footage:'Square footage',status_desc:'Status',submitted_date:'Submitted'};
     var shown=0, rows='';
     Object.keys(pretty).forEach(function(k){
       var v=p.raw[k]; if(v==null||v===''||typeof v==='object')return;
