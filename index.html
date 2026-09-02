@@ -14964,6 +14964,14 @@ function rdRefresh(){
   var cnt=q('rdCount'); if(cnt)cnt.textContent='Scanning permits…';
   var done=function(leads,demo){_rdLeads=leads; window._rdIsDemo=demo||_rdCity==='demo';
     if(demo&&cnt)cnt.textContent='Live feed unavailable — demo data';
+    if(demo&&_rdCity!=='demo'){
+      var pc=RADAR_CITIES[_rdCity]; var pcfg=(pc&&(pc.recent||pc))||null;
+      if(pcfg&&pcfg.api){
+        fetch(pcfg.api+'?$limit=1&$order='+pcfg.date+'%20DESC').then(function(r){return r.json();}).then(function(rows){
+          window._rdProbe=JSON.stringify(rows&&rows[0]||{}).slice(0,800); rdDraw();
+        }).catch(function(){});
+      }
+    }
     if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
   if(_rdCity==='demo'){ done(rdDemoLeads(),true); return; }
   rdFetch().then(function(leads){ if(!leads.length) done(rdDemoLeads(),true); else done(leads,false); })
@@ -15014,23 +15022,24 @@ function rdFetch(){
       .then(function(parts){var out=[];parts.forEach(function(p){out=out.concat(p||[]);});return out;});
   }
   function permitId(cfg,r){var id='';(cfg.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
+  window._rdDrop={zip:0,coords:0,date:0,rule:0,score:0};
   function rowLead(cfg,r,kind){
-    if(!rdZipOK(r,cfg))return null;
+    if(!rdZipOK(r,cfg)){window._rdDrop.zip++;return null;}
     var _ll=cfg.pt?cfg.pt(r):[r[cfg.latf],r[cfg.lngf]];
     var lat=parseFloat(_ll[0]),lng=parseFloat(_ll[1]);
-    if(!isFinite(lat)||!isFinite(lng))return null;
-    var dt=new Date(r[cfg.date]); if(isNaN(dt))return null;
+    if(!isFinite(lat)||!isFinite(lng)){window._rdDrop.coords++;return null;}
+    var dt=new Date(r[cfg.date]); if(isNaN(dt)){window._rdDrop.date++;return null;}
     var desc=''; cfg.descf.forEach(function(f){if(!desc&&r[f])desc=String(r[f]);});
     var age=(Date.now()-dt.getTime())/31557600000;
     if(kind==='due'){
-      var sc=rdScore(age,t); if(sc<25)return null;
+      var sc=rdScore(age,t); if(sc<25){window._rdDrop.score++;return null;}
       return {lat:lat,lng:lng,base:sc,score:sc,age:Math.round(age),year:dt.getFullYear(),kind:'due',
         why:'Last '+t.unit+' permit '+dt.getFullYear()+' — '+Math.round(age)+' yrs old, due for replacement',
         addr:(cfg.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(cfg,r)};
     }
     var up=desc.toUpperCase(), rule=null;
     (t.adj||[]).forEach(function(a){ if(!rule&&a.kw.some(function(k){return up.indexOf(k)>=0;})) rule=a; });
-    if(!rule)return null;
+    if(!rule){window._rdDrop.rule++;return null;}
     var months=Math.max(0,Math.round(age*12));
     return {lat:lat,lng:lng,base:rule.sc,score:rule.sc,age:Math.round(age),year:dt.getFullYear(),kind:'project',
       why:rule.label+' ('+(months<=1?'this month':months+' months ago')+')',
@@ -15106,8 +15115,11 @@ function rdDraw(){
   var db=q('rdDemoBanner'),tr2=q('rdTrust');
   if(db){db.style.display=window._rdIsDemo?'block':'none';
     if(window._rdIsDemo&&_rdCity!=='demo'&&(window._rdDiag||[]).length){
+      var drop=window._rdDrop||{};
       db.innerHTML='⚠️ DEMO DATA — live feed came back empty. <span style="font-weight:400">Diagnostics (screenshot this for Claude):</span>'
-        +(window._rdDiag||[]).map(function(d){return '<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">'+bpEsc(d.api)+' → HTTP '+d.status+' · rows '+d.rows+' · kept '+(d.kept==null?'?':d.kept)+(d.err?' · '+bpEsc(d.err):'')+'</div>';}).join('');
+        +(window._rdDiag||[]).map(function(d){return '<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">'+bpEsc(d.api)+' → HTTP '+d.status+' · rows '+d.rows+' · kept '+(d.kept==null?'?':d.kept)+(d.err?' · '+bpEsc(d.err):'')+'</div>';}).join('')
+        +'<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">dropped — zip:'+(drop.zip||0)+' coords:'+(drop.coords||0)+' date:'+(drop.date||0)+' rule:'+(drop.rule||0)+' score:'+(drop.score||0)+'</div>'
+        +(window._rdProbe?'<div style="font-family:ui-monospace,monospace;font-size:10px;font-weight:400;margin-top:5px;word-break:break-all;background:#fff;border-radius:6px;padding:6px">SAMPLE ROW: '+bpEsc(window._rdProbe)+'</div>':'');
     }}
   if(tr2)tr2.style.display=window._rdIsDemo?'none':'block';
   _rdLayer.clearLayers(); _rdStormLayer.clearLayers();
