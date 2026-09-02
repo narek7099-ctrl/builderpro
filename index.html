@@ -14974,11 +14974,18 @@ function rdFetch(){
   var base=RADAR_CITIES[_rdCity], t=RADAR_TRADES[_rdTrade];
   var recentCfg=base.recent||base;   // some cities split old/new permit datasets
   var now=new Date();
+  window._rdDiag=[];
   function q1(cfg,from,to,kws,limit){
     var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+cfg.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
     var where=cfg.date+" > '"+from+"' AND "+cfg.date+" < '"+to+"' AND "+kwWhere+(cfg.pt?'':" AND "+cfg.latf+" IS NOT NULL");
     var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC';
-    return fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();});
+    var d={api:cfg.api.split('/resource/')[1]||cfg.api,status:'?',rows:'?',err:''};
+    window._rdDiag.push(d);
+    return fetch(url).then(function(r){
+      d.status=r.status;
+      if(!r.ok){return r.text().then(function(t){d.err=t.slice(0,220);throw 0;});}
+      return r.json().then(function(rows){d.rows=rows.length;return rows;});
+    },function(e){d.status='network';d.err=String(e).slice(0,120);throw 0;});
   }
   function permitId(cfg,r){var id='';(cfg.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
   function rowLead(cfg,r,kind){
@@ -15014,6 +15021,8 @@ function rdFetch(){
     var leads=[], seen={};
     (res[0]||[]).forEach(function(r){var p=rowLead(base,r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     ((res[1])||[]).forEach(function(r){var p=rowLead(recentCfg,r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
+    if(window._rdDiag[0])window._rdDiag[0].kept=leads.filter(function(x){return x.kind==='due';}).length;
+    if(window._rdDiag[1])window._rdDiag[1].kept=leads.filter(function(x){return x.kind==='project';}).length;
     leads.sort(function(a,b){return b.score-a.score;});
     return leads.slice(0,450);
   });
@@ -15068,7 +15077,11 @@ function rdDemoStorms(){
 function rdDraw(){
   if(!_rdMap)return;
   var db=q('rdDemoBanner'),tr2=q('rdTrust');
-  if(db)db.style.display=window._rdIsDemo?'block':'none';
+  if(db){db.style.display=window._rdIsDemo?'block':'none';
+    if(window._rdIsDemo&&_rdCity!=='demo'&&(window._rdDiag||[]).length){
+      db.innerHTML='⚠️ DEMO DATA — live feed came back empty. <span style="font-weight:400">Diagnostics (screenshot this for Claude):</span>'
+        +(window._rdDiag||[]).map(function(d){return '<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">'+bpEsc(d.api)+' → HTTP '+d.status+' · rows '+d.rows+' · kept '+(d.kept==null?'?':d.kept)+(d.err?' · '+bpEsc(d.err):'')+'</div>';}).join('');
+    }}
   if(tr2)tr2.style.display=window._rdIsDemo?'none':'block';
   _rdLayer.clearLayers(); _rdStormLayer.clearLayers();
   var t=RADAR_TRADES[_rdTrade];
