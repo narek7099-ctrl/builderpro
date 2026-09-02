@@ -14825,7 +14825,7 @@ var RADAR_CITIES={
     addr:function(r){return r.original_address1||'';},
     zipf:['original_zip','zip','zipcode'],idf:['permit_number','permit_num','permittype'],portal:'https://abc.austintexas.gov/web/permit/public-search-other',portalName:'City of Austin permit search'},
   la:{name:'Los Angeles, CA',cityName:'Los Angeles',state:'CA',lat:34.1866,lng:-118.4009,zoom:12,wfo:'LOX',
-    api:'https://data.lacity.org/resource/yv23-pmwf.json',
+    api:'https://data.lacity.org/resource/nbyu-2ha9.json',
     date:'issue_date',descf:['work_description','permit_type','permit_sub_type'],
     latf:'latitude',lngf:'longitude',
     pt:function(r){var la=r.latitude||(r.location_1&&r.location_1.latitude),lo=r.longitude||(r.location_1&&r.location_1.longitude);return [la,lo];},
@@ -14975,17 +14975,24 @@ function rdFetch(){
   var recentCfg=base.recent||base;   // some cities split old/new permit datasets
   var now=new Date();
   window._rdDiag=[];
-  function q1(cfg,from,to,kws,limit){
+  var terrZips=((_rdTerr&&_rdTerr.zips)||[]).slice(0,3);
+  function q1(cfg,from,to,kws,limit,zip){
     var kwWhere='('+kws.slice(0,6).map(function(k){return "upper("+cfg.descf[0]+") like '%"+k+"%'";}).join(' OR ')+')';
     var where=cfg.date+" > '"+from+"' AND "+cfg.date+" < '"+to+"' AND "+kwWhere+(cfg.pt?'':" AND "+cfg.latf+" IS NOT NULL");
-    var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC';
-    var d={api:cfg.api.split('/resource/')[1]||cfg.api,status:'?',rows:'?',err:''};
+    var url=cfg.api+'?$where='+encodeURIComponent(where)+'&$limit='+limit+'&$order='+cfg.date+'%20DESC'
+      +(zip?'&$q='+encodeURIComponent(zip):'');   /* server-side: only rows mentioning this zip */
+    var d={api:(cfg.api.split('/resource/')[1]||cfg.api)+(zip?' ['+zip+']':''),status:'?',rows:'?',err:''};
     window._rdDiag.push(d);
     return fetch(url).then(function(r){
       d.status=r.status;
       if(!r.ok){return r.text().then(function(t){d.err=t.slice(0,220);throw 0;});}
       return r.json().then(function(rows){d.rows=rows.length;return rows;});
     },function(e){d.status='network';d.err=String(e).slice(0,120);throw 0;});
+  }
+  function qAll(cfg,from,to,kws,limit){
+    var zips=terrZips.length?terrZips:[''];
+    return Promise.all(zips.map(function(z){return q1(cfg,from,to,kws,limit,z).catch(function(){return [];});}))
+      .then(function(parts){var out=[];parts.forEach(function(p){out=out.concat(p||[]);});return out;});
   }
   function permitId(cfg,r){var id='';(cfg.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
   function rowLead(cfg,r,kind){
@@ -15015,14 +15022,15 @@ function rdFetch(){
   var recFrom=new Date(Date.now()-274*86400000).toISOString().slice(0,10);   // last ~9 months
   var recTo=new Date(Date.now()+86400000).toISOString().slice(0,10);
   var adjKws=[]; (t.adj||[]).forEach(function(a){adjKws=adjKws.concat(a.kw);});
-  var jobs=[ q1(base,dueFrom,dueTo,t.kw,600).catch(function(){return [];}) ];
-  if(adjKws.length) jobs.push(q1(recentCfg,recFrom,recTo,adjKws,300).catch(function(){return [];}));
+  var jobs=[ qAll(base,dueFrom,dueTo,t.kw,600) ];
+  if(adjKws.length) jobs.push(qAll(recentCfg,recFrom,recTo,adjKws,300));
   return Promise.all(jobs).then(function(res){
     var leads=[], seen={};
     (res[0]||[]).forEach(function(r){var p=rowLead(base,r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     ((res[1])||[]).forEach(function(r){var p=rowLead(recentCfg,r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
-    if(window._rdDiag[0])window._rdDiag[0].kept=leads.filter(function(x){return x.kind==='due';}).length;
-    if(window._rdDiag[1])window._rdDiag[1].kept=leads.filter(function(x){return x.kind==='project';}).length;
+    var dueK=leads.filter(function(x){return x.kind==='due';}).length;
+    var prK=leads.filter(function(x){return x.kind==='project';}).length;
+    (window._rdDiag||[]).forEach(function(d){d.kept=(d.api.indexOf((base.api.split('/resource/')[1]||''))===0)?dueK:prK;});
     leads.sort(function(a,b){return b.score-a.score;});
     return leads.slice(0,450);
   });
