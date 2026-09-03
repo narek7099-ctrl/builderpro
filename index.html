@@ -12582,8 +12582,13 @@ function aiBuildAtlas(){
   q.style.display='';
   q.innerHTML='<button type="button" onclick="aiQuick(\'How much does it cost?\')">Pricing?</button>'
     +'<button type="button" onclick="aiQuick(\'Can I book an appointment?\')">Book a visit</button>'
-    +'<button type="button" onclick="aiQuick(\'Are you available this week?\')">Availability</button>'
-    +(BP_ATLAS_PHONE?'<a href="tel:'+BP_ATLAS_PHONE+'" style="display:inline-block;background:#16a34a;color:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:600;text-decoration:none">📞 Call Atlas — hear the voice</a>':'');
+    +'<button type="button" onclick="aiQuick(\'Are you available this week?\')">Availability</button>';
+  if(BP_ATLAS_PHONE&&!document.getElementById('aiCallBtn')){
+    var cb=document.createElement('a');cb.id='aiCallBtn';cb.href='tel:'+BP_ATLAS_PHONE;
+    cb.style.cssText='display:block;text-align:center;background:#2f6bff;color:#fff;border-radius:12px;padding:13px 16px;margin-top:12px;font-weight:700;font-size:14.5px;text-decoration:none;box-shadow:0 6px 18px rgba(47,107,255,.28)';
+    cb.textContent='📞 Call Atlas — hear the voice';
+    document.getElementById('aiChat').insertAdjacentElement('afterend',cb);
+  }
   document.getElementById('aiMsgs').innerHTML='';
   aiHistory=[];
   var biz=aiState.biz||('your '+aiTradeLower()+' company');
