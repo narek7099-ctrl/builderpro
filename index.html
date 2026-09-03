@@ -15132,8 +15132,10 @@ function rdLocked(){
 }
 function rdRenderShell(){
   var t=RADAR_TRADES[_rdTrade];
-  var chips=Object.keys(RADAR_TRADES).map(function(k){var tt=RADAR_TRADES[k];
-    return '<button class="bpx-jt rd-chip'+(k===_rdTrade?' on':'')+'" data-rdt="'+k+'" onclick="rdSetTrade(\''+k+'\')">'+tt.l+'</button>';}).join('');
+  var chips=_rdTerr
+    ? '<button class="bpx-jt rd-chip on" data-rdt="'+_rdTrade+'" style="cursor:default">'+(RADAR_TRADES[_rdTrade]||{}).l+'</button>'
+    : Object.keys(RADAR_TRADES).map(function(k){var tt=RADAR_TRADES[k];
+        return '<button class="bpx-jt rd-chip'+(k===_rdTrade?' on':'')+'" data-rdt="'+k+'" onclick="rdSetTrade(\''+k+'\')">'+tt.l+'</button>';}).join('');
   var terrNote=_rdTerr?('<span class="bpx-badge" style="font-size:11.5px">Your territory: '+bpEsc((_rdTerr.zips||[]).join(', ')||RADAR_CITIES[_rdCity].name)+' · '+(RADAR_TRADES[_rdTerr.trade]||{}).l+'</span>')
     :('<span class="bpx-badge warn" style="font-size:11.5px">Demo preview — no territory assigned</span>');
   q('bpxViewArea').innerHTML=
@@ -15153,7 +15155,7 @@ function rdRenderShell(){
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
   rdEnsureLeaflet(rdRefresh);
 }
-window.rdSetTrade=function(k){_rdTrade=k;
+window.rdSetTrade=function(k){if(_rdTerr)return;_rdTrade=k;
   document.querySelectorAll('.rd-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rdt')===k);});rdRefresh();};
 window.rdSetMin=function(v){_rdMin=+v;rdDraw();};
 window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
