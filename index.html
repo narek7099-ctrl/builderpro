@@ -13158,8 +13158,11 @@ function bpCalcPick(cid){
   var local=JSON.parse(localStorage.getItem('bpPrice_'+cid)||'null');
   bpCalcRender(cid,local);
   var ok=document.getElementById('bpCalcOk');if(ok)ok.textContent='';
-  if(BP_LIVE){try{BP_SB.from('calculator_pricing').select('pricing').eq('calc_id',cid).maybeSingle().then(function(r){
-    if(r&&r.data&&r.data.pricing&&window._bpCalcCur===cid)bpCalcRender(cid,r.data.pricing);
+  if(BP_LIVE){try{BP_SB.from('calculator_pricing').select('pricing,owner').eq('calc_id',cid).then(function(r){
+    if(r&&r.data&&r.data.length&&window._bpCalcCur===cid){
+      var row=r.data.filter(function(x){return x.owner;})[0]||r.data[0];
+      if(row&&row.pricing)bpCalcRender(cid,row.pricing);
+    }
   }).catch(function(){});}catch(e){}}
 }
 function bpCalcCollect(cid){
@@ -13174,7 +13177,7 @@ function bpCalcSave(){
   var cid=window._bpCalcCur||bpCalcAssigned(),pricing=bpCalcCollect(cid);
   localStorage.setItem('bpPrice_'+cid,JSON.stringify(pricing));
   var ok=document.getElementById('bpCalcOk');ok.textContent='Saving\u2026';
-  if(BP_LIVE){try{BP_SB.from('calculator_pricing').upsert({calc_id:cid,pricing:pricing,updated_at:new Date().toISOString()},{onConflict:'calc_id'}).then(function(r){
+  if(BP_LIVE){try{BP_SB.from('calculator_pricing').upsert({calc_id:cid,pricing:pricing,updated_at:new Date().toISOString()},{onConflict:'calc_id,owner'}).then(function(r){
     if(r&&r.error)throw r.error;ok.textContent='\u2713 Saved \u2014 live on your '+cid+' calculator.';
   }).catch(function(){ok.textContent='Saved on this device \u2014 live sync unavailable right now.';}).then(function(){setTimeout(function(){if(ok)ok.textContent='';},4500);});}
   catch(e){ok.textContent='\u2713 Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}}
