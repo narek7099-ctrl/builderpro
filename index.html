@@ -13116,11 +13116,20 @@ var BP_CALC_DEFS={"roofing":{"unit":"per square (100 sq ft), installed","groups"
 var BP_CALC_IDS=[['roofing','Roofing'],['hvac','HVAC'],['countertops','Countertops'],['trim','Trim'],['painting','Painting'],['pools','Pools'],['landscaping','Landscaping']];
 var BP_CALC_IDX={roofing:0,hvac:1,countertops:2,trim:3,painting:4,pools:5,landscaping:6};
 function bpFieldLabel(f){return {low:'Low ($)',high:'High ($)',baseLow:'Base low ($)',baseHigh:'Base high ($)',perLow:'Per sq ft low',perHigh:'Per sq ft high'}[f]||f;}
+function bpCalcAssigned(){
+  var t='';try{t=(((bpSettingsGet()||{}).company||{}).trade||'').toLowerCase();}catch(e){}
+  var id=null;
+  if(t){BP_CALC_IDS.forEach(function(p){ if(!id&&(t.indexOf(p[0])>-1||p[1].toLowerCase().indexOf(t)>-1||t.indexOf(p[1].toLowerCase())>-1)) id=p[0]; });}
+  if(!id)id=localStorage.getItem('bpCalcId');
+  if(!id||!BP_CALC_DEFS[id])id='roofing';
+  return id;
+}
 function bpCalculator(){
-  var saved=localStorage.getItem('bpCalcId')||'roofing';if(!BP_CALC_DEFS[saved])saved='roofing';
-  var opts='';BP_CALC_IDS.forEach(function(p){opts+='<option value="'+p[0]+'"'+(p[0]===saved?' selected':'')+'>'+p[1]+'</option>';});
+  var saved=bpCalcAssigned(); window._bpCalcCur=saved;
+  var nm=saved;BP_CALC_IDS.forEach(function(p){if(p[0]===saved)nm=p[1];});
   document.getElementById('bpxViewArea').innerHTML=
-    '<div class="bpx-calc-head"><div><label class="bpx-calc-lab">Your calculator</label><select id="bpCalcSel" class="bpx-calc-sel" onchange="bpCalcPick(this.value)">'+opts+'</select></div>'
+    '<div class="bpx-calc-head"><div><label class="bpx-calc-lab">Your calculator</label><div class="bpx-calc-sel" style="display:flex;align-items:center;font-weight:700">'+bpEsc(nm)+'</div>'
+    +'<div class="bpx-mut" style="font-size:11.5px;margin-top:4px">Matched to your trade in Settings. Need a different one? Contact us.</div></div>'
     +'<button class="bpx-mini alt" onclick="bpCalcPreview()">Preview live calculator \u2197</button></div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Edit your pricing<span class="lg2" id="bpCalcUnit"></span></div>'
       +'<div id="bpCalcTable"><div class="bpx-price-row"><span>Loading\u2026</span></div></div>'
@@ -13150,7 +13159,7 @@ function bpCalcPick(cid){
   bpCalcRender(cid,local);
   var ok=document.getElementById('bpCalcOk');if(ok)ok.textContent='';
   if(BP_LIVE){try{BP_SB.from('calculator_pricing').select('pricing').eq('calc_id',cid).maybeSingle().then(function(r){
-    if(r&&r.data&&r.data.pricing){var sel=document.getElementById('bpCalcSel');if(sel&&sel.value===cid)bpCalcRender(cid,r.data.pricing);}
+    if(r&&r.data&&r.data.pricing&&window._bpCalcCur===cid)bpCalcRender(cid,r.data.pricing);
   }).catch(function(){});}catch(e){}}
 }
 function bpCalcCollect(cid){
@@ -13162,7 +13171,7 @@ function bpCalcCollect(cid){
   return out;
 }
 function bpCalcSave(){
-  var cid=document.getElementById('bpCalcSel').value,pricing=bpCalcCollect(cid);
+  var cid=window._bpCalcCur||bpCalcAssigned(),pricing=bpCalcCollect(cid);
   localStorage.setItem('bpPrice_'+cid,JSON.stringify(pricing));
   var ok=document.getElementById('bpCalcOk');ok.textContent='Saving\u2026';
   if(BP_LIVE){try{BP_SB.from('calculator_pricing').upsert({calc_id:cid,pricing:pricing,updated_at:new Date().toISOString()},{onConflict:'calc_id'}).then(function(r){
@@ -13172,7 +13181,7 @@ function bpCalcSave(){
   else{ok.textContent='\u2713 Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}
 }
 function bpCalcPreview(){
-  var cid=document.getElementById('bpCalcSel').value,idx=BP_CALC_IDX[cid]||0;
+  var cid=window._bpCalcCur||bpCalcAssigned(),idx=BP_CALC_IDX[cid]||0;
   bpClose();
   setTimeout(function(){if(typeof estCarouselGo==='function')estCarouselGo(idx);var s=document.getElementById('estimator');if(s)s.scrollIntoView({behavior:'smooth'});},260);
 }
@@ -14012,7 +14021,7 @@ function bpAvatar(name,size){
   var colors=['#2f6bff','#7c3aed','#0891b2','#0d9488','#d97706','#dc2626','#db2777','#4f46e5','#2563eb','#059669'];
   var h=0; for(var i=0;i<n.length;i++){h=(h*31+n.charCodeAt(i))>>>0;}
   var c=colors[h%colors.length]; var s=size||36;
-  if(!/[A-Z0-9]/.test(init)){
+  if(!/[A-Z]/.test(init)){
     var ic=Math.round(s*0.55);
     return '<span class="bpx-av" style="background:'+c+';width:'+s+'px;height:'+s+'px;display:inline-flex;align-items:center;justify-content:center"><svg width="'+ic+'" height="'+ic+'" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>';
   }
