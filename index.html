@@ -12825,7 +12825,7 @@ function bpDashProjects(){
   var cards=act.slice(0,4).map(function(j){
     var cover=(j.photos&&j.photos[0])
       ? '<img src="'+j.photos[0]+'" style="width:100%;height:110px;object-fit:cover;display:block">'
-      : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2f6bff 0%,#7bc8ff 100%);color:#fff;font-size:30px">🔨</div>';
+      : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid var(--line)"><svg width="54" height="54" viewBox="0 0 48 48" fill="none" stroke="#2f6bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
     var sub=[];
     if(j.sched&&j.sched.target)sub.push('🎯 '+bpEsc(j.sched.target));
     if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
