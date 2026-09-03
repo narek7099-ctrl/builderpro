@@ -14953,9 +14953,46 @@ function bpSettings(){
       +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
       +'<div class="bpx-fldhint" style="margin-top:14px">Saved on this device. Used to personalize your dashboard, messages, and estimates.</div>'
     +'</div></div>'
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
+      +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
+        +'<div style="flex:1;min-width:230px">'
+          +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:17px;font-weight:800">BuilderPro OS</span><span style="background:#eaf1ff;color:#2457d6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px">GROWTH PLAN · ACTIVE</span></div>'
+          +'<div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:#2f6bff">$1,199</span><span class="bpx-mut" style="font-size:13px"> / month</span></div>'
+          +'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Includes everything in Foundation, plus:</div>'
+          +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 16px;margin-top:8px;font-size:13px">'
+          +['Atlas AI Receptionist (24/7)','10+ lead automations','Smart booking system','Job calculator','Analytics dashboard','AI search ranking (SEO)','Advanced lead funnels','Priority support + monthly review'].map(function(x){return '<div><span style="color:#15803d;font-weight:700">✓</span> '+x+'</div>';}).join('')
+          +'</div>'
+        +'</div>'
+        +'<div style="min-width:180px;display:flex;flex-direction:column;gap:8px;align-items:stretch">'
+          +'<a class="bpx-btn ghost" style="text-align:center;text-decoration:none" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a>'
+          +'<button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpCancelOpen()">Cancel my plan</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
     +'<div class="bpx-set-foot"><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
   bpSettingsPull();
 }
+window.bpCancelOpen=function(){
+  bpModal('<h3>Cancel your plan?</h3>'
+    +'<div class="bpx-sub">We\'d hate to see you go. Tell us why you\'re thinking of canceling — your request goes straight to our team and we\'ll confirm within 1 business day. Your service stays on until the end of your billing period.</div>'
+    +'<label>Reason for canceling</label><select id="bpx-cx-why" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px">'
+    +['Too expensive','Not getting enough leads','Not using it enough','Switching to another service','Closing / pausing my business','Something else'].map(function(x){return '<option>'+x+'</option>';}).join('')
+    +'</select>'
+    +'<label>Anything we could have done better?</label><textarea id="bpx-cx-notes" style="width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Optional — but it really helps us improve."></textarea>'
+    +'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Tapping the button opens an email to our team with your answers — just hit send.</div>'
+    +'<div class="row" style="margin-top:14px"><button class="bpx-btn" onclick="bpCloseModal()">Keep my plan</button><button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpCancelSend()">Request cancellation</button></div>');
+};
+window.bpCancelSend=function(){
+  var g=function(id){var e=q(id);return e?e.value:'';};
+  var s=bpSettingsGet(),c=s.company||{},o=s.owner||{};
+  var who=(c.name||'')+(o.name?(' — '+o.name):'');
+  var body='Hi BuilderPro team,%0D%0A%0D%0AI\'d like to cancel my BuilderPro OS plan ($1,199/mo).%0D%0A%0D%0ABusiness: '+encodeURIComponent(who||'(not set)')
+    +'%0D%0AReason: '+encodeURIComponent(g('bpx-cx-why'))
+    +(g('bpx-cx-notes')?('%0D%0AMore details: '+encodeURIComponent(g('bpx-cx-notes'))):'')
+    +'%0D%0A%0D%0APlease confirm my cancellation.';
+  window.location.href='mailto:support@builderpro-os.com?subject='+encodeURIComponent('Cancellation request — BuilderPro OS')+'&body='+body;
+  bpCloseModal();
+};
 window.bpHrsToggle=function(day){var ck=q('hrs-'+day+'-o');var t=q('hrs-'+day+'-t');if(!ck||!t)return;
   if(ck.checked){t.innerHTML='<input type="time" id="hrs-'+day+'-from" value="08:00"><span class="sep">to</span><input type="time" id="hrs-'+day+'-to" value="17:00">';}
   else{t.innerHTML='<span class="bpx-hrs-closed">Closed</span>';}
