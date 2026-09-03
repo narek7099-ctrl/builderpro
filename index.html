@@ -14825,8 +14825,9 @@ window.bpFinAddSave=function(kind){
 #bpx.bpx-dark .bpx-themebtn{background:#1a2230;border-color:var(--line);color:#f0b666;}
 #bpx.bpx-dark .bpx-close{background:#1a2230 !important;border-color:var(--line) !important;color:var(--grey) !important;}
 /* settings */
-.bpx-set-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;max-width:980px;align-items:start;}
-@media(max-width:900px){.bpx-set-grid{grid-template-columns:1fr;max-width:640px;}}
+.bpx-set-grid{columns:2;column-gap:16px;margin-bottom:0;max-width:980px;}
+.bpx-set-grid>.bpx-panel{break-inside:avoid;-webkit-column-break-inside:avoid;display:inline-block;width:100%;margin:0 0 16px;box-sizing:border-box;}
+@media(max-width:900px){.bpx-set-grid{columns:1;max-width:640px;}}
 .bpx-fld{margin-bottom:14px;} .bpx-fld:last-child{margin-bottom:0;}
 .bpx-fld label{display:block;font-size:12px;font-weight:600;color:var(--grey);margin-bottom:5px;}
 .bpx-fld input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
@@ -14953,7 +14954,7 @@ function bpSettings(){
       +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
       +'<div class="bpx-fldhint" style="margin-top:14px">Saved on this device. Used to personalize your dashboard, messages, and estimates.</div>'
     +'</div></div>'
-    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
+    +'<div class="bpx-panel" style="max-width:980px;box-sizing:border-box"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
       +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
         +'<div style="flex:1;min-width:230px">'
           +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:17px;font-weight:800">BuilderPro OS</span><span style="background:#eaf1ff;color:#2457d6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px">GROWTH PLAN · ACTIVE</span></div>'
