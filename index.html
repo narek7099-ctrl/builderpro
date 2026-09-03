@@ -13473,7 +13473,7 @@ var _bpContacts=[];
     var first=new Date(y,m,1), startDow=first.getDay(), days=new Date(y,m+1,0).getDate();
     var today=new Date(); var isThisMonth=(today.getFullYear()===y&&today.getMonth()===m);
     // bucket events by day (local)
-    var byDay={};
+    var byDay={}; var pdays=(_bpCalKind==='jobs'&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
     for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
     var html='<div class="bpx-grid">';
     var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -13482,6 +13482,8 @@ var _bpContacts=[];
     for(var dnum=1;dnum<=days;dnum++){
       var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'');
       html+='<div class="'+cls+'"><div class="bpx-daynum">'+dnum+'</div>';
+      var pevs=pdays[dnum]||[];
+      for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt" style="background:#eaf1ff;color:#2457d6;border:1px solid #cddcff" onclick="bpProjOpen(\''+pevs[j].id+'\')">'+pevs[j].label+'</div>'; }
       var evs=byDay[dnum]||[];
       for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')">'+bpFmtTime(evs[j].start)+' '+bpEsc(evs[j].title)+'</div>'; }
       html+='</div>';
@@ -13603,7 +13605,7 @@ var _bpContacts=[];
     var first=new Date(y,m,1), startDow=first.getDay(), days=new Date(y,m+1,0).getDate();
     var today=new Date(); var isThisMonth=(today.getFullYear()===y&&today.getMonth()===m);
     // bucket events by day (local)
-    var byDay={};
+    var byDay={}; var pdays=(_bpCalKind==='jobs'&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
     for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
     var html='<div class="bpx-grid">';
     var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -13612,6 +13614,8 @@ var _bpContacts=[];
     for(var dnum=1;dnum<=days;dnum++){
       var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'');
       html+='<div class="'+cls+'"><div class="bpx-daynum">'+dnum+'</div>';
+      var pevs=pdays[dnum]||[];
+      for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt" style="background:#eaf1ff;color:#2457d6;border:1px solid #cddcff" onclick="bpProjOpen(\''+pevs[j].id+'\')">'+pevs[j].label+'</div>'; }
       var evs=byDay[dnum]||[];
       for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')">'+bpFmtTime(evs[j].start)+' '+bpEsc(evs[j].title)+'</div>'; }
       html+='</div>';
@@ -14587,6 +14591,30 @@ window.bpAddJobSave=function(){
   bpJobsSet(jobs); bpCloseModal(); bpActiveJobs();
 };
 /* project details: schedule, notes, photos (synced to the cloud with the project) */
+/* project work days for the Jobs calendar: {dayOfMonth:[{id,label}]} for a given month */
+window.bpProjCalEvents=function(y,m){
+  var out={}; if(typeof bpJobsGet!=='function') return out;
+  var dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  bpJobsGet().forEach(function(j){
+    if(j.status!=='active'||!j.sched||!j.sched.start) return;
+    var s=new Date(j.sched.start+'T12:00:00'); if(isNaN(s.getTime())) return;
+    var e=(j.sched.target?new Date(j.sched.target+'T12:00:00'):s);
+    if(isNaN(e.getTime())||e<s) e=s;
+    var days=j.sched.days||[], d=new Date(s), guard=0;
+    while(d<=e&&guard++<400){
+      if(d.getFullYear()===y&&d.getMonth()===m){
+        var isStart=(d.getTime()===s.getTime()), isEnd=(j.sched.target&&d.getTime()===e.getTime());
+        var work=(!days.length)||days.indexOf(dw[d.getDay()])>-1;
+        if(work||isStart||isEnd){
+          var lbl=(isStart?'▶ ':(isEnd?'🏁 ':''))+'🔨 '+bpEsc(j.name||'Project')+(work&&j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':'');
+          (out[d.getDate()]=out[d.getDate()]||[]).push({id:j.id,label:lbl});
+        }
+      }
+      d.setDate(d.getDate()+1);
+    }
+  });
+  return out;
+};
 var _bpProjId=null;
 window.bpProjOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
@@ -14618,7 +14646,7 @@ window.bpProjDelete=function(){
   if(!confirm('Delete "'+(j.name||'this project')+'"? This removes it from Active Projects and Finances. This can\'t be undone.'))return;
   bpJobsSet(jobs.filter(function(x){return x.id!==_bpProjId;}));
   bpCloseModal();
-  if(window._bpCurView==='dashboard'){bpDashboard();}else{bpActiveJobs();}
+  if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };
 function bpProjPhotosRender(j){
   var el=document.getElementById('bpx-pj-photos'); if(!el)return;
@@ -14659,7 +14687,7 @@ window.bpProjSave=function(){
   if(dEl){ var bs=dEl.querySelectorAll('button[data-day]'); for(var i=0;i<bs.length;i++){ if(bs[i].getAttribute('data-on')==='1') days.push(bs[i].getAttribute('data-day')); } }
   j.sched={start:g('bpx-pj-start'),target:g('bpx-pj-target'),notes:g('bpx-pj-notes'),days:days,hours:g('bpx-pj-hours')};
   bpJobsSet(jobs); bpCloseModal();
-  if(window._bpCurView==='dashboard'){bpDashboard();}else{bpActiveJobs();}
+  if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };
 window.bpJobDoneOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
