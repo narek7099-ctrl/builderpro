@@ -11663,12 +11663,9 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/roofing.jpg" alt="Roofing model website" loading="lazy">
           <div class="mw-in">
-          <div class="v1-panel">
-            <span class="v1-brand">SUMMIT ROOFING</span>
-            <span class="v1-stars">★★★★★ <i>500+ roofs replaced</i></span>
-            <b class="v1-big">The last roof<br>you'll ever buy.</b>
-            <span class="v1-btn">Get a free inspection</span>
-          </div>
+          <div class="v1-top"><span class="v1-brand">SUMMIT ▲ ROOFING</span><span class="v1-cta">STORM DAMAGE? →</span></div>
+          <div class="v1-mid"><b class="v1-big">Storm-proof<br>starts here.</b><span class="v1-rule"></span></div>
+          <div class="v1-chips"><span>GAF Certified</span><span>Insurance approved</span><span>10-yr warranty</span></div>
           </div>
         </div>
         <div class="mw-meta"><b>The Summit</b><span>Roofing &amp; exteriors — storm-damage focused, insurance-claim CTA, satellite estimator front and center.</span></div>
@@ -11719,15 +11716,17 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .mw-card:hover .mw-bg{transform:scale(1.06);}
 .mw-site::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;}
 .mw-in{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;padding:14px 17px;display:flex;flex-direction:column;}
-/* V1 — Summit: frosted side panel, orange accent */
-.mw-v1 .mw-in{padding:0;}
-.mw-v1 .mw-site::after{background:linear-gradient(90deg,rgba(10,14,26,.25) 40%,rgba(10,14,26,.05));}
-.v1-panel{position:absolute;top:0;left:0;bottom:0;width:47%;background:rgba(12,17,32,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:8px;}
-.v1-brand{color:rgba(255,255,255,.85);font-size:10px;font-weight:800;letter-spacing:.22em;}
-.v1-stars{color:#fbbf24;font-size:10px;font-weight:700;}
-.v1-stars i{color:rgba(255,255,255,.65);font-style:normal;font-weight:600;margin-left:4px;}
-.v1-big{color:#fff;font-size:clamp(17px,2.4vw,25px);line-height:1.1;font-weight:800;letter-spacing:-.01em;}
-.v1-btn{display:inline-block;align-self:flex-start;margin-top:4px;background:#f97316;color:#fff;font-size:10.5px;font-weight:800;border-radius:8px;padding:8px 13px;box-shadow:0 6px 16px rgba(249,115,22,.4);}
+/* V1 — Summit: top statement, red rule, trust chips */
+.mw-v1 .mw-in{justify-content:space-between;}
+.mw-v1 .mw-site::after{background:linear-gradient(180deg,rgba(10,14,26,.6),rgba(10,14,26,.12) 55%,rgba(10,14,26,.45));}
+.v1-top{display:flex;align-items:center;justify-content:space-between;}
+.v1-brand{color:#fff;font-size:11px;font-weight:900;letter-spacing:.18em;}
+.v1-cta{background:#dc2626;color:#fff;font-size:9px;font-weight:900;letter-spacing:.08em;border-radius:6px;padding:6px 10px;box-shadow:0 6px 16px rgba(220,38,38,.4);}
+.v1-mid{margin-top:2px;}
+.v1-big{display:block;color:#fff;font-size:clamp(20px,2.7vw,29px);line-height:1.03;font-weight:900;letter-spacing:-.01em;text-shadow:0 2px 14px rgba(0,0,0,.5);}
+.v1-rule{display:block;width:52px;height:4px;border-radius:2px;background:#dc2626;margin-top:9px;}
+.v1-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.v1-chips span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:5px 10px;}
 /* V2 — PureComfort: bold headline + booking bar, electric blue */
 .mw-v2 .mw-in{justify-content:space-between;}
 .mw-v2 .mw-site::after{background:linear-gradient(180deg,rgba(7,15,35,.55),rgba(7,15,35,.08) 45%,rgba(7,15,35,.35));}
@@ -11763,6 +11762,77 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .mw-meta b{white-space:nowrap;}
 .mw-meta b{display:block;font-size:14.5px;margin-bottom:3px;}
 .mw-meta span{font-size:12.5px;color:var(--grey);line-height:1.5;}
+</style>
+
+<div class="divider"></div>
+
+<!-- ===== LEAD RADAR ===== -->
+<section id="leadradar">
+  <div class="wrap">
+    <div class="lr-hero rv">
+      <div class="lr-copy">
+        <span class="eye" style="color:#7bc8ff">Included with BuilderPro OS</span>
+        <h2 style="color:#fff">Lead Radar: know who needs you<br><em>before they search</em></h2>
+        <p>Most contractors wait for homeowners to Google them. Lead Radar reads <b>public permit records and storm reports</b> in your area and scores every home for how likely it is to need your trade — an aging roof after a solar install, a remodel that needs landscaping, hail paths after a storm.</p>
+        <div class="lr-pts">
+          <div class="lr-pt"><b>Real, verifiable data</b><span>Every dot is a real permit on file with the city — tap it and see the government record.</span></div>
+          <div class="lr-pt"><b>Your door-knock list, ranked</b><span>Hot leads scored 75+ first. Add one tap to your CRM, follow up, mark contacted.</span></div>
+          <div class="lr-pt"><b>Compliant by design</b><span>Automations only fire after you confirm a real conversation — TCPA-safe from day one.</span></div>
+        </div>
+        <div class="lr-scarce">
+          <div class="lr-lock">🔒</div>
+          <div><b>Territories are exclusive — and they go fast.</b><br>One contractor per trade, per area. When your zips are claimed, they're closed to every competitor on BuilderPro. Once it's gone, it's gone.</div>
+        </div>
+        <a class="btn-primary" href="#contact" style="margin-top:22px;display:inline-block">Check if your area is still open →</a>
+      </div>
+      <div class="lr-map rv">
+        <div class="lr-maphead"><span class="bdot"></span> Live territory map</div>
+        <div class="lr-grid">
+          <i class="hot" style="top:22%;left:30%"></i><i class="hot" style="top:48%;left:62%"></i><i class="hot" style="top:66%;left:24%"></i>
+          <i class="warm" style="top:34%;left:74%"></i><i class="warm" style="top:58%;left:44%"></i><i class="warm" style="top:18%;left:58%"></i><i class="warm" style="top:76%;left:66%"></i>
+          <i class="cool" style="top:28%;left:14%"></i><i class="cool" style="top:70%;left:82%"></i><i class="cool" style="top:82%;left:40%"></i><i class="cool" style="top:12%;left:80%"></i>
+          <span class="lr-ping"></span>
+        </div>
+        <div class="lr-leg"><span><i class="hot"></i> Hot — permit signals now</span><span><i class="warm"></i> Warm</span><span><i class="cool"></i> Watch</span></div>
+        <div class="lr-claimed">⚡ 91605 · Roofing — <b>CLAIMED</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+<style>
+#leadradar{background:linear-gradient(160deg,#0b1430,#12234f 60%,#0e1b3c);padding:84px 0;}
+.lr-hero{display:grid;grid-template-columns:1.15fr 1fr;gap:54px;align-items:center;max-width:1080px;margin:0 auto;}
+@media(max-width:860px){.lr-hero{grid-template-columns:1fr;gap:36px;}}
+.lr-copy h2{font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.02em;line-height:1.12;margin:10px 0 16px;}
+.lr-copy h2 em{font-style:italic;color:#7bc8ff;}
+.lr-copy>p{color:rgba(255,255,255,.82);font-size:15.5px;line-height:1.65;max-width:560px;}
+.lr-copy>p b{color:#fff;}
+.lr-pts{display:flex;flex-direction:column;gap:12px;margin-top:22px;}
+.lr-pt{border-left:3px solid #2f6bff;padding:2px 0 2px 14px;}
+.lr-pt b{display:block;color:#fff;font-size:14.5px;margin-bottom:2px;}
+.lr-pt span{color:rgba(255,255,255,.72);font-size:13px;line-height:1.55;}
+.lr-scarce{display:flex;gap:14px;align-items:flex-start;background:rgba(220,38,38,.14);border:1px solid rgba(248,113,113,.45);border-radius:14px;padding:15px 17px;margin-top:24px;color:rgba(255,255,255,.85);font-size:13.5px;line-height:1.55;}
+.lr-scarce b{color:#fecaca;}
+.lr-lock{font-size:20px;line-height:1;}
+.lr-map{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:16px;}
+.lr-maphead{color:rgba(255,255,255,.85);font-size:12px;font-weight:700;letter-spacing:.06em;display:flex;align-items:center;gap:7px;margin-bottom:12px;}
+.lr-grid{position:relative;height:260px;border-radius:14px;background:
+ linear-gradient(rgba(123,200,255,.07) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(123,200,255,.07) 1px,transparent 1px),
+ radial-gradient(120% 100% at 50% 0%,#132853,#0c1834);
+ background-size:28px 28px,28px 28px,100% 100%;overflow:hidden;}
+.lr-grid i{position:absolute;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 4px rgba(255,255,255,.06);}
+.lr-grid i.hot,.lr-leg i.hot{background:#e11d48;box-shadow:0 0 14px rgba(225,29,72,.8);}
+.lr-grid i.warm,.lr-leg i.warm{background:#f59e0b;}
+.lr-grid i.cool,.lr-leg i.cool{background:#3b82f6;}
+.lr-grid i.hot{animation:lrPulse 2.2s ease-in-out infinite;}
+@keyframes lrPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+.lr-ping{position:absolute;top:46%;left:48%;width:14px;height:14px;border-radius:50%;border:2px solid #7bc8ff;animation:lrPing 2.6s ease-out infinite;}
+@keyframes lrPing{0%{transform:scale(.4);opacity:1}100%{transform:scale(7);opacity:0}}
+.lr-leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;color:rgba(255,255,255,.75);font-size:11.5px;}
+.lr-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.lr-claimed{margin-top:12px;background:rgba(21,128,61,.22);border:1px solid rgba(74,222,128,.45);color:#bbf7d0;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:600;}
+.lr-claimed b{color:#4ade80;letter-spacing:.06em;}
 </style>
 
 <div class="divider"></div>
@@ -12028,6 +12098,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
       <div class="qa rv"><button class="qa-q">Is there a contract or can I cancel anytime?<span class="pm"></span></button><div class="qa-a"><p>No long-term contracts. You can cancel anytime. We earn your business every month by delivering results — not by locking you into a 12-month agreement.</p></div></div>
       <div class="qa rv"><button class="qa-q">How does the 14-day trial work?<span class="pm"></span></button><div class="qa-a"><p>You pay the one-time setup fee today, we get everything built and live within 3–4 days, and then your 14-day trial begins. You use the full system completely live with real leads. At the end of 14 days, if you want to continue, your monthly billing starts. If not, you walk away with no additional charges.</p></div></div>
       <div class="qa rv"><button class="qa-q">What's the difference between the $499 and $1,899 plans?<span class="pm"></span></button><div class="qa-a"><p>The $499 Foundation plan gives you the core setup — website, Google Business Profile, missed call text-back, and basic booking. The $1,899 BuilderPro OS plan adds Atlas AI Receptionist, 10+ automations, the satellite roof estimator, AI search ranking, the analytics dashboard, advanced lead funnels, Lead Radar — our permit-based lead-finding map with an exclusive territory for your trade — and priority support with monthly results reviews.</p></div></div>
+      <div class="qa rv"><button class="qa-q">What is Lead Radar and why is it limited?<span class="pm"></span></button><div class="qa-a"><p>Lead Radar is our permit-based lead-finding map, included with BuilderPro OS. It scans public building permits and storm reports in your area and scores every home for how likely it is to need your trade — with the actual government record behind every lead. Territories are exclusive: we only ever sell each area to <b>one</b> contractor per trade, so your competitors literally cannot buy your zips while you hold them. That exclusivity is also why space is limited — once an area is claimed, it's closed. Ask us which zips near you are still open.</p></div></div>
       <div class="qa rv"><button class="qa-q">Do I need to be tech-savvy to use this?<span class="pm"></span></button><div class="qa-a"><p>No. Everything is done for you. We build it, set it up, and manage it. You'll get a simple dashboard where you can see your leads, booked appointments, and performance — but you don't need to touch anything technical.</p></div></div>
       <div class="qa rv"><button class="qa-q">What is the Satellite Roof Estimator?<span class="pm"></span></button><div class="qa-a"><p>An AI-powered tool embedded on your website that lets homeowners enter their address and get an instant roof estimate using real satellite imagery. Before showing the result, it captures their name, phone, and email — so every estimate request becomes a qualified lead automatically sent to your system.</p></div></div>
     </div>
