@@ -485,6 +485,16 @@ section{padding:88px 0;}
 @keyframes aiblink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
 /* build-your-Atlas wizard */
 .ai-wiz{padding:20px 20px 18px;text-align:left;}
+.ai-ask{padding:20px 20px 22px;text-align:left;}
+.ai-ask-h{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-l);font-weight:700;margin-bottom:10px;}
+.ai-ask-item{background:#f4f7ff;border:1px solid #e3ebfb;border-radius:12px 12px 12px 4px;padding:10px 14px;font-size:14px;color:#2b3242;margin-bottom:8px;opacity:0;transform:translateY(8px);animation:aiAskIn .45s cubic-bezier(.22,1,.36,1) forwards;}
+.ai-ask-item:nth-child(2){animation-delay:.05s}.ai-ask-item:nth-child(3){animation-delay:.15s}.ai-ask-item:nth-child(4){animation-delay:.25s}.ai-ask-item:nth-child(5){animation-delay:.35s}
+@keyframes aiAskIn{to{opacity:1;transform:none}}
+.ai-ask-note{font-size:12.5px;color:var(--grey-l);margin:12px 2px 14px;}
+.ai-ask-call{display:block;text-align:center;background:#2f6bff;color:#fff;border-radius:12px;padding:14px 16px;font-weight:700;font-size:15px;text-decoration:none;box-shadow:0 8px 22px rgba(47,107,255,.28);}
+.ai-ask-call:hover{background:#2457d6;}
+.ai-ask-text{display:block;text-align:center;background:#fff;color:#2f6bff;border:1.5px solid #cddcff;border-radius:12px;padding:12px 16px;font-weight:600;font-size:14px;text-decoration:none;margin-top:9px;}
+.ai-ask-text:hover{background:#f4f7ff;}
 .ai-wiz-prog{font-size:12px;color:var(--grey);margin-bottom:14px;}
 .ai-wiz-prog b{color:var(--blue);}
 .ai-wq{display:none;animation:aiwfade .35s ease;}
@@ -515,7 +525,7 @@ section{padding:88px 0;}
     <div class="sec-head center rv" style="margin-bottom:48px">
       <span class="eye">Meet your AI</span>
       <h2>Talk to <em>Atlas</em> — live</h2>
-      <p>This isn’t a script — it’s the real AI that answers your calls, texts, and bookings 24/7. Ask it anything a homeowner would, and see how it sells for you.</p>
+      <p>This isn’t a script — it’s the real AI that answers your calls, texts, and bookings 24/7. Call or text it right now, ask it anything a homeowner would, and hear how it sells for you.</p>
     </div>
     <div class="atlas-stage rv">
       <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with Atlas AI">
@@ -526,43 +536,20 @@ section{padding:88px 0;}
       <div class="atlas-inline" id="atlasInline">
         <div class="ai-head">
           <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
-          <div><div class="ai-name" id="aiName">Atlas — live demo</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">The real AI · unscripted</span></div></div>
+          <div><div class="ai-name" id="aiName">Atlas — live demo</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">Online 24/7 · call or text</span></div></div>
           <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close">&times;</button>
         </div>
 
-        <!-- wizard -->
-        <div class="ai-wiz" id="aiWiz">
-          <div class="ai-wiz-prog">Step <b id="aiWizStep">1</b> of 3</div>
-          <div class="ai-wq on" data-q="1">
-            <div class="ai-wq-h">What's your trade?</div>
-            <div class="ai-wq-s">Atlas tailors itself to your industry — pick yours.</div>
-            <div class="ai-wq-opts" id="aiTrades"></div>
-            <div id="aiOtherWrap" style="display:none;margin-top:10px"><input id="aiOther" class="ai-win" placeholder="Type your trade…" oninput="aiWizCheck()"></div>
-          </div>
-          <div class="ai-wq" data-q="2">
-            <div class="ai-wq-h">What's your business name?</div>
-            <div class="ai-wq-s">So Atlas answers as your company — not a generic bot.</div>
-            <input id="aiBiz" class="ai-win" placeholder="e.g. Summit Exteriors" oninput="aiWizCheck()">
-          </div>
-          <div class="ai-wq" data-q="3">
-            <div class="ai-wq-h">How should Atlas sound?</div>
-            <div class="ai-wq-s">Pick the voice that fits your brand.</div>
-            <div class="ai-wq-opts" id="aiTones"></div>
-          </div>
-          <div class="ai-wiz-nav">
-            <button class="ai-wiz-back" id="aiWizBack" type="button" onclick="aiWizGo(-1)" style="visibility:hidden">← Back</button>
-            <button class="ai-wiz-next" id="aiWizNext" type="button" onclick="aiWizNext()" disabled>Continue →</button>
-          </div>
-        </div>
-
-        <!-- personalized chat -->
-        <div class="ai-chat" id="aiChat" style="display:none">
-          <div class="ai-msgs" id="aiMsgs"></div>
-          <div class="ai-quick" id="aiQuick"></div>
-          <div class="ai-bar">
-            <input id="aiInput" type="text" autocomplete="off" placeholder="Ask Atlas anything&hellip;" onkeydown="if(event.key==='Enter')aiSend()">
-            <button class="ai-send" type="button" onclick="aiSend()" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-          </div>
+        <!-- call / text Atlas -->
+        <div class="ai-ask" id="aiAsk">
+          <div class="ai-ask-h">Try asking Atlas&hellip;</div>
+          <div class="ai-ask-item">"How much does a roof replacement cost?"</div>
+          <div class="ai-ask-item">"Can you book me an inspection this week?"</div>
+          <div class="ai-ask-item">"Do you handle insurance claims for storm damage?"</div>
+          <div class="ai-ask-item">"What areas do you service?"</div>
+          <div class="ai-ask-note">This is the real AI — not a recording. It answers, quotes ballparks, and books appointments live, 24/7.</div>
+          <a class="ai-ask-call" href="tel:+13503331230">📞 Call Atlas — (350) 333-1230</a>
+          <a class="ai-ask-text" href="sms:+13503331230">💬 Text Atlas instead</a>
         </div>
       </div>
     </div>
@@ -12602,13 +12589,11 @@ function aiBuildAtlas(){
 }
 function openAtlasInline(){
   var w=document.getElementById('atlasInline');if(!w)return;
-  aiWizRender();
   if(!w.classList.contains('open')){
     w.classList.add('open');
     document.getElementById('atlasHint').classList.add('hide');
     document.getElementById('atlasBlobBtn').classList.add('active');
   }
-  if(!aiStarted){aiStarted=true;aiState={trade:'Roofing',biz:'BuilderPro',tone:'Friendly',step:3};aiBuildAtlas();}
 }
 function closeAtlasInline(){
   var w=document.getElementById('atlasInline');if(!w)return;
