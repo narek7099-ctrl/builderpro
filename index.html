@@ -681,7 +681,12 @@ section{padding:88px 0;}
 .est-rc .rv2{font-weight:600;font-size:14px;}
 .est-disc{font-size:11.5px;color:var(--grey-l);max-width:560px;margin:16px auto 0;line-height:1.55;}
 .est-3up{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:860px;margin:0 auto 20px;}
-.est-3up .c{text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 14px;}
+.est-3up .c{text-align:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 14px;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s,border-color .35s;}
+.est-3up .c:hover{transform:translateY(-6px);box-shadow:0 20px 44px rgba(47,107,255,.14);border-color:#cddcff;}
+.est-3up .c:hover .est-art svg{transform:translateY(-4px) scale(1.03);}
+.est-art svg{transition:transform .5s cubic-bezier(.22,1,.36,1);animation:estBob 5s ease-in-out infinite;}
+.est-3up .c:nth-child(2) .est-art svg{animation-delay:1.2s}.est-3up .c:nth-child(3) .est-art svg{animation-delay:2.4s}
+@keyframes estBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 .est-3up .c .em{font-size:22px;margin-bottom:6px;}
 .est-3up .c{padding:14px 14px 16px;}
 .est-art{border-radius:12px;overflow:hidden;margin-bottom:12px;background:radial-gradient(120% 90% at 50% 28%, #eef3ff, #dbe4ff);}
@@ -692,12 +697,17 @@ section{padding:88px 0;}
 /* ==== estimator carousel ==== */
 .est-carousel{position:relative;max-width:860px;margin:40px auto 0;}
 .est-viewport{overflow:hidden;border-radius:22px;box-shadow:0 30px 70px rgba(20,30,60,.10);}
-.est-track{display:flex;transition:transform .5s cubic-bezier(.22,.61,.36,1);}
-.est-slide{flex:0 0 100%;width:100%;align-self:flex-start;}
+.est-track{display:flex;transition:transform .65s cubic-bezier(.22,1,.36,1);}
+.est-slide{flex:0 0 100%;width:100%;align-self:flex-start;transition:opacity .5s ease,transform .65s cubic-bezier(.22,1,.36,1);opacity:.35;transform:scale(.965);}
+.est-slide.on{opacity:1;transform:none;}
+.est-viewport{border-radius:22px;box-shadow:0 30px 70px rgba(20,30,60,.12);border:1px solid var(--line);position:relative;}
+.est-viewport::before{content:'';position:absolute;inset:-1px;border-radius:23px;padding:1px;background:linear-gradient(135deg,rgba(47,107,255,.45),rgba(123,200,255,.2),rgba(47,107,255,0) 60%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:4;}
 .est-carousel .est-shell{margin:0;box-shadow:none;border:none;border-radius:0;}
 .est-frame-wrap{background:#f4f2ec;}
 .est-frame{display:block;width:100%;height:660px;border:0;background:#f4f2ec;}
-.est-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:46px;height:46px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:0 10px 26px rgba(20,30,60,.16);color:var(--ink);font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s;}
+.est-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:46px;height:46px;border-radius:50%;background:#fff;border:1px solid var(--line);box-shadow:0 10px 26px rgba(20,30,60,.16);color:var(--ink);font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.25s cubic-bezier(.22,1,.36,1);}
+.est-arrow:hover:not(:disabled){transform:translateY(-50%) scale(1.12);border-color:#2f6bff;color:#2f6bff;box-shadow:0 14px 32px rgba(47,107,255,.25);}
+.est-arrow:active:not(:disabled){transform:translateY(-50%) scale(.98);}
 .est-arrow:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
 .est-arrow:disabled{opacity:.3;cursor:default;pointer-events:none;}
 .est-arrow-prev{left:-22px;}
@@ -11576,7 +11586,8 @@ document.addEventListener('click', function(e) {
 /* ---- estimator carousel ---- */
 var estIdx=0,EST_N=7;
 function estCarousel(d){estCarouselGo(estIdx+d);}
-function estCarouselGo(i){i=Math.max(0,Math.min(EST_N-1,i));estIdx=i;var tr=document.getElementById("estTrack");if(tr)tr.style.transform="translateX(-"+(i*100)+"%)";var p=document.getElementById("estPrev"),n=document.getElementById("estNext");if(p)p.disabled=(i===0);if(n)n.disabled=(i===EST_N-1);var ds=document.querySelectorAll("#estCdots .est-cdot");for(var k=0;k<ds.length;k++)ds[k].classList.toggle("on",k===i);}
+function estCarouselGo(i){i=Math.max(0,Math.min(EST_N-1,i));estIdx=i;var tr=document.getElementById("estTrack");if(tr)tr.style.transform="translateX(-"+(i*100)+"%)";var p=document.getElementById("estPrev"),n=document.getElementById("estNext");if(p)p.disabled=(i===0);if(n)n.disabled=(i===EST_N-1);var ds=document.querySelectorAll("#estCdots .est-cdot");for(var k=0;k<ds.length;k++)ds[k].classList.toggle("on",k===i);var sl=document.querySelectorAll("#estTrack .est-slide");for(var k2=0;k2<sl.length;k2++)sl[k2].classList.toggle("on",k2===i);}
+document.addEventListener('DOMContentLoaded',function(){var s0=document.querySelector('#estTrack .est-slide');if(s0)s0.classList.add('on');});
 function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d.head||d.getElementsByTagName("head")[0];if(!head||d.getElementById("bp-inh"))return;var src=document.querySelectorAll("style,link[rel=\"stylesheet\"]");for(var i=0;i<src.length;i++){var n=src[i];if(n.tagName==="STYLE"){if(n.textContent&&n.textContent.indexOf("@font-face")>=0){var s=d.createElement("style");s.textContent=n.textContent;head.appendChild(s);}}else{var href=n.getAttribute("href")||"";if(href.indexOf("fonts.")>=0){var l=d.createElement("link");l.rel="stylesheet";l.href=href;head.appendChild(l);}}}var m=d.createElement("meta");m.id="bp-inh";head.appendChild(m);}catch(e){}}
 (function(){var fs=document.querySelectorAll(".est-frame");for(var i=0;i<fs.length;i++){(function(fr){if(fr.contentDocument&&fr.contentDocument.readyState==="complete")bpFrameInherit(fr);fr.addEventListener("load",function(){bpFrameInherit(fr);});})(fs[i]);}})();
 (function(){var labels=["Roof","HVAC","Countertops","Trim","Painting","Pool","Landscaping"];var el=document.getElementById("estCdots");if(!el)return;var h="";labels.forEach(function(l,i){h+='<button class="est-cdot'+(i===0?" on":"")+'" onclick="estCarouselGo('+i+')">'+l+'</button>';});el.innerHTML=h;})();
