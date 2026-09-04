@@ -11662,33 +11662,41 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
       <div class="mw-card mw-v1">
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/roofing.jpg" alt="Roofing model website" loading="lazy">
+          <div class="mw-in">
           <div class="v1-nav"><span class="v1-brand">▲ SUMMIT</span><span class="v1-links">STORM&ensp;REPAIR&ensp;REPLACE</span><span class="v1-cta">FREE ESTIMATE</span></div>
           <div class="v1-head"><span class="v1-kick">We are Summit Roofing</span><b>ROOFS BUILT<br>TO OUTLAST.</b></div>
+          </div>
         </div>
         <div class="mw-meta"><b>The Summit</b><span>Roofing &amp; exteriors — storm-damage focused, insurance-claim CTA, satellite estimator front and center.</span></div>
       </div>
       <div class="mw-card mw-v2">
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/hvac.jpg" alt="HVAC model website" loading="lazy">
+          <div class="mw-in">
           <div class="v2-bar">❄ 24/7 emergency service — <b>(555) 019-4400</b></div>
           <div class="v2-nav"><span class="v2-brand">purecomfort<b>.</b></span><span class="v2-links">cooling · heating · air quality</span></div>
           <div class="v2-head"><b>Perfect climate,<br>every day.</b><span class="v2-btn">Book a tune-up →</span></div>
+          </div>
         </div>
         <div class="mw-meta"><b>The Dispatch</b><span>HVAC &amp; plumbing — emergency-call layout, 24/7 booking bar, maintenance-plan upsells built in.</span></div>
       </div>
       <div class="mw-card mw-v3">
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/pool.jpg" alt="Pool model website" loading="lazy">
+          <div class="mw-in">
           <div class="v3-nav"><span class="v3-brand">BlueCrest</span><span class="v3-burger"><i></i><i></i></span></div>
           <div class="v3-head"><span class="v3-kick">DESIGN&thinsp;·&thinsp;BUILD&thinsp;·&thinsp;SERVICE</span><b><em>Your backyard,</em><br>resort-grade.</b><span class="v3-link">Explore our builds</span></div>
+          </div>
         </div>
         <div class="mw-meta"><b>The Showcase</b><span>Pools &amp; outdoor living — gallery-first design, build configurator, seasonal service plans.</span></div>
       </div>
       <div class="mw-card mw-v4">
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/landscaping.jpg" alt="Landscaping model website" loading="lazy">
+          <div class="mw-in">
           <div class="v4-nav"><span class="v4-links">Gardens</span><span class="v4-links">Patios</span><span class="v4-brand">🌿 Evergreen</span><span class="v4-links">Care</span><span class="v4-links">Contact</span></div>
           <div class="v4-head"><b>Grounds that<br><em>turn heads.</em></b><span class="v4-pill">Get a seasonal quote</span></div>
+          </div>
         </div>
         <div class="mw-meta"><b>The Estate</b><span>Landscaping — before/after sliders, seasonal-package quotes, maintenance subscriptions.</span></div>
       </div>
@@ -11701,15 +11709,14 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 @media(max-width:760px){.mw-grid{grid-template-columns:1fr;}}
 .mw-card{background:transparent;border:0;box-shadow:none;transition:transform .4s cubic-bezier(.22,1,.36,1);}
 .mw-card:hover{transform:translateY(-7px);}
-.mw-site{position:relative;height:auto;aspect-ratio:900/482;overflow:hidden;display:flex;flex-direction:column;padding:14px 17px;border-radius:18px;box-shadow:0 24px 55px rgba(20,30,60,.16);}
+.mw-site{position:relative;height:0;padding:0 0 53.5%;overflow:hidden;border-radius:18px;box-shadow:0 24px 55px rgba(20,30,60,.16);}
 .mw-card:hover .mw-site{box-shadow:0 34px 70px rgba(47,107,255,.22);}
-@media(max-width:600px){.mw-site{padding:14px 16px;}}
-.mw-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.22,1,.36,1);}
+.mw-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.22,1,.36,1);}
 .mw-card:hover .mw-bg{transform:scale(1.06);}
-.mw-site::after{content:'';position:absolute;inset:0;pointer-events:none;}
-.mw-site>*{position:relative;z-index:2;}
+.mw-site::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;}
+.mw-in{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;padding:14px 17px;display:flex;flex-direction:column;}
 /* V1 — Summit: industrial bold, yellow accent, bottom-left */
-.mw-v1 .mw-site{justify-content:space-between;}
+.mw-v1 .mw-in{justify-content:space-between;}
 .mw-v1 .mw-site::after{background:linear-gradient(180deg,rgba(8,12,28,.45),rgba(8,12,28,.06) 40%,rgba(8,12,28,.6) 90%);}
 .v1-nav{display:flex;align-items:center;gap:10px;}
 .v1-brand{color:#fff;font-weight:900;font-size:13px;letter-spacing:.08em;}
@@ -11718,7 +11725,7 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .v1-kick{display:block;color:#ffd035;font-size:10.5px;font-weight:700;letter-spacing:.1em;margin-bottom:4px;}
 .v1-head b{color:#fff;font-size:clamp(19px,2.5vw,26px);line-height:1.02;font-weight:900;letter-spacing:.01em;font-family:Arial,Helvetica,sans-serif;text-shadow:0 2px 14px rgba(0,0,0,.5);}
 /* V2 — PureComfort: clean tech, cyan, centered, top bar */
-.mw-v2 .mw-site{padding:0;justify-content:flex-start;text-align:center;}
+.mw-v2 .mw-in{padding:0;justify-content:flex-start;text-align:center;}
 .mw-v2 .mw-site::after{background:linear-gradient(180deg,rgba(4,26,34,.68),rgba(4,26,34,.18) 45%,rgba(4,26,34,.5));}
 .v2-bar{background:#06b6d4;color:#03242b;font-size:10px;font-weight:700;padding:5px 8px;letter-spacing:.03em;}
 .v2-bar b{font-weight:900;}
@@ -11730,7 +11737,7 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .v2-head b{display:block;color:#fff;font-size:clamp(17px,2.3vw,23px);line-height:1.12;font-weight:300;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
 .v2-btn{display:inline-block;margin-top:10px;border:1.5px solid #22d3ee;color:#a5f3fc;font-size:10.5px;font-weight:700;border-radius:999px;padding:6px 14px;}
 /* V3 — BlueCrest: luxury serif, minimal burger nav, left-centered */
-.mw-v3 .mw-site{justify-content:center;}
+.mw-v3 .mw-in{justify-content:center;padding-left:18px;}
 .mw-v3 .mw-site::after{background:linear-gradient(100deg,rgba(6,16,34,.62) 8%,rgba(6,16,34,.12) 55%,rgba(6,16,34,.28));}
 .v3-nav{position:absolute;top:14px;left:18px;right:18px;display:flex;align-items:center;z-index:2;}
 .v3-brand{color:#fff;font-family:Georgia,'Times New Roman',serif;font-size:15px;letter-spacing:.05em;font-style:italic;}
@@ -11741,7 +11748,7 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .v3-head b em{font-style:italic;color:#bae6fd;}
 .v3-link{display:inline-block;margin-top:9px;color:#fff;font-size:11px;font-weight:600;border-bottom:1.5px solid #7dd3fc;padding-bottom:2px;}
 /* V4 — Evergreen: editorial organic, centered logo nav, bottom-right serif */
-.mw-v4 .mw-site{justify-content:space-between;align-items:flex-end;text-align:right;}
+.mw-v4 .mw-in{justify-content:space-between;align-items:flex-end;text-align:right;}
 .mw-v4 .mw-site::after{background:linear-gradient(200deg,rgba(10,24,12,.5),rgba(10,24,12,.08) 45%,rgba(10,24,12,.62) 92%);}
 .v4-nav{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;}
 .v4-brand{color:#fff;font-weight:800;font-size:13px;padding:0 4px;}
