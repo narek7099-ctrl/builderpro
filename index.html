@@ -11663,8 +11663,12 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/roofing.jpg" alt="Roofing model website" loading="lazy">
           <div class="mw-in">
-          <div class="v1-nav"><span class="v1-brand">▲ SUMMIT</span><span class="v1-links">STORM&ensp;REPAIR&ensp;REPLACE</span><span class="v1-cta">FREE ESTIMATE</span></div>
-          <div class="v1-head"><span class="v1-kick">We are Summit Roofing</span><b>ROOFS BUILT<br>TO OUTLAST.</b></div>
+          <div class="v1-panel">
+            <span class="v1-brand">SUMMIT ROOFING</span>
+            <span class="v1-stars">★★★★★ <i>500+ roofs replaced</i></span>
+            <b class="v1-big">The last roof<br>you'll ever buy.</b>
+            <span class="v1-btn">Get a free inspection</span>
+          </div>
           </div>
         </div>
         <div class="mw-meta"><b>The Summit</b><span>Roofing &amp; exteriors — storm-damage focused, insurance-claim CTA, satellite estimator front and center.</span></div>
@@ -11673,9 +11677,9 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
         <div class="mw-site">
           <img class="mw-bg" src="assets/models/hvac.jpg" alt="HVAC model website" loading="lazy">
           <div class="mw-in">
-          <div class="v2-bar">❄ 24/7 emergency service — <b>(555) 019-4400</b></div>
-          <div class="v2-nav"><span class="v2-brand">purecomfort<b>.</b></span><span class="v2-links">cooling · heating · air quality</span></div>
-          <div class="v2-head"><b>Perfect climate,<br>every day.</b><span class="v2-btn">Book a tune-up →</span></div>
+          <div class="v2-nav"><span class="v2-brand">◈ PURECOMFORT</span><span class="v2-phone">📞 (555) 019-4400</span></div>
+          <b class="v2-big">Fixed today.<br>Comfort tonight.</b>
+          <div class="v2-book"><span class="v2-field">Your zip code</span><span class="v2-field w">What's broken?</span><span class="v2-go">Book now</span></div>
           </div>
         </div>
         <div class="mw-meta"><b>The Dispatch</b><span>HVAC &amp; plumbing — emergency-call layout, 24/7 booking bar, maintenance-plan upsells built in.</span></div>
@@ -11715,27 +11719,26 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 .mw-card:hover .mw-bg{transform:scale(1.06);}
 .mw-site::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;}
 .mw-in{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;padding:14px 17px;display:flex;flex-direction:column;}
-/* V1 — Summit: industrial bold, yellow accent, bottom-left */
-.mw-v1 .mw-in{justify-content:space-between;}
-.mw-v1 .mw-site::after{background:linear-gradient(180deg,rgba(8,12,28,.45),rgba(8,12,28,.06) 40%,rgba(8,12,28,.6) 90%);}
-.v1-nav{display:flex;align-items:center;gap:10px;}
-.v1-brand{color:#fff;font-weight:900;font-size:13px;letter-spacing:.08em;}
-.v1-links{margin-left:auto;color:rgba(255,255,255,.8);font-size:9px;font-weight:700;letter-spacing:.14em;}
-.v1-cta{background:#ffd035;color:#1a1a10;font-size:9.5px;font-weight:900;letter-spacing:.06em;border-radius:4px;padding:5px 9px;}
-.v1-kick{display:block;color:#ffd035;font-size:10.5px;font-weight:700;letter-spacing:.1em;margin-bottom:4px;}
-.v1-head b{color:#fff;font-size:clamp(19px,2.5vw,26px);line-height:1.02;font-weight:900;letter-spacing:.01em;font-family:Arial,Helvetica,sans-serif;text-shadow:0 2px 14px rgba(0,0,0,.5);}
-/* V2 — PureComfort: clean tech, cyan, centered, top bar */
-.mw-v2 .mw-in{padding:0;justify-content:flex-start;text-align:center;}
-.mw-v2 .mw-site::after{background:linear-gradient(180deg,rgba(4,26,34,.68),rgba(4,26,34,.18) 45%,rgba(4,26,34,.5));}
-.v2-bar{background:#06b6d4;color:#03242b;font-size:10px;font-weight:700;padding:5px 8px;letter-spacing:.03em;}
-.v2-bar b{font-weight:900;}
-.v2-nav{display:flex;align-items:baseline;justify-content:space-between;padding:9px 14px 0;}
-.v2-brand{color:#fff;font-weight:300;font-size:15px;letter-spacing:.02em;}
-.v2-brand b{color:#22d3ee;font-weight:900;}
-.v2-links{color:rgba(255,255,255,.75);font-size:9.5px;font-weight:500;letter-spacing:.05em;}
-.v2-head{margin-top:30px;}
-.v2-head b{display:block;color:#fff;font-size:clamp(17px,2.3vw,23px);line-height:1.12;font-weight:300;letter-spacing:-.01em;text-shadow:0 2px 12px rgba(0,0,0,.5);}
-.v2-btn{display:inline-block;margin-top:10px;border:1.5px solid #22d3ee;color:#a5f3fc;font-size:10.5px;font-weight:700;border-radius:999px;padding:6px 14px;}
+/* V1 — Summit: frosted side panel, orange accent */
+.mw-v1 .mw-in{padding:0;}
+.mw-v1 .mw-site::after{background:linear-gradient(90deg,rgba(10,14,26,.25) 40%,rgba(10,14,26,.05));}
+.v1-panel{position:absolute;top:0;left:0;bottom:0;width:47%;background:rgba(12,17,32,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:8px;}
+.v1-brand{color:rgba(255,255,255,.85);font-size:10px;font-weight:800;letter-spacing:.22em;}
+.v1-stars{color:#fbbf24;font-size:10px;font-weight:700;}
+.v1-stars i{color:rgba(255,255,255,.65);font-style:normal;font-weight:600;margin-left:4px;}
+.v1-big{color:#fff;font-size:clamp(17px,2.4vw,25px);line-height:1.1;font-weight:800;letter-spacing:-.01em;}
+.v1-btn{display:inline-block;align-self:flex-start;margin-top:4px;background:#f97316;color:#fff;font-size:10.5px;font-weight:800;border-radius:8px;padding:8px 13px;box-shadow:0 6px 16px rgba(249,115,22,.4);}
+/* V2 — PureComfort: bold headline + booking bar, electric blue */
+.mw-v2 .mw-in{justify-content:space-between;}
+.mw-v2 .mw-site::after{background:linear-gradient(180deg,rgba(7,15,35,.55),rgba(7,15,35,.08) 45%,rgba(7,15,35,.35));}
+.v2-nav{display:flex;align-items:center;justify-content:space-between;}
+.v2-brand{color:#fff;font-weight:900;font-size:12px;letter-spacing:.12em;}
+.v2-phone{color:#fff;font-size:10px;font-weight:700;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 10px;}
+.v2-big{color:#fff;font-size:clamp(19px,2.6vw,27px);line-height:1.05;font-weight:900;letter-spacing:-.01em;text-shadow:0 2px 14px rgba(0,0,0,.45);margin-top:-8px;}
+.v2-book{display:flex;gap:6px;background:rgba(255,255,255,.94);border-radius:12px;padding:7px;box-shadow:0 12px 30px rgba(0,0,0,.25);}
+.v2-field{flex:1;background:#eef2f8;border-radius:7px;color:#7c8698;font-size:9.5px;font-weight:600;padding:8px 10px;text-align:left;white-space:nowrap;overflow:hidden;}
+.v2-field.w{flex:1.3;}
+.v2-go{background:#2563eb;color:#fff;font-size:10px;font-weight:800;border-radius:7px;padding:8px 13px;white-space:nowrap;}
 /* V3 — BlueCrest: luxury serif, minimal burger nav, left-centered */
 .mw-v3 .mw-in{justify-content:center;padding-left:18px;}
 .mw-v3 .mw-site::after{background:linear-gradient(100deg,rgba(6,16,34,.62) 8%,rgba(6,16,34,.12) 55%,rgba(6,16,34,.28));}
