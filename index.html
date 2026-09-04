@@ -15361,11 +15361,51 @@ function rdRenderShell(){
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
+    +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">📡 Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
   rdEnsureLeaflet(rdRefresh);
+  rdLoadAuto();
 }
+function rdLoadAuto(){
+  var el=q('rdAutoList'); if(!el) return;
+  if(!(window.BP_LIVE&&window.BP_SB)){ el.textContent='Auto-added leads appear here once your territory is live.'; return; }
+  BP_SB.from('contacts').select('*').contains('tags',['auto']).order('created_at',{ascending:false}).limit(10).then(function(r){
+    rdAutoRender(r&&r.data||[]);
+  }).catch(function(){
+    BP_SB.from('contacts').select('*').contains('tags',['auto']).limit(10).then(function(r2){ rdAutoRender(r2&&r2.data||[]); }).catch(function(){ el.textContent='Could not load auto-added leads right now.'; });
+  });
+}
+function rdAutoRender(rows){
+  var el=q('rdAutoList'); if(!el) return;
+  el.classList.remove('bpx-mut');
+  if(!rows.length){ el.innerHTML='<span class="bpx-mut">No auto-added leads yet — the radar drops its top 10 here each morning at 7am.</span>'; return; }
+  el.innerHTML=rows.map(function(c){
+    var addr=bpEsc((c.name||'').replace(/^Radar — /,''));
+    var m=/score (\d+) · ([^·]+) · permit ([0-9-]+)/.exec(c.notes||'');
+    var score=m?m[1]:'', why=m?m[2].trim():'', date=m?m[3]:'';
+    var done=(c.tags||[]).indexOf('contacted')>-1;
+    return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)">'
+      +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':'#f59e0b')+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'—')+'</span>'
+      +'<div style="flex:1;min-width:0"><b style="font-size:13.5px">'+addr+'</b><div class="bpx-mut" style="font-size:11.5px">'+bpEsc(why||'permit signal')+(date?' · '+bpEsc(date):'')+'</div></div>'
+      +(done?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted ✓</span>'
+        :'<button class="bpx-rowbtn" onclick="rdAutoContacted(this,\''+bpEsc(c.ghl_id||'')+'\','+(c.id?("'"+c.id+"'"):'null')+')">Contacted ✓</button>')
+      +'</div>';
+  }).join('');
+}
+window.rdAutoContacted=function(btn,ghlId,rowId){
+  if(!confirm('Confirm you had a real conversation with this homeowner? This moves them into your follow-up automations.')) return;
+  btn.disabled=true; btn.textContent='Saving…';
+  var fin=function(){ btn.outerHTML='<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted ✓</span>'; };
+  var p=ghlId?rdFn('contacted',{ghlId:ghlId}):Promise.resolve({});
+  p.then(function(){
+    if(rowId&&window.BP_SB){ BP_SB.from('contacts').select('tags').eq('id',rowId).maybeSingle().then(function(r){
+      var t=(r&&r.data&&r.data.tags)||[]; if(t.indexOf('contacted')<0)t.push('contacted');
+      BP_SB.from('contacts').update({tags:t}).eq('id',rowId).then(fin).catch(fin);
+    }).catch(fin); } else fin();
+  }).catch(function(){ btn.disabled=false; btn.textContent='Contacted ✓'; alert('Could not sync — try again.'); });
+};
 window.rdSetTrade=function(k){if(_rdTerr)return;_rdTrade=k;
   document.querySelectorAll('.rd-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rdt')===k);});rdRefresh();};
 window.rdSetMin=function(v){_rdMin=+v;rdDraw();};
