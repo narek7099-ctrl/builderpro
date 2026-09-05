@@ -13102,7 +13102,7 @@ function bpDashboard(){
   var funnel=[{n:'Website visitors',v:1240,w:100},{n:'Leads captured',v:342,w:64},{n:'Conversations',v:268,w:48},{n:'Inspections booked',v:128,w:30},{n:'Jobs won',v:47,w:14}];
   var fh='';funnel.forEach(function(f){fh+='<div class="bpx-frow"><div class="bpx-fname">'+f.n+'</div><div class="bpx-fbarwrap"><div class="bpx-fbar" style="width:'+f.w+'%"></div></div><div class="bpx-fcount">'+f.v+'</div></div>';});
   document.getElementById('bpxViewArea').innerHTML=
-    '<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">🔨 Active projects<span class="lg2">what\'s in motion right now</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading…</div></div>'
+    '<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Active projects<span class="lg2">what\'s in motion right now</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading…</div></div>'
     +'<div class="bpx-stats six">'
     +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val" id="bpxSNew">342</div><div class="note">▲ 18% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val" id="bpxSBooked">128</div><div class="note">▲ 12% vs last month</div></div>'
@@ -13122,7 +13122,7 @@ function bpDashboard(){
       +'</div></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2" id="bpxFunTag">this month</span></div><div id="bpxFunnel">'+fh+'</div></div>'
-    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">🎯 Lead Radar<span class="lg2">homes near you that need your work</span></div><div id="bpxRadarCard" class="bpx-mut" style="font-size:13.5px">Checking your territory…</div></div>';
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Lead Radar<span class="lg2">homes near you that need your work</span></div><div id="bpxRadarCard" class="bpx-mut" style="font-size:13.5px">Checking your territory…</div></div>';
   if(BP_LIVE)bpDashLive();
   bpDashRadar();
   bpDashProjects();
@@ -13137,9 +13137,9 @@ function bpDashProjects(){
       ? '<img src="'+j.photos[0]+'" style="width:100%;height:110px;object-fit:cover;display:block">'
       : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid var(--line)"><svg width="54" height="54" viewBox="0 0 48 48" fill="none" stroke="#2f6bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
     var sub=[];
-    if(j.sched&&j.sched.target)sub.push('🎯 '+bpEsc(j.sched.target));
-    if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
-    if(j.photos&&j.photos.length)sub.push('📷 '+j.photos.length);
+    if(j.sched&&j.sched.target)sub.push('Due '+bpEsc(j.sched.target));
+    if(j.sched&&j.sched.days&&j.sched.days.length)sub.push(j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
+    if(j.photos&&j.photos.length)sub.push(j.photos.length+' photos');
     return '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;background:#fff" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">'
       +cover
       +'<div style="padding:9px 11px"><b style="font-size:13.5px">'+bpEsc(j.name)+'</b><div class="bpx-mut" style="font-size:12px;margin-top:1px">'+bpEsc(j.title||'Project')+' · <span class="bpx-num">'+bpMoneyFmt(j.estimate)+'</span></div>'
@@ -13270,7 +13270,7 @@ function bpRenderCInfo(){
   if(_bpCurConv.phone)chips.push('<a href="tel:'+bpEsc(_bpCurConv.phone)+'" style="text-decoration:none;color:#2f6bff">📞 '+bpEsc(_bpCurConv.phone)+'</a>');
   if(_bpCurConv.email)chips.push('<a href="mailto:'+bpEsc(_bpCurConv.email)+'" style="text-decoration:none;color:#2f6bff">✉️ '+bpEsc(_bpCurConv.email)+'</a>');
   var jobsHtml=jobs.length?jobs.map(function(j){
-    var st=j.status==='done'?'✅ Completed':'🔨 In progress';
+    var st=j.status==='done'?'Completed':'In progress';
     var tgt=(j.sched&&j.sched.target)?(' · target '+bpEsc(j.sched.target)):'';
     return '<div style="font-size:12.5px;margin-top:3px">'+st+' — <b>'+bpEsc(j.title||'Project')+'</b>'+(j.estimate?' · '+bpMoneyFmt(j.estimate):'')+tgt+'</div>';
   }).join(''):'';
@@ -14874,9 +14874,9 @@ function bpActiveJobs(){
     head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Won</th><th>Status</th><th></th></tr>';
     rows=active.length?active.map(function(j){
       var extra=[];
-      if(j.sched&&j.sched.target)extra.push('🎯 '+bpEsc(j.sched.target));
-      if(j.sched&&j.sched.days&&j.sched.days.length)extra.push('📅 '+j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
-      if(j.photos&&j.photos.length)extra.push('📷 '+j.photos.length);
+      if(j.sched&&j.sched.target)extra.push('Due '+bpEsc(j.sched.target));
+      if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
+      if(j.photos&&j.photos.length)extra.push(j.photos.length+' photos');
       return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:44px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
     }).join(''):'<tr><td colspan="5" class="bpx-empty2">No active projects yet. When you mark a deal <b>Won</b> in Close Deals it shows up here — or add one manually.</td></tr>';
@@ -14928,7 +14928,7 @@ window.bpProjCalEvents=function(y,m){
         var isStart=(d.getTime()===s.getTime()), isEnd=(j.sched.target&&d.getTime()===e.getTime());
         var work=(!days.length)||days.indexOf(dw[d.getDay()])>-1;
         if(work||isStart||isEnd){
-          var lbl=(isStart?'▶ ':(isEnd?'🏁 ':''))+'🔨 '+bpEsc(j.name||'Project')+(work&&j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':'');
+          var lbl=(isStart?'Start · ':(isEnd?'Finish · ':''))+bpEsc(j.name||'Project')+(work&&j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':'');
           (out[d.getDate()]=out[d.getDate()]||[]).push({id:j.id,label:lbl});
         }
       }
@@ -15460,7 +15460,7 @@ function rdRenderShell(){
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
-    +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">📡 Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
+    +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
@@ -15919,5 +15919,28 @@ document.head.appendChild(rdCss);
   document.getElementById('oawIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
 })();
 </script>
+<style id="bpx-deslop">
+/* Jobber-style pass: flat surfaces, tighter density, tabular figures */
+#bpx{--line:#e4e7ec;}
+#bpx .bpx-panel,#bpx .bpx-stat{border-radius:10px;padding:14px 16px;box-shadow:none;border-color:#e4e7ec;}
+#bpx .bpx-ptitle{font-size:13px;margin-bottom:10px;color:#111827;font-weight:600;}
+#bpx .bpx-ptitle .lg2{font-weight:500;color:#98a1b2;font-size:11.5px;}
+#bpx .bpx-stat .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:600;}
+#bpx .bpx-stat .val{font-variant-numeric:tabular-nums;font-size:21px;font-weight:700;letter-spacing:-.01em;}
+#bpx .bpx-stat .note{color:#98a1b2;font-size:11px;}
+#bpx .bpx-stats{gap:10px;margin-bottom:12px;}
+#bpx .bpx-num{font-variant-numeric:tabular-nums;}
+#bpx .bpx-ctable{font-size:13px;}
+#bpx .bpx-ctable td{padding:9px 12px;}
+#bpx .bpx-ctable th,#bpx .bpx-ctable thead th{padding:8px 12px;font-size:10.5px;background:#f8f9fb;}
+#bpx .bpx-btn{border-radius:8px;padding:9px 15px;font-size:13.5px;}
+#bpx .bpx-rowbtn,#bpx .bpx-donebtn,#bpx .bpx-addbtn{border-radius:7px;font-size:12.5px;}
+#bpx .bpx-badge{border-radius:6px;font-size:11px;font-weight:600;}
+#bpx .bpx-side{padding:14px 10px;}
+#bpx .bpx-side a{border-radius:7px;font-size:13.5px;}
+#bpx .bpx-cwrap{border-radius:10px;border-color:#e4e7ec;box-shadow:none;}
+#bpx .bpx-jt{border-radius:7px;font-size:13px;}
+#bpx input,#bpx select,#bpx textarea{border-radius:8px;}
+</style>
 </body>
 </html>
