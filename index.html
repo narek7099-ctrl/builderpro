@@ -14526,6 +14526,12 @@ window.bpBulkSend=async function(){
 .bpx-clockbtn{width:42px;height:42px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--grey);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
 .bpx-clockbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .bpx-clockbtn:hover{border-color:var(--blue);color:var(--blue);}
+/* beat the generic .bpx-reply button rule that squashed these icons */
+.bpx-reply button.bpx-sendbtn{width:44px;height:44px;padding:0;border-radius:50%;background:var(--blue);}
+.bpx-reply button.bpx-clockbtn{width:44px;height:44px;padding:0;border-radius:50%;background:#fff;color:var(--grey);border:1px solid var(--line);}
+.bpx-reply button.bpx-sendbtn svg{width:19px;height:19px;stroke:#fff;fill:none;}
+.bpx-reply button.bpx-clockbtn svg{width:19px;height:19px;stroke:currentColor;fill:none;}
+.bpx-reply button.bpx-clockbtn:hover{border-color:var(--blue);color:var(--blue);background:#fff;}
 .bpx-when-note{font-size:12px;color:var(--grey);margin-top:8px;background:var(--soft);border:1px dashed var(--line);border-radius:9px;padding:9px 12px;line-height:1.5;}
 .bpx-when-note a{color:var(--blue);font-weight:600;}
 .bpx-schedlist{display:flex;flex-direction:column;gap:9px;margin-top:8px;max-height:340px;overflow-y:auto;}
