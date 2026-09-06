@@ -15156,9 +15156,10 @@ function bpInvLoad(){
 window.bpInvOpen=async function(){
   bpModal('<h3>New invoice</h3><div class="bpx-sub">Loading your contacts…</div>');
   await bpEnsureContacts();
+  bpCloseModal();
   var opts=_bpContacts.map(function(c){return '<option value="'+bpEsc(c.id)+'" data-name="'+bpEsc(c.name||'')+'" data-phone="'+bpEsc(c.phone||'')+'" data-email="'+bpEsc(c.email||'')+'">'+bpEsc(c.name||c.phone||c.email||'Contact')+'</option>';}).join('');
   bpModal('<h3>New invoice</h3><div class="bpx-sub">The customer gets a payment link by text or email. When they pay, your workflows fire automatically.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1.25fr;gap:22px" class="bpx-iv-grid">'
+    +'<div style="display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:26px" class="bpx-iv-grid">'
     +'<div>'
     +'<label>Customer</label><select id="bpx-iv-c" onchange="bpInvPrev()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px">'+(opts||'<option value="">No contacts found</option>')+'</select>'
     +'<label>Type</label><select id="bpx-iv-t" onchange="bpInvType()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px"><option>Deposit</option><option>Final balance</option><option>Progress payment</option><option value="custom">Custom title…</option></select>'
@@ -15174,7 +15175,7 @@ window.bpInvOpen=async function(){
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-iv-go" onclick="bpInvSend()">Send invoice</button></div>');
   window._bpInvVia='sms';
   bpInvPrev();
-  var mc=document.querySelector('.bpx-modalcard'); if(mc){mc.style.maxWidth='900px';mc.style.width='94vw';}
+  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='980px';mc.style.width='95vw';}
 };
 window.bpInvType=function(){ var t=q('bpx-iv-t'); q('bpx-iv-tw').style.display=(t&&t.value==='custom')?'block':'none'; bpInvPrev(); };
 window.bpInvPrev=function(){
@@ -15192,7 +15193,7 @@ window.bpInvPrev=function(){
   var fmt=function(d){return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});};
   var money=function(n){return '$'+(+n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');};
   var addrLines=[biz]; if(c.phone)addrLines.push(c.phone); if(c.address)addrLines.push(c.address); addrLines.push('US');
-  el.innerHTML='<div style="background:#fff;border:1px solid #e7eaf1;box-shadow:0 10px 34px rgba(20,30,60,.10);padding:26px 28px 30px;font-size:12px;color:#374151;border-radius:4px">'
+  el.innerHTML='<div style="background:#fff;border:1px solid #e7eaf1;box-shadow:0 10px 34px rgba(20,30,60,.10);padding:24px 26px 26px;font-size:12px;color:#374151;border-radius:4px">'
     +'<div style="text-align:right;font-size:30px;font-weight:600;letter-spacing:.01em;color:#111827;line-height:1">INVOICE</div>'
     +'<div style="border-top:1.5px solid #111827;margin:10px 0 14px"></div>'
     +'<div style="text-align:right;color:#4b5563;font-size:11.5px;line-height:1.7">'+addrLines.map(function(x){return bpEsc(x);}).join('<br>')+'</div>'
