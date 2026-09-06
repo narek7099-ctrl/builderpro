@@ -14519,6 +14519,7 @@ window.bpBulkSend=async function(){
 </script>
 <style>
 /* ===== Scheduled sends ===== */
+@media(max-width:640px){.bpx-iv-grid{grid-template-columns:1fr!important;}}
 .bpx-msgbar-btns{display:flex;gap:8px;flex-wrap:wrap;}
 .bpx-ghostbtn{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:10px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;}
 .bpx-ghostbtn:hover{border-color:var(--blue);color:var(--blue);}
@@ -15157,16 +15158,50 @@ window.bpInvOpen=async function(){
   await bpEnsureContacts();
   var opts=_bpContacts.map(function(c){return '<option value="'+bpEsc(c.id)+'" data-name="'+bpEsc(c.name||'')+'" data-phone="'+bpEsc(c.phone||'')+'" data-email="'+bpEsc(c.email||'')+'">'+bpEsc(c.name||c.phone||c.email||'Contact')+'</option>';}).join('');
   bpModal('<h3>New invoice</h3><div class="bpx-sub">The customer gets a payment link by text or email. When they pay, your workflows fire automatically.</div>'
-    +'<label>Customer</label><select id="bpx-iv-c" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px">'+(opts||'<option value="">No contacts found</option>')+'</select>'
-    +'<label>Type</label><select id="bpx-iv-t" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px"><option>Deposit</option><option>Final balance</option><option>Progress payment</option><option value="custom">Custom title…</option></select>'
-    +'<div id="bpx-iv-tw" style="display:none"><label>Custom title</label><input id="bpx-iv-tc" placeholder="e.g. Roof repair — 123 Main St"></div>'
-    +'<label>Amount</label><input id="bpx-iv-a" placeholder="$0" inputmode="decimal">'
-    +'<label>Description (optional)</label><input id="bpx-iv-d" placeholder="What this covers">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="bpx-iv-grid">'
+    +'<div>'
+    +'<label>Customer</label><select id="bpx-iv-c" onchange="bpInvPrev()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px">'+(opts||'<option value="">No contacts found</option>')+'</select>'
+    +'<label>Type</label><select id="bpx-iv-t" onchange="bpInvType()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px"><option>Deposit</option><option>Final balance</option><option>Progress payment</option><option value="custom">Custom title…</option></select>'
+    +'<div id="bpx-iv-tw" style="display:none"><label>Custom title</label><input id="bpx-iv-tc" placeholder="e.g. Roof repair — 123 Main St" oninput="bpInvPrev()"></div>'
+    +'<label>Amount</label><input id="bpx-iv-a" placeholder="$0" inputmode="decimal" oninput="bpInvPrev()">'
+    +'<label>Description (optional)</label><input id="bpx-iv-d" placeholder="What this covers — shows on the invoice" oninput="bpInvPrev()">'
+    +'<label>Due</label><select id="bpx-iv-due" onchange="bpInvPrev()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px"><option value="0">On receipt</option><option value="7" selected>In 7 days</option><option value="14">In 14 days</option><option value="30">In 30 days</option></select>'
     +'<label>Send by</label><div class="bpx-bulk-tabs"><button id="iv-s-sms" class="on" onclick="bpInvSendVia(\'sms\')">Text</button><button id="iv-s-email" onclick="bpInvSendVia(\'email\')">Email</button><button id="iv-s-both" onclick="bpInvSendVia(\'both\')">Both</button></div>'
+    +'</div>'
+    +'<div><label>What your customer sees</label><div id="bpx-iv-prev"></div></div>'
+    +'</div>'
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-iv-go" onclick="bpInvSend()">Send invoice</button></div>');
   window._bpInvVia='sms';
-  var tsel=q('bpx-iv-t'); if(tsel)tsel.onchange=function(){ q('bpx-iv-tw').style.display=(this.value==='custom')?'block':'none'; };
+  bpInvPrev();
+};
+window.bpInvType=function(){ var t=q('bpx-iv-t'); q('bpx-iv-tw').style.display=(t&&t.value==='custom')?'block':'none'; bpInvPrev(); };
+window.bpInvPrev=function(){
+  var el=q('bpx-iv-prev'); if(!el) return;
+  var st={}; try{ st=bpSettingsGet()||{}; }catch(e){}
+  var c=st.company||{};
+  var biz=c.name||'Your Company'; var logo=c.logo||c.logoUrl||'';
+  var sel=q('bpx-iv-c'); var op=sel&&sel.options[sel.selectedIndex];
+  var cust=(op&&(op.getAttribute('data-name')||op.text))||'Customer';
+  var t=(q('bpx-iv-t')||{}).value||'Deposit'; if(t==='custom') t=((q('bpx-iv-tc')||{}).value||'Invoice').trim()||'Invoice';
+  var amt=bpParseMoney((q('bpx-iv-a')||{}).value);
+  var desc=((q('bpx-iv-d')||{}).value||'').trim();
+  var dd=+((q('bpx-iv-due')||{}).value||7);
+  var due=dd===0?'Due on receipt':('Due '+new Date(Date.now()+dd*864e5).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  el.innerHTML='<div style="border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 10px 30px rgba(20,30,60,.08)">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);background:#f8fafd">'
+      +(logo?'<img src="'+logo+'" style="width:30px;height:30px;border-radius:8px;object-fit:cover">':'<span style="width:30px;height:30px;border-radius:8px;background:#2f6bff;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">'+bpEsc((biz[0]||'C').toUpperCase())+'</span>')
+      +'<div><b style="font-size:13.5px">'+bpEsc(biz)+'</b><div class="bpx-mut" style="font-size:10.5px">'+(c.phone?bpEsc(c.phone):'')+(c.phone&&c.email?' · ':'')+(c.email?bpEsc(c.email):'')+'</div></div></div>'
+    +'<div style="padding:14px 15px">'
+      +'<div class="bpx-mut" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Invoice — '+bpEsc(due)+'</div>'
+      +'<div style="font-size:12.5px;margin-top:6px">Billed to <b>'+bpEsc(cust)+'</b></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px">'
+        +'<div style="min-width:0"><b style="font-size:13px">'+bpEsc(t)+'</b>'+(desc?'<div class="bpx-mut" style="font-size:11px;margin-top:2px">'+bpEsc(desc)+'</div>':'')+'</div>'
+        +'<b class="bpx-num" style="font-size:13.5px;white-space:nowrap;margin-left:10px">'+bpMoneyFmt(amt)+'</b></div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13.5px"><span class="bpx-mut">Total due</span><b class="bpx-num" style="color:#2f6bff;font-size:16px">'+bpMoneyFmt(amt)+'</b></div>'
+      +'<div style="background:#2f6bff;color:#fff;text-align:center;border-radius:10px;padding:11px;font-weight:700;font-size:13px;margin-top:12px;opacity:.92">Pay '+bpMoneyFmt(amt)+'</div>'
+      +'<div class="bpx-mut" style="font-size:10px;text-align:center;margin-top:8px">Secure payment powered by your connected Stripe account</div>'
+    +'</div></div>';
 };
 window.bpInvSendVia=function(v){ window._bpInvVia=v; ['sms','email','both'].forEach(function(k){var b=q('iv-s-'+k); if(b)b.classList.toggle('on',k===v);}); };
 window.bpInvSend=async function(){
@@ -15184,7 +15219,7 @@ window.bpInvSend=async function(){
   btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Creating invoice…';
   try{
     var r=await fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
-      body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-iv-d')||{}).value||'',send:via,businessName:biz})});
+      body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-iv-d')||{}).value||'',send:via,businessName:biz,dueDays:+((q('bpx-iv-due')||{}).value||7)})});
     if(r.status===404){ msg.innerHTML=BPINV_NOTE; btn.disabled=false; return; }
     var d=await r.json();
     if(d&&d.ok){ msg.style.color='#15803d'; msg.textContent=d.sent?'Invoice sent ✓':'Invoice created — sending failed ('+(d.sendError||'check GHL')+'), it\'s saved as a draft in GHL.'; btn.textContent='Done'; setTimeout(function(){bpCloseModal(); bpInvLoad();},1200); }
