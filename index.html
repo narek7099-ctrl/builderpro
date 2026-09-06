@@ -15114,6 +15114,9 @@ function bpFinances(){
     +'<div class="bpx-stat"><div class="lbl">Net profit</div><div class="val blue">'+bpMoneyFmt(d.net)+'</div><div class="note">income − expenses</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Margin</div><div class="val">'+margin+'%</div><div class="note">of income</div></div>'
     +'</div>'
+    +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Invoices<span class="lg2">send real invoices — payment updates your GHL workflows automatically</span></div>'
+      +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxInvCount" style="font-size:12.5px"></span><button class="bpx-addbtn" onclick="bpInvOpen()">+ New invoice</button></div>'
+      +'<div id="bpxInvList" class="bpx-mut" style="font-size:13px">Loading invoices…</div></div>'
     +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
     +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs — tap one to add income &amp; costs</span></div>'
       +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'
@@ -15121,8 +15124,73 @@ function bpFinances(){
       +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
       +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table>'
       +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Tap a job to add income &amp; expenses. Synced to your account.</div></div>';
+  bpInvLoad();
 }
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
+var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
+var BPINV_NOTE='<div class="bpx-when-note">Invoicing isn\'t set up yet. Deploy the <b>ghl-invoice</b> function and set the <b>GHL_LOCATION_ID</b> secret to enable it.</div>';
+function bpInvLoad(){
+  var el=q('bpxInvList'); if(!el) return;
+  if(!window.BP_LIVE){ el.innerHTML='<span class="bpx-mut">Invoices are available on live accounts.</span>'; return; }
+  fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})})
+  .then(function(r){ if(r.status===404) throw 'nf'; return r.json(); })
+  .then(function(d){
+    el.classList.remove('bpx-mut');
+    if(!(d&&d.ok)){ el.innerHTML=BPINV_NOTE+(d&&d.error?'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'+bpEsc(String(d.error))+'</div>':''); return; }
+    var items=d.items||[];
+    var cnt=q('bpxInvCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
+    if(!items.length){ el.innerHTML='<span class="bpx-mut">No invoices yet. Send your first with + New invoice.</span>'; return; }
+    var stc={paid:'#15803d','partially-paid':'#d97706',sent:'#2457d6',draft:'#6a6a70',overdue:'#dc2626',void:'#9a9aa0'};
+    el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
+      +items.map(function(v){
+        var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
+        var due=v.dueDate?new Date(v.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+        return '<tr><td>'+bpEsc(v.name||'Invoice')+'</td><td>'+bpEsc(v.contact||'—')+'</td><td class="bpx-mut">'+due+'</td>'
+          +'<td><span class="bpx-badge" style="color:'+col+';border-color:currentColor;background:transparent">'+bpEsc(String(v.status||'draft'))+'</span></td>'
+          +'<td class="bpx-r bpx-num">'+bpMoneyFmt(v.total)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  })
+  .catch(function(){ el.classList.remove('bpx-mut'); el.innerHTML=BPINV_NOTE; });
+}
+window.bpInvOpen=async function(){
+  bpModal('<h3>New invoice</h3><div class="bpx-sub">Loading your contacts…</div>');
+  await bpEnsureContacts();
+  var opts=_bpContacts.map(function(c){return '<option value="'+bpEsc(c.id)+'" data-name="'+bpEsc(c.name||'')+'" data-phone="'+bpEsc(c.phone||'')+'" data-email="'+bpEsc(c.email||'')+'">'+bpEsc(c.name||c.phone||c.email||'Contact')+'</option>';}).join('');
+  bpModal('<h3>New invoice</h3><div class="bpx-sub">The customer gets a payment link by text or email. When they pay, your workflows fire automatically.</div>'
+    +'<label>Customer</label><select id="bpx-iv-c" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px">'+(opts||'<option value="">No contacts found</option>')+'</select>'
+    +'<label>Type</label><select id="bpx-iv-t" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px"><option>Deposit</option><option>Final balance</option><option>Progress payment</option><option value="custom">Custom title…</option></select>'
+    +'<div id="bpx-iv-tw" style="display:none"><label>Custom title</label><input id="bpx-iv-tc" placeholder="e.g. Roof repair — 123 Main St"></div>'
+    +'<label>Amount</label><input id="bpx-iv-a" placeholder="$0" inputmode="decimal">'
+    +'<label>Description (optional)</label><input id="bpx-iv-d" placeholder="What this covers">'
+    +'<label>Send by</label><div class="bpx-bulk-tabs"><button id="iv-s-sms" class="on" onclick="bpInvSendVia(\'sms\')">Text</button><button id="iv-s-email" onclick="bpInvSendVia(\'email\')">Email</button><button id="iv-s-both" onclick="bpInvSendVia(\'both\')">Both</button></div>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-iv-go" onclick="bpInvSend()">Send invoice</button></div>');
+  window._bpInvVia='sms';
+  var tsel=q('bpx-iv-t'); if(tsel)tsel.onchange=function(){ q('bpx-iv-tw').style.display=(this.value==='custom')?'block':'none'; };
+};
+window.bpInvSendVia=function(v){ window._bpInvVia=v; ['sms','email','both'].forEach(function(k){var b=q('iv-s-'+k); if(b)b.classList.toggle('on',k===v);}); };
+window.bpInvSend=async function(){
+  var msg=q('bpx-mmsg'), btn=q('bpx-iv-go');
+  var sel=q('bpx-iv-c'); var op=sel&&sel.options[sel.selectedIndex];
+  if(!op||!op.value){ msg.style.color='#dc2626'; msg.textContent='Pick a customer.'; return; }
+  var amt=bpParseMoney((q('bpx-iv-a')||{}).value);
+  if(!(amt>0)){ msg.style.color='#dc2626'; msg.textContent='Enter an amount.'; return; }
+  var t=(q('bpx-iv-t')||{}).value; if(t==='custom') t=((q('bpx-iv-tc')||{}).value||'Invoice').trim()||'Invoice';
+  var via=window._bpInvVia||'sms';
+  var phone=op.getAttribute('data-phone')||'', email=op.getAttribute('data-email')||'';
+  if(via!=='email'&&!phone){ msg.style.color='#dc2626'; msg.textContent='This contact has no phone — send by email instead.'; return; }
+  if(via!=='sms'&&!email){ msg.style.color='#dc2626'; msg.textContent='This contact has no email — send by text instead.'; return; }
+  var biz='Your contractor'; try{ biz=((bpSettingsGet()||{}).company||{}).name||biz; }catch(e){}
+  btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Creating invoice…';
+  try{
+    var r=await fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
+      body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-iv-d')||{}).value||'',send:via,businessName:biz})});
+    if(r.status===404){ msg.innerHTML=BPINV_NOTE; btn.disabled=false; return; }
+    var d=await r.json();
+    if(d&&d.ok){ msg.style.color='#15803d'; msg.textContent=d.sent?'Invoice sent ✓':'Invoice created — sending failed ('+(d.sendError||'check GHL')+'), it\'s saved as a draft in GHL.'; btn.textContent='Done'; setTimeout(function(){bpCloseModal(); bpInvLoad();},1200); }
+    else { msg.style.color='#dc2626'; msg.textContent='Could not create: '+bpEsc(String((d&&d.error)||'unknown error')); btn.disabled=false; }
+  }catch(e){ msg.style.color='#dc2626'; msg.textContent='Network error — try again.'; btn.disabled=false; }
+};
 window.bpFinAddOpen=function(kind){
   var isExp=kind==='expense';
   bpModal('<h3>Add '+(isExp?'expense':'income')+'</h3><div class="bpx-sub">'+(isExp?'A cost not tied to a specific job (rent, software, fuel…).':'Money in that didn’t come from a tracked job (cash job, deposit…).')+'</div>'
