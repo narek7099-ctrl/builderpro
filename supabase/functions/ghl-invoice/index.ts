@@ -93,6 +93,17 @@ Deno.serve(async (req) => {
     const invId = d?._id ?? d?.id ?? d?.invoice?._id;
     if (!invId) return json({ ok: false, error: "created but no invoice id returned", raw: d }, 502);
 
+    // tag the contact so workflows can tell deposit vs final without title filters
+    try {
+      const low = title.toLowerCase();
+      if (low.includes("deposit")) {
+        await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, { method: "POST", headers: ghlH(t), body: JSON.stringify({ tags: ["deposit-sent"] }) });
+      } else if (low.includes("final")) {
+        await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, { method: "DELETE", headers: ghlH(t), body: JSON.stringify({ tags: ["deposit-sent"] }) });
+        await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, { method: "POST", headers: ghlH(t), body: JSON.stringify({ tags: ["final-sent"] }) });
+      }
+    } catch { /* tagging is best-effort */ }
+
     // send it (sms/email/both); failure to send still leaves a draft they can send from GHL
     const sendPref = b.send === "email" ? "email" : b.send === "both" ? "sms_and_email" : "sms";
     let sent = false, sendErr = "";
