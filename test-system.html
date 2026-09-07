@@ -69,7 +69,7 @@ async function runAll(){
       if(r.nf)return['bad','Function not deployed (404)'];
       if(r.err)return['bad',r.err];
       return ['ok','Deployed and answering (HTTP '+r.status+')'];}],
-    ['agency (command center)', 'agency', {op:'ping'}, function(r){
+    ['AGENCY (command center)', 'AGENCY', {op:'ping'}, function(r){
       if(r.nf)return['bad','Not deployed (404)'];
       if(r.err)return['bad',r.err];
       return ['ok','Deployed and answering (HTTP '+r.status+')'];}],
