@@ -64,68 +64,39 @@ async function post(fn,body){
 }
 async function runAll(){
   document.getElementById('out').innerHTML='';
-  var checks=[
-    ['ai-response (Atlas/Nova brains)', 'ai-response', {mode:'ping'}, function(r){
-      if(r.nf)return['bad','Function not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      return ['ok','Deployed and answering (HTTP '+r.status+')'];}],
-    ['AGENCY (command center)', 'AGENCY', {op:'ping'}, function(r){
-      if(r.nf)return['bad','Not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      return ['ok','Deployed and answering (HTTP '+r.status+')'];}],
-    ['job-complete (Mark done → GHL tag)', 'job-complete', {}, function(r){
-      if(r.nf)return['bad','Not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      if(r.status===401)return['ok','Deployed — correctly requires portal login'];
-      return ['ok','Deployed (HTTP '+r.status+')'];}],
-    ['radar-sync (Add prospect / Contacted)', 'radar-sync', {}, function(r){
-      if(r.nf)return['bad','Not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      return ['ok','Deployed (HTTP '+r.status+')'];}],
-    ['skip-trace (owner lookup)', 'skip-trace', {}, function(r){
-      if(r.nf)return['bad','Not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      return ['ok','Deployed (HTTP '+r.status+')'];}],
-    ['ghl-invoice (invoices + tagging)', 'ghl-invoice', {action:'list'}, function(r){
-      if(r.nf)return['bad','Not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      if(r.d&&r.d.ok)return['ok','Working — GHL returned '+((r.d.items||[]).length)+' invoice(s). Token + location OK.'];
-      return ['bad','Deployed but erroring: '+((r.d&&r.d.error)||('HTTP '+r.status))];}],
-    ['ghl-estimate (estimates)', 'ghl-estimate', {action:'list'}, function(r){
-      if(r.nf)return['bad','Not deployed (404)'];
-      if(r.err)return['bad',r.err];
-      if(r.d&&r.d.ok)return['ok','Working — GHL returned '+((r.d.items||[]).length)+' estimate(s).'];
-      return ['bad','Deployed but erroring: '+((r.d&&r.d.error)||('HTTP '+r.status))];}],
-    ['ghl-schedule (scheduled sends)', 'ghl-schedule', {action:'list'}, function(r){
-      if(r.nf)return['bad','Not deployed (404) — scheduled messages will not send'];
-      if(r.err)return['bad',r.err];
-      if(r.d&&r.d.ok){var p=(r.d.items||[]).filter(function(x){return x.status==='pending';}).length;return['ok','Working — '+p+' pending send(s) queued.'];}
-      return ['bad','Deployed but erroring: '+((r.d&&r.d.error)||('HTTP '+r.status))];}],
-    ['radar-daily (7am auto-leads)', 'radar-daily', null, function(r){ return null; }],
-    ['project-create (deposit-paid webhook)', 'project-create', {}, function(r){
-      if(r.nf)return['bad','Not deployed (404) — paid deposits will NOT create projects'];
-      if(r.err)return['bad',r.err];
-      if(r.d&&/owner_email required/.test(r.d.error||''))return['ok','Deployed — correctly demanding owner_email (webhook sends it).'];
-      if(r.status===400||r.status===404)return['ok','Deployed and validating input (HTTP '+r.status+')'];
-      return ['warn','Deployed, unexpected reply: '+JSON.stringify(r.d).slice(0,90)];}],
-  ];
-  for(var i=0;i<checks.length;i++){
-    var c=checks[i];
-    if(c[1]==='radar-daily'){
-      // existence check only — GET without running would still run it, so probe with a HEAD-ish bad method
-      try{
-        var rr=await fetch(U+'/functions/v1/radar-daily',{method:'PUT',headers:hdr()});
-        if(rr.status===404) row(c[0],'bad','Not deployed (404)');
-        else row(c[0],'ok','Deployed (rejects bad method with HTTP '+rr.status+' as expected). Use the live-fire button below to actually run it.');
-      }catch(e){ row(c[0],'bad',String(e).slice(0,120)); }
-      continue;
+  var pr=await post('system-test',{action:'probe'});
+  if(pr.d&&pr.d.ok&&pr.d.probe){
+    row('Probe mode','ok','Checks ran server-side via system-test — immune to browser CORS/cache issues.');
+    var expect={
+      'ai-response':[400,'Atlas/Nova brains'],'AGENCY':[0,'command center'],'job-complete':[401,'Mark done → GHL tag'],
+      'radar-sync':[401,'Add prospect / Contacted'],'skip-trace':[401,'owner lookup'],
+      'ghl-invoice':[200,'invoices + tagging'],'ghl-estimate':[200,'estimates'],'ghl-schedule':[200,'scheduled sends'],
+      'project-create':[400,'deposit-paid webhook'],'radar-daily':[405,'7am auto-leads']};
+    pr.d.probe.forEach(function(x){
+      var meta=expect[x.name]||[0,''];
+      var ok=false,msg='HTTP '+x.status+' · '+x.body;
+      if(x.status===404){row(x.name+' ('+meta[1]+')','bad','NOT DEPLOYED (404)');return;}
+      if(x.status===0){row(x.name+' ('+meta[1]+')','bad',x.body);return;}
+      try{var j=JSON.parse(x.body);if(j&&j.ok===true)ok=true;}catch(e){}
+      if(meta[0]&&x.status===meta[0])ok=true;
+      if(x.name==='AGENCY'&&x.status>0&&x.status<500)ok=true;
+      if(x.name==='project-create'&&/owner_email|POST only|required/.test(x.body))ok=true;
+      if(x.name==='radar-daily'&&(x.status===405||/POST\/GET/.test(x.body)))ok=true;
+      row(x.name+' ('+meta[1]+')',ok?'ok':'bad',msg);
+    });
+  } else {
+    row('Probe mode','warn','system-test probe unavailable ('+(pr.nf?'not deployed / old version':(pr.err||'error'))+') — falling back to direct browser checks, which CORS can block. Redeploy system-test with the probe code for reliable results.');
+    var basics=[['ai-response','ai-response',{mode:'ping'}],['AGENCY','AGENCY',{op:'ping'}],['job-complete','job-complete',{}],
+      ['radar-sync','radar-sync',{}],['skip-trace','skip-trace',{}],['ghl-invoice','ghl-invoice',{action:'list'}],
+      ['ghl-estimate','ghl-estimate',{action:'list'}],['ghl-schedule','ghl-schedule',{action:'list'}],['project-create','project-create',{}]];
+    for(var i=0;i<basics.length;i++){
+      var r=await post(basics[i][1],basics[i][2]);
+      if(r.nf)row(basics[i][0],'bad','Not deployed (404)');
+      else if(r.err)row(basics[i][0],'bad',r.err+' (may be CORS, not the function)');
+      else row(basics[i][0],'ok','HTTP '+r.status);
     }
-    var res=await post(c[1],c[2]);
-    var v=c[3](res);
-    if(v) row(c[0],v[0],v[1]);
   }
-  // cron sanity note
-  row('Cron schedules','warn','This page can\'t see pg_cron. Verify in Supabase → SQL editor: <b>select jobname,schedule,active from cron.job;</b> — you should see radar-daily (0 14 * * *) and ghl-schedule-run (*/5 * * * *).');
+  row('Cron schedules','warn','This page can\'t see pg_cron. Verify in Supabase → SQL editor: <b>select jobname,schedule,active from cron.job;</b> — expect radar-daily (0 14 * * *) and ghl-schedule-run (*/5 * * * *).');
 }
 async function fireRadar(btn){
   btn.disabled=true; var o=document.getElementById('radarOut'); o.textContent=' Running…';
