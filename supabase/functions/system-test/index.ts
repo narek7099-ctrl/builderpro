@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     const targets: [string, string, unknown][] = [
       ["ai-response", "POST", { mode: "ping" }],
       ["AGENCY", "POST", { op: "ping" }],
-      ["job-complete", "POST", {}],
+      ["job-done", "POST", {}],
       ["radar-sync", "POST", {}],
       ["skip-trace", "POST", {}],
       ["ghl-invoice", "POST", { action: "list" }],
