@@ -68,7 +68,7 @@ async function runAll(){
   if(pr.d&&pr.d.ok&&pr.d.probe){
     row('Probe mode','ok','Checks ran server-side via system-test — immune to browser CORS/cache issues.');
     var expect={
-      'ai-response':[400,'Atlas/Nova brains'],'AGENCY':[0,'command center'],'job-complete':[401,'Mark done → GHL tag'],
+      'ai-response':[400,'Atlas/Nova brains'],'AGENCY':[0,'command center'],'job-done':[401,'Mark done → GHL tag'],
       'radar-sync':[401,'Add prospect / Contacted'],'skip-trace':[401,'owner lookup'],
       'ghl-invoice':[200,'invoices + tagging'],'ghl-estimate':[200,'estimates'],'ghl-schedule':[200,'scheduled sends'],
       'project-create':[400,'deposit-paid webhook'],'radar-daily':[405,'7am auto-leads']};
@@ -86,7 +86,7 @@ async function runAll(){
     });
   } else {
     row('Probe mode','warn','system-test probe unavailable ('+(pr.nf?'not deployed / old version':(pr.err||'error'))+') — falling back to direct browser checks, which CORS can block. Redeploy system-test with the probe code for reliable results.');
-    var basics=[['ai-response','ai-response',{mode:'ping'}],['AGENCY','AGENCY',{op:'ping'}],['job-complete','job-complete',{}],
+    var basics=[['ai-response','ai-response',{mode:'ping'}],['AGENCY','AGENCY',{op:'ping'}],['job-done','job-done',{}],
       ['radar-sync','radar-sync',{}],['skip-trace','skip-trace',{}],['ghl-invoice','ghl-invoice',{action:'list'}],
       ['ghl-estimate','ghl-estimate',{action:'list'}],['ghl-schedule','ghl-schedule',{action:'list'}],['project-create','project-create',{}]];
     for(var i=0;i<basics.length;i++){

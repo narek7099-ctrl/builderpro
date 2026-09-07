@@ -15063,7 +15063,7 @@ window.bpJobDoneSave=function(id,skip){
   if(!wasDone && j.contactId && BP_LIVE){
     BP_SB.auth.getSession().then(function(s){
       var t=s&&s.data&&s.data.session&&s.data.session.access_token; if(!t) return;
-      return fetch(BP_URL+'/functions/v1/job-complete',{method:'POST',
+      return fetch(BP_URL+'/functions/v1/job-done',{method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
         body:JSON.stringify({contactId:j.contactId})});
     }).catch(function(){});
