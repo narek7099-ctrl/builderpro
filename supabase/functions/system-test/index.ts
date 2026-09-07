@@ -14,6 +14,7 @@ const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
 const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 const LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const TEST_NAME = "BP System Test";
 
@@ -96,6 +97,34 @@ Deno.serve(async (req) => {
 
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
+
+  if (b.action === "probe") {
+    const targets: [string, string, unknown][] = [
+      ["ai-response", "POST", { mode: "ping" }],
+      ["AGENCY", "POST", { op: "ping" }],
+      ["job-complete", "POST", {}],
+      ["radar-sync", "POST", {}],
+      ["skip-trace", "POST", {}],
+      ["ghl-invoice", "POST", { action: "list" }],
+      ["ghl-estimate", "POST", { action: "list" }],
+      ["ghl-schedule", "POST", { action: "list" }],
+      ["project-create", "POST", {}],
+      ["radar-daily", "PUT", null], // PUT = existence check without running the scan
+    ];
+    const out: Record<string, unknown>[] = [];
+    for (const [name, method, body] of targets) {
+      try {
+        const r = await fetch(`${SB_URL}/functions/v1/${name}`, {
+          method,
+          headers: { Authorization: `Bearer ${SB_SERVICE}`, apikey: SB_SERVICE, "Content-Type": "application/json" },
+          body: body === null ? undefined : JSON.stringify(body),
+        });
+        const txt = (await r.text()).slice(0, 160);
+        out.push({ name, status: r.status, body: txt });
+      } catch (e) { out.push({ name, status: 0, body: String(e).slice(0, 120) }); }
+    }
+    return json({ ok: true, probe: out });
+  }
 
   if (b.action === "cleanup") {
     const id = await findTestContact(t);
