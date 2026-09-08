@@ -111,6 +111,7 @@ async function firePhase(btn,ph){
   btn.disabled=false;
   if(r.nf){o.innerHTML='<b style="color:#dc2626">system-test function not deployed yet.</b>';return;}
   if(!r.d){o.innerHTML='<b style="color:#dc2626">'+(r.err||'no response')+'</b>';return;}
+  if(r.d.error){o.innerHTML='<b style="color:#dc2626">'+r.d.error+'</b>';return;}
   var h='';
   (r.d.steps||[]).forEach(function(st){h+='<div style="margin-top:4px">'+(st.ok?'✅':'❌')+' <b>'+st.step+'</b> — '+st.detail+'</div>';});
   h+='<div style="margin-top:10px;font-weight:700">Now verify by eye:</div>';
