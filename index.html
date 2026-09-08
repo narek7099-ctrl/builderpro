@@ -13135,6 +13135,7 @@ function bpDashProjects(){
       : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid var(--line)"><svg width="54" height="54" viewBox="0 0 48 48" fill="none" stroke="#2f6bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
     var sub=[];
     if(j.sched&&j.sched.target)sub.push('🎯 '+bpEsc(j.sched.target));
+    if(j.collected!=null)sub.push('💵 '+bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
     if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
     else if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
     if(j.photos&&j.photos.length)sub.push('📷 '+j.photos.length);
@@ -14880,6 +14881,7 @@ function bpActiveJobs(){
     rows=active.length?active.map(function(j){
       var extra=[];
       if(j.sched&&j.sched.target)extra.push('🎯 '+bpEsc(j.sched.target));
+      if(j.collected!=null)extra.push('💵 '+bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push('📅 '+j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push('📷 '+j.photos.length);
@@ -14960,6 +14962,7 @@ window.bpProjOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
   _bpProjId=id; j.sched=j.sched||{}; j.photos=j.photos||[];
   _bpProjDates=(j.sched.dates||[]).slice();
+  _bpProjExp=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt};});
   // one-time migrate: old start/target/weekday schedules become real booked dates
   if(!_bpProjDates.length&&j.sched.start){
     var dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -14988,16 +14991,20 @@ window.bpProjOpen=function(id){
       +'<label>Address</label>'+inp('bpx-pj-addr','Job site address',j.addr)
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
         +'<div><label>Job</label>'+inp('bpx-pj-title','e.g. Roof replacement',j.title)+'</div>'
-        +'<div><label>Estimate</label>'+inp('bpx-pj-est','$0',j.estimate?bpMoneyFmt(j.estimate):'')+'</div></div>'
+        +'<div><label>Estimate</label><input id="bpx-pj-est" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.estimate?bpMoneyFmt(j.estimate):'')+'"></div></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+        +'<div><label>Paid so far</label><input id="bpx-pj-paid" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.collected!=null?bpMoneyFmt(j.collected):'')+'"></div>'
+        +'<div><label>Balance due</label><div id="bpx-pj-bal" style="padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;background:var(--soft);font-weight:700;font-size:14.5px">$0</div></div></div>'
+      +'<label>Expenses</label><div id="bpx-pj-exps"></div><div class="bpx-addexp" onclick="bpProjExpAdd()">+ Add expense</div>'
       +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>'
     +'</div>'
     +'<div>'
       +'<label>Booked work days</label>'
       +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Tap days to book them — they show on the Jobs calendar.</div>'
       +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff"></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
-        +'<div><label>Start time</label><input type="time" id="bpx-pj-time" value="'+bpEsc(j.sched.time||'09:00')+'"></div>'
-        +'<div><label>Duration</label><select id="bpx-pj-dur" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'
+      +'<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px">'
+        +'<div style="min-width:0"><label>Start time</label><input type="time" id="bpx-pj-time" style="width:100%;min-width:0;box-sizing:border-box" value="'+bpEsc(j.sched.time||'09:00')+'"></div>'
+        +'<div style="min-width:0"><label>Duration</label><select id="bpx-pj-dur" style="width:100%;min-width:0;box-sizing:border-box;padding:.7rem .5rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'
           +[['30','30 minutes'],['60','1 hour'],['120','2 hours'],['180','3 hours'],['240','4 hours'],['360','6 hours'],['480','Full day (8 hours)']].map(function(o){
               return '<option value="'+o[0]+'"'+(String(j.sched.dur||'480')===o[0]?' selected':'')+'>'+o[1]+'</option>';
             }).join('')+'</select></div></div>'
@@ -15007,7 +15014,25 @@ window.bpProjOpen=function(id){
     +'</div></div>'
     +'<div style="display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:nowrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='94vw';}
-  bpProjCalDraw(); bpProjPhotosRender(j);
+  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal();
+};
+var _bpProjExp=[];
+function bpProjExpRender(){
+  var el=document.getElementById('bpx-pj-exps'); if(!el)return;
+  el.innerHTML=_bpProjExp.map(function(e,i){
+    return '<div class="bpx-exprow"><select onchange="_bpProjExp['+i+'].cat=this.value">'+bpCatOpts(e.cat)+'</select>'
+      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpProjExp['+i+'].amt=this.value">'
+      +'<button class="bpx-exprm" onclick="bpProjExpDel('+i+')">×</button></div>';
+  }).join('')||'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:4px">No expenses logged yet.</div>';
+}
+window.bpProjExpAdd=function(){ _bpProjExp.push({cat:'Materials',amt:''}); bpProjExpRender(); };
+window.bpProjExpDel=function(i){ _bpProjExp.splice(i,1); bpProjExpRender(); };
+window.bpProjBal=function(){
+  var el=document.getElementById('bpx-pj-bal'); if(!el)return;
+  var g=function(id){var e2=document.getElementById(id);return e2?e2.value:'';};
+  var due=bpParseMoney(g('bpx-pj-est'))-bpParseMoney(g('bpx-pj-paid'));
+  el.textContent=bpMoneyFmt(Math.max(due,0));
+  el.style.color=due<=0?'#15803d':'var(--ink)';
 };
 function bpProjIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 /* "09:00" + minutes -> "9 AM · 3h" for calendar/card labels */
@@ -15097,6 +15122,9 @@ window.bpProjSave=function(){
   j.addr=g('bpx-pj-addr').trim();
   var tt=g('bpx-pj-title').trim(); if(tt)j.title=tt;
   j.estimate=bpParseMoney(g('bpx-pj-est'));
+  var paidRaw=g('bpx-pj-paid').trim();
+  j.collected=paidRaw?bpParseMoney(paidRaw):null;
+  j.expenses=_bpProjExp.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
   var dates=_bpProjDates.slice().sort();
   j.sched={notes:g('bpx-pj-notes'),dates:dates,time:g('bpx-pj-time'),dur:g('bpx-pj-dur'),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
   bpJobsSet(jobs); bpCloseModal();
@@ -15857,8 +15885,10 @@ function rdEnsureLeaflet(cb){
 function rdInitMap(){
   var c=RADAR_CITIES[_rdCity];
   if(_rdMap){ _rdMap.remove(); _rdMap=null; }
-  _rdMap=L.map('rdMap',{scrollWheelZoom:true}).setView([c.lat,c.lng],c.zoom);
+  _rdMap=L.map('rdMap',{zoomControl:false,dragging:false,touchZoom:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,tap:false}).setView([c.lat,c.lng],c.zoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(_rdMap);
+  /* map is locked — snap back to the full territory whenever a popup closes */
+  _rdMap.on('popupclose',function(){ if(window._rdFitB) setTimeout(function(){ if(_rdMap&&window._rdFitB)_rdMap.fitBounds(window._rdFitB); },60); });
   _rdStormLayer=L.layerGroup().addTo(_rdMap);
   _rdLayer=L.layerGroup().addTo(_rdMap);
 }
@@ -16043,7 +16073,7 @@ function rdDraw(){
     _rdStorms.forEach(function(sv){
       _rdStormLayer.addLayer(L.circle([sv.lat,sv.lng],{radius:3000,color:'#f97316',weight:1,fillColor:'#f97316',fillOpacity:.13}));
       _rdStormLayer.addLayer(L.circleMarker([sv.lat,sv.lng],{radius:4,color:'#fff',weight:1,fillColor:'#f97316',fillOpacity:1})
-        .bindPopup('<b>'+sv.type+' report</b>'+(sv.mag?' · '+sv.mag:'')+'<br><span style="color:#6a6a70;font-size:11.5px">'+sv.when+'</span>'));
+        .bindPopup('<b>'+sv.type+' report</b>'+(sv.mag?' · '+sv.mag:'')+'<br><span style="color:#6a6a70;font-size:11.5px">'+sv.when+'</span>',{keepInView:true}));
     });
   }
   var shown=_rdLeads.filter(function(p){return p.score>=_rdMin;});
@@ -16051,9 +16081,15 @@ function rdDraw(){
     var i=_rdLeads.indexOf(p);
     var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':'#fff');
     var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:ring,weight:(p.storm||p.kind==='project')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
-    m.bindPopup(rdPopup(p,i,t));
+    m.bindPopup(rdPopup(p,i,t),{maxWidth:290,maxHeight:320,keepInView:true,autoPanPadding:L.point(24,24)});
     _rdLayer.addLayer(m);
   });
+  /* lock the view to exactly fit every dot in the territory */
+  if(shown.length){
+    var bb=L.latLngBounds(shown.map(function(p){return [p.lat,p.lng];}));
+    window._rdFitB=bb.pad(0.15);
+    _rdMap.fitBounds(window._rdFitB);
+  }
   var list=q('rdList');
   if(list){
     var top=shown.slice(0,15);
@@ -16159,7 +16195,7 @@ window.rdEvidence=function(i){
   }
   box.innerHTML=h; box.style.display='block';
 };
-window.rdFocus=function(i){var p=_rdLeads[i];if(!p||!_rdMap)return;_rdMap.setView([p.lat,p.lng],15);
+window.rdFocus=function(i){var p=_rdLeads[i];if(!p||!_rdMap)return;
   _rdLayer.eachLayer(function(l){var ll=l.getLatLng&&l.getLatLng();if(ll&&Math.abs(ll.lat-p.lat)<1e-9&&Math.abs(ll.lng-p.lng)<1e-9)l.openPopup();});};
 function rdFn(action,payload){
   return BP_SB.auth.getSession().then(function(sn){
