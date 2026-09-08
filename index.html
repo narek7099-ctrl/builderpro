@@ -14979,7 +14979,7 @@ window.bpProjOpen=function(id){
   var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
   bpModal('<h3>'+bpEsc(j.name||'Project')+' — '+bpEsc(j.title||'Project')+'</h3>'
     +'<div class="bpx-sub">Everything about this project in one place — it all saves to your account.</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start">'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">'
     +'<div>'
       +'<label>Customer name</label>'+inp('bpx-pj-name','Full name',j.name)
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
@@ -14989,24 +14989,24 @@ window.bpProjOpen=function(id){
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
         +'<div><label>Job</label>'+inp('bpx-pj-title','e.g. Roof replacement',j.title)+'</div>'
         +'<div><label>Estimate</label>'+inp('bpx-pj-est','$0',j.estimate?bpMoneyFmt(j.estimate):'')+'</div></div>'
-      +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:84px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>'
+      +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>'
     +'</div>'
     +'<div>'
       +'<label>Booked work days</label>'
-      +'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">Tap days to book or clear them — booked days show on the Jobs calendar.</div>'
-      +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff"></div>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Tap days to book them — they show on the Jobs calendar.</div>'
+      +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff"></div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
         +'<div><label>Start time</label><input type="time" id="bpx-pj-time" value="'+bpEsc(j.sched.time||'09:00')+'"></div>'
         +'<div><label>Duration</label><select id="bpx-pj-dur" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'
           +[['30','30 minutes'],['60','1 hour'],['120','2 hours'],['180','3 hours'],['240','4 hours'],['360','6 hours'],['480','Full day (8 hours)']].map(function(o){
               return '<option value="'+o[0]+'"'+(String(j.sched.dur||'480')===o[0]?' selected':'')+'>'+o[1]+'</option>';
             }).join('')+'</select></div></div>'
-      +'<label style="margin-top:14px">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
-      +'<button class="bpx-btn ghost" style="padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
+      +'<label style="margin-top:12px">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
+      +'<button class="bpx-btn ghost" style="width:auto;margin-top:4px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">'
     +'</div></div>'
-    +'<div class="row" style="margin-top:16px;align-items:center"><button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpProjSave()">Save</button></div>');
-  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='860px';mc.style.width='94vw';}
+    +'<div style="display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:nowrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
+  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='94vw';}
   bpProjCalDraw(); bpProjPhotosRender(j);
 };
 function bpProjIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
@@ -15032,14 +15032,14 @@ window.bpProjCalDraw=function(){
     +'<button type="button" style="'+nav+'" onclick="bpProjCalNav(-1)">‹</button>'
     +'<b style="font-size:14px">'+mn[m]+' '+y+'</b>'
     +'<button type="button" style="'+nav+'" onclick="bpProjCalNav(1)">›</button></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">';
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">';
   var dh=['S','M','T','W','T','F','S'];
   for(var i=0;i<7;i++)h+='<div class="bpx-mut" style="font-size:11px;padding:2px 0">'+dh[i]+'</div>';
   for(var b=0;b<first;b++)h+='<div></div>';
   for(var d=1;d<=dim;d++){
     var iso=y+'-'+('0'+(m+1)).slice(-2)+'-'+('0'+d).slice(-2);
     var on=_bpProjDates.indexOf(iso)>-1, isToday=(iso===todayIso);
-    h+='<button type="button" onclick="bpProjCalTog(\''+iso+'\')" style="aspect-ratio:auto;padding:0;height:34px;border-radius:9px;cursor:pointer;font-size:13px;'
+    h+='<button type="button" onclick="bpProjCalTog(\''+iso+'\')" style="aspect-ratio:auto;padding:0;height:30px;border-radius:8px;cursor:pointer;font-size:12.5px;'
       +(on?'background:#2f6bff;color:#fff;border:1px solid #2f6bff;font-weight:600'
           :'background:#fff;color:#31343c;border:1px solid '+(isToday?'#2f6bff':'var(--line)'))
       +'">'+d+'</button>';
