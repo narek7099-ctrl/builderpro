@@ -133,66 +133,70 @@ Deno.serve(async (req) => {
     return json({ ok: r.ok, detail: r.ok ? "test contact deleted" : `delete failed HTTP ${r.status}` });
   }
 
-  if (b.action !== "run") return json({ ok: false, error: "action must be 'run' or 'cleanup'" }, 400);
-  const phone = String(b.phone ?? "").trim();
+  const phone = String(b.phone ?? "").trim() || "+1702555" + String(1000 + Math.floor(Math.random() * 9000));
   const steps: Step[] = [];
 
-  // 1. create (or reuse) the test contact
-  let cid = await findTestContact(t);
-  if (!cid) {
-    const r = await fetch(`${GHL_BASE}/contacts/`, {
-      method: "POST", headers: H(t),
-      body: JSON.stringify({ locationId: LOC, name: TEST_NAME, firstName: "BP System", lastName: "Test", phone: phone || undefined, tags: ["system-test"] }),
+  if (b.action === "run" || b.action === "phase1") {
+    // PHASE 1: contact + deposit invoice + tag + payment. Stop there so the
+    // workflow's tag routing sees deposit-sent, like a real customer's timeline.
+    let cid = await findTestContact(t);
+    if (!cid) {
+      const r = await fetch(`${GHL_BASE}/contacts/`, {
+        method: "POST", headers: H(t),
+        body: JSON.stringify({ locationId: LOC, name: TEST_NAME, firstName: "BP System", lastName: "Test", phone, tags: ["system-test"] }),
+      });
+      const d = await r.json().catch(() => ({}));
+      cid = d?.contact?.id ?? "";
+      steps.push({ step: "Create test contact", ok: !!cid, detail: cid || (d?.message ?? `HTTP ${r.status}`) });
+    } else {
+      steps.push({ step: "Create test contact", ok: true, detail: `reusing existing (${cid})` });
+    }
+    if (!cid) return json({ ok: false, steps });
+
+    const dep = await mkInvoice(t, cid, phone, "Deposit — system test");
+    steps.push({ step: "Create Deposit invoice", ok: !!dep.id, detail: dep.id || dep.err || "" });
+    if (dep.id) {
+      await addTags(t, cid, ["deposit-sent"]);
+      steps.push({ step: "Tag deposit-sent (as portal would)", ok: true, detail: "applied" });
+      const p = await recordPayment(t, dep.id);
+      steps.push({ step: "Record payment on Deposit → fires 'Invoice Paid' workflow", ok: p.ok, detail: p.ok ? "payment recorded" : (p.err ?? "") });
+    }
+    return json({
+      ok: steps.every((x) => x.ok), steps,
+      now_check: [
+        "Wait ~1 minute for GHL to process the trigger",
+        "Opportunity 'BP System Test' should move to Won",
+        "RELOAD the portal → Active Projects: 'BP System Test' should appear",
+        "Contact tags: deposit-sent should be REMOVED by the workflow",
+        "Then run Phase 2 to finish the job",
+      ],
     });
-    const d = await r.json().catch(() => ({}));
-    cid = d?.contact?.id ?? "";
-    steps.push({ step: "Create test contact", ok: !!cid, detail: cid ? `id ${cid}` : (d?.message ?? `HTTP ${r.status}`) });
-  } else {
-    steps.push({ step: "Create test contact", ok: true, detail: `reusing existing (${cid})` });
-  }
-  if (!cid) return json({ ok: false, steps });
-
-  // 2. deposit invoice + auto tag (same as portal does)
-  const dep = await mkInvoice(t, cid, phone, "Deposit — system test");
-  steps.push({ step: "Create Deposit invoice", ok: !!dep.id, detail: dep.id || dep.err || "" });
-  if (dep.id) {
-    await addTags(t, cid, ["deposit-sent"]);
-    steps.push({ step: "Tag deposit-sent (as portal would)", ok: true, detail: "applied" });
-    // 3. record payment -> fires the real Invoice Paid trigger
-    const p = await recordPayment(t, dep.id);
-    steps.push({ step: "Record payment on Deposit → fires 'Invoice Paid' workflow", ok: p.ok, detail: p.ok ? "payment recorded — Won workflow + project webhook should fire now" : (p.err ?? "") });
   }
 
-  await sleep(1500);
-
-  // 4. job-complete tag -> fires final-invoice workflow
-  const jc = await addTags(t, cid, ["job-complete"]);
-  steps.push({ step: "Tag job-complete → fires 'Job Complete' workflow", ok: jc, detail: jc ? "applied" : "tag call failed" });
-
-  // 5. final invoice + payment -> paid-in-full chain
-  const fin = await mkInvoice(t, cid, phone, "Final balance — system test");
-  steps.push({ step: "Create Final invoice", ok: !!fin.id, detail: fin.id || fin.err || "" });
-  if (fin.id) {
-    await addTags(t, cid, ["final-sent"]);
-    const p2 = await recordPayment(t, fin.id);
-    steps.push({ step: "Record payment on Final → fires paid-in-full → review chain", ok: p2.ok, detail: p2.ok ? "payment recorded" : (p2.err ?? "") });
+  if (b.action === "phase2") {
+    const cid = await findTestContact(t);
+    if (!cid) return json({ ok: false, error: "no test contact — run Phase 1 first" });
+    const jc = await addTags(t, cid, ["job-complete"]);
+    steps.push({ step: "Tag job-complete → fires 'Job Complete' workflow", ok: jc, detail: jc ? "applied" : "failed" });
+    const fin = await mkInvoice(t, cid, phone, "Final balance — system test");
+    steps.push({ step: "Create Final invoice", ok: !!fin.id, detail: fin.id || fin.err || "" });
+    if (fin.id) {
+      await addTags(t, cid, ["final-sent"]);
+      const p2 = await recordPayment(t, fin.id);
+      steps.push({ step: "Record payment on Final → fires paid-in-full → review chain", ok: p2.ok, detail: p2.ok ? "payment recorded" : (p2.err ?? "") });
+    }
+    const rc = await addTags(t, cid, ["radar-contacted"]);
+    steps.push({ step: "Tag radar-contacted → fires Lead Radar workflow", ok: rc, detail: rc ? "applied" : "failed" });
+    return json({
+      ok: steps.every((x) => x.ok), steps,
+      now_check: [
+        "Wait ~1 minute for triggers to process",
+        "Contact tags: paid-in-full present, final-sent removed",
+        "Google Review workflow: contact enrolled (review text after its wait)",
+        "When done: cleanup + delete the portal test project",
+      ],
+    });
   }
 
-  // 6. radar workflows
-  const rc = await addTags(t, cid, ["radar-contacted"]);
-  steps.push({ step: "Tag radar-contacted → fires Lead Radar workflow", ok: rc, detail: rc ? "applied" : "failed" });
-
-  const allOk = steps.every((s) => s.ok);
-  return json({
-    ok: allOk, steps,
-    now_check: [
-      "Your GHL notifications: deposit-paid, job-complete, and digest pings should arrive",
-      "Opportunity for 'BP System Test': should be in Won",
-      "Portal → Active Projects: 'BP System Test' project should exist (via webhook)",
-      "Contact tags: paid-in-full present; deposit-sent/final-sent removed by your workflows",
-      phone ? "Your phone: review-request + radar follow-up texts (subject to A2P)" : "No phone given — SMS steps silent",
-      "Each workflow's Enrollment history shows this contact",
-      "When done: run {action:'cleanup'} or tap the cleanup button",
-    ],
-  });
+  return json({ ok: false, error: "action must be 'phase1', 'phase2', 'probe' or 'cleanup'" }, 400);
 });
