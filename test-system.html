@@ -37,9 +37,10 @@ button.run{background:#2f6bff;color:#fff;border:0;border-radius:11px;padding:13p
 <div class="sec">Live-fire tests (create real data — run deliberately)</div>
 <div class="danger">Runs the real 7am radar scan now: adds up to 10 real leads per territory to GHL + Today's Picks, and fires the digest tag.
 <br><button onclick="fireRadar(this)">Run radar-daily now</button><span id="radarOut"></span></div>
-<div class="danger" style="border-color:#a5b8f5;background:#f4f7ff"><b style="color:#2457d6">🧪 Full pipeline test</b> — creates a "BP System Test" contact and pushes it through the ENTIRE flow with real GHL events: deposit invoice → payment recorded (fires your Won workflow + project webhook) → job-complete → final invoice → payment (fires paid-in-full → review) → radar tags. Every workflow trips for real. Enter your cell to also receive the customer texts.
+<div class="danger" style="border-color:#a5b8f5;background:#f4f7ff"><b style="color:#2457d6">🧪 Full pipeline test</b> — creates a "BP System Test" contact and pushes it through the ENTIRE flow with real GHL events: deposit invoice → payment recorded (fires your Won workflow + project webhook) → job-complete → final invoice → payment (fires paid-in-full → review) → radar tags. Run <b>Phase 1</b>, wait a minute, RELOAD the portal and check Active Projects — then run <b>Phase 2</b>. (Two phases so the tag routing sees the same timeline as a real customer.)
 <br><input id="stPhone" placeholder="+1 555 555 5555 (optional)" style="margin-top:8px;padding:9px 12px;border:1px solid #d6dbe6;border-radius:8px;font-family:inherit;width:220px">
-<br><button style="border-color:#a5b8f5;color:#2457d6" onclick="fireFull(this)">▶ Run full pipeline test</button>
+<br><button style="border-color:#a5b8f5;color:#2457d6" onclick="firePhase(this,'phase1')">▶ Phase 1 — deposit paid</button>
+<button style="border-color:#a5b8f5;color:#2457d6;margin-left:8px" onclick="firePhase(this,'phase2')">▶ Phase 2 — finish job</button>
 <button style="margin-left:8px" onclick="fireCleanup(this)">🧹 Cleanup test contact</button>
 <div id="fullOut" style="margin-top:8px"></div></div>
 <div class="danger">Creates a test project ("System Check Test") in Active Projects via the same webhook path GHL uses. Delete it afterwards in the portal (Details → Delete project).
@@ -104,9 +105,9 @@ async function fireRadar(btn){
   o.textContent=' '+JSON.stringify(r.d||r).slice(0,300);
   btn.disabled=false;
 }
-async function fireFull(btn){
-  btn.disabled=true; var o=document.getElementById('fullOut'); o.innerHTML='Running the whole pipeline…';
-  var r=await post('system-test',{action:'run',phone:(document.getElementById('stPhone').value||'').trim()});
+async function firePhase(btn,ph){
+  btn.disabled=true; var o=document.getElementById('fullOut'); o.innerHTML='Running '+ph+'…';
+  var r=await post('system-test',{action:ph,phone:(document.getElementById('stPhone').value||'').trim()});
   btn.disabled=false;
   if(r.nf){o.innerHTML='<b style="color:#dc2626">system-test function not deployed yet.</b>';return;}
   if(!r.d){o.innerHTML='<b style="color:#dc2626">'+(r.err||'no response')+'</b>';return;}
