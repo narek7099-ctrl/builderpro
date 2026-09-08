@@ -13135,7 +13135,8 @@ function bpDashProjects(){
       : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid var(--line)"><svg width="54" height="54" viewBox="0 0 48 48" fill="none" stroke="#2f6bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
     var sub=[];
     if(j.sched&&j.sched.target)sub.push('🎯 '+bpEsc(j.sched.target));
-    if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
+    if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked');
+    else if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
     if(j.photos&&j.photos.length)sub.push('📷 '+j.photos.length);
     return '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;background:#fff" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">'
       +cover
@@ -14879,7 +14880,8 @@ function bpActiveJobs(){
     rows=active.length?active.map(function(j){
       var extra=[];
       if(j.sched&&j.sched.target)extra.push('🎯 '+bpEsc(j.sched.target));
-      if(j.sched&&j.sched.days&&j.sched.days.length)extra.push('📅 '+j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
+      if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked');
+      else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push('📅 '+j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push('📷 '+j.photos.length);
       return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:44px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
@@ -14922,7 +14924,18 @@ window.bpProjCalEvents=function(y,m){
   var out={}; if(typeof bpJobsGet!=='function') return out;
   var dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   bpJobsGet().forEach(function(j){
-    if(j.status!=='active'||!j.sched||!j.sched.start) return;
+    if(j.status!=='active'||!j.sched) return;
+    if(j.sched.dates&&j.sched.dates.length){
+      var sorted=j.sched.dates.slice().sort();
+      sorted.forEach(function(iso){
+        var dd=new Date(iso+'T12:00:00'); if(isNaN(dd.getTime()))return;
+        if(dd.getFullYear()!==y||dd.getMonth()!==m)return;
+        var mark=(iso===sorted[0]?'▶ ':(sorted.length>1&&iso===sorted[sorted.length-1]?'🏁 ':''));
+        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:mark+'🔨 '+bpEsc(j.name||'Project')});
+      });
+      return;
+    }
+    if(!j.sched.start) return;
     var s=new Date(j.sched.start+'T12:00:00'); if(isNaN(s.getTime())) return;
     var e=(j.sched.target?new Date(j.sched.target+'T12:00:00'):s);
     if(isNaN(e.getTime())||e<s) e=s;
@@ -14941,32 +14954,83 @@ window.bpProjCalEvents=function(y,m){
   });
   return out;
 };
-var _bpProjId=null;
+var _bpProjId=null,_bpProjCal=null,_bpProjDates=[];
 window.bpProjOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
   _bpProjId=id; j.sched=j.sched||{}; j.photos=j.photos||[];
-  bpModal('<h3>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Project')+'</h3>'
-    +'<div class="bpx-sub">Keep the project record in one place — everything saves to your account.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div><label>Start date</label><input type="date" id="bpx-pj-start" value="'+bpEsc(j.sched.start||'')+'"></div>'
-    +'<div><label>Target finish</label><input type="date" id="bpx-pj-target" value="'+bpEsc(j.sched.target||'')+'"></div></div>'
-    +'<label>Work days</label><div id="bpx-pj-days" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
-    +['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(d){
-        var on=(j.sched.days||[]).indexOf(d)>-1;
-        return '<button type="button" data-day="'+d+'" data-on="'+(on?'1':'0')+'" onclick="bpProjDayTog(this)" style="padding:8px 11px;border-radius:9px;border:1px solid '+(on?'#2f6bff':'var(--line)')+';background:'+(on?'#2f6bff':'#fff')+';color:'+(on?'#fff':'#31343c')+';font-size:12.5px;cursor:pointer">'+d+'</button>';
-      }).join('')+'</div>'
-    +'<label>Hours per work day</label><input type="number" id="bpx-pj-hours" min="1" max="16" step="0.5" placeholder="e.g. 8" value="'+bpEsc(j.sched.hours||'')+'" style="max-width:140px">'
-    +'<label>Project notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>'
-    +'<label>Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
-    +'<button class="bpx-btn ghost" style="padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
-    +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">'
-    +'<div class="row" style="margin-top:14px;align-items:center"><button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpProjSave()">Save</button></div>');
-  bpProjPhotosRender(j);
+  _bpProjDates=(j.sched.dates||[]).slice();
+  // one-time migrate: old start/target/weekday schedules become real booked dates
+  if(!_bpProjDates.length&&j.sched.start){
+    var dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var s=new Date(j.sched.start+'T12:00:00');
+    if(!isNaN(s.getTime())){
+      var e=(j.sched.target?new Date(j.sched.target+'T12:00:00'):s);
+      if(isNaN(e.getTime())||e<s)e=s;
+      var days=j.sched.days||[],d=new Date(s),guard=0;
+      while(d<=e&&guard++<400){
+        if((!days.length)||days.indexOf(dw[d.getDay()])>-1)_bpProjDates.push(bpProjIso(d));
+        d.setDate(d.getDate()+1);
+      }
+    }
+  }
+  var n=new Date(); _bpProjCal={y:n.getFullYear(),m:n.getMonth()};
+  if(_bpProjDates.length){ var f0=new Date(_bpProjDates.slice().sort()[0]+'T12:00:00'); if(!isNaN(f0.getTime())){_bpProjCal={y:f0.getFullYear(),m:f0.getMonth()};} }
+  var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
+  bpModal('<h3>'+bpEsc(j.name||'Project')+' — '+bpEsc(j.title||'Project')+'</h3>'
+    +'<div class="bpx-sub">Everything about this project in one place — it all saves to your account.</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start">'
+    +'<div>'
+      +'<label>Customer name</label>'+inp('bpx-pj-name','Full name',j.name)
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+        +'<div><label>Phone</label>'+inp('bpx-pj-phone','(555) 555-5555',j.phone)+'</div>'
+        +'<div><label>Email</label>'+inp('bpx-pj-email','name@email.com',j.email)+'</div></div>'
+      +'<label>Address</label>'+inp('bpx-pj-addr','Job site address',j.addr)
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+        +'<div><label>Job</label>'+inp('bpx-pj-title','e.g. Roof replacement',j.title)+'</div>'
+        +'<div><label>Estimate</label>'+inp('bpx-pj-est','$0',j.estimate?bpMoneyFmt(j.estimate):'')+'</div></div>'
+      +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:84px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>'
+    +'</div>'
+    +'<div>'
+      +'<label>Booked work days</label>'
+      +'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">Tap days to book or clear them — booked days show on the Jobs calendar.</div>'
+      +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff"></div>'
+      +'<label style="margin-top:14px">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
+      +'<button class="bpx-btn ghost" style="padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
+      +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">'
+    +'</div></div>'
+    +'<div class="row" style="margin-top:16px;align-items:center"><button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpProjSave()">Save</button></div>');
+  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='860px';mc.style.width='94vw';}
+  bpProjCalDraw(); bpProjPhotosRender(j);
 };
-window.bpProjDayTog=function(b){
-  var on=b.getAttribute('data-on')!=='1';
-  b.setAttribute('data-on',on?'1':'0');
-  b.style.background=on?'#2f6bff':'#fff'; b.style.color=on?'#fff':'#31343c'; b.style.borderColor=on?'#2f6bff':'var(--line)';
+function bpProjIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+window.bpProjCalDraw=function(){
+  var el=document.getElementById('bpx-pj-cal'); if(!el||!_bpProjCal)return;
+  var y=_bpProjCal.y,m=_bpProjCal.m;
+  var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var first=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate();
+  var todayIso=bpProjIso(new Date());
+  var nav='width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#31343c;font-size:15px;cursor:pointer;line-height:1';
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<button type="button" style="'+nav+'" onclick="bpProjCalNav(-1)">‹</button>'
+    +'<b style="font-size:14px">'+mn[m]+' '+y+'</b>'
+    +'<button type="button" style="'+nav+'" onclick="bpProjCalNav(1)">›</button></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">';
+  var dh=['S','M','T','W','T','F','S'];
+  for(var i=0;i<7;i++)h+='<div class="bpx-mut" style="font-size:11px;padding:2px 0">'+dh[i]+'</div>';
+  for(var b=0;b<first;b++)h+='<div></div>';
+  for(var d=1;d<=dim;d++){
+    var iso=y+'-'+('0'+(m+1)).slice(-2)+'-'+('0'+d).slice(-2);
+    var on=_bpProjDates.indexOf(iso)>-1, isToday=(iso===todayIso);
+    h+='<button type="button" onclick="bpProjCalTog(\''+iso+'\')" style="aspect-ratio:auto;padding:0;height:34px;border-radius:9px;cursor:pointer;font-size:13px;'
+      +(on?'background:#2f6bff;color:#fff;border:1px solid #2f6bff;font-weight:600'
+          :'background:#fff;color:#31343c;border:1px solid '+(isToday?'#2f6bff':'var(--line)'))
+      +'">'+d+'</button>';
+  }
+  h+='</div><div class="bpx-mut" style="font-size:12px;margin-top:8px">'+(_bpProjDates.length?_bpProjDates.length+' day'+(_bpProjDates.length===1?'':'s')+' booked':'No days booked yet.')+'</div>';
+  el.innerHTML=h;
 };
+window.bpProjCalNav=function(d){ _bpProjCal.m+=d; if(_bpProjCal.m<0){_bpProjCal.m=11;_bpProjCal.y--;} if(_bpProjCal.m>11){_bpProjCal.m=0;_bpProjCal.y++;} bpProjCalDraw(); };
+window.bpProjCalTog=function(iso){ var i=_bpProjDates.indexOf(iso); if(i>-1)_bpProjDates.splice(i,1); else _bpProjDates.push(iso); bpProjCalDraw(); };
 window.bpProjDelete=function(){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   if(!confirm('Delete "'+(j.name||'this project')+'"? This removes it from Active Projects and Finances. This can\'t be undone.'))return;
@@ -15009,9 +15073,14 @@ window.bpProjPhotoDel=function(i){
 window.bpProjSave=function(){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   var g=function(id){var e2=document.getElementById(id);return e2?e2.value:'';};
-  var days=[]; var dEl=document.getElementById('bpx-pj-days');
-  if(dEl){ var bs=dEl.querySelectorAll('button[data-day]'); for(var i=0;i<bs.length;i++){ if(bs[i].getAttribute('data-on')==='1') days.push(bs[i].getAttribute('data-day')); } }
-  j.sched={start:g('bpx-pj-start'),target:g('bpx-pj-target'),notes:g('bpx-pj-notes'),days:days,hours:g('bpx-pj-hours')};
+  var nm=g('bpx-pj-name').trim(); if(nm)j.name=nm;
+  j.phone=g('bpx-pj-phone').trim();
+  j.email=g('bpx-pj-email').trim();
+  j.addr=g('bpx-pj-addr').trim();
+  var tt=g('bpx-pj-title').trim(); if(tt)j.title=tt;
+  j.estimate=bpParseMoney(g('bpx-pj-est'));
+  var dates=_bpProjDates.slice().sort();
+  j.sched={notes:g('bpx-pj-notes'),dates:dates,start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
   bpJobsSet(jobs); bpCloseModal();
   if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };
