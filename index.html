@@ -13135,7 +13135,7 @@ function bpDashProjects(){
       : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid var(--line)"><svg width="54" height="54" viewBox="0 0 48 48" fill="none" stroke="#2f6bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
     var sub=[];
     if(j.sched&&j.sched.target)sub.push('🎯 '+bpEsc(j.sched.target));
-    if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked');
+    if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
     else if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
     if(j.photos&&j.photos.length)sub.push('📷 '+j.photos.length);
     return '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;background:#fff" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">'
@@ -14880,7 +14880,7 @@ function bpActiveJobs(){
     rows=active.length?active.map(function(j){
       var extra=[];
       if(j.sched&&j.sched.target)extra.push('🎯 '+bpEsc(j.sched.target));
-      if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked');
+      if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push('📅 '+j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push('📷 '+j.photos.length);
       return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:44px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
@@ -14927,11 +14927,12 @@ window.bpProjCalEvents=function(y,m){
     if(j.status!=='active'||!j.sched) return;
     if(j.sched.dates&&j.sched.dates.length){
       var sorted=j.sched.dates.slice().sort();
+      var when=bpProjTimeLbl(j.sched.time,j.sched.dur);
       sorted.forEach(function(iso){
         var dd=new Date(iso+'T12:00:00'); if(isNaN(dd.getTime()))return;
         if(dd.getFullYear()!==y||dd.getMonth()!==m)return;
         var mark=(iso===sorted[0]?'▶ ':(sorted.length>1&&iso===sorted[sorted.length-1]?'🏁 ':''));
-        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:mark+'🔨 '+bpEsc(j.name||'Project')});
+        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:mark+'🔨 '+bpEsc(j.name||'Project')+(when?' · '+when:'')});
       });
       return;
     }
@@ -14994,6 +14995,12 @@ window.bpProjOpen=function(id){
       +'<label>Booked work days</label>'
       +'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">Tap days to book or clear them — booked days show on the Jobs calendar.</div>'
       +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'
+        +'<div><label>Start time</label><input type="time" id="bpx-pj-time" value="'+bpEsc(j.sched.time||'09:00')+'"></div>'
+        +'<div><label>Duration</label><select id="bpx-pj-dur" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'
+          +[['30','30 minutes'],['60','1 hour'],['120','2 hours'],['180','3 hours'],['240','4 hours'],['360','6 hours'],['480','Full day (8 hours)']].map(function(o){
+              return '<option value="'+o[0]+'"'+(String(j.sched.dur||'480')===o[0]?' selected':'')+'>'+o[1]+'</option>';
+            }).join('')+'</select></div></div>'
       +'<label style="margin-top:14px">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
       +'<button class="bpx-btn ghost" style="padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">'
@@ -15003,6 +15010,17 @@ window.bpProjOpen=function(id){
   bpProjCalDraw(); bpProjPhotosRender(j);
 };
 function bpProjIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+/* "09:00" + minutes -> "9 AM · 3h" for calendar/card labels */
+function bpProjTimeLbl(t,dur){
+  if(!t)return '';
+  var p=String(t).split(':'), h=parseInt(p[0],10), mi=p[1]||'00';
+  if(isNaN(h))return '';
+  var ap=h>=12?'PM':'AM', h12=h%12||12;
+  var s=h12+(mi!=='00'?':'+mi:'')+' '+ap;
+  var m=parseInt(dur,10);
+  if(m>0)s+=' · '+(m%60===0?(m/60)+'h':m+'m');
+  return s;
+}
 window.bpProjCalDraw=function(){
   var el=document.getElementById('bpx-pj-cal'); if(!el||!_bpProjCal)return;
   var y=_bpProjCal.y,m=_bpProjCal.m;
@@ -15080,7 +15098,7 @@ window.bpProjSave=function(){
   var tt=g('bpx-pj-title').trim(); if(tt)j.title=tt;
   j.estimate=bpParseMoney(g('bpx-pj-est'));
   var dates=_bpProjDates.slice().sort();
-  j.sched={notes:g('bpx-pj-notes'),dates:dates,start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
+  j.sched={notes:g('bpx-pj-notes'),dates:dates,time:g('bpx-pj-time'),dur:g('bpx-pj-dur'),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
   bpJobsSet(jobs); bpCloseModal();
   if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };
