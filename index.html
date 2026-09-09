@@ -12456,7 +12456,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 /* ===== THEME-FIELD (field-service look) START — delete this whole block to revert ===== */
 #bpx:not(.bpx-dark){background:#eef1f5;}
 /* --- sidebar: solid navy, blue active pill --- */
-#bpx:not(.bpx-dark) .bpx-side{background:linear-gradient(180deg,#20304a,#182234) !important;border-right:0 !important;padding:22px 14px;}
+#bpx:not(.bpx-dark) .bpx-side{background:#1c2940 !important;border-right:0 !important;padding:22px 14px;}
 #bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#7bc8ff;}
@@ -12468,7 +12468,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-uemail{color:#c2cede;font-size:12.5px;font-weight:600;margin-bottom:10px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.26);color:#e8eef7;padding:10px;border-radius:9px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-logout:hover{border-color:#7bc8ff;color:#fff;}
-#bpx:not(.bpx-dark) .bpx-mobbar{background:#20304a;border-bottom:0;}
+#bpx:not(.bpx-dark) .bpx-mobbar{background:#1c2940;border-bottom:0;}
 #bpx:not(.bpx-dark) .bpx-mobbar a{color:#d5dde9;border-color:rgba(255,255,255,.22);}
 #bpx:not(.bpx-dark) .bpx-mobbar a.on{background:var(--blue);border-color:var(--blue);color:#fff;}
 /* --- page header --- */
@@ -13227,7 +13227,7 @@ function bpDashboard(){
   var funnel=[{n:'Website visitors',v:1240,w:100},{n:'Leads captured',v:342,w:64},{n:'Conversations',v:268,w:48},{n:'Inspections booked',v:128,w:30},{n:'Jobs won',v:47,w:14}];
   var fh='';funnel.forEach(function(f){fh+='<div class="bpx-frow"><div class="bpx-fname">'+f.n+'</div><div class="bpx-fbarwrap"><div class="bpx-fbar" style="width:'+f.w+'%"></div></div><div class="bpx-fcount">'+f.v+'</div></div>';});
   document.getElementById('bpxViewArea').innerHTML=
-    '<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">🔨 Active projects<span class="lg2">what\'s in motion right now</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading…</div></div>'
+    '<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Active projects<span class="lg2">what\'s in motion right now</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading…</div></div>'
     +'<div class="bpx-stats six">'
     +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val" id="bpxSNew">342</div><div class="note">▲ 18% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val" id="bpxSBooked">128</div><div class="note">▲ 12% vs last month</div></div>'
@@ -13248,7 +13248,7 @@ function bpDashboard(){
       +'</div></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Lead funnel<span class="lg2" id="bpxFunTag">this month</span></div><div id="bpxFunnel">'+fh+'</div></div>'
-    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">🎯 Lead Radar<span class="lg2">homes near you that need your work</span></div><div id="bpxRadarCard" class="bpx-mut" style="font-size:13.5px">Checking your territory…</div></div>';
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Lead Radar<span class="lg2">homes near you that need your work</span></div><div id="bpxRadarCard" class="bpx-mut" style="font-size:13.5px">Checking your territory…</div></div>';
   if(BP_LIVE)bpDashLive();
   bpDashRadar();
   bpDashProjects();
@@ -13261,17 +13261,18 @@ function bpDashProjects(){
   var cards=act.slice(0,4).map(function(j){
     var cover=(j.photos&&j.photos[0])
       ? '<img src="'+j.photos[0]+'" style="width:100%;height:110px;object-fit:cover;display:block">'
-      : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#fff;border-bottom:1px solid var(--line)"><svg width="54" height="54" viewBox="0 0 48 48" fill="none" stroke="#2f6bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
+      : '<div style="width:100%;height:110px;display:flex;align-items:center;justify-content:center;background:#f1f5f9"><svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="#94a3b8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/><path d="M33 12 V8 H37 V15.5"/></svg></div>';
     var sub=[];
-    if(j.sched&&j.sched.target)sub.push('🎯 '+bpEsc(j.sched.target));
-    if(j.collected!=null)sub.push('💵 '+bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
-    if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
-    else if(j.sched&&j.sched.days&&j.sched.days.length)sub.push('📅 '+j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
-    if(j.photos&&j.photos.length)sub.push('📷 '+j.photos.length);
-    return '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;background:#fff" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">'
+    if(j.sched&&j.sched.target)sub.push('Target '+bpEsc(j.sched.target));
+    if(j.collected!=null)sub.push(bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
+    if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
+    else if(j.sched&&j.sched.days&&j.sched.days.length)sub.push(j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
+    if(j.photos&&j.photos.length)sub.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
+    return '<div style="border:0;border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;box-shadow:0 1px 3px rgba(15,30,60,.12)" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">'
       +cover
-      +'<div style="padding:9px 11px"><b style="font-size:13.5px">'+bpEsc(j.name)+'</b><div class="bpx-mut" style="font-size:12px;margin-top:1px">'+bpEsc(j.title||'Project')+' · <span class="bpx-num">'+bpMoneyFmt(j.estimate)+'</span></div>'
-      +(sub.length?'<div class="bpx-mut" style="font-size:11px;margin-top:3px">'+sub.join(' · ')+'</div>':'')
+      +'<div style="padding:10px 12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b style="font-size:13.5px;color:#0f2540">'+bpEsc(j.name)+'</b><span class="bpx-num" style="font-size:12.5px;font-weight:700;color:#0f2540">'+bpMoneyFmt(j.estimate)+'</span></div>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-top:1px">'+bpEsc(j.title||'Project')+'</div>'
+      +(sub.length?'<div style="font-size:11px;margin-top:5px;color:#64748b">'+sub.join(' · ')+'</div>':'')
       +'</div></div>';
   }).join('');
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">'+cards+'</div>'
@@ -14548,17 +14549,17 @@ function bpDrawContacts(list){
 function bpStageOf(c){
   var tags=(c.tags||[]).map(function(t){return String(t).toLowerCase();});
   var has=function(t){return tags.indexOf(t)>-1;};
-  if(has('job-complete'))return ['✅ Job completed','#15803d'];
-  if(has('paid-in-full'))return ['💚 Paid in full','#15803d'];
-  if(has('final-sent'))return ['📄 Final invoice sent','#7c3aed'];
-  if(has('deposit-sent'))return ['💵 Deposit invoice sent','#b45309'];
-  if(has('estimate-accepted'))return ['👍 Estimate accepted — deposit due','#15803d'];
-  if(has('estimate-sent')||has('estimate'))return ['📐 Estimate sent — deciding','#2457d6'];
-  if(has('radar-contacted')||has('contacted'))return ['📞 Contacted — in follow-up','#2457d6'];
-  if(has('radar-prospect')||has('radar-auto')||has('radar'))return ['📡 Radar lead — not contacted yet','#0d9488'];
-  if(has('missed-call-no-response'))return ['📱 Missed call — Atlas following up','#b45309'];
-  if(has('customer'))return ['⭐ Customer','#15803d'];
-  return ['🆕 New lead','#64748b'];
+  if(has('job-complete'))return ['Job completed','#15803d'];
+  if(has('paid-in-full'))return ['Paid in full','#15803d'];
+  if(has('final-sent'))return ['Final invoice sent','#7c3aed'];
+  if(has('deposit-sent'))return ['Deposit invoice sent','#b45309'];
+  if(has('estimate-accepted'))return ['Estimate accepted — deposit due','#15803d'];
+  if(has('estimate-sent')||has('estimate'))return ['Estimate sent — deciding','#2457d6'];
+  if(has('radar-contacted')||has('contacted'))return ['Contacted — in follow-up','#2457d6'];
+  if(has('radar-prospect')||has('radar-auto')||has('radar'))return ['Radar lead — not contacted yet','#0d9488'];
+  if(has('missed-call-no-response'))return ['Missed call — Atlas following up','#b45309'];
+  if(has('customer'))return ['Customer','#15803d'];
+  return ['New lead','#64748b'];
 }
 /* full-page contact profile */
 window.bpContactPage=function(id){
@@ -14577,9 +14578,9 @@ window.bpContactPage=function(id){
       +st+'<button class="bpx-rowbtn" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">Open</button></div>';
   }).join(''):'<div class="bpx-mut" style="font-size:13px">No jobs linked to this contact yet.</div>';
   var act='';
-  if(c.phone)act+='<a class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="tel:'+bpEsc(c.phone)+'">📞 Call</a>'
-    +'<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="sms:'+bpEsc(c.phone)+'">💬 Text</a>';
-  if(c.email)act+='<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="mailto:'+bpEsc(c.email)+'">✉️ Email</a>';
+  if(c.phone)act+='<a class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="tel:'+bpEsc(c.phone)+'">Call</a>'
+    +'<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="sms:'+bpEsc(c.phone)+'">Text</a>';
+  if(c.email)act+='<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="mailto:'+bpEsc(c.email)+'">Email</a>';
   var row=function(lbl,val){return '<div style="display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #eef1f6;font-size:13.5px;align-items:center"><span style="width:76px;flex:0 0 auto;color:#7b8a9f;font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">'+lbl+'</span><span style="min-width:0;word-break:break-word">'+val+'</span></div>';};
   q('bpxViewArea').innerHTML=
     '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpNav(\'contacts\')">← All contacts</button>'
@@ -14597,7 +14598,7 @@ window.bpContactPage=function(id){
       +row('Email',(c.email?'<a href="mailto:'+bpEsc(c.email)+'" style="color:var(--blue);text-decoration:none;font-weight:600">'+bpEsc(c.email)+'</a>':'<span class="bpx-dash">—</span>'))
       +row('Stage',stageChip)
       +row('Added',added)
-      +'<div style="display:flex;gap:8px;margin-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px" onclick="bpOpenEdit(\''+c.id+'\')">✏️ Edit</button>'
+      +'<div style="display:flex;gap:8px;margin-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px" onclick="bpOpenEdit(\''+c.id+'\')">Edit</button>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px;color:#dc2626;border-color:#f3c4c4" onclick="bpOpenDelete(\''+c.id+'\')">Delete</button></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Jobs with this customer</div>'+jobsHtml+'</div>'
@@ -15100,11 +15101,11 @@ function bpActiveJobs(){
     var pgA=bpPage('jobsA',active,10,'bpActiveJobs()'); pgNav=pgA.nav;
     rows=active.length?pgA.items.map(function(j){
       var extra=[];
-      if(j.sched&&j.sched.target)extra.push('🎯 '+bpEsc(j.sched.target));
-      if(j.collected!=null)extra.push('💵 '+bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
-      if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push('📅 '+j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
-      else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push('📅 '+j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
-      if(j.photos&&j.photos.length)extra.push('📷 '+j.photos.length);
+      if(j.sched&&j.sched.target)extra.push('Target '+bpEsc(j.sched.target));
+      if(j.collected!=null)extra.push(bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
+      if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
+      else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
+      if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
       return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:44px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
     }).join(''):'<tr><td colspan="5" class="bpx-empty2">No active projects yet. When you mark a deal <b>Won</b> in Close Deals it shows up here — or add one manually.</td></tr>';
@@ -15154,8 +15155,8 @@ window.bpProjCalEvents=function(y,m){
       sorted.forEach(function(iso){
         var dd=new Date(iso+'T12:00:00'); if(isNaN(dd.getTime()))return;
         if(dd.getFullYear()!==y||dd.getMonth()!==m)return;
-        var mark=(iso===sorted[0]?'▶ ':(sorted.length>1&&iso===sorted[sorted.length-1]?'🏁 ':''));
-        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:mark+'🔨 '+bpEsc(j.name||'Project')+(when?' · '+when:'')});
+        var mark=(iso===sorted[0]?' · start':(sorted.length>1&&iso===sorted[sorted.length-1]?' · last day':''));
+        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:bpEsc(j.name||'Project')+mark+(when?' · '+when:'')});
       });
       return;
     }
@@ -15169,7 +15170,7 @@ window.bpProjCalEvents=function(y,m){
         var isStart=(d.getTime()===s.getTime()), isEnd=(j.sched.target&&d.getTime()===e.getTime());
         var work=(!days.length)||days.indexOf(dw[d.getDay()])>-1;
         if(work||isStart||isEnd){
-          var lbl=(isStart?'▶ ':(isEnd?'🏁 ':''))+'🔨 '+bpEsc(j.name||'Project')+(work&&j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':'');
+          var lbl=bpEsc(j.name||'Project')+(isStart?' · start':(isEnd?' · last day':''))+(work&&j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':'');
           (out[d.getDate()]=out[d.getDate()]||[]).push({id:j.id,label:lbl});
         }
       }
@@ -15844,7 +15845,7 @@ function bpSettings(){
       +'</span></div>';
   }).join('');
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
-  var tabs=[['business','🏢 Business'],['hours','🕒 Hours & replies'],['owner','👤 Owner'],['plan','💳 Plan & billing']];
+  var tabs=[['business','Business'],['hours','Hours & replies'],['owner','Owner'],['plan','Plan & billing']];
   var chip=function(t){return '<button class="bpx-jt'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')">'+t[1]+'</button>';};
   var sec=function(id){return 'id="set-sec-'+id+'" style="'+(_bpSetSec===id?'':'display:none;')+'margin-bottom:16px"';};
   q('bpxViewArea').innerHTML=
@@ -16069,7 +16070,7 @@ function rdRenderShell(){
     :('<span class="bpx-badge warn" style="font-size:11.5px">Demo preview — no territory assigned</span>');
   q('bpxViewArea').innerHTML=
     '<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
-      +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">📋 My list</button></div>'+terrNote+'</div>'
+      +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">My list</button></div>'+terrNote+'</div>'
     +'<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px">'
       +'<span><i class="rd-dot" style="background:#e11d48"></i> Hot (75+)</span><span><i class="rd-dot" style="background:#f59e0b"></i> Warm</span>'
       +'<span><i class="rd-dot" style="background:#eab308"></i> Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i> Watch</span>'
@@ -16081,7 +16082,7 @@ function rdRenderShell(){
     +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
-    +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">📡 Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
+    +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
@@ -16093,7 +16094,7 @@ function rdRenderShell(){
 window.rdMinePage=function(){
   q('bpxViewArea').innerHTML=
     '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpNav(\'leadradar\')">← Back to Lead Radar</button>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">📋 My list — leads you added<span class="lg2">every prospect you tapped + Add · knock or mail, then tap Contacted</span></div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">My list — leads you added<span class="lg2">every prospect you tapped + Add · knock or mail, then tap Contacted</span></div>'
     +'<div id="rdMineList" class="bpx-mut" style="font-size:13px">Loading your list…</div></div>';
   rdLoadMine();
 };
@@ -16108,7 +16109,7 @@ function rdLoadMine(){
 }
 window.rdMineRender=function(){
   var rows=window._rdMineRows||[];
-  var mb=q('rdMineBtn'); if(mb)mb.textContent='📋 My list'+(rows.length?' ('+rows.length+')':'');
+  var mb=q('rdMineBtn'); if(mb)mb.textContent='My list'+(rows.length?' ('+rows.length+')':'');
   var el=q('rdMineList'); if(!el) return;
   el.classList.remove('bpx-mut');
   if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing here yet — tap <b>+ Add</b> on a dot or a prospect below and it files into this list.</span>'; return; }
@@ -16399,7 +16400,7 @@ function rdDraw(){
     list.innerHTML=top.length?top.map(function(p,r){var i=_rdLeads.indexOf(p);r=r+pgBase;
       var act;
       if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px">✓ Contacted</span>';
-      else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">📞 Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">📋</button>';
+      else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">List</button>';
       else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
       return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+(p.storm?' <span title="recent storm nearby">⛈️</span>':'')+'</td>'
         +'<td class="bpx-mut" style="font-size:12.5px">'+(p.kind==='project'?'🔨 ':'')+bpEsc((p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs')).slice(0,80))+'</td>'
@@ -16432,8 +16433,8 @@ function rdPopup(p,i,t){
   var lookup='https://www.google.com/search?q='+encodeURIComponent('"'+p.addr+'" '+RADAR_CITIES[_rdCity].name+' property records owner');
   var btn;
   if(_rdContacted[p.addr]) btn='<div style="margin-top:7px;color:#15803d;font-weight:700;font-size:12px">✓ Contacted — automations running</div>';
-  else if(_rdAdded[p.addr]) btn='<button onclick="rdContacted('+i+')" style="margin-top:7px;background:#15803d;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">📞 I made contact</button>'
-    +' <button onclick="rdSheetClose();rdMineJump()" style="margin-top:7px;background:#fff;color:#2f6bff;border:1px solid #cddcff;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">📋 View in my list</button>';
+  else if(_rdAdded[p.addr]) btn='<button onclick="rdContacted('+i+')" style="margin-top:7px;background:#15803d;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">I made contact</button>'
+    +' <button onclick="rdSheetClose();rdMineJump()" style="margin-top:7px;background:#fff;color:#2f6bff;border:1px solid #cddcff;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">View in my list</button>';
   else btn='<button onclick="rdAddLead('+i+')" style="margin-top:7px;background:#2f6bff;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">+ Add to Contacts</button>';
   return '<div style="font:13.5px/1.55 inherit;min-width:200px;padding-right:26px">'
     +'<b>'+bpEsc(p.addr)+'</b><br>'
@@ -16442,11 +16443,11 @@ function rdPopup(p,i,t){
     +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">🔨 active project</span>':'')+'<br>'
     +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span><br>'
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
-    +'<a onclick="rdEvidence('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📋 More info — see the permit record</a>'
+    +'<a onclick="rdEvidence('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">More info — see the permit record</a>'
     +'<div id="rdEv'+i+'" style="display:none"></div><br>'
-    +'<a href="https://maps.apple.com/?q='+encodeURIComponent(p.addr+' '+((RADAR_CITIES[_rdCity]||{}).cityName||''))+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🗺️ Open in Maps</a> · '
-    +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🔍 Owner lookup (public records)</a>'
-    +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📱 Reveal owner info</a>':'')
+    +'<a href="https://maps.apple.com/?q='+encodeURIComponent(p.addr+' '+((RADAR_CITIES[_rdCity]||{}).cityName||''))+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Open in Maps</a> · '
+    +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Owner lookup (public records)</a>'
+    +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">Reveal owner info</a>':'')
     +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn+'</div>';
 }
 window.rdReveal=function(i){
