@@ -15410,7 +15410,7 @@ window.bpEstDraw=function(){
   var items=window._bpEstItems||[];
   var cnt=q('bpxEstCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
   if(!items.length){ el.innerHTML='<span class="bpx-mut">No estimates yet. Send your first with + New estimate.</span>'; return; }
-  var pg=bpPage('estimates',items,10,'bpEstDraw()');
+  var pg=bpPage('estimates',items,5,'bpEstDraw()');
   var stc={accepted:'#15803d',sent:'#2457d6',draft:'#6a6a70',declined:'#dc2626',invoiced:'#7c3aed',expired:'#9a9aa0'};
   el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
     +pg.items.map(function(v){
@@ -15532,7 +15532,7 @@ window.bpInvDraw=function(){
   var items=window._bpInvItems||[];
   var cnt=q('bpxInvCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
   if(!items.length){ el.innerHTML='<span class="bpx-mut">No invoices yet. Send your first with + New invoice.</span>'; return; }
-  var pg=bpPage('invoices',items,10,'bpInvDraw()');
+  var pg=bpPage('invoices',items,5,'bpInvDraw()');
   var stc={paid:'#15803d','partially-paid':'#d97706',sent:'#2457d6',draft:'#6a6a70',overdue:'#dc2626',void:'#9a9aa0'};
   el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
     +pg.items.map(function(v){
