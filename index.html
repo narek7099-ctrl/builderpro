@@ -13119,20 +13119,26 @@ function bpDashMoneyHTML(){
   (d.inc||[]).forEach(function(x){if(!x.when)return;var t=new Date(x.when),k=t.getFullYear()+'-'+t.getMonth();incM[k]=(incM[k]||0)+x.amt;});
   (d.exp||[]).forEach(function(x){if(!x.when)return;var t=new Date(x.when),k=t.getFullYear()+'-'+t.getMonth();expM[k]=(expM[k]||0)+x.amt;});
   var iv=keys.map(function(k){return incM[k]||0;}),ev=keys.map(function(k){return expM[k]||0;});
-  var mx=Math.max.apply(null,iv.concat(ev).concat([1]));
-  var W=620,H=230,pad=14,n=6,gw=(W-2*pad)/n,bw=Math.min(40,(gw-18)/2);
+  var pv=iv.map(function(v,i2){return v-ev[i2];});   /* profit per month */
+  var W=620,H=230,pad=16,n=6;
+  var lo=Math.min.apply(null,pv.concat([0])),hi=Math.max.apply(null,pv.concat(ev).concat([1]));
   var svg='';for(var g=1;g<4;g++){var gy=pad+g*(H-2*pad)/4;svg+='<line x1="'+pad+'" y1="'+gy+'" x2="'+(W-pad)+'" y2="'+gy+'" stroke="#f0efe9"/>';}
+  if(lo<0){var zy=H-pad-((0-lo)/(hi-lo))*(H-2*pad);svg+='<line x1="'+pad+'" y1="'+zy+'" x2="'+(W-pad)+'" y2="'+zy+'" stroke="#e3e6ee" stroke-dasharray="4 4"/>';}
+  var pPts=scalePts(pv,W,H,pad,lo,hi),ePts=scalePts(ev,W,H,pad,lo,hi);
+  var area=smoothPath(pPts)+'L'+(W-pad)+' '+(H-pad)+' L'+pad+' '+(H-pad)+' Z';
+  svg+='<defs><linearGradient id="bpxCfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6bff" stop-opacity=".14"/><stop offset="1" stop-color="#2f6bff" stop-opacity="0"/></linearGradient></defs>'
+    +'<path d="'+area+'" fill="url(#bpxCfG)"/>'
+    +'<path d="'+smoothPath(ePts)+'" fill="none" stroke="#f59e0b" stroke-width="2.4"/>'
+    +'<path d="'+smoothPath(pPts)+'" fill="none" stroke="#2f6bff" stroke-width="2.6"/>';
   for(var b2=0;b2<n;b2++){
-    var cx=pad+gw*b2+gw/2;
-    var ih=Math.round(iv[b2]/mx*(H-2*pad)),eh=Math.round(ev[b2]/mx*(H-2*pad));
-    if(ih>0)svg+='<rect x="'+(cx-bw-1)+'" y="'+(H-pad-ih)+'" width="'+bw+'" height="'+ih+'" rx="3" fill="#2f6bff"><title>'+labels[b2]+' income: '+bpMoneyFmt(iv[b2])+'</title></rect>';
-    if(eh>0)svg+='<rect x="'+(cx+1)+'" y="'+(H-pad-eh)+'" width="'+bw+'" height="'+eh+'" rx="3" fill="#f59e0b"><title>'+labels[b2]+' expenses: '+bpMoneyFmt(ev[b2])+'</title></rect>';
+    svg+='<circle cx="'+pPts[b2][0]+'" cy="'+pPts[b2][1]+'" r="3.4" fill="#fff" stroke="#2f6bff" stroke-width="2.2"><title>'+labels[b2]+' profit: '+bpMoneyFmt(pv[b2])+'</title></circle>'
+      +'<circle cx="'+ePts[b2][0]+'" cy="'+ePts[b2][1]+'" r="3" fill="#fff" stroke="#f59e0b" stroke-width="2"><title>'+labels[b2]+' expenses: '+bpMoneyFmt(ev[b2])+'</title></circle>';
   }
   var months='<div style="display:grid;grid-template-columns:repeat(6,1fr);text-align:center;font-size:11.5px;color:#8a97a0;margin-top:2px">'+labels.map(function(l){return '<div>'+l+'</div>';}).join('')+'</div>';
   var hasFlow=iv.some(function(v){return v>0;})||ev.some(function(v){return v>0;});
   var flow=hasFlow
     ? '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" preserveAspectRatio="none">'+svg+'</svg>'+months
-      +'<div class="legend" style="margin-top:6px"><span><i style="background:#2f6bff;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Income</span> &nbsp;<span><i style="background:#f59e0b;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Expenses</span></div>'
+      +'<div class="legend" style="margin-top:6px"><span><i style="background:#2f6bff;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Profit</span> &nbsp;<span><i style="background:#f59e0b;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Expenses</span></div>'
     : '<div class="bpx-mut" style="font-size:13px;padding:26px 0;text-align:center">No money logged yet — collect on a job or add income in Finances and your cash flow shows up here.</div>';
   return '<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Cash flow<span class="lg2">last 6 months · from your jobs &amp; finances</span></div>'+flow+'</div>';
 }
