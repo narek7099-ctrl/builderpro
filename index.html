@@ -13092,6 +13092,21 @@ function bpNav(v){
 function bpDonut(pct,color,val,label){
   return '<div class="donut"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="'+color+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+pct+' 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg><div><div class="dv">'+val+'</div><div class="dl">'+label+'</div></div></div>';
 }
+/* generic list pager: bpPage('key', items, perPage, 'redrawFn()') -> {items: pageSlice, nav: html} */
+var _bpPg={};
+function bpPage(key,items,per,renderCall){
+  var n=Math.max(1,Math.ceil(items.length/per));
+  var p=Math.min(Math.max(_bpPg[key]||1,1),n); _bpPg[key]=p;
+  var nav='';
+  if(items.length>per){
+    nav='<div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px;font-size:12.5px;color:#6a6a70">'
+      +'<button class="bpx-rowbtn" style="'+(p<=1?'opacity:.35;pointer-events:none':'')+'" onclick="bpPgGo(\''+key+'\','+(p-1)+',\''+renderCall+'\')">‹ Prev</button>'
+      +'<span>Page '+p+' of '+n+' · '+items.length+' total</span>'
+      +'<button class="bpx-rowbtn" style="'+(p>=n?'opacity:.35;pointer-events:none':'')+'" onclick="bpPgGo(\''+key+'\','+(p+1)+',\''+renderCall+'\')">Next ›</button></div>';
+  }
+  return {items:items.slice((p-1)*per,p*per),nav:nav};
+}
+window.bpPgGo=function(key,p,call){ _bpPg[key]=p; try{ new Function(call)(); }catch(e){} };
 /* dashboard money block: finance tiles + 6-month cash flow + outstanding balances */
 function bpDashMoneyHTML(){
   if(typeof bpFinData!=='function')return '';
@@ -13267,18 +13282,25 @@ function bpDashLive(){
 function bpEsc(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function bpContacts(){
   if(!BP_LIVE){bpContactsMock();return;}
-  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th></tr></thead><tbody id="bpxCbody"><tr><td colspan="5" style="padding:22px;color:#8a97a0">Loading your contacts…</td></tr></tbody></table></div>';
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th></tr></thead><tbody id="bpxCbody"><tr><td colspan="5" style="padding:22px;color:#8a97a0">Loading your contacts…</td></tr></tbody></table><div id="bpxCnav" style="padding:0 14px 12px"></div></div>';
   bpApi(GHL_DASH_URL,{view:'contacts'}).then(function(d){
-    var list=(d&&d.contactsList)||[],b=document.getElementById('bpxCbody');if(!b)return;
-    if(!list.length){b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">No contacts yet.</td></tr>';return;}
-    var h='';list.forEach(function(c){
-      var tags='';(c.tags||[]).forEach(function(t){tags+='<span class="bpx-pill new" style="margin-right:4px">'+bpEsc(t)+'</span>';});
-      var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-      h+='<tr><td class="bpx-cname">'+bpEsc(c.name)+'</td><td>'+bpEsc(c.phone)+'</td><td>'+bpEsc(c.email)+'</td><td>'+(tags||'<span style="color:#8a97a0">—</span>')+'</td><td style="color:#8a97a0">'+added+'</td></tr>';
-    });
-    b.innerHTML=h;
+    window._bpCtList=(d&&d.contactsList)||[];
+    bpContactsDraw();
   }).catch(function(){var b=document.getElementById('bpxCbody');if(b)b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">Could not load contacts right now. Please try again shortly.</td></tr>';});
 }
+window.bpContactsDraw=function(){
+  var list=window._bpCtList||[],b=document.getElementById('bpxCbody'),nv=document.getElementById('bpxCnav');
+  if(!b)return;
+  if(!list.length){b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">No contacts yet.</td></tr>';if(nv)nv.innerHTML='';return;}
+  var pg=bpPage('contacts',list,25,'bpContactsDraw()');
+  var h='';pg.items.forEach(function(c){
+    var tags='';(c.tags||[]).forEach(function(t){tags+='<span class="bpx-pill new" style="margin-right:4px">'+bpEsc(t)+'</span>';});
+    var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    h+='<tr><td class="bpx-cname">'+bpEsc(c.name)+'</td><td>'+bpEsc(c.phone)+'</td><td>'+bpEsc(c.email)+'</td><td>'+(tags||'<span style="color:#8a97a0">—</span>')+'</td><td style="color:#8a97a0">'+added+'</td></tr>';
+  });
+  b.innerHTML=h;
+  if(nv)nv.innerHTML=pg.nav;
+};
 function bpContactsMock(){
   var rows=[['Mike Johnson','(214) 555-0142','Storm damage','new','Google'],['Sarah Malik','(602) 555-0198','Full replacement','booked','Referral'],['Dana Meyers','(469) 555-0110','Roof estimate','new','Estimator'],['Carlos Rivera','(480) 555-0173','Repair — leak','pending','Google'],['Jessica Tran','(714) 555-0155','New construction','booked','Ads'],['Ethan Wells','(972) 555-0128','Inspection','new','Website'],['Nina Patel','(619) 555-0187','Insurance claim','pending','Referral']];
   var h='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Interest</th><th>Status</th><th>Source</th></tr></thead><tbody>';
@@ -14932,10 +14954,11 @@ function bpActiveJobs(){
   var jobs=bpJobsGet();
   var active=jobs.filter(function(j){return j.status==='active';});
   var done=jobs.filter(function(j){return j.status==='done';});
-  var rows, head;
+  var rows, head, pgNav='';
   if(_bpJobTab==='active'){
     head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Won</th><th>Status</th><th></th></tr>';
-    rows=active.length?active.map(function(j){
+    var pgA=bpPage('jobsA',active,10,'bpActiveJobs()'); pgNav=pgA.nav;
+    rows=active.length?pgA.items.map(function(j){
       var extra=[];
       if(j.sched&&j.sched.target)extra.push('🎯 '+bpEsc(j.sched.target));
       if(j.collected!=null)extra.push('💵 '+bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
@@ -14947,7 +14970,8 @@ function bpActiveJobs(){
     }).join(''):'<tr><td colspan="5" class="bpx-empty2">No active projects yet. When you mark a deal <b>Won</b> in Close Deals it shows up here — or add one manually.</td></tr>';
   } else {
     head='<tr><th>Job</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th><th></th></tr>';
-    rows=done.length?done.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
+    var pgD=bpPage('jobsD',done,10,'bpActiveJobs()'); pgNav=pgD.nav;
+    rows=done.length?pgD.items.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
       return '<tr><td>'+bpJobCell(j)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'<span class="bpx-mut">—</span>')+'</td>'
         +'<td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(e)+'</td>'
         +'<td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td>'
@@ -14959,7 +14983,7 @@ function bpActiveJobs(){
     '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
       +'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div>'
-    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
+    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
 }
 window.bpJobTab=function(t){_bpJobTab=t;bpActiveJobs();};
 window.bpAddJobOpen=function(){
@@ -15271,12 +15295,14 @@ function bpFinances(){
   if(_bpFinTab==='income') all=all.filter(function(x){return x.s>0;});
   if(_bpFinTab==='expense') all=all.filter(function(x){return x.s<0;});
   all.sort(function(a,b){return (b.w||0)-(a.w||0);});
-  var ledHtml=all.length?all.slice(0,12).map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+  var ledPg=bpPage('finled',all,10,'bpFinances()');
+  var ledHtml=all.length?ledPg.items.map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     return '<tr><td>'+bpEsc(x.n)+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td></tr>';
   }).join(''):'<tr><td colspan="4" class="bpx-empty2">Nothing logged yet. Mark a job done with what you collected, or use <b>+ Add income</b>.</td></tr>';
   // per-job
   var pj=d.jobs.filter(function(j){return j.status==='done';});
-  var pjHtml=pj.length?pj.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
+  var pjPg=bpPage('finjobs',pj,10,'bpFinances()');
+  var pjHtml=pj.length?pjPg.items.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
     return '<tr style="cursor:pointer" onclick="bpJobDoneOpen(\''+j.id+'\')" title="Tap to add income & expenses"><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
   }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a project done in Active Projects and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
@@ -15295,10 +15321,10 @@ function bpFinances(){
       +'<div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>'
     +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
     +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs — tap one to add income &amp; costs</span></div>'
-      +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'
+      +'<table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table>'+pjPg.nav+'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Other income &amp; expenses<span class="lg2">money outside your pipeline</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
       +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
-      +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table>'
+      +'<table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table>'+ledPg.nav
       +'<div class="note" style="text-align:center;color:var(--grey-l);font-size:11.5px;margin-top:12px">Management view — not accounting of record. Income is what you actually collected. Tap a job to add income &amp; expenses. Synced to your account.</div></div>';
   bpInvLoad();
   bpEstLoad();
@@ -15315,21 +15341,27 @@ function bpEstLoad(){
   .then(function(d){
     el.classList.remove('bpx-mut');
     if(!(d&&d.ok)){ el.innerHTML=BPEST_NOTE+(d&&d.error?'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'+bpEsc(String(d.error))+'</div>':''); return; }
-    var items=d.items||[];
-    var cnt=q('bpxEstCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
-    if(!items.length){ el.innerHTML='<span class="bpx-mut">No estimates yet. Send your first with + New estimate.</span>'; return; }
-    var stc={accepted:'#15803d',sent:'#2457d6',draft:'#6a6a70',declined:'#dc2626',invoiced:'#7c3aed',expired:'#9a9aa0'};
-    el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
-      +items.map(function(v){
-        var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
-        var ex=v.expiryDate?new Date(v.expiryDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
-        return '<tr><td>'+bpEsc(v.name||'Estimate')+'</td><td>'+bpEsc(v.contact||'—')+'</td><td class="bpx-mut">'+ex+'</td>'
-          +'<td><span class="bpx-badge" style="color:'+col+';border-color:currentColor;background:transparent">'+bpEsc(String(v.status||'draft'))+'</span></td>'
-          +'<td class="bpx-r bpx-num">'+bpMoneyFmt(v.total)+'</td></tr>';
-      }).join('')+'</tbody></table>';
+    window._bpEstItems=d.items||[];
+    bpEstDraw();
   })
   .catch(function(){ el.classList.remove('bpx-mut'); el.innerHTML=BPEST_NOTE; });
 }
+window.bpEstDraw=function(){
+  var el=q('bpxEstList'); if(!el)return;
+  var items=window._bpEstItems||[];
+  var cnt=q('bpxEstCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
+  if(!items.length){ el.innerHTML='<span class="bpx-mut">No estimates yet. Send your first with + New estimate.</span>'; return; }
+  var pg=bpPage('estimates',items,8,'bpEstDraw()');
+  var stc={accepted:'#15803d',sent:'#2457d6',draft:'#6a6a70',declined:'#dc2626',invoiced:'#7c3aed',expired:'#9a9aa0'};
+  el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
+    +pg.items.map(function(v){
+      var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
+      var ex=v.expiryDate?new Date(v.expiryDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+      return '<tr><td>'+bpEsc(v.name||'Estimate')+'</td><td>'+bpEsc(v.contact||'—')+'</td><td class="bpx-mut">'+ex+'</td>'
+        +'<td><span class="bpx-badge" style="color:'+col+';border-color:currentColor;background:transparent">'+bpEsc(String(v.status||'draft'))+'</span></td>'
+        +'<td class="bpx-r bpx-num">'+bpMoneyFmt(v.total)+'</td></tr>';
+    }).join('')+'</tbody></table>'+pg.nav;
+};
 window.bpEstOpen=async function(){
   bpModal('<h3>New estimate</h3><div class="bpx-sub">Loading your contacts…</div>');
   await bpEnsureContacts();
@@ -15431,21 +15463,27 @@ function bpInvLoad(){
   .then(function(d){
     el.classList.remove('bpx-mut');
     if(!(d&&d.ok)){ el.innerHTML=BPINV_NOTE+(d&&d.error?'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'+bpEsc(String(d.error))+'</div>':''); return; }
-    var items=d.items||[];
-    var cnt=q('bpxInvCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
-    if(!items.length){ el.innerHTML='<span class="bpx-mut">No invoices yet. Send your first with + New invoice.</span>'; return; }
-    var stc={paid:'#15803d','partially-paid':'#d97706',sent:'#2457d6',draft:'#6a6a70',overdue:'#dc2626',void:'#9a9aa0'};
-    el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
-      +items.map(function(v){
-        var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
-        var due=v.dueDate?new Date(v.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
-        return '<tr><td>'+bpEsc(v.name||'Invoice')+'</td><td>'+bpEsc(v.contact||'—')+'</td><td class="bpx-mut">'+due+'</td>'
-          +'<td><span class="bpx-badge" style="color:'+col+';border-color:currentColor;background:transparent">'+bpEsc(String(v.status||'draft'))+'</span></td>'
-          +'<td class="bpx-r bpx-num">'+bpMoneyFmt(v.total)+'</td></tr>';
-      }).join('')+'</tbody></table>';
+    window._bpInvItems=d.items||[];
+    bpInvDraw();
   })
   .catch(function(){ el.classList.remove('bpx-mut'); el.innerHTML=BPINV_NOTE; });
 }
+window.bpInvDraw=function(){
+  var el=q('bpxInvList'); if(!el)return;
+  var items=window._bpInvItems||[];
+  var cnt=q('bpxInvCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
+  if(!items.length){ el.innerHTML='<span class="bpx-mut">No invoices yet. Send your first with + New invoice.</span>'; return; }
+  var pg=bpPage('invoices',items,8,'bpInvDraw()');
+  var stc={paid:'#15803d','partially-paid':'#d97706',sent:'#2457d6',draft:'#6a6a70',overdue:'#dc2626',void:'#9a9aa0'};
+  el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
+    +pg.items.map(function(v){
+      var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
+      var due=v.dueDate?new Date(v.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+      return '<tr><td>'+bpEsc(v.name||'Invoice')+'</td><td>'+bpEsc(v.contact||'—')+'</td><td class="bpx-mut">'+due+'</td>'
+        +'<td><span class="bpx-badge" style="color:'+col+';border-color:currentColor;background:transparent">'+bpEsc(String(v.status||'draft'))+'</span></td>'
+        +'<td class="bpx-r bpx-num">'+bpMoneyFmt(v.total)+'</td></tr>';
+    }).join('')+'</tbody></table>'+pg.nav;
+};
 window.bpInvOpen=async function(){
   bpModal('<h3>New invoice</h3><div class="bpx-sub">Loading your contacts…</div>');
   await bpEnsureContacts();
@@ -16152,8 +16190,10 @@ function rdDraw(){
   }
   var list=q('rdList');
   if(list){
-    var top=shown.slice(0,15);
-    list.innerHTML=top.length?top.map(function(p,r){var i=_rdLeads.indexOf(p);
+    var rdPg=bpPage('rdlist',shown,10,'rdDraw()');
+    var pgBase=(_bpPg['rdlist']-1)*10;
+    var top=rdPg.items;
+    list.innerHTML=top.length?top.map(function(p,r){var i=_rdLeads.indexOf(p);r=r+pgBase;
       var act;
       if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px">✓ Contacted</span>';
       else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">📞 Contacted</button>';
@@ -16163,6 +16203,7 @@ function rdDraw(){
         +'<td class="bpx-r"><span style="padding:2px 10px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11.5px">'+p.score+'</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap">'+act+'</td></tr>';
     }).join(''):'<tr><td colspan="5" class="bpx-empty2">Nothing above the score filter — lower the min score.</td></tr>';
+    if(rdPg.nav)list.innerHTML+='<tr><td colspan="5" style="border:0">'+rdPg.nav+'</td></tr>';
   }
   var cnt=q('rdCount');
   if(cnt)cnt.textContent=shown.length+' prospects · '+shown.filter(function(x){return x.score>=75;}).length+' hot'+(_rdStormOn?' · '+_rdStorms.length+' storm reports':'');
