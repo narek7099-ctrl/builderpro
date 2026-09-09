@@ -12456,8 +12456,14 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 /* ===== THEME-FIELD (field-service look) START — delete this whole block to revert ===== */
 #bpx:not(.bpx-dark){background:#eef1f5;}
 /* --- sidebar: solid navy, blue active pill --- */
-#bpx:not(.bpx-dark) .bpx-side{background:#1c2940 !important;border-right:0 !important;padding:22px 14px;position:sticky;top:0;height:100vh;height:100dvh;box-sizing:border-box;align-self:start;overflow-y:auto;}
-@media(min-width:821px){#bpx:not(.bpx-dark) .bpx-app{background:linear-gradient(90deg,#1c2940 230px,transparent 230px);}}
+#bpx:not(.bpx-dark) .bpx-side{background:#1c2940 !important;border-right:0 !important;padding:22px 14px;box-sizing:border-box;}
+/* app shell on desktop/tablet: shell is one screen tall, only the main area scrolls
+   (keeps the sidebar small so iOS never rasterizes a huge navy element) */
+@media(min-width:821px){
+  #bpx:not(.bpx-dark) .bpx-app.on{height:100vh;height:100dvh;overflow:hidden;}
+  #bpx:not(.bpx-dark) .bpx-app.on .bpx-main{overflow-y:auto;height:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
+  #bpx:not(.bpx-dark) .bpx-app.on .bpx-side{height:100%;overflow-y:auto;}
+}
 #bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#7bc8ff;}
