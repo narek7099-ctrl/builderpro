@@ -13047,7 +13047,7 @@ function bpEnterPortal(email){
   document.getElementById('bpxApp').classList.add('on');
   bpBuildMobbar();bpNav('dashboard');
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
-  bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpDashProjects(); });
+  bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpNav('dashboard'); });
 }
 function bpDoAuth(){
   var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
@@ -13092,6 +13092,62 @@ function bpNav(v){
 function bpDonut(pct,color,val,label){
   return '<div class="donut"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="'+color+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+pct+' 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg><div><div class="dv">'+val+'</div><div class="dl">'+label+'</div></div></div>';
 }
+/* dashboard money block: finance tiles + 6-month cash flow + outstanding balances */
+function bpDashMoneyHTML(){
+  if(typeof bpFinData!=='function')return '';
+  var d; try{ d=bpFinData(); }catch(e){ return ''; }
+  var margin=d.income>0?Math.round(d.net/d.income*100):0;
+  /* outstanding balances on active jobs */
+  var outst=0,dueRows=[];
+  (d.jobs||[]).forEach(function(j){
+    if(j.status!=='active'||!(j.estimate>0))return;
+    var due=Math.max(j.estimate-(+j.collected||0),0);
+    if(due>0){outst+=due;dueRows.push({id:j.id,n:j.name,t:j.title,due:due,paid:+j.collected||0,est:j.estimate});}
+  });
+  dueRows.sort(function(a,b){return b.due-a.due;});
+  /* last 6 calendar months of income vs expenses */
+  var now=new Date(),keys=[],labels=[];
+  for(var i=5;i>=0;i--){var dt=new Date(now.getFullYear(),now.getMonth()-i,1);keys.push(dt.getFullYear()+'-'+dt.getMonth());labels.push(dt.toLocaleDateString('en-US',{month:'short'}));}
+  var incM={},expM={};
+  (d.inc||[]).forEach(function(x){if(!x.when)return;var t=new Date(x.when),k=t.getFullYear()+'-'+t.getMonth();incM[k]=(incM[k]||0)+x.amt;});
+  (d.exp||[]).forEach(function(x){if(!x.when)return;var t=new Date(x.when),k=t.getFullYear()+'-'+t.getMonth();expM[k]=(expM[k]||0)+x.amt;});
+  var iv=keys.map(function(k){return incM[k]||0;}),ev=keys.map(function(k){return expM[k]||0;});
+  var mx=Math.max.apply(null,iv.concat(ev).concat([1]));
+  var W=620,H=170,pad=14,n=6,gw=(W-2*pad)/n,bw=Math.min(36,(gw-18)/2);
+  var svg='';for(var g=1;g<4;g++){var gy=pad+g*(H-2*pad)/4;svg+='<line x1="'+pad+'" y1="'+gy+'" x2="'+(W-pad)+'" y2="'+gy+'" stroke="#f0efe9"/>';}
+  for(var b2=0;b2<n;b2++){
+    var cx=pad+gw*b2+gw/2;
+    var ih=Math.round(iv[b2]/mx*(H-2*pad)),eh=Math.round(ev[b2]/mx*(H-2*pad));
+    if(ih>0)svg+='<rect x="'+(cx-bw-1)+'" y="'+(H-pad-ih)+'" width="'+bw+'" height="'+ih+'" rx="3" fill="#2f6bff"><title>'+labels[b2]+' income: '+bpMoneyFmt(iv[b2])+'</title></rect>';
+    if(eh>0)svg+='<rect x="'+(cx+1)+'" y="'+(H-pad-eh)+'" width="'+bw+'" height="'+eh+'" rx="3" fill="#f59e0b"><title>'+labels[b2]+' expenses: '+bpMoneyFmt(ev[b2])+'</title></rect>';
+  }
+  var months='<div style="display:grid;grid-template-columns:repeat(6,1fr);text-align:center;font-size:11.5px;color:#8a97a0;margin-top:2px">'+labels.map(function(l){return '<div>'+l+'</div>';}).join('')+'</div>';
+  var hasFlow=iv.some(function(v){return v>0;})||ev.some(function(v){return v>0;});
+  var flow=hasFlow
+    ? '<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'" preserveAspectRatio="none">'+svg+'</svg>'+months
+      +'<div class="legend" style="margin-top:6px"><span><i style="background:#2f6bff;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Income</span> &nbsp;<span><i style="background:#f59e0b;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px"></i>Expenses</span></div>'
+    : '<div class="bpx-mut" style="font-size:13px;padding:26px 0;text-align:center">No money logged yet — collect on a job or add income in Finances and your cash flow shows up here.</div>';
+  var dueHtml=dueRows.length
+    ? dueRows.slice(0,5).map(function(r){
+        var pct=r.est>0?Math.min(100,Math.round(r.paid/r.est*100)):0;
+        return '<div style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+r.id+'\')},60)">'
+          +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px"><b>'+bpEsc(r.n)+'</b><span class="bpx-num" style="color:#b45309;font-weight:700">'+bpMoneyFmt(r.due)+' due</span></div>'
+          +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:#8a97a0;margin:2px 0 5px">'+bpEsc(r.t||'Job')+'<span>'+bpMoneyFmt(r.paid)+' of '+bpMoneyFmt(r.est)+' paid</span></div>'
+          +'<div style="height:5px;border-radius:99px;background:#eef0f4;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:#2f6bff;border-radius:99px"></i></div></div>';
+      }).join('')+(dueRows.length>5?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">+ '+(dueRows.length-5)+' more in Active Projects</div>':'')
+    : '<div class="bpx-mut" style="font-size:13px;padding:26px 0;text-align:center">Nothing outstanding — every active job is fully collected. 🎉</div>';
+  return '<div class="bpx-stats">'
+    +'<div class="bpx-stat"><div class="lbl">Collected</div><div class="val">'+bpMoneyFmt(d.income)+'</div><div class="note">to date</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Outstanding</div><div class="val" style="color:#b45309">'+bpMoneyFmt(outst)+'</div><div class="note">'+dueRows.length+' job'+(dueRows.length===1?'':'s')+' with balance</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Expenses</div><div class="val">'+bpMoneyFmt(d.expense)+'</div><div class="note">to date</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Net profit</div><div class="val blue">'+bpMoneyFmt(d.net)+'</div><div class="note">'+(d.income>0?margin+'% margin':'income − expenses')+'</div></div>'
+    +'</div>'
+    +'<div class="bpx-row">'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Cash flow<span class="lg2">last 6 months</span></div>'+flow+'</div>'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Money on the table<span class="lg2">balances due on active jobs</span></div>'+dueHtml
+        +'<div style="text-align:right;margin-top:8px"><button class="bpx-btn ghost" style="padding:8px 14px;font-size:12.5px" onclick="bpNav(\'finances\')">Open Finances →</button></div></div>'
+    +'</div>';
+}
 function bpDashboard(){
   var line=scalePts([35,42,38,52,48,68,74,62,70,58,66,60],620,190,16,0,100);
   var line2=scalePts([20,28,34,30,44,40,55,50,58,52,64,70],620,190,16,0,100);
@@ -13108,6 +13164,7 @@ function bpDashboard(){
     +'<div class="bpx-stat"><div class="lbl">Appointments booked</div><div class="val" id="bpxSAppts">—</div><div class="note">this month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Total customers</div><div class="val" id="bpxSCust">—</div><div class="note">all time</div></div>'
     +'</div>'
+    +bpDashMoneyHTML()
     +'<div class="bpx-row">'
       +'<div class="bpx-panel"><div class="bpx-ptitle">Bookings over time<span class="lg2" id="bpxLineTag">last 12 weeks</span></div>'
         +'<div id="bpxLineWrap"><svg viewBox="0 0 620 190" width="100%" height="190" preserveAspectRatio="none">'+grid
@@ -15823,6 +15880,7 @@ function rdRenderShell(){
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
+    +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">📡 Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
@@ -16060,6 +16118,7 @@ function rdDraw(){
     }}
   if(tr2)tr2.style.display=window._rdIsDemo?'none':'block';
   _rdLayer.clearLayers(); _rdStormLayer.clearLayers();
+  if(window.rdSheetClose)try{rdSheetClose();}catch(e){}
   var t=RADAR_TRADES[_rdTrade];
   _rdLeads.forEach(function(p){
     p.storm=false; p.score=p.base;
@@ -16081,7 +16140,8 @@ function rdDraw(){
     var i=_rdLeads.indexOf(p);
     var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':'#fff');
     var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:ring,weight:(p.storm||p.kind==='project')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
-    m.bindPopup(rdPopup(p,i,t),{maxWidth:290,maxHeight:320,keepInView:true,autoPanPadding:L.point(24,24)});
+    m.on('click',function(){rdSheetOpen(i);});
+    m._rdIdx=i;
     _rdLayer.addLayer(m);
   });
   /* lock the view to exactly fit every dot in the territory */
@@ -16107,13 +16167,30 @@ function rdDraw(){
   var cnt=q('rdCount');
   if(cnt)cnt.textContent=shown.length+' prospects · '+shown.filter(function(x){return x.score>=75;}).length+' hot'+(_rdStormOn?' · '+_rdStorms.length+' storm reports':'');
 }
+/* the lead detail card under the map — replaces the clipped map popup */
+window.rdSheetOpen=function(i){
+  var p=_rdLeads[i]; if(!p)return;
+  var t=RADAR_TRADES[_rdTrade];
+  var el=document.getElementById('rdSheet'); if(!el)return;
+  /* highlight the selected dot */
+  if(_rdLayer)_rdLayer.eachLayer(function(l){ if(l.setStyle&&l._rdIdx!=null)l.setStyle({weight:l._rdIdx===i?4:((_rdLeads[l._rdIdx]||{}).storm||( _rdLeads[l._rdIdx]||{}).kind==='project'?2.5:1.5),color:l._rdIdx===i?'#1d4ed8':((_rdLeads[l._rdIdx]||{}).storm?'#f97316':((_rdLeads[l._rdIdx]||{}).kind==='project'?'#7c3aed':'#fff'))}); });
+  el.style.display='block';
+  el.innerHTML='<button onclick="rdSheetClose()" style="position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:#fff;color:#6a6a70;font-size:14px;cursor:pointer;line-height:1">×</button>'
+    +rdPopup(p,i,t);
+  var inner=el.querySelector('div'); if(inner){inner.style.maxHeight='none';inner.style.overflowY='visible';}
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+window.rdSheetClose=function(){
+  var el=document.getElementById('rdSheet'); if(el){el.style.display='none';el.innerHTML='';}
+  if(_rdLayer)_rdLayer.eachLayer(function(l){ if(l.setStyle&&l._rdIdx!=null){var p2=_rdLeads[l._rdIdx]||{};l.setStyle({weight:(p2.storm||p2.kind==='project')?2.5:1.5,color:p2.storm?'#f97316':(p2.kind==='project'?'#7c3aed':'#fff')});} });
+};
 function rdPopup(p,i,t){
   var lookup='https://www.google.com/search?q='+encodeURIComponent('"'+p.addr+'" '+RADAR_CITIES[_rdCity].name+' property records owner');
   var btn;
   if(_rdContacted[p.addr]) btn='<div style="margin-top:7px;color:#15803d;font-weight:700;font-size:12px">✓ Contacted — automations running</div>';
   else if(_rdAdded[p.addr]) btn='<button onclick="rdContacted('+i+')" style="margin-top:7px;background:#15803d;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">📞 I made contact</button>';
   else btn='<button onclick="rdAddLead('+i+')" style="margin-top:7px;background:#2f6bff;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">+ Add to Contacts</button>';
-  return '<div style="font:13px/1.5 -apple-system,sans-serif;min-width:200px;max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:4px">'
+  return '<div style="font:13.5px/1.55 inherit;min-width:200px;padding-right:26px">'
     +'<b>'+bpEsc(p.addr)+'</b><br>'
     +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span>'
     +(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':'')
@@ -16122,6 +16199,7 @@ function rdPopup(p,i,t){
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
     +'<a onclick="rdEvidence('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📋 More info — see the permit record</a>'
     +'<div id="rdEv'+i+'" style="display:none"></div><br>'
+    +'<a href="https://maps.apple.com/?q='+encodeURIComponent(p.addr+' '+((RADAR_CITIES[_rdCity]||{}).cityName||''))+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🗺️ Open in Maps</a> · '
     +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">🔍 Owner lookup (public records)</a>'
     +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">📱 Reveal owner info</a>':'')
     +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn+'</div>';
@@ -16198,8 +16276,7 @@ window.rdEvidence=function(i){
 };
 /* re-measure the open popup after its content grows (evidence / owner reveal) */
 function rdPopSync(){ try{ if(_rdMap&&_rdMap._popup)_rdMap._popup.update(); }catch(e){} }
-window.rdFocus=function(i){var p=_rdLeads[i];if(!p||!_rdMap)return;
-  _rdLayer.eachLayer(function(l){var ll=l.getLatLng&&l.getLatLng();if(ll&&Math.abs(ll.lat-p.lat)<1e-9&&Math.abs(ll.lng-p.lng)<1e-9)l.openPopup();});};
+window.rdFocus=function(i){var p=_rdLeads[i];if(!p)return;rdSheetOpen(i);};
 function rdFn(action,payload){
   return BP_SB.auth.getSession().then(function(sn){
     var tok=sn&&sn.data&&sn.data.session&&sn.data.session.access_token;
