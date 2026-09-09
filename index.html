@@ -12455,34 +12455,61 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-badge{background:#f7f9fc;}
 /* ===== THEME-FIELD (field-service look) START — delete this whole block to revert ===== */
 #bpx:not(.bpx-dark){background:#eef1f5;}
-#bpx:not(.bpx-dark) .bpx-side{background:#1f2a3a;border-right:0;}
+/* --- sidebar: solid navy, blue active pill --- */
+#bpx:not(.bpx-dark) .bpx-side{background:linear-gradient(180deg,#20304a,#182234) !important;border-right:0 !important;padding:22px 14px;}
+#bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#7bc8ff;}
-#bpx:not(.bpx-dark) .bpx-nav a{color:#aab6c8;}
-#bpx:not(.bpx-dark) .bpx-nav a:hover{background:#28374d;color:#e8eef7;}
-#bpx:not(.bpx-dark) .bpx-nav a.on{background:#2d3c52;color:#fff;box-shadow:inset 3px 0 0 #38bdf8;}
+#bpx:not(.bpx-dark) .bpx-nav a{color:#b9c5d8 !important;font-weight:500;border-radius:10px;padding:11px 13px;}
+#bpx:not(.bpx-dark) .bpx-nav a:hover{background:rgba(255,255,255,.08) !important;color:#fff !important;box-shadow:none !important;}
+#bpx:not(.bpx-dark) .bpx-nav a.on{background:var(--blue) !important;color:#fff !important;font-weight:600;box-shadow:0 6px 16px rgba(47,107,255,.38) !important;}
+#bpx:not(.bpx-dark) .bpx-nav a svg{stroke:currentColor;}
+#bpx:not(.bpx-dark) .bpx-user2{border-top:1px solid rgba(255,255,255,.12);}
 #bpx:not(.bpx-dark) .bpx-side .bpx-uemail{color:#8fa0b8;}
-#bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:transparent;border-color:#3a4a63;color:#c6d2e2;}
-#bpx:not(.bpx-dark) .bpx-side .bpx-logout:hover{border-color:#38bdf8;color:#fff;}
-#bpx:not(.bpx-dark) .bpx-user2{border-top-color:#31405a;}
+#bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:transparent;border:1px solid rgba(255,255,255,.22);color:#d5dde9;}
+#bpx:not(.bpx-dark) .bpx-side .bpx-logout:hover{border-color:#7bc8ff;color:#fff;}
+#bpx:not(.bpx-dark) .bpx-mobbar{background:#20304a;border-bottom:0;}
+#bpx:not(.bpx-dark) .bpx-mobbar a{color:#d5dde9;border-color:rgba(255,255,255,.22);}
+#bpx:not(.bpx-dark) .bpx-mobbar a.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+/* --- page header --- */
+#bpx:not(.bpx-dark) .bpx-mhdr h1{font-family:var(--sans);font-weight:800;font-size:26px;letter-spacing:-.02em;color:#0f2540;}
+#bpx:not(.bpx-dark) .bpx-mhdr p{color:#5b6b82;}
+/* --- cards & tiles --- */
 #bpx:not(.bpx-dark) .bpx-panel,#bpx:not(.bpx-dark) .bpx-stat{border:0;box-shadow:0 1px 3px rgba(15,30,60,.10);border-radius:10px;}
-#bpx:not(.bpx-dark) .bpx-stat{border-top:3px solid #2563eb;}
+#bpx:not(.bpx-dark) .bpx-stat{border-top:3px solid var(--blue);}
 #bpx:not(.bpx-dark) .bpx-stats .bpx-stat:nth-child(2){border-top-color:#16a34a;}
 #bpx:not(.bpx-dark) .bpx-stats .bpx-stat:nth-child(3){border-top-color:#f59e0b;}
 #bpx:not(.bpx-dark) .bpx-stats .bpx-stat:nth-child(4){border-top-color:#7c3aed;}
 #bpx:not(.bpx-dark) .bpx-stats .bpx-stat:nth-child(5){border-top-color:#0d9488;}
 #bpx:not(.bpx-dark) .bpx-stats .bpx-stat:nth-child(6){border-top-color:#db2777;}
 #bpx:not(.bpx-dark) .bpx-stat .val{font-family:var(--sans);font-weight:800;letter-spacing:-.015em;font-size:27px;color:#0f2540;}
-#bpx:not(.bpx-dark) .bpx-stat .val.blue{color:#2563eb;}
-#bpx:not(.bpx-dark) .bpx-mhdr h1{font-family:var(--sans);font-weight:800;font-size:26px;letter-spacing:-.02em;color:#0f2540;}
+#bpx:not(.bpx-dark) .bpx-stat .val.blue{color:var(--blue);}
+#bpx:not(.bpx-dark) .bpx-ptitle{color:#0f2540;font-weight:700;}
+/* --- tables --- */
 #bpx:not(.bpx-dark) .bpx-ctable thead th,#bpx:not(.bpx-dark) .bpx-table th,#bpx:not(.bpx-dark) .bpx-ctable th{background:#f1f5f9;border-bottom:2px solid #dbe3ec;color:#64748b;}
-#bpx:not(.bpx-dark) .bpx-btn:not(.ghost){background:#2563eb;border-radius:8px;}
-#bpx:not(.bpx-dark) .bpx-btn:not(.ghost):hover{background:#1d4fd7;}
+#bpx:not(.bpx-dark) .bpx-ctable td,#bpx:not(.bpx-dark) .bpx-table td{border-bottom-color:#e8edf3;}
+#bpx:not(.bpx-dark) .bpx-ctable tbody tr:hover td,#bpx:not(.bpx-dark) .bpx-table tbody tr:hover td{background:#f8fafc;}
 #bpx:not(.bpx-dark) .bpx-cname{font-weight:700;color:#17263c;}
-#bpx:not(.bpx-dark) .bpx-badge{font-weight:700;}
-#bpx:not(.bpx-dark) .bpx-mobbar{background:#1f2a3a;border-bottom:0;}
-#bpx:not(.bpx-dark) .bpx-mobbar a{color:#c6d2e2;border-color:#3a4a63;}
-#bpx:not(.bpx-dark) .bpx-mobbar a.on{background:#2563eb;border-color:#2563eb;color:#fff;}
+/* --- buttons & chips everywhere --- */
+#bpx:not(.bpx-dark) .bpx-btn:not(.ghost){background:var(--blue);border-radius:8px;}
+#bpx:not(.bpx-dark) .bpx-btn.ghost{border-color:#cfd8e4;color:#26374f;border-radius:8px;}
+#bpx:not(.bpx-dark) .bpx-rowbtn,#bpx:not(.bpx-dark) .bpx-mini{border:1px solid #cfd8e4;background:#fff;color:#26374f;border-radius:8px;font-weight:600;}
+#bpx:not(.bpx-dark) .bpx-rowbtn:hover,#bpx:not(.bpx-dark) .bpx-mini:hover{border-color:var(--blue);color:var(--blue);}
+#bpx:not(.bpx-dark) .bpx-addbtn,#bpx:not(.bpx-dark) .bpx-donebtn,#bpx:not(.bpx-dark) .bpx-cd-btn{background:var(--blue);border-radius:8px;}
+#bpx:not(.bpx-dark) .bpx-jt{border-radius:8px;font-weight:600;color:#3c4c63;}
+#bpx:not(.bpx-dark) .bpx-jt.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+#bpx:not(.bpx-dark) .bpx-badge{font-weight:700;border-radius:6px;background:#eef2f8;border-color:#d4dce8;color:#3c4c63;}
+#bpx:not(.bpx-dark) .bpx-tag,#bpx:not(.bpx-dark) .bpx-pill{border-radius:6px;font-weight:600;}
+/* --- inputs --- */
+#bpx:not(.bpx-dark) .bpx-modalcard input,#bpx:not(.bpx-dark) .bpx-modalcard select,#bpx:not(.bpx-dark) .bpx-modalcard textarea,
+#bpx:not(.bpx-dark) .bpx-panel input,#bpx:not(.bpx-dark) .bpx-panel select,#bpx:not(.bpx-dark) .bpx-panel textarea,
+#bpx:not(.bpx-dark) .bpx-csearch{border-color:#cfd8e4;border-radius:8px;}
+/* --- messaging / calendar / misc surfaces --- */
+#bpx:not(.bpx-dark) .bpx-convlist,#bpx:not(.bpx-dark) .bpx-thread,#bpx:not(.bpx-dark) .bpx-cwrap,#bpx:not(.bpx-dark) .bpx-day,#bpx:not(.bpx-dark) .bpx-slot{border-color:#dbe3ec;}
+#bpx:not(.bpx-dark) .bpx-fbarwrap{background:#e2eaf5;}
+#bpx:not(.bpx-dark) .bpx-fbar{background:var(--blue);}
+#bpx:not(.bpx-dark) .bpx-modalcard{border:0;border-radius:12px;box-shadow:0 24px 70px rgba(15,30,60,.28);}
+#bpx:not(.bpx-dark) .bpx-modalcard h3{color:#0f2540;font-weight:800;}
 /* ===== THEME-FIELD END ===== */
 </style>
 
