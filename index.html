@@ -13302,7 +13302,7 @@ window.bpContactsDraw=function(){
   var list=window._bpCtList||[],b=document.getElementById('bpxCbody'),nv=document.getElementById('bpxCnav');
   if(!b)return;
   if(!list.length){b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">No contacts yet.</td></tr>';if(nv)nv.innerHTML='';return;}
-  var pg=bpPage('contacts',list,25,'bpContactsDraw()');
+  var pg=bpPage('contacts',list,10,'bpContactsDraw()');
   var h='';pg.items.forEach(function(c){
     var tags='';(c.tags||[]).forEach(function(t){tags+='<span class="bpx-pill new" style="margin-right:4px">'+bpEsc(t)+'</span>';});
     var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
@@ -15363,7 +15363,7 @@ window.bpEstDraw=function(){
   var items=window._bpEstItems||[];
   var cnt=q('bpxEstCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
   if(!items.length){ el.innerHTML='<span class="bpx-mut">No estimates yet. Send your first with + New estimate.</span>'; return; }
-  var pg=bpPage('estimates',items,8,'bpEstDraw()');
+  var pg=bpPage('estimates',items,10,'bpEstDraw()');
   var stc={accepted:'#15803d',sent:'#2457d6',draft:'#6a6a70',declined:'#dc2626',invoiced:'#7c3aed',expired:'#9a9aa0'};
   el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
     +pg.items.map(function(v){
@@ -15485,7 +15485,7 @@ window.bpInvDraw=function(){
   var items=window._bpInvItems||[];
   var cnt=q('bpxInvCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
   if(!items.length){ el.innerHTML='<span class="bpx-mut">No invoices yet. Send your first with + New invoice.</span>'; return; }
-  var pg=bpPage('invoices',items,8,'bpInvDraw()');
+  var pg=bpPage('invoices',items,10,'bpInvDraw()');
   var stc={paid:'#15803d','partially-paid':'#d97706',sent:'#2457d6',draft:'#6a6a70',overdue:'#dc2626',void:'#9a9aa0'};
   el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
     +pg.items.map(function(v){
@@ -15954,12 +15954,49 @@ function rdRenderShell(){
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">📡 Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
+    +'<div class="bpx-panel" style="margin-top:16px" id="rdMinePanel"><div class="bpx-ptitle">📋 My list — leads you added<span class="lg2">every prospect you tapped + Add · work them, then tap Contacted</span></div><div id="rdMineList" class="bpx-mut" style="font-size:13px">Loading your list…</div></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
   rdEnsureLeaflet(rdRefresh);
   rdLoadAuto();
+  rdLoadMine();
 }
+/* "My list": every prospect the client added by hand (tagged 'radar') */
+function rdLoadMine(){
+  var el=q('rdMineList'); if(!el) return;
+  if(!(window.BP_LIVE&&window.BP_SB)){ el.textContent='Leads you add show up here once you\'re signed in.'; return; }
+  BP_SB.from('contacts').select('*').contains('tags',['radar']).order('created_at',{ascending:false}).limit(200).then(function(r){
+    window._rdMineRows=(r&&r.data)||[]; rdMineRender();
+  }).catch(function(){
+    BP_SB.from('contacts').select('*').contains('tags',['radar']).limit(200).then(function(r2){ window._rdMineRows=(r2&&r2.data)||[]; rdMineRender(); })
+      .catch(function(){ el.textContent='Could not load your list right now.'; });
+  });
+}
+window.rdMineRender=function(){
+  var el=q('rdMineList'); if(!el) return;
+  el.classList.remove('bpx-mut');
+  var rows=window._rdMineRows||[];
+  if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing here yet — tap <b>+ Add</b> on a dot or a prospect below and it files into this list.</span>'; return; }
+  var pg=bpPage('rdmine',rows,10,'rdMineRender()');
+  el.innerHTML=pg.items.map(function(c){
+    var addr=bpEsc((c.name||'').replace(/^Radar — /,''));
+    var m=/Score (\d+)/i.exec(c.notes||'');
+    var score=m?m[1]:'';
+    var when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    var done=(c.tags||[]).indexOf('contacted')>-1;
+    return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)">'
+      +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':(score?'#f59e0b':'#2f6bff'))+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'📍')+'</span>'
+      +'<div style="flex:1;min-width:0"><b style="font-size:13.5px">'+addr+'</b><div class="bpx-mut" style="font-size:11.5px">'+bpEsc(((c.notes||'').split('.')[0]||'radar lead').slice(0,80))+(when?' · added '+when:'')+'</div></div>'
+      +'<a href="https://maps.apple.com/?q='+encodeURIComponent((c.name||'').replace(/^Radar — /,''))+'" target="_blank" rel="noopener" style="font-size:16px;text-decoration:none" title="Open in Maps">🗺️</a>'
+      +(done?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted ✓</span>'
+        :'<button class="bpx-rowbtn" onclick="rdAutoContacted(this,\''+bpEsc(c.ghl_id||'')+'\','+(c.id?("'"+c.id+"'"):'null')+')">Contacted ✓</button>')
+      +'</div>';
+  }).join('')+pg.nav;
+};
+window.rdMineJump=function(){
+  var el=q('rdMinePanel'); if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+};
 function rdLoadAuto(){
   var el=q('rdAutoList'); if(!el) return;
   if(!(window.BP_LIVE&&window.BP_SB)){ el.textContent='Auto-added leads appear here once your territory is live.'; return; }
@@ -16230,7 +16267,7 @@ function rdDraw(){
     list.innerHTML=top.length?top.map(function(p,r){var i=_rdLeads.indexOf(p);r=r+pgBase;
       var act;
       if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px">✓ Contacted</span>';
-      else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">📞 Contacted</button>';
+      else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">📞 Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">📋</button>';
       else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
       return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+(p.storm?' <span title="recent storm nearby">⛈️</span>':'')+'</td>'
         +'<td class="bpx-mut" style="font-size:12.5px">'+(p.kind==='project'?'🔨 ':'')+bpEsc((p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs')).slice(0,80))+'</td>'
@@ -16263,7 +16300,8 @@ function rdPopup(p,i,t){
   var lookup='https://www.google.com/search?q='+encodeURIComponent('"'+p.addr+'" '+RADAR_CITIES[_rdCity].name+' property records owner');
   var btn;
   if(_rdContacted[p.addr]) btn='<div style="margin-top:7px;color:#15803d;font-weight:700;font-size:12px">✓ Contacted — automations running</div>';
-  else if(_rdAdded[p.addr]) btn='<button onclick="rdContacted('+i+')" style="margin-top:7px;background:#15803d;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">📞 I made contact</button>';
+  else if(_rdAdded[p.addr]) btn='<button onclick="rdContacted('+i+')" style="margin-top:7px;background:#15803d;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">📞 I made contact</button>'
+    +' <button onclick="rdSheetClose();rdMineJump()" style="margin-top:7px;background:#fff;color:#2f6bff;border:1px solid #cddcff;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">📋 View in my list</button>';
   else btn='<button onclick="rdAddLead('+i+')" style="margin-top:7px;background:#2f6bff;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">+ Add to Contacts</button>';
   return '<div style="font:13.5px/1.55 inherit;min-width:200px;padding-right:26px">'
     +'<b>'+bpEsc(p.addr)+'</b><br>'
@@ -16371,9 +16409,9 @@ window.rdAddLead=function(i){
   rdFn('push',{address:p.addr,trade:_rdTrade,note:note}).then(function(d){
     var ghlId=(d&&d.ghlId)||'';
     _rdGhl[p.addr]=ghlId;
-    BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note,ghl_id:ghlId}).then(function(){}).catch(function(){});
+    BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note,ghl_id:ghlId}).then(rdLoadMine).catch(function(){});
   }).catch(function(){
-    BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note}).then(function(){}).catch(function(){});
+    BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note}).then(rdLoadMine).catch(function(){});
   });
 };
 window.rdContacted=function(i){
