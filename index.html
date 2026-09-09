@@ -12464,9 +12464,9 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-nav a:hover{background:rgba(255,255,255,.08) !important;color:#fff !important;box-shadow:none !important;}
 #bpx:not(.bpx-dark) .bpx-nav a.on{background:var(--blue) !important;color:#fff !important;font-weight:600;box-shadow:0 6px 16px rgba(47,107,255,.38) !important;}
 #bpx:not(.bpx-dark) .bpx-nav a svg{stroke:currentColor;}
-#bpx:not(.bpx-dark) .bpx-user2{border-top:1px solid rgba(255,255,255,.12);}
-#bpx:not(.bpx-dark) .bpx-side .bpx-uemail{color:#8fa0b8;}
-#bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:transparent;border:1px solid rgba(255,255,255,.22);color:#d5dde9;}
+#bpx:not(.bpx-dark) .bpx-user2{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;margin-top:10px;}
+#bpx:not(.bpx-dark) .bpx-side .bpx-uemail{color:#c2cede;font-size:12.5px;font-weight:600;margin-bottom:10px;}
+#bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.26);color:#e8eef7;padding:10px;border-radius:9px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-logout:hover{border-color:#7bc8ff;color:#fff;}
 #bpx:not(.bpx-dark) .bpx-mobbar{background:#20304a;border-bottom:0;}
 #bpx:not(.bpx-dark) .bpx-mobbar a{color:#d5dde9;border-color:rgba(255,255,255,.22);}
@@ -14516,42 +14516,57 @@ function bpRenderContacts(){
         +'<input class="bpx-csearch" id="bpx-csearch" type="text" placeholder="Search name, phone, email, or tag" oninput="bpFilterContacts(this.value)"></div>'
       +'<div class="bpx-chead-r"><span class="bpx-count" id="bpx-ccount"></span><button class="bpx-addbtn" onclick="bpOpenAdd()">+ New contact</button></div>'
     +'</div>'
-    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th><th></th></tr></thead>'
-      +'<tbody id="bpx-cbody"><tr><td colspan="6" class="bpx-cempty">Loading your contacts…</td></tr></tbody></table></div>';
+    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Added</th><th></th></tr></thead>'
+      +'<tbody id="bpx-cbody"><tr><td colspan="5" class="bpx-cempty">Loading your contacts…</td></tr></tbody></table></div>';
   bpLoadContacts();
 }
 function bpDrawContacts(list){
   var b=q('bpx-cbody'); if(!b) return;
   window._bpCtDrawList=list;
   var cc=q('bpx-ccount'); if(cc) cc.textContent=list.length+(list.length===1?' contact':' contacts');
-  if(!list.length){ b.innerHTML='<tr><td colspan="6" class="bpx-cempty">No contacts found.</td></tr>'; return; }
+  if(!list.length){ b.innerHTML='<tr><td colspan="5" class="bpx-cempty">No contacts found.</td></tr>'; return; }
   var pg=bpPage('contacts2',list,10,'bpDrawContacts(window._bpCtDrawList)');
   var EDIT='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>';
   var TRASH='<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
   var html='';
   for(var i=0;i<pg.items.length;i++){
     var c=pg.items[i];
-    var tags=''; for(var j=0;j<(c.tags||[]).length;j++){ tags+='<span class="bpx-tag">'+bpEsc(c.tags[j])+'</span>'; }
     var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
     html+='<tr style="cursor:pointer" onclick="bpContactPage(\''+c.id+'\')">'
       +'<td><div class="bpx-cnamecell">'+bpAvatar(c.name||'?',34)+'<span class="bpx-cname">'+bpEsc(c.name||'—')+'</span></div></td>'
       +'<td class="bpx-cmuted">'+(c.phone?bpEsc(c.phone):'<span class="bpx-dash">—</span>')+'</td>'
       +'<td class="bpx-cmuted">'+(c.email?bpEsc(c.email):'<span class="bpx-dash">—</span>')+'</td>'
-      +'<td>'+(tags||'<span class="bpx-dash">—</span>')+'</td>'
       +'<td class="bpx-cmuted">'+(added||'<span class="bpx-dash">—</span>')+'</td>'
       +'<td class="bpx-cact"><button class="bpx-iconbtn" title="Edit" onclick="event.stopPropagation();bpOpenEdit(\''+c.id+'\')">'+EDIT+'</button>'
         +'<button class="bpx-iconbtn del" title="Delete" onclick="event.stopPropagation();bpOpenDelete(\''+c.id+'\')">'+TRASH+'</button></td>'
     +'</tr>';
   }
-  if(pg.nav)html+='<tr><td colspan="6" style="border:0">'+pg.nav+'</td></tr>';
+  if(pg.nav)html+='<tr><td colspan="5" style="border:0">'+pg.nav+'</td></tr>';
   b.innerHTML=html;
+}
+/* translate GHL machinery tags into one friendly pipeline stage */
+function bpStageOf(c){
+  var tags=(c.tags||[]).map(function(t){return String(t).toLowerCase();});
+  var has=function(t){return tags.indexOf(t)>-1;};
+  if(has('job-complete'))return ['✅ Job completed','#15803d'];
+  if(has('paid-in-full'))return ['💚 Paid in full','#15803d'];
+  if(has('final-sent'))return ['📄 Final invoice sent','#7c3aed'];
+  if(has('deposit-sent'))return ['💵 Deposit invoice sent','#b45309'];
+  if(has('estimate-accepted'))return ['👍 Estimate accepted — deposit due','#15803d'];
+  if(has('estimate-sent')||has('estimate'))return ['📐 Estimate sent — deciding','#2457d6'];
+  if(has('radar-contacted')||has('contacted'))return ['📞 Contacted — in follow-up','#2457d6'];
+  if(has('radar-prospect')||has('radar-auto')||has('radar'))return ['📡 Radar lead — not contacted yet','#0d9488'];
+  if(has('missed-call-no-response'))return ['📱 Missed call — Atlas following up','#b45309'];
+  if(has('customer'))return ['⭐ Customer','#15803d'];
+  return ['🆕 New lead','#64748b'];
 }
 /* full-page contact profile */
 window.bpContactPage=function(id){
   var c=(_bpContacts||[]).filter(function(x){return x.id===id;})[0];
   if(!c){ bpNav('contacts'); return; }
   var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
-  var tags=(c.tags||[]).map(function(t){return '<span class="bpx-tag">'+bpEsc(t)+'</span>';}).join(' ')||'<span class="bpx-dash">—</span>';
+  var stage=bpStageOf(c);
+  var stageChip='<span style="display:inline-block;padding:5px 13px;border-radius:99px;font-size:12.5px;font-weight:700;color:'+stage[1]+';background:'+stage[1]+'18;border:1px solid '+stage[1]+'55">'+stage[0]+'</span>';
   var jobs=(typeof bpJobsGet==='function'?bpJobsGet():[]).filter(function(j){
     return (j.contactId&&j.contactId===id)||(c.name&&j.name===c.name)||(c.phone&&j.phone&&j.phone.replace(/\D/g,'')===c.phone.replace(/\D/g,''));
   });
@@ -14565,22 +14580,24 @@ window.bpContactPage=function(id){
   if(c.phone)act+='<a class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="tel:'+bpEsc(c.phone)+'">📞 Call</a>'
     +'<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="sms:'+bpEsc(c.phone)+'">💬 Text</a>';
   if(c.email)act+='<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 18px;text-decoration:none;display:inline-block" href="mailto:'+bpEsc(c.email)+'">✉️ Email</a>';
+  var row=function(lbl,val){return '<div style="display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #eef1f6;font-size:13.5px;align-items:center"><span style="width:76px;flex:0 0 auto;color:#7b8a9f;font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">'+lbl+'</span><span style="min-width:0;word-break:break-word">'+val+'</span></div>';};
   q('bpxViewArea').innerHTML=
     '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpNav(\'contacts\')">← All contacts</button>'
-    +'<div class="bpx-panel" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
-      +bpAvatar(c.name||'?',56)
-      +'<div style="flex:1;min-width:200px"><div style="font-size:19px;font-weight:800">'+bpEsc(c.name||'Unnamed contact')+'</div>'
-        +'<div class="bpx-mut" style="font-size:12.5px;margin-top:2px">Added '+added+'</div></div>'
+    +'<div class="bpx-panel" style="margin-bottom:16px;padding:0;overflow:hidden">'
+      +'<div style="height:6px;background:linear-gradient(90deg,'+stage[1]+','+stage[1]+'66)"></div>'
+      +'<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:20px 22px">'
+      +bpAvatar(c.name||'?',60)
+      +'<div style="flex:1;min-width:220px"><div style="font-size:21px;font-weight:800;color:#0f2540">'+bpEsc(c.name||'Unnamed contact')+'</div>'
+        +'<div style="margin-top:7px">'+stageChip+'</div></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+act+'</div>'
     +'</div></div>'
     +'<div class="bpx-set-grid">'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Contact info</div>'
-      +'<div style="font-size:13.5px;line-height:2.1">'
-      +'<div><span class="bpx-mut" style="display:inline-block;width:80px">Phone</span>'+(c.phone?bpEsc(c.phone):'<span class="bpx-dash">—</span>')+'</div>'
-      +'<div><span class="bpx-mut" style="display:inline-block;width:80px">Email</span>'+(c.email?bpEsc(c.email):'<span class="bpx-dash">—</span>')+'</div>'
-      +'<div><span class="bpx-mut" style="display:inline-block;width:80px">Tags</span>'+tags+'</div>'
-      +'<div><span class="bpx-mut" style="display:inline-block;width:80px">Added</span>'+added+'</div></div>'
-      +'<div style="display:flex;gap:8px;margin-top:14px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px" onclick="bpOpenEdit(\''+c.id+'\')">✏️ Edit</button>'
+      +row('Phone',(c.phone?'<a href="tel:'+bpEsc(c.phone)+'" style="color:var(--blue);text-decoration:none;font-weight:600">'+bpEsc(c.phone)+'</a>':'<span class="bpx-dash">—</span>'))
+      +row('Email',(c.email?'<a href="mailto:'+bpEsc(c.email)+'" style="color:var(--blue);text-decoration:none;font-weight:600">'+bpEsc(c.email)+'</a>':'<span class="bpx-dash">—</span>'))
+      +row('Stage',stageChip)
+      +row('Added',added)
+      +'<div style="display:flex;gap:8px;margin-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px" onclick="bpOpenEdit(\''+c.id+'\')">✏️ Edit</button>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px;color:#dc2626;border-color:#f3c4c4" onclick="bpOpenDelete(\''+c.id+'\')">Delete</button></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Jobs with this customer</div>'+jobsHtml+'</div>'
