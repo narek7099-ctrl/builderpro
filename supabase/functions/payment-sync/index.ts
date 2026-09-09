@@ -15,6 +15,9 @@
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const FALLBACK_EMAIL = Deno.env.get("PORTAL_OWNER_EMAIL") ?? "";
+const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? Deno.env.get("GHL_API_KEY") ?? "";
+const GHL_LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
+const GHL_BASE = "https://services.leadconnectorhq.com";
 
 const sbH = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
@@ -43,9 +46,41 @@ Deno.serve(async (req) => {
   const name = pick("name") || String(b.full_name ?? "").trim();
   const phone = pick("phone").replace(/\D/g, "");
   const kind = pick("kind").toLowerCase() === "final" ? "final" : "deposit";
-  const amount = Number(pick("amount").replace(/[^0-9.]/g, "")) || 0;
+  let amount = Number(pick("amount").replace(/[^0-9.]/g, "")) || 0;
+
+  // fallback 1: scan the webhook's standard payload for an amount-ish field
+  if (!(amount > 0)) {
+    const scan = (o: unknown, depth: number): number => {
+      if (!o || typeof o !== "object" || depth > 3) return 0;
+      for (const [k, v] of Object.entries(o as Record<string, unknown>)) {
+        if (/amount_?paid|amountpaid|total_?amount|invoice_?total|^total$|^amount$/i.test(k)) {
+          const n = Number(String(v).replace(/[^0-9.]/g, ""));
+          if (n > 0) return n;
+        }
+        const nested = scan(v, depth + 1);
+        if (nested > 0) return nested;
+      }
+      return 0;
+    };
+    amount = scan(b, 0);
+  }
+
+  // fallback 2: look the invoice up in GHL by invoice number
+  const invNo = pick("invoiceNumber") || pick("invoice_number");
+  if (!(amount > 0) && invNo && GHL_TOKEN && GHL_LOC) {
+    try {
+      const r = await fetch(`${GHL_BASE}/invoices/?altId=${GHL_LOC}&altType=location&limit=50&offset=0`, {
+        headers: { Authorization: `Bearer ${GHL_TOKEN}`, Version: "2021-07-28", Accept: "application/json" },
+      });
+      const d = await r.json().catch(() => ({}));
+      const inv = (d?.invoices ?? []).find((v: Record<string, unknown>) =>
+        String(v.invoiceNumber ?? "").replace(/\D/g, "") === invNo.replace(/\D/g, ""));
+      if (inv) amount = Number(inv.amountPaid ?? inv.total ?? 0) || 0;
+    } catch { /* fall through */ }
+  }
+
   if (kind === "deposit" && !(amount > 0)) {
-    return json({ ok: false, error: "amount required for deposit", got: Object.keys(cd).length ? cd : b }, 400);
+    return json({ ok: false, error: "could not determine amount — pass invoiceNumber in custom data", got: Object.keys(cd).length ? cd : Object.keys(b) }, 400);
   }
 
   const owner = await userIdByEmail(email);
