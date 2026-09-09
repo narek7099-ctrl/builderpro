@@ -15075,7 +15075,20 @@ function bpJobExp(j){return (j.expenses||[]).reduce(function(s,e){return s+(+e.a
 function bpAgo(ts){if(!ts)return '—';var d=Math.floor((Date.now()-ts)/86400000);return d<=0?'today':(d===1?'yesterday':d+'d ago');}
 function bpCatList(){return ['Materials','Labor / crew','Subcontractor','Ads','Fuel','Tools','Permits','Overhead','Other'];}
 function bpCatOpts(sel){return bpCatList().map(function(c){return '<option'+(c===sel?' selected':'')+'>'+c+'</option>';}).join('');}
-function bpJobCell(j){return '<div class="bpx-cnamecell">'+bpAvatar(j.name||'?',34)+'<div><div class="bpx-cname">'+bpEsc(j.name||'Job')+'</div><div class="bpx-js">'+bpEsc(j.title||'Job')+'</div></div></div>';}
+function bpJobCell(j){
+  var av=(j.photos&&j.photos[0])
+    ? '<img src="'+j.photos[0]+'" style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto">'
+    : '<span style="width:42px;height:42px;border-radius:9px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto"><svg width="24" height="24" viewBox="0 0 48 48" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22 L24 7 L42 22"/><path d="M10 20 V40 H38 V20"/><rect x="20" y="28" width="8" height="12"/></svg></span>';
+  return '<div class="bpx-cnamecell">'+av+'<div><div class="bpx-cname">'+bpEsc(j.name||'Job')+'</div><div class="bpx-js">'+bpEsc(j.title||'Job')+'</div></div></div>';
+}
+/* "Sep 10 – Sep 24" from booked dates (or legacy start/target) */
+function bpJobDates(j){
+  var s=j.sched||{}, a=(s.dates&&s.dates.length)?s.dates.slice().sort():[];
+  var from=a[0]||s.start||'', to=a.length>1?a[a.length-1]:(s.target||'');
+  var f=function(iso){var d=new Date(iso+'T12:00:00');return isNaN(d.getTime())?'':d.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
+  if(!from)return '';
+  return f(from)+(to&&to!==from?' – '+f(to):'');
+}
 
 /* Won deal -> Active Job (hook both mock + live mark-won) */
 function bpJobFromDeal(o){
@@ -15098,7 +15111,7 @@ function bpActiveJobs(){
   var done=jobs.filter(function(j){return j.status==='done';});
   var rows, head, pgNav='';
   if(_bpJobTab==='active'){
-    head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Won</th><th>Status</th><th></th></tr>';
+    head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Dates</th><th>Won</th><th>Status</th><th></th></tr>';
     var pgA=bpPage('jobsA',active,10,'bpActiveJobs()'); pgNav=pgA.nav;
     rows=active.length?pgA.items.map(function(j){
       var extra=[];
@@ -15107,9 +15120,9 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:44px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
+      return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
-    }).join(''):'<tr><td colspan="5" class="bpx-empty2">No active projects yet. When you mark a deal <b>Won</b> in Close Deals it shows up here — or add one manually.</td></tr>';
+    }).join(''):'<tr><td colspan="6" class="bpx-empty2">No active projects yet. When a deposit is paid the job shows up here automatically — or add one manually.</td></tr>';
   } else {
     head='<tr><th>Job</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th><th></th></tr>';
     var pgD=bpPage('jobsD',done,10,'bpActiveJobs()'); pgNav=pgD.nav;
