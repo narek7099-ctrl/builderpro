@@ -12452,6 +12452,24 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
   .bpx-inbox{height:auto;}
   .bpx-main{padding:18px 16px;}
 }
+/* ===== theme v2 — polish pass: same personality, cleaner surfaces ===== */
+#bpx:not(.bpx-dark){--line:#e6e9f1;--line-2:#eef0f6;--soft:#f7f9fc;background:#f6f7fa;}
+#bpx:not(.bpx-dark) .bpx-side{background:#fff;}
+#bpx .bpx-nav a{border-radius:11px;}
+#bpx:not(.bpx-dark) .bpx-nav a:hover{background:#f2f5fa;}
+#bpx:not(.bpx-dark) .bpx-nav a.on{background:linear-gradient(90deg,#eaf1ff,#f3f8ff);box-shadow:inset 3px 0 0 var(--blue);}
+#bpx .bpx-panel,#bpx .bpx-stat{border-radius:16px;}
+#bpx:not(.bpx-dark) .bpx-panel,#bpx:not(.bpx-dark) .bpx-stat{border-color:#e6e9f1;box-shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.035);}
+#bpx:not(.bpx-dark) .bpx-ctable thead th,#bpx:not(.bpx-dark) .bpx-table th{background:#f7f9fc;}
+#bpx .bpx-btn:not(.ghost){box-shadow:0 1px 2px rgba(16,24,40,.08);transition:box-shadow .15s,transform .12s;}
+#bpx .bpx-btn:not(.ghost):hover{box-shadow:0 4px 12px rgba(47,107,255,.28);transform:translateY(-1px);}
+#bpx .bpx-modalcard{border-radius:18px;box-shadow:0 24px 70px rgba(16,24,40,.22);}
+#bpx input:focus,#bpx select:focus,#bpx textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);outline:none;}
+#bpx .bpx-rowbtn,#bpx .bpx-addbtn{border-radius:9px;}
+#bpx .bpx-mhdr h1{letter-spacing:-.018em;}
+#bpx:not(.bpx-dark) .bpx-mhdr p{color:#667085;}
+#bpx .bpx-stat .lbl{letter-spacing:.06em;}
+#bpx:not(.bpx-dark) .bpx-badge{background:#f7f9fc;}
 </style>
 
 <!-- ===== ATLAS CHATBOT ===== -->
@@ -15705,9 +15723,21 @@ function bpSettings(){
       +'</span></div>';
   }).join('');
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
+  var tabs=[['business','🏢 Business'],['hours','🕒 Hours & replies'],['owner','👤 Owner'],['plan','💳 Plan & billing']];
+  var chip=function(t){return '<button class="bpx-jt'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')">'+t[1]+'</button>';};
+  var sec=function(id){return 'id="set-sec-'+id+'" style="'+(_bpSetSec===id?'':'display:none;')+'margin-bottom:16px"';};
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-set-grid">'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Business</div>'
+    /* header card */
+    '<div class="bpx-panel" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
+      +'<div class="bpx-logo-pv" style="width:64px;height:64px;flex:0 0 auto">'+ (BPLOGO?('<img src="'+BPLOGO+'" style="width:100%;height:100%;object-fit:contain">'):'<span style="font-size:11px;color:#8a97a0">Logo</span>') +'</div>'
+      +'<div style="flex:1;min-width:200px"><div style="font-size:18px;font-weight:800">'+bpEsc(c.name||'Your business')+'</div>'
+        +'<div class="bpx-mut" style="font-size:13px;margin-top:2px">'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</div></div>'
+      +'<span style="background:#eaf1ff;color:#2457d6;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;white-space:nowrap">GROWTH · $1,899/mo</span>'
+    +'</div></div>'
+    /* section tabs */
+    +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(chip).join('')+'</div>'
+    /* business */
+    +'<div '+sec('business')+'><div class="bpx-panel" style="max-width:640px"><div class="bpx-ptitle">Business<span class="lg2">what your customers see</span></div>'
       +'<div class="bpx-fld"><label>Logo</label><div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
         +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
         +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>'
@@ -15719,22 +15749,26 @@ function bpSettings(){
       +f('set-caddr','Address',c.address,'123 Main St, City, ST')
       +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover — e.g. Austin, 78701, 78704')
       +f('set-clic','License # (optional)',c.license,'License / insurance #')
-    +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Business hours</div>'
+    +'</div></div>'
+    /* hours + auto-reply */
+    +'<div '+sec('hours')+'><div class="bpx-set-grid">'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Business hours<span class="lg2">booking windows & after-hours</span></div>'
       +hrsRows
       +'<div class="bpx-fldhint">Used for booking windows and to power after-hours auto-replies.</div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Auto-reply message</div>'
       +'<div class="bpx-fld"><label>Sent on a missed call or after-hours message</label><textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'! We missed you but we\'ll text you right back. What can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>'
         +'<div class="bpx-fldhint">Leave blank to use BuilderPro’s default recovery text.</div></div>'
-    +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Owner</div>'
+    +'</div></div></div>'
+    /* owner */
+    +'<div '+sec('owner')+'><div class="bpx-panel" style="max-width:560px"><div class="bpx-ptitle">Owner<span class="lg2">personalizes your dashboard & messages</span></div>'
       +f('set-oname','Owner name',o.name,'Full name')
       +f('set-oemail','Owner email',o.email,'owner@company.com','email')
       +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
-      +'<div class="bpx-fldhint" style="margin-top:14px">Saved on this device. Used to personalize your dashboard, messages, and estimates.</div>'
+      +'<div class="bpx-fldhint" style="margin-top:14px">Saved to your account. Used to personalize your dashboard, messages, and estimates.</div>'
     +'</div></div>'
-    +'<div class="bpx-panel" style="max-width:980px;box-sizing:border-box"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
+    /* plan */
+    +'<div '+sec('plan')+'><div class="bpx-panel" style="max-width:980px;box-sizing:border-box"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
       +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
         +'<div style="flex:1;min-width:230px">'
           +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:17px;font-weight:800">BuilderPro OS</span><span style="background:#eaf1ff;color:#2457d6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px">GROWTH PLAN · ACTIVE</span></div>'
@@ -15749,10 +15783,16 @@ function bpSettings(){
           +'<button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpCancelOpen()">Cancel my plan</button>'
         +'</div>'
       +'</div>'
-    +'</div>'
-    +'<div class="bpx-set-foot"><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
+    +'</div></div>'
+    +'<div class="bpx-set-foot" style="position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg,#faf9f6) 30%);padding-top:18px"><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
   bpSettingsPull();
 }
+var _bpSetSec='business';
+window.bpSetTab=function(t){
+  _bpSetSec=t;
+  ['business','hours','owner','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
+};
 window.bpCancelOpen=function(){
   bpModal('<h3>Cancel your plan?</h3>'
     +'<div class="bpx-sub">We\'d hate to see you go. Tell us why you\'re thinking of canceling — your request goes straight to our team and we\'ll confirm within 1 business day. Your service stays on until the end of your billing period.</div>'
