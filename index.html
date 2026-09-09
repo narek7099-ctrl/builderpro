@@ -15731,7 +15731,7 @@ function bpSettings(){
     /* section tabs */
     +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(chip).join('')+'</div>'
     /* business */
-    +'<div '+sec('business')+'><div class="bpx-panel" style="max-width:640px"><div class="bpx-ptitle">Business<span class="lg2">what your customers see</span></div>'
+    +'<div '+sec('business')+'><div class="bpx-panel"><div class="bpx-ptitle">Business<span class="lg2">what your customers see</span></div>'
       +'<div class="bpx-fld"><label>Logo</label><div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
         +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
         +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>'
@@ -15755,14 +15755,14 @@ function bpSettings(){
         +'<div class="bpx-fldhint">Leave blank to use BuilderPro’s default recovery text.</div></div>'
     +'</div></div></div>'
     /* owner */
-    +'<div '+sec('owner')+'><div class="bpx-panel" style="max-width:560px"><div class="bpx-ptitle">Owner<span class="lg2">personalizes your dashboard & messages</span></div>'
+    +'<div '+sec('owner')+'><div class="bpx-panel"><div class="bpx-ptitle">Owner<span class="lg2">personalizes your dashboard & messages</span></div>'
       +f('set-oname','Owner name',o.name,'Full name')
       +f('set-oemail','Owner email',o.email,'owner@company.com','email')
       +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
       +'<div class="bpx-fldhint" style="margin-top:14px">Saved to your account. Used to personalize your dashboard, messages, and estimates.</div>'
     +'</div></div>'
     /* plan */
-    +'<div '+sec('plan')+'><div class="bpx-panel" style="max-width:980px;box-sizing:border-box"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
+    +'<div '+sec('plan')+'><div class="bpx-panel" style="box-sizing:border-box"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
       +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
         +'<div style="flex:1;min-width:230px">'
           +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:17px;font-weight:800">BuilderPro OS</span><span style="background:#eaf1ff;color:#2457d6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px">GROWTH PLAN · ACTIVE</span></div>'
@@ -15948,13 +15948,14 @@ function rdRenderShell(){
       +'<span><i class="rd-dot" style="background:#fff;border:2.5px solid #7c3aed;box-sizing:border-box"></i> 🔨 active project</span>'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
+      +'<button id="rdMineBtn" class="bpx-rowbtn" onclick="rdMineJump()" style="font-size:12px;background:#eaf1ff;border-color:#cddcff;color:#2457d6;font-weight:700">📋 My list</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">📡 Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
-    +'<div class="bpx-panel" style="margin-top:16px" id="rdMinePanel"><div class="bpx-ptitle">📋 My list — leads you added<span class="lg2">every prospect you tapped + Add · work them, then tap Contacted</span></div><div id="rdMineList" class="bpx-mut" style="font-size:13px">Loading your list…</div></div>'
+    +'<div class="bpx-panel" style="margin-top:16px;display:none" id="rdMinePanel"><div class="bpx-ptitle">📋 My list — leads you added<span class="lg2">every prospect you tapped + Add · work them, then tap Contacted</span><button onclick="q(\'rdMinePanel\').style.display=\'none\'" style="border:0;background:none;color:#8a97a0;font-size:16px;cursor:pointer;padding:0 2px">×</button></div><div id="rdMineList" class="bpx-mut" style="font-size:13px">Loading your list…</div></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Hottest prospects<span class="lg2">ranked — your door-knock list. Add → knock or mail → tap Contacted once you\'ve talked.</span></div>'
       +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
@@ -15977,6 +15978,7 @@ window.rdMineRender=function(){
   var el=q('rdMineList'); if(!el) return;
   el.classList.remove('bpx-mut');
   var rows=window._rdMineRows||[];
+  var mb=q('rdMineBtn'); if(mb)mb.textContent='📋 My list'+(rows.length?' ('+rows.length+')':'');
   if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing here yet — tap <b>+ Add</b> on a dot or a prospect below and it files into this list.</span>'; return; }
   var pg=bpPage('rdmine',rows,10,'rdMineRender()');
   el.innerHTML=pg.items.map(function(c){
@@ -15995,7 +15997,9 @@ window.rdMineRender=function(){
   }).join('')+pg.nav;
 };
 window.rdMineJump=function(){
-  var el=q('rdMinePanel'); if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  var el=q('rdMinePanel'); if(!el)return;
+  el.style.display='block';
+  setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'start'}); },40);
 };
 function rdLoadAuto(){
   var el=q('rdAutoList'); if(!el) return;
