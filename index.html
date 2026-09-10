@@ -16305,12 +16305,14 @@ function rdRenderShell(){
     +'<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px">'
       +'<span><i class="rd-dot" style="background:#e11d48"></i> Hot (75+)</span><span><i class="rd-dot" style="background:#f59e0b"></i> Warm</span>'
       +'<span><i class="rd-dot" style="background:#eab308"></i> Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i> Watch</span>'
-      +'<span><i class="rd-dot" style="background:#fff;border:2.5px solid #7c3aed;box-sizing:border-box"></i> 🔨 active project</span>'
+      +'<span><i class="rd-dot" style="background:#fff;border:2.5px solid #7c3aed;box-sizing:border-box"></i> your active project</span>'
+      +'<span><i class="rd-dot" style="background:#0f2540;border:1.5px solid #fff;box-sizing:border-box"></i> crew on the street</span>'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
-    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → 📋 More info to see the government record.</div>'
+    +'<div id="rdStormMode" style="display:none;background:#7c2d12;color:#fff;border-radius:10px;padding:11px 15px;font-size:13px;margin-bottom:8px"></div>'
+    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → More info to see the government record.</div>'
     +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div class="bpx-panel" style="margin-top:16px" id="rdAutoPanel"><div class="bpx-ptitle">Today\'s picks — auto-added for you<span class="lg2">the radar files its top finds here every morning · tap Contacted after a real conversation</span></div><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
@@ -16437,7 +16439,7 @@ function rdRefresh(){
         }).catch(function(){});
       }
     }
-    if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
+    rdFetchStorms().then(function(){ rdStormModeEval(); rdDraw(); });};
   if(_rdCity==='demo'){ done(rdDemoLeads(),true); return; }
   rdFetch().then(function(leads){ if(!leads.length) done(rdDemoLeads(),true); else done(leads,false); })
     .catch(function(){ done(rdDemoLeads(),true); });
@@ -16518,12 +16520,25 @@ function rdFetch(){
   var recFrom=new Date(Date.now()-730*86400000).toISOString().slice(0,10);   // last ~24 months
   var recTo=new Date(Date.now()+86400000).toISOString().slice(0,10);
   var adjKws=[]; (t.adj||[]).forEach(function(a){adjKws=adjKws.concat(a.kw);});
+  var anchorFrom=new Date(Date.now()-21*86400000).toISOString().slice(0,10);   // fresh same-trade permits = crews on the street
   var jobs=[ qAll(base,dueFrom,dueTo,t.kw,600) ];
-  if(adjKws.length) jobs.push(qAll(recentCfg,recFrom,recTo,adjKws,300));
+  jobs.push(adjKws.length?qAll(recentCfg,recFrom,recTo,adjKws,300):Promise.resolve([]));
+  jobs.push(qAll(recentCfg,anchorFrom,recTo,t.kw,120).catch(function(){return [];}));
   return Promise.all(jobs).then(function(res){
     var leads=[], seen={};
     (res[0]||[]).forEach(function(r){var p=rowLead(base,r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     ((res[1])||[]).forEach(function(r){var p=rowLead(recentCfg,r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
+    /* anchors: not leads themselves — active jobs whose neighbors we boost */
+    var anchors=[];
+    ((res[2])||[]).forEach(function(r){
+      var _ll=recentCfg.pt?recentCfg.pt(r):[r[recentCfg.latf],r[recentCfg.lngf]];
+      var la=parseFloat(_ll[0]),lo=parseFloat(_ll[1]);
+      if(!isFinite(la)||!isFinite(lo))return;
+      var dt=new Date(r[recentCfg.date]); if(isNaN(dt))return;
+      anchors.push({lat:la,lng:lo,addr:(recentCfg.addr(r)||'nearby address').toString().trim(),
+        when:dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})});
+    });
+    window._rdAnchors=anchors.slice(0,80);
     var dueK=leads.filter(function(x){return x.kind==='due';}).length;
     var prK=leads.filter(function(x){return x.kind==='project';}).length;
     (window._rdDiag||[]).forEach(function(d){d.kept=(d.api.indexOf((base.api.split('/resource/')[1]||''))===0)?dueK:prK;});
@@ -16569,8 +16584,25 @@ function rdFetchStorms(){
       out.push({lat:co[1],lng:co[0],type:tt.indexOf('HAIL')>=0?'Hail':'Wind',mag:p.magnitude||'',when:(p.valid||'').slice(0,10)});
     });
     _rdStorms=out.slice(0,120);
+    window._rdStormsReal=_rdStorms.length>0;
     if(!_rdStorms.length)_rdStorms=rdDemoStorms();
-  }).catch(function(){_rdStorms=rdDemoStorms();});
+  }).catch(function(){_rdStorms=rdDemoStorms();window._rdStormsReal=false;});
+}
+/* STORM MODE: real hail/wind reports in the last 72h near the territory */
+function rdStormModeEval(){
+  window._rdFreshStorms=[];
+  if(!window._rdStormsReal||_rdCity==='demo')return;
+  var c=RADAR_CITIES[_rdCity], cutoff=Date.now()-72*3600000;
+  (_rdStorms||[]).forEach(function(sv){
+    var dt=new Date(sv.when+'T12:00:00');
+    if(isNaN(dt.getTime())||dt.getTime()<cutoff)return;
+    if(rdKm(sv.lat,sv.lng,c.lat,c.lng)>40)return;
+    window._rdFreshStorms.push(sv);
+  });
+  if(window._rdFreshStorms.length&&!_rdStormOn){
+    _rdStormOn=true;
+    var b=q('rdStormBtn');if(b)b.innerHTML='&#9928;&#65039; Storm overlay: ON';
+  }
 }
 function rdDemoStorms(){
   var c=RADAR_CITIES[_rdCity], out=[], seed=7;
@@ -16593,13 +16625,41 @@ function rdDraw(){
   _rdLayer.clearLayers(); _rdStormLayer.clearLayers();
   if(window.rdSheetClose)try{rdSheetClose();}catch(e){}
   var t=RADAR_TRADES[_rdTrade];
+  var fresh=window._rdFreshStorms||[], anchors=window._rdAnchors||[];
   _rdLeads.forEach(function(p){
-    p.storm=false; p.score=p.base;
-    if(_rdStormOn&&t.storm){
-      for(var i=0;i<_rdStorms.length;i++){
-        if(rdKm(p.lat,p.lng,_rdStorms[i].lat,_rdStorms[i].lng)<=3){p.storm=true;p.score=Math.min(100,p.base+15);break;}
+    p.storm=false; p.stormFresh=false; p.anchor=null; p.score=p.base;
+    if(t.storm){
+      for(var f2=0;f2<fresh.length;f2++){
+        if(rdKm(p.lat,p.lng,fresh[f2].lat,fresh[f2].lng)<=3){p.storm=true;p.stormFresh=true;p.score=Math.min(100,p.score+20);break;}
+      }
+      if(!p.stormFresh&&_rdStormOn){
+        for(var i=0;i<_rdStorms.length;i++){
+          if(rdKm(p.lat,p.lng,_rdStorms[i].lat,_rdStorms[i].lng)<=3){p.storm=true;p.score=Math.min(100,p.score+15);break;}
+        }
       }
     }
+    for(var a2=0;a2<anchors.length;a2++){
+      var dk=rdKm(p.lat,p.lng,anchors[a2].lat,anchors[a2].lng);
+      if(dk<=0.16&&p.addr!==anchors[a2].addr){
+        p.anchor={addr:anchors[a2].addr,when:anchors[a2].when,ft:Math.max(60,Math.round(dk*3281))};
+        p.score=Math.min(100,p.score+18); break;
+      }
+    }
+  });
+  /* storm mode banner */
+  var smb=q('rdStormMode');
+  if(smb){
+    if(fresh.length){
+      var boosted=_rdLeads.filter(function(x){return x.stormFresh;}).length;
+      smb.style.display='block';
+      smb.innerHTML='<b>STORM MODE</b> — '+fresh.length+' hail/wind report'+(fresh.length===1?'':'s')+' in your area in the last 72 hours. '
+        +(boosted?boosted+' home'+(boosted===1?'':'s')+' in the path boosted — knock this week while damage is fresh.':'Boosting homes in the path as reports come in.');
+    } else smb.style.display='none';
+  }
+  /* fresh same-trade permits = active jobs; boost their neighbors and mark them */
+  anchors.forEach(function(an){
+    _rdStormLayer.addLayer(L.circleMarker([an.lat,an.lng],{radius:5,color:'#fff',weight:1.5,fillColor:'#0f2540',fillOpacity:1})
+      .bindPopup('<b>Active '+t.unit+' job</b><br>'+bpEsc(an.addr)+'<br><span style="color:#6a6a70;font-size:11.5px">Permit filed '+bpEsc(an.when)+' — their neighbors are your warmest doors.</span>',{keepInView:true}));
   });
   if(_rdStormOn){
     _rdStorms.forEach(function(sv){
@@ -16633,8 +16693,10 @@ function rdDraw(){
       if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px">✓ Contacted</span>';
       else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">List</button>';
       else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
-      return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+(p.storm?' <span title="recent storm nearby">⛈️</span>':'')+'</td>'
-        +'<td class="bpx-mut" style="font-size:12.5px">'+(p.kind==='project'?'🔨 ':'')+bpEsc((p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs')).slice(0,80))+'</td>'
+      var freshTag=(p.stormFresh?'<span style="color:#dc2626;font-weight:700;font-size:11px"> STORM 72H</span>':(p.storm?' <span title="recent storm nearby">⛈️</span>':''))
+        +(p.anchor?'<span style="color:#0f2540;font-weight:700;font-size:11px"> CREW '+p.anchor.ft+' FT</span>':'');
+      return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+freshTag+'</td>'
+        +'<td class="bpx-mut" style="font-size:12.5px">'+bpEsc((p.anchor?('Roof crew '+p.anchor.ft+' ft away at '+p.anchor.addr+' ('+p.anchor.when+') · '):'')+(p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs'))).slice(0,120)+'</td>'
         +'<td class="bpx-r"><span style="padding:2px 10px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11.5px">'+p.score+'</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap">'+act+'</td></tr>';
     }).join(''):'<tr><td colspan="5" class="bpx-empty2">Nothing above the score filter — lower the min score.</td></tr>';
@@ -16670,8 +16732,9 @@ function rdPopup(p,i,t){
   return '<div style="font:13.5px/1.55 inherit;min-width:200px;padding-right:26px">'
     +'<b>'+bpEsc(p.addr)+'</b><br>'
     +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span>'
-    +(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':'')
-    +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">🔨 active project</span>':'')+'<br>'
+    +(p.stormFresh?' <span style="font-size:11px;color:#dc2626;font-weight:700">STORM — hit in last 72h</span>':(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':''))
+    +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">active project</span>':'')+'<br>'
+    +(p.anchor?'<div style="margin:5px 0;padding:7px 10px;background:#eef3fb;border-left:3px solid #0f2540;border-radius:7px;font-size:12.5px"><b>Crew on the street:</b> a '+t.unit+' permit was filed at '+bpEsc(p.anchor.addr)+' — '+p.anchor.ft+' ft away ('+bpEsc(p.anchor.when)+'). Their neighbors are watching that job happen.</div>':'')
     +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span><br>'
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
     +'<a onclick="rdEvidence('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">More info — see the permit record</a>'
