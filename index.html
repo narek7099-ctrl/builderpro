@@ -16307,6 +16307,7 @@ function rdRenderShell(){
       +'<span><i class="rd-dot" style="background:#eab308"></i> Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i> Watch</span>'
       +'<span><i class="rd-dot" style="background:#fff;border:2.5px solid #7c3aed;box-sizing:border-box"></i> your active project</span>'
       +'<span><i class="rd-dot" style="background:#0f2540;border:1.5px solid #fff;box-sizing:border-box"></i> crew on the street</span>'
+      +'<span><i class="rd-dot" style="background:#f59e0b;border:2.5px solid #0f2540;box-sizing:border-box"></i> their neighbor</span>'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
@@ -16542,8 +16543,37 @@ function rdFetch(){
     var dueK=leads.filter(function(x){return x.kind==='due';}).length;
     var prK=leads.filter(function(x){return x.kind==='project';}).length;
     (window._rdDiag||[]).forEach(function(d){d.kept=(d.api.indexOf((base.api.split('/resource/')[1]||''))===0)?dueK:prK;});
-    leads.sort(function(a,b){return b.score-a.score;});
-    return leads.slice(0,450);
+    /* neighbor dots: real addresses on file within ~500ft of each fresh crew —
+       these become contactable prospects even with no old permit of their own */
+    function qNear(cfg,an){
+      if(!cfg.latf||!cfg.lngf)return Promise.resolve([]);
+      var dd=0.0015;
+      var where=cfg.latf+' between '+(an.lat-dd)+' and '+(an.lat+dd)+' AND '+cfg.lngf+' between '+(an.lng-dd)+' and '+(an.lng+dd);
+      return fetch(cfg.api+'?$where='+encodeURIComponent(where)+'&$limit=25')
+        .then(function(r){return r.ok?r.json():[];}).catch(function(){return [];});
+    }
+    var top=window._rdAnchors.slice(0,8);
+    return Promise.all(top.map(function(an){return qNear(recentCfg,an).then(function(rows){return {an:an,rows:rows};});}))
+      .then(function(groups){
+        var nCount=0;
+        groups.forEach(function(g){
+          (g.rows||[]).forEach(function(r){
+            if(nCount>=40)return;
+            var addr=(recentCfg.addr(r)||'').toString().trim();
+            if(!addr||seen[addr]||addr===g.an.addr)return;
+            var _ll=recentCfg.pt?recentCfg.pt(r):[r[recentCfg.latf],r[recentCfg.lngf]];
+            var la=parseFloat(_ll[0]),lo=parseFloat(_ll[1]);
+            if(!isFinite(la)||!isFinite(lo))return;
+            var ft=Math.max(40,Math.round(rdKm(la,lo,g.an.lat,g.an.lng)*3281));
+            seen[addr]=1;nCount++;
+            leads.push({lat:la,lng:lo,base:72,score:72,age:0,year:new Date().getFullYear(),kind:'neighbor',
+              why:'Neighbor of the active '+t.unit+' job at '+g.an.addr+' — '+ft+' ft away. They\'re watching that job happen right now.',
+              addr:addr,desc:'address on file with the city',storm:false,raw:r,pid:permitId(recentCfg,r)});
+          });
+        });
+        leads.sort(function(a,b){return b.score-a.score;});
+        return leads.slice(0,480);
+      });
   });
 }
 function rdDemoLeads(){
@@ -16671,8 +16701,8 @@ function rdDraw(){
   var shown=_rdLeads.filter(function(p){return p.score>=_rdMin;});
   shown.forEach(function(p){
     var i=_rdLeads.indexOf(p);
-    var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':'#fff');
-    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:ring,weight:(p.storm||p.kind==='project')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
+    var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':(p.kind==='neighbor'?'#0f2540':'#fff'));
+    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:ring,weight:(p.storm||p.kind==='project'||p.kind==='neighbor')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
     m.on('click',function(){rdSheetOpen(i);});
     m._rdIdx=i;
     _rdLayer.addLayer(m);
