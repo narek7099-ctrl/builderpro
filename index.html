@@ -13908,7 +13908,9 @@ var _bpContacts=[];
   };
   window.bpOpenDelete=function(id){
     var c=bpFind(id); if(!c) return;
-    bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
+    bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div>'
+      +'<label>Type <b>DELETE</b> to confirm</label><input id="bpx-del-verify" placeholder="DELETE" autocomplete="off" autocapitalize="characters">'
+      +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
   };
   async function bpWrite(payload){
     return fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
@@ -13926,6 +13928,8 @@ var _bpContacts=[];
   };
   window.bpDeleteContact=async function(id){
     var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    var v=q('bpx-del-verify');
+    if(v&&String(v.value).trim().toUpperCase()!=='DELETE'){ msg.style.color='#dc2626'; msg.textContent='Type DELETE to confirm.'; return; }
     btn.disabled=true; btn.textContent='Deleting\u2026';
     try{
       var res=await bpWrite({action:'delete',id:id});
@@ -14038,12 +14042,16 @@ var _bpContacts=[];
 /* ==== bpOpenDelete ==== */
   window.bpOpenDelete=function(id){
     var c=bpFind(id); if(!c) return;
-    bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
+    bpModal('<h3>Delete Contact</h3><div class="bpx-sub">Permanently delete <b style="color:var(--ink)">'+bpEsc(c.name)+'</b> from your BuilderPro system? This cannot be undone.</div>'
+      +'<label>Type <b>DELETE</b> to confirm</label><input id="bpx-del-verify" placeholder="DELETE" autocomplete="off" autocapitalize="characters">'
+      +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
   };
 
 /* ==== bpDeleteContact ==== */
   window.bpDeleteContact=async function(id){
     var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+    var v=q('bpx-del-verify');
+    if(v&&String(v.value).trim().toUpperCase()!=='DELETE'){ msg.style.color='#dc2626'; msg.textContent='Type DELETE to confirm.'; return; }
     btn.disabled=true; btn.textContent='Deleting\u2026';
     try{
       var res=await bpWrite({action:'delete',id:id});
@@ -14613,6 +14621,21 @@ window.bpContactPage=function(id){
 };
 
 /* ---------- Messaging ---------- */
+/* messaging → contact profile: match the conversation to a contact record */
+window.bpMsgContact=async function(){
+  var cv=(typeof _bpCurConv!=='undefined'&&_bpCurConv)||window._bpCurConv; if(!cv)return;
+  await bpEnsureContacts();
+  var norm=function(p){return String(p||'').replace(/\D/g,'');};
+  var c=(_bpContacts||[]).filter(function(x){
+    return (cv.contactId&&x.id===cv.contactId)
+      ||(cv.phone&&x.phone&&norm(x.phone)===norm(cv.phone))
+      ||(cv.email&&x.email&&String(x.email).toLowerCase()===String(cv.email).toLowerCase())
+      ||(cv.name&&x.name&&x.name===cv.name);
+  })[0];
+  if(!c){alert('No matching contact record found for this conversation.');return;}
+  bpNav('contacts');
+  setTimeout(function(){bpContactPage(c.id);},80);
+};
 function bpRenderMessaging(){
   q('bpxViewArea').innerHTML='<div class="bpx-inbox">'
     +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
@@ -14649,9 +14672,10 @@ window.bpOpenConv=async function(id){
   var MAIL='<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>';
   var SEND='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
   q('bpx-thread').innerHTML=
-    '<div class="bpx-thead">'+bpAvatar(_bpCurConv.name||'?',38)
+    '<div class="bpx-thead" style="cursor:pointer" title="View contact" onclick="bpMsgContact()">'+bpAvatar(_bpCurConv.name||'?',38)
       +'<div><div class="bpx-thead-name">'+bpEsc(_bpCurConv.name||'Unknown')+'</div>'
-      +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div></div>'
+      +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div>'
+      +'<span class="bpx-rowbtn" style="margin-left:auto;flex:0 0 auto">Profile →</span></div>'
     +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
       +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
     +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages…</div></div>'
@@ -14912,9 +14936,10 @@ window.bpOpenConv=async function(id){
   var SEND='<svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
   var CLOCK='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   q('bpx-thread').innerHTML=
-    '<div class="bpx-thead">'+bpAvatar(_bpCurConv.name||'?',38)
+    '<div class="bpx-thead" style="cursor:pointer" title="View contact" onclick="bpMsgContact()">'+bpAvatar(_bpCurConv.name||'?',38)
       +'<div><div class="bpx-thead-name">'+bpEsc(_bpCurConv.name||'Unknown')+'</div>'
-      +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div></div>'
+      +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div>'
+      +'<span class="bpx-rowbtn" style="margin-left:auto;flex:0 0 auto">Profile →</span></div>'
     +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
       +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
     +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages…</div></div>'
@@ -15126,8 +15151,8 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
-        +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
+      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
+        +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
     }).join(''):'<tr><td colspan="6" class="bpx-empty2">No active projects yet. When a deposit is paid the job shows up here automatically — or add one manually.</td></tr>';
   } else {
     head='<tr><th>Job</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th><th></th></tr>';
@@ -15137,7 +15162,7 @@ function bpActiveJobs(){
         +'<td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(e)+'</td>'
         +'<td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td>'
         +'<td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td>'
-        +'<td class="bpx-r"><button class="bpx-rowbtn" onclick="bpJobDoneOpen(\''+j.id+'\')">Edit</button></td></tr>';
+        +'<td class="bpx-r"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Edit</button></td></tr>';
     }).join(''):'<tr><td colspan="6" class="bpx-empty2">No completed jobs yet.</td></tr>';
   }
   q('bpxViewArea').innerHTML=
@@ -15224,7 +15249,7 @@ window.bpProjOpen=function(id){
   var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
   bpModal('<h3>'+bpEsc(j.name||'Project')+' — '+bpEsc(j.title||'Project')+'</h3>'
     +'<div class="bpx-sub">Everything about this project in one place — it all saves to your account.</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start">'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:34px;align-items:start;margin-top:8px">'
     +'<div>'
       +'<label>Customer name</label>'+inp('bpx-pj-name','Full name',j.name)
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
@@ -15253,10 +15278,71 @@ window.bpProjOpen=function(id){
       +'<label style="margin-top:12px">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:4px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">'
+      +'<label style="margin-top:18px">Documents ('+(j.docs||[]).length+'/6)</label>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Contracts, permits, receipts — photos or PDFs. On iPad, choose “Scan Documents” in the picker.</div>'
+      +'<div id="bpx-pj-docs"></div>'
+      +'<button class="bpx-btn ghost" style="width:auto;margin-top:6px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-doc\').click()">+ Add file / scan</button>'
+      +'<input type="file" id="bpx-pj-doc" accept="image/*,.pdf,application/pdf" style="display:none" onchange="bpProjDoc(event)">'
     +'</div></div>'
     +'<div style="display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:nowrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
-  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='94vw';}
-  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal();
+  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='920px';mc.style.width='95vw';mc.style.padding='30px 34px';}
+  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal(); bpProjDocsRender(j);
+};
+function bpProjDocsRender(j){
+  var el=document.getElementById('bpx-pj-docs'); if(!el)return;
+  el.innerHTML=(j.docs||[]).map(function(d,i){
+    var isPdf=(d.t||'').indexOf('pdf')>-1;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eef1f6;font-size:13px">'
+      +'<span style="flex:0 0 auto;width:30px;height:30px;border-radius:7px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#64748b">'+(isPdf?'PDF':'IMG')+'</span>'
+      +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+bpEsc(d.n||'Document')+'</span>'
+      +'<button class="bpx-rowbtn" onclick="bpProjDocOpen('+i+')">View</button>'
+      +'<button class="bpx-exprm" onclick="bpProjDocDel('+i+')">×</button></div>';
+  }).join('')||'<div class="bpx-mut" style="font-size:12.5px">No documents yet.</div>';
+}
+window.bpProjDocOpen=function(i){
+  var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  var d=(j.docs||[])[i]; if(!d)return;
+  try{
+    var parts=d.d.split(','), bin=atob(parts[1]), arr=new Uint8Array(bin.length);
+    for(var k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k);
+    var url=URL.createObjectURL(new Blob([arr],{type:d.t||'application/octet-stream'}));
+    window.open(url,'_blank');
+  }catch(e){ window.open(d.d,'_blank'); }
+};
+window.bpProjDocDel=function(i){
+  var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  var d=(j.docs||[])[i]; if(!d)return;
+  if(!confirm('Remove "'+(d.n||'this document')+'" from the project?'))return;
+  j.docs.splice(i,1); bpProjDocsRender(j);
+};
+window.bpProjDoc=function(e){
+  var f=e.target.files&&e.target.files[0]; if(!f)return;
+  var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  j.docs=j.docs||[];
+  if(j.docs.length>=6){alert('Up to 6 documents per project.');return;}
+  var isPdf=/pdf/i.test(f.type)||/\.pdf$/i.test(f.name);
+  if(isPdf){
+    if(f.size>1500000){alert('PDF is too large — keep it under 1.5 MB (or scan pages as photos).');e.target.value='';return;}
+    var r=new FileReader();
+    r.onload=function(){ j.docs.push({n:f.name,t:'application/pdf',d:r.result}); bpProjDocsRender(j); };
+    r.readAsDataURL(f);
+  }else{
+    var r2=new FileReader();
+    r2.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var mx=1400,w=img.width,h=img.height;
+        if(w>mx||h>mx){var k=mx/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k);}
+        var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        j.docs.push({n:f.name||'Scan',t:'image/jpeg',d:cv.toDataURL('image/jpeg',0.8)});
+        bpProjDocsRender(j);
+      };
+      img.src=r2.result;
+    };
+    r2.readAsDataURL(f);
+  }
+  e.target.value='';
 };
 var _bpProjExp=[];
 function bpProjExpRender(){
@@ -15318,7 +15404,9 @@ window.bpProjCalNav=function(d){ _bpProjCal.m+=d; if(_bpProjCal.m<0){_bpProjCal.
 window.bpProjCalTog=function(iso){ var i=_bpProjDates.indexOf(iso); if(i>-1)_bpProjDates.splice(i,1); else _bpProjDates.push(iso); bpProjCalDraw(); };
 window.bpProjDelete=function(){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
-  if(!confirm('Delete "'+(j.name||'this project')+'"? This removes it from Active Projects and Finances. This can\'t be undone.'))return;
+  var t=prompt('This permanently removes "'+(j.name||'this project')+'" from Active Projects and Finances.\n\nType DELETE to confirm:');
+  if(t===null)return;
+  if(String(t).trim().toUpperCase()!=='DELETE'){alert('Not deleted — you must type DELETE exactly.');return;}
   bpJobsSet(jobs.filter(function(x){return x.id!==_bpProjId;}));
   bpCloseModal();
   if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
