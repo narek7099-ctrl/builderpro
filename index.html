@@ -16671,7 +16671,7 @@ function rdDraw(){
     for(var a2=0;a2<anchors.length;a2++){
       var dk=rdKm(p.lat,p.lng,anchors[a2].lat,anchors[a2].lng);
       if(dk<=0.16&&p.addr!==anchors[a2].addr){
-        p.anchor={addr:anchors[a2].addr,when:anchors[a2].when,ft:Math.max(60,Math.round(dk*3281))};
+        p.anchor={addr:anchors[a2].addr,when:anchors[a2].when,ft:Math.max(60,Math.round(dk*3281)),lat:anchors[a2].lat,lng:anchors[a2].lng};
         p.score=Math.min(100,p.score+18); break;
       }
     }
@@ -16745,11 +16745,24 @@ window.rdSheetOpen=function(i){
   el.style.display='block';
   el.innerHTML='<button onclick="rdSheetClose()" style="position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:#fff;color:#6a6a70;font-size:14px;cursor:pointer;line-height:1">×</button>'
     +rdPopup(p,i,t);
+  /* zoom into the block so crews & neighbors are readable; dashed line ties them together */
+  try{
+    if(window._rdFocusLayer){_rdMap.removeLayer(window._rdFocusLayer);window._rdFocusLayer=null;}
+    window._rdFocusLayer=L.layerGroup().addTo(_rdMap);
+    if(p.anchor&&p.anchor.lat){
+      window._rdFocusLayer.addLayer(L.polyline([[p.lat,p.lng],[p.anchor.lat,p.anchor.lng]],{color:'#0f2540',weight:2,dashArray:'5 6',opacity:.85}));
+      _rdMap.fitBounds(L.latLngBounds([[p.lat,p.lng],[p.anchor.lat,p.anchor.lng]]).pad(0.9));
+    }else{
+      _rdMap.setView([p.lat,p.lng],16);
+    }
+  }catch(e){}
   var inner=el.querySelector('div'); if(inner){inner.style.maxHeight='none';inner.style.overflowY='visible';}
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
 };
 window.rdSheetClose=function(){
   var el=document.getElementById('rdSheet'); if(el){el.style.display='none';el.innerHTML='';}
+  try{ if(window._rdFocusLayer){_rdMap.removeLayer(window._rdFocusLayer);window._rdFocusLayer=null;} }catch(e){}
+  try{ if(_rdMap&&window._rdFitB)_rdMap.fitBounds(window._rdFitB); }catch(e){}
   if(_rdLayer)_rdLayer.eachLayer(function(l){ if(l.setStyle&&l._rdIdx!=null){var p2=_rdLeads[l._rdIdx]||{};l.setStyle({weight:(p2.storm||p2.kind==='project')?2.5:1.5,color:p2.storm?'#f97316':(p2.kind==='project'?'#7c3aed':'#fff')});} });
 };
 function rdPopup(p,i,t){
