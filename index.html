@@ -15341,6 +15341,57 @@ function bpScanReady(){
   });
   return _bpScanLoad;
 }
+/* multi-page scan session -> one PDF document */
+var _bpScanPages=[];
+var _bpPdfLoad=null;
+function bpPdfReady(){
+  if(_bpPdfLoad)return _bpPdfLoad;
+  _bpPdfLoad=new Promise(function(res,rej){
+    if(window.jspdf&&window.jspdf.jsPDF)return res();
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=function(){ (window.jspdf&&window.jspdf.jsPDF)?res():rej('no jspdf'); };
+    s.onerror=rej; document.head.appendChild(s);
+  });
+  return _bpPdfLoad;
+}
+function bpScanFail(msg){
+  alert(msg||'Couldn\'t detect a page in that shot — nothing was saved.\n\nTips: lay the paper flat on a contrasting surface, fit the whole page in frame with a margin around it, and avoid shadows. Then try again.');
+  if(_bpScanPages.length&&confirm('Keep the '+_bpScanPages.length+' page'+(_bpScanPages.length===1?'':'s')+' you already scanned as the document?')){ bpScanFinishPdf(); }
+}
+function bpScanPageAdd(canvas){
+  _bpScanPages.push({d:canvas.toDataURL('image/jpeg',0.8),w:canvas.width,h:canvas.height});
+  if(_bpScanPages.length<8&&confirm('Page '+_bpScanPages.length+' captured ✓\n\nScan another page for this document?')){
+    var inp=document.getElementById('bpx-pj-scan'); if(inp){inp.click();return;}
+  }
+  bpScanFinishPdf();
+}
+function bpScanFinishPdf(){
+  var pages=_bpScanPages.splice(0,_bpScanPages.length);
+  if(!pages.length)return;
+  var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  j.docs=j.docs||[];
+  var el=document.getElementById('bpx-pj-docs');
+  if(el)el.insertAdjacentHTML('afterbegin','<div id="bpx-scanwait" style="font-size:12.5px;padding:6px 0;color:var(--blue);font-weight:600">Building the PDF…</div>');
+  var off=function(){ var w=document.getElementById('bpx-scanwait'); if(w)w.remove(); };
+  var nm='Scan '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})+(pages.length>1?' · '+pages.length+' pages':'');
+  bpPdfReady().then(function(){
+    var doc=null;
+    pages.forEach(function(p,i){
+      var wmm=210,hmm=Math.max(60,Math.round(210*p.h/p.w));
+      if(i===0)doc=new window.jspdf.jsPDF({unit:'mm',format:[wmm,hmm]});
+      else doc.addPage([wmm,hmm]);
+      doc.addImage(p.d,'JPEG',0,0,wmm,hmm);
+    });
+    off();
+    j.docs.push({n:nm,t:'application/pdf',d:doc.output('datauristring')});
+    bpProjDocsRender(j);
+  }).catch(function(){
+    off();
+    pages.forEach(function(p,i){ if(j.docs.length<6)j.docs.push({n:nm+' — p'+(i+1),t:'image/jpeg',d:p.d}); });
+    bpProjDocsRender(j);
+  });
+}
 window.bpProjDoc=function(e,scan){
   var f=e.target.files&&e.target.files[0]; if(!f)return;
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
@@ -15373,29 +15424,32 @@ window.bpProjDoc=function(e,scan){
         var el=document.getElementById('bpx-pj-docs');
         if(el)el.insertAdjacentHTML('afterbegin','<div id="bpx-scanwait" style="font-size:12.5px;padding:6px 0;color:var(--blue);font-weight:600">Finding the page & flattening it…</div>');
         bpScanReady().then(function(){
-          try{
-            var scanner=new jscanify();
-            /* keep the detected paper's aspect ratio via the corner points */
-            var mat=window.cv.imread(img);
-            var contour=scanner.findPaperContour(mat);
-            var pts=contour?scanner.getCornerPoints(contour):null;
-            mat.delete();
-            var outW=1000,outH=1294;
-            if(pts){
-              var d=function(a,b){return Math.hypot(a.x-b.x,a.y-b.y);};
-              var wAvg=(d(pts.topLeftCorner,pts.topRightCorner)+d(pts.bottomLeftCorner,pts.bottomRightCorner))/2;
-              var hAvg=(d(pts.topLeftCorner,pts.bottomLeftCorner)+d(pts.topRightCorner,pts.bottomRightCorner))/2;
-              if(wAvg>40&&hAvg>40){ outW=1000; outH=Math.max(400,Math.min(1800,Math.round(1000*hAvg/wAvg))); }
-            }
-            var out=scanner.extractPaper(img,outW,outH);
-            /* crisp scan look on the flattened page */
-            var fin=document.createElement('canvas');fin.width=out.width;fin.height=out.height;
-            var fctx=fin.getContext('2d');
-            try{fctx.filter='grayscale(1) contrast(1.25) brightness(1.08)';}catch(e3){}
-            fctx.drawImage(out,0,0);
-            waitOff(); finish(fin,scanDate);
-          }catch(e4){ waitOff(); fallback(); }
-        }).catch(function(){ waitOff(); fallback(); });
+          var scanner=new jscanify();
+          /* detect the page — no page found means the scan FAILS (no random photos) */
+          var mat=window.cv.imread(img);
+          var contour=scanner.findPaperContour(mat);
+          var pts=null;
+          try{ pts=contour?scanner.getCornerPoints(contour):null; }catch(eP){}
+          mat.delete();
+          var d=function(a,b){return Math.hypot(a.x-b.x,a.y-b.y);};
+          var wAvg=0,hAvg=0;
+          if(pts){
+            wAvg=(d(pts.topLeftCorner,pts.topRightCorner)+d(pts.bottomLeftCorner,pts.bottomRightCorner))/2;
+            hAvg=(d(pts.topLeftCorner,pts.bottomLeftCorner)+d(pts.topRightCorner,pts.bottomRightCorner))/2;
+          }
+          /* require a real page: found corners covering a sensible chunk of the photo */
+          var minSide=Math.min(img.width,img.height);
+          if(!pts||wAvg<minSide*0.25||hAvg<minSide*0.25){
+            waitOff(); bpScanFail(); return;
+          }
+          var outW=1000,outH=Math.max(400,Math.min(1800,Math.round(1000*hAvg/wAvg)));
+          var out=scanner.extractPaper(img,outW,outH);
+          var fin=document.createElement('canvas');fin.width=out.width;fin.height=out.height;
+          var fctx=fin.getContext('2d');
+          try{fctx.filter='grayscale(1) contrast(1.25) brightness(1.08)';}catch(e3){}
+          fctx.drawImage(out,0,0);
+          waitOff(); bpScanPageAdd(fin);
+        }).catch(function(){ waitOff(); bpScanFail('The scanner couldn\'t load — check your connection and try again.'); });
       };
       img.src=r2.result;
     };
