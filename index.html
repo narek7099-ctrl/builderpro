@@ -12555,6 +12555,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <a data-view="activejobs" onclick="bpNav('activejobs')"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>Active Projects</span></a><a data-view="finances" onclick="bpNav('finances')"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Finances</span></a><a data-view="leadradar" onclick="bpNav('leadradar')"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Lead Radar</span></a>
         
         <a data-view="calculator" onclick="bpNav('calculator')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3"/></svg><span>My Calculator</span></a>
+        <a data-view="atlas" onclick="bpNav('atlas')"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8"/><circle cx="14.5" cy="10" r=".8"/></svg><span>Atlas AI</span></a>
         <a data-view="settings" onclick="bpNav('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 3.6h.09A1.65 1.65 0 0 0 9 2.09V2a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 14 3.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 8v.09A1.65 1.65 0 0 0 21.91 9H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></a>
       </nav>
       <div class="bpx-user2"><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
@@ -13141,9 +13142,9 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},atlas:{t:'Atlas AI',s:'Your 24/7 AI receptionist \u2014 what it does, what it knows, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 function bpBuildMobbar(){
-  var h='';Object.keys(BPVIEWS).forEach(function(v){h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
+  var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
 }
 function bpNav(v){
@@ -13152,7 +13153,7 @@ function bpNav(v){
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,leadradar:bpRadar,calculator:bpCalculator,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,leadradar:bpRadar,calculator:bpCalculator,atlas:bpAtlasView,settings:bpSettings}[v])();
   document.querySelector('.bpx-main').scrollTop=0;
 }
 function bpDonut(pct,color,val,label){
@@ -13664,6 +13665,85 @@ function bpCalcPreview(){
   setTimeout(function(){if(typeof estCarouselGo==='function')estCarouselGo(idx);var s=document.getElementById('estimator');if(s)s.scrollIntoView({behavior:'smooth'});},260);
 }
 
+/* ---- Atlas AI tab: status, performance, the brain, and everything it runs ---- */
+function bpAtlasView(){
+  var s=bpSettingsGet(), a=s.atlas||{}, c=s.company||{};
+  var ph=BP_ATLAS_PHONE||'';
+  var phFmt=ph.replace(/^\+1?/,'').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3');
+  var fld=function(id,label,hint,val,ph2){return '<label style="margin-top:14px;display:block;font-size:13px;font-weight:600">'+label+'</label>'
+    +(hint?'<div class="bpx-mut" style="font-size:12px;margin:2px 0 6px">'+hint+'</div>':'')
+    +'<textarea id="'+id+'" style="width:100%;min-height:74px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:13.5px;box-sizing:border-box" placeholder="'+ph2+'">'+bpEsc(val||'')+'</textarea>';};
+  var autoHtml='';
+  BP_AUTOMATIONS.forEach(function(g){
+    autoHtml+='<div class="bpx-auto-stage">'+g.stage+'</div><div class="bpx-auto-grid">';
+    g.items.forEach(function(it){autoHtml+='<div class="bpx-auto-card"><div class="bpx-auto-top"><span class="bpx-auto-dot"></span><div class="bpx-auto-name">'+it.n+'</div><span class="bpx-auto-on">ON</span></div><p class="bpx-auto-desc">'+it.d+'</p></div>';});
+    autoHtml+='</div>';
+  });
+  q('bpxViewArea').innerHTML=
+    /* status hero */
+    '<div class="bpx-panel" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">'
+      +'<div style="width:54px;height:54px;border-radius:14px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex:0 0 auto"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8" fill="#fff"/><circle cx="14.5" cy="10" r=".8" fill="#fff"/></svg></div>'
+      +'<div style="flex:1;min-width:220px"><div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><b style="font-size:18px;color:#0f2540">Atlas is live</b>'
+        +'<span style="display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#15803d;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:99px"><i style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block"></i>ANSWERING 24/7</span></div>'
+        +'<div class="bpx-mut" style="font-size:13px;margin-top:3px">Every call and text to <b class="bpx-num">'+bpEsc(phFmt||'your business line')+'</b> is answered instantly — Atlas books jobs, answers questions, and never lets a lead go cold.</div></div>'
+      +(ph?'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +'<a class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px;text-decoration:none;display:inline-block" href="tel:'+bpEsc(ph)+'">Call Atlas</a>'
+        +'<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:11px 18px;text-decoration:none;display:inline-block" href="sms:'+bpEsc(ph)+'">Text Atlas</a></div>':'')
+    +'</div></div>'
+    /* performance */
+    +'<div class="bpx-stats">'
+    +'<div class="bpx-stat"><div class="lbl">Calls recovered</div><div class="val" id="bpxAtCalls">—</div><div class="note">this month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Texts recovered</div><div class="val" id="bpxAtTexts">—</div><div class="note">this month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Leads reactivated</div><div class="val" id="bpxAtReact">—</div><div class="note">this month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Appointments booked</div><div class="val blue" id="bpxAtAppts">—</div><div class="note">this month</div></div>'
+    +'</div>'
+    +'<div class="bpx-set-grid">'
+    /* the brain */
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Atlas’s brain<span class="lg2">what it knows about your business</span></div>'
+      +'<div class="bpx-mut" style="font-size:12.5px">Atlas already knows your business name, trade, hours, and service area from Settings. Add anything else it should know — save it here and our team updates your live Atlas, usually within one business day.</div>'
+      +fld('bpx-at-services','Services & pricing guidance','What you do, what you don’t, and ballpark ranges Atlas may quote.',a.services,'e.g. Full roof replacements $9k–$25k depending on size & material. We do repairs from $450. We do NOT do flat commercial roofs.')
+      +fld('bpx-at-faq','Common questions & answers','The questions customers always ask — and exactly how Atlas should answer.',a.faq,'e.g. Are you licensed & insured? — Yes, CA license #123456, fully insured. Do you offer financing? — Yes, through Acorn.')
+      +fld('bpx-at-rules','Rules & boundaries','Things Atlas must always or never do.',a.rules,'e.g. Never quote an exact final price. Always offer the free inspection. Emergencies: tell them we can be out within 24 hours.')
+      +'<div style="display:flex;gap:8px;margin-top:16px;align-items:center;flex-wrap:wrap">'
+        +'<button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 20px" onclick="bpAtlasSave()">Save brain</button>'
+        +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 16px" onclick="bpAtlasSend()">Send update to the Atlas team</button>'
+        +'<span class="bpx-mmsg" id="bpx-atmsg"></span></div>'
+    +'</div>'
+    /* try it */
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Try Atlas yourself<span class="lg2">call the line and ask it anything</span></div>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-bottom:10px">Call or text your own number and try these — this is exactly what your customers experience:</div>'
+      +['“How much does a new roof cost?”','“Are you licensed and insured?”','“Can I book an inspection for Saturday?”','“Do you handle insurance claims?”','“What areas do you cover?”'].map(function(x){
+        return '<div style="padding:9px 13px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;font-size:13.5px;background:var(--soft)">'+x+'</div>';}).join('')
+      +'<div class="bpx-mut" style="font-size:12px;margin-top:10px">Every conversation Atlas has shows up in your Messaging tab, and booked appointments land on your Calendar.</div>'
+    +'</div></div>'
+    /* automations */
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Everything Atlas runs for you<span class="lg2">always on — no setup needed</span></div>'+autoHtml+'</div>';
+  /* live performance numbers */
+  if(window.BP_LIVE){
+    bpApi(GHL_DASH_URL,{}).then(function(d){
+      if(!d)return;
+      if(d.recovery){bpSet('bpxAtCalls',bpNum(d.recovery.calls||0));bpSet('bpxAtTexts',bpNum(d.recovery.texts||0));bpSet('bpxAtReact',bpNum(d.recovery.reactivated||0));}
+      if(d.appointmentsBookedMonth!=null)bpSet('bpxAtAppts',bpNum(d.appointmentsBookedMonth));
+    }).catch(function(){});
+  }
+}
+window.bpAtlasSave=function(){
+  var g=function(id){var e=q(id);return e?e.value:'';};
+  var s=bpSettingsGet();
+  s.atlas={services:g('bpx-at-services'),faq:g('bpx-at-faq'),rules:g('bpx-at-rules'),updated:Date.now()};
+  bpSettingsSet(s);
+  var m=q('bpx-atmsg'); if(m){m.style.color='#15803d';m.textContent='Saving…';}
+  bpSettingsPush(s).then(function(ok){ if(m){m.textContent=ok?'Saved ✓ · synced to your account':'Saved on this device ✓'; setTimeout(function(){if(m)m.textContent='';},3000);} });
+};
+window.bpAtlasSend=function(){
+  var g=function(id){var e=q(id);return e?e.value:'';};
+  var s=bpSettingsGet(),c=s.company||{};
+  var body='Hi BuilderPro team,%0D%0A%0D%0APlease update my Atlas AI with the following:%0D%0A%0D%0ABusiness: '+encodeURIComponent(c.name||'(not set)')
+    +'%0D%0A%0D%0ASERVICES %26 PRICING:%0D%0A'+encodeURIComponent(g('bpx-at-services')||'(no change)')
+    +'%0D%0A%0D%0AFAQ:%0D%0A'+encodeURIComponent(g('bpx-at-faq')||'(no change)')
+    +'%0D%0A%0D%0ARULES:%0D%0A'+encodeURIComponent(g('bpx-at-rules')||'(no change)');
+  window.location.href='mailto:support@builderpro-os.com?subject='+encodeURIComponent('Atlas brain update — '+(c.name||'client'))+'&body='+body;
+};
 function bpAutomations(){
   var h='<div class="bpx-sec-p" style="max-width:640px">Your BuilderPro system runs these automations around the clock — capturing, nurturing, and following up with every lead so nothing slips through the cracks.</div>';
   BP_AUTOMATIONS.forEach(function(g){
