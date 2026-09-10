@@ -15271,18 +15271,19 @@ window.bpProjOpen=function(id){
       +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff"></div>'
       +'<div style="margin-top:10px">'
         +'<div><label>Start time</label><input type="time" id="bpx-pj-time" style="display:block;width:100%;max-width:200px;box-sizing:border-box" value="'+bpEsc(j.sched.time||'09:00')+'"></div>'
-        +'<div><label>Duration</label><select id="bpx-pj-dur" style="display:block;width:100%;box-sizing:border-box;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit;font-size:14px">'
-          +[['30','30 minutes'],['60','1 hour'],['120','2 hours'],['180','3 hours'],['240','4 hours'],['360','6 hours'],['480','Full day (8 hours)']].map(function(o){
-              return '<option value="'+o[0]+'"'+(String(j.sched.dur||'480')===o[0]?' selected':'')+'>'+o[1]+'</option>';
-            }).join('')+'</select></div></div>'
+        +'<div><label>End time</label><input type="time" id="bpx-pj-end" style="display:block;width:100%;max-width:200px;box-sizing:border-box" value="'+bpEsc(j.sched.end||bpProjEndFromDur(j.sched.time||'09:00',j.sched.dur||'480'))+'"></div></div>'
       +'<label style="margin-top:12px">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:4px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">'
       +'<label style="margin-top:18px">Documents ('+(j.docs||[]).length+'/6)</label>'
-      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Contracts, permits, receipts — photos or PDFs. On iPad, choose “Scan Documents” in the picker.</div>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Contracts, permits, receipts — as files or scanned straight from the camera.</div>'
       +'<div id="bpx-pj-docs"></div>'
-      +'<button class="bpx-btn ghost" style="width:auto;margin-top:6px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-doc\').click()">+ Add file / scan</button>'
+      +'<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">'
+        +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-doc\').click()">+ Add file</button>'
+        +'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-scan\').click()">Scan paper</button>'
+      +'</div>'
       +'<input type="file" id="bpx-pj-doc" accept="image/*,.pdf,application/pdf" style="display:none" onchange="bpProjDoc(event)">'
+      +'<input type="file" id="bpx-pj-scan" accept="image/*" capture="environment" style="display:none" onchange="bpProjDoc(event,true)">'
     +'</div></div>'
     +'<div style="display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:nowrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='920px';mc.style.width='95vw';mc.style.padding='30px 34px';}
@@ -15315,7 +15316,7 @@ window.bpProjDocDel=function(i){
   if(!confirm('Remove "'+(d.n||'this document')+'" from the project?'))return;
   j.docs.splice(i,1); bpProjDocsRender(j);
 };
-window.bpProjDoc=function(e){
+window.bpProjDoc=function(e,scan){
   var f=e.target.files&&e.target.files[0]; if(!f)return;
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   j.docs=j.docs||[];
@@ -15334,8 +15335,11 @@ window.bpProjDoc=function(e){
         var mx=1400,w=img.width,h=img.height;
         if(w>mx||h>mx){var k=mx/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k);}
         var cv=document.createElement('canvas');cv.width=w;cv.height=h;
-        cv.getContext('2d').drawImage(img,0,0,w,h);
-        j.docs.push({n:f.name||'Scan',t:'image/jpeg',d:cv.toDataURL('image/jpeg',0.8)});
+        var ctx=cv.getContext('2d');
+        if(scan){ try{ctx.filter='grayscale(1) contrast(1.35) brightness(1.1)';}catch(e2){} }
+        ctx.drawImage(img,0,0,w,h);
+        var nm=scan?('Scan '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})):(f.name||'Document');
+        j.docs.push({n:nm,t:'image/jpeg',d:cv.toDataURL('image/jpeg',0.8)});
         bpProjDocsRender(j);
       };
       img.src=r2.result;
@@ -15363,16 +15367,23 @@ window.bpProjBal=function(){
   el.style.color=due<=0?'#15803d':'var(--ink)';
 };
 function bpProjIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
-/* "09:00" + minutes -> "9 AM · 3h" for calendar/card labels */
+/* "09:00" -> minutes-of-day; back to "5:30 PM" */
+function bpProjT12(t){
+  var p=String(t).split(':'),h=parseInt(p[0],10),mi=p[1]||'00';
+  if(isNaN(h))return '';
+  return (h%12||12)+(mi!=='00'?':'+mi:'')+' '+(h>=12?'PM':'AM');
+}
+function bpProjEndFromDur(t,dur){
+  var p=String(t).split(':'),m=(parseInt(p[0],10)||9)*60+(parseInt(p[1],10)||0)+(parseInt(dur,10)||480);
+  m=Math.min(m,23*60+59);
+  return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2);
+}
+/* schedule label: "9 AM – 5 PM" for calendar/card lines */
 function bpProjTimeLbl(t,dur){
   if(!t)return '';
-  var p=String(t).split(':'), h=parseInt(p[0],10), mi=p[1]||'00';
-  if(isNaN(h))return '';
-  var ap=h>=12?'PM':'AM', h12=h%12||12;
-  var s=h12+(mi!=='00'?':'+mi:'')+' '+ap;
-  var m=parseInt(dur,10);
-  if(m>0)s+=' · '+(m%60===0?(m/60)+'h':m+'m');
-  return s;
+  var s=bpProjT12(t); if(!s)return '';
+  var e=bpProjT12(bpProjEndFromDur(t,dur));
+  return e?s+' – '+e:s;
 }
 window.bpProjCalDraw=function(){
   var el=document.getElementById('bpx-pj-cal'); if(!el||!_bpProjCal)return;
@@ -15456,7 +15467,10 @@ window.bpProjSave=function(){
   j.collected=paidRaw?bpParseMoney(paidRaw):null;
   j.expenses=_bpProjExp.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
   var dates=_bpProjDates.slice().sort();
-  j.sched={notes:g('bpx-pj-notes'),dates:dates,time:g('bpx-pj-time'),dur:g('bpx-pj-dur'),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
+  var t0=g('bpx-pj-time'),t1=g('bpx-pj-end');
+  var mins=function(t){var p=String(t).split(':');return (+p[0])*60+(+p[1]||0);};
+  var dur=(t0&&t1)?(mins(t1)-mins(t0)):0; if(!(dur>0))dur=480;
+  j.sched={notes:g('bpx-pj-notes'),dates:dates,time:t0,end:t1,dur:String(dur),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
   bpJobsSet(jobs); bpCloseModal();
   if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };
