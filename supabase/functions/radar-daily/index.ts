@@ -67,6 +67,42 @@ function scorePermit(row: Record<string, string>, trade: string) {
   return { pts: Math.min(97, pts), why: best.why, date: (row.issue_date ?? "").slice(0, 10) };
 }
 
+function rowCoords(p: Record<string, unknown>): [number, number] | null {
+  const g = (p.geolocation ?? p.location ?? {}) as Record<string, unknown>;
+  const co = (g.coordinates ?? null) as number[] | null;
+  const la = Number(p.lat ?? g.latitude ?? (co ? co[1] : NaN));
+  const lo = Number(p.lon ?? g.longitude ?? (co ? co[0] : NaN));
+  return isFinite(la) && isFinite(lo) ? [la, lo] : null;
+}
+const kmBetween = (a: number, b: number, c: number, d: number) => {
+  const R = 6371, dLa = (c - a) * Math.PI / 180, dLo = (d - b) * Math.PI / 180;
+  const x = Math.sin(dLa / 2) ** 2 + Math.cos(a * Math.PI / 180) * Math.cos(c * Math.PI / 180) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+};
+// same-trade keywords: a FRESH one of these = a crew on the street (anchor, not lead)
+const TRADE_KW: Record<string, string[]> = {
+  roofing: ["reroof", "roof"], hvac: ["hvac"], landscaping: ["landscap", "irrigation"],
+  painting: ["siding", "stucco"], countertops: ["kitchen"],
+};
+// storm mode: real hail/wind reports near LA in the last 72h
+async function fetchFreshStorms(): Promise<{ lat: number; lng: number; type: string }[]> {
+  const fmt = (d: Date) => d.toISOString().slice(0, 16) + "Z";
+  const url = `https://mesonet.agron.iastate.edu/geojson/lsr.geojson?inc_ap=yes&wfos=LOX&sts=${fmt(new Date(Date.now() - 72 * 36e5))}&ets=${fmt(new Date())}`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const g = await r.json();
+    const out: { lat: number; lng: number; type: string }[] = [];
+    for (const f of g?.features ?? []) {
+      const tt = String(f?.properties?.typetext ?? "").toUpperCase();
+      if (!tt.includes("HAIL") && !tt.includes("TSTM WND") && !tt.includes("THUNDERSTORM WIND")) continue;
+      const co = f?.geometry?.coordinates;
+      if (co) out.push({ lat: co[1], lng: co[0], type: tt.includes("HAIL") ? "hail" : "wind" });
+    }
+    return out.slice(0, 100);
+  } catch { return []; }
+}
+
 async function fetchPermits(zips: string[]) {
   const out: Record<string, string>[] = [];
   const since = new Date(Date.now() - 730 * 864e5).toISOString().slice(0, 10);
@@ -143,6 +179,19 @@ Deno.serve(async (req) => {
     const zips: string[] = (t.zips ?? []).length ? t.zips : ["91605"];
     const trade = RULES[t.trade] ? t.trade : "roofing";
     const permits = await fetchPermits(zips);
+    // anchors: fresh same-trade permits (last 21 days) = crews on the street
+    const anchorCut = Date.now() - 21 * 864e5;
+    const akw = TRADE_KW[trade] ?? TRADE_KW.roofing;
+    const anchors: { lat: number; lng: number; addr: string }[] = [];
+    for (const p of permits) {
+      const hay = ["work_desc", "permit_type", "permit_sub_type"].map((f) => String(p[f] ?? "").toLowerCase()).join(" ");
+      if (!akw.some((k) => hay.includes(k))) continue;
+      const d = new Date(String(p.issue_date ?? ""));
+      if (isNaN(d.getTime()) || d.getTime() < anchorCut) continue;
+      const c = rowCoords(p);
+      if (c) anchors.push({ lat: c[0], lng: c[1], addr: String(p.primary_address ?? "").trim() });
+    }
+    const storms = await fetchFreshStorms();
     const scored: { addr: string; score: number; why: string; date: string }[] = [];
     const dupe = new Set<string>();
     for (const p of permits) {
@@ -153,7 +202,16 @@ Deno.serve(async (req) => {
       const sc = scorePermit(p, trade);
       if (!sc) continue;
       dupe.add(key);
-      scored.push({ addr, score: sc.pts, why: sc.why, date: sc.date });
+      // fresh-signal boosts: crew on the street + storm hit in last 72h
+      let pts = sc.pts, why = sc.why;
+      const co = rowCoords(p);
+      if (co) {
+        const an = anchors.find((a) => a.addr !== addr && kmBetween(co[0], co[1], a.lat, a.lng) <= 0.16);
+        if (an) { pts = Math.min(100, pts + 18); why = `crew on the street (${an.addr}) · ` + why; }
+        const st = storms.find((s) => kmBetween(co[0], co[1], s.lat, s.lng) <= 3);
+        if (st) { pts = Math.min(100, pts + 20); why = `STORM ${st.type} hit <72h · ` + why; }
+      }
+      scored.push({ addr, score: pts, why, date: sc.date });
     }
     scored.sort((a, b) => b.score - a.score);
     const top = scored.slice(0, PER_DAY);
