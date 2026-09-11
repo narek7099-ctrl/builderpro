@@ -12387,6 +12387,12 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 .bpx-siteframe:fullscreen iframe,.bpx-siteframe:-webkit-full-screen iframe{height:100vh;}
 .bpx-siteph{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--grey);font-size:13.5px;padding:24px;}
 /* My Calculator */
+.bpx-calc-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr);gap:16px;align-items:start;}
+@media(max-width:1080px){.bpx-calc-wrap{grid-template-columns:1fr;}}
+.bpx-calc-prev{position:sticky;top:0;}
+.bpx-calc-frame{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f4f2ec;}
+.bpx-calc-iframe{display:block;width:100%;height:600px;border:0;background:#f4f2ec;}
+@media(max-width:1080px){.bpx-calc-iframe{height:540px;}.bpx-calc-prev{position:static;}}
 .bpx-calc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
 .bpx-calc-lab{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:5px;}
 .bpx-calc-sel{border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:14px;background:#fff;color:#111114;outline:none;min-width:200px;}
@@ -12556,9 +12562,13 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 /* view transition + loading */
 #bpxViewArea.bpx-in{animation:bpxIn .32s cubic-bezier(.2,.7,.2,1) both;}
 @keyframes bpxIn{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
-#bpxProg{position:fixed;top:0;left:0;height:3px;width:0;background:var(--blue);z-index:4000;opacity:0;transition:width .55s cubic-bezier(.2,.7,.3,1),opacity .25s;box-shadow:0 0 10px rgba(37,99,235,.55);pointer-events:none;}
-#bpxProg.run{opacity:1;width:72%;}
-#bpxProg.done{width:100%;opacity:0;transition:width .18s ease,opacity .3s .12s;}
+#bpxSpin{position:fixed;inset:0;z-index:2500;display:none;align-items:center;justify-content:center;pointer-events:none;}
+#bpxSpin.on{display:flex;}
+#bpxSpin::before{content:'';position:absolute;inset:0;background:rgba(244,246,249,.55);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);}
+#bpxSpin i{position:relative;width:42px;height:42px;border-radius:50%;border:3px solid rgba(37,99,235,.16);border-top-color:var(--blue);animation:bpxSpinTurn .65s linear infinite;}
+@keyframes bpxSpinTurn{to{transform:rotate(360deg);}}
+#bpx.bpx-dark #bpxSpin::before{background:rgba(15,20,30,.55);}
+@media(prefers-reduced-motion:reduce){#bpxSpin i{animation-duration:1.6s;}}
 .bpx-skel{height:14px;border-radius:6px;background:linear-gradient(90deg,#eef1f5 25%,#f7f9fc 50%,#eef1f5 75%);background-size:200% 100%;animation:bpxSk 1.2s infinite;margin:10px 0;}
 @keyframes bpxSk{to{background-position:-200% 0;}}
 #bpx.bpx-dark .bpx-skel{background:linear-gradient(90deg,#1e2736 25%,#26303f 50%,#1e2736 75%);background-size:200% 100%;}
@@ -12574,7 +12584,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-ctable tbody tr[onclick]{cursor:pointer;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#8ec5ff;}
 #bpx .bpx-panel .bpx-btn{width:auto;margin-top:0;}
-#bpx .bpx-set-foot .bpx-btn{width:100%;}
+#bpx .bpx-set-foot .bpx-btn{width:auto;}
 #bpx:not(.bpx-dark) .bpx-stat .note{color:#6b7a90;font-weight:500;}
 #bpx:not(.bpx-dark) .bpx-stat .note.up{color:#15803d;font-weight:600;}
 #bpx:not(.bpx-dark) .bpx-stat .note.down{color:#dc2626;font-weight:600;}
@@ -13215,13 +13225,14 @@ function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
 }
-/* thin progress bar across the top of the portal while a view loads */
-function bpProgress(){
-  var p=document.getElementById('bpxProg');
-  if(!p){p=document.createElement('div');p.id='bpxProg';document.getElementById('bpx').appendChild(p);}
-  clearTimeout(p._t);clearTimeout(p._t2);
-  p.className='';void p.offsetWidth;p.className='run';
-  p._t=setTimeout(function(){p.className='done';p._t2=setTimeout(function(){p.className='';},450);},520);
+/* circular loader in the middle of the portal while a view builds */
+function bpSpin(on){
+  var s=document.getElementById('bpxSpin');
+  if(!s){s=document.createElement('div');s.id='bpxSpin';s.innerHTML='<i></i>';document.getElementById('bpx').appendChild(s);}
+  clearTimeout(s._t);
+  if(on===false){s.classList.remove('on');return;}
+  s.classList.add('on');
+  s._t=setTimeout(function(){s.classList.remove('on');},450);
 }
 function bpNav(v){
   window._bpCurView=v;
@@ -13230,12 +13241,27 @@ function bpNav(v){
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
   var area=document.getElementById('bpxViewArea');
-  bpProgress();
+  bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
   ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,leadradar:bpRadar,marketing:bpMarketing,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
+/* ---- CSV export: bpCsv('contacts',[headers],[[row],[row]]) ---- */
+function bpCsvCell(v){ v=(v==null?'':String(v)); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function bpCsv(name,head,rows){
+  if(!rows||!rows.length){alert('Nothing to export yet.');return;}
+  var lines=[head.map(bpCsvCell).join(',')].concat(rows.map(function(r){return r.map(bpCsvCell).join(',');}));
+  /* the BOM makes Excel read it as UTF-8 instead of mangling accents and the — dash */
+  var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;
+  a.download=String(name).replace(/[^a-z0-9\-_]+/gi,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1500);
+}
+function bpCsvBtn(fn,label){ return '<button class="bpx-btn ghost bpx-csv" onclick="'+fn+'" title="Download as a spreadsheet">'+bpCsvIcon+(label||'Export CSV')+'</button>'; }
+var bpCsvIcon='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 function bpDonut(pct,color,val,label){
   return '<div class="donut"><svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="#eef0f4" stroke-width="6"/><circle cx="21" cy="21" r="16" fill="none" stroke="'+color+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+pct+' 100" stroke-dashoffset="25" pathLength="100" transform="rotate(-90 21 21)"/></svg><div><div class="dv">'+val+'</div><div class="dl">'+label+'</div></div></div>';
 }
@@ -13662,15 +13688,37 @@ function bpCalculator(){
   var saved=bpCalcAssigned(); window._bpCalcCur=saved;
   var nm=saved;BP_CALC_IDS.forEach(function(p){if(p[0]===saved)nm=p[1];});
   document.getElementById('bpxViewArea').innerHTML=
-    '<div class="bpx-calc-head"><div><label class="bpx-calc-lab">Your calculator</label><div class="bpx-calc-sel" style="display:flex;align-items:center;font-weight:700">'+bpEsc(nm)+'</div>'
-    +'<div class="bpx-mut" style="font-size:11.5px;margin-top:4px">Matched to your trade in Settings. Need a different one? Contact us.</div></div>'
-    +'<button class="bpx-mini alt" onclick="bpCalcPreview()">Preview live calculator \u2197</button></div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Edit your pricing<span class="lg2" id="bpCalcUnit"></span></div>'
+    '<div class="bpx-calc-wrap">'
+    +'<div class="bpx-panel">'
+      +'<div class="bpx-chead" style="margin-bottom:14px;align-items:flex-start">'
+        +'<div><div class="bpx-ptitle" style="margin:0">Edit your pricing<span class="lg2" id="bpCalcUnit" style="margin-left:8px"></span></div>'
+        +'<div class="bpx-mut" style="font-size:12px;margin-top:3px">'+bpEsc(nm)+' calculator \u00b7 matched to your trade in Settings</div></div>'
+      +'</div>'
       +'<div id="bpCalcTable"><div class="bpx-price-row"><span>Loading\u2026</span></div></div>'
-      +'<div class="bpx-calc-foot"><button class="bpx-cd-btn" onclick="bpCalcSave()">Save pricing</button><button class="bpx-mini alt" style="margin-left:10px" onclick="bpCalcReset()">Reset to defaults</button><span class="bpx-calc-ok" id="bpCalcOk"></span></div>'
-    +'</div>';
+      +'<div class="bpx-calc-foot"><button class="bpx-cd-btn" onclick="bpCalcSave()">Save pricing</button><button class="bpx-mini alt" onclick="bpCalcReset()">Reset to defaults</button><span class="bpx-calc-ok" id="bpCalcOk"></span></div>'
+    +'</div>'
+    +'<div class="bpx-panel bpx-calc-prev">'
+      +'<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">What your customer sees</div>'
+        +'<button class="bpx-mini alt" onclick="bpCalcFrameReload()">Refresh</button></div>'
+      +'<div id="bpCalcPreviewBox" class="bpx-calc-frame"></div>'
+      +'<div class="bpx-mut" style="font-size:11.5px;margin-top:9px">The real calculator from your website. Save your pricing and it reloads here with the new numbers.</div>'
+    +'</div></div>';
   bpCalcPick(saved);
+  bpCalcFrameReload();
 }
+/* the live estimators on the homepage are self-contained srcdoc iframes \u2014 clone the
+   matching one so the client edits prices beside the thing their customer actually uses */
+window.bpCalcFrameReload=function(){
+  var host=document.getElementById('bpCalcPreviewBox'); if(!host) return;
+  var cid=window._bpCalcCur||bpCalcAssigned(), idx=BP_CALC_IDX[cid];
+  var src=document.querySelectorAll('#estimator .est-frame')[idx];
+  host.innerHTML='';
+  if(!src){ host.innerHTML='<div class="bpx-empty2" style="padding:40px">Preview isn\'t available for this calculator.</div>'; return; }
+  var f=document.createElement('iframe');
+  f.className='bpx-calc-iframe'; f.setAttribute('title','Live calculator preview');
+  f.setAttribute('srcdoc',src.getAttribute('srcdoc')||'');
+  host.appendChild(f);
+};
 function bpCalcRender(cid,override){
   var def=BP_CALC_DEFS[cid];var u=document.getElementById('bpCalcUnit');if(u)u.textContent=def.unit;
   var h='';
@@ -13719,7 +13767,7 @@ function bpCalcSave(){
   localStorage.setItem('bpPrice_'+cid,JSON.stringify(pricing));
   var ok=document.getElementById('bpCalcOk');ok.textContent='Saving\u2026';
   if(BP_LIVE){try{BP_SB.from('calculator_pricing').upsert({calc_id:cid,pricing:pricing,updated_at:new Date().toISOString()},{onConflict:'calc_id,owner'}).then(function(r){
-    if(r&&r.error)throw r.error;ok.textContent='\u2713 Saved \u2014 live on your '+cid+' calculator.';
+    if(r&&r.error)throw r.error;ok.textContent='\u2713 Saved \u2014 live on your '+cid+' calculator.';setTimeout(bpCalcFrameReload,400);
   }).catch(function(){ok.textContent='Saved on this device \u2014 live sync unavailable right now.';}).then(function(){setTimeout(function(){if(ok)ok.textContent='';},4500);});}
   catch(e){ok.textContent='\u2713 Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}}
   else{ok.textContent='\u2713 Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}
@@ -13781,45 +13829,39 @@ function bpRgDirty(){
   var d=bpRgDraft(),r=_bpRgRemote; if(!r)return !!(d.services||d.pricing||d.faq||d.rules);
   return (d.services||'')!==(r.services||'')||(d.pricing||'')!==(r.pricing||'')||(d.faq||'')!==(r.faqs||'')||(d.rules||'')!==(r.custom_instructions||'')||((d.tone||'Friendly')!==(r.tone||'Friendly'));
 }
+/* compact pill for the header strip */
 function bpRgStatusHTML(){
   var r=_bpRgRemote, dirty=bpRgDirty();
-  if(!r||!r.published_at){
-    return '<div class="bpx-rg-status"><span class="dot amber"></span><div><b>Not published yet</b><div class="bpx-mut">Ridge is answering from your Settings only. Add what it should know, then publish.</div></div></div>';
-  }
-  var line='Published '+bpRgAgo(r.published_at)+(r.ghl_synced_at?' · phone line synced':(_bpRgLinked?' · phone line didn\'t update on the last publish':' · web & text only — phone line not linked'));
-  return '<div class="bpx-rg-status"><span class="dot '+(dirty?'amber':'green')+'"></span><div><b>'+(dirty?'Unpublished changes':'Live')+'</b><div class="bpx-mut">'+line+'</div></div></div>';
+  if(!r||!r.published_at) return '<span class="bpx-rg-st amber"><i></i>Not published yet</span>';
+  if(dirty) return '<span class="bpx-rg-st amber"><i></i>Unpublished changes</span>';
+  return '<span class="bpx-rg-st green"><i></i>Live · published '+bpRgAgo(r.published_at)+'</span>';
+}
+/* the fuller explanation, shown only beside the Publish button */
+function bpRgStatusDetail(){
+  var r=_bpRgRemote, dirty=bpRgDirty();
+  if(!r||!r.published_at) return '<b>Not published yet</b><div class="bpx-mut">'+BP_AI_NAME+' is answering from your Settings only. Add what it should know below, then publish.</div>';
+  var line='Published '+bpRgAgo(r.published_at)+' · '+(r.ghl_synced_at?'web, text and your phone line':(_bpRgLinked?'the phone line didn\'t update last time':'web &amp; text only — phone line not linked'));
+  return '<b>'+(dirty?'You have unpublished changes':'Live')+'</b><div class="bpx-mut">'+line+'</div>';
 }
 function bpRidgeView(){
   var s=bpSettingsGet(), c=s.company||{}, d=bpRgDraft();
   window._bpRgTone=d.tone||'Friendly';
   var ph=BP_ATLAS_PHONE||'';
   var phFmt=ph.replace(/^\+1?/,'').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3');
-  var tabs=[['knowledge','Knowledge'],['voice','Voice & tone'],['test','Test '+BP_AI_NAME]];
+  var tabs=[['knowledge','Knowledge'],['voice','Voice & tone'],['test','Test '+BP_AI_NAME],['stats','Performance']];
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-panel bpx-rg-hero"><div class="bpx-rg-heroL">'
-      +'<div class="bpx-rg-mark"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8" fill="#fff"/><circle cx="14.5" cy="10" r=".8" fill="#fff"/></svg></div>'
-      +'<div><div class="bpx-rg-title">'+BP_AI_NAME+' is live <span class="bpx-rg-pill"><i></i>ANSWERING 24/7</span></div>'
-        +'<div class="bpx-mut" style="font-size:13px;margin-top:3px">Every call and text to <b class="bpx-num">'+bpEsc(phFmt||'your business line')+'</b> is answered instantly — '+BP_AI_NAME+' books jobs, answers questions, and never lets a lead go cold.</div></div>'
-    +'</div>'
-    +'<div class="bpx-rg-heroR"><div id="bpx-rg-status">'+bpRgStatusHTML()+'</div>'
-      +(ph?'<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="bpx-btn" style="width:auto;margin-top:0;padding:10px 16px;text-decoration:none;display:inline-block" href="tel:'+bpEsc(ph)+'">Call '+BP_AI_NAME+'</a><a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 16px;text-decoration:none;display:inline-block" href="sms:'+bpEsc(ph)+'">Text</a></div>':'')
-    +'</div></div>'
-    +'<div class="bpx-stats">'
-    +'<div class="bpx-stat"><div class="lbl">Calls recovered</div><div class="val" id="bpxAtCalls">—</div><div class="note">this month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Texts recovered</div><div class="val" id="bpxAtTexts">—</div><div class="note">this month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Leads reactivated</div><div class="val" id="bpxAtReact">—</div><div class="note">this month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Appointments booked</div><div class="val blue" id="bpxAtAppts">—</div><div class="note">this month</div></div>'
+    /* one compact strip, instead of a hero plus a full row of tiles */
+    '<div class="bpx-rg-bar">'
+      +'<span class="bpx-rg-mark"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8" fill="#fff"/><circle cx="14.5" cy="10" r=".8" fill="#fff"/></svg></span>'
+      +'<div class="bpx-rg-barmain"><b>'+BP_AI_NAME+' is answering 24/7</b>'
+        +'<div class="bpx-mut" style="font-size:12.5px">Every call and text to '+bpEsc(phFmt||'your business line')+'</div></div>'
+      +'<span id="bpx-rg-status">'+bpRgStatusHTML()+'</span>'
+      +(ph?'<span class="bpx-rg-baracts"><a class="bpx-btn" href="tel:'+bpEsc(ph)+'">Call</a><a class="bpx-btn ghost" href="sms:'+bpEsc(ph)+'">Text</a></span>':'')
     +'</div>'
     +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpRgTab===t[0]?' on':'')+'" data-rg-tab="'+t[0]+'" onclick="bpRgTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
     +'<div id="bpx-rg-panes">'+bpRgPane(_bpRgTab)+'</div>';
-  if(window.BP_LIVE){
-    bpApi(GHL_DASH_URL,{}).then(function(r){
-      if(!r)return;
-      if(r.recovery){bpSet('bpxAtCalls',bpNum(r.recovery.calls||0));bpSet('bpxAtTexts',bpNum(r.recovery.texts||0));bpSet('bpxAtReact',bpNum(r.recovery.reactivated||0));}
-      if(r.appointmentsBookedMonth!=null)bpSet('bpxAtAppts',bpNum(r.appointmentsBookedMonth));
-    }).catch(function(){});
-    if(!_bpRgLoaded)bpRgLoadRemote();
-  }
+  bpRgStats();
+  if(window.BP_LIVE&&!_bpRgLoaded)bpRgLoadRemote();
 }
 function bpRgLoadRemote(){
   bpAuthApi(AI_BRAIN_URL,{op:'get'}).then(function(r){
@@ -13834,6 +13876,7 @@ function bpRgLoadRemote(){
       if(window._bpCurView==='ai')bpRgTab(_bpRgTab);
     }
     var st=q('bpx-rg-status'); if(st)st.innerHTML=bpRgStatusHTML();
+    var st2=q('bpx-rg-status2'); if(st2)st2.innerHTML=bpRgStatusDetail();
   }).catch(function(){ _bpRgLoaded=true; });
 }
 window.bpRgTab=function(t){
@@ -13841,32 +13884,46 @@ window.bpRgTab=function(t){
   _bpRgTab=t;
   document.querySelectorAll('[data-rg-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rg-tab')===t);});
   var p=q('bpx-rg-panes'); if(p)p.innerHTML=bpRgPane(t);
+  if(t==='stats')bpRgStats();
 };
 function bpRgKeepDraft(){ var s=bpSettingsGet(); s.ridge=bpRgFromForm(); delete s.atlas; bpSettingsSet(s); }
 function bpRgPane(t){
   var s=bpSettingsGet(), c=s.company||{}, d=bpRgDraft();
   var ta=function(id,label,hint,val,ph){return '<div class="bpx-fld"><label>'+label+'</label>'+(hint?'<div class="bpx-fldhint" style="margin:0 0 6px">'+hint+'</div>':'')+'<textarea id="'+id+'" placeholder="'+ph+'" oninput="bpRgTouched()">'+bpEsc(val||'')+'</textarea></div>';};
+  if(t==='stats'){
+    return '<div class="bpx-stats">'
+      +'<div class="bpx-stat"><div class="lbl">Calls recovered</div><div class="val" id="bpxAtCalls">—</div><div class="note">this month</div></div>'
+      +'<div class="bpx-stat"><div class="lbl">Texts recovered</div><div class="val" id="bpxAtTexts">—</div><div class="note">this month</div></div>'
+      +'<div class="bpx-stat"><div class="lbl">Leads reactivated</div><div class="val" id="bpxAtReact">—</div><div class="note">this month</div></div>'
+      +'<div class="bpx-stat"><div class="lbl">Appointments booked</div><div class="val blue" id="bpxAtAppts">—</div><div class="note">this month</div></div>'
+      +'</div>'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">What these mean</div>'
+      +'<div class="bpx-rg-kv"><span>Calls recovered</span><b>Missed calls '+BP_AI_NAME+' texted back before the lead went cold</b></div>'
+      +'<div class="bpx-rg-kv"><span>Texts recovered</span><b>Unanswered texts it picked up and carried on</b></div>'
+      +'<div class="bpx-rg-kv"><span>Leads reactivated</span><b>Old, quiet leads it re-opened a conversation with</b></div>'
+      +'<div class="bpx-rg-kv"><span>Appointments booked</span><b>Inspections it put on your calendar by itself</b></div>'
+      +'<div class="bpx-fldhint" style="margin-top:12px">Counted for the current month, straight from your live account.</div></div>';
+  }
   if(t==='knowledge'){
     var known=[['Business',c.name],['Trade',c.trade],['Phone',c.phone],['Service area',c.serviceArea],['Hours',bpHoursText(s.hours)]];
-    return '<div class="bpx-rg-grid">'
+    var shorten=function(v){ v=String(v||''); return v.length>38?v.slice(0,36)+'…':v; };
+    var chips=known.map(function(k){return '<span class="bpx-rg-chip'+(k[1]?'':' off')+'"'+(k[1]?' title="'+bpEsc(k[1])+'"':'')+'>'+k[0]+': <b>'+(k[1]?bpEsc(shorten(k[1])):'not set')+'</b></span>';}).join('');
+    return '<div class="bpx-rg-col">'
+      +'<div class="bpx-rg-known"><span class="bpx-mut" style="font-size:12px">'+BP_AI_NAME+' already knows this from Settings:</span>'+chips
+        +'<button class="bpx-rg-editset" onclick="bpNav(\'settings\')">Edit</button></div>'
       +'<div class="bpx-panel"><div class="bpx-ptitle">What '+BP_AI_NAME+' knows<span class="lg2">plain English — write it like you\'d brief a new office hire</span></div>'
         +ta('bpx-rg-services','Services','What you do — and what you don\'t.',d.services,'e.g. Full roof replacements, repairs, storm & hail damage, insurance claims, gutters. We do NOT do flat commercial roofs.')
         +ta('bpx-rg-pricing','Pricing guidance','Ballpark ranges '+BP_AI_NAME+' may quote. It never invents exact prices.',d.pricing,'e.g. Repairs from $450. Full replacements $9k–$25k depending on size & material. Free inspections.')
         +ta('bpx-rg-faq','Common questions & answers','The questions customers always ask — and exactly how to answer.',d.faq,'e.g. Licensed & insured? — Yes, CA lic #123456, fully insured.\nFinancing? — Yes, through Acorn, 0% for 12 months.')
         +ta('bpx-rg-rules','Rules & boundaries','Things '+BP_AI_NAME+' must always or never do.',d.rules,'e.g. Always offer the free inspection. Emergencies: we can be out within 24 hours. Never promise a start date.')
       +'</div>'
-      +'<div>'
-        +'<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Publish<span class="lg2">goes live instantly</span></div>'
-          +'<div id="bpx-rg-status2">'+bpRgStatusHTML()+'</div>'
-          +'<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 20px" id="bpx-rg-pub" onclick="bpRgPublish()">Publish to '+BP_AI_NAME+'</button><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:10px 16px" onclick="bpRgSaveDraft()">Save draft</button></div>'
-          +'<div class="bpx-mmsg" id="bpx-rg-msg" style="margin-top:8px"></div>'
-          +'<div class="bpx-fldhint" style="margin-top:10px">Publishing updates '+BP_AI_NAME+' everywhere it answers — web chat, texts, and your phone line. No waiting on us.</div>'
-        +'</div>'
-        +'<div class="bpx-panel"><div class="bpx-ptitle">Already known from Settings</div>'
-          +known.map(function(k){return '<div class="bpx-rg-kv"><span>'+k[0]+'</span><b>'+(k[1]?bpEsc(k[1]):'<i class="bpx-mut">not set</i>')+'</b></div>';}).join('')
-          +'<button class="bpx-btn ghost" style="width:auto;margin-top:12px;padding:8px 14px;font-size:13px" onclick="bpNav(\'settings\')">Edit in Settings</button>'
-        +'</div>'
-      +'</div></div>';
+      +'<div class="bpx-rg-pubbar">'
+        +'<div class="bpx-rg-pubtext" id="bpx-rg-status2">'+bpRgStatusDetail()+'</div>'
+        +'<span class="bpx-mmsg" id="bpx-rg-msg"></span>'
+        +'<button class="bpx-btn ghost" onclick="bpRgSaveDraft()">Save draft</button>'
+        +'<button class="bpx-btn" id="bpx-rg-pub" onclick="bpRgPublish()">Publish to '+BP_AI_NAME+'</button>'
+      +'</div>'
+    +'</div>';
   }
   if(t==='voice'){
     var tones=[['Friendly','Warm and upbeat. Uses first names, keeps it light.'],['Professional','Calm, precise, no slang. Reads like a seasoned office manager.'],['Bold','Confident and direct. Moves fast toward booking.']];
@@ -13903,7 +13960,19 @@ window.bpRgSetTone=function(t){
   var g=q('bpx-rg-greet'); if(g)g.textContent=bpRgGreeting(t,bpSettingsGet().company||{});
   bpRgKeepDraft(); bpRgTouched();
 };
-window.bpRgTouched=function(){ var st=q('bpx-rg-status2'),st1=q('bpx-rg-status'); if(q('bpx-rg-services'))bpRgKeepDraft(); var h=bpRgStatusHTML(); if(st)st.innerHTML=h; if(st1)st1.innerHTML=h; };
+window.bpRgTouched=function(){
+  if(q('bpx-rg-services'))bpRgKeepDraft();
+  var st=q('bpx-rg-status2'); if(st)st.innerHTML=bpRgStatusDetail();
+  var st1=q('bpx-rg-status'); if(st1)st1.innerHTML=bpRgStatusHTML();
+};
+function bpRgStats(){
+  if(!window.BP_LIVE||!q('bpxAtCalls'))return;
+  bpApi(GHL_DASH_URL,{}).then(function(r){
+    if(!r)return;
+    if(r.recovery){bpSet('bpxAtCalls',bpNum(r.recovery.calls||0));bpSet('bpxAtTexts',bpNum(r.recovery.texts||0));bpSet('bpxAtReact',bpNum(r.recovery.reactivated||0));}
+    if(r.appointmentsBookedMonth!=null)bpSet('bpxAtAppts',bpNum(r.appointmentsBookedMonth));
+  }).catch(function(){});
+}
 window.bpRgSaveDraft=function(){
   bpRgKeepDraft();
   var m=q('bpx-rg-msg'); if(m){m.style.color='#15803d';m.textContent='Draft saved on this device';}
@@ -14807,12 +14876,19 @@ function bpRenderContacts(){
     '<div class="bpx-chead">'
       +'<div class="bpx-searchwrap"><svg class="bpx-si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'
         +'<input class="bpx-csearch" id="bpx-csearch" type="text" placeholder="Search name, phone, email, or tag" oninput="bpFilterContacts(this.value)"></div>'
-      +'<div class="bpx-chead-r"><span class="bpx-count" id="bpx-ccount"></span><button class="bpx-addbtn" onclick="bpOpenAdd()">+ New contact</button></div>'
+      +'<div class="bpx-chead-r"><span class="bpx-count" id="bpx-ccount"></span>'+bpCsvBtn('bpCsvContacts()')+'<button class="bpx-addbtn" onclick="bpOpenAdd()">+ New contact</button></div>'
     +'</div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Added</th><th></th></tr></thead>'
       +'<tbody id="bpx-cbody"><tr><td colspan="5" class="bpx-cempty">Loading your contacts…</td></tr></tbody></table></div>';
   bpLoadContacts();
 }
+window.bpCsvContacts=function(){
+  var list=window._bpCtDrawList||_bpContacts||[];
+  bpCsv('contacts',['Name','Phone','Email','Stage','Tags','Added'],list.map(function(c){
+    return [c.name||'',c.phone||'',c.email||'',(bpStageOf(c)||[''])[0],(c.tags||[]).join(' | '),
+      c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US'):''];
+  }));
+};
 function bpDrawContacts(list){
   var b=q('bpx-cbody'); if(!b) return;
   window._bpCtDrawList=list;
@@ -15445,7 +15521,7 @@ function bpActiveJobs(){
   q('bpxViewArea').innerHTML=
     '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
-      +'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
 }
 window.bpJobTab=function(t){_bpJobTab=t;bpActiveJobs();};
@@ -15951,12 +16027,14 @@ function bpFinances(){
   if(_bpFinTab==='income') all=all.filter(function(x){return x.s>0;});
   if(_bpFinTab==='expense') all=all.filter(function(x){return x.s<0;});
   all.sort(function(a,b){return (b.w||0)-(a.w||0);});
+  window._bpFinLedger=all;
   var ledPg=bpPage('finled',all,10,'bpFinances()');
   var ledHtml=all.length?ledPg.items.map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     return '<tr><td>'+bpEsc(x.n)+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td></tr>';
   }).join(''):'<tr><td colspan="4" class="bpx-empty2">Nothing logged yet. Mark a job done with what you collected, or use <b>+ Add income</b>.</td></tr>';
   // per-job
   var pj=d.jobs.filter(function(j){return j.status==='done';});
+  window._bpFinJobs=pj;
   var pjPg=bpPage('finjobs',pj,10,'bpFinances()');
   var pjHtml=pj.length?pjPg.items.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
     return '<tr style="cursor:pointer" onclick="bpJobDoneOpen(\''+j.id+'\')" title="Tap to add income & expenses"><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
@@ -15978,7 +16056,7 @@ function bpFinances(){
       +'<div class="bpx-panel"><div class="bpx-ptitle">Quick add</div><div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Log money that didn\'t come through a job — ad spend, fuel, a side payment.</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div>'
         +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px">Management view — not accounting of record. Income is what you actually collected. Synced to your account.</div></div></div>'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Per-job profit<span class="lg2">completed jobs — tap one to add income &amp; costs</span></div>'
+      +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Per-job profit<span class="lg2" style="margin-left:8px">completed jobs — tap one to add income &amp; costs</span></div>'+bpCsvBtn('bpCsvJobs()')+'</div>'
       +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'+pjPg.nav+'</div>')
     +vp('invoices',
       '<div class="bpx-panel"><div class="bpx-ptitle">Invoices<span class="lg2">real invoices — payment updates your account automatically</span></div>'
@@ -15990,11 +16068,38 @@ function bpFinances(){
       +'<div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>')
     +vp('ledger',
       '<div class="bpx-panel"><div class="bpx-ptitle">Income &amp; expenses<span class="lg2">every dollar in and out</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
-      +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
+      +'<div class="bpx-finrow-btns">'+bpCsvBtn('bpCsvLedger()')+'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
       +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>');
   bpInvLoad();
   bpEstLoad();
 }
+window.bpCsvLedger=function(){
+  bpCsv('income-and-expenses',['Item','Category','Direction','Date','Amount'],(window._bpFinLedger||[]).map(function(x){
+    return [x.n||'',x.t||'',x.s>0?'Income':'Expense',x.w?new Date(x.w).toLocaleDateString('en-US'):'',(x.s>0?'':'-')+(Number(x.a)||0)];
+  }));
+};
+window.bpCsvJobs=function(){
+  bpCsv('per-job-profit',['Job','Customer','Estimate','Collected','Costs','Profit','Margin %'],(window._bpFinJobs||[]).map(function(j){
+    var c=+j.collected||0,e=bpJobExp(j),p=c-e;
+    return [j.title||'Job',j.name||'',Number(j.estimate)||0,c,e,p,c>0?Math.round(p/c*100):''];
+  }));
+};
+window.bpCsvProjects=function(){
+  var jobs=(typeof bpJobsGet==='function'?bpJobsGet():[]);
+  bpCsv('projects',['Customer','Job','Status','Estimate','Collected','Costs','Profit','Address','Phone','Days booked','Won','Completed'],jobs.map(function(j){
+    var c=+j.collected||0,e=bpJobExp(j);
+    return [j.name||'',j.title||'',j.status==='done'?'Completed':'Active',Number(j.estimate)||0,c,e,c-e,j.addr||'',j.phone||'',
+      (((j.sched||{}).dates)||[]).length,j.wonAt?new Date(j.wonAt).toLocaleDateString('en-US'):'',j.doneAt?new Date(j.doneAt).toLocaleDateString('en-US'):''];
+  }));
+};
+window.bpCsvRadar=function(){
+  bpCsv('lead-radar-list',['Address','Score','Signal','Added','Contacted'],(window._rdMineRows||[]).map(function(c){
+    var m=/Score (\d+)/i.exec(c.notes||'');
+    return [(c.name||'').replace(/^Radar — /,''),m?m[1]:'',((c.notes||'').split('.')[0]||''),
+      c.created_at?new Date(c.created_at).toLocaleDateString('en-US'):'',
+      (c.tags||[]).indexOf('contacted')>-1?'Yes':'No'];
+  }));
+};
 var _bpFinView='overview';
 window.bpFinView=function(t){
   _bpFinView=t;
@@ -16270,6 +16375,32 @@ window.bpFinAddSave=function(kind){
 </script>
 <style>
 /* ===== Ridge AI tab ===== */
+/* compact header strip */
+.bpx-rg-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(15,30,60,.04);}
+.bpx-rg-barmain{flex:1;min-width:190px;}
+.bpx-rg-barmain b{font-size:14.5px;color:#1b2a41;font-weight:700;}
+.bpx-rg-baracts{display:flex;gap:8px;}
+.bpx-rg-baracts .bpx-btn{width:auto;margin-top:0;padding:8px 16px;font-size:13px;text-decoration:none;display:inline-block;}
+.bpx-rg-st{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:99px;white-space:nowrap;}
+.bpx-rg-st i{width:7px;height:7px;border-radius:50%;flex:0 0 auto;}
+.bpx-rg-st.green{background:#dcfce7;color:#15803d;}.bpx-rg-st.green i{background:#16a34a;}
+.bpx-rg-st.amber{background:#fef3c7;color:#b45309;}.bpx-rg-st.amber i{background:#f59e0b;}
+/* knowledge: one readable column with the publish bar pinned under it */
+.bpx-rg-col{max-width:820px;}
+.bpx-rg-known{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.bpx-rg-chip{font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:4px 11px;color:var(--grey);}
+.bpx-rg-chip b{color:#1b2a41;font-weight:600;}
+.bpx-rg-chip.off b{color:var(--grey-l);font-weight:400;font-style:italic;}
+.bpx-rg-editset{font-size:12px;font-weight:600;color:var(--blue);background:none;border:0;cursor:pointer;padding:4px 6px;font-family:inherit;}
+.bpx-rg-editset:hover{text-decoration:underline;}
+.bpx-rg-pubbar{position:sticky;bottom:0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-top:2px solid var(--blue);border-radius:10px;padding:13px 16px;margin-top:16px;box-shadow:0 -2px 14px rgba(15,30,60,.07);}
+.bpx-rg-pubtext{flex:1;min-width:200px;font-size:13px;}
+.bpx-rg-pubtext b{color:#1b2a41;}
+.bpx-rg-pubbar .bpx-btn{width:auto;margin-top:0;padding:10px 18px;}
+.bpx-rg-pubbar .bpx-mmsg{margin:0;flex-basis:100%;order:9;}
+#bpx.bpx-dark .bpx-rg-bar,#bpx.bpx-dark .bpx-rg-pubbar{background:#161d2b;border-color:var(--line);}
+#bpx.bpx-dark .bpx-rg-barmain b,#bpx.bpx-dark .bpx-rg-pubtext b,#bpx.bpx-dark .bpx-rg-chip b{color:var(--ink);}
+#bpx.bpx-dark .bpx-rg-chip{background:#1a2230;border-color:var(--line);}
 .bpx-rg-hero{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
 .bpx-rg-heroL{display:flex;gap:16px;align-items:center;flex:1;min-width:260px;}
 .bpx-rg-mark{width:54px;height:54px;border-radius:14px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 6px 16px rgba(47,107,255,.28);}
@@ -16308,7 +16439,10 @@ window.bpFinAddSave=function(kind){
 .bpx-mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
 .bpx-mk-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:150px;}
 .bpx-mk-top{display:flex;align-items:center;gap:11px;}
-.bpx-mk-logo{width:38px;height:38px;border-radius:10px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex:0 0 auto;font-family:var(--sans);}
+.bpx-csv{width:auto!important;margin-top:0!important;padding:8px 14px!important;font-size:12.5px!important;white-space:nowrap;}
+.bpx-mk-logo{width:38px;height:38px;border-radius:10px;color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.bpx-mk-logo.light{border:1px solid var(--line);}
+.bpx-mk-logo svg{display:block;}
 .bpx-mk-name{font-weight:700;font-size:14px;color:#0f2540;}.bpx-mk-desc{font-size:12px;color:var(--grey);margin-top:1px;}
 .bpx-mk-st{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;display:inline-block;}
 .bpx-mk-st.on{background:#dcfce7;color:#15803d;}.bpx-mk-st.off{background:#eef2f8;color:#3c4c63;}.bpx-mk-st.soon{background:#fef3c7;color:#b45309;}
@@ -16331,11 +16465,21 @@ window.bpFinAddSave=function(kind){
 /* ===== Marketing: ad accounts + listings connected, measured, and launched from here ===== */
 var MKT_URL=BP_URL+'/functions/v1/marketing-oauth';
 var _bpMk={conns:[],stats:{},cfg:{},loaded:false,loading:false,tab:null,reqs:[]};
+var MK_SVG={
+  meta:'<svg viewBox="0 0 24 24" width="21" height="21"><path fill="#fff" d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.25-1.5 1.55-1.5h1.65V3.6c-.29-.04-1.27-.13-2.41-.13-2.39 0-4.02 1.46-4.02 4.13V9.9H7.5V13h2.77v8h3.23z"/></svg>',
+  google:'<svg viewBox="0 0 24 24" width="21" height="21">'
+    +'<path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.54 5.54 0 0 1-2.4 3.58v2.97h3.88c2.27-2.09 3.55-5.17 3.55-8.79z"/>'
+    +'<path fill="#34A853" d="M12 24c3.24 0 5.96-1.08 7.95-2.94l-3.88-2.97c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.28v3.09A12 12 0 0 0 12 24z"/>'
+    +'<path fill="#FBBC05" d="M5.27 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.28a12 12 0 0 0 0 10.74l3.99-3.09z"/>'
+    +'<path fill="#EA4335" d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.7 0 3.99 2.47 1.28 6.63l3.99 3.09C6.22 6.88 8.87 4.77 12 4.77z"/></svg>',
+  gbp:'<svg viewBox="0 0 24 24" width="21" height="21"><path fill="#fff" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
+  yelp:'<svg viewBox="0 0 24 24" width="21" height="21"><path fill="#fff" d="M11.2 3.6v7.7c0 .72-.87 1.04-1.32.5L6.12 7.46a1 1 0 0 1 .2-1.5l3.38-2.06a1 1 0 0 1 1.5.7zM9.9 13.6l-4.6 1.2a1 1 0 0 0-.5 1.6l2.4 2.8a1 1 0 0 0 1.6-.16l2.2-3.88c.35-.62-.2-1.35-.9-1.17zm3.6.6 2.3 3.88a1 1 0 0 0 1.6.16l2.3-2.8a1 1 0 0 0-.5-1.6l-4.6-1.2c-.7-.18-1.25.55-.9 1.17zm.6-3 4.5-1.7a1 1 0 0 0 .3-1.65l-2-2a1 1 0 0 0-1.6.2l-2.3 4c-.37.63.25 1.4.95 1.15z"/></svg>'
+};
 var BP_MKT=[
-  {k:'meta',n:'Meta Ads',d:'Facebook & Instagram campaigns',c:'#1877f2',m:'f',oauth:true,go:'https://adsmanager.facebook.com/'},
-  {k:'google_ads',n:'Google Ads',d:'Search & Local Services campaigns',c:'#34a853',m:'G',oauth:true,go:'https://ads.google.com/'},
-  {k:'gbp',n:'Google Business Profile',d:'Your map listing — calls, directions, clicks',c:'#4285f4',m:'G',oauth:true,go:'https://business.google.com/'},
-  {k:'yelp',n:'Yelp',d:'Your listing — rating, reviews, requests',c:'#d32323',m:'Y',oauth:false,go:'https://biz.yelp.com/'}
+  {k:'meta',n:'Meta Ads',d:'Facebook & Instagram campaigns',c:'#1877f2',ic:'meta',oauth:true,go:'https://adsmanager.facebook.com/'},
+  {k:'google_ads',n:'Google Ads',d:'Search & Local Services campaigns',c:'#fff',ic:'google',light:true,oauth:true,go:'https://ads.google.com/'},
+  {k:'gbp',n:'Google Business Profile',d:'Your map listing — calls, directions, clicks',c:'#4285f4',ic:'gbp',oauth:true,go:'https://business.google.com/'},
+  {k:'yelp',n:'Yelp',d:'Your listing — rating, reviews, requests',c:'#d32323',ic:'yelp',oauth:false,go:'https://biz.yelp.com/'}
 ];
 function bpMkP(k){return BP_MKT.filter(function(p){return p.k===k;})[0]||{n:k,c:'#64748b',m:'?'};}
 function bpMkConn(k){return _bpMk.conns.filter(function(c){return c.provider===k;})[0]||null;}
@@ -16427,7 +16571,7 @@ function bpMkCard(p){
   var acts=c
     ?'<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:8px 13px;font-size:12.5px;text-decoration:none;display:inline-block" href="'+p.go+'" target="_blank" rel="noopener">Open '+bpEsc(p.n.split(' ')[0])+'</a><button class="bpx-rowbtn" style="margin:0" onclick="bpMkDisconnect(\''+p.k+'\')">Disconnect</button>'
     :'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 16px;font-size:12.5px" onclick="bpMkConnect(\''+p.k+'\')">Connect</button>';
-  return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo" style="background:'+p.c+'">'+p.m+'</div><div style="min-width:0"><div class="bpx-mk-name">'+p.n+'</div><div class="bpx-mk-desc">'+p.d+'</div></div></div>'
+  return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(p.light?' light':'')+'" style="background:'+p.c+'">'+(MK_SVG[p.ic]||'')+'</div><div style="min-width:0"><div class="bpx-mk-name">'+p.n+'</div><div class="bpx-mk-desc">'+p.d+'</div></div></div>'
     +'<div>'+st+'</div>'+(c&&c.account_name?'<div class="bpx-mk-acct">'+bpEsc(c.account_name)+(c.connected_at?' · since '+new Date(c.connected_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+'</div>':'')
     +'<div class="bpx-mk-acts">'+acts+'</div></div>';
 }
@@ -16494,6 +16638,16 @@ window.bpMkLaunchSend=async function(){
 #bpx.bpx-dark .bpx-themebtn{background:#1a2230;border-color:var(--line);color:#f0b666;}
 #bpx.bpx-dark .bpx-close{background:#1a2230 !important;border-color:var(--line) !important;color:var(--grey) !important;}
 /* settings */
+.bpx-set-hdr{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(15,30,60,.04);}
+.bpx-set-logo{width:58px;height:58px;border-radius:12px;border:1px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto;font-size:11px;color:var(--grey-l);}
+.bpx-set-logo img{width:100%;height:100%;object-fit:contain;}
+.bpx-set-id{flex:1;min-width:180px;}
+.bpx-set-id h2{font-family:var(--sans);font-size:18px;font-weight:800;color:#1b2a41;margin:0;letter-spacing:-.01em;}
+.bpx-set-plan{background:#eaf1ff;color:#2457d6;font-size:11.5px;font-weight:700;padding:6px 13px;border-radius:99px;white-space:nowrap;}
+.bpx-set-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start;max-width:1000px;}
+#bpx.bpx-dark .bpx-set-hdr{background:#161d2b;border-color:var(--line);}
+#bpx.bpx-dark .bpx-set-id h2{color:var(--ink);}
+#bpx.bpx-dark .bpx-set-logo{background:#1a2230;border-color:var(--line);}
 .bpx-set-grid{columns:2;column-gap:16px;margin-bottom:0;max-width:980px;}
 .bpx-set-grid>.bpx-panel{break-inside:avoid;-webkit-column-break-inside:avoid;display:inline-block;width:100%;margin:0 0 16px;box-sizing:border-box;}
 @media(max-width:900px){.bpx-set-grid{columns:1;max-width:640px;}}
@@ -16502,9 +16656,12 @@ window.bpMkLaunchSend=async function(){
 .bpx-fld input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);}
 .bpx-fld input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
 .bpx-fld2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.bpx-set-foot{display:block;max-width:none;}
+.bpx-set-foot{position:sticky;bottom:0;display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-top:2px solid var(--blue);border-radius:10px;padding:12px 16px;margin-top:18px;max-width:1000px;box-shadow:0 -2px 14px rgba(15,30,60,.07);}
+.bpx-set-foot .bpx-btn{width:auto!important;padding:11px 26px!important;font-size:14px!important;margin-top:0;}
+.bpx-set-foot .bpx-mmsg{margin:0;text-align:right;min-height:0;}
+#bpx.bpx-dark .bpx-set-foot{background:#161d2b;border-color:var(--line);border-top-color:var(--blue);}
 .bpx-set-foot .bpx-mmsg{display:block;text-align:center;min-height:18px;margin-bottom:8px;}
-.bpx-set-foot .bpx-btn{width:100%;padding:15px;font-size:15px;}
+.bpx-set-foot .bpx-btn{width:auto;}
 .bpx-fld textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);resize:vertical;min-height:76px;line-height:1.5;}
 .bpx-fld textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
 .bpx-fldhint{font-size:11.5px;color:var(--grey-l);margin-top:6px;line-height:1.4;}
@@ -16597,64 +16754,67 @@ function bpSettings(){
   var chip=function(t){return '<button class="bpx-jt'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')">'+t[1]+'</button>';};
   var sec=function(id){return 'id="set-sec-'+id+'" style="'+(_bpSetSec===id?'':'display:none;')+'margin-bottom:16px"';};
   q('bpxViewArea').innerHTML=
-    /* header card */
-    '<div class="bpx-panel" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
-      +'<div class="bpx-logo-pv" style="width:64px;height:64px;flex:0 0 auto">'+ (BPLOGO?('<img src="'+BPLOGO+'" style="width:100%;height:100%;object-fit:contain">'):'<span style="font-size:11px;color:#8a97a0">Logo</span>') +'</div>'
-      +'<div style="flex:1;min-width:200px"><div style="font-size:18px;font-weight:800">'+bpEsc(c.name||'Your business')+'</div>'
-        +'<div class="bpx-mut" style="font-size:13px;margin-top:2px">'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</div></div>'
-      +'<span style="background:#eaf1ff;color:#2457d6;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;white-space:nowrap">BUILDERPRO OS · $199/mo</span>'
-    +'</div></div>'
-    /* section tabs */
-    +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(chip).join('')+'</div>'
-    /* business */
-    +'<div '+sec('business')+'><div class="bpx-panel"><div class="bpx-ptitle">Business<span class="lg2">what your customers see</span></div>'
-      +'<div class="bpx-fld"><label>Logo</label><div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
-        +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
-        +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>'
-        +'<div class="bpx-fldhint">Square image works best. Appears on your dashboard and estimates.</div></div>'
-      +f('set-cname','Business name',c.name,'Acme Roofing')
-      +f('set-ctrade','Trade / type',c.trade,'Roofing')
-      +'<div class="bpx-fld2">'+f('set-cphone','Phone',c.phone,'(555) 555-5555','tel')+f('set-cemail','Email',c.email,'you@company.com','email')+'</div>'
-      +f('set-cweb','Website',c.website,'yourcompany.com','url')
-      +f('set-caddr','Address',c.address,'123 Main St, City, ST')
-      +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover — e.g. Austin, 78701, 78704')
-      +f('set-clic','License # (optional)',c.license,'License / insurance #')
-    +'</div></div>'
-    /* hours + auto-reply */
-    +'<div '+sec('hours')+'><div class="bpx-set-grid">'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Business hours<span class="lg2">booking windows & after-hours</span></div>'
-      +hrsRows
-      +'<div class="bpx-fldhint">Used for booking windows and to power after-hours auto-replies.</div>'
+    /* identity header */
+    '<div class="bpx-set-hdr">'
+      +'<div class="bpx-set-logo">'+(BPLOGO?('<img src="'+BPLOGO+'" alt="">'):'<span>Logo</span>')+'</div>'
+      +'<div class="bpx-set-id"><h2>'+bpEsc(c.name||'Your business')+'</h2>'
+        +'<div class="bpx-mut" style="font-size:13px;margin-top:3px">'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</div></div>'
+      +'<span class="bpx-set-plan">BUILDERPRO OS · $199/mo</span>'
     +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Auto-reply message</div>'
-      +'<div class="bpx-fld"><label>Sent on a missed call or after-hours message</label><textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'! We missed you but we\'ll text you right back. What can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>'
-        +'<div class="bpx-fldhint">Leave blank to use BuilderPro’s default recovery text.</div></div>'
-    +'</div></div></div>'
+    +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(chip).join('')+'</div>'
+    /* business — identity and contact split into two readable cards */
+    +'<div '+sec('business')+'><div class="bpx-set-grid2">'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Identity<span class="lg2">what customers see</span></div>'
+        +'<div class="bpx-fld"><label>Logo</label><div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
+          +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
+          +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>'
+          +'<div class="bpx-fldhint">Square works best. Appears on your dashboard, invoices and estimates.</div></div>'
+        +f('set-cname','Business name',c.name,'Acme Roofing')
+        +f('set-ctrade','Trade / type',c.trade,'Roofing')
+        +f('set-clic','License # (optional)',c.license,'License / insurance #')
+      +'</div>'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Contact &amp; coverage<span class="lg2">how customers reach you</span></div>'
+        +'<div class="bpx-fld2">'+f('set-cphone','Phone',c.phone,'(555) 555-5555','tel')+f('set-cemail','Email',c.email,'you@company.com','email')+'</div>'
+        +f('set-cweb','Website',c.website,'yourcompany.com','url')
+        +f('set-caddr','Address',c.address,'123 Main St, City, ST')
+        +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover — e.g. Austin, 78701, 78704')
+        +'<div class="bpx-fldhint">'+BP_AI_NAME+' uses your service area to tell callers whether you cover them.</div>'
+      +'</div></div></div>'
+    /* hours + auto-reply */
+    +'<div '+sec('hours')+'><div class="bpx-set-grid2">'
+      +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:8px"><div class="bpx-ptitle" style="margin:0">Opening hours</div>'
+        +'<button class="bpx-mini alt" onclick="bpHrsCopy()">Copy Monday to weekdays</button></div>'
+        +hrsRows
+        +'<div class="bpx-fldhint" style="margin-top:12px">Sets your booking windows, and tells '+BP_AI_NAME+' when you\'re closed.</div>'
+      +'</div>'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Missed-call auto-reply<span class="lg2">sent within seconds</span></div>'
+        +'<div class="bpx-fld"><label>Text sent on a missed call or after hours</label><textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'! Sorry we missed you — what can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>'
+          +'<div class="bpx-fldhint">Leave blank to use BuilderPro\'s default recovery text.</div></div>'
+      +'</div></div></div>'
     /* owner */
-    +'<div '+sec('owner')+'><div class="bpx-panel"><div class="bpx-ptitle">Owner<span class="lg2">personalizes your dashboard & messages</span></div>'
-      +f('set-oname','Owner name',o.name,'Full name')
+    +'<div '+sec('owner')+'><div class="bpx-panel" style="max-width:640px"><div class="bpx-ptitle">Owner<span class="lg2">personalizes your dashboard &amp; messages</span></div>'
+      +'<div class="bpx-fld2">'+f('set-oname','Owner name',o.name,'Full name')+f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')+'</div>'
       +f('set-oemail','Owner email',o.email,'owner@company.com','email')
-      +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
-      +'<div class="bpx-fldhint" style="margin-top:14px">Saved to your account. Used to personalize your dashboard, messages, and estimates.</div>'
+      +'<div class="bpx-fldhint" style="margin-top:14px">Saved to your account. Used to personalize your dashboard, messages and estimates.</div>'
     +'</div></div>'
     /* plan */
-    +'<div '+sec('plan')+'><div class="bpx-panel" style="box-sizing:border-box"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
+    +'<div '+sec('plan')+'><div class="bpx-panel" style="box-sizing:border-box;max-width:1000px"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
       +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
         +'<div style="flex:1;min-width:230px">'
           +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:17px;font-weight:800">BuilderPro OS</span><span style="background:#eaf1ff;color:#2457d6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px">ACTIVE</span></div>'
-          +'<div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:#2f6bff">$199</span><span class="bpx-mut" style="font-size:13px"> / month · everything included</span></div>'
-          +'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">One plan, no add-ons:</div>'
-          +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 16px;margin-top:8px;font-size:13px">'
+          +'<div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:var(--blue)">$199</span><span class="bpx-mut" style="font-size:13px"> / month · everything included</span></div>'
+          +'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">One plan, no add-ons:</div>'
+          +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:5px 16px;margin-top:8px;font-size:13px">'
           +[BP_AI_NAME+' AI receptionist (24/7)','Exclusive Lead Radar territory','Marketing — Meta, Google, Yelp','Invoices, estimates & payments','Projects, scheduling & finances','Job calculator','Website & Google Business setup','Priority support'].map(function(x){return '<div><span style="color:#15803d;font-weight:700">✓</span> '+x+'</div>';}).join('')
           +'</div>'
         +'</div>'
-        +'<div style="min-width:180px;display:flex;flex-direction:column;gap:8px;align-items:stretch">'
+        +'<div style="min-width:190px;display:flex;flex-direction:column;gap:8px;align-items:stretch">'
           +'<a class="bpx-btn ghost" style="text-align:center;text-decoration:none" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a>'
           +'<button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpCancelOpen()">Cancel my plan</button>'
         +'</div>'
       +'</div>'
     +'</div></div>'
-    +'<div class="bpx-set-foot" style="position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg,#faf9f6) 30%);padding-top:18px"><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
+    +'<div class="bpx-set-foot" id="bpx-setfoot"'+(_bpSetSec==='plan'?' hidden':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
   bpSettingsPull();
 }
 var _bpSetSec='business';
@@ -16662,6 +16822,16 @@ window.bpSetTab=function(t){
   _bpSetSec=t;
   ['business','hours','owner','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
+  var foot=q('bpx-setfoot'); if(foot)foot.hidden=(t==='plan');   /* nothing to save on the plan tab */
+};
+window.bpHrsCopy=function(){
+  var from=(q('hrs-mon-from')||{}).value||'08:00', to=(q('hrs-mon-to')||{}).value||'17:00';
+  var open=(q('hrs-mon-o')||{}).checked;
+  ['tue','wed','thu','fri'].forEach(function(d){
+    var ck=q('hrs-'+d+'-o'); if(!ck)return;
+    if(ck.checked!==open){ ck.checked=open; bpHrsToggle(d); }
+    if(open){ var a=q('hrs-'+d+'-from'),b=q('hrs-'+d+'-to'); if(a)a.value=from; if(b)b.value=to; }
+  });
 };
 window.bpCancelOpen=function(){
   bpModal('<h3>Cancel your plan?</h3>'
@@ -16857,7 +17027,7 @@ function rdRenderShell(){
 window.rdMinePage=function(){
   q('bpxViewArea').innerHTML=
     '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpNav(\'leadradar\')">← Back to Lead Radar</button>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">My list — leads you added<span class="lg2">every prospect you tapped + Add · knock or mail, then tap Contacted</span></div>'
+    +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">My list — leads you added<span class="lg2" style="margin-left:8px">knock or mail, then tap Contacted</span></div>'+bpCsvBtn('bpCsvRadar()','Export list')+'</div>'
     +'<div id="rdMineList" class="bpx-mut" style="font-size:13px">Loading your list…</div></div>';
   rdLoadMine();
 };
@@ -17433,7 +17603,22 @@ document.head.appendChild(rdCss);
 <script>
 /* ==== In-dashboard AI assistant (owner mode): knows YOUR data, navigates for you ==== */
 (function(){
-  var A_NAME="Ridge", A_BRAND="BuilderPro", A_NAV=[{"key": "dashboard", "label": "Dashboard", "desc": "leads, bookings and revenue at a glance"}, {"key": "messaging", "label": "Messaging", "desc": "texts and emails with leads, broadcasts and scheduling"}, {"key": "contacts", "label": "Contacts", "desc": "every lead and customer, add/import here"}, {"key": "calendar", "label": "Calendar", "desc": "upcoming inspections and appointments"}, {"key": "activejobs", "label": "Active Projects", "desc": "projects in progress with photos and schedule"}, {"key": "finances", "label": "Finances", "desc": "income, expenses and per-job profit"}, {"key": "leadradar", "label": "Lead Radar", "desc": "map of homes likely to need work soon, scored from public permits"}, {"key": "calculator", "label": "My Calculator", "desc": "preview the estimator and edit pricing"}, {"key": "settings", "label": "Settings", "desc": "business details, logo, hours, auto-reply"}];
+  var A_NAME="Ridge", A_BRAND="BuilderPro";
+  /* The assistant only knows the software through these descriptions — keep them
+     current and task-level, so it can answer "how do I…" and not just "go here". */
+  var A_NAV=[
+    {key:"dashboard",label:"Dashboard",desc:"new leads this month, jobs booked, profit, missed calls saved, appointments, cash flow chart, lead funnel, and a Lead Radar summary"},
+    {key:"messaging",label:"Messaging",desc:"every text and email with leads in one inbox; tapping the contact icon in a conversation opens that person's full profile"},
+    {key:"contacts",label:"Contacts",desc:"every lead and customer with their pipeline stage; search, add, edit, and Export CSV. Tapping a name opens their profile and the jobs linked to them"},
+    {key:"calendar",label:"Calendar",desc:"upcoming inspections and appointments, plus the work days booked on active projects"},
+    {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances"},
+    {key:"finances",label:"Finances",desc:"tabs for Overview (where the money goes by category, per-job profit), Invoices, Estimates, and Income & expenses. Send real invoices and estimates the customer can pay or accept; every list has Export CSV"},
+    {key:"leadradar",label:"Lead Radar",desc:"a map of homes most likely to need their trade, scored from public permit records, crews working on the same street, and storms in the last 72 hours. 'Today's picks' are auto-added each morning; 'My list' holds saved prospects. Add a prospect, knock or mail, then tap Contacted"},
+    {key:"marketing",label:"Marketing",desc:"connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
+    {key:"calculator",label:"My Calculator",desc:"edit the prices behind the estimator on their website, with a live preview of exactly what the customer sees sitting right beside the editor. Save pricing and the preview reloads"},
+    {key:"ai",label:"Ridge AI",desc:"their 24/7 AI receptionist. The Knowledge tab holds services, pricing guidance, common questions and rules — filling those in and tapping Publish pushes it live to web chat, texts and the phone line. Voice & tone sets how it sounds; Test Ridge lets them chat with it like a customer would"},
+    {key:"settings",label:"Settings",desc:"business name, trade, phone, email, address, service area, licence number, logo, opening hours, the missed-call auto-reply, owner details, and their plan and billing"}
+  ];
   var css=document.createElement('style');
   css.textContent='.oaw-btn{position:fixed;right:18px;bottom:18px;z-index:99999;width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;background:linear-gradient(135deg,#2f6bff,#1e4fd6);display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(47,107,255,.4)}'
   +'.oaw-btn svg{display:block}'
@@ -17445,13 +17630,13 @@ document.head.appendChild(rdCss);
   document.head.appendChild(css);
   var btn=document.createElement('button');btn.className='oaw-btn';btn.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14.5a2 2 0 0 1-2 2H8l-4.5 4V5a2 2 0 0 1 2-2H19a2 2 0 0 1 2 2z"/><path d="M12.2 6.2l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4-2.4-1.1 2.4-1.1z" fill="#fff" stroke="none"/></svg>';btn.title='Ask '+A_NAME;
   var pan=document.createElement('div');pan.className='oaw-panel';
-  pan.innerHTML='<div class="oaw-head">'+A_NAME+' <span>&mdash; your '+A_BRAND+' assistant</span></div><div class="oaw-log" id="oawLog"></div><div class="oaw-in"><input id="oawIn" placeholder="Ask about bookings, contacts, or where to find things&hellip;"><button id="oawGo">&#8594;</button></div>';
+  pan.innerHTML='<div class="oaw-head">'+A_NAME+' <span>&mdash; your '+A_BRAND+' assistant</span></div><div class="oaw-log" id="oawLog"></div><div class="oaw-in"><input id="oawIn" placeholder="Ask anything, or &ldquo;how do I&hellip;&rdquo;"><button id="oawGo">&#8594;</button></div>';
   document.body.appendChild(btn);document.body.appendChild(pan);
   var HIST=[],open=false;
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function add(role,text){var l=document.getElementById('oawLog');var d=document.createElement('div');d.className='oaw-m '+(role==='user'?'u':'b');d.innerHTML=esc(text);l.appendChild(d);l.scrollTop=l.scrollHeight;return d;}
   btn.onclick=function(){open=!open;pan.style.display=open?'flex':'none';
-    if(open&&!HIST.length){add('bot','Hi! I\'m '+A_NAME+'. Ask me about your bookings, contacts, unread messages — or where to find anything in your dashboard.');}
+    if(open&&!HIST.length){add('bot','Hi! I\'m '+A_NAME+'. Ask me about your bookings, contacts or messages — or how anything here works: "how do I send an invoice?", "where do I scan a contract?", "how do I change what Ridge says on the phone?" I\'ll take you straight there.');}
     if(open)setTimeout(function(){var i=document.getElementById('oawIn');if(i)i.focus();},50);};
   /* show ONLY while the portal overlay is open AND signed in — never on the homepage */
   setInterval(function(){
@@ -17461,6 +17646,21 @@ document.head.appendChild(rdCss);
     btn.style.display=on?'flex':'none';
     if(!on&&open){open=false;pan.style.display='none';}
   },600);
+  /* the owner-mode brain is deployed as ai-response on some projects and ai-chat on
+     others — try both rather than silently failing on whichever name is missing */
+  async function callAi(body,tok){
+    var base=(window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co'),names=['ai-response','ai-chat'],last=null;
+    for(var i=0;i<names.length;i++){
+      try{
+        var r=await fetch(base+'/functions/v1/'+names[i],{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify(body)});
+        if(r.status===404){continue;}
+        var d=await r.json();
+        if(d&&(d.reply||d.navigate))return d;
+        last=d&&d.error;
+      }catch(e){last=String(e);}
+    }
+    return {reply:last?('Couldn\'t reach the assistant — '+last):'Couldn\'t reach the assistant just now. Try again in a moment.'};
+  }
   async function send(){
     var inp=document.getElementById('oawIn');var t=(inp.value||'').trim();if(!t)return;inp.value='';
     add('user',t);HIST.push({role:'user',content:t});
@@ -17469,10 +17669,7 @@ document.head.appendChild(rdCss);
       var tok='';
       if(window.BP_SB&&BP_SB.auth){var s=await BP_SB.auth.getSession();tok=(s&&s.data&&s.data.session&&s.data.session.access_token)||'';}
       if(!tok){node.textContent='Please sign in to your dashboard first.';return;}
-      var r=await fetch((window.BP_URL||'https://ttzwzouhiwdwamuimhpo.supabase.co')+'/functions/v1/ai-response',{
-        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
-        body:JSON.stringify({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV})});
-      var d=await r.json();
+      var d=await callAi({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV},tok);
       var reply=d.reply||d.error||'Sorry, something went wrong.';
       node.textContent=reply;HIST.push({role:'assistant',content:reply});
       if(d.navigate&&typeof window.bpNav==='function'){try{bpNav(d.navigate);}catch(e){}}
