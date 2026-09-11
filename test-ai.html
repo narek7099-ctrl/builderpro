@@ -50,11 +50,11 @@ async function runAll(){
   else if(r1.status===405||/POST only/.test(r1.text)){setr(d1,'ok','✓ Function is deployed and JWT is off',r1.text.slice(0,200));}
   else setr(d1,'warn','Got HTTP '+r1.status,r1.text.slice(0,300));
 
-  // 2: visitor chat (what the homepage Atlas/Nova send)
-  var d2=box('2 · Visitor chat (homepage Atlas/Nova)');
+  // 2: visitor chat (what the homepage Ridge/Nova send)
+  var d2=box('2 · Visitor chat (homepage Ridge/Nova)');
   var t0=Date.now();
   var r2=await tryFetch({method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({message:'do you do roof repairs?',business:{name:'BuilderPro',industry:'Roofing',assistant_name:'Atlas',tone:'Friendly'}})});
+    body:JSON.stringify({message:'do you do roof repairs?',business:{name:'BuilderPro',industry:'Roofing',assistant_name:'Ridge',tone:'Friendly'}})});
   var secs=((Date.now()-t0)/1000).toFixed(1);
   var j2=null;try{j2=JSON.parse(r2.text);}catch(e){}
   if(r2.status===200&&j2&&j2.reply){setr(d2,'ok','✓ Real AI answered in '+secs+'s',j2.reply);}

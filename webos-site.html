@@ -417,7 +417,7 @@ nav{flex-wrap:nowrap;white-space:nowrap;}
 #bpx{--soft:#f5f5f7;--mu:#6b6b73;--ink:#141417;}
 #bpx.dark{--soft:#221f2a;--mu:#9c99ab;--ink:#e9e7f0;}
 
-/* Atlas blob + inline chat */
+/* Ridge blob + inline chat */
 .atlas-stage{display:flex;flex-direction:column;align-items:center;}
 .net-wrap{position:relative;width:340px;height:340px;max-width:86vw;border:0;background:none;padding:0;cursor:pointer;display:block;transition:transform .5s cubic-bezier(.22,1,.36,1);}
 .net-wrap::before{content:'';position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle at 50% 45%,rgba(139,92,246,.12),rgba(139,92,246,0) 68%);}
@@ -462,7 +462,7 @@ nav{flex-wrap:nowrap;white-space:nowrap;}
 .ai-typing span:nth-child(2){animation-delay:.18s;}
 .ai-typing span:nth-child(3){animation-delay:.36s;}
 @keyframes aiblink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
-/* build-your-Atlas wizard */
+/* build-your-Ridge wizard */
 .ai-wiz{padding:20px 20px 18px;text-align:left;}
 .ai-wiz-prog{font-size:12px;color:var(--grey);margin-bottom:14px;}
 .ai-wiz-prog b{color:var(--blue);}
@@ -1518,10 +1518,10 @@ function bpMarkWon(id){
   bpDrawDeals();
 }
 var BP_AUTOMATIONS=[
-  {stage:'When a new lead comes in',items:[{n:'Roof Estimator Follow-Up',d:'The moment someone uses your roof estimator, Atlas texts them to answer questions and get them booked.'},{n:'New Lead Outreach',d:'Any lead you add and tag gets an instant, friendly text from Atlas to start the conversation.'},{n:'Instant Email Reply',d:'Anyone who emails you gets an immediate, professional response so no lead waits.'},{n:'Text-Back Capture',d:'Leads from your text-back form get an automatic reply within seconds.'}]},
-  {stage:'When you miss a call or text',items:[{n:'Missed Call Text-Back',d:'If a call is missed, Atlas texts them right back so you never lose the lead.'},{n:'Missed Text Response',d:'An unanswered text gets an automatic reply that keeps the conversation going.'}]},
-  {stage:'Booking & appointments',items:[{n:'Appointment Confirmations & Reminders',d:'Confirms every booking and sends reminders the day before and hour of, so fewer no-shows.'},{n:'Appointment Check-In',d:'After each inspection, you get a quick text to log what happened.'},{n:'No-Show Recovery',d:'If someone misses their inspection, Atlas reaches out to get them rescheduled.'},{n:'Cancellation Follow-Up',d:'When an appointment is cancelled, Atlas offers to grab a new time before the lead goes cold.'}]},
-  {stage:'Closing & after the job',items:[{n:'Estimate Follow-Up',d:'After an estimate is sent, Atlas answers questions, handles objections, and routes hot leads to you.'},{n:'Google Review Requests',d:'After a completed job, Atlas asks happy customers for a Google review.'},{n:'Dead Lead Reactivation',d:'Old leads that went quiet get re-engaged automatically weeks later.'}]}
+  {stage:'When a new lead comes in',items:[{n:'Roof Estimator Follow-Up',d:'The moment someone uses your roof estimator, Ridge texts them to answer questions and get them booked.'},{n:'New Lead Outreach',d:'Any lead you add and tag gets an instant, friendly text from Ridge to start the conversation.'},{n:'Instant Email Reply',d:'Anyone who emails you gets an immediate, professional response so no lead waits.'},{n:'Text-Back Capture',d:'Leads from your text-back form get an automatic reply within seconds.'}]},
+  {stage:'When you miss a call or text',items:[{n:'Missed Call Text-Back',d:'If a call is missed, Ridge texts them right back so you never lose the lead.'},{n:'Missed Text Response',d:'An unanswered text gets an automatic reply that keeps the conversation going.'}]},
+  {stage:'Booking & appointments',items:[{n:'Appointment Confirmations & Reminders',d:'Confirms every booking and sends reminders the day before and hour of, so fewer no-shows.'},{n:'Appointment Check-In',d:'After each inspection, you get a quick text to log what happened.'},{n:'No-Show Recovery',d:'If someone misses their inspection, Ridge reaches out to get them rescheduled.'},{n:'Cancellation Follow-Up',d:'When an appointment is cancelled, Ridge offers to grab a new time before the lead goes cold.'}]},
+  {stage:'Closing & after the job',items:[{n:'Estimate Follow-Up',d:'After an estimate is sent, Ridge answers questions, handles objections, and routes hot leads to you.'},{n:'Google Review Requests',d:'After a completed job, Ridge asks happy customers for a Google review.'},{n:'Dead Lead Reactivation',d:'Old leads that went quiet get re-engaged automatically weeks later.'}]}
 ];
 /* ---- My Website ---- */
 function bpTile(lbl,val,blue){return '<div class="bpx-stat"><div class="lbl">'+lbl+'</div><div class="val'+(blue?' blue':'')+'">'+val+'</div></div>';}
