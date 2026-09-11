@@ -12573,6 +12573,13 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-cd-card:hover{box-shadow:0 4px 14px rgba(15,30,60,.08);}
 #bpx:not(.bpx-dark) .bpx-ctable tbody tr[onclick]{cursor:pointer;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#8ec5ff;}
+#bpx .bpx-panel .bpx-btn{width:auto;margin-top:0;}
+#bpx .bpx-set-foot .bpx-btn{width:100%;}
+#bpx:not(.bpx-dark) .bpx-stat .note{color:#6b7a90;font-weight:500;}
+#bpx:not(.bpx-dark) .bpx-stat .note.up{color:#15803d;font-weight:600;}
+#bpx:not(.bpx-dark) .bpx-stat .note.down{color:#dc2626;font-weight:600;}
+.bpx-finrow-btns .bpx-addbtn,.bpx-finrow-btns .bpx-btn{padding:9px 15px !important;font-size:13px;margin-top:0;}
+@media(max-width:820px){#bpx .bpx-mobbar{padding-right:104px;}}
 /* ===== THEME-FIELD END ===== */
 </style>
 
@@ -13310,10 +13317,10 @@ function bpDashboard(){
   document.getElementById('bpxViewArea').innerHTML=
     '<div class="bpx-panel" style="margin-bottom:16px"><div class="bpx-ptitle">Active projects<span class="lg2">what\'s in motion right now</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading…</div></div>'
     +'<div class="bpx-stats six">'
-    +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val" id="bpxSNew">342</div><div class="note">▲ 18% vs last month</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val" id="bpxSBooked">128</div><div class="note">▲ 12% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val" id="bpxSNew">342</div><div class="note up">▲ 18% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Jobs booked</div><div class="val" id="bpxSBooked">128</div><div class="note up">▲ 12% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Profit</div><div class="val blue">'+(function(){try{return bpMoneyFmt(bpFinData().net);}catch(e){return '$0';}})()+'</div><div class="note">income − expenses</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Missed calls saved</div><div class="val" id="bpxSMiss">63</div><div class="note">▲ 9% vs last month</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Missed calls saved</div><div class="val" id="bpxSMiss">63</div><div class="note up">▲ 9% vs last month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Appointments booked</div><div class="val" id="bpxSAppts">—</div><div class="note">this month</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Total customers</div><div class="val" id="bpxSCust">—</div><div class="note">all time</div></div>'
     +'</div>'
