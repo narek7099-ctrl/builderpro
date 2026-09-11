@@ -13786,7 +13786,7 @@ function bpRgStatusHTML(){
   if(!r||!r.published_at){
     return '<div class="bpx-rg-status"><span class="dot amber"></span><div><b>Not published yet</b><div class="bpx-mut">Ridge is answering from your Settings only. Add what it should know, then publish.</div></div></div>';
   }
-  var line='Published '+bpRgAgo(r.published_at)+(r.ghl_synced_at?' · phone line synced':(_bpRgLinked?' · phone line sync pending':' · live for web & text'));
+  var line='Published '+bpRgAgo(r.published_at)+(r.ghl_synced_at?' · phone line synced':(_bpRgLinked?' · phone line didn\'t update on the last publish':' · web & text only — phone line not linked'));
   return '<div class="bpx-rg-status"><span class="dot '+(dirty?'amber':'green')+'"></span><div><b>'+(dirty?'Unpublished changes':'Live')+'</b><div class="bpx-mut">'+line+'</div></div></div>';
 }
 function bpRidgeView(){
@@ -13921,7 +13921,13 @@ window.bpRgPublish=function(){
     if(!(r&&r.ok)){ if(m){m.style.color='#dc2626';m.textContent='Could not publish — '+bpEsc((r&&r.error)||'try again');} return; }
     _bpRgRemote=r.brain||_bpRgRemote; _bpRgLoaded=true;
     bpSettingsPush(bpSettingsGet());
-    if(m){m.style.color='#15803d';m.textContent=r.ghl==='synced'?'Published ✓ · live on web, text, and your phone line':(r.ghl==='failed'?'Published ✓ · phone line sync hit a snag, we\'ll retry':'Published ✓ · live for web & text');}
+    if(m){
+      var ok=r.ghl==='synced';
+      m.style.color=ok?'#15803d':'#b45309';
+      m.textContent=ok?'Published ✓ · live on web, text, and your phone line'
+        :(r.ghl==='failed'?'Published ✓ · saved, but the phone line didn\'t update — publish again in a minute'
+                          :'Published ✓ · live on web & text · phone line not linked yet');
+    }
     bpRgTouched();
     setTimeout(function(){if(m)m.textContent='';},4500);
   }).catch(function(){ if(btn)btn.disabled=false; if(m){m.style.color='#dc2626';m.textContent='Could not publish — check your connection.';} });
