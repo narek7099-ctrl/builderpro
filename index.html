@@ -16342,20 +16342,30 @@ function bpMarketing(){
     +'<div class="bpx-chead" style="margin-bottom:16px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpMk.tab===t[0]?' on':'')+'" data-mk-tab="'+t[0]+'" onclick="bpMkTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpMkRefresh()">Refresh numbers</button><button class="bpx-addbtn" onclick="bpMkLaunch()">Launch a campaign</button></div></div>'
     +'<div id="bpx-mk-pane">'+bpMkPane()+'</div>';
-  if(window.BP_LIVE&&!_bpMk.loaded&&!_bpMk.loading)bpMkLoad(false);
+  if(window.BP_LIVE&&!_bpMk.loaded&&!_bpMk.loading){try{bpMkLoad(false);}catch(e){bpMkDone(null,null,'Couldn\'t load your marketing numbers. Tap Refresh numbers to try again.');}}
 }
 window.bpMkTab=function(t){_bpMk.tab=t;document.querySelectorAll('[data-mk-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-mk-tab')===t);});var p=q('bpx-mk-pane');if(p)p.innerHTML=bpMkPane();};
 window.bpMkRefresh=function(){_bpMk.loaded=false;bpMkLoad(true);};
+function bpMkDone(r,q,note){
+  r=r||{};
+  _bpMk.conns=r.connections||[]; _bpMk.stats=r.stats||{}; _bpMk.cfg=r.configured||{};
+  if(q)_bpMk.reqs=q.data||[];
+  _bpMk.note=note||(r.error==='sign in required'?'Sign out and back in to load your marketing numbers.':'');
+  _bpMk.loaded=true; _bpMk.loading=false;
+  if(!_bpMk.conns.length&&_bpMk.tab==='overview')_bpMk.tab='connections';
+  if(window._bpCurView==='marketing')bpMarketing();
+}
 function bpMkLoad(force){
-  _bpMk.loading=true;
-  var reqs=(window.BP_SB?BP_SB.from('campaign_requests').select('*').order('created_at',{ascending:false}).limit(20):Promise.resolve({data:[]}));
-  Promise.all([bpAuthApi(MKT_URL,{op:'stats',force:!!force}).catch(function(){return null;}),reqs.catch(function(){return {data:[]};})]).then(function(res){
-    var r=res[0]||{};
-    _bpMk.conns=(r.connections)||[]; _bpMk.stats=(r.stats)||{}; _bpMk.cfg=(r.configured)||{}; _bpMk.reqs=(res[1]&&res[1].data)||[];
-    _bpMk.loaded=true; _bpMk.loading=false;
-    if(!_bpMk.conns.length&&_bpMk.tab==='overview')_bpMk.tab='connections';
-    if(window._bpCurView==='marketing')bpMarketing();
-  });
+  if(_bpMk.loading)return;
+  _bpMk.loading=true; _bpMk.note='';
+  // a Supabase query builder is a thenable, not a Promise — it has no .catch of its own
+  var reqs=window.BP_SB
+    ? Promise.resolve(BP_SB.from('campaign_requests').select('*').order('created_at',{ascending:false}).limit(20)).catch(function(){return {data:[]};})
+    : Promise.resolve({data:[]});
+  var stats=Promise.resolve(bpAuthApi(MKT_URL,{op:'stats',force:!!force})).catch(function(){return null;});
+  setTimeout(function(){ if(!_bpMk.loaded)bpMkDone(null,null,'Couldn\'t reach the marketing service. Tap Refresh numbers to try again.'); },15000);
+  var oops='Couldn\'t reach the marketing service — this isn\'t about your accounts. Tap Refresh numbers to try again.';
+  Promise.all([stats,reqs]).then(function(res){ bpMkDone(res[0],res[1],res[0]?'':oops); },function(){ bpMkDone(null,null,oops); });
 }
 function bpMkKpis(){
   var L=_bpMk.loaded, m=bpMkStat('meta'), g=bpMkStat('google_ads'), b=bpMkStat('gbp'), y=bpMkStat('yelp');
@@ -16369,6 +16379,11 @@ function bpMkKpis(){
 function bpMkPane(){
   var t=_bpMk.tab;
   if(!_bpMk.loaded&&window.BP_LIVE)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  var note=_bpMk.note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpMk.note)+'</div>':'';
+  if(note)return note+bpMkPaneBody(t);
+  return bpMkPaneBody(t);
+}
+function bpMkPaneBody(t){
   if(t==='connections')return '<div class="bpx-mk-grid">'+BP_MKT.map(bpMkCard).join('')+'</div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px;text-align:center">Connections are read-only for your accounts — we never post or spend without a campaign you approved.</div>';
   if(!_bpMk.conns.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>Nothing connected yet</b>Connect Meta, Google, or Yelp and your spend, leads, and reviews show up here automatically.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpMkTab(\'connections\')">Connect a channel</button></div></div></div>';
