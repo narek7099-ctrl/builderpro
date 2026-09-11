@@ -248,7 +248,7 @@ async function onboardFull(a: Record<string, string>) {
     if (Array.isArray(cals) && cals.length) { bookingCalId = cals[0].id; steps.push("Linked their booking calendar (" + (cals[0].name || bookingCalId) + ")"); }
   } catch { /* ignore */ }
 
-  // 3) create the client's AI receptionist brain (Nova/Atlas)
+  // 3) create the client's AI receptionist brain (Nova/Ridge)
   if (SB_URL && SB_SERVICE) {
     try {
       const rb = await fetch(`${SB_URL}/rest/v1/ai_brain?on_conflict=slug`, {

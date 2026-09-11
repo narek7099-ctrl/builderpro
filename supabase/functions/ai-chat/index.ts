@@ -1,4 +1,4 @@
-// ai-chat — the brain for Nova (Web OS) and Atlas (BuilderPro), now a REAL receptionist.
+// ai-chat — the brain for Nova (Web OS) and Ridge (BuilderPro), now a REAL receptionist.
 // Beyond answering from the business's `ai_brain` knowledge, it can now ACT:
 //   • capture a lead   → creates the contact (+note) in the business's GoHighLevel account
 //   • check openings   → reads live free slots from their booking calendar
@@ -127,7 +127,7 @@ async function actBook(locId: string, calId: string, a: Record<string, string>):
 }
 
 // ===================== OWNER MODE =====================
-// The same Nova/Atlas, but inside the BuilderPro / Web OS client dashboard:
+// The same Nova/Ridge, but inside the BuilderPro / Web OS client dashboard:
 // it knows the logged-in business owner's OWN data (their contacts, bookings,
 // conversations from the Supabase tables) and helps them navigate the portal.
 
