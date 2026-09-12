@@ -2423,6 +2423,56 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
 </style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: roofing photography ===== */
+#est-embed .e-ldpanel{background-image:linear-gradient(155deg,rgba(18,35,61,.93),rgba(28,51,85,.90)),url('assets/roofing/roof-underlayment.jpg');
+  background-size:cover;background-position:center;}
+#est-embed .e-rhero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.86)),url('assets/roofing/roof-completed.jpg')!important;
+  background-size:cover!important;background-position:center 38%!important;}
+
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
+</style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
@@ -3777,6 +3827,47 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active,#est-embed .e-sp.back,
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
+</style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
 </style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
@@ -5403,6 +5494,47 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
 </style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
+</style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
@@ -6934,6 +7066,47 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active,#est-embed .e-sp.back,
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
+</style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
 </style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
@@ -8546,6 +8719,47 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active,#est-embed .e-sp.back,
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
+</style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
 </style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
@@ -10278,6 +10492,47 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
 </style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
+</style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
@@ -11859,6 +12114,47 @@ document.addEventListener('click', function(e) {
   #est-embed .e-sp.active,#est-embed .e-sp.back,
   #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
 }
+</style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
 </style>
 </body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
