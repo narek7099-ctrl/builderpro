@@ -16593,9 +16593,11 @@ window.bpFinAddSave=function(kind){
 .bpx-emptyhero b{font-size:15px;color:#1b2a41;}
 @media(max-width:560px){.bpx-emptyhero img{width:100%;height:130px;}}
 #bpx.bpx-dark .bpx-emptyhero b{color:var(--ink);}
-.bpx-mk-logo{width:38px;height:38px;border-radius:10px;color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
-.bpx-mk-logo.light{border:1px solid var(--line);}
-.bpx-mk-logo svg{display:block;}
+.bpx-mk-logo{width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 auto;overflow:hidden;}
+.bpx-mk-logo img{width:26px;height:26px;object-fit:contain;display:block;}
+.bpx-mk-logo.bleed{border:0;}
+.bpx-mk-logo.bleed img{width:100%;height:100%;}
+#bpx.bpx-dark .bpx-mk-logo{background:#f6f8fb;}
 .bpx-mk-name{font-weight:700;font-size:14px;color:#0f2540;}.bpx-mk-desc{font-size:12px;color:var(--grey);margin-top:1px;}
 .bpx-mk-st{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;display:inline-block;}
 .bpx-mk-st.on{background:#dcfce7;color:#15803d;}.bpx-mk-st.off{background:#eef2f8;color:#3c4c63;}.bpx-mk-st.soon{background:#fef3c7;color:#b45309;}
@@ -16618,21 +16620,11 @@ window.bpFinAddSave=function(kind){
 /* ===== Marketing: ad accounts + listings connected, measured, and launched from here ===== */
 var MKT_URL=BP_URL+'/functions/v1/marketing-oauth';
 var _bpMk={conns:[],stats:{},cfg:{},loaded:false,loading:false,tab:null,reqs:[]};
-var MK_SVG={
-  meta:'<svg viewBox="0 0 24 24" width="21" height="21"><path fill="#fff" d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.25-1.5 1.55-1.5h1.65V3.6c-.29-.04-1.27-.13-2.41-.13-2.39 0-4.02 1.46-4.02 4.13V9.9H7.5V13h2.77v8h3.23z"/></svg>',
-  google:'<svg viewBox="0 0 24 24" width="21" height="21">'
-    +'<path fill="#4285F4" d="M23.5 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.54 5.54 0 0 1-2.4 3.58v2.97h3.88c2.27-2.09 3.55-5.17 3.55-8.79z"/>'
-    +'<path fill="#34A853" d="M12 24c3.24 0 5.96-1.08 7.95-2.94l-3.88-2.97c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.28v3.09A12 12 0 0 0 12 24z"/>'
-    +'<path fill="#FBBC05" d="M5.27 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.28a12 12 0 0 0 0 10.74l3.99-3.09z"/>'
-    +'<path fill="#EA4335" d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.7 0 3.99 2.47 1.28 6.63l3.99 3.09C6.22 6.88 8.87 4.77 12 4.77z"/></svg>',
-  gbp:'<svg viewBox="0 0 24 24" width="21" height="21"><path fill="#fff" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
-  yelp:'<svg viewBox="0 0 24 24" width="21" height="21"><path fill="#fff" d="M11.2 3.6v7.7c0 .72-.87 1.04-1.32.5L6.12 7.46a1 1 0 0 1 .2-1.5l3.38-2.06a1 1 0 0 1 1.5.7zM9.9 13.6l-4.6 1.2a1 1 0 0 0-.5 1.6l2.4 2.8a1 1 0 0 0 1.6-.16l2.2-3.88c.35-.62-.2-1.35-.9-1.17zm3.6.6 2.3 3.88a1 1 0 0 0 1.6.16l2.3-2.8a1 1 0 0 0-.5-1.6l-4.6-1.2c-.7-.18-1.25.55-.9 1.17zm.6-3 4.5-1.7a1 1 0 0 0 .3-1.65l-2-2a1 1 0 0 0-1.6.2l-2.3 4c-.37.63.25 1.4.95 1.15z"/></svg>'
-};
 var BP_MKT=[
-  {k:'meta',n:'Meta Ads',d:'Facebook & Instagram campaigns',c:'#1877f2',ic:'meta',oauth:true,go:'https://adsmanager.facebook.com/'},
-  {k:'google_ads',n:'Google Ads',d:'Search & Local Services campaigns',c:'#fff',ic:'google',light:true,oauth:true,go:'https://ads.google.com/'},
-  {k:'gbp',n:'Google Business Profile',d:'Your map listing — calls, directions, clicks',c:'#4285f4',ic:'gbp',oauth:true,go:'https://business.google.com/'},
-  {k:'yelp',n:'Yelp',d:'Your listing — rating, reviews, requests',c:'#d32323',ic:'yelp',oauth:false,go:'https://biz.yelp.com/'}
+  {k:'meta',n:'Meta Ads',d:'Facebook & Instagram campaigns',img:'assets/brand/meta.png',oauth:true,go:'https://adsmanager.facebook.com/'},
+  {k:'google_ads',n:'Google Ads',d:'Search & Local Services campaigns',img:'assets/brand/google-ads.png',oauth:true,go:'https://ads.google.com/'},
+  {k:'gbp',n:'Google Business Profile',d:'Your map listing — calls, directions, clicks',img:'assets/brand/google-g.png',oauth:true,go:'https://business.google.com/'},
+  {k:'yelp',n:'Yelp',d:'Your listing — rating, reviews, requests',img:'assets/brand/yelp.png',bleed:true,oauth:false,go:'https://biz.yelp.com/'}
 ];
 function bpMkP(k){return BP_MKT.filter(function(p){return p.k===k;})[0]||{n:k,c:'#64748b',m:'?'};}
 function bpMkConn(k){return _bpMk.conns.filter(function(c){return c.provider===k;})[0]||null;}
@@ -16724,7 +16716,7 @@ function bpMkCard(p){
   var acts=c
     ?'<a class="bpx-btn ghost" style="width:auto;margin-top:0;padding:8px 13px;font-size:12.5px;text-decoration:none;display:inline-block" href="'+p.go+'" target="_blank" rel="noopener">Open '+bpEsc(p.n.split(' ')[0])+'</a><button class="bpx-rowbtn" style="margin:0" onclick="bpMkDisconnect(\''+p.k+'\')">Disconnect</button>'
     :'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 16px;font-size:12.5px" onclick="bpMkConnect(\''+p.k+'\')">Connect</button>';
-  return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(p.light?' light':'')+'" style="background:'+p.c+'">'+(MK_SVG[p.ic]||'')+'</div><div style="min-width:0"><div class="bpx-mk-name">'+p.n+'</div><div class="bpx-mk-desc">'+p.d+'</div></div></div>'
+  return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(p.bleed?' bleed':'')+'"><img src="'+p.img+'" alt="'+bpEsc(p.n)+'" loading="lazy"></div><div style="min-width:0"><div class="bpx-mk-name">'+p.n+'</div><div class="bpx-mk-desc">'+p.d+'</div></div></div>'
     +'<div>'+st+'</div>'+(c&&c.account_name?'<div class="bpx-mk-acct">'+bpEsc(c.account_name)+(c.connected_at?' · since '+new Date(c.connected_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+'</div>':'')
     +'<div class="bpx-mk-acts">'+acts+'</div></div>';
 }
