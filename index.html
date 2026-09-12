@@ -13073,6 +13073,21 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-nav a:hover{background:rgba(255,255,255,.08) !important;color:#fff !important;box-shadow:none !important;}
 #bpx:not(.bpx-dark) .bpx-nav a.on{background:var(--blue) !important;color:#fff !important;font-weight:600;box-shadow:0 6px 16px rgba(47,107,255,.38) !important;}
 #bpx:not(.bpx-dark) .bpx-nav a svg{stroke:currentColor;}
+/* grouped sidebar: branch headers, collapsible sub-pages, pinned footer */
+#bpx .bpx-grp{display:flex;flex-direction:column;gap:2px;}
+#bpx .bpx-grp-h{justify-content:flex-start;}
+#bpx .bpx-grp-h .bpx-chev{width:14px !important;height:14px !important;margin-left:auto;opacity:.55;transition:transform .18s;stroke-width:2.2;}
+#bpx .bpx-grp.open .bpx-grp-h .bpx-chev{transform:rotate(180deg);}
+#bpx .bpx-sub{display:none;flex-direction:column;gap:1px;margin:1px 0 4px;padding-left:16px;position:relative;}
+#bpx .bpx-sub::before{content:'';position:absolute;left:20px;top:2px;bottom:6px;width:1.5px;background:rgba(255,255,255,.12);border-radius:2px;}
+#bpx .bpx-grp.open .bpx-sub{display:flex;}
+#bpx .bpx-sub a{padding:8px 12px 8px 22px !important;font-size:13.3px !important;border-radius:9px !important;}
+#bpx:not(.bpx-dark) .bpx-grp.has-on .bpx-grp-h{color:#fff !important;}
+#bpx:not(.bpx-dark) .bpx-sub a.on{background:rgba(47,107,255,.22) !important;box-shadow:inset 3px 0 0 #7bc8ff !important;color:#fff !important;}
+#bpx .bpx-nav-foot{margin-top:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:2px;}
+#bpx.bpx-dark .bpx-sub::before,#bpx.bpx-dark .bpx-nav-foot{border-color:#232c3a;background-color:transparent;}
+#bpx.bpx-dark .bpx-sub::before{background:#232c3a;}
+#bpx.bpx-dark .bpx-sub a.on{background:rgba(47,107,255,.16);box-shadow:inset 3px 0 0 var(--blue);}
 #bpx:not(.bpx-dark) .bpx-user2{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;margin-top:10px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-uemail{color:#c2cede;font-size:12.5px;font-weight:600;margin-bottom:10px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.26);color:#e8eef7;padding:10px;border-radius:9px;}
@@ -13216,17 +13231,8 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
   <div class="bpx-app" id="bpxApp">
     <aside class="bpx-side">
       <div class="bpx-brand2"><svg class="bpmark" width="34" height="34" aria-label="BuilderPro OS"><use href="#bpMark"/></svg>BuilderPro<span>OS</span></div>
-      <nav class="bpx-nav" id="bpxNav">
-        <a class="on" data-view="dashboard" onclick="bpNav('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span>Dashboard</span></a>
-        <a data-view="messaging" onclick="bpNav('messaging')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Messaging</span></a>
-        <a data-view="contacts" onclick="bpNav('contacts')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Contacts</span></a>
-        <a data-view="calendar" onclick="bpNav('calendar')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Calendar</span></a>
-        <a data-view="activejobs" onclick="bpNav('activejobs')"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>Active Projects</span></a><a data-view="finances" onclick="bpNav('finances')"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Finances</span></a><a data-view="leadradar" onclick="bpNav('leadradar')"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Lead Radar</span></a>
-        <a data-view="marketing" onclick="bpNav('marketing')"><svg viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></svg><span>Marketing</span></a>
-        <a data-view="calculator" onclick="bpNav('calculator')"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3"/></svg><span>My Calculator</span></a>
-        <a data-view="ai" onclick="bpNav('ai')"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8"/><circle cx="14.5" cy="10" r=".8"/></svg><span>Ridge AI</span></a>
-        <a data-view="settings" onclick="bpNav('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 3.6h.09A1.65 1.65 0 0 0 9 2.09V2a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 14 3.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 8v.09A1.65 1.65 0 0 0 21.91 9H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></a>
-      </nav>
+      <!-- built by bpBuildNav() from BP_NAV — five branches, then Ridge AI + Settings pinned below -->
+      <nav class="bpx-nav" id="bpxNav"></nav>
       <div class="bpx-user2"><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
     </aside>
     <main class="bpx-main">
@@ -13791,8 +13797,9 @@ function bpEnterPortal(email){
   document.getElementById('bpxUemail').textContent=email||'';
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
+  bpBuildNav();
   bpBuildMobbar();
-  var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return 'marketing';}}catch(e){}return null;})();
+  var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return c==='social'?'social':'marketing';}}catch(e){}return null;})();
   bpNav(landed||'dashboard');
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
   bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpNav('dashboard'); });
@@ -13823,7 +13830,48 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},marketing:{t:'Marketing',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+/* ---- sidebar: five branches, each a page or a group of pages ---- */
+var BP_ICO={
+  dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
+  projects:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
+  finances:'<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  leads:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  marketing:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/>',
+  ai:'<path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8"/><circle cx="14.5" cy="10" r=".8"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 3.6h.09A1.65 1.65 0 0 0 9 2.09V2a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 14 3.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 8v.09A1.65 1.65 0 0 0 21.91 9H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+};
+var BP_NAV=[
+  {id:'dashboard',l:'Dashboard',ico:'dashboard'},
+  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['calendar','Calendar'],['calculator','My Calculator']]},
+  {id:'finances',l:'Finances',ico:'finances'},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['contacts','Contacts'],['messaging','Messaging']]},
+  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors']]}
+];
+var BP_NAV_FOOT=[['ai','Ridge AI','ai'],['settings','Settings','settings']];
+function bpNavGroupOf(v){
+  for(var i=0;i<BP_NAV.length;i++){var g=BP_NAV[i];if(g.id===v&&!g.kids)return g.id;
+    if(g.kids)for(var j=0;j<g.kids.length;j++)if(g.kids[j][0]===v)return g.id;}
+  return null;
+}
+function bpBuildNav(){
+  var ic=function(k){return '<svg viewBox="0 0 24 24">'+BP_ICO[k]+'</svg>';};
+  var h='';
+  BP_NAV.forEach(function(g){
+    if(!g.kids){h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
+    h+='<div class="bpx-grp" data-grp="'+g.id+'">'
+      +'<a class="bpx-grp-h" onclick="bpNavToggle(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span><svg class="bpx-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>'
+      +'<div class="bpx-sub">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span></a>';}).join('')+'</div></div>';
+  });
+  h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
+  document.getElementById('bpxNav').innerHTML=h;
+}
+function bpNavToggle(gid){
+  var g=document.querySelector('#bpxNav .bpx-grp[data-grp="'+gid+'"]');if(!g)return;
+  var open=g.classList.toggle('open');
+  /* opening a branch jumps to its first page so a tap always does something */
+  if(open&&bpNavGroupOf(window._bpCurView)!==gid){var first=g.querySelector('.bpx-sub a');if(first)bpNav(first.getAttribute('data-view'));}
+}
 function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
@@ -13839,14 +13887,16 @@ function bpSpin(on){
 }
 function bpNav(v){
   window._bpCurView=v;
-  document.querySelectorAll('#bpxNav a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
+  document.querySelectorAll('#bpxNav a[data-view]').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
+  var gid=bpNavGroupOf(v);
+  document.querySelectorAll('#bpxNav .bpx-grp').forEach(function(g){var mine=g.getAttribute('data-grp')===gid;g.classList.toggle('open',mine);g.classList.toggle('has-on',mine);});
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,leadradar:bpRadar,marketing:bpMarketing,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,leadradar:bpRadar,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -17079,6 +17129,58 @@ window.bpFinAddSave=function(kind){
 .bpx-mk-rev:last-child{border-bottom:0;}
 .bpx-mk-stars{color:#f59e0b;letter-spacing:1px;font-size:12px;}
 .bpx-mk-empty{padding:34px 20px;text-align:center;color:var(--grey);font-size:13.5px;}
+/* competitors */
+.bpx-cp-stars{position:relative;display:inline-block;font-size:13px;line-height:1;letter-spacing:1px;color:#d9dde5;vertical-align:-1px;}
+.bpx-cp-stars-on{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#f59e0b;}
+.bpx-ctable tr.bpx-cp-you td{background:linear-gradient(90deg,#eef3ff,#f7faff);}
+.bpx-ctable tr.bpx-cp-you td:first-child{box-shadow:inset 3px 0 0 var(--blue);}
+.bpx-lbl{display:block;font-size:11.5px;font-weight:600;color:var(--grey);margin-bottom:5px;letter-spacing:.02em;}
+.bpx-inp{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;background:#fff;color:var(--ink);}
+.bpx-inp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.14);}
+@media(max-width:700px){.bpx-cp-form{grid-template-columns:1fr !important;}}
+.bpx-cp-res{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line-2);}
+.bpx-cp-res:first-child{border-top:0;}
+.bpx-cp-res img,.bpx-cp-noimg{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#eef1f5;}
+#bpx .bpx-rowbtn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+#bpx .bpx-rowbtn.primary:hover{background:var(--blue-d);border-color:var(--blue-d);color:#fff;}
+#bpx .bpx-rowbtn.primary:disabled{opacity:.55;cursor:default;}
+.bpx-cp-ins{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.bpx-cp-card{display:flex;gap:13px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
+.bpx-cp-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+.bpx-cp-card.gap .bpx-cp-ico{background:#fff1f2;color:#be123c;}
+.bpx-cp-card.win .bpx-cp-ico{background:#ecfdf5;color:#047857;}
+.bpx-cp-card.warn .bpx-cp-ico{background:#fff7ed;color:#c2410c;}
+.bpx-cp-card.info .bpx-cp-ico{background:#eef3ff;color:#1b56ee;}
+#bpx.bpx-dark .bpx-cp-card,#bpx.bpx-dark .bpx-inp{background:#151b26;border-color:#232c3a;color:#e6e9ef;}
+/* social media */
+.bpx-badge.ok{background:#ecfdf5;color:#047857;}
+.bpx-badge.bad{background:#fff1f2;color:#be123c;}
+.bpx-so-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--c,#64748b) 12%,#fff);color:var(--c,#64748b);white-space:nowrap;}
+.bpx-so-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c,#64748b);}
+.bpx-so-chip.ok{background:#ecfdf5;color:#047857;}.bpx-so-chip.ok::before{background:#10b981;}
+.bpx-so-chip.bad{background:#fff1f2;color:#be123c;}.bpx-so-chip.bad::before{background:#f43f5e;}
+.bpx-so-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+.bpx-so-acct-h{display:flex;align-items:center;margin-bottom:12px;}
+.bpx-so-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.bpx-so-v{font-size:20px;font-weight:700;letter-spacing:-.02em;}
+.bpx-so-l{font-size:11px;color:var(--grey);margin-top:2px;}
+.bpx-so-top{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+.bpx-so-post,.bpx-so-row{display:flex;gap:12px;align-items:flex-start;}
+.bpx-so-post{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;}
+.bpx-so-row{padding:12px 0;border-top:1px solid var(--line-2);}
+.bpx-so-row:first-of-type{border-top:0;}
+.bpx-so-post img,.bpx-so-row img,.bpx-so-noimg{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#eef1f5;}
+.bpx-so-txt{font-size:13px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.bpx-so-cks,.bpx-so-when{display:flex;gap:8px;flex-wrap:wrap;}
+.bpx-so-ck{display:inline-flex !important;align-items:center;gap:6px;margin:0 !important;padding:7px 11px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;font-weight:600;color:var(--ink) !important;cursor:pointer;background:#fff;}
+.bpx-so-ck input{width:auto !important;margin:0 !important;padding:0 !important;accent-color:var(--blue);}
+.bpx-so-ck.off{opacity:.55;cursor:default;}
+.bpx-so-img{display:flex;gap:12px;align-items:flex-start;}
+.bpx-so-prev{width:96px;height:96px;border-radius:12px;overflow:hidden;background:#eef1f5;flex-shrink:0;border:1px solid var(--line);}
+.bpx-so-prev.empty{background:repeating-linear-gradient(45deg,#f3f5f9,#f3f5f9 6px,#eaedf3 6px,#eaedf3 12px);}
+.bpx-so-prev img{width:100%;height:100%;object-fit:cover;display:block;}
+#bpx.bpx-dark .bpx-so-post,#bpx.bpx-dark .bpx-so-ck{background:#151b26;border-color:#232c3a;}
+#bpx.bpx-dark .bpx-ctable tr.bpx-cp-you td{background:#172033;}
 .bpx-mk-empty b{display:block;color:#0f2540;font-size:16px;margin-bottom:6px;}
 #bpx.bpx-dark .bpx-mk-card{background:#161d2b;border-color:var(--line);}
 #bpx.bpx-dark .bpx-mk-name,#bpx.bpx-dark .bpx-mk-empty b{color:var(--ink);}
@@ -17096,6 +17198,448 @@ var BP_MKT=[
 function bpMkP(k){return BP_MKT.filter(function(p){return p.k===k;})[0]||{n:k,c:'#64748b',m:'?'};}
 function bpMkConn(k){return _bpMk.conns.filter(function(c){return c.provider===k;})[0]||null;}
 function bpMkStat(k){return _bpMk.stats[k]||{};}
+/* Social Media and Competitors get real views below; these stubs keep nav safe until then */
+/* ===== Social Media — Facebook Page + Instagram + Google Business posts: stats, planner, compose ===== */
+var _bpSo={loaded:false,loading:false,tab:'overview',stats:{},conn:{},cfg:{},page:null,posts:[],note:'',demo:false,view:'list',month:null,filter:'all'};
+var BP_SO_CH={facebook:{n:'Facebook',c:'#1877f2',max:63206},instagram:{n:'Instagram',c:'#e1306c',max:2200},gbp:{n:'Google Business',c:'#4285f4',max:1500}};
+function bpSoDemo(){
+  var d=Date.now(), day=864e5, img=function(i){return bpStockImg(i,true);};
+  return {
+    conn:{facebook:true,instagram:true,gbp:true}, page:{name:'Summit Peak Roofing',ig:'summitpeakroofing'},
+    stats:{
+      facebook:{name:'Summit Peak Roofing',followers:1284,reach:9420,engagement:611,posts:[
+        {id:'f1',channel:'facebook',text:'Full tear-off and replacement in Circle C — done in one day, cleaned up before dinner. Thanks for trusting us, Dana!',at:new Date(d-2*day).toISOString(),image:img(3),reach:2310,engagement:187},
+        {id:'f2',channel:'facebook',text:'Storm season checklist: loose shingles, granules in the gutters, water stains on the ceiling. Free inspection if you spot any of these.',at:new Date(d-6*day).toISOString(),image:img(1),reach:1840,engagement:96}]},
+      instagram:{name:'summitpeakroofing',followers:842,media:96,reach:5130,posts:[
+        {id:'i1',channel:'instagram',text:'Before → after. Architectural shingles in Weathered Wood.',at:new Date(d-3*day).toISOString(),image:img(2),engagement:143},
+        {id:'i2',channel:'instagram',text:'Crew on site at 6:45am. Rain by noon means we start early.',at:new Date(d-9*day).toISOString(),image:img(4),engagement:78}]}
+    },
+    posts:[
+      {id:'p1',channels:['facebook','instagram'],text:'Hail hit the north side of town last night. If your roof is over 10 years old, get it looked at before the next storm — inspection is free.',image_url:img(1),scheduled_at:new Date(d+1*day).toISOString(),status:'scheduled',results:{}},
+      {id:'p2',channels:['facebook','gbp'],text:'We\'re on Lakeline Blvd all week. Neighbors: wave us down for a quick look at your gutters.',image_url:'',scheduled_at:new Date(d+3*day).toISOString(),status:'scheduled',results:{}},
+      {id:'p3',channels:['facebook','instagram'],text:'Full tear-off and replacement in Circle C — done in one day.',image_url:img(3),scheduled_at:new Date(d-2*day).toISOString(),published_at:new Date(d-2*day).toISOString(),status:'published',results:{facebook:{ok:true},instagram:{ok:true}}},
+      {id:'p4',channels:['facebook','instagram','gbp'],text:'Storm season checklist: loose shingles, granules in the gutters, water stains on the ceiling.',image_url:'',scheduled_at:new Date(d-6*day).toISOString(),published_at:new Date(d-6*day).toISOString(),status:'partial',results:{facebook:{ok:true},gbp:{ok:true},instagram:{ok:false,error:'Instagram needs a photo'}}}
+    ]
+  };
+}
+function bpSocial(){
+  var tabs=[['overview','Overview'],['posts','Posts'],['accounts','Accounts']];
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-stats" id="bpx-so-kpis">'+bpSoKpis()+'</div>'
+    +'<div class="bpx-chead" style="margin-bottom:16px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpSo.tab===t[0]?' on':'')+'" data-so-tab="'+t[0]+'" onclick="bpSoTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpSoRefresh()">Refresh</button><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpCsvSocial()">Export CSV</button><button class="bpx-addbtn" onclick="bpSoCompose()">+ New post</button></div></div>'
+    +'<div id="bpx-so-pane">'+bpSoPane()+'</div>';
+  if(!_bpSo.loaded&&!_bpSo.loading){
+    if(window.BP_LIVE){ try{bpSoLoad(false);}catch(e){bpSoDone(null,null,'Couldn\'t load your social accounts. Tap Refresh to try again.');} }
+    else { var dm=bpSoDemo(); bpSoDone({ok:true,stats:dm.stats,connected:dm.conn,page:dm.page,configured:{}},{ok:true,posts:dm.posts},''); }
+  }
+}
+window.bpSoTab=function(t){_bpSo.tab=t;document.querySelectorAll('[data-so-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-so-tab')===t);});var p=q('bpx-so-pane');if(p)p.innerHTML=bpSoPane();};
+window.bpSoRefresh=function(){_bpSo.loaded=false;if(window.BP_LIVE)bpSoLoad(true);else bpSocial();};
+function bpSoLoad(force){
+  if(_bpSo.loading)return;
+  _bpSo.loading=true;_bpSo.note='';
+  setTimeout(function(){ if(!_bpSo.loaded)bpSoDone(null,null,'Couldn\'t reach the marketing service. Tap Refresh to try again.'); },15000);
+  var st=Promise.resolve(bpAuthApi(MKT_URL,{op:'social.stats',force:!!force})).catch(function(){return null;});
+  var ps=Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.list'})).catch(function(){return null;});
+  Promise.all([st,ps]).then(function(r){
+    var a=r[0],b=r[1];
+    var note=!a?'Couldn\'t reach the marketing service. Tap Refresh to try again.':(!a.ok?(a.error==='sign in required'?'Sign out and back in to load your social accounts.':'Couldn\'t load your social accounts: '+(a.error||'unknown error')):'');
+    if(!note&&b&&!b.ok&&b.error!=='unknown op')note='Posts didn\'t load: '+(b.error||'unknown error');
+    bpSoDone(a,b,note);
+  });
+}
+function bpSoDone(a,b,note){
+  a=a||{};b=b||{};
+  _bpSo.stats=a.stats||{}; _bpSo.conn=a.connected||{}; _bpSo.cfg=a.configured||{}; _bpSo.page=a.page||null;
+  _bpSo.posts=(b.posts||[]).slice();
+  _bpSo.demo=!window.BP_LIVE;
+  _bpSo.note=note||''; _bpSo.loaded=true; _bpSo.loading=false;
+  if(!_bpSo.month){var n=new Date();_bpSo.month=new Date(n.getFullYear(),n.getMonth(),1);}
+  if(window._bpCurView==='social')bpSocial();
+}
+function bpSoAny(){return !!(_bpSo.conn.facebook||_bpSo.conn.instagram||_bpSo.conn.gbp);}
+function bpSoKpis(){
+  var L=_bpSo.loaded, f=_bpSo.stats.facebook||{}, i=_bpSo.stats.instagram||{};
+  var tile=function(l,v,n){return '<div class="bpx-stat"><div class="lbl">'+l+'</div><div class="val">'+v+'</div><div class="note" style="color:var(--grey);font-weight:500">'+n+'</div></div>';};
+  var sched=_bpSo.posts.filter(function(p){return p.status==='scheduled';}).length;
+  var fol=(+f.followers||0)+(+i.followers||0), reach=(+f.reach||0)+(+i.reach||0), eng=(+f.engagement||0)+((i.posts||[]).reduce(function(s,p){return s+(+p.engagement||0);},0));
+  return tile('Followers',L&&bpSoAny()?bpNum(fol):'—',L&&bpSoAny()?('Facebook '+bpNum(+f.followers||0)+' · Instagram '+bpNum(+i.followers||0)):'connect an account')
+    +tile('Reach',L&&bpSoAny()?bpNum(reach):'—','people who saw your posts · 28 days')
+    +tile('Engagement',L&&bpSoAny()?bpNum(eng):'—','likes, comments, clicks · 28 days')
+    +tile('Scheduled',L?bpNum(sched):'—',sched?'posts waiting to go out':'nothing queued yet');
+}
+function bpSoPane(){
+  if(!_bpSo.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  var h='';
+  if(_bpSo.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpSo.note)+'</div>';
+  if(_bpSo.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px">⚠️ DEMO DATA — sample accounts and posts. Sign in to connect yours.</div>';
+  var t=_bpSo.tab;
+  if(t==='posts')return h+bpSoPostsPane();
+  if(t==='accounts')return h+bpSoAccountsPane();
+  return h+bpSoOverviewPane();
+}
+function bpSoChip(ch){var c=BP_SO_CH[ch]||{n:ch,c:'#64748b'};return '<span class="bpx-so-chip" style="--c:'+c.c+'">'+c.n+'</span>';}
+function bpSoOverviewPane(){
+  if(!bpSoAny())return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No social accounts connected</b>Connect your Facebook Page (Instagram comes with it) and Google Business Profile to see followers, reach and your best posts here — and to post to all of them at once.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpSoTab(\'accounts\')">Connect accounts</button></div></div></div>';
+  var f=_bpSo.stats.facebook, i=_bpSo.stats.instagram;
+  var card=function(ch,s,lines){return '<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip(ch)+'<span style="font-weight:600;font-size:13.5px;margin-left:8px">'+bpEsc(s.name||'')+'</span>'+(s.error?'<span class="bpx-badge warn" style="margin-left:auto">'+bpEsc(String(s.error).slice(0,40))+'</span>':'')+'</div><div class="bpx-so-nums">'+lines.map(function(l){return '<div><div class="bpx-so-v">'+l[1]+'</div><div class="bpx-so-l">'+l[0]+'</div></div>';}).join('')+'</div></div>';};
+  var h='<div class="bpx-so-grid">';
+  if(f)h+=card('facebook',f,[['Followers',bpNum(+f.followers||0)],['Reach · 28d',bpNum(+f.reach||0)],['Engagement · 28d',bpNum(+f.engagement||0)]]);
+  else if(_bpSo.conn.facebook)h+=card('facebook',{name:(_bpSo.page||{}).name||''},[['Followers','—'],['Reach · 28d','—'],['Engagement · 28d','—']]);
+  if(i)h+=card('instagram',i,[['Followers',bpNum(+i.followers||0)],['Reach · 28d',bpNum(+i.reach||0)],['Posts',bpNum(+i.media||0)]]);
+  else if(_bpSo.conn.facebook)h+='<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip('instagram')+'<span class="bpx-mut" style="font-size:12.5px;margin-left:8px">not linked to your Page</span></div><div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Link your Instagram business account to the Facebook Page (Page settings → Linked accounts) and reconnect. Then Instagram posting and numbers show up here.</div></div>';
+  if(_bpSo.conn.gbp)h+='<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip('gbp')+'<span class="bpx-mut" style="font-size:12.5px;margin-left:8px">connected</span></div><div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Posts here appear on your Google listing. Calls, directions and website clicks live in <a onclick="bpNav(\'marketing\')" style="color:var(--blue);cursor:pointer;font-weight:600">Ads &amp; Listings</a>.</div></div>';
+  h+='</div>';
+  var top=[].concat((f&&f.posts)||[],(i&&i.posts)||[]).sort(function(a,b){return (+b.engagement||0)-(+a.engagement||0);}).slice(0,6);
+  if(top.length){
+    h+='<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><b style="font-size:14px">Best recent posts</b><span class="bpx-mut" style="font-size:12px">by engagement · last 8 per channel</span></div><div class="bpx-so-top">'
+      +top.map(function(p){return '<div class="bpx-so-post">'+(p.image?'<img src="'+bpEsc(p.image)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')+'<div style="min-width:0;flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+bpSoChip(p.channel)+'<span class="bpx-mut" style="font-size:11.5px">'+bpEsc(String(p.at||'').slice(0,10))+'</span></div><div class="bpx-so-txt">'+bpEsc(p.text||'(photo)')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:5px">'+(p.reach?bpNum(p.reach)+' reached · ':'')+bpNum(+p.engagement||0)+' engaged'+(p.url?' · <a href="'+bpEsc(p.url)+'" target="_blank" rel="noopener" style="color:var(--blue)">open ↗</a>':'')+'</div></div></div>';}).join('')+'</div></div>';
+  }
+  return h;
+}
+function bpSoStatus(p){
+  var m={scheduled:['Scheduled',''],publishing:['Publishing…',' warn'],published:['Published',' ok'],partial:['Partly published',' warn'],failed:['Failed',' bad']}[p.status]||[p.status,''];
+  return '<span class="bpx-badge'+m[1]+'">'+m[0]+'</span>';
+}
+function bpSoPostsPane(){
+  var posts=_bpSo.posts.slice().sort(function(a,b){return Date.parse(b.scheduled_at||0)-Date.parse(a.scheduled_at||0);});
+  var up=posts.filter(function(p){return p.status==='scheduled'||p.status==='publishing';}).reverse(), past=posts.filter(function(p){return p.status!=='scheduled'&&p.status!=='publishing';});
+  var head='<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpSo.view==='list'?' on':'')+'" onclick="bpSoView(\'list\')">List</button><button class="bpx-jt'+(_bpSo.view==='cal'?' on':'')+'" onclick="bpSoView(\'cal\')">Calendar</button></div>'
+    +'<span class="bpx-mut" style="font-size:12px">'+(bpSoAny()?'Scheduled posts go out on time whether or not you\'re logged in.':'Connect an account before scheduling.')+'</span></div>';
+  if(_bpSo.view==='cal')return head+bpSoCalendar();
+  var row=function(p){
+    var when=p.scheduled_at?new Date(p.scheduled_at):null, wtxt=when?when.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+when.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}):'';
+    var res=p.results||{}, chips=(p.channels||[]).map(function(c){var r=res[c];return '<span class="bpx-so-chip'+(r?(r.ok?' ok':' bad'):'')+'" style="--c:'+(BP_SO_CH[c]||{}).c+'" title="'+bpEsc(r&&r.error?r.error:'')+'">'+(BP_SO_CH[c]||{n:c}).n+(r?(r.ok?' ✓':' ✕'):'')+'</span>';}).join('');
+    var errs=Object.keys(res).filter(function(c){return res[c]&&!res[c].ok;}).map(function(c){return (BP_SO_CH[c]||{n:c}).n+': '+res[c].error;});
+    return '<div class="bpx-so-row">'+(p.image_url?'<img src="'+bpEsc(p.image_url)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')
+      +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">'+bpSoStatus(p)+'<span class="bpx-mut" style="font-size:12px">'+wtxt+'</span>'+chips+'</div>'
+      +'<div class="bpx-so-txt">'+bpEsc(p.text||'(photo only)')+'</div>'+(errs.length?'<div style="color:#b91c1c;font-size:12px;margin-top:4px">'+bpEsc(errs.join(' · '))+'</div>':'')+'</div>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'+(p.status==='scheduled'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoCompose(\''+bpEsc(p.id)+'\')">Edit</button>':'')+(p.status==='failed'||p.status==='partial'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoRetry(\''+bpEsc(p.id)+'\')">Retry</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDelete(\''+bpEsc(p.id)+'\')" title="Remove">✕</button></div></div>';
+  };
+  var h=head;
+  h+='<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:10px"><b style="font-size:14px">Coming up</b><button class="bpx-rowbtn primary" style="margin:0" onclick="bpSoCompose()">+ New post</button></div>'+(up.length?up.map(row).join(''):'<div class="bpx-mk-empty">Nothing scheduled. Tap New post to write one and pick a time.</div>')+'</div>';
+  h+='<div class="bpx-panel" style="margin-top:14px"><div class="bpx-chead" style="margin-bottom:10px"><b style="font-size:14px">History</b><span class="bpx-mut" style="font-size:12px">'+past.length+' posts</span></div>'+(past.length?past.slice(0,40).map(row).join(''):'<div class="bpx-mk-empty">Published posts show up here with what went through on each channel.</div>')+'</div>';
+  return h;
+}
+window.bpSoView=function(v){_bpSo.view=v;var p=q('bpx-so-pane');if(p)p.innerHTML=bpSoPane();};
+window.bpSoMonth=function(d){_bpSo.month=new Date(_bpSo.month.getFullYear(),_bpSo.month.getMonth()+d,1);bpSoView('cal');};
+function bpSoCalendar(){
+  var m=_bpSo.month, y=m.getFullYear(), mo=m.getMonth(), first=new Date(y,mo,1).getDay(), days=new Date(y,mo+1,0).getDate(), today=new Date();
+  var by={}; _bpSo.posts.forEach(function(p){if(!p.scheduled_at)return;var d=new Date(p.scheduled_at);if(d.getFullYear()===y&&d.getMonth()===mo){(by[d.getDate()]=by[d.getDate()]||[]).push(p);}});
+  var h='<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-calnav"><button onclick="bpSoMonth(-1)">‹</button><div class="bpx-calmonth" style="font-family:inherit;font-size:16px;font-weight:700">'+m.toLocaleDateString(undefined,{month:'long',year:'numeric'})+'</div><button onclick="bpSoMonth(1)">›</button></div><span class="bpx-mut" style="font-size:12px">Tap a day to schedule a post for it</span></div>';
+  h+='<div class="bpx-grid">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="bpx-dow">'+d+'</div>';}).join('');
+  for(var i=0;i<first;i++)h+='<div class="bpx-day empty"></div>';
+  for(var d=1;d<=days;d++){
+    var isT=today.getFullYear()===y&&today.getMonth()===mo&&today.getDate()===d, list=by[d]||[];
+    h+='<div class="bpx-day'+(isT?' today':'')+'" style="cursor:pointer" onclick="bpSoCompose(null,\''+y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')+'\')"><div class="bpx-daynum">'+d+'</div>'
+      +list.slice(0,3).map(function(p){var col=p.status==='scheduled'?'':(p.status==='published'?'background:#ecfdf5;color:#047857;':'background:#fff1f2;color:#be123c;');return '<div class="bpx-appt" style="'+col+'" onclick="event.stopPropagation();'+(p.status==='scheduled'?'bpSoCompose(\''+bpEsc(p.id)+'\')':'bpSoView(\'list\')')+'" title="'+bpEsc(p.text||'')+'">'+new Date(p.scheduled_at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})+' '+bpEsc((p.text||'Photo').slice(0,28))+'</div>';}).join('')
+      +(list.length>3?'<div class="bpx-mut" style="font-size:11px">+'+(list.length-3)+' more</div>':'')+'</div>';
+  }
+  return h+'</div>';
+}
+function bpSoAccountsPane(){
+  var pg=_bpSo.page||{}, cfg=_bpSo.cfg||{};
+  var card=function(img,bleed,name,desc,connected,sub,acts){return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(bleed?' bleed':'')+'"><img src="'+img+'" alt="" loading="lazy"></div><div style="min-width:0"><div class="bpx-mk-name">'+name+'</div><div class="bpx-mk-desc">'+desc+'</div></div></div><div style="margin:12px 0 10px">'+(connected?'<span class="bpx-mk-st on">Connected</span>':(connected===null?'<span class="bpx-mk-st soon">Coming soon</span>':'<span class="bpx-mk-st off">Not connected</span>'))+(sub?' <span class="bpx-mut" style="font-size:12px">'+sub+'</span>':'')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+acts+'</div></div>';};
+  var fbSub=_bpSo.conn.facebook?bpEsc(pg.name||'')+(pg.ig?' · @'+bpEsc(pg.ig):' · no Instagram linked'):(cfg.meta===false?'setup in progress':'');
+  var fbActs=_bpSo.conn.facebook
+    ?((pg.pages||[]).length>1?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoPickPage()">Switch Page</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDisconnect()">Disconnect</button>'
+    :'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 16px;font-size:12.5px" onclick="bpSoConnect()">Connect</button>';
+  var h='<div class="bpx-mk-grid">'
+    +card('assets/brand/meta.png',false,'Facebook Page + Instagram','One connection covers your Page and the Instagram business account linked to it.',!!_bpSo.conn.facebook,fbSub,fbActs)
+    +card('assets/brand/google-g.png',false,'Google Business Profile','Posts show on your map listing under "Updates".',!!_bpSo.conn.gbp,'',_bpSo.conn.gbp?'<button class="bpx-rowbtn" style="margin:0" onclick="bpNav(\'marketing\')">Manage in Ads &amp; Listings</button>':'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 16px;font-size:12.5px" onclick="bpMkConnect(\'gbp\')">Connect</button>')
+    +card('assets/brand/meta.png',false,'LinkedIn, TikTok, X','Not available yet. Tell us if one matters to you and we\'ll prioritise it.',null,'','<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="mailto:support@builderpro-os.com?subject=Social%20channel%20request">Request a channel</a>')
+    +'</div><div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px;text-align:center">We only post what you write and schedule here. Nothing goes out on its own.</div>';
+  return h;
+}
+window.bpSoConnect=async function(){
+  if(!window.BP_LIVE){alert('Sign in to connect your accounts.');return;}
+  var t=await bpJwt(); if(!t){alert('Please sign in again, then tap Connect.');return;}
+  window.open(MKT_URL+'?op=start&provider=social&t='+encodeURIComponent(t),'_blank');
+  bpModal('<h3>Finishing in a new tab</h3><div class="bpx-sub">Approve the connection in the tab that just opened — pick the Facebook Page for your business. When it brings you back, your numbers load automatically.</div><div class="row"><button class="bpx-btn" onclick="bpCloseModal();bpSoRefresh()">I\'m back — refresh</button></div>');
+};
+window.bpSoDisconnect=function(){
+  bpModal('<h3>Disconnect Facebook &amp; Instagram?</h3><div class="bpx-sub">Scheduled posts to these channels won\'t go out. Nothing on Facebook itself changes.</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Keep it</button><button class="bpx-btn danger" onclick="bpCloseModal();bpAuthApi(MKT_URL,{op:\'disconnect\',provider:\'social\'}).then(function(){bpSoRefresh();})">Disconnect</button></div>');
+};
+window.bpSoPickPage=function(){
+  var pages=(_bpSo.page||{}).pages||[];
+  bpModal('<h3>Which Page should we post to?</h3><div class="bpx-sub">Your Facebook login manages more than one Page.</div>'+pages.map(function(p){return '<button class="bpx-btn ghost" style="width:100%;margin-top:8px;text-align:left" onclick="bpCloseModal();bpAuthApi(MKT_URL,{op:\'social.select_page\',page_id:\''+bpEsc(p.id)+'\'}).then(function(){bpSoRefresh();})">'+bpEsc(p.name||p.id)+(p.ig?' <span class="bpx-mut" style="font-size:12px">· @'+bpEsc(p.ig.username||'')+'</span>':'')+'</button>';}).join('')+'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button></div>');
+};
+/* compose / edit a post. editId edits a scheduled post (delete + recreate); presetDate comes from the calendar */
+window.bpSoCompose=function(editId,presetDate){
+  var p=editId?_bpSo.posts.filter(function(x){return x.id===editId;})[0]:null;
+  var conn=_bpSo.conn||{}, any=bpSoAny();
+  var when=p&&p.scheduled_at?new Date(p.scheduled_at):(presetDate?new Date(presetDate+'T09:00'):null);
+  var local=function(d){if(!d)return '';var z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16);};
+  var chk=function(k){var on=p?(p.channels||[]).indexOf(k)>=0:!!conn[k];return '<label class="bpx-so-ck'+(conn[k]?'':' off')+'"><input type="checkbox" data-so-ch="'+k+'" '+(on&&conn[k]?'checked':'')+' '+(conn[k]?'':'disabled')+' onchange="bpSoCount()"> '+bpSoChip(k)+(conn[k]?'':'<span class="bpx-mut" style="font-size:11px;margin-left:6px">not connected</span>')+'</label>';};
+  bpModal('<h3>'+(p?'Edit post':'New post')+'</h3>'
+    +(any?'':'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:8px">Connect an account first — nothing is connected yet.</div>')
+    +'<label>Post to</label><div class="bpx-so-cks">'+chk('facebook')+chk('instagram')+chk('gbp')+'</div>'
+    +'<label>What do you want to say? <span id="bpx-so-cnt" class="bpx-mut" style="font-weight:400;float:right"></span></label><textarea id="bpx-so-text" placeholder="Just finished a full replacement on Oak Hill Dr — before and after below. Free inspections all month." oninput="bpSoCount()">'+bpEsc(p?p.text||'':'')+'</textarea>'
+    +'<label>Photo <span class="bpx-mut" style="font-weight:400">— required for Instagram</span></label>'
+    +'<div class="bpx-so-img"><div id="bpx-so-prev" class="bpx-so-prev'+(p&&p.image_url?'':' empty')+'">'+(p&&p.image_url?'<img src="'+bpEsc(p.image_url)+'" alt="">':'')+'</div>'
+      +'<div style="flex:1;min-width:0"><input type="file" id="bpx-so-file" accept="image/*" style="display:none" onchange="bpSoFile(this)"><button class="bpx-rowbtn" style="margin:0" onclick="q(\'bpx-so-file\').click()">Upload a photo</button> <span class="bpx-mut" style="font-size:12px">or paste a link</span><input id="bpx-so-imgurl" value="'+bpEsc(p?p.image_url||'':'')+'" placeholder="https://…/photo.jpg" style="margin-top:8px" oninput="bpSoImgUrl(this.value)"><div id="bpx-so-up" class="bpx-mut" style="font-size:12px;margin-top:5px"></div></div></div>'
+    +'<label>Link <span class="bpx-mut" style="font-weight:400">(optional — Facebook &amp; Google)</span></label><input id="bpx-so-link" value="'+bpEsc(p?p.link_url||'':'')+'" placeholder="https://your-site.com/free-inspection">'
+    +'<label>When</label><div class="bpx-so-when"><label class="bpx-so-ck"><input type="radio" name="bpx-so-w" value="now" '+(when?'':'checked')+' onchange="bpSoWhen()"> Post now</label><label class="bpx-so-ck"><input type="radio" name="bpx-so-w" value="later" '+(when?'checked':'')+' onchange="bpSoWhen()"> Schedule</label></div>'
+    +'<input type="datetime-local" id="bpx-so-at" value="'+local(when)+'" style="margin-top:8px;'+(when?'':'display:none')+'">'
+    +'<div class="bpx-mmsg" id="bpx-so-msg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-so-go" onclick="bpSoSubmit(\''+(p?bpEsc(p.id):'')+'\')" '+(any?'':'disabled')+'>'+(when?'Schedule':'Post now')+'</button></div>');
+  var card=document.querySelector('#bpx-modal .bpx-modalcard'); if(card)card.style.maxWidth='620px';
+  bpSoCount();
+};
+window.bpSoCount=function(){
+  var t=(q('bpx-so-text')||{}).value||'', el=q('bpx-so-cnt'); if(!el)return;
+  var chs=[].slice.call(document.querySelectorAll('[data-so-ch]:checked')).map(function(c){return c.getAttribute('data-so-ch');});
+  var lim=chs.length?Math.min.apply(null,chs.map(function(c){return BP_SO_CH[c].max;})):63206;
+  el.textContent=t.length+' / '+bpNum(lim); el.style.color=t.length>lim?'#b91c1c':'';
+};
+window.bpSoWhen=function(){var v=(document.querySelector('[name=bpx-so-w]:checked')||{}).value;var at=q('bpx-so-at'),go=q('bpx-so-go');if(at)at.style.display=v==='later'?'':'none';if(go)go.textContent=v==='later'?'Schedule':'Post now';};
+window.bpSoImgUrl=function(v){var pv=q('bpx-so-prev');if(!pv)return;v=(v||'').trim();pv.classList.toggle('empty',!v);pv.innerHTML=v?'<img src="'+bpEsc(v)+'" alt="">':'';};
+window.bpSoFile=async function(inp){
+  var f=inp.files&&inp.files[0]; if(!f)return;
+  var st=q('bpx-so-up'); if(f.size>8*1024*1024){st.textContent='That photo is over 8 MB — pick a smaller one.';return;}
+  if(!window.BP_LIVE||!window.BP_SB){ var r=new FileReader(); r.onload=function(){bpSoImgUrl(r.result);q('bpx-so-imgurl').value='';st.textContent='Preview only — sign in to upload.';}; r.readAsDataURL(f); return; }
+  st.textContent='Uploading…';
+  try{
+    var s=await BP_SB.auth.getSession(), uid=s&&s.data&&s.data.session&&s.data.session.user&&s.data.session.user.id; if(!uid)throw new Error('sign in again');
+    var path=uid+'/'+Date.now()+'-'+f.name.replace(/[^a-z0-9.]+/gi,'-').toLowerCase();
+    var up=await BP_SB.storage.from('social').upload(path,f,{upsert:false,contentType:f.type});
+    if(up.error)throw up.error;
+    var url=BP_SB.storage.from('social').getPublicUrl(path).data.publicUrl;
+    q('bpx-so-imgurl').value=url; bpSoImgUrl(url); st.textContent='Uploaded ✓';
+  }catch(e){ st.textContent='Upload failed: '+((e&&e.message)||e)+' — you can paste an image link instead.'; }
+};
+window.bpSoSubmit=function(editId){
+  var chs=[].slice.call(document.querySelectorAll('[data-so-ch]:checked')).map(function(c){return c.getAttribute('data-so-ch');});
+  var text=((q('bpx-so-text')||{}).value||'').trim(), img=((q('bpx-so-imgurl')||{}).value||'').trim(), link=((q('bpx-so-link')||{}).value||'').trim();
+  var later=(document.querySelector('[name=bpx-so-w]:checked')||{}).value==='later', at=later?((q('bpx-so-at')||{}).value||''):'';
+  var msg=q('bpx-so-msg'), say=function(s){if(msg)msg.textContent=s;};
+  if(!chs.length)return say('Pick at least one channel.');
+  if(!text&&!img)return say('Write something or add a photo.');
+  if(chs.indexOf('instagram')>=0&&!img)return say('Instagram posts need a photo.');
+  if(/^data:/.test(img))return say('Sign in to upload photos, or paste an image link.');
+  if(later&&(!at||Date.parse(at)<Date.now()+60e3))return say('Pick a time at least a minute from now.');
+  var over=chs.filter(function(c){return text.length>BP_SO_CH[c].max;}); if(over.length)return say('Too long for '+BP_SO_CH[over[0]].n+' ('+bpNum(BP_SO_CH[over[0]].max)+' max).');
+  var payload={op:'social.posts.create',channels:chs,text:text,image_url:img,link_url:link,scheduled_at:later?new Date(at).toISOString():null};
+  var go=q('bpx-so-go'); if(go){go.disabled=true;go.textContent=later?'Scheduling…':'Posting…';}
+  if(!window.BP_LIVE){
+    if(editId)_bpSo.posts=_bpSo.posts.filter(function(x){return x.id!==editId;});
+    _bpSo.posts.push({id:'d'+Date.now(),channels:chs,text:text,image_url:img,link_url:link,scheduled_at:later?new Date(at).toISOString():new Date().toISOString(),status:later?'scheduled':'published',results:later?{}:chs.reduce(function(o,c){o[c]={ok:true};return o;},{})});
+    bpCloseModal(); _bpSo.tab='posts'; bpSocial(); return;
+  }
+  var pre=editId?Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.delete',id:editId})):Promise.resolve();
+  pre.then(function(){return bpAuthApi(MKT_URL,payload);}).then(function(r){
+    if(!r||!r.ok){ if(go){go.disabled=false;go.textContent=later?'Schedule':'Post now';} return say((r&&r.error)||'Couldn\'t save the post.'); }
+    bpCloseModal(); _bpSo.tab='posts'; _bpSo.loaded=false; bpSoLoad(false);
+    var p=r.post||{}; if(p.status==='failed'||p.status==='partial'){var e=Object.keys(p.results||{}).filter(function(c){return !p.results[c].ok;}).map(function(c){return BP_SO_CH[c].n+': '+p.results[c].error;}); setTimeout(function(){alert((p.status==='failed'?'The post didn\'t go out.\n':'Part of the post didn\'t go out.\n')+e.join('\n'));},50);}
+  },function(){ if(go){go.disabled=false;go.textContent=later?'Schedule':'Post now';} say('Couldn\'t reach the marketing service.'); });
+};
+window.bpSoRetry=function(id){
+  var p=_bpSo.posts.filter(function(x){return x.id===id;})[0]; if(!p)return;
+  var failed=Object.keys(p.results||{}).filter(function(c){return !(p.results[c]||{}).ok;});
+  if(!window.BP_LIVE){alert('Sign in to retry.');return;}
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.create',channels:failed.length?failed:p.channels,text:p.text||'',image_url:p.image_url||'',link_url:p.link_url||'',scheduled_at:null})).then(function(){_bpSo.loaded=false;bpSoLoad(false);});
+};
+window.bpSoDelete=function(id){
+  if(!window.BP_LIVE){_bpSo.posts=_bpSo.posts.filter(function(x){return x.id!==id;});bpSocial();return;}
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.delete',id:id})).then(function(){_bpSo.loaded=false;bpSoLoad(false);});
+};
+window.bpCsvSocial=function(){
+  bpCsv('social-posts',['When','Status','Channels','Text','Photo','Link','Results'],
+    _bpSo.posts.map(function(p){var r=p.results||{};return [p.scheduled_at||'',p.status,(p.channels||[]).join('; '),p.text||'',p.image_url||'',p.link_url||'',Object.keys(r).map(function(c){return c+':'+(r[c].ok?'ok':(r[c].error||'failed'));}).join('; ')];}));
+};
+/* ===== Competitors — how the other contractors in the area show up on Yelp, and where to beat them ===== */
+var _bpCp={loaded:false,loading:false,tab:'scoreboard',rows:[],me:{},note:'',cfg:{},search:null,searching:false,demo:false};
+var BP_CP_DEMO={
+  me:{name:'',rating:4.6,reviews:38,yelp:true},
+  rows:[
+    {id:'d1',name:'Summit Roofing Co.',snapshot:{rating:4.8,reviews:212,price:'$$',categories:['Roofing','Gutter Services'],photos:48,claimed:true,address:'Austin, TX',distance_mi:3.1,url:'#'},history:[{at:Date.now()-30*864e5,reviews:203},{at:Date.now(),reviews:212}]},
+    {id:'d2',name:'Lone Star Roof & Solar',snapshot:{rating:4.3,reviews:97,price:'$$$',categories:['Roofing','Solar Installation'],photos:22,claimed:true,address:'Round Rock, TX',distance_mi:8.4,url:'#'},history:[{at:Date.now()-30*864e5,reviews:95},{at:Date.now(),reviews:97}]},
+    {id:'d3',name:'Hill Country Exteriors',snapshot:{rating:4.9,reviews:64,price:'$$',categories:['Roofing','Siding','Windows Installation'],photos:61,claimed:true,address:'Cedar Park, TX',distance_mi:11.2,url:'#'},history:[{at:Date.now()-30*864e5,reviews:58},{at:Date.now(),reviews:64}]},
+    {id:'d4',name:'Metro Roof Pros',snapshot:{rating:3.9,reviews:141,price:'$',categories:['Roofing'],photos:7,claimed:false,address:'Austin, TX',distance_mi:5.6,url:'#'},history:[{at:Date.now()-30*864e5,reviews:140},{at:Date.now(),reviews:141}]}
+  ]
+};
+function bpStars(r){
+  r=Math.max(0,Math.min(5,+r||0));
+  return '<span class="bpx-cp-stars" title="'+r+' of 5"><span class="bpx-cp-stars-on" style="width:'+(r/5*100)+'%">★★★★★</span>★★★★★</span>';
+}
+/* reviews gained over the last ~30 days, from the snapshot history */
+function bpCpVelocity(row){
+  var h=row.history||[]; if(h.length<2)return null;
+  var now=h[h.length-1], cutoff=Date.now()-30*864e5, base=null;
+  for(var i=0;i<h.length;i++){ if(h[i].at>=cutoff){ base=h[i]; break; } }
+  if(!base||base===now)base=h[h.length-2];
+  return (+now.reviews||0)-(+base.reviews||0);
+}
+function bpCompetitors(){
+  var tabs=[['scoreboard','Scoreboard'],['find','Find competitors'],['win','Where to win']];
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-stats" id="bpx-cp-kpis">'+bpCpKpis()+'</div>'
+    +'<div class="bpx-chead" style="margin-bottom:16px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpCp.tab===t[0]?' on':'')+'" data-cp-tab="'+t[0]+'" onclick="bpCpTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpCpRefresh()">Refresh</button><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpCsvCompetitors()">Export CSV</button><button class="bpx-addbtn" onclick="bpCpTab(\'find\')">+ Track a competitor</button></div></div>'
+    +'<div id="bpx-cp-pane">'+bpCpPane()+'</div>';
+  if(!_bpCp.loaded&&!_bpCp.loading){
+    if(window.BP_LIVE){ try{bpCpLoad(false);}catch(e){bpCpDone(null,'Couldn\'t load competitor data. Tap Refresh to try again.');} }
+    else bpCpDone({ok:true,competitors:BP_CP_DEMO.rows,me:BP_CP_DEMO.me,configured:{yelp:false}},'');
+  }
+}
+window.bpCpTab=function(t){_bpCp.tab=t;document.querySelectorAll('[data-cp-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-cp-tab')===t);});var p=q('bpx-cp-pane');if(p)p.innerHTML=bpCpPane();};
+window.bpCpRefresh=function(){_bpCp.loaded=false;_bpCp.search=null;if(window.BP_LIVE)bpCpLoad(true);else bpCompetitors();};
+function bpCpLoad(force){
+  if(_bpCp.loading)return;
+  _bpCp.loading=true;_bpCp.note='';
+  setTimeout(function(){ if(!_bpCp.loaded)bpCpDone(null,'Couldn\'t reach the marketing service. Tap Refresh to try again.'); },15000);
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.list',force:!!force})).then(function(r){ bpCpDone(r,r&&r.ok?'':(r&&r.error==='sign in required'?'Sign out and back in to load competitor data.':'Couldn\'t load competitor data. Tap Refresh to try again.')); },function(){ bpCpDone(null,'Couldn\'t reach the marketing service. Tap Refresh to try again.'); });
+}
+function bpCpDone(r,note){
+  r=r||{};
+  _bpCp.cfg=r.configured||{};
+  /* Yelp search not switched on server-side → show the demo set so the page still teaches what it does */
+  _bpCp.demo=!window.BP_LIVE||(!_bpCp.cfg.yelp&&!(r.competitors||[]).length);
+  _bpCp.rows=_bpCp.demo&&!(r.competitors||[]).length?BP_CP_DEMO.rows:(r.competitors||[]);
+  var me=r.me||{}; if(_bpCp.demo&&!me.reviews)me=BP_CP_DEMO.me;
+  if(!me.name){var c=bpSettingsGet().company||{};me.name=c.name||'Your business';}
+  _bpCp.me=me; _bpCp.note=note||''; _bpCp.loaded=true; _bpCp.loading=false;
+  if(window._bpCurView==='competitors')bpCompetitors();
+}
+function bpCpRanked(){
+  var me=_bpCp.me||{};
+  var list=_bpCp.rows.map(function(r){var s=r.snapshot||{};return {you:false,id:r.id,name:r.name||s.name,rating:+s.rating||0,reviews:+s.reviews||0,price:s.price||'',cats:s.categories||[],photos:s.photos,claimed:s.claimed,addr:s.address||'',dist:s.distance_mi,url:s.url||'',vel:bpCpVelocity(r),closed:s.closed};});
+  if(me.yelp||me.reviews)list.push({you:true,name:me.name,rating:+me.rating||0,reviews:+me.reviews||0,url:me.url||'',cats:[],vel:null});
+  /* Yelp's own ordering is review-weighted, so rank by reviews with rating as the tiebreak */
+  list.sort(function(a,b){return (b.reviews-a.reviews)||(b.rating-a.rating);});
+  list.forEach(function(x,i){x.rank=i+1;});
+  return list;
+}
+function bpCpKpis(){
+  var L=_bpCp.loaded, me=_bpCp.me||{}, list=L?bpCpRanked():[], you=list.filter(function(x){return x.you;})[0], top=list.filter(function(x){return !x.you;})[0];
+  var tile=function(l,v,n){return '<div class="bpx-stat"><div class="lbl">'+l+'</div><div class="val">'+v+'</div><div class="note" style="color:var(--grey);font-weight:500">'+n+'</div></div>';};
+  var avg=list.filter(function(x){return !x.you&&x.rating;}); avg=avg.length?avg.reduce(function(s,x){return s+x.rating;},0)/avg.length:0;
+  return tile('Your rating',L&&you?(you.rating.toFixed(1)+'★'):'—',L&&avg?('local average '+avg.toFixed(1)+'★'):'connect Yelp to compare')
+    +tile('Your reviews',L&&you?bpNum(you.reviews):'—',L&&top?(top.reviews>(you?you.reviews:0)?('#1 has '+bpNum(top.reviews)):'you have the most'):'from your Yelp listing')
+    +tile('Your rank',L&&you?('#'+you.rank+' of '+list.length):'—','among tracked businesses, by reviews')
+    +tile('Tracking',L?bpNum(_bpCp.rows.length):'—',_bpCp.demo?'demo set':'rivals, refreshed daily');
+}
+function bpCpPane(){
+  if(!_bpCp.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  var h='';
+  if(_bpCp.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpCp.note)+'</div>';
+  if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px">⚠️ DEMO DATA — illustrative businesses, not your real market. '+(window.BP_LIVE?'Yelp lookups aren\'t switched on for this account yet.':'Sign in to track the businesses in your area.')+'</div>';
+  var t=_bpCp.tab;
+  if(t==='find')return h+bpCpFindPane();
+  if(t==='win')return h+bpCpWinPane();
+  return h+bpCpScorePane();
+}
+function bpCpScorePane(){
+  var list=bpCpRanked();
+  if(!list.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No competitors tracked yet</b>Search the businesses in your area and track the ones you run into on bids.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
+  var rows=list.map(function(x){
+    var vel=x.vel==null?'<span class="bpx-mut">—</span>':(x.vel>0?'<span style="color:#15803d;font-weight:600">+'+x.vel+'</span>':'<span class="bpx-mut">0</span>');
+    var meta=x.you?'<span class="bpx-badge">You</span>':[x.price,x.dist!=null?x.dist+' mi':'',x.claimed===false?'<span class="bpx-badge warn">unclaimed</span>':''].filter(Boolean).join(' · ');
+    return '<tr'+(x.you?' class="bpx-cp-you"':'')+'><td class="bpx-r bpx-num" style="width:40px;color:var(--grey)">#'+x.rank+'</td>'
+      +'<td class="bpx-cname"><div>'+bpEsc(x.name||'')+'</div><div class="bpx-mut" style="font-size:11.5px;font-weight:400">'+(meta||'')+'</div></td>'
+      +'<td>'+bpStars(x.rating)+' <span class="bpx-num" style="font-size:12.5px">'+(x.rating?x.rating.toFixed(1):'—')+'</span></td>'
+      +'<td class="bpx-r bpx-num">'+bpNum(x.reviews)+'</td><td class="bpx-r bpx-num">'+vel+'</td>'
+      +'<td><span class="bpx-mut" style="font-size:12px">'+bpEsc((x.cats||[]).slice(0,3).join(', '))+'</span></td>'
+      +'<td class="bpx-r" style="white-space:nowrap">'+(x.url&&x.url!=='#'?'<a class="bpx-rowbtn" href="'+bpEsc(x.url)+'" target="_blank" rel="noopener" style="text-decoration:none;margin-left:0">Yelp ↗</a>':'')
+      +(x.you?'':'<button class="bpx-rowbtn" onclick="bpCpReviews(\''+bpEsc(x.id)+'\',\''+bpEsc(x.name).replace(/'/g,'&#39;')+'\')">Reviews</button><button class="bpx-rowbtn" onclick="bpCpUntrack(\''+bpEsc(x.id)+'\')" title="Stop tracking">✕</button>')+'</td></tr>';
+  }).join('');
+  return '<div class="bpx-panel" style="padding:0;overflow:hidden"><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th></th><th>Business</th><th>Rating</th><th class="bpx-r">Reviews</th><th class="bpx-r" title="Reviews gained in the last 30 days">+30d</th><th>Services listed</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+    +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:12px">Ranked by review count with rating as the tiebreak — the same weighting Yelp and Google use to order local results. +30d fills in after a rival has been tracked for a day or more.</div>';
+}
+function bpCpFindPane(){
+  var c=bpSettingsGet().company||{};
+  var qv=_bpCp.q!=null?_bpCp.q:((c.trade||'Roofing')+' contractor'), lv=_bpCp.l!=null?_bpCp.l:(c.address||c.serviceArea||'');
+  var res='';
+  if(_bpCp.searching)res='<div class="bpx-empty2">Searching Yelp…</div>';
+  else if(_bpCp.search){
+    var tracked={}; _bpCp.rows.forEach(function(r){tracked[r.id]=1;});
+    res=_bpCp.search.length?_bpCp.search.map(function(x){
+      var on=!!tracked[x.id], mine=_bpCp.me&&_bpCp.me.yelp_id===x.id;
+      return '<div class="bpx-cp-res">'+(x.image?'<img src="'+bpEsc(x.image)+'" alt="" loading="lazy">':'<div class="bpx-cp-noimg"></div>')
+        +'<div style="flex:1;min-width:0"><div style="font-weight:600">'+bpEsc(x.name)+(mine?' <span class="bpx-badge">You</span>':'')+'</div>'
+        +'<div class="bpx-mut" style="font-size:12px">'+bpStars(x.rating)+' '+x.rating+' · '+bpNum(x.reviews)+' reviews'+(x.price?' · '+x.price:'')+(x.distance_mi!=null?' · '+x.distance_mi+' mi':'')+'</div>'
+        +'<div class="bpx-mut" style="font-size:12px">'+bpEsc((x.categories||[]).join(', '))+(x.address?' · '+bpEsc(x.address):'')+'</div></div>'
+        +(mine?'':'<button class="bpx-rowbtn'+(on?'':' primary')+'" '+(on?'disabled':'')+' onclick="bpCpTrack(\''+bpEsc(x.id)+'\',this)">'+(on?'Tracking':'Track')+'</button>')+'</div>';
+    }).join(''):'<div class="bpx-empty2">No businesses found for that search. Try a broader trade name or a nearby city.</div>';
+  } else res='<div class="bpx-empty2">Search by trade and city. Results come back most-reviewed first — those are the listings homeowners see before yours.</div>';
+  return '<div class="bpx-panel"><div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:10px;align-items:end" class="bpx-cp-form">'
+    +'<div><label class="bpx-lbl">What they do</label><input class="bpx-inp" id="bpx-cp-q" value="'+bpEsc(qv)+'" placeholder="Roofing contractor"></div>'
+    +'<div><label class="bpx-lbl">Where</label><input class="bpx-inp" id="bpx-cp-l" value="'+bpEsc(lv)+'" placeholder="Austin, TX"></div>'
+    +'<button class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px" onclick="bpCpSearch()">Search</button></div>'
+    +'<div id="bpx-cp-res" style="margin-top:14px">'+res+'</div></div>';
+}
+window.bpCpSearch=function(){
+  _bpCp.q=(q('bpx-cp-q')||{}).value||''; _bpCp.l=(q('bpx-cp-l')||{}).value||'';
+  if(!_bpCp.q.trim()||!_bpCp.l.trim()){alert('Enter what they do and where.');return;}
+  if(!window.BP_LIVE||_bpCp.demo){
+    /* offline / not configured: filter the demo set so the flow is still visible */
+    _bpCp.search=BP_CP_DEMO.rows.map(function(r){return Object.assign({id:r.id,name:r.name},r.snapshot);});
+    bpCpTab('find');return;
+  }
+  _bpCp.searching=true; bpCpTab('find');
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.search',query:_bpCp.q,location:_bpCp.l,limit:15})).then(function(r){
+    _bpCp.searching=false; _bpCp.search=(r&&r.ok)?(r.results||[]):[];
+    if(r&&!r.ok)_bpCp.note=r.error==='not_configured'?'Yelp lookups aren\'t switched on for this account yet.':('Yelp search failed: '+(r.error||'unknown error'));
+    if(window._bpCurView==='competitors')bpCompetitors();
+  },function(){ _bpCp.searching=false;_bpCp.search=[];_bpCp.note='Couldn\'t reach the marketing service.'; if(window._bpCurView==='competitors')bpCompetitors(); });
+};
+window.bpCpTrack=function(id,btn){
+  if(btn){btn.disabled=true;btn.textContent='Adding…';}
+  if(!window.BP_LIVE||_bpCp.demo){ if(!_bpCp.rows.some(function(r){return r.id===id;})){var d=BP_CP_DEMO.rows.filter(function(r){return r.id===id;})[0];if(d)_bpCp.rows.push(d);} bpCompetitors(); return; }
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.track',id:id})).then(function(r){
+    if(r&&r.ok){_bpCp.loaded=false;bpCpLoad(true);}
+    else{ if(btn){btn.disabled=false;btn.textContent='Track';} alert('Couldn\'t track that business: '+((r&&r.error)||'unknown error')); }
+  },function(){ if(btn){btn.disabled=false;btn.textContent='Track';} alert('Couldn\'t reach the marketing service.'); });
+};
+window.bpCpUntrack=function(id){
+  if(!window.BP_LIVE||_bpCp.demo){ _bpCp.rows=_bpCp.rows.filter(function(r){return r.id!==id;}); bpCompetitors(); return; }
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.untrack',id:id})).then(function(){ _bpCp.loaded=false;bpCpLoad(false); });
+};
+window.bpCpReviews=function(id,name){
+  bpModal('<h3>'+bpEsc(name)+' — newest reviews</h3><div id="bpx-cp-rv" class="bpx-sub">Loading…</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
+  var show=function(list){var el=q('bpx-cp-rv');if(!el)return;el.innerHTML=list.length?list.map(function(r){return '<div style="padding:10px 0;border-top:1px solid var(--line)"><div>'+bpStars(r.rating)+' <span class="bpx-mut" style="font-size:12px">'+bpEsc(r.user||'')+' · '+bpEsc(String(r.at||'').slice(0,10))+'</span></div><div style="font-size:13px;margin-top:4px">'+bpEsc(r.text||'')+'</div></div>';}).join(''):'No reviews available.';};
+  if(!window.BP_LIVE||_bpCp.demo){show([{rating:5,user:'Dana M.',at:'2026-08-30',text:'Crew showed up on time, roof done in a day, cleaned up everything. Would hire again.'},{rating:4,user:'Luis R.',at:'2026-08-12',text:'Good work, took a while to get the estimate back though.'}]);return;}
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.reviews',id:id})).then(function(r){show((r&&r.reviews)||[]);},function(){show([]);});
+};
+/* rule-based read of the scoreboard: concrete gaps, each tied to something in the app that closes it */
+function bpCpInsights(){
+  var list=bpCpRanked(), me=_bpCp.me||{}, you=list.filter(function(x){return x.you;})[0], rivals=list.filter(function(x){return !x.you;});
+  var out=[], go=function(v,l){return '<button class="bpx-rowbtn primary" style="margin-left:0" onclick="bpNav(\''+v+'\')">'+l+'</button>';};
+  if(!rivals.length)return out;
+  if(!you){ out.push({k:'warn',t:'You\'re not on the scoreboard yet',d:'Connect your Yelp listing in Ads & Listings and your rating and reviews land here next to theirs.',a:go('marketing','Connect Yelp')}); }
+  var top=rivals[0];
+  if(you&&top.reviews>you.reviews){
+    var gap=top.reviews-you.reviews, pace=Math.max(0,+top.vel||0);
+    out.push({k:'gap',t:bpEsc(top.name)+' has '+bpNum(gap)+' more reviews than you',d:'Review count is the biggest factor in who shows first. '+(pace?bpEsc(top.name)+' is adding about '+pace+' a month, so they\'re asking after every job. ':'')+'Ridge can text every finished job a review link automatically — most contractors who ask after each job add 3–6 reviews a month.',a:go('ai','Set up review requests in Ridge')});
+  }
+  var fast=rivals.filter(function(x){return (x.vel||0)>=3;}).sort(function(a,b){return b.vel-a.vel;})[0];
+  if(fast&&(!you||fast.vel>(you.vel||0)))out.push({k:'gap',t:bpEsc(fast.name)+' is gaining reviews fastest (+'+fast.vel+' in 30 days)',d:'That pace means a review request is built into how they close jobs. Match it: ask on the final walkthrough, then let Ridge follow up by text the next morning.',a:go('activejobs','Open Active Projects')});
+  var avg=rivals.filter(function(x){return x.rating;}); avg=avg.length?avg.reduce(function(s,x){return s+x.rating;},0)/avg.length:0;
+  if(you&&avg&&you.rating<avg-0.15)out.push({k:'gap',t:'Your rating ('+you.rating.toFixed(1)+'★) trails the local average ('+avg.toFixed(1)+'★)',d:'Reply to every review — especially the bad ones — within a day. A calm, specific reply is read by the next 50 homeowners, and Yelp shows response rate on the listing.',a:go('marketing','Open Ads & Listings')});
+  else if(you&&avg&&you.rating>=avg+0.15)out.push({k:'win',t:'Your rating beats the local average ('+you.rating.toFixed(1)+'★ vs '+avg.toFixed(1)+'★)',d:'Put that number on your estimate and website. Homeowners comparing three bids pick the one with the best reviews far more often than the cheapest.',a:go('calculator','Open My Calculator')});
+  var un=rivals.filter(function(x){return x.claimed===false;});
+  if(un.length)out.push({k:'win',t:un.length+' rival'+(un.length>1?'s haven\'t':' hasn\'t')+' claimed their listing',d:bpEsc(un.map(function(x){return x.name;}).join(', '))+' — unclaimed means nobody there answers reviews or posts photos. A claimed, active listing with fresh photos outranks a stale one with more reviews over time.',a:go('marketing','Check your listings')});
+  var photoy=rivals.filter(function(x){return x.photos>=20;}).sort(function(a,b){return b.photos-a.photos;})[0];
+  if(photoy)out.push({k:'gap',t:bpEsc(photoy.name)+' shows '+photoy.photos+' photos on their listing',d:'Before-and-after shots are the thing homeowners actually scroll. You already take job photos in Active Projects — post the best three from every finished roof.',a:go('activejobs','Grab photos from Active Projects')});
+  var cats={}; rivals.forEach(function(x){(x.cats||[]).forEach(function(c){cats[c]=(cats[c]||0)+1;});});
+  var extra=Object.keys(cats).filter(function(c){return !/roof/i.test(c);}).sort(function(a,b){return cats[b]-cats[a];}).slice(0,4);
+  if(extra.length)out.push({k:'info',t:'Services rivals list that you may not: '+bpEsc(extra.join(', ')),d:'Each extra category is another search you can show up in. If you do any of these, add them to your Yelp and Google listings and to Ridge\'s knowledge so it can quote them.',a:go('ai','Update Ridge\'s services')});
+  var closed=rivals.filter(function(x){return x.closed;});
+  if(closed.length)out.push({k:'win',t:bpEsc(closed.map(function(x){return x.name;}).join(', '))+' shows as closed on Yelp',d:'Their customers are still searching. This is the moment to run a small Google Ads campaign on their name and area.',a:go('marketing','Launch a campaign')});
+  return out;
+}
+function bpCpWinPane(){
+  var ins=bpCpInsights();
+  if(!ins.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>Nothing to compare yet</b>Track a few competitors and this tab fills in with specific gaps and what to do about each.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
+  var ico={gap:'▲',win:'✓',warn:'!',info:'i'};
+  return '<div class="bpx-cp-ins">'+ins.map(function(x){return '<div class="bpx-cp-card '+x.k+'"><div class="bpx-cp-ico">'+ico[x.k]+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;margin-bottom:4px">'+x.t+'</div><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-bottom:10px">'+x.d+'</div>'+x.a+'</div></div>';}).join('')+'</div>';
+}
+window.bpCsvCompetitors=function(){
+  var list=bpCpRanked();
+  bpCsv('competitors',['Rank','Business','Rating','Reviews','Reviews gained 30d','Price','Services','Distance mi','Claimed','Yelp URL'],
+    list.map(function(x){return [x.rank,x.name,x.rating,x.reviews,x.vel==null?'':x.vel,x.price||'',(x.cats||[]).join('; '),x.dist==null?'':x.dist,x.you?'':(x.claimed===false?'no':'yes'),x.url==='#'?'':x.url];}));
+};
 function bpMarketing(){
   if(!_bpMk.tab)_bpMk.tab=_bpMk.loaded&&!_bpMk.conns.length?'connections':'overview';
   var tabs=[['overview','Overview'],['campaigns','Campaigns'],['connections','Connections']];
@@ -17501,14 +18045,22 @@ var RADAR_CITIES={
     date:'issued_date',descf:['description','permit_type_desc','work_class'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return r.original_address1||'';},
-    zipf:['original_zip','zip','zipcode'],idf:['permit_number','permit_num','permittype'],portal:'https://abc.austintexas.gov/web/permit/public-search-other',portalName:'City of Austin permit search'},
+    zipf:['original_zip','zip','zipcode'],idf:['permit_number','permit_num','permittype'],
+    statusf:['status_current'],whof:['contractor_company_name','contractor_name','applicant_full_name','applicant'],
+    portal:'https://abc.austintexas.gov/web/permit/public-search-other',portalName:'City of Austin permit search'},
   la:{name:'Los Angeles, CA',cityName:'Los Angeles',state:'CA',lat:34.1866,lng:-118.4009,zoom:12,wfo:'LOX',
     api:'https://data.lacity.org/resource/nbyu-2ha9.json',
     date:'issue_date',descf:['work_description','permit_type','permit_sub_type'],
     latf:'latitude',lngf:'longitude',
     pt:function(r){var la=r.latitude||(r.location_1&&r.location_1.latitude),lo=r.longitude||(r.location_1&&r.location_1.longitude);return [la,lo];},
     addr:function(r){return [r.address_start,r.street_direction,r.street_name,r.street_suffix].filter(Boolean).join(' ')||r.primary_address||'';},
-    zipf:['zip_code','zip'],idf:['pcis_permit','pcis_permit_'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records',
+    zipf:['zip_code','zip'],idf:['pcis_permit','pcis_permit_'],statusf:['status_desc','status'],whof:['contractor_business_name','contractor_name','applicant'],
+    portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records',
+    /* county assessor parcels: year built for homes that have NO roof permit on file at all.
+       Field names follow the LA County open-data schema; the diagnostics banner reports the HTTP status if they drift. */
+    assessor:{api:'https://data.lacounty.gov/resource/9trm-uz8i.json',yb:'yearbuilt',latf:'center_lat',lngf:'center_lon',zipf:['zipcode5'],
+      addr:function(r){return r.propertylocation||'';},idf:['ain'],
+      extraTiers:["rollyear=2024 AND propertytype='SFR'","rollyear='2024'",""],name:'LA County Assessor parcel roll'},
     recent:{api:'https://data.lacity.org/resource/pi9x-tg5x.json',
       date:'issue_date',descf:['work_desc','permit_type','permit_sub_type','use_desc'],kwf:['work_desc','permit_type'],
       latf:'lat',lngf:'lon',
@@ -17519,13 +18071,15 @@ var RADAR_CITIES={
         return [la,lo];
       },
       addr:function(r){return r.primary_address||'';},
-      zipf:['zip_code'],idf:['permit_nbr'],portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records'}},
+      zipf:['zip_code'],idf:['permit_nbr'],statusf:['status_desc','status'],whof:['contractor_business_name','contractor_name','applicant'],
+      portal:'https://www.ladbs.org/services/check-status/online-building-records',portalName:'LADBS online building records'}},
   chicago:{name:'Chicago, IL',cityName:'Chicago',state:'IL',lat:41.8781,lng:-87.6298,zoom:11,wfo:'LOT',
     api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',
     date:'issue_date',descf:['work_description','permit_type'],
     latf:'latitude',lngf:'longitude',
     addr:function(r){return [r.street_number,r.street_direction,r.street_name].filter(Boolean).join(' ');},
-    zipf:['zip_code','contact_1_zipcode','zip'],idf:['permit_','id','permit_number'],portal:'https://webapps1.chicago.gov/buildingrecords/',portalName:'City of Chicago building records'},
+    zipf:['zip_code','contact_1_zipcode','zip'],idf:['permit_','id','permit_number'],whof:['contact_1_name'],
+    portal:'https://webapps1.chicago.gov/buildingrecords/',portalName:'City of Chicago building records'},
   demo:{name:'Demo City',lat:32.7767,lng:-96.7970,zoom:11,wfo:'',zipf:[]}
 };
 var RADAR_TRADES={
@@ -17610,19 +18164,26 @@ function rdRenderShell(){
   q('bpxViewArea').innerHTML=
     '<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
       +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">My list</button></div>'+terrNote+'</div>'
-    +'<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px">'
-      +'<span><i class="rd-dot" style="background:#e11d48"></i> Hot (75+)</span><span><i class="rd-dot" style="background:#f59e0b"></i> Warm</span>'
-      +'<span><i class="rd-dot" style="background:#eab308"></i> Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i> Watch</span>'
-      +'<span><i class="rd-dot" style="background:#fff;border:2.5px solid #7c3aed;box-sizing:border-box"></i> your active project</span>'
-      +'<span><i class="rd-dot" style="background:#0f2540;border:1.5px solid #fff;box-sizing:border-box"></i> crew on the street</span>'
-      +'<span><i class="rd-dot" style="background:#f59e0b;border:2.5px solid #0f2540;box-sizing:border-box"></i> their neighbor</span>'
+    +'<div class="rd-toolbar">'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
-      +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
-      +'<span id="rdCount" class="bpx-mut" style="margin-left:auto"></span></div>'
+      +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px;margin:0">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
+      +'<button class="bpx-rowbtn primary" onclick="rdRoute()" style="font-size:12px;margin:0" title="Best 10 doors, ordered for walking, opened in Google Maps">🧭 Plan a route</button>'
+      +'<span class="bpx-mut" style="margin-left:auto;font-size:12px">Roofs due by age + fresh signals from the last 90 days · all from public records</span></div>'
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdStormMode" style="display:none;background:#7c2d12;color:#fff;border-radius:10px;padding:11px 15px;font-size:13px;margin-bottom:8px"></div>'
-    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real permit on file with the city. Tap a dot → More info to see the government record.</div>'
-    +'<div id="rdMap" style="height:480px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:#e8ecf4"></div>'
+    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real public record. Tap a dot → More info to see the government record.</div>'
+    +'<div id="rdMapWrap"><div id="rdMap"></div>'
+      +'<div class="rd-stat" id="rdCount">Scanning…</div>'
+      +'<div class="rd-legend">'
+        +'<span><i class="rd-dot" style="background:#e11d48"></i>Hot (75+)</span><span><i class="rd-dot" style="background:#f59e0b"></i>Warm</span>'
+        +'<span><i class="rd-dot" style="background:#eab308"></i>Cool</span><span><i class="rd-dot" style="background:#3b82f6"></i>Watch</span>'
+        +'<span><i class="rd-dot" style="background:#fff;border:2px solid #dc2626;box-sizing:border-box"></i>expired permit</span>'
+        +'<span><i class="rd-dot" style="background:#fff;border:2px solid #0ea5e9;box-sizing:border-box"></i>no permit on file</span>'
+        +'<span><i class="rd-dot" style="background:#fff;border:2px solid #7c3aed;box-sizing:border-box"></i>project next door</span>'
+        +'<span><i class="rd-dot" style="background:#0f2540;border:1.5px solid #fff;box-sizing:border-box"></i>crew on the street</span>'
+        +'<span><i class="rd-dot" style="background:#f59e0b;border:2px solid #f97316;box-sizing:border-box"></i>storm nearby</span>'
+        +'<span><i class="rd-dot" style="background:#f59e0b;border:2px solid #0f2540;box-sizing:border-box"></i>crew\'s neighbor</span>'
+        +'<div class="cnts" id="rdLegendCounts"></div></div></div>'
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs">'
       +'<button class="bpx-jt'+(_rdListTab==='auto'?' on':'')+'" data-rd-tab="auto" onclick="rdListTab(\'auto\')">Today\'s picks</button>'
@@ -17658,20 +18219,36 @@ window.rdMineRender=function(){
   var el=q('rdMineList'); if(!el) return;
   el.classList.remove('bpx-mut');
   if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing here yet — tap <b>+ Add</b> on a dot or a prospect below and it files into this list.</span>'; return; }
+  /* funnel: how many of the doors you added turned into conversations, bookings, jobs */
+  /* each door counts at every stage it reached, whether or not it was later marked lost */
+  var rank={knocked:1,contacted:2,booked:3,won:4}, n={total:rows.length,k:0,t:0,b:0,w:0};
+  rows.forEach(function(c){var r=0;(c.tags||[]).forEach(function(s){if(rank[s]>r)r=rank[s];});if(r>=1)n.k++;if(r>=2)n.t++;if(r>=3)n.b++;if(r>=4)n.w++;});
+  var pct=function(a,b){return b?Math.round(a/b*100)+'%':'—';};
+  var funnel='<div class="rd-funnel">'
+    +'<div><b>'+n.total+'</b><span>added</span></div><i>›</i>'
+    +'<div><b>'+n.k+'</b><span>knocked · '+pct(n.k,n.total)+'</span></div><i>›</i>'
+    +'<div><b>'+n.t+'</b><span>talked · '+pct(n.t,n.total)+'</span></div><i>›</i>'
+    +'<div><b>'+n.b+'</b><span>booked · '+pct(n.b,n.total)+'</span></div><i>›</i>'
+    +'<div class="win"><b>'+n.w+'</b><span>won · '+pct(n.w,n.total)+'</span></div></div>'
+    +'<div class="bpx-mut" style="font-size:11.5px;margin:6px 0 12px">Typical door-to-door for '+bpEsc((RADAR_TRADES[_rdTrade]||{}).l||'this trade')+': talk to 1 in 4, book 1 in 3 you talk to, win half you inspect. If a stage is far below that, that\'s the one to work on.</div>';
   var pg=bpPage('rdmine',rows,10,'rdMineRender()');
-  el.innerHTML=pg.items.map(function(c){
+  el.innerHTML=funnel+pg.items.map(function(c){
     var addr=bpEsc((c.name||'').replace(/^Radar — /,''));
     var m=/Score (\d+)/i.exec(c.notes||'');
     var score=m?m[1]:'';
     var when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    var done=(c.tags||[]).indexOf('contacted')>-1;
-    return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)">'
+    var stage=rdStageOf(c), idArg=c.id?("'"+c.id+"'"):'null', ghl=bpEsc(c.ghl_id||'');
+    var next={new:['knocked','contacted'],knocked:['contacted','lost'],contacted:['booked','lost'],booked:['won','lost'],won:[],lost:['contacted']}[stage]||[];
+    var lbl=function(k){return (RD_STAGES.filter(function(s){return s[0]===k;})[0]||[k,k])[1];};
+    var badge=stage==='new'?'':'<span class="bpx-badge'+(stage==='won'?' ok':stage==='lost'?' bad':'')+'">'+lbl(stage)+'</span>';
+    var acts=next.map(function(k){return '<button class="bpx-rowbtn'+(k==='lost'?'':' primary')+'" style="margin:0" onclick="rdStage(this,'+idArg+',\''+k+'\',\''+ghl+'\')">'+lbl(k)+'</button>';}).join(' ');
+    var days=c.created_at?Math.round((Date.now()-Date.parse(c.created_at))/864e5):0;
+    var nudge=(stage==='knocked'&&days>=3)?'<span style="color:#b45309;font-size:11px;font-weight:600"> · knock again</span>':(stage==='contacted'&&days>=7?'<span style="color:#b45309;font-size:11px;font-weight:600"> · follow up</span>':'');
+    return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">'
       +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':(score?'#f59e0b':'#2f6bff'))+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'📍')+'</span>'
-      +'<div style="flex:1;min-width:0"><b style="font-size:13.5px">'+addr+'</b><div class="bpx-mut" style="font-size:11.5px">'+bpEsc(((c.notes||'').split('.')[0]||'radar lead').slice(0,80))+(when?' · added '+when:'')+'</div></div>'
+      +'<div style="flex:1;min-width:180px"><b style="font-size:13.5px">'+addr+'</b> '+badge+'<div class="bpx-mut" style="font-size:11.5px">'+bpEsc(((c.notes||'').split('.')[0]||'radar lead').slice(0,80))+(when?' · added '+when:'')+nudge+'</div></div>'
       +'<a href="https://maps.apple.com/?q='+encodeURIComponent((c.name||'').replace(/^Radar — /,''))+'" target="_blank" rel="noopener" style="font-size:16px;text-decoration:none" title="Open in Maps">🗺️</a>'
-      +(done?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted ✓</span>'
-        :'<button class="bpx-rowbtn" onclick="rdAutoContacted(this,\''+bpEsc(c.ghl_id||'')+'\','+(c.id?("'"+c.id+"'"):'null')+')">Contacted ✓</button>')
-      +'</div>';
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+'</div></div>';
   }).join('')+pg.nav;
 };
 window.rdMineJump=function(){ rdMinePage(); };
@@ -17730,8 +18307,11 @@ function rdEnsureLeaflet(cb){
 function rdInitMap(){
   var c=RADAR_CITIES[_rdCity];
   if(_rdMap){ _rdMap.remove(); _rdMap=null; }
-  _rdMap=L.map('rdMap',{zoomControl:false,dragging:false,touchZoom:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,tap:false}).setView([c.lat,c.lng],c.zoom);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(_rdMap);
+  /* free to pan and zoom, but fenced to the territory (maxBounds is set once the dots are drawn) */
+  _rdMap=L.map('rdMap',{zoomControl:false,scrollWheelZoom:true,dragging:true,minZoom:9,maxZoom:19,maxBoundsViscosity:.9}).setView([c.lat,c.lng],c.zoom);
+  L.control.zoom({position:'topright'}).addTo(_rdMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(_rdMap);
   /* map is locked — snap back to the full territory whenever a popup closes */
   _rdMap.on('popupclose',function(){ if(window._rdFitB) setTimeout(function(){ if(_rdMap&&window._rdFitB)_rdMap.fitBounds(window._rdFitB); },60); });
   _rdStormLayer=L.layerGroup().addTo(_rdMap);
@@ -17803,8 +18383,22 @@ function rdFetch(){
       .then(function(parts){var out=[];parts.forEach(function(p){out=out.concat(p||[]);});return out;});
   }
   function permitId(cfg,r){var id='';(cfg.idf||[]).forEach(function(f){if(!id&&r[f])id=String(r[f]);});return id;}
-  window._rdDrop={zip:0,coords:0,date:0,rule:0,score:0};
+  function firstOf(cfg,r,key){var v='';((cfg[key])||[]).forEach(function(f){if(!v&&r[f])v=String(r[f]);});return v;}
+  window._rdDrop={zip:0,coords:0,date:0,rule:0,score:0,status:0};
   function rowLead(cfg,r,kind){
+    if(kind==='expired'){
+      /* a same-trade permit that expired or was voided: the homeowner planned the job and it never happened */
+      if(!rdZipOK(r,cfg)){window._rdDrop.zip++;return null;}
+      var st=firstOf(cfg,r,'statusf'); if(!/EXPIR|VOID|WITHDRAW|CANCEL|LAPSE/i.test(st)){window._rdDrop.status++;return null;}
+      var ll2=cfg.pt?cfg.pt(r):[r[cfg.latf],r[cfg.lngf]]; var la2=parseFloat(ll2[0]),lo2=parseFloat(ll2[1]);
+      if(!isFinite(la2)||!isFinite(lo2)){window._rdDrop.coords++;return null;}
+      var d2=new Date(r[cfg.date]); if(isNaN(d2)){window._rdDrop.date++;return null;}
+      var mo2=Math.max(0,Math.round((Date.now()-d2.getTime())/2629800000));
+      var ds2=''; cfg.descf.forEach(function(f){if(!ds2&&r[f])ds2=String(r[f]);});
+      return {lat:la2,lng:lo2,base:80,score:80,age:0,year:d2.getFullYear(),kind:'expired',signalAt:d2.getTime(),
+        why:t.l+' permit filed '+d2.toLocaleDateString('en-US',{month:'short',year:'numeric'})+' expired without the work being done ('+(mo2<=1?'this month':mo2+' months ago')+') — they still need a '+t.unit,
+        addr:(cfg.addr(r)||'Address on record').toString().trim(),desc:(ds2.slice(0,70)+' · status: '+st).slice(0,110),storm:false,raw:r,pid:permitId(cfg,r)};
+    }
     if(!rdZipOK(r,cfg)){window._rdDrop.zip++;return null;}
     var _ll=cfg.pt?cfg.pt(r):[r[cfg.latf],r[cfg.lngf]];
     var lat=parseFloat(_ll[0]),lng=parseFloat(_ll[1]);
@@ -17823,23 +18417,49 @@ function rdFetch(){
     (t.adj||[]).forEach(function(a){ if(!rule&&a.kw.some(function(k){return up.indexOf(k)>=0;})) rule=a; });
     if(!rule){window._rdDrop.rule++;return null;}
     var months=Math.max(0,Math.round(age*12));
-    return {lat:lat,lng:lng,base:rule.sc,score:rule.sc,age:Math.round(age),year:dt.getFullYear(),kind:'project',
+    return {lat:lat,lng:lng,base:rule.sc,score:rule.sc,age:Math.round(age),year:dt.getFullYear(),kind:'project',signalAt:dt.getTime(),
       why:rule.label+' ('+(months<=1?'this month':months+' months ago')+')',
       addr:(cfg.addr(r)||'Address on record').toString().trim(),desc:desc.slice(0,90),storm:false,raw:r,pid:permitId(cfg,r)};
   }
   var dueFrom=new Date(now.getFullYear()-t.hi,now.getMonth(),1).toISOString().slice(0,10);
   var dueTo=new Date(now.getFullYear()-t.lo,now.getMonth(),1).toISOString().slice(0,10);
-  var recFrom=new Date(Date.now()-730*86400000).toISOString().slice(0,10);   // last ~24 months
+  var recFrom=new Date(Date.now()-90*86400000).toISOString().slice(0,10);    // fresh signals only: last 90 days
   var recTo=new Date(Date.now()+86400000).toISOString().slice(0,10);
   var adjKws=[]; (t.adj||[]).forEach(function(a){adjKws=adjKws.concat(a.kw);});
   var anchorFrom=new Date(Date.now()-21*86400000).toISOString().slice(0,10);   // fresh same-trade permits = crews on the street
+  var expFrom=new Date(Date.now()-3*365*86400000).toISOString().slice(0,10);   // permits that lapsed in the last 3 years
   var jobs=[ qAll(base,dueFrom,dueTo,t.kw,600) ];
   jobs.push(adjKws.length?qAll(recentCfg,recFrom,recTo,adjKws,300):Promise.resolve([]));
   jobs.push(qAll(recentCfg,anchorFrom,recTo,t.kw,120).catch(function(){return [];}));
+  jobs.push(recentCfg.statusf?qAll(recentCfg,expFrom,recTo,t.kw,400).catch(function(){return [];}):Promise.resolve([]));
+  /* assessor parcels: homes built in the replacement window with no same-trade permit on file at all.
+     Needs a territory zip to stay bounded; skipped city-wide. */
+  var asr=base.assessor, yNow=now.getFullYear();
+  function qAssessor(zip){
+    var tiers=(asr.extraTiers||['']).slice();
+    var zf=(asr.zipf||[])[0];
+    function attempt(){
+      if(!tiers.length)return Promise.resolve([]);
+      var extra=tiers.shift();
+      var where=asr.yb+' between '+(yNow-t.hi-6)+' and '+(yNow-t.lo)+(zf?" AND "+zf+" like '"+zip+"%'":'')+(extra?' AND '+extra:'');
+      var url=asr.api+'?$where='+encodeURIComponent(where)+'&$limit=250';
+      var d={api:(asr.api.split('/resource/')[1]||asr.api)+' [assessor '+zip+']',status:'?',rows:'?',err:''}; window._rdDiag.push(d);
+      return fetch(url).then(function(r){d.status=r.status;if(!r.ok){return r.text().then(function(tx){d.err=tx.slice(0,160);throw {code:r.status};});}return r.json().then(function(rows){d.rows=rows.length;return rows;});})
+        .catch(function(e){ if(e&&e.code===400&&tiers.length)return attempt(); return []; });
+    }
+    return attempt();
+  }
+  function qRecentSameTrade(zip){ /* any same-trade permit in the last 15 years → that address HAS been re-done */
+    var from=new Date(yNow-15,0,1).toISOString().slice(0,10);
+    return qZip(recentCfg,from,recTo,t.kw,2000,zip).catch(function(){return [];});
+  }
+  var asrZips=(asr&&terrZips.length)?terrZips:[];
+  jobs.push(Promise.all(asrZips.map(function(z){return Promise.all([qAssessor(z),qRecentSameTrade(z)]);})));
   return Promise.all(jobs).then(function(res){
     var leads=[], seen={};
     (res[0]||[]).forEach(function(r){var p=rowLead(base,r,'due'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     ((res[1])||[]).forEach(function(r){var p=rowLead(recentCfg,r,'project'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
+    ((res[3])||[]).forEach(function(r){var p=rowLead(recentCfg,r,'expired'); if(p&&!seen[p.addr]){seen[p.addr]=1;leads.push(p);}});
     /* anchors: not leads themselves — active jobs whose neighbors we boost */
     var anchors=[];
     ((res[2])||[]).forEach(function(r){
@@ -17848,9 +18468,27 @@ function rdFetch(){
       if(!isFinite(la)||!isFinite(lo))return;
       var dt=new Date(r[recentCfg.date]); if(isNaN(dt))return;
       anchors.push({lat:la,lng:lo,addr:(recentCfg.addr(r)||'nearby address').toString().trim(),
+        who:firstOf(recentCfg,r,'whof').replace(/\s+/g,' ').trim().slice(0,48),
         when:dt.toLocaleDateString('en-US',{month:'short',day:'numeric'})});
     });
     window._rdAnchors=anchors.slice(0,80);
+    /* assessor → "no permit on file" leads */
+    var normA=function(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();};
+    ((res[4])||[]).forEach(function(pair){
+      var rows=pair[0]||[], done={};
+      (pair[1]||[]).forEach(function(r){var a=normA(recentCfg.addr(r));if(a)done[a]=1;});
+      rows.forEach(function(r){
+        var yb=parseInt(r[asr.yb],10); if(!isFinite(yb)||yb<1800)return;
+        var addr=(asr.addr(r)||'').toString().replace(/\s+/g,' ').trim(); if(!addr||seen[addr])return;
+        if(done[normA(addr)])return;                       /* somebody already re-roofed it */
+        var la=parseFloat(r[asr.latf]),lo=parseFloat(r[asr.lngf]); if(!isFinite(la)||!isFinite(lo))return;
+        var age=yNow-yb, sc=rdScore(age,t)-5; if(sc<25)return;
+        seen[addr]=1;
+        leads.push({lat:la,lng:lo,base:sc,score:sc,age:age,year:yb,kind:'noperm',
+          why:'Built '+yb+' and no '+t.unit+' permit on file since — likely the original '+t.unit+', about '+age+' years old',
+          addr:addr,desc:'assessor record — '+asr.name,storm:false,raw:r,pid:permitId(asr,r)});
+      });
+    });
     var dueK=leads.filter(function(x){return x.kind==='due';}).length;
     var prK=leads.filter(function(x){return x.kind==='project';}).length;
     (window._rdDiag||[]).forEach(function(d){d.kept=(d.api.indexOf((base.api.split('/resource/')[1]||''))===0)?dueK:prK;});
@@ -17883,7 +18521,7 @@ function rdFetch(){
           });
         });
         leads.sort(function(a,b){return b.score-a.score;});
-        return leads.slice(0,480);
+        return leads.slice(0,600);
       });
   });
 }
@@ -17901,13 +18539,25 @@ function rdDemoLeads(){
   }
   (t.adj||[]).forEach(function(a,ai){
     for(var j2=0;j2<6;j2++){
-      var mo=1+Math.floor(rnd()*8);
-      out.push({lat:c.lat+(rnd()-0.5)*0.2,lng:c.lng+(rnd()-0.5)*0.26,base:a.sc,score:a.sc,age:0,kind:'project',
+      var mo=1+Math.floor(rnd()*3);
+      out.push({lat:c.lat+(rnd()-0.5)*0.2,lng:c.lng+(rnd()-0.5)*0.26,base:a.sc,score:a.sc,age:0,kind:'project',signalAt:Date.now()-mo*2629800000,
         why:a.label+' ('+mo+' months ago)',year:new Date().getFullYear(),
         addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],
         desc:a.kw[0].toLowerCase()+' permit (demo)',storm:false,demo:true});
     }
   });
+  for(var k=0;k<5;k++){
+    var mo3=2+Math.floor(rnd()*20);
+    out.push({lat:c.lat+(rnd()-0.5)*0.2,lng:c.lng+(rnd()-0.5)*0.26,base:80,score:80,age:0,kind:'expired',signalAt:Date.now()-mo3*2629800000,year:new Date().getFullYear(),
+      why:t.l+' permit filed '+mo3+' months ago expired without the work being done — they still need a '+t.unit,
+      addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],desc:t.kw[0].toLowerCase()+' permit · status: EXPIRED (demo)',storm:false,demo:true});
+  }
+  for(var k2=0;k2<8;k2++){
+    var age2=Math.round(t.lo+rnd()*(t.hi-t.lo)), sc2=rdScore(age2,t)-5; if(sc2<25)continue;
+    out.push({lat:c.lat+(rnd()-0.5)*0.22,lng:c.lng+(rnd()-0.5)*0.28,base:sc2,score:sc2,age:age2,kind:'noperm',year:new Date().getFullYear()-age2,
+      why:'Built '+(new Date().getFullYear()-age2)+' and no '+t.unit+' permit on file since — likely the original '+t.unit+', about '+age2+' years old',
+      addr:(100+Math.floor(rnd()*9800))+' '+streets[Math.floor(rnd()*streets.length)],desc:'assessor record (demo)',storm:false,demo:true});
+  }
   return out.sort(function(a,b){return b.score-a.score;});
 }
 function rdFetchStorms(){
@@ -18012,18 +18662,26 @@ function rdDraw(){
   var shown=_rdLeads.filter(function(p){return p.score>=_rdMin;});
   shown.forEach(function(p){
     var i=_rdLeads.indexOf(p);
-    var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':(p.kind==='neighbor'?'#0f2540':'#fff'));
-    var m=L.circleMarker([p.lat,p.lng],{radius:p.score>=75?8:6,color:ring,weight:(p.storm||p.kind==='project'||p.kind==='neighbor')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.92});
+    var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':(p.kind==='neighbor'?'#0f2540':(p.kind==='expired'?'#dc2626':(p.kind==='noperm'?'#0ea5e9':'#fff'))));
+    var hot=p.score>=75;
+    /* soft halo under hot dots so the best doors read at a glance */
+    if(hot)_rdLayer.addLayer(L.circleMarker([p.lat,p.lng],{radius:15,stroke:false,fillColor:rdColor(p.score),fillOpacity:.16,interactive:false}));
+    var m=L.circleMarker([p.lat,p.lng],{radius:hot?7:5.5,color:ring,weight:(p.storm||p.kind!=='due')?2.5:1.5,fillColor:rdColor(p.score),fillOpacity:.95,dashArray:p.kind==='expired'?'3 3':null});
+    m.bindTooltip('<b>'+bpEsc(p.addr)+'</b><br>'+rdLabel(p.score)+' · '+p.score+rdKindTag(p,true),{direction:'top',offset:[0,-8],opacity:.96,className:'rd-tip'});
     m.on('click',function(){rdSheetOpen(i);});
     m._rdIdx=i;
     _rdLayer.addLayer(m);
   });
-  /* lock the view to exactly fit every dot in the territory */
+  /* fit the territory, then fence panning to a little beyond it */
   if(shown.length){
     var bb=L.latLngBounds(shown.map(function(p){return [p.lat,p.lng];}));
     window._rdFitB=bb.pad(0.15);
     _rdMap.fitBounds(window._rdFitB);
+    _rdMap.setMaxBounds(bb.pad(0.9));
   }
+  var lg=q('rdLegendCounts');
+  if(lg){var k={};_rdLeads.forEach(function(p){k[p.kind]=(k[p.kind]||0)+1;});
+    lg.innerHTML=[['due','Old permit',k.due],['noperm','No permit on file',k.noperm],['expired','Expired permit',k.expired],['project','Project next door',k.project],['neighbor','Crew neighbor',k.neighbor]].filter(function(x){return x[2];}).map(function(x){return '<span>'+x[1]+' <b>'+x[2]+'</b></span>';}).join('');}
   var list=q('rdList');
   if(list){
     var rdPg=bpPage('rdlist',shown,10,'rdDraw()');
@@ -18035,7 +18693,7 @@ function rdDraw(){
       else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">List</button>';
       else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
       var freshTag=(p.stormFresh?'<span style="color:#dc2626;font-weight:700;font-size:11px"> STORM 72H</span>':(p.storm?' <span title="recent storm nearby">⛈️</span>':''))
-        +(p.anchor?'<span style="color:#0f2540;font-weight:700;font-size:11px"> CREW '+p.anchor.ft+' FT</span>':'');
+        +(p.anchor?'<span style="color:#0f2540;font-weight:700;font-size:11px"> CREW '+p.anchor.ft+' FT</span>':'')+rdKindTag(p,false);
       return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+freshTag+'</td>'
         +'<td class="bpx-mut" style="font-size:12.5px">'+bpEsc((p.anchor?('Roof crew '+p.anchor.ft+' ft away at '+p.anchor.addr+' ('+p.anchor.when+') · '):'')+(p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs'))).slice(0,120)+'</td>'
         +'<td class="bpx-r"><span style="padding:2px 10px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11.5px">'+p.score+'</span></td>'
@@ -18088,16 +18746,70 @@ function rdPopup(p,i,t){
     +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span>'
     +(p.stormFresh?' <span style="font-size:11px;color:#dc2626;font-weight:700">STORM — hit in last 72h</span>':(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':''))
     +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">active project</span>':'')+'<br>'
-    +(p.anchor?'<div style="margin:5px 0;padding:7px 10px;background:#eef3fb;border-left:3px solid #0f2540;border-radius:7px;font-size:12.5px"><b>Crew on the street:</b> a '+t.unit+' permit was filed at '+bpEsc(p.anchor.addr)+' — '+p.anchor.ft+' ft away ('+bpEsc(p.anchor.when)+'). Their neighbors are watching that job happen.</div>':'')
-    +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span><br>'
+    +(p.anchor?'<div style="margin:5px 0;padding:7px 10px;background:#eef3fb;border-left:3px solid #0f2540;border-radius:7px;font-size:12.5px"><b>Crew on the street:</b> a '+t.unit+' permit was filed at '+bpEsc(p.anchor.addr)+' — '+p.anchor.ft+' ft away ('+bpEsc(p.anchor.when)+').'+(p.anchor.who?' The crew is <b>'+bpEsc(p.anchor.who)+'</b> — mention you\'re the other bid on the block.':' Their neighbors are watching that job happen.')+'</div>':'')
+    +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span>'
+    +(p.signalAt?' <span style="color:#6a6a70;font-size:11.5px">· signal '+rdAgo(p.signalAt)+'</span>':'')+'<br>'
     +'<span style="color:#6a6a70;font-size:11.5px">'+bpEsc(p.desc)+'</span><br>'
     +'<a onclick="rdEvidence('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">More info — see the permit record</a>'
     +'<div id="rdEv'+i+'" style="display:none"></div><br>'
     +'<a href="https://maps.apple.com/?q='+encodeURIComponent(p.addr+' '+((RADAR_CITIES[_rdCity]||{}).cityName||''))+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Open in Maps</a> · '
     +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Owner lookup (public records)</a>'
     +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">Reveal owner info</a>':'')
-    +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn+'</div>';
+    +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn
+    +' <button onclick="rdHanger('+i+')" style="margin-top:7px;background:#fff;color:#0f2540;border:1px solid #cfd8e4;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer" title="A one-page flyer with this exact reason on it">🖨 Door hanger</button></div>';
 }
+function rdAgo(ms){var d=Math.max(0,Math.round((Date.now()-ms)/864e5));return d<1?'today':d===1?'yesterday':d<31?d+' days ago':Math.round(d/30.4)+' months ago';}
+function rdKindTag(p,tip){
+  var s=p.kind==='expired'?['#dc2626','EXPIRED PERMIT']:p.kind==='noperm'?['#0369a1','NO PERMIT ON FILE']:p.kind==='project'?['#7c3aed','PROJECT NEXT DOOR']:null;
+  if(!s)return '';
+  return tip?' · '+s[1].toLowerCase():'<span style="color:'+s[0]+';font-weight:700;font-size:11px"> '+s[1]+'</span>';
+}
+/* ---- knock route: best doors first, then nearest-next; opens as a multi-stop Google Maps trip ---- */
+window.rdRoute=function(){
+  var shown=_rdLeads.filter(function(p){return p.score>=_rdMin&&!_rdContacted[p.addr];});
+  var pool=shown.slice().sort(function(a,b){return ((_rdAdded[b.addr]?1:0)-(_rdAdded[a.addr]?1:0))||(b.score-a.score);}).slice(0,10);
+  if(!pool.length){alert('Nothing above the score filter to route. Lower the min score.');return;}
+  var order=[pool.shift()], km=0;
+  while(pool.length){var last=order[order.length-1],bi=0,bd=1e9;pool.forEach(function(p,i){var d=rdKm(last.lat,last.lng,p.lat,p.lng);if(d<bd){bd=d;bi=i;}});km+=bd;order.push(pool.splice(bi,1)[0]);}
+  var city=(RADAR_CITIES[_rdCity]||{}).cityName||'';
+  var url='https://www.google.com/maps/dir/'+order.map(function(p){return encodeURIComponent(p.addr+(city?', '+city:''));}).join('/');
+  var idxs=order.map(function(p){return _rdLeads.indexOf(p);});
+  bpModal('<h3>Today\'s knock route</h3><div class="bpx-sub">'+order.length+' doors · about '+(km*0.621).toFixed(1)+' miles between stops. Best score first, then whichever is nearest — the way a good canvasser walks a block.</div>'
+    +'<ol class="rd-route">'+order.map(function(p){return '<li><b>'+bpEsc(p.addr)+'</b><span class="bpx-mut"> — '+rdLabel(p.score)+' '+p.score+' · '+bpEsc((p.why||'').slice(0,80))+'</span></li>';}).join('')+'</ol>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button><button class="bpx-btn ghost" onclick="rdHangers(['+idxs.join(',')+'])">Print '+order.length+' door hangers</button><a class="bpx-btn" href="'+url+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Open in Google Maps</a></div>');
+  var card=document.querySelector('#bpx-modal .bpx-modalcard'); if(card)card.style.maxWidth='560px';
+};
+/* ---- door hangers: one printable page per lead, with the exact reason we flagged the house ---- */
+window.rdHanger=function(i){rdHangers([i]);};
+window.rdHangers=function(idxs){
+  var s=bpSettingsGet(),c=s.company||{},t=RADAR_TRADES[_rdTrade],esc=bpEsc;
+  var site=(c.website||'').trim(), siteUrl=site?(/^https?:/i.test(site)?site:'https://'+site):'';
+  var qr=siteUrl?'https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0&data='+encodeURIComponent(siteUrl+(siteUrl.indexOf('?')<0?'?':'&')+'src=hanger'):'';
+  var pages=idxs.map(function(i){var p=_rdLeads[i]; if(!p)return '';
+    var hook=p.stormFresh?'Hail and wind were reported on your street this week.':p.kind==='expired'?'A '+t.unit+' permit was pulled for your home but the work was never finished.':p.kind==='noperm'?'County records show your home was built in '+p.year+' with no '+t.unit+' replacement on file.':p.kind==='project'?'We noticed work starting on your home — the '+t.unit+' is the piece most people forget to check first.':p.anchor?'We\'re working '+p.anchor.ft+' feet from your door this week.':'Your last '+t.unit+' permit was '+p.year+' — that\'s '+p.age+' years.';
+    return '<section class="hg"><div class="top">'+(c.logo?'<img class="logo" src="'+esc(c.logo)+'" alt="">':'')+'<div class="co">'+esc(c.name||'Your company')+'</div></div>'
+      +'<h1>'+(p.anchor||p.stormFresh?'We were on your street today.':'Your '+esc(t.unit)+' may be due.')+'</h1>'
+      +'<p class="addr">'+esc(p.addr)+'</p><p class="hook">'+esc(hook)+'</p>'
+      +'<p class="body">A free '+esc(t.unit)+' inspection takes about 20 minutes, with photos you keep. No pressure, no obligation.'+(p.stormFresh?' Storm damage is usually covered by insurance — but only when it\'s documented early.':'')+'</p>'
+      +'<div class="cta">'+(c.phone?'<div class="ph">Call or text <b>'+esc(c.phone)+'</b></div>':'')+(site?'<div class="site">'+esc(site)+'</div>':'')+(qr?'<img class="qr" src="'+qr+'" alt="">':'')+'</div>'
+      +'<div class="foot">'+(c.license?'License '+esc(c.license)+' · ':'')+esc(c.serviceArea||'')+'</div></section>';
+  }).join('');
+  var w=window.open('','_blank'); if(!w){alert('Allow pop-ups for this site to print door hangers.');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Door hangers</title><style>@page{size:letter;margin:.5in}body{margin:0;font:15px/1.5 Inter,-apple-system,Segoe UI,sans-serif;color:#0f172a}.hg{page-break-after:always;padding:36px 40px;border:2px solid #0f172a;border-radius:18px;margin:0 0 24px;min-height:8.6in;box-sizing:border-box;display:flex;flex-direction:column}.top{display:flex;align-items:center;gap:12px;margin-bottom:26px}.logo{height:44px;width:auto}.co{font-weight:800;font-size:20px;letter-spacing:-.02em}h1{font-size:40px;line-height:1.08;letter-spacing:-.03em;margin:0 0 14px}.addr{font-weight:700;color:#475569;margin:0 0 18px}.hook{font-size:19px;font-weight:600;margin:0 0 12px}.body{color:#334155;margin:0 0 auto}.cta{margin-top:34px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}.ph{font-size:26px}.ph b{font-size:30px}.site{color:#2563eb;font-weight:600}.qr{width:110px;height:110px;margin-left:auto}.foot{margin-top:22px;font-size:12px;color:#94a3b8}@media print{.hg{margin:0}}</style>'+pages+'<scr'+'ipt>setTimeout(function(){window.print();},500);</scr'+'ipt>');
+  w.document.close();
+};
+/* ---- pipeline stages on My list: knocked → talked → booked → won/lost ---- */
+var RD_STAGES=[['knocked','Knocked','No answer / left a hanger'],['contacted','Talked','Real conversation'],['booked','Booked','Inspection on the calendar'],['won','Won','Signed'],['lost','Lost','Not interested / went elsewhere']];
+function rdStageOf(c){var tg=c.tags||[];for(var i=RD_STAGES.length-1;i>=0;i--){if(tg.indexOf(RD_STAGES[i][0])>=0)return RD_STAGES[i][0];}return 'new';}
+window.rdStage=function(btn,rowId,stage,ghlId){
+  if(stage==='contacted')return rdAutoContacted(btn,ghlId,rowId);   /* keeps the GHL follow-up automation in the loop */
+  if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to track stages.');return;}
+  btn.disabled=true;
+  BP_SB.from('contacts').select('tags').eq('id',rowId).maybeSingle().then(function(r){
+    var t=(r&&r.data&&r.data.tags)||[]; if(t.indexOf(stage)<0)t.push(stage);
+    return BP_SB.from('contacts').update({tags:t}).eq('id',rowId);
+  }).then(function(){rdLoadMine();},function(){btn.disabled=false;alert('Couldn\'t save that — try again.');});
+};
 window.rdReveal=function(i){
   var p=_rdLeads[i]; if(!p) return;
   if(p.owner){ return; }
@@ -18184,7 +18896,7 @@ function rdFn(action,payload){
 window.rdAddLead=function(i){
   var p=_rdLeads[i]; if(!p)return;
   var t=RADAR_TRADES[_rdTrade];
-  var note='Lead Radar ('+t.l+'): last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old. Score '+p.score+' ('+rdLabel(p.score)+')'+(p.storm?' · recent storm nearby':'')+'.';
+  var note='Lead Radar ('+t.l+'): '+(p.why||('last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old'))+'. Score '+p.score+' ('+rdLabel(p.score)+')'+(p.storm?' · recent storm nearby':'')+'.';
   if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to save prospects.');return;}
   _rdAdded[p.addr]=1; rdDraw();
   rdFn('push',{address:p.addr,trade:_rdTrade,note:note}).then(function(d){
@@ -18208,7 +18920,20 @@ window.rdContacted=function(i){
   }
 };
 var rdCss=document.createElement('style');
-rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.rd-chip{margin:2px 0}';
+rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.rd-chip{margin:2px 0}'
+  +'#rdMapWrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(16,24,40,.08)}'
+  +'#rdMap{height:560px;background:#e8ecf4}@media(max-width:700px){#rdMap{height:420px}}'
+  +'#rdMap .leaflet-control-zoom{border:0;border-radius:10px;overflow:hidden;box-shadow:0 4px 14px rgba(16,24,40,.14)}#rdMap .leaflet-control-zoom a{width:32px;height:32px;line-height:30px;color:#0f2540;border-color:#e6e9ef}'
+  +'#rdMap .leaflet-control-attribution{font-size:9.5px;background:rgba(255,255,255,.7)}'
+  +'.rd-tip{background:#0f172a;color:#fff;border:0;border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.35;box-shadow:0 6px 18px rgba(0,0,0,.25)}.rd-tip::before{border-top-color:#0f172a}'
+  +'.rd-legend{position:absolute;left:12px;bottom:12px;z-index:800;background:rgba(255,255,255,.93);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:11.5px;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;max-width:300px}'
+  +'.rd-legend span{display:flex;align-items:center;white-space:nowrap}.rd-legend i.rd-dot{width:9px;height:9px}'
+  +'.rd-legend .cnts{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:6px;margin-top:3px;color:var(--grey)}.rd-legend .cnts b{color:var(--ink);margin-left:3px}'
+  +'.rd-stat{position:absolute;left:12px;top:12px;z-index:800;background:rgba(15,23,42,.88);color:#fff;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:600;backdrop-filter:blur(6px)}'
+  +'@media(max-width:700px){.rd-legend{position:static;max-width:none;border-radius:0 0 16px 16px;border-top:0}.rd-stat{top:auto;bottom:12px;left:auto;right:12px}}'
+  +'.rd-route{margin:12px 0 0;padding-left:20px;font-size:13px;line-height:1.5}.rd-route li{margin-bottom:6px}'
+  +'.rd-funnel{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.rd-funnel div{flex:1;min-width:88px;background:var(--card,#fbfaf7);border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center}.rd-funnel div b{display:block;font-size:19px;letter-spacing:-.02em}.rd-funnel div span{font-size:11px;color:var(--grey)}.rd-funnel div.win{background:#ecfdf5;border-color:#a7f3d0}.rd-funnel i{color:var(--grey-l);font-style:normal;font-size:16px}'
+  +'.rd-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px}';
 document.head.appendChild(rdCss);
 </script>
 
@@ -18225,8 +18950,10 @@ document.head.appendChild(rdCss);
     {key:"calendar",label:"Calendar",desc:"upcoming inspections and appointments, plus the work days booked on active projects"},
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances"},
     {key:"finances",label:"Finances",desc:"tabs for Overview (where the money goes by category, per-job profit), Invoices, Estimates, and Income & expenses. Send real invoices and estimates the customer can pay or accept; every list has Export CSV"},
-    {key:"leadradar",label:"Lead Radar",desc:"a map of homes most likely to need their trade, scored from public permit records, crews working on the same street, and storms in the last 72 hours. 'Today's picks' are auto-added each morning; 'My list' holds saved prospects. Add a prospect, knock or mail, then tap Contacted"},
-    {key:"marketing",label:"Marketing",desc:"connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
+    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
+    {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
+    {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
+    {key:"competitors",label:"Competitors",desc:"under Marketing. A scoreboard of the other contractors in their area from Yelp — rating, review count, reviews gained in the last 30 days, services listed. 'Find competitors' searches by trade and city and tracks the ones they pick; 'Where to win' lists specific gaps (fewer reviews, lower rating, missing photos or services) with a button to the part of the app that fixes each"},
     {key:"calculator",label:"My Calculator",desc:"edit the prices behind the estimator on their website, with a live preview of exactly what the customer sees sitting right beside the editor. Save pricing and the preview reloads"},
     {key:"ai",label:"Ridge AI",desc:"their 24/7 AI receptionist. The Knowledge tab holds services, pricing guidance, common questions and rules — filling those in and tapping Publish pushes it live to web chat, texts and the phone line. Voice & tone sets how it sounds; Test Ridge lets them chat with it like a customer would"},
     {key:"settings",label:"Settings",desc:"business name, trade, phone, email, address, service area, licence number, logo, opening hours, the missed-call auto-reply, owner details, and their plan and billing"}
