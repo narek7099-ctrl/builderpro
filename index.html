@@ -17129,6 +17129,30 @@ window.bpFinAddSave=function(kind){
 .bpx-mk-rev:last-child{border-bottom:0;}
 .bpx-mk-stars{color:#f59e0b;letter-spacing:1px;font-size:12px;}
 .bpx-mk-empty{padding:34px 20px;text-align:center;color:var(--grey);font-size:13.5px;}
+/* competitors */
+.bpx-cp-stars{position:relative;display:inline-block;font-size:13px;line-height:1;letter-spacing:1px;color:#d9dde5;vertical-align:-1px;}
+.bpx-cp-stars-on{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#f59e0b;}
+.bpx-ctable tr.bpx-cp-you td{background:linear-gradient(90deg,#eef3ff,#f7faff);}
+.bpx-ctable tr.bpx-cp-you td:first-child{box-shadow:inset 3px 0 0 var(--blue);}
+.bpx-lbl{display:block;font-size:11.5px;font-weight:600;color:var(--grey);margin-bottom:5px;letter-spacing:.02em;}
+.bpx-inp{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;background:#fff;color:var(--ink);}
+.bpx-inp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.14);}
+@media(max-width:700px){.bpx-cp-form{grid-template-columns:1fr !important;}}
+.bpx-cp-res{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line-2);}
+.bpx-cp-res:first-child{border-top:0;}
+.bpx-cp-res img,.bpx-cp-noimg{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#eef1f5;}
+#bpx .bpx-rowbtn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+#bpx .bpx-rowbtn.primary:hover{background:var(--blue-d);border-color:var(--blue-d);color:#fff;}
+#bpx .bpx-rowbtn.primary:disabled{opacity:.55;cursor:default;}
+.bpx-cp-ins{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.bpx-cp-card{display:flex;gap:13px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
+.bpx-cp-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+.bpx-cp-card.gap .bpx-cp-ico{background:#fff1f2;color:#be123c;}
+.bpx-cp-card.win .bpx-cp-ico{background:#ecfdf5;color:#047857;}
+.bpx-cp-card.warn .bpx-cp-ico{background:#fff7ed;color:#c2410c;}
+.bpx-cp-card.info .bpx-cp-ico{background:#eef3ff;color:#1b56ee;}
+#bpx.bpx-dark .bpx-cp-card,#bpx.bpx-dark .bpx-inp{background:#151b26;border-color:#232c3a;color:#e6e9ef;}
+#bpx.bpx-dark .bpx-ctable tr.bpx-cp-you td{background:#172033;}
 .bpx-mk-empty b{display:block;color:#0f2540;font-size:16px;margin-bottom:6px;}
 #bpx.bpx-dark .bpx-mk-card{background:#161d2b;border-color:var(--line);}
 #bpx.bpx-dark .bpx-mk-name,#bpx.bpx-dark .bpx-mk-empty b{color:var(--ink);}
@@ -17148,7 +17172,198 @@ function bpMkConn(k){return _bpMk.conns.filter(function(c){return c.provider===k
 function bpMkStat(k){return _bpMk.stats[k]||{};}
 /* Social Media and Competitors get real views below; these stubs keep nav safe until then */
 function bpSocial(){ q('bpxViewArea').innerHTML='<div class="bpx-empty2" style="padding:40px">Social Media is on its way.</div>'; }
-function bpCompetitors(){ q('bpxViewArea').innerHTML='<div class="bpx-empty2" style="padding:40px">Competitor analysis is on its way.</div>'; }
+/* ===== Competitors — how the other contractors in the area show up on Yelp, and where to beat them ===== */
+var _bpCp={loaded:false,loading:false,tab:'scoreboard',rows:[],me:{},note:'',cfg:{},search:null,searching:false,demo:false};
+var BP_CP_DEMO={
+  me:{name:'',rating:4.6,reviews:38,yelp:true},
+  rows:[
+    {id:'d1',name:'Summit Roofing Co.',snapshot:{rating:4.8,reviews:212,price:'$$',categories:['Roofing','Gutter Services'],photos:48,claimed:true,address:'Austin, TX',distance_mi:3.1,url:'#'},history:[{at:Date.now()-30*864e5,reviews:203},{at:Date.now(),reviews:212}]},
+    {id:'d2',name:'Lone Star Roof & Solar',snapshot:{rating:4.3,reviews:97,price:'$$$',categories:['Roofing','Solar Installation'],photos:22,claimed:true,address:'Round Rock, TX',distance_mi:8.4,url:'#'},history:[{at:Date.now()-30*864e5,reviews:95},{at:Date.now(),reviews:97}]},
+    {id:'d3',name:'Hill Country Exteriors',snapshot:{rating:4.9,reviews:64,price:'$$',categories:['Roofing','Siding','Windows Installation'],photos:61,claimed:true,address:'Cedar Park, TX',distance_mi:11.2,url:'#'},history:[{at:Date.now()-30*864e5,reviews:58},{at:Date.now(),reviews:64}]},
+    {id:'d4',name:'Metro Roof Pros',snapshot:{rating:3.9,reviews:141,price:'$',categories:['Roofing'],photos:7,claimed:false,address:'Austin, TX',distance_mi:5.6,url:'#'},history:[{at:Date.now()-30*864e5,reviews:140},{at:Date.now(),reviews:141}]}
+  ]
+};
+function bpStars(r){
+  r=Math.max(0,Math.min(5,+r||0));
+  return '<span class="bpx-cp-stars" title="'+r+' of 5"><span class="bpx-cp-stars-on" style="width:'+(r/5*100)+'%">★★★★★</span>★★★★★</span>';
+}
+/* reviews gained over the last ~30 days, from the snapshot history */
+function bpCpVelocity(row){
+  var h=row.history||[]; if(h.length<2)return null;
+  var now=h[h.length-1], cutoff=Date.now()-30*864e5, base=null;
+  for(var i=0;i<h.length;i++){ if(h[i].at>=cutoff){ base=h[i]; break; } }
+  if(!base||base===now)base=h[h.length-2];
+  return (+now.reviews||0)-(+base.reviews||0);
+}
+function bpCompetitors(){
+  var tabs=[['scoreboard','Scoreboard'],['find','Find competitors'],['win','Where to win']];
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-stats" id="bpx-cp-kpis">'+bpCpKpis()+'</div>'
+    +'<div class="bpx-chead" style="margin-bottom:16px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpCp.tab===t[0]?' on':'')+'" data-cp-tab="'+t[0]+'" onclick="bpCpTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpCpRefresh()">Refresh</button><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpCsvCompetitors()">Export CSV</button><button class="bpx-addbtn" onclick="bpCpTab(\'find\')">+ Track a competitor</button></div></div>'
+    +'<div id="bpx-cp-pane">'+bpCpPane()+'</div>';
+  if(!_bpCp.loaded&&!_bpCp.loading){
+    if(window.BP_LIVE){ try{bpCpLoad(false);}catch(e){bpCpDone(null,'Couldn\'t load competitor data. Tap Refresh to try again.');} }
+    else bpCpDone({ok:true,competitors:BP_CP_DEMO.rows,me:BP_CP_DEMO.me,configured:{yelp:false}},'');
+  }
+}
+window.bpCpTab=function(t){_bpCp.tab=t;document.querySelectorAll('[data-cp-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-cp-tab')===t);});var p=q('bpx-cp-pane');if(p)p.innerHTML=bpCpPane();};
+window.bpCpRefresh=function(){_bpCp.loaded=false;_bpCp.search=null;if(window.BP_LIVE)bpCpLoad(true);else bpCompetitors();};
+function bpCpLoad(force){
+  if(_bpCp.loading)return;
+  _bpCp.loading=true;_bpCp.note='';
+  setTimeout(function(){ if(!_bpCp.loaded)bpCpDone(null,'Couldn\'t reach the marketing service. Tap Refresh to try again.'); },15000);
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.list',force:!!force})).then(function(r){ bpCpDone(r,r&&r.ok?'':(r&&r.error==='sign in required'?'Sign out and back in to load competitor data.':'Couldn\'t load competitor data. Tap Refresh to try again.')); },function(){ bpCpDone(null,'Couldn\'t reach the marketing service. Tap Refresh to try again.'); });
+}
+function bpCpDone(r,note){
+  r=r||{};
+  _bpCp.cfg=r.configured||{};
+  /* Yelp search not switched on server-side → show the demo set so the page still teaches what it does */
+  _bpCp.demo=!window.BP_LIVE||(!_bpCp.cfg.yelp&&!(r.competitors||[]).length);
+  _bpCp.rows=_bpCp.demo&&!(r.competitors||[]).length?BP_CP_DEMO.rows:(r.competitors||[]);
+  var me=r.me||{}; if(_bpCp.demo&&!me.reviews)me=BP_CP_DEMO.me;
+  if(!me.name){var c=bpSettingsGet().company||{};me.name=c.name||'Your business';}
+  _bpCp.me=me; _bpCp.note=note||''; _bpCp.loaded=true; _bpCp.loading=false;
+  if(window._bpCurView==='competitors')bpCompetitors();
+}
+function bpCpRanked(){
+  var me=_bpCp.me||{};
+  var list=_bpCp.rows.map(function(r){var s=r.snapshot||{};return {you:false,id:r.id,name:r.name||s.name,rating:+s.rating||0,reviews:+s.reviews||0,price:s.price||'',cats:s.categories||[],photos:s.photos,claimed:s.claimed,addr:s.address||'',dist:s.distance_mi,url:s.url||'',vel:bpCpVelocity(r),closed:s.closed};});
+  if(me.yelp||me.reviews)list.push({you:true,name:me.name,rating:+me.rating||0,reviews:+me.reviews||0,url:me.url||'',cats:[],vel:null});
+  /* Yelp's own ordering is review-weighted, so rank by reviews with rating as the tiebreak */
+  list.sort(function(a,b){return (b.reviews-a.reviews)||(b.rating-a.rating);});
+  list.forEach(function(x,i){x.rank=i+1;});
+  return list;
+}
+function bpCpKpis(){
+  var L=_bpCp.loaded, me=_bpCp.me||{}, list=L?bpCpRanked():[], you=list.filter(function(x){return x.you;})[0], top=list.filter(function(x){return !x.you;})[0];
+  var tile=function(l,v,n){return '<div class="bpx-stat"><div class="lbl">'+l+'</div><div class="val">'+v+'</div><div class="note" style="color:var(--grey);font-weight:500">'+n+'</div></div>';};
+  var avg=list.filter(function(x){return !x.you&&x.rating;}); avg=avg.length?avg.reduce(function(s,x){return s+x.rating;},0)/avg.length:0;
+  return tile('Your rating',L&&you?(you.rating.toFixed(1)+'★'):'—',L&&avg?('local average '+avg.toFixed(1)+'★'):'connect Yelp to compare')
+    +tile('Your reviews',L&&you?bpNum(you.reviews):'—',L&&top?(top.reviews>(you?you.reviews:0)?('#1 has '+bpNum(top.reviews)):'you have the most'):'from your Yelp listing')
+    +tile('Your rank',L&&you?('#'+you.rank+' of '+list.length):'—','among tracked businesses, by reviews')
+    +tile('Tracking',L?bpNum(_bpCp.rows.length):'—',_bpCp.demo?'demo set':'rivals, refreshed daily');
+}
+function bpCpPane(){
+  if(!_bpCp.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  var h='';
+  if(_bpCp.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpCp.note)+'</div>';
+  if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px">⚠️ DEMO DATA — illustrative businesses, not your real market. '+(window.BP_LIVE?'Yelp lookups aren\'t switched on for this account yet.':'Sign in to track the businesses in your area.')+'</div>';
+  var t=_bpCp.tab;
+  if(t==='find')return h+bpCpFindPane();
+  if(t==='win')return h+bpCpWinPane();
+  return h+bpCpScorePane();
+}
+function bpCpScorePane(){
+  var list=bpCpRanked();
+  if(!list.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No competitors tracked yet</b>Search the businesses in your area and track the ones you run into on bids.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
+  var rows=list.map(function(x){
+    var vel=x.vel==null?'<span class="bpx-mut">—</span>':(x.vel>0?'<span style="color:#15803d;font-weight:600">+'+x.vel+'</span>':'<span class="bpx-mut">0</span>');
+    var meta=x.you?'<span class="bpx-badge">You</span>':[x.price,x.dist!=null?x.dist+' mi':'',x.claimed===false?'<span class="bpx-badge warn">unclaimed</span>':''].filter(Boolean).join(' · ');
+    return '<tr'+(x.you?' class="bpx-cp-you"':'')+'><td class="bpx-r bpx-num" style="width:40px;color:var(--grey)">#'+x.rank+'</td>'
+      +'<td class="bpx-cname"><div>'+bpEsc(x.name||'')+'</div><div class="bpx-mut" style="font-size:11.5px;font-weight:400">'+(meta||'')+'</div></td>'
+      +'<td>'+bpStars(x.rating)+' <span class="bpx-num" style="font-size:12.5px">'+(x.rating?x.rating.toFixed(1):'—')+'</span></td>'
+      +'<td class="bpx-r bpx-num">'+bpNum(x.reviews)+'</td><td class="bpx-r bpx-num">'+vel+'</td>'
+      +'<td><span class="bpx-mut" style="font-size:12px">'+bpEsc((x.cats||[]).slice(0,3).join(', '))+'</span></td>'
+      +'<td class="bpx-r" style="white-space:nowrap">'+(x.url&&x.url!=='#'?'<a class="bpx-rowbtn" href="'+bpEsc(x.url)+'" target="_blank" rel="noopener" style="text-decoration:none;margin-left:0">Yelp ↗</a>':'')
+      +(x.you?'':'<button class="bpx-rowbtn" onclick="bpCpReviews(\''+bpEsc(x.id)+'\',\''+bpEsc(x.name).replace(/'/g,'&#39;')+'\')">Reviews</button><button class="bpx-rowbtn" onclick="bpCpUntrack(\''+bpEsc(x.id)+'\')" title="Stop tracking">✕</button>')+'</td></tr>';
+  }).join('');
+  return '<div class="bpx-panel" style="padding:0;overflow:hidden"><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th></th><th>Business</th><th>Rating</th><th class="bpx-r">Reviews</th><th class="bpx-r" title="Reviews gained in the last 30 days">+30d</th><th>Services listed</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+    +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:12px">Ranked by review count with rating as the tiebreak — the same weighting Yelp and Google use to order local results. +30d fills in after a rival has been tracked for a day or more.</div>';
+}
+function bpCpFindPane(){
+  var c=bpSettingsGet().company||{};
+  var qv=_bpCp.q!=null?_bpCp.q:((c.trade||'Roofing')+' contractor'), lv=_bpCp.l!=null?_bpCp.l:(c.address||c.serviceArea||'');
+  var res='';
+  if(_bpCp.searching)res='<div class="bpx-empty2">Searching Yelp…</div>';
+  else if(_bpCp.search){
+    var tracked={}; _bpCp.rows.forEach(function(r){tracked[r.id]=1;});
+    res=_bpCp.search.length?_bpCp.search.map(function(x){
+      var on=!!tracked[x.id], mine=_bpCp.me&&_bpCp.me.yelp_id===x.id;
+      return '<div class="bpx-cp-res">'+(x.image?'<img src="'+bpEsc(x.image)+'" alt="" loading="lazy">':'<div class="bpx-cp-noimg"></div>')
+        +'<div style="flex:1;min-width:0"><div style="font-weight:600">'+bpEsc(x.name)+(mine?' <span class="bpx-badge">You</span>':'')+'</div>'
+        +'<div class="bpx-mut" style="font-size:12px">'+bpStars(x.rating)+' '+x.rating+' · '+bpNum(x.reviews)+' reviews'+(x.price?' · '+x.price:'')+(x.distance_mi!=null?' · '+x.distance_mi+' mi':'')+'</div>'
+        +'<div class="bpx-mut" style="font-size:12px">'+bpEsc((x.categories||[]).join(', '))+(x.address?' · '+bpEsc(x.address):'')+'</div></div>'
+        +(mine?'':'<button class="bpx-rowbtn'+(on?'':' primary')+'" '+(on?'disabled':'')+' onclick="bpCpTrack(\''+bpEsc(x.id)+'\',this)">'+(on?'Tracking':'Track')+'</button>')+'</div>';
+    }).join(''):'<div class="bpx-empty2">No businesses found for that search. Try a broader trade name or a nearby city.</div>';
+  } else res='<div class="bpx-empty2">Search by trade and city. Results come back most-reviewed first — those are the listings homeowners see before yours.</div>';
+  return '<div class="bpx-panel"><div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:10px;align-items:end" class="bpx-cp-form">'
+    +'<div><label class="bpx-lbl">What they do</label><input class="bpx-inp" id="bpx-cp-q" value="'+bpEsc(qv)+'" placeholder="Roofing contractor"></div>'
+    +'<div><label class="bpx-lbl">Where</label><input class="bpx-inp" id="bpx-cp-l" value="'+bpEsc(lv)+'" placeholder="Austin, TX"></div>'
+    +'<button class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px" onclick="bpCpSearch()">Search</button></div>'
+    +'<div id="bpx-cp-res" style="margin-top:14px">'+res+'</div></div>';
+}
+window.bpCpSearch=function(){
+  _bpCp.q=(q('bpx-cp-q')||{}).value||''; _bpCp.l=(q('bpx-cp-l')||{}).value||'';
+  if(!_bpCp.q.trim()||!_bpCp.l.trim()){alert('Enter what they do and where.');return;}
+  if(!window.BP_LIVE||_bpCp.demo){
+    /* offline / not configured: filter the demo set so the flow is still visible */
+    _bpCp.search=BP_CP_DEMO.rows.map(function(r){return Object.assign({id:r.id,name:r.name},r.snapshot);});
+    bpCpTab('find');return;
+  }
+  _bpCp.searching=true; bpCpTab('find');
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.search',query:_bpCp.q,location:_bpCp.l,limit:15})).then(function(r){
+    _bpCp.searching=false; _bpCp.search=(r&&r.ok)?(r.results||[]):[];
+    if(r&&!r.ok)_bpCp.note=r.error==='not_configured'?'Yelp lookups aren\'t switched on for this account yet.':('Yelp search failed: '+(r.error||'unknown error'));
+    if(window._bpCurView==='competitors')bpCompetitors();
+  },function(){ _bpCp.searching=false;_bpCp.search=[];_bpCp.note='Couldn\'t reach the marketing service.'; if(window._bpCurView==='competitors')bpCompetitors(); });
+};
+window.bpCpTrack=function(id,btn){
+  if(btn){btn.disabled=true;btn.textContent='Adding…';}
+  if(!window.BP_LIVE||_bpCp.demo){ if(!_bpCp.rows.some(function(r){return r.id===id;})){var d=BP_CP_DEMO.rows.filter(function(r){return r.id===id;})[0];if(d)_bpCp.rows.push(d);} bpCompetitors(); return; }
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.track',id:id})).then(function(r){
+    if(r&&r.ok){_bpCp.loaded=false;bpCpLoad(true);}
+    else{ if(btn){btn.disabled=false;btn.textContent='Track';} alert('Couldn\'t track that business: '+((r&&r.error)||'unknown error')); }
+  },function(){ if(btn){btn.disabled=false;btn.textContent='Track';} alert('Couldn\'t reach the marketing service.'); });
+};
+window.bpCpUntrack=function(id){
+  if(!window.BP_LIVE||_bpCp.demo){ _bpCp.rows=_bpCp.rows.filter(function(r){return r.id!==id;}); bpCompetitors(); return; }
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.untrack',id:id})).then(function(){ _bpCp.loaded=false;bpCpLoad(false); });
+};
+window.bpCpReviews=function(id,name){
+  bpModal('<h3>'+bpEsc(name)+' — newest reviews</h3><div id="bpx-cp-rv" class="bpx-sub">Loading…</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
+  var show=function(list){var el=q('bpx-cp-rv');if(!el)return;el.innerHTML=list.length?list.map(function(r){return '<div style="padding:10px 0;border-top:1px solid var(--line)"><div>'+bpStars(r.rating)+' <span class="bpx-mut" style="font-size:12px">'+bpEsc(r.user||'')+' · '+bpEsc(String(r.at||'').slice(0,10))+'</span></div><div style="font-size:13px;margin-top:4px">'+bpEsc(r.text||'')+'</div></div>';}).join(''):'No reviews available.';};
+  if(!window.BP_LIVE||_bpCp.demo){show([{rating:5,user:'Dana M.',at:'2026-08-30',text:'Crew showed up on time, roof done in a day, cleaned up everything. Would hire again.'},{rating:4,user:'Luis R.',at:'2026-08-12',text:'Good work, took a while to get the estimate back though.'}]);return;}
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'competitors.reviews',id:id})).then(function(r){show((r&&r.reviews)||[]);},function(){show([]);});
+};
+/* rule-based read of the scoreboard: concrete gaps, each tied to something in the app that closes it */
+function bpCpInsights(){
+  var list=bpCpRanked(), me=_bpCp.me||{}, you=list.filter(function(x){return x.you;})[0], rivals=list.filter(function(x){return !x.you;});
+  var out=[], go=function(v,l){return '<button class="bpx-rowbtn primary" style="margin-left:0" onclick="bpNav(\''+v+'\')">'+l+'</button>';};
+  if(!rivals.length)return out;
+  if(!you){ out.push({k:'warn',t:'You\'re not on the scoreboard yet',d:'Connect your Yelp listing in Ads & Listings and your rating and reviews land here next to theirs.',a:go('marketing','Connect Yelp')}); }
+  var top=rivals[0];
+  if(you&&top.reviews>you.reviews){
+    var gap=top.reviews-you.reviews, pace=Math.max(0,+top.vel||0);
+    out.push({k:'gap',t:bpEsc(top.name)+' has '+bpNum(gap)+' more reviews than you',d:'Review count is the biggest factor in who shows first. '+(pace?bpEsc(top.name)+' is adding about '+pace+' a month, so they\'re asking after every job. ':'')+'Ridge can text every finished job a review link automatically — most contractors who ask after each job add 3–6 reviews a month.',a:go('ai','Set up review requests in Ridge')});
+  }
+  var fast=rivals.filter(function(x){return (x.vel||0)>=3;}).sort(function(a,b){return b.vel-a.vel;})[0];
+  if(fast&&(!you||fast.vel>(you.vel||0)))out.push({k:'gap',t:bpEsc(fast.name)+' is gaining reviews fastest (+'+fast.vel+' in 30 days)',d:'That pace means a review request is built into how they close jobs. Match it: ask on the final walkthrough, then let Ridge follow up by text the next morning.',a:go('activejobs','Open Active Projects')});
+  var avg=rivals.filter(function(x){return x.rating;}); avg=avg.length?avg.reduce(function(s,x){return s+x.rating;},0)/avg.length:0;
+  if(you&&avg&&you.rating<avg-0.15)out.push({k:'gap',t:'Your rating ('+you.rating.toFixed(1)+'★) trails the local average ('+avg.toFixed(1)+'★)',d:'Reply to every review — especially the bad ones — within a day. A calm, specific reply is read by the next 50 homeowners, and Yelp shows response rate on the listing.',a:go('marketing','Open Ads & Listings')});
+  else if(you&&avg&&you.rating>=avg+0.15)out.push({k:'win',t:'Your rating beats the local average ('+you.rating.toFixed(1)+'★ vs '+avg.toFixed(1)+'★)',d:'Put that number on your estimate and website. Homeowners comparing three bids pick the one with the best reviews far more often than the cheapest.',a:go('calculator','Open My Calculator')});
+  var un=rivals.filter(function(x){return x.claimed===false;});
+  if(un.length)out.push({k:'win',t:un.length+' rival'+(un.length>1?'s haven\'t':' hasn\'t')+' claimed their listing',d:bpEsc(un.map(function(x){return x.name;}).join(', '))+' — unclaimed means nobody there answers reviews or posts photos. A claimed, active listing with fresh photos outranks a stale one with more reviews over time.',a:go('marketing','Check your listings')});
+  var photoy=rivals.filter(function(x){return x.photos>=20;}).sort(function(a,b){return b.photos-a.photos;})[0];
+  if(photoy)out.push({k:'gap',t:bpEsc(photoy.name)+' shows '+photoy.photos+' photos on their listing',d:'Before-and-after shots are the thing homeowners actually scroll. You already take job photos in Active Projects — post the best three from every finished roof.',a:go('activejobs','Grab photos from Active Projects')});
+  var cats={}; rivals.forEach(function(x){(x.cats||[]).forEach(function(c){cats[c]=(cats[c]||0)+1;});});
+  var extra=Object.keys(cats).filter(function(c){return !/roof/i.test(c);}).sort(function(a,b){return cats[b]-cats[a];}).slice(0,4);
+  if(extra.length)out.push({k:'info',t:'Services rivals list that you may not: '+bpEsc(extra.join(', ')),d:'Each extra category is another search you can show up in. If you do any of these, add them to your Yelp and Google listings and to Ridge\'s knowledge so it can quote them.',a:go('ai','Update Ridge\'s services')});
+  var closed=rivals.filter(function(x){return x.closed;});
+  if(closed.length)out.push({k:'win',t:bpEsc(closed.map(function(x){return x.name;}).join(', '))+' shows as closed on Yelp',d:'Their customers are still searching. This is the moment to run a small Google Ads campaign on their name and area.',a:go('marketing','Launch a campaign')});
+  return out;
+}
+function bpCpWinPane(){
+  var ins=bpCpInsights();
+  if(!ins.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>Nothing to compare yet</b>Track a few competitors and this tab fills in with specific gaps and what to do about each.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
+  var ico={gap:'▲',win:'✓',warn:'!',info:'i'};
+  return '<div class="bpx-cp-ins">'+ins.map(function(x){return '<div class="bpx-cp-card '+x.k+'"><div class="bpx-cp-ico">'+ico[x.k]+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;margin-bottom:4px">'+x.t+'</div><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-bottom:10px">'+x.d+'</div>'+x.a+'</div></div>';}).join('')+'</div>';
+}
+window.bpCsvCompetitors=function(){
+  var list=bpCpRanked();
+  bpCsv('competitors',['Rank','Business','Rating','Reviews','Reviews gained 30d','Price','Services','Distance mi','Claimed','Yelp URL'],
+    list.map(function(x){return [x.rank,x.name,x.rating,x.reviews,x.vel==null?'':x.vel,x.price||'',(x.cats||[]).join('; '),x.dist==null?'':x.dist,x.you?'':(x.claimed===false?'no':'yes'),x.url==='#'?'':x.url];}));
+};
 function bpMarketing(){
   if(!_bpMk.tab)_bpMk.tab=_bpMk.loaded&&!_bpMk.conns.length?'connections':'overview';
   var tabs=[['overview','Overview'],['campaigns','Campaigns'],['connections','Connections']];
@@ -18279,7 +18494,9 @@ document.head.appendChild(rdCss);
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances"},
     {key:"finances",label:"Finances",desc:"tabs for Overview (where the money goes by category, per-job profit), Invoices, Estimates, and Income & expenses. Send real invoices and estimates the customer can pay or accept; every list has Export CSV"},
     {key:"leadradar",label:"Lead Radar",desc:"a map of homes most likely to need their trade, scored from public permit records, crews working on the same street, and storms in the last 72 hours. 'Today's picks' are auto-added each morning; 'My list' holds saved prospects. Add a prospect, knock or mail, then tap Contacted"},
-    {key:"marketing",label:"Marketing",desc:"connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
+    {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
+    {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
+    {key:"competitors",label:"Competitors",desc:"under Marketing. A scoreboard of the other contractors in their area from Yelp — rating, review count, reviews gained in the last 30 days, services listed. 'Find competitors' searches by trade and city and tracks the ones they pick; 'Where to win' lists specific gaps (fewer reviews, lower rating, missing photos or services) with a button to the part of the app that fixes each"},
     {key:"calculator",label:"My Calculator",desc:"edit the prices behind the estimator on their website, with a live preview of exactly what the customer sees sitting right beside the editor. Save pricing and the preview reloads"},
     {key:"ai",label:"Ridge AI",desc:"their 24/7 AI receptionist. The Knowledge tab holds services, pricing guidance, common questions and rules — filling those in and tapping Publish pushes it live to web chat, texts and the phone line. Voice & tone sets how it sounds; Test Ridge lets them chat with it like a customer would"},
     {key:"settings",label:"Settings",desc:"business name, trade, phone, email, address, service area, licence number, logo, opening hours, the missed-call auto-reply, owner details, and their plan and billing"}

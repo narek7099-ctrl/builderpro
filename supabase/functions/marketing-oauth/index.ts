@@ -14,6 +14,10 @@
 //   { op:"disconnect", provider }       -> remove
 //   { op:"yelp.search", query, location }  -> candidate listings
 //   { op:"yelp.connect", id }           -> link a listing
+//   { op:"competitors.search", query, location, limit } -> nearby rivals (Yelp, most-reviewed first)
+//   { op:"competitors.list", force }    -> tracked rivals (snapshots refreshed daily) + your own listing numbers
+//   { op:"competitors.track", id } / { op:"competitors.untrack", id }
+//   { op:"competitors.reviews", id }    -> a rival's 3 newest reviews
 //
 // Deploy:  supabase functions deploy marketing-oauth --no-verify-jwt
 // Secrets: META_APP_ID, META_APP_SECRET,
@@ -95,6 +99,25 @@ async function patchIntegration(id: unknown, patch: Row) {
   await fetch(`${SB_URL}/rest/v1/integrations?id=eq.${id}`, { method: "PATCH", headers: sbH, body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }) });
 }
 const safe = (r: Row) => ({ provider: r.provider, status: r.status, account_id: r.account_id, account_name: r.account_name, meta: r.meta ?? {}, connected_at: r.connected_at, updated_at: r.updated_at });
+
+// --- competitors: tracked rival listings + a daily snapshot history ---
+async function getCompetitors(uid: string): Promise<Row[]> {
+  const r = await fetch(`${SB_URL}/rest/v1/competitors?owner=eq.${uid}&select=*&order=created_at.asc`, { headers: sbH });
+  return r.ok ? await r.json() : [];
+}
+async function patchCompetitor(id: unknown, patch: Row) {
+  await fetch(`${SB_URL}/rest/v1/competitors?id=eq.${id}`, { method: "PATCH", headers: sbH, body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }) });
+}
+const safeComp = (r: Row) => ({ id: r.yelp_id, name: r.name, snapshot: r.snapshot ?? {}, history: r.history ?? [], added_at: r.created_at, updated_at: r.updated_at });
+// the subset of a Yelp business record the portal shows
+const yelpLite = (x: Row) => ({
+  id: x.id, name: x.name, rating: Number(x.rating ?? 0), reviews: Number(x.review_count ?? 0), price: x.price ?? "",
+  categories: ((x.categories as Row[]) ?? []).map((c) => c.title).slice(0, 4),
+  phone: x.display_phone ?? "", url: x.url ?? "", image: x.image_url ?? "",
+  address: (((x.location as Row)?.display_address as string[]) ?? []).join(", "),
+  distance_mi: x.distance ? Math.round(Number(x.distance) / 160.9) / 10 : null,
+  closed: !!x.is_closed,
+});
 
 // --- Google token refresh ---
 async function googleToken(row: Row): Promise<string> {
@@ -264,6 +287,58 @@ Deno.serve(async (req) => {
     await upsertIntegration({ owner: user.id, provider: "yelp", status: "connected", account_id: x.id, account_name: x.name, meta: { url: x.url, rating: x.rating, reviews: x.review_count } });
     return json({ ok: true });
   }
+  // ---------------- competitors (Yelp-backed) ----------------
+  if (b.op === "competitors.search") {
+    if (!YELP_KEY) return json({ ok: false, error: "not_configured" });
+    const u = `https://api.yelp.com/v3/businesses/search?term=${encodeURIComponent(b.query ?? "")}&location=${encodeURIComponent(b.location ?? "")}&limit=${Math.min(Number(b.limit ?? 15), 20)}&sort_by=review_count`;
+    const r = await fetch(u, { headers: { Authorization: `Bearer ${YELP_KEY}` } });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return json({ ok: false, error: String((d as Row)?.error?.description ?? "yelp error").slice(0, 160) });
+    return json({ ok: true, results: (d.businesses ?? []).map(yelpLite) });
+  }
+  if (b.op === "competitors.list") {
+    const [rows, ints] = await Promise.all([getCompetitors(user.id), getIntegrations(user.id)]);
+    // refresh any snapshot older than a day, appending to history so the portal can show review velocity
+    const fresh: Row[] = [];
+    for (const row of rows) {
+      const age = Date.now() - Date.parse(String(row.updated_at ?? 0));
+      if (YELP_KEY && (age > 24 * 3600e3 || b.force)) {
+        const x = await fetch(`https://api.yelp.com/v3/businesses/${encodeURIComponent(String(row.yelp_id))}`, { headers: { Authorization: `Bearer ${YELP_KEY}` } }).then((r) => r.json()).catch(() => ({}));
+        if (x?.id) {
+          const snap = { ...yelpLite(x), photos: (x.photos ?? []).length, claimed: x.is_claimed !== false, hours: !!(x.hours ?? []).length };
+          const hist = ([...(row.history as Row[] ?? [])]).concat([{ at: Date.now(), rating: snap.rating, reviews: snap.reviews }]).slice(-60);
+          await patchCompetitor(row.id, { name: snap.name, snapshot: snap, history: hist });
+          fresh.push({ ...row, name: snap.name, snapshot: snap, history: hist }); continue;
+        }
+      }
+      fresh.push(row);
+    }
+    const yelp = ints.find((i) => i.provider === "yelp"), gbp = ints.find((i) => i.provider === "gbp");
+    const ym = (yelp?.meta as Row) ?? {}, ys = (ym.stats as Row) ?? {};
+    const me = { name: yelp?.account_name ?? gbp?.account_name ?? "", yelp_id: yelp?.account_id ?? "", rating: Number(ys.rating ?? ym.rating ?? 0), reviews: Number(ys.reviews ?? ym.reviews ?? 0), url: ys.url ?? ym.url ?? "", gbp: !!gbp, yelp: !!yelp };
+    return json({ ok: true, competitors: fresh.map(safeComp), me, configured: { yelp: !!YELP_KEY } });
+  }
+  if (b.op === "competitors.track") {
+    if (!YELP_KEY) return json({ ok: false, error: "not_configured" });
+    const x = await fetch(`https://api.yelp.com/v3/businesses/${encodeURIComponent(b.id ?? "")}`, { headers: { Authorization: `Bearer ${YELP_KEY}` } }).then((r) => r.json()).catch(() => ({}));
+    if (!x?.id) return json({ ok: false, error: "listing not found" });
+    const snap = { ...yelpLite(x), photos: (x.photos ?? []).length, claimed: x.is_claimed !== false, hours: !!(x.hours ?? []).length };
+    await fetch(`${SB_URL}/rest/v1/competitors?on_conflict=owner,yelp_id`, {
+      method: "POST", headers: { ...sbH, Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ owner: user.id, yelp_id: x.id, name: x.name, snapshot: snap, history: [{ at: Date.now(), rating: snap.rating, reviews: snap.reviews }], updated_at: new Date().toISOString() }),
+    });
+    return json({ ok: true });
+  }
+  if (b.op === "competitors.untrack") {
+    await fetch(`${SB_URL}/rest/v1/competitors?owner=eq.${user.id}&yelp_id=eq.${encodeURIComponent(b.id ?? "")}`, { method: "DELETE", headers: sbH });
+    return json({ ok: true });
+  }
+  if (b.op === "competitors.reviews") {
+    if (!YELP_KEY) return json({ ok: false, error: "not_configured" });
+    const rv = await fetch(`https://api.yelp.com/v3/businesses/${encodeURIComponent(b.id ?? "")}/reviews?limit=3&sort_by=newest`, { headers: { Authorization: `Bearer ${YELP_KEY}` } }).then((r) => r.json()).catch(() => ({}));
+    return json({ ok: true, reviews: (rv.reviews ?? []).map((x: Row) => ({ rating: x.rating, text: String(x.text ?? "").slice(0, 240), user: (x.user as Row)?.name, at: x.time_created })) });
+  }
+
   if (b.op === "stats") {
     const rows = await getIntegrations(user.id);
     const out: Record<string, unknown> = {};
