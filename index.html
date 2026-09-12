@@ -13799,7 +13799,7 @@ function bpEnterPortal(email){
   document.getElementById('bpxApp').classList.add('on');
   bpBuildNav();
   bpBuildMobbar();
-  var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return 'marketing';}}catch(e){}return null;})();
+  var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return c==='social'?'social':'marketing';}}catch(e){}return null;})();
   bpNav(landed||'dashboard');
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
   bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpNav('dashboard'); });
@@ -17152,6 +17152,34 @@ window.bpFinAddSave=function(kind){
 .bpx-cp-card.warn .bpx-cp-ico{background:#fff7ed;color:#c2410c;}
 .bpx-cp-card.info .bpx-cp-ico{background:#eef3ff;color:#1b56ee;}
 #bpx.bpx-dark .bpx-cp-card,#bpx.bpx-dark .bpx-inp{background:#151b26;border-color:#232c3a;color:#e6e9ef;}
+/* social media */
+.bpx-badge.ok{background:#ecfdf5;color:#047857;}
+.bpx-badge.bad{background:#fff1f2;color:#be123c;}
+.bpx-so-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--c,#64748b) 12%,#fff);color:var(--c,#64748b);white-space:nowrap;}
+.bpx-so-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c,#64748b);}
+.bpx-so-chip.ok{background:#ecfdf5;color:#047857;}.bpx-so-chip.ok::before{background:#10b981;}
+.bpx-so-chip.bad{background:#fff1f2;color:#be123c;}.bpx-so-chip.bad::before{background:#f43f5e;}
+.bpx-so-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+.bpx-so-acct-h{display:flex;align-items:center;margin-bottom:12px;}
+.bpx-so-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.bpx-so-v{font-size:20px;font-weight:700;letter-spacing:-.02em;}
+.bpx-so-l{font-size:11px;color:var(--grey);margin-top:2px;}
+.bpx-so-top{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+.bpx-so-post,.bpx-so-row{display:flex;gap:12px;align-items:flex-start;}
+.bpx-so-post{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;}
+.bpx-so-row{padding:12px 0;border-top:1px solid var(--line-2);}
+.bpx-so-row:first-of-type{border-top:0;}
+.bpx-so-post img,.bpx-so-row img,.bpx-so-noimg{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#eef1f5;}
+.bpx-so-txt{font-size:13px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.bpx-so-cks,.bpx-so-when{display:flex;gap:8px;flex-wrap:wrap;}
+.bpx-so-ck{display:inline-flex !important;align-items:center;gap:6px;margin:0 !important;padding:7px 11px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;font-weight:600;color:var(--ink) !important;cursor:pointer;background:#fff;}
+.bpx-so-ck input{width:auto !important;margin:0 !important;padding:0 !important;accent-color:var(--blue);}
+.bpx-so-ck.off{opacity:.55;cursor:default;}
+.bpx-so-img{display:flex;gap:12px;align-items:flex-start;}
+.bpx-so-prev{width:96px;height:96px;border-radius:12px;overflow:hidden;background:#eef1f5;flex-shrink:0;border:1px solid var(--line);}
+.bpx-so-prev.empty{background:repeating-linear-gradient(45deg,#f3f5f9,#f3f5f9 6px,#eaedf3 6px,#eaedf3 12px);}
+.bpx-so-prev img{width:100%;height:100%;object-fit:cover;display:block;}
+#bpx.bpx-dark .bpx-so-post,#bpx.bpx-dark .bpx-so-ck{background:#151b26;border-color:#232c3a;}
 #bpx.bpx-dark .bpx-ctable tr.bpx-cp-you td{background:#172033;}
 .bpx-mk-empty b{display:block;color:#0f2540;font-size:16px;margin-bottom:6px;}
 #bpx.bpx-dark .bpx-mk-card{background:#161d2b;border-color:var(--line);}
@@ -17171,7 +17199,255 @@ function bpMkP(k){return BP_MKT.filter(function(p){return p.k===k;})[0]||{n:k,c:
 function bpMkConn(k){return _bpMk.conns.filter(function(c){return c.provider===k;})[0]||null;}
 function bpMkStat(k){return _bpMk.stats[k]||{};}
 /* Social Media and Competitors get real views below; these stubs keep nav safe until then */
-function bpSocial(){ q('bpxViewArea').innerHTML='<div class="bpx-empty2" style="padding:40px">Social Media is on its way.</div>'; }
+/* ===== Social Media — Facebook Page + Instagram + Google Business posts: stats, planner, compose ===== */
+var _bpSo={loaded:false,loading:false,tab:'overview',stats:{},conn:{},cfg:{},page:null,posts:[],note:'',demo:false,view:'list',month:null,filter:'all'};
+var BP_SO_CH={facebook:{n:'Facebook',c:'#1877f2',max:63206},instagram:{n:'Instagram',c:'#e1306c',max:2200},gbp:{n:'Google Business',c:'#4285f4',max:1500}};
+function bpSoDemo(){
+  var d=Date.now(), day=864e5, img=function(i){return bpStockImg(i,true);};
+  return {
+    conn:{facebook:true,instagram:true,gbp:true}, page:{name:'Summit Peak Roofing',ig:'summitpeakroofing'},
+    stats:{
+      facebook:{name:'Summit Peak Roofing',followers:1284,reach:9420,engagement:611,posts:[
+        {id:'f1',channel:'facebook',text:'Full tear-off and replacement in Circle C — done in one day, cleaned up before dinner. Thanks for trusting us, Dana!',at:new Date(d-2*day).toISOString(),image:img(3),reach:2310,engagement:187},
+        {id:'f2',channel:'facebook',text:'Storm season checklist: loose shingles, granules in the gutters, water stains on the ceiling. Free inspection if you spot any of these.',at:new Date(d-6*day).toISOString(),image:img(1),reach:1840,engagement:96}]},
+      instagram:{name:'summitpeakroofing',followers:842,media:96,reach:5130,posts:[
+        {id:'i1',channel:'instagram',text:'Before → after. Architectural shingles in Weathered Wood.',at:new Date(d-3*day).toISOString(),image:img(2),engagement:143},
+        {id:'i2',channel:'instagram',text:'Crew on site at 6:45am. Rain by noon means we start early.',at:new Date(d-9*day).toISOString(),image:img(4),engagement:78}]}
+    },
+    posts:[
+      {id:'p1',channels:['facebook','instagram'],text:'Hail hit the north side of town last night. If your roof is over 10 years old, get it looked at before the next storm — inspection is free.',image_url:img(1),scheduled_at:new Date(d+1*day).toISOString(),status:'scheduled',results:{}},
+      {id:'p2',channels:['facebook','gbp'],text:'We\'re on Lakeline Blvd all week. Neighbors: wave us down for a quick look at your gutters.',image_url:'',scheduled_at:new Date(d+3*day).toISOString(),status:'scheduled',results:{}},
+      {id:'p3',channels:['facebook','instagram'],text:'Full tear-off and replacement in Circle C — done in one day.',image_url:img(3),scheduled_at:new Date(d-2*day).toISOString(),published_at:new Date(d-2*day).toISOString(),status:'published',results:{facebook:{ok:true},instagram:{ok:true}}},
+      {id:'p4',channels:['facebook','instagram','gbp'],text:'Storm season checklist: loose shingles, granules in the gutters, water stains on the ceiling.',image_url:'',scheduled_at:new Date(d-6*day).toISOString(),published_at:new Date(d-6*day).toISOString(),status:'partial',results:{facebook:{ok:true},gbp:{ok:true},instagram:{ok:false,error:'Instagram needs a photo'}}}
+    ]
+  };
+}
+function bpSocial(){
+  var tabs=[['overview','Overview'],['posts','Posts'],['accounts','Accounts']];
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-stats" id="bpx-so-kpis">'+bpSoKpis()+'</div>'
+    +'<div class="bpx-chead" style="margin-bottom:16px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpSo.tab===t[0]?' on':'')+'" data-so-tab="'+t[0]+'" onclick="bpSoTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpSoRefresh()">Refresh</button><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 14px;font-size:13px" onclick="bpCsvSocial()">Export CSV</button><button class="bpx-addbtn" onclick="bpSoCompose()">+ New post</button></div></div>'
+    +'<div id="bpx-so-pane">'+bpSoPane()+'</div>';
+  if(!_bpSo.loaded&&!_bpSo.loading){
+    if(window.BP_LIVE){ try{bpSoLoad(false);}catch(e){bpSoDone(null,null,'Couldn\'t load your social accounts. Tap Refresh to try again.');} }
+    else { var dm=bpSoDemo(); bpSoDone({ok:true,stats:dm.stats,connected:dm.conn,page:dm.page,configured:{}},{ok:true,posts:dm.posts},''); }
+  }
+}
+window.bpSoTab=function(t){_bpSo.tab=t;document.querySelectorAll('[data-so-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-so-tab')===t);});var p=q('bpx-so-pane');if(p)p.innerHTML=bpSoPane();};
+window.bpSoRefresh=function(){_bpSo.loaded=false;if(window.BP_LIVE)bpSoLoad(true);else bpSocial();};
+function bpSoLoad(force){
+  if(_bpSo.loading)return;
+  _bpSo.loading=true;_bpSo.note='';
+  setTimeout(function(){ if(!_bpSo.loaded)bpSoDone(null,null,'Couldn\'t reach the marketing service. Tap Refresh to try again.'); },15000);
+  var st=Promise.resolve(bpAuthApi(MKT_URL,{op:'social.stats',force:!!force})).catch(function(){return null;});
+  var ps=Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.list'})).catch(function(){return null;});
+  Promise.all([st,ps]).then(function(r){
+    var a=r[0],b=r[1];
+    var note=!a?'Couldn\'t reach the marketing service. Tap Refresh to try again.':(!a.ok?(a.error==='sign in required'?'Sign out and back in to load your social accounts.':'Couldn\'t load your social accounts: '+(a.error||'unknown error')):'');
+    if(!note&&b&&!b.ok&&b.error!=='unknown op')note='Posts didn\'t load: '+(b.error||'unknown error');
+    bpSoDone(a,b,note);
+  });
+}
+function bpSoDone(a,b,note){
+  a=a||{};b=b||{};
+  _bpSo.stats=a.stats||{}; _bpSo.conn=a.connected||{}; _bpSo.cfg=a.configured||{}; _bpSo.page=a.page||null;
+  _bpSo.posts=(b.posts||[]).slice();
+  _bpSo.demo=!window.BP_LIVE;
+  _bpSo.note=note||''; _bpSo.loaded=true; _bpSo.loading=false;
+  if(!_bpSo.month){var n=new Date();_bpSo.month=new Date(n.getFullYear(),n.getMonth(),1);}
+  if(window._bpCurView==='social')bpSocial();
+}
+function bpSoAny(){return !!(_bpSo.conn.facebook||_bpSo.conn.instagram||_bpSo.conn.gbp);}
+function bpSoKpis(){
+  var L=_bpSo.loaded, f=_bpSo.stats.facebook||{}, i=_bpSo.stats.instagram||{};
+  var tile=function(l,v,n){return '<div class="bpx-stat"><div class="lbl">'+l+'</div><div class="val">'+v+'</div><div class="note" style="color:var(--grey);font-weight:500">'+n+'</div></div>';};
+  var sched=_bpSo.posts.filter(function(p){return p.status==='scheduled';}).length;
+  var fol=(+f.followers||0)+(+i.followers||0), reach=(+f.reach||0)+(+i.reach||0), eng=(+f.engagement||0)+((i.posts||[]).reduce(function(s,p){return s+(+p.engagement||0);},0));
+  return tile('Followers',L&&bpSoAny()?bpNum(fol):'—',L&&bpSoAny()?('Facebook '+bpNum(+f.followers||0)+' · Instagram '+bpNum(+i.followers||0)):'connect an account')
+    +tile('Reach',L&&bpSoAny()?bpNum(reach):'—','people who saw your posts · 28 days')
+    +tile('Engagement',L&&bpSoAny()?bpNum(eng):'—','likes, comments, clicks · 28 days')
+    +tile('Scheduled',L?bpNum(sched):'—',sched?'posts waiting to go out':'nothing queued yet');
+}
+function bpSoPane(){
+  if(!_bpSo.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  var h='';
+  if(_bpSo.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpSo.note)+'</div>';
+  if(_bpSo.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px">⚠️ DEMO DATA — sample accounts and posts. Sign in to connect yours.</div>';
+  var t=_bpSo.tab;
+  if(t==='posts')return h+bpSoPostsPane();
+  if(t==='accounts')return h+bpSoAccountsPane();
+  return h+bpSoOverviewPane();
+}
+function bpSoChip(ch){var c=BP_SO_CH[ch]||{n:ch,c:'#64748b'};return '<span class="bpx-so-chip" style="--c:'+c.c+'">'+c.n+'</span>';}
+function bpSoOverviewPane(){
+  if(!bpSoAny())return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No social accounts connected</b>Connect your Facebook Page (Instagram comes with it) and Google Business Profile to see followers, reach and your best posts here — and to post to all of them at once.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpSoTab(\'accounts\')">Connect accounts</button></div></div></div>';
+  var f=_bpSo.stats.facebook, i=_bpSo.stats.instagram;
+  var card=function(ch,s,lines){return '<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip(ch)+'<span style="font-weight:600;font-size:13.5px;margin-left:8px">'+bpEsc(s.name||'')+'</span>'+(s.error?'<span class="bpx-badge warn" style="margin-left:auto">'+bpEsc(String(s.error).slice(0,40))+'</span>':'')+'</div><div class="bpx-so-nums">'+lines.map(function(l){return '<div><div class="bpx-so-v">'+l[1]+'</div><div class="bpx-so-l">'+l[0]+'</div></div>';}).join('')+'</div></div>';};
+  var h='<div class="bpx-so-grid">';
+  if(f)h+=card('facebook',f,[['Followers',bpNum(+f.followers||0)],['Reach · 28d',bpNum(+f.reach||0)],['Engagement · 28d',bpNum(+f.engagement||0)]]);
+  else if(_bpSo.conn.facebook)h+=card('facebook',{name:(_bpSo.page||{}).name||''},[['Followers','—'],['Reach · 28d','—'],['Engagement · 28d','—']]);
+  if(i)h+=card('instagram',i,[['Followers',bpNum(+i.followers||0)],['Reach · 28d',bpNum(+i.reach||0)],['Posts',bpNum(+i.media||0)]]);
+  else if(_bpSo.conn.facebook)h+='<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip('instagram')+'<span class="bpx-mut" style="font-size:12.5px;margin-left:8px">not linked to your Page</span></div><div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Link your Instagram business account to the Facebook Page (Page settings → Linked accounts) and reconnect. Then Instagram posting and numbers show up here.</div></div>';
+  if(_bpSo.conn.gbp)h+='<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip('gbp')+'<span class="bpx-mut" style="font-size:12.5px;margin-left:8px">connected</span></div><div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Posts here appear on your Google listing. Calls, directions and website clicks live in <a onclick="bpNav(\'marketing\')" style="color:var(--blue);cursor:pointer;font-weight:600">Ads &amp; Listings</a>.</div></div>';
+  h+='</div>';
+  var top=[].concat((f&&f.posts)||[],(i&&i.posts)||[]).sort(function(a,b){return (+b.engagement||0)-(+a.engagement||0);}).slice(0,6);
+  if(top.length){
+    h+='<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><b style="font-size:14px">Best recent posts</b><span class="bpx-mut" style="font-size:12px">by engagement · last 8 per channel</span></div><div class="bpx-so-top">'
+      +top.map(function(p){return '<div class="bpx-so-post">'+(p.image?'<img src="'+bpEsc(p.image)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')+'<div style="min-width:0;flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+bpSoChip(p.channel)+'<span class="bpx-mut" style="font-size:11.5px">'+bpEsc(String(p.at||'').slice(0,10))+'</span></div><div class="bpx-so-txt">'+bpEsc(p.text||'(photo)')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:5px">'+(p.reach?bpNum(p.reach)+' reached · ':'')+bpNum(+p.engagement||0)+' engaged'+(p.url?' · <a href="'+bpEsc(p.url)+'" target="_blank" rel="noopener" style="color:var(--blue)">open ↗</a>':'')+'</div></div></div>';}).join('')+'</div></div>';
+  }
+  return h;
+}
+function bpSoStatus(p){
+  var m={scheduled:['Scheduled',''],publishing:['Publishing…',' warn'],published:['Published',' ok'],partial:['Partly published',' warn'],failed:['Failed',' bad']}[p.status]||[p.status,''];
+  return '<span class="bpx-badge'+m[1]+'">'+m[0]+'</span>';
+}
+function bpSoPostsPane(){
+  var posts=_bpSo.posts.slice().sort(function(a,b){return Date.parse(b.scheduled_at||0)-Date.parse(a.scheduled_at||0);});
+  var up=posts.filter(function(p){return p.status==='scheduled'||p.status==='publishing';}).reverse(), past=posts.filter(function(p){return p.status!=='scheduled'&&p.status!=='publishing';});
+  var head='<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpSo.view==='list'?' on':'')+'" onclick="bpSoView(\'list\')">List</button><button class="bpx-jt'+(_bpSo.view==='cal'?' on':'')+'" onclick="bpSoView(\'cal\')">Calendar</button></div>'
+    +'<span class="bpx-mut" style="font-size:12px">'+(bpSoAny()?'Scheduled posts go out on time whether or not you\'re logged in.':'Connect an account before scheduling.')+'</span></div>';
+  if(_bpSo.view==='cal')return head+bpSoCalendar();
+  var row=function(p){
+    var when=p.scheduled_at?new Date(p.scheduled_at):null, wtxt=when?when.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+when.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}):'';
+    var res=p.results||{}, chips=(p.channels||[]).map(function(c){var r=res[c];return '<span class="bpx-so-chip'+(r?(r.ok?' ok':' bad'):'')+'" style="--c:'+(BP_SO_CH[c]||{}).c+'" title="'+bpEsc(r&&r.error?r.error:'')+'">'+(BP_SO_CH[c]||{n:c}).n+(r?(r.ok?' ✓':' ✕'):'')+'</span>';}).join('');
+    var errs=Object.keys(res).filter(function(c){return res[c]&&!res[c].ok;}).map(function(c){return (BP_SO_CH[c]||{n:c}).n+': '+res[c].error;});
+    return '<div class="bpx-so-row">'+(p.image_url?'<img src="'+bpEsc(p.image_url)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')
+      +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">'+bpSoStatus(p)+'<span class="bpx-mut" style="font-size:12px">'+wtxt+'</span>'+chips+'</div>'
+      +'<div class="bpx-so-txt">'+bpEsc(p.text||'(photo only)')+'</div>'+(errs.length?'<div style="color:#b91c1c;font-size:12px;margin-top:4px">'+bpEsc(errs.join(' · '))+'</div>':'')+'</div>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'+(p.status==='scheduled'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoCompose(\''+bpEsc(p.id)+'\')">Edit</button>':'')+(p.status==='failed'||p.status==='partial'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoRetry(\''+bpEsc(p.id)+'\')">Retry</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDelete(\''+bpEsc(p.id)+'\')" title="Remove">✕</button></div></div>';
+  };
+  var h=head;
+  h+='<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:10px"><b style="font-size:14px">Coming up</b><button class="bpx-rowbtn primary" style="margin:0" onclick="bpSoCompose()">+ New post</button></div>'+(up.length?up.map(row).join(''):'<div class="bpx-mk-empty">Nothing scheduled. Tap New post to write one and pick a time.</div>')+'</div>';
+  h+='<div class="bpx-panel" style="margin-top:14px"><div class="bpx-chead" style="margin-bottom:10px"><b style="font-size:14px">History</b><span class="bpx-mut" style="font-size:12px">'+past.length+' posts</span></div>'+(past.length?past.slice(0,40).map(row).join(''):'<div class="bpx-mk-empty">Published posts show up here with what went through on each channel.</div>')+'</div>';
+  return h;
+}
+window.bpSoView=function(v){_bpSo.view=v;var p=q('bpx-so-pane');if(p)p.innerHTML=bpSoPane();};
+window.bpSoMonth=function(d){_bpSo.month=new Date(_bpSo.month.getFullYear(),_bpSo.month.getMonth()+d,1);bpSoView('cal');};
+function bpSoCalendar(){
+  var m=_bpSo.month, y=m.getFullYear(), mo=m.getMonth(), first=new Date(y,mo,1).getDay(), days=new Date(y,mo+1,0).getDate(), today=new Date();
+  var by={}; _bpSo.posts.forEach(function(p){if(!p.scheduled_at)return;var d=new Date(p.scheduled_at);if(d.getFullYear()===y&&d.getMonth()===mo){(by[d.getDate()]=by[d.getDate()]||[]).push(p);}});
+  var h='<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-calnav"><button onclick="bpSoMonth(-1)">‹</button><div class="bpx-calmonth" style="font-family:inherit;font-size:16px;font-weight:700">'+m.toLocaleDateString(undefined,{month:'long',year:'numeric'})+'</div><button onclick="bpSoMonth(1)">›</button></div><span class="bpx-mut" style="font-size:12px">Tap a day to schedule a post for it</span></div>';
+  h+='<div class="bpx-grid">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="bpx-dow">'+d+'</div>';}).join('');
+  for(var i=0;i<first;i++)h+='<div class="bpx-day empty"></div>';
+  for(var d=1;d<=days;d++){
+    var isT=today.getFullYear()===y&&today.getMonth()===mo&&today.getDate()===d, list=by[d]||[];
+    h+='<div class="bpx-day'+(isT?' today':'')+'" style="cursor:pointer" onclick="bpSoCompose(null,\''+y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')+'\')"><div class="bpx-daynum">'+d+'</div>'
+      +list.slice(0,3).map(function(p){var col=p.status==='scheduled'?'':(p.status==='published'?'background:#ecfdf5;color:#047857;':'background:#fff1f2;color:#be123c;');return '<div class="bpx-appt" style="'+col+'" onclick="event.stopPropagation();'+(p.status==='scheduled'?'bpSoCompose(\''+bpEsc(p.id)+'\')':'bpSoView(\'list\')')+'" title="'+bpEsc(p.text||'')+'">'+new Date(p.scheduled_at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})+' '+bpEsc((p.text||'Photo').slice(0,28))+'</div>';}).join('')
+      +(list.length>3?'<div class="bpx-mut" style="font-size:11px">+'+(list.length-3)+' more</div>':'')+'</div>';
+  }
+  return h+'</div>';
+}
+function bpSoAccountsPane(){
+  var pg=_bpSo.page||{}, cfg=_bpSo.cfg||{};
+  var card=function(img,bleed,name,desc,connected,sub,acts){return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(bleed?' bleed':'')+'"><img src="'+img+'" alt="" loading="lazy"></div><div style="min-width:0"><div class="bpx-mk-name">'+name+'</div><div class="bpx-mk-desc">'+desc+'</div></div></div><div style="margin:12px 0 10px">'+(connected?'<span class="bpx-mk-st on">Connected</span>':(connected===null?'<span class="bpx-mk-st soon">Coming soon</span>':'<span class="bpx-mk-st off">Not connected</span>'))+(sub?' <span class="bpx-mut" style="font-size:12px">'+sub+'</span>':'')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+acts+'</div></div>';};
+  var fbSub=_bpSo.conn.facebook?bpEsc(pg.name||'')+(pg.ig?' · @'+bpEsc(pg.ig):' · no Instagram linked'):(cfg.meta===false?'setup in progress':'');
+  var fbActs=_bpSo.conn.facebook
+    ?((pg.pages||[]).length>1?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoPickPage()">Switch Page</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDisconnect()">Disconnect</button>'
+    :'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 16px;font-size:12.5px" onclick="bpSoConnect()">Connect</button>';
+  var h='<div class="bpx-mk-grid">'
+    +card('assets/brand/meta.png',false,'Facebook Page + Instagram','One connection covers your Page and the Instagram business account linked to it.',!!_bpSo.conn.facebook,fbSub,fbActs)
+    +card('assets/brand/google-g.png',false,'Google Business Profile','Posts show on your map listing under "Updates".',!!_bpSo.conn.gbp,'',_bpSo.conn.gbp?'<button class="bpx-rowbtn" style="margin:0" onclick="bpNav(\'marketing\')">Manage in Ads &amp; Listings</button>':'<button class="bpx-btn" style="width:auto;margin-top:0;padding:8px 16px;font-size:12.5px" onclick="bpMkConnect(\'gbp\')">Connect</button>')
+    +card('assets/brand/meta.png',false,'LinkedIn, TikTok, X','Not available yet. Tell us if one matters to you and we\'ll prioritise it.',null,'','<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="mailto:support@builderpro-os.com?subject=Social%20channel%20request">Request a channel</a>')
+    +'</div><div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px;text-align:center">We only post what you write and schedule here. Nothing goes out on its own.</div>';
+  return h;
+}
+window.bpSoConnect=async function(){
+  if(!window.BP_LIVE){alert('Sign in to connect your accounts.');return;}
+  var t=await bpJwt(); if(!t){alert('Please sign in again, then tap Connect.');return;}
+  window.open(MKT_URL+'?op=start&provider=social&t='+encodeURIComponent(t),'_blank');
+  bpModal('<h3>Finishing in a new tab</h3><div class="bpx-sub">Approve the connection in the tab that just opened — pick the Facebook Page for your business. When it brings you back, your numbers load automatically.</div><div class="row"><button class="bpx-btn" onclick="bpCloseModal();bpSoRefresh()">I\'m back — refresh</button></div>');
+};
+window.bpSoDisconnect=function(){
+  bpModal('<h3>Disconnect Facebook &amp; Instagram?</h3><div class="bpx-sub">Scheduled posts to these channels won\'t go out. Nothing on Facebook itself changes.</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Keep it</button><button class="bpx-btn danger" onclick="bpCloseModal();bpAuthApi(MKT_URL,{op:\'disconnect\',provider:\'social\'}).then(function(){bpSoRefresh();})">Disconnect</button></div>');
+};
+window.bpSoPickPage=function(){
+  var pages=(_bpSo.page||{}).pages||[];
+  bpModal('<h3>Which Page should we post to?</h3><div class="bpx-sub">Your Facebook login manages more than one Page.</div>'+pages.map(function(p){return '<button class="bpx-btn ghost" style="width:100%;margin-top:8px;text-align:left" onclick="bpCloseModal();bpAuthApi(MKT_URL,{op:\'social.select_page\',page_id:\''+bpEsc(p.id)+'\'}).then(function(){bpSoRefresh();})">'+bpEsc(p.name||p.id)+(p.ig?' <span class="bpx-mut" style="font-size:12px">· @'+bpEsc(p.ig.username||'')+'</span>':'')+'</button>';}).join('')+'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button></div>');
+};
+/* compose / edit a post. editId edits a scheduled post (delete + recreate); presetDate comes from the calendar */
+window.bpSoCompose=function(editId,presetDate){
+  var p=editId?_bpSo.posts.filter(function(x){return x.id===editId;})[0]:null;
+  var conn=_bpSo.conn||{}, any=bpSoAny();
+  var when=p&&p.scheduled_at?new Date(p.scheduled_at):(presetDate?new Date(presetDate+'T09:00'):null);
+  var local=function(d){if(!d)return '';var z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16);};
+  var chk=function(k){var on=p?(p.channels||[]).indexOf(k)>=0:!!conn[k];return '<label class="bpx-so-ck'+(conn[k]?'':' off')+'"><input type="checkbox" data-so-ch="'+k+'" '+(on&&conn[k]?'checked':'')+' '+(conn[k]?'':'disabled')+' onchange="bpSoCount()"> '+bpSoChip(k)+(conn[k]?'':'<span class="bpx-mut" style="font-size:11px;margin-left:6px">not connected</span>')+'</label>';};
+  bpModal('<h3>'+(p?'Edit post':'New post')+'</h3>'
+    +(any?'':'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:8px">Connect an account first — nothing is connected yet.</div>')
+    +'<label>Post to</label><div class="bpx-so-cks">'+chk('facebook')+chk('instagram')+chk('gbp')+'</div>'
+    +'<label>What do you want to say? <span id="bpx-so-cnt" class="bpx-mut" style="font-weight:400;float:right"></span></label><textarea id="bpx-so-text" placeholder="Just finished a full replacement on Oak Hill Dr — before and after below. Free inspections all month." oninput="bpSoCount()">'+bpEsc(p?p.text||'':'')+'</textarea>'
+    +'<label>Photo <span class="bpx-mut" style="font-weight:400">— required for Instagram</span></label>'
+    +'<div class="bpx-so-img"><div id="bpx-so-prev" class="bpx-so-prev'+(p&&p.image_url?'':' empty')+'">'+(p&&p.image_url?'<img src="'+bpEsc(p.image_url)+'" alt="">':'')+'</div>'
+      +'<div style="flex:1;min-width:0"><input type="file" id="bpx-so-file" accept="image/*" style="display:none" onchange="bpSoFile(this)"><button class="bpx-rowbtn" style="margin:0" onclick="q(\'bpx-so-file\').click()">Upload a photo</button> <span class="bpx-mut" style="font-size:12px">or paste a link</span><input id="bpx-so-imgurl" value="'+bpEsc(p?p.image_url||'':'')+'" placeholder="https://…/photo.jpg" style="margin-top:8px" oninput="bpSoImgUrl(this.value)"><div id="bpx-so-up" class="bpx-mut" style="font-size:12px;margin-top:5px"></div></div></div>'
+    +'<label>Link <span class="bpx-mut" style="font-weight:400">(optional — Facebook &amp; Google)</span></label><input id="bpx-so-link" value="'+bpEsc(p?p.link_url||'':'')+'" placeholder="https://your-site.com/free-inspection">'
+    +'<label>When</label><div class="bpx-so-when"><label class="bpx-so-ck"><input type="radio" name="bpx-so-w" value="now" '+(when?'':'checked')+' onchange="bpSoWhen()"> Post now</label><label class="bpx-so-ck"><input type="radio" name="bpx-so-w" value="later" '+(when?'checked':'')+' onchange="bpSoWhen()"> Schedule</label></div>'
+    +'<input type="datetime-local" id="bpx-so-at" value="'+local(when)+'" style="margin-top:8px;'+(when?'':'display:none')+'">'
+    +'<div class="bpx-mmsg" id="bpx-so-msg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-so-go" onclick="bpSoSubmit(\''+(p?bpEsc(p.id):'')+'\')" '+(any?'':'disabled')+'>'+(when?'Schedule':'Post now')+'</button></div>');
+  var card=document.querySelector('#bpx-modal .bpx-modalcard'); if(card)card.style.maxWidth='620px';
+  bpSoCount();
+};
+window.bpSoCount=function(){
+  var t=(q('bpx-so-text')||{}).value||'', el=q('bpx-so-cnt'); if(!el)return;
+  var chs=[].slice.call(document.querySelectorAll('[data-so-ch]:checked')).map(function(c){return c.getAttribute('data-so-ch');});
+  var lim=chs.length?Math.min.apply(null,chs.map(function(c){return BP_SO_CH[c].max;})):63206;
+  el.textContent=t.length+' / '+bpNum(lim); el.style.color=t.length>lim?'#b91c1c':'';
+};
+window.bpSoWhen=function(){var v=(document.querySelector('[name=bpx-so-w]:checked')||{}).value;var at=q('bpx-so-at'),go=q('bpx-so-go');if(at)at.style.display=v==='later'?'':'none';if(go)go.textContent=v==='later'?'Schedule':'Post now';};
+window.bpSoImgUrl=function(v){var pv=q('bpx-so-prev');if(!pv)return;v=(v||'').trim();pv.classList.toggle('empty',!v);pv.innerHTML=v?'<img src="'+bpEsc(v)+'" alt="">':'';};
+window.bpSoFile=async function(inp){
+  var f=inp.files&&inp.files[0]; if(!f)return;
+  var st=q('bpx-so-up'); if(f.size>8*1024*1024){st.textContent='That photo is over 8 MB — pick a smaller one.';return;}
+  if(!window.BP_LIVE||!window.BP_SB){ var r=new FileReader(); r.onload=function(){bpSoImgUrl(r.result);q('bpx-so-imgurl').value='';st.textContent='Preview only — sign in to upload.';}; r.readAsDataURL(f); return; }
+  st.textContent='Uploading…';
+  try{
+    var s=await BP_SB.auth.getSession(), uid=s&&s.data&&s.data.session&&s.data.session.user&&s.data.session.user.id; if(!uid)throw new Error('sign in again');
+    var path=uid+'/'+Date.now()+'-'+f.name.replace(/[^a-z0-9.]+/gi,'-').toLowerCase();
+    var up=await BP_SB.storage.from('social').upload(path,f,{upsert:false,contentType:f.type});
+    if(up.error)throw up.error;
+    var url=BP_SB.storage.from('social').getPublicUrl(path).data.publicUrl;
+    q('bpx-so-imgurl').value=url; bpSoImgUrl(url); st.textContent='Uploaded ✓';
+  }catch(e){ st.textContent='Upload failed: '+((e&&e.message)||e)+' — you can paste an image link instead.'; }
+};
+window.bpSoSubmit=function(editId){
+  var chs=[].slice.call(document.querySelectorAll('[data-so-ch]:checked')).map(function(c){return c.getAttribute('data-so-ch');});
+  var text=((q('bpx-so-text')||{}).value||'').trim(), img=((q('bpx-so-imgurl')||{}).value||'').trim(), link=((q('bpx-so-link')||{}).value||'').trim();
+  var later=(document.querySelector('[name=bpx-so-w]:checked')||{}).value==='later', at=later?((q('bpx-so-at')||{}).value||''):'';
+  var msg=q('bpx-so-msg'), say=function(s){if(msg)msg.textContent=s;};
+  if(!chs.length)return say('Pick at least one channel.');
+  if(!text&&!img)return say('Write something or add a photo.');
+  if(chs.indexOf('instagram')>=0&&!img)return say('Instagram posts need a photo.');
+  if(/^data:/.test(img))return say('Sign in to upload photos, or paste an image link.');
+  if(later&&(!at||Date.parse(at)<Date.now()+60e3))return say('Pick a time at least a minute from now.');
+  var over=chs.filter(function(c){return text.length>BP_SO_CH[c].max;}); if(over.length)return say('Too long for '+BP_SO_CH[over[0]].n+' ('+bpNum(BP_SO_CH[over[0]].max)+' max).');
+  var payload={op:'social.posts.create',channels:chs,text:text,image_url:img,link_url:link,scheduled_at:later?new Date(at).toISOString():null};
+  var go=q('bpx-so-go'); if(go){go.disabled=true;go.textContent=later?'Scheduling…':'Posting…';}
+  if(!window.BP_LIVE){
+    if(editId)_bpSo.posts=_bpSo.posts.filter(function(x){return x.id!==editId;});
+    _bpSo.posts.push({id:'d'+Date.now(),channels:chs,text:text,image_url:img,link_url:link,scheduled_at:later?new Date(at).toISOString():new Date().toISOString(),status:later?'scheduled':'published',results:later?{}:chs.reduce(function(o,c){o[c]={ok:true};return o;},{})});
+    bpCloseModal(); _bpSo.tab='posts'; bpSocial(); return;
+  }
+  var pre=editId?Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.delete',id:editId})):Promise.resolve();
+  pre.then(function(){return bpAuthApi(MKT_URL,payload);}).then(function(r){
+    if(!r||!r.ok){ if(go){go.disabled=false;go.textContent=later?'Schedule':'Post now';} return say((r&&r.error)||'Couldn\'t save the post.'); }
+    bpCloseModal(); _bpSo.tab='posts'; _bpSo.loaded=false; bpSoLoad(false);
+    var p=r.post||{}; if(p.status==='failed'||p.status==='partial'){var e=Object.keys(p.results||{}).filter(function(c){return !p.results[c].ok;}).map(function(c){return BP_SO_CH[c].n+': '+p.results[c].error;}); setTimeout(function(){alert((p.status==='failed'?'The post didn\'t go out.\n':'Part of the post didn\'t go out.\n')+e.join('\n'));},50);}
+  },function(){ if(go){go.disabled=false;go.textContent=later?'Schedule':'Post now';} say('Couldn\'t reach the marketing service.'); });
+};
+window.bpSoRetry=function(id){
+  var p=_bpSo.posts.filter(function(x){return x.id===id;})[0]; if(!p)return;
+  var failed=Object.keys(p.results||{}).filter(function(c){return !(p.results[c]||{}).ok;});
+  if(!window.BP_LIVE){alert('Sign in to retry.');return;}
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.create',channels:failed.length?failed:p.channels,text:p.text||'',image_url:p.image_url||'',link_url:p.link_url||'',scheduled_at:null})).then(function(){_bpSo.loaded=false;bpSoLoad(false);});
+};
+window.bpSoDelete=function(id){
+  if(!window.BP_LIVE){_bpSo.posts=_bpSo.posts.filter(function(x){return x.id!==id;});bpSocial();return;}
+  Promise.resolve(bpAuthApi(MKT_URL,{op:'social.posts.delete',id:id})).then(function(){_bpSo.loaded=false;bpSoLoad(false);});
+};
+window.bpCsvSocial=function(){
+  bpCsv('social-posts',['When','Status','Channels','Text','Photo','Link','Results'],
+    _bpSo.posts.map(function(p){var r=p.results||{};return [p.scheduled_at||'',p.status,(p.channels||[]).join('; '),p.text||'',p.image_url||'',p.link_url||'',Object.keys(r).map(function(c){return c+':'+(r[c].ok?'ok':(r[c].error||'failed'));}).join('; ')];}));
+};
 /* ===== Competitors — how the other contractors in the area show up on Yelp, and where to beat them ===== */
 var _bpCp={loaded:false,loading:false,tab:'scoreboard',rows:[],me:{},note:'',cfg:{},search:null,searching:false,demo:false};
 var BP_CP_DEMO={

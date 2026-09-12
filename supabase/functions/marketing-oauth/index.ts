@@ -18,6 +18,13 @@
 //   { op:"competitors.list", force }    -> tracked rivals (snapshots refreshed daily) + your own listing numbers
 //   { op:"competitors.track", id } / { op:"competitors.untrack", id }
 //   { op:"competitors.reviews", id }    -> a rival's 3 newest reviews
+//   ?op=start&provider=social&t=<jwt>   -> Meta consent for Facebook Page + Instagram posting/insights
+//   { op:"social.stats" }               -> followers / reach / engagement / recent posts per channel (cached 30 min)
+//   { op:"social.posts.list" }          -> the planner (also publishes anything due for this client)
+//   { op:"social.posts.create", channels[], text, image_url, link_url, scheduled_at }
+//   { op:"social.posts.delete", id }
+//   { op:"social.select_page", page_id }-> pick a different Facebook Page from the connected account
+//   { op:"social.publish_due" } with header x-cron-secret: CRON_SECRET  -> cron entry point (see the migration)
 //
 // Deploy:  supabase functions deploy marketing-oauth --no-verify-jwt
 // Secrets: META_APP_ID, META_APP_SECRET,
@@ -35,6 +42,9 @@ const G_ADS_DEV = Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN") ?? "";
 const G_ADS_LOGIN = Deno.env.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID") ?? "";
 const YELP_KEY = Deno.env.get("YELP_API_KEY") ?? "";
 const PORTAL_URL = Deno.env.get("PORTAL_URL") ?? "https://builderpro-os.com";
+const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
+// posting + insights for a Facebook Page and the Instagram business account attached to it
+const SOCIAL_SCOPES = "pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content,instagram_basic,instagram_content_publish,instagram_manage_insights,business_management";
 const REDIRECT = `${SB_URL}/functions/v1/marketing-oauth`;
 const STATS_TTL = 30 * 60 * 1000;
 
@@ -182,6 +192,99 @@ async function yelpStats(row: Row) {
   return { rating: Number(b.rating || 0), reviews: Number(b.review_count || 0), url: b.url, reviewsList: (rv.reviews ?? []).map((x: Row) => ({ rating: x.rating, text: String(x.text ?? "").slice(0, 200), user: (x.user as Row)?.name, at: x.time_created })) };
 }
 
+// --- social: Graph API helpers, per-channel stats, publishing ---
+const fb = (path: string, token: string, init?: RequestInit) =>
+  fetch(`https://graph.facebook.com/v19.0/${path}${path.includes("?") ? "&" : "?"}access_token=${encodeURIComponent(token)}`, init).then((r) => r.json()).catch(() => ({}));
+const form = (o: Record<string, string>) => new URLSearchParams(o);
+const insVal = (x: Row, name: string) => { const s = (((x.insights as Row)?.data as Row[]) ?? []).find((i) => i.name === name); return Number((((s?.values as Row[]) ?? [])[0])?.value ?? 0); };
+
+async function socialStats(row: Row) {
+  const t = String(row.access_token ?? ""), page = String(row.account_id ?? ""), m = (row.meta as Row) ?? {}, ig = String(((m.ig as Row) ?? {}).id ?? "");
+  const out: Row = { facebook: null, instagram: null };
+  if (page) {
+    const p = await fb(`${page}?fields=fan_count,followers_count,name,link,picture{url}`, t);
+    const ins = await fb(`${page}/insights?metric=page_impressions_unique,page_post_engagements&period=days_28`, t);
+    const val = (name: string) => { const s = ((ins.data as Row[]) ?? []).find((x) => x.name === name); const vs = (s?.values as Row[]) ?? []; return Number(vs[vs.length - 1]?.value ?? 0); };
+    const posts = await fb(`${page}/posts?fields=message,created_time,permalink_url,full_picture,insights.metric(post_impressions_unique,post_engaged_users)&limit=8`, t);
+    out.facebook = {
+      name: p.name, followers: Number(p.followers_count ?? p.fan_count ?? 0), reach: val("page_impressions_unique"), engagement: val("page_post_engagements"), link: p.link, picture: p.picture?.data?.url,
+      error: p.error?.message,
+      posts: ((posts.data as Row[]) ?? []).map((x) => ({ id: x.id, text: String(x.message ?? "").slice(0, 180), at: x.created_time, url: x.permalink_url, image: x.full_picture, reach: insVal(x, "post_impressions_unique"), engagement: insVal(x, "post_engaged_users"), channel: "facebook" })),
+    };
+  }
+  if (ig) {
+    const a = await fb(`${ig}?fields=username,followers_count,media_count,profile_picture_url`, t);
+    const since = Math.floor((Date.now() - 28 * 864e5) / 1000), until = Math.floor(Date.now() / 1000);
+    const ins = await fb(`${ig}/insights?metric=reach&period=day&since=${since}&until=${until}`, t);
+    const reach = ((((ins.data as Row[]) ?? [])[0]?.values as Row[]) ?? []).reduce((s: number, v: Row) => s + Number(v.value || 0), 0);
+    const media = await fb(`${ig}/media?fields=caption,timestamp,permalink,media_url,thumbnail_url,like_count,comments_count&limit=8`, t);
+    out.instagram = {
+      name: a.username, followers: Number(a.followers_count ?? 0), media: Number(a.media_count ?? 0), reach, picture: a.profile_picture_url, error: a.error?.message,
+      posts: ((media.data as Row[]) ?? []).map((x) => ({ id: x.id, text: String(x.caption ?? "").slice(0, 180), at: x.timestamp, url: x.permalink, image: x.media_url ?? x.thumbnail_url, engagement: Number(x.like_count ?? 0) + Number(x.comments_count ?? 0), channel: "instagram" })),
+    };
+  }
+  return out;
+}
+
+async function publishPost(post: Row, ints: Row[]): Promise<{ results: Row; status: string }> {
+  const social = ints.find((i) => i.provider === "social"), gbp = ints.find((i) => i.provider === "gbp");
+  const results: Row = {};
+  const text = String(post.text ?? ""), img = String(post.image_url ?? ""), link = String(post.link_url ?? "");
+  for (const ch of ((post.channels as string[]) ?? [])) {
+    try {
+      if (ch === "facebook") {
+        if (!social?.account_id) throw new Error("Facebook Page not connected");
+        const t = String(social.access_token), page = String(social.account_id);
+        const r = img
+          ? await fb(`${page}/photos`, t, { method: "POST", body: form({ url: img, caption: text }) })
+          : await fb(`${page}/feed`, t, { method: "POST", body: form({ message: text, ...(link ? { link } : {}) }) });
+        if (!r.id && !r.post_id) throw new Error(r.error?.message ?? "Facebook rejected the post");
+        results[ch] = { ok: true, id: r.post_id ?? r.id };
+      } else if (ch === "instagram") {
+        if (!social) throw new Error("Instagram not connected");
+        const t = String(social.access_token), ig = String((((social.meta as Row)?.ig as Row) ?? {}).id ?? "");
+        if (!ig) throw new Error("No Instagram business account is linked to this Facebook Page");
+        if (!img) throw new Error("Instagram needs a photo");
+        const c = await fb(`${ig}/media`, t, { method: "POST", body: form({ image_url: img, caption: text }) });
+        if (!c.id) throw new Error(c.error?.message ?? "Instagram rejected the photo");
+        const p = await fb(`${ig}/media_publish`, t, { method: "POST", body: form({ creation_id: c.id }) });
+        if (!p.id) throw new Error(p.error?.message ?? "Instagram couldn't publish");
+        results[ch] = { ok: true, id: p.id };
+      } else if (ch === "gbp") {
+        if (!gbp) throw new Error("Google Business Profile not connected");
+        const t = await googleToken(gbp), acct = String(((gbp.meta as Row) ?? {}).account ?? ""), loc = String(gbp.account_id ?? "");
+        if (!acct || !loc) throw new Error("No Google listing selected");
+        const body: Row = { languageCode: "en-US", summary: text, topicType: "STANDARD" };
+        if (img) body.media = [{ mediaFormat: "PHOTO", sourceUrl: img }];
+        if (link) body.callToAction = { actionType: "LEARN_MORE", url: link };
+        const r = await fetch(`https://mybusiness.googleapis.com/v4/${acct}/${loc}/localPosts`, { method: "POST", headers: { Authorization: `Bearer ${t}`, "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((x) => x.json()).catch(() => ({}));
+        if (!r.name) throw new Error(r.error?.message ?? "Google rejected the post");
+        results[ch] = { ok: true, id: r.name };
+      } else throw new Error("unsupported channel");
+    } catch (e) { results[ch] = { ok: false, error: String((e as Error)?.message ?? e).slice(0, 180) }; }
+  }
+  const oks = Object.values(results).filter((r) => (r as Row).ok).length, n = Object.keys(results).length;
+  return { results, status: n && oks === n ? "published" : oks ? "partial" : "failed" };
+}
+
+// publish everything whose time has come; `owner` narrows it to one client (used on page load)
+async function publishDue(owner?: string): Promise<number> {
+  const q = `${SB_URL}/rest/v1/social_posts?status=eq.scheduled&scheduled_at=lte.${encodeURIComponent(new Date().toISOString())}${owner ? `&owner=eq.${owner}` : ""}&select=*&limit=20`;
+  const rows: Row[] = await fetch(q, { headers: sbH }).then((r) => r.ok ? r.json() : []).catch(() => []);
+  let n = 0;
+  for (const post of rows) {
+    // claim the row first so a cron tick and a page load can't both post it
+    const c = await fetch(`${SB_URL}/rest/v1/social_posts?id=eq.${post.id}&status=eq.scheduled`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify({ status: "publishing" }) });
+    const claimed = c.ok ? await c.json() : [];
+    if (!claimed.length) continue;
+    const ints = await getIntegrations(String(post.owner));
+    const { results, status } = await publishPost(post, ints);
+    await fetch(`${SB_URL}/rest/v1/social_posts?id=eq.${post.id}`, { method: "PATCH", headers: sbH, body: JSON.stringify({ status, results, published_at: new Date().toISOString() }) });
+    n++;
+  }
+  return n;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (!SB_URL || !SB_SERVICE) return json({ ok: false, error: "missing secrets" }, 500);
@@ -199,6 +302,12 @@ Deno.serve(async (req) => {
         if (!META_APP_ID) return page("Meta Ads isn't switched on yet", "Our team is finishing the Meta connection for BuilderPro OS. You'll get a note the moment it's live.");
         const u = new URL("https://www.facebook.com/v19.0/dialog/oauth");
         u.search = new URLSearchParams({ client_id: META_APP_ID, redirect_uri: REDIRECT, state, scope: "ads_read,ads_management,business_management,leads_retrieval,pages_show_list", response_type: "code" }).toString();
+        return Response.redirect(u.toString(), 302);
+      }
+      if (provider === "social") {
+        if (!META_APP_ID) return page("Facebook & Instagram aren't switched on yet", "Our team is finishing the Meta connection for BuilderPro OS. You'll get a note the moment it's live.");
+        const u = new URL("https://www.facebook.com/v19.0/dialog/oauth");
+        u.search = new URLSearchParams({ client_id: META_APP_ID, redirect_uri: REDIRECT, state, scope: SOCIAL_SCOPES, response_type: "code" }).toString();
         return Response.redirect(u.toString(), 302);
       }
       if (provider === "google_ads" || provider === "gbp") {
@@ -225,6 +334,20 @@ Deno.serve(async (req) => {
           const accts = await fetch(`https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status&limit=10&access_token=${token}`).then((r) => r.json()).catch(() => ({}));
           const a = (accts?.data ?? [])[0] ?? {};
           await upsertIntegration({ owner: st.u, provider: "meta", status: a.id ? "connected" : "no_ad_account", account_id: a.id ?? "", account_name: a.name ?? "", access_token: token, expires_at: new Date(Date.now() + 55 * 864e5).toISOString(), meta: { accounts: (accts?.data ?? []).slice(0, 10) } });
+          return Response.redirect(back, 302);
+        }
+        if (st.p === "social") {
+          const tk = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?client_id=${META_APP_ID}&client_secret=${META_APP_SECRET}&redirect_uri=${encodeURIComponent(REDIRECT)}&code=${code}`).then((r) => r.json());
+          let token = tk.access_token ?? "";
+          if (!token) return page("Meta didn't accept the connection", String(tk?.error?.message ?? "").slice(0, 200));
+          const ll = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${META_APP_ID}&client_secret=${META_APP_SECRET}&fb_exchange_token=${token}`).then((r) => r.json()).catch(() => ({}));
+          if (ll.access_token) token = ll.access_token;
+          // page tokens minted from a long-lived user token don't expire; keep the user token to re-derive them
+          const pages = await fb("me/accounts?fields=id,name,access_token,instagram_business_account{id,username},followers_count,fan_count,picture{url}&limit=25", token);
+          const list = ((pages.data as Row[]) ?? []);
+          const p = list[0] ?? {};
+          const ig = (p.instagram_business_account as Row) ?? null;
+          await upsertIntegration({ owner: st.u, provider: "social", status: p.id ? "connected" : "no_page", account_id: p.id ?? "", account_name: p.name ?? "", access_token: p.access_token ?? token, refresh_token: token, expires_at: new Date(Date.now() + 55 * 864e5).toISOString(), meta: { pages: list.map((x) => ({ id: x.id, name: x.name, ig: x.instagram_business_account ?? null })), ig, picture: (p.picture as Row)?.data ? ((p.picture as Row).data as Row).url : null } });
           return Response.redirect(back, 302);
         }
         if (st.p === "google_ads" || st.p === "gbp") {
@@ -260,10 +383,15 @@ Deno.serve(async (req) => {
 
   // ---------------- portal API ----------------
   if (req.method !== "POST") return json({ ok: false, error: "POST" }, 405);
-  const user = await userFromJwt((req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, ""));
-  if (!user) return json({ ok: false, error: "sign in required" }, 401);
   let b: Record<string, string>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
+  // the scheduler has no user; it authenticates with a shared secret and can only do one thing
+  if (b.op === "social.publish_due") {
+    if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) return json({ ok: false, error: "forbidden" }, 403);
+    return json({ ok: true, published: await publishDue() });
+  }
+  const user = await userFromJwt((req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, ""));
+  if (!user) return json({ ok: false, error: "sign in required" }, 401);
   const configured = { meta: !!META_APP_ID, google_ads: !!G_ID, gbp: !!G_ID, yelp: !!YELP_KEY };
 
   if (b.op === "list") {
@@ -337,6 +465,62 @@ Deno.serve(async (req) => {
     if (!YELP_KEY) return json({ ok: false, error: "not_configured" });
     const rv = await fetch(`https://api.yelp.com/v3/businesses/${encodeURIComponent(b.id ?? "")}/reviews?limit=3&sort_by=newest`, { headers: { Authorization: `Bearer ${YELP_KEY}` } }).then((r) => r.json()).catch(() => ({}));
     return json({ ok: true, reviews: (rv.reviews ?? []).map((x: Row) => ({ rating: x.rating, text: String(x.text ?? "").slice(0, 240), user: (x.user as Row)?.name, at: x.time_created })) });
+  }
+
+  // ---------------- social media ----------------
+  if (b.op === "social.stats") {
+    const ints = await getIntegrations(user.id);
+    const s = ints.find((i) => i.provider === "social"), gbp = ints.find((i) => i.provider === "gbp");
+    const m = (s?.meta as Row) ?? {};
+    let stats: Row = (m.social_stats as Row) ?? {};
+    const at = Number(m.social_stats_at ?? 0);
+    if (s?.account_id && (b.force || Date.now() - at > STATS_TTL)) {
+      try { stats = await socialStats(s); } catch (e) { stats = { error: String(e).slice(0, 120) }; }
+      await patchIntegration(s.id, { meta: { ...m, social_stats: stats, social_stats_at: Date.now() } });
+    }
+    return json({
+      ok: true, stats,
+      connected: { facebook: !!s?.account_id, instagram: !!((m.ig as Row) ?? {}).id, gbp: !!gbp?.account_id },
+      configured: { meta: !!META_APP_ID, google: !!G_ID },
+      page: s ? { name: s.account_name, id: s.account_id, ig: ((m.ig as Row) ?? {}).username ?? null, pages: (m.pages as Row[]) ?? [], picture: m.picture ?? null, status: s.status } : null,
+    });
+  }
+  if (b.op === "social.select_page") {
+    const ints = await getIntegrations(user.id), s = ints.find((i) => i.provider === "social");
+    if (!s) return json({ ok: false, error: "not connected" });
+    const pages = await fb("me/accounts?fields=id,name,access_token,instagram_business_account{id,username},picture{url}&limit=25", String(s.refresh_token ?? s.access_token));
+    const p = (((pages.data as Row[]) ?? [])).find((x) => x.id === b.page_id);
+    if (!p) return json({ ok: false, error: "page not found" });
+    await patchIntegration(s.id, { account_id: p.id, account_name: p.name, access_token: p.access_token, status: "connected", meta: { ...((s.meta as Row) ?? {}), ig: p.instagram_business_account ?? null, picture: (p.picture as Row)?.data ? ((p.picture as Row).data as Row).url : null, social_stats: null, social_stats_at: 0 } });
+    return json({ ok: true });
+  }
+  if (b.op === "social.posts.list") {
+    await publishDue(user.id);
+    const rows = await fetch(`${SB_URL}/rest/v1/social_posts?owner=eq.${user.id}&select=*&order=scheduled_at.desc.nullslast&limit=150`, { headers: sbH }).then((r) => r.ok ? r.json() : []).catch(() => []);
+    return json({ ok: true, posts: rows });
+  }
+  if (b.op === "social.posts.create") {
+    const bb = b as unknown as Row;
+    const channels = ((bb.channels as string[]) ?? []).filter((c) => ["facebook", "instagram", "gbp"].includes(c));
+    const text = String(bb.text ?? "").trim(), image_url = String(bb.image_url ?? "").trim(), link_url = String(bb.link_url ?? "").trim();
+    if (!channels.length) return json({ ok: false, error: "pick at least one channel" });
+    if (!text && !image_url) return json({ ok: false, error: "write something or add a photo" });
+    if (channels.includes("instagram") && !image_url) return json({ ok: false, error: "Instagram posts need a photo" });
+    const when = bb.scheduled_at ? Date.parse(String(bb.scheduled_at)) : NaN;
+    const future = !isNaN(when) && when > Date.now() + 30e3;
+    const row = { owner: user.id, channels, text, image_url: image_url || null, link_url: link_url || null, scheduled_at: new Date(future ? when : Date.now()).toISOString(), status: future ? "scheduled" : "publishing", results: {} };
+    const ins = await fetch(`${SB_URL}/rest/v1/social_posts`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(row) });
+    const created = ins.ok ? (await ins.json())[0] : null;
+    if (!created) return json({ ok: false, error: "couldn't save the post (is the social_posts table created?)" });
+    if (future) return json({ ok: true, post: created });
+    const ints = await getIntegrations(user.id);
+    const { results, status } = await publishPost(created, ints);
+    await fetch(`${SB_URL}/rest/v1/social_posts?id=eq.${created.id}`, { method: "PATCH", headers: sbH, body: JSON.stringify({ status, results, published_at: new Date().toISOString() }) });
+    return json({ ok: true, post: { ...created, status, results } });
+  }
+  if (b.op === "social.posts.delete") {
+    await fetch(`${SB_URL}/rest/v1/social_posts?owner=eq.${user.id}&id=eq.${encodeURIComponent(b.id ?? "")}`, { method: "DELETE", headers: sbH });
+    return json({ ok: true });
   }
 
   if (b.op === "stats") {
