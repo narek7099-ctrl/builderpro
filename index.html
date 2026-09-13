@@ -17080,6 +17080,7 @@ window.bpFinView=function(t){
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
 /* ===== Payouts — the contractor connects their OWN Stripe inside their own GHL
    sub-account, so invoice money goes straight to their bank. We never hold it. ===== */
+var BP_PORTAL_DOMAIN='app.gohighlevel.com';   // ← swap for app.builderpro-os.com once the white-label domain is live
 var _bpPay={loaded:false,loading:false,loc:'',connected:null,note:''};
 function bpPayouts(){
   q('bpxViewArea').innerHTML='<div id="bpx-pay"></div>';
@@ -17115,7 +17116,9 @@ function bpPayRender(){
   var s=bpSettingsGet(),c=s.company||{},co=c.name||'your business';
   if(!_bpPay.loaded){el.innerHTML='<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div></div>';return;}
   var loc=_bpPay.loc;
-  var payUrl=loc?('https://app.gohighlevel.com/v2/location/'+encodeURIComponent(loc)+'/payments/integrations'):'';
+  /* Point BP_PORTAL_DOMAIN at your own white-label domain (GHL agency Settings →
+     Company → White Label Domain) and the client never sees GoHighLevel. */
+  var payUrl=loc?('https://'+BP_PORTAL_DOMAIN+'/v2/location/'+encodeURIComponent(loc)+'/payments/integrations'):'';
   var step=function(n,t,d,extra){return '<div class="bpx-pay-step"><span class="n">'+n+'</span><div><b>'+t+'</b><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-top:3px">'+d+'</div>'+(extra||'')+'</div></div>';};
   el.innerHTML=
     '<div class="bpx-pay-flow"><div><b>Homeowner pays</b><span>card, on your invoice</span></div><i>→</i>'
@@ -17127,10 +17130,10 @@ function bpPayRender(){
       ? '<div class="bpx-panel"><div class="bpx-ptitle">Connect your Stripe<span class="lg2">one time, about two minutes</span></div>'
         +step(1,'Open your payment settings','This opens your own BuilderPro payments account in a new tab. You’re already signed in.',
           '<a class="bpx-btn" style="width:auto;margin-top:10px;padding:10px 18px;text-decoration:none;display:inline-block" href="'+payUrl+'" target="_blank" rel="noopener">Open payment settings ↗</a>')
-        +step(2,'Pick Stripe and tap Connect','Stripe will ask for your business details and the bank account you want paid into. If you already have a Stripe account, just sign in — don’t make a second one.')
-        +step(3,'Come back and send an invoice','Every invoice you send from Finances is then payable by card, and the money lands in the account you just connected.',
+        +step(2,'Tap Connect on Stripe','Stripe opens and asks you to sign in — or create an account if you don’t have one. You enter your own business details and the bank account you want paid into. We never see or handle any of it; only you can link your bank.')
+        +step(3,'Come back and send an invoice','Every invoice you send from Finances is then payable by card, and the money lands in the bank account you just linked — usually within two business days.',
           '<button class="bpx-btn ghost" style="width:auto;margin-top:10px;padding:10px 18px" onclick="bpNav(\'invoices\')">Go to Invoices</button>')
-        +'<div class="bpx-mut" style="font-size:12px;margin-top:16px;border-top:1px solid var(--line);padding-top:12px">Already connected? Nothing to do — this page is only needed once. You can change the bank account any time from the same screen.</div></div>'
+        +'<div class="bpx-mut" style="font-size:12px;margin-top:16px;border-top:1px solid var(--line);padding-top:12px">Already connected? Nothing to do — this page is only needed once, and you can change the bank account any time from the same screen. If the Payments menu isn’t there when you open it, tell us and we’ll switch the permission on.</div></div>'
       : '<div class="bpx-panel"><div class="bpx-ptitle">We’re still finishing your payments account</div>'
         +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6;margin-bottom:14px">Card payments run through a payments account we set up for '+bpEsc(co)+'. Yours isn’t linked to this login yet. Tap below and we’ll finish it — you don’t need to do anything else, and we’ll let you know the moment it’s ready.</div>'
         +'<div style="display:flex;gap:9px;flex-wrap:wrap"><button class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px" id="bpx-pay-ask" onclick="bpPayAsk()">Finish my setup</button>'
