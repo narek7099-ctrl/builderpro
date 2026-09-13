@@ -8,7 +8,9 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QM37G969Z0');</script>
 <title>BuilderPro OS — Book more roofing jobs, on autopilot</title>
 <meta name="description" content="BuilderPro OS is the complete AI-powered growth system for contractors. Ridge AI answers every call, texts back missed leads, and books inspections 24/7.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='1' y='1' width='38' height='38' rx='11' fill='%23101828'/%3E%3Cpath d='M9 22.5 L20 11.5 L31 22.5' fill='none' stroke='%23ffffff' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M20 11.5 L31 22.5 L31 29.5 L20 18.5 Z' fill='%232563eb'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -49,15 +51,14 @@ img,svg{display:block;}
 nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .3s;}
 nav.solid{border-color:var(--line);}
 .nav-i{max-width:var(--maxw);margin:0 auto;padding:15px 32px;display:flex;align-items:center;justify-content:space-between;}
-.brand{display:flex;align-items:center;gap:9px;font-family:var(--serif);font-size:21px;font-weight:400;letter-spacing:-.01em;}
+/* wordmark matches the logo: bold geometric sans, "Builder" slate, "Pro" blue */
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:22px;font-weight:700;letter-spacing:-.03em;color:#4a5568;}
 .brand svg{width:20px;height:20px;}
-.brand .bpmark{width:28px;height:28px;flex-shrink:0;}
+.brand .bpmark{width:32px;height:32px;flex-shrink:0;}
 .bpmark{flex-shrink:0;}
-/* logo mark — dark tile by default; inverts to a white tile on dark surfaces */
-.bpmark,.hb-ico svg{--bpm-body:#101828;--bpm-knock:#ffffff;--bpm-accent:#2563eb;}
-.hb-ico{background:#101828 !important;}
-.hb-ico svg{width:16px;height:16px;--bpm-body:transparent;--bpm-knock:#ffffff;--bpm-accent:#60a5fa;}
-.brand span{color:var(--blue);font-weight:500;}
+.hb-ico{background:#eef3ff !important;}
+.hb-ico svg{width:18px;height:18px;}
+.brand span{color:#3b73b9;font-weight:700;}
 .nav-r{display:flex;align-items:center;gap:24px;font-size:14px;color:#333;}
 .nav-r .lk{display:flex;align-items:center;gap:5px;color:#333;transition:color .2s;}
 .nav-r .lk:hover{color:#000;}
@@ -211,14 +212,10 @@ section{padding:88px 0;}
 
 <!-- ===== BuilderPro OS logo mark (reusable symbol) ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <!-- Facet tile: a roof knocked out of a solid tile, one plane catching light.
-       Colours come from CSS custom properties so the same symbol can invert on
-       dark surfaces — see .bpmark rules below. -->
+  <!-- The BuilderPro lattice hexagon (assets/brand/logo-mark-*.png, transparent).
+       Every <use href="#bpMark"> on the site renders this one image. -->
   <symbol id="bpMark" viewBox="0 0 40 40">
-    <rect x="1" y="1" width="38" height="38" rx="11" fill="var(--bpm-body,#101828)"/>
-    <path d="M9 22.5 L20 11.5 L31 22.5" fill="none" stroke="var(--bpm-knock,#ffffff)"
-          stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M20 11.5 L31 22.5 L31 29.5 L20 18.5 Z" fill="var(--bpm-accent,#2563eb)"/>
+    <image href="assets/brand/logo-mark-256.png" x="0" y="0" width="40" height="40" preserveAspectRatio="xMidYMid meet"/>
   </symbol>
 </svg>
 
@@ -228,8 +225,8 @@ section{padding:88px 0;}
 <nav id="nav">
   <div class="nav-i">
     <a href="#home" class="brand">
-      <svg class="bpmark" width="26" height="26" aria-label="BuilderPro OS"><use href="#bpMark"/></svg>
-      BuilderPro <span>OS</span>
+      <svg class="bpmark" width="32" height="32" aria-label="BuilderPro"><use href="#bpMark"/></svg>
+      <b class="wm">Builder<span>Pro</span></b>
     </a>
     <div class="nav-r">
       <a class="lk" href="#features">Features</a>
@@ -12816,7 +12813,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 
 <!-- ===== LEGAL: PRIVACY ===== -->
 <div class="legal-page" id="privacy">
-  <div class="legal-nav"><div class="brand"><svg class="bpmark" width="26" height="26" aria-label="BuilderPro OS"><use href="#bpMark"/></svg>BuilderPro <span>OS</span></div><button class="btn btn-light" onclick="closeLegal('privacy')">← Back to site</button></div>
+  <div class="legal-nav"><div class="brand"><svg class="bpmark" width="32" height="32" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div><button class="btn btn-light" onclick="closeLegal('privacy')">← Back to site</button></div>
   <div class="legal-body">
     <div class="legal-h1">Privacy Policy</div>
     <div class="legal-date">Effective Date: 2025</div>
@@ -12831,7 +12828,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 
 <!-- ===== LEGAL: TERMS ===== -->
 <div class="legal-page" id="terms">
-  <div class="legal-nav"><div class="brand"><svg class="bpmark" width="26" height="26" aria-label="BuilderPro OS"><use href="#bpMark"/></svg>BuilderPro <span>OS</span></div><button class="btn btn-light" onclick="closeLegal('terms')">← Back to site</button></div>
+  <div class="legal-nav"><div class="brand"><svg class="bpmark" width="32" height="32" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div><button class="btn btn-light" onclick="closeLegal('terms')">← Back to site</button></div>
   <div class="legal-body">
     <div class="legal-h1">Terms of Service</div>
     <div class="legal-date">Effective Date: 2025</div>
@@ -13065,9 +13062,10 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 }
 #bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
-/* navy sidebar: flip the tile so the mark stays legible */
-#bpx .bpx-side .bpmark{--bpm-body:#ffffff;--bpm-knock:#1b2636;--bpm-accent:#2563eb;}
-#bpx.bpx-dark .bpmark{--bpm-body:#ffffff;--bpm-knock:#12161f;--bpm-accent:#2563eb;}
+/* navy sidebar / dark theme: the blue lattice needs a light tile behind it to stay legible */
+#bpx .bpx-side .bpmark,#bpx.bpx-dark .bpmark{background:#fff;border-radius:9px;padding:3px;box-sizing:border-box;}
+#bpx .bpx-brand2{font-family:var(--sans);font-weight:700;letter-spacing:-.03em;color:#4a5568;}
+#bpx .bpx-brand2 span{color:#3b73b9;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#7bc8ff;}
 #bpx:not(.bpx-dark) .bpx-nav a{color:#b9c5d8 !important;font-weight:500;border-radius:10px;padding:11px 13px;}
 #bpx:not(.bpx-dark) .bpx-nav a:hover{background:rgba(255,255,255,.08) !important;color:#fff !important;box-shadow:none !important;}
@@ -13211,7 +13209,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
   <!-- login -->
   <div class="bpx-auth" id="bpxLogin">
     <div class="bpx-wrap">
-      <div class="bpx-brand2"><svg class="bpmark" width="34" height="34" aria-label="BuilderPro OS"><use href="#bpMark"/></svg>BuilderPro<span>OS</span></div>
+      <div class="bpx-brand2"><svg class="bpmark" width="36" height="36" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>
       <div class="bpx-card">
         <h1>Welcome back</h1>
         <div class="bpx-sub2">Sign in to your BuilderPro dashboard.</div>
@@ -13230,7 +13228,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
   <!-- app -->
   <div class="bpx-app" id="bpxApp">
     <aside class="bpx-side">
-      <div class="bpx-brand2"><svg class="bpmark" width="34" height="34" aria-label="BuilderPro OS"><use href="#bpMark"/></svg>BuilderPro<span>OS</span></div>
+      <div class="bpx-brand2"><svg class="bpmark" width="36" height="36" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>
       <!-- built by bpBuildNav() from BP_NAV — five branches, then Ridge AI + Settings pinned below -->
       <nav class="bpx-nav" id="bpxNav"></nav>
       <div class="bpx-user2"><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
