@@ -1461,10 +1461,11 @@ shell.innerHTML = `
   <div class=&quot;e-prog&quot;><div class=&quot;e-pfill&quot; id=&quot;e-pfill&quot; style=&quot;width:9%&quot;></div></div>
 
   <style>
-  .e-tabs{display:flex;gap:6px;padding:12px 22px 0;background:#fff}
-  .e-tab{flex:0 0 auto;border:1px solid #e3e8ef;background:#f6f8fb;color:#4b5563;border-radius:999px;padding:8px 15px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .e-tabs{display:flex;gap:8px;padding:18px 26px;background:#fff;border-bottom:1px solid #e9e8e3;flex-wrap:wrap}
+  @media(max-width:600px){.e-tabs{padding:14px 16px}}
+  .e-tab{flex:0 0 auto;border:1px solid #e3e8ef;background:#f6f8fb;color:#4b5563;border-radius:999px;padding:10px 18px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;line-height:1.2}
   .e-tab:hover{border-color:#c7d2e3;color:#0f172a}
-  .e-tab.on{background:var(--a);border-color:var(--a);color:#fff}
+  .e-tab.on{background:var(--a);border-color:var(--a);color:#fff;box-shadow:0 2px 8px rgba(47,107,255,.28)}
   .e-rac{padding:0 0 32px;background:#fff}
   .e-rac-in{max-width:620px;margin:0 auto;padding:0 22px}
   .e-rac-hero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.84)),url('assets/roofing/roof-crew.jpg');background-size:cover;background-position:center 40%;padding:36px 0 40px;color:#fff}
@@ -1474,7 +1475,7 @@ shell.innerHTML = `
   .e-rac-step{display:none}
   .e-rac-step.on{display:block;animation:eSpIn .52s cubic-bezier(.22,1,.28,1) both}
   .e-rac-step.on.back{animation:eSpBack .52s cubic-bezier(.22,1,.28,1) both}
-  .e-rac-q{padding-top:26px}
+  .e-rac-q{padding-top:30px}
   .e-rac-prog{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:14px}
   .e-rac-dots{display:flex;gap:5px}.e-rac-dots i{width:22px;height:4px;border-radius:2px;background:#e5e9f0;transition:background .2s}.e-rac-dots i.on{background:var(--a)}
   .e-rac-qt{margin-bottom:6px}
@@ -1531,7 +1532,7 @@ shell.innerHTML = `
         <div class=&quot;e-rac-prog&quot;><span>Question 1 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i></i><i></i><i></i></div></div>
         <div class=&quot;e-rac-found&quot; id=&quot;e-rac-found&quot;></div>
         <div class=&quot;e-stitle e-rac-qt&quot;>What's the roof<br><em>made of?</em></div>
-        <div class=&quot;e-rac-hint&quot;>Tap one — we'll move you along.</div>
+        <div class=&quot;e-rac-hint&quot;>Tap one, then Next.</div>
         <div class=&quot;e-rac-chips&quot; data-q=&quot;material&quot;>
           <button data-v=&quot;asphalt&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Asphalt shingle</button><button data-v=&quot;metal&quot; onclick=&quot;eRacPick(this)&quot;>Metal</button><button data-v=&quot;tile&quot; onclick=&quot;eRacPick(this)&quot;>Tile</button><button data-v=&quot;flat&quot; onclick=&quot;eRacPick(this)&quot;>Flat / rolled</button><button data-v=&quot;unknown&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div>
         <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(0)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(2)&quot;>Next →</button></div>
@@ -1539,7 +1540,7 @@ shell.innerHTML = `
       <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s2&quot;>
         <div class=&quot;e-rac-prog&quot;><span>Question 2 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i></i><i></i></div></div>
         <div class=&quot;e-stitle e-rac-qt&quot;>When was it<br><em>last replaced?</em></div>
-        <div class=&quot;e-rac-hint&quot; id=&quot;e-rac-agehint&quot;>Your best guess is fine.</div>
+        <div class=&quot;e-rac-hint&quot; id=&quot;e-rac-agehint&quot;>Your best guess is fine — then tap Next.</div>
         <div class=&quot;e-rac-chips&quot; data-q=&quot;age&quot;>
           <button data-v=&quot;5&quot; onclick=&quot;eRacPick(this)&quot;>Under 10 years</button><button data-v=&quot;15&quot; onclick=&quot;eRacPick(this)&quot;>10–20 years</button><button data-v=&quot;25&quot; onclick=&quot;eRacPick(this)&quot;>20+ years</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div>
         <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(1)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(3)&quot;>Next →</button></div>
@@ -1555,7 +1556,7 @@ shell.innerHTML = `
       <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s4&quot;>
         <div class=&quot;e-rac-prog&quot;><span>Question 4 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i></div></div>
         <div class=&quot;e-stitle e-rac-qt&quot;>Hail or a big windstorm<br><em>in the last year?</em></div>
-        <div class=&quot;e-rac-hint&quot;>Storm damage often isn't visible from the ground.</div>
+        <div class=&quot;e-rac-hint&quot;>Storm damage often isn't visible from the ground. Tap one, then Next.</div>
         <div class=&quot;e-rac-chips&quot; data-q=&quot;storm&quot;>
           <button data-v=&quot;yes&quot; onclick=&quot;eRacPick(this)&quot;>Yes</button><button data-v=&quot;no&quot; onclick=&quot;eRacPick(this)&quot;>No</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div>
         <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(3)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(5)&quot;>Next →</button></div>
@@ -2586,7 +2587,7 @@ function eRacPickAddr(i){
   document.getElementById('e-rac-note').innerHTML='<span class=&quot;e-rac-busy&quot;></span>Checking public records for this address…';
   eRacLookup().then(function(){
     var f=document.getElementById('e-rac-found'), y=new Date().getFullYear(), hint=document.getElementById('e-rac-agehint');
-    if(eRac.permitYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> The last roof permit on file for this address is from <b>'+eRac.permitYear+'</b> — about '+(y-eRac.permitYear)+' years ago ('+eRac.source+').'; eRacSetAge(y-eRac.permitYear); if(hint)hint.textContent='Pre-filled from the permit we found — change it if you know better.'; }
+    if(eRac.permitYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> The last roof permit on file for this address is from <b>'+eRac.permitYear+'</b> — about '+(y-eRac.permitYear)+' years ago ('+eRac.source+').'; eRacSetAge(y-eRac.permitYear); if(hint)hint.textContent='Pre-filled from the permit we found — change it if you know better, then tap Next.'; }
     else if(eRac.builtYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> Property records show the home was built in <b>'+eRac.builtYear+'</b> and no roof replacement permit is on file — the roof may be original ('+eRac.source+').'; eRacSetAge(y-eRac.builtYear); if(hint)hint.textContent='Pre-filled from property records — change it if you know better.'; }
     else { f.className='e-rac-found none'; f.innerHTML='No public roof records turned up for this address'+(eRac.source?' in '+eRac.source:'')+' — that\'s common. Answer the next four and we\'ll score it from what you know.'; }
     document.getElementById('e-rac-note').textContent='';
@@ -2628,7 +2629,6 @@ function eRacPick(btn){
   }
   wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});
   eRac.ans[qk]=v; if(qk==='age')eRac.ans.ageExact=null;
-  var next={material:2,age:3,storm:5}[qk]; if(next)setTimeout(function(){eRacGo(next);},260);
 }
 /* deterministic rubric: age vs. material lifespan (wear accelerates late), minus what the homeowner has noticed */
 function eRacCompute(){
@@ -2709,7 +2709,7 @@ function eRacReset(){
   eRac.addr='';eRac.lat=null;eRac.lng=null;eRac.zip='';eRac.permitYear=null;eRac.builtYear=null;eRac.saved=false;eRac.ans={material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'};
   document.querySelectorAll('#e-rac .e-rac-chips').forEach(function(w){w.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});var d=w.querySelector('[data-v=&quot;asphalt&quot;],[data-v=&quot;unknown&quot;],[data-v=&quot;none&quot;]');if(d)d.classList.add('on');});
   ['e-rac-addr','e-rac-name','e-rac-phone','e-rac-email'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  var h=document.getElementById('e-rac-agehint'); if(h)h.textContent='Your best guess is fine.';
+  var h=document.getElementById('e-rac-agehint'); if(h)h.textContent='Your best guess is fine — then tap Next.';
   eRacGo(0);
 }
 /* open straight onto the checker when the host page asks for it */
