@@ -13378,20 +13378,35 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-nav a.on{background:var(--blue) !important;color:#fff !important;font-weight:600;box-shadow:0 6px 16px rgba(47,107,255,.38) !important;}
 #bpx:not(.bpx-dark) .bpx-nav a svg{stroke:currentColor;}
 /* grouped sidebar: branch headers, collapsible sub-pages, pinned footer */
-#bpx .bpx-grp{display:flex;flex-direction:column;gap:2px;}
-#bpx .bpx-grp-h{justify-content:flex-start;}
-#bpx .bpx-grp-h .bpx-chev{width:14px !important;height:14px !important;margin-left:auto;opacity:.55;transition:transform .18s;stroke-width:2.2;}
-#bpx .bpx-grp.open .bpx-grp-h .bpx-chev{transform:rotate(180deg);}
-#bpx .bpx-sub{display:none;flex-direction:column;gap:1px;margin:1px 0 4px;padding-left:16px;position:relative;}
-#bpx .bpx-sub::before{content:'';position:absolute;left:20px;top:2px;bottom:6px;width:1.5px;background:rgba(255,255,255,.12);border-radius:2px;}
-#bpx .bpx-grp.open .bpx-sub{display:flex;}
-#bpx .bpx-sub a{padding:8px 12px 8px 22px !important;font-size:13.3px !important;border-radius:9px !important;}
+#bpx .bpx-grp{display:flex;flex-direction:column;}
+#bpx .bpx-grp-h{justify-content:flex-start;cursor:pointer;}
+#bpx .bpx-grp-h .bpx-chev{width:14px !important;height:14px !important;margin-left:auto;opacity:.5;
+  transition:transform .26s cubic-bezier(.4,0,.2,1),opacity .15s;stroke-width:2.2;}
+#bpx .bpx-grp-h:hover .bpx-chev{opacity:.9;}
+#bpx .bpx-grp.open .bpx-grp-h .bpx-chev{transform:rotate(180deg);opacity:.9;}
+/* 0fr → 1fr animates to the content's own height, so no max-height guesswork */
+#bpx .bpx-sub{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s cubic-bezier(.4,0,.2,1);}
+#bpx .bpx-sub-in{overflow:hidden;min-height:0;display:flex;flex-direction:column;gap:1px;
+  padding-left:16px;position:relative;opacity:0;transform:translateY(-3px);
+  transition:opacity .2s ease .04s,transform .24s cubic-bezier(.4,0,.2,1);}
+#bpx .bpx-grp.open .bpx-sub{grid-template-rows:1fr;}
+#bpx .bpx-grp.open .bpx-sub-in{opacity:1;transform:none;padding-bottom:5px;}
+#bpx .bpx-sub-in::before{content:'';position:absolute;left:20px;top:3px;bottom:8px;width:1.5px;
+  background:rgba(255,255,255,.13);border-radius:2px;}
+#bpx .bpx-sub a{padding:8px 12px 8px 22px !important;font-size:13.3px !important;border-radius:9px !important;
+  position:relative;transition:background .15s,color .15s,box-shadow .2s;}
 #bpx:not(.bpx-dark) .bpx-grp.has-on .bpx-grp-h{color:#fff !important;}
 #bpx:not(.bpx-dark) .bpx-sub a.on{background:rgba(47,107,255,.22) !important;box-shadow:inset 3px 0 0 #7bc8ff !important;color:#fff !important;}
 #bpx .bpx-nav-foot{margin-top:auto;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:2px;}
-#bpx.bpx-dark .bpx-sub::before,#bpx.bpx-dark .bpx-nav-foot{border-color:#232c3a;background-color:transparent;}
-#bpx.bpx-dark .bpx-sub::before{background:#232c3a;}
+#bpx.bpx-dark .bpx-nav-foot{border-color:#232c3a;}
+#bpx.bpx-dark .bpx-sub-in::before{background:#232c3a;}
 #bpx.bpx-dark .bpx-sub a.on{background:rgba(47,107,255,.16);box-shadow:inset 3px 0 0 var(--blue);}
+/* a tap should feel like it landed, even before the view finishes building */
+#bpx .bpx-nav a{transition:background .15s,color .15s,box-shadow .2s,transform .12s;}
+#bpx .bpx-nav a:active{transform:scale(.985);}
+@media(prefers-reduced-motion:reduce){
+  #bpx .bpx-sub,#bpx .bpx-sub-in,#bpx .bpx-grp-h .bpx-chev,#bpx .bpx-nav a{transition:none !important;}
+}
 #bpx:not(.bpx-dark) .bpx-user2{border-top:1px solid rgba(255,255,255,.14);padding-top:16px;margin-top:10px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-uemail{color:#c2cede;font-size:12.5px;font-weight:600;margin-bottom:10px;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-logout{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.26);color:#e8eef7;padding:10px;border-radius:9px;}
@@ -14165,16 +14180,19 @@ function bpBuildNav(){
     if(!g.kids){h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
     h+='<div class="bpx-grp" data-grp="'+g.id+'">'
       +'<a class="bpx-grp-h" onclick="bpNavToggle(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span><svg class="bpx-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>'
-      +'<div class="bpx-sub">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span></a>';}).join('')+'</div></div>';
+      +'<div class="bpx-sub"><div class="bpx-sub-in">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span></a>';}).join('')+'</div></div></div>';
   });
   h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
   document.getElementById('bpxNav').innerHTML=h;
 }
+/* A branch header opens or closes the branch and nothing else — tapping
+   "Projects" should not yank you off the page you are reading. You choose the
+   sub-page yourself. Only one branch stays open at a time. */
 function bpNavToggle(gid){
   var g=document.querySelector('#bpxNav .bpx-grp[data-grp="'+gid+'"]');if(!g)return;
-  var open=g.classList.toggle('open');
-  /* opening a branch jumps to its first page so a tap always does something */
-  if(open&&bpNavGroupOf(window._bpCurView)!==gid){var first=g.querySelector('.bpx-sub a');if(first)bpNav(first.getAttribute('data-view'));}
+  var open=!g.classList.contains('open');
+  document.querySelectorAll('#bpxNav .bpx-grp').forEach(function(x){ if(x!==g)x.classList.remove('open'); });
+  g.classList.toggle('open',open);
 }
 function bpBuildMobbar(){
   var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
