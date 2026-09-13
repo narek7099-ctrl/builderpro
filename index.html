@@ -14150,7 +14150,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},bigroofs:{t:'Big Roofs',s:'Commercial roofs in your area, biggest first \u2014 with the business\u2019s phone number. Businesses aren\u2019t on the Do-Not-Call list, so these you can simply ring.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes and commercial roofs in your service area most likely to need your trade — from public permit records and the satellite view.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14165,7 +14165,7 @@ var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['calendar','Calendar'],['calculator','My Calculator']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['payouts','Payouts']]},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['bigroofs','Big Roofs'],['neighbors','Neighbor Farming'],['contacts','Contacts'],['messaging','Messaging']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['neighbors','Neighbor Farming'],['contacts','Contacts'],['messaging','Messaging']]},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors']]}
 ];
 var BP_NAV_FOOT=[['ai','Ridge AI','ai'],['settings','Settings','settings']];
@@ -14219,7 +14219,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,bigroofs:bpBigRoofs,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -18999,6 +18999,7 @@ function bpRadar(){
     }).catch(function(){_rdTerrLoaded=true;bpRadar();});
     return;
   }
+  if(window._rdMode==='commercial'){ bgShell(); return; }
   if(!_rdTerr && !_rdDemoOK){ rdLocked(); return; }
   rdRenderShell();
 }
@@ -19009,7 +19010,8 @@ function rdLocked(){
     if(el)el.textContent=em?('Signed in as: '+em+' — territories are matched to this exact email.'):'Not signed in.';
   }).catch(function(){});}
   q('bpxViewArea').innerHTML=
-    '<div style="max-width:560px;margin:30px auto;text-align:center;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:38px 30px">'
+    rdModeBar('homes')
+    +'<div style="max-width:560px;margin:30px auto;text-align:center;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:38px 30px">'
     +'<img src="assets/roofing/roof-completed-sm.jpg" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:18px">'
     +'<h3 style="font-size:19px;margin-bottom:10px">Lead Radar territories are exclusive</h3>'
     +'<p style="color:#5f6470;font-size:14px;line-height:1.6;margin-bottom:8px">One contractor per trade, per area. Your territory gives you a live map of the homes most likely to need your work — scored from public permit records and recent storm reports — and nobody else in your trade can buy it.</p>'
@@ -19017,7 +19019,8 @@ function rdLocked(){
     +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
     +'<a class="bpx-btn" style="text-decoration:none" href="mailto:narek7099@gmail.com?subject=Lead%20Radar%20territory">Check my area</a>'
     +'<button class="bpx-btn ghost" onclick="_rdDemoOK=true;_rdCity=\'demo\';bpRadar()">Preview with demo data</button></div>'
-    +'<div id="rdWhoami" style="margin-top:16px;font-size:12px;color:#9a9aa0"></div></div>';
+    +'<div id="rdWhoami" style="margin-top:16px;font-size:12px;color:#9a9aa0"></div></div>'
+    +'<div class="bpx-mut" style="text-align:center;font-size:12.5px;margin-top:-14px">Commercial roofs need no territory \u2014 that half of the map is public data you scan yourself.</div>';
 }
 function rdRenderShell(){
   var t=RADAR_TRADES[_rdTrade];
@@ -19028,7 +19031,8 @@ function rdRenderShell(){
   var terrNote=_rdTerr?('<span class="bpx-badge" style="font-size:11.5px">Your territory: '+bpEsc((_rdTerr.zips||[]).join(', ')||RADAR_CITIES[_rdCity].name)+' · '+(RADAR_TRADES[_rdTerr.trade]||{}).l+'</span>')
     :('<span class="bpx-badge warn" style="font-size:11.5px">Demo preview — no territory assigned</span>');
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
+    rdModeBar('homes')
+    +'<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
       +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">My list</button></div>'+terrNote+'</div>'
     +'<div class="rd-toolbar">'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
@@ -19826,9 +19830,8 @@ document.head.appendChild(rdCss);
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
     {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
-    {key:"bigroofs",label:"Big Roofs",desc:"under Leads. Commercial roof prospecting by phone. They pan the satellite map to an area and hit Scan this view; it lists every commercial building \u2014 strip malls, warehouses, churches, schools, self-storage \u2014 with the real roof size measured from the building footprint in public map data, an estimate at their own $/sq ft rate, and the business's phone number where one is on file. Biggest roofs first, so they work the biggest ticket first. One tap dials, and the building moves through Called \u2192 Talked \u2192 Walked it \u2192 Bid out \u2192 Won/Lost on My list. A Referral partners tab does the same for solar installers, property managers, insurance agents and realtors. Businesses are not on the Do-Not-Call registry, so unlike homeowner lists these can simply be rung. It does NOT judge roof condition \u2014 the contractor looks at the satellite image and decides."},
     {key:"neighbors",label:"Neighbor Farming",desc:"under Leads. Turns a job they have finished into the next one: pick a completed job with an address, and BuilderPro maps the real homes around it from OpenStreetMap address data, closest and same-street first. Every door is tracked through Hanger left \u2192 Reached out \u2192 Replied \u2192 Booked \u2192 Won, so over time they learn how many extra jobs each finished job produces. Prints door hangers that name the job address and the neighbour's own street, plans a walking route from the job site, and writes the postcard and text copy with the street merged in. There is also a 'Farm this street' button on each project."},
-    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
+    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. A Homes / Commercial switch at the top flips the same map to commercial roofs: scan the satellite view and every strip mall, warehouse, church, school and self-storage comes back with its real roof size measured from the building footprint, an estimate at the contractor's own $/sq ft rate, and the business's phone number — biggest roof first, one tap to dial, tracked Called → Talked → Walked it → Bid out → Won. Businesses are not on the Do-Not-Call registry, so unlike homeowner lists these can simply be rung. A Referral partners tab does the same for solar installers, property managers, insurance agents and realtors. It does NOT judge roof condition — the contractor looks at the satellite image. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
     {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
     {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
     {key:"competitors",label:"Competitors",desc:"under Marketing. A scoreboard of the other contractors in their area from Yelp — rating, review count, reviews gained in the last 30 days, services listed. 'Find competitors' searches by trade and city and tracks the ones they pick; 'Where to win' lists specific gaps (fewer reviews, lower rating, missing photos or services) with a button to the part of the app that fixes each"},
@@ -20278,11 +20281,23 @@ function bgArea(ring){
 }
 function bgColor(sqft){return sqft>=40000?'#b91c1c':sqft>=20000?'#ea580c':sqft>=10000?'#d97706':'#0284c7';}
 
-function bpBigRoofs(){
+/* Homes vs Commercial — the same radar, two kinds of roof. Residential runs on
+   permit records and scoring; commercial runs on building footprints you scan
+   off the satellite view. Sharing one page keeps it one habit, not two. */
+function rdModeBar(active){
+  var b=function(m,l,t){return '<button class="bpx-jt'+(active===m?' on':'')+'" title="'+t+'" onclick="rdSetMode(\''+m+'\')">'+l+'</button>';};
+  return '<div class="bpx-jobtabs" style="margin-bottom:12px">'
+    +b('homes','\ud83c\udfe0 Homes','Houses scored from permit records and storm reports')
+    +b('commercial','\ud83c\udfe2 Commercial roofs','Strip malls, warehouses, churches \u2014 measured off the satellite view, with the business phone')
+    +'</div>';
+}
+window.rdSetMode=function(m){ window._rdMode=m; bpRadar(); };
+function bgShell(){
   var s=(typeof bpSettingsGet==='function'?bpSettingsGet():{})||{};
   if(s.commercialRate)_bg.rate=+s.commercialRate||9;
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div class="bpx-jobtabs">'
+    rdModeBar('commercial')
+    +'<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div class="bpx-jobtabs">'
       +'<button class="bpx-jt'+(_bg.tab==='roofs'?' on':'')+'" onclick="bgTab(\'roofs\')">Big roofs</button>'
       +'<button class="bpx-jt'+(_bg.tab==='partners'?' on':'')+'" onclick="bgTab(\'partners\')">Referral partners</button>'
       +'<button class="bpx-jt'+(_bg.tab==='mine'?' on':'')+'" onclick="bgTab(\'mine\')">My list</button></div>'
@@ -20314,7 +20329,7 @@ function bpBigRoofs(){
   if(_bg.tab==='partners') bgLoadPartners();
   if(_bg.tab==='mine') bgLoadMine();
 }
-window.bgTab=function(t){_bg.tab=t;bpBigRoofs();};
+window.bgTab=function(t){_bg.tab=t;bgShell();};
 window.bgSetMin=function(v){_bg.min=+v||5000;bgRender();};
 window.bgSetRate=function(v){
   _bg.rate=Math.max(1,+String(v).replace(/[^0-9.]/g,'')||9);
