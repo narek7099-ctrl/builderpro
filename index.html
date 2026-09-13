@@ -14150,7 +14150,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14165,7 +14165,7 @@ var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['calendar','Calendar'],['calculator','My Calculator']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['payouts','Payouts']]},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['contacts','Contacts'],['messaging','Messaging']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['neighbors','Neighbor Farming'],['contacts','Contacts'],['messaging','Messaging']]},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors']]}
 ];
 var BP_NAV_FOOT=[['ai','Ridge AI','ai'],['settings','Settings','settings']];
@@ -14219,7 +14219,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -16602,6 +16602,7 @@ window.bpProjOpen=function(id){
         +'<div><label>Phone</label>'+inp('bpx-pj-phone','(555) 555-5555',j.phone)+'</div>'
         +'<div><label>Email</label>'+inp('bpx-pj-email','name@email.com',j.email)+'</div></div>'
       +'<label>Address</label>'+inp('bpx-pj-addr','Job site address',j.addr)
+      +((j.addr||'').trim().length>6?'<div style="margin-top:7px"><button class="bpx-rowbtn" onclick="bpFmFromJob(\''+j.id+'\')" title="Map the homes around this one and build a farming list">Farm this street →</button></div>':'')
       +'<label>Job</label>'+inp('bpx-pj-title','e.g. Roof replacement',j.title)
       +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:90px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>')
     +pane('money',
@@ -19825,6 +19826,7 @@ document.head.appendChild(rdCss);
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
     {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
+    {key:"neighbors",label:"Neighbor Farming",desc:"under Leads. Turns a job they have finished into the next one: pick a completed job with an address, and BuilderPro maps the real homes around it from OpenStreetMap address data, closest and same-street first. Every door is tracked through Hanger left \u2192 Reached out \u2192 Replied \u2192 Booked \u2192 Won, so over time they learn how many extra jobs each finished job produces. Prints door hangers that name the job address and the neighbour's own street, plans a walking route from the job site, and writes the postcard and text copy with the street merged in. There is also a 'Farm this street' button on each project."},
     {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
     {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
     {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
@@ -19892,6 +19894,315 @@ document.head.appendChild(rdCss);
   document.getElementById('oawGo').onclick=send;
   document.getElementById('oawIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
 })();
+</script>
+
+<style>
+/* ===== Neighbor Farming ===== */
+.fm-hero{display:flex;gap:18px;align-items:center;background:linear-gradient(115deg,#0f2540,#1d4676);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:16px;overflow:hidden;position:relative}
+.fm-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.17}
+.fm-hero .in{position:relative;flex:1;min-width:220px}
+.fm-hero h3{margin:0 0 5px;font-size:18px;letter-spacing:-.02em}
+.fm-hero p{margin:0;font-size:13.5px;line-height:1.55;color:#cfe0f4;max-width:62ch}
+.fm-hero .btn{position:relative;background:#fff;color:#0f2540;border:0;border-radius:10px;padding:11px 18px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.fm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.fm-card{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fff;cursor:pointer;transition:border-color .16s,transform .16s}
+.fm-card:hover{border-color:#b9c9de;transform:translateY(-1px)}
+.fm-card h4{margin:0 0 3px;font-size:15.5px;letter-spacing:-.01em}
+.fm-card .sub{font-size:12.5px;color:#6a6a70;margin-bottom:12px}
+.fm-nums{display:flex;gap:16px;flex-wrap:wrap}
+.fm-nums div{font-size:12px;color:#6a6a70}
+.fm-nums b{display:block;font-size:19px;color:#0f172a;letter-spacing:-.02em}
+.fm-bar{display:flex;height:6px;border-radius:4px;overflow:hidden;background:#eef1f6;margin-top:12px}
+.fm-bar i{display:block}
+.fm-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #eef1f6;font-size:13.5px;flex-wrap:wrap}
+.fm-row .ad{flex:1;min-width:170px;font-weight:600}
+.fm-row .di{color:#6a6a70;font-size:12.5px;white-space:nowrap}
+.fm-chip{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.fm-stg{display:flex;gap:5px;flex-wrap:wrap}
+.fm-stg button{font-size:11.5px;border:1px solid #dfe5ee;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;color:#3d4a5c}
+.fm-stg button.on{background:#0f2540;border-color:#0f2540;color:#fff}
+.fm-warn{background:#fff8ec;border:1px solid #f2dfbd;border-radius:11px;padding:12px 15px;font-size:12.5px;line-height:1.6;color:#6b4f16;margin-top:14px}
+.fm-copy{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;background:var(--soft)}
+.fm-copy h5{margin:0 0 7px;font-size:13px;letter-spacing:-.01em}
+.fm-copy pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:13.5px;line-height:1.65;color:#2b3440}
+</style>
+<script>
+/* ===== Neighbor Farming — every finished job becomes the next one ==========
+   The trigger here is their OWN completed work, not geography or weather: a
+   finished roof sits on a street of houses the same age, by the same builder,
+   under the same 20 years of weather, and the neighbours have watched the
+   trucks all week. We take the job's address, find the real houses around it
+   (OpenStreetMap address data), and hand back a farming list with the proof
+   merged into the copy. Tracked per door so they learn their true number:
+   "every roof I finish produces N more".
+   Needs the farm_campaigns table (supabase/migrations/…_farm_campaigns.sql). */
+var FM_RADII=[[250,'Same block','about 250 m'],[450,'A few blocks','about 450 m'],[800,'Whole neighbourhood','about 800 m']];
+/* 'new' is the absence of a stage, not a button — tapping the stage you're already
+   on clears it back to new, which is the undo. */
+var FM_STAGES=[['new','Not touched'],['hanger','Hanger left'],['texted','Reached out'],['replied','Replied'],['booked','Booked'],['won','Won']];
+var FM_ACTIONS=FM_STAGES.slice(1);
+var FM_COLOR={new:'#e2e8f0',hanger:'#9db4d0',texted:'#6f93bb',replied:'#e8a33d',booked:'#2f7d4f',won:'#1c5c39'};
+var _bpFm={list:null,open:null,err:'',busy:'',draftJob:null};
+
+function bpFmKm(a,b,c,d){var R=6371,p=Math.PI/180;var u=(c-a)*p,v=(d-b)*p;
+  var h=Math.sin(u/2)*Math.sin(u/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(v/2)*Math.sin(v/2);
+  return 2*R*Math.asin(Math.sqrt(h));}
+function bpFmFt(km){return Math.round(km*3280.84);}
+function bpFmStreetOf(addr){return String(addr||'').replace(/^\s*[\d-]+\s+/,'').split(',')[0].trim();}
+function bpFmCount(c,st){return (c.targets||[]).filter(function(t){return (t.stage||'new')===st;}).length;}
+function bpFmLeads(c){return (c.targets||[]).filter(function(t){return ['replied','booked','won'].indexOf(t.stage||'new')>=0;}).length;}
+
+/* ---------- the page ---------- */
+function bpNeighbors(){
+  if(_bpFm.open){ return bpFmDetail(); }
+  var area=q('bpxViewArea');
+  var hero='<div class="fm-hero"><img src="assets/roofing/roof-crew.jpg" alt="" loading="lazy">'
+    +'<div class="in"><h3>Your finished jobs are your best lead list</h3>'
+    +'<p>The houses around a roof you just replaced were built the same year, by the same builder, and have taken the same weather. The neighbours watched your trucks all week — that’s proof no ad can buy. Pick a job and BuilderPro maps the real homes around it.</p></div>'
+    +'<button class="btn" onclick="bpFmNewOpen()">Farm a finished job</button></div>';
+  if(_bpFm.list===null){
+    area.innerHTML=hero+'<div class="bpx-empty2">Loading your campaigns…</div>';
+    bpFmLoad(); return;
+  }
+  if(_bpFm.err){ area.innerHTML=hero+'<div class="fm-warn">'+bpEsc(_bpFm.err)+'</div>'; return; }
+  var cards=_bpFm.list.map(function(c){
+    var tg=c.targets||[], n=tg.length, leads=bpFmLeads(c), booked=bpFmCount(c,'booked')+bpFmCount(c,'won');
+    var segs=FM_STAGES.map(function(s){var k=bpFmCount(c,s[0]);return k?'<i style="width:'+(k/Math.max(n,1)*100)+'%;background:'+FM_COLOR[s[0]]+'"></i>':'';}).join('');
+    return '<div class="fm-card" onclick="bpFmOpen(\''+c.id+'\')">'
+      +'<h4>'+bpEsc(c.job_name||'Job')+'</h4>'
+      +'<div class="sub">'+bpEsc(bpFmStreetOf(c.anchor_addr)||c.anchor_addr||'')+'</div>'
+      +'<div class="fm-nums"><div><b>'+n+'</b>neighbours</div><div><b>'+leads+'</b>replied</div><div><b>'+booked+'</b>booked</div>'
+      +'<div><b>'+(n?Math.round(leads/n*100):0)+'%</b>response</div></div>'
+      +'<div class="fm-bar">'+segs+'</div></div>';
+  }).join('');
+  var jobs=bpFmJobs();
+  area.innerHTML=hero
+    +(_bpFm.list.length
+      ? '<div class="bpx-chead"><div><b style="font-size:14.5px">Campaigns</b> <span class="bpx-mut" style="font-size:12.5px">· '+_bpFm.list.length+'</span></div>'+bpCsvBtn('bpCsvFarm()')+'</div><div class="fm-cards">'+cards+'</div>'
+      : '<div class="bpx-emptyhero"><img src="assets/roofing/roof-decking-sm.jpg" alt="" loading="lazy"><div><b>No farming campaigns yet</b>'
+        +'<div class="bpx-mut" style="font-size:13px;margin-top:3px">'
+        +(jobs.length?'Start with a job that has an address on it — you have '+jobs.length+' ready.':'Add an address to a project in <b>Active Projects</b> first — the address is what the map needs.')
+        +'</div></div></div>');
+}
+function bpFmJobs(){
+  return (typeof bpJobsGet==='function'?bpJobsGet():[]).filter(function(j){return (j.addr||'').trim().length>6;});
+}
+function bpFmLoad(){
+  if(!(window.BP_LIVE&&window.BP_SB)){
+    _bpFm.list=[]; _bpFm.err='Sign in to save farming campaigns to your account.'; bpNeighbors(); return;
+  }
+  Promise.resolve(BP_SB.from('farm_campaigns').select('*').order('created_at',{ascending:false}))
+    .then(function(r){
+      if(r&&r.error){
+        _bpFm.list=[];
+        _bpFm.err=(String(r.error.message||'').indexOf('farm_campaigns')>=0||r.error.code==='42P01')
+          ? 'The farm_campaigns table hasn’t been created in your database yet — run the Neighbor Farming SQL and reload.'
+          : 'Couldn’t load your campaigns: '+r.error.message;
+      }else{ _bpFm.list=(r&&r.data)||[]; _bpFm.err=''; }
+      bpNeighbors();
+    },function(){ _bpFm.list=[]; _bpFm.err='Couldn’t reach your account just now — check your connection and reload.'; bpNeighbors(); });
+}
+window.bpCsvFarm=function(){
+  var rows=[];
+  (_bpFm.list||[]).forEach(function(c){(c.targets||[]).forEach(function(t){
+    rows.push([c.job_name,c.anchor_addr,t.addr,bpFmFt(t.km||0),t.same?'yes':'no',t.stage||'new']);
+  });});
+  bpCsv('neighbor-farming',['Job','Job address','Neighbour','Feet away','Same street','Stage'],rows);
+};
+
+/* ---------- start a campaign ---------- */
+window.bpFmNewOpen=function(pre){
+  var jobs=bpFmJobs();
+  if(!jobs.length){
+    bpModal('<h3>No job addresses yet</h3><div class="bpx-sub">Neighbor Farming works off the address of a job you’ve done — that’s the house the neighbours watched.</div>'
+      +'<p style="font-size:13.5px;line-height:1.6;color:#3d4a5c">Open a project in <b>Active Projects</b>, put the job-site address in, save it, then come back.</p>'
+      +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button><button class="bpx-btn" onclick="bpCloseModal();bpNav(\'activejobs\')">Open Active Projects</button></div>');
+    return;
+  }
+  var sel=jobs.map(function(j){return '<option value="'+bpEsc(j.id)+'"'+(pre===j.id?' selected':'')+'>'+bpEsc((j.name||'Job')+' — '+j.addr)+'</option>';}).join('');
+  bpModal('<h3>Farm a finished job</h3><div class="bpx-sub">We’ll map the real homes around this address and build the list.</div>'
+    +'<label>Which job</label><select id="fm-job" style="width:100%;padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit">'+sel+'</select>'
+    +'<label>How far out</label><select id="fm-rad" style="width:100%;padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit">'
+      +FM_RADII.map(function(r,i){return '<option value="'+r[0]+'"'+(i===1?' selected':'')+'>'+r[1]+' — '+r[2]+'</option>';}).join('')+'</select>'
+    +'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Same block converts best. Go wider once you’ve worked the block.</div>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="fm-go" onclick="bpFmBuild()">Find the neighbours</button></div>');
+};
+window.bpFmFromJob=function(id){ bpCloseModal(); bpNav('neighbors'); setTimeout(function(){bpFmNewOpen(id);},260); };
+
+function bpFmMsg(t,bad){var m=q('bpx-mmsg'); if(!m)return; m.style.color=bad?'#dc2626':'#5b6b7f'; m.textContent=t;}
+window.bpFmBuild=function(){
+  var jid=(q('fm-job')||{}).value, rad=+((q('fm-rad')||{}).value)||450;
+  var j=bpFmJobs().filter(function(x){return x.id===jid;})[0];
+  if(!j){ bpFmMsg('Pick a job first.',true); return; }
+  var btn=q('fm-go'); if(btn){btn.disabled=true;btn.textContent='Finding…';}
+  bpFmMsg('Looking up the address…');
+  bpFmGeocode(j.addr)
+    .then(function(pt){
+      bpFmMsg('Mapping the homes around it…');
+      return bpFmNearby(pt.lat,pt.lng,rad).then(function(list){
+        var anchorStreet=bpFmStreetOf(j.addr).toLowerCase();
+        var seen={}, targets=[];
+        list.forEach(function(h){
+          var addr=(h.num+' '+h.street).trim(), key=addr.toLowerCase();
+          if(seen[key])return; seen[key]=1;
+          if(key===bpFmStreetOf(j.addr).toLowerCase()||addr.toLowerCase()===String(j.addr).toLowerCase().split(',')[0].trim())return;
+          var km=bpFmKm(pt.lat,pt.lng,h.lat,h.lng);
+          if(km<0.004)return;                       /* the job itself */
+          targets.push({addr:addr,street:h.street,lat:h.lat,lng:h.lng,km:Math.round(km*10000)/10000,
+            same:h.street.toLowerCase()===anchorStreet,stage:'new'});
+        });
+        targets.sort(function(a,b){ if(a.same!==b.same)return a.same?-1:1; return a.km-b.km; });
+        targets=targets.slice(0,150);
+        if(!targets.length) throw new Error('OpenStreetMap has no house addresses mapped around there yet, so there’s nothing honest to show. This is common in rural areas and new builds. Try a wider radius, or a job in a denser part of town.');
+        return {pt:pt,targets:targets};
+      });
+    })
+    .then(function(o){
+      var row={job_id:j.id,job_name:(j.name||'Job')+' — '+(j.title||''),anchor_addr:j.addr,
+        anchor_lat:o.pt.lat,anchor_lng:o.pt.lng,radius_m:rad,targets:o.targets};
+      if(!(window.BP_LIVE&&window.BP_SB)){
+        row.id='local'+Date.now(); _bpFm.list=[row].concat(_bpFm.list||[]);
+        bpCloseModal(); _bpFm.open=row.id; bpFmDetail(); return;
+      }
+      return Promise.resolve(BP_SB.from('farm_campaigns').insert(row).select().single()).then(function(r){
+        if(r&&r.error) throw new Error(r.error.message);
+        var made=Array.isArray(r.data)?r.data[0]:r.data;      /* single() normally unwraps; don't depend on it */
+        if(!made||!made.id) throw new Error('Saved, but your account didn’t hand the campaign back — reload the page and it should be there.');
+        _bpFm.list=[made].concat(_bpFm.list||[]);
+        bpCloseModal(); _bpFm.open=made.id; bpFmDetail();
+      });
+    })
+    .catch(function(e){
+      var btn2=q('fm-go'); if(btn2){btn2.disabled=false;btn2.textContent='Find the neighbours';}
+      bpFmMsg((e&&e.message)||'Something went wrong — try again.',true);
+    });
+};
+/* real address data — no invented houses */
+function bpFmGeocode(addr){
+  var url='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+encodeURIComponent(addr);
+  return fetch(url).then(function(r){return r.ok?r.json():[];}).then(function(a){
+    if(!a||!a.length) throw new Error('We couldn’t find “'+addr+'” on the map. Add the city and state to the job address and try again.');
+    return {lat:+a[0].lat,lng:+a[0].lon};
+  });
+}
+function bpFmNearby(lat,lng,radius){
+  var qy='[out:json][timeout:25];('
+    +'node(around:'+radius+','+lat+','+lng+')["addr:housenumber"];'
+    +'way(around:'+radius+','+lat+','+lng+')["addr:housenumber"];'
+    +');out center 400;';
+  return fetch('https://overpass-api.de/api/interpreter',{method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(qy)})
+    .then(function(r){ if(!r.ok) throw new Error('The address map service is busy right now — give it a minute and try again.'); return r.json(); })
+    .then(function(d){
+      var out=[];
+      ((d&&d.elements)||[]).forEach(function(el){
+        var t=el.tags||{}, num=t['addr:housenumber'], st=t['addr:street'];
+        if(!num||!st)return;
+        var la=el.lat!=null?el.lat:(el.center&&el.center.lat), ln=el.lon!=null?el.lon:(el.center&&el.center.lon);
+        if(la==null||ln==null)return;
+        out.push({num:String(num),street:String(st),lat:la,lng:ln});
+      });
+      return out;
+    });
+}
+
+/* ---------- one campaign ---------- */
+window.bpFmOpen=function(id){ _bpFm.open=id; bpFmDetail(); };
+window.bpFmBack=function(){ _bpFm.open=null; bpNeighbors(); };
+function bpFmCur(){ return (_bpFm.list||[]).filter(function(c){return String(c.id)===String(_bpFm.open);})[0]; }
+function bpFmDetail(){
+  var c=bpFmCur(), area=q('bpxViewArea');
+  if(!c){ _bpFm.open=null; return bpNeighbors(); }
+  var tg=c.targets||[], n=tg.length, street=bpFmStreetOf(c.anchor_addr);
+  var rows=tg.map(function(t,i){
+    var st=t.stage||'new';
+    return '<div class="fm-row">'
+      +'<span class="ad">'+bpEsc(t.addr)+'</span>'
+      +(t.same?'<span class="fm-chip" style="background:#e8f1fb;color:#1d4676">same street</span>':'')
+      +'<span class="di">'+bpFmFt(t.km||0)+' ft away</span>'
+      +'<span class="fm-stg">'+FM_ACTIONS.map(function(s){
+          return '<button class="'+(st===s[0]?'on':'')+'" title="'+(st===s[0]?'Tap again to undo':s[2]||s[1])+'" onclick="bpFmStage('+i+',\''+s[0]+'\')">'+s[1]+'</button>';
+        }).join('')+'</span></div>';
+  }).join('');
+  var leads=bpFmLeads(c), booked=bpFmCount(c,'booked')+bpFmCount(c,'won');
+  area.innerHTML=
+    '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpFmBack()">← All campaigns</button>'
+    +'<div class="bpx-chead"><div><b style="font-size:15px">'+bpEsc(c.job_name||'Job')+'</b>'
+      +'<div class="bpx-mut" style="font-size:12.5px">'+bpEsc(c.anchor_addr||'')+' · '+n+' homes mapped within '+(c.radius_m||450)+' m</div></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +'<button class="bpx-rowbtn" onclick="bpFmHangers()">🖨 Print door hangers</button>'
+        +'<button class="bpx-rowbtn" onclick="bpFmRoute()">Plan a walking route</button>'
+      +'</div></div>'
+    +'<div class="fm-nums" style="margin-bottom:16px;gap:26px"><div><b>'+n+'</b>neighbours</div><div><b>'+bpFmCount(c,'hanger')+'</b>hangers left</div>'
+      +'<div><b>'+leads+'</b>replied</div><div><b>'+booked+'</b>booked</div><div><b>'+bpFmCount(c,'won')+'</b>won</div></div>'
+    +bpFmCopyBlocks(c,street)
+    +'<div class="bpx-cwrap" style="padding:6px 16px 2px;margin-top:16px">'+rows+'</div>';
+}
+window.bpFmStage=function(i,st){
+  var c=bpFmCur(); if(!c)return;
+  var t=(c.targets||[])[i]; if(!t)return;
+  t.stage=(t.stage===st?'new':st);
+  bpFmDetail();
+  if(!(window.BP_LIVE&&window.BP_SB)||String(c.id).indexOf('local')===0)return;
+  Promise.resolve(BP_SB.from('farm_campaigns').update({targets:c.targets}).eq('id',c.id)).then(function(){},function(){});
+};
+function bpFmCopyBlocks(c,street){
+  var s=(typeof bpSettingsGet==='function'?bpSettingsGet():{})||{}, co=s.company||{};
+  var me=co.name||'our crew', ph=co.phone||'', unit='roof';
+  var hanger='We just finished a '+unit+' at '+bpEsc(bpFmStreetOf(c.anchor_addr)? String(c.anchor_addr).split(',')[0] : 'your street')
+    +'. Your home was built around the same time and has taken the same weather — if you’ve been wondering about yours, we’re already in the neighbourhood this week.';
+  var post='Hi neighbour — '+me+' just replaced the '+unit+' at '+String(c.anchor_addr||'').split(',')[0]+'.\n\n'
+    +'Houses on '+(street||'this street')+' went up around the same year, so most of them are due within a season or two of each other. '
+    +'While we’re still set up nearby we’re doing free 20-minute inspections — photos you keep, no obligation.\n\n'
+    +(ph?'Call or text '+ph+'\n':'')+(co.website?co.website+'\n':'');
+  var sms='Hi {first} — '+me+' here. We just finished the '+unit+' at '+String(c.anchor_addr||'').split(',')[0]
+    +' on your street. Happy to take a quick look at yours while we’re nearby — want me to swing by? Reply STOP to opt out.';
+  return '<div class="fm-copy"><h5>Door hanger / postcard — the street name is already merged in</h5><pre>'+bpEsc(post)+'</pre></div>'
+    +'<div class="fm-copy"><h5>If a neighbour reaches out or you already have their number</h5><pre>'+bpEsc(sms)+'</pre></div>'
+    +'<div class="fm-warn"><b>On texting:</b> the copy above is for neighbours who contact you first, scan the hanger, or are already customers who agreed to hear from you. '
+    +'Cold-texting numbers you bought or looked up is a TCPA problem — that’s real money per message, not a technicality. Door hangers and mailers have no such limit, which is why they lead here.</div>';
+}
+window.bpFmRoute=function(){
+  var c=bpFmCur(); if(!c)return;
+  var order=(c.targets||[]).filter(function(t){return (t.stage||'new')==='new';}).slice(0,12);
+  if(!order.length){ alert('Every door on this list has been worked already — nice.'); return; }
+  var url='https://www.google.com/maps/dir/?api=1&travelmode=walking&origin='+c.anchor_lat+','+c.anchor_lng
+    +'&destination='+order[order.length-1].lat+','+order[order.length-1].lng;
+  if(order.length>2) url+='&waypoints='+order.slice(0,-1).map(function(t){return t.lat+','+t.lng;}).join('|');
+  bpModal('<h3>Walking route — '+order.length+' doors</h3><div class="bpx-sub">Starting at the job they can see from the sidewalk.</div>'
+    +'<div style="font-size:13.5px;line-height:1.9;margin:4px 0 2px">'+order.map(function(t,i){return (i+1)+'. '+bpEsc(t.addr)+' <span class="bpx-mut">· '+bpFmFt(t.km||0)+' ft</span>';}).join('<br>')+'</div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button><a class="bpx-btn" href="'+url+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Open in Google Maps</a></div>');
+};
+window.bpFmHangers=function(){
+  var c=bpFmCur(); if(!c)return;
+  var tg=(c.targets||[]).filter(function(t){return (t.stage||'new')==='new';});
+  if(!tg.length) tg=(c.targets||[]).slice(0,20);
+  tg=tg.slice(0,20);
+  var s=(typeof bpSettingsGet==='function'?bpSettingsGet():{})||{}, co=s.company||{}, esc=bpEsc;
+  var site=(co.website||'').trim(), siteUrl=site?(/^https?:/i.test(site)?site:'https://'+site):'';
+  var qr=siteUrl?'https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0&data='+encodeURIComponent(siteUrl+(siteUrl.indexOf('?')<0?'?':'&')+'src=neighbor'):'';
+  var jobAddr=String(c.anchor_addr||'').split(',')[0];
+  var pages=tg.map(function(t){
+    return '<section class="hg"><div class="top">'+(co.logo?'<img class="logo" src="'+esc(co.logo)+'" alt="">':'')+'<div class="co">'+esc(co.name||'Your company')+'</div></div>'
+      +'<h1>We just finished a roof on your street.</h1>'
+      +'<p class="addr">'+esc(t.addr)+'</p>'
+      +'<p class="hook">'+esc(jobAddr)+' — '+bpFmFt(t.km||0)+' feet from your door.</p>'
+      +'<p class="body">Homes on '+esc(t.street||'this street')+' were built around the same year and have taken the same weather, so they tend to come due within a season of each other. While our crew is still set up nearby, a free 20-minute inspection takes photos you keep. No pressure, no obligation — and you can walk down the street and look at our work first.</p>'
+      +'<div class="cta">'+(co.phone?'<div class="ph">Call or text <b>'+esc(co.phone)+'</b></div>':'')+(site?'<div class="site">'+esc(site)+'</div>':'')+(qr?'<img class="qr" src="'+qr+'" alt="">':'')+'</div>'
+      +'<div class="foot">'+(co.license?'License '+esc(co.license)+' · ':'')+esc(co.serviceArea||'')+'</div></section>';
+  }).join('');
+  var w=window.open('','_blank'); if(!w){alert('Allow pop-ups for this site to print door hangers.');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Neighbour hangers</title><style>@page{size:letter;margin:.5in}body{margin:0;font:15px/1.5 Inter,-apple-system,Segoe UI,sans-serif;color:#0f172a}.hg{page-break-after:always;padding:36px 40px;border:2px solid #0f172a;border-radius:18px;margin:0 0 24px;min-height:8.6in;box-sizing:border-box;display:flex;flex-direction:column}.top{display:flex;align-items:center;gap:12px;margin-bottom:26px}.logo{height:44px;width:auto}.co{font-weight:800;font-size:20px;letter-spacing:-.02em}h1{font-size:40px;line-height:1.08;letter-spacing:-.03em;margin:0 0 14px}.addr{font-weight:700;color:#475569;margin:0 0 18px}.hook{font-size:19px;font-weight:600;margin:0 0 12px}.body{color:#334155;margin:0 0 auto}.cta{margin-top:34px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}.ph{font-size:26px}.ph b{font-size:30px}.site{color:#2563eb;font-weight:600}.qr{width:110px;height:110px;margin-left:auto}.foot{margin-top:22px;font-size:12px;color:#94a3b8}@media print{.hg{margin:0}}</style>'+pages+'<scr'+'ipt>setTimeout(function(){window.print();},500);</scr'+'ipt>');
+  w.document.close();
+  /* printing a hanger IS leaving one, as far as the funnel is concerned */
+  var ids={}; tg.forEach(function(t){ids[t.addr]=1;});
+  (c.targets||[]).forEach(function(t){ if(ids[t.addr]&&(t.stage||'new')==='new') t.stage='hanger'; });
+  bpFmDetail();
+  if((window.BP_LIVE&&window.BP_SB)&&String(c.id).indexOf('local')!==0){
+    Promise.resolve(BP_SB.from('farm_campaigns').update({targets:c.targets}).eq('id',c.id)).then(function(){},function(){});
+  }
+};
 </script>
 
 </body>
