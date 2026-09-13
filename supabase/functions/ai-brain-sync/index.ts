@@ -141,7 +141,9 @@ Deno.serve(async (req) => {
       published_at: now,
     };
     if (LOC) fields.ghl_location_id = LOC;
-    const row = await findBrain(user.id);
+    // pass the email here too: a client who hits Publish before ever opening
+    // Payouts would otherwise create a second brain row instead of claiming theirs
+    const row = await findBrain(user.id, user.email);
     let saved: Row | null = null;
     if (row) {
       const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(fields) });
