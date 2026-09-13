@@ -1454,8 +1454,80 @@ shell.innerHTML = `
     <div class=&quot;e-tlogo&quot;><div class=&quot;e-ldot&quot;></div>Roof<span>Estimator</span></div>
     <div class=&quot;e-tstep&quot; id=&quot;e-tstep&quot;>Step <b>1</b> of 11 — Location</div>
   </div>
+  <div class=&quot;e-tabs&quot; id=&quot;e-tabs&quot;>
+    <button class=&quot;e-tab on&quot; id=&quot;e-tab-est&quot; onclick=&quot;eRacTab('est')&quot;>Get an estimate</button>
+    <button class=&quot;e-tab&quot; id=&quot;e-tab-rac&quot; onclick=&quot;eRacTab('rac')&quot;>How old is my roof?</button>
+  </div>
   <div class=&quot;e-prog&quot;><div class=&quot;e-pfill&quot; id=&quot;e-pfill&quot; style=&quot;width:9%&quot;></div></div>
 
+  <style>
+  .e-tabs{display:flex;gap:6px;padding:12px 22px 0;background:#fff}
+  .e-tab{flex:0 0 auto;border:1px solid #e3e8ef;background:#f6f8fb;color:#4b5563;border-radius:999px;padding:8px 15px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  .e-tab:hover{border-color:#c7d2e3;color:#0f172a}
+  .e-tab.on{background:var(--a);border-color:var(--a);color:#fff}
+  .e-rac{padding:26px 22px 32px;background:#fff}
+  .e-rac-in{max-width:620px;margin:0 auto}
+  .e-rac-search{margin-top:16px;position:relative}
+  .e-rac-note{font-size:12.5px;color:#6b7280;margin-top:10px;min-height:18px}
+  .e-rac-found{background:#eef3ff;border-left:3px solid var(--a);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5;margin:12px 0 18px;color:#1e3a8a}
+  .e-rac-found.none{background:#f6f8fb;border-left-color:#cbd5e1;color:#475569}
+  .e-rac-q{margin-bottom:16px}
+  .e-rac-ql{font-weight:600;font-size:13.5px;margin-bottom:7px;color:#0c0c0d}
+  .e-rac-ql span{font-weight:400;color:#6b7280;font-size:12px}
+  .e-rac-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .e-rac-chips button{border:1px solid #dfe4ec;background:#fff;color:#374151;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:.12s}
+  .e-rac-chips button:hover{border-color:#94a3b8}
+  .e-rac-chips button.on{background:#0f172a;border-color:#0f172a;color:#fff}
+  .e-rac-res{text-align:center;padding:6px 0}
+  .e-rac-ring{width:132px;height:132px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:conic-gradient(var(--rc) calc(var(--pct)*1%),#e9edf3 0);animation:e-rac-pop .5s cubic-bezier(.2,.8,.2,1)}
+  @keyframes e-rac-pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .e-rac-ring i{width:104px;height:104px;border-radius:50%;background:#fff;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:34px;letter-spacing:-.03em;color:var(--rc);line-height:1}
+  .e-rac-ring i small{display:block;font-size:10.5px;font-weight:600;color:#6b7280;letter-spacing:.07em;text-transform:uppercase;margin-top:4px}
+  .e-rac-band{display:inline-block;padding:5px 13px;border-radius:999px;font-weight:700;font-size:13px;background:var(--rb);color:var(--rc);margin-bottom:12px}
+  .e-rac-txt{font-size:15px;line-height:1.55;color:#1f2937;max-width:520px;margin:0 auto 14px}
+  .e-rac-why{display:flex;flex-direction:column;gap:6px;max-width:480px;margin:0 auto 20px;text-align:left}
+  .e-rac-why div{font-size:13px;color:#4b5563;padding:8px 10px;border-radius:8px;background:#f6f8fb;display:flex;gap:8px;line-height:1.4}
+  .e-rac-why b{color:var(--rc);flex-shrink:0;min-width:34px;text-align:right}
+  .e-rac-ctas{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .e-rac-ctas .e-btnmain{margin:0;width:auto}
+  .e-rac-ghost{background:#fff;border:1px solid #dfe4ec;color:#0f172a;border-radius:12px;padding:13px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .e-rac-ghost:hover{border-color:#94a3b8}
+  .e-rac-again{margin-top:16px;font-size:12.5px;color:#6b7280;background:none;border:0;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .e-rac-res.good{--rc:#15803d;--rb:#dcfce7}
+  .e-rac-res.mid{--rc:#b45309;--rb:#fef3c7}
+  .e-rac-res.warn{--rc:#c2410c;--rb:#ffedd5}
+  .e-rac-res.bad{--rc:#b91c1c;--rb:#fee2e2}
+  .e-rac-busy{display:inline-block;width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:var(--a);border-radius:50%;animation:e-rac-spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes e-rac-spin{to{transform:rotate(360deg)}}
+  </style>
+  <div class=&quot;e-rac&quot; id=&quot;e-rac&quot; style=&quot;display:none&quot;>
+    <div class=&quot;e-rac-in&quot;>
+      <div id=&quot;e-rac-s1&quot;>
+        <span class=&quot;e-seye&quot;>Roof health check</span>
+        <div class=&quot;e-stitle&quot;>How old is<br><em>your roof?</em></div>
+        <div class=&quot;e-ssub&quot;>Type your address. We check public permit and property records, ask four quick questions, and score your roof's health in under a minute.</div>
+        <div class=&quot;e-asearch e-rac-search&quot;>
+          <input type=&quot;text&quot; class=&quot;e-asearch-input&quot; id=&quot;e-rac-addr&quot; placeholder=&quot;Start typing your address…&quot; autocomplete=&quot;off&quot; oninput=&quot;eRacAddrInput(event)&quot; onkeydown=&quot;if(event.key==='Escape')document.getElementById('e-rac-sug').classList.remove('open')&quot;>
+          <div class=&quot;e-suggestions&quot; id=&quot;e-rac-sug&quot;></div>
+        </div>
+        <div class=&quot;e-rac-note&quot; id=&quot;e-rac-note&quot;></div>
+      </div>
+      <div id=&quot;e-rac-s2&quot; style=&quot;display:none&quot;>
+        <span class=&quot;e-seye&quot;>Four quick questions</span>
+        <div class=&quot;e-rac-found&quot; id=&quot;e-rac-found&quot;></div>
+        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>What's the roof made of?</div><div class=&quot;e-rac-chips&quot; data-q=&quot;material&quot;>
+          <button data-v=&quot;asphalt&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Asphalt shingle</button><button data-v=&quot;metal&quot; onclick=&quot;eRacPick(this)&quot;>Metal</button><button data-v=&quot;tile&quot; onclick=&quot;eRacPick(this)&quot;>Tile</button><button data-v=&quot;flat&quot; onclick=&quot;eRacPick(this)&quot;>Flat / rolled</button><button data-v=&quot;unknown&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div></div>
+        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>When was it last replaced?</div><div class=&quot;e-rac-chips&quot; data-q=&quot;age&quot;>
+          <button data-v=&quot;5&quot; onclick=&quot;eRacPick(this)&quot;>Under 10 years</button><button data-v=&quot;15&quot; onclick=&quot;eRacPick(this)&quot;>10–20 years</button><button data-v=&quot;25&quot; onclick=&quot;eRacPick(this)&quot;>20+ years</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div></div>
+        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>Noticed any of these? <span>(tap all that apply)</span></div><div class=&quot;e-rac-chips multi&quot; data-q=&quot;issues&quot;>
+          <button data-v=&quot;shingles&quot; onclick=&quot;eRacPick(this)&quot;>Missing or curling shingles</button><button data-v=&quot;granules&quot; onclick=&quot;eRacPick(this)&quot;>Granules in the gutters</button><button data-v=&quot;stains&quot; onclick=&quot;eRacPick(this)&quot;>Ceiling stains or leaks</button><button data-v=&quot;sag&quot; onclick=&quot;eRacPick(this)&quot;>Sagging areas</button><button data-v=&quot;moss&quot; onclick=&quot;eRacPick(this)&quot;>Moss or algae</button><button data-v=&quot;none&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>None of these</button></div></div>
+        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>Hail or a big windstorm in the last year?</div><div class=&quot;e-rac-chips&quot; data-q=&quot;storm&quot;>
+          <button data-v=&quot;yes&quot; onclick=&quot;eRacPick(this)&quot;>Yes</button><button data-v=&quot;no&quot; onclick=&quot;eRacPick(this)&quot;>No</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div></div>
+        <div class=&quot;e-btnrow&quot;><button class=&quot;e-btnmain&quot; id=&quot;e-rac-go&quot; onclick=&quot;eRacScore()&quot;>See my roof health →</button></div>
+      </div>
+      <div id=&quot;e-rac-s3&quot; style=&quot;display:none&quot;></div>
+    </div>
+  </div>
   <div class=&quot;e-app&quot;>
 
   <!-- STEP 1 -->
@@ -2409,7 +2481,174 @@ document.addEventListener('click', function(e) {
   }
 });
 
-</script><script>(function(){try{var CID=&quot;roofing&quot;,U=&quot;https://ttzwzouhiwdwamuimhpo.supabase.co&quot;,A=&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso&quot;;fetch(U+&quot;/rest/v1/calculator_pricing?calc_id=eq.&quot;+CID+&quot;&amp;select=pricing&quot;,{headers:{apikey:A,Authorization:&quot;Bearer &quot;+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof E_CONFIG===&quot;undefined&quot;||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!==&quot;object&quot;||v===null){if(typeof v===&quot;number&quot;)E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!==&quot;object&quot;)return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});[&quot;eBuildMats&quot;,&quot;eBuildAddons&quot;,&quot;eBuildColors&quot;,&quot;eBuildHeight&quot;,&quot;eBuildCabinets&quot;,&quot;eBuildScope&quot;].forEach(function(fn){try{if(typeof window[fn]===&quot;function&quot;)window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
+
+/* ===== Roof Age Checker — second tab: address → public records → 4 questions → health score ===== */
+var eRac={addr:'',lat:null,lng:null,zip:'',state:'',permitYear:null,builtYear:null,source:'',ans:{material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'},timer:null};
+var E_RAC_AI='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-chat';
+/* the same open-data portals Lead Radar reads; lookups are a ~40 m box around the geocoded point */
+var E_RAC_CITIES=[
+  {n:'City of Austin',lat:30.2672,lng:-97.7431,api:'https://data.austintexas.gov/resource/3syk-w9eu.json',date:'issued_date',latf:'latitude',lngf:'longitude',desc:['description','permit_type_desc','work_class']},
+  {n:'City of Los Angeles',lat:34.1866,lng:-118.4009,api:'https://data.lacity.org/resource/pi9x-tg5x.json',date:'issue_date',latf:'lat',lngf:'lon',desc:['work_desc','permit_type'],
+   also:{api:'https://data.lacity.org/resource/nbyu-2ha9.json',date:'issue_date',latf:'latitude',lngf:'longitude',desc:['work_description','permit_type']},
+   assessor:{api:'https://data.lacounty.gov/resource/9trm-uz8i.json',yb:'yearbuilt',latf:'center_lat',lngf:'center_lon'}},
+  {n:'City of Chicago',lat:41.8781,lng:-87.6298,api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',date:'issue_date',latf:'latitude',lngf:'longitude',desc:['work_description','permit_type']}
+];
+function eRacTab(t){
+  var rac=t==='rac';
+  var el=document.getElementById('e-rac'); if(el)el.style.display=rac?'block':'none';
+  var app=document.querySelector('#est-embed .e-app'); if(app)app.style.display=rac?'none':'';
+  var prog=document.querySelector('#est-embed .e-prog'); if(prog)prog.style.display=rac?'none':'';
+  var ts=document.getElementById('e-tstep'); if(ts)ts.style.visibility=rac?'hidden':'visible';
+  var a=document.getElementById('e-tab-est'),b=document.getElementById('e-tab-rac');
+  if(a)a.classList.toggle('on',!rac); if(b)b.classList.toggle('on',rac);
+  if(rac){var inp=document.getElementById('e-rac-addr');if(inp&amp;&amp;!eRac.addr)setTimeout(function(){inp.focus();},50);}
+}
+function eRacAddrInput(ev){
+  var val=(ev.target.value||'').trim(), box=document.getElementById('e-rac-sug');
+  clearTimeout(eRac.timer);
+  if(val.length<3){box.classList.remove('open');return;}
+  box.innerHTML='<div class=&quot;e-suggestion-loading&quot;><span class=&quot;e-spin-sm&quot;></span>Searching US addresses...</div>';
+  box.classList.add('open');
+  eRac.timer=setTimeout(function(){
+    var url='https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(val)+'&amp;format=json&amp;addressdetails=1&amp;limit=6&amp;countrycodes=us';
+    fetch(url,{headers:{'Accept-Language':'en-US,en;q=0.9'}}).then(function(r){return r.json();}).then(function(data){
+      var list=(data||[]).filter(function(r){var a=r.address||{};return a.house_number||a.road;}).slice(0,5);
+      if(!list.length){box.innerHTML='<div class=&quot;e-suggestion-loading&quot;>No match — try adding the city or ZIP.</div>';return;}
+      box.innerHTML=list.map(function(r,i){
+        var a=r.address||{}, line=[a.house_number,a.road].filter(Boolean).join(' '), sub=[a.city||a.town||a.village,a.state,a.postcode].filter(Boolean).join(', ');
+        return '<div class=&quot;e-suggestion&quot; onclick=&quot;eRacPickAddr('+i+')&quot;><div class=&quot;e-suggestion-main&quot;>'+line+'</div><div class=&quot;e-suggestion-sub&quot;>'+sub+'</div></div>';
+      }).join('');
+      window._eRacList=list;
+    }).catch(function(){box.innerHTML='<div class=&quot;e-suggestion-loading&quot;>Address search is busy — try again in a moment.</div>';});
+  },420);
+}
+function eRacPickAddr(i){
+  var r=(window._eRacList||[])[i]; if(!r)return;
+  var a=r.address||{};
+  eRac.addr=[a.house_number,a.road].filter(Boolean).join(' ')+', '+[a.city||a.town||a.village,a.state].filter(Boolean).join(', ');
+  eRac.lat=parseFloat(r.lat); eRac.lng=parseFloat(r.lon); eRac.zip=(a.postcode||'').slice(0,5); eRac.state=a.state||'';
+  document.getElementById('e-rac-addr').value=eRac.addr;
+  document.getElementById('e-rac-sug').classList.remove('open');
+  document.getElementById('e-rac-note').innerHTML='<span class=&quot;e-rac-busy&quot;></span>Checking public records for this address…';
+  eRacLookup().then(function(){
+    var f=document.getElementById('e-rac-found'), y=new Date().getFullYear();
+    if(eRac.permitYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> The last roof permit on file for this address is from <b>'+eRac.permitYear+'</b> — about '+(y-eRac.permitYear)+' years ago ('+eRac.source+').'; eRacSetAge(y-eRac.permitYear); }
+    else if(eRac.builtYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> Property records show the home was built in <b>'+eRac.builtYear+'</b> and no roof replacement permit is on file — the roof may be original ('+eRac.source+').'; eRacSetAge(y-eRac.builtYear); }
+    else { f.className='e-rac-found none'; f.innerHTML='No public roof records turned up for this address'+(eRac.source?' in '+eRac.source:'')+' — that\'s common. Answer below and we\'ll score it from what you know.'; }
+    document.getElementById('e-rac-note').textContent='';
+    document.getElementById('e-rac-s1').style.display='none';
+    document.getElementById('e-rac-s2').style.display='block';
+  });
+}
+function eRacSetAge(age){
+  var v=age<10?'5':age<=20?'15':'25';
+  document.querySelectorAll('#e-rac [data-q=&quot;age&quot;] button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-v')===v);});
+  eRac.ans.age=v; eRac.ans.ageExact=age;
+}
+function eRacKm(a,b,c,d){var R=6371,dl=(c-a)*Math.PI/180,dg=(d-b)*Math.PI/180;var x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dg/2)*Math.sin(dg/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function eRacLookup(){
+  eRac.permitYear=null; eRac.builtYear=null; eRac.source='';
+  var city=null; E_RAC_CITIES.forEach(function(c){ if(eRacKm(eRac.lat,eRac.lng,c.lat,c.lng)<80&amp;&amp;(!city||eRacKm(eRac.lat,eRac.lng,c.lat,c.lng)<eRacKm(eRac.lat,eRac.lng,city.lat,city.lng)))city=c; });
+  if(!city)return Promise.resolve();
+  eRac.source=city.n+' records';
+  var dd=0.00045, deadline=new Promise(function(res){setTimeout(res,7000);});
+  function q(cfg){
+    var kw=cfg.desc.slice(0,2).map(function(f){return &quot;upper(&quot;+f+&quot;) like '%ROOF%'&quot;;}).join(' OR ');
+    var where=cfg.latf+' between '+(eRac.lat-dd)+' and '+(eRac.lat+dd)+' AND '+cfg.lngf+' between '+(eRac.lng-dd)+' and '+(eRac.lng+dd)+' AND ('+kw+')';
+    return fetch(cfg.api+'?$where='+encodeURIComponent(where)+'&amp;$order='+cfg.date+'%20DESC&amp;$limit=5').then(function(r){return r.ok?r.json():[];}).then(function(rows){
+      (rows||[]).forEach(function(r){var y=parseInt(String(r[cfg.date]||'').slice(0,4),10);if(y>1900&amp;&amp;(!eRac.permitYear||y>eRac.permitYear))eRac.permitYear=y;});
+    }).catch(function(){});
+  }
+  var jobs=[q(city)]; if(city.also)jobs.push(q(city.also));
+  if(city.assessor){var a=city.assessor;var w2=a.latf+' between '+(eRac.lat-dd)+' and '+(eRac.lat+dd)+' AND '+a.lngf+' between '+(eRac.lng-dd)+' and '+(eRac.lng+dd);
+    jobs.push(fetch(a.api+'?$where='+encodeURIComponent(w2)+'&amp;$limit=3').then(function(r){return r.ok?r.json():[];}).then(function(rows){(rows||[]).forEach(function(r){var y=parseInt(r[a.yb],10);if(y>1800&amp;&amp;(!eRac.builtYear||y<eRac.builtYear))eRac.builtYear=y;});}).catch(function(){}));}
+  return Promise.race([Promise.all(jobs),deadline]);
+}
+function eRacPick(btn){
+  var wrap=btn.parentNode, qk=wrap.getAttribute('data-q'), v=btn.getAttribute('data-v');
+  if(wrap.classList.contains('multi')){
+    if(v==='none'){wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});}
+    else{btn.classList.toggle('on');var none=wrap.querySelector('[data-v=&quot;none&quot;]');if(none)none.classList.remove('on');if(!wrap.querySelector('button.on')&amp;&amp;none)none.classList.add('on');}
+    eRac.ans.issues=[].slice.call(wrap.querySelectorAll('button.on')).map(function(b){return b.getAttribute('data-v');});
+  }else{
+    wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});
+    eRac.ans[qk]=v; if(qk==='age')eRac.ans.ageExact=null;
+  }
+}
+/* deterministic rubric: age vs. material lifespan, minus what the homeowner has noticed */
+function eRacCompute(){
+  var A=eRac.ans, life={asphalt:22,metal:45,tile:50,flat:18,unknown:22}[A.material]||22, y=new Date().getFullYear();
+  var age=null, src='';
+  if(eRac.permitYear){age=y-eRac.permitYear;src='permit';}
+  else if(A.ageExact!=null){age=A.ageExact;src='records';}
+  else if(A.age!=='unknown'){age=+A.age;src='you';}
+  else if(eRac.builtYear){age=Math.min(y-eRac.builtYear,life+12);src='built';}
+  var score=100, why=[];
+  if(age!=null){var ratio=age/life, hit=Math.min(70,Math.round(70*Math.pow(ratio,1.6))); score-=hit; why.push(['-'+hit,'About '+age+' years old — a '+({asphalt:'shingle',metal:'metal',tile:'tile',flat:'flat',unknown:'typical'}[A.material])+' roof usually lasts '+life+'.']);}
+  else {score-=15; why.push(['-15','Age unknown — we assume mid-life until it\'s inspected.']);}
+  var issueHit={shingles:[12,'Missing or curling shingles let water in.'],granules:[10,'Granules in the gutters mean the shingles are wearing through.'],stains:[18,'Ceiling stains or leaks — water is already getting in.'],sag:[22,'Sagging points to decking or structural damage underneath.'],moss:[6,'Moss and algae hold moisture against the surface.']};
+  (A.issues||[]).forEach(function(k){if(issueHit[k]){score-=issueHit[k][0];why.push(['-'+issueHit[k][0],issueHit[k][1]]);}});
+  if(A.storm==='yes'){score-=8;why.push(['-8','A hail or wind event in the last year — damage often isn\'t visible from the ground.']);}
+  else if(A.storm==='unknown'){score-=3;why.push(['-3','Unsure about storms — worth a look.']);}
+  score=Math.max(5,Math.min(98,score));
+  var left=age!=null?Math.max(0,life-age-(A.issues||[]).filter(function(k){return k!=='none';}).length*2):null;
+  var band=score>=70?'good':score>=45?'mid':score>=25?'warn':'bad';
+  return {score:score,band:band,age:age,life:life,left:left,why:why,src:src};
+}
+function eRacScore(){
+  var go=document.getElementById('e-rac-go'); if(go){go.disabled=true;go.innerHTML='<span class=&quot;e-rac-busy&quot;></span>Scoring…';}
+  var r=eRacCompute(), co=(typeof E_CONFIG!=='undefined'&amp;&amp;E_CONFIG.companyName)||'our team';
+  var label={good:'Healthy',mid:'Aging — keep an eye on it',warn:'Needs attention soon',bad:'Needs attention now'}[r.band];
+  var fallback=r.band==='good'
+    ? 'Good news — your roof looks healthy.'+(r.age!=null?' At about '+r.age+' years it has roughly '+r.left+' years of life left.':'')+' A free inspection every couple of years keeps it that way and catches small repairs while they\'re cheap.'
+    : (r.age!=null?'At about '+r.age+' years'+(r.left===0?' your roof is past its expected life':' your roof is in its later years')+'.':'Based on what you\'ve noticed, your roof needs a closer look.')+(r.band==='bad'?' The signs you described usually mean water is already getting in — an inspection now can stop small damage from turning into decking and drywall repairs.':' An inspection now tells you whether repairs will carry it a few more seasons or whether it\'s time to plan a replacement.');
+  var render=function(text){
+    var s3=document.getElementById('e-rac-s3');
+    var book=(typeof E_CONFIG!=='undefined'&amp;&amp;(E_CONFIG.bookingUrl||(E_CONFIG.ctaUrl&amp;&amp;E_CONFIG.ctaUrl!=='#')))?true:false;
+    var primary=r.band==='good'
+      ? '<button class=&quot;e-btnmain&quot; onclick=&quot;eRacToEst()&quot;>See replacement pricing</button><button class=&quot;e-rac-ghost&quot; onclick=&quot;eRacBook()&quot;>Book a free inspection</button>'
+      : '<button class=&quot;e-btnmain&quot; onclick=&quot;eRacBook()&quot;>Book a free inspection</button><button class=&quot;e-rac-ghost&quot; onclick=&quot;eRacToEst()&quot;>Get an instant estimate</button>';
+    s3.innerHTML='<div class=&quot;e-rac-res '+r.band+'&quot; style=&quot;--pct:'+r.score+'&quot;>'
+      +'<div class=&quot;e-rac-ring&quot;><i>'+r.score+'<small>out of 100</small></i></div>'
+      +'<div class=&quot;e-rac-band&quot;>'+label+'</div>'
+      +'<div class=&quot;e-rac-txt&quot;>'+text+'</div>'
+      +'<div class=&quot;e-rac-why&quot;>'+r.why.map(function(w){return '<div><b>'+w[0]+'</b><span>'+w[1]+'</span></div>';}).join('')+'</div>'
+      +'<div class=&quot;e-rac-ctas&quot;>'+primary+'</div>'
+      +(book?'':'')
+      +'<div><button class=&quot;e-rac-again&quot; onclick=&quot;eRacReset()&quot;>Check a different address</button></div></div>';
+    document.getElementById('e-rac-s2').style.display='none'; s3.style.display='block';
+    if(go){go.disabled=false;go.textContent='See my roof health →';}
+    try{ if(typeof E_CONFIG!=='undefined'&amp;&amp;E_CONFIG.webhookUrl)fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:co+' Roof Health Check',address:eRac.addr,zip:eRac.zip,roofScore:r.score,roofBand:label,roofAge:r.age,material:eRac.ans.material,issues:(eRac.ans.issues||[]).join(','),storm:eRac.ans.storm,timestamp:new Date().toISOString()})}).catch(function(){}); }catch(e){}
+  };
+  /* short AI wording of the same facts; the rubric already decided the score */
+  var facts='Roof health check. Score '+r.score+'/100 ('+label+'). Material: '+eRac.ans.material+'. Age: '+(r.age!=null?r.age+' years (from '+r.src+')':'unknown')+'. Typical lifespan '+r.life+'. Issues noticed: '+(eRac.ans.issues||[]).join(', ')+'. Storm in last year: '+eRac.ans.storm+'.';
+  var ctl=new AbortController(); var t=setTimeout(function(){ctl.abort();},6000);
+  fetch(E_RAC_AI,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({message:facts+' Write exactly two short, plain sentences for the homeowner explaining this result and what to do next. No greeting, no questions, no offer to book, no markdown.',business:{business_name:co,industry:'roofing',custom_instructions:'You are a roofing inspector summarising a roof health result. Reply with two plain sentences only.'}})})
+    .then(function(x){return x.json();}).then(function(d){clearTimeout(t);var s=(d&amp;&amp;d.reply||'').replace(/\s+/g,' ').trim();var clash=(r.band==='good'&amp;&amp;/attention|replac|final years|leak|urgent/i.test(s))||(r.band!=='good'&amp;&amp;/healthy|good news|great shape|no action/i.test(s));render(s&amp;&amp;s.length>30&amp;&amp;s.length<420&amp;&amp;!/\?/.test(s)&amp;&amp;!clash?s:fallback);})
+    .catch(function(){clearTimeout(t);render(fallback);});
+}
+function eRacBook(){
+  var u=(typeof E_CONFIG!=='undefined')?(E_CONFIG.bookingUrl||(E_CONFIG.ctaUrl&amp;&amp;E_CONFIG.ctaUrl!=='#'?E_CONFIG.ctaUrl:'')):'';
+  try{ parent.postMessage({bp:'book',address:eRac.addr},'*'); }catch(e){}
+  if(u){ window.open(u,'_blank','noopener'); return; }
+  /* no calendar link set yet — the estimator's own contact step books the visit */
+  eRacToEst();
+}
+function eRacToEst(){
+  eRacTab('est');
+  try{ if(eRac.zip){var z=document.getElementById('e-zipIn');if(z&amp;&amp;!z.value){z.value=eRac.zip;if(typeof eHandleZip==='function')eHandleZip(eRac.zip);}} }catch(e){}
+  try{ document.getElementById('est-embed').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+}
+function eRacReset(){
+  eRac.addr='';eRac.lat=null;eRac.lng=null;eRac.zip='';eRac.permitYear=null;eRac.builtYear=null;eRac.ans={material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'};
+  document.querySelectorAll('#e-rac .e-rac-chips').forEach(function(w){w.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});var d=w.querySelector('[data-v=&quot;asphalt&quot;],[data-v=&quot;unknown&quot;],[data-v=&quot;none&quot;]');if(d)d.classList.add('on');});
+  document.getElementById('e-rac-addr').value='';
+  document.getElementById('e-rac-s3').style.display='none';document.getElementById('e-rac-s2').style.display='none';document.getElementById('e-rac-s1').style.display='block';
+}
+/* open straight onto the checker when the host page asks for it */
+try{ if(/roof-age/.test(parent.location.hash))setTimeout(function(){eRacTab('rac');},0); }catch(e){}
+window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data.bp==='roof-age')eRacTab('rac'); }catch(e){} });
+</script><script>(function(){try{var CID=&quot;roofing&quot;,U=&quot;https://ttzwzouhiwdwamuimhpo.supabase.co&quot;,A=&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso&quot;;fetch(U+&quot;/rest/v1/calculator_pricing?calc_id=eq.&quot;+CID+&quot;&amp;select=pricing&quot;,{headers:{apikey:A,Authorization:&quot;Bearer &quot;+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof p.bookingUrl===&quot;string&quot;&amp;&amp;typeof E_CONFIG!==&quot;undefined&quot;)E_CONFIG.bookingUrl=p.bookingUrl;if(typeof E_CONFIG===&quot;undefined&quot;||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!==&quot;object&quot;||v===null){if(typeof v===&quot;number&quot;)E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!==&quot;object&quot;)return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});[&quot;eBuildMats&quot;,&quot;eBuildAddons&quot;,&quot;eBuildColors&quot;,&quot;eBuildHeight&quot;,&quot;eBuildCabinets&quot;,&quot;eBuildScope&quot;].forEach(function(fn){try{if(typeof window[fn]===&quot;function&quot;)window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
 <style>
 /* --- BuilderPro polish: staggered step reveal, button feel, loading --- */
 #est-embed .e-sp.active .e-shdr{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .05s;}
@@ -14350,6 +14589,7 @@ function bpCalculator(){
         +'<div class="bpx-ptitle" style="margin:0">Edit your pricing<span class="lg2" id="bpCalcUnit" style="margin-left:8px"></span></div>'
       +'</div>'
       +'<div id="bpCalcTable"><div class="bpx-price-row"><span>Loading\u2026</span></div></div>'
+      +'<div id="bpCalcBookWrap" style="display:none;margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card,#fbfaf7)"><div style="font-weight:700;font-size:13.5px;margin-bottom:4px">Booking calendar link</div><div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">Where "Book a free inspection" sends people from the roof health check. Paste your website\'s booking page or calendar link. Leave blank and they\'re sent into the estimator\'s contact step instead.</div><input class="bpx-inp" id="bpCalcBook" placeholder="https://yourcompany.com/book"></div>'
       +'<div class="bpx-calc-foot"><button class="bpx-cd-btn" onclick="bpCalcSave()">Save pricing</button><button class="bpx-mini alt" onclick="bpCalcReset()">Reset to defaults</button><span class="bpx-calc-ok" id="bpCalcOk"></span></div>'
     +'</div></div>'
     +'<div data-calc-pane="preview"'+(_bpCalcTab==='preview'?'':' hidden')+'><div class="bpx-panel">'
@@ -14400,6 +14640,9 @@ function bpCalcRender(cid,override){
     });
   });
   var tb=document.getElementById('bpCalcTable');if(tb)tb.innerHTML=h;
+  var bw=document.getElementById('bpCalcBookWrap'),bi=document.getElementById('bpCalcBook');
+  if(bw)bw.style.display=cid==='roofing'?'':'none';
+  if(bi&&cid==='roofing')bi.value=(override&&typeof override.bookingUrl==='string')?override.bookingUrl:(bi.value||'');
 }
 function bpCalcPick(cid){
   if(!BP_CALC_DEFS[cid])return;localStorage.setItem('bpCalcId',cid);
@@ -14421,6 +14664,7 @@ function bpCalcCollect(cid){
     if(g2.flat){ out[prop][k]=Number(inp.value)||0; return; }
     out[prop][k]=out[prop][k]||{};out[prop][k][f]=Number(inp.value)||0;
   });
+  if(cid==='roofing'){var bk=document.getElementById('bpCalcBook');if(bk)out.bookingUrl=bk.value.trim();}
   return out;
 }
 function bpCalcSave(){
@@ -18165,6 +18409,7 @@ function rdRenderShell(){
     +'<div class="rd-toolbar">'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px;margin:0">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
+      +'<button id="rdOverBtn" class="bpx-rowbtn'+(_rdOverdue?' primary':'')+'" onclick="rdToggleOverdue()" style="font-size:12px;margin:0" title="Only roofs 25+ years old — the ones most likely to fail this season">⏰ Overdue only (25+ yrs)'+(_rdOverdue?' ✓':'')+'</button>'
       +'<button class="bpx-rowbtn primary" onclick="rdRoute()" style="font-size:12px;margin:0" title="Best 10 doors, ordered for walking, opened in Google Maps">🧭 Plan a route</button>'
       +'<span class="bpx-mut" style="margin-left:auto;font-size:12px">Roofs due by age + fresh signals from the last 90 days · all from public records</span></div>'
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
@@ -18291,6 +18536,9 @@ window.rdAutoContacted=function(btn,ghlId,rowId){
 window.rdSetTrade=function(k){if(_rdTerr)return;_rdTrade=k;
   document.querySelectorAll('.rd-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rdt')===k);});rdRefresh();};
 window.rdSetMin=function(v){_rdMin=+v;rdDraw();};
+var _rdOverdue=false;
+function rdIsOverdue(p){return (p.kind==='due'||p.kind==='noperm')&&(+p.age||0)>=25;}
+window.rdToggleOverdue=function(){_rdOverdue=!_rdOverdue;var b=q('rdOverBtn');if(b){b.classList.toggle('primary',_rdOverdue);b.innerHTML='⏰ Overdue only (25+ yrs)'+(_rdOverdue?' ✓':'');}rdDraw();};
 window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
   var b=q('rdStormBtn');if(b)b.innerHTML='&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off');
   if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
@@ -18657,7 +18905,7 @@ function rdDraw(){
         .bindPopup('<b>'+sv.type+' report</b>'+(sv.mag?' · '+sv.mag:'')+'<br><span style="color:#6a6a70;font-size:11.5px">'+sv.when+'</span>',{keepInView:true}));
     });
   }
-  var shown=_rdLeads.filter(function(p){return p.score>=_rdMin;});
+  var shown=_rdLeads.filter(function(p){return p.score>=_rdMin&&(!_rdOverdue||rdIsOverdue(p));});
   shown.forEach(function(p){
     var i=_rdLeads.indexOf(p);
     var ring=p.storm?'#f97316':(p.kind==='project'?'#7c3aed':(p.kind==='neighbor'?'#0f2540':(p.kind==='expired'?'#dc2626':(p.kind==='noperm'?'#0ea5e9':'#fff'))));
@@ -18759,8 +19007,10 @@ function rdPopup(p,i,t){
 function rdAgo(ms){var d=Math.max(0,Math.round((Date.now()-ms)/864e5));return d<1?'today':d===1?'yesterday':d<31?d+' days ago':Math.round(d/30.4)+' months ago';}
 function rdKindTag(p,tip){
   var s=p.kind==='expired'?['#dc2626','EXPIRED PERMIT']:p.kind==='noperm'?['#0369a1','NO PERMIT ON FILE']:p.kind==='project'?['#7c3aed','PROJECT NEXT DOOR']:null;
-  if(!s)return '';
-  return tip?' · '+s[1].toLowerCase():'<span style="color:'+s[0]+';font-weight:700;font-size:11px"> '+s[1]+'</span>';
+  var o=rdIsOverdue(p)?['#b91c1c','OVERDUE '+p.age+' YRS']:null;
+  var parts=[s,o].filter(Boolean);
+  if(!parts.length)return '';
+  return parts.map(function(x){return tip?' · '+x[1].toLowerCase():'<span style="color:'+x[0]+';font-weight:700;font-size:11px"> '+x[1]+'</span>';}).join('');
 }
 /* ---- knock route: best doors first, then nearest-next; opens as a multi-stop Google Maps trip ---- */
 window.rdRoute=function(){
