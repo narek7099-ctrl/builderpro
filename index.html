@@ -1466,24 +1466,34 @@ shell.innerHTML = `
   .e-tab:hover{border-color:#c7d2e3;color:#0f172a}
   .e-tab.on{background:var(--a);border-color:var(--a);color:#fff}
   .e-rac{padding:0 0 32px;background:#fff}
-  .e-rac-hero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.84)),url('assets/roofing/roof-crew.jpg');background-size:cover;background-position:center 40%;padding:36px 22px 40px;color:#fff}
+  .e-rac-in{max-width:620px;margin:0 auto;padding:0 22px}
+  .e-rac-hero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.84)),url('assets/roofing/roof-crew.jpg');background-size:cover;background-position:center 40%;padding:36px 0 40px;color:#fff}
   #est-embed .e-rac-hero .e-seye{color:#9cc8ee!important}#est-embed .e-rac-hero .e-stitle{color:#fff!important}#est-embed .e-rac-hero .e-stitle em{color:#9cc8ee!important}#est-embed .e-rac-hero .e-ssub{color:rgba(255,255,255,.82)!important}
   .e-rac-hero .e-rac-note{color:rgba(255,255,255,.85)}
   .e-rac-hero .e-asearch-input{background:#fff;color:#0c0c0d;border-color:rgba(255,255,255,.35)}
-  #e-rac-s2,#e-rac-s3{padding:26px 0 0}
-  .e-rac-in{max-width:620px;margin:0 auto}
+  .e-rac-step{display:none}
+  .e-rac-step.on{display:block;animation:eSpIn .52s cubic-bezier(.22,1,.28,1) both}
+  .e-rac-step.on.back{animation:eSpBack .52s cubic-bezier(.22,1,.28,1) both}
+  .e-rac-q{padding-top:26px}
+  .e-rac-prog{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:14px}
+  .e-rac-dots{display:flex;gap:5px}.e-rac-dots i{width:22px;height:4px;border-radius:2px;background:#e5e9f0;transition:background .2s}.e-rac-dots i.on{background:var(--a)}
+  .e-rac-qt{margin-bottom:6px}
+  .e-rac-hint{font-size:13px;color:#6b7280;margin-bottom:16px}
   .e-rac-search{margin-top:16px;position:relative}
   .e-rac-note{font-size:12.5px;color:#6b7280;margin-top:10px;min-height:18px}
-  .e-rac-found{background:#eef3ff;border-left:3px solid var(--a);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5;margin:12px 0 18px;color:#1e3a8a}
+  .e-rac-found{background:#eef3ff;border-left:3px solid var(--a);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5;margin:0 0 18px;color:#1e3a8a}
   .e-rac-found.none{background:#f6f8fb;border-left-color:#cbd5e1;color:#475569}
-  .e-rac-q{margin-bottom:16px}
-  .e-rac-ql{font-weight:600;font-size:13.5px;margin-bottom:7px;color:#0c0c0d}
-  .e-rac-ql span{font-weight:400;color:#6b7280;font-size:12px}
-  .e-rac-chips{display:flex;flex-wrap:wrap;gap:7px}
-  .e-rac-chips button{border:1px solid #dfe4ec;background:#fff;color:#374151;border-radius:999px;padding:8px 13px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:.12s}
+  .e-rac-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .e-rac-chips button{border:1px solid #dfe4ec;background:#fff;color:#374151;border-radius:12px;padding:13px 16px;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:.12s;flex:1 1 calc(50% - 8px);text-align:left}
   .e-rac-chips button:hover{border-color:#94a3b8}
   .e-rac-chips button.on{background:#0f172a;border-color:#0f172a;color:#fff}
-  .e-rac-res{text-align:center;padding:6px 0}
+  .e-rac-nav{display:flex;gap:10px;justify-content:space-between;margin-top:22px}
+  .e-rac-back{background:none;border:1px solid #dfe4ec;border-radius:12px;padding:12px 16px;font-family:inherit;font-size:14px;font-weight:600;color:#475569;cursor:pointer}
+  .e-rac-nav .e-btnmain{margin:0;width:auto;flex:1}
+  .e-rac-form{display:grid;gap:10px;margin-top:6px}
+  .e-rac-form input{border:1px solid #dfe4ec;border-radius:12px;padding:13px 14px;font-family:inherit;font-size:15px;width:100%;background:#fff;color:#0c0c0d}
+  .e-rac-form input:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(47,107,255,.14)}
+  .e-rac-res{text-align:center;padding:26px 0 0}
   .e-rac-ring{width:132px;height:132px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:conic-gradient(var(--rc) calc(var(--pct)*1%),#e9edf3 0);animation:e-rac-pop .5s cubic-bezier(.2,.8,.2,1)}
   @keyframes e-rac-pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
   .e-rac-ring i{width:104px;height:104px;border-radius:50%;background:#fff;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:34px;letter-spacing:-.03em;color:var(--rc);line-height:1}
@@ -1497,7 +1507,7 @@ shell.innerHTML = `
   .e-rac-ctas .e-btnmain{margin:0;width:auto}
   .e-rac-ghost{background:#fff;border:1px solid #dfe4ec;color:#0f172a;border-radius:12px;padding:13px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
   .e-rac-ghost:hover{border-color:#94a3b8}
-  .e-rac-again{margin-top:16px;font-size:12.5px;color:#6b7280;background:none;border:0;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .e-rac-again{margin-top:14px;font-size:12.5px;color:#6b7280;background:none;border:0;cursor:pointer;text-decoration:underline;font-family:inherit}
   .e-rac-res.good{--rc:#15803d;--rb:#dcfce7}
   .e-rac-res.mid{--rc:#b45309;--rb:#fef3c7}
   .e-rac-res.warn{--rc:#c2410c;--rb:#ffedd5}
@@ -1506,31 +1516,59 @@ shell.innerHTML = `
   @keyframes e-rac-spin{to{transform:rotate(360deg)}}
   </style>
   <div class=&quot;e-rac&quot; id=&quot;e-rac&quot; style=&quot;display:none&quot;>
-    <div id=&quot;e-rac-s1&quot; class=&quot;e-rac-hero&quot;><div class=&quot;e-rac-in&quot;>
-        <span class=&quot;e-seye&quot;>Roof health check</span>
-        <div class=&quot;e-stitle&quot;>How old is<br><em>your roof?</em></div>
-        <div class=&quot;e-ssub&quot;>Type your address. We check public permit and property records, ask four quick questions, and score your roof's health in under a minute.</div>
-        <div class=&quot;e-asearch e-rac-search&quot;>
-          <input type=&quot;text&quot; class=&quot;e-asearch-input&quot; id=&quot;e-rac-addr&quot; placeholder=&quot;Start typing your address…&quot; autocomplete=&quot;off&quot; oninput=&quot;eRacAddrInput(event)&quot; onkeydown=&quot;if(event.key==='Escape')document.getElementById('e-rac-sug').classList.remove('open')&quot;>
-          <div class=&quot;e-suggestions&quot; id=&quot;e-rac-sug&quot;></div>
-        </div>
-        <div class=&quot;e-rac-note&quot; id=&quot;e-rac-note&quot;></div>
-      </div></div>
-    <div class=&quot;e-rac-in&quot;>
-      <div id=&quot;e-rac-s2&quot; style=&quot;display:none&quot;>
-        <span class=&quot;e-seye&quot;>Four quick questions</span>
-        <div class=&quot;e-rac-found&quot; id=&quot;e-rac-found&quot;></div>
-        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>What's the roof made of?</div><div class=&quot;e-rac-chips&quot; data-q=&quot;material&quot;>
-          <button data-v=&quot;asphalt&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Asphalt shingle</button><button data-v=&quot;metal&quot; onclick=&quot;eRacPick(this)&quot;>Metal</button><button data-v=&quot;tile&quot; onclick=&quot;eRacPick(this)&quot;>Tile</button><button data-v=&quot;flat&quot; onclick=&quot;eRacPick(this)&quot;>Flat / rolled</button><button data-v=&quot;unknown&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div></div>
-        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>When was it last replaced?</div><div class=&quot;e-rac-chips&quot; data-q=&quot;age&quot;>
-          <button data-v=&quot;5&quot; onclick=&quot;eRacPick(this)&quot;>Under 10 years</button><button data-v=&quot;15&quot; onclick=&quot;eRacPick(this)&quot;>10–20 years</button><button data-v=&quot;25&quot; onclick=&quot;eRacPick(this)&quot;>20+ years</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div></div>
-        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>Noticed any of these? <span>(tap all that apply)</span></div><div class=&quot;e-rac-chips multi&quot; data-q=&quot;issues&quot;>
-          <button data-v=&quot;shingles&quot; onclick=&quot;eRacPick(this)&quot;>Missing or curling shingles</button><button data-v=&quot;granules&quot; onclick=&quot;eRacPick(this)&quot;>Granules in the gutters</button><button data-v=&quot;stains&quot; onclick=&quot;eRacPick(this)&quot;>Ceiling stains or leaks</button><button data-v=&quot;sag&quot; onclick=&quot;eRacPick(this)&quot;>Sagging areas</button><button data-v=&quot;moss&quot; onclick=&quot;eRacPick(this)&quot;>Moss or algae</button><button data-v=&quot;none&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>None of these</button></div></div>
-        <div class=&quot;e-rac-q&quot;><div class=&quot;e-rac-ql&quot;>Hail or a big windstorm in the last year?</div><div class=&quot;e-rac-chips&quot; data-q=&quot;storm&quot;>
-          <button data-v=&quot;yes&quot; onclick=&quot;eRacPick(this)&quot;>Yes</button><button data-v=&quot;no&quot; onclick=&quot;eRacPick(this)&quot;>No</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div></div>
-        <div class=&quot;e-btnrow&quot;><button class=&quot;e-btnmain&quot; id=&quot;e-rac-go&quot; onclick=&quot;eRacScore()&quot;>See my roof health →</button></div>
+    <div id=&quot;e-rac-s0&quot; class=&quot;e-rac-hero e-rac-step on&quot;><div class=&quot;e-rac-in&quot;>
+      <span class=&quot;e-seye&quot;>Roof health check</span>
+      <div class=&quot;e-stitle&quot;>How old is<br><em>your roof?</em></div>
+      <div class=&quot;e-ssub&quot;>Type your address. We check public permit and property records, ask four quick questions, and score your roof's health in under a minute.</div>
+      <div class=&quot;e-asearch e-rac-search&quot;>
+        <input type=&quot;text&quot; class=&quot;e-asearch-input&quot; id=&quot;e-rac-addr&quot; placeholder=&quot;Start typing your address…&quot; autocomplete=&quot;off&quot; oninput=&quot;eRacAddrInput(event)&quot; onkeydown=&quot;if(event.key==='Escape')document.getElementById('e-rac-sug').classList.remove('open')&quot;>
+        <div class=&quot;e-suggestions&quot; id=&quot;e-rac-sug&quot;></div>
       </div>
-      <div id=&quot;e-rac-s3&quot; style=&quot;display:none&quot;></div>
+      <div class=&quot;e-rac-note&quot; id=&quot;e-rac-note&quot;></div>
+    </div></div>
+    <div class=&quot;e-rac-in&quot;>
+      <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s1&quot;>
+        <div class=&quot;e-rac-prog&quot;><span>Question 1 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i></i><i></i><i></i></div></div>
+        <div class=&quot;e-rac-found&quot; id=&quot;e-rac-found&quot;></div>
+        <div class=&quot;e-stitle e-rac-qt&quot;>What's the roof<br><em>made of?</em></div>
+        <div class=&quot;e-rac-hint&quot;>Tap one — we'll move you along.</div>
+        <div class=&quot;e-rac-chips&quot; data-q=&quot;material&quot;>
+          <button data-v=&quot;asphalt&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Asphalt shingle</button><button data-v=&quot;metal&quot; onclick=&quot;eRacPick(this)&quot;>Metal</button><button data-v=&quot;tile&quot; onclick=&quot;eRacPick(this)&quot;>Tile</button><button data-v=&quot;flat&quot; onclick=&quot;eRacPick(this)&quot;>Flat / rolled</button><button data-v=&quot;unknown&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div>
+        <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(0)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(2)&quot;>Next →</button></div>
+      </div>
+      <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s2&quot;>
+        <div class=&quot;e-rac-prog&quot;><span>Question 2 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i></i><i></i></div></div>
+        <div class=&quot;e-stitle e-rac-qt&quot;>When was it<br><em>last replaced?</em></div>
+        <div class=&quot;e-rac-hint&quot; id=&quot;e-rac-agehint&quot;>Your best guess is fine.</div>
+        <div class=&quot;e-rac-chips&quot; data-q=&quot;age&quot;>
+          <button data-v=&quot;5&quot; onclick=&quot;eRacPick(this)&quot;>Under 10 years</button><button data-v=&quot;15&quot; onclick=&quot;eRacPick(this)&quot;>10–20 years</button><button data-v=&quot;25&quot; onclick=&quot;eRacPick(this)&quot;>20+ years</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div>
+        <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(1)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(3)&quot;>Next →</button></div>
+      </div>
+      <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s3&quot;>
+        <div class=&quot;e-rac-prog&quot;><span>Question 3 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i></i></div></div>
+        <div class=&quot;e-stitle e-rac-qt&quot;>Noticed any<br><em>of these?</em></div>
+        <div class=&quot;e-rac-hint&quot;>Tap all that apply, then Next.</div>
+        <div class=&quot;e-rac-chips multi&quot; data-q=&quot;issues&quot;>
+          <button data-v=&quot;shingles&quot; onclick=&quot;eRacPick(this)&quot;>Missing or curling shingles</button><button data-v=&quot;granules&quot; onclick=&quot;eRacPick(this)&quot;>Granules in the gutters</button><button data-v=&quot;stains&quot; onclick=&quot;eRacPick(this)&quot;>Ceiling stains or leaks</button><button data-v=&quot;sag&quot; onclick=&quot;eRacPick(this)&quot;>Sagging areas</button><button data-v=&quot;moss&quot; onclick=&quot;eRacPick(this)&quot;>Moss or algae</button><button data-v=&quot;none&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>None of these</button></div>
+        <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(2)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(4)&quot;>Next →</button></div>
+      </div>
+      <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s4&quot;>
+        <div class=&quot;e-rac-prog&quot;><span>Question 4 of 4</span><div class=&quot;e-rac-dots&quot;><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i><i class=&quot;on&quot;></i></div></div>
+        <div class=&quot;e-stitle e-rac-qt&quot;>Hail or a big windstorm<br><em>in the last year?</em></div>
+        <div class=&quot;e-rac-hint&quot;>Storm damage often isn't visible from the ground.</div>
+        <div class=&quot;e-rac-chips&quot; data-q=&quot;storm&quot;>
+          <button data-v=&quot;yes&quot; onclick=&quot;eRacPick(this)&quot;>Yes</button><button data-v=&quot;no&quot; onclick=&quot;eRacPick(this)&quot;>No</button><button data-v=&quot;unknown&quot; class=&quot;on&quot; onclick=&quot;eRacPick(this)&quot;>Not sure</button></div>
+        <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(3)&quot;>← Back</button><button class=&quot;e-btnmain&quot; onclick=&quot;eRacGo(5)&quot;>Next →</button></div>
+      </div>
+      <div class=&quot;e-rac-step e-rac-q&quot; id=&quot;e-rac-s5&quot;>
+        <div class=&quot;e-rac-prog&quot;><span>Almost there</span></div>
+        <div class=&quot;e-stitle e-rac-qt&quot;>Where should we<br><em>send your report?</em></div>
+        <div class=&quot;e-rac-hint&quot;>We'll text you the score and what it means. No sales calls unless you book something.</div>
+        <div class=&quot;e-rac-form&quot;><input id=&quot;e-rac-name&quot; placeholder=&quot;Your name&quot; autocomplete=&quot;name&quot;><input id=&quot;e-rac-phone&quot; placeholder=&quot;Mobile number&quot; inputmode=&quot;tel&quot; autocomplete=&quot;tel&quot;><input id=&quot;e-rac-email&quot; placeholder=&quot;Email (optional)&quot; inputmode=&quot;email&quot; autocomplete=&quot;email&quot;></div>
+        <div class=&quot;e-rac-nav&quot;><button class=&quot;e-rac-back&quot; onclick=&quot;eRacGo(4)&quot;>← Back</button><button class=&quot;e-btnmain&quot; id=&quot;e-rac-go&quot; onclick=&quot;eRacScore(false)&quot;>See my roof health →</button></div>
+        <div style=&quot;text-align:center&quot;><button class=&quot;e-rac-again&quot; onclick=&quot;eRacScore(true)&quot;>Skip — just show my score</button></div>
+      </div>
+      <div class=&quot;e-rac-step&quot; id=&quot;e-rac-s6&quot;></div>
     </div>
   </div>
   <div class=&quot;e-app&quot;>
@@ -2487,9 +2525,10 @@ document.addEventListener('click', function(e) {
 });
 
 
-/* ===== Roof Age Checker — second tab: address → public records → 4 questions → health score ===== */
-var eRac={addr:'',lat:null,lng:null,zip:'',state:'',permitYear:null,builtYear:null,source:'',ans:{material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'},timer:null};
-var E_RAC_AI='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-chat';
+/* ===== Roof Age Checker — second tab: address → public records → one question per page → health score ===== */
+var eRac={step:0,addr:'',lat:null,lng:null,zip:'',state:'',permitYear:null,builtYear:null,source:'',ans:{material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'},timer:null,saved:false};
+var E_RAC_SB='https://ttzwzouhiwdwamuimhpo.supabase.co';
+var E_RAC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
 /* the same open-data portals Lead Radar reads; lookups are a ~40 m box around the geocoded point */
 var E_RAC_CITIES=[
   {n:'City of Austin',lat:30.2672,lng:-97.7431,api:'https://data.austintexas.gov/resource/3syk-w9eu.json',date:'issued_date',latf:'latitude',lngf:'longitude',desc:['description','permit_type_desc','work_class']},
@@ -2507,6 +2546,16 @@ function eRacTab(t){
   var a=document.getElementById('e-tab-est'),b=document.getElementById('e-tab-rac');
   if(a)a.classList.toggle('on',!rac); if(b)b.classList.toggle('on',rac);
   if(rac){var inp=document.getElementById('e-rac-addr');if(inp&amp;&amp;!eRac.addr)setTimeout(function(){inp.focus();},50);}
+}
+/* step machine: 0 address · 1-4 questions · 5 contact · 6 result. Slides forward or back like the estimator. */
+function eRacGo(n){
+  var back=n<eRac.step;
+  for(var i=0;i<=6;i++){var s=document.getElementById('e-rac-s'+i);if(!s)continue;s.classList.remove('on','back');}
+  var t=document.getElementById('e-rac-s'+n); if(!t)return;
+  void t.offsetWidth; t.classList.add('on'); if(back)t.classList.add('back');
+  eRac.step=n;
+  try{ document.getElementById('est-embed').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+  if(n===5)setTimeout(function(){var f=document.getElementById('e-rac-name');if(f)f.focus();},350);
 }
 function eRacAddrInput(ev){
   var val=(ev.target.value||'').trim(), box=document.getElementById('e-rac-sug');
@@ -2536,13 +2585,12 @@ function eRacPickAddr(i){
   document.getElementById('e-rac-sug').classList.remove('open');
   document.getElementById('e-rac-note').innerHTML='<span class=&quot;e-rac-busy&quot;></span>Checking public records for this address…';
   eRacLookup().then(function(){
-    var f=document.getElementById('e-rac-found'), y=new Date().getFullYear();
-    if(eRac.permitYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> The last roof permit on file for this address is from <b>'+eRac.permitYear+'</b> — about '+(y-eRac.permitYear)+' years ago ('+eRac.source+').'; eRacSetAge(y-eRac.permitYear); }
-    else if(eRac.builtYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> Property records show the home was built in <b>'+eRac.builtYear+'</b> and no roof replacement permit is on file — the roof may be original ('+eRac.source+').'; eRacSetAge(y-eRac.builtYear); }
-    else { f.className='e-rac-found none'; f.innerHTML='No public roof records turned up for this address'+(eRac.source?' in '+eRac.source:'')+' — that\'s common. Answer below and we\'ll score it from what you know.'; }
+    var f=document.getElementById('e-rac-found'), y=new Date().getFullYear(), hint=document.getElementById('e-rac-agehint');
+    if(eRac.permitYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> The last roof permit on file for this address is from <b>'+eRac.permitYear+'</b> — about '+(y-eRac.permitYear)+' years ago ('+eRac.source+').'; eRacSetAge(y-eRac.permitYear); if(hint)hint.textContent='Pre-filled from the permit we found — change it if you know better.'; }
+    else if(eRac.builtYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> Property records show the home was built in <b>'+eRac.builtYear+'</b> and no roof replacement permit is on file — the roof may be original ('+eRac.source+').'; eRacSetAge(y-eRac.builtYear); if(hint)hint.textContent='Pre-filled from property records — change it if you know better.'; }
+    else { f.className='e-rac-found none'; f.innerHTML='No public roof records turned up for this address'+(eRac.source?' in '+eRac.source:'')+' — that\'s common. Answer the next four and we\'ll score it from what you know.'; }
     document.getElementById('e-rac-note').textContent='';
-    document.getElementById('e-rac-s1').style.display='none';
-    document.getElementById('e-rac-s2').style.display='block';
+    eRacGo(1);
   });
 }
 function eRacSetAge(age){
@@ -2569,18 +2617,20 @@ function eRacLookup(){
     jobs.push(fetch(a.api+'?$where='+encodeURIComponent(w2)+'&amp;$limit=3').then(function(r){return r.ok?r.json():[];}).then(function(rows){(rows||[]).forEach(function(r){var y=parseInt(r[a.yb],10);if(y>1800&amp;&amp;(!eRac.builtYear||y<eRac.builtYear))eRac.builtYear=y;});}).catch(function(){}));}
   return Promise.race([Promise.all(jobs),deadline]);
 }
+/* single-choice questions advance on tap, like the estimator; the multi-choice one waits for Next */
 function eRacPick(btn){
   var wrap=btn.parentNode, qk=wrap.getAttribute('data-q'), v=btn.getAttribute('data-v');
   if(wrap.classList.contains('multi')){
     if(v==='none'){wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});}
     else{btn.classList.toggle('on');var none=wrap.querySelector('[data-v=&quot;none&quot;]');if(none)none.classList.remove('on');if(!wrap.querySelector('button.on')&amp;&amp;none)none.classList.add('on');}
     eRac.ans.issues=[].slice.call(wrap.querySelectorAll('button.on')).map(function(b){return b.getAttribute('data-v');});
-  }else{
-    wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});
-    eRac.ans[qk]=v; if(qk==='age')eRac.ans.ageExact=null;
+    return;
   }
+  wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});
+  eRac.ans[qk]=v; if(qk==='age')eRac.ans.ageExact=null;
+  var next={material:2,age:3,storm:5}[qk]; if(next)setTimeout(function(){eRacGo(next);},260);
 }
-/* deterministic rubric: age vs. material lifespan, minus what the homeowner has noticed */
+/* deterministic rubric: age vs. material lifespan (wear accelerates late), minus what the homeowner has noticed */
 function eRacCompute(){
   var A=eRac.ans, life={asphalt:22,metal:45,tile:50,flat:18,unknown:22}[A.material]||22, y=new Date().getFullYear();
   var age=null, src='';
@@ -2600,35 +2650,46 @@ function eRacCompute(){
   var band=score>=70?'good':score>=45?'mid':score>=25?'warn':'bad';
   return {score:score,band:band,age:age,life:life,left:left,why:why,src:src};
 }
-function eRacScore(){
+/* every check is filed to the contractor's BuilderPro account so it shows in Lead Radar → Roof checks */
+function eRacSave(r,label){
+  if(eRac.saved)return; eRac.saved=true;
+  var name=(document.getElementById('e-rac-name')||{}).value||'', phone=(document.getElementById('e-rac-phone')||{}).value||'', email=(document.getElementById('e-rac-email')||{}).value||'';
+  var host=''; try{host=(document.referrer||'').replace(/^https?:\/\//,'').split('/')[0]||(parent!==window?'embed':location.host);}catch(e){host='embed';}
+  var row={owner:(typeof E_CONFIG!=='undefined'&amp;&amp;E_CONFIG.ownerId)||null,calc_id:'roofing',address:eRac.addr,zip:eRac.zip,lat:eRac.lat,lng:eRac.lng,score:r.score,band:r.band,label:label,age:r.age,material:eRac.ans.material,issues:(eRac.ans.issues||[]).filter(function(k){return k!=='none';}),storm:eRac.ans.storm,permit_year:eRac.permitYear,built_year:eRac.builtYear,name:name.trim(),phone:phone.trim(),email:email.trim(),host:host};
+  try{ fetch(E_RAC_SB+'/rest/v1/roof_checks',{method:'POST',headers:{'Content-Type':'application/json','apikey':E_RAC_ANON,'Authorization':'Bearer '+E_RAC_ANON,'Prefer':'return=minimal'},body:JSON.stringify(row)}).catch(function(){}); }catch(e){}
+  try{ if(typeof E_CONFIG!=='undefined'&amp;&amp;E_CONFIG.webhookUrl)fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:((E_CONFIG.companyName)||'')+' Roof Health Check',firstName:name.trim().split(' ')[0]||'',lastName:name.trim().split(' ').slice(1).join(' '),phone:phone.trim(),email:email.trim(),address:eRac.addr,zip:eRac.zip,roofScore:r.score,roofBand:label,roofAge:r.age,material:eRac.ans.material,issues:(eRac.ans.issues||[]).join(','),storm:eRac.ans.storm,timestamp:new Date().toISOString()})}).catch(function(){}); }catch(e){}
+}
+function eRacScore(skip){
+  if(!skip){
+    var ph=((document.getElementById('e-rac-phone')||{}).value||'').replace(/\D/g,'');
+    if(ph&amp;&amp;ph.length<10){var pf=document.getElementById('e-rac-phone');pf.style.borderColor='#b91c1c';pf.focus();return;}
+  }
   var go=document.getElementById('e-rac-go'); if(go){go.disabled=true;go.innerHTML='<span class=&quot;e-rac-busy&quot;></span>Scoring…';}
   var r=eRacCompute(), co=(typeof E_CONFIG!=='undefined'&amp;&amp;E_CONFIG.companyName)||'our team';
   var label={good:'Healthy',mid:'Aging — keep an eye on it',warn:'Needs attention soon',bad:'Needs attention now'}[r.band];
   var fallback=r.band==='good'
     ? 'Good news — your roof looks healthy.'+(r.age!=null?' At about '+r.age+' years it has roughly '+r.left+' years of life left.':'')+' A free inspection every couple of years keeps it that way and catches small repairs while they\'re cheap.'
     : (r.age!=null?'At about '+r.age+' years'+(r.left===0?' your roof is past its expected life':' your roof is in its later years')+'.':'Based on what you\'ve noticed, your roof needs a closer look.')+(r.band==='bad'?' The signs you described usually mean water is already getting in — an inspection now can stop small damage from turning into decking and drywall repairs.':' An inspection now tells you whether repairs will carry it a few more seasons or whether it\'s time to plan a replacement.');
+  eRacSave(r,label);
   var render=function(text){
-    var s3=document.getElementById('e-rac-s3');
-    var book=(typeof E_CONFIG!=='undefined'&amp;&amp;(E_CONFIG.bookingUrl||(E_CONFIG.ctaUrl&amp;&amp;E_CONFIG.ctaUrl!=='#')))?true:false;
+    var s6=document.getElementById('e-rac-s6');
     var primary=r.band==='good'
       ? '<button class=&quot;e-btnmain&quot; onclick=&quot;eRacToEst()&quot;>See replacement pricing</button><button class=&quot;e-rac-ghost&quot; onclick=&quot;eRacBook()&quot;>Book a free inspection</button>'
       : '<button class=&quot;e-btnmain&quot; onclick=&quot;eRacBook()&quot;>Book a free inspection</button><button class=&quot;e-rac-ghost&quot; onclick=&quot;eRacToEst()&quot;>Get an instant estimate</button>';
-    s3.innerHTML='<div class=&quot;e-rac-res '+r.band+'&quot; style=&quot;--pct:'+r.score+'&quot;>'
+    s6.innerHTML='<div class=&quot;e-rac-res '+r.band+'&quot; style=&quot;--pct:'+r.score+'&quot;>'
       +'<div class=&quot;e-rac-ring&quot;><i>'+r.score+'<small>out of 100</small></i></div>'
       +'<div class=&quot;e-rac-band&quot;>'+label+'</div>'
       +'<div class=&quot;e-rac-txt&quot;>'+text+'</div>'
       +'<div class=&quot;e-rac-why&quot;>'+r.why.map(function(w){return '<div><b>'+w[0]+'</b><span>'+w[1]+'</span></div>';}).join('')+'</div>'
       +'<div class=&quot;e-rac-ctas&quot;>'+primary+'</div>'
-      +(book?'':'')
       +'<div><button class=&quot;e-rac-again&quot; onclick=&quot;eRacReset()&quot;>Check a different address</button></div></div>';
-    document.getElementById('e-rac-s2').style.display='none'; s3.style.display='block';
+    eRacGo(6);
     if(go){go.disabled=false;go.textContent='See my roof health →';}
-    try{ if(typeof E_CONFIG!=='undefined'&amp;&amp;E_CONFIG.webhookUrl)fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:co+' Roof Health Check',address:eRac.addr,zip:eRac.zip,roofScore:r.score,roofBand:label,roofAge:r.age,material:eRac.ans.material,issues:(eRac.ans.issues||[]).join(','),storm:eRac.ans.storm,timestamp:new Date().toISOString()})}).catch(function(){}); }catch(e){}
   };
-  /* short AI wording of the same facts; the rubric already decided the score */
+  /* short AI wording of the same facts; the rubric already decided the score, and a guard keeps the words in line with it */
   var facts='Roof health check. Score '+r.score+'/100 ('+label+'). Material: '+eRac.ans.material+'. Age: '+(r.age!=null?r.age+' years (from '+r.src+')':'unknown')+'. Typical lifespan '+r.life+'. Issues noticed: '+(eRac.ans.issues||[]).join(', ')+'. Storm in last year: '+eRac.ans.storm+'.';
   var ctl=new AbortController(); var t=setTimeout(function(){ctl.abort();},6000);
-  fetch(E_RAC_AI,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({message:facts+' Write exactly two short, plain sentences for the homeowner explaining this result and what to do next. No greeting, no questions, no offer to book, no markdown.',business:{business_name:co,industry:'roofing',custom_instructions:'You are a roofing inspector summarising a roof health result. Reply with two plain sentences only.'}})})
+  fetch(E_RAC_SB+'/functions/v1/ai-chat',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({message:facts+' Write exactly two short, plain sentences for the homeowner explaining this result and what to do next. No greeting, no questions, no offer to book, no markdown.',business:{business_name:co,industry:'roofing',custom_instructions:'You are a roofing inspector summarising a roof health result. Reply with two plain sentences only.'}})})
     .then(function(x){return x.json();}).then(function(d){clearTimeout(t);var s=(d&amp;&amp;d.reply||'').replace(/\s+/g,' ').trim();var clash=(r.band==='good'&amp;&amp;/attention|replac|final years|leak|urgent/i.test(s))||(r.band!=='good'&amp;&amp;/healthy|good news|great shape|no action/i.test(s));render(s&amp;&amp;s.length>30&amp;&amp;s.length<420&amp;&amp;!/\?/.test(s)&amp;&amp;!clash?s:fallback);})
     .catch(function(){clearTimeout(t);render(fallback);});
 }
@@ -2645,15 +2706,16 @@ function eRacToEst(){
   try{ document.getElementById('est-embed').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
 }
 function eRacReset(){
-  eRac.addr='';eRac.lat=null;eRac.lng=null;eRac.zip='';eRac.permitYear=null;eRac.builtYear=null;eRac.ans={material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'};
+  eRac.addr='';eRac.lat=null;eRac.lng=null;eRac.zip='';eRac.permitYear=null;eRac.builtYear=null;eRac.saved=false;eRac.ans={material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'};
   document.querySelectorAll('#e-rac .e-rac-chips').forEach(function(w){w.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});var d=w.querySelector('[data-v=&quot;asphalt&quot;],[data-v=&quot;unknown&quot;],[data-v=&quot;none&quot;]');if(d)d.classList.add('on');});
-  document.getElementById('e-rac-addr').value='';
-  document.getElementById('e-rac-s3').style.display='none';document.getElementById('e-rac-s2').style.display='none';document.getElementById('e-rac-s1').style.display='block';
+  ['e-rac-addr','e-rac-name','e-rac-phone','e-rac-email'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var h=document.getElementById('e-rac-agehint'); if(h)h.textContent='Your best guess is fine.';
+  eRacGo(0);
 }
 /* open straight onto the checker when the host page asks for it */
 try{ if(/roof-age/.test(parent.location.hash))setTimeout(function(){eRacTab('rac');},0); }catch(e){}
 window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data.bp==='roof-age')eRacTab('rac'); }catch(e){} });
-</script><script>(function(){try{var CID=&quot;roofing&quot;,U=&quot;https://ttzwzouhiwdwamuimhpo.supabase.co&quot;,A=&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso&quot;;fetch(U+&quot;/rest/v1/calculator_pricing?calc_id=eq.&quot;+CID+&quot;&amp;select=pricing&quot;,{headers:{apikey:A,Authorization:&quot;Bearer &quot;+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof p.bookingUrl===&quot;string&quot;&amp;&amp;typeof E_CONFIG!==&quot;undefined&quot;)E_CONFIG.bookingUrl=p.bookingUrl;if(typeof E_CONFIG===&quot;undefined&quot;||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!==&quot;object&quot;||v===null){if(typeof v===&quot;number&quot;)E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!==&quot;object&quot;)return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});[&quot;eBuildMats&quot;,&quot;eBuildAddons&quot;,&quot;eBuildColors&quot;,&quot;eBuildHeight&quot;,&quot;eBuildCabinets&quot;,&quot;eBuildScope&quot;].forEach(function(fn){try{if(typeof window[fn]===&quot;function&quot;)window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
+</script><script>(function(){try{var CID=&quot;roofing&quot;,U=&quot;https://ttzwzouhiwdwamuimhpo.supabase.co&quot;,A=&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso&quot;;fetch(U+&quot;/rest/v1/calculator_pricing?calc_id=eq.&quot;+CID+&quot;&amp;select=pricing,owner&quot;,{headers:{apikey:A,Authorization:&quot;Bearer &quot;+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(rows[0].owner&amp;&amp;typeof E_CONFIG!==&quot;undefined&quot;)E_CONFIG.ownerId=rows[0].owner;if(typeof p.bookingUrl===&quot;string&quot;&amp;&amp;typeof E_CONFIG!==&quot;undefined&quot;)E_CONFIG.bookingUrl=p.bookingUrl;if(typeof E_CONFIG===&quot;undefined&quot;||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!==&quot;object&quot;||v===null){if(typeof v===&quot;number&quot;)E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!==&quot;object&quot;)return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});[&quot;eBuildMats&quot;,&quot;eBuildAddons&quot;,&quot;eBuildColors&quot;,&quot;eBuildHeight&quot;,&quot;eBuildCabinets&quot;,&quot;eBuildScope&quot;].forEach(function(fn){try{if(typeof window[fn]===&quot;function&quot;)window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
 <style>
 /* --- BuilderPro polish: staggered step reveal, button feel, loading --- */
 #est-embed .e-sp.active .e-shdr{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .05s;}
@@ -18356,8 +18418,47 @@ window.rdListTab=function(t){
   _rdListTab=t;
   document.querySelectorAll('[data-rd-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rd-tab')===t);});
   document.querySelectorAll('[data-rd-pane]').forEach(function(p){p.hidden=p.getAttribute('data-rd-pane')!==t;});
-  var h=q('rdListHint'); if(h)h.textContent=t==='auto'?'The radar files its top finds here every morning · tap Contacted after a real conversation':'Ranked door-knock list · Add → knock or mail → tap Contacted once you\'ve talked';
+  var h=q('rdListHint'); if(h)h.textContent=rdListHintText(t);
 };
+function rdListHintText(t){return t==='auto'?'The radar files its top finds here every morning · tap Contacted after a real conversation':t==='checks'?'Homeowners who ran the roof health check on your site · the ones who left a number are warm':'Ranked door-knock list · Add → knock or mail → tap Contacted once you\'ve talked';}
+/* ---- Roof checks: homeowners who used the "How old is my roof?" tab on the client's estimator ---- */
+var RD_CHECK_DEMO=[
+  {id:'c1',address:'1408 Cedar Ln, Austin, TX',zip:'78704',score:31,band:'warn',label:'Needs attention soon',age:21,material:'asphalt',issues:['granules'],storm:'unknown',permit_year:2005,name:'Dana M.',phone:'(512) 555-0142',created_at:new Date(Date.now()-3*36e5).toISOString(),status:'new'},
+  {id:'c2',address:'92 Prairie Dr, Austin, TX',zip:'78745',score:12,band:'bad',label:'Needs attention now',age:24,material:'asphalt',issues:['stains','shingles'],storm:'yes',permit_year:2002,name:'',phone:'',created_at:new Date(Date.now()-26*36e5).toISOString(),status:'new'},
+  {id:'c3',address:'7710 Highland Ave, Austin, TX',zip:'78731',score:84,band:'good',label:'Healthy',age:6,material:'metal',issues:[],storm:'no',permit_year:2020,name:'Luis R.',phone:'(512) 555-0199',email:'luis@example.com',created_at:new Date(Date.now()-2*864e5).toISOString(),status:'contacted'}
+];
+function rdLoadChecks(){
+  var el=q('rdChecksList'); if(!el)return;
+  if(!(window.BP_LIVE&&window.BP_SB)){ rdChecksRender(RD_CHECK_DEMO,true); return; }
+  Promise.resolve(BP_SB.from('roof_checks').select('*').order('created_at',{ascending:false}).limit(100)).then(function(r){
+    if(r&&r.error)throw r.error; rdChecksRender((r&&r.data)||[],false);
+  }).catch(function(e){ el.innerHTML='<span class="bpx-mut">Couldn\'t load roof checks'+(e&&/relation|does not exist/i.test(String(e.message||e))?' — the roof_checks table isn\'t created yet (run the migration).':'.')+'</span>'; });
+}
+function rdChecksRender(rows,demo){
+  var el=q('rdChecksList'); if(!el)return; el.classList.remove('bpx-mut');
+  var tab=q('rdChecksTab'); if(tab)tab.textContent='Roof checks'+(rows.length?' ('+rows.length+')':'');
+  if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing yet. Every homeowner who runs the roof health check on your site lands here with their score — even if they don\'t book.</span>'; return; }
+  var col=function(b){return b==='good'?'#15803d':b==='mid'?'#b45309':b==='warn'?'#c2410c':'#b91c1c';};
+  var pg=bpPage('rdchecks',rows,10,'rdChecksRender(window._rdCheckRows,window._rdCheckDemo)'); window._rdCheckRows=rows; window._rdCheckDemo=demo;
+  el.innerHTML=(demo?'<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:10px">⚠️ DEMO — sample checks. Sign in to see the real ones from your site.</div>':'')
+    +pg.items.map(function(c){
+      var when=c.created_at?new Date(c.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+      var facts=[c.age!=null?'~'+c.age+' yrs':'',c.material||'',(c.issues||[]).length?(c.issues||[]).join(', '):'no issues noted',c.storm==='yes'?'storm last year':'',c.permit_year?'permit '+c.permit_year:(c.built_year?'built '+c.built_year:'')].filter(Boolean).join(' · ');
+      var who=c.name||c.phone?('<b>'+bpEsc(c.name||'No name')+'</b>'+(c.phone?' · <a href="tel:'+bpEsc(c.phone)+'" style="color:var(--blue);text-decoration:none">'+bpEsc(c.phone)+'</a>':'')+(c.email?' · '+bpEsc(c.email):'')):'<span class="bpx-mut">No contact left — address only</span>';
+      var st=c.status&&c.status!=='new'?'<span class="bpx-badge'+(c.status==='won'?' ok':c.status==='lost'?' bad':'')+'">'+bpEsc(c.status)+'</span>':'';
+      var acts=(c.status==='new'||!c.status)?'<button class="bpx-rowbtn primary" style="margin:0" onclick="rdCheckStatus(this,\''+bpEsc(c.id)+'\',\'contacted\')">Contacted</button>':(c.status==='contacted'?'<button class="bpx-rowbtn primary" style="margin:0" onclick="rdCheckStatus(this,\''+bpEsc(c.id)+'\',\'booked\')">Booked</button>':(c.status==='booked'?'<button class="bpx-rowbtn primary" style="margin:0" onclick="rdCheckStatus(this,\''+bpEsc(c.id)+'\',\'won\')">Won</button>':''));
+      return '<div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">'
+        +'<span title="'+bpEsc(c.label||'')+'" style="flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:'+col(c.band)+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">'+(c.score!=null?c.score:'—')+'</span>'
+        +'<div style="flex:1;min-width:200px"><div style="font-size:13.5px"><b>'+bpEsc(c.address||'Address not given')+'</b> '+st+'</div><div style="font-size:12.5px;margin-top:2px">'+who+'</div><div class="bpx-mut" style="font-size:11.5px;margin-top:2px">'+bpEsc(facts)+(when?' · '+when:'')+'</div></div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+(c.address?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="https://maps.apple.com/?q='+encodeURIComponent(c.address)+'" target="_blank" rel="noopener">Map</a>':'')+'</div></div>';
+    }).join('')+pg.nav;
+}
+window.rdCheckStatus=function(btn,id,status){
+  if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to track roof checks.');return;}
+  btn.disabled=true;
+  Promise.resolve(BP_SB.from('roof_checks').update({status:status}).eq('id',id)).then(function(){rdLoadChecks();},function(){btn.disabled=false;alert('Couldn\'t save that — try again.');});
+};
+window.bpCsvRoofChecks=function(){var rows=window._rdCheckRows||[];bpCsv('roof-checks',['When','Score','Result','Address','ZIP','Name','Phone','Email','Age','Material','Issues','Storm','Permit year','Built year','Status'],rows.map(function(c){return [c.created_at||'',c.score,c.label||'',c.address||'',c.zip||'',c.name||'',c.phone||'',c.email||'',c.age==null?'':c.age,c.material||'',(c.issues||[]).join('; '),c.storm||'',c.permit_year||'',c.built_year||'',c.status||''];}));};
 
 function rdColor(sc){return sc>=75?'#e11d48':sc>=55?'#f59e0b':sc>=35?'#eab308':'#3b82f6';}
 function rdLabel(sc){return sc>=75?'HOT':sc>=55?'Warm':sc>=35?'Cool':'Watch';}
@@ -18435,14 +18536,17 @@ function rdRenderShell(){
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs">'
       +'<button class="bpx-jt'+(_rdListTab==='auto'?' on':'')+'" data-rd-tab="auto" onclick="rdListTab(\'auto\')">Today\'s picks</button>'
-      +'<button class="bpx-jt'+(_rdListTab==='hot'?' on':'')+'" data-rd-tab="hot" onclick="rdListTab(\'hot\')">Hottest prospects</button></div>'
-      +'<span class="bpx-mut" style="font-size:12px" id="rdListHint">'+(_rdListTab==='auto'?'The radar files its top finds here every morning · tap Contacted after a real conversation':'Ranked door-knock list · Add → knock or mail → tap Contacted once you\'ve talked')+'</span></div>'
+      +'<button class="bpx-jt'+(_rdListTab==='hot'?' on':'')+'" data-rd-tab="hot" onclick="rdListTab(\'hot\')">Hottest prospects</button>'
+      +'<button class="bpx-jt'+(_rdListTab==='checks'?' on':'')+'" data-rd-tab="checks" id="rdChecksTab" onclick="rdListTab(\'checks\')">Roof checks</button></div>'
+      +'<span class="bpx-mut" style="font-size:12px" id="rdListHint">'+rdListHintText(_rdListTab)+'</span></div>'
       +'<div data-rd-pane="auto" id="rdAutoPanel"'+(_rdListTab==='auto'?'':' hidden')+'><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
+      +'<div data-rd-pane="checks"'+(_rdListTab==='checks'?'':' hidden')+'><div id="rdChecksList" class="bpx-mut" style="font-size:13px">Loading roof checks…</div></div>'
       +'<div data-rd-pane="hot"'+(_rdListTab==='hot'?'':' hidden')+'><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
   rdEnsureLeaflet(rdRefresh);
   rdLoadAuto();
   rdLoadMine();
+  rdLoadChecks();
 }
 /* "My list": every prospect the client added by hand (tagged 'radar') — its own page */
 window.rdMinePage=function(){
@@ -19203,7 +19307,7 @@ document.head.appendChild(rdCss);
     {key:"calendar",label:"Calendar",desc:"upcoming inspections and appointments, plus the work days booked on active projects"},
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances"},
     {key:"finances",label:"Finances",desc:"tabs for Overview (where the money goes by category, per-job profit), Invoices, Estimates, and Income & expenses. Send real invoices and estimates the customer can pay or accept; every list has Export CSV"},
-    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
+    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
     {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
     {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
     {key:"competitors",label:"Competitors",desc:"under Marketing. A scoreboard of the other contractors in their area from Yelp — rating, review count, reviews gained in the last 30 days, services listed. 'Find competitors' searches by trade and city and tracks the ones they pick; 'Where to win' lists specific gaps (fewer reviews, lower rating, missing photos or services) with a button to the part of the app that fixes each"},
