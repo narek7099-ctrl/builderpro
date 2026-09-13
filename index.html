@@ -1465,7 +1465,12 @@ shell.innerHTML = `
   .e-tab{flex:0 0 auto;border:1px solid #e3e8ef;background:#f6f8fb;color:#4b5563;border-radius:999px;padding:8px 15px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
   .e-tab:hover{border-color:#c7d2e3;color:#0f172a}
   .e-tab.on{background:var(--a);border-color:var(--a);color:#fff}
-  .e-rac{padding:26px 22px 32px;background:#fff}
+  .e-rac{padding:0 0 32px;background:#fff}
+  .e-rac-hero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.84)),url('assets/roofing/roof-crew.jpg');background-size:cover;background-position:center 40%;padding:36px 22px 40px;color:#fff}
+  #est-embed .e-rac-hero .e-seye{color:#9cc8ee!important}#est-embed .e-rac-hero .e-stitle{color:#fff!important}#est-embed .e-rac-hero .e-stitle em{color:#9cc8ee!important}#est-embed .e-rac-hero .e-ssub{color:rgba(255,255,255,.82)!important}
+  .e-rac-hero .e-rac-note{color:rgba(255,255,255,.85)}
+  .e-rac-hero .e-asearch-input{background:#fff;color:#0c0c0d;border-color:rgba(255,255,255,.35)}
+  #e-rac-s2,#e-rac-s3{padding:26px 0 0}
   .e-rac-in{max-width:620px;margin:0 auto}
   .e-rac-search{margin-top:16px;position:relative}
   .e-rac-note{font-size:12.5px;color:#6b7280;margin-top:10px;min-height:18px}
@@ -1501,8 +1506,7 @@ shell.innerHTML = `
   @keyframes e-rac-spin{to{transform:rotate(360deg)}}
   </style>
   <div class=&quot;e-rac&quot; id=&quot;e-rac&quot; style=&quot;display:none&quot;>
-    <div class=&quot;e-rac-in&quot;>
-      <div id=&quot;e-rac-s1&quot;>
+    <div id=&quot;e-rac-s1&quot; class=&quot;e-rac-hero&quot;><div class=&quot;e-rac-in&quot;>
         <span class=&quot;e-seye&quot;>Roof health check</span>
         <div class=&quot;e-stitle&quot;>How old is<br><em>your roof?</em></div>
         <div class=&quot;e-ssub&quot;>Type your address. We check public permit and property records, ask four quick questions, and score your roof's health in under a minute.</div>
@@ -1511,7 +1515,8 @@ shell.innerHTML = `
           <div class=&quot;e-suggestions&quot; id=&quot;e-rac-sug&quot;></div>
         </div>
         <div class=&quot;e-rac-note&quot; id=&quot;e-rac-note&quot;></div>
-      </div>
+      </div></div>
+    <div class=&quot;e-rac-in&quot;>
       <div id=&quot;e-rac-s2&quot; style=&quot;display:none&quot;>
         <span class=&quot;e-seye&quot;>Four quick questions</span>
         <div class=&quot;e-rac-found&quot; id=&quot;e-rac-found&quot;></div>
