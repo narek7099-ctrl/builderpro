@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<script>try{if(/[#&]sign=[a-f0-9]{20,64}/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14111,7 +14112,7 @@ function bpOpenPortal(){
 }
 function bpClose(){document.getElementById('bpx').classList.remove('open');document.body.style.overflow='';}
 /* coming back from an ad-account connection lands on the site — open the portal straight away */
-if(/[?&]connected=/.test(location.search))setTimeout(bpOpenPortal,60);
+if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
 function bpEnterPortal(email){
   document.getElementById('bpxUemail').textContent=email||'';
   document.getElementById('bpxLogin').style.display='none';
@@ -16590,7 +16591,7 @@ window.bpProjOpen=function(id){
   var n=new Date(); _bpProjCal={y:n.getFullYear(),m:n.getMonth()};
   if(_bpProjDates.length){ var f0=new Date(_bpProjDates.slice().sort()[0]+'T12:00:00'); if(!isNaN(f0.getTime())){_bpProjCal={y:f0.getFullYear(),m:f0.getMonth()};} }
   var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
-  var tabs=[['details','Details'],['money','Money'],['schedule','Schedule'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length]];
+  var tabs=[['details','Details'],['money','Money'],['schedule','Schedule'],['contract','Contract'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length]];
   var pane=function(k,html){return '<div data-pj-pane="'+k+'"'+(k==='details'?'':' hidden')+'>'+html+'</div>';};
   bpModal('<h3>'+bpEsc(j.name||'Project')+' — '+bpEsc(j.title||'Project')+'</h3>'
     +'<div class="bpx-sub">Everything about this project — it all saves to your account.</div>'
@@ -16621,6 +16622,7 @@ window.bpProjOpen=function(id){
       '<label style="margin-top:0">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:4px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">')
+    +pane('contract','<div id="bpx-pj-contract"><div class="bpx-empty2">Loading…</div></div>')
     +pane('docs',
       '<label style="margin-top:0">Documents ('+(j.docs||[]).length+'/6)</label>'
       +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Contracts, permits, receipts — as files or scanned straight from the camera.</div>'
@@ -16633,7 +16635,7 @@ window.bpProjOpen=function(id){
       +'<input type="file" id="bpx-pj-scan" accept="image/*" capture="environment" style="display:none" onchange="bpProjDoc(event,true)">')
     +'<div style="display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line-2);padding-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='95vw';mc.style.padding='28px 32px';}
-  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal(); bpProjDocsRender(j);
+  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
 };
 window.bpProjTab=function(t){
   document.querySelectorAll('[data-pj-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-pj-tab')===t);});
@@ -17096,6 +17098,349 @@ window.bpFinView=function(t){
   document.querySelectorAll('[data-fin-pane]').forEach(function(p){p.hidden=p.getAttribute('data-fin-pane')!==t;});
 };
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
+
+/* ===== Contracts + e-signature ==========================================
+   The contractor builds an agreement from a template against a job, sends the
+   homeowner a tokenised link, and the homeowner signs it on a public page.
+   Everything the ESIGN Act expects is captured server-side: the exact text they
+   saw, explicit consent, the signature, and an audit trail. ==================*/
+var CT_URL=BP_URL+'/functions/v1/contract-sign';
+var _bpCt={job:null,rows:[],loaded:false};
+
+/* The default roofing agreement. {{merge}} fields are filled from the job and
+   the contractor's own Settings, and the whole thing stays editable before it
+   is sent — it is their contract, not ours. */
+var BP_CT_TEMPLATE=[
+ 'ROOFING AGREEMENT',
+ '',
+ 'This agreement is made on {{date}} between {{company}} ("Contractor") and {{customer}} ("Owner") for work at {{address}}.',
+ '',
+ '1. SCOPE OF WORK',
+ '{{scope}}',
+ '',
+ '2. PRICE AND PAYMENT',
+ 'Total price: {{amount}}.',
+ 'Deposit due at signing: {{deposit}}. The balance is due on completion.',
+ 'Payment may be made by card, check or cash.',
+ '',
+ '3. SCHEDULE',
+ '{{start}}',
+ 'Work may be delayed by weather, material availability, or conditions found once the existing roof is opened up. Contractor will keep Owner informed of any change.',
+ '',
+ '4. CHANGES',
+ 'Any change to the scope or price must be agreed in writing by both parties before that work is carried out.',
+ '',
+ '5. HIDDEN CONDITIONS',
+ 'If damaged decking, rot or other concealed damage is found, Contractor will stop, show Owner the condition, and provide a written price before continuing.',
+ '',
+ '6. PERMITS AND CODE',
+ 'Contractor will pull required permits and perform the work to local building code and manufacturer specification.',
+ '',
+ '7. WARRANTY',
+ 'Contractor warrants workmanship for {{warranty}} from completion. Manufacturer warranties on materials pass to Owner.',
+ '',
+ '8. INSURANCE AND LICENCE',
+ 'Contractor carries liability insurance and holds licence {{licence}}.',
+ '',
+ '9. CLEAN-UP',
+ 'Contractor will remove all debris and magnet-sweep the property on completion.',
+ '',
+ '10. CANCELLATION',
+ 'Owner may cancel within three (3) business days of signing for a full refund of any deposit.',
+ '',
+ 'By signing below, Owner agrees to the scope, price and terms above.'
+].join('\n');
+
+function bpCtFill(tpl,j){
+  var s=bpSettingsGet(),c=s.company||{};
+  var money=function(v){return (v==null||v==='')?'$0':bpMoneyFmt(+v||0);};
+  var sched='To be scheduled — Contractor will confirm dates with Owner.';
+  if(j&&j.sched&&j.sched.dates&&j.sched.dates.length){
+    var ds=j.sched.dates.slice().sort();
+    sched='Work is scheduled to begin '+new Date(ds[0]+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+
+      (ds.length>1?' over approximately '+ds.length+' working days.':'.');
+  } else if(j&&j.sched&&j.sched.target){ sched='Target completion: '+j.sched.target+'.'; }
+  var map={
+    date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    company:c.name||'Contractor', customer:(j&&j.name)||'Owner',
+    address:(j&&j.address)||c.serviceArea||'the property address on file',
+    scope:(j&&j.title)?('Furnish all labour, materials and equipment to complete: '+j.title+'.'):'Furnish all labour, materials and equipment as described in the estimate provided.',
+    amount:money(j&&j.estimate), deposit:money(j&&j.estimate?Math.round((+j.estimate||0)*0.3):0),
+    start:sched, warranty:'5 years', licence:c.license||'on file'
+  };
+  return String(tpl).replace(/\{\{(\w+)\}\}/g,function(m,k){return map[k]!=null?map[k]:m;});
+}
+function bpCtLoad(j){
+  _bpCt.job=j; _bpCt.loaded=false;
+  if(!(window.BP_LIVE&&window.BP_SB)){ _bpCt.rows=[]; _bpCt.loaded=true; bpCtRender(); return; }
+  Promise.resolve(BP_SB.from('contracts').select('*').eq('job_id',j.id).order('created_at',{ascending:false})).then(function(r){
+    if(r&&r.error)throw r.error;
+    _bpCt.rows=(r&&r.data)||[]; _bpCt.loaded=true; bpCtRender();
+  },function(e){ _bpCt.rows=[]; _bpCt.loaded=true; bpCtRender(/relation|does not exist|schema cache/i.test(String((e&&e.message)||e))?'The contracts table isn\'t created yet — run the migration and this tab comes alive.':'Couldn\'t load contracts for this job.'); });
+}
+function bpCtStatus(c){
+  var m={draft:['Draft',''],sent:['Sent',''],viewed:['Opened',''],signed:['Signed',' ok'],declined:['Declined',' bad'],void:['Void',' bad']}[c.status]||[c.status,''];
+  return '<span class="bpx-badge'+m[1]+'">'+m[0]+'</span>';
+}
+function bpCtRender(note){
+  var el=document.getElementById('bpx-pj-contract'); if(!el)return;
+  var j=_bpCt.job||{};
+  if(!_bpCt.loaded){ el.innerHTML='<div class="bpx-empty2">Loading…</div>'; return; }
+  var warn=note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-bottom:12px">'+bpEsc(note)+'</div>':'';
+  var offline=!(window.BP_LIVE&&window.BP_SB)?'<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:600;margin-bottom:12px">Sign in to create and send contracts.</div>':'';
+  var list=_bpCt.rows.length?_bpCt.rows.map(function(c){
+    var when=c.signed_at?('Signed '+new Date(c.signed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})):(c.sent_at?('Sent '+new Date(c.sent_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})):'Not sent yet');
+    return '<div class="bpx-ct-row">'
+      +'<div style="flex:1;min-width:170px"><div style="font-weight:600;font-size:13.5px">'+bpEsc(c.title||'Agreement')+' '+bpCtStatus(c)+'</div>'
+      +'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px">'+bpMoneyFmt(+c.amount||0)+' · '+bpEsc(when)+(c.signer_name?' by '+bpEsc(c.signer_name):'')+'</div></div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        +(c.status==='signed'
+          ? '<button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">View signed</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtPrint(\''+c.id+'\')">Print</button>'
+          : '<button class="bpx-rowbtn primary" style="margin:0" onclick="bpCtSend(\''+c.id+'\')">'+(c.status==='draft'?'Send':'Copy link')+'</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">Preview</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtVoid(\''+c.id+'\')" title="Cancel this contract">✕</button>')
+      +'</div></div>';
+  }).join(''):'<div class="bpx-empty2" style="padding:18px">No contract on this job yet. Build one from your template — the customer\'s details and price are already filled in.</div>';
+  el.innerHTML=offline+warn
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      +'<div class="bpx-mut" style="font-size:12px">Contracts for this job</div>'
+      +'<button class="bpx-addbtn" onclick="bpCtNew()"'+((window.BP_LIVE&&window.BP_SB)?'':' disabled')+'>+ New contract</button></div>'
+    +list
+    +'<div class="bpx-mut" style="font-size:11.5px;margin-top:12px;border-top:1px solid var(--line-2);padding-top:10px">Signatures are captured with the signer\'s consent, time, and IP address, which is what the US ESIGN Act asks for. Have your own lawyer review the wording before you rely on it.</div>';
+}
+window.bpCtNew=function(){
+  var j=_bpCt.job||{};
+  var body=bpCtFill(BP_CT_TEMPLATE,j);
+  bpModal('<h3>New contract</h3><div class="bpx-sub">Filled in from this job. Edit anything before you send it — this is your agreement.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div><label>Customer</label><input id="bpx-ct-name" value="'+bpEsc(j.name||'')+'"></div>'
+      +'<div><label>Total price</label><input id="bpx-ct-amt" inputmode="decimal" value="'+(j.estimate||'')+'"></div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div><label>Email</label><input id="bpx-ct-email" placeholder="them@example.com" value="'+bpEsc(j.email||'')+'"></div>'
+      +'<div><label>Deposit at signing</label><input id="bpx-ct-dep" inputmode="decimal" value="'+(j.estimate?Math.round((+j.estimate||0)*0.3):'')+'"></div></div>'
+    +'<label>Property address</label><input id="bpx-ct-addr" value="'+bpEsc(j.address||'')+'">'
+    +'<label>Agreement</label><textarea id="bpx-ct-body" style="min-height:230px;font-size:13px;line-height:1.55">'+bpEsc(body)+'</textarea>'
+    +'<div class="bpx-mmsg" id="bpx-ct-msg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-ct-save" onclick="bpCtSave()">Create contract</button></div>');
+  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='680px';mc.style.width='95vw';}
+};
+window.bpCtSave=function(){
+  var g=function(id){var e=q(id);return e?e.value.trim():'';};
+  var msg=q('bpx-ct-msg'),btn=q('bpx-ct-save'),j=_bpCt.job||{};
+  var name=g('bpx-ct-name'),body=g('bpx-ct-body'),amt=+g('bpx-ct-amt').replace(/[^0-9.]/g,'')||0;
+  if(!name){msg.textContent='Who is this contract with?';return;}
+  if(!body||body.length<40){msg.textContent='The agreement text looks empty.';return;}
+  if(btn){btn.disabled=true;btn.textContent='Creating…';}
+  BP_SB.auth.getSession().then(function(sn){
+    var u=sn&&sn.data&&sn.data.session&&sn.data.session.user; if(!u)throw new Error('sign in again');
+    return BP_SB.from('contracts').insert({
+      owner:u.id,job_id:j.id,title:(j.title?j.title+' — Agreement':'Roofing Agreement'),
+      customer_name:name,customer_email:g('bpx-ct-email')||null,customer_phone:j.phone||null,
+      address:g('bpx-ct-addr')||null,body:body,scope:j.title||null,
+      amount:amt||null,deposit:+g('bpx-ct-dep').replace(/[^0-9.]/g,'')||null
+    }).select();
+  }).then(function(r){
+    if(r&&r.error)throw r.error;
+    bpCloseModal(); bpCtLoad(j);
+  },function(e){
+    if(btn){btn.disabled=false;btn.textContent='Create contract';}
+    if(msg)msg.textContent=/relation|does not exist|schema cache/i.test(String((e&&e.message)||e))?'The contracts table isn\'t created yet — run the migration first.':'Couldn\'t save: '+((e&&e.message)||'unknown error');
+  });
+};
+function bpCtRow(id){return _bpCt.rows.filter(function(c){return c.id===id;})[0];}
+window.bpCtSend=function(id){
+  var c=bpCtRow(id); if(!c)return;
+  Promise.resolve(bpAuthApi(CT_URL,{op:'send',id:id})).then(function(r){
+    if(!r||!r.ok){alert('Couldn\'t prepare the link: '+((r&&r.error)||'unknown error'));return;}
+    var link=r.link;
+    var sms=c.customer_phone?('sms:'+c.customer_phone+'?&body='+encodeURIComponent('Here is your agreement to review and sign: '+link)):'';
+    var mail=c.customer_email?('mailto:'+c.customer_email+'?subject='+encodeURIComponent(c.title||'Your agreement')+'&body='+encodeURIComponent('Please review and sign here:\n\n'+link)):'';
+    bpModal('<h3>Send it to '+bpEsc(c.customer_name||'your customer')+'</h3>'
+      +'<div class="bpx-sub">They open this link, read the agreement and sign it on their phone. You\'ll see it here the moment they do.</div>'
+      +'<div class="bpx-ct-link" id="bpx-ct-link">'+bpEsc(link)+'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+        +'<button class="bpx-btn" style="width:auto;margin:0;padding:10px 16px" onclick="bpCtCopy(\''+bpEsc(link)+'\',this)">Copy link</button>'
+        +(sms?'<a class="bpx-btn ghost" style="width:auto;margin:0;padding:10px 16px;text-decoration:none" href="'+bpEsc(sms)+'">Text it</a>':'')
+        +(mail?'<a class="bpx-btn ghost" style="width:auto;margin:0;padding:10px 16px;text-decoration:none" href="'+bpEsc(mail)+'">Email it</a>':'')
+      +'</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal();bpCtLoad(_bpCt.job)">Done</button></div>');
+  },function(){alert('Couldn\'t reach the contract service.');});
+};
+window.bpCtCopy=function(link,btn){
+  var done=function(){if(btn){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy link';},1800);}};
+  try{ navigator.clipboard.writeText(link).then(done,function(){bpCtCopyFallback(link,done);}); }catch(e){ bpCtCopyFallback(link,done); }
+};
+function bpCtCopyFallback(link,done){
+  var t=document.createElement('textarea');t.value=link;t.style.position='fixed';t.style.opacity='0';
+  document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}
+  document.body.removeChild(t);
+}
+window.bpCtVoid=function(id){
+  if(!confirm('Cancel this contract? The link stops working for the customer.'))return;
+  Promise.resolve(bpAuthApi(CT_URL,{op:'void',id:id})).then(function(){bpCtLoad(_bpCt.job);});
+};
+function bpCtDoc(c,signed){
+  var s=bpSettingsGet(),co=s.company||{};
+  return '<div class="bpx-ct-doc">'
+    +'<div class="bpx-ct-head"><div><b>'+bpEsc(co.name||'')+'</b>'+(co.phone?'<span>'+bpEsc(co.phone)+'</span>':'')+(co.license?'<span>Licence '+bpEsc(co.license)+'</span>':'')+'</div>'
+      +'<div style="text-align:right"><b>'+bpEsc(c.title||'Agreement')+'</b><span>'+bpMoneyFmt(+c.amount||0)+'</span></div></div>'
+    +'<pre>'+bpEsc(c.body||'')+'</pre>'
+    +(signed&&c.signature
+      ? '<div class="bpx-ct-sig"><div><div class="lbl">Signed by</div><img src="'+bpEsc(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div></div>'
+        +'<div class="bpx-mut" style="font-size:11px;line-height:1.6">'+new Date(c.signed_at).toLocaleString()+'<br>'+bpEsc(c.signer_email||'')+(c.signer_ip?'<br>IP '+bpEsc(c.signer_ip):'')+'<br>Consented to sign electronically</div></div>'
+      : '<div class="bpx-mut" style="font-size:12px;margin-top:16px;border-top:1px dashed var(--line);padding-top:12px">Not signed yet.</div>')
+    +'</div>';
+}
+window.bpCtView=function(id){
+  var c=bpCtRow(id); if(!c)return;
+  bpModal('<h3>'+bpEsc(c.title||'Agreement')+' '+bpCtStatus(c)+'</h3>'+bpCtDoc(c,c.status==='signed')
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'+(c.status==='signed'?'<button class="bpx-btn" onclick="bpCtPrint(\''+c.id+'\')">Print / save PDF</button>':'')+'</div>');
+  var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='720px';mc.style.width='95vw';}
+};
+window.bpCtPrint=function(id){
+  var c=bpCtRow(id); if(!c)return;
+  var w=window.open('','_blank'); if(!w){alert('Allow pop-ups to print the contract.');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>'+bpEsc(c.title||'Agreement')+'</title>'
+    +'<style>@page{size:letter;margin:.7in}body{margin:0;font:13px/1.6 Inter,-apple-system,Segoe UI,sans-serif;color:#0f172a}'
+    +'.bpx-ct-doc{max-width:none}.bpx-ct-head{display:flex;justify-content:space-between;border-bottom:2px solid #0f172a;padding-bottom:10px;margin-bottom:18px}'
+    +'.bpx-ct-head b{display:block;font-size:16px}.bpx-ct-head span{display:block;font-size:11.5px;color:#64748b}'
+    +'pre{white-space:pre-wrap;font:inherit;margin:0}'
+    +'.bpx-ct-sig{display:flex;gap:26px;align-items:flex-end;margin-top:26px;border-top:1px solid #cbd5e1;padding-top:16px}'
+    +'.bpx-ct-sig .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:4px}'
+    +'.bpx-ct-sig img{display:block;height:54px}.bpx-ct-sig .nm{border-top:1px solid #0f172a;margin-top:4px;padding-top:3px;font-weight:600}'
+    +'.bpx-mut{color:#64748b}</style>'+bpCtDoc(c,c.status==='signed')
+    +'<scr'+'ipt>setTimeout(function(){window.print();},400);</scr'+'ipt>');
+  w.document.close();
+};
+
+/* ===== Public signing page — what the homeowner opens from #sign=<token> =====
+   No login. The token in the link is the credential, and every read and write
+   goes through the contract-sign function so this page never touches the
+   contracts table. =========================================================*/
+var _bpSg={token:'',c:null,pad:null,drew:false};
+function bpSignRoute(){
+  var m=/[#&]sign=([a-f0-9]{20,64})/i.exec(location.hash||'');
+  if(!m)return false;
+  _bpSg.token=m[1];
+  document.body.classList.add('bp-signing');
+  var host=document.createElement('div'); host.id='bpSign'; document.body.appendChild(host);
+  host.innerHTML='<div class="sg-wrap"><div class="sg-card"><div class="sg-load">Loading your agreement…</div></div></div>';
+  fetch(CT_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},body:JSON.stringify({op:'get',token:_bpSg.token})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||!d.ok){bpSignErr(d&&d.error==='void'?'This agreement has been cancelled by the contractor.':'We couldn\'t find that agreement. Check the link, or ask your contractor to resend it.');return;}
+      _bpSg.c=d.contract; bpSignRender();
+    })
+    .catch(function(){bpSignErr('We couldn\'t load the agreement just now. Check your connection and reload the page.');});
+  return true;
+}
+function bpSignErr(msg){
+  var h=document.getElementById('bpSign'); if(!h)return;
+  h.innerHTML='<div class="sg-wrap"><div class="sg-card"><div class="sg-brand"><svg class="bpmark" width="30" height="30"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>'
+    +'<h1 class="sg-h">Agreement unavailable</h1><p class="sg-p">'+bpEsc(msg)+'</p></div></div>';
+}
+function bpSignRender(){
+  var c=_bpSg.c,h=document.getElementById('bpSign'); if(!h||!c)return;
+  if(c.status==='signed'){ bpSignDone(); return; }
+  if(c.status==='declined'){
+    h.innerHTML='<div class="sg-wrap"><div class="sg-card"><h1 class="sg-h">You declined this agreement</h1><p class="sg-p">If that was a mistake, contact your contractor and they can send it again.</p></div></div>';
+    return;
+  }
+  h.innerHTML='<div class="sg-wrap">'
+    +'<div class="sg-card">'
+      +'<div class="sg-brand"><svg class="bpmark" width="30" height="30"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>'
+      +'<h1 class="sg-h">Your agreement is ready to sign</h1>'
+      +'<p class="sg-p">Please read it through. Nothing is agreed until you sign at the bottom, and you can close this page and come back to the same link any time.</p>'
+      +'<div class="sg-meta">'
+        +(c.amount!=null?'<div><span>Total</span><b>'+bpMoneyFmt(+c.amount||0)+'</b></div>':'')
+        +(c.deposit!=null?'<div><span>Due at signing</span><b>'+bpMoneyFmt(+c.deposit||0)+'</b></div>':'')
+        +(c.address?'<div><span>Property</span><b>'+bpEsc(c.address)+'</b></div>':'')
+      +'</div>'
+      +'<div class="sg-doc"><pre>'+bpEsc(c.body||'')+'</pre></div>'
+      +'<div class="sg-sign">'
+        +'<div class="sg-lbl">Sign here</div>'
+        +'<div class="sg-padwrap"><canvas id="sgPad" class="sg-pad"></canvas><button class="sg-clear" onclick="bpSignClear()">Clear</button><span class="sg-hint" id="sgHint">Draw your signature with your finger</span></div>'
+        +'<label class="sg-f"><span>Your full legal name</span><input id="sgName" autocomplete="name" placeholder="Type your name" oninput="bpSignCheck()"></label>'
+        +'<label class="sg-f"><span>Email <i>(for your copy)</i></span><input id="sgEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>'
+        +'<label class="sg-consent"><input type="checkbox" id="sgConsent" onchange="bpSignCheck()"><span>I agree to sign this agreement electronically, and that my electronic signature is as binding as a signature on paper.</span></label>'
+        +'<div class="sg-msg" id="sgMsg"></div>'
+        +'<button class="sg-btn" id="sgGo" disabled onclick="bpSignSubmit()">Sign agreement</button>'
+        +'<button class="sg-decline" onclick="bpSignDecline()">I don\'t want to sign this</button>'
+      +'</div>'
+      +'<div class="sg-foot">Your name, the time you signed and your IP address are recorded with this agreement, as required for electronic signatures in the US.</div>'
+    +'</div></div>';
+  bpSignPad();
+}
+/* signature pad — pointer events cover finger, stylus and mouse in one path */
+function bpSignPad(){
+  var cv=document.getElementById('sgPad'); if(!cv)return;
+  var fit=function(){
+    var r=cv.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,3);
+    var data=cv.width?cv.toDataURL():null;
+    cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
+    var x=cv.getContext('2d'); x.scale(dpr,dpr);
+    x.lineWidth=2.2; x.lineCap='round'; x.lineJoin='round'; x.strokeStyle='#0f172a';
+    if(data&&_bpSg.drew){var im=new Image();im.onload=function(){x.drawImage(im,0,0,r.width,r.height);};im.src=data;}
+    _bpSg.pad=x;
+  };
+  fit(); addEventListener('resize',fit);
+  var drawing=false,last=null;
+  var pt=function(e){var r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+  cv.addEventListener('pointerdown',function(e){drawing=true;last=pt(e);cv.setPointerCapture(e.pointerId);e.preventDefault();});
+  cv.addEventListener('pointermove',function(e){
+    if(!drawing)return;
+    var p=pt(e),x=_bpSg.pad;
+    x.beginPath();x.moveTo(last.x,last.y);x.lineTo(p.x,p.y);x.stroke();
+    last=p;
+    if(!_bpSg.drew){_bpSg.drew=true;var hint=document.getElementById('sgHint');if(hint)hint.style.opacity='0';bpSignCheck();}
+    e.preventDefault();
+  });
+  var stop=function(){drawing=false;};
+  cv.addEventListener('pointerup',stop); cv.addEventListener('pointercancel',stop); cv.addEventListener('pointerleave',stop);
+}
+window.bpSignClear=function(){
+  var cv=document.getElementById('sgPad'); if(!cv||!_bpSg.pad)return;
+  _bpSg.pad.clearRect(0,0,cv.width,cv.height); _bpSg.drew=false;
+  var hint=document.getElementById('sgHint'); if(hint)hint.style.opacity='';
+  bpSignCheck();
+};
+window.bpSignCheck=function(){
+  var n=((document.getElementById('sgName')||{}).value||'').trim();
+  var ok=n.length>=2&&_bpSg.drew&&(document.getElementById('sgConsent')||{}).checked;
+  var b=document.getElementById('sgGo'); if(b)b.disabled=!ok;
+};
+window.bpSignSubmit=function(){
+  var b=document.getElementById('sgGo'),msg=document.getElementById('sgMsg');
+  var cv=document.getElementById('sgPad');
+  var name=((document.getElementById('sgName')||{}).value||'').trim();
+  if(!name||!_bpSg.drew){if(msg)msg.textContent='Please add your signature and name.';return;}
+  b.disabled=true; b.textContent='Signing…';
+  fetch(CT_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},
+    body:JSON.stringify({op:'sign',token:_bpSg.token,signer_name:name,signer_email:((document.getElementById('sgEmail')||{}).value||'').trim(),
+      signature:cv.toDataURL('image/png'),kind:'drawn',consent:true})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||!d.ok){b.disabled=false;b.textContent='Sign agreement';if(msg)msg.textContent=(d&&d.error)||'Something went wrong — please try again.';return;}
+      _bpSg.c=d.contract||_bpSg.c; bpSignDone();
+    })
+    .catch(function(){b.disabled=false;b.textContent='Sign agreement';if(msg)msg.textContent='Couldn\'t reach the server — check your connection and try again.';});
+};
+window.bpSignDecline=function(){
+  if(!confirm('Let your contractor know you don\'t want to sign this agreement?'))return;
+  fetch(CT_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},body:JSON.stringify({op:'decline',token:_bpSg.token})})
+    .then(function(){_bpSg.c.status='declined';bpSignRender();}).catch(function(){});
+};
+function bpSignDone(){
+  var c=_bpSg.c,h=document.getElementById('bpSign'); if(!h)return;
+  h.innerHTML='<div class="sg-wrap"><div class="sg-card">'
+    +'<div class="sg-tick">✓</div>'
+    +'<h1 class="sg-h" style="text-align:center">You\'re all signed</h1>'
+    +'<p class="sg-p" style="text-align:center">Thanks'+(c&&c.signer_name?', '+bpEsc(c.signer_name.split(' ')[0]):'')+'. Your contractor has been notified. Keep this page or print a copy for your records.</p>'
+    +'<div class="sg-doc" style="margin-top:18px"><pre>'+bpEsc((c&&c.body)||'')+'</pre></div>'
+    +(c&&c.signature?'<div class="sg-signed"><div class="sg-lbl">Signed by</div><img src="'+bpEsc(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div><div class="sg-when">'+(c.signed_at?new Date(c.signed_at).toLocaleString():'')+'</div></div>':'')
+    +'<button class="sg-btn" style="margin-top:18px" onclick="window.print()">Print / save a copy</button>'
+    +'</div></div>';
+}
+/* the signing page takes over the whole document when the link carries a token */
+try{ bpSignRoute(); }catch(e){}
+
 /* ===== Payouts — the contractor connects their OWN Stripe inside their own GHL
    sub-account, so invoice money goes straight to their bank. We never hold it. ===== */
 var BP_PORTAL_DOMAIN='app.gohighlevel.com';   // ← swap for app.builderpro-os.com once the white-label domain is live
@@ -17531,6 +17876,70 @@ window.bpFinAddSave=function(kind){
 .bpx-mk-rev:last-child{border-bottom:0;}
 .bpx-mk-stars{color:#f59e0b;letter-spacing:1px;font-size:12px;}
 .bpx-mk-empty{padding:34px 20px;text-align:center;color:var(--grey);font-size:13.5px;}
+html.bp-signing-boot body>*:not(#bpSign):not(script):not(style):not(link):not(svg){visibility:hidden;}
+html.bp-signing-boot body{background:#eef1f6;}
+
+/* contracts (portal) */
+.bpx-ct-row{display:flex;gap:11px;align-items:center;flex-wrap:wrap;padding:11px 0;border-top:1px solid var(--line-2);}
+.bpx-ct-row:first-of-type{border-top:0;}
+.bpx-ct-doc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 22px;max-height:46vh;overflow:auto;}
+.bpx-ct-head{display:flex;justify-content:space-between;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:16px;flex-wrap:wrap;}
+.bpx-ct-head b{display:block;font-size:15px;letter-spacing:-.01em;}
+.bpx-ct-head span{display:block;font-size:11.5px;color:var(--grey);}
+.bpx-ct-doc pre{white-space:pre-wrap;font:inherit;font-size:13px;line-height:1.65;margin:0;color:var(--ink-2);}
+.bpx-ct-sig{display:flex;gap:24px;align-items:flex-end;margin-top:22px;border-top:1px solid var(--line);padding-top:14px;flex-wrap:wrap;}
+.bpx-ct-sig .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--grey);margin-bottom:4px;}
+.bpx-ct-sig img{display:block;height:50px;}
+.bpx-ct-sig .nm{border-top:1px solid var(--ink);margin-top:4px;padding-top:3px;font-weight:600;font-size:13px;}
+.bpx-ct-link{margin-top:12px;background:var(--soft,#f6f8fb);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:12.5px;word-break:break-all;font-family:ui-monospace,monospace;}
+#bpx.bpx-dark .bpx-ct-doc,#bpx.bpx-dark .bpx-ct-link{background:#151b26;border-color:#232c3a;}
+#bpx.bpx-dark .bpx-ct-doc pre{color:#e6e9ef;}
+
+/* public signing page */
+body.bp-signing>*:not(#bpSign):not(script):not(style):not(link):not(svg){display:none !important;}
+body.bp-signing{background:#eef1f6;}
+#bpSign .sg-wrap{min-height:100vh;padding:26px 16px 60px;display:flex;justify-content:center;align-items:flex-start;}
+#bpSign .sg-card{background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(16,24,40,.10);max-width:680px;width:100%;padding:30px 30px 34px;}
+@media(max-width:600px){#bpSign .sg-card{padding:22px 18px 28px;border-radius:14px;}}
+#bpSign .sg-brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+#bpSign .sg-brand .wm{font-size:20px;font-weight:700;letter-spacing:-.03em;color:#4a5568;}
+#bpSign .sg-brand .wm span{color:#3b73b9;}
+#bpSign .sg-h{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1.2;margin:0 0 8px;color:#0c0c0d;}
+#bpSign .sg-p{font-size:14.5px;line-height:1.6;color:#4b5563;margin:0 0 18px;}
+#bpSign .sg-load{padding:40px;text-align:center;color:#6b7280;}
+#bpSign .sg-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+#bpSign .sg-meta div{flex:1;min-width:130px;background:#f6f8fb;border:1px solid #e4e9f0;border-radius:10px;padding:10px 12px;}
+#bpSign .sg-meta span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;}
+#bpSign .sg-meta b{display:block;font-size:15px;margin-top:2px;color:#0c0c0d;}
+#bpSign .sg-doc{border:1px solid #e4e9f0;border-radius:12px;background:#fcfdfe;padding:18px;max-height:42vh;overflow:auto;}
+#bpSign .sg-doc pre{white-space:pre-wrap;font:inherit;font-size:13.5px;line-height:1.7;margin:0;color:#26262a;}
+#bpSign .sg-sign{margin-top:22px;}
+#bpSign .sg-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;color:#6b7280;margin-bottom:7px;}
+#bpSign .sg-padwrap{position:relative;}
+#bpSign .sg-pad{width:100%;height:150px;border:2px dashed #cbd5e1;border-radius:12px;background:#fff;touch-action:none;display:block;cursor:crosshair;}
+#bpSign .sg-hint{position:absolute;left:0;right:0;top:62px;text-align:center;font-size:13px;color:#9aa3b2;pointer-events:none;transition:opacity .2s;}
+#bpSign .sg-clear{position:absolute;right:9px;top:9px;background:#fff;border:1px solid #e4e9f0;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:600;color:#4b5563;cursor:pointer;}
+#bpSign .sg-f{display:block;margin-top:14px;}
+#bpSign .sg-f span{display:block;font-size:12.5px;font-weight:600;color:#374151;margin-bottom:5px;}
+#bpSign .sg-f i{font-style:normal;font-weight:400;color:#9aa3b2;}
+#bpSign .sg-f input{width:100%;box-sizing:border-box;border:1px solid #dfe4ec;border-radius:10px;padding:12px 13px;font:inherit;font-size:15px;background:#fff;color:#0c0c0d;}
+#bpSign .sg-f input:focus{outline:none;border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.14);}
+#bpSign .sg-consent{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13px;line-height:1.55;color:#374151;cursor:pointer;}
+#bpSign .sg-consent input{width:19px;height:19px;flex-shrink:0;margin-top:1px;accent-color:#2f6bff;}
+#bpSign .sg-msg{color:#b91c1c;font-size:13px;min-height:18px;margin-top:8px;}
+#bpSign .sg-btn{width:100%;margin-top:8px;background:#2f6bff;color:#fff;border:0;border-radius:12px;padding:15px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;}
+#bpSign .sg-btn:hover:not(:disabled){background:#1b56ee;}
+#bpSign .sg-btn:disabled{background:#c9d8ff;cursor:not-allowed;}
+#bpSign .sg-decline{display:block;margin:12px auto 0;background:none;border:0;color:#6b7280;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;}
+#bpSign .sg-foot{margin-top:20px;padding-top:14px;border-top:1px solid #eef1f6;font-size:11.5px;line-height:1.6;color:#8b93a1;}
+#bpSign .sg-tick{width:58px;height:58px;border-radius:50%;background:#ecfdf5;color:#15803d;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:4px auto 16px;}
+#bpSign .sg-signed{margin-top:18px;border-top:1px solid #e4e9f0;padding-top:14px;}
+#bpSign .sg-signed img{display:block;height:54px;}
+#bpSign .sg-signed .nm{border-top:1px solid #0f172a;display:inline-block;margin-top:4px;padding-top:3px;font-weight:600;}
+#bpSign .sg-when{font-size:11.5px;color:#8b93a1;margin-top:5px;}
+@media print{body.bp-signing{background:#fff;}#bpSign .sg-card{box-shadow:none;max-width:none;padding:0;}
+  #bpSign .sg-doc{max-height:none;border:0;padding:0;background:none;}#bpSign .sg-btn,#bpSign .sg-decline,#bpSign .sg-brand{display:none;}}
+
 .bpx-pay-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;}
 .bpx-pay-flow>div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
 .bpx-pay-flow>div.on{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.10);}
@@ -19413,7 +19822,7 @@ document.head.appendChild(rdCss);
     {key:"messaging",label:"Messaging",desc:"every text and email with leads in one inbox; tapping the contact icon in a conversation opens that person's full profile"},
     {key:"contacts",label:"Contacts",desc:"every lead and customer with their pipeline stage; search, add, edit, and Export CSV. Tapping a name opens their profile and the jobs linked to them"},
     {key:"calendar",label:"Calendar",desc:"upcoming inspections and appointments, plus the work days booked on active projects"},
-    {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances"},
+    {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
     {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
     {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
