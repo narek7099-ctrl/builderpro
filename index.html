@@ -17080,6 +17080,7 @@ window.bpFinView=function(t){
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
 /* ===== Payouts — the contractor connects their OWN Stripe inside their own GHL
    sub-account, so invoice money goes straight to their bank. We never hold it. ===== */
+var BP_PORTAL_DOMAIN='app.gohighlevel.com';   // ← swap for app.builderpro-os.com once the white-label domain is live
 var _bpPay={loaded:false,loading:false,loc:'',connected:null,note:''};
 function bpPayouts(){
   q('bpxViewArea').innerHTML='<div id="bpx-pay"></div>';
@@ -17115,7 +17116,9 @@ function bpPayRender(){
   var s=bpSettingsGet(),c=s.company||{},co=c.name||'your business';
   if(!_bpPay.loaded){el.innerHTML='<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div></div>';return;}
   var loc=_bpPay.loc;
-  var payUrl=loc?('https://app.gohighlevel.com/v2/location/'+encodeURIComponent(loc)+'/payments/integrations'):'';
+  /* Point BP_PORTAL_DOMAIN at your own white-label domain (GHL agency Settings →
+     Company → White Label Domain) and the client never sees GoHighLevel. */
+  var payUrl=loc?('https://'+BP_PORTAL_DOMAIN+'/v2/location/'+encodeURIComponent(loc)+'/payments/integrations'):'';
   var step=function(n,t,d,extra){return '<div class="bpx-pay-step"><span class="n">'+n+'</span><div><b>'+t+'</b><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-top:3px">'+d+'</div>'+(extra||'')+'</div></div>';};
   el.innerHTML=
     '<div class="bpx-pay-flow"><div><b>Homeowner pays</b><span>card, on your invoice</span></div><i>→</i>'
