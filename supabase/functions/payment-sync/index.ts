@@ -25,13 +25,17 @@ const GHL_BASE = "https://services.leadconnectorhq.com";
 const sbH = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 
-async function locationForOwner(owner: string): Promise<string> {
-  if (!owner) return "";
-  try {
-    const r = await fetch(`${SB_URL}/rest/v1/ai_brain?owner=eq.${owner}&select=ghl_location_id&limit=1`, { headers: sbH });
+async function locationForOwner(owner: string, email?: string): Promise<string> {
+  const get = async (qs: string) => {
+    const r = await fetch(`${SB_URL}/rest/v1/ai_brain?${qs}&select=ghl_location_id&limit=1`, { headers: sbH });
     if (!r.ok) return "";
     const rows = await r.json();
     return String(rows?.[0]?.ghl_location_id ?? "");
+  };
+  try {
+    if (owner) { const own = await get(`owner=eq.${owner}`); if (own) return own; }
+    // the brain row may still be unclaimed if the client hasn't signed in yet
+    return email ? await get(`owner_email=ilike.${encodeURIComponent(email)}`) : "";
   } catch { return ""; }
 }
 
@@ -80,7 +84,7 @@ Deno.serve(async (req) => {
 
   const owner = await userIdByEmail(email);
   if (!owner) return json({ ok: false, error: "no portal user for " + email }, 404);
-  const ghlLoc = (await locationForOwner(owner)) || GHL_LOC_FALLBACK;
+  const ghlLoc = (await locationForOwner(owner, email)) || GHL_LOC_FALLBACK;
 
   // fallback 2: look the invoice up in GHL by invoice number, in THEIR sub-account
   const invNo = pick("invoiceNumber") || pick("invoice_number");

@@ -254,7 +254,7 @@ async function onboardFull(a: Record<string, string>) {
       const rb = await fetch(`${SB_URL}/rest/v1/ai_brain?on_conflict=slug`, {
         method: "POST",
         headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
-        body: JSON.stringify({ slug: locationId, is_demo: false, ghl_location_id: locationId, booking_calendar_id: bookingCalId, assistant_name: a.assistant_name || "Nova", business_name: a.name, industry: a.industry || "", tone: a.tone || "Friendly", services: a.services || "", pricing: a.pricing || "", hours: a.hours || "", phone: a.phone || "", booking_url: a.booking_url || "", faqs: a.faqs || "", custom_instructions: a.custom_instructions || "" }),
+        body: JSON.stringify({ slug: locationId, is_demo: false, ghl_location_id: locationId, owner_email: a.email || "", booking_calendar_id: bookingCalId, assistant_name: a.assistant_name || "Nova", business_name: a.name, industry: a.industry || "", tone: a.tone || "Friendly", services: a.services || "", pricing: a.pricing || "", hours: a.hours || "", phone: a.phone || "", booking_url: a.booking_url || "", faqs: a.faqs || "", custom_instructions: a.custom_instructions || "" }),
       });
       if (rb.ok) steps.push("Created their AI receptionist brain (slug = " + locationId + ")");
     } catch { /* ignore */ }

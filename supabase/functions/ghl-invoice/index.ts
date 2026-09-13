@@ -50,10 +50,15 @@ async function ownerLocation(jwt: string): Promise<string> {
     if (!u.ok) return "";
     const me = await u.json();
     if (!me?.id) return "";
-    const r = await fetch(`${SB_URL}/rest/v1/ai_brain?owner=eq.${me.id}&select=ghl_location_id&limit=1`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
-    if (!r.ok) return "";
-    const rows = await r.json();
-    return String(rows?.[0]?.ghl_location_id ?? "");
+    const h = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` };
+    const get = async (qs: string) => {
+      const r = await fetch(`${SB_URL}/rest/v1/ai_brain?${qs}&select=ghl_location_id&limit=1`, { headers: h });
+      if (!r.ok) return "";
+      const rows = await r.json();
+      return String(rows?.[0]?.ghl_location_id ?? "");
+    };
+    // owned row first; otherwise the row onboarding set up for this email
+    return (await get(`owner=eq.${me.id}`)) || (me.email ? await get(`owner_email=ilike.${encodeURIComponent(me.email)}`) : "");
   } catch { return ""; }
 }
 

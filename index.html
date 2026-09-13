@@ -17089,11 +17089,27 @@ function bpPayouts(){
 function bpPayLoad(){
   if(!(window.BP_LIVE&&window.BP_SB)){_bpPay.loaded=true;bpPayRender();return;}
   _bpPay.loading=true;
-  Promise.resolve(BP_SB.from('ai_brain').select('ghl_location_id').maybeSingle()).then(function(r){
-    _bpPay.loc=(r&&r.data&&r.data.ghl_location_id)||'';
+  /* goes through the function, not the table: it claims the sub-account that was
+     set up for this email the first time the client signs in */
+  Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'get'})).then(function(r){
+    _bpPay.loc=(r&&r.brain&&r.brain.ghl_location_id)||'';
     _bpPay.loaded=true;_bpPay.loading=false;bpPayRender();
-  },function(){_bpPay.loaded=true;_bpPay.loading=false;_bpPay.note='Could not check your account setup.';bpPayRender();});
+  },function(){_bpPay.loaded=true;_bpPay.loading=false;_bpPay.note='Could not check your account setup — tap Retry.';bpPayRender();});
 }
+window.bpPayRetry=function(){_bpPay.loaded=false;_bpPay.note='';bpPayRender();bpPayLoad();};
+window.bpPayAsk=function(){
+  var btn=q('bpx-pay-ask'),msg=q('bpx-pay-msg'),co=(bpSettingsGet().company||{}).name||'';
+  var done=function(t,ok){ if(msg){msg.style.color=ok?'#15803d':'#b45309';msg.textContent=t;} if(btn){btn.disabled=!!ok;btn.textContent=ok?'Request sent ✓':'Finish my setup';} };
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  if(!(window.BP_LIVE&&window.BP_SB)){done('Sign in and we’ll pick this up for you.',false);return;}
+  BP_SB.auth.getSession().then(function(sn){
+    var u=sn&&sn.data&&sn.data.session&&sn.data.session.user; if(!u)throw 0;
+    return BP_SB.from('support_requests').insert({owner:u.id,email:u.email,kind:'billing',subject:'Finish payments setup',body:'Client asked us to link their payments account. Business: '+co+'. Portal email: '+(u.email||'')+'.'});
+  }).then(function(r){
+    if(r&&r.error)throw r.error;
+    done('Got it — we’ll finish your payments setup and let you know. Usually same business day.',true);
+  },function(){ done('Couldn’t send that. Email support@builderpro-os.com and we’ll sort it out.',false); });
+};
 function bpPayRender(){
   var el=q('bpx-pay'); if(!el)return;
   var s=bpSettingsGet(),c=s.company||{},co=c.name||'your business';
@@ -17115,10 +17131,12 @@ function bpPayRender(){
         +step(3,'Come back and send an invoice','Every invoice you send from Finances is then payable by card, and the money lands in the account you just connected.',
           '<button class="bpx-btn ghost" style="width:auto;margin-top:10px;padding:10px 18px" onclick="bpNav(\'invoices\')">Go to Invoices</button>')
         +'<div class="bpx-mut" style="font-size:12px;margin-top:16px;border-top:1px solid var(--line);padding-top:12px">Already connected? Nothing to do — this page is only needed once. You can change the bank account any time from the same screen.</div></div>'
-      : '<div class="bpx-panel"><div class="bpx-ptitle">Your payments account isn’t set up yet</div>'
-        +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6;margin-bottom:14px">Before you can take card payments, '+bpEsc(co)+' needs its own payments account created — that’s something we do for you as part of onboarding. Once it exists, this page will walk you through connecting Stripe so invoice money goes straight to your bank.</div>'
-        +'<a class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px;text-decoration:none;display:inline-block" href="mailto:support@builderpro-os.com?subject=Set%20up%20my%20payments%20account">Ask us to set it up</a>'
-        +'<div class="bpx-mut" style="font-size:12px;margin-top:14px">In the meantime you can still send invoices and record payments by hand — they just won’t be payable by card.</div></div>')
+      : '<div class="bpx-panel"><div class="bpx-ptitle">We’re still finishing your payments account</div>'
+        +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6;margin-bottom:14px">Card payments run through a payments account we set up for '+bpEsc(co)+'. Yours isn’t linked to this login yet. Tap below and we’ll finish it — you don’t need to do anything else, and we’ll let you know the moment it’s ready.</div>'
+        +'<div style="display:flex;gap:9px;flex-wrap:wrap"><button class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px" id="bpx-pay-ask" onclick="bpPayAsk()">Finish my setup</button>'
+        +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:11px 18px" onclick="bpPayRetry()">Retry</button></div>'
+        +'<div class="bpx-mmsg" id="bpx-pay-msg" style="margin-top:10px"></div>'
+        +'<div class="bpx-mut" style="font-size:12px;margin-top:14px">Meanwhile everything else works — send invoices and estimates as usual, and record cash or check payments on a job. Only card payment is waiting on this.</div></div>')
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Common questions</div>'
       +'<div class="bpx-pay-q"><b>Does BuilderPro take a cut of my jobs?</b><span>No. You pay us a flat monthly subscription and nothing per job. The only fee on a payment is Stripe’s own.</span></div>'
       +'<div class="bpx-pay-q"><b>Whose name is on the payment?</b><span>Yours. Your customer’s statement shows your business, and the Stripe account and bank details are yours.</span></div>'

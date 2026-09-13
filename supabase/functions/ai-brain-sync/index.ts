@@ -66,21 +66,30 @@ const SAFE = ["slug", "assistant_name", "business_name", "industry", "tone", "se
 const pick = (r: Row) => Object.fromEntries(SAFE.map((k) => [k, r[k] ?? null]));
 
 // the client's brain row: owned by them, else the location's row (claimed), else new
-async function findBrain(uid: string): Promise<Row | null> {
+// Onboarding creates the brain row (with the client's GHL sub-account) before the
+// client has ever signed in, so it starts unowned. The first time they sign in we
+// claim the row that was set up for their email — that is what links their portal
+// login to their own GHL sub-account, and therefore to their own Stripe payouts.
+async function findBrain(uid: string, email?: string): Promise<Row | null> {
   const get = async (qs: string) => {
     const r = await fetch(`${SB_URL}/rest/v1/ai_brain?${qs}&select=*&limit=1`, { headers: sbH });
     const rows = r.ok ? await r.json() : [];
     return Array.isArray(rows) && rows.length ? rows[0] as Row : null;
   };
+  const claim = async (row: Row | null) => {
+    if (!row) return null;
+    await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: sbH, body: JSON.stringify({ owner: uid }) });
+    return { ...row, owner: uid };
+  };
   const own = await get(`owner=eq.${uid}`);
   if (own) return own;
-  if (LOC) {
-    const loc = await get(`slug=eq.${encodeURIComponent(LOC)}&owner=is.null`);
-    if (loc) {
-      await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${loc.id}`, { method: "PATCH", headers: sbH, body: JSON.stringify({ owner: uid }) });
-      return { ...loc, owner: uid };
-    }
+  // match the email onboarding was run with (case-insensitive), unowned rows only
+  if (email) {
+    const byEmail = await get(`owner_email=ilike.${encodeURIComponent(email)}&owner=is.null`);
+    if (byEmail) return claim(byEmail);
   }
+  // single-tenant fallback: the one location named by the LOC secret
+  if (LOC) return claim(await get(`slug=eq.${encodeURIComponent(LOC)}&owner=is.null`));
   return null;
 }
 
@@ -116,8 +125,8 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
 
   if (b.op === "get") {
-    const row = await findBrain(user.id);
-    return json({ ok: true, brain: row ? pick(row) : null, ghl_linked: !!LOC });
+    const row = await findBrain(user.id, user.email);
+    return json({ ok: true, brain: row ? pick(row) : null, ghl_linked: !!(row?.ghl_location_id || LOC) });
   }
 
   if (b.op === "publish") {
