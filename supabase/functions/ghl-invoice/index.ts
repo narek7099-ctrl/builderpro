@@ -11,7 +11,11 @@
 const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
 const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
 const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
-const LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+// Fallback only. Each client's invoices belong in THEIR OWN sub-account so the
+// money lands in THEIR Stripe — resolved per signed-in owner below.
+const LOC_FALLBACK = Deno.env.get("GHL_LOCATION_ID") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
 
 const cors = {
@@ -22,34 +26,53 @@ const cors = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const ghlH = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
 
-async function token(): Promise<string> {
+async function token(loc: string): Promise<string> {
   if (GHL_TOKEN) return GHL_TOKEN;
-  if (GHL_API_KEY && GHL_COMPANY_ID && LOC) {
+  if (GHL_API_KEY && GHL_COMPANY_ID && loc) {
     try {
       const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
         method: "POST",
         headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: LOC }).toString(),
+        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: loc }).toString(),
       });
       if (r.ok) { const d = await r.json(); if (d?.access_token) return d.access_token; }
     } catch { /* fall through */ }
   }
   return GHL_API_KEY;
 }
+// The signed-in client's own GHL sub-account. Without it we must not fall back
+// to a shared location — that would put their customer's money in someone
+// else's Stripe, so we refuse instead.
+async function ownerLocation(jwt: string): Promise<string> {
+  if (!jwt || !SB_URL || !SB_SERVICE) return "";
+  try {
+    const u = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${jwt}` } });
+    if (!u.ok) return "";
+    const me = await u.json();
+    if (!me?.id) return "";
+    const r = await fetch(`${SB_URL}/rest/v1/ai_brain?owner=eq.${me.id}&select=ghl_location_id&limit=1`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+    if (!r.ok) return "";
+    const rows = await r.json();
+    return String(rows?.[0]?.ghl_location_id ?? "");
+  } catch { return ""; }
+}
+
 const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
-  if (!LOC) return json({ ok: false, error: "GHL_LOCATION_ID secret not set" }, 500);
-  const t = await token();
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const loc = (await ownerLocation(jwt)) || LOC_FALLBACK;
+  if (!loc) return json({ ok: false, error: "Your payments account isn't set up yet — open Finances → Payouts." }, 409);
+  const t = await token(loc);
   if (!t) return json({ ok: false, error: "no GHL token" }, 500);
 
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
 
   if (b.action === "list") {
-    const r = await fetch(`${GHL_BASE}/invoices/?altId=${LOC}&altType=location&limit=25&offset=0`, { headers: ghlH(t) });
+    const r = await fetch(`${GHL_BASE}/invoices/?altId=${loc}&altType=location&limit=25&offset=0`, { headers: ghlH(t) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) return json({ ok: false, status: r.status, error: d?.message ?? "list failed" }, 502);
     const items = (d?.invoices ?? []).map((v: Record<string, unknown>) => ({
@@ -75,7 +98,7 @@ Deno.serve(async (req) => {
     const dueDays = Math.max(0, Number(b.dueDays ?? 7));
 
     const payload = {
-      altId: LOC, altType: "location",
+      altId: loc, altType: "location",
       name: title,
       businessDetails: { name: String(b.businessName ?? "Your contractor") },
       currency: "USD",
@@ -110,7 +133,7 @@ Deno.serve(async (req) => {
     try {
       const rs = await fetch(`${GHL_BASE}/invoices/${invId}/send`, {
         method: "POST", headers: ghlH(t),
-        body: JSON.stringify({ altId: LOC, altType: "location", action: sendPref, liveMode: true }),
+        body: JSON.stringify({ altId: loc, altType: "location", action: sendPref, liveMode: true }),
       });
       sent = rs.ok;
       if (!rs.ok) sendErr = (await rs.json().catch(() => ({})))?.message ?? `send ${rs.status}`;
