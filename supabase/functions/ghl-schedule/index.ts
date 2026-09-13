@@ -1,104 +1,108 @@
-// Supabase Edge Function: ghl-schedule
-// Stores scheduled SMS/Email sends and dispatches them when due.
-//
-// Actions (POST JSON body { action: ... }):
-//   create  { sendAt, channel:'SMS'|'Email', subject?, message, contactIds:[], label? }
-//   list    -> { ok, items:[...] }  (pending + recently sent)
-//   cancel  { id }
-//   process -> dispatch everything due now (call from a 1-min cron)
+// ghl-schedule — scheduled sends for the BuilderPro portal.
+// Actions (POST JSON):
+//   {action:'create', channel:'SMS'|'Email', subject?, message, contactIds:[], sendAt:ISO, label?}
+//   {action:'list'}                 -> {ok, items:[...]}
+//   {action:'cancel', id}           -> {ok}
+//   {action:'run'}                  -> processes due pending rows (called by pg_cron)
 //
 // Deploy:  supabase functions deploy ghl-schedule --no-verify-jwt
-// Table:   see 20260815_scheduled_messages.sql migration.
-// Cron:    schedule a call to this function with {"action":"process"} every minute
-//          (Supabase Dashboard → Database → Cron, or pg_cron / external cron).
-//          Protect it by setting SCHED_CRON_KEY and sending header x-cron-key.
+// Table:   scheduled_msgs (see SETUP.md)
+// Secrets: GHL_TOKEN (or GHL_API_KEY), SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
-const CORS = {
+const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? Deno.env.get("GHL_API_KEY") ?? "";
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const GHL_BASE = "https://services.leadconnectorhq.com";
+
+const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-key",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const SB = Deno.env.get("SUPABASE_URL")!;
-const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const REST = `${SB}/rest/v1/scheduled_messages`;
-const HED = { apikey: SR, Authorization: `Bearer ${SR}`, "Content-Type": "application/json" };
+const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
+const sbH = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
+const ghlH = { Authorization: `Bearer ${GHL_TOKEN}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" };
 
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+async function sendOne(channel: string, contactId: string, message: string, subject: string) {
+  const body: Record<string, unknown> = channel === "Email"
+    ? { type: "Email", contactId, subject, html: `<p>${message.replace(/\n/g, "<br>")}</p>`, emailTo: undefined }
+    : { type: "SMS", contactId, message };
+  const r = await fetch(`${GHL_BASE}/conversations/messages`, { method: "POST", headers: ghlH, body: JSON.stringify(body) });
+  return r.ok;
 }
 
-async function dispatchOne(row: any) {
-  const ids: string[] = Array.isArray(row.contact_ids) ? row.contact_ids : [];
-  let ok = 0, fail = 0;
-  for (const cid of ids) {
-    try {
-      const r = await fetch(`${SB}/functions/v1/ghl-messaging`, {
-        method: "POST",
-        headers: { apikey: SR, Authorization: `Bearer ${SR}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "send", msgType: row.channel, contactId: cid, message: row.message, subject: row.subject || "A note from your contractor" }),
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
+  if (!SB_URL || !SB_SERVICE) return json({ ok: false, error: "missing secrets" }, 500);
+
+  let b: Record<string, unknown>;
+  try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
+  const action = String(b.action ?? "");
+
+  if (action === "create") {
+    const contactIds = Array.isArray(b.contactIds) ? b.contactIds.map(String).filter(Boolean) : [];
+    const message = String(b.message ?? "").trim();
+    const sendAt = new Date(String(b.sendAt ?? ""));
+    if (!contactIds.length || !message || isNaN(sendAt.getTime())) return json({ ok: false, error: "contactIds, message, sendAt required" }, 400);
+    if (sendAt.getTime() < Date.now()) return json({ ok: false, error: "sendAt must be in the future" }, 400);
+    const row = {
+      channel: b.channel === "Email" ? "Email" : "SMS",
+      subject: String(b.subject ?? "A note from your contractor"),
+      message,
+      contact_ids: contactIds,
+      send_at: sendAt.toISOString(),
+      label: String(b.label ?? "Message"),
+      status: "pending",
+    };
+    const r = await fetch(`${SB_URL}/rest/v1/scheduled_msgs`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(row) });
+    if (!r.ok) return json({ ok: false, error: "db insert failed" }, 502);
+    const d = await r.json();
+    return json({ ok: true, item: d[0] ?? row });
+  }
+
+  if (action === "list") {
+    const r = await fetch(`${SB_URL}/rest/v1/scheduled_msgs?select=*&order=send_at.asc&limit=100`, { headers: sbH });
+    if (!r.ok) return json({ ok: false, error: "db read failed" }, 502);
+    return json({ ok: true, items: await r.json() });
+  }
+
+  if (action === "cancel") {
+    const id = String(b.id ?? "");
+    if (!id) return json({ ok: false, error: "id required" }, 400);
+    const r = await fetch(`${SB_URL}/rest/v1/scheduled_msgs?id=eq.${encodeURIComponent(id)}&status=eq.pending`, {
+      method: "PATCH", headers: sbH, body: JSON.stringify({ status: "canceled" }),
+    });
+    return json({ ok: r.ok });
+  }
+
+  if (action === "run") {
+    if (!GHL_TOKEN) return json({ ok: false, error: "no GHL token" }, 500);
+    const now = new Date().toISOString();
+    const r = await fetch(`${SB_URL}/rest/v1/scheduled_msgs?status=eq.pending&send_at=lte.${encodeURIComponent(now)}&select=*&limit=20`, { headers: sbH });
+    if (!r.ok) return json({ ok: false, error: "db read failed" }, 502);
+    const due = await r.json();
+    const results: Record<string, unknown>[] = [];
+    for (const row of due) {
+      // claim it first so overlapping runs never double-send
+      const claim = await fetch(`${SB_URL}/rest/v1/scheduled_msgs?id=eq.${row.id}&status=eq.pending`, {
+        method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify({ status: "sending" }),
       });
-      const j = await r.json().catch(() => ({}));
-      j && j.ok ? ok++ : fail++;
-    } catch (_) { fail++; }
-    await new Promise((res) => setTimeout(res, 200));
+      const claimed = claim.ok ? await claim.json() : [];
+      if (!claimed.length) continue;
+      let ok = 0, fail = 0;
+      for (const cid of row.contact_ids ?? []) {
+        try { (await sendOne(row.channel, cid, row.message, row.subject)) ? ok++ : fail++; }
+        catch { fail++; }
+        await new Promise((res) => setTimeout(res, 220));
+      }
+      await fetch(`${SB_URL}/rest/v1/scheduled_msgs?id=eq.${row.id}`, {
+        method: "PATCH", headers: sbH, body: JSON.stringify({ status: fail && !ok ? "failed" : "sent", sent_count: ok, fail_count: fail }),
+      });
+      results.push({ id: row.id, ok, fail });
+    }
+    return json({ ok: true, processed: results.length, results });
   }
-  await fetch(`${REST}?id=eq.${row.id}`, {
-    method: "PATCH", headers: HED,
-    body: JSON.stringify({ status: fail && !ok ? "error" : "sent", sent_at: new Date().toISOString(), result: { ok, fail } }),
-  });
-  return { ok, fail };
-}
 
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (!SB || !SR) return json({ ok: false, error: "scheduler not configured" });
-  let body: any = {};
-  try { body = await req.json(); } catch (_) {}
-  const action = body.action;
-
-  try {
-    if (action === "create") {
-      if (!body.message || !body.sendAt || !Array.isArray(body.contactIds) || !body.contactIds.length)
-        return json({ ok: false, error: "message, sendAt and contactIds are required" });
-      const row = {
-        send_at: new Date(body.sendAt).toISOString(),
-        channel: body.channel === "Email" ? "Email" : "SMS",
-        subject: body.subject || null,
-        message: body.message,
-        contact_ids: body.contactIds,
-        label: body.label || null,
-        status: "pending",
-      };
-      const r = await fetch(REST, { method: "POST", headers: { ...HED, Prefer: "return=representation" }, body: JSON.stringify(row) });
-      const d = await r.json();
-      return r.ok ? json({ ok: true, item: d[0] }) : json({ ok: false, error: JSON.stringify(d) });
-    }
-
-    if (action === "list") {
-      const r = await fetch(`${REST}?order=send_at.asc&limit=100`, { headers: HED });
-      const items = await r.json();
-      return json({ ok: true, items });
-    }
-
-    if (action === "cancel") {
-      if (!body.id) return json({ ok: false, error: "id required" });
-      await fetch(`${REST}?id=eq.${body.id}&status=eq.pending`, { method: "PATCH", headers: HED, body: JSON.stringify({ status: "canceled" }) });
-      return json({ ok: true });
-    }
-
-    if (action === "process") {
-      const key = Deno.env.get("SCHED_CRON_KEY");
-      if (key && req.headers.get("x-cron-key") !== key) return json({ ok: false, error: "unauthorized" }, 401);
-      const now = new Date().toISOString();
-      const r = await fetch(`${REST}?status=eq.pending&send_at=lte.${now}&order=send_at.asc&limit=50`, { headers: HED });
-      const due = await r.json();
-      let processed = 0;
-      for (const row of (Array.isArray(due) ? due : [])) { await dispatchOne(row); processed++; }
-      return json({ ok: true, processed });
-    }
-
-    return json({ ok: false, error: "unknown action" });
-  } catch (e) {
-    return json({ ok: false, error: String(e) });
-  }
+  return json({ ok: false, error: "unknown action" }, 400);
 });
