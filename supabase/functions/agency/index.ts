@@ -260,12 +260,37 @@ async function onboardFull(a: Record<string, string>) {
     } catch { /* ignore */ }
   }
 
-  // 4) optionally invite a teammate to the new sub-account
-  if (a.inviteEmail) {
+  // 4) give the client a login on their own sub-account.
+  // This is what lets THEM connect THEIR Stripe — we can create the account but
+  // we can never link their bank; Stripe requires the owner's own KYC.
+  // paymentsEnabled + settingsEnabled are the two that unlock
+  // Settings → Payments → Integrations; without them the client opens the page
+  // and sees nothing, which is the most common onboarding failure.
+  const clientEmail = a.inviteEmail || a.email;
+  if (clientEmail) {
     try {
-      const ur = await fetch(`${GHL_BASE}/users/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify({ companyId: GHL_COMPANY_ID, locationIds: [locationId], firstName: a.inviteFirstName || "", lastName: a.inviteLastName || "", email: a.inviteEmail, type: "account", role: "admin" }) });
-      if (ur.ok) steps.push("Invited teammate " + a.inviteEmail);
-    } catch { /* ignore */ }
+      const ur = await fetch(`${GHL_BASE}/users/`, {
+        method: "POST",
+        headers: ghlHeaders(GHL_API_KEY),
+        body: JSON.stringify({
+          companyId: GHL_COMPANY_ID, locationIds: [locationId],
+          firstName: a.inviteFirstName || a.name || "", lastName: a.inviteLastName || "",
+          email: clientEmail, phone: a.phone || "", type: "account", role: "admin",
+          permissions: {
+            paymentsEnabled: true, settingsEnabled: true, invoiceEnabled: true,
+            recordPaymentEnabled: true, exportPaymentsEnabled: true, refundsEnabled: true,
+            contactsEnabled: true, conversationsEnabled: true, appointmentsEnabled: true,
+            opportunitiesEnabled: true, dashboardStatsEnabled: true, reviewsEnabled: true,
+            onlineListingsEnabled: true, marketingEnabled: true, workflowsEnabled: true,
+            triggersEnabled: true, campaignsEnabled: true, funnelsEnabled: true,
+            websitesEnabled: true, tagsEnabled: true, leadValueEnabled: true,
+            phoneCallEnabled: true, bulkRequestsEnabled: false, cancelSubscriptionEnabled: false,
+          },
+        }),
+      });
+      if (ur.ok) steps.push("Gave " + clientEmail + " a login with payment-settings access (they connect their own Stripe)");
+      else steps.push("Could not create their login (" + ur.status + ") \u2014 add them by hand under My Staff and switch on Payment Settings");
+    } catch { steps.push("Could not create their login \u2014 add them by hand under My Staff and switch on Payment Settings"); }
   }
 
   return json({ ok: true, locationId, steps });
