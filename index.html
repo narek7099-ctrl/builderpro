@@ -14134,7 +14134,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — from public permit records.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14148,7 +14148,7 @@ var BP_ICO={
 var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['calendar','Calendar'],['calculator','My Calculator']]},
-  {id:'finances',l:'Finances',ico:'finances'},
+  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['payouts','Payouts']]},
   {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['contacts','Contacts'],['messaging','Messaging']]},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors']]}
 ];
@@ -14200,7 +14200,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinances,leadradar:bpRadar,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -17012,7 +17012,6 @@ function bpFinances(){
     return '<tr style="cursor:pointer" onclick="bpJobDoneOpen(\''+j.id+'\')" title="Tap to add income & expenses"><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
   }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a project done in Active Projects and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
-  var vtabs=[['overview','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses']];
   var vp=function(k,html){return '<div data-fin-pane="'+k+'"'+(_bpFinView===k?'':' hidden')+'>'+html+'</div>';};
   q('bpxViewArea').innerHTML=
     '<div class="bpx-stats">'
@@ -17021,7 +17020,7 @@ function bpFinances(){
     +'<div class="bpx-stat"><div class="lbl">Net profit</div><div class="val blue">'+bpMoneyFmt(d.net)+'</div><div class="note">income − expenses</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Margin</div><div class="val">'+margin+'%</div><div class="note">of income</div></div>'
     +'</div>'
-    +'<div class="bpx-chead" style="margin-bottom:16px"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+vtabs.map(function(t){return '<button class="bpx-jt'+(_bpFinView===t[0]?' on':'')+'" data-fin-tab="'+t[0]+'" onclick="bpFinView(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
+    +'<div class="bpx-chead" style="margin-bottom:16px"><div></div>'
       +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpInvOpen()">+ New invoice</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpEstOpen()">+ New estimate</button></div></div>'
     +vp('overview',
       '<div class="bpx-row"><div class="bpx-panel"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
@@ -17079,6 +17078,58 @@ window.bpFinView=function(t){
   document.querySelectorAll('[data-fin-pane]').forEach(function(p){p.hidden=p.getAttribute('data-fin-pane')!==t;});
 };
 window.bpFinTab=function(t){_bpFinTab=t;bpFinances();};
+/* ===== Payouts — the contractor connects their OWN Stripe inside their own GHL
+   sub-account, so invoice money goes straight to their bank. We never hold it. ===== */
+var _bpPay={loaded:false,loading:false,loc:'',connected:null,note:''};
+function bpPayouts(){
+  q('bpxViewArea').innerHTML='<div id="bpx-pay"></div>';
+  bpPayRender();
+  if(!_bpPay.loaded&&!_bpPay.loading)bpPayLoad();
+}
+function bpPayLoad(){
+  if(!(window.BP_LIVE&&window.BP_SB)){_bpPay.loaded=true;bpPayRender();return;}
+  _bpPay.loading=true;
+  Promise.resolve(BP_SB.from('ai_brain').select('ghl_location_id').maybeSingle()).then(function(r){
+    _bpPay.loc=(r&&r.data&&r.data.ghl_location_id)||'';
+    _bpPay.loaded=true;_bpPay.loading=false;bpPayRender();
+  },function(){_bpPay.loaded=true;_bpPay.loading=false;_bpPay.note='Could not check your account setup.';bpPayRender();});
+}
+function bpPayRender(){
+  var el=q('bpx-pay'); if(!el)return;
+  var s=bpSettingsGet(),c=s.company||{},co=c.name||'your business';
+  if(!_bpPay.loaded){el.innerHTML='<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div></div>';return;}
+  var loc=_bpPay.loc;
+  var payUrl=loc?('https://app.gohighlevel.com/v2/location/'+encodeURIComponent(loc)+'/payments/integrations'):'';
+  var step=function(n,t,d,extra){return '<div class="bpx-pay-step"><span class="n">'+n+'</span><div><b>'+t+'</b><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-top:3px">'+d+'</div>'+(extra||'')+'</div></div>';};
+  el.innerHTML=
+    '<div class="bpx-pay-flow"><div><b>Homeowner pays</b><span>card, on your invoice</span></div><i>→</i>'
+      +'<div class="on"><b>Your Stripe</b><span>your account, your name</span></div><i>→</i>'
+      +'<div><b>Your bank</b><span>about 2 business days</span></div></div>'
+    +'<div class="bpx-mut" style="font-size:12.5px;margin:10px 0 18px">BuilderPro never holds or touches your money. We create the invoice and tell you when it’s paid — the payment itself goes straight from your customer to your own Stripe account. Stripe’s standard fee (2.9% + 30¢) applies; we add nothing on top.</div>'
+    +(_bpPay.note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpPay.note)+'</div>':'')
+    +(loc
+      ? '<div class="bpx-panel"><div class="bpx-ptitle">Connect your Stripe<span class="lg2">one time, about two minutes</span></div>'
+        +step(1,'Open your payment settings','This opens your own BuilderPro payments account in a new tab. You’re already signed in.',
+          '<a class="bpx-btn" style="width:auto;margin-top:10px;padding:10px 18px;text-decoration:none;display:inline-block" href="'+payUrl+'" target="_blank" rel="noopener">Open payment settings ↗</a>')
+        +step(2,'Pick Stripe and tap Connect','Stripe will ask for your business details and the bank account you want paid into. If you already have a Stripe account, just sign in — don’t make a second one.')
+        +step(3,'Come back and send an invoice','Every invoice you send from Finances is then payable by card, and the money lands in the account you just connected.',
+          '<button class="bpx-btn ghost" style="width:auto;margin-top:10px;padding:10px 18px" onclick="bpNav(\'invoices\')">Go to Invoices</button>')
+        +'<div class="bpx-mut" style="font-size:12px;margin-top:16px;border-top:1px solid var(--line);padding-top:12px">Already connected? Nothing to do — this page is only needed once. You can change the bank account any time from the same screen.</div></div>'
+      : '<div class="bpx-panel"><div class="bpx-ptitle">Your payments account isn’t set up yet</div>'
+        +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6;margin-bottom:14px">Before you can take card payments, '+bpEsc(co)+' needs its own payments account created — that’s something we do for you as part of onboarding. Once it exists, this page will walk you through connecting Stripe so invoice money goes straight to your bank.</div>'
+        +'<a class="bpx-btn" style="width:auto;margin-top:0;padding:11px 18px;text-decoration:none;display:inline-block" href="mailto:support@builderpro-os.com?subject=Set%20up%20my%20payments%20account">Ask us to set it up</a>'
+        +'<div class="bpx-mut" style="font-size:12px;margin-top:14px">In the meantime you can still send invoices and record payments by hand — they just won’t be payable by card.</div></div>')
+    +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Common questions</div>'
+      +'<div class="bpx-pay-q"><b>Does BuilderPro take a cut of my jobs?</b><span>No. You pay us a flat monthly subscription and nothing per job. The only fee on a payment is Stripe’s own.</span></div>'
+      +'<div class="bpx-pay-q"><b>Whose name is on the payment?</b><span>Yours. Your customer’s statement shows your business, and the Stripe account and bank details are yours.</span></div>'
+      +'<div class="bpx-pay-q"><b>What if a customer disputes a charge?</b><span>It goes to you through Stripe, the same as any card payment you take today. We don’t sit in the middle of it.</span></div>'
+      +'<div class="bpx-pay-q"><b>Can I still take cash or check?</b><span>Yes. Mark the job done in Active Projects with what you collected and it flows into Finances the same way.</span></div></div>';
+}
+/* Finances is a sidebar branch now — each sub-page just preselects a pane */
+function bpFinOverview(){_bpFinView='overview';bpFinances();}
+function bpFinInvoices(){_bpFinView='invoices';bpFinances();}
+function bpFinEstimates(){_bpFinView='estimates';bpFinances();}
+function bpFinLedger(){_bpFinView='ledger';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
 var BPEST_NOTE='<div class="bpx-when-note">Estimates aren\'t set up yet. Deploy the <b>ghl-estimate</b> function to enable them.</div>';
@@ -17203,11 +17254,13 @@ window.bpEstSend=async function(){
     else { msg.style.color='#dc2626'; msg.textContent='Could not create: '+bpEsc(String((d&&d.error)||'unknown error')); btn.disabled=false; }
   }catch(e){ msg.style.color='#dc2626'; msg.textContent='Network error — try again.'; btn.disabled=false; }
 };
-var BPINV_NOTE='<div class="bpx-when-note">Invoicing isn\'t set up yet. Deploy the <b>ghl-invoice</b> function and set the <b>GHL_LOCATION_ID</b> secret to enable it.</div>';
+var BPINV_NOTE='<div class="bpx-when-note">Card invoicing isn\'t switched on for your account yet — open <b>Finances → Payouts</b> to connect your Stripe, or ask us to finish setting it up.</div>';
 function bpInvLoad(){
   var el=q('bpxInvList'); if(!el) return;
   if(!window.BP_LIVE){ el.innerHTML='<span class="bpx-mut">Invoices are available on live accounts.</span>'; return; }
-  fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})})
+  bpJwt().then(function(tok){
+  return fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+(tok||BP_ANON),'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
+  })
   .then(function(r){ if(r.status===404) throw 'nf'; return r.json(); })
   .then(function(d){
     el.classList.remove('bpx-mut');
@@ -17319,7 +17372,8 @@ window.bpInvSend=async function(){
   var biz='Your contractor'; try{ biz=((bpSettingsGet()||{}).company||{}).name||biz; }catch(e){}
   btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Creating invoice…';
   try{
-    var r=await fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
+    var _tok=await bpJwt();
+    var r=await fetch(GHL_INV_URL,{method:'POST',headers:{'Authorization':'Bearer '+(_tok||BP_ANON),'apikey':BP_ANON,'Content-Type':'application/json'},
       body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-iv-d')||{}).value||'',send:via,businessName:biz,dueDays:+((q('bpx-iv-due')||{}).value||7)})});
     if(r.status===404){ msg.innerHTML=BPINV_NOTE; btn.disabled=false; return; }
     var d=await r.json();
@@ -17438,6 +17492,21 @@ window.bpFinAddSave=function(kind){
 .bpx-mk-rev:last-child{border-bottom:0;}
 .bpx-mk-stars{color:#f59e0b;letter-spacing:1px;font-size:12px;}
 .bpx-mk-empty{padding:34px 20px;text-align:center;color:var(--grey);font-size:13.5px;}
+.bpx-pay-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;}
+.bpx-pay-flow>div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+.bpx-pay-flow>div.on{border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,107,255,.10);}
+.bpx-pay-flow b{display:block;font-size:14.5px;letter-spacing:-.01em;}
+.bpx-pay-flow span{display:block;font-size:12px;color:var(--grey);margin-top:2px;}
+.bpx-pay-flow i{align-self:center;font-style:normal;color:var(--grey-l);font-size:17px;}
+.bpx-pay-step{display:flex;gap:13px;padding:14px 0;border-top:1px solid var(--line-2);}
+.bpx-pay-step:first-of-type{border-top:0;padding-top:4px;}
+.bpx-pay-step .n{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--blue-l);color:var(--blue-d);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.bpx-pay-q{padding:11px 0;border-top:1px solid var(--line-2);}
+.bpx-pay-q:first-of-type{border-top:0;}
+.bpx-pay-q b{display:block;font-size:13.5px;margin-bottom:3px;}
+.bpx-pay-q span{font-size:13px;color:var(--grey);line-height:1.55;}
+#bpx.bpx-dark .bpx-pay-flow>div{background:#151b26;border-color:#232c3a;}
+
 /* competitors */
 .bpx-cp-stars{position:relative;display:inline-block;font-size:13px;line-height:1;letter-spacing:1px;color:#d9dde5;vertical-align:-1px;}
 .bpx-cp-stars-on{position:absolute;left:0;top:0;overflow:hidden;white-space:nowrap;color:#f59e0b;}
@@ -19306,7 +19375,8 @@ document.head.appendChild(rdCss);
     {key:"contacts",label:"Contacts",desc:"every lead and customer with their pipeline stage; search, add, edit, and Export CSV. Tapping a name opens their profile and the jobs linked to them"},
     {key:"calendar",label:"Calendar",desc:"upcoming inspections and appointments, plus the work days booked on active projects"},
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances"},
-    {key:"finances",label:"Finances",desc:"tabs for Overview (where the money goes by category, per-job profit), Invoices, Estimates, and Income & expenses. Send real invoices and estimates the customer can pay or accept; every list has Export CSV"},
+    {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
+    {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
     {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
     {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
     {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
