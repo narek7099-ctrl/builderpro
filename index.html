@@ -18964,6 +18964,7 @@ var RADAR_TRADES={
     adj:[{kw:['ADDITION','ADU'],label:'Addition underway — new openings need matching windows & doors',sc:65}]}
 };
 var _rdCity='demo', _rdTrade='roofing';
+var _rdSat=false;
 var _rdMap=null,_rdLayer=null,_rdStormLayer=null,_rdLeads=[],_rdStorms=[],_rdStormOn=false,_rdMin=25;
 var _rdTerr=null,_rdTerrLoaded=false,_rdDemoOK=false,_rdAdded={},_rdGhl={},_rdContacted={};
 var _rdListTab='auto';
@@ -19081,6 +19082,7 @@ function rdRenderShell(){
       +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">My list</button></div>'+terrNote+'</div>'
     +'<div class="rd-toolbar">'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
+      +'<button id="rdSatBtn" class="bpx-rowbtn" onclick="rdToggleSat()" style="font-size:12px;margin:0" title="Look at the actual roofs">'+(_rdSat?'\ud83d\uddfa Plain map':'\ud83d\udef0\ufe0f Satellite')+'</button>'
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px;margin:0">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<button id="rdOverBtn" class="bpx-rowbtn'+(_rdOverdue?' primary':'')+'" onclick="rdToggleOverdue()" style="font-size:12px;margin:0" title="Only roofs 25+ years old — the ones most likely to fail this season">⏰ Overdue only (25+ yrs)'+(_rdOverdue?' ✓':'')+'</button>'
       +'<button class="bpx-rowbtn primary" onclick="rdRoute()" style="font-size:12px;margin:0" title="Best 10 doors, ordered for walking, opened in Google Maps">🧭 Plan a route</button>'
@@ -19280,12 +19282,27 @@ function rdInitMap(){
   /* free to pan and zoom, but fenced to the territory (maxBounds is set once the dots are drawn) */
   _rdMap=L.map('rdMap',{zoomControl:false,scrollWheelZoom:true,dragging:true,minZoom:9,maxZoom:19,maxBoundsViscosity:.9}).setView([c.lat,c.lng],c.zoom);
   L.control.zoom({position:'topright'}).addTo(_rdMap);
-  bpTileLayer(_rdMap,'street');
+  rdBase();
   /* map is locked — snap back to the full territory whenever a popup closes */
   _rdMap.on('popupclose',function(){ if(window._rdFitB) setTimeout(function(){ if(_rdMap&&window._rdFitB)_rdMap.fitBounds(window._rdFitB); },60); });
   _rdStormLayer=L.layerGroup().addTo(_rdMap);
   _rdLayer=L.layerGroup().addTo(_rdMap);
 }
+/* Same switch as the commercial map: plain by default because street names are
+   what you need to read a list of addresses, satellite when you want to look at
+   the actual roof. */
+function rdBase(){
+  if(_rdBase){_rdBase.remove();_rdBase=null;}
+  if(_rdLabels){_rdLabels.remove();_rdLabels=null;}
+  if(_rdSat){ _rdBase=bpTileLayer(_rdMap,'satellite'); _rdLabels=bpTileLayer(_rdMap,'labels'); }
+  else { _rdBase=bpTileLayer(_rdMap,'street'); }
+}
+var _rdBase=null,_rdLabels=null;
+window.rdToggleSat=function(){
+  _rdSat=!_rdSat;
+  var b=q('rdSatBtn'); if(b)b.innerHTML=_rdSat?'\ud83d\uddfa Plain map':'\ud83d\udef0\ufe0f Satellite';
+  if(_rdMap)rdBase();
+};
 function rdRefresh(){
   if(!window.L) return;
   if(!_rdMap||!document.getElementById('rdMap')||!document.getElementById('rdMap')._leaflet_id) rdInitMap();
@@ -20386,7 +20403,7 @@ var BG_PARTNERS=[
   ['office=property_management','Property manager','One phone number, dozens of roofs'],
   ['office=insurance','Insurance agent','Sees every storm claim before you do'],
   ['office=estate_agent','Real estate agent','Every listing has a roof, and an inspection deadline']];
-var _bg={map:null,layer:null,rows:[],sel:null,min:5000,rate:9,tab:'roofs',mine:null,busy:false,sat:true,partners:null,err:''};
+var _bg={map:null,layer:null,rows:[],sel:null,min:5000,rate:9,tab:'roofs',mine:null,busy:false,sat:false,partners:null,err:''};
 
 function bgSqft(m2){return m2*10.7639;}
 function bgFmtSqft(n){return Math.round(n).toLocaleString()+' sq ft';}
@@ -20432,7 +20449,7 @@ function bgShell(){
         +'<label class="rate">Min roof <select id="bgMin" onchange="bgSetMin(this.value)" style="padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit">'
           +[2500,5000,10000,20000,40000].map(function(v){return '<option value="'+v+'"'+(v===_bg.min?' selected':'')+'>'+v.toLocaleString()+' sq ft</option>';}).join('')+'</select></label>'
         +'<label class="rate">Your rate $<input id="bgRate" value="'+_bg.rate+'" onchange="bgSetRate(this.value)">/sq ft</label>'
-        +'<button class="bpx-rowbtn" onclick="bgToggleSat()" id="bgSatBtn" style="margin:0">'+(_bg.sat?'🗺 Plain map':'🛰 Satellite')+'</button>'
+        +'<button class="bpx-rowbtn" onclick="bgToggleSat()" id="bgSatBtn" style="margin:0">'+(_bg.sat?'🗺 Plain map':'🛰️ Satellite')+'</button>'
       +'</div>'
       +'<div id="bgWrap"><div id="bgMap"></div><div class="bg-stat" id="bgCount">Pan to the area you work, then tap <b>Scan this view</b>.</div>'
         +'<div class="bg-legend"><span><i style="background:#b91c1c"></i>40,000+ sq ft</span><span><i style="background:#ea580c"></i>20,000+</span>'
@@ -20478,7 +20495,7 @@ function bgBase(){
     _bg.base=bpTileLayer(_bg.map,'street');
   }
 }
-window.bgToggleSat=function(){_bg.sat=!_bg.sat;var b=q('bgSatBtn');if(b)b.innerHTML=_bg.sat?'🗺 Plain map':'🛰 Satellite';if(_bg.map)bgBase();};
+window.bgToggleSat=function(){_bg.sat=!_bg.sat;var b=q('bgSatBtn');if(b)b.innerHTML=_bg.sat?'🗺 Plain map':'🛰️ Satellite';if(_bg.map)bgBase();};
 window.bgGo=function(){
   var v=((q('bgWhere')||{}).value||'').trim(); if(!v)return;
   var st=q('bgCount'); if(st)st.textContent='Finding '+v+'…';
