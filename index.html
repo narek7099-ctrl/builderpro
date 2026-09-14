@@ -14223,6 +14223,17 @@ function bpNav(v){
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
+/* ---- delete, everywhere, the same way -------------------------------------
+   One confirm wording and one button shape, so a destructive action never
+   looks like an ordinary one. bpDelBtn() renders it; bpAskDel() asks. The
+   confirm always names the thing being deleted, because "Are you sure?" tells
+   the person nothing about what they are about to lose. ---------------------*/
+function bpDelBtn(onclick,title){
+  return '<button class="bpx-delbtn" title="'+(title||'Delete')+'" onclick="event.stopPropagation();'+onclick+'">\u2715</button>';
+}
+function bpAskDel(what,extra){
+  return confirm('Delete '+what+'?'+(extra?'\n\n'+extra:'\n\nThis can\u2019t be undone.'));
+}
 /* ---- CSV export: bpCsv('contacts',[headers],[[row],[row]]) ---- */
 function bpCsvCell(v){ v=(v==null?'':String(v)); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 function bpCsv(name,head,rows){
@@ -17000,9 +17011,9 @@ function bpFinData(){
     if(j.collected!=null && j.collected>0) inc.push({name:(j.title||'Job')+' — '+j.name,type:'Job',amt:+j.collected,when:j.doneAt||j.wonAt});
     (j.expenses||[]).forEach(function(e){ exp.push({name:e.cat+' — '+j.name,type:e.cat,amt:+e.amt||0,when:j.doneAt||j.wonAt}); catTot[e.cat]=(catTot[e.cat]||0)+(+e.amt||0); });
   });
-  fin.forEach(function(f){
-    if(f.kind==='income') inc.push({name:f.note||'Income',type:'Manual',amt:+f.amount||0,when:f.when});
-    else { exp.push({name:f.note||f.category||'Expense',type:f.category||'Other',amt:+f.amount||0,when:f.when}); catTot[f.category||'Other']=(catTot[f.category||'Other']||0)+(+f.amount||0); }
+  fin.forEach(function(f,fi){
+    if(f.kind==='income') inc.push({name:f.note||'Income',type:'Manual',amt:+f.amount||0,when:f.when,fi:fi});
+    else { exp.push({name:f.note||f.category||'Expense',type:f.category||'Other',amt:+f.amount||0,when:f.when,fi:fi}); catTot[f.category||'Other']=(catTot[f.category||'Other']||0)+(+f.amount||0); }
   });
   var income=inc.reduce(function(s,x){return s+x.amt;},0);
   var expense=exp.reduce(function(s,x){return s+x.amt;},0);
@@ -17016,15 +17027,16 @@ function bpFinances(){
   var ccol={ 'Materials':'#2f6bff','Labor / crew':'#f59e0b','Subcontractor':'#7c3aed','Ads':'#15803d','Fuel':'#6a6a70','Tools':'#0d9488','Permits':'#db2777','Overhead':'#dc2626','Other':'#9a9aa0' };
   var catHtml=cats.length?cats.map(function(c){return '<div class="bpx-fincat"><span class="nm">'+bpEsc(c)+'</span><span class="bar"><i style="width:'+Math.max(6,Math.round(d.catTot[c]/cmax*100))+'%;background:'+(ccol[c]||'#2f6bff')+'"></i></span><span class="amt">'+bpMoneyFmt(d.catTot[c])+'</span></div>';}).join(''):'<div class="bpx-empty2">No expenses logged yet.</div>';
   // ledger
-  var all=d.inc.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:1,w:x.when};}).concat(d.exp.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:-1,w:x.when};}));
+  var all=d.inc.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:1,w:x.when,fi:x.fi};}).concat(d.exp.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:-1,w:x.when,fi:x.fi};}));
   if(_bpFinTab==='income') all=all.filter(function(x){return x.s>0;});
   if(_bpFinTab==='expense') all=all.filter(function(x){return x.s<0;});
   all.sort(function(a,b){return (b.w||0)-(a.w||0);});
   window._bpFinLedger=all;
   var ledPg=bpPage('finled',all,10,'bpFinances()');
   var ledHtml=all.length?ledPg.items.map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    return '<tr><td>'+bpEsc(x.n)+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td></tr>';
-  }).join(''):'<tr><td colspan="4" class="bpx-empty2">Nothing logged yet. Mark a job done with what you collected, or use <b>+ Add income</b>.</td></tr>';
+    return '<tr><td>'+bpEsc(x.n)+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td>'
+      +'<td class="bpx-r">'+(x.fi==null?'<span class="bpx-mut" title="This came from a job — edit or delete it on the project itself" style="font-size:11px">from a job</span>':bpDelBtn('bpFinDel('+x.fi+')','Delete this entry'))+'</td></tr>';
+  }).join(''):'<tr><td colspan="5" class="bpx-empty2">Nothing logged yet. Mark a job done with what you collected, or use <b>+ Add income</b>.</td></tr>';
   // per-job
   var pj=d.jobs.filter(function(j){return j.status==='done';});
   window._bpFinJobs=pj;
@@ -17061,10 +17073,18 @@ function bpFinances(){
     +vp('ledger',
       '<div class="bpx-panel"><div class="bpx-ptitle">Income &amp; expenses<span class="lg2">every dollar in and out</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
       +'<div class="bpx-finrow-btns">'+bpCsvBtn('bpCsvLedger()')+'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
-      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>');
+      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>');
   bpInvLoad();
   bpEstLoad();
 }
+/* Only entries added by hand can be deleted here. Money that came from a job
+   belongs to that job — deleting the row would silently disagree with the
+   project it came from, so we point at the project instead. */
+window.bpFinDel=function(i){
+  var fin=bpFinGet(), f=fin[i]; if(!f)return;
+  if(!bpAskDel((f.note||f.category||'this entry')+' ('+bpMoneyFmt(+f.amount||0)+')','Your totals and margin update straight away.'))return;
+  fin.splice(i,1); bpFinSet(fin); bpFinances();
+};
 window.bpCsvLedger=function(){
   bpCsv('income-and-expenses',['Item','Category','Direction','Date','Amount'],(window._bpFinLedger||[]).map(function(x){
     return [x.n||'',x.t||'',x.s>0?'Income':'Expense',x.w?new Date(x.w).toLocaleDateString('en-US'):'',(x.s>0?'':'-')+(Number(x.a)||0)];
@@ -17195,6 +17215,7 @@ function bpCtRender(note){
       +'<div style="flex:1;min-width:170px"><div style="font-weight:600;font-size:13.5px">'+bpEsc(c.title||'Agreement')+' '+bpCtStatus(c)+'</div>'
       +'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px">'+bpMoneyFmt(+c.amount||0)+' · '+bpEsc(when)+(c.signer_name?' by '+bpEsc(c.signer_name):'')+'</div></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        +(c.status==='signed'?'':bpDelBtn("bpCtDel('"+"'+c.id+'"+"')",'Delete this contract'))
         +(c.status==='signed'
           ? '<button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">View signed</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtPrint(\''+c.id+'\')">Print</button>'
           : '<button class="bpx-rowbtn primary" style="margin:0" onclick="bpCtSend(\''+c.id+'\')">'+(c.status==='draft'?'Send':'Copy link')+'</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">Preview</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtVoid(\''+c.id+'\')" title="Cancel this contract">✕</button>')
@@ -17273,6 +17294,20 @@ function bpCtCopyFallback(link,done){
   document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}
   document.body.removeChild(t);
 }
+/* Signed contracts are records and stay put — void is the only exit, and the
+   database refuses the delete anyway. Drafts and sent-but-unsigned ones are
+   just paperwork, so they can go. */
+window.bpCtDel=function(id){
+  var c=(_bpCt.rows||[]).filter(function(x){return String(x.id)===String(id);})[0];
+  if(c&&c.status==='signed'){ alert('A signed agreement can\u2019t be deleted \u2014 it\u2019s the record of what was agreed. Use Void instead.'); return; }
+  if(!(window.BP_LIVE&&window.BP_SB)){ alert('Sign in to change contracts.'); return; }
+  if(!bpAskDel((c&&c.title)||'this contract', c&&c.status!=='draft'?'The link you sent the customer stops working immediately.':null))return;
+  _bpCt.rows=(_bpCt.rows||[]).filter(function(x){return String(x.id)!==String(id);});
+  bpCtRender();
+  Promise.resolve(BP_SB.from('contracts').delete().eq('id',id)).then(function(r){
+    if(r&&r.error){ bpCtLoad(_bpCt.job); }
+  },function(){ bpCtLoad(_bpCt.job); });
+};
 window.bpCtVoid=function(id){
   if(!confirm('Cancel this contract? The link stops working for the customer.'))return;
   Promise.resolve(bpAuthApi(CT_URL,{op:'void',id:id})).then(function(){bpCtLoad(_bpCt.job);});
@@ -18968,9 +19003,19 @@ function rdChecksRender(rows,demo){
       return '<div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">'
         +'<span title="'+bpEsc(c.label||'')+'" style="flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:'+col(c.band)+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">'+(c.score!=null?c.score:'—')+'</span>'
         +'<div style="flex:1;min-width:200px"><div style="font-size:13.5px"><b>'+bpEsc(c.address||'Address not given')+'</b> '+st+'</div><div style="font-size:12.5px;margin-top:2px">'+who+'</div><div class="bpx-mut" style="font-size:11.5px;margin-top:2px">'+bpEsc(facts)+(when?' · '+when:'')+'</div></div>'
-        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+(c.address?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="https://maps.apple.com/?q='+encodeURIComponent(c.address)+'" target="_blank" rel="noopener">Map</a>':'')+'</div></div>';
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(demo?'':bpDelBtn("rdCheckDel('"+String(c.id).replace(/'/g,"")+"')",'Delete this roof check'))+acts+(c.address?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="https://maps.apple.com/?q='+encodeURIComponent(c.address)+'" target="_blank" rel="noopener">Map</a>':'')+'</div></div>';
     }).join('')+pg.nav;
 }
+/* Test runs, duplicates, and the contractor's own kids playing with the widget
+   all land in here — they need to be able to clear them out. */
+window.rdCheckDel=function(id){
+  if(!(window.BP_LIVE&&window.BP_SB)){ alert('Sign in to change your roof checks.'); return; }
+  var row=(window._rdCheckRows||[]).filter(function(c){return String(c.id)===String(id);})[0];
+  if(!bpAskDel('the roof check for '+((row&&(row.address||row.name))||'this homeowner')))return;
+  window._rdCheckRows=(window._rdCheckRows||[]).filter(function(c){return String(c.id)!==String(id);});
+  rdChecksRender(window._rdCheckRows,window._rdCheckDemo);
+  Promise.resolve(BP_SB.from('roof_checks').delete().eq('id',id)).then(function(){},function(){ rdLoadChecks(); });
+};
 window.rdCheckStatus=function(btn,id,status){
   if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to track roof checks.');return;}
   btn.disabled=true;
@@ -19122,8 +19167,19 @@ window.rdMineRender=function(){
       +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':(score?'#f59e0b':'#2f6bff'))+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'📍')+'</span>'
       +'<div style="flex:1;min-width:180px"><b style="font-size:13.5px">'+addr+'</b> '+badge+'<div class="bpx-mut" style="font-size:11.5px">'+bpEsc(((c.notes||'').split('.')[0]||'radar lead').slice(0,80))+(when?' · added '+when:'')+nudge+'</div></div>'
       +'<a href="https://maps.apple.com/?q='+encodeURIComponent((c.name||'').replace(/^Radar — /,''))+'" target="_blank" rel="noopener" style="font-size:16px;text-decoration:none" title="Open in Maps">🗺️</a>'
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+'</div></div>';
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+bpDelBtn("rdMineDel("+idArg+",'"+addr.replace(/'/g,"\\'")+"')",'Remove this lead from your list')+'</div></div>';
   }).join('')+pg.nav;
+};
+/* A door you added by mistake, or one that turned out to be a vacant lot. This
+   removes the contact row the radar created — it does not touch anything the
+   customer has in GoHighLevel beyond that row. */
+window.rdMineDel=function(rowId,label){
+  if(!rowId){ alert('This lead has no saved row to delete yet.'); return; }
+  if(!(window.BP_LIVE&&window.BP_SB)){ alert('Sign in to change your list.'); return; }
+  if(!bpAskDel(label||'this lead','It leaves your radar list and its funnel counts.'))return;
+  window._rdMineRows=(window._rdMineRows||[]).filter(function(c){return c.id!==rowId;});
+  rdMineRender();
+  Promise.resolve(BP_SB.from('contacts').delete().eq('id',rowId)).then(function(){},function(){ rdLoadMine(); });
 };
 window.rdMineJump=function(){ rdMinePage(); };
 function rdLoadAuto(){
@@ -19800,6 +19856,8 @@ window.rdContacted=function(i){
 };
 var rdCss=document.createElement('style');
 rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.rd-chip{margin:2px 0}'
+  +'.bpx-delbtn{border:1px solid #f0d4d4;background:#fff;color:#c44;border-radius:7px;padding:4px 9px;font-size:12px;line-height:1;cursor:pointer;margin:0;flex:0 0 auto}'
+  +'.bpx-delbtn:hover{background:#dc2626;border-color:#dc2626;color:#fff}'
   +'#rdMapWrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(16,24,40,.08)}'
   +'#rdMap{height:560px;background:#e8ecf4}@media(max-width:700px){#rdMap{height:420px}}'
   +'#rdMap .leaflet-control-zoom{border:0;border-radius:10px;overflow:hidden;box-shadow:0 4px 14px rgba(16,24,40,.14)}#rdMap .leaflet-control-zoom a{width:32px;height:32px;line-height:30px;color:#0f2540;border-color:#e6e9ef}'
@@ -20125,6 +20183,7 @@ function bpFmDetail(){
       +'<span class="ad">'+bpEsc(t.addr)+'</span>'
       +(t.same?'<span class="fm-chip" style="background:#e8f1fb;color:#1d4676">same street</span>':'')
       +'<span class="di">'+bpFmFt(t.km||0)+' ft away</span>'
+      +bpDelBtn("bpFmDropTarget("+i+")",'Remove this house from the list')
       +'<span class="fm-stg">'+FM_ACTIONS.map(function(s){
           return '<button class="'+(st===s[0]?'on':'')+'" title="'+(st===s[0]?'Tap again to undo':s[2]||s[1])+'" onclick="bpFmStage('+i+',\''+s[0]+'\')">'+s[1]+'</button>';
         }).join('')+'</span></div>';
@@ -20137,11 +20196,38 @@ function bpFmDetail(){
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
         +'<button class="bpx-rowbtn" onclick="bpFmHangers()">🖨 Print door hangers</button>'
         +'<button class="bpx-rowbtn" onclick="bpFmRoute()">Plan a walking route</button>'
+        +bpDelBtn("bpFmDelete()",'Delete this whole campaign')
       +'</div></div>'
     +'<div class="fm-nums" style="margin-bottom:16px;gap:26px"><div><b>'+n+'</b>neighbours</div><div><b>'+bpFmCount(c,'hanger')+'</b>hangers left</div>'
       +'<div><b>'+leads+'</b>replied</div><div><b>'+booked+'</b>booked</div><div><b>'+bpFmCount(c,'won')+'</b>won</div></div>'
     +bpFmCopyBlocks(c,street)
     +'<div class="bpx-cwrap" style="padding:6px 16px 2px;margin-top:16px">'+rows+'</div>';
+}
+/* Remove one house — a vacant lot, a rental you already do, someone who asked
+   you not to come back. The last one matters: if a neighbour says stop, the
+   contractor needs to be able to make them actually disappear. */
+window.bpFmDropTarget=function(i){
+  var c=bpFmCur(); if(!c)return;
+  var t=(c.targets||[])[i]; if(!t)return;
+  if(!bpAskDel(t.addr,'It comes off this campaign\u2019s list and its door hangers.'))return;
+  c.targets.splice(i,1);
+  bpFmDetail(); bpFmPersist(c);
+};
+window.bpFmDelete=function(){
+  var c=bpFmCur(); if(!c)return;
+  var n=(c.targets||[]).length;
+  if(!bpAskDel('the campaign for '+(c.job_name||'this job'),
+    'All '+n+' neighbour'+(n===1?'':'s')+' and everything you\u2019ve tracked against them goes with it.'))return;
+  var id=c.id;
+  _bpFm.list=(_bpFm.list||[]).filter(function(x){return String(x.id)!==String(id);});
+  _bpFm.open=null; bpNeighbors();
+  if((window.BP_LIVE&&window.BP_SB)&&String(id).indexOf('local')!==0){
+    Promise.resolve(BP_SB.from('farm_campaigns').delete().eq('id',id)).then(function(){},function(){});
+  }
+};
+function bpFmPersist(c){
+  if(!(window.BP_LIVE&&window.BP_SB)||String(c.id).indexOf('local')===0)return;
+  Promise.resolve(BP_SB.from('farm_campaigns').update({targets:c.targets}).eq('id',c.id)).then(function(){},function(){});
 }
 window.bpFmStage=function(i,st){
   var c=bpFmCur(); if(!c)return;
@@ -20513,8 +20599,21 @@ window.bgMineRender=function(){
         +'<span class="sz">'+bgFmtSqft(r.area_sqft)+'</span><span class="es">'+bpMoneyFmt(bgEst(r.area_sqft))+'</span>'
         +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'">☎ Call</a>':'')
         +'<span class="bg-stg" style="margin:0">'+BG_STAGES.map(function(s){
-            return '<button class="'+(r.stage===s[0]?'on':'')+'" onclick="bgStage(\''+bpEsc(r.osm_id)+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</span></div>';
+            return '<button class="'+(r.stage===s[0]?'on':'')+'" onclick="bgStage(\''+bpEsc(r.osm_id)+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</span>'
+        +bpDelBtn("bgDrop('"+bpEsc(r.osm_id)+"')",'Take this building off your list')+'</div>';
     }).join('');
+};
+/* Dead building, wrong number, already re-roofed, or simply not worth the call
+   — it should leave the list rather than sit there being scrolled past. */
+window.bgDrop=function(osmId){
+  var r=(_bg.mine||[]).filter(function(x){return x.osm_id===osmId;})[0]; if(!r)return;
+  if(!bpAskDel(r.name||'this building','It stays on the map \u2014 this only clears it from your list.'))return;
+  _bg.mine=(_bg.mine||[]).filter(function(x){return x.osm_id!==osmId;});
+  bgMineRender();
+  if(_bg.sel&&_bg.sel.id===osmId)bgSheet(_bg.sel);
+  if(window.BP_LIVE&&window.BP_SB){
+    Promise.resolve(BP_SB.from('roof_prospects').delete().eq('osm_id',osmId)).then(function(){},function(){});
+  }
 };
 window.bpCsvBigRoofs=function(){
   bpCsv('big-roofs',['Name','Type','Roof sq ft','Estimate','Phone','Address'],
