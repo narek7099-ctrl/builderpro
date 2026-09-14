@@ -14229,7 +14229,7 @@ function bpNav(v){
    confirm always names the thing being deleted, because "Are you sure?" tells
    the person nothing about what they are about to lose. ---------------------*/
 function bpDelBtn(onclick,title){
-  return '<button class="bpx-delbtn" title="'+(title||'Delete')+'" onclick="event.stopPropagation();'+onclick+'">\u2715</button>';
+  return '<button class="bpx-delbtn" title="'+(title||'Delete')+'" onclick="event.stopPropagation();'+onclick+'">Delete</button>';
 }
 function bpAskDel(what,extra){
   return confirm('Delete '+what+'?'+(extra?'\n\n'+extra:'\n\nThis can\u2019t be undone.'));
@@ -19234,6 +19234,9 @@ window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
 
 var BP_TILES={
   street:[
+    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+     opt:{maxZoom:16,maxNativeZoom:16,attribution:'Tiles &copy; Esri'},
+     over:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'},
     {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
      opt:{maxZoom:19,attribution:'Tiles &copy; Esri'}},
     {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -19253,21 +19256,23 @@ var BP_TILES={
    contractor staring at a broken or watermarked map. */
 function bpTileLayer(map,kind,onSwap){
   var chain=BP_TILES[kind]||BP_TILES.street, i=0, layer=null;
+  var over=null;
+  var drop=function(){ try{map.removeLayer(layer);}catch(e){} if(over){try{map.removeLayer(over);}catch(e){}over=null;} };
   var mount=function(){
     var c=chain[i];
     layer=L.tileLayer(c.url,c.opt);
     var errs=0;
     layer.on('tileerror',function(){
       if(++errs<6||i>=chain.length-1)return;
-      errs=0; i++;
-      try{map.removeLayer(layer);}catch(e){}
-      mount(); if(onSwap)onSwap(chain[i]);
+      errs=0; i++; drop(); mount(); if(onSwap)onSwap(chain[i]);
     });
     layer.addTo(map);
     if(kind!=='labels')try{layer.bringToBack();}catch(e){}
+    /* some basemaps ship their labels separately so the ground stays quiet */
+    if(c.over){ over=L.tileLayer(c.over,{maxZoom:(c.opt&&c.opt.maxZoom)||19,maxNativeZoom:(c.opt&&c.opt.maxNativeZoom),attribution:''}).addTo(map); }
   };
   mount();
-  return {remove:function(){try{map.removeLayer(layer);}catch(e){}}};
+  return {remove:drop};
 }
 function rdEnsureLeaflet(cb){
   if(window.L){cb();return;}
@@ -19909,7 +19914,7 @@ window.rdContacted=function(i){
 };
 var rdCss=document.createElement('style');
 rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.rd-chip{margin:2px 0}'
-  +'.bpx-delbtn{border:1px solid #f0d4d4;background:#fff;color:#c44;border-radius:7px;padding:4px 9px;font-size:12px;line-height:1;cursor:pointer;margin:0;flex:0 0 auto}'
+  +'.bpx-delbtn{border:1px solid #f0d4d4;background:#fff;color:#c0392b;border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:600;line-height:1.25;cursor:pointer;margin:0;flex:0 0 auto;white-space:nowrap}'
   +'.bpx-delbtn:hover{background:#dc2626;border-color:#dc2626;color:#fff}'
   +'#rdMapWrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(16,24,40,.08)}'
   +'#rdMap{height:560px;background:#e8ecf4}@media(max-width:700px){#rdMap{height:420px}}'
@@ -20034,6 +20039,7 @@ document.head.appendChild(rdCss);
 .fm-row .di{color:#6a6a70;font-size:12.5px;white-space:nowrap}
 .fm-chip{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
 .fm-stg{display:flex;gap:5px;flex-wrap:wrap}
+.fm-row .bpx-delbtn{margin-left:10px}
 .fm-stg button{font-size:11.5px;border:1px solid #dfe5ee;background:#fff;border-radius:7px;padding:4px 9px;cursor:pointer;color:#3d4a5c}
 .fm-stg button.on{background:#0f2540;border-color:#0f2540;color:#fff}
 .fm-warn{background:#fff8ec;border:1px solid #f2dfbd;border-radius:11px;padding:12px 15px;font-size:12.5px;line-height:1.6;color:#6b4f16;margin-top:14px}
@@ -20230,17 +20236,21 @@ function bpFmDetail(){
   var c=bpFmCur(), area=q('bpxViewArea');
   if(!c){ _bpFm.open=null; return bpNeighbors(); }
   var tg=c.targets||[], n=tg.length, street=bpFmStreetOf(c.anchor_addr);
-  var rows=tg.map(function(t,i){
-    var st=t.stage||'new';
+  /* keep each house's real index on the row: paging must not renumber them, or
+     Delete would take out the wrong house */
+  var pgt=bpPage('fmdoors',tg.map(function(t,i){return {t:t,i:i};}),10,'bpFmDetail()');
+  var rows=pgt.items.map(function(o){
+    var t=o.t, i=o.i, st=t.stage||'new';
     return '<div class="fm-row">'
       +'<span class="ad">'+bpEsc(t.addr)+'</span>'
       +(t.same?'<span class="fm-chip" style="background:#e8f1fb;color:#1d4676">same street</span>':'')
       +'<span class="di">'+bpFmFt(t.km||0)+' ft away</span>'
-      +bpDelBtn("bpFmDropTarget("+i+")",'Remove this house from the list')
       +'<span class="fm-stg">'+FM_ACTIONS.map(function(s){
           return '<button class="'+(st===s[0]?'on':'')+'" title="'+(st===s[0]?'Tap again to undo':s[2]||s[1])+'" onclick="bpFmStage('+i+',\''+s[0]+'\')">'+s[1]+'</button>';
-        }).join('')+'</span></div>';
-  }).join('');
+        }).join('')+'</span>'
+      /* last, and set apart: deleting a house is not one of the stage taps */
+      +bpDelBtn("bpFmDropTarget("+i+")",'Remove this house from the list')+'</div>';
+  }).join('')+pgt.nav;
   var leads=bpFmLeads(c), booked=bpFmCount(c,'booked')+bpFmCount(c,'won');
   area.innerHTML=
     '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpFmBack()">← All campaigns</button>'
@@ -20563,7 +20573,8 @@ function bgRender(){
   });
   if(!rows.length){ if(list)list.innerHTML='<span class="bpx-mut">No roofs that big in this view. Drop the minimum, or pan somewhere with more commercial stock.</span>'; return; }
   list.classList.remove('bpx-mut');
-  list.innerHTML=rows.slice(0,120).map(function(r){
+  var pg=bpPage('bgroofs',rows,10,'bgRender()');
+  list.innerHTML=pg.items.map(function(r){
     return '<div class="bg-row" onclick="bgPick(\''+r.id+'\')">'
       +'<span class="nm">'+bpEsc(r.name||'Unnamed building')+(r.addr?' <span class="bpx-mut" style="font-weight:400">· '+bpEsc(r.addr)+'</span>':'')+'</span>'
       +'<span class="bg-tag">'+bpEsc(r.kind)+'</span>'
@@ -20571,7 +20582,7 @@ function bgRender(){
       +'<span class="es">'+bpMoneyFmt(bgEst(r.sqft))+'</span>'
       +(r.phone?'<span class="bg-tag" style="background:#e7f6ec;color:#15803d">☎ phone</span>':'<span class="bg-tag" style="background:#f4f4f6;color:#9a9aa0">no number</span>')
       +'</div>';
-  }).join('');
+  }).join('')+pg.nav;
 }
 window.bgPick=function(id){var r=(_bg.rows||[]).filter(function(x){return x.id===id;})[0];if(r){bgSheet(r);if(_bg.map)_bg.map.setView([r.lat,r.lng],18);}};
 window.bgSheetClose=function(){_bg.sel=null;var el=q('bgSheet');if(el)el.innerHTML='';};
@@ -20639,10 +20650,11 @@ window.bgMineRender=function(){
   el.classList.remove('bpx-mut');
   var pipeline=rows.filter(function(r){return ['bid','walked'].indexOf(r.stage)>=0;}).reduce(function(s,r){return s+bgEst(r.area_sqft);},0);
   var won=rows.filter(function(r){return r.stage==='won';}).reduce(function(s,r){return s+bgEst(r.area_sqft);},0);
+  var pgm=bpPage('bgmine',rows,10,'bgMineRender()');
   el.innerHTML='<div class="fm-nums" style="gap:26px;margin-bottom:14px"><div><b>'+rows.length+'</b>roofs</div>'
     +'<div><b>'+rows.filter(function(r){return r.stage==='called';}).length+'</b>called</div>'
     +'<div><b>'+bpMoneyFmt(pipeline)+'</b>out for bid</div><div><b>'+bpMoneyFmt(won)+'</b>won</div></div>'
-    +rows.map(function(r){
+    +pgm.items.map(function(r){
       var tel=String(r.phone||'').replace(/[^0-9+]/g,'');
       return '<div class="bg-row" style="cursor:default">'
         +'<span class="nm">'+bpEsc(r.name||'Unnamed')+(r.addr?' <span class="bpx-mut" style="font-weight:400">· '+bpEsc(r.addr)+'</span>':'')+'</span>'
@@ -20651,7 +20663,7 @@ window.bgMineRender=function(){
         +'<span class="bg-stg" style="margin:0">'+BG_STAGES.map(function(s){
             return '<button class="'+(r.stage===s[0]?'on':'')+'" onclick="bgStage(\''+bpEsc(r.osm_id)+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</span>'
         +bpDelBtn("bgDrop('"+bpEsc(r.osm_id)+"')",'Take this building off your list')+'</div>';
-    }).join('');
+    }).join('')+pgm.nav;
 };
 /* Dead building, wrong number, already re-roofed, or simply not worth the call
    — it should leave the list rather than sit there being scrolled past. */
@@ -20709,6 +20721,17 @@ function bgLoadPartners(){
           website:t.website||t['contact:website']||'',addr:[t['addr:housenumber'],t['addr:street']].filter(Boolean).join(' ')});
       });
       _bg.partners=groups;
+      bgPartnersRender();
+    })
+    .catch(function(e){
+      clearTimeout(timer);
+      if(e&&e.name==='AbortError')return;   /* the timeout already spoke */
+      fail('Couldn\u2019t reach the public map service just now.');
+    });
+}
+window.bgPartnersRender=function(){
+  var el=q('bgPartners'); if(!el)return;
+  var groups=_bg.partners||{};
       el.className=''; el.style.fontSize='';
       var total=Object.keys(groups).reduce(function(n,k){return n+groups[k].length;},0);
       if(!total){
@@ -20720,25 +20743,22 @@ function bgLoadPartners(){
       el.innerHTML=BG_PARTNERS.map(function(p){
         var list=(groups[p[0]]||[]).filter(function(x){return x.name;});
         var withPh=list.filter(function(x){return x.phone;});
+        /* each kind of partner pages on its own, so a long list of insurance
+           agents doesn't bury the solar installers underneath it */
+        var pgp=bpPage('bgp_'+p[0],list,10,'bgPartnersRender()');
         return '<div class="bpx-panel" style="margin-bottom:14px"><div class="bpx-ptitle" style="margin:0 0 3px">'+p[1]+' <span class="lg2">\u00b7 '+list.length+' nearby, '+withPh.length+' with a number</span></div>'
           +'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:10px">'+p[2]+'</div>'
-          +(list.length?list.slice(0,25).map(function(x){
+          +(list.length?pgp.items.map(function(x){
               var tel=String(x.phone||'').replace(/[^0-9+]/g,'');
               return '<div class="bg-row" style="cursor:default"><span class="nm">'+bpEsc(x.name)+(x.addr?' <span class="bpx-mut" style="font-weight:400">\u00b7 '+bpEsc(x.addr)+'</span>':'')+'</span>'
                 +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'">\u260e Call</a>':'<span class="bg-tag">no number</span>')
                 +(x.website?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="'+bpEsc(/^https?:/i.test(x.website)?x.website:'https://'+x.website)+'" target="_blank" rel="noopener">Site</a>':'')+'</div>';
-            }).join(''):'<span class="bpx-mut">None mapped near here.</span>')
+            }).join('')+pgp.nav:'<span class="bpx-mut">None mapped near here.</span>')
           +'</div>';
       }).join('')
       +'<div class="bg-note">These are businesses, so the Do-Not-Call registry doesn\u2019t apply and you can ring them directly. '
       +'Keep it a manual call \u2014 autodialers and recorded messages are a different rule, and that one does bite.</div>';
-    })
-    .catch(function(e){
-      clearTimeout(timer);
-      if(e&&e.name==='AbortError')return;   /* the timeout already spoke */
-      fail('Couldn\u2019t reach the public map service just now.');
-    });
-}
+};
 </script>
 
 </body>
