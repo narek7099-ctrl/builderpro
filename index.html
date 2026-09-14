@@ -14,7 +14,7 @@
 <script>try{if(/[#&]sign=[a-f0-9]{20,64}/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300,0..1,0&display=block" rel="stylesheet">
 <style>
 /* ==== BuilderPro OS — 'Daylight' theme ==== */
 :root{
@@ -13370,7 +13370,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
 #bpx .bpx-brand2 .bpmark{width:46px;height:46px;}
-#bpx .bpx-side .bpx-brand2 .bpmark{width:42px;height:42px;filter:brightness(2.1) saturate(.75) drop-shadow(0 0 6px rgba(255,255,255,.22));}
+#bpx .bpx-side .bpx-brand2 .bpmark{width:42px;height:42px;filter:brightness(2.9) contrast(.78) saturate(.8) drop-shadow(0 0 7px rgba(143,193,255,.35));}
 #bpx .bpx-brand2{font-family:var(--sans);font-weight:700;letter-spacing:-.03em;color:#4a5568;}
 #bpx .bpx-brand2 span{color:#3b73b9;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2 span{color:#7bc8ff;}
@@ -14150,7 +14150,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes and commercial roofs in your service area most likely to need your trade — from public permit records and the satellite view.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes and commercial roofs in your service area most likely to need your trade — from public permit records and the satellite view.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14166,7 +14166,7 @@ var BP_NAV=[
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['calendar','Calendar'],['calculator','My Calculator']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['payouts','Payouts']]},
   {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['neighbors','Neighbor Farming'],['contacts','Contacts'],['messaging','Messaging']]},
-  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors']]}
+  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors'],['reputation','Reputation']]}
 ];
 var BP_NAV_FOOT=[['settings','Settings','settings']];
 function bpNavGroupOf(v){
@@ -14227,7 +14227,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpAiView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,reputation:bpReputation,calculator:bpCalculator,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -14683,7 +14683,7 @@ function bpCalcAssigned(){
 function bpCalculator(){
   var saved=bpCalcAssigned(); window._bpCalcCur=saved;
   var nm=saved;BP_CALC_IDS.forEach(function(p){if(p[0]===saved)nm=p[1];});
-  var tabs=[['pricing','Edit pricing'],['preview','Preview']];
+  var tabs=[['pricing','Edit pricing'],['preview','Preview'],['embed','Embed on your site']];
   document.getElementById('bpxViewArea').innerHTML=
     '<div class="bpx-calc-hero"><img src="assets/roofing/roof-completed-sm.jpg" alt="" loading="lazy">'
       +'<div><div class="bpx-calc-heroT">'+bpEsc(nm)+' calculator</div>'
@@ -14701,9 +14701,25 @@ function bpCalculator(){
       +'<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">What your customer sees<span class="lg2" style="margin-left:8px">the real calculator from your website</span></div>'
         +'<button class="bpx-mini alt" onclick="bpCalcFrameReload()">Restart</button></div>'
       +'<div id="bpCalcPreviewBox" class="bpx-calc-frame"></div>'
+    +'</div></div>'
+    +'<div data-calc-pane="embed"'+(_bpCalcTab==='embed'?'':' hidden')+'><div class="bpx-panel" style="max-width:860px">'
+      +'<div class="bpx-ptitle">Put this calculator on your website<span class="lg2">one line of code</span></div>'
+      +'<p class="bpx-mut" style="font-size:13.5px;margin:0 0 12px;max-width:68ch;line-height:1.55">Paste this where you want the calculator to appear. It loads your prices live, so anything you save on the Edit pricing tab is on your site the moment you save it. Roof checks that visitors run land in your Lead Radar.</p>'
+      +'<div class="em-code"><pre id="bpEmbedCode">Getting your embed code\u2026</pre><button class="bpx-rowbtn primary" id="bpEmbedCopy" onclick="bpEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Works on WordPress, Squarespace, Wix, Webflow, GoHighLevel sites, or plain HTML. Ask your web person to drop it into an HTML or Embed block.</div>'
+      +'<div class="em-lic"><div class="em-lic-h"><span class=ms>gavel</span>Embed licence</div>'
+        +'<ol>'
+        +'<li><b>It\u2019s licensed, not sold.</b> This calculator is licensed to your business, for websites you own or control, for as long as your BuilderPro subscription is active.</li>'
+        +'<li><b>Don\u2019t share it.</b> The calculator, its code and its design are the copyright of BuilderPro OS. You may not copy, resell, sublicense or hand the embed code or the calculator to another business, or place it on a site you don\u2019t own.</li>'
+        +'<li><b>It\u2019s traceable.</b> Your embed carries your account id, and roof checks record the website they came from, so a copy leads back to the account it was issued to.</li>'
+        +'<li><b>If it is shared anyway:</b> we can switch the calculator off on unauthorised sites and, where it\u2019s deliberate, end the subscription. Unauthorised copying or distribution of copyrighted software can also be pursued as copyright infringement; US law allows statutory damages of up to $150,000 per work for wilful infringement.</li>'
+        +'</ol>'
+        +'<div class="em-lic-f">This is a plain-language summary, not legal advice. Your full terms are in your BuilderPro agreement.</div>'
+      +'</div>'
     +'</div></div>';
   bpCalcPick(saved);
   if(_bpCalcTab==='preview')bpCalcFrameReload();
+  if(_bpCalcTab==='embed')bpEmbedFill();
 }
 var _bpCalcTab='pricing';
 window.bpCalcTab=function(t){
@@ -14711,6 +14727,7 @@ window.bpCalcTab=function(t){
   document.querySelectorAll('[data-calc-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-calc-tab')===t);});
   document.querySelectorAll('[data-calc-pane]').forEach(function(p){p.hidden=p.getAttribute('data-calc-pane')!==t;});
   if(t==='preview'&&!document.querySelector('#bpCalcPreviewBox iframe'))bpCalcFrameReload();
+  if(t==='embed')bpEmbedFill();
 };
 /* the live estimators on the homepage are self-contained srcdoc iframes \u2014 clone the
    matching one so the client edits prices beside the thing their customer actually uses */
@@ -14782,6 +14799,28 @@ function bpCalcSave(){
   catch(e){ok.textContent='<span class=ms>check</span> Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}}
   else{ok.textContent='<span class=ms>check</span> Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}
 }
+/* The embed is the same estimator document the marketing site shows, served
+   from /embed/<trade>.html with the client's owner id in the query string, so
+   it loads THEIR prices and files roof checks under THEIR account. The pages are
+   generated from index.html by tools/build-embeds.py. */
+window.bpEmbedFill=function(){
+  var pre=q('bpEmbedCode'); if(!pre)return;
+  var cid=window._bpCalcCur||bpCalcAssigned();
+  if(!(window.BP_LIVE&&window.BP_SB)){ pre.textContent='Sign in to get the embed code for your account.'; window._bpEmbedSnippet=''; return; }
+  Promise.resolve(bpSetUser()).then(function(u){
+    if(!u||!u.id){ pre.textContent='Sign in to get the embed code for your account.'; return; }
+    var url='https://builderpro-os.com/embed/'+cid+'.html?u='+u.id;
+    window._bpEmbedSnippet='<iframe src="'+url+'" title="Instant estimate" loading="lazy" style="width:100%;min-height:720px;border:0;border-radius:16px;overflow:hidden"></iframe>';
+    pre.textContent=window._bpEmbedSnippet;
+  },function(){ pre.textContent='Couldn\u2019t read your account just now. Reload and try again.'; });
+};
+window.bpEmbedCopy=function(){
+  var snip=window._bpEmbedSnippet||''; var b=q('bpEmbedCopy'); if(!snip||!b)return;
+  var done=function(){ b.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){ if(b)b.innerHTML='<span class=ms>content_copy</span> Copy code'; },1800); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(snip).then(done,function(){ bpEmbedSelect(); }); }
+  else bpEmbedSelect();
+};
+function bpEmbedSelect(){ var pre=q('bpEmbedCode'); if(!pre)return; var r=document.createRange(); r.selectNodeContents(pre); var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r); try{ document.execCommand('copy'); }catch(e){} }
 window.bpCalcReset=function(){
   var cid=window._bpCalcCur||bpCalcAssigned();
   if(!confirm('Reset every price, add-on, and multiplier on your '+cid+' calculator back to the BuilderPro defaults? Your saved custom pricing will be removed.'))return;
@@ -18774,9 +18813,18 @@ var BPDAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thurs
 var BPLOGO='';
 function bpHrsDefault(){var h={};BPDAYS.forEach(function(d){var wk=d[0]!=='sat'&&d[0]!=='sun';h[d[0]]={open:wk,from:'08:00',to:'17:00'};});return h;}
 function bpSettings(){
+  /* Settings, third layout. A section rail on the left, one column of
+     label-left form rows on the right, the way settings read in tools people
+     trust with money. Every field id, handler and save path is unchanged from
+     the previous layouts; only the shell is new. */
   var s=bpSettingsGet(),c=s.company||{},o=s.owner||{},h=s.hours||bpHrsDefault();
   BPLOGO=c.logo||c.logoUrl||'';
-  var f=function(id,label,val,ph,type){return '<div class="bpx-fld"><label>'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+bpEsc(val||'')+'" placeholder="'+ph+'"></div>';};
+  var row=function(label,hint,control,forId){
+    return '<div class="st-row"><div class="st-lab"><label'+(forId?' for="'+forId+'"':'')+'>'+label+'</label>'+(hint?'<div class="st-hint">'+hint+'</div>':'')+'</div><div class="st-ctl">'+control+'</div></div>';
+  };
+  var inp=function(id,val,ph,type){return '<input id="'+id+'" type="'+(type||'text')+'" value="'+bpEsc(val||'')+'" placeholder="'+ph+'">';};
+  var f=function(id,label,val,ph,type,hint){return row(label,hint||'',inp(id,val,ph,type),id);};
+  var grp=function(t){return '<div class="st-grp">'+t+'</div>';};
   var hrsRows=BPDAYS.map(function(d){var dh=h[d[0]]||{open:false,from:'08:00',to:'17:00'};
     return '<div class="bpx-hrs-row"><span class="bpx-hrs-day">'+d[1]+'</span>'
       +'<input type="checkbox" class="bpx-hrs-ck" id="hrs-'+d[0]+'-o" '+(dh.open?'checked':'')+' onchange="bpHrsToggle(\''+d[0]+'\')">'
@@ -18785,77 +18833,71 @@ function bpSettings(){
       +'</span></div>';
   }).join('');
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
-  var tabs=[['business','Business'],['hours','Hours & replies'],['owner','Owner'],['ridge','Ridge AI'],['appearance','Appearance'],['plan','Plan & billing']];
-  var chip=function(t){return '<button class="bpx-jt'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')">'+t[1]+'</button>';};
-  var sec=function(id){return 'id="set-sec-'+id+'" style="'+(_bpSetSec===id?'':'display:none;')+'margin-bottom:16px"';};
+  var SECS=[
+    ['business','Business','storefront','Who you are, and how customers reach you.'],
+    ['hours','Hours & replies','schedule','When you\'re open, and what a missed call gets back.'],
+    ['owner','Owner','person','Personalises your dashboard, messages and estimates.'],
+    ['ridge','Ridge AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
+    ['appearance','Appearance','palette','How the software looks to you.'],
+    ['plan','Plan & billing','credit_card','Your BuilderPro membership.']];
+  var rail=SECS.map(function(t){return '<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';}).join('');
+  var sec=function(id,body){var t=SECS.filter(function(x){return x[0]===id;})[0];
+    return '<section id="set-sec-'+id+'" class="st-sec"'+(_bpSetSec===id?'':' style="display:none"')+'><div class="st-head"><h2>'+t[1]+'</h2><p>'+t[3]+'</p></div>'+body+'</section>';};
+  var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
+      return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o2[0]?' on':'')+'" onclick="bpApplyTheme(\''+o2[0]+'\');bpSettings()"><span class="ms">'+o2[2]+'</span> '+o2[1]+'</button>';}).join('')+'</div>';
+  var feats=[BP_AI_NAME+' AI receptionist, 24/7','Exclusive Lead Radar territory','Neighbor Farming and commercial roofs','Marketing: Meta, Google, Yelp, reputation','Invoices, estimates, contracts and payments','Projects, scheduling and finances','Your calculator, embeddable on your site','Priority support'];
+
   q('bpxViewArea').innerHTML=
-    /* identity header */
-    '<div class="bpx-set-hdr">'
-      +'<div class="bpx-set-logo">'+(BPLOGO?('<img src="'+BPLOGO+'" alt="">'):'<span>Logo</span>')+'</div>'
-      +'<div class="bpx-set-id"><h2>'+bpEsc(c.name||'Your business')+'</h2>'
-        +'<div class="bpx-mut" style="font-size:13px;margin-top:3px">'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</div></div>'
-      +'<span class="bpx-set-plan">BUILDERPRO OS · $199/mo</span>'
-    +'</div>'
-    +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(chip).join('')+'</div>'
-    /* business — identity and contact split into two readable cards */
-    +'<div '+sec('business')+'><div class="bpx-set-grid2">'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Identity<span class="lg2">what customers see</span></div>'
-        +'<div class="bpx-fld"><label>Logo</label><div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
+    '<div class="st">'
+      +'<aside class="st-rail">'
+        +'<div class="st-id"><div class="st-logo">'+(BPLOGO?('<img src="'+BPLOGO+'" alt="">'):'<span class="ms">storefront</span>')+'</div>'
+          +'<div><b>'+bpEsc(c.name||'Your business')+'</b><span>'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</span></div></div>'
+        +'<div class="st-navs" role="navigation" aria-label="Settings sections">'+rail+'</div>'
+        +'<div class="st-plan"><span class="ms">verified</span>BuilderPro OS · $199/mo</div>'
+      +'</aside>'
+      +'<div class="st-body">'
+      +sec('business',
+        grp('Identity')
+        +row('Logo','Square works best. It appears on your dashboard, invoices, estimates and door hangers.',
+          '<div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
           +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
-          +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>'
-          +'<div class="bpx-fldhint">Square works best. Appears on your dashboard, invoices and estimates.</div></div>'
+          +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>')
         +f('set-cname','Business name',c.name,'Acme Roofing')
-        +f('set-ctrade','Trade / type',c.trade,'Roofing')
-        +f('set-clic','License # (optional)',c.license,'License / insurance #')
-      +'</div>'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Contact &amp; coverage<span class="lg2">how customers reach you</span></div>'
-        +'<div class="bpx-fld2">'+f('set-cphone','Phone',c.phone,'(555) 555-5555','tel')+f('set-cemail','Email',c.email,'you@company.com','email')+'</div>'
+        +f('set-ctrade','Trade',c.trade,'Roofing','text','Picks which calculator you get.')
+        +f('set-clic','License number',c.license,'License / insurance #','text','Optional. Printed on contracts and door hangers.')
+        +grp('Contact & coverage')
+        +f('set-cphone','Phone',c.phone,'(555) 555-5555','tel')
+        +f('set-cemail','Email',c.email,'you@company.com','email')
         +f('set-cweb','Website',c.website,'yourcompany.com','url')
         +f('set-caddr','Address',c.address,'123 Main St, City, ST')
-        +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover — e.g. Austin, 78701, 78704')
-        +'<div class="bpx-fldhint">'+BP_AI_NAME+' uses your service area to tell callers whether you cover them.</div>'
-      +'</div></div></div>'
-    /* hours + auto-reply */
-    +'<div '+sec('hours')+'><div class="bpx-set-grid2">'
-      +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:8px"><div class="bpx-ptitle" style="margin:0">Opening hours</div>'
-        +'<button class="bpx-mini alt" onclick="bpHrsCopy()">Copy Monday to weekdays</button></div>'
-        +hrsRows
-        +'<div class="bpx-fldhint" style="margin-top:12px">Sets your booking windows, and tells '+BP_AI_NAME+' when you\'re closed.</div>'
+        +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover, e.g. Austin, 78701, 78704','text',BP_AI_NAME+' uses this to tell callers whether you cover them.'))
+      +sec('hours',
+        grp('Opening hours')
+        +'<div class="st-row"><div class="st-lab"><label>Days and times</label><div class="st-hint">Sets your booking windows, and tells '+BP_AI_NAME+' when you\'re closed.</div>'
+          +'<button class="bpx-rowbtn" style="margin-top:12px" onclick="bpHrsCopy()">Copy Monday to weekdays</button></div>'
+          +'<div class="st-ctl"><div class="st-hrs">'+hrsRows+'</div></div></div>'
+        +grp('Missed-call auto-reply')
+        +row('Text sent on a missed call or after hours','Goes out within seconds. Leave blank to use BuilderPro\'s default recovery text.',
+          '<textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'. Sorry we missed you. What can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>','set-autoreply'))
+      +sec('owner',
+        f('set-oname','Owner name',o.name,'Full name')
+        +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
+        +f('set-oemail','Owner email',o.email,'owner@company.com','email','Saved to your account.'))
+      +sec('ridge','<div id="bpx-rg-host"></div>')
+      +sec('appearance',
+        row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg))
+      +sec('plan',
+        row('Your plan','One plan, everything included.',
+          '<div class="st-planbox"><div class="st-planhead"><b>BuilderPro OS</b><span class="bpx-badge ok">Active</span></div>'
+          +'<div class="st-price">$199<span> / month</span></div>'
+          +'<div class="st-feats">'+feats.map(function(x){return '<div><span class="ms">check</span>'+x+'</div>';}).join('')+'</div></div>')
+        +row('Billing','Questions about an invoice, a card on file, or a change of plan.',
+          '<a class="bpx-rowbtn" style="text-decoration:none;display:inline-block" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a>')
+        +row('Cancel','Ends the membership at the end of the current period. Your data stays for 30 days.',
+          '<button class="bpx-rowbtn st-danger" onclick="bpCancelOpen()">Cancel my plan</button>'))
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='ridge'||_bpSetSec==='appearance')?' hidden':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Missed-call auto-reply<span class="lg2">sent within seconds</span></div>'
-        +'<div class="bpx-fld"><label>Text sent on a missed call or after hours</label><textarea id="set-autoreply" placeholder="Thanks for reaching '+(c.name?bpEsc(c.name):'us')+'! Sorry we missed you — what can we help with?">'+bpEsc(s.autoReply||'')+'</textarea>'
-          +'<div class="bpx-fldhint">Leave blank to use BuilderPro\'s default recovery text.</div></div>'
-      +'</div></div></div>'
-    /* owner */
-    +'<div '+sec('owner')+'><div class="bpx-panel" style="max-width:640px"><div class="bpx-ptitle">Owner<span class="lg2">personalizes your dashboard &amp; messages</span></div>'
-      +'<div class="bpx-fld2">'+f('set-oname','Owner name',o.name,'Full name')+f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')+'</div>'
-      +f('set-oemail','Owner email',o.email,'owner@company.com','email')
-      +'<div class="bpx-fldhint" style="margin-top:14px">Saved to your account. Used to personalize your dashboard, messages and estimates.</div>'
-    +'</div></div>'
-    /* plan */
-    +'<div '+sec('ridge')+'><div id="bpx-rg-host"></div></div>'
-    +'<div '+sec('appearance')+'><div class="bpx-panel" style="max-width:640px"><div class="bpx-ptitle">Appearance<span class="lg2">how the software looks to you</span></div>'
-      +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Light and dark are both designed, not one dimmed. System follows your device.</div>'
-      +'<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o){
-          return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o[0]?' on':'')+'" onclick="bpApplyTheme(\''+o[0]+'\');bpSettings()"><span class="ms">'+o[2]+'</span> '+o[1]+'</button>';}).join('')+'</div>'
-    +'</div></div>'
-    +'<div '+sec('plan')+'><div class="bpx-panel" style="box-sizing:border-box;max-width:1000px"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
-      +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
-        +'<div style="flex:1;min-width:230px">'
-          +'<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:17px;font-weight:800">BuilderPro OS</span><span style="background:#eaf1ff;color:#2457d6;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px">ACTIVE</span></div>'
-          +'<div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:var(--blue)">$199</span><span class="bpx-mut" style="font-size:13px"> / month · everything included</span></div>'
-          +'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">One plan, no add-ons:</div>'
-          +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:5px 16px;margin-top:8px;font-size:13px">'
-          +[BP_AI_NAME+' AI receptionist (24/7)','Exclusive Lead Radar territory','Marketing — Meta, Google, Yelp','Invoices, estimates & payments','Projects, scheduling & finances','Job calculator','Website & Google Business setup','Priority support'].map(function(x){return '<div><span style="color:#15803d;font-weight:700"><span class=ms>check</span></span> '+x+'</div>';}).join('')
-          +'</div>'
-        +'</div>'
-        +'<div style="min-width:190px;display:flex;flex-direction:column;gap:8px;align-items:stretch">'
-          +'<a class="bpx-btn ghost" style="text-align:center;text-decoration:none" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a>'
-          +'<button class="bpx-btn ghost" style="color:#dc2626;border-color:#f3c4c4" onclick="bpCancelOpen()">Cancel my plan</button>'
-        +'</div>'
-      +'</div>'
-    +'</div></div>'
-    +'<div class="bpx-set-foot" id="bpx-setfoot"'+(_bpSetSec==='plan'?' hidden':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
+    +'</div>';
   bpSettingsPull();
   if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpRidgeView('bpx-rg-host'); }
 }
@@ -19260,6 +19302,8 @@ window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
 
 var BP_TILES={
   street:[
+    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+     opt:{maxZoom:19,attribution:'Tiles &copy; Esri'}},
     {url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
      opt:{maxZoom:16,maxNativeZoom:16,attribution:'Tiles &copy; Esri'},
      over:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'},
@@ -19325,6 +19369,7 @@ function rdInitMap(){
 function rdBase(){
   if(_rdBase){_rdBase.remove();_rdBase=null;}
   if(_rdLabels){_rdLabels.remove();_rdLabels=null;}
+  try{ _rdMap.getPane('tilePane').classList.toggle('sat',!!_rdSat); }catch(e){}
   if(_rdSat){ _rdBase=bpTileLayer(_rdMap,'satellite'); _rdLabels=bpTileLayer(_rdMap,'labels'); }
   else { _rdBase=bpTileLayer(_rdMap,'street'); }
 }
@@ -19972,6 +20017,7 @@ document.head.appendChild(rdCss);
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
     {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
+    {key:"reputation",label:"Reputation",desc:"under Marketing. Their own ratings and newest reviews from Google Business Profile, Yelp and Facebook side by side, with a reply link into each platform, plus an Ask for a review composer that copies or texts a short message with their Google review link. Platforms connect on Ads & Listings (Google, Yelp) and Social Media (Facebook). Shows clearly-labelled sample data until something is connected."},
     {key:"neighbors",label:"Neighbor Farming",desc:"under Leads. Turns a job they have finished into the next one: pick a completed job with an address, and BuilderPro maps the real homes around it from OpenStreetMap address data, closest and same-street first. Every door is tracked through Hanger left \u2192 Reached out \u2192 Replied \u2192 Booked \u2192 Won, so over time they learn how many extra jobs each finished job produces. Prints door hangers that name the job address and the neighbour's own street, plans a walking route from the job site, and writes the postcard and text copy with the street merged in. There is also a 'Farm this street' button on each project."},
     {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. A Homes / Commercial switch at the top flips the same map to commercial roofs: scan the satellite view and every strip mall, warehouse, church, school and self-storage comes back with its real roof size measured from the building footprint, an estimate at the contractor's own $/sq ft rate, and the business's phone number — biggest roof first, one tap to dial, tracked Called → Talked → Walked it → Bid out → Won. Businesses are not on the Do-Not-Call registry, so unlike homeowner lists these can simply be rung. A Referral partners tab does the same for solar installers, property managers, insurance agents and realtors. It does NOT judge roof condition — the contractor looks at the satellite image. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
     {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
@@ -20074,6 +20120,108 @@ document.head.appendChild(rdCss);
 .fm-copy pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:13.5px;line-height:1.65;color:#2b3440}
 </style>
 <script>
+/* ===== Reputation: the contractor's own reviews, every platform, one page =====
+   Google needs the Business Profile connection, Yelp needs the Yelp connection,
+   Facebook comes off the social connection. Nothing here is scraped; each
+   platform's own API is asked, through marketing-oauth. Until something is
+   connected the page shows sample data and says so. */
+var _bpRep={loaded:false,loading:false,data:null,err:'',tab:'all'};
+var BP_REP_DEMO={google:{rating:4.8,count:127,name:'Summit Peak Roofing',reviewUrl:'https://search.google.com/local/writereview?placeid=demo',manageUrl:'https://business.google.com/reviews',
+    reviews:[{rating:5,user:'Priya N.',at:'2026-09-09T14:10:00Z',text:'Crew showed up when they said, finished in two days, and the yard was cleaner than they found it. Ridge answered the phone at 9pm on a Sunday.'},
+             {rating:4,user:'Marcus R.',at:'2026-09-02T18:40:00Z',text:'Solid work on the storm repair. Estimate came in exactly where the online calculator said it would.'},
+             {rating:5,user:'Dana M.',at:'2026-08-27T10:05:00Z',text:'Second roof they have done for our family. Fair price, no surprises.'}]},
+  yelp:{rating:4.6,count:41,name:'Summit Peak Roofing',reviewUrl:'https://www.yelp.com/biz/demo',manageUrl:'https://biz.yelp.com/',
+    reviews:[{rating:5,user:'Lena K.',at:'2026-09-05T16:00:00Z',text:'Got a real estimate from their website before anyone called me. That alone sold me.'},
+             {rating:3,user:'Tom B.',at:'2026-08-15T12:00:00Z',text:'Good roof, but scheduling slipped a week. They did call ahead about it.'}]},
+  facebook:{rating:4.9,count:58,name:'Summit Peak Roofing',reviewUrl:'https://www.facebook.com/demo/reviews',manageUrl:'https://www.facebook.com/demo/reviews',
+    reviews:[{rating:5,user:'Ana G.',at:'2026-09-11T09:30:00Z',text:'Recommend to anyone in South Austin.'}]}};
+var BP_REP_PLAT=[['google','Google','assets/brand/google-g.png','gbp','marketing'],['yelp','Yelp','assets/brand/yelp.png','yelp','marketing'],['facebook','Facebook','assets/brand/meta.png','social','social']];
+
+function bpRepStars(r){var n=Math.round(+r||0);var h='';for(var i=1;i<=5;i++)h+='<span class="ms rp-star'+(i<=n?' on':'')+'">star</span>';return '<span class="rp-stars" title="'+(+r||0).toFixed(1)+' of 5">'+h+'</span>';}
+function bpRepWhen(at){if(!at)return '';var d=new Date(at);if(isNaN(d.getTime()))return '';var days=Math.round((Date.now()-d.getTime())/864e5);return days<=0?'today':days===1?'yesterday':days<30?days+' days ago':d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+
+function bpReputation(){
+  var area=q('bpxViewArea');
+  if(!window.BP_LIVE){ _bpRep.data=BP_REP_DEMO; _bpRep.demo=true; _bpRep.loaded=true; }
+  if(!_bpRep.loaded){
+    area.innerHTML='<div class="bpx-empty2" style="padding:40px">Asking Google, Yelp and Facebook for your reviews…</div>';
+    if(!_bpRep.loading)bpRepLoad(false);
+    return;
+  }
+  bpRepRender();
+}
+function bpRepLoad(force){
+  _bpRep.loading=true;
+  bpAuthApi(MKT_URL,{op:'reputation.get',force:!!force}).then(function(r){
+    _bpRep.loading=false; _bpRep.loaded=true;
+    if(!r||r.ok===false){ _bpRep.err=(r&&r.error)||'The marketing service didn’t answer.'; _bpRep.data=BP_REP_DEMO; _bpRep.demo=true; }
+    else {
+      var any=!!(r.google||r.yelp||r.facebook);
+      _bpRep.demo=!any; _bpRep.data=any?{google:r.google,yelp:r.yelp,facebook:r.facebook}:BP_REP_DEMO; _bpRep.conn=r.connected||{}; _bpRep.err='';
+    }
+    if(window._bpCurView==='reputation')bpRepRender();
+  }).catch(function(){ _bpRep.loading=false; _bpRep.loaded=true; _bpRep.err='Couldn’t reach the marketing service.'; _bpRep.data=BP_REP_DEMO; _bpRep.demo=true; if(window._bpCurView==='reputation')bpRepRender(); });
+}
+window.bpRepRefresh=function(){ _bpRep.loaded=false; bpReputation(); bpRepLoad(true); };
+window.bpRepTab=function(t){ _bpRep.tab=t; bpRepRender(); };
+function bpRepAll(){
+  var d=_bpRep.data||{}, out=[];
+  BP_REP_PLAT.forEach(function(p){ var x=d[p[0]]; if(!x||!x.reviews)return; x.reviews.forEach(function(r){ out.push({plat:p[0],platName:p[1],img:p[2],rating:+r.rating||0,user:r.user||'A customer',at:r.at||'',text:r.text||'',replied:!!r.replied,manage:x.manageUrl||''}); }); });
+  out.sort(function(a,b){return new Date(b.at||0)-new Date(a.at||0);});
+  return out;
+}
+function bpRepRender(){
+  var area=q('bpxViewArea'), d=_bpRep.data||{}, conn=_bpRep.conn||{};
+  var live=BP_REP_PLAT.filter(function(p){return d[p[0]]&&!d[p[0]].error;});
+  var wavg=0,tot=0; live.forEach(function(p){var x=d[p[0]]; if(x.count&&x.rating){wavg+=x.rating*x.count;tot+=x.count;}});
+  var avg=tot?wavg/tot:0;
+  var all=bpRepAll(), month=all.filter(function(r){return r.at&&(Date.now()-new Date(r.at).getTime())<30*864e5;}).length;
+  var s=(typeof bpSettingsGet==='function'?bpSettingsGet():{})||{}, co=s.company||{};
+  var best=(d.google&&d.google.reviewUrl)||(d.facebook&&d.facebook.reviewUrl)||(d.yelp&&d.yelp.reviewUrl)||'';
+  var ask='Hi {first}, thanks again for choosing '+(co.name||'us')+'. If you have a minute, a quick review helps our small crew more than you’d think: '+(best||'[your review link]');
+  var demo=_bpRep.demo?'<div class="rp-demo"><span class="ms">info</span>'+(_bpRep.err?bpEsc(_bpRep.err)+' Showing sample data. ':'Sample data. ')+'Connect Google and Yelp on <a onclick="bpNav(\'marketing\')">Ads &amp; Listings</a> and Facebook on <a onclick="bpNav(\'social\')">Social Media</a> to see your real reviews here.</div>':'';
+  var tiles='<div class="bpx-stats" style="margin-bottom:16px">'
+    +'<div class="bpx-stat"><div class="lbl">Average rating</div><div class="val">'+(avg?avg.toFixed(1):'—')+'</div><div class="note">'+(live.length?'across '+live.length+' platform'+(live.length===1?'':'s'):'nothing connected yet')+'</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Total reviews</div><div class="val">'+(tot?tot.toLocaleString():'—')+'</div><div class="note">all time</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">New this month</div><div class="val">'+(all.length?month:'—')+'</div><div class="note">of the newest we can see</div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Ask for one</div><div class="val" style="font-size:15px;font-weight:700;letter-spacing:0;margin-top:6px"><button class="bpx-btn" style="margin:0;padding:10px 16px;font-size:13.5px" onclick="document.getElementById(\'rpAsk\').scrollIntoView({behavior:\'smooth\'})"><span class=ms>rate_review</span> Ask for a review</button></div></div>'
+    +'</div>';
+  var cards='<div class="rp-plats">'+BP_REP_PLAT.map(function(p){
+    var x=d[p[0]], on=!!x&&!x.error, err=x&&x.error;
+    return '<div class="rp-plat'+(on?'':' off')+'"><div class="rp-plat-h"><img src="'+p[2]+'" alt=""><b>'+p[1]+'</b>'+(on?'<span class="bpx-badge ok">Connected</span>':'<span class="bpx-badge">Not connected</span>')+'</div>'
+      +(on?'<div class="rp-big">'+(+x.rating||0).toFixed(1)+' '+bpRepStars(x.rating)+'</div><div class="bpx-mut" style="font-size:12.5px">'+(+x.count||0).toLocaleString()+' review'+(x.count===1?'':'s')+(x.name?' · '+bpEsc(x.name):'')+'</div>'
+          +'<div class="rp-plat-a">'+(x.manageUrl?'<a class="bpx-rowbtn" style="text-decoration:none" href="'+bpEsc(x.manageUrl)+'" target="_blank" rel="noopener">Manage</a>':'')+(x.reviewUrl?'<button class="bpx-rowbtn" onclick="bpRepCopy(\''+bpEsc(x.reviewUrl)+'\',this)">Copy review link</button>':'')+'</div>'
+        :'<div class="bpx-mut" style="font-size:12.5px;line-height:1.5;margin:6px 0 10px">'+(err?bpEsc(err):'Connect it and your rating, review count and newest reviews show here.')+'</div>'
+          +'<button class="bpx-rowbtn primary" onclick="bpNav(\''+p[4]+'\')">Connect on '+(p[4]==='social'?'Social Media':'Ads &amp; Listings')+'</button>')
+      +'</div>';}).join('')+'</div>';
+  var list=all.filter(function(r){return _bpRep.tab==='all'||r.plat===_bpRep.tab;});
+  var pg=bpPage('rep',list,10,'bpRepRender()');
+  var feed='<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-jobtabs">'
+    +[['all','All'],['google','Google'],['yelp','Yelp'],['facebook','Facebook']].map(function(t){return '<button class="bpx-jt'+(_bpRep.tab===t[0]?' on':'')+'" onclick="bpRepTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center"><span class="bpx-mut" style="font-size:12px">Yelp shows its three newest; Google and Facebook the last twenty.</span><button class="bpx-rowbtn" onclick="bpRepRefresh()"><span class=ms>refresh</span> Refresh</button></div></div>'
+    +(pg.items.length?pg.items.map(function(r){
+      return '<div class="rp-rev"><img class="rp-rev-logo" src="'+r.img+'" alt="'+r.platName+'">'
+        +'<div class="rp-rev-b"><div class="rp-rev-t">'+bpRepStars(r.rating)+'<b>'+bpEsc(r.user)+'</b><span class="bpx-mut">'+bpRepWhen(r.at)+' · '+r.platName+'</span>'+(r.replied?'<span class="bpx-badge ok">Replied</span>':(r.rating<=3?'<span class="bpx-badge warn">Needs a reply</span>':''))+'</div>'
+        +(r.text?'<div class="rp-rev-x">'+bpEsc(r.text)+'</div>':'<div class="rp-rev-x bpx-mut">Rating only, no text.</div>')+'</div>'
+        +(r.manage?'<a class="bpx-rowbtn" style="text-decoration:none;flex:0 0 auto" href="'+bpEsc(r.manage)+'" target="_blank" rel="noopener">Reply</a>':'')+'</div>';
+    }).join('')+pg.nav:'<div class="bpx-empty2">No reviews to show yet.</div>')
+    +'</div>';
+  var askBox='<div class="bpx-panel" id="rpAsk" style="margin-top:16px"><div class="bpx-ptitle">Ask for a review<span class="lg2">right after a job, while they’re still happy</span></div>'
+    +'<div class="rp-ask"><div><label class="st-lab" style="display:block;font-weight:600;font-size:13px;margin-bottom:6px">Message</label><textarea id="rpAskMsg">'+bpEsc(ask)+'</textarea>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-top:6px">{first} becomes their first name when you paste it into a text or email. Google is the link that moves the needle most; use it unless a customer lives on Yelp.</div></div>'
+      +'<div class="rp-ask-a"><button class="bpx-btn" style="margin:0" onclick="bpRepCopy(document.getElementById(\'rpAskMsg\').value,this)"><span class=ms>content_copy</span> Copy message</button>'
+        +'<a class="bpx-btn ghost" style="margin:0;text-decoration:none;text-align:center" href="sms:?&body='+encodeURIComponent(ask.replace('{first}','there'))+'"><span class=ms>sms</span> Send as a text</a>'
+        +'<a class="bpx-btn ghost" style="margin:0;text-decoration:none;text-align:center" href="mailto:?subject='+encodeURIComponent('A quick favour')+'&body='+encodeURIComponent(ask.replace('{first}','there'))+'"><span class=ms>mail</span> Send as an email</a>'
+        +'<div class="bpx-mut" style="font-size:11.5px;line-height:1.5">Send this to people you’ve done work for. They’re your customers, so texting them is fine; buying a list and blasting it is not.</div></div></div>'
+    +'</div>';
+  area.innerHTML=demo+tiles+cards+feed+askBox;
+}
+window.bpRepCopy=function(text,btn){
+  var done=function(){ if(!btn)return; var was=btn.innerHTML; btn.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){btn.innerHTML=was;},1600); };
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,function(){prompt('Copy this:',text);});
+  else prompt('Copy this:',text);
+};
+
 /* ===== Neighbor Farming — every finished job becomes the next one ==========
    The trigger here is their OWN completed work, not geography or weather: a
    finished roof sits on a street of houses the same age, by the same builder,
@@ -20524,6 +20672,7 @@ function bgInitMap(){
 function bgBase(){
   if(_bg.base){_bg.base.remove();_bg.base=null;}
   if(_bg.labels){_bg.labels.remove();_bg.labels=null;}
+  try{ _bg.map.getPane('tilePane').classList.toggle('sat',!!_bg.sat); }catch(e){}
   if(_bg.sat){
     _bg.base=bpTileLayer(_bg.map,'satellite');
     _bg.labels=bpTileLayer(_bg.map,'labels');
@@ -21020,6 +21169,12 @@ window.bgPartnersRender=function(){
 #bpx .bpx-rg-bar{background:linear-gradient(135deg,#12203a,#0c1526) !important;border-radius:var(--r-lg) !important;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 32px -16px rgba(0,0,0,.5)}
 #bpx .fm-hero{border-radius:var(--r-lg);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 16px 40px -18px rgba(0,0,0,.55)}
 #bpx #rdMapWrap,#bpx #bgWrap{border-radius:var(--r-lg) !important;border:1px solid var(--line) !important;box-shadow:inset 0 1px 0 var(--edge),0 12px 32px -16px rgba(var(--sh-c),.3) !important}
+/* basemap tint: softened in light so the dots lead; inverted and re-hued in
+   dark so the map is part of the dark UI. Only the tile pane, never the markers. */
+#bpx #rdMap .leaflet-tile-pane,#bpx #bgMap .leaflet-tile-pane{filter:saturate(.72) contrast(.92) brightness(1.04);transition:filter .3s var(--ease)}
+#bpx.bpx-dark #rdMap .leaflet-tile-pane,#bpx.bpx-dark #bgMap .leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.82) contrast(.88) saturate(.55)}
+#bpx.bpx-dark #rdMap .leaflet-tile-pane.sat,#bpx.bpx-dark #bgMap .leaflet-tile-pane.sat{filter:brightness(.92) saturate(.9)}
+#bpx #rdMap,#bpx #bgMap{background:var(--bg-2) !important}
 #bpx .rd-legend,#bpx .bg-legend{background:rgba(255,255,255,.9) !important;border-radius:12px !important;backdrop-filter:blur(8px)}
 #bpx.bpx-dark .rd-legend,#bpx.bpx-dark .bg-legend{background:rgba(18,24,38,.9) !important;color:var(--ink);border-color:var(--line) !important}
 #bpx.bpx-dark .rd-legend .cnts{color:var(--grey)}#bpx.bpx-dark .rd-legend .cnts b{color:var(--ink)}
@@ -21071,6 +21226,99 @@ window.bgPartnersRender=function(){
 #bpx.bpx-dark .bpx-mobbar{background:linear-gradient(180deg,var(--side-a),var(--side-b)) !important}
 #bpx.bpx-dark .bpx-set-plan{background:var(--blue-l);color:var(--blue-d)}
 #bpx.bpx-dark .bpx-when-note,#bpx.bpx-dark .bpx-ga-note{background:var(--soft) !important;border-color:var(--line) !important}
+/* ---------- settings, third layout: rail + form rows ---------- */
+#bpx .st{display:grid;grid-template-columns:232px minmax(0,1fr);gap:28px;align-items:start}
+#bpx .st-rail{position:sticky;top:0;display:flex;flex-direction:column;gap:12px;min-height:60vh}
+#bpx .st-id{display:flex;align-items:center;gap:12px;padding:4px 6px 14px;border-bottom:1px solid var(--line)}
+#bpx .st-id b{display:block;font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--ink);line-height:1.2}
+#bpx .st-id span{display:block;font-size:12px;color:var(--grey);margin-top:2px}
+#bpx .st-logo{width:44px;height:44px;border-radius:12px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--grey-l);flex:0 0 auto;box-shadow:inset 0 1px 0 var(--edge)}
+#bpx .st-logo img{width:100%;height:100%;object-fit:cover}
+#bpx .st-navs{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:100%}
+#bpx .st,#bpx .st-rail{min-width:0}
+#bpx .st-nav{display:flex;align-items:center;gap:10px;padding:9px 11px 9px 13px;border:0;background:transparent;border-radius:10px;color:var(--grey);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;text-align:left;position:relative;
+  transition:background .18s var(--ease),color .18s var(--ease),box-shadow .2s var(--ease),transform .18s var(--ease)}
+#bpx .st-nav .ms{font-size:19px;opacity:.8;width:20px;text-align:center}
+#bpx .st-nav:hover{background:var(--soft);color:var(--ink)}
+#bpx .st-nav:active{transform:scale(.985)}
+#bpx .st-nav.on{background:var(--card);color:var(--ink);box-shadow:inset 0 1px 0 var(--edge),0 1px 3px rgba(var(--sh-c),.12),0 8px 16px -10px rgba(var(--sh-c),.3)}
+#bpx .st-nav.on .ms{opacity:1;color:var(--blue)}
+#bpx .st-nav.on::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--blue)}
+#bpx .st-plan{margin-top:auto;font-size:12px;font-weight:600;color:var(--grey);display:flex;gap:6px;align-items:center;padding:10px 12px;border-top:1px solid var(--line)}
+#bpx .st-plan .ms{color:var(--blue)}
+#bpx .st-body{min-width:0;max-width:860px}
+#bpx .st-head{padding-bottom:14px;border-bottom:1px solid var(--line)}
+#bpx .st-head h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.025em;color:var(--ink)}
+#bpx .st-head p{margin:4px 0 0;color:var(--grey);font-size:13px}
+#bpx .st-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-l);margin:26px 0 2px}
+#bpx .st-row{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;padding:16px 0;border-bottom:1px solid var(--line-2);align-items:start}
+#bpx .st-lab label{display:block;font-weight:600;color:var(--ink);font-size:13.5px;letter-spacing:-.005em}
+#bpx .st-hint{font-size:12px;color:var(--grey);margin-top:3px;line-height:1.5;max-width:34ch}
+#bpx .st-ctl input:not([type=checkbox]):not([type=time]),#bpx .st-ctl textarea{width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px}
+#bpx .st-ctl textarea{min-height:112px;resize:vertical;font-family:inherit;line-height:1.5}
+#bpx .st-hrs .bpx-hrs-row{grid-template-columns:64px 22px 1fr;padding:7px 0}
+#bpx .st-hrs .bpx-hrs-day{color:var(--ink);font-weight:600;font-size:13px}
+#bpx .st-hrs .bpx-hrs-closed{color:var(--grey-l)}
+#bpx .st-hrs .sep{color:var(--grey-l);margin:0 8px}
+#bpx .st-planbox{display:flex;flex-direction:column;gap:8px}
+#bpx .st-planhead{display:flex;align-items:center;gap:10px}
+#bpx .st-planhead b{font-size:15px;color:var(--ink)}
+#bpx .st-price{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+#bpx .st-price span{font-size:13px;font-weight:500;color:var(--grey);letter-spacing:0}
+#bpx .st-feats{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 18px;font-size:13px;color:var(--ink);margin-top:6px}
+#bpx .st-feats .ms{color:#1d9a55;margin-right:6px}
+#bpx .st-danger{color:#c0392b !important;border-color:rgba(192,57,43,.3) !important}
+#bpx .st-danger:hover{background:#dc2626 !important;border-color:#dc2626 !important;color:#fff !important}
+#bpx .st-foot{position:sticky;bottom:0;margin-top:14px;display:flex;justify-content:flex-end;align-items:center;gap:14px;padding:14px 0 8px;
+  background:linear-gradient(180deg,rgba(238,241,246,0),var(--bg) 35%) !important;border:0 !important;box-shadow:none !important;border-radius:0 !important}
+#bpx.bpx-dark .st-foot{background:linear-gradient(180deg,rgba(11,15,22,0),var(--bg) 35%) !important}
+#bpx .st-foot .bpx-btn{margin:0 !important}
+#bpx .st-foot .bpx-mmsg{margin:0 !important;min-height:0 !important;font-size:12.5px}
+@media(max-width:900px){
+  #bpx .st{grid-template-columns:1fr;gap:14px}
+  #bpx .st-rail{position:static;min-height:0}
+  #bpx .st-navs{flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:2px}
+  #bpx .st-nav{white-space:nowrap;flex:0 0 auto}
+  #bpx .st-nav.on::before{display:none}
+  #bpx .st-plan{display:none}
+  #bpx .st-row{grid-template-columns:1fr;gap:8px;padding:14px 0}
+}
+/* ---------- calculator embed ---------- */
+#bpx .em-code{position:relative;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px 130px 14px 16px;box-shadow:inset 0 1px 2px rgba(var(--sh-c),.06)}
+#bpx .em-code pre{margin:0;white-space:pre-wrap;word-break:break-all;font:12.5px/1.55 'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink)}
+#bpx .em-code .bpx-rowbtn{position:absolute;top:10px;right:10px}
+#bpx .em-lic{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--soft)}
+#bpx .em-lic-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:8px}
+#bpx .em-lic ol{margin:0;padding-left:20px;font-size:13px;line-height:1.6;color:var(--ink)}
+#bpx .em-lic li{margin:6px 0}
+#bpx .em-lic-f{font-size:11.5px;color:var(--grey-l);margin-top:10px}
+@media(max-width:700px){#bpx .em-code{padding-right:16px;padding-bottom:52px}#bpx .em-code .bpx-rowbtn{top:auto;bottom:10px;left:10px;right:auto}}
+/* ---------- reputation ---------- */
+#bpx .rp-demo{display:flex;gap:8px;align-items:flex-start;background:#fff8ec;border:1px solid #f2dfbd;color:#6b4f16;border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
+#bpx .rp-demo a{color:#1f4fc4;font-weight:600;cursor:pointer}
+#bpx.bpx-dark .rp-demo{background:#2a2110;border-color:#4a3a15;color:#f0c977}#bpx.bpx-dark .rp-demo a{color:#8db0ff}
+#bpx .rp-plats{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+#bpx .rp-plat{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05),0 12px 32px -16px rgba(var(--sh-c),.28)}
+#bpx .rp-plat.off{background:var(--soft);box-shadow:none}
+#bpx .rp-plat-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#bpx .rp-plat-h img{width:26px;height:26px;object-fit:contain;border-radius:6px}
+#bpx .rp-plat-h b{font-size:14.5px;color:var(--ink);flex:1}
+#bpx .rp-big{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--ink);display:flex;align-items:center;gap:8px}
+#bpx .rp-plat-a{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#bpx .rp-stars{display:inline-flex;gap:0;vertical-align:middle}
+#bpx .rp-star{font-size:18px;color:var(--line);font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 20}
+#bpx .rp-star.on{color:#f5b301}
+#bpx .rp-rev{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line-2)}
+#bpx .rp-rev-logo{width:22px;height:22px;object-fit:contain;border-radius:5px;margin-top:3px;flex:0 0 auto}
+#bpx .rp-rev-b{flex:1;min-width:0}
+#bpx .rp-rev-t{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+#bpx .rp-rev-t b{color:var(--ink)}
+#bpx .rp-rev-t .rp-star{font-size:15px}
+#bpx .rp-rev-x{font-size:13.5px;line-height:1.55;color:var(--ink);margin-top:4px;max-width:78ch}
+#bpx .rp-ask{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr);gap:20px;align-items:start}
+#bpx .rp-ask textarea{width:100%;box-sizing:border-box;min-height:120px;padding:11px 13px;font-family:inherit;font-size:14px;line-height:1.5;resize:vertical}
+#bpx .rp-ask-a{display:flex;flex-direction:column;gap:8px}
+@media(max-width:760px){#bpx .rp-ask{grid-template-columns:1fr}}
 </style>
 
 </body>
