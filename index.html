@@ -15459,13 +15459,49 @@ var _bpContacts=[];
 
 /* ==== bpRenderCalendar ==== */
   function bpRenderCalendar(){
+    var insp=_bpCalKind!=='jobs';
     q('bpxViewArea').innerHTML=
-      '<div class="bpx-caltoggle"><button id="bpx-ct-insp" class="'+(_bpCalKind==='inspection'?'on':'')+'" onclick="bpCalKind(\'inspection\')">Inspections</button><button id="bpx-ct-jobs" class="'+(_bpCalKind==='jobs'?'on':'')+'" onclick="bpCalKind(\'jobs\')">Jobs</button></div>'
-      +'<div class="bpx-calhead"><div class="bpx-calnav"><button onclick="bpCalMove(-1)">\u2039</button><div class="bpx-calmonth" id="bpx-calmonth"></div><button onclick="bpCalMove(1)">\u203a</button></div><div style="display:flex;gap:.5rem"><button class="bpx-addbtn" style="background:var(--soft);border:1px solid var(--line);color:var(--ink)" onclick="bpCalToday()">Today</button><button class="bpx-addbtn" onclick="bpOpenBook()">'+(_bpCalKind==='jobs'?'+ Book Job':'+ Book Appointment')+'</button></div></div>'
-      +'<div id="bpx-calgrid"></div>'
-      +'<div class="bpx-upnext"><h3>Upcoming '+(_bpCalKind==='jobs'?'Jobs':'Appointments')+'</h3><div id="bpx-upnext"></div></div>';
+      '<div class="cal-top"><div class="bpx-jobtabs cal-tabs"><button class="bpx-jt'+(insp?' on':'')+'" onclick="bpCalKind(\'inspection\')"><span class=ms>roofing</span> Inspections</button><button class="bpx-jt'+(!insp?' on':'')+'" onclick="bpCalKind(\'jobs\')"><span class=ms>construction</span> Jobs</button></div>'
+      +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button><button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(insp?'Book inspection':'Book job')+'</button></div></div>'
+      +'<div class="cal-layout">'
+      +'<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>'
+      +'<div class="cal-side">'
+      +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
+      +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(insp?'inspections':'jobs')+'</b><span id="bpx-upcount" class="bpx-badge"></span></div><div id="bpx-upnext"></div></div>'
+      +'</div></div>';
     bpLoadCalendar();
+    if(insp) bpCalLinkRender();
   }
+
+  /* ==== booking link + embed (Inspections only) ==== */
+  var _bpCalLink={url:'',ready:null};
+  function bpCalLinkRender(){
+    var el=q('bpx-callink'); if(!el) return;
+    if(!(window.BP_LIVE&&window.BP_SB)){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Sign in to get the booking link for your account.</div>'; return; }
+    el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Reading your account\u2026</div>';
+    Promise.resolve(bpSetUser()).then(function(u){
+      if(!u||!u.id){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Sign in to get the booking link for your account.</div>'; return; }
+      _bpCalLink.url='https://builderpro-os.com/book/?u='+u.id;
+      bpCalLinkDraw();
+      Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'get'})).then(function(r){ _bpCalLink.ready=!!(r&&r.brain&&r.brain.booking_calendar_id); bpCalLinkDraw(); },function(){});
+    },function(){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Couldn\u2019t read your account just now. Reload and try again.</div>'; });
+  }
+  function bpCalLinkDraw(){
+    var el=q('bpx-callink'); if(!el||!_bpCalLink.url) return;
+    var url=_bpCalLink.url;
+    var embed='<iframe src="'+url+'&embed=1" title="Book a roof inspection" loading="lazy" style="width:100%;min-height:640px;border:0;border-radius:18px;overflow:hidden"></iframe>';
+    el.innerHTML='<div class="cal-side-h"><b>Your booking page</b><span class="bpx-badge">Inspections</span></div>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Homeowners pick a month, a day and a time on your open inspection calendar. Put it on your website, in your Google profile, and in every text.</div>'
+      +(_bpCalLink.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>No inspection calendar is linked to your account yet, so the page will say booking is off. Ask BuilderPro to connect it.</span></div>':'')
+      +'<div class="cal-url"><span class=ms>link</span><span class="cal-url-t">'+bpEsc(url)+'</span></div>'
+      +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button></div>'
+      +'<div class="cal-embed" id="bpx-cl-embed" hidden><div class="em-code"><pre id="bpx-cl-code">'+bpEsc(embed)+'</pre><button class="bpx-rowbtn" id="bpx-cl-ecopy" onclick="bpCalEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div><div class="bpx-mut" style="font-size:12px;margin-top:8px">Paste it into any page of your site. The embed is licensed to your account only and may not be shared or resold.</div></div>';
+    window._bpCalEmbed=embed;
+  }
+  function bpCopyText(txt,btn,label){ var done=function(){ btn.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){ btn.innerHTML=label; },1800); }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,function(){ window.prompt('Copy this:',txt); }); } else window.prompt('Copy this:',txt); }
+  window.bpCalLinkCopy=function(){ var b=q('bpx-cl-copy'); if(b) bpCopyText(_bpCalLink.url,b,'<span class=ms>content_copy</span> Copy link'); };
+  window.bpCalEmbedCopy=function(){ var b=q('bpx-cl-ecopy'); if(b) bpCopyText(window._bpCalEmbed||'',b,'<span class=ms>content_copy</span> Copy code'); };
+  window.bpCalEmbedToggle=function(){ var e=q('bpx-cl-embed'); if(e) e.hidden=!e.hidden; };
 
 /* ==== bpCalKind ==== */
   window.bpCalKind=function(k){ _bpCalKind=k; _bpCalDate=new Date(); bpRenderCalendar(); };
@@ -15499,26 +15535,28 @@ var _bpContacts=[];
     // bucket events by day (local)
     var byDay={}; var pdays=(_bpCalKind==='jobs'&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
     for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
-    var html='<div class="bpx-grid">';
+    var html='<div class="bpx-grid cal-grid">';
     var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     for(var i=0;i<7;i++) html+='<div class="bpx-dow">'+dow[i]+'</div>';
     for(var i=0;i<startDow;i++) html+='<div class="bpx-day empty"></div>';
     for(var dnum=1;dnum<=days;dnum++){
-      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'');
-      html+='<div class="'+cls+'"><div class="bpx-daynum">'+dnum+'</div>';
-      var pevs=pdays[dnum]||[];
-      for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt" style="background:#eaf1ff;color:#2457d6;border:1px solid #cddcff" onclick="bpProjOpen(\''+pevs[j].id+'\')">'+pevs[j].label+'</div>'; }
-      var evs=byDay[dnum]||[];
-      for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')">'+bpFmtTime(evs[j].start)+' '+bpEsc(evs[j].title)+'</div>'; }
+      var pevs=pdays[dnum]||[], evs=byDay[dnum]||[];
+      var isPast=new Date(y,m,dnum,23,59).getTime()<Date.now();
+      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+((pevs.length+evs.length)?' has':'');
+      html+='<div class="'+cls+'"><div class="bpx-daynum"><span>'+dnum+'</span>'+((pevs.length+evs.length)>0?'<i class="cal-dot"></i>':'')+'</div>';
+      for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt job" onclick="bpProjOpen(\''+pevs[j].id+'\')"><b>'+bpEsc(pevs[j].label)+'</b></div>'; }
+      for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')"><span class="t">'+bpFmtTime(evs[j].start)+'</span><b>'+bpEsc(evs[j].title)+'</b></div>'; }
       html+='</div>';
     }
     html+='</div>';
     q('bpx-calgrid').innerHTML=html;
     // upcoming list (future only)
-    var now=Date.now(); var up=_bpEvents.filter(function(e){ return new Date(e.start).getTime()>=now-3600000; }).slice(0,8);
+    var now=Date.now(); var up=_bpEvents.filter(function(e){ return new Date(e.start).getTime()>=now-3600000; }).sort(function(a,b){ return new Date(a.start)-new Date(b.start); });
+    var cnt=q('bpx-upcount'); if(cnt) cnt.textContent=up.length?String(up.length):'';
+    up=up.slice(0,8);
     var uh='';
-    if(!up.length){ uh='<div class="bpx-cempty" style="padding:1rem">No upcoming appointments.</div>'; }
-    for(var i=0;i<up.length;i++){ var dt=new Date(up[i].start); uh+='<div class="bpx-uprow"><div class="bpx-update"><span class="mo">'+dt.toLocaleDateString('en-US',{month:'short'})+'</span><span class="dy">'+dt.getDate()+'</span></div><div style="flex:1;min-width:0"><div class="bpx-upname">'+bpEsc(up[i].title)+'</div><div class="bpx-uptime">'+dt.toLocaleDateString('en-US',{weekday:'long'})+' \u00b7 '+bpFmtTime(up[i].start)+(up[i].address?(' \u00b7 '+bpEsc(up[i].address)):'')+'</div></div><span class="bpx-upstatus">'+bpEsc(up[i].status||'confirmed')+'</span></div>'; }
+    if(!up.length){ uh='<div class="cal-empty">Nothing booked yet. '+(_bpCalKind==='jobs'?'Book a job above, or schedule dates on a project.':'Share your booking page, or book one above.')+'</div>'; }
+    for(var i=0;i<up.length;i++){ var dt=new Date(up[i].start); uh+='<div class="cal-up" onclick="bpApptClick(\''+up[i].id+'\')"><div class="cal-up-d"><span class="mo">'+dt.toLocaleDateString('en-US',{month:'short'})+'</span><span class="dy">'+dt.getDate()+'</span></div><div class="cal-up-b"><div class="cal-up-n">'+bpEsc(up[i].title)+'</div><div class="cal-up-t">'+dt.toLocaleDateString('en-US',{weekday:'short'})+' \u00b7 '+bpFmtTime(up[i].start)+(up[i].address?(' \u00b7 '+bpEsc(up[i].address)):'')+'</div></div><span class="bpx-upstatus">'+bpEsc(up[i].status||'confirmed')+'</span></div>'; }
     q('bpx-upnext').innerHTML=uh;
   }
 
@@ -15553,14 +15591,50 @@ var _bpContacts=[];
         +'<label>Duration</label><select id="bpx-bk-dur" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit"><option value="30">30 minutes</option><option value="60">1 hour</option><option value="120">2 hours</option><option value="180" selected>3 hours</option><option value="240">4 hours</option><option value="360">6 hours</option><option value="480">Full day (8 hours)</option></select>'
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBookJob()">Book Job</button></div>');
     } else {
-      bpModal('<h3>Book Appointment</h3>'+contactSel
+      bpModal('<h3>Book inspection</h3>'+contactSel
         +'<label>Title</label><input id="bpx-bk-title" value="Roof Inspection">'
         +'<label>Address</label><input id="bpx-bk-addr" placeholder="On-site location">'
-        +'<label>Pick an open time</label><div class="bpx-slotwrap" id="bpx-bk-slots"></div>'
+        +'<div class="mdt" id="bpx-bk-slots"></div>'
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBook()">Book</button></div>');
-      _bpSlotSel=null; bpLoadSlots('bpx-bk-slots');
+      _bpSlotSel=null; bpMdt('bpx-bk-slots');
     }
   };
+
+/* ==== month → date → time picker (staff side; the public page has its own copy) ==== */
+  var _mdt={slots:null,month:'',date:''};
+  function bpMdtLocal(iso){ var d=new Date(iso); var p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+  async function bpMdt(containerId){
+    var el=q(containerId); if(!el) return;
+    _mdt.month=''; _mdt.date='';
+    el.innerHTML='<div class="mdt-row"><b>Month</b></div><div class="bpx-slotempty">Finding open times…</div>';
+    try{
+      var res=await bpCalWrite({action:'slots'});
+      if(!res.ok||!res.slots){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; return; }
+      var by={}; Object.keys(res.slots).forEach(function(k){ (res.slots[k]||[]).forEach(function(iso){ var ld=bpMdtLocal(iso); (by[ld]=by[ld]||[]).push(iso); }); });
+      Object.keys(by).forEach(function(k){ by[k].sort(); });
+      _mdt.slots=by;
+      if(!Object.keys(by).length){ el.innerHTML='<div class="bpx-slotempty">No open times in the next few weeks.</div>'; return; }
+      bpMdtDraw(el);
+    }catch(e){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; }
+  }
+  function bpMdtDraw(el){
+    var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dates=Object.keys(_mdt.slots).sort();
+    var months=[]; dates.forEach(function(d){ var mk=d.slice(0,7); if(months.indexOf(mk)<0) months.push(mk); });
+    if(!_mdt.month||months.indexOf(_mdt.month)<0) _mdt.month=months[0];
+    var h='<div class="mdt-row"><b>Month</b></div><div class="mdt-chips">';
+    months.forEach(function(mk){ h+='<button type="button" class="mdt-chip'+(mk===_mdt.month?' on':'')+'" data-m="'+mk+'">'+MON[+mk.slice(5,7)-1]+' '+mk.slice(0,4)+'</button>'; });
+    h+='</div><div class="mdt-row"><b>Date</b><i>'+dates.filter(function(d){return d.slice(0,7)===_mdt.month;}).length+' days open</i></div><div class="mdt-chips">';
+    dates.filter(function(d){return d.slice(0,7)===_mdt.month;}).forEach(function(d){ var dt=new Date(d+'T12:00:00'); h+='<button type="button" class="mdt-chip day'+(d===_mdt.date?' on':'')+'" data-d="'+d+'"><small>'+dt.toLocaleDateString('en-US',{weekday:'short'})+'</small>'+dt.getDate()+'</button>'; });
+    h+='</div><div class="mdt-row"><b>Time</b></div><div class="mdt-chips" id="mdt-times">';
+    if(!_mdt.date) h+='<div class="bpx-slotempty" style="padding:6px 0">Pick a date first.</div>';
+    else (_mdt.slots[_mdt.date]||[]).forEach(function(iso){ h+='<button type="button" class="mdt-chip'+(iso===_bpSlotSel?' on':'')+'" data-t="'+iso+'">'+bpFmtTime(iso)+'</button>'; });
+    h+='</div>';
+    el.innerHTML=h;
+    el.querySelectorAll('[data-m]').forEach(function(b){ b.onclick=function(){ _mdt.month=b.getAttribute('data-m'); _mdt.date=''; _bpSlotSel=null; bpMdtDraw(el); }; });
+    el.querySelectorAll('[data-d]').forEach(function(b){ b.onclick=function(){ _mdt.date=b.getAttribute('data-d'); _bpSlotSel=null; bpMdtDraw(el); }; });
+    el.querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ _bpSlotSel=b.getAttribute('data-t'); el.querySelectorAll('[data-t]').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); }; });
+  }
 
 /* ==== bpLoadSlots ==== */
   async function bpLoadSlots(containerId){
@@ -15669,18 +15743,8 @@ var _bpContacts=[];
 
   window.bpOpenReschedule=function(id){
     var e=bpFindEv(id); if(!e) return; _bpSlotSel=null;
-    bpModal('<h3>Reschedule</h3><div class="bpx-sub">'+bpEsc(e.title)+' \u2014 pick a new open time</div><div class="bpx-slotwrap" id="bpx-rs-slots"></div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoReschedule(\''+id+'\')">Save</button></div>');
-    bpLoadSlots('bpx-rs-slots');
-  };
-  window.bpDoReschedule=async function(id){
-    var e=bpFindEv(id); var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
-    if(!_bpSlotSel){ msg.style.color='#dc2626'; msg.textContent='Pick an open time above.'; return; }
-    var durMs=Math.max(new Date(e.end).getTime()-new Date(e.start).getTime(),1800000);
-    var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+durMs));
-    btn.disabled=true; btn.textContent='Saving\u2026';
-    var res=await bpCalWrite({action:'update',id:id,startTime:startISO,endTime:endISO});
-    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Rescheduled.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
-    else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Save'; }
+    bpModal('<h3>Reschedule</h3><div class="bpx-sub">'+bpEsc(e.title)+' \u2014 pick a new time</div><div class="mdt" id="bpx-rs-slots"></div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoReschedule(\''+id+'\')">Save</button></div>');
+    bpMdt('bpx-rs-slots');
   };
 
 /* ==== bpDoReschedule ==== */
@@ -15708,7 +15772,7 @@ var _bpContacts=[];
   function bpFormatLA(d){ var g={}; new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(function(x){g[x.type]=x.value;}); var off; try{ off=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',timeZoneName:'longOffset'}).formatToParts(d).find(function(x){return x.type==='timeZoneName';}).value.replace('GMT',''); }catch(e){ off='-08:00'; } if(g.hour==='24') g.hour='00'; return g.year+'-'+g.month+'-'+g.day+'T'+g.hour+':'+g.minute+':00'+(off||'-08:00'); }
 
 /* ==== bpModal ==== */
-  function bpModal(html){ var m=document.createElement('div'); m.className='bpx-modal'; m.id='bpx-modal'; m.innerHTML='<div class="bpx-modalcard">'+html+'</div>'; m.onclick=function(e){ if(e.target===m) bpCloseModal(); }; document.getElementById('bpx').appendChild(m); }
+  function bpModal(html){ var old=q('bpx-modal'); if(old) old.remove(); var m=document.createElement('div'); m.className='bpx-modal'; m.id='bpx-modal'; m.innerHTML='<div class="bpx-modalcard">'+html+'</div>'; m.onclick=function(e){ if(e.target===m) bpCloseModal(); }; document.getElementById('bpx').appendChild(m); }
 
 /* ==== bpCloseModal ==== */
   window.bpCloseModal=function(){ var m=q('bpx-modal'); if(m) m.remove(); };
@@ -21293,6 +21357,85 @@ window.bgPartnersRender=function(){
 #bpx .em-lic li{margin:6px 0}
 #bpx .em-lic-f{font-size:11.5px;color:var(--grey-l);margin-top:10px}
 @media(max-width:700px){#bpx .em-code{padding-right:16px;padding-bottom:52px}#bpx .em-code .bpx-rowbtn{top:auto;bottom:10px;left:10px;right:auto}}
+/* ---------- calendar v2 ---------- */
+#bpx .cal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#bpx .cal-tabs .bpx-jt .ms{font-size:18px;margin-right:4px;vertical-align:-.2em}
+#bpx .cal-acts{display:flex;gap:8px;align-items:center}
+#bpx .cal-acts .bpx-btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#bpx .cal-acts .bpx-btn .ms{font-size:18px}
+#bpx .cal-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+#bpx .cal-panel{padding:16px 18px 18px}
+#bpx .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+#bpx .cal-month{font-size:19px;font-weight:800;letter-spacing:-.024em;font-family:inherit;min-width:0}
+#bpx .cal-nav{display:flex;gap:6px}
+#bpx .cal-nav button{width:34px;height:34px;border:1px solid var(--line);background:var(--card);border-radius:9px;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05);transition:transform .15s var(--ease),border-color .15s}
+#bpx .cal-nav button:hover{transform:translateY(-1px);border-color:#b9c9ea}
+#bpx .cal-nav button:active{transform:translateY(1px)}
+#bpx .cal-grid{gap:5px}
+#bpx .cal-grid .bpx-dow{font-size:10.5px;color:var(--grey-l);padding:2px 0 6px}
+#bpx .cal-grid .bpx-day{background:var(--soft);border:1px solid var(--line-2,var(--line));border-radius:10px;min-height:96px;padding:6px 6px 5px;box-shadow:none;transition:background .15s,border-color .15s}
+#bpx .cal-grid .bpx-day:hover{background:var(--card);border-color:var(--line)}
+#bpx .cal-grid .bpx-day.has{background:var(--card);box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05)}
+#bpx .cal-grid .bpx-day.past{opacity:.55}
+#bpx .cal-grid .bpx-day.today{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset,0 6px 16px -10px rgba(43,99,230,.5);opacity:1}
+#bpx .cal-grid .bpx-day.empty{background:transparent;border:0;box-shadow:none}
+#bpx .cal-grid .bpx-daynum{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--grey);margin-bottom:5px;font-variant-numeric:tabular-nums}
+#bpx .cal-grid .bpx-day.today .bpx-daynum span{background:linear-gradient(180deg,#4a83ff,var(--blue));color:#fff;border-radius:999px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+#bpx .cal-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);display:none}
+#bpx .cal-grid .bpx-appt{display:flex;flex-direction:column;gap:1px;background:var(--blue-l);color:var(--blue-d);border:1px solid rgba(43,99,230,.14);border-radius:7px;padding:4px 7px;font-size:11px;font-weight:600;line-height:1.25;margin-bottom:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:transform .15s var(--ease),background .15s}
+#bpx .cal-grid .bpx-appt .t{font-size:10px;font-weight:600;opacity:.75;font-variant-numeric:tabular-nums}
+#bpx .cal-grid .bpx-appt b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+#bpx .cal-grid .bpx-appt:hover{transform:translateY(-1px);background:var(--blue);color:#fff;border-color:transparent}
+#bpx .cal-grid .bpx-appt.job{background:var(--soft);color:var(--ink);border-color:var(--line)}
+#bpx .cal-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+#bpx .cal-side .bpx-panel{padding:16px 18px}
+#bpx .cal-side-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+#bpx .cal-side-h b{font-size:14.5px;font-weight:700}
+#bpx .cal-up{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line-2,var(--line));cursor:pointer}
+#bpx .cal-up:first-child{border-top:0;padding-top:2px}
+#bpx .cal-up-d{width:44px;height:46px;border-radius:11px;background:var(--soft);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;flex:none;box-shadow:inset 0 1px 0 var(--edge)}
+#bpx .cal-up-d .mo{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-d)}
+#bpx .cal-up-d .dy{font-size:18px;font-weight:800;letter-spacing:-.03em;margin-top:2px;font-variant-numeric:tabular-nums}
+#bpx .cal-up-b{flex:1;min-width:0}
+#bpx .cal-up-n{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cal-up-t{font-size:12px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cal-up .bpx-upstatus{flex:none}
+#bpx .cal-empty{font-size:13px;color:var(--grey);line-height:1.5;padding:4px 0 2px}
+#bpx .cal-url{display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;box-shadow:inset 0 1px 2px rgba(var(--sh-c),.06);font-size:12.5px;min-width:0}
+#bpx .cal-url .ms{color:var(--grey);font-size:18px;flex:none}
+#bpx .cal-url-t{font-family:'Geist Mono',ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+#bpx .cal-link-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+#bpx .cal-link-acts .bpx-rowbtn{margin:0;display:inline-flex;align-items:center;gap:5px;text-decoration:none}
+#bpx .cal-link-acts .bpx-rowbtn .ms{font-size:16px}
+#bpx .cal-embed{margin-top:12px}
+#bpx .cal-embed .em-code{padding-right:16px;padding-bottom:48px}
+#bpx .cal-embed .em-code .bpx-rowbtn{top:auto;bottom:10px;right:10px;left:auto}
+#bpx .cal-warn{display:flex;gap:8px;align-items:flex-start;background:#fff8ec;border:1px solid #f2dfbd;color:#6b4f16;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.5;margin-bottom:10px}
+#bpx .cal-warn .ms{font-size:18px;flex:none;margin-top:1px}
+#bpx.bpx-dark .cal-warn{background:#2a2110;border-color:#4a3a15;color:#f0c977}
+#bpx .bpx-modalcard h3{font-family:inherit !important;letter-spacing:-.024em}
+/* month → date → time picker inside modals */
+#bpx .mdt{margin-top:8px}
+#bpx .mdt-row{display:flex;align-items:baseline;gap:8px;margin:12px 0 6px}
+#bpx .mdt-row b{font-size:12px;font-weight:600;color:var(--grey)}
+#bpx .mdt-row i{font-style:normal;font-size:11.5px;color:var(--grey-l);margin-left:auto}
+#bpx .mdt-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:150px;overflow-y:auto;padding:1px}
+#bpx .mdt-chip{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:8px 12px;font:600 12.5px/1 inherit;font-family:inherit;cursor:pointer;min-height:36px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05);transition:transform .15s var(--ease),border-color .15s,background .15s;font-variant-numeric:tabular-nums}
+#bpx .mdt-chip:hover{transform:translateY(-1px);border-color:#b9c9ea}
+#bpx .mdt-chip.on{background:linear-gradient(180deg,#4a83ff,var(--blue));color:#fff;border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 8px 18px -8px rgba(43,99,230,.55)}
+#bpx .mdt-chip.day{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:46px;padding:6px 8px;font-size:14px}
+#bpx .mdt-chip.day small{font-size:9.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--grey)}
+#bpx .mdt-chip.day.on small{color:rgba(255,255,255,.85)}
+@media(max-width:900px){#bpx .cal-layout{grid-template-columns:1fr}}
+@media(max-width:600px){
+  #bpx .cal-grid{gap:3px}
+  #bpx .cal-grid .bpx-day{min-height:44px;padding:4px;border-radius:7px}
+  #bpx .cal-grid .bpx-daynum{margin-bottom:0;font-size:11px}
+  #bpx .cal-grid .bpx-appt{display:none}
+  #bpx .cal-dot{display:block}
+  #bpx .cal-panel{padding:12px}
+  #bpx .cal-top .bpx-btn{padding:10px 14px}
+}
 /* ---------- reputation ---------- */
 #bpx .rp-demo{display:flex;gap:8px;align-items:flex-start;background:#fff8ec;border:1px solid #f2dfbd;color:#6b4f16;border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
 #bpx .rp-demo a{color:#1f4fc4;font-weight:600;cursor:pointer}

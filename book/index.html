@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Book a roof inspection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,300,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{
+  --blue:#2b63e6;--blue-hi:#4a83ff;--blue-act:#1f4fc4;--blue-soft:#e8effd;
+  --ink:#0f1a2b;--body:#3c4c63;--mu:#5a6b82;--mu2:#8a97a8;
+  --bg:#eef1f6;--bg2:#e6eaf1;--card:#fff;--soft:#f5f7fb;--line:#dfe5ee;--line2:#e9edf3;
+  --edge:rgba(255,255,255,.85);--sh:15,26,43;
+  --ok:#15803d;--ok-soft:#ecfdf5;--warn:#b45309;--warn-soft:#fff7ed;--err:#b91c1c;--err-soft:#fee2e2;
+  --ease:cubic-bezier(.32,.72,0,1);--soft-out:cubic-bezier(.16,1,.3,1);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --blue:#5a8bff;--blue-hi:#7ba4ff;--blue-act:#8db0ff;--blue-soft:#182a52;
+  --ink:#e9eef6;--body:#c5cedc;--mu:#9fabbd;--mu2:#6f7d92;
+  --bg:#0b0f16;--bg2:#0e131c;--card:#121826;--soft:#171f2e;--line:#233043;--line2:#1c2637;
+  --edge:rgba(255,255,255,.055);--sh:0,0,0;
+  --ok:#5ed08b;--ok-soft:#10261a;--warn:#f0c977;--warn-soft:#2a2110;--err:#ff8a8a;--err-soft:#3a1616;
+}}
+:root[data-theme="dark"]{
+  --blue:#5a8bff;--blue-hi:#7ba4ff;--blue-act:#8db0ff;--blue-soft:#182a52;
+  --ink:#e9eef6;--body:#c5cedc;--mu:#9fabbd;--mu2:#6f7d92;
+  --bg:#0b0f16;--bg2:#0e131c;--card:#121826;--soft:#171f2e;--line:#233043;--line2:#1c2637;
+  --edge:rgba(255,255,255,.055);--sh:0,0,0;
+  --ok:#5ed08b;--ok-soft:#10261a;--warn:#f0c977;--warn-soft:#2a2110;--err:#ff8a8a;--err-soft:#3a1616;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Geist,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100dvh;padding:28px 16px 40px;display:flex;flex-direction:column;align-items:center}
+body.embed{padding:0;background:transparent;min-height:0}
+.ms{font-family:"Material Symbols Rounded";font-weight:300;font-size:20px;line-height:1;display:inline-block;vertical-align:-.22em;font-variation-settings:"opsz" 20,"wght" 300,"FILL" 0}
+.ms.fill{font-variation-settings:"opsz" 20,"wght" 300,"FILL" 1}
+b,strong{font-weight:700}
+
+/* shell: the double bezel — a tray, and the card seated in it */
+.tray{width:100%;max-width:980px;background:rgba(var(--sh),.04);border:1px solid rgba(var(--sh),.06);border-radius:26px;padding:8px}
+body.embed .tray{background:transparent;border:0;padding:0;border-radius:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh),.05),0 24px 60px -24px rgba(var(--sh),.35);display:grid;grid-template-columns:300px 1fr;overflow:hidden;min-height:560px}
+.side{background:var(--soft);border-right:1px solid var(--line2);padding:28px 26px;display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mu)}
+.biz{font-size:22px;font-weight:800;letter-spacing:-.028em;line-height:1.15}
+.h1{font-size:25px;font-weight:800;letter-spacing:-.028em;line-height:1.15;margin:0}
+.meta{display:flex;flex-direction:column;gap:10px;color:var(--body);font-size:13.5px}
+.meta div{display:flex;gap:10px;align-items:flex-start}
+.meta .ms{color:var(--mu);font-size:19px;margin-top:1px}
+.meta a{color:var(--blue-act);text-decoration:none;font-weight:600}
+.side .foot{margin-top:auto;font-size:11.5px;color:var(--mu2);line-height:1.5}
+.side .foot a{color:inherit}
+.main{padding:28px 30px 26px;min-width:0;display:flex;flex-direction:column}
+.steps{display:flex;gap:6px;align-items:center;margin-bottom:22px}
+.steps span{flex:1;height:3px;border-radius:99px;background:var(--line);transition:background .3s var(--ease)}
+.steps span.on{background:var(--blue)}
+.lbl{display:flex;align-items:baseline;gap:8px;margin:18px 0 10px}
+.lbl:first-child{margin-top:0}
+.lbl b{font-size:13.5px;font-weight:700}
+.lbl i{font-style:normal;font-size:12px;color:var(--mu2)}
+.lbl em{font-style:normal;margin-left:auto;font-size:12.5px;color:var(--mu);font-weight:500}
+
+/* chips: month row, date grid, time grid */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;font:600 13.5px/1 Geist,system-ui,sans-serif;cursor:pointer;min-height:38px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh),.05);transition:transform .15s var(--ease),border-color .15s,background .15s,box-shadow .15s;font-variant-numeric:tabular-nums}
+.chip:hover{transform:translateY(-1px);border-color:#b9c9ea}
+.chip:active{transform:translateY(1px) scale(.99)}
+.chip.on{background:linear-gradient(180deg,var(--blue-hi),var(--blue));color:#fff;border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.12),0 8px 18px -8px rgba(43,99,230,.55)}
+.chip:disabled{opacity:.38;cursor:not-allowed;box-shadow:none;transform:none}
+.chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(43,99,230,.22)}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.days .dow{text-align:center;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mu2);padding:2px 0 4px}
+.days .chip{padding:0;height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:14px}
+.days .chip small{font-size:9.5px;font-weight:600;color:var(--blue-act);letter-spacing:.02em}
+.days .chip.on small{color:rgba(255,255,255,.85)}
+.days .chip:disabled small{display:none}
+.days .pad{visibility:hidden}
+.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.times .chip{text-align:center;padding:10px 6px}
+.hint{color:var(--mu);font-size:13px;padding:14px 4px}
+.hint.err{color:var(--err)}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mu);font-size:13.5px}
+
+/* footer bar of each pane */
+.bar{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:22px}
+.pick{font-size:13.5px;color:var(--body);display:flex;align-items:center;gap:8px;min-width:0}
+.pick .ms{color:var(--blue)}
+.pick b{color:var(--ink)}
+.btn{appearance:none;border:0;text-decoration:none;border-radius:11px;padding:12px 20px;font:600 14px/1 Geist,system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:44px;transition:transform .15s var(--ease),filter .15s,box-shadow .15s}
+.btn .ms{font-size:19px}
+.btn.pri{margin-left:auto;color:#fff;background:linear-gradient(180deg,var(--blue-hi),var(--blue));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.12),0 1px 2px rgba(var(--sh),.12),0 8px 18px -8px rgba(43,99,230,.45)}
+.btn.pri:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.btn.pri:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:inset 0 1px 0 var(--edge)}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(43,99,230,.22)}
+
+/* details form */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.form .full{grid-column:1/-1}
+.f label{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:0 0 5px}
+.f input,.f textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font:14px/1.4 Geist,system-ui,sans-serif;background:var(--card);color:var(--ink);box-shadow:inset 0 1px 2px rgba(var(--sh),.06)}
+.f textarea{min-height:76px;resize:vertical}
+.f input:focus,.f textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(43,99,230,.16)}
+.summary{display:flex;gap:14px;align-items:center;background:var(--soft);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;margin-bottom:18px}
+.summary .date{width:52px;height:52px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;box-shadow:inset 0 1px 0 var(--edge)}
+.summary .date .mo{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue-act)}
+.summary .date .dy{font-size:22px;font-weight:800;letter-spacing:-.03em;margin-top:2px}
+.summary .txt b{display:block;font-size:14.5px}
+.summary .txt span{font-size:13px;color:var(--mu)}
+.summary a{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--blue-act);text-decoration:none;white-space:nowrap}
+.msg{font-size:13px;font-weight:600;min-height:18px;margin-top:10px}
+.msg.err{color:var(--err)}.msg.ok{color:var(--ok)}
+
+/* done */
+.done{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;flex:1;gap:8px;padding:10px 0}
+.done .ring{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;margin-bottom:8px;box-shadow:inset 0 1px 0 var(--edge)}
+.done .ring .ms{font-size:34px}
+.done h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.028em}
+.done p{margin:0;color:var(--body);max-width:380px}
+.done .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.note{background:var(--warn-soft);color:var(--warn);border:1px solid rgba(180,83,9,.18);border-radius:12px;padding:11px 14px;font-size:13px;line-height:1.5}
+
+.pane{animation:rise .42s var(--soft-out) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.spin{width:22px;height:22px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite;margin:26px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.pane{animation:none}.chip,.btn{transition:none}}
+.brand{margin-top:18px;font-size:12px;color:var(--mu2);display:flex;gap:6px;align-items:center}
+.brand a{color:var(--mu);text-decoration:none;font-weight:600}
+body.embed .brand{display:none}
+
+@media(max-width:760px){
+  body{padding:12px 12px 28px}
+  .tray{padding:5px;border-radius:20px}
+  .card{grid-template-columns:1fr;min-height:0}
+  .side{border-right:0;border-bottom:1px solid var(--line2);padding:20px 18px;gap:10px}
+  .side .foot{display:none}
+  .main{padding:20px 16px 18px}
+  .form{grid-template-columns:1fr}
+  .bar{flex-wrap:wrap}
+  .btn.pri{width:100%;justify-content:center;margin-left:0}
+  .pick{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="tray"><div class="card">
+  <aside class="side">
+    <div class="eyebrow">Free roof inspection</div>
+    <div class="biz" id="biz">Loading…</div>
+    <div class="meta">
+      <div><span class="ms">schedule</span><span>About 1 hour, at your home</span></div>
+      <div id="m-phone" hidden><span class="ms">call</span><a id="phone" href="#"></a></div>
+      <div id="m-area" hidden><span class="ms">location_on</span><span id="area"></span></div>
+      <div id="m-hours" hidden><span class="ms">event_available</span><span id="hours"></span></div>
+    </div>
+    <div class="foot">Pick a time that suits you. You will get a text confirmation, and a reminder the day before.</div>
+  </aside>
+  <section class="main" id="main">
+    <div class="steps" id="steps"><span class="on"></span><span></span><span></span></div>
+    <div id="pane"><div class="spin"></div></div>
+  </section>
+</div></div>
+<div class="brand"><span class="ms" style="font-size:16px">verified</span> Scheduling by <a href="https://builderpro-os.com" target="_blank" rel="noopener">BuilderPro OS</a></div>
+
+<script>
+(function(){
+  var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
+  var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+  var API=SB_URL+"/functions/v1/book-public";
+  var qs=new URLSearchParams(location.search);
+  var U=(qs.get("u")||"").replace(/[^0-9a-z_-]/gi,"").slice(0,80);
+  if(qs.get("embed")==="1") document.body.classList.add("embed");
+  if(qs.get("theme")==="dark"||qs.get("theme")==="light") document.documentElement.setAttribute("data-theme",qs.get("theme"));
+
+  var MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var S={step:1,monthKey:"",date:"",iso:"",slots:{},loaded:{},info:null,name:"",phone:"",email:"",address:"",notes:""};
+  var $=function(id){return document.getElementById(id);};
+  var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+  function api(body){ body.u=U; return fetch(API,{method:"POST",headers:{"Content-Type":"application/json","apikey":SB_ANON,"Authorization":"Bearer "+SB_ANON},body:JSON.stringify(body)}).then(function(r){return r.json();}); }
+  function pad(n){return (n<10?"0":"")+n;}
+  function localDate(iso){ var d=new Date(iso); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function fmtTime(iso){ return new Date(iso).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); }
+  function fmtLong(iso){ return new Date(iso).toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}); }
+  function tzName(){ try{ return new Intl.DateTimeFormat("en-US",{timeZoneName:"short"}).formatToParts(new Date()).filter(function(p){return p.type==="timeZoneName";})[0].value; }catch(e){ return ""; } }
+
+  // the months we offer: this one and the next two
+  function months(){ var out=[],d=new Date(); for(var i=0;i<3;i++){ var m=new Date(d.getFullYear(),d.getMonth()+i,1); out.push({key:m.getFullYear()+"-"+pad(m.getMonth()+1),y:m.getFullYear(),m:m.getMonth(),label:MON[m.getMonth()]+(m.getFullYear()!==d.getFullYear()?" "+m.getFullYear():"")}); } return out; }
+  // slots for a month: keyed by LOCAL date, so the grid matches what the homeowner sees
+  function loadMonth(mk){
+    if(S.loaded[mk]) return Promise.resolve();
+    var y=+mk.slice(0,4), m=+mk.slice(5,7)-1;
+    var from=Math.max(Date.now(), new Date(y,m,1).getTime()), to=new Date(y,m+1,1).getTime()+86400000;
+    if(from>=to){ S.loaded[mk]="past"; return Promise.resolve(); }
+    S.loaded[mk]="loading";
+    return api({op:"slots",from:from,to:to}).then(function(r){
+      if(!r.ok) throw new Error(r.error||"slots");
+      Object.keys(r.slots||{}).forEach(function(k){ (r.slots[k]||[]).forEach(function(iso){ if(Date.parse(iso)<Date.now()+1800000) return; var ld=localDate(iso); (S.slots[ld]=S.slots[ld]||[]).push(iso); }); });
+      Object.keys(S.slots).forEach(function(k){ S.slots[k]=S.slots[k].filter(function(v,i,a){return a.indexOf(v)===i;}).sort(); });
+      S.loaded[mk]="ok";
+    }).catch(function(){ S.loaded[mk]="err"; });
+  }
+
+  function steps(n){ var s=$("steps").children; for(var i=0;i<s.length;i++) s[i].className=i<n?"on":""; }
+  function render(){ steps(S.step); var p=$("pane"); p.className="pane"; if(S.step===1) pane1(p); else if(S.step===2) pane2(p); else if(S.step===3) pane3(p); }
+
+  // ---- 1. month → date → time ----
+  function pane1(p){
+    var ms=months(); if(!S.monthKey) S.monthKey=ms[0].key;
+    var h='<div class="lbl"><b>Month</b></div><div class="chips" id="months">';
+    ms.forEach(function(m){ h+='<button class="chip'+(m.key===S.monthKey?' on':'')+'" data-m="'+m.key+'">'+m.label+'</button>'; });
+    h+='</div><div class="lbl"><b>Date</b><i>days with an opening</i><em id="mstate"></em></div><div id="dates"><div class="spin"></div></div>';
+    h+='<div class="lbl"><b>Time</b><em>'+esc(tzName())+'</em></div><div id="times"><div class="hint">Pick a date first.</div></div>';
+    h+='<div class="bar"><div class="pick" id="pick"></div><button class="btn pri" id="next" disabled>Next <span class="ms">arrow_forward</span></button></div>';
+    p.innerHTML=h;
+    p.querySelectorAll("#months .chip").forEach(function(b){ b.onclick=function(){ S.monthKey=b.getAttribute("data-m"); S.date=""; S.iso=""; render(); }; });
+    $("next").onclick=function(){ if(S.iso){ S.step=2; render(); } };
+    drawDates(); drawTimes(); drawPick();
+    loadMonth(S.monthKey).then(function(){ if(S.step===1&&$("dates")) { drawDates(); } });
+  }
+  function drawDates(){
+    var el=$("dates"); if(!el) return;
+    var st=S.loaded[S.monthKey];
+    if(st==="loading"||!st){ el.innerHTML='<div class="spin"></div>'; return; }
+    if(st==="err"){ el.innerHTML='<div class="hint err">Could not load openings for this month. Try again in a moment.</div>'; return; }
+    var y=+S.monthKey.slice(0,4), m=+S.monthKey.slice(5,7)-1, days=new Date(y,m+1,0).getDate(), first=new Date(y,m,1).getDay();
+    var h='<div class="days">'; ["S","M","T","W","T","F","S"].forEach(function(d){ h+='<div class="dow">'+d+'</div>'; });
+    for(var i=0;i<first;i++) h+='<div class="chip pad"></div>';
+    var open=0;
+    for(var d=1;d<=days;d++){ var k=S.monthKey+"-"+pad(d); var n=(S.slots[k]||[]).length; if(n) open++; h+='<button class="chip'+(k===S.date?' on':'')+'" data-d="'+k+'"'+(n?'':' disabled')+'>'+d+(n?'<small>'+n+' open</small>':'')+'</button>'; }
+    h+='</div>'; el.innerHTML=h;
+    var ms=$("mstate"); if(ms) ms.textContent=open?open+' day'+(open===1?'':'s')+' open':'Fully booked this month';
+    el.querySelectorAll(".chip[data-d]").forEach(function(b){ b.onclick=function(){ S.date=b.getAttribute("data-d"); S.iso=""; el.querySelectorAll(".chip").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); drawTimes(); drawPick(); }; });
+  }
+  function drawTimes(){
+    var el=$("times"); if(!el) return;
+    if(!S.date){ el.innerHTML='<div class="hint">Pick a date first.</div>'; return; }
+    var arr=S.slots[S.date]||[]; if(!arr.length){ el.innerHTML='<div class="empty">No openings that day.</div>'; return; }
+    var h='<div class="times">'; arr.forEach(function(iso){ h+='<button class="chip'+(iso===S.iso?' on':'')+'" data-t="'+iso+'">'+fmtTime(iso)+'</button>'; }); h+='</div>';
+    el.innerHTML=h;
+    el.querySelectorAll(".chip").forEach(function(b){ b.onclick=function(){ S.iso=b.getAttribute("data-t"); el.querySelectorAll(".chip").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); drawPick(); }; });
+  }
+  function drawPick(){
+    var el=$("pick"), n=$("next"); if(!el) return;
+    if(S.iso){ el.innerHTML='<span class="ms">event</span><span><b>'+esc(fmtLong(S.iso))+'</b> at '+esc(fmtTime(S.iso))+'</span>'; n.disabled=false; }
+    else { el.innerHTML='<span class="ms" style="color:var(--mu2)">event</span><span style="color:var(--mu)">Choose a month, a date, then a time.</span>'; n.disabled=true; }
+  }
+
+  // ---- 2. details ----
+  function pane2(p){
+    var d=new Date(S.iso);
+    p.innerHTML='<div class="summary"><div class="date"><span class="mo">'+d.toLocaleDateString("en-US",{month:"short"})+'</span><span class="dy">'+d.getDate()+'</span></div><div class="txt"><b>'+esc(fmtLong(S.iso))+'</b><span>'+esc(fmtTime(S.iso))+' · about 1 hour</span></div><a href="#" id="chg">Change</a></div>'
+      +'<div class="form"><div class="f"><label for="f-name">Your name</label><input id="f-name" autocomplete="name" value="'+esc(S.name)+'"></div>'
+      +'<div class="f"><label for="f-phone">Mobile number</label><input id="f-phone" type="tel" autocomplete="tel" inputmode="tel" value="'+esc(S.phone)+'"></div>'
+      +'<div class="f"><label for="f-email">Email <span style="font-weight:500;color:var(--mu2)">optional</span></label><input id="f-email" type="email" autocomplete="email" value="'+esc(S.email)+'"></div>'
+      +'<div class="f"><label for="f-addr">Address of the roof</label><input id="f-addr" autocomplete="street-address" placeholder="Street, city" value="'+esc(S.address)+'"></div>'
+      +'<div class="f full"><label for="f-notes">Anything we should know? <span style="font-weight:500;color:var(--mu2)">optional</span></label><textarea id="f-notes" placeholder="Leak after the last storm, missing shingles, insurance claim…">'+esc(S.notes)+'</textarea></div></div>'
+      +'<div class="msg" id="msg"></div>'
+      +'<div class="bar"><button class="btn ghost" id="back"><span class="ms">arrow_back</span> Back</button><button class="btn pri" id="go">Confirm booking <span class="ms">check</span></button></div>';
+    var keep=function(){ S.name=$("f-name").value.trim(); S.phone=$("f-phone").value.trim(); S.email=$("f-email").value.trim(); S.address=$("f-addr").value.trim(); S.notes=$("f-notes").value.trim(); };
+    $("chg").onclick=function(e){ e.preventDefault(); keep(); S.step=1; render(); };
+    $("back").onclick=function(){ keep(); S.step=1; render(); };
+    $("go").onclick=function(){
+      keep(); var m=$("msg"); m.className="msg";
+      if(!S.name){ m.className="msg err"; m.textContent="Please add your name."; $("f-name").focus(); return; }
+      if(S.phone.replace(/\D/g,"").length<10){ m.className="msg err"; m.textContent="Please add a mobile number we can text."; $("f-phone").focus(); return; }
+      if(S.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(S.email)){ m.className="msg err"; m.textContent="That email does not look right."; $("f-email").focus(); return; }
+      var b=$("go"); b.disabled=true; b.innerHTML='Booking…';
+      api({op:"book",startTime:S.iso,name:S.name,phone:S.phone,email:S.email,address:S.address,notes:S.notes}).then(function(r){
+        if(r.ok){ S.step=3; S.result=r; render(); return; }
+        m.className="msg err"; m.textContent=r.error||"Could not book that time. Please try another.";
+        b.disabled=false; b.innerHTML='Confirm booking <span class="ms">check</span>';
+        if(/taken/i.test(r.error||"")){ S.loaded={}; S.slots={}; S.iso=""; }
+      },function(){ m.className="msg err"; m.textContent="No connection. Please try again."; b.disabled=false; b.innerHTML='Confirm booking <span class="ms">check</span>'; });
+    };
+    $("f-name").focus();
+  }
+
+  // ---- 3. done ----
+  function pane3(p){
+    var start=new Date(S.iso), end=new Date(start.getTime()+3600000);
+    var ics=function(d){ return d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,""); };
+    var biz=(S.info&&S.info.business)||"your roofer";
+    var g="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent("Roof inspection — "+biz)+"&dates="+ics(start)+"/"+ics(end)+(S.address?"&location="+encodeURIComponent(S.address):"");
+    var icsBody="BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BuilderPro OS//Booking//EN\r\nBEGIN:VEVENT\r\nUID:"+(S.result&&S.result.id||Date.now())+"@builderpro-os.com\r\nDTSTAMP:"+ics(new Date())+"\r\nDTSTART:"+ics(start)+"\r\nDTEND:"+ics(end)+"\r\nSUMMARY:Roof inspection — "+biz.replace(/[,;]/g," ")+"\r\n"+(S.address?"LOCATION:"+S.address.replace(/[,;]/g," ")+"\r\n":"")+"END:VEVENT\r\nEND:VCALENDAR";
+    p.innerHTML='<div class="done"><div class="ring"><span class="ms fill">check_circle</span></div><h2>You are booked</h2><p><b>'+esc(fmtLong(S.iso))+' at '+esc(fmtTime(S.iso))+'</b></p><p>'+esc(biz)+' will text '+esc(S.phone)+' to confirm, and again the day before. '+(S.address?'They will meet you at '+esc(S.address)+'.':'')+'</p>'
+      +'<div class="acts"><a class="btn ghost" href="'+g+'" target="_blank" rel="noopener"><span class="ms">calendar_add_on</span> Google Calendar</a><a class="btn ghost" id="ics" href="data:text/calendar;charset=utf-8,'+encodeURIComponent(icsBody)+'" download="roof-inspection.ics"><span class="ms">download</span> Apple / Outlook</a></div>'
+      +((S.info&&S.info.phone)?'<p style="margin-top:18px;font-size:13px;color:var(--mu)">Need to change it? Call <a href="tel:'+esc(S.info.phone)+'" style="color:var(--blue-act);font-weight:600;text-decoration:none">'+esc(S.info.phone)+'</a>.</p>':'')+'</div>';
+    steps(3);
+  }
+
+  // ---- boot ----
+  function boot(){
+    if(!U){ $("biz").textContent="Booking page"; $("pane").innerHTML='<div class="note">This booking link is missing its contractor id. Ask for the link again from their website or text.</div>'; return; }
+    api({op:"info"}).then(function(r){
+      S.info=r;
+      $("biz").textContent=r.business||"Roof inspection";
+      if(r.business) document.title="Book a roof inspection — "+r.business;
+      if(r.phone){ $("phone").textContent=r.phone; $("phone").href="tel:"+r.phone.replace(/[^\d+]/g,""); $("m-phone").hidden=false; }
+      if(r.area){ $("area").textContent=r.area; $("m-area").hidden=false; }
+      if(r.hours){ $("hours").textContent=r.hours.slice(0,80); $("m-hours").hidden=false; }
+      if(!r.ok||!r.ready){ $("pane").innerHTML='<div class="note">Online booking is not switched on for this contractor yet'+(r.phone?', call <a href="tel:'+esc(r.phone)+'" style="color:inherit;font-weight:700">'+esc(r.phone)+'</a> to book':'')+'.</div>'; return; }
+      render();
+    },function(){ $("biz").textContent="Roof inspection"; $("pane").innerHTML='<div class="note">Could not reach the scheduler. Please refresh in a moment.</div>'; });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
