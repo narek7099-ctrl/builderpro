@@ -14,7 +14,7 @@
 <script>try{if(/[#&]sign=[a-f0-9]{20,64}/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300,0,0&display=swap" rel="stylesheet">
 <style>
 /* ==== BuilderPro OS — 'Daylight' theme ==== */
 :root{
@@ -13527,7 +13527,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 <!-- ===== ATLAS CHATBOT ===== -->
 <!-- ===== CLIENT PORTAL ===== -->
 <div id="bpx">
-  <button class="bpx-close" onclick="bpClose()">×</button><button class="bpx-themebtn" id="bpxThemeBtn" onclick="bpToggleTheme()" title="Toggle theme" aria-label="Toggle theme"></button>
+  <button class="bpx-close" onclick="bpClose()" aria-label="Close"><span class="ms">close</span></button><button class="bpx-themebtn" id="bpxThemeBtn" onclick="bpToggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span class="ms">dark_mode</span></button>
   <!-- login -->
   <div class="bpx-auth" id="bpxLogin">
     <div class="bpx-wrap">
@@ -13698,7 +13698,7 @@ function eOpt(key,btnId,list,useEm){
     h+='<div class="est-oi" onclick="ePick(this,\''+key+'\',\''+o.v+'\',\''+(o.label||o.l)+'\',\''+btnId+'\')">'
       +(useEm?('<div class="em">'+(o.em||'<svg class="bpi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>')+'</div>'):'')
       +'<div><div class="lbl">'+(o.label||o.l)+'</div><div class="desc">'+(o.note||o.d)+'</div></div>'
-      +'<div class="rd">✓</div></div>';
+      +'<div class="rd"><span class=ms>check</span></div></div>';
   });
   el.innerHTML=h;
 }
@@ -13706,7 +13706,7 @@ function eOpt(key,btnId,list,useEm){
   if(!document.getElementById('estMats'))return;
   // materials
   var mh='';Object.keys(E_CONFIG.pricing).forEach(function(k){var v=E_CONFIG.pricing[k];
-    mh+='<div class="est-oi" onclick="ePick(this,\'material\',\''+k+'\',\''+v.label+'\',\'estBtn2\')"><div class="em">'+v.em+'</div><div><div class="lbl">'+v.label+'</div><div class="desc">$'+v.low+'–$'+v.high+'/sq installed · '+v.note+'</div></div><div class="rd">✓</div></div>';});
+    mh+='<div class="est-oi" onclick="ePick(this,\'material\',\''+k+'\',\''+v.label+'\',\'estBtn2\')"><div class="em">'+v.em+'</div><div><div class="lbl">'+v.label+'</div><div class="desc">$'+v.low+'–$'+v.high+'/sq installed · '+v.note+'</div></div><div class="rd"><span class=ms>check</span></div></div>';});
   document.getElementById('estMats').innerHTML=mh;
   eOpt('pitch','estBtn3',{id:'estPitch',data:E_PITCH});
   eOpt('stories','estBtn4',{id:'estStories',data:E_STORIES});
@@ -13733,7 +13733,7 @@ function estGo(n){
   var lab=document.getElementById('estStepLab');
   if(n<=7)lab.innerHTML='Step <b>'+n+'</b> of 7 — '+names[n];
   else if(n===8)lab.innerHTML='<b>Calculating…</b>';
-  else lab.innerHTML='<b>✓ Estimate complete</b>';
+  else lab.innerHTML='<b><span class=ms>check</span> Estimate complete</b>';
   var sh=document.querySelector('.est-shell');var r=sh.getBoundingClientRect();if(r.top<0)sh.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function estSubmit(){
@@ -13794,7 +13794,7 @@ function openPlan(name,price){
   openModal('planModal');
 }
 function planSubmit(){
-  document.getElementById('planBody').innerHTML='<div class="msuccess"><div class="ic">✓</div><div class="modal-title" style="margin-bottom:8px">You\'re all set!</div><p style="font-size:14px;color:var(--grey);line-height:1.6">Our onboarding team will reach out within 24 hours to kick off your build. Keep an eye on your inbox.</p><button class="btn btn-dark" style="margin:18px auto 0" onclick="closeModal(\'planModal\')">Done</button></div>';
+  document.getElementById('planBody').innerHTML='<div class="msuccess"><div class="ic"><span class=ms>check</span></div><div class="modal-title" style="margin-bottom:8px">You\'re all set!</div><p style="font-size:14px;color:var(--grey);line-height:1.6">Our onboarding team will reach out within 24 hours to kick off your build. Keep an eye on your inbox.</p><button class="btn btn-dark" style="margin:18px auto 0" onclick="closeModal(\'planModal\')">Done</button></div>';
 }
 
 /* ==================== BOOKING CALENDAR ==================== */
@@ -13834,7 +13834,7 @@ function calPickSlot(i,el){
 }
 function calBook(){
   var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.querySelector('.cal-right').innerHTML='<div class="msuccess"><div class="ic">✓</div><div style="font-family:var(--serif);font-size:22px;margin-bottom:6px">Demo booked!</div><p style="font-size:13.5px;color:var(--grey);line-height:1.6">You\'re confirmed for <b>'+months[calSel.getMonth()]+' '+calSel.getDate()+'</b> at <b>'+calSlot+'</b>. We\'ll send a confirmation and reminder by text.</p></div>';
+  document.querySelector('.cal-right').innerHTML='<div class="msuccess"><div class="ic"><span class=ms>check</span></div><div style="font-family:var(--serif);font-size:22px;margin-bottom:6px">Demo booked!</div><p style="font-size:13.5px;color:var(--grey);line-height:1.6">You\'re confirmed for <b>'+months[calSel.getMonth()]+' '+calSel.getDate()+'</b> at <b>'+calSlot+'</b>. We\'ll send a confirmation and reminder by text.</p></div>';
 }
 if(document.getElementById('calDays'))calRender();
 
@@ -13927,7 +13927,7 @@ function aiWizShow(){
   document.querySelectorAll('#aiWiz .ai-wq').forEach(function(q){q.classList.toggle('on',+q.getAttribute('data-q')===aiState.step);});
   document.getElementById('aiWizStep').textContent=aiState.step;
   document.getElementById('aiWizBack').style.visibility=aiState.step>1?'visible':'hidden';
-  document.getElementById('aiWizNext').textContent=aiState.step===3?'Build my Ridge ✨':'Continue →';
+  document.getElementById('aiWizNext').textContent=aiState.step===3?'Build my Ridge <span class=ms>auto_awesome</span>':'Continue →';
   aiWizCheck();
 }
 function aiWizGo(dir){aiState.step=Math.max(1,Math.min(3,aiState.step+dir));aiWizShow();}
@@ -13952,7 +13952,7 @@ function aiBuildAtlas(){
   if(BP_ATLAS_PHONE&&!document.getElementById('aiCallBtn')){
     var cb=document.createElement('a');cb.id='aiCallBtn';cb.href='tel:'+BP_ATLAS_PHONE;
     cb.style.cssText='display:block;text-align:center;background:#2f6bff;color:#fff;border-radius:12px;padding:13px 16px;margin-top:12px;font-weight:700;font-size:14.5px;text-decoration:none;box-shadow:0 6px 18px rgba(47,107,255,.28)';
-    cb.textContent='📞 Call Ridge — hear the voice';
+    cb.textContent='<span class=ms>call</span> Call Ridge — hear the voice';
     document.getElementById('aiChat').insertAdjacentElement('afterend',cb);
   }
   document.getElementById('aiMsgs').innerHTML='';
@@ -13960,8 +13960,8 @@ function aiBuildAtlas(){
   var biz=aiState.biz||('your '+aiTradeLower()+' company');
   var greet;
   if(aiState.tone==='Professional')greet="Hello, and thank you for contacting "+biz+". I'm Ridge, your AI assistant. I can provide pricing guidance, answer questions about our "+aiTradeLower()+" services, and schedule your appointment. How may I help?";
-  else if(aiState.tone==='Bold')greet="Hey! 👋 You've reached "+biz+" — I'm Ridge, and I get things done. Ready to answer questions, ballpark your "+aiTradeLower()+" pricing, and lock in your appointment right now. What do you need?";
-  else greet="Hi there! Thanks for reaching out to "+biz+" 😊 I'm Ridge, your "+aiTradeLower()+" assistant. I can answer questions, give you a ballpark price, and book your appointment anytime. What can I help with?";
+  else if(aiState.tone==='Bold')greet="Hey! You've reached "+biz+" — I'm Ridge, and I get things done. Ready to answer questions, ballpark your "+aiTradeLower()+" pricing, and lock in your appointment right now. What do you need?";
+  else greet="Hi there! Thanks for reaching out to "+biz+" I'm Ridge, your "+aiTradeLower()+" assistant. I can answer questions, give you a ballpark price, and book your appointment anytime. What can I help with?";
   setTimeout(function(){aiTyping(true);},250);
   setTimeout(function(){aiTyping(false);aiAdd('atlas',greet);var i=document.getElementById('aiInput');if(i)i.focus();},1000);
 }
@@ -14168,14 +14168,15 @@ var BP_NAV=[
   {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['neighbors','Neighbor Farming'],['contacts','Contacts'],['messaging','Messaging']]},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors']]}
 ];
-var BP_NAV_FOOT=[['ai','Ridge AI','ai'],['settings','Settings','settings']];
+var BP_NAV_FOOT=[['settings','Settings','settings']];
 function bpNavGroupOf(v){
   for(var i=0;i<BP_NAV.length;i++){var g=BP_NAV[i];if(g.id===v&&!g.kids)return g.id;
     if(g.kids)for(var j=0;j<g.kids.length;j++)if(g.kids[j][0]===v)return g.id;}
   return null;
 }
+var BP_MS={dashboard:'grid_view',projects:'construction',finances:'payments',leads:'radar',marketing:'campaign',ai:'smart_toy',settings:'tune'};
 function bpBuildNav(){
-  var ic=function(k){return '<svg viewBox="0 0 24 24">'+BP_ICO[k]+'</svg>';};
+  var ic=function(k){return '<span class="ms">'+(BP_MS[k]||'circle')+'</span>';};
   var h='';
   BP_NAV.forEach(function(g){
     if(!g.kids){h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
@@ -14185,18 +14186,24 @@ function bpBuildNav(){
   });
   h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
   document.getElementById('bpxNav').innerHTML=h;
+  bpNavOpenSet().forEach(function(id){ var g=document.querySelector('#bpxNav .bpx-grp[data-grp="'+id+'"]'); if(g)g.classList.add('open'); });
 }
-/* A branch header opens or closes the branch and nothing else — tapping
-   "Projects" should not yank you off the page you are reading. You choose the
-   sub-page yourself. Only one branch stays open at a time. */
+/* A branch header opens or closes its own branch and nothing else: tapping
+   "Projects" must not yank you off the page you are reading, and it must not
+   slam the other branches shut either. Any number can be open, and the set is
+   remembered so the sidebar looks the same next time. */
+function bpNavOpenSet(){ try{ return JSON.parse(localStorage.getItem('bpxNavOpen')||'[]'); }catch(e){ return []; } }
+function bpNavRemember(){
+  var open=[]; document.querySelectorAll('#bpxNav .bpx-grp.open').forEach(function(g){ open.push(g.getAttribute('data-grp')); });
+  try{ localStorage.setItem('bpxNavOpen',JSON.stringify(open)); }catch(e){}
+}
 function bpNavToggle(gid){
   var g=document.querySelector('#bpxNav .bpx-grp[data-grp="'+gid+'"]');if(!g)return;
-  var open=!g.classList.contains('open');
-  document.querySelectorAll('#bpxNav .bpx-grp').forEach(function(x){ if(x!==g)x.classList.remove('open'); });
-  g.classList.toggle('open',open);
+  g.classList.toggle('open',!g.classList.contains('open'));
+  bpNavRemember();
 }
 function bpBuildMobbar(){
-  var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
+  var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals'||v==='ai')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
 }
 /* circular loader in the middle of the portal while a view builds */
@@ -14212,14 +14219,15 @@ function bpNav(v){
   window._bpCurView=v;
   document.querySelectorAll('#bpxNav a[data-view]').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
   var gid=bpNavGroupOf(v);
-  document.querySelectorAll('#bpxNav .bpx-grp').forEach(function(g){var mine=g.getAttribute('data-grp')===gid;g.classList.toggle('open',mine);g.classList.toggle('has-on',mine);});
+  document.querySelectorAll('#bpxNav .bpx-grp').forEach(function(g){var mine=g.getAttribute('data-grp')===gid;if(mine)g.classList.add('open');g.classList.toggle('has-on',mine);});
+  if(gid)bpNavRemember();
   document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
   document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpRidgeView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,calculator:bpCalculator,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -14318,7 +14326,7 @@ function bpFinDue(d){
           +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:#8a97a0;margin:2px 0 5px">'+bpEsc(r.t||'Job')+'<span>'+bpMoneyFmt(r.paid)+' of '+bpMoneyFmt(r.est)+' paid</span></div>'
           +'<div style="height:5px;border-radius:99px;background:#eef0f4;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:#2f6bff;border-radius:99px"></i></div></div>';
       }).join('')+(rows.length>8?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">+ '+(rows.length-8)+' more in Active Projects</div>':'')
-    : '<div class="bpx-mut" style="font-size:13px;padding:22px 0;text-align:center">Nothing outstanding — every active job is fully collected. 🎉</div>';
+    : '<div class="bpx-mut" style="font-size:13px;padding:22px 0;text-align:center">Nothing outstanding — every active job is fully collected. <span class=ms>celebration</span></div>';
   return {outst:outst,count:rows.length,html:html};
 }
 function bpDashboard(){
@@ -14505,10 +14513,10 @@ function bpRenderCInfo(){
     return (nm&&jn===nm)||(ph&&jp&&jp===ph);
   });
   var chips=[];
-  if(_bpCurConv.phone)chips.push('<a href="tel:'+bpEsc(_bpCurConv.phone)+'" style="text-decoration:none;color:#2f6bff">📞 '+bpEsc(_bpCurConv.phone)+'</a>');
-  if(_bpCurConv.email)chips.push('<a href="mailto:'+bpEsc(_bpCurConv.email)+'" style="text-decoration:none;color:#2f6bff">✉️ '+bpEsc(_bpCurConv.email)+'</a>');
+  if(_bpCurConv.phone)chips.push('<a href="tel:'+bpEsc(_bpCurConv.phone)+'" style="text-decoration:none;color:#2f6bff"><span class=ms>call</span> '+bpEsc(_bpCurConv.phone)+'</a>');
+  if(_bpCurConv.email)chips.push('<a href="mailto:'+bpEsc(_bpCurConv.email)+'" style="text-decoration:none;color:#2f6bff"><span class=ms>mail</span> '+bpEsc(_bpCurConv.email)+'</a>');
   var jobsHtml=jobs.length?jobs.map(function(j){
-    var st=j.status==='done'?'✅ Completed':'🔨 In progress';
+    var st=j.status==='done'?'<span class=ms>check_circle</span> Completed':'<span class=ms>construction</span> In progress';
     var tgt=(j.sched&&j.sched.target)?(' · target '+bpEsc(j.sched.target)):'';
     return '<div style="font-size:12.5px;margin-top:3px">'+st+' — <b>'+bpEsc(j.title||'Project')+'</b>'+(j.estimate?' · '+bpMoneyFmt(j.estimate):'')+tgt+'</div>';
   }).join(''):'';
@@ -14597,7 +14605,7 @@ function bpDrawLiveDeals(){
 function bpDrawLiveWon(list){
   var el=document.getElementById('bpxWonList');if(!el)return;
   if(!list.length){el.innerHTML='<div class="bpx-cd-card"><div>No confirmed jobs yet. When you mark a deal won, it\'ll show here.</div></div>';return;}
-  var h='';list.forEach(function(o){var won=o.wonAt?(' <span>Won '+new Date(o.wonAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span>'):'';h+='<div class="bpx-cd-card" style="opacity:.92"><div><div class="bpx-cd-name">'+bpEsc(o.name||'Unknown')+'</div><div class="bpx-cd-meta">'+(o.phone?'<span>'+bpEsc(o.phone)+'</span>':'')+(o.value?'<span class="bpx-cd-val">'+bpMoney(o.value)+'</span>':'')+won+'</div></div><span class="bpx-pill won">✓ Won</span></div>';});
+  var h='';list.forEach(function(o){var won=o.wonAt?(' <span>Won '+new Date(o.wonAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span>'):'';h+='<div class="bpx-cd-card" style="opacity:.92"><div><div class="bpx-cd-name">'+bpEsc(o.name||'Unknown')+'</div><div class="bpx-cd-meta">'+(o.phone?'<span>'+bpEsc(o.phone)+'</span>':'')+(o.value?'<span class="bpx-cd-val">'+bpMoney(o.value)+'</span>':'')+won+'</div></div><span class="bpx-pill won"><span class=ms>check</span> Won</span></div>';});
   el.innerHTML=h;
 }
 function bpMarkWonLive(oppId,contactId){
@@ -14615,7 +14623,7 @@ function bpDrawDeals(){
   if(!BP_DEALS.length)h+='<div class="bpx-cd-card"><div>No deals in Decision Pending right now.</div></div>';
   BP_DEALS.forEach(function(o){h+='<div class="bpx-cd-card"><div><div class="bpx-cd-name">'+o.n+'</div><div class="bpx-cd-meta"><span>'+o.ph+'</span><span class="bpx-cd-val">'+bpMoney(o.v)+'</span></div></div><button class="bpx-cd-btn" onclick="bpMarkWon(\''+o.id+'\')">Mark as won</button></div>';});
   h+='</div><div class="bpx-sec-h" style="margin-top:26px">Confirmed jobs</div><div class="bpx-sec-p">Deals you\'ve closed and marked won.</div><div id="bpxWonList">';
-  BP_WON.forEach(function(o){h+='<div class="bpx-cd-card" style="opacity:.92"><div><div class="bpx-cd-name">'+o.n+'</div><div class="bpx-cd-meta"><span>'+o.ph+'</span><span class="bpx-cd-val">'+bpMoney(o.v)+'</span><span>Won '+o.d+'</span></div></div><span class="bpx-pill won">✓ Won</span></div>';});
+  BP_WON.forEach(function(o){h+='<div class="bpx-cd-card" style="opacity:.92"><div><div class="bpx-cd-name">'+o.n+'</div><div class="bpx-cd-meta"><span>'+o.ph+'</span><span class="bpx-cd-val">'+bpMoney(o.v)+'</span><span>Won '+o.d+'</span></div></div><span class="bpx-pill won"><span class=ms>check</span> Won</span></div>';});
   h+='</div>';
   document.getElementById('bpxViewArea').innerHTML=h;
 }
@@ -14645,7 +14653,7 @@ function bpWebsite(){
     +bpTile('Conversion rate','6.7%',true)
     +bpTile('Avg. time on page','1m 52s')
     +'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Your website<span class="bpx-site-ctl"><input id="bpSiteUrl" class="bpx-urlin" placeholder="yourbusiness.com" value="'+bpEsc(url)+'"><button class="bpx-mini" onclick="bpSaveSite()">Preview</button><a class="bpx-mini alt" id="bpSiteOpen" href="'+(url?('https://'+bpEsc(url)):'#')+'" target="_blank" rel="noopener">Open ↗</a><button class="bpx-mini alt" onclick="bpSiteFull()">Fullscreen ⛶</button></span></div>'
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Your website<span class="bpx-site-ctl"><input id="bpSiteUrl" class="bpx-urlin" placeholder="yourbusiness.com" value="'+bpEsc(url)+'"><button class="bpx-mini" onclick="bpSaveSite()">Preview</button><a class="bpx-mini alt" id="bpSiteOpen" href="'+(url?('https://'+bpEsc(url)):'#')+'" target="_blank" rel="noopener">Open <span class=ms>arrow_outward</span></a><button class="bpx-mini alt" onclick="bpSiteFull()">Fullscreen <span class=ms>open_in_full</span></button></span></div>'
       +'<div class="bpx-siteframe" id="bpSiteFrame">'+(url?('<iframe src="https://'+bpEsc(url)+'" title="Your website" loading="lazy"></iframe>'):'<div class="bpx-siteph">Enter your website address above and hit <b>Preview</b> to see your live site right here.</div>')+'</div></div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Visitors over time<span class="lg2">last 12 weeks</span></div>'
       +'<svg viewBox="0 0 620 150" width="100%" height="150" preserveAspectRatio="none">'+grid+'<path d="'+smoothPath(line)+'" fill="none" stroke="#2f6bff" stroke-width="2.4"/></svg></div>';
@@ -14769,10 +14777,10 @@ function bpCalcSave(){
   localStorage.setItem('bpPrice_'+cid,JSON.stringify(pricing));
   var ok=document.getElementById('bpCalcOk');ok.textContent='Saving\u2026';
   if(BP_LIVE){try{BP_SB.from('calculator_pricing').upsert({calc_id:cid,pricing:pricing,updated_at:new Date().toISOString()},{onConflict:'calc_id,owner'}).then(function(r){
-    if(r&&r.error)throw r.error;ok.textContent='\u2713 Saved \u2014 live on your '+cid+' calculator.';setTimeout(bpCalcFrameReload,400);
+    if(r&&r.error)throw r.error;ok.textContent='<span class=ms>check</span> Saved \u2014 live on your '+cid+' calculator.';setTimeout(bpCalcFrameReload,400);
   }).catch(function(){ok.textContent='Saved on this device \u2014 live sync unavailable right now.';}).then(function(){setTimeout(function(){if(ok)ok.textContent='';},4500);});}
-  catch(e){ok.textContent='\u2713 Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}}
-  else{ok.textContent='\u2713 Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}
+  catch(e){ok.textContent='<span class=ms>check</span> Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}}
+  else{ok.textContent='<span class=ms>check</span> Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}
 }
 window.bpCalcReset=function(){
   var cid=window._bpCalcCur||bpCalcAssigned();
@@ -14784,10 +14792,10 @@ window.bpCalcReset=function(){
   if(BP_LIVE){try{
     BP_SB.from('calculator_pricing').delete().eq('calc_id',cid).then(function(r){
       if(r&&r.error)throw r.error;
-      done('✓ Back to defaults — live on your calculator.');
+      done('Back to defaults — live on your calculator.');
     }).catch(function(){done('Defaults restored on this device — live sync unavailable right now.');});
-  }catch(e){done('✓ Back to defaults.');}}
-  else done('✓ Back to defaults.');
+  }catch(e){done('Back to defaults.');}}
+  else done('Back to defaults.');
 };
 function bpCalcPreview(){
   var cid=window._bpCalcCur||bpCalcAssigned(),idx=BP_CALC_IDX[cid]||0;
@@ -14845,13 +14853,14 @@ function bpRgStatusDetail(){
   var line='Published '+bpRgAgo(r.published_at)+' · '+(r.ghl_synced_at?'web, text and your phone line':(_bpRgLinked?'the phone line didn\'t update last time':'web &amp; text only — phone line not linked'));
   return '<b>'+(dirty?'You have unpublished changes':'Live')+'</b><div class="bpx-mut">'+line+'</div>';
 }
-function bpRidgeView(){
+function bpRidgeView(hostId){
   var s=bpSettingsGet(), c=s.company||{}, d=bpRgDraft();
+  var host=q(hostId||'bpxViewArea'); if(!host)return;
   window._bpRgTone=d.tone||'Friendly';
   var ph=BP_ATLAS_PHONE||'';
   var phFmt=ph.replace(/^\+1?/,'').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3');
   var tabs=[['knowledge','Knowledge'],['voice','Voice & tone'],['test','Test '+BP_AI_NAME],['stats','Performance']];
-  q('bpxViewArea').innerHTML=
+  host.innerHTML=
     /* one compact strip, instead of a hero plus a full row of tiles */
     '<div class="bpx-rg-bar">'
       +'<span class="bpx-rg-mark"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8" fill="#fff"/><circle cx="14.5" cy="10" r=".8" fill="#fff"/></svg></span>'
@@ -14978,7 +14987,7 @@ function bpRgStats(){
 window.bpRgSaveDraft=function(){
   bpRgKeepDraft();
   var m=q('bpx-rg-msg'); if(m){m.style.color='#15803d';m.textContent='Draft saved on this device';}
-  bpSettingsPush(bpSettingsGet()).then(function(ok){ if(m){m.textContent=ok?'Draft saved ✓ · synced to your account':'Draft saved on this device ✓'; setTimeout(function(){if(m)m.textContent='';},3000);} });
+  bpSettingsPush(bpSettingsGet()).then(function(ok){ if(m){m.textContent=ok?'Draft saved · synced to your account':'Draft saved on this device '; setTimeout(function(){if(m)m.textContent='';},3000);} });
 };
 window.bpRgPublish=function(){
   if(q('bpx-rg-services'))bpRgKeepDraft();
@@ -14995,9 +15004,9 @@ window.bpRgPublish=function(){
     if(m){
       var ok=r.ghl==='synced';
       m.style.color=ok?'#15803d':'#b45309';
-      m.textContent=ok?'Published ✓ · live on web, text, and your phone line'
-        :(r.ghl==='failed'?'Published ✓ · saved, but the phone line didn\'t update — publish again in a minute'
-                          :'Published ✓ · live on web & text · phone line not linked yet');
+      m.textContent=ok?'Published · live on web, text, and your phone line'
+        :(r.ghl==='failed'?'Published · saved, but the phone line didn\'t update — publish again in a minute'
+                          :'Published · live on web & text · phone line not linked yet');
     }
     bpRgTouched();
     setTimeout(function(){if(m)m.textContent='';},4500);
@@ -15100,7 +15109,7 @@ function ccTradeChange(v){
 function ccSubmit(e){
   e.preventDefault();
   document.getElementById('ccOk').classList.add('show');
-  var b=document.getElementById('ccBtn');b.textContent='Request sent ✓';b.disabled=true;b.style.opacity='.7';
+  var b=document.getElementById('ccBtn');b.textContent='Request sent ';b.disabled=true;b.style.opacity='.7';
   return false;
 }
 </script>
@@ -15942,7 +15951,7 @@ window.bpContactPage=function(id){
     return (j.contactId&&j.contactId===id)||(c.name&&j.name===c.name)||(c.phone&&j.phone&&j.phone.replace(/\D/g,'')===c.phone.replace(/\D/g,''));
   });
   var jobsHtml=jobs.length?jobs.map(function(j){
-    var st=j.status==='done'?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Done ✓</span>':'<span class="bpx-badge">In progress</span>';
+    var st=j.status==='done'?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Done <span class=ms>check</span></span>':'<span class="bpx-badge">In progress</span>';
     return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)">'
       +'<div style="flex:1;min-width:0"><b style="font-size:13.5px">'+bpEsc(j.title||'Job')+'</b><div class="bpx-mut" style="font-size:12px">'+bpMoneyFmt(j.estimate)+(j.collected!=null?' · '+bpMoneyFmt(j.collected)+' collected':'')+'</div></div>'
       +st+'<button class="bpx-rowbtn" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">Open</button></div>';
@@ -15994,7 +16003,7 @@ window.bpMsgContact=async function(){
 function bpRenderMessaging(){
   q('bpxViewArea').innerHTML='<div class="bpx-inbox">'
     +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
-    +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big">💬</div>Select a conversation to view messages.</div></div>'
+    +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
   +'</div>';
   bpLoadConvos();
 }
@@ -16062,10 +16071,10 @@ var _bpBulkChan='SMS';
 function bpRenderMessaging(){
   q('bpxViewArea').innerHTML=
     '<div class="bpx-msgbar"><div class="bpx-msgbar-t">Conversations</div>'
-      +'<button class="bpx-addbtn" onclick="bpBulkOpen()">✉ Broadcast</button></div>'
+      +'<button class="bpx-addbtn" onclick="bpBulkOpen()"><span class=ms>mail</span> Broadcast</button></div>'
     +'<div class="bpx-inbox">'
       +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
-      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big">💬</div>Select a conversation to view messages.</div></div>'
+      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
     +'</div>';
   bpLoadConvos();
 }
@@ -16170,11 +16179,11 @@ var BPSCHED_NOTE='<div class="bpx-when-note">Scheduling isn’t set up yet. Depl
 function bpRenderMessaging(){
   q('bpxViewArea').innerHTML=
     '<div class="bpx-msgbar"><div class="bpx-msgbar-t">Conversations</div>'
-      +'<div class="bpx-msgbar-btns"><button class="bpx-ghostbtn" onclick="bpSchedListOpen()">🕒 Scheduled</button>'
-      +'<button class="bpx-addbtn" onclick="bpBulkOpen()">✉ Broadcast</button></div></div>'
+      +'<div class="bpx-msgbar-btns"><button class="bpx-ghostbtn" onclick="bpSchedListOpen()"><span class=ms>schedule</span> Scheduled</button>'
+      +'<button class="bpx-addbtn" onclick="bpBulkOpen()"><span class=ms>mail</span> Broadcast</button></div></div>'
     +'<div class="bpx-inbox">'
       +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
-      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big">💬</div>Select a conversation to view messages.</div></div>'
+      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
     +'</div>';
   bpLoadConvos();
 }
@@ -16223,7 +16232,7 @@ window.bpBulkSend=async function(){
     var label=(aud.indexOf('tag:')===0?('Tag: '+aud.slice(4)):'All contacts');
     btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Scheduling…';
     var res=await bpSchedCreate({channel:_bpBulkChan,subject:subject,message:text,contactIds:recips.map(function(c){return c.id;}),sendAt:when.toISOString(),label:'Broadcast · '+label});
-    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Scheduled '+recips.length+' message'+(recips.length===1?'':'s')+' for '+bpFmtSched(when.toISOString())+'.'; btn.textContent='Scheduled ✓'; }
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Scheduled '+recips.length+' message'+(recips.length===1?'':'s')+' for '+bpFmtSched(when.toISOString())+'.'; btn.textContent='Scheduled '; }
     else if(res.notConfigured){ msg.innerHTML=BPSCHED_NOTE; btn.disabled=false; }
     else { msg.style.color='#dc2626'; msg.textContent='Could not schedule. Please try again.'; btn.disabled=false; }
     return;
@@ -16263,7 +16272,7 @@ window.bpSchedListOpen=async function(){
     var d=await r.json(); var items=(d&&d.items)||[];
     var pending=items.filter(function(x){return x.status==='pending';});
     var el=q('bpx-schedlist'); if(!el) return;
-    if(!pending.length){ el.innerHTML='<div class="bpx-sched-empty">No scheduled sends. Use <b>Broadcast → Schedule</b> or the 🕒 in a conversation.</div>'; return; }
+    if(!pending.length){ el.innerHTML='<div class="bpx-sched-empty">No scheduled sends. Use <b>Broadcast → Schedule</b> or the <span class=ms>schedule</span> in a conversation.</div>'; return; }
     el.innerHTML=pending.map(function(x){var n=(x.contact_ids||[]).length;
       return '<div class="bpx-schedrow" id="sched-'+x.id+'"><span class="bpx-sched-badge '+x.channel+'">'+(x.channel==='Email'?'Email':'SMS')+'</span>'
         +'<div class="si"><div class="bpx-sched-when">'+bpFmtSched(x.send_at)+'</div>'
@@ -16507,7 +16516,7 @@ function bpActiveJobs(){
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
       return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
-        +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done ✓</button></td></tr>';
+        +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done <span class=ms>check</span></button></td></tr>';
     }).join(''):'<tr><td colspan="6" style="padding:0"><div class="bpx-emptyhero"><img src="assets/roofing/roof-decking-sm.jpg" alt="" loading="lazy"><div><b>No active projects yet</b><div class="bpx-mut" style="font-size:13px;margin-top:3px">When a deposit is paid the job lands here automatically — or add one with <b>+ Add job</b>.</div></div></div></td></tr>';
   } else {
     head='<tr><th>Job</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th><th></th></tr>';
@@ -16725,7 +16734,7 @@ function bpScanFail(msg){
 }
 function bpScanPageAdd(canvas){
   _bpScanPages.push({d:canvas.toDataURL('image/jpeg',0.8),w:canvas.width,h:canvas.height});
-  if(_bpScanPages.length<8&&confirm('Page '+_bpScanPages.length+' captured ✓\n\nScan another page for this document?')){
+  if(_bpScanPages.length<8&&confirm('Page '+_bpScanPages.length+' captured <span class=ms>check</span>\n\nScan another page for this document?')){
     var inp=document.getElementById('bpx-pj-scan'); if(inp){inp.click();return;}
   }
   bpScanFinishPdf();
@@ -17218,7 +17227,7 @@ function bpCtRender(note){
         +(c.status==='signed'?'':bpDelBtn("bpCtDel('"+"'+c.id+'"+"')",'Delete this contract'))
         +(c.status==='signed'
           ? '<button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">View signed</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtPrint(\''+c.id+'\')">Print</button>'
-          : '<button class="bpx-rowbtn primary" style="margin:0" onclick="bpCtSend(\''+c.id+'\')">'+(c.status==='draft'?'Send':'Copy link')+'</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">Preview</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtVoid(\''+c.id+'\')" title="Cancel this contract">✕</button>')
+          : '<button class="bpx-rowbtn primary" style="margin:0" onclick="bpCtSend(\''+c.id+'\')">'+(c.status==='draft'?'Send':'Copy link')+'</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtView(\''+c.id+'\')">Preview</button><button class="bpx-rowbtn" style="margin:0" onclick="bpCtVoid(\''+c.id+'\')" title="Cancel this contract"><span class=ms>close</span></button>')
       +'</div></div>';
   }).join(''):'<div class="bpx-empty2" style="padding:18px">No contract on this job yet. Build one from your template — the customer\'s details and price are already filled in.</div>';
   el.innerHTML=offline+warn
@@ -17286,7 +17295,7 @@ window.bpCtSend=function(id){
   },function(){alert('Couldn\'t reach the contract service.');});
 };
 window.bpCtCopy=function(link,btn){
-  var done=function(){if(btn){btn.textContent='Copied ✓';setTimeout(function(){btn.textContent='Copy link';},1800);}};
+  var done=function(){if(btn){btn.textContent='Copied ';setTimeout(function(){btn.textContent='Copy link';},1800);}};
   try{ navigator.clipboard.writeText(link).then(done,function(){bpCtCopyFallback(link,done);}); }catch(e){ bpCtCopyFallback(link,done); }
 };
 function bpCtCopyFallback(link,done){
@@ -17466,7 +17475,7 @@ window.bpSignDecline=function(){
 function bpSignDone(){
   var c=_bpSg.c,h=document.getElementById('bpSign'); if(!h)return;
   h.innerHTML='<div class="sg-wrap"><div class="sg-card">'
-    +'<div class="sg-tick">✓</div>'
+    +'<div class="sg-tick"><span class=ms>check</span></div>'
     +'<h1 class="sg-h" style="text-align:center">You\'re all signed</h1>'
     +'<p class="sg-p" style="text-align:center">Thanks'+(c&&c.signer_name?', '+bpEsc(c.signer_name.split(' ')[0]):'')+'. Your contractor has been notified. Keep this page or print a copy for your records.</p>'
     +'<div class="sg-doc" style="margin-top:18px"><pre>'+bpEsc((c&&c.body)||'')+'</pre></div>'
@@ -17499,7 +17508,7 @@ function bpPayLoad(){
 window.bpPayRetry=function(){_bpPay.loaded=false;_bpPay.note='';bpPayRender();bpPayLoad();};
 window.bpPayAsk=function(){
   var btn=q('bpx-pay-ask'),msg=q('bpx-pay-msg'),co=(bpSettingsGet().company||{}).name||'';
-  var done=function(t,ok){ if(msg){msg.style.color=ok?'#15803d':'#b45309';msg.textContent=t;} if(btn){btn.disabled=!!ok;btn.textContent=ok?'Request sent ✓':'Finish my setup';} };
+  var done=function(t,ok){ if(msg){msg.style.color=ok?'#15803d':'#b45309';msg.textContent=t;} if(btn){btn.disabled=!!ok;btn.textContent=ok?'Request sent ':'Finish my setup';} };
   if(btn){btn.disabled=true;btn.textContent='Sending…';}
   if(!(window.BP_LIVE&&window.BP_SB)){done('Sign in and we’ll pick this up for you.',false);return;}
   BP_SB.auth.getSession().then(function(sn){
@@ -17528,7 +17537,7 @@ function bpPayRender(){
     +(loc
       ? '<div class="bpx-panel"><div class="bpx-ptitle">Connect your Stripe<span class="lg2">one time, about two minutes</span></div>'
         +step(1,'Open your payment settings','This opens your own BuilderPro payments account in a new tab. You’re already signed in.',
-          '<a class="bpx-btn" style="width:auto;margin-top:10px;padding:10px 18px;text-decoration:none;display:inline-block" href="'+payUrl+'" target="_blank" rel="noopener">Open payment settings ↗</a>')
+          '<a class="bpx-btn" style="width:auto;margin-top:10px;padding:10px 18px;text-decoration:none;display:inline-block" href="'+payUrl+'" target="_blank" rel="noopener">Open payment settings <span class=ms>arrow_outward</span></a>')
         +step(2,'Tap Connect on Stripe','Stripe opens and asks you to sign in — or create an account if you don’t have one. You enter your own business details and the bank account you want paid into. We never see or handle any of it; only you can link your bank.')
         +step(3,'Come back and send an invoice','Every invoice you send from Finances is then payable by card, and the money lands in the bank account you just linked — usually within two business days.',
           '<button class="bpx-btn ghost" style="width:auto;margin-top:10px;padding:10px 18px" onclick="bpNav(\'invoices\')">Go to Invoices</button>')
@@ -17670,7 +17679,7 @@ window.bpEstSend=async function(){
       body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-es-d')||{}).value||'',send:via,businessName:biz,expiryDays:+((q('bpx-es-exp')||{}).value||14)})});
     if(r.status===404){ msg.innerHTML=BPEST_NOTE; btn.disabled=false; return; }
     var d=await r.json();
-    if(d&&d.ok){ msg.style.color='#15803d'; msg.textContent=d.sent?'Estimate sent ✓':'Estimate created — sending failed ('+(d.sendError||'check GHL')+'), it\'s saved as a draft in GHL.'; btn.textContent='Done'; setTimeout(function(){bpCloseModal(); bpEstLoad();},1200); }
+    if(d&&d.ok){ msg.style.color='#15803d'; msg.textContent=d.sent?'Estimate sent ':'Estimate created — sending failed ('+(d.sendError||'check GHL')+'), it\'s saved as a draft in GHL.'; btn.textContent='Done'; setTimeout(function(){bpCloseModal(); bpEstLoad();},1200); }
     else { msg.style.color='#dc2626'; msg.textContent='Could not create: '+bpEsc(String((d&&d.error)||'unknown error')); btn.disabled=false; }
   }catch(e){ msg.style.color='#dc2626'; msg.textContent='Network error — try again.'; btn.disabled=false; }
 };
@@ -17797,7 +17806,7 @@ window.bpInvSend=async function(){
       body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-iv-d')||{}).value||'',send:via,businessName:biz,dueDays:+((q('bpx-iv-due')||{}).value||7)})});
     if(r.status===404){ msg.innerHTML=BPINV_NOTE; btn.disabled=false; return; }
     var d=await r.json();
-    if(d&&d.ok){ msg.style.color='#15803d'; msg.textContent=d.sent?'Invoice sent ✓':'Invoice created — sending failed ('+(d.sendError||'check GHL')+'), it\'s saved as a draft in GHL.'; btn.textContent='Done'; setTimeout(function(){bpCloseModal(); bpInvLoad();},1200); }
+    if(d&&d.ok){ msg.style.color='#15803d'; msg.textContent=d.sent?'Invoice sent ':'Invoice created — sending failed ('+(d.sendError||'check GHL')+'), it\'s saved as a draft in GHL.'; btn.textContent='Done'; setTimeout(function(){bpCloseModal(); bpInvLoad();},1200); }
     else { msg.style.color='#dc2626'; msg.textContent='Could not create: '+bpEsc(String((d&&d.error)||'unknown error')); btn.disabled=false; }
   }catch(e){ msg.style.color='#dc2626'; msg.textContent='Network error — try again.'; btn.disabled=false; }
 };
@@ -18135,7 +18144,7 @@ function bpSoPane(){
   if(!_bpSo.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
   var h='';
   if(_bpSo.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpSo.note)+'</div>';
-  if(_bpSo.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px">⚠️ DEMO DATA — sample accounts and posts. Sign in to connect yours.</div>';
+  if(_bpSo.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px"><span class=ms>warning</span> DEMO DATA — sample accounts and posts. Sign in to connect yours.</div>';
   var t=_bpSo.tab;
   if(t==='posts')return h+bpSoPostsPane();
   if(t==='accounts')return h+bpSoAccountsPane();
@@ -18156,7 +18165,7 @@ function bpSoOverviewPane(){
   var top=[].concat((f&&f.posts)||[],(i&&i.posts)||[]).sort(function(a,b){return (+b.engagement||0)-(+a.engagement||0);}).slice(0,6);
   if(top.length){
     h+='<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><b style="font-size:14px">Best recent posts</b><span class="bpx-mut" style="font-size:12px">by engagement · last 8 per channel</span></div><div class="bpx-so-top">'
-      +top.map(function(p){return '<div class="bpx-so-post">'+(p.image?'<img src="'+bpEsc(p.image)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')+'<div style="min-width:0;flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+bpSoChip(p.channel)+'<span class="bpx-mut" style="font-size:11.5px">'+bpEsc(String(p.at||'').slice(0,10))+'</span></div><div class="bpx-so-txt">'+bpEsc(p.text||'(photo)')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:5px">'+(p.reach?bpNum(p.reach)+' reached · ':'')+bpNum(+p.engagement||0)+' engaged'+(p.url?' · <a href="'+bpEsc(p.url)+'" target="_blank" rel="noopener" style="color:var(--blue)">open ↗</a>':'')+'</div></div></div>';}).join('')+'</div></div>';
+      +top.map(function(p){return '<div class="bpx-so-post">'+(p.image?'<img src="'+bpEsc(p.image)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')+'<div style="min-width:0;flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+bpSoChip(p.channel)+'<span class="bpx-mut" style="font-size:11.5px">'+bpEsc(String(p.at||'').slice(0,10))+'</span></div><div class="bpx-so-txt">'+bpEsc(p.text||'(photo)')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:5px">'+(p.reach?bpNum(p.reach)+' reached · ':'')+bpNum(+p.engagement||0)+' engaged'+(p.url?' · <a href="'+bpEsc(p.url)+'" target="_blank" rel="noopener" style="color:var(--blue)">open <span class=ms>arrow_outward</span></a>':'')+'</div></div></div>';}).join('')+'</div></div>';
   }
   return h;
 }
@@ -18172,12 +18181,12 @@ function bpSoPostsPane(){
   if(_bpSo.view==='cal')return head+bpSoCalendar();
   var row=function(p){
     var when=p.scheduled_at?new Date(p.scheduled_at):null, wtxt=when?when.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+when.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}):'';
-    var res=p.results||{}, chips=(p.channels||[]).map(function(c){var r=res[c];return '<span class="bpx-so-chip'+(r?(r.ok?' ok':' bad'):'')+'" style="--c:'+(BP_SO_CH[c]||{}).c+'" title="'+bpEsc(r&&r.error?r.error:'')+'">'+(BP_SO_CH[c]||{n:c}).n+(r?(r.ok?' ✓':' ✕'):'')+'</span>';}).join('');
+    var res=p.results||{}, chips=(p.channels||[]).map(function(c){var r=res[c];return '<span class="bpx-so-chip'+(r?(r.ok?' ok':' bad'):'')+'" style="--c:'+(BP_SO_CH[c]||{}).c+'" title="'+bpEsc(r&&r.error?r.error:'')+'">'+(BP_SO_CH[c]||{n:c}).n+(r?(r.ok?' <span class=ms>check</span>':' <span class=ms>close</span>'):'')+'</span>';}).join('');
     var errs=Object.keys(res).filter(function(c){return res[c]&&!res[c].ok;}).map(function(c){return (BP_SO_CH[c]||{n:c}).n+': '+res[c].error;});
     return '<div class="bpx-so-row">'+(p.image_url?'<img src="'+bpEsc(p.image_url)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')
       +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">'+bpSoStatus(p)+'<span class="bpx-mut" style="font-size:12px">'+wtxt+'</span>'+chips+'</div>'
       +'<div class="bpx-so-txt">'+bpEsc(p.text||'(photo only)')+'</div>'+(errs.length?'<div style="color:#b91c1c;font-size:12px;margin-top:4px">'+bpEsc(errs.join(' · '))+'</div>':'')+'</div>'
-      +'<div style="display:flex;gap:6px;flex-shrink:0">'+(p.status==='scheduled'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoCompose(\''+bpEsc(p.id)+'\')">Edit</button>':'')+(p.status==='failed'||p.status==='partial'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoRetry(\''+bpEsc(p.id)+'\')">Retry</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDelete(\''+bpEsc(p.id)+'\')" title="Remove">✕</button></div></div>';
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'+(p.status==='scheduled'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoCompose(\''+bpEsc(p.id)+'\')">Edit</button>':'')+(p.status==='failed'||p.status==='partial'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoRetry(\''+bpEsc(p.id)+'\')">Retry</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDelete(\''+bpEsc(p.id)+'\')" title="Remove"><span class=ms>close</span></button></div></div>';
   };
   var h=head;
   h+='<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:10px"><b style="font-size:14px">Coming up</b><button class="bpx-rowbtn primary" style="margin:0" onclick="bpSoCompose()">+ New post</button></div>'+(up.length?up.map(row).join(''):'<div class="bpx-mk-empty">Nothing scheduled. Tap New post to write one and pick a time.</div>')+'</div>';
@@ -18268,7 +18277,7 @@ window.bpSoFile=async function(inp){
     var up=await BP_SB.storage.from('social').upload(path,f,{upsert:false,contentType:f.type});
     if(up.error)throw up.error;
     var url=BP_SB.storage.from('social').getPublicUrl(path).data.publicUrl;
-    q('bpx-so-imgurl').value=url; bpSoImgUrl(url); st.textContent='Uploaded ✓';
+    q('bpx-so-imgurl').value=url; bpSoImgUrl(url); st.textContent='Uploaded ';
   }catch(e){ st.textContent='Upload failed: '+((e&&e.message)||e)+' — you can paste an image link instead.'; }
 };
 window.bpSoSubmit=function(editId){
@@ -18386,7 +18395,7 @@ function bpCpPane(){
   if(!_bpCp.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
   var h='';
   if(_bpCp.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpCp.note)+'</div>';
-  if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px">⚠️ DEMO DATA — illustrative businesses, not your real market. '+(window.BP_LIVE?'Yelp lookups aren\'t switched on for this account yet.':'Sign in to track the businesses in your area.')+'</div>';
+  if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px"><span class=ms>warning</span> DEMO DATA — illustrative businesses, not your real market. '+(window.BP_LIVE?'Yelp lookups aren\'t switched on for this account yet.':'Sign in to track the businesses in your area.')+'</div>';
   var t=_bpCp.tab;
   if(t==='find')return h+bpCpFindPane();
   if(t==='win')return h+bpCpWinPane();
@@ -18403,8 +18412,8 @@ function bpCpScorePane(){
       +'<td>'+bpStars(x.rating)+' <span class="bpx-num" style="font-size:12.5px">'+(x.rating?x.rating.toFixed(1):'—')+'</span></td>'
       +'<td class="bpx-r bpx-num">'+bpNum(x.reviews)+'</td><td class="bpx-r bpx-num">'+vel+'</td>'
       +'<td><span class="bpx-mut" style="font-size:12px">'+bpEsc((x.cats||[]).slice(0,3).join(', '))+'</span></td>'
-      +'<td class="bpx-r" style="white-space:nowrap">'+(x.url&&x.url!=='#'?'<a class="bpx-rowbtn" href="'+bpEsc(x.url)+'" target="_blank" rel="noopener" style="text-decoration:none;margin-left:0">Yelp ↗</a>':'')
-      +(x.you?'':'<button class="bpx-rowbtn" onclick="bpCpReviews(\''+bpEsc(x.id)+'\',\''+bpEsc(x.name).replace(/'/g,'&#39;')+'\')">Reviews</button><button class="bpx-rowbtn" onclick="bpCpUntrack(\''+bpEsc(x.id)+'\')" title="Stop tracking">✕</button>')+'</td></tr>';
+      +'<td class="bpx-r" style="white-space:nowrap">'+(x.url&&x.url!=='#'?'<a class="bpx-rowbtn" href="'+bpEsc(x.url)+'" target="_blank" rel="noopener" style="text-decoration:none;margin-left:0">Yelp <span class=ms>arrow_outward</span></a>':'')
+      +(x.you?'':'<button class="bpx-rowbtn" onclick="bpCpReviews(\''+bpEsc(x.id)+'\',\''+bpEsc(x.name).replace(/'/g,'&#39;')+'\')">Reviews</button><button class="bpx-rowbtn" onclick="bpCpUntrack(\''+bpEsc(x.id)+'\')" title="Stop tracking"><span class=ms>close</span></button>')+'</td></tr>';
   }).join('');
   return '<div class="bpx-panel" style="padding:0;overflow:hidden"><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th></th><th>Business</th><th>Rating</th><th class="bpx-r">Reviews</th><th class="bpx-r" title="Reviews gained in the last 30 days">+30d</th><th>Services listed</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:12px">Ranked by review count with rating as the tiebreak — the same weighting Yelp and Google use to order local results. +30d fills in after a rival has been tracked for a day or more.</div>';
@@ -18494,7 +18503,7 @@ function bpCpInsights(){
 function bpCpWinPane(){
   var ins=bpCpInsights();
   if(!ins.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>Nothing to compare yet</b>Track a few competitors and this tab fills in with specific gaps and what to do about each.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
-  var ico={gap:'▲',win:'✓',warn:'!',info:'i'};
+  var ico={gap:'▲',win:'',warn:'!',info:'i'};
   return '<div class="bpx-cp-ins">'+ins.map(function(x){return '<div class="bpx-cp-card '+x.k+'"><div class="bpx-cp-ico">'+ico[x.k]+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;margin-bottom:4px">'+x.t+'</div><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-bottom:10px">'+x.d+'</div>'+x.a+'</div></div>';}).join('')+'</div>';
 }
 window.bpCsvCompetitors=function(){
@@ -18581,7 +18590,7 @@ function bpMkPaneBody(t){
   if(!rep)rep='<div class="bpx-mut" style="font-size:13px">Connect Google Business Profile or Yelp to track calls, directions, and reviews.</div>';
   return '<div class="bpx-row"><div class="bpx-panel"><div class="bpx-ptitle">Where leads come from<span class="lg2">last 30 days</span></div>'+srcH+'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Reputation<span class="lg2">listings</span></div>'+rep+'</div></div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Connected channels</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+BP_MKT.map(function(p){var c=bpMkConn(p.k);return '<span class="bpx-mk-st '+(c?'on':'off')+'" style="padding:6px 12px;font-size:12px">'+p.n+(c?' ✓':'')+'</span>';}).join('')+'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:6px 12px;font-size:12px" onclick="bpMkTab(\'connections\')">Manage</button></div></div>';
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Connected channels</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+BP_MKT.map(function(p){var c=bpMkConn(p.k);return '<span class="bpx-mk-st '+(c?'on':'off')+'" style="padding:6px 12px;font-size:12px">'+p.n+(c?' <span class=ms>check</span>':'')+'</span>';}).join('')+'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:6px 12px;font-size:12px" onclick="bpMkTab(\'connections\')">Manage</button></div></div>';
 }
 function bpMkCard(p){
   var c=bpMkConn(p.k), cfg=_bpMk.cfg||{}, ready=p.k==='yelp'?cfg.yelp:(p.k==='meta'?cfg.meta:cfg.google_ads);
@@ -18708,8 +18717,16 @@ window.bpMkLaunchSend=async function(){
 /* ===== moon/sun theme toggle (light=moon, dark=sun) ===== */
 var BPMOON='<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 var BPSUN='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v2.2M12 20.3v2.2M4 4l1.6 1.6M18.4 18.4l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4 20l1.6-1.6M18.4 5.6L20 4"/></svg>';
-function bpApplyTheme(t){var d=t==='dark';var el=document.getElementById('bpx');if(el)el.classList.toggle('bpx-dark',d);var btn=document.getElementById('bpxThemeBtn');if(btn)btn.innerHTML=d?BPSUN:BPMOON;try{localStorage.setItem('bpxTheme',t);}catch(e){}}
+function bpApplyTheme(t){
+  var sys=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var d=t==='dark'||(t==='system'&&sys);
+  var el=document.getElementById('bpx');if(el)el.classList.toggle('bpx-dark',d);
+  var btn=document.getElementById('bpxThemeBtn');if(btn)btn.innerHTML='<span class="ms">'+(d?'light_mode':'dark_mode')+'</span>';
+  try{localStorage.setItem('bpxTheme',t);}catch(e){}
+}
+/* the header button flips between the two; System is chosen in Settings */
 window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&el.classList.contains('bpx-dark');bpApplyTheme(d?'light':'dark');};
+try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){ if((localStorage.getItem('bpxTheme')||'')==='system')bpApplyTheme('system'); }); }catch(e){}
 (function(){try{bpApplyTheme(localStorage.getItem('bpxTheme')||'light');}catch(e){}})();
 
 /* ===== Settings ===== */
@@ -18768,7 +18785,7 @@ function bpSettings(){
       +'</span></div>';
   }).join('');
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
-  var tabs=[['business','Business'],['hours','Hours & replies'],['owner','Owner'],['plan','Plan & billing']];
+  var tabs=[['business','Business'],['hours','Hours & replies'],['owner','Owner'],['ridge','Ridge AI'],['appearance','Appearance'],['plan','Plan & billing']];
   var chip=function(t){return '<button class="bpx-jt'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')">'+t[1]+'</button>';};
   var sec=function(id){return 'id="set-sec-'+id+'" style="'+(_bpSetSec===id?'':'display:none;')+'margin-bottom:16px"';};
   q('bpxViewArea').innerHTML=
@@ -18816,6 +18833,12 @@ function bpSettings(){
       +'<div class="bpx-fldhint" style="margin-top:14px">Saved to your account. Used to personalize your dashboard, messages and estimates.</div>'
     +'</div></div>'
     /* plan */
+    +'<div '+sec('ridge')+'><div id="bpx-rg-host"></div></div>'
+    +'<div '+sec('appearance')+'><div class="bpx-panel" style="max-width:640px"><div class="bpx-ptitle">Appearance<span class="lg2">how the software looks to you</span></div>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Light and dark are both designed, not one dimmed. System follows your device.</div>'
+      +'<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o){
+          return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o[0]?' on':'')+'" onclick="bpApplyTheme(\''+o[0]+'\');bpSettings()"><span class="ms">'+o[2]+'</span> '+o[1]+'</button>';}).join('')+'</div>'
+    +'</div></div>'
     +'<div '+sec('plan')+'><div class="bpx-panel" style="box-sizing:border-box;max-width:1000px"><div class="bpx-ptitle">Your plan<span class="lg2">billing &amp; membership</span></div>'
       +'<div style="display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap">'
         +'<div style="flex:1;min-width:230px">'
@@ -18823,7 +18846,7 @@ function bpSettings(){
           +'<div style="margin-top:4px"><span style="font-size:26px;font-weight:800;color:var(--blue)">$199</span><span class="bpx-mut" style="font-size:13px"> / month · everything included</span></div>'
           +'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">One plan, no add-ons:</div>'
           +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:5px 16px;margin-top:8px;font-size:13px">'
-          +[BP_AI_NAME+' AI receptionist (24/7)','Exclusive Lead Radar territory','Marketing — Meta, Google, Yelp','Invoices, estimates & payments','Projects, scheduling & finances','Job calculator','Website & Google Business setup','Priority support'].map(function(x){return '<div><span style="color:#15803d;font-weight:700">✓</span> '+x+'</div>';}).join('')
+          +[BP_AI_NAME+' AI receptionist (24/7)','Exclusive Lead Radar territory','Marketing — Meta, Google, Yelp','Invoices, estimates & payments','Projects, scheduling & finances','Job calculator','Website & Google Business setup','Priority support'].map(function(x){return '<div><span style="color:#15803d;font-weight:700"><span class=ms>check</span></span> '+x+'</div>';}).join('')
           +'</div>'
         +'</div>'
         +'<div style="min-width:190px;display:flex;flex-direction:column;gap:8px;align-items:stretch">'
@@ -18834,13 +18857,16 @@ function bpSettings(){
     +'</div></div>'
     +'<div class="bpx-set-foot" id="bpx-setfoot"'+(_bpSetSec==='plan'?' hidden':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>';
   bpSettingsPull();
+  if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpRidgeView('bpx-rg-host'); }
 }
 var _bpSetSec='business';
+window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','ridge','appearance','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot)foot.hidden=(t==='plan');   /* nothing to save on the plan tab */
+  var foot=q('bpx-setfoot'); if(foot)foot.hidden=(t==='plan'||t==='ridge'||t==='appearance');   /* those tabs save themselves */
+  if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpRidgeView('bpx-rg-host'); }
 };
 window.bpHrsCopy=function(){
   var from=(q('hrs-mon-from')||{}).value||'08:00', to=(q('hrs-mon-to')||{}).value||'17:00';
@@ -18888,10 +18914,10 @@ window.bpSettingsSave=function(){
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   var data={company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}};
   bpSettingsSet(data);
-  var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ✓';}
+  var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ';}
   bpSettingsPush(data).then(function(ok){
     if(!m)return;
-    m.style.color='#15803d';m.textContent=ok?'Saved ✓ · synced':'Saved on device ✓';
+    m.style.color='#15803d';m.textContent=ok?'Saved · synced':'Saved on device ';
     setTimeout(function(){if(m)m.textContent='';},2600);
   });
 };
@@ -18994,7 +19020,7 @@ function rdChecksRender(rows,demo){
   if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing yet. Every homeowner who runs the roof health check on your site lands here with their score — even if they don\'t book.</span>'; return; }
   var col=function(b){return b==='good'?'#15803d':b==='mid'?'#b45309':b==='warn'?'#c2410c':'#b91c1c';};
   var pg=bpPage('rdchecks',rows,10,'rdChecksRender(window._rdCheckRows,window._rdCheckDemo)'); window._rdCheckRows=rows; window._rdCheckDemo=demo;
-  el.innerHTML=(demo?'<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:10px">⚠️ DEMO — sample checks. Sign in to see the real ones from your site.</div>':'')
+  el.innerHTML=(demo?'<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:10px"><span class=ms>warning</span> DEMO — sample checks. Sign in to see the real ones from your site.</div>':'')
     +pg.items.map(function(c){
       var when=c.created_at?new Date(c.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
       var facts=[c.age!=null?'~'+c.age+' yrs':'',c.material||'',(c.issues||[]).length?(c.issues||[]).join(', '):'no issues noted',c.storm==='yes'?'storm last year':'',c.permit_year?'permit '+c.permit_year:(c.built_year?'built '+c.built_year:'')].filter(Boolean).join(' · ');
@@ -19082,14 +19108,14 @@ function rdRenderShell(){
       +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">My list</button></div>'+terrNote+'</div>'
     +'<div class="rd-toolbar">'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
-      +'<button id="rdSatBtn" class="bpx-rowbtn" onclick="rdToggleSat()" style="font-size:12px;margin:0" title="Look at the actual roofs">'+(_rdSat?'\ud83d\uddfa Plain map':'\ud83d\udef0\ufe0f Satellite')+'</button>'
-      +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px;margin:0">&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
-      +'<button id="rdOverBtn" class="bpx-rowbtn'+(_rdOverdue?' primary':'')+'" onclick="rdToggleOverdue()" style="font-size:12px;margin:0" title="Only roofs 25+ years old — the ones most likely to fail this season">⏰ Overdue only (25+ yrs)'+(_rdOverdue?' ✓':'')+'</button>'
-      +'<button class="bpx-rowbtn primary" onclick="rdRoute()" style="font-size:12px;margin:0" title="Best 10 doors, ordered for walking, opened in Google Maps">🧭 Plan a route</button>'
+      +'<button id="rdSatBtn" class="bpx-rowbtn" onclick="rdToggleSat()" style="font-size:12px;margin:0" title="Look at the actual roofs">'+(_rdSat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite')+'</button>'
+      +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px;margin:0"><span class=ms>thunderstorm</span> Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
+      +'<button id="rdOverBtn" class="bpx-rowbtn'+(_rdOverdue?' primary':'')+'" onclick="rdToggleOverdue()" style="font-size:12px;margin:0" title="Only roofs 25+ years old — the ones most likely to fail this season"><span class=ms>alarm</span> Overdue only (25+ yrs)'+(_rdOverdue?' <span class=ms>check</span>':'')+'</button>'
+      +'<button class="bpx-rowbtn primary" onclick="rdRoute()" style="font-size:12px;margin:0" title="Best 10 doors, ordered for walking, opened in Google Maps"><span class=ms>explore</span> Plan a route</button>'
       +'<span class="bpx-mut" style="margin-left:auto;font-size:12px">Roofs due by age + fresh signals from the last 90 days · all from public records</span></div>'
-    +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px">⚠️ DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
+    +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px"><span class=ms>warning</span> DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdStormMode" style="display:none;background:#7c2d12;color:#fff;border-radius:10px;padding:11px 15px;font-size:13px;margin-bottom:8px"></div>'
-    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px">✓ Live data ('+RADAR_VER+') — every dot below is a real public record. Tap a dot → More info to see the government record.</div>'
+    +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px"><span class=ms>check</span> Live data ('+RADAR_VER+') — every dot below is a real public record. Tap a dot → More info to see the government record.</div>'
     +'<div id="rdMapWrap"><div id="rdMap"></div>'
       +'<div class="rd-stat" id="rdCount">Scanning…</div>'
       +'<div class="rd-legend">'
@@ -19166,9 +19192,9 @@ window.rdMineRender=function(){
     var days=c.created_at?Math.round((Date.now()-Date.parse(c.created_at))/864e5):0;
     var nudge=(stage==='knocked'&&days>=3)?'<span style="color:#b45309;font-size:11px;font-weight:600"> · knock again</span>':(stage==='contacted'&&days>=7?'<span style="color:#b45309;font-size:11px;font-weight:600"> · follow up</span>':'');
     return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">'
-      +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':(score?'#f59e0b':'#2f6bff'))+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'📍')+'</span>'
+      +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':(score?'#f59e0b':'#2f6bff'))+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'<span class=ms>location_on</span>')+'</span>'
       +'<div style="flex:1;min-width:180px"><b style="font-size:13.5px">'+addr+'</b> '+badge+'<div class="bpx-mut" style="font-size:11.5px">'+bpEsc(((c.notes||'').split('.')[0]||'radar lead').slice(0,80))+(when?' · added '+when:'')+nudge+'</div></div>'
-      +'<a href="https://maps.apple.com/?q='+encodeURIComponent((c.name||'').replace(/^Radar — /,''))+'" target="_blank" rel="noopener" style="font-size:16px;text-decoration:none" title="Open in Maps">🗺️</a>'
+      +'<a href="https://maps.apple.com/?q='+encodeURIComponent((c.name||'').replace(/^Radar — /,''))+'" target="_blank" rel="noopener" style="font-size:16px;text-decoration:none" title="Open in Maps"><span class=ms>map</span></a>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+bpDelBtn("rdMineDel("+idArg+",'"+addr.replace(/'/g,"\\'")+"')",'Remove this lead from your list')+'</div></div>';
   }).join('')+pg.nav;
 };
@@ -19205,31 +19231,31 @@ function rdAutoRender(rows){
     return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)">'
       +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':'#f59e0b')+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'—')+'</span>'
       +'<div style="flex:1;min-width:0"><b style="font-size:13.5px">'+addr+'</b><div class="bpx-mut" style="font-size:11.5px">'+bpEsc(why||'permit signal')+(date?' · '+bpEsc(date):'')+'</div></div>'
-      +(done?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted ✓</span>'
-        :'<button class="bpx-rowbtn" onclick="rdAutoContacted(this,\''+bpEsc(c.ghl_id||'')+'\','+(c.id?("'"+c.id+"'"):'null')+')">Contacted ✓</button>')
+      +(done?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted <span class=ms>check</span></span>'
+        :'<button class="bpx-rowbtn" onclick="rdAutoContacted(this,\''+bpEsc(c.ghl_id||'')+'\','+(c.id?("'"+c.id+"'"):'null')+')">Contacted <span class=ms>check</span></button>')
       +'</div>';
   }).join('');
 }
 window.rdAutoContacted=function(btn,ghlId,rowId){
   if(!confirm('Confirm you had a real conversation with this homeowner? This moves them into your follow-up automations.')) return;
   btn.disabled=true; btn.textContent='Saving…';
-  var fin=function(){ btn.outerHTML='<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted ✓</span>'; };
+  var fin=function(){ btn.outerHTML='<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Contacted <span class=ms>check</span></span>'; };
   var p=ghlId?rdFn('contacted',{ghlId:ghlId}):Promise.resolve({});
   p.then(function(){
     if(rowId&&window.BP_SB){ BP_SB.from('contacts').select('tags').eq('id',rowId).maybeSingle().then(function(r){
       var t=(r&&r.data&&r.data.tags)||[]; if(t.indexOf('contacted')<0)t.push('contacted');
       BP_SB.from('contacts').update({tags:t}).eq('id',rowId).then(fin).catch(fin);
     }).catch(fin); } else fin();
-  }).catch(function(){ btn.disabled=false; btn.textContent='Contacted ✓'; alert('Could not sync — try again.'); });
+  }).catch(function(){ btn.disabled=false; btn.textContent='Contacted '; alert('Could not sync — try again.'); });
 };
 window.rdSetTrade=function(k){if(_rdTerr)return;_rdTrade=k;
   document.querySelectorAll('.rd-chip').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rdt')===k);});rdRefresh();};
 window.rdSetMin=function(v){_rdMin=+v;rdDraw();};
 var _rdOverdue=false;
 function rdIsOverdue(p){return (p.kind==='due'||p.kind==='noperm')&&(+p.age||0)>=25;}
-window.rdToggleOverdue=function(){_rdOverdue=!_rdOverdue;var b=q('rdOverBtn');if(b){b.classList.toggle('primary',_rdOverdue);b.innerHTML='⏰ Overdue only (25+ yrs)'+(_rdOverdue?' ✓':'');}rdDraw();};
+window.rdToggleOverdue=function(){_rdOverdue=!_rdOverdue;var b=q('rdOverBtn');if(b){b.classList.toggle('primary',_rdOverdue);b.innerHTML='<span class=ms>alarm</span> Overdue only (25+ yrs)'+(_rdOverdue?' <span class=ms>check</span>':'');}rdDraw();};
 window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
-  var b=q('rdStormBtn');if(b)b.innerHTML='&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off');
+  var b=q('rdStormBtn');if(b)b.innerHTML='<span class=ms>thunderstorm</span> Storm overlay: '+(_rdStormOn?'ON':'off');
   if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
 
 var BP_TILES={
@@ -19305,7 +19331,7 @@ function rdBase(){
 var _rdBase=null,_rdLabels=null;
 window.rdToggleSat=function(){
   _rdSat=!_rdSat;
-  var b=q('rdSatBtn'); if(b)b.innerHTML=_rdSat?'\ud83d\uddfa Plain map':'\ud83d\udef0\ufe0f Satellite';
+  var b=q('rdSatBtn'); if(b)b.innerHTML=_rdSat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite';
   if(_rdMap)rdBase();
 };
 function rdRefresh(){
@@ -19583,7 +19609,7 @@ function rdStormModeEval(){
   });
   if(window._rdFreshStorms.length&&!_rdStormOn){
     _rdStormOn=true;
-    var b=q('rdStormBtn');if(b)b.innerHTML='&#9928;&#65039; Storm overlay: ON';
+    var b=q('rdStormBtn');if(b)b.innerHTML='<span class=ms>thunderstorm</span> Storm overlay: ON';
   }
 }
 function rdDemoStorms(){
@@ -19598,7 +19624,7 @@ function rdDraw(){
   if(db){db.style.display=window._rdIsDemo?'block':'none';
     if(window._rdIsDemo&&_rdCity!=='demo'&&(window._rdDiag||[]).length){
       var drop=window._rdDrop||{};
-      db.innerHTML='⚠️ DEMO DATA ('+RADAR_VER+') — live feed came back empty. <span style="font-weight:400">Diagnostics (screenshot this for Claude):</span>'
+      db.innerHTML='<span class=ms>warning</span> DEMO DATA ('+RADAR_VER+') — live feed came back empty. <span style="font-weight:400">Diagnostics (screenshot this for Claude):</span>'
         +(window._rdDiag||[]).map(function(d){return '<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">'+bpEsc(d.api)+' → HTTP '+d.status+' · rows '+d.rows+' · kept '+(d.kept==null?'?':d.kept)+(d.err?' · '+bpEsc(d.err):'')+'</div>';}).join('')
         +'<div style="font-family:ui-monospace,monospace;font-size:11px;font-weight:400;margin-top:3px">dropped — zip:'+(drop.zip||0)+' coords:'+(drop.coords||0)+' date:'+(drop.date||0)+' rule:'+(drop.rule||0)+' score:'+(drop.score||0)+'</div>'
         +(window._rdProbe?'<div style="font-family:ui-monospace,monospace;font-size:10px;font-weight:400;margin-top:5px;word-break:break-all;background:#fff;border-radius:6px;padding:6px">SAMPLE ROW: '+bpEsc(window._rdProbe)+'</div>':'');
@@ -19680,10 +19706,10 @@ function rdDraw(){
     var top=rdPg.items;
     list.innerHTML=top.length?top.map(function(p,r){var i=_rdLeads.indexOf(p);r=r+pgBase;
       var act;
-      if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px">✓ Contacted</span>';
+      if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px"><span class=ms>check</span> Contacted</span>';
       else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">List</button>';
       else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
-      var freshTag=(p.stormFresh?'<span style="color:#dc2626;font-weight:700;font-size:11px"> STORM 72H</span>':(p.storm?' <span title="recent storm nearby">⛈️</span>':''))
+      var freshTag=(p.stormFresh?'<span style="color:#dc2626;font-weight:700;font-size:11px"> STORM 72H</span>':(p.storm?' <span title="recent storm nearby"><span class=ms>thunderstorm</span></span>':''))
         +(p.anchor?'<span style="color:#0f2540;font-weight:700;font-size:11px"> CREW '+p.anchor.ft+' FT</span>':'')+rdKindTag(p,false);
       return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+freshTag+'</td>'
         +'<td class="bpx-mut" style="font-size:12.5px">'+bpEsc((p.anchor?('Roof crew '+p.anchor.ft+' ft away at '+p.anchor.addr+' ('+p.anchor.when+') · '):'')+(p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs'))).slice(0,120)+'</td>'
@@ -19728,14 +19754,14 @@ window.rdSheetClose=function(){
 function rdPopup(p,i,t){
   var lookup='https://www.google.com/search?q='+encodeURIComponent('"'+p.addr+'" '+RADAR_CITIES[_rdCity].name+' property records owner');
   var btn;
-  if(_rdContacted[p.addr]) btn='<div style="margin-top:7px;color:#15803d;font-weight:700;font-size:12px">✓ Contacted — automations running</div>';
+  if(_rdContacted[p.addr]) btn='<div style="margin-top:7px;color:#15803d;font-weight:700;font-size:12px"><span class=ms>check</span> Contacted — automations running</div>';
   else if(_rdAdded[p.addr]) btn='<button onclick="rdContacted('+i+')" style="margin-top:7px;background:#15803d;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">I made contact</button>'
     +' <button onclick="rdSheetClose();rdMineJump()" style="margin-top:7px;background:#fff;color:#2f6bff;border:1px solid #cddcff;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">View in my list</button>';
   else btn='<button onclick="rdAddLead('+i+')" style="margin-top:7px;background:#2f6bff;color:#fff;border:0;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer">+ Add to Contacts</button>';
   return '<div style="font:13.5px/1.55 inherit;min-width:200px;padding-right:26px">'
     +'<b>'+bpEsc(p.addr)+'</b><br>'
     +'<span style="display:inline-block;margin:4px 0;padding:2px 9px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11px">'+rdLabel(p.score)+' · '+p.score+'</span>'
-    +(p.stormFresh?' <span style="font-size:11px;color:#dc2626;font-weight:700">STORM — hit in last 72h</span>':(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700">⛈️ storm nearby</span>':''))
+    +(p.stormFresh?' <span style="font-size:11px;color:#dc2626;font-weight:700">STORM — hit in last 72h</span>':(p.storm?' <span style="font-size:11px;color:#f97316;font-weight:700"><span class=ms>thunderstorm</span> storm nearby</span>':''))
     +(p.kind==='project'?' <span style="font-size:11px;color:#7c3aed;font-weight:700">active project</span>':'')+'<br>'
     +(p.anchor?'<div style="margin:5px 0;padding:7px 10px;background:#eef3fb;border-left:3px solid #0f2540;border-radius:7px;font-size:12.5px"><b>Crew on the street:</b> a '+t.unit+' permit was filed at '+bpEsc(p.anchor.addr)+' — '+p.anchor.ft+' ft away ('+bpEsc(p.anchor.when)+').'+(p.anchor.who?' The crew is <b>'+bpEsc(p.anchor.who)+'</b> — mention you\'re the other bid on the block.':' Their neighbors are watching that job happen.')+'</div>':'')
     +'<span style="font-size:12.5px">'+bpEsc(p.why||('Last '+t.unit+' permit: '+p.year+' ('+p.age+' yrs ago)'))+'</span>'
@@ -19747,7 +19773,7 @@ function rdPopup(p,i,t){
     +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Owner lookup (public records)</a>'
     +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">Reveal owner info</a>':'')
     +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn
-    +' <button onclick="rdHanger('+i+')" style="margin-top:7px;background:#fff;color:#0f2540;border:1px solid #cfd8e4;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer" title="A one-page flyer with this exact reason on it">🖨 Door hanger</button></div>';
+    +' <button onclick="rdHanger('+i+')" style="margin-top:7px;background:#fff;color:#0f2540;border:1px solid #cfd8e4;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer" title="A one-page flyer with this exact reason on it"><span class=ms>print</span> Door hanger</button></div>';
 }
 function rdAgo(ms){var d=Math.max(0,Math.round((Date.now()-ms)/864e5));return d<1?'today':d===1?'yesterday':d<31?d+' days ago':Math.round(d/30.4)+' months ago';}
 function rdKindTag(p,tip){
@@ -19860,11 +19886,11 @@ window.rdEvidence=function(i){
     var verify='';
     if(p.pid&&c.api&&(c.idf||[]).length){
       var idField=(c.idf||[]).filter(function(f){return p.raw[f];})[0];
-      if(idField) verify+='<a href="'+c.api+'?'+idField+'='+encodeURIComponent(p.pid)+'" target="_blank" rel="noopener" style="color:#2f6bff">View raw city record ↗</a>';
+      if(idField) verify+='<a href="'+c.api+'?'+idField+'='+encodeURIComponent(p.pid)+'" target="_blank" rel="noopener" style="color:#2f6bff">View raw city record <span class=ms>arrow_outward</span></a>';
     }
-    if(c.portal) verify+=(verify?' · ':'')+'<a href="'+c.portal+'" target="_blank" rel="noopener" style="color:#2f6bff">'+bpEsc(c.portalName||'Official permit search')+' ↗</a>';
+    if(c.portal) verify+=(verify?' · ':'')+'<a href="'+c.portal+'" target="_blank" rel="noopener" style="color:#2f6bff">'+bpEsc(c.portalName||'Official permit search')+' <span class=ms>arrow_outward</span></a>';
     h='<div style="margin:6px 0;padding:8px 10px;background:#f2f5fb;border-radius:8px;font-size:11.5px">'
-      +'<div style="font-weight:700;margin-bottom:4px;color:#15803d">✓ Public record — how we know</div>'
+      +'<div style="font-weight:700;margin-bottom:4px;color:#15803d"><span class=ms>check</span> Public record — how we know</div>'
       +'<table style="border-collapse:collapse">'+rows+'</table>'
       +(verify?'<div style="margin-top:6px">'+verify+'</div>':'')
       +'</div>';
@@ -20257,7 +20283,7 @@ function bpFmDetail(){
     +'<div class="bpx-chead"><div><b style="font-size:15px">'+bpEsc(c.job_name||'Job')+'</b>'
       +'<div class="bpx-mut" style="font-size:12.5px">'+bpEsc(c.anchor_addr||'')+' · '+n+' homes mapped within '+(c.radius_m||450)+' m</div></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-        +'<button class="bpx-rowbtn" onclick="bpFmHangers()">🖨 Print door hangers</button>'
+        +'<button class="bpx-rowbtn" onclick="bpFmHangers()"><span class=ms>print</span> Print door hangers</button>'
         +'<button class="bpx-rowbtn" onclick="bpFmRoute()">Plan a walking route</button>'
         +bpDelBtn("bpFmDelete()",'Delete this whole campaign')
       +'</div></div>'
@@ -20436,8 +20462,8 @@ function bgColor(sqft){return sqft>=40000?'#b91c1c':sqft>=20000?'#ea580c':sqft>=
 function rdModeBar(active){
   var b=function(m,l,t){return '<button class="bpx-jt'+(active===m?' on':'')+'" title="'+t+'" onclick="rdSetMode(\''+m+'\')">'+l+'</button>';};
   return '<div class="bpx-jobtabs" style="margin-bottom:12px">'
-    +b('homes','\ud83c\udfe0 Homes','Houses scored from permit records and storm reports')
-    +b('commercial','\ud83c\udfe2 Commercial roofs','Strip malls, warehouses, churches \u2014 measured off the satellite view, with the business phone')
+    +b('homes','<span class=ms>home</span> Homes','Houses scored from permit records and storm reports')
+    +b('commercial','<span class=ms>apartment</span> Commercial roofs','Strip malls, warehouses, churches \u2014 measured off the satellite view, with the business phone')
     +'</div>';
 }
 window.rdSetMode=function(m){ window._rdMode=m; bpRadar(); };
@@ -20455,11 +20481,11 @@ function bgShell(){
       +'<div class="bg-bar">'
         +'<input type="text" id="bgWhere" placeholder="Jump to a city, zip or street…" onkeydown="if(event.key===\'Enter\')bgGo()">'
         +'<button class="bpx-rowbtn" onclick="bgGo()" style="margin:0">Go</button>'
-        +'<button class="bpx-rowbtn primary" id="bgScan" onclick="bgScan()" style="margin:0">🔍 Scan this view</button>'
+        +'<button class="bpx-rowbtn primary" id="bgScan" onclick="bgScan()" style="margin:0"><span class=ms>search</span> Scan this view</button>'
         +'<label class="rate">Min roof <select id="bgMin" onchange="bgSetMin(this.value)" style="padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit">'
           +[2500,5000,10000,20000,40000].map(function(v){return '<option value="'+v+'"'+(v===_bg.min?' selected':'')+'>'+v.toLocaleString()+' sq ft</option>';}).join('')+'</select></label>'
         +'<label class="rate">Your rate $<input id="bgRate" value="'+_bg.rate+'" onchange="bgSetRate(this.value)">/sq ft</label>'
-        +'<button class="bpx-rowbtn" onclick="bgToggleSat()" id="bgSatBtn" style="margin:0">'+(_bg.sat?'🗺 Plain map':'🛰️ Satellite')+'</button>'
+        +'<button class="bpx-rowbtn" onclick="bgToggleSat()" id="bgSatBtn" style="margin:0">'+(_bg.sat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite')+'</button>'
       +'</div>'
       +'<div id="bgWrap"><div id="bgMap"></div><div class="bg-stat" id="bgCount">Pan to the area you work, then tap <b>Scan this view</b>.</div>'
         +'<div class="bg-legend"><span><i style="background:#b91c1c"></i>40,000+ sq ft</span><span><i style="background:#ea580c"></i>20,000+</span>'
@@ -20505,7 +20531,7 @@ function bgBase(){
     _bg.base=bpTileLayer(_bg.map,'street');
   }
 }
-window.bgToggleSat=function(){_bg.sat=!_bg.sat;var b=q('bgSatBtn');if(b)b.innerHTML=_bg.sat?'🗺 Plain map':'🛰️ Satellite';if(_bg.map)bgBase();};
+window.bgToggleSat=function(){_bg.sat=!_bg.sat;var b=q('bgSatBtn');if(b)b.innerHTML=_bg.sat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite';if(_bg.map)bgBase();};
 window.bgGo=function(){
   var v=((q('bgWhere')||{}).value||'').trim(); if(!v)return;
   var st=q('bgCount'); if(st)st.textContent='Finding '+v+'…';
@@ -20554,7 +20580,7 @@ window.bgScan=function(){
       var l=q('bgList'); if(l)l.textContent=_bg.err;
       if(st)st.textContent=_bg.err;
     })
-    .then(function(){ _bg.busy=false; var b2=q('bgScan'); if(b2){b2.disabled=false;b2.innerHTML='🔍 Scan this view';} });
+    .then(function(){ _bg.busy=false; var b2=q('bgScan'); if(b2){b2.disabled=false;b2.innerHTML='<span class=ms>search</span> Scan this view';} });
 };
 function bgRender(){
   var rows=(_bg.rows||[]).filter(function(r){return r.sqft>=_bg.min;});
@@ -20580,7 +20606,7 @@ function bgRender(){
       +'<span class="bg-tag">'+bpEsc(r.kind)+'</span>'
       +'<span class="sz">'+bgFmtSqft(r.sqft)+'</span>'
       +'<span class="es">'+bpMoneyFmt(bgEst(r.sqft))+'</span>'
-      +(r.phone?'<span class="bg-tag" style="background:#e7f6ec;color:#15803d">☎ phone</span>':'<span class="bg-tag" style="background:#f4f4f6;color:#9a9aa0">no number</span>')
+      +(r.phone?'<span class="bg-tag" style="background:#e7f6ec;color:#15803d"><span class=ms>call</span> phone</span>':'<span class="bg-tag" style="background:#f4f4f6;color:#9a9aa0">no number</span>')
       +'</div>';
   }).join('')+pg.nav;
 }
@@ -20599,11 +20625,11 @@ function bgSheet(r){
       +'<div><div class="bpx-mut" style="font-size:12px">At $'+_bg.rate+'/sq ft</div><div class="big">'+bpMoneyFmt(bgEst(r.sqft))+'</div></div>'
     +'</div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
-      +(tel?'<a class="bg-call" href="tel:'+bpEsc(tel)+'" onclick="bgStage(\''+r.id+'\',\'called\')">☎ Call '+bpEsc(r.phone)+'</a>'
+      +(tel?'<a class="bg-call" href="tel:'+bpEsc(tel)+'" onclick="bgStage(\''+r.id+'\',\'called\')"><span class=ms>call</span> Call '+bpEsc(r.phone)+'</a>'
            :'<span class="bg-call off" title="OpenStreetMap has no number for this one">No number on file</span>')
       +(r.website?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="'+bpEsc(/^https?:/i.test(r.website)?r.website:'https://'+r.website)+'" target="_blank" rel="noopener">Website</a>':'')
       +'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lng+'" target="_blank" rel="noopener">Street view</a>'
-      +'<button class="bpx-rowbtn'+(saved?'':' primary')+'" style="margin:0" onclick="bgSave(\''+r.id+'\')">'+(saved?'✓ On my list':'+ Add to my list')+'</button>'
+      +'<button class="bpx-rowbtn'+(saved?'':' primary')+'" style="margin:0" onclick="bgSave(\''+r.id+'\')">'+(saved?'<span class=ms>check</span> On my list':'+ Add to my list')+'</button>'
     +'</div>'
     +(saved?'<div class="bg-stg">'+BG_STAGES.map(function(s){
         return '<button class="'+(saved.stage===s[0]?'on':'')+'" onclick="bgStage(\''+r.id+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</div>':'')
@@ -20659,7 +20685,7 @@ window.bgMineRender=function(){
       return '<div class="bg-row" style="cursor:default">'
         +'<span class="nm">'+bpEsc(r.name||'Unnamed')+(r.addr?' <span class="bpx-mut" style="font-weight:400">· '+bpEsc(r.addr)+'</span>':'')+'</span>'
         +'<span class="sz">'+bgFmtSqft(r.area_sqft)+'</span><span class="es">'+bpMoneyFmt(bgEst(r.area_sqft))+'</span>'
-        +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'">☎ Call</a>':'')
+        +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'"><span class=ms>call</span> Call</a>':'')
         +'<span class="bg-stg" style="margin:0">'+BG_STAGES.map(function(s){
             return '<button class="'+(r.stage===s[0]?'on':'')+'" onclick="bgStage(\''+bpEsc(r.osm_id)+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</span>'
         +bpDelBtn("bgDrop('"+bpEsc(r.osm_id)+"')",'Take this building off your list')+'</div>';
@@ -20751,7 +20777,7 @@ window.bgPartnersRender=function(){
           +(list.length?pgp.items.map(function(x){
               var tel=String(x.phone||'').replace(/[^0-9+]/g,'');
               return '<div class="bg-row" style="cursor:default"><span class="nm">'+bpEsc(x.name)+(x.addr?' <span class="bpx-mut" style="font-weight:400">\u00b7 '+bpEsc(x.addr)+'</span>':'')+'</span>'
-                +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'">\u260e Call</a>':'<span class="bg-tag">no number</span>')
+                +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'"><span class=ms>call</span> Call</a>':'<span class="bg-tag">no number</span>')
                 +(x.website?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="'+bpEsc(/^https?:/i.test(x.website)?x.website:'https://'+x.website)+'" target="_blank" rel="noopener">Site</a>':'')+'</div>';
             }).join('')+pgp.nav:'<span class="bpx-mut">None mapped near here.</span>')
           +'</div>';
@@ -20760,6 +20786,292 @@ window.bgPartnersRender=function(){
       +'Keep it a manual call \u2014 autodialers and recorded messages are a different rule, and that one does bite.</div>';
 };
 </script>
+
+<style id="bpx-v3">
+/* =====================================================================
+   BuilderPro portal, theme 3.
+   One accent, cool-grey neutrals, Geist for type, Material Symbols (wght
+   300) as the single icon family. Surfaces are built like machined parts:
+   a hairline edge, a light catch along the top, and a shadow tinted to the
+   ground it sits on, never pure black. Light and dark are both designed;
+   dark is not light with the lights off. This block loads last on purpose
+   so it wins on order, and it reaches for !important only where the older
+   sidebar theme already used it.
+   ===================================================================== */
+#bpx{
+  --sans:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --r-lg:18px; --r-md:12px; --r-sm:9px;
+  font-family:var(--sans);
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+/* ---------- light ---------- */
+#bpx:not(.bpx-dark){
+  --bg:#eef1f6; --bg-2:#e6eaf1; --card:#ffffff; --soft:#f5f7fb;
+  --line:#dfe5ee; --line-2:#e9edf3;
+  --ink:#0f1a2b; --grey:#5a6b82; --grey-l:#8a97a8; --mu:#5a6b82;
+  --blue:#2b63e6; --blue-d:#1f4fc4; --blue-l:#e8effd; --blue-glow:rgba(43,99,230,.45);
+  --sh-c:15,26,43;
+  --edge:rgba(255,255,255,.85);
+  --side-a:#12203a; --side-b:#0c1526;
+  background:var(--bg) !important; color:var(--ink);
+}
+/* ---------- dark ---------- */
+#bpx.bpx-dark{
+  --bg:#0b0f16; --bg-2:#0e131c; --card:#121826; --soft:#171f2e;
+  --line:#233043; --line-2:#1c2637;
+  --ink:#e9eef6; --grey:#9fabbd; --grey-l:#6f7d92; --mu:#9fabbd;
+  --blue:#5a8bff; --blue-d:#8db0ff; --blue-l:#1a2745; --blue-glow:rgba(90,139,255,.4);
+  --sh-c:0,0,0;
+  --edge:rgba(255,255,255,.055);
+  --side-a:#0d1220; --side-b:#090d15;
+  background:var(--bg) !important; color:var(--ink);
+}
+
+/* ---------- the one icon family ---------- */
+#bpx .ms{
+  font-family:'Material Symbols Rounded' !important;font-weight:300;font-style:normal;
+  font-size:1.2em;line-height:1;display:inline-block;vertical-align:-.2em;
+  font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  letter-spacing:normal !important;text-transform:none !important;white-space:nowrap;
+  direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased;
+}
+#bpx .bpx-nav .ms{font-size:20px;width:20px;text-align:center;flex:0 0 20px;vertical-align:middle;opacity:.92}
+#bpx .bpx-rowbtn .ms,#bpx .bpx-btn .ms,#bpx .bpx-addbtn .ms,#bpx .bpx-jt .ms{font-size:1.15em;vertical-align:-.18em;margin-right:.1em}
+
+/* ---------- grain, fixed and untouchable, so the flat areas have a surface ---------- */
+#bpx::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+#bpx.bpx-dark::after{mix-blend-mode:screen;opacity:.05}
+
+/* ---------- app shell ---------- */
+@media(min-width:821px){#bpx .bpx-app.on{grid-template-columns:244px 1fr}}
+#bpx .bpx-main{padding:28px 34px 40px}
+#bpx .bpx-mhdr{margin-bottom:22px}
+#bpx .bpx-mhdr h1{font-family:var(--sans) !important;font-weight:800 !important;font-size:25px !important;letter-spacing:-.028em !important;color:var(--ink) !important;line-height:1.15}
+#bpx .bpx-mhdr p{color:var(--grey) !important;font-size:13.5px;margin-top:5px;max-width:70ch}
+#bpx.bpx-dark .bpx-mhdr h1{color:var(--ink) !important}
+
+/* ---------- sidebar: a solid tray with a light catch, every branch its own accordion ---------- */
+#bpx .bpx-side{
+  background:linear-gradient(180deg,var(--side-a),var(--side-b)) !important;
+  border-right:1px solid rgba(255,255,255,.06) !important;
+  padding:22px 14px !important;position:relative;
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.03),inset 0 1px 0 rgba(255,255,255,.06);
+}
+#bpx .bpx-side::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 60% at 0% 0%,rgba(90,139,255,.18),transparent 60%);
+}
+#bpx .bpx-side>*{position:relative}
+#bpx .bpx-side .bpx-brand2{color:#fff !important;margin-bottom:26px}
+#bpx .bpx-side .bpx-brand2 span{color:#8fc1ff !important}
+#bpx .bpx-nav a{
+  color:#b4c0d3 !important;font-weight:500;border-radius:11px !important;padding:10px 12px !important;
+  transition:background .18s var(--ease),color .18s var(--ease),transform .18s var(--ease),box-shadow .22s var(--ease) !important;
+}
+#bpx .bpx-nav a:hover{background:rgba(255,255,255,.07) !important;color:#fff !important}
+#bpx .bpx-nav a:active{transform:scale(.985)}
+#bpx .bpx-nav a.on,#bpx .bpx-nav .bpx-sub a.on{
+  background:linear-gradient(180deg,#4a83ff,#2b63e6) !important;color:#fff !important;font-weight:600;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 10px 22px -8px var(--blue-glow) !important;
+}
+#bpx .bpx-grp.has-on .bpx-grp-h{color:#fff !important}
+#bpx .bpx-grp-h .bpx-chev{stroke:currentColor;opacity:.55}
+#bpx .bpx-sub-in::before{background:rgba(255,255,255,.12) !important}
+#bpx .bpx-sub a{padding:8px 12px 8px 22px !important;font-size:13.3px !important;border-radius:9px !important}
+#bpx .bpx-nav-foot{border-top:1px solid rgba(255,255,255,.1) !important;margin-top:auto;padding-top:10px}
+#bpx .bpx-user2{border-top:1px solid rgba(255,255,255,.1) !important;padding-top:14px !important;margin-top:10px !important}
+#bpx .bpx-side .bpx-uemail{color:#c0cbdc !important;font-size:12.5px;font-weight:600}
+#bpx .bpx-side .bpx-logout{
+  background:rgba(255,255,255,.05) !important;border:1px solid rgba(255,255,255,.16) !important;color:#e6ecf5 !important;
+  border-radius:10px !important;padding:10px !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+  transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease);
+}
+#bpx .bpx-side .bpx-logout:hover{background:rgba(255,255,255,.09) !important;border-color:rgba(255,255,255,.3) !important}
+#bpx .bpx-side .bpx-logout:active{transform:translateY(1px)}
+#bpx .bpx-mobbar{background:linear-gradient(180deg,var(--side-a),var(--side-b)) !important;border-bottom:1px solid rgba(255,255,255,.06) !important}
+#bpx .bpx-mobbar a{color:#c9d3e2 !important;border-color:rgba(255,255,255,.18) !important;border-radius:999px}
+#bpx .bpx-mobbar a.on{background:linear-gradient(180deg,#4a83ff,#2b63e6) !important;border-color:transparent !important;color:#fff !important}
+
+/* ---------- surfaces: hairline edge, light catch on top, tinted ambient shadow ---------- */
+#bpx .bpx-panel,#bpx .bpx-stat,#bpx .bpx-card,#bpx .bpx-cd-card,#bpx .bpx-auto-card,#bpx .fm-card,#bpx .bg-sheet,#bpx .fm-copy{
+  background:var(--card) !important;border:1px solid var(--line) !important;border-radius:var(--r-lg) !important;
+  box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05),0 12px 32px -16px rgba(var(--sh-c),.28) !important;
+  transition:box-shadow .25s var(--ease),transform .25s var(--ease),border-color .2s var(--ease);
+}
+#bpx .bpx-stat{border-top:1px solid var(--line) !important;padding:18px 20px !important}
+#bpx .bpx-stat .lbl{color:var(--grey);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+#bpx .bpx-stat .val{font-family:var(--sans) !important;font-weight:800;letter-spacing:-.03em;font-size:26px;color:var(--ink);font-feature-settings:'tnum'}
+#bpx .bpx-stat .val.blue{color:var(--blue)}
+#bpx .bpx-stat .note{color:var(--grey-l)}
+#bpx .fm-card{cursor:pointer}
+#bpx .fm-card:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 var(--edge),0 2px 4px rgba(var(--sh-c),.06),0 22px 44px -18px rgba(var(--sh-c),.35) !important}
+#bpx .bpx-ptitle{color:var(--ink) !important;font-weight:700 !important;font-size:13.5px !important;letter-spacing:-.01em}
+#bpx .bpx-ptitle .lg2{color:var(--grey-l);font-weight:500;font-size:12px}
+#bpx .bpx-cwrap{background:var(--card) !important;border:1px solid var(--line) !important;border-radius:var(--r-md) !important;box-shadow:inset 0 1px 0 var(--edge) !important}
+#bpx .bpx-mut{color:var(--grey) !important}
+#bpx .bpx-empty2,#bpx .bpx-emptyhero{color:var(--grey)}
+#bpx .bpx-emptyhero img{border-radius:var(--r-md)}
+#bpx .bpx-when-note,#bpx .bpx-ga-note,#bpx .fm-warn,#bpx .bg-note{border-radius:var(--r-md) !important}
+
+/* ---------- buttons: gradient body, light catch, tinted glow, physical press ---------- */
+#bpx .bpx-btn:not(.ghost),#bpx .bpx-addbtn,#bpx .bpx-rowbtn.primary,#bpx .bg-call:not(.off),#bpx .bpx-donebtn,#bpx .fm-hero .btn{
+  background:linear-gradient(180deg,#4a83ff,#2b63e6) !important;color:#fff !important;border:0 !important;
+  border-radius:11px !important;font-weight:650;letter-spacing:-.005em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.12),0 1px 2px rgba(var(--sh-c),.12),0 8px 18px -8px var(--blue-glow) !important;
+  transition:transform .18s var(--ease),box-shadow .22s var(--ease),filter .18s var(--ease) !important;
+}
+#bpx .bpx-btn:not(.ghost):hover,#bpx .bpx-addbtn:hover,#bpx .bpx-rowbtn.primary:hover,#bpx .bg-call:not(.off):hover,#bpx .bpx-donebtn:hover,#bpx .fm-hero .btn:hover{
+  transform:translateY(-1px);filter:brightness(1.05);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(0,0,0,.12),0 2px 4px rgba(var(--sh-c),.12),0 14px 26px -10px var(--blue-glow) !important;
+}
+#bpx .bpx-btn:not(.ghost):active,#bpx .bpx-addbtn:active,#bpx .bpx-rowbtn.primary:active,#bpx .bg-call:not(.off):active,#bpx .bpx-donebtn:active,#bpx .fm-hero .btn:active{transform:translateY(1px) scale(.99);filter:brightness(.98)}
+#bpx .bg-call:not(.off){background:linear-gradient(180deg,#2fa25b,#1d7f43) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 8px 18px -8px rgba(29,127,67,.5) !important}
+#bpx .fm-hero .btn{color:#0f2540 !important;background:linear-gradient(180deg,#ffffff,#eaf0fb) !important;box-shadow:inset 0 1px 0 #fff,0 8px 18px -8px rgba(0,0,0,.35) !important}
+#bpx .bpx-btn.ghost,#bpx .bpx-rowbtn:not(.primary),#bpx .bpx-ghostbtn,#bpx .bpx-iconbtn,#bpx .bpx-logo-up,#bpx .bpx-logo-rm,#bpx .bpx-delbtn,#bpx .sg-decline,#bpx .bpx-calnav button{
+  background:var(--card) !important;color:var(--ink) !important;border:1px solid var(--line) !important;border-radius:9px !important;
+  box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.06) !important;
+  transition:transform .18s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease) !important;
+}
+#bpx .bpx-btn.ghost:hover,#bpx .bpx-rowbtn:not(.primary):hover,#bpx .bpx-ghostbtn:hover,#bpx .bpx-iconbtn:hover,#bpx .bpx-calnav button:hover{
+  border-color:var(--grey-l) !important;transform:translateY(-1px);box-shadow:inset 0 1px 0 var(--edge),0 4px 10px -4px rgba(var(--sh-c),.25) !important;background:var(--card) !important;
+}
+#bpx .bpx-btn.ghost:active,#bpx .bpx-rowbtn:not(.primary):active{transform:translateY(1px)}
+#bpx .bpx-delbtn{color:#c0392b !important;border-color:rgba(192,57,43,.28) !important}
+#bpx .bpx-delbtn:hover{background:#dc2626 !important;border-color:#dc2626 !important;color:#fff !important}
+#bpx.bpx-dark .bpx-delbtn{color:#ff8a80 !important;border-color:rgba(255,138,128,.3) !important}
+#bpx .bpx-rowbtn{font-weight:600}
+
+/* ---------- segmented tabs: a recessed tray, the active one raised out of it ---------- */
+#bpx .bpx-jobtabs{background:var(--bg-2) !important;padding:3px !important;border-radius:11px !important;gap:2px !important;display:inline-flex !important;
+  box-shadow:inset 0 1px 2px rgba(var(--sh-c),.08),inset 0 0 0 1px rgba(var(--sh-c),.04)}
+#bpx.bpx-dark .bpx-jobtabs{background:#0d121b !important;box-shadow:inset 0 1px 2px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.04)}
+#bpx .bpx-jt{border:0 !important;background:transparent !important;border-radius:8px !important;color:var(--grey) !important;padding:7px 14px !important;font-weight:600 !important;
+  transition:background .2s var(--ease),color .2s var(--ease),box-shadow .2s var(--ease),transform .18s var(--ease) !important}
+#bpx .bpx-jt:hover{color:var(--ink) !important}
+#bpx .bpx-jt.on{background:var(--card) !important;color:var(--ink) !important;box-shadow:inset 0 1px 0 var(--edge),0 1px 3px rgba(var(--sh-c),.14),0 4px 10px -6px rgba(var(--sh-c),.3) !important}
+#bpx .bpx-jt:active{transform:scale(.98)}
+
+/* ---------- inputs: slightly recessed, accent ring on focus ---------- */
+#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),#bpx select,#bpx textarea{
+  background:var(--card) !important;color:var(--ink) !important;border:1px solid var(--line) !important;border-radius:10px !important;
+  box-shadow:inset 0 1px 2px rgba(var(--sh-c),.06) !important;font-family:var(--sans);
+  transition:border-color .18s var(--ease),box-shadow .18s var(--ease) !important;
+}
+#bpx input::placeholder,#bpx textarea::placeholder{color:var(--grey-l)}
+#bpx input:focus,#bpx select:focus,#bpx textarea:focus{border-color:var(--blue) !important;box-shadow:inset 0 1px 2px rgba(var(--sh-c),.04),0 0 0 3px rgba(43,99,230,.16) !important;outline:none}
+#bpx.bpx-dark input:focus,#bpx.bpx-dark select:focus,#bpx.bpx-dark textarea:focus{box-shadow:0 0 0 3px rgba(90,139,255,.22) !important}
+#bpx .bpx-fld label,#bpx label{color:var(--grey);font-weight:600;font-size:12.5px}
+#bpx .bpx-fldhint{color:var(--grey-l)}
+#bpx *:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+#bpx button:focus:not(:focus-visible){outline:none}
+
+/* ---------- tables ---------- */
+#bpx .bpx-ctable thead th,#bpx .bpx-table th{background:var(--soft) !important;color:var(--grey) !important;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--line) !important}
+#bpx .bpx-ctable td,#bpx .bpx-table td{border-bottom:1px solid var(--line-2) !important;color:var(--ink)}
+#bpx .bpx-ctable tbody tr{transition:background .15s var(--ease)}
+#bpx .bpx-ctable tbody tr:hover td{background:var(--soft)}
+#bpx .bpx-num{font-feature-settings:'tnum'}
+#bpx .bpx-pos{color:#1d9a55}#bpx .bpx-neg{color:#d64545}
+#bpx.bpx-dark .bpx-pos{color:#4fd087}#bpx.bpx-dark .bpx-neg{color:#ff7b72}
+
+/* ---------- badges & chips ---------- */
+#bpx .bpx-badge{background:var(--blue-l) !important;color:var(--blue-d) !important;border:0 !important;border-radius:999px !important;font-weight:650;letter-spacing:.01em}
+#bpx .bpx-badge.warn{background:#fff3df !important;color:#9a5b00 !important}
+#bpx .bpx-badge.ok{background:#e4f7ec !important;color:#137a40 !important}
+#bpx .bpx-badge.bad{background:#fde8e8 !important;color:#b42323 !important}
+#bpx.bpx-dark .bpx-badge.warn{background:#3a2a10 !important;color:#ffc36a !important}
+#bpx.bpx-dark .bpx-badge.ok{background:#12301f !important;color:#5fe39a !important}
+#bpx.bpx-dark .bpx-badge.bad{background:#3a1717 !important;color:#ff8a80 !important}
+#bpx .bg-tag,#bpx .fm-chip{border-radius:999px}
+#bpx.bpx-dark .bg-tag{background:#1c2637 !important;color:#9fabbd !important}
+#bpx.bpx-dark .fm-chip{background:#1a2745 !important;color:#8db0ff !important}
+
+/* ---------- modals ---------- */
+#bpx .bpx-modal{background:rgba(8,12,20,.5) !important;backdrop-filter:blur(6px) saturate(120%)}
+#bpx .bpx-modalcard{background:var(--card) !important;border:1px solid var(--line) !important;border-radius:20px !important;
+  box-shadow:inset 0 1px 0 var(--edge),0 30px 80px -20px rgba(var(--sh-c),.55),0 2px 6px rgba(var(--sh-c),.1) !important;color:var(--ink)}
+#bpx .bpx-modalcard h3{font-weight:800;letter-spacing:-.025em;color:var(--ink)}
+#bpx .bpx-sub{color:var(--grey)}
+
+/* ---------- header controls: two glass pills top-right ---------- */
+#bpx .bpx-close,#bpx .bpx-themebtn{
+  width:38px !important;height:38px !important;border-radius:999px !important;
+  background:rgba(255,255,255,.72) !important;border:1px solid rgba(15,26,43,.1) !important;color:var(--ink) !important;
+  backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 4px 14px -6px rgba(15,26,43,.35);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  transition:transform .18s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease);
+}
+#bpx.bpx-dark .bpx-close,#bpx.bpx-dark .bpx-themebtn{background:rgba(18,24,38,.75) !important;border-color:rgba(255,255,255,.1) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 4px 14px -6px rgba(0,0,0,.7)}
+#bpx .bpx-close:hover,#bpx .bpx-themebtn:hover{transform:translateY(-1px);border-color:var(--blue) !important}
+#bpx .bpx-themebtn .ms{font-size:20px}
+
+/* ---------- misc components picked up by the new tokens ---------- */
+#bpx .bpx-set-hdr{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:inset 0 1px 0 var(--edge),0 12px 32px -16px rgba(var(--sh-c),.28)}
+#bpx .bpx-set-id h2{color:var(--ink);letter-spacing:-.02em}
+#bpx .bpx-set-plan{background:var(--blue-l);color:var(--blue-d);border-radius:999px;font-weight:700}
+#bpx .bpx-rg-bar{background:linear-gradient(135deg,#12203a,#0c1526) !important;border-radius:var(--r-lg) !important;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 12px 32px -16px rgba(0,0,0,.5)}
+#bpx .fm-hero{border-radius:var(--r-lg);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 16px 40px -18px rgba(0,0,0,.55)}
+#bpx #rdMapWrap,#bpx #bgWrap{border-radius:var(--r-lg) !important;border:1px solid var(--line) !important;box-shadow:inset 0 1px 0 var(--edge),0 12px 32px -16px rgba(var(--sh-c),.3) !important}
+#bpx .rd-legend,#bpx .bg-legend{background:rgba(255,255,255,.9) !important;border-radius:12px !important;backdrop-filter:blur(8px)}
+#bpx.bpx-dark .rd-legend,#bpx.bpx-dark .bg-legend{background:rgba(18,24,38,.9) !important;color:var(--ink);border-color:var(--line) !important}
+#bpx.bpx-dark .rd-legend .cnts{color:var(--grey)}#bpx.bpx-dark .rd-legend .cnts b{color:var(--ink)}
+#bpx.bpx-dark .fm-row,#bpx.bpx-dark .bg-row{border-color:var(--line-2) !important;color:var(--ink)}
+#bpx.bpx-dark .bg-row:hover{background:var(--soft)}
+#bpx.bpx-dark .fm-stg button,#bpx.bpx-dark .bg-stg button{background:var(--card);border-color:var(--line);color:var(--grey)}
+#bpx.bpx-dark .fm-stg button.on,#bpx.bpx-dark .bg-stg button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+#bpx.bpx-dark .fm-nums b,#bpx.bpx-dark .bg-sheet .big,#bpx.bpx-dark .bg-row .es{color:var(--ink)}
+#bpx.bpx-dark .fm-warn,#bpx.bpx-dark .bg-note{background:#2a2110 !important;border-color:#4a3a15 !important;color:#f0c977 !important}
+#bpx.bpx-dark .fm-copy pre{color:var(--ink)}
+#bpx.bpx-dark .bpx-cp-stars,#bpx.bpx-dark .bpx-mk-stars{color:#f5b301}
+#bpx.bpx-dark ::-webkit-scrollbar{width:10px;height:10px}
+#bpx.bpx-dark ::-webkit-scrollbar-thumb{background:#243043;border-radius:999px;border:2px solid var(--bg)}
+#bpx.bpx-dark .bpx-fbar{background:var(--blue)}
+#bpx.bpx-dark svg text{fill:var(--grey)}
+
+/* ---------- view enter: heavier, springier ---------- */
+#bpxViewArea.bpx-in{animation:bpxIn3 .42s var(--ease-out) both}
+@keyframes bpxIn3{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#bpxSpin i{border-top-color:var(--blue) !important}
+
+/* ---------- login ---------- */
+#bpx .bpx-auth .bpx-card{border-radius:22px !important}
+#bpx .bpx-auth h1{font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+#bpx .bpx-sub2,#bpx .bpx-hint{color:var(--grey)}
+
+/* ---------- mobile ---------- */
+@media(max-width:820px){
+  #bpx .bpx-mobbar{padding-right:100px !important}
+  #bpx .bpx-main{padding:16px 16px 32px}
+  #bpx .bpx-mhdr h1{font-size:22px !important}
+  #bpx .bpx-close,#bpx .bpx-themebtn{width:34px !important;height:34px !important}
+}
+@media(prefers-reduced-motion:reduce){
+  #bpx *,#bpx *::before,#bpx *::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+/* ---------- dark, restated at the old block's specificity ---------- */
+#bpx.bpx-dark .bpx-panel,#bpx.bpx-dark .bpx-stat,#bpx.bpx-dark .bpx-card,#bpx.bpx-dark .bpx-cd-card,#bpx.bpx-dark .bpx-auto-card,#bpx.bpx-dark .bpx-cwrap,#bpx.bpx-dark .bpx-modalcard,#bpx.bpx-dark .fm-card,#bpx.bpx-dark .bg-sheet,#bpx.bpx-dark .fm-copy,#bpx.bpx-dark .bpx-set-hdr{background:var(--card) !important;border-color:var(--line) !important;color:var(--ink)}
+#bpx.bpx-dark .bpx-jt{background:transparent !important;border:0 !important;color:var(--grey) !important}
+#bpx.bpx-dark .bpx-jt:hover{color:var(--ink) !important}
+#bpx.bpx-dark .bpx-jt.on{background:var(--soft) !important;color:var(--ink) !important;box-shadow:inset 0 1px 0 var(--edge),0 1px 3px rgba(0,0,0,.55),0 4px 10px -6px rgba(0,0,0,.6) !important}
+#bpx.bpx-dark .bpx-btn.ghost,#bpx.bpx-dark .bpx-iconbtn,#bpx.bpx-dark .bpx-ghostbtn,#bpx.bpx-dark .bpx-calnav button,#bpx.bpx-dark .bpx-mtab,#bpx.bpx-dark .bpx-rowbtn:not(.primary),#bpx.bpx-dark .bpx-logo-up,#bpx.bpx-dark .bpx-logo-rm{background:var(--soft) !important;border-color:var(--line) !important;color:var(--ink) !important}
+#bpx.bpx-dark .bpx-btn.ghost:hover,#bpx.bpx-dark .bpx-iconbtn:hover,#bpx.bpx-dark .bpx-ghostbtn:hover,#bpx.bpx-dark .bpx-rowbtn:not(.primary):hover,#bpx.bpx-dark .bpx-calnav button:hover{background:#1c2536 !important;border-color:#33425a !important}
+#bpx.bpx-dark .bpx-delbtn{background:var(--soft) !important;color:#ff8a80 !important;border-color:rgba(255,138,128,.3) !important}
+#bpx.bpx-dark .bpx-delbtn:hover{background:#dc2626 !important;border-color:#dc2626 !important;color:#fff !important}
+#bpx.bpx-dark .bpx-modalcard input,#bpx.bpx-dark .bpx-modalcard select,#bpx.bpx-dark .bpx-modalcard textarea,#bpx.bpx-dark #bpxLogin input,#bpx.bpx-dark .bpx-fld input,#bpx.bpx-dark .bpx-fld textarea,#bpx.bpx-dark .bpx-fld select,#bpx.bpx-dark .bpx-exprow select,#bpx.bpx-dark .bpx-expamt,#bpx.bpx-dark input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),#bpx.bpx-dark select,#bpx.bpx-dark textarea{background:var(--bg-2) !important;border-color:var(--line) !important;color:var(--ink) !important;box-shadow:inset 0 1px 2px rgba(0,0,0,.45) !important}
+#bpx.bpx-dark .bpx-side .bpx-logout{background:rgba(255,255,255,.05) !important;border-color:rgba(255,255,255,.16) !important;color:#e6ecf5 !important}
+#bpx.bpx-dark .bpx-ctable thead th,#bpx.bpx-dark .bpx-table th{background:var(--soft) !important;color:var(--grey) !important}
+#bpx.bpx-dark .bpx-mobbar{background:linear-gradient(180deg,var(--side-a),var(--side-b)) !important}
+#bpx.bpx-dark .bpx-set-plan{background:var(--blue-l);color:var(--blue-d)}
+#bpx.bpx-dark .bpx-when-note,#bpx.bpx-dark .bpx-ga-note{background:var(--soft) !important;border-color:var(--line) !important}
+</style>
 
 </body>
 </html>

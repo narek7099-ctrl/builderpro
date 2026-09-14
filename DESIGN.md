@@ -7,41 +7,63 @@ description: >
   saturated blue doing all the persuading. The portal is a navy sidebar against a
   cool near-white workspace, built to be read all day on a phone in a truck. Brand
   voltage is restraint: one blue, cool neutrals, generous whitespace, and real
-  roofing photography under a navy tint rather than illustration. Type is Inter
-  throughout — no serif anywhere in product UI. The lattice-hexagon mark pairs
-  with a bold two-tone wordmark, slate "Builder" + blue "Pro".
+  roofing photography under a navy tint rather than illustration. The portal is
+  set in Geist with one icon family (Material Symbols Rounded, weight 300) and
+  no emoji; the marketing site still carries Inter as legacy. Surfaces are built
+  like machined parts: a hairline edge, a light catch along the top, a shadow
+  tinted to the ground. Light and dark are both designed, not one dimmed. The
+  lattice-hexagon mark pairs with a bold two-tone wordmark, slate "Builder" +
+  blue "Pro".
 
 colors:
   # brand
-  primary: "#2f6bff"            # the one accent. buttons, links, active nav, focus
-  primary-active: "#1b56ee"     # hover / pressed
-  primary-soft: "#eef3ff"       # tinted fills, badges, active row wash
-  primary-on-dark: "#7bc8ff"    # links & accents on the navy sidebar
+  primary: "#2b63e6"            # the one accent. buttons, links, active nav, focus
+  primary-active: "#1f4fc4"     # hover / pressed, and accent text on light fills
+  primary-soft: "#e8effd"       # tinted fills, badges, active row wash
+  primary-hi: "#4a83ff"         # top of the primary gradient (buttons, active nav)
+  primary-on-dark: "#8fc1ff"    # links & accents on the navy sidebar
+  primary-dark-mode: "#5a8bff"  # the accent when the whole app is dark
+  primary-dark-mode-text: "#8db0ff" 
   primary-disabled: "#c9d8ff"
   logo-word: "#4a5568"          # "Builder" in the wordmark
   logo-accent: "#3b73b9"        # "Pro" in the wordmark
 
   # text
-  ink: "#0c0c0d"                # headings, primary text
-  ink-2: "#26262a"              # secondary headings
-  body: "#3f4350"
-  muted: "#6a6a70"              # labels, captions, helper text
-  muted-soft: "#9a9aa0"         # timestamps, disabled, fine print
+  ink: "#0f1a2b"                # headings, primary text (navy-black, never pure)
+  ink-2: "#1b2a41"              # secondary headings
+  body: "#3c4c63"
+  muted: "#5a6b82"              # labels, captions, helper text
+  muted-soft: "#8a97a8"         # timestamps, disabled, fine print
   on-primary: "#ffffff"
   on-dark: "#ffffff"
   on-dark-soft: "#b9c5d8"       # sidebar nav items at rest
 
   # surfaces (cool, never warm — see "Known tension")
   canvas: "#ffffff"             # marketing page ground
-  workspace: "#f7f9fc"          # portal page ground behind panels
+  workspace: "#eef1f6"          # portal page ground behind panels
+  workspace-deep: "#e6eaf1"     # recessed trays (segmented tabs)
   surface-card: "#ffffff"       # panels, cards, table bodies
-  surface-soft: "#f6f8fb"       # inset rows, quiet fills, tab rests
-  surface-dark: "#1b2636"       # portal sidebar
-  surface-dark-deep: "#0b1220"  # darkest navy, login card, dark-mode ground
-  surface-dark-elevated: "#151b26"  # dark-mode cards
-  hairline: "#e4e9f0"           # borders, table rules
-  hairline-soft: "#f0f2f6"      # inner dividers
-  hairline-dark: "#232c3a"      # borders inside navy / dark mode
+  surface-soft: "#f5f7fb"       # inset rows, quiet fills, table heads
+  sidebar-top: "#12203a"        # sidebar gradient, top
+  sidebar-bottom: "#0c1526"     # sidebar gradient, bottom
+  hairline: "#dfe5ee"           # borders, table rules
+  hairline-soft: "#e9edf3"      # inner dividers
+  edge-light: "rgba(255,255,255,.85)"   # the 1px light catch on top of every surface
+  shadow-tint: "15,26,43"       # rgb the ambient shadows are mixed from (navy, not black)
+
+  # dark mode (a second designed palette, not the light one inverted)
+  dark-ground: "#0b0f16"
+  dark-ground-deep: "#0e131c"   # recessed inputs and trays
+  dark-card: "#121826"
+  dark-soft: "#171f2e"          # raised tab, ghost button rest
+  dark-hairline: "#233043"
+  dark-hairline-soft: "#1c2637"
+  dark-ink: "#e9eef6"
+  dark-muted: "#9fabbd"
+  dark-muted-soft: "#6f7d92"
+  dark-edge-light: "rgba(255,255,255,.055)"
+  dark-sidebar-top: "#0d1220"
+  dark-sidebar-bottom: "#090d15" 
 
   # photo treatment
   photo-tint-from: "rgba(18,35,61,0.90)"
@@ -64,101 +86,113 @@ colors:
 
 typography:
   display-xl:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Inter, system-ui, sans-serif"   # marketing site only (legacy)
     fontSize: 56px
     fontWeight: 800
     lineHeight: 1.05
     letterSpacing: -1.8px
   display-lg:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Inter, system-ui, sans-serif"   # marketing site only (legacy)
     fontSize: 42px
     fontWeight: 800
     lineHeight: 1.1
     letterSpacing: -1.2px
   display-md:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Inter, system-ui, sans-serif"   # marketing site only (legacy)
     fontSize: 32px
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: -0.8px
   page-title:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 26px
-    fontWeight: 700
-    lineHeight: 1.2
-    letterSpacing: -0.5px
+    fontFamily: "Geist, system-ui, sans-serif"
+    fontSize: 25px
+    fontWeight: 800
+    lineHeight: 1.15
+    letterSpacing: -0.028em
   panel-title:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 15px
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: -0.2px
   stat-value:
-    fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: 28px
-    fontWeight: 700
+    fontFamily: "Geist, system-ui, sans-serif"
+    fontSize: 26px
+    fontWeight: 800
     lineHeight: 1
-    letterSpacing: -0.6px
+    letterSpacing: -0.03em
+    fontVariantNumeric: tabular-nums
   body-md:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 15px
     fontWeight: 400
     lineHeight: 1.6
   body-sm:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 13.5px
     fontWeight: 400
     lineHeight: 1.55
   table-cell:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 13.5px
     fontWeight: 400
     lineHeight: 1.45
   caption:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 12px
     fontWeight: 500
     lineHeight: 1.45
   label-uppercase:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 11px
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: 0.07em
     textTransform: uppercase
   button:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 14px
     fontWeight: 600
     lineHeight: 1
   nav-link:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 14px
     fontWeight: 500
     lineHeight: 1.4
   nav-sublink:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 13.3px
     fontWeight: 500
     lineHeight: 1.4
   wordmark:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontSize: 22px
     fontWeight: 700
     letterSpacing: -0.03em
   numeric:
-    fontFamily: "Inter, system-ui, sans-serif"
+    fontFamily: "Geist, system-ui, sans-serif"
     fontVariantNumeric: tabular-nums
     fontSize: 13.5px
     fontWeight: 600
 
+icons:
+  family: "Material Symbols Rounded"
+  weight: 300                    # light, precise lines; never the filled or heavy cuts
+  fill: 0
+  opticalSize: 20
+  markup: '<span class="ms">name</span>'
+  navSize: 20px
+  inlineSize: 1.2em              # inside buttons and labels
+  emoji: "never, anywhere in product UI"
+
 rounded:
   xs: 6px
   sm: 8px
-  md: 10px          # the workhorse — buttons, inputs, rows
-  lg: 12px          # cards, modals
-  xl: 14px          # panels
-  xxl: 16px         # hero cards, map frame
+  md: 10px          # inputs, row buttons
+  button: 11px      # primary and ghost buttons
+  lg: 12px          # table wraps, inner cards
+  xl: 18px          # panels, stat tiles, map frame
+  modal: 20px
   pill: 999px
   full: 999px
 
@@ -178,28 +212,36 @@ motion:
   base: 200ms
   slow: 320ms
   step: 520ms                                    # step-to-step slide in flows
-  ease-standard: "cubic-bezier(.4,0,.2,1)"
-  ease-out-soft: "cubic-bezier(.22,1,.28,1)"     # entrances, step transitions
+  ease-standard: "cubic-bezier(.32,.72,0,1)"    # hover, press, tab swaps: mass, then settle
+  ease-out-soft: "cubic-bezier(.16,1,.3,1)"      # entrances, step transitions
+  view-enter: "420ms ease-out-soft, 10px rise"
+  press: "translateY(1px) scale(.99)"            # every button, so a tap lands
   reduced-motion: "honour prefers-reduced-motion — disable slides and spins"
 
 elevation:
-  flat: "none"
-  raised: "0 1px 3px rgba(16,24,40,.08)"
-  card: "0 4px 14px rgba(16,24,40,.10)"
-  float: "0 10px 30px rgba(16,24,40,.08)"
-  modal: "0 24px 70px rgba(16,24,40,.22)"
-  accent-glow: "0 2px 8px rgba(47,107,255,.28)"
-  focus-ring: "0 0 0 3px rgba(47,107,255,.14)"
+  # every surface: light catch on top, then a tinted ambient shadow. The rgb in
+  # the shadow is {colors.shadow-tint}, so shadows read as shade, not soot.
+  surface: "inset 0 1px 0 {edge-light}, 0 1px 2px rgba(15,26,43,.05), 0 12px 32px -16px rgba(15,26,43,.28)"
+  surface-hover: "inset 0 1px 0 {edge-light}, 0 2px 4px rgba(15,26,43,.06), 0 22px 44px -18px rgba(15,26,43,.35)"
+  recessed: "inset 0 1px 2px rgba(15,26,43,.06)"                         # inputs, tab trays
+  raised-in-tray: "inset 0 1px 0 {edge-light}, 0 1px 3px rgba(15,26,43,.14), 0 4px 10px -6px rgba(15,26,43,.3)"
+  button-primary: "inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(0,0,0,.12), 0 1px 2px rgba(15,26,43,.12), 0 8px 18px -8px rgba(43,99,230,.45)"
+  modal: "inset 0 1px 0 {edge-light}, 0 30px 80px -20px rgba(15,26,43,.55), 0 2px 6px rgba(15,26,43,.1)"
+  accent-glow: "0 10px 22px -8px rgba(43,99,230,.45)"                    # under the active nav pill
+  focus-ring: "0 0 0 3px rgba(43,99,230,.16)"
+  grain: "fixed, pointer-events none, 4% multiply (5% screen in dark)"
 
 components:
   button-primary:
-    backgroundColor: "{colors.primary}"
+    background: "linear-gradient(180deg, {colors.primary-hi}, {colors.primary})"
     textColor: "{colors.on-primary}"
     typography: "{typography.button}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.button}"
     padding: 11px 18px
+    shadow: "{elevation.button-primary}"
   button-primary-hover:
-    backgroundColor: "{colors.primary-active}"
+    transform: "translateY(-1px)"
+    filter: "brightness(1.05)"
   button-ghost:
     backgroundColor: "{colors.surface-card}"
     textColor: "{colors.ink}"
@@ -229,6 +271,7 @@ components:
     border: "1px solid {colors.hairline}"
     rounded: "{rounded.xl}"
     padding: 18px
+    shadow: "{elevation.surface}"
   stat-tile:
     backgroundColor: "{colors.surface-card}"
     border: "1px solid {colors.hairline}"
@@ -237,25 +280,27 @@ components:
     label: "{typography.label-uppercase}"
     value: "{typography.stat-value}"
   sidebar:
-    backgroundColor: "{colors.surface-dark}"
-    width: 248px
-    textColor: "{colors.on-dark-soft}"
-    activeBackground: "{colors.primary}"
+    background: "linear-gradient(180deg, {colors.sidebar-top}, {colors.sidebar-bottom})"
+    sheen: "radial-gradient(120% 60% at 0% 0%, rgba(90,139,255,.18), transparent 60%)"
+    width: 244px
+    textColor: "#b4c0d3"
+    activeBackground: "linear-gradient(180deg, {colors.primary-hi}, {colors.primary})"
+    activeShadow: "inset 0 1px 0 rgba(255,255,255,.28), {elevation.accent-glow}"
     activeText: "{colors.on-dark}"
-    hoverBackground: "rgba(255,255,255,.08)"
+    hoverBackground: "rgba(255,255,255,.07)"
+    accordions: "independent; any number open; the open set is remembered per device"
   sidebar-sublink:
     typography: "{typography.nav-sublink}"
     padding: 8px 12px 8px 22px
-    activeBackground: "rgba(47,107,255,.22)"
-    activeRail: "inset 3px 0 0 {colors.primary-on-dark}"
-  tab-pill:
-    backgroundColor: "{colors.surface-soft}"
+    activeBackground: "same gradient pill as a top-level item"
+  tab-segment:
+    tray: "{colors.workspace-deep}, padding 3px, radius 11px, {elevation.recessed}"
     textColor: "{colors.muted}"
-    border: "1px solid {colors.hairline}"
-    rounded: "{rounded.pill}"
-    padding: 10px 18px
-    activeBackground: "{colors.primary}"
-    activeText: "{colors.on-primary}"
+    rounded: 8px
+    padding: 7px 14px
+    activeBackground: "{colors.surface-card}"
+    activeText: "{colors.ink}"
+    activeShadow: "{elevation.raised-in-tray}"   # the active tab is raised out of the tray, never painted blue
   badge:
     backgroundColor: "{colors.primary-soft}"
     textColor: "{colors.primary-active}"
@@ -270,9 +315,11 @@ components:
     numericAlign: right
   modal:
     backgroundColor: "{colors.surface-card}"
-    rounded: "{rounded.lg}"
+    border: "1px solid {colors.hairline}"
+    rounded: "{rounded.modal}"
     padding: 24px
     shadow: "{elevation.modal}"
+    scrim: "rgba(8,12,20,.5) with 6px blur"
     maxWidth: 440px
   photo-band:
     background: "linear-gradient(150deg, {colors.photo-tint-from}, {colors.photo-tint-to}), url(<roofing photo>)"
@@ -295,29 +342,42 @@ Two surfaces, one language:
 - **Portal** (the app behind sign-in) — navy sidebar, cool near-white workspace,
   white panels. Denser than the marketing site but never cramped.
 
-The through-line is **restraint**. One accent colour. One typeface. Cool
-neutrals. If a screen feels busy, the fix is removing something, not adding a
-divider.
+The through-line is **restraint with weight**. One accent colour. One typeface.
+One icon family. Cool neutrals. Surfaces have a physical edge and a shadow the
+colour of the ground, so the app reads as made, not generated. If a screen feels
+busy, the fix is removing something, not adding a divider.
 
 ## Colors
 
 ### Brand & accent
 
-`#2f6bff` is the only accent in the product. It marks the primary action, the
+`#2b63e6` is the only accent in the product. It marks the primary action, the
 active nav item, links, and focus. When two things on a screen are blue, one of
-them is wrong — demote it to a ghost button or plain text.
+them is wrong: demote it to a ghost button or plain text. Filled blue is built as
+a short vertical gradient (`primary-hi` to `primary`) with a 1px light catch on
+top, so it reads as a solid object rather than a flat swatch.
 
 On the navy sidebar, blue text goes illegible, so links and accents there use
-`primary-on-dark` `#7bc8ff`.
+`primary-on-dark` `#8fc1ff`. In dark mode the accent lifts to `#5a8bff` so it
+keeps its contrast against `dark-card`.
 
 ### Surfaces
 
-Marketing sits on white. The portal sits on `workspace` `#f7f9fc` with white
-panels floating on it — that half-step of contrast is what makes panels read as
-objects without needing heavy shadows.
+Marketing sits on white. The portal sits on `workspace` `#eef1f6` with white
+panels on it. Every panel is a machined part: a `hairline` edge, `edge-light`
+along the top, and an ambient shadow mixed from `shadow-tint` (navy) rather than
+black. A fixed 4% grain sits over the whole portal so flat areas have a surface.
 
-The sidebar is `#1b2636`. Dark mode drops the whole app to `#0b1220` with
-`#151b26` cards and `#232c3a` borders.
+The sidebar is a vertical gradient `sidebar-top` to `sidebar-bottom` with a soft
+blue sheen in the top-left corner.
+
+### Dark mode
+
+Dark is its own palette, not light with the lights off: `dark-ground` `#0b0f16`,
+`dark-card` `#121826`, `dark-hairline` `#233043`, ink `#e9eef6`. The light catch
+drops to 5.5% white, shadows go black, inputs recess to `dark-ground-deep`, and
+the accent lifts to `#5a8bff`. Both modes ship together; nothing is designed in
+one and checked in the other. A third setting, System, follows the device.
 
 ### Text
 
@@ -345,13 +405,24 @@ still applied to some marketing headings and should not spread.
 
 ## Typography
 
-**Inter everywhere. No serif in product UI.** The serif in the codebase is
-legacy; new UI uses Inter at every level.
+**Geist in the portal. No serif in product UI.** Inter and the Newsreader serif
+remain on the marketing site as legacy and must not spread into the app.
+Numbers are tabular everywhere in the portal (`font-variant-numeric`).
+
+## Iconography
+
+One family: **Material Symbols Rounded at weight 300, unfilled, optical size
+20.** Rendered as `<span class="ms">name</span>`. Light, precise lines that match
+the type's weight. No emoji anywhere in product UI, and no second icon set: a
+hand-drawn SVG next to a Symbols glyph is the fastest way to look assembled.
+The rating star (★) in review widgets is a typographic glyph, not an emoji, and
+stays.
 
 ### Hierarchy
 
 Display sizes are for the marketing site only. In the portal, the largest text
-is `page-title` at 26px — a dashboard does not need a 56px headline.
+is `page-title` at 25px, weight 800, tight tracking. A dashboard does not need
+a 56px headline.
 
 - Display 56 / 42 / 32 — marketing heroes and section heads, weight 800, tight
   tracking (negative, scaling with size)
@@ -381,7 +452,7 @@ invent 7px.
 ### Grid
 
 - Marketing max width 1200px, 32px side gutters
-- Portal: 248px sidebar + fluid main, 26px gutters, panels max ~1200px
+- Portal: 244px sidebar + fluid main, 28/34px gutters, panels max ~1200px
 - Card grids use `repeat(auto-fill, minmax(300px, 1fr))` with 14px gaps —
   they reflow rather than squashing
 
@@ -393,18 +464,20 @@ gets crowded, split it into tabs rather than shrinking the type.
 
 ## Elevation
 
-Shadows are soft, blue-grey and low-opacity — never black, never harsh.
+Every surface is built the same way, in this order: a 1px `hairline` border, a
+1px `edge-light` inset along the top (the light catch), then an ambient shadow
+mixed from `shadow-tint`. Light comes from above. Nothing casts a black shadow
+on a light ground.
 
-`raised` for resting cards, `card` for anything that lifts on hover, `float` for
-the map frame and popovers, `modal` for dialogs. The only glow is
-`accent-glow` under an active blue pill.
-
-Borders do most of the work; shadow is a hint, not the main event.
+Inputs and tab trays are the inverse: recessed, with an inset shadow and no
+light catch. The active tab is raised out of the tray with `raised-in-tray`.
+Primary buttons carry both a top highlight and a bottom shade so they read as
+a solid piece, and press down 1px when tapped.
 
 ## Shapes
 
-Radius 10px is the workhorse. Panels 14px, cards 12px, small controls 8px, pills
-999px. The logo tile is 11/40 of its box.
+Panels and stat tiles 18px, modals 20px, buttons 11px, inputs 10px, tabs 8px
+inside an 11px tray, pills 999px. The logo tile is 11/40 of its box.
 
 Nothing is square-cornered except table cells and full-bleed photo bands.
 
@@ -412,8 +485,9 @@ Nothing is square-cornered except table cells and full-bleed photo bands.
 
 Motion exists to explain what moved, never to decorate.
 
-- 150ms for hover and colour changes
-- 200ms for panel and tab swaps
+- 180ms `ease-standard` for hover, press and colour changes
+- 200ms `ease-standard` for panel and tab swaps
+- 420ms `ease-out-soft` for a view entering, rising 10px
 - 520ms `ease-out-soft` for step-to-step slides in the estimator and roof checker,
   sliding the opposite way on Back so direction carries meaning
 - A centred circular spinner for view loads; never a bar at the top
@@ -434,22 +508,29 @@ band is `#9cc8ee`; headline is white.
 
 ### Sidebar
 
-248px, `#1b2636`. Five branches — Dashboard, Projects, Finances, Leads,
-Marketing — with Ridge AI and Settings pinned at the bottom behind a rule.
+244px, navy gradient with a blue sheen top-left. Five branches: Dashboard,
+Projects, Finances, Leads, Marketing. Settings is pinned at the bottom behind a
+rule, and Ridge AI lives inside Settings as a tab rather than in the sidebar.
 
-Branches with children expand in place. The active sub-page gets a translucent
-blue wash and a 3px left rail in `primary-on-dark`. Items at rest are
-`on-dark-soft`; hover lifts to white on an 8%-white wash.
+Branches are independent accordions: any number can be open at once, a tap on a
+header only touches that branch, and the open set is remembered on the device.
+The active item, top-level or sub-page, is the same gradient pill with a light
+catch and a soft blue glow. Items at rest are `#b4c0d3`; hover lifts to white
+on a 7%-white wash.
 
 ### Buttons
 
-Primary blue, ghost white-with-border, row buttons small and bordered. One
-primary per screen region. Destructive actions are `error` and always confirm.
+Primary is the blue gradient with top highlight, bottom shade and a tinted
+glow; ghost is the card colour with a hairline and a light catch; row buttons are
+the same at a smaller size. All three lift 1px on hover and press 1px on tap.
+One primary per screen region. Destructive actions say **Delete** in red, sit
+last in their row, and always confirm by naming what is about to go.
 
 ### Panels & stat tiles
 
-White, 1px `hairline` border, 14px radius, 18px padding. Stat tiles are the same
-shell with an uppercase label, a 28px tabular value, and a muted note.
+White, 1px `hairline` border, 18px radius, 18px padding, `elevation.surface`.
+Stat tiles are the same shell with an uppercase label, a 26px tabular value in
+weight 800, and a muted note. No coloured top border on tiles.
 
 ### Tables
 
@@ -459,8 +540,9 @@ list view gets an **Export CSV**.
 
 ### Tabs
 
-Pill tabs in their own band with real padding — 22px is right when the band sits
-between a header and content. Active pill is solid blue with `accent-glow`.
+Segmented: a recessed tray with the active tab raised out of it in the card
+colour. Never a solid blue active tab; blue is reserved for the primary action
+and the active nav item.
 
 ### Empty states
 
@@ -477,7 +559,9 @@ Never fake a number, and never claim a retry that isn't happening.
 
 ### Do
 
-- Use one blue, one typeface, cool neutrals
+- Use one blue, one typeface, one icon family, cool neutrals
+- Build every surface the same way: edge, light catch, tinted shadow
+- Design both modes at once and look at both before shipping
 - Right-align and tabular-align every stacked number
 - Give tap targets 38px minimum height
 - Put an Export CSV on every list
@@ -490,6 +574,9 @@ Never fake a number, and never claim a retry that isn't happening.
 
 - Don't add a second accent colour
 - Don't use serif in product UI
+- Don't use emoji in product UI, and don't mix a second icon set in
+- Don't paint an active tab blue
+- Don't cast a black shadow on a light ground
 - Don't introduce warm/cream surfaces (see Known tension)
 - Don't use display sizes inside the portal
 - Don't auto-advance a form on selection — let the user confirm with Next
@@ -504,7 +591,7 @@ Never fake a number, and never claim a retry that isn't happening.
 - `≤600px` phone — estimator and public embeds go single-column
 - `≤700px` small tablet — card grids to one column, map 420px tall
 - `≤820px` — sidebar collapses to the horizontal mobile bar
-- `≥821px` desktop — full sidebar, sticky main scroll
+- `≥821px` desktop — full 244px sidebar, sticky main scroll
 
 ### Rules
 
