@@ -15483,7 +15483,7 @@ var _bpContacts=[];
       if(!u||!u.id){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Sign in to get the booking link for your account.</div>'; return; }
       _bpCalLink.url='https://builderpro-os.com/book/?u='+u.id;
       bpCalLinkDraw();
-      Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'get'})).then(function(r){ _bpCalLink.ready=!!(r&&r.brain&&r.brain.booking_calendar_id); bpCalLinkDraw(); },function(){});
+      fetch(BP_URL+'/functions/v1/book-public',{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({op:'info',u:u.id})}).then(function(r){ return r.json(); }).then(function(r){ if(r&&r.ok!==undefined){ _bpCalLink.ready=!!r.ready; bpCalLinkDraw(); } },function(){});
     },function(){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Couldn\u2019t read your account just now. Reload and try again.</div>'; });
   }
   function bpCalLinkDraw(){
@@ -15492,7 +15492,7 @@ var _bpContacts=[];
     var embed='<iframe src="'+url+'&embed=1" title="Book a roof inspection" loading="lazy" style="width:100%;min-height:640px;border:0;border-radius:18px;overflow:hidden"></iframe>';
     el.innerHTML='<div class="cal-side-h"><b>Your booking page</b><span class="bpx-badge">Inspections</span></div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Homeowners pick a month, a day and a time on your open inspection calendar. Put it on your website, in your Google profile, and in every text.</div>'
-      +(_bpCalLink.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>No inspection calendar is linked to your account yet, so the page will say booking is off. Ask BuilderPro to connect it.</span></div>':'')
+      +(_bpCalLink.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>Your booking page is not switched on yet: no inspection calendar is linked to this account, so visitors will see your phone number instead of open times. Tell BuilderPro support which GoHighLevel calendar to use and it goes live.</span></div>':'')
       +'<div class="cal-url"><span class=ms>link</span><span class="cal-url-t">'+bpEsc(url)+'</span></div>'
       +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button></div>'
       +'<div class="cal-embed" id="bpx-cl-embed" hidden><div class="em-code"><pre id="bpx-cl-code">'+bpEsc(embed)+'</pre><button class="bpx-rowbtn" id="bpx-cl-ecopy" onclick="bpCalEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div><div class="bpx-mut" style="font-size:12px;margin-top:8px">Paste it into any page of your site. The embed is licensed to your account only and may not be shared or resold.</div></div>';
@@ -21363,7 +21363,7 @@ window.bgPartnersRender=function(){
 #bpx .cal-acts{display:flex;gap:8px;align-items:center}
 #bpx .cal-acts .bpx-btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 #bpx .cal-acts .bpx-btn .ms{font-size:18px}
-#bpx .cal-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+#bpx .cal-layout{display:flex;flex-direction:column;gap:14px}
 #bpx .cal-panel{padding:16px 18px 18px}
 #bpx .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 #bpx .cal-month{font-size:19px;font-weight:800;letter-spacing:-.024em;font-family:inherit;min-width:0}
@@ -21373,7 +21373,7 @@ window.bgPartnersRender=function(){
 #bpx .cal-nav button:active{transform:translateY(1px)}
 #bpx .cal-grid{gap:5px}
 #bpx .cal-grid .bpx-dow{font-size:10.5px;color:var(--grey-l);padding:2px 0 6px}
-#bpx .cal-grid .bpx-day{background:var(--soft);border:1px solid var(--line-2,var(--line));border-radius:10px;min-height:96px;padding:6px 6px 5px;box-shadow:none;transition:background .15s,border-color .15s}
+#bpx .cal-grid .bpx-day{background:var(--soft);border:1px solid var(--line-2,var(--line));border-radius:10px;min-height:108px;padding:6px 6px 5px;box-shadow:none;transition:background .15s,border-color .15s}
 #bpx .cal-grid .bpx-day:hover{background:var(--card);border-color:var(--line)}
 #bpx .cal-grid .bpx-day.has{background:var(--card);box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05)}
 #bpx .cal-grid .bpx-day.past{opacity:.55}
@@ -21387,7 +21387,7 @@ window.bgPartnersRender=function(){
 #bpx .cal-grid .bpx-appt b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
 #bpx .cal-grid .bpx-appt:hover{transform:translateY(-1px);background:var(--blue);color:#fff;border-color:transparent}
 #bpx .cal-grid .bpx-appt.job{background:var(--soft);color:var(--ink);border-color:var(--line)}
-#bpx .cal-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+#bpx .cal-side{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0;align-items:start}
 #bpx .cal-side .bpx-panel{padding:16px 18px}
 #bpx .cal-side-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 #bpx .cal-side-h b{font-size:14.5px;font-weight:700}
@@ -21426,7 +21426,7 @@ window.bgPartnersRender=function(){
 #bpx .mdt-chip.day{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:46px;padding:6px 8px;font-size:14px}
 #bpx .mdt-chip.day small{font-size:9.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--grey)}
 #bpx .mdt-chip.day.on small{color:rgba(255,255,255,.85)}
-@media(max-width:900px){#bpx .cal-layout{grid-template-columns:1fr}}
+@media(max-width:900px){#bpx .cal-side{grid-template-columns:1fr}}
 @media(max-width:600px){
   #bpx .cal-grid{gap:3px}
   #bpx .cal-grid .bpx-day{min-height:44px;padding:4px;border-radius:7px}
