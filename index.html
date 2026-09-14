@@ -19230,6 +19230,43 @@ window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
   var b=q('rdStormBtn');if(b)b.innerHTML='&#9928;&#65039; Storm overlay: '+(_rdStormOn?'ON':'off');
   if(_rdStormOn&&!_rdStorms.length){rdFetchStorms().then(rdDraw);}else rdDraw();};
 
+var BP_TILES={
+  street:[
+    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+     opt:{maxZoom:19,attribution:'Tiles &copy; Esri'}},
+    {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+     opt:{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}}
+  ],
+  satellite:[
+    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+     opt:{maxZoom:19,attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'}}
+  ],
+  labels:[
+    {url:'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+     opt:{maxZoom:19,attribution:''}}
+  ]
+};
+/* Add a tile layer that demotes itself: a handful of tile errors and we drop to
+   the next provider in the chain, so one CDN changing its terms can't leave the
+   contractor staring at a broken or watermarked map. */
+function bpTileLayer(map,kind,onSwap){
+  var chain=BP_TILES[kind]||BP_TILES.street, i=0, layer=null;
+  var mount=function(){
+    var c=chain[i];
+    layer=L.tileLayer(c.url,c.opt);
+    var errs=0;
+    layer.on('tileerror',function(){
+      if(++errs<6||i>=chain.length-1)return;
+      errs=0; i++;
+      try{map.removeLayer(layer);}catch(e){}
+      mount(); if(onSwap)onSwap(chain[i]);
+    });
+    layer.addTo(map);
+    if(kind!=='labels')try{layer.bringToBack();}catch(e){}
+  };
+  mount();
+  return {remove:function(){try{map.removeLayer(layer);}catch(e){}}};
+}
 function rdEnsureLeaflet(cb){
   if(window.L){cb();return;}
   var css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(css);
@@ -19243,8 +19280,7 @@ function rdInitMap(){
   /* free to pan and zoom, but fenced to the territory (maxBounds is set once the dots are drawn) */
   _rdMap=L.map('rdMap',{zoomControl:false,scrollWheelZoom:true,dragging:true,minZoom:9,maxZoom:19,maxBoundsViscosity:.9}).setView([c.lat,c.lng],c.zoom);
   L.control.zoom({position:'topright'}).addTo(_rdMap);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',
-    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'}).addTo(_rdMap);
+  bpTileLayer(_rdMap,'street');
   /* map is locked — snap back to the full territory whenever a popup closes */
   _rdMap.on('popupclose',function(){ if(window._rdFitB) setTimeout(function(){ if(_rdMap&&window._rdFitB)_rdMap.fitBounds(window._rdFitB); },60); });
   _rdStormLayer=L.layerGroup().addTo(_rdMap);
@@ -20433,16 +20469,13 @@ function bgInitMap(){
   if(_bg.rows.length)bgRender();
 }
 function bgBase(){
-  if(_bg.base){try{_bg.map.removeLayer(_bg.base);}catch(e){}}
-  if(_bg.labels){try{_bg.map.removeLayer(_bg.labels);}catch(e){}_bg.labels=null;}
+  if(_bg.base){_bg.base.remove();_bg.base=null;}
+  if(_bg.labels){_bg.labels.remove();_bg.labels=null;}
   if(_bg.sat){
-    _bg.base=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {maxZoom:19,attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'}).addTo(_bg.map);
-    _bg.labels=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
-      {maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(_bg.map);
+    _bg.base=bpTileLayer(_bg.map,'satellite');
+    _bg.labels=bpTileLayer(_bg.map,'labels');
   }else{
-    _bg.base=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      {maxZoom:19,subdomains:'abcd',attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; CARTO'}).addTo(_bg.map);
+    _bg.base=bpTileLayer(_bg.map,'street');
   }
 }
 window.bgToggleSat=function(){_bg.sat=!_bg.sat;var b=q('bgSatBtn');if(b)b.innerHTML=_bg.sat?'🗺 Plain map':'🛰 Satellite';if(_bg.map)bgBase();};
@@ -20626,15 +20659,31 @@ function bgLoadPartners(){
   var el=q('bgPartners'); if(!el)return;
   var c=(window.RADAR_CITIES&&RADAR_CITIES[window._rdCity||'austin'])||{lat:30.2672,lng:-97.7431};
   var ctr=(_bg.map?_bg.map.getCenter():{lat:c.lat,lng:c.lng});
-  el.innerHTML='<span class="bpx-mut">Finding partners near '+ctr.lat.toFixed(3)+', '+ctr.lng.toFixed(3)+'…</span>';
-  var around='(around:25000,'+ctr.lat+','+ctr.lng+')';
-  var qy='[out:json][timeout:40];('
-    +'nwr["shop"="solar"]'+around+';nwr["office"="property_management"]'+around+';'
-    +'nwr["office"="insurance"]'+around+';nwr["office"="estate_agent"]'+around+';'
-    +');out tags center 300;';
-  fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(qy)})
-    .then(function(r){ if(!r.ok)throw new Error('busy'); return r.json(); })
+  el.className='bpx-mut'; el.style.fontSize='13px';
+  el.innerHTML='Finding partners near '+ctr.lat.toFixed(3)+', '+ctr.lng.toFixed(3)+'\u2026';
+  /* The public Overpass endpoint queues requests behind whoever else is asking,
+     and a queued request never settles on its own — which left this tab saying
+     "Finding partners..." forever. Give it a hard deadline and a way back. */
+  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+  var done=false;
+  var fail=function(msg){
+    if(done)return; done=true;
+    el.className=''; el.style.fontSize='';
+    el.innerHTML='<div class="bg-note" style="margin:0">'+bpEsc(msg)
+      +'<div style="margin-top:10px"><button class="bpx-rowbtn" style="margin:0" onclick="bgLoadPartners()">Try again</button></div></div>';
+  };
+  var timer=setTimeout(function(){ if(ctrl)try{ctrl.abort();}catch(e){} fail('The public map service didn\u2019t answer in time \u2014 it queues everyone\u2019s requests and is busy right now. This is their server, not your connection.'); },25000);
+  /* two statements instead of four: the endpoint charges for each one */
+  var around='(around:15000,'+ctr.lat+','+ctr.lng+')';
+  var qy='[out:json][timeout:25];('
+    +'nwr["shop"="solar"]'+around+';'
+    +'nwr["office"~"^(property_management|insurance|estate_agent)$"]'+around+';'
+    +');out tags center 250;';
+  fetch('https://overpass-api.de/api/interpreter',{method:'POST',signal:ctrl?ctrl.signal:undefined,
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(qy)})
+    .then(function(r){ if(!r.ok)throw new Error(r.status===429||r.status===504?'busy':'http'); return r.json(); })
     .then(function(d){
+      if(done)return; done=true; clearTimeout(timer);
       var groups={};
       ((d&&d.elements)||[]).forEach(function(e){
         var t=e.tags||{}; var key=t.shop==='solar'?'shop=solar':'office='+t.office;
@@ -20643,24 +20692,35 @@ function bgLoadPartners(){
           website:t.website||t['contact:website']||'',addr:[t['addr:housenumber'],t['addr:street']].filter(Boolean).join(' ')});
       });
       _bg.partners=groups;
-      el.classList.remove('bpx-mut');
-      var html=BG_PARTNERS.map(function(p){
+      el.className=''; el.style.fontSize='';
+      var total=Object.keys(groups).reduce(function(n,k){return n+groups[k].length;},0);
+      if(!total){
+        el.innerHTML='<div class="bg-note" style="margin:0">No solar installers, property managers, insurance agents or realtors are mapped within 10 miles of here. '
+          +'That usually means nobody has added them to the public map rather than that none exist \u2014 pan the map on the Big roofs tab to a denser area and come back.'
+          +'<div style="margin-top:10px"><button class="bpx-rowbtn" style="margin:0" onclick="bgLoadPartners()">Search again</button></div></div>';
+        return;
+      }
+      el.innerHTML=BG_PARTNERS.map(function(p){
         var list=(groups[p[0]]||[]).filter(function(x){return x.name;});
         var withPh=list.filter(function(x){return x.phone;});
-        return '<div class="bpx-panel" style="margin-bottom:14px"><div class="bpx-ptitle" style="margin:0 0 3px">'+p[1]+' <span class="lg2">· '+list.length+' nearby, '+withPh.length+' with a number</span></div>'
+        return '<div class="bpx-panel" style="margin-bottom:14px"><div class="bpx-ptitle" style="margin:0 0 3px">'+p[1]+' <span class="lg2">\u00b7 '+list.length+' nearby, '+withPh.length+' with a number</span></div>'
           +'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:10px">'+p[2]+'</div>'
           +(list.length?list.slice(0,25).map(function(x){
               var tel=String(x.phone||'').replace(/[^0-9+]/g,'');
-              return '<div class="bg-row" style="cursor:default"><span class="nm">'+bpEsc(x.name)+(x.addr?' <span class="bpx-mut" style="font-weight:400">· '+bpEsc(x.addr)+'</span>':'')+'</span>'
-                +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'">☎ Call</a>':'<span class="bg-tag">no number</span>')
+              return '<div class="bg-row" style="cursor:default"><span class="nm">'+bpEsc(x.name)+(x.addr?' <span class="bpx-mut" style="font-weight:400">\u00b7 '+bpEsc(x.addr)+'</span>':'')+'</span>'
+                +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'">\u260e Call</a>':'<span class="bg-tag">no number</span>')
                 +(x.website?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="'+bpEsc(/^https?:/i.test(x.website)?x.website:'https://'+x.website)+'" target="_blank" rel="noopener">Site</a>':'')+'</div>';
             }).join(''):'<span class="bpx-mut">None mapped near here.</span>')
           +'</div>';
-      }).join('');
-      el.innerHTML=html+'<div class="bg-note">These are businesses, so the Do-Not-Call registry doesn’t apply and you can ring them directly. '
-        +'Keep it a manual call — autodialers and recorded messages are a different rule, and that one does bite.</div>';
+      }).join('')
+      +'<div class="bg-note">These are businesses, so the Do-Not-Call registry doesn\u2019t apply and you can ring them directly. '
+      +'Keep it a manual call \u2014 autodialers and recorded messages are a different rule, and that one does bite.</div>';
     })
-    .catch(function(){ el.textContent='The public map service is busy right now — give it a minute and reopen this tab.'; });
+    .catch(function(e){
+      clearTimeout(timer);
+      if(e&&e.name==='AbortError')return;   /* the timeout already spoke */
+      fail('Couldn\u2019t reach the public map service just now.');
+    });
 }
 </script>
 
