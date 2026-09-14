@@ -18,6 +18,7 @@
 //   { op:"competitors.list", force }    -> tracked rivals (snapshots refreshed daily) + your own listing numbers
 //   { op:"competitors.track", id } / { op:"competitors.untrack", id }
 //   { op:"competitors.reviews", id }    -> a rival's 3 newest reviews
+//   { op:"reputation.get", force? }     -> your own ratings + newest reviews on Google, Yelp, Facebook
 //   ?op=start&provider=social&t=<jwt>   -> Meta consent for Facebook Page + Instagram posting/insights
 //   { op:"social.stats" }               -> followers / reach / engagement / recent posts per channel (cached 30 min)
 //   { op:"social.posts.list" }          -> the planner (also publishes anything due for this client)
@@ -521,6 +522,79 @@ Deno.serve(async (req) => {
   if (b.op === "social.posts.delete") {
     await fetch(`${SB_URL}/rest/v1/social_posts?owner=eq.${user.id}&id=eq.${encodeURIComponent(b.id ?? "")}`, { method: "DELETE", headers: sbH });
     return json({ ok: true });
+  }
+
+  // --- reputation: the contractor's own ratings and newest reviews, every platform they've connected ---
+  // Google needs the Business Profile connection (reviews live on the v4 reviews
+  // endpoint; the write-a-review link needs the listing's placeId). Yelp needs the
+  // Yelp connection (the Fusion API returns three reviews, no more). Facebook
+  // reads page ratings off the social connection. Each is cached on its own
+  // integration row for six hours so opening the page doesn't hammer three APIs.
+  if (b.op === "reputation.get") {
+    const REP_TTL = 6 * 3600 * 1000;
+    const ints = await getIntegrations(user.id);
+    const pick = (p: string) => ints.find((i) => i.provider === p);
+    const yelp = pick("yelp"), gbp = pick("gbp"), social = pick("social");
+    const out: Row = { google: null, yelp: null, facebook: null };
+    const cached = (row: Row | undefined) => {
+      const m = (row?.meta as Row) ?? {};
+      return (!b.force && m.reputation && Date.now() - Number(m.reputation_at ?? 0) < REP_TTL) ? m.reputation as Row : null;
+    };
+    const keep = async (row: Row, data: Row) => { await patchIntegration(row.id, { meta: { ...((row.meta as Row) ?? {}), reputation: data, reputation_at: Date.now() } }); return data; };
+    const stars = (s: string) => ({ ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 } as Record<string, number>)[s] ?? Number(s) ?? 0;
+
+    if (gbp?.account_id) {
+      out.google = cached(gbp) ?? await (async () => {
+        try {
+          const t = await googleToken(gbp), acct = String(((gbp.meta as Row) ?? {}).account ?? ""), loc = String(gbp.account_id);
+          const h = { Authorization: `Bearer ${t}` };
+          const rv = await fetch(`https://mybusiness.googleapis.com/v4/${acct}/${loc}/reviews?pageSize=20&orderBy=updateTime%20desc`, { headers: h }).then((r) => r.json()).catch(() => ({}));
+          let placeId = String(((gbp.meta as Row) ?? {}).placeId ?? "");
+          if (!placeId) {
+            const li = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${loc}?readMask=metadata`, { headers: h }).then((r) => r.json()).catch(() => ({}));
+            placeId = String(((li?.metadata as Row) ?? {}).placeId ?? "");
+          }
+          const list = ((rv?.reviews as Row[]) ?? []).map((x) => ({
+            rating: stars(String(x.starRating ?? "")), text: String(x.comment ?? "").slice(0, 400),
+            user: String(((x.reviewer as Row) ?? {}).displayName ?? "A customer"), at: x.createTime ?? x.updateTime ?? "",
+            replied: !!x.reviewReply, id: x.reviewId ?? x.name ?? "",
+          }));
+          return keep(gbp, {
+            rating: Number(rv?.averageRating ?? 0), count: Number(rv?.totalReviewCount ?? list.length),
+            reviews: list, name: gbp.account_name ?? "",
+            reviewUrl: placeId ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}` : "",
+            manageUrl: "https://business.google.com/reviews",
+            error: rv?.error ? String((rv.error as Row).message ?? "google error").slice(0, 160) : undefined,
+          });
+        } catch (e) { return { error: String(e).slice(0, 160) }; }
+      })();
+    }
+    if (yelp?.account_id && YELP_KEY) {
+      out.yelp = cached(yelp) ?? await (async () => {
+        try {
+          const s = await yelpStats(yelp);
+          return keep(yelp, { rating: s.rating, count: s.reviews, reviews: (s.reviewsList as Row[]) ?? [], name: yelp.account_name ?? "", reviewUrl: s.url ?? "", manageUrl: "https://biz.yelp.com/" });
+        } catch (e) { return { error: String(e).slice(0, 160) }; }
+      })();
+    }
+    if (social?.account_id) {
+      out.facebook = cached(social) ?? await (async () => {
+        try {
+          const pg = String(social.account_id), tok = String(social.access_token ?? "");
+          const d = await fb(`${pg}?fields=overall_star_rating,rating_count,ratings.limit(10){rating,review_text,created_time,reviewer{name}}`, tok);
+          const list = (((d?.ratings as Row)?.data as Row[]) ?? []).map((x) => ({
+            rating: Number(x.rating ?? 0), text: String(x.review_text ?? "").slice(0, 400),
+            user: String(((x.reviewer as Row) ?? {}).name ?? "A customer"), at: x.created_time ?? "",
+          }));
+          return keep(social, {
+            rating: Number(d?.overall_star_rating ?? 0), count: Number(d?.rating_count ?? 0), reviews: list, name: social.account_name ?? "",
+            reviewUrl: `https://www.facebook.com/${pg}/reviews`, manageUrl: `https://www.facebook.com/${pg}/reviews`,
+            error: d?.error ? String((d.error as Row).message ?? "facebook error").slice(0, 160) : undefined,
+          });
+        } catch (e) { return { error: String(e).slice(0, 160) }; }
+      })();
+    }
+    return json({ ok: true, ...out, connected: { google: !!gbp?.account_id, yelp: !!(yelp?.account_id && YELP_KEY), facebook: !!social?.account_id }, configured });
   }
 
   if (b.op === "stats") {

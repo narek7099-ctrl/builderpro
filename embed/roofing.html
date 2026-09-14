@@ -1,0 +1,1934 @@
+<!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roof Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#ffffff;--card:#ffffff;--border:#e3e8ef;--bs:#e3e8ef;
+--text:#1b2a41;--txt:#1b2a41;--mu:#6b7a90;--muted:#6b7a90;
+--a:#2563eb;--al:#60a5fa;--blue-l:#60a5fa;--cyan:#60a5fa;--ag:rgba(37,99,235,.12);
+--green:#15803d;--red:#dc2626;}
+html,body{margin:0;background:#f6f8fb;font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;}
+.est-stage{max-width:980px;margin:32px auto;padding:0 16px;}
+#est-embed{border:1px solid #e3e8ef;border-radius:16px;overflow:hidden;box-shadow:0 10px 34px rgba(15,30,60,.09);}
+#est-embed .leaflet-container{background:#e3e8ef !important;}
+
+/* estimator (de-branded, light) */
+
+/* ── Estimator scoped styles ── */
+#est-embed {
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;
+  background: #ffffff;
+  color: #0c0c0d;
+  width: 100%;
+  position: relative;
+}
+#est-embed * { box-sizing: border-box; }
+
+#est-embed {
+  --a: #2f6bff;
+  --al: #9cc8ee;
+  --ag: rgba(47,107,255,0.18);
+  --bg: #02040b;
+  --card: rgba(47,107,255,0.55);
+  --border: rgba(37,99,235,0.18);
+  --bs: rgba(255, 255, 255, 0.07);
+  --w: #ffffff;
+  --txt: rgba(255, 255, 255, 0.75);
+  --mu: rgba(255, 255, 255, 0.38);
+  --green: #00d478;
+  --red: #ff4444;
+}
+
+/* TOPBAR inside estimator */
+#est-embed .e-topbar {
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--bs);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 3px 14px;
+  background: #ffffff;
+  backdrop-filter: blur(20px);
+}
+@media (max-width: 540px){
+  #est-embed .e-topbar{padding:12px 16px;}
+  #est-embed .e-tlogo{font-size:15px;letter-spacing:1.5px;}
+  #est-embed .e-tstep{flex-basis:100%;}
+}
+#est-embed .e-tlogo { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 18px; letter-spacing: 3px; color: #fff; display: flex; align-items: center; gap: 8px; }
+#est-embed .e-tlogo span { color: var(--al); }
+#est-embed .e-ldot { width: 7px; height: 7px; border-radius: 50%; background: var(--a); box-shadow: 0 0 8px var(--a); }
+#est-embed .e-tstep { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--mu); }
+#est-embed .e-tstep b { color: var(--al); }
+
+/* PROGRESS */
+#est-embed .e-prog { height: 3px; background: var(--bs); }
+#est-embed .e-pfill { height: 100%; background: linear-gradient(90deg, var(--a), var(--al)); transition: width .7s cubic-bezier(.16,1,.3,1); }
+
+/* STEP PANELS */
+#est-embed .e-app { position: relative; }
+#est-embed .e-sp { display: none; }
+#est-embed .e-sp.active { display: flex; flex-direction: column; animation: eSpIn .52s cubic-bezier(.22,1,.28,1) both; }
+#est-embed .e-sp.back { animation: eSpBack .52s cubic-bezier(.22,1,.28,1) both; }
+@keyframes eSpIn  { from { opacity:0; transform:translate3d(26px,8px,0) scale(.985) } to { opacity:1; transform:none } }
+@keyframes eSpBack { from { opacity:0; transform:translate3d(-26px,8px,0) scale(.985) } to { opacity:1; transform:none } }
+
+#est-embed .e-shdr { padding: 28px 32px 0; max-width: 860px; margin: 0 auto; width: 100%; }
+#est-embed .e-sbody { padding: 16px 32px 36px; max-width: 860px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; flex: 1; }
+@media (max-width: 640px) {
+  #est-embed .e-shdr, #est-embed .e-sbody { padding-left: 16px; padding-right: 16px; }
+  #est-embed .e-shdr { padding-top: 20px; }
+}
+
+#est-embed .e-seye { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--al); margin-bottom: 8px; display: block; }
+#est-embed .e-stitle { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: clamp(28px, 4vw, 46px); line-height: .93; letter-spacing: 1px; color: #fff; margin-bottom: 6px; }
+#est-embed .e-stitle em { color: var(--a); font-style: normal; }
+#est-embed .e-ssub { font-size: 14px; color: var(--mu); line-height: 1.6; margin-bottom: 18px; max-width: 540px; }
+
+/* CARD */
+#est-embed .e-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 22px; backdrop-filter: blur(12px); box-shadow: 0 12px 36px rgba(0,0,0,.26); margin-bottom: 12px; }
+
+/* ADDRESS SEARCH */
+#est-embed .e-asearch { position: relative; margin-bottom: 10px; }
+#est-embed .e-asearch-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; z-index: 2; }
+#est-embed .e-asearch-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--bs);
+  border-radius: 10px;
+  padding: 13px 13px 13px 44px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 15px; color: #fff;
+  outline: none;
+  transition: all .3s;
+}
+#est-embed .e-asearch-input::placeholder { color: var(--mu); }
+#est-embed .e-asearch-input:focus { border-color: var(--a); background: rgba(47,107,255,0.09); box-shadow: 0 0 0 3px var(--ag); }
+
+/* SUGGESTIONS */
+#est-embed .e-suggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #08112a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 9999;
+  display: none;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 14px 40px rgba(0,0,0,.6);
+}
+#est-embed .e-suggestions.open { display: block; }
+#est-embed .e-suggestion {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--bs);
+  transition: background .18s;
+  font-size: 13px; color: var(--txt);
+}
+#est-embed .e-suggestion:last-child { border: none; }
+#est-embed .e-suggestion:hover { background: rgba(47,107,255,0.14); color: #fff; }
+#est-embed .e-suggestion-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+#est-embed .e-suggestion-main { font-weight: 600; color: #fff; }
+#est-embed .e-suggestion-sub { font-size: 11px; color: var(--mu); margin-top: 2px; }
+#est-embed .e-suggestion-loading { padding: 12px 14px; font-size: 12px; color: var(--mu); display: flex; align-items: center; gap: 8px; }
+#est-embed .e-spin-sm { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--bs); border-top-color: var(--al); animation: eSpin .7s linear infinite; display: inline-block; }
+@keyframes eSpin { to { transform: rotate(360deg); } }
+
+/* MAP */
+#est-embed .e-mapwrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px; display: none; }
+#est-embed .e-maptb { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f4f2ec; border-bottom: 1px solid var(--bs); flex-wrap: wrap; }
+#est-embed .e-mtbtn {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(47,107,255,0.3); border: 1px solid rgba(37,99,235,0.18); border-radius: 6px;
+  padding: 5px 10px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--al); cursor: pointer; transition: all .22s;
+}
+#est-embed .e-mtbtn:hover, #est-embed .e-mtbtn.on { background: rgba(47,107,255,0.32); border-color: var(--a); color: #fff; }
+#est-embed .e-mtbtn.del { border-color: rgba(255,60,60,.25); color: var(--red); }
+#est-embed .e-mtbtn.del:hover { background: rgba(255,60,60,.12); border-color: var(--red); }
+#est-embed .e-mstat { margin-left: auto; font-size: 10px; color: var(--mu); letter-spacing: 1px; text-align: right; }
+#est-embed #e-mapel { width: 100%; height: 400px; }
+@media (max-width: 640px) { #est-embed #e-mapel { height: 280px; } }
+#est-embed .e-mhint { padding: 8px 12px; background: rgba(47,107,255,0.2); font-size: 11px; color: #3a6286; border-top: 1px solid var(--bs); line-height: 1.5; }
+
+/* MEASURED RESULT */
+#est-embed .e-mresult {
+  display: none; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: rgba(47,107,255,0.12); border: 1px solid rgba(47,107,255,0.28); border-radius: 10px;
+  margin-bottom: 10px;
+}
+#est-embed .e-mrn { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 32px; color: #fff; line-height: 1; }
+#est-embed .e-mrl { font-size: 10px; color: var(--mu); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+#est-embed .e-mrbadge { color: var(--green); }
+#est-embed .e-mrsq { font-size: 11px; color: var(--mu); margin-left: 6px; }
+#est-embed .e-mredit { margin-left: auto; font-size: 11px; color: var(--al); cursor: pointer; text-decoration: underline; white-space: nowrap; }
+
+/* MANUAL SLIDER */
+#est-embed .e-manualbtn {
+  background: transparent; border: 1px solid var(--bs); border-radius: 7px;
+  padding: 7px 14px; font-size: 11px; color: var(--mu); cursor: pointer;
+  transition: all .22s; font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+#est-embed .e-manualbtn:hover { border-color: var(--border); color: #fff; }
+#est-embed .e-sldwrap { display: none; }
+#est-embed .e-slddisp { display: flex; align-items: baseline; gap: 6px; margin-bottom: 12px; }
+#est-embed .e-sldval { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 46px; color: #fff; line-height: 1; }
+#est-embed .e-sldunit { font-size: 12px; color: var(--mu); letter-spacing: 2px; text-transform: uppercase; }
+#est-embed input[type=range].e-sld { width: 100%; -webkit-appearance: none; height: 5px; background: var(--bs); border-radius: 3px; outline: none; cursor: pointer; }
+#est-embed input[type=range].e-sld::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg,var(--a),var(--al)); border: 2px solid rgba(255,255,255,.2); box-shadow: 0 0 12px var(--ag); cursor: pointer; }
+#est-embed .e-sldlbl { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--mu); }
+
+/* OPTION LIST */
+#est-embed .e-olist { display: flex; flex-direction: column; gap: 8px; }
+#est-embed .e-oi {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  background: rgba(255,255,255,.03); border: 1px solid var(--bs); border-radius: 10px;
+  cursor: pointer;
+  transition: all .32s cubic-bezier(.16,1,.3,1);
+  position: relative; overflow: hidden;
+}
+#est-embed .e-oi::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,rgba(47,107,255,0.07),transparent 60%); opacity:0; transition:opacity .3s; }
+#est-embed .e-oi:hover { border-color: rgba(47,107,255,0.35); background: rgba(47,107,255,0.14); transform: translateX(3px); }
+#est-embed .e-oi:hover::before { opacity: 1; }
+#est-embed .e-oi.sel { border-color: var(--a); background: rgba(47,107,255,0.2); box-shadow: 0 0 0 1px var(--a), 0 0 18px var(--ag); transform: translateX(5px); }
+#est-embed .e-oi.sel::before { opacity: 1; }
+#est-embed .e-oi-em { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+#est-embed .e-oi-info { flex: 1; }
+#est-embed .e-oi-lbl { font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
+#est-embed .e-oi-desc { font-size: 11px; color: var(--mu); margin-top: 2px; line-height: 1.4; }
+#est-embed .e-oi-tag { font-size: 10px; color: var(--al); font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
+#est-embed .e-oi-radio { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--bs); display: flex; align-items: center; justify-content: center; font-size: 9px; color: transparent; flex-shrink: 0; transition: all .28s; }
+#est-embed .e-oi.sel .e-oi-radio { background: var(--a); border-color: var(--a); color: #fff; box-shadow: 0 0 8px var(--ag); }
+
+/* REGION GRID */
+#est-embed .e-regg { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-bottom: 8px; }
+@media (max-width: 500px) { #est-embed .e-regg { grid-template-columns: 1fr 1fr; } }
+#est-embed .e-rb { background: rgba(255,255,255,.04); border: 1px solid var(--bs); border-radius: 8px; padding: 9px 10px; cursor: pointer; transition: all .28s; text-align: center; }
+#est-embed .e-rb:hover { border-color: rgba(47,107,255,0.3); background: rgba(47,107,255,0.12); }
+#est-embed .e-rb.on { border-color: var(--a); background: rgba(47,107,255,0.18); box-shadow: 0 0 0 1px var(--a); }
+#est-embed .e-rb-n { font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
+#est-embed .e-rb-s { font-size: 9px; color: var(--mu); margin-top: 2px; }
+
+/* FORM */
+#est-embed .e-fr2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { #est-embed .e-fr2 { grid-template-columns: 1fr; } }
+#est-embed .e-fg { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+#est-embed .e-fl { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--mu); }
+#est-embed .e-fi {
+  background: rgba(255,255,255,.05); border: 1px solid var(--bs); border-radius: 9px;
+  padding: 11px 14px; font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 14px; color: #fff;
+  outline: none; transition: all .28s; width: 100%;
+}
+#est-embed .e-fi::placeholder { color: var(--mu); }
+#est-embed .e-fi:focus { border-color: var(--a); background: rgba(47,107,255,0.09); box-shadow: 0 0 0 3px var(--ag); }
+#est-embed .e-consent { font-size: 11px; color: var(--mu); line-height: 1.65; padding: 10px 12px; background: rgba(255,255,255,.03); border: 1px solid var(--bs); border-radius: 7px; margin-bottom: 16px; }
+
+/* BUTTONS */
+#est-embed .e-btnrow { display: flex; gap: 10px; margin-top: auto; padding-top: 14px; }
+#est-embed .e-btnmain {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px 24px;
+  background: linear-gradient(90deg, #6aa6dd, #8fc1ea);
+  border: none; border-radius: 10px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: #fff; cursor: pointer;
+  transition: all .4s cubic-bezier(.16,1,.3,1);
+  box-shadow: 0 0 20px rgba(37,99,235,0.18);
+  position: relative; overflow: hidden;
+}
+#est-embed .e-btnmain::before { content:''; position:absolute; inset:0; background:linear-gradient(rgba(255,255,255,.08),transparent); pointer-events:none; }
+#est-embed .e-btnmain:hover { box-shadow: 0 0 44px rgba(47,107,255,0.45), 0 7px 20px rgba(0,0,0,.3); transform: translateY(-2px); }
+#est-embed .e-btnmain:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
+#est-embed .e-btnback {
+  display: flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--bs); border-radius: 9px;
+  padding: 12px 16px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--mu); cursor: pointer; transition: all .28s; flex-shrink: 0;
+}
+#est-embed .e-btnback:hover { border-color: var(--border); color: #fff; }
+
+/* STEP DOTS */
+#est-embed .e-stepdots { display: flex; justify-content: center; gap: 5px; padding: 14px 0 0; }
+#est-embed .e-sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--bs); transition: all .4s cubic-bezier(.16,1,.3,1); }
+#est-embed .e-sdot.done { background: var(--green); }
+#est-embed .e-sdot.act { background: var(--a); width: 18px; border-radius: 3px; box-shadow: 0 0 8px var(--ag); }
+
+/* LOADING */
+#est-embed .e-ldpanel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 70px 32px; gap: 24px; }
+#est-embed .e-ldring { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--bs); border-top-color: var(--a); animation: eSpin .85s linear infinite; }
+#est-embed .e-ldsteps { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 320px; }
+#est-embed .e-ldstp { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: rgba(47,107,255,0.12); border: 1px solid var(--bs); border-radius: 8px; font-size: 12px; color: var(--mu); transition: all .42s; }
+#est-embed .e-ldstp.act { color: #fff; border-color: var(--border); background: rgba(37,99,235,0.18); }
+#est-embed .e-ldstp.done { color: var(--green); border-color: rgba(47,107,255,0.2); background: rgba(47,107,255,0.07); }
+#est-embed .e-lddot { width: 6px; height: 6px; border-radius: 50%; background: var(--bs); flex-shrink: 0; transition: background .4s; }
+#est-embed .e-ldstp.act .e-lddot { background: var(--al); animation: eBlk 1.1s ease-in-out infinite; }
+#est-embed .e-ldstp.done .e-lddot { background: var(--green); }
+@keyframes eBlk { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* RESULT */
+#est-embed .e-rpage { max-width: 860px; margin: 0 auto; padding: 28px 32px; width: 100%; }
+@media (max-width: 640px) { #est-embed .e-rpage { padding: 16px; } }
+#est-embed .e-rhero { text-align: center; padding: 28px 24px; background: linear-gradient(135deg, rgba(47,107,255,0.55), #f4f2ec); border: 1px solid rgba(47,107,255,0.3); border-radius: 18px; margin-bottom: 14px; box-shadow: 0 0 50px rgba(47,107,255,0.1); }
+#est-embed .e-rbadge { display: inline-flex; align-items: center; gap: 5px; background: rgba(47,107,255,0.1); border: 1px solid rgba(47,107,255,0.25); border-radius: 18px; padding: 4px 12px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); margin-bottom: 12px; }
+#est-embed .e-rlbl { font-size: 10px; color: var(--mu); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; }
+#est-embed .e-rrange { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: clamp(30px,5vw,54px); color: #fff; line-height: 1; letter-spacing: 2px; margin-bottom: 7px; }
+#est-embed .e-rrange em { color: var(--a); font-style: normal; }
+#est-embed .e-rnote { font-size: 12px; color: var(--mu); line-height: 1.6; }
+#est-embed .e-rgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
+@media (max-width: 500px) { #est-embed .e-rgrid { grid-template-columns: 1fr 1fr; } }
+#est-embed .e-rbox { background: rgba(47,107,255,0.28); border: 1px solid var(--border); border-radius: 10px; padding: 12px 9px; text-align: center; animation: eRbIn .5s cubic-bezier(.16,1,.3,1) both; }
+#est-embed .e-rbox:nth-child(1){animation-delay:.04s} #est-embed .e-rbox:nth-child(2){animation-delay:.09s} #est-embed .e-rbox:nth-child(3){animation-delay:.14s} #est-embed .e-rbox:nth-child(4){animation-delay:.19s} #est-embed .e-rbox:nth-child(5){animation-delay:.24s} #est-embed .e-rbox:nth-child(6){animation-delay:.29s}
+@keyframes eRbIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+#est-embed .e-rbv { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 19px; color: #fff; line-height: 1; margin-bottom: 3px; }
+#est-embed .e-rbl { font-size: 8px; color: var(--mu); letter-spacing: 1.5px; text-transform: uppercase; }
+#est-embed .e-disc { font-size: 11px; color: var(--mu); line-height: 1.75; padding: 12px 14px; background: rgba(255,255,255,.03); border: 1px solid var(--bs); border-radius: 9px; margin-bottom: 16px; }
+#est-embed .e-rcta { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+#est-embed .e-rcta .e-btnmain { max-width: 400px; }
+#est-embed .e-rctasub { font-size: 11px; color: var(--mu); }
+#est-embed .e-restart { background: transparent; border: none; font-size: 12px; color: var(--mu); cursor: pointer; text-decoration: underline; transition: color .2s; margin-top: 3px; }
+#est-embed .e-restart:hover { color: #fff; }
+
+/* Leaflet dark theme override scoped to estimator */
+#est-embed .leaflet-container { background: #e9e8e3 !important; }
+#est-embed .leaflet-control-zoom a { background: #ffffff !important; color: var(--al) !important; border-color: var(--border) !important; }
+#est-embed .leaflet-control-zoom a:hover { background: rgba(47,107,255,0.2) !important; }
+#est-embed .leaflet-bar { border: 1px solid var(--border) !important; border-radius: 8px !important; overflow: hidden !important; box-shadow: none !important; }
+
+#est-embed .e-tlogo,
+#est-embed .e-stitle,
+#est-embed .e-asearch-input,
+#est-embed .e-suggestion:hover,
+#est-embed .e-suggestion-main,
+#est-embed .e-mrn,
+#est-embed .e-manualbtn:hover,
+#est-embed .e-sldval,
+#est-embed .e-oi-lbl,
+#est-embed .e-rb-n,
+#est-embed .e-fi,
+#est-embed .e-btnback:hover,
+#est-embed .e-rrange,
+#est-embed .e-rbv,
+#est-embed .e-restart:hover{color:#0c0c0d !important;}
+
+/* ---- light overrides + legibility ---- */
+#est-embed{background:#ffffff !important;color:#0c0c0d !important;}
+#est-embed .e-topbar{background:#ffffff !important;border-bottom:1px solid #e9e8e3 !important;}
+#est-embed .e-tlogo{color:#0c0c0d !important;}
+#est-embed .e-asearch-input{background:#ffffff !important;border:1px solid #e0ded6 !important;color:#0c0c0d !important;}
+#est-embed .e-asearch-input::placeholder{color:#7a8696 !important;}
+#est-embed .e-maptb{background:#f6f8fb !important;}
+#est-embed .e-mhint{background:rgba(47,107,255,.10) !important;color:#3a6286 !important;}
+/* suggestion dropdown */
+#est-embed .e-suggestions{background:#ffffff !important;border:1px solid #e9e8e3 !important;box-shadow:0 12px 30px rgba(15,23,38,.12) !important;}
+#est-embed .e-suggestion{background:#ffffff !important;color:#0c0c0d !important;border-bottom:1px solid #f4f2ec !important;}
+#est-embed .e-suggestion:hover,#est-embed .e-suggestion.act{background:#f6f8fb !important;}
+#est-embed .e-suggestion-main{color:#0c0c0d !important;}
+#est-embed .e-suggestion-sub,#est-embed .e-suggestion-loading{color:#56627a !important;}
+/* readable eyebrows / faint labels */
+#est-embed .e-seye{color:#2f6bff !important;}
+#est-embed .e-ssub,#est-embed .e-mrl,#est-embed .e-sldlbl,#est-embed .e-tstep{color:#6a6a70 !important;}
+#est-embed .e-stitle em{color:#2f6bff !important;}
+/* disabled CONTINUE button: muted but fully readable */
+#est-embed .e-btnmain:disabled{opacity:1 !important;background:#f0efe9 !important;color:#9a9aa0 !important;box-shadow:none !important;}
+/* legibility: force faint text to black (user request) */
+#est-embed .e-mrn,#est-embed .e-mrsq,#est-embed .e-oi-desc,#est-embed .e-ssub,#est-embed .e-mrl,#est-embed .e-sldlbl,#est-embed .e-tstep,#est-embed .e-mstat,#est-embed .e-mhint{color:#0c0c0d !important;}
+#est-embed #e-slopecard,#est-embed #e-slopecard *{color:#0c0c0d !important;}
+#est-embed #e-truearea{color:#12558a !important;}
+#est-embed #e-pitchsel{background:#ffffff !important;color:#0c0c0d !important;border:1px solid #e0ded6 !important;}
+/* map toolbar buttons: readable dark styling */
+#est-embed .e-mtbtn{color:#2f6bff !important;background:#eaf1f9 !important;border:1px solid #b9cfe6 !important;}
+#est-embed .e-mtbtn.on,#est-embed .e-mtbtn:hover{background:#2f6bff !important;border-color:#2f6bff !important;color:#ffffff !important;}
+#est-embed .e-mtbtn.del{color:#dc2626 !important;background:#fdeaea !important;border-color:#f2b8b8 !important;}
+#est-embed .e-mtbtn.del:hover{background:#dc2626 !important;border-color:#dc2626 !important;color:#ffffff !important;}
+#est-embed #e-btnmeasure.on{background:#dc2626 !important;border-color:#dc2626 !important;color:#ffffff !important;}
+/* ===== clean, trustworthy redesign ===== */
+#est-embed .e-oi-em{display:none !important;}
+#est-embed .e-stitle{font-family:'Space Grotesk','Inter',system-ui,sans-serif !important;font-weight:400 !important;letter-spacing:-.3px !important;text-transform:none !important;font-size:clamp(24px,3.2vw,34px) !important;line-height:1.18 !important;color:#0c0c0d !important;}
+#est-embed .e-stitle em{color:#2f6bff !important;font-style:normal !important;}
+#est-embed .e-seye{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;letter-spacing:.5px !important;font-weight:600 !important;color:#9a9aa0 !important;font-size:11px !important;}
+#est-embed .e-ssub{color:#6a6a70 !important;font-size:14px !important;font-weight:400 !important;}
+#est-embed .e-oi{border:1px solid #e9e8e3 !important;background:#fff !important;border-radius:10px !important;box-shadow:none !important;transform:none !important;}
+#est-embed .e-oi::before{display:none !important;}
+#est-embed .e-oi:hover{border-color:#bcd0e6 !important;background:#f8fbfe !important;transform:none !important;}
+#est-embed .e-oi.sel{border-color:#2f6bff !important;background:#f6f8fb !important;box-shadow:0 0 0 1px #2f6bff !important;transform:none !important;}
+#est-embed .e-oi-lbl{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:600 !important;text-transform:none !important;letter-spacing:0 !important;font-size:15px !important;color:#0c0c0d !important;}
+#est-embed .e-oi-desc{color:#6a6a70 !important;font-size:12px !important;}
+#est-embed .e-oi-tag{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:none !important;color:#2f6bff !important;}
+#est-embed .e-btnmain{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:none !important;box-shadow:none !important;background:#2f6bff !important;border-radius:10px !important;}
+#est-embed .e-btnmain::before{display:none !important;}
+#est-embed .e-btnmain:hover{box-shadow:0 4px 14px rgba(47,107,255,.25) !important;transform:none !important;}
+#est-embed .e-btnback{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:500 !important;letter-spacing:0 !important;text-transform:none !important;}
+#est-embed .e-tstep{text-transform:none !important;letter-spacing:0 !important;}
+#est-embed .e-mhint{font-weight:400 !important;} #est-embed .e-mhint strong{font-weight:600 !important;}
+#est-embed .e-zipwrap{margin-bottom:16px;}
+#est-embed .e-ziplabel{display:block;font-size:13px;font-weight:600;color:#0c0c0d;margin-bottom:6px;font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;}
+#est-embed .e-zipinput{width:150px;padding:11px 14px;border:1px solid #e9e8e3;border-radius:8px;font-size:15px;color:#0c0c0d;outline:none;background:#fff;font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;}
+#est-embed .e-zipinput:focus{border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+#est-embed .e-ziphint{font-size:12px;color:#9a9aa0;margin-top:6px;}
+/* result slide: darken faint text to black (user request) */
+#est-embed .e-rlbl,#est-embed .e-rbl,#est-embed .e-rnote,#est-embed .e-rctasub,#est-embed .e-disc{color:#1f2937 !important;}
+#est-embed .e-rrange,#est-embed .e-rbv{color:#0c0c0d !important;}
+#est-embed .e-rrange em{color:#2f6bff !important;}
+#est-embed .e-restart{color:#2f6bff !important;}
+
+/* ============================================================
+   POLISH LAYER — cleaner, more premium light UI (appended so it
+   wins on the cascade). Safe visual-only tweaks.
+   ============================================================ */
+#est-embed{--pri:#2f6bff;--pri-d:#1b56ee;--ink:#0c0c0d;--ink-2:#6a6a70;--line:#e9e8e3;--soft:#fbfaf7;}
+#est-embed .e-num{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums;}
+
+/* Shell: softer, more premium frame */
+#est-embed{border-radius:0 !important;}
+.est-stage{max-width:920px;}
+#est-embed>.e-app,#est-embed{background:#ffffff !important;}
+
+/* Big numbers were calling an unloaded font (Bebas Neue) → fell back ugly.
+   Give them a clean, tight numeric stack. */
+#est-embed .e-rrange,#est-embed .e-rbv,#est-embed .e-mrn,#est-embed .e-sldval{
+  font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;
+  font-variant-numeric:tabular-nums;font-weight:700 !important;letter-spacing:-.5px !important;}
+
+/* Top bar: crisper */
+#est-embed .e-topbar{padding:16px 26px !important;}
+#est-embed .e-ldot{background:var(--pri) !important;box-shadow:0 0 0 4px rgba(47,107,255,.14) !important;}
+#est-embed .e-tlogo{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:700 !important;letter-spacing:.2px !important;font-size:16px !important;}
+#est-embed .e-tlogo span{color:var(--pri) !important;}
+
+/* Progress bar a touch bolder */
+#est-embed .e-prog{height:4px !important;background:#f6f8fb !important;}
+#est-embed .e-pfill{background:linear-gradient(90deg,var(--pri),#5a9bd8) !important;}
+
+/* Option cards: lift on hover, cleaner selected state */
+#est-embed .e-oi{padding:15px 18px !important;transition:border-color .2s,box-shadow .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#bcd4ea !important;box-shadow:0 4px 14px rgba(15,27,45,.06) !important;}
+#est-embed .e-oi.sel{box-shadow:0 0 0 1.5px var(--pri),0 6px 18px rgba(47,107,255,.14) !important;}
+#est-embed .e-oi-radio{border:1.5px solid #cfdae7 !important;}
+
+/* Primary button: gradient + confident hover */
+#est-embed .e-btnmain{background:linear-gradient(180deg,#3a7cc0,var(--pri)) !important;padding:15px 24px !important;font-size:15px !important;box-shadow:0 2px 8px rgba(47,107,255,.28) !important;}
+#est-embed .e-btnmain:hover{background:linear-gradient(180deg,#3f83c9,var(--pri-d)) !important;box-shadow:0 6px 20px rgba(47,107,255,.34) !important;transform:translateY(-1px) !important;}
+#est-embed .e-btnmain:disabled{background:#f6f8fb !important;color:#9a9aa0 !important;box-shadow:none !important;transform:none !important;}
+
+/* Cards: softer surface + shadow */
+#est-embed .e-card{background:#ffffff !important;border:1px solid var(--line) !important;border-radius:14px !important;box-shadow:0 2px 10px rgba(15,27,45,.04) !important;backdrop-filter:none !important;}
+
+/* Measured-result banner: clean success card */
+#est-embed .e-mresult{background:#f0f7ef !important;border:1px solid #cfe6cd !important;border-radius:12px !important;padding:14px 16px !important;}
+#est-embed .e-mrbadge{color:#1a8a4a !important;font-weight:600 !important;}
+
+/* ---- RESULT SLIDE: the money shot ---- */
+#est-embed .e-rhero{
+  background:linear-gradient(160deg,#f4f9ff 0%,#eaf3fc 100%) !important;
+  border:1px solid #d5e6f6 !important;border-radius:20px !important;
+  box-shadow:0 10px 40px rgba(47,107,255,.10) !important;padding:34px 26px !important;}
+#est-embed .e-rbadge{background:#e6f5ec !important;border:1px solid #bfe4c9 !important;color:#1a8a4a !important;font-weight:600 !important;}
+#est-embed .e-rrange{font-size:clamp(34px,5.5vw,58px) !important;letter-spacing:-1px !important;}
+#est-embed .e-rrange em{color:var(--pri) !important;}
+#est-embed .e-rgrid{gap:10px !important;}
+#est-embed .e-rbox{
+  background:#ffffff !important;border:1px solid var(--line) !important;border-radius:12px !important;
+  padding:14px 10px !important;box-shadow:0 1px 4px rgba(15,27,45,.04) !important;}
+#est-embed .e-rbv{font-size:18px !important;color:var(--ink) !important;}
+#est-embed .e-rbl{color:#8592a5 !important;letter-spacing:1px !important;}
+#est-embed .e-disc{background:var(--soft) !important;border:1px solid var(--line) !important;border-radius:12px !important;}
+
+/* Step dots: friendlier */
+#est-embed .e-sdot.act{background:var(--pri) !important;}
+#est-embed .e-sdot.done{background:#1a8a4a !important;}
+
+/* Loading ring on brand color */
+#est-embed .e-ldring{border-top-color:var(--pri) !important;}
+#est-embed .e-ldstp.done{color:#1a8a4a !important;}
+
+/* ---- YOUR INFO slide: form fields were near-transparent white on a
+   white card, so they vanished. Give them real surfaces. ---- */
+#est-embed .e-fi{
+  background:#ffffff !important;border:1px solid #e9e8e3 !important;border-radius:9px !important;
+  color:var(--ink) !important;}
+#est-embed .e-fi::placeholder{color:#9a9aa0 !important;}
+#est-embed .e-fi:focus{border-color:var(--pri) !important;background:#ffffff !important;box-shadow:0 0 0 3px rgba(47,107,255,.12) !important;}
+#est-embed .e-fl{color:#6a6a70 !important;font-weight:600 !important;letter-spacing:1.5px !important;}
+#est-embed .e-consent{background:var(--soft) !important;border:1px solid var(--line) !important;color:#6a6a70 !important;border-radius:9px !important;}
+#est-embed .e-consent b{color:var(--ink) !important;}
+/* ---- AI VISUALIZER (photo left, options right) ---- */
+#est-embed .e-viz{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:14px;}
+@media (max-width:720px){ #est-embed .e-viz{grid-template-columns:1fr;} }
+#est-embed .e-vizphoto{position:sticky;top:12px;}
+#est-embed .e-vizupload{border:2px dashed #bcd4ea;border-radius:14px;background:#f7fbff;padding:34px 18px;text-align:center;cursor:pointer;transition:all .18s;}
+#est-embed .e-vizupload:hover{border-color:#2f6bff;background:#eef6ff;}
+#est-embed .e-vizstage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #e9e8e3;background:#0c0c0d;min-height:200px;display:flex;align-items:center;justify-content:center;}
+#est-embed .e-vizimg{width:100%;display:block;}
+#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,27,45,.55);color:#fff;backdrop-filter:blur(2px);}
+#est-embed .e-vizbadge{position:absolute;top:10px;left:10px;background:rgba(47,107,255,.92);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+#est-embed .e-vizbar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+#est-embed .e-vizbtn{flex:1;min-width:90px;padding:8px 10px;border:1px solid #e0ded6;border-radius:8px;background:#fff;color:#0c0c0d;font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
+#est-embed .e-vizbtn.on{background:#2f6bff;border-color:#2f6bff;color:#fff;}
+#est-embed .e-vizbtn.ghost{flex:0 0 auto;color:#6a6a70;}
+#est-embed .e-vizbtn.ghost:hover{border-color:#2f6bff;color:#2f6bff;}
+#est-embed .e-vizhint{font-size:11px;color:#9a9aa0;margin-top:8px;line-height:1.5;text-align:center;}
+#est-embed .e-vizcv{width:100%;display:block;border-radius:14px;cursor:crosshair;background:#0c0c0d;touch-action:none;}
+#est-embed .e-vizimg{width:100%;display:block;border-radius:14px;background:#f6f8fb;}
+#est-embed .e-vizhelp{margin-top:8px;font-size:12px;font-weight:600;color:#2f6bff;text-align:center;background:#eef6ff;border:1px solid #d5e6f6;border-radius:8px;padding:8px 10px;}
+#est-embed .e-vizprevlbl{font-size:11px;color:#9a9aa0;text-align:center;margin-top:8px;}
+#est-embed .e-vizgen{width:100%;margin-top:10px;padding:13px 16px;border:none;border-radius:10px;background:linear-gradient(180deg,#3a7cc0,#2f6bff);color:#fff;font:600 15px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(47,107,255,.28);transition:all .18s;}
+#est-embed .e-vizgen:hover{background:linear-gradient(180deg,#3f83c9,#1b56ee);box-shadow:0 6px 20px rgba(47,107,255,.34);transform:translateY(-1px);}
+/* Material / add-on swatch thumbnails */
+#est-embed .e-oi-sw{width:48px;height:48px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid #e9e8e3;box-shadow:0 1px 3px rgba(15,27,45,.08);}
+#est-embed .e-oi-emchip{width:48px;height:48px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#f6faff,#e9f1fb);border:1px solid #dbe6f2;box-shadow:0 1px 3px rgba(15,27,45,.06),inset 0 1px 0 #fff;}
+#est-embed .e-oi{gap:12px !important;}
+#est-embed .e-vizgen:disabled{background:#f0efe9;color:#9a9aa0;cursor:not-allowed;box-shadow:none;transform:none;}
+/* color chips */
+#est-embed .e-colorrow{display:flex;flex-wrap:wrap;gap:8px;}
+#est-embed .e-colorchip{display:flex;align-items:center;gap:7px;padding:7px 12px 7px 8px;border:1px solid #e9e8e3;border-radius:20px;background:#fff;color:#0c0c0d;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
+#est-embed .e-colordot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
+#est-embed .e-colorchip:hover{border-color:#2f6bff;}
+#est-embed .e-colorchip.on{border-color:#2f6bff;background:#faf8f4;box-shadow:0 0 0 1px #2f6bff;}
+#est-embed .e-colornone{background:#f0f2f5 !important;color:#9a9aa0;display:flex;align-items:center;justify-content:center;font-size:11px;}
+/* Design-step split: options + sticky preview panel */
+#est-embed .e-vizsplit{display:flex;gap:18px;align-items:flex-start;}
+#est-embed .e-vizsplit>.e-vizcol{flex:1;min-width:0;}
+#est-embed .e-vizsplit>.e-vizphoto{width:320px;flex:none;}
+@media(max-width:720px){#est-embed .e-vizsplit{flex-direction:column;}#est-embed .e-vizsplit>.e-vizphoto{width:100%;}}
+/* Preview loading / gating overlay */
+#est-embed .e-vizstage{position:relative;}
+#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:rgba(247,250,253,.78);backdrop-filter:blur(2px);border-radius:12px;text-align:center;padding:16px;}
+#est-embed .e-vizspin{width:34px;height:34px;border-radius:50%;border:3px solid #cfe0f2;border-top-color:#2f6bff;animation:e-vizspin .9s linear infinite;}
+@keyframes e-vizspin{to{transform:rotate(360deg);}}
+#est-embed .e-vizloading b{font-size:14px;color:#0c0c0d;}
+#est-embed .e-vizloading span{font-size:11.5px;color:#6a6a70;max-width:230px;line-height:1.4;}
+</style></head>
+<body><div class="est-stage"><div id="est-embed-shell"></div></div>
+<script>
+/* ═══════════════════════════════════════════════════
+   ESTIMATOR CONFIG
+═══════════════════════════════════════════════════ */
+const E_CONFIG = {
+  companyName: "Your Company",
+  accentColor: "#2f6bff",
+  ctaText: "Book a Free Inspection",
+  ctaUrl: "#",
+  webhookUrl: "https://services.leadconnectorhq.com/hooks/aUs7E5m1gmLXoeIV3WM9/webhook-trigger/ef3ddaf4-7cde-4c97-90f6-28560e86346d",
+  /* AI VISUALIZER — homeowners upload a photo of their home's exterior and tap
+     "View Design" to get a photorealistic preview of the selected roofing
+     material + color. Renders only on the explicit button tap, and identical
+     photo+prompt combos are cached (no repeat charges). Leave blank to hide. */
+  aiEditUrl: "https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-visualizer",
+  aiEditKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso",
+  /* Each material has color options. `hex` tints the color chip; `desc` is the
+     phrase fed to the AI visualizer prompt. */
+  pricing: {
+    "asphalt-3tab":   { label:"3-Tab Asphalt Shingles",   low:450,  high:600,  note:"Budget-friendly · 15–20 years",
+      colors:[{name:"Charcoal Black",hex:"#26262a",desc:"charcoal black asphalt shingles"},{name:"Weathered Wood",hex:"#6b5d4f",desc:"weathered wood brown shingles"},{name:"Slate Gray",hex:"#6a6a70",desc:"slate gray shingles"},{name:"Driftwood",hex:"#8a7c68",desc:"driftwood tan shingles"},{name:"Barkwood",hex:"#4a3f36",desc:"dark brown barkwood shingles"},{name:"Hunter Green",hex:"#33463a",desc:"hunter green shingles"}] },
+    "asphalt-arch":   { label:"Architectural Shingles",   low:550,  high:750,  note:"Most popular · 25–30 years",
+      colors:[{name:"Charcoal Black",hex:"#26262a",desc:"charcoal black architectural asphalt shingles"},{name:"Weathered Wood",hex:"#6b5d4f",desc:"weathered wood brown architectural shingles"},{name:"Slate Gray",hex:"#6a6a70",desc:"slate gray architectural shingles"},{name:"Driftwood",hex:"#8a7c68",desc:"driftwood tan architectural shingles"},{name:"Barkwood",hex:"#4a3f36",desc:"dark brown barkwood architectural shingles"},{name:"Hunter Green",hex:"#33463a",desc:"hunter green architectural shingles"}] },
+    "metal-standing": { label:"Standing Seam Metal",      low:1000, high:1400, note:"Long-lasting · 40–70 years",
+      colors:[{name:"Matte Black",hex:"#2b2d30",desc:"matte black standing seam metal roof"},{name:"Charcoal Gray",hex:"#555a5f",desc:"charcoal gray standing seam metal roof"},{name:"Galvalume Silver",hex:"#b7bcc0",desc:"galvalume silver standing seam metal roof"},{name:"Slate Blue",hex:"#4a5b6e",desc:"slate blue standing seam metal roof"},{name:"Barn Red",hex:"#7c322c",desc:"deep barn red standing seam metal roof"},{name:"Forest Green",hex:"#324a3a",desc:"forest green standing seam metal roof"}] },
+    "tile-clay":      { label:"Clay or Concrete Tile",    low:1200, high:1700, note:"Very durable · 50+ years",
+      colors:[{name:"Terra Cotta",hex:"#9c4a32",desc:"terra cotta clay barrel tile"},{name:"Sand Tan",hex:"#c19a6b",desc:"sand tan concrete tile"},{name:"Adobe Brown",hex:"#7a4a34",desc:"adobe brown clay tile"},{name:"Terracotta Blend",hex:"#b5613a",desc:"blended terracotta clay tile"},{name:"Slate Gray",hex:"#6a6a70",desc:"slate gray concrete tile"}] },
+    "flat-tpo":       { label:"Flat Roof (TPO Membrane)", low:550,  high:750,  note:"For low-slope roofs · 15–25 years",
+      colors:[{name:"White",hex:"#eef0ee",desc:"white TPO membrane flat roof"},{name:"Light Gray",hex:"#c3c6c4",desc:"light gray TPO membrane flat roof"},{name:"Tan",hex:"#cbbfa4",desc:"tan TPO membrane flat roof"}] },
+    "slate-natural":  { label:"Natural Slate",            low:1500, high:2500, note:"Premium / luxury · 75+ years",
+      colors:[{name:"Slate Gray",hex:"#5f646a",desc:"natural gray slate roof tiles"},{name:"Black Slate",hex:"#26262a",desc:"natural black slate roof tiles"},{name:"Green Slate",hex:"#42513f",desc:"natural green slate roof tiles"},{name:"Purple Slate",hex:"#4f4552",desc:"natural purple slate roof tiles"},{name:"Mottled Gray",hex:"#787c80",desc:"mottled gray-black natural slate roof tiles"}] },
+  },
+  /* Optional visual upgrades — preview-only, appended to the AI prompt. */
+  addons: {
+    "skylight":    { label:"Add a Skylight",      icon:"", desc:"See a roof skylight in your preview" },
+    "gutters":     { label:"New Gutters",         icon:"", desc:"Preview clean new gutters along the edge" },
+    "ridge-vent":  { label:"Ridge Vent",          icon:"", desc:"Preview a low-profile ridge vent at the peak" },
+  },
+  pitchMult:   { "flat":1.00, "low":1.00, "medium":1.22, "steep":1.55, "very-steep":1.85 },
+  storiesMult: { "1":1.00, "2":1.09, "3":1.18 },
+  regionMult:  { "northeast":1.28, "west-coast":1.22, "midwest":0.94, "southeast":0.88, "southwest":0.98, "mountain":1.04, "national":1.00 },
+  projectMult: { "full-replace":1.00, "overlay":0.82, "repair":0.30, "new":0.90 },
+};
+</script>
+<script>
+/* ═══ Build and inject estimator HTML into shell ═══ */
+/* All functions global so inline handlers (oninput/onclick) can reach them */
+var shell = document.getElementById('est-embed-shell');
+shell.innerHTML = `
+<div id="est-embed">
+  <div class="e-topbar">
+    <div class="e-tlogo"><div class="e-ldot"></div>Roof<span>Estimator</span></div>
+    <div class="e-tstep" id="e-tstep">Step <b>1</b> of 11 — Location</div>
+  </div>
+  <div class="e-tabs" id="e-tabs">
+    <button class="e-tab on" id="e-tab-est" onclick="eRacTab('est')">Get an estimate</button>
+    <button class="e-tab" id="e-tab-rac" onclick="eRacTab('rac')">How old is my roof?</button>
+  </div>
+  <div class="e-prog"><div class="e-pfill" id="e-pfill" style="width:9%"></div></div>
+
+  <style>
+  .e-tabs{display:flex;gap:10px;padding:22px 26px;background:#f7f9fc;border-top:1px solid #edf0f5;border-bottom:1px solid #e4e9f0;flex-wrap:wrap}
+  @media(max-width:600px){.e-tabs{padding:16px 16px}}
+  .e-tab{flex:0 0 auto;border:1px solid #dde3ec;background:#fff;color:#4b5563;border-radius:999px;padding:12px 22px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;line-height:1.2}
+  .e-tab:hover{border-color:#c7d2e3;color:#0f172a}
+  .e-tab.on{background:var(--a);border-color:var(--a);color:#fff;box-shadow:0 2px 8px rgba(47,107,255,.28)}
+  .e-rac{padding:0 0 32px;background:#fff}
+  .e-rac-in{max-width:620px;margin:0 auto;padding:0 22px}
+  .e-rac-hero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.84)),url('assets/roofing/roof-crew.jpg');background-size:cover;background-position:center 40%;padding:36px 0 40px;color:#fff}
+  #est-embed .e-rac-hero .e-seye{color:#9cc8ee!important}#est-embed .e-rac-hero .e-stitle{color:#fff!important}#est-embed .e-rac-hero .e-stitle em{color:#9cc8ee!important}#est-embed .e-rac-hero .e-ssub{color:rgba(255,255,255,.82)!important}
+  .e-rac-hero .e-rac-note{color:rgba(255,255,255,.85)}
+  .e-rac-hero .e-asearch-input{background:#fff;color:#0c0c0d;border-color:rgba(255,255,255,.35)}
+  .e-rac-step{display:none}
+  .e-rac-step.on{display:block;animation:eSpIn .52s cubic-bezier(.22,1,.28,1) both}
+  .e-rac-step.on.back{animation:eSpBack .52s cubic-bezier(.22,1,.28,1) both}
+  .e-rac-q{padding-top:34px}
+  .e-rac-prog{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:14px}
+  .e-rac-dots{display:flex;gap:5px}.e-rac-dots i{width:22px;height:4px;border-radius:2px;background:#e5e9f0;transition:background .2s}.e-rac-dots i.on{background:var(--a)}
+  .e-rac-qt{margin-bottom:6px}
+  .e-rac-hint{font-size:13px;color:#6b7280;margin-bottom:16px}
+  .e-rac-search{margin-top:16px;position:relative}
+  .e-rac-note{font-size:12.5px;color:#6b7280;margin-top:10px;min-height:18px}
+  .e-rac-found{background:#eef3ff;border-left:3px solid var(--a);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5;margin:0 0 18px;color:#1e3a8a}
+  .e-rac-found.none{background:#f6f8fb;border-left-color:#cbd5e1;color:#475569}
+  .e-rac-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .e-rac-chips button{border:1px solid #dfe4ec;background:#fff;color:#374151;border-radius:12px;padding:13px 16px;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:.12s;flex:1 1 calc(50% - 8px);text-align:left}
+  .e-rac-chips button:hover{border-color:#94a3b8}
+  .e-rac-chips button.on{background:#0f172a;border-color:#0f172a;color:#fff}
+  .e-rac-nav{display:flex;gap:10px;justify-content:space-between;margin-top:22px}
+  .e-rac-back{background:none;border:1px solid #dfe4ec;border-radius:12px;padding:12px 16px;font-family:inherit;font-size:14px;font-weight:600;color:#475569;cursor:pointer}
+  .e-rac-nav .e-btnmain{margin:0;width:auto;flex:1}
+  .e-rac-form{display:grid;gap:10px;margin-top:6px}
+  .e-rac-form input{border:1px solid #dfe4ec;border-radius:12px;padding:13px 14px;font-family:inherit;font-size:15px;width:100%;background:#fff;color:#0c0c0d}
+  .e-rac-form input:focus{outline:none;border-color:var(--a);box-shadow:0 0 0 3px rgba(47,107,255,.14)}
+  .e-rac-res{text-align:center;padding:26px 0 0}
+  .e-rac-ring{width:132px;height:132px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:conic-gradient(var(--rc) calc(var(--pct)*1%),#e9edf3 0);animation:e-rac-pop .5s cubic-bezier(.2,.8,.2,1)}
+  @keyframes e-rac-pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .e-rac-ring i{width:104px;height:104px;border-radius:50%;background:#fff;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:34px;letter-spacing:-.03em;color:var(--rc);line-height:1}
+  .e-rac-ring i small{display:block;font-size:10.5px;font-weight:600;color:#6b7280;letter-spacing:.07em;text-transform:uppercase;margin-top:4px}
+  .e-rac-band{display:inline-block;padding:5px 13px;border-radius:999px;font-weight:700;font-size:13px;background:var(--rb);color:var(--rc);margin-bottom:12px}
+  .e-rac-txt{font-size:15px;line-height:1.55;color:#1f2937;max-width:520px;margin:0 auto 14px}
+  .e-rac-why{display:flex;flex-direction:column;gap:6px;max-width:480px;margin:0 auto 20px;text-align:left}
+  .e-rac-why div{font-size:13px;color:#4b5563;padding:8px 10px;border-radius:8px;background:#f6f8fb;display:flex;gap:8px;line-height:1.4}
+  .e-rac-why b{color:var(--rc);flex-shrink:0;min-width:34px;text-align:right}
+  .e-rac-ctas{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .e-rac-ctas .e-btnmain{margin:0;width:auto}
+  .e-rac-ghost{background:#fff;border:1px solid #dfe4ec;color:#0f172a;border-radius:12px;padding:13px 20px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .e-rac-ghost:hover{border-color:#94a3b8}
+  .e-rac-again{margin-top:14px;font-size:12.5px;color:#6b7280;background:none;border:0;cursor:pointer;text-decoration:underline;font-family:inherit}
+  .e-rac-res.good{--rc:#15803d;--rb:#dcfce7}
+  .e-rac-res.mid{--rc:#b45309;--rb:#fef3c7}
+  .e-rac-res.warn{--rc:#c2410c;--rb:#ffedd5}
+  .e-rac-res.bad{--rc:#b91c1c;--rb:#fee2e2}
+  .e-rac-busy{display:inline-block;width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:var(--a);border-radius:50%;animation:e-rac-spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes e-rac-spin{to{transform:rotate(360deg)}}
+  </style>
+  <div class="e-rac" id="e-rac" style="display:none">
+    <div id="e-rac-s0" class="e-rac-hero e-rac-step on"><div class="e-rac-in">
+      <span class="e-seye">Roof health check</span>
+      <div class="e-stitle">How old is<br><em>your roof?</em></div>
+      <div class="e-ssub">Type your address. We check public permit and property records, ask four quick questions, and score your roof's health in under a minute.</div>
+      <div class="e-asearch e-rac-search">
+        <input type="text" class="e-asearch-input" id="e-rac-addr" placeholder="Start typing your address…" autocomplete="off" oninput="eRacAddrInput(event)" onkeydown="if(event.key==='Escape')document.getElementById('e-rac-sug').classList.remove('open')">
+        <div class="e-suggestions" id="e-rac-sug"></div>
+      </div>
+      <div class="e-rac-note" id="e-rac-note"></div>
+    </div></div>
+    <div class="e-rac-in">
+      <div class="e-rac-step e-rac-q" id="e-rac-s1">
+        <div class="e-rac-prog"><span>Question 1 of 4</span><div class="e-rac-dots"><i class="on"></i><i></i><i></i><i></i></div></div>
+        <div class="e-rac-found" id="e-rac-found"></div>
+        <div class="e-stitle e-rac-qt">What's the roof<br><em>made of?</em></div>
+        <div class="e-rac-hint">Tap one, then Next.</div>
+        <div class="e-rac-chips" data-q="material">
+          <button data-v="asphalt" class="on" onclick="eRacPick(this)">Asphalt shingle</button><button data-v="metal" onclick="eRacPick(this)">Metal</button><button data-v="tile" onclick="eRacPick(this)">Tile</button><button data-v="flat" onclick="eRacPick(this)">Flat / rolled</button><button data-v="unknown" onclick="eRacPick(this)">Not sure</button></div>
+        <div class="e-rac-nav"><button class="e-rac-back" onclick="eRacGo(0)">← Back</button><button class="e-btnmain" onclick="eRacGo(2)">Next →</button></div>
+      </div>
+      <div class="e-rac-step e-rac-q" id="e-rac-s2">
+        <div class="e-rac-prog"><span>Question 2 of 4</span><div class="e-rac-dots"><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+        <div class="e-stitle e-rac-qt">When was it<br><em>last replaced?</em></div>
+        <div class="e-rac-hint" id="e-rac-agehint">Your best guess is fine — then tap Next.</div>
+        <div class="e-rac-chips" data-q="age">
+          <button data-v="5" onclick="eRacPick(this)">Under 10 years</button><button data-v="15" onclick="eRacPick(this)">10–20 years</button><button data-v="25" onclick="eRacPick(this)">20+ years</button><button data-v="unknown" class="on" onclick="eRacPick(this)">Not sure</button></div>
+        <div class="e-rac-nav"><button class="e-rac-back" onclick="eRacGo(1)">← Back</button><button class="e-btnmain" onclick="eRacGo(3)">Next →</button></div>
+      </div>
+      <div class="e-rac-step e-rac-q" id="e-rac-s3">
+        <div class="e-rac-prog"><span>Question 3 of 4</span><div class="e-rac-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></div>
+        <div class="e-stitle e-rac-qt">Noticed any<br><em>of these?</em></div>
+        <div class="e-rac-hint">Tap all that apply, then Next.</div>
+        <div class="e-rac-chips multi" data-q="issues">
+          <button data-v="shingles" onclick="eRacPick(this)">Missing or curling shingles</button><button data-v="granules" onclick="eRacPick(this)">Granules in the gutters</button><button data-v="stains" onclick="eRacPick(this)">Ceiling stains or leaks</button><button data-v="sag" onclick="eRacPick(this)">Sagging areas</button><button data-v="moss" onclick="eRacPick(this)">Moss or algae</button><button data-v="none" class="on" onclick="eRacPick(this)">None of these</button></div>
+        <div class="e-rac-nav"><button class="e-rac-back" onclick="eRacGo(2)">← Back</button><button class="e-btnmain" onclick="eRacGo(4)">Next →</button></div>
+      </div>
+      <div class="e-rac-step e-rac-q" id="e-rac-s4">
+        <div class="e-rac-prog"><span>Question 4 of 4</span><div class="e-rac-dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
+        <div class="e-stitle e-rac-qt">Hail or a big windstorm<br><em>in the last year?</em></div>
+        <div class="e-rac-hint">Storm damage often isn't visible from the ground. Tap one, then Next.</div>
+        <div class="e-rac-chips" data-q="storm">
+          <button data-v="yes" onclick="eRacPick(this)">Yes</button><button data-v="no" onclick="eRacPick(this)">No</button><button data-v="unknown" class="on" onclick="eRacPick(this)">Not sure</button></div>
+        <div class="e-rac-nav"><button class="e-rac-back" onclick="eRacGo(3)">← Back</button><button class="e-btnmain" onclick="eRacGo(5)">Next →</button></div>
+      </div>
+      <div class="e-rac-step e-rac-q" id="e-rac-s5">
+        <div class="e-rac-prog"><span>Almost there</span></div>
+        <div class="e-stitle e-rac-qt">Where should we<br><em>send your report?</em></div>
+        <div class="e-rac-hint">We'll text you the score and what it means. No sales calls unless you book something.</div>
+        <div class="e-rac-form"><input id="e-rac-name" placeholder="Your name" autocomplete="name"><input id="e-rac-phone" placeholder="Mobile number" inputmode="tel" autocomplete="tel"><input id="e-rac-email" placeholder="Email (optional)" inputmode="email" autocomplete="email"></div>
+        <div class="e-rac-nav"><button class="e-rac-back" onclick="eRacGo(4)">← Back</button><button class="e-btnmain" id="e-rac-go" onclick="eRacScore(false)">See my roof health →</button></div>
+        <div style="text-align:center"><button class="e-rac-again" onclick="eRacScore(true)">Skip — just show my score</button></div>
+      </div>
+      <div class="e-rac-step" id="e-rac-s6"></div>
+    </div>
+  </div>
+  <div class="e-app">
+
+  <!-- STEP 1 -->
+  <div class="e-sp active" id="e-sp1">
+    <div class="e-sbody">
+      <div class="e-zippanel" id="e-zippanel">
+        <div class="e-shdr">
+          <span class="e-seye">Get started</span>
+          <div class="e-stitle">What's your<br><em>ZIP code?</em></div>
+          <div class="e-ssub">We use this to estimate local labor and material pricing for your area. Next, we'll measure your roof.</div>
+        </div>
+        <div class="e-zipwrap">
+          <label class="e-ziplabel" for="e-zipIn">Your ZIP code</label>
+          <input type="text" class="e-zipinput" id="e-zipIn" maxlength="5" inputmode="numeric" placeholder="e.g. 91401" oninput="eHandleZip(this.value)">
+          <div class="e-ziphint">We use this to estimate local pricing.</div>
+        </div>
+        <div class="e-btnrow"><button class="e-btnmain" id="e-zipcont" onclick="eZipNext()" disabled>Continue →</button></div>
+      </div>
+      <div class="e-addrpanel" id="e-addrpanel" style="display:none">
+        <div class="e-shdr">
+          <span class="e-seye">Your property</span>
+          <div class="e-stitle">What's the<br><em>Property Address?</em></div>
+          <div class="e-ssub">Enter your address, then trace the roof outline on the satellite map. Square footage calculates automatically.</div>
+        </div>
+      <div class="e-asearch">
+        <div class="e-asearch-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <input type="text" class="e-asearch-input" id="e-addrIn" placeholder="Start typing a US address..." autocomplete="off" oninput="eHandleAddrInput(event)" onkeydown="eHandleAddrKey(event)">
+        <div class="e-suggestions" id="e-suggestions"></div>
+      </div>
+      <div class="e-mapwrap" id="e-mapwrap">
+        <div class="e-maptb">
+          <button class="e-mtbtn on" id="e-btndraw" onclick="eSetTool('draw')">Surface Area</button>
+          <button class="e-mtbtn" id="e-btnpan" onclick="eSetTool('pan')">Pan / Zoom</button>
+          <button class="e-mtbtn del" onclick="eClearDrawing()">Clear</button>
+          <button class="e-mtbtn" id="e-btnhd" onclick="eToggleImagery()">HD: On</button>
+          <div class="e-mstat" id="e-mstat">Click each corner of the roof to trace the outline</div>
+        </div>
+        <div id="e-mapel"></div>
+        <div class="e-mhint"><strong>How to trace:</strong> click each corner of a roof section, then double-click to finish it. Triangles work well for hips and gables. Start clicking again to add another section — they all add up. Your roof slope is measured automatically from satellite data and combined with your traced area for the true roof size. Scroll to zoom; Clear resets everything.</div>
+      </div>
+      <label class="e-flatrow" style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:13px;color:#0c0c0d;cursor:pointer">
+        <input type="checkbox" id="e-flatchk" onchange="eToggleFlat(this.checked)" style="width:16px;height:16px;cursor:pointer">
+        This is a flat or low-slope roof (no pitch adjustment)
+      </label>
+      <div class="e-mresult" id="e-mresult">
+        <div>
+          <div class="e-mrn" id="e-mrn">—</div>
+          <div class="e-mrl">sq ft &nbsp;<span class="e-mrbadge">✓ Measured via satellite</span></div>
+        </div>
+        <div class="e-mrsq" id="e-msq">— roofing squares</div>
+        <div class="e-mredit" onclick="eClearDrawing()">Re-draw →</div>
+      </div>
+      <div class="e-card" id="e-slopecard" style="display:none;padding:12px 16px;margin-top:10px">
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--al);margin-bottom:8px">Slope-adjusted (true) area</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div id="e-slopeinfo" style="font-size:12px;color:var(--mu)">Roof slope measured automatically</div>
+          <div id="e-truearea" style="font-size:13px;color:#9cc8ee;font-weight:700">True roof area: — sq ft</div>
+        </div>
+        <div style="font-size:11px;color:var(--mu);margin-top:8px">Flat footprint × slope factor = the actual surface you shingle — the number to order materials against.</div>
+      </div>
+      <button class="e-manualbtn" id="e-manualbtn" onclick="eToggleManual()">Can't trace the roof? Enter size manually</button>
+      <div class="e-card e-sldwrap" id="e-sldwrap">
+        <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--al);margin-bottom:10px">Approximate Roof Size</div>
+        <div class="e-slddisp">
+          <div class="e-sldval" id="e-sldval">1,800</div>
+          <div class="e-sldunit">sq ft</div>
+        </div>
+        <input type="range" class="e-sld" id="e-sld" min="400" max="8000" step="50" value="1800" oninput="eHandleSlider(this.value)">
+        <div class="e-sldlbl"><span>400 sq ft</span><span>4,000</span><span>8,000 sq ft</span></div>
+        <div style="font-size:11px;color:var(--mu);margin-top:10px;line-height:1.6">Avg 1-story home: 1,200–1,800 sq ft · 2-story: 1,500–2,400 · Large home: 2,500–4,000</div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eZipBack()">← Back</button>
+        <button class="e-btnmain" id="e-btn1" onclick="eGo(2)" disabled>Continue — Roof Material →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 — MATERIAL -->
+  <div class="e-sp" id="e-sp2">
+    <div class="e-shdr">
+      <span class="e-seye">Step 2 of 10</span>
+      <div class="e-stitle">What Roofing<br><em>Material?</em></div>
+      <div class="e-ssub">Select your desired material. Prices shown per roofing square (100 sq ft), fully installed including materials and labor.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+          <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-matlist"></div></div>
+          <div class="e-card" id="e-colorcard" style="display:none;padding:14px 16px;margin-top:10px">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Choose a color / finish</div>
+            <div class="e-colorrow" id="e-colorrow"></div>
+          </div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(1,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn2" onclick="eGo(4)" disabled>Continue — Roof Pitch →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots2"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 — PITCH -->
+  <div class="e-sp" id="e-sp3">
+    <div class="e-shdr">
+      <span class="e-seye">Step 3 of 10</span>
+      <div class="e-stitle">What's the<br><em>Roof Pitch?</em></div>
+      <div class="e-ssub">Steeper roofs require more safety equipment. A steep roof can cost 55% more than a low slope.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePick(this,'pitch','flat')"><div class="e-oi-em">➖</div><div class="e-oi-info"><div class="e-oi-lbl">Flat / Nearly Flat</div><div class="e-oi-desc">0–2/12 pitch · Typically TPO, EPDM or gravel roofs</div></div><div class="e-oi-tag">No add'l cost</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','low')"><div class="e-oi-em">🔹</div><div class="e-oi-info"><div class="e-oi-lbl">Low Slope</div><div class="e-oi-desc">2–4/12 pitch · Gentle slope, easy to walk on</div></div><div class="e-oi-tag">+8%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','medium')"><div class="e-oi-em">🔺</div><div class="e-oi-info"><div class="e-oi-lbl">Medium Slope</div><div class="e-oi-desc">4–7/12 pitch · Most common residential pitch</div></div><div class="e-oi-tag">+20%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','steep')"><div class="e-oi-em">⛰</div><div class="e-oi-info"><div class="e-oi-lbl">Steep Slope</div><div class="e-oi-desc">7–10/12 pitch · Requires safety harness equipment</div></div><div class="e-oi-tag">+38%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'pitch','very-steep')"><div class="e-oi-em">🏔</div><div class="e-oi-info"><div class="e-oi-lbl">Very Steep</div><div class="e-oi-desc">10+/12 pitch · High complexity, premium labor cost</div></div><div class="e-oi-tag">+60%</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(2,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn3" onclick="eGo(4)" disabled>Continue — Stories →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots3"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4 — STORIES -->
+  <div class="e-sp" id="e-sp4">
+    <div class="e-shdr">
+      <span class="e-seye">Step 4 of 10</span>
+      <div class="e-stitle">How Many<br><em>Stories?</em></div>
+      <div class="e-ssub">Taller homes require more equipment and staging, which increases labor cost.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePick(this,'stories','1')"><div class="e-oi-em">🏠</div><div class="e-oi-info"><div class="e-oi-lbl">1 Story</div><div class="e-oi-desc">Single level · Standard access · No additional cost</div></div><div class="e-oi-tag">Base price</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'stories','2')"><div class="e-oi-em">🏘</div><div class="e-oi-info"><div class="e-oi-lbl">2 Stories</div><div class="e-oi-desc">Two levels · Extension ladders and staging required</div></div><div class="e-oi-tag">+14%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'stories','3')"><div class="e-oi-em">🏢</div><div class="e-oi-info"><div class="e-oi-lbl">3+ Stories</div><div class="e-oi-desc">Three or more levels · Premium staging required</div></div><div class="e-oi-tag">+28%</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(2,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn4" onclick="eGo(5)" disabled>Continue — Project Type →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots4"></div>
+    </div>
+  </div>
+
+  <!-- STEP 5 — PROJECT TYPE -->
+  <div class="e-sp" id="e-sp5">
+    <div class="e-shdr">
+      <span class="e-seye">Step 5 of 10</span>
+      <div class="e-stitle">What Type of<br><em>Project?</em></div>
+      <div class="e-ssub">Repairs and overlays cost significantly less than full replacements.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePick(this,'project','full-replace')"><div class="e-oi-em">🔄</div><div class="e-oi-info"><div class="e-oi-lbl">Full Replacement</div><div class="e-oi-desc">Remove existing roof completely, install new system</div></div><div class="e-oi-tag">Full estimate</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','overlay')"><div class="e-oi-em">➕</div><div class="e-oi-info"><div class="e-oi-lbl">Re-Roof / Overlay</div><div class="e-oi-desc">New shingles over existing layer — only if 1 layer currently</div></div><div class="e-oi-tag">~18% less</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','repair')"><div class="e-oi-em">🔧</div><div class="e-oi-info"><div class="e-oi-lbl">Partial Repair</div><div class="e-oi-desc">Fix damaged section, storm damage, or active leak</div></div><div class="e-oi-tag">~25–35% of full</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em">🏗</div><div class="e-oi-info"><div class="e-oi-lbl">New Construction</div><div class="e-oi-desc">Brand new home build — no tear-off required</div></div><div class="e-oi-tag">~8% less</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(4,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn5" onclick="eGo(6)" disabled>Continue — Urgency →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots5"></div>
+    </div>
+  </div>
+
+  <!-- STEP 6 — URGENCY -->
+  <div class="e-sp" id="e-sp6">
+    <div class="e-shdr">
+      <span class="e-seye">Step 6 of 10</span>
+      <div class="e-stitle">How Soon Do You<br><em>Need This Done?</em></div>
+      <div class="e-ssub">This helps us match you with the right contractor and get you scheduled quickly.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em">🚨</div><div class="e-oi-info"><div class="e-oi-lbl">Emergency — ASAP</div><div class="e-oi-desc">Active leak or damage causing immediate risk to the home</div></div><div class="e-oi-tag" style="color:var(--red)">Priority</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em">⚡</div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–2 Weeks</div><div class="e-oi-desc">Urgent but not an emergency — needs attention soon</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em">📅</div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–3 Months</div><div class="e-oi-desc">Planning ahead — no immediate emergency</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em">🔄</div><div class="e-oi-info"><div class="e-oi-lbl">Flexible — No Rush</div><div class="e-oi-desc">Just exploring options and getting estimates for now</div></div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(5,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn6" onclick="eGo(7)" disabled>Continue — Roof Condition →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots6"></div>
+    </div>
+  </div>
+
+  <!-- STEP 7 — DAMAGES -->
+  <div class="e-sp" id="e-sp7">
+    <div class="e-shdr">
+      <span class="e-seye">Step 7 of 10</span>
+      <div class="e-stitle">Any Current Leaks<br><em>or Damage?</em></div>
+      <div class="e-ssub">Knowing the condition of your roof helps us give a more accurate estimate.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePickQ(this,'damages','active-leak')"><div class="e-oi-em">💧</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Active Leak</div><div class="e-oi-desc">Water is currently entering the home — needs immediate attention</div></div><div class="e-oi-tag" style="color:var(--red)">Urgent</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','storm-damage')"><div class="e-oi-em">⛈</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Storm Damage</div><div class="e-oi-desc">Wind, hail, or tree damage — may be covered by insurance</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','visible-damage')"><div class="e-oi-em">🔍</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Visible Damage</div><div class="e-oi-desc">Missing shingles, sagging, or visible deterioration</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','no-damage')"><div class="e-oi-em">✅</div><div class="e-oi-info"><div class="e-oi-lbl">No — Roof is Intact</div><div class="e-oi-desc">No known damage — proactive replacement or upgrade</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'damages','unsure')"><div class="e-oi-em">❓</div><div class="e-oi-info"><div class="e-oi-lbl">Not Sure</div><div class="e-oi-desc">Haven't had it inspected — not sure of the condition</div></div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(6,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn7" onclick="eGo(8)" disabled>Continue — Insurance →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots7"></div>
+    </div>
+  </div>
+
+  <!-- STEP 8 — INSURANCE -->
+  <div class="e-sp" id="e-sp8">
+    <div class="e-shdr">
+      <span class="e-seye">Step 8 of 10</span>
+      <div class="e-stitle">Is This Part of an<br><em>Insurance Claim?</em></div>
+      <div class="e-ssub">Many roofing projects after storms are fully or partially covered by homeowner's insurance.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePickQ(this,'insurance','yes-filed')"><div class="e-oi-em">📋</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Claim Already Filed</div><div class="e-oi-desc">I've already started the claim with my insurance company</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','yes-planning')"><div class="e-oi-em">📞</div><div class="e-oi-info"><div class="e-oi-lbl">Yes — Planning to File</div><div class="e-oi-desc">I believe I have a valid claim but haven't contacted insurance yet</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','maybe')"><div class="e-oi-em">🤔</div><div class="e-oi-info"><div class="e-oi-lbl">Maybe — Not Sure</div><div class="e-oi-desc">I'm not sure if I should file — would like guidance</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'insurance','no')"><div class="e-oi-em">💳</div><div class="e-oi-info"><div class="e-oi-lbl">No — Paying Out of Pocket</div><div class="e-oi-desc">This is not an insurance claim — I'm self-funding the project</div></div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-card" style="padding:16px 18px;margin-top:12px">
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:4px">See your new design</div>
+        <div style="font-size:14px;font-weight:600;color:#0c0c0d;margin-bottom:4px">Upload a photo of your home's exterior</div>
+        <div style="font-size:12px;color:#9a9aa0;margin-bottom:12px">Optional — see your selected roofing material and color rendered on your home with AI on the earlier design steps.</div>
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin:16px 0 8px">Add visual upgrades to the preview</div>
+        <div class="e-olist" id="e-addonlist"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(7,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn8" onclick="eGo(9)" disabled>Continue — Your Info →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots8"></div>
+    </div>
+  </div>
+
+  <!-- STEP 9 — LEAD FORM -->
+  <div class="e-sp" id="e-sp9">
+    <div class="e-shdr">
+      <span class="e-seye">Step 9 of 10</span>
+      <div class="e-stitle">Almost Done —<br><em>Your Info.</em></div>
+      <div class="e-ssub">Enter your contact details and we'll generate your personalized estimate. We never share your information.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card">
+        <div class="e-fr2">
+          <div class="e-fg"><label class="e-fl">First Name *</label><input class="e-fi" id="e-fn" type="text" placeholder="John" oninput="eChkForm()"></div>
+          <div class="e-fg"><label class="e-fl">Last Name *</label><input class="e-fi" id="e-ln" type="text" placeholder="Smith" oninput="eChkForm()"></div>
+        </div>
+        <div class="e-fr2">
+          <div class="e-fg"><label class="e-fl">Phone Number *</label><input class="e-fi" id="e-ph" type="tel" placeholder="(555) 000-0000" oninput="eChkForm()"></div>
+          <div class="e-fg"><label class="e-fl">Email Address *</label><input class="e-fi" id="e-em" type="email" placeholder="john@email.com" oninput="eChkForm()"></div>
+        </div>
+        <div class="e-fg"><label class="e-fl">Additional Notes (Optional)</label><input class="e-fi" id="e-nt" type="text" placeholder="Insurance claim, storm damage, preferred timeline..."></div>
+        <div class="e-consent">By submitting you consent to receive communications from <b id="e-cco">Your Company</b> regarding your roofing estimate. Message &amp; data rates may apply. Reply STOP to opt out. We never sell your information.</div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(8,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn9" onclick="eDoSubmit()" disabled>Generate My Estimate →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots9"></div>
+    </div>
+  </div>
+
+  <!-- STEP 10 — LOADING -->
+  <div class="e-sp" id="e-sp10">
+    <div class="e-ldpanel">
+      <div class="e-ldring"></div>
+      <div style="text-align:center">
+        <div style="font-family:'Space Grotesk','Inter',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px;color:#fff">Calculating Your Estimate</div>
+        <div class="e-ldsteps">
+          <div class="e-ldstp act" id="e-ld1"><div class="e-lddot"></div>Analyzing satellite roof area</div>
+          <div class="e-ldstp" id="e-ld2"><div class="e-lddot"></div>Calculating material quantities</div>
+          <div class="e-ldstp" id="e-ld3"><div class="e-lddot"></div>Applying regional labor rates</div>
+          <div class="e-ldstp" id="e-ld4"><div class="e-lddot"></div>Adjusting for pitch &amp; complexity</div>
+          <div class="e-ldstp" id="e-ld5"><div class="e-lddot"></div>Generating your estimate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="e-sp" id="e-spR">
+    <div class="e-rpage">
+      <div class="e-rhero">
+        <div class="e-rbadge">✓ Estimate Ready</div>
+        <div class="e-rlbl">Estimated Project Cost</div>
+        <div class="e-rrange" id="e-rrange">$— — <em>$—</em></div>
+        <div class="e-rnote" id="e-rnote"></div>
+      </div>
+      <div class="e-rgrid">
+        <div class="e-rbox"><div class="e-rbv" id="e-rv1">—</div><div class="e-rbl">Roof Area</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv2">—</div><div class="e-rbl">Squares</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv3">—</div><div class="e-rbl">Material</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv4">—</div><div class="e-rbl">Pitch</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv5">—</div><div class="e-rbl">Region</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv6">—</div><div class="e-rbl">Per Square</div></div>
+      </div>
+      <div class="e-disc">This is a preliminary estimate based on your inputs. Final pricing varies based on local labor rates, roof complexity, deck condition, permit fees, and material availability. An in-person inspection is required for a firm quote.</div>
+      <div class="e-rcta">
+        <button class="e-btnmain" id="e-rctabtn">Book a Free Inspection</button>
+        <div class="e-rctasub">Free · No obligation · Response within 24 hours</div>
+        <button class="e-restart" onclick="eRestart()">← Start a new estimate</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /e-app -->
+</div><!-- /est-embed -->
+`;
+
+/* ═══ ESTIMATOR JAVASCRIPT ═══ */
+var eS = {
+  addr:'', sqft:0, usedMap:false, lat:0, lon:0,
+  material:'', pitch:'', stories:'', project:'',
+  region:'national', regionLabel:'National Average',
+  urgency:'', damages:'', insurance:'',
+  color:null, addons:{}, photoOrig:null, photoNew:null, vizView:'orig', photoKey:''
+};
+var E_TOTAL = 11;
+var eCur = 1;
+var eLmap = null;
+var eManualOpen = false;
+var eAddrTimer = null;
+var eDrawModeActive = false;
+var eClickPts = [];
+var eClickMarkers = [];
+var eClickPoly = null;
+var eClickLine = null;
+var eFacets = [];
+var eFacetTotal = 0;
+var eMeasurePitch = '4/12';
+var eTileStd = null, eTileHD = null, eImageryHD = true;
+var eTool = 'draw';
+var eMeasurePts = [], eMeasureMarkers = [], eMeasureLine = null, eMeasureLabels = [], eMeasureLines = [];
+
+
+
+/* ADDRESS SEARCH */
+function eHandleAddrInput(e) {
+  var val = e.target.value;
+  eS.addr = '';
+  eS.sqft = eS.usedMap ? eS.sqft : 0;
+  eCheckBtn1();
+  clearTimeout(eAddrTimer);
+  var box = document.getElementById('e-suggestions');
+  if (val.length < 3) { box.classList.remove('open'); return; }
+  box.innerHTML = '<div class="e-suggestion-loading"><span class="e-spin-sm"></span>Searching US addresses...</div>';
+  box.classList.add('open');
+  eAddrTimer = setTimeout(function() { eSearchAddress(val); }, 450);
+}
+function eHandleAddrKey(e) {
+  if (e.key === 'Escape') document.getElementById('e-suggestions').classList.remove('open');
+}
+function eSearchAddress(query) {
+  var url = 'https://nominatim.openstreetmap.org/search'
+    + '?q=' + encodeURIComponent(query)
+    + '&format=json&addressdetails=1&limit=8&countrycodes=us&bounded=0';
+  fetch(url, { headers:{ 'Accept-Language':'en-US,en;q=0.9', 'User-Agent':'RoofEstimator/1.0' } })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var filtered = (data||[]).filter(function(r){
+      var t=(r.type||'').toLowerCase(), cls=(r.class||'').toLowerCase(), addr=r.address||{};
+      if((addr.country_code||'').toLowerCase()!=='us') return false;
+      var hasNumber = addr.house_number||addr.road;
+      var goodType = ['house','building','residential','yes','apartments','detached','terrace','dormitory','bungalow'].indexOf(t)>-1||cls==='building'||cls==='place'||(cls==='highway'&&hasNumber);
+      var badType = ['country','state','county','city','town','village','ocean','sea','river','lake','park','forest','administrative','boundary','continent'].indexOf(t)>-1;
+      return !badType&&(goodType||hasNumber);
+    });
+    if(!filtered.length) filtered=(data||[]).filter(function(r){ var addr=r.address||{}; return (addr.country_code||'').toLowerCase()==='us'&&(addr.road||addr.house_number)&&!['country','state','county'].includes((r.type||'').toLowerCase()); });
+    eRenderSuggestions(filtered.slice(0,5));
+  }).catch(function(){ eRenderSuggestions([]); });
+}
+function eDetectRegion(stateAbbr) {
+  var s=(stateAbbr||'').toUpperCase();
+  var regions={northeast:['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD'],'west-coast':['CA','WA','OR','HI','AK'],midwest:['IL','IN','OH','MI','WI','MN','IA','MO','ND','SD','NE','KS'],southeast:['TX','FL','GA','NC','SC','VA','WV','AL','MS','TN','KY','AR','LA','OK'],southwest:['AZ','NV','NM','CO'],mountain:['UT','ID','MT','WY']};
+  var labels={northeast:'Northeast','west-coast':'West Coast',midwest:'Midwest',southeast:'Southeast',southwest:'Southwest',mountain:'Mountain'};
+  for(var reg in regions){ if(regions[reg].indexOf(s)>-1){ eS.region=reg; eS.regionLabel=labels[reg]; return; } }
+  eS.region='national'; eS.regionLabel='National Average';
+}
+function eRenderSuggestions(data) {
+  var box=document.getElementById('e-suggestions');
+  if(!data||!data.length){ box.innerHTML='<div class="e-suggestion" style="color:var(--mu);cursor:default">No US addresses found — try adding city or state</div>'; return; }
+  var html='';
+  data.forEach(function(r){
+    var parts=(r.display_name||'').split(',');
+    var main=parts.slice(0,2).join(',').trim(), sub=parts.slice(2,5).join(',').trim();
+    var lat=parseFloat(r.lat), lon=parseFloat(r.lon);
+    var state=''; try{ state=(r.address&&r.address.state_code)||''; }catch(e){}
+    html+='<div class="e-suggestion" onclick="eSelectAddress(\''+eEscQ(r.display_name)+'\',' +lat+','+lon+',\''+state+'\')">'
+      +'<div class="e-suggestion-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
+      +'<div><div class="e-suggestion-main">'+eEsc(main)+'</div>'
+      +'<div class="e-suggestion-sub">'+eEsc(sub)+'</div></div></div>';
+  });
+  box.innerHTML=html;
+}
+var E_SOLAR_URL='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/rapid-handler';
+var E_SOLAR_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
+function eSolarPitchCategory(deg){ if(deg<5)return 'flat'; if(deg<15)return 'low'; if(deg<30)return 'medium'; if(deg<40)return 'steep'; return 'very-steep'; }
+function eSolarPreselectPitch(cat){ var els=document.querySelectorAll('.e-oi'); for(var i=0;i<els.length;i++){ var oc=els[i].getAttribute('onclick')||''; if(oc.indexOf("'pitch','"+cat+"'")>=0){ try{ ePick(els[i],'pitch',cat); }catch(e){} break; } } }
+function eSolarShowResult(d){
+  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Roof slope measured automatically — now trace your roof to measure the area.';
+  var mw=document.getElementById('e-mapwrap');
+  var banner=document.getElementById('e-solarbanner');
+  if(!banner){ banner=document.createElement('div'); banner.id='e-solarbanner'; banner.style.cssText='margin:0 0 12px;padding:12px 14px;border:1px solid #b6e0c2;background:#eef9f1;border-radius:10px;color:#166534;font-size:13px;line-height:1.5'; if(mw&&mw.parentNode) mw.parentNode.insertBefore(banner, mw); }
+  banner.innerHTML='✓ We measured your roof slope automatically from satellite data: about <b>'+d.avgPitchDegrees+'°</b>. Now <b>trace your roof outline</b> on the map to measure the area — we\'ll combine them into your true roof size.';
+}
+function eSolarMeasure(lat, lon){
+  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Measuring your roof automatically\u2026';
+  fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.found && d.totalAreaSqft>0){
+        eS.solarPitchDeg=d.avgPitchDegrees; eS.pitch=eSolarPitchCategory(d.avgPitchDegrees);
+        eMeasurePitch=eDegToPitch(d.avgPitchDegrees);
+        var _ps=document.getElementById('e-pitchsel'); if(_ps) _ps.value=eMeasurePitch;
+        eSolarShowResult(d); eSolarPreselectPitch(eS.pitch);
+        if(d.centerLat&&d.centerLng&&eLmap){ eLmap.setView([d.centerLat,d.centerLng],20); setTimeout(function(){ try{eLmap.invalidateSize();}catch(e){} },150); }
+      } else {
+        if(stat) stat.textContent='Couldn\'t auto-measure this address \u2014 trace the roof below instead.';
+      }
+    })
+    .catch(function(){ if(stat) stat.textContent='Auto-measure unavailable \u2014 trace the roof below instead.'; });
+}
+function eSelectAddress(fullAddr, lat, lon, stateAbbr) {
+  document.getElementById('e-addrIn').value=fullAddr.split(',').slice(0,4).join(',');
+  document.getElementById('e-suggestions').classList.remove('open');
+  eS.addr=fullAddr;
+  eGeocodePrecise(fullAddr, lat, lon, stateAbbr);
+}
+function eGeocodePrecise(fullAddr, lat, lon, stateAbbr){
+  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Locating the property\u2026';
+  function proceed(uLat, uLon, uState){ eS.lat=uLat; eS.lon=uLon; eDetectRegion(uState||stateAbbr); eInitMap(uLat, uLon); eSolarMeasure(uLat, uLon); }
+  fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({address:fullAddr}) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d && d.geocoded && d.lat && d.lng){ proceed(d.lat, d.lng, d.state||stateAbbr); } else { proceed(lat, lon, stateAbbr); } })
+    .catch(function(){ proceed(lat, lon, stateAbbr); });
+}
+function eEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function eEscQ(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+/* MAP */
+function eInitMap(lat, lon) {
+  document.getElementById('e-mapwrap').style.display='block';
+  eClearDrawing();
+  if(!eLmap){
+    eLmap=L.map('e-mapel',{ center:[lat,lon], zoom:20, maxZoom:23, zoomControl:true, attributionControl:false, doubleClickZoom:false });
+    eTileStd=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:23,maxNativeZoom:19});
+    eTileHD=L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:23,maxNativeZoom:21,subdomains:['mt0','mt1','mt2','mt3']});
+    (eImageryHD?eTileHD:eTileStd).addTo(eLmap);
+    eLmap.on('click', eOnMapClick);
+    eLmap.on('dblclick', eOnMapDblClick);
+  } else {
+    eLmap.setView([lat,lon],20);
+    setTimeout(function(){ eLmap.invalidateSize(); },100);
+  }
+  eSetDrawMode(true);
+}
+function eSetTool(t){
+  eTool=t; eDrawModeActive=(t==='draw');
+  var db=document.getElementById('e-btndraw'), pb=document.getElementById('e-btnpan'), mb=document.getElementById('e-btnmeasure');
+  if(db) db.classList.toggle('on',t==='draw');
+  if(pb) pb.classList.toggle('on',t==='pan');
+  if(mb) mb.classList.toggle('on',t==='measure');
+  if(eLmap){ eLmap.getContainer().style.cursor=(t==='pan')?'':'crosshair'; if(t==='pan') eLmap.dragging.enable(); else eLmap.dragging.disable(); }
+}
+function eSetDrawMode(active){ eSetTool(active?'draw':'pan'); }
+function eOnMapClick(e) {
+  if(eTool==='measure'){ eMeasureClick(e); return; }
+  if(eTool!=='draw') return;
+  var pt=e.latlng; eClickPts.push(pt);
+  var m=L.circleMarker(pt,{radius:5,color:'#ffffff',fillColor:'#9cc8ee',fillOpacity:1,weight:2,interactive:false}).addTo(eLmap);
+  eClickMarkers.push(m);
+  eRedrawShape();
+  var n=eClickPts.length;
+  document.getElementById('e-mstat').textContent=n<3?n+' point'+(n>1?'s':'')+' placed — need 3 minimum (double-click to finish)':n+' points — double-click or click Clear when done';
+}
+function eOnMapDblClick(e){ if(eTool==='measure'){ if(eMeasurePts.length>=2) eFinishMeasure(); return; } if(eTool==='draw'&&eClickPts.length>=3) eFinishPolygon(); }
+function eRedrawShape() {
+  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
+  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
+  if(eClickPts.length>=2) eClickLine=L.polyline(eClickPts,{color:'#9cc8ee',weight:2,opacity:0.8,interactive:false}).addTo(eLmap);
+  if(eClickPts.length>=3){
+    eClickPoly=L.polygon(eClickPts,{color:'#9cc8ee',weight:2,fillColor:'#2f6bff',fillOpacity:0.22,interactive:false}).addTo(eLmap);
+  }
+  eUpdateAreaDisplay();
+}
+function eFinishPolygon() {
+  if(eClickPts.length<3) return;
+  var sqft=eCalcSqFt(eClickPts);
+  var poly=L.polygon(eClickPts,{color:'#7ad19a',weight:2,fillColor:'#2f6bff',fillOpacity:0.28,interactive:false}).addTo(eLmap);
+  eFacets.push({sqft:sqft, poly:poly});
+  eFacetTotal+=sqft;
+  eClickMarkers.forEach(function(m){ if(eLmap) eLmap.removeLayer(m); }); eClickMarkers=[];
+  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
+  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
+  eClickPts=[];
+  eUpdateAreaDisplay();
+  document.getElementById('e-mstat').textContent=eFacets.length+' section'+(eFacets.length>1?'s':'')+' traced · total '+eCurrentPlanTotal().toLocaleString()+' sq ft. Trace another, or Clear.';
+  eSetDrawMode(true);
+}
+function eCalcSqFt(pts) {
+  if(!pts||pts.length<3) return 0;
+  var R=6378137, area=0, n=pts.length;
+  for(var i=0;i<n;i++){ var j=(i+1)%n, lat1=pts[i].lat*Math.PI/180, lat2=pts[j].lat*Math.PI/180, dLon=(pts[j].lng-pts[i].lng)*Math.PI/180; area+=dLon*(2+Math.sin(lat1)+Math.sin(lat2)); }
+  return Math.round(Math.abs(area*R*R/2)*10.7639);
+}
+function eToggleImagery(){
+  eImageryHD=!eImageryHD;
+  if(!eLmap) return;
+  if(eImageryHD){ if(eTileStd) eLmap.removeLayer(eTileStd); eTileHD.addTo(eLmap); }
+  else { if(eTileHD) eLmap.removeLayer(eTileHD); eTileStd.addTo(eLmap); }
+  var b=document.getElementById('e-btnhd'); if(b) b.textContent='HD: '+(eImageryHD?'On':'Off');
+}
+function eSlopeFactor(pp){ var r=parseFloat((pp||'0/12').split('/')[0])||0; return Math.sqrt(r*r+144)/12; }
+function eSlopeToCat(pp){ var r=parseFloat((pp||'4/12').split('/')[0])||0; if(r<1)return 'flat'; if(r<4)return 'low'; if(r<7)return 'medium'; if(r<10)return 'steep'; return 'very-steep'; }
+function eDegToPitch(deg){ var x=Math.round(12*Math.tan((deg||0)*Math.PI/180)); var opts=[0,3,4,6,8,10,12]; var best=opts[0],bd=1e9; for(var i=0;i<opts.length;i++){ var dd=Math.abs(opts[i]-x); if(dd<bd){bd=dd;best=opts[i];} } return best+'/12'; }
+function eSetMeasurePitch(pp){ eMeasurePitch=pp; eS.solarPitchDeg=null; eUpdateAreaDisplay(); }
+function eToggleFlat(on){ eS.flatRoof=on; if(on) eS.pitch='flat'; eUpdateAreaDisplay(); }
+function eHandleZip(v){ try{ eS.zip=(v||'').replace(/[^0-9]/g,'').slice(0,5); var b=document.getElementById('e-zipcont'); if(b) b.disabled=(eS.zip.length!==5); }catch(e){} }
+function eZipNext(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(z)z.style.display='none'; if(a)a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 10 \u2014 Address'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+function eZipBack(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(a)a.style.display='none'; if(z)z.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 10 \u2014 Location'; }
+function eCurrentPlanTotal(){ var t=eFacetTotal; if(eClickPts.length>=3) t+=eCalcSqFt(eClickPts); return Math.round(t); }
+function eUpdateAreaDisplay(){
+  var plan=eCurrentPlanTotal();
+  var factor=(eS.flatRoof?1.0:(eS.solarPitchDeg?(1/Math.cos(eS.solarPitchDeg*Math.PI/180)):eSlopeFactor(eMeasurePitch)));
+  var trueArea=Math.round(plan*factor);
+  var mrn=document.getElementById('e-mrn'); if(mrn) mrn.textContent=plan.toLocaleString();
+  var msq=document.getElementById('e-msq'); if(msq) msq.textContent=Math.ceil(trueArea/100)+' roofing squares (true area)';
+  var ta=document.getElementById('e-truearea'); if(ta) ta.textContent='True roof area: '+trueArea.toLocaleString()+' sq ft';
+  var si=document.getElementById('e-slopeinfo'); if(si){ si.textContent = eS.flatRoof ? 'Flat / low-slope roof \u2014 no pitch adjustment' : (eS.solarPitchDeg ? ('Roof slope: ~'+eS.solarPitchDeg+'\u00b0 (measured automatically)') : 'Roof slope: using a typical estimate'); }
+  var res=document.getElementById('e-mresult'); if(res) res.style.display=plan>0?'flex':'none';
+  var card=document.getElementById('e-slopecard'); if(card) card.style.display=plan>0?'block':'none';
+  if(plan>0){ eS.sqft=trueArea; eS.planSqft=plan; eS.usedMap=true; eS.pitch=eSlopeToCat(eMeasurePitch); }
+  eCheckBtn1();
+}
+function eDistFt(a,b){
+  var R=6371000, dLat=(b.lat-a.lat)*Math.PI/180, dLon=(b.lng-a.lng)*Math.PI/180;
+  var la1=a.lat*Math.PI/180, la2=b.lat*Math.PI/180;
+  var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.sqrt(h))*3.28084;
+}
+function eMeasureLabelMarker(mid,txt){
+  return L.marker(mid,{interactive:false,icon:L.divIcon({className:'',html:'<div style="background:#dc2626;color:#fff;font:700 11px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35)">'+txt+'</div>',iconSize:[0,0]})}).addTo(eLmap);
+}
+function eMeasureClick(e){
+  eMeasurePts.push(e.latlng);
+  eMeasureMarkers.push(L.circleMarker(e.latlng,{radius:4,color:'#fff',fillColor:'#dc2626',fillOpacity:1,weight:2,interactive:false}).addTo(eLmap));
+  eMeasureRedraw();
+}
+function eMeasureRedraw(){
+  if(eMeasureLine){ eLmap.removeLayer(eMeasureLine); eMeasureLine=null; }
+  eMeasureLabels.forEach(function(l){ eLmap.removeLayer(l); }); eMeasureLabels=[];
+  if(eMeasurePts.length>=2){
+    eMeasureLine=L.polyline(eMeasurePts,{color:'#dc2626',weight:3,opacity:.9,interactive:false}).addTo(eLmap);
+    var total=0;
+    for(var i=1;i<eMeasurePts.length;i++){
+      var a=eMeasurePts[i-1], b=eMeasurePts[i], d=eDistFt(a,b); total+=d;
+      eMeasureLabels.push(eMeasureLabelMarker(L.latLng((a.lat+b.lat)/2,(a.lng+b.lng)/2), Math.round(d)+' ft'));
+    }
+    document.getElementById('e-mstat').textContent='Measuring \u00b7 total '+Math.round(total)+' ft (double-click to finish)';
+  } else {
+    document.getElementById('e-mstat').textContent='Click two points to measure a length (double-click to finish)';
+  }
+}
+function eFinishMeasure(){
+  if(eMeasurePts.length<2) return;
+  var total=0; for(var i=1;i<eMeasurePts.length;i++) total+=eDistFt(eMeasurePts[i-1],eMeasurePts[i]);
+  eMeasureLines.push({line:eMeasureLine, labels:eMeasureLabels.slice(), markers:eMeasureMarkers.slice()});
+  eMeasureLine=null; eMeasureLabels=[]; eMeasureMarkers=[]; eMeasurePts=[];
+  document.getElementById('e-mstat').textContent='Measured '+Math.round(total)+' ft \u00b7 measure another, or switch tools.';
+}
+function eClearDrawing() {
+  eClickPts=[]; eClickMarkers.forEach(function(m){ if(eLmap) eLmap.removeLayer(m); }); eClickMarkers=[];
+  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
+  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
+  eFacets.forEach(function(f){ if(eLmap&&f.poly) eLmap.removeLayer(f.poly); }); eFacets=[]; eFacetTotal=0;
+  eMeasureLines.forEach(function(g){ if(g.line) eLmap.removeLayer(g.line); g.labels.forEach(function(l){ eLmap.removeLayer(l); }); g.markers.forEach(function(m){ eLmap.removeLayer(m); }); }); eMeasureLines=[];
+  if(eMeasureLine){ eLmap.removeLayer(eMeasureLine); eMeasureLine=null; }
+  eMeasureLabels.forEach(function(l){ eLmap.removeLayer(l); }); eMeasureLabels=[];
+  eMeasureMarkers.forEach(function(m){ eLmap.removeLayer(m); }); eMeasureMarkers=[]; eMeasurePts=[];
+  eS.sqft=0; eS.usedMap=false;
+  document.getElementById('e-mresult').style.display='none';
+  var card=document.getElementById('e-slopecard'); if(card) card.style.display='none';
+  document.getElementById('e-mstat').textContent='Click each corner of a roof section to trace it (triangles OK). Double-click to finish each section.';
+  if(eLmap) eSetDrawMode(true);
+  eCheckBtn1();
+}
+
+/* SLIDER */
+function eToggleManual() {
+  eManualOpen=!eManualOpen;
+  document.getElementById('e-sldwrap').style.display=eManualOpen?'block':'none';
+  document.getElementById('e-manualbtn').textContent=eManualOpen?"Hide manual entry ↑":"Can't trace the roof? Enter size manually";
+  if(eManualOpen&&!eS.usedMap) eHandleSlider(document.getElementById('e-sld').value);
+}
+function eHandleSlider(v) {
+  document.getElementById('e-sldval').textContent=parseInt(v).toLocaleString();
+  var pct=(v-400)/(8000-400)*100;
+  document.getElementById('e-sld').style.background='linear-gradient(90deg,var(--a) '+pct+'%,var(--bs) '+pct+'%)';
+  if(eManualOpen){ eS.sqft=parseInt(v); eS.usedMap=false; eCheckBtn1(); }
+}
+function eUpdateSlider(v){ document.getElementById('e-sld').value=v; eHandleSlider(v); }
+
+/* MATERIALS */
+/* Polished duotone add-on icons (dark accent + light tint, no emojis). */
+function eSvgD(inner){ return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none">'+inner+'</svg>'; }
+var _D='#2f6bff', _L='#bcd6f0';
+var E_SVG={
+  /* skylight window set into a sloped roof */
+  'skylight':   eSvgD('<path d="M3 12L12 4l9 8v8H3z" fill="'+_L+'"/><rect x="8.5" y="10" width="7" height="7" rx="1" fill="'+_D+'"/><path d="M12 10v7M8.5 13.5h7" stroke="#fff" stroke-width="1.1"/>'),
+  /* new gutter + downspouts along the eave */
+  'gutters':    eSvgD('<path d="M3 5h18v3H3z" fill="'+_L+'"/><path d="M2 11h20v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z" fill="'+_D+'"/><path d="M6 16v5M18 16v5" stroke="'+_D+'" stroke-width="1.7" stroke-linecap="round"/>'),
+  /* ridge vent along the roof peak */
+  'ridge-vent': eSvgD('<path d="M2 15L12 6l10 9" stroke="'+_D+'" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="14.5" width="16" height="4" rx="1" fill="'+_L+'"/><path d="M7 16.5h10" stroke="'+_D+'" stroke-width="1.2"/>')
+};
+/* Clean material swatch — a real product photo if E_CONFIG…img is set,
+   otherwise a tidy generated swatch so it looks complete out of the box. */
+var eSwCache={};
+function eSwatch(key){
+  if(eSwCache[key]) return eSwCache[key];
+  var t=document.createElement('canvas'); t.width=t.height=120; var c=t.getContext('2d');
+  function grad(a,b){ var g=c.createLinearGradient(0,0,120,120); g.addColorStop(0,a); g.addColorStop(1,b); c.fillStyle=g; c.fillRect(0,0,120,120); }
+  function speck(n,cols,sz,al){ c.globalAlpha=al||1; for(var i=0;i<n;i++){ c.fillStyle=cols[Math.floor(Math.random()*cols.length)]; var x=Math.random()*120,y=Math.random()*120,r=sz*(0.4+Math.random()); c.beginPath();c.arc(x,y,r,0,6.283);c.fill(); } c.globalAlpha=1; }
+  var x,y,xx;
+  switch(key){
+    case 'asphalt-3tab': grad('#4a4d52','#26262a'); speck(320,['#26282b','#6a6a70','#42454a'],1.0,0.7); for(y=0;y<120;y+=24){ c.fillStyle='rgba(0,0,0,0.16)'; c.fillRect(0,y,120,2); } break;
+    case 'asphalt-arch': grad('#55493f','#3c332b'); speck(340,['#2c2620','#6b5d4f','#4a3f36'],1.0,0.75); for(y=0;y<120;y+=18){ c.fillStyle='rgba(0,0,0,0.14)'; c.fillRect(0,y,120,3); } break;
+    case 'metal-standing': grad('#7d848a','#5c6368'); for(x=8;x<120;x+=16){ c.strokeStyle='rgba(255,255,255,0.20)'; c.lineWidth=2; c.beginPath();c.moveTo(x,0);c.lineTo(x,120);c.stroke(); c.strokeStyle='rgba(0,0,0,0.24)'; c.beginPath();c.moveTo(x+2,0);c.lineTo(x+2,120);c.stroke(); } break;
+    case 'tile-clay': grad('#b5613a','#9c4a32'); for(y=0;y<120;y+=20){ c.fillStyle='rgba(0,0,0,0.10)'; c.fillRect(0,y,120,2); for(xx=0;xx<120;xx+=24){ c.strokeStyle='rgba(0,0,0,0.20)'; c.lineWidth=1.5; c.beginPath(); c.arc(xx+12,y+10,12,Math.PI,0,false); c.stroke(); } } break;
+    case 'flat-tpo': grad('#e8e9e7','#d5d7d4'); speck(30,['#cdd0cd'],0.7,0.3); break;
+    case 'slate-natural': grad('#6a6a70','#565b61'); speck(240,['#4a4e54','#7f858c','#3f4348'],1.1,0.7); for(y=0;y<120;y+=22){ c.fillStyle='rgba(0,0,0,0.12)'; c.fillRect(0,y,120,2); } break;
+    default: grad('#6a6a70','#42454a');
+  }
+  eSwCache[key]=t.toDataURL('image/jpeg',0.85); return eSwCache[key];
+}
+function eBuildMats() {
+  var l=document.getElementById('e-matlist'), html='';
+  Object.keys(E_CONFIG.pricing).forEach(function(k){
+    var v=E_CONFIG.pricing[k];
+    var sw=v.img||eSwatch(k);
+    html+='<div class="e-oi" onclick="ePick(this,\'material\',\''+k+'\');eMatPicked(\''+k+'\')">'
+      +'<img class="e-oi-sw" src="'+sw+'" alt="'+v.label+'">'
+      +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
+      +'<div class="e-oi-desc">$'+v.low+'–$'+v.high+'/sq installed · '+v.note+'</div></div>'
+      +'<div class="e-oi-radio">✓</div></div>';
+  });
+  l.innerHTML=html;
+}
+/* When a material is chosen, reveal its color options. */
+function eMatPicked(k){
+  var m=E_CONFIG.pricing[k]; var card=document.getElementById('e-colorcard'), row=document.getElementById('e-colorrow');
+  if(!m||!m.colors||!m.colors.length){ if(card)card.style.display='none'; eS.color=null; eVisualize(); return; }
+  var html='';
+  m.colors.forEach(function(col,i){
+    html+='<button type="button" class="e-colorchip'+(i===0?' on':'')+'" onclick="ePickColor(\''+k+'\','+i+',this)">'
+      +'<span class="e-colordot" style="background:'+col.hex+'"></span>'+col.name+'</button>';
+  });
+  if(row) row.innerHTML=html; if(card) card.style.display='block';
+  eS.color=m.colors[0];   // default first color
+  eVisualize();
+}
+function ePickColor(k,i,el){
+  var m=E_CONFIG.pricing[k]; if(!m||!m.colors) return;
+  eS.color=m.colors[i];
+  var row=el?el.parentNode:null;
+  (row?row.querySelectorAll('.e-colorchip'):document.querySelectorAll('#e-colorrow .e-colorchip')).forEach(function(b){ b.classList.remove('on'); });
+  if(el) el.classList.add('on');
+  eVisualize();
+}
+/* ═══ AI VISUALIZER — upload a home photo, preview the new roof ═══ */
+var VIZ_PANEL =
+  '<div class="e-vizupload" onclick="this.querySelector(\'input\').click()">'
+  +'<input type="file" accept="image/*" style="display:none" onchange="ePhotoUpload(this)">'
+  +'<div class="e-vizuptxt"><div style="margin-bottom:6px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1L8 4h8l1.5 2h1A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg></div>'
+  +'<div style="font-weight:600;color:#0c0c0d">Upload a photo of your home\'s exterior</div>'
+  +'<div style="font-size:12px;color:#9a9aa0;margin-top:4px">Then tap the button to see your new roof — photorealistic AI</div></div></div>'
+  +'<div class="e-vizstage" style="display:none"><img class="e-vizimg" alt="Your home">'
+  +'<div class="e-vizloading" style="display:none"><div class="e-vizspin"></div><b>AI modifying…</b>'
+  +'<span class="e-vizloadsub">Photo will be available after your design answers are complete.</span></div>'
+  +'<div class="e-vizbadge" style="display:none">AI preview</div></div>'
+  +'<button class="e-vizgen" onclick="eVizGenerate()" style="display:none">View Design</button>'
+  +'<div class="e-vizbar" style="display:none">'
+  +'<button class="e-vizbtn" data-view="orig" onclick="eVizShow(\'orig\')">Original</button>'
+  +'<button class="e-vizbtn on" data-view="new" onclick="eVizShow(\'new\')">Preview</button>'
+  +'<button class="e-vizbtn ghost" onclick="this.closest(\'.e-vizphoto\').querySelector(\'input\').click()">↻ Photo</button></div>'
+  +'<div class="e-vizhint" style="display:none">Photorealistic AI preview — final look may vary slightly.</div>';
+function eVizInit(){
+  document.querySelectorAll('#est-embed [data-viz]').forEach(function(el){ el.innerHTML=VIZ_PANEL; });
+  eVizSyncAll();
+}
+function ePhotoUpload(input){
+  var fl=input.files&&input.files[0]; if(!fl) return;
+  var r=new FileReader();
+  r.onload=function(e){ eS.photoOrig=e.target.result; eS.photoNew=null; eS.photoKey='p'+e.target.result.length+e.target.result.slice(30,90); eS.vizView='new'; eVizSyncAll(); };
+  r.readAsDataURL(fl);
+}
+function eVizShow(which){ eS.vizView=which; eVizSyncAll(); }
+/* One combined prompt from all current choices, applied to the ORIGINAL photo. */
+function eBuildVizPrompt(){
+  var m=E_CONFIG.pricing[eS.material]; if(!m) return null;
+  var desc = (eS.color&&eS.color.desc) ? eS.color.desc : (m.label.toLowerCase());
+  var parts=['Replace only the roof of this house with realistic '+desc+'. Keep the siding, windows, gutters, landscaping, sky and everything else exactly the same. Photorealistic, preserve the original camera angle, perspective and lighting.'];
+  var add={skylight:'Also add a modern skylight window set into the roof.',gutters:'Also install clean new gutters along the roof edge.','ridge-vent':'Also add a low-profile ridge vent along the roof peak.'};
+  if(eS.addons) Object.keys(eS.addons).forEach(function(k){ if(add[k]) parts.push(add[k]); });
+  return parts.join(' ');
+}
+/* Cost guardrails: (1) render only on explicit button tap, (2) cache each
+   photo+prompt so re-viewing the same combo never charges again. */
+var eVizCache={}, eVizBusy=false;
+function eVizGenerate(){
+  if(!eS.photoOrig) return;
+  if(!eS.material){ eVizHint('Pick a roofing material first, then tap to preview it.'); return; }
+  if(!E_CONFIG.aiEditUrl){ eVizHint('AI preview turns on once your endpoint is set (E_CONFIG.aiEditUrl).'); return; }
+  var prompt=eBuildVizPrompt(); if(!prompt) return;
+  var key=(eS.photoKey||'')+'|'+prompt;
+  if(eVizCache[key]){ eS.photoNew=eVizCache[key]; eS.vizView='new'; eVizSyncAll(); return; }   // cached = no charge
+  if(eVizBusy) return;
+  eVizBusy=true; eS.vizView='new'; eVizSetLoading(true); eVizSyncAll();
+  var headers={'Content-Type':'application/json'};
+  if(E_CONFIG.aiEditKey){ headers['Authorization']='Bearer '+E_CONFIG.aiEditKey; headers['apikey']=E_CONFIG.aiEditKey; }
+  fetch(E_CONFIG.aiEditUrl,{method:'POST',headers:headers,body:JSON.stringify({image:eS.photoOrig,prompt:prompt})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      eVizSetLoading(false); eVizBusy=false;
+      var out=d.image||d.imageUrl||d.output||d.result||d.b64;
+      if(out){ if(out.indexOf('data:')!==0&&out.indexOf('http')!==0) out='data:image/png;base64,'+out; eVizCache[key]=out; eS.photoNew=out; eS.vizView='new'; eVizSyncAll(); }
+      else { eVizHint(d.error?('Preview error: '+d.error):'Preview unavailable right now.'); eS.vizView='orig'; eVizSyncAll(); }
+    })
+    .catch(function(){ eVizSetLoading(false); eVizBusy=false; eVizHint('Preview unavailable right now — your estimate is unaffected.'); eS.vizView='orig'; eVizSyncAll(); });
+}
+function eVizHint(t){ document.querySelectorAll('#est-embed .e-vizhint').forEach(function(h){ h.textContent=t; h.style.display='block'; }); }
+/* "Design answers complete" = a material/scope is chosen AND (that material has
+   no colors OR a color is chosen). */
+function eVizAnswersComplete(){
+  if(!eS.material) return false;
+  var m=E_CONFIG.pricing[eS.material];
+  if(m&&m.colors&&m.colors.length&&!eS.color) return false;
+  return true;
+}
+function eVizSetLoading(on){ eVizSyncAll(); }   /* overlay is driven centrally by eVizSyncAll (eVizBusy) */
+function eVizGenLabel(){
+  var ready = eVizAnswersComplete() && !!eS.photoOrig;   // answers complete AND a photo uploaded
+  document.querySelectorAll('#est-embed .e-vizgen').forEach(function(b){
+    b.disabled = !ready;
+    b.textContent = ready ? 'View Design' : (!eS.photoOrig ? 'Upload a photo first' : 'Complete your design answers');
+  });
+}
+function eVisualize(){ eVizSyncAll(); }   /* material/color/add-on change = refresh label + overlay gate (free) */
+function eVizSyncAll(){
+  var complete=eVizAnswersComplete();
+  document.querySelectorAll('#est-embed .e-vizphoto').forEach(function(ph){
+    var up=ph.querySelector('.e-vizupload'), stg=ph.querySelector('.e-vizstage'), gen=ph.querySelector('.e-vizgen'), bar=ph.querySelector('.e-vizbar');
+    var load=ph.querySelector('.e-vizloading'), sub=ph.querySelector('.e-vizloadsub');
+    if(eS.photoOrig){
+      if(up)up.style.display='none'; if(stg)stg.style.display='flex'; if(gen)gen.style.display='block'; if(bar)bar.style.display=eS.photoNew?'flex':'none';
+      var img=ph.querySelector('.e-vizimg'); if(img) img.src=(eS.vizView==='new'&&eS.photoNew)?eS.photoNew:eS.photoOrig;
+      var badge=ph.querySelector('.e-vizbadge'); if(badge) badge.style.display=(eS.vizView==='new'&&eS.photoNew)?'block':'none';
+      ph.querySelectorAll('.e-vizbtn[data-view]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-view')===eS.vizView); });
+      if(load){
+        if(eVizBusy){ load.style.display='flex'; if(sub) sub.textContent='This usually takes a few seconds…'; }
+        else if(!complete){ load.style.display='flex'; if(sub) sub.textContent='Photo will be available after your design answers are complete.'; }
+        else { load.style.display='none'; }
+      }
+    } else {
+      if(up)up.style.display='block'; if(stg)stg.style.display='none'; if(gen)gen.style.display='none'; if(bar)bar.style.display='none';
+      if(load) load.style.display='none';
+    }
+  });
+  eVizGenLabel();
+}
+/* VISUAL ADD-ONS (multi-select, preview-only) */
+function eBuildAddons() {
+  var l=document.getElementById('e-addonlist'); if(!l||!E_CONFIG.addons) return; var html='';
+  Object.keys(E_CONFIG.addons).forEach(function(k){
+    var v=E_CONFIG.addons[k];
+    var thumb = v.img ? '<img class="e-oi-sw" src="'+v.img+'" alt="'+v.label+'">' : '<div class="e-oi-emchip">'+(E_SVG[k]||v.icon||'')+'</div>';
+    html+='<div class="e-oi" data-addon="'+k+'" onclick="eToggleAddon(this,\''+k+'\')">'
+      +thumb
+      +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
+      +'<div class="e-oi-desc">'+v.desc+'</div></div>'
+      +'<div class="e-oi-radio">✓</div></div>';
+  });
+  l.innerHTML=html;
+}
+function eToggleAddon(el, key){
+  if(!eS.addons) eS.addons={};
+  if(eS.addons[key]){ delete eS.addons[key]; el.classList.remove('sel'); }
+  else { eS.addons[key]=true; el.classList.add('sel'); }
+  eVisualize();
+}
+
+/* SELECTION HELPERS */
+function ePick(el, key, val) {
+  var list=el.closest('.e-olist');
+  list.querySelectorAll('.e-oi').forEach(function(i){ i.classList.remove('sel'); });
+  el.classList.add('sel'); eS[key]=val;
+  var map2={material:'e-btn2',pitch:'e-btn3',stories:'e-btn4',project:'e-btn5'};
+  if(map2[key]) document.getElementById(map2[key]).disabled=false;
+}
+function ePickQ(el, key, val) {
+  el.closest('.e-olist').querySelectorAll('.e-oi').forEach(function(i){ i.classList.remove('sel'); });
+  el.classList.add('sel'); eS[key]=val;
+  var btnMap={urgency:'e-btn6',damages:'e-btn7',insurance:'e-btn8'};
+  if(btnMap[key]) document.getElementById(btnMap[key]).disabled=false;
+}
+function eChkForm() {
+  var ok=document.getElementById('e-fn').value.trim()&&document.getElementById('e-ln').value.trim()&&document.getElementById('e-ph').value.trim().length>=7&&document.getElementById('e-em').value.includes('@');
+  document.getElementById('e-btn9').disabled=!ok;
+}
+function eCheckBtn1(){ document.getElementById('e-btn1').disabled=!(eS.addr&&eS.sqft>0); }
+
+/* DOTS */
+function eBuildAllDots() {
+  for(var s=1;s<=E_TOTAL;s++){
+    var el=document.getElementById('e-dots'+s); if(!el) continue;
+    var html='';
+    for(var i=1;i<=E_TOTAL;i++){ var cls=i<s?'done':i===s?'act':''; html+='<div class="e-sdot '+cls+'"></div>'; }
+    el.innerHTML=html;
+  }
+}
+
+/* NAVIGATION */
+function eGo(n, back) {
+  var oldEl=document.getElementById(eCur<=E_TOTAL?'e-sp'+eCur:'e-spR');
+  oldEl.classList.remove('active','back');
+  var nextEl=document.getElementById(n<=E_TOTAL?'e-sp'+n:'e-spR');
+  nextEl.classList.add('active');
+  if(back){ nextEl.classList.add('back'); setTimeout(function(){ nextEl.classList.remove('back'); },450); }
+  eCur=n;
+  var _dn=(n>3?n-1:n); var pct=Math.round((Math.min(_dn,10)/10)*100);
+  document.getElementById('e-pfill').style.width=pct+'%';
+  var names=['','Address','Material','Pitch','Stories','Project Type','Urgency','Damages','Insurance','Your Info','Calculating',''];
+  document.getElementById('e-tstep').innerHTML=n<=E_TOTAL?'Step <b>'+_dn+'</b> of 10 — '+(names[n]||''):'<b>✓ Estimate Complete</b>';
+  // Only scroll if the top of the estimator is above the viewport
+  var embed=document.getElementById('est-embed-shell');
+  if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
+  if(n===1){ var _z=document.getElementById('e-zippanel'),_a=document.getElementById('e-addrpanel'); if(_z)_z.style.display='none'; if(_a)_a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 10 \u2014 Address'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+}
+
+/* SUBMIT + RESULT */
+function eCalcPrice(){
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['asphalt-arch'];
+  var pm=E_CONFIG.pitchMult[eS.pitch]||1.18, sm=E_CONFIG.storiesMult[eS.stories]||1.00;
+  var prm=E_CONFIG.projectMult[eS.project]||1.00, rm=parseFloat(E_CONFIG.regionMult[eS.region]||1.00);
+  var sq=Math.ceil(eS.sqft/100);
+  var lowPerSq=Math.round(p.low*pm*sm*rm), highPerSq=Math.round(p.high*pm*sm*rm);
+  var low=Math.round(sq*lowPerSq*prm/100)*100, high=Math.round(sq*highPerSq*prm/100)*100;
+  return {low:low, high:high, mid:Math.round((low+high)/2)};
+}
+function eDoSubmit() {
+  var _est = eCalcPrice();
+  if(E_CONFIG.webhookUrl){ fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:document.getElementById('e-fn').value,lastName:document.getElementById('e-ln').value,phone:document.getElementById('e-ph').value,email:document.getElementById('e-em').value,notes:document.getElementById('e-nt').value,address:eS.addr,sqft:eS.sqft,material:eS.material,pitch:eS.pitch,stories:eS.stories,project:eS.project,region:eS.region,estimateLow:_est.low,estimateHigh:_est.high,estimateValue:_est.mid,source:E_CONFIG.companyName+' Roof Estimator',timestamp:new Date().toISOString()})}).catch(function(){}); }
+  eGo(10);
+  var ids=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'], li=0;
+  function eNextStep(){ if(li>=ids.length){ setTimeout(eShowResult,500); return; } document.getElementById(ids[li]).classList.remove('act'); document.getElementById(ids[li]).classList.add('done'); li++; if(li<ids.length) document.getElementById(ids[li]).classList.add('act'); setTimeout(eNextStep,680); }
+  setTimeout(eNextStep,680);
+}
+function eShowResult() {
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['asphalt-arch'];
+  var pm=E_CONFIG.pitchMult[eS.pitch]||1.18, sm=E_CONFIG.storiesMult[eS.stories]||1.00;
+  var prm=E_CONFIG.projectMult[eS.project]||1.00, rm=parseFloat(E_CONFIG.regionMult[eS.region]||1.00);
+  var sq=Math.ceil(eS.sqft/100);
+  var lowPerSq=Math.round(p.low*pm*sm*rm), highPerSq=Math.round(p.high*pm*sm*rm);
+  var low=Math.round(sq*lowPerSq*prm/100)*100, high=Math.round(sq*highPerSq*prm/100)*100;
+  document.getElementById('e-rrange').innerHTML='$'+low.toLocaleString()+' — <em>$'+high.toLocaleString()+'</em>';
+  document.getElementById('e-rnote').textContent=eS.sqft.toLocaleString()+' sq ft · '+p.label+' · '+eS.pitch+' pitch · '+eS.stories+' story · '+(eS.project||'').replace('-',' ')+' · '+eS.regionLabel+(eS.usedMap?' · Measured via satellite':' · Manual estimate');
+  document.getElementById('e-rv1').textContent=eS.sqft.toLocaleString()+' sq ft';
+  document.getElementById('e-rv2').textContent=sq+' squares';
+  document.getElementById('e-rv3').textContent=p.label;
+  document.getElementById('e-rv4').textContent=eS.pitch.charAt(0).toUpperCase()+eS.pitch.slice(1).replace('-',' ');
+  document.getElementById('e-rv5').textContent=eS.regionLabel||'National Average';
+  document.getElementById('e-rv6').textContent='$'+lowPerSq+'–$'+highPerSq+'/sq';
+  document.getElementById('e-sp10').classList.remove('active');
+  document.getElementById('e-spR').classList.add('active');
+  document.getElementById('e-pfill').style.width='100%';
+  document.getElementById('e-tstep').innerHTML='<b>✓ Estimate Complete</b>';
+  var embed=document.getElementById('est-embed-shell');
+  if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
+}
+
+/* RESTART */
+function eRestart() {
+  eS={addr:'',sqft:0,usedMap:false,lat:0,lon:0,material:'',pitch:'',stories:'',project:'',region:'national',regionLabel:'National Average',urgency:'',damages:'',insurance:'',color:null,addons:{},photoOrig:null,photoNew:null,vizView:'orig',photoKey:''};
+  document.getElementById('e-addrIn').value='';
+  document.getElementById('e-mapwrap').style.display='none';
+  document.getElementById('e-mresult').style.display='none';
+  document.getElementById('e-sldwrap').style.display='none';
+  eManualOpen=false;
+  document.getElementById('e-manualbtn').textContent="Can't trace the roof? Enter size manually";
+  eClearDrawing();
+  document.querySelectorAll('#est-embed .e-oi').forEach(function(i){ i.classList.remove('sel'); });
+  document.querySelectorAll('#est-embed .e-rb').forEach(function(b){ b.classList.remove('on'); });
+  var _cc=document.getElementById('e-colorcard'); if(_cc) _cc.style.display='none';
+  eVizSyncAll();
+  for(var i=1;i<=9;i++){ var b=document.getElementById('e-btn'+i); if(b) b.disabled=true; }
+  ['e-fn','e-ln','e-ph','e-em','e-nt'].forEach(function(id){ document.getElementById(id).value=''; });
+  var ldIds=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'];
+  ldIds.forEach(function(id,idx){ var el=document.getElementById(id); el.classList.remove('done','act'); if(idx===0) el.classList.add('act'); });
+  document.getElementById('e-spR').classList.remove('active');
+  eCur=1; eGo(1);
+  document.getElementById('e-pfill').style.width='9%';
+  document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 10 — Address';
+}
+
+/* ═══ INIT — all functions defined above, safe to call now ═══ */
+document.getElementById('e-cco').textContent = E_CONFIG.companyName;
+document.getElementById('e-rctabtn').textContent = E_CONFIG.ctaText;
+document.getElementById('e-rctabtn').onclick = function() { window.open(E_CONFIG.ctaUrl,'_blank'); };
+eBuildMats();
+eBuildAddons();
+eVizInit();
+eBuildAllDots();
+eUpdateSlider(1800);
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.e-asearch')) {
+    var s = document.getElementById('e-suggestions');
+    if (s) s.classList.remove('open');
+  }
+});
+
+
+/* ===== Roof Age Checker — second tab: address → public records → one question per page → health score ===== */
+var eRac={step:0,addr:'',lat:null,lng:null,zip:'',state:'',permitYear:null,builtYear:null,source:'',ans:{material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'},timer:null,saved:false};
+var E_RAC_SB='https://ttzwzouhiwdwamuimhpo.supabase.co';
+var E_RAC_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
+/* the same open-data portals Lead Radar reads; lookups are a ~40 m box around the geocoded point */
+var E_RAC_CITIES=[
+  {n:'City of Austin',lat:30.2672,lng:-97.7431,api:'https://data.austintexas.gov/resource/3syk-w9eu.json',date:'issued_date',latf:'latitude',lngf:'longitude',desc:['description','permit_type_desc','work_class']},
+  {n:'City of Los Angeles',lat:34.1866,lng:-118.4009,api:'https://data.lacity.org/resource/pi9x-tg5x.json',date:'issue_date',latf:'lat',lngf:'lon',desc:['work_desc','permit_type'],
+   also:{api:'https://data.lacity.org/resource/nbyu-2ha9.json',date:'issue_date',latf:'latitude',lngf:'longitude',desc:['work_description','permit_type']},
+   assessor:{api:'https://data.lacounty.gov/resource/9trm-uz8i.json',yb:'yearbuilt',latf:'center_lat',lngf:'center_lon'}},
+  {n:'City of Chicago',lat:41.8781,lng:-87.6298,api:'https://data.cityofchicago.org/resource/ydr8-5enu.json',date:'issue_date',latf:'latitude',lngf:'longitude',desc:['work_description','permit_type']}
+];
+function eRacTab(t){
+  var rac=t==='rac';
+  var el=document.getElementById('e-rac'); if(el)el.style.display=rac?'block':'none';
+  var app=document.querySelector('#est-embed .e-app'); if(app)app.style.display=rac?'none':'';
+  var prog=document.querySelector('#est-embed .e-prog'); if(prog)prog.style.display=rac?'none':'';
+  var ts=document.getElementById('e-tstep'); if(ts)ts.style.visibility=rac?'hidden':'visible';
+  var a=document.getElementById('e-tab-est'),b=document.getElementById('e-tab-rac');
+  if(a)a.classList.toggle('on',!rac); if(b)b.classList.toggle('on',rac);
+  if(rac){var inp=document.getElementById('e-rac-addr');if(inp&&!eRac.addr)setTimeout(function(){inp.focus();},50);}
+}
+/* step machine: 0 address · 1-4 questions · 5 contact · 6 result. Slides forward or back like the estimator. */
+function eRacGo(n){
+  var back=n<eRac.step;
+  for(var i=0;i<=6;i++){var s=document.getElementById('e-rac-s'+i);if(!s)continue;s.classList.remove('on','back');}
+  var t=document.getElementById('e-rac-s'+n); if(!t)return;
+  void t.offsetWidth; t.classList.add('on'); if(back)t.classList.add('back');
+  eRac.step=n;
+  try{ document.getElementById('est-embed').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+  if(n===5)setTimeout(function(){var f=document.getElementById('e-rac-name');if(f)f.focus();},350);
+}
+function eRacAddrInput(ev){
+  var val=(ev.target.value||'').trim(), box=document.getElementById('e-rac-sug');
+  clearTimeout(eRac.timer);
+  if(val.length<3){box.classList.remove('open');return;}
+  box.innerHTML='<div class="e-suggestion-loading"><span class="e-spin-sm"></span>Searching US addresses...</div>';
+  box.classList.add('open');
+  eRac.timer=setTimeout(function(){
+    var url='https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(val)+'&format=json&addressdetails=1&limit=6&countrycodes=us';
+    fetch(url,{headers:{'Accept-Language':'en-US,en;q=0.9'}}).then(function(r){return r.json();}).then(function(data){
+      var list=(data||[]).filter(function(r){var a=r.address||{};return a.house_number||a.road;}).slice(0,5);
+      if(!list.length){box.innerHTML='<div class="e-suggestion-loading">No match — try adding the city or ZIP.</div>';return;}
+      box.innerHTML=list.map(function(r,i){
+        var a=r.address||{}, line=[a.house_number,a.road].filter(Boolean).join(' '), sub=[a.city||a.town||a.village,a.state,a.postcode].filter(Boolean).join(', ');
+        return '<div class="e-suggestion" onclick="eRacPickAddr('+i+')"><div class="e-suggestion-main">'+line+'</div><div class="e-suggestion-sub">'+sub+'</div></div>';
+      }).join('');
+      window._eRacList=list;
+    }).catch(function(){box.innerHTML='<div class="e-suggestion-loading">Address search is busy — try again in a moment.</div>';});
+  },420);
+}
+function eRacPickAddr(i){
+  var r=(window._eRacList||[])[i]; if(!r)return;
+  var a=r.address||{};
+  eRac.addr=[a.house_number,a.road].filter(Boolean).join(' ')+', '+[a.city||a.town||a.village,a.state].filter(Boolean).join(', ');
+  eRac.lat=parseFloat(r.lat); eRac.lng=parseFloat(r.lon); eRac.zip=(a.postcode||'').slice(0,5); eRac.state=a.state||'';
+  document.getElementById('e-rac-addr').value=eRac.addr;
+  document.getElementById('e-rac-sug').classList.remove('open');
+  document.getElementById('e-rac-note').innerHTML='<span class="e-rac-busy"></span>Checking public records for this address…';
+  eRacLookup().then(function(){
+    var f=document.getElementById('e-rac-found'), y=new Date().getFullYear(), hint=document.getElementById('e-rac-agehint');
+    if(eRac.permitYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> The last roof permit on file for this address is from <b>'+eRac.permitYear+'</b> — about '+(y-eRac.permitYear)+' years ago ('+eRac.source+').'; eRacSetAge(y-eRac.permitYear); if(hint)hint.textContent='Pre-filled from the permit we found — change it if you know better, then tap Next.'; }
+    else if(eRac.builtYear){ f.className='e-rac-found'; f.innerHTML='<b>Found it.</b> Property records show the home was built in <b>'+eRac.builtYear+'</b> and no roof replacement permit is on file — the roof may be original ('+eRac.source+').'; eRacSetAge(y-eRac.builtYear); if(hint)hint.textContent='Pre-filled from property records — change it if you know better.'; }
+    else { f.className='e-rac-found none'; f.innerHTML='No public roof records turned up for this address'+(eRac.source?' in '+eRac.source:'')+' — that\'s common. Answer the next four and we\'ll score it from what you know.'; }
+    document.getElementById('e-rac-note').textContent='';
+    eRacGo(1);
+  });
+}
+function eRacSetAge(age){
+  var v=age<10?'5':age<=20?'15':'25';
+  document.querySelectorAll('#e-rac [data-q="age"] button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-v')===v);});
+  eRac.ans.age=v; eRac.ans.ageExact=age;
+}
+function eRacKm(a,b,c,d){var R=6371,dl=(c-a)*Math.PI/180,dg=(d-b)*Math.PI/180;var x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dg/2)*Math.sin(dg/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function eRacLookup(){
+  eRac.permitYear=null; eRac.builtYear=null; eRac.source='';
+  var city=null; E_RAC_CITIES.forEach(function(c){ if(eRacKm(eRac.lat,eRac.lng,c.lat,c.lng)<80&&(!city||eRacKm(eRac.lat,eRac.lng,c.lat,c.lng)<eRacKm(eRac.lat,eRac.lng,city.lat,city.lng)))city=c; });
+  if(!city)return Promise.resolve();
+  eRac.source=city.n+' records';
+  var dd=0.00045, deadline=new Promise(function(res){setTimeout(res,7000);});
+  function q(cfg){
+    var kw=cfg.desc.slice(0,2).map(function(f){return "upper("+f+") like '%ROOF%'";}).join(' OR ');
+    var where=cfg.latf+' between '+(eRac.lat-dd)+' and '+(eRac.lat+dd)+' AND '+cfg.lngf+' between '+(eRac.lng-dd)+' and '+(eRac.lng+dd)+' AND ('+kw+')';
+    return fetch(cfg.api+'?$where='+encodeURIComponent(where)+'&$order='+cfg.date+'%20DESC&$limit=5').then(function(r){return r.ok?r.json():[];}).then(function(rows){
+      (rows||[]).forEach(function(r){var y=parseInt(String(r[cfg.date]||'').slice(0,4),10);if(y>1900&&(!eRac.permitYear||y>eRac.permitYear))eRac.permitYear=y;});
+    }).catch(function(){});
+  }
+  var jobs=[q(city)]; if(city.also)jobs.push(q(city.also));
+  if(city.assessor){var a=city.assessor;var w2=a.latf+' between '+(eRac.lat-dd)+' and '+(eRac.lat+dd)+' AND '+a.lngf+' between '+(eRac.lng-dd)+' and '+(eRac.lng+dd);
+    jobs.push(fetch(a.api+'?$where='+encodeURIComponent(w2)+'&$limit=3').then(function(r){return r.ok?r.json():[];}).then(function(rows){(rows||[]).forEach(function(r){var y=parseInt(r[a.yb],10);if(y>1800&&(!eRac.builtYear||y<eRac.builtYear))eRac.builtYear=y;});}).catch(function(){}));}
+  return Promise.race([Promise.all(jobs),deadline]);
+}
+/* single-choice questions advance on tap, like the estimator; the multi-choice one waits for Next */
+function eRacPick(btn){
+  var wrap=btn.parentNode, qk=wrap.getAttribute('data-q'), v=btn.getAttribute('data-v');
+  if(wrap.classList.contains('multi')){
+    if(v==='none'){wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});}
+    else{btn.classList.toggle('on');var none=wrap.querySelector('[data-v="none"]');if(none)none.classList.remove('on');if(!wrap.querySelector('button.on')&&none)none.classList.add('on');}
+    eRac.ans.issues=[].slice.call(wrap.querySelectorAll('button.on')).map(function(b){return b.getAttribute('data-v');});
+    return;
+  }
+  wrap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b===btn);});
+  eRac.ans[qk]=v; if(qk==='age')eRac.ans.ageExact=null;
+}
+/* deterministic rubric: age vs. material lifespan (wear accelerates late), minus what the homeowner has noticed */
+function eRacCompute(){
+  var A=eRac.ans, life={asphalt:22,metal:45,tile:50,flat:18,unknown:22}[A.material]||22, y=new Date().getFullYear();
+  var age=null, src='';
+  if(eRac.permitYear){age=y-eRac.permitYear;src='permit';}
+  else if(A.ageExact!=null){age=A.ageExact;src='records';}
+  else if(A.age!=='unknown'){age=+A.age;src='you';}
+  else if(eRac.builtYear){age=Math.min(y-eRac.builtYear,life+12);src='built';}
+  var score=100, why=[];
+  if(age!=null){var ratio=age/life, hit=Math.min(70,Math.round(70*Math.pow(ratio,1.6))); score-=hit; why.push(['-'+hit,'About '+age+' years old — a '+({asphalt:'shingle',metal:'metal',tile:'tile',flat:'flat',unknown:'typical'}[A.material])+' roof usually lasts '+life+'.']);}
+  else {score-=15; why.push(['-15','Age unknown — we assume mid-life until it\'s inspected.']);}
+  var issueHit={shingles:[12,'Missing or curling shingles let water in.'],granules:[10,'Granules in the gutters mean the shingles are wearing through.'],stains:[18,'Ceiling stains or leaks — water is already getting in.'],sag:[22,'Sagging points to decking or structural damage underneath.'],moss:[6,'Moss and algae hold moisture against the surface.']};
+  (A.issues||[]).forEach(function(k){if(issueHit[k]){score-=issueHit[k][0];why.push(['-'+issueHit[k][0],issueHit[k][1]]);}});
+  if(A.storm==='yes'){score-=8;why.push(['-8','A hail or wind event in the last year — damage often isn\'t visible from the ground.']);}
+  else if(A.storm==='unknown'){score-=3;why.push(['-3','Unsure about storms — worth a look.']);}
+  score=Math.max(5,Math.min(98,score));
+  var left=age!=null?Math.max(0,life-age-(A.issues||[]).filter(function(k){return k!=='none';}).length*2):null;
+  var band=score>=70?'good':score>=45?'mid':score>=25?'warn':'bad';
+  return {score:score,band:band,age:age,life:life,left:left,why:why,src:src};
+}
+/* every check is filed to the contractor's BuilderPro account so it shows in Lead Radar → Roof checks */
+function eRacSave(r,label){
+  if(eRac.saved)return; eRac.saved=true;
+  var name=(document.getElementById('e-rac-name')||{}).value||'', phone=(document.getElementById('e-rac-phone')||{}).value||'', email=(document.getElementById('e-rac-email')||{}).value||'';
+  var host=''; try{host=(document.referrer||'').replace(/^https?:\/\//,'').split('/')[0]||(parent!==window?'embed':location.host);}catch(e){host='embed';}
+  var row={owner:(typeof E_CONFIG!=='undefined'&&E_CONFIG.ownerId)||null,calc_id:'roofing',address:eRac.addr,zip:eRac.zip,lat:eRac.lat,lng:eRac.lng,score:r.score,band:r.band,label:label,age:r.age,material:eRac.ans.material,issues:(eRac.ans.issues||[]).filter(function(k){return k!=='none';}),storm:eRac.ans.storm,permit_year:eRac.permitYear,built_year:eRac.builtYear,name:name.trim(),phone:phone.trim(),email:email.trim(),host:host};
+  try{ fetch(E_RAC_SB+'/rest/v1/roof_checks',{method:'POST',headers:{'Content-Type':'application/json','apikey':E_RAC_ANON,'Authorization':'Bearer '+E_RAC_ANON,'Prefer':'return=minimal'},body:JSON.stringify(row)}).catch(function(){}); }catch(e){}
+  try{ if(typeof E_CONFIG!=='undefined'&&E_CONFIG.webhookUrl)fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:((E_CONFIG.companyName)||'')+' Roof Health Check',firstName:name.trim().split(' ')[0]||'',lastName:name.trim().split(' ').slice(1).join(' '),phone:phone.trim(),email:email.trim(),address:eRac.addr,zip:eRac.zip,roofScore:r.score,roofBand:label,roofAge:r.age,material:eRac.ans.material,issues:(eRac.ans.issues||[]).join(','),storm:eRac.ans.storm,timestamp:new Date().toISOString()})}).catch(function(){}); }catch(e){}
+}
+function eRacScore(skip){
+  if(!skip){
+    var ph=((document.getElementById('e-rac-phone')||{}).value||'').replace(/\D/g,'');
+    if(ph&&ph.length<10){var pf=document.getElementById('e-rac-phone');pf.style.borderColor='#b91c1c';pf.focus();return;}
+  }
+  var go=document.getElementById('e-rac-go'); if(go){go.disabled=true;go.innerHTML='<span class="e-rac-busy"></span>Scoring…';}
+  var r=eRacCompute(), co=(typeof E_CONFIG!=='undefined'&&E_CONFIG.companyName)||'our team';
+  var label={good:'Healthy',mid:'Aging — keep an eye on it',warn:'Needs attention soon',bad:'Needs attention now'}[r.band];
+  var fallback=r.band==='good'
+    ? 'Good news — your roof looks healthy.'+(r.age!=null?' At about '+r.age+' years it has roughly '+r.left+' years of life left.':'')+' A free inspection every couple of years keeps it that way and catches small repairs while they\'re cheap.'
+    : (r.age!=null?'At about '+r.age+' years'+(r.left===0?' your roof is past its expected life':' your roof is in its later years')+'.':'Based on what you\'ve noticed, your roof needs a closer look.')+(r.band==='bad'?' The signs you described usually mean water is already getting in — an inspection now can stop small damage from turning into decking and drywall repairs.':' An inspection now tells you whether repairs will carry it a few more seasons or whether it\'s time to plan a replacement.');
+  eRacSave(r,label);
+  var render=function(text){
+    var s6=document.getElementById('e-rac-s6');
+    var primary=r.band==='good'
+      ? '<button class="e-btnmain" onclick="eRacToEst()">See replacement pricing</button><button class="e-rac-ghost" onclick="eRacBook()">Book a free inspection</button>'
+      : '<button class="e-btnmain" onclick="eRacBook()">Book a free inspection</button><button class="e-rac-ghost" onclick="eRacToEst()">Get an instant estimate</button>';
+    s6.innerHTML='<div class="e-rac-res '+r.band+'" style="--pct:'+r.score+'">'
+      +'<div class="e-rac-ring"><i>'+r.score+'<small>out of 100</small></i></div>'
+      +'<div class="e-rac-band">'+label+'</div>'
+      +'<div class="e-rac-txt">'+text+'</div>'
+      +'<div class="e-rac-why">'+r.why.map(function(w){return '<div><b>'+w[0]+'</b><span>'+w[1]+'</span></div>';}).join('')+'</div>'
+      +'<div class="e-rac-ctas">'+primary+'</div>'
+      +'<div><button class="e-rac-again" onclick="eRacReset()">Check a different address</button></div></div>';
+    eRacGo(6);
+    if(go){go.disabled=false;go.textContent='See my roof health →';}
+  };
+  /* short AI wording of the same facts; the rubric already decided the score, and a guard keeps the words in line with it */
+  var facts='Roof health check. Score '+r.score+'/100 ('+label+'). Material: '+eRac.ans.material+'. Age: '+(r.age!=null?r.age+' years (from '+r.src+')':'unknown')+'. Typical lifespan '+r.life+'. Issues noticed: '+(eRac.ans.issues||[]).join(', ')+'. Storm in last year: '+eRac.ans.storm+'.';
+  var ctl=new AbortController(); var t=setTimeout(function(){ctl.abort();},6000);
+  fetch(E_RAC_SB+'/functions/v1/ai-chat',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({message:facts+' Write exactly two short, plain sentences for the homeowner explaining this result and what to do next. No greeting, no questions, no offer to book, no markdown.',business:{business_name:co,industry:'roofing',custom_instructions:'You are a roofing inspector summarising a roof health result. Reply with two plain sentences only.'}})})
+    .then(function(x){return x.json();}).then(function(d){clearTimeout(t);var s=(d&&d.reply||'').replace(/\s+/g,' ').trim();var clash=(r.band==='good'&&/attention|replac|final years|leak|urgent/i.test(s))||(r.band!=='good'&&/healthy|good news|great shape|no action/i.test(s));render(s&&s.length>30&&s.length<420&&!/\?/.test(s)&&!clash?s:fallback);})
+    .catch(function(){clearTimeout(t);render(fallback);});
+}
+function eRacBook(){
+  var u=(typeof E_CONFIG!=='undefined')?(E_CONFIG.bookingUrl||(E_CONFIG.ctaUrl&&E_CONFIG.ctaUrl!=='#'?E_CONFIG.ctaUrl:'')):'';
+  try{ parent.postMessage({bp:'book',address:eRac.addr},'*'); }catch(e){}
+  if(u){ window.open(u,'_blank','noopener'); return; }
+  /* no calendar link set yet — the estimator's own contact step books the visit */
+  eRacToEst();
+}
+function eRacToEst(){
+  eRacTab('est');
+  try{ if(eRac.zip){var z=document.getElementById('e-zipIn');if(z&&!z.value){z.value=eRac.zip;if(typeof eHandleZip==='function')eHandleZip(eRac.zip);}} }catch(e){}
+  try{ document.getElementById('est-embed').scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){}
+}
+function eRacReset(){
+  eRac.addr='';eRac.lat=null;eRac.lng=null;eRac.zip='';eRac.permitYear=null;eRac.builtYear=null;eRac.saved=false;eRac.ans={material:'asphalt',age:'unknown',issues:['none'],storm:'unknown'};
+  document.querySelectorAll('#e-rac .e-rac-chips').forEach(function(w){w.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});var d=w.querySelector('[data-v="asphalt"],[data-v="unknown"],[data-v="none"]');if(d)d.classList.add('on');});
+  ['e-rac-addr','e-rac-name','e-rac-phone','e-rac-email'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var h=document.getElementById('e-rac-agehint'); if(h)h.textContent='Your best guess is fine — then tap Next.';
+  eRacGo(0);
+}
+/* open straight onto the checker when the host page asks for it */
+try{ if(/roof-age/.test(parent.location.hash))setTimeout(function(){eRacTab('rac');},0); }catch(e){}
+window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='roof-age')eRacTab('rac'); }catch(e){} });
+</script><script>(function(){try{var CID="roofing",U="https://ttzwzouhiwdwamuimhpo.supabase.co",A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")||"").replace(/[^0-9a-f-]/gi,"");}catch(e){}if(OWN&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=OWN;fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=pricing,owner",{headers:{apikey:A,Authorization:"Bearer "+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(rows[0].owner&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=rows[0].owner;if(typeof p.bookingUrl==="string"&&typeof E_CONFIG!=="undefined")E_CONFIG.bookingUrl=p.bookingUrl;if(typeof E_CONFIG==="undefined"||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!=="object"||v===null){if(typeof v==="number")E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!=="object")return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});["eBuildMats","eBuildAddons","eBuildColors","eBuildHeight","eBuildCabinets","eBuildScope"].forEach(function(fn){try{if(typeof window[fn]==="function")window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
+<style>
+/* --- BuilderPro polish: staggered step reveal, button feel, loading --- */
+#est-embed .e-sp.active .e-shdr{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .05s;}
+#est-embed .e-sp.active .e-sbody{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .13s;}
+@keyframes eRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#est-embed .e-btnmain{transition:transform .16s cubic-bezier(.22,1,.28,1),box-shadow .2s,background .2s,opacity .2s;}
+#est-embed .e-btnmain:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(37,99,235,.3);}
+#est-embed .e-btnmain:not(:disabled):active{transform:translateY(0) scale(.984);}
+#est-embed .e-pfill{box-shadow:0 0 10px rgba(37,99,235,.45);}
+#est-embed .e-ldstp{transition:color .35s,background .35s,border-color .35s,transform .35s;}
+#est-embed .e-ldstp.act{transform:translateX(3px);}
+#est-embed .e-sdot{transition:width .3s cubic-bezier(.22,1,.28,1),background .3s;}
+@media(prefers-reduced-motion:reduce){
+  #est-embed .e-sp.active,#est-embed .e-sp.back,
+  #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
+}
+</style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: roofing photography ===== */
+#est-embed .e-ldpanel{background-image:linear-gradient(155deg,rgba(18,35,61,.93),rgba(28,51,85,.90)),url('assets/roofing/roof-underlayment.jpg');
+  background-size:cover;background-position:center;}
+#est-embed .e-rhero{background-image:linear-gradient(150deg,rgba(18,35,61,.90),rgba(30,58,99,.86)),url('assets/roofing/roof-completed.jpg')!important;
+  background-size:cover!important;background-position:center 38%!important;}
+
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
+</style>
+
+<style>
+/* ===== BuilderPro: step header band ===== */
+#est-embed .e-shdr{
+  position:relative;padding:28px 32px 26px !important;margin-bottom:4px;
+  background:linear-gradient(140deg,#12233d 0%,#1e3a63 100%);
+}
+#est-embed .e-shdr>*{position:relative;z-index:2;}
+#est-embed .e-shdr::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(70% 120% at 88% 0%,rgba(96,165,250,.22),transparent 70%);}
+#est-embed .e-shdr .e-seye{color:#7dd3fc !important;}
+#est-embed .e-shdr .e-stitle{color:#fff !important;}
+#est-embed .e-shdr .e-stitle em{color:#7dd3fc !important;}
+#est-embed .e-shdr .e-ssub{color:rgba(255,255,255,.76) !important;}
+@media(max-width:640px){#est-embed .e-shdr{padding:22px 16px 20px !important;}}
+</style>
+
+<style>
+#est-embed .e-shdr{
+  background-image:linear-gradient(140deg,rgba(18,35,61,.92) 0%,rgba(30,58,99,.86) 100%),url('assets/roofing/roof-decking.jpg');
+  background-size:cover;background-position:center 62%;
+}
+</style>
+
+<style>
+/* the first screen's header sits one level deeper (inside .e-sbody), so pull it flush */
+#est-embed #e-zippanel .e-shdr{margin:-16px -32px 14px !important;width:auto !important;max-width:none !important;}
+@media(max-width:640px){#est-embed #e-zippanel .e-shdr{margin:-16px -16px 12px !important;}}
+</style>
+</body><style>
+#est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
+#est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
+#est-embed button:active{transform:scale(.95);}
+.bp-pop{animation:bpPop .4s cubic-bezier(.22,1,.36,1);}
+@keyframes bpPop{0%{transform:scale(1)}35%{transform:scale(.93)}70%{transform:scale(1.03)}100%{transform:scale(1)}}
+</style>
+<script>
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest?e.target.closest('button,a,[role=button],[class*=btn],[class*=opt],[class*=chip],[class*=card],label,select'):null;
+ if(!b)return;
+ b.classList.remove('bp-pop');void b.offsetWidth;b.classList.add('bp-pop');
+},true);
+</script></html>

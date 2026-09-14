@@ -1,0 +1,1785 @@
+<!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pool Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#ffffff;--card:#ffffff;--border:#e3e8ef;--bs:#e3e8ef;
+--text:#1b2a41;--txt:#1b2a41;--mu:#6b7a90;--muted:#6b7a90;
+--a:#2563eb;--al:#60a5fa;--blue-l:#60a5fa;--cyan:#60a5fa;--ag:rgba(37,99,235,.12);
+--green:#15803d;--red:#dc2626;}
+html,body{margin:0;background:#f6f8fb;font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;}
+.est-stage{max-width:980px;margin:32px auto;padding:0 16px;}
+#est-embed{border:1px solid #e3e8ef;border-radius:16px;overflow:hidden;box-shadow:0 10px 34px rgba(15,30,60,.09);}
+#est-embed .leaflet-container{background:#e3e8ef !important;}
+
+/* estimator (de-branded, light) */
+
+/* ── Estimator scoped styles ── */
+#est-embed {
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;
+  background: #ffffff;
+  color: #0c0c0d;
+  width: 100%;
+  position: relative;
+}
+#est-embed * { box-sizing: border-box; }
+
+#est-embed {
+  --a: #2f6bff;
+  --al: #9cc8ee;
+  --ag: rgba(47,107,255,0.18);
+  --bg: #02040b;
+  --card: rgba(47,107,255,0.55);
+  --border: rgba(37,99,235,0.18);
+  --bs: rgba(255, 255, 255, 0.07);
+  --w: #ffffff;
+  --txt: rgba(255, 255, 255, 0.75);
+  --mu: rgba(255, 255, 255, 0.38);
+  --green: #00d478;
+  --red: #ff4444;
+}
+
+/* TOPBAR inside estimator */
+#est-embed .e-topbar {
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--bs);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 3px 14px;
+  background: #ffffff;
+  backdrop-filter: blur(20px);
+}
+@media (max-width: 540px){
+  #est-embed .e-topbar{padding:12px 16px;}
+  #est-embed .e-tlogo{font-size:15px;letter-spacing:1.5px;}
+  #est-embed .e-tstep{flex-basis:100%;}
+}
+#est-embed .e-tlogo { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 18px; letter-spacing: 3px; color: #fff; display: flex; align-items: center; gap: 8px; }
+#est-embed .e-tlogo span { color: var(--al); }
+#est-embed .e-ldot { width: 7px; height: 7px; border-radius: 50%; background: var(--a); box-shadow: 0 0 8px var(--a); }
+#est-embed .e-tstep { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--mu); }
+#est-embed .e-tstep b { color: var(--al); }
+
+/* PROGRESS */
+#est-embed .e-prog { height: 3px; background: var(--bs); }
+#est-embed .e-pfill { height: 100%; background: linear-gradient(90deg, var(--a), var(--al)); transition: width .7s cubic-bezier(.16,1,.3,1); }
+
+/* STEP PANELS */
+#est-embed .e-app { position: relative; }
+#est-embed .e-sp { display: none; }
+#est-embed .e-sp.active { display: flex; flex-direction: column; animation: eSpIn .52s cubic-bezier(.22,1,.28,1) both; }
+#est-embed .e-sp.back { animation: eSpBack .52s cubic-bezier(.22,1,.28,1) both; }
+@keyframes eSpIn  { from { opacity:0; transform:translate3d(26px,8px,0) scale(.985) } to { opacity:1; transform:none } }
+@keyframes eSpBack { from { opacity:0; transform:translate3d(-26px,8px,0) scale(.985) } to { opacity:1; transform:none } }
+
+#est-embed .e-shdr { padding: 28px 32px 0; max-width: 860px; margin: 0 auto; width: 100%; }
+#est-embed .e-sbody { padding: 16px 32px 36px; max-width: 860px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; flex: 1; }
+@media (max-width: 640px) {
+  #est-embed .e-shdr, #est-embed .e-sbody { padding-left: 16px; padding-right: 16px; }
+  #est-embed .e-shdr { padding-top: 20px; }
+}
+
+#est-embed .e-seye { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--al); margin-bottom: 8px; display: block; }
+#est-embed .e-stitle { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: clamp(28px, 4vw, 46px); line-height: .93; letter-spacing: 1px; color: #fff; margin-bottom: 6px; }
+#est-embed .e-stitle em { color: var(--a); font-style: normal; }
+#est-embed .e-ssub { font-size: 14px; color: var(--mu); line-height: 1.6; margin-bottom: 18px; max-width: 540px; }
+
+/* CARD */
+#est-embed .e-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 22px; backdrop-filter: blur(12px); box-shadow: 0 12px 36px rgba(0,0,0,.26); margin-bottom: 12px; }
+
+/* ADDRESS SEARCH */
+#est-embed .e-asearch { position: relative; margin-bottom: 10px; }
+#est-embed .e-asearch-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; z-index: 2; }
+#est-embed .e-asearch-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--bs);
+  border-radius: 10px;
+  padding: 13px 13px 13px 44px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 15px; color: #fff;
+  outline: none;
+  transition: all .3s;
+}
+#est-embed .e-asearch-input::placeholder { color: var(--mu); }
+#est-embed .e-asearch-input:focus { border-color: var(--a); background: rgba(47,107,255,0.09); box-shadow: 0 0 0 3px var(--ag); }
+
+/* SUGGESTIONS */
+#est-embed .e-suggestions {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #08112a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 9999;
+  display: none;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 14px 40px rgba(0,0,0,.6);
+}
+#est-embed .e-suggestions.open { display: block; }
+#est-embed .e-suggestion {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--bs);
+  transition: background .18s;
+  font-size: 13px; color: var(--txt);
+}
+#est-embed .e-suggestion:last-child { border: none; }
+#est-embed .e-suggestion:hover { background: rgba(47,107,255,0.14); color: #fff; }
+#est-embed .e-suggestion-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+#est-embed .e-suggestion-main { font-weight: 600; color: #fff; }
+#est-embed .e-suggestion-sub { font-size: 11px; color: var(--mu); margin-top: 2px; }
+#est-embed .e-suggestion-loading { padding: 12px 14px; font-size: 12px; color: var(--mu); display: flex; align-items: center; gap: 8px; }
+#est-embed .e-spin-sm { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--bs); border-top-color: var(--al); animation: eSpin .7s linear infinite; display: inline-block; }
+@keyframes eSpin { to { transform: rotate(360deg); } }
+
+/* MAP */
+#est-embed .e-mapwrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px; display: none; }
+#est-embed .e-maptb { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f4f2ec; border-bottom: 1px solid var(--bs); flex-wrap: wrap; }
+#est-embed .e-mtbtn {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(47,107,255,0.3); border: 1px solid rgba(37,99,235,0.18); border-radius: 6px;
+  padding: 5px 10px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--al); cursor: pointer; transition: all .22s;
+}
+#est-embed .e-mtbtn:hover, #est-embed .e-mtbtn.on { background: rgba(47,107,255,0.32); border-color: var(--a); color: #fff; }
+#est-embed .e-mtbtn.del { border-color: rgba(255,60,60,.25); color: var(--red); }
+#est-embed .e-mtbtn.del:hover { background: rgba(255,60,60,.12); border-color: var(--red); }
+#est-embed .e-mstat { margin-left: auto; font-size: 10px; color: var(--mu); letter-spacing: 1px; text-align: right; }
+#est-embed #e-mapel { width: 100%; height: 400px; }
+@media (max-width: 640px) { #est-embed #e-mapel { height: 280px; } }
+#est-embed .e-mhint { padding: 8px 12px; background: rgba(47,107,255,0.2); font-size: 11px; color: #3a6286; border-top: 1px solid var(--bs); line-height: 1.5; }
+
+/* MEASURED RESULT */
+#est-embed .e-mresult {
+  display: none; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: rgba(47,107,255,0.12); border: 1px solid rgba(47,107,255,0.28); border-radius: 10px;
+  margin-bottom: 10px;
+}
+#est-embed .e-mrn { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 32px; color: #fff; line-height: 1; }
+#est-embed .e-mrl { font-size: 10px; color: var(--mu); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+#est-embed .e-mrbadge { color: var(--green); }
+#est-embed .e-mrsq { font-size: 11px; color: var(--mu); margin-left: 6px; }
+#est-embed .e-mredit { margin-left: auto; font-size: 11px; color: var(--al); cursor: pointer; text-decoration: underline; white-space: nowrap; }
+
+/* MANUAL SLIDER */
+#est-embed .e-manualbtn {
+  background: transparent; border: 1px solid var(--bs); border-radius: 7px;
+  padding: 7px 14px; font-size: 11px; color: var(--mu); cursor: pointer;
+  transition: all .22s; font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+#est-embed .e-manualbtn:hover { border-color: var(--border); color: #fff; }
+#est-embed .e-sldwrap { display: none; }
+#est-embed .e-slddisp { display: flex; align-items: baseline; gap: 6px; margin-bottom: 12px; }
+#est-embed .e-sldval { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 46px; color: #fff; line-height: 1; }
+#est-embed .e-sldunit { font-size: 12px; color: var(--mu); letter-spacing: 2px; text-transform: uppercase; }
+#est-embed input[type=range].e-sld { width: 100%; -webkit-appearance: none; height: 5px; background: var(--bs); border-radius: 3px; outline: none; cursor: pointer; }
+#est-embed input[type=range].e-sld::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg,var(--a),var(--al)); border: 2px solid rgba(255,255,255,.2); box-shadow: 0 0 12px var(--ag); cursor: pointer; }
+#est-embed .e-sldlbl { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--mu); }
+
+/* OPTION LIST */
+#est-embed .e-olist { display: flex; flex-direction: column; gap: 8px; }
+#est-embed .e-oi {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  background: rgba(255,255,255,.03); border: 1px solid var(--bs); border-radius: 10px;
+  cursor: pointer;
+  transition: all .32s cubic-bezier(.16,1,.3,1);
+  position: relative; overflow: hidden;
+}
+#est-embed .e-oi::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,rgba(47,107,255,0.07),transparent 60%); opacity:0; transition:opacity .3s; }
+#est-embed .e-oi:hover { border-color: rgba(47,107,255,0.35); background: rgba(47,107,255,0.14); transform: translateX(3px); }
+#est-embed .e-oi:hover::before { opacity: 1; }
+#est-embed .e-oi.sel { border-color: var(--a); background: rgba(47,107,255,0.2); box-shadow: 0 0 0 1px var(--a), 0 0 18px var(--ag); transform: translateX(5px); }
+#est-embed .e-oi.sel::before { opacity: 1; }
+#est-embed .e-oi-em { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+#est-embed .e-oi-info { flex: 1; }
+#est-embed .e-oi-lbl { font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
+#est-embed .e-oi-desc { font-size: 11px; color: var(--mu); margin-top: 2px; line-height: 1.4; }
+#est-embed .e-oi-tag { font-size: 10px; color: var(--al); font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
+#est-embed .e-oi-radio { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--bs); display: flex; align-items: center; justify-content: center; font-size: 9px; color: transparent; flex-shrink: 0; transition: all .28s; }
+#est-embed .e-oi.sel .e-oi-radio { background: var(--a); border-color: var(--a); color: #fff; box-shadow: 0 0 8px var(--ag); }
+
+/* REGION GRID */
+#est-embed .e-regg { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-bottom: 8px; }
+@media (max-width: 500px) { #est-embed .e-regg { grid-template-columns: 1fr 1fr; } }
+#est-embed .e-rb { background: rgba(255,255,255,.04); border: 1px solid var(--bs); border-radius: 8px; padding: 9px 10px; cursor: pointer; transition: all .28s; text-align: center; }
+#est-embed .e-rb:hover { border-color: rgba(47,107,255,0.3); background: rgba(47,107,255,0.12); }
+#est-embed .e-rb.on { border-color: var(--a); background: rgba(47,107,255,0.18); box-shadow: 0 0 0 1px var(--a); }
+#est-embed .e-rb-n { font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
+#est-embed .e-rb-s { font-size: 9px; color: var(--mu); margin-top: 2px; }
+
+/* FORM */
+#est-embed .e-fr2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { #est-embed .e-fr2 { grid-template-columns: 1fr; } }
+#est-embed .e-fg { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+#est-embed .e-fl { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--mu); }
+#est-embed .e-fi {
+  background: rgba(255,255,255,.05); border: 1px solid var(--bs); border-radius: 9px;
+  padding: 11px 14px; font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 14px; color: #fff;
+  outline: none; transition: all .28s; width: 100%;
+}
+#est-embed .e-fi::placeholder { color: var(--mu); }
+#est-embed .e-fi:focus { border-color: var(--a); background: rgba(47,107,255,0.09); box-shadow: 0 0 0 3px var(--ag); }
+#est-embed .e-consent { font-size: 11px; color: var(--mu); line-height: 1.65; padding: 10px 12px; background: rgba(255,255,255,.03); border: 1px solid var(--bs); border-radius: 7px; margin-bottom: 16px; }
+
+/* BUTTONS */
+#est-embed .e-btnrow { display: flex; gap: 10px; margin-top: auto; padding-top: 14px; }
+#est-embed .e-btnmain {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px 24px;
+  background: linear-gradient(90deg, #6aa6dd, #8fc1ea);
+  border: none; border-radius: 10px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: #fff; cursor: pointer;
+  transition: all .4s cubic-bezier(.16,1,.3,1);
+  box-shadow: 0 0 20px rgba(37,99,235,0.18);
+  position: relative; overflow: hidden;
+}
+#est-embed .e-btnmain::before { content:''; position:absolute; inset:0; background:linear-gradient(rgba(255,255,255,.08),transparent); pointer-events:none; }
+#est-embed .e-btnmain:hover { box-shadow: 0 0 44px rgba(47,107,255,0.45), 0 7px 20px rgba(0,0,0,.3); transform: translateY(-2px); }
+#est-embed .e-btnmain:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
+#est-embed .e-btnback {
+  display: flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--bs); border-radius: 9px;
+  padding: 12px 16px;
+  font-family: 'Inter','Space Grotesk',system-ui,-apple-system,sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--mu); cursor: pointer; transition: all .28s; flex-shrink: 0;
+}
+#est-embed .e-btnback:hover { border-color: var(--border); color: #fff; }
+
+/* STEP DOTS */
+#est-embed .e-stepdots { display: flex; justify-content: center; gap: 5px; padding: 14px 0 0; }
+#est-embed .e-sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--bs); transition: all .4s cubic-bezier(.16,1,.3,1); }
+#est-embed .e-sdot.done { background: var(--green); }
+#est-embed .e-sdot.act { background: var(--a); width: 18px; border-radius: 3px; box-shadow: 0 0 8px var(--ag); }
+
+/* LOADING */
+#est-embed .e-ldpanel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 70px 32px; gap: 24px; }
+#est-embed .e-ldring { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--bs); border-top-color: var(--a); animation: eSpin .85s linear infinite; }
+#est-embed .e-ldsteps { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 320px; }
+#est-embed .e-ldstp { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: rgba(47,107,255,0.12); border: 1px solid var(--bs); border-radius: 8px; font-size: 12px; color: var(--mu); transition: all .42s; }
+#est-embed .e-ldstp.act { color: #fff; border-color: var(--border); background: rgba(37,99,235,0.18); }
+#est-embed .e-ldstp.done { color: var(--green); border-color: rgba(47,107,255,0.2); background: rgba(47,107,255,0.07); }
+#est-embed .e-lddot { width: 6px; height: 6px; border-radius: 50%; background: var(--bs); flex-shrink: 0; transition: background .4s; }
+#est-embed .e-ldstp.act .e-lddot { background: var(--al); animation: eBlk 1.1s ease-in-out infinite; }
+#est-embed .e-ldstp.done .e-lddot { background: var(--green); }
+@keyframes eBlk { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* RESULT */
+#est-embed .e-rpage { max-width: 860px; margin: 0 auto; padding: 28px 32px; width: 100%; }
+@media (max-width: 640px) { #est-embed .e-rpage { padding: 16px; } }
+#est-embed .e-rhero { text-align: center; padding: 28px 24px; background: linear-gradient(135deg, rgba(47,107,255,0.55), #f4f2ec); border: 1px solid rgba(47,107,255,0.3); border-radius: 18px; margin-bottom: 14px; box-shadow: 0 0 50px rgba(47,107,255,0.1); }
+#est-embed .e-rbadge { display: inline-flex; align-items: center; gap: 5px; background: rgba(47,107,255,0.1); border: 1px solid rgba(47,107,255,0.25); border-radius: 18px; padding: 4px 12px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--green); margin-bottom: 12px; }
+#est-embed .e-rlbl { font-size: 10px; color: var(--mu); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; }
+#est-embed .e-rrange { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: clamp(30px,5vw,54px); color: #fff; line-height: 1; letter-spacing: 2px; margin-bottom: 7px; }
+#est-embed .e-rrange em { color: var(--a); font-style: normal; }
+#est-embed .e-rnote { font-size: 12px; color: var(--mu); line-height: 1.6; }
+#est-embed .e-rgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; margin-bottom: 14px; }
+@media (max-width: 500px) { #est-embed .e-rgrid { grid-template-columns: 1fr 1fr; } }
+#est-embed .e-rbox { background: rgba(47,107,255,0.28); border: 1px solid var(--border); border-radius: 10px; padding: 12px 9px; text-align: center; animation: eRbIn .5s cubic-bezier(.16,1,.3,1) both; }
+#est-embed .e-rbox:nth-child(1){animation-delay:.04s} #est-embed .e-rbox:nth-child(2){animation-delay:.09s} #est-embed .e-rbox:nth-child(3){animation-delay:.14s} #est-embed .e-rbox:nth-child(4){animation-delay:.19s} #est-embed .e-rbox:nth-child(5){animation-delay:.24s} #est-embed .e-rbox:nth-child(6){animation-delay:.29s}
+@keyframes eRbIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+#est-embed .e-rbv { font-family: 'Space Grotesk','Inter',system-ui,sans-serif; font-size: 19px; color: #fff; line-height: 1; margin-bottom: 3px; }
+#est-embed .e-rbl { font-size: 8px; color: var(--mu); letter-spacing: 1.5px; text-transform: uppercase; }
+#est-embed .e-disc { font-size: 11px; color: var(--mu); line-height: 1.75; padding: 12px 14px; background: rgba(255,255,255,.03); border: 1px solid var(--bs); border-radius: 9px; margin-bottom: 16px; }
+#est-embed .e-rcta { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+#est-embed .e-rcta .e-btnmain { max-width: 400px; }
+#est-embed .e-rctasub { font-size: 11px; color: var(--mu); }
+#est-embed .e-restart { background: transparent; border: none; font-size: 12px; color: var(--mu); cursor: pointer; text-decoration: underline; transition: color .2s; margin-top: 3px; }
+#est-embed .e-restart:hover { color: #fff; }
+
+/* Leaflet dark theme override scoped to estimator */
+#est-embed .leaflet-container { background: #e9e8e3 !important; }
+#est-embed .leaflet-control-zoom a { background: #ffffff !important; color: var(--al) !important; border-color: var(--border) !important; }
+#est-embed .leaflet-control-zoom a:hover { background: rgba(47,107,255,0.2) !important; }
+#est-embed .leaflet-bar { border: 1px solid var(--border) !important; border-radius: 8px !important; overflow: hidden !important; box-shadow: none !important; }
+
+#est-embed .e-tlogo,
+#est-embed .e-stitle,
+#est-embed .e-asearch-input,
+#est-embed .e-suggestion:hover,
+#est-embed .e-suggestion-main,
+#est-embed .e-mrn,
+#est-embed .e-manualbtn:hover,
+#est-embed .e-sldval,
+#est-embed .e-oi-lbl,
+#est-embed .e-rb-n,
+#est-embed .e-fi,
+#est-embed .e-btnback:hover,
+#est-embed .e-rrange,
+#est-embed .e-rbv,
+#est-embed .e-restart:hover{color:#0c0c0d !important;}
+
+/* ---- light overrides + legibility ---- */
+#est-embed{background:#ffffff !important;color:#0c0c0d !important;}
+#est-embed .e-topbar{background:#ffffff !important;border-bottom:1px solid #e9e8e3 !important;}
+#est-embed .e-tlogo{color:#0c0c0d !important;}
+#est-embed .e-asearch-input{background:#ffffff !important;border:1px solid #e0ded6 !important;color:#0c0c0d !important;}
+#est-embed .e-asearch-input::placeholder{color:#7a8696 !important;}
+#est-embed .e-maptb{background:#f6f8fb !important;}
+#est-embed .e-mhint{background:rgba(47,107,255,.10) !important;color:#3a6286 !important;}
+/* suggestion dropdown */
+#est-embed .e-suggestions{background:#ffffff !important;border:1px solid #e9e8e3 !important;box-shadow:0 12px 30px rgba(15,23,38,.12) !important;}
+#est-embed .e-suggestion{background:#ffffff !important;color:#0c0c0d !important;border-bottom:1px solid #f4f2ec !important;}
+#est-embed .e-suggestion:hover,#est-embed .e-suggestion.act{background:#f6f8fb !important;}
+#est-embed .e-suggestion-main{color:#0c0c0d !important;}
+#est-embed .e-suggestion-sub,#est-embed .e-suggestion-loading{color:#56627a !important;}
+/* readable eyebrows / faint labels */
+#est-embed .e-seye{color:#2f6bff !important;}
+#est-embed .e-ssub,#est-embed .e-mrl,#est-embed .e-sldlbl,#est-embed .e-tstep{color:#6a6a70 !important;}
+#est-embed .e-stitle em{color:#2f6bff !important;}
+/* disabled CONTINUE button: muted but fully readable */
+#est-embed .e-btnmain:disabled{opacity:1 !important;background:#f0efe9 !important;color:#9a9aa0 !important;box-shadow:none !important;}
+/* legibility: force faint text to black (user request) */
+#est-embed .e-mrn,#est-embed .e-mrsq,#est-embed .e-oi-desc,#est-embed .e-ssub,#est-embed .e-mrl,#est-embed .e-sldlbl,#est-embed .e-tstep,#est-embed .e-mstat,#est-embed .e-mhint{color:#0c0c0d !important;}
+#est-embed #e-slopecard,#est-embed #e-slopecard *{color:#0c0c0d !important;}
+#est-embed #e-truearea{color:#12558a !important;}
+#est-embed #e-pitchsel{background:#ffffff !important;color:#0c0c0d !important;border:1px solid #e0ded6 !important;}
+/* map toolbar buttons: readable dark styling */
+#est-embed .e-mtbtn{color:#2f6bff !important;background:#eaf1f9 !important;border:1px solid #b9cfe6 !important;}
+#est-embed .e-mtbtn.on,#est-embed .e-mtbtn:hover{background:#2f6bff !important;border-color:#2f6bff !important;color:#ffffff !important;}
+#est-embed .e-mtbtn.del{color:#dc2626 !important;background:#fdeaea !important;border-color:#f2b8b8 !important;}
+#est-embed .e-mtbtn.del:hover{background:#dc2626 !important;border-color:#dc2626 !important;color:#ffffff !important;}
+#est-embed #e-btnmeasure.on{background:#dc2626 !important;border-color:#dc2626 !important;color:#ffffff !important;}
+/* ===== clean, trustworthy redesign ===== */
+#est-embed .e-oi-em{display:none !important;}
+#est-embed .e-stitle{font-family:'Space Grotesk','Inter',system-ui,sans-serif !important;font-weight:400 !important;letter-spacing:-.3px !important;text-transform:none !important;font-size:clamp(24px,3.2vw,34px) !important;line-height:1.18 !important;color:#0c0c0d !important;}
+#est-embed .e-stitle em{color:#2f6bff !important;font-style:normal !important;}
+#est-embed .e-seye{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;letter-spacing:.5px !important;font-weight:600 !important;color:#9a9aa0 !important;font-size:11px !important;}
+#est-embed .e-ssub{color:#6a6a70 !important;font-size:14px !important;font-weight:400 !important;}
+#est-embed .e-oi{border:1px solid #e9e8e3 !important;background:#fff !important;border-radius:10px !important;box-shadow:none !important;transform:none !important;}
+#est-embed .e-oi::before{display:none !important;}
+#est-embed .e-oi:hover{border-color:#bcd0e6 !important;background:#f8fbfe !important;transform:none !important;}
+#est-embed .e-oi.sel{border-color:#2f6bff !important;background:#f6f8fb !important;box-shadow:0 0 0 1px #2f6bff !important;transform:none !important;}
+#est-embed .e-oi-lbl{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:600 !important;text-transform:none !important;letter-spacing:0 !important;font-size:15px !important;color:#0c0c0d !important;}
+#est-embed .e-oi-desc{color:#6a6a70 !important;font-size:12px !important;}
+#est-embed .e-oi-tag{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:none !important;color:#2f6bff !important;}
+#est-embed .e-btnmain{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:none !important;box-shadow:none !important;background:#2f6bff !important;border-radius:10px !important;}
+#est-embed .e-btnmain::before{display:none !important;}
+#est-embed .e-btnmain:hover{box-shadow:0 4px 14px rgba(47,107,255,.25) !important;transform:none !important;}
+#est-embed .e-btnback{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:500 !important;letter-spacing:0 !important;text-transform:none !important;}
+#est-embed .e-tstep{text-transform:none !important;letter-spacing:0 !important;}
+#est-embed .e-mhint{font-weight:400 !important;} #est-embed .e-mhint strong{font-weight:600 !important;}
+#est-embed .e-zipwrap{margin-bottom:16px;}
+#est-embed .e-ziplabel{display:block;font-size:13px;font-weight:600;color:#0c0c0d;margin-bottom:6px;font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;}
+#est-embed .e-zipinput{width:150px;padding:11px 14px;border:1px solid #e9e8e3;border-radius:8px;font-size:15px;color:#0c0c0d;outline:none;background:#fff;font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;}
+#est-embed .e-zipinput:focus{border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+#est-embed .e-ziphint{font-size:12px;color:#9a9aa0;margin-top:6px;}
+/* result slide: darken faint text to black (user request) */
+#est-embed .e-rlbl,#est-embed .e-rbl,#est-embed .e-rnote,#est-embed .e-rctasub,#est-embed .e-disc{color:#1f2937 !important;}
+#est-embed .e-rrange,#est-embed .e-rbv{color:#0c0c0d !important;}
+#est-embed .e-rrange em{color:#2f6bff !important;}
+#est-embed .e-restart{color:#2f6bff !important;}
+
+/* ============================================================
+   POLISH LAYER — cleaner, more premium light UI (appended so it
+   wins on the cascade). Safe visual-only tweaks.
+   ============================================================ */
+#est-embed{--pri:#2f6bff;--pri-d:#1b56ee;--ink:#0c0c0d;--ink-2:#6a6a70;--line:#e9e8e3;--soft:#fbfaf7;}
+#est-embed .e-num{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums;}
+
+/* Shell: softer, more premium frame */
+#est-embed{border-radius:0 !important;}
+.est-stage{max-width:920px;}
+#est-embed>.e-app,#est-embed{background:#ffffff !important;}
+
+/* Big numbers were calling an unloaded font (Bebas Neue) → fell back ugly.
+   Give them a clean, tight numeric stack. */
+#est-embed .e-rrange,#est-embed .e-rbv,#est-embed .e-mrn,#est-embed .e-sldval{
+  font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;
+  font-variant-numeric:tabular-nums;font-weight:700 !important;letter-spacing:-.5px !important;}
+
+/* Top bar: crisper */
+#est-embed .e-topbar{padding:16px 26px !important;}
+#est-embed .e-ldot{background:var(--pri) !important;box-shadow:0 0 0 4px rgba(47,107,255,.14) !important;}
+#est-embed .e-tlogo{font-family:'Inter','Space Grotesk',system-ui,-apple-system,sans-serif !important;font-weight:700 !important;letter-spacing:.2px !important;font-size:16px !important;}
+#est-embed .e-tlogo span{color:var(--pri) !important;}
+
+/* Progress bar a touch bolder */
+#est-embed .e-prog{height:4px !important;background:#f6f8fb !important;}
+#est-embed .e-pfill{background:linear-gradient(90deg,var(--pri),#5a9bd8) !important;}
+
+/* Option cards: lift on hover, cleaner selected state */
+#est-embed .e-oi{padding:15px 18px !important;transition:border-color .2s,box-shadow .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#bcd4ea !important;box-shadow:0 4px 14px rgba(15,27,45,.06) !important;}
+#est-embed .e-oi.sel{box-shadow:0 0 0 1.5px var(--pri),0 6px 18px rgba(47,107,255,.14) !important;}
+#est-embed .e-oi-radio{border:1.5px solid #cfdae7 !important;}
+
+/* Primary button: gradient + confident hover */
+#est-embed .e-btnmain{background:linear-gradient(180deg,#3a7cc0,var(--pri)) !important;padding:15px 24px !important;font-size:15px !important;box-shadow:0 2px 8px rgba(47,107,255,.28) !important;}
+#est-embed .e-btnmain:hover{background:linear-gradient(180deg,#3f83c9,var(--pri-d)) !important;box-shadow:0 6px 20px rgba(47,107,255,.34) !important;transform:translateY(-1px) !important;}
+#est-embed .e-btnmain:disabled{background:#f6f8fb !important;color:#9a9aa0 !important;box-shadow:none !important;transform:none !important;}
+
+/* Cards: softer surface + shadow */
+#est-embed .e-card{background:#ffffff !important;border:1px solid var(--line) !important;border-radius:14px !important;box-shadow:0 2px 10px rgba(15,27,45,.04) !important;backdrop-filter:none !important;}
+
+/* Measured-result banner: clean success card */
+#est-embed .e-mresult{background:#f0f7ef !important;border:1px solid #cfe6cd !important;border-radius:12px !important;padding:14px 16px !important;}
+#est-embed .e-mrbadge{color:#1a8a4a !important;font-weight:600 !important;}
+
+/* ---- RESULT SLIDE: the money shot ---- */
+#est-embed .e-rhero{
+  background:linear-gradient(160deg,#f4f9ff 0%,#eaf3fc 100%) !important;
+  border:1px solid #d5e6f6 !important;border-radius:20px !important;
+  box-shadow:0 10px 40px rgba(47,107,255,.10) !important;padding:34px 26px !important;}
+#est-embed .e-rbadge{background:#e6f5ec !important;border:1px solid #bfe4c9 !important;color:#1a8a4a !important;font-weight:600 !important;}
+#est-embed .e-rrange{font-size:clamp(34px,5.5vw,58px) !important;letter-spacing:-1px !important;}
+#est-embed .e-rrange em{color:var(--pri) !important;}
+#est-embed .e-rgrid{gap:10px !important;}
+#est-embed .e-rbox{
+  background:#ffffff !important;border:1px solid var(--line) !important;border-radius:12px !important;
+  padding:14px 10px !important;box-shadow:0 1px 4px rgba(15,27,45,.04) !important;}
+#est-embed .e-rbv{font-size:18px !important;color:var(--ink) !important;}
+#est-embed .e-rbl{color:#8592a5 !important;letter-spacing:1px !important;}
+#est-embed .e-disc{background:var(--soft) !important;border:1px solid var(--line) !important;border-radius:12px !important;}
+
+/* Step dots: friendlier */
+#est-embed .e-sdot.act{background:var(--pri) !important;}
+#est-embed .e-sdot.done{background:#1a8a4a !important;}
+
+/* Loading ring on brand color */
+#est-embed .e-ldring{border-top-color:var(--pri) !important;}
+#est-embed .e-ldstp.done{color:#1a8a4a !important;}
+
+/* ---- POOL size picker: make it pop (no longer a blank white card) ---- */
+#est-embed .e-poolsize{background:linear-gradient(160deg,#f2f8ff,#e7f1fb) !important;border:1px solid #bcd7f0 !important;box-shadow:0 4px 16px rgba(47,107,255,.12) !important;}
+#est-embed .e-sldval{color:#2f6bff !important;}
+#est-embed .e-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+#est-embed .e-preset{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border:1px solid #bcd7f0;border-radius:10px;background:#fff;color:#0c0c0d;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .18s;text-align:center;}
+#est-embed .e-preset span{font-size:10px;font-weight:400;color:#9a9aa0;}
+#est-embed .e-preset:hover{border-color:#2f6bff;background:#f2f8ff;box-shadow:0 3px 10px rgba(47,107,255,.15);}
+#est-embed .e-preset.on{border-color:#2f6bff;background:#2f6bff;color:#fff;box-shadow:0 0 0 1px #2f6bff;}
+#est-embed .e-preset.on span{color:rgba(255,255,255,.85);}
+#est-embed .e-shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px;}
+#est-embed .e-shapebtn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border:1px solid #bcd7f0;border-radius:10px;background:#fff;color:#0c0c0d;font-size:20px;line-height:1;cursor:pointer;transition:all .18s;}
+#est-embed .e-shapebtn span{font-size:10px;font-weight:600;color:#6a6a70;}
+#est-embed .e-shapebtn:hover{border-color:#2f6bff;background:#f2f8ff;}
+#est-embed .e-shapebtn.on{border-color:#2f6bff;background:#2f6bff;color:#fff;box-shadow:0 0 0 1px #2f6bff;}
+#est-embed .e-shapebtn.on span{color:rgba(255,255,255,.9);}
+
+/* ---- YOUR INFO slide: form fields were near-transparent white on a
+   white card, so they vanished. Give them real surfaces. ---- */
+#est-embed .e-fi{
+  background:#ffffff !important;border:1px solid #e9e8e3 !important;border-radius:9px !important;
+  color:var(--ink) !important;}
+#est-embed .e-fi::placeholder{color:#9a9aa0 !important;}
+#est-embed .e-fi:focus{border-color:var(--pri) !important;background:#ffffff !important;box-shadow:0 0 0 3px rgba(47,107,255,.12) !important;}
+#est-embed .e-fl{color:#6a6a70 !important;font-weight:600 !important;letter-spacing:1.5px !important;}
+#est-embed .e-consent{background:var(--soft) !important;border:1px solid var(--line) !important;color:#6a6a70 !important;border-radius:9px !important;}
+#est-embed .e-consent b{color:var(--ink) !important;}
+/* ---- AI VISUALIZER (photo left, options right) ---- */
+#est-embed .e-viz{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:14px;}
+@media (max-width:720px){ #est-embed .e-viz{grid-template-columns:1fr;} }
+#est-embed .e-vizphoto{position:sticky;top:12px;}
+#est-embed .e-vizupload{border:2px dashed #bcd4ea;border-radius:14px;background:#f7fbff;padding:34px 18px;text-align:center;cursor:pointer;transition:all .18s;}
+#est-embed .e-vizupload:hover{border-color:#2f6bff;background:#eef6ff;}
+#est-embed .e-vizstage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #e9e8e3;background:#0c0c0d;min-height:200px;display:flex;align-items:center;justify-content:center;}
+#est-embed .e-vizimg{width:100%;display:block;}
+#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,27,45,.55);color:#fff;backdrop-filter:blur(2px);}
+#est-embed .e-vizbadge{position:absolute;top:10px;left:10px;background:rgba(47,107,255,.92);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+#est-embed .e-vizbar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+#est-embed .e-vizbtn{flex:1;min-width:90px;padding:8px 10px;border:1px solid #e0ded6;border-radius:8px;background:#fff;color:#0c0c0d;font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
+#est-embed .e-vizbtn.on{background:#2f6bff;border-color:#2f6bff;color:#fff;}
+#est-embed .e-vizbtn.ghost{flex:0 0 auto;color:#6a6a70;}
+#est-embed .e-vizbtn.ghost:hover{border-color:#2f6bff;color:#2f6bff;}
+#est-embed .e-vizhint{font-size:11px;color:#9a9aa0;margin-top:8px;line-height:1.5;text-align:center;}
+#est-embed .e-vizimg{width:100%;display:block;border-radius:14px;background:#f6f8fb;}
+#est-embed .e-vizgen{width:100%;margin-top:10px;padding:13px 16px;border:none;border-radius:10px;background:linear-gradient(180deg,#3a7cc0,#2f6bff);color:#fff;font:600 15px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(47,107,255,.28);transition:all .18s;}
+#est-embed .e-vizgen:hover{background:linear-gradient(180deg,#3f83c9,#1b56ee);box-shadow:0 6px 20px rgba(47,107,255,.34);transform:translateY(-1px);}
+#est-embed .e-vizgen:disabled{background:#f0efe9;color:#9a9aa0;cursor:not-allowed;box-shadow:none;transform:none;}
+/* Material / add-on swatch thumbnails */
+#est-embed .e-oi-sw{width:48px;height:48px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid #e9e8e3;box-shadow:0 1px 3px rgba(15,27,45,.08);}
+#est-embed .e-oi-emchip{width:48px;height:48px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#f6faff,#e9f1fb);border:1px solid #dbe6f2;box-shadow:0 1px 3px rgba(15,27,45,.06),inset 0 1px 0 #fff;}
+#est-embed .e-oi{gap:12px !important;}
+/* color chips */
+#est-embed .e-colorrow{display:flex;flex-wrap:wrap;gap:8px;}
+#est-embed .e-colorchip{display:flex;align-items:center;gap:7px;padding:7px 12px 7px 8px;border:1px solid #e9e8e3;border-radius:20px;background:#fff;color:#0c0c0d;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
+#est-embed .e-colordot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
+#est-embed .e-colorchip:hover{border-color:#2f6bff;}
+#est-embed .e-colorchip.on{border-color:#2f6bff;background:#faf8f4;box-shadow:0 0 0 1px #2f6bff;}
+#est-embed .e-colornone{background:#f0f2f5 !important;color:#9a9aa0;display:flex;align-items:center;justify-content:center;font-size:11px;}
+/* ---- photo-beside-options split layout ---- */
+#est-embed .e-vizsplit{display:flex;gap:18px;align-items:flex-start;}
+#est-embed .e-vizsplit>.e-vizcol{flex:1;min-width:0;}
+#est-embed .e-vizsplit>.e-vizphoto{width:320px;flex:none;}
+@media(max-width:720px){#est-embed .e-vizsplit{flex-direction:column;}#est-embed .e-vizsplit>.e-vizphoto{width:100%;}}
+/* ---- loading / gating overlay ---- */
+#est-embed .e-vizstage{position:relative;}
+#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:rgba(247,250,253,.78);backdrop-filter:blur(2px);border-radius:12px;text-align:center;padding:16px;}
+#est-embed .e-vizspin{width:34px;height:34px;border-radius:50%;border:3px solid #cfe0f2;border-top-color:#2f6bff;animation:e-vizspin .9s linear infinite;}
+@keyframes e-vizspin{to{transform:rotate(360deg);}}
+#est-embed .e-vizloading b{font-size:14px;color:#0c0c0d;}
+#est-embed .e-vizloading span{font-size:11.5px;color:#6a6a70;max-width:230px;line-height:1.4;}
+</style></head>
+<body><div class="est-stage"><div id="est-embed-shell"></div></div>
+<script>
+/* ═══════════════════════════════════════════════════
+   ESTIMATOR CONFIG
+═══════════════════════════════════════════════════ */
+const E_CONFIG = {
+  companyName: "Your Company",
+  accentColor: "#2f6bff",
+  ctaText: "Book a Free Inspection",
+  ctaUrl: "#",
+  webhookUrl: "https://services.leadconnectorhq.com/hooks/aUs7E5m1gmLXoeIV3WM9/webhook-trigger/ef3ddaf4-7cde-4c97-90f6-28560e86346d",
+  /* POOL pricing = fixed BASE cost (excavation, plumbing, equipment, permits)
+     + water-surface AREA × per-sq-ft. Base+area handles the fact that pools
+     have large fixed costs that don't shrink with size. Ranges reflect
+     2024–25 US inground averages, fully installed (materials + labor). */
+  /* Each pool type has interior finish / water-tone options. `hex` tints the
+     color chip; `desc` is the phrase fed to the AI prompt for the visualizer. */
+  poolColors: [
+    {name:"Caribbean Blue",hex:"#2a9dc9",desc:"bright caribbean blue water"},
+    {name:"Deep Blue",hex:"#1c5a8a",desc:"deep blue plaster water"},
+    {name:"Lagoon Green",hex:"#2e8b7f",desc:"lagoon green pebble water"},
+    {name:"Pearl White",hex:"#dfe7e8",desc:"crisp white plaster water"},
+    {name:"Midnight",hex:"#2b3a44",desc:"dark black-pebble-finish water"},
+    {name:"Aqua",hex:"#46b6c4",desc:"aqua glass-tile water"},
+  ],
+  pricing: {
+    "vinyl":      { label:"Vinyl Liner",        baseLow:22000, baseHigh:32000, perLow:45, perHigh:75,  note:"Lowest cost · liner every ~8–12 yrs",
+      colors:[{name:"Caribbean Blue",hex:"#2a9dc9",desc:"bright caribbean blue water"},{name:"Deep Blue",hex:"#1c5a8a",desc:"deep blue plaster water"},{name:"Lagoon Green",hex:"#2e8b7f",desc:"lagoon green pebble water"},{name:"Pearl White",hex:"#dfe7e8",desc:"crisp white plaster water"},{name:"Midnight",hex:"#2b3a44",desc:"dark black-pebble-finish water"},{name:"Aqua",hex:"#46b6c4",desc:"aqua glass-tile water"}] },
+    "fiberglass": { label:"Fiberglass",         baseLow:28000, baseHigh:42000, perLow:55, perHigh:95,  note:"Fast install · low maintenance",
+      colors:[{name:"Caribbean Blue",hex:"#2a9dc9",desc:"bright caribbean blue water"},{name:"Deep Blue",hex:"#1c5a8a",desc:"deep blue plaster water"},{name:"Lagoon Green",hex:"#2e8b7f",desc:"lagoon green pebble water"},{name:"Pearl White",hex:"#dfe7e8",desc:"crisp white plaster water"},{name:"Midnight",hex:"#2b3a44",desc:"dark black-pebble-finish water"},{name:"Aqua",hex:"#46b6c4",desc:"aqua glass-tile water"}] },
+    "gunite":     { label:"Gunite / Concrete",  baseLow:35000, baseHigh:55000, perLow:70, perHigh:130, note:"Fully custom shape · most durable",
+      colors:[{name:"Caribbean Blue",hex:"#2a9dc9",desc:"bright caribbean blue water"},{name:"Deep Blue",hex:"#1c5a8a",desc:"deep blue plaster water"},{name:"Lagoon Green",hex:"#2e8b7f",desc:"lagoon green pebble water"},{name:"Pearl White",hex:"#dfe7e8",desc:"crisp white plaster water"},{name:"Midnight",hex:"#2b3a44",desc:"dark black-pebble-finish water"},{name:"Aqua",hex:"#46b6c4",desc:"aqua glass-tile water"}] },
+  },
+  /* decking / patio around the pool — additive $ ranges (region-adjusted) */
+  deckAdd: {
+    "none":   { label:"No Decking",          low:0,     high:0,     note:"Pool only · no surrounding patio" },
+    "small":  { label:"Small Deck / Border", low:3000,  high:8000,  note:"Narrow walk-around border" },
+    "medium": { label:"Medium Patio",        low:8000,  high:18000, note:"Full patio + lounge space" },
+    "large":  { label:"Large Entertaining",  low:18000, high:40000, note:"Expansive patio, multiple zones" },
+  },
+  /* optional features / add-ons — flat $ ranges ADDED to the estimate */
+  addons: {
+    "heater":     { label:"Pool Heater",              low:2500, high:6000,  icon:"🔥", desc:"Gas or heat-pump water heating" },
+    "cover":      { label:"Automatic / Safety Cover", low:2000, high:12000, icon:"🛡️", desc:"Auto or manual safety cover" },
+    "saltwater":  { label:"Saltwater System",         low:1500, high:3000,  icon:"🧂", desc:"Salt chlorination · softer water" },
+    "lighting":   { label:"LED Pool Lighting",        low:700,  high:2500,  icon:"💡", desc:"Color-changing underwater LEDs" },
+    "waterfall":  { label:"Waterfall / Water Feature", low:2000, high:8000, icon:"⛲", desc:"Rock waterfall, sheer descent, jets" },
+    "spa":        { label:"Attached Spa / Hot Tub",   low:8000, high:20000, icon:"♨️", desc:"Integrated spillover spa" },
+    "automation": { label:"Smart Automation",         low:1500, high:4500,  icon:"📱", desc:"App control of pumps, heat, lights" },
+    "slide-board":{ label:"Slide / Diving Board",     low:1500, high:6000,  icon:"🤿", desc:"Water slide or diving board, installed" },
+  },
+  /* excavation terrain difficulty (applies to construction subtotal) */
+  terrainMult: { "flat":1.00, "gentle":1.12, "sloped":1.30, "steep":1.55 },
+  /* site access for excavators & equipment */
+  accessMult:  { "easy":1.00, "moderate":1.15, "difficult":1.35 },
+  regionMult:  { "northeast":1.15, "west-coast":1.25, "midwest":0.97, "southeast":0.94, "southwest":1.02, "mountain":1.06, "national":1.00 },
+  /* project type as a fraction of a full new build's construction cost */
+  projectMult: { "new":1.00, "resurface":0.28, "replace-liner":0.18, "conversion":0.14 },
+};
+</script>
+<script>
+/* ═══ Build and inject estimator HTML into shell ═══ */
+/* All functions global so inline handlers (oninput/onclick) can reach them */
+var shell = document.getElementById('est-embed-shell');
+shell.innerHTML = `
+<div id="est-embed">
+  <div class="e-topbar">
+    <div class="e-tlogo"><div class="e-ldot"></div>Pool<span>Estimator</span></div>
+    <div class="e-tstep" id="e-tstep">Step <b>1</b> of 11 — Location</div>
+  </div>
+  <div class="e-prog"><div class="e-pfill" id="e-pfill" style="width:9%"></div></div>
+
+  <div class="e-app">
+
+  <!-- STEP 1 -->
+  <div class="e-sp active" id="e-sp1">
+    <div class="e-sbody">
+      <div class="e-zippanel" id="e-zippanel">
+        <div class="e-shdr">
+          <span class="e-seye">Get started</span>
+          <div class="e-stitle">What's your<br><em>ZIP code?</em></div>
+          <div class="e-ssub">We use this to estimate local labor and material pricing for your area. Next, you'll trace where you want the pool.</div>
+        </div>
+        <div class="e-zipwrap">
+          <label class="e-ziplabel" for="e-zipIn">Your ZIP code</label>
+          <input type="text" class="e-zipinput" id="e-zipIn" maxlength="5" inputmode="numeric" placeholder="e.g. 91401" oninput="eHandleZip(this.value)">
+          <div class="e-ziphint">We use this to estimate local pricing.</div>
+        </div>
+        <div class="e-btnrow"><button class="e-btnmain" id="e-zipcont" onclick="eZipNext()" disabled>Continue →</button></div>
+      </div>
+      <div class="e-addrpanel" id="e-addrpanel" style="display:none">
+        <div class="e-shdr">
+          <span class="e-seye">Your property</span>
+          <div class="e-stitle">What's the<br><em>Property Address?</em></div>
+          <div class="e-ssub">Enter your address, then place your pool: pick a shape, drag ✥ to move it, drag ↻ to rotate, and size it below.</div>
+        </div>
+      <div class="e-asearch">
+        <div class="e-asearch-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <input type="text" class="e-asearch-input" id="e-addrIn" placeholder="Start typing a US address..." autocomplete="off" oninput="eHandleAddrInput(event)" onkeydown="eHandleAddrKey(event)">
+        <div class="e-suggestions" id="e-suggestions"></div>
+      </div>
+      <div class="e-mapwrap" id="e-mapwrap">
+        <div class="e-maptb">
+          <button class="e-mtbtn on" id="e-btnrect" onclick="ePoolMode('rect')">▭ Rectangle</button>
+          <button class="e-mtbtn" id="e-btnfree" onclick="ePoolMode('freeform')">✎ Freeform Curve</button>
+          <button class="e-mtbtn" id="e-btntrace" onclick="ePoolMode('straight')">📐 Straight Trace</button>
+          <button class="e-mtbtn del" onclick="eResetPool()">Reset</button>
+          <button class="e-mtbtn" id="e-btnhd" onclick="eToggleImagery()">HD: On</button>
+          <div class="e-mstat" id="e-mstat">Drag ✥ to move · drag ↻ to rotate · size below</div>
+        </div>
+        <div id="e-mapel"></div>
+        <div class="e-mhint"><strong>Three ways to place your pool:</strong> <b>▭ Rectangle</b> — drag ✥ to move, ↻ to rotate, size it below. <b>✎ Freeform Curve</b> — press and drag to draw a smooth curvy outline. <b>📐 Straight Trace</b> — click each corner, double-click to finish. Scroll to zoom; Reset clears.</div>
+      </div>
+      <div class="e-mresult" id="e-mresult">
+        <div>
+          <div class="e-mrn" id="e-mrn">—</div>
+          <div class="e-mrl">sq ft pool surface &nbsp;<span class="e-mrbadge">✓ Measured via satellite</span></div>
+        </div>
+        <div class="e-mrsq" id="e-msq">— sq ft</div>
+        <div class="e-mredit" onclick="eClearDrawing()">Re-draw →</div>
+      </div>
+      <div class="e-card" id="e-slopecard" style="display:none;padding:12px 16px;margin-top:10px">
+        <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--al);margin-bottom:8px">Pool size</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div id="e-slopeinfo" style="font-size:12px;color:var(--mu)">Pool footprint measured from satellite</div>
+          <div id="e-truearea" style="font-size:13px;color:#9cc8ee;font-weight:700">Pool surface: — sq ft</div>
+        </div>
+        <div style="font-size:11px;color:var(--mu);margin-top:8px">Approximate water-surface size. Pool type, decking, terrain and access are handled on later steps.</div>
+      </div>
+      <button class="e-manualbtn" id="e-manualbtn" onclick="eToggleManual()" style="display:none">Hide size picker ↑</button>
+      <div class="e-card e-sldwrap e-poolsize" id="e-sldwrap" style="display:block">
+        <div id="e-sizehdr" style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">📐 Rectangle Size <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6a6a70">— or draw a shape on the map above</span></div>
+        <div class="e-presets">
+          <button type="button" class="e-preset" onclick="ePoolPreset(250)">Small<span>~250 sq ft · 12×20</span></button>
+          <button type="button" class="e-preset" onclick="ePoolPreset(450)">Medium<span>~450 sq ft · 16×28</span></button>
+          <button type="button" class="e-preset" onclick="ePoolPreset(800)">Large<span>~800 sq ft · 20×40</span></button>
+        </div>
+        <div class="e-slddisp">
+          <div class="e-sldval" id="e-sldval">450</div>
+          <div class="e-sldunit">sq ft</div>
+        </div>
+        <input type="range" class="e-sld" id="e-sld" min="150" max="1200" step="10" value="450" oninput="eHandleSlider(this.value)">
+        <div class="e-sldlbl"><span>150 sq ft</span><span>650</span><span>1,200 sq ft</span></div>
+        <div style="font-size:11px;color:#3a6286;margin-top:10px;line-height:1.6">Fine-tune with the slider, then <b>drag ✥ to move</b> and <b>↻ to rotate</b> the pool on the map.</div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eZipBack()">← Back</button>
+        <button class="e-btnmain" id="e-btn1" onclick="eGo(2)" disabled>Continue — Pool Type →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 — MATERIAL -->
+  <div class="e-sp" id="e-sp2">
+    <div class="e-shdr">
+      <span class="e-seye">Step 2 of 9</span>
+      <div class="e-stitle">What Type of<br><em>Pool?</em></div>
+      <div class="e-ssub">Pool type is the biggest price driver. Each includes a base install cost plus a per-sq-ft rate for the water surface — fully installed. Pick a type, then choose a water finish — you'll preview it on your backyard at the Site Access step.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-matlist"></div></div>
+      <div class="e-card" id="e-colorcard" style="display:none;padding:14px 16px;margin-top:10px">
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Choose a water / finish color</div>
+        <div class="e-colorrow" id="e-colorrow"></div>
+      </div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(1,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn2" onclick="eGo(3)" disabled>Continue — Add-Ons →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots2"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 — FEATURES / ADD-ONS (optional, multi-select) -->
+  <div class="e-sp" id="e-sp3">
+    <div class="e-shdr">
+      <span class="e-seye">Step 3 of 9</span>
+      <div class="e-stitle">Any Features or<br><em>Add-Ons?</em></div>
+      <div class="e-ssub">Optional — select any extras you'd like included. Each adds to your estimate. Skip if it's just the base service.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-addonlist"></div></div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(2,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn3" onclick="eGo(4)">Continue — Quality →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots3"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4 — STORIES -->
+  <div class="e-sp" id="e-sp4">
+    <div class="e-shdr">
+      <span class="e-seye">Step 4 of 9</span>
+      <div class="e-stitle">How Much<br><em>Decking / Patio?</em></div>
+      <div class="e-ssub">The paved area around the pool is a big part of the budget. Pick how much decking you want.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePick(this,'decking','none')"><div class="e-oi-em">🚫</div><div class="e-oi-info"><div class="e-oi-lbl">No Decking</div><div class="e-oi-desc">Pool only · deck later or existing surface</div></div><div class="e-oi-tag">+$0</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'decking','small')"><div class="e-oi-em">▫️</div><div class="e-oi-info"><div class="e-oi-lbl">Small Deck / Border</div><div class="e-oi-desc">Narrow walk-around border around the pool</div></div><div class="e-oi-tag">+$3k–8k</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'decking','medium')"><div class="e-oi-em">◻️</div><div class="e-oi-info"><div class="e-oi-lbl">Medium Patio</div><div class="e-oi-desc">Full patio with lounge and seating space</div></div><div class="e-oi-tag">+$8k–18k</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'decking','large')"><div class="e-oi-em">⬜</div><div class="e-oi-info"><div class="e-oi-lbl">Large Entertaining</div><div class="e-oi-desc">Expansive patio, multiple zones, premium finish</div></div><div class="e-oi-tag">+$18k–40k</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(3,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn4" onclick="eGo(5)" disabled>Continue — Project Type →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots4"></div>
+    </div>
+  </div>
+
+  <!-- STEP 5 — PROJECT TYPE -->
+  <div class="e-sp" id="e-sp5">
+    <div class="e-shdr">
+      <span class="e-seye">Step 5 of 9</span>
+      <div class="e-stitle">What Type of<br><em>Project?</em></div>
+      <div class="e-ssub">Resurfacing or replacing a liner costs far less than building a brand-new pool.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em">🏗</div><div class="e-oi-info"><div class="e-oi-lbl">New Pool Build</div><div class="e-oi-desc">Brand-new inground pool from the ground up</div></div><div class="e-oi-tag">Full estimate</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','resurface')"><div class="e-oi-em">🔧</div><div class="e-oi-info"><div class="e-oi-lbl">Resurface / Remodel</div><div class="e-oi-desc">Re-plaster/refinish an existing pool shell</div></div><div class="e-oi-tag">~28% of new</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','replace-liner')"><div class="e-oi-em">🔄</div><div class="e-oi-info"><div class="e-oi-lbl">Replace Vinyl Liner</div><div class="e-oi-desc">Swap a worn liner in an existing vinyl pool</div></div><div class="e-oi-tag">~18% of new</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','conversion')"><div class="e-oi-em">🧂</div><div class="e-oi-info"><div class="e-oi-lbl">Equipment / Conversion</div><div class="e-oi-desc">Saltwater conversion, new pump/heater, upgrades</div></div><div class="e-oi-tag">~14% of new</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(4,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn5" onclick="eGo(6)" disabled>Continue — Urgency →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots5"></div>
+    </div>
+  </div>
+
+  <!-- STEP 6 — URGENCY -->
+  <div class="e-sp" id="e-sp6">
+    <div class="e-shdr">
+      <span class="e-seye">Step 6 of 9</span>
+      <div class="e-stitle">How Soon Do You<br><em>Need This Done?</em></div>
+      <div class="e-ssub">This helps us match you with the right contractor and get you scheduled quickly.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em">🚨</div><div class="e-oi-info"><div class="e-oi-lbl">ASAP — Event or Deadline</div><div class="e-oi-desc">Need it done fast for a sale, event, or HOA deadline</div></div><div class="e-oi-tag" style="color:var(--red)">Priority</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em">⚡</div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–2 Weeks</div><div class="e-oi-desc">Urgent but not an emergency — needs attention soon</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em">📅</div><div class="e-oi-info"><div class="e-oi-lbl">Within 1–3 Months</div><div class="e-oi-desc">Planning ahead — no immediate emergency</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em">🔄</div><div class="e-oi-info"><div class="e-oi-lbl">Flexible — No Rush</div><div class="e-oi-desc">Just exploring options and getting estimates for now</div></div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(5,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn6" onclick="eGo(7)" disabled>Continue — Terrain →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots6"></div>
+    </div>
+  </div>
+
+  <!-- STEP 7 — DAMAGES -->
+  <div class="e-sp" id="e-sp7">
+    <div class="e-shdr">
+      <span class="e-seye">Step 7 of 9</span>
+      <div class="e-stitle">What's the<br><em>Terrain Like?</em></div>
+      <div class="e-ssub">Excavating on a slope means more digging, hauling, and retaining work. Flat lots are cheapest to build on.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePickQ(this,'terrain','flat')"><div class="e-oi-em">🟩</div><div class="e-oi-info"><div class="e-oi-lbl">Flat / Level</div><div class="e-oi-desc">Even ground · easiest to work · no grading needed</div></div><div class="e-oi-tag">Base</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','gentle')"><div class="e-oi-em">📐</div><div class="e-oi-info"><div class="e-oi-lbl">Gentle Slope</div><div class="e-oi-desc">Slight grade · minor leveling or prep</div></div><div class="e-oi-tag">+10%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','sloped')"><div class="e-oi-em">⛰️</div><div class="e-oi-info"><div class="e-oi-lbl">Noticeably Sloped</div><div class="e-oi-desc">Real grade · more prep, hauling, and access effort</div></div><div class="e-oi-tag">+25%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','steep')"><div class="e-oi-em">🧗</div><div class="e-oi-info"><div class="e-oi-lbl">Steep / Terraced</div><div class="e-oi-desc">Hillside · may need retaining or terracing work</div></div><div class="e-oi-tag">+45%</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(6,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn7" onclick="eGo(8)" disabled>Continue — Site Access →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots7"></div>
+    </div>
+  </div>
+
+  <!-- STEP 8 — INSURANCE -->
+  <div class="e-sp" id="e-sp8">
+    <div class="e-shdr">
+      <span class="e-seye">Step 8 of 9</span>
+      <div class="e-stitle">How's the<br><em>Site Access?</em></div>
+      <div class="e-ssub">Can equipment and materials reach the work area easily? Tight access means more hand-hauling and labor.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px">
+        <div class="e-olist">
+          <div class="e-oi" onclick="ePickQ(this,'access','easy')"><div class="e-oi-em">🚜</div><div class="e-oi-info"><div class="e-oi-lbl">Easy — Wide Open</div><div class="e-oi-desc">Trucks/equipment can reach the area · driveway or wide gate</div></div><div class="e-oi-tag">Base</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'access','moderate')"><div class="e-oi-em">🚪</div><div class="e-oi-info"><div class="e-oi-lbl">Moderate</div><div class="e-oi-desc">Standard gate · some hand-hauling with wheelbarrows</div></div><div class="e-oi-tag">+12%</div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'access','difficult')"><div class="e-oi-em">🧱</div><div class="e-oi-info"><div class="e-oi-lbl">Difficult — Tight</div><div class="e-oi-desc">Narrow gate, stairs, or long carry · mostly by hand</div></div><div class="e-oi-tag">+28%</div><div class="e-oi-radio">✓</div></div>
+        </div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(7,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn8" onclick="eGo(9)" disabled>Continue — Your Info →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots8"></div>
+    </div>
+  </div>
+
+  <!-- STEP 9 — LEAD FORM -->
+  <div class="e-sp" id="e-sp9">
+    <div class="e-shdr">
+      <span class="e-seye">Step 9 of 9</span>
+      <div class="e-stitle">Almost Done —<br><em>Your Info.</em></div>
+      <div class="e-ssub">Enter your contact details and we'll generate your personalized estimate. We never share your information.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card">
+        <div class="e-fr2">
+          <div class="e-fg"><label class="e-fl">First Name *</label><input class="e-fi" id="e-fn" type="text" placeholder="John" oninput="eChkForm()"></div>
+          <div class="e-fg"><label class="e-fl">Last Name *</label><input class="e-fi" id="e-ln" type="text" placeholder="Smith" oninput="eChkForm()"></div>
+        </div>
+        <div class="e-fr2">
+          <div class="e-fg"><label class="e-fl">Phone Number *</label><input class="e-fi" id="e-ph" type="tel" placeholder="(555) 000-0000" oninput="eChkForm()"></div>
+          <div class="e-fg"><label class="e-fl">Email Address *</label><input class="e-fi" id="e-em" type="email" placeholder="john@email.com" oninput="eChkForm()"></div>
+        </div>
+        <div class="e-fg"><label class="e-fl">Additional Notes (Optional)</label><input class="e-fi" id="e-nt" type="text" placeholder="Preferred shape/size, spa, timeline, financing questions..."></div>
+        <div class="e-consent">By submitting you consent to receive communications from <b id="e-cco">Your Company</b> regarding your pool estimate. Message &amp; data rates may apply. Reply STOP to opt out. We never sell your information.</div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(8,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn9" onclick="eDoSubmit()" disabled>Generate My Estimate →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots9"></div>
+    </div>
+  </div>
+
+  <!-- STEP 10 — LOADING -->
+  <div class="e-sp" id="e-sp10">
+    <div class="e-ldpanel">
+      <div class="e-ldring"></div>
+      <div style="text-align:center">
+        <div style="font-family:'Space Grotesk','Inter',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px;color:#fff">Calculating Your Estimate</div>
+        <div class="e-ldsteps">
+          <div class="e-ldstp act" id="e-ld1"><div class="e-lddot"></div>Measuring your pool size</div>
+          <div class="e-ldstp" id="e-ld2"><div class="e-lddot"></div>Estimating base build & water-surface cost</div>
+          <div class="e-ldstp" id="e-ld3"><div class="e-lddot"></div>Applying regional labor rates</div>
+          <div class="e-ldstp" id="e-ld4"><div class="e-lddot"></div>Adding decking, features &amp; site factors</div>
+          <div class="e-ldstp" id="e-ld5"><div class="e-lddot"></div>Generating your estimate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="e-sp" id="e-spR">
+    <div class="e-rpage">
+      <div class="e-rhero">
+        <div class="e-rbadge">✓ Estimate Ready</div>
+        <div class="e-rlbl">Estimated Project Cost</div>
+        <div class="e-rrange" id="e-rrange">$— — <em>$—</em></div>
+        <div class="e-rnote" id="e-rnote"></div>
+      </div>
+      <div class="e-rgrid">
+        <div class="e-rbox"><div class="e-rbv" id="e-rv1">—</div><div class="e-rbl">Pool Size</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv2">—</div><div class="e-rbl">Pool Type</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv3">—</div><div class="e-rbl">Decking</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv4">—</div><div class="e-rbl">Project</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv5">—</div><div class="e-rbl">Region</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv6">—</div><div class="e-rbl">Add-Ons</div></div>
+      </div>
+      <div class="e-disc">This is a preliminary estimate based on your inputs. Final pricing varies based on local labor rates, exact pool size and shape, soil and rock conditions, permits and engineering, equipment selection, and site access. An on-site consultation is required for a firm quote.</div>
+      <div class="e-rcta">
+        <button class="e-btnmain" id="e-rctabtn">Book a Free Inspection</button>
+        <div class="e-rctasub">Free · No obligation · Response within 24 hours</div>
+        <button class="e-restart" onclick="eRestart()">← Start a new estimate</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /e-app -->
+</div><!-- /est-embed -->
+`;
+
+/* ═══ ESTIMATOR JAVASCRIPT ═══ */
+var eS = {
+  addr:'', sqft:0, planSqft:0, usedMap:false, lat:0, lon:0,
+  material:'', decking:'', project:'',
+  region:'national', regionLabel:'National Average',
+  urgency:'', terrain:'', access:'', addons:{},
+  color:null, photoOrig:null, photoNew:null, vizView:'orig', photoKey:''
+};
+var E_TOTAL = 11;
+var eCur = 1;
+var eLmap = null;
+var eManualOpen = false;
+/* ── Draggable / rotatable pool SHAPE (rectangle, oval, round, kidney) ── */
+var ePoolPoly=null, eMoveHandle=null, eRotHandle=null;
+var eShapeType='rect', eShapeAngle=0, eShapeCenter=null;   // eShapeAngle in radians
+var FT_PER_DEG=364000;
+/* Unit shape templates: arrays of {x,y}, roughly centered at origin */
+function eShapeTemplate(type){
+  var i,a,pts=[];
+  if(type==='rect'){ var w=1,l=1.9; return [{x:-w/2,y:-l/2},{x:w/2,y:-l/2},{x:w/2,y:l/2},{x:-w/2,y:l/2}]; }
+  if(type==='round'){ for(i=0;i<40;i++){ a=i/40*2*Math.PI; pts.push({x:Math.cos(a),y:Math.sin(a)}); } return pts; }
+  if(type==='oval'){ for(i=0;i<40;i++){ a=i/40*2*Math.PI; pts.push({x:Math.cos(a)*1.0,y:Math.sin(a)*1.7}); } return pts; }
+  if(type==='kidney'){ // curvy freeform kidney bean
+    for(i=0;i<48;i++){ a=i/48*2*Math.PI;
+      var r=1 + 0.28*Math.sin(a) - 0.18*Math.cos(2*a);
+      var x=Math.cos(a)*r, y=Math.sin(a)*r*1.5;
+      x += 0.22*Math.sin(2*a);           // pinch one side for the kidney curve
+      pts.push({x:x,y:y}); }
+    return pts;
+  }
+  return eShapeTemplate('rect');
+}
+function ePolyArea(pts){ var s=0,n=pts.length; for(var i=0;i<n;i++){ var j=(i+1)%n; s+=pts[i].x*pts[j].y - pts[j].x*pts[i].y; } return Math.abs(s/2); }
+function eBuildShapePoints(center, area, type, angle){
+  var t=eShapeTemplate(type), A=ePolyArea(t);
+  var scale=Math.sqrt(area/A);                       // scale so polygon area == target sqft (ft²)
+  var cosA=Math.cos(angle), sinA=Math.sin(angle), cosLat=Math.cos(center.lat*Math.PI/180);
+  var latlngs=[], maxR=0;
+  for(var i=0;i<t.length;i++){
+    var x=t[i].x*scale, y=t[i].y*scale;              // feet
+    var rx=x*cosA - y*sinA, ry=x*sinA + y*cosA;      // rotate
+    var r=Math.sqrt(rx*rx+ry*ry); if(r>maxR) maxR=r;
+    latlngs.push([center.lat + ry/FT_PER_DEG, center.lng + rx/(FT_PER_DEG*cosLat)]);
+  }
+  return {latlngs:latlngs, radiusFt:maxR};
+}
+function eEnsurePoolShape(center){
+  if(!eLmap) return;
+  var area=parseInt(document.getElementById('e-sld').value)||450;
+  eShapeCenter = center || eShapeCenter || (eMoveHandle?eMoveHandle.getLatLng():eLmap.getCenter());
+  if(eShapeCenter && eShapeCenter.lat===undefined){ eShapeCenter=L.latLng(eShapeCenter); }
+  var sp=eBuildShapePoints(eShapeCenter, area, eShapeType, eShapeAngle);
+  if(!ePoolPoly){ ePoolPoly=L.polygon(sp.latlngs,{color:'#2f6bff',weight:2,fillColor:'#5b86ff',fillOpacity:0.35,interactive:false}).addTo(eLmap); }
+  else { ePoolPoly.setLatLngs(sp.latlngs); }
+  // MOVE handle at center
+  if(!eMoveHandle){
+    var mi=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50%;background:#2f6bff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;cursor:move">✥</div>',iconSize:[30,30],iconAnchor:[15,15]});
+    eMoveHandle=L.marker(eShapeCenter,{draggable:true,icon:mi,zIndexOffset:1000}).addTo(eLmap);
+    eMoveHandle.on('drag',function(e){ eEnsurePoolShape(e.target.getLatLng()); });
+    eMoveHandle.on('dragend',function(){ eSyncPoolArea(); });
+  } else { eMoveHandle.setLatLng(eShapeCenter); }
+  // ROTATE handle out past the top edge, along the current angle
+  var cosLat=Math.cos(eShapeCenter.lat*Math.PI/180), rOut=sp.radiusFt+14;
+  var hx=-Math.sin(eShapeAngle)*rOut, hy=Math.cos(eShapeAngle)*rOut;
+  var rLL=L.latLng(eShapeCenter.lat + hy/FT_PER_DEG, eShapeCenter.lng + hx/(FT_PER_DEG*cosLat));
+  if(!eRotHandle){
+    var ri=L.divIcon({className:'',html:'<div style="width:28px;height:28px;border-radius:50%;background:#15803d;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;cursor:grab">↻</div>',iconSize:[28,28],iconAnchor:[14,14]});
+    eRotHandle=L.marker(rLL,{draggable:true,icon:ri,zIndexOffset:1001}).addTo(eLmap);
+    eRotHandle.on('drag',function(e){
+      var p=e.target.getLatLng(), cl=Math.cos(eShapeCenter.lat*Math.PI/180);
+      var dx=(p.lng-eShapeCenter.lng)*FT_PER_DEG*cl, dy=(p.lat-eShapeCenter.lat)*FT_PER_DEG;
+      eShapeAngle=Math.atan2(dx, dy);                // bearing → rotation
+      eEnsurePoolShape(eShapeCenter);
+    });
+    eRotHandle.on('dragend',function(){ eSyncPoolArea(); });
+  } else { eRotHandle.setLatLng(rLL); }
+  eSyncPoolArea();
+}
+function eSetShape(type, el){
+  eShapeType=type;
+  document.querySelectorAll('#est-embed .e-shapebtn').forEach(function(b){ b.classList.remove('on'); });
+  if(el) el.classList.add('on');
+  if(eLmap && ePoolPoly) eEnsurePoolShape(eShapeCenter);
+}
+function eSyncPoolArea(){
+  var area=parseInt(document.getElementById('e-sld').value)||450;
+  eS.sqft=area; eS.planSqft=area; eS.usedMap=true; eS.poolPlaced=true; eS.poolShape=eShapeType;
+  var mrn=document.getElementById('e-mrn'); if(mrn) mrn.textContent=area.toLocaleString();
+  var msq=document.getElementById('e-msq'); if(msq) msq.textContent=area.toLocaleString()+' sq ft pool surface';
+  var ta=document.getElementById('e-truearea'); if(ta) ta.textContent='Pool surface area: '+area.toLocaleString()+' sq ft';
+  var si=document.getElementById('e-slopeinfo'); if(si) si.textContent='Drag ✥ to move · drag ↻ to rotate · pick a shape & size';
+  var res=document.getElementById('e-mresult'); if(res) res.style.display='flex';
+  var card=document.getElementById('e-slopecard'); if(card) card.style.display='block';
+  var st=document.getElementById('e-mstat'); if(st) st.textContent='Drag ✥ to move · drag the green ↻ handle to rotate';
+  eCheckBtn1();
+}
+function eRemovePoolShape(){
+  if(!eLmap) return;
+  if(ePoolPoly){ eLmap.removeLayer(ePoolPoly); ePoolPoly=null; }
+  if(eMoveHandle){ eLmap.removeLayer(eMoveHandle); eMoveHandle=null; }
+  if(eRotHandle){ eLmap.removeLayer(eRotHandle); eRotHandle=null; }
+}
+var eAddrTimer = null;
+var eDrawModeActive = false;
+var eClickPts = [];
+var eClickMarkers = [];
+var eClickPoly = null;
+var eClickLine = null;
+var eFacets = [];
+var eFacetTotal = 0;
+var eMeasurePitch = '4/12';
+var eTileStd = null, eTileHD = null, eImageryHD = true;
+var eTool = 'draw';
+var eMeasurePts = [], eMeasureMarkers = [], eMeasureLine = null, eMeasureLabels = [], eMeasureLines = [];
+
+
+
+/* ADDRESS SEARCH */
+function eHandleAddrInput(e) {
+  var val = e.target.value;
+  eS.addr = '';
+  eS.sqft = eS.usedMap ? eS.sqft : 0;
+  eCheckBtn1();
+  clearTimeout(eAddrTimer);
+  var box = document.getElementById('e-suggestions');
+  if (val.length < 3) { box.classList.remove('open'); return; }
+  box.innerHTML = '<div class="e-suggestion-loading"><span class="e-spin-sm"></span>Searching US addresses...</div>';
+  box.classList.add('open');
+  eAddrTimer = setTimeout(function() { eSearchAddress(val); }, 450);
+}
+function eHandleAddrKey(e) {
+  if (e.key === 'Escape') document.getElementById('e-suggestions').classList.remove('open');
+}
+function eSearchAddress(query) {
+  var url = 'https://nominatim.openstreetmap.org/search'
+    + '?q=' + encodeURIComponent(query)
+    + '&format=json&addressdetails=1&limit=8&countrycodes=us&bounded=0';
+  fetch(url, { headers:{ 'Accept-Language':'en-US,en;q=0.9', 'User-Agent':'PoolEstimator/1.0' } })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var filtered = (data||[]).filter(function(r){
+      var t=(r.type||'').toLowerCase(), cls=(r.class||'').toLowerCase(), addr=r.address||{};
+      if((addr.country_code||'').toLowerCase()!=='us') return false;
+      var hasNumber = addr.house_number||addr.road;
+      var goodType = ['house','building','residential','yes','apartments','detached','terrace','dormitory','bungalow'].indexOf(t)>-1||cls==='building'||cls==='place'||(cls==='highway'&&hasNumber);
+      var badType = ['country','state','county','city','town','village','ocean','sea','river','lake','park','forest','administrative','boundary','continent'].indexOf(t)>-1;
+      return !badType&&(goodType||hasNumber);
+    });
+    if(!filtered.length) filtered=(data||[]).filter(function(r){ var addr=r.address||{}; return (addr.country_code||'').toLowerCase()==='us'&&(addr.road||addr.house_number)&&!['country','state','county'].includes((r.type||'').toLowerCase()); });
+    eRenderSuggestions(filtered.slice(0,5));
+  }).catch(function(){ eRenderSuggestions([]); });
+}
+function eDetectRegion(stateAbbr) {
+  var s=(stateAbbr||'').toUpperCase();
+  var regions={northeast:['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD'],'west-coast':['CA','WA','OR','HI','AK'],midwest:['IL','IN','OH','MI','WI','MN','IA','MO','ND','SD','NE','KS'],southeast:['TX','FL','GA','NC','SC','VA','WV','AL','MS','TN','KY','AR','LA','OK'],southwest:['AZ','NV','NM','CO'],mountain:['UT','ID','MT','WY']};
+  var labels={northeast:'Northeast','west-coast':'West Coast',midwest:'Midwest',southeast:'Southeast',southwest:'Southwest',mountain:'Mountain'};
+  for(var reg in regions){ if(regions[reg].indexOf(s)>-1){ eS.region=reg; eS.regionLabel=labels[reg]; return; } }
+  eS.region='national'; eS.regionLabel='National Average';
+}
+function eRenderSuggestions(data) {
+  var box=document.getElementById('e-suggestions');
+  if(!data||!data.length){ box.innerHTML='<div class="e-suggestion" style="color:var(--mu);cursor:default">No US addresses found — try adding city or state</div>'; return; }
+  var html='';
+  data.forEach(function(r){
+    var parts=(r.display_name||'').split(',');
+    var main=parts.slice(0,2).join(',').trim(), sub=parts.slice(2,5).join(',').trim();
+    var lat=parseFloat(r.lat), lon=parseFloat(r.lon);
+    var state=''; try{ state=(r.address&&r.address.state_code)||''; }catch(e){}
+    html+='<div class="e-suggestion" onclick="eSelectAddress(\''+eEscQ(r.display_name)+'\',' +lat+','+lon+',\''+state+'\')">'
+      +'<div class="e-suggestion-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>'
+      +'<div><div class="e-suggestion-main">'+eEsc(main)+'</div>'
+      +'<div class="e-suggestion-sub">'+eEsc(sub)+'</div></div></div>';
+  });
+  box.innerHTML=html;
+}
+var E_SOLAR_URL='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/rapid-handler';
+var E_SOLAR_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
+function eSolarPitchCategory(deg){ if(deg<5)return 'flat'; if(deg<15)return 'low'; if(deg<30)return 'medium'; if(deg<40)return 'steep'; return 'very-steep'; }
+function eSolarPreselectPitch(cat){ var els=document.querySelectorAll('.e-oi'); for(var i=0;i<els.length;i++){ var oc=els[i].getAttribute('onclick')||''; if(oc.indexOf("'pitch','"+cat+"'")>=0){ try{ ePick(els[i],'pitch',cat); }catch(e){} break; } } }
+function eSolarShowResult(d){
+  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Property located — now trace where you want the pool, or pick a size below.';
+  var mw=document.getElementById('e-mapwrap');
+  var banner=document.getElementById('e-solarbanner');
+  if(!banner){ banner=document.createElement('div'); banner.id='e-solarbanner'; banner.style.cssText='margin:0 0 12px;padding:12px 14px;border:1px solid #b6e0c2;background:#eef9f1;border-radius:10px;color:#166534;font-size:13px;line-height:1.5'; if(mw&&mw.parentNode) mw.parentNode.insertBefore(banner, mw); }
+  banner.innerHTML='✓ We centered the map on your property. Now <b>trace roughly where the pool will go</b> — click each corner and double-click to finish. Or use the size picker below.';
+}
+function eSolarMeasure(lat, lon){
+  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Locating your property\u2026';
+  fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.found){
+        eS.solarPitchDeg=d.avgPitchDegrees; eS.pitch=eSolarPitchCategory(d.avgPitchDegrees);
+        eMeasurePitch=eDegToPitch(d.avgPitchDegrees);
+        var _ps=document.getElementById('e-pitchsel'); if(_ps) _ps.value=eMeasurePitch;
+        eSolarShowResult(d);
+        if(d.centerLat&&d.centerLng&&eLmap){ eLmap.setView([d.centerLat,d.centerLng],20); setTimeout(function(){ try{eLmap.invalidateSize();}catch(e){} },150); }
+      } else {
+        if(stat) stat.textContent='Trace the intended pool area below, or pick a size.';
+      }
+    })
+    .catch(function(){ if(stat) stat.textContent='Trace the intended pool area below, or pick a size.'; });
+}
+function eSelectAddress(fullAddr, lat, lon, stateAbbr) {
+  document.getElementById('e-addrIn').value=fullAddr.split(',').slice(0,4).join(',');
+  document.getElementById('e-suggestions').classList.remove('open');
+  eS.addr=fullAddr;
+  eGeocodePrecise(fullAddr, lat, lon, stateAbbr);
+}
+function eGeocodePrecise(fullAddr, lat, lon, stateAbbr){
+  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Locating the property\u2026';
+  function proceed(uLat, uLon, uState){ eS.lat=uLat; eS.lon=uLon; eDetectRegion(uState||stateAbbr); eInitMap(uLat, uLon); eSolarMeasure(uLat, uLon); }
+  fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({address:fullAddr}) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d && d.geocoded && d.lat && d.lng){ proceed(d.lat, d.lng, d.state||stateAbbr); } else { proceed(lat, lon, stateAbbr); } })
+    .catch(function(){ proceed(lat, lon, stateAbbr); });
+}
+function eEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function eEscQ(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+/* MAP */
+function eInitMap(lat, lon) {
+  document.getElementById('e-mapwrap').style.display='block';
+  eClearDrawing();
+  if(!eLmap){
+    eLmap=L.map('e-mapel',{ center:[lat,lon], zoom:20, maxZoom:23, zoomControl:true, attributionControl:false, doubleClickZoom:false });
+    eTileStd=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:23,maxNativeZoom:19});
+    eTileHD=L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:23,maxNativeZoom:21,subdomains:['mt0','mt1','mt2','mt3']});
+    (eImageryHD?eTileHD:eTileStd).addTo(eLmap);
+    eLmap.on('click', eOnMapClick);
+    eLmap.on('dblclick', eOnMapDblClick);
+  } else {
+    eLmap.setView([lat,lon],20);
+    setTimeout(function(){ eLmap.invalidateSize(); },100);
+  }
+  if(!eLmap._freeBound){ eLmap.on('mousedown',eFreeStart); eLmap.on('mousemove',eFreeMove); eLmap.on('mouseup',eFreeEnd); eLmap._freeBound=true; }
+  eShapeAngle=0; eShapeCenter=L.latLng(lat,lon);
+  setTimeout(function(){ ePoolMode('rect'); },250);
+}
+function eSetTool(t){
+  eTool=t; eDrawModeActive=(t==='draw');
+  if(eLmap){ eLmap.getContainer().style.cursor=(t==='pan')?'':'crosshair'; if(t==='pan') eLmap.dragging.enable(); else eLmap.dragging.disable(); }
+}
+function eSetDrawMode(active){ eSetTool(active?'draw':'pan'); }
+function eMstat(t){ var st=document.getElementById('e-mstat'); if(st) st.textContent=t; }
+
+/* THREE POOL MODES: rectangle · freeform curve · straight trace */
+var ePoolTool='rect';
+function ePoolMode(m){
+  ePoolTool=m;
+  [['e-btnrect','rect'],['e-btnfree','freeform'],['e-btntrace','straight']].forEach(function(p){ var b=document.getElementById(p[0]); if(b) b.classList.toggle('on', p[1]===m); });
+  eClearDrawing();                                   // wipe any prior shape/drawing
+  var sh=document.getElementById('e-sldwrap'); if(sh) sh.style.display=(m==='rect')?'block':'none';
+  if(!eLmap) return;
+  if(m==='rect'){ eSetTool('pan'); eEnsurePoolShape(eShapeCenter||eLmap.getCenter()); }
+  else if(m==='straight'){ eSetTool('draw'); eMstat('Click each corner of the pool, then double-click to finish.'); }
+  else if(m==='freeform'){ eSetTool('free'); eMstat('Press and drag on the map to draw a smooth pool outline.'); }
+  eCheckBtn1();
+}
+function eResetPool(){ ePoolMode(ePoolTool); }
+
+/* Freeform (freehand) drawing */
+var eFreePts=[], eFreeLine=null, eFreePoly=null, eFreeing=false;
+function eFreeStart(e){ if(ePoolTool!=='freeform') return; eFreeing=true; eFreePts=[e.latlng]; eRemoveFreehand(); eFreeLine=L.polyline(eFreePts,{color:'#2f6bff',weight:3,interactive:false}).addTo(eLmap); }
+function eFreeMove(e){ if(!eFreeing) return; eFreePts.push(e.latlng); if(eFreeLine) eFreeLine.setLatLngs(eFreePts); }
+function eFreeEnd(){
+  if(!eFreeing) return; eFreeing=false;
+  if(eFreePts.length>=3){
+    if(eFreeLine){ eLmap.removeLayer(eFreeLine); eFreeLine=null; }
+    eFreePoly=L.polygon(eFreePts,{color:'#2f6bff',weight:2,fillColor:'#5b86ff',fillOpacity:0.35,interactive:false}).addTo(eLmap);
+    var sq=eCalcSqFt(eFreePts);
+    eShowDrawnArea(sq, 'freeform');
+    eMstat('Curvy pool drawn · '+sq.toLocaleString()+' sq ft. Tap Reset to redraw.');
+  } else { eRemoveFreehand(); eMstat('Draw a larger outline — press and drag around the pool.'); }
+}
+function eRemoveFreehand(){ if(!eLmap) return; if(eFreeLine){ eLmap.removeLayer(eFreeLine); eFreeLine=null; } if(eFreePoly){ eLmap.removeLayer(eFreePoly); eFreePoly=null; } eFreePts=[]; }
+function eShowDrawnArea(sq, shape){
+  eS.sqft=sq; eS.planSqft=sq; eS.usedMap=true; eS.poolPlaced=true; eS.poolShape=shape;
+  var mrn=document.getElementById('e-mrn'); if(mrn) mrn.textContent=sq.toLocaleString();
+  var msq=document.getElementById('e-msq'); if(msq) msq.textContent=sq.toLocaleString()+' sq ft pool surface';
+  var ta=document.getElementById('e-truearea'); if(ta) ta.textContent='Pool surface area: '+sq.toLocaleString()+' sq ft';
+  var si=document.getElementById('e-slopeinfo'); if(si) si.textContent='Measured from your drawing';
+  var res=document.getElementById('e-mresult'); if(res) res.style.display='flex';
+  var card=document.getElementById('e-slopecard'); if(card) card.style.display='block';
+  eCheckBtn1();
+}
+function eOnMapClick(e) {
+  if(eTool==='measure'){ eMeasureClick(e); return; }
+  if(eTool!=='draw') return;
+  var pt=e.latlng; eClickPts.push(pt);
+  var m=L.circleMarker(pt,{radius:5,color:'#ffffff',fillColor:'#9cc8ee',fillOpacity:1,weight:2,interactive:false}).addTo(eLmap);
+  eClickMarkers.push(m);
+  eRedrawShape();
+  var n=eClickPts.length;
+  document.getElementById('e-mstat').textContent=n<3?n+' point'+(n>1?'s':'')+' placed — need 3 minimum (double-click to finish)':n+' points — double-click or click Clear when done';
+}
+function eOnMapDblClick(e){ if(eTool==='measure'){ if(eMeasurePts.length>=2) eFinishMeasure(); return; } if(eTool==='draw'&&eClickPts.length>=3) eFinishPolygon(); }
+function eRedrawShape() {
+  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
+  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
+  if(eClickPts.length>=2) eClickLine=L.polyline(eClickPts,{color:'#9cc8ee',weight:2,opacity:0.8,interactive:false}).addTo(eLmap);
+  if(eClickPts.length>=3){
+    eClickPoly=L.polygon(eClickPts,{color:'#9cc8ee',weight:2,fillColor:'#2f6bff',fillOpacity:0.22,interactive:false}).addTo(eLmap);
+  }
+  eUpdateAreaDisplay();
+}
+function eFinishPolygon() {
+  if(eClickPts.length<3) return;
+  var sqft=eCalcSqFt(eClickPts);
+  var poly=L.polygon(eClickPts,{color:'#7ad19a',weight:2,fillColor:'#2f6bff',fillOpacity:0.28,interactive:false}).addTo(eLmap);
+  eFacets.push({sqft:sqft, poly:poly});
+  eFacetTotal+=sqft;
+  eClickMarkers.forEach(function(m){ if(eLmap) eLmap.removeLayer(m); }); eClickMarkers=[];
+  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
+  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
+  eClickPts=[];
+  eUpdateAreaDisplay();
+  document.getElementById('e-mstat').textContent=eFacets.length+' section'+(eFacets.length>1?'s':'')+' traced · total '+eCurrentPlanTotal().toLocaleString()+' sq ft. Trace another, or Clear.';
+  eSetDrawMode(true);
+}
+function eCalcSqFt(pts) {
+  if(!pts||pts.length<3) return 0;
+  var R=6378137, area=0, n=pts.length;
+  for(var i=0;i<n;i++){ var j=(i+1)%n, lat1=pts[i].lat*Math.PI/180, lat2=pts[j].lat*Math.PI/180, dLon=(pts[j].lng-pts[i].lng)*Math.PI/180; area+=dLon*(2+Math.sin(lat1)+Math.sin(lat2)); }
+  return Math.round(Math.abs(area*R*R/2)*10.7639);
+}
+function eToggleImagery(){
+  eImageryHD=!eImageryHD;
+  if(!eLmap) return;
+  if(eImageryHD){ if(eTileStd) eLmap.removeLayer(eTileStd); eTileHD.addTo(eLmap); }
+  else { if(eTileHD) eLmap.removeLayer(eTileHD); eTileStd.addTo(eLmap); }
+  var b=document.getElementById('e-btnhd'); if(b) b.textContent='HD: '+(eImageryHD?'On':'Off');
+}
+function eSlopeFactor(pp){ var r=parseFloat((pp||'0/12').split('/')[0])||0; return Math.sqrt(r*r+144)/12; }
+function eSlopeToCat(pp){ var r=parseFloat((pp||'4/12').split('/')[0])||0; if(r<1)return 'flat'; if(r<4)return 'low'; if(r<7)return 'medium'; if(r<10)return 'steep'; return 'very-steep'; }
+function eDegToPitch(deg){ var x=Math.round(12*Math.tan((deg||0)*Math.PI/180)); var opts=[0,3,4,6,8,10,12]; var best=opts[0],bd=1e9; for(var i=0;i<opts.length;i++){ var dd=Math.abs(opts[i]-x); if(dd<bd){bd=dd;best=opts[i];} } return best+'/12'; }
+function eSetMeasurePitch(pp){ eMeasurePitch=pp; eS.solarPitchDeg=null; eUpdateAreaDisplay(); }
+function eToggleFlat(on){ eS.flatRoof=on; if(on) eS.pitch='flat'; eUpdateAreaDisplay(); }
+function eHandleZip(v){ try{ eS.zip=(v||'').replace(/[^0-9]/g,'').slice(0,5); var b=document.getElementById('e-zipcont'); if(b) b.disabled=(eS.zip.length!==5); }catch(e){} }
+function eZipNext(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(z)z.style.display='none'; if(a)a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 Address'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+function eZipBack(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(a)a.style.display='none'; if(z)z.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 Location'; }
+function eCurrentPlanTotal(){ var t=eFacetTotal; if(eClickPts.length>=3) t+=eCalcSqFt(eClickPts); return Math.round(t); }
+function eUpdateAreaDisplay(){
+  var plan=eCurrentPlanTotal();                 // traced project area = the number we price on
+  var mrn=document.getElementById('e-mrn'); if(mrn) mrn.textContent=plan.toLocaleString();
+  var msq=document.getElementById('e-msq'); if(msq) msq.textContent=plan.toLocaleString()+' sq ft pool surface';
+  var ta=document.getElementById('e-truearea'); if(ta) ta.textContent='Pool surface area: '+plan.toLocaleString()+' sq ft';
+  var si=document.getElementById('e-slopeinfo'); if(si){ si.textContent = 'Area measured from satellite'; }
+  var res=document.getElementById('e-mresult'); if(res) res.style.display=plan>0?'flex':'none';
+  var card=document.getElementById('e-slopecard'); if(card) card.style.display=plan>0?'block':'none';
+  if(plan>0){ eS.sqft=plan; eS.planSqft=plan; eS.usedMap=true; eS.poolShape='straight'; }
+  eCheckBtn1();
+}
+function eDistFt(a,b){
+  var R=6371000, dLat=(b.lat-a.lat)*Math.PI/180, dLon=(b.lng-a.lng)*Math.PI/180;
+  var la1=a.lat*Math.PI/180, la2=b.lat*Math.PI/180;
+  var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.sqrt(h))*3.28084;
+}
+function eMeasureLabelMarker(mid,txt){
+  return L.marker(mid,{interactive:false,icon:L.divIcon({className:'',html:'<div style="background:#dc2626;color:#fff;font:700 11px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35)">'+txt+'</div>',iconSize:[0,0]})}).addTo(eLmap);
+}
+function eMeasureClick(e){
+  eMeasurePts.push(e.latlng);
+  eMeasureMarkers.push(L.circleMarker(e.latlng,{radius:4,color:'#fff',fillColor:'#dc2626',fillOpacity:1,weight:2,interactive:false}).addTo(eLmap));
+  eMeasureRedraw();
+}
+function eMeasureRedraw(){
+  if(eMeasureLine){ eLmap.removeLayer(eMeasureLine); eMeasureLine=null; }
+  eMeasureLabels.forEach(function(l){ eLmap.removeLayer(l); }); eMeasureLabels=[];
+  if(eMeasurePts.length>=2){
+    eMeasureLine=L.polyline(eMeasurePts,{color:'#dc2626',weight:3,opacity:.9,interactive:false}).addTo(eLmap);
+    var total=0;
+    for(var i=1;i<eMeasurePts.length;i++){
+      var a=eMeasurePts[i-1], b=eMeasurePts[i], d=eDistFt(a,b); total+=d;
+      eMeasureLabels.push(eMeasureLabelMarker(L.latLng((a.lat+b.lat)/2,(a.lng+b.lng)/2), Math.round(d)+' ft'));
+    }
+    document.getElementById('e-mstat').textContent='Measuring \u00b7 total '+Math.round(total)+' ft (double-click to finish)';
+  } else {
+    document.getElementById('e-mstat').textContent='Click two points to measure a length (double-click to finish)';
+  }
+}
+function eFinishMeasure(){
+  if(eMeasurePts.length<2) return;
+  var total=0; for(var i=1;i<eMeasurePts.length;i++) total+=eDistFt(eMeasurePts[i-1],eMeasurePts[i]);
+  eMeasureLines.push({line:eMeasureLine, labels:eMeasureLabels.slice(), markers:eMeasureMarkers.slice()});
+  eMeasureLine=null; eMeasureLabels=[]; eMeasureMarkers=[]; eMeasurePts=[];
+  document.getElementById('e-mstat').textContent='Measured '+Math.round(total)+' ft \u00b7 measure another, or switch tools.';
+}
+function eClearDrawing() {
+  eClickPts=[]; eClickMarkers.forEach(function(m){ if(eLmap) eLmap.removeLayer(m); }); eClickMarkers=[];
+  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
+  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
+  eFacets.forEach(function(f){ if(eLmap&&f.poly) eLmap.removeLayer(f.poly); }); eFacets=[]; eFacetTotal=0;
+  eMeasureLines.forEach(function(g){ if(g.line) eLmap.removeLayer(g.line); g.labels.forEach(function(l){ eLmap.removeLayer(l); }); g.markers.forEach(function(m){ eLmap.removeLayer(m); }); }); eMeasureLines=[];
+  if(eMeasureLine){ eLmap.removeLayer(eMeasureLine); eMeasureLine=null; }
+  eMeasureLabels.forEach(function(l){ eLmap.removeLayer(l); }); eMeasureLabels=[];
+  eMeasureMarkers.forEach(function(m){ eLmap.removeLayer(m); }); eMeasureMarkers=[]; eMeasurePts=[];
+  eRemoveFreehand();
+  eRemovePoolShape();
+  eS.sqft=0; eS.usedMap=false; eS.poolPlaced=false;
+  document.getElementById('e-mresult').style.display='none';
+  var card=document.getElementById('e-slopecard'); if(card) card.style.display='none';
+  eCheckBtn1();
+}
+
+/* SIZE PICKER — always visible for pool; drives the on-map rectangle */
+function eToggleManual() {
+  eManualOpen=!eManualOpen;
+  document.getElementById('e-sldwrap').style.display=eManualOpen?'block':'none';
+  document.getElementById('e-manualbtn').textContent=eManualOpen?"Hide size picker ↑":"Pick your pool size";
+  if(eManualOpen) eHandleSlider(document.getElementById('e-sld').value);
+}
+function ePoolPreset(v){ eUpdateSlider(v); }
+function eHandleSlider(v) {
+  document.getElementById('e-sldval').textContent=parseInt(v).toLocaleString();
+  var pct=(v-150)/(1200-150)*100;
+  document.getElementById('e-sld').style.background='linear-gradient(90deg,var(--a) '+pct+'%,var(--bs) '+pct+'%)';
+  eS.sqft=parseInt(v);
+  var pv=parseInt(v), pmap={250:0,450:1,800:2};
+  var pbtns=document.querySelectorAll('#est-embed .e-preset');
+  pbtns.forEach(function(b,i){ b.classList.toggle('on', pmap[pv]===i); });
+  if(eLmap && ePoolPoly){ eEnsurePoolShape(); }   // resize rect around its current center
+  else { eCheckBtn1(); }
+}
+function eUpdateSlider(v){ document.getElementById('e-sld').value=v; eHandleSlider(v); }
+
+/* MATERIALS */
+var E_ICONS={'vinyl':'🟦','fiberglass':'🛁','gunite':'🏊'};
+/* Polished duotone add-on icons (dark accent + light tint, no emojis).
+   D = deep accent, L = light tint. Wrapped in a 24×24 viewBox. */
+function eSvgD(inner){ return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none">'+inner+'</svg>'; }
+var _D='#2f6bff', _L='#bcd6f0';
+var E_SVG={
+  /* flame heater */
+  'heater':      eSvgD('<path d="M12 2c1.5 3 4.5 5 4.5 9a4.5 4.5 0 0 1-9 0c0-1.6.7-2.8 1.6-3.9C10 8.6 11 6.5 12 2z" fill="'+_L+'"/><path d="M12 21a3 3 0 0 1-3-3c0-1.8 1.5-2.6 3-5 1.5 2.4 3 3.2 3 5a3 3 0 0 1-3 3z" fill="'+_D+'"/>'),
+  /* safety cover / shield */
+  'cover':       eSvgD('<path d="M12 3l7 3v5c0 4.2-2.9 7.7-7 9-4.1-1.3-7-4.8-7-9V6z" fill="'+_L+'"/><path d="M9 12l2.2 2.2L15.5 10" stroke="'+_D+'" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'),
+  /* saltwater droplet + grains */
+  'saltwater':   eSvgD('<path d="M12 3c3.5 4.5 5.5 7.2 5.5 10a5.5 5.5 0 0 1-11 0c0-2.8 2-5.5 5.5-10z" fill="'+_L+'"/><circle cx="10" cy="13" r="1" fill="'+_D+'"/><circle cx="13.5" cy="15" r="1" fill="'+_D+'"/><circle cx="12" cy="11" r="1" fill="'+_D+'"/>'),
+  /* LED bulb */
+  'lighting':    eSvgD('<path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V17h5v-1.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="'+_L+'"/><rect x="9.5" y="18" width="5" height="3" rx="1" fill="'+_D+'"/>'),
+  /* waterfall / water feature */
+  'waterfall':   eSvgD('<path d="M3 5h18v3H3z" fill="'+_D+'"/><path d="M15 8h6v13h-6z" fill="'+_L+'"/><path d="M18 8v13" stroke="#fff" stroke-width="1.2"/><path d="M3 11h10v2H3zM3 15h8v2H3z" fill="'+_L+'"/>'),
+  /* spa / hot tub with jets */
+  'spa':         eSvgD('<rect x="3" y="10" width="18" height="9" rx="2.4" fill="'+_L+'"/><path d="M7 10V7a2 2 0 0 1 2-2M12 10V6.5a2 2 0 0 1 2-2M17 10V7a2 2 0 0 1 2-2" stroke="'+_D+'" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M6 15h12" stroke="'+_D+'" stroke-width="1.4" stroke-linecap="round"/>'),
+  /* smart automation phone */
+  'automation':  eSvgD('<rect x="7" y="3" width="10" height="18" rx="2.4" fill="'+_L+'"/><rect x="9" y="6" width="6" height="8" rx="1" fill="'+_D+'"/><circle cx="12" cy="17.5" r="1.2" fill="'+_D+'"/>'),
+  /* slide / diving board */
+  'slide-board': eSvgD('<path d="M4 20c5 0 6-11 13-11" stroke="'+_D+'" stroke-width="2.4" fill="none" stroke-linecap="round"/><rect x="3" y="19" width="18" height="2.4" rx="1.2" fill="'+_L+'"/><circle cx="17" cy="9" r="2" fill="'+_D+'"/>')
+};
+/* Clean pool water/finish swatch, generated so it looks complete out of the box. */
+var eSwCache={};
+function eSwatch(key){
+  if(eSwCache[key]) return eSwCache[key];
+  var t=document.createElement('canvas'); t.width=t.height=120; var c=t.getContext('2d');
+  function grad(a,b){ var g=c.createLinearGradient(0,0,120,120); g.addColorStop(0,a); g.addColorStop(1,b); c.fillStyle=g; c.fillRect(0,0,120,120); }
+  function ripple(col,al){ c.globalAlpha=al||0.5; c.strokeStyle=col; c.lineWidth=2; for(var y=12;y<120;y+=16){ c.beginPath(); c.moveTo(0,y); for(var x=0;x<=120;x+=12){ c.lineTo(x, y+Math.sin(x/12)*4); } c.stroke(); } c.globalAlpha=1; }
+  switch(key){
+    case 'vinyl': grad('#3aa9d6','#1f6fa8'); ripple('#bfe6f5',0.45); break;
+    case 'fiberglass': grad('#46b6c4','#2a8fa8'); ripple('#d3f2f6',0.5); break;
+    case 'gunite': grad('#2a7fc0','#1c5a8a'); ripple('#a9d2ee',0.4); break;
+    default: grad('#3aa9d6','#1f6fa8'); ripple('#bfe6f5',0.45);
+  }
+  eSwCache[key]=t.toDataURL('image/jpeg',0.85); return eSwCache[key];
+}
+function eBuildMats() {
+  var l=document.getElementById('e-matlist'), html='';
+  Object.keys(E_CONFIG.pricing).forEach(function(k){
+    var v=E_CONFIG.pricing[k];
+    var baseK=Math.round(v.baseLow/1000)+'k';
+    var sw=v.img||eSwatch(k);
+    html+='<div class="e-oi" onclick="ePick(this,\'material\',\''+k+'\');eMatPicked(\''+k+'\')">'
+      +'<img class="e-oi-sw" src="'+sw+'" alt="'+v.label+'">'
+      +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
+      +'<div class="e-oi-desc">From ~$'+baseK+' base + $'+v.perLow+'–$'+v.perHigh+'/sq ft · '+v.note+'</div></div>'
+      +'<div class="e-oi-radio">✓</div></div>';
+  });
+  l.innerHTML=html;
+}
+/* When a pool type is chosen, reveal its water / finish color options. */
+function eMatPicked(k){
+  var m=E_CONFIG.pricing[k]; var card=document.getElementById('e-colorcard'), row=document.getElementById('e-colorrow');
+  if(!m||!m.colors||!m.colors.length){ if(card)card.style.display='none'; eS.color=null; eVisualize(); return; }
+  var html='';
+  m.colors.forEach(function(col,i){
+    html+='<button type="button" class="e-colorchip'+(i===0?' on':'')+'" onclick="ePickColor(\''+k+'\','+i+',this)">'
+      +'<span class="e-colordot" style="background:'+col.hex+'"></span>'+col.name+'</button>';
+  });
+  if(row) row.innerHTML=html; if(card) card.style.display='block';
+  eS.color=m.colors[0];   // default first color
+  eVisualize();
+}
+function ePickColor(k,i,el){
+  var m=E_CONFIG.pricing[k]; if(!m||!m.colors) return;
+  eS.color=m.colors[i];
+  var row=el?el.parentNode:null;
+  (row?row.querySelectorAll('.e-colorchip'):document.querySelectorAll('#e-colorrow .e-colorchip')).forEach(function(b){ b.classList.remove('on'); });
+  if(el) el.classList.add('on');
+  eVisualize();
+}
+/* ═══ AI VISUALIZER — upload a backyard photo, render the pool in it ═══ */
+var VIZ_PANEL =
+  '<div class="e-vizupload" onclick="this.querySelector(\'input\').click()">'
+  +'<input type="file" accept="image/*" style="display:none" onchange="ePhotoUpload(this)">'
+  +'<div class="e-vizuptxt"><div style="margin-bottom:6px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1L8 4h8l1.5 2h1A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg></div>'
+  +'<div style="font-weight:600;color:#0c0c0d">Upload a photo of your backyard</div>'
+  +'<div style="font-size:12px;color:#9a9aa0;margin-top:4px">Then tap the button to see your pool — photorealistic AI</div></div></div>'
+  +'<div class="e-vizstage" style="display:none"><img class="e-vizimg" alt="Your backyard">'
+  +'<div class="e-vizloading" style="display:none"><div class="e-vizspin"></div><b>AI modifying…</b><span class="e-vizloadsub">Photo will be available after your design answers are complete.</span></div>'
+  +'<div class="e-vizbadge" style="display:none">AI preview</div></div>'
+  +'<button class="e-vizgen" onclick="eVizGenerate()" style="display:none">View Design</button>'
+  +'<div class="e-vizbar" style="display:none">'
+  +'<button class="e-vizbtn" data-view="orig" onclick="eVizShow(\'orig\')">Original</button>'
+  +'<button class="e-vizbtn on" data-view="new" onclick="eVizShow(\'new\')">Preview</button>'
+  +'<button class="e-vizbtn ghost" onclick="this.closest(\'.e-vizphoto\').querySelector(\'input\').click()">↻ Photo</button></div>'
+  +'<div class="e-vizhint" style="display:none">Photorealistic AI preview — final look may vary slightly.</div>';
+function eVizInit(){
+  document.querySelectorAll('#est-embed [data-viz]').forEach(function(el){ el.innerHTML=VIZ_PANEL; });
+  eVizSyncAll();
+}
+function ePhotoUpload(input){
+  var fl=input.files&&input.files[0]; if(!fl) return;
+  var r=new FileReader();
+  r.onload=function(e){ eS.photoOrig=e.target.result; eS.photoNew=null; eS.photoKey='p'+e.target.result.length+e.target.result.slice(30,90); eS.vizView='new'; eVizSyncAll(); };
+  r.readAsDataURL(fl);
+}
+function eVizShow(which){ eS.vizView=which; eVizSyncAll(); }
+/* One combined prompt from all current choices, applied to the ORIGINAL photo. */
+function eBuildVizPrompt(){
+  var m=E_CONFIG.pricing[eS.material]; if(!m) return null;
+  var mat = m.label.toLowerCase().replace(/\s*\/.*$/,'');   // "gunite / concrete" -> "gunite"
+  var water = (eS.color&&eS.color.desc) ? eS.color.desc : 'blue water';
+  var parts=['Show a realistic in-ground swimming pool with a '+mat+' interior finish and '+water+' in this backyard. Keep the house, fence, landscaping and sky exactly the same. Photorealistic, preserve the original camera angle, perspective and lighting.'];
+  var add={spa:'Include an attached spillover spa beside the pool.',waterfall:'Include a natural rock waterfall water feature.',lighting:'Include color-changing LED underwater lighting.','slide-board':'Include a diving board at the deep end.'};
+  if(eS.addons) Object.keys(eS.addons).forEach(function(k){ if(add[k]) parts.push(add[k]); });
+  var deckClause={small:'Add a small border deck around the pool.',medium:'Add a full paved patio deck around the pool.',large:'Add an expansive entertaining patio with lounge space around the pool.'};
+  if(eS.decking&&deckClause[eS.decking]) parts.push(deckClause[eS.decking]);
+  return parts.join(' ');
+}
+/* Cost guardrails: (1) render only on explicit button tap, (2) cache each
+   photo+prompt so re-viewing the same combo never charges again. */
+/* Design answers are "complete" when a pool type/material is chosen AND
+   (that material has no color options OR a color has been chosen). */
+function eAnswersComplete(){
+  var m=E_CONFIG.pricing[eS.material]; if(!m) return false;
+  var hasColors = !!(m.colors && m.colors.length);
+  if(hasColors && !eS.color) return false;
+  return true;
+}
+var eVizCache={}, eVizBusy=false;
+function eVizGenerate(){
+  if(!eS.photoOrig) return;
+  if(!eAnswersComplete()){ eVizHint('Finish your design answers (pool type and finish) first, then tap to preview it.'); return; }
+  if(!eS.material){ eVizHint('Pick a pool type first, then tap to preview it.'); return; }
+  if(!E_CONFIG.aiEditUrl){ eVizHint('AI preview turns on once your endpoint is set (E_CONFIG.aiEditUrl).'); return; }
+  var prompt=eBuildVizPrompt(); if(!prompt) return;
+  var key=(eS.photoKey||'')+'|'+prompt;
+  if(eVizCache[key]){ eS.photoNew=eVizCache[key]; eS.vizView='new'; eVizSyncAll(); return; }   // cached = no charge
+  if(eVizBusy) return;
+  eVizBusy=true; eS.vizView='new'; eVizSetLoading(true); eVizSyncAll();
+  var headers={'Content-Type':'application/json'};
+  if(E_CONFIG.aiEditKey){ headers['Authorization']='Bearer '+E_CONFIG.aiEditKey; headers['apikey']=E_CONFIG.aiEditKey; }
+  fetch(E_CONFIG.aiEditUrl,{method:'POST',headers:headers,body:JSON.stringify({image:eS.photoOrig,prompt:prompt})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      eVizSetLoading(false); eVizBusy=false;
+      var out=d.image||d.imageUrl||d.output||d.result||d.b64;
+      if(out){ if(out.indexOf('data:')!==0&&out.indexOf('http')!==0) out='data:image/png;base64,'+out; eVizCache[key]=out; eS.photoNew=out; eS.vizView='new'; eVizSyncAll(); }
+      else { eVizHint(d.error?('Preview error: '+d.error):'Preview unavailable right now.'); eS.vizView='orig'; eVizSyncAll(); }
+    })
+    .catch(function(){ eVizSetLoading(false); eVizBusy=false; eVizHint('Preview unavailable right now — your estimate is unaffected.'); eS.vizView='orig'; eVizSyncAll(); });
+}
+function eVizHint(t){ document.querySelectorAll('#est-embed .e-vizhint').forEach(function(h){ h.textContent=t; h.style.display='block'; }); }
+function eVizSetLoading(on){
+  document.querySelectorAll('#est-embed .e-vizstage').forEach(function(s){ if(on)s.style.display='flex'; });
+  document.querySelectorAll('#est-embed .e-vizloading').forEach(function(l){ l.style.display=on?'flex':'none'; });
+}
+function eVizGenLabel(){
+  var ready = !!(eAnswersComplete() && eS.photoOrig);   // answers complete + uploaded photo
+  document.querySelectorAll('#est-embed .e-vizgen').forEach(function(b){
+    b.disabled = !ready;
+    b.textContent = ready ? 'View Design' : (eS.photoOrig ? 'Finish your design answers first' : 'Upload a photo first');
+  });
+}
+function eVisualize(){ eVizGenLabel(); }   /* material/color/add-on change = just refresh the button label (free) */
+function eVizSyncAll(){
+  document.querySelectorAll('#est-embed .e-vizphoto').forEach(function(ph){
+    var up=ph.querySelector('.e-vizupload'), stg=ph.querySelector('.e-vizstage'), gen=ph.querySelector('.e-vizgen'), bar=ph.querySelector('.e-vizbar');
+    var loading=ph.querySelector('.e-vizloading'), sub=ph.querySelector('.e-vizloadsub');
+    if(eS.photoOrig){
+      if(up)up.style.display='none'; if(stg)stg.style.display='flex'; if(gen)gen.style.display='block'; if(bar)bar.style.display=eS.photoNew?'flex':'none';
+      var img=ph.querySelector('.e-vizimg'); if(img) img.src=(eS.vizView==='new'&&eS.photoNew)?eS.photoNew:eS.photoOrig;
+      var badge=ph.querySelector('.e-vizbadge'); if(badge) badge.style.display=(eS.vizView==='new'&&eS.photoNew)?'block':'none';
+      ph.querySelectorAll('.e-vizbtn[data-view]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-view')===eS.vizView); });
+      /* overlay: rendering, or gated until answers complete */
+      var showOv=false, subtxt='';
+      if(eVizBusy){ showOv=true; subtxt='This usually takes a few seconds…'; }
+      else if(!eAnswersComplete() && !eS.photoNew){ showOv=true; subtxt='Photo will be available after your design answers are complete.'; }
+      if(sub&&subtxt) sub.textContent=subtxt;
+      if(loading) loading.style.display=showOv?'flex':'none';
+    } else {
+      if(up)up.style.display='block'; if(stg)stg.style.display='none'; if(gen)gen.style.display='none'; if(bar)bar.style.display='none';
+      if(loading) loading.style.display='none';
+    }
+  });
+  eVizGenLabel();
+}
+/* ADD-ONS (multi-select, optional) */
+function eBuildAddons() {
+  var l=document.getElementById('e-addonlist'); if(!l) return; var html='';
+  Object.keys(E_CONFIG.addons).forEach(function(k){
+    var v=E_CONFIG.addons[k];
+    var thumb = v.img ? '<img class="e-oi-sw" src="'+v.img+'" alt="'+v.label+'">' : '<div class="e-oi-emchip">'+(E_SVG[k]||v.icon||'➕')+'</div>';
+    html+='<div class="e-oi" data-addon="'+k+'" onclick="eToggleAddon(this,\''+k+'\')">'
+      +thumb
+      +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
+      +'<div class="e-oi-desc">'+v.desc+'</div></div>'
+      +'<div class="e-oi-tag">+$'+v.low.toLocaleString()+'–$'+v.high.toLocaleString()+'</div>'
+      +'<div class="e-oi-radio">✓</div></div>';
+  });
+  l.innerHTML=html;
+}
+function eToggleAddon(el, key){
+  if(!eS.addons) eS.addons={};
+  if(eS.addons[key]){ delete eS.addons[key]; el.classList.remove('sel'); }
+  else { eS.addons[key]=true; el.classList.add('sel'); }
+  eVisualize();
+}
+function eAddonTotals(){
+  var low=0, high=0, n=0;
+  if(eS.addons){ Object.keys(eS.addons).forEach(function(k){ var v=E_CONFIG.addons[k]; if(v){ low+=v.low; high+=v.high; n++; } }); }
+  return {low:low, high:high, count:n};
+}
+
+/* SELECTION HELPERS */
+function ePick(el, key, val) {
+  var list=el.closest('.e-olist');
+  list.querySelectorAll('.e-oi').forEach(function(i){ i.classList.remove('sel'); });
+  el.classList.add('sel'); eS[key]=val;
+  var map2={material:'e-btn2',pitch:'e-btn3',decking:'e-btn4',project:'e-btn5'};
+  if(map2[key]) document.getElementById(map2[key]).disabled=false;
+}
+function ePickQ(el, key, val) {
+  el.closest('.e-olist').querySelectorAll('.e-oi').forEach(function(i){ i.classList.remove('sel'); });
+  el.classList.add('sel'); eS[key]=val;
+  var btnMap={urgency:'e-btn6',terrain:'e-btn7',access:'e-btn8'};
+  if(btnMap[key]) document.getElementById(btnMap[key]).disabled=false;
+}
+function eChkForm() {
+  var ok=document.getElementById('e-fn').value.trim()&&document.getElementById('e-ln').value.trim()&&document.getElementById('e-ph').value.trim().length>=7&&document.getElementById('e-em').value.includes('@');
+  document.getElementById('e-btn9').disabled=!ok;
+}
+function eCheckBtn1(){ document.getElementById('e-btn1').disabled=!(eS.addr&&eS.sqft>0); }
+
+/* DOTS */
+function eBuildAllDots() {
+  for(var s=1;s<=E_TOTAL;s++){
+    var el=document.getElementById('e-dots'+s); if(!el) continue;
+    var html='';
+    for(var i=1;i<=E_TOTAL;i++){ var cls=i<s?'done':i===s?'act':''; html+='<div class="e-sdot '+cls+'"></div>'; }
+    el.innerHTML=html;
+  }
+}
+
+/* NAVIGATION */
+function eGo(n, back) {
+  var oldEl=document.getElementById(eCur<=E_TOTAL?'e-sp'+eCur:'e-spR');
+  oldEl.classList.remove('active','back');
+  var nextEl=document.getElementById(n<=E_TOTAL?'e-sp'+n:'e-spR');
+  nextEl.classList.add('active');
+  if(back){ nextEl.classList.add('back'); setTimeout(function(){ nextEl.classList.remove('back'); },450); }
+  eCur=n;
+  var _dn=Math.min(n,9); var pct=Math.round((_dn/9)*100);
+  document.getElementById('e-pfill').style.width=pct+'%';
+  var names=['','Address','Pool Type','Features & Add-Ons','Decking','Project Type','Urgency','Terrain','Site Access','Your Info','Calculating',''];
+  document.getElementById('e-tstep').innerHTML=n<=E_TOTAL?'Step <b>'+_dn+'</b> of 9 — '+(names[n]||''):'<b>✓ Estimate Complete</b>';
+  // Only scroll if the top of the estimator is above the viewport
+  var embed=document.getElementById('est-embed-shell');
+  if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
+  if(n===1){ var _z=document.getElementById('e-zippanel'),_a=document.getElementById('e-addrpanel'); if(_z)_z.style.display='none'; if(_a)_a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 Address'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+}
+
+/* SUBMIT + RESULT */
+function eCalcPrice(){
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['gunite'];
+  var tm=E_CONFIG.terrainMult[eS.terrain]||1.00, am=E_CONFIG.accessMult[eS.access]||1.00;
+  var prm=E_CONFIG.projectMult[eS.project]||1.00, rm=parseFloat(E_CONFIG.regionMult[eS.region]||1.00);
+  var area=eS.sqft;
+  var deck=E_CONFIG.deckAdd[eS.decking]||E_CONFIG.deckAdd['none'];
+  var add=eAddonTotals();
+  // construction = fixed base + water-area × per-sq-ft, then terrain/access/project/region
+  var constLow=(p.baseLow + area*p.perLow)*tm*am*prm*rm;
+  var constHigh=(p.baseHigh + area*p.perHigh)*tm*am*prm*rm;
+  // decking is region-adjusted; add-ons are flat equipment costs
+  var low=Math.round((constLow + deck.low*rm + add.low)/100)*100;
+  var high=Math.round((constHigh + deck.high*rm + add.high)/100)*100;
+  return {low:low, high:high, mid:Math.round((low+high)/2), area:area, base:p.baseLow, deck:deck, addons:add};
+}
+function eDoSubmit() {
+  var _est = eCalcPrice();
+  if(E_CONFIG.webhookUrl){ fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:document.getElementById('e-fn').value,lastName:document.getElementById('e-ln').value,phone:document.getElementById('e-ph').value,email:document.getElementById('e-em').value,notes:document.getElementById('e-nt').value,address:eS.addr,poolSqft:eS.sqft,poolType:eS.material,poolShape:eS.poolShape,decking:eS.decking,terrain:eS.terrain,access:eS.access,project:eS.project,addons:Object.keys(eS.addons||{}).join(', '),region:eS.region,urgency:eS.urgency,estimateLow:_est.low,estimateHigh:_est.high,estimateValue:_est.mid,source:E_CONFIG.companyName+' Pool Estimator',timestamp:new Date().toISOString()})}).catch(function(){}); }
+  eGo(10);
+  var ids=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'], li=0;
+  function eNextStep(){ if(li>=ids.length){ setTimeout(eShowResult,500); return; } document.getElementById(ids[li]).classList.remove('act'); document.getElementById(ids[li]).classList.add('done'); li++; if(li<ids.length) document.getElementById(ids[li]).classList.add('act'); setTimeout(eNextStep,680); }
+  setTimeout(eNextStep,680);
+}
+function eTitle(s){ s=(s||'').replace(/-/g,' '); return s.charAt(0).toUpperCase()+s.slice(1); }
+function eShowResult() {
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['gunite'];
+  var est=eCalcPrice();
+  document.getElementById('e-rrange').innerHTML='$'+est.low.toLocaleString()+' — <em>$'+est.high.toLocaleString()+'</em>';
+  document.getElementById('e-rnote').textContent=est.area.toLocaleString()+' sq ft · '+p.label+' · '+eTitle(eS.decking)+' decking · '+eTitle(eS.terrain)+' terrain · '+eTitle(eS.project)+(est.addons&&est.addons.count?' · '+est.addons.count+' add-on'+(est.addons.count>1?'s':''):'')+' · '+eS.regionLabel+(eS.usedMap?' · Measured via satellite':' · Manual estimate');
+  document.getElementById('e-rv1').textContent=est.area.toLocaleString()+' sq ft';
+  document.getElementById('e-rv2').textContent=p.label;
+  document.getElementById('e-rv3').textContent=eTitle(eS.decking)||'—';
+  document.getElementById('e-rv4').textContent=eTitle(eS.project)||'—';
+  document.getElementById('e-rv5').textContent=eS.regionLabel||'National Average';
+  document.getElementById('e-rv6').textContent=est.addons&&est.addons.count?est.addons.count+' selected':'None';
+  document.getElementById('e-sp10').classList.remove('active');
+  document.getElementById('e-spR').classList.add('active');
+  document.getElementById('e-pfill').style.width='100%';
+  document.getElementById('e-tstep').innerHTML='<b>✓ Estimate Complete</b>';
+  var embed=document.getElementById('est-embed-shell');
+  if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
+}
+
+/* RESTART */
+function eRestart() {
+  eS={addr:'',sqft:0,planSqft:0,poolPlaced:false,usedMap:false,lat:0,lon:0,material:'',decking:'',project:'',region:'national',regionLabel:'National Average',urgency:'',terrain:'',access:'',addons:{},color:null,photoOrig:null,photoNew:null,vizView:'orig',photoKey:''};
+  var _cc=document.getElementById('e-colorcard'); if(_cc)_cc.style.display='none';
+  eVizSyncAll();
+  document.getElementById('e-addrIn').value='';
+  eRemovePoolShape();
+  document.getElementById('e-mapwrap').style.display='none';
+  document.getElementById('e-mresult').style.display='none';
+  document.getElementById('e-sldwrap').style.display='block';
+  eManualOpen=true;
+  eClearDrawing();
+  eUpdateSlider(450);
+  document.querySelectorAll('#est-embed .e-oi').forEach(function(i){ i.classList.remove('sel'); });
+  document.querySelectorAll('#est-embed .e-rb').forEach(function(b){ b.classList.remove('on'); });
+  for(var i=1;i<=9;i++){ var b=document.getElementById('e-btn'+i); if(b) b.disabled=true; }
+  ['e-fn','e-ln','e-ph','e-em','e-nt'].forEach(function(id){ document.getElementById(id).value=''; });
+  var ldIds=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'];
+  ldIds.forEach(function(id,idx){ var el=document.getElementById(id); el.classList.remove('done','act'); if(idx===0) el.classList.add('act'); });
+  document.getElementById('e-spR').classList.remove('active');
+  eCur=1; eGo(1);
+  document.getElementById('e-pfill').style.width='9%';
+  document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 — Address';
+}
+
+/* ═══ INIT — all functions defined above, safe to call now ═══ */
+document.getElementById('e-cco').textContent = E_CONFIG.companyName;
+document.getElementById('e-rctabtn').textContent = E_CONFIG.ctaText;
+document.getElementById('e-rctabtn').onclick = function() { window.open(E_CONFIG.ctaUrl,'_blank'); };
+eBuildMats();
+eBuildAddons();
+eVizInit();
+eBuildAllDots();
+eManualOpen=true;
+eUpdateSlider(450);
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.e-asearch')) {
+    var s = document.getElementById('e-suggestions');
+    if (s) s.classList.remove('open');
+  }
+});
+
+</script><script>(function(){try{var CID="pools",U="https://ttzwzouhiwdwamuimhpo.supabase.co",A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")||"").replace(/[^0-9a-f-]/gi,"");}catch(e){}if(OWN&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=OWN;fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=pricing",{headers:{apikey:A,Authorization:"Bearer "+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof E_CONFIG==="undefined"||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!=="object"||v===null){if(typeof v==="number")E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!=="object")return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});["eBuildMats","eBuildAddons","eBuildColors","eBuildHeight","eBuildCabinets","eBuildScope"].forEach(function(fn){try{if(typeof window[fn]==="function")window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
+<style>
+/* --- BuilderPro polish: staggered step reveal, button feel, loading --- */
+#est-embed .e-sp.active .e-shdr{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .05s;}
+#est-embed .e-sp.active .e-sbody{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .13s;}
+@keyframes eRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#est-embed .e-btnmain{transition:transform .16s cubic-bezier(.22,1,.28,1),box-shadow .2s,background .2s,opacity .2s;}
+#est-embed .e-btnmain:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(37,99,235,.3);}
+#est-embed .e-btnmain:not(:disabled):active{transform:translateY(0) scale(.984);}
+#est-embed .e-pfill{box-shadow:0 0 10px rgba(37,99,235,.45);}
+#est-embed .e-ldstp{transition:color .35s,background .35s,border-color .35s,transform .35s;}
+#est-embed .e-ldstp.act{transform:translateX(3px);}
+#est-embed .e-sdot{transition:width .3s cubic-bezier(.22,1,.28,1),background .3s;}
+@media(prefers-reduced-motion:reduce){
+  #est-embed .e-sp.active,#est-embed .e-sp.back,
+  #est-embed .e-sp.active .e-shdr,#est-embed .e-sp.active .e-sbody{animation:none!important;}
+}
+</style>
+
+<style>
+/* ===== BuilderPro: calculating + result screens ===== */
+/* the calculating panel had white text on a white ground — make it a real moment */
+#est-embed .e-ldpanel{position:relative;overflow:hidden;border-radius:14px;margin:18px;padding:58px 32px;
+  background:linear-gradient(155deg,#12233d 0%,#1c3355 55%,#12233d 100%);}
+#est-embed .e-ldpanel>*{position:relative;z-index:2;}
+#est-embed .e-ldpanel::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(58% 46% at 50% 0%,rgba(96,165,250,.26),transparent 72%);}
+#est-embed .e-ldring{width:54px;height:54px;border:2px solid rgba(255,255,255,.16);border-top-color:#60a5fa;}
+#est-embed .e-ldstp{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.55);}
+#est-embed .e-ldstp.act{background:rgba(96,165,250,.18)!important;border-color:rgba(96,165,250,.42)!important;color:#fff!important;}
+#est-embed .e-ldstp.done{background:rgba(255,255,255,.05)!important;color:rgba(255,255,255,.72)!important;}
+#est-embed .e-ldstp.done .e-lddot{background:#34d399!important;animation:none!important;}
+/* the result hero was a flat blue wash — make it the payoff */
+#est-embed .e-rhero{position:relative;overflow:hidden;border:0!important;padding:36px 26px!important;
+  background:linear-gradient(150deg,#12233d 0%,#1e3a63 100%)!important;
+  box-shadow:0 14px 40px rgba(15,30,60,.20)!important;}
+#est-embed .e-rhero>*{position:relative;z-index:2;}
+#est-embed .e-rhero .e-rlbl,#est-embed .e-rhero .e-rnote{color:rgba(255,255,255,.74)!important;}
+#est-embed .e-rhero .e-rrange{color:#fff!important;}
+#est-embed .e-rhero .e-rrange em{color:#7dd3fc!important;}
+#est-embed .e-rbadge{background:rgba(52,211,153,.16)!important;border-color:rgba(52,211,153,.42)!important;color:#6ee7b7!important;}
+/* option cards: a little lift so the form feels alive */
+#est-embed .e-opt,#est-embed .e-oi{transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s;}
+#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,30,60,.10);}
+@media(prefers-reduced-motion:reduce){#est-embed .e-opt:hover,#est-embed .e-oi:hover{transform:none;}}
+</style>
+
+<style>
+/* ===== BuilderPro: option cards (overrides the older !important de-branding block) ===== */
+#est-embed .e-oi{border:1px solid #e3e8ef !important;border-radius:12px !important;
+  transition:transform .18s cubic-bezier(.22,1,.28,1),box-shadow .2s,border-color .2s,background .2s !important;}
+#est-embed .e-oi:hover{border-color:#9dbcfc !important;background:#fbfcff !important;
+  box-shadow:0 6px 18px rgba(15,30,60,.09) !important;transform:translateY(-2px) !important;}
+#est-embed .e-oi.sel{border-color:#2563eb !important;background:#f5f9ff !important;
+  box-shadow:0 0 0 1.5px #2563eb,0 8px 22px rgba(37,99,235,.16) !important;transform:none !important;}
+#est-embed .e-oi.sel .e-oi-lbl{color:#1b2a41 !important;}
+#est-embed .e-oi-tag{font-variant-numeric:tabular-nums;}
+@media(prefers-reduced-motion:reduce){#est-embed .e-oi:hover{transform:none !important;}}
+</style>
+
+<style>
+/* ===== BuilderPro: step header band ===== */
+#est-embed .e-shdr{
+  position:relative;padding:28px 32px 26px !important;margin-bottom:4px;
+  background:linear-gradient(140deg,#12233d 0%,#1e3a63 100%);
+}
+#est-embed .e-shdr>*{position:relative;z-index:2;}
+#est-embed .e-shdr::after{content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(70% 120% at 88% 0%,rgba(96,165,250,.22),transparent 70%);}
+#est-embed .e-shdr .e-seye{color:#7dd3fc !important;}
+#est-embed .e-shdr .e-stitle{color:#fff !important;}
+#est-embed .e-shdr .e-stitle em{color:#7dd3fc !important;}
+#est-embed .e-shdr .e-ssub{color:rgba(255,255,255,.76) !important;}
+@media(max-width:640px){#est-embed .e-shdr{padding:22px 16px 20px !important;}}
+</style>
+
+<style>
+/* the first screen's header sits one level deeper (inside .e-sbody), so pull it flush */
+#est-embed #e-zippanel .e-shdr{margin:-16px -32px 14px !important;width:auto !important;max-width:none !important;}
+@media(max-width:640px){#est-embed #e-zippanel .e-shdr{margin:-16px -16px 12px !important;}}
+</style>
+</body><style>
+#est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
+#est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
+#est-embed button:active{transform:scale(.95);}
+.bp-pop{animation:bpPop .4s cubic-bezier(.22,1,.36,1);}
+@keyframes bpPop{0%{transform:scale(1)}35%{transform:scale(.93)}70%{transform:scale(1.03)}100%{transform:scale(1)}}
+</style>
+<script>
+document.addEventListener('click',function(e){
+ var b=e.target&&e.target.closest?e.target.closest('button,a,[role=button],[class*=btn],[class*=opt],[class*=chip],[class*=card],label,select'):null;
+ if(!b)return;
+ b.classList.remove('bp-pop');void b.offsetWidth;b.classList.add('bp-pop');
+},true);
+</script></html>
