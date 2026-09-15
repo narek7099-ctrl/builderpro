@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
   const user = await userFromReq(req);
   if (!user) return json({ ok: false, error: "sign in required" }, 401);
 
-  let b: { op?: string; brain?: Record<string, string>; company?: Record<string, string>; calendarId?: string };
+  let b: { op?: string; brain?: Record<string, string>; company?: Record<string, string>; calendarId?: string; locationId?: string };
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
 
   if (b.op === "get") {
@@ -152,32 +152,55 @@ Deno.serve(async (req) => {
   }
 
   // ---- which calendar takes public inspection bookings ----
-  // The booking page (builderpro-os.com/book) books into ai_brain.booking_calendar_id.
-  // These two ops let the owner set it themselves instead of asking support.
+  // The booking page (builderpro-os.com/book) books into ai_brain.booking_calendar_id
+  // inside ai_brain.ghl_location_id. These ops let the owner set both themselves:
+  // a client whose row was never created by onboarding would otherwise be stuck.
+  const clean = (v: unknown) => String(v ?? "").trim().slice(0, 80);
+  const idOk = (v: string) => /^[A-Za-z0-9_-]*$/.test(v);
+
   if (b.op === "calendars") {
     const row = await findBrain(user.id, user.email);
-    if (!row) return json({ ok: true, calendars: [], reason: "no_row", selected: "" });
-    const loc = String(row.ghl_location_id ?? "") || LOC;
-    if (!loc) return json({ ok: true, calendars: [], reason: "no_location", selected: String(row.booking_calendar_id ?? "") });
+    const sel = String(row?.booking_calendar_id ?? "");
+    // an explicit locationId lets them look up a sub-account before it is saved
+    const asked = clean(b.locationId);
+    if (asked && !idOk(asked)) return json({ ok: false, error: "That does not look like a location id." }, 400);
+    const loc = asked || String(row?.ghl_location_id ?? "") || LOC;
+    if (!loc) return json({ ok: true, calendars: [], reason: row ? "no_location" : "no_row", selected: sel, has_row: !!row });
     const t = await locationToken(loc);
-    if (!t) return json({ ok: true, calendars: [], reason: "no_token", selected: String(row.booking_calendar_id ?? "") });
+    if (!t) return json({ ok: true, calendars: [], reason: "no_token", selected: sel, location: loc, has_row: !!row });
     try {
       const r = await fetch(`${GHL_BASE}/calendars/?locationId=${encodeURIComponent(loc)}`, { headers: ghlH(t) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) return json({ ok: true, calendars: [], reason: "ghl_" + r.status, selected: String(row.booking_calendar_id ?? "") });
+      if (!r.ok) return json({ ok: true, calendars: [], reason: "ghl_" + r.status, selected: sel, location: loc, has_row: !!row });
       const cals = (d?.calendars ?? []).map((c: Row) => ({ id: String(c.id ?? ""), name: String(c.name ?? "Calendar") })).filter((c: { id: string }) => c.id);
-      return json({ ok: true, calendars: cals, selected: String(row.booking_calendar_id ?? "") });
-    } catch { return json({ ok: true, calendars: [], reason: "unreachable", selected: String(row.booking_calendar_id ?? "") }); }
+      return json({ ok: true, calendars: cals, selected: sel, location: loc, has_row: !!row });
+    } catch { return json({ ok: true, calendars: [], reason: "unreachable", selected: sel, location: loc, has_row: !!row }); }
   }
 
   if (b.op === "set_calendar") {
-    const id = String(b.calendarId ?? "").trim().slice(0, 80);
-    if (!/^[A-Za-z0-9_-]*$/.test(id)) return json({ ok: false, error: "That does not look like a calendar id." }, 400);
+    const id = clean(b.calendarId), locId = clean(b.locationId);
+    if (!idOk(id)) return json({ ok: false, error: "That does not look like a calendar id." }, 400);
+    if (!idOk(locId)) return json({ ok: false, error: "That does not look like a location id." }, 400);
     const row = await findBrain(user.id, user.email);
-    if (!row) return json({ ok: false, error: "Publish Ridge once in Settings first — that creates your account record." }, 404);
-    const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify({ booking_calendar_id: id, updated_at: new Date().toISOString() }) });
-    if (!r.ok) return json({ ok: false, error: "Could not save that calendar." }, 502);
-    const saved = (await r.json().catch(() => []))[0] ?? null;
+    const fields: Row = { booking_calendar_id: id, updated_at: new Date().toISOString() };
+    if (locId) fields.ghl_location_id = locId;
+    let saved: Row | null = null;
+    if (row) {
+      const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(fields) });
+      if (!r.ok) return json({ ok: false, error: "Could not save that calendar." }, 502);
+      saved = (await r.json().catch(() => []))[0] ?? null;
+    } else {
+      // no record yet: create one owned by this login so the booking page can find it
+      const loc = locId || LOC;
+      if (!loc) return json({ ok: false, error: "Add your GoHighLevel location id too — without it there is no account to book into." }, 400);
+      const create: Row = {
+        ...fields, owner: user.id, owner_email: user.email, is_demo: false,
+        assistant_name: AI_NAME, ghl_location_id: loc, slug: loc,
+      };
+      const r = await fetch(`${SB_URL}/rest/v1/ai_brain`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(create) });
+      if (!r.ok) return json({ ok: false, error: "Could not create your account record." , detail: (await r.text()).slice(0, 200) }, 502);
+      saved = (await r.json().catch(() => []))[0] ?? null;
+    }
     return json({ ok: true, booking_calendar_id: id, brain: saved ? pick(saved) : null });
   }
 
