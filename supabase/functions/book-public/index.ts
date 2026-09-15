@@ -148,6 +148,29 @@ function fmtPacific(d: Date): string {
   return `${g.year}-${g.month}-${g.day}T${g.hour}:${g.minute}:${g.second}${off}`;
 }
 
+// Days the contractor closed off in the portal (holidays). Dropped from every
+// slot list, in both modes, so nobody can book them.
+async function closedDays(u: string): Promise<Set<string>> {
+  const out = new Set<string>();
+  if (!u || !SB_URL || !SB_SERVICE || !/^[0-9a-f-]{36}$/i.test(u)) return out;
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/booking_closed_days?owner=eq.${u}&select=day`, { headers: sbHeaders });
+    const rows = r.ok ? await r.json() : [];
+    if (Array.isArray(rows)) for (const x of rows) if (x?.day) out.add(String(x.day).slice(0, 10));
+  } catch { /* none */ }
+  return out;
+}
+function dropClosed(slots: Record<string, string[]>, closed: Set<string>): Record<string, string[]> {
+  if (!closed.size) return slots;
+  const out: Record<string, string[]> = {};
+  for (const k of Object.keys(slots)) {
+    if (closed.has(k)) continue;
+    const keep = slots[k].filter((iso) => !closed.has(fmtPacific(new Date(iso)).slice(0, 10)));
+    if (keep.length) out[k] = keep;
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
@@ -176,17 +199,18 @@ Deno.serve(async (req) => {
   }
 
   if (op === "slots") {
+    const closed = await closedDays(u);
     if (mode === "portal") {
       const p = await portalSlots();
       if (!p.ok) return json({ ok: false, error: "Could not read the calendar right now.", status: p.status }, 502);
-      return json({ ok: true, slots: p.slots, tz: "" });
+      return json({ ok: true, slots: dropClosed(p.slots, closed), tz: "" });
     }
     const from = Number(b.from) || Date.now();
     // cap the window at 62 days so one page load can't hammer the calendar
     const to = Math.min(Number(b.to) || from + 31 * 86400000, from + 62 * 86400000);
     const s = await freeSlots(loc, cal, from, to);
     if (!s.ok) return json({ ok: false, error: "Could not read the calendar right now.", status: s.status }, 502);
-    return json({ ok: true, slots: s.slots, tz: s.tz });
+    return json({ ok: true, slots: dropClosed(s.slots, closed), tz: s.tz });
   }
 
   if (op === "book") {
@@ -200,6 +224,8 @@ Deno.serve(async (req) => {
     if (!name || !phone) return json({ ok: false, error: "Name and phone are required." }, 400);
     if (!startMs || startMs < Date.now() - 600000) return json({ ok: false, error: "Pick a time in the future." }, 400);
     const taken = () => json({ ok: false, error: "That time was just taken. Pick another." }, 409);
+    const closed = await closedDays(u);
+    if (closed.has(fmtPacific(new Date(startMs)).slice(0, 10))) return json({ ok: false, error: "We are closed that day. Pick another." }, 409);
 
     if (mode === "portal") {
       // only a slot the calendar itself offered can be booked
