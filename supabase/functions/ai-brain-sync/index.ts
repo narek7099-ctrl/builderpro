@@ -181,11 +181,17 @@ Deno.serve(async (req) => {
     const id = clean(b.calendarId), locId = clean(b.locationId);
     if (!idOk(id)) return json({ ok: false, error: "That does not look like a calendar id." }, 400);
     if (!idOk(locId)) return json({ ok: false, error: "That does not look like a location id." }, 400);
+    const co = b.company ?? {};
+    const txt = (v: unknown) => String(v ?? "").slice(0, 300).trim();
     const row = await findBrain(user.id, user.email);
     const fields: Row = { booking_calendar_id: id, updated_at: new Date().toISOString() };
     if (locId) fields.ghl_location_id = locId;
+    // the booking page shows the business name, phone and area; fill any that are
+    // still blank from what the portal already knows, without touching published copy
+    const blanks: Array<[string, string]> = [["business_name", txt(co.name)], ["phone", txt(co.phone)], ["service_area", txt(co.area)], ["hours", txt(co.hours)]];
     let saved: Row | null = null;
     if (row) {
+      for (const [k, v] of blanks) if (v && !String(row[k] ?? "").trim()) fields[k] = v;
       const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(fields) });
       if (!r.ok) return json({ ok: false, error: "Could not save that calendar." }, 502);
       saved = (await r.json().catch(() => []))[0] ?? null;
@@ -197,6 +203,7 @@ Deno.serve(async (req) => {
         ...fields, owner: user.id, owner_email: user.email, is_demo: false,
         assistant_name: AI_NAME, ghl_location_id: loc, slug: loc,
       };
+      for (const [k, v] of blanks) if (v) create[k] = v;
       const r = await fetch(`${SB_URL}/rest/v1/ai_brain`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(create) });
       if (!r.ok) return json({ ok: false, error: "Could not create your account record." , detail: (await r.text()).slice(0, 200) }, 502);
       saved = (await r.json().catch(() => []))[0] ?? null;

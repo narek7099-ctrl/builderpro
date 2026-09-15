@@ -15532,7 +15532,10 @@ var _bpContacts=[];
     var loc=((locEl&&locEl.value)||_bpCalLink.loc||'').trim();
     if(!id){ _bpCalLink.msg='Pick the calendar that takes your inspections.'; bpCalLinkDraw(); return; }
     _bpCalLink.busy=true; _bpCalLink.msg=''; bpCalLinkDraw();
-    Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'set_calendar',calendarId:id,locationId:loc})).then(function(r){
+    /* pass what Settings already knows, so a brand-new record isn't nameless on
+       the booking page; the function only fills fields that are still blank */
+    var co=(bpSettingsGet()||{}).company||{};
+    Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'set_calendar',calendarId:id,locationId:loc,company:{name:co.name||'',phone:co.phone||'',area:co.serviceArea||'',hours:co.hours||''}})).then(function(r){
       _bpCalLink.busy=false;
       if(r&&r.ok){ _bpCalLink.sel=id; _bpCalLink.loc=loc; _bpCalLink.show=false; _bpCalLink.msg=''; bpCalLinkDraw(); bpCalCheck(); }
       else { _bpCalLink.msg=(r&&r.error)||'Could not save that calendar.'; bpCalLinkDraw(); }
