@@ -14150,7 +14150,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes and commercial roofs in your service area most likely to need your trade — from public permit records and the satellite view.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},calculator:{t:'My Calculator',s:'Preview your estimator and edit your pricing.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes and commercial roofs in your service area most likely to need your trade — from public permit records and the satellite view.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:'Ridge AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14227,7 +14227,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,reputation:bpReputation,calculator:bpCalculator,ai:bpAiView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   document.querySelector('.bpx-main').scrollTop=0;
 }
@@ -14683,45 +14683,38 @@ function bpCalcAssigned(){
 function bpCalculator(){
   var saved=bpCalcAssigned(); window._bpCalcCur=saved;
   var nm=saved;BP_CALC_IDS.forEach(function(p){if(p[0]===saved)nm=p[1];});
-  var tabs=[['pricing','Edit pricing'],['preview','Preview'],['embed','Embed on your site']];
+  if(_bpCalcTab==='pricing') _bpCalcTab='preview';
+  var tabs=[['preview','Preview'],['embed','Embed on your site']];
   document.getElementById('bpxViewArea').innerHTML=
     '<div class="bpx-calc-hero"><img src="assets/roofing/roof-completed-sm.jpg" alt="" loading="lazy">'
-      +'<div><div class="bpx-calc-heroT">'+bpEsc(nm)+' calculator</div>'
-      +'<div class="bpx-calc-heroS">Matched to your trade in Settings. Your prices drive the estimate every visitor sees on your website.</div></div></div>'
+      +'<div style="flex:1;min-width:200px"><div class="bpx-calc-heroT">'+bpEsc(nm)+' calculator</div>'
+      +'<div class="bpx-calc-heroS">Matched to your trade in Settings. Your prices, colours and logo drive what every visitor sees on your website.</div></div>'
+      +'<button class="bpx-btn" style="display:inline-flex;align-items:center;gap:7px" onclick="bpCustomize(\'calc\')"><span class=ms>palette</span> Customize</button></div>'
     +'<div class="bpx-jobtabs" style="margin-bottom:16px;flex-wrap:wrap">'+tabs.map(function(t){return '<button class="bpx-jt'+(_bpCalcTab===t[0]?' on':'')+'" data-calc-tab="'+t[0]+'" onclick="bpCalcTab(\''+t[0]+'\')">'+t[1]+'</button>';}).join('')+'</div>'
-    +'<div data-calc-pane="pricing"'+(_bpCalcTab==='pricing'?'':' hidden')+'><div class="bpx-panel" style="max-width:840px">'
-      +'<div class="bpx-chead" style="margin-bottom:14px;align-items:flex-start">'
-        +'<div class="bpx-ptitle" style="margin:0">Edit your pricing<span class="lg2" id="bpCalcUnit" style="margin-left:8px"></span></div>'
-      +'</div>'
-      +'<div id="bpCalcTable"><div class="bpx-price-row"><span>Loading\u2026</span></div></div>'
-      +'<div id="bpCalcBookWrap" style="display:none;margin-top:14px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card,#fbfaf7)"><div style="font-weight:700;font-size:13.5px;margin-bottom:4px">Booking calendar link</div><div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">Where "Book a free inspection" sends people from the roof health check. Paste your website\'s booking page or calendar link. Leave blank and they\'re sent into the estimator\'s contact step instead.</div><input class="bpx-inp" id="bpCalcBook" placeholder="https://yourcompany.com/book"></div>'
-      +'<div class="bpx-calc-foot"><button class="bpx-cd-btn" onclick="bpCalcSave()">Save pricing</button><button class="bpx-mini alt" onclick="bpCalcReset()">Reset to defaults</button><span class="bpx-calc-ok" id="bpCalcOk"></span></div>'
-    +'</div></div>'
     +'<div data-calc-pane="preview"'+(_bpCalcTab==='preview'?'':' hidden')+'><div class="bpx-panel">'
       +'<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">What your customer sees<span class="lg2" style="margin-left:8px">the real calculator from your website</span></div>'
-        +'<button class="bpx-mini alt" onclick="bpCalcFrameReload()">Restart</button></div>'
+        +'<div style="display:flex;gap:8px"><button class="bpx-mini alt" onclick="bpCalcFrameReload()">Restart</button><button class="bpx-mini alt" onclick="bpCustomize(\'calc\')">Edit prices &amp; look</button></div></div>'
       +'<div id="bpCalcPreviewBox" class="bpx-calc-frame"></div>'
     +'</div></div>'
     +'<div data-calc-pane="embed"'+(_bpCalcTab==='embed'?'':' hidden')+'><div class="bpx-panel" style="max-width:860px">'
       +'<div class="bpx-ptitle">Put this calculator on your website<span class="lg2">one line of code</span></div>'
-      +'<p class="bpx-mut" style="font-size:13.5px;margin:0 0 12px;max-width:68ch;line-height:1.55">Paste this where you want the calculator to appear. It loads your prices live, so anything you save on the Edit pricing tab is on your site the moment you save it. Roof checks that visitors run land in your Lead Radar.</p>'
-      +'<div class="em-code"><pre id="bpEmbedCode">Getting your embed code\u2026</pre><button class="bpx-rowbtn primary" id="bpEmbedCopy" onclick="bpEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div>'
+      +'<p class="bpx-mut" style="font-size:13.5px;margin:0 0 12px;max-width:68ch;line-height:1.55">Paste this where you want the calculator to appear. It loads your prices and your look live, so anything you save in Customize is on your site the moment you save it. Roof checks that visitors run land in your Lead Radar.</p>'
+      +'<div class="em-code"><pre id="bpEmbedCode">Getting your embed code…</pre><button class="bpx-rowbtn primary" id="bpEmbedCopy" onclick="bpEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div>'
       +'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Works on WordPress, Squarespace, Wix, Webflow, GoHighLevel sites, or plain HTML. Ask your web person to drop it into an HTML or Embed block.</div>'
       +'<div class="em-lic"><div class="em-lic-h"><span class=ms>gavel</span>Embed licence</div>'
         +'<ol>'
-        +'<li><b>It\u2019s licensed, not sold.</b> This calculator is licensed to your business, for websites you own or control, for as long as your BuilderPro subscription is active.</li>'
-        +'<li><b>Don\u2019t share it.</b> The calculator, its code and its design are the copyright of BuilderPro OS. You may not copy, resell, sublicense or hand the embed code or the calculator to another business, or place it on a site you don\u2019t own.</li>'
-        +'<li><b>It\u2019s traceable.</b> Your embed carries your account id, and roof checks record the website they came from, so a copy leads back to the account it was issued to.</li>'
-        +'<li><b>If it is shared anyway:</b> we can switch the calculator off on unauthorised sites and, where it\u2019s deliberate, end the subscription. Unauthorised copying or distribution of copyrighted software can also be pursued as copyright infringement; US law allows statutory damages of up to $150,000 per work for wilful infringement.</li>'
+        +'<li><b>It’s licensed, not sold.</b> This calculator is licensed to your business, for websites you own or control, for as long as your BuilderPro subscription is active.</li>'
+        +'<li><b>Don’t share it.</b> The calculator, its code and its design are the copyright of BuilderPro OS. You may not copy, resell, sublicense or hand the embed code or the calculator to another business, or place it on a site you don’t own.</li>'
+        +'<li><b>It’s traceable.</b> Your embed carries your account id, and roof checks record the website they came from, so a copy leads back to the account it was issued to.</li>'
+        +'<li><b>If it is shared anyway:</b> we can switch the calculator off on unauthorised sites and, where it’s deliberate, end the subscription. Unauthorised copying or distribution of copyrighted software can also be pursued as copyright infringement; US law allows statutory damages of up to $150,000 per work for wilful infringement.</li>'
         +'</ol>'
         +'<div class="em-lic-f">This is a plain-language summary, not legal advice. Your full terms are in your BuilderPro agreement.</div>'
       +'</div>'
     +'</div></div>';
-  bpCalcPick(saved);
   if(_bpCalcTab==='preview')bpCalcFrameReload();
   if(_bpCalcTab==='embed')bpEmbedFill();
 }
-var _bpCalcTab='pricing';
+var _bpCalcTab='preview';
 window.bpCalcTab=function(t){
   _bpCalcTab=t;
   document.querySelectorAll('[data-calc-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-calc-tab')===t);});
@@ -14747,7 +14740,8 @@ function bpCalcRender(cid,override){
   var h='';
   def.groups.forEach(function(g,gi){
     var cols='1fr'+g.fields.map(function(){return ' minmax(0,108px)';}).join('');
-    if(def.groups.length>1)h+='<div class="bpx-price-grp">'+g.title+'</div>';
+    var hint=g.flat?'Multiplies the base price. 1.00 = no change.':(gi===0?def.unit:'Added on top of the estimate.');
+    h+='<details class="cz-sec"'+(gi===0?' open':'')+'><summary><span class="cz-sec-t">'+g.title+'</span><span class="cz-sec-s">'+g.items.length+' items \u00b7 '+hint+'</span><span class=ms>expand_more</span></summary><div class="cz-sec-b">';
     h+='<div class="bpx-price-row bpx-price-hd" style="grid-template-columns:'+cols+'"><span>Item</span>'+g.fields.map(function(f){return '<span>'+bpFieldLabel(f)+'</span>';}).join('')+'</div>';
     g.items.forEach(function(it){
       var ov=override&&override[g.prop]?override[g.prop][it.k]:null;
@@ -14760,6 +14754,7 @@ function bpCalcRender(cid,override){
         }).join('')
         +'</div>';
     });
+    h+='</div></details>';
   });
   var tb=document.getElementById('bpCalcTable');if(tb)tb.innerHTML=h;
   var bw=document.getElementById('bpCalcBookWrap'),bi=document.getElementById('bpCalcBook');
@@ -14794,11 +14789,155 @@ function bpCalcSave(){
   localStorage.setItem('bpPrice_'+cid,JSON.stringify(pricing));
   var ok=document.getElementById('bpCalcOk');ok.textContent='Saving\u2026';
   if(BP_LIVE){try{BP_SB.from('calculator_pricing').upsert({calc_id:cid,pricing:pricing,updated_at:new Date().toISOString()},{onConflict:'calc_id,owner'}).then(function(r){
-    if(r&&r.error)throw r.error;ok.textContent='<span class=ms>check</span> Saved \u2014 live on your '+cid+' calculator.';setTimeout(bpCalcFrameReload,400);
+    if(r&&r.error)throw r.error;ok.textContent='<span class=ms>check</span> Saved \u2014 live on your '+cid+' calculator.';setTimeout(function(){ bpCalcFrameReload(); if(window.bpCzReload)bpCzReload(); },400);
   }).catch(function(){ok.textContent='Saved on this device \u2014 live sync unavailable right now.';}).then(function(){setTimeout(function(){if(ok)ok.textContent='';},4500);});}
   catch(e){ok.textContent='<span class=ms>check</span> Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}}
   else{ok.textContent='<span class=ms>check</span> Saved.';setTimeout(function(){if(ok)ok.textContent='';},3000);}
 }
+/* ===== Customize: how the calculator and the booking page look on the client's
+   own website. Sections on the left (prices for the calculator, then look &
+   feel and images), the real public page on the right, updated as you type.
+   The theme is a small JSON per owner and kind in embed_themes; the public
+   pages read it anonymously and also accept a live postMessage preview. ===== */
+var BP_FONTS=['Geist','Inter','Plus Jakarta Sans','Manrope','DM Sans','Space Grotesk','Lato','Roboto','Nunito','Poppins','Montserrat','Playfair Display'];
+var BP_THEME_DEF={primary:'',bg:'',card:'',text:'',font:'',radius:'',logo:'',hero:'',hideBrand:false,logoSize:44};
+var _bpCust={kind:'calc',theme:{},saved:{},uid:'',device:'desktop',dirty:false,msg:''};
+window.bpCustomize=function(kind){ _bpCust.kind=(kind==='calendar')?'calendar':'calc'; _bpCust.dirty=false; _bpCust.msg=''; bpNav('customize'); };
+function bpCzThemeGet(kind){ var t={}; try{ t=JSON.parse(localStorage.getItem('bpTheme_'+kind)||'{}')||{}; }catch(e){} return t; }
+function bpCzThemeCache(kind,t){ try{ localStorage.setItem('bpTheme_'+kind,JSON.stringify(t||{})); }catch(e){} }
+function bpCustomizeView(){
+  var k=_bpCust.kind, isCalc=k==='calc';
+  var cid=window._bpCalcCur||bpCalcAssigned(); window._bpCalcCur=cid;
+  _bpCust.theme=Object.assign({},BP_THEME_DEF,bpCzThemeGet(k)); _bpCust.saved=Object.assign({},_bpCust.theme);
+  var t=_bpCust.theme;
+  var color=function(key,label,hint){ return '<div class="cz-field"><label>'+label+(hint?'<small>'+hint+'</small>':'')+'</label><div class="cz-color"><input type="color" data-th="'+key+'" value="'+(bpCzHex(t[key])||'#ffffff')+'"'+(t[key]?'':' data-empty="1"')+'><input type="text" data-th="'+key+'" placeholder="Default" value="'+bpEsc(t[key]||'')+'" maxlength="7"><button type="button" class="bpx-rowbtn" data-clear="'+key+'" title="Back to default">Default</button></div></div>'; };
+  var img=function(key,label,hint){ return '<div class="cz-field"><label>'+label+'<small>'+hint+'</small></label><div class="cz-img"><div class="cz-img-p" id="cz-img-'+key+'">'+(t[key]?'<img src="'+bpEsc(t[key])+'" alt="">':'<span class=ms>image</span>')+'</div><div class="cz-img-c"><input type="text" data-th="'+key+'" placeholder="https://… image link" value="'+(String(t[key]||'').slice(0,5)==='data:'?'':bpEsc(t[key]||''))+'"><div style="display:flex;gap:6px;flex-wrap:wrap"><label class="bpx-rowbtn" style="margin:0;cursor:pointer"><span class=ms>upload</span> Upload<input type="file" accept="image/*" data-up="'+key+'" hidden></label><button type="button" class="bpx-rowbtn" data-clear="'+key+'">Remove</button></div></div></div></div>'; };
+  var look='<details class="cz-sec" open><summary><span class="cz-sec-t">Look &amp; feel</span><span class="cz-sec-s">Colours, font and corners</span><span class=ms>expand_more</span></summary><div class="cz-sec-b">'
+    +'<div class="cz-grid">'+color('primary','Main colour','Buttons, highlights, the selected day')+color('bg','Page background','Behind the '+(isCalc?'calculator':'booking card'))+color('card','Card colour','The '+(isCalc?'calculator':'card')+' itself')+color('text','Text colour','Headings and body text')+'</div>'
+    +'<div class="cz-grid"><div class="cz-field"><label>Font</label><select data-th="font"><option value="">Default ('+(isCalc?'Inter':'Geist')+')</option>'+BP_FONTS.map(function(f){return '<option'+(t.font===f?' selected':'')+' style="font-family:\''+f+'\'">'+f+'</option>';}).join('')+'</select></div>'
+    +'<div class="cz-field"><label>Corners<small>0 is square, 24 is very round</small></label><div class="cz-range"><input type="range" min="0" max="24" step="1" data-th="radius" value="'+(t.radius===''||t.radius==null?(isCalc?12:18):t.radius)+'"><span id="cz-radius-v">'+(t.radius===''||t.radius==null?'Default':t.radius+'px')+'</span></div></div></div>'
+    +'<label class="cz-check"><input type="checkbox" data-th="hideBrand"'+(t.hideBrand?' checked':'')+'> Hide the small “'+(isCalc?'BuilderPro':'Scheduling by BuilderPro')+'” line</label>'
+    +'</div></details>';
+  var images='<details class="cz-sec"><summary><span class="cz-sec-t">Images</span><span class="cz-sec-s">Your logo and a header photo</span><span class=ms>expand_more</span></summary><div class="cz-sec-b">'
+    +img('logo','Logo','Shown at the top. PNG with a transparent background looks best.')
+    +'<div class="cz-field" style="max-width:260px"><label>Logo size</label><div class="cz-range"><input type="range" min="24" max="96" step="2" data-th="logoSize" value="'+(t.logoSize||44)+'"><span id="cz-logo-v">'+(t.logoSize||44)+'px</span></div></div>'
+    +img('hero','Header photo','A finished roof, your crew, your truck. Sits '+(isCalc?'above the calculator':'at the top of the side panel')+' under a soft navy tint.')
+    +'</div></details>';
+  var book=(isCalc&&cid==='roofing')?'<details class="cz-sec"><summary><span class="cz-sec-t">Booking link</span><span class="cz-sec-s">Where “Book a free inspection” sends people</span><span class=ms>expand_more</span></summary><div class="cz-sec-b"><div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">Your BuilderPro booking page is the natural choice. Leave blank and visitors go to the estimator’s contact step instead.</div><input class="bpx-inp" id="bpCalcBook" placeholder="https://builderpro-os.com/book/?u=…"><div id="bpCalcBookWrap" hidden></div></div></details>':'';
+  var backTo=isCalc?'calculator':'calendar';
+  q('bpxViewArea').innerHTML=
+    '<div class="cz">'
+    +'<div class="cz-left">'
+      +'<div class="cz-top"><button class="bpx-rowbtn" style="margin:0" onclick="bpNav(\''+backTo+'\')"><span class=ms>arrow_back</span> Back to '+(isCalc?'calculator':'calendar')+'</button>'
+        +'<div class="bpx-jobtabs"><button class="bpx-jt'+(isCalc?' on':'')+'" onclick="bpCustomize(\'calc\')">Calculator</button><button class="bpx-jt'+(!isCalc?' on':'')+'" onclick="bpCustomize(\'calendar\')">Booking page</button></div></div>'
+      +(isCalc?'<div class="cz-h">Prices<span>'+bpEsc(BP_CALC_DEFS[cid].unit)+'</span></div><div id="bpCalcTable"><div class="bpx-price-row"><span>Loading…</span></div></div>'+book:'')
+      +'<div class="cz-h">Look<span>what visitors see on your site</span></div>'+look+images
+      +'<div class="cz-foot"><button class="bpx-btn" onclick="bpCzSave()"><span class=ms>check</span> Save</button><button class="bpx-btn ghost" onclick="bpCzResetLook()">Reset look</button><span class="bpx-calc-ok" id="bpCalcOk"></span><span class="cz-msg" id="cz-msg"></span></div>'
+    +'</div>'
+    +'<div class="cz-right"><div class="cz-prev"><div class="cz-prev-h"><b>Live preview</b><span class="bpx-mut" style="font-size:12px">'+(isCalc?'your real calculator page':'your real booking page')+'</span><div class="bpx-jobtabs" style="margin-left:auto"><button class="bpx-jt'+(_bpCust.device==='desktop'?' on':'')+'" onclick="bpCzDevice(\'desktop\')"><span class=ms>desktop_windows</span></button><button class="bpx-jt'+(_bpCust.device==='phone'?' on':'')+'" onclick="bpCzDevice(\'phone\')"><span class=ms>smartphone</span></button></div></div>'
+      +'<div class="cz-frame'+(_bpCust.device==='phone'?' phone':'')+'"><iframe id="cz-iframe" title="Preview"></iframe></div></div></div>'
+    +'</div>';
+  if(isCalc) bpCalcPick(cid);
+  bpCzWire();
+  Promise.resolve(window.BP_LIVE&&window.BP_SB?bpSetUser():null).then(function(u){
+    _bpCust.uid=(u&&u.id)||'';
+    bpCzReload();
+    if(!(window.BP_LIVE&&window.BP_SB)) return;
+    /* the saved theme from the account wins over the device cache */
+    return Promise.resolve(BP_SB.from('embed_themes').select('theme').eq('kind',k).maybeSingle()).then(function(r){
+      if(r&&r.data&&r.data.theme&&_bpCust.kind===k){ _bpCust.theme=Object.assign({},BP_THEME_DEF,r.data.theme); _bpCust.saved=Object.assign({},_bpCust.theme); bpCzThemeCache(k,r.data.theme); bpCzFill(); bpCzPush(); }
+    },function(){});
+  },function(){ bpCzReload(); });
+}
+function bpCzHex(v){ v=String(v||'').trim(); if(/^#[0-9a-f]{6}$/i.test(v)) return v; if(/^#[0-9a-f]{3}$/i.test(v)) return '#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3]; return ''; }
+function bpCzPrevSrc(){
+  var k=_bpCust.kind, u=_bpCust.uid?('u='+encodeURIComponent(_bpCust.uid)):'';
+  if(k==='calc'){ var cid=window._bpCalcCur||bpCalcAssigned(); return 'embed/'+cid+'.html?'+u+'&preview=1'; }
+  return 'book/?'+u+'&embed=1&preview=1';
+}
+window.bpCzReload=function(){ var f=q('cz-iframe'); if(!f) return; f.src=bpCzPrevSrc(); f.onload=function(){ bpCzPush(); setTimeout(bpCzPush,600); }; };
+function bpCzPush(){ var f=q('cz-iframe'); if(!f||!f.contentWindow) return; try{ f.contentWindow.postMessage({type:'bp-theme',theme:bpCzClean(_bpCust.theme)},'*'); }catch(e){} }
+function bpCzClean(t){ var o={}; Object.keys(t||{}).forEach(function(k){ var v=t[k]; if(v===''||v==null||v===false) return; if(k==='radius'||k==='logoSize') v=+v; o[k]=v; }); return o; }
+window.bpCzDevice=function(d){ _bpCust.device=d; var f=document.querySelector('.cz-frame'); if(f) f.classList.toggle('phone',d==='phone'); document.querySelectorAll('.cz-prev-h .bpx-jt').forEach(function(b,i){ b.classList.toggle('on',(i===0)===(d==='desktop')); }); };
+/* write the theme into the controls (after the account copy arrives) */
+function bpCzFill(){
+  var t=_bpCust.theme;
+  document.querySelectorAll('.cz [data-th]').forEach(function(el){
+    var k=el.getAttribute('data-th');
+    if(el.type==='checkbox') el.checked=!!t[k];
+    else if(el.type==='color'){ el.value=bpCzHex(t[k])||'#ffffff'; if(t[k]) el.removeAttribute('data-empty'); else el.setAttribute('data-empty','1'); }
+    else if(el.type==='file') return;
+    else if(el.type==='text'&&(k==='logo'||k==='hero')) el.value=String(t[k]||'').slice(0,5)==='data:'?'':(t[k]||'');
+    else if(el.type==='range') el.value=(t[k]===''||t[k]==null)?el.value:t[k];
+    else el.value=t[k]||'';
+  });
+  var rv=q('cz-radius-v'); if(rv) rv.textContent=(t.radius===''||t.radius==null)?'Default':t.radius+'px';
+  var lv=q('cz-logo-v'); if(lv) lv.textContent=(t.logoSize||44)+'px';
+  ['logo','hero'].forEach(function(k){ var p=q('cz-img-'+k); if(p) p.innerHTML=t[k]?'<img src="'+bpEsc(t[k])+'" alt="">':'<span class=ms>image</span>'; });
+}
+function bpCzWire(){
+  var root=document.querySelector('.cz'); if(!root) return;
+  var set=function(k,v){ _bpCust.theme[k]=v; _bpCust.dirty=true; bpCzPush(); var m=q('cz-msg'); if(m) m.textContent='Unsaved changes'; };
+  root.addEventListener('input',function(e){
+    var el=e.target, k=el.getAttribute&&el.getAttribute('data-th'); if(!k) return;
+    if(el.type==='color'){ el.removeAttribute('data-empty'); var tx=root.querySelector('input[type=text][data-th="'+k+'"]'); if(tx) tx.value=el.value; set(k,el.value); }
+    else if(el.type==='text'&&['primary','bg','card','text'].indexOf(k)>=0){ var h=bpCzHex(el.value); var c=root.querySelector('input[type=color][data-th="'+k+'"]'); if(h&&c){ c.value=h; c.removeAttribute('data-empty'); } if(h||el.value==='') set(k,h); }
+    else if(el.type==='range'){ set(k,+el.value); var rv=q(k==='radius'?'cz-radius-v':'cz-logo-v'); if(rv) rv.textContent=el.value+'px'; }
+    else if(el.type==='checkbox'){ set(k,el.checked); }
+    else if(el.type==='text'&&(k==='logo'||k==='hero')){ var v=el.value.trim(); if(!v||/^https?:\/\//i.test(v)){ set(k,v); var p=q('cz-img-'+k); if(p) p.innerHTML=v?'<img src="'+bpEsc(v)+'" alt="">':'<span class=ms>image</span>'; } }
+    else set(k,el.value);
+  });
+  root.addEventListener('change',function(e){
+    var el=e.target; if(el.tagName==='SELECT'&&el.getAttribute('data-th')) set(el.getAttribute('data-th'),el.value);
+    var up=el.getAttribute&&el.getAttribute('data-up');
+    if(up&&el.files&&el.files[0]) bpCzUpload(up,el.files[0]);
+  });
+  root.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('[data-clear]'); if(!b) return;
+    var k=b.getAttribute('data-clear'); set(k,''); bpCzFill();
+  });
+}
+/* an uploaded image is stored inside the theme as a data URL, downscaled so
+   the theme stays small enough to travel with every page load */
+function bpCzUpload(key,file){
+  var m=q('cz-msg');
+  if(!/^image\//.test(file.type)){ if(m) m.textContent='That is not an image.'; return; }
+  var rd=new FileReader();
+  rd.onload=function(){
+    var im=new Image();
+    im.onload=function(){
+      var max=key==='logo'?480:1200, sc=Math.min(1,max/Math.max(im.width,im.height));
+      var c=document.createElement('canvas'); c.width=Math.round(im.width*sc); c.height=Math.round(im.height*sc);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      var keepPng=key==='logo'&&/png|svg|webp/i.test(file.type);
+      var out=keepPng?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.82);
+      if(out.length>420000&&keepPng) out=c.toDataURL('image/jpeg',.82);
+      if(out.length>420000){ if(m) m.textContent='That image is too large even after shrinking. Try a smaller one, or paste a link to it.'; return; }
+      _bpCust.theme[key]=out; _bpCust.dirty=true; bpCzFill(); bpCzPush(); if(m) m.textContent='Unsaved changes';
+    };
+    im.onerror=function(){ if(m) m.textContent='Could not read that image.'; };
+    im.src=rd.result;
+  };
+  rd.readAsDataURL(file);
+}
+window.bpCzResetLook=function(){
+  if(!confirm('Reset colours, font, corners and images to the BuilderPro defaults? Prices are not affected.')) return;
+  _bpCust.theme=Object.assign({},BP_THEME_DEF); _bpCust.dirty=true; bpCzFill(); bpCzPush(); var m=q('cz-msg'); if(m) m.textContent='Unsaved changes';
+};
+window.bpCzSave=function(){
+  var k=_bpCust.kind, m=q('cz-msg'), clean=bpCzClean(_bpCust.theme);
+  if(k==='calc') bpCalcSave();
+  bpCzThemeCache(k,clean);
+  if(m) m.textContent='Saving…';
+  if(!(window.BP_LIVE&&window.BP_SB)){ if(m) m.textContent='Saved on this device — sign in to put it on your website.'; _bpCust.dirty=false; return; }
+  Promise.resolve(BP_SB.from('embed_themes').upsert({kind:k,theme:clean,updated_at:new Date().toISOString()},{onConflict:'owner,kind'})).then(function(r){
+    if(r&&r.error) throw r.error;
+    _bpCust.saved=Object.assign({},_bpCust.theme); _bpCust.dirty=false;
+    if(m) m.innerHTML='<span class=ms>check</span> Saved — live on your '+(k==='calc'?'calculator':'booking page')+'.';
+    setTimeout(function(){ if(m&&!_bpCust.dirty) m.textContent=''; },4500);
+  },function(){ if(m) m.textContent='Saved on this device — could not reach your account just now.'; });
+};
+
 /* The embed is the same estimator document the marketing site shows, served
    from /embed/<trade>.html with the client's owner id in the query string, so
    it loads THEIR prices and files roof checks under THEIR account. The pages are
@@ -15594,7 +15733,7 @@ var _bpContacts=[];
       +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
       +bpCalConnHtml()
       +'<div class="cal-url"><span class=ms>link</span><span class="cal-url-t">'+bpEsc(url)+'</span></div>'
-      +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button>'
+      +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button><button class="bpx-rowbtn" onclick="bpCustomize(\'calendar\')"><span class=ms>palette</span> Customize</button>'
       +(s.ready===true?'<button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button>':'')+'</div>'
       +'<div class="cal-embed" id="bpx-cl-embed" hidden><div class="em-code"><pre id="bpx-cl-code">'+bpEsc(embed)+'</pre><button class="bpx-rowbtn" id="bpx-cl-ecopy" onclick="bpCalEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div><div class="bpx-mut" style="font-size:12px;margin-top:8px">Paste it into any page of your site. The embed is licensed to your account only and may not be shared or resold.</div></div>';
     window._bpCalEmbed=embed;
@@ -21737,6 +21876,55 @@ window.bgPartnersRender=function(){
   #bpx .cal-panel{padding:12px}
   #bpx .cal-top .bpx-btn{padding:10px 14px}
 }
+/* ---------- customize ---------- */
+#bpx .cz{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,46%);gap:16px;align-items:start}
+#bpx .cz-left{min-width:0}
+#bpx .cz-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#bpx .cz-h{display:flex;align-items:baseline;gap:8px;font-size:15px;font-weight:700;margin:18px 0 8px}
+#bpx .cz-h:first-of-type{margin-top:4px}
+#bpx .cz-h span{font-size:12px;font-weight:500;color:var(--grey)}
+#bpx .cz-sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:10px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05),0 12px 32px -16px rgba(var(--sh-c),.22)}
+#bpx .cz-sec summary{list-style:none;display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none}
+#bpx .cz-sec summary::-webkit-details-marker{display:none}
+#bpx .cz-sec-t{font-size:14px;font-weight:700;color:var(--ink)}
+#bpx .cz-sec-s{font-size:12px;color:var(--grey);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cz-sec summary .ms{color:var(--grey-l);transition:transform .2s var(--ease)}
+#bpx .cz-sec[open] summary .ms{transform:rotate(180deg)}
+#bpx .cz-sec[open] summary{border-bottom:1px solid var(--line-2,var(--line))}
+#bpx .cz-sec-b{padding:6px 16px 14px}
+#bpx .cz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px 16px;margin-top:8px}
+#bpx .cz-field{min-width:0;margin-top:8px}
+#bpx .cz-field>label{display:block;font-size:12px;font-weight:600;color:var(--grey);margin-bottom:5px}
+#bpx .cz-field>label small{display:block;font-weight:400;color:var(--grey-l);font-size:11.5px;margin-top:1px}
+#bpx .cz-color{display:flex;gap:6px;align-items:center}
+#bpx .cz-color input[type=color]{width:40px;height:38px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--card);cursor:pointer;flex:none}
+#bpx .cz-color input[type=color][data-empty]{opacity:.45}
+#bpx .cz-color input[type=text]{flex:1;min-width:0;font-family:'Geist Mono',ui-monospace,monospace;font-size:12.5px}
+#bpx .cz-color .bpx-rowbtn{margin:0;flex:none}
+#bpx .cz-range{display:flex;align-items:center;gap:10px}
+#bpx .cz-range input[type=range]{flex:1;accent-color:var(--blue)}
+#bpx .cz-range span{font-size:12.5px;color:var(--grey);min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+#bpx .cz-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-top:14px;cursor:pointer}
+#bpx .cz-check input{accent-color:var(--blue);width:16px;height:16px}
+#bpx .cz-img{display:flex;gap:12px;align-items:flex-start}
+#bpx .cz-img-p{width:96px;height:64px;border:1px dashed var(--line);border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--grey-l);flex:none;overflow:hidden}
+#bpx .cz-img-p img{max-width:100%;max-height:100%;object-fit:contain}
+#bpx .cz-img-c{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#bpx .cz-img-c .bpx-rowbtn{display:inline-flex;align-items:center;gap:4px}
+#bpx .bpx-calc-hero .bpx-btn,#bpx .cz-foot .bpx-btn{width:auto;flex:none}
+#bpx .cz-foot{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0 4px;margin-top:6px;background:linear-gradient(180deg,rgba(238,241,246,0),var(--bg) 30%)}
+#bpx .cz-msg{font-size:12.5px;color:var(--grey);font-weight:600}
+#bpx .cz-right{position:sticky;top:12px}
+#bpx .cz-prev{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05),0 12px 32px -16px rgba(var(--sh-c),.28)}
+#bpx .cz-prev-h{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+#bpx .cz-prev-h b{font-size:13.5px}
+#bpx .cz-prev-h .bpx-jt{padding:5px 9px !important}
+#bpx .cz-frame{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;height:min(78vh,860px);box-shadow:inset 0 1px 2px rgba(var(--sh-c),.06);transition:max-width .3s var(--ease);margin:0 auto}
+#bpx .cz-frame iframe{width:100%;height:100%;border:0;background:#fff;display:block}
+#bpx .cz-frame.phone{max-width:400px;border-radius:26px;border:8px solid #1b2333}
+#bpx .cz #bpCalcTable .bpx-price-row{padding:7px 0}
+@media(max-width:1000px){#bpx .cz{grid-template-columns:1fr}#bpx .cz-right{position:static}#bpx .cz-frame{height:640px}}
+
 /* ---------- recurring money ---------- */
 #bpx .fin-rec{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px}
 #bpx .fin-rec-row{display:flex;gap:10px;flex-wrap:wrap}

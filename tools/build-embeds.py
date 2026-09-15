@@ -47,6 +47,12 @@ for i, t in enumerate(TRADES):
     doc = doc.replace('<!doctype html>', '<!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->', 1)
     if '<meta name="viewport"' not in doc:
         doc = re.sub(r'(<head[^>]*>)', r'\1<meta name="viewport" content="width=device-width,initial-scale=1">', doc, count=1)
+    # the owner's saved look (colours, font, logo) and live preview from the portal
+    applier = io.open(os.path.join(ROOT, 'tools', 'theme-applier.js'), encoding='utf-8').read().replace('__KIND__', 'calc')
+    if '</body>' in doc:
+        doc = doc.replace('</body>', '<script id="bp-theme-applier">' + applier + '</script></body>', 1)
+    else:
+        doc += '<script id="bp-theme-applier">' + applier + '</script>'
     io.open(os.path.join(OUT, t + '.html'), 'w', encoding='utf-8').write(doc)
     built.append((t, len(doc)))
 
