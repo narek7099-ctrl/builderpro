@@ -84,6 +84,25 @@ body.embed .tray{background:transparent;border:0;padding:0;border-radius:0}
 .hint.err{color:var(--err)}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mu);font-size:13.5px}
 
+/* full-month calendar */
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.cal-m b{font-size:20px;font-weight:800;letter-spacing:-.024em}
+.cal-m small{display:block;font-size:12px;color:var(--mu2);min-height:14px}
+.cal-nav{appearance:none;width:40px;height:40px;border:1px solid var(--line);background:var(--card);border-radius:11px;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh),.05);transition:transform .15s var(--ease)}
+.cal-nav:hover:not(:disabled){transform:translateY(-1px);border-color:#b9c9ea}
+.cal-nav:disabled{opacity:.35;cursor:default}
+.days.big{gap:8px}
+.days.big .dow{font-size:11px;padding:4px 0 6px}
+.days.big .chip{height:66px;font-size:17px;font-weight:700;gap:3px}
+.days.big .chip small{font-size:10px}
+.days.big .chip.today:not(.on)::after{content:"";position:absolute;bottom:6px;width:5px;height:5px;border-radius:50%;background:var(--blue)}
+.days.big .chip{position:relative}
+.days.big .chip:disabled{background:transparent;border-style:dashed;opacity:.5}
+.cal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--mu)}
+.cal-key{display:inline-flex;align-items:center;gap:7px}
+.cal-key i{width:12px;height:12px;border-radius:4px;background:var(--card);border:1px solid var(--line);box-shadow:inset 0 1px 0 var(--edge)}
+.cal-foot em{font-style:normal;font-weight:500}
+@media(max-width:760px){.days.big{gap:5px}.days.big .chip{height:54px;font-size:15px}.days.big .chip small{font-size:9px}}
 /* month | day | time columns */
 .mdt3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
 .mdt-col{min-width:0}
@@ -235,53 +254,39 @@ body.embed .brand{display:none}
   function steps(n){ var s=$("steps").children; for(var i=0;i<s.length;i++) s[i].className=i<n?"on":""; }
   function render(){ steps(S.step); var p=$("pane"); p.className="pane"; if(S.step===1) pane1(p); else if(S.step===2) pane2(p); else if(S.step===3) pane3(p); }
 
-  // ---- 1. month | day | time ----
-  // Three columns. Each shows only the choice (or a prompt) until it is opened;
-  // picking in one column collapses it and opens the next.
-  S.open="month";
+  // ---- 1. a full month calendar; tap a day with openings ----
+  S.viewKey="";
   function pane1(p){
-    var ms=months(); if(!S.monthKey) S.monthKey=ms[0].key;
-    p.innerHTML='<div class="mdt3" id="mdt"></div><div class="bar"><div class="pick" id="pick"></div><button class="btn pri" id="next" disabled>Next <span class="ms">arrow_forward</span></button></div>';
-    $("next").onclick=function(){ if(S.iso){ S.step=2; render(); } };
-    drawCols(); drawPick();
-    ms.forEach(function(m){ loadMonth(m.key).then(function(){ if(S.step===1&&$("mdt")) drawCols(); }); });
+    var ms=months(); if(!S.viewKey) S.viewKey=S.monthKey||ms[0].key;
+    p.innerHTML='<div id="calwrap"></div>';
+    drawCal();
+    ms.forEach(function(m){ loadMonth(m.key).then(function(){ if(S.step===1&&$("calwrap")) drawCal(); }); });
   }
-  function openDays(mk){ return Object.keys(S.slots).filter(function(d){ return d.slice(0,7)===mk&&S.slots[d].length; }).sort(); }
-  function drawCols(){
-    var el=$("mdt"); if(!el) return;
-    var ms=months(), mk=S.monthKey, days=openDays(mk), times=S.date?(S.slots[S.date]||[]):[];
-    var st=S.loaded[mk], loading=(st==="loading"||!st);
-    var dt=function(d){ return new Date(d+"T12:00:00"); };
-    var col=function(key,label,sel,list,extra){
-      var open=S.open===key;
-      return '<div class="mdt-col'+(open?' open':'')+'"><div class="mdt-h">'+label+(extra?'<em>'+extra+'</em>':'')+'</div>'
-        +'<button type="button" class="mdt-sel'+(sel.on?' on':'')+(sel.dim?' dim':'')+'" data-open="'+key+'"><div class="mdt-txt">'+sel.html+'</div><span class="ms">'+(open?'expand_less':'expand_more')+'</span></button>'
-        +(open?'<div class="mdt-list">'+list+'</div>':'')+'</div>';
-    };
-    var mLabel=function(m){ return MON[m.m]+(m.y!==new Date().getFullYear()?' '+m.y:''); };
-    var cur=ms.filter(function(m){return m.key===mk;})[0]||ms[0];
-    var mSel={on:true,html:'<b>'+esc(mLabel(cur))+'</b><small>'+(loading?'checking\u2026':(days.length?days.length+' day'+(days.length===1?'':'s')+' open':'fully booked'))+'</small>'};
-    var mList=ms.map(function(m){ var n=openDays(m.key).length, ld=S.loaded[m.key]; return '<button type="button" class="mdt-opt'+(m.key===mk?' on':'')+'" data-m="'+m.key+'"><b>'+esc(mLabel(m))+'</b><small>'+((ld==="loading"||!ld)?'checking\u2026':(n?n+' day'+(n===1?'':'s')+' open':'fully booked'))+'</small></button>'; }).join('');
-    var dSel=S.date?{on:true,html:'<b>'+esc(dt(S.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))+'</b><small>'+(S.slots[S.date]||[]).length+' times open</small>'}:{dim:true,html:'<b>Pick a day</b><small>'+(loading?'checking\u2026':(days.length?days.length+' open':'none this month'))+'</small>'};
-    var dList=loading?'<div class="spin" style="margin:14px auto"></div>':(st==="err"?'<div class="mdt-none">Could not load this month. Try again in a moment.</div>':(days.length?days.map(function(d){ return '<button type="button" class="mdt-opt'+(d===S.date?' on':'')+'" data-d="'+d+'"><b>'+esc(dt(d).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))+'</b><small>'+S.slots[d].length+' open</small></button>'; }).join(''):'<div class="mdt-none">Nothing open this month. Try the next one.</div>'));
-    var tSel=S.iso?{on:true,html:'<b>'+esc(fmtTime(S.iso))+'</b><small>about 1 hour</small>'}:{dim:true,html:'<b>Pick a time</b><small>'+(S.date?times.length+' open':'choose a day first')+'</small>'};
-    var tList=times.length?times.map(function(iso){ return '<button type="button" class="mdt-opt'+(iso===S.iso?' on':'')+'" data-t="'+iso+'"><b>'+esc(fmtTime(iso))+'</b></button>'; }).join(''):'<div class="mdt-none">Choose a day first.</div>';
-    el.innerHTML=col("month","Month",mSel,mList)+col("date","Day",dSel,dList)+col("time","Time",tSel,tList,esc(tzName()));
-    el.querySelectorAll("[data-open]").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-open"); S.open=(S.open===k)?"":k; drawCols(); }; });
-    el.querySelectorAll("[data-m]").forEach(function(b){ b.onclick=function(){ S.monthKey=b.getAttribute("data-m"); S.date=""; S.iso=""; S.open="date"; drawCols(); drawPick(); loadMonth(S.monthKey).then(function(){ if(S.step===1) drawCols(); }); }; });
-    el.querySelectorAll("[data-d]").forEach(function(b){ b.onclick=function(){ S.date=b.getAttribute("data-d"); S.iso=""; S.open="time"; drawCols(); drawPick(); }; });
-    el.querySelectorAll("[data-t]").forEach(function(b){ b.onclick=function(){ S.iso=b.getAttribute("data-t"); S.open=""; drawCols(); drawPick(); }; });
-  }
-  function drawPick(){
-    var el=$("pick"), n=$("next"); if(!el) return;
-    if(S.iso){ el.innerHTML='<span class="ms">event</span><span><b>'+esc(fmtLong(S.iso))+'</b> at '+esc(fmtTime(S.iso))+'</span>'; n.disabled=false; }
-    else { el.innerHTML='<span class="ms" style="color:var(--mu2)">event</span><span style="color:var(--mu)">Choose a month, a day, then a time.</span>'; n.disabled=true; }
+  function drawCal(){
+    var el=$("calwrap"); if(!el) return;
+    var ms=months(), idx=ms.map(function(m){return m.key;}).indexOf(S.viewKey); if(idx<0){ idx=0; S.viewKey=ms[0].key; }
+    var m=ms[idx], y=m.y, mo=m.m, days=new Date(y,mo+1,0).getDate(), first=new Date(y,mo,1).getDay();
+    var st=S.loaded[m.key], loading=(st==="loading"||!st), open=0;
+    var h='<div class="cal-h"><button type="button" class="cal-nav" id="cal-prev"'+(idx===0?' disabled':'')+'><span class="ms">chevron_left</span></button><div class="cal-m"><b>'+MON[mo]+' '+y+'</b><small>'+(loading?'checking openings\u2026':'')+'</small></div><button type="button" class="cal-nav" id="cal-next"'+(idx===ms.length-1?' disabled':'')+'><span class="ms">chevron_right</span></button></div>';
+    h+='<div class="days big">'; ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(function(d){ h+='<div class="dow">'+d+'</div>'; });
+    for(var i=0;i<first;i++) h+='<div class="chip pad"></div>';
+    var today=localDate(new Date().toISOString());
+    for(var d=1;d<=days;d++){ var k=m.key+"-"+pad(d); var n=(S.slots[k]||[]).length; if(n) open++;
+      h+='<button type="button" class="chip'+(k===S.date?' on':'')+(k===today?' today':'')+'" data-d="'+k+'"'+(n?'':' disabled')+'><span>'+d+'</span>'+(n?'<small>'+n+' open</small>':'')+'</button>'; }
+    h+='</div>';
+    h+='<div class="cal-foot"><span class="cal-key"><i></i> days with openings</span><em>'+(loading?'':(open?open+' day'+(open===1?'':'s')+' open this month':'Nothing open this month \u2014 try the next one'))+'</em></div>';
+    el.innerHTML=h;
+    $("cal-prev").onclick=function(){ if(idx>0){ S.viewKey=ms[idx-1].key; drawCal(); } };
+    $("cal-next").onclick=function(){ if(idx<ms.length-1){ S.viewKey=ms[idx+1].key; drawCal(); loadMonth(S.viewKey).then(drawCal); } };
+    el.querySelectorAll(".chip[data-d]").forEach(function(b){ b.onclick=function(){ S.date=b.getAttribute("data-d"); S.monthKey=S.viewKey; S.iso=""; S.step=2; render(); }; });
   }
 
   // ---- 2. details ----
   function pane2(p){
-    var d=new Date(S.iso);
-    p.innerHTML='<div class="summary"><div class="date"><span class="mo">'+d.toLocaleDateString("en-US",{month:"short"})+'</span><span class="dy">'+d.getDate()+'</span></div><div class="txt"><b>'+esc(fmtLong(S.iso))+'</b><span>'+esc(fmtTime(S.iso))+' · about 1 hour</span></div><a href="#" id="chg">Change</a></div>'
+    var d=new Date(S.date+"T12:00:00"), times=S.slots[S.date]||[];
+    p.innerHTML='<div class="summary"><div class="date"><span class="mo">'+d.toLocaleDateString("en-US",{month:"short"})+'</span><span class="dy">'+d.getDate()+'</span></div><div class="txt"><b>'+esc(d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}))+'</b><span id="sum-t">'+(S.iso?esc(fmtTime(S.iso))+' · about 1 hour':times.length+' times open · about 1 hour each')+'</span></div><a href="#" id="chg">Change day</a></div>'
+      +'<div class="lbl" style="margin-top:0"><b>Pick a time</b><em>'+esc(tzName())+'</em></div><div class="times" id="times">'+times.map(function(iso){ return '<button type="button" class="chip'+(iso===S.iso?' on':'')+'" data-t="'+iso+'">'+esc(fmtTime(iso))+'</button>'; }).join('')+'</div>'
+      +'<div class="lbl"><b>Your details</b></div>'
       +'<div class="form"><div class="f"><label for="f-name">Your name</label><input id="f-name" autocomplete="name" value="'+esc(S.name)+'"></div>'
       +'<div class="f"><label for="f-phone">Mobile number</label><input id="f-phone" type="tel" autocomplete="tel" inputmode="tel" value="'+esc(S.phone)+'"></div>'
       +'<div class="f"><label for="f-email">Email <span style="font-weight:500;color:var(--mu2)">optional</span></label><input id="f-email" type="email" autocomplete="email" value="'+esc(S.email)+'"></div>'
@@ -290,10 +295,12 @@ body.embed .brand{display:none}
       +'<div class="msg" id="msg"></div>'
       +'<div class="bar"><button class="btn ghost" id="back"><span class="ms">arrow_back</span> Back</button><button class="btn pri" id="go">Confirm booking <span class="ms">check</span></button></div>';
     var keep=function(){ S.name=$("f-name").value.trim(); S.phone=$("f-phone").value.trim(); S.email=$("f-email").value.trim(); S.address=$("f-addr").value.trim(); S.notes=$("f-notes").value.trim(); };
-    $("chg").onclick=function(e){ e.preventDefault(); keep(); S.step=1; S.open="time"; render(); };
+    $("chg").onclick=function(e){ e.preventDefault(); keep(); S.step=1; render(); };
     $("back").onclick=function(){ keep(); S.step=1; render(); };
+    p.querySelectorAll("#times .chip").forEach(function(b){ b.onclick=function(){ S.iso=b.getAttribute("data-t"); p.querySelectorAll("#times .chip").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); var t=$("sum-t"); if(t) t.textContent=fmtTime(S.iso)+" \u00b7 about 1 hour"; }; });
     $("go").onclick=function(){
       keep(); var m=$("msg"); m.className="msg";
+      if(!S.iso){ m.className="msg err"; m.textContent="Pick a time first."; $("times").scrollIntoView({behavior:"smooth",block:"center"}); return; }
       if(!S.name){ m.className="msg err"; m.textContent="Please add your name."; $("f-name").focus(); return; }
       if(S.phone.replace(/\D/g,"").length<10){ m.className="msg err"; m.textContent="Please add a mobile number we can text."; $("f-phone").focus(); return; }
       if(S.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(S.email)){ m.className="msg err"; m.textContent="That email does not look right."; $("f-email").focus(); return; }
@@ -305,7 +312,6 @@ body.embed .brand{display:none}
         if(/taken/i.test(r.error||"")){ S.loaded={}; S.slots={}; S.iso=""; }
       },function(){ m.className="msg err"; m.textContent="No connection. Please try again."; b.disabled=false; b.innerHTML='Confirm booking <span class="ms">check</span>'; });
     };
-    $("f-name").focus();
   }
 
   // ---- 3. done ----
