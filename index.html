@@ -15502,9 +15502,16 @@ var _bpContacts=[];
       .then(function(r){ return r.json(); })
       .then(function(r){
         if(my!==_bpCalLink.seq||!r||r.ok===undefined) return;
-        _bpCalLink.ready=!!r.ready; _bpCalLink.reason=r.reason||'';
+        _bpCalLink.ready=!!r.ready; _bpCalLink.reason=r.reason||''; _bpCalLink.mode=r.mode||'';
         bpCalLinkDraw();
         if(!r.ready&&_bpCalLink.cals===null) bpCalLoadCals('',my);
+        /* the page greets homeowners with the business name from the account
+           record; if that is blank, push what Settings knows, once */
+        if(r.ready&&!r.business&&!_bpCalLink.profiled){
+          _bpCalLink.profiled=true;
+          var co=(bpSettingsGet()||{}).company||{};
+          if(co.name) Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'profile',company:{name:co.name||'',phone:co.phone||'',area:co.serviceArea||'',hours:co.hours||''}})).then(function(){},function(){});
+        }
       },function(){});
   }
   function bpCalLoadCals(locOverride,my){
@@ -15583,11 +15590,12 @@ var _bpContacts=[];
     el.innerHTML='<div class="cal-side-h"><b>Your booking page</b><span class="bpx-badge">'+(s.ready===false?'Not live yet':'Inspections')+'</span></div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Homeowners pick a month, a day and a time on your open inspection calendar. Put it on your website, in your Google profile, and in every text.</div>'
       +(s.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>This page can\u2019t show open times until you say which calendar takes inspections. Until then visitors see your phone number instead.</span></div>':'')
+      +(s.ready===true&&s.mode==='portal'?'<div class="bpx-mut" style="font-size:12.5px;margin:-4px 0 12px;display:flex;gap:6px;align-items:flex-start"><span class=ms style="font-size:17px;color:#15803d">check_circle</span><span>Books into the same Inspections calendar you see above. Homeowners get the outside view, you get the inside one.</span></div>':'')
       +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
       +bpCalConnHtml()
       +'<div class="cal-url"><span class=ms>link</span><span class="cal-url-t">'+bpEsc(url)+'</span></div>'
       +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button>'
-      +(s.ready===true?'<button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Change calendar</button>':'')+'</div>'
+      +(s.ready===true?'<button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button>':'')+'</div>'
       +'<div class="cal-embed" id="bpx-cl-embed" hidden><div class="em-code"><pre id="bpx-cl-code">'+bpEsc(embed)+'</pre><button class="bpx-rowbtn" id="bpx-cl-ecopy" onclick="bpCalEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div><div class="bpx-mut" style="font-size:12px;margin-top:8px">Paste it into any page of your site. The embed is licensed to your account only and may not be shared or resold.</div></div>';
     window._bpCalEmbed=embed;
   }
