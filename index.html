@@ -15485,10 +15485,12 @@ var _bpContacts=[];
   window.bpCalMove=function(d){ _bpCalDate.setMonth(_bpCalDate.getMonth()+d); bpDrawCalendar(); };
   window.bpCalToday=function(){ _bpCalDate=new Date(); bpDrawCalendar(); };
   async function bpLoadCalendar(){
+    var kinds=_bpCalKind==='all'?['inspection','jobs']:[_bpCalKind];
+    var one=function(cal){ return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:cal})}).then(function(r){return r.json();}).then(function(d){ return (d.events||[]).map(function(e){ e.cal=cal; return e; }); },function(){ return null; }); };
     try{
-      var r=await fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:_bpCalKind})});
-      var d=await r.json();
-      _bpEvents=(d.events||[]);
+      var parts=await Promise.all(kinds.map(one));
+      if(parts.every(function(p){return p===null;})) throw new Error('down');
+      _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); });
       bpDrawCalendar();
     }catch(e){ var g=q('bpx-calgrid'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
   }
@@ -15500,7 +15502,8 @@ var _bpContacts=[];
     var first=new Date(y,m,1), startDow=first.getDay(), days=new Date(y,m+1,0).getDate();
     var today=new Date(); var isThisMonth=(today.getFullYear()===y&&today.getMonth()===m);
     // bucket events by day (local)
-    var byDay={}; var pdays=(_bpCalKind==='jobs'&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
+    var all=_bpCalKind==='all';
+    var byDay={}; var pdays=((_bpCalKind==='jobs'||all)&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
     for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
     var html='<div class="bpx-grid">';
     var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -15530,7 +15533,7 @@ var _bpContacts=[];
   function bpLAParts(iso){ var f=bpFormatLA(new Date(iso)); return {date:f.slice(0,10), time:f.slice(11,16)}; }
   function bpMkISO(dateStr,timeStr){ return dateStr+'T'+timeStr+':00'+bpLAOffset(dateStr,timeStr); }
   function bpSlotMsg(res){ var m=''; try{ m=JSON.parse(res.detail||'{}').message||''; }catch(e){} if(/no longer available|not available/i.test(m)) return 'That time isn\'t available. Please pick another.'; return 'Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; }
-  async function bpCalWrite(payload){ if(payload.cal===undefined) payload.cal=_bpCalKind; return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}); }
+  async function bpCalWrite(payload){ if(payload.cal===undefined) payload.cal=(_bpCalKind==='all'?(window._bpApptCal||'inspection'):_bpCalKind); return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}); }
   var _bpSlotSel=null;
   async function bpLoadSlots(containerId){
     var el=q(containerId); if(!el) return;
@@ -15594,22 +15597,98 @@ var _bpContacts=[];
       else { msg.style.color='#dc2626'; msg.textContent='Could not delete'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; btn.disabled=false; btn.textContent='Delete'; }
     }catch(e){ msg.style.color='#dc2626'; msg.textContent='Could not delete. Please try again.'; btn.disabled=false; btn.textContent='Delete'; }
   };
-  var _bpCalDate=new Date(); var _bpEvents=[]; var _bpCalKind='inspection';
+  var _bpCalDate=new Date(); var _bpEvents=[]; var _bpCalKind='all';
 
 /* ==== bpRenderCalendar ==== */
   function bpRenderCalendar(){
-    var insp=_bpCalKind!=='jobs';
+    var k=_bpCalKind, all=k==='all', insp=k==='inspection', jobs=k==='jobs';
+    var tab=function(id,ico,label){ return '<button class="bpx-jt'+(k===id?' on':'')+'" onclick="bpCalKind(\''+id+'\')"><span class=ms>'+ico+'</span> '+label+'</button>'; };
     q('bpxViewArea').innerHTML=
-      '<div class="cal-top"><div class="bpx-jobtabs cal-tabs"><button class="bpx-jt'+(insp?' on':'')+'" onclick="bpCalKind(\'inspection\')"><span class=ms>roofing</span> Inspections</button><button class="bpx-jt'+(!insp?' on':'')+'" onclick="bpCalKind(\'jobs\')"><span class=ms>construction</span> Jobs</button></div>'
-      +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'+(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')+'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(insp?'Book inspection':'Book job')+'</button></div></div>'
+      '<div class="cal-top"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
+      +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
+        +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
+        +(all?'<button class="bpx-btn ghost cal-today" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>roofing</span> Book inspection</button><button class="bpx-btn" onclick="bpNoteOpen()"><span class=ms>add</span> Add note or to-do</button>'
+             :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
+      +'</div></div>'
+      +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs &amp; project days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">Tap any day to see it or add to it</span></div>':'')
       +'<div class="cal-layout">'
       +'<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>'
       +'<div class="cal-side">'
       +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
-      +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(insp?'inspections':'jobs')+'</b><span id="bpx-upcount" class="bpx-badge"></span></div><div id="bpx-upnext"></div></div>'
+      +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge"></span></div><div id="bpx-todos"></div></div>':'')
+      +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge"></span></div><div id="bpx-upnext"></div></div>'
       +'</div></div>';
     bpLoadCalendar();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
+    if(all){ bpNotesLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
+  }
+
+/* ==== notes & to-dos: the owner's own entries, outside GoHighLevel ==== */
+  var _bpNotes=null;
+  function bpNotesGet(){ if(_bpNotes) return _bpNotes; try{ _bpNotes=JSON.parse(localStorage.getItem('bpCalNotes')||'[]'); }catch(e){ _bpNotes=[]; } return _bpNotes; }
+  function bpNotesCache(list){ _bpNotes=list; try{ localStorage.setItem('bpCalNotes',JSON.stringify(list)); }catch(e){} }
+  function bpNotesLoad(){
+    if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve();
+    return Promise.resolve(BP_SB.from('calendar_notes').select('id,day,kind,text,at,done').order('day')).then(function(r){
+      if(r&&r.data) bpNotesCache(r.data.map(function(x){ return {id:x.id,day:String(x.day).slice(0,10),kind:x.kind||'todo',text:x.text||'',at:x.at||'',done:!!x.done}; }));
+    },function(){});
+  }
+  function bpNotesFor(day){ return bpNotesGet().filter(function(n){return n.day===day;}).sort(function(a,b){ return (a.done-b.done)||(a.at||'').localeCompare(b.at||''); }); }
+  window.bpNoteAdd=function(day,kind,text,at){
+    text=String(text||'').trim(); if(!text||!/^\d{4}-\d{2}-\d{2}$/.test(day)) return Promise.resolve(false);
+    var n={id:'n'+Date.now()+Math.floor(Math.random()*1000),day:day,kind:kind==='note'?'note':'todo',text:text.slice(0,500),at:String(at||'').slice(0,20),done:false};
+    var list=bpNotesGet().concat([n]); bpNotesCache(list);
+    if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve(true);
+    return Promise.resolve(bpSetUser()).then(function(u){ if(!u) return true;
+      return Promise.resolve(BP_SB.from('calendar_notes').insert({owner:u.id,day:n.day,kind:n.kind,text:n.text,at:n.at,done:false}).select('id').single()).then(function(r){ if(r&&r.data&&r.data.id){ n.id=r.data.id; bpNotesCache(list); } return true; },function(){ return true; }); });
+  };
+  window.bpNoteToggle=function(id){
+    var list=bpNotesGet(); var n=list.filter(function(x){return x.id===id;})[0]; if(!n) return;
+    n.done=!n.done; bpNotesCache(list); bpDrawCalendar(); var sh=q('bpx-modal'); if(sh&&sh.querySelector('.cal-sheet')) bpDaySheet(n.day);
+    if(window.BP_LIVE&&window.BP_SB&&!/^n\d/.test(id)) Promise.resolve(BP_SB.from('calendar_notes').update({done:n.done,updated_at:new Date().toISOString()}).eq('id',id)).then(function(){},function(){});
+  };
+  window.bpNoteDel=function(id){
+    var n=bpNotesGet().filter(function(x){return x.id===id;})[0]; if(!n) return;
+    if(!bpAskDel('\u201c'+n.text.slice(0,60)+'\u201d','')) return;
+    bpNotesCache(bpNotesGet().filter(function(x){return x.id!==id;})); bpDrawCalendar(); bpDaySheet(n.day);
+    if(window.BP_LIVE&&window.BP_SB&&!/^n\d/.test(id)) Promise.resolve(BP_SB.from('calendar_notes').delete().eq('id',id)).then(function(){},function(){});
+  };
+  window.bpNoteOpen=function(day){ if(!day){ var t=new Date(); day=t.getFullYear()+'-'+(t.getMonth()<9?'0':'')+(t.getMonth()+1)+'-'+(t.getDate()<10?'0':'')+t.getDate(); } bpDaySheet(day,true); };
+  /* everything on one day, and a place to add to it */
+  window.bpDaySheet=function(day,focusAdd){
+    var d=new Date(day+'T12:00:00'), y=d.getFullYear(), m=d.getMonth(), dn=d.getDate();
+    var evs=_bpEvents.filter(function(e){ var t=new Date(e.start); return t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===dn; }).sort(function(a,b){ return new Date(a.start)-new Date(b.start); });
+    var pdays=(window.bpProjCalEvents?bpProjCalEvents(y,m):{})[dn]||[];
+    var notes=bpNotesFor(day);
+    var rows='';
+    evs.forEach(function(e){ rows+='<div class="cal-sheet-row" onclick="bpCloseModal();bpApptClick(\''+e.id+'\')"><i class="lg-'+(e.cal==='jobs'?'job':'insp')+'"></i><div><b>'+bpEsc(e.title)+'</b><span>'+bpFmtTime(e.start)+(e.address?' \u00b7 '+bpEsc(e.address):'')+'</span></div><span class=ms>chevron_right</span></div>'; });
+    pdays.forEach(function(p){ rows+='<div class="cal-sheet-row" onclick="bpCloseModal();bpProjOpen(\''+p.id+'\')"><i class="lg-job"></i><div><b>'+bpEsc(p.label)+'</b><span>Project day</span></div><span class=ms>chevron_right</span></div>'; });
+    notes.forEach(function(n){ rows+='<div class="cal-sheet-row note'+(n.done?' done':'')+'">'+(n.kind==='todo'?'<button class="cal-check'+(n.done?' on':'')+'" onclick="bpNoteToggle(\''+n.id+'\')" title="'+(n.done?'Mark not done':'Mark done')+'"><span class=ms>'+(n.done?'check':'')+'</span></button>':'<i class="lg-note"></i>')+'<div><b>'+bpEsc(n.text)+'</b><span>'+(n.kind==='todo'?'To-do':'Note')+(n.at?' \u00b7 '+bpEsc(n.at):'')+'</span></div>'+bpDelBtn('bpNoteDel(\''+n.id+'\')','Delete this entry')+'</div>'; });
+    if(!rows) rows='<div class="cal-empty">Nothing on this day yet.</div>';
+    bpModal('<div class="cal-sheet"><h3>'+d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+'</h3>'
+      +'<div class="cal-sheet-list">'+rows+'</div>'
+      +'<div class="cal-sheet-add"><div class="cal-sheet-h">Add to this day</div>'
+      +'<div class="cal-sheet-f"><input id="bpx-n-text" placeholder="Pick up shingles from ABC Supply\u2026" maxlength="500"></div>'
+      +'<div class="cal-sheet-f row2"><div class="bpx-jobtabs" id="bpx-n-kind"><button class="bpx-jt on" data-k="todo" onclick="bpNoteKind(\'todo\')">To-do</button><button class="bpx-jt" data-k="note" onclick="bpNoteKind(\'note\')">Note</button></div><input id="bpx-n-at" placeholder="Time (optional)" style="max-width:150px"><button class="bpx-btn" onclick="bpNoteSave(\''+day+'\')">Add</button></div>'
+      +'<div class="bpx-mmsg" id="bpx-mmsg"></div></div>'
+      +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Done</button></div></div>');
+    window._bpNoteKind='todo';
+    if(focusAdd){ var t=q('bpx-n-text'); if(t) t.focus(); }
+  };
+  window.bpNoteKind=function(k){ window._bpNoteKind=k; document.querySelectorAll('#bpx-n-kind .bpx-jt').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-k')===k); }); };
+  window.bpNoteSave=function(day){
+    var t=(q('bpx-n-text')||{}).value||'', at=(q('bpx-n-at')||{}).value||'', msg=q('bpx-mmsg');
+    if(!t.trim()){ if(msg){ msg.style.color='#dc2626'; msg.textContent='Write something first.'; } return; }
+    bpNoteAdd(day,window._bpNoteKind||'todo',t,at).then(function(){ bpDrawCalendar(); bpDaySheet(day,true); });
+  };
+  function bpTodosRender(){
+    var el=q('bpx-todos'); if(!el) return;
+    var today=new Date(); var tk=today.getFullYear()+'-'+(today.getMonth()<9?'0':'')+(today.getMonth()+1)+'-'+(today.getDate()<10?'0':'')+today.getDate();
+    var open=bpNotesGet().filter(function(n){ return n.kind==='todo'&&!n.done; }).sort(function(a,b){ return a.day<b.day?-1:a.day>b.day?1:0; });
+    var cnt=q('bpx-todocount'); if(cnt) cnt.textContent=open.length?String(open.length):'';
+    if(!open.length){ el.innerHTML='<div class="cal-empty">Nothing to do. Tap a day on the calendar, or <a onclick="bpNoteOpen()" style="color:var(--blue-d);font-weight:600;cursor:pointer">add a to-do for today</a>.</div>'; return; }
+    el.innerHTML=open.slice(0,10).map(function(n){ var d=new Date(n.day+'T12:00:00'); var late=n.day<tk; return '<div class="cal-todo'+(late?' late':'')+'"><button class="cal-check" onclick="bpNoteToggle(\''+n.id+'\')" title="Mark done"><span class=ms></span></button><div class="cal-up-b" onclick="bpDaySheet(\''+n.day+'\')" style="cursor:pointer"><div class="cal-up-n">'+bpEsc(n.text)+'</div><div class="cal-up-t">'+(n.day===tk?'Today':late?'Overdue \u00b7 ':'')+(n.day===tk?'':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}))+(n.at?' \u00b7 '+bpEsc(n.at):'')+'</div></div></div>'; }).join('')
+      +(open.length>10?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">'+(open.length-10)+' more on the calendar.</div>':'');
   }
 
   /* ==== booking link + embed (Inspections only) ==== */
@@ -15754,10 +15833,12 @@ var _bpContacts=[];
 
 /* ==== bpLoadCalendar ==== */
   async function bpLoadCalendar(){
+    var kinds=_bpCalKind==='all'?['inspection','jobs']:[_bpCalKind];
+    var one=function(cal){ return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:cal})}).then(function(r){return r.json();}).then(function(d){ return (d.events||[]).map(function(e){ e.cal=cal; return e; }); },function(){ return null; }); };
     try{
-      var r=await fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:_bpCalKind})});
-      var d=await r.json();
-      _bpEvents=(d.events||[]);
+      var parts=await Promise.all(kinds.map(one));
+      if(parts.every(function(p){return p===null;})) throw new Error('down');
+      _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); });
       bpDrawCalendar();
     }catch(e){ var g=q('bpx-calgrid'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
   }
@@ -15773,7 +15854,8 @@ var _bpContacts=[];
     var first=new Date(y,m,1), startDow=first.getDay(), days=new Date(y,m+1,0).getDate();
     var today=new Date(); var isThisMonth=(today.getFullYear()===y&&today.getMonth()===m);
     // bucket events by day (local)
-    var byDay={}; var pdays=(_bpCalKind==='jobs'&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
+    var all=_bpCalKind==='all';
+    var byDay={}; var pdays=((_bpCalKind==='jobs'||all)&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
     for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
     var closedMap=bpClosedSet();
     var html='<div class="bpx-grid cal-grid">';
@@ -15784,12 +15866,16 @@ var _bpContacts=[];
       var pevs=pdays[dnum]||[], evs=byDay[dnum]||[];
       var isPast=new Date(y,m,dnum,23,59).getTime()<Date.now();
       var key=y+'-'+(m<9?'0':'')+(m+1)+'-'+(dnum<10?'0':'')+dnum;
-      var isClosed=_bpCalKind!=='jobs'&&!!closedMap[key];
-      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+((pevs.length+evs.length)?' has':'')+(isClosed?' closed':'');
-      var tap=(_bpCalKind!=='jobs'&&!isPast)?' onclick="bpCalDayTap(\''+key+'\')" title="'+(isClosed?'Closed \u2014 tap to manage':'Tap to close this day')+'"':'';
-      html+='<div class="'+cls+'"><div class="bpx-daynum"'+tap+'><span>'+dnum+'</span>'+(isClosed?'<em class="cal-closed-tag">Closed</em>':((pevs.length+evs.length)>0?'<i class="cal-dot"></i>':''))+'</div>';
-      for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt job" onclick="bpProjOpen(\''+pevs[j].id+'\')"><b>'+bpEsc(pevs[j].label)+'</b></div>'; }
-      for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')"><span class="t">'+bpFmtTime(evs[j].start)+'</span><b>'+bpEsc(evs[j].title)+'</b></div>'; }
+      var notes=all?bpNotesFor(key):[];
+      var isClosed=_bpCalKind==='inspection'&&!!closedMap[key];
+      var count=pevs.length+evs.length+notes.length;
+      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+(count?' has':'')+(isClosed?' closed':'')+(all?' tap':'');
+      var tap=all?' onclick="bpDaySheet(\''+key+'\')" title="Open this day"':((_bpCalKind==='inspection'&&!isPast)?' onclick="bpCalDayTap(\''+key+'\')" title="'+(isClosed?'Closed \u2014 tap to manage':'Tap to close this day')+'"':'');
+      html+='<div class="'+cls+'"'+(all?tap:'')+'><div class="bpx-daynum"'+(all?'':tap)+'><span>'+dnum+'</span>'+(isClosed?'<em class="cal-closed-tag">Closed</em>':(count>0?'<i class="cal-dot"></i>':''))+'</div>';
+      var stop=all?'event.stopPropagation();':'';
+      for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt job" onclick="'+stop+'bpProjOpen(\''+pevs[j].id+'\')"><b>'+bpEsc(pevs[j].label)+'</b></div>'; }
+      for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt'+(evs[j].cal==='jobs'?' job':'')+'" onclick="'+stop+'bpApptClick(\''+evs[j].id+'\')"><span class="t">'+bpFmtTime(evs[j].start)+'</span><b>'+bpEsc(evs[j].title)+'</b></div>'; }
+      for(var j=0;j<notes.length;j++){ var n=notes[j]; html+='<div class="bpx-appt '+n.kind+(n.done?' done':'')+'"'+(n.kind==='todo'?' onclick="'+stop+'bpNoteToggle(\''+n.id+'\')" title="Tap to mark '+(n.done?'not done':'done')+'"':'')+'><span class=ms>'+(n.kind==='todo'?(n.done?'check_circle':'radio_button_unchecked'):'sticky_note_2')+'</span><b>'+bpEsc(n.text)+'</b></div>'; }
       html+='</div>';
     }
     html+='</div>';
@@ -15800,8 +15886,9 @@ var _bpContacts=[];
     up=up.slice(0,8);
     var uh='';
     if(!up.length){ uh='<div class="cal-empty">Nothing booked yet. '+(_bpCalKind==='jobs'?'Book a job above, or schedule dates on a project.':'Share your booking page, or book one above.')+'</div>'; }
-    for(var i=0;i<up.length;i++){ var dt=new Date(up[i].start); uh+='<div class="cal-up" onclick="bpApptClick(\''+up[i].id+'\')"><div class="cal-up-d"><span class="mo">'+dt.toLocaleDateString('en-US',{month:'short'})+'</span><span class="dy">'+dt.getDate()+'</span></div><div class="cal-up-b"><div class="cal-up-n">'+bpEsc(up[i].title)+'</div><div class="cal-up-t">'+dt.toLocaleDateString('en-US',{weekday:'short'})+' \u00b7 '+bpFmtTime(up[i].start)+(up[i].address?(' \u00b7 '+bpEsc(up[i].address)):'')+'</div></div><span class="bpx-upstatus">'+bpEsc(up[i].status||'confirmed')+'</span></div>'; }
+    for(var i=0;i<up.length;i++){ var dt=new Date(up[i].start); uh+='<div class="cal-up" onclick="bpApptClick(\''+up[i].id+'\')"><div class="cal-up-d'+(up[i].cal==='jobs'?' job':'')+'"><span class="mo">'+dt.toLocaleDateString('en-US',{month:'short'})+'</span><span class="dy">'+dt.getDate()+'</span></div><div class="cal-up-b"><div class="cal-up-n">'+bpEsc(up[i].title)+'</div><div class="cal-up-t">'+(all?(up[i].cal==='jobs'?'Job \u00b7 ':'Inspection \u00b7 '):'')+dt.toLocaleDateString('en-US',{weekday:'short'})+' \u00b7 '+bpFmtTime(up[i].start)+(up[i].address?(' \u00b7 '+bpEsc(up[i].address)):'')+'</div></div><span class="bpx-upstatus">'+bpEsc(up[i].status||'confirmed')+'</span></div>'; }
     q('bpx-upnext').innerHTML=uh;
+    if(all) bpTodosRender();
   }
 
 /* ==== bpFindEv ==== */
@@ -15810,7 +15897,7 @@ var _bpContacts=[];
 /* ==== bpApptClick ==== */
 
   window.bpApptClick=function(id){
-    var e=bpFindEv(id); if(!e) return; var dt=new Date(e.start);
+    var e=bpFindEv(id); if(!e) return; var dt=new Date(e.start); window._bpApptCal=e.cal||(_bpCalKind==='jobs'?'jobs':'inspection');
     bpModal('<h3>'+bpEsc(e.title)+'</h3>'
       +'<div class="bpx-sub">'+dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+bpFmtTime(e.start)+'</div>'
       +(e.address?'<div style="color:var(--mu);font-size:.85rem;margin-top:.4rem">'+bpEsc(e.address)+'</div>':'')
@@ -21758,7 +21845,7 @@ window.bgPartnersRender=function(){
 /* ---------- calendar v2 ---------- */
 #bpx .cal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 #bpx .cal-tabs .bpx-jt .ms{font-size:18px;margin-right:4px;vertical-align:-.2em}
-#bpx .cal-acts{display:flex;gap:8px;align-items:center}
+#bpx .cal-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
 #bpx .cal-acts .bpx-btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 #bpx .cal-acts .bpx-btn .ms{font-size:18px}
 #bpx .cal-layout{display:flex;flex-direction:column;gap:14px}
@@ -21841,6 +21928,53 @@ window.bgPartnersRender=function(){
 #bpx .mdt-opt.on small{color:rgba(255,255,255,.85)}
 #bpx .mdt-none{font-size:12px;color:var(--grey-l);padding:8px 4px}
 @media(max-width:600px){#bpx .mdt3{grid-template-columns:1fr}#bpx .mdt-list{max-height:180px}}
+/* the combined view: legend, notes, to-dos, day sheet */
+#bpx .cal-legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin:-4px 0 12px}
+#bpx .cal-legend span{display:inline-flex;align-items:center;gap:6px}
+#bpx .cal-legend i,#bpx .cal-sheet-row>i{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
+#bpx .lg-insp{background:var(--blue)}
+#bpx .lg-job{background:#0d9488}
+#bpx .lg-todo{background:#f59e0b}
+#bpx .lg-note{background:#8b5cf6}
+#bpx .cal-grid .bpx-day.tap{cursor:pointer}
+#bpx .cal-grid .bpx-day.tap:hover{border-color:#b9c9ea}
+#bpx .cal-grid .bpx-appt.job{background:#e6f7f5;color:#0f766e;border-color:rgba(13,148,136,.25)}
+#bpx .cal-grid .bpx-appt.job:hover{background:#0d9488;color:#fff}
+#bpx .cal-grid .bpx-appt.todo,#bpx .cal-grid .bpx-appt.note{flex-direction:row;align-items:center;gap:5px}
+#bpx .cal-grid .bpx-appt.todo{background:#fff7ed;color:#9a5b0f;border-color:#f2dfbd}
+#bpx .cal-grid .bpx-appt.todo:hover{background:#f59e0b;color:#fff}
+#bpx .cal-grid .bpx-appt.todo.done{opacity:.55;text-decoration:line-through}
+#bpx .cal-grid .bpx-appt.note{background:#f3efff;color:#5b3fb8;border-color:#e0d7fb;cursor:default}
+#bpx .cal-grid .bpx-appt.note:hover{background:#f3efff;color:#5b3fb8;transform:none}
+#bpx .cal-grid .bpx-appt .ms{font-size:13px;flex:none}
+#bpx.bpx-dark .cal-grid .bpx-appt.job{background:#0f2a28;color:#7dd3c8;border-color:#1d4a45}
+#bpx.bpx-dark .cal-grid .bpx-appt.todo{background:#2a2110;color:#f0c977;border-color:#4a3a15}
+#bpx.bpx-dark .cal-grid .bpx-appt.note{background:#241c3d;color:#c4b5fd;border-color:#3b2f63}
+#bpx .cal-up-d.job .mo{color:#0f766e}
+#bpx .cal-todo{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line-2,var(--line))}
+#bpx .cal-todo:first-child{border-top:0;padding-top:2px}
+#bpx .cal-todo.late .cal-up-t{color:#b45309}
+#bpx .cal-check{appearance:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#fff;flex:none;transition:background .15s,border-color .15s}
+#bpx .cal-check .ms{font-size:16px}
+#bpx .cal-check:hover{border-color:var(--blue)}
+#bpx .cal-check.on{background:var(--blue);border-color:var(--blue)}
+#bpx .cal-sheet h3{margin-bottom:10px}
+#bpx .cal-sheet-list{max-height:280px;overflow-y:auto;margin:0 -4px;padding:0 4px}
+#bpx .cal-sheet-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line-2,var(--line));cursor:pointer}
+#bpx .cal-sheet-row:first-child{border-top:0}
+#bpx .cal-sheet-row.note{cursor:default}
+#bpx .cal-sheet-row>div{flex:1;min-width:0}
+#bpx .cal-sheet-row b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cal-sheet-row.done b{text-decoration:line-through;color:var(--grey)}
+#bpx .cal-sheet-row span{display:block;font-size:12px;color:var(--grey)}
+#bpx .cal-sheet-row>.ms{color:var(--grey-l)}
+#bpx .cal-sheet-add{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+#bpx .cal-sheet-h{font-size:12px;font-weight:600;color:var(--grey);margin-bottom:8px}
+#bpx .cal-sheet-f{margin-bottom:8px}
+#bpx .cal-sheet-f.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#bpx .cal-sheet-f.row2 .bpx-btn{width:auto;margin-left:auto}
+#bpx .cal-sheet-f input{width:100%}
+#bpx .cal-sheet-f.row2 input{flex:1;min-width:120px}
 /* closed days */
 #bpx .cal-grid .bpx-day.closed{background:repeating-linear-gradient(135deg,var(--soft) 0 6px,var(--bg-2) 6px 8px);opacity:1}
 #bpx .cal-grid .bpx-daynum[onclick]{cursor:pointer}
@@ -21868,6 +22002,7 @@ window.bgPartnersRender=function(){
 #bpx .mdt-chip.day.on small{color:rgba(255,255,255,.85)}
 @media(max-width:900px){#bpx .cal-side{grid-template-columns:1fr}}
 @media(max-width:600px){
+  #bpx .cal-top{flex-direction:column;align-items:stretch}#bpx .cal-acts .bpx-btn{flex:1 1 auto;justify-content:center;padding:10px 12px;white-space:normal}#bpx .cal-legend{gap:10px}
   #bpx .cal-grid{gap:3px}
   #bpx .cal-grid .bpx-day{min-height:44px;padding:4px;border-radius:7px}
   #bpx .cal-grid .bpx-daynum{margin-bottom:0;font-size:11px}
