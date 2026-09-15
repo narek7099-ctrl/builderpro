@@ -132,6 +132,8 @@ Deno.serve(async (req) => {
       hours: row?.hours || "",
       area: row?.service_area || "",
       ready: !!(loc && cal),
+      // why it is not ready, so the owner's portal can say what to fix
+      reason: (loc && cal) ? "" : !row ? "no_row" : !loc ? "no_location" : "no_calendar",
       demo: !!row?.is_demo,
     });
   }

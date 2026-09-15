@@ -15474,27 +15474,90 @@ var _bpContacts=[];
   }
 
   /* ==== booking link + embed (Inspections only) ==== */
-  var _bpCalLink={url:'',ready:null};
+  var _bpCalLink={url:'',ready:null,reason:'',cals:null,sel:'',show:false,busy:false,msg:''};
   function bpCalLinkRender(){
     var el=q('bpx-callink'); if(!el) return;
-    if(!(window.BP_LIVE&&window.BP_SB)){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Sign in to get the booking link for your account.</div>'; return; }
-    el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Reading your account\u2026</div>';
+    var shell=function(body){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">'+body+'</div>'; };
+    if(!(window.BP_LIVE&&window.BP_SB)){ shell('Sign in to get the booking link for your account.'); return; }
+    shell('Reading your account\u2026');
     Promise.resolve(bpSetUser()).then(function(u){
-      if(!u||!u.id){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Sign in to get the booking link for your account.</div>'; return; }
+      if(!u||!u.id){ shell('Sign in to get the booking link for your account.'); return; }
       _bpCalLink.url='https://builderpro-os.com/book/?u='+u.id;
+      _bpCalLink.cals=null; _bpCalLink.show=false; _bpCalLink.msg='';
       bpCalLinkDraw();
-      fetch(BP_URL+'/functions/v1/book-public',{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({op:'info',u:u.id})}).then(function(r){ return r.json(); }).then(function(r){ if(r&&r.ok!==undefined){ _bpCalLink.ready=!!r.ready; bpCalLinkDraw(); } },function(){});
-    },function(){ el.innerHTML='<div class="cal-side-h"><b>Your booking page</b></div><div class="bpx-mut" style="font-size:13px">Couldn\u2019t read your account just now. Reload and try again.</div>'; });
+      bpCalCheck();
+    },function(){ shell('Couldn\u2019t read your account just now. Reload and try again.'); });
+  }
+  /* is the page actually live? ask the booking function itself, the same way a
+     homeowner's browser does, rather than guessing from the account record */
+  function bpCalCheck(){
+    var u=(_bpCalLink.url.split('u=')[1]||'');
+    return fetch(BP_URL+'/functions/v1/book-public',{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({op:'info',u:u})})
+      .then(function(r){ return r.json(); })
+      .then(function(r){
+        if(!r||r.ok===undefined) return;
+        _bpCalLink.ready=!!r.ready; _bpCalLink.reason=r.reason||'';
+        bpCalLinkDraw();
+        if(!r.ready&&_bpCalLink.cals===null) bpCalLoadCals();
+      },function(){});
+  }
+  function bpCalLoadCals(){
+    _bpCalLink.cals='loading'; bpCalLinkDraw();
+    Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'calendars'})).then(function(r){
+      _bpCalLink.cals=(r&&r.calendars)||[];
+      if(r&&r.reason) _bpCalLink.reason=r.reason;
+      if(r&&r.selected) _bpCalLink.sel=r.selected;
+      _bpCalLink.show=true; bpCalLinkDraw();
+    },function(){ _bpCalLink.cals=[]; _bpCalLink.reason='unreachable'; _bpCalLink.show=true; bpCalLinkDraw(); });
+  }
+  window.bpCalConnOpen=function(){ _bpCalLink.show=true; if(_bpCalLink.cals===null) bpCalLoadCals(); else bpCalLinkDraw(); };
+  window.bpCalConnSave=function(){
+    var sel=q('bpx-cl-sel'), man=q('bpx-cl-man');
+    var id=((sel&&sel.value)||(man&&man.value)||'').trim();
+    if(!id){ _bpCalLink.msg='Pick the calendar that takes your inspections.'; bpCalLinkDraw(); return; }
+    _bpCalLink.busy=true; _bpCalLink.msg=''; bpCalLinkDraw();
+    Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'set_calendar',calendarId:id})).then(function(r){
+      _bpCalLink.busy=false;
+      if(r&&r.ok){ _bpCalLink.sel=id; _bpCalLink.show=false; _bpCalLink.msg=''; bpCalLinkDraw(); bpCalCheck(); }
+      else { _bpCalLink.msg=(r&&r.error)||'Could not save that calendar.'; bpCalLinkDraw(); }
+    },function(){ _bpCalLink.busy=false; _bpCalLink.msg='Could not save that calendar. Try again.'; bpCalLinkDraw(); });
+  };
+  /* the connect block: a dropdown of their own GoHighLevel calendars, or a box to
+     paste an id when we can't read the list */
+  function bpCalConnHtml(){
+    var s=_bpCalLink;
+    if(!s.show) return '';
+    if(s.cals==='loading') return '<div class="cal-conn"><div class="bpx-mut" style="font-size:12.5px">Reading your calendars\u2026</div></div>';
+    var why={no_row:'Your account record hasn\u2019t been created yet. Open Settings \u203a Ridge AI and tap Publish once, then come back.',
+             no_location:'No GoHighLevel sub-account is linked to your login yet, so there are no calendars to list.',
+             no_token:'BuilderPro can\u2019t reach GoHighLevel right now, so the list is empty. You can still paste the calendar id.'}[s.reason];
+    var h='<div class="cal-conn"><div class="cal-conn-h">Connect your inspection calendar</div>';
+    if(why) h+='<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">'+why+'</div>';
+    if(s.reason==='no_row'){ return h+'<div class="cal-conn-r"><button class="bpx-rowbtn" onclick="bpNav(\'settings\')">Open Settings</button></div></div>'; }
+    if(s.cals&&s.cals.length){
+      h+='<div class="cal-conn-r"><select id="bpx-cl-sel">'
+        +'<option value="">Choose a calendar\u2026</option>'
+        +s.cals.map(function(c){ return '<option value="'+bpEsc(c.id)+'"'+(c.id===s.sel?' selected':'')+'>'+bpEsc(c.name)+'</option>'; }).join('')
+        +'</select><button class="bpx-btn" id="bpx-cl-save" onclick="bpCalConnSave()"'+(s.busy?' disabled':'')+'>'+(s.busy?'Saving\u2026':'Connect')+'</button></div>';
+    } else {
+      h+='<div class="cal-conn-r"><input id="bpx-cl-man" placeholder="Paste the calendar id" value="'+bpEsc(s.sel)+'"><button class="bpx-btn" id="bpx-cl-save" onclick="bpCalConnSave()"'+(s.busy?' disabled':'')+'>'+(s.busy?'Saving\u2026':'Connect')+'</button></div>'
+        +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">In GoHighLevel: Settings \u203a Calendars \u203a open the inspection calendar. The id is the long code in the address bar.</div>';
+    }
+    if(s.msg) h+='<div style="font-size:12.5px;font-weight:600;color:#b91c1c;margin-top:8px">'+bpEsc(s.msg)+'</div>';
+    return h+'</div>';
   }
   function bpCalLinkDraw(){
     var el=q('bpx-callink'); if(!el||!_bpCalLink.url) return;
-    var url=_bpCalLink.url;
+    var url=_bpCalLink.url, s=_bpCalLink;
     var embed='<iframe src="'+url+'&embed=1" title="Book a roof inspection" loading="lazy" style="width:100%;min-height:640px;border:0;border-radius:18px;overflow:hidden"></iframe>';
-    el.innerHTML='<div class="cal-side-h"><b>Your booking page</b><span class="bpx-badge">Inspections</span></div>'
+    el.innerHTML='<div class="cal-side-h"><b>Your booking page</b><span class="bpx-badge">'+(s.ready===false?'Not live yet':'Inspections')+'</span></div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Homeowners pick a month, a day and a time on your open inspection calendar. Put it on your website, in your Google profile, and in every text.</div>'
-      +(_bpCalLink.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>Your booking page is not switched on yet: no inspection calendar is linked to this account, so visitors will see your phone number instead of open times. Tell BuilderPro support which GoHighLevel calendar to use and it goes live.</span></div>':'')
+      +(s.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>This page can\u2019t show open times until you say which calendar takes inspections. Until then visitors see your phone number instead.</span></div>':'')
+      +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
+      +bpCalConnHtml()
       +'<div class="cal-url"><span class=ms>link</span><span class="cal-url-t">'+bpEsc(url)+'</span></div>'
-      +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button></div>'
+      +'<div class="cal-link-acts"><button class="bpx-rowbtn" id="bpx-cl-copy" onclick="bpCalLinkCopy()"><span class=ms>content_copy</span> Copy link</button><a class="bpx-rowbtn" href="'+url+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span> Open</a><button class="bpx-rowbtn" onclick="bpCalEmbedToggle()"><span class=ms>code</span> Embed</button>'
+      +(s.ready===true?'<button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Change calendar</button>':'')+'</div>'
       +'<div class="cal-embed" id="bpx-cl-embed" hidden><div class="em-code"><pre id="bpx-cl-code">'+bpEsc(embed)+'</pre><button class="bpx-rowbtn" id="bpx-cl-ecopy" onclick="bpCalEmbedCopy()"><span class=ms>content_copy</span> Copy code</button></div><div class="bpx-mut" style="font-size:12px;margin-top:8px">Paste it into any page of your site. The embed is licensed to your account only and may not be shared or resold.</div></div>';
     window._bpCalEmbed=embed;
   }
@@ -21412,6 +21475,11 @@ window.bgPartnersRender=function(){
 #bpx .cal-embed .em-code .bpx-rowbtn{top:auto;bottom:10px;right:10px;left:auto}
 #bpx .cal-warn{display:flex;gap:8px;align-items:flex-start;background:#fff8ec;border:1px solid #f2dfbd;color:#6b4f16;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.5;margin-bottom:10px}
 #bpx .cal-warn .ms{font-size:18px;flex:none;margin-top:1px}
+#bpx .cal-conn{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+#bpx .cal-conn-h{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px}
+#bpx .cal-conn-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#bpx .cal-conn-r select,#bpx .cal-conn-r input{flex:1;min-width:150px}
+#bpx .cal-conn-r .bpx-btn{flex:none;padding:9px 16px}
 #bpx.bpx-dark .cal-warn{background:#2a2110;border-color:#4a3a15;color:#f0c977}
 #bpx .bpx-modalcard h3{font-family:inherit !important;letter-spacing:-.024em}
 /* month → date → time picker inside modals */
