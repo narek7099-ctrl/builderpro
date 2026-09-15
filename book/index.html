@@ -84,6 +84,31 @@ body.embed .tray{background:transparent;border:0;padding:0;border-radius:0}
 .hint.err{color:var(--err)}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--mu);font-size:13.5px}
 
+/* month | day | time columns */
+.mdt3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.mdt-col{min-width:0}
+.mdt-h{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mu2);margin:0 0 8px 2px}
+.mdt-h em{font-style:normal;margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;color:var(--mu2)}
+.mdt-sel{appearance:none;width:100%;display:flex;align-items:center;gap:8px;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px 10px 12px 14px;font-family:inherit;cursor:pointer;min-height:62px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh),.05);transition:transform .15s var(--ease),border-color .15s,box-shadow .15s}
+.mdt-sel b{display:block;font-size:15px;font-weight:700;line-height:1.15}
+.mdt-sel small{display:block;font-size:12px;color:var(--mu);margin-top:3px}
+.mdt-txt{flex:1;min-width:0}
+.mdt-sel .ms{margin-left:auto;color:var(--mu2);flex:none}
+.mdt-sel:hover{transform:translateY(-1px);border-color:#b9c9ea}
+.mdt-sel.on{border-color:var(--blue);box-shadow:inset 0 1px 0 var(--edge),0 0 0 3px rgba(43,99,230,.12)}
+.mdt-sel.on b{color:var(--blue-act)}
+.mdt-sel.dim b{color:var(--mu)}
+.mdt-col.open .mdt-sel{border-color:var(--blue)}
+.mdt-sel:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(43,99,230,.22)}
+.mdt-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:300px;overflow-y:auto;padding:2px;animation:rise .3s var(--soft-out) both}
+.mdt-opt{appearance:none;text-align:left;border:1px solid var(--line2);background:var(--soft);color:var(--ink);border-radius:10px;padding:9px 12px;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,transform .15s var(--ease);font-variant-numeric:tabular-nums;min-height:42px}
+.mdt-opt b{display:block;font-size:13.5px;font-weight:600}
+.mdt-opt small{display:block;font-size:11.5px;color:var(--mu);margin-top:1px}
+.mdt-opt:hover{background:var(--card);border-color:#b9c9ea;transform:translateY(-1px)}
+.mdt-opt.on{background:linear-gradient(180deg,var(--blue-hi),var(--blue));color:#fff;border-color:transparent}
+.mdt-opt.on small{color:rgba(255,255,255,.85)}
+.mdt-none{font-size:12.5px;color:var(--mu2);padding:10px 4px;line-height:1.5}
+
 /* footer bar of each pane */
 .bar{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:22px}
 .pick{font-size:13.5px;color:var(--body);display:flex;align-items:center;gap:8px;min-width:0}
@@ -141,6 +166,8 @@ body.embed .brand{display:none}
   .side .foot{display:none}
   .main{padding:20px 16px 18px}
   .form{grid-template-columns:1fr}
+  .mdt3{grid-template-columns:1fr}
+  .mdt-list{max-height:220px}
   .bar{flex-wrap:wrap}
   .btn.pri{width:100%;justify-content:center;margin-left:0}
   .pick{width:100%}
@@ -208,46 +235,47 @@ body.embed .brand{display:none}
   function steps(n){ var s=$("steps").children; for(var i=0;i<s.length;i++) s[i].className=i<n?"on":""; }
   function render(){ steps(S.step); var p=$("pane"); p.className="pane"; if(S.step===1) pane1(p); else if(S.step===2) pane2(p); else if(S.step===3) pane3(p); }
 
-  // ---- 1. month → date → time ----
+  // ---- 1. month | day | time ----
+  // Three columns. Each shows only the choice (or a prompt) until it is opened;
+  // picking in one column collapses it and opens the next.
+  S.open="month";
   function pane1(p){
     var ms=months(); if(!S.monthKey) S.monthKey=ms[0].key;
-    var h='<div class="lbl"><b>Month</b></div><div class="chips" id="months">';
-    ms.forEach(function(m){ h+='<button class="chip'+(m.key===S.monthKey?' on':'')+'" data-m="'+m.key+'">'+m.label+'</button>'; });
-    h+='</div><div class="lbl"><b>Date</b><i>days with an opening</i><em id="mstate"></em></div><div id="dates"><div class="spin"></div></div>';
-    h+='<div class="lbl"><b>Time</b><em>'+esc(tzName())+'</em></div><div id="times"><div class="hint">Pick a date first.</div></div>';
-    h+='<div class="bar"><div class="pick" id="pick"></div><button class="btn pri" id="next" disabled>Next <span class="ms">arrow_forward</span></button></div>';
-    p.innerHTML=h;
-    p.querySelectorAll("#months .chip").forEach(function(b){ b.onclick=function(){ S.monthKey=b.getAttribute("data-m"); S.date=""; S.iso=""; render(); }; });
+    p.innerHTML='<div class="mdt3" id="mdt"></div><div class="bar"><div class="pick" id="pick"></div><button class="btn pri" id="next" disabled>Next <span class="ms">arrow_forward</span></button></div>';
     $("next").onclick=function(){ if(S.iso){ S.step=2; render(); } };
-    drawDates(); drawTimes(); drawPick();
-    loadMonth(S.monthKey).then(function(){ if(S.step===1&&$("dates")) { drawDates(); } });
+    drawCols(); drawPick();
+    ms.forEach(function(m){ loadMonth(m.key).then(function(){ if(S.step===1&&$("mdt")) drawCols(); }); });
   }
-  function drawDates(){
-    var el=$("dates"); if(!el) return;
-    var st=S.loaded[S.monthKey];
-    if(st==="loading"||!st){ el.innerHTML='<div class="spin"></div>'; return; }
-    if(st==="err"){ el.innerHTML='<div class="hint err">Could not load openings for this month. Try again in a moment.</div>'; return; }
-    var y=+S.monthKey.slice(0,4), m=+S.monthKey.slice(5,7)-1, days=new Date(y,m+1,0).getDate(), first=new Date(y,m,1).getDay();
-    var h='<div class="days">'; ["S","M","T","W","T","F","S"].forEach(function(d){ h+='<div class="dow">'+d+'</div>'; });
-    for(var i=0;i<first;i++) h+='<div class="chip pad"></div>';
-    var open=0;
-    for(var d=1;d<=days;d++){ var k=S.monthKey+"-"+pad(d); var n=(S.slots[k]||[]).length; if(n) open++; h+='<button class="chip'+(k===S.date?' on':'')+'" data-d="'+k+'"'+(n?'':' disabled')+'>'+d+(n?'<small>'+n+' open</small>':'')+'</button>'; }
-    h+='</div>'; el.innerHTML=h;
-    var ms=$("mstate"); if(ms) ms.textContent=open?open+' day'+(open===1?'':'s')+' open':'Fully booked this month';
-    el.querySelectorAll(".chip[data-d]").forEach(function(b){ b.onclick=function(){ S.date=b.getAttribute("data-d"); S.iso=""; el.querySelectorAll(".chip").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); drawTimes(); drawPick(); }; });
-  }
-  function drawTimes(){
-    var el=$("times"); if(!el) return;
-    if(!S.date){ el.innerHTML='<div class="hint">Pick a date first.</div>'; return; }
-    var arr=S.slots[S.date]||[]; if(!arr.length){ el.innerHTML='<div class="empty">No openings that day.</div>'; return; }
-    var h='<div class="times">'; arr.forEach(function(iso){ h+='<button class="chip'+(iso===S.iso?' on':'')+'" data-t="'+iso+'">'+fmtTime(iso)+'</button>'; }); h+='</div>';
-    el.innerHTML=h;
-    el.querySelectorAll(".chip").forEach(function(b){ b.onclick=function(){ S.iso=b.getAttribute("data-t"); el.querySelectorAll(".chip").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); drawPick(); }; });
+  function openDays(mk){ return Object.keys(S.slots).filter(function(d){ return d.slice(0,7)===mk&&S.slots[d].length; }).sort(); }
+  function drawCols(){
+    var el=$("mdt"); if(!el) return;
+    var ms=months(), mk=S.monthKey, days=openDays(mk), times=S.date?(S.slots[S.date]||[]):[];
+    var st=S.loaded[mk], loading=(st==="loading"||!st);
+    var dt=function(d){ return new Date(d+"T12:00:00"); };
+    var col=function(key,label,sel,list,extra){
+      var open=S.open===key;
+      return '<div class="mdt-col'+(open?' open':'')+'"><div class="mdt-h">'+label+(extra?'<em>'+extra+'</em>':'')+'</div>'
+        +'<button type="button" class="mdt-sel'+(sel.on?' on':'')+(sel.dim?' dim':'')+'" data-open="'+key+'"><div class="mdt-txt">'+sel.html+'</div><span class="ms">'+(open?'expand_less':'expand_more')+'</span></button>'
+        +(open?'<div class="mdt-list">'+list+'</div>':'')+'</div>';
+    };
+    var mLabel=function(m){ return MON[m.m]+(m.y!==new Date().getFullYear()?' '+m.y:''); };
+    var cur=ms.filter(function(m){return m.key===mk;})[0]||ms[0];
+    var mSel={on:true,html:'<b>'+esc(mLabel(cur))+'</b><small>'+(loading?'checking\u2026':(days.length?days.length+' day'+(days.length===1?'':'s')+' open':'fully booked'))+'</small>'};
+    var mList=ms.map(function(m){ var n=openDays(m.key).length, ld=S.loaded[m.key]; return '<button type="button" class="mdt-opt'+(m.key===mk?' on':'')+'" data-m="'+m.key+'"><b>'+esc(mLabel(m))+'</b><small>'+((ld==="loading"||!ld)?'checking\u2026':(n?n+' day'+(n===1?'':'s')+' open':'fully booked'))+'</small></button>'; }).join('');
+    var dSel=S.date?{on:true,html:'<b>'+esc(dt(S.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))+'</b><small>'+(S.slots[S.date]||[]).length+' times open</small>'}:{dim:true,html:'<b>Pick a day</b><small>'+(loading?'checking\u2026':(days.length?days.length+' open':'none this month'))+'</small>'};
+    var dList=loading?'<div class="spin" style="margin:14px auto"></div>':(st==="err"?'<div class="mdt-none">Could not load this month. Try again in a moment.</div>':(days.length?days.map(function(d){ return '<button type="button" class="mdt-opt'+(d===S.date?' on':'')+'" data-d="'+d+'"><b>'+esc(dt(d).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))+'</b><small>'+S.slots[d].length+' open</small></button>'; }).join(''):'<div class="mdt-none">Nothing open this month. Try the next one.</div>'));
+    var tSel=S.iso?{on:true,html:'<b>'+esc(fmtTime(S.iso))+'</b><small>about 1 hour</small>'}:{dim:true,html:'<b>Pick a time</b><small>'+(S.date?times.length+' open':'choose a day first')+'</small>'};
+    var tList=times.length?times.map(function(iso){ return '<button type="button" class="mdt-opt'+(iso===S.iso?' on':'')+'" data-t="'+iso+'"><b>'+esc(fmtTime(iso))+'</b></button>'; }).join(''):'<div class="mdt-none">Choose a day first.</div>';
+    el.innerHTML=col("month","Month",mSel,mList)+col("date","Day",dSel,dList)+col("time","Time",tSel,tList,esc(tzName()));
+    el.querySelectorAll("[data-open]").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-open"); S.open=(S.open===k)?"":k; drawCols(); }; });
+    el.querySelectorAll("[data-m]").forEach(function(b){ b.onclick=function(){ S.monthKey=b.getAttribute("data-m"); S.date=""; S.iso=""; S.open="date"; drawCols(); drawPick(); loadMonth(S.monthKey).then(function(){ if(S.step===1) drawCols(); }); }; });
+    el.querySelectorAll("[data-d]").forEach(function(b){ b.onclick=function(){ S.date=b.getAttribute("data-d"); S.iso=""; S.open="time"; drawCols(); drawPick(); }; });
+    el.querySelectorAll("[data-t]").forEach(function(b){ b.onclick=function(){ S.iso=b.getAttribute("data-t"); S.open=""; drawCols(); drawPick(); }; });
   }
   function drawPick(){
     var el=$("pick"), n=$("next"); if(!el) return;
     if(S.iso){ el.innerHTML='<span class="ms">event</span><span><b>'+esc(fmtLong(S.iso))+'</b> at '+esc(fmtTime(S.iso))+'</span>'; n.disabled=false; }
-    else { el.innerHTML='<span class="ms" style="color:var(--mu2)">event</span><span style="color:var(--mu)">Choose a month, a date, then a time.</span>'; n.disabled=true; }
+    else { el.innerHTML='<span class="ms" style="color:var(--mu2)">event</span><span style="color:var(--mu)">Choose a month, a day, then a time.</span>'; n.disabled=true; }
   }
 
   // ---- 2. details ----
@@ -262,7 +290,7 @@ body.embed .brand{display:none}
       +'<div class="msg" id="msg"></div>'
       +'<div class="bar"><button class="btn ghost" id="back"><span class="ms">arrow_back</span> Back</button><button class="btn pri" id="go">Confirm booking <span class="ms">check</span></button></div>';
     var keep=function(){ S.name=$("f-name").value.trim(); S.phone=$("f-phone").value.trim(); S.email=$("f-email").value.trim(); S.address=$("f-addr").value.trim(); S.notes=$("f-notes").value.trim(); };
-    $("chg").onclick=function(e){ e.preventDefault(); keep(); S.step=1; render(); };
+    $("chg").onclick=function(e){ e.preventDefault(); keep(); S.step=1; S.open="time"; render(); };
     $("back").onclick=function(){ keep(); S.step=1; render(); };
     $("go").onclick=function(){
       keep(); var m=$("msg"); m.className="msg";

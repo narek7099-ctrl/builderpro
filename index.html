@@ -15462,7 +15462,7 @@ var _bpContacts=[];
     var insp=_bpCalKind!=='jobs';
     q('bpxViewArea').innerHTML=
       '<div class="cal-top"><div class="bpx-jobtabs cal-tabs"><button class="bpx-jt'+(insp?' on':'')+'" onclick="bpCalKind(\'inspection\')"><span class=ms>roofing</span> Inspections</button><button class="bpx-jt'+(!insp?' on':'')+'" onclick="bpCalKind(\'jobs\')"><span class=ms>construction</span> Jobs</button></div>'
-      +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button><button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(insp?'Book inspection':'Book job')+'</button></div></div>'
+      +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'+(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')+'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(insp?'Book inspection':'Book job')+'</button></div></div>'
       +'<div class="cal-layout">'
       +'<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>'
       +'<div class="cal-side">'
@@ -15470,7 +15470,7 @@ var _bpContacts=[];
       +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(insp?'inspections':'jobs')+'</b><span id="bpx-upcount" class="bpx-badge"></span></div><div id="bpx-upnext"></div></div>'
       +'</div></div>';
     bpLoadCalendar();
-    if(insp) bpCalLinkRender();
+    if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
   }
 
   /* ==== booking link + embed (Inspections only) ==== */
@@ -15636,6 +15636,7 @@ var _bpContacts=[];
     // bucket events by day (local)
     var byDay={}; var pdays=(_bpCalKind==='jobs'&&window.bpProjCalEvents)?bpProjCalEvents(y,m):{};
     for(var i=0;i<_bpEvents.length;i++){ var dt=new Date(_bpEvents[i].start); if(dt.getFullYear()===y&&dt.getMonth()===m){ var dnum=dt.getDate(); (byDay[dnum]=byDay[dnum]||[]).push(_bpEvents[i]); } }
+    var closedMap=bpClosedSet();
     var html='<div class="bpx-grid cal-grid">';
     var dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     for(var i=0;i<7;i++) html+='<div class="bpx-dow">'+dow[i]+'</div>';
@@ -15643,8 +15644,11 @@ var _bpContacts=[];
     for(var dnum=1;dnum<=days;dnum++){
       var pevs=pdays[dnum]||[], evs=byDay[dnum]||[];
       var isPast=new Date(y,m,dnum,23,59).getTime()<Date.now();
-      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+((pevs.length+evs.length)?' has':'');
-      html+='<div class="'+cls+'"><div class="bpx-daynum"><span>'+dnum+'</span>'+((pevs.length+evs.length)>0?'<i class="cal-dot"></i>':'')+'</div>';
+      var key=y+'-'+(m<9?'0':'')+(m+1)+'-'+(dnum<10?'0':'')+dnum;
+      var isClosed=_bpCalKind!=='jobs'&&!!closedMap[key];
+      var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+((pevs.length+evs.length)?' has':'')+(isClosed?' closed':'');
+      var tap=(_bpCalKind!=='jobs'&&!isPast)?' onclick="bpCalDayTap(\''+key+'\')" title="'+(isClosed?'Closed \u2014 tap to manage':'Tap to close this day')+'"':'';
+      html+='<div class="'+cls+'"><div class="bpx-daynum"'+tap+'><span>'+dnum+'</span>'+(isClosed?'<em class="cal-closed-tag">Closed</em>':((pevs.length+evs.length)>0?'<i class="cal-dot"></i>':''))+'</div>';
       for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt job" onclick="bpProjOpen(\''+pevs[j].id+'\')"><b>'+bpEsc(pevs[j].label)+'</b></div>'; }
       for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt" onclick="bpApptClick(\''+evs[j].id+'\')"><span class="t">'+bpFmtTime(evs[j].start)+'</span><b>'+bpEsc(evs[j].title)+'</b></div>'; }
       html+='</div>';
@@ -15697,21 +15701,24 @@ var _bpContacts=[];
         +'<label>Address</label><input id="bpx-bk-addr" placeholder="On-site location">'
         +'<div class="mdt" id="bpx-bk-slots"></div>'
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBook()">Book</button></div>');
-      _bpSlotSel=null; bpMdt('bpx-bk-slots');
+      _bpSlotSel=null; bpMdt('bpx-bk-slots'); var mc=q('bpx-modal'); if(mc&&mc.firstChild) mc.firstChild.classList.add('wide');
     }
   };
 
-/* ==== month → date → time picker (staff side; the public page has its own copy) ==== */
-  var _mdt={slots:null,month:'',date:''};
+/* ==== month | day | time picker (staff side; the public page has its own copy) ====
+   Three columns. Each shows only what is chosen (or a prompt) until it is opened;
+   picking in one column collapses it and opens the next. Closed days are skipped. */
+  var _mdt={slots:null,month:'',date:'',open:'month'};
   function bpMdtLocal(iso){ var d=new Date(iso); var p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
   async function bpMdt(containerId){
     var el=q(containerId); if(!el) return;
-    _mdt.month=''; _mdt.date='';
-    el.innerHTML='<div class="mdt-row"><b>Month</b></div><div class="bpx-slotempty">Finding open times…</div>';
+    _mdt.month=''; _mdt.date=''; _mdt.open='month';
+    el.innerHTML='<div class="bpx-slotempty">Finding open times\u2026</div>';
     try{
       var res=await bpCalWrite({action:'slots'});
       if(!res.ok||!res.slots){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; return; }
-      var by={}; Object.keys(res.slots).forEach(function(k){ (res.slots[k]||[]).forEach(function(iso){ var ld=bpMdtLocal(iso); (by[ld]=by[ld]||[]).push(iso); }); });
+      var closed=bpClosedSet();
+      var by={}; Object.keys(res.slots).forEach(function(k){ (res.slots[k]||[]).forEach(function(iso){ var ld=bpMdtLocal(iso); if(closed[ld]||closed[k]) return; (by[ld]=by[ld]||[]).push(iso); }); });
       Object.keys(by).forEach(function(k){ by[k].sort(); });
       _mdt.slots=by;
       if(!Object.keys(by).length){ el.innerHTML='<div class="bpx-slotempty">No open times in the next few weeks.</div>'; return; }
@@ -15719,48 +15726,78 @@ var _bpContacts=[];
     }catch(e){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; }
   }
   function bpMdtDraw(el){
-    var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var dates=Object.keys(_mdt.slots).sort();
     var months=[]; dates.forEach(function(d){ var mk=d.slice(0,7); if(months.indexOf(mk)<0) months.push(mk); });
-    if(!_mdt.month||months.indexOf(_mdt.month)<0) _mdt.month=months[0];
-    var h='<div class="mdt-row"><b>Month</b></div><div class="mdt-chips">';
-    months.forEach(function(mk){ h+='<button type="button" class="mdt-chip'+(mk===_mdt.month?' on':'')+'" data-m="'+mk+'">'+MON[+mk.slice(5,7)-1]+' '+mk.slice(0,4)+'</button>'; });
-    h+='</div><div class="mdt-row"><b>Date</b><i>'+dates.filter(function(d){return d.slice(0,7)===_mdt.month;}).length+' days open</i></div><div class="mdt-chips">';
-    dates.filter(function(d){return d.slice(0,7)===_mdt.month;}).forEach(function(d){ var dt=new Date(d+'T12:00:00'); h+='<button type="button" class="mdt-chip day'+(d===_mdt.date?' on':'')+'" data-d="'+d+'"><small>'+dt.toLocaleDateString('en-US',{weekday:'short'})+'</small>'+dt.getDate()+'</button>'; });
-    h+='</div><div class="mdt-row"><b>Time</b></div><div class="mdt-chips" id="mdt-times">';
-    if(!_mdt.date) h+='<div class="bpx-slotempty" style="padding:6px 0">Pick a date first.</div>';
-    else (_mdt.slots[_mdt.date]||[]).forEach(function(iso){ h+='<button type="button" class="mdt-chip'+(iso===_bpSlotSel?' on':'')+'" data-t="'+iso+'">'+bpFmtTime(iso)+'</button>'; });
-    h+='</div>';
-    el.innerHTML=h;
-    el.querySelectorAll('[data-m]').forEach(function(b){ b.onclick=function(){ _mdt.month=b.getAttribute('data-m'); _mdt.date=''; _bpSlotSel=null; bpMdtDraw(el); }; });
-    el.querySelectorAll('[data-d]').forEach(function(b){ b.onclick=function(){ _mdt.date=b.getAttribute('data-d'); _bpSlotSel=null; bpMdtDraw(el); }; });
-    el.querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ _bpSlotSel=b.getAttribute('data-t'); el.querySelectorAll('[data-t]').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); }; });
+    if(_mdt.month&&months.indexOf(_mdt.month)<0){ _mdt.month=''; _mdt.date=''; }
+    var mDays=dates.filter(function(d){return d.slice(0,7)===_mdt.month;});
+    var times=_mdt.date?(_mdt.slots[_mdt.date]||[]):[];
+    var dt=function(d){ return new Date(d+'T12:00:00'); };
+    var col=function(key,label,sel,list){
+      var open=_mdt.open===key;
+      return '<div class="mdt-col'+(open?' open':'')+'"><div class="mdt-h">'+label+'</div>'
+        +'<button type="button" class="mdt-sel'+(sel.on?' on':'')+(sel.dim?' dim':'')+'" data-open="'+key+'"><div class="mdt-txt">'+sel.html+'</div><span class=ms>'+(open?'expand_less':'expand_more')+'</span></button>'
+        +(open?'<div class="mdt-list">'+list+'</div>':'')+'</div>';
+    };
+    var mSel=_mdt.month?{on:true,html:'<b>'+MON[+_mdt.month.slice(5,7)-1]+'</b><small>'+_mdt.month.slice(0,4)+'</small>'}:{dim:true,html:'<b>Pick a month</b><small>'+months.length+' with openings</small>'};
+    var mList=months.map(function(mk){ var n=dates.filter(function(d){return d.slice(0,7)===mk;}).length; return '<button type="button" class="mdt-opt'+(mk===_mdt.month?' on':'')+'" data-m="'+mk+'"><b>'+MON[+mk.slice(5,7)-1]+' '+mk.slice(0,4)+'</b><small>'+n+' day'+(n===1?'':'s')+' open</small></button>'; }).join('');
+    var dSel=_mdt.date?{on:true,html:'<b>'+dt(_mdt.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'</b><small>'+(_mdt.slots[_mdt.date]||[]).length+' times open</small>'}:{dim:true,html:'<b>Pick a day</b><small>'+(_mdt.month?mDays.length+' open':'choose a month first')+'</small>'};
+    var dList=mDays.length?mDays.map(function(d){ var n=(_mdt.slots[d]||[]).length; return '<button type="button" class="mdt-opt'+(d===_mdt.date?' on':'')+'" data-d="'+d+'"><b>'+dt(d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'</b><small>'+n+' open</small></button>'; }).join(''):'<div class="mdt-none">Choose a month first.</div>';
+    var tSel=_bpSlotSel&&_mdt.date?{on:true,html:'<b>'+bpFmtTime(_bpSlotSel)+'</b><small>about 1 hour</small>'}:{dim:true,html:'<b>Pick a time</b><small>'+(_mdt.date?times.length+' open':'choose a day first')+'</small>'};
+    var tList=times.length?times.map(function(iso){ return '<button type="button" class="mdt-opt'+(iso===_bpSlotSel?' on':'')+'" data-t="'+iso+'"><b>'+bpFmtTime(iso)+'</b></button>'; }).join(''):'<div class="mdt-none">Choose a day first.</div>';
+    el.innerHTML='<div class="mdt3">'+col('month','Month',mSel,mList)+col('date','Day',dSel,dList)+col('time','Time',tSel,tList)+'</div>';
+    el.querySelectorAll('[data-open]').forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-open'); _mdt.open=(_mdt.open===k)?'':k; bpMdtDraw(el); }; });
+    el.querySelectorAll('[data-m]').forEach(function(b){ b.onclick=function(){ _mdt.month=b.getAttribute('data-m'); _mdt.date=''; _bpSlotSel=null; _mdt.open='date'; bpMdtDraw(el); }; });
+    el.querySelectorAll('[data-d]').forEach(function(b){ b.onclick=function(){ _mdt.date=b.getAttribute('data-d'); _bpSlotSel=null; _mdt.open='time'; bpMdtDraw(el); }; });
+    el.querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ _bpSlotSel=b.getAttribute('data-t'); _mdt.open=''; bpMdtDraw(el); }; });
   }
 
-/* ==== bpLoadSlots ==== */
-  async function bpLoadSlots(containerId){
-    var el=q(containerId); if(!el) return;
-    el.innerHTML='<div class="bpx-slotempty">Finding open times\u2026</div>';
-    try{
-      var res=await bpCalWrite({action:'slots'});
-      if(!res.ok || !res.slots){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; return; }
-      var dates=Object.keys(res.slots).sort();
-      var html=''; var any=false;
-      for(var i=0;i<dates.length;i++){
-        var arr=res.slots[dates[i]]||[]; if(!arr.length) continue; any=true;
-        var dLbl=new Date(dates[i]+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
-        html+='<div class="bpx-slotday">'+dLbl+'</div><div class="bpx-slots">';
-        for(var j=0;j<arr.length;j++){ var t=new Date(arr[j]).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); html+='<div class="bpx-slot" data-iso="'+arr[j]+'" onclick="bpPickSlot(this)">'+t+'</div>'; }
-        html+='</div>';
-      }
-      el.innerHTML=any?html:'<div class="bpx-slotempty">No open times in the next few weeks.</div>';
-    }catch(e){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; }
+/* ==== closed days (holidays, crew away) ====
+   Kept on the account; the public page and the staff picker both skip them. */
+  var _bpClosed=null;
+  function bpClosedGet(){ if(_bpClosed) return _bpClosed; try{ _bpClosed=JSON.parse(localStorage.getItem('bpClosedDays')||'[]'); }catch(e){ _bpClosed=[]; } return _bpClosed; }
+  function bpClosedSet(){ var m={}; bpClosedGet().forEach(function(x){ m[x.day]=x.note||true; }); return m; }
+  function bpClosedLoad(){
+    if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve();
+    return Promise.resolve(BP_SB.from('booking_closed_days').select('day,note').order('day')).then(function(r){
+      if(r&&r.data){ _bpClosed=r.data.map(function(x){ return {day:String(x.day).slice(0,10),note:x.note||''}; }); try{ localStorage.setItem('bpClosedDays',JSON.stringify(_bpClosed)); }catch(e){} }
+    },function(){});
   }
-
-/* ==== bpPickSlot ==== */
-  window.bpPickSlot=function(node){
-    var wrap=node.closest('.bpx-slotwrap'); if(wrap){ var all=wrap.querySelectorAll('.bpx-slot'); for(var i=0;i<all.length;i++) all[i].classList.remove('sel'); }
-    node.classList.add('sel'); _bpSlotSel=node.getAttribute('data-iso');
+  function bpClosedSave(list){
+    _bpClosed=list; try{ localStorage.setItem('bpClosedDays',JSON.stringify(list)); }catch(e){}
+  }
+  window.bpClosedAdd=function(day,note){
+    day=String(day||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(day)) return Promise.resolve(false);
+    var list=bpClosedGet().filter(function(x){return x.day!==day;}); list.push({day:day,note:note||''}); list.sort(function(a,b){return a.day<b.day?-1:1;}); bpClosedSave(list);
+    if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve(true);
+    return Promise.resolve(bpSetUser()).then(function(u){ if(!u) return true; return Promise.resolve(BP_SB.from('booking_closed_days').upsert({owner:u.id,day:day,note:note||''},{onConflict:'owner,day'})).then(function(){return true;},function(){return true;}); });
+  };
+  window.bpClosedRemove=function(day){
+    bpClosedSave(bpClosedGet().filter(function(x){return x.day!==day;}));
+    if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve(true);
+    return Promise.resolve(BP_SB.from('booking_closed_days').delete().eq('day',day)).then(function(){return true;},function(){return true;});
+  };
+  window.bpClosedOpen=function(prefill){
+    var list=bpClosedGet(); var today=new Date(); var min=today.getFullYear()+'-'+(today.getMonth()<9?'0':'')+(today.getMonth()+1)+'-'+(today.getDate()<10?'0':'')+today.getDate();
+    var rows=list.length?list.map(function(x){ var d=new Date(x.day+'T12:00:00'); return '<div class="cal-closed-row"><div><b>'+d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})+'</b>'+(x.note?'<span>'+bpEsc(x.note)+'</span>':'')+'</div>'+bpDelBtn('bpClosedDel(\''+x.day+'\')','Reopen this day')+'</div>'; }).join(''):'<div class="cal-empty">No closed days yet. Add a holiday or a day the crew is away and nobody can book an inspection on it.</div>';
+    bpModal('<h3>Closed days</h3><div class="bpx-sub">Nobody can book an inspection on these days, from the booking page or in here.</div>'
+      +'<div class="cal-closed-add"><div><label>Day</label><input type="date" id="bpx-cd-day" min="'+min+'" value="'+bpEsc(prefill||'')+'"></div><div style="flex:1"><label>Reason <span style="font-weight:500">optional</span></label><input id="bpx-cd-note" placeholder="Thanksgiving, crew off, trade show\u2026"></div><button class="bpx-btn" style="align-self:flex-end" onclick="bpClosedAddClick()">Close this day</button></div>'
+      +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+      +'<div class="cal-closed-list" id="bpx-cd-list">'+rows+'</div>'
+      +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal();bpDrawCalendar()">Done</button></div>');
+  };
+  window.bpClosedAddClick=function(){
+    var d=(q('bpx-cd-day')||{}).value, n=((q('bpx-cd-note')||{}).value||'').trim(), msg=q('bpx-mmsg');
+    if(!d){ if(msg){ msg.style.color='#dc2626'; msg.textContent='Pick a day.'; } return; }
+    bpClosedAdd(d,n).then(function(){ bpClosedOpen(); });
+  };
+  window.bpClosedDel=function(day){
+    if(!bpAskDel('the closed day on '+new Date(day+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric'}),'People will be able to book inspections on it again.')) return;
+    bpClosedRemove(day).then(function(){ bpClosedOpen(); });
+  };
+  window.bpCalDayTap=function(day){
+    var closed=bpClosedSet();
+    if(closed[day]) bpClosedOpen(); else bpClosedOpen(day);
   };
 
 /* ==== bpSlotMsg ==== */
@@ -15845,7 +15882,7 @@ var _bpContacts=[];
   window.bpOpenReschedule=function(id){
     var e=bpFindEv(id); if(!e) return; _bpSlotSel=null;
     bpModal('<h3>Reschedule</h3><div class="bpx-sub">'+bpEsc(e.title)+' \u2014 pick a new time</div><div class="mdt" id="bpx-rs-slots"></div><div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoReschedule(\''+id+'\')">Save</button></div>');
-    bpMdt('bpx-rs-slots');
+    bpMdt('bpx-rs-slots'); var mc=q('bpx-modal'); if(mc&&mc.firstChild) mc.firstChild.classList.add('wide');
   };
 
 /* ==== bpDoReschedule ==== */
@@ -21520,7 +21557,44 @@ window.bgPartnersRender=function(){
 #bpx .cal-conn-r .bpx-btn{flex:none;padding:9px 16px}
 #bpx.bpx-dark .cal-warn{background:#2a2110;border-color:#4a3a15;color:#f0c977}
 #bpx .bpx-modalcard h3{font-family:inherit !important;letter-spacing:-.024em}
-/* month → date → time picker inside modals */
+/* month | day | time picker inside modals */
+#bpx .bpx-modalcard.wide{max-width:680px}
+#bpx .mdt3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;margin-top:10px}
+#bpx .mdt-col{min-width:0}
+#bpx .mdt-h{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--grey-l);margin:0 0 6px 2px}
+#bpx .mdt-sel{appearance:none;width:100%;display:flex;align-items:center;gap:8px;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:11px;padding:10px 10px 10px 12px;font-family:inherit;cursor:pointer;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05);transition:transform .15s var(--ease),border-color .15s,box-shadow .15s;min-height:54px}
+#bpx .mdt-sel b{display:block;font-size:14px;font-weight:700;line-height:1.15}
+#bpx .mdt-sel small{display:block;font-size:11.5px;color:var(--grey);margin-top:2px}
+#bpx .mdt-txt{flex:1;min-width:0}
+#bpx .mdt-sel .ms{margin-left:auto;color:var(--grey-l);font-size:20px;flex:none}
+#bpx .mdt-sel:hover{transform:translateY(-1px);border-color:#b9c9ea}
+#bpx .mdt-sel.on{border-color:var(--blue);box-shadow:inset 0 1px 0 var(--edge),0 0 0 3px rgba(43,99,230,.12)}
+#bpx .mdt-sel.on b{color:var(--blue-d)}
+#bpx .mdt-sel.dim b{color:var(--grey)}
+#bpx .mdt-col.open .mdt-sel{border-color:var(--blue)}
+#bpx .mdt-list{display:flex;flex-direction:column;gap:5px;margin-top:6px;max-height:236px;overflow-y:auto;padding:1px}
+#bpx .mdt-opt{appearance:none;text-align:left;border:1px solid var(--line-2,var(--line));background:var(--soft);color:var(--ink);border-radius:9px;padding:8px 11px;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,transform .15s var(--ease);font-variant-numeric:tabular-nums}
+#bpx .mdt-opt b{display:block;font-size:13px;font-weight:600}
+#bpx .mdt-opt small{display:block;font-size:11px;color:var(--grey);margin-top:1px}
+#bpx .mdt-opt:hover{background:var(--card);border-color:#b9c9ea;transform:translateY(-1px)}
+#bpx .mdt-opt.on{background:linear-gradient(180deg,#4a83ff,var(--blue));color:#fff;border-color:transparent}
+#bpx .mdt-opt.on small{color:rgba(255,255,255,.85)}
+#bpx .mdt-none{font-size:12px;color:var(--grey-l);padding:8px 4px}
+@media(max-width:600px){#bpx .mdt3{grid-template-columns:1fr}#bpx .mdt-list{max-height:180px}}
+/* closed days */
+#bpx .cal-grid .bpx-day.closed{background:repeating-linear-gradient(135deg,var(--soft) 0 6px,var(--bg-2) 6px 8px);opacity:1}
+#bpx .cal-grid .bpx-daynum[onclick]{cursor:pointer}
+#bpx .cal-closed-tag{font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#b45309;background:#fff7ed;border:1px solid #f2dfbd;border-radius:999px;padding:1px 6px}
+#bpx.bpx-dark .cal-closed-tag{background:#2a2110;border-color:#4a3a15;color:#f0c977}
+#bpx .cal-closed-add{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:12px}
+#bpx .cal-closed-add label{margin-top:0}
+#bpx .cal-closed-add input{width:100%}
+#bpx .cal-closed-add>div:first-child{flex:0 0 160px}
+#bpx .cal-closed-list{margin-top:14px;max-height:260px;overflow-y:auto}
+#bpx .cal-closed-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line-2,var(--line))}
+#bpx .cal-closed-row b{font-size:13.5px}
+#bpx .cal-closed-row span{display:block;font-size:12px;color:var(--grey)}
+/* (old chip picker rules kept for anything else that uses them) */
 #bpx .mdt{margin-top:8px}
 #bpx .mdt-row{display:flex;align-items:baseline;gap:8px;margin:12px 0 6px}
 #bpx .mdt-row b{font-size:12px;font-weight:600;color:var(--grey)}
