@@ -21877,7 +21877,7 @@ window.bgPartnersRender=function(){
   #bpx .cal-top .bpx-btn{padding:10px 14px}
 }
 /* ---------- customize ---------- */
-#bpx .cz{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,46%);gap:16px;align-items:start}
+#bpx .cz{display:flex;flex-direction:column;gap:18px}
 #bpx .cz-left{min-width:0}
 #bpx .cz-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 #bpx .cz-h{display:flex;align-items:baseline;gap:8px;font-size:15px;font-weight:700;margin:18px 0 8px}
@@ -21912,18 +21912,18 @@ window.bgPartnersRender=function(){
 #bpx .cz-img-c{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 #bpx .cz-img-c .bpx-rowbtn{display:inline-flex;align-items:center;gap:4px}
 #bpx .bpx-calc-hero .bpx-btn,#bpx .cz-foot .bpx-btn{width:auto;flex:none}
-#bpx .cz-foot{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0 4px;margin-top:6px;background:linear-gradient(180deg,rgba(238,241,246,0),var(--bg) 30%)}
+#bpx .cz-foot{position:sticky;bottom:0;z-index:2;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0 4px;margin-top:6px;background:linear-gradient(180deg,rgba(238,241,246,0),var(--bg) 30%)}
 #bpx .cz-msg{font-size:12.5px;color:var(--grey);font-weight:600}
-#bpx .cz-right{position:sticky;top:12px}
+#bpx .cz-right{position:static}
 #bpx .cz-prev{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px;box-shadow:inset 0 1px 0 var(--edge),0 1px 2px rgba(var(--sh-c),.05),0 12px 32px -16px rgba(var(--sh-c),.28)}
 #bpx .cz-prev-h{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 #bpx .cz-prev-h b{font-size:13.5px}
 #bpx .cz-prev-h .bpx-jt{padding:5px 9px !important}
-#bpx .cz-frame{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;height:min(78vh,860px);box-shadow:inset 0 1px 2px rgba(var(--sh-c),.06);transition:max-width .3s var(--ease);margin:0 auto}
+#bpx .cz-frame{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;height:min(88vh,1000px);box-shadow:inset 0 1px 2px rgba(var(--sh-c),.06);transition:max-width .3s var(--ease);margin:0 auto}
 #bpx .cz-frame iframe{width:100%;height:100%;border:0;background:#fff;display:block}
 #bpx .cz-frame.phone{max-width:400px;border-radius:26px;border:8px solid #1b2333}
 #bpx .cz #bpCalcTable .bpx-price-row{padding:7px 0}
-@media(max-width:1000px){#bpx .cz{grid-template-columns:1fr}#bpx .cz-right{position:static}#bpx .cz-frame{height:640px}}
+@media(max-width:1000px){#bpx .cz-frame{height:640px}}
 
 /* ---------- recurring money ---------- */
 #bpx .fin-rec{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px}
