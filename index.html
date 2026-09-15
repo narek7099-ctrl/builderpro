@@ -19504,6 +19504,10 @@ window.rdToggleStorm=function(){_rdStormOn=!_rdStormOn;
 
 var BP_TILES={
   street:[
+    /* the clean grey CARTO-style look, from OpenFreeMap: free, no key, no watermark.
+       Vector tiles drawn by MapLibre; if the library or the tiles can't load we
+       drop to the raster chain below. */
+    {gl:'https://tiles.openfreemap.org/styles/positron',attribution:'&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/">OpenMapTiles</a> &copy; OpenStreetMap contributors'},
     {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
      opt:{maxZoom:19,attribution:'Tiles &copy; Esri'}},
     {url:'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
@@ -19526,12 +19530,52 @@ var BP_TILES={
 /* Add a tile layer that demotes itself: a handful of tile errors and we drop to
    the next provider in the chain, so one CDN changing its terms can't leave the
    contractor staring at a broken or watermarked map. */
+/* MapLibre + its Leaflet bridge, loaded once, only when a vector style is wanted */
+var _bpGL=null;
+function bpEnsureGL(){
+  if(_bpGL) return _bpGL;
+  _bpGL=new Promise(function(res,rej){
+    if(window.maplibregl&&L.maplibreGL){res();return;}
+    var css=document.createElement('link');css.rel='stylesheet';css.href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';document.head.appendChild(css);
+    var js=document.createElement('script');js.src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+    js.onerror=function(){rej();};
+    js.onload=function(){
+      var br=document.createElement('script');br.src='https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js';
+      br.onload=function(){ if(L.maplibreGL)res(); else rej(); }; br.onerror=function(){rej();};
+      document.head.appendChild(br);
+    };
+    document.head.appendChild(js);
+    setTimeout(function(){rej();},9000);
+  });
+  _bpGL.catch(function(){ _bpGL=null; });
+  return _bpGL;
+}
 function bpTileLayer(map,kind,onSwap){
   var chain=BP_TILES[kind]||BP_TILES.street, i=0, layer=null;
-  var over=null;
-  var drop=function(){ try{map.removeLayer(layer);}catch(e){} if(over){try{map.removeLayer(over);}catch(e){}over=null;} };
+  var over=null, dead=false;
+  var drop=function(){ try{if(layer)map.removeLayer(layer);}catch(e){} if(over){try{map.removeLayer(over);}catch(e){}over=null;} };
   var mount=function(){
+    if(dead) return;
     var c=chain[i];
+    if(c.gl){
+      /* vector style: try it, and quietly step down the chain if it can't load */
+      var next=function(){ if(dead)return; drop(); i++; mount(); if(onSwap)onSwap(chain[i]); };
+      bpEnsureGL().then(function(){
+        if(dead) return;
+        try{
+          layer=L.maplibreGL({style:c.gl,attribution:c.attribution||'',interactive:false});
+          var errs=0, settled=false;
+          layer.addTo(map);
+          var gl=layer.getMaplibreMap&&layer.getMaplibreMap();
+          if(gl){
+            gl.on('load',function(){settled=true;});
+            gl.on('error',function(){ if(++errs>=4&&!settled) next(); });
+          }
+          setTimeout(function(){ if(!settled&&!dead&&layer&&(!gl||!gl.loaded||!gl.loaded())) next(); },12000);
+        }catch(e){ next(); }
+      },function(){ next(); });
+      return;
+    }
     layer=L.tileLayer(c.url,c.opt);
     var errs=0;
     layer.on('tileerror',function(){
@@ -19544,7 +19588,7 @@ function bpTileLayer(map,kind,onSwap){
     if(c.over){ over=L.tileLayer(c.over,{maxZoom:(c.opt&&c.opt.maxZoom)||19,maxNativeZoom:(c.opt&&c.opt.maxNativeZoom),attribution:''}).addTo(map); }
   };
   mount();
-  return {remove:drop};
+  return {remove:function(){ dead=true; drop(); }};
 }
 function rdEnsureLeaflet(cb){
   if(window.L){cb();return;}
@@ -19581,11 +19625,32 @@ window.rdToggleSat=function(){
   var b=q('rdSatBtn'); if(b)b.innerHTML=_rdSat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite';
   if(_rdMap)rdBase();
 };
+/* The scan reads several public feeds and that is worth showing: a veil over the
+   map with a ring, held for a few seconds even when the feeds answer instantly,
+   so a scan reads as work being done rather than a list that was already there. */
+function rdVeil(on,text){
+  var w=q('rdMapWrap'); if(!w) return;
+  var v=w.querySelector('.rd-veil');
+  if(!on){ if(v){ v.classList.add('out'); setTimeout(function(){ if(v&&v.parentNode) v.parentNode.removeChild(v); },320); } return; }
+  if(!v){ v=document.createElement('div'); v.className='rd-veil'; w.appendChild(v); }
+  v.classList.remove('out');
+  v.innerHTML='<div class="rd-veil-in"><div class="rd-ring"></div><div class="rd-veil-t">'+(text||'Scanning\u2026')+'</div><div class="rd-veil-s" id="rdVeilStep">Permits</div></div>';
+}
+function rdVeilHold(started,cb){
+  /* 2–5 s from when the scan began, varied so it doesn't feel like a timer */
+  var steps=['Permits','Storm reports','Roof ages','Scoring'], si=0;
+  var tick=setInterval(function(){ var e=q('rdVeilStep'); if(!e){clearInterval(tick);return;} si=Math.min(si+1,steps.length-1); e.textContent=steps[si]; },700);
+  var hold=2000+Math.floor(Math.random()*3000);
+  var wait=Math.max(0,hold-(Date.now()-started));
+  setTimeout(function(){ clearInterval(tick); rdVeil(false); cb(); },wait);
+}
 function rdRefresh(){
   if(!window.L) return;
   if(!_rdMap||!document.getElementById('rdMap')||!document.getElementById('rdMap')._leaflet_id) rdInitMap();
   var cnt=q('rdCount'); if(cnt)cnt.textContent='Scanning permits…';
-  var done=function(leads,demo){_rdLeads=leads; window._rdIsDemo=demo||_rdCity==='demo';
+  var started=Date.now(); rdVeil(true,'Scanning your territory');
+  var done=function(leads,demo){ rdVeilHold(started,function(){ doneNow(leads,demo); }); };
+  var doneNow=function(leads,demo){_rdLeads=leads; window._rdIsDemo=demo||_rdCity==='demo';
     if(demo&&cnt)cnt.textContent='Live feed unavailable — demo data';
     if(demo&&_rdCity!=='demo'){
       var pc=RADAR_CITIES[_rdCity]; var pcfg=(pc&&(pc.recent||pc))||null;
@@ -21374,6 +21439,20 @@ window.bgPartnersRender=function(){
 /* basemap tint: softened in light so the dots lead; inverted and re-hued in
    dark so the map is part of the dark UI. Only the tile pane, never the markers. */
 #bpx #rdMap .leaflet-tile-pane,#bpx #bgMap .leaflet-tile-pane{filter:saturate(.72) contrast(.92) brightness(1.04);transition:filter .3s var(--ease)}
+#bpx .leaflet-gl-layer{transition:filter .3s var(--ease)}
+#bpx.bpx-dark .leaflet-gl-layer{filter:invert(1) hue-rotate(185deg) brightness(.86) contrast(.9) saturate(.5)}
+#bpx #rdMapWrap{position:relative}
+#bpx .rd-veil{position:absolute;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;background:rgba(238,241,246,.72);backdrop-filter:blur(3px) saturate(120%);border-radius:inherit;animation:rdVeilIn .25s var(--ease-out) both}
+#bpx.bpx-dark .rd-veil{background:rgba(11,15,22,.7)}
+#bpx .rd-veil.out{animation:rdVeilOut .3s var(--ease) both}
+#bpx .rd-veil-in{display:flex;flex-direction:column;align-items:center;gap:12px;padding:26px 30px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:inset 0 1px 0 var(--edge),0 24px 60px -20px rgba(var(--sh-c),.45)}
+#bpx .rd-ring{width:46px;height:46px;border-radius:50%;border:4px solid rgba(43,99,230,.16);border-top-color:var(--blue);animation:rdSpin .8s linear infinite}
+#bpx .rd-veil-t{font-size:14px;font-weight:700;color:var(--ink)}
+#bpx .rd-veil-s{font-size:12px;color:var(--grey);font-variant-numeric:tabular-nums;min-width:110px;text-align:center}
+@keyframes rdSpin{to{transform:rotate(360deg)}}
+@keyframes rdVeilIn{from{opacity:0}to{opacity:1}}
+@keyframes rdVeilOut{to{opacity:0}}
+@media(prefers-reduced-motion:reduce){#bpx .rd-ring{animation-duration:1.6s}}
 #bpx.bpx-dark #rdMap .leaflet-tile-pane,#bpx.bpx-dark #bgMap .leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.82) contrast(.88) saturate(.55)}
 #bpx.bpx-dark #rdMap .leaflet-tile-pane.sat,#bpx.bpx-dark #bgMap .leaflet-tile-pane.sat{filter:brightness(.92) saturate(.9)}
 #bpx #rdMap,#bpx #bgMap{background:var(--bg-2) !important}
