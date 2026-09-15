@@ -10,6 +10,8 @@
 // POST (Authorization: Bearer <client JWT>)
 //   { op: "get" }                               -> current brain + publish status
 //   { op: "publish", brain: {...}, company: {...} } -> save + sync
+//   { op: "calendars" }                         -> the calendars in their GHL sub-account
+//   { op: "set_calendar", calendarId }          -> which one takes public inspection bookings
 //
 // Deploy:  supabase functions deploy ai-brain-sync --no-verify-jwt
 // Secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (built in),
@@ -61,8 +63,28 @@ async function ghlToken(): Promise<string> {
   return _tok;
 }
 
+// a token for whichever sub-account this client owns, not just the LOC secret
+const locTokCache: Record<string, string> = {};
+async function locationToken(locationId: string): Promise<string> {
+  if (!locationId || locationId === LOC) return (await ghlToken()) || GHL_TOKEN;
+  if (locTokCache[locationId]) return locTokCache[locationId];
+  const perLoc = Deno.env.get("GHL_TOKEN_" + locationId);
+  if (perLoc) { locTokCache[locationId] = perLoc; return perLoc; }
+  if (GHL_API_KEY && GHL_COMPANY_ID) {
+    try {
+      const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId }).toString(),
+      });
+      if (r.ok) { const d = await r.json(); if (d?.access_token) { locTokCache[locationId] = d.access_token; return d.access_token; } }
+    } catch { /* fall through */ }
+  }
+  return GHL_TOKEN;
+}
+
 type Row = Record<string, unknown>;
-const SAFE = ["slug", "assistant_name", "business_name", "industry", "tone", "services", "pricing", "hours", "service_area", "phone", "booking_url", "faqs", "custom_instructions", "published_at", "ghl_synced_at", "updated_at", "ghl_location_id"];
+const SAFE = ["slug", "assistant_name", "business_name", "industry", "tone", "services", "pricing", "hours", "service_area", "phone", "booking_url", "faqs", "custom_instructions", "published_at", "ghl_synced_at", "updated_at", "ghl_location_id", "booking_calendar_id"];
 const pick = (r: Row) => Object.fromEntries(SAFE.map((k) => [k, r[k] ?? null]));
 
 // the client's brain row: owned by them, else the location's row (claimed), else new
@@ -121,12 +143,42 @@ Deno.serve(async (req) => {
   const user = await userFromReq(req);
   if (!user) return json({ ok: false, error: "sign in required" }, 401);
 
-  let b: { op?: string; brain?: Record<string, string>; company?: Record<string, string> };
+  let b: { op?: string; brain?: Record<string, string>; company?: Record<string, string>; calendarId?: string };
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
 
   if (b.op === "get") {
     const row = await findBrain(user.id, user.email);
     return json({ ok: true, brain: row ? pick(row) : null, ghl_linked: !!(row?.ghl_location_id || LOC) });
+  }
+
+  // ---- which calendar takes public inspection bookings ----
+  // The booking page (builderpro-os.com/book) books into ai_brain.booking_calendar_id.
+  // These two ops let the owner set it themselves instead of asking support.
+  if (b.op === "calendars") {
+    const row = await findBrain(user.id, user.email);
+    if (!row) return json({ ok: true, calendars: [], reason: "no_row", selected: "" });
+    const loc = String(row.ghl_location_id ?? "") || LOC;
+    if (!loc) return json({ ok: true, calendars: [], reason: "no_location", selected: String(row.booking_calendar_id ?? "") });
+    const t = await locationToken(loc);
+    if (!t) return json({ ok: true, calendars: [], reason: "no_token", selected: String(row.booking_calendar_id ?? "") });
+    try {
+      const r = await fetch(`${GHL_BASE}/calendars/?locationId=${encodeURIComponent(loc)}`, { headers: ghlH(t) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return json({ ok: true, calendars: [], reason: "ghl_" + r.status, selected: String(row.booking_calendar_id ?? "") });
+      const cals = (d?.calendars ?? []).map((c: Row) => ({ id: String(c.id ?? ""), name: String(c.name ?? "Calendar") })).filter((c: { id: string }) => c.id);
+      return json({ ok: true, calendars: cals, selected: String(row.booking_calendar_id ?? "") });
+    } catch { return json({ ok: true, calendars: [], reason: "unreachable", selected: String(row.booking_calendar_id ?? "") }); }
+  }
+
+  if (b.op === "set_calendar") {
+    const id = String(b.calendarId ?? "").trim().slice(0, 80);
+    if (!/^[A-Za-z0-9_-]*$/.test(id)) return json({ ok: false, error: "That does not look like a calendar id." }, 400);
+    const row = await findBrain(user.id, user.email);
+    if (!row) return json({ ok: false, error: "Publish Ridge once in Settings first — that creates your account record." }, 404);
+    const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify({ booking_calendar_id: id, updated_at: new Date().toISOString() }) });
+    if (!r.ok) return json({ ok: false, error: "Could not save that calendar." }, 502);
+    const saved = (await r.json().catch(() => []))[0] ?? null;
+    return json({ ok: true, booking_calendar_id: id, brain: saved ? pick(saved) : null });
   }
 
   if (b.op === "publish") {
