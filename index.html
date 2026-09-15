@@ -17254,6 +17254,27 @@ window.bpJobDoneSave=function(id,skip){
 };
 
 /* ---------- Finances ---------- */
+/* Recurring money: rent, software, insurance, a retainer. A rule carries a
+   cadence and a start; every period from the start to today is one ledger entry,
+   so totals and margin stay honest without anyone re-typing it. */
+var BP_RECUR={weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'};
+function bpRecurDates(f){
+  var out=[], t=new Date(), now=new Date(t.getFullYear(),t.getMonth(),t.getDate(),23,59,59).getTime(), start=new Date(+f.start||+f.when||now), n=0;
+  var d=new Date(start.getTime());
+  while(d.getTime()<=now && n<400){
+    out.push(d.getTime()); n++;
+    if(f.recur==='weekly') d=new Date(d.getTime()+7*86400000);
+    else if(f.recur==='yearly') d=new Date(d.getFullYear()+1,d.getMonth(),d.getDate(),12);
+    else { var m=new Date(d.getFullYear(),d.getMonth()+1,1,12); var last=new Date(m.getFullYear(),m.getMonth()+1,0).getDate(); d=new Date(m.getFullYear(),m.getMonth(),Math.min(start.getDate(),last),12); }
+  }
+  return out;
+}
+function bpRecurNext(f){ var ds=bpRecurDates(f); var last=ds.length?new Date(ds[ds.length-1]):new Date(+f.start||Date.now()); var d=new Date(last.getTime());
+  if(f.recur==='weekly') d=new Date(d.getTime()+7*86400000);
+  else if(f.recur==='yearly') d=new Date(d.getFullYear()+1,d.getMonth(),d.getDate(),12);
+  else { var st=new Date(+f.start||+f.when||Date.now()); var m=new Date(d.getFullYear(),d.getMonth()+1,1,12); var lastD=new Date(m.getFullYear(),m.getMonth()+1,0).getDate(); d=new Date(m.getFullYear(),m.getMonth(),Math.min(st.getDate(),lastD),12); }
+  return d; }
+function bpRecurMonthly(f){ var a=+f.amount||0; return f.recur==='weekly'?a*52/12:f.recur==='yearly'?a/12:a; }
 var _bpFinTab='all';
 function bpFinData(){
   var jobs=bpJobsGet(), fin=bpFinGet(), inc=[], exp=[], catTot={};
@@ -17262,8 +17283,12 @@ function bpFinData(){
     (j.expenses||[]).forEach(function(e){ exp.push({name:e.cat+' — '+j.name,type:e.cat,amt:+e.amt||0,when:j.doneAt||j.wonAt}); catTot[e.cat]=(catTot[e.cat]||0)+(+e.amt||0); });
   });
   fin.forEach(function(f,fi){
-    if(f.kind==='income') inc.push({name:f.note||'Income',type:'Manual',amt:+f.amount||0,when:f.when,fi:fi});
-    else { exp.push({name:f.note||f.category||'Expense',type:f.category||'Other',amt:+f.amount||0,when:f.when,fi:fi}); catTot[f.category||'Other']=(catTot[f.category||'Other']||0)+(+f.amount||0); }
+    /* a recurring rule becomes one dated entry per period from its start to today */
+    var whens=f.recur?bpRecurDates(f):[f.when];
+    whens.forEach(function(w){
+      if(f.kind==='income') inc.push({name:f.note||'Income',type:'Manual',amt:+f.amount||0,when:w,fi:fi,rec:f.recur||''});
+      else { exp.push({name:f.note||f.category||'Expense',type:f.category||'Other',amt:+f.amount||0,when:w,fi:fi,rec:f.recur||''}); catTot[f.category||'Other']=(catTot[f.category||'Other']||0)+(+f.amount||0); }
+    });
   });
   var income=inc.reduce(function(s,x){return s+x.amt;},0);
   var expense=exp.reduce(function(s,x){return s+x.amt;},0);
@@ -17271,20 +17296,22 @@ function bpFinData(){
 }
 function bpFinances(){
   var d=bpFinData();
+  var recRules=[]; bpFinGet().forEach(function(f,fi){ if(f.recur) recRules.push({f:f,fi:fi}); });
+  var recMonthly=recRules.reduce(function(t,r){ return t+(r.f.kind==='expense'?bpRecurMonthly(r.f):0); },0);
   var margin=d.income>0?Math.round(d.net/d.income*100):0;
   var cats=Object.keys(d.catTot).sort(function(a,b){return d.catTot[b]-d.catTot[a];});
   var cmax=Math.max.apply(null,cats.map(function(c){return d.catTot[c];}).concat([1]));
   var ccol={ 'Materials':'#2f6bff','Labor / crew':'#f59e0b','Subcontractor':'#7c3aed','Ads':'#15803d','Fuel':'#6a6a70','Tools':'#0d9488','Permits':'#db2777','Overhead':'#dc2626','Other':'#9a9aa0' };
   var catHtml=cats.length?cats.map(function(c){return '<div class="bpx-fincat"><span class="nm">'+bpEsc(c)+'</span><span class="bar"><i style="width:'+Math.max(6,Math.round(d.catTot[c]/cmax*100))+'%;background:'+(ccol[c]||'#2f6bff')+'"></i></span><span class="amt">'+bpMoneyFmt(d.catTot[c])+'</span></div>';}).join(''):'<div class="bpx-empty2">No expenses logged yet.</div>';
   // ledger
-  var all=d.inc.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:1,w:x.when,fi:x.fi};}).concat(d.exp.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:-1,w:x.when,fi:x.fi};}));
+  var all=d.inc.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:1,w:x.when,fi:x.fi,rec:x.rec};}).concat(d.exp.map(function(x){return {n:x.name,t:x.type,a:x.amt,s:-1,w:x.when,fi:x.fi,rec:x.rec};}));
   if(_bpFinTab==='income') all=all.filter(function(x){return x.s>0;});
   if(_bpFinTab==='expense') all=all.filter(function(x){return x.s<0;});
   all.sort(function(a,b){return (b.w||0)-(a.w||0);});
   window._bpFinLedger=all;
   var ledPg=bpPage('finled',all,10,'bpFinances()');
   var ledHtml=all.length?ledPg.items.map(function(x){var dt=x.w?new Date(x.w).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    return '<tr><td>'+bpEsc(x.n)+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td>'
+    return '<tr><td>'+bpEsc(x.n)+(x.rec?' <span class="fin-rec" title="Recurring \u2014 delete the rule from the Recurring panel or with Delete on this row">'+BP_RECUR[x.rec]+'</span>':'')+'</td><td><span class="bpx-badge'+(x.s<0?' warn':'')+'">'+bpEsc(x.t)+'</span></td><td class="bpx-mut">'+dt+'</td><td class="bpx-r bpx-num '+(x.s>0?'bpx-pos':'bpx-neg')+'">'+(x.s>0?'+ ':'− ')+bpMoneyFmt(x.a)+'</td>'
       +'<td class="bpx-r">'+(x.fi==null?'<span class="bpx-mut" title="This came from a job — edit or delete it on the project itself" style="font-size:11px">from a job</span>':bpDelBtn('bpFinDel('+x.fi+')','Delete this entry'))+'</td></tr>';
   }).join(''):'<tr><td colspan="5" class="bpx-empty2">Nothing logged yet. Mark a job done with what you collected, or use <b>+ Add income</b>.</td></tr>';
   // per-job
@@ -17307,9 +17334,14 @@ function bpFinances(){
       +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpInvOpen()">+ New invoice</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpEstOpen()">+ New estimate</button></div></div>'
     +vp('overview',
       '<div class="bpx-row"><div class="bpx-panel"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
-      +'<div class="bpx-panel"><div class="bpx-ptitle">Quick add</div><div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Log money that didn\'t come through a job — ad spend, fuel, a side payment.</div>'
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Quick add</div><div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Log money that didn\'t come through a job — ad spend, fuel, a side payment. Set it to repeat and it books itself every week, month or year.</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div>'
         +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px">Management view — not accounting of record. Income is what you actually collected. Synced to your account.</div></div></div>'
+      +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Recurring<span class="lg2" style="margin-left:8px">books itself on schedule</span></div><span class="bpx-mut" style="font-size:12.5px">'+(recRules.length?bpMoneyFmt(recMonthly)+' / month in fixed costs':'')+'</span></div>'
+        +(recRules.length?'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Repeats</th><th>Next</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'
+          +recRules.map(function(r){ var f=r.f; return '<tr><td>'+bpEsc(f.note||f.category||(f.kind==='income'?'Income':'Expense'))+'</td><td><span class="bpx-badge'+(f.kind==='expense'?' warn':'')+'">'+BP_RECUR[f.recur]+'</span></td><td class="bpx-mut">'+bpRecurNext(f).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</td><td class="bpx-r bpx-num '+(f.kind==='income'?'bpx-pos':'bpx-neg')+'">'+(f.kind==='income'?'+ ':'\u2212 ')+bpMoneyFmt(+f.amount||0)+'</td><td class="bpx-r">'+bpDelBtn('bpFinDel('+r.fi+')','Stop this recurring entry')+'</td></tr>'; }).join('')
+          +'</tbody></table></div>':'<div class="bpx-empty2">Nothing repeats yet. Add an expense or income and set <b>Repeats</b> to weekly, monthly or yearly — rent, software, insurance, a retainer.</div>')
+        +'</div>'
       +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Per-job profit<span class="lg2" style="margin-left:8px">completed jobs — tap one to add income &amp; costs</span></div>'+bpCsvBtn('bpCsvJobs()')+'</div>'
       +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'+pjPg.nav+'</div>')
     +vp('invoices',
@@ -17332,7 +17364,8 @@ function bpFinances(){
    project it came from, so we point at the project instead. */
 window.bpFinDel=function(i){
   var fin=bpFinGet(), f=fin[i]; if(!f)return;
-  if(!bpAskDel((f.note||f.category||'this entry')+' ('+bpMoneyFmt(+f.amount||0)+')','Your totals and margin update straight away.'))return;
+  var what=(f.note||f.category||'this entry')+' ('+bpMoneyFmt(+f.amount||0)+(f.recur?' '+BP_RECUR[f.recur].toLowerCase():'')+')';
+  if(!bpAskDel(what,f.recur?'This stops the recurring rule and removes every entry it created. Your totals and margin update straight away.':'Your totals and margin update straight away.'))return;
   fin.splice(i,1); bpFinSet(fin); bpFinances();
 };
 window.bpCsvLedger=function(){
@@ -18057,14 +18090,23 @@ window.bpFinAddOpen=function(kind){
     +'<label>Amount</label><input id="bpx-fa-amt" placeholder="$0">'
     +(isExp?'<label>Category</label><select id="bpx-fa-cat" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px;background:#fff;color:var(--ink)">'+bpCatOpts('Materials')+'</select>':'')
     +'<label>Note</label><input id="bpx-fa-note" placeholder="'+(isExp?'e.g. ABC Supply':'e.g. Cash job — fascia')+'">'
+    +'<div class="fin-rec-row"><div><label>Repeats</label><select id="bpx-fa-rec" onchange="bpFinRecUi()"><option value="">One time</option><option value="weekly">Every week</option><option value="monthly">Every month</option><option value="yearly">Every year</option></select></div>'
+    +'<div id="bpx-fa-startwrap" hidden><label>Starting</label><input type="date" id="bpx-fa-start" value="'+new Date().toISOString().slice(0,10)+'"></div></div>'
+    +'<div class="bpx-mut" id="bpx-fa-rechint" style="font-size:12px;margin-top:6px" hidden>Books itself on that day every period, from the start date to today and onward. Delete the rule any time from the Recurring panel.</div>'
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpFinAddSave(\''+kind+'\')">Add</button></div>');
 };
+window.bpFinRecUi=function(){ var r=(q('bpx-fa-rec')||{}).value; var w=q('bpx-fa-startwrap'), h=q('bpx-fa-rechint'); if(w)w.hidden=!r; if(h)h.hidden=!r; };
 window.bpFinAddSave=function(kind){
   var amt=bpParseMoney((q('bpx-fa-amt')||{}).value);
   if(!amt){ q('bpx-mmsg').style.color='#dc2626'; q('bpx-mmsg').textContent='Enter an amount.'; return; }
   var fin=bpFinGet();
-  fin.unshift({id:'f'+Date.now(),kind:kind,amount:amt,category:(q('bpx-fa-cat')||{}).value||'Other',note:((q('bpx-fa-note')||{}).value||'').trim(),when:Date.now()});
+  var rec=(q('bpx-fa-rec')||{}).value||'';
+  var startV=(q('bpx-fa-start')||{}).value; var start=rec&&startV?new Date(startV+'T12:00:00').getTime():Date.now();
+  if(rec&&start>Date.now()+86400000*366*5){ q('bpx-mmsg').style.color='#dc2626'; q('bpx-mmsg').textContent='That start date is too far out.'; return; }
+  var entry={id:'f'+Date.now(),kind:kind,amount:amt,category:(q('bpx-fa-cat')||{}).value||'Other',note:((q('bpx-fa-note')||{}).value||'').trim(),when:rec?start:Date.now()};
+  if(rec){ entry.recur=rec; entry.start=start; }
+  fin.unshift(entry);
   bpFinSet(fin); bpCloseModal(); bpFinances();
 };
 
@@ -21695,6 +21737,11 @@ window.bgPartnersRender=function(){
   #bpx .cal-panel{padding:12px}
   #bpx .cal-top .bpx-btn{padding:10px 14px}
 }
+/* ---------- recurring money ---------- */
+#bpx .fin-rec{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--blue-d);background:var(--blue-l);border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px}
+#bpx .fin-rec-row{display:flex;gap:10px;flex-wrap:wrap}
+#bpx .fin-rec-row>div{flex:1;min-width:150px}
+#bpx .fin-rec-row select,#bpx .fin-rec-row input{width:100%}
 /* ---------- reputation ---------- */
 #bpx .rp-demo{display:flex;gap:8px;align-items:flex-start;background:#fff8ec;border:1px solid #f2dfbd;color:#6b4f16;border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
 #bpx .rp-demo a{color:#1f4fc4;font-weight:600;cursor:pointer}
