@@ -177,6 +177,31 @@ Deno.serve(async (req) => {
     } catch { return json({ ok: true, calendars: [], reason: "unreachable", selected: sel, location: loc, has_row: !!row }); }
   }
 
+  // The public booking page shows the business name, phone and area from this
+  // record. A login whose record was never created by onboarding gets one here,
+  // keyed to them, so the page is not nameless — no calendar or sub-account needed.
+  if (b.op === "profile") {
+    const co = b.company ?? {};
+    const txt = (v: unknown) => String(v ?? "").slice(0, 300).trim();
+    const vals: Array<[string, string]> = [["business_name", txt(co.name)], ["phone", txt(co.phone)], ["service_area", txt(co.area)], ["hours", txt(co.hours)]];
+    const row = await findBrain(user.id, user.email);
+    const fields: Row = { updated_at: new Date().toISOString() };
+    if (row) {
+      for (const [k, v] of vals) if (v && !String(row[k] ?? "").trim()) fields[k] = v;
+      if (Object.keys(fields).length === 1) return json({ ok: true, brain: pick(row), changed: false });
+      const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(fields) });
+      const saved = r.ok ? ((await r.json().catch(() => []))[0] ?? null) : null;
+      return json({ ok: !!saved, brain: saved ? pick(saved) : pick(row), changed: !!saved });
+    }
+    const create: Row = { ...fields, owner: user.id, owner_email: user.email, is_demo: false, assistant_name: AI_NAME, slug: `u-${user.id.slice(0, 8)}` };
+    for (const [k, v] of vals) if (v) create[k] = v;
+    if (LOC) create.ghl_location_id = LOC;
+    const r = await fetch(`${SB_URL}/rest/v1/ai_brain`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(create) });
+    if (!r.ok) return json({ ok: false, error: "Could not create your account record.", detail: (await r.text()).slice(0, 200) }, 502);
+    const saved = (await r.json().catch(() => []))[0] ?? null;
+    return json({ ok: true, brain: saved ? pick(saved) : null, changed: true });
+  }
+
   if (b.op === "set_calendar") {
     const id = clean(b.calendarId), locId = clean(b.locationId);
     if (!idOk(id)) return json({ ok: false, error: "That does not look like a calendar id." }, 400);

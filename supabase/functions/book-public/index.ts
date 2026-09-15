@@ -10,9 +10,11 @@
 //   { op:"book",  u, startTime, name, phone, email?, address?, notes? }
 //                                          -> creates the contact + appointment in their GoHighLevel
 //
-// The calendar used is ai_brain.booking_calendar_id — the same one Ridge books
-// into — inside ai_brain.ghl_location_id. Falls back to GHL_CALENDAR_ID /
-// GHL_LOCATION_ID secrets for a single-account install.
+// Which calendar? By default the SAME one the portal's Inspections tab shows: the
+// page goes through the ghl-calendar and ghl-contacts functions the portal uses,
+// so the inside view and the outside view are one calendar. An account that has
+// its own booking_calendar_id + ghl_location_id on ai_brain (a client with their
+// own GoHighLevel sub-account) books straight into that instead.
 //
 // Deploy:
 //   supabase functions deploy book-public --no-verify-jwt
@@ -114,6 +116,38 @@ async function freeSlots(loc: string, cal: string, from: number, to: number): Pr
   return { ok: true, slots, tz };
 }
 
+// ---- the portal's own calendar ----
+// The Inspections tab in the portal is served by the ghl-calendar function, and its
+// contacts by ghl-contacts. When an account has no calendar of its own on file, the
+// public page goes through those same two functions, so a homeowner books into
+// exactly the calendar the roofer sees inside the portal.
+const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const portalHeaders = { Authorization: `Bearer ${SB_ANON}`, apikey: SB_ANON, "Content-Type": "application/json" };
+async function portal(fn: "ghl-calendar" | "ghl-contacts", body: Record<string, unknown>): Promise<Record<string, any>> {
+  try {
+    const r = await fetch(`${SB_URL}/functions/v1/${fn}`, { method: "POST", headers: portalHeaders, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    return { ...d, ok: r.ok && d?.ok !== false, status: r.status };
+  } catch { return { ok: false, status: 0 }; }
+}
+async function portalSlots(): Promise<{ ok: boolean; slots: Record<string, string[]>; status?: number }> {
+  const d = await portal("ghl-calendar", { action: "slots", cal: "inspection" });
+  const slots: Record<string, string[]> = {};
+  if (d.ok && d.slots && typeof d.slots === "object") {
+    for (const k of Object.keys(d.slots)) { const a = d.slots[k]; if (Array.isArray(a) && a.length) slots[k] = a.map(String); }
+  }
+  return { ok: !!d.ok, slots, status: d.status };
+}
+// GHL wants the offset the calendar lives in; the portal writes Pacific, so match it
+function fmtPacific(d: Date): string {
+  const g: Record<string, string> = {};
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(d).forEach((p) => { g[p.type] = p.value; });
+  if (g.hour === "24") g.hour = "00";
+  let off = "-08:00";
+  try { off = (new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "longOffset" }).formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "GMT-08:00").replace("GMT", "") || "-08:00"; } catch { /* keep default */ }
+  return `${g.year}-${g.month}-${g.day}T${g.hour}:${g.minute}:${g.second}${off}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
@@ -123,24 +157,30 @@ Deno.serve(async (req) => {
   const u = String(b.u || "").replace(/[^0-9a-z_-]/gi, "").slice(0, 80);
   const row = await findBrain(u);
   const { loc, cal } = target(row);
+  // "own": this account has its own calendar on file. "portal": the shared one the
+  // portal's Inspections tab shows.
+  const mode: "own" | "portal" = loc && cal ? "own" : "portal";
 
   if (op === "info") {
+    let ready = mode === "own", reason = "";
+    if (mode === "portal") { const p = await portalSlots(); ready = p.ok; if (!ready) reason = "portal_" + (p.status || 0); }
     return json({
       ok: true,
       business: row?.business_name || "",
       phone: row?.phone || "",
       hours: row?.hours || "",
       area: row?.service_area || "",
-      ready: !!(loc && cal),
-      // why it is not ready, so the owner's portal can say what to fix
-      reason: (loc && cal) ? "" : !row ? "no_row" : !loc ? "no_location" : "no_calendar",
+      ready, reason, mode,
       demo: !!row?.is_demo,
     });
   }
 
-  if (!loc || !cal) return json({ ok: false, error: "This contractor has not connected a booking calendar yet." }, 404);
-
   if (op === "slots") {
+    if (mode === "portal") {
+      const p = await portalSlots();
+      if (!p.ok) return json({ ok: false, error: "Could not read the calendar right now.", status: p.status }, 502);
+      return json({ ok: true, slots: p.slots, tz: "" });
+    }
     const from = Number(b.from) || Date.now();
     // cap the window at 62 days so one page load can't hammer the calendar
     const to = Math.min(Number(b.to) || from + 31 * 86400000, from + 62 * 86400000);
@@ -159,17 +199,36 @@ Deno.serve(async (req) => {
     const startMs = Date.parse(startTime);
     if (!name || !phone) return json({ ok: false, error: "Name and phone are required." }, 400);
     if (!startMs || startMs < Date.now() - 600000) return json({ ok: false, error: "Pick a time in the future." }, 400);
-    // only a slot the calendar itself offered can be booked — no arbitrary times from the browser
+    const taken = () => json({ ok: false, error: "That time was just taken. Pick another." }, 409);
+
+    if (mode === "portal") {
+      // only a slot the calendar itself offered can be booked
+      const p = await portalSlots();
+      if (p.ok && !Object.values(p.slots).flat().some((iso) => Date.parse(iso) === startMs)) return taken();
+      // the contact, through the same function the portal's Contacts page uses
+      const c = await portal("ghl-contacts", { action: "create", name, phone, email });
+      const cid = String(c.id || c.contactId || c.contact?.id || c.data?.id || c.meta?.contactId || "");
+      if (!cid) return json({ ok: false, error: "Could not save your details. Call us instead.", status: c.status }, 502);
+      const startP = fmtPacific(new Date(startMs)), endP = fmtPacific(new Date(startMs + 3600000));
+      const r = await portal("ghl-calendar", { action: "create", cal: "inspection", contactId: cid, startTime: startP, endTime: endP, title: "Roof inspection — " + name + (notes ? " (" + notes.slice(0, 80) + ")" : ""), address });
+      if (!r.ok) {
+        let msg = ""; try { msg = JSON.parse(r.detail || "{}").message || ""; } catch { /* no detail */ }
+        return /not available|no longer/i.test(msg) ? taken() : json({ ok: false, error: "Could not book that time. Please try another.", status: r.status }, 502);
+      }
+      return json({ ok: true, id: r.id || "", startTime, business: row?.business_name || "", phone: row?.phone || "", mode });
+    }
+
+    // own calendar: straight to GoHighLevel for this account's sub-account
     const s = await freeSlots(loc, cal, startMs - 86400000, startMs + 86400000);
     const offered = Object.values(s.slots).flat().some((iso) => Date.parse(iso) === startMs);
-    if (s.ok && !offered) return json({ ok: false, error: "That time was just taken. Pick another." }, 409);
+    if (s.ok && !offered) return taken();
 
     const tok = await locationToken(loc);
     const cr = await fetch(`${GHL_BASE}/contacts/`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ locationId: loc, name, phone, email: email || undefined, address1: address || undefined, source: "Booking page", tags: ["booking-page"] }) });
     const cd = await cr.json().catch(() => ({}));
     // a duplicate phone/email comes back as 400 with the existing contact id in meta
     const cid = cd?.contact?.id || cd?.id || cd?.meta?.contactId || "";
-    if (!cid) return json({ ok: false, error: "Could not save your details. Call us instead." , status: cr.status }, 502);
+    if (!cid) return json({ ok: false, error: "Could not save your details. Call us instead.", status: cr.status }, 502);
     if (notes) await fetch(`${GHL_BASE}/contacts/${cid}/notes`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ body: "Booking page: " + notes }) }).catch(() => {});
 
     const endTime = new Date(startMs + 60 * 60000).toISOString();
@@ -177,9 +236,9 @@ Deno.serve(async (req) => {
     const d = await r.json().catch(() => ({}));
     if (!r.ok) {
       const msg = String(d?.message || "");
-      return json({ ok: false, error: /not available|no longer/i.test(msg) ? "That time was just taken. Pick another." : "Could not book that time. Please try another.", status: r.status }, 502);
+      return /not available|no longer/i.test(msg) ? taken() : json({ ok: false, error: "Could not book that time. Please try another.", status: r.status }, 502);
     }
-    return json({ ok: true, id: d?.id || "", startTime, business: row?.business_name || "", phone: row?.phone || "" });
+    return json({ ok: true, id: d?.id || "", startTime, business: row?.business_name || "", phone: row?.phone || "", mode });
   }
 
   return json({ ok: false, error: "unknown op" }, 400);
