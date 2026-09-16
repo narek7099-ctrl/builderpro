@@ -1,4 +1,4 @@
-# ai-chat — the brain behind Nova (Web OS) & Vera (BuilderPro)
+# ai-chat — the brain behind Nova (Web OS) & Lisa (BuilderPro)
 
 Turns the chatbots from canned keyword replies into real, per-business AI using
 Google **Gemini's free tier**. The API key lives only in this function
@@ -36,7 +36,7 @@ supabase secrets set AI_MODEL=gemini-2.0-flash
 {
   "message": "how much for a new roof?",
   "slug": "demo-roofing",              // optional: pulls a stored brain
-  "business": { "name": "...", "industry": "...", "tone": "Friendly", "assistant_name": "Vera" },
+  "business": { "name": "...", "industry": "...", "tone": "Friendly", "assistant_name": "Lisa" },
   "history": [{ "role": "user", "content": "..." }, { "role": "assistant", "content": "..." }]
 }
 ```

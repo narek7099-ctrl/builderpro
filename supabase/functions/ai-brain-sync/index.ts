@@ -1,4 +1,4 @@
-// ai-brain-sync — the portal's "Publish" button for the AI receptionist (Vera by default; clients can rename it).
+// ai-brain-sync — the portal's "Publish" button for the AI receptionist (Lisa by default; clients can rename it).
 // Replaces the old "email the team" flow: the client edits Ridge's knowledge in
 // the portal, taps Publish, and this function
 //   1) upserts their `ai_brain` row (what ai-chat uses live for web/SMS replies)
@@ -24,7 +24,7 @@ const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
 const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 const LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
-const AI_NAME = "Vera";
+const AI_NAME = "Lisa";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
