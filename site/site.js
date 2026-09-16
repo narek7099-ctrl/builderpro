@@ -30,10 +30,21 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') dlMenu(false); });
 
   /* ---------- reveal ---------- */
+  /* every card animates in, staggered by its position among its siblings */
+  $$('main .dl-card, main .dl-photo, main .dl-stat, main .dl-shot, main .dl-acc, main .dl-logo, main .dl-plan, main .mw-card').forEach(function (el) {
+    if (el.closest('.dl-hero')) return;
+    el.classList.add('dl-rv');
+  });
+  $$('.dl-rv').forEach(function (el) {
+    var i = 0, n = el; while ((n = n.previousElementSibling) && i < 8) i++;
+    el.style.setProperty('--i', i);
+  });
+  $$('.dl-menu a').forEach(function (a, i) { a.style.setProperty('--i', i); });
   var rio = new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } });
-  }, { threshold: 0.18 });
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
   $$('.dl-rv, .dl-row, .dl-flow').forEach(function (el) { rio.observe(el); });
+  $$('main .dl-card').forEach(function (el) { if (!el.closest('.dl-hero')) el.classList.add('lift'); });
 
   /* ---------- hero: pinned object + swapping panels ---------- */
   (function () {
@@ -83,6 +94,7 @@
     var tile = $('.dl-stat'); if (!tile) return;
     var slides = $$('.s', tile), dots = $$('.dl-dots button', tile), i = 0, timer;
     function go(n) { i = (n + slides.length) % slides.length; slides.forEach(function (s, k) { s.classList.toggle('on', k === i); }); dots.forEach(function (d, k) { d.classList.toggle('on', k === i); }); }
+    tile.addEventListener('click', function (e) { if (!e.target.closest('.dl-dots')) { go(i + 1); restart(); } });
     dots.forEach(function (d, k) { d.addEventListener('click', function () { go(k); restart(); }); });
     function restart() { clearInterval(timer); if (!reduce) timer = setInterval(function () { go(i + 1); }, 3600); }
     go(0); restart();
