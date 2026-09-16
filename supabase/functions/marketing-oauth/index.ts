@@ -45,7 +45,21 @@ const YELP_KEY = Deno.env.get("YELP_API_KEY") ?? "";
 const PORTAL_URL = Deno.env.get("PORTAL_URL") ?? "https://builderpro-os.com";
 const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
 // posting + insights for a Facebook Page and the Instagram business account attached to it
-const SOCIAL_SCOPES = "pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content,instagram_basic,instagram_content_publish,instagram_manage_insights,business_management";
+/* Only ask for what we actually call. App Review rejects any permission a
+   reviewer cannot see used in the product, so this list must stay in step
+   with the Graph calls below:
+     ads_read                  -> me/adaccounts, <acct>/insights, <acct>/campaigns
+     pages_show_list           -> me/accounts
+     pages_read_engagement     -> <page>/insights, fan_count
+     pages_read_user_content   -> <page>/posts, <page>/ratings
+     pages_manage_posts        -> POST <page>/feed, POST <page>/photos
+     instagram_basic           -> <ig> profile fields, <ig>/media
+     instagram_manage_insights -> <ig>/insights
+     instagram_content_publish -> POST <ig>/media, POST <ig>/media_publish
+   We do not create or edit campaigns and we do not read lead forms, so
+   ads_management and leads_retrieval are deliberately not requested. */
+const ADS_SCOPES = "ads_read,pages_show_list";
+const SOCIAL_SCOPES = "pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content,instagram_basic,instagram_content_publish,instagram_manage_insights";
 const REDIRECT = `${SB_URL}/functions/v1/marketing-oauth`;
 const STATS_TTL = 30 * 60 * 1000;
 
@@ -302,7 +316,7 @@ Deno.serve(async (req) => {
       if (provider === "meta") {
         if (!META_APP_ID) return page("Meta Ads isn't switched on yet", "Our team is finishing the Meta connection for BuilderPro OS. You'll get a note the moment it's live.");
         const u = new URL("https://www.facebook.com/v19.0/dialog/oauth");
-        u.search = new URLSearchParams({ client_id: META_APP_ID, redirect_uri: REDIRECT, state, scope: "ads_read,ads_management,business_management,leads_retrieval,pages_show_list", response_type: "code" }).toString();
+        u.search = new URLSearchParams({ client_id: META_APP_ID, redirect_uri: REDIRECT, state, scope: ADS_SCOPES, response_type: "code" }).toString();
         return Response.redirect(u.toString(), 302);
       }
       if (provider === "social") {
