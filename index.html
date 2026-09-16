@@ -18592,7 +18592,9 @@ var BP_MKT=[
   {k:'gbp',n:'Google Business Profile',d:'Your map listing — calls, directions, clicks',img:'assets/brand/google-g.png',oauth:true,go:'https://business.google.com/'},
   {k:'yelp',n:'Yelp',d:'Your listing — rating, reviews, requests',img:'assets/brand/yelp.png',bleed:true,oauth:false,go:'https://biz.yelp.com/'}
 ];
-function bpMkP(k){return BP_MKT.filter(function(p){return p.k===k;})[0]||{n:k,c:'#64748b',m:'?'};}
+/* Campaigns can be requested for channels that have no connect card of their own. */
+var BP_MKT_REQ={google_ads_lsa:{n:'Google Local Services Ads',c:'#1a73e8',m:'G'}};
+function bpMkP(k){return BP_MKT.filter(function(p){return p.k===k;})[0]||BP_MKT_REQ[k]||{n:k,c:'#64748b',m:'?'};}
 function bpMkConn(k){return _bpMk.conns.filter(function(c){return c.provider===k;})[0]||null;}
 function bpMkStat(k){return _bpMk.stats[k]||{};}
 /* Social Media and Competitors get real views below; these stubs keep nav safe until then */
@@ -18891,8 +18893,10 @@ function bpCpLoad(force){
 function bpCpDone(r,note){
   r=r||{};
   _bpCp.cfg=r.configured||{};
-  /* Yelp search not switched on server-side → show the demo set so the page still teaches what it does */
-  _bpCp.demo=!window.BP_LIVE||(!_bpCp.cfg.yelp&&!(r.competitors||[]).length);
+  /* Sample rivals are only for the signed-out tour. A real account sees the
+     empty state and a note about the missing key, never invented businesses. */
+  _bpCp.demo=!window.BP_LIVE;
+  _bpCp.needsKey=!!window.BP_LIVE&&!_bpCp.cfg.yelp;
   _bpCp.rows=_bpCp.demo&&!(r.competitors||[]).length?BP_CP_DEMO.rows:(r.competitors||[]);
   var me=r.me||{}; if(_bpCp.demo&&!me.reviews)me=BP_CP_DEMO.me;
   if(!me.name){var c=bpSettingsGet().company||{};me.name=c.name||'Your business';}
@@ -18915,13 +18919,14 @@ function bpCpKpis(){
   return tile('Your rating',L&&you?(you.rating.toFixed(1)+'★'):'—',L&&avg?('local average '+avg.toFixed(1)+'★'):'connect Yelp to compare')
     +tile('Your reviews',L&&you?bpNum(you.reviews):'—',L&&top?(top.reviews>(you?you.reviews:0)?('#1 has '+bpNum(top.reviews)):'you have the most'):'from your Yelp listing')
     +tile('Your rank',L&&you?('#'+you.rank+' of '+list.length):'—','among tracked businesses, by reviews')
-    +tile('Tracking',L?bpNum(_bpCp.rows.length):'—',_bpCp.demo?'demo set':'rivals, refreshed daily');
+    +tile('Tracking',L?bpNum(_bpCp.rows.length):'—',_bpCp.demo?'demo set':(_bpCp.needsKey?'not switched on yet':'rivals, refreshed daily'));
 }
 function bpCpPane(){
   if(!_bpCp.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
   var h='';
   if(_bpCp.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpCp.note)+'</div>';
-  if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px"><span class=ms>warning</span> DEMO DATA — illustrative businesses, not your real market. '+(window.BP_LIVE?'Yelp lookups aren\'t switched on for this account yet.':'Sign in to track the businesses in your area.')+'</div>';
+  if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px"><span class=ms>warning</span> DEMO DATA — illustrative businesses, not your real market. Sign in to track the businesses in your area.</div>';
+  else if(_bpCp.needsKey)h+='<div style="background:var(--tint);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 13px;font-size:13px;margin-bottom:12px"><span class=ms>info</span> Competitor lookups aren\'t switched on for this account yet, so nothing is listed below. Ask your BuilderPro contact to enable them.</div>';
   var t=_bpCp.tab;
   if(t==='find')return h+bpCpFindPane();
   if(t==='win')return h+bpCpWinPane();

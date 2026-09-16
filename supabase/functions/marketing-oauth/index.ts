@@ -63,7 +63,7 @@ const page = (title: string, body: string) => new Response(
   { headers: { "Content-Type": "text/html" } });
 
 type Row = Record<string, unknown>;
-const PROVIDERS = ["meta", "google_ads", "gbp", "yelp"];
+const PROVIDERS = ["meta", "social", "google_ads", "gbp", "yelp"];
 
 async function userFromJwt(jwt: string): Promise<{ id: string; email: string } | null> {
   if (!jwt) return null;
