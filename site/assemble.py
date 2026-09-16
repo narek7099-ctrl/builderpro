@@ -37,7 +37,8 @@ base = (SITE / 'base.css').read_text(encoding='utf-8')
 head_new = head_new[:i] + '<style>\n' + base + '\n</style>\n<link rel="stylesheet" href="site/site.css">\n' \
     + '<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>\n' \
     + head_new[j:]
-head_new = head_new.replace('<title>BuilderPro OS — Book more roofing jobs, on autopilot</title>', '<title>BuilderPro OS. Software for roofers, reimagined.</title>')
+head_new = head_new.replace('<title>BuilderPro OS — Book more roofing jobs, on autopilot</title>', '<title>BuilderPro OS. Software for contractors, reimagined.</title>')
+head_new = re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="BuilderPro OS is the operating system for contractors: Lisa answers every call, jobs run from estimate to invoice, and your numbers stay in one login. Built for every trade.">', head_new, count=1)
 html = head + head_new + tail
 
 # ---------- body: top ----------
@@ -64,9 +65,12 @@ html = re.sub(r'<style>\n/\* build a custom calculator \*/.*?</style>\n', '', ht
 
 # models heading copy
 html = html.replace('<span class="eye">Your website, done for you</span>\n      <h2>Four model sites, <em>built to convert</em></h2>',
-                    '<h2>Four model sites, <em>built to convert</em></h2>')
+                    '<h2>Need a website? <em>Add one for $49 a month.</em></h2>')
+html = html.replace('<p>Every BuilderPro plan includes a custom website built on one of our battle-tested contractor models — then tailored to your brand, photos, and services. Pick a direction; we handle the rest.</p>',
+                    '<p>Pick one of four contractor models. We tailor it to your brand, photos and services, then host and maintain it, on top of any plan. Already have a site you like? Keep it and embed the calculator and booking page.</p>')
 html = html.replace("Don’t see your trade? Every model adapts — painting, concrete, solar, fencing and more.",
-                    "Don't see your trade? Every model adapts: painting, concrete, solar, fencing and more. Need a calculator or 3D configurator for something else? We build those too.")
+                    "Don't see your trade? Every model adapts: painting, concrete, solar, fencing, electrical and more. Need a calculator or 3D configurator for something else? We build those too.")
+html = html.replace('<a href="#pricing" style="color:var(--blue);font-weight:600">Included in every plan →</a>', '<a href="#pricing" style="color:var(--blue);font-weight:600">See plans</a>')
 
 # ---------- pricing: replace section, keep the plan modal ----------
 a, old_pricing, rest = cut(html, '<section id="pricing">', '</section>')
@@ -79,9 +83,6 @@ bottom = bottom.replace('__PLAN_MODAL__', modal)
 
 # ---------- booking .. footer + legal overlays: replace ----------
 # grab the FAQ items from the old markup first
-faq_items = between(rest2, '<div class="faq">', '\n    </div>\n  </div>\n</section>', incl_end=False)
-faq_items = faq_items[len('<div class="faq">'):].strip('\n')
-bottom = bottom.replace('__FAQ_ITEMS__', faq_items)
 # now cut from the old booking section through the end of the terms overlay
 c, _old_tail, rest3 = cut(rest2, '<section id="booking">', '<div class="legal-page" id="terms">', incl_end=False)
 _, _terms, rest3 = cut(rest3, '<div class="legal-page" id="terms">', '</div>\n</div>')
@@ -91,6 +92,7 @@ html = a + c + bottom + rest3
 
 # ---------- odds and ends ----------
 html = html.replace('<div class="divider"></div>', '')
+html = html.replace('<script src="https://link.msgsndr.com/js/form_embed.js" type="text/javascript"></script>\n', '')
 # no em dashes in visible marketing copy (kept FAQ, estimator and model text still had them)
 m0 = html.index('<main id="main"'); m1 = html.index('</main>', m0)
 e0 = html.index('<section id="estimator">', m0); e1 = html.index('</section>', html.index('<div class="est-cdots"', e0)) + len('</section>')
