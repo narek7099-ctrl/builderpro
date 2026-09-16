@@ -600,3 +600,29 @@ Never fake a number, and never claim a retry that isn't happening.
 - Tables and the map scroll horizontally inside their own container; the page
   body never does
 - Modals go full-width with 16px margins under 600px
+
+## Marketing site (index.html above the portal)
+
+The public site is a panelled page in the language of dashline.tech: every
+block is a white card on a pale ground (`--dl-ground`) with 8px gutters, one
+blue, black pill buttons, and Geist throughout. Sources live in `site/`:
+
+- `site/base.css` replaces the old theme block in `<head>` (tokens the kept
+  components still read, plus resets).
+- `site/site.css` is the visual system. Everything is scoped under `body.dl`
+  because the estimator iframes inherit every stylesheet on the page.
+- `site/site.js` drives the preloader, the pinned story, reveals, the stat
+  carousel, the flow diagram and the timeline. No scroll listeners: each
+  scroll-tracking loop is a requestAnimationFrame gated by an
+  IntersectionObserver.
+- `site/hero3d.js` is the Three.js hero object: frosted-glass slabs on a
+  tiled floor, keyframed through four states and blended by scroll progress.
+  It degrades to a flat tile when WebGL is unavailable.
+- `site/body-top.html` and `site/body-bottom.html` are the marketing markup;
+  `site/assemble.py` splices them into a clean `index.html` around the
+  estimator section, the plan modal, the FAQ items and the portal, which are
+  kept byte-for-byte.
+
+Rules of the page: no em dashes in visible copy, one accent, one radius
+scale (18px cards, pill buttons), at most one eyebrow per three sections,
+and "Book a demo" is the only demo-intent label.

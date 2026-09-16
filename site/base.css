@@ -1,0 +1,34 @@
+/* ==== BuilderPro OS base: tokens the kept components (estimator, Lisa chat,
+   plan modal, model sites) still read, plus resets. Visual design lives in
+   site/site.css. ==== */
+:root{
+  --ink:#0b1021; --ink-2:#26262a; --grey:#5b6472; --grey-l:#8a93a3;
+  --line:#e3e7ee; --line-2:#eef1f5; --bg:#ffffff; --bar:#f3f5f9; --card:#ffffff;
+  --blue:#2b63e6; --blue-d:#1d4fc4; --blue-l:#e9f0ff; --cream:#f4e7bd;
+  --green:#1faa5a; --red:#e0574e; --pill:#0b1021;
+  --serif:'Geist',system-ui,sans-serif; --sans:'Geist',system-ui,sans-serif;
+  --maxw:1200px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+img,svg{display:block;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 32px;}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;border-radius:999px;padding:11px 20px;transition:.2s;white-space:nowrap;}
+.btn-dark{background:var(--pill);color:#fff;}
+.btn-light{background:#fff;color:var(--ink);border:1px solid var(--line);}
+.btn-blue{background:var(--blue);color:#fff;}
+.bdot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;}
+section{padding:0;}
+.sec-head{max-width:600px;}
+.eye{display:none;}
+.rv,.pop{opacity:1;}
+.modal-ov{position:fixed;inset:0;background:rgba(11,16,33,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.modal-ov.open{display:flex;}
+.modal{background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);}
+.modal-title{font-weight:700;font-size:18px;}
+.modal-close{font-size:18px;color:var(--grey);}
+.modal-body{padding:22px;}
