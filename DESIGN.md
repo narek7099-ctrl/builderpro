@@ -510,7 +510,7 @@ band is `#9cc8ee`; headline is white.
 
 244px, navy gradient with a blue sheen top-left. Five branches: Dashboard,
 Projects, Finances, Leads, Marketing. Settings is pinned at the bottom behind a
-rule, and Ridge AI lives inside Settings as a tab rather than in the sidebar.
+rule, and the AI receptionist (Atlas) lives inside Settings as a tab rather than in the sidebar.
 
 Branches are independent accordions: any number can be open at once, a tap on a
 header only touches that branch, and the open set is remembered on the device.
