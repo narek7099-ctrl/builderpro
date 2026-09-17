@@ -170,3 +170,34 @@
 #bpx .sp-dir-a a.bpx-rowbtn{text-decoration:none;display:inline-flex;align-items:center}
 @media(max-width:600px){#bpx .sp-dir-sh{margin-left:0;width:100%}#bpx .sp-dir-list{max-height:none}}
 #bpx .sp-dir-miss{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin:12px 0 2px}
+
+/* ---------- the cold start: one instruction, one button ---------- */
+#bpx .sp-note.good{background:#f0fdf4;border-color:#86efac;color:#14532d}
+#bpx .sp-start{padding:0;overflow:hidden}
+#bpx .sp-start-top{text-align:center;padding:38px 26px 30px;max-width:520px;margin:0 auto}
+#bpx .sp-start-top .ms{font-size:44px;color:var(--blue);display:block;margin-bottom:12px}
+#bpx .sp-start-top h3{font-size:21px;line-height:1.3;margin:0 0 8px}
+#bpx .sp-start-top p{font-size:14.5px;line-height:1.65;color:var(--grey);margin:0 0 20px}
+#bpx .sp-start-go{width:auto;min-width:200px;margin:0 auto;padding:13px 30px;font-size:15px}
+#bpx .sp-start-alt{margin-top:14px;font-size:12.5px;color:var(--grey)}
+#bpx .bpx-linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--blue);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+#bpx .sp-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+#bpx .sp-step{background:var(--card,#fff);padding:18px 20px;display:flex;gap:12px;align-items:flex-start}
+#bpx .sp-step>span{flex:none;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+#bpx .sp-step b{display:block;font-size:14px;margin-bottom:3px}
+#bpx .sp-step small{font-size:12.5px;line-height:1.55;color:var(--grey)}
+@media(max-width:760px){#bpx .sp-steps{grid-template-columns:1fr}#bpx .sp-start-top{padding:30px 20px 24px}#bpx .sp-start-go{width:100%}}
+
+/* ---------- where I buy: the visible dependency ---------- */
+#bpx .sp-where{display:flex;align-items:center;gap:13px;flex-wrap:wrap;border:1px solid var(--line);background:var(--tint,#f4f6fa);border-radius:12px;padding:12px 15px;margin-bottom:14px}
+#bpx .sp-where>.ms{font-size:22px;color:var(--blue);flex:none}
+#bpx .sp-where>div{flex:1;min-width:210px}
+#bpx .sp-where b{display:block;font-size:13.5px}
+#bpx .sp-where .bpx-mut{font-size:12.5px;line-height:1.5}
+#bpx .sp-where-a{display:flex;gap:6px;flex-wrap:wrap}
+#bpx .sp-where-a .bpx-rowbtn{margin:0}
+
+/* what each option is actually worth */
+#bpx .sp-win{background:#0f7a3d;color:#fff;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800;letter-spacing:.01em}
+#bpx.bpx-dark .sp-win{background:#16a34a}
+#bpx .sp-two .bpx-ptitle .lg2{margin-left:9px}
