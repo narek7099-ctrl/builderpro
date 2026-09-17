@@ -22,11 +22,11 @@
   var live = function () { return !!(window.BP_LIVE && window.BP_SB); };
   var msg = function (id, t, bad) { var e = $(id); if (!e) return; e.textContent = t || ''; e.style.color = bad ? '#b3392f' : ''; };
 
-  SP.scan = { doc: null, po: null, file: '', busy: false };
+  SP.scan = { doc: null, po: null, file: '', busy: false, mode: 'new', drive: 20 };
 
   /* ---------- open ---------- */
   SP.scanOpen = function (poId) {
-    SP.scan = { doc: null, po: poId ? SP.pos.filter(function (p) { return p.id === poId; })[0] : null, file: '', busy: false };
+    SP.scan = { doc: null, po: poId ? SP.pos.filter(function (p) { return p.id === poId; })[0] : null, file: '', busy: false, mode: 'new', drive: 20 };
     var p = SP.scan.po;
     window.bpModal('<h3>Scan a supplier document</h3>'
       + '<div class="bpx-sub">' + (p ? 'Photograph the invoice for ' + esc(p.po_number) + '. ' : 'An invoice, a quote or a counter receipt. ')
@@ -154,9 +154,22 @@
       + '<button class="sp-relink" onclick="SP.scanOpen(' + (po ? '\'' + po.id + '\'' : '') + ')">Scan a different one</button></div></div>';
 
     if (!sup) {
-      h += '<div class="sp-note warn"><span class=ms>info</span>No supplier on file matches this document. Pick one so the prices land in the right book.</div>'
-        + '<label>Supplier</label><select id="sp-scan-sup" onchange="SP.scanSetSup(this.value)"><option value="">Choose</option>'
-        + SP.sup.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + (s.branch ? ', ' + esc(s.branch) : '') + '</option>'; }).join('') + '</select>';
+      var nm = doc.supplier_name || 'this supplier';
+      if (SP.scan.mode !== 'pick' && doc.supplier_name) {
+        h += '<div class="sp-note"><span class=ms>add_business</span>New supplier. We will set <b>' + esc(nm) + '</b> up from this document'
+          + [doc.branch ? esc(doc.branch) : '', doc.account_no ? 'account ' + esc(doc.account_no) : ''].filter(Boolean).join(', ').replace(/^(.)/, ', $1') + '.</div>'
+          + '<div class="sp-newsup"><label>Roughly how far is this branch?</label>'
+          + '<div class="bpx-jobtabs">' + [10, 20, 35].map(function (d) {
+            return '<button class="bpx-jt' + (SP.scan.drive === d ? ' on' : '') + '" onclick="SP.scanDrive(' + d + ')">' + d + (d === 35 ? '+ min' : ' min') + '</button>';
+          }).join('') + '</div>'
+          + '<span class="bpx-mut">That is all we need. It works out the fastest run, and you can change it later.</span>'
+          + '<button class="sp-relink" onclick="SP.scanMode(\'pick\')">Use a supplier I already have</button></div>';
+      } else {
+        h += '<div class="sp-note warn"><span class=ms>info</span>Pick the supplier so the prices land in the right book.</div>'
+          + '<label>Supplier</label><select id="sp-scan-sup" onchange="SP.scanSetSup(this.value)"><option value="">Choose</option>'
+          + SP.sup.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + (s.branch ? ', ' + esc(s.branch) : '') + '</option>'; }).join('') + '</select>'
+          + (doc.supplier_name ? '<button class="sp-relink" onclick="SP.scanMode(\'new\')">Set ' + esc(doc.supplier_name) + ' up instead</button>' : '');
+      }
     }
 
     if (po) {
@@ -169,14 +182,18 @@
         + plainTable(doc);
     }
 
-    var willPrice = (sup || SP.scan.sup) ? doc.lines.filter(function (l) { return l.unit_price > 0; }).length : 0;
-    h += '<label class="sp-check" style="margin-top:12px"><input type="checkbox" id="sp-scan-learn"' + (willPrice ? ' checked' : ' disabled') + '> Update the price book with these ' + willPrice + ' prices</label>';
+    var landing = sup || (SP.scan.mode !== 'pick' && doc.supplier_name);
+    var willPrice = landing ? doc.lines.filter(function (l) { return l.unit_price > 0; }).length : 0;
+    h += '<label class="sp-check" style="margin-top:12px"><input type="checkbox" id="sp-scan-learn"' + (willPrice ? ' checked' : ' disabled') + '> '
+      + (willPrice ? 'Save these ' + willPrice + ' prices to ' + esc(sup ? sup.name : doc.supplier_name) : 'No prices to save yet') + '</label>';
 
     $('sp-scan-out').innerHTML = h;
     $('sp-scan-foot').innerHTML = '<button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button>'
       + '<button class="bpx-btn" onclick="SP.scanApply()">' + (po ? 'Accept and post to the job' : 'Save these prices') + '</button>';
   };
-  SP.scanSetSup = function (id) { SP.scan.sup = SP.supById(id); SP.scanDone(SP.scan.doc); };
+  SP.scanSetSup = function (id) { SP.scan.sup = SP.supById(id); SP.scan.mode = 'pick'; SP.scanDone(SP.scan.doc); };
+  SP.scanMode = function (m) { SP.scan.mode = m; if (m === 'new') SP.scan.sup = null; SP.scanDone(SP.scan.doc); };
+  SP.scanDrive = function (d) { SP.scan.drive = d; SP.scanDone(SP.scan.doc); };
 
   function compareTable(po, doc) {
     var used = {};
@@ -225,14 +242,28 @@
     msg('sp-mmsg', 'Saving');
     var work = Promise.resolve();
 
-    if (learn && sup) {
-      var now = new Date().toISOString();
-      var rows = doc.lines.filter(function (l) { return l.unit_price > 0; }).map(function (l) {
-        var sku = l.sku || matchSku(sup.id, l.name) || slug(l.name);
-        return { supplier_id: sup.id, sku: sku, name: l.name, unit: l.unit || 'ea', price: l.unit_price,
-          source: doc.doc_type === 'quote' ? 'quote' : 'invoice', source_at: now, source_ref: doc.invoice_no || '' };
+    /* the document names a supplier we have never seen: set it up from what it says */
+    if (!sup && SP.scan.mode !== 'pick' && doc.supplier_name) {
+      work = work.then(function () {
+        return SP.db.insert('suppliers', {
+          name: doc.supplier_name, kind: 'custom', branch: doc.branch || '', account_no: doc.account_no || '',
+          drive_min: SP.scan.drive || 20, will_call: true, delivery: false, connection: { type: 'pricebook' },
+          notes: 'Added from ' + (doc.doc_type || 'a document') + (doc.invoice_no ? ' ' + doc.invoice_no : ''),
+        });
+      }).then(function (row) { sup = row; SP.scan.sup = row; SP.sup.push(row); });
+    }
+
+    if (learn) {
+      work = work.then(function () {
+        if (!sup) return null;
+        var now = new Date().toISOString();
+        var rows = doc.lines.filter(function (l) { return l.unit_price > 0; }).map(function (l) {
+          var sku = l.sku || matchSku(sup.id, l.name) || slug(l.name);
+          return { supplier_id: sup.id, sku: sku, name: l.name, unit: l.unit || 'ea', price: l.unit_price,
+            source: doc.doc_type === 'quote' ? 'quote' : 'invoice', source_at: now, source_ref: doc.invoice_no || '' };
+        });
+        return rows.length ? SP.db.upsertItems(rows) : null;
       });
-      if (rows.length) work = work.then(function () { return SP.db.upsertItems(rows); });
     }
 
     if (po) {

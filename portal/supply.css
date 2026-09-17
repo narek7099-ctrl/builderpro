@@ -9,10 +9,10 @@
 #bpx .sp-sel{padding:9px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13.5px;background:var(--card,#fff);color:inherit;max-width:260px}
 #bpx .sp-check{display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0 2px;text-transform:none;letter-spacing:0}
 #bpx .sp-check input{width:auto;margin:0}
-#bpx .sp-note{display:flex;align-items:center;gap:8px;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px;background:var(--tint,#f4f6fa);border:1px solid var(--line);color:inherit}
+#bpx .sp-note{display:block;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;line-height:1.5;margin-bottom:12px;background:var(--tint,#f4f6fa);border:1px solid var(--line);color:inherit}
 #bpx .sp-note.warn{background:#fff7ed;border-color:#f59e0b;color:#92400e}
 #bpx .sp-note.bad{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
-#bpx .sp-note .ms{font-size:18px}
+#bpx .sp-note .ms{font-size:18px;vertical-align:-4px;margin-right:7px}
 
 /* suppliers */
 #bpx .sp-sup{display:flex;flex-direction:column;gap:10px}
@@ -117,3 +117,37 @@
 #bpx .sp-pick-row:has(input:checked) em{color:#b3392f}
 #bpx .sp-relink{display:block;margin-top:4px;background:none;border:0;padding:0;font:600 12px var(--sans,inherit);color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 #bpx .sp-relink:hover{color:var(--blue-d)}
+
+/* ---------- job kits ---------- */
+#bpx .sp-kits{display:flex;flex-direction:column;gap:10px;margin:14px 0;max-height:56vh;overflow:auto}
+#bpx .sp-kit{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card,#fff)}
+#bpx .sp-kit-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+#bpx .sp-kit-h b{display:block;font-size:15px}
+#bpx .sp-kit-h .bpx-mut{display:block;font-size:12.5px;margin-top:2px}
+#bpx .sp-kit-size{display:flex;align-items:flex-end;gap:10px;margin-top:10px;flex-wrap:wrap}
+#bpx .sp-kit-size label{flex:1;min-width:150px;margin:0;font-size:12px;text-transform:none;letter-spacing:0}
+#bpx .sp-kit-size input{margin:4px 0 0;padding:9px 12px;font-size:15px;max-width:110px}
+#bpx .sp-kit-size .bpx-btn{flex:none}
+#bpx .sp-kit-prev{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;padding-top:11px;border-top:1px solid var(--line-2,var(--line))}
+#bpx .sp-kit-pill{background:var(--tint,#f4f6fa);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--grey)}
+#bpx .sp-kit-pill b{color:var(--ink);font-variant-numeric:tabular-nums}
+#bpx .sp-kit-fix{display:flex;flex-direction:column;gap:2px;margin:10px 0 2px;max-height:34vh;overflow:auto}
+#bpx .sp-kit-fix .sp-check{margin:0;padding:5px 0;align-items:flex-start}
+#bpx .sp-kit-fix em{font-style:normal;font-size:12px}
+#bpx .sp-kitcue{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px;padding:16px;border:1px dashed var(--line);border-radius:14px;background:var(--tint,#f4f6fa)}
+#bpx .sp-kitcue .ms{font-size:30px;color:var(--blue);flex:none}
+#bpx .sp-kitcue div{flex:1;min-width:210px}
+#bpx .sp-kitcue b{display:block;font-size:15px}
+#bpx .sp-kitcue .bpx-mut{display:block;font-size:12.5px;margin-top:3px;line-height:1.5}
+
+/* ---------- first run ---------- */
+#bpx .sp-first{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+#bpx .sp-first > .ms{font-size:38px;color:var(--blue);flex:none}
+#bpx .sp-first > div{flex:1;min-width:240px}
+#bpx .sp-first b{display:block;font-size:16px}
+#bpx .sp-first .bpx-mut{display:block;font-size:13px;margin-top:4px;line-height:1.55;max-width:62ch}
+#bpx .sp-first-btns{display:flex;gap:8px;flex-wrap:wrap}
+#bpx .sp-newsup{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-top:8px}
+#bpx .sp-newsup label{margin:0 0 7px;font-size:12.5px;text-transform:none;letter-spacing:0}
+#bpx .sp-newsup .bpx-jobtabs{margin:0 0 7px}
+#bpx .sp-newsup .bpx-mut{display:block;font-size:12px}

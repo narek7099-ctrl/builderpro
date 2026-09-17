@@ -153,7 +153,7 @@
     return '<div class="bpx-stats">' + t('Suppliers', SP.sup.length) + t('Items priced', SP.items.length.toLocaleString()) + t('Open POs', open, true) + t('Awaiting invoice match', unrec) + '</div>';
   }
   function tabs(active) {
-    var t = [['supply', 'Source parts'], ['supplyorders', 'Purchase orders'], ['suppliers', 'Suppliers']];
+    var t = [['supply', 'Order materials'], ['supplyorders', 'Purchase orders'], ['suppliers', 'Suppliers']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   function state() {
@@ -172,7 +172,7 @@
     var h = tabs('suppliers') + state() + kpis();
     h += '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Your supply houses<span class="lg2">contractor pricing and stock, per branch</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.supOpen()">+ Add supplier</button></div></div>';
-    if (!SP.sup.length) h += '<div class="bpx-panel"><div class="bpx-empty2">No suppliers yet. Add the branches you buy from, then import each one\'s price book or connect a live feed.</div></div>';
+    if (!SP.sup.length) h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">Photograph one piece of paper from your supplier. We read the branch, your account number and every price off it, and set the supplier up for you. No forms.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
     h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
     $('bpxViewArea').innerHTML = h;
   };
@@ -325,25 +325,25 @@
     var L = SP.list;
     var h = tabs('supply') + state() + kpis();
     if (!SP.sup.length) {
-      h += '<div class="bpx-panel"><div class="bpx-ptitle">Start with your suppliers</div><div class="bpx-empty2">The sourcing engine compares stock, price and drive time across the branches you buy from. Add them first.</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="bpx-btn sp-inline" onclick="bpNav(\'suppliers\')">Add suppliers</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try with sample suppliers</button></div></div>';
+      h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">We compare price, stock and drive time across your supply houses. Photograph one quote and the first branch sets itself up, prices and all.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
       $('bpxViewArea').innerHTML = h; return;
     }
     /* list picker + builder */
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
     h += '<div class="sp-two"><div class="bpx-panel">'
       + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">Parts list<span class="lg2">build it in the field, order it in one tap</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">' + (open.length ? 'Open a saved list' : 'No saved lists') + '</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select><button class="bpx-addbtn" onclick="SP.newList()">+ New list</button></div></div>';
-    if (!L) h += '<div class="bpx-empty2" style="margin-top:12px">Start a new list or open a saved one.</div>';
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">' + (open.length ? 'Open a saved list' : 'No saved lists') + '</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select><button class="bpx-btn ghost sp-inline" onclick="SP.newList(true)">Blank list</button><button class="bpx-addbtn" onclick="SP.kitOpen()">+ Start from a kit</button></div></div>';
+    if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">A 25 square re-roof fills in the shingles, underlayment, starter, ridge cap, drip edge and nails at the right counts. Change any line before you order.</span></div><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Start from a kit</button></div>';
     else {
       var js = jobs();
       h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>'
         + '<div class="sp-items"><div class="sp-item sp-head"><span>Item</span><span>Qty</span><span>Unit</span><span></span></div>'
         + (L.items || []).map(function (it, k) { return '<div class="sp-item"><input value="' + esc(it.name) + '" placeholder="What do you need" oninput="SP.itemEdit(' + k + ',\'name\',this.value)" list="sp-dl"><input value="' + esc(it.qty) + '" inputmode="decimal" oninput="SP.itemEdit(' + k + ',\'qty\',this.value)"><input value="' + esc(it.unit || '') + '" placeholder="ea" oninput="SP.itemEdit(' + k + ',\'unit\',this.value)"><button class="sp-x" onclick="SP.itemDel(' + k + ')" aria-label="Remove">&times;</button></div>'; }).join('')
         + '</div><datalist id="sp-dl">' + uniqNames().slice(0, 300).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Add item</button><span class="bpx-mut" style="font-size:12.5px">Type to pick from your price books, or write anything and the engine matches it.</span></div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Add item</button><button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button><span class="bpx-mut" style="font-size:12.5px">Type to pick from your price books, or write anything and we match it.</span></div>'
         + '<div class="sp-prio"><span class="bpx-mut">Optimise for</span><div class="bpx-jobtabs"><button class="bpx-jt' + (SP.priority === 'fastest' ? ' on' : '') + '" onclick="SP.setPrio(\'fastest\')">Fastest</button><button class="bpx-jt' + (SP.priority === 'cheapest' ? ' on' : '') + '" onclick="SP.setPrio(\'cheapest\')">Cheapest</button></div>'
         + '<button class="bpx-btn sp-inline" onclick="SP.run()">Find the best option</button></div>'
-        + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Cheapest counts a supply run at ' + money(SP.cost.stop) + ' per stop plus ' + money(SP.cost.min) + ' per minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
+        + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Cheapest counts what a trip costs you: ' + money(SP.cost.stop) + ' a stop plus ' + money(SP.cost.min) + ' a minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
     }
     h += '</div><div>' + plansHtml() + '</div></div>';
     $('bpxViewArea').innerHTML = h;
@@ -351,6 +351,7 @@
   function uniqNames() { var seen = {}, out = []; SP.items.forEach(function (i) { var k = i.name.toLowerCase(); if (!seen[k]) { seen[k] = 1; out.push(i.name); } }); return out.sort(); }
   SP.pick = function (id) { SP.list = SP.lists.filter(function (l) { return l.id === id; })[0] || null; SP.plans = null; if (SP.list) SP.priority = SP.list.priority || 'fastest'; window.bpSupply(); };
   SP.newList = function () {
+    window.bpCloseModal();
     var js = jobs(), j = js[0];
     db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the next job'), job_id: j ? j.id : '', job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [{ key: uid('k'), name: '', qty: 1, unit: 'ea' }] })
       .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpSupply(); var f = document.querySelector('.sp-item:not(.sp-head) input'); if (f) f.focus(); })
@@ -364,7 +365,7 @@
   SP.itemDel = function (k) { SP.list.items.splice(k, 1); SP.plans = null; saveList(); window.bpSupply(); };
   SP.setPrio = function (p) { SP.priority = p; if (SP.list) { SP.list.priority = p; saveList(); } window.bpSupply(); };
   SP.costOpen = function () {
-    window.bpModal('<h3>What a supply run costs you</h3><div class="bpx-sub">Used by "cheapest" so a $6 saving never sends a tech across town.</div><div class="sp-r2">' + window.bpField('sp-c-stop', 'Per stop (loading, counter, paperwork)', SP.cost.stop, '60') + window.bpField('sp-c-min', 'Per minute of driving (truck + tech)', SP.cost.min, '1.20') + '</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="SP.costSave()">Save</button></div>');
+    window.bpModal('<h3>What a trip to the supply house costs you</h3><div class="bpx-sub">Used by "cheapest" so a $6 saving never sends a tech across town.</div><div class="sp-r2">' + window.bpField('sp-c-stop', 'Per stop (loading, counter, paperwork)', SP.cost.stop, '60') + window.bpField('sp-c-min', 'Per minute of driving (truck + tech)', SP.cost.min, '1.20') + '</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="SP.costSave()">Save</button></div>');
   };
   SP.costSave = function () { SP.cost = { stop: +String(($('sp-c-stop') || {}).value).replace(/[^0-9.]/g, '') || 0, min: +String(($('sp-c-min') || {}).value).replace(/[^0-9.]/g, '') || 0 }; try { localStorage.setItem('bpSupplyCost', JSON.stringify(SP.cost)); } catch (e) {} window.bpCloseModal(); SP.plans = null; window.bpSupply(); };
 
@@ -460,7 +461,7 @@
       return '<div class="sp-plan' + (sel ? ' sel' : '') + '">'
         + '<div class="sp-plan-h"><b>' + label + '</b>' + (sel ? '<span class="bpx-badge">Your priority</span>' : '') + '</div>'
         + '<div class="sp-plan-big"><span>' + money(p.total) + '</span><small>' + (p.stopsN === 1 ? '1 stop' : p.stopsN + ' stops') + (p.stops.every(function (st) { return st.fulfil === 'delivery'; }) ? ', delivered' : ', about ' + p.stops.reduce(function (t, st) { return t + (st.fulfil === 'delivery' ? 0 : st.drive * 2); }, 0) + ' min round trip') + '</small></div>'
-        + '<div class="sp-plan-sub bpx-mut">Parts ' + money(p.parts) + (p.run ? ' + supply run ' + money(p.run) : '') + '</div>'
+        + '<div class="sp-plan-sub bpx-mut">Parts ' + money(p.parts) + (p.run ? ' + your time and truck ' + money(p.run) : '') + '</div>'
         + p.stops.map(function (st) {
           return '<div class="sp-stop"><div class="sp-stop-h"><b>' + esc(st.supplier.name) + '</b><span class="bpx-mut">' + (st.fulfil === 'delivery' ? 'Delivery' + (st.fees ? ' ' + money(st.fees) : ', free') : (st.supplier.drive_min != null ? st.supplier.drive_min + ' min away' : 'drive time unknown') + ', will-call') + '</span><span class="sp-stop-t">' + money(st.subtotal) + '</span></div>'
             + '<div class="sp-lines">' + st.lines.map(function (x) { return '<div class="sp-line"><span>' + x.qty + ' &times; ' + esc(x.name) + (x.score < 0.85 ? ' <em class="bpx-mut">(matched from "' + esc(x.line.name) + '")</em>' : '') + '</span>' + stockBadge(x.item, x.qty) + '<span class="bpx-num">' + money(x.qty * x.price) + '</span></div>'; }).join('') + '</div></div>';
@@ -490,7 +491,7 @@
   };
   window.bpSupplyOrders = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('supplyorders') + skel(); load(); return; }
-    var t = [['orders_open', 'Open'], ['orders_inv', 'Invoiced'], ['orders_done', 'Reconciled'], ['orders_all', 'All']];
+    var t = [['orders_open', 'Open'], ['orders_inv', 'Invoiced'], ['orders_done', 'Done'], ['orders_all', 'All']];
     var rows = SP.pos.filter(function (p) {
       if (SP.tab === 'orders_open') return p.status === 'sent' || p.status === 'ready' || p.status === 'picked_up';
       if (SP.tab === 'orders_inv') return p.status === 'invoiced';
@@ -504,7 +505,7 @@
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
     $('bpxViewArea').innerHTML = h;
   };
-  var STATUS = { sent: ['Sent', ''], ready: ['Ready at will-call', ''], picked_up: ['Picked up', ''], invoiced: ['Invoice entered', 'warn'], reconciled: ['Reconciled', ''], cancelled: ['Cancelled', 'warn'] };
+  var STATUS = { sent: ['Sent', ''], ready: ['Ready at will-call', ''], picked_up: ['Picked up', ''], invoiced: ['Invoice entered', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
   function poCard(p) {
     var s = supById(p.supplier_id), st = STATUS[p.status] || [p.status, ''];
     var next = p.status === 'sent' ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">Mark ready</button>'
