@@ -13761,7 +13761,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes and commercial roofs in your service area most likely to need your trade — from public permit records and the satellite view.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Pick the job and the size, see who has it in stock and at what price, and send the orders in one tap.'},supplyorders:{t:'Purchase orders',s:'Every PO, its will-call barcode, and the invoice matched back to the job.'},suppliers:{t:'Suppliers',s:'Your supply houses, their contractor pricing and stock.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'Your leads, bookings, and pipeline at a glance.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},neighbors:{t:'Neighbor Farming',s:'Every job you finish is a billboard on a street full of houses the same age — work the neighbours while the proof is still parked outside.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Pick the job and the size, see who has it in stock and at what price, and send the orders in one tap.'},supplyorders:{t:'Purchase orders',s:'Every PO, its will-call barcode, and the invoice matched back to the job.'},suppliers:{t:'Suppliers',s:'Your supply houses, their contractor pricing and stock.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -18944,7 +18944,7 @@ function bpSettings(){
     return '<section id="set-sec-'+id+'" class="st-sec"'+(_bpSetSec===id?'':' style="display:none"')+'><div class="st-head"><h2>'+t[1]+'</h2><p>'+t[3]+'</p></div>'+body+'</section>';};
   var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
       return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o2[0]?' on':'')+'" onclick="bpApplyTheme(\''+o2[0]+'\');bpSettings()"><span class="ms">'+o2[2]+'</span> '+o2[1]+'</button>';}).join('')+'</div>';
-  var feats=[BP_AI_NAME+' AI receptionist, 24/7','Exclusive Lead Radar territory','Neighbor Farming and commercial roofs','Marketing: Meta, Google, Yelp, reputation','Invoices, estimates, contracts and payments','Projects, scheduling and finances','Your calculator, embeddable on your site','Priority support'];
+  var feats=[BP_AI_NAME+' AI receptionist, 24/7','Exclusive Lead Radar territory','Neighbor Farming: work the whole street','Marketing: Meta, Google, Yelp, reputation','Invoices, estimates, contracts and payments','Projects, scheduling and finances','Your calculator, embeddable on your site','Priority support'];
 
   q('bpxViewArea').innerHTML=
     '<div class="st">'
@@ -19213,7 +19213,6 @@ function bpRadar(){
     }).catch(function(){_rdTerrLoaded=true;bpRadar();});
     return;
   }
-  if(window._rdMode==='commercial'){ bgShell(); return; }
   if(!_rdTerr && !_rdDemoOK){ rdLocked(); return; }
   rdRenderShell();
 }
@@ -19224,8 +19223,7 @@ function rdLocked(){
     if(el)el.textContent=em?('Signed in as: '+em+' — territories are matched to this exact email.'):'Not signed in.';
   }).catch(function(){});}
   q('bpxViewArea').innerHTML=
-    rdModeBar('homes')
-    +'<div style="max-width:560px;margin:30px auto;text-align:center;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:38px 30px">'
+    '<div style="max-width:560px;margin:30px auto;text-align:center;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:38px 30px">'
     +'<img src="assets/roofing/roof-completed-sm.jpg" alt="" loading="lazy" style="width:100%;height:150px;object-fit:cover;border-radius:12px;margin-bottom:18px">'
     +'<h3 style="font-size:19px;margin-bottom:10px">Lead Radar territories are exclusive</h3>'
     +'<p style="color:#5f6470;font-size:14px;line-height:1.6;margin-bottom:8px">One contractor per trade, per area. Your territory gives you a live map of the homes most likely to need your work — scored from public permit records and recent storm reports — and nobody else in your trade can buy it.</p>'
@@ -19233,8 +19231,7 @@ function rdLocked(){
     +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
     +'<a class="bpx-btn" style="text-decoration:none" href="mailto:narek7099@gmail.com?subject=Lead%20Radar%20territory">Check my area</a>'
     +'<button class="bpx-btn ghost" onclick="_rdDemoOK=true;_rdCity=\'demo\';bpRadar()">Preview with demo data</button></div>'
-    +'<div id="rdWhoami" style="margin-top:16px;font-size:12px;color:#9a9aa0"></div></div>'
-    +'<div class="bpx-mut" style="text-align:center;font-size:12.5px;margin-top:-14px">Commercial roofs need no territory \u2014 that half of the map is public data you scan yourself.</div>';
+    +'<div id="rdWhoami" style="margin-top:16px;font-size:12px;color:#9a9aa0"></div></div>';
 }
 function rdRenderShell(){
   var t=RADAR_TRADES[_rdTrade];
@@ -19245,8 +19242,7 @@ function rdRenderShell(){
   var terrNote=_rdTerr?('<span class="bpx-badge" style="font-size:11.5px">Your territory: '+bpEsc((_rdTerr.zips||[]).join(', ')||RADAR_CITIES[_rdCity].name)+' · '+(RADAR_TRADES[_rdTerr.trade]||{}).l+'</span>')
     :('<span class="bpx-badge warn" style="font-size:11.5px">Demo preview — no territory assigned</span>');
   q('bpxViewArea').innerHTML=
-    rdModeBar('homes')
-    +'<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
+    '<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><div class="bpx-jobtabs" style="flex-wrap:wrap">'+chips+'</div>'
       +'<button id="rdMineBtn" class="bpx-btn" style="width:auto;margin-top:0;padding:9px 16px;font-size:13px" onclick="rdMinePage()">My list</button></div>'+terrNote+'</div>'
     +'<div class="rd-toolbar">'
       +'<label style="display:flex;align-items:center;gap:6px">Min score <input type="range" min="25" max="80" step="5" value="'+_rdMin+'" oninput="rdSetMin(this.value)" style="width:110px"></label>'
@@ -19507,7 +19503,7 @@ function rdInitMap(){
   _rdStormLayer=L.layerGroup().addTo(_rdMap);
   _rdLayer=L.layerGroup().addTo(_rdMap);
 }
-/* Same switch as the commercial map: plain by default because street names are
+/* Satellite toggle: plain by default because street names are
    what you need to read a list of addresses, satellite when you want to look at
    the actual roof. */
 function rdBase(){
@@ -20184,7 +20180,7 @@ document.head.appendChild(rdCss);
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
     {key:"reputation",label:"Reputation",desc:"under Marketing. Their own ratings and newest reviews from Google Business Profile, Yelp and Facebook side by side, with a reply link into each platform, plus an Ask for a review composer that copies or texts a short message with their Google review link. Platforms connect on Ads & Listings (Google, Yelp) and Social Media (Facebook). Shows clearly-labelled sample data until something is connected."},
     {key:"neighbors",label:"Neighbor Farming",desc:"under Leads. Turns a job they have finished into the next one: pick a completed job with an address, and BuilderPro maps the real homes around it from OpenStreetMap address data, closest and same-street first. Every door is tracked through Hanger left \u2192 Reached out \u2192 Replied \u2192 Booked \u2192 Won, so over time they learn how many extra jobs each finished job produces. Prints door hangers that name the job address and the neighbour's own street, plans a walking route from the job site, and writes the postcard and text copy with the street merged in. There is also a 'Farm this street' button on each project."},
-    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. A Homes / Commercial switch at the top flips the same map to commercial roofs: scan the satellite view and every strip mall, warehouse, church, school and self-storage comes back with its real roof size measured from the building footprint, an estimate at the contractor's own $/sq ft rate, and the business's phone number — biggest roof first, one tap to dial, tracked Called → Talked → Walked it → Bid out → Won. Businesses are not on the Do-Not-Call registry, so unlike homeowner lists these can simply be rung. A Referral partners tab does the same for solar installers, property managers, insurance agents and realtors. It does NOT judge roof condition — the contractor looks at the satellite image. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
+    {key:"leadradar",label:"Lead Radar",desc:"under Leads. A map of homes most likely to need their trade, scored from public records: old permits due for replacement, houses with no permit on file at all (county assessor year-built), permits that expired without the work being done, projects starting next door, crews working on the same street (with the contractor's name), and storms in the last 72 hours. It does NOT judge roof condition — the contractor looks at the satellite image. Signals are limited to the last 90 days so leads are fresh. 'Plan a route' builds a 10-door knock route and opens it in Google Maps; every lead has a printable door hanger with the exact reason. 'Today's picks' are auto-added each morning; 'Roof checks' lists every homeowner who ran the 'How old is my roof?' check on their website with the score, what they noticed and any contact they left; 'My list' tracks each door through Knocked → Talked → Booked → Won with a funnel"},
     {key:"marketing",label:"Ads & Listings",desc:"under Marketing. Connect Meta Ads, Google Ads, Google Business Profile and Yelp to see ad spend, leads, cost per lead, and reviews in one place. 'Launch a campaign' sends a brief to the BuilderPro team to build it inside their own ad account"},
     {key:"social",label:"Social Media",desc:"under Marketing. Connect Facebook, Instagram and other social accounts, see followers, reach and engagement, and write and schedule posts from one calendar"},
     {key:"competitors",label:"Competitors",desc:"under Marketing. A scoreboard of the other contractors in their area from Yelp — rating, review count, reviews gained in the last 30 days, services listed. 'Find competitors' searches by trade and city and tracks the ones they pick; 'Where to win' lists specific gaps (fewer reviews, lower rating, missing photos or services) with a button to the part of the app that fixes each"},
@@ -20694,410 +20690,6 @@ window.bpFmHangers=function(){
   if((window.BP_LIVE&&window.BP_SB)&&String(c.id).indexOf('local')!==0){
     Promise.resolve(BP_SB.from('farm_campaigns').update({targets:c.targets}).eq('id',c.id)).then(function(){},function(){});
   }
-};
-</script>
-
-<style>
-/* ===== Big Roofs ===== */
-#bgWrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 10px 30px rgba(16,24,40,.08)}
-#bgMap{height:560px;background:#12161d}@media(max-width:700px){#bgMap{height:430px}}
-.bg-stat{position:absolute;left:12px;top:12px;z-index:800;background:rgba(15,23,42,.88);color:#fff;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:600;backdrop-filter:blur(6px);max-width:62%}
-.bg-legend{position:absolute;left:12px;bottom:12px;z-index:800;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-size:11.5px;display:flex;gap:13px;flex-wrap:wrap;align-items:center}
-.bg-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
-@media(max-width:700px){.bg-legend{position:static;border-radius:0 0 16px 16px;border-top:0}.bg-stat{max-width:none}}
-.bg-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
-.bg-bar input[type=text]{padding:.6rem .8rem;border:1px solid var(--line);border-radius:9px;font-size:13.5px;font-family:inherit;min-width:210px}
-.bg-bar .rate{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#5f6470}
-.bg-bar .rate input{width:64px;padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit}
-.bg-sheet{margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:15px 17px;position:relative}
-.bg-sheet h4{margin:0 0 3px;font-size:17px;letter-spacing:-.02em}
-.bg-sheet .meta{font-size:12.5px;color:#5f6470;margin-bottom:12px}
-.bg-sheet .big{font-size:27px;font-weight:800;letter-spacing:-.03em;color:#0f2540}
-.bg-x{position:absolute;right:11px;top:9px;border:0;background:none;font-size:19px;cursor:pointer;color:#8a94a4;line-height:1}
-.bg-call{display:inline-flex;align-items:center;gap:7px;background:#15803d;color:#fff;border:0;border-radius:10px;padding:11px 20px;font-weight:700;font-size:14.5px;text-decoration:none;cursor:pointer}
-.bg-call.off{background:#e4e8ef;color:#8a94a4;cursor:not-allowed}
-.bg-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #eef1f6;font-size:13.5px;cursor:pointer;flex-wrap:wrap}
-.bg-row:hover{background:#f9fbff}
-.bg-row .nm{flex:1;min-width:150px;font-weight:600}
-.bg-row .sz{color:#6a6a70;font-size:12.5px;white-space:nowrap}
-.bg-row .es{font-weight:700;color:#0f2540;white-space:nowrap}
-.bg-tag{font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px;background:#eef2f8;color:#54617a;white-space:nowrap;text-transform:capitalize}
-.bg-stg{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
-.bg-stg button{font-size:11.5px;border:1px solid #dfe5ee;background:#fff;border-radius:7px;padding:5px 10px;cursor:pointer;color:#3d4a5c}
-.bg-stg button.on{background:#0f2540;border-color:#0f2540;color:#fff}
-.bg-note{background:#fff8ec;border:1px solid #f2dfbd;border-radius:11px;padding:11px 14px;font-size:12.5px;line-height:1.6;color:#6b4f16;margin-top:12px}
-</style>
-<script>
-/* ===== Big Roofs — commercial prospecting by satellite, then the phone =======
-   The whole residential lead market fights over homeowners you mostly can't
-   legally cold-call. Businesses you can: the Do-Not-Call registry is
-   residential. So this page is the other half of the trade — strip malls,
-   churches, warehouses, self-storage, schools — where the roofs are flat, the
-   tickets are 10-30x, and the owner is a business with a listed phone.
-
-   Two honest limits, stated on the page and not engineered around:
-   1. We do NOT score roof condition. That would be an ML claim we can't stand
-      behind. The contractor looks at the satellite image himself — which is
-      the point, and takes four seconds.
-   2. Roof AREA is real: it's the building footprint from OpenStreetMap, and
-      for a flat commercial roof the footprint IS the roof. That's what ranks
-      the list, so they work biggest-ticket first.
-   Needs the roof_prospects table (supabase/migrations/…_roof_prospects.sql). */
-var BG_KINDS={commercial:'commercial',retail:'retail',industrial:'industrial',warehouse:'warehouse',church:'church',cathedral:'church',
-  school:'school',college:'school',university:'school',hospital:'hospital',office:'office',hotel:'hotel',supermarket:'supermarket',
-  civic:'civic',public:'civic',sports_hall:'civic',stadium:'civic',apartments:'apartments',residential:'apartments'};
-var BG_STAGES=[['called','Called'],['talked','Talked'],['walked','Walked it'],['bid','Bid out'],['won','Won'],['lost','Lost']];
-var BG_PARTNERS=[
-  ['shop=solar','Solar installer','Solar can’t go on a 20-year roof — they have deals stuck behind a re-roof right now'],
-  ['office=property_management','Property manager','One phone number, dozens of roofs'],
-  ['office=insurance','Insurance agent','Sees every storm claim before you do'],
-  ['office=estate_agent','Real estate agent','Every listing has a roof, and an inspection deadline']];
-var _bg={map:null,layer:null,rows:[],sel:null,min:5000,rate:9,tab:'roofs',mine:null,busy:false,sat:false,partners:null,err:''};
-
-function bgSqft(m2){return m2*10.7639;}
-function bgFmtSqft(n){return Math.round(n).toLocaleString()+' sq ft';}
-function bgEst(sqft){return sqft*(+_bg.rate||9);}
-/* spherical shoelace — good to a fraction of a percent at building scale */
-function bgArea(ring){
-  if(!ring||ring.length<3)return 0;
-  var R=6378137,s=0;
-  for(var i=0,n=ring.length;i<n;i++){
-    var a=ring[i],b=ring[(i+1)%n];
-    s+=(b.lon-a.lon)*Math.PI/180*(2+Math.sin(a.lat*Math.PI/180)+Math.sin(b.lat*Math.PI/180));
-  }
-  return Math.abs(s*R*R/2);
-}
-function bgColor(sqft){return sqft>=40000?'#b91c1c':sqft>=20000?'#ea580c':sqft>=10000?'#d97706':'#0284c7';}
-
-/* Homes vs Commercial — the same radar, two kinds of roof. Residential runs on
-   permit records and scoring; commercial runs on building footprints you scan
-   off the satellite view. Sharing one page keeps it one habit, not two. */
-function rdModeBar(active){
-  var b=function(m,l,t){return '<button class="bpx-jt'+(active===m?' on':'')+'" title="'+t+'" onclick="rdSetMode(\''+m+'\')">'+l+'</button>';};
-  return '<div class="bpx-jobtabs" style="margin-bottom:12px">'
-    +b('homes','<span class=ms>home</span> Homes','Houses scored from permit records and storm reports')
-    +b('commercial','<span class=ms>apartment</span> Commercial roofs','Strip malls, warehouses, churches \u2014 measured off the satellite view, with the business phone')
-    +'</div>';
-}
-window.rdSetMode=function(m){ window._rdMode=m; bpRadar(); };
-function bgShell(){
-  var s=(typeof bpSettingsGet==='function'?bpSettingsGet():{})||{};
-  if(s.commercialRate)_bg.rate=+s.commercialRate||9;
-  q('bpxViewArea').innerHTML=
-    rdModeBar('commercial')
-    +'<div class="bpx-chead" style="flex-wrap:wrap;gap:10px"><div class="bpx-jobtabs">'
-      +'<button class="bpx-jt'+(_bg.tab==='roofs'?' on':'')+'" onclick="bgTab(\'roofs\')">Big roofs</button>'
-      +'<button class="bpx-jt'+(_bg.tab==='partners'?' on':'')+'" onclick="bgTab(\'partners\')">Referral partners</button>'
-      +'<button class="bpx-jt'+(_bg.tab==='mine'?' on':'')+'" onclick="bgTab(\'mine\')">My list</button></div>'
-      +'<span class="bpx-mut" style="font-size:12px">Businesses aren’t on the Do-Not-Call registry — these you can simply ring.</span></div>'
-    +'<div data-bg-pane="roofs"'+(_bg.tab==='roofs'?'':' hidden')+'>'
-      +'<div class="bg-bar">'
-        +'<input type="text" id="bgWhere" placeholder="Jump to a city, zip or street…" onkeydown="if(event.key===\'Enter\')bgGo()">'
-        +'<button class="bpx-rowbtn" onclick="bgGo()" style="margin:0">Go</button>'
-        +'<button class="bpx-rowbtn primary" id="bgScan" onclick="bgScan()" style="margin:0"><span class=ms>search</span> Scan this view</button>'
-        +'<label class="rate">Min roof <select id="bgMin" onchange="bgSetMin(this.value)" style="padding:.5rem .6rem;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit">'
-          +[2500,5000,10000,20000,40000].map(function(v){return '<option value="'+v+'"'+(v===_bg.min?' selected':'')+'>'+v.toLocaleString()+' sq ft</option>';}).join('')+'</select></label>'
-        +'<label class="rate">Your rate $<input id="bgRate" value="'+_bg.rate+'" onchange="bgSetRate(this.value)">/sq ft</label>'
-        +'<button class="bpx-rowbtn" onclick="bgToggleSat()" id="bgSatBtn" style="margin:0">'+(_bg.sat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite')+'</button>'
-      +'</div>'
-      +'<div id="bgWrap"><div id="bgMap"></div><div class="bg-stat" id="bgCount">Pan to the area you work, then tap <b>Scan this view</b>.</div>'
-        +'<div class="bg-legend"><span><i style="background:#b91c1c"></i>40,000+ sq ft</span><span><i style="background:#ea580c"></i>20,000+</span>'
-        +'<span><i style="background:#d97706"></i>10,000+</span><span><i style="background:#0284c7"></i>smaller</span></div></div>'
-      +'<div id="bgSheet"></div>'
-      +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:10px">'
-        +'<div class="bpx-ptitle" style="margin:0">Biggest roofs first<span class="lg2" style="margin-left:8px">the number beside each one is the job, not the lead</span></div>'
-        +bpCsvBtn('bpCsvBigRoofs()')+'</div>'
-        +'<div id="bgList" class="bpx-mut" style="font-size:13px">Nothing scanned yet.</div>'
-        +'<div class="bg-note"><b>What this does and doesn’t tell you:</b> the roof size is real — it’s the building’s actual footprint from public map data, which on a flat commercial roof is the roof. '
-        +'The <b>condition is not</b>. We don’t guess at that from a photo. Open the satellite view, look for ponding, patches, rust and gravel loss, and back your own eyes.</div></div>'
-    +'</div>'
-    +'<div data-bg-pane="partners"'+(_bg.tab==='partners'?'':' hidden')+'><div id="bgPartners" class="bpx-mut" style="font-size:13px">Loading…</div></div>'
-    +'<div data-bg-pane="mine"'+(_bg.tab==='mine'?'':' hidden')+'><div id="bgMine" class="bpx-mut" style="font-size:13px">Loading…</div></div>';
-  if(_bg.tab==='roofs') rdEnsureLeaflet(bgInitMap);
-  if(_bg.tab==='partners') bgLoadPartners();
-  if(_bg.tab==='mine') bgLoadMine();
-}
-window.bgTab=function(t){_bg.tab=t;bgShell();};
-window.bgSetMin=function(v){_bg.min=+v||5000;bgRender();};
-window.bgSetRate=function(v){
-  _bg.rate=Math.max(1,+String(v).replace(/[^0-9.]/g,'')||9);
-  try{var s=bpSettingsGet()||{};s.commercialRate=_bg.rate;bpSettingsSet(s);}catch(e){}
-  bgRender(); if(_bg.sel)bgSheet(_bg.sel);
-};
-function bgInitMap(){
-  if(!window.L)return;
-  var c=(window.RADAR_CITIES&&RADAR_CITIES[window._rdCity||'austin'])||{lat:30.2672,lng:-97.7431};
-  if(_bg.map){try{_bg.map.remove();}catch(e){}_bg.map=null;}
-  _bg.map=L.map('bgMap',{zoomControl:false,minZoom:10,maxZoom:19}).setView([c.lat,c.lng],15);
-  L.control.zoom({position:'topright'}).addTo(_bg.map);
-  bgBase();
-  _bg.layer=L.layerGroup().addTo(_bg.map);
-  if(_bg.rows.length)bgRender();
-}
-function bgBase(){
-  if(_bg.base){_bg.base.remove();_bg.base=null;}
-  if(_bg.labels){_bg.labels.remove();_bg.labels=null;}
-  try{ _bg.map.getPane('tilePane').classList.toggle('sat',!!_bg.sat); }catch(e){}
-  if(_bg.sat){
-    _bg.base=bpTileLayer(_bg.map,'satellite');
-    _bg.labels=bpTileLayer(_bg.map,'labels');
-  }else{
-    _bg.base=bpTileLayer(_bg.map,'street');
-  }
-}
-window.bgToggleSat=function(){_bg.sat=!_bg.sat;var b=q('bgSatBtn');if(b)b.innerHTML=_bg.sat?'<span class=ms>map</span> Plain map':'<span class=ms>satellite_alt</span> Satellite';if(_bg.map)bgBase();};
-window.bgGo=function(){
-  var v=((q('bgWhere')||{}).value||'').trim(); if(!v)return;
-  var st=q('bgCount'); if(st)st.textContent='Finding '+v+'…';
-  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+encodeURIComponent(v))
-    .then(function(r){return r.ok?r.json():[];}).then(function(a){
-      if(!a||!a.length){if(st)st.textContent='Couldn’t find that — try a zip or "city, state".';return;}
-      _bg.map.setView([+a[0].lat,+a[0].lon],15);
-      if(st)st.innerHTML='Now tap <b>Scan this view</b>.';
-    }).catch(function(){if(st)st.textContent='Location lookup failed — check your connection.';});
-};
-
-/* ---------- the scan ---------- */
-window.bgScan=function(){
-  if(!_bg.map||_bg.busy)return;
-  var b=_bg.map.getBounds(), st=q('bgCount'), btn=q('bgScan');
-  if(_bg.map.getZoom()<13){ if(st)st.textContent='Zoom in a little first — a whole metro at once is more than the map service will answer.'; return; }
-  _bg.busy=true; if(btn){btn.disabled=true;btn.textContent='Scanning…';}
-  if(st)st.textContent='Reading the buildings in view…';
-  var bbox=b.getSouth().toFixed(5)+','+b.getWest().toFixed(5)+','+b.getNorth().toFixed(5)+','+b.getEast().toFixed(5);
-  var qy='[out:json][timeout:50];('
-    +'way["building"~"^(commercial|retail|industrial|warehouse|church|cathedral|school|college|university|hospital|office|hotel|supermarket|civic|public|sports_hall|stadium)$"]('+bbox+');'
-    +'way["building"]["shop"]('+bbox+');'
-    +'way["building"]["amenity"~"^(place_of_worship|school|college|hospital|restaurant|fast_food|supermarket)$"]('+bbox+');'
-    +');out tags geom 600;';
-  fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(qy)})
-    .then(function(r){ if(!r.ok) throw new Error(r.status===429||r.status===504?'The public map service is busy — wait a minute and scan again.':'Map service error '+r.status); return r.json(); })
-    .then(function(d){
-      var out=[];
-      ((d&&d.elements)||[]).forEach(function(el){
-        var g=el.geometry; if(!g||g.length<3)return;
-        var t=el.tags||{}, m2=bgArea(g); if(!m2)return;
-        var sqft=bgSqft(m2); if(sqft<1200)return;
-        var la=0,ln=0; g.forEach(function(p){la+=p.lat;ln+=p.lon;});
-        var kind=BG_KINDS[t.building]||t.shop||t.amenity||t.building||'building';
-        out.push({id:'w'+el.id,name:t.name||t.operator||t['brand']||'',kind:String(kind).replace(/_/g,' '),
-          sqft:Math.round(sqft),lat:la/g.length,lng:ln/g.length,ring:g,
-          phone:t.phone||t['contact:phone']||'',website:t.website||t['contact:website']||'',
-          addr:[t['addr:housenumber'],t['addr:street']].filter(Boolean).join(' ')});
-      });
-      out.sort(function(a,b2){return b2.sqft-a.sqft;});
-      _bg.rows=out; _bg.err='';
-      bgRender();
-    })
-    .catch(function(e){
-      _bg.rows=[]; _bg.err=(e&&e.message)||'The scan failed — try again.';
-      var l=q('bgList'); if(l)l.textContent=_bg.err;
-      if(st)st.textContent=_bg.err;
-    })
-    .then(function(){ _bg.busy=false; var b2=q('bgScan'); if(b2){b2.disabled=false;b2.innerHTML='<span class=ms>search</span> Scan this view';} });
-};
-function bgRender(){
-  var rows=(_bg.rows||[]).filter(function(r){return r.sqft>=_bg.min;});
-  var st=q('bgCount'), list=q('bgList');
-  if(_bg.layer)_bg.layer.clearLayers();
-  if(!_bg.rows.length){ if(list)list.textContent=_bg.err||'Nothing scanned yet.'; return; }
-  if(st){
-    var withPh=rows.filter(function(r){return r.phone;}).length;
-    st.innerHTML='<b>'+rows.length+'</b> roofs over '+_bg.min.toLocaleString()+' sq ft · <b>'+withPh+'</b> with a phone on file';
-  }
-  rows.forEach(function(r,i){
-    var poly=L.polygon(r.ring.map(function(p){return [p.lat,p.lon];}),
-      {color:bgColor(r.sqft),weight:2,fillColor:bgColor(r.sqft),fillOpacity:.34});
-    poly.on('click',function(){bgSheet(r);});
-    poly.addTo(_bg.layer);
-  });
-  if(!rows.length){ if(list)list.innerHTML='<span class="bpx-mut">No roofs that big in this view. Drop the minimum, or pan somewhere with more commercial stock.</span>'; return; }
-  list.classList.remove('bpx-mut');
-  var pg=bpPage('bgroofs',rows,10,'bgRender()');
-  list.innerHTML=pg.items.map(function(r){
-    return '<div class="bg-row" onclick="bgPick(\''+r.id+'\')">'
-      +'<span class="nm">'+bpEsc(r.name||'Unnamed building')+(r.addr?' <span class="bpx-mut" style="font-weight:400">· '+bpEsc(r.addr)+'</span>':'')+'</span>'
-      +'<span class="bg-tag">'+bpEsc(r.kind)+'</span>'
-      +'<span class="sz">'+bgFmtSqft(r.sqft)+'</span>'
-      +'<span class="es">'+bpMoneyFmt(bgEst(r.sqft))+'</span>'
-      +(r.phone?'<span class="bg-tag" style="background:#e7f6ec;color:#15803d"><span class=ms>call</span> phone</span>':'<span class="bg-tag" style="background:#f4f4f6;color:#9a9aa0">no number</span>')
-      +'</div>';
-  }).join('')+pg.nav;
-}
-window.bgPick=function(id){var r=(_bg.rows||[]).filter(function(x){return x.id===id;})[0];if(r){bgSheet(r);if(_bg.map)_bg.map.setView([r.lat,r.lng],18);}};
-window.bgSheetClose=function(){_bg.sel=null;var el=q('bgSheet');if(el)el.innerHTML='';};
-function bgSheet(r){
-  _bg.sel=r;
-  var el=q('bgSheet'); if(!el)return;
-  var saved=(_bg.mine||[]).filter(function(x){return x.osm_id===r.id;})[0];
-  var tel=String(r.phone||'').replace(/[^0-9+]/g,'');
-  el.innerHTML='<div class="bg-sheet"><button class="bg-x" onclick="bgSheetClose()">×</button>'
-    +'<h4>'+bpEsc(r.name||'Unnamed building')+'</h4>'
-    +'<div class="meta">'+bpEsc(r.kind)+(r.addr?' · '+bpEsc(r.addr):'')+'</div>'
-    +'<div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">'
-      +'<div><div class="bpx-mut" style="font-size:12px">Roof area</div><div class="big">'+bgFmtSqft(r.sqft)+'</div></div>'
-      +'<div><div class="bpx-mut" style="font-size:12px">At $'+_bg.rate+'/sq ft</div><div class="big">'+bpMoneyFmt(bgEst(r.sqft))+'</div></div>'
-    +'</div>'
-    +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
-      +(tel?'<a class="bg-call" href="tel:'+bpEsc(tel)+'" onclick="bgStage(\''+r.id+'\',\'called\')"><span class=ms>call</span> Call '+bpEsc(r.phone)+'</a>'
-           :'<span class="bg-call off" title="OpenStreetMap has no number for this one">No number on file</span>')
-      +(r.website?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="'+bpEsc(/^https?:/i.test(r.website)?r.website:'https://'+r.website)+'" target="_blank" rel="noopener">Website</a>':'')
-      +'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lng+'" target="_blank" rel="noopener">Street view</a>'
-      +'<button class="bpx-rowbtn'+(saved?'':' primary')+'" style="margin:0" onclick="bgSave(\''+r.id+'\')">'+(saved?'<span class=ms>check</span> On my list':'+ Add to my list')+'</button>'
-    +'</div>'
-    +(saved?'<div class="bg-stg">'+BG_STAGES.map(function(s){
-        return '<button class="'+(saved.stage===s[0]?'on':'')+'" onclick="bgStage(\''+r.id+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</div>':'')
-    +(tel?'':'<div class="bpx-mut" style="font-size:12px;margin-top:10px">No phone in the public map data — the name and address above are usually enough to find it.</div>')
-    +'</div>';
-}
-window.bgSave=function(id){
-  var r=(_bg.rows||[]).filter(function(x){return x.id===id;})[0]; if(!r)return;
-  if(!(window.BP_LIVE&&window.BP_SB)){ alert('Sign in to keep a prospect list.'); return; }
-  if((_bg.mine||[]).some(function(x){return x.osm_id===id;})){ return; }
-  var row={osm_id:r.id,name:r.name||'Unnamed building',kind:r.kind,area_sqft:r.sqft,lat:r.lat,lng:r.lng,
-    addr:r.addr||'',phone:r.phone||'',website:r.website||'',stage:'new'};
-  _bg.mine=[row].concat(_bg.mine||[]); bgSheet(r);
-  Promise.resolve(BP_SB.from('roof_prospects').insert(row)).then(function(res){
-    if(res&&res.error){ _bg.mine=(_bg.mine||[]).filter(function(x){return x.osm_id!==id;}); bgSheet(r);
-      alert(String(res.error.message||'').indexOf('roof_prospects')>=0
-        ? 'The roof_prospects table hasn’t been created yet — run the Big Roofs SQL and reload.'
-        : 'Couldn’t save that: '+res.error.message); }
-  },function(){});
-};
-window.bgStage=function(id,st){
-  var m=(_bg.mine||[]).filter(function(x){return x.osm_id===id;})[0];
-  if(!m){ if(st==='called'){ bgSave(id); m=(_bg.mine||[]).filter(function(x){return x.osm_id===id;})[0]; } if(!m)return; }
-  m.stage=(m.stage===st?'new':st);
-  var r=(_bg.rows||[]).filter(function(x){return x.id===id;})[0]; if(r&&_bg.sel&&_bg.sel.id===id)bgSheet(r);
-  if(_bg.tab==='mine')bgMineRender();
-  if(!(window.BP_LIVE&&window.BP_SB))return;
-  Promise.resolve(BP_SB.from('roof_prospects').update({stage:m.stage}).eq('osm_id',id)).then(function(){},function(){});
-};
-function bgLoadMine(){
-  if(!(window.BP_LIVE&&window.BP_SB)){ var e0=q('bgMine'); if(e0)e0.textContent='Sign in and the roofs you add show up here.'; return; }
-  Promise.resolve(BP_SB.from('roof_prospects').select('*').order('area_sqft',{ascending:false})).then(function(r){
-    if(r&&r.error){ _bg.mine=[]; var e1=q('bgMine');
-      if(e1)e1.textContent=String(r.error.message||'').indexOf('roof_prospects')>=0
-        ? 'The roof_prospects table hasn’t been created yet — run the Big Roofs SQL and reload.' : 'Couldn’t load your list.';
-      return; }
-    _bg.mine=(r&&r.data)||[]; bgMineRender();
-  },function(){ var e2=q('bgMine'); if(e2)e2.textContent='Couldn’t reach your account just now.'; });
-}
-window.bgMineRender=function(){
-  var el=q('bgMine'); if(!el)return;
-  var rows=_bg.mine||[];
-  if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing saved yet — scan a view, tap a roof, and <b>Add to my list</b>.</span>'; return; }
-  el.classList.remove('bpx-mut');
-  var pipeline=rows.filter(function(r){return ['bid','walked'].indexOf(r.stage)>=0;}).reduce(function(s,r){return s+bgEst(r.area_sqft);},0);
-  var won=rows.filter(function(r){return r.stage==='won';}).reduce(function(s,r){return s+bgEst(r.area_sqft);},0);
-  var pgm=bpPage('bgmine',rows,10,'bgMineRender()');
-  el.innerHTML='<div class="fm-nums" style="gap:26px;margin-bottom:14px"><div><b>'+rows.length+'</b>roofs</div>'
-    +'<div><b>'+rows.filter(function(r){return r.stage==='called';}).length+'</b>called</div>'
-    +'<div><b>'+bpMoneyFmt(pipeline)+'</b>out for bid</div><div><b>'+bpMoneyFmt(won)+'</b>won</div></div>'
-    +pgm.items.map(function(r){
-      var tel=String(r.phone||'').replace(/[^0-9+]/g,'');
-      return '<div class="bg-row" style="cursor:default">'
-        +'<span class="nm">'+bpEsc(r.name||'Unnamed')+(r.addr?' <span class="bpx-mut" style="font-weight:400">· '+bpEsc(r.addr)+'</span>':'')+'</span>'
-        +'<span class="sz">'+bgFmtSqft(r.area_sqft)+'</span><span class="es">'+bpMoneyFmt(bgEst(r.area_sqft))+'</span>'
-        +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'"><span class=ms>call</span> Call</a>':'')
-        +'<span class="bg-stg" style="margin:0">'+BG_STAGES.map(function(s){
-            return '<button class="'+(r.stage===s[0]?'on':'')+'" onclick="bgStage(\''+bpEsc(r.osm_id)+'\',\''+s[0]+'\')">'+s[1]+'</button>';}).join('')+'</span>'
-        +bpDelBtn("bgDrop('"+bpEsc(r.osm_id)+"')",'Take this building off your list')+'</div>';
-    }).join('')+pgm.nav;
-};
-/* Dead building, wrong number, already re-roofed, or simply not worth the call
-   — it should leave the list rather than sit there being scrolled past. */
-window.bgDrop=function(osmId){
-  var r=(_bg.mine||[]).filter(function(x){return x.osm_id===osmId;})[0]; if(!r)return;
-  if(!bpAskDel(r.name||'this building','It stays on the map \u2014 this only clears it from your list.'))return;
-  _bg.mine=(_bg.mine||[]).filter(function(x){return x.osm_id!==osmId;});
-  bgMineRender();
-  if(_bg.sel&&_bg.sel.id===osmId)bgSheet(_bg.sel);
-  if(window.BP_LIVE&&window.BP_SB){
-    Promise.resolve(BP_SB.from('roof_prospects').delete().eq('osm_id',osmId)).then(function(){},function(){});
-  }
-};
-window.bpCsvBigRoofs=function(){
-  bpCsv('big-roofs',['Name','Type','Roof sq ft','Estimate','Phone','Address'],
-    (_bg.rows||[]).filter(function(r){return r.sqft>=_bg.min;}).map(function(r){
-      return [r.name||'Unnamed',r.kind,r.sqft,Math.round(bgEst(r.sqft)),r.phone,r.addr];}));
-};
-
-/* ---------- referral partners: businesses whose customers need a roofer ---------- */
-function bgLoadPartners(){
-  var el=q('bgPartners'); if(!el)return;
-  var c=(window.RADAR_CITIES&&RADAR_CITIES[window._rdCity||'austin'])||{lat:30.2672,lng:-97.7431};
-  var ctr=(_bg.map?_bg.map.getCenter():{lat:c.lat,lng:c.lng});
-  el.className='bpx-mut'; el.style.fontSize='13px';
-  el.innerHTML='Finding partners near '+ctr.lat.toFixed(3)+', '+ctr.lng.toFixed(3)+'\u2026';
-  /* The public Overpass endpoint queues requests behind whoever else is asking,
-     and a queued request never settles on its own — which left this tab saying
-     "Finding partners..." forever. Give it a hard deadline and a way back. */
-  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-  var done=false;
-  var fail=function(msg){
-    if(done)return; done=true;
-    el.className=''; el.style.fontSize='';
-    el.innerHTML='<div class="bg-note" style="margin:0">'+bpEsc(msg)
-      +'<div style="margin-top:10px"><button class="bpx-rowbtn" style="margin:0" onclick="bgLoadPartners()">Try again</button></div></div>';
-  };
-  var timer=setTimeout(function(){ if(ctrl)try{ctrl.abort();}catch(e){} fail('The public map service didn\u2019t answer in time \u2014 it queues everyone\u2019s requests and is busy right now. This is their server, not your connection.'); },25000);
-  /* two statements instead of four: the endpoint charges for each one */
-  var around='(around:15000,'+ctr.lat+','+ctr.lng+')';
-  var qy='[out:json][timeout:25];('
-    +'nwr["shop"="solar"]'+around+';'
-    +'nwr["office"~"^(property_management|insurance|estate_agent)$"]'+around+';'
-    +');out tags center 250;';
-  fetch('https://overpass-api.de/api/interpreter',{method:'POST',signal:ctrl?ctrl.signal:undefined,
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(qy)})
-    .then(function(r){ if(!r.ok)throw new Error(r.status===429||r.status===504?'busy':'http'); return r.json(); })
-    .then(function(d){
-      if(done)return; done=true; clearTimeout(timer);
-      var groups={};
-      ((d&&d.elements)||[]).forEach(function(e){
-        var t=e.tags||{}; var key=t.shop==='solar'?'shop=solar':'office='+t.office;
-        if(!BG_PARTNERS.some(function(p){return p[0]===key;}))return;
-        (groups[key]=groups[key]||[]).push({name:t.name||t.operator||'',phone:t.phone||t['contact:phone']||'',
-          website:t.website||t['contact:website']||'',addr:[t['addr:housenumber'],t['addr:street']].filter(Boolean).join(' ')});
-      });
-      _bg.partners=groups;
-      bgPartnersRender();
-    })
-    .catch(function(e){
-      clearTimeout(timer);
-      if(e&&e.name==='AbortError')return;   /* the timeout already spoke */
-      fail('Couldn\u2019t reach the public map service just now.');
-    });
-}
-window.bgPartnersRender=function(){
-  var el=q('bgPartners'); if(!el)return;
-  var groups=_bg.partners||{};
-      el.className=''; el.style.fontSize='';
-      var total=Object.keys(groups).reduce(function(n,k){return n+groups[k].length;},0);
-      if(!total){
-        el.innerHTML='<div class="bg-note" style="margin:0">No solar installers, property managers, insurance agents or realtors are mapped within 10 miles of here. '
-          +'That usually means nobody has added them to the public map rather than that none exist \u2014 pan the map on the Big roofs tab to a denser area and come back.'
-          +'<div style="margin-top:10px"><button class="bpx-rowbtn" style="margin:0" onclick="bgLoadPartners()">Search again</button></div></div>';
-        return;
-      }
-      el.innerHTML=BG_PARTNERS.map(function(p){
-        var list=(groups[p[0]]||[]).filter(function(x){return x.name;});
-        var withPh=list.filter(function(x){return x.phone;});
-        /* each kind of partner pages on its own, so a long list of insurance
-           agents doesn't bury the solar installers underneath it */
-        var pgp=bpPage('bgp_'+p[0],list,10,'bgPartnersRender()');
-        return '<div class="bpx-panel" style="margin-bottom:14px"><div class="bpx-ptitle" style="margin:0 0 3px">'+p[1]+' <span class="lg2">\u00b7 '+list.length+' nearby, '+withPh.length+' with a number</span></div>'
-          +'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:10px">'+p[2]+'</div>'
-          +(list.length?pgp.items.map(function(x){
-              var tel=String(x.phone||'').replace(/[^0-9+]/g,'');
-              return '<div class="bg-row" style="cursor:default"><span class="nm">'+bpEsc(x.name)+(x.addr?' <span class="bpx-mut" style="font-weight:400">\u00b7 '+bpEsc(x.addr)+'</span>':'')+'</span>'
-                +(tel?'<a class="bpx-rowbtn primary" style="margin:0;text-decoration:none" href="tel:'+bpEsc(tel)+'"><span class=ms>call</span> Call</a>':'<span class="bg-tag">no number</span>')
-                +(x.website?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="'+bpEsc(/^https?:/i.test(x.website)?x.website:'https://'+x.website)+'" target="_blank" rel="noopener">Site</a>':'')+'</div>';
-            }).join('')+pgp.nav:'<span class="bpx-mut">None mapped near here.</span>')
-          +'</div>';
-      }).join('')
-      +'<div class="bg-note">These are businesses, so the Do-Not-Call registry doesn\u2019t apply and you can ring them directly. '
-      +'Keep it a manual call \u2014 autodialers and recorded messages are a different rule, and that one does bite.</div>';
 };
 </script>
 
@@ -21757,5 +21349,6 @@ window.bgPartnersRender=function(){
 <script src="portal/supply.js"></script>
 <script src="portal/supply-scan.js"></script>
 <script src="portal/supply-kits.js"></script>
+<script src="portal/supply-dir.js"></script>
 <script src="site/site.js"></script>
 </html>

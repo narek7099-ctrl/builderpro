@@ -171,9 +171,10 @@
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('suppliers') + skel(); load(); return; }
     var h = tabs('suppliers') + state() + kpis();
     h += '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Your supply houses<span class="lg2">contractor pricing and stock, per branch</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.supOpen()">+ Add supplier</button></div></div>';
-    if (!SP.sup.length) h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">Photograph one piece of paper from your supplier. We read the branch, your account number and every price off it, and set the supplier up for you. No forms.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.dirOpen()">+ Add supplier</button></div></div>';
+    if (!SP.sup.length) h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">Photograph one piece of paper from your supplier. We read the branch, your account number and every price off it, and set the supplier up for you. No forms.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen()">Browse suppliers</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
     h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
+    if (SP.sup.length) h += '<div class="sp-note"><span class="ms">storefront</span>Buying from somewhere else too? <b>Browse suppliers</b> lists the branch networks and online sellers that carry your trade, so a second bid on the same list is two taps. <button class="bpx-rowbtn" onclick="SP.dirOpen()">Browse suppliers</button></div>';
     $('bpxViewArea').innerHTML = h;
   };
   function supCard(s) {
@@ -219,11 +220,13 @@
     db.del('suppliers', id).then(function () { SP.reload(); }).catch(function (e) { alert('Could not remove. ' + (e.message || '')); });
   };
   SP.supOpen = function (id) {
-    var s = id ? supById(id) : { name: '', kind: 'custom', branch: '', address: '', drive_min: '', account_no: '', email: '', tier: '', hours: '', will_call: true, delivery: false, delivery_fee: 0, delivery_min: 0, connection: { type: 'pricebook' } };
+    var pre = !id && SP.dirPrefill ? SP.dirPrefill : null; SP.dirPrefill = null;
+    var s = id ? supById(id) : (pre || { name: '', kind: 'custom', branch: '', address: '', drive_min: '', account_no: '', email: '', tier: '', hours: '', will_call: true, delivery: false, delivery_fee: 0, delivery_min: 0, connection: { type: 'pricebook' } });
     var conn = s.connection || { type: 'pricebook' };
     var kinds = [['abc', 'ABC Supply'], ['srs', 'SRS Distribution'], ['beacon', 'Beacon'], ['ferguson', 'Ferguson'], ['homedepot_pro', 'Home Depot Pro'], ['lowes_pro', 'Lowe\'s Pro'], ['winsupply', 'Winsupply'], ['ced', 'CED'], ['custom', 'Other']];
     var f = window.bpField;
-    window.bpModal('<h3>' + (id ? 'Edit supplier' : 'Add a supplier') + '</h3><div class="bpx-sub">One entry per branch you buy from. Drive time is what the sourcing engine uses for "fastest".</div>'
+    window.bpModal('<h3>' + (id ? 'Edit supplier' : pre ? 'Add ' + esc(pre.name) : 'Add a supplier') + '</h3><div class="bpx-sub">One entry per branch you buy from. Drive time is what the sourcing engine uses for "fastest".</div>'
+      + (pre ? '<div class="sp-note"><span class="ms">lightbulb</span>' + esc(pre._hint) + '</div>' : '')
       + '<div class="sp-r2">' + f('sp-s-name', 'Name', s.name, 'ABC Supply') + '<div><label>Distributor</label><select id="sp-s-kind">' + kinds.map(function (k) { return '<option value="' + k[0] + '"' + (s.kind === k[0] ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select></div></div>'
       + '<div class="sp-r2">' + f('sp-s-branch', 'Branch', s.branch, 'North branch') + f('sp-s-drive', 'Drive time from the shop, minutes', s.drive_min == null ? '' : s.drive_min, '12') + '</div>'
       + f('sp-s-addr', 'Address', s.address, '4120 Industrial Blvd')
@@ -325,7 +328,7 @@
     var L = SP.list;
     var h = tabs('supply') + state() + kpis();
     if (!SP.sup.length) {
-      h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">We compare price, stock and drive time across your supply houses. Photograph one quote and the first branch sets itself up, prices and all.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
+      h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">We compare price, stock and drive time across your supply houses. Photograph one quote and the first branch sets itself up, prices and all.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen()">Browse suppliers</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
       $('bpxViewArea').innerHTML = h; return;
     }
     /* list picker + builder */
