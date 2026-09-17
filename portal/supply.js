@@ -180,16 +180,19 @@
     var its = itemsOf(s.id), conn = s.connection || { type: 'pricebook' };
     var stocked = its.filter(function (i) { return i.stock != null; }).length;
     var latest = its.reduce(function (m, i) { return Math.max(m, Date.parse(i.stock_at || i.updated_at || 0) || 0); }, 0);
+    var srcs = {}; its.forEach(function (i) { var k = i.source || 'manual'; srcs[k] = (srcs[k] || 0) + 1; });
+    var learned = (srcs.invoice || 0) + (srcs.quote || 0);
     var connLine = conn.type === 'api'
       ? '<span class="bpx-badge">Live feed</span> ' + esc(conn.provider || '') + (conn.last_sync ? ', synced ' + ago(Date.parse(conn.last_sync)) : ', never synced')
       : '<span class="bpx-badge">Price book</span> ' + (its.length ? its.length.toLocaleString() + ' items' + (stocked ? ', ' + stocked + ' with stock counts' : '') + (latest ? ', updated ' + ago(latest) : '') : 'empty');
     return '<div class="bpx-panel sp-sup">'
       + '<div class="sp-sup-h"><div><b>' + esc(s.name) + '</b><span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ')) + '</span></div>'
       + '<div class="sp-drive">' + (s.drive_min != null ? '<b>' + s.drive_min + '</b> min' : '<b>?</b> min') + '</div></div>'
-      + '<div class="sp-sup-meta">' + connLine + '</div>'
+      + '<div class="sp-sup-meta">' + connLine + (learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + learned + ' from your paperwork</span>' : '') + '</div>'
       + '<div class="sp-sup-meta bpx-mut">' + [s.tier ? esc(s.tier) + ' pricing' : '', s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivery ' + (s.delivery_fee > 0 ? money(s.delivery_fee) + (s.delivery_min > 0 ? ', free over ' + money(s.delivery_min) : '') : 'free') : '', s.hours ? esc(s.hours) : ''].filter(Boolean).join(' &middot; ') + '</div>'
       + '<div class="sp-sup-acts">'
-      + '<button class="bpx-rowbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import price book</button>'
+      + '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Scan a quote</button>'
+      + '<button class="bpx-rowbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import CSV</button>'
       + (conn.type === 'api' ? '<button class="bpx-rowbtn primary" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : '<button class="bpx-rowbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (its.length ? 'Refresh sample stock' : 'Load sample catalog') + '</button>')
       + '<button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">View items</button>'
       + '<button class="bpx-rowbtn" onclick="SP.supOpen(\'' + s.id + '\')">Edit</button>'
@@ -304,11 +307,14 @@
     document.querySelector('#bpx-modal .bpx-modalcard').style.maxWidth = '760px';
   };
   function stockBadge(i, need) {
-    if (i.stock == null) return '<span class="sp-stk unk">unknown</span>';
-    if (i.stock <= 0) return '<span class="sp-stk out">out</span>';
-    if (need && i.stock < need) return '<span class="sp-stk low">' + i.stock + ' of ' + need + '</span>';
-    if (i.stock < 10) return '<span class="sp-stk low">' + i.stock + ' left</span>';
-    return '<span class="sp-stk ok">' + i.stock + ' in stock</span>';
+    var age = i.stock_at ? Math.floor((Date.now() - Date.parse(i.stock_at)) / 86400000) : null;
+    var stale = age != null && age >= 2;
+    var when = age == null ? '' : ' <em>' + (age <= 0 ? 'today' : age === 1 ? 'yesterday' : age + 'd old') + '</em>';
+    if (i.stock == null) return '<span class="sp-stk unk" title="No count on file. Call the branch or scan a counter receipt.">no count</span>';
+    if (i.stock <= 0) return '<span class="sp-stk out" title="Last counted ' + esc(String(age)) + ' days ago">out' + when + '</span>';
+    var cls = (need && i.stock < need) || i.stock < 10 ? 'low' : 'ok';
+    var txt = need && i.stock < need ? i.stock + ' of ' + need : i.stock < 10 ? i.stock + ' left' : i.stock + ' in stock';
+    return '<span class="sp-stk ' + cls + (stale ? ' stale' : '') + '">' + txt + when + '</span>';
   }
 
   /* ================================================================
@@ -493,7 +499,7 @@
     });
     var h = tabs('supplyorders') + state() + kpis()
       + '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs" style="flex-wrap:wrap">' + t.map(function (x) { return '<button class="bpx-jt' + (SP.tab === x[0] ? ' on' : '') + '" onclick="SP.tab=\'' + x[0] + '\';bpSupplyOrders()">' + x[1] + '</button>'; }).join('') + '</div>'
-      + '<div style="display:flex;gap:8px">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Source a list</button></div></div>';
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-btn ghost sp-inline" onclick="SP.scanOpen()">Scan an invoice</button><button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Source a list</button></div></div>';
     if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing here.' : 'No purchase orders yet. Source a parts list and the POs land here with their will-call barcodes.') + '</div></div>';
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
     $('bpxViewArea').innerHTML = h;
@@ -502,8 +508,8 @@
   function poCard(p) {
     var s = supById(p.supplier_id), st = STATUS[p.status] || [p.status, ''];
     var next = p.status === 'sent' ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">Mark ready</button>'
-      : p.status === 'ready' ? '<button class="bpx-rowbtn primary" onclick="SP.poStatus(\'' + p.id + '\',\'picked_up\')">Picked up</button>'
-      : p.status === 'picked_up' ? '<button class="bpx-rowbtn primary" onclick="SP.invoiceOpen(\'' + p.id + '\')">Enter invoice</button>'
+      : p.status === 'ready' ? '<button class="bpx-rowbtn primary" onclick="SP.pickupOpen(\'' + p.id + '\')">Picked up</button>'
+      : p.status === 'picked_up' ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen(\'' + p.id + '\')">Scan invoice</button><button class="bpx-rowbtn" onclick="SP.invoiceOpen(\'' + p.id + '\')">Type it</button>'
       : p.status === 'invoiced' ? '<button class="bpx-rowbtn primary" onclick="SP.reconcile(\'' + p.id + '\')">Match to job</button>' : '';
     var variance = p.invoice_total != null ? p.invoice_total - p.total : null;
     return '<div class="bpx-panel sp-po">'
@@ -565,7 +571,7 @@
       if (j) { j.expenses = (j.expenses || []).filter(function (e) { return e.key !== key; }); j.expenses.push({ cat: 'Materials', amt: +p.invoice_total, note: note, key: key }); window.bpJobsSet(js); }
       else { var fin = window.bpFinGet ? bpFinGet() : []; fin = fin.filter(function (e) { return e.id !== key; }); fin.unshift({ id: key, kind: 'expense', amount: +p.invoice_total, category: 'Materials', note: note, when: Date.now() }); window.bpFinSet(fin); }
     } catch (e) { alert('Could not write the expense to Finances. ' + (e.message || '')); return; }
-    db.update('purchase_orders', id, { status: 'reconciled', reconciled_at: new Date().toISOString(), expense_key: key }).then(function () { return load(true); }).catch(function (e) { alert('Expense written, but the PO did not close. ' + (e.message || '')); });
+    return db.update('purchase_orders', id, { status: 'reconciled', reconciled_at: new Date().toISOString(), expense_key: key }).then(function () { return load(true); }).catch(function (e) { alert('Expense written, but the PO did not close. ' + (e.message || '')); });
   };
   SP.csv = function () {
     var rows = SP.pos.map(function (p) { var s = supById(p.supplier_id); return [p.po_number, s ? s.name : '', p.job_name || '', p.status, p.fulfil, p.lines.length, p.subtotal, p.fees, p.total, p.invoice_ref || '', p.invoice_total == null ? '' : p.invoice_total, p.sent_at, p.reconciled_at || '']; });
@@ -586,6 +592,8 @@
   }
   SP.barcode = barcodeSvg;
   SP.plan = plan;
+  /* used by supply-scan.js */
+  SP.db = db; SP.supById = supById; SP.itemsOf = itemsOf; SP.load = load; SP.money = money; SP.stockBadge = stockBadge;
 
   /* seed the signed-out tour so the pages have something to show */
   if (!live()) {
