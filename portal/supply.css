@@ -77,3 +77,43 @@
 #bpx .sp-ticket-bar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;text-align:center}
 #bpx .sp-ticket-bar svg{max-width:100%;height:auto}
 #bpx .sp-ticket-num{font:600 18px ui-monospace,Menlo,monospace;letter-spacing:.16em;margin-top:6px;color:#0b1021}
+
+/* ---------- scanning paperwork ---------- */
+#bpx .sp-drop{border:1.5px dashed var(--line);border-radius:14px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;background:var(--tint,#f4f6fa);transition:border-color .2s,background .2s}
+#bpx .sp-drop.over{border-color:var(--blue);background:var(--blue-l)}
+#bpx .sp-drop .ms{font-size:34px;color:var(--blue)}
+#bpx .sp-drop b{font-size:15.5px}
+#bpx .sp-drop .bpx-mut{font-size:12.5px;max-width:42ch}
+#bpx .sp-drop-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+#bpx .sp-drop-btns label{cursor:pointer}
+#bpx .sp-scanning{display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 16px;text-align:center}
+#bpx .sp-scanning b{font-size:15px}
+#bpx .sp-scanning .bpx-mut{font-size:12.5px}
+#bpx .sp-ring{width:34px;height:34px;border-radius:50%;border:3px solid var(--blue-l);border-top-color:var(--blue);animation:spRing .8s linear infinite;margin-bottom:6px}
+@keyframes spRing{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#bpx .sp-ring{animation-duration:2.4s}}
+#bpx .sp-scan-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin:14px 0 10px}
+#bpx .sp-scan-head b{display:block;font-size:16px}
+#bpx .sp-scan-head .bpx-mut{display:block;font-size:12.5px;margin-top:2px;text-transform:capitalize}
+#bpx .sp-scan-tot{text-align:right;white-space:nowrap}
+#bpx .sp-scan-tot .bpx-mut{display:block;font-size:11.5px}
+#bpx .sp-scan-tot b{font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+#bpx .sp-var{font-weight:650}
+#bpx .sp-var.bad{color:#b3392f}
+#bpx .sp-var.good{color:#137a3f}
+#bpx .sp-var small,#bpx .bpx-ctable td small{display:block;font-weight:500;font-size:11px;color:var(--grey)}
+#bpx .sp-stk em{font-style:normal;opacity:.7;font-weight:500}
+#bpx .sp-stk.stale{opacity:.75}
+#bpx .sp-learn{display:inline-flex;align-items:center;gap:4px;background:var(--blue-l);color:var(--blue-d);border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:650;white-space:nowrap}
+#bpx .sp-learn .ms{font-size:14px}
+#bpx .sp-pick{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+#bpx .sp-pick-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:11px;padding:10px 13px;cursor:pointer;text-transform:none;letter-spacing:0;margin:0}
+#bpx .sp-pick-row input{width:auto;margin:0;flex:none}
+#bpx .sp-pick-row span{flex:1;min-width:0}
+#bpx .sp-pick-row b{display:block;font-size:13.5px;font-weight:600}
+#bpx .sp-pick-row .bpx-mut{font-size:12px}
+#bpx .sp-pick-row em{font-style:normal;font-size:11.5px;font-weight:650;color:var(--grey);white-space:nowrap}
+#bpx .sp-pick-row:has(input:checked){border-color:#fca5a5;background:#fef2f2}
+#bpx .sp-pick-row:has(input:checked) em{color:#b3392f}
+#bpx .sp-relink{display:block;margin-top:4px;background:none;border:0;padding:0;font:600 12px var(--sans,inherit);color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+#bpx .sp-relink:hover{color:var(--blue-d)}
