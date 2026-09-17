@@ -150,11 +150,23 @@
     var open = SP.pos.filter(function (p) { return p.status === 'sent' || p.status === 'ready'; }).length;
     var unrec = SP.pos.filter(function (p) { return p.status === 'invoiced' || p.status === 'picked_up'; }).length;
     var t = function (l, v, blue) { return '<div class="bpx-stat"><div class="lbl">' + l + '</div><div class="val' + (blue ? ' blue' : '') + '">' + v + '</div></div>'; };
-    return '<div class="bpx-stats">' + t('Suppliers', SP.sup.length) + t('Items priced', SP.items.length.toLocaleString()) + t('Open POs', open, true) + t('Awaiting invoice match', unrec) + '</div>';
+    return '<div class="bpx-stats">' + t('Places you buy', SP.sup.length) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
   }
   function tabs(active) {
-    var t = [['supply', 'Order materials'], ['supplyorders', 'Purchase orders'], ['suppliers', 'Suppliers']];
+    var t = [['supply', 'Order materials'], ['supplyorders', 'Orders']];
+    if (active === 'suppliers') t.push(['suppliers', 'Where I buy']);
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
+  }
+  /* The one line that makes the dependency visible: what we can price, and
+     how to fix it. Every "why did it not find my item" question ends here. */
+  function whereBar() {
+    var n = SP.sup.length;
+    if (!n) return '';
+    var names = SP.sup.slice(0, 3).map(function (s) { return esc(s.name); }).join(', ') + (n > 3 ? ' and ' + (n - 3) + ' more' : '');
+    return '<div class="sp-where"><span class="ms">storefront</span><div><b>We know prices at ' + names + '.</b>'
+      + '<span class="bpx-mut">Buy somewhere else too? Photograph a bill from there and we will know their prices as well.</span></div>'
+      + '<div class="sp-where-a"><button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button>'
+      + '<button class="bpx-rowbtn" onclick="bpNav(\'suppliers\')">See prices</button></div></div>';
   }
   function state() {
     if (SP.err) return '<div class="sp-note bad"><span class=ms>error</span>' + esc(SP.err) + ' <button class="bpx-rowbtn" onclick="SP.reload()">Retry</button></div>';
@@ -172,7 +184,7 @@
     var h = tabs('suppliers') + state() + kpis();
     h += '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Your supply houses<span class="lg2">contractor pricing and stock, per branch</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.dirOpen()">+ Add supplier</button></div></div>';
-    if (!SP.sup.length) h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">Photograph one piece of paper from your supplier. We read the branch, your account number and every price off it, and set the supplier up for you. No forms.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen()">Browse suppliers</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
+    if (!SP.sup.length) h += firstRun();
     h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
     if (SP.sup.length) h += '<div class="sp-note"><span class="ms">storefront</span>Buying from somewhere else too? <b>Browse suppliers</b> lists the branch networks and online sellers that carry your trade, so a second bid on the same list is two taps. <button class="bpx-rowbtn" onclick="SP.dirOpen()">Browse suppliers</button></div>';
     $('bpxViewArea').innerHTML = h;
@@ -323,30 +335,48 @@
   /* ================================================================
      SOURCING
      ================================================================ */
+  /* The cold start decides whether any of this gets used. One instruction,
+     one button, and the three steps drawn out so the point is visible before
+     any work is done. Everything else is a grey link underneath. */
+  function firstRun(where) {
+    var step = function (n, t, sub) { return '<div class="sp-step"><span>' + n + '</span><div><b>' + t + '</b><small>' + sub + '</small></div></div>'; };
+    return '<div class="bpx-panel sp-start">'
+      + '<div class="sp-start-top"><span class="ms">photo_camera</span>'
+        + '<h3>Photograph a bill from your supply house</h3>'
+        + '<p>Any invoice or quote, however old. We read what they charge <b>you</b>, and from then on we can tell you where each job is cheapest to buy.</p>'
+        + '<button class="bpx-btn sp-start-go" onclick="SP.scanOpen()">Take a photo</button>'
+        + '<div class="sp-start-alt">Nothing to hand? <button class="bpx-linkbtn" onclick="SP.addSamples()">Look around with example data</button> or <button class="bpx-linkbtn" onclick="SP.dirOpen()">type a supply house in</button></div>'
+      + '</div>'
+      + '<div class="sp-steps">'
+        + step(1, 'Photograph a bill', 'We learn your prices at that supply house')
+        + step(2, 'Say what the job needs', 'Pick the job type and the size, the list fills itself in')
+        + step(3, 'We tell you where to buy', 'Cheapest, or closest. Then send the order from your phone')
+      + '</div></div>';
+  }
   window.bpSupply = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('supply') + skel(); load(); return; }
     var L = SP.list;
     var h = tabs('supply') + state() + kpis();
     if (!SP.sup.length) {
-      h += '<div class="bpx-panel sp-first"><span class="ms">document_scanner</span><div><b>Start with a quote or an invoice</b><span class="bpx-mut">We compare price, stock and drive time across your supply houses. Photograph one quote and the first branch sets itself up, prices and all.</span></div><div class="sp-first-btns"><button class="bpx-btn sp-inline" onclick="SP.scanOpen()">Scan a quote</button><button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen()">Browse suppliers</button><button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Try it with samples</button></div></div>';
-      $('bpxViewArea').innerHTML = h; return;
+      $('bpxViewArea').innerHTML = tabs('supply') + state() + firstRun(); return;
     }
+    h += whereBar();
     /* list picker + builder */
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
     h += '<div class="sp-two"><div class="bpx-panel">'
-      + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">Parts list<span class="lg2">build it in the field, order it in one tap</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">' + (open.length ? 'Open a saved list' : 'No saved lists') + '</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select><button class="bpx-btn ghost sp-inline" onclick="SP.newList(true)">Blank list</button><button class="bpx-addbtn" onclick="SP.kitOpen()">+ Start from a kit</button></div></div>';
-    if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">A 25 square re-roof fills in the shingles, underlayment, starter, ridge cap, drip edge and nails at the right counts. Change any line before you order.</span></div><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Start from a kit</button></div>';
+      + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">pick the job type, put in the size</span></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">' + (open.length ? 'Open a list you started' : 'Nothing started yet') + '</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select><button class="bpx-btn ghost sp-inline" onclick="SP.newList(true)">Type it myself</button><button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button></div></div>';
+    if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">Say "re-roof, 25 squares" and the shingles, underlayment, starter, ridge cap, drip edge and nails fill in at the right counts. Change any line before you order.</span></div><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Pick the job</button></div>';
     else {
       var js = jobs();
       h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>'
         + '<div class="sp-items"><div class="sp-item sp-head"><span>Item</span><span>Qty</span><span>Unit</span><span></span></div>'
         + (L.items || []).map(function (it, k) { return '<div class="sp-item"><input value="' + esc(it.name) + '" placeholder="What do you need" oninput="SP.itemEdit(' + k + ',\'name\',this.value)" list="sp-dl"><input value="' + esc(it.qty) + '" inputmode="decimal" oninput="SP.itemEdit(' + k + ',\'qty\',this.value)"><input value="' + esc(it.unit || '') + '" placeholder="ea" oninput="SP.itemEdit(' + k + ',\'unit\',this.value)"><button class="sp-x" onclick="SP.itemDel(' + k + ')" aria-label="Remove">&times;</button></div>'; }).join('')
         + '</div><datalist id="sp-dl">' + uniqNames().slice(0, 300).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Add item</button><button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button><span class="bpx-mut" style="font-size:12.5px">Type to pick from your price books, or write anything and we match it.</span></div>'
-        + '<div class="sp-prio"><span class="bpx-mut">Optimise for</span><div class="bpx-jobtabs"><button class="bpx-jt' + (SP.priority === 'fastest' ? ' on' : '') + '" onclick="SP.setPrio(\'fastest\')">Fastest</button><button class="bpx-jt' + (SP.priority === 'cheapest' ? ' on' : '') + '" onclick="SP.setPrio(\'cheapest\')">Cheapest</button></div>'
-        + '<button class="bpx-btn sp-inline" onclick="SP.run()">Find the best option</button></div>'
-        + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Cheapest counts what a trip costs you: ' + money(SP.cost.stop) + ' a stop plus ' + money(SP.cost.min) + ' a minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Add item</button><button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button><span class="bpx-mut" style="font-size:12.5px">Start typing and we suggest what your supply houses carry.</span></div>'
+        + '<div class="sp-prio"><span class="bpx-mut">What matters today</span><div class="bpx-jobtabs"><button class="bpx-jt' + (SP.priority === 'fastest' ? ' on' : '') + '" onclick="SP.setPrio(\'fastest\')">Getting it today</button><button class="bpx-jt' + (SP.priority === 'cheapest' ? ' on' : '') + '" onclick="SP.setPrio(\'cheapest\')">Paying less</button></div>'
+        + '<button class="bpx-btn sp-inline" onclick="SP.run()">Where do I buy this</button></div>'
+        + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">A second stop is not free, so we count what a trip costs you: ' + money(SP.cost.stop) + ' a stop plus ' + money(SP.cost.min) + ' a minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
     }
     h += '</div><div>' + plansHtml() + '</div></div>';
     $('bpxViewArea').innerHTML = h;
@@ -449,7 +479,7 @@
     var L = SP.list; if (!L) return;
     var lines = (L.items || []).filter(function (i) { return String(i.name).trim() && +i.qty > 0; }).map(function (i) { return { key: i.key, name: i.name, qty: +i.qty, unit: i.unit }; });
     if (!lines.length) { alert('Add at least one item with a quantity.'); return; }
-    if (!SP.items.length) { alert('Your suppliers have no prices yet. Import a price book or load a sample catalog on the Suppliers tab.'); return; }
+    if (!SP.items.length) { alert('We do not know any prices yet. Photograph a bill from your supply house and we will learn them off it.'); return; }
     SP.plans = { fastest: plan(lines, 'fastest'), cheapest: plan(lines, 'cheapest'), lines: lines };
     if (L.status === 'draft') { L.status = 'sourced'; db.update('parts_lists', L.id, { status: 'sourced' }).catch(function () {}); }
     window.bpSupply();
@@ -457,29 +487,49 @@
   };
   function plansHtml() {
     var P = SP.plans;
-    if (!P) return '<div class="bpx-panel sp-plans"><div class="bpx-ptitle">Best options<span class="lg2">fastest and cheapest, side by side</span></div><div class="bpx-empty2">Build the list, then tap "Find the best option". You will get the quickest single trip and the lowest total cost, with stock and your price at every branch.</div></div>';
+    if (!P) return '<div class="bpx-panel sp-plans"><div class="bpx-ptitle">Where to buy it<span class="lg2">closest and cheapest, side by side</span></div><div class="bpx-empty2">Put the list together on the left, then tap <b>Where do I buy this</b>. We check your price at every supply house you use and show you both answers.</div></div>';
+    var F = P.fastest, C = P.cheapest;
+    var gap = F && C ? Math.round(F.total - C.total) : 0;                 /* what cheapest saves in money */
+    var mins = F && C ? Math.round(C.minutes - F.minutes) : 0;            /* what fastest saves in time */
     var card = function (key, label, p) {
       var sel = SP.priority === key;
       if (!p) return '<div class="sp-plan' + (sel ? ' sel' : '') + '"><div class="sp-plan-h"><b>' + label + '</b></div><div class="bpx-empty2">No supplier has these items priced yet.</div></div>';
+      /* "saves 7 hours" against a delivery is true and reads like nonsense.
+         What the contractor is actually choosing there is today or tomorrow. */
+      var delivered = function (x) { return x && x.stops.some(function (st) { return st.fulfil === 'delivery'; }); };
+      var win = key === 'cheapest'
+        ? (gap > 0 ? 'Saves ' + money(gap) : '')
+        : (delivered(C) && !delivered(p) ? 'Have it today'
+          : mins >= 10 ? 'Saves ' + mins + ' min' + (C && C.stopsN > p.stopsN ? ' and a stop' : '')
+          : C && C.stopsN > p.stopsN ? 'One stop, not ' + C.stopsN : '');
       return '<div class="sp-plan' + (sel ? ' sel' : '') + '">'
-        + '<div class="sp-plan-h"><b>' + label + '</b>' + (sel ? '<span class="bpx-badge">Your priority</span>' : '') + '</div>'
+        + '<div class="sp-plan-h"><b>' + label + '</b>' + (win ? '<span class="sp-win">' + win + '</span>' : '') + (sel ? '<span class="bpx-badge">Your priority</span>' : '') + '</div>'
         + '<div class="sp-plan-big"><span>' + money(p.total) + '</span><small>' + (p.stopsN === 1 ? '1 stop' : p.stopsN + ' stops') + (p.stops.every(function (st) { return st.fulfil === 'delivery'; }) ? ', delivered' : ', about ' + p.stops.reduce(function (t, st) { return t + (st.fulfil === 'delivery' ? 0 : st.drive * 2); }, 0) + ' min round trip') + '</small></div>'
         + '<div class="sp-plan-sub bpx-mut">Parts ' + money(p.parts) + (p.run ? ' + your time and truck ' + money(p.run) : '') + '</div>'
         + p.stops.map(function (st) {
           return '<div class="sp-stop"><div class="sp-stop-h"><b>' + esc(st.supplier.name) + '</b><span class="bpx-mut">' + (st.fulfil === 'delivery' ? 'Delivery' + (st.fees ? ' ' + money(st.fees) : ', free') : (st.supplier.drive_min != null ? st.supplier.drive_min + ' min away' : 'drive time unknown') + ', will-call') + '</span><span class="sp-stop-t">' + money(st.subtotal) + '</span></div>'
             + '<div class="sp-lines">' + st.lines.map(function (x) { return '<div class="sp-line"><span>' + x.qty + ' &times; ' + esc(x.name) + (x.score < 0.85 ? ' <em class="bpx-mut">(matched from "' + esc(x.line.name) + '")</em>' : '') + '</span>' + stockBadge(x.item, x.qty) + '<span class="bpx-num">' + money(x.qty * x.price) + '</span></div>'; }).join('') + '</div></div>';
         }).join('')
-        + (p.missing.length ? '<div class="sp-note warn" style="margin-top:8px"><span class=ms>warning</span>Nobody has ' + p.missing.map(function (m) { return esc(m.name); }).join(', ') + ' in stock or priced. Order those separately.</div>' : '')
-        + '<button class="bpx-btn sp-inline" style="margin-top:12px" onclick="SP.order(\'' + key + '\')">Send ' + (p.stopsN === 1 ? 'this PO' : 'these ' + p.stopsN + ' POs') + '</button>'
+        + (p.missing.length ? '<div class="sp-note warn" style="margin-top:8px"><span class=ms>help</span>We have no price for <b>' + p.missing.map(function (m) { return esc(m.name); }).join('</b>, <b>') + '</b>. That just means we have never seen a bill with it on. Photograph one from wherever you buy it and it will be priced from now on. <button class="bpx-rowbtn" onclick="SP.scanOpen()">Photograph a bill</button></div>' : '')
+        + '<button class="bpx-btn sp-inline" style="margin-top:12px" onclick="SP.order(\'' + key + '\')">' + (p.stopsN === 1 ? 'Order it this way' : 'Order it this way, ' + p.stopsN + ' stops') + '</button>'
         + '</div>';
     };
-    return '<div class="bpx-panel sp-plans"><div class="bpx-ptitle">Best options<span class="lg2">' + P.lines.length + ' items across ' + SP.sup.length + ' suppliers</span></div><div class="sp-plan-grid">' + card('fastest', 'Fastest', P.fastest) + card('cheapest', 'Cheapest', P.cheapest) + '</div></div>';
+    return '<div class="bpx-panel sp-plans"><div class="bpx-ptitle">Where to buy it<span class="lg2">' + P.lines.length + ' items, checked at ' + SP.sup.length + (SP.sup.length === 1 ? ' supply house' : ' supply houses') + '</span></div><div class="sp-plan-grid">' + card('fastest', 'Closest', P.fastest) + card('cheapest', 'Cheapest', P.cheapest) + '</div></div>';
   }
 
   /* ---------- purchase orders ---------- */
   function poNumber(n) { var d = new Date(); var ymd = String(d.getFullYear()).slice(2) + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2); return 'PO-' + ymd + '-' + ('00' + n).slice(-3); }
   SP.order = function (key) {
     var P = SP.plans && SP.plans[key]; var L = SP.list; if (!P || !L) return;
+    /* the one line that earns the second use: what this choice was worth */
+    var other = SP.plans[key === 'cheapest' ? 'fastest' : 'cheapest'];
+    SP.won = other && other !== P
+      ? (key === 'cheapest'
+        ? (other.total - P.total > 1 ? 'You bought it ' + money(other.total - P.total) + ' cheaper than the closest trip.' : '')
+        : (other.stops.some(function (st) { return st.fulfil === 'delivery'; }) ? 'You will have it today instead of waiting on a delivery.'
+          : other.minutes - P.minutes > 5 ? 'You saved about ' + Math.round(other.minutes - P.minutes) + ' minutes' + (other.stopsN > P.stopsN ? ' and a second stop' : '') + '.'
+          : ''))
+      : '';
     var n = SP.pos.length + 1, seq = Promise.resolve(), made = [];
     P.stops.forEach(function (st) {
       var row = { list_id: L.id, supplier_id: st.supplier.id, po_number: poNumber(n++), status: 'sent', fulfil: st.fulfil, eta_min: st.fulfil === 'delivery' ? null : st.drive,
@@ -490,11 +540,11 @@
     seq.then(function () { return db.update('parts_lists', L.id, { status: 'ordered' }); })
       .then(function () { L.status = 'ordered'; SP.list = null; SP.plans = null; SP.tab = 'orders_open'; return load(true); })
       .then(function () { window.bpNav('supplyorders'); if (made[0]) SP.poOpen(made[0].id); })
-      .catch(function (e) { alert('Could not create the purchase orders. ' + (e.message || '')); });
+      .catch(function (e) { alert('Could not send the order. ' + (e.message || '')); });
   };
   window.bpSupplyOrders = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('supplyorders') + skel(); load(); return; }
-    var t = [['orders_open', 'Open'], ['orders_inv', 'Invoiced'], ['orders_done', 'Done'], ['orders_all', 'All']];
+    var t = [['orders_open', 'Waiting on me'], ['orders_inv', 'Bill to check'], ['orders_done', 'Finished'], ['orders_all', 'Everything']];
     var rows = SP.pos.filter(function (p) {
       if (SP.tab === 'orders_open') return p.status === 'sent' || p.status === 'ready' || p.status === 'picked_up';
       if (SP.tab === 'orders_inv') return p.status === 'invoiced';
@@ -503,30 +553,31 @@
     });
     var h = tabs('supplyorders') + state() + kpis()
       + '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs" style="flex-wrap:wrap">' + t.map(function (x) { return '<button class="bpx-jt' + (SP.tab === x[0] ? ' on' : '') + '" onclick="SP.tab=\'' + x[0] + '\';bpSupplyOrders()">' + x[1] + '</button>'; }).join('') + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-btn ghost sp-inline" onclick="SP.scanOpen()">Scan an invoice</button><button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Source a list</button></div></div>';
-    if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing here.' : 'No purchase orders yet. Source a parts list and the POs land here with their will-call barcodes.') + '</div></div>';
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-btn ghost sp-inline" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Order materials</button></div></div>';
+    if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + ' Show the barcode at the counter, then photograph the bill when you get it so it lands on the job.</div>'; SP.won = ''; }
+    if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing in here right now.' : 'Nothing ordered yet. Order materials for a job and it lands here with a barcode you show at the counter.') + '</div></div>';
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
     $('bpxViewArea').innerHTML = h;
   };
-  var STATUS = { sent: ['Sent', ''], ready: ['Ready at will-call', ''], picked_up: ['Picked up', ''], invoiced: ['Invoice entered', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
+  var STATUS = { sent: ['Ordered', ''], ready: ['Ready to collect', ''], picked_up: ['Picked up', ''], invoiced: ['Bill needs checking', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
   function poCard(p) {
     var s = supById(p.supplier_id), st = STATUS[p.status] || [p.status, ''];
-    var next = p.status === 'sent' ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">Mark ready</button>'
+    var next = p.status === 'sent' ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">They say it is ready</button>'
       : p.status === 'ready' ? '<button class="bpx-rowbtn primary" onclick="SP.pickupOpen(\'' + p.id + '\')">Picked up</button>'
-      : p.status === 'picked_up' ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen(\'' + p.id + '\')">Scan invoice</button><button class="bpx-rowbtn" onclick="SP.invoiceOpen(\'' + p.id + '\')">Type it</button>'
-      : p.status === 'invoiced' ? '<button class="bpx-rowbtn primary" onclick="SP.reconcile(\'' + p.id + '\')">Match to job</button>' : '';
+      : p.status === 'picked_up' ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen(\'' + p.id + '\')">Photograph the bill</button><button class="bpx-rowbtn" onclick="SP.invoiceOpen(\'' + p.id + '\')">Type it in</button>'
+      : p.status === 'invoiced' ? '<button class="bpx-rowbtn primary" onclick="SP.reconcile(\'' + p.id + '\')">Put it on the job</button>' : '';
     var variance = p.invoice_total != null ? p.invoice_total - p.total : null;
     return '<div class="bpx-panel sp-po">'
       + '<div class="sp-po-h"><div><b>' + esc(p.po_number) + '</b><span class="bpx-mut">' + esc(s ? s.name : 'Supplier removed') + (p.job_name ? ' &middot; ' + esc(p.job_name) : '') + '</span></div><span class="bpx-badge' + (st[1] ? ' ' + st[1] : '') + '">' + st[0] + '</span></div>'
       + '<div class="sp-barcode" onclick="SP.poOpen(\'' + p.id + '\')" title="Open the will-call ticket">' + barcodeSvg(p.po_number, 220, 46) + '<span>' + esc(p.po_number) + '</span></div>'
       + '<div class="sp-po-meta bpx-mut">' + p.lines.length + ' line' + (p.lines.length === 1 ? '' : 's') + ' &middot; ' + (p.fulfil === 'delivery' ? 'Delivery' : 'Will-call') + ' &middot; sent ' + ago(Date.parse(p.sent_at)) + '</div>'
-      + '<div class="sp-po-tot"><span>PO total</span><b>' + money(p.total) + '</b></div>'
-      + (variance != null ? '<div class="sp-po-tot"><span>Invoice ' + esc(p.invoice_ref || '') + '</span><b class="' + (Math.abs(variance) > Math.max(2, p.total * 0.02) ? 'bpx-neg' : '') + '">' + money(p.invoice_total) + (Math.abs(variance) >= 0.01 ? ' <small>(' + (variance > 0 ? '+' : '') + money(variance) + ')</small>' : '') + '</b></div>' : '')
-      + '<div class="sp-sup-acts">' + next + '<button class="bpx-rowbtn" onclick="SP.poOpen(\'' + p.id + '\')">Ticket</button>' + (p.status !== 'reconciled' && p.status !== 'cancelled' ? window.bpDelBtn('SP.poStatus(\'' + p.id + '\',\'cancelled\')', 'Cancel PO') : '') + '</div>'
+      + '<div class="sp-po-tot"><span>What you ordered</span><b>' + money(p.total) + '</b></div>'
+      + (variance != null ? '<div class="sp-po-tot"><span>What they billed ' + esc(p.invoice_ref || '') + '</span><b class="' + (Math.abs(variance) > Math.max(2, p.total * 0.02) ? 'bpx-neg' : '') + '">' + money(p.invoice_total) + (Math.abs(variance) >= 0.01 ? ' <small>(' + (variance > 0 ? '+' : '') + money(variance) + ')</small>' : '') + '</b></div>' : '')
+      + '<div class="sp-sup-acts">' + next + '<button class="bpx-rowbtn" onclick="SP.poOpen(\'' + p.id + '\')">Counter ticket</button>' + (p.status !== 'reconciled' && p.status !== 'cancelled' ? window.bpDelBtn('SP.poStatus(\'' + p.id + '\',\'cancelled\')', 'Cancel this order') : '') + '</div>'
       + '</div>';
   }
   SP.poStatus = function (id, status) {
-    if (status === 'cancelled' && !confirm('Cancel this purchase order?')) return;
+    if (status === 'cancelled' && !confirm('Cancel this order?')) return;
     var patch = { status: status }; if (status === 'picked_up') patch.picked_up_at = new Date().toISOString();
     db.update('purchase_orders', id, patch).then(function () { return load(true); }).catch(function (e) { alert('Could not update. ' + (e.message || '')); });
   };
