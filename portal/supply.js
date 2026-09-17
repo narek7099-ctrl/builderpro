@@ -632,7 +632,9 @@
   SP.invoiceSave = function (id) {
     var ref = (($('sp-inv-ref') || {}).value || '').trim(), tot = +String(($('sp-inv-total') || {}).value).replace(/[^0-9.]/g, '');
     if (!(tot > 0)) { msg('sp-mmsg', 'Enter the invoice total.', true); return; }
-    db.update('purchase_orders', id, { status: 'invoiced', invoice_ref: ref, invoice_total: tot, invoiced_at: new Date().toISOString() }).then(function () { window.bpCloseModal(); return load(true); }).catch(function (e) { msg('sp-mmsg', 'Could not save. ' + (e.message || ''), true); });
+    /* it moves to "Bill to check", so follow it there rather than letting it
+       vanish from the tab they are looking at */
+    db.update('purchase_orders', id, { status: 'invoiced', invoice_ref: ref, invoice_total: tot, invoiced_at: new Date().toISOString() }).then(function () { window.bpCloseModal(); SP.tab = 'orders_inv'; return load(true); }).catch(function (e) { msg('sp-mmsg', 'Could not save. ' + (e.message || ''), true); });
   };
   /* reconciliation: the invoice becomes a Materials expense on the job (or a
      standalone expense when the PO has no job), and the PO is closed */
@@ -642,7 +644,7 @@
     var key = 'sp' + p.id.slice(0, 8);
     try {
       var js = window.bpJobsGet ? bpJobsGet() : [], j = js.filter(function (x) { return x.id === p.job_id; })[0];
-      if (j) { j.expenses = (j.expenses || []).filter(function (e) { return e.key !== key; }); j.expenses.push({ cat: 'Materials', amt: +p.invoice_total, note: note, key: key }); window.bpJobsSet(js); }
+      if (j) { j.expenses = (j.expenses || []).filter(function (e) { return e.key !== key; }); j.expenses.push({ cat: 'Materials', amt: +p.invoice_total, note: note, key: key, when: Date.now() }); window.bpJobsSet(js); }
       else { var fin = window.bpFinGet ? bpFinGet() : []; fin = fin.filter(function (e) { return e.id !== key; }); fin.unshift({ id: key, kind: 'expense', amount: +p.invoice_total, category: 'Materials', note: note, when: Date.now() }); window.bpFinSet(fin); }
     } catch (e) { alert('Could not write the expense to Finances. ' + (e.message || '')); return; }
     return db.update('purchase_orders', id, { status: 'reconciled', reconciled_at: new Date().toISOString(), expense_key: key }).then(function () { return load(true); }).catch(function (e) { alert('Expense written, but the PO did not close. ' + (e.message || '')); });
