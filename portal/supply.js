@@ -150,7 +150,8 @@
     var open = SP.pos.filter(function (p) { return p.status === 'sent' || p.status === 'ready'; }).length;
     var unrec = SP.pos.filter(function (p) { return p.status === 'invoiced' || p.status === 'picked_up'; }).length;
     var t = function (l, v, blue) { return '<div class="bpx-stat"><div class="lbl">' + l + '</div><div class="val' + (blue ? ' blue' : '') + '">' + v + '</div></div>'; };
-    return '<div class="bpx-stats">' + t('Places you buy', SP.sup.length) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
+    var ex = SP.samples().length, mine = SP.sup.length - ex;
+    return '<div class="bpx-stats">' + t('Places you buy', mine + (ex ? ' <small class="sp-ex">+' + ex + ' example</small>' : '')) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
   }
   function tabs(active) {
     var t = [['supply', 'Order materials'], ['supplyorders', 'Orders']];
@@ -160,9 +161,9 @@
   /* The one line that makes the dependency visible: what we can price, and
      how to fix it. Every "why did it not find my item" question ends here. */
   function whereBar() {
-    var n = SP.sup.length;
+    var mine = SP.sup.filter(function (s) { return !isSample(s); }), n = mine.length;
     if (!n) return '';
-    var names = SP.sup.slice(0, 3).map(function (s) { return esc(s.name); }).join(', ') + (n > 3 ? ' and ' + (n - 3) + ' more' : '');
+    var names = mine.slice(0, 3).map(function (s) { return esc(s.name); }).join(', ') + (n > 3 ? ' and ' + (n - 3) + ' more' : '');
     return '<div class="sp-where"><span class="ms">storefront</span><div><b>We know prices at ' + names + '.</b>'
       + '<span class="bpx-mut">Buy somewhere else too? Photograph a bill from there and we will know their prices as well.</span></div>'
       + '<div class="sp-where-a"><button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button>'
@@ -170,7 +171,9 @@
   }
   function state() {
     if (SP.err) return '<div class="sp-note bad"><span class=ms>error</span>' + esc(SP.err) + ' <button class="bpx-rowbtn" onclick="SP.reload()">Retry</button></div>';
-    if (!live()) return '<div class="sp-note warn"><span class=ms>warning</span>DEMO DATA. Sample suppliers and prices so you can try the flow. Sign in to use your own.</div>';
+    if (!live()) return '<div class="sp-note warn"><span class=ms>warning</span>These are example suppliers and made-up prices, so you can see how it works. Sign in to use your own.</div>';
+    var ex = SP.samples();
+    if (ex.length) return '<div class="sp-note warn"><span class=ms>science</span><b>' + ex.length + ' of these are examples, not your real suppliers.</b> Their prices are made up. Photograph a bill from a supply house you actually use, then clear these out. <button class="bpx-rowbtn" onclick="SP.clearSamples()">Remove the examples</button></div>';
     return '';
   }
   SP.reload = function () { SP.loaded = false; load(true); };
@@ -199,7 +202,7 @@
       ? '<span class="bpx-badge">Live feed</span> ' + esc(conn.provider || '') + (conn.last_sync ? ', synced ' + ago(Date.parse(conn.last_sync)) : ', never synced')
       : '<span class="bpx-badge">Price book</span> ' + (its.length ? its.length.toLocaleString() + ' items' + (stocked ? ', ' + stocked + ' with stock counts' : '') + (latest ? ', updated ' + ago(latest) : '') : 'empty');
     return '<div class="bpx-panel sp-sup">'
-      + '<div class="sp-sup-h"><div><b>' + esc(s.name) + '</b><span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ')) + '</span></div>'
+      + '<div class="sp-sup-h"><div><b>' + esc(s.name) + '</b>' + (isSample(s) ? ' <span class="bpx-badge warn">Example</span>' : '') + '<span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ')) + '</span></div>'
       + '<div class="sp-drive">' + (s.drive_min != null ? '<b>' + s.drive_min + '</b> min' : '<b>?</b> min') + '</div></div>'
       + '<div class="sp-sup-meta">' + connLine + (learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + learned + ' from your paperwork</span>' : '') + '</div>'
       + '<div class="sp-sup-meta bpx-mut">' + [s.tier ? esc(s.tier) + ' pricing' : '', s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivery ' + (s.delivery_fee > 0 ? money(s.delivery_fee) + (s.delivery_min > 0 ? ', free over ' + money(s.delivery_min) : '') : 'free') : '', s.hours ? esc(s.hours) : ''].filter(Boolean).join(' &middot; ') + '</div>'
@@ -214,13 +217,29 @@
   }
   function ago(ts) { if (!ts) return 'never'; var m = Math.round((Date.now() - ts) / 60000); if (m < 2) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.round(m / 60); if (h < 24) return h + 'h ago'; var d = Math.round(h / 24); return d + 'd ago'; }
 
+  /* Example suppliers carry a flag so they can always be told apart from the
+     contractor's own, counted once, and removed in one go. */
+  function isSample(s) { return !!(s && s.connection && s.connection.sample); }
+  SP.samples = function () { return SP.sup.filter(isSample); };
   SP.addSamples = function () {
+    /* adding them twice is how six suppliers appear where there are three */
+    var have = {}; SP.samples().forEach(function (s) { have[String(s.name).toLowerCase()] = true; });
+    var todo = SAMPLE_SUPPLIERS.filter(function (s) { return !have[s.name.toLowerCase()]; });
+    if (!todo.length) { SP.reload(); return; }
     var seq = Promise.resolve();
-    SAMPLE_SUPPLIERS.forEach(function (s, k) {
+    todo.forEach(function (s) {
+      var k = SAMPLE_SUPPLIERS.indexOf(s);
       seq = seq.then(function () { return db.insert('suppliers', Object.assign({ connection: { type: 'pricebook', sample: true }, email: '' }, s)); })
         .then(function (row) { SP.sup.push(row); return db.upsertItems(sampleItems(row, k + 1)); });
     });
-    seq.then(function () { SP.reload(); }).catch(function (e) { alert('Could not add sample suppliers. ' + (e.message || '')); });
+    seq.then(function () { SP.reload(); }).catch(function (e) { alert('Could not add the example suppliers. ' + (e.message || '')); });
+  };
+  SP.clearSamples = function () {
+    var ex = SP.samples(); if (!ex.length) return;
+    if (!confirm('Remove the ' + ex.length + ' example ' + (ex.length === 1 ? 'supplier' : 'suppliers') + ' and their prices? Anything you added yourself stays.')) return;
+    var seq = Promise.resolve();
+    ex.forEach(function (s) { seq = seq.then(function () { return db.del('suppliers', s.id); }); });
+    seq.then(function () { SP.reload(); }).catch(function (e) { alert('Could not remove the examples. ' + (e.message || '')); });
   };
   SP.loadSample = function (id) {
     var s = supById(id); if (!s) return;
