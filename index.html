@@ -16684,7 +16684,7 @@ window.bpProjOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
   _bpProjId=id; j.sched=j.sched||{}; j.photos=j.photos||[];
   _bpProjDates=(j.sched.dates||[]).slice();
-  _bpProjExp=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt};});
+  _bpProjExp=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt,note:e.note,key:e.key};});
   // one-time migrate: old start/target/weekday schedules become real booked dates
   if(!_bpProjDates.length&&j.sched.start){
     var dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -16927,7 +16927,9 @@ function bpProjExpRender(){
   el.innerHTML=_bpProjExp.map(function(e,i){
     return '<div class="bpx-exprow"><select onchange="_bpProjExp['+i+'].cat=this.value">'+bpCatOpts(e.cat)+'</select>'
       +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpProjExp['+i+'].amt=this.value">'
-      +'<button class="bpx-exprm" onclick="bpProjExpDel('+i+')">×</button></div>';
+      +'<button class="bpx-exprm" onclick="bpProjExpDel('+i+')">×</button></div>'
+      /* a supply bill carries where it came from; say so instead of showing a bare number */
+      +(e.note?'<div class="bpx-expnote"><span class="ms">receipt_long</span>'+bpEsc(e.note)+'</div>':'');
   }).join('')||'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:4px">No expenses logged yet.</div>';
 }
 window.bpProjExpAdd=function(){ _bpProjExp.push({cat:'Materials',amt:''}); bpProjExpRender(); };
@@ -17038,7 +17040,7 @@ window.bpProjSave=function(){
   j.estimate=bpParseMoney(g('bpx-pj-est'));
   var paidRaw=g('bpx-pj-paid').trim();
   j.collected=paidRaw?bpParseMoney(paidRaw):null;
-  j.expenses=_bpProjExp.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
+  j.expenses=_bpProjExp.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt),note:e.note||'',key:e.key||''};}).filter(function(e){return e.amt>0;});
   var dates=_bpProjDates.slice().sort();
   var t0=g('bpx-pj-time'),t1=g('bpx-pj-end');
   var mins=function(t){var p=String(t).split(':');return (+p[0])*60+(+p[1]||0);};
@@ -17050,7 +17052,7 @@ window.bpProjSave=function(){
 window.bpJobDoneOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
   _bpJobDoneId=id;
-  _bpJobExpDraft=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt};});
+  _bpJobExpDraft=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt,note:e.note,key:e.key};});
   if(!_bpJobExpDraft.length) _bpJobExpDraft=[{cat:'Materials',amt:''}];
   bpModal('<h3>'+(j.status==='done'?'Edit job':'Mark job done')+' — '+bpEsc(j.name)+'</h3>'
     +'<div class="bpx-sub">'+bpEsc(j.title||'Job')+' · everything below is optional.</div>'
@@ -17087,7 +17089,7 @@ window.bpJobDoneSave=function(id,skip){
   if(!skip){
     var col=bpParseMoney((q('bpx-jd-col')||{}).value);
     j.collected= col>0 ? col : (j.collected!=null?j.collected:null);
-    j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
+    j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt),note:e.note||'',key:e.key||''};}).filter(function(e){return e.amt>0;});
   }
   j.status='done'; j.doneAt=j.doneAt||Date.now();
   bpJobsSet(jobs); bpCloseModal();
@@ -17130,7 +17132,7 @@ function bpFinData(){
   var jobs=bpJobsGet(), fin=bpFinGet(), inc=[], exp=[], catTot={};
   jobs.forEach(function(j){
     if(j.collected!=null && j.collected>0) inc.push({name:(j.title||'Job')+' — '+j.name,type:'Job',amt:+j.collected,when:j.doneAt||j.wonAt});
-    (j.expenses||[]).forEach(function(e){ exp.push({name:e.cat+' — '+j.name,type:e.cat,amt:+e.amt||0,when:j.doneAt||j.wonAt}); catTot[e.cat]=(catTot[e.cat]||0)+(+e.amt||0); });
+    (j.expenses||[]).forEach(function(e){ exp.push({name:(e.note?e.note+' — ':e.cat+' — ')+j.name,type:e.cat,amt:+e.amt||0,when:e.when||j.doneAt||j.wonAt}); catTot[e.cat]=(catTot[e.cat]||0)+(+e.amt||0); });
   });
   fin.forEach(function(f,fi){
     /* a recurring rule becomes one dated entry per period from its start to today */
@@ -20695,6 +20697,8 @@ window.bpFmHangers=function(){
 </script>
 
 <style id="bpx-v3">
+#bpx .bpx-expnote{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--grey);margin:-4px 0 8px 2px}
+#bpx .bpx-expnote .ms{font-size:14px}
 /* =====================================================================
    BuilderPro portal, theme 3.
    One accent, cool-grey neutrals, Geist for type, Material Symbols (wght
