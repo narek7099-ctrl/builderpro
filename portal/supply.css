@@ -202,3 +202,11 @@
 #bpx.bpx-dark .sp-win{background:#16a34a}
 #bpx .sp-two .bpx-ptitle .lg2{margin-left:9px}
 #bpx .bpx-stat .sp-ex{display:block;font-size:11.5px;font-weight:700;color:#92400e;letter-spacing:0}
+
+/* the ticket: a delivery is not a counter visit */
+#bpx .sp-ticket-del{display:flex;gap:12px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;margin:16px 0}
+#bpx .sp-ticket-del .ms{font-size:28px;color:var(--blue)}
+#bpx .sp-ticket-del b{display:block;font-size:14.5px}
+#bpx .sp-ticket-del .bpx-mut{font-size:12.5px}
+#bpx .sp-ticket-ask{display:block;margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);font-size:12.5px;line-height:1.6;color:var(--grey)}
+#bpx .sp-ticket-ask .ms{font-size:17px;color:#b45309;vertical-align:-4px;margin-right:5px}

@@ -573,15 +573,18 @@
     var h = tabs('supplyorders') + state() + kpis()
       + '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs" style="flex-wrap:wrap">' + t.map(function (x) { return '<button class="bpx-jt' + (SP.tab === x[0] ? ' on' : '') + '" onclick="SP.tab=\'' + x[0] + '\';bpSupplyOrders()">' + x[1] + '</button>'; }).join('') + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-btn ghost sp-inline" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Order materials</button></div></div>';
-    if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + ' Show the barcode at the counter, then photograph the bill when you get it so it lands on the job.</div>'; SP.won = ''; }
+    if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + ' Now send it to them, or just show the ticket at the counter. We do not contact the supply house for you.</div>'; SP.won = ''; }
     if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing in here right now.' : 'Nothing ordered yet. Order materials for a job and it lands here with a barcode you show at the counter.') + '</div></div>';
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
     $('bpxViewArea').innerHTML = h;
   };
-  var STATUS = { sent: ['Ordered', ''], ready: ['Ready to collect', ''], picked_up: ['Picked up', ''], invoiced: ['Bill needs checking', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
+  var STATUS = { sent: ['Not sent yet', 'warn'], ready: ['Ready to collect', ''], picked_up: ['Picked up', ''], invoiced: ['Bill needs checking', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
   function poCard(p) {
     var s = supById(p.supplier_id), st = STATUS[p.status] || [p.status, ''];
-    var next = p.status === 'sent' ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">They say it is ready</button>'
+    if (p.status === 'sent' && p.sent_to_supplier) st = ['Sent to them', ''];
+    var next = p.status === 'sent' ? (p.sent_to_supplier
+        ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">They say it is ready</button>'
+        : '<button class="bpx-rowbtn primary" onclick="SP.poOpen(\'' + p.id + '\')">Send it to them</button>')
       : p.status === 'ready' ? '<button class="bpx-rowbtn primary" onclick="SP.pickupOpen(\'' + p.id + '\')">Picked up</button>'
       : p.status === 'picked_up' ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen(\'' + p.id + '\')">Photograph the bill</button><button class="bpx-rowbtn" onclick="SP.invoiceOpen(\'' + p.id + '\')">Type it in</button>'
       : p.status === 'invoiced' ? '<button class="bpx-rowbtn primary" onclick="SP.reconcile(\'' + p.id + '\')">Put it on the job</button>' : '';
@@ -589,10 +592,10 @@
     return '<div class="bpx-panel sp-po">'
       + '<div class="sp-po-h"><div><b>' + esc(p.po_number) + '</b><span class="bpx-mut">' + esc(s ? s.name : 'Supplier removed') + (p.job_name ? ' &middot; ' + esc(p.job_name) : '') + '</span></div><span class="bpx-badge' + (st[1] ? ' ' + st[1] : '') + '">' + st[0] + '</span></div>'
       + '<div class="sp-barcode" onclick="SP.poOpen(\'' + p.id + '\')" title="Open the will-call ticket">' + barcodeSvg(p.po_number, 220, 46) + '<span>' + esc(p.po_number) + '</span></div>'
-      + '<div class="sp-po-meta bpx-mut">' + p.lines.length + ' line' + (p.lines.length === 1 ? '' : 's') + ' &middot; ' + (p.fulfil === 'delivery' ? 'Delivery' : 'Will-call') + ' &middot; sent ' + ago(Date.parse(p.sent_at)) + '</div>'
+      + '<div class="sp-po-meta bpx-mut">' + p.lines.length + ' line' + (p.lines.length === 1 ? '' : 's') + ' &middot; ' + (p.fulfil === 'delivery' ? 'Delivery' : 'Will-call') + ' &middot; made ' + ago(Date.parse(p.sent_at)) + '</div>'
       + '<div class="sp-po-tot"><span>What you ordered</span><b>' + money(p.total) + '</b></div>'
       + (variance != null ? '<div class="sp-po-tot"><span>What they billed ' + esc(p.invoice_ref || '') + '</span><b class="' + (Math.abs(variance) > Math.max(2, p.total * 0.02) ? 'bpx-neg' : '') + '">' + money(p.invoice_total) + (Math.abs(variance) >= 0.01 ? ' <small>(' + (variance > 0 ? '+' : '') + money(variance) + ')</small>' : '') + '</b></div>' : '')
-      + '<div class="sp-sup-acts">' + next + '<button class="bpx-rowbtn" onclick="SP.poOpen(\'' + p.id + '\')">Counter ticket</button>' + (p.status !== 'reconciled' && p.status !== 'cancelled' ? window.bpDelBtn('SP.poStatus(\'' + p.id + '\',\'cancelled\')', 'Cancel this order') : '') + '</div>'
+      + '<div class="sp-sup-acts">' + next + '<button class="bpx-rowbtn" onclick="SP.poOpen(\'' + p.id + '\')">' + (p.fulfil === 'delivery' ? 'Delivery order' : 'Counter ticket') + '</button>' + (p.status !== 'reconciled' && p.status !== 'cancelled' ? window.bpDelBtn('SP.poStatus(\'' + p.id + '\',\'cancelled\')', 'Cancel this order') : '') + '</div>'
       + '</div>';
   }
   SP.poStatus = function (id, status) {
@@ -600,26 +603,62 @@
     var patch = { status: status }; if (status === 'picked_up') patch.picked_up_at = new Date().toISOString();
     db.update('purchase_orders', id, patch).then(function () { return load(true); }).catch(function (e) { alert('Could not update. ' + (e.message || '')); });
   };
+  /* The ticket is two different documents. Will-call is something you carry
+     to a counter, so it leads with the barcode and the PO number. A delivery
+     is something you send, so the barcode is meaningless and the address is
+     what matters. Showing "Will-call ticket" over a delivery was just wrong.
+
+     It also has to say the thing the screen otherwise implies and never
+     states: BuilderPro does not transmit anything to the supply house. The
+     contractor sends it. */
   SP.poOpen = function (id) {
     var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
     var s = supById(p.supplier_id) || {}, co = ((window.bpSettingsGet && bpSettingsGet().company) || {});
-    var text = 'PURCHASE ORDER ' + p.po_number + '\nFrom: ' + (co.name || 'Our company') + (co.phone ? ', ' + co.phone : '') + '\nTo: ' + (s.name || '') + (s.branch ? ', ' + s.branch : '') + (s.account_no ? '\nAccount: ' + s.account_no : '') + (p.job_name ? '\nJob: ' + p.job_name : '') + '\n\n' + p.lines.map(function (l) { return l.qty + ' x ' + l.name + ' [' + l.sku + '] @ ' + money(l.price); }).join('\n') + '\n\nSubtotal ' + money(p.subtotal) + (p.fees ? '\nDelivery ' + money(p.fees) : '') + '\nTotal ' + money(p.total) + '\n' + (p.fulfil === 'delivery' ? 'Please deliver.' : 'Will-call pickup. Tech will present this PO number.');
+    var deliver = p.fulfil === 'delivery';
+    var where = deliver ? (co.address ? 'Deliver to: ' + co.address : 'Please deliver.') : 'Will-call pickup. Our tech will present this PO number.';
+    var text = 'PURCHASE ORDER ' + p.po_number + '\nFrom: ' + (co.name || 'Our company') + (co.phone ? ', ' + co.phone : '')
+      + '\nTo: ' + (s.name || '') + (s.branch ? ', ' + s.branch : '') + (s.account_no ? '\nAccount: ' + s.account_no : '') + (p.job_name ? '\nJob: ' + p.job_name : '') + '\n\n'
+      + p.lines.map(function (l) { return l.qty + ' x ' + l.name + (l.sku ? ' [' + l.sku + ']' : '') + ' @ ' + money(l.price); }).join('\n')
+      + '\n\nSubtotal ' + money(p.subtotal) + (p.fees ? '\nDelivery ' + money(p.fees) : '') + '\nTotal ' + money(p.total) + '\n' + where
+      + '\n\nPlease put PO ' + p.po_number + ' on the invoice.';
     var mail = s.email ? 'mailto:' + encodeURIComponent(s.email) + '?subject=' + encodeURIComponent('PO ' + p.po_number + ' from ' + (co.name || 'BuilderPro client')) + '&body=' + encodeURIComponent(text) : '';
-    window.bpModal('<div class="sp-ticket" id="sp-ticket">'
-      + '<div class="sp-ticket-h"><div><div class="bpx-mut" style="font-size:12px">Will-call ticket</div><b style="font-size:20px">' + esc(p.po_number) + '</b></div><div style="text-align:right"><b>' + esc(s.name || '') + '</b><div class="bpx-mut">' + esc(s.branch || '') + (s.account_no ? ' &middot; Acct ' + esc(s.account_no) : '') + '</div></div></div>'
-      + '<div class="sp-ticket-bar">' + barcodeSvg(p.po_number, 420, 90) + '<div class="sp-ticket-num">' + esc(p.po_number) + '</div></div>'
+    var sent = !!p.sent_to_supplier;
+
+    window.bpModal(
+      (sent
+        ? '<div class="sp-note good"><span class="ms">check_circle</span>Sent to ' + esc(s.name || 'the supplier') + '. When the bill comes, photograph it and it lands on the job.</div>'
+        : '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + esc(s.name || 'The supply house') + ' has not been told about this yet.</b> We do not send orders for you. '
+          + (deliver ? 'Send it across so they can schedule the drop.' : 'Send it across and they will have it picked before you get there, or just show this at the counter.')
+          + (s.email ? '' : ' Add their contractor desk email on <button class="bpx-linkbtn" onclick="bpCloseModal();bpNav(\'suppliers\')">Where I buy</button> and this becomes one tap.') + '</div>')
+      + '<div class="sp-ticket" id="sp-ticket">'
+      + '<div class="sp-ticket-h"><div><div class="bpx-mut" style="font-size:12px">' + (deliver ? 'Delivery order' : 'Will-call ticket') + '</div><b style="font-size:20px">' + esc(p.po_number) + '</b></div>'
+        + '<div style="text-align:right"><b>' + esc(s.name || '') + '</b><div class="bpx-mut">' + esc(s.branch || '') + (s.account_no ? ' &middot; Acct ' + esc(s.account_no) : '') + '</div></div></div>'
+      + (deliver
+        ? '<div class="sp-ticket-del"><span class="ms">local_shipping</span><div><b>Deliver to ' + esc(co.address || 'the address on file') + '</b><span class="bpx-mut">' + (p.job_name ? 'Job: ' + esc(p.job_name) + ' &middot; ' : '') + (p.fees ? 'Delivery ' + money(p.fees) : 'Free delivery') + '</span></div></div>'
+        : '<div class="sp-ticket-bar">' + barcodeSvg(p.po_number, 420, 90) + '<div class="sp-ticket-num">' + esc(p.po_number) + '</div></div>')
       + '<table class="bpx-ctable"><thead><tr><th>Qty</th><th>Item</th><th>SKU</th><th class="bpx-r">Each</th><th class="bpx-r">Total</th></tr></thead><tbody>' + p.lines.map(function (l) { return '<tr><td>' + l.qty + '</td><td>' + esc(l.name) + '</td><td class="bpx-mut">' + esc(l.sku) + '</td><td class="bpx-r bpx-num">' + money(l.price) + '</td><td class="bpx-r bpx-num">' + money(l.qty * l.price) + '</td></tr>'; }).join('') + '</tbody></table>'
       + '<div class="sp-po-tot" style="margin-top:8px"><span>' + (p.fees ? 'Parts ' + money(p.subtotal) + ' + delivery ' + money(p.fees) : 'Total') + '</span><b>' + money(p.total) + '</b></div>'
-      + '<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">' + esc(co.name || '') + (p.job_name ? ' &middot; Job: ' + esc(p.job_name) : '') + ' &middot; ' + (p.fulfil === 'delivery' ? 'Delivery' : 'Will-call: the counter scans this code or keys the PO number') + '</div>'
+      + '<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">' + esc(co.name || '') + (p.job_name ? ' &middot; Job: ' + esc(p.job_name) : '') + ' &middot; ' + (deliver ? 'Delivery' : 'Will-call') + '</div>'
+      + '<div class="sp-ticket-ask"><span class="ms">priority_high</span>Ask them to put <b>' + esc(p.po_number) + '</b> on the invoice. Then the bill matches itself back to this order and the job.</div>'
       + '</div>'
-      + '<div class="row" style="flex-wrap:wrap">' + (mail ? '<a class="bpx-btn sp-inline" href="' + mail + '">Email to ' + esc(s.name || 'supplier') + '</a>' : '<button class="bpx-btn sp-inline" onclick="SP.copy(this)" data-text="' + esc(text) + '">Copy PO text</button>') + '<button class="bpx-btn ghost sp-inline" onclick="SP.printTicket()">Print</button>' + (mail ? '<button class="bpx-btn ghost sp-inline" onclick="SP.copy(this)" data-text="' + esc(text) + '">Copy</button>' : '') + '<button class="bpx-btn ghost sp-inline" onclick="bpCloseModal()">Close</button></div>');
+      + '<div class="row" style="flex-wrap:wrap">'
+        + (mail ? '<a class="bpx-btn sp-inline" href="' + mail + '" onclick="SP.poSent(\'' + p.id + '\')">Email it to ' + esc(s.name || 'the supplier') + '</a>' : '')
+        + '<button class="bpx-btn' + (mail ? ' ghost' : '') + ' sp-inline" onclick="SP.copy(this);SP.poSent(\'' + p.id + '\')" data-text="' + esc(text) + '">Copy it to send</button>'
+        + '<button class="bpx-btn ghost sp-inline" onclick="SP.printTicket(' + (deliver ? 'true' : 'false') + ')">Print</button>'
+        + '<button class="bpx-btn ghost sp-inline" onclick="bpCloseModal()">Close</button></div>');
     document.querySelector('#bpx-modal .bpx-modalcard').style.maxWidth = '640px';
   };
+  /* copying or emailing it is the contractor saying "this is on its way" */
+  SP.poSent = function (id) {
+    var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p || p.sent_to_supplier) return;
+    p.sent_to_supplier = true;
+    db.update('purchase_orders', id, { sent_to_supplier: true }).catch(function () {});
+  };
   SP.copy = function (btn) { var t = btn.getAttribute('data-text') || ''; try { navigator.clipboard.writeText(t).then(function () { btn.textContent = 'Copied'; }); } catch (e) { alert(t); } };
-  SP.printTicket = function () {
+  SP.printTicket = function (deliver) {
     var t = $('sp-ticket'); if (!t) return;
     var w = window.open('', '_blank', 'width=720,height=900'); if (!w) { alert('Allow pop-ups to print.'); return; }
-    w.document.write('<!doctype html><title>Will-call ticket</title><style>body{font:14px Geist,system-ui,sans-serif;padding:24px;color:#111}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:6px 8px;border-bottom:1px solid #ddd;text-align:left}th:last-child,td:last-child,th:nth-child(4),td:nth-child(4){text-align:right}.sp-ticket-bar{text-align:center;margin:18px 0}.sp-ticket-num{font:600 18px ui-monospace,monospace;letter-spacing:.14em;margin-top:6px}.sp-ticket-h{display:flex;justify-content:space-between;gap:16px}.bpx-mut{color:#666}</style>' + t.innerHTML);
+    w.document.write('<!doctype html><title>' + (deliver ? 'Delivery order' : 'Will-call ticket') + '</title><style>body{font:14px Geist,system-ui,sans-serif;padding:24px;color:#111}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:6px 8px;border-bottom:1px solid #ddd;text-align:left}th:last-child,td:last-child,th:nth-child(4),td:nth-child(4){text-align:right}.sp-ticket-bar{text-align:center;margin:18px 0}.sp-ticket-num{font:600 18px ui-monospace,monospace;letter-spacing:.14em;margin-top:6px}.sp-ticket-h{display:flex;justify-content:space-between;gap:16px}.bpx-mut{color:#666}</style>' + t.innerHTML);
     w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 250);
   };
   SP.invoiceOpen = function (id) {
