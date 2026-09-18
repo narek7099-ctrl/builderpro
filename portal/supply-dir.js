@@ -320,6 +320,22 @@
     var line = [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' ');
     return [line, t['addr:city']].filter(Boolean).join(', ');
   }
+  /* Overpass has public mirrors and they get busy independently. Try the
+     main one, give it 25 seconds, then the mirror. Never spin forever. */
+  var OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+  function overpass(qy, i) {
+    i = i || 0;
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 25000);
+    return fetch(OVERPASS[i], { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(qy), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { if (!r.ok) throw new Error('busy'); return r.json(); })
+      .then(function (d) { clearTimeout(timer); return d; })
+      .catch(function (e) {
+        clearTimeout(timer);
+        if (i + 1 < OVERPASS.length) return overpass(qy, i + 1);
+        throw new Error('The map service is busy right now. Give it a minute and try again, or add the supplier by hand.');
+      });
+  }
   SP.nearFind = function () {
     var q = ($('sp-near-q') || {}).value || SP.near.q; q = String(q || '').trim();
     if (!q) { SP.near.err = 'Type a zip or a city first.'; SP.nearRender(); return; }
@@ -330,14 +346,16 @@
     };
     geocode(q).then(function (at) {
       SP.near.at = at;
-      var R = 40000; /* 25 miles: past that it is a delivery, not a run */
-      var qy = '[out:json][timeout:25];('
-        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["shop"~"^(' + shopKindsFor(SP.dir.trade || myTrade()).join('|') + ')$"];'
-        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["name"~"' + CHAIN_RX + '",i]["shop"];'
-        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["name"~"' + CHAIN_RX + '",i]["building"];'
-        + ');out center tags 200;';
-      return fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(qy) })
-        .then(function (r) { if (!r.ok) throw new Error('The map service is busy right now. Give it a minute and try again.'); return r.json(); });
+      /* 15 miles. In a metro, 25 was a query the map could not finish, and past
+         15 it is a delivery anyway. Only shops are scanned, never buildings:
+         a name search over every building in Los Angeles never returns. */
+      var R = 24000;
+      var kinds = shopKindsFor(SP.dir.trade || myTrade()).join('|');
+      var qy = '[out:json][timeout:20];('
+        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["shop"~"^(' + kinds + ')$"];'
+        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["shop"]["name"~"' + CHAIN_RX + '",i];'
+        + ');out center 200;';
+      return overpass(qy);
     }).then(function (d) {
       var seen = {}, out = [];
       ((d && d.elements) || []).forEach(function (el) {
