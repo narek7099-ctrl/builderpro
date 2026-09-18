@@ -163,10 +163,8 @@
     var mine = SP.sup.filter(function (s) { return !isSample(s); }), n = mine.length;
     if (!n) return '';
     var names = mine.slice(0, 3).map(function (s) { return esc(s.name); }).join(', ') + (n > 3 ? ' and ' + (n - 3) + ' more' : '');
-    return '<div class="sp-where"><span class="ms">storefront</span><div><b>We know prices at ' + names + '.</b>'
-      + '<span class="bpx-mut">Buy somewhere else too? Photograph a bill from there and we will know their prices as well.</span></div>'
-      + '<div class="sp-where-a"><button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button>'
-      + '<button class="bpx-rowbtn" onclick="bpNav(\'suppliers\')">See prices</button></div></div>';
+    return '<div class="sp-where"><span>Prices from <b>' + names + '</b></span>'
+      + '<span class="sp-where-a"><button class="bpx-linkbtn" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-linkbtn" onclick="bpNav(\'suppliers\')">Where I buy</button></span></div>';
   }
   function state() {
     if (SP.err) return '<div class="sp-note bad"><span class=ms>error</span>' + esc(SP.err) + ' <button class="bpx-rowbtn" onclick="SP.reload()">Retry</button></div>';
@@ -183,12 +181,12 @@
      ================================================================ */
   window.bpSuppliers = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('suppliers') + skel(); load(); return; }
-    var h = tabs('suppliers') + state() + kpis();
-    h += '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Where I buy<span class="lg2">the places we can price a job at. Add one, or stop using one.</span></div>'
+    var h = tabs('suppliers') + state();
+    h += '<div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-mut" style="font-size:13px">' + (SP.sup.length ? SP.sup.length + (SP.sup.length === 1 ? ' supply house' : ' supply houses') : '') + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.dirOpen()">+ Add supplier</button></div></div>';
     if (!SP.sup.length) h += firstRun();
     h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
-    if (SP.sup.length) h += '<div class="sp-note"><span class="ms">storefront</span>Buying from somewhere else too? <b>Browse suppliers</b> lists the branch networks and online sellers that carry your trade, so a second bid on the same list is two taps. <button class="bpx-rowbtn" onclick="SP.dirOpen()">Browse suppliers</button></div>';
+
     $('bpxViewArea').innerHTML = h;
   };
   function supCard(s) {
@@ -199,22 +197,22 @@
     var learned = (srcs.invoice || 0) + (srcs.quote || 0);
     var connLine = conn.type === 'api'
       ? '<span class="bpx-badge">Live feed</span> ' + esc(conn.provider || '') + (conn.last_sync ? ', synced ' + ago(Date.parse(conn.last_sync)) : ', never synced')
-      : '<span class="bpx-badge">Price book</span> ' + (its.length ? its.length.toLocaleString() + ' items' + (stocked ? ', ' + stocked + ' with stock counts' : '') + (latest ? ', updated ' + ago(latest) : '') : 'empty');
+      : (its.length ? '<b>' + its.length.toLocaleString() + ' prices</b>' + (latest ? '<span class="bpx-mut"> &middot; updated ' + ago(latest) + '</span>' : '') : '');
     return '<div class="bpx-panel sp-sup">'
       + '<div class="sp-sup-h"><div><b>' + esc(s.name) + '</b>' + (isSample(s) ? ' <span class="bpx-badge warn">Example</span>' : '') + '<span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ')) + '</span></div>'
       + '<div class="sp-drive">' + (s.drive_min != null ? '<b>' + s.drive_min + '</b> min' : '<b>?</b> min') + '</div></div>'
       + '<div class="sp-sup-meta">' + connLine + (learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + learned + ' from your paperwork</span>' : '') + '</div>'
-      + '<div class="sp-sup-meta bpx-mut">' + [s.tier ? esc(s.tier) + ' pricing' : '', s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivery ' + (s.delivery_fee > 0 ? money(s.delivery_fee) + (s.delivery_min > 0 ? ', free over ' + money(s.delivery_min) : '') : 'free') : '', s.hours ? esc(s.hours) : ''].filter(Boolean).join(' &middot; ') + '</div>'
-      + (its.length ? '' : '<div class="sp-note" style="margin:10px 0 8px"><span class="ms">request_quote</span><b>No prices from ' + esc(s.name) + ' yet.</b> Send them your usual list and ask for a quote. When it comes back, photograph it and their prices go in on their own.</div>')
+      + '<div class="sp-sup-meta bpx-mut">' + [s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivers' + (s.delivery_fee > 0 ? ' ' + money(s.delivery_fee) : ' free') : ''].filter(Boolean).join(' &middot; ') + '</div>'
+      + (its.length ? '' : '<div class="bpx-mut sp-sup-empty">No prices yet. Ask for a quote, then photograph it.</div>')
       + '<div class="sp-sup-acts">'
       + (its.length
-        ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button>'
+        ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">See their prices</button>'
         : '<button class="bpx-rowbtn primary" onclick="SP.quoteAsk(\'' + s.id + '\')">Ask for their prices</button><button class="bpx-rowbtn" onclick="SP.scanOpen()">Photograph a bill</button>')
-      + '<button class="bpx-rowbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import a price file</button>'
-      + (conn.type === 'api' ? '<button class="bpx-rowbtn primary" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : isSample(s) ? '<button class="bpx-rowbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (its.length ? 'Refresh example stock' : 'Load example prices') + '</button>' : '')
-      + (its.length ? '<button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">See their prices</button>' : '')
-      + '<button class="bpx-rowbtn" onclick="SP.supOpen(\'' + s.id + '\')">Edit</button>'
-      + window.bpDelBtn('SP.supDel(\'' + s.id + '\')', 'Stop using them')
+      + '</div><div class="sp-links">'
+      + '<button class="bpx-linkbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import a price file</button>'
+      + (conn.type === 'api' ? '<button class="bpx-linkbtn" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : isSample(s) ? '<button class="bpx-linkbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (its.length ? 'Refresh example stock' : 'Load example prices') + '</button>' : '')
+      + '<button class="bpx-linkbtn" onclick="SP.supOpen(\'' + s.id + '\')">Edit</button>'
+      + '<button class="bpx-linkbtn sp-quiet-del" onclick="SP.supDel(\'' + s.id + '\')">Stop using them</button>'
       + '</div></div>';
   }
   function ago(ts) { if (!ts) return 'never'; var m = Math.round((Date.now() - ts) / 60000); if (m < 2) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.round(m / 60); if (h < 24) return h + 'h ago'; var d = Math.round(h / 24); return d + 'd ago'; }
@@ -377,7 +375,7 @@
   window.bpSupply = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('supply') + skel(); load(); return; }
     var L = SP.list;
-    var h = tabs('supply') + state() + kpis();
+    var h = tabs('supply') + state();
     if (!SP.sup.length) {
       $('bpxViewArea').innerHTML = tabs('supply') + state() + firstRun(); return;
     }
@@ -386,8 +384,8 @@
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
     h += '<div class="sp-two"><div class="bpx-panel">'
       + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">pick the job type, put in the size</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">' + (open.length ? 'Open a list you started' : 'Nothing started yet') + '</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select><button class="bpx-btn ghost sp-inline" onclick="SP.newList(true)">Type it myself</button><button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button></div></div>';
-    if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">Say "re-roof, 25 squares" and the shingles, underlayment, starter, ridge cap, drip edge and nails fill in at the right counts. Change any line before you order.</span></div><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Pick the job</button></div>';
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + (open.length ? '<select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">Open a list you started</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select>' : '') + (L ? '<button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button>' : '') + '</div></div>';
+    if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">Say "re-roof, 25 squares" and the shingles, underlayment, starter, ridge cap, drip edge and nails fill in at the right counts. Change any line before you order.</span></div><div class="sp-kitcue-b"><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Pick the job</button><button class="bpx-linkbtn" onclick="SP.newList(true)">or type it myself</button></div></div>';
     else {
       var js = jobs();
       h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>'
@@ -565,21 +563,24 @@
   };
   window.bpSupplyOrders = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('supplyorders') + skel(); load(); return; }
-    var t = [['orders_open', 'Waiting on me'], ['orders_inv', 'Bill to check'], ['orders_done', 'Finished'], ['orders_all', 'Everything']];
+    var cnt = function (f) { return SP.pos.filter(f).length; };
+    var nOpen = cnt(function (p) { return p.status === 'sent' || p.status === 'ready' || p.status === 'picked_up'; }), nInv = cnt(function (p) { return p.status === 'invoiced'; });
+    var t = [['orders_open', 'Waiting on me' + (nOpen ? ' <i>' + nOpen + '</i>' : '')], ['orders_inv', 'Bill to check' + (nInv ? ' <i>' + nInv + '</i>' : '')], ['orders_done', 'Finished'], ['orders_all', 'Everything']];
     var rows = SP.pos.filter(function (p) {
       if (SP.tab === 'orders_open') return p.status === 'sent' || p.status === 'ready' || p.status === 'picked_up';
       if (SP.tab === 'orders_inv') return p.status === 'invoiced';
       if (SP.tab === 'orders_done') return p.status === 'reconciled';
       return true;
     });
-    var h = tabs('supplyorders') + state() + kpis()
+    var h = tabs('supplyorders') + state()
       + '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs" style="flex-wrap:wrap">' + t.map(function (x) { return '<button class="bpx-jt' + (SP.tab === x[0] ? ' on' : '') + '" onclick="SP.tab=\'' + x[0] + '\';bpSupplyOrders()">' + x[1] + '</button>'; }).join('') + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-btn ghost sp-inline" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Order materials</button></div></div>';
+      + '<button class="bpx-addbtn" onclick="SP.scanOpen()">Photograph a bill</button></div>';
     var unsent = SP.pos.filter(function (p) { return p.status === 'sent' && !p.sent_to_supplier; });
     if (unsent.length) h += '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + (unsent.length === 1 ? 'One order has not been sent to the supply house.' : unsent.length + ' orders have not been sent to the supply house.') + '</b> Until you send it, nothing is picked and nobody is expecting you. <button class="bpx-rowbtn primary" onclick="SP.poOpen(\'' + unsent[0].id + '\')">' + (unsent.length === 1 ? 'Send it' : 'Send them') + '</button></div>';
-    if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + ' Now send it to them, or just show the ticket at the counter. We do not contact the supply house for you.</div>'; SP.won = ''; }
+    if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + '</div>'; SP.won = ''; }
     if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing in here right now.' : 'Nothing ordered yet. Order materials for a job and it lands here with a barcode you show at the counter.') + '</div></div>';
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
+    if (SP.pos.length) h += '<div class="sp-foot">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '</div>';
     $('bpxViewArea').innerHTML = h;
   };
   var STATUS = { sent: ['Not sent yet', 'warn'], ready: ['Ready to collect', ''], picked_up: ['Picked up', ''], invoiced: ['Bill needs checking', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
