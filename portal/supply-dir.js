@@ -320,32 +320,48 @@
     var line = [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' ');
     return [line, t['addr:city']].filter(Boolean).join(', ');
   }
-  /* Overpass has public mirrors and they get busy independently. Try the
-     main one, give it 25 seconds, then the mirror. Never spin forever. */
+  /* Overpass has public mirrors and they get busy independently, so ask
+     them all at once and take the first good answer. On a slow evening the
+     main server can sit in a queue for twenty seconds while the mirror
+     answers in two. Never spin forever: 25 seconds and it stops. */
   var OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
-  function overpass(qy, i) {
-    i = i || 0;
-    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 25000);
-    var said = '';
-    return fetch(OVERPASS[i], { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(qy), signal: ctl ? ctl.signal : undefined })
+  function overpassOne(url, qy, signal) {
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(qy), signal: signal })
       .then(function (r) {
         if (r.ok) return r.json();
         /* a rejected query comes back as HTML with the reason in it; keep the reason */
         return r.text().then(function (t) {
           var m = t.match(/Error<\/strong>:\s*([^<]{5,160})/i) || t.match(/error[^<]{5,160}/i);
-          said = 'HTTP ' + r.status + (m ? ': ' + (m[1] || m[0]).trim() : '');
-          throw new Error('rejected');
+          throw new Error('HTTP ' + r.status + (m ? ': ' + (m[1] || m[0]).trim() : ''));
         });
       })
-      .then(function (d) { clearTimeout(timer); return d; })
-      .catch(function (e) {
-        clearTimeout(timer);
-        if (!said && e && e.name === 'AbortError') said = 'no answer in 25 seconds';
-        if (!said && e && /Failed to fetch|NetworkError|Load failed/i.test(e.message || '')) said = 'the request was blocked before it reached the map';
-        if (i + 1 < OVERPASS.length) return overpass(qy, i + 1);
-        throw new Error('The map service is busy right now. Give it a minute and try again, or add the supplier by hand.' + (said ? ' (' + said + ')' : ''));
+      .then(function (d) {
+        /* a server-side timeout is a 200 with no elements and a remark */
+        if (d && d.remark && /timed? ?out|runtime error/i.test(d.remark) && !((d.elements || []).length)) throw new Error('timed out on the server');
+        return d;
       });
+  }
+  function overpass(qy) {
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 25000);
+    var reasons = [], failed = 0;
+    return new Promise(function (resolve, reject) {
+      OVERPASS.forEach(function (url) {
+        overpassOne(url, qy, ctl ? ctl.signal : undefined).then(function (d) {
+          clearTimeout(timer); if (ctl) ctl.abort(); resolve(d);
+        }).catch(function (e) {
+          var why = e && e.name === 'AbortError' ? '' : (e && /Failed to fetch|NetworkError|Load failed/i.test(e.message || '') ? 'blocked before it reached the map' : (e && e.message) || '');
+          if (why) reasons.push(why);
+          if (++failed === OVERPASS.length) {
+            clearTimeout(timer);
+            var said = reasons.length ? reasons[0] : 'no answer in 25 seconds';
+            reject(new Error(/timed out/.test(said)
+              ? 'The map took too long to answer. Try again in a minute, or a zip a little closer to the shop.'
+              : 'The map service is busy right now. Give it a minute and try again, or add the supplier by hand. (' + said + ')'));
+          }
+        });
+      });
+    });
   }
   SP.nearFind = function () {
     var q = ($('sp-near-q') || {}).value || SP.near.q; q = String(q || '').trim();
@@ -371,9 +387,6 @@
         + ');out center 200;';
       return overpass(qy);
     }).then(function (d) {
-      /* a server-side timeout is a 200 with no elements and a remark; it is
-         not "no supply houses here" and must never be shown as one */
-      if (d && d.remark && /timed? ?out|runtime error/i.test(d.remark) && !((d.elements || []).length)) throw new Error('The map took too long to answer. Try again in a minute, or a zip a little closer to the shop.');
       var seen = {}, out = [];
       ((d && d.elements) || []).forEach(function (el) {
         var t = el.tags || {}; if (!t.name) return;
