@@ -17,7 +17,7 @@
   var esc = window.bpEsc;
   var money = function (n) { n = Math.round(+n || 0); return (n < 0 ? '\u2212' : '') + '$' + Math.abs(n).toLocaleString(); };
   var live = function () { return !!(window.BP_LIVE && window.BP_SB); };
-  var D = window.BPDASH = { brain: undefined, calc: undefined, appts: undefined, supply: undefined, leads: undefined };
+  var D = window.BPDASH = { brain: undefined, calc: undefined, appts: undefined, events: undefined, supply: undefined, leads: undefined, contracts: undefined, unread: undefined, deals: undefined, setupOpen: false };
 
   /* ---------- setup: verified, not self-reported ---------- */
   function isSample(s) { return !!(s && s.connection && s.connection.sample); }
@@ -40,12 +40,15 @@
     var done = known.filter(function (x) { return x.done; }).length, pct = Math.round(done / list.length * 100);
     var hidden = false; try { hidden = localStorage.getItem('bpSetupHidden') === '1'; } catch (e) {}
     if (pct === 100 && hidden) return '';
-    if (pct === 100) return '<div class="dash-done"><span class="ms">verified</span><b>Set up. Everything is in place.</b><button class="bpx-linkbtn" onclick="BPDASH.hide()">Hide this</button></div>';
+    if (pct === 100) return '<div class="dash-mini done"><span class="ms">verified</span><span>Set up. Everything is in place.</span><button class="bpx-linkbtn" onclick="BPDASH.hide()">Hide</button></div>';
     var next = list.filter(function (x) { return x.done === false; })[0];
-    return '<div class="bpx-panel dash-setup">'
-      + '<div class="dash-setup-h"><div><b>Getting set up</b><span class="bpx-mut">' + done + ' of ' + list.length + ' done' + (next ? ' &middot; next: ' + esc(next.t) : '') + '</span></div><div class="dash-pct">' + pct + '%</div></div>'
-      + '<div class="dash-bar"><i style="width:' + pct + '%"></i></div>'
-      + '<div class="dash-steps">' + list.map(function (x) {
+    /* one line: how far along, what is next, and a way to see the rest */
+    var mini = '<div class="dash-mini"><span class="dash-mini-bar"><i style="width:' + pct + '%"></i></span>'
+      + '<span class="dash-mini-t"><b>Set up ' + pct + '%</b>' + (next ? ' &middot; next: ' + esc(next.t) : '') + '</span>'
+      + (next ? '<button class="bpx-rowbtn primary" onclick="bpNav(\'' + next.go + '\')">Do it</button>' : '')
+      + '<button class="bpx-linkbtn" onclick="BPDASH.setupOpen=!BPDASH.setupOpen;bpDashboard()">' + (D.setupOpen ? 'Fewer' : 'All ' + list.length + ' steps') + '</button></div>';
+    if (!D.setupOpen) return mini;
+    return mini + '<div class="bpx-panel dash-setup"><div class="dash-steps">' + list.map(function (x) {
         var st = x.done === null ? 'wait' : x.done ? 'ok' : 'todo';
         return '<div class="dash-step ' + st + '" onclick="bpNav(\'' + x.go + '\')">'
           + '<span class="dash-tick"><span class="ms">' + (st === 'ok' ? 'check' : st === 'wait' ? 'more_horiz' : '') + '</span></span>'
@@ -143,6 +146,71 @@
         : '<div class="dash-empty">Nothing booked today.</div>') + '</div>';
   }
 
+  /* ---------- needs attention: what is waiting on them, only when non-zero ---------- */
+  function attention() {
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [], rows = [];
+    var todayIso = new Date().toISOString().slice(0, 10);
+    var late = jobs.filter(function (j) { return j.status === 'active' && j.sched && j.sched.target && String(j.sched.target) < todayIso && ((+j.estimate || 0) - (+j.collected || 0)) > 0; });
+    if (late.length) rows.push({ ico: 'schedule', n: late.length, t: late.length === 1 ? money((+late[0].estimate || 0) - (+late[0].collected || 0)) + ' still owed on ' + esc(late[0].name) + ', past its target date' : late.length + ' projects past their target date with money owed', go: 'activejobs', tone: 'bad' });
+    var waiting = (D.contracts || []).filter(function (c) { return c.status === 'sent' || c.status === 'viewed'; });
+    if (waiting.length) rows.push({ ico: 'draw', n: waiting.length, t: waiting.length === 1 ? (esc(waiting[0].customer_name || waiting[0].title) + ' has not signed yet' + (waiting[0].status === 'viewed' ? ' (opened it)' : '')) : waiting.length + ' contracts waiting for a signature', go: 'activejobs' });
+    var pos = (window.SP && SP.pos) || [];
+    var unsent = pos.filter(function (p) { return p.status === 'sent' && !p.sent_to_supplier; }).length, bills = pos.filter(function (p) { return p.status === 'invoiced'; }).length;
+    if (unsent) rows.push({ ico: 'outgoing_mail', n: unsent, t: unsent === 1 ? 'One materials order has not been sent to the supply house' : unsent + ' materials orders not sent to the supply house', go: 'supplyorders', tone: 'warn' });
+    if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders' });
+    if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging' });
+    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' waiting on a yes' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals' });
+    return '<div class="bpx-panel"><div class="bpx-ptitle">Needs you<span class="lg2">' + (rows.length ? rows.length + (rows.length === 1 ? ' thing' : ' things') + ' waiting' : 'nothing waiting') + '</span></div>'
+      + (rows.length ? '<div class="dash-att">' + rows.map(function (r) { return '<div class="dash-att-r' + (r.tone ? ' ' + r.tone : '') + '" onclick="bpNav(\'' + r.go + '\')"><span class="ms">' + r.ico + '</span><span>' + r.t + '</span><span class="ms go">chevron_right</span></div>'; }).join('') + '</div>'
+        : '<div class="dash-empty">Nothing is waiting on you. Bills matched, orders sent, contracts signed.</div>') + '</div>';
+  }
+
+  /* ---------- this week: crews and appointments, day by day ---------- */
+  function week() {
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [];
+    var days = [], now = new Date();
+    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), lbl: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' }), num: d.getDate(), crews: [], appts: [] }); }
+    jobs.forEach(function (j) { if (j.status !== 'active' || !j.sched) return; (j.sched.dates || []).forEach(function (iso) { var day = days.filter(function (x) { return x.iso === iso; })[0]; if (day) day.crews.push(j); }); });
+    (D.events || []).forEach(function (a) { var iso = String(a.start || '').slice(0, 10); var day = days.filter(function (x) { return x.iso === iso; })[0]; if (day) day.appts.push(a); });
+    var busy = days.some(function (d) { return d.crews.length || d.appts.length; });
+    var strip = '<div class="dash-week">' + days.map(function (d) {
+      var n = d.crews.length + d.appts.length;
+      return '<div class="dash-day' + (n ? ' on' : '') + (d.lbl === 'Today' ? ' today' : '') + '" title="' + esc(d.crews.map(function (j) { return j.name; }).concat(d.appts.map(function (a) { return a.name; })).join(', ')) + '"><small>' + d.lbl + '</small><b>' + d.num + '</b>'
+        + '<span>' + (d.crews.length ? '<i class="c">' + d.crews.length + '</i>' : '') + (d.appts.length ? '<i class="a">' + d.appts.length + '</i>' : '') + '</span></div>';
+    }).join('') + '</div>';
+    var today = days[0], rows = [];
+    today.crews.forEach(function (j) { rows.push({ t: j.sched.time ? esc(j.sched.time) : 'All day', w: esc(j.name) + (j.title ? ', ' + esc(j.title) : ''), s: 'Crew on site', go: 'activejobs' }); });
+    today.appts.slice(0, 4).forEach(function (a) { rows.push({ t: esc(a.time || ''), w: esc(a.name || 'Appointment'), s: esc(a.what || 'Inspection'), go: 'calendar' }); });
+    return '<div class="bpx-panel"><div class="bpx-ptitle">This week<span class="lg2"><i class="dash-key c"></i>crews <i class="dash-key a"></i>appointments</span></div>' + strip
+      + (rows.length ? '<div class="dash-today">' + rows.map(function (r) { return '<div class="dash-ev" onclick="bpNav(\'' + r.go + '\')"><b>' + r.t + '</b><div><span>' + r.w + '</span><small>' + r.s + '</small></div></div>'; }).join('') + '</div>'
+        : '<div class="dash-empty" style="padding-top:10px">' + (busy ? 'Nothing on today.' : 'Nothing booked this week. Schedule days on a project, or share your booking link.') + '</div>') + '</div>';
+  }
+
+  /* ---------- recent: what happened, newest first, from timestamps we already keep ---------- */
+  function activity() {
+    var ev = [], jobs = (window.bpJobsGet && bpJobsGet()) || [];
+    var add = function (t, txt, go) { if (t && !isNaN(t)) ev.push({ t: t, txt: txt, go: go }); };
+    ((window.SP && SP.pos) || []).forEach(function (p) {
+      var sup = window.SP && SP.supById && SP.supById(p.supplier_id);
+      add(Date.parse(p.reconciled_at), 'Bill from ' + esc(sup ? sup.name : 'a supplier') + ' matched to ' + esc(p.job_name || 'the account') + ', ' + money(p.invoice_total || p.total), 'supplyorders');
+      add(Date.parse(p.sent_at), 'Ordered ' + money(p.total) + ' of materials from ' + esc(sup ? sup.name : 'a supplier') + (p.job_name ? ' for ' + esc(p.job_name) : ''), 'supplyorders');
+    });
+    (D.contracts || []).forEach(function (c) {
+      add(Date.parse(c.signed_at), esc(c.customer_name || c.title) + ' signed the contract' + (c.amount ? ', ' + money(c.amount) : ''), 'activejobs');
+      add(Date.parse(c.sent_at), 'Contract sent to ' + esc(c.customer_name || c.title), 'activejobs');
+    });
+    jobs.forEach(function (j) {
+      add(+j.doneAt, esc(j.name) + ' marked done' + (j.collected != null ? ', ' + money(j.collected) + ' collected' : ''), 'finances');
+      add(+j.wonAt, esc(j.name) + ' won' + (j.estimate ? ', ' + money(j.estimate) : ''), 'activejobs');
+    });
+    ev.sort(function (a, b) { return b.t - a.t; });
+    ev = ev.slice(0, 7);
+    var ago = function (t) { var m = Math.round((Date.now() - t) / 60000); if (m < 60) return m + 'm'; var h = Math.round(m / 60); if (h < 24) return h + 'h'; var d = Math.round(h / 24); return d + 'd'; };
+    return '<div class="bpx-panel"><div class="bpx-ptitle">Recent<span class="lg2">newest first</span></div>'
+      + (ev.length ? '<div class="dash-act">' + ev.map(function (e) { return '<div class="dash-act-r" onclick="bpNav(\'' + e.go + '\')"><small>' + ago(e.t) + '</small><span>' + e.txt + '</span></div>'; }).join('') + '</div>'
+        : '<div class="dash-empty">As you order materials, send contracts and finish jobs, they show here.</div>') + '</div>';
+  }
+
   /* ---------- the page ---------- */
   window.bpDashboard = function () {
     var el = $('bpxViewArea'); if (!el) return;
@@ -150,7 +218,10 @@
     el.innerHTML = (live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
       + (crew ? '' : checklist())
       + (crew ? '' : numbers())
-      + (crew ? '<div style="margin-top:16px">' + today() + '</div>' : '<div class="dash-two">' + moneyChart() + today() + '</div>')
+      + (crew
+        ? '<div style="margin-top:16px">' + week() + '</div>'
+        : '<div class="dash-two even">' + attention() + week() + '</div>'
+          + '<div class="dash-two">' + moneyChart() + activity() + '</div>')
       + '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Projects in motion<span class="lg2">tap one to open it</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading</div></div>'
       + (crew ? '' : '<div style="margin-top:16px">' + jobsChart() + '</div>')
       + (D.leads ? '<div class="bpx-stats dash-nums" style="margin-top:16px"><div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">' + D.leads.n + '</div><div class="note">from your website and phone line</div></div><div class="bpx-stat"><div class="lbl">Appointments this month</div><div class="val">' + D.leads.a + '</div><div class="note">booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page</div></div></div>' : '');
@@ -168,11 +239,13 @@
     if (D.brain === undefined) jobs.push(window.bpAuthApi(window.AI_BRAIN_URL, { op: 'get' }).then(function (r) { D.brain = (r && r.ok && r.brain) || null; }).catch(function () { D.brain = null; }));
     if (D.calc === undefined) jobs.push(BP_SB.from('calculator_pricing').select('calc_id').limit(1).then(function (r) { D.calc = !!(r && r.data && r.data.length); }).catch(function () { D.calc = false; }));
     if (window.SP && !SP.loaded && SP.load) jobs.push(SP.load().catch(function () {}));
-    if (D.appts === undefined && window.GHL_CAL_URL) jobs.push(window.bpApi(window.GHL_CAL_URL, { action: 'list', cal: 'inspection' }).then(function (d) {
-      var iso = new Date().toISOString().slice(0, 10);
-      D.appts = ((d && (d.appointments || d.events)) || []).filter(function (a) { return String(a.start || a.startTime || a.date || '').slice(0, 10) === iso; })
-        .map(function (a) { var t = a.start || a.startTime; return { time: t ? new Date(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '', name: a.contact || a.contactName || a.title || a.name || 'Appointment', what: a.title || a.calendar || 'Inspection' }; });
-    }).catch(function () { D.appts = null; }));
+    if (D.events === undefined && window.GHL_CAL_URL) jobs.push(window.bpApi(window.GHL_CAL_URL, { action: 'list', cal: 'inspection' }).then(function (d) {
+      D.events = ((d && (d.appointments || d.events)) || []).map(function (a) { var t = a.start || a.startTime; return { start: t ? new Date(t).toISOString() : '', time: t ? new Date(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '', name: a.contact || a.contactName || a.title || a.name || 'Appointment', what: a.title || a.calendar || 'Inspection' }; });
+      D.appts = D.events;
+    }).catch(function () { D.events = null; D.appts = null; }));
+    if (D.contracts === undefined) jobs.push(BP_SB.from('contracts').select('id,title,customer_name,status,amount,sent_at,signed_at').order('created_at', { ascending: false }).limit(30).then(function (r) { D.contracts = (r && r.data) || []; }).catch(function () { D.contracts = []; }));
+    if (D.unread === undefined) jobs.push(BP_SB.from('conversations').select('unread').gt('unread', 0).limit(200).then(function (r) { D.unread = ((r && r.data) || []).reduce(function (t, c) { return t + (+c.unread || 0); }, 0); }).catch(function () { D.unread = 0; }));
+    if (D.deals === undefined && window.GHL_OPP_URL) jobs.push(window.bpApi(window.GHL_OPP_URL, { action: 'list' }).then(function (d) { var o = (d && d.opportunities) || []; D.deals = { n: o.length, v: o.reduce(function (t, x) { return t + (+x.value || 0); }, 0) }; }).catch(function () { D.deals = null; }));
     if (D.leads === undefined && window.GHL_DASH_URL) jobs.push(window.bpApi(window.GHL_DASH_URL, {}).then(function (d) {
       D.leads = (d && d.newLeadsMonth != null) ? { n: Number(d.newLeadsMonth).toLocaleString(), a: d.appointmentsBookedMonth != null ? Number(d.appointmentsBookedMonth).toLocaleString() : '&middot;' } : null;
     }).catch(function () { D.leads = null; }));
