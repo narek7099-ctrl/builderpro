@@ -242,6 +242,18 @@
     return 'https://www.google.com/maps/search/' + encodeURIComponent(d.name + (where ? ' near ' + where : ''));
   }
   function homeUrl(d) { var u = String(d.locator || ''); return /google\.com\/search/.test(u) ? u : u.replace(/^(https?:\/\/[^\/]+).*$/, '$1'); }
+  /* A chain's own locator, with the zip already in it. Only set from a URL
+     seen working in a real browser, never guessed: {zip} is replaced. With
+     no verified URL the button falls back to a map search, which never 404s. */
+  var FIND = {
+    /* abc: 'https://www.abcsupply.com/...?zip={zip}',   <- paste the real one here */
+  };
+  function findUrl(d) {
+    var t = FIND[d.id], zip = myZip();
+    if (t && zip) return t.replace('{zip}', encodeURIComponent(zip));
+    if (t) return t.replace(/[?&][^?&]*\{zip\}[^?&]*/, '').replace(/\{zip\}/, '');
+    return mapUrl(d);
+  }
   function dirCard(d, added) {
     return '<div class="sp-dir-c' + (added ? ' added' : '') + '">'
       + '<div class="sp-dir-t"><b>' + esc(d.name) + '</b>'
@@ -255,7 +267,7 @@
           ? '<button class="bpx-rowbtn" onclick="SP.dirGo(\'' + d.id + '\')">Open their site</button>'
           : '<button class="bpx-rowbtn primary" onclick="SP.dirAdd(\'' + d.id + '\')">Add to my suppliers</button>')
         + '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(homeUrl(d)) + '">Their website</a>'
-        + (d.type === 'branch' ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(mapUrl(d)) + '">Branches near me</a>' : '')
+        + (d.type === 'branch' ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(findUrl(d)) + '">Branches near me</a>' : '')
       + '</div></div>';
   }
   function myZip() {
