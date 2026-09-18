@@ -59,6 +59,82 @@
   }
   D.hide = function () { try { localStorage.setItem('bpSetupHidden', '1'); } catch (e) {} window.bpDashboard(); };
 
+  /* ---------- hero: one band, so the page opens with a statement ---------- */
+  function hero(crew) {
+    var co = ((window.bpSettingsGet && bpSettingsGet().company) || {});
+    var h = new Date().getHours();
+    var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [];
+    var act = jobs.filter(function (j) { return j.status === 'active'; });
+    var iso = new Date().toISOString().slice(0, 10);
+    var onSite = act.filter(function (j) { return j.sched && (j.sched.dates || []).indexOf(iso) >= 0; }).length;
+    var appts = (D.events || []).filter(function (e) { return String(e.start || '').slice(0, 10) === iso; }).length;
+    var bits = [];
+    if (onSite) bits.push(onSite === 1 ? 'one crew out' : onSite + ' crews out');
+    if (appts) bits.push(appts === 1 ? 'one appointment' : appts + ' appointments');
+    var line = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + (bits.length ? ' · ' + bits.join(' · ') : '');
+    var fin; try { fin = bpFinData(); } catch (e) { fin = { inc: [], exp: [] }; }
+    var mk = monthKey(Date.now());
+    var inM = fin.inc.filter(function (x) { return x.when && monthKey(x.when) === mk; }).reduce(function (t, x) { return t + x.amt; }, 0);
+    var outM = fin.exp.filter(function (x) { return x.when && monthKey(x.when) === mk; }).reduce(function (t, x) { return t + x.amt; }, 0);
+    var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
+    var inMotion = act.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
+    var pos = (window.SP && SP.pos) || [];
+    var waiting = pos.filter(function (p) { return (p.status === 'sent' && !p.sent_to_supplier) || p.status === 'invoiced'; }).length;
+    var k = function (lbl, val, sub, go, tone) {
+      return '<div class="hero-k' + (go ? ' go' : '') + (tone ? ' ' + tone : '') + '"' + (go ? ' onclick="bpNav(\'' + go + '\')"' : '') + '><span class="hero-k-l">' + lbl + '</span><span class="hero-k-v">' + val + '</span><span class="hero-k-s">' + sub + '</span></div>';
+    };
+    var nums = crew
+      ? k('On site today', String(onSite), onSite ? 'tap to open the job' : 'nothing scheduled', 'activejobs')
+        + k('Appointments', String(appts), 'today', 'calendar')
+        + k('Projects running', String(act.length), 'across the business', 'activejobs')
+      : k('In motion', String(act.length), money(inMotion) + ' of work', 'activejobs')
+        + k('Owed to you', money(owed), owed ? 'on active projects' : 'all collected', 'finances')
+        + k('This month', money(inM - outM), money(inM) + ' in · ' + money(outM) + ' out', 'finances', inM - outM < 0 ? 'neg' : 'pos')
+        + k('Materials', String(waiting), waiting ? 'waiting on you' : 'nothing waiting', 'supplyorders', waiting ? 'warn' : '');
+    return '<div class="dash-hero">'
+      + '<div class="hero-top"><div><div class="hero-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div><div class="hero-line">' + esc(line) + '</div></div>'
+      + '<button class="hero-cta" onclick="bpNav(\'supply\')"><span class="ms">add</span>Order materials</button></div>'
+      + '<div class="hero-ks">' + nums + '</div></div>';
+  }
+
+  /* ---------- projects: the photos, big, right under the hero ---------- */
+  function projects(crew) {
+    var jobs = ((window.bpJobsGet && bpJobsGet()) || []).filter(function (j) { return j.status === 'active'; });
+    if (!jobs.length) {
+      return '<div class="bpx-panel dash-projs-empty"><img src="assets/roofing/roof-underlayment-sm.jpg" alt="" loading="lazy">'
+        + '<div><b>No projects running</b><span class="bpx-mut">Win a deal in Close Deals, or add one straight away. Photos, the schedule and the costs all live on the project.</span>'
+        + '<button class="bpx-btn ghost sp-inline" onclick="bpNav(\'activejobs\')">Open Active Projects</button></div></div>';
+    }
+    var iso = new Date().toISOString().slice(0, 10);
+    /* The row always fills: as many columns as there are cards, up to four.
+       One or two get a wide layout with the photo beside the detail, three
+       or four get photo cards. No empty columns either way. */
+    var shown = jobs.slice(0, 4), split = shown.length <= 2;
+    var cards = shown.map(function (j) {
+      var img = (j.photos && j.photos[0]) || (window.bpStockImg ? bpStockImg(j.id) : 'assets/roofing/roof-completed.jpg');
+      var est = +j.estimate || 0, paid = +j.collected || 0;
+      var pct = est > 0 ? Math.min(100, Math.round(paid / est * 100)) : 0;
+      var today = j.sched && (j.sched.dates || []).indexOf(iso) >= 0;
+      var nDays = (j.sched && (j.sched.dates || []).length) || 0;
+      var meta = [];
+      if (today) meta.push('<b class="pj-live"><i></i>Crew on site today</b>');
+      else if (nDays) meta.push(nDays + (nDays === 1 ? ' day booked' : ' days booked'));
+      if (j.photos && j.photos.length) meta.push(j.photos.length + (j.photos.length === 1 ? ' photo' : ' photos'));
+      else meta.push('no photos yet');
+      return '<article class="pj-card" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
+        + '<div class="pj-img"><img src="' + esc(img) + '" alt="" loading="lazy">' + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
+        + '<div class="pj-body"><div class="pj-h"><b>' + esc(j.name) + '</b>' + (crew ? '' : '<span class="pj-amt">' + money(est) + '</span>') + '</div>'
+        + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
+        + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'
+          + '<div class="pj-pay">' + (est > 0 ? pct + '% paid · ' + money(Math.max(est - paid, 0)) + ' due' : 'no amount set') + '</div>')
+        + '<div class="pj-meta">' + meta.join(' · ') + '</div></div></article>';
+    }).join('');
+    return '<div class="dash-projs"><div class="dash-sec"><h3>Projects in motion</h3><button class="bpx-linkbtn" onclick="bpNav(\'activejobs\')">'
+      + (jobs.length > shown.length ? 'All ' + jobs.length + ' projects' : 'All projects') + '</button></div>'
+      + '<div class="pj-row' + (split ? ' split' : '') + '" style="grid-template-columns:repeat(' + shown.length + ',minmax(0,1fr))">' + cards + '</div></div>';
+  }
+
   /* ---------- the four numbers ---------- */
   function monthKey(t) { var d = new Date(t); return d.getFullYear() + '-' + d.getMonth(); }
   function numbers() {
@@ -220,15 +296,14 @@
     var el = $('bpxViewArea'); if (!el) return;
     var crew = !!(window.bpTeamIsCrew && bpTeamIsCrew());
     el.innerHTML = (live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
+      + hero(crew)
       + (crew ? '' : checklist())
-      + (crew ? '' : numbers())
+      + projects(crew)
       + (crew
         ? '<div style="margin-top:16px">' + week() + '</div>'
-        : '<div class="dash-two">' + attention() + week() + moneyChart() + activity() + '</div>')
-      + '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Projects in motion<span class="lg2">tap one to open it</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading</div></div>'
-      + (crew ? '' : '<div style="margin-top:16px">' + jobsChart() + '</div>')
-      + (D.leads ? '<div class="bpx-stats dash-nums" style="margin-top:16px"><div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">' + D.leads.n + '</div><div class="note">from your website and phone line</div></div><div class="bpx-stat"><div class="lbl">Appointments this month</div><div class="val">' + D.leads.a + '</div><div class="note">booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page</div></div></div>' : '');
-    if (window.bpDashProjects) bpDashProjects();
+        : '<div class="dash-two">' + attention() + week() + moneyChart() + activity() + '</div>'
+          + '<div style="margin-top:16px">' + jobsChart() + '</div>'
+          + (D.leads ? '<div class="bpx-stats dash-nums" style="margin-top:16px"><div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">' + D.leads.n + '</div><div class="note">from your website and phone line</div></div><div class="bpx-stat"><div class="lbl">Appointments this month</div><div class="val">' + D.leads.a + '</div><div class="note">booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page</div></div></div>' : ''));
     fetchState();
   };
 
