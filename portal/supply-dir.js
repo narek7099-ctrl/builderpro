@@ -70,7 +70,7 @@
     D({ id: 'ced', name: 'CED (Consolidated Electrical)', kind: 'ced', type: 'branch', trades: ['electrical'],
       carries: 'Wire, conduit, breakers, panels, fixtures, gear',
       note: 'Independent profit centers, so the counter has real authority to price a job.',
-      locator: 'https://www.cednational.com/locations', delivery: true, drive: 22 }),
+      locator: 'https://www.google.com/search?q=Consolidated+Electrical+Distributors+CED+locations', delivery: true, drive: 22 }),
     D({ id: 'graybar', name: 'Graybar', kind: 'custom', type: 'branch', trades: ['electrical'],
       carries: 'Wire and cable, gear, lighting, datacomm',
       note: 'Better on commercial gear and lighting packages than on small residential runs.',
@@ -233,14 +233,15 @@
     el.innerHTML = group('Drive there', 'branch networks, pick up the same day', near)
       + group('Ships to you', 'no counter line, no account needed', web);
   };
-  /* Vendor locator paths change without notice and 404. A map search for
-     the chain near the zip never does, and it shows hours and a phone. The
-     site link is the bare domain, which is the one URL a company keeps. */
-  function branchUrl(d) {
+  /* Vendor locator paths change without notice and 404, and none can be
+     checked from here. The homepage is the one URL a company keeps, so the
+     site button goes there and the contractor taps their own Locations link.
+     A map search is the second link, because it shows which branch is near. */
+  function mapUrl(d) {
     var where = myZip() || ((window.bpSettingsGet && (window.bpSettingsGet().company || {}).address) || '');
     return 'https://www.google.com/maps/search/' + encodeURIComponent(d.name + (where ? ' near ' + where : ''));
   }
-  function homeUrl(d) { return String(d.locator || '').replace(/^(https?:\/\/[^\/]+).*$/, '$1'); }
+  function homeUrl(d) { var u = String(d.locator || ''); return /google\.com\/search/.test(u) ? u : u.replace(/^(https?:\/\/[^\/]+).*$/, '$1'); }
   function dirCard(d, added) {
     return '<div class="sp-dir-c' + (added ? ' added' : '') + '">'
       + '<div class="sp-dir-t"><b>' + esc(d.name) + '</b>'
@@ -253,9 +254,8 @@
         + (added
           ? '<button class="bpx-rowbtn" onclick="SP.dirGo(\'' + d.id + '\')">Open their site</button>'
           : '<button class="bpx-rowbtn primary" onclick="SP.dirAdd(\'' + d.id + '\')">Add to my suppliers</button>')
-        + (d.type === 'branch'
-          ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(branchUrl(d)) + '">Find your branch</a>'
-          : '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(homeUrl(d)) + '">Open their site</a>')
+        + '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(homeUrl(d)) + '">Their website</a>'
+        + (d.type === 'branch' ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(mapUrl(d)) + '">Branches near me</a>' : '')
       + '</div></div>';
   }
   function myZip() {
