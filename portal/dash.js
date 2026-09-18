@@ -164,35 +164,55 @@
     var fin; try { fin = bpFinData(); } catch (e) { return ''; }
     var now = new Date(), keys = [], labels = [];
     for (var i = 5; i >= 0; i--) { var dt = new Date(now.getFullYear(), now.getMonth() - i, 1); keys.push(dt.getFullYear() + '-' + dt.getMonth()); labels.push(dt.toLocaleDateString('en-US', { month: 'short' })); }
-    var inM = {}, outM = {};
+    var inM = {}, outM = {}, cat = {};
     fin.inc.forEach(function (x) { if (x.when) { var k = monthKey(x.when); inM[k] = (inM[k] || 0) + x.amt; } });
-    fin.exp.forEach(function (x) { if (x.when) { var k = monthKey(x.when); outM[k] = (outM[k] || 0) + x.amt; } });
+    fin.exp.forEach(function (x) {
+      if (!x.when) return; var k = monthKey(x.when); outM[k] = (outM[k] || 0) + x.amt;
+      if (keys.indexOf(k) >= 0) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; }
+    });
     var iv = keys.map(function (k) { return inM[k] || 0; }), ov = keys.map(function (k) { return outM[k] || 0; });
-    var has = iv.some(Boolean) || ov.some(Boolean);
-    if (!has) return '<div class="bpx-panel"><div class="bpx-ptitle">Money in and out<span class="lg2">last 6 months</span></div><div class="dash-empty">Nothing logged yet. Collect on a job, or photograph a supply bill, and it lands here.</div></div>';
-    /* The svg scales its text with the viewBox, so an 11px label inside a
-       620-wide box renders at about 6px on a phone. A narrower box on a
-       narrow screen keeps the labels the size they were drawn at. */
+    var live = keys.filter(function (k, n) { return iv[n] > 0 || ov[n] > 0; }).length;
+    var totalIn = iv.reduce(function (t, v) { return t + v; }, 0), totalOut = ov.reduce(function (t, v) { return t + v; }, 0);
+    if (!live) return '<div class="bpx-panel"><div class="bpx-ptitle">Money in and out<span class="lg2">last 6 months</span></div><div class="dash-empty">Nothing logged yet. Collect on a job, or photograph a supply bill, and it lands here.</div></div>';
+
+    /* One or two months of history makes a six-column time series mostly
+       empty air. Until there is a trend to draw, show where the money
+       actually went, which is full from the first week. */
+    if (live < 3) {
+      var rows = Object.keys(cat).sort(function (a, b) { return cat[b] - cat[a]; });
+      var max = Math.max.apply(null, [totalIn].concat(rows.map(function (c) { return cat[c]; })).concat([1]));
+      var COL = { 'Materials': '#2f6bff', 'Labor / crew': '#eb6834', 'Subcontractor': '#7c3aed', 'Ads': '#0f7a3d', 'Fuel': '#6a6a70', 'Tools': '#0d9488', 'Permits': '#db2777', 'Overhead': '#b45309', 'Other': '#9a9aa0' };
+      var bar = function (label, val, colour, strong) {
+        return '<div class="mc-row' + (strong ? ' strong' : '') + '"><span class="mc-l">' + esc(label) + '</span>'
+          + '<span class="mc-b"><i style="width:' + Math.max(2, Math.round(val / max * 100)) + '%;background:' + colour + '"></i></span>'
+          + '<span class="mc-v">' + money(val) + '</span></div>';
+      };
+      return '<div class="bpx-panel"><div class="bpx-ptitle">Where the money went<span class="lg2">' + (totalIn - totalOut >= 0 ? money(totalIn - totalOut) + ' kept so far' : money(totalOut - totalIn) + ' down so far') + '</span></div>'
+        + '<div class="mc-wrap">' + bar('Money in', totalIn, 'var(--dash-in)', true)
+        + (rows.length ? rows.map(function (c) { return bar(c, cat[c], COL[c] || '#9a9aa0'); }).join('') : '<div class="mc-none">Nothing spent yet.</div>')
+        + '</div>'
+        + '<div class="mc-foot">A month or two more and this becomes your income against your costs, month by month.</div></div>';
+    }
+
     var narrow = (window.innerWidth || 1200) < 760;
-    var W = narrow ? 380 : 620, H = narrow ? 188 : 200, padL = 8, padR = 8, top = 22, base = H - 26, max = Math.max.apply(null, iv.concat(ov).concat([1]));
+    var W = narrow ? 380 : 620, H = narrow ? 188 : 200, padL = 8, padR = 8, top = 22, base = H - 26, max2 = Math.max.apply(null, iv.concat(ov).concat([1]));
     var gw = (W - padL - padR) / 6, bw = Math.min(26, gw * 0.34), gap = 2;
-    var y = function (v) { return base - (v / max) * (base - top); };
+    var y = function (v) { return base - (v / max2) * (base - top); };
     var svg = '';
     for (var g = 1; g <= 3; g++) { var gy = top + (base - top) * g / 4; svg += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" class="dash-grid"/>'; }
     svg += '<line x1="' + padL + '" y1="' + base + '" x2="' + (W - padR) + '" y2="' + base + '" class="dash-axis"/>';
-    var bar = function (x, v, cls, title) { var h = Math.max(0, base - y(v)); if (!v) return ''; return '<path class="' + cls + '" d="M' + x + ' ' + base + ' v-' + Math.max(0, h - 4) + ' a4 4 0 0 1 4 -4 h' + (bw - 8) + ' a4 4 0 0 1 4 4 v' + Math.max(0, h - 4) + ' z"><title>' + title + '</title></path>'; };
+    var bar2 = function (x, v, cls, title) { var h = Math.max(0, base - y(v)); if (!v) return ''; return '<path class="' + cls + '" d="M' + x + ' ' + base + ' v-' + Math.max(0, h - 4) + ' a4 4 0 0 1 4 -4 h' + (bw - 8) + ' a4 4 0 0 1 4 4 v' + Math.max(0, h - 4) + ' z"><title>' + title + '</title></path>'; };
     for (var m = 0; m < 6; m++) {
       var cx = padL + gw * m + gw / 2;
-      svg += bar(cx - bw - gap / 2, iv[m], 'dash-in', labels[m] + ' in: ' + money(iv[m]));
-      svg += bar(cx + gap / 2, ov[m], 'dash-out', labels[m] + ' out: ' + money(ov[m]));
-      /* direct label on the latest month only */
+      svg += bar2(cx - bw - gap / 2, iv[m], 'dash-in', labels[m] + ' in: ' + money(iv[m]));
+      svg += bar2(cx + gap / 2, ov[m], 'dash-out', labels[m] + ' out: ' + money(ov[m]));
       if (m === 5) {
         if (iv[m]) svg += '<text x="' + (cx - gap / 2 - bw / 2) + '" y="' + (y(iv[m]) - 6) + '" class="dash-lbl" text-anchor="middle">' + money(iv[m]) + '</text>';
         if (ov[m]) svg += '<text x="' + (cx + gap / 2 + bw / 2) + '" y="' + (y(ov[m]) - 6) + '" class="dash-lbl" text-anchor="middle">' + money(ov[m]) + '</text>';
       }
       svg += '<text x="' + cx + '" y="' + (H - 8) + '" class="dash-ax" text-anchor="middle">' + labels[m] + '</text>';
     }
-    var net = iv.reduce(function (t, v) { return t + v; }, 0) - ov.reduce(function (t, v) { return t + v; }, 0);
+    var net = totalIn - totalOut;
     return '<div class="bpx-panel"><div class="bpx-ptitle">Money in and out<span class="lg2">last 6 months &middot; ' + (net >= 0 ? money(net) + ' kept' : money(-net) + ' down') + '</span></div>'
       + '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" class="dash-chart" role="img" aria-label="Money in and out by month">' + svg + '</svg>'
       + '<div class="dash-legend"><span><i class="dash-in"></i>In</span><span><i class="dash-out"></i>Out</span></div></div>';
@@ -291,6 +311,25 @@
         : '<div class="dash-empty">As you order materials, send contracts and finish jobs, they show here.</div>') + '</div>';
   }
 
+  /* ---------- the foot: four figures about the business, not the day ---------- */
+  function footStats() {
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [], mk = monthKey(Date.now());
+    var wonM = jobs.filter(function (j) { return j.wonAt && monthKey(+j.wonAt) === mk; });
+    var wonVal = wonM.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
+    var doneM = jobs.filter(function (j) { return j.doneAt && monthKey(+j.doneAt) === mk; });
+    var doneVal = doneM.reduce(function (t, j) { return t + (+j.collected || 0); }, 0);
+    var sized = jobs.filter(function (j) { return (+j.estimate || 0) > 0; });
+    var avg = sized.length ? sized.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0) / sized.length : 0;
+    var t = function (l, v, note, go) { return '<div class="bpx-stat dash-tile' + (go ? ' go' : '') + '"' + (go ? ' onclick="bpNav(\'' + go + '\')"' : '') + '><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="note">' + note + '</div></div>'; };
+    return '<div class="bpx-stats dash-nums" style="margin-top:16px">'
+      + t('New leads this month', D.leads ? D.leads.n : '&middot;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', D.leads ? 'contacts' : 'marketing')
+      + t('Appointments this month', D.leads ? D.leads.a : '&middot;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page' : 'your booking page feeds this', 'calendar')
+      + t('Won this month', String(wonM.length), wonM.length ? money(wonVal) + ' of work' : 'nothing marked won yet', 'activejobs')
+      + t('Average job', avg ? money(avg) : '&middot;', sized.length ? 'across ' + sized.length + (sized.length === 1 ? ' priced job' : ' priced jobs') : 'put a price on a job to see this', 'activejobs')
+      + '</div>'
+      + (doneM.length ? '<div class="dash-foot-note">' + doneM.length + (doneM.length === 1 ? ' project' : ' projects') + ' finished this month, ' + money(doneVal) + ' collected.</div>' : '');
+  }
+
   /* ---------- the page ---------- */
   window.bpDashboard = function () {
     var el = $('bpxViewArea'); if (!el) return;
@@ -303,7 +342,7 @@
         ? '<div style="margin-top:16px">' + week() + '</div>'
         : '<div class="dash-two">' + attention() + week() + moneyChart() + activity() + '</div>'
           + '<div style="margin-top:16px">' + jobsChart() + '</div>'
-          + (D.leads ? '<div class="bpx-stats dash-nums" style="margin-top:16px"><div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">' + D.leads.n + '</div><div class="note">from your website and phone line</div></div><div class="bpx-stat"><div class="lbl">Appointments this month</div><div class="val">' + D.leads.a + '</div><div class="note">booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page</div></div></div>' : ''));
+          + footStats());
     fetchState();
   };
 
