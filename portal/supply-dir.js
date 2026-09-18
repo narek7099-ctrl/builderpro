@@ -233,8 +233,15 @@
     el.innerHTML = group('Drive there', 'branch networks, pick up the same day', near)
       + group('Ships to you', 'no counter line, no account needed', web);
   };
+  /* Vendor locator paths change without notice and 404. A map search for
+     the chain near the zip never does, and it shows hours and a phone. The
+     site link is the bare domain, which is the one URL a company keeps. */
+  function branchUrl(d) {
+    var where = myZip() || ((window.bpSettingsGet && (window.bpSettingsGet().company || {}).address) || '');
+    return 'https://www.google.com/maps/search/' + encodeURIComponent(d.name + (where ? ' near ' + where : ''));
+  }
+  function homeUrl(d) { return String(d.locator || '').replace(/^(https?:\/\/[^\/]+).*$/, '$1'); }
   function dirCard(d, added) {
-    var zip = encodeURIComponent(myZip());
     return '<div class="sp-dir-c' + (added ? ' added' : '') + '">'
       + '<div class="sp-dir-t"><b>' + esc(d.name) + '</b>'
         + (d.region ? '<span class="bpx-badge warn">' + esc(d.region) + '</span>' : '')
@@ -246,8 +253,9 @@
         + (added
           ? '<button class="bpx-rowbtn" onclick="SP.dirGo(\'' + d.id + '\')">Open their site</button>'
           : '<button class="bpx-rowbtn primary" onclick="SP.dirAdd(\'' + d.id + '\')">Add to my suppliers</button>')
-        + '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(d.locator) + (d.type === 'branch' && zip ? (d.locator.indexOf('?') >= 0 ? '&' : '?') + 'q=' + zip : '') + '">'
-        + (d.type === 'branch' ? 'Find your branch' : 'Open their site') + '</a>'
+        + (d.type === 'branch'
+          ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(branchUrl(d)) + '">Find your branch</a>'
+          : '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(homeUrl(d)) + '">Open their site</a>')
       + '</div></div>';
   }
   function myZip() {
@@ -258,7 +266,7 @@
   }
   SP.dirGo = function (id) {
     var d = DIR.filter(function (x) { return x.id === id; })[0];
-    if (d) window.open(d.locator, '_blank', 'noopener');
+    if (d) window.open(homeUrl(d), '_blank', 'noopener');
   };
   SP.dirManual = function () { SP.dirPrefill = null; window.bpCloseModal(); SP.supOpen(); };
 
