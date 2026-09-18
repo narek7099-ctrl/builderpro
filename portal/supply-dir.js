@@ -246,7 +246,31 @@
      seen working in a real browser, never guessed: {zip} is replaced. With
      no verified URL the button falls back to a map search, which never 404s. */
   var FIND = {
-    /* abc: 'https://www.abcsupply.com/...?zip={zip}',   <- paste the real one here */
+    /* each one confirmed as the chain's indexed locator page, Sep 2026.
+       Most locators take the zip in the form, not the URL, so only the ones
+       known to read it from the address carry {zip}. */
+    abc: 'https://www.abcsupply.com/locations/',
+    srs: 'https://www.srsdistribution.com/en/markets/find-a-branch/',
+    beacon: 'https://locations.becn.com/',
+    carter: 'https://www.carterlumber.com/locations',
+    ferguson: 'https://www.ferguson.com/searchBranch',
+    winsupply: 'https://www.winsupplyinc.com/location-finder',
+    johnstone: 'https://www.johnstonesupply.com/',
+    graybar: 'https://www.graybar.com/store-finder?q={zip}',
+    sherwin: 'https://www.sherwin-williams.com/store-locator',
+    benmoore: 'https://www.benjaminmoore.com/en-us/store-locator',
+    siteone: 'https://www.siteone.com/en/store-finder',
+    whitecap: 'https://www.whitecap.com/locationfinder',
+    lw: 'https://lwsupply.com/locations/',
+    fbm: 'https://www.fbmsales.com/location/',
+    bfs: 'https://www.bldr.com/location-finder',
+    e84: 'https://www.84lumber.com/store-locator/',
+    fastenal: 'https://www.fastenal.com/locations',
+    homedepot_pro: 'https://www.homedepot.com/l/store-locator',
+    lowes_pro: 'https://www.lowes.com/store/',
+    menards: 'https://www.menards.com/store-details/locator.html',
+    /* CED is run as regional companies with no national locator; a search is the honest link */
+    ced: 'https://www.google.com/search?q=CED+Consolidated+Electrical+Distributors+locations+near+{zip}',
   };
   function findUrl(d) {
     var t = FIND[d.id], zip = myZip();
