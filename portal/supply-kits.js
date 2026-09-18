@@ -163,6 +163,7 @@
     return Math.max(1, q);
   }
   SP.kitQty = qtyFor;
+  SP.kitsAll = allKits;
 
   /* built-ins for this trade, plus anything the contractor saved */
   function allKits() {
