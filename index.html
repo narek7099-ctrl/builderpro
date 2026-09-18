@@ -15082,7 +15082,8 @@ var _bpContacts=[];
     var k=_bpCalKind, all=k==='all', insp=k==='inspection', jobs=k==='jobs';
     var tab=function(id,ico,label){ return '<button class="bpx-jt'+(k===id?' on':'')+'" onclick="bpCalKind(\''+id+'\')"><span class=ms>'+ico+'</span> '+label+'</button>'; };
     q('bpxViewArea').innerHTML=
-      '<div class="cal-top"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
+      '<div class="cal-top"><div class="cal-left"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
+      +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
       +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
         +(all?'<button class="bpx-btn ghost cal-today" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>roofing</span> Book inspection</button><button class="bpx-btn" onclick="bpNoteOpen()"><span class=ms>add</span> Add note or to-do</button>'
@@ -15090,7 +15091,9 @@ var _bpContacts=[];
       +'</div></div>'
       +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs &amp; project days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">Tap any day to see it or add to it</span></div>':'')
       +'<div class="cal-layout">'
-      +'<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>'
+      +(_bpCalView==='day'
+        ? '<div class="bpx-panel cal-panel"><div id="bpx-dayview" class="cd-wrap"></div></div>'
+        : '<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>')
       +'<div class="cal-side">'
       +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
       +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge"></span></div><div id="bpx-todos"></div></div>':'')
@@ -15099,6 +15102,130 @@ var _bpContacts=[];
     bpLoadCalendar();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
     if(all){ bpNotesLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
+  }
+
+
+/* ==== Day view: one day, hour by hour =============================
+   The month grid answers "what is this month like". It cannot answer
+   "what is Thursday like", which is the question a contractor actually
+   asks on Thursday morning. This lays the day out against the clock:
+   the working hours as rows, everything booked drawn across them at the
+   time it happens, and how much of the day is already spoken for.
+   Crew days, inspections and timed to-dos all land on the same grid. */
+  var _bpCalView='day';
+  var _bpDaySel=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
+  var BP_DAYKEY=['sun','mon','tue','wed','thu','fri','sat'];
+  function bpIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  function bpMins(hhmm){ var p=String(hhmm||'').split(':'); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); }
+  function bpClock(m){ var h=Math.floor(m/60),mm=m%60,ap=h>=12?'PM':'AM',h12=h%12||12; return h12+(mm?':'+('0'+mm).slice(-2):'')+' '+ap; }
+  window.bpCalView=function(v){ _bpCalView=v; bpRenderCalendar(); };
+  window.bpDayPick=function(iso){ _bpDaySel=iso; _bpCalDate=new Date(iso+'T12:00:00'); bpDrawDay(); };
+  window.bpDayMove=function(n){ var d=new Date(_bpDaySel+'T12:00:00'); d.setDate(d.getDate()+n); bpDayPick(bpIso(d)); };
+  window.bpDayToday=function(){ bpDayPick(bpIso(new Date())); };
+
+  /* everything on the selected day, as {from,to,kind,title,sub,go} in minutes */
+  function bpDayItems(iso){
+    var out=[], y=+iso.slice(0,4), mo=+iso.slice(5,7)-1, dd=+iso.slice(8,10);
+    (_bpEvents||[]).forEach(function(e){
+      var t=new Date(e.start); if(isNaN(t.getTime())) return;
+      if(t.getFullYear()!==y||t.getMonth()!==mo||t.getDate()!==dd) return;
+      var from=t.getHours()*60+t.getMinutes();
+      var to=e.end?(function(){var x=new Date(e.end);return isNaN(x.getTime())?from+60:x.getHours()*60+x.getMinutes();})():from+60;
+      out.push({from:from,to:Math.max(to,from+30),kind:e.cal==='jobs'?'job':'insp',title:e.title||'Appointment',sub:e.addr||(e.cal==='jobs'?'Job':'Inspection'),act:"bpApptClick('"+e.id+"')"});
+    });
+    (typeof bpJobsGet==='function'?bpJobsGet():[]).forEach(function(j){
+      if(j.status!=='active'||!j.sched||!(j.sched.dates||[]).length) return;
+      if((j.sched.dates||[]).indexOf(iso)<0) return;
+      var t=j.sched.time||'', from=t?bpMins(t):null;
+      var to=t?bpMins(j.sched.end||bpProjEndFromDur(t,j.sched.dur)):null;
+      out.push({from:from,to:to,kind:'crew',allDay:!t,title:j.name||'Project',sub:(j.title||'Project')+' · crew on site',act:"bpProjOpen('"+j.id+"')"});
+    });
+    (typeof bpNotesFor==='function'?bpNotesFor(iso):[]).forEach(function(n){
+      var from=n.at?bpMins(n.at):null;
+      out.push({from:from,to:from==null?null:from+30,kind:n.kind==='note'?'note':'todo',allDay:!n.at,done:n.done,title:n.text,sub:n.kind==='note'?'Note':'To-do',act:"bpDaySheet('"+iso+"')"});
+    });
+    return out;
+  }
+
+  function bpDrawDay(){
+    var host=q('bpx-dayview'); if(!host) return;
+    var iso=_bpDaySel, d=new Date(iso+'T12:00:00'), today=bpIso(new Date());
+    var items=bpDayItems(iso);
+    var timed=items.filter(function(x){return x.from!=null;}).sort(function(a,b){return a.from-b.from||a.to-b.to;});
+    var allDay=items.filter(function(x){return x.from==null;});
+
+    /* the window we draw: the business's own hours, stretched to hold
+       anything booked outside them */
+    var hrs=(typeof bpSettingsGet==='function'?(bpSettingsGet().hours||{}):{})[BP_DAYKEY[d.getDay()]]||{};
+    var open=hrs.from?bpMins(hrs.from):7*60, close=hrs.to?bpMins(hrs.to):18*60;
+    if(!hrs.open&&hrs.open!==undefined){ open=Math.min(open,8*60); close=Math.max(close,17*60); }
+    timed.forEach(function(x){ open=Math.min(open,x.from); close=Math.max(close,x.to); });
+    open=Math.max(0,Math.floor(open/60)*60); close=Math.min(24*60,Math.ceil(close/60)*60);
+    if(close-open<6*60) close=Math.min(24*60,open+6*60);
+    var span=close-open, PX=54, TOP=12, H=span/60*PX+TOP;
+
+    /* side by side when they overlap, so nothing is hidden behind anything */
+    var cols=[];
+    timed.forEach(function(x){
+      var placed=false;
+      for(var c=0;c<cols.length&&!placed;c++){ if(cols[c][cols[c].length-1].to<=x.from){ cols[c].push(x); x.col=c; placed=true; } }
+      if(!placed){ x.col=cols.length; cols.push([x]); }
+    });
+    var lanes=Math.max(1,cols.length);
+    timed.forEach(function(x){
+      var over=timed.filter(function(o){return o!==x&&o.from<x.to&&x.from<o.to;});
+      x.lanes=Math.max(1,Math.min(lanes,over.reduce(function(m,o){return Math.max(m,(o.col||0)+1);},(x.col||0)+1)));
+    });
+
+    var booked=0, merged=timed.slice().sort(function(a,b){return a.from-b.from;});
+    var cur=null; merged.forEach(function(x){ if(!cur||x.from>cur[1]){ if(cur)booked+=cur[1]-cur[0]; cur=[x.from,x.to]; } else cur[1]=Math.max(cur[1],x.to); });
+    if(cur) booked+=cur[1]-cur[0];
+    var workable=Math.max(60,(hrs.to?bpMins(hrs.to):17*60)-(hrs.from?bpMins(hrs.from):8*60));
+    var pct=Math.min(100,Math.round(booked/workable*100));
+
+    /* the strip: a fortnight to jump around in without leaving the day */
+    var strip=''; var s0=new Date(iso+'T12:00:00'); s0.setDate(s0.getDate()-3);
+    for(var i=0;i<14;i++){
+      var dd2=new Date(s0); dd2.setDate(s0.getDate()+i); var k=bpIso(dd2);
+      var n=bpDayItems(k).length;
+      strip+='<button class="cd-chip'+(k===iso?' on':'')+(k===today?' today':'')+'" onclick="bpDayPick(\''+k+'\')">'
+        +'<small>'+dd2.toLocaleDateString('en-US',{weekday:'short'})+'</small><b>'+dd2.getDate()+'</b>'
+        +'<i'+(n?'':' class="none"')+'>'+(n?n:'')+'</i></button>';
+    }
+
+    var lines='';
+    for(var m2=open;m2<=close;m2+=60){
+      var topPx=TOP+(m2-open)/60*PX;
+      lines+='<div class="cd-hr" style="top:'+topPx+'px"><span>'+bpClock(m2)+'</span></div>';
+    }
+    var nowLine='';
+    if(iso===today){
+      var nw=new Date(), nm=nw.getHours()*60+nw.getMinutes();
+      if(nm>=open&&nm<=close) nowLine='<div class="cd-now" style="top:'+(TOP+(nm-open)/60*PX)+'px"><i></i></div>';
+    }
+    var blocks=timed.map(function(x){
+      var top=TOP+(x.from-open)/60*PX, h=Math.max(38,(x.to-x.from)/60*PX-3);   /* a half-hour block still has to fit both its lines */
+      var w=100/x.lanes, left=(x.col||0)*w;
+      return '<div class="cd-ev '+x.kind+(x.done?' done':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 2px);width:calc('+w+'% - 6px)" onclick="'+x.act+'">'
+        +'<b>'+bpEsc(x.title)+'</b><span>'+bpClock(x.from)+' – '+bpClock(x.to)+(x.sub?' · '+bpEsc(x.sub):'')+'</span></div>';
+    }).join('');
+
+    host.innerHTML=
+      '<div class="cd-head">'
+        +'<div class="cd-nav"><button onclick="bpDayMove(-1)" aria-label="Previous day"><span class=ms>chevron_left</span></button>'
+        +'<div class="cd-date"><b>'+d.toLocaleDateString('en-US',{weekday:'long'})+'</b><span>'+d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+(iso===today?' · today':'')+'</span></div>'
+        +'<button onclick="bpDayMove(1)" aria-label="Next day"><span class=ms>chevron_right</span></button></div>'
+        +'<div class="cd-cap"><div class="cd-cap-t"><b>'+(booked?Math.round(booked/60*10)/10+'h booked':'Nothing booked')+'</b><span>'+(hrs.open===false?'closed today':'of about '+Math.round(workable/60)+'h')+'</span></div>'
+        +'<div class="cd-cap-bar"><i style="width:'+pct+'%"></i></div></div>'
+      +'</div>'
+      +'<div class="cd-strip">'+strip+'</div>'
+      +(allDay.length?'<div class="cd-allday">'+allDay.map(function(x){
+          return '<div class="cd-ev '+x.kind+(x.done?' done':'')+' flat" onclick="'+x.act+'"><b>'+bpEsc(x.title)+'</b><span>'+bpEsc(x.sub)+'</span></div>';
+        }).join('')+'</div>':'')
+      +'<div class="cd-grid" style="height:'+H+'px">'+lines+nowLine+'<div class="cd-lane">'+blocks+'</div>'
+        +(timed.length?'':'<div class="cd-free">Nothing on the clock. Tap a day above, or add something to this one.</div>')+'</div>'
+      +'<div class="cd-foot"><button class="bpx-rowbtn" onclick="bpDaySheet(\''+iso+'\',true)"><span class=ms>add</span> Add to this day</button>'
+        +'<button class="bpx-rowbtn" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>event</span> Book an inspection</button></div>';
   }
 
 /* ==== notes & to-dos: the owner's own entries, outside GoHighLevel ==== */
@@ -15318,7 +15445,7 @@ var _bpContacts=[];
       if(parts.every(function(p){return p===null;})) throw new Error('down');
       _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); });
       bpDrawCalendar();
-    }catch(e){ var g=q('bpx-calgrid'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
+    }catch(e){ var g=q('bpx-calgrid')||q('bpx-dayview'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
   }
 
 /* ==== bpFmtTime ==== */
@@ -15326,6 +15453,7 @@ var _bpContacts=[];
 
 /* ==== bpDrawCalendar ==== */
   function bpDrawCalendar(){
+    if(_bpCalView==='day'){ bpDrawDay(); return; }
     var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var y=_bpCalDate.getFullYear(), m=_bpCalDate.getMonth();
     q('bpx-calmonth').textContent=mn[m]+' '+y;
@@ -20035,7 +20163,7 @@ document.head.appendChild(rdCss);
     {key:"dashboard",label:"Dashboard",desc:"opens with a one-line setup progress bar (tap 'All 6 steps' to see the full checklist). Each item is checked against real state, not self-reported: business details, logo, whether Lisa's knowledge is published, calculator prices saved, a first project, and a supply house with real prices. Each links to the page that finishes it, and the list folds away at 100%. Then four numbers: projects in motion and their value, what is owed on active projects, this month's money in minus out, and supply orders waiting (not sent, or a bill to check). 'Needs you' lists only what is actually waiting on them: money owed on projects past their target date, contracts sent but not signed, materials orders not sent, supply bills to check, unread messages, and estimates waiting on a yes; empty when nothing is. 'This week' is a seven-day strip showing crews on site (blue) and appointments (green) per day, with today's list underneath. 'Recent' is what happened newest first: orders placed, bills matched, contracts sent or signed, jobs finished. A Money in and out bar chart for the last six months from the ledger, Today (crews on site and appointments), the projects in motion, and profit by finished job with margin. Leads and appointments this month appear once the phone line is connected. Nothing on it is invented; if a number is not known yet it is absent"},
     {key:"messaging",label:"Messaging",desc:"every text and email with leads in one inbox; tapping the contact icon in a conversation opens that person's full profile"},
     {key:"contacts",label:"Contacts",desc:"every lead and customer with their pipeline stage; search, add, edit, and Export CSV. Tapping a name opens their profile and the jobs linked to them"},
-    {key:"calendar",label:"Calendar",desc:"upcoming inspections and appointments, plus the work days booked on active projects"},
+    {key:"calendar",label:"Calendar",desc:"opens on a Day view: one day laid out against the clock, with the working hours as rows and everything booked drawn where it falls. Inspections, job appointments, crew days on a project and timed to-dos all sit on the same grid, side by side when they overlap, with a red line at the current time. A strip of fourteen days above it jumps to any day and shows how many things are on each. It says how much of the day is booked against the business hours in Settings. A Month switch returns to the month grid with the to-do and upcoming lists beside it. Both views have Add to this day and Book an inspection"},
     {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
     {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
@@ -21209,14 +21337,14 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/supply.css?v=20260918g">
-<link rel="stylesheet" href="portal/dash.css?v=20260918g">
-<link rel="stylesheet" href="portal/team.css?v=20260918g">
-<script src="portal/team.js?v=20260918g"></script>
-<script src="portal/supply.js?v=20260918g"></script>
-<script src="portal/supply-scan.js?v=20260918g"></script>
-<script src="portal/supply-kits.js?v=20260918g"></script>
-<script src="portal/supply-dir.js?v=20260918g"></script>
-<script src="portal/dash.js?v=20260918g"></script>
-<script src="site/site.js?v=20260918g"></script>
+<link rel="stylesheet" href="portal/supply.css?v=20260918j">
+<link rel="stylesheet" href="portal/dash.css?v=20260918j">
+<link rel="stylesheet" href="portal/team.css?v=20260918j">
+<script src="portal/team.js?v=20260918j"></script>
+<script src="portal/supply.js?v=20260918j"></script>
+<script src="portal/supply-scan.js?v=20260918j"></script>
+<script src="portal/supply-kits.js?v=20260918j"></script>
+<script src="portal/supply-dir.js?v=20260918j"></script>
+<script src="portal/dash.js?v=20260918j"></script>
+<script src="site/site.js?v=20260918j"></script>
 </html>
