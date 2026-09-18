@@ -146,12 +146,13 @@
   /* ---------- the page ---------- */
   window.bpDashboard = function () {
     var el = $('bpxViewArea'); if (!el) return;
+    var crew = !!(window.bpTeamIsCrew && bpTeamIsCrew());
     el.innerHTML = (live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
-      + checklist()
-      + numbers()
-      + '<div class="dash-two">' + moneyChart() + today() + '</div>'
+      + (crew ? '' : checklist())
+      + (crew ? '' : numbers())
+      + (crew ? '<div style="margin-top:16px">' + today() + '</div>' : '<div class="dash-two">' + moneyChart() + today() + '</div>')
       + '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Projects in motion<span class="lg2">tap one to open it</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading</div></div>'
-      + '<div style="margin-top:16px">' + jobsChart() + '</div>'
+      + (crew ? '' : '<div style="margin-top:16px">' + jobsChart() + '</div>')
       + (D.leads ? '<div class="bpx-stats dash-nums" style="margin-top:16px"><div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">' + D.leads.n + '</div><div class="note">from your website and phone line</div></div><div class="bpx-stat"><div class="lbl">Appointments this month</div><div class="val">' + D.leads.a + '</div><div class="note">booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page</div></div></div>' : '');
     if (window.bpDashProjects) bpDashProjects();
     fetchState();

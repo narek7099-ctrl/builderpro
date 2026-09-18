@@ -73,6 +73,18 @@ async function userFromJwt(jwt: string): Promise<{ id: string } | null> {
   } catch { return null; }
 }
 
+
+/* A team member works on their owner's account. After auth, swap the caller
+   for the owner they belong to (and the owner's email where a lookup is by
+   email), so everything downstream reads and writes the right rows. */
+async function effectiveOwner(id: string, email?: string): Promise<{ id: string; email: string }> {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/team_members?member=eq.${id}&accepted_at=not.is.null&select=owner,owner_email&limit=1`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+    const rows = r.ok ? await r.json() : [];
+    if (rows?.[0]?.owner) return { id: rows[0].owner, email: rows[0].owner_email || email || "" };
+  } catch { /* fall through */ }
+  return { id, email: email ?? "" };
+}
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
@@ -134,7 +146,8 @@ Deno.serve(async (req) => {
   }
 
   // ---------------- owner ----------------
-  const user = await userFromJwt((req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, ""));
+  const user0 = await userFromJwt((req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, ""));
+  const user = user0 ? await effectiveOwner(user0.id) : null;
   if (!user) return json({ ok: false, error: "sign in required" }, 401);
 
   const own = async (id: string) => {

@@ -48,8 +48,9 @@ async function ownerLocation(jwt: string): Promise<string> {
   try {
     const u = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${jwt}` } });
     if (!u.ok) return "";
-    const me = await u.json();
-    if (!me?.id) return "";
+    const me0 = await u.json();
+    if (!me0?.id) return "";
+    const me = await effectiveOwner(me0.id, me0.email);
     const h = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` };
     const get = async (qs: string) => {
       const r = await fetch(`${SB_URL}/rest/v1/ai_brain?${qs}&select=ghl_location_id&limit=1`, { headers: h });
@@ -64,6 +65,18 @@ async function ownerLocation(jwt: string): Promise<string> {
 
 const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
 
+
+/* A team member works on their owner's account. After auth, swap the caller
+   for the owner they belong to (and the owner's email where a lookup is by
+   email), so everything downstream reads and writes the right rows. */
+async function effectiveOwner(id: string, email?: string): Promise<{ id: string; email: string }> {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/team_members?member=eq.${id}&accepted_at=not.is.null&select=owner,owner_email&limit=1`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+    const rows = r.ok ? await r.json() : [];
+    if (rows?.[0]?.owner) return { id: rows[0].owner, email: rows[0].owner_email || email || "" };
+  } catch { /* fall through */ }
+  return { id, email: email ?? "" };
+}
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);

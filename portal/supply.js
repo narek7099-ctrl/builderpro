@@ -42,7 +42,7 @@
       if (!live()) { row = Object.assign({ id: uid('m'), created_at: new Date().toISOString() }, row); mem[t].unshift(row); return Promise.resolve(row); }
       return window.bpSetUser().then(function (u) {
         if (!u) throw new Error('sign in required');
-        row.owner = u.id;
+        row.owner = window.bpOwnerId ? bpOwnerId(u) : u.id;
         return window.BP_SB.from(t).insert(row).select('*').single().then(function (r) { if (r.error) throw r.error; return r.data; });
       });
     },
@@ -64,7 +64,7 @@
       }
       return window.bpSetUser().then(function (u) {
         if (!u) throw new Error('sign in required');
-        rows.forEach(function (r) { r.owner = u.id; });
+        var oid = window.bpOwnerId ? bpOwnerId(u) : u.id; rows.forEach(function (r) { r.owner = oid; });
         var i = 0, n = 0;
         var step = function () {
           if (i >= rows.length) return n;
