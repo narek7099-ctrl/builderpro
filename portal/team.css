@@ -1,0 +1,24 @@
+/* Team page and the "working as" stamp */
+#bpx .tm-as{display:block;font-size:11px;font-weight:600;color:var(--grey);margin-top:2px}
+#bpx .tm-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+#bpx .tm-roles>div{border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+#bpx .tm-roles b{display:block;font-size:13.5px;margin-bottom:2px}
+#bpx .tm-roles span{font-size:12.5px;color:var(--grey);line-height:1.5}
+@media(max-width:600px){#bpx .tm-roles{grid-template-columns:1fr}}
+#bpx .tm-list{display:flex;flex-direction:column}
+#bpx .tm-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+#bpx .tm-row:first-child{border-top:0}
+#bpx .tm-who b{display:block;font-size:13.5px}
+#bpx .tm-who span{display:block;font-size:12px;color:var(--grey)}
+#bpx .tm-role{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card,#fff);color:inherit}
+#bpx .tm-acts{display:flex;gap:12px;font-size:12.5px}
+#bpx .tm-acts .bpx-linkbtn{color:var(--grey);text-decoration:none}
+#bpx .tm-acts .tm-del{color:#b3392f}
+#bpx .tm-empty{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:6px 0 2px;font-size:13px;color:var(--grey);line-height:1.5}
+#bpx .tm-empty .ms{font-size:26px;color:var(--blue)}
+#bpx .tm-empty b{color:var(--ink)}
+#bpx .tm-note{font-size:13px;color:var(--grey);line-height:1.55}
+#bpx .tm-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto auto;gap:8px;align-items:center;margin-top:8px}
+#bpx .tm-form input,#bpx .tm-form select{font:inherit;font-size:13.5px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);color:inherit;min-width:0}
+#bpx .tm-form .bpx-btn{margin:0;white-space:nowrap}
+@media(max-width:700px){#bpx .tm-form{grid-template-columns:1fr}#bpx .tm-row{grid-template-columns:1fr;gap:6px}}

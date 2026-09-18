@@ -13725,6 +13725,11 @@ function bpClose(){document.getElementById('bpx').classList.remove('open');docum
 /* coming back from an ad-account connection lands on the site — open the portal straight away */
 if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
 function bpEnterPortal(email){
+  /* whose account is this? decided before the sidebar or any data */
+  var go=function(){ bpEnterPortal2(email); if(window.bpTeamStamp)bpTeamStamp(); };
+  if(window.bpTeamResolve){ bpTeamResolve().then(go,go); } else go();
+}
+function bpEnterPortal2(email){
   document.getElementById('bpxUemail').textContent=email||'';
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
@@ -13790,13 +13795,15 @@ var BP_MS={dashboard:'grid_view',projects:'construction',supply:'inventory_2',fi
 function bpBuildNav(){
   var ic=function(k){return '<span class="ms">'+(BP_MS[k]||'circle')+'</span>';};
   var h='';
+  var ok=function(v){return !window.bpTeamAllows||bpTeamAllows(v);};
   BP_NAV.forEach(function(g){
-    if(!g.kids){h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
+    if(!g.kids){if(!ok(g.id))return;h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
+    g={id:g.id,l:g.l,ico:g.ico,kids:g.kids.filter(function(k){return ok(k[0]);})}; if(!g.kids.length)return;
     h+='<div class="bpx-grp" data-grp="'+g.id+'">'
       +'<a class="bpx-grp-h" onclick="bpNavToggle(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span><svg class="bpx-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>'
       +'<div class="bpx-sub"><div class="bpx-sub-in">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span></a>';}).join('')+'</div></div></div>';
   });
-  h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
+  h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.filter(function(f){return ok(f[0]);}).map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
   document.getElementById('bpxNav').innerHTML=h;
   bpNavOpenSet().forEach(function(id){ var g=document.querySelector('#bpxNav .bpx-grp[data-grp="'+id+'"]'); if(g)g.classList.add('open'); });
 }
@@ -13828,6 +13835,7 @@ function bpSpin(on){
   s._t=setTimeout(function(){s.classList.remove('on');},450);
 }
 function bpNav(v){
+  if(window.bpTeamAllows&&!bpTeamAllows(v))v='dashboard';
   window._bpCurView=v;
   document.querySelectorAll('#bpxNav a[data-view]').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
   var gid=bpNavGroupOf(v);
@@ -13984,15 +13992,15 @@ function bpDashProjects(){
     var cover=(j.photos&&j.photos[0])
       ? '<img src="'+j.photos[0]+'" style="width:100%;height:110px;object-fit:cover;display:block">'
       : '<div style="position:relative"><img src="'+bpStockImg(j.id,true)+'" alt="" loading="lazy" style="width:100%;height:110px;object-fit:cover;display:block"><span style="position:absolute;left:8px;bottom:8px;background:rgba(15,30,60,.72);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:5px">NO PHOTOS YET</span></div>';
-    var sub=[];
+    var sub=[], crew=!!(window.bpTeamIsCrew&&bpTeamIsCrew());
     if(j.sched&&j.sched.target)sub.push('Target '+bpEsc(j.sched.target));
-    if(j.collected!=null)sub.push(bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
+    if(!crew&&j.collected!=null)sub.push(bpMoneyFmt(j.collected)+' paid'+(j.estimate>0?' · '+bpMoneyFmt(Math.max(j.estimate-j.collected,0))+' due':''));
     if(j.sched&&j.sched.dates&&j.sched.dates.length)sub.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
     else if(j.sched&&j.sched.days&&j.sched.days.length)sub.push(j.sched.days.length+'d/wk'+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h':''));
     if(j.photos&&j.photos.length)sub.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
     return '<div style="border:0;border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;box-shadow:0 1px 3px rgba(15,30,60,.12)" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">'
       +cover
-      +'<div style="padding:10px 12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b style="font-size:13.5px;color:#0f2540">'+bpEsc(j.name)+'</b><span class="bpx-num" style="font-size:12.5px;font-weight:700;color:#0f2540">'+bpMoneyFmt(j.estimate)+'</span></div>'
+      +'<div style="padding:10px 12px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b style="font-size:13.5px;color:#0f2540">'+bpEsc(j.name)+'</b>'+(crew?'':'<span class="bpx-num" style="font-size:12.5px;font-weight:700;color:#0f2540">'+bpMoneyFmt(j.estimate)+'</span>')+'</div>'
       +'<div class="bpx-mut" style="font-size:12px;margin-top:1px">'+bpEsc(j.title||'Project')+'</div>'
       +(sub.length?'<div style="font-size:11px;margin-top:5px;color:#64748b">'+sub.join(' · ')+'</div>':'')
       +'</div></div>';
@@ -15264,7 +15272,7 @@ var _bpContacts=[];
     var list=bpNotesGet().concat([n]); bpNotesCache(list);
     if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve(true);
     return Promise.resolve(bpSetUser()).then(function(u){ if(!u) return true;
-      return Promise.resolve(BP_SB.from('calendar_notes').insert({owner:u.id,day:n.day,kind:n.kind,text:n.text,at:n.at,done:false}).select('id').single()).then(function(r){ if(r&&r.data&&r.data.id){ n.id=r.data.id; bpNotesCache(list); } return true; },function(){ return true; }); });
+      return Promise.resolve(BP_SB.from('calendar_notes').insert({owner:bpOwnerId(u),day:n.day,kind:n.kind,text:n.text,at:n.at,done:false}).select('id').single()).then(function(r){ if(r&&r.data&&r.data.id){ n.id=r.data.id; bpNotesCache(list); } return true; },function(){ return true; }); });
   };
   window.bpNoteToggle=function(id){
     var list=bpNotesGet(); var n=list.filter(function(x){return x.id===id;})[0]; if(!n) return;
@@ -15620,7 +15628,7 @@ var _bpContacts=[];
     day=String(day||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(day)) return Promise.resolve(false);
     var list=bpClosedGet().filter(function(x){return x.day!==day;}); list.push({day:day,note:note||''}); list.sort(function(a,b){return a.day<b.day?-1:1;}); bpClosedSave(list);
     if(!(window.BP_LIVE&&window.BP_SB)) return Promise.resolve(true);
-    return Promise.resolve(bpSetUser()).then(function(u){ if(!u) return true; return Promise.resolve(BP_SB.from('booking_closed_days').upsert({owner:u.id,day:day,note:note||''},{onConflict:'owner,day'})).then(function(){return true;},function(){return true;}); });
+    return Promise.resolve(bpSetUser()).then(function(u){ if(!u) return true; return Promise.resolve(BP_SB.from('booking_closed_days').upsert({owner:bpOwnerId(u),day:day,note:note||''},{onConflict:'owner,day'})).then(function(){return true;},function(){return true;}); });
   };
   window.bpClosedRemove=function(day){
     bpClosedSave(bpClosedGet().filter(function(x){return x.day!==day;}));
@@ -16540,7 +16548,7 @@ function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorag
 function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 function bpFinCloudPush(){
   if(!BP_LIVE) return;
-  BP_SB.from('portal_finance').upsert({jobs:bpJobsGet(),fin:bpFinGet()}).then(function(){}).catch(function(){});
+  BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},window.bpOwnerId&&bpOwnerId()?{owner:bpOwnerId()}:{})).then(function(){}).catch(function(){});
 }
 function bpFinCloudLoad(){
   if(!BP_LIVE||_bpFinLoaded) return Promise.resolve();
@@ -16703,6 +16711,8 @@ window.bpProjOpen=function(id){
   if(_bpProjDates.length){ var f0=new Date(_bpProjDates.slice().sort()[0]+'T12:00:00'); if(!isNaN(f0.getTime())){_bpProjCal={y:f0.getFullYear(),m:f0.getMonth()};} }
   var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
   var tabs=[['details','Details'],['money','Money'],['schedule','Schedule'],['contract','Contract'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length]];
+  /* crew runs the job, not the money: no Money tab, no Contract tab */
+  if(window.bpTeamIsCrew&&bpTeamIsCrew())tabs=tabs.filter(function(t){return t[0]!=='money'&&t[0]!=='contract';});
   var pane=function(k,html){return '<div data-pj-pane="'+k+'"'+(k==='details'?'':' hidden')+'>'+html+'</div>';};
   bpModal('<h3>'+bpEsc(j.name||'Project')+' — '+bpEsc(j.title||'Project')+'</h3>'
     +'<div class="bpx-sub">Everything about this project — it all saves to your account.</div>'
@@ -16750,6 +16760,7 @@ window.bpProjOpen=function(id){
   bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
 };
 window.bpProjTab=function(t){
+  if(window.bpTeamIsCrew&&bpTeamIsCrew()&&(t==='money'||t==='contract'))t='details';
   document.querySelectorAll('[data-pj-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-pj-tab')===t);});
   document.querySelectorAll('[data-pj-pane]').forEach(function(p){p.hidden=p.getAttribute('data-pj-pane')!==t;});
 };
@@ -17389,7 +17400,7 @@ window.bpCtSave=function(){
   BP_SB.auth.getSession().then(function(sn){
     var u=sn&&sn.data&&sn.data.session&&sn.data.session.user; if(!u)throw new Error('sign in again');
     return BP_SB.from('contracts').insert({
-      owner:u.id,job_id:j.id,title:(j.title?j.title+' — Agreement':'Roofing Agreement'),
+      owner:bpOwnerId(u),job_id:j.id,title:(j.title?j.title+' — Agreement':'Roofing Agreement'),
       customer_name:name,customer_email:g('bpx-ct-email')||null,customer_phone:j.phone||null,
       address:g('bpx-ct-addr')||null,body:body,scope:j.title||null,
       amount:amt||null,deposit:+g('bpx-ct-dep').replace(/[^0-9.]/g,'')||null
@@ -17639,7 +17650,7 @@ window.bpPayAsk=function(){
   if(!(window.BP_LIVE&&window.BP_SB)){done('Sign in and we’ll pick this up for you.',false);return;}
   BP_SB.auth.getSession().then(function(sn){
     var u=sn&&sn.data&&sn.data.session&&sn.data.session.user; if(!u)throw 0;
-    return BP_SB.from('support_requests').insert({owner:u.id,email:u.email,kind:'billing',subject:'Finish payments setup',body:'Client asked us to link their payments account. Business: '+co+'. Portal email: '+(u.email||'')+'.'});
+    return BP_SB.from('support_requests').insert({owner:bpOwnerId(u),email:u.email,kind:'billing',subject:'Finish payments setup',body:'Client asked us to link their payments account. Business: '+co+'. Portal email: '+(u.email||'')+'.'});
   }).then(function(r){
     if(r&&r.error)throw r.error;
     done('Got it — we’ll finish your payments setup and let you know. Usually same business day.',true);
@@ -18790,7 +18801,7 @@ window.bpMkLaunchSend=async function(){
   if(!g('bpx-cp-b')){m.style.color='#dc2626';m.textContent='Add a monthly budget so we can size the campaign.';return;}
   var u=await bpSetUser(); if(!u){m.style.color='#dc2626';m.textContent='Sign in to send a request.';return;}
   btn.disabled=true; m.style.color='var(--blue)'; m.textContent='Sending…';
-  var r=await bpSetSB.from('campaign_requests').insert({owner:u.id,email:u.email,provider:g('bpx-cp-p'),goal:g('bpx-cp-g'),budget:g('bpx-cp-b'),area:g('bpx-cp-a'),offer:g('bpx-cp-o'),notes:g('bpx-cp-n')});
+  var r=await bpSetSB.from('campaign_requests').insert({owner:bpOwnerId(u),email:u.email,provider:g('bpx-cp-p'),goal:g('bpx-cp-g'),budget:g('bpx-cp-b'),area:g('bpx-cp-a'),offer:g('bpx-cp-o'),notes:g('bpx-cp-n')});
   btn.disabled=false;
   if(r.error){m.style.color='#dc2626';m.textContent='Could not send — '+bpEsc(r.error.message||'try again');return;}
   bpCloseModal(); _bpMk.tab='campaigns'; bpMkRefresh();
@@ -18882,7 +18893,7 @@ function bpSettingsSet(o){try{localStorage.setItem('bpSettings',JSON.stringify(o
 async function bpSettingsPull(){
   var u=await bpSetUser(); if(!u)return;
   try{
-    var r=await bpSetSB.from('client_settings').select('data').eq('user_id',u.id).maybeSingle();
+    var r=await bpSetSB.from('client_settings').select('data').eq('user_id',bpOwnerId(u)).maybeSingle();
     if(r&&r.data&&r.data.data){
       var merged=r.data.data, local=bpSettingsGet();
       if(local.company&&local.company.logo){merged.company=merged.company||{};if(!merged.company.logo)merged.company.logo=local.company.logo;}
@@ -18906,7 +18917,7 @@ async function bpSettingsPush(data){
       var up=await bpSetSB.storage.from('client-logos').upload(path,blob,{upsert:true,contentType:blob.type});
       if(!up.error){var pub=bpSetSB.storage.from('client-logos').getPublicUrl(path);srv.company.logoUrl=(pub.data&&pub.data.publicUrl)?pub.data.publicUrl+'?t='+Date.now():'';}
     } else if(logo){srv.company.logoUrl=logo;}
-    var r=await bpSetSB.from('client_settings').upsert({user_id:u.id,email:u.email,data:srv,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    var r=await bpSetSB.from('client_settings').upsert({user_id:bpOwnerId(u),email:u.email,data:srv,updated_at:new Date().toISOString()},{onConflict:'user_id'});
     return !r.error;
   }catch(e){return false;}
 }
@@ -18940,7 +18951,8 @@ function bpSettings(){
     ['owner','Owner','person','Personalises your dashboard, messages and estimates.'],
     ['ridge',''+BP_AI_NAME+' AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
-    ['plan','Plan & billing','credit_card','Your BuilderPro membership.']];
+    ['team','Team','group','Who else can sign in, and what they can see.'],
+    ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
   var rail=SECS.map(function(t){return '<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';}).join('');
   var sec=function(id,body){var t=SECS.filter(function(x){return x[0]===id;})[0];
     return '<section id="set-sec-'+id+'" class="st-sec"'+(_bpSetSec===id?'':' style="display:none"')+'><div class="st-head"><h2>'+t[1]+'</h2><p>'+t[3]+'</p></div>'+body+'</section>';};
@@ -18987,7 +18999,8 @@ function bpSettings(){
       +sec('ridge','<div id="bpx-rg-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg))
-      +sec('plan',
+      +(SECS.some(function(t){return t[0]==='team';})?sec('team',window.bpTeamPanel?bpTeamPanel():''):'')
+      +(SECS.some(function(t){return t[0]==='plan';})?sec('plan',
         '<div class="st-plan">'
           +'<div class="st-plan-top"><div><div class="st-plan-eyebrow">Your plan</div><div class="st-planhead"><b>BuilderPro OS</b><span class="bpx-badge ok">Active</span></div><div class="bpx-mut" style="font-size:13px;margin-top:4px">One plan, everything included. Billed monthly, cancel any time.</div></div>'
             +'<div class="st-price">$199<span> / month</span></div></div>'
@@ -18996,8 +19009,8 @@ function bpSettings(){
         +'<div class="st-plan-row">'
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
-        +'</div>')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='ridge'||_bpSetSec==='appearance')?' hidden':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+        +'</div>'):'')
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='appearance')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   bpSettingsPull();
@@ -19007,9 +19020,9 @@ var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','ridge','appearance','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','ridge','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot)foot.hidden=(t==='plan'||t==='ridge'||t==='appearance');   /* those tabs save themselves */
+  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='appearance');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
   if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
 };
 window.bpHrsCopy=function(){
@@ -19038,7 +19051,7 @@ window.bpCancelSend=async function(){
   var u=await bpSetUser();
   if(!u){ window.location.href='mailto:support@builderpro-os.com?subject='+encodeURIComponent('Cancellation request — BuilderPro OS')+'&body='+encodeURIComponent('Business: '+(who||'(not set)')+'\nReason: '+g('bpx-cx-why')+'\n'+g('bpx-cx-notes')); bpCloseModal(); return; }
   if(btn)btn.disabled=true; if(m){m.style.color='var(--blue)';m.textContent='Sending…';}
-  var r=await bpSetSB.from('support_requests').insert({owner:u.id,email:u.email,kind:'cancel',subject:'Cancellation request — '+(who||u.email),body:'Reason: '+g('bpx-cx-why')+(g('bpx-cx-notes')?'\n'+g('bpx-cx-notes'):'')});
+  var r=await bpSetSB.from('support_requests').insert({owner:bpOwnerId(u),email:u.email,kind:'cancel',subject:'Cancellation request — '+(who||u.email),body:'Reason: '+g('bpx-cx-why')+(g('bpx-cx-notes')?'\n'+g('bpx-cx-notes'):'')});
   if(btn)btn.disabled=false;
   if(r.error){ if(m){m.style.color='#dc2626';m.textContent='Could not send — '+bpEsc(r.error.message||'try again');} return; }
   bpCloseModal();
@@ -20189,7 +20202,7 @@ document.head.appendChild(rdCss);
     {key:"competitors",label:"Competitors",desc:"under Marketing. A scoreboard of the other contractors in their area from Yelp — rating, review count, reviews gained in the last 30 days, services listed. 'Find competitors' searches by trade and city and tracks the ones they pick; 'Where to win' lists specific gaps (fewer reviews, lower rating, missing photos or services) with a button to the part of the app that fixes each"},
     {key:"calculator",label:"My Calculator",desc:"edit the prices behind the estimator on their website, with a live preview of exactly what the customer sees sitting right beside the editor. Save pricing and the preview reloads"},
     {key:"ai",label:""+BP_AI_NAME+" AI",desc:"their 24/7 AI receptionist. The Knowledge tab holds services, pricing guidance, common questions and rules — filling those in and tapping Publish pushes it live to web chat, texts and the phone line. Voice & tone sets how it sounds; Test "+BP_AI_NAME+" lets them chat with it like a customer would"},
-    {key:"settings",label:"Settings",desc:"business name, trade, phone, email, address, service area, licence number, logo, opening hours, the missed-call auto-reply, owner details, and their plan and billing"}
+    {key:"settings",label:"Settings",desc:"business name, trade, phone, email, address, service area, licence number, logo, opening hours, the missed-call auto-reply, owner details, their plan and billing, and Team. Team (owner only): add other people to the account by email with a role. Office sees everything the owner sees except billing and the Team page. Crew sees projects, calendar, materials, contacts and messages, and nothing about money or settings. The person gets an email with a link to set a password, then signs in at the normal login; if they already have a BuilderPro login they just sign in. The owner can change a role or remove someone at any time; it applies on their next sign-in. Everyone on the team works on the same account and the same data"}
   ];
   var css=document.createElement('style');
   css.textContent='.oaw-btn{position:fixed;right:18px;bottom:18px;z-index:99999;width:58px;height:58px;border-radius:50%;border:0;cursor:pointer;background:linear-gradient(135deg,#2f6bff,#1e4fd6);display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(47,107,255,.4)}'
@@ -21350,12 +21363,14 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/supply.css?v=20260918a">
-<link rel="stylesheet" href="portal/dash.css?v=20260918a">
-<script src="portal/supply.js?v=20260918a"></script>
-<script src="portal/supply-scan.js?v=20260918a"></script>
-<script src="portal/supply-kits.js?v=20260918a"></script>
-<script src="portal/supply-dir.js?v=20260918a"></script>
-<script src="portal/dash.js?v=20260918a"></script>
-<script src="site/site.js?v=20260918a"></script>
+<link rel="stylesheet" href="portal/supply.css?v=20260918b">
+<link rel="stylesheet" href="portal/dash.css?v=20260918b">
+<link rel="stylesheet" href="portal/team.css?v=20260918b">
+<script src="portal/team.js?v=20260918b"></script>
+<script src="portal/supply.js?v=20260918b"></script>
+<script src="portal/supply-scan.js?v=20260918b"></script>
+<script src="portal/supply-kits.js?v=20260918b"></script>
+<script src="portal/supply-dir.js?v=20260918b"></script>
+<script src="portal/dash.js?v=20260918b"></script>
+<script src="site/site.js?v=20260918b"></script>
 </html>
