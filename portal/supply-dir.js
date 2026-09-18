@@ -327,13 +327,24 @@
     i = i || 0;
     var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 25000);
+    var said = '';
     return fetch(OVERPASS[i], { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(qy), signal: ctl ? ctl.signal : undefined })
-      .then(function (r) { if (!r.ok) throw new Error('busy'); return r.json(); })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        /* a rejected query comes back as HTML with the reason in it; keep the reason */
+        return r.text().then(function (t) {
+          var m = t.match(/Error<\/strong>:\s*([^<]{5,160})/i) || t.match(/error[^<]{5,160}/i);
+          said = 'HTTP ' + r.status + (m ? ': ' + (m[1] || m[0]).trim() : '');
+          throw new Error('rejected');
+        });
+      })
       .then(function (d) { clearTimeout(timer); return d; })
       .catch(function (e) {
         clearTimeout(timer);
+        if (!said && e && e.name === 'AbortError') said = 'no answer in 25 seconds';
+        if (!said && e && /Failed to fetch|NetworkError|Load failed/i.test(e.message || '')) said = 'the request was blocked before it reached the map';
         if (i + 1 < OVERPASS.length) return overpass(qy, i + 1);
-        throw new Error('The map service is busy right now. Give it a minute and try again, or add the supplier by hand.');
+        throw new Error('The map service is busy right now. Give it a minute and try again, or add the supplier by hand.' + (said ? ' (' + said + ')' : ''));
       });
   }
   SP.nearFind = function () {
@@ -353,9 +364,10 @@
       /* one exact-match clause per shop type. A regex on the value cannot use
          the index, and in a city that scan hit the server's own time limit
          and came back as an empty answer that looked like "nothing here". */
+      /* exact matches only. The chains all carry one of these shop tags, so a
+         name search adds nothing and its regex was one more thing to reject. */
       var qy = '[out:json][timeout:20];('
         + shopKindsFor(SP.dir.trade || myTrade()).map(function (k) { return 'nwr(' + here + ')["shop"="' + k + '"];'; }).join('')
-        + 'nwr(' + here + ')["shop"]["name"~"' + CHAIN_RX + '",i];'
         + ');out center 200;';
       return overpass(qy);
     }).then(function (d) {
