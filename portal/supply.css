@@ -210,3 +210,4 @@
 #bpx .sp-ticket-del .bpx-mut{font-size:12.5px}
 #bpx .sp-ticket-ask{display:block;margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);font-size:12.5px;line-height:1.6;color:var(--grey)}
 #bpx .sp-ticket-ask .ms{font-size:17px;color:#b45309;vertical-align:-4px;margin-right:5px}
+#bpx .sp-skip{text-align:center;font-size:12.5px;color:var(--grey);margin-top:-4px;padding-bottom:2px}

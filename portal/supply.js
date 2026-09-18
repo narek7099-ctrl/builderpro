@@ -558,7 +558,7 @@
     });
     seq.then(function () { return db.update('parts_lists', L.id, { status: 'ordered' }); })
       .then(function () { L.status = 'ordered'; SP.list = null; SP.plans = null; SP.tab = 'orders_open'; return load(true); })
-      .then(function () { window.bpNav('supplyorders'); if (made[0]) SP.poOpen(made[0].id); })
+      .then(function () { window.bpNav('supplyorders'); if (made[0]) setTimeout(function () { SP.poOpen(made[0].id); }, 200); })
       .catch(function (e) { alert('Could not send the order. ' + (e.message || '')); });
   };
   window.bpSupplyOrders = function () {
@@ -573,6 +573,8 @@
     var h = tabs('supplyorders') + state() + kpis()
       + '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs" style="flex-wrap:wrap">' + t.map(function (x) { return '<button class="bpx-jt' + (SP.tab === x[0] ? ' on' : '') + '" onclick="SP.tab=\'' + x[0] + '\';bpSupplyOrders()">' + x[1] + '</button>'; }).join('') + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '<button class="bpx-btn ghost sp-inline" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-addbtn" onclick="bpNav(\'supply\')">+ Order materials</button></div></div>';
+    var unsent = SP.pos.filter(function (p) { return p.status === 'sent' && !p.sent_to_supplier; });
+    if (unsent.length) h += '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + (unsent.length === 1 ? 'One order has not been sent to the supply house.' : unsent.length + ' orders have not been sent to the supply house.') + '</b> Until you send it, nothing is picked and nobody is expecting you. <button class="bpx-rowbtn primary" onclick="SP.poOpen(\'' + unsent[0].id + '\')">' + (unsent.length === 1 ? 'Send it' : 'Send them') + '</button></div>';
     if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + ' Now send it to them, or just show the ticket at the counter. We do not contact the supply house for you.</div>'; SP.won = ''; }
     if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing in here right now.' : 'Nothing ordered yet. Order materials for a job and it lands here with a barcode you show at the counter.') + '</div></div>';
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
@@ -581,7 +583,7 @@
   var STATUS = { sent: ['Not sent yet', 'warn'], ready: ['Ready to collect', ''], picked_up: ['Picked up', ''], invoiced: ['Bill needs checking', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
   function poCard(p) {
     var s = supById(p.supplier_id), st = STATUS[p.status] || [p.status, ''];
-    if (p.status === 'sent' && p.sent_to_supplier) st = ['Sent to them', ''];
+    if (p.status === 'sent' && p.sent_to_supplier) st = p.send_mode === 'walkin' ? ['Walking in', ''] : ['Sent to them', ''];
     var next = p.status === 'sent' ? (p.sent_to_supplier
         ? '<button class="bpx-rowbtn" onclick="SP.poStatus(\'' + p.id + '\',\'ready\')">They say it is ready</button>'
         : '<button class="bpx-rowbtn primary" onclick="SP.poOpen(\'' + p.id + '\')">Send it to them</button>')
@@ -623,13 +625,17 @@
       + '\n\nPlease put PO ' + p.po_number + ' on the invoice.';
     var mail = s.email ? 'mailto:' + encodeURIComponent(s.email) + '?subject=' + encodeURIComponent('PO ' + p.po_number + ' from ' + (co.name || 'BuilderPro client')) + '&body=' + encodeURIComponent(text) : '';
     var sent = !!p.sent_to_supplier;
+    var walkin = p.send_mode === 'walkin';
+    var queue = SP.pos.filter(function (x) { return x.status === 'sent' && !x.sent_to_supplier && x.id !== p.id; }).length;
 
     window.bpModal(
       (sent
-        ? '<div class="sp-note good"><span class="ms">check_circle</span>Sent to ' + esc(s.name || 'the supplier') + '. When the bill comes, photograph it and it lands on the job.</div>'
-        : '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + esc(s.name || 'The supply house') + ' has not been told about this yet.</b> We do not send orders for you. '
-          + (deliver ? 'Send it across so they can schedule the drop.' : 'Send it across and they will have it picked before you get there, or just show this at the counter.')
-          + (s.email ? '' : ' Add their contractor desk email on <button class="bpx-linkbtn" onclick="bpCloseModal();bpNav(\'suppliers\')">Where I buy</button> and this becomes one tap.') + '</div>')
+        ? '<div class="sp-note good"><span class="ms">' + (walkin ? 'directions_car' : 'check_circle') + '</span>' + (walkin
+            ? 'You are showing this at the counter. Nothing was sent to ' + esc(s.name || 'them') + ', so they are not expecting you.'
+            : 'Sent to ' + esc(s.name || 'the supplier') + '. When the bill comes, photograph it and it lands on the job.') + '</div>'
+        : '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + esc(s.name || 'The supply house') + ' has not been told about this yet.</b> We do not send orders for you, so nothing is waiting for you until you send it. '
+          + (deliver ? 'Send it across so they can schedule the drop.' : 'Send it and it is picked before you arrive. Otherwise you are queueing at the counter like any other day.')
+          + (s.email || deliver ? '' : ' Add their contractor desk email on <button class="bpx-linkbtn" onclick="bpCloseModal();bpNav(\'suppliers\')">Where I buy</button> and this becomes one tap.') + '</div>')
       + '<div class="sp-ticket" id="sp-ticket">'
       + '<div class="sp-ticket-h"><div><div class="bpx-mut" style="font-size:12px">' + (deliver ? 'Delivery order' : 'Will-call ticket') + '</div><b style="font-size:20px">' + esc(p.po_number) + '</b></div>'
         + '<div style="text-align:right"><b>' + esc(s.name || '') + '</b><div class="bpx-mut">' + esc(s.branch || '') + (s.account_no ? ' &middot; Acct ' + esc(s.account_no) : '') + '</div></div></div>'
@@ -642,17 +648,39 @@
       + '<div class="sp-ticket-ask"><span class="ms">priority_high</span>Ask them to put <b>' + esc(p.po_number) + '</b> on the invoice. Then the bill matches itself back to this order and the job.</div>'
       + '</div>'
       + '<div class="row" style="flex-wrap:wrap">'
-        + (mail ? '<a class="bpx-btn sp-inline" href="' + mail + '" onclick="SP.poSent(\'' + p.id + '\')">Email it to ' + esc(s.name || 'the supplier') + '</a>' : '')
-        + '<button class="bpx-btn' + (mail ? ' ghost' : '') + ' sp-inline" onclick="SP.copy(this);SP.poSent(\'' + p.id + '\')" data-text="' + esc(text) + '">Copy it to send</button>'
+        + (mail ? '<a class="bpx-btn sp-inline" href="' + mail + '" onclick="SP.poSent(\'' + p.id + '\',\'sent\')">Email it to ' + esc(s.name || 'the supplier') + '</a>' : '')
+        + '<button class="bpx-btn' + (mail ? ' ghost' : '') + ' sp-inline" onclick="SP.copy(this);SP.poSent(\'' + p.id + '\',\'sent\')" data-text="' + esc(text) + '">Copy it to send</button>'
         + '<button class="bpx-btn ghost sp-inline" onclick="SP.printTicket(' + (deliver ? 'true' : 'false') + ')">Print</button>'
-        + '<button class="bpx-btn ghost sp-inline" onclick="bpCloseModal()">Close</button></div>');
+        + (sent
+          ? '<button class="bpx-btn ghost sp-inline" onclick="SP.poNext()">' + (queue ? 'Next order (' + queue + ' to go)' : 'Close') + '</button>'
+          : '')
+        + '</div>'
+      /* the only way past an unsent order, and it is a decision, not a dismissal */
+      + (sent ? '' : '<div class="sp-skip">Not sending it? <button class="bpx-linkbtn" onclick="SP.poWalkIn(\'' + p.id + '\')">I will just show this at the counter</button>'
+          + (deliver ? ' &middot; a delivery really does have to be sent' : '') + '</div>'));
     document.querySelector('#bpx-modal .bpx-modalcard').style.maxWidth = '640px';
   };
-  /* copying or emailing it is the contractor saying "this is on its way" */
-  SP.poSent = function (id) {
+  /* copying or emailing it is the contractor saying "this is on its way".
+     Walking in is a legitimate answer too, but it has to be chosen, because
+     an order nobody was told about is the one that wastes an hour. */
+  SP.poSent = function (id, mode) {
     var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p || p.sent_to_supplier) return;
-    p.sent_to_supplier = true;
-    db.update('purchase_orders', id, { sent_to_supplier: true }).catch(function () {});
+    p.sent_to_supplier = true; p.send_mode = mode || 'sent';
+    db.update('purchase_orders', id, { sent_to_supplier: true, send_mode: p.send_mode }).catch(function () {});
+    setTimeout(function () { SP.poOpen(id); }, 350);
+  };
+  SP.poWalkIn = function (id) {
+    var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
+    if (p.fulfil === 'delivery' && !confirm('This one is being delivered, so there is no counter to walk into. Mark it handled anyway?')) return;
+    SP.poSent(id, 'walkin');
+  };
+  /* several stops means several orders; walk them rather than leaving the
+     rest buried in a list */
+  SP.poNext = function () {
+    var next = SP.pos.filter(function (x) { return x.status === 'sent' && !x.sent_to_supplier; })[0];
+    window.bpCloseModal();
+    if (next) setTimeout(function () { SP.poOpen(next.id); }, 250);
+    else if (window._bpCurView === 'supplyorders') window.bpSupplyOrders();
   };
   SP.copy = function (btn) { var t = btn.getAttribute('data-text') || ''; try { navigator.clipboard.writeText(t).then(function () { btn.textContent = 'Copied'; }); } catch (e) { alert(t); } };
   SP.printTicket = function (deliver) {
