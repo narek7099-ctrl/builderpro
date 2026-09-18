@@ -94,8 +94,12 @@
     var iv = keys.map(function (k) { return inM[k] || 0; }), ov = keys.map(function (k) { return outM[k] || 0; });
     var has = iv.some(Boolean) || ov.some(Boolean);
     if (!has) return '<div class="bpx-panel"><div class="bpx-ptitle">Money in and out<span class="lg2">last 6 months</span></div><div class="dash-empty">Nothing logged yet. Collect on a job, or photograph a supply bill, and it lands here.</div></div>';
-    var W = 620, H = 200, padL = 8, padR = 8, top = 22, base = H - 26, max = Math.max.apply(null, iv.concat(ov).concat([1]));
-    var gw = (W - padL - padR) / 6, bw = Math.min(26, gw * 0.3), gap = 2;
+    /* The svg scales its text with the viewBox, so an 11px label inside a
+       620-wide box renders at about 6px on a phone. A narrower box on a
+       narrow screen keeps the labels the size they were drawn at. */
+    var narrow = (window.innerWidth || 1200) < 760;
+    var W = narrow ? 380 : 620, H = narrow ? 188 : 200, padL = 8, padR = 8, top = 22, base = H - 26, max = Math.max.apply(null, iv.concat(ov).concat([1]));
+    var gw = (W - padL - padR) / 6, bw = Math.min(26, gw * 0.34), gap = 2;
     var y = function (v) { return base - (v / max) * (base - top); };
     var svg = '';
     for (var g = 1; g <= 3; g++) { var gy = top + (base - top) * g / 4; svg += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" class="dash-grid"/>'; }
@@ -220,14 +224,23 @@
       + (crew ? '' : numbers())
       + (crew
         ? '<div style="margin-top:16px">' + week() + '</div>'
-        : '<div class="dash-two even">' + attention() + week() + '</div>'
-          + '<div class="dash-two">' + moneyChart() + activity() + '</div>')
+        : '<div class="dash-two">' + attention() + week() + moneyChart() + activity() + '</div>')
       + '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-ptitle">Projects in motion<span class="lg2">tap one to open it</span></div><div id="bpxProjCard" class="bpx-mut" style="font-size:13.5px">Loading</div></div>'
       + (crew ? '' : '<div style="margin-top:16px">' + jobsChart() + '</div>')
       + (D.leads ? '<div class="bpx-stats dash-nums" style="margin-top:16px"><div class="bpx-stat"><div class="lbl">New leads this month</div><div class="val">' + D.leads.n + '</div><div class="note">from your website and phone line</div></div><div class="bpx-stat"><div class="lbl">Appointments this month</div><div class="val">' + D.leads.a + '</div><div class="note">booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page</div></div></div>' : '');
     if (window.bpDashProjects) bpDashProjects();
     fetchState();
   };
+
+  /* a rotation crosses the breakpoint: redraw so the chart is drawn for the
+     size it is actually being shown at */
+  var wasNarrow = (window.innerWidth || 1200) < 760;
+  window.addEventListener('resize', function () {
+    var now = (window.innerWidth || 1200) < 760;
+    if (now === wasNarrow) return;
+    wasNarrow = now;
+    if (window._bpCurView === 'dashboard') window.bpDashboard();
+  });
 
   /* what needs the network: fetched once per visit, page re-rendered when it lands */
   var fetching = false;
