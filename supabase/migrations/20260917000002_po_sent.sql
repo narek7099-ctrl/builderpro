@@ -3,3 +3,6 @@
 -- look identical to one the branch is already picking.
 
 alter table public.purchase_orders add column if not exists sent_to_supplier boolean not null default false;
+
+-- and how it went out: emailed to the branch, or carried to the counter
+alter table public.purchase_orders add column if not exists send_mode text not null default '';
