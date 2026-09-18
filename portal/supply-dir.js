@@ -182,21 +182,31 @@
     return 'all';
   }
 
-  SP.dir = { trade: null, q: '' };
-  SP.dirOpen = function () {
+  SP.dir = { trade: null, q: '', mode: 'near' };
+  SP.dirOpen = function (mode) {
     if (SP.dir.trade == null) SP.dir.trade = myTrade();
+    if (mode) SP.dir.mode = mode;
+    if (!SP.near.q) SP.near.q = myPlace();
+    var m = SP.dir.mode;
     window.bpModal(
-      '<h3>Find a supplier</h3><div class="bpx-sub">The companies that sell your trade. Pick one to add it, then scan a quote from them so the prices are yours and not a guess.</div>'
-      + '<input id="sp-dir-q" class="sp-dir-q" type="search" placeholder="Search by name or material, for example minisplit or drywall" value="' + esc(SP.dir.q) + '" oninput="SP.dirFilter(this.value)">'
-      + '<div class="sp-dir-trades" id="sp-dir-trades">' + TRADES.map(function (p) {
-        return '<button class="bpx-jt' + (SP.dir.trade === p[0] ? ' on' : '') + '" onclick="SP.dirTrade(\'' + p[0] + '\')">' + p[1] + '</button>';
-      }).join('') + '</div>'
-      + '<div id="sp-dir-list" class="sp-dir-list"></div>'
-      + '<div class="sp-dir-miss">Plenty of good suppliers are regional and independent. <button class="bpx-rowbtn" onclick="SP.dirManual()">Add one by hand</button></div>'
+      '<h3>Find a supplier</h3><div class="bpx-sub">Nothing here is a price. Add one, then ask them for a quote or photograph a bill, and their prices are yours.</div>'
+      + '<div class="bpx-jobtabs" style="margin-bottom:12px">'
+        + '<button class="bpx-jt' + (m === 'near' ? ' on' : '') + '" onclick="SP.dirOpen(\'near\')"><span class="ms">near_me</span> Near me</button>'
+        + '<button class="bpx-jt' + (m === 'dir' ? ' on' : '') + '" onclick="SP.dirOpen(\'dir\')"><span class="ms">storefront</span> Chains and online</button></div>'
+      + (m === 'near'
+        ? '<div class="sp-near-bar"><input id="sp-near-q" class="sp-dir-q" type="search" placeholder="Zip, city or the shop address" value="' + esc(SP.near.q) + '" onkeydown="if(event.key===\'Enter\')SP.nearFind()">'
+          + '<button class="bpx-btn sp-inline" id="sp-near-go" onclick="SP.nearFind()">Find supply houses</button></div>'
+          + '<div id="sp-near-list" class="sp-dir-list"></div>'
+        : '<input id="sp-dir-q" class="sp-dir-q" type="search" placeholder="Search by name or material, for example minisplit or drywall" value="' + esc(SP.dir.q) + '" oninput="SP.dirFilter(this.value)">'
+          + '<div class="sp-dir-trades" id="sp-dir-trades">' + TRADES.map(function (p) {
+            return '<button class="bpx-jt' + (SP.dir.trade === p[0] ? ' on' : '') + '" onclick="SP.dirTrade(\'' + p[0] + '\')">' + p[1] + '</button>';
+          }).join('') + '</div>'
+          + '<div id="sp-dir-list" class="sp-dir-list"></div>')
+      + '<div class="sp-dir-miss">Know one we could not find? <button class="bpx-rowbtn" onclick="SP.dirManual()">Add it by hand</button></div>'
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
     var card = document.querySelector('#bpx-modal .bpx-modalcard');
     if (card) card.style.maxWidth = '760px';
-    SP.dirRender();
+    if (m === 'near') SP.nearRender(); else SP.dirRender();
   };
   SP.dirTrade = function (t) {
     SP.dir.trade = t;
@@ -269,5 +279,163 @@
     };
     window.bpCloseModal();
     SP.supOpen();
+  };
+
+  /* ================================================================
+     NEAR ME: the supply houses that actually exist around the shop.
+
+     Real map data, not a list we typed. Nominatim turns the zip into a
+     point, Overpass returns every building-supply shop around it, and
+     the chains we know get their directory notes attached. Distance is
+     measured; drive time is an estimate the contractor corrects once.
+     Same two services Neighbor Farming already runs on.
+     ================================================================ */
+  SP.near = { q: '', busy: false, rows: [], err: '', at: null };
+  function myPlace() {
+    var c = (window.bpSettingsGet && window.bpSettingsGet().company) || {};
+    return String(c.address || c.city || c.zip || myZip() || '');
+  }
+  /* OSM shop tags that mean "sells building material to the trade" */
+  var SHOP_KINDS = { hardware: 'Hardware', doityourself: 'Home improvement', trade: 'Trade supply', building_materials: 'Building supply', paint: 'Paint', electrical: 'Electrical supply', plumbing: 'Plumbing supply', hvac: 'HVAC supply', garden_centre: 'Landscape supply', lumber: 'Lumber yard', roofing: 'Roofing supply' };
+  /* a roofer does not want the garden centre; a landscaper does */
+  var ALWAYS = ['hardware', 'doityourself', 'trade', 'building_materials', 'lumber'];
+  var BY_TRADE = { roofing: ['roofing'], siding: ['roofing'], painting: ['paint'], electrical: ['electrical'], plumbing: ['plumbing', 'hvac'], hvac: ['hvac', 'plumbing'], landscaping: ['garden_centre'], concrete: [], drywall: [], framing: [], tools: [] };
+  function shopKindsFor(trade) { return trade === 'all' ? Object.keys(SHOP_KINDS) : ALWAYS.concat(BY_TRADE[trade] || []); }
+  var CHAIN_RX = 'ABC Supply|SRS|Beacon|Ferguson|Winsupply|Johnstone|Consolidated Electrical|\\bCED\\b|Graybar|Sherwin|Benjamin Moore|SiteOne|White Cap|L ?& ?W Supply|Foundation Building|Builders FirstSource|84 Lumber|Fastenal|Home Depot|Lowe|Menards|Carter Lumber|Grainger|Roofing Supply|Building Supply|Roofing|Lumber|Drywall|Insulation|Electric Supply|Plumbing Supply';
+  function chainFor(name) {
+    var n = String(name || '').toLowerCase();
+    return DIR.filter(function (d) {
+      var key = d.name.toLowerCase().replace(/ \(.*\)$/, '').split(' ')[0];
+      return key.length > 2 && n.indexOf(key) >= 0 && (key !== 'home' || n.indexOf('home depot') >= 0);
+    })[0] || null;
+  }
+  function miles(a, b) {
+    var R = 3958.8, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  /* around town a truck averages about 25 mph door to door */
+  function driveMin(mi) { return Math.max(5, Math.round(mi * 2.4)); }
+  function osmAddress(t) {
+    var line = [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' ');
+    return [line, t['addr:city']].filter(Boolean).join(', ');
+  }
+  SP.nearFind = function () {
+    var q = ($('sp-near-q') || {}).value || SP.near.q; q = String(q || '').trim();
+    if (!q) { SP.near.err = 'Type a zip or a city first.'; SP.nearRender(); return; }
+    SP.near.q = q; SP.near.busy = true; SP.near.err = ''; SP.near.rows = []; SP.nearRender();
+    var geocode = window.bpFmGeocode || function (addr) {
+      return fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=' + encodeURIComponent(addr)).then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (a) { if (!a || !a.length) throw new Error('We could not find that on the map. Try the zip on its own.'); return { lat: +a[0].lat, lng: +a[0].lon }; });
+    };
+    geocode(q).then(function (at) {
+      SP.near.at = at;
+      var R = 40000; /* 25 miles: past that it is a delivery, not a run */
+      var qy = '[out:json][timeout:25];('
+        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["shop"~"^(' + shopKindsFor(SP.dir.trade || myTrade()).join('|') + ')$"];'
+        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["name"~"' + CHAIN_RX + '",i]["shop"];'
+        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["name"~"' + CHAIN_RX + '",i]["building"];'
+        + ');out center tags 200;';
+      return fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(qy) })
+        .then(function (r) { if (!r.ok) throw new Error('The map service is busy right now. Give it a minute and try again.'); return r.json(); });
+    }).then(function (d) {
+      var seen = {}, out = [];
+      ((d && d.elements) || []).forEach(function (el) {
+        var t = el.tags || {}; if (!t.name) return;
+        var la = el.lat != null ? el.lat : (el.center && el.center.lat), ln = el.lon != null ? el.lon : (el.center && el.center.lon);
+        if (la == null || ln == null) return;
+        var key = t.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + la.toFixed(3) + '|' + ln.toFixed(3);
+        if (seen[key]) return; seen[key] = 1;
+        /* a garden centre or a tile shop is real but not what a roofer drives to */
+        var chain = chainFor(t.name), shop = t.shop || '';
+        if (!chain && shopKindsFor(SP.dir.trade || myTrade()).indexOf(shop) < 0) return;
+        var mi = miles(SP.near.at, { lat: la, lng: ln });
+        out.push({ name: t.name, kind: shop, label: chain ? chain.carries : (SHOP_KINDS[shop] || 'Supply'), chain: chain, address: osmAddress(t), phone: t.phone || t['contact:phone'] || '', site: t.website || t['contact:website'] || '', hours: t.opening_hours || '', lat: la, lng: ln, mi: mi, drive: driveMin(mi) });
+      });
+      out.sort(function (a, b) { return a.mi - b.mi; });
+      SP.near.rows = out.slice(0, 40); SP.near.busy = false; SP.nearRender();
+    }).catch(function (e) { SP.near.busy = false; SP.near.err = (e && e.message) || 'Something went wrong. Try again.'; SP.nearRender(); });
+  };
+  SP.nearRender = function () {
+    var el = $('sp-near-list'); if (!el) return;
+    var go = $('sp-near-go'); if (go) { go.disabled = SP.near.busy; go.textContent = SP.near.busy ? 'Looking' : 'Find supply houses'; }
+    if (SP.near.err) { el.innerHTML = '<div class="sp-note bad"><span class="ms">error</span>' + esc(SP.near.err) + '</div>'; return; }
+    if (SP.near.busy) { el.innerHTML = '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>'; return; }
+    if (!SP.near.rows.length) {
+      el.innerHTML = '<div class="sp-note"><span class="ms">near_me</span>' + (SP.near.at ? 'No supply houses on the map within 25 miles of there. Try a bigger town nearby, or check the chains tab.' : 'Put in your zip and we list every supply house around it, closest first, with a guess at the drive.') + '</div>';
+      return;
+    }
+    var have = {}; (SP.sup || []).forEach(function (s) { have[String(s.name).toLowerCase() + '|' + String(s.address || '').toLowerCase()] = true; });
+    el.innerHTML = '<div class="sp-dir-h">Closest first<span>' + SP.near.rows.length + ' within 25 miles of ' + esc(SP.near.q) + '</span></div>'
+      + SP.near.rows.map(function (r, i) {
+        var added = have[r.name.toLowerCase() + '|' + r.address.toLowerCase()];
+        return '<div class="sp-dir-c' + (added ? ' added' : '') + '">'
+          + '<div class="sp-dir-t"><b>' + esc(r.name) + '</b>' + (added ? '<span class="bpx-badge">Already yours</span>' : '') + '<span class="sp-dir-sh">' + r.mi.toFixed(1) + ' mi &middot; about ' + r.drive + ' min</span></div>'
+          + '<div class="sp-dir-car">' + esc(r.label) + (r.address ? ' &middot; ' + esc(r.address) : '') + '</div>'
+          + (r.chain ? '<div class="sp-dir-n">' + esc(r.chain.note) + '</div>' : '')
+          + '<div class="sp-dir-a">'
+            + (added ? '' : '<button class="bpx-rowbtn primary" onclick="SP.nearAdd(' + i + ')">Add to my suppliers</button>')
+            + (r.phone ? '<a class="bpx-rowbtn" href="tel:' + esc(r.phone.replace(/[^0-9+]/g, '')) + '">Call ' + esc(r.phone) + '</a>' : '')
+            + '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + r.lat + ',' + r.lng + '">Directions</a>'
+          + '</div></div>';
+      }).join('');
+  };
+  SP.nearAdd = function (i) {
+    var r = SP.near.rows[i]; if (!r) return;
+    SP.dirPrefill = {
+      name: r.name, kind: r.chain ? r.chain.kind : 'custom', branch: r.address.split(',')[0] || '', address: r.address, drive_min: r.drive,
+      account_no: '', email: '', tier: '', hours: r.hours, will_call: true, delivery: !!(r.chain && r.chain.delivery), delivery_fee: 0, delivery_min: 0,
+      notes: r.label, connection: { type: 'pricebook' },
+      _hint: 'Drive time is our guess from the map, ' + r.drive + ' minutes. Fix it if you know better. Then ask them for a quote so we have their prices.',
+    };
+    window.bpCloseModal();
+    SP.supOpen();
+  };
+
+  /* ================================================================
+     ASK FOR THEIR PRICES: the only honest way to see what a new supply
+     house would charge. Nobody publishes contractor pricing; it lives on
+     a quote with your name on it. So we write the request from the list
+     the contractor actually buys, they send it, and when the quote comes
+     back the camera turns it into prices.
+     ================================================================ */
+  function usualItems() {
+    var kits = (SP.kitsAll && SP.kitsAll()) || [];
+    var k = kits[0];
+    if (k && k.items && k.items.length) {
+      return k.items.map(function (it) { return { name: it.n || it.name, qty: SP.kitQty ? SP.kitQty(it, k.size) : (it.fixed || 1), unit: it.u || it.unit || 'ea' }; });
+    }
+    /* no kits for this trade: whatever they have ordered most */
+    var tally = {};
+    (SP.pos || []).forEach(function (p) { (p.lines || []).forEach(function (l) { var key = l.name; tally[key] = tally[key] || { name: l.name, qty: 0, unit: l.unit || 'ea' }; tally[key].qty += +l.qty || 0; }); });
+    return Object.keys(tally).map(function (k) { return tally[k]; }).sort(function (a, b) { return b.qty - a.qty; }).slice(0, 15);
+  }
+  SP.quoteAsk = function (supplierId) {
+    var s = SP.supById ? SP.supById(supplierId) : null; if (!s) return;
+    var co = (window.bpSettingsGet && window.bpSettingsGet().company) || {};
+    var items = usualItems();
+    var lines = items.length ? items.map(function (it) { return '  ' + it.qty + ' ' + it.unit + '  ' + it.name; }).join('\n') : '  (list the materials you buy most)';
+    var town = String(co.address || '').split(',').slice(1).join(',').replace(/\b\d{5}(-\d{4})?\b/, '').replace(/\s+/g, ' ').trim();
+    var text = 'Hi ' + (s.name || 'there') + ',\n\n'
+      + 'I run ' + (co.name || 'a contracting company') + (town ? ' in ' + town : '') + ' and I am looking at buying from you. '
+      + 'Could you quote me contractor pricing on a typical job, and let me know what it takes to set up an account?\n\n'
+      + lines + '\n\n'
+      + 'Please put your item numbers on the quote. Will-call and delivery pricing both help if you offer both.\n\n'
+      + 'Thanks,\n' + (co.owner || co.name || '') + (co.phone ? '\n' + co.phone : '') + (co.email ? '\n' + co.email : '');
+    var mail = s.email ? 'mailto:' + encodeURIComponent(s.email) + '?subject=' + encodeURIComponent('Quote request from ' + (co.name || 'a contractor')) + '&body=' + encodeURIComponent(text) : '';
+    window.bpModal('<h3>Ask ' + esc(s.name) + ' for their prices</h3>'
+      + '<div class="bpx-sub">Nobody publishes contractor pricing. It lives on a quote with your name on it, so this asks for one using the list you buy most. Change anything before you send it.</div>'
+      + '<textarea id="sp-qa-text" class="sp-qa">' + esc(text) + '</textarea>'
+      + '<div class="sp-note"><span class="ms">photo_camera</span><b>When the quote comes back, photograph it.</b> Every price on it goes into ' + esc(s.name) + '\'s price book, and from then on they are in every comparison.</div>'
+      + '<div class="row" style="flex-wrap:wrap">'
+        + (mail ? '<a class="bpx-btn sp-inline" href="' + mail + '">Email it to them</a>' : '')
+        + '<button class="bpx-btn' + (mail ? ' ghost' : '') + ' sp-inline" onclick="SP.quoteCopy(this)">Copy it to send</button>'
+        + (s.email ? '' : '<button class="bpx-btn ghost sp-inline" onclick="bpCloseModal();SP.supOpen(\'' + s.id + '\')">Add their email</button>')
+        + '<button class="bpx-btn ghost sp-inline" onclick="bpCloseModal()">Close</button></div>');
+    document.querySelector('#bpx-modal .bpx-modalcard').style.maxWidth = '620px';
+  };
+  SP.quoteCopy = function (btn) {
+    var t = ($('sp-qa-text') || {}).value || '';
+    try { navigator.clipboard.writeText(t).then(function () { btn.textContent = 'Copied'; }); } catch (e) { alert(t); }
   };
 })();

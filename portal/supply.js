@@ -154,8 +154,7 @@
     return '<div class="bpx-stats">' + t('Places you buy', mine + (ex ? ' <small class="sp-ex">+' + ex + ' example</small>' : '')) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
   }
   function tabs(active) {
-    var t = [['supply', 'Order materials'], ['supplyorders', 'Orders']];
-    if (active === 'suppliers') t.push(['suppliers', 'Where I buy']);
+    var t = [['supply', 'Order materials'], ['supplyorders', 'Orders'], ['suppliers', 'Where I buy']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   /* The one line that makes the dependency visible: what we can price, and
@@ -185,7 +184,7 @@
   window.bpSuppliers = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('suppliers') + skel(); load(); return; }
     var h = tabs('suppliers') + state() + kpis();
-    h += '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Your supply houses<span class="lg2">contractor pricing and stock, per branch</span></div>'
+    h += '<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Where I buy<span class="lg2">the places we can price a job at. Add one, or stop using one.</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.dirOpen()">+ Add supplier</button></div></div>';
     if (!SP.sup.length) h += firstRun();
     h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
@@ -206,13 +205,16 @@
       + '<div class="sp-drive">' + (s.drive_min != null ? '<b>' + s.drive_min + '</b> min' : '<b>?</b> min') + '</div></div>'
       + '<div class="sp-sup-meta">' + connLine + (learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + learned + ' from your paperwork</span>' : '') + '</div>'
       + '<div class="sp-sup-meta bpx-mut">' + [s.tier ? esc(s.tier) + ' pricing' : '', s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivery ' + (s.delivery_fee > 0 ? money(s.delivery_fee) + (s.delivery_min > 0 ? ', free over ' + money(s.delivery_min) : '') : 'free') : '', s.hours ? esc(s.hours) : ''].filter(Boolean).join(' &middot; ') + '</div>'
+      + (its.length ? '' : '<div class="sp-note" style="margin:10px 0 8px"><span class="ms">request_quote</span><b>No prices from ' + esc(s.name) + ' yet.</b> Send them your usual list and ask for a quote. When it comes back, photograph it and their prices go in on their own.</div>')
       + '<div class="sp-sup-acts">'
-      + '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Scan a quote</button>'
-      + '<button class="bpx-rowbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import CSV</button>'
-      + (conn.type === 'api' ? '<button class="bpx-rowbtn primary" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : '<button class="bpx-rowbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (its.length ? 'Refresh sample stock' : 'Load sample catalog') + '</button>')
-      + '<button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">View items</button>'
+      + (its.length
+        ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button>'
+        : '<button class="bpx-rowbtn primary" onclick="SP.quoteAsk(\'' + s.id + '\')">Ask for their prices</button><button class="bpx-rowbtn" onclick="SP.scanOpen()">Photograph a bill</button>')
+      + '<button class="bpx-rowbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import a price file</button>'
+      + (conn.type === 'api' ? '<button class="bpx-rowbtn primary" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : isSample(s) ? '<button class="bpx-rowbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (its.length ? 'Refresh example stock' : 'Load example prices') + '</button>' : '')
+      + (its.length ? '<button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">See their prices</button>' : '')
       + '<button class="bpx-rowbtn" onclick="SP.supOpen(\'' + s.id + '\')">Edit</button>'
-      + window.bpDelBtn('SP.supDel(\'' + s.id + '\')', 'Remove supplier')
+      + window.bpDelBtn('SP.supDel(\'' + s.id + '\')', 'Stop using them')
       + '</div></div>';
   }
   function ago(ts) { if (!ts) return 'never'; var m = Math.round((Date.now() - ts) / 60000); if (m < 2) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.round(m / 60); if (h < 24) return h + 'h ago'; var d = Math.round(h / 24); return d + 'd ago'; }
@@ -247,7 +249,7 @@
   };
   SP.supDel = function (id) {
     var s = supById(id); if (!s) return;
-    if (!window.bpAskDel(s.name + ' and its price book')) return;
+    if (!window.bpAskDel(s.name + ' and every price we learned from them')) return;
     db.del('suppliers', id).then(function () { SP.reload(); }).catch(function (e) { alert('Could not remove. ' + (e.message || '')); });
   };
   SP.supOpen = function (id) {
