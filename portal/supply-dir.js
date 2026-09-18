@@ -291,7 +291,10 @@
           ? '<button class="bpx-rowbtn" onclick="SP.dirGo(\'' + d.id + '\')">Open their site</button>'
           : '<button class="bpx-rowbtn primary" onclick="SP.dirAdd(\'' + d.id + '\')">Add to my suppliers</button>')
         + '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(homeUrl(d)) + '">Their website</a>'
-        + (d.type === 'branch' ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(findUrl(d)) + '">Branches near me</a>' : '')
+        + (d.type === 'branch'
+          ? '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(mapUrl(d)) + '">On a map near me</a>'
+            + '<a class="bpx-rowbtn" target="_blank" rel="noopener" href="' + esc(findUrl(d)) + '">Their branch list</a>'
+          : '')
       + '</div></div>';
   }
   function myZip() {
