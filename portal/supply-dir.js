@@ -349,14 +349,19 @@
       /* 15 miles. In a metro, 25 was a query the map could not finish, and past
          15 it is a delivery anyway. Only shops are scanned, never buildings:
          a name search over every building in Los Angeles never returns. */
-      var R = 24000;
-      var kinds = shopKindsFor(SP.dir.trade || myTrade()).join('|');
+      var R = 24000, here = 'around:' + R + ',' + at.lat + ',' + at.lng;
+      /* one exact-match clause per shop type. A regex on the value cannot use
+         the index, and in a city that scan hit the server's own time limit
+         and came back as an empty answer that looked like "nothing here". */
       var qy = '[out:json][timeout:20];('
-        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["shop"~"^(' + kinds + ')$"];'
-        + 'nwr(around:' + R + ',' + at.lat + ',' + at.lng + ')["shop"]["name"~"' + CHAIN_RX + '",i];'
+        + shopKindsFor(SP.dir.trade || myTrade()).map(function (k) { return 'nwr(' + here + ')["shop"="' + k + '"];'; }).join('')
+        + 'nwr(' + here + ')["shop"]["name"~"' + CHAIN_RX + '",i];'
         + ');out center 200;';
       return overpass(qy);
     }).then(function (d) {
+      /* a server-side timeout is a 200 with no elements and a remark; it is
+         not "no supply houses here" and must never be shown as one */
+      if (d && d.remark && /timed? ?out|runtime error/i.test(d.remark) && !((d.elements || []).length)) throw new Error('The map took too long to answer. Try again in a minute, or a zip a little closer to the shop.');
       var seen = {}, out = [];
       ((d && d.elements) || []).forEach(function (el) {
         var t = el.tags || {}; if (!t.name) return;
@@ -380,11 +385,11 @@
     if (SP.near.err) { el.innerHTML = '<div class="sp-note bad"><span class="ms">error</span>' + esc(SP.near.err) + '</div>'; return; }
     if (SP.near.busy) { el.innerHTML = '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>'; return; }
     if (!SP.near.rows.length) {
-      el.innerHTML = '<div class="sp-note"><span class="ms">near_me</span>' + (SP.near.at ? 'No supply houses on the map within 25 miles of there. Try a bigger town nearby, or check the chains tab.' : 'Put in your zip and we list every supply house around it, closest first, with a guess at the drive.') + '</div>';
+      el.innerHTML = '<div class="sp-note"><span class="ms">near_me</span>' + (SP.near.at ? 'No supply houses on the map within 15 miles of there. Try a bigger town nearby, or check the chains tab.' : 'Put in your zip and we list every supply house around it, closest first, with a guess at the drive.') + '</div>';
       return;
     }
     var have = {}; (SP.sup || []).forEach(function (s) { have[String(s.name).toLowerCase() + '|' + String(s.address || '').toLowerCase()] = true; });
-    el.innerHTML = '<div class="sp-dir-h">Closest first<span>' + SP.near.rows.length + ' within 25 miles of ' + esc(SP.near.q) + '</span></div>'
+    el.innerHTML = '<div class="sp-dir-h">Closest first<span>' + SP.near.rows.length + ' within 15 miles of ' + esc(SP.near.q) + '</span></div>'
       + SP.near.rows.map(function (r, i) {
         var added = have[r.name.toLowerCase() + '|' + r.address.toLowerCase()];
         return '<div class="sp-dir-c' + (added ? ' added' : '') + '">'
