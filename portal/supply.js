@@ -449,7 +449,7 @@
     var stopsCost = function (stops) { return stops.reduce(function (t, st) { return t + (st.fulfil === 'delivery' ? st.fees : C.stop + (st.drive || 0) * 2 * C.min); }, 0); };
     var DELIVERY_MIN = 480;                             /* a delivery is "tomorrow"; only cheapest may prefer it */
     var mkStop = function (s, ls) {
-      var sub = ls.reduce(function (t, x) { return t + x.qty * x.price; }, 0);
+      var sub = ls.reduce(function (t, x) { return t + (x.tbc || x.price == null ? 0 : x.qty * x.price); }, 0);
       var free = s.delivery && s.delivery_min > 0 && sub >= s.delivery_min;
       var del = s.delivery && (!s.will_call || (mode === 'cheapest' && (free || (+s.delivery_fee || 0) < C.stop + (s.drive_min == null ? 25 : s.drive_min) * 2 * C.min)));
       var fees = del ? (free ? 0 : +s.delivery_fee || 0) : 0;
@@ -468,6 +468,16 @@
       return { stops: stops, missing: missing, parts: parts, run: run, total: parts + run, minutes: minutes, stopsN: stops.length };
     };
     var cands = [];
+    /* an item nobody has priced yet still goes on the order: the branch
+       prices it at the account rate and the next bill teaches us the number */
+    var asTbc = function (l) { return { line: l, item: { sku: '', name: l.name, unit: l.unit || 'ea', price: null, stock: null }, sku: '', name: l.name, qty: l.qty, unit: l.unit || 'ea', price: null, tbc: true, score: 1 }; };
+    var fold = function (c) {
+      if (!c || !c.missing.length) return c;
+      var host = c.stops[0];
+      c.missing.forEach(function (l) { host.lines.push(asTbc(l)); });
+      c.tbc = c.missing.length; c.missing = [];
+      return c;
+    };
     /* single-supplier plans */
     sups.forEach(function (s) {
       var a = lines.map(function (l, i) { var m = grid[s.id][i]; return m && (inStock(m, l.qty) || (mode === 'cheapest' && unknown(m))) ? s.id : null; });
@@ -485,20 +495,25 @@
       return best ? best.id : null;
     })));
     cands = cands.filter(function (c) { return c.stops.length; });
-    if (!cands.length) return null;
+    if (!cands.length) {
+      /* nothing priced anywhere: one stop at the nearest supply house, every line for them to price */
+      var s0 = byDrive[0]; if (!s0) return null;
+      var st0 = mkStop(s0, lines.map(asTbc));
+      return { stops: [st0], missing: [], tbc: lines.length, parts: 0, run: stopsCost([st0]), total: stopsCost([st0]), minutes: st0.fulfil === 'delivery' ? DELIVERY_MIN : st0.drive * 2, stopsN: 1 };
+    }
     var covered = function (c) { return lines.length - c.missing.length; };
     cands.sort(function (a, b) {
       if (covered(b) !== covered(a)) return covered(b) - covered(a);
       if (mode === 'fastest') return (a.minutes - b.minutes) || (a.stopsN - b.stopsN) || (a.total - b.total);
       return (a.total - b.total) || (a.minutes - b.minutes);
     });
-    return cands[0];
+    return fold(cands[0]);
   }
   SP.run = function () {
     var L = SP.list; if (!L) return;
     var lines = (L.items || []).filter(function (i) { return String(i.name).trim() && +i.qty > 0; }).map(function (i) { return { key: i.key, name: i.name, qty: +i.qty, unit: i.unit }; });
     if (!lines.length) { alert('Add at least one item with a quantity.'); return; }
-    if (!SP.items.length) { alert('We do not know any prices yet. Photograph a bill from your supply house and we will learn them off it.'); return; }
+    if (!SP.sup.length) { alert('Add a supply house first, on Where I buy. Then the order has somewhere to go.'); return; }
     SP.plans = { fastest: plan(lines, 'fastest'), cheapest: plan(lines, 'cheapest'), lines: lines };
     if (L.status === 'draft') { L.status = 'sourced'; db.update('parts_lists', L.id, { status: 'sourced' }).catch(function () {}); }
     window.bpSupply();
@@ -523,13 +538,13 @@
           : C && C.stopsN > p.stopsN ? 'One stop, not ' + C.stopsN : '');
       return '<div class="sp-plan' + (sel ? ' sel' : '') + '">'
         + '<div class="sp-plan-h"><b>' + label + '</b>' + (win ? '<span class="sp-win">' + win + '</span>' : '') + (sel ? '<span class="bpx-badge">Your priority</span>' : '') + '</div>'
-        + '<div class="sp-plan-big"><span>' + money(p.total) + '</span><small>' + (p.stopsN === 1 ? '1 stop' : p.stopsN + ' stops') + (p.stops.every(function (st) { return st.fulfil === 'delivery'; }) ? ', delivered' : ', about ' + p.stops.reduce(function (t, st) { return t + (st.fulfil === 'delivery' ? 0 : st.drive * 2); }, 0) + ' min round trip') + '</small></div>'
+        + '<div class="sp-plan-big"><span>' + (p.parts || !p.tbc ? money(p.total) : 'Priced at the counter') + '</span><small>' + (p.stopsN === 1 ? '1 stop' : p.stopsN + ' stops') + (p.stops.every(function (st) { return st.fulfil === 'delivery'; }) ? ', delivered' : ', about ' + p.stops.reduce(function (t, st) { return t + (st.fulfil === 'delivery' ? 0 : st.drive * 2); }, 0) + ' min round trip') + '</small></div>'
         + '<div class="sp-plan-sub bpx-mut">Parts ' + money(p.parts) + (p.run ? ' + your time and truck ' + money(p.run) : '') + '</div>'
         + p.stops.map(function (st) {
-          return '<div class="sp-stop"><div class="sp-stop-h"><b>' + esc(st.supplier.name) + '</b><span class="bpx-mut">' + (st.fulfil === 'delivery' ? 'Delivery' + (st.fees ? ' ' + money(st.fees) : ', free') : (st.supplier.drive_min != null ? st.supplier.drive_min + ' min away' : 'drive time unknown') + ', will-call') + '</span><span class="sp-stop-t">' + money(st.subtotal) + '</span></div>'
-            + '<div class="sp-lines">' + st.lines.map(function (x) { return '<div class="sp-line"><span>' + x.qty + ' &times; ' + esc(x.name) + (x.score < 0.85 ? ' <em class="bpx-mut">(matched from "' + esc(x.line.name) + '")</em>' : '') + '</span>' + stockBadge(x.item, x.qty) + '<span class="bpx-num">' + money(x.qty * x.price) + '</span></div>'; }).join('') + '</div></div>';
+          return '<div class="sp-stop"><div class="sp-stop-h"><b>' + esc(st.supplier.name) + '</b><span class="bpx-mut">' + (st.fulfil === 'delivery' ? 'Delivery' + (st.fees ? ' ' + money(st.fees) : ', free') : (st.supplier.drive_min != null ? st.supplier.drive_min + ' min away' : 'drive time unknown') + ', will-call') + '</span><span class="sp-stop-t">' + (st.lines.every(function (x) { return x.tbc; }) ? 'priced by them' : money(st.subtotal)) + '</span></div>'
+            + '<div class="sp-lines">' + st.lines.map(function (x) { return '<div class="sp-line"><span>' + x.qty + ' &times; ' + esc(x.name) + (x.score < 0.85 ? ' <em class="bpx-mut">(matched from "' + esc(x.line.name) + '")</em>' : '') + '</span>' + (x.tbc ? '<span class="sp-tbc">branch prices it</span>' : stockBadge(x.item, x.qty)) + '<span class="bpx-num">' + (x.tbc ? '&mdash;' : money(x.qty * x.price)) + '</span></div>'; }).join('') + '</div></div>';
         }).join('')
-        + (p.missing.length ? '<div class="sp-note warn" style="margin-top:8px"><span class=ms>help</span>We have no price for <b>' + p.missing.map(function (m) { return esc(m.name); }).join('</b>, <b>') + '</b>. That just means we have never seen a bill with it on. Photograph one from wherever you buy it and it will be priced from now on. <button class="bpx-rowbtn" onclick="SP.scanOpen()">Photograph a bill</button></div>' : '')
+        + (p.tbc ? '<div class="sp-note" style="margin-top:8px"><span class=ms>help</span><b>' + p.tbc + (p.tbc === 1 ? ' item has' : ' items have') + ' no price yet</b> because you have never bought ' + (p.tbc === 1 ? 'it' : 'them') + ' through here. ' + (p.tbc === 1 ? 'It goes' : 'They go') + ' on the order marked <i>price at our account rate</i>; the branch fills it in. Photograph that bill when it comes and ' + (p.tbc === 1 ? 'it is' : 'they are') + ' priced from then on.</div>' : '')
         + '<button class="bpx-btn sp-inline" style="margin-top:12px" onclick="SP.order(\'' + key + '\')">' + (p.stopsN === 1 ? 'Order it this way' : 'Order it this way, ' + p.stopsN + ' stops') + '</button>'
         + '</div>';
     };
@@ -552,7 +567,7 @@
     var n = SP.pos.length + 1, seq = Promise.resolve(), made = [];
     P.stops.forEach(function (st) {
       var row = { list_id: L.id, supplier_id: st.supplier.id, po_number: poNumber(n++), status: 'sent', fulfil: st.fulfil, eta_min: st.fulfil === 'delivery' ? null : st.drive,
-        lines: st.lines.map(function (x) { return { sku: x.sku, name: x.name, qty: x.qty, unit: x.unit, price: x.price }; }),
+        lines: st.lines.map(function (x) { return x.tbc ? { sku: '', name: x.name, qty: x.qty, unit: x.unit, price: null, tbc: true } : { sku: x.sku, name: x.name, qty: x.qty, unit: x.unit, price: x.price }; }),
         subtotal: Math.round(st.subtotal * 100) / 100, fees: Math.round(st.fees * 100) / 100, total: Math.round((st.subtotal + st.fees) * 100) / 100, job_id: L.job_id || '', job_name: L.job_name || '', sent_at: new Date().toISOString() };
       seq = seq.then(function () { return db.insert('purchase_orders', row); }).then(function (r) { made.push(r); });
     });
@@ -620,39 +635,45 @@
     var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
     var s = supById(p.supplier_id) || {}, co = ((window.bpSettingsGet && bpSettingsGet().company) || {});
     var deliver = p.fulfil === 'delivery';
+    var isTbc = function (l) { return l.tbc || l.price == null; }, tbcN = p.lines.filter(isTbc).length;
     var where = deliver ? (co.address ? 'Deliver to: ' + co.address : 'Please deliver.') : 'Will-call pickup. Our tech will present this PO number.';
     var text = 'PURCHASE ORDER ' + p.po_number + '\nFrom: ' + (co.name || 'Our company') + (co.phone ? ', ' + co.phone : '')
       + '\nTo: ' + (s.name || '') + (s.branch ? ', ' + s.branch : '') + (s.account_no ? '\nAccount: ' + s.account_no : '') + (p.job_name ? '\nJob: ' + p.job_name : '') + '\n\n'
-      + p.lines.map(function (l) { return l.qty + ' x ' + l.name + (l.sku ? ' [' + l.sku + ']' : '') + ' @ ' + money(l.price); }).join('\n')
-      + '\n\nSubtotal ' + money(p.subtotal) + (p.fees ? '\nDelivery ' + money(p.fees) : '') + '\nTotal ' + money(p.total) + '\n' + where
+      + p.lines.map(function (l) { return l.qty + ' x ' + l.name + (l.sku ? ' [' + l.sku + ']' : '') + (isTbc(l) ? '  (price at our account rate)' : ' @ ' + money(l.price)); }).join('\n')
+      + '\n\n' + (tbcN < p.lines.length ? 'Priced lines ' + money(p.subtotal) + (p.fees ? '\nDelivery ' + money(p.fees) : '') + '\n' : '')
+      + (tbcN ? tbcN + (tbcN === 1 ? ' line' : ' lines') + ' marked "price at our account rate": please price at our contractor rate and put it on the invoice.\n' : '') + where
       + '\n\nPlease put PO ' + p.po_number + ' on the invoice.';
     var mail = s.email ? 'mailto:' + encodeURIComponent(s.email) + '?subject=' + encodeURIComponent('PO ' + p.po_number + ' from ' + (co.name || 'BuilderPro client')) + '&body=' + encodeURIComponent(text) : '';
     var sent = !!p.sent_to_supplier;
-    var walkin = p.send_mode === 'walkin';
+    var walkin = p.send_mode === 'walkin', emailed = p.send_mode === 'emailed';
+    var note = SP._poNote || ''; SP._poNote = '';
     var queue = SP.pos.filter(function (x) { return x.status === 'sent' && !x.sent_to_supplier && x.id !== p.id; }).length;
 
     window.bpModal(
-      (sent
-        ? '<div class="sp-note good"><span class="ms">' + (walkin ? 'directions_car' : 'check_circle') + '</span>' + (walkin
+      (note ? '<div class="sp-note warn"><span class="ms">info</span>' + esc(note) + '</div>' : '')
+      + (sent
+        ? '<div class="sp-note good"><span class="ms">' + (walkin ? 'directions_car' : emailed ? 'mark_email_read' : 'check_circle') + '</span>' + (walkin
             ? 'You are showing this at the counter. Nothing was sent to ' + esc(s.name || 'them') + ', so they are not expecting you.'
+            : emailed
+            ? 'Emailed to <b>' + esc(p.sent_to || s.email || s.name) + '</b>' + (p.branch_sent_at ? ' ' + ago(Date.parse(p.branch_sent_at)) : '') + '. A copy is in your inbox; their reply comes to you. When the bill comes, photograph it and it lands on the job.'
             : 'Sent to ' + esc(s.name || 'the supplier') + '. When the bill comes, photograph it and it lands on the job.') + '</div>'
-        : '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + esc(s.name || 'The supply house') + ' has not been told about this yet.</b> We do not send orders for you, so nothing is waiting for you until you send it. '
-          + (deliver ? 'Send it across so they can schedule the drop.' : 'Send it and it is picked before you arrive. Otherwise you are queueing at the counter like any other day.')
-          + (s.email || deliver ? '' : ' Add their contractor desk email on <button class="bpx-linkbtn" onclick="bpCloseModal();bpNav(\'suppliers\')">Where I buy</button> and this becomes one tap.') + '</div>')
+        : '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + esc(s.name || 'The supply house') + ' has not been told about this yet.</b> Nothing is waiting for you until it goes. '
+          + (deliver ? 'Send it across so they can schedule the drop.' : 'Send it and it is picked before you arrive. Otherwise you are queueing at the counter like any other day.') + '</div>')
       + '<div class="sp-ticket" id="sp-ticket">'
       + '<div class="sp-ticket-h"><div><div class="bpx-mut" style="font-size:12px">' + (deliver ? 'Delivery order' : 'Will-call ticket') + '</div><b style="font-size:20px">' + esc(p.po_number) + '</b></div>'
         + '<div style="text-align:right"><b>' + esc(s.name || '') + '</b><div class="bpx-mut">' + esc(s.branch || '') + (s.account_no ? ' &middot; Acct ' + esc(s.account_no) : '') + '</div></div></div>'
       + (deliver
         ? '<div class="sp-ticket-del"><span class="ms">local_shipping</span><div><b>Deliver to ' + esc(co.address || 'the address on file') + '</b><span class="bpx-mut">' + (p.job_name ? 'Job: ' + esc(p.job_name) + ' &middot; ' : '') + (p.fees ? 'Delivery ' + money(p.fees) : 'Free delivery') + '</span></div></div>'
         : '<div class="sp-ticket-bar">' + barcodeSvg(p.po_number, 420, 90) + '<div class="sp-ticket-num">' + esc(p.po_number) + '</div></div>')
-      + '<table class="bpx-ctable"><thead><tr><th>Qty</th><th>Item</th><th>SKU</th><th class="bpx-r">Each</th><th class="bpx-r">Total</th></tr></thead><tbody>' + p.lines.map(function (l) { return '<tr><td>' + l.qty + '</td><td>' + esc(l.name) + '</td><td class="bpx-mut">' + esc(l.sku) + '</td><td class="bpx-r bpx-num">' + money(l.price) + '</td><td class="bpx-r bpx-num">' + money(l.qty * l.price) + '</td></tr>'; }).join('') + '</tbody></table>'
-      + '<div class="sp-po-tot" style="margin-top:8px"><span>' + (p.fees ? 'Parts ' + money(p.subtotal) + ' + delivery ' + money(p.fees) : 'Total') + '</span><b>' + money(p.total) + '</b></div>'
+      + '<table class="bpx-ctable"><thead><tr><th>Qty</th><th>Item</th><th>SKU</th><th class="bpx-r">Each</th><th class="bpx-r">Total</th></tr></thead><tbody>' + p.lines.map(function (l) { return '<tr><td>' + l.qty + '</td><td>' + esc(l.name) + '</td><td class="bpx-mut">' + esc(l.sku || '') + '</td>' + (isTbc(l) ? '<td class="bpx-r" colspan="2"><span class="sp-tbc">at account rate</span></td>' : '<td class="bpx-r bpx-num">' + money(l.price) + '</td><td class="bpx-r bpx-num">' + money(l.qty * l.price) + '</td>') + '</tr>'; }).join('') + '</tbody></table>'
+      + '<div class="sp-po-tot" style="margin-top:8px"><span>' + (tbcN ? (tbcN < p.lines.length ? 'Priced lines' + (p.fees ? ' + delivery ' + money(p.fees) : '') + ', plus ' + tbcN + ' the branch prices' : 'The branch prices all ' + tbcN + ' lines') : (p.fees ? 'Parts ' + money(p.subtotal) + ' + delivery ' + money(p.fees) : 'Total')) + '</span><b>' + (tbcN === p.lines.length ? '&mdash;' : money(p.total)) + '</b></div>'
       + '<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">' + esc(co.name || '') + (p.job_name ? ' &middot; Job: ' + esc(p.job_name) : '') + ' &middot; ' + (deliver ? 'Delivery' : 'Will-call') + '</div>'
       + '<div class="sp-ticket-ask"><span class="ms">priority_high</span>Ask them to put <b>' + esc(p.po_number) + '</b> on the invoice. Then the bill matches itself back to this order and the job.</div>'
       + '</div>'
+      + '<div id="sp-po-ask"></div>'
       + '<div class="row" style="flex-wrap:wrap">'
-        + (mail ? '<a class="bpx-btn sp-inline" href="' + mail + '" onclick="SP.poSent(\'' + p.id + '\',\'sent\')">Email it to ' + esc(s.name || 'the supplier') + '</a>' : '')
-        + '<button class="bpx-btn' + (mail ? ' ghost' : '') + ' sp-inline" onclick="SP.copy(this);SP.poSent(\'' + p.id + '\',\'sent\')" data-text="' + esc(text) + '">Copy it to send</button>'
+        + (sent ? '' : '<button class="bpx-btn sp-inline" id="sp-send-btn" onclick="SP.poSend(\'' + p.id + '\')">Send to ' + esc(s.name || 'the supplier') + '</button>')
+        + '<button class="bpx-btn ghost sp-inline" onclick="SP.copy(this)' + (sent ? '' : ';SP.poSent(\'' + p.id + '\',\'sent\')') + '" data-text="' + esc(text) + '">Copy it' + (sent ? '' : ' to send') + '</button>'
         + '<button class="bpx-btn ghost sp-inline" onclick="SP.printTicket(' + (deliver ? 'true' : 'false') + ')">Print</button>'
         + (sent
           ? '<button class="bpx-btn ghost sp-inline" onclick="SP.poNext()">' + (queue ? 'Next order (' + queue + ' to go)' : 'Close') + '</button>'
@@ -662,6 +683,55 @@
       + (sent ? '' : '<div class="sp-skip">Not sending it? <button class="bpx-linkbtn" onclick="SP.poWalkIn(\'' + p.id + '\')">I will just show this at the counter</button>'
           + (deliver ? ' &middot; a delivery really does have to be sent' : '') + '</div>'));
     document.querySelector('#bpx-modal .bpx-modalcard').style.maxWidth = '640px';
+    SP._poMail = mail;
+  };
+  /* Send it: the branch's contractor desk gets the order by email from our
+     mail service, the contractor is copied, replies come back to them. If
+     the supplier has no desk email yet we ask for it right here. If this
+     deployment has no mail service, the contractor's own mail app opens with
+     the same text, and the order is still stamped as sent. */
+  SP.poSend = function (id) {
+    var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
+    var s = supById(p.supplier_id) || {};
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(s.email || '').trim())) { SP.poEmailAsk(id); return; }
+    var btn = $('sp-send-btn'); if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+    var st = (window.bpSettingsGet && bpSettingsGet()) || {}, co = st.company || {}, ow = st.owner || {};
+    /* stamped here as well as by the server, so a reload in between never shows an emailed order as unsent */
+    var stamp = function (to, at) { p.sent_to_supplier = true; p.send_mode = 'emailed'; p.sent_to = to; p.branch_sent_at = at || new Date().toISOString(); db.update('purchase_orders', id, { sent_to_supplier: true, send_mode: 'emailed', sent_to: p.sent_to, branch_sent_at: p.branch_sent_at }).catch(function () {}); };
+    if (!live()) { setTimeout(function () { stamp(s.email); SP.poOpen(id); }, 600); return; }
+    Promise.resolve(window.bpAuthApi(window.BP_URL + '/functions/v1/supply-send', { op: 'send', poId: id, company: { name: co.name || '', phone: co.phone || '', address: co.address || '', email: ow.email || '' } }))
+      .then(function (r) {
+        if (r && r.ok) { stamp(r.to || s.email, r.at); SP.poOpen(id); return; }
+        var why = r && r.reason;
+        if (why === 'no_mailer') { SP.poFallback(id, 'Email sending is not switched on for this account yet, so we opened the order in your mail app instead. Send it from there.'); return; }
+        if (why === 'no_email') { SP.poEmailAsk(id); return; }
+        SP.poMsg('Could not send it: ' + ((r && (r.detail || r.error)) || 'the mail service did not answer') + '. Try again, or copy it and send it yourself.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Send to ' + (s.name || 'the supplier'); }
+      })
+      .catch(function () {
+        SP.poFallback(id, 'Could not reach the mail service, so we opened the order in your mail app instead. Send it from there.');
+      });
+  };
+  SP.poFallback = function (id, note) {
+    var mail = SP._poMail; if (mail) { try { window.location.href = mail; } catch (e) {} }
+    SP._poNote = note; SP.poSent(id, 'sent');
+  };
+  SP.poMsg = function (t) { var el = $('sp-po-ask'); if (el) el.innerHTML = '<div class="sp-note warn"><span class="ms">error</span>' + esc(t) + '</div>'; };
+  SP.poEmailAsk = function (id) {
+    var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
+    var s = supById(p.supplier_id) || {}; var el = $('sp-po-ask'); if (!el) return;
+    el.innerHTML = '<div class="sp-ask"><div class="sp-ask-h"><span class="ms">alternate_email</span><div><b>Where does ' + esc(s.name || 'this branch') + ' take orders?</b><span class="bpx-mut">Their contractor desk or pro desk email. Ask at the counter once; we keep it.</span></div></div>'
+      + '<div class="sp-ask-f"><input id="sp-ask-email" type="email" inputmode="email" placeholder="prodesk@branch.com" autocomplete="off"><button class="bpx-btn sp-inline" onclick="SP.poEmailSave(\'' + id + '\')">Save and send</button></div>'
+      + '<div class="bpx-mut" style="font-size:12px;margin-top:6px">No email for them? <button class="bpx-linkbtn" onclick="SP.copy(document.querySelector(\'[data-text]\'));SP.poSent(\'' + id + '\',\'sent\')">Copy the order and text it to them</button></div></div>';
+    var i = $('sp-ask-email'); if (i) { i.focus(); i.addEventListener('keydown', function (e) { if (e.key === 'Enter') SP.poEmailSave(id); }); }
+  };
+  SP.poEmailSave = function (id) {
+    var p = SP.pos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
+    var s = supById(p.supplier_id); if (!s) return;
+    var v = String(($('sp-ask-email') || {}).value || '').trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { var i = $('sp-ask-email'); if (i) { i.style.borderColor = '#b3392f'; i.focus(); } return; }
+    s.email = v;
+    db.update('suppliers', s.id, { email: v }).catch(function () {}).then(function () { SP.poOpen(id); setTimeout(function () { SP.poSend(id); }, 120); });
   };
   /* copying or emailing it is the contractor saying "this is on its way".
      Walking in is a legitimate answer too, but it has to be chosen, because
@@ -680,8 +750,10 @@
   /* several stops means several orders; walk them rather than leaving the
      rest buried in a list */
   SP.poNext = function () {
+    var back = SP._back; SP._back = null;
     var next = SP.pos.filter(function (x) { return x.status === 'sent' && !x.sent_to_supplier; })[0];
     window.bpCloseModal();
+    if (back) { setTimeout(function () { if (window.bpProjOpen) bpProjOpen(back); }, 250); return; }
     if (next) setTimeout(function () { SP.poOpen(next.id); }, 250);
     else if (window._bpCurView === 'supplyorders') window.bpSupplyOrders();
   };
@@ -736,6 +808,46 @@
     for (var m = 0; m < pattern.length; m++) { var wd = +pattern[m] * scale; if (m % 2 === 0) bars += '<rect x="' + x.toFixed(2) + '" y="0" width="' + wd.toFixed(2) + '" height="' + h + '"/>'; x += wd; }
     return '<svg class="sp-bc" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" role="img" aria-label="Barcode ' + esc(text) + '" shape-rendering="crispEdges"><rect width="' + w + '" height="' + h + '" fill="#fff"/><g fill="#0b1021">' + bars + '</g></svg>';
   }
+  /* ---------- the Materials tab on a project ----------
+     Everything bought for this job, and the way to buy more, without leaving
+     the project card. Opening an order from here comes back here. */
+  window.bpProjMaterials = function (jobId) {
+    var el = $('bpx-pj-mat'); if (!el) return;
+    if (!SP.loaded) { el.innerHTML = '<div class="bpx-skel" style="width:60%"></div>'; load().then(function () { window.bpProjMaterials(jobId); }); return; }
+    var pos = SP.pos.filter(function (p) { return p.job_id === jobId && p.status !== 'cancelled'; });
+    var drafts = SP.lists.filter(function (l) { return l.job_id === jobId && l.status !== 'ordered'; });
+    var spent = pos.reduce(function (t, p) { return t + (p.invoice_total != null ? +p.invoice_total : +p.total || 0); }, 0);
+    var open = pos.filter(function (p) { return !p.sent_to_supplier && p.status === 'sent'; }).length;
+    var label = function (p) {
+      if (p.status === 'reconciled') return ['Bill matched', 'good'];
+      if (p.status === 'invoiced') return ['Bill to check', 'warn'];
+      if (p.status === 'picked_up') return ['Picked up, bill to come', ''];
+      if (p.status === 'ready') return ['Ready at the counter', 'good'];
+      if (!p.sent_to_supplier) return ['Not sent yet', 'warn'];
+      return [p.send_mode === 'walkin' ? 'Showing at the counter' : p.fulfil === 'delivery' ? 'Delivery on its way' : 'Sent, being picked', ''];
+    };
+    el.innerHTML =
+      (pos.length
+        ? '<div class="sp-mat-sum"><b>' + money(spent) + '</b><span>on materials so far, across ' + pos.length + (pos.length === 1 ? ' order' : ' orders') + (open ? ' &middot; <em>' + open + ' not sent yet</em>' : '') + '</span></div>'
+        : '<div class="sp-mat-sum"><b>Nothing ordered for this job yet.</b><span>Order it from here and it lands on this project and in Finances when the bill comes.</span></div>')
+      + pos.map(function (p) {
+        var s = supById(p.supplier_id) || {}, lb = label(p), tbc = p.lines.filter(function (l) { return l.tbc || l.price == null; }).length;
+        return '<div class="sp-mat-row" onclick="SP._back=\'' + jobId + '\';SP.poOpen(\'' + p.id + '\')"><div class="sp-mat-who"><b>' + esc(s.name || 'Supplier') + '</b><span>' + esc(p.po_number) + ' &middot; ' + p.lines.length + (p.lines.length === 1 ? ' line' : ' lines') + (tbc ? ', ' + tbc + ' priced by them' : '') + ' &middot; ' + ago(Date.parse(p.sent_at)) + '</span></div>'
+          + '<span class="sp-mat-st ' + lb[1] + '">' + lb[0] + '</span><b class="bpx-num">' + (p.invoice_total != null ? money(p.invoice_total) : tbc === p.lines.length ? '&mdash;' : money(p.total)) + '</b><span class="ms">chevron_right</span></div>';
+      }).join('')
+      + drafts.map(function (l) {
+        var n = (l.items || []).filter(function (i) { return String(i.name || '').trim(); }).length;
+        return '<div class="sp-mat-row draft" onclick="bpCloseModal();bpNav(\'supply\');setTimeout(function(){SP.pick(\'' + l.id + '\')},60)"><div class="sp-mat-who"><b>' + esc(l.name || 'Parts list') + '</b><span>started, not ordered &middot; ' + n + (n === 1 ? ' item' : ' items') + '</span></div><span class="sp-mat-st">Continue</span><span class="ms">chevron_right</span></div>';
+      }).join('')
+      + '<div class="sp-mat-acts"><button class="bpx-btn sp-inline" onclick="SP.newListFor(\'' + jobId + '\')"><span class="ms">add_shopping_cart</span>Order materials for this job</button>'
+      + '<button class="bpx-rowbtn" onclick="bpCloseModal();bpNav(\'supplyorders\')">All orders</button></div>';
+  };
+  SP.newListFor = function (jobId) {
+    var j = (window.bpJobsGet ? bpJobsGet() : []).filter(function (x) { return x.id === jobId; })[0];
+    db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the job'), job_id: jobId, job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [{ key: uid('k'), name: '', qty: 1, unit: 'ea' }] })
+      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpCloseModal(); window.bpNav('supply'); setTimeout(function () { var f = document.querySelector('.sp-item:not(.sp-head) input'); if (f) f.focus(); }, 80); })
+      .catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
+  };
   SP.barcode = barcodeSvg;
   SP.plan = plan;
   /* used by supply-scan.js */
