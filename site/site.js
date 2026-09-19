@@ -150,7 +150,7 @@
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
     if (!right || !canvas || canvas._bpHero) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20260919-d').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+    import('./hero3d.js?v=20260919-e').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
       .catch(function () { right.classList.add('nogl'); });
   }
   /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
