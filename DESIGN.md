@@ -603,26 +603,34 @@ Never fake a number, and never claim a retry that isn't happening.
 
 ## Marketing site (index.html above the portal)
 
-The public site is a panelled page in the language of dashline.tech: every
-block is a white card on a pale ground (`--dl-ground`) with 8px gutters, one
-blue, black pill buttons, and Geist throughout. Sources live in `site/`:
+The public site is a mosaic of rounded cards on a cool grey canvas
+(`#f0f3f7`, never white), 6px apart and 6px from the screen edge. There is
+no centred container and no section margin: `--gutter` is the only
+separator. Cards are white, accent blue (`#006fff`), slate (`#788493`) or a
+1px outline. Type is General Sans, large, tight, navy (`#001530`), with
+exactly one accent phrase per headline and a period at the end. Every size
+is in rem on a fluid root font-size, so the design scales to an ultrawide.
+Motion: headings rise out of a line mask (GSAP SplitText), then the section
+pill grows; storytelling is scrubbed to scroll, feedback is tweened.
+Sources live in `site/`:
 
-- `site/base.css` replaces the old theme block in `<head>` (tokens the kept
-  components still read, plus resets).
-- `site/site.css` is the visual system. Everything is scoped under `body.dl`
-  because the estimator iframes inherit every stylesheet on the page.
-- `site/site.js` drives the preloader, the pinned story, reveals, the stat
-  carousel, the flow diagram and the timeline. No scroll listeners: each
-  scroll-tracking loop is a requestAnimationFrame gated by an
-  IntersectionObserver.
-- `site/hero3d.js` is the Three.js hero object: frosted-glass slabs on a
-  tiled floor, keyframed through four states and blended by scroll progress.
-  It degrades to a flat tile when WebGL is unavailable.
+- `site/base.css` is the theme block in `<head>`: tokens the kept
+  components (estimator, Lisa chat, plan modal, model sites) still read.
+- `site/site.css` is the visual system: tokens, the fluid root, the card
+  primitive, components and sections. Element resets are scoped to the
+  marketing markup so the portal keeps its own.
+- `site/site.js` is the animation layer on GSAP + ScrollTrigger + SplitText
+  and Lenis (all vendored under `site/vendor/`): heading reveal, hero story,
+  ink-in text, trades accordion, sticky how-it-works, timeline, menu, drawer.
+  Lenis stands down whenever the loader, the menu, the drawer, the portal or
+  a modal owns the screen.
+- `site/hero3d.js` is the Three.js hero object in the video slot: a cube of
+  frosted tiles driven through four states by the story's scroll progress.
 - `site/body-top.html` and `site/body-bottom.html` are the marketing markup;
-  `site/assemble.py` splices them into a clean `index.html` around the
-  estimator section, the plan modal, the FAQ items and the portal, which are
-  kept byte-for-byte.
+  `site/assemble.py` splices them into `index.html` between
+  `<!-- site:top -->` / `<!-- site:bottom -->` markers, re-runnable, keeping
+  the estimator, the model sites, the plan modal and the portal byte-for-byte.
 
-Rules of the page: no em dashes in visible copy, one accent, one radius
-scale (18px cards, pill buttons), at most one eyebrow per three sections,
-and "Book a demo" is the only demo-intent label.
+Rules of the page: no em dashes in visible copy, one accent phrase per
+headline, headlines end in a period, cards are flat (shadows only on the
+glass cards floating over the hero), and "Get started" opens the drawer.

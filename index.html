@@ -14,15 +14,16 @@
 <script>try{if(/[#&]sign=[a-f0-9]{20,64}/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300,0..1,0&display=block" rel="stylesheet">
 <style>
 /* ==== BuilderPro OS base: tokens the kept components (estimator, Lisa chat,
    plan modal, model sites) still read, plus resets. Visual design lives in
    site/site.css. ==== */
 :root{
-  --ink:#0b1021; --ink-2:#26262a; --grey:#5b6472; --grey-l:#8a93a3;
-  --line:#e3e7ee; --line-2:#eef1f5; --bg:#ffffff; --bar:#f3f5f9; --card:#ffffff;
-  --blue:#2b63e6; --blue-d:#1d4fc4; --blue-l:#e9f0ff; --cream:#f4e7bd;
+  --ink:#001530; --ink-2:#001530; --grey:#788493; --grey-l:#9aa3b1;
+  --line:#dce3ec; --line-2:#eef1f6; --bg:#ffffff; --bar:#f0f3f7; --card:#ffffff;
+  --blue:#006fff; --blue-d:#003db8; --blue-l:#e6f0ff; --cream:#f4e7bd;
   --green:#1faa5a; --red:#e0574e; --pill:#0b1021;
   --serif:'Geist',system-ui,sans-serif; --sans:'Geist',system-ui,sans-serif;
   --maxw:1200px;
@@ -52,8 +53,8 @@ section{padding:0;}
 .modal-body{padding:22px;}
 
 </style>
-<link rel="stylesheet" href="site/site.css?v=20260919b">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919b"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20260919">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919"}}</script>
 
 
 <style id="bpi-icons">
@@ -317,215 +318,430 @@ section{padding:0;}
 .msuccess{text-align:center;padding:14px 0;}
 .msuccess .ic{width:56px;height:56px;border-radius:50%;background:rgba(31,170,90,.12);color:var(--green);font-size:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
 </style>
-<a class="dl-skip" href="#main">Skip to content</a>
+<!-- site:top -->
+<a class="skip" href="#main">Skip to content</a>
 
 <div class="dl-pre" aria-hidden="true"><b>BuilderPro</b></div>
 
-<div class="dl-nav">
-  <a class="dl-btn w" href="#" onclick="bpOpenPortal();return false;">Client login</a>
-  <a class="dl-btn k" href="#pricing">Get started</a>
-  <button class="dl-menu-btn" type="button" onclick="dlMenu()" aria-label="Menu" aria-expanded="false"><span></span></button>
-</div>
-<div class="dl-menu-veil" onclick="dlMenu(false)"></div>
-<nav class="dl-menu" aria-label="Site">
-  <div>
-    <a href="#features">What you get</a><br>
-    <a href="#services">How it works</a><br>
-    <a href="#atlas">Lisa AI</a><br>
-    <a href="#estimator">Estimator</a><br>
-    <a href="#pricing">Pricing</a><br>
-    <a href="#faq">FAQ</a>
-  </div>
-  <div class="dl-menu-side">
-    <a href="#pricing">Get started</a>
-    <a href="#" onclick="bpOpenPortal();dlMenu(false);return false;">Client login</a>
-    <a href="#contact">Contact</a>
-    <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a>
+<!-- ===================== NAVBAR ===========================================
+  The logo is position:fixed with mix-blend-mode:difference so one white mark
+  stays legible over white cards, blue cards and the hero alike.           -->
+<a class="navbar_logo" id="logo" href="#home" aria-label="BuilderPro OS, home">
+  <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+    <path d="M20 2 36 11v18L20 38 4 29V11z" stroke-width="2.2"/>
+    <path d="M20 2v36M4 11l32 18M36 11 4 29" stroke-width="1.1" opacity=".55"/>
+    <path d="M20 20 4 11M20 20l16-9M20 20v18" stroke-width="1.8"/>
+  </svg>
+  <span>BuilderPro</span>
+</a>
+
+<nav class="navbar" aria-label="Primary">
+  <div></div>
+  <div class="navbar_ctas">
+    <a href="#" class="btn is-ghost" onclick="bpOpenPortal();return false;">Client login</a>
+    <button class="btn js-open-drawer" type="button">Get started</button>
+    <button class="icon-btn js-open-menu" type="button" aria-label="Open menu" aria-expanded="false">
+      <span class="navbar_burger"><span></span><span></span></span>
+    </button>
   </div>
 </nav>
 
+<!-- ===================== SLIDE-OUT MENU =================================== -->
+<div class="overlay js-close-menu" id="menuOverlay"></div>
+<aside class="menu" id="menu" aria-label="Site menu">
+  <div class="menu_top">
+    <span>BuilderPro OS</span>
+    <button class="menu_close js-close-menu" type="button" aria-label="Close menu">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 1l14 14M15 1L1 15" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+  <div class="menu_body">
+    <nav>
+      <a href="#trades" class="menu_link">What you get</a>
+      <a href="#how" class="menu_link">How it works</a>
+      <a href="#lisa" class="menu_link">Lisa AI</a>
+      <a href="#estimator" class="menu_link">Estimator</a>
+      <a href="#pricing" class="menu_link">Pricing</a>
+      <a href="#faq" class="menu_link">FAQ</a>
+    </nav>
+    <div class="menu_bottom">
+      <p class="b-m"><a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a></p>
+      <p class="b-m"><a href="tel:+13503331230">(350) 333-1230, Lisa picks up</a></p>
+      <div class="menu_socials">
+        <a href="#" onclick="bpOpenPortal();dlMenu(false);return false;">Client login</a>
+        <a href="#" class="js-open-drawer">Get started</a>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ===================== CONTACT DRAWER ==================================
+  Opened by every "Get started" on the page. GSAP slides it in from x:100%. -->
+<div class="overlay js-close-drawer" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer" aria-label="Get started">
+  <div class="drawer_head">
+    <h3 class="h-s">Get started.</h3>
+    <button class="icon-btn is-outline js-close-drawer" type="button" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 16 16"><path d="M1 1l14 14M15 1L1 15" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+  <a href="tel:+13503331230" class="drawer_call">
+    <span class="icon-btn" style="flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15 15 0 006.6 6.6l2.2-2.2a1 1 0 011-.24 11.4 11.4 0 003.6.58 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.4 11.4 0 00.58 3.6 1 1 0 01-.25 1z"/></svg></span>
+    <span><span class="b-m" style="font-weight:500;display:block">Call Lisa, the live demo</span><span class="b-s muted">(350) 333-1230. Ask what a customer would ask.</span></span>
+  </a>
+  <form onsubmit="return false" novalidate>
+    <div class="drawer_two">
+      <div class="drawer_field"><label class="b-s" for="dfName">Full name</label><input id="dfName" type="text" autocomplete="name" placeholder="Dana Whitfield"></div>
+      <div class="drawer_field"><label class="b-s" for="dfBiz">Business name</label><input id="dfBiz" type="text" autocomplete="organization" placeholder="Whitfield Plumbing"></div>
+    </div>
+    <div class="drawer_two">
+      <div class="drawer_field"><label class="b-s" for="dfPhone">Phone</label><input id="dfPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0148"></div>
+      <div class="drawer_field"><label class="b-s" for="dfEmail">Email</label><input id="dfEmail" type="email" autocomplete="email" inputmode="email" placeholder="dana@whitfieldplumbing.com"></div>
+    </div>
+    <div class="drawer_field"><label class="b-s" for="dfMsg">Your trade and crew size</label><textarea id="dfMsg" rows="4" placeholder="Plumbing, six of us, two trucks. Tired of missing calls on the job."></textarea></div>
+    <button class="btn" type="submit" onclick="dlContactSend(this)">Send</button>
+    <div class="drawer_msg" aria-live="polite"></div>
+  </form>
+</aside>
+
 <main id="main" class="dl-page">
 
-<!-- ===== HERO + PINNED STORY ===== -->
-<section class="dl-hero" id="home">
-  <div class="dl-hero-left">
-    <div class="dl-card dl-brandcard" id="nav">
-      <a class="dl-brand" href="#home"><svg aria-label="BuilderPro"><use href="#bpMark"/></svg><b>Builder<span>Pro</span></b></a>
-    </div>
-    <div class="dl-card dl-headline">
-      <h1 class="dl-h1">Software<br>for contractors,<br><em>reimagined.</em></h1>
-    </div>
-    <div class="dl-card dl-what">
-      <span class="dl-kicker"><i></i>What we do</span>
-      <p class="dl-lead">One system that answers your phone, schedules the work, sends the estimate, signs the contract and collects the invoice. Built for every trade.</p>
-    </div>
-    <div class="dl-story">
-      <div class="dl-panel">
-        <div class="dl-card dl-panel-head"><span class="dl-num">1</span><h3 class="dl-h3">Answer every call</h3></div>
-        <div class="dl-card dl-panel-body">A customer calls while you're on a job site. Lisa picks up, answers their questions and books the appointment before the next ring.</div>
-      </div>
-      <div class="dl-panel">
-        <div class="dl-card dl-panel-head"><span class="dl-num">2</span><h3 class="dl-h3">Run every job</h3></div>
-        <div class="dl-card dl-panel-body">The estimate, the signed contract, the schedule, the photos and the invoice live on one project card, from the first call to the final payment.</div>
-      </div>
-      <div class="dl-panel">
-        <div class="dl-card dl-panel-head"><span class="dl-num">3</span><h3 class="dl-h3">Know your numbers</h3></div>
-        <div class="dl-card dl-panel-body">Income, expenses and profit on every job, updated as the money moves. Finances a crew of two or twenty can read at a glance.</div>
-      </div>
-    </div>
-  </div>
-  <div class="dl-stage">
-    <canvas aria-hidden="true"></canvas>
-    <div class="dl-stage-fallback" aria-hidden="true"><i></i></div>
-  </div>
-</section>
+<!-- ===================== 1. HERO =========================================
+  ONE sticky stage holds every visual layer. Invisible trigger blocks below it
+  give the scroll story its length.
+    .hero_left / .hero_right   the resting state (the right card is the cube)
+    .hero_dark                 dark wash, fades in with scroll
+    .hero_story                the glass caption cards                      -->
+<section class="section hero" id="home">
+  <div class="hero_stage">
 
-<!-- ===== WORKS WITH ===== -->
-<section class="dl-logos" aria-label="Works with">
-  <div class="dl-card"><b>Connects to the tools you already pay for.</b>Small crew to fifty trucks.</div>
-  <div class="dl-marq"><div class="dl-marq-track" aria-hidden="false"><div class="dl-logo"><img src="assets/brand/google-g.png" alt="Google" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/meta.png" alt="Meta" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/yelp.png" alt="Yelp" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/google-ads.png" alt="Google Ads" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/stripe.svg" alt="Stripe" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/twilio.svg" alt="Twilio" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/googlecalendar.svg" alt="Google Calendar" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/quickbooks.svg" alt="QuickBooks" loading="lazy"></div></div><div class="dl-marq-track" aria-hidden="true"><div class="dl-logo"><img src="assets/brand/google-g.png" alt="Google" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/meta.png" alt="Meta" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/yelp.png" alt="Yelp" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/google-ads.png" alt="Google Ads" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/stripe.svg" alt="Stripe" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/twilio.svg" alt="Twilio" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/googlecalendar.svg" alt="Google Calendar" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/quickbooks.svg" alt="QuickBooks" loading="lazy"></div></div></div>
-  <div class="dl-marq rev"><div class="dl-marq-track" aria-hidden="false"><div class="dl-logo"><img src="assets/brand/stripe.svg" alt="Stripe" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/twilio.svg" alt="Twilio" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/googlecalendar.svg" alt="Google Calendar" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/quickbooks.svg" alt="QuickBooks" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/google-g.png" alt="Google" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/meta.png" alt="Meta" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/yelp.png" alt="Yelp" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/google-ads.png" alt="Google Ads" loading="lazy"></div></div><div class="dl-marq-track" aria-hidden="true"><div class="dl-logo"><img src="assets/brand/stripe.svg" alt="Stripe" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/twilio.svg" alt="Twilio" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/googlecalendar.svg" alt="Google Calendar" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/quickbooks.svg" alt="QuickBooks" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/google-g.png" alt="Google" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/meta.png" alt="Meta" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/yelp.png" alt="Yelp" loading="lazy"></div><div class="dl-logo"><img src="assets/brand/google-ads.png" alt="Google Ads" loading="lazy"></div></div></div>
-</section>
+    <div class="hero_left">
+      <div class="hero_left-top"></div>
 
-<!-- ===== WHAT YOU GET ===== -->
-<section id="features" class="dl-grid" style="gap:var(--dl-gap)">
-  <div class="dl-card dl-sechead">
-    <span class="dl-kicker"><i></i>What you get</span>
-    <h2 class="dl-h2">One system.<br>Every <em>trade.</em></h2>
-  </div>
-  <div class="dl-bento">
-    <div class="dl-media">
-      <div class="dl-photo"><img src="assets/roofing/roof-crew.jpg" alt="A roofing crew laying underlayment on a residential roof" loading="lazy"></div>
-      <div class="dl-stack">
-        <div class="dl-stat blue"><div><b>128</b><span>Jobs booked in one month, by one crew</span></div><div class="dl-bars" aria-hidden="true"><i style="--h:30%"></i><i style="--h:45%"></i><i style="--h:38%"></i><i style="--h:62%"></i><i style="--h:70%"></i><i style="--h:84%"></i><i style="--h:100%"></i></div></div>
-        <div class="dl-stat slate"><div><b>63</b><span>Calls answered while the owner was on a roof</span></div><div class="dl-bars" aria-hidden="true"><i style="--h:40%"></i><i style="--h:35%"></i><i style="--h:58%"></i><i style="--h:52%"></i><i style="--h:76%"></i><i style="--h:68%"></i><i style="--h:100%"></i></div></div>
+      <div class="hero_left-mid">
+        <h1 class="h-l" data-split="heading" data-split-load>
+          Software<br>for contractors,<br><span class="accent">reimagined.</span>
+        </h1>
       </div>
-    </div>
-    <div class="dl-side">
-      <div class="dl-card dl-case">
-        <small>Included in every plan</small>
-        <h4>Lisa answering the phone, estimates and contracts, scheduling, invoices and finances, and every customer in one place.</h4>
-        <a class="dl-btn k" style="margin-top:10px;align-self:flex-start" href="#pricing">Get started</a>
-      </div>
-      <div class="dl-acc">
-        <details open><summary>Roofing<i></i></summary><p>Satellite roof estimates on your site, storm-damage follow-up, insurance-claim intake and Lead Radar territories.</p></details>
-        <details><summary>HVAC, plumbing and electrical<i></i></summary><p>Emergency-call routing, maintenance-plan reminders and service calculators customers can price themselves.</p></details>
-        <details><summary>Painting, concrete and remodeling<i></i></summary><p>Room-by-room quote builders, before-and-after galleries and review requests the day the job wraps.</p></details>
-        <details><summary>Pools and landscaping<i></i></summary><p>Seasonal packages, build configurators and recurring service billing that runs itself.</p></details>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ===== FLOW ===== -->
-<section id="services" class="dl-grid" style="gap:var(--dl-gap)">
-  <div class="dl-card dl-sechead">
-    <span class="dl-kicker"><i></i>How it works</span>
-    <h2 class="dl-h2">Goodbye scattered apps,<br>hello <em>one</em> system.</h2>
-  </div>
-  <div class="dl-flow">
-    <div class="dl-blueprint dl-paper all">
-      <svg class="dl-wires" viewBox="0 0 900 560" preserveAspectRatio="none" aria-hidden="true">
-        <path class="b" d="M150 120 V430"/><path d="M450 200 V430"/><path d="M750 120 V500"/>
-        <path d="M230 260 H370"/><path d="M530 340 H670"/><path d="M230 430 C300 430 300 340 370 340"/>
-      </svg>
-      <div class="dl-nodes">
-        <div class="dl-node hi"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.6 2.6.7a2 2 0 0 1 1.7 2z"/></svg>Call answered</div>
-        <div class="dl-node dim">Site measured</div>
-        <div class="dl-node"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Job scheduled</div>
-        <div class="dl-node">Lisa books the visit</div>
-        <div class="dl-node"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>Estimate sent</div>
-        <div class="dl-node">Crew dispatched</div>
-        <div class="dl-node dim">Customer confirms</div>
-        <div class="dl-node dim">Customer reviews it</div>
-        <div class="dl-node dim">Photos logged on site</div>
-        <div class="dl-node"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>Reminder the night before</div>
-        <div class="dl-node"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Contract signed</div>
-        <div class="dl-node"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Invoice paid</div>
-        <div class="dl-node dim">Profit logged on the job</div>
-        <div class="dl-node dim">Deposit collected</div>
-        <div class="dl-node end">Review requested</div>
+      <div class="hero_left-bot" data-pill-parent>
+        <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">What we do</span></div>
+        <p class="b-l" data-split="heading" data-split-load data-split-delay=".35">
+          One system that answers your phone, schedules the work, sends the estimate, signs the contract and collects the invoice. Built for every trade.
+        </p>
       </div>
     </div>
-    <div class="dl-flowtext">
-      <div class="dl-card">
-        <span class="dl-icon"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg></span>
-        <h3 class="dl-h3">From first call<br>to final invoice</h3>
-      </div>
-      <div class="dl-card" style="gap:24px">
-        <p class="dl-p">Every step after the phone rings is wired together: the booking, the estimate, the contract, the schedule, the invoice and the review. You show up and do the work.</p>
-        <a class="dl-btn k" style="align-self:flex-start" href="#pricing">Get started</a>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ===== PRODUCT ROWS ===== -->
-<section id="product" class="dl-grid" style="gap:var(--dl-gap)">
-  <div class="dl-row">
-    <div class="dl-shotcard dl-paper all"><img src="assets/site/portal-dashboard.png" alt="The BuilderPro dashboard showing jobs, calls answered and pipeline" loading="lazy"></div>
-    <div class="dl-rowtext">
-      <div class="dl-card">
-        <span class="dl-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
-        <h3 class="dl-h3">One dashboard</h3>
-      </div>
-      <div class="dl-card grow" style="gap:24px">
-        <p class="dl-p">Calls answered, jobs in motion, invoices out and profit in, in a single calm view. It's the same dashboard your portal opens to every morning.</p>
-        <a class="dl-btn k" style="align-self:flex-start" href="#" onclick="bpOpenPortal();return false;">Client login</a>
-      </div>
+    <!-- RIGHT: the object stage. A cube of frosted tiles, four of them blue,
+         rendered live (site/hero3d.js) and driven through its states by the
+         scroll story. Falls back to a flat tile without WebGL.             -->
+    <div class="hero_right">
+      <canvas aria-hidden="true"></canvas>
+      <div class="hero_fallback" aria-hidden="true"><i></i></div>
     </div>
-  </div>
-  <div class="dl-row flip">
-    <div class="dl-shotcard dl-paper all"><img src="assets/site/portal-calendar.png" alt="The BuilderPro calendar with upcoming appointments" loading="lazy"></div>
-    <div class="dl-rowtext">
-      <div class="dl-card">
-        <span class="dl-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></span>
-        <h3 class="dl-h3">Scheduled while<br>you're on site</h3>
-      </div>
-      <div class="dl-card grow" style="gap:24px">
-        <p class="dl-p">Appointments, jobs, closed days and your own to-dos on one calendar, with a public booking page your customers can use at midnight.</p>
-        <a class="dl-btn k" style="align-self:flex-start" href="#pricing">Get started</a>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ===== LISA ===== -->
-<section id="atlas" class="dl-lisa">
-  <div class="dl-card dl-lisa-text">
-    <span class="dl-kicker"><i></i>Meet your receptionist</span>
-    <div style="display:flex;flex-direction:column;gap:18px">
-      <h2 class="dl-h2">Talk to <em>Lisa</em>, live.</h2>
-      <p class="dl-p">This is the real receptionist that answers your calls, texts and bookings, not a recording. Call or text it now and ask what a customer would ask.</p>
-    </div>
-  </div>
-  <div class="dl-card dl-lisa-stage">
-    <div class="atlas-stage">
-      <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with Lisa AI">
-        <canvas id="atlasNet" aria-hidden="true"></canvas>
-      </button>
-      <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to talk to Lisa</span></div>
-      <div class="atlas-inline" id="atlasInline">
-        <div class="ai-head">
-          <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
-          <div><div class="ai-name" id="aiName">Lisa, live demo</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">Online 24/7. Call or text.</span></div></div>
-          <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close">&times;</button>
+    <div class="hero_dark" id="heroDark"></div>
+
+    <div class="hero_story" id="heroStory">
+      <div class="hero_story-top">
+        <div class="hero_counter">
+          <svg viewBox="0 0 48 48">
+            <circle class="ring-bg" cx="24" cy="24" r="22"/>
+            <circle class="ring-fg" cx="24" cy="24" r="22" id="heroRing"/>
+          </svg>
+          <span id="heroNum">1</span>
         </div>
-        <div class="ai-ask" id="aiAsk">
-          <div class="ai-ask-h">Try asking Lisa</div>
-          <div class="ai-ask-item">"How much does a full replacement cost?"</div>
-          <div class="ai-ask-item">"Can you book me an appointment this week?"</div>
-          <div class="ai-ask-item">"Do you handle insurance claims?"</div>
-          <div class="ai-ask-item">"What areas do you service?"</div>
-          <div class="ai-ask-note">This is the real AI. It answers, quotes ballparks and books appointments live, 24/7.</div>
-          <a class="ai-ask-call" href="tel:+13503331230">Call Lisa, (350) 333-1230</a>
-          <a class="ai-ask-text" href="sms:+13503331230">Text Lisa instead</a>
+        <div class="hero_step-title" data-step="1">Answer every call</div>
+        <div class="hero_step-title" data-step="2">Run every job</div>
+        <div class="hero_step-title" data-step="3">Know your numbers</div>
+      </div>
+      <div class="hero_story-bot">
+        <p class="b-l hero_step-body" data-step="1" data-highlight-text>A customer calls while you are on a roof. Lisa picks up, answers their questions and books the visit before the next ring.</p>
+        <p class="b-l hero_step-body" data-step="2" data-highlight-text>The estimate, the signed contract, the schedule, the photos and the invoice live on one project card, from first call to final payment.</p>
+        <p class="b-l hero_step-body" data-step="3" data-highlight-text>Income, expenses and profit on every job, updated as the money moves. Numbers a crew of two or twenty can read at a glance.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero_triggers">
+    <div class="hero_trigger is-1" data-hero-step="1"></div>
+    <div class="hero_trigger is-2" data-hero-step="2"></div>
+    <div class="hero_trigger is-3" data-hero-step="3"></div>
+  </div>
+</section>
+
+
+<!-- ===================== 2. LOGO WALL ==================================== -->
+<section class="section" aria-label="Works with">
+  <div class="stack">
+    <div class="card is-outline" style="text-align:center">
+      <p class="b-m">Connects to the tools you already pay for.<br>Small crew to fifty trucks.</p>
+    </div>
+    <div class="marquee">
+      <div class="marquee_track">
+        <div class="logo-tile"><img src="assets/brand/google-g.png" alt="Google" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/meta.png" alt="Meta" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/yelp.png" alt="Yelp" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/google-ads.png" alt="Google Ads" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/stripe.svg" alt="Stripe" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/twilio.svg" alt="Twilio" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/googlecalendar.svg" alt="Google Calendar" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/quickbooks.svg" alt="QuickBooks" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/google-g.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/meta.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/yelp.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/google-ads.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/stripe.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/twilio.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/googlecalendar.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/quickbooks.svg" alt="" loading="lazy"></div>
+      </div>
+    </div>
+    <div class="marquee">
+      <div class="marquee_track is-reverse">
+        <div class="logo-tile"><img src="assets/brand/stripe.svg" alt="Stripe" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/twilio.svg" alt="Twilio" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/googlecalendar.svg" alt="Google Calendar" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/quickbooks.svg" alt="QuickBooks" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/google-g.png" alt="Google" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/meta.png" alt="Meta" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/yelp.png" alt="Yelp" loading="lazy"></div>
+        <div class="logo-tile"><img src="assets/brand/google-ads.png" alt="Google Ads" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/stripe.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/twilio.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/googlecalendar.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/quickbooks.svg" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/google-g.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/meta.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/yelp.png" alt="" loading="lazy"></div>
+        <div class="logo-tile" aria-hidden="true"><img src="assets/brand/google-ads.png" alt="" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================== 3. WHAT YOU GET, BY TRADE ========================
+  Left = media mosaic that cross-fades. Right = accordion, one open at a time.
+  Both are driven by the same index.                                       -->
+<section class="section" id="trades" data-pill-parent>
+  <div class="stack">
+    <div class="card sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">What you get</span></div>
+      <h2 class="h-m" data-split="heading">One system.<br>Every <span class="accent">trade.</span></h2>
+    </div>
+
+    <div class="cs_body" id="csBody">
+      <div class="cs_media">
+        <div class="cs_photo-wrap">
+          <img class="cs_photo is-active" data-cs="0" alt="A roofing crew laying underlayment on a residential roof" src="assets/roofing/roof-crew.jpg" loading="lazy">
+          <img class="cs_photo" data-cs="1" alt="A condenser unit beside a home" src="assets/models/hvac.jpg" loading="lazy">
+          <img class="cs_photo" data-cs="2" alt="A finished home exterior from above" src="assets/roofing/roof-completed.jpg" loading="lazy">
+          <img class="cs_photo" data-cs="3" alt="A finished backyard pool" src="assets/models/pool.jpg" loading="lazy">
+        </div>
+
+        <div class="cs_stats">
+          <div class="cs_stat is-top is-active" data-cs="0">
+            <span class="h-s">24/7</span><span class="b-s">Lisa answers while you are on the roof</span>
+            <div class="cs_chart"><span data-h="30"></span><span data-h="45"></span><span data-h="40"></span><span data-h="62"></span><span data-h="55"></span><span data-h="80"></span><span data-h="100"></span></div>
+          </div>
+          <div class="cs_stat is-bot is-active" data-cs="0">
+            <span class="h-s">Satellite</span><span class="b-s">Roof estimates from your own website</span>
+          </div>
+
+          <div class="cs_stat is-top" data-cs="1">
+            <span class="h-s">Minutes</span><span class="b-s">Emergency calls routed to the on-call tech</span>
+            <div class="cs_chart"><span data-h="20"></span><span data-h="35"></span><span data-h="55"></span><span data-h="50"></span><span data-h="75"></span><span data-h="90"></span><span data-h="100"></span></div>
+          </div>
+          <div class="cs_stat is-bot" data-cs="1">
+            <span class="h-s">Renewing</span><span class="b-s">Maintenance plans that remind themselves</span>
+          </div>
+
+          <div class="cs_stat is-top" data-cs="2">
+            <span class="h-s">Room by room</span><span class="b-s">Quotes customers build on your site</span>
+            <div class="cs_chart"><span data-h="25"></span><span data-h="30"></span><span data-h="48"></span><span data-h="60"></span><span data-h="70"></span><span data-h="85"></span><span data-h="100"></span></div>
+          </div>
+          <div class="cs_stat is-bot" data-cs="2">
+            <span class="h-s">Day of</span><span class="b-s">Review requests the day the job wraps</span>
+          </div>
+
+          <div class="cs_stat is-top" data-cs="3">
+            <span class="h-s">Seasonal</span><span class="b-s">Packages and recurring billing that runs itself</span>
+            <div class="cs_chart"><span data-h="40"></span><span data-h="38"></span><span data-h="55"></span><span data-h="65"></span><span data-h="60"></span><span data-h="88"></span><span data-h="100"></span></div>
+          </div>
+          <div class="cs_stat is-bot" data-cs="3">
+            <span class="h-s">Configured</span><span class="b-s">Build configurators customers price themselves</span>
+          </div>
         </div>
       </div>
+
+      <div class="cs_list" id="csList">
+        <article class="cs_item is-active" data-cs="0">
+          <button class="cs_item-head" type="button">
+            <span class="b-l">Roofing</span>
+            <span class="icon-btn is-outline"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0v12M0 6h12" stroke="currentColor" stroke-width="1.5"/></svg></span>
+          </button>
+          <div class="cs_item-body"><div class="cs_item-inner">
+            <span class="b-s muted">Included in every plan</span>
+            <p class="t-m">Satellite roof estimates on your site, storm-damage follow-up, insurance-claim intake and Lead Radar territories.</p>
+            <a href="#pricing" class="btn">See plans</a>
+          </div></div>
+        </article>
+
+        <article class="cs_item" data-cs="1">
+          <button class="cs_item-head" type="button">
+            <span class="b-l">HVAC, plumbing and electrical</span>
+            <span class="icon-btn is-outline"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0v12M0 6h12" stroke="currentColor" stroke-width="1.5"/></svg></span>
+          </button>
+          <div class="cs_item-body"><div class="cs_item-inner">
+            <span class="b-s muted">Included in every plan</span>
+            <p class="t-m">Emergency-call routing, maintenance-plan reminders and service calculators customers can price themselves.</p>
+            <a href="#pricing" class="btn">See plans</a>
+          </div></div>
+        </article>
+
+        <article class="cs_item" data-cs="2">
+          <button class="cs_item-head" type="button">
+            <span class="b-l">Painting, concrete and remodeling</span>
+            <span class="icon-btn is-outline"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0v12M0 6h12" stroke="currentColor" stroke-width="1.5"/></svg></span>
+          </button>
+          <div class="cs_item-body"><div class="cs_item-inner">
+            <span class="b-s muted">Included in every plan</span>
+            <p class="t-m">Room-by-room quote builders, before-and-after galleries and review requests the day the job wraps.</p>
+            <a href="#pricing" class="btn">See plans</a>
+          </div></div>
+        </article>
+
+        <article class="cs_item" data-cs="3">
+          <button class="cs_item-head" type="button">
+            <span class="b-l">Pools and landscaping</span>
+            <span class="icon-btn is-outline"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0v12M0 6h12" stroke="currentColor" stroke-width="1.5"/></svg></span>
+          </button>
+          <div class="cs_item-body"><div class="cs_item-inner">
+            <span class="b-s muted">Included in every plan</span>
+            <p class="t-m">Seasonal packages, build configurators and recurring service billing that runs itself.</p>
+            <a href="#pricing" class="btn">See plans</a>
+          </div></div>
+        </article>
+      </div>
     </div>
   </div>
 </section>
 
+
+<!-- ===================== 4. HOW IT WORKS ==================================
+  Left column is sticky for the whole section; the right column scrolls past
+  in 100vh blocks. Each block activates the matching sticky visual.        -->
+<section class="section" id="how" data-pill-parent>
+  <div class="stack">
+    <div class="card is-outline is-grid-texture sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">How it works</span></div>
+      <h2 class="h-m" data-split="heading">Goodbye scattered apps,<br>hello <span class="accent">one</span> system.</h2>
+    </div>
+
+    <div class="sol_body">
+      <div class="sol_sticky">
+        <div class="sol_visual is-grid-texture">
+          <!-- 1: the flow, as rounded node chips joined by thin connector lines -->
+          <svg class="sol_img is-active" data-sol="0" viewBox="10 20 500 325" aria-label="From the call to the review, every step wired together">
+            <g font-family="General Sans, Geist, Arial, sans-serif" font-size="13" font-weight="500">
+              <rect x="20"  y="40"  width="130" height="34" rx="8" fill="#006fff"/><text x="85" y="62" fill="#fff" text-anchor="middle">Call answered</text>
+              <rect x="20"  y="90"  width="130" height="34" rx="8" fill="#dce3ec"/><text x="85" y="112" fill="#001530" text-anchor="middle">Lisa books the visit</text>
+              <rect x="20"  y="140" width="95"  height="28" rx="8" fill="#e9edf3"/><text x="67" y="159" fill="#8a94a3" text-anchor="middle" font-size="11">Site measured</text>
+              <rect x="125" y="140" width="85"  height="28" rx="8" fill="#e9edf3"/><text x="167" y="159" fill="#8a94a3" text-anchor="middle" font-size="11">Photos logged</text>
+              <rect x="20"  y="195" width="130" height="34" rx="8" fill="#fff" stroke="#dce3ec"/><text x="85" y="217" fill="#001530" text-anchor="middle">Estimate sent</text>
+              <rect x="215" y="195" width="130" height="34" rx="8" fill="#eef1f6"/><text x="280" y="217" fill="#001530" text-anchor="middle">Customer confirms</text>
+              <rect x="370" y="40"  width="130" height="34" rx="8" fill="#dce3ec"/><text x="435" y="62" fill="#001530" text-anchor="middle">Contract signed</text>
+              <rect x="370" y="95"  width="130" height="34" rx="8" fill="#fff" stroke="#dce3ec"/><text x="435" y="117" fill="#001530" text-anchor="middle">Crew scheduled</text>
+              <rect x="370" y="195" width="130" height="34" rx="8" fill="#fff" stroke="#dce3ec"/><text x="435" y="217" fill="#001530" text-anchor="middle">Invoice paid</text>
+              <rect x="370" y="300" width="130" height="34" rx="8" fill="#001530"/><text x="435" y="322" fill="#fff" text-anchor="middle">Review requested</text>
+              <path d="M150 212h65M345 212h25M435 74v21M435 129v66M435 229v71" stroke="#c6cfdb" fill="none"/>
+              <path d="M150 157h60v-72h160" stroke="#006fff" fill="none" opacity=".5"/>
+            </g>
+          </svg>
+          <!-- 2 and 3: the real product -->
+          <img class="sol_img sol_shot" data-sol="1" src="assets/site/portal-dashboard.png" alt="The BuilderPro dashboard: active projects, leads, jobs booked, profit and cash flow" loading="lazy">
+          <img class="sol_img sol_shot" data-sol="2" src="assets/site/portal-calendar.png" alt="The BuilderPro calendar with the week's appointments and jobs" loading="lazy">
+        </div>
+      </div>
+
+      <div class="sol_scroll">
+        <div class="sol_block" data-sol-block="0">
+          <div class="sol_block-top">
+            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg></span>
+            <h3 class="h-m" data-split="heading">From first call<br>to final invoice</h3>
+          </div>
+          <div class="sol_block-bot is-grid-texture">
+            <p class="b-m">Every step after the phone rings is wired together: the booking, the estimate, the contract, the schedule, the invoice and the review. You show up and do the work.</p>
+            <button class="btn js-open-drawer" type="button">Get started</button>
+          </div>
+        </div>
+
+        <div class="sol_block" data-sol-block="1">
+          <div class="sol_block-top">
+            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+            <h3 class="h-m" data-split="heading">One calm<br>dashboard</h3>
+          </div>
+          <div class="sol_block-bot is-grid-texture">
+            <p class="b-m">Calls answered, jobs in motion, invoices out and profit in, in a single view. It is the same dashboard your portal opens to every morning.</p>
+            <a href="#" class="btn" onclick="bpOpenPortal();return false;">Client login</a>
+          </div>
+        </div>
+
+        <div class="sol_block" data-sol-block="2">
+          <div class="sol_block-top">
+            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></span>
+            <h3 class="h-m" data-split="heading">Scheduled while<br>you are on site</h3>
+          </div>
+          <div class="sol_block-bot is-grid-texture">
+            <p class="b-m">Appointments, jobs, closed days and your own to-dos on one calendar, with a public booking page your customers can use at midnight.</p>
+            <button class="btn js-open-drawer" type="button">Get started</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================== 5. LISA ========================================= -->
+<section class="section" id="lisa" data-pill-parent>
+  <div class="lisa">
+    <div class="card lisa_text">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Meet your receptionist</span></div>
+      <div>
+        <h2 class="h-m" data-split="heading">Talk to <span class="accent">Lisa,</span> live.</h2>
+        <p class="b-m">This is the real receptionist that answers your calls, texts and bookings, not a recording. Call or text now and ask what a customer would ask.</p>
+      </div>
+    </div>
+    <div class="card lisa_stage">
+      <div class="atlas-stage">
+        <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with Lisa AI">
+          <canvas id="atlasNet" aria-hidden="true"></canvas>
+        </button>
+        <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to talk to Lisa</span></div>
+        <div class="atlas-inline" id="atlasInline">
+          <div class="ai-head">
+            <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
+            <div><div class="ai-name" id="aiName">Lisa, live demo</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">Online 24/7. Call or text.</span></div></div>
+            <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close">&times;</button>
+          </div>
+          <div class="ai-ask" id="aiAsk">
+            <div class="ai-ask-h">Try asking Lisa</div>
+            <div class="ai-ask-item">"How much does a full replacement cost?"</div>
+            <div class="ai-ask-item">"Can you book me an appointment this week?"</div>
+            <div class="ai-ask-item">"Do you handle insurance claims?"</div>
+            <div class="ai-ask-item">"What areas do you service?"</div>
+            <div class="ai-ask-note">This is the real AI. It answers, quotes ballparks and books appointments live, 24/7.</div>
+            <a class="ai-ask-call" href="tel:+13503331230">Call Lisa, (350) 333-1230</a>
+            <a class="ai-ask-text" href="sms:+13503331230">Text Lisa instead</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /site:top -->
 <section id="estimator">
   <div class="wrap">
     <div class="sec-head center rv" style="margin-bottom:36px">
@@ -12575,61 +12791,64 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 </style>
 
 <!-- ===== BOOKING ===== -->
-<!-- ===== PRICING ===== -->
-<section id="pricing" class="dl-grid" style="gap:var(--dl-gap)">
-  <div class="dl-card dl-sechead">
-    <span class="dl-kicker"><i></i>Plans</span>
-    <h2 class="dl-h2">Three plans.<br>One <em>mission.</em></h2>
-  </div>
-  <div class="dl-plans">
-    <div class="dl-card dl-plan">
-      <span class="eb">Starter</span>
-      <span class="nm">Foundation</span>
-      <span class="ds">Lisa on your phone, your schedule and your customers in one place. 14-day free trial included.</span>
-      <ul>
-        <li>Lisa AI receptionist, 24/7</li>
-        <li>Missed-call text-back</li>
-        <li>Calendar and public booking page</li>
-        <li>Contacts and messaging</li>
-        <li>Estimates and invoices</li>
-      </ul>
-      <a class="dl-btn w" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20Foundation%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20Foundation%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0APhone%3A">Request a quote</a>
+<!-- site:bottom -->
+<!-- ===================== 6. PRICING ====================================== -->
+<section class="section" id="pricing" data-pill-parent>
+  <div class="stack">
+    <div class="card sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Plans</span></div>
+      <h2 class="h-m" data-split="heading">Three plans.<br>One <span class="accent">mission.</span></h2>
     </div>
-    <div class="dl-card dl-plan hi">
-      <span class="eb">Most popular</span>
-      <span class="nm">BuilderPro OS</span>
-      <span class="ds">The full operating system: every job, every dollar and every customer, run from one login. 14-day free trial included.</span>
-      <ul>
-        <li>Everything in Foundation</li>
-        <li>Projects with photos, schedule and costs</li>
-        <li>Contracts with e-signature</li>
-        <li>Finances with profit per job</li>
-        <li>Instant-quote calculator for your site</li>
-        <li>Marketing: reviews, social and ads in one place</li>
-        <li>Lead Radar, exclusive territory</li>
-        <li>Priority support and monthly review</li>
-      </ul>
-      <a class="dl-btn w" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20BuilderPro%20OS%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20BuilderPro%20OS%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0APhone%3A">Request a quote</a>
+    <div class="plans">
+      <div class="card plan">
+        <span class="plan_tag">Starter</span>
+        <span class="t-l">Foundation</span>
+        <span class="plan_desc">Lisa on your phone, your schedule and your customers in one place. 14-day free trial included.</span>
+        <ul>
+          <li>Lisa AI receptionist, 24/7</li>
+          <li>Missed-call text-back</li>
+          <li>Calendar and public booking page</li>
+          <li>Contacts and messaging</li>
+          <li>Estimates and invoices</li>
+        </ul>
+        <a class="btn is-outline" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20Foundation%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20Foundation%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0APhone%3A">Request a quote</a>
+      </div>
+      <div class="card plan is-blue on-blue">
+        <span class="plan_tag">Most popular</span>
+        <span class="t-l">BuilderPro OS</span>
+        <span class="plan_desc">The full operating system: every job, every dollar and every customer, run from one login. 14-day free trial included.</span>
+        <ul>
+          <li>Everything in Foundation</li>
+          <li>Projects with photos, schedule and costs</li>
+          <li>Contracts with e-signature</li>
+          <li>Finances with profit per job</li>
+          <li>Instant-quote calculator for your site</li>
+          <li>Marketing: reviews, social and ads in one place</li>
+          <li>Lead Radar, exclusive territory</li>
+          <li>Priority support and monthly review</li>
+        </ul>
+        <a class="btn is-on-blue" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20BuilderPro%20OS%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20BuilderPro%20OS%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0APhone%3A">Request a quote</a>
+      </div>
+      <div class="card plan">
+        <span class="plan_tag">Performance</span>
+        <span class="t-l">Enterprise</span>
+        <span class="plan_desc">A done-for-you growth engine. We build, run and optimise your paid campaigns. You cover the ad spend.</span>
+        <ul>
+          <li>Everything in BuilderPro OS</li>
+          <li>Paid ads management and optimisation</li>
+          <li>Professional ad filming and editing</li>
+          <li>Advanced CRM and custom AI training</li>
+          <li>Weekly strategy calls and a dedicated manager</li>
+        </ul>
+        <a class="btn is-outline" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20Enterprise%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20Enterprise%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0AMonthly%20ad%20budget%3A%0D%0APhone%3A">Request a quote</a>
+      </div>
     </div>
-    <div class="dl-card dl-plan">
-      <span class="eb">Performance</span>
-      <span class="nm">Enterprise</span>
-      <span class="ds">A done-for-you growth engine. We build, run and optimise your paid campaigns. You cover the ad spend.</span>
-      <ul>
-        <li>Everything in BuilderPro OS</li>
-        <li>Paid ads management and optimisation</li>
-        <li>Professional ad filming and editing</li>
-        <li>Advanced CRM and custom AI training</li>
-        <li>Weekly strategy calls and a dedicated manager</li>
-      </ul>
-      <a class="dl-btn w" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20Enterprise%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20Enterprise%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0AMonthly%20ad%20budget%3A%0D%0APhone%3A">Request a quote</a>
+    <div class="card addon">
+      <div><span class="t-s" style="display:block">Need a website?</span><span class="b-s muted">We build it on one of the four model sites above, tailor it to your brand, and host and maintain it. Add it to any plan.</span></div>
+      <div class="addon_price">$49<small> / month</small></div>
     </div>
+    <div class="card plan-note">No long-term contracts. Cancel anytime. Live in 3 to 4 days.</div>
   </div>
-  <div class="dl-card dl-addon">
-    <div><b>Need a website?</b><br><span>We build it on one of the four model sites below, tailor it to your brand, and host and maintain it. Add it to any plan.</span></div>
-    <div class="price">$49<small> / month</small></div>
-  </div>
-  <div class="dl-card dl-plan-note">No long-term contracts. Cancel anytime. Live in 3 to 4 days.</div>
 </section>
 
 <!-- plan modal -->
@@ -12640,103 +12859,115 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
   </div>
 </div>
 
-<!-- ===== TIMELINE ===== -->
-<section class="dl-card dl-timeline" aria-label="Timeline">
-  <h2 class="dl-h2">The best part? <em>We're fast.</em><br>Think days, not months.</h2>
-  <div class="dl-tl">
-    <div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="rail"><div class="fill"></div></div>
-    <div class="pts">
-      <div class="pt on"><span>Day 1</span><b>Kickoff call</b></div>
-      <div class="pt"><span>Day 2</span><b>Lisa trained on your business</b></div>
-      <div class="pt"><span>Day 3</span><b>Customers imported</b></div>
-      <div class="pt"><span>Day 4</span><b>Live on your line</b></div>
-      <div class="pt"><span>Week 2</span><b>First check-in</b></div>
-      <div class="pt"><span>Day 14</span><b>Trial ends</b></div>
+<!-- ===================== 7. FAST RESULTS TIMELINE ========================
+  A blue bar grows across a faint grid; each dot pops as the bar passes it. -->
+<section class="section" data-pill-parent aria-label="Timeline">
+  <div class="card is-outline">
+    <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Fast results</span></div>
+    <h2 class="h-m" style="max-width:45rem;margin-top:5.375rem" data-split="heading">
+      The best part? <span class="accent">We are fast.</span><br>Think days, not months.
+    </h2>
+
+    <div class="hww_graph" id="hwwGraph">
+      <div class="hww_line"><div class="hww_bar" id="hwwBar"></div></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_tick"><span class="hww_dot"><span class="hww_pulse"></span></span></div>
+      <div class="hww_icon">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>
+      </div>
     </div>
-    <div class="bolt"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></div>
+    <div class="hww_steps b-s">
+      <div><span>Day 1</span><b>Kickoff call</b></div>
+      <div><span>Day 2</span><b>Lisa trained on your business</b></div>
+      <div><span>Day 3</span><b>Customers and open jobs imported</b></div>
+      <div><span>Day 4</span><b>Live on your line</b></div>
+      <div><span>Day 14</span><b>Trial ends. Keep going or walk away</b></div>
+    </div>
   </div>
 </section>
 
-<!-- ===== CONTACT ===== -->
-<section id="contact" class="dl-two">
-  <div class="dl-card" style="padding:32px 34px;display:flex;flex-direction:column;gap:40px">
-    <span class="dl-kicker"><i></i>Get started</span>
-    <div style="display:flex;flex-direction:column;gap:18px">
-      <h2 class="dl-h2">Tell us about<br>your <em>business.</em></h2>
-      <p class="dl-p">Send a note with your trade and how many people are on the crew. A person replies within one business day with the right plan and a start date.</p>
+
+<!-- ===================== 8. FAQ ========================================== -->
+<section class="section" id="faq" data-pill-parent>
+  <div class="faq_body">
+    <div class="card faq_head sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">FAQ</span></div>
+      <h2 class="h-m" data-split="heading">Frequently<br>asked <span class="accent">questions.</span></h2>
     </div>
-    <ul class="dl-checks">
-      <li>Live in 3 to 4 days</li>
-      <li>14-day free trial on Foundation and BuilderPro OS</li>
-      <li>No pressure. Walk away knowing if it fits.</li>
-    </ul>
-  </div>
-  <div class="dl-card dl-form">
-    <div class="r2">
-      <div><label for="cfName">Full name</label><input id="cfName" autocomplete="name" placeholder="Dana Whitfield"></div>
-      <div><label for="cfBiz">Business name</label><input id="cfBiz" autocomplete="organization" placeholder="Whitfield Plumbing"></div>
+    <div class="faq">
+      <div class="qa"><button class="qa-q" type="button">What exactly is included in the BuilderPro OS plan?<span class="pm"></span></button><div class="qa-a"><p>Everything a contracting business runs on: Lisa answering your phone 24/7, missed-call text-back, a calendar with a public booking page, contacts and messaging, estimates, contracts with e-signature, projects with photos and costs, invoices, finances with profit per job, an instant-quote calculator for your site, the marketing tools, and your exclusive Lead Radar territory.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">Is this only for roofers?<span class="pm"></span></button><div class="qa-a"><p>No. BuilderPro OS runs roofing, HVAC, plumbing, electrical, painting, concrete, remodeling, pools and landscaping companies. Lisa is trained on your trade, the calculator is built around your services, and the model sites cover every one of them.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">How fast will my system be live?<span class="pm"></span></button><div class="qa-a"><p>Most clients are live in 3 to 4 days. We train Lisa on your business, import your customers and open jobs, connect your phone line and calendar, and hand you a working system. You just start answering fewer calls.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">Do you build my website?<span class="pm"></span></button><div class="qa-a"><p>Only if you want one. A website is an add-on at $49 a month on any plan. We build it on one of the four model sites, tailor it to your brand, photos and services, and host and maintain it. If you already have a site you like, keep it and embed the calculator and booking page on it.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">What does Lisa AI actually do?<span class="pm"></span></button><div class="qa-a"><p>Lisa is your 24/7 AI receptionist. She answers calls and texts, explains your services, gives ballpark pricing you approve, qualifies the customer and books the appointment straight into your calendar. When you miss a call, she texts the caller back within seconds. She is trained on your business, your hours and your service area.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">Is there a contract or can I cancel anytime?<span class="pm"></span></button><div class="qa-a"><p>No long-term contracts. Cancel anytime. We earn your business every month by keeping your jobs, your money and your customers in order, not by locking you in.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">How does the 14-day trial work?<span class="pm"></span></button><div class="qa-a"><p>You pay the one-time setup fee, we get everything built and live within 3 to 4 days, and then your 14-day trial begins on the full, live system with real calls and real jobs. At the end of 14 days you keep going or you walk away.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">What is the setup fee and what does it cover?<span class="pm"></span></button><div class="qa-a"><p>It covers the real hard costs of switching you on: your business phone number, the carrier registration required to send texts, training Lisa on your business, and importing your customers and open jobs. It is a one-time charge.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">Do I need to be tech-savvy to use this?<span class="pm"></span></button><div class="qa-a"><p>No. We set everything up and keep it running. You get one dashboard where you see your calls, jobs, invoices and profit, and the Lisa tab where you can change what she says. Nothing technical to touch.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">What is the instant estimator?<span class="pm"></span></button><div class="qa-a"><p>A calculator you embed on your website that lets a customer price a job in under a minute, whether that is a roof measured from satellite imagery, an HVAC tune-up or a pool build. Before showing the number it captures their name, phone and email, and the lead lands in your portal with Lisa following up.</p></div></div>
     </div>
-    <div class="r2">
-      <div><label for="cfPhone">Phone</label><input id="cfPhone" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0148"></div>
-      <div><label for="cfEmail">Email</label><input id="cfEmail" autocomplete="email" inputmode="email" placeholder="dana@whitfieldplumbing.com"></div>
-    </div>
-    <div><label for="cfMsg">Your trade and crew size</label><textarea id="cfMsg" style="min-height:120px" placeholder="Plumbing, six of us, two trucks. Tired of missing calls on the job."></textarea></div>
-    <button class="dl-btn b" type="button" style="width:100%;height:48px" onclick="dlContactSend(this)">Send message</button>
-    <div class="msg" aria-live="polite"></div>
   </div>
 </section>
 
-<!-- ===== FAQ ===== -->
-<section id="faq" class="dl-faq">
-  <div class="dl-card" style="padding:32px 34px;display:flex;flex-direction:column;gap:40px;align-self:start;position:sticky;top:var(--dl-gap)">
-    <span class="dl-kicker"><i></i>FAQ</span>
-    <h2 class="dl-h2">Frequently<br>asked <em>questions.</em></h2>
-  </div>
-  <div class="faq">
-    <div class="qa"><button class="qa-q">What exactly is included in the BuilderPro OS plan?<span class="pm"></span></button><div class="qa-a"><p>Everything a contracting business runs on: Lisa answering your phone 24/7, missed-call text-back, a calendar with a public booking page, contacts and messaging, estimates, contracts with e-signature, projects with photos and costs, invoices, finances with profit per job, an instant-quote calculator for your site, the marketing tools, and your exclusive Lead Radar territory.</p></div></div>
-    <div class="qa"><button class="qa-q">Is this only for roofers?<span class="pm"></span></button><div class="qa-a"><p>No. BuilderPro OS runs roofing, HVAC, plumbing, electrical, painting, concrete, remodeling, pools and landscaping companies. Lisa is trained on your trade, the calculator is built around your services, and the model sites cover every one of them.</p></div></div>
-    <div class="qa"><button class="qa-q">How fast will my system be live?<span class="pm"></span></button><div class="qa-a"><p>Most clients are live in 3 to 4 days. We train Lisa on your business, import your customers and open jobs, connect your phone line and calendar, and hand you a working system. You just start answering fewer calls.</p></div></div>
-    <div class="qa"><button class="qa-q">Do you build my website?<span class="pm"></span></button><div class="qa-a"><p>Only if you want one. A website is an add-on at $49 a month on any plan. We build it on one of the four model sites, tailor it to your brand, photos and services, and host and maintain it. If you already have a site you like, keep it and embed the calculator and booking page on it.</p></div></div>
-    <div class="qa"><button class="qa-q">What does Lisa AI actually do?<span class="pm"></span></button><div class="qa-a"><p>Lisa is your 24/7 AI receptionist. She answers calls and texts, explains your services, gives ballpark pricing you approve, qualifies the customer and books the appointment straight into your calendar. When you miss a call, she texts the caller back within seconds. She is trained on your business, your hours and your service area.</p></div></div>
-    <div class="qa"><button class="qa-q">Is there a contract or can I cancel anytime?<span class="pm"></span></button><div class="qa-a"><p>No long-term contracts. Cancel anytime. We earn your business every month by keeping your jobs, your money and your customers in order, not by locking you in.</p></div></div>
-    <div class="qa"><button class="qa-q">How does the 14-day trial work?<span class="pm"></span></button><div class="qa-a"><p>You pay the one-time setup fee, we get everything built and live within 3 to 4 days, and then your 14-day trial begins on the full, live system with real calls and real jobs. At the end of 14 days you keep going or you walk away.</p></div></div>
-    <div class="qa"><button class="qa-q">What is the setup fee and what does it cover?<span class="pm"></span></button><div class="qa-a"><p>It covers the real hard costs of switching you on: your business phone number, the carrier registration required to send texts, training Lisa on your business, and importing your customers and open jobs. It is a one-time charge.</p></div></div>
-    <div class="qa"><button class="qa-q">Do I need to be tech-savvy to use this?<span class="pm"></span></button><div class="qa-a"><p>No. We set everything up and keep it running. You get one dashboard where you see your calls, jobs, invoices and profit, and the Lisa tab where you can change what she says. Nothing technical to touch.</p></div></div>
-    <div class="qa"><button class="qa-q">What is the instant estimator?<span class="pm"></span></button><div class="qa-a"><p>A calculator you embed on your website that lets a customer price a job in under a minute, whether that is a roof measured from satellite imagery, an HVAC tune-up or a pool build. Before showing the number it captures their name, phone and email, and the lead lands in your portal with Lisa following up.</p></div></div>
-  </div>
-</section>
 
-<!-- ===== CTA + FOOTER ===== -->
-<section class="dl-cta" aria-label="Next step">
-  <span class="dl-kicker w"><i></i>Next step</span>
-  <a class="dl-big" href="#contact"><b>Get started</b><span class="dl-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
-  <div class="meta">
-    <div class="l">
-      <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a>
-      <span>Built for contractors, run 24/7</span>
+<!-- ===================== 9. FOOTER ======================================= -->
+<footer class="section" data-pill-parent>
+  <div class="stack">
+    <div class="card is-blue on-blue" navbar-logo-color-change>
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Next step</span></div>
+
+      <a href="#" class="footer_big js-open-drawer">
+        <span class="h-l" data-split="heading">Get started</span>
+        <span class="footer_big-line"></span>
+        <span class="footer_big-fill"></span>
+        <span class="footer_big-arrow">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+
+      <div class="footer_meta">
+        <div>
+          <p class="b-s" style="font-weight:600"><a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a></p>
+          <p class="b-s" style="font-weight:600">Built for contractors, run 24/7</p>
+        </div>
+        <div class="footer_links b-s">
+          <a href="terms.html" class="u-link">Terms of Service</a>
+          <a href="privacy.html" class="u-link">Privacy Policy</a>
+          <a href="data-deletion.html" class="u-link">Data Deletion</a>
+          <span>&copy;<span class="dl-yr"></span></span>
+        </div>
+      </div>
     </div>
-    <div class="r">
-      <a href="terms.html">Terms of Service</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="data-deletion.html">Data Deletion</a>
-      <span>&copy;<span class="dl-yr"></span></span>
+
+    <div class="card is-blue on-blue" navbar-logo-color-change>
+      <div class="footer_bottom">
+        <div class="footer_links b-s">
+          <a href="#trades" class="u-link">What you get</a>
+          <a href="#how" class="u-link">How it works</a>
+          <a href="#lisa" class="u-link">Lisa AI</a>
+          <a href="#estimator" class="u-link">Estimator</a>
+          <a href="#pricing" class="u-link">Pricing</a>
+          <a href="#faq" class="u-link">FAQ</a>
+        </div>
+        <div class="footer_socials b-s">
+          <a href="#" class="u-link" onclick="bpOpenPortal();return false;">Client login</a>
+          <span id="yr" style="display:none"></span>
+          <span>BuilderPro OS</span>
+        </div>
+      </div>
     </div>
   </div>
-</section>
-<footer class="dl-foot">
-  <div class="l">
-    <a href="#features">What you get</a>
-    <a href="#atlas">Lisa AI</a>
-    <a href="#estimator">Estimator</a>
-    <a href="#pricing">Pricing</a>
-    <a href="#" onclick="bpOpenPortal();return false;">Client login</a>
-  </div>
-  <span id="yr" style="display:none"></span>
-  <span>BuilderPro OS</span>
 </footer>
 
 </main>
+<!-- /site:bottom -->
 
 <style>
 /* ==== Lisa chatbot ==== */
@@ -21586,6 +21817,9 @@ window.bpFmHangers=function(){
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260919c"></script>
 <script src="portal/dash.js?v=20260919c"></script>
-<script src="site/vendor/lenis.min.js?v=20260919b"></script>
-<script src="site/site.js?v=20260919b"></script>
+<script src="site/vendor/lenis.min.js?v=20260919"></script>
+<script src="site/vendor/gsap.min.js?v=20260919"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20260919"></script>
+<script src="site/vendor/SplitText.min.js?v=20260919"></script>
+<script src="site/site.js?v=20260919"></script>
 </html>
