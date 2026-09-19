@@ -150,7 +150,7 @@
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
     if (!right || !canvas || canvas._bpHero) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20260919-g').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+    import('./hero3d.js?v=20260919-h').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
       .catch(function () { right.classList.add('nogl'); });
   }
   /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
@@ -179,16 +179,37 @@
      video has been played once from a user gesture.                        */
   function initHeroScrub(triggers) {
     var scrub = $('#videoScrub'); if (!scrub) return;
+    /* Safari will not paint a frame you seek to until the video has played
+       once, so a scrubbed clip sits on frame one forever. It is muted and
+       inline, so it may autoplay: start it, then pause on the first frame.
+       If the browser refuses without a gesture, prime on whichever gesture
+       arrives first, wheel and pointer included, not touch alone. */
+    var primed = false;
+    function prime() {
+      if (primed) return; primed = true;
+      var at = scrub.currentTime;
+      var pr = scrub.play();
+      if (pr && pr.then) pr.then(function () { scrub.pause(); scrub.currentTime = at; }).catch(function () { primed = false; });
+      else { try { scrub.pause(); scrub.currentTime = at; } catch (e) { primed = false; } }
+    }
+    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, prime, { once: true, passive: true });
+    });
     var ready = function () {
-      var once = function (el, ev, fn) { var h = function () { el.removeEventListener(ev, h); fn.apply(null, arguments); }; el.addEventListener(ev, h); };
-      once(document.documentElement, 'touchstart', function () { scrub.play().then(function () { scrub.pause(); }).catch(function () {}); });
+      prime();
       var tl = gsap.timeline({ scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true } });
       tl.fromTo(scrub, { currentTime: 0 }, { currentTime: scrub.duration || 1, ease: 'none' });
       gsap.fromTo(scrub, { opacity: 0 }, { opacity: 1, ease: 'none', scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'top 40%', scrub: true } });
+      /* seeking a file the browser is still streaming lands on the nearest
+         buffered frame, so fetch it once and seek against the local copy.
+         Swapping the source resets the element, so prime it again. */
       var src = scrub.currentSrc || scrub.src;
       setTimeout(function () {
         fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
-          var t = scrub.currentTime; scrub.setAttribute('src', URL.createObjectURL(b)); scrub.currentTime = t + 0.01;
+          var t = scrub.currentTime;
+          scrub.addEventListener('loadeddata', function () { scrub.currentTime = t; prime(); }, { once: true });
+          primed = false;
+          scrub.setAttribute('src', URL.createObjectURL(b));
         }).catch(function () {});
       }, 1000);
     };
