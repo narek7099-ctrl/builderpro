@@ -17,7 +17,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 
-const GROUND = 0xf0f3f7;
+const GROUND = 0xedf2f6;
 const BLUE = 0x006fff;
 
 const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
