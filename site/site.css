@@ -21,7 +21,7 @@
 
 /* 2. TOKENS ---------------------------------------------------------------- */
 :root{
-  --gray-100:#f0f3f7;   /* the page canvas. Never white. */
+  --gray-100:#edf2f6;   /* the page canvas, the same grey the hero clips sit on. Never white. */
   --gray-200:#dce3ec;   /* soft fills + hover states */
   --gray-300:#bac0ca;   /* "not yet read" text in the scroll-highlight effect */
   --gray-500:#788493;   /* the slate stat card */
@@ -331,7 +331,7 @@ main.dl-page p{margin:0;}
 /* the clips are 16:9 in a taller card: fit them and scale up a little, so the
    cube sits back in the frame instead of filling it. The card is painted the
    clip's own background so the letterbox is invisible. */
-.hero_right.has-video{background:#edf2f6;}
+.hero_right.has-video{background:var(--gray-100);}
 .hero_video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.32);pointer-events:none;z-index:2;opacity:0;transition:opacity .6s;}
 .hero_video.is-on{opacity:1;}
 /* the scroll-story clip covers the whole stage, above the dark wash: the wash
@@ -668,3 +668,8 @@ body.dl .modal{border-radius:var(--radius);}
   .pill_icon{width:2rem;}.pill_dash{width:1rem;}
   .dl-pre{display:none;}
 }
+
+/* the how-it-works flow: a dash travels the rail once the visual is up */
+.flow_dash{animation:flowDash 4s linear infinite;}
+@keyframes flowDash{from{stroke-dashoffset:922;}to{stroke-dashoffset:0;}}
+@media (prefers-reduced-motion:reduce){.flow_dash{animation:none;}}

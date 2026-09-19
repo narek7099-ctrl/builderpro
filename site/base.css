@@ -3,7 +3,7 @@
    site/site.css. ==== */
 :root{
   --ink:#001530; --ink-2:#001530; --grey:#788493; --grey-l:#9aa3b1;
-  --line:#dce3ec; --line-2:#eef1f6; --bg:#ffffff; --bar:#f0f3f7; --card:#ffffff;
+  --line:#dce3ec; --line-2:#eef1f6; --bg:#ffffff; --bar:#edf2f6; --card:#ffffff;
   --blue:#006fff; --blue-d:#003db8; --blue-l:#e6f0ff; --cream:#f4e7bd;
   --green:#1faa5a; --red:#e0574e; --pill:#0b1021;
   --serif:'Geist',system-ui,sans-serif; --sans:'Geist',system-ui,sans-serif;
