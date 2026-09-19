@@ -15083,16 +15083,18 @@ var _bpContacts=[];
     var tab=function(id,ico,label){ return '<button class="bpx-jt'+(k===id?' on':'')+'" onclick="bpCalKind(\''+id+'\')"><span class=ms>'+ico+'</span> '+label+'</button>'; };
     q('bpxViewArea').innerHTML=
       '<div class="cal-top"><div class="cal-left"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
-      +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
+      +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='week'?' on':'')+'" onclick="bpCalView(\'week\')"><span class=ms>view_week</span> Week</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
       +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
         +(all?'<button class="bpx-btn ghost cal-today" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>roofing</span> Book inspection</button><button class="bpx-btn" onclick="bpNoteOpen()"><span class=ms>add</span> Add note or to-do</button>'
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
-      +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs &amp; project days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">Tap any day to see it or add to it</span></div>':'')
+      +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">'+(_bpCalView==='week'?'Drag a box to move it · click an empty slot to write a note or a to-do':'Tap any day to see it or add to it')+'</span></div>':'')
       +'<div class="cal-layout">'
       +(_bpCalView==='day'
         ? '<div class="bpx-panel cal-panel"><div id="bpx-dayview" class="cd-wrap"></div></div>'
+        : _bpCalView==='week'
+        ? '<div class="bpx-panel cal-panel cw-panel"><div id="bpx-weekview" class="cw-wrap"></div></div>'
         : '<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>')
       +'<div class="cal-side">'
       +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
@@ -15112,7 +15114,7 @@ var _bpContacts=[];
    the working hours as rows, everything booked drawn across them at the
    time it happens, and how much of the day is already spoken for.
    Crew days, inspections and timed to-dos all land on the same grid. */
-  var _bpCalView='day';
+  var _bpCalView='week';
   var _bpDaySel=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
   var BP_DAYKEY=['sun','mon','tue','wed','thu','fri','sat'];
   function bpIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
@@ -15131,18 +15133,18 @@ var _bpContacts=[];
       if(t.getFullYear()!==y||t.getMonth()!==mo||t.getDate()!==dd) return;
       var from=t.getHours()*60+t.getMinutes();
       var to=e.end?(function(){var x=new Date(e.end);return isNaN(x.getTime())?from+60:x.getHours()*60+x.getMinutes();})():from+60;
-      out.push({from:from,to:Math.max(to,from+30),kind:e.cal==='jobs'?'job':'insp',title:e.title||'Appointment',sub:e.addr||(e.cal==='jobs'?'Job':'Inspection'),act:"bpApptClick('"+e.id+"')"});
+      out.push({from:from,to:Math.max(to,from+30),kind:e.cal==='jobs'?'job':'insp',title:e.title||'Appointment',sub:e.addr||(e.cal==='jobs'?'Job':'Inspection'),act:"bpApptClick('"+e.id+"')",ref:'appt:'+e.id});
     });
     (typeof bpJobsGet==='function'?bpJobsGet():[]).forEach(function(j){
       if(j.status!=='active'||!j.sched||!(j.sched.dates||[]).length) return;
       if((j.sched.dates||[]).indexOf(iso)<0) return;
       var t=j.sched.time||'', from=t?bpMins(t):null;
       var to=t?bpMins(j.sched.end||bpProjEndFromDur(t,j.sched.dur)):null;
-      out.push({from:from,to:to,kind:'crew',allDay:!t,title:j.name||'Project',sub:(j.title||'Project')+' · crew on site',act:"bpProjOpen('"+j.id+"')"});
+      out.push({from:from,to:to,kind:'crew',allDay:!t,title:j.name||'Project',sub:(j.title||'Project')+' · crew on site',act:"bpProjOpen('"+j.id+"')",ref:'crew:'+j.id});
     });
     (typeof bpNotesFor==='function'?bpNotesFor(iso):[]).forEach(function(n){
       var from=n.at?bpMins(n.at):null;
-      out.push({from:from,to:from==null?null:from+30,kind:n.kind==='note'?'note':'todo',allDay:!n.at,done:n.done,title:n.text,sub:n.kind==='note'?'Note':'To-do',act:"bpDaySheet('"+iso+"')"});
+      out.push({from:from,to:from==null?null:from+30,kind:n.kind==='note'?'note':'todo',allDay:!n.at,done:n.done,title:n.text,sub:n.kind==='note'?'Note':'To-do',act:"bpDaySheet('"+iso+"')",ref:'note:'+n.id});
     });
     return out;
   }
@@ -15227,6 +15229,254 @@ var _bpContacts=[];
       +'<div class="cd-foot"><button class="bpx-rowbtn" onclick="bpDaySheet(\''+iso+'\',true)"><span class=ms>add</span> Add to this day</button>'
         +'<button class="bpx-rowbtn" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>event</span> Book an inspection</button></div>';
   }
+
+/* ==== Week view: the whole week against the clock ==================
+   The day view answers "what is Thursday like". This answers the
+   question a contractor asks on Monday morning: where are the holes
+   this week, and what can I shuffle into them. Seven columns, one hour
+   a row, every crew day, inspection, note and to-do as a coloured box.
+
+   Two things here that the month grid cannot do. Boxes are draggable,
+   so a job that slips a day is a drag rather than a form. And an empty
+   slot is clickable, so a note or a to-do is written where it belongs
+   instead of in a modal that asks which day you meant.
+
+   What moves where: notes and to-dos move freely, day and time, because
+   they are ours. Appointments move through the same calendar API the
+   Reschedule button uses, so the customer's confirmation still goes out.
+   Crew days move across days only: one project carries one start time
+   for all of its days, so dragging one up would silently move the rest.
+   ================================================================== */
+  var _bpWkOpen=7*60, _bpWkClose=19*60, BPWK_PX=48, BPWK_GUT=58;
+
+  window.bpWeekMove=function(n){ var d=new Date(_bpDaySel+'T12:00:00'); d.setDate(d.getDate()+n*7); _bpDaySel=bpIso(d); _bpCalDate=new Date(d); bpDrawWeek(); };
+  window.bpWeekToday=function(){ _bpDaySel=bpIso(new Date()); _bpCalDate=new Date(); bpDrawWeek(); };
+  window.bpWeekToDay=function(iso){ _bpDaySel=iso; _bpCalDate=new Date(iso+'T12:00:00'); _bpCalView='day'; bpRenderCalendar(); };
+
+  function bpWkDays(){
+    var d=new Date(_bpDaySel+'T12:00:00'); d.setDate(d.getDate()-d.getDay());
+    var out=[]; for(var i=0;i<7;i++){ var x=new Date(d); x.setDate(d.getDate()+i); out.push(bpIso(x)); }
+    return out;
+  }
+  function bpWkSnap(m){ return Math.round(m/15)*15; }
+  function bpWkHHMM(m){ m=Math.max(0,Math.min(1439,Math.round(m))); return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2); }
+
+  /* a short line under the grid, so a drag says what it did */
+  window.bpWkSay=function(t,bad){
+    _bpWkPend=t?{t:t,bad:!!bad}:null;
+    var e=q('bpx-wk-say'); if(!e) return;
+    e.textContent=t||''; e.className='cw-say'+(bad?' bad':'')+(t?' on':'');
+    clearTimeout(window._bpWkSayT);
+    if(t) window._bpWkSayT=setTimeout(function(){ _bpWkPend=null; var x=q('bpx-wk-say'); if(x){ x.textContent=''; x.className='cw-say'; } },bad?6000:3600);
+  };
+  var _bpWkPend=null;
+
+  function bpDrawWeek(){
+    var host=q('bpx-weekview'); if(!host) return;
+    var days=bpWkDays(), today=bpIso(new Date());
+    var perDay=days.map(function(iso){ return bpDayItems(iso); });
+
+    /* the window we draw: business hours, stretched to hold anything
+       booked outside them, never less than a working day */
+    var hset=(typeof bpSettingsGet==='function'?(bpSettingsGet().hours||{}):{});
+    var open=24*60, close=0;
+    days.forEach(function(iso){ var h=hset[BP_DAYKEY[new Date(iso+'T12:00:00').getDay()]]||{}; if(h.open===false) return;
+      open=Math.min(open,h.from?bpMins(h.from):7*60); close=Math.max(close,h.to?bpMins(h.to):18*60); });
+    if(open>close){ open=7*60; close=18*60; }
+    perDay.forEach(function(items){ items.forEach(function(x){ if(x.from!=null){ open=Math.min(open,x.from); close=Math.max(close,x.to); } }); });
+    open=Math.max(0,Math.floor(open/60)*60); close=Math.min(24*60,Math.ceil(close/60)*60);
+    if(close-open<8*60) close=Math.min(24*60,open+8*60);
+    _bpWkOpen=open; _bpWkClose=close;
+    var span=close-open, TOP=10, H=span/60*BPWK_PX+TOP;
+
+    var lines='';
+    for(var m=open;m<close;m+=60) lines+='<div class="cw-hr" style="top:'+(TOP+(m-open)/60*BPWK_PX)+'px"><span>'+bpClock(m)+'</span></div>';
+
+    var heads='<div class="cw-corner"></div>', allday='<div class="cw-corner"></div>', cols='<div class="cw-gut"></div>', anyUntimed=false;
+    var weekBooked=0;
+    days.forEach(function(iso,di){
+      var d=new Date(iso+'T12:00:00'), items=perDay[di], isToday=iso===today;
+      var hrs=hset[BP_DAYKEY[d.getDay()]]||{}, shut=hrs.open===false;
+      heads+='<button class="cw-head'+(isToday?' today':'')+(shut?' shut':'')+'" onclick="bpWeekToDay(\''+iso+'\')" title="Open this day">'
+        +'<small>'+d.toLocaleDateString('en-US',{weekday:'short'})+'</small><b>'+d.getDate()+'</b></button>';
+
+      var untimed=items.filter(function(x){return x.from==null;}); if(untimed.length) anyUntimed=true;
+      allday+='<div class="cw-ad'+(isToday?' today':'')+'">'+untimed.map(function(x){
+        return '<div class="cw-ev '+x.kind+(x.done?' done':'')+' flat"'+bpWkAttrs(x,iso)+'><b>'+bpEsc(x.title)+'</b></div>';
+      }).join('')+'</div>';
+
+      /* side by side when they overlap, so nothing hides behind anything */
+      var timed=items.filter(function(x){return x.from!=null;}).sort(function(a,b){return a.from-b.from||a.to-b.to;});
+      var lanes=[];
+      timed.forEach(function(x){ var placed=false;
+        for(var c=0;c<lanes.length&&!placed;c++){ if(lanes[c][lanes[c].length-1].to<=x.from){ lanes[c].push(x); x.col=c; placed=true; } }
+        if(!placed){ x.col=lanes.length; lanes.push([x]); } });
+      timed.forEach(function(x){ var over=timed.filter(function(o){return o!==x&&o.from<x.to&&x.from<o.to;});
+        x.lanes=Math.max(1,over.reduce(function(t,o){return Math.max(t,(o.col||0)+1);},(x.col||0)+1)); });
+
+      var cur=null; timed.forEach(function(x){ if(!cur||x.from>cur[1]){ if(cur)weekBooked+=cur[1]-cur[0]; cur=[x.from,x.to]; } else cur[1]=Math.max(cur[1],x.to); });
+      if(cur) weekBooked+=cur[1]-cur[0];
+
+      var blocks=timed.map(function(x){
+        var top=TOP+(x.from-open)/60*BPWK_PX, h=Math.max(20,(x.to-x.from)/60*BPWK_PX-2);
+        var w=100/x.lanes, left=(x.col||0)*w;
+        /* a quarter-hour box has room for a title or a time, never both */
+        var line=h<32?'':'<span>'+bpClock(x.from)+(h>=44?' – '+bpClock(x.to):'')+'</span>';
+        return '<div class="cw-ev '+x.kind+(x.done?' done':'')+(h<32?' tiny':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 1px);width:calc('+w+'% - 3px)"'+bpWkAttrs(x,iso)
+          +' aria-label="'+bpEsc(x.title+', '+bpClock(x.from))+'"><b>'+bpEsc(x.title)+'</b>'+line+'</div>';
+      }).join('');
+      var nowL='';
+      if(isToday){ var nw=new Date(), nm=nw.getHours()*60+nw.getMinutes(); if(nm>=open&&nm<=close) nowL='<div class="cw-now" style="top:'+(TOP+(nm-open)/60*BPWK_PX)+'px"><i></i></div>'; }
+      cols+='<div class="cw-col'+(isToday?' today':'')+(shut?' shut':'')+'" data-day="'+iso+'" data-di="'+di+'">'+nowL+blocks+'</div>';
+    });
+
+    var first=new Date(days[0]+'T12:00:00'), last=new Date(days[6]+'T12:00:00');
+    var mo=function(d){ return d.toLocaleDateString('en-US',{month:'short'}); };
+    var label=mo(first)+' '+first.getDate()+' – '+(first.getMonth()===last.getMonth()?'':mo(last)+' ')
+      +last.getDate()+', '+last.getFullYear();
+
+    host.innerHTML=
+      '<div class="cw-top">'
+        +'<div class="cw-nav"><button onclick="bpWeekMove(-1)" aria-label="Previous week"><span class=ms>chevron_left</span></button>'
+        +'<b>'+label+'</b>'
+        +'<button onclick="bpWeekMove(1)" aria-label="Next week"><span class=ms>chevron_right</span></button>'
+        +'<button class="cw-tnow" onclick="bpWeekToday()">This week</button></div>'
+        +'<div class="cw-cap">'+(weekBooked?Math.round(weekBooked/60)+'h booked this week':'Nothing booked this week')+'</div>'
+      +'</div>'
+      +'<div class="cw-heads">'+heads+'</div>'
+      +(anyUntimed?'<div class="cw-adrow">'+allday+'</div>':'')
+      +'<div class="cw-scroll" id="bpx-wk-scroll"><div class="cw-grid" style="height:'+H+'px">'
+        +'<div class="cw-lines">'+lines+'</div><div class="cw-cols">'+cols+'</div></div></div>'
+      +'<div class="cw-say" id="bpx-wk-say"></div>'
+      ;
+
+    bpWkBind(host);
+    if(_bpWkPend){ var sv=q('bpx-wk-say'); if(sv){ sv.textContent=_bpWkPend.t; sv.className='cw-say on'+(_bpWkPend.bad?' bad':''); } }
+    var sc=q('bpx-wk-scroll');
+    if(sc){ var start=Math.max(0,(((hset[BP_DAYKEY[new Date().getDay()]]||{}).from?bpMins(hset[BP_DAYKEY[new Date().getDay()]].from):8*60)-open)/60*BPWK_PX-8); sc.scrollTop=start; }
+  }
+
+  /* what a box is, and whether it can be dragged */
+  function bpWkAttrs(x,iso){
+    var ref=x.ref||'', t=ref.split(':')[0];
+    var can=(t==='note')?'both':(t==='appt')?'both':(t==='crew'&&!x.allDay)?'day':'';
+    return ' data-ref="'+bpEsc(ref)+'" data-day="'+iso+'" data-from="'+(x.from==null?'':x.from)+'" data-to="'+(x.to==null?'':x.to)+'"'
+      +(can?' data-move="'+can+'"':'')+' data-act="'+bpEsc(x.act||'')+'"'+(can?' title="Drag to move"':'');
+  }
+
+  /* one listener for the whole grid: drag a box, or click a gap */
+  function bpWkBind(host){
+    var grid=host.querySelector('.cw-cols'); if(!grid) return;
+    grid.addEventListener('pointerdown',function(ev){
+      if(ev.button) return;
+      var box=ev.target.closest?ev.target.closest('.cw-ev'):null;
+      if(box) return bpWkDrag(ev,box,grid);
+      var col=ev.target.closest?ev.target.closest('.cw-col'):null;
+      if(col) bpWkGap(ev,col);
+    });
+  }
+
+  function bpWkDrag(ev,box,grid){
+    var move=box.getAttribute('data-move'), act=box.getAttribute('data-act');
+    if(!move){ bpWkRun(act); return; }
+    var cols=[].slice.call(grid.querySelectorAll('.cw-col')), days=cols.map(function(c){return c.getAttribute('data-day');});
+    var colW=cols[0].getBoundingClientRect().width+1;
+    var d0=days.indexOf(box.getAttribute('data-day')), from=+box.getAttribute('data-from'), to=+box.getAttribute('data-to');
+    var ref=box.getAttribute('data-ref'), dur=Math.max(15,to-from);
+    var x0=ev.clientX, y0=ev.clientY, live=false, tgt={day:d0,from:from}, tip=null;
+    /* the listeners live on the window, not on the box: a cloud refresh
+       can replace the box mid-drag, and the drag has to survive that */
+    function onMove(e){
+      if(!live){ if(Math.abs(e.clientX-x0)<4&&Math.abs(e.clientY-y0)<4) return;
+        live=true; box.classList.add('cw-drag'); grid.classList.add('cw-dragging');
+        tip=document.createElement('div'); tip.className='cw-tip'; document.body.appendChild(tip); }
+      if(e.cancelable) e.preventDefault();
+      var di=Math.max(0,Math.min(6,d0+Math.round((e.clientX-x0)/colW)));
+      var mn=move==='day'?from:bpWkSnap(from+(e.clientY-y0)/BPWK_PX*60);
+      tgt={day:di,from:Math.max(_bpWkOpen,Math.min(_bpWkClose-dur,mn))};
+      if(box.isConnected) box.style.transform='translate('+((tgt.day-d0)*colW)+'px,'+((tgt.from-from)/60*BPWK_PX)+'px)';
+      tip.textContent=new Date(days[tgt.day]+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'})+' '+bpClock(tgt.from)
+        +(move==='day'?'':' \u2013 '+bpClock(tgt.from+dur));
+      tip.style.left=e.clientX+'px'; tip.style.top=Math.max(8,e.clientY-34)+'px';
+    }
+    function done(){
+      window.removeEventListener('pointermove',onMove,true); window.removeEventListener('pointerup',done,true); window.removeEventListener('pointercancel',done,true);
+      if(tip&&tip.parentNode) tip.parentNode.removeChild(tip);
+      grid.classList.remove('cw-dragging');
+      if(box.isConnected){ box.classList.remove('cw-drag'); box.style.transform=''; }
+      if(!live){ bpWkRun(act); return; }
+      if(tgt.day===d0&&tgt.from===from) return;
+      bpWkCommit(ref,days[tgt.day],tgt.from,dur,days[d0],move);
+    }
+    window.addEventListener('pointermove',onMove,true); window.addEventListener('pointerup',done,true); window.addEventListener('pointercancel',done,true);
+  }
+  function bpWkRun(act){ if(act) try{ (new Function(act))(); }catch(e){} }
+
+  /* write the move through, each kind by its own road */
+  function bpWkCommit(ref,day,mins,dur,wasDay,move){
+    var t=ref.split(':')[0], id=ref.slice(t.length+1);
+    var lbl=new Date(day+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
+    if(t==='note'){
+      var list=bpNotesGet(), n=list.filter(function(x){return x.id===id;})[0]; if(!n) return;
+      n.day=day; n.at=bpWkHHMM(mins); bpNotesCache(list); bpDrawWeek();
+      bpWkSay('Moved to '+lbl+' at '+bpClock(mins)+'.');
+      if(window.BP_LIVE&&window.BP_SB&&!/^n\d/.test(id)) Promise.resolve(BP_SB.from('calendar_notes').update({day:n.day,at:n.at,updated_at:new Date().toISOString()}).eq('id',id)).then(function(){},function(){});
+      return;
+    }
+    if(t==='crew'){
+      var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j||!j.sched) return;
+      var ds=(j.sched.dates||[]).slice();
+      if(ds.indexOf(day)>=0){ bpWkSay('That project already works '+lbl+'.',true); return; }
+      var at=ds.indexOf(wasDay); if(at<0) return;
+      ds[at]=day; j.sched.dates=ds.sort(); bpJobsSet(jobs); bpDrawWeek();
+      bpWkSay('Crew day moved to '+lbl+'. The start time is set on the project, so every day of it starts together.');
+      return;
+    }
+    if(t==='appt'){
+      var e=bpFindEv(id); if(!e) return;
+      var durMs=Math.max(new Date(e.end).getTime()-new Date(e.start).getTime(),1800000);
+      var startISO=bpMkISO(day,bpWkHHMM(mins)), endISO=bpFormatLA(new Date(new Date(startISO).getTime()+durMs));
+      bpWkSay('Moving…');
+      Promise.resolve(bpCalWrite({action:'update',id:id,startTime:startISO,endTime:endISO,cal:e.cal||'inspection'})).then(function(res){
+        if(res&&res.ok){ bpWkSay('Moved to '+lbl+' at '+bpClock(mins)+'. The customer gets the update.'); bpLoadCalendar(); }
+        else { bpWkSay((res&&(res.message||res.error))||'That time would not take. Nothing was changed.',true); bpDrawWeek(); }
+      },function(){ bpWkSay('Could not reach the calendar. Nothing was changed.',true); bpDrawWeek(); });
+    }
+  }
+
+  /* click an empty slot: write a note or a to-do right where it belongs */
+  function bpWkGap(ev,col){
+    var day=col.getAttribute('data-day'), r=col.getBoundingClientRect();
+    var mins=Math.max(_bpWkOpen,Math.min(_bpWkClose-30,bpWkSnap(_bpWkOpen+(ev.clientY-r.top-10)/BPWK_PX*60)));
+    bpWkQuick(day,mins,ev.clientX,ev.clientY);
+  }
+  window.bpWkQuick=function(day,mins,px,py){
+    bpWkQuickClose();
+    var d=new Date(day+'T12:00:00');
+    var el=document.createElement('div'); el.className='cw-quick'; el.id='bpx-wk-quick';
+    el.innerHTML='<div class="cw-q-h"><b>'+d.toLocaleDateString('en-US',{weekday:'long'})+' · '+bpClock(mins)+'</b>'
+      +'<button onclick="bpWkQuickClose()" aria-label="Close"><span class=ms>close</span></button></div>'
+      +'<input id="bpx-wk-q-t" placeholder="Pick up shingles from ABC Supply…" maxlength="500">'
+      +'<div class="cw-q-r"><div class="bpx-jobtabs" id="bpx-wk-q-k"><button class="bpx-jt on" data-k="todo" onclick="bpWkQuickKind(\'todo\')">To-do</button><button class="bpx-jt" data-k="note" onclick="bpWkQuickKind(\'note\')">Note</button></div>'
+      +'<button class="bpx-btn" onclick="bpWkQuickSave(\''+day+'\','+mins+')">Add</button></div>';
+    document.body.appendChild(el);
+    var w=el.offsetWidth||270, h=el.offsetHeight||140;
+    el.style.left=Math.max(8,Math.min((window.innerWidth||900)-w-8,px-w/2))+'px';
+    el.style.top=Math.max(8,Math.min((window.innerHeight||700)-h-8,py+12))+'px';
+    window._bpWkQKind='todo';
+    var t=q('bpx-wk-q-t'); if(t){ t.focus(); t.addEventListener('keydown',function(e){ if(e.key==='Enter') bpWkQuickSave(day,mins); if(e.key==='Escape') bpWkQuickClose(); }); }
+    setTimeout(function(){ document.addEventListener('pointerdown',bpWkQuickAway,true); },0);
+  };
+  function bpWkQuickAway(e){ var el=q('bpx-wk-quick'); if(el&&!el.contains(e.target)) bpWkQuickClose(); }
+  window.bpWkQuickClose=function(){ document.removeEventListener('pointerdown',bpWkQuickAway,true); var el=q('bpx-wk-quick'); if(el&&el.parentNode) el.parentNode.removeChild(el); };
+  window.bpWkQuickKind=function(k){ window._bpWkQKind=k; document.querySelectorAll('#bpx-wk-q-k .bpx-jt').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-k')===k); }); };
+  window.bpWkQuickSave=function(day,mins){
+    var t=(q('bpx-wk-q-t')||{}).value||'';
+    if(!t.trim()){ var i=q('bpx-wk-q-t'); if(i) i.focus(); return; }
+    var kind=window._bpWkQKind||'todo';
+    bpNoteAdd(day,kind,t,bpWkHHMM(mins)).then(function(){ bpWkQuickClose(); bpDrawWeek(); if(typeof bpTodosRender==='function') bpTodosRender();
+      bpWkSay((kind==='note'?'Note':'To-do')+' added to '+new Date(day+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'})+' at '+bpClock(mins)+'.'); });
+  };
 
 /* ==== notes & to-dos: the owner's own entries, outside GoHighLevel ==== */
   var _bpNotes=null;
@@ -15454,6 +15704,7 @@ var _bpContacts=[];
 /* ==== bpDrawCalendar ==== */
   function bpDrawCalendar(){
     if(_bpCalView==='day'){ bpDrawDay(); return; }
+    if(_bpCalView==='week'){ bpDrawWeek(); return; }
     var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var y=_bpCalDate.getFullYear(), m=_bpCalDate.getMonth();
     q('bpx-calmonth').textContent=mn[m]+' '+y;
@@ -21177,8 +21428,9 @@ window.bpFmHangers=function(){
 #bpx .cal-legend i,#bpx .cal-sheet-row>i{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
 #bpx .lg-insp{background:var(--blue)}
 #bpx .lg-job{background:#0d9488}
-#bpx .lg-todo{background:#f59e0b}
-#bpx .lg-note{background:#8b5cf6}
+#bpx .lg-todo{background:var(--cal-todo,#7c3aed)}
+#bpx .lg-note{background:var(--cal-note,#6a6a70)}
+#bpx .lg-crew{background:var(--cal-crew,#b45309)}
 #bpx .cal-grid .bpx-day.tap{cursor:pointer}
 #bpx .cal-grid .bpx-day.tap:hover{border-color:#b9c9ea}
 #bpx .cal-grid .bpx-appt.job{background:#e6f7f5;color:#0f766e;border-color:rgba(13,148,136,.25)}
@@ -21337,14 +21589,14 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/supply.css?v=20260918k">
-<link rel="stylesheet" href="portal/dash.css?v=20260918k">
-<link rel="stylesheet" href="portal/team.css?v=20260918k">
-<script src="portal/team.js?v=20260918k"></script>
-<script src="portal/supply.js?v=20260918k"></script>
-<script src="portal/supply-scan.js?v=20260918k"></script>
-<script src="portal/supply-kits.js?v=20260918k"></script>
-<script src="portal/supply-dir.js?v=20260918k"></script>
-<script src="portal/dash.js?v=20260918k"></script>
-<script src="site/site.js?v=20260918k"></script>
+<link rel="stylesheet" href="portal/supply.css?v=20260919a">
+<link rel="stylesheet" href="portal/dash.css?v=20260919a">
+<link rel="stylesheet" href="portal/team.css?v=20260919a">
+<script src="portal/team.js?v=20260919a"></script>
+<script src="portal/supply.js?v=20260919a"></script>
+<script src="portal/supply-scan.js?v=20260919a"></script>
+<script src="portal/supply-kits.js?v=20260919a"></script>
+<script src="portal/supply-dir.js?v=20260919a"></script>
+<script src="portal/dash.js?v=20260919a"></script>
+<script src="site/site.js?v=20260919a"></script>
 </html>
