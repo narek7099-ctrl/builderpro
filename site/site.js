@@ -150,7 +150,7 @@
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
     if (!right || !canvas || canvas._bpHero) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20260919-h').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+    import('./hero3d.js?v=20260919-i').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
       .catch(function () { right.classList.add('nogl'); });
   }
   /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
@@ -179,42 +179,35 @@
      video has been played once from a user gesture.                        */
   function initHeroScrub(triggers) {
     var scrub = $('#videoScrub'); if (!scrub) return;
-    /* Safari will not paint a frame you seek to until the video has played
-       once, so a scrubbed clip sits on frame one forever. It is muted and
-       inline, so it may autoplay: start it, then pause on the first frame.
-       If the browser refuses without a gesture, prime on whichever gesture
-       arrives first, wheel and pointer included, not touch alone. */
-    var primed = false;
-    function prime() {
-      if (primed) return; primed = true;
-      var at = scrub.currentTime;
-      var pr = scrub.play();
-      if (pr && pr.then) pr.then(function () { scrub.pause(); scrub.currentTime = at; }).catch(function () { primed = false; });
-      else { try { scrub.pause(); scrub.currentTime = at; } catch (e) { primed = false; } }
-    }
-    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (ev) {
-      document.addEventListener(ev, prime, { once: true, passive: true });
-    });
-    var ready = function () {
-      prime();
-      var tl = gsap.timeline({ scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true } });
-      tl.fromTo(scrub, { currentTime: 0 }, { currentTime: scrub.duration || 1, ease: 'none' });
-      gsap.fromTo(scrub, { opacity: 0 }, { opacity: 1, ease: 'none', scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'top 40%', scrub: true } });
-      /* seeking a file the browser is still streaming lands on the nearest
-         buffered frame, so fetch it once and seek against the local copy.
-         Swapping the source resets the element, so prime it again. */
-      var src = scrub.currentSrc || scrub.src;
-      setTimeout(function () {
-        fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
-          var t = scrub.currentTime;
-          scrub.addEventListener('loadeddata', function () { scrub.currentTime = t; prime(); }, { once: true });
-          primed = false;
-          scrub.setAttribute('src', URL.createObjectURL(b));
-        }).catch(function () {});
-      }, 1000);
-    };
+    scrub.removeAttribute('controls');
     scrub.addEventListener('error', function () { scrub.remove(); }, { once: true });
-    if (scrub.readyState >= 1) ready(); else scrub.addEventListener('loadedmetadata', ready, { once: true });
+
+    /* The clip runs by itself while the story is on screen, rather than
+       being seeked a frame at a time. A seek per scroll frame means a
+       decode from the nearest keyframe every frame, which stutters and
+       forces a fat all-keyframe encode; plain playback is one smooth
+       decode. The captions, the ring and the step swaps still follow the
+       scroll, so the story is still yours to pace. */
+    var want = false;
+    function sync() {
+      if (want && scrub.paused) { var p = scrub.play(); if (p && p.catch) p.catch(function () {}); }
+      else if (!want && !scrub.paused) scrub.pause();
+    }
+    ScrollTrigger.create({
+      trigger: triggers, start: 'top bottom', end: 'bottom bottom',
+      onToggle: function (self) { want = self.isActive; sync(); },
+    });
+    /* a browser that will not autoplay muted video starts it on the first
+       gesture instead, whichever kind arrives */
+    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, sync, { passive: true });
+    });
+    document.addEventListener('visibilitychange', function () { if (document.hidden) scrub.pause(); else sync(); });
+
+    gsap.fromTo(scrub, { opacity: 0 }, {
+      opacity: 1, ease: 'none',
+      scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'top 40%', scrub: true },
+    });
   }
   function initHeroStory() {
     var stage = $('.hero_stage');

@@ -53,8 +53,8 @@ section{padding:0;}
 .modal-body{padding:22px;}
 
 </style>
-<link rel="stylesheet" href="site/site.css?v=20260919-h">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919-h"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20260919-i">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919-i"}}</script>
 
 
 <style id="bpi-icons">
@@ -430,8 +430,8 @@ section{padding:0;}
 
     <!-- RIGHT: the object stage. Three clips: an intro that plays once, a
          loop that takes over when it ends, and (full-bleed over the stage,
-         below) a scrub clip whose currentTime is driven by the scroll story.
-         If the clips are missing, the live cube (site/hero3d.js) stands in. -->
+         below) the story clip, which runs by itself while the story is on
+         screen. If the clips are missing, the live cube stands in. -->
     <div class="hero_right">
       <video class="hero_video is-intro" id="videoIntro" muted playsinline preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3HA0qLqxUhnO8yWK4c1UchjDT3T/695409d0-8f3e-4ce9-9720-68ae78661055.mp4"></video>
       <video class="hero_video is-loop" id="videoLoop" muted playsinline loop preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3HA0qLqxUhnO8yWK4c1UchjDT3T/a1280d37-2e24-4976-9bdb-e712d04b87d3.mp4"></video>
@@ -439,7 +439,7 @@ section{padding:0;}
       <div class="hero_fallback" aria-hidden="true"><i></i></div>
     </div>
 
-    <video class="hero_scrub" id="videoScrub" muted playsinline preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3HA0qLqxUhnO8yWK4c1UchjDT3T/6871b9f9-2f44-4324-99e5-21a855cb0b38.mp4"></video>
+    <video class="hero_scrub" id="videoScrub" muted playsinline loop preload="auto" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3HA0qLqxUhnO8yWK4c1UchjDT3T/2b66f6a0-83f8-4d58-88ac-0d4151510d73.mp4"></video>
     <div class="hero_dark" id="heroDark"></div>
 
     <div class="hero_story" id="heroStory">
@@ -21841,9 +21841,9 @@ window.bpFmHangers=function(){
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260919c"></script>
 <script src="portal/dash.js?v=20260919c"></script>
-<script src="site/vendor/lenis.min.js?v=20260919-h"></script>
-<script src="site/vendor/gsap.min.js?v=20260919-h"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20260919-h"></script>
-<script src="site/vendor/SplitText.min.js?v=20260919-h"></script>
-<script src="site/site.js?v=20260919-h"></script>
+<script src="site/vendor/lenis.min.js?v=20260919-i"></script>
+<script src="site/vendor/gsap.min.js?v=20260919-i"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>
+<script src="site/vendor/SplitText.min.js?v=20260919-i"></script>
+<script src="site/site.js?v=20260919-i"></script>
 </html>
