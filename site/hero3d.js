@@ -17,8 +17,8 @@ import * as THREE from 'three';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 import { RoundedBoxGeometry } from './vendor/RoundedBoxGeometry.js';
 
-const GROUND = 0xeef1f6;
-const BLUE = 0x2b63e6;
+const GROUND = 0xf0f3f7;
+const BLUE = 0x006fff;
 
 const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
 const inOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -168,7 +168,7 @@ export function mount(canvas) {
   }
 
   /* nothing to draw for while the portal, the menu or a legal page covers the screen */
-  const covered = () => document.body.style.overflow === 'hidden' || document.body.classList.contains('dl-menu-open');
+  const covered = () => document.body.style.overflow === 'hidden' || document.body.classList.contains('is-locked');
 
   function frame() {
     if (!running) return;

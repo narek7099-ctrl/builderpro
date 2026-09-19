@@ -1,232 +1,422 @@
-/* Marketing site behaviour: smooth scroll, preloader, menu, masked line
-   reveals, the pinned story, the flow diagram, the timeline, the form.
-   No scroll listeners: everything that tracks scroll runs in a
-   requestAnimationFrame loop gated by an IntersectionObserver, so it
-   only ticks while its section is on screen. */
+/* ============================================================================
+   ANIMATION LAYER — BuilderPro OS marketing site
+   ----------------------------------------------------------------------------
+     1. Setup: Lenis + GSAP, and the scroll-lock helper
+     2. Preloader
+     3. Masked line reveal for headings  <- the signature effect
+     4. Hero scroll story (dark wash, the cube driven by scroll, step swaps, ring)
+     5. Scroll-highlight text ("ink filling in")
+     6. Trades accordion + media cross-fade
+     7. How-it-works sticky/scroll pairing
+     8. Fast-results timeline
+     9. Menu + contact drawer
+    10. Nav logo colour flip
+
+   Storytelling motion is SCRUBBED (tied to scroll, ease "none").
+   Feedback motion is TWEENED (fixed duration, expressive ease).
+   ========================================================================= */
 (function () {
   'use strict';
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var HAS_GSAP = typeof gsap !== 'undefined';
+  var HAS_ST = HAS_GSAP && typeof ScrollTrigger !== 'undefined';
+  var HAS_SPLIT = HAS_GSAP && typeof SplitText !== 'undefined';
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
-  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
-  if (!reduce) document.documentElement.classList.add('dl-anim');
+  if (HAS_ST) gsap.registerPlugin(ScrollTrigger);
 
-  /* ---------- smooth scroll ----------
-     Lenis carries the page. It stands down whenever something else owns the
-     screen: the loader, the menu, the portal (which sets body overflow
-     hidden), the legal overlays. Anything inside those is left to scroll
+
+  /* 1. SETUP --------------------------------------------------------------- */
+
+  /* Lenis is driven by GSAP's ticker, not its own rAF, or it and ScrollTrigger
+     disagree about the scroll position by a frame. It stands down while the
+     loader, the menu, the drawer, the portal or a modal owns the screen, and
+     leaves the portal, the chat, the estimator and the legal pages to scroll
      natively. */
   var lenis = null;
-  if (!reduce && window.Lenis) {
+  if (!REDUCED && window.Lenis) {
     try {
       lenis = new Lenis({
-        lerp: 0.09, wheelMultiplier: 1, smoothWheel: true,
-        prevent: function (node) { return !!(node.closest && node.closest('#bpx, .atlas-inline, .legal-page, .modal, .est-shell, [data-lenis-prevent]')); },
+        lerp: 0.1,
+        prevent: function (node) { return !!(node.closest && node.closest('#bpx, .atlas-inline, .legal-page, .modal, .est-shell, .drawer, .menu_body, [data-lenis-prevent]')); },
       });
-      var held = false;
-      (function raf(t) {
-        var lock = document.documentElement.classList.contains('dl-hold') || document.body.classList.contains('dl-menu-open') || document.body.style.overflow === 'hidden';
-        if (lock !== held) { held = lock; held ? lenis.stop() : lenis.start(); }
-        lenis.raf(t); requestAnimationFrame(raf);
-      })(0);
-      /* same-page links glide instead of jumping */
-      document.addEventListener('click', function (e) {
-        var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
-        var id = a.getAttribute('href'); if (!id || id === '#' || id.length < 2) return;
-        var el = document.getElementById(id.slice(1)); if (!el) return;
-        e.preventDefault(); lenis.scrollTo(el, { offset: -6, duration: 1.2 });
-        if (history.pushState) history.pushState(null, '', id);
-      });
+      if (HAS_GSAP) {
+        if (HAS_ST) lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add(function (time) { lenis.raf(time * 1000); });
+        gsap.ticker.lagSmoothing(0);
+      } else {
+        (function raf(t) { lenis.raf(t); requestAnimationFrame(raf); })(0);
+      }
     } catch (e) { lenis = null; }
   }
 
-  /* ---------- preloader ---------- */
+  var lockState = { loader: false, menu: false, drawer: false };
+  var extLocked = false;
+  function updateLock() {
+    var locked = lockState.loader || lockState.menu || lockState.drawer || extLocked;
+    if (lenis) { locked ? lenis.stop() : lenis.start(); }
+    document.body.classList.toggle('is-locked', lockState.loader || lockState.menu || lockState.drawer);
+  }
+  /* the portal, the plan modal and the legal pages lock the page by setting
+     body overflow hidden themselves; watch for that and stand Lenis down */
+  new MutationObserver(function () {
+    var v = document.body.style.overflow === 'hidden';
+    if (v !== extLocked) { extLocked = v; updateLock(); }
+  }).observe(document.body, { attributes: true, attributeFilter: ['style'] });
+
+  /* always start at the top: a scroll-driven hero restored mid-scroll looks broken */
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('beforeunload', function () { window.scrollTo(0, 0); });
+
+  /* same-page links glide instead of jumping */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]'); if (!a) return;
+    var id = a.getAttribute('href'); if (!id || id === '#' || id.length < 2) return;
+    var el = document.getElementById(id.slice(1)); if (!el) return;
+    e.preventDefault();
+    closeMenu(); closeDrawer();
+    if (lenis) lenis.scrollTo(el, { offset: -6, duration: 1.2 }); else el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
+    if (history.pushState) history.pushState(null, '', id);
+  });
+
+
+  /* 2. PRELOADER ----------------------------------------------------------- */
   (function () {
     var pre = $('.dl-pre'); if (!pre) return;
     var seen = false; try { seen = sessionStorage.getItem('bpPre') === '1'; } catch (e) {}
-    if (seen || reduce) { pre.classList.add('gone'); return; }
-    document.documentElement.classList.add('dl-hold');
+    if (seen || REDUCED) { pre.classList.add('gone'); return; }
+    lockState.loader = true; updateLock();
     requestAnimationFrame(function () { pre.classList.add('in'); });
-    setTimeout(function () { pre.classList.add('out'); document.documentElement.classList.remove('dl-hold'); }, 1150);
+    setTimeout(function () { pre.classList.add('out'); lockState.loader = false; updateLock(); }, 1150);
     setTimeout(function () { pre.classList.add('gone'); try { sessionStorage.setItem('bpPre', '1'); } catch (e) {} }, 2200);
   })();
-  /* the page always opens at the top, so the scroll-driven hero starts in a known state */
-  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-  addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
 
-  /* ---------- menu ---------- */
-  window.dlMenu = function (force) {
-    var open = typeof force === 'boolean' ? force : !document.body.classList.contains('dl-menu-open');
-    document.body.classList.toggle('dl-menu-open', open);
-    var b = $('.dl-menu-btn'); if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+  /* 3. MASKED LINE REVEAL ---------------------------------------------------
+     Every heading is split into lines, each line wrapped in an overflow:hidden
+     mask, and the lines slide up from below the mask. yPercent 110, not 100:
+     descenders need the extra 10%. After the reveal we add .is-split-active
+     to the parent, which grows the section pill (pure CSS). Text first, then
+     the pill: that ordering is most of the polish.                          */
+  var splitConfig = {
+    lines: { duration: 0.8, stagger: 0.08 },
+    words: { duration: 0.6, stagger: 0.06 },
+    chars: { duration: 0.4, stagger: 0.01 },
   };
-  $$('.dl-menu a').forEach(function (a, i) { a.style.setProperty('--i', i); a.addEventListener('click', function () { dlMenu(false); }); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') dlMenu(false); });
+  function initHeadingReveal() {
+    $$('[data-split="heading"]').forEach(function (heading) {
+      var type = heading.dataset.splitReveal || 'lines';
+      var delay = parseFloat(heading.dataset.splitDelay) || 0;
+      var onLoad = heading.hasAttribute('data-split-load');
+      var parent = heading.closest('[data-pill-parent]') || heading.parentElement;
+      var activate = function () { setTimeout(function () { parent.classList.add('is-split-active'); }, delay * 1000); };
 
-  /* ---------- masked line reveals ----------
-     A heading is split into words, the words are measured, and each run of
-     words on one line is wrapped in a box that hides what is below it. The
-     lines then rise into view, one after another. Split again on resize,
-     because the lines change. */
-  function splitLines(el) {
-    if (!el._orig) el._orig = el.innerHTML;
-    el.innerHTML = el._orig;
-    var frag = document.createDocumentFragment();
-    (function walk(node, into, em) {
-      [].slice.call(node.childNodes).forEach(function (n) {
-        if (n.nodeType === 3) {
-          n.textContent.split(/(\s+)/).forEach(function (piece) {
-            if (!piece) return;
-            if (/^\s+$/.test(piece)) { into.appendChild(document.createTextNode(' ')); return; }
-            var w = document.createElement('span'); w.className = 'w'; w.textContent = piece;
-            if (em) { var e = document.createElement('em'); e.appendChild(w); into.appendChild(e); } else into.appendChild(w);
-          });
-        } else if (n.nodeName === 'BR') { into.appendChild(document.createElement('br')); }
-        else if (n.nodeName === 'EM') { walk(n, into, true); }
-        else { walk(n, into, em); }
+      if (REDUCED || !HAS_SPLIT || !HAS_ST) { activate(); return; }
+
+      var types = type === 'lines' ? ['lines'] : type === 'words' ? ['lines', 'words'] : ['lines', 'words', 'chars'];
+      SplitText.create(heading, {
+        type: types.join(', '),
+        mask: 'lines',
+        autoSplit: true,
+        linesClass: 'line',
+        wordsClass: 'word',
+        charsClass: 'letter',
+        onSplit: function (self) {
+          var cfg = splitConfig[type];
+          var anim = { yPercent: 110, duration: cfg.duration, stagger: cfg.stagger, delay: delay, ease: 'expo.out' };
+          if (onLoad) { activate(); return gsap.from(self[type], anim); }
+          anim.scrollTrigger = { trigger: heading, start: 'clamp(top 80%)', once: true, onEnter: activate };
+          return gsap.from(self[type], anim);
+        },
       });
-    })(el, frag, false);
-    el.innerHTML = ''; el.appendChild(frag);
-    var words = $$('.w', el), lines = [], cur = null, top = null;
-    words.forEach(function (w) {
-      var t = w.offsetTop;
-      if (top === null || Math.abs(t - top) > 2) { cur = []; lines.push(cur); top = t; }
-      cur.push(w.parentNode.nodeName === 'EM' ? w.parentNode : w);
     });
-    var out = document.createDocumentFragment();
-    lines.forEach(function (line) {
-      var ln = document.createElement('span'); ln.className = 'ln';
-      var inn = document.createElement('span'); inn.className = 'in';
-      line.forEach(function (w, i) { if (i) inn.appendChild(document.createTextNode(' ')); inn.appendChild(w); });
-      ln.appendChild(inn); out.appendChild(ln);
+    /* a pill without a split heading beside it still grows when it comes into view */
+    $$('[data-pill-parent]').forEach(function (p) {
+      if (p.querySelector('[data-split="heading"]')) return;
+      if (REDUCED || !HAS_ST) { p.classList.add('is-split-active'); return; }
+      ScrollTrigger.create({ trigger: p, start: 'clamp(top 85%)', once: true, onEnter: function () { p.classList.add('is-split-active'); } });
     });
-    el.innerHTML = ''; el.appendChild(out);
   }
-  var heads = reduce ? [] : $$('main .dl-h1, main .dl-h2, main .sec-head h2, .dl-big b');
-  heads.forEach(function (h) { h.classList.add('dl-split'); splitLines(h); });
-  var hio = new IntersectionObserver(function (es) {
-    es.forEach(function (e) {
-      if (!e.isIntersecting) return; hio.unobserve(e.target);
-      e.target.classList.add('is-on');
-      var host = e.target.closest('.dl-card, .dl-cta, .dl-stat, section') || e.target.parentElement;
-      if (host) host.classList.add('is-on');
+
+
+  /* 4. HERO SCROLL STORY ----------------------------------------------------
+     ONE sticky stage with invisible trigger blocks below it. As you scroll
+     through those blocks: a dark wash fades over the whole stage, the glass
+     caption cards fade in, the ring counter draws itself, the captions swap,
+     and the cube in the right-hand card is driven through its states.
+     The cube is site/hero3d.js: mount(canvas).setProgress(0..1).            */
+  var heroApi = null;
+  function initHeroObject() {
+    var right = $('.hero_right'), canvas = $('.hero_right canvas');
+    if (!right || !canvas) return;
+    if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
+    import('./hero3d.js?v=20260919').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      .catch(function () { right.classList.add('nogl'); });
+  }
+  function initHeroStory() {
+    var stage = $('.hero_stage');
+    if (!stage || window.innerWidth <= 767 || REDUCED || !HAS_ST) return;
+    var dark = $('#heroDark'), story = $('#heroStory'), ring = $('#heroRing'), num = $('#heroNum');
+    var triggers = $('.hero_triggers');
+    var blocks = $$('[data-hero-step]');
+    if (!blocks.length) return;
+
+    gsap.fromTo([dark, story], { opacity: 0 }, {
+      opacity: 1, ease: 'none',
+      scrollTrigger: { trigger: blocks[0], start: 'top bottom', end: 'top 40%', scrub: true },
     });
-  }, { threshold: 0.25, rootMargin: '0px 0px -8% 0px' });
-  heads.forEach(function (h) { hio.observe(h); });
-  /* a kicker without a split heading beside it still gets its pill */
-  $$('.dl-kicker').forEach(function (k) {
-    var host = k.closest('.dl-card, .dl-cta, section'); if (!host || host.querySelector('.dl-split')) return;
-    var o = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { host.classList.add('is-on'); o.disconnect(); } }, { threshold: 0.3 });
-    o.observe(host);
-  });
-  var rw = innerWidth, rt;
-  addEventListener('resize', function () {
-    if (innerWidth === rw) return; rw = innerWidth; clearTimeout(rt);
-    rt = setTimeout(function () {
-      heads.forEach(function (h) { var on = h.classList.contains('is-on'); h.classList.add('no-anim'); splitLines(h); if (on) h.classList.add('is-on'); requestAnimationFrame(function () { h.classList.remove('no-anim'); }); });
-    }, 160);
-  }, { passive: true });
 
-  /* ---------- card reveals ---------- */
-  $$('main .dl-card, main .dl-photo, main .dl-stat, main .dl-acc, main .dl-plan, main .mw-card').forEach(function (el) {
-    if (el.closest('.dl-hero')) return;
-    el.classList.add('dl-rv');
-  });
-  $$('.dl-rv').forEach(function (el) {
-    var i = 0, n = el; while ((n = n.previousElementSibling) && i < 8) i++;
-    el.style.setProperty('--i', i);
-  });
-  var rio = new IntersectionObserver(function (es) {
-    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); rio.unobserve(e.target); } });
-  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  $$('.dl-rv, .dl-row, .dl-flow').forEach(function (el) { rio.observe(el); });
-
-  /* ---------- hero: pinned object + swapping panels ---------- */
-  (function () {
-    var hero = $('.dl-hero'), stage = $('.dl-stage'), canvas = $('.dl-stage canvas');
-    if (!hero || !stage || !canvas) return;
-    var api = null;
-    var panels = $$('.dl-panel', hero);
-    panels.forEach(function (p) {
-      var body = $('.dl-panel-body', p); if (!body) return;
-      body.innerHTML = body.textContent.trim().split(/\s+/).map(function (w) { return '<span class="w">' + w + '</span>'; }).join(' ');
-    });
-    var words = panels.map(function (p) { return $$('.w', p); });
-    var nums = panels.map(function (p) { return $('.dl-num', p); });
-
-    function mountGL() {
-      if (!('WebGLRenderingContext' in window)) { stage.classList.add('nogl'); return; }
-      import('./hero3d.js?v=20260919b').then(function (m) { api = m.mount(canvas); if (!api) stage.classList.add('nogl'); })
-        .catch(function () { stage.classList.add('nogl'); });
+    if (ring) {
+      var r = ring.r.baseVal.value, c = 2 * Math.PI * r;
+      ring.style.strokeDasharray = c; ring.style.strokeDashoffset = c;
+      gsap.to(ring, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true } });
     }
-    mountGL();
 
-    var running = false, last = -1;
-    function tick() {
-      if (!running) return;
-      var vh = innerHeight, r = hero.getBoundingClientRect();
-      var total = Math.max(1, r.height - vh);
-      var p = clamp(-r.top / total, 0, 1);
-      if (Math.abs(p - last) > 0.0005) { last = p; if (api) api.setProgress(p); }
-      panels.forEach(function (pn, i) {
-        var pr = pn.getBoundingClientRect();
-        /* words ink in as the panel's text card crosses the lower half of the viewport */
-        var t = clamp((vh * 0.92 - pr.bottom + pr.height * 0.6) / (vh * 0.45), 0, 1);
-        var ws = words[i], n = ws.length;
-        for (var k = 0; k < n; k++) { var on = k / n < t; if (ws[k].classList.contains('on') !== on) ws[k].classList.toggle('on', on); }
-        if (nums[i]) nums[i].style.setProperty('--ring', Math.round(t * 360) + 'deg');
+    var setStep = function (i) {
+      $$('.hero_step-title, .hero_step-body').forEach(function (el) { el.classList.toggle('is-active', +el.dataset.step === i + 1); });
+      if (num) num.textContent = i + 1;
+    };
+    setStep(0);
+    blocks.forEach(function (block, i) {
+      ScrollTrigger.create({ trigger: block, start: 'top bottom', end: 'bottom bottom', onToggle: function (self) { if (self.isActive) setStep(i); } });
+    });
+
+    /* the cube's progress across the whole story, in place of a scrubbed video */
+    ScrollTrigger.create({
+      trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true,
+      onUpdate: function (self) { if (heroApi) heroApi.setProgress(self.progress); },
+    });
+  }
+
+
+  /* 5. SCROLL-HIGHLIGHT TEXT -------------------------------------------------
+     Characters start grey and turn navy as the section scrolls through.
+     Scrubbed and linear: it should feel like reading.                      */
+  function initHighlightText() {
+    if (REDUCED || !HAS_SPLIT || !HAS_ST) return;
+    $$('[data-highlight-text]').forEach(function (el) {
+      var from = el.dataset.highlightColorFrom || '#BAC0CA';
+      var to = el.dataset.highlightColorTo || '#001530';
+      var stag = parseFloat(el.dataset.highlightStagger) || 0.1;
+      SplitText.create(el, {
+        type: 'words, chars', autoSplit: true,
+        onSplit: function (self) {
+          gsap.set(self.chars, { color: from });
+          return gsap.to(self.chars, {
+            color: to, stagger: stag, ease: 'linear',
+            scrollTrigger: {
+              trigger: el.closest('section') || el,
+              start: el.dataset.highlightScrollStart || 'top 90%',
+              end: el.dataset.highlightScrollEnd || 'center 40%',
+              scrub: true,
+            },
+          });
+        },
       });
-      requestAnimationFrame(tick);
+    });
+  }
+
+
+  /* 6. TRADES -----------------------------------------------------------------
+     One open at a time. Height is tweened 0 <-> content height and then
+     released to auto. Opening an item cross-fades the photo and stat cards. */
+  function initCaseStudies() {
+    var items = $$('.cs_item');
+    if (!items.length) return;
+    var showMedia = function (idx) {
+      $$('.cs_photo').forEach(function (p) { p.classList.toggle('is-active', +p.dataset.cs === idx); });
+      $$('.cs_stat').forEach(function (s) { s.classList.toggle('is-active', +s.dataset.cs === idx); });
+      $$('.cs_stat').forEach(function (s) { $$('.cs_chart span', s).forEach(function (bar) { bar.style.height = s.classList.contains('is-active') ? (bar.dataset.h || 60) + '%' : '0%'; }); });
+    };
+    var open = function (item) {
+      var body = $('.cs_item-body', item);
+      item.classList.add('is-active');
+      var h = body.firstElementChild.offsetHeight;
+      if (!HAS_GSAP || REDUCED) { body.style.height = 'auto'; return; }
+      gsap.fromTo(body, { height: 0 }, { height: h, duration: 0.6, ease: 'power2.inOut', onComplete: function () { body.style.height = 'auto'; } });
+    };
+    var close = function (item) {
+      var body = $('.cs_item-body', item);
+      item.classList.remove('is-active');
+      if (!HAS_GSAP || REDUCED) { body.style.height = 0; return; }
+      gsap.to(body, { height: 0, duration: 0.6, ease: 'power2.inOut' });
+    };
+    items.forEach(function (item) {
+      $('.cs_item-head', item).addEventListener('click', function () {
+        if (item.classList.contains('is-active')) { close(item); return; }
+        items.forEach(function (o) { if (o !== item && o.classList.contains('is-active')) close(o); });
+        open(item);
+        showMedia(+item.dataset.cs);
+        if (HAS_ST) setTimeout(function () { ScrollTrigger.refresh(); }, 650);
+      });
+    });
+    var first = items.filter(function (i) { return i.classList.contains('is-active'); })[0] || items[0];
+    first.classList.add('is-active');
+    $('.cs_item-body', first).style.height = 'auto';
+    showMedia(+first.dataset.cs);
+    /* the first item's bars grow when the section arrives, not on load */
+    if (HAS_ST && !REDUCED) {
+      $$('.cs_chart span').forEach(function (bar) { bar.style.height = '0%'; });
+      ScrollTrigger.create({ trigger: '.cs_body', start: 'top 75%', once: true, onEnter: function () { showMedia(+first.dataset.cs); } });
     }
-    var io = new IntersectionObserver(function (es) {
-      if (es.some(function (e) { return e.isIntersecting; })) { if (!running) { running = true; requestAnimationFrame(tick); } } else running = false;
-    }, { rootMargin: '10% 0px 10% 0px' });
-    io.observe(hero);
-  })();
+  }
 
-  /* ---------- flow diagram: nodes light up in order ---------- */
-  (function () {
-    var flow = $('.dl-flow'); if (!flow) return;
-    var nodes = $$('.dl-node', flow);
-    var io = new IntersectionObserver(function (es) {
-      if (!es.some(function (e) { return e.isIntersecting; })) return; io.disconnect();
-      nodes.forEach(function (n, k) { setTimeout(function () { n.classList.add('on'); }, reduce ? 0 : 160 + k * 110); });
-    }, { threshold: 0.15 });
-    io.observe(flow);
-  })();
 
-  /* ---------- timeline: the bar grows with scroll, dots pop as it passes ---------- */
-  (function () {
-    var tl = $('.dl-tl'); if (!tl) return;
-    var fill = $('.fill', tl), pts = $$('.pt', tl), running = false;
-    function tick() {
-      if (!running) return;
-      var r = tl.getBoundingClientRect(), vh = innerHeight;
-      var p = clamp((vh * 0.9 - r.top) / (vh * 0.8), 0, 1);
-      fill.style.width = (p * 100) + '%';
-      pts.forEach(function (pt, k) { pt.classList.toggle('on', k / (pts.length - 1) <= p + 0.001); });
-      requestAnimationFrame(tick);
+  /* 7. HOW IT WORKS -------------------------------------------------------------
+     Each 100vh text block owns one illustration in the sticky column. The
+     window is "top center" -> "bottom center" so the swap happens when the
+     block is the one you are reading.                                        */
+  function initSolutions() {
+    var blocks = $$('[data-sol-block]'), imgs = $$('.sol_img');
+    if (!blocks.length || !imgs.length) return;
+    var activate = function (i) { imgs.forEach(function (img) { img.classList.toggle('is-active', +img.dataset.sol === i); }); };
+    activate(0);
+    if (window.innerWidth <= 767 || !HAS_ST) return;
+    blocks.forEach(function (block, i) {
+      ScrollTrigger.create({ trigger: block, start: 'top center', end: 'bottom center', onToggle: function (self) { if (self.isActive) activate(i); } });
+    });
+  }
+
+
+  /* 8. FAST-RESULTS TIMELINE -----------------------------------------------------
+     The BAR is scrubbed (it reports your scroll position); each DOT POP is a
+     fixed tween with bounce.out (it is a thing happening).                    */
+  function initTimeline() {
+    var wrap = $('#hwwGraph'), bar = $('#hwwBar'), ticks = $$('.hww_tick');
+    if (!wrap || !bar || !ticks.length) return;
+    var isMobile = window.innerWidth < 768;
+    if (REDUCED || !HAS_ST) { bar.style[isMobile ? 'height' : 'width'] = '100%'; ticks.forEach(function (t) { t.classList.add('is-active'); }); return; }
+    var from = {}, to = {}; from[isMobile ? 'height' : 'width'] = '0%'; to[isMobile ? 'height' : 'width'] = '100%';
+    to.ease = 'none'; to.scrollTrigger = { trigger: wrap, start: 'top 90%', end: 'top 10%', scrub: true };
+    gsap.fromTo(bar, from, to);
+    ticks.forEach(function (tick) {
+      var pulse = $('.hww_pulse', tick);
+      ScrollTrigger.create({
+        trigger: wrap, start: 'top bottom', end: 'bottom top', scrub: true,
+        onUpdate: function () {
+          var b = bar.getBoundingClientRect(), d = tick.getBoundingClientRect();
+          var barPos = isMobile ? b.bottom : b.right;
+          var dotPos = isMobile ? d.top + d.height / 2 : d.left + d.width / 2;
+          var passed = barPos >= dotPos;
+          if (passed && !tick.classList.contains('is-active')) {
+            tick.classList.add('is-active');
+            gsap.fromTo(pulse, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'bounce.out', onComplete: function () { gsap.to(pulse, { opacity: 0, duration: 0.3, delay: 0.3 }); } });
+          }
+          if (!passed && tick.classList.contains('is-active')) { tick.classList.remove('is-active'); gsap.set(pulse, { opacity: 0, scale: 0.7 }); }
+        },
+      });
+    });
+  }
+
+
+  /* 9. MENU + DRAWER ---------------------------------------------------------
+     Both are timelines built once, paused, then played/reversed, so the close
+     is exactly as smooth as the open. The off-screen position is set here
+     with gsap.set, never with a CSS transform.                               */
+  var menuTl = null, drawerTl = null;
+  var menu = $('#menu'), menuOverlay = $('#menuOverlay'), drawer = $('#drawer'), drawerOverlay = $('#drawerOverlay');
+  function openMenu() {
+    if (!menu) return;
+    menu.classList.add('is-open'); menuOverlay.classList.add('is-open');
+    if (menuTl) menuTl.timeScale(1).play(); else menu.style.transform = 'none';
+    lockState.menu = true; updateLock();
+    $$('.js-open-menu').forEach(function (b) { b.setAttribute('aria-expanded', 'true'); });
+  }
+  function closeMenu() {
+    if (!menu || !menu.classList.contains('is-open')) return;
+    menuOverlay.classList.remove('is-open');
+    if (menuTl) { menuTl.timeScale(1.2).reverse(); menuTl.eventCallback('onReverseComplete', function () { menu.classList.remove('is-open'); }); }
+    else { menu.style.transform = 'translateX(105%)'; menu.classList.remove('is-open'); }
+    lockState.menu = false; updateLock();
+    $$('.js-open-menu').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+  }
+  function openDrawer() {
+    if (!drawer) return;
+    drawer.classList.add('is-open'); drawerOverlay.classList.add('is-open');
+    if (drawerTl) drawerTl.timeScale(1).play(); else drawer.style.transform = 'none';
+    lockState.drawer = true; updateLock();
+    var first = $('input', drawer); if (first) setTimeout(function () { first.focus(); }, 400);
+  }
+  function closeDrawer() {
+    if (!drawer || !drawer.classList.contains('is-open')) return;
+    drawerOverlay.classList.remove('is-open');
+    if (drawerTl) { drawerTl.timeScale(1).reverse(); drawerTl.eventCallback('onReverseComplete', function () { drawer.classList.remove('is-open'); }); }
+    else { drawer.style.transform = 'translateX(100%)'; drawer.classList.remove('is-open'); }
+    lockState.drawer = false; updateLock();
+  }
+  function initPanels() {
+    if (menu) {
+      if (HAS_GSAP) { gsap.set(menu, { xPercent: 105 }); menuTl = gsap.timeline({ paused: true }).to(menu, { xPercent: 0, duration: 0.5, ease: 'power2.out' }); }
+      else menu.style.transform = 'translateX(105%)';
+      $$('.js-open-menu').forEach(function (b) { b.addEventListener('click', openMenu); });
+      $$('.js-close-menu').forEach(function (b) { b.addEventListener('click', closeMenu); });
     }
-    var io = new IntersectionObserver(function (es) {
-      if (es.some(function (e) { return e.isIntersecting; })) { if (!running) { running = true; requestAnimationFrame(tick); } } else running = false;
-    }, { rootMargin: '20% 0px 20% 0px' });
-    io.observe(tl);
-    if (reduce) { fill.style.width = '100%'; pts.forEach(function (pt) { pt.classList.add('on'); }); running = false; io.disconnect(); }
-  })();
+    if (drawer) {
+      if (HAS_GSAP) { gsap.set(drawer, { xPercent: 100 }); drawerTl = gsap.timeline({ paused: true }).to(drawer, { xPercent: 0, duration: 0.6, ease: 'power1.out' }); }
+      else drawer.style.transform = 'translateX(100%)';
+      $$('.js-open-drawer').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); closeMenu(); openDrawer(); }); });
+      $$('.js-close-drawer').forEach(function (b) { b.addEventListener('click', closeDrawer); });
+    }
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeMenu(); closeDrawer(); } });
+  }
+  window.dlMenu = function (force) { (force === false ? closeMenu : openMenu)(); };
+  window.dlDrawer = function (force) { (force === false ? closeDrawer : openDrawer)(); };
 
-  /* ---------- contact form ---------- */
+  /* the drawer form: nothing fake. It opens a ready-to-send email to the
+     support desk with everything typed in, and says so. */
   window.dlContactSend = function (btn) {
-    var form = btn.closest('.dl-form'), msg = $('.msg', form);
-    var name = $('#cfName', form), email = $('#cfEmail', form);
+    var form = btn.closest('form'), msg = $('.drawer_msg', form);
+    var get = function (id) { var el = $('#' + id, form); return el ? el.value.trim() : ''; };
+    var name = get('dfName'), biz = get('dfBiz'), phone = get('dfPhone'), email = get('dfEmail'), text = get('dfMsg');
+    $$('input,textarea', form).forEach(function (i) { i.classList.remove('is-bad'); });
     var bad = [];
-    if (name && !name.value.trim()) bad.push(name);
-    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim())) bad.push(email);
-    $$('input,textarea', form).forEach(function (i) { i.style.borderColor = ''; });
-    if (bad.length) { bad.forEach(function (i) { i.style.borderColor = '#e0574e'; }); msg.textContent = 'Add your name and a valid email so we can reply.'; msg.style.color = '#b3392f'; bad[0].focus(); return; }
-    btn.disabled = true; btn.textContent = 'Sent';
-    msg.textContent = 'Thanks. We reply within one business day.'; msg.style.color = '';
+    if (!name) bad.push($('#dfName', form));
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) bad.push($('#dfEmail', form));
+    if (bad.length) { bad.forEach(function (i) { i.classList.add('is-bad'); }); msg.textContent = 'Add your name and a valid email so we can reply.'; bad[0].focus(); return; }
+    var body = 'Name: ' + name + '\nBusiness: ' + biz + '\nPhone: ' + phone + '\nEmail: ' + email + '\n\n' + text;
+    location.href = 'mailto:support@builderpro-os.com?subject=' + encodeURIComponent('Getting started' + (biz ? ': ' + biz : '')) + '&body=' + encodeURIComponent(body);
+    msg.textContent = 'Your mail app is opening with this filled in. We reply within one business day.';
   };
 
-  /* ---------- footer year ---------- */
-  $$('.dl-yr').forEach(function (e) { e.textContent = new Date().getFullYear(); });
+
+  /* 10. NAV LOGO FLIP ---------------------------------------------------------
+     mix-blend-mode:difference goes muddy over the blue cards, so whenever an
+     element tagged [navbar-logo-color-change] crosses a line 32px from the
+     top, drop the blend mode and force plain white.                         */
+  function initLogoFlip() {
+    var logo = $('#logo'), targets = $$('[navbar-logo-color-change]');
+    if (!logo || !targets.length) return;
+    var LINE = 32, ticking = false;
+    var update = function () {
+      ticking = false;
+      var active = targets.some(function (el) { var r = el.getBoundingClientRect(); return r.top <= LINE && r.bottom >= LINE; });
+      logo.classList.toggle('is-white', active);
+    };
+    var onScroll = function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    if (lenis) lenis.on('scroll', onScroll);
+  }
+
+
+  /* BOOT ------------------------------------------------------------------- */
+  function boot() {
+    initHeadingReveal();
+    initHeroObject();
+    initHeroStory();
+    initHighlightText();
+    initCaseStudies();
+    initSolutions();
+    initTimeline();
+    initPanels();
+    initLogoFlip();
+    $$('.dl-yr').forEach(function (e) { e.textContent = new Date().getFullYear(); });
+    /* fonts change line breaks, which moves every mask SplitText created */
+    if (HAS_ST) {
+      if (document.fonts) document.fonts.ready.then(function () { ScrollTrigger.refresh(); });
+      window.addEventListener('load', function () { ScrollTrigger.refresh(); });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
