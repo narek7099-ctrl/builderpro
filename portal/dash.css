@@ -275,3 +275,113 @@
 #bpx .cal-left{display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-width:0}
 #bpx .cal-acts .bpx-btn{width:auto;margin:0;padding:9px 14px;white-space:nowrap}
 @media(max-width:600px){#bpx .cal-acts{display:grid;grid-template-columns:1fr 1fr}#bpx .cal-acts .bpx-btn{width:100%;justify-content:center}}
+
+/* ==================================================================
+   Week view: seven columns against the clock.
+
+   One colour per kind of work, shared with the day view and the
+   legend so the two never contradict each other. The four work
+   colours are validated for colour-blind separation in both themes;
+   notes sit in neutral grey because they are a mark, not a job, and
+   every box carries its own text label besides.
+   ================================================================== */
+#bpx{--cal-insp:#2f6bff;--cal-job:#0d9488;--cal-crew:#b45309;--cal-todo:#7c3aed;--cal-note:#6a6a70}
+#bpx.bpx-dark{--cal-insp:#5b8dff;--cal-job:#0f9e8f;--cal-crew:#c97a2e;--cal-todo:#9b7bf0;--cal-note:#9a9aa0}
+
+#bpx .cw-wrap{display:block}
+#bpx .cw-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+#bpx .cw-nav{display:flex;align-items:center;gap:8px}
+#bpx .cw-nav>b{font-size:16px;letter-spacing:-.02em;min-width:150px;text-align:center}
+#bpx .cw-nav button{height:32px;min-width:32px;padding:0 6px;border:1px solid var(--line);background:var(--card,#fff);border-radius:9px;cursor:pointer;color:inherit;display:flex;align-items:center;justify-content:center;font:inherit;font-size:12.5px}
+#bpx .cw-nav button:hover{border-color:var(--blue);color:var(--blue)}
+#bpx .cw-tnow{padding:0 11px!important;font-weight:600}
+#bpx .cw-cap{font-size:12.5px;color:var(--grey)}
+
+#bpx .cw-heads,#bpx .cw-adrow,#bpx .cw-cols{display:grid;grid-template-columns:58px repeat(7,minmax(0,1fr))}
+#bpx .cw-heads{border:1px solid var(--line);border-bottom:0;border-radius:12px 12px 0 0;overflow:hidden;background:var(--card,#fff)}
+#bpx .cw-corner{border-right:1px solid var(--line)}
+#bpx .cw-head{border:0;border-right:1px solid var(--line);background:transparent;color:inherit;font:inherit;cursor:pointer;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+#bpx .cw-head:last-child{border-right:0}
+#bpx .cw-head small{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey)}
+#bpx .cw-head b{font-size:16px;letter-spacing:-.02em}
+#bpx .cw-head:hover b{color:var(--blue)}
+#bpx .cw-head.today b{color:#fff;background:var(--blue);border-radius:999px;min-width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+#bpx .cw-head.shut small,#bpx .cw-head.shut b{opacity:.45}
+
+#bpx .cw-adrow{border:1px solid var(--line);border-bottom:0;background:var(--soft);min-height:30px}
+#bpx .cw-ad{border-right:1px solid var(--line);padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0}
+#bpx .cw-ad:last-child{border-right:0}
+#bpx .cw-ad.today{background:rgba(47,107,255,.05)}
+
+#bpx .cw-scroll{max-height:min(62vh,620px);overflow:auto;border:1px solid var(--line);border-radius:0 0 12px 12px;background:var(--card,#fff);-webkit-overflow-scrolling:touch}
+#bpx .cw-grid{position:relative;min-width:620px}
+#bpx .cw-lines{position:absolute;inset:0;pointer-events:none}
+#bpx .cw-hr{position:absolute;left:58px;right:0;border-top:1px solid var(--line)}
+#bpx .cw-hr:first-child{border-top:0}
+#bpx .cw-hr span{position:absolute;left:-54px;top:-8px;font-size:10.5px;font-weight:600;color:var(--grey-l);font-feature-settings:'tnum';white-space:nowrap}
+#bpx .cw-cols{position:absolute;inset:0}
+#bpx .cw-gut{border-right:1px solid var(--line)}
+#bpx .cw-col{position:relative;border-right:1px solid var(--line);min-width:0;cursor:copy}
+#bpx .cw-col:last-child{border-right:0}
+#bpx .cw-col.today{background:rgba(47,107,255,.04)}
+#bpx .cw-col.shut{background:repeating-linear-gradient(135deg,transparent,transparent 7px,var(--soft) 7px,var(--soft) 14px)}
+#bpx .cw-cols.cw-dragging .cw-col{cursor:grabbing}
+#bpx .cw-now{position:absolute;left:0;right:0;border-top:2px solid #e11d48;z-index:4;pointer-events:none}
+#bpx .cw-now i{position:absolute;left:-4px;top:-4px;width:7px;height:7px;border-radius:50%;background:#e11d48}
+
+#bpx .cw-ev{position:absolute;z-index:2;border-radius:7px;padding:3px 6px;overflow:hidden;cursor:pointer;
+  border-left:3px solid var(--cal-insp);background:color-mix(in srgb,var(--cal-insp) 14%,var(--card,#fff));color:inherit;
+  touch-action:none;transition:box-shadow .12s,filter .12s}
+#bpx .cw-ev[data-move]{cursor:grab}
+#bpx .cw-ev:hover{filter:brightness(.97)}
+#bpx .cw-ev b{display:block;font-size:11.5px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cw-ev span{display:block;font-size:10.5px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cw-ev.insp{border-left-color:var(--cal-insp);background:color-mix(in srgb,var(--cal-insp) 14%,var(--card,#fff))}
+#bpx .cw-ev.job{border-left-color:var(--cal-job);background:color-mix(in srgb,var(--cal-job) 14%,var(--card,#fff))}
+#bpx .cw-ev.crew{border-left-color:var(--cal-crew);background:color-mix(in srgb,var(--cal-crew) 14%,var(--card,#fff))}
+#bpx .cw-ev.todo{border-left-color:var(--cal-todo);background:color-mix(in srgb,var(--cal-todo) 14%,var(--card,#fff))}
+#bpx .cw-ev.note{border-left-color:var(--cal-note);background:var(--soft)}
+#bpx .cw-ev.done b{text-decoration:line-through;color:var(--grey)}
+#bpx .cw-ev.flat{position:static;padding:2px 6px}
+#bpx .cw-ev.flat b{font-size:10.5px}
+#bpx .cw-ev.cw-drag{z-index:9;cursor:grabbing;box-shadow:0 12px 26px -10px rgba(10,18,32,.45);filter:none;opacity:.94}
+#bpx .cw-tip{position:fixed;z-index:9999;transform:translateX(-50%);background:#0f1a2b;color:#fff;font-size:11.5px;font-weight:700;padding:5px 9px;border-radius:8px;pointer-events:none;white-space:nowrap}
+
+#bpx .cw-say{font-size:12.5px;color:var(--grey);min-height:0;margin-top:0;transition:min-height .15s}
+#bpx .cw-say.on{min-height:20px;margin-top:9px;color:#0f7a3d}
+#bpx .cw-say.bad{color:#b3392f}
+#bpx .cw-legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--grey);margin-top:11px}
+#bpx .cw-legend span{display:inline-flex;align-items:center;gap:6px}
+#bpx .cw-legend i{width:9px;height:9px;border-radius:3px;flex:none;display:inline-block}
+#bpx .cw-legend .bpx-mut{margin-left:auto;color:var(--grey-l)}
+
+/* the note/to-do card that opens where you clicked */
+#bpx .cw-quick,.cw-quick{position:fixed;z-index:9998;width:270px;background:var(--card,#fff);border:1px solid var(--line);border-radius:13px;box-shadow:0 20px 44px -18px rgba(10,18,32,.5);padding:11px 12px 12px;color:var(--ink)}
+.cw-quick .cw-q-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.cw-quick .cw-q-h b{font-size:12.5px}
+.cw-quick .cw-q-h button{border:0;background:transparent;cursor:pointer;color:var(--grey);display:flex;padding:0}
+.cw-quick input{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card,#fff);color:inherit}
+.cw-quick .cw-q-r{display:flex;align-items:center;gap:8px;margin-top:9px}
+.cw-quick .cw-q-r .bpx-jobtabs{flex:1;min-width:0}
+.cw-quick .cw-q-r .bpx-btn{margin:0;width:auto;padding:8px 15px;white-space:nowrap}
+
+/* the day view speaks the same colour language */
+#bpx .cd-ev.insp{border-left-color:var(--cal-insp);background:color-mix(in srgb,var(--cal-insp) 13%,var(--card,#fff))}
+#bpx .cd-ev.job{border-left-color:var(--cal-job);background:color-mix(in srgb,var(--cal-job) 13%,var(--card,#fff))}
+#bpx .cd-ev.crew{border-left-color:var(--cal-crew);background:color-mix(in srgb,var(--cal-crew) 13%,var(--card,#fff))}
+#bpx .cd-ev.todo{border-left-color:var(--cal-todo);background:color-mix(in srgb,var(--cal-todo) 13%,var(--card,#fff))}
+#bpx .cd-ev.note{border-left-color:var(--cal-note);background:var(--soft)}
+
+@media(max-width:700px){
+  #bpx .cw-top{gap:8px}
+  #bpx .cw-nav>b{min-width:0;font-size:14px}
+  #bpx .cw-cap{width:100%}
+  #bpx .cw-scroll{max-height:58vh}
+  #bpx .cw-heads,#bpx .cw-adrow,#bpx .cw-cols{grid-template-columns:44px repeat(7,minmax(0,1fr))}
+  #bpx .cw-hr{left:44px}
+  #bpx .cw-hr span{left:-41px;font-size:9.5px}
+  #bpx .cw-grid{min-width:560px}
+  .cw-quick{width:calc(100vw - 24px);max-width:290px}
+}
+#bpx .cw-ev.tiny{display:flex;align-items:center;padding-top:0;padding-bottom:0}
+#bpx .cw-ev.tiny b{font-size:11px}
