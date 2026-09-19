@@ -53,8 +53,8 @@ section{padding:0;}
 .modal-body{padding:22px;}
 
 </style>
-<link rel="stylesheet" href="site/site.css?v=20260919">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20260919-c">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919-c"}}</script>
 
 
 <style id="bpi-icons">
@@ -432,14 +432,18 @@ section{padding:0;}
       </div>
     </div>
 
-    <!-- RIGHT: the object stage. A cube of frosted tiles, four of them blue,
-         rendered live (site/hero3d.js) and driven through its states by the
-         scroll story. Falls back to a flat tile without WebGL.             -->
+    <!-- RIGHT: the object stage. Three clips: an intro that plays once, a
+         loop that takes over when it ends, and (full-bleed over the stage,
+         below) a scrub clip whose currentTime is driven by the scroll story.
+         If the clips are missing, the live cube (site/hero3d.js) stands in. -->
     <div class="hero_right">
+      <video class="hero_video is-intro" id="videoIntro" muted playsinline preload="auto" src="assets/site/hero-intro.mp4"></video>
+      <video class="hero_video is-loop" id="videoLoop" muted playsinline loop preload="auto" src="assets/site/hero-loop.mp4"></video>
       <canvas aria-hidden="true"></canvas>
       <div class="hero_fallback" aria-hidden="true"><i></i></div>
     </div>
 
+    <video class="hero_scrub" id="videoScrub" muted playsinline preload="auto" src="assets/site/hero-scrub.mp4"></video>
     <div class="hero_dark" id="heroDark"></div>
 
     <div class="hero_story" id="heroStory">
@@ -21817,9 +21821,9 @@ window.bpFmHangers=function(){
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260919c"></script>
 <script src="portal/dash.js?v=20260919c"></script>
-<script src="site/vendor/lenis.min.js?v=20260919"></script>
-<script src="site/vendor/gsap.min.js?v=20260919"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20260919"></script>
-<script src="site/vendor/SplitText.min.js?v=20260919"></script>
-<script src="site/site.js?v=20260919"></script>
+<script src="site/vendor/lenis.min.js?v=20260919-c"></script>
+<script src="site/vendor/gsap.min.js?v=20260919-c"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20260919-c"></script>
+<script src="site/vendor/SplitText.min.js?v=20260919-c"></script>
+<script src="site/site.js?v=20260919-c"></script>
 </html>

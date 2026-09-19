@@ -146,12 +146,54 @@
      and the cube in the right-hand card is driven through its states.
      The cube is site/hero3d.js: mount(canvas).setProgress(0..1).            */
   var heroApi = null;
-  function initHeroObject() {
+  function mountCube() {
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
-    if (!right || !canvas) return;
+    if (!right || !canvas || canvas._bpHero) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20260919').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+    import('./hero3d.js?v=20260919-c').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
       .catch(function () { right.classList.add('nogl'); });
+  }
+  /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
+     If the clips are not there (or cannot play), the live cube stands in. */
+  function initHeroObject() {
+    var right = $('.hero_right'), intro = $('#videoIntro'), loop = $('#videoLoop');
+    if (!right || !intro || !loop) { mountCube(); return; }
+    var fell = false;
+    var fallback = function () { if (fell) return; fell = true; right.classList.remove('has-video'); intro.remove(); loop.remove(); mountCube(); };
+    /* a missing file may have errored before this ran */
+    if (intro.error || loop.error || intro.networkState === 3 || loop.networkState === 3) { fallback(); return; }
+    intro.addEventListener('error', fallback); loop.addEventListener('error', fallback);
+    intro.addEventListener('canplay', function () {
+      if (fell) return;
+      right.classList.add('has-video'); intro.classList.add('is-on');
+      intro.play().catch(function () { loop.classList.add('is-on'); loop.play().catch(function () {}); });
+    }, { once: true });
+    intro.addEventListener('ended', function () { loop.classList.add('is-on'); loop.play().catch(function () {}); intro.classList.remove('is-on'); });
+    if (REDUCED) { intro.addEventListener('canplay', function () { intro.pause(); intro.currentTime = intro.duration || 0; }, { once: true }); }
+    /* the browser gives up on a missing file with an error; a stalled network gets a cube after a while */
+    setTimeout(function () { if (!right.classList.contains('has-video')) fallback(); }, 8000);
+  }
+  /* The scroll-story clip: its currentTime is driven by scroll. Seeking a
+     plain MP4 is slow, so the file is encoded with every frame a keyframe and
+     re-fetched as a blob so seeks are local. iOS will not seek until the
+     video has been played once from a user gesture.                        */
+  function initHeroScrub(triggers) {
+    var scrub = $('#videoScrub'); if (!scrub) return;
+    var ready = function () {
+      var once = function (el, ev, fn) { var h = function () { el.removeEventListener(ev, h); fn.apply(null, arguments); }; el.addEventListener(ev, h); };
+      once(document.documentElement, 'touchstart', function () { scrub.play().then(function () { scrub.pause(); }).catch(function () {}); });
+      var tl = gsap.timeline({ scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true } });
+      tl.fromTo(scrub, { currentTime: 0 }, { currentTime: scrub.duration || 1, ease: 'none' });
+      gsap.fromTo(scrub, { opacity: 0 }, { opacity: 1, ease: 'none', scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'top 40%', scrub: true } });
+      var src = scrub.currentSrc || scrub.src;
+      setTimeout(function () {
+        fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+          var t = scrub.currentTime; scrub.setAttribute('src', URL.createObjectURL(b)); scrub.currentTime = t + 0.01;
+        }).catch(function () {});
+      }, 1000);
+    };
+    scrub.addEventListener('error', function () { scrub.remove(); }, { once: true });
+    if (scrub.readyState >= 1) ready(); else scrub.addEventListener('loadedmetadata', ready, { once: true });
   }
   function initHeroStory() {
     var stage = $('.hero_stage');
@@ -181,7 +223,8 @@
       ScrollTrigger.create({ trigger: block, start: 'top bottom', end: 'bottom bottom', onToggle: function (self) { if (self.isActive) setStep(i); } });
     });
 
-    /* the cube's progress across the whole story, in place of a scrubbed video */
+    initHeroScrub(triggers);
+    /* the cube, when it is standing in for the clips, follows the same progress */
     ScrollTrigger.create({
       trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true,
       onUpdate: function (self) { if (heroApi) heroApi.setProgress(self.progress); },
