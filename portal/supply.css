@@ -259,3 +259,29 @@
 #bpx .sp-mat-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 #bpx .sp-mat-acts .bpx-btn{margin:0}
 @media(max-width:560px){#bpx .sp-mat-row{grid-template-columns:minmax(0,1fr) auto 20px}#bpx .sp-mat-row>b{display:none}}
+
+/* ---------- material icons ----------
+   One drawn icon per price-book category (see the icon table in supply.js).
+   The family tint groups results at a glance; the name is always beside it,
+   so colour is never carrying the meaning on its own. */
+#bpx .sp-chip{display:inline-flex;align-items:center;justify-content:center;flex:none;width:38px;height:38px;border-radius:10px;background:var(--soft);color:var(--grey)}
+#bpx .sp-chip .sp-ic{width:22px;height:22px}
+#bpx .sp-chip.sm{width:30px;height:30px;border-radius:8px}
+#bpx .sp-chip.sm .sp-ic{width:18px;height:18px}
+#bpx .sp-chip[data-fam=roof] {color:#a2542c;background:rgba(162,84,44,.1)}
+#bpx .sp-chip[data-fam=hvac] {color:#1f7a8c;background:rgba(31,122,140,.1)}
+#bpx .sp-chip[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.1)}
+#bpx .sp-chip[data-fam=elec] {color:#a4711a;background:rgba(164,113,26,.11)}
+#bpx .sp-chip[data-fam=paint]{color:#7a4fa3;background:rgba(122,79,163,.1)}
+#bpx .sp-chip[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.1)}
+#bpx .sp-chip[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.12)}
+/* the tints are mixed for a white card, so on the dark card they are lifted
+   rather than re-picked, which keeps the same hue reading */
+#bpx.bpx-dark .sp-chip{background:rgba(255,255,255,.06)}
+#bpx.bpx-dark .sp-chip[data-fam=roof] {color:#d99366;background:rgba(217,147,102,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=hvac] {color:#5fb6c6;background:rgba(95,182,198,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=plumb]{color:#7ba6e8;background:rgba(123,166,232,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=elec] {color:#e0b055;background:rgba(224,176,85,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=paint]{color:#b28cd6;background:rgba(178,140,214,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=land] {color:#6cbd8a;background:rgba(108,189,138,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=conc] {color:#a3adbb;background:rgba(163,173,187,.13)}

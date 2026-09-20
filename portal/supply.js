@@ -421,6 +421,191 @@
   };
   SP.costSave = function () { SP.cost = { stop: +String(($('sp-c-stop') || {}).value).replace(/[^0-9.]/g, '') || 0, min: +String(($('sp-c-min') || {}).value).replace(/[^0-9.]/g, '') || 0 }; try { localStorage.setItem('bpSupplyCost', JSON.stringify(SP.cost)); } catch (e) {} window.bpCloseModal(); SP.plans = null; window.bpSupply(); };
 
+  /* ================================================================
+     WHAT A MATERIAL LOOKS LIKE
+
+     A picker you search is only usable if the eye can skip most of it, and
+     that means every line needs a picture. Real photographs are out: nothing
+     in supplier_items carries an image, there is no catalogue feed behind a
+     scanned price book, and buying art for every category of every trade we
+     support costs more than it is worth. So these are drawn here — line
+     icons, one per category, in currentColor, which cost nothing and extend
+     to whatever trade gets added next.
+
+     Categories come from the price book itself (`supplier_items.category`).
+     A book scanned off a paper invoice usually has none, so when it is
+     missing the item's own name is read instead — see catOf().
+     ================================================================ */
+  var I = {                                     /* inner SVG, 24x24, stroke currentColor */
+    /* roofing */
+    Shingles:    '<path d="M3 20V9l9-5 9 5v11z"/><path d="M3 13h18M3 16.5h18"/><path d="M7.5 9v4M12 9v4M16.5 9v4M5.2 13v3.5M9.7 13v3.5M14.3 13v3.5M18.8 13v3.5"/>',
+    Underlayment:'<ellipse cx="7" cy="9" rx="4" ry="5"/><path d="M7 4h7v10H7"/><path d="M14 14c3 0 3 4 7 4"/><path d="M3 18h18"/>',
+    Metal:       '<path d="M3 17V8l6-3v9zM9 14h12v3H9z"/>',
+    Fasteners:   '<path d="M8 4h8l-3 3v10l-1 3-1-3V7z"/><path d="M8 4h8"/>',
+    Ventilation: '<rect x="3" y="7" width="13" height="11" rx="1.5"/><path d="M6 10h7M6 13h7M6 16h7M18 9c2 1 2 2 0 3M20.5 8c3 1.5 3 4.5 0 6"/>',
+    Flashing:    '<path d="M5 3v18M5 8h7v10"/><path d="M12 8l5-3v10l-5 3"/>',
+    Sealants:    '<rect x="6" y="9" width="9" height="12" rx="1.5"/><path d="M15 11l4-4 1.5 1.5-4 4z"/><path d="M8.5 13h4"/>',
+    /* hvac */
+    Refrigerant: '<rect x="7" y="6" width="10" height="15" rx="3"/><path d="M10 6V4h4v2M12 10v7"/>',
+    Electrical:  '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    Copper:      '<rect x="3" y="5" width="18" height="5" rx="2.5"/><rect x="3" y="14" width="18" height="5" rx="2.5"/><path d="M9 5v5M15 14v5"/>',
+    Controls:    '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+    Filters:     '<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M7 5l-2 14M11 5L9 19M15 5l-2 14M19 5l-2 14"/>',
+    Drainage:    '<path d="M7 3v10a4 4 0 0 0 8 0v-3"/><path d="M15 10h5"/><path d="M5 3h4"/><path d="M18 8v4"/>',
+    Motors:      '<circle cx="12" cy="12" r="3"/><path d="M12 9c0-4 1-6 3-6s2 3-1 5M15 12c4 0 6 1 6 3s-3 2-5-1M12 15c0 4-1 6-3 6s-2-3 1-5M9 12c-4 0-6-1-6-3s3-2 5 1"/>',
+    Duct:        '<path d="M3 8c2-2 3 2 5 0s3 2 5 0 3 2 5 0 2 0 3-1M3 16c2-2 3 2 5 0s3 2 5 0 3 2 5 0 2 0 3-1"/><path d="M3 8v8M21 7v8"/>',
+    Install:     '<rect x="3" y="16" width="18" height="4" rx="1"/><rect x="7" y="5" width="10" height="11" rx="1.5"/><circle cx="12" cy="10" r="3"/>',
+    /* plumbing */
+    Pipe:        '<path d="M2 9h20M2 15h20"/><rect x="6" y="7" width="3" height="10" rx="1"/><rect x="15" y="7" width="3" height="10" rx="1"/>',
+    Fittings:    '<path d="M4 8h9a7 7 0 0 1 7 7v5"/><path d="M4 5v6M17 20h6"/>',
+    Equipment:   '<rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 8h6M12 13v5M10 21h4"/>',
+    Valves:      '<path d="M4 9v6l8-3zM20 9v6l-8-3z"/><path d="M12 12V6M9 5h6"/>',
+    Fixtures:    '<path d="M4 21h16"/><path d="M9 21v-5h6v5"/><path d="M12 16v-5a3 3 0 0 1 3-3h2"/><path d="M17 5v6M15 5h4"/>',
+    /* electrical */
+    Wire:        '<path d="M20 12a8 8 0 1 0-8 8h8"/><path d="M16 12a4 4 0 1 0-4 4h4"/>',
+    Breakers:    '<rect x="6" y="3" width="12" height="18" rx="2"/><rect x="9" y="7" width="6" height="5" rx="1"/><path d="M9 16h6"/>',
+    Boxes:       '<rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 9h16M9 4v5M15 4v5"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>',
+    Devices:     '<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="8" r="2.5"/><circle cx="12" cy="16" r="2.5"/><path d="M12 6.5v3M12 14.5v3"/>',
+    Conduit:     '<path d="M3 7h18M3 13h18"/><path d="M7 5v4M17 11v4"/><path d="M6 7v6M18 7v6"/>',
+    Connectors:  '<path d="M9 21V9l3-6 3 6v12z"/><path d="M9 12h6M9 16h6"/>',
+    Panels:      '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h3M13 7h3M8 11h3M13 11h3M8 15h3M13 15h3"/>',
+    Lighting:    '<path d="M9 18h6M10 21h4"/><path d="M12 2a6 6 0 0 0-4 10.5c.7.8 1 1.6 1 2.5h6c0-.9.3-1.7 1-2.5A6 6 0 0 0 12 2z"/>',
+    /* painting */
+    Paint:       '<path d="M5 8h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M5 8l2-4h10l2 4"/><path d="M9 4V2h6v2"/>',
+    Tools:       '<rect x="4" y="4" width="14" height="5" rx="1.5"/><path d="M18 6.5h2v3h-9"/><path d="M11 9.5v3M9.5 12.5h3V21h-3z"/>',
+    Prep:        '<circle cx="10" cy="14" r="7"/><circle cx="10" cy="14" r="2.5"/><path d="M15 9l6-5"/>',
+    /* landscaping */
+    Turf:        '<path d="M4 20c0-5 2-8 4-9M9 20c0-6 1-9 3-11M14 20c0-5 2-8 4-9M6.5 20c0-4 .5-6 1.5-7M11.5 20c0-4 .5-6 1.5-7M16.5 20c0-4 .5-6 1.5-7"/><path d="M2 20h20"/>',
+    Bulk:        '<path d="M2 19h20L15 7h-6z"/><path d="M9 13h6"/>',
+    Hardscape:   '<path d="M2 8h20v9H2z"/><path d="M2 12.5h20M8 8v4.5M15 8v4.5M5 12.5V17M11.5 12.5V17M18 12.5V17"/>',
+    Irrigation:  '<path d="M12 21v-8"/><path d="M9 13h6"/><path d="M8 9a5 5 0 0 1 8 0M5 6a9 9 0 0 1 14 0"/>',
+    Plants:      '<path d="M12 21v-7"/><path d="M12 14c0-4-2-6-5-6 0 4 2 6 5 6zM12 14c0-4 2-6 5-6 0 4-2 6-5 6z"/><path d="M8 21h8"/>',
+    /* concrete */
+    Concrete:    '<path d="M7 7c0-2 1-3 5-3s5 1 5 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M7 7h10M10 11h4"/>',
+    Steel:       '<path d="M5 20 19 4"/><path d="M7 13l2 2M10 9.5l2 2M13 6l2 2M4 16.5l2 2M16 2.5l2 2"/>',
+    Forms:       '<path d="M4 6h13v3H4zM4 6v14"/><path d="M17 9v8M20 12l-3 2"/>',
+    Joints:      '<path d="M3 6h8v12H3zM13 6h8v12h-8z"/><path d="M12 4v16"/>',
+    Finish:      '<path d="M3 13h13l2 3H5z"/><path d="M11 13V9h3v4"/><path d="M12.5 9V6"/>',
+    Hardware:    '<path d="m9 4 3-2 3 2v3h-6z"/><path d="M11 7v11l1 3 1-3V7"/><path d="M10 11h4M10 14h4"/>',
+    Other:       '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M12 7V4"/>',
+  };
+
+  /* A quiet colour per family, so the eye groups the results before it reads
+     them. Chips only — never the sole carrier of meaning, the name is beside it. */
+  var FAM = {
+    roof:  ['Shingles', 'Underlayment', 'Metal', 'Fasteners', 'Ventilation', 'Flashing'],
+    hvac:  ['Refrigerant', 'Copper', 'Controls', 'Filters', 'Motors', 'Duct', 'Install'],
+    plumb: ['Pipe', 'Fittings', 'Equipment', 'Valves', 'Fixtures', 'Drainage'],
+    elec:  ['Electrical', 'Wire', 'Breakers', 'Boxes', 'Devices', 'Conduit', 'Connectors', 'Panels', 'Lighting'],
+    paint: ['Paint', 'Tools', 'Prep', 'Sealants'],
+    land:  ['Turf', 'Bulk', 'Hardscape', 'Irrigation', 'Plants'],
+    conc:  ['Concrete', 'Steel', 'Forms', 'Joints', 'Finish', 'Hardware'],
+  };
+  var FAM_OF = {}; Object.keys(FAM).forEach(function (f) { FAM[f].forEach(function (c) { FAM_OF[c] = f; }); });
+
+  /* Scanned price books often have no category column at all, so the name is
+     the fallback evidence.
+
+     THE ORDER IS THE ALGORITHM: the first hit wins, so a phrase always sits
+     above the word it contains. "Roofing nails" has to be read as Fasteners
+     before Hardware sees "nail"; "drip edge" as Metal before Irrigation sees
+     "drip"; "wire mesh" as Steel before Wire sees "wire"; "P-trap ... PVC" as
+     Drainage before Pipe sees "pvc". Trailing spaces are load-bearing too —
+     'tub ' so a tube of roof cement is not a bathtub. Reordering these rows
+     changes what they classify; the harness in scratchpad/cat.js checks every
+     sample item against the category its own catalog row declares. */
+  var NAME_CAT = [
+    /* phrases that would otherwise be eaten by a more general row below */
+    ['Sealants', ['caulk', 'sealant', 'silicone', 'roof cement', 'solder', 'flux', 'adhesive', 'foil tape', 'duct tape']],
+    ['Shingles', ['shingle', 'ridge cap', 'starter strip']],
+    ['Underlayment', ['underlayment', 'ice and water', 'felt', 'synthetic roll']],
+    ['Flashing', ['flashing', 'pipe boot', 'step flash', 'counterflash']],
+    ['Ventilation', ['ridge vent', 'soffit vent', 'turbine', 'louver', 'exhaust vent']],
+    ['Metal', ['drip edge', 'valley metal', 'coil stock', 'gutter', 'downspout']],
+    ['Fasteners', ['roofing nail', 'staple', 'cap nail']],
+    /* hvac */
+    ['Refrigerant', ['refrigerant', 'r-410', 'r410', 'r-22', 'freon']],
+    ['Filters', ['filter', 'pleated', 'merv']],
+    ['Motors', ['blower', 'motor', 'fan blade', 'compressor']],
+    ['Controls', ['thermostat', 'control board', 'sensor', 'zone panel']],
+    ['Copper', ['line set', 'copper tube', 'copper pipe', 'copper coil']],
+    ['Install', ['pad ', 'mount', 'stand', 'curb']],
+    ['Duct', ['duct', 'plenum', 'register', 'grille']],
+    /* painting: Prep above Paint, or painter's tape is read as paint */
+    ['Prep', ['tape', 'drop cloth', 'sand', 'joint compound', 'fabric', 'vapor barrier', 'plastic sheeting']],
+    ['Paint', ['paint', 'primer', 'stain', 'lacquer', 'enamel']],
+    ['Tools', ['roller', 'brush', 'spray tip', 'blade', 'knife', 'trowel', 'bucket']],
+    /* electrical: the specific device above the material it is made of */
+    ['Breakers', ['breaker', 'fuse']],
+    ['Panels', ['load center', 'panel', 'meter base']],
+    ['Devices', ['receptacle', 'gfci', 'switch', 'decora', 'outlet', 'dimmer']],
+    ['Boxes', ['gang box', 'junction box', 'device box', 'old work box']],
+    ['Connectors', ['wire nut', 'connector', 'lug', 'crimp', 'butt splice']],
+    ['Conduit', ['emt', 'conduit', 'rigid', 'liquidtight', 'strut']],
+    ['Lighting', ['light', 'led', 'recessed', 'bulb', 'lamp']],
+    ['Electrical', ['capacitor', 'contactor', 'disconnect', 'transformer', 'relay']],
+    /* landscaping sits above Steel and Pipe: "edging steel", "drip tubing" */
+    ['Turf', ['sod', 'seed', 'turf', 'fescue', 'bermuda']],
+    ['Plants', ['shrub', 'tree', 'plant', 'boxwood', 'perennial']],
+    ['Hardscape', ['paver', 'edging', 'retaining', 'flagstone', 'block wall']],
+    ['Irrigation', ['sprinkler', 'drip', 'emitter', 'irrigation', 'rotor']],
+    ['Steel', ['rebar', 'wire mesh', 'steel', 'angle iron', 'channel']],
+    ['Wire', ['romex', 'nm-b', 'thhn', 'wire', 'cable']],
+    /* plumbing: what it does above what it is made of */
+    ['Drainage', ['p-trap', 'trap ', 'drain', 'condensate', 'sump', 'cleanout']],
+    ['Valves', ['valve', 'regulator', 'backflow', 'hose bibb']],
+    ['Fittings', ['fitting', 'elbow', 'coupling', 'tee ', 'union', 'nipple', 'supply line', 'adapter']],
+    ['Pipe', ['pex', 'pvc', 'cpvc', 'abs', 'pipe', 'tubing']],
+    ['Fixtures', ['toilet', 'sink', 'faucet', 'wax ring', 'shower', 'bathtub', 'tub ', 'vanity']],
+    ['Equipment', ['water heater', 'expansion tank', 'pump', 'furnace', 'condenser', 'air handler']],
+    /* concrete: the mix above the yardage, Forms above the generic hardware */
+    ['Concrete', ['ready mix', 'sakrete', 'quikrete', 'concrete', 'cement', 'mortar', 'grout']],
+    ['Forms', ['form ', 'stake', 'snap tie', 'formwork']],
+    ['Joints', ['expansion joint', 'control joint', 'backer rod']],
+    ['Finish', ['curing compound', 'hardener', 'densifier', 'sealer']],
+    ['Bulk', ['mulch', 'topsoil', 'gravel', 'river rock', 'cu yd', 'pallet']],
+    /* last, because almost everything is fastened to something */
+    ['Hardware', ['anchor', 'bolt', 'screw', 'nail', 'washer', 'bracket', 'hanger', 'strap']],
+  ];
+
+  /* The category of an item, however little the price book gave us. */
+  function catOf(item) {
+    if (!item) return 'Other';
+    var c = String(item.category || '').trim();
+    if (c) {
+      if (I[c]) return c;                                   /* a name we already draw */
+      var lc = c.toLowerCase();
+      var hit = Object.keys(I).filter(function (k) { return k.toLowerCase() === lc; })[0];
+      if (hit) return hit;
+      /* someone else's wording for a category we know: "Pipe & Tube",
+         "Rough Hardware", "ELECTRICAL MATERIAL". Our own names are tried
+         first so "Rough Hardware" does not get read as a nail. */
+      var own = Object.keys(I).filter(function (k) { return lc.indexOf(k.toLowerCase()) >= 0; })
+        .sort(function (a, b) { return b.length - a.length; })[0];
+      if (own) return own;
+      var byWord = NAME_CAT.filter(function (r) { return r[1].some(function (w) { return lc.indexOf(w.trim()) >= 0; }); })[0];
+      if (byWord) return byWord[0];
+    }
+    var n = ' ' + String(item.name || '').toLowerCase() + ' ';
+    var m = NAME_CAT.filter(function (r) { return r[1].some(function (w) { return n.indexOf(w) >= 0; }); })[0];
+    return m ? m[0] : 'Other';
+  }
+  /* A bare line the contractor typed has a name and nothing else. */
+  function catOfName(name) { return catOf({ name: name }); }
+
+  function icon(cat, cls) {
+    var c = I[cat] ? cat : 'Other';
+    return '<svg class="sp-ic ' + (cls || '') + '" data-fam="' + (FAM_OF[c] || 'other') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+      + 'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[c] + '</svg>';
+  }
+  /* the chip the picker and the list rows both use */
+  function iconChip(item) {
+    var c = catOf(item);
+    return '<span class="sp-chip" data-fam="' + (FAM_OF[c] || 'other') + '" title="' + esc(c) + '">' + icon(c) + '</span>';
+  }
+  SP.catOf = catOf; SP.catOfName = catOfName; SP.icon = icon; SP.iconChip = iconChip;
+  SP.categories = function () { return Object.keys(I); };
+
   /* ---------- matching: a list line against a supplier's price book ---------- */
   var STOP = { the: 1, a: 1, of: 1, and: 1, in: 1, ft: 1, x: 1, per: 1, with: 1 };
   function toks(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9./ -]/g, ' ').split(/[\s,]+/).filter(function (t) { return t && !STOP[t]; }); }
