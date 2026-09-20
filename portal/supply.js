@@ -164,13 +164,13 @@
     if (!n) return '';
     var names = mine.slice(0, 3).map(function (s) { return esc(s.name); }).join(', ') + (n > 3 ? ' and ' + (n - 3) + ' more' : '');
     return '<div class="sp-where"><span>Prices from <b>' + names + '</b></span>'
-      + '<span class="sp-where-a"><button class="bpx-linkbtn" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-linkbtn" onclick="bpNav(\'suppliers\')">Where I buy</button></span></div>';
+      + '<span class="sp-where-a"><button class="bpx-linkbtn" onclick="SP.dirOpen()">Add supplier</button><button class="bpx-linkbtn" onclick="bpNav(\'suppliers\')">Where I buy</button></span></div>';
   }
   function state() {
     if (SP.err) return '<div class="sp-note bad"><span class=ms>error</span>' + esc(SP.err) + ' <button class="bpx-rowbtn" onclick="SP.reload()">Retry</button></div>';
     if (!live()) return '<div class="sp-note warn"><span class=ms>warning</span>These are example suppliers and made-up prices, so you can see how it works. Sign in to use your own.</div>';
     var ex = SP.samples();
-    if (ex.length) return '<div class="sp-note warn"><span class=ms>science</span><b>' + ex.length + ' of these are examples, not your real suppliers.</b> Their prices are made up. Photograph a bill from a supply house you actually use, then clear these out. <button class="bpx-rowbtn" onclick="SP.clearSamples()">Remove the examples</button></div>';
+    if (ex.length) return '<div class="sp-note warn"><span class=ms>science</span><b>' + ex.length + ' of these are examples, not your real suppliers.</b> Their prices are made up. Add a supply house you actually use, then clear these out. <button class="bpx-rowbtn" onclick="SP.clearSamples()">Remove the examples</button></div>';
     return '';
   }
   SP.reload = function () { SP.loaded = false; load(true); };
@@ -275,7 +275,8 @@
     var v = function (i) { return ($( i) || {}).value || ''; };
     var name = v('sp-s-name').trim(); if (!name) { msg('sp-mmsg', 'Give the supplier a name.', true); return; }
     var connType = v('sp-s-conn'), prev = id ? (supById(id) || {}).connection || {} : {};
-    var row = { name: name, kind: v('sp-s-kind') || 'custom', branch: v('sp-s-branch').trim(), address: v('sp-s-addr').trim(), drive_min: v('sp-s-drive') === '' ? null : Math.max(0, parseInt(v('sp-s-drive'), 10) || 0),
+    var pre = SP.dirPrefill || {};
+    var row = { name: name, kind: v('sp-s-kind') || 'custom', dir_id: (id ? (supById(id) || {}).dir_id : pre.dir_id) || '', branch: v('sp-s-branch').trim(), address: v('sp-s-addr').trim(), drive_min: v('sp-s-drive') === '' ? null : Math.max(0, parseInt(v('sp-s-drive'), 10) || 0),
       account_no: v('sp-s-acct').trim(), tier: v('sp-s-tier').trim(), email: v('sp-s-email').trim(), hours: v('sp-s-hours').trim(),
       will_call: !!($( 'sp-s-wc') || {}).checked, delivery: !!($( 'sp-s-del') || {}).checked, delivery_fee: +String(v('sp-s-fee')).replace(/[^0-9.]/g, '') || 0, delivery_min: +String(v('sp-s-min')).replace(/[^0-9.]/g, '') || 0,
       connection: connType === 'api' ? { type: 'api', provider: (v('sp-s-prov').trim() || 'demo'), last_sync: prev.last_sync || null } : { type: 'pricebook' } };
@@ -354,36 +355,32 @@
   /* ================================================================
      SOURCING
      ================================================================ */
-  /* The cold start decides whether any of this gets used. One instruction,
-     one button, and the three steps drawn out so the point is visible before
-     any work is done. Everything else is a grey link underneath. */
-  function firstRun(where) {
-    var step = function (n, t, sub) { return '<div class="sp-step"><span>' + n + '</span><div><b>' + t + '</b><small>' + sub + '</small></div></div>'; };
-    return '<div class="bpx-panel sp-start">'
-      + '<div class="sp-start-top"><span class="ms">photo_camera</span>'
-        + '<h3>Photograph a bill from your supply house</h3>'
-        + '<p>Any invoice or quote, however old. We read what they charge <b>you</b>, and from then on we can tell you where each job is cheapest to buy.</p>'
-        + '<button class="bpx-btn sp-start-go" onclick="SP.scanOpen()">Take a photo</button>'
-        + '<div class="sp-start-alt">Nothing to hand? <button class="bpx-linkbtn" onclick="SP.addSamples()">Look around with example data</button> or <button class="bpx-linkbtn" onclick="SP.dirOpen()">type a supply house in</button></div>'
-      + '</div>'
-      + '<div class="sp-steps">'
-        + step(1, 'Photograph a bill', 'We learn your prices at that supply house')
-        + step(2, 'Say what the job needs', 'Pick the job type and the size, the list fills itself in')
-        + step(3, 'We tell you where to buy', 'Cheapest, or closest. Then send the order from your phone')
+  /* The cold start used to be a wall: no suppliers meant no price book,
+     no price book meant nothing to search, so the first thing a contractor
+     met was a chore. The catalog removed that — searching works before
+     anyone has added anything — so this is now a banner over a working
+     page rather than a gate in front of a dead one. */
+  function firstRun() {
+    return '<div class="sp-firstrun">'
+      + '<div class="sp-firstrun-t"><span class="ms">storefront</span>'
+        + '<div><b>You can order from the catalog right now.</b>'
+        + '<span>Search any material below and we will tell you which chains stock it. Add the supply house you actually use and your own negotiated prices replace the ballparks everywhere.</span></div></div>'
+      + '<div class="sp-firstrun-b">'
+        + '<button class="bpx-btn sp-inline" onclick="SP.dirOpen()">Add a supplier</button>'
+        + '<button class="bpx-linkbtn" onclick="SP.scanOpen()">I have a bill to photograph</button>'
+        + '<button class="bpx-linkbtn" onclick="SP.addSamples()">Look around with example data</button>'
       + '</div></div>';
   }
   window.bpSupply = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('supply') + skel(); load(); return; }
     var L = SP.list;
     var h = tabs('supply') + state();
-    if (!SP.sup.length) {
-      $('bpxViewArea').innerHTML = tabs('supply') + state() + firstRun(); return;
-    }
+    if (!SP.sup.length) h += firstRun();
     h += whereBar();
     /* list picker + builder */
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
     h += '<div class="sp-two"><div class="bpx-panel">'
-      + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">pick the job type, put in the size</span></div>'
+      + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">search any material, or pick the whole job</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + (open.length ? '<select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">Open a list you started</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select>' : '') + (L ? '<button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button>' : '') + '</div></div>';
     if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">Say "re-roof, 25 squares" and the shingles, underlayment, starter, ridge cap, drip edge and nails fill in at the right counts. Change any line before you order.</span></div><div class="sp-kitcue-b"><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Pick the job</button><button class="bpx-linkbtn" onclick="SP.newList(true)">or type it myself</button></div></div>';
     else {
@@ -612,33 +609,87 @@
   /* ================================================================
      THE PICKER
 
-     A contractor knows what they need; what they do not know is the exact
-     wording their supply house prints on it. So the list is built by
-     searching the price books we already hold rather than by typing a name
-     into an empty box and hoping the matcher recognises it later. Picking
-     a real row carries its SKU, unit and price across, which is the whole
-     point: the sourcing engine then has nothing to guess at.
+     Tab one is "what do you need", and it searches a materials catalog
+     that ships with the product (supply-catalog.js) joined to whatever
+     price books the contractor has added. So it works on day one, before
+     anyone has photographed anything.
 
-     With nothing typed it shows what they bought last, because the same
-     dozen materials come up on almost every job.
+     Every result says WHO SELLS IT. That is the question a contractor
+     actually has, and the answer is stable enough to ship: roofing
+     distributors carry shingles, Ferguson carries pipe, SiteOne carries
+     irrigation, the big boxes carry the gap fill. Chains they have
+     already added are marked; the rest are one tap from being added.
 
-     Typing is still allowed — see itemAdd(). A line with no match becomes a
-     TBC item and the supplier prices it, exactly as before.
+     Prices come in three tiers and the UI never blurs them:
+       yours    a real negotiated price off their own price book. This is
+                the only kind that is ever ordered or costed with.
+       typical  a ballpark from the catalog, labelled as a ballpark, so a
+                new account can size a job before adding a supplier.
+       none     nobody has priced it; the supplier quotes it.
+
+     A typical price deliberately does not travel onto the list as a cost:
+     pickAdd only carries a SKU and price when the match came from the
+     contractor's own book, so the sourcing engine and every purchase
+     order downstream still run on real numbers only.
      ================================================================ */
-  var PICK = { q: '' };
+  var PICK = { q: '', trade: '' };
 
-  /* One row per distinct material, with every supplier that carries it
-     hanging off it, cheapest first. Rebuilt only when the price books
-     change, because this runs on every keystroke. */
-  var _idx = null, _idxN = -1;
+  function norm(s) { return String(s || '').toLowerCase().trim().replace(/\s+/g, ' '); }
+
+  /* which national chain a supplier of theirs actually is, so "who sells
+     this" can say "you already buy there". dir_id is set when they add one
+     from the directory; older rows are matched on the name they typed. */
+  function chainOf(sup) {
+    if (!sup) return '';
+    if (sup.dir_id) return sup.dir_id;
+    var n = norm(sup.name); if (!n) return '';
+    var hit = (SP.dirAll || []).filter(function (d) {
+      var dn = norm(d.name);
+      return dn === n || n.indexOf(dn) >= 0 || dn.indexOf(n) >= 0;
+    }).sort(function (a, b) { return b.name.length - a.name.length; })[0];
+    return hit ? hit.id : '';
+  }
+  function chainMeta(id) { return (SP.dirAll || []).filter(function (d) { return d.id === id; })[0] || null; }
+  /* Chip-sized names. The directory carries the full legal-ish name, which
+     is right on a supplier card and far too long on a pill. */
+  var SHORT = { homedepot_pro: 'Home Depot', lowes_pro: "Lowe's", ced: 'CED',
+    fbm: 'Foundation BM', supplyhouse: 'SupplyHouse', beacon: 'Beacon',
+    srs: 'SRS', siteone: 'SiteOne', bfs: 'Builders FirstSource', amazonbiz: 'Amazon Business',
+    northerntool: 'Northern Tool', hvacdirect: 'HVACDirect', whitecap: 'White Cap' };
+  function chainName(id) {
+    if (SHORT[id]) return SHORT[id];
+    var d = chainMeta(id); if (!d) return id;
+    return d.name.replace(/\s*\(.*\)\s*/, '').trim();
+  }
+  /* the chains they have already added, so their own counter sorts first */
+  function myChains() {
+    var out = {};
+    SP.sup.forEach(function (s) { if (!isSample(s)) { var c = chainOf(s); if (c) out[c] = s; } });
+    return out;
+  }
+
+  /* One row per material: the catalog as the spine, the contractor's own
+     price books laid over the top. Rebuilt only when either changes. */
+  var _idx = null, _idxKey = '';
   function index() {
-    if (_idx && _idxN === SP.items.length) return _idx;
+    var key = SP.items.length + ':' + SP.sup.length + ':' + ((SP.CATALOG || []).length);
+    if (_idx && _idxKey === key) return _idx;
     var by = {};
+    (SP.CATALOG || []).forEach(function (c) {
+      var k = norm(c.name);
+      by[k] = { key: k, name: c.name, cat: c.cat, unit: c.unit, lo: c.lo, hi: c.hi,
+        car: c.car.slice(), offers: [], trade: c.trade, toks: toks(c.name) };
+    });
     SP.items.forEach(function (it) {
-      var k = String(it.name || '').toLowerCase().trim();
-      if (!k) return;
-      var g = by[k] || (by[k] = { key: k, name: it.name, unit: it.unit || 'ea', cat: catOf(it), toks: toks(it.name), offers: [] });
+      var k = norm(it.name); if (!k) return;
+      var g = by[k];
+      if (!g) {
+        g = by[k] = { key: k, name: it.name, cat: catOf(it), unit: it.unit || 'ea', lo: 0, hi: 0,
+          car: [], offers: [], trade: '', toks: toks(it.name) };
+      }
       g.offers.push(it);
+      var c = chainOf(supById(it.supplier_id));
+      if (c && g.car.indexOf(c) < 0) g.car.push(c);
     });
     var list = Object.keys(by).map(function (k) { return by[k]; });
     list.forEach(function (g) {
@@ -647,18 +698,19 @@
         return ap - bp;
       });
     });
-    _idx = { list: list, map: by }; _idxN = SP.items.length;
+    _idx = { list: list, map: by }; _idxKey = key;
     return _idx;
   }
-  function groupFor(key) { return index().map[String(key || '').toLowerCase().trim()] || null; }
+  function groupFor(key) { return index().map[norm(key)] || null; }
 
-  /* Every query word has to be accounted for, so "pex 3/4" narrows instead
-     of widening. Ranking puts what they literally typed at the top: the
-     name that starts with it, then the name that contains it. */
+  /* Every query word has to be accounted for, so "pex 3/4" narrows rather
+     than widens. Ranking puts what they literally typed at the top, and a
+     word the name starts with beats the same letters buried inside another
+     word — without that, "shing" offers flashing before shingles. */
   function search(q, n) {
-    var ql = String(q || '').toLowerCase().trim();
+    var ql = norm(q);
     if (ql.length < 2) return [];
-    var qt = toks(ql), out = [];
+    var qt = toks(ql), out = [], trade = PICK.trade;
     index().list.forEach(function (g) {
       var nl = g.name.toLowerCase();
       var ok = qt.every(function (t) {
@@ -666,94 +718,151 @@
       });
       var sku = g.offers.some(function (o) { return String(o.sku || '').toLowerCase().indexOf(ql) === 0; });
       if (!ok && !sku) return;
-      /* A word the item starts with beats the same letters buried inside
-         another word, or "shing" offers flashing before shingles. */
       var s = nl.indexOf(ql) === 0 ? 5
         : g.toks.some(function (u) { return u.indexOf(ql) === 0; }) ? 4
         : sku ? 3
         : nl.indexOf(ql) >= 0 ? 2 : 1;
+      /* their own trade and their own priced items float up; everything
+         else is still reachable, because a roofer still buys plywood */
+      if (g.offers.length) s += 2;
+      if (trade && g.trade === trade) s += 1;
       out.push({ g: g, s: s });
     });
     out.sort(function (a, b) {
       return b.s - a.s || b.g.offers.length - a.g.offers.length || a.g.name.length - b.g.name.length
         || (a.g.name < b.g.name ? -1 : 1);
     });
-    return out.slice(0, n || 24).map(function (x) { return x.g; });
+    return out.slice(0, n || 30).map(function (x) { return x.g; });
   }
 
-  /* What they actually buy, newest first: the lines off recent parts lists
-     and orders. A name we have never had a price for still shows — it was
-     on a real job, which is reason enough. */
+  /* What they actually buy, newest first, off recent orders and lists. */
   function recent(n) {
     var seen = {}, out = [], src = [];
     SP.pos.forEach(function (p) { src.push([Date.parse(p.created_at || p.sent_at || 0) || 0, p.lines || []]); });
     SP.lists.forEach(function (l) { src.push([Date.parse(l.created_at || 0) || 0, l.items || []]); });
     src.sort(function (a, b) { return b[0] - a[0]; });
     var onList = {};
-    ((SP.list && SP.list.items) || []).forEach(function (it) { onList[String(it.name || '').toLowerCase().trim()] = 1; });
-    for (var i = 0; i < src.length && out.length < (n || 12); i++) {
+    ((SP.list && SP.list.items) || []).forEach(function (it) { onList[norm(it.name)] = 1; });
+    for (var i = 0; i < src.length && out.length < (n || 10); i++) {
       var lines = src[i][1];
-      for (var j = 0; j < lines.length && out.length < (n || 12); j++) {
-        var name = String(lines[j].name || '').trim(), k = name.toLowerCase();
+      for (var j = 0; j < lines.length && out.length < (n || 10); j++) {
+        var name = String(lines[j].name || '').trim(), k = norm(name);
         if (!k || seen[k] || onList[k]) continue;
         seen[k] = 1;
-        out.push(groupFor(k) || { key: k, name: name, unit: lines[j].unit || 'ea', cat: catOfName(name), offers: [] });
+        out.push(groupFor(k) || { key: k, name: name, unit: lines[j].unit || 'ea', cat: catOfName(name), car: [], offers: [], lo: 0, hi: 0 });
       }
     }
     return out;
   }
+  /* Before there is any history: the catalog's own staples for their trade,
+     so tab one is never an empty box. */
+  function starters(n) {
+    var t = PICK.trade, onList = {};
+    ((SP.list && SP.list.items) || []).forEach(function (it) { onList[norm(it.name)] = 1; });
+    return index().list.filter(function (g) {
+      return (!t || g.trade === t) && !onList[g.key];
+    }).slice(0, n || 10);
+  }
 
-  /* what this costs and whether it is on the shelf, across the houses that
-     carry it — the two things that decide whether it goes on the list */
-  function offerLine(g) {
-    if (!g.offers.length) return '<span class="sp-pk-none">No price yet — the supplier will quote it</span>';
-    var best = g.offers[0], s = supById(best.supplier_id);
-    var more = g.offers.length > 1 ? '<span class="sp-pk-more">+' + (g.offers.length - 1) + ' more</span>' : '';
-    var stock = best.stock == null ? '' : best.stock > 0
-      ? '<span class="sp-pk-stk ok">' + best.stock.toLocaleString() + ' on the shelf</span>'
-      : '<span class="sp-pk-stk out">none on the shelf</span>';
-    return '<b>' + (best.price == null ? '—' : money(best.price)) + '</b>'
-      + '<span class="sp-pk-sup">' + esc(s ? s.name : 'a supply house') + '</span>' + stock + more;
+  /* ---------- who sells it ---------- */
+  function storeChips(g) {
+    if (!g.car || !g.car.length) return '';
+    var mine = myChains();
+    var ids = g.car.slice().sort(function (a, b) { return (mine[b] ? 1 : 0) - (mine[a] ? 1 : 0); });
+    var shown = ids.slice(0, 4), rest = ids.length - shown.length;
+    return '<span class="sp-pk-stores">' + shown.map(function (id) {
+      var nm = chainName(id);
+      return '<button class="sp-store' + (mine[id] ? ' mine' : '') + '" data-c="' + esc(id) + '"'
+        + ' onclick="event.stopPropagation();SP.storeTap(this.dataset.c)"'
+        + ' title="' + esc(mine[id] ? 'You buy here' : 'Add ' + nm + ' as a supplier') + '">'
+        + (mine[id] ? '<span class="ms">check</span>' : '') + esc(nm) + '</button>';
+    }).join('') + (rest > 0 ? '<span class="sp-store-more">+' + rest + '</span>' : '') + '</span>';
   }
+  SP.storeTap = function (id) {
+    var mine = myChains();
+    if (mine[id]) { window.bpNav('suppliers'); return; }
+    if (SP.dirAdd) SP.dirAdd(id);
+  };
+
+  /* ---------- what it costs ---------- */
+  function priceLine(g) {
+    if (g.offers.length) {
+      var best = g.offers[0], s = supById(best.supplier_id);
+      var stock = best.stock == null ? '' : best.stock > 0
+        ? '<span class="sp-pk-stk ok">' + best.stock.toLocaleString() + ' on the shelf</span>'
+        : '<span class="sp-pk-stk out">none on the shelf</span>';
+      return '<b>' + (best.price == null ? '—' : money(best.price)) + '</b>'
+        + '<span class="sp-pk-yours">your price</span>'
+        + '<span class="sp-pk-sup">' + esc(s ? s.name : 'a supply house') + '</span>' + stock
+        + (g.offers.length > 1 ? '<span class="sp-pk-more">+' + (g.offers.length - 1) + ' more</span>' : '');
+    }
+    if (g.lo > 0) {
+      return '<b class="typ">' + money(g.lo).replace(/\.00$/, '') + ' to ' + money(g.hi).replace(/\.00$/, '') + '</b>'
+        + '<span class="sp-pk-typ" title="A ballpark from our catalog, not a quote. Add the supplier you use and your own price replaces it.">typical</span>';
+    }
+    return '<span class="sp-pk-none">No price yet — the supplier will quote it</span>';
+  }
+
+  /* Deliberately a div, not a button: each row carries its own store
+     buttons, and a button inside a button is invalid HTML that the parser
+     silently hoists out — which is exactly how the store chips vanished
+     the first time. Keyboard behaviour is put back by hand. */
   function pickRow(g, kind) {
-    return '<button class="sp-pk-row" data-k="' + esc(g.key) + '" onclick="SP.pickAdd(this.dataset.k)">'
+    return '<div class="sp-pk-row" role="button" tabindex="0" data-k="' + esc(g.key) + '"'
+      + ' onclick="SP.pickAdd(this.dataset.k)" onkeydown="SP.rowKey(event,this)">'
       + iconChip({ name: g.name, category: g.cat })
-      + '<span class="sp-pk-txt"><b>' + esc(g.name) + '</b><span class="sp-pk-meta">' + offerLine(g) + '</span></span>'
-      + '<span class="sp-pk-add">' + (kind === 'recent' ? 'Add' : '+') + '</span></button>';
+      + '<span class="sp-pk-txt"><b>' + esc(g.name) + '</b>'
+      + '<span class="sp-pk-meta">' + priceLine(g) + '</span>'
+      + storeChips(g) + '</span>'
+      + '<span class="sp-pk-add">' + (kind === 'search' ? '+' : 'Add') + '</span></div>';
   }
+  SP.rowKey = function (e, el) {
+    if (!e || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault(); SP.pickAdd(el.dataset.k);
+  };
   function resultsHtml() {
     var q = PICK.q;
-    if (String(q || '').trim().length >= 2) {
-      var res = search(q, 24);
+    if (norm(q).length >= 2) {
+      var res = search(q, 30);
       if (!res.length) {
-        return '<div class="sp-pk-empty"><b>Nothing your supply houses carry matches that.</b>'
-          + '<span>Add it anyway and we will ask them to price it, or photograph a bill so we learn what they call it.</span>'
-          + '<span class="sp-pk-empty-b"><button class="bpx-rowbtn" onclick="SP.pickAddRaw()">Add &ldquo;' + esc(String(q).trim()) + '&rdquo; anyway</button>'
-          + '<button class="bpx-linkbtn" onclick="SP.scanOpen()">Photograph a bill</button></span></div>';
+        return '<div class="sp-pk-empty"><b>Nothing in the catalog or your price books matches that.</b>'
+          + '<span>Add it anyway and whoever you order from will price it.</span>'
+          + '<span class="sp-pk-empty-b"><button class="bpx-rowbtn" onclick="SP.pickAddRaw()">Add &ldquo;' + esc(String(q).trim()) + '&rdquo; anyway</button></span></div>';
       }
       return '<div class="sp-pk-list">' + res.map(function (g) { return pickRow(g, 'search'); }).join('') + '</div>';
     }
-    var rec = recent(12);
-    if (!rec.length) {
-      return '<div class="sp-pk-empty"><b>Search what your supply houses carry.</b>'
-        + '<span>Type a few letters — &ldquo;pex&rdquo;, &ldquo;shingle&rdquo;, &ldquo;20a&rdquo; — and pick the line. What you buy most will start showing up here.</span></div>';
-    }
-    return '<div class="sp-pk-lbl">What you buy most</div>'
+    var rec = recent(10), lbl = 'What you buy most';
+    if (!rec.length) { rec = starters(10); lbl = 'Common on your kind of job'; }
+    if (!rec.length) return '';
+    return '<div class="sp-pk-lbl">' + lbl + '</div>'
       + '<div class="sp-pk-list recent">' + rec.map(function (g) { return pickRow(g, 'recent'); }).join('') + '</div>';
   }
   function pickerHtml() {
+    if (PICK.trade === '' && window.bpSettingsGet) {
+      var t = String(((bpSettingsGet().company) || {}).trade || '').toLowerCase();
+      PICK.trade = ['roofing', 'plumbing', 'electrical', 'hvac', 'painting', 'landscaping', 'concrete', 'drywall', 'framing']
+        .filter(function (k) { return t.indexOf(k.slice(0, 5)) >= 0; })[0]
+        || (t.indexOf('air') >= 0 || t.indexOf('heat') >= 0 ? 'hvac'
+          : t.indexOf('lawn') >= 0 || t.indexOf('pool') >= 0 ? 'landscaping'
+          : t.indexOf('mason') >= 0 ? 'concrete' : null) || '';
+    }
+    var n = (SP.CATALOG || []).length;
     return '<div class="sp-pk">'
       + '<div class="sp-pk-box"><span class="ms">search</span>'
-      + '<input id="sp-pk-q" value="' + esc(PICK.q) + '" placeholder="Search what you need — we look in every price book you have"'
+      + '<input id="sp-pk-q" value="' + esc(PICK.q) + '" placeholder="Search materials — shingles, PEX, 20A breaker, sod"'
       + ' autocomplete="off" oninput="SP.pickQ(this.value)" onkeydown="SP.pickKey(event)">'
       + (PICK.q ? '<button class="sp-pk-clr" onclick="SP.pickQ(\'\',true)" aria-label="Clear">&times;</button>' : '')
-      + '</div><div id="sp-pk-res">' + resultsHtml() + '</div>'
+      + '</div>'
+      + '<div class="sp-pk-cue">' + n.toLocaleString() + ' materials, and who stocks them. '
+      + (SP.sup.filter(function (s) { return !isSample(s); }).length
+        ? 'Prices marked <em>your price</em> come from your own price books.'
+        : '<button class="bpx-linkbtn" onclick="SP.dirOpen()">Add a supplier</button> and your real prices replace the ballparks.')
+      + '</div>'
+      + '<div id="sp-pk-res">' + resultsHtml() + '</div>'
       + '<div id="sp-pk-flash" class="sp-pk-flash" role="status" aria-live="polite"></div></div>';
   }
   function itemsHtml() {
     var L = SP.list, items = (L && L.items) || [];
-    /* the picker above and the list below are two different things, so the
-       list says so rather than running on from the search results */
     var head = '<div class="sp-list-hd"><b>On the list</b>' + (items.length ? '<span>' + items.length + (items.length === 1 ? ' item' : ' items') + '</span>' : '') + '</div>';
     if (!items.length) return head + '<div class="sp-items-none">Nothing yet. Search above, or <button class="bpx-linkbtn" onclick="SP.itemAdd()">type one in</button>.</div>';
     return head + '<div class="sp-items"><div class="sp-item sp-head"><span></span><span>Item</span><span>Qty</span><span>Unit</span><span></span></div>'
@@ -785,26 +894,29 @@
   SP.pickKey = function (e) {
     if (!e) return;
     if (e.key === 'Escape') { SP.pickQ('', true); return; }
-    /* Enter takes the top result, so a known item is two actions: type, Enter */
     if (e.key === 'Enter') {
       var first = document.querySelector('#sp-pk-res .sp-pk-row');
       if (first) { e.preventDefault(); SP.pickAdd(first.dataset.k); }
     }
   };
-  /* Add a real price-book line: it carries the SKU and the unit the supply
-     house uses, so the sourcing engine matches it exactly rather than by
-     wording. Adding the same thing twice means two of them. */
+  /* A line off the contractor's own price book carries its SKU across, so
+     the sourcing engine matches it exactly. A catalog line deliberately
+     does NOT carry the typical price: it goes on as a name to be quoted,
+     because a ballpark must never end up on a purchase order. */
   SP.pickAdd = function (key) {
     var L = SP.list; if (!L) return;
     var g = groupFor(key);
     var name = g ? g.name : String(key || '').trim();
     if (!name) return;
     L.items = L.items || [];
-    var on = L.items.filter(function (it) { return String(it.name || '').toLowerCase().trim() === name.toLowerCase(); })[0];
-    if (on) on.qty = (+on.qty || 0) + 1;
-    else L.items.push({ key: uid('k'), name: name, qty: 1, unit: (g && g.unit) || 'ea', sku: g && g.offers[0] ? g.offers[0].sku : '', cat: g ? g.cat : catOfName(name) });
+    var on = L.items.filter(function (it) { return norm(it.name) === norm(name); })[0];
+    if (on) { on.qty = (+on.qty || 0) + 1; }
+    else {
+      L.items.push({ key: uid('k'), name: name, qty: 1, unit: (g && g.unit) || 'ea',
+        sku: g && g.offers[0] ? g.offers[0].sku : '', cat: g ? g.cat : catOfName(name) });
+    }
     SP.plans = null; saveList(); pickRedraw();
-    if (on) flash(name + ' is now ' + on.qty);
+    flash(on ? name + ' is now ' + on.qty : name + ' added');
   };
   SP.pickAddRaw = function () { var q = String(PICK.q || '').trim(); if (!q) return; SP.pickAdd(q); SP.pickQ('', true); };
   function flash(t) {

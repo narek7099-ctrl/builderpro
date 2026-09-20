@@ -313,6 +313,7 @@
   SP.dirAdd = function (id) {
     var d = DIR.filter(function (x) { return x.id === id; })[0]; if (!d) return;
     SP.dirPrefill = {
+      dir_id: d.id,            /* so "who sells this" can say "you already buy there" */
       name: d.name, kind: d.kind, branch: '', address: '', drive_min: d.type === 'online' ? '' : (d.drive || 20),
       account_no: '', email: '', tier: '', hours: '',
       will_call: d.type === 'branch', delivery: !!d.delivery, delivery_fee: 0, delivery_min: 0,
