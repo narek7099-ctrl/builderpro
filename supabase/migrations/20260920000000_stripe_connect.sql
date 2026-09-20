@@ -1,3 +1,7 @@
+-- NOT IN USE. Written for a BuilderPro-owned Stripe connection, which was
+-- set aside: invoices are raised in the sub-account and charged through the
+-- Stripe connected there. Harmless if already applied (two empty tables).
+--
 -- Stripe Connect: the contractor's own Stripe account, linked to BuilderPro.
 --
 -- Until now card payments went through the Stripe connection inside each

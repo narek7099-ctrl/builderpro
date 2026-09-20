@@ -1,3 +1,9 @@
+// NOT IN USE. Invoices are raised in the sub-account and charged through the
+// Stripe connected there, so this is not wired to anything and should not be
+// deployed. Kept because it is finished and ready if invoicing ever moves
+// in-house; the Payouts page walks the contractor through the sub-account
+// connection instead. See supabase/migrations/20260920000000_stripe_connect.sql.
+//
 // stripe-connect — links a contractor's OWN Stripe account to BuilderPro.
 //
 // Standard Connect, onboarded with Account Links. We create the connected
