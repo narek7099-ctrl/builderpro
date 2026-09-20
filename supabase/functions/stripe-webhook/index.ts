@@ -1,3 +1,9 @@
+// NOT IN USE. Invoices are raised in the sub-account and charged through the
+// Stripe connected there, so this is not wired to anything and should not be
+// deployed. Kept because it is finished and ready if invoicing ever moves
+// in-house; the Payouts page walks the contractor through the sub-account
+// connection instead. See supabase/migrations/20260920000000_stripe_connect.sql.
+//
 // stripe-webhook — Stripe telling us a card went through on a contractor's
 // own connected account.
 //
