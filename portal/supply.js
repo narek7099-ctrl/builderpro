@@ -381,23 +381,47 @@
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
     h += '<div class="sp-two"><div class="bpx-panel">'
       + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">search any material, or pick the whole job</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + (open.length ? '<select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">Open a list you started</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select>' : '') + (L ? '<button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button>' : '') + '</div></div>';
-    if (!L) h += '<div class="sp-kitcue"><span class="ms">auto_awesome_motion</span><div><b>Pick the job, put in the size.</b><span class="bpx-mut">Say "re-roof, 25 squares" and the shingles, underlayment, starter, ridge cap, drip edge and nails fill in at the right counts. Change any line before you order.</span></div><div class="sp-kitcue-b"><button class="bpx-btn sp-inline" onclick="SP.kitOpen()">Pick the job</button><button class="bpx-linkbtn" onclick="SP.newList(true)">or type it myself</button></div></div>';
-    else {
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + (open.length ? '<select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">Open a list you started</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select>' : '') + '<button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button>' + '</div></div>';
+    /* The search box is the page, so it is always here. It used to live
+       inside the "you have a list open" branch, which meant arriving at
+       the tab showed a cue to pick a job and no way to search at all. The
+       list is now created on the first thing they add instead. */
+    if (L) {
       var js = jobs();
-      h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>'
-        + pickerHtml()
-        + '<div id="sp-items">' + itemsHtml() + '</div>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Type one in</button><button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button></div>'
-        + '<div class="sp-prio"><span class="bpx-mut">What matters today</span><div class="bpx-jobtabs"><button class="bpx-jt' + (SP.priority === 'fastest' ? ' on' : '') + '" onclick="SP.setPrio(\'fastest\')">Getting it today</button><button class="bpx-jt' + (SP.priority === 'cheapest' ? ' on' : '') + '" onclick="SP.setPrio(\'cheapest\')">Paying less</button></div>'
-        + '<button class="bpx-btn sp-inline" onclick="SP.run()">Where do I buy this</button></div>'
-        + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">A second stop is not free, so we count what a trip costs you: ' + money(SP.cost.stop) + ' a stop plus ' + money(SP.cost.min) + ' a minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
+      h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>';
     }
+    h += pickerHtml()
+      + '<div id="sp-items">' + itemsHtml() + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Type one in</button>'
+      + (L && (L.items || []).length ? '<button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button>' : '')
+      + '<span class="bpx-mut" style="font-size:12.5px">Doing a whole job? <button class="bpx-linkbtn" onclick="SP.kitOpen()">Pick the job and the size</button> and the list fills itself in.</span></div>'
+      + '<div class="sp-prio"><span class="bpx-mut">What matters today</span><div class="bpx-jobtabs"><button class="bpx-jt' + (SP.priority === 'fastest' ? ' on' : '') + '" onclick="SP.setPrio(\'fastest\')">Getting it today</button><button class="bpx-jt' + (SP.priority === 'cheapest' ? ' on' : '') + '" onclick="SP.setPrio(\'cheapest\')">Paying less</button></div>'
+      + '<button class="bpx-btn sp-inline" onclick="SP.run()">Where do I buy this</button></div>'
+      + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">A second stop is not free, so we count what a trip costs you: ' + money(SP.cost.stop) + ' a stop plus ' + money(SP.cost.min) + ' a minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
     h += '</div><div>' + plansHtml() + '</div></div>';
     $('bpxViewArea').innerHTML = h;
   };
   function uniqNames() { var seen = {}, out = []; SP.items.forEach(function (i) { var k = i.name.toLowerCase(); if (!seen[k]) { seen[k] = 1; out.push(i.name); } }); return out.sort(); }
   SP.pick = function (id) { SP.list = SP.lists.filter(function (l) { return l.id === id; })[0] || null; SP.plans = null; if (SP.list) SP.priority = SP.list.priority || 'fastest'; window.bpSupply(); };
+  /* Nothing is created just by arriving at the tab: the list comes into
+     existence when the first item goes on it. Keeps the empty state a
+     search box rather than a form, and stops a stray draft list being
+     saved every time someone looks at the page. */
+  function ensureList() {
+    if (SP.list) return Promise.resolve(SP.list);
+    var js = jobs(), j = js[0];
+    return db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the next job'), job_id: j ? j.id : '',
+      job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [] })
+      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; return row; });
+  }
+  /* A full redraw is needed the first time, to bring in the list name and
+     job fields. The search text lives in PICK, so it survives it. */
+  function afterAdd(wasNew) {
+    if (!wasNew) { pickRedraw(); return; }
+    window.bpSupply();
+    var f = $('sp-pk-q');
+    if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
+  }
   SP.newList = function () {
     window.bpCloseModal();
     var js = jobs(), j = js[0];
@@ -412,8 +436,17 @@
   /* Typing one in is still here, for the thing no price book has a row for.
      Both of these redraw the list alone, so whatever is in the search box
      survives — the two halves are used together. */
-  SP.itemAdd = function () { SP.list.items = SP.list.items || []; SP.list.items.push({ key: uid('k'), name: '', qty: 1, unit: 'ea' }); saveList(); pickRedraw(); var ins = document.querySelectorAll('.sp-item:not(.sp-head) input'); if (ins.length) ins[ins.length - 3].focus(); };
-  SP.itemDel = function (k) { SP.list.items.splice(k, 1); SP.plans = null; saveList(); pickRedraw(); };
+  SP.itemAdd = function () {
+    var wasNew = !SP.list;
+    ensureList().then(function (L) {
+      L.items = L.items || [];
+      L.items.push({ key: uid('k'), name: '', qty: 1, unit: 'ea' });
+      saveList(); afterAdd(wasNew);
+      var ins = document.querySelectorAll('.sp-item:not(.sp-head) input');
+      if (ins.length) ins[ins.length - 3].focus();
+    }).catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
+  };
+  SP.itemDel = function (k) { if (!SP.list) return; SP.list.items.splice(k, 1); SP.plans = null; saveList(); pickRedraw(); };
   SP.setPrio = function (p) { SP.priority = p; if (SP.list) { SP.list.priority = p; saveList(); } window.bpSupply(); };
   SP.costOpen = function () {
     window.bpModal('<h3>What a trip to the supply house costs you</h3><div class="bpx-sub">Used by "cheapest" so a $6 saving never sends a tech across town.</div><div class="sp-r2">' + window.bpField('sp-c-stop', 'Per stop (loading, counter, paperwork)', SP.cost.stop, '60') + window.bpField('sp-c-min', 'Per minute of driving (truck + tech)', SP.cost.min, '1.20') + '</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="SP.costSave()">Save</button></div>');
@@ -904,19 +937,21 @@
      does NOT carry the typical price: it goes on as a name to be quoted,
      because a ballpark must never end up on a purchase order. */
   SP.pickAdd = function (key) {
-    var L = SP.list; if (!L) return;
     var g = groupFor(key);
     var name = g ? g.name : String(key || '').trim();
     if (!name) return;
-    L.items = L.items || [];
-    var on = L.items.filter(function (it) { return norm(it.name) === norm(name); })[0];
-    if (on) { on.qty = (+on.qty || 0) + 1; }
-    else {
-      L.items.push({ key: uid('k'), name: name, qty: 1, unit: (g && g.unit) || 'ea',
-        sku: g && g.offers[0] ? g.offers[0].sku : '', cat: g ? g.cat : catOfName(name) });
-    }
-    SP.plans = null; saveList(); pickRedraw();
-    flash(on ? name + ' is now ' + on.qty : name + ' added');
+    var wasNew = !SP.list;
+    ensureList().then(function (L) {
+      L.items = L.items || [];
+      var on = L.items.filter(function (it) { return norm(it.name) === norm(name); })[0];
+      if (on) { on.qty = (+on.qty || 0) + 1; }
+      else {
+        L.items.push({ key: uid('k'), name: name, qty: 1, unit: (g && g.unit) || 'ea',
+          sku: g && g.offers[0] ? g.offers[0].sku : '', cat: g ? g.cat : catOfName(name) });
+      }
+      SP.plans = null; saveList(); afterAdd(wasNew);
+      flash(on ? name + ' is now ' + on.qty : name + ' added');
+    }).catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
   };
   SP.pickAddRaw = function () { var q = String(PICK.q || '').trim(); if (!q) return; SP.pickAdd(q); SP.pickQ('', true); };
   function flash(t) {
