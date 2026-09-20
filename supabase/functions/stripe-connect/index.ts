@@ -1,15 +1,20 @@
 // stripe-connect — links a contractor's OWN Stripe account to BuilderPro.
 //
-// Standard Connect, over OAuth. The contractor signs in to Stripe (or creates
-// an account) and comes back; we keep the account id they authorised. Every
-// charge is then made ON their account, so the money goes from the homeowner
-// straight to their bank. We never hold it and we take nothing on top.
+// Standard Connect, onboarded with Account Links. We create the connected
+// account through the API and hand the contractor a one-time Stripe link to
+// finish it; if they already have a Stripe account they sign in to it during
+// that flow. Every charge is then made ON their account, so the money goes
+// from the homeowner straight to their bank. We never hold it and we take
+// nothing on top.
 //
-//   POST { op:"status"  }  -> { ok, connected, account:{...} }   refreshed from Stripe
-//   POST { op:"link"    }  -> { ok, url }                        send the browser here
-//   POST { op:"disconnect" } -> { ok }                           revokes our access
-//   GET  ?code=..&state=..  Stripe's redirect back; stores the account and
-//                           bounces to the portal.
+//   POST { op:"status" }      -> { ok, connected, account:{...} }  refreshed from Stripe
+//   POST { op:"link" }        -> { ok, url }                       send the browser here
+//   POST { op:"disconnect" }  -> { ok }                            we stop using it
+//
+// Account Links rather than OAuth on purpose: OAuth needs a Connect client id
+// and registered redirect URIs, and this needs neither. Coming back from
+// Stripe proves nothing on its own, so the portal always re-reads the real
+// state with op:"status" rather than trusting the return trip.
 //
 // The account id is never accepted from the caller: it is read from the
 // owner's row, so a caller can only ever act on the account they connected.
@@ -17,28 +22,22 @@
 // Connecting a bank account is the owner's own business, so a team member is
 // refused here even though they share the rest of the account.
 //
-// Deploy:  supabase functions deploy stripe-connect        (Verify JWT OFF —
-//          Stripe's redirect arrives without our JWT; the POST ops check it
-//          themselves.)
-// Secrets: STRIPE_SECRET_KEY        sk_live_… (or sk_test_… while testing)
-//          STRIPE_CONNECT_CLIENT_ID ca_…      Stripe → Settings → Connect → Platform
-//          STRIPE_STATE_SECRET      any long random string
-//          PORTAL_RETURN_URL        https://builderpro-os.com/
-// In Stripe, add this function's URL as an OAuth redirect URI:
-//          https://<project>.supabase.co/functions/v1/stripe-connect
+// Deploy:  supabase functions deploy stripe-connect
+// Secrets: STRIPE_SECRET_KEY   sk_live_… (or sk_test_… while testing)
+//          PORTAL_RETURN_URL   https://builderpro-os.com/
+// In Stripe you only need Connect switched on. There is no client id to find
+// and no redirect URI to register.
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SK = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
-const CLIENT_ID = Deno.env.get("STRIPE_CONNECT_CLIENT_ID") ?? "";
-const STATE_SECRET = Deno.env.get("STRIPE_STATE_SECRET") || SB_SERVICE;
 const RETURN_URL = Deno.env.get("PORTAL_RETURN_URL") || "https://builderpro-os.com/";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -72,44 +71,15 @@ async function isTeamMember(id: string): Promise<boolean> {
   } catch { return false; }
 }
 
-/* ---------- state: signed and short-lived, so the callback cannot be forged ---------- */
-const b64url = (b: ArrayBuffer | Uint8Array) =>
-  btoa(String.fromCharCode(...new Uint8Array(b as ArrayBuffer))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-const unb64url = (s: string) => atob(s.replace(/-/g, "+").replace(/_/g, "/"));
-
-async function hmac(msg: string): Promise<string> {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(STATE_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  return b64url(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg)));
-}
-async function signState(owner: string): Promise<string> {
-  const body = b64url(new TextEncoder().encode(JSON.stringify({ o: owner, e: Date.now() + 15 * 60_000 })));
-  return `${body}.${await hmac(body)}`;
-}
-async function readState(state: string): Promise<string> {
-  const [body, sig] = String(state || "").split(".");
-  if (!body || !sig) return "";
-  const expect = await hmac(body);
-  // constant-time enough: compare fixed-length digests
-  if (sig.length !== expect.length) return "";
-  let diff = 0;
-  for (let i = 0; i < sig.length; i++) diff |= sig.charCodeAt(i) ^ expect.charCodeAt(i);
-  if (diff !== 0) return "";
-  try {
-    const p = JSON.parse(unb64url(body));
-    return p?.e > Date.now() ? String(p.o || "") : "";
-  } catch { return ""; }
-}
-
 /* ---------- stripe ---------- */
-async function stripe(path: string, opts: { method?: string; body?: Record<string, string>; base?: string } = {}) {
-  const base = opts.base ?? "https://api.stripe.com";
-  const r = await fetch(`${base}${path}`, {
+async function stripe(path: string, opts: { method?: string; body?: Record<string, string> } = {}) {
+  const r = await fetch(`https://api.stripe.com${path}`, {
     method: opts.method ?? "GET",
     headers: { Authorization: `Bearer ${SK}`, "Content-Type": "application/x-www-form-urlencoded" },
     body: opts.body ? new URLSearchParams(opts.body).toString() : undefined,
   });
   const out = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(out?.error?.error_description || out?.error?.message || `stripe ${r.status}`);
+  if (!r.ok) throw new Error(out?.error?.message || `stripe ${r.status}`);
   return out;
 }
 
@@ -124,9 +94,9 @@ async function rowFor(owner: string): Promise<Row | null> {
   return rows?.[0] ?? null;
 }
 
-/* Ask Stripe what the account can actually do. A connected account that has
-   not finished onboarding can be linked but unable to take a card yet, and
-   the contractor needs to be told which. */
+/* Ask Stripe what the account can actually do. An account that has been
+   created but not finished can be linked yet unable to take a card, and the
+   contractor needs to be told which. */
 async function refresh(owner: string, accountId: string) {
   const a = await stripe(`/v1/accounts/${encodeURIComponent(accountId)}`);
   const due: string[] = [
@@ -141,6 +111,7 @@ async function refresh(owner: string, accountId: string) {
     business_name: a?.business_profile?.name || a?.settings?.dashboard?.display_name || "",
     country: a?.country || "",
     currency: a?.default_currency || "usd",
+    livemode: !!a?.livemode,
     checked_at: new Date().toISOString(),
   };
   await rest(`stripe_accounts?owner=eq.${owner}`, { method: "PATCH", body: JSON.stringify(patch) });
@@ -162,44 +133,8 @@ const shape = (r: Row | null, extra: Record<string, unknown> = {}) => !r || !r.a
   ...extra,
 };
 
-/* ---------- the callback Stripe sends the contractor back to ---------- */
-function bounce(status: string, detail = "") {
-  const u = new URL(RETURN_URL);
-  u.hash = `payouts=${status}${detail ? `&d=${encodeURIComponent(detail.slice(0, 120))}` : ""}`;
-  return new Response(null, { status: 302, headers: { ...CORS, Location: u.toString() } });
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-
-  /* Stripe's redirect: ?code & state, or ?error when the contractor backed out */
-  if (req.method === "GET") {
-    const qs = new URL(req.url).searchParams;
-    if (qs.get("error")) return bounce("denied", qs.get("error_description") ?? "");
-    const code = qs.get("code") ?? "";
-    const owner = await readState(qs.get("state") ?? "");
-    if (!code || !owner) return bounce("error", "That link expired. Start again from Payouts.");
-    try {
-      const tok = await stripe("/oauth/token", {
-        method: "POST", base: "https://connect.stripe.com",
-        body: { grant_type: "authorization_code", code, client_secret: SK },
-      });
-      const accountId = String(tok?.stripe_user_id ?? "");
-      if (!accountId) return bounce("error", "Stripe did not return an account.");
-      await rest("stripe_accounts", {
-        method: "POST",
-        headers: { Prefer: "resolution=merge-duplicates,return=representation" },
-        body: JSON.stringify({
-          owner, account_id: accountId, livemode: !!tok?.livemode,
-          connected_at: new Date().toISOString(), disconnected_at: null,
-        }),
-      });
-      try { await refresh(owner, accountId); } catch { /* the link stands even if the lookup hiccups */ }
-      return bounce("connected");
-    } catch (e) {
-      return bounce("error", String((e as Error)?.message ?? e));
-    }
-  }
 
   let b: { op?: string } = {};
   try { b = await req.json(); } catch { /* no body */ }
@@ -209,37 +144,64 @@ Deno.serve(async (req) => {
   if (await isTeamMember(user.id)) {
     return json({ ok: false, error: "Only the account owner can set up payouts." }, 403);
   }
-  if (!SK || !CLIENT_ID) return json({ ok: false, reason: "not_configured" });
+  if (!SK) return json({ ok: false, reason: "not_configured" });
 
   const owner = user.id;
 
-  if (b.op === "link") {
-    const u = new URL("https://connect.stripe.com/oauth/authorize");
-    u.searchParams.set("response_type", "code");
-    u.searchParams.set("client_id", CLIENT_ID);
-    u.searchParams.set("scope", "read_write");
-    u.searchParams.set("state", await signState(owner));
-    u.searchParams.set("stripe_user[email]", user.email || "");
-    return json({ ok: true, url: u.toString() });
-  }
+  try {
+    if (b.op === "link") {
+      let row = await rowFor(owner);
+      let accountId = String(row?.account_id ?? "");
 
-  if (b.op === "status") {
-    const row = await rowFor(owner);
-    if (!row?.account_id) return json({ ok: true, connected: false, account: null });
-    let extra = {};
-    try { extra = await refresh(owner, row.account_id); } catch { /* show what we have */ }
-    return json({ ok: true, connected: true, account: shape({ ...row, ...extra } as Row) });
-  }
-
-  if (b.op === "disconnect") {
-    const row = await rowFor(owner);
-    if (row?.account_id) {
-      try {
-        await stripe("/oauth/deauthorize", {
-          method: "POST", base: "https://connect.stripe.com",
-          body: { client_id: CLIENT_ID, stripe_user_id: row.account_id },
+      /* first time through: make the account, and remember it before sending
+         them anywhere, so a dropped connection cannot orphan it */
+      if (!accountId) {
+        const acct = await stripe("/v1/accounts", {
+          method: "POST",
+          body: {
+            type: "standard",
+            email: user.email || "",
+            "business_profile[product_description]": "Home improvement and contracting services",
+          },
         });
-      } catch { /* already revoked on Stripe's side; clear ours regardless */ }
+        accountId = String(acct?.id ?? "");
+        if (!accountId) return json({ ok: false, error: "Stripe did not return an account." });
+        await rest("stripe_accounts", {
+          method: "POST",
+          headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+          body: JSON.stringify({
+            owner, account_id: accountId, livemode: !!acct?.livemode,
+            connected_at: new Date().toISOString(), disconnected_at: null,
+          }),
+        });
+      }
+
+      /* A link is single use and short lived. refresh_url is where Stripe
+         sends them if it expires before they finish; the portal just asks
+         them to tap Connect again, which mints a fresh one. */
+      const link = await stripe("/v1/account_links", {
+        method: "POST",
+        body: {
+          account: accountId,
+          type: "account_onboarding",
+          refresh_url: `${RETURN_URL}#payouts=refresh`,
+          return_url: `${RETURN_URL}#payouts=connected`,
+        },
+      });
+      return json({ ok: true, url: String(link?.url ?? "") });
+    }
+
+    if (b.op === "status") {
+      const row = await rowFor(owner);
+      if (!row?.account_id) return json({ ok: true, connected: false, account: null });
+      let extra = {};
+      try { extra = await refresh(owner, row.account_id); } catch { /* show what we have */ }
+      return json({ ok: true, connected: true, account: shape({ ...row, ...extra } as Row) });
+    }
+
+    if (b.op === "disconnect") {
+      /* We stop using the account; we do not delete it. It is theirs, it may
+         hold a balance, and the money already taken belongs to them. */
       await rest(`stripe_accounts?owner=eq.${owner}`, {
         method: "PATCH",
         body: JSON.stringify({
@@ -247,8 +209,10 @@ Deno.serve(async (req) => {
           requirements_due: "", disconnected_at: new Date().toISOString(),
         }),
       });
+      return json({ ok: true, connected: false });
     }
-    return json({ ok: true, connected: false });
+  } catch (e) {
+    return json({ ok: false, reason: "stripe", detail: String((e as Error)?.message ?? e) });
   }
 
   return json({ ok: false, error: "op: status | link | disconnect" }, 400);

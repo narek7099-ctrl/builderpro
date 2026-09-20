@@ -18145,7 +18145,9 @@ window.bpPayConnect=function(){
   bpPayApi({op:'link'}).then(function(r){
     if(r&&r.ok&&r.url){location.href=r.url;return;}
     _bpPay.busy=false;
-    _bpPay.flash=r&&r.reason==='not_configured'?'Card payments aren’t switched on for BuilderPro yet — tell us and we’ll enable it.':'Couldn’t open Stripe just now. Try again in a moment.';
+    _bpPay.flash=r&&r.reason==='not_configured'?'Card payments aren’t switched on for BuilderPro yet — tell us and we’ll enable it.'
+      :(r&&r.reason==='stripe'&&r.detail)?('Stripe said: '+r.detail)
+      :'Couldn’t open Stripe just now. Try again in a moment.';
     _bpPay.flashOk=false;bpPayRender();
   },function(){_bpPay.busy=false;_bpPay.flash='Couldn’t reach Stripe. Check your connection and try again.';_bpPay.flashOk=false;bpPayRender();});
 };
@@ -18264,6 +18266,7 @@ function bpPayFaq(){
   var d=/[#&]d=([^&]+)/.exec(location.hash||'');
   var msg={connected:['Stripe connected. Invoices are payable by card from now on.',true],
            denied:['Stripe sign-in was cancelled — nothing changed.',false],
+           refresh:['That Stripe link expired before you finished. Tap Connect with Stripe to pick up where you left off.',false],
            paid:['Payment received. It’s on the job already.',true],
            cancelled:['That payment was cancelled.',false],
            error:[(d?decodeURIComponent(d[1]):'Something went wrong connecting Stripe.'),false]}[st];
