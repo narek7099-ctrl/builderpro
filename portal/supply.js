@@ -389,10 +389,9 @@
     else {
       var js = jobs();
       h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>'
-        + '<div class="sp-items"><div class="sp-item sp-head"><span>Item</span><span>Qty</span><span>Unit</span><span></span></div>'
-        + (L.items || []).map(function (it, k) { return '<div class="sp-item"><input value="' + esc(it.name) + '" placeholder="What do you need" oninput="SP.itemEdit(' + k + ',\'name\',this.value)" list="sp-dl"><input value="' + esc(it.qty) + '" inputmode="decimal" oninput="SP.itemEdit(' + k + ',\'qty\',this.value)"><input value="' + esc(it.unit || '') + '" placeholder="ea" oninput="SP.itemEdit(' + k + ',\'unit\',this.value)"><button class="sp-x" onclick="SP.itemDel(' + k + ')" aria-label="Remove">&times;</button></div>'; }).join('')
-        + '</div><datalist id="sp-dl">' + uniqNames().slice(0, 300).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>'
-        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Add item</button><button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button><span class="bpx-mut" style="font-size:12.5px">Start typing and we suggest what your supply houses carry.</span></div>'
+        + pickerHtml()
+        + '<div id="sp-items">' + itemsHtml() + '</div>'
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Type one in</button><button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button></div>'
         + '<div class="sp-prio"><span class="bpx-mut">What matters today</span><div class="bpx-jobtabs"><button class="bpx-jt' + (SP.priority === 'fastest' ? ' on' : '') + '" onclick="SP.setPrio(\'fastest\')">Getting it today</button><button class="bpx-jt' + (SP.priority === 'cheapest' ? ' on' : '') + '" onclick="SP.setPrio(\'cheapest\')">Paying less</button></div>'
         + '<button class="bpx-btn sp-inline" onclick="SP.run()">Where do I buy this</button></div>'
         + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">A second stop is not free, so we count what a trip costs you: ' + money(SP.cost.stop) + ' a stop plus ' + money(SP.cost.min) + ' a minute of driving. <a href="#" onclick="SP.costOpen();return false" style="color:var(--blue)">Change</a></div>';
@@ -405,16 +404,19 @@
   SP.newList = function () {
     window.bpCloseModal();
     var js = jobs(), j = js[0];
-    db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the next job'), job_id: j ? j.id : '', job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [{ key: uid('k'), name: '', qty: 1, unit: 'ea' }] })
-      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpSupply(); var f = document.querySelector('.sp-item:not(.sp-head) input'); if (f) f.focus(); })
+    db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the next job'), job_id: j ? j.id : '', job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [] })
+      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpSupply(); var f = document.getElementById('sp-pk-q'); if (f) f.focus(); })
       .catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
   };
   var saveT = null;
   function saveList() { var L = SP.list; if (!L) return; clearTimeout(saveT); saveT = setTimeout(function () { db.update('parts_lists', L.id, { name: L.name, job_id: L.job_id || '', job_name: L.job_name || '', priority: SP.priority, items: L.items }).catch(function () {}); }, 500); }
   SP.listMeta = function () { var L = SP.list; if (!L) return; L.name = ($('sp-l-name') || {}).value || L.name; var jid = ($('sp-l-job') || {}).value || ''; L.job_id = jid; var j = jobs().filter(function (x) { return x.id === jid; })[0]; L.job_name = j ? j.name : ''; saveList(); };
   SP.itemEdit = function (k, f, v) { var it = (SP.list.items || [])[k]; if (!it) return; it[f] = f === 'qty' ? (+String(v).replace(/[^0-9.]/g, '') || 0) : v; SP.plans = null; saveList(); };
-  SP.itemAdd = function () { SP.list.items = SP.list.items || []; SP.list.items.push({ key: uid('k'), name: '', qty: 1, unit: 'ea' }); saveList(); window.bpSupply(); var ins = document.querySelectorAll('.sp-item:not(.sp-head) input'); if (ins.length) ins[ins.length - 3].focus(); };
-  SP.itemDel = function (k) { SP.list.items.splice(k, 1); SP.plans = null; saveList(); window.bpSupply(); };
+  /* Typing one in is still here, for the thing no price book has a row for.
+     Both of these redraw the list alone, so whatever is in the search box
+     survives — the two halves are used together. */
+  SP.itemAdd = function () { SP.list.items = SP.list.items || []; SP.list.items.push({ key: uid('k'), name: '', qty: 1, unit: 'ea' }); saveList(); pickRedraw(); var ins = document.querySelectorAll('.sp-item:not(.sp-head) input'); if (ins.length) ins[ins.length - 3].focus(); };
+  SP.itemDel = function (k) { SP.list.items.splice(k, 1); SP.plans = null; saveList(); pickRedraw(); };
   SP.setPrio = function (p) { SP.priority = p; if (SP.list) { SP.list.priority = p; saveList(); } window.bpSupply(); };
   SP.costOpen = function () {
     window.bpModal('<h3>What a trip to the supply house costs you</h3><div class="bpx-sub">Used by "cheapest" so a $6 saving never sends a tech across town.</div><div class="sp-r2">' + window.bpField('sp-c-stop', 'Per stop (loading, counter, paperwork)', SP.cost.stop, '60') + window.bpField('sp-c-min', 'Per minute of driving (truck + tech)', SP.cost.min, '1.20') + '</div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="SP.costSave()">Save</button></div>');
@@ -532,7 +534,8 @@
     ['Install', ['pad ', 'mount', 'stand', 'curb']],
     ['Duct', ['duct', 'plenum', 'register', 'grille']],
     /* painting: Prep above Paint, or painter's tape is read as paint */
-    ['Prep', ['tape', 'drop cloth', 'sand', 'joint compound', 'fabric', 'vapor barrier', 'plastic sheeting']],
+    /* not a bare 'fabric': it catches "cricket, fabricated" */
+    ['Prep', ['tape', 'drop cloth', 'sand', 'joint compound', 'landscape fabric', 'filter fabric', 'vapor barrier', 'plastic sheeting']],
     ['Paint', ['paint', 'primer', 'stain', 'lacquer', 'enamel']],
     ['Tools', ['roller', 'brush', 'spray tip', 'blade', 'knife', 'trowel', 'bucket']],
     /* electrical: the specific device above the material it is made of */
@@ -605,6 +608,210 @@
   }
   SP.catOf = catOf; SP.catOfName = catOfName; SP.icon = icon; SP.iconChip = iconChip;
   SP.categories = function () { return Object.keys(I); };
+
+  /* ================================================================
+     THE PICKER
+
+     A contractor knows what they need; what they do not know is the exact
+     wording their supply house prints on it. So the list is built by
+     searching the price books we already hold rather than by typing a name
+     into an empty box and hoping the matcher recognises it later. Picking
+     a real row carries its SKU, unit and price across, which is the whole
+     point: the sourcing engine then has nothing to guess at.
+
+     With nothing typed it shows what they bought last, because the same
+     dozen materials come up on almost every job.
+
+     Typing is still allowed — see itemAdd(). A line with no match becomes a
+     TBC item and the supplier prices it, exactly as before.
+     ================================================================ */
+  var PICK = { q: '' };
+
+  /* One row per distinct material, with every supplier that carries it
+     hanging off it, cheapest first. Rebuilt only when the price books
+     change, because this runs on every keystroke. */
+  var _idx = null, _idxN = -1;
+  function index() {
+    if (_idx && _idxN === SP.items.length) return _idx;
+    var by = {};
+    SP.items.forEach(function (it) {
+      var k = String(it.name || '').toLowerCase().trim();
+      if (!k) return;
+      var g = by[k] || (by[k] = { key: k, name: it.name, unit: it.unit || 'ea', cat: catOf(it), toks: toks(it.name), offers: [] });
+      g.offers.push(it);
+    });
+    var list = Object.keys(by).map(function (k) { return by[k]; });
+    list.forEach(function (g) {
+      g.offers.sort(function (a, b) {
+        var ap = a.price == null ? Infinity : +a.price, bp = b.price == null ? Infinity : +b.price;
+        return ap - bp;
+      });
+    });
+    _idx = { list: list, map: by }; _idxN = SP.items.length;
+    return _idx;
+  }
+  function groupFor(key) { return index().map[String(key || '').toLowerCase().trim()] || null; }
+
+  /* Every query word has to be accounted for, so "pex 3/4" narrows instead
+     of widening. Ranking puts what they literally typed at the top: the
+     name that starts with it, then the name that contains it. */
+  function search(q, n) {
+    var ql = String(q || '').toLowerCase().trim();
+    if (ql.length < 2) return [];
+    var qt = toks(ql), out = [];
+    index().list.forEach(function (g) {
+      var nl = g.name.toLowerCase();
+      var ok = qt.every(function (t) {
+        return g.toks.some(function (u) { return u.indexOf(t) === 0; }) || nl.indexOf(t) >= 0;
+      });
+      var sku = g.offers.some(function (o) { return String(o.sku || '').toLowerCase().indexOf(ql) === 0; });
+      if (!ok && !sku) return;
+      /* A word the item starts with beats the same letters buried inside
+         another word, or "shing" offers flashing before shingles. */
+      var s = nl.indexOf(ql) === 0 ? 5
+        : g.toks.some(function (u) { return u.indexOf(ql) === 0; }) ? 4
+        : sku ? 3
+        : nl.indexOf(ql) >= 0 ? 2 : 1;
+      out.push({ g: g, s: s });
+    });
+    out.sort(function (a, b) {
+      return b.s - a.s || b.g.offers.length - a.g.offers.length || a.g.name.length - b.g.name.length
+        || (a.g.name < b.g.name ? -1 : 1);
+    });
+    return out.slice(0, n || 24).map(function (x) { return x.g; });
+  }
+
+  /* What they actually buy, newest first: the lines off recent parts lists
+     and orders. A name we have never had a price for still shows — it was
+     on a real job, which is reason enough. */
+  function recent(n) {
+    var seen = {}, out = [], src = [];
+    SP.pos.forEach(function (p) { src.push([Date.parse(p.created_at || p.sent_at || 0) || 0, p.lines || []]); });
+    SP.lists.forEach(function (l) { src.push([Date.parse(l.created_at || 0) || 0, l.items || []]); });
+    src.sort(function (a, b) { return b[0] - a[0]; });
+    var onList = {};
+    ((SP.list && SP.list.items) || []).forEach(function (it) { onList[String(it.name || '').toLowerCase().trim()] = 1; });
+    for (var i = 0; i < src.length && out.length < (n || 12); i++) {
+      var lines = src[i][1];
+      for (var j = 0; j < lines.length && out.length < (n || 12); j++) {
+        var name = String(lines[j].name || '').trim(), k = name.toLowerCase();
+        if (!k || seen[k] || onList[k]) continue;
+        seen[k] = 1;
+        out.push(groupFor(k) || { key: k, name: name, unit: lines[j].unit || 'ea', cat: catOfName(name), offers: [] });
+      }
+    }
+    return out;
+  }
+
+  /* what this costs and whether it is on the shelf, across the houses that
+     carry it — the two things that decide whether it goes on the list */
+  function offerLine(g) {
+    if (!g.offers.length) return '<span class="sp-pk-none">No price yet — the supplier will quote it</span>';
+    var best = g.offers[0], s = supById(best.supplier_id);
+    var more = g.offers.length > 1 ? '<span class="sp-pk-more">+' + (g.offers.length - 1) + ' more</span>' : '';
+    var stock = best.stock == null ? '' : best.stock > 0
+      ? '<span class="sp-pk-stk ok">' + best.stock.toLocaleString() + ' on the shelf</span>'
+      : '<span class="sp-pk-stk out">none on the shelf</span>';
+    return '<b>' + (best.price == null ? '—' : money(best.price)) + '</b>'
+      + '<span class="sp-pk-sup">' + esc(s ? s.name : 'a supply house') + '</span>' + stock + more;
+  }
+  function pickRow(g, kind) {
+    return '<button class="sp-pk-row" data-k="' + esc(g.key) + '" onclick="SP.pickAdd(this.dataset.k)">'
+      + iconChip({ name: g.name, category: g.cat })
+      + '<span class="sp-pk-txt"><b>' + esc(g.name) + '</b><span class="sp-pk-meta">' + offerLine(g) + '</span></span>'
+      + '<span class="sp-pk-add">' + (kind === 'recent' ? 'Add' : '+') + '</span></button>';
+  }
+  function resultsHtml() {
+    var q = PICK.q;
+    if (String(q || '').trim().length >= 2) {
+      var res = search(q, 24);
+      if (!res.length) {
+        return '<div class="sp-pk-empty"><b>Nothing your supply houses carry matches that.</b>'
+          + '<span>Add it anyway and we will ask them to price it, or photograph a bill so we learn what they call it.</span>'
+          + '<span class="sp-pk-empty-b"><button class="bpx-rowbtn" onclick="SP.pickAddRaw()">Add &ldquo;' + esc(String(q).trim()) + '&rdquo; anyway</button>'
+          + '<button class="bpx-linkbtn" onclick="SP.scanOpen()">Photograph a bill</button></span></div>';
+      }
+      return '<div class="sp-pk-list">' + res.map(function (g) { return pickRow(g, 'search'); }).join('') + '</div>';
+    }
+    var rec = recent(12);
+    if (!rec.length) {
+      return '<div class="sp-pk-empty"><b>Search what your supply houses carry.</b>'
+        + '<span>Type a few letters — &ldquo;pex&rdquo;, &ldquo;shingle&rdquo;, &ldquo;20a&rdquo; — and pick the line. What you buy most will start showing up here.</span></div>';
+    }
+    return '<div class="sp-pk-lbl">What you buy most</div>'
+      + '<div class="sp-pk-list recent">' + rec.map(function (g) { return pickRow(g, 'recent'); }).join('') + '</div>';
+  }
+  function pickerHtml() {
+    return '<div class="sp-pk">'
+      + '<div class="sp-pk-box"><span class="ms">search</span>'
+      + '<input id="sp-pk-q" value="' + esc(PICK.q) + '" placeholder="Search what you need — we look in every price book you have"'
+      + ' autocomplete="off" oninput="SP.pickQ(this.value)" onkeydown="SP.pickKey(event)">'
+      + (PICK.q ? '<button class="sp-pk-clr" onclick="SP.pickQ(\'\',true)" aria-label="Clear">&times;</button>' : '')
+      + '</div><div id="sp-pk-res">' + resultsHtml() + '</div>'
+      + '<div id="sp-pk-flash" class="sp-pk-flash" role="status" aria-live="polite"></div></div>';
+  }
+  function itemsHtml() {
+    var L = SP.list, items = (L && L.items) || [];
+    /* the picker above and the list below are two different things, so the
+       list says so rather than running on from the search results */
+    var head = '<div class="sp-list-hd"><b>On the list</b>' + (items.length ? '<span>' + items.length + (items.length === 1 ? ' item' : ' items') + '</span>' : '') + '</div>';
+    if (!items.length) return head + '<div class="sp-items-none">Nothing yet. Search above, or <button class="bpx-linkbtn" onclick="SP.itemAdd()">type one in</button>.</div>';
+    return head + '<div class="sp-items"><div class="sp-item sp-head"><span></span><span>Item</span><span>Qty</span><span>Unit</span><span></span></div>'
+      + items.map(function (it, k) {
+        return '<div class="sp-item">' + iconChip({ name: it.name, category: it.cat }).replace('sp-chip', 'sp-chip sm')
+          + '<input value="' + esc(it.name) + '" placeholder="What do you need" oninput="SP.itemEdit(' + k + ',\'name\',this.value)" list="sp-dl">'
+          + '<input value="' + esc(it.qty) + '" inputmode="decimal" oninput="SP.itemEdit(' + k + ',\'qty\',this.value)">'
+          + '<input value="' + esc(it.unit || '') + '" placeholder="ea" oninput="SP.itemEdit(' + k + ',\'unit\',this.value)">'
+          + '<button class="sp-x" onclick="SP.itemDel(' + k + ')" aria-label="Remove">&times;</button></div>';
+      }).join('')
+      + '</div><datalist id="sp-dl">' + uniqNames().slice(0, 300).map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>';
+  }
+  /* Redraw the two halves without touching the search box, so the field
+     keeps its value and the caret while the list fills up underneath. */
+  function pickRedraw() {
+    var r = $('sp-pk-res'); if (r) r.innerHTML = resultsHtml();
+    var i = $('sp-items'); if (i) i.innerHTML = itemsHtml();
+  }
+  SP.pickQ = function (v, focus) {
+    PICK.q = v || '';
+    var box = $('sp-pk-q');
+    if (box && box.value !== PICK.q) box.value = PICK.q;
+    var clr = document.querySelector('.sp-pk-clr');
+    if (PICK.q && !clr && box) box.insertAdjacentHTML('afterend', '<button class="sp-pk-clr" onclick="SP.pickQ(\'\',true)" aria-label="Clear">&times;</button>');
+    if (!PICK.q && clr) clr.parentNode.removeChild(clr);
+    pickRedraw();
+    if (focus && box) box.focus();
+  };
+  SP.pickKey = function (e) {
+    if (!e) return;
+    if (e.key === 'Escape') { SP.pickQ('', true); return; }
+    /* Enter takes the top result, so a known item is two actions: type, Enter */
+    if (e.key === 'Enter') {
+      var first = document.querySelector('#sp-pk-res .sp-pk-row');
+      if (first) { e.preventDefault(); SP.pickAdd(first.dataset.k); }
+    }
+  };
+  /* Add a real price-book line: it carries the SKU and the unit the supply
+     house uses, so the sourcing engine matches it exactly rather than by
+     wording. Adding the same thing twice means two of them. */
+  SP.pickAdd = function (key) {
+    var L = SP.list; if (!L) return;
+    var g = groupFor(key);
+    var name = g ? g.name : String(key || '').trim();
+    if (!name) return;
+    L.items = L.items || [];
+    var on = L.items.filter(function (it) { return String(it.name || '').toLowerCase().trim() === name.toLowerCase(); })[0];
+    if (on) on.qty = (+on.qty || 0) + 1;
+    else L.items.push({ key: uid('k'), name: name, qty: 1, unit: (g && g.unit) || 'ea', sku: g && g.offers[0] ? g.offers[0].sku : '', cat: g ? g.cat : catOfName(name) });
+    SP.plans = null; saveList(); pickRedraw();
+    if (on) flash(name + ' is now ' + on.qty);
+  };
+  SP.pickAddRaw = function () { var q = String(PICK.q || '').trim(); if (!q) return; SP.pickAdd(q); SP.pickQ('', true); };
+  function flash(t) {
+    var e = $('sp-pk-flash'); if (!e) return;
+    e.textContent = t; e.className = 'sp-pk-flash on';
+    clearTimeout(flash._t); flash._t = setTimeout(function () { e.className = 'sp-pk-flash'; }, 1800);
+  }
 
   /* ---------- matching: a list line against a supplier's price book ---------- */
   var STOP = { the: 1, a: 1, of: 1, and: 1, in: 1, ft: 1, x: 1, per: 1, with: 1 };
@@ -1029,8 +1236,8 @@
   };
   SP.newListFor = function (jobId) {
     var j = (window.bpJobsGet ? bpJobsGet() : []).filter(function (x) { return x.id === jobId; })[0];
-    db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the job'), job_id: jobId, job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [{ key: uid('k'), name: '', qty: 1, unit: 'ea' }] })
-      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpCloseModal(); window.bpNav('supply'); setTimeout(function () { var f = document.querySelector('.sp-item:not(.sp-head) input'); if (f) f.focus(); }, 80); })
+    db.insert('parts_lists', { name: 'Parts for ' + (j ? j.name : 'the job'), job_id: jobId, job_name: j ? j.name : '', priority: SP.priority, status: 'draft', items: [] })
+      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpCloseModal(); window.bpNav('supply'); setTimeout(function () { var f = document.getElementById('sp-pk-q'); if (f) f.focus(); }, 80); })
       .catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
   };
   SP.barcode = barcodeSvg;
