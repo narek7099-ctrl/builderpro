@@ -377,21 +377,27 @@
     var h = tabs('supply') + state();
     if (!SP.sup.length) h += firstRun();
     h += whereBar();
-    /* list picker + builder */
+
+    /* Laid out as a shop: the aisle runs the full width of the screen, and
+       the list you are filling sits under it with the two sourcing answers
+       beside it. The picker used to share a half-width column with the
+       list, which left room for one product at a time. */
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
-    h += '<div class="sp-two"><div class="bpx-panel">'
+    h += '<div class="bpx-panel sp-shop">'
       + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">search any material, or pick the whole job</span></div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' + (open.length ? '<select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">Open a list you started</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select>' : '') + '<button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button>' + '</div></div>';
-    /* The search box is the page, so it is always here. It used to live
-       inside the "you have a list open" branch, which meant arriving at
-       the tab showed a cue to pick a job and no way to search at all. The
-       list is now created on the first thing they add instead. */
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+      + (open.length ? '<select id="sp-list-pick" onchange="SP.pick(this.value)" class="sp-sel"><option value="">Open a list you started</option>' + open.map(function (l) { return '<option value="' + l.id + '"' + (L && L.id === l.id ? ' selected' : '') + '>' + esc(l.name) + (l.job_name ? ' (' + esc(l.job_name) + ')' : '') + '</option>'; }).join('') + '</select>' : '')
+      + '<button class="bpx-addbtn" onclick="SP.kitOpen()">+ Pick the job</button></div></div>'
+      + pickerHtml()
+      + '</div>';
+
+    /* the list being filled, and what it will cost where */
+    h += '<div class="sp-two" style="margin-top:14px"><div class="bpx-panel">';
     if (L) {
       var js = jobs();
-      h += '<div class="sp-r2" style="margin-top:12px"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>';
+      h += '<div class="sp-r2"><div><label>List name</label><input id="sp-l-name" value="' + esc(L.name) + '" onchange="SP.listMeta()"></div><div><label>Job</label><select id="sp-l-job" onchange="SP.listMeta()"><option value="">No job (overhead)</option>' + js.map(function (j) { return '<option value="' + j.id + '"' + (L.job_id === j.id ? ' selected' : '') + '>' + esc(j.name + (j.title ? ', ' + j.title : '')) + '</option>'; }).join('') + '</select></div></div>';
     }
-    h += pickerHtml()
-      + '<div id="sp-items">' + itemsHtml() + '</div>'
+    h += '<div id="sp-items">' + itemsHtml() + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center"><button class="bpx-rowbtn" onclick="SP.itemAdd()">+ Type one in</button>'
       + (L && (L.items || []).length ? '<button class="bpx-rowbtn" onclick="SP.kitSaveOpen()">Save as a kit</button>' : '')
       + '<span class="bpx-mut" style="font-size:12.5px">Doing a whole job? <button class="bpx-linkbtn" onclick="SP.kitOpen()">Pick the job and the size</button> and the list fills itself in.</span></div>'
@@ -665,7 +671,7 @@
      contractor's own book, so the sourcing engine and every purchase
      order downstream still run on real numbers only.
      ================================================================ */
-  var PICK = { q: '', trade: '' };
+  var PICK = { q: '', trade: '', cat: '', n: 20 };
 
   function norm(s) { return String(s || '').toLowerCase().trim().replace(/\s+/g, ' '); }
 
@@ -787,22 +793,12 @@
     }
     return out;
   }
-  /* Before there is any history: the catalog's own staples for their trade,
-     so tab one is never an empty box. */
-  function starters(n) {
-    var t = PICK.trade, onList = {};
-    ((SP.list && SP.list.items) || []).forEach(function (it) { onList[norm(it.name)] = 1; });
-    return index().list.filter(function (g) {
-      return (!t || g.trade === t) && !onList[g.key];
-    }).slice(0, n || 10);
-  }
-
   /* ---------- who sells it ---------- */
-  function storeChips(g) {
+  function storeChips(g, lim) {
     if (!g.car || !g.car.length) return '';
     var mine = myChains();
     var ids = g.car.slice().sort(function (a, b) { return (mine[b] ? 1 : 0) - (mine[a] ? 1 : 0); });
-    var shown = ids.slice(0, 4), rest = ids.length - shown.length;
+    var shown = ids.slice(0, lim || 4), rest = ids.length - shown.length;
     return '<span class="sp-pk-stores">' + shown.map(function (id) {
       var nm = chainName(id);
       return '<button class="sp-store' + (mine[id] ? ' mine' : '') + '" data-c="' + esc(id) + '"'
@@ -840,36 +836,94 @@
      buttons, and a button inside a button is invalid HTML that the parser
      silently hoists out — which is exactly how the store chips vanished
      the first time. Keyboard behaviour is put back by hand. */
-  function pickRow(g, kind) {
-    return '<div class="sp-pk-row" role="button" tabindex="0" data-k="' + esc(g.key) + '"'
-      + ' onclick="SP.pickAdd(this.dataset.k)" onkeydown="SP.rowKey(event,this)">'
-      + iconChip({ name: g.name, category: g.cat })
-      + '<span class="sp-pk-txt"><b>' + esc(g.name) + '</b>'
-      + '<span class="sp-pk-meta">' + priceLine(g) + '</span>'
-      + storeChips(g) + '</span>'
-      + '<span class="sp-pk-add">' + (kind === 'search' ? '+' : 'Add') + '</span></div>';
+  /* ---------- the shelf ----------
+     A product card, not a row: picture, name, price, who stocks it. The
+     picture is the category icon on a tinted panel, because there are no
+     photographs to show and a card with an empty image well looks broken.
+     A card already on the list wears its count, the way a basket does.
+
+     Deliberately a div: each card carries its own store buttons, and a
+     button inside a button is invalid HTML the parser silently hoists out,
+     which is how the store chips vanished the first time. */
+  function onListQty(name) {
+    var it = ((SP.list && SP.list.items) || []).filter(function (x) { return norm(x.name) === norm(name); })[0];
+    return it ? (+it.qty || 0) : 0;
+  }
+  function pickCard(g) {
+    var n = onListQty(g.name);
+    return '<div class="sp-card' + (n ? ' on' : '') + '" role="button" tabindex="0" data-k="' + esc(g.key) + '"'
+      + ' onclick="SP.pickAdd(this.dataset.k)" onkeydown="SP.rowKey(event,this)" title="' + esc(g.name) + '">'
+      + '<div class="sp-card-art">' + icon(catOf({ name: g.name, category: g.cat }), 'big')
+      + (n ? '<span class="sp-card-n">' + n + '</span>' : '') + '</div>'
+      + '<b class="sp-card-nm">' + esc(g.name) + '</b>'
+      + '<div class="sp-card-price">' + priceLine(g) + '</div>'
+      + storeChips(g, 3)
+      + '<span class="sp-card-add">' + (n ? 'Add another' : 'Add') + '</span></div>';
   }
   SP.rowKey = function (e, el) {
     if (!e || (e.key !== 'Enter' && e.key !== ' ')) return;
     e.preventDefault(); SP.pickAdd(el.dataset.k);
   };
+
+  /* Departments, the way a store has aisles. Built from whatever is on the
+     shelf right now, so they never offer an empty one. */
+  function departments(rows) {
+    var by = {};
+    rows.forEach(function (g) { var c = catOf({ name: g.name, category: g.cat }); by[c] = (by[c] || 0) + 1; });
+    return Object.keys(by).sort(function (a, b) { return by[b] - by[a] || (a < b ? -1 : 1); })
+      .slice(0, 12).map(function (c) { return [c, by[c]]; });
+  }
+  function deptBar(rows) {
+    var d = departments(rows);
+    if (d.length < 2) return '';
+    return '<div class="sp-depts"><button class="sp-dept' + (PICK.cat ? '' : ' on') + '" onclick="SP.pickCat(\'\')">All<i>' + rows.length + '</i></button>'
+      + d.map(function (x) {
+        return '<button class="sp-dept' + (PICK.cat === x[0] ? ' on' : '') + '" onclick="SP.pickCat(this.dataset.c)" data-c="' + esc(x[0]) + '">'
+          + icon(x[0]) + esc(x[0]) + '<i>' + x[1] + '</i></button>';
+      }).join('') + '</div>';
+  }
+  SP.pickCat = function (c) { PICK.cat = c || ''; PICK.n = PAGE; pickRedraw(); };
+
+  var PAGE = 20;
   function resultsHtml() {
-    var q = PICK.q;
+    var q = PICK.q, rows, lbl;
     if (norm(q).length >= 2) {
-      var res = search(q, 30);
-      if (!res.length) {
+      rows = search(q, 240); lbl = rows.length + (rows.length === 1 ? ' match' : ' matches') + ' for &ldquo;' + esc(String(q).trim()) + '&rdquo;';
+      if (!rows.length) {
         return '<div class="sp-pk-empty"><b>Nothing in the catalog or your price books matches that.</b>'
           + '<span>Add it anyway and whoever you order from will price it.</span>'
           + '<span class="sp-pk-empty-b"><button class="bpx-rowbtn" onclick="SP.pickAddRaw()">Add &ldquo;' + esc(String(q).trim()) + '&rdquo; anyway</button></span></div>';
       }
-      return '<div class="sp-pk-list">' + res.map(function (g) { return pickRow(g, 'search'); }).join('') + '</div>';
+    } else {
+      var rec = recent(240);
+      if (rec.length >= 4) { rows = rec; lbl = 'What you buy most'; }
+      else { rows = browse(); lbl = 'Common on your kind of job'; }
     }
-    var rec = recent(10), lbl = 'What you buy most';
-    if (!rec.length) { rec = starters(10); lbl = 'Common on your kind of job'; }
-    if (!rec.length) return '';
-    return '<div class="sp-pk-lbl">' + lbl + '</div>'
-      + '<div class="sp-pk-list recent">' + rec.map(function (g) { return pickRow(g, 'recent'); }).join('') + '</div>';
+    var bar = deptBar(rows);
+    if (PICK.cat) rows = rows.filter(function (g) { return catOf({ name: g.name, category: g.cat }) === PICK.cat; });
+    var n = Math.min(PICK.n || PAGE, rows.length);
+    var more = rows.length - n;
+    return bar
+      + '<div class="sp-pk-lbl">' + lbl + (PICK.cat ? ' &middot; ' + esc(PICK.cat) : '') + '</div>'
+      + '<div class="sp-shelf">' + rows.slice(0, n).map(pickCard).join('') + '</div>'
+      + (more > 0 ? '<div class="sp-more"><button class="bpx-rowbtn" onclick="SP.pickMore()">Show ' + Math.min(more, PAGE) + ' more</button><span class="bpx-mut">' + n + ' of ' + rows.length + '</span></div>' : '');
   }
+  SP.pickMore = function () { PICK.n = (PICK.n || PAGE) + PAGE; pickRedraw(); };
+  /* the aisle you walk when you have not asked for anything: the catalog
+     for their trade, their own priced items first */
+  function browse() {
+    var t = PICK.trade, list = index().list, at = {};
+    list.forEach(function (g, i) { at[g.key] = i; });
+    /* Things they have a real price for come first, then their own trade,
+       then the rest in catalog order — which keeps each trade's materials
+       together instead of interleaving nine trades on one shelf. */
+    return list.slice().sort(function (a, b) {
+      return (b.offers.length ? 1 : 0) - (a.offers.length ? 1 : 0)
+        || (t ? ((b.trade === t ? 1 : 0) - (a.trade === t ? 1 : 0)) : 0)
+        || at[a.key] - at[b.key];
+    });
+  }
+
   function pickerHtml() {
     if (PICK.trade === '' && window.bpSettingsGet) {
       var t = String(((bpSettingsGet().company) || {}).trade || '').toLowerCase();
@@ -894,6 +948,7 @@
       + '<div id="sp-pk-res">' + resultsHtml() + '</div>'
       + '<div id="sp-pk-flash" class="sp-pk-flash" role="status" aria-live="polite"></div></div>';
   }
+
   function itemsHtml() {
     var L = SP.list, items = (L && L.items) || [];
     var head = '<div class="sp-list-hd"><b>On the list</b>' + (items.length ? '<span>' + items.length + (items.length === 1 ? ' item' : ' items') + '</span>' : '') + '</div>';
@@ -915,6 +970,7 @@
     var i = $('sp-items'); if (i) i.innerHTML = itemsHtml();
   }
   SP.pickQ = function (v, focus) {
+    if ((v || '') !== PICK.q) { PICK.cat = ''; PICK.n = PAGE; }
     PICK.q = v || '';
     var box = $('sp-pk-q');
     if (box && box.value !== PICK.q) box.value = PICK.q;

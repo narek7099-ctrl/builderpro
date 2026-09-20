@@ -363,3 +363,62 @@
 #bpx .sp-firstrun-t span{display:block;font-size:12.5px;line-height:1.55;color:var(--grey);margin-top:3px}
 #bpx .sp-firstrun-b{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-left:38px}
 @media(max-width:560px){#bpx .sp-firstrun-b{padding-left:0}}
+
+/* ==================================================================
+   THE SHELF — materials laid out like a store, full width.
+   auto-fill with a 200px floor lands on 5 across at a normal desktop
+   width and reflows down to 2 on a phone, rather than pinning a count
+   that would squash the cards on a laptop.
+   ================================================================== */
+#bpx .sp-shop{padding-bottom:18px}
+#bpx .sp-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-top:10px}
+@media(min-width:1700px){#bpx .sp-shelf{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+@media(max-width:900px){#bpx .sp-shelf{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px}}
+@media(max-width:520px){#bpx .sp-shelf{grid-template-columns:1fr 1fr;gap:9px}}
+
+#bpx .sp-card{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:14px;background:var(--card,#fff);padding:11px;cursor:pointer;text-align:left;position:relative;transition:border-color .15s,box-shadow .15s,transform .15s}
+#bpx .sp-card:hover,#bpx .sp-card:focus-visible{border-color:var(--blue);box-shadow:0 6px 18px rgba(0,111,255,.1);transform:translateY(-2px);outline:none}
+#bpx .sp-card.on{border-color:#9fd9b8;background:linear-gradient(0deg,rgba(15,122,61,.04),rgba(15,122,61,.04)),var(--card,#fff)}
+@media(prefers-reduced-motion:reduce){#bpx .sp-card{transition:none}#bpx .sp-card:hover{transform:none}}
+/* the picture well: a big category icon, since there are no photographs */
+#bpx .sp-card-art{position:relative;display:flex;align-items:center;justify-content:center;height:86px;border-radius:10px;background:var(--soft);color:var(--grey)}
+#bpx .sp-card-art .sp-ic.big{width:40px;height:40px}
+#bpx .sp-card-n{position:absolute;top:6px;right:6px;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#0f7a3d;color:#fff;font-size:11.5px;font-weight:700;padding:0 6px}
+#bpx .sp-card-nm{font-size:13px;font-weight:650;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px}
+#bpx .sp-card-price{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);min-height:20px}
+#bpx .sp-card-price>b{font-size:14px;font-weight:700;color:var(--ink)}
+#bpx .sp-card-price>b.typ{font-size:13px;font-weight:650;color:var(--grey)}
+/* inside a card the price line is a stack, not a sentence */
+#bpx .sp-card-price .sp-pk-sup,#bpx .sp-card-price .sp-pk-more{flex-basis:100%;font-size:11.5px}
+#bpx .sp-card-price .sp-pk-stk{font-size:11px}
+#bpx .sp-card .sp-pk-stores{margin-top:auto;padding-top:2px}
+#bpx .sp-card .sp-store{font-size:10.5px;padding:2px 7px}
+#bpx .sp-card-add{display:block;text-align:center;border:1px solid var(--line);border-radius:9px;padding:7px 0;font-size:12.5px;font-weight:650;color:var(--grey);background:var(--tint,#f4f6fa)}
+#bpx .sp-card:hover .sp-card-add{border-color:var(--blue);color:#fff;background:var(--blue)}
+#bpx .sp-card.on .sp-card-add{color:#0f7a3d;border-color:#9fd9b8;background:#e7f7ee}
+#bpx.bpx-dark .sp-card-art{background:rgba(255,255,255,.05)}
+#bpx.bpx-dark .sp-card.on{border-color:rgba(52,168,110,.45)}
+#bpx.bpx-dark .sp-card.on .sp-card-add{color:#6cbd8a;background:rgba(52,168,110,.14);border-color:rgba(52,168,110,.35)}
+
+/* departments, the way a store has aisles */
+#bpx .sp-depts{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+#bpx .sp-dept{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;background:var(--card,#fff);color:var(--grey);font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;cursor:pointer;white-space:nowrap}
+#bpx .sp-dept .sp-ic{width:15px;height:15px}
+#bpx .sp-dept i{font-style:normal;font-size:11px;font-weight:600;opacity:.6}
+#bpx .sp-dept:hover{border-color:var(--blue);color:var(--blue)}
+#bpx .sp-dept.on{background:var(--ink);border-color:var(--ink);color:#fff}
+#bpx .sp-dept.on i{opacity:.75}
+#bpx.bpx-dark .sp-dept.on{background:var(--blue);border-color:var(--blue)}
+
+#bpx .sp-more{display:flex;align-items:center;gap:12px;justify-content:center;margin-top:14px}
+#bpx .sp-more .bpx-mut{font-size:12px}
+/* the shelf is the page now, so the old scrolling row list is retired */
+#bpx .sp-pk-list{max-height:none;overflow:visible}
+
+/* shop header: the subtitle sits beside the title on a wide panel, so it
+   needs the gap that a wrapped line used to give it for free */
+#bpx .sp-shop .bpx-ptitle .lg2{margin-left:10px}
+/* a card is not a row: the supplier line carries the stock, and "+2 more"
+   is dropped because the store chips underneath already say who else has it */
+#bpx .sp-card-price .sp-pk-more{display:none}
+#bpx .sp-card-price .sp-pk-sup{flex-basis:100%;margin-bottom:-2px}
