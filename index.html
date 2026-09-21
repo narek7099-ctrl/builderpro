@@ -13029,7 +13029,8 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 @keyframes tb{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
 
 /* ==== client portal ==== */
-#bpx{position:fixed;inset:0;z-index:2100;background:var(--bg);display:none;overflow-y:auto;}
+#bpx{position:fixed;inset:0;z-index:2100;background:var(--bg);display:none;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 #bpx.open{display:block;}
 .bpx-close{position:fixed;top:16px;right:20px;z-index:10;width:40px;height:40px;border-radius:50%;background:#f4f3ee;border:1px solid var(--line);color:#444;font-size:20px;}
 .bpx-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
@@ -13215,9 +13216,17 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
    had to find "the thing that scrolls" could only be right in one of them.
    The theme decides colours; it has no business deciding layout. */
 @media(min-width:821px){
-  #bpx .bpx-app.on{height:100vh;height:100dvh;overflow:hidden;}
-  #bpx .bpx-app.on .bpx-main{overflow-y:auto;height:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
-  #bpx .bpx-app.on .bpx-side{height:100%;overflow-y:auto;}
+  /* The row is sized explicitly and the children are allowed to be shorter
+     than their content. .bpx-main used to say height:100% — a percentage
+     against a row that was never given a height, which some engines resolve
+     against the content instead of the shell. When that happens the column
+     is exactly as tall as what is in it, there is nothing to scroll, and the
+     shell's overflow:hidden quietly crops the rest. minmax(0,1fr) plus
+     min-height:0 is the same layout without the percentage. */
+  #bpx .bpx-app.on{height:100vh;height:100dvh;overflow:hidden;grid-template-rows:minmax(0,1fr);}
+  #bpx .bpx-app.on .bpx-main{overflow-y:auto;min-height:0;box-sizing:border-box;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+  #bpx .bpx-app.on .bpx-side{min-height:0;overflow-y:auto;}
 }
 #bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
@@ -13517,8 +13526,8 @@ document.querySelectorAll('.qa-q').forEach(function(q){q.addEventListener('click
 });});
 
 /* ---- legal ---- */
-function openLegal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeLegal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+function openLegal(id){document.getElementById(id).classList.add('open');bpSyncLock();}
+function closeLegal(id){document.getElementById(id).classList.remove('open');bpSyncLock();}
 
 /* ---- contact ---- */
 function contactSend(){alert("Message sent! We'll be in touch within 24 hours.");}
@@ -13626,9 +13635,9 @@ function estRestart(){
 }
 
 /* ==================== PLAN MODAL ==================== */
-function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.modal-ov.open').forEach(function(m){m.classList.remove('open');});document.body.style.overflow='';}});
+function openModal(id){document.getElementById(id).classList.add('open');bpSyncLock();}
+function closeModal(id){document.getElementById(id).classList.remove('open');bpSyncLock();}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.modal-ov.open').forEach(function(m){m.classList.remove('open');});bpSyncLock();}});
 var BP_ORDER={
   'Foundation':{id:'eYfJMFmsAwsqMwYFfn5W',h:1069,name:'Order Form 499'},
   'BuilderPro OS':{id:'QQLxpErUhpcsiFl9UCyS',h:1085,name:'Order Form 899'},
@@ -13964,10 +13973,41 @@ function bpSet(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
 function bpFriendly(m){if(!m)return 'Something went wrong. Please try again.';if(/invalid login/i.test(m))return 'Incorrect email or password.';if(/rate limit/i.test(m))return 'Too many attempts. Please wait a moment and try again.';return m;}
 
 function bpOpenPortal(){
-  document.getElementById('bpx').classList.add('open');document.body.style.overflow='hidden';
+  document.getElementById('bpx').classList.add('open');bpSyncLock();
   if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){bpEnterPortal(r.data.session.user.email);}}).catch(function(){});}
 }
-function bpClose(){document.getElementById('bpx').classList.remove('open');document.body.style.overflow='';}
+function bpClose(){document.getElementById('bpx').classList.remove('open');bpSyncLock();}
+/* The page behind an overlay must not scroll, and the page behind NOTHING
+   must. Five different functions were setting body.style.overflow by hand and
+   clearing it by hand, so the truth depended on them running in the right
+   order — close a legal panel while the portal is open and the lock was gone;
+   leave by a path that forgot to clear it and the site stayed frozen with no
+   way back. This asks the DOM what is actually open and sets it from that.
+   Two things lock it: the portal overlay, and a modal. */
+function bpSyncLock(){
+  var open=document.querySelector('#bpx.open, .modal-ov.open');
+  document.body.style.overflow=open?'hidden':'';
+}
+window.bpSyncLock=bpSyncLock;
+/* A net under it, so the lock survives a path nobody thought of. Watched on
+   the overlays themselves rather than the whole document: a subtree watch
+   would fire on every class change on the page, and hovering a chart changes
+   half a dozen of them a frame. */
+function bpWatchLock(){
+  if(!window.MutationObserver)return;
+  var mo=new MutationObserver(function(){
+    if(bpWatchLock.q)return;
+    bpWatchLock.q=requestAnimationFrame(function(){bpWatchLock.q=0;bpSyncLock();});
+  });
+  var seen=document.querySelectorAll('#bpx, .modal-ov');
+  for(var i=0;i<seen.length;i++)mo.observe(seen[i],{attributes:true,attributeFilter:['class']});
+  bpSyncLock();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bpWatchLock);
+else bpWatchLock();
+/* coming back through the back button restores a page from cache with whatever
+   inline style it had when it left */
+window.addEventListener('pageshow',bpSyncLock);
 /* coming back from an ad-account connection lands on the site — open the portal straight away */
 if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
 function bpEnterPortal(email){
