@@ -18246,6 +18246,74 @@ function bpFinLedger(){_bpFinView='ledger';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
 var BPEST_NOTE='<div class="bpx-when-note">Estimates aren\'t set up yet. Deploy the <b>ghl-estimate</b> function to enable them.</div>';
+/* ===== Charts on the invoice and estimate lists ==========================
+   Both lists answer "what did I send"; neither answers "what am I owed, and
+   how late is it" — which is the question that actually costs a contractor
+   money. These two charts sit above the list and answer it. */
+function bpInvCharts(){
+  if(!window.bpChart)return '';
+  var items=window._bpInvItems||[];
+  if(items.length<2)return '';
+  var st=function(v){return String(v.status||'draft').toLowerCase();};
+  var paid=0,owed=0,byStatus={},aging=[0,0,0,0];
+  var LATE=['Not due yet','1–30 days late','31–60 days late','Over 60 days late'];
+  items.forEach(function(v){
+    var amt=+v.total||0, s=st(v);
+    byStatus[s]=(byStatus[s]||0)+amt;
+    if(s==='paid'){paid+=amt;return;}
+    if(s==='void')return;
+    owed+=amt;
+    var due=v.dueDate?Date.parse(v.dueDate):NaN;
+    var days=isNaN(due)?0:Math.floor((Date.now()-due)/864e5);
+    aging[days<=0?0:days<=30?1:days<=60?2:3]+=amt;
+  });
+  var grand=paid+owed;
+  if(!(grand>0))return '';
+  var left='<div>'+bpChart.progress({
+    title:'Collected against everything you have billed',
+    value:paid,target:grand,fmt:bpMoneyFmt,
+    tone:owed>paid?'warn':'',
+    note:bpMoneyFmt(owed)+' still out'
+  })+'<div style="margin-top:14px">'+bpChart.ranked({
+    title:'By status',lead:'every invoice on this list',
+    rows:Object.keys(byStatus).map(function(k){return {label:k.charAt(0).toUpperCase()+k.slice(1).replace(/-/g,' '),value:byStatus[k]};}),
+    fmt:bpMoneyFmt,axis:'Status'
+  })+'</div></div>';
+  var right='<div>'+(owed>0?bpChart.columns({
+    title:'How late the unpaid ones are',
+    lead:bpMoneyFmt(owed)+' outstanding · by how far past its due date',
+    x:{label:'Age',values:LATE},
+    series:[{name:'Outstanding',values:aging}],
+    fmt:bpMoneyFmt,height:200
+  }):bpChart.empty({title:'How late the unpaid ones are',empty:'Everything you have billed is paid. Nothing is aging.'}))+'</div>';
+  return '<div class="bpc-two" style="margin-bottom:16px">'+left+right+'</div>';
+}
+function bpEstCharts(){
+  if(!window.bpChart)return '';
+  var items=window._bpEstItems||[];
+  if(items.length<2)return '';
+  var byStatus={},won=0,decided=0,open=0;
+  items.forEach(function(v){
+    var amt=+v.total||0, s=String(v.status||'draft').toLowerCase();
+    byStatus[s]=(byStatus[s]||0)+amt;
+    if(s==='accepted'||s==='invoiced'){won+=amt;decided+=amt;}
+    else if(s==='declined'||s==='expired')decided+=amt;
+    else if(s==='sent')open+=amt;
+  });
+  var tot=Object.keys(byStatus).reduce(function(t,k){return t+byStatus[k];},0);
+  if(!(tot>0))return '';
+  return '<div class="bpc-two" style="margin-bottom:16px">'
+    +'<div>'+(decided>0?bpChart.progress({
+      title:'Of the quotes that got an answer, what you won',
+      value:won,target:decided,fmt:bpMoneyFmt,
+      note:open>0?bpMoneyFmt(open)+' still waiting on a yes':'nothing still waiting'
+    }):bpChart.empty({title:'What you win',empty:'Nothing accepted or declined yet. Once customers start answering, your win rate shows here.'}))+'</div>'
+    +'<div>'+bpChart.ranked({
+      title:'Where your quotes stand',lead:bpMoneyFmt(tot)+' quoted across '+items.length+' estimate'+(items.length===1?'':'s'),
+      rows:Object.keys(byStatus).map(function(k){return {label:k.charAt(0).toUpperCase()+k.slice(1),value:byStatus[k]};}),
+      fmt:bpMoneyFmt,axis:'Status'
+    })+'</div></div>';
+}
 function bpEstLoad(){
   var el=q('bpxEstList'); if(!el) return;
   if(!window.BP_LIVE){ el.innerHTML='<span class="bpx-mut">Estimates are available on live accounts.</span>'; return; }
@@ -18266,7 +18334,7 @@ window.bpEstDraw=function(){
   if(!items.length){ el.innerHTML='<span class="bpx-mut">No estimates yet. Send your first with + New estimate.</span>'; return; }
   var pg=bpPage('estimates',items,5,'bpEstDraw()');
   var stc={accepted:'#15803d',sent:'#2457d6',draft:'#6a6a70',declined:'#dc2626',invoiced:'#7c3aed',expired:'#9a9aa0'};
-  el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
+  el.innerHTML=bpEstCharts()+'<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
     +pg.items.map(function(v){
       var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
       var ex=v.expiryDate?new Date(v.expiryDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
@@ -18390,7 +18458,7 @@ window.bpInvDraw=function(){
   if(!items.length){ el.innerHTML='<span class="bpx-mut">No invoices yet. Send your first with + New invoice.</span>'; return; }
   var pg=bpPage('invoices',items,5,'bpInvDraw()');
   var stc={paid:'#15803d','partially-paid':'#d97706',sent:'#2457d6',draft:'#6a6a70',overdue:'#dc2626',void:'#9a9aa0'};
-  el.innerHTML='<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
+  el.innerHTML=bpInvCharts()+'<table class="bpx-ctable"><thead><tr><th>Invoice</th><th>Customer</th><th>Due</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
     +pg.items.map(function(v){
       var col=stc[String(v.status||'').toLowerCase()]||'#6a6a70';
       var due=v.dueDate?new Date(v.dueDate).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
@@ -18881,6 +18949,33 @@ function bpSoPane(){
   return h+bpSoOverviewPane();
 }
 function bpSoChip(ch){var c=BP_SO_CH[ch]||{n:ch,c:'#64748b'};return '<span class="bpx-so-chip" style="--c:'+c.c+'">'+c.n+'</span>';}
+/* "Best recent posts" tells them which post worked. It does not tell them
+   whether posting is working — whether engagement is going anywhere, and which
+   channel is carrying it. Reach and engagement are different sizes, so they
+   never share an axis: one chart each. */
+function bpSoCharts(){
+  if(!window.bpChart)return '';
+  var f=_bpSo.stats.facebook||{}, i=_bpSo.stats.instagram||{};
+  var posts=[].concat(f.posts||[],i.posts||[]).filter(function(p){return p.at&&!isNaN(Date.parse(p.at));});
+  var chan=[];
+  if(f.followers||f.reach||f.engagement)chan.push({label:'Facebook',value:+f.reach||0});
+  if(i.followers||i.reach)chan.push({label:'Instagram',value:+i.reach||0});
+  chan=chan.filter(function(c){return c.value>0;});
+  var eng=posts.length>=2?bpChart.byMonth(posts,6,function(p){return p.at;},function(p){return +p.engagement||0;}):null;
+  var left=eng&&eng.values.some(function(v){return v>0;})
+    ? bpChart.columns({title:'Engagement, month by month',
+        lead:'likes, comments and clicks on the posts we can see',
+        x:{label:'Month',values:eng.labels},
+        series:[{name:'Engagement',values:eng.values}],fmt:bpNum,height:200})
+    : bpChart.empty({title:'Engagement, month by month',
+        empty:'Post a few times and the engagement your posts earn is drawn here, month by month.'});
+  var right=chan.length?bpChart.ranked({title:'Which channel reaches more people',
+      lead:'people who saw your posts · last 28 days',
+      rows:chan,fmt:bpNum,axis:'Channel'})
+    : bpChart.empty({title:'Which channel reaches more people',
+        empty:'Reach shows up once your accounts have published posts we can measure.'});
+  return '<div class="bpc-two" style="margin-top:16px"><div class="bpx-panel">'+left+'</div><div class="bpx-panel">'+right+'</div></div>';
+}
 function bpSoOverviewPane(){
   if(!bpSoAny())return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No social accounts connected</b>Connect your Facebook Page (Instagram comes with it) and Google Business Profile to see followers, reach and your best posts here — and to post to all of them at once.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpSoTab(\'accounts\')">Connect accounts</button></div></div></div>';
   var f=_bpSo.stats.facebook, i=_bpSo.stats.instagram;
@@ -18892,6 +18987,7 @@ function bpSoOverviewPane(){
   else if(_bpSo.conn.facebook)h+='<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip('instagram')+'<span class="bpx-mut" style="font-size:12.5px;margin-left:8px">not linked to your Page</span></div><div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Link your Instagram business account to the Facebook Page (Page settings → Linked accounts) and reconnect. Then Instagram posting and numbers show up here.</div></div>';
   if(_bpSo.conn.gbp)h+='<div class="bpx-panel bpx-so-acct"><div class="bpx-so-acct-h">'+bpSoChip('gbp')+'<span class="bpx-mut" style="font-size:12.5px;margin-left:8px">connected</span></div><div class="bpx-mut" style="font-size:12.5px;line-height:1.5">Posts here appear on your Google listing. Calls, directions and website clicks live in <a onclick="bpNav(\'marketing\')" style="color:var(--blue);cursor:pointer;font-weight:600">Ads &amp; Listings</a>.</div></div>';
   h+='</div>';
+  h+=bpSoCharts();
   var top=[].concat((f&&f.posts)||[],(i&&i.posts)||[]).sort(function(a,b){return (+b.engagement||0)-(+a.engagement||0);}).slice(0,6);
   if(top.length){
     h+='<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><b style="font-size:14px">Best recent posts</b><span class="bpx-mut" style="font-size:12px">by engagement · last 8 per channel</span></div><div class="bpx-so-top">'
@@ -19134,6 +19230,31 @@ function bpCpPane(){
   if(t==='win')return h+bpCpWinPane();
   return h+bpCpScorePane();
 }
+/* The scoreboard table already ranks them. What it does not show is the size
+   of the gap — and a gap of 40 reviews is a different problem from a gap of
+   400. Two charts, one measure each: never reviews and rating on one axis. */
+function bpCpCharts(list){
+  if(!window.bpChart||list.length<2)return '';
+  /* whatever the cap trims, you are always on the chart: your own bar is the
+     one the contractor is looking for */
+  var you=list.filter(function(x){return x.you;})[0];
+  var top=list.filter(function(x){return !x.you;}).slice(0,9);
+  var shown=you?top.slice(0,9).concat([you]):top;
+  var lbl=function(x){return (x.name||'A business')+(x.you?' (you)':'');};
+  var rev=shown.filter(function(x){return x.reviews>0;}).map(function(x){return {label:lbl(x),value:x.reviews,mine:!!x.you};});
+  var rat=shown.filter(function(x){return x.rating>0;}).map(function(x){return {label:lbl(x),value:x.rating,mine:!!x.you};});
+  if(!rev.length&&!rat.length)return '';
+  var gap=you&&top.length&&top[0].reviews>you.reviews?(top[0].reviews-you.reviews):0;
+  return '<div class="bpc-two" style="margin-bottom:16px">'
+    +'<div class="bpx-panel">'+bpChart.ranked({
+      title:'Reviews, side by side',
+      lead:gap?bpNum(gap)+' reviews behind the top listing':'you have the most reviews of the businesses you track',
+      rows:rev,fmt:bpNum,axis:'Business',max:10})+'</div>'
+    +'<div class="bpx-panel">'+bpChart.ranked({
+      title:'Star rating, side by side',
+      lead:'out of five · a high rating on few reviews still loses to a good one on many',
+      rows:rat,fmt:function(n){return (Math.round(n*10)/10).toFixed(1)+'★';},axis:'Business',max:10})+'</div></div>';
+}
 function bpCpScorePane(){
   var list=bpCpRanked();
   if(!list.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No competitors tracked yet</b>Search the businesses in your area and track the ones you run into on bids.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
@@ -19148,7 +19269,7 @@ function bpCpScorePane(){
       +'<td class="bpx-r" style="white-space:nowrap">'+(x.url&&x.url!=='#'?'<a class="bpx-rowbtn" href="'+bpEsc(x.url)+'" target="_blank" rel="noopener" style="text-decoration:none;margin-left:0">Yelp <span class=ms>arrow_outward</span></a>':'')
       +(x.you?'':'<button class="bpx-rowbtn" onclick="bpCpReviews(\''+bpEsc(x.id)+'\',\''+bpEsc(x.name).replace(/'/g,'&#39;')+'\')">Reviews</button><button class="bpx-rowbtn" onclick="bpCpUntrack(\''+bpEsc(x.id)+'\')" title="Stop tracking"><span class=ms>close</span></button>')+'</td></tr>';
   }).join('');
-  return '<div class="bpx-panel" style="padding:0;overflow:hidden"><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th></th><th>Business</th><th>Rating</th><th class="bpx-r">Reviews</th><th class="bpx-r" title="Reviews gained in the last 30 days">+30d</th><th>Services listed</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
+  return bpCpCharts(list)+'<div class="bpx-panel" style="padding:0;overflow:hidden"><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th></th><th>Business</th><th>Rating</th><th class="bpx-r">Reviews</th><th class="bpx-r" title="Reviews gained in the last 30 days">+30d</th><th>Services listed</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:12px">Ranked by review count with rating as the tiebreak — the same weighting Yelp and Google use to order local results. +30d fills in after a rival has been tracked for a day or more.</div>';
 }
 function bpCpFindPane(){
@@ -19293,6 +19414,33 @@ function bpMkPane(){
   if(note)return note+bpMkPaneBody(t);
   return bpMkPaneBody(t);
 }
+/* Leads and spend are different units, so they get a chart each rather than
+   two scales on one picture. Cost per lead is the thing that matters and it
+   is a division of the two, so it is written into the spend chart's lead. */
+function bpMkCharts(){
+  if(!window.bpChart)return '';
+  var m=bpMkStat('meta'),g=bpMkStat('google_ads');
+  var leads=[],spend=[];
+  if(bpMkConn('meta')){leads.push({label:'Meta Ads',value:+m.leads||0});spend.push({label:'Meta Ads',value:+m.spend||0});}
+  if(bpMkConn('google_ads')){leads.push({label:'Google Ads',value:+g.leads||0});spend.push({label:'Google Ads',value:+g.spend||0});}
+  /* calls and directions off a Google listing are not ad leads, and putting
+     them on this chart would divide the ad spend by a number that never cost
+     anything — the totals here match the tiles above, on purpose. They have
+     their own figures in the listings panel below. */
+  leads=leads.filter(function(x){return x.value>0;});spend=spend.filter(function(x){return x.value>0;});
+  var totL=leads.reduce(function(t,x){return t+x.value;},0),totS=spend.reduce(function(t,x){return t+x.value;},0);
+  var left=leads.length?bpChart.ranked({title:'Where leads come from',
+      lead:bpNum(totL)+' lead'+(totL===1?'':'s')+' from ads · last 30 days',
+      rows:leads,fmt:bpNum,axis:'Source'})
+    : bpChart.empty({title:'Where leads come from',
+        empty:'Connect an ad account or your Google listing and every lead is attributed here.'});
+  var right=spend.length?bpChart.ranked({title:'What you spent to get them',
+      lead:bpMoneyFmt(totS)+' in 30 days'+(totL>0?' · '+bpMoneyFmt(totS/totL)+' a lead':''),
+      rows:spend,fmt:bpMoneyFmt,axis:'Channel'})
+    : bpChart.empty({title:'What you spent to get them',
+        empty:'Connect Meta or Google Ads and your spend shows here beside the leads it bought.'});
+  return '<div class="bpc-two" style="margin-bottom:16px"><div class="bpx-panel">'+left+'</div><div class="bpx-panel">'+right+'</div></div>';
+}
 function bpMkPaneBody(t){
   if(t==='connections')return '<div class="bpx-mk-grid">'+BP_MKT.map(bpMkCard).join('')+'</div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px;text-align:center">Connections are read-only for your accounts — we never post or spend without a campaign you approved.</div>';
@@ -19313,16 +19461,15 @@ function bpMkPaneBody(t){
   }
   /* overview */
   var m=bpMkStat('meta'),g=bpMkStat('google_ads'),b=bpMkStat('gbp'),y=bpMkStat('yelp');
-  var src=[['Meta Ads',+m.leads||0,'#1877f2',!!bpMkConn('meta')],['Google Ads',+g.leads||0,'#34a853',!!bpMkConn('google_ads')],['Google listing',(+b.calls||0)+(+b.directions||0),'#4285f4',!!bpMkConn('gbp')]].filter(function(s){return s[3];});
-  var mx=Math.max.apply(null,src.map(function(s){return s[1];}).concat([1]));
-  var srcH=src.length?src.map(function(s){return '<div class="bpx-mk-src"><span class="nm">'+s[0]+'</span><span class="bar"><i style="width:'+Math.max(4,Math.round(s[1]/mx*100))+'%;background:'+s[2]+'"></i></span><span class="n">'+bpNum(s[1])+'</span></div>';}).join(''):'<div class="bpx-mut" style="font-size:13px">Connect an ad account to see where leads come from.</div>';
   var rep='';
   if(bpMkConn('yelp')){rep+='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:30px;font-weight:800;color:#0f2540">'+(y.rating||'—')+'</span><span class="bpx-mk-stars">'+'★'.repeat(Math.round(+y.rating||0))+'</span><span class="bpx-mut" style="font-size:12.5px">'+bpNum(y.reviews||0)+' Yelp reviews</span></div>'
     +((y.reviewsList||[]).map(function(r){return '<div class="bpx-mk-rev"><span class="bpx-mk-stars">'+'★'.repeat(+r.rating||0)+'</span> <b>'+bpEsc(r.user||'')+'</b><div class="bpx-mut">'+bpEsc(r.text||'')+'</div></div>';}).join(''));}
   if(bpMkConn('gbp')){rep+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:'+(rep?'14px':'0')+'">'+[['Calls',b.calls],['Directions',b.directions],['Site clicks',b.website]].map(function(x){return '<div style="background:var(--soft);border-radius:10px;padding:10px 12px"><div class="bpx-mut" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">'+x[0]+'</div><div style="font-size:20px;font-weight:800;color:#0f2540">'+bpNum(x[1]||0)+'</div></div>';}).join('')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:8px">From your Google Business Profile · last 30 days</div>';}
   if(!rep)rep='<div class="bpx-mut" style="font-size:13px">Connect Google Business Profile or Yelp to track calls, directions, and reviews.</div>';
-  return '<div class="bpx-row"><div class="bpx-panel"><div class="bpx-ptitle">Where leads come from<span class="lg2">last 30 days</span></div>'+srcH+'</div>'
-    +'<div class="bpx-panel"><div class="bpx-ptitle">Reputation<span class="lg2">listings</span></div>'+rep+'</div></div>'
+  /* the ranked chart above replaced the hand-drawn source bars: same numbers,
+     one chart language, and a table under it */
+  return bpMkCharts()
+    +'<div class="bpx-panel"><div class="bpx-ptitle">Reputation<span class="lg2">listings</span></div>'+rep+'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Connected channels</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+BP_MKT.map(function(p){var c=bpMkConn(p.k);return '<span class="bpx-mk-st '+(c?'on':'off')+'" style="padding:6px 12px;font-size:12px">'+p.n+(c?' <span class=ms>check</span>':'')+'</span>';}).join('')+'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:6px 12px;font-size:12px" onclick="bpMkTab(\'connections\')">Manage</button></div></div>';
 }
 function bpMkCard(p){
@@ -19830,6 +19977,29 @@ function rdLocked(){
     +'<button class="bpx-btn ghost" onclick="_rdDemoOK=true;_rdCity=\'demo\';bpRadar()">Preview with demo data</button></div>'
     +'<div id="rdWhoami" style="margin-top:16px;font-size:12px;color:#9a9aa0"></div></div>';
 }
+/* The map shows where the doors are; it does not show how good the list is.
+   Two charts do: how the scores are distributed (a territory that is all
+   "watch" is a different day's work from one with twenty hot doors), and what
+   is actually driving the scores. */
+function rdCharts(shown){
+  if(!window.bpChart)return '';
+  if(!shown||shown.length<3)return '';
+  var BANDS=[['Watch',0,50],['Cool',50,65],['Warm',65,75],['Hot',75,101]];
+  var vals=BANDS.map(function(b){return shown.filter(function(p){return p.score>=b[1]&&p.score<b[2];}).length;});
+  var KIND={due:'Roof past its age',noperm:'No permit on file',expired:'Expired permit',project:'Project next door',neighbor:'Next to your crew'};
+  var k={};shown.forEach(function(p){var n=KIND[p.kind]||'Other signal';k[n]=(k[n]||0)+1;});
+  var hot=vals[3],storm=shown.filter(function(p){return p.storm;}).length;
+  return '<div class="bpc-two" style="margin:14px 0 16px"><div class="bpx-panel">'+bpChart.columns({
+      title:'How the scores fall',
+      lead:shown.length+' door'+(shown.length===1?'':'s')+' above your filter · '+hot+' worth knocking first',
+      x:{label:'Band',values:BANDS.map(function(b){return b[0];})},
+      series:[{name:'Doors',values:vals}],fmt:bpNum,height:200
+    })+'</div><div class="bpx-panel">'+bpChart.ranked({
+      title:'What is driving the scores',
+      lead:storm?storm+' of them also had a storm pass nearby':'from public permit records and roof age',
+      rows:Object.keys(k).map(function(n){return {label:n,value:k[n]};}),fmt:bpNum,axis:'Signal'
+    })+'</div></div>';
+}
 function rdRenderShell(){
   var t=RADAR_TRADES[_rdTrade];
   var chips=_rdTerr
@@ -19864,6 +20034,7 @@ function rdRenderShell(){
         +'<span><i class="rd-dot" style="background:#f59e0b;border:2px solid #0f2540;box-sizing:border-box"></i>crew\'s neighbor</span>'
         +'<div class="cnts" id="rdLegendCounts"></div></div></div>'
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
+    +'<div id="rdCharts"></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs">'
       +'<button class="bpx-jt'+(_rdListTab==='auto'?' on':'')+'" data-rd-tab="auto" onclick="rdListTab(\'auto\')">Today\'s picks</button>'
       +'<button class="bpx-jt'+(_rdListTab==='hot'?' on':'')+'" data-rd-tab="hot" onclick="rdListTab(\'hot\')">Hottest prospects</button>'
@@ -20499,6 +20670,8 @@ function rdDraw(){
     _rdMap.fitBounds(window._rdFitB);
     _rdMap.setMaxBounds(bb.pad(0.9));
   }
+  var ch=q('rdCharts');
+  if(ch)ch.innerHTML=rdCharts(shown);
   var lg=q('rdLegendCounts');
   if(lg){var k={};_rdLeads.forEach(function(p){k[p.kind]=(k[p.kind]||0)+1;});
     lg.innerHTML=[['due','Old permit',k.due],['noperm','No permit on file',k.noperm],['expired','Expired permit',k.expired],['project','Project next door',k.project],['neighbor','Crew neighbor',k.neighbor]].filter(function(x){return x[2];}).map(function(x){return '<span>'+x[1]+' <b>'+x[2]+'</b></span>';}).join('');}
@@ -20929,6 +21102,47 @@ function bpRepAll(){
   out.sort(function(a,b){return new Date(b.at||0)-new Date(a.at||0);});
   return out;
 }
+/* Two questions the review feed cannot answer: is the rating moving, and are
+   the bad ones a trickle or a pattern. A monthly average needs a mean, not a
+   sum, so the buckets are built here rather than with bpChart.byMonth. */
+function bpRepCharts(all){
+  if(!window.bpChart)return '';
+  var dated=all.filter(function(r){return r.at&&!isNaN(Date.parse(r.at))&&r.rating>0;});
+  var dist=[0,0,0,0,0];
+  all.forEach(function(r){var n=Math.round(r.rating);if(n>=1&&n<=5)dist[n-1]++;});
+  var distRows=[5,4,3,2,1].map(function(n){return {label:n+' star'+(n===1?'':'s'),value:dist[n-1]};})
+    .filter(function(r){return r.value>0;});
+  var trend='';
+  if(dated.length>=4){
+    var now=new Date(),labels=[],sum=[],cnt=[],idx={};
+    for(var i=5;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      idx[d.getFullYear()+'-'+d.getMonth()]=labels.length;
+      labels.push(d.toLocaleDateString('en-US',{month:'short'}));sum.push(0);cnt.push(0);}
+    dated.forEach(function(r){var t=new Date(r.at),k=t.getFullYear()+'-'+t.getMonth();
+      if(idx[k]!=null){sum[idx[k]]+=r.rating;cnt[idx[k]]++;}});
+    /* A month nobody reviewed carries the last month's average forward: the
+       line is "where your rating stands", and a drop to zero would be a lie.
+       The months before the first review have nothing to carry, so they are
+       cut off the front rather than drawn as a climb up from zero. */
+    var first=-1; cnt.forEach(function(c,n){ if(c&&first<0)first=n; });
+    if(first>=0){ labels=labels.slice(first); sum=sum.slice(first); cnt=cnt.slice(first); }
+    var last=0,avg=sum.map(function(s,n){if(cnt[n]){last=s/cnt[n];}return Math.round(last*10)/10;});
+    if(first>=0&&avg.length>=2)trend=bpChart.line({
+      title:'Where your rating stands',
+      lead:'monthly average of the reviews we can see · '+labels[0]+' to '+labels[labels.length-1],
+      x:{label:'Month',values:labels},
+      series:[{name:'Average rating',values:avg}],
+      fmt:function(n){return (Math.round(n*10)/10).toFixed(1)+'★';},height:200
+    });
+  }
+  if(!trend)trend=bpChart.empty({title:'Where your rating stands',
+    empty:'Once there are a few dated reviews, your monthly average is drawn here.'});
+  var spread=distRows.length?bpChart.ranked({title:'How the stars fall',
+    lead:all.length+' review'+(all.length===1?'':'s')+' we can see',
+    rows:distRows,fmt:bpNum,axis:'Rating'
+  }):bpChart.empty({title:'How the stars fall',empty:'No reviews to break down yet.'});
+  return '<div class="bpc-two" style="margin-top:16px"><div class="bpx-panel">'+trend+'</div><div class="bpx-panel">'+spread+'</div></div>';
+}
 function bpRepRender(){
   var area=q('bpxViewArea'), d=_bpRep.data||{}, conn=_bpRep.conn||{};
   var live=BP_REP_PLAT.filter(function(p){return d[p[0]]&&!d[p[0]].error;});
@@ -20973,7 +21187,7 @@ function bpRepRender(){
         +'<a class="bpx-btn ghost" style="margin:0;text-decoration:none;text-align:center" href="mailto:?subject='+encodeURIComponent('A quick favour')+'&body='+encodeURIComponent(ask.replace('{first}','there'))+'"><span class=ms>mail</span> Send as an email</a>'
         +'<div class="bpx-mut" style="font-size:11.5px;line-height:1.5">Send this to people you’ve done work for. They’re your customers, so texting them is fine; buying a list and blasting it is not.</div></div></div>'
     +'</div>';
-  area.innerHTML=demo+tiles+cards+feed+askBox;
+  area.innerHTML=demo+tiles+cards+bpRepCharts(all)+feed+askBox;
 }
 window.bpRepCopy=function(text,btn){
   var done=function(){ if(!btn)return; var was=btn.innerHTML; btn.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){btn.innerHTML=was;},1600); };
@@ -21946,20 +22160,20 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/charts.css?v=20260921a">
+<link rel="stylesheet" href="portal/charts.css?v=20260921b">
 <link rel="stylesheet" href="portal/progress.css?v=20260921a">
 <link rel="stylesheet" href="portal/supply.css?v=20260921e">
 <link rel="stylesheet" href="portal/dash.css?v=20260919c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
-<script src="portal/charts.js?v=20260921a"></script>
+<script src="portal/charts.js?v=20260921b"></script>
 <script src="portal/progress.js?v=20260921a"></script>
-<script src="portal/supply.js?v=20260921e"></script>
+<script src="portal/supply.js?v=20260921f"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260919c"></script>
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
-<script src="portal/dash.js?v=20260919c"></script>
+<script src="portal/dash.js?v=20260921a"></script>
 <script src="site/vendor/lenis.min.js?v=20260919-i"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
 <script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>

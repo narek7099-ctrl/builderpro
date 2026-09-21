@@ -255,6 +255,56 @@
       : '<span class="sp-vs bad">' + pct + '% over typical</span>';
   }
 
+  /* What the supplier cards cannot show side by side: how much of your buying
+     each house actually gets, and whether their prices sit under or over the
+     going rate. The second one is the whole reason to keep more than one. */
+  function supCharts() {
+    if (!window.bpChart) return '';
+    var mine = SP.sup.filter(function (x) { return !isSample(x); });
+    if (mine.length < 2) return '';
+    var spend = {}, vs = [];
+    SP.pos.forEach(function (p) {
+      if (p.status === 'cancelled') return;
+      var s = supById(p.supplier_id); if (!s || isSample(s)) return;
+      spend[s.name] = (spend[s.name] || 0) + (+p.total || 0);
+    });
+    mine.forEach(function (s) {
+      var st = supStats(s);
+      /* under three matched lines a median is noise, not a comparison */
+      if (st.vs == null || st.matched < 3) return;
+      vs.push({ label: s.name, value: Math.round(st.vs * 1000) / 10, matched: st.matched });
+    });
+    var spendRows = Object.keys(spend).filter(function (k) { return spend[k] > 0; })
+      .map(function (k) { return { label: k, value: spend[k] }; });
+    if (!spendRows.length && !vs.length) return '';
+
+    var left = spendRows.length ? bpChart.ranked({
+      title: 'Who gets your business',
+      lead: 'ordered through BuilderPro, all time',
+      rows: spendRows, fmt: money, axis: 'Supply house',
+    }) : bpChart.empty({
+      title: 'Who gets your business',
+      empty: 'Order materials through BuilderPro and this splits your spend across the houses you use.',
+    });
+
+    /* A price difference is signed, and ranked bars have no negative side, so
+       the comparison is drawn as how far each house sits from typical, with
+       the direction written into every row's label. */
+    var right = vs.length ? bpChart.ranked({
+      title: 'How their prices compare',
+      lead: 'your own prices against the typical range for the same material',
+      rows: vs.map(function (r) {
+        return { label: r.label + (r.value < 0 ? ' — under' : r.value > 0 ? ' — over' : ' — level'),
+          value: Math.abs(r.value) };
+      }),
+      fmt: function (n) { return (Math.round(n * 10) / 10) + '%'; }, axis: 'Supply house',
+    }) : bpChart.empty({
+      title: 'How their prices compare',
+      empty: 'Photograph a couple of bills from each house. Once we can match three lines to the catalog, we can say who is cheaper.',
+    });
+    return '<div class="bpc-two" style="margin:18px 0 0"><div class="bpx-panel">' + left + '</div><div class="bpx-panel">' + right + '</div></div>';
+  }
+
   window.bpSuppliers = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('suppliers') + skel(); load(); return; }
     var mine = SP.sup.filter(function (x) { return !isSample(x); });
@@ -269,6 +319,7 @@
     if (!SP.sup.length) h += firstRun();
     else h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
 
+    h += supCharts();
     h += connectGrid(mine);
     $('bpxViewArea').innerHTML = h;
   };
