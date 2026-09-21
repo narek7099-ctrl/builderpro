@@ -973,49 +973,59 @@
 
   /* ---------- what it costs ---------- */
   function priceLine(g) {
+    var per = g.unit ? '<span class="sp-per">per ' + esc(g.unit) + '</span>' : '';
     if (g.offers.length) {
-      var best = g.offers[0], s = supById(best.supplier_id);
+      var best = g.offers[0], sup = supById(best.supplier_id);
       var stock = best.stock == null ? '' : best.stock > 0
         ? '<span class="sp-pk-stk ok">' + best.stock.toLocaleString() + ' on the shelf</span>'
         : '<span class="sp-pk-stk out">none on the shelf</span>';
-      return '<b>' + (best.price == null ? '—' : money(best.price)) + '</b>'
+      return '<b>' + (best.price == null ? '—' : money(best.price)) + '</b>' + per
         + '<span class="sp-pk-yours">your price</span>'
-        + '<span class="sp-pk-sup">' + esc(s ? s.name : 'a supply house') + '</span>' + stock
+        + '<span class="sp-pk-sup">' + esc(sup ? sup.name : 'a supply house') + '</span>' + stock
         + (g.offers.length > 1 ? '<span class="sp-pk-more">+' + (g.offers.length - 1) + ' more</span>' : '');
     }
     if (g.lo > 0) {
-      return '<b class="typ">' + money(g.lo).replace(/\.00$/, '') + ' to ' + money(g.hi).replace(/\.00$/, '') + '</b>'
+      return '<b class="typ">' + money(g.lo).replace(/\.00$/, '') + '\u2013' + money(g.hi).replace(/\.00$/, '').replace('$', '') + '</b>' + per
         + '<span class="sp-pk-typ" title="A ballpark from our catalog, not a quote. Add the supplier you use and your own price replaces it.">typical</span>';
     }
-    return '<span class="sp-pk-none">No price yet — the supplier will quote it</span>';
+    return '<span class="sp-pk-none">No price yet — the supplier quotes it</span>';
   }
 
-  /* Deliberately a div, not a button: each row carries its own store
-     buttons, and a button inside a button is invalid HTML that the parser
-     silently hoists out — which is exactly how the store chips vanished
-     the first time. Keyboard behaviour is put back by hand. */
-  /* ---------- the shelf ----------
-     A product card, not a row: picture, name, price, who stocks it. The
-     picture is the category icon on a tinted panel, because there are no
-     photographs to show and a card with an empty image well looks broken.
-     A card already on the list wears its count, the way a basket does.
-
-     Deliberately a div: each card carries its own store buttons, and a
-     button inside a button is invalid HTML the parser silently hoists out,
-     which is how the store chips vanished the first time. */
+  /* how many of this are already on the list, so the card can wear its
+     count the way a basket does */
   function onListQty(name) {
     var it = ((SP.list && SP.list.items) || []).filter(function (x) { return norm(x.name) === norm(name); })[0];
     return it ? (+it.qty || 0) : 0;
   }
+
+  /* A row of the chains that carry it, as their actual marks rather than
+     their names. On a card there is no room for "Beacon Building Products"
+     and the logo is the faster read anyway — it is how you scan a shelf. */
+  function storeAvatars(g, lim) {
+    if (!g.car || !g.car.length) return '';
+    var mine = myChains();
+    var ids = g.car.slice().sort(function (a, b) { return (mine[b] ? 1 : 0) - (mine[a] ? 1 : 0); });
+    var shown = ids.slice(0, lim || 4), rest = ids.length - shown.length;
+    return '<span class="sp-card-at">' + shown.map(function (id) {
+      return '<button class="sp-at' + (mine[id] ? ' mine' : '') + '" data-c="' + esc(id) + '"'
+        + ' onclick="event.stopPropagation();SP.storeTap(this.dataset.c)"'
+        + ' title="' + esc((mine[id] ? 'You buy here — ' : 'Add as a supplier — ') + chainName(id)) + '">'
+        + supMark(chainName(id), id) + '</button>';
+    }).join('') + (rest > 0 ? '<span class="sp-at-more">+' + rest + '</span>' : '') + '</span>';
+  }
+
   function pickCard(g) {
     var n = onListQty(g.name);
+    var cat = catOf({ name: g.name, category: g.cat });
+    var fam = FAM_OF[cat] || 'other';
     return '<div class="sp-card' + (n ? ' on' : '') + '" role="button" tabindex="0" data-k="' + esc(g.key) + '"'
       + ' onclick="SP.pickAdd(this.dataset.k)" onkeydown="SP.rowKey(event,this)" title="' + esc(g.name) + '">'
-      + '<div class="sp-card-art">' + icon(catOf({ name: g.name, category: g.cat }), 'big')
+      + '<div class="sp-card-art" data-fam="' + fam + '">' + icon(cat, 'big')
+      + '<span class="sp-card-cat">' + esc(cat) + '</span>'
       + (n ? '<span class="sp-card-n">' + n + '</span>' : '') + '</div>'
       + '<b class="sp-card-nm">' + esc(g.name) + '</b>'
       + '<div class="sp-card-price">' + priceLine(g) + '</div>'
-      + storeChips(g, 3)
+      + storeAvatars(g, 4)
       + '<span class="sp-card-add">' + (n ? 'Add another' : 'Add') + '</span></div>';
   }
   SP.rowKey = function (e, el) {
