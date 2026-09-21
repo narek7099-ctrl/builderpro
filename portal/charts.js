@@ -60,7 +60,20 @@
     var mag = Math.pow(10, Math.floor(Math.log10(v))), n = v / mag;
     return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
   }
-  function ticks(max, n) {
+  /* Four gridlines is the default, but four into some maxima gives $1.3k as a
+     ruler mark, which nobody reads off. So try a few counts and take the first
+     whose step lands on a number a person would have chosen themselves. */
+  var NICE = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8];
+  function isNice(step) {
+    if (!(step > 0)) return false;
+    var mag = Math.pow(10, Math.floor(Math.log10(step))), m = step / mag;
+    return NICE.some(function (k) { return Math.abs(m - k) < 1e-9; });
+  }
+  function ticks(max) {
+    var counts = [4, 5, 3, 6], n = 4;
+    for (var c = 0; c < counts.length; c++) {
+      if (isNice(max / counts[c])) { n = counts[c]; break; }
+    }
     var out = [];
     for (var i = 0; i <= n; i++) out.push(max / n * i);
     return out;
@@ -96,15 +109,104 @@
       }).join('') + '</tbody></table></div>';
   }
 
+  /* ---------- drawn at the width it is actually given ----------
+     An SVG scaled from a fixed grid to whatever width the panel happens to
+     be does not scale its type with it: the same axis label came out 18.7px
+     wide in a full panel and 8.8px in a half one, stretched in one place and
+     squashed in the other, and the bar corners and gutters went with it. So
+     the drawing takes a width and the viewBox is that width in real pixels —
+     one unit is one pixel, in both directions, everywhere.
+
+     W0 is only what the string is built at before it has been measured. The
+     moment the chart is in the DOM it is redrawn at its true width, and
+     again whenever that width changes. */
+  var W0 = 720;
+
+  /* A six-month line stretched across 1090px and held at 200 tall is a 5:1
+     letterbox — the trend flattens into a straight line and the chart stops
+     saying anything. So a wide plot is allowed to grow a little taller, to a
+     ceiling, instead of either staying flat or scaling up without limit. */
+  function heightFor(o, W) {
+    var base = o.height || 210;
+    return Math.round(Math.min(base * 1.35, Math.max(base, W / 3.4)));
+  }
+
+  function svgOpen(o, W, H) {
+    return '<svg viewBox="0 0 ' + Math.round(W) + ' ' + H + '" style="height:' + H + 'px"'
+      + ' role="img" aria-label="' + esc(o.title || 'chart') + '" preserveAspectRatio="xMidYMid meet">';
+  }
+
+  /* Everything the redraw needs, parked on the plot: the same blob the
+     tooltip already reads, so there is one description of a chart, not two. */
+  function plotted(o, kind, svg, legend, table) {
+    var spec = escAttr(JSON.stringify({
+      k: kind, h: o.height || 210, t: o.title || '', xl: (o.x || {}).label || '',
+      x: (o.x || {}).values || [], s: (o.series || []).map(function (s) { return { n: s.name, v: s.values }; }),
+      f: (o.fmt || money) === money ? 'money' : 'plain',
+    }));
+    return frame(o, svg, legend, table)
+      .replace('<div class="bpc-plot">', '<div class="bpc-plot" data-chart="' + spec + '">');
+  }
+  function specOf(plot) {
+    var d = plot.getAttribute('data-chart'); if (!d) return null;
+    try { return JSON.parse(d); } catch (e) { return null; }
+  }
+  /* a spec is not a chart options object, so turn it back into one */
+  function optsOf(d) {
+    return {
+      title: d.t, height: d.h, fmt: fmtOf(d.f),
+      x: { label: d.xl, values: d.x },
+      series: d.s.map(function (s) { return { name: s.n, values: s.v }; }),
+    };
+  }
+  function redraw(plot) {
+    var w = Math.round(plot.clientWidth);
+    /* a pane that is hidden has no width to draw at; the observer brings it
+       back the moment it is shown */
+    if (!(w > 40)) return;
+    if (+plot.getAttribute('data-w') === w) return;
+    var d = specOf(plot); if (!d) return;
+    var o = optsOf(d);
+    var svg = d.k === 'cols' ? colsSvg(o, w) : lineSvg(o, w);
+    var old = plot.querySelector('svg');
+    if (old) old.outerHTML = svg; else plot.insertAdjacentHTML('afterbegin', svg);
+    plot.setAttribute('data-w', w);
+  }
+  C.redraw = redraw;
+
+  var ro = window.ResizeObserver ? new ResizeObserver(function (es) {
+    es.forEach(function (e) { redraw(e.target); });
+  }) : null;
+  function watch(root) {
+    (root.querySelectorAll ? root.querySelectorAll('.bpc-plot[data-chart]') : []).forEach(function (plot) {
+      redraw(plot);
+      if (ro && !plot.__bpcRo) { plot.__bpcRo = 1; ro.observe(plot); }
+    });
+  }
+  /* Views render with innerHTML, so nothing calls us when a chart lands.
+     Watching the document catches every one of them without every caller
+     having to remember to mount it. */
+  if (window.MutationObserver) {
+    new MutationObserver(function (ms) {
+      for (var i = 0; i < ms.length; i++) {
+        var added = ms[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          if (added[j].nodeType === 1) watch(added[j]);
+        }
+      }
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { watch(document); });
+  else watch(document);
+
   /* ==================================================================
      LINE — change over time. Area fill only when there is one series,
      because two overlapping washes read as a third colour.
      ================================================================== */
-  C.line = function (o) {
+  function lineSvg(o, W) {
     var x = o.x || { values: [] }, series = o.series || [], fmt = o.fmt || money;
-    var W = 720, H = o.height || 210, P = { t: 14, r: 14, b: 26, l: 52 };
+    var H = heightFor(o, W), P = { t: 14, r: 14, b: 26, l: 52 };
     var n = x.values.length;
-    if (!n || !series.length) return empty(o);
 
     var raw = 0;
     series.forEach(function (s) { s.values.forEach(function (v) { if (+v > raw) raw = +v; }); });
@@ -114,106 +216,110 @@
     var py = function (v) { return P.t + ih - ih * (Math.max(0, +v || 0) / max); };
 
     var af = axisFmt(fmt);
-    var grid = ticks(max, 4).map(function (t) {
+    var grid = ticks(max).map(function (t) {
       var y = py(t);
       return '<line class="bpc-grid" x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + y + '" y2="' + y + '"/>'
         + '<text class="bpc-ax" x="' + (P.l - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + af(t) + '</text>';
     }).join('');
 
-    /* every label would collide on a narrow card, so thin them to fit */
-    var step = Math.ceil(n / 7);
+    /* labels are thinned to whatever the real width can hold, so a narrow
+       card drops some rather than overlapping them */
+    var step = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 58))));
     var xlab = x.values.map(function (lbl, i) {
       if (i % step && i !== n - 1) return '';
       return '<text class="bpc-ax" x="' + px(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(lbl) + '</text>';
     }).join('');
 
     var paths = series.map(function (s, si) {
-      var d = s.values.map(function (v, i) { return (i ? 'L' : 'M') + px(i) + ' ' + py(v); }).join(' ');
+      var d = s.values.map(function (v, i) { return (i ? 'L' : 'M') + px(i).toFixed(1) + ' ' + py(v).toFixed(1); }).join(' ');
       var area = series.length === 1
-        ? '<path class="bpc-area" d="' + d + ' L' + px(n - 1) + ' ' + (P.t + ih) + ' L' + px(0) + ' ' + (P.t + ih) + ' Z" fill="' + slot(si) + '"/>'
+        ? '<path class="bpc-area" d="' + d + ' L' + px(n - 1).toFixed(1) + ' ' + (P.t + ih) + ' L' + px(0).toFixed(1) + ' ' + (P.t + ih) + ' Z" fill="' + slot(si) + '"/>'
         : '';
-      /* the last point is marked and labelled: the current value is the
-         one a reader is actually looking for */
+      /* the last point is marked: the current value is the one a reader is
+         actually looking for */
       var last = s.values[n - 1];
       return area
         + '<path class="bpc-line" d="' + d + '" stroke="' + slot(si) + '"/>'
-        + '<circle class="bpc-end" cx="' + px(n - 1) + '" cy="' + py(last) + '" r="4.5" fill="' + slot(si) + '"/>';
+        + '<circle class="bpc-end" cx="' + px(n - 1).toFixed(1) + '" cy="' + py(last).toFixed(1) + '" r="4.5" fill="' + slot(si) + '"/>';
     }).join('');
 
+    var hw = n > 1 ? iw / (n - 1) : iw;
     var hot = x.values.map(function (lbl, i) {
-      return '<rect class="bpc-hit" data-i="' + i + '" x="' + (px(i) - iw / (n > 1 ? (n - 1) * 2 : 1)) + '" y="' + P.t
-        + '" width="' + (n > 1 ? iw / (n - 1) : iw) + '" height="' + ih + '"/>';
+      return '<rect class="bpc-hit" data-i="' + i + '" x="' + (px(i) - hw / 2).toFixed(1) + '" y="' + P.t
+        + '" width="' + hw.toFixed(1) + '" height="' + ih + '"/>';
     }).join('');
 
-    /* an explicit pixel height with preserveAspectRatio="none": the plot
-       fills the card's width exactly and keeps the height it was designed
-       at, instead of growing taller in proportion on a wide screen. The
-       strokes are non-scaling, so nothing distorts with it. */
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="height:' + H + 'px" role="img" aria-label="' + esc(o.title || 'chart') + '" preserveAspectRatio="none">'
+    return svgOpen(o, W, H)
       + grid + xlab
       + '<line class="bpc-grid bpc-base" x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + (P.t + ih) + '" y2="' + (P.t + ih) + '"/>'
       + paths
       + '<line class="bpc-cross" x1="0" x2="0" y1="' + P.t + '" y2="' + (P.t + ih) + '" hidden/>'
       + hot + '</svg>';
-
-    return frame(o, svg, legendOf(series), tableOf(x, series, fmt))
-      .replace('<div class="bpc-plot">', '<div class="bpc-plot" data-chart="' + escAttr(JSON.stringify({
-        x: x.values, s: series.map(function (s) { return { n: s.name, v: s.values }; }), f: fmt === money ? 'money' : 'plain',
-      })) + '">');
+  }
+  C.line = function (o) {
+    var x = o.x || { values: [] }, series = o.series || [];
+    if (!x.values.length || !series.length) return empty(o);
+    return plotted(o, 'line', lineSvg(o, W0), legendOf(series), tableOf(x, series, o.fmt || money));
   };
 
   /* ==================================================================
      COLUMNS — a countable thing per period. Bars, not a line, when the
      periods are discrete buckets rather than a continuous reading.
      ================================================================== */
-  C.columns = function (o) {
+  function colsSvg(o, W) {
     var x = o.x || { values: [] }, series = o.series || [], fmt = o.fmt || plain;
-    var W = 720, H = o.height || 210, P = { t: 14, r: 14, b: 26, l: 52 };
+    var H = heightFor(o, W), P = { t: 14, r: 14, b: 26, l: 52 };
     var n = x.values.length;
-    if (!n || !series.length) return empty(o);
 
     var raw = 0;
     series.forEach(function (s) { s.values.forEach(function (v) { if (+v > raw) raw = +v; }); });
     var max = niceMax(raw) || 1;
     var iw = W - P.l - P.r, ih = H - P.t - P.b;
-    var band = iw / n, gap = Math.min(14, band * 0.28);
-    var bw = (band - gap) / series.length;
+    /* Thin marks. Left to itself a single series over six months draws
+       54px slabs, which is a lot of ink for one number — so the bar has a
+       ceiling and the group sits centred in its band rather than stretched
+       across it. */
+    var band = iw / n, gap = Math.min(18, band * 0.28);
+    var bw = Math.min((band - gap) / series.length, series.length > 1 ? 26 : 34);
+    var grpW = bw * series.length, pad = (band - grpW) / 2;
     var py = function (v) { return P.t + ih - ih * (Math.max(0, +v || 0) / max); };
 
     var af = axisFmt(fmt);
-    var grid = ticks(max, 4).map(function (t) {
+    var grid = ticks(max).map(function (t) {
       var y = py(t);
       return '<line class="bpc-grid" x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + y + '" y2="' + y + '"/>'
         + '<text class="bpc-ax" x="' + (P.l - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + af(t) + '</text>';
     }).join('');
 
-    var step = Math.ceil(n / 8), bars = '', xlab = '';
+    /* how many labels the real width can hold without them touching */
+    var step = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 72))));
+    var bars = '', xlab = '';
     x.values.forEach(function (lbl, i) {
-      var x0 = P.l + band * i + gap / 2;
+      var x0 = P.l + band * i + pad;
       series.forEach(function (s, si) {
         var v = Math.max(0, +s.values[i] || 0), y = py(v), h = P.t + ih - y;
-        /* a rounded top on a bar that is anchored to the baseline; zero
-           draws nothing rather than a stub that reads as a small value */
+        /* a rounded top on a bar anchored to the baseline; zero draws
+           nothing rather than a stub that reads as a small value */
         if (h > 0.5) {
-          bars += '<rect class="bpc-bar" x="' + (x0 + bw * si) + '" y="' + y + '" width="' + Math.max(1, bw - 2)
-            + '" height="' + h + '" rx="' + Math.min(4, bw / 2) + '" fill="' + slot(si) + '"/>';
+          bars += '<rect class="bpc-bar" x="' + (x0 + bw * si).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, bw - 2).toFixed(1)
+            + '" height="' + h.toFixed(1) + '" rx="' + Math.min(4, bw / 2).toFixed(1) + '" fill="' + slot(si) + '"/>';
         }
       });
       if (!(i % step) || i === n - 1) {
-        xlab += '<text class="bpc-ax" x="' + (P.l + band * i + band / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(lbl) + '</text>';
+        xlab += '<text class="bpc-ax" x="' + (P.l + band * i + band / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(lbl) + '</text>';
       }
-      bars += '<rect class="bpc-hit" data-i="' + i + '" x="' + (P.l + band * i) + '" y="' + P.t + '" width="' + band + '" height="' + ih + '"/>';
+      bars += '<rect class="bpc-hit" data-i="' + i + '" x="' + (P.l + band * i).toFixed(1) + '" y="' + P.t + '" width="' + band.toFixed(1) + '" height="' + ih + '"/>';
     });
 
-    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="height:' + H + 'px" role="img" aria-label="' + esc(o.title || 'chart') + '" preserveAspectRatio="none">'
+    return svgOpen(o, W, H)
       + grid + xlab
       + '<line class="bpc-grid bpc-base" x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + (P.t + ih) + '" y2="' + (P.t + ih) + '"/>'
       + bars + '</svg>';
-
-    return frame(o, svg, legendOf(series), tableOf(x, series, fmt))
-      .replace('<div class="bpc-plot">', '<div class="bpc-plot" data-chart="' + escAttr(JSON.stringify({
-        x: x.values, s: series.map(function (s) { return { n: s.name, v: s.values }; }), f: fmt === money ? 'money' : 'plain',
-      })) + '">');
+  }
+  C.columns = function (o) {
+    var x = o.x || { values: [] }, series = o.series || [];
+    if (!x.values.length || !series.length) return empty(o);
+    return plotted(o, 'cols', colsSvg(o, W0), legendOf(series), tableOf(x, series, o.fmt || plain));
   };
 
   /* ==================================================================
@@ -308,7 +414,9 @@
       var svg = plot.querySelector('svg'), cross = plot.querySelector('.bpc-cross');
       if (cross && svg) {
         var cx = +hit.getAttribute('x') + (+hit.getAttribute('width')) / 2;
-        cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.hidden = false;
+        /* `hidden` is an HTMLElement property; assigning it on an SVG node
+           sets a field nobody reads. The attribute is the real switch. */
+        cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.removeAttribute('hidden');
       }
     }
     tip.innerHTML = html;
@@ -320,7 +428,7 @@
   }, { passive: true });
 
   function hideCross(plot) {
-    var c = plot.querySelector('.bpc-cross'); if (c) c.hidden = true;
+    var c = plot.querySelector('.bpc-cross'); if (c) c.setAttribute('hidden', '');
   }
   document.addEventListener('pointerleave', function (e) {
     var plot = e.target.closest ? e.target.closest('.bpc-plot') : null;
