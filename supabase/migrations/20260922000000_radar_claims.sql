@@ -98,6 +98,9 @@ returns int language sql security definer set search_path = public as $$
     returning 1
   ) select count(*)::int from gone;
 $$;
+-- Postgres grants EXECUTE to PUBLIC by default, and this one deletes rows.
+-- It is the scheduled job's, nobody else's.
+revoke all on function public.radar_sweep_claims() from public;
 
 -- Real work on a lead pushes its expiry out. Called by the portal when a
 -- contact is actually made, not when the card is opened.
@@ -111,6 +114,10 @@ returns void language sql security definer set search_path = public as $$
    where door = p_door and trade = p_trade
      and lower(owner) = lower(coalesce(auth.jwt() ->> 'email', ''));
 $$;
+-- Safe for a signed-in client: it can only ever touch a row it owns, because
+-- the WHERE clause checks the claim's owner against their own token.
+revoke all on function public.radar_touch_claim(text, text, text) from public;
+grant execute on function public.radar_touch_claim(text, text, text) to authenticated;
 
 -- ------------------------------------------------------------- dealing ------
 -- Two contractors in one town must not open the map and see the same doors.
@@ -146,6 +153,7 @@ language sql security definer set search_path = public as $$
   select coalesce((select idx from near where lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')))::int, 0),
          greatest((select count(*) from near)::int, 1);
 $$;
+revoke all on function public.radar_deal_slot(text) from public;
 grant execute on function public.radar_deal_slot(text) to authenticated;
 
 -- ----------------------------------------------------------- supply log -----
