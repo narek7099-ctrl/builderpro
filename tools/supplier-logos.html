@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Supplier logo collector</title>
+<style>
+  :root{
+    --bg:#edf2f6; --card:#fff; --ink:#001530; --grey:#5b6472; --grey-l:#8b95a3;
+    --line:#dfe5ec; --blue:#006fff; --good:#0f7a3d; --warn:#b45309; --bad:#b3392f;
+    --tile:#f4f6fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:26px;letter-spacing:-.02em;margin:0 0 6px}
+  .sub{color:var(--grey);margin:0 0 20px;max-width:70ch}
+  .bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 14px;
+    border-bottom:1px solid var(--line);margin-bottom:18px;
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);padding:9px 16px;font-weight:600}
+  button:hover{border-color:var(--blue);color:var(--blue)}
+  button.go{background:var(--blue);border-color:var(--blue);color:#fff}
+  button.go:hover{filter:brightness(1.07);color:#fff}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .count{margin-left:auto;color:var(--grey);font-size:13px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);
+    margin:26px 0 10px;font-weight:700}
+  h2 em{font-style:normal;color:var(--grey-l);font-weight:600;text-transform:none;letter-spacing:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .slot{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;
+    display:flex;flex-direction:column;gap:9px}
+  .slot.has{border-color:#9fd9b8}
+  .slot.over{border-color:var(--blue);background:#f2f7ff}
+  .slot-h{display:flex;align-items:center;gap:9px;min-width:0}
+  .slot-h b{font-size:13.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  code{font:600 11.5px ui-monospace,Menlo,Consolas,monospace;color:var(--grey);
+    background:var(--tile);border-radius:5px;padding:2px 6px;white-space:nowrap}
+  /* the preview is the real thing: the same near-white tile and the same
+     38px the portal draws it at, so a white logo visibly disappears here
+     instead of after it ships */
+  .prev{display:flex;align-items:center;gap:12px;background:var(--tile);
+    border:1px solid var(--line);border-radius:10px;padding:10px;min-height:66px}
+  .big,.small{background:#fff;border-radius:9px;display:flex;align-items:center;
+    justify-content:center;overflow:hidden;flex:none;border:1px solid var(--line)}
+  .big{width:88px;height:44px}
+  .small{width:38px;height:38px;border-radius:9px}
+  .big img,.small img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+  .prev .empty{color:var(--grey-l);font-size:12px}
+  .drop{border:1.5px dashed var(--line);border-radius:10px;padding:10px;text-align:center;
+    color:var(--grey);font-size:12.5px}
+  .drop b{color:var(--blue)}
+  .note{font-size:11.5px;line-height:1.45;min-height:16px}
+  .note.ok{color:var(--good)} .note.warn{color:var(--warn)} .note.bad{color:var(--bad)}
+  .row{display:flex;gap:6px}
+  .row button{padding:6px 10px;font-size:12px;font-weight:600;flex:1}
+  .out{margin-top:30px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:16px}
+  .out h3{margin:0 0 8px;font-size:15px}
+  textarea{width:100%;min-height:74px;font:12.5px ui-monospace,Menlo,Consolas,monospace;
+    padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--tile);
+    color:var(--ink);resize:vertical}
+  .how{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;margin-bottom:22px}
+  .how ol{margin:8px 0 0;padding-left:20px} .how li{margin:5px 0}
+  .how b{font-weight:650}
+  @media(max-width:520px){.grid{grid-template-columns:1fr}.wrap{padding:20px 16px 50px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Supplier logo collector</h1>
+  <p class="sub">Drop each chain&rsquo;s logo into its slot. This names every file correctly,
+     shows it at the exact size and on the exact tile BuilderPro draws it on, warns you when
+     one will disappear, and packages the lot as a zip.</p>
+
+  <div class="how">
+    <b>How to work through it</b>
+    <ol>
+      <li>Open the company&rsquo;s own press or brand page &mdash; or its Wikipedia article, whose
+          logo is usually clean and current &mdash; and save the logo.</li>
+      <li>Drag the file onto its slot below. Or paste an image URL into the slot.</li>
+      <li>Watch the small preview: that is the real 38&thinsp;px tile. <b>If it vanishes, it is a
+          white logo</b> &mdash; grab the dark or full-colour version instead.</li>
+      <li>Hit <b>Download zip</b> and send it over. Nine is enough to start; the rest keep their
+          lettermarks until they arrive.</li>
+    </ol>
+  </div>
+
+  <div class="bar">
+    <button class="go" id="zip" disabled>Download zip</button>
+    <button id="clear">Clear all</button>
+    <span class="count" id="count">0 collected</span>
+  </div>
+
+  <div id="tiers"></div>
+
+  <div class="out">
+    <h3>Then paste this into <code>portal/supply-dir.js</code></h3>
+    <p class="sub" style="margin:0 0 8px">Only ids listed here are ever requested, so partial
+       batches are fine &mdash; anything left out keeps its lettermark.</p>
+    <textarea id="line" readonly>SP.LOGOS = ''.split(' ').filter(Boolean);</textarea>
+  </div>
+</div>
+
+<script>
+/* The 37 chains BuilderPro knows, in the order worth collecting them.
+   Tier 1 covers every trade; the rest are the trade specialists. */
+/* A ZIP writer, rather than pulling one off a CDN: the file has to work
+   from a Downloads folder with no network, and PNGs are already compressed
+   so stored entries cost nothing. Local header + central directory + EOCD,
+   which is the whole format for this case. */
+var CRC = (function () {
+  var t = new Uint32Array(256);
+  for (var n = 0; n < 256; n++) {
+    var c = n;
+    for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return function (buf) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < buf.length; i++) c = t[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  };
+})();
+function makeZip(entries) {                       /* [{name, data:Uint8Array}] */
+  var parts = [], central = [], offset = 0;
+  var te = new TextEncoder();
+  var u16 = function (n) { return [n & 255, (n >>> 8) & 255]; };
+  var u32 = function (n) { return [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]; };
+  entries.forEach(function (e) {
+    var name = te.encode(e.name), crc = CRC(e.data), len = e.data.length;
+    var local = [].concat([80, 75, 3, 4], u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(len), u32(len), u16(name.length), u16(0));
+    parts.push(new Uint8Array(local), name, e.data);
+    central.push([].concat([80, 75, 1, 2], u16(20), u16(20), u16(0), u16(0), u16(0), u16(0),
+      u32(crc), u32(len), u32(len), u16(name.length), u16(0), u16(0), u16(0), u16(0),
+      u32(0), u32(offset)), name);
+    offset += local.length + name.length + len;
+  });
+  var cd = [], cdLen = 0;
+  for (var i = 0; i < central.length; i += 2) {
+    var head = new Uint8Array(central[i]);
+    cd.push(head, central[i + 1]);
+    cdLen += head.length + central[i + 1].length;
+  }
+  var end = new Uint8Array([].concat([80, 75, 5, 6], u16(0), u16(0),
+    u16(entries.length), u16(entries.length), u32(cdLen), u32(offset), u16(0)));
+  return new Blob(parts.concat(cd, [end]), { type: 'application/zip' });
+}
+
+var TIERS = [
+  ['Tier 1 — these cover every trade', 'get these nine first', [
+    ['homedepot_pro','Home Depot Pro','homedepot.com'],
+    ['lowes_pro',"Lowe's Pro",'lowes.com'],
+    ['abc','ABC Supply','abcsupply.com'],
+    ['srs','SRS Distribution','srsdistribution.com'],
+    ['beacon','Beacon Building Products','beaconbuildingproducts.com'],
+    ['ferguson','Ferguson','ferguson.com'],
+    ['sherwin','Sherwin-Williams','sherwin-williams.com'],
+    ['siteone','SiteOne Landscape Supply','siteone.com'],
+    ['floordecor','Floor & Decor','flooranddecor.com'],
+  ]],
+  ['Tier 2 — the trade specialists', 'worth having', [
+    ['ced','CED (Consolidated Electrical)','cedcareers.com'],
+    ['graybar','Graybar','graybar.com'],
+    ['winsupply','Winsupply','winsupplyinc.com'],
+    ['johnstone','Johnstone Supply','johnstonesupply.com'],
+    ['whitecap','White Cap','whitecap.com'],
+    ['lw','L&W Supply','lwsupply.com'],
+    ['fbm','Foundation Building Materials','fbmsales.com'],
+    ['bfs','Builders FirstSource','bldr.com'],
+    ['poolcorp','POOLCORP / SCP Distributors','poolcorp.com'],
+    ['leslies',"Leslie's Pool Supplies",'lesliespool.com'],
+    ['msi','MSI Surfaces','msisurfaces.com'],
+    ['richelieu','Richelieu Hardware','richelieu.com'],
+  ]],
+  ['Tier 3 — nice to have', 'no rush on these', [
+    ['menards','Menards','menards.com'],
+    ['carter','Carter Lumber','carterlumber.com'],
+    ['e84','84 Lumber','84lumber.com'],
+    ['fastenal','Fastenal','fastenal.com'],
+    ['benmoore','Benjamin Moore','benjaminmoore.com'],
+    ['supplyhouse','SupplyHouse.com','supplyhouse.com'],
+    ['pexuniverse','PexUniverse','pexuniverse.com'],
+    ['hvacdirect','HVACDirect','hvacdirect.com'],
+    ['grainger','Grainger','grainger.com'],
+    ['zoro','Zoro','zoro.com'],
+    ['amazonbiz','Amazon Business','business.amazon.com'],
+    ['northerntool','Northern Tool','northerntool.com'],
+    ['heritagepool','Heritage Pool Supply','heritagepoolsupply.com'],
+    ['tileshop','The Tile Shop','tileshop.com'],
+    ['cosentino','Cosentino','cosentino.com'],
+    ['metrie','Metrie','metrie.com'],
+  ]],
+];
+
+var files = {};                                  /* id -> {blob, url, w, h} */
+var $ = function (s, r) { return (r || document).querySelector(s); };
+
+function initials(name) {
+  var w = String(name).replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean);
+  return w.length > 1 ? (w[0][0] + w[1][0]).toUpperCase() : w[0].slice(0, 2).toUpperCase();
+}
+
+/* Is this logo mostly white? The portal draws every mark on a near-white
+   tile in both themes, so a white-on-transparent lockup is invisible there.
+   Sample the pixels that are not transparent and see how light they are. */
+function lightnessWarning(img) {
+  try {
+    var c = document.createElement('canvas'), n = 64;
+    c.width = n; c.height = n;
+    var x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(img, 0, 0, n, n);
+    var d = x.getImageData(0, 0, n, n).data, lit = 0, seen = 0;
+    for (var i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 40) continue;                        /* transparent */
+      seen++;
+      if ((d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) > 225) lit++;
+    }
+    if (!seen) return { cls: 'bad', msg: 'Looks empty — nothing but transparency.' };
+    if (lit / seen > 0.8) return { cls: 'bad', msg: 'Nearly all white — it will vanish on the tile. Use the dark version.' };
+    if (lit / seen > 0.55) return { cls: 'warn', msg: 'Very light. Check the small preview is still readable.' };
+    return null;
+  } catch (e) { return null; }                             /* tainted canvas, skip */
+}
+
+function setFile(id, blob) {
+  var url = URL.createObjectURL(blob);
+  var img = new Image();
+  img.onload = function () {
+    files[id] = { blob: blob, url: url, w: img.naturalWidth, h: img.naturalHeight, warn: lightnessWarning(img) };
+    render();
+  };
+  img.onerror = function () {
+    var s = $('#note-' + id);
+    if (s) { s.className = 'note bad'; s.textContent = 'That file is not an image the browser can read.'; }
+  };
+  img.src = url;
+}
+
+function slotHtml(id, name) {
+  var f = files[id];
+  var warn = f && f.warn;
+  var note = !f ? ''
+    : warn ? warn.msg
+    : (f.w < 120 ? 'Only ' + f.w + 'px wide — fine, but bigger is sharper.' : f.w + '×' + f.h + ', looks good.');
+  var noteCls = !f ? '' : warn ? warn.cls : (f.w < 120 ? 'warn' : 'ok');
+  return '<div class="slot' + (f ? ' has' : '') + '" id="slot-' + id + '" data-id="' + id + '">'
+    + '<div class="slot-h"><b>' + name.replace(/&/g, '&amp;') + '</b><code>' + id + '.png</code></div>'
+    + '<div class="prev">'
+      + '<span class="big">' + (f ? '<img src="' + f.url + '" alt="">' : '<span class="empty">—</span>') + '</span>'
+      + '<span class="small">' + (f ? '<img src="' + f.url + '" alt="">' : '<span class="empty">' + initials(name) + '</span>') + '</span>'
+      + '<span class="note ' + noteCls + '" id="note-' + id + '">' + note + '</span>'
+    + '</div>'
+    + (f ? '<div class="row"><button data-act="url" data-id="' + id + '">Replace</button>'
+           + '<button data-act="del" data-id="' + id + '">Remove</button></div>'
+         : '<div class="drop">Drag a file here, or <b data-act="pick" data-id="' + id + '">choose one</b>'
+           + ' &middot; <b data-act="url" data-id="' + id + '">paste a URL</b></div>')
+    + '</div>';
+}
+
+function render() {
+  $('#tiers').innerHTML = TIERS.map(function (t) {
+    return '<h2>' + t[0] + ' <em>' + t[1] + '</em></h2>'
+      + '<div class="grid">' + t[2].map(function (r) { return slotHtml(r[0], r[1]); }).join('') + '</div>';
+  }).join('');
+  var ids = Object.keys(files);
+  $('#count').textContent = ids.length + ' collected';
+  $('#zip').disabled = !ids.length;
+  $('#line').value = "SP.LOGOS = '" + ids.join(' ') + "'.split(' ').filter(Boolean);";
+}
+
+/* one delegated listener, so it survives every re-render */
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]'); if (!b) return;
+  var id = b.dataset.id;
+  if (b.dataset.act === 'del') { delete files[id]; render(); return; }
+  if (b.dataset.act === 'pick') {
+    var inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = function () { if (inp.files[0]) setFile(id, inp.files[0]); };
+    inp.click();
+    return;
+  }
+  if (b.dataset.act === 'url') {
+    var u = prompt('Paste the image URL for ' + id);
+    if (!u) return;
+    fetch(u).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.blob();
+    }).then(function (bl) { setFile(id, bl); })
+      .catch(function () {
+        alert('Could not fetch that URL — the site blocked it.\n\nSave the image to your computer and drag it onto the slot instead.');
+      });
+  }
+});
+
+/* drag and drop, per slot */
+document.addEventListener('dragover', function (e) {
+  var s = e.target.closest('.slot'); if (!s) return;
+  e.preventDefault(); s.classList.add('over');
+});
+document.addEventListener('dragleave', function (e) {
+  var s = e.target.closest('.slot'); if (s) s.classList.remove('over');
+});
+document.addEventListener('drop', function (e) {
+  var s = e.target.closest('.slot'); if (!s) return;
+  e.preventDefault(); s.classList.remove('over');
+  var f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) setFile(s.dataset.id, f);
+});
+/* dropping anywhere else should not navigate away from the page */
+window.addEventListener('dragover', function (e) { e.preventDefault(); });
+window.addEventListener('drop', function (e) { e.preventDefault(); });
+
+$('#clear').onclick = function () {
+  if (!Object.keys(files).length || confirm('Clear everything collected so far?')) { files = {}; render(); }
+};
+
+/* Everything is re-encoded to PNG at a consistent width, so the zip is
+   uniform whatever mix of formats and sizes went in. */
+$('#zip').onclick = function () {
+  var btn = this; btn.disabled = true; btn.textContent = 'Packing…';
+  var ids = Object.keys(files);
+  /* Everything is re-encoded to PNG at one width, so the zip is uniform
+     whatever mix of formats and sizes went in. */
+  Promise.all(ids.map(function (id) {
+    return new Promise(function (done) {
+      var img = new Image();
+      img.onload = function () {
+        var W = 240, H = Math.max(1, Math.round(img.naturalHeight * (W / img.naturalWidth)));
+        var c = document.createElement('canvas'); c.width = W; c.height = H;
+        c.getContext('2d').drawImage(img, 0, 0, W, H);
+        c.toBlob(function (bl) {
+          (bl || files[id].blob).arrayBuffer().then(function (ab) {
+            done({ name: id + '.png', data: new Uint8Array(ab) });
+          });
+        }, 'image/png');
+      };
+      img.onerror = function () {
+        files[id].blob.arrayBuffer().then(function (ab) {
+          done({ name: id + '.png', data: new Uint8Array(ab) });
+        });
+      };
+      img.src = files[id].url;
+    });
+  })).then(function (entries) {
+    entries.push({
+      name: 'SP.LOGOS.txt',
+      data: new TextEncoder().encode("SP.LOGOS = '" + ids.join(' ') + "'.split(' ').filter(Boolean);\n"),
+    });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(makeZip(entries));
+    a.download = 'supplier-logos.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    btn.disabled = false; btn.textContent = 'Download zip';
+  }).catch(function (e) {
+    btn.disabled = false; btn.textContent = 'Download zip';
+    alert('Could not pack the zip: ' + e.message);
+  });
+};
+
+render();
+</script>
+</body>
+</html>
