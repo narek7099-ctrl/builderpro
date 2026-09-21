@@ -54,6 +54,10 @@
 #bpx .bpc-ax{fill:var(--grey);font-size:11px;font-family:inherit}
 #bpx .bpc-hit{fill:transparent}
 #bpx .bpc-cross{stroke:var(--grey-l,var(--grey));stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+/* the `hidden` attribute is implemented by a UA rule that only matches HTML
+   elements, so an SVG <line hidden> was drawn anyway — a dashed line down the
+   left edge of every line chart, parked at x=0 waiting for a hover */
+#bpx svg .bpc-cross[hidden]{display:none}
 #bpx .bpc-bar{transition:opacity .12s}
 #bpx .bpc-plot:hover .bpc-bar{opacity:.82}
 
