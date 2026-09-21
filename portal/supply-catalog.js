@@ -709,6 +709,13 @@
 
   SP.CATALOG = C;
 
+  /* Which categories have a photo sitting in assets/materials/. Same deal
+     as the supplier logos: an explicit list, so nothing is requested until
+     the file is actually there and a card falls back to its drawn icon
+     rather than a broken image. The filename is the category lowercased —
+     Underlayment becomes underlayment.jpg. */
+  SP.CATIMG = ''.split(' ').filter(Boolean);
+
   /* One place that turns whatever the contractor typed into Settings into a
      shelf. "Interior design" is flooring and tile, "general contractor" is
      the site and safety kit, and a pool builder is not a plumber even
