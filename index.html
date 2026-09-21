@@ -14069,7 +14069,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},suppliers:{t:'Where I buy',s:'The supply houses you use, and what they charge you.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},leadsources:{t:'Lead Sources',s:'The leads you already buy — Angi, Thumbtack, your own website — arriving here the second they are sent, so they get answered first.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},suppliers:{t:'Where I buy',s:'The supply houses you use, and what they charge you.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14085,7 +14085,7 @@ var BP_NAV=[
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['calendar','Calendar'],['calculator','My Calculator']]},
   {id:'supply',l:'Supply',ico:'supply',kids:[['supply','Order materials'],['supplyorders','Orders'],['suppliers','Where I buy']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['payouts','Payouts']]},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['contacts','Contacts'],['messaging','Messaging']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['leadsources','Lead Sources'],['contacts','Contacts'],['messaging','Messaging']]},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors'],['reputation','Reputation']]}
 ];
 var BP_NAV_FOOT=[['settings','Settings','settings']];
@@ -14150,7 +14150,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,leadsources:bpLeadSources,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
 }
@@ -21557,6 +21557,239 @@ document.head.appendChild(rdCss);
   document.getElementById('oawIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
 })();
 </script>
+
+<script>
+/* ===== Lead Sources — the leads they already pay for ======================
+   Lead Radar finds doors nobody has knocked. This is the other half of the
+   same job: Angi, Thumbtack, a local ping-post seller, the form on their own
+   site. They are already buying those leads; what they are not doing is
+   answering them inside a minute, and on a shared lead that is most of what
+   decides who gets the work — the vendor sold the same homeowner to three
+   other contractors in the same breath.
+
+   So this page is deliberately small. It hands out a webhook URL, shows what
+   has come through it, and keeps an honest per-vendor cost. The valuable
+   part is not on this page at all: it is the tag the intake function puts on
+   the contact, which fires the workflow that answers the homeowner while
+   they still have the tab open. */
+var LS_VENDORS=[
+  ['angi','Angi','Angi Leads / Angi Ads'],
+  ['thumbtack','Thumbtack','Thumbtack lead webhook'],
+  ['homeadvisor','HomeAdvisor','HomeAdvisor / Angi Pro'],
+  ['networx','Networx','Networx'],
+  ['modernize','Modernize','Modernize'],
+  ['website','My website','A form on their own site'],
+  ['generic','Other seller','Any ping-post seller or spreadsheet']
+];
+function lsVendorName(k){var r=LS_VENDORS.filter(function(x){return x[0]===k;})[0];return r?r[1]:k;}
+var _lsSources=[],_lsEvents=[],_lsErr='';
+
+function lsHookUrl(s){
+  return (window.BP_URL||'https://YOUR-PROJECT.supabase.co')+'/functions/v1/lead-intake/'+s.id
+    +(s.secret?('?k='+s.secret):'');
+}
+
+function bpLeadSources(){
+  var area=q('bpxViewArea');
+  if(!(window.BP_LIVE&&window.BP_SB)){
+    area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">Sign in to connect a lead source.</div></div>';
+    return;
+  }
+  area.innerHTML='<div class="bpx-panel"><div class="bpx-mut" style="font-size:13px">Loading your lead sources…</div></div>';
+  Promise.all([
+    Promise.resolve(BP_SB.from('lead_sources').select('*').order('created_at',{ascending:false})).catch(function(e){return {error:e};}),
+    Promise.resolve(BP_SB.from('lead_events').select('*').order('received_at',{ascending:false}).limit(100)).catch(function(){return {data:[]};})
+  ]).then(function(r){
+    if(r[0]&&r[0].error){
+      _lsErr=(String((r[0].error&&r[0].error.message)||'').indexOf('does not exist')>=0)
+        ? 'The lead_sources tables haven’t been created yet — run the Lead Sources SQL and reload.'
+        : 'Couldn’t load your lead sources just now.';
+      _lsSources=[];
+    } else { _lsErr=''; _lsSources=(r[0].data)||[]; }
+    _lsEvents=(r[1]&&r[1].data)||[];
+    lsRender();
+  });
+}
+
+function lsRender(){
+  var area=q('bpxViewArea'); if(!area)return;
+  if(_lsErr){ area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">'+bpEsc(_lsErr)+'</div></div>'; return; }
+
+  var acc=_lsEvents.filter(function(e){return e.status==='accepted';});
+  var dup=_lsEvents.filter(function(e){return e.status==='duplicate';});
+  var since30=Date.now()-30*864e5;
+  var acc30=acc.filter(function(e){return Date.parse(e.received_at)>=since30;});
+  var spend=acc30.reduce(function(a,e){return a+(+e.cost||0);},0);
+
+  /* Per source, only ever compared against itself: what you pay for a lead
+     and what you get for it. Cost per lead is the number vendors quote;
+     what a contractor actually needs is cost per lead they could reach,
+     which is why duplicates and unreachable ones are counted separately
+     rather than folded away. */
+  var stats=_lsSources.map(function(s){
+    var mine=_lsEvents.filter(function(e){return e.source_id===s.id;});
+    var a=mine.filter(function(e){return e.status==='accepted';});
+    var a30=a.filter(function(e){return Date.parse(e.received_at)>=since30;});
+    return {s:s,all:mine.length,acc:a.length,acc30:a30.length,
+      dup:mine.filter(function(e){return e.status==='duplicate';}).length,
+      bad:mine.filter(function(e){return e.status==='rejected';}).length,
+      spend:a30.reduce(function(x,e){return x+(+e.cost||0);},0)};
+  });
+
+  var head='<div class="bpx-hero2"><div><h3 style="margin:0 0 5px">Lead sources</h3>'
+    +'<div class="bpx-mut" style="font-size:13px;line-height:1.6;max-width:70ch">The leads you already buy — Angi, Thumbtack, '
+    +'a local seller, your own website — arriving here the second the vendor sends them, so '+bpEsc(BP_AI_NAME)
+    +' answers the homeowner while they still have the tab open. On a shared lead that is usually the whole contest.</div></div>'
+    +'<button class="bpx-btn" style="width:auto;margin:0;padding:10px 18px" onclick="lsAddOpen()">+ Connect a source</button></div>';
+
+  var tiles='<div class="bpx-stats" style="margin:14px 0">'
+    +'<div class="bpx-stat"><span>Leads in, 30 days</span><b>'+acc30.length+'</b></div>'
+    +'<div class="bpx-stat"><span>Spend, 30 days</span><b>'+bpMoneyFmt(spend)+'</b></div>'
+    +'<div class="bpx-stat"><span>Cost per lead</span><b>'+(acc30.length&&spend?bpMoneyFmt(spend/acc30.length):'—')+'</b></div>'
+    +'<div class="bpx-stat"><span>Duplicates caught</span><b>'+dup.length+'</b></div></div>';
+
+  var chart='';
+  if(window.bpChart&&stats.filter(function(x){return x.acc30>0;}).length>=2){
+    chart='<div class="bpx-panel" style="margin-bottom:16px">'+bpChart.ranked({
+      title:'Where your leads came from',
+      lead:'accepted leads, last 30 days',
+      rows:stats.filter(function(x){return x.acc30>0;})
+        .map(function(x){return {label:lsVendorName(x.s.vendor)+(x.s.label?' · '+x.s.label:''),value:x.acc30};}),
+      fmt:bpNum,axis:'Source'})+'</div>';
+  }
+
+  var cards=_lsSources.length
+    ? '<div class="bpx-cards2">'+stats.map(function(x){
+        var s=x.s, url=lsHookUrl(s);
+        var last=s.last_lead_at?('last lead '+rdAgo(Date.parse(s.last_lead_at))):'nothing received yet';
+        var cpl=x.acc30&&x.spend?bpMoneyFmt(x.spend/x.acc30):(s.cost_per_lead?bpMoneyFmt(s.cost_per_lead):'—');
+        return '<div class="bpx-panel ls-card'+(s.active?'':' off')+'">'
+          +'<div class="bpx-chead" style="margin-bottom:8px"><div><b style="font-size:15px">'+bpEsc(s.label||lsVendorName(s.vendor))+'</b>'
+            +'<div class="bpx-mut" style="font-size:12px">'+bpEsc(lsVendorName(s.vendor))+' · '+bpEsc(last)+'</div></div>'
+            +'<span class="bpx-badge'+(s.active?' ok':'')+'">'+(s.active?'Live':'Paused')+'</span></div>'
+          +'<div class="ls-nums"><div><b>'+x.acc30+'</b><span>leads, 30d</span></div>'
+            +'<div><b>'+cpl+'</b><span>per lead</span></div>'
+            +'<div><b>'+x.dup+'</b><span>duplicate</span></div>'
+            +'<div><b>'+x.bad+'</b><span>unusable</span></div></div>'
+          +'<label class="st-lab" style="display:block;margin:12px 0 4px;font-weight:600;font-size:12px">Webhook URL — paste this into '+bpEsc(lsVendorName(s.vendor))+'</label>'
+          +'<div class="ls-url"><code>'+bpEsc(url)+'</code>'
+            +'<button class="bpx-rowbtn" onclick="lsCopy(this,\''+s.id+'\')">Copy</button></div>'
+          +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Treat it like a password — anyone with this URL can file leads into your account.</div>'
+          +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'
+            +'<button class="bpx-rowbtn" onclick="lsToggle(\''+s.id+'\')">'+(s.active?'Pause':'Resume')+'</button>'
+            +'<button class="bpx-rowbtn" onclick="lsTest(\''+s.id+'\')" title="Send a fake lead through it, end to end">Send a test lead</button>'
+            +bpDelBtn("lsDel('"+s.id+"')",'Disconnect this source')
+          +'</div></div>';
+      }).join('')+'</div>'
+    : '<div class="bpx-panel"><div class="bpx-empty2"><b>No sources connected yet.</b>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Connect one and you get a webhook URL to paste into that vendor’s '
+      +'lead-delivery settings. Every lead they send lands in Contacts and starts your follow-up straight away — '
+      +'no inbox to watch, no copying numbers across.</div>'
+      +'<button class="bpx-btn" style="width:auto;margin-top:12px;padding:10px 18px" onclick="lsAddOpen()">+ Connect a source</button></div></div>';
+
+  var recent=_lsEvents.length
+    ? '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:10px">'
+      +'<div class="bpx-ptitle" style="margin:0">Leads received<span class="lg2" style="margin-left:8px">newest first</span></div>'
+      +bpCsvBtn('bpCsvLeadEvents()','Export')+'</div>'
+      +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Job</th><th>Source</th><th>Status</th><th>When</th></tr></thead><tbody>'
+      +_lsEvents.slice(0,40).map(function(e){
+        var s=_lsSources.filter(function(x){return x.id===e.source_id;})[0]||{};
+        var badge=e.status==='accepted'?'ok':e.status==='duplicate'?'warn':'bad';
+        return '<tr><td>'+bpEsc(e.name||'—')+'</td><td>'+(e.phone?'<a href="tel:'+bpEsc(e.phone)+'" style="color:#2f6bff;text-decoration:none">'+bpEsc(e.phone)+'</a>':'—')+'</td>'
+          +'<td style="max-width:280px">'+bpEsc((e.job||'').slice(0,90))+'</td>'
+          +'<td>'+bpEsc(s.label||lsVendorName(s.vendor||'')||'—')+'</td>'
+          +'<td><span class="bpx-badge '+badge+'" title="'+bpEsc(e.reason||'')+'">'+bpEsc(e.status)+'</span></td>'
+          +'<td class="bpx-mut">'+bpEsc(rdAgo(Date.parse(e.received_at)))+'</td></tr>';
+      }).join('')+'</tbody></table></div>'
+      +'<div class="bpx-mut" style="font-size:11.5px;margin-top:9px">Duplicates and unusable leads are kept, not thrown away — '
+      +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
+    : '';
+
+  area.innerHTML=head+tiles+chart+cards+recent;
+}
+
+window.lsCopy=function(btn,id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  bpRepCopy(lsHookUrl(s),btn);
+};
+
+window.lsAddOpen=function(){
+  bpModal('<h3>Connect a lead source</h3><div class="bpx-sub">You’ll get a webhook URL to paste into that vendor’s lead-delivery settings.</div>'
+    +'<label>Who sends the leads</label><select id="ls-v" style="width:100%;padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit">'
+      +LS_VENDORS.map(function(v){return '<option value="'+v[0]+'">'+v[1]+' — '+v[2]+'</option>';}).join('')+'</select>'
+    +'<label>Name it (optional)</label><input id="ls-l" placeholder="e.g. Angi — roofing, Austin" style="width:100%;padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit">'
+    +'<label>What you pay per lead (optional)</label><input id="ls-c" type="number" min="0" step="0.01" placeholder="e.g. 65" style="width:100%;padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit">'
+    +'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Leave the price blank if you don’t know it yet — a guessed number is worse than an empty one when the point is comparing vendors honestly.</div>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="ls-go" onclick="lsAdd()">Create the webhook</button></div>');
+};
+window.lsAdd=function(){
+  var v=(q('ls-v')||{}).value||'generic', l=((q('ls-l')||{}).value||'').trim();
+  var c=parseFloat((q('ls-c')||{}).value); if(!isFinite(c)||c<0)c=null;
+  var btn=q('ls-go'); if(btn){btn.disabled=true;btn.textContent='Creating…';}
+  Promise.resolve(BP_SB.from('lead_sources').insert({vendor:v,label:l||lsVendorName(v),cost_per_lead:c}).select())
+    .then(function(r){
+      if(r&&r.error)throw r.error;
+      bpCloseModal(); bpLeadSources();
+    },function(e){
+      if(btn){btn.disabled=false;btn.textContent='Create the webhook';}
+      var m=q('bpx-mmsg'); if(m){m.style.color='#dc2626';m.textContent=(e&&e.message)||'Couldn’t create that — try again.';}
+    });
+};
+window.lsToggle=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  s.active=!s.active; lsRender();
+  Promise.resolve(BP_SB.from('lead_sources').update({active:s.active}).eq('id',id))
+    .then(function(){},function(){ s.active=!s.active; lsRender(); alert('Couldn’t save that — try again.'); });
+};
+window.lsDel=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  if(!bpAskDel(s.label||lsVendorName(s.vendor),'The webhook URL stops working immediately, and the leads it already delivered stay in Contacts.'))return;
+  _lsSources=_lsSources.filter(function(x){return x.id!==id;}); lsRender();
+  Promise.resolve(BP_SB.from('lead_sources').delete().eq('id',id)).then(function(){},function(){ bpLeadSources(); });
+};
+
+/* A test lead, sent through the real webhook rather than simulated. The whole
+   path is what can be broken — the URL, the parser, the tag, the workflow —
+   and only a real post exercises all of it. It arrives tagged like any other
+   lead, so it is deleted from Contacts afterwards like any other. */
+window.lsTest=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  if(!confirm('Send a test lead through this webhook?\n\nIt goes the whole way — it will appear in Contacts and will start your follow-up, '
+    +'exactly as a real one does. Delete the contact afterwards.'))return;
+  var stamp=Date.now().toString().slice(-6);
+  fetch(lsHookUrl(s),{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:'Test Lead '+stamp,phone:'555000'+stamp,email:'test'+stamp+'@example.com',
+      address:'1 Test Street',job:'Test lead sent from BuilderPro — safe to delete.'})})
+  .then(function(r){return r.json().catch(function(){return {};});})
+  .then(function(d){
+    if(d&&d.ok)alert('It went through — status "'+d.status+'". Check Contacts for "Test Lead '+stamp+'".');
+    else alert('The webhook answered with an error: '+((d&&d.error)||'unknown')+'\n\nIf it says the function was not found, deploy lead-intake first.');
+    bpLeadSources();
+  }).catch(function(){ alert('Couldn’t reach the webhook. If lead-intake hasn’t been deployed yet, that’s why.'); });
+};
+
+window.bpCsvLeadEvents=function(){
+  bpCsv('leads-received',['Received','Name','Phone','Email','Address','Job','Source','Status','Reason','Cost'],
+    _lsEvents.map(function(e){
+      var s=_lsSources.filter(function(x){return x.id===e.source_id;})[0]||{};
+      return [e.received_at?new Date(e.received_at).toLocaleString('en-US'):'',e.name,e.phone,e.email,e.address,e.job,
+        s.label||lsVendorName(s.vendor||''),e.status,e.reason,e.cost||''];
+    }));
+};
+
+var lsCss=document.createElement('style');
+lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}'
+  +'.ls-card.off{opacity:.62}'
+  +'.ls-nums{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}'
+  +'.ls-nums div{font-size:11.5px;color:var(--grey)}'
+  +'.ls-nums b{display:block;font-size:18px;color:var(--ink);letter-spacing:-.02em;font-weight:700}'
+  +'.ls-url{display:flex;align-items:center;gap:8px;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 10px}'
+  +'.ls-url code{flex:1;min-width:0;font-size:11.5px;overflow-x:auto;white-space:nowrap;color:var(--ink)}'
+  +'.bpx-hero2{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}';
+document.head.appendChild(lsCss);
+</script>
+
 
 <script>
 /* ===== Reputation: the contractor's own reviews, every platform, one page =====
