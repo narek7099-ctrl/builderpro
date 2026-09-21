@@ -17069,7 +17069,7 @@ function bpActiveJobs(){
   var done=jobs.filter(function(j){return j.status==='done';});
   var rows, head, pgNav='';
   if(_bpJobTab==='active'){
-    head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Dates</th><th>Won</th><th>Status</th><th></th></tr>';
+    head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Progress</th><th>Dates</th><th>Status</th><th></th></tr>';
     var pgA=bpPage('jobsA',active,10,'bpActiveJobs()'); pgNav=pgA.nav;
     rows=active.length?pgA.items.map(function(j){
       var extra=[];
@@ -17078,7 +17078,7 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td class="bpx-mut">'+bpAgo(j.wonAt)+'</td><td><span class="bpx-badge">In progress</span></td>'
+      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done <span class=ms>check</span></button></td></tr>';
     }).join(''):'<tr><td colspan="6" style="padding:0"><div class="bpx-emptyhero"><img src="assets/roofing/roof-decking-sm.jpg" alt="" loading="lazy"><div><b>No active projects yet</b><div class="bpx-mut" style="font-size:13px;margin-top:3px">When a deposit is paid the job lands here automatically — or add one with <b>+ Add job</b>.</div></div></div></td></tr>';
   } else {
@@ -17093,7 +17093,8 @@ function bpActiveJobs(){
     }).join(''):'<tr><td colspan="6" class="bpx-empty2">No completed jobs yet.</td></tr>';
   }
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
+    (_bpJobTab==='active'&&window.bpPlanCheckin?bpPlanCheckin():'')
+    +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
@@ -17200,9 +17201,12 @@ window.bpProjOpen=function(id){
       '<label style="margin-top:0">Materials</label><div class="bpx-mut" style="font-size:12px;margin-bottom:8px">What you have ordered for this job, and the way to order more. Bills land on it in Finances.</div>'
       +'<div id="bpx-pj-mat"><div class="bpx-empty2">Loading\u2026</div></div>')
     +pane('schedule',
-      '<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(180px,1fr);gap:22px;align-items:start" class="bpx-iv-grid">'
-      +'<div><label style="margin-top:0">Booked work days</label>'
-      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Tap days to book them — they show on the Jobs calendar.</div>'
+      '<label style="margin-top:0">Phases and progress</label>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">The stages this job runs through. Tick one off as it is finished; if one slips, everything behind it moves and we tell you what it did to the finish date.</div>'
+      +(window.bpPlanPanel?bpPlanPanel(j.id):'')
+      +'<label style="margin-top:20px">Booked work days</label>'
+      +'<div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(180px,1fr);gap:22px;align-items:start" class="bpx-iv-grid">'
+      +'<div><div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Tap days to book them — they show on the Jobs calendar.</div>'
       +'<div id="bpx-pj-cal" style="border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff"></div></div>'
       +'<div><label style="margin-top:0">Start time</label><input type="time" id="bpx-pj-time" style="display:block;width:100%;box-sizing:border-box" value="'+bpEsc(j.sched.time||'09:00')+'">'
         +'<label>End time</label><input type="time" id="bpx-pj-end" style="display:block;width:100%;box-sizing:border-box" value="'+bpEsc(j.sched.end||bpProjEndFromDur(j.sched.time||'09:00',j.sched.dur||'480'))+'">'
@@ -21943,11 +21947,13 @@ window.bpFmHangers=function(){
 
 </body>
 <link rel="stylesheet" href="portal/charts.css?v=20260921a">
+<link rel="stylesheet" href="portal/progress.css?v=20260921a">
 <link rel="stylesheet" href="portal/supply.css?v=20260921e">
 <link rel="stylesheet" href="portal/dash.css?v=20260919c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/charts.js?v=20260921a"></script>
+<script src="portal/progress.js?v=20260921a"></script>
 <script src="portal/supply.js?v=20260921e"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260919c"></script>
