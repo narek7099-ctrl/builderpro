@@ -209,7 +209,13 @@
      and fall back on the 404: with nothing here the page asks for nothing
      and every tile wears its lettermark. Drop <id>.png in that folder and
      add the id here — that is the whole job. See the README in there. */
-  SP.LOGOS = ''.split(' ').filter(Boolean);
+  SP.LOGOS = 'abc beacon ferguson floordecor lowes_pro sherwin siteone srs'.split(' ').filter(Boolean);
+
+  /* Some brands only publish a square app-icon lockup — white mark on a
+     solid brand colour. Those already carry their own tile, so they fill
+     the chip edge to edge instead of floating inset on ours, which would
+     read as a coloured stamp stuck on a grey card. */
+  SP.LOGOS_FULL = 'ferguson lowes_pro sherwin siteone'.split(' ').filter(Boolean);
 
   function matches(d, trade, q) {
     if (trade !== 'all' && d.trades.indexOf(trade) < 0 && d.trades.indexOf('all') < 0) return false;

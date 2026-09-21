@@ -209,7 +209,8 @@
      broken-image icon, and dropping a file in is all it takes to upgrade. */
   function supMark(name, id, cls) {
     var tint = CHAIN_TINT[id] || 'var(--grey)';
-    return '<span class="sp-mark ' + (cls || '') + '" style="--mk:' + tint + '">'
+    var full = id && (SP.LOGOS_FULL || []).indexOf(id) >= 0 ? ' full' : '';
+    return '<span class="sp-mark ' + (cls || '') + full + '" style="--mk:' + tint + '">'
       + '<i>' + esc(initials(name)) + '</i>'
       + (id && (SP.LOGOS || []).indexOf(id) >= 0
         ? '<img src="assets/suppliers/' + esc(id) + '.png" alt="" loading="lazy"'
