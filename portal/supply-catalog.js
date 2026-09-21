@@ -47,6 +47,11 @@
     dry:   'lw fbm',
     lum:   'bfs e84 carter',
     tool:  'fastenal grainger zoro',
+    pool:  'poolcorp heritagepool leslies',
+    tile:  'floordecor tileshop msi',
+    stone: 'msi cosentino floordecor',
+    cab:   'richelieu homedepot_pro lowes_pro',
+    mill:  'metrie bfs carter e84',
   };
   function carriers(s) {
     var out = [];
@@ -489,17 +494,257 @@
     ['Screws assorted bulk pack', 'Fasteners', 'box', 28, 55, 'tool box'],
   ]);
 
+  add('pools', [
+    ['Pool pump, variable speed 1.65 HP', 'Pumps', 'ea', 720, 1250, 'pool'],
+    ['Pool pump, single speed 1 HP', 'Pumps', 'ea', 280, 520, 'pool box'],
+    ['Booster pump for cleaner, 3/4 HP', 'Pumps', 'ea', 320, 560, 'pool'],
+    ['Pump motor, 1.5 HP replacement', 'Pumps', 'ea', 240, 430, 'pool'],
+    ['Pump basket and lid', 'Pumps', 'ea', 28, 58, 'pool'],
+    ['Pump seal and gasket kit', 'Pumps', 'ea', 18, 38, 'pool'],
+    ['Cartridge filter, 150 sq ft', 'Filters', 'ea', 340, 620, 'pool'],
+    ['Cartridge filter element, 100 sq ft', 'Filters', 'ea', 78, 145, 'pool box'],
+    ['DE filter, 48 sq ft', 'Filters', 'ea', 520, 900, 'pool'],
+    ['Sand filter, 24 in with valve', 'Filters', 'ea', 420, 720, 'pool box'],
+    ['Filter sand, 50 lb', 'Filters', 'bag', 14, 28, 'pool box'],
+    ['DE powder, 25 lb', 'Filters', 'bag', 26, 48, 'pool'],
+    ['Multiport valve, 6 position', 'Valves', 'ea', 130, 240, 'pool'],
+    ['Pool heater, gas 400k BTU', 'Equipment', 'ea', 2200, 3600, 'pool'],
+    ['Heat pump, pool 110k BTU', 'Equipment', 'ea', 2600, 4400, 'pool'],
+    ['Salt chlorine generator', 'Equipment', 'ea', 850, 1550, 'pool'],
+    ['Salt cell, replacement', 'Equipment', 'ea', 420, 780, 'pool'],
+    ['Automation control panel', 'Controls', 'ea', 950, 1700, 'pool'],
+    ['Chlorine tabs 3 in, 50 lb', 'Chemicals', 'bucket', 130, 230, 'pool box'],
+    ['Liquid chlorine, 2x2.5 gal case', 'Chemicals', 'case', 16, 32, 'pool box'],
+    ['Muriatic acid, 2x1 gal case', 'Chemicals', 'case', 18, 34, 'pool box'],
+    ['Soda ash, 25 lb', 'Chemicals', 'bag', 32, 58, 'pool'],
+    ['Calcium hardness increaser, 50 lb', 'Chemicals', 'bag', 48, 88, 'pool'],
+    ['Cyanuric acid stabilizer, 25 lb', 'Chemicals', 'bag', 62, 115, 'pool'],
+    ['Algaecide, 1 gal', 'Chemicals', 'ea', 34, 68, 'pool box'],
+    ['Pool shock, 1 lb bags, 24 ct', 'Chemicals', 'case', 48, 92, 'pool box'],
+    ['Diatomaceous earth alternative, 25 lb', 'Chemicals', 'bag', 38, 72, 'pool'],
+    ['Vinyl liner, 20x40 overlap', 'Liner', 'ea', 850, 1600, 'pool'],
+    ['Liner patch kit, underwater', 'Liner', 'ea', 18, 38, 'pool box'],
+    ['Pool plaster mix, 100 lb', 'Liner', 'bag', 32, 58, 'pool'],
+    ['Pebble finish aggregate, 50 lb', 'Liner', 'bag', 48, 88, 'pool'],
+    ['Waterline tile, 6x6 pack', 'Tile', 'pk', 26, 52, 'pool tile'],
+    ['Pool coping, precast per lf', 'Hardscape', 'lf', 11, 24, 'pool land'],
+    ['Skimmer, complete', 'Drainage', 'ea', 78, 150, 'pool'],
+    ['Main drain, dual VGB', 'Drainage', 'ea', 68, 130, 'pool'],
+    ['Return fitting and eyeball', 'Fittings', 'ea', 8, 18, 'pool box'],
+    ['PVC flex hose 2 in, 25 ft', 'Pipe', 'roll', 42, 78, 'pool'],
+    ['Pool LED light, color 12V', 'Lighting', 'ea', 280, 520, 'pool'],
+    ['Niche and conduit kit', 'Lighting', 'ea', 95, 180, 'pool'],
+    ['Robotic pool cleaner', 'Tools', 'ea', 650, 1400, 'pool box'],
+    ['Leaf rake and pole set', 'Tools', 'ea', 42, 85, 'pool box'],
+    ['Test kit, drop reagent', 'Tools', 'ea', 28, 58, 'pool box'],
+    ['Winter cover, 20x40', 'Tools', 'ea', 180, 340, 'pool box'],
+    ['Safety cover, mesh custom', 'Tools', 'ea', 1800, 3200, 'pool'],
+  ]);
+
+  add('trim', [
+    ['Base moulding, MDF 5-1/4 in, per lf', 'Trim', 'lf', 1.3, 2.8, 'mill box'],
+    ['Base moulding, primed pine 5-1/4 in, per lf', 'Trim', 'lf', 1.9, 3.8, 'mill box'],
+    ['Casing, MDF 3-1/2 in, per lf', 'Trim', 'lf', 1.1, 2.4, 'mill box'],
+    ['Casing, colonial pine 2-1/4 in, per lf', 'Trim', 'lf', 1.2, 2.6, 'mill box'],
+    ['Crown moulding, MDF 5 in, per lf', 'Trim', 'lf', 1.8, 3.6, 'mill box'],
+    ['Crown moulding, poplar 5-1/4 in, per lf', 'Trim', 'lf', 3.2, 6.5, 'mill'],
+    ['Shoe moulding, per lf', 'Trim', 'lf', 0.7, 1.6, 'mill box'],
+    ['Quarter round, per lf', 'Trim', 'lf', 0.7, 1.6, 'mill box'],
+    ['Chair rail, per lf', 'Trim', 'lf', 1.6, 3.4, 'mill box'],
+    ['Panel moulding, per lf', 'Trim', 'lf', 1.4, 3.2, 'mill'],
+    ['Shiplap, primed 8 in, per lf', 'Trim', 'lf', 2.2, 4.5, 'mill box'],
+    ['Beadboard panel, 4x8', 'Panels', 'ea', 28, 55, 'mill box'],
+    ['Stair tread, red oak 48 in', 'Trim', 'ea', 42, 85, 'mill box'],
+    ['Stair riser, primed 48 in', 'Trim', 'ea', 14, 30, 'mill box'],
+    ['Newel post, 3-1/2 in', 'Trim', 'ea', 95, 200, 'mill'],
+    ['Baluster, wood 36 in', 'Trim', 'ea', 6, 14, 'mill box'],
+    ['Handrail, oak per lf', 'Trim', 'lf', 8, 18, 'mill box'],
+    ['Interior door, hollow core prehung 30 in', 'Doors', 'ea', 95, 185, 'mill box'],
+    ['Interior door, solid core prehung 32 in', 'Doors', 'ea', 210, 420, 'mill box'],
+    ['Bifold door, 24 in', 'Doors', 'ea', 68, 140, 'mill box'],
+    ['Barn door kit with track', 'Doors', 'ea', 240, 480, 'mill box'],
+    ['Exterior door, fiberglass prehung 36 in', 'Doors', 'ea', 420, 900, 'mill box'],
+    ['Door casing kit, one side', 'Trim', 'ea', 24, 48, 'mill box'],
+    ['Door hinges, 3-1/2 in, 3 pk', 'Hardware', 'pk', 9, 20, 'cab box'],
+    ['Passage lever set', 'Hardware', 'ea', 22, 48, 'cab box'],
+    ['Privacy lever set', 'Hardware', 'ea', 26, 55, 'cab box'],
+    ['Deadbolt, single cylinder', 'Hardware', 'ea', 32, 72, 'cab box'],
+    ['Door stop, 3 pk', 'Hardware', 'pk', 7, 15, 'box'],
+    ['Window, vinyl double hung 36x48', 'Windows', 'ea', 280, 560, 'mill box'],
+    ['Window trim kit, exterior', 'Trim', 'ea', 38, 78, 'mill box'],
+    ['Finish nails 16 ga, 2-1/2 in, 2500 ct', 'Fasteners', 'box', 24, 48, 'box tool'],
+    ['Brad nails 18 ga, 2 in, 5000 ct', 'Fasteners', 'box', 18, 38, 'box tool'],
+    ['Construction adhesive for trim, 12 pk', 'Sealants', 'case', 38, 70, 'box'],
+    ['Paintable caulk for trim, 12 pk', 'Sealants', 'case', 32, 58, 'paint box'],
+    ['Wood filler, stainable 1 qt', 'Prep', 'ea', 12, 26, 'box paint'],
+  ]);
+
+  add('cabinets', [
+    ['Base cabinet, shaker 24 in', 'Cabinets', 'ea', 180, 400, 'cab box'],
+    ['Base cabinet, shaker 36 in', 'Cabinets', 'ea', 240, 520, 'cab box'],
+    ['Wall cabinet, shaker 30x30', 'Cabinets', 'ea', 165, 360, 'cab box'],
+    ['Sink base cabinet, 36 in', 'Cabinets', 'ea', 220, 480, 'cab box'],
+    ['Pantry cabinet, 24x84', 'Cabinets', 'ea', 420, 880, 'cab box'],
+    ['Drawer base, 3 drawer 18 in', 'Cabinets', 'ea', 230, 500, 'cab box'],
+    ['Vanity cabinet, 36 in', 'Cabinets', 'ea', 260, 620, 'cab box'],
+    ['Cabinet door, shaker replacement', 'Cabinets', 'ea', 28, 75, 'cab'],
+    ['Drawer box, dovetail', 'Cabinets', 'ea', 34, 78, 'cab'],
+    ['Toe kick, matching 8 ft', 'Cabinets', 'ea', 18, 42, 'cab box'],
+    ['Crown for cabinets, per lf', 'Trim', 'lf', 4, 11, 'cab box'],
+    ['Filler strip, 3x96', 'Cabinets', 'ea', 14, 34, 'cab box'],
+    ['Finished end panel', 'Panels', 'ea', 38, 88, 'cab'],
+    ['Plywood, birch 3/4 in 4x8', 'Panels', 'ea', 62, 120, 'cab lum box'],
+    ['Melamine panel, 3/4 in 4x8', 'Panels', 'ea', 42, 85, 'cab'],
+    ['Edge banding, 250 ft roll', 'Panels', 'roll', 28, 62, 'cab'],
+    ['Soft-close hinge, 100 pk', 'Hardware', 'box', 78, 165, 'cab'],
+    ['Soft-close hinge, 10 pk', 'Hardware', 'pk', 14, 32, 'cab box'],
+    ['Undermount drawer slides 18 in, 10 pr', 'Hardware', 'box', 130, 280, 'cab'],
+    ['Side-mount drawer slides 20 in, 10 pr', 'Hardware', 'box', 58, 125, 'cab box'],
+    ['Cabinet pulls, 4 in, 25 pk', 'Hardware', 'box', 48, 120, 'cab box'],
+    ['Cabinet knobs, 25 pk', 'Hardware', 'box', 38, 95, 'cab box'],
+    ['Lazy susan, 28 in', 'Hardware', 'ea', 78, 170, 'cab box'],
+    ['Pull-out trash, double bin', 'Hardware', 'ea', 95, 210, 'cab box'],
+    ['Drawer organiser insert', 'Hardware', 'ea', 34, 78, 'cab box'],
+    ['Shelf pins, 100 ct', 'Hardware', 'box', 8, 18, 'cab box'],
+    ['Cabinet screws 2-1/2 in, 100 ct', 'Fasteners', 'box', 14, 30, 'cab box'],
+    ['Pocket screws, 500 ct', 'Fasteners', 'box', 22, 45, 'box tool'],
+    ['Under cabinet lighting, 4 pk', 'Lighting', 'case', 68, 145, 'cab box elec'],
+    ['Cabinet touch-up kit', 'Finish', 'ea', 18, 42, 'cab'],
+  ]);
+
+  add('countertops', [
+    ['Quartz slab, level 1 per sq ft', 'Stone', 'sqft', 32, 55, 'stone'],
+    ['Quartz slab, level 3 per sq ft', 'Stone', 'sqft', 55, 95, 'stone'],
+    ['Granite slab, level 1 per sq ft', 'Stone', 'sqft', 28, 50, 'stone'],
+    ['Granite slab, exotic per sq ft', 'Stone', 'sqft', 60, 120, 'stone'],
+    ['Marble slab, per sq ft', 'Stone', 'sqft', 55, 130, 'stone'],
+    ['Porcelain slab, per sq ft', 'Stone', 'sqft', 45, 85, 'stone'],
+    ['Butcher block, 8 ft', 'Panels', 'ea', 180, 420, 'box'],
+    ['Laminate countertop, post-form per lf', 'Panels', 'lf', 18, 42, 'box'],
+    ['Solid surface sheet, per sq ft', 'Stone', 'sqft', 26, 52, 'stone'],
+    ['Undermount sink clips, 10 pk', 'Hardware', 'pk', 12, 28, 'stone'],
+    ['Countertop support bracket, hidden', 'Hardware', 'ea', 22, 55, 'box cab'],
+    ['Stone adhesive, color matched tube', 'Sealants', 'ea', 14, 32, 'stone'],
+    ['Silicone, clear kitchen and bath, 12 pk', 'Sealants', 'case', 38, 72, 'box paint'],
+    ['Stone sealer, 1 qt', 'Finish', 'ea', 24, 55, 'stone box'],
+    ['Seam setter, suction', 'Tools', 'ea', 180, 380, 'stone'],
+    ['Diamond polishing pads, 7 pc set', 'Tools', 'pk', 48, 110, 'stone tool'],
+    ['Diamond blade for stone, 10 in', 'Tools', 'ea', 95, 220, 'stone tool'],
+    ['Core bit, 1-3/8 in diamond', 'Tools', 'ea', 42, 95, 'stone tool'],
+    ['Slab transport A-frame rack', 'Tools', 'ea', 420, 900, 'stone'],
+    ['Suction cup lifters, pair', 'Tools', 'pr', 68, 150, 'stone tool'],
+    ['Backsplash tile, subway per sq ft', 'Tile', 'sqft', 2.2, 6.5, 'tile box'],
+    ['Backsplash mosaic sheet, 12x12', 'Tile', 'ea', 8, 22, 'tile box'],
+    ['Thinset for stone, 50 lb', 'Sealants', 'bag', 18, 38, 'tile box'],
+    ['Grout, unsanded 25 lb', 'Sealants', 'bag', 22, 45, 'tile box'],
+    ['Edge profile, bullnose per lf', 'Stone', 'lf', 12, 28, 'stone'],
+    ['Sink cutout and polish, per opening', 'Stone', 'ea', 95, 220, 'stone'],
+    ['Cooktop cutout, per opening', 'Stone', 'ea', 85, 190, 'stone'],
+  ]);
+
+  add('flooring', [
+    ['Luxury vinyl plank, per sq ft', 'Flooring', 'sqft', 1.8, 4.5, 'tile box'],
+    ['Engineered hardwood, per sq ft', 'Flooring', 'sqft', 3.4, 8.5, 'tile box'],
+    ['Solid oak flooring, per sq ft', 'Flooring', 'sqft', 4.2, 9.5, 'tile box mill'],
+    ['Laminate flooring, per sq ft', 'Flooring', 'sqft', 1.3, 3.4, 'tile box'],
+    ['Carpet, per sq yd', 'Flooring', 'sqyd', 12, 34, 'box'],
+    ['Carpet pad, per sq yd', 'Flooring', 'sqyd', 4, 9, 'box'],
+    ['Porcelain tile 12x24, per sq ft', 'Tile', 'sqft', 1.8, 5.5, 'tile box'],
+    ['Ceramic tile 12x12, per sq ft', 'Tile', 'sqft', 1.1, 3.2, 'tile box'],
+    ['Wood-look plank tile, per sq ft', 'Tile', 'sqft', 2.4, 6, 'tile box'],
+    ['Mosaic tile sheet, 12x12', 'Tile', 'ea', 7, 24, 'tile box'],
+    ['Large format tile 24x48, per sq ft', 'Tile', 'sqft', 4, 11, 'tile'],
+    ['Tile trim, Schluter edge 8 ft', 'Trim', 'ea', 18, 42, 'tile box'],
+    ['Transition strip, 3 ft', 'Trim', 'ea', 12, 30, 'tile box'],
+    ['Thinset, modified 50 lb', 'Sealants', 'bag', 16, 34, 'tile box'],
+    ['Large format thinset, 50 lb', 'Sealants', 'bag', 24, 48, 'tile box'],
+    ['Grout, sanded 25 lb', 'Sealants', 'bag', 20, 42, 'tile box'],
+    ['Epoxy grout, 1 gal kit', 'Sealants', 'ea', 62, 130, 'tile'],
+    ['Grout sealer, 1 qt', 'Finish', 'ea', 18, 40, 'tile box'],
+    ['Flooring adhesive, 4 gal', 'Sealants', 'ea', 68, 140, 'tile box'],
+    ['Underlayment foam, 100 sq ft roll', 'Prep', 'roll', 22, 48, 'tile box'],
+    ['Cork underlayment, 100 sq ft', 'Prep', 'roll', 55, 110, 'tile'],
+    ['Uncoupling membrane, 150 sq ft', 'Prep', 'roll', 130, 260, 'tile box'],
+    ['Waterproofing membrane, 1 gal', 'Prep', 'ea', 48, 98, 'tile box'],
+    ['Self-levelling compound, 50 lb', 'Prep', 'bag', 32, 62, 'tile box'],
+    ['Backer board 1/2 in, 3x5', 'Panels', 'ea', 13, 26, 'tile box dry'],
+    ['Backer board screws, 200 ct', 'Fasteners', 'box', 16, 34, 'tile box'],
+    ['Tile spacers, 500 ct', 'Tools', 'bag', 8, 18, 'tile box'],
+    ['Levelling clips and wedges, 500 ct', 'Tools', 'box', 42, 88, 'tile box'],
+    ['Tile saw, 7 in wet', 'Tools', 'ea', 180, 420, 'tile box tool'],
+    ['Notched trowel set', 'Tools', 'ea', 22, 48, 'tile box'],
+    ['Grout float and sponges', 'Tools', 'ea', 18, 40, 'tile box'],
+    ['Knee pads, gel', 'Tools', 'pr', 24, 55, 'box tool'],
+    ['Stair nose, per lf', 'Trim', 'lf', 12, 30, 'tile box'],
+    ['Baseboard for flooring, per lf', 'Trim', 'lf', 1.3, 3, 'mill box'],
+  ]);
+
+  add('general', [
+    ['Dumpster, 20 yd haul', 'Prep', 'ea', 420, 780, 'box'],
+    ['Portable toilet, monthly', 'Prep', 'ea', 130, 260, 'box'],
+    ['Temporary fence panel, 6x12', 'Prep', 'ea', 78, 160, 'tool'],
+    ['Construction heater, propane', 'Tools', 'ea', 130, 290, 'box tool'],
+    ['Dehumidifier, jobsite', 'Tools', 'ea', 280, 620, 'tool box'],
+    ['Air scrubber with HEPA', 'Tools', 'ea', 420, 850, 'tool'],
+    ['Poly sheeting 6 mil, 20x100', 'Prep', 'roll', 62, 125, 'box'],
+    ['Zip wall dust barrier kit', 'Prep', 'ea', 48, 110, 'box tool'],
+    ['Floor protection board, 38 in x 100 ft', 'Prep', 'roll', 55, 120, 'box'],
+    ['Ram board equivalent, per roll', 'Prep', 'roll', 55, 115, 'box'],
+    ['Hard hats, 4 pk', 'Tools', 'pk', 38, 78, 'tool box'],
+    ['Hi-vis vests, 5 pk', 'Tools', 'pk', 26, 55, 'tool box'],
+    ['Fall protection harness kit', 'Tools', 'ea', 130, 290, 'tool box'],
+    ['First aid kit, 50 person', 'Tools', 'ea', 42, 95, 'tool box'],
+    ['Fire extinguisher, 10 lb ABC', 'Tools', 'ea', 58, 125, 'tool box'],
+    ['Jobsite sign and permit box', 'Prep', 'ea', 28, 68, 'box'],
+    ['Wheelbarrow, 6 cu ft', 'Tools', 'ea', 95, 190, 'box tool'],
+    ['Mixing tub, 20 gal', 'Tools', 'ea', 18, 38, 'box'],
+    ['Ladder jacks and plank', 'Tools', 'ea', 180, 390, 'tool box'],
+    ['Scaffold frame set, 5x5', 'Tools', 'ea', 130, 290, 'tool box'],
+    ['Job box, 48 in lockable', 'Tools', 'ea', 280, 620, 'tool box'],
+    ['Broom and shovel set', 'Tools', 'ea', 34, 72, 'box'],
+    ['Shop rags, 25 lb box', 'Tools', 'box', 34, 68, 'box tool'],
+    ['Layout paint, 12 pk', 'Tools', 'case', 42, 85, 'box tool'],
+    ['Chalk refill, 5 lb', 'Tools', 'ea', 14, 30, 'box tool'],
+  ]);
+
   SP.CATALOG = C;
 
-  /* A contractor's trade decides what opens first, but never what they are
-     allowed to search: a roofer still buys plywood and caulk. */
-  SP.catalogForTrade = function (trade) {
+  /* One place that turns whatever the contractor typed into Settings into a
+     shelf. "Interior design" is flooring and tile, "general contractor" is
+     the site and safety kit, and a pool builder is not a plumber even
+     though half their list is pipe. A trade we do not recognise gets the
+     whole catalog rather than an empty shop. */
+  var TRADE_WORDS = [
+    ['pools', ['pool', 'spa', 'hot tub']],
+    ['countertops', ['countertop', 'counter top', 'granite', 'quartz', 'stone', 'surface']],
+    ['cabinets', ['cabinet', 'millwork shop', 'joinery']],
+    ['flooring', ['floor', 'tile', 'interior design', 'interior', 'design', 'carpet']],
+    ['trim', ['trim', 'finish carpentry', 'carpentry', 'carpenter', 'molding', 'moulding', 'door', 'window']],
+    ['roofing', ['roof', 'gutter', 'siding']],
+    ['plumbing', ['plumb', 'drain', 'septic']],
+    ['electrical', ['electric', 'solar', 'low voltage']],
+    ['hvac', ['hvac', 'heating', 'air condition', 'air', 'heat', 'mechanical', 'refrigeration']],
+    ['painting', ['paint', 'stain', 'drywall finish']],
+    ['landscaping', ['landscap', 'lawn', 'irrigation', 'hardscape', 'yard', 'tree', 'garden']],
+    ['concrete', ['concrete', 'mason', 'foundation', 'paving', 'driveway']],
+    ['drywall', ['drywall', 'insulation', 'plaster']],
+    ['framing', ['framing', 'lumber', 'deck', 'fence', 'structural']],
+    ['general', ['general contract', 'general', 'remodel', 'renovation', 'construction', 'builder', 'handyman', 'restoration']],
+  ];
+  SP.tradeKey = function (trade) {
     var t = String(trade || '').toLowerCase();
-    var key = ['roofing', 'plumbing', 'electrical', 'hvac', 'painting', 'landscaping', 'concrete', 'drywall', 'framing', 'tools']
-      .filter(function (k) { return t.indexOf(k.slice(0, 5)) >= 0; })[0]
-      || (t.indexOf('air') >= 0 || t.indexOf('heat') >= 0 ? 'hvac'
-        : t.indexOf('lawn') >= 0 || t.indexOf('pool') >= 0 ? 'landscaping'
-        : t.indexOf('mason') >= 0 ? 'concrete' : '');
+    if (!t) return '';
+    var hit = TRADE_WORDS.filter(function (r) {
+      return r[1].some(function (w) { return t.indexOf(w) >= 0; });
+    })[0];
+    return hit ? hit[0] : '';
+  };
+  SP.catalogForTrade = function (trade) {
+    var key = SP.tradeKey(trade);
     return key ? C.filter(function (x) { return x.trade === key; }) : C;
+  };
+  SP.trades = function () {
+    var seen = {}; C.forEach(function (x) { seen[x.trade] = (seen[x.trade] || 0) + 1; });
+    return seen;
   };
 })();

@@ -422,3 +422,66 @@
    is dropped because the store chips underneath already say who else has it */
 #bpx .sp-card-price .sp-pk-more{display:none}
 #bpx .sp-card-price .sp-pk-sup{flex-basis:100%;margin-bottom:-2px}
+
+/* The portal's base input rule sets border, background, radius and an
+   inset shadow with !important, so a plain override loses and the field
+   draws its own box inside the search wrapper — the "two boxes" look.
+   The wrapper owns the frame here, so the input has to give up all four. */
+#bpx .sp-pk-box input{border:0 !important;background:none !important;border-radius:0 !important;box-shadow:none !important}
+#bpx .sp-pk-box:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(43,99,230,.16)}
+#bpx .sp-pk-box input:focus{border:0 !important;box-shadow:none !important}
+
+/* ==================================================================
+   SUPPLIERS — logos, the chains we already know, and what their
+   prices are actually worth.
+   ================================================================== */
+/* The lettermark is the floor. A real logo drops on top of it and the
+   parent gains .has, which hides the letters. Nothing is fetched, so a
+   missing file costs nothing and never shows a broken image. */
+#bpx .sp-mark{position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;background:var(--soft);overflow:hidden}
+#bpx .sp-mark i{font-style:normal;font-size:13px;font-weight:800;letter-spacing:.02em;color:var(--mk,var(--grey))}
+#bpx .sp-mark img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain}
+#bpx .sp-mark.has i{visibility:hidden}
+#bpx .sp-mark.lg{width:46px;height:46px;border-radius:11px}
+#bpx .sp-mark.lg i{font-size:16px}
+/* a white logo would vanish on the dark card, so the tile stays light */
+#bpx.bpx-dark .sp-mark{background:#f2f5f9}
+#bpx.bpx-dark .sp-mark i{color:var(--mk,#5b6472)}
+
+#bpx .sp-sup-h{align-items:center;gap:11px}
+#bpx .sp-sup-id{flex:1;min-width:0}
+#bpx .sp-sup-id b{display:block;font-size:15.5px;letter-spacing:-.01em}
+#bpx .sp-sup-id .bpx-mut{display:block;font-size:12.5px;margin-top:1px}
+/* the three numbers that say whether this supplier is pulling its weight */
+#bpx .sp-sup-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px 6px;background:var(--tint,#f4f6fa)}
+#bpx .sp-sup-nums>div{text-align:center;min-width:0}
+#bpx .sp-sup-nums b{display:block;font-size:16px;font-weight:700;letter-spacing:-.02em}
+#bpx .sp-sup-nums span{display:block;font-size:10.5px;color:var(--grey);margin-top:1px}
+#bpx .sp-sup-vs{display:flex;flex-direction:column;gap:3px}
+#bpx .sp-sup-vs .bpx-mut{font-size:11.5px;line-height:1.4}
+#bpx .sp-vs{align-self:flex-start;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
+#bpx .sp-vs.good{background:#e7f7ee;color:#0f7a3d}
+#bpx .sp-vs.bad{background:#fdecec;color:#b3392f}
+#bpx .sp-vs.even{background:var(--soft);color:var(--grey)}
+#bpx.bpx-dark .sp-vs.good{background:rgba(52,168,110,.16);color:#6cbd8a}
+#bpx.bpx-dark .sp-vs.bad{background:rgba(214,92,80,.16);color:#e08a80}
+
+/* the chains we already know: a directory you can see, not a modal */
+#bpx .sp-chains{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+@media(max-width:560px){#bpx .sp-chains{grid-template-columns:1fr}}
+#bpx .sp-chain{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff);padding:10px 12px;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s,box-shadow .15s}
+#bpx .sp-chain:hover{border-color:var(--blue);box-shadow:0 4px 14px rgba(0,111,255,.08)}
+#bpx .sp-chain.on{border-color:#9fd9b8;background:linear-gradient(0deg,rgba(15,122,61,.04),rgba(15,122,61,.04)),var(--card,#fff)}
+#bpx .sp-chain-t{flex:1;min-width:0}
+#bpx .sp-chain-t b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .sp-chain-t span{display:block;font-size:11.5px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+#bpx .sp-chain-a{flex:none;display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--grey);border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:var(--tint,#f4f6fa)}
+#bpx .sp-chain-a .ms{font-size:14px}
+#bpx .sp-chain:hover .sp-chain-a{border-color:var(--blue);color:#fff;background:var(--blue)}
+#bpx .sp-chain.on .sp-chain-a{color:#0f7a3d;border-color:#9fd9b8;background:#e7f7ee}
+#bpx.bpx-dark .sp-chain.on .sp-chain-a{color:#6cbd8a;background:rgba(52,168,110,.14);border-color:rgba(52,168,110,.35)}
+
+/* On a wide panel the subtitle sits beside the title instead of wrapping
+   under it, so it needs the gap the wrap used to give it. Applies to every
+   Supply heading, not just the shop. */
+#bpx .sp-shop .bpx-ptitle .lg2,#bpx .bpx-chead .bpx-ptitle .lg2{margin-left:10px;font-weight:500}

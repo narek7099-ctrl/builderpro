@@ -25,6 +25,8 @@
     ['all', 'All trades'], ['roofing', 'Roofing'], ['siding', 'Siding & gutters'], ['plumbing', 'Plumbing'],
     ['hvac', 'HVAC'], ['electrical', 'Electrical'], ['painting', 'Painting'], ['landscaping', 'Landscaping'],
     ['concrete', 'Concrete'], ['drywall', 'Drywall & insulation'], ['framing', 'Lumber & framing'], ['tools', 'Tools & fasteners'],
+    ['pools', 'Pools & spas'], ['trim', 'Trim & millwork'], ['cabinets', 'Cabinets'], ['countertops', 'Countertops & stone'],
+    ['flooring', 'Flooring & tile'],
   ];
 
   /* A branch network is somewhere you drive to and pick up the same day.
@@ -47,7 +49,7 @@
       carries: 'Shingles, commercial roofing, siding, waterproofing, insulation',
       note: 'Beacon PRO+ shows your own pricing and past orders online, so your price book stays honest.',
       locator: 'https://www.beaconbuildingproducts.com/store-locator', delivery: true, drive: 24 }),
-    D({ id: 'carter', name: 'Carter Lumber', kind: 'custom', type: 'branch', trades: ['roofing', 'framing', 'siding'],
+    D({ id: 'carter', name: 'Carter Lumber', kind: 'custom', type: 'branch', trades: ['roofing', 'framing', 'siding', 'trim'],
       carries: 'Lumber, trusses, shingles, siding, windows and doors',
       note: 'Useful when one stop has to cover both the framing and the roof.',
       locator: 'https://www.carterlumber.com/store-locator', delivery: true, drive: 25 }),
@@ -101,7 +103,7 @@
       carries: 'Drywall, metal framing, insulation, stucco, acoustics',
       note: 'Often the cheaper of the two drywall networks. Worth a second bid on the same list.',
       locator: 'https://www.fbmsales.com/locations', delivery: true, drive: 26 }),
-    D({ id: 'bfs', name: 'Builders FirstSource', kind: 'custom', type: 'branch', trades: ['framing', 'roofing'],
+    D({ id: 'bfs', name: 'Builders FirstSource', kind: 'custom', type: 'branch', trades: ['framing', 'roofing', 'trim'],
       carries: 'Lumber, trusses, engineered wood, millwork, windows',
       note: 'Best when the job needs a truss or window package quoted rather than picked off a shelf.',
       locator: 'https://www.bldr.com/locations', delivery: true, drive: 28 }),
@@ -113,6 +115,48 @@
       carries: 'Fasteners, anchors, abrasives, safety, jobsite consumables',
       note: 'They will stock a bin on your shop wall and refill it, which kills a lot of small runs.',
       locator: 'https://www.fastenal.com/locations', delivery: true, drive: 18 }),
+
+    /* ---- pools and spas ---- */
+    D({ id: 'poolcorp', name: 'POOLCORP / SCP Distributors', kind: 'custom', type: 'branch', trades: ['pools'],
+      carries: 'Pumps, filters, heaters, chemicals, liners, white goods',
+      note: 'Trade only, and the default for anyone who builds or services pools. A licence gets you the counter price.',
+      locator: 'https://www.poolcorp.com/locations/', delivery: true, drive: 24 }),
+    D({ id: 'heritagepool', name: 'Heritage Pool Supply', kind: 'custom', type: 'branch', trades: ['pools'],
+      carries: 'Equipment, plumbing, chemicals, finishes',
+      note: 'Part of the SRS family, so the account can sometimes be shared with a roofing or landscape branch.',
+      locator: 'https://www.heritagepoolsupply.com/locations', delivery: true, drive: 26 }),
+    D({ id: 'leslies', name: "Leslie's Pool Supplies", kind: 'custom', type: 'branch', trades: ['pools'],
+      carries: 'Chemicals, cleaners, parts, small equipment',
+      note: 'Retail pricing, but there is one on every corner and they open early. The emergency stop, not the job order.',
+      locator: 'https://lesliespool.com/store-locator', delivery: false, drive: 10 }),
+
+    /* ---- surfaces: tile, stone, flooring ---- */
+    D({ id: 'floordecor', name: 'Floor & Decor', kind: 'custom', type: 'branch', trades: ['flooring', 'countertops'],
+      carries: 'Tile, wood, laminate, vinyl plank, setting materials, some slabs',
+      note: 'Warehouse format with stock on the floor, so a whole house can leave the same day. Pro desk is worth registering.',
+      locator: 'https://www.flooranddecor.com/stores', delivery: true, drive: 18 }),
+    D({ id: 'msi', name: 'MSI Surfaces', kind: 'custom', type: 'branch', trades: ['countertops', 'flooring'],
+      carries: 'Quartz and granite slabs, porcelain, tile, LVT',
+      note: 'Trade distributor. You pick actual slabs off the rack, which matters when the customer is choosing veining.',
+      locator: 'https://www.msisurfaces.com/locations/', delivery: true, drive: 28 }),
+    D({ id: 'tileshop', name: 'The Tile Shop', kind: 'custom', type: 'branch', trades: ['flooring'],
+      carries: 'Tile, mosaics, setting materials, trim pieces',
+      note: 'Narrower than the warehouses but better on the decorative pieces a designer will actually specify.',
+      locator: 'https://www.tileshop.com/store-locator', delivery: true, drive: 20 }),
+    D({ id: 'cosentino', name: 'Cosentino', kind: 'custom', type: 'branch', trades: ['countertops'],
+      carries: 'Silestone, Dekton and natural stone slabs',
+      note: 'Brand-owned centres. Go here when the job is specced to one of their lines rather than shopping on price.',
+      locator: 'https://www.cosentino.com/usa/centers/', delivery: true, drive: 30 }),
+
+    /* ---- millwork and cabinet hardware ---- */
+    D({ id: 'richelieu', name: 'Richelieu Hardware', kind: 'custom', type: 'branch', trades: ['cabinets', 'trim'],
+      carries: 'Hinges, slides, pulls, closet systems, edge banding, panels',
+      note: 'The cabinet shop counter. Soft-close hardware in real quantities rather than two-packs.',
+      locator: 'https://www.richelieu.com/us/en/showrooms', delivery: true, drive: 26 }),
+    D({ id: 'metrie', name: 'Metrie', kind: 'custom', type: 'branch', trades: ['trim'],
+      carries: 'Interior mouldings, casing, base, doors, MDF and solid profiles',
+      note: 'Profiles stay consistent between orders, which is the whole problem with buying trim off a box-store rack.',
+      locator: 'https://www.metrie.com/where-to-buy/', delivery: true, drive: 28 }),
 
     /* ---- the big boxes: everyone uses them for the gap fill ---- */
     D({ id: 'homedepot_pro', name: 'Home Depot Pro', kind: 'homedepot_pro', type: 'branch', trades: ['all'],
@@ -159,6 +203,13 @@
       locator: 'https://www.northerntool.com', delivery: true, lead: 'ships in 2 to 5 days' }),
   ];
   SP.dirAll = DIR;
+
+  /* Which chains actually have a logo file sitting in assets/suppliers/.
+     Kept as an explicit list rather than letting every tile fire a request
+     and fall back on the 404: with nothing here the page asks for nothing
+     and every tile wears its lettermark. Drop <id>.png in that folder and
+     add the id here — that is the whole job. See the README in there. */
+  SP.LOGOS = ''.split(' ').filter(Boolean);
 
   function matches(d, trade, q) {
     if (trade !== 'all' && d.trades.indexOf(trade) < 0 && d.trades.indexOf('all') < 0) return false;
