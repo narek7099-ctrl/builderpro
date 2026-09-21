@@ -13,6 +13,17 @@
    without re-running the validator on both surfaces.
    ================================================================== */
 #bpx{
+  /* Diverging: two hues either side of a neutral gray, for polarity — a
+     rating against the middle of the scale, a price against typical. Blue
+     and orange rather than the obvious green and red, because green/red is
+     the one pair a colourblind reader cannot separate. Each arm was checked
+     as a one-hue ramp (monotone lightness, visible steps, pale end still
+     reading against the surface) and the two poles as a pair: worst case
+     ΔE 28.9 under protanopia against a target of 8. */
+  --bpc-pos2:#1a4fd0; --bpc-pos1:#7aa4ff;
+  --bpc-mid:#9aa6b6;
+  --bpc-neg1:#f2a173; --bpc-neg2:#c2410c;
+
   --bpc-s1:#2f6bff;   /* blue — the portal's own, slot 1 */
   --bpc-s2:#eb6834;   /* orange */
   --bpc-s3:#1baf7a;   /* aqua */
@@ -24,6 +35,12 @@
   --bpc-area:.13;
 }
 #bpx.bpx-dark{
+  /* stepped for the dark surface, not flipped: the pale end of each arm has
+     to lighten to stay visible on #121826, and both were re-validated there */
+  --bpc-pos2:#a9c4ff; --bpc-pos1:#4f7fe0;
+  --bpc-mid:#6d7887;
+  --bpc-neg1:#c05a26; --bpc-neg2:#f0a173;
+
   /* the same five hues, stepped for the dark surface — not an inversion */
   --bpc-s1:#3987e5; --bpc-s2:#d95926; --bpc-s3:#199e70; --bpc-s4:#c98500; --bpc-s5:#9085e9;
   --bpc-other:#6d7887;
@@ -81,6 +98,42 @@
 #bpx .bpc-row:hover .bpc-rt{outline:1px solid var(--line)}
 #bpx .bpc-row.mine .bpc-rl,#bpx .bpc-row.mine .bpc-rv{font-weight:750}
 @media(max-width:520px){#bpx .bpc-row{grid-template-columns:minmax(64px,40%) minmax(0,1fr) auto}}
+
+/* ---------- split & likert: one total, divided ----------
+   A 2px surface gap between segments, so two touching fills never read as
+   one, and the track keeps its shape when a slice is a sliver. */
+#bpx .bpc-stack{display:flex;height:26px;border-radius:8px;overflow:hidden;background:var(--soft);gap:2px}
+#bpx .bpc-seg{display:block;min-width:3px;border-radius:3px;transition:opacity .12s}
+#bpx .bpc-stack:hover .bpc-seg{opacity:.82}
+#bpx .bpc-stack .bpc-seg:hover{opacity:1}
+#bpx .bpc-legend-v{gap:8px 16px}
+#bpx .bpc-legend-v .bpc-key b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
+
+/* the neutral step's own middle, marked — the line both arms are read from */
+#bpx .bpc-lik{position:relative}
+#bpx .bpc-zero{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.55;border-radius:2px;pointer-events:none}
+#bpx .bpc-lik-foot{display:flex;justify-content:space-between;font-size:12px;color:var(--grey);margin-top:8px}
+
+/* ---------- diverging rows: a side, not just a length ---------- */
+#bpx .bpc-drow .bpc-dt{position:relative;height:14px;border-radius:99px;background:var(--soft)}
+#bpx .bpc-drow .bpc-dt i{position:absolute;top:0;bottom:0;border-radius:99px}
+#bpx .bpc-axis0{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line);transform:translateX(-.5px)}
+#bpx .bpc-dfoot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--grey);
+  border-top:1px solid var(--line);padding-top:7px}
+
+/* ---------- scatter ---------- */
+#bpx .bpc-dot{stroke:var(--card,#fff);stroke-width:2;vector-effect:non-scaling-stroke;transition:opacity .12s}
+#bpx .bpc-plot:hover .bpc-dot{opacity:.7}
+#bpx .bpc-dot.mine,#bpx .bpc-plot:hover .bpc-dot.mine{opacity:1}
+#bpx .bpc-dotlab{fill:var(--ink);font-size:12px;font-weight:650;font-family:inherit}
+#bpx .bpc-axname{fill:var(--grey-l,var(--grey));font-size:11px}
+
+/* ---------- dumbbell ---------- */
+#bpx .bpc-dbar{stroke:var(--line);stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#bpx .bpc-dend{stroke:var(--card,#fff);stroke-width:2;vector-effect:non-scaling-stroke}
+#bpx .bpc-dbl{fill:var(--ink);font-size:12.5px}
+#bpx .bpc-dgap{fill:var(--bpc-pos2);font-size:12px;font-weight:700;font-family:inherit;font-variant-numeric:tabular-nums}
+#bpx .bpc-dgap.neg{fill:var(--bpc-neg2)}
 
 /* progress */
 #bpx .bpc-ptrack{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
