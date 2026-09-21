@@ -1014,13 +1014,25 @@
     }).join('') + (rest > 0 ? '<span class="sp-at-more">+' + rest + '</span>' : '') + '</span>';
   }
 
+  /* A category photo when one has been added, the drawn icon until then.
+     Both sit in the same tinted well, so a half-finished set of photos
+     still looks deliberate rather than broken. */
+  function catArt(cat, cls) {
+    var slug = String(cat || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (slug && (SP.CATIMG || []).indexOf(slug) >= 0) {
+      return '<img class="sp-art-img" src="assets/materials/' + slug + '.jpg" alt=""'
+        + ' loading="lazy" onerror="this.remove()">';
+    }
+    return icon(cat, cls);
+  }
+
   function pickCard(g) {
     var n = onListQty(g.name);
     var cat = catOf({ name: g.name, category: g.cat });
     var fam = FAM_OF[cat] || 'other';
     return '<div class="sp-card' + (n ? ' on' : '') + '" role="button" tabindex="0" data-k="' + esc(g.key) + '"'
       + ' onclick="SP.matOpen(this.dataset.k)" onkeydown="SP.rowKey(event,this)" title="' + esc(g.name) + '">'
-      + '<div class="sp-card-art" data-fam="' + fam + '">' + icon(cat, 'big')
+      + '<div class="sp-card-art" data-fam="' + fam + '">' + catArt(cat, 'big')
       + '<span class="sp-card-cat">' + esc(cat) + '</span>'
       + (n ? '<span class="sp-card-n">' + n + '</span>' : '') + '</div>'
       + '<b class="sp-card-nm">' + esc(g.name) + '</b>'
@@ -1090,7 +1102,7 @@
 
     window.bpModal(
       '<div class="sp-md">'
-      + '<div class="sp-md-top"><div class="sp-md-art" data-fam="' + fam + '">' + icon(cat, 'huge') + '</div>'
+      + '<div class="sp-md-top"><div class="sp-md-art" data-fam="' + fam + '">' + catArt(cat, 'huge') + '</div>'
       + '<div class="sp-md-id"><h3>' + esc(g.name) + '</h3>'
       + '<div class="sp-md-meta"><span class="sp-md-cat">' + esc(cat) + '</span>'
       + (g.unit ? '<span>sold by the ' + esc(g.unit) + '</span>' : '')
