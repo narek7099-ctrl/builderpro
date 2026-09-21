@@ -69,8 +69,8 @@
     var mag = Math.pow(10, Math.floor(Math.log10(step))), m = step / mag;
     return NICE.some(function (k) { return Math.abs(m - k) < 1e-9; });
   }
-  function ticks(max) {
-    var counts = [4, 5, 3, 6], n = 4;
+  function ticks(max, prefer) {
+    var counts = prefer || [4, 5, 3, 6], n = counts[0];
     for (var c = 0; c < counts.length; c++) {
       if (isNice(max / counts[c])) { n = counts[c]; break; }
     }
@@ -143,6 +143,15 @@
       k: kind, h: o.height || 210, t: o.title || '', xl: (o.x || {}).label || '',
       x: (o.x || {}).values || [], s: (o.series || []).map(function (s) { return { n: s.name, v: s.values }; }),
       f: (o.fmt || money) === money ? 'money' : 'plain',
+      /* A formatter is a function and a spec is JSON, so a chart drawn with
+         one of its own — stars, percentages — would come back from a redraw
+         formatted as a bare number. Named kinds survive the round trip. */
+      fk: o.fmtKind || '',
+      /* the forms that are not a time series carry their own shape */
+      p: o.points || null, r: o.rows || null,
+      xn: o.xName || '', yn: o.yName || '', an: o.aName || '', bn: o.bName || '',
+      xf: (o.xFmt || plain) === money ? 'money' : 'plain',
+      yfk: o.yFmtKind || '', y0: o.yFrom, y1: o.yTo, mx: o.max,
     }));
     return frame(o, svg, legend, table)
       .replace('<div class="bpc-plot">', '<div class="bpc-plot" data-chart="' + spec + '">');
@@ -152,13 +161,21 @@
     try { return JSON.parse(d); } catch (e) { return null; }
   }
   /* a spec is not a chart options object, so turn it back into one */
+  var RATING = function (n) { return (Math.round(n * 10) / 10).toFixed(1) + '\u2605'; };
+  var PERCENT = function (n) { return (Math.round(n * 10) / 10) + '%'; };
+  var NAMED = C.NAMED = { rating: RATING, percent: PERCENT };
   function optsOf(d) {
     return {
-      title: d.t, height: d.h, fmt: fmtOf(d.f),
+      title: d.t, height: d.h, fmt: NAMED[d.fk] || fmtOf(d.f), fmtKind: d.fk,
       x: { label: d.xl, values: d.x },
       series: d.s.map(function (s) { return { name: s.n, values: s.v }; }),
+      points: d.p, rows: d.r,
+      xName: d.xn, yName: d.yn, aName: d.an, bName: d.bn,
+      xFmt: fmtOf(d.xf), yFmt: NAMED[d.yfk] || fmtOf(d.f),
+      yFrom: d.y0, yTo: d.y1, max: d.mx,
     };
   }
+  var DRAW = { line: lineSvg, cols: colsSvg, scatter: scatterSvg, dumbbell: dumbbellSvg };
   function redraw(plot) {
     var w = Math.round(plot.clientWidth);
     /* a pane that is hidden has no width to draw at; the observer brings it
@@ -167,7 +184,7 @@
     if (+plot.getAttribute('data-w') === w) return;
     var d = specOf(plot); if (!d) return;
     var o = optsOf(d);
-    var svg = d.k === 'cols' ? colsSvg(o, w) : lineSvg(o, w);
+    var svg = (DRAW[d.k] || lineSvg)(o, w);
     var old = plot.querySelector('svg');
     if (old) old.outerHTML = svg; else plot.insertAdjacentHTML('afterbegin', svg);
     plot.setAttribute('data-w', w);
@@ -360,6 +377,251 @@
   };
 
   /* ==================================================================
+     SCATTER — two measures per thing, plotted against each other. This is
+     the form that answers "who is actually ahead", which two separate bar
+     charts cannot: a 4.9 on nine reviews and a 4.3 on four hundred sit in
+     different places here and in the same place on a ranked list.
+
+     Emphasis rather than categorical: one mark is the reader's own, in the
+     accent hue and labelled; the rest are context in gray. Colour is never
+     doing the work alone — the reader's mark is also larger and named.
+     ================================================================== */
+  function scatterSvg(o, W) {
+    var pts = o.points || [];
+    var H = Math.round(Math.min(320, Math.max(220, W * 0.46))), P = { t: 16, r: 18, b: 34, l: 56 };
+    var iw = W - P.l - P.r, ih = H - P.t - P.b;
+    var xs = pts.map(function (p) { return +p.x || 0; }), ys = pts.map(function (p) { return +p.y || 0; });
+    var xMax = niceMax(Math.max.apply(null, xs.concat([1])));
+    /* a rating axis that starts at zero wastes four fifths of the plot, so a
+       y range that never reaches its floor is allowed to start above it —
+       and the axis says so rather than leaving the reader to assume zero */
+    var yLo = o.yFrom != null ? o.yFrom : 0, yHi = o.yTo != null ? o.yTo : niceMax(Math.max.apply(null, ys.concat([1])));
+    var px = function (v) { return P.l + iw * (Math.max(0, +v || 0) / (xMax || 1)); };
+    var py = function (v) { return P.t + ih - ih * ((Math.min(yHi, Math.max(yLo, +v || 0)) - yLo) / ((yHi - yLo) || 1)); };
+    var xf = axisFmt(o.xFmt || plain), yf = o.yFmt || plain;
+
+    /* a rating spans a star and a half; five steps of 0.3 is a stranger
+       ruler than three of 0.5 */
+    var grid = ticks(yHi - yLo, (yHi - yLo) <= 2 ? [3, 4, 5, 6] : null).map(function (t) {
+      var v = yLo + t, y = py(v);
+      return '<line class="bpc-grid" x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>'
+        + '<text class="bpc-ax" x="' + (P.l - 8) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end">' + esc(yf(v)) + '</text>';
+    }).join('');
+    var xt = ticks(xMax), xlab = xt.map(function (t, i) {
+      if (!i) return '';
+      return '<text class="bpc-ax" x="' + px(t).toFixed(1) + '" y="' + (H - 12) + '" text-anchor="middle">' + esc(xf(t)) + '</text>';
+    }).join('');
+
+    var marks = pts.map(function (p) {
+      var cx = px(p.x), cy = py(p.y), r = p.mine ? 8 : 6;
+      var tip = escAttr('<b>' + esc(p.label) + '</b><span>' + esc(o.xName || 'x') + '<em>' + esc(xf(p.x)) + '</em></span>'
+        + '<span>' + esc(o.yName || 'y') + '<em>' + esc(yf(p.y)) + '</em></span>');
+      /* the mark is 12px; the thing you have to hit is 28, because nobody
+         lands a pointer on a dot dead-centre and a phone never could */
+      return { dot: '<circle class="bpc-dot' + (p.mine ? ' mine' : '') + '" cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1)
+          + '" r="' + r + '" fill="' + (p.mine ? 'var(--bpc-s2)' : 'var(--bpc-other)') + '"/>',
+        hit: '<circle class="bpc-hit" cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="14" data-tip="' + tip + '"/>' };
+    });
+    /* only the reader's own mark is labelled on the plot; labelling every
+       point is how a scatter turns into a wall of overlapping words */
+    var mine = pts.filter(function (p) { return p.mine; })[0];
+    var tag = mine ? '<text class="bpc-dotlab" x="' + (px(mine.x) + 12).toFixed(1) + '" y="' + (py(mine.y) + 4).toFixed(1) + '">'
+      + esc(mine.label) + '</text>' : '';
+
+    return svgOpen(o, W, H) + grid + xlab
+      + '<line class="bpc-grid bpc-base" x1="' + P.l + '" x2="' + (W - P.r) + '" y1="' + (P.t + ih) + '" y2="' + (P.t + ih) + '"/>'
+      + '<text class="bpc-ax bpc-axname" x="' + (P.l + iw / 2).toFixed(1) + '" y="' + (H - 1) + '" text-anchor="middle">'
+      + esc(o.xName || '') + '</text>'
+      + marks.map(function (m) { return m.dot; }).join('') + tag
+      /* every hit ring last, so one sits above its own mark and above its
+         neighbours' marks too — otherwise the dots punch holes in the targets */
+      + marks.map(function (m) { return m.hit; }).join('') + '</svg>';
+  }
+  C.scatter = function (o) {
+    if (!(o.points || []).length) return empty(o);
+    return plotted(o, 'scatter', scatterSvg(o, W0), '', scatterTable(o));
+  };
+  function scatterTable(o) {
+    var xf = o.xFmt || plain, yf = o.yFmt || plain;
+    return '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>'
+      + esc(o.xName || 'x') + '</th><th>' + esc(o.yName || 'y') + '</th></tr></thead><tbody>'
+      + (o.points || []).map(function (p) {
+        return '<tr><th scope="row">' + esc(p.label) + '</th><td>' + esc(xf(p.x)) + '</td><td>' + esc(yf(p.y)) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  /* ==================================================================
+     DUMBBELL — two related numbers per row, and the distance between them
+     is the point. What a job cost and what it brought in are one story,
+     and a bar of the difference alone hides whether a thin margin came off
+     a big job or a small one.
+     ================================================================== */
+  function dumbbellSvg(o, W) {
+    var rows = (o.rows || []).slice(0, o.max || 7);
+    var lw = Math.min(190, Math.max(96, Math.round(W * 0.26)));
+    var P = { t: 12, r: 74, b: 26, l: lw + 12 };
+    var H = P.t + P.b + rows.length * 30;
+    var iw = W - P.l - P.r;
+    var max = niceMax(Math.max.apply(null, rows.map(function (r) { return Math.max(+r.a || 0, +r.b || 0); }).concat([1])));
+    var px = function (v) { return P.l + iw * (Math.max(0, +v || 0) / max); };
+    var fmt = o.fmt || money, af = axisFmt(fmt);
+
+    var grid = ticks(max).map(function (t) {
+      var x = px(t);
+      return '<line class="bpc-grid" x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + P.t + '" y2="' + (H - P.b) + '"/>'
+        + '<text class="bpc-ax" x="' + x.toFixed(1) + '" y="' + (H - 9) + '" text-anchor="middle">' + esc(af(t)) + '</text>';
+    }).join('');
+
+    var body = rows.map(function (r, i) {
+      var y = P.t + 15 + i * 30, xa = px(r.a), xb = px(r.b), gap = (+r.b || 0) - (+r.a || 0);
+      var name = String(r.label || '');
+      if (name.length > 22) name = name.slice(0, 21) + '…';
+      return '<text class="bpc-ax bpc-dbl" x="' + (lw + 4) + '" y="' + (y + 4) + '" text-anchor="end">' + esc(name) + '</text>'
+        + '<line class="bpc-dbar" x1="' + Math.min(xa, xb).toFixed(1) + '" x2="' + Math.max(xa, xb).toFixed(1) + '" y1="' + y + '" y2="' + y + '"/>'
+        + '<circle class="bpc-dend" cx="' + xa.toFixed(1) + '" cy="' + y + '" r="5" fill="var(--bpc-pos1)"/>'
+        + '<circle class="bpc-dend" cx="' + xb.toFixed(1) + '" cy="' + y + '" r="5" fill="var(--bpc-pos2)"/>'
+        + '<text class="bpc-dgap' + (gap < 0 ? ' neg' : '') + '" x="' + (W - P.r + 8) + '" y="' + (y + 4) + '">'
+        + (gap < 0 ? '−' : '+') + esc(fmt(Math.abs(gap))) + '</text>'
+        + '<rect class="bpc-hit" x="' + P.l + '" y="' + (y - 14) + '" width="' + iw.toFixed(1) + '" height="28"'
+        + ' data-tip="' + escAttr('<b>' + esc(r.label) + '</b><span>' + esc(o.aName || 'a') + '<em>' + esc(fmt(r.a)) + '</em></span>'
+          + '<span>' + esc(o.bName || 'b') + '<em>' + esc(fmt(r.b)) + '</em></span>') + '"/>';
+    }).join('');
+
+    return svgOpen(o, W, H) + grid + body + '</svg>';
+  }
+  C.dumbbell = function (o) {
+    var rows = (o.rows || []);
+    if (!rows.length) return empty(o);
+    var legend = '<div class="bpc-legend"><span class="bpc-key"><i style="background:var(--bpc-pos1)"></i>'
+      + esc(o.aName || '') + '</span><span class="bpc-key"><i style="background:var(--bpc-pos2)"></i>' + esc(o.bName || '') + '</span></div>';
+    var fmt = o.fmt || money;
+    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>'
+      + esc(o.aName || 'a') + '</th><th>' + esc(o.bName || 'b') + '</th><th>Difference</th></tr></thead><tbody>'
+      + rows.map(function (r) {
+        var g = (+r.b || 0) - (+r.a || 0);
+        return '<tr><th scope="row">' + esc(r.label) + '</th><td>' + fmt(r.a) + '</td><td>' + fmt(r.b) + '</td><td>'
+          + (g < 0 ? '−' : '') + fmt(Math.abs(g)) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    return plotted(o, 'dumbbell', dumbbellSvg(o, W0), legend, table);
+  };
+
+  /* ==================================================================
+     SPLIT — one total, and how it divides. A stacked bar rather than a
+     ranked list: the reader's question is "how much of the whole", and a
+     length against a full-width track answers it without arithmetic. Laid
+     out horizontally because the categories are words.
+     ================================================================== */
+  C.split = function (o) {
+    var rows = (o.rows || []).filter(function (r) { return +r.value > 0; })
+      .sort(function (a, b) { return b.value - a.value; });
+    var fmt = o.fmt || money;
+    if (!rows.length) return empty(o);
+    /* past five slices the tail is thinner than its own label, so it folds */
+    if (rows.length > 5) {
+      var rest = rows.slice(4).reduce(function (t, r) { return t + r.value; }, 0);
+      rows = rows.slice(0, 4).concat([{ label: 'Everything else', value: rest, other: true }]);
+    }
+    var total = rows.reduce(function (t, r) { return t + r.value; }, 0) || 1;
+    /* Laid out largest-first, but coloured by name. Assigning the hue by
+       position would repaint every category the month one of them overtakes
+       another, and a reader who learned that Materials is blue would be told
+       something false. Alphabetical is arbitrary but it is stable, which is
+       the only property that matters here. */
+    var ord = rows.map(function (r) { return r.label; }).sort();
+    var hue = function (r) { return r.other ? 'var(--bpc-other)' : slot(ord.indexOf(r.label)); };
+    var seg = rows.map(function (r) {
+      var pct = r.value / total * 100;
+      return '<i class="bpc-seg" style="flex:' + pct.toFixed(3) + ';background:'
+        + hue(r) + '" data-tip="'
+        + escAttr('<b>' + esc(r.label) + '</b><span>' + fmt(r.value) + '<em>' + Math.round(pct) + '%</em></span>') + '"></i>';
+    }).join('');
+    /* the legend carries the number too, so identity and size are both in
+       text and neither depends on telling two colours apart */
+    var keys = rows.map(function (r) {
+      return '<span class="bpc-key"><i style="background:' + hue(r) + '"></i>'
+        + esc(r.label) + ' <b>' + fmt(r.value) + '</b></span>';
+    }).join('');
+    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>Amount</th><th>Share</th></tr></thead><tbody>'
+      + rows.map(function (r) {
+        return '<tr><th scope="row">' + esc(r.label) + '</th><td>' + fmt(r.value) + '</td><td>' + Math.round(r.value / total * 100) + '%</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    return frame(o, '<div class="bpc-stack">' + seg + '</div>', '<div class="bpc-legend bpc-legend-v">' + keys + '</div>', table);
+  };
+
+  /* ==================================================================
+     LIKERT — an ordered scale, split either side of its middle. Star
+     ratings are not a ranking: five through one is the order, and sorting
+     them by count throws away the thing that makes them a scale. So the
+     order is fixed, and the bar is pinned at the neutral step so the good
+     and the bad read as two directions from a common line.
+     ================================================================== */
+  var DIV5 = ['var(--bpc-pos2)', 'var(--bpc-pos1)', 'var(--bpc-mid)', 'var(--bpc-neg1)', 'var(--bpc-neg2)'];
+  C.likert = function (o) {
+    var steps = o.steps || [];                      /* best → worst, fixed */
+    var total = steps.reduce(function (t, s) { return t + (+s.value || 0); }, 0);
+    if (!total) return empty(o);
+    var mid = o.neutral == null ? Math.floor(steps.length / 2) : o.neutral;
+    var pct = steps.map(function (s) { return (+s.value || 0) / total * 100; });
+    /* the zero line sits where the neutral step's own middle falls, so the
+       two arms are measured from the same place on every chart */
+    var before = pct.slice(0, mid).reduce(function (t, v) { return t + v; }, 0) + pct[mid] / 2;
+    var tip = function (s, p) {
+      return escAttr('<b>' + esc(s.label) + '</b><span>' + (+s.value || 0).toLocaleString()
+        + (s.value === 1 ? ' review' : ' reviews') + '<em>' + Math.round(p) + '%</em></span>');
+    };
+    var seg = steps.map(function (s, i) {
+      if (!(pct[i] > 0)) return '';
+      return '<i class="bpc-seg" style="flex:' + pct[i].toFixed(3) + ';background:' + DIV5[Math.min(i, 4)] + '"'
+        + ' data-tip="' + tip(s, pct[i]) + '"></i>';
+    }).join('');
+    var good = pct.slice(0, mid).reduce(function (t, v) { return t + v; }, 0);
+    var bad = pct.slice(mid + 1).reduce(function (t, v) { return t + v; }, 0);
+    var keys = steps.filter(function (s) { return +s.value > 0; }).map(function (s) {
+      var i = steps.indexOf(s);
+      return '<span class="bpc-key"><i style="background:' + DIV5[Math.min(i, 4)] + '"></i>'
+        + esc(s.label) + ' <b>' + (+s.value || 0).toLocaleString() + '</b></span>';
+    }).join('');
+    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Rating') + '</th><th>Count</th><th>Share</th></tr></thead><tbody>'
+      + steps.map(function (s, i) {
+        return '<tr><th scope="row">' + esc(s.label) + '</th><td>' + (+s.value || 0).toLocaleString() + '</td><td>' + Math.round(pct[i]) + '%</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    return frame(o,
+      '<div class="bpc-lik"><div class="bpc-stack">' + seg + '</div>'
+      + '<span class="bpc-zero" style="left:' + before.toFixed(2) + '%"></span></div>'
+      + '<div class="bpc-lik-foot"><span>' + Math.round(good) + '% above the middle</span>'
+      + '<span>' + Math.round(bad) + '% below</span></div>',
+      '<div class="bpc-legend bpc-legend-v">' + keys + '</div>', table);
+  };
+
+  /* ==================================================================
+     DIVERGING — how far each row sits either side of a baseline, with the
+     side carrying the meaning. A ranked bar cannot show this: it has no
+     negative direction, so "9% under" and "9% over" draw the same length.
+     ================================================================== */
+  C.diverging = function (o) {
+    var rows = (o.rows || []).slice().sort(function (a, b) { return a.value - b.value; });
+    if (!rows.length) return empty(o);
+    var fmt = o.fmt || function (n) { return (Math.round(n * 10) / 10) + '%'; };
+    var span = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.value); }).concat([1]));
+    var body = rows.map(function (r) {
+      var v = +r.value || 0, w = Math.abs(v) / span * 50;    /* half the track each way */
+      var good = o.lowIsGood === false ? v > 0 : v < 0;
+      return '<div class="bpc-row bpc-drow" data-tip="' + escAttr('<b>' + esc(r.label) + '</b><span>'
+        + esc(v < 0 ? o.underWord || 'under' : v > 0 ? o.overWord || 'over' : 'level') + '<em>' + fmt(Math.abs(v)) + '</em></span>') + '">'
+        + '<span class="bpc-rl">' + esc(r.label) + '</span>'
+        + '<span class="bpc-dt"><b class="bpc-axis0"></b><i style="' + (v < 0 ? 'right:50%' : 'left:50%')
+        + ';width:' + Math.max(0.6, w).toFixed(2) + '%;background:' + (good ? 'var(--bpc-pos2)' : 'var(--bpc-neg2)') + '"></i></span>'
+        + '<span class="bpc-rv">' + (v === 0 ? '—' : (v < 0 ? '−' : '+') + fmt(Math.abs(v))) + '</span></div>';
+    }).join('');
+    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>Difference</th></tr></thead><tbody>'
+      + rows.map(function (r) {
+        return '<tr><th scope="row">' + esc(r.label) + '</th><td>' + (r.value < 0 ? '−' : r.value > 0 ? '+' : '') + fmt(Math.abs(r.value)) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    return frame(o, '<div class="bpc-rows">' + body + '</div>'
+      + '<div class="bpc-dfoot"><span>' + esc(o.leftWord || 'under') + '</span><span>' + esc(o.rightWord || 'over') + '</span></div>', '', table);
+  };
+
+  /* ==================================================================
      PROGRESS — one number against its target. A bar, not a donut: the
      comparison is length against a known end, which a line does better
      than an arc.
@@ -397,12 +659,16 @@
     var plot = e.target.closest ? e.target.closest('.bpc-plot') : null;
     if (!plot) return;
     var tip = plot.querySelector('.bpc-tip');
-    var hit = e.target.closest('.bpc-hit, .bpc-row');
+    var hit = e.target.closest('.bpc-hit, .bpc-row, .bpc-seg, .bpc-dot');
     if (!hit || !tip) { if (tip) tip.hidden = true; hideCross(plot); return; }
 
     var html;
-    if (hit.classList.contains('bpc-row')) {
+    /* a mark that brought its own words uses them — that is every form
+       except the time series, where the text depends on which column the
+       pointer is over */
+    if (hit.getAttribute('data-tip')) {
       html = hit.getAttribute('data-tip');
+      hideCross(plot);
     } else {
       var data = plot.getAttribute('data-chart');
       if (!data) return;

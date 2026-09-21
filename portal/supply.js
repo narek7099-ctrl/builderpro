@@ -278,7 +278,7 @@
       .map(function (k) { return { label: k, value: spend[k] }; });
     if (!spendRows.length && !vs.length) return '';
 
-    var left = spendRows.length ? bpChart.ranked({
+    var left = spendRows.length ? bpChart.split({
       title: 'Who gets your business',
       lead: 'ordered through BuilderPro, all time',
       rows: spendRows, fmt: money, axis: 'Supply house',
@@ -287,17 +287,16 @@
       empty: 'Order materials through BuilderPro and this splits your spend across the houses you use.',
     });
 
-    /* A price difference is signed, and ranked bars have no negative side, so
-       the comparison is drawn as how far each house sits from typical, with
-       the direction written into every row's label. */
-    var right = vs.length ? bpChart.ranked({
+    /* A price difference has a side, and a ranked bar has no negative
+       direction - 9% under and 9% over drew the same length, and the meaning
+       had to be bolted onto the label. Off a centre line it is one glance. */
+    var right = vs.length ? bpChart.diverging({
       title: 'How their prices compare',
       lead: 'your own prices against the typical range for the same material',
-      rows: vs.map(function (r) {
-        return { label: r.label + (r.value < 0 ? ' — under' : r.value > 0 ? ' — over' : ' — level'),
-          value: Math.abs(r.value) };
-      }),
-      fmt: function (n) { return (Math.round(n * 10) / 10) + '%'; }, axis: 'Supply house',
+      rows: vs, axis: 'Supply house',
+      leftWord: 'cheaper than typical', rightWord: 'dearer than typical',
+      underWord: 'under typical', overWord: 'over typical',
+      fmt: function (n) { return (Math.round(n * 10) / 10) + '%'; },
     }) : bpChart.empty({
       title: 'How their prices compare',
       empty: 'Photograph a couple of bills from each house. Once we can match three lines to the catalog, we can say who is cheaper.',
@@ -1535,9 +1534,9 @@
         series: [{ name: 'Materials', values: m.values }],
         fmt: money, height: 200,
       }) + '</div>'
-      + '<div class="bpx-panel">' + bpChart.ranked({
+      + '<div class="bpx-panel">' + bpChart.split({
         title: 'Who it goes to',
-        lead: 'by supply house',
+        lead: 'share of your material spend, by supply house',
         rows: Object.keys(per).map(function (k) { return { label: k, value: per[k] }; }),
         fmt: money, axis: 'Supply house',
       }) + '</div></div>';

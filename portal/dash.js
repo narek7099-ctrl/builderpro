@@ -203,25 +203,24 @@
   }
   function jobsChart() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
-    var done = jobs.filter(function (j) { return j.status === 'done' && j.collected != null; }).map(function (j) {
+    var rows = jobs.filter(function (j) { return j.status === 'done' && j.collected != null; }).map(function (j) {
       var c = +j.collected || 0, e = (j.expenses || []).reduce(function (t, x) { return t + (+x.amt || 0); }, 0);
-      return { label: j.name || 'Job', value: c - e };
-    }).filter(function (d) { return d.value > 0; });
-    if (!done.length) return '<div class="bpx-panel">' + bpChart.empty({
-      title: 'Profit by job',
-      empty: 'Mark a project done and put in what you collected. Each one shows here with what you kept on it.',
+      return { label: j.name || 'Job', a: e, b: c, profit: c - e };
+    }).sort(function (x, y) { return y.profit - x.profit; });
+    if (!rows.length) return '<div class="bpx-panel">' + bpChart.empty({
+      title: 'What each job cost, and what it brought in',
+      empty: 'Mark a project done and put in what you collected. Each one shows here with its costs beside it.',
     }) + '</div>';
-    /* Ranked bars are lengths off a shared baseline, which is the one
-       comparison people read accurately. A loss has no length to draw, so
-       the losing jobs are named under the chart instead of inverted into it. */
-    var lost = jobs.filter(function (j) { return j.status === 'done' && j.collected != null
-      && (+j.collected || 0) - (j.expenses || []).reduce(function (t, x) { return t + (+x.amt || 0); }, 0) < 0; });
-    return '<div class="bpx-panel">' + bpChart.ranked({
-      title: 'Profit by job',
-      lead: 'finished projects, best first',
-      rows: done, fmt: money, axis: 'Job',
-    }) + (lost.length ? '<div class="mc-foot">' + lost.length + (lost.length === 1 ? ' finished job came in under its costs: ' : ' finished jobs came in under their costs: ')
-      + lost.map(function (j) { return esc(j.name || 'Job'); }).join(', ') + '.</div>' : '') + '</div>';
+    /* A single bar of profit hides the size of the job it came off: $2,000
+       kept on a $4,000 repair and $2,000 kept on a $40,000 re-roof are not
+       the same week. Both numbers, and the distance between them, in one row. */
+    var kept = rows.reduce(function (t, r) { return t + r.profit; }, 0);
+    return '<div class="bpx-panel">' + bpChart.dumbbell({
+      title: 'What each job cost, and what it brought in',
+      lead: rows.length + (rows.length === 1 ? ' finished job ' : ' finished jobs ') + '\u00b7 ' + money(kept) + ' kept across them',
+      rows: rows, aName: 'What it cost', bName: 'What you collected',
+      fmt: money, axis: 'Job', max: 7,
+    }) + '</div>';
   }
 
   /* ---------- today: appointments and crews ---------- */

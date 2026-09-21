@@ -17656,7 +17656,7 @@ function bpFinCatChart(d){
   var rows=Object.keys(d.catTot||{}).map(function(c){return {label:c,value:d.catTot[c]};});
   if(!rows.length) return bpChart.empty({title:'Where the money goes',empty:'No expenses logged yet.'});
   var tot=rows.reduce(function(t,r){return t+r.value;},0);
-  return bpChart.ranked({title:'Where the money goes',lead:bpMoneyFmt(tot)+' out, by category',
+  return bpChart.split({title:'Where the money goes',lead:bpMoneyFmt(tot)+' out, by category',
     rows:rows,fmt:bpMoneyFmt,axis:'Category'});
 }
 function bpFinances(){
@@ -18255,11 +18255,10 @@ function bpInvCharts(){
   var items=window._bpInvItems||[];
   if(items.length<2)return '';
   var st=function(v){return String(v.status||'draft').toLowerCase();};
-  var paid=0,owed=0,byStatus={},aging=[0,0,0,0];
+  var paid=0,owed=0,aging=[0,0,0,0];
   var LATE=['Not due yet','1–30 days late','31–60 days late','Over 60 days late'];
   items.forEach(function(v){
     var amt=+v.total||0, s=st(v);
-    byStatus[s]=(byStatus[s]||0)+amt;
     if(s==='paid'){paid+=amt;return;}
     if(s==='void')return;
     owed+=amt;
@@ -18274,11 +18273,7 @@ function bpInvCharts(){
     value:paid,target:grand,fmt:bpMoneyFmt,
     tone:owed>paid?'warn':'',
     note:bpMoneyFmt(owed)+' still out'
-  })+'<div style="margin-top:14px">'+bpChart.ranked({
-    title:'By status',lead:'every invoice on this list',
-    rows:Object.keys(byStatus).map(function(k){return {label:k.charAt(0).toUpperCase()+k.slice(1).replace(/-/g,' '),value:byStatus[k]};}),
-    fmt:bpMoneyFmt,axis:'Status'
-  })+'</div></div>';
+  })+'</div>';
   var right='<div>'+(owed>0?bpChart.columns({
     title:'How late the unpaid ones are',
     lead:bpMoneyFmt(owed)+' outstanding · by how far past its due date',
@@ -18308,7 +18303,7 @@ function bpEstCharts(){
       value:won,target:decided,fmt:bpMoneyFmt,
       note:open>0?bpMoneyFmt(open)+' still waiting on a yes':'nothing still waiting'
     }):bpChart.empty({title:'What you win',empty:'Nothing accepted or declined yet. Once customers start answering, your win rate shows here.'}))+'</div>'
-    +'<div>'+bpChart.ranked({
+    +'<div>'+bpChart.split({
       title:'Where your quotes stand',lead:bpMoneyFmt(tot)+' quoted across '+items.length+' estimate'+(items.length===1?'':'s'),
       rows:Object.keys(byStatus).map(function(k){return {label:k.charAt(0).toUpperCase()+k.slice(1),value:byStatus[k]};}),
       fmt:bpMoneyFmt,axis:'Status'
@@ -19235,25 +19230,29 @@ function bpCpPane(){
    400. Two charts, one measure each: never reviews and rating on one axis. */
 function bpCpCharts(list){
   if(!window.bpChart||list.length<2)return '';
-  /* whatever the cap trims, you are always on the chart: your own bar is the
-     one the contractor is looking for */
+  /* Two ranked charts could not answer the question a contractor actually
+     has. A 4.9 on nine reviews and a 4.3 on four hundred are different
+     businesses, and on two separate lists they look like near neighbours.
+     Plotted against each other they land in different corners: far right is
+     established, high up is well liked, and the gap to you is a distance you
+     can see rather than two positions you have to hold in your head. */
+  var pts=list.filter(function(x){return x.reviews>0||x.rating>0;}).map(function(x){
+    return {label:(x.name||'A business'),x:+x.reviews||0,y:+x.rating||0,mine:!!x.you};});
+  if(pts.length<2)return '';
   var you=list.filter(function(x){return x.you;})[0];
-  var top=list.filter(function(x){return !x.you;}).slice(0,9);
-  var shown=you?top.slice(0,9).concat([you]):top;
-  var lbl=function(x){return (x.name||'A business')+(x.you?' (you)':'');};
-  var rev=shown.filter(function(x){return x.reviews>0;}).map(function(x){return {label:lbl(x),value:x.reviews,mine:!!x.you};});
-  var rat=shown.filter(function(x){return x.rating>0;}).map(function(x){return {label:lbl(x),value:x.rating,mine:!!x.you};});
-  if(!rev.length&&!rat.length)return '';
-  var gap=you&&top.length&&top[0].reviews>you.reviews?(top[0].reviews-you.reviews):0;
-  return '<div class="bpc-two" style="margin-bottom:16px">'
-    +'<div class="bpx-panel">'+bpChart.ranked({
-      title:'Reviews, side by side',
-      lead:gap?bpNum(gap)+' reviews behind the top listing':'you have the most reviews of the businesses you track',
-      rows:rev,fmt:bpNum,axis:'Business',max:10})+'</div>'
-    +'<div class="bpx-panel">'+bpChart.ranked({
-      title:'Star rating, side by side',
-      lead:'out of five · a high rating on few reviews still loses to a good one on many',
-      rows:rat,fmt:function(n){return (Math.round(n*10)/10).toFixed(1)+'★';},axis:'Business',max:10})+'</div></div>';
+  var top=list.filter(function(x){return !x.you;})[0];
+  var gap=you&&top&&top.reviews>you.reviews?(top.reviews-you.reviews):0;
+  var rated=pts.filter(function(p){return p.y>0;}).map(function(p){return p.y;});
+  var lo=rated.length?Math.max(0,Math.floor(Math.min.apply(null,rated)*2)/2-0.5):0;
+  var stars=function(n){return (Math.round(n*10)/10).toFixed(1)+'\u2605';};
+  return '<div class="bpx-panel" style="margin-bottom:16px">'+bpChart.scatter({
+    title:'Where you sit against them',
+    lead:(gap?bpNum(gap)+' reviews behind the top listing · ':'')
+      +'further right is more established, higher up is better liked',
+    points:pts, axis:'Business',
+    xName:'Reviews', yName:'Rating', yFmtKind:'rating',
+    xFmt:bpNum, yFmt:stars, yFrom:lo, yTo:5
+  })+'</div>';
 }
 function bpCpScorePane(){
   var list=bpCpRanked();
@@ -19429,15 +19428,24 @@ function bpMkCharts(){
      their own figures in the listings panel below. */
   leads=leads.filter(function(x){return x.value>0;});spend=spend.filter(function(x){return x.value>0;});
   var totL=leads.reduce(function(t,x){return t+x.value;},0),totS=spend.reduce(function(t,x){return t+x.value;},0);
-  var left=leads.length?bpChart.ranked({title:'Where leads come from',
+  var left=leads.length?bpChart.split({title:'Where leads come from',
       lead:bpNum(totL)+' lead'+(totL===1?'':'s')+' from ads · last 30 days',
       rows:leads,fmt:bpNum,axis:'Source'})
     : bpChart.empty({title:'Where leads come from',
         empty:'Connect an ad account or your Google listing and every lead is attributed here.'});
-  var right=spend.length?bpChart.ranked({title:'What you spent to get them',
-      lead:bpMoneyFmt(totS)+' in 30 days'+(totL>0?' · '+bpMoneyFmt(totS/totL)+' a lead':''),
-      rows:spend,fmt:bpMoneyFmt,axis:'Channel'})
-    : bpChart.empty({title:'What you spent to get them',
+  /* Spend on its own only says who is biggest. What it costs to buy one lead
+     says who is worth more money, which is the decision in front of them, so
+     that is the number the bars are drawn from - shortest wins. */
+  var cpl=spend.map(function(x){
+    var l=(leads.filter(function(y){return y.label===x.label;})[0]||{}).value||0;
+    return l>0?{label:x.label,value:x.value/l}:null;}).filter(Boolean);
+  var right=cpl.length?bpChart.ranked({title:'What each lead costs you',
+      lead:bpMoneyFmt(totS)+' in 30 days'+(totL>0?' · '+bpMoneyFmt(totS/totL)+' a lead overall':'')+' · shorter is better',
+      rows:cpl,fmt:bpMoneyFmt,axis:'Channel'})
+    : spend.length?bpChart.split({title:'What you spent to get them',
+        lead:bpMoneyFmt(totS)+' in 30 days · no leads attributed to it yet',
+        rows:spend,fmt:bpMoneyFmt,axis:'Channel'})
+    : bpChart.empty({title:'What each lead costs you',
         empty:'Connect Meta or Google Ads and your spend shows here beside the leads it bought.'});
   return '<div class="bpc-two" style="margin-bottom:16px"><div class="bpx-panel">'+left+'</div><div class="bpx-panel">'+right+'</div></div>';
 }
@@ -21110,8 +21118,10 @@ function bpRepCharts(all){
   var dated=all.filter(function(r){return r.at&&!isNaN(Date.parse(r.at))&&r.rating>0;});
   var dist=[0,0,0,0,0];
   all.forEach(function(r){var n=Math.round(r.rating);if(n>=1&&n<=5)dist[n-1]++;});
-  var distRows=[5,4,3,2,1].map(function(n){return {label:n+' star'+(n===1?'':'s'),value:dist[n-1]};})
-    .filter(function(r){return r.value>0;});
+  /* fixed five-to-one, never sorted and never filtered: an empty step is
+     part of the shape of the scale, and moving 3 stars off the middle would
+     move the line the other two arms are measured from */
+  var distRows=[5,4,3,2,1].map(function(n){return {label:n+' star'+(n===1?'':'s'),value:dist[n-1]};});
   var trend='';
   if(dated.length>=4){
     var now=new Date(),labels=[],sum=[],cnt=[],idx={};
@@ -21132,14 +21142,14 @@ function bpRepCharts(all){
       lead:'monthly average of the reviews we can see · '+labels[0]+' to '+labels[labels.length-1],
       x:{label:'Month',values:labels},
       series:[{name:'Average rating',values:avg}],
-      fmt:function(n){return (Math.round(n*10)/10).toFixed(1)+'★';},height:200
+      fmt:bpChart.NAMED.rating, fmtKind:'rating', height:200
     });
   }
   if(!trend)trend=bpChart.empty({title:'Where your rating stands',
     empty:'Once there are a few dated reviews, your monthly average is drawn here.'});
-  var spread=distRows.length?bpChart.ranked({title:'How the stars fall',
-    lead:all.length+' review'+(all.length===1?'':'s')+' we can see',
-    rows:distRows,fmt:bpNum,axis:'Rating'
+  var spread=all.length?bpChart.likert({title:'How the stars fall',
+    lead:all.length+' review'+(all.length===1?'':'s')+' we can see · three stars is the middle',
+    steps:distRows,neutral:2,axis:'Rating'
   }):bpChart.empty({title:'How the stars fall',empty:'No reviews to break down yet.'});
   return '<div class="bpc-two" style="margin-top:16px"><div class="bpx-panel">'+trend+'</div><div class="bpx-panel">'+spread+'</div></div>';
 }
@@ -22160,20 +22170,20 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/charts.css?v=20260921c">
+<link rel="stylesheet" href="portal/charts.css?v=20260921d">
 <link rel="stylesheet" href="portal/progress.css?v=20260921a">
 <link rel="stylesheet" href="portal/supply.css?v=20260921e">
 <link rel="stylesheet" href="portal/dash.css?v=20260919c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
-<script src="portal/charts.js?v=20260921c"></script>
+<script src="portal/charts.js?v=20260921d"></script>
 <script src="portal/progress.js?v=20260921a"></script>
-<script src="portal/supply.js?v=20260921f"></script>
+<script src="portal/supply.js?v=20260921g"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260919c"></script>
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
-<script src="portal/dash.js?v=20260921a"></script>
+<script src="portal/dash.js?v=20260921b"></script>
 <script src="site/vendor/lenis.min.js?v=20260919-i"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
 <script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>
