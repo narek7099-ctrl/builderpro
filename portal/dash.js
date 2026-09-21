@@ -159,76 +159,69 @@
       + '</div>';
   }
 
-  /* ---------- charts: two series, validated in both modes ---------- */
+  /* ---------- charts ----------
+     These go through bpChart, the same as Finances and Orders: one palette,
+     one hover layer, a table under each. The dashboard used to draw its own
+     bars, which meant two chart languages in one product. */
   function moneyChart() {
     var fin; try { fin = bpFinData(); } catch (e) { return ''; }
-    var now = new Date(), keys = [], labels = [];
-    for (var i = 5; i >= 0; i--) { var dt = new Date(now.getFullYear(), now.getMonth() - i, 1); keys.push(dt.getFullYear() + '-' + dt.getMonth()); labels.push(dt.toLocaleDateString('en-US', { month: 'short' })); }
-    var inM = {}, outM = {}, cat = {};
-    fin.inc.forEach(function (x) { if (x.when) { var k = monthKey(x.when); inM[k] = (inM[k] || 0) + x.amt; } });
-    fin.exp.forEach(function (x) {
-      if (!x.when) return; var k = monthKey(x.when); outM[k] = (outM[k] || 0) + x.amt;
-      if (keys.indexOf(k) >= 0) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; }
-    });
-    var iv = keys.map(function (k) { return inM[k] || 0; }), ov = keys.map(function (k) { return outM[k] || 0; });
-    var live = keys.filter(function (k, n) { return iv[n] > 0 || ov[n] > 0; }).length;
-    var totalIn = iv.reduce(function (t, v) { return t + v; }, 0), totalOut = ov.reduce(function (t, v) { return t + v; }, 0);
-    if (!live) return '<div class="bpx-panel"><div class="bpx-ptitle">Money in and out<span class="lg2">last 6 months</span></div><div class="dash-empty">Nothing logged yet. Collect on a job, or photograph a supply bill, and it lands here.</div></div>';
+    var inM = bpChart.byMonth(fin.inc, 6, function (x) { return x.when; }, function (x) { return x.amt; });
+    var outM = bpChart.byMonth(fin.exp, 6, function (x) { return x.when; }, function (x) { return x.amt; });
+    var months = inM.values.filter(function (v, i) { return v > 0 || outM.values[i] > 0; }).length;
+    var totalIn = inM.values.reduce(function (t, v) { return t + v; }, 0);
+    var totalOut = outM.values.reduce(function (t, v) { return t + v; }, 0);
+    var net = totalIn - totalOut;
+    var kept = (net >= 0 ? money(net) + ' kept' : money(-net) + ' down');
+
+    if (!months) return '<div class="bpx-panel">' + bpChart.empty({
+      title: 'Money in and out',
+      empty: 'Nothing logged yet. Collect on a job, or photograph a supply bill, and six months of it appears here.',
+    }) + '</div>';
 
     /* One or two months of history makes a six-column time series mostly
        empty air. Until there is a trend to draw, show where the money
        actually went, which is full from the first week. */
-    if (live < 3) {
-      var rows = Object.keys(cat).sort(function (a, b) { return cat[b] - cat[a]; });
-      var max = Math.max.apply(null, [totalIn].concat(rows.map(function (c) { return cat[c]; })).concat([1]));
-      var COL = { 'Materials': '#2f6bff', 'Labor / crew': '#eb6834', 'Subcontractor': '#7c3aed', 'Ads': '#0f7a3d', 'Fuel': '#6a6a70', 'Tools': '#0d9488', 'Permits': '#db2777', 'Overhead': '#b45309', 'Other': '#9a9aa0' };
-      var bar = function (label, val, colour, strong) {
-        return '<div class="mc-row' + (strong ? ' strong' : '') + '"><span class="mc-l">' + esc(label) + '</span>'
-          + '<span class="mc-b"><i style="width:' + Math.max(2, Math.round(val / max * 100)) + '%;background:' + colour + '"></i></span>'
-          + '<span class="mc-v">' + money(val) + '</span></div>';
-      };
-      return '<div class="bpx-panel"><div class="bpx-ptitle">Where the money went<span class="lg2">' + (totalIn - totalOut >= 0 ? money(totalIn - totalOut) + ' kept so far' : money(totalOut - totalIn) + ' down so far') + '</span></div>'
-        + '<div class="mc-wrap">' + bar('Money in', totalIn, 'var(--dash-in)', true)
-        + (rows.length ? rows.map(function (c) { return bar(c, cat[c], COL[c] || '#9a9aa0'); }).join('') : '<div class="mc-none">Nothing spent yet.</div>')
-        + '</div>'
-        + '<div class="mc-foot">A month or two more and this becomes your income against your costs, month by month.</div></div>';
+    if (months < 3) {
+      var cat = {};
+      fin.exp.forEach(function (x) { if (x.when) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; } });
+      var rows = Object.keys(cat).map(function (c) { return { label: c, value: cat[c] }; });
+      if (!rows.length) rows = [{ label: 'Money in', value: totalIn }];
+      return '<div class="bpx-panel">' + bpChart.ranked({
+        title: 'Where the money went',
+        lead: kept + ' so far · a month or two more and this becomes income against costs, month by month',
+        rows: rows, fmt: money, axis: 'Category',
+      }) + '</div>';
     }
 
-    var narrow = (window.innerWidth || 1200) < 760;
-    var W = narrow ? 380 : 620, H = narrow ? 188 : 200, padL = 8, padR = 8, top = 22, base = H - 26, max2 = Math.max.apply(null, iv.concat(ov).concat([1]));
-    var gw = (W - padL - padR) / 6, bw = Math.min(26, gw * 0.34), gap = 2;
-    var y = function (v) { return base - (v / max2) * (base - top); };
-    var svg = '';
-    for (var g = 1; g <= 3; g++) { var gy = top + (base - top) * g / 4; svg += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" class="dash-grid"/>'; }
-    svg += '<line x1="' + padL + '" y1="' + base + '" x2="' + (W - padR) + '" y2="' + base + '" class="dash-axis"/>';
-    var bar2 = function (x, v, cls, title) { var h = Math.max(0, base - y(v)); if (!v) return ''; return '<path class="' + cls + '" d="M' + x + ' ' + base + ' v-' + Math.max(0, h - 4) + ' a4 4 0 0 1 4 -4 h' + (bw - 8) + ' a4 4 0 0 1 4 4 v' + Math.max(0, h - 4) + ' z"><title>' + title + '</title></path>'; };
-    for (var m = 0; m < 6; m++) {
-      var cx = padL + gw * m + gw / 2;
-      svg += bar2(cx - bw - gap / 2, iv[m], 'dash-in', labels[m] + ' in: ' + money(iv[m]));
-      svg += bar2(cx + gap / 2, ov[m], 'dash-out', labels[m] + ' out: ' + money(ov[m]));
-      if (m === 5) {
-        if (iv[m]) svg += '<text x="' + (cx - gap / 2 - bw / 2) + '" y="' + (y(iv[m]) - 6) + '" class="dash-lbl" text-anchor="middle">' + money(iv[m]) + '</text>';
-        if (ov[m]) svg += '<text x="' + (cx + gap / 2 + bw / 2) + '" y="' + (y(ov[m]) - 6) + '" class="dash-lbl" text-anchor="middle">' + money(ov[m]) + '</text>';
-      }
-      svg += '<text x="' + cx + '" y="' + (H - 8) + '" class="dash-ax" text-anchor="middle">' + labels[m] + '</text>';
-    }
-    var net = totalIn - totalOut;
-    return '<div class="bpx-panel"><div class="bpx-ptitle">Money in and out<span class="lg2">last 6 months &middot; ' + (net >= 0 ? money(net) + ' kept' : money(-net) + ' down') + '</span></div>'
-      + '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + H + '" class="dash-chart" role="img" aria-label="Money in and out by month">' + svg + '</svg>'
-      + '<div class="dash-legend"><span><i class="dash-in"></i>In</span><span><i class="dash-out"></i>Out</span></div></div>';
+    return '<div class="bpx-panel">' + bpChart.line({
+      title: 'Money in and out',
+      lead: 'last six months · ' + kept,
+      x: { label: 'Month', values: inM.labels },
+      series: [{ name: 'Money in', values: inM.values }, { name: 'Money out', values: outM.values }],
+      fmt: money, height: 200,
+    }) + '</div>';
   }
   function jobsChart() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
     var done = jobs.filter(function (j) { return j.status === 'done' && j.collected != null; }).map(function (j) {
       var c = +j.collected || 0, e = (j.expenses || []).reduce(function (t, x) { return t + (+x.amt || 0); }, 0);
-      return { n: j.name, c: c, p: c - e, m: c > 0 ? Math.round((c - e) / c * 100) : 0 };
-    }).sort(function (a, b) { return b.p - a.p; }).slice(0, 6);
-    if (!done.length) return '<div class="bpx-panel"><div class="bpx-ptitle">Profit by job<span class="lg2">finished projects</span></div><div class="dash-empty">Mark a project done and put in what you collected. Each one shows here with its margin.</div></div>';
-    var max = Math.max.apply(null, done.map(function (d) { return Math.abs(d.p); }).concat([1]));
-    return '<div class="bpx-panel"><div class="bpx-ptitle">Profit by job<span class="lg2">finished projects, best first</span></div><div class="dash-jobs">'
-      + done.map(function (d) {
-        return '<div class="dash-job"><span class="n">' + esc(d.n) + '</span><span class="b"><i class="' + (d.p < 0 ? 'neg' : '') + '" style="width:' + Math.max(3, Math.round(Math.abs(d.p) / max * 100)) + '%"></i></span><span class="v bpx-num">' + money(d.p) + '<small>' + d.m + '%</small></span></div>';
-      }).join('') + '</div></div>';
+      return { label: j.name || 'Job', value: c - e };
+    }).filter(function (d) { return d.value > 0; });
+    if (!done.length) return '<div class="bpx-panel">' + bpChart.empty({
+      title: 'Profit by job',
+      empty: 'Mark a project done and put in what you collected. Each one shows here with what you kept on it.',
+    }) + '</div>';
+    /* Ranked bars are lengths off a shared baseline, which is the one
+       comparison people read accurately. A loss has no length to draw, so
+       the losing jobs are named under the chart instead of inverted into it. */
+    var lost = jobs.filter(function (j) { return j.status === 'done' && j.collected != null
+      && (+j.collected || 0) - (j.expenses || []).reduce(function (t, x) { return t + (+x.amt || 0); }, 0) < 0; });
+    return '<div class="bpx-panel">' + bpChart.ranked({
+      title: 'Profit by job',
+      lead: 'finished projects, best first',
+      rows: done, fmt: money, axis: 'Job',
+    }) + (lost.length ? '<div class="mc-foot">' + lost.length + (lost.length === 1 ? ' finished job came in under its costs: ' : ' finished jobs came in under their costs: ')
+      + lost.map(function (j) { return esc(j.name || 'Job'); }).join(', ') + '.</div>' : '') + '</div>';
   }
 
   /* ---------- today: appointments and crews ---------- */

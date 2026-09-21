@@ -221,6 +221,11 @@
      are words and a word reads along a row rather than rotated under a
      column. Never a pie: angle is the hardest thing to compare.
      ================================================================== */
+  /* One hue by default. A ranked chart sorts by value, so a per-bar hue would
+     be colour following rank rather than the thing it names — the row above
+     you turns green the moment it overtakes you. The label and the value are
+     already written on every row, so the hue was never carrying identity.
+     Pass hues:true only where the bars are a fixed set that never re-sorts. */
   C.ranked = function (o) {
     var rows = (o.rows || []).slice().sort(function (a, b) { return b.value - a.value; });
     var fmt = o.fmt || money;
@@ -233,10 +238,12 @@
     var top = rows[0].value || 1, total = rows.reduce(function (t, r) { return t + r.value; }, 0) || 1;
     var body = rows.map(function (r, i) {
       var pct = Math.round(r.value / total * 100);
-      return '<div class="bpc-row" data-tip="' + escAttr(esc(r.label) + ' · ' + fmt(r.value) + ' · ' + pct + '% of the total') + '">'
+      /* one row can be marked as the reader's own — it wears the second hue
+         AND says so in its label, so the mark is never colour alone */
+      return '<div class="bpc-row' + (r.mine ? ' mine' : '') + '" data-tip="' + escAttr(esc(r.label) + ' · ' + fmt(r.value) + ' · ' + pct + '% of the total') + '">'
         + '<span class="bpc-rl">' + esc(r.label) + '</span>'
         + '<span class="bpc-rt"><i style="width:' + Math.max(1.5, r.value / top * 100) + '%;background:'
-        + (r.other ? 'var(--bpc-other)' : (o.mono ? 'var(--bpc-s1)' : slot(i))) + '"></i></span>'
+        + (r.other ? 'var(--bpc-other)' : r.mine ? 'var(--bpc-s2)' : (o.hues ? slot(i) : 'var(--bpc-s1)')) + '"></i></span>'
         + '<span class="bpc-rv">' + fmt(r.value) + '</span></div>';
     }).join('');
     var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>Amount</th><th>Share</th></tr></thead><tbody>'
