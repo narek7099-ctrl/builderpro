@@ -14030,6 +14030,9 @@ function bpEnterPortal(email){
   if(window.bpTeamResolve){ bpTeamResolve().then(go,go); } else go();
 }
 function bpEnterPortal2(email){
+  /* who is signed in, for the code that has to write it down — a claim is
+     owned by an email, and row-level security checks it against the token */
+  window._bpEmail=email||'';
   document.getElementById('bpxUemail').textContent=email||'';
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
@@ -19964,6 +19967,11 @@ var _rdCity='demo', _rdTrade='roofing';
 var _rdSat=false;
 var _rdMap=null,_rdLayer=null,_rdStormLayer=null,_rdLeads=[],_rdStorms=[],_rdStormOn=false,_rdMin=25;
 var _rdTerr=null,_rdTerrLoaded=false,_rdDemoOK=false,_rdAdded={},_rdGhl={},_rdContacted={};
+/* Claims: doors somebody is working. _rdTaken is everyone else's, so they can
+   be kept off this map; _rdMine is this contractor's own, with the date each
+   one lapses. _rdSlot is their share of the backlog — see radar_deal_slot. */
+var _rdTaken={},_rdMine={},_rdSlot={slot:0,total:1},_rdClaimsLoaded=false;
+var RD_CLAIM_DAYS=14;
 var _rdListTab='auto';
 window.rdListTab=function(t){
   _rdListTab=t;
@@ -20085,6 +20093,75 @@ function rdCharts(shown){
       rows:Object.keys(k).map(function(n){return {label:n,value:k[n]};}),fmt:bpNum,axis:'Signal'
     })+'</div></div>';
 }
+/* ===== Claims: one door, one contractor ==================================
+   The old model sold a whole zip to one person, which cannot work once
+   anybody can sign up — and it was never what they wanted anyway. What a
+   contractor wants is that the door they are about to knock is not also
+   being knocked by someone else using this. So the lock is on the door.
+
+   Two rules do the work. The backlog is dealt, so two people in one town
+   never open the map on the same houses; and a claim lapses after a
+   fortnight without real work on it, which stops a dormant subscriber
+   sitting on half a street and — at any scale — hands back more doors per
+   day than the permit feeds deliver.                                    */
+
+/* Which share of the backlog is this contractor's. Deterministic, so a door
+   stays with the same person day after day instead of drifting. */
+function rdHash(k){ var h=2166136261,i=0; k=String(k);
+  for(;i<k.length;i++){h^=k.charCodeAt(i);h=(h*16777619)>>>0;} return h>>>0; }
+function rdDeal(leads){
+  return (leads||[]).filter(function(p){
+    var d=p.door||(window.rdDoorKey?rdDoorKey(p.addr):p.addr);
+    p.door=d;
+    if(_rdMine[d])return true;                 /* mine stays mine */
+    if(_rdTaken[d])return false;               /* somebody is working it */
+    if(_rdSlot.total<2)return true;            /* nobody to share with yet */
+    return rdHash(d+'|'+_rdTrade)%_rdSlot.total===_rdSlot.slot;
+  });
+}
+/* Everyone else's claims, and my own. Loaded before the map draws, because a
+   door that is taken must never be shown even for a moment. */
+function rdLoadClaims(){
+  if(!(window.BP_LIVE&&window.BP_SB))return Promise.resolve();
+  var mine=BP_SB.from('radar_claims').select('door,address,state,expires_at').eq('trade',_rdTrade);
+  var taken=BP_SB.from('radar_taken').select('door').eq('trade',_rdTrade);
+  var slot=BP_SB.rpc('radar_deal_slot',{p_trade:_rdTrade});
+  return Promise.all([
+    Promise.resolve(mine).catch(function(){return {data:[]};}),
+    Promise.resolve(taken).catch(function(){return {data:[]};}),
+    Promise.resolve(slot).catch(function(){return {data:null};})
+  ]).then(function(r){
+    _rdMine={}; (r[0].data||[]).forEach(function(c){_rdMine[c.door]=c;});
+    _rdTaken={}; (r[1].data||[]).forEach(function(c){ if(!_rdMine[c.door])_rdTaken[c.door]=1; });
+    var sl=r[2].data&&r[2].data[0]; if(sl&&sl.total>0)_rdSlot={slot:+sl.slot||0,total:+sl.total||1};
+    _rdClaimsLoaded=true;
+  }).catch(function(){ _rdClaimsLoaded=true; });
+}
+/* The signed-in email. Row-level security checks the claim's owner against
+   the token, so getting this wrong means the insert is refused rather than
+   mis-filed — but the fallback keeps a restored session from tripping over
+   it before the portal has finished announcing who it is. */
+function rdWhoAmI(){
+  if(window._bpEmail)return window._bpEmail;
+  var el=document.getElementById('bpxUemail');
+  return (el&&el.textContent||'').trim();
+}
+/* how long a claim has left, in the words someone would use out loud */
+function rdClaimLeft(c){
+  if(!c||!c.expires_at)return '';
+  var d=Math.ceil((Date.parse(c.expires_at)-Date.now())/864e5);
+  if(!(d>0))return 'lapsing today';
+  if(d===1)return 'yours until tomorrow';
+  return 'yours for '+d+' more day'+(d===1?'':'s');
+}
+/* Real work resets the clock. Opening the card does not — or a claim could be
+   kept alive forever by looking at it. */
+function rdTouch(door,state){
+  if(!(window.BP_LIVE&&window.BP_SB)||!door)return Promise.resolve();
+  if(_rdMine[door])_rdMine[door].expires_at=new Date(Date.now()+RD_CLAIM_DAYS*864e5).toISOString();
+  return Promise.resolve(BP_SB.rpc('radar_touch_claim',{p_door:door,p_trade:_rdTrade,p_state:state||null})).catch(function(){});
+}
+
 function rdRenderShell(){
   var t=RADAR_TRADES[_rdTrade];
   var chips=_rdTerr
@@ -20102,7 +20179,7 @@ function rdRenderShell(){
       +'<button id="rdStormBtn" class="bpx-rowbtn" onclick="rdToggleStorm()" style="font-size:12px;margin:0"><span class=ms>thunderstorm</span> Storm overlay: '+(_rdStormOn?'ON':'off')+'</button>'
       +'<button id="rdOverBtn" class="bpx-rowbtn'+(_rdOverdue?' primary':'')+'" onclick="rdToggleOverdue()" style="font-size:12px;margin:0" title="Only roofs 25+ years old — the ones most likely to fail this season"><span class=ms>alarm</span> Overdue only (25+ yrs)'+(_rdOverdue?' <span class=ms>check</span>':'')+'</button>'
       +'<button class="bpx-rowbtn primary" onclick="rdRoute()" style="font-size:12px;margin:0" title="Best 10 doors, ordered for walking, opened in Google Maps"><span class=ms>explore</span> Plan a route</button>'
-      +'<span class="bpx-mut" style="margin-left:auto;font-size:12px">Roofs due by age + fresh signals from the last 90 days · all from public records</span></div>'
+      +'<span class="bpx-mut" style="margin-left:auto;font-size:12px" id="rdShareNote">Roofs due by age + fresh signals from the last 90 days · all from public records</span></div>'
     +'<div id="rdDemoBanner" style="display:none;background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:8px"><span class=ms>warning</span> DEMO DATA — these are illustrative dots, not real homes. Live permit data loads automatically for covered territories.</div>'
     +'<div id="rdStormMode" style="display:none;background:#7c2d12;color:#fff;border-radius:10px;padding:11px 15px;font-size:13px;margin-bottom:8px"></div>'
     +'<div id="rdTrust" style="display:none;color:#15803d;font-size:12px;margin-bottom:8px"><span class=ms>check</span> Live data ('+RADAR_VER+') — every dot below is a real public record. Tap a dot → More info to see the government record.</div>'
@@ -20129,7 +20206,9 @@ function rdRenderShell(){
       +'<div data-rd-pane="checks"'+(_rdListTab==='checks'?'':' hidden')+'><div id="rdChecksList" class="bpx-mut" style="font-size:13px">Loading roof checks…</div></div>'
       +'<div data-rd-pane="hot"'+(_rdListTab==='hot'?'':' hidden')+'><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px;text-align:center">Adding a prospect files it in GHL as <b>radar-prospect</b> (no automations fire). When you tap <b>Contacted</b> after a real conversation it becomes <b>radar-contacted</b> — wire your GHL workflows to that tag.</div>';
-  rdEnsureLeaflet(rdRefresh);
+  /* claims first: a door somebody else is working must never appear, not
+     even for the moment between the map drawing and the answer arriving */
+  rdLoadClaims().then(function(){ rdEnsureLeaflet(rdRefresh); });
   rdLoadAuto();
   rdLoadMine();
   rdLoadChecks();
@@ -20397,7 +20476,7 @@ function rdRefresh(){
   var cnt=q('rdCount'); if(cnt)cnt.textContent='Scanning permits…';
   var started=Date.now(); rdVeil(true,'Scanning your territory');
   var done=function(leads,demo){ rdVeilHold(started,function(){ doneNow(leads,demo); }); };
-  var doneNow=function(leads,demo){_rdLeads=leads; window._rdIsDemo=demo||_rdCity==='demo';
+  var doneNow=function(leads,demo){_rdLeads=rdDeal(leads); window._rdIsDemo=demo||_rdCity==='demo';
     if(demo&&cnt)cnt.textContent='Live feed unavailable — demo data';
     if(demo&&_rdCity!=='demo'){
       var pc=RADAR_CITIES[_rdCity]; var pcfg=(pc&&(pc.recent||pc))||null;
@@ -20769,9 +20848,11 @@ function rdDraw(){
       var act;
       if(_rdContacted[p.addr]) act='<span style="color:#15803d;font-weight:600;font-size:12px"><span class=ms>check</span> Contacted</span>';
       else if(_rdAdded[p.addr]) act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdContacted('+i+')">Contacted</button> <button class="bpx-rowbtn" title="View in my list" onclick="event.stopPropagation();rdMineJump()">List</button>';
-      else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">+ Add</button>';
+      else act='<button class="bpx-rowbtn" onclick="event.stopPropagation();rdAddLead('+i+')">Claim it</button>';
+      var mineC=_rdMine[p.door||''];
+      var holdTag=mineC?' <span class="rd-hold'+((Date.parse(mineC.expires_at)-Date.now())<3*864e5?' soon':'')+'">'+bpEsc(rdClaimLeft(mineC))+'</span>':'';
       var freshTag=(p.stormFresh?'<span style="color:#dc2626;font-weight:700;font-size:11px"> STORM 72H</span>':(p.storm?' <span title="recent storm nearby"><span class=ms>thunderstorm</span></span>':''))
-        +(p.anchor?'<span style="color:#0f2540;font-weight:700;font-size:11px"> CREW '+p.anchor.ft+' FT</span>':'')+rdKindTag(p,false);
+        +(p.anchor?'<span style="color:#0f2540;font-weight:700;font-size:11px"> CREW '+p.anchor.ft+' FT</span>':'')+rdKindTag(p,false)+holdTag;
       return '<tr style="cursor:pointer" onclick="rdFocus('+i+')"><td class="bpx-mut">'+(r+1)+'</td><td>'+bpEsc(p.addr)+freshTag+'</td>'
         +'<td class="bpx-mut" style="font-size:12.5px">'+bpEsc((p.anchor?('Roof crew '+p.anchor.ft+' ft away at '+p.anchor.addr+' ('+p.anchor.when+') · '):'')+(p.why||('Last '+t.unit+': '+p.year+' · '+p.age+' yrs'))).slice(0,120)+'</td>'
         +'<td class="bpx-r"><span style="padding:2px 10px;border-radius:99px;background:'+rdColor(p.score)+';color:#fff;font-weight:700;font-size:11.5px">'+p.score+'</span></td>'
@@ -20781,6 +20862,16 @@ function rdDraw(){
   }
   var cnt=q('rdCount');
   if(cnt)cnt.textContent=shown.length+' prospects · '+shown.filter(function(x){return x.score>=75;}).length+' hot'+(_rdStormOn?' · '+_rdStorms.length+' storm reports':'');
+  /* Say plainly that this list is theirs alone. It is the whole promise, and
+     it is invisible unless somebody writes it down. */
+  var note=q('rdShareNote');
+  if(note){
+    var held=Object.keys(_rdMine).length;
+    note.textContent=(_rdSlot.total>1
+      ? 'Your own list — '+_rdSlot.total+' contractors work this area and no two see the same doors'
+      : 'Your own list — nobody else is being shown these doors')
+      +(held?' · '+held+' claimed by you':'');
+  }
 }
 /* the lead detail card under the map — replaces the clipped map popup */
 window.rdSheetOpen=function(i){
@@ -20978,7 +21069,23 @@ window.rdAddLead=function(i){
   var t=RADAR_TRADES[_rdTrade];
   var note='Lead Radar ('+t.l+'): '+(p.why||('last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old'))+'. Score '+p.score+' ('+rdLabel(p.score)+')'+(p.storm?' · recent storm nearby':'')+'.';
   if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to save prospects.');return;}
-  _rdAdded[p.addr]=1; rdDraw();
+  var door=p.door||(window.rdDoorKey?rdDoorKey(p.addr):p.addr);
+  _rdAdded[p.addr]=1;
+  /* Take the door. Insert, not upsert: if somebody else already holds it the
+     insert fails and it is theirs — we do not steal it, we say so and put it
+     back on their map. */
+  var exp=new Date(Date.now()+RD_CLAIM_DAYS*864e5).toISOString();
+  _rdMine[door]={door:door,address:p.addr,state:'claimed',expires_at:exp};
+  rdDraw();
+  Promise.resolve(BP_SB.from('radar_claims').insert({
+    door:door,trade:_rdTrade,owner:rdWhoAmI(),address:p.addr,expires_at:exp
+  })).then(function(r){
+    if(r&&r.error){
+      delete _rdMine[door]; delete _rdAdded[p.addr]; _rdTaken[door]=1; rdDraw();
+      alert('Another contractor is already working this one. It has come off your map.');
+      throw r.error;
+    }
+  }).catch(function(){});
   rdFn('push',{address:p.addr,trade:_rdTrade,note:note}).then(function(d){
     var ghlId=(d&&d.ghlId)||'';
     _rdGhl[p.addr]=ghlId;
@@ -20990,7 +21097,9 @@ window.rdAddLead=function(i){
 window.rdContacted=function(i){
   var p=_rdLeads[i]; if(!p)return;
   if(!confirm('Confirm you\'ve actually spoken with this homeowner? This starts your follow-up automations.'))return;
-  _rdContacted[p.addr]=1; rdDraw();
+  _rdContacted[p.addr]=1;
+  rdTouch(p.door||(window.rdDoorKey?rdDoorKey(p.addr):p.addr),'contacted');
+  rdDraw();
   var finish=function(ghlId){ if(ghlId) rdFn('contacted',{ghlId:ghlId}).catch(function(){}); };
   if(_rdGhl[p.addr]) finish(_rdGhl[p.addr]);
   else if(window.BP_LIVE&&window.BP_SB){
@@ -21015,7 +21124,12 @@ rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-ra
   +'@media(max-width:700px){.rd-legend{position:static;max-width:none;border-radius:0 0 16px 16px;border-top:0}.rd-stat{top:auto;bottom:12px;left:auto;right:12px}}'
   +'.rd-route{margin:12px 0 0;padding-left:20px;font-size:13px;line-height:1.5}.rd-route li{margin-bottom:6px}'
   +'.rd-funnel{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.rd-funnel div{flex:1;min-width:88px;background:var(--card,#fbfaf7);border:1px solid var(--line);border-radius:10px;padding:8px 10px;text-align:center}.rd-funnel div b{display:block;font-size:19px;letter-spacing:-.02em}.rd-funnel div span{font-size:11px;color:var(--grey)}.rd-funnel div.win{background:#ecfdf5;border-color:#a7f3d0}.rd-funnel i{color:var(--grey-l);font-style:normal;font-size:16px}'
-  +'.rd-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px}';
+  +'.rd-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px}'
+  /* how long a claimed door stays theirs — amber, and worded, once it is
+     close enough to matter */
+  +'.rd-hold{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:99px;font-size:10.5px;font-weight:650;'
+  +'background:var(--soft,#eef2f8);color:var(--grey,#5a6b82);white-space:nowrap}'
+  +'.rd-hold.soon{background:#fff3e2;color:#b45309}';
 document.head.appendChild(rdCss);
 </script>
 
@@ -22266,6 +22380,7 @@ window.bpFmHangers=function(){
 <link rel="stylesheet" href="portal/dash.css?v=20260919c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
+<script src="portal/radar-key.js?v=20260922a"></script>
 <script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260921a"></script>
 <script src="portal/supply.js?v=20260921h"></script>
