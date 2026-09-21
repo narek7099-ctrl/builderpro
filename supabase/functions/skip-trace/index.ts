@@ -31,12 +31,26 @@ async function verifyUser(req: Request): Promise<{ id: string; email: string } |
   } catch { return null; }
 }
 
-// only clients WITH an active Radar territory may spend lookups
-async function hasTerritory(email: string): Promise<boolean> {
+// You may spend a lookup on a door you have claimed, and on no other.
+//
+// This used to gate on an active exclusive territory, which is the model the
+// radar has since dropped — so in practice nobody could run a lookup at all.
+// The claim is the better gate anyway, and not only because it still exists:
+// it ties the spend to a door this contractor is actually working, and the
+// daily claim cap already limits how many of those there can be. Without it
+// the endpoint is a paid database anyone with a login can walk through an
+// address at a time.
+//
+// Checked here rather than in the browser, because a check the client makes
+// is a check the client can skip — and every skip costs real money.
+async function ownsClaim(email: string, door: string): Promise<boolean> {
+  if (!door) return false;
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/radar_territories?email=eq.${encodeURIComponent(email.toLowerCase())}&active=eq.true&select=email`, {
-      headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` },
-    });
+    const q = `${SB_URL}/rest/v1/radar_claims`
+      + `?door=eq.${encodeURIComponent(door)}`
+      + `&owner=eq.${encodeURIComponent(email.toLowerCase())}`
+      + `&state=neq.dead&select=door`;
+    const r = await fetch(q, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
     const rows = await r.json();
     return Array.isArray(rows) && rows.length > 0;
   } catch { return false; }
@@ -49,12 +63,15 @@ Deno.serve(async (req) => {
 
   const user = await verifyUser(req);
   if (!user) return json({ ok: false, error: "not signed in" }, 401);
-  if (!(await hasTerritory(user.email))) return json({ ok: false, error: "no active Lead Radar territory on this account" }, 403);
-
-  let body: { street?: string; city?: string; state?: string; zip?: string };
+  let body: { street?: string; city?: string; state?: string; zip?: string; door?: string };
   try { body = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   const street = (body.street ?? "").toString().slice(0, 120).trim();
   if (!street) return json({ ok: false, error: "street required" }, 400);
+
+  const door = (body.door ?? "").toString().slice(0, 160).trim();
+  if (!(await ownsClaim(user.email, door))) {
+    return json({ ok: false, error: "claim this door first — lookups are only for doors you hold" }, 403);
+  }
 
   try {
     const r = await fetch("https://api.batchdata.com/api/v1/property/skip-trace", {
