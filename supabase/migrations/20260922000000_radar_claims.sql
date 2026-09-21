@@ -28,8 +28,12 @@ create table if not exists public.radar_seats (
   lng        double precision not null,
   radius_mi  numeric not null default 25 check (radius_mi > 0 and radius_mi <= 120),
   active     boolean not null default true,
-  -- how many doors a day this seat wants; null means "size it from supply"
+  -- the daily allowance. Comes from the plan: 3 on the middle one, 5 on the
+  -- top. Null falls back to RADAR_FREE_PER_DAY below.
   per_day    int,
+  -- minutes east of UTC, so "3 a day" resets at midnight where they live
+  -- rather than at six in the evening. The portal sends it on sign-in.
+  tz_offset_min int not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   primary key (email, trade)
@@ -119,42 +123,86 @@ $$;
 revoke all on function public.radar_touch_claim(text, text, text) from public;
 grant execute on function public.radar_touch_claim(text, text, text) to authenticated;
 
--- ------------------------------------------------------------- dealing ------
--- Two contractors in one town must not open the map and see the same doors.
--- Before anyone has claimed anything there is nothing to tell them apart, so
--- the backlog is split by arithmetic: each seat is given a slot, and a door
--- belongs to whoever's slot its key hashes to. Stable, so a door does not move
--- between people from one day to the next, and even, so nobody gets the thin
--- end of the town.
+-- -------------------------------------------------------- daily limit ------
+-- Claiming is capped per day, and the cap is the scarcity in this model: the
+-- map is open to everyone, so what stops one contractor taking a whole
+-- neighbourhood on Sunday night is the allowance, not a territory.
 --
--- Returns the caller's slot and how many seats share their patch. Security
--- definer because working that out means counting other people's seats, which
--- is not something a client may read — it gets two integers, not a roster.
-create or replace function public.radar_deal_slot(p_trade text)
-returns table (slot int, total int)
-language sql security definer set search_path = public as $$
-  with me as (
-    select * from public.radar_seats
-     where lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
-       and trade = p_trade and active
-     limit 1
-  ),
-  /* seats whose circles overlap mine, me included, oldest first so the
-     ordering does not shuffle when somebody new signs up */
-  near as (
-    select s.email,
-           row_number() over (order by s.created_at, s.email) - 1 as idx
-      from public.radar_seats s, me
-     where s.trade = p_trade and s.active
-       and 3959 * acos(least(1, greatest(-1,
-             cos(radians(me.lat)) * cos(radians(s.lat)) * cos(radians(s.lng) - radians(me.lng))
-           + sin(radians(me.lat)) * sin(radians(s.lat))))) <= (me.radius_mi + s.radius_mi)
-  )
-  select coalesce((select idx from near where lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')))::int, 0),
-         greatest((select count(*) from near)::int, 1);
+-- Enforced here rather than in the browser. A cap that only exists in the UI
+-- is a suggestion — anyone can call the table directly with the same token.
+create or replace function public.radar_claim_door(
+  p_door text, p_trade text, p_address text default ''
+) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
+  v_allow int;
+  v_off   int;
+  v_since timestamptz;
+  v_used  int;
+begin
+  if v_email = '' then
+    return jsonb_build_object('ok', false, 'reason', 'signed_out');
+  end if;
+
+  select coalesce(per_day, 3), coalesce(tz_offset_min, 0)
+    into v_allow, v_off
+    from public.radar_seats
+   where lower(email) = v_email and trade = p_trade and active
+   limit 1;
+  -- no seat yet: the middle plan's allowance, so an existing client is not
+  -- locked out by a table they have never heard of
+  v_allow := coalesce(v_allow, 3);
+  v_off   := coalesce(v_off, 0);
+
+  -- midnight where they are, not midnight in UTC
+  v_since := date_trunc('day', now() + make_interval(mins => v_off)) - make_interval(mins => v_off);
+
+  select count(*) into v_used
+    from public.radar_claims
+   where lower(owner) = v_email and trade = p_trade and claimed_at >= v_since;
+
+  if v_used >= v_allow then
+    return jsonb_build_object('ok', false, 'reason', 'limit',
+      'allowance', v_allow, 'used', v_used, 'resets_at', v_since + interval '1 day');
+  end if;
+
+  begin
+    insert into public.radar_claims (door, trade, owner, address)
+    values (p_door, p_trade, v_email, coalesce(p_address, ''));
+  exception when unique_violation then
+    -- somebody got there first; say so rather than quietly doing nothing
+    return jsonb_build_object('ok', false, 'reason', 'taken');
+  end;
+
+  return jsonb_build_object('ok', true, 'allowance', v_allow, 'used', v_used + 1,
+    'left', v_allow - v_used - 1, 'resets_at', v_since + interval '1 day');
+end;
 $$;
-revoke all on function public.radar_deal_slot(text) from public;
-grant execute on function public.radar_deal_slot(text) to authenticated;
+revoke all on function public.radar_claim_door(text, text, text) from public;
+grant execute on function public.radar_claim_door(text, text, text) to authenticated;
+
+-- What is left today, for the button and the counter. Same day boundary as
+-- the claim itself, or the two would disagree at midnight.
+create or replace function public.radar_allowance(p_trade text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_email text := lower(coalesce(auth.jwt() ->> 'email', ''));
+  v_allow int; v_off int; v_since timestamptz; v_used int;
+begin
+  select coalesce(per_day, 3), coalesce(tz_offset_min, 0) into v_allow, v_off
+    from public.radar_seats
+   where lower(email) = v_email and trade = p_trade and active limit 1;
+  v_allow := coalesce(v_allow, 3); v_off := coalesce(v_off, 0);
+  v_since := date_trunc('day', now() + make_interval(mins => v_off)) - make_interval(mins => v_off);
+  select count(*) into v_used from public.radar_claims
+   where lower(owner) = v_email and trade = p_trade and claimed_at >= v_since;
+  return jsonb_build_object('allowance', v_allow, 'used', v_used,
+    'left', greatest(0, v_allow - v_used), 'resets_at', v_since + interval '1 day');
+end;
+$$;
+revoke all on function public.radar_allowance(text) from public;
+grant execute on function public.radar_allowance(text) to authenticated;
 
 -- ----------------------------------------------------------- supply log -----
 -- What the feeds actually produced, per area per trade per day. Two weeks of
