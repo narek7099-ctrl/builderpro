@@ -19982,7 +19982,7 @@ window.rdListTab=function(t){
   document.querySelectorAll('[data-rd-pane]').forEach(function(p){p.hidden=p.getAttribute('data-rd-pane')!==t;});
   var h=q('rdListHint'); if(h)h.textContent=rdListHintText(t);
 };
-function rdListHintText(t){return t==='auto'?'The radar files its top finds here every morning · tap Contacted after a real conversation':t==='checks'?'Homeowners who ran the roof health check on your site · the ones who left a number are warm':'Ranked door-knock list · Add → knock or mail → tap Contacted once you\'ve talked';}
+function rdListHintText(t){return t==='mine'?'Doors you have claimed · yours for 14 days, and the clock restarts every time you log a real conversation':t==='auto'?'The radar files its top finds here every morning · tap Contacted after a real conversation':t==='checks'?'Homeowners who ran the roof health check on your site · the ones who left a number are warm':'Ranked door-knock list · Add → knock or mail → tap Contacted once you\'ve talked';}
 /* ---- Roof checks: homeowners who used the "How old is my roof?" tab on the client's estimator ---- */
 var RD_CHECK_DEMO=[
   {id:'c1',address:'1408 Cedar Ln, Austin, TX',zip:'78704',score:31,band:'warn',label:'Needs attention soon',age:21,material:'asphalt',issues:['granules'],storm:'unknown',permit_year:2005,name:'Dana M.',phone:'(512) 555-0142',created_at:new Date(Date.now()-3*36e5).toISOString(),status:'new'},
@@ -20162,16 +20162,56 @@ function rdLoadClaims(){
     _rdTaken={}; (r[1].data||[]).forEach(function(c){ if(!_rdMine[c.door])_rdTaken[c.door]=1; });
     if(r[2].data)_rdAllow=r[2].data;
     _rdClaimsLoaded=true;
+    /* land them on their own doors when they have some — an empty "Today's
+       picks" is the wrong first thing to show somebody holding three leads */
+    if(Object.keys(_rdMine).length&&_rdListTab==='auto')_rdListTab='mine';
+    rdHeldRender();
   }).catch(function(){ _rdClaimsLoaded=true; });
 }
+/* The doors this contractor is holding, with how long each has left. Drawn
+   from the claims themselves rather than from the contact records, so a
+   door appears the instant it is claimed instead of after a round trip
+   through GHL — which is what "I claimed it and nothing happened" was. */
+function rdHeldRender(){
+  var tab=q('rdMineTab'), el=q('rdHeldList');
+  var keys=Object.keys(_rdMine);
+  if(tab)tab.textContent='Yours'+(keys.length?' ('+keys.length+')':'');
+  if(!el)return;
+  if(!keys.length){
+    el.innerHTML='<div class="bpx-empty2">Nothing claimed yet. Tap <b>Claim it</b> on a green dot or a row below and it lands here, '
+      +'yours alone for 14 days.</div>';
+    return;
+  }
+  var rows=keys.map(function(k){return _rdMine[k];}).sort(function(a,b){
+    return Date.parse(a.expires_at||0)-Date.parse(b.expires_at||0);   /* nearest to lapsing first */
+  });
+  el.innerHTML='<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Address</th><th>Stage</th><th>Time left</th><th></th></tr></thead><tbody>'
+    +rows.map(function(c){
+      var left=rdClaimLeft(c), soon=(Date.parse(c.expires_at)-Date.now())<3*864e5;
+      var st=c.state&&c.state!=='claimed'?c.state:'not contacted';
+      var idx=_rdLeads.map(function(p){return p.door;}).indexOf(c.door);
+      return '<tr><td>'+bpEsc(c.address||c.door)+'</td>'
+        +'<td><span class="bpx-badge'+(c.state==='won'?' ok':(c.state==='claimed'?'':' warn'))+'">'+bpEsc(st)+'</span></td>'
+        +'<td><span class="rd-hold'+(soon?' soon':'')+'">'+bpEsc(left)+'</span></td>'
+        +'<td class="bpx-r" style="white-space:nowrap">'
+          +(idx>=0?'<button class="bpx-rowbtn" onclick="rdFocus('+idx+')">Show on map</button>':'')
+          +(c.state==='claimed'&&idx>=0?'<button class="bpx-rowbtn primary" onclick="rdContacted('+idx+')">Contacted</button>':'')
+          +'<a class="bpx-rowbtn" style="text-decoration:none" target="_blank" rel="noopener" href="https://maps.apple.com/?q='+encodeURIComponent(c.address||'')+'">Map</a>'
+        +'</td></tr>';
+    }).join('')+'</tbody></table></div>'
+    +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px">Nearest to lapsing first. '
+    +'A door goes back on everyone\u2019s map if 14 days pass without a real conversation logged against it.</div>';
+}
+
 /* Out of claims for today. Said once, plainly, with the two things they
    actually want to know: when it comes back, and what the bigger plan gives. */
 function rdLimitHit(){
   var when=_rdAllow.resets_at?new Date(_rdAllow.resets_at):null;
   var t=when?when.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})
     +' '+(when.toDateString()===new Date().toDateString()?'today':'tomorrow'):'midnight';
-  bpModal('<h3>That\u2019s your '+_rdAllow.allowance+' for today</h3>'
-    +'<div class="bpx-sub">Your next '+_rdAllow.allowance+' unlock at '+bpEsc(t)+'.</div>'
+  bpModal('<div class="rd-lockwrap"><span class="rd-lockmark ms">lock</span></div>'
+    +'<h3 style="text-align:center">That\u2019s your '+_rdAllow.allowance+' for today</h3>'
+    +'<div class="bpx-sub" style="text-align:center">Your next '+_rdAllow.allowance+' unlock at '+bpEsc(t)+'.</div>'
     +'<p style="font-size:13.5px;line-height:1.65;color:var(--grey)">The cap is deliberate. Claimed doors are yours alone for a fortnight, '
     +'and a contractor who takes fifty in a night works none of them \u2014 they just sit there, off everyone else\u2019s map, '
     +'until they lapse. Three or five a day is about what one crew can actually knock and follow up properly.</p>'
@@ -20242,10 +20282,16 @@ function rdRenderShell(){
     +'<div id="rdSheet" style="display:none;margin-top:10px;border:1px solid #cddcff;border-radius:14px;background:#f7f9ff;padding:14px 16px;position:relative"></div>'
     +'<div id="rdCharts"></div>'
     +'<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-jobtabs">'
+      /* Claimed doors used to have nowhere to go: the tab you land on shows
+         what the nightly job filed, and a door you claim yourself is tagged
+         differently, so you could claim three and watch the list stay empty.
+         They belong here, in front of you, next to everything else. */
+      +'<button class="bpx-jt'+(_rdListTab==='mine'?' on':'')+'" data-rd-tab="mine" id="rdMineTab" onclick="rdListTab(\'mine\')">Yours</button>'
       +'<button class="bpx-jt'+(_rdListTab==='auto'?' on':'')+'" data-rd-tab="auto" onclick="rdListTab(\'auto\')">Today\'s picks</button>'
       +'<button class="bpx-jt'+(_rdListTab==='hot'?' on':'')+'" data-rd-tab="hot" onclick="rdListTab(\'hot\')">Hottest prospects</button>'
       +'<button class="bpx-jt'+(_rdListTab==='checks'?' on':'')+'" data-rd-tab="checks" id="rdChecksTab" onclick="rdListTab(\'checks\')">Roof checks</button></div>'
       +'<span class="bpx-mut" style="font-size:12px" id="rdListHint">'+rdListHintText(_rdListTab)+'</span></div>'
+      +'<div data-rd-pane="mine"'+(_rdListTab==='mine'?'':' hidden')+'><div id="rdHeldList"></div></div>'
       +'<div data-rd-pane="auto" id="rdAutoPanel"'+(_rdListTab==='auto'?'':' hidden')+'><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
       +'<div data-rd-pane="checks"'+(_rdListTab==='checks'?'':' hidden')+'><div id="rdChecksList" class="bpx-mut" style="font-size:13px">Loading roof checks…</div></div>'
       +'<div data-rd-pane="hot"'+(_rdListTab==='hot'?'':' hidden')+'><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div></div>'
@@ -21120,6 +21166,7 @@ function rdDraw(){
      it is invisible unless somebody writes it down. */
   /* What is left today. The whole model in one line: a shared map, a daily
      allowance, and doors that are already gone shown as gone. */
+  rdHeldRender();
   var note=q('rdShareNote');
   if(note){
     var held=Object.keys(_rdMine).length;
@@ -21395,6 +21442,11 @@ rdCss.textContent='.rd-dot{display:inline-block;width:10px;height:10px;border-ra
   +'.rd-allow b{color:var(--ink);font-weight:700}'
   +'.rd-allow.out b{color:#b45309}'
   +'.rd-gone{font-size:12px;color:#b91c1c;font-weight:600;white-space:nowrap}'
+  /* the lock on the "that is your three" message — amber rather than red,
+     because nothing has gone wrong: they have used what they are due */
+  +'.rd-lockwrap{display:flex;justify-content:center;margin-bottom:14px}'
+  +'.rd-lockmark{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+  +'background:#fff3e2;color:#b45309;font-size:30px;border:1px solid #f0c98a}'
   +'@media(prefers-reduced-motion:reduce){.rd-wheelhint{transition:none}}'
   /* how long a claimed door stays theirs — amber, and worded, once it is
      close enough to matter */
