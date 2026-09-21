@@ -1019,18 +1019,19 @@
     var cat = catOf({ name: g.name, category: g.cat });
     var fam = FAM_OF[cat] || 'other';
     return '<div class="sp-card' + (n ? ' on' : '') + '" role="button" tabindex="0" data-k="' + esc(g.key) + '"'
-      + ' onclick="SP.pickAdd(this.dataset.k)" onkeydown="SP.rowKey(event,this)" title="' + esc(g.name) + '">'
+      + ' onclick="SP.matOpen(this.dataset.k)" onkeydown="SP.rowKey(event,this)" title="' + esc(g.name) + '">'
       + '<div class="sp-card-art" data-fam="' + fam + '">' + icon(cat, 'big')
       + '<span class="sp-card-cat">' + esc(cat) + '</span>'
       + (n ? '<span class="sp-card-n">' + n + '</span>' : '') + '</div>'
       + '<b class="sp-card-nm">' + esc(g.name) + '</b>'
       + '<div class="sp-card-price">' + priceLine(g) + '</div>'
       + storeAvatars(g, 4)
-      + '<span class="sp-card-add">' + (n ? 'Add another' : 'Add') + '</span></div>';
+      + '<button class="sp-card-add" onclick="event.stopPropagation();SP.pickAdd(this.closest(\'.sp-card\').dataset.k)">'
+      + (n ? 'Add another' : 'Add') + '</button></div>';
   }
   SP.rowKey = function (e, el) {
     if (!e || (e.key !== 'Enter' && e.key !== ' ')) return;
-    e.preventDefault(); SP.pickAdd(el.dataset.k);
+    e.preventDefault(); SP.matOpen(el.dataset.k);
   };
 
   /* Departments, the way a store has aisles. Built from whatever is on the
@@ -1053,6 +1054,92 @@
   SP.pickCat = function (c) { PICK.cat = c || ''; PICK.n = PAGE; pickRedraw(); };
 
   var PAGE = 20;
+  /* ---------- one material, in full ----------
+     The card is a shelf tag and has room for a price and four marks. This
+     is the aisle-side label: every house that carries it with what each
+     one charges, what the number actually means, and a quantity, so the
+     decision is made here rather than back on the list. */
+  SP.matOpen = function (key) {
+    var g = groupFor(key);
+    if (!g) { SP.pickAdd(key); return; }
+    var cat = catOf({ name: g.name, category: g.cat });
+    var fam = FAM_OF[cat] || 'other';
+    var mine = myChains();
+    var on = onListQty(g.name);
+
+    var priced = g.offers.map(function (o) {
+      var sup = supById(o.supplier_id);
+      return '<div class="sp-md-row"><span class="sp-md-who">' + supMark(sup ? sup.name : '?', chainOf(sup))
+        + '<b>' + esc(sup ? sup.name : 'A supply house') + '</b></span>'
+        + '<span class="sp-md-p">' + (o.price == null ? '—' : money(o.price)) + '</span>'
+        + '<span class="sp-md-s">' + (o.stock == null ? '<em>stock unknown</em>'
+          : o.stock > 0 ? '<span class="sp-pk-stk ok">' + o.stock.toLocaleString() + ' on the shelf</span>'
+          : '<span class="sp-pk-stk out">none on the shelf</span>') + '</span>'
+        + (o.sku ? '<span class="sp-md-sku">' + esc(o.sku) + '</span>' : '<span class="sp-md-sku"></span>') + '</div>';
+    }).join('');
+
+    /* everyone the catalog says carries it, theirs first */
+    var carriers = (g.car || []).slice().sort(function (a, b) { return (mine[b] ? 1 : 0) - (mine[a] ? 1 : 0); });
+    var where = carriers.map(function (id) {
+      var d = chainMeta(id);
+      return '<button class="sp-md-chain' + (mine[id] ? ' on' : '') + '" data-c="' + esc(id) + '"'
+        + ' onclick="SP.storeTap(this.dataset.c)">' + supMark(chainName(id), id)
+        + '<span><b>' + esc(chainName(id)) + '</b><small>' + esc(d ? String(d.carries).slice(0, 46) : '') + '</small></span>'
+        + '<span class="sp-md-tag">' + (mine[id] ? 'You buy here' : 'Add') + '</span></button>';
+    }).join('') || '<div class="bpx-mut" style="font-size:13px">Nobody in our directory is listed for this one. Put it on the list anyway and whoever you order from will price it.</div>';
+
+    window.bpModal(
+      '<div class="sp-md">'
+      + '<div class="sp-md-top"><div class="sp-md-art" data-fam="' + fam + '">' + icon(cat, 'huge') + '</div>'
+      + '<div class="sp-md-id"><h3>' + esc(g.name) + '</h3>'
+      + '<div class="sp-md-meta"><span class="sp-md-cat">' + esc(cat) + '</span>'
+      + (g.unit ? '<span>sold by the ' + esc(g.unit) + '</span>' : '')
+      + (g.trade ? '<span>' + esc(g.trade) + '</span>' : '') + '</div>'
+      + '<div class="sp-md-head">' + (g.offers.length
+          ? '<b>' + money(g.offers[0].price) + '</b><span class="sp-pk-yours">your price</span>'
+            + '<small>the best of ' + g.offers.length + (g.offers.length === 1 ? ' price you hold' : ' prices you hold') + '</small>'
+          : g.lo > 0
+            ? '<b>' + money(g.lo).replace(/\.00$/, '') + '\u2013' + money(g.hi).replace(/\.00$/, '').replace('$', '') + '</b>'
+              + '<span class="sp-pk-typ">typical</span><small>a ballpark from our catalog, not a quote</small>'
+            : '<b>No price yet</b><small>the supplier quotes it when you order</small>') + '</div>'
+      + '</div></div>'
+      + (priced ? '<div class="sp-md-sec"><div class="sp-md-h">What you are charged</div>'
+          + '<div class="sp-md-rows">' + priced + '</div>'
+          + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">From your own price books. These are the numbers we order and cost the job with.</div></div>' : '')
+      + '<div class="sp-md-sec"><div class="sp-md-h">Where to buy it</div>'
+      + '<div class="sp-md-chains">' + where + '</div>'
+      + '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Which chains stock this, from our catalog. It is not a live feed of their shelves &mdash; add the branch you use and your own prices take over.</div></div>'
+      + '<div class="sp-md-foot">'
+      + '<div class="sp-md-qty"><button onclick="SP.mdQty(-1)">&minus;</button>'
+      + '<input id="sp-md-q" value="1" inputmode="decimal" aria-label="How many">'
+      + '<button onclick="SP.mdQty(1)">+</button></div>'
+      + '<button class="bpx-btn sp-inline" onclick="SP.mdAdd(\'' + esc(g.key).replace(/'/g, "\\'") + '\')">'
+      + (on ? 'Add more to the list' : 'Add to the list') + '</button>'
+      + (on ? '<span class="bpx-mut" style="font-size:12.5px">' + on + ' already on the list</span>' : '')
+      + '</div></div>');
+    var card = document.querySelector('#bpx-modal .bpx-modalcard');
+    if (card) card.style.maxWidth = '620px';
+  };
+  SP.mdQty = function (d) {
+    var i = $('sp-md-q'); if (!i) return;
+    i.value = Math.max(1, (+String(i.value).replace(/[^0-9.]/g, '') || 1) + d);
+  };
+  SP.mdAdd = function (key) {
+    var i = $('sp-md-q'), n = Math.max(1, +String((i || {}).value || 1).replace(/[^0-9.]/g, '') || 1);
+    window.bpCloseModal();
+    var g = groupFor(key), name = g ? g.name : key;
+    var wasNew = !SP.list;
+    ensureList().then(function (L) {
+      L.items = L.items || [];
+      var ex = L.items.filter(function (x) { return norm(x.name) === norm(name); })[0];
+      if (ex) ex.qty = (+ex.qty || 0) + n;
+      else L.items.push({ key: uid('k'), name: name, qty: n, unit: (g && g.unit) || 'ea',
+        sku: g && g.offers[0] ? g.offers[0].sku : '', cat: g ? g.cat : catOfName(name) });
+      SP.plans = null; saveList(); afterAdd(wasNew);
+      flash(name + (ex ? ' is now ' + ex.qty : ' \u00d7 ' + n + ' added'));
+    }).catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
+  };
+
   function resultsHtml() {
     var q = PICK.q, rows, lbl;
     if (norm(q).length >= 2) {
