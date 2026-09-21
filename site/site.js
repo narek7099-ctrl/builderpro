@@ -54,9 +54,24 @@
   var extLocked = false;
   function updateLock() {
     var locked = lockState.loader || lockState.menu || lockState.drawer || extLocked;
+    /* A stopped Lenis does not scroll, and nothing on screen says so — no
+       greyed scrollbar, no overlay, just a page that ignores you. So the
+       stop is only ever as long as something is actually covering the
+       screen, and the flags are re-read rather than remembered. */
     if (lenis) { locked ? lenis.stop() : lenis.start(); }
     document.body.classList.toggle('is-locked', lockState.loader || lockState.menu || lockState.drawer);
   }
+  /* If every overlay is gone the scroll comes back, whatever any flag thinks.
+     This is the one that stops a missed start() from freezing the page for
+     the rest of the visit. */
+  function releaseIfClear() {
+    if (document.querySelector('#bpx.open, .modal-ov.open')) return;
+    if (document.body.classList.contains('is-locked')) return;
+    if (lenis && lenis.isStopped) lenis.start();
+  }
+  window.addEventListener('pageshow', releaseIfClear);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) releaseIfClear(); });
+  setInterval(releaseIfClear, 2000);
   /* the portal, the plan modal and the legal pages lock the page by setting
      body overflow hidden themselves; watch for that and stand Lenis down */
   new MutationObserver(function () {
