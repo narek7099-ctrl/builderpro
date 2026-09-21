@@ -17625,6 +17625,36 @@ function bpFinData(){
   var expense=exp.reduce(function(s,x){return s+x.amt;},0);
   return {inc:inc,exp:exp,catTot:catTot,income:income,expense:expense,net:income-expense,jobs:jobs};
 }
+/* Money in against money out, by month. Two series on one axis — never
+   two scales — so the gap between the lines is the profit and can be
+   read directly rather than inferred from two differently-stretched
+   pictures. Six months because that is what fits without thinning the
+   labels into uselessness. */
+function bpFinChart(d){
+  var inc=bpChart.byMonth(d.inc,6,function(r){return r.when;},function(r){return r.amt;});
+  var exp=bpChart.byMonth(d.exp,6,function(r){return r.when;},function(r){return r.amt;});
+  var any=inc.values.concat(exp.values).some(function(v){return v>0;});
+  if(!any) return bpChart.empty({title:'Money in and out',
+    empty:'Mark a job done with what you collected, or log an expense, and six months of it appears here.'});
+  var net=inc.values.reduce(function(a,b){return a+b;},0)-exp.values.reduce(function(a,b){return a+b;},0);
+  return bpChart.line({
+    title:'Money in and out',
+    lead:'last six months · '+(net>=0?'kept ':'down ')+bpMoneyFmt(Math.abs(net)),
+    x:{label:'Month',values:inc.labels},
+    series:[{name:'Money in',values:inc.values},{name:'Money out',values:exp.values}],
+    fmt:bpChart.money, height:220
+  });
+}
+/* Where the money goes. Ranked bars rather than a pie: comparing lengths
+   against a shared baseline is something people are good at, and comparing
+   angles is something they are not. */
+function bpFinCatChart(d){
+  var rows=Object.keys(d.catTot||{}).map(function(c){return {label:c,value:d.catTot[c]};});
+  if(!rows.length) return bpChart.empty({title:'Where the money goes',empty:'No expenses logged yet.'});
+  var tot=rows.reduce(function(t,r){return t+r.value;},0);
+  return bpChart.ranked({title:'Where the money goes',lead:bpMoneyFmt(tot)+' out, by category',
+    rows:rows,fmt:bpMoneyFmt,axis:'Category'});
+}
 function bpFinances(){
   var d=bpFinData();
   var recRules=[]; bpFinGet().forEach(function(f,fi){ if(f.recur) recRules.push({f:f,fi:fi}); });
@@ -17664,7 +17694,8 @@ function bpFinances(){
     +'<div class="bpx-chead" style="margin-bottom:16px"><div></div>'
       +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpInvOpen()">+ New invoice</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpEstOpen()">+ New estimate</button></div></div>'
     +vp('overview',
-      '<div class="bpx-row"><div class="bpx-panel"><div class="bpx-ptitle">Where the money goes<span class="lg2">by category</span></div>'+catHtml+'</div>'
+      '<div class="bpx-panel" style="margin-bottom:16px">'+bpFinChart(d)+'</div>'
+      +'<div class="bpx-row"><div class="bpx-panel">'+bpFinCatChart(d)+'</div>'
       +'<div class="bpx-panel"><div class="bpx-ptitle">Quick add</div><div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Log money that didn\'t come through a job — ad spend, fuel, a side payment. Set it to repeat and it books itself every week, month or year.</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div>'
         +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:14px">Management view — not accounting of record. Income is what you actually collected. Synced to your account.</div></div></div>'
@@ -21911,10 +21942,12 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
+<link rel="stylesheet" href="portal/charts.css?v=20260921a">
 <link rel="stylesheet" href="portal/supply.css?v=20260921e">
 <link rel="stylesheet" href="portal/dash.css?v=20260919c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
+<script src="portal/charts.js?v=20260921a"></script>
 <script src="portal/supply.js?v=20260921e"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260919c"></script>

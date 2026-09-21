@@ -1450,11 +1450,48 @@
     var unsent = SP.pos.filter(function (p) { return p.status === 'sent' && !p.sent_to_supplier; });
     if (unsent.length) h += '<div class="sp-note warn"><span class="ms">outgoing_mail</span><b>' + (unsent.length === 1 ? 'One order has not been sent to the supply house.' : unsent.length + ' orders have not been sent to the supply house.') + '</b> Until you send it, nothing is picked and nobody is expecting you. <button class="bpx-rowbtn primary" onclick="SP.poOpen(\'' + unsent[0].id + '\')">' + (unsent.length === 1 ? 'Send it' : 'Send them') + '</button></div>';
     if (SP.won) { h += '<div class="sp-note good"><span class="ms">savings</span>' + esc(SP.won) + '</div>'; SP.won = ''; }
+    h += spendCharts();
     if (!rows.length) h += '<div class="bpx-panel"><div class="bpx-empty2">' + (SP.pos.length ? 'Nothing in here right now.' : 'Nothing ordered yet. Order materials for a job and it lands here with a barcode you show at the counter.') + '</div></div>';
     h += '<div class="sp-grid">' + rows.map(poCard).join('') + '</div>';
     if (SP.pos.length) h += '<div class="sp-foot">' + window.bpCsvBtn('SP.csv()', 'Export CSV') + '</div>';
     $('bpxViewArea').innerHTML = h;
   };
+  /* What materials are costing, and who it is going to. Two questions a
+     contractor has about their own buying that a list of orders cannot
+     answer, so they sit above the list rather than inside it. */
+  function spendCharts() {
+    if (!window.bpChart || SP.pos.length < 2) return '';
+    var spent = SP.pos.filter(function (p) { return p.status !== 'cancelled'; });
+    var tot = spent.reduce(function (t, p) { return t + (+p.total || 0); }, 0);
+    if (!(tot > 0)) return '';
+
+    var m = bpChart.byMonth(spent, 6,
+      function (p) { return p.created_at || p.sent_at; },
+      function (p) { return +p.total || 0; });
+
+    var per = {};
+    spent.forEach(function (p) {
+      var sup = supById(p.supplier_id);
+      var k = sup ? sup.name : 'Someone else';
+      per[k] = (per[k] || 0) + (+p.total || 0);
+    });
+
+    return '<div class="bpc-two" style="margin-bottom:16px">'
+      + '<div class="bpx-panel">' + bpChart.columns({
+        title: 'What materials are costing',
+        lead: 'last six months \u00b7 ' + money(tot) + ' across ' + spent.length + (spent.length === 1 ? ' order' : ' orders'),
+        x: { label: 'Month', values: m.labels },
+        series: [{ name: 'Materials', values: m.values }],
+        fmt: money, height: 200,
+      }) + '</div>'
+      + '<div class="bpx-panel">' + bpChart.ranked({
+        title: 'Who it goes to',
+        lead: 'by supply house',
+        rows: Object.keys(per).map(function (k) { return { label: k, value: per[k] }; }),
+        fmt: money, axis: 'Supply house',
+      }) + '</div></div>';
+  }
+
   var STATUS = { sent: ['Not sent yet', 'warn'], ready: ['Ready to collect', ''], picked_up: ['Picked up', ''], invoiced: ['Bill needs checking', 'warn'], reconciled: ['Done', ''], cancelled: ['Cancelled', 'warn'] };
   function poCard(p) {
     var s = supById(p.supplier_id), st = STATUS[p.status] || [p.status, ''];

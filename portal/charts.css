@@ -1,0 +1,106 @@
+/* ==================================================================
+   Chart styling. The palette slots are declared once here, in both
+   themes, and every chart is written against the role rather than a
+   hex — so the light and dark sets swap in one place and no chart can
+   quietly use a colour that was never validated.
+
+   These values were run through the data-viz validator against this
+   portal's own surfaces (white, and #121826 in dark). Both sets pass
+   the lightness band, chroma floor, CVD separation and normal-vision
+   floor. Two light slots (aqua, yellow) fall under 3:1 on white, which
+   obliges relief — hence the direct value labels on every ranked row
+   and the table under every chart. Do not substitute a hex here
+   without re-running the validator on both surfaces.
+   ================================================================== */
+#bpx{
+  --bpc-s1:#2f6bff;   /* blue — the portal's own, slot 1 */
+  --bpc-s2:#eb6834;   /* orange */
+  --bpc-s3:#1baf7a;   /* aqua */
+  --bpc-s4:#eda100;   /* yellow */
+  --bpc-s5:#4a3aa7;   /* violet */
+  --bpc-other:#9aa6b6;
+  --bpc-warn:#b45309;
+  --bpc-grid:#e8ecf3;
+  --bpc-area:.13;
+}
+#bpx.bpx-dark{
+  /* the same five hues, stepped for the dark surface — not an inversion */
+  --bpc-s1:#3987e5; --bpc-s2:#d95926; --bpc-s3:#199e70; --bpc-s4:#c98500; --bpc-s5:#9085e9;
+  --bpc-other:#6d7887;
+  --bpc-warn:#e0a555;
+  --bpc-grid:#242c3a;
+  --bpc-area:.2;
+}
+
+#bpx .bpc{margin:0;display:flex;flex-direction:column;gap:10px}
+#bpx .bpc-cap{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:0}
+#bpx .bpc-t{font-size:14px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+#bpx .bpc-lead{font-size:12.5px;color:var(--grey)}
+
+/* legend: present whenever there is more than one series, so identity is
+   never carried by colour alone */
+#bpx .bpc-legend{display:flex;gap:14px;flex-wrap:wrap}
+#bpx .bpc-key{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--grey)}
+#bpx .bpc-key i{width:10px;height:10px;border-radius:3px;flex:none}
+
+#bpx .bpc-plot{position:relative}
+#bpx .bpc-plot svg{display:block;width:100%}
+/* strokes stay the thickness they were drawn at however the viewBox scales */
+#bpx .bpc-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#bpx .bpc-area{opacity:var(--bpc-area);stroke:none}
+#bpx .bpc-end{stroke:var(--card,#fff);stroke-width:2;vector-effect:non-scaling-stroke}
+#bpx .bpc-grid{stroke:var(--bpc-grid);stroke-width:1;vector-effect:non-scaling-stroke}
+#bpx .bpc-base{stroke:var(--line)}
+#bpx .bpc-ax{fill:var(--grey);font-size:11px;font-family:inherit}
+#bpx .bpc-hit{fill:transparent}
+#bpx .bpc-cross{stroke:var(--grey-l,var(--grey));stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+#bpx .bpc-bar{transition:opacity .12s}
+#bpx .bpc-plot:hover .bpc-bar{opacity:.82}
+
+/* tooltip */
+#bpx .bpc-tip{position:absolute;z-index:4;pointer-events:none;background:var(--card,#fff);
+  border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;
+  box-shadow:0 8px 24px rgba(11,21,43,.12);min-width:120px}
+#bpx .bpc-tip b{display:block;font-size:12px;margin-bottom:4px}
+#bpx .bpc-tip span{display:flex;align-items:center;gap:6px;color:var(--grey);white-space:nowrap}
+#bpx .bpc-tip i{width:8px;height:8px;border-radius:2px;flex:none}
+#bpx .bpc-tip em{font-style:normal;font-weight:700;color:var(--ink);margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* ranked rows — the label reads along the bar, and the value is always
+   written out, which is the relief the contrast warning asks for */
+#bpx .bpc-rows{display:flex;flex-direction:column;gap:7px}
+#bpx .bpc-row{display:grid;grid-template-columns:minmax(72px,30%) minmax(0,1fr) auto;gap:10px;align-items:center}
+#bpx .bpc-rl{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx .bpc-rt{height:12px;border-radius:99px;background:var(--soft);overflow:hidden}
+#bpx .bpc-rt i{display:block;height:100%;border-radius:99px}
+#bpx .bpc-rv{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+#bpx .bpc-row:hover .bpc-rt{outline:1px solid var(--line)}
+@media(max-width:520px){#bpx .bpc-row{grid-template-columns:minmax(64px,40%) minmax(0,1fr) auto}}
+
+/* progress */
+#bpx .bpc-ptrack{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+#bpx .bpc-ptrack i{display:block;height:100%;border-radius:99px;transition:width .4s ease}
+#bpx .bpc-pfoot{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--grey)}
+#bpx .bpc-pfoot span:first-child{font-weight:700;color:var(--ink)}
+@media(prefers-reduced-motion:reduce){#bpx .bpc-ptrack i{transition:none}}
+
+/* the numbers behind the picture — always available, never in the way */
+#bpx .bpc-tbl{border-top:1px solid var(--line);padding-top:8px}
+#bpx .bpc-tbl summary{font-size:12px;color:var(--grey);cursor:pointer;list-style:none}
+#bpx .bpc-tbl summary::-webkit-details-marker{display:none}
+#bpx .bpc-tbl summary:before{content:'▸ ';font-size:10px}
+#bpx .bpc-tbl[open] summary:before{content:'▾ '}
+#bpx .bpc-tbl summary:hover{color:var(--blue)}
+#bpx .bpc-tblwrap{overflow-x:auto;margin-top:8px}
+#bpx .bpc-tbl table{width:100%;border-collapse:collapse;font-size:12px}
+#bpx .bpc-tbl th,#bpx .bpc-tbl td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+#bpx .bpc-tbl thead th{color:var(--grey);font-weight:650}
+#bpx .bpc-tbl tbody th{text-align:left;font-weight:600}
+#bpx .bpc-tbl td{font-variant-numeric:tabular-nums}
+
+#bpx .bpc-empty .bpc-none{border:1px dashed var(--line);border-radius:12px;padding:26px 16px;
+  text-align:center;font-size:13px;color:var(--grey);background:var(--tint,#f4f6fa)}
+
+/* two charts side by side where there is room, stacked where there is not */
+#bpx .bpc-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){#bpx .bpc-two{grid-template-columns:minmax(0,1fr)}}
