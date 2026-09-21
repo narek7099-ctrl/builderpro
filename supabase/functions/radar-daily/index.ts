@@ -8,6 +8,8 @@
 // Secrets used: GHL_TOKEN (or GHL_API_KEY fallback), SUPABASE_URL,
 //               SUPABASE_SERVICE_ROLE_KEY
 
+import { doorKey } from "./door-key.js";
+
 const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? Deno.env.get("GHL_API_KEY") ?? "";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -142,6 +144,43 @@ async function ghlAddLead(addr: string, trade: string, why: string, date: string
   return id;
 }
 
+/* What the feeds actually produced today, written down before anyone acts on
+   it. Two weeks of this and the size of a contractor's daily hand can be set
+   from the real inflow in their real city, instead of from PER_DAY, which is
+   a number somebody picked. Best effort: a failure here must never cost
+   anybody their leads. */
+async function logSupply(area: string, trade: string, row: Record<string, number>) {
+  try {
+    await fetch(`${SB_URL}/rest/v1/radar_supply_log?on_conflict=day,area,trade`, {
+      method: "POST",
+      headers: { ...sbH, Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ day: new Date().toISOString().slice(0, 10), area, trade, ...row }),
+    });
+  } catch { /* instrumentation is never worth a failed run */ }
+}
+
+/* Doors handed back by claims that lapsed. At any real scale this is the
+   larger of the two supplies — the permit feeds trickle, the fortnight
+   recycles — so it is counted separately or the numbers will mislead. */
+async function sweepClaims(): Promise<number> {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/radar_sweep_claims`, { method: "POST", headers: sbH, body: "{}" });
+    if (r.ok) return Number(await r.json()) || 0;
+  } catch { /* non-fatal */ }
+  return 0;
+}
+
+/* Doors already locked to somebody. They are not supply, and dealing one
+   twice is the single thing this whole model exists to prevent. */
+async function takenDoors(trade: string): Promise<Set<string>> {
+  const out = new Set<string>();
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/radar_claims?select=door&trade=eq.${encodeURIComponent(trade)}&state=neq.dead&limit=20000`, { headers: sbH });
+    if (r.ok) for (const c of await r.json()) out.add(c.door);
+  } catch { /* if we cannot tell, fall back to the name dedupe below */ }
+  return out;
+}
+
 async function notifyOwner(email: string, leads: { addr: string; score: number; why: string }[]) {
   // find (or create) the owner's own contact in GHL, add a digest note + tag.
   // A GHL workflow on tag "radar-digest" sends them the actual SMS/email/push.
@@ -173,6 +212,9 @@ Deno.serve(async (req) => {
   if (!terrRes.ok) return json({ ok: false, error: "territories fetch failed" }, 502);
   const terrs = await terrRes.json();
   const seen = await existingNames();
+  /* first, hand back everything that lapsed — those doors are supply for the
+     run that is about to happen, not the next one */
+  const recycled = await sweepClaims();
   const results: Record<string, unknown>[] = [];
 
   for (const t of terrs) {
@@ -192,13 +234,16 @@ Deno.serve(async (req) => {
       if (c) anchors.push({ lat: c[0], lng: c[1], addr: String(p.primary_address ?? "").trim() });
     }
     const storms = await fetchFreshStorms();
-    const scored: { addr: string; score: number; why: string; date: string }[] = [];
+    const held = await takenDoors(trade);
+    const scored: { addr: string; score: number; why: string; date: string; door: string }[] = [];
     const dupe = new Set<string>();
     for (const p of permits) {
       const addr = (p.primary_address ?? "").trim();
       if (!addr) continue;
       const key = addr.toLowerCase();
       if (dupe.has(key) || seen.has(key)) continue;
+      const door = doorKey(addr);
+      if (!door || held.has(door)) continue;   /* somebody is already on it */
       const sc = scorePermit(p, trade);
       if (!sc) continue;
       dupe.add(key);
@@ -211,13 +256,16 @@ Deno.serve(async (req) => {
         const st = storms.find((s) => kmBetween(co[0], co[1], s.lat, s.lng) <= 3);
         if (st) { pts = Math.min(100, pts + 20); why = `STORM ${st.type} hit <72h · ` + why; }
       }
-      scored.push({ addr, score: pts, why, date: sc.date });
+      scored.push({ addr, score: pts, why, date: sc.date, door });
     }
     scored.sort((a, b) => b.score - a.score);
     const top = scored.slice(0, PER_DAY);
     let added = 0;
     for (const l of top) { if (await ghlAddLead(l.addr, trade, l.why, l.date, l.score)) { added++; seen.add(l.addr.toLowerCase()); } }
     const notified = top.length ? await notifyOwner(t.email, top) : false;
+    await logSupply(zips.join("+") || "unknown", trade, {
+      fetched: permits.length, scored: scored.length, fresh: added, recycled, seats: 1,
+    });
     results.push({ email: t.email, trade, zips, permits: permits.length, candidates: scored.length, added, notified });
   }
   return json({ ok: true, ran_at: new Date().toISOString(), territories: results });
