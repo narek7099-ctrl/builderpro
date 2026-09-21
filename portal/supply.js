@@ -179,38 +179,166 @@
   /* ================================================================
      SUPPLIERS
      ================================================================ */
+  /* ---------- a supplier's mark ----------
+     Chain logos live in assets/suppliers/<id>.(svg|png) and are dropped in
+     as files; nothing is fetched at runtime. Until one exists the tile
+     wears a lettermark in the chain's own colour, so the page is never
+     waiting on artwork and a supply house the contractor typed in by hand
+     looks like it belongs next to the national ones. */
+  var CHAIN_TINT = {
+    abc: '#0a4d8c', srs: '#0d5c3f', beacon: '#b03a2e', carter: '#8a5a2b',
+    ferguson: '#0b3d91', winsupply: '#1f5f8b', johnstone: '#0f6e4f',
+    ced: '#c0392b', graybar: '#1a5276', sherwin: '#0b5394', benmoore: '#1b4f72',
+    siteone: '#2e7d32', whitecap: '#c62828', lw: '#5d4037', fbm: '#37474f',
+    bfs: '#1565c0', e84: '#2e7d32', fastenal: '#1b5e20',
+    homedepot_pro: '#d2691e', lowes_pro: '#00518f', menards: '#2e5c1f',
+    supplyhouse: '#00695c', pexuniverse: '#1565c0', hvacdirect: '#0277bd',
+    grainger: '#b71c1c', zoro: '#c62828', amazonbiz: '#7b5800', northerntool: '#b71c1c',
+    poolcorp: '#01579b', heritagepool: '#0277bd', leslies: '#1565c0',
+    floordecor: '#c05621', msi: '#37474f', tileshop: '#5d4037',
+    cosentino: '#212121', richelieu: '#1a237e', metrie: '#4e342e',
+  };
+  function initials(name) {
+    var w = String(name || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (!w.length) return '?';
+    if (w.length === 1) return w[0].slice(0, 2).toUpperCase();
+    return (w[0][0] + w[1][0]).toUpperCase();
+  }
+  /* The <img> is tried first and removes itself if the file is not there,
+     which leaves the lettermark underneath. No network round trip, no
+     broken-image icon, and dropping a file in is all it takes to upgrade. */
+  function supMark(name, id, cls) {
+    var tint = CHAIN_TINT[id] || 'var(--grey)';
+    return '<span class="sp-mark ' + (cls || '') + '" style="--mk:' + tint + '">'
+      + '<i>' + esc(initials(name)) + '</i>'
+      + (id && (SP.LOGOS || []).indexOf(id) >= 0
+        ? '<img src="assets/suppliers/' + esc(id) + '.png" alt="" loading="lazy"'
+          + ' onerror="this.remove()" onload="this.parentNode.classList.add(\'has\')">'
+        : '')
+      + '</span>';
+  }
+
+  /* ---------- what their prices are actually worth ----------
+     Every priced item is compared with the catalog's typical midpoint for
+     the same material. It answers the question a contractor has about a
+     supply house — am I getting a good price here — with their own numbers
+     rather than a claim. Only counted where we have both. */
+  function supStats(s) {
+    var its = itemsOf(s.id), cat = {};
+    (SP.CATALOG || []).forEach(function (c) { cat[norm(c.name)] = c; });
+    var deltas = [], matched = 0;
+    its.forEach(function (i) {
+      var c = cat[norm(i.name)];
+      if (!c || !(c.lo > 0) || i.price == null) return;
+      var mid = (c.lo + c.hi) / 2;
+      if (!(mid > 0)) return;
+      matched++; deltas.push((+i.price - mid) / mid);
+    });
+    deltas.sort(function (a, b) { return a - b; });
+    var med = deltas.length ? deltas[Math.floor(deltas.length / 2)] : null;
+    return {
+      items: its.length,
+      stocked: its.filter(function (i) { return i.stock != null; }).length,
+      latest: its.reduce(function (m, i) { return Math.max(m, Date.parse(i.stock_at || i.updated_at || 0) || 0); }, 0),
+      learned: its.filter(function (i) { return i.source === 'invoice' || i.source === 'quote'; }).length,
+      matched: matched,
+      vs: med,
+    };
+  }
+  function vsBadge(st) {
+    if (st.vs == null || st.matched < 3) return '';
+    var pct = Math.round(Math.abs(st.vs) * 100);
+    if (pct < 3) return '<span class="sp-vs even">About the going rate</span>';
+    return st.vs < 0
+      ? '<span class="sp-vs good">' + pct + '% under typical</span>'
+      : '<span class="sp-vs bad">' + pct + '% over typical</span>';
+  }
+
   window.bpSuppliers = function () {
     if (!SP.loaded) { $('bpxViewArea').innerHTML = tabs('suppliers') + skel(); load(); return; }
-    var h = tabs('suppliers') + state();
-    h += '<div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-mut" style="font-size:13px">' + (SP.sup.length ? SP.sup.length + (SP.sup.length === 1 ? ' supply house' : ' supply houses') : '') + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>') + '<button class="bpx-addbtn" onclick="SP.dirOpen()">+ Add supplier</button></div></div>';
-    if (!SP.sup.length) h += firstRun();
-    h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
+    var mine = SP.sup.filter(function (x) { return !isSample(x); });
+    var h = tabs('suppliers') + state() + supKpis();
 
+    h += '<div class="bpx-chead" style="margin:18px 0 12px"><div class="bpx-ptitle" style="margin:0">Where I buy'
+      + '<span class="lg2">' + (SP.sup.length ? SP.sup.length + (SP.sup.length === 1 ? ' supply house' : ' supply houses') : 'nothing added yet') + '</span></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>')
+      + '<button class="bpx-addbtn" onclick="SP.supOpen()">+ Add one by hand</button></div></div>';
+
+    if (!SP.sup.length) h += firstRun();
+    else h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
+
+    h += connectGrid(mine);
     $('bpxViewArea').innerHTML = h;
   };
+  function supKpis() {
+    var mine = SP.sup.filter(function (x) { return !isSample(x); });
+    var priced = SP.items.length;
+    var known = {}; SP.items.forEach(function (i) { known[norm(i.name)] = 1; });
+    var cover = (SP.CATALOG || []).filter(function (c) { return known[norm(c.name)]; }).length;
+    var t = function (l, v, blue) { return '<div class="bpx-stat"><div class="lbl">' + l + '</div><div class="val' + (blue ? ' blue' : '') + '">' + v + '</div></div>'; };
+    var ex = SP.sup.length - mine.length;
+    return '<div class="bpx-stats">' + t('Supply houses', mine.length + (ex ? ' <small class="sp-ex">+' + ex + ' example</small>' : ''))
+      + t('Prices you own', priced.toLocaleString())
+      + t('Catalog covered', cover + '<small class="sp-ex"> of ' + (SP.CATALOG || []).length + '</small>', true)
+      + t('Chains you can add', (SP.dirAll || []).length) + '</div>';
+  }
+
+  /* The chains we already know, laid out with their marks. "Automatically
+     connected" is the catalog side of it: every one of these already tells
+     the shop who stocks what. Adding one is how their own prices get in. */
+  function connectGrid(mine) {
+    var dir = SP.dirAll || []; if (!dir.length) return '';
+    var have = {}; mine.forEach(function (s) { var c = s.dir_id || ''; if (c) have[c] = 1; });
+    (SP.dirAll || []).forEach(function (d) {
+      mine.forEach(function (s) { if (norm(s.name) === norm(d.name)) have[d.id] = 1; });
+    });
+    var t = (window.bpSettingsGet && SP.tradeKey) ? SP.tradeKey((bpSettingsGet().company || {}).trade) : '';
+    var fit = function (d) { return !t || d.trades.indexOf('all') >= 0 || d.trades.some(function (x) { return x.indexOf(t.slice(0, 5)) >= 0 || t.indexOf(x.slice(0, 5)) >= 0; }); };
+    var rows = dir.slice().sort(function (a, b) {
+      return (have[b.id] ? 1 : 0) - (have[a.id] ? 1 : 0) || (fit(b) ? 1 : 0) - (fit(a) ? 1 : 0);
+    });
+    return '<div class="bpx-chead" style="margin:26px 0 4px"><div class="bpx-ptitle" style="margin:0">Supply houses we already know'
+      + '<span class="lg2">' + dir.length + ' chains, wired into the catalog. Tap one to make its prices yours.</span></div></div>'
+      + '<div class="bpx-mut" style="font-size:12.5px;margin-bottom:12px">Every material in Order materials already says which of these stock it. Adding one here is what replaces the ballpark prices with the numbers <b>you</b> are charged.</div>'
+      + '<div class="sp-chains">' + rows.map(function (d) {
+        var on = !!have[d.id];
+        return '<button class="sp-chain' + (on ? ' on' : '') + '" onclick="SP.chainTap(this.dataset.d,' + (on ? 'true' : 'false') + ')" data-d="' + esc(d.id) + '">'
+          + supMark(d.name, d.id)
+          + '<span class="sp-chain-t"><b>' + esc(d.name) + '</b><span>' + esc(d.carries).slice(0, 62) + '</span></span>'
+          + '<span class="sp-chain-a">' + (on ? '<span class="ms">check</span>Added' : 'Add') + '</span></button>';
+      }).join('') + '</div>';
+  }
+  SP.chainTap = function (id, have) {
+    if (have) { var s = SP.sup.filter(function (x) { return x.dir_id === id || norm(x.name) === norm((chainMeta(id) || {}).name || ''); })[0]; if (s) SP.itemsOpen(s.id); return; }
+    if (SP.dirAdd) SP.dirAdd(id);
+  };
+
   function supCard(s) {
-    var its = itemsOf(s.id), conn = s.connection || { type: 'pricebook' };
-    var stocked = its.filter(function (i) { return i.stock != null; }).length;
-    var latest = its.reduce(function (m, i) { return Math.max(m, Date.parse(i.stock_at || i.updated_at || 0) || 0); }, 0);
-    var srcs = {}; its.forEach(function (i) { var k = i.source || 'manual'; srcs[k] = (srcs[k] || 0) + 1; });
-    var learned = (srcs.invoice || 0) + (srcs.quote || 0);
+    var st = supStats(s), conn = s.connection || { type: 'pricebook' };
     var connLine = conn.type === 'api'
       ? '<span class="bpx-badge">Live feed</span> ' + esc(conn.provider || '') + (conn.last_sync ? ', synced ' + ago(Date.parse(conn.last_sync)) : ', never synced')
-      : (its.length ? '<b>' + its.length.toLocaleString() + ' prices</b>' + (latest ? '<span class="bpx-mut"> &middot; updated ' + ago(latest) + '</span>' : '') : '');
+      : (st.items ? '<b>' + st.items.toLocaleString() + ' prices</b>' + (st.latest ? '<span class="bpx-mut"> &middot; updated ' + ago(st.latest) + '</span>' : '') : '');
     return '<div class="bpx-panel sp-sup">'
-      + '<div class="sp-sup-h"><div><b>' + esc(s.name) + '</b>' + (isSample(s) ? ' <span class="bpx-badge warn">Example</span>' : '') + '<span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ')) + '</span></div>'
+      + '<div class="sp-sup-h">' + supMark(s.name, chainOf(s), 'lg')
+      + '<div class="sp-sup-id"><b>' + esc(s.name) + '</b>' + (isSample(s) ? ' <span class="bpx-badge warn">Example</span>' : '')
+      + '<span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ') || 'No branch set') + '</span></div>'
       + '<div class="sp-drive">' + (s.drive_min != null ? '<b>' + s.drive_min + '</b> min' : '<b>?</b> min') + '</div></div>'
-      + '<div class="sp-sup-meta">' + connLine + (learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + learned + ' from your paperwork</span>' : '') + '</div>'
+      + '<div class="sp-sup-meta">' + connLine + (st.learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + st.learned + ' from your paperwork</span>' : '') + '</div>'
+      + (st.items ? '<div class="sp-sup-nums">'
+          + '<div><b>' + st.items.toLocaleString() + '</b><span>prices</span></div>'
+          + '<div><b>' + st.stocked.toLocaleString() + '</b><span>with stock</span></div>'
+          + '<div><b>' + st.matched + '</b><span>we can compare</span></div></div>'
+          + (vsBadge(st) ? '<div class="sp-sup-vs">' + vsBadge(st) + '<span class="bpx-mut">against the catalog&rsquo;s typical price for the same material</span></div>' : '')
+        : '<div class="bpx-mut sp-sup-empty">No prices yet. Ask for a quote, then photograph it.</div>')
       + '<div class="sp-sup-meta bpx-mut">' + [s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivers' + (s.delivery_fee > 0 ? ' ' + money(s.delivery_fee) : ' free') : ''].filter(Boolean).join(' &middot; ') + '</div>'
-      + (its.length ? '' : '<div class="bpx-mut sp-sup-empty">No prices yet. Ask for a quote, then photograph it.</div>')
       + '<div class="sp-sup-acts">'
-      + (its.length
+      + (st.items
         ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">See their prices</button>'
         : '<button class="bpx-rowbtn primary" onclick="SP.quoteAsk(\'' + s.id + '\')">Ask for their prices</button><button class="bpx-rowbtn" onclick="SP.scanOpen()">Photograph a bill</button>')
       + '</div><div class="sp-links">'
       + '<button class="bpx-linkbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import a price file</button>'
-      + (conn.type === 'api' ? '<button class="bpx-linkbtn" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : isSample(s) ? '<button class="bpx-linkbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (its.length ? 'Refresh example stock' : 'Load example prices') + '</button>' : '')
+      + (conn.type === 'api' ? '<button class="bpx-linkbtn" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : isSample(s) ? '<button class="bpx-linkbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (st.items ? 'Refresh example stock' : 'Load example prices') + '</button>' : '')
       + '<button class="bpx-linkbtn" onclick="SP.supOpen(\'' + s.id + '\')">Edit</button>'
       + '<button class="bpx-linkbtn sp-quiet-del" onclick="SP.supDel(\'' + s.id + '\')">Stop using them</button>'
       + '</div></div>';
@@ -525,6 +653,19 @@
     Joints:      '<path d="M3 6h8v12H3zM13 6h8v12h-8z"/><path d="M12 4v16"/>',
     Finish:      '<path d="M3 13h13l2 3H5z"/><path d="M11 13V9h3v4"/><path d="M12.5 9V6"/>',
     Hardware:    '<path d="m9 4 3-2 3 2v3h-6z"/><path d="M11 7v11l1 3 1-3V7"/><path d="M10 11h4M10 14h4"/>',
+    /* pools */
+    Pumps:       '<circle cx="10" cy="13" r="5"/><path d="M10 8V5h6a3 3 0 0 1 0 6h-1"/><path d="M4 21h14"/><circle cx="10" cy="13" r="1.5"/>',
+    Chemicals:   '<path d="M10 3v6l-4.5 8A2 2 0 0 0 7 20h10a2 2 0 0 0 1.5-3L14 9V3"/><path d="M9 3h6"/><path d="M7.5 14h9"/>',
+    Liner:       '<path d="M3 8c2.5-2 5-2 7.5 0S15.5 10 18 8s3-1 3-1"/><path d="M3 14c2.5-2 5-2 7.5 0s5 2 7.5 0 3-1 3-1"/><path d="M3 20c2.5-2 5-2 7.5 0s5 2 7.5 0 3-1 3-1"/>',
+    /* surfaces */
+    Tile:        '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>',
+    Stone:       '<path d="M3 17V9l9-4 9 4v8l-9 4z"/><path d="M3 9l9 4 9-4M12 13v8"/>',
+    Flooring:    '<path d="M2 6h20v12H2z"/><path d="M2 10h20M2 14h20"/><path d="M9 6v4M16 10v4M6 14v4M14 14v4"/>',
+    /* millwork and cabinets */
+    Trim:        '<path d="M3 15h18v4H3z"/><path d="M3 15c3 0 3-4 6-4s3 4 6 4 3-4 6-4"/>',
+    Doors:       '<path d="M5 3h14v18H5z"/><path d="M8 3v18"/><circle cx="15.5" cy="12" r="1"/>',
+    Windows:     '<rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M3 12h18"/>',
+    Cabinets:    '<rect x="3" y="3" width="18" height="18" rx="1.5"/><path d="M12 3v18M3 11h18"/><path d="M10 7v2M14 7v2M10 15v2M14 15v2"/>',
     Other:       '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M12 7V4"/>',
   };
 
@@ -538,6 +679,9 @@
     paint: ['Paint', 'Tools', 'Prep', 'Sealants'],
     land:  ['Turf', 'Bulk', 'Hardscape', 'Irrigation', 'Plants'],
     conc:  ['Concrete', 'Steel', 'Forms', 'Joints', 'Finish', 'Hardware'],
+    pool:  ['Pumps', 'Chemicals', 'Liner'],
+    surf:  ['Tile', 'Stone', 'Flooring'],
+    wood:  ['Trim', 'Doors', 'Windows', 'Cabinets'],
   };
   var FAM_OF = {}; Object.keys(FAM).forEach(function (f) { FAM[f].forEach(function (c) { FAM_OF[c] = f; }); });
 
@@ -554,57 +698,70 @@
      sample item against the category its own catalog row declares. */
   var NAME_CAT = [
     /* phrases that would otherwise be eaten by a more general row below */
-    ['Sealants', ['caulk', 'sealant', 'silicone', 'roof cement', 'solder', 'flux', 'adhesive', 'foil tape', 'duct tape']],
-    ['Shingles', ['shingle', 'ridge cap', 'starter strip']],
-    ['Underlayment', ['underlayment', 'ice and water', 'felt', 'synthetic roll']],
+    ['Sealants', ['caulk', 'sealant', 'silicone', 'roof cement', 'solder', 'flux', 'adhesive', 'foil tape', 'duct tape', 'closure strip', 'seam tape', 'butyl', 'pvc cement', 'thinset', 'grout', 'mastic']],
+    ['Shingles', ['shingle', 'ridge cap', 'starter strip', 'hip and ridge']],
+    ['Underlayment', ['underlayment', 'ice and water', 'felt', 'synthetic roll', 'tpo', 'epdm', 'membrane', 'polyiso', 'insulation board']],
     ['Flashing', ['flashing', 'pipe boot', 'step flash', 'counterflash']],
-    ['Ventilation', ['ridge vent', 'soffit vent', 'turbine', 'louver', 'exhaust vent']],
-    ['Metal', ['drip edge', 'valley metal', 'coil stock', 'gutter', 'downspout']],
-    ['Fasteners', ['roofing nail', 'staple', 'cap nail']],
+    ['Ventilation', ['ridge vent', 'soffit vent', 'turbine', 'louver', 'exhaust vent', 'box vent', 'gable vent']],
+    ['Metal', ['drip edge', 'valley metal', 'coil stock', 'gutter', 'downspout', 'standing seam', 'coil stock', 'exposed fastener panel']],
+    ['Fasteners', ['roofing nail', 'staple', 'cap nail', 'finish nails', 'brad nails', 'framing nails', 'drywall screws', 'deck screws', 'pocket screws']],
+    /* pools: above Filters and Valves, which they share wording with */
+    ['Chemicals', ['chlorine', 'muriatic', 'algaecide', 'soda ash', 'cyanuric', 'shock', 'stabilizer', 'hardness increaser']],
+    ['Pumps', ['pool pump', 'booster pump', 'pump basket', 'pump motor', 'pump seal', 'sump pump']],
+    ['Liner', ['vinyl liner', 'liner patch', 'pool plaster', 'pebble finish']],
+    /* surfaces: Stone above Tile, Tile above Flooring, all above Panels */
+    ['Stone', ['quartz slab', 'granite', 'marble', 'porcelain slab', 'solid surface', 'bullnose', 'slab', 'cutout and polish', 'cooktop cutout']],
+    ['Tile', ['tile', 'mosaic', 'backsplash']],
+    ['Flooring', ['vinyl plank', 'engineered hardwood', 'hardwood flooring', 'oak flooring', 'laminate floor', 'carpet', 'flooring']],
+    /* millwork */
+    ['Cabinets', ['cabinet', 'vanity', 'drawer box', 'toe kick', 'filler strip', 'pantry']],
+    ['Doors', ['door,', 'prehung', 'bifold', 'barn door']],
+    ['Windows', ['window,']],
+    ['Trim', ['moulding', 'molding', 'casing', 'base board', 'baseboard', 'shoe', 'quarter round', 'chair rail', 'shiplap', 'stair tread', 'stair nose', 'riser', 'newel', 'baluster', 'handrail', 'transition strip', 'schluter']],
     /* hvac */
     ['Refrigerant', ['refrigerant', 'r-410', 'r410', 'r-22', 'freon']],
     ['Filters', ['filter', 'pleated', 'merv']],
     ['Motors', ['blower', 'motor', 'fan blade', 'compressor']],
-    ['Controls', ['thermostat', 'control board', 'sensor', 'zone panel']],
+    ['Controls', ['thermostat', 'control board', 'sensor', 'zone panel', 'damper']],
     ['Copper', ['line set', 'copper tube', 'copper pipe', 'copper coil']],
     ['Install', ['pad ', 'mount', 'stand', 'curb']],
     ['Duct', ['duct', 'plenum', 'register', 'grille']],
     /* painting: Prep above Paint, or painter's tape is read as paint */
     /* not a bare 'fabric': it catches "cricket, fabricated" */
-    ['Prep', ['tape', 'drop cloth', 'sand', 'joint compound', 'landscape fabric', 'filter fabric', 'vapor barrier', 'plastic sheeting']],
-    ['Paint', ['paint', 'primer', 'stain', 'lacquer', 'enamel']],
-    ['Tools', ['roller', 'brush', 'spray tip', 'blade', 'knife', 'trowel', 'bucket']],
+    ['Prep', ['tape', 'drop cloth', 'sand', 'joint compound', 'landscape fabric', 'filter fabric', 'vapor barrier', 'plastic sheeting', 'masking', 'rosin paper', 'spackling', 'wood filler', 'tsp', 'weed barrier', 'self-level', 'uncoupling', 'waterproofing membrane', 'poly sheeting', 'floor protection', 'dumpster']],
+    ['Paint', ['paint', 'primer', 'stain', 'lacquer', 'enamel', 'elastomeric', 'coating']],
+    ['Tools', ['roller', 'brush', 'spray tip', 'blade', 'knife', 'trowel', 'bucket', 'harness', 'sweeper', 'ladder', 'scaffold', 'wheelbarrow', 'respirator', 'safety glasses', 'work gloves', 'extension cord', 'generator', 'shop vac', 'tile saw', 'spacers', 'float']],
     /* electrical: the specific device above the material it is made of */
     ['Breakers', ['breaker', 'fuse']],
-    ['Panels', ['load center', 'panel', 'meter base']],
-    ['Devices', ['receptacle', 'gfci', 'switch', 'decora', 'outlet', 'dimmer']],
-    ['Boxes', ['gang box', 'junction box', 'device box', 'old work box']],
-    ['Connectors', ['wire nut', 'connector', 'lug', 'crimp', 'butt splice']],
+    ['Panels', ['load center', 'panel', 'meter base', 'meter main', 'interlock', 'load center', 'beadboard', 'melamine', 'plywood', 'osb', 'backer board', 'batt insulation', 'rigid foam', 'drywall', 'cement board', 'steel stud']],
+    ['Devices', ['receptacle', 'gfci', 'switch', 'decora', 'outlet', 'dimmer', 'wall plate']],
+    ['Boxes', ['gang box', 'junction box', 'device box', 'old work box', 'new work box', 'square box', 'mud ring', 'ceiling fan rated', 'weatherproof box']],
+    ['Connectors', ['wire nut', 'connector', 'lug', 'crimp', 'butt splice', 'ground bar']],
     ['Conduit', ['emt', 'conduit', 'rigid', 'liquidtight', 'strut']],
     ['Lighting', ['light', 'led', 'recessed', 'bulb', 'lamp']],
-    ['Electrical', ['capacitor', 'contactor', 'disconnect', 'transformer', 'relay']],
+    ['Electrical', ['capacitor', 'contactor', 'disconnect', 'transformer', 'relay', 'hard start', 'whip']],
     /* landscaping sits above Steel and Pipe: "edging steel", "drip tubing" */
-    ['Turf', ['sod', 'seed', 'turf', 'fescue', 'bermuda']],
+    ['Turf', ['sod', 'seed', 'turf', 'fescue', 'bermuda', 'fertilizer', 'weed and feed']],
     ['Plants', ['shrub', 'tree', 'plant', 'boxwood', 'perennial']],
     ['Hardscape', ['paver', 'edging', 'retaining', 'flagstone', 'block wall']],
     ['Irrigation', ['sprinkler', 'drip', 'emitter', 'irrigation', 'rotor']],
     ['Steel', ['rebar', 'wire mesh', 'steel', 'angle iron', 'channel']],
-    ['Wire', ['romex', 'nm-b', 'thhn', 'wire', 'cable']],
+    ['Wire', ['romex', 'nm-b', 'thhn', 'wire', 'cable', 'uf-b', 'awg', 'bare copper', 'ser 4']],
     /* plumbing: what it does above what it is made of */
     ['Drainage', ['p-trap', 'trap ', 'drain', 'condensate', 'sump', 'cleanout']],
-    ['Valves', ['valve', 'regulator', 'backflow', 'hose bibb']],
+    ['Valves', ['valve', 'regulator', 'backflow', 'hose bibb', 'angle stop']],
     ['Fittings', ['fitting', 'elbow', 'coupling', 'tee ', 'union', 'nipple', 'supply line', 'adapter']],
-    ['Pipe', ['pex', 'pvc', 'cpvc', 'abs', 'pipe', 'tubing']],
-    ['Fixtures', ['toilet', 'sink', 'faucet', 'wax ring', 'shower', 'bathtub', 'tub ', 'vanity']],
-    ['Equipment', ['water heater', 'expansion tank', 'pump', 'furnace', 'condenser', 'air handler']],
+    ['Pipe', ['pex', 'pvc', 'cpvc', 'abs', 'pipe', 'tubing', 'copper type', 'cast iron', 'no-hub']],
+    ['Fixtures', ['toilet', 'sink', 'faucet', 'wax ring', 'shower', 'bathtub', 'tub ', 'vanity', 'garbage disposal', 'disposal']],
+    ['Equipment', ['water heater', 'expansion tank', 'pump', 'furnace', 'condenser', 'air handler', 'water softener', 'mini split', 'evaporator coil', 'air purifier', 'humidifier', 'ev charger', 'exhaust fan', 'ceiling fan', 'heater', 'salt cell', 'chlorine generator']],
     /* concrete: the mix above the yardage, Forms above the generic hardware */
     ['Concrete', ['ready mix', 'sakrete', 'quikrete', 'concrete', 'cement', 'mortar', 'grout']],
     ['Forms', ['form ', 'stake', 'snap tie', 'formwork']],
     ['Joints', ['expansion joint', 'control joint', 'backer rod']],
-    ['Finish', ['curing compound', 'hardener', 'densifier', 'sealer']],
+    ['Finish', ['curing compound', 'hardener', 'densifier', 'sealer', 'stone sealer', 'grout sealer']],
     ['Bulk', ['mulch', 'topsoil', 'gravel', 'river rock', 'cu yd', 'pallet']],
     /* last, because almost everything is fastened to something */
-    ['Hardware', ['anchor', 'bolt', 'screw', 'nail', 'washer', 'bracket', 'hanger', 'strap']],
+    ['Hardware', ['anchor', 'bolt', 'screw', 'nail', 'washer', 'bracket', 'hanger', 'strap', 'snow guard', 'ground rod', 'joist hanger', 'hurricane tie', 'shelf pin', 'support bracket']],
   ];
 
   /* The category of an item, however little the price book gave us. */
@@ -925,13 +1082,8 @@
   }
 
   function pickerHtml() {
-    if (PICK.trade === '' && window.bpSettingsGet) {
-      var t = String(((bpSettingsGet().company) || {}).trade || '').toLowerCase();
-      PICK.trade = ['roofing', 'plumbing', 'electrical', 'hvac', 'painting', 'landscaping', 'concrete', 'drywall', 'framing']
-        .filter(function (k) { return t.indexOf(k.slice(0, 5)) >= 0; })[0]
-        || (t.indexOf('air') >= 0 || t.indexOf('heat') >= 0 ? 'hvac'
-          : t.indexOf('lawn') >= 0 || t.indexOf('pool') >= 0 ? 'landscaping'
-          : t.indexOf('mason') >= 0 ? 'concrete' : null) || '';
+    if (PICK.trade === '' && window.bpSettingsGet && SP.tradeKey) {
+      PICK.trade = SP.tradeKey(((bpSettingsGet().company) || {}).trade) || '';
     }
     var n = (SP.CATALOG || []).length;
     return '<div class="sp-pk">'
