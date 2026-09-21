@@ -427,9 +427,17 @@
    inset shadow with !important, so a plain override loses and the field
    draws its own box inside the search wrapper — the "two boxes" look.
    The wrapper owns the frame here, so the input has to give up all four. */
-#bpx .sp-pk-box input{border:0 !important;background:none !important;border-radius:0 !important;box-shadow:none !important}
+/* Specificity, not !important, decides this one. The base rule is
+   #bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file])
+   — one id, four attribute selectors, one element — and both declarations
+   are !important, so the more specific wins. Carrying the same chain plus
+   the wrapper class outranks it; a plain `.sp-pk-box input` does not, which
+   is why the field kept drawing a second box inside the first. */
+#bpx .sp-pk-box input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]){
+  border:0 !important;background:none !important;border-radius:0 !important;box-shadow:none !important}
 #bpx .sp-pk-box:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(43,99,230,.16)}
-#bpx .sp-pk-box input:focus{border:0 !important;box-shadow:none !important}
+#bpx .sp-pk-box input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):focus{
+  border:0 !important;box-shadow:none !important}
 
 /* ==================================================================
    SUPPLIERS — logos, the chains we already know, and what their
@@ -494,3 +502,66 @@
    than the square marks need */
 #bpx .sp-chain .sp-mark{width:54px;border-radius:8px}
 #bpx .sp-chain .sp-mark.full{width:38px}
+
+/* ==================================================================
+   THE CARD, as a shelf tag.
+   The art well used to be a flat grey box with a grey icon, which read
+   as a missing image. It now carries the category's own tint and names
+   the category, so a shelf of cards has colour and the eye can group it
+   before reading a word.
+   ================================================================== */
+#bpx .sp-card{gap:8px;padding:10px}
+#bpx .sp-card-art{position:relative;height:104px;border-radius:11px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--soft);color:var(--grey)}
+#bpx .sp-card-art .sp-ic.big{width:46px;height:46px;stroke-width:1.5}
+/* the same family tints the category chips use, so one material reads the
+   same colour wherever it appears */
+#bpx .sp-card-art[data-fam=roof] {color:#a2542c;background:rgba(162,84,44,.09)}
+#bpx .sp-card-art[data-fam=hvac] {color:#1f7a8c;background:rgba(31,122,140,.09)}
+#bpx .sp-card-art[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.09)}
+#bpx .sp-card-art[data-fam=elec] {color:#a4711a;background:rgba(164,113,26,.1)}
+#bpx .sp-card-art[data-fam=paint]{color:#7a4fa3;background:rgba(122,79,163,.09)}
+#bpx .sp-card-art[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.09)}
+#bpx .sp-card-art[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.1)}
+#bpx .sp-card-art[data-fam=pool] {color:#0277bd;background:rgba(2,119,189,.09)}
+#bpx .sp-card-art[data-fam=surf] {color:#8d6e63;background:rgba(141,110,99,.1)}
+#bpx .sp-card-art[data-fam=wood] {color:#6d4c41;background:rgba(109,76,65,.1)}
+#bpx.bpx-dark .sp-card-art{background:rgba(255,255,255,.05)}
+#bpx.bpx-dark .sp-card-art[data-fam=roof] {color:#d99366} #bpx.bpx-dark .sp-card-art[data-fam=hvac]{color:#5fb6c6}
+#bpx.bpx-dark .sp-card-art[data-fam=plumb]{color:#7ba6e8} #bpx.bpx-dark .sp-card-art[data-fam=elec]{color:#e0b055}
+#bpx.bpx-dark .sp-card-art[data-fam=paint]{color:#b28cd6} #bpx.bpx-dark .sp-card-art[data-fam=land]{color:#6cbd8a}
+#bpx.bpx-dark .sp-card-art[data-fam=conc] {color:#a3adbb} #bpx.bpx-dark .sp-card-art[data-fam=pool]{color:#63b8e8}
+#bpx.bpx-dark .sp-card-art[data-fam=surf] {color:#c8a89c} #bpx.bpx-dark .sp-card-art[data-fam=wood]{color:#c2a094}
+/* the aisle this thing came from, bottom-left of the picture */
+#bpx .sp-card-cat{position:absolute;left:8px;bottom:7px;font-size:10px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;opacity:.72}
+#bpx .sp-card-n{top:7px;right:7px}
+
+#bpx .sp-card-nm{font-size:13px;line-height:1.35;min-height:35px;margin-top:1px}
+/* price first and big, the way a shelf tag reads */
+#bpx .sp-card-price{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;row-gap:2px;min-height:22px}
+#bpx .sp-card-price>b{font-size:17px;font-weight:750;letter-spacing:-.02em;color:var(--ink)}
+#bpx .sp-card-price>b.typ{font-size:16px;font-weight:700;color:var(--ink)}
+#bpx .sp-per{font-size:11px;color:var(--grey)}
+/* flex-basis:100% puts the badge on its own line; max-width stops it
+   stretching into a full-width bar across the card */
+#bpx .sp-card-price .sp-pk-typ,#bpx .sp-card-price .sp-pk-yours{
+  flex-basis:100%;max-width:fit-content;margin-right:auto}
+#bpx .sp-card-price .sp-pk-sup{flex-basis:100%;font-size:11.5px;margin-top:-1px}
+#bpx .sp-card-price .sp-pk-stk{font-size:11px}
+#bpx .sp-card-price .sp-pk-none{font-size:12px}
+
+/* who carries it, as marks — the way you scan a shelf */
+#bpx .sp-card-at{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+#bpx .sp-at{border:0;background:none;padding:0;cursor:pointer;line-height:0;border-radius:7px}
+#bpx .sp-at .sp-mark{width:26px;height:26px;border-radius:7px;border:1px solid var(--line)}
+#bpx .sp-at .sp-mark i{font-size:9.5px}
+#bpx .sp-at .sp-mark img{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}
+#bpx .sp-at .sp-mark.full img{inset:0;width:100%;height:100%}
+#bpx .sp-at:hover .sp-mark{border-color:var(--blue)}
+#bpx .sp-at.mine .sp-mark{border-color:#7fc9a3;box-shadow:0 0 0 1px #7fc9a3}
+#bpx .sp-at-more{font-size:11px;color:var(--grey-l,var(--grey));margin-left:2px}
+
+#bpx .sp-card-add{margin-top:6px;padding:8px 0;font-size:12.5px}
+#bpx .sp-card:hover .sp-card-add{background:var(--blue);border-color:var(--blue);color:#fff}
