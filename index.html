@@ -17831,14 +17831,9 @@ window.bpCsvProjects=function(){
       (((j.sched||{}).dates)||[]).length,j.wonAt?new Date(j.wonAt).toLocaleDateString('en-US'):'',j.doneAt?new Date(j.doneAt).toLocaleDateString('en-US'):''];
   }));
 };
-window.bpCsvRadar=function(){
-  bpCsv('lead-radar-list',['Address','Score','Signal','Added','Contacted'],(window._rdMineRows||[]).map(function(c){
-    var m=/Score (\d+)/i.exec(c.notes||'');
-    return [(c.name||'').replace(/^Radar — /,''),m?m[1]:'',((c.notes||'').split('.')[0]||''),
-      c.created_at?new Date(c.created_at).toLocaleDateString('en-US'):'',
-      (c.tags||[]).indexOf('contacted')>-1?'Yes':'No'];
-  }));
-};
+/* The radar's export lives with the list it exports — see bpCsvHeld. The
+   version that was here read a table the radar no longer fills, so it
+   quietly produced an empty file. */
 var _bpFinView='overview';
 window.bpFinView=function(t){
   _bpFinView=t;
@@ -20172,36 +20167,161 @@ function rdLoadClaims(){
    from the claims themselves rather than from the contact records, so a
    door appears the instant it is claimed instead of after a round trip
    through GHL — which is what "I claimed it and nothing happened" was. */
+/* The doors this contractor is holding. THE list — there is no other.
+
+   There used to be two: this one, drawn from radar_claims, and a "My list"
+   page drawn from contacts tagged 'radar'. They answered the same question
+   from different tables and so they disagreed, which is exactly what three
+   claimed doors sitting above an empty list looked like. A claim is now
+   created before any contact row exists, so the claims table is the one that
+   can be right, and the contact row is what GHL gets told about afterwards.
+
+   The pipeline moved here too. radar_claims already carries the same ladder
+   in its `state` column, and moving a door along it restarts the fourteen
+   days — which is the whole point of logging the conversation, and was not
+   true of the tag-based version. */
+var RD_LADDER=[['claimed','Not contacted'],['contacted','Talked'],['booked','Booked'],['won','Won'],['dead','Dropped']];
+var RD_NEXT={claimed:['contacted','dead'],contacted:['booked','dead'],booked:['won','dead'],won:[],dead:['contacted']};
+function rdStateLabel(k){ var r=RD_LADDER.filter(function(x){return x[0]===k;})[0]; return r?r[1]:k; }
+function rdHeldRows(){
+  return Object.keys(_rdMine).map(function(k){return _rdMine[k];}).sort(function(a,b){
+    return Date.parse(a.expires_at||0)-Date.parse(b.expires_at||0);   /* nearest to lapsing first */
+  });
+}
 function rdHeldRender(){
   var tab=q('rdMineTab'), el=q('rdHeldList');
-  var keys=Object.keys(_rdMine);
-  if(tab)tab.textContent='Yours'+(keys.length?' ('+keys.length+')':'');
+  var rows=rdHeldRows();
+  if(tab)tab.textContent='Yours'+(rows.length?' ('+rows.length+')':'');
+  var mb=q('rdMineBtn'); if(mb)mb.textContent='Yours'+(rows.length?' ('+rows.length+')':'');
   if(!el)return;
-  if(!keys.length){
+  if(!rows.length){
     el.innerHTML='<div class="bpx-empty2">Nothing claimed yet. Tap <b>Claim it</b> on a green dot or a row below and it lands here, '
       +'yours alone for 14 days.</div>';
     return;
   }
-  var rows=keys.map(function(k){return _rdMine[k];}).sort(function(a,b){
-    return Date.parse(a.expires_at||0)-Date.parse(b.expires_at||0);   /* nearest to lapsing first */
-  });
-  el.innerHTML='<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Address</th><th>Stage</th><th>Time left</th><th></th></tr></thead><tbody>'
+
+  /* how the doors you hold are actually going. Counted cumulatively: a door
+     that is booked was also talked to, whether or not anyone tagged it. */
+  var rank={claimed:0,contacted:1,booked:2,won:3,dead:0};
+  var n={total:rows.length,t:0,b:0,w:0,d:0};
+  rows.forEach(function(c){ var r=rank[c.state]||0;
+    if(c.state==='dead'){n.d++;return;} if(r>=1)n.t++; if(r>=2)n.b++; if(r>=3)n.w++; });
+  var pct=function(a,b){return b?Math.round(a/b*100)+'%':'\u2014';};
+  var live=n.total-n.d;
+  var funnel='<div class="rd-funnel">'
+    +'<div><b>'+live+'</b><span>held</span></div><i>\u203a</i>'
+    +'<div><b>'+n.t+'</b><span>talked \u00b7 '+pct(n.t,live)+'</span></div><i>\u203a</i>'
+    +'<div><b>'+n.b+'</b><span>booked \u00b7 '+pct(n.b,n.t)+'</span></div><i>\u203a</i>'
+    +'<div class="win"><b>'+n.w+'</b><span>won \u00b7 '+pct(n.w,n.b)+'</span></div></div>'
+    +'<div class="bpx-mut" style="font-size:11.5px;margin:6px 0 12px">Each rate is against the stage before it. '
+    +'Door-to-door for '+bpEsc((RADAR_TRADES[_rdTrade]||{}).l||'this trade')+' usually runs about 1 in 4 talked to, '
+    +'1 in 3 of those booked, half of those won. A stage well under that is the one to work on.</div>';
+
+  el.innerHTML=funnel
+    +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Address</th><th>Stage</th><th>Time left</th><th>Owner</th><th></th></tr></thead><tbody>'
     +rows.map(function(c){
       var left=rdClaimLeft(c), soon=(Date.parse(c.expires_at)-Date.now())<3*864e5;
-      var st=c.state&&c.state!=='claimed'?c.state:'not contacted';
       var idx=_rdLeads.map(function(p){return p.door;}).indexOf(c.door);
+      var d=String(c.door||'').replace(/'/g,"\\'");
+      var acts=(RD_NEXT[c.state||'claimed']||[]).map(function(k){
+        return '<button class="bpx-rowbtn'+(k==='dead'?'':' primary')+'" onclick="rdClaimStage(\''+d+'\',\''+k+'\')">'+rdStateLabel(k)+'</button>';
+      }).join('');
       return '<tr><td>'+bpEsc(c.address||c.door)+'</td>'
-        +'<td><span class="bpx-badge'+(c.state==='won'?' ok':(c.state==='claimed'?'':' warn'))+'">'+bpEsc(st)+'</span></td>'
-        +'<td><span class="rd-hold'+(soon?' soon':'')+'">'+bpEsc(left)+'</span></td>'
+        +'<td><span class="bpx-badge'+(c.state==='won'?' ok':c.state==='dead'?' bad':(c.state==='claimed'||!c.state)?'':' warn')+'">'
+          +bpEsc(rdStateLabel(c.state||'claimed'))+'</span></td>'
+        +'<td>'+(c.state==='dead'?'<span class="bpx-mut">\u2014</span>'
+          :'<span class="rd-hold'+(soon?' soon':'')+'">'+bpEsc(left)+'</span>')+'</td>'
+        +'<td id="rdOwn-'+bpEsc(c.door)+'" style="font-size:12px;min-width:150px">'+rdOwnerCell(c.door)+'</td>'
         +'<td class="bpx-r" style="white-space:nowrap">'
           +(idx>=0?'<button class="bpx-rowbtn" onclick="rdFocus('+idx+')">Show on map</button>':'')
-          +(c.state==='claimed'&&idx>=0?'<button class="bpx-rowbtn primary" onclick="rdContacted('+idx+')">Contacted</button>':'')
+          +acts
           +'<a class="bpx-rowbtn" style="text-decoration:none" target="_blank" rel="noopener" href="https://maps.apple.com/?q='+encodeURIComponent(c.address||'')+'">Map</a>'
         +'</td></tr>';
     }).join('')+'</tbody></table></div>'
     +'<div class="note" style="color:var(--grey-l);font-size:11.5px;margin-top:10px">Nearest to lapsing first. '
-    +'A door goes back on everyone\u2019s map if 14 days pass without a real conversation logged against it.</div>';
+    +'A door goes back on everyone\u2019s map if 14 days pass without a real conversation logged against it \u2014 '
+    +'moving one along the stages restarts the fortnight.</div>';
 }
+
+/* Move a door along the ladder. The state and the clock are the same write,
+   in radar_touch_claim, because a stage change IS the work that renews it. */
+window.rdClaimStage=function(door,state){
+  var c=_rdMine[door]; if(!c)return;
+  if(state==='dead'&&!confirm('Drop '+(c.address||door)+'? It goes straight back on everyone else\u2019s map.'))return;
+  var was=c.state; c.state=state;
+  rdHeldRender(); rdDraw();
+  rdTouch(door,state).then(function(){
+    /* keep GHL in step: 'Talked' is what starts their follow-up automation */
+    if(state==='contacted'&&_rdGhl[c.address]) rdFn('contacted',{ghlId:_rdGhl[c.address]}).catch(function(){});
+  },function(){ c.state=was; rdHeldRender(); alert('Couldn\u2019t save that \u2014 try again.'); });
+};
+
+/* ---- owner contact details ------------------------------------------------
+   A paid lookup, about ten cents, against a licensed provider. Only on doors
+   they hold: the edge function checks the claim itself, so this button is a
+   convenience and not the control.
+
+   Shown as a button rather than run automatically for the same reason it is
+   confirmed — every press is money, and a list that silently traced forty
+   doors on load would be a bill nobody agreed to. */
+var _rdOwners={};
+function rdOwnerCell(door){
+  var o=_rdOwners[door];
+  if(o===undefined){
+    return '<button class="bpx-rowbtn" onclick="rdLookup(\''+String(door).replace(/'/g,"\\'")+'\')" '
+      +'title="Look up the owner\u2019s name and phone \u2014 about 10\u00a2 a lookup">'
+      +'<span class="ms" style="font-size:14px;vertical-align:-2px">person_search</span> Get details</button>';
+  }
+  if(o===null)return '<span class="bpx-mut">Looking up\u2026</span>';
+  if(o.err)return '<span style="color:#b45309">'+bpEsc(o.err)+'</span>';
+  if(!o.found)return '<span class="bpx-mut">No match on file</span>';
+  var ph=(o.phones||[]).map(function(x){
+    return '<a href="tel:'+bpEsc(x.number)+'" style="color:#2f6bff;text-decoration:none">'+bpEsc(x.number)+'</a>'
+      +(x.dnc?' <span style="color:#b45309" title="On the Do Not Call registry \u2014 mail or knock, do not cold-call">DNC</span>':'');
+  }).join('<br>');
+  return '<b>'+bpEsc(o.name||'Owner')+'</b>'+(ph?'<br>'+ph:'')
+    +((o.emails||[]).length?'<br><span class="bpx-mut">'+bpEsc(o.emails.join(', '))+'</span>':'');
+}
+window.rdLookup=function(door,after){
+  var c=_rdMine[door];
+  if(!c){alert('Claim this door first \u2014 lookups are only for doors you hold.');return;}
+  var done=function(){ rdHeldRender(); if(typeof after==='function')after(); };
+  if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to look up owner details.');return;}
+  if(!confirm('Look up the owner\u2019s name and phone for '+(c.address||door)+'?\n\nThis uses one paid data credit \u2014 about 10\u00a2. '
+    +'Traced numbers are for calls and mail only, never automated texts.'))return;
+  _rdOwners[door]=null; done();
+  var city=RADAR_CITIES[_rdCity]||{};
+  BP_SB.auth.getSession().then(function(sn){
+    var tok=sn&&sn.data&&sn.data.session&&sn.data.session.access_token; if(!tok)throw new Error('signed out');
+    return fetch((window.BP_URL||'')+'/functions/v1/skip-trace',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
+      body:JSON.stringify({door:door,street:c.address||'',city:city.cityName||'',state:city.state||'',zip:''})});
+  }).then(function(r){return r.json();}).then(function(d){
+    if(!d||d.ok===false){ _rdOwners[door]={err:(d&&d.error)||'Lookup failed'}; done(); return; }
+    _rdOwners[door]={found:!!d.found,name:d.name,phones:d.phones||[],emails:d.emails||[]};
+    done();
+    /* fold it into the contact record so the rest of the portal has it too */
+    if(d.found&&c.address){
+      var upd={};
+      if(d.name)upd.name=d.name+' \u2014 '+c.address;
+      if(d.phones&&d.phones[0])upd.phone=d.phones[0].number;
+      if(d.emails&&d.emails[0])upd.email=d.emails[0];
+      if(Object.keys(upd).length)
+        Promise.resolve(BP_SB.from('contacts').update(upd).eq('name',c.address)).then(function(){},function(){});
+    }
+  }).catch(function(){ _rdOwners[door]={err:'Network issue \u2014 try again'}; done(); });
+};
+
+/* Export what they hold. Whatever has been looked up rides along, because the
+   reason to export is usually to hand the round to somebody with a van. */
+window.bpCsvHeld=function(){
+  var rows=rdHeldRows().map(function(c){
+    var o=_rdOwners[c.door]||{};
+    return [c.address||c.door, rdStateLabel(c.state||'claimed'), rdClaimLeft(c),
+      o.name||'', ((o.phones||[])[0]||{}).number||'', (o.emails||[])[0]||''];
+  });
+  bpCsv('claimed-doors',['Address','Stage','Time left','Owner','Phone','Email'],rows);
+};
 
 /* Out of claims for today. Said once, plainly, with the two things they
    actually want to know: when it comes back, and what the bigger plan gives. */
@@ -20291,7 +20411,10 @@ function rdRenderShell(){
       +'<button class="bpx-jt'+(_rdListTab==='hot'?' on':'')+'" data-rd-tab="hot" onclick="rdListTab(\'hot\')">Hottest prospects</button>'
       +'<button class="bpx-jt'+(_rdListTab==='checks'?' on':'')+'" data-rd-tab="checks" id="rdChecksTab" onclick="rdListTab(\'checks\')">Roof checks</button></div>'
       +'<span class="bpx-mut" style="font-size:12px" id="rdListHint">'+rdListHintText(_rdListTab)+'</span></div>'
-      +'<div data-rd-pane="mine"'+(_rdListTab==='mine'?'':' hidden')+'><div id="rdHeldList"></div></div>'
+      +'<div data-rd-pane="mine"'+(_rdListTab==='mine'?'':' hidden')+'>'
+        +'<div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Doors you have claimed'
+        +'<span class="lg2" style="margin-left:8px">yours for 14 days, and the clock restarts every time you log a real conversation</span></div>'
+        +bpCsvBtn('bpCsvHeld()','Export list')+'</div><div id="rdHeldList"></div></div>'
       +'<div data-rd-pane="auto" id="rdAutoPanel"'+(_rdListTab==='auto'?'':' hidden')+'><div id="rdAutoList" class="bpx-mut" style="font-size:13px">Checking for auto-added leads…</div></div>'
       +'<div data-rd-pane="checks"'+(_rdListTab==='checks'?'':' hidden')+'><div id="rdChecksList" class="bpx-mut" style="font-size:13px">Loading roof checks…</div></div>'
       +'<div data-rd-pane="hot"'+(_rdListTab==='hot'?'':' hidden')+'><div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>#</th><th>Address</th><th>Signal</th><th class="bpx-r">Score</th><th></th></tr></thead><tbody id="rdList"></tbody></table></div></div></div>'
@@ -20300,76 +20423,15 @@ function rdRenderShell(){
      even for the moment between the map drawing and the answer arriving */
   rdLoadClaims().then(function(){ rdEnsureLeaflet(rdRefresh); });
   rdLoadAuto();
-  rdLoadMine();
   rdLoadChecks();
 }
-/* "My list": every prospect the client added by hand (tagged 'radar') — its own page */
-window.rdMinePage=function(){
-  q('bpxViewArea').innerHTML=
-    '<button class="bpx-btn ghost" style="width:auto;margin:0 0 14px;padding:9px 16px" onclick="bpNav(\'leadradar\')">← Back to Lead Radar</button>'
-    +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">My list — leads you added<span class="lg2" style="margin-left:8px">knock or mail, then tap Contacted</span></div>'+bpCsvBtn('bpCsvRadar()','Export list')+'</div>'
-    +'<div id="rdMineList" class="bpx-mut" style="font-size:13px">Loading your list…</div></div>';
-  rdLoadMine();
-};
-function rdLoadMine(){
-  if(!(window.BP_LIVE&&window.BP_SB)){ var el=q('rdMineList'); if(el)el.textContent='Leads you add show up here once you\'re signed in.'; return; }
-  BP_SB.from('contacts').select('*').contains('tags',['radar']).order('created_at',{ascending:false}).limit(200).then(function(r){
-    window._rdMineRows=(r&&r.data)||[]; rdMineRender();
-  }).catch(function(){
-    BP_SB.from('contacts').select('*').contains('tags',['radar']).limit(200).then(function(r2){ window._rdMineRows=(r2&&r2.data)||[]; rdMineRender(); })
-      .catch(function(){ var el2=q('rdMineList'); if(el2)el2.textContent='Could not load your list right now.'; });
-  });
-}
-window.rdMineRender=function(){
-  var rows=window._rdMineRows||[];
-  var mb=q('rdMineBtn'); if(mb)mb.textContent='My list'+(rows.length?' ('+rows.length+')':'');
-  var el=q('rdMineList'); if(!el) return;
-  el.classList.remove('bpx-mut');
-  if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing here yet — tap <b>+ Add</b> on a dot or a prospect below and it files into this list.</span>'; return; }
-  /* funnel: how many of the doors you added turned into conversations, bookings, jobs */
-  /* each door counts at every stage it reached, whether or not it was later marked lost */
-  var rank={knocked:1,contacted:2,booked:3,won:4}, n={total:rows.length,k:0,t:0,b:0,w:0};
-  rows.forEach(function(c){var r=0;(c.tags||[]).forEach(function(s){if(rank[s]>r)r=rank[s];});if(r>=1)n.k++;if(r>=2)n.t++;if(r>=3)n.b++;if(r>=4)n.w++;});
-  var pct=function(a,b){return b?Math.round(a/b*100)+'%':'—';};
-  var funnel='<div class="rd-funnel">'
-    +'<div><b>'+n.total+'</b><span>added</span></div><i>›</i>'
-    +'<div><b>'+n.k+'</b><span>knocked · '+pct(n.k,n.total)+'</span></div><i>›</i>'
-    +'<div><b>'+n.t+'</b><span>talked · '+pct(n.t,n.total)+'</span></div><i>›</i>'
-    +'<div><b>'+n.b+'</b><span>booked · '+pct(n.b,n.total)+'</span></div><i>›</i>'
-    +'<div class="win"><b>'+n.w+'</b><span>won · '+pct(n.w,n.total)+'</span></div></div>'
-    +'<div class="bpx-mut" style="font-size:11.5px;margin:6px 0 12px">Typical door-to-door for '+bpEsc((RADAR_TRADES[_rdTrade]||{}).l||'this trade')+': talk to 1 in 4, book 1 in 3 you talk to, win half you inspect. If a stage is far below that, that\'s the one to work on.</div>';
-  var pg=bpPage('rdmine',rows,10,'rdMineRender()');
-  el.innerHTML=funnel+pg.items.map(function(c){
-    var addr=bpEsc((c.name||'').replace(/^Radar — /,''));
-    var m=/Score (\d+)/i.exec(c.notes||'');
-    var score=m?m[1]:'';
-    var when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    var stage=rdStageOf(c), idArg=c.id?("'"+c.id+"'"):'null', ghl=bpEsc(c.ghl_id||'');
-    var next={new:['knocked','contacted'],knocked:['contacted','lost'],contacted:['booked','lost'],booked:['won','lost'],won:[],lost:['contacted']}[stage]||[];
-    var lbl=function(k){return (RD_STAGES.filter(function(s){return s[0]===k;})[0]||[k,k])[1];};
-    var badge=stage==='new'?'':'<span class="bpx-badge'+(stage==='won'?' ok':stage==='lost'?' bad':'')+'">'+lbl(stage)+'</span>';
-    var acts=next.map(function(k){return '<button class="bpx-rowbtn'+(k==='lost'?'':' primary')+'" style="margin:0" onclick="rdStage(this,'+idArg+',\''+k+'\',\''+ghl+'\')">'+lbl(k)+'</button>';}).join(' ');
-    var days=c.created_at?Math.round((Date.now()-Date.parse(c.created_at))/864e5):0;
-    var nudge=(stage==='knocked'&&days>=3)?'<span style="color:#b45309;font-size:11px;font-weight:600"> · knock again</span>':(stage==='contacted'&&days>=7?'<span style="color:#b45309;font-size:11px;font-weight:600"> · follow up</span>':'');
-    return '<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">'
-      +'<span style="flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:'+(+score>=75?'#e11d48':(score?'#f59e0b':'#2f6bff'))+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13.5px">'+(score||'<span class=ms>location_on</span>')+'</span>'
-      +'<div style="flex:1;min-width:180px"><b style="font-size:13.5px">'+addr+'</b> '+badge+'<div class="bpx-mut" style="font-size:11.5px">'+bpEsc(((c.notes||'').split('.')[0]||'radar lead').slice(0,80))+(when?' · added '+when:'')+nudge+'</div></div>'
-      +'<a href="https://maps.apple.com/?q='+encodeURIComponent((c.name||'').replace(/^Radar — /,''))+'" target="_blank" rel="noopener" style="font-size:16px;text-decoration:none" title="Open in Maps"><span class=ms>map</span></a>'
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+acts+bpDelBtn("rdMineDel("+idArg+",'"+addr.replace(/'/g,"\\'")+"')",'Remove this lead from your list')+'</div></div>';
-  }).join('')+pg.nav;
-};
-/* A door you added by mistake, or one that turned out to be a vacant lot. This
-   removes the contact row the radar created — it does not touch anything the
-   customer has in GoHighLevel beyond that row. */
-window.rdMineDel=function(rowId,label){
-  if(!rowId){ alert('This lead has no saved row to delete yet.'); return; }
-  if(!(window.BP_LIVE&&window.BP_SB)){ alert('Sign in to change your list.'); return; }
-  if(!bpAskDel(label||'this lead','It leaves your radar list and its funnel counts.'))return;
-  window._rdMineRows=(window._rdMineRows||[]).filter(function(c){return c.id!==rowId;});
-  rdMineRender();
-  Promise.resolve(BP_SB.from('contacts').delete().eq('id',rowId)).then(function(){},function(){ rdLoadMine(); });
-};
+/* "My list" used to be a page of its own, reading contacts tagged 'radar'.
+   It is gone: the Yours tab above is the same question answered from the
+   table that can actually be right, and two lists that disagree are worse
+   than one list. Both entry points now land on that tab. */
+window.rdMinePage=function(){ rdListTab('mine'); var el=q('rdHeldList'); if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'}); };
 window.rdMineJump=function(){ rdMinePage(); };
+
 function rdLoadAuto(){
   var el=q('rdAutoList'); if(!el) return;
   if(!(window.BP_LIVE&&window.BP_SB)){ el.textContent='Auto-added leads appear here once your territory is live.'; return; }
@@ -21283,7 +21345,9 @@ function rdPopup(p,i,t){
     +'<div id="rdEv'+i+'" style="display:none"></div><br>'
     +'<a href="https://maps.apple.com/?q='+encodeURIComponent(p.addr+' '+((RADAR_CITIES[_rdCity]||{}).cityName||''))+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Open in Maps</a> · '
     +'<a href="'+lookup+'" target="_blank" rel="noopener" style="font-size:12px;color:#2f6bff">Owner lookup (public records)</a>'
-    +(_rdTerr?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">Reveal owner info</a>':'')
+    /* Only on a door they hold. The edge function enforces that too — this
+       just avoids offering a button that can only answer "claim it first". */
+    +(p.mine?' · <a onclick="rdReveal('+i+')" style="font-size:12px;color:#2f6bff;cursor:pointer;text-decoration:underline">Get owner contact details (~10¢)</a>':'')
     +'<div id="rdRev'+i+'" style="font-size:12px"></div><br>'+btn
     +' <button onclick="rdHanger('+i+')" style="margin-top:7px;background:#fff;color:#0f2540;border:1px solid #cfd8e4;border-radius:8px;padding:7px 13px;font-weight:600;cursor:pointer" title="A one-page flyer with this exact reason on it"><span class=ms>print</span> Door hanger</button></div>';
 }
@@ -21330,157 +21394,33 @@ window.rdHangers=function(idxs){
   w.document.write('<!doctype html><meta charset="utf-8"><title>Door hangers</title><style>@page{size:letter;margin:.5in}body{margin:0;font:15px/1.5 Inter,-apple-system,Segoe UI,sans-serif;color:#0f172a}.hg{page-break-after:always;padding:36px 40px;border:2px solid #0f172a;border-radius:18px;margin:0 0 24px;min-height:8.6in;box-sizing:border-box;display:flex;flex-direction:column}.top{display:flex;align-items:center;gap:12px;margin-bottom:26px}.logo{height:44px;width:auto}.co{font-weight:800;font-size:20px;letter-spacing:-.02em}h1{font-size:40px;line-height:1.08;letter-spacing:-.03em;margin:0 0 14px}.addr{font-weight:700;color:#475569;margin:0 0 18px}.hook{font-size:19px;font-weight:600;margin:0 0 12px}.body{color:#334155;margin:0 0 auto}.cta{margin-top:34px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}.ph{font-size:26px}.ph b{font-size:30px}.site{color:#2563eb;font-weight:600}.qr{width:110px;height:110px;margin-left:auto}.foot{margin-top:22px;font-size:12px;color:#94a3b8}@media print{.hg{margin:0}}</style>'+pages+'<scr'+'ipt>setTimeout(function(){window.print();},500);</scr'+'ipt>');
   w.document.close();
 };
-/* ---- pipeline stages on My list: knocked → talked → booked → won/lost ---- */
-var RD_STAGES=[['knocked','Knocked','No answer / left a hanger'],['contacted','Talked','Real conversation'],['booked','Booked','Inspection on the calendar'],['won','Won','Signed'],['lost','Lost','Not interested / went elsewhere']];
-function rdStageOf(c){var tg=c.tags||[];for(var i=RD_STAGES.length-1;i>=0;i--){if(tg.indexOf(RD_STAGES[i][0])>=0)return RD_STAGES[i][0];}return 'new';}
-window.rdStage=function(btn,rowId,stage,ghlId){
-  if(stage==='contacted')return rdAutoContacted(btn,ghlId,rowId);   /* keeps the GHL follow-up automation in the loop */
-  if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to track stages.');return;}
-  btn.disabled=true;
-  BP_SB.from('contacts').select('tags').eq('id',rowId).maybeSingle().then(function(r){
-    var t=(r&&r.data&&r.data.tags)||[]; if(t.indexOf(stage)<0)t.push(stage);
-    return BP_SB.from('contacts').update({tags:t}).eq('id',rowId);
-  }).then(function(){rdLoadMine();},function(){btn.disabled=false;alert('Couldn\'t save that — try again.');});
-};
+/* The tag-based stage ladder that lived here drove the old "My list" page.
+   The claim's own `state` column carries the same ladder now, and moving a
+   door along it also renews the fourteen days — see rdClaimStage. */
+/* The same lookup as the list's, from the map sheet. One cache and one
+   code path: two of them meant a door could be traced twice, and each trace
+   is money. */
 window.rdReveal=function(i){
-  var p=_rdLeads[i]; if(!p) return;
-  if(p.owner){ return; }
-  if(!confirm('Look up the owner\'s name & phone for '+p.addr+'? Each lookup uses a paid data credit (~$0.10).')) return;
-  var box=document.getElementById('rdRev'+i); if(box) box.innerHTML='<span style="color:#6a6a70">Looking up…</span>';
-  var c=RADAR_CITIES[_rdCity]||{};
-  BP_SB.auth.getSession().then(function(sn){
-    var tok=sn&&sn.data&&sn.data.session&&sn.data.session.access_token; if(!tok) throw 0;
-    return fetch((window.BP_URL||'')+'/functions/v1/skip-trace',{method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
-      body:JSON.stringify({street:p.addr,city:c.cityName||'',state:c.state||'',zip:(_rdTerr&&_rdTerr.zips&&_rdTerr.zips[0])||''})});
-  }).then(function(r){return r.json();}).then(function(d){
-    var box2=document.getElementById('rdRev'+i); if(!box2) return;
-    if(!d||d.ok===false){ box2.innerHTML='<span style="color:#b45309">'+((d&&d.error)||'Lookup failed')+'</span>'; return; }
-    if(!d.found){ box2.innerHTML='<span style="color:#6a6a70">No owner match found.</span>'; return; }
-    p.owner=d;
-    var ph=(d.phones||[]).map(function(x){return x.number+(x.dnc?' <span style="color:#b45309">(DNC — do not cold-call)</span>':'');}).join('<br>');
-    box2.innerHTML='<div style="margin-top:5px;padding:7px 9px;background:#f2f5fb;border-radius:8px"><b>'+bpEsc(d.name||'Owner')+'</b>'
-      +(ph?'<br>'+ph:'')+((d.emails||[]).length?'<br>'+bpEsc(d.emails.join(', ')):'')
-      +'<div style="color:#6a6a70;margin-top:3px">For calls & mail only — not automated texts.</div></div>';
-    rdPopSync();
-    /* if this prospect was added, enrich the saved contact */
-    if(_rdAdded[p.addr]&&window.BP_SB){
-      var upd={};
-      if(d.name) upd.name=d.name+' — '+p.addr;
-      if(d.phones&&d.phones[0]) upd.phone=d.phones[0].number;
-      if(d.emails&&d.emails[0]) upd.email=d.emails[0];
-      BP_SB.from('contacts').update(upd).eq('name',p.addr).then(function(){}).catch(function(){});
-    }
-  }).catch(function(){ var b2=document.getElementById('rdRev'+i); if(b2) b2.innerHTML='<span style="color:#b45309">Network issue — try again.</span>'; });
+  var p=_rdLeads[i]; if(!p||!p.door)return;
+  var box=document.getElementById('rdRev'+i);
+  var paint=function(){ var el=document.getElementById('rdRev'+i); if(el)el.innerHTML=rdOwnerBox(p.door); };
+  if(_rdOwners[p.door]!==undefined){ paint(); return; }
+  rdLookup(p.door,paint);
 };
-window.rdEvidence=function(i){
-  var p=_rdLeads[i]; if(!p) return;
-  var box=document.getElementById('rdEv'+i); if(!box) return;
-  if(box.style.display==='block'){box.style.display='none';rdPopSync();return;}
-  var c=RADAR_CITIES[_rdCity]||{};
-  var h='';
-  if(p.demo){
-    h='<div style="margin:6px 0;padding:8px 10px;background:#fff7ed;border-radius:8px;color:#92400e">This is a <b>demo dot</b> — illustrative only, no real permit behind it.</div>';
-  }else if(p.raw){
-    var pretty={permit_number:'Permit #',permit_num:'Permit #',pcis_permit_:'Permit #',permit_:'Permit #',permit_nbr:'Permit #',
-      permit_type:'Type',permit_type_desc:'Type',permittype:'Type',permit_sub_type:'Subtype',work_class:'Work class',
-      description:'Description',work_description:'Description',issued_date:'Issued',issue_date:'Issued',
-      declared_valuation:'Declared value',reported_cost:'Reported cost',valuation:'Valuation',
-      applicant:'Applicant',contractor_name:'Contractor',contact_1_name:'Contact',original_address1:'Address',status_current:'Status',status:'Status',
-      permit_nbr:'Permit #',pcis_permit:'Permit #',primary_address:'Address',work_desc:'Description',use_desc:'Use',square_footage:'Square footage',status_desc:'Status',submitted_date:'Submitted'};
-    var shown=0, rows='';
-    Object.keys(pretty).forEach(function(k){
-      var v=p.raw[k]; if(v==null||v===''||typeof v==='object')return;
-      v=String(v); if(k.indexOf('date')>=0||k==='issued_date'||k==='issue_date')v=v.slice(0,10);
-      rows+='<tr><td style="color:#6a6a70;padding:2px 8px 2px 0;white-space:nowrap;vertical-align:top">'+pretty[k]+'</td><td style="word-break:break-word">'+bpEsc(v.slice(0,180))+'</td></tr>';
-      shown++;
-    });
-    if(!shown){Object.keys(p.raw).slice(0,8).forEach(function(k){var v=p.raw[k];if(v==null||typeof v==='object')return;rows+='<tr><td style="color:#6a6a70;padding:2px 8px 2px 0">'+bpEsc(k)+'</td><td>'+bpEsc(String(v).slice(0,140))+'</td></tr>';});}
-    var verify='';
-    if(p.pid&&c.api&&(c.idf||[]).length){
-      var idField=(c.idf||[]).filter(function(f){return p.raw[f];})[0];
-      if(idField) verify+='<a href="'+c.api+'?'+idField+'='+encodeURIComponent(p.pid)+'" target="_blank" rel="noopener" style="color:#2f6bff">View raw city record <span class=ms>arrow_outward</span></a>';
-    }
-    if(c.portal) verify+=(verify?' · ':'')+'<a href="'+c.portal+'" target="_blank" rel="noopener" style="color:#2f6bff">'+bpEsc(c.portalName||'Official permit search')+' <span class=ms>arrow_outward</span></a>';
-    h='<div style="margin:6px 0;padding:8px 10px;background:#f2f5fb;border-radius:8px;font-size:11.5px">'
-      +'<div style="font-weight:700;margin-bottom:4px;color:#15803d"><span class=ms>check</span> Public record — how we know</div>'
-      +'<table style="border-collapse:collapse">'+rows+'</table>'
-      +(verify?'<div style="margin-top:6px">'+verify+'</div>':'')
-      +'</div>';
-  }else{
-    h='<div style="margin:6px 0;color:#6a6a70">Record details unavailable for this dot.</div>';
-  }
-  box.innerHTML=h; box.style.display='block'; rdPopSync();
-};
-/* re-measure the open popup after its content grows (evidence / owner reveal) */
-function rdPopSync(){ try{ if(_rdMap&&_rdMap._popup)_rdMap._popup.update(); }catch(e){} }
-window.rdFocus=function(i){var p=_rdLeads[i];if(!p)return;rdSheetOpen(i);};
-function rdFn(action,payload){
-  return BP_SB.auth.getSession().then(function(sn){
-    var tok=sn&&sn.data&&sn.data.session&&sn.data.session.access_token;
-    if(!tok) throw new Error('signin');
-    payload.action=action;
-    return fetch((window.BP_URL||'')+'/functions/v1/radar-sync',{method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
-      body:JSON.stringify(payload)}).then(function(r){return r.json();});
-  });
+function rdOwnerBox(door){
+  var o=_rdOwners[door];
+  if(o===null)return '<span style="color:#6a6a70">Looking up\u2026</span>';
+  if(!o)return '';
+  if(o.err)return '<span style="color:#b45309">'+bpEsc(o.err)+'</span>';
+  if(!o.found)return '<span style="color:#6a6a70">No owner match found.</span>';
+  var ph=(o.phones||[]).map(function(x){
+    return bpEsc(x.number)+(x.dnc?' <span style="color:#b45309">(DNC \u2014 do not cold-call)</span>':'');
+  }).join('<br>');
+  return '<div style="margin-top:5px;padding:7px 9px;background:#f2f5fb;border-radius:8px"><b>'+bpEsc(o.name||'Owner')+'</b>'
+    +(ph?'<br>'+ph:'')+((o.emails||[]).length?'<br>'+bpEsc(o.emails.join(', ')):'')
+    +'<div style="color:#6a6a70;margin-top:3px">For calls & mail only \u2014 not automated texts.</div></div>';
 }
-/* "Work this street" on a project: open the radar and pin the list to that
-   street, which is where that job's neighbours now rank. Replaces the old
-   Farm-this-street button, and lands on the same houses. */
-window.rdFromJob=function(id){
-  var j=((typeof bpJobsGet==='function'?bpJobsGet():[])||[]).filter(function(x){return String(x.id)===String(id);})[0];
-  if(typeof bpCloseModal==='function')bpCloseModal();
-  bpNav('leadradar');
-  if(!j||!(j.addr||'').trim())return;
-  var st=rdStreetOf(j.addr); if(!st)return;
-  /* the feeds take a moment; wait for the leads rather than guessing a delay,
-     then put the map on that street. The doors there are already near the top
-     of the list \u2014 rdRescore has boosted them \u2014 so there is nothing to filter. */
-  var tries=0;
-  (function wait(){
-    if(++tries>40)return;                                    /* ~10s, then give up quietly */
-    var on=(window._rdLeads||[]).filter(function(p){return rdStreetOf(p.addr)===st;});
-    if(!on.length||!window._rdMap||!window.L){ setTimeout(wait,250); return; }
-    try{
-      _rdMap.fitBounds(L.latLngBounds(on.map(function(p){return [p.lat,p.lng];})).pad(0.35));
-    }catch(e){}
-  })();
-};
-window.rdAddLead=function(i){
-  var p=_rdLeads[i]; if(!p)return;
-  var t=RADAR_TRADES[_rdTrade];
-  var note='Lead Radar ('+t.l+'): '+(p.why||('last '+t.unit+' permit '+p.year+' — '+p.age+' yrs old'))+'. Score '+p.score+' ('+rdLabel(p.score)+')'+(p.storm?' · recent storm nearby':'')+'.';
-  if(!(window.BP_LIVE&&window.BP_SB)){alert('Sign in to save prospects.');return;}
-  var door=p.door||(window.rdDoorKey?rdDoorKey(p.addr):p.addr);
-  if(_rdAllow.left<=0){ rdLimitHit(); return; }
-  _rdAdded[p.addr]=1;
-  /* The server decides, not this. It checks the allowance and whether anyone
-     else already has the door, in one statement, so two people tapping the
-     same dot at the same moment cannot both win. */
-  var exp=new Date(Date.now()+RD_CLAIM_DAYS*864e5).toISOString();
-  _rdMine[door]={door:door,address:p.addr,state:'claimed',expires_at:exp};
-  _rdAllow.left=Math.max(0,_rdAllow.left-1); _rdAllow.used=(_rdAllow.used||0)+1;
-  rdDraw();
-  Promise.resolve(BP_SB.rpc('radar_claim_door',{p_door:door,p_trade:_rdTrade,p_address:p.addr}))
-  .then(function(r){
-    var d=r&&r.data;
-    if(d&&d.ok){ _rdAllow.allowance=d.allowance; _rdAllow.used=d.used; _rdAllow.left=d.left; _rdAllow.resets_at=d.resets_at; rdDraw(); return; }
-    /* put it back exactly as it was, and say which of the two happened */
-    delete _rdMine[door]; delete _rdAdded[p.addr];
-    if(d&&d.reason==='taken'){ _rdTaken[door]=1; _rdAllow.left++; _rdAllow.used--; rdDraw();
-      alert('Another contractor claimed this one first. It is now showing as taken.'); return; }
-    if(d&&d.reason==='limit'){ _rdAllow.allowance=d.allowance; _rdAllow.used=d.used; _rdAllow.left=0; rdDraw(); rdLimitHit(); return; }
-    _rdAllow.left++; _rdAllow.used--; rdDraw();
-  }).catch(function(){ _rdAllow.left++; _rdAllow.used--; });
-  rdFn('push',{address:p.addr,trade:_rdTrade,note:note}).then(function(d){
-    var ghlId=(d&&d.ghlId)||'';
-    _rdGhl[p.addr]=ghlId;
-    BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note,ghl_id:ghlId}).then(rdLoadMine).catch(function(){});
-  }).catch(function(){
-    BP_SB.from('contacts').insert({name:p.addr,tags:['radar',_rdTrade],notes:note}).then(rdLoadMine).catch(function(){});
-  });
-};
+
 window.rdContacted=function(i){
   var p=_rdLeads[i]; if(!p)return;
   if(!confirm('Confirm you\'ve actually spoken with this homeowner? This starts your follow-up automations.'))return;
