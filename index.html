@@ -13205,12 +13205,19 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 #bpx:not(.bpx-dark){background:#eef1f5;}
 /* --- sidebar: solid navy, blue active pill --- */
 #bpx:not(.bpx-dark) .bpx-side{background:#1c2940 !important;border-right:0 !important;padding:22px 14px;box-sizing:border-box;}
-/* app shell on desktop/tablet: shell is one screen tall, only the main area scrolls
-   (keeps the sidebar small so iOS never rasterizes a huge navy element) */
+/* App shell on desktop/tablet: shell is one screen tall, only the main area
+   scrolls (keeps the sidebar small so iOS never rasterizes a huge navy
+   element).
+
+   These were written as #bpx:not(.bpx-dark), so the whole scrolling model
+   changed with the theme: in light mode .bpx-main was the scroller, and in
+   dark mode it was #bpx instead. Two layouts for one app, and anything that
+   had to find "the thing that scrolls" could only be right in one of them.
+   The theme decides colours; it has no business deciding layout. */
 @media(min-width:821px){
-  #bpx:not(.bpx-dark) .bpx-app.on{height:100vh;height:100dvh;overflow:hidden;}
-  #bpx:not(.bpx-dark) .bpx-app.on .bpx-main{overflow-y:auto;height:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
-  #bpx:not(.bpx-dark) .bpx-app.on .bpx-side{height:100%;overflow-y:auto;}
+  #bpx .bpx-app.on{height:100vh;height:100dvh;overflow:hidden;}
+  #bpx .bpx-app.on .bpx-main{overflow-y:auto;height:100%;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
+  #bpx .bpx-app.on .bpx-side{height:100%;overflow-y:auto;}
 }
 #bpx:not(.bpx-dark) .bpx-nav{background:transparent !important;}
 #bpx:not(.bpx-dark) .bpx-side .bpx-brand2{color:#fff;}
@@ -14088,8 +14095,21 @@ function bpNav(v){
   area.classList.remove('bpx-in');void area.offsetWidth;
   ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,neighbors:bpNeighbors,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
-  document.querySelector('.bpx-main').scrollTop=0;
+  bpScrollTop();
 }
+/* Opening a page puts you at the top of it. Which element actually scrolls
+   depends on the width — the main column inside the shell on a desktop, the
+   whole overlay on a phone — so this resets whichever one it really is
+   rather than naming one and being wrong half the time. */
+function bpScrollTop(){
+  ['.bpx-main','#bpx'].forEach(function(sel){
+    var el=document.querySelector(sel);
+    if(el&&el.scrollHeight-el.clientHeight>4)el.scrollTop=0;
+  });
+  var app=document.querySelector('.bpx-app');
+  if(app&&app.scrollTop)app.scrollTop=0;
+}
+window.bpScrollTop=bpScrollTop;
 /* ---- delete, everywhere, the same way -------------------------------------
    One confirm wording and one button shape, so a destructive action never
    looks like an ordinary one. bpDelBtn() renders it; bpAskDel() asks. The
@@ -17656,8 +17676,9 @@ function bpFinCatChart(d){
   var rows=Object.keys(d.catTot||{}).map(function(c){return {label:c,value:d.catTot[c]};});
   if(!rows.length) return bpChart.empty({title:'Where the money goes',empty:'No expenses logged yet.'});
   var tot=rows.reduce(function(t,r){return t+r.value;},0);
-  return bpChart.split({title:'Where the money goes',lead:bpMoneyFmt(tot)+' out, by category',
-    rows:rows,fmt:bpMoneyFmt,axis:'Category'});
+  return bpChart.donut({title:'Where the money goes',lead:'by category',
+    rows:rows,fmt:bpMoneyFmt,axis:'Category',
+    centre:bpMoneyFmt(tot),centreNote:'out, all time'});
 }
 function bpFinances(){
   var d=bpFinData();
@@ -18303,10 +18324,10 @@ function bpEstCharts(){
       value:won,target:decided,fmt:bpMoneyFmt,
       note:open>0?bpMoneyFmt(open)+' still waiting on a yes':'nothing still waiting'
     }):bpChart.empty({title:'What you win',empty:'Nothing accepted or declined yet. Once customers start answering, your win rate shows here.'}))+'</div>'
-    +'<div>'+bpChart.split({
-      title:'Where your quotes stand',lead:bpMoneyFmt(tot)+' quoted across '+items.length+' estimate'+(items.length===1?'':'s'),
+    +'<div>'+bpChart.donut({
+      title:'Where your quotes stand',lead:'across '+items.length+' estimate'+(items.length===1?'':'s'),
       rows:Object.keys(byStatus).map(function(k){return {label:k.charAt(0).toUpperCase()+k.slice(1),value:byStatus[k]};}),
-      fmt:bpMoneyFmt,axis:'Status'
+      fmt:bpMoneyFmt,axis:'Status',centre:bpMoneyFmt(tot),centreNote:'quoted'
     })+'</div></div>';
 }
 function bpEstLoad(){
@@ -19428,9 +19449,10 @@ function bpMkCharts(){
      their own figures in the listings panel below. */
   leads=leads.filter(function(x){return x.value>0;});spend=spend.filter(function(x){return x.value>0;});
   var totL=leads.reduce(function(t,x){return t+x.value;},0),totS=spend.reduce(function(t,x){return t+x.value;},0);
-  var left=leads.length?bpChart.split({title:'Where leads come from',
-      lead:bpNum(totL)+' lead'+(totL===1?'':'s')+' from ads · last 30 days',
-      rows:leads,fmt:bpNum,axis:'Source'})
+  var left=leads.length?bpChart.donut({title:'Where leads come from',
+      lead:'from ads · last 30 days',
+      rows:leads,fmt:bpNum,axis:'Source',valueHead:'Leads',
+      centre:bpNum(totL),centreNote:totL===1?'lead':'leads'})
     : bpChart.empty({title:'Where leads come from',
         empty:'Connect an ad account or your Google listing and every lead is attributed here.'});
   /* Spend on its own only says who is biggest. What it costs to buy one lead
@@ -19442,9 +19464,10 @@ function bpMkCharts(){
   var right=cpl.length?bpChart.ranked({title:'What each lead costs you',
       lead:bpMoneyFmt(totS)+' in 30 days'+(totL>0?' · '+bpMoneyFmt(totS/totL)+' a lead overall':'')+' · shorter is better',
       rows:cpl,fmt:bpMoneyFmt,axis:'Channel'})
-    : spend.length?bpChart.split({title:'What you spent to get them',
-        lead:bpMoneyFmt(totS)+' in 30 days · no leads attributed to it yet',
-        rows:spend,fmt:bpMoneyFmt,axis:'Channel'})
+    : spend.length?bpChart.donut({title:'What you spent to get them',
+        lead:'no leads attributed to it yet',
+        rows:spend,fmt:bpMoneyFmt,axis:'Channel',
+        centre:bpMoneyFmt(totS),centreNote:'in 30 days'})
     : bpChart.empty({title:'What each lead costs you',
         empty:'Connect Meta or Google Ads and your spend shows here beside the leads it bought.'});
   return '<div class="bpc-two" style="margin-bottom:16px"><div class="bpx-panel">'+left+'</div><div class="bpx-panel">'+right+'</div></div>';
@@ -21147,9 +21170,22 @@ function bpRepCharts(all){
   }
   if(!trend)trend=bpChart.empty({title:'Where your rating stands',
     empty:'Once there are a few dated reviews, your monthly average is drawn here.'});
-  var spread=all.length?bpChart.likert({title:'How the stars fall',
-    lead:all.length+' review'+(all.length===1?'':'s')+' we can see · three stars is the middle',
-    steps:distRows,neutral:2,axis:'Rating'
+  /* The ring keeps the scale's own order — five o'clock round to one — and
+     its own ramp, so the good end and the bad end stay at opposite poles
+     rather than being coloured by which happens to be commonest. The middle
+     holds the average, which is the number the whole card is about. */
+  var rated=all.filter(function(r){return r.rating>0;});
+  var mean=rated.length?rated.reduce(function(t,r){return t+r.rating;},0)/rated.length:0;
+  /* the one reading a rating distribution is for: how much of it is good */
+  var above=dist[4]+dist[3], below=dist[1]+dist[0];
+  var pc=function(n){return Math.round(n/all.length*100);};
+  var spread=all.length?bpChart.donut({title:'How the stars fall',
+    lead:all.length+' review'+(all.length===1?'':'s')+' \u00b7 '+pc(above)+'% four stars or better, '+pc(below)+'% two or worse',
+    rows:distRows, fixed:true,
+    ramp:['var(--bpc-pos2)','var(--bpc-pos1)','var(--bpc-mid)','var(--bpc-neg1)','var(--bpc-neg2)'],
+    centre:mean?mean.toFixed(1)+'\u2605':String(all.length),
+    centreNote:mean?'average of these':'reviews',
+    fmt:bpNum, valueHead:'Reviews', axis:'Rating'
   }):bpChart.empty({title:'How the stars fall',empty:'No reviews to break down yet.'});
   return '<div class="bpc-two" style="margin-top:16px"><div class="bpx-panel">'+trend+'</div><div class="bpx-panel">'+spread+'</div></div>';
 }
@@ -22170,15 +22206,15 @@ window.bpFmHangers=function(){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/charts.css?v=20260921d">
+<link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260921a">
 <link rel="stylesheet" href="portal/supply.css?v=20260921e">
 <link rel="stylesheet" href="portal/dash.css?v=20260919c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
-<script src="portal/charts.js?v=20260921d"></script>
+<script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260921a"></script>
-<script src="portal/supply.js?v=20260921g"></script>
+<script src="portal/supply.js?v=20260921h"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260919c"></script>
 <script src="portal/supply-kits.js?v=20260919c"></script>

@@ -278,10 +278,11 @@
       .map(function (k) { return { label: k, value: spend[k] }; });
     if (!spendRows.length && !vs.length) return '';
 
-    var left = spendRows.length ? bpChart.split({
+    var left = spendRows.length ? bpChart.donut({
       title: 'Who gets your business',
       lead: 'ordered through BuilderPro, all time',
       rows: spendRows, fmt: money, axis: 'Supply house',
+      centre: money(spendRows.reduce(function (t, r) { return t + r.value; }, 0)), centreNote: 'in orders',
     }) : bpChart.empty({
       title: 'Who gets your business',
       empty: 'Order materials through BuilderPro and this splits your spend across the houses you use.',
@@ -1534,11 +1535,12 @@
         series: [{ name: 'Materials', values: m.values }],
         fmt: money, height: 200,
       }) + '</div>'
-      + '<div class="bpx-panel">' + bpChart.split({
+      + '<div class="bpx-panel">' + bpChart.donut({
         title: 'Who it goes to',
-        lead: 'share of your material spend, by supply house',
+        lead: 'by supply house',
         rows: Object.keys(per).map(function (k) { return { label: k, value: per[k] }; }),
         fmt: money, axis: 'Supply house',
+        centre: money(tot), centreNote: 'across ' + spent.length + (spent.length === 1 ? ' order' : ' orders'),
       }) + '</div></div>';
   }
 

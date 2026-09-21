@@ -506,92 +506,117 @@
   };
 
   /* ==================================================================
-     SPLIT — one total, and how it divides. A stacked bar rather than a
-     ranked list: the reader's question is "how much of the whole", and a
-     length against a full-width track answers it without arithmetic. Laid
-     out horizontally because the categories are words.
+     DONUT — a total, and the slices it is made of. A ring is weaker than a
+     bar for telling two close slices apart, which is why every slice keeps
+     its number written beside it and the table sits underneath. What the
+     ring buys in return is the hole: the total lives in the middle, where
+     it is the first thing read, and hovering a slice puts that slice's
+     share there instead.
+
+     Square, so it scales uniformly and never distorts. Six slices at most;
+     past that the tail is thinner than its own label and folds to Other.
      ================================================================== */
-  C.split = function (o) {
-    var rows = (o.rows || []).filter(function (r) { return +r.value > 0; })
-      .sort(function (a, b) { return b.value - a.value; });
+  function arc(cx, cy, rO, rI, a0, a1) {
+    var p = function (r, a) { return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+    var big = (a1 - a0) > Math.PI ? 1 : 0;
+    var o0 = p(rO, a0), o1 = p(rO, a1), i1 = p(rI, a1), i0 = p(rI, a0);
+    return 'M' + o0[0].toFixed(2) + ' ' + o0[1].toFixed(2)
+      + 'A' + rO + ' ' + rO + ' 0 ' + big + ' 1 ' + o1[0].toFixed(2) + ' ' + o1[1].toFixed(2)
+      + 'L' + i1[0].toFixed(2) + ' ' + i1[1].toFixed(2)
+      + 'A' + rI + ' ' + rI + ' 0 ' + big + ' 0 ' + i0[0].toFixed(2) + ' ' + i0[1].toFixed(2) + 'Z';
+  }
+  C.donut = function (o) {
+    /* A zero has no slice to draw, so it drops out — but on a fixed scale its
+       POSITION still belongs to it. Each row remembers where it started, or a
+       rating with no four-star reviews would slide three stars up the ramp
+       and paint the middle of the scale the colour of the good end. */
+    var rows = (o.rows || []).map(function (r, i) {
+      return { label: r.label, value: +r.value || 0, other: r.other, k: i };
+    }).filter(function (r) { return r.value > 0; });
     var fmt = o.fmt || money;
     if (!rows.length) return empty(o);
-    /* past five slices the tail is thinner than its own label, so it folds */
-    if (rows.length > 5) {
-      var rest = rows.slice(4).reduce(function (t, r) { return t + r.value; }, 0);
-      rows = rows.slice(0, 4).concat([{ label: 'Everything else', value: rest, other: true }]);
+    if (!o.fixed) rows = rows.sort(function (a, b) { return b.value - a.value; });
+    /* There are five hues and there is no sixth: a generated one is
+       indistinguishable from an existing slot to a colourblind reader. So
+       five categories carry colour and the rest go grey — as themselves when
+       there is one of them, folded into a single slice when there are more. */
+    if (rows.length > 6) {
+      var rest = rows.slice(5).reduce(function (t, r) { return t + r.value; }, 0);
+      rows = rows.slice(0, 5).concat([{ label: 'Everything else', value: rest, other: true }]);
     }
     var total = rows.reduce(function (t, r) { return t + r.value; }, 0) || 1;
-    /* Laid out largest-first, but coloured by name. Assigning the hue by
-       position would repaint every category the month one of them overtakes
-       another, and a reader who learned that Materials is blue would be told
-       something false. Alphabetical is arbitrary but it is stable, which is
-       the only property that matters here. */
-    var ord = rows.map(function (r) { return r.label; }).sort();
-    var hue = function (r) { return r.other ? 'var(--bpc-other)' : slot(ord.indexOf(r.label)); };
-    var seg = rows.map(function (r) {
-      var pct = r.value / total * 100;
-      return '<i class="bpc-seg" style="flex:' + pct.toFixed(3) + ';background:'
-        + hue(r) + '" data-tip="'
-        + escAttr('<b>' + esc(r.label) + '</b><span>' + fmt(r.value) + '<em>' + Math.round(pct) + '%</em></span>') + '"></i>';
-    }).join('');
-    /* the legend carries the number too, so identity and size are both in
-       text and neither depends on telling two colours apart */
-    var keys = rows.map(function (r) {
-      return '<span class="bpc-key"><i style="background:' + hue(r) + '"></i>'
-        + esc(r.label) + ' <b>' + fmt(r.value) + '</b></span>';
-    }).join('');
-    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>Amount</th><th>Share</th></tr></thead><tbody>'
+
+    /* Colour follows the name, not the size, so a category does not change
+       hue the month another overtakes it. A fixed-order chart (a rating
+       scale) keeps its own ramp instead — there the position IS the meaning.
+       Only the five that get a hue are in the ordering, or a grey row would
+       take a slot and push a coloured one off the end of the palette. */
+    var top = rows.filter(function (r) { return !r.other; }).slice(0, C.SLOTS.length);
+    var ord = top.map(function (r) { return r.label; }).sort();
+    var hue = function (r) {
+      if (o.ramp) return o.ramp[Math.min(r.k, o.ramp.length - 1)];
+      var at = ord.indexOf(r.label);
+      return (r.other || at < 0) ? 'var(--bpc-other)' : slot(at);
+    };
+
+    var S = 208, c = S / 2, rO = 96, rI = 60, GAP = 0.03;   /* ~2px of surface between slices */
+    var a = -Math.PI / 2, paths = '', list = '';
+    rows.forEach(function (r, i) {
+      var frac = r.value / total, sweep = frac * Math.PI * 2;
+      var pct = Math.round(frac * 100);
+      var hub = '<b>' + esc(fmt(r.value)) + '</b><span>' + esc(r.label) + ' · ' + pct + '%</span>';
+      var tipTxt = esc(r.label) + ' · ' + fmt(r.value) + ' · ' + pct + '% of the total';
+      /* a slice smaller than the gap would be drawn inside out */
+      var g = Math.min(GAP, sweep / 3);
+      paths += '<path class="bpc-slice" data-k="' + i + '" d="' + arc(c, c, rO, rI, a + g / 2, a + sweep - g / 2)
+        + '" fill="' + hue(r) + '" data-hub="' + escAttr(hub) + '" data-tip="' + escAttr(tipTxt) + '"></path>';
+      list += '<div class="bpc-drow2" data-k="' + i + '" data-hub="' + escAttr(hub) + '">'
+        + '<i style="background:' + hue(r) + '"></i>'
+        + '<span class="bpc-dname">' + esc(r.label) + '</span>'
+        + '<b>' + esc(fmt(r.value)) + '</b><em>' + pct + '%</em></div>';
+      a += sweep;
+    });
+
+    var hub0 = '<b>' + esc(o.centre || fmt(total)) + '</b><span>' + esc(o.centreNote || 'in total') + '</span>';
+    var plot = '<div class="bpc-donut" data-hub0="' + escAttr(hub0) + '">'
+      + '<div class="bpc-ring"><svg viewBox="0 0 ' + S + ' ' + S + '" role="img" aria-label="' + esc(o.title || 'chart') + '">'
+      + paths + '</svg><div class="bpc-hub">' + hub0 + '</div></div>'
+      + '<div class="bpc-dlist">' + list + '</div></div>';
+
+    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Item') + '</th><th>'
+      + esc(o.valueHead || 'Amount') + '</th><th>Share</th></tr></thead><tbody>'
       + rows.map(function (r) {
-        return '<tr><th scope="row">' + esc(r.label) + '</th><td>' + fmt(r.value) + '</td><td>' + Math.round(r.value / total * 100) + '%</td></tr>';
+        return '<tr><th scope="row">' + esc(r.label) + '</th><td>' + fmt(r.value) + '</td><td>'
+          + Math.round(r.value / total * 100) + '%</td></tr>';
       }).join('') + '</tbody></table></div>';
-    return frame(o, '<div class="bpc-stack">' + seg + '</div>', '<div class="bpc-legend bpc-legend-v">' + keys + '</div>', table);
+    return frame(o, plot, '', table);
   };
 
-  /* ==================================================================
-     LIKERT — an ordered scale, split either side of its middle. Star
-     ratings are not a ranking: five through one is the order, and sorting
-     them by count throws away the thing that makes them a scale. So the
-     order is fixed, and the bar is pinned at the neutral step so the good
-     and the bad read as two directions from a common line.
-     ================================================================== */
-  var DIV5 = ['var(--bpc-pos2)', 'var(--bpc-pos1)', 'var(--bpc-mid)', 'var(--bpc-neg1)', 'var(--bpc-neg2)'];
-  C.likert = function (o) {
-    var steps = o.steps || [];                      /* best → worst, fixed */
-    var total = steps.reduce(function (t, s) { return t + (+s.value || 0); }, 0);
-    if (!total) return empty(o);
-    var mid = o.neutral == null ? Math.floor(steps.length / 2) : o.neutral;
-    var pct = steps.map(function (s) { return (+s.value || 0) / total * 100; });
-    /* the zero line sits where the neutral step's own middle falls, so the
-       two arms are measured from the same place on every chart */
-    var before = pct.slice(0, mid).reduce(function (t, v) { return t + v; }, 0) + pct[mid] / 2;
-    var tip = function (s, p) {
-      return escAttr('<b>' + esc(s.label) + '</b><span>' + (+s.value || 0).toLocaleString()
-        + (s.value === 1 ? ' review' : ' reviews') + '<em>' + Math.round(p) + '%</em></span>');
-    };
-    var seg = steps.map(function (s, i) {
-      if (!(pct[i] > 0)) return '';
-      return '<i class="bpc-seg" style="flex:' + pct[i].toFixed(3) + ';background:' + DIV5[Math.min(i, 4)] + '"'
-        + ' data-tip="' + tip(s, pct[i]) + '"></i>';
-    }).join('');
-    var good = pct.slice(0, mid).reduce(function (t, v) { return t + v; }, 0);
-    var bad = pct.slice(mid + 1).reduce(function (t, v) { return t + v; }, 0);
-    var keys = steps.filter(function (s) { return +s.value > 0; }).map(function (s) {
-      var i = steps.indexOf(s);
-      return '<span class="bpc-key"><i style="background:' + DIV5[Math.min(i, 4)] + '"></i>'
-        + esc(s.label) + ' <b>' + (+s.value || 0).toLocaleString() + '</b></span>';
-    }).join('');
-    var table = '<div class="bpc-tblwrap"><table><thead><tr><th>' + esc(o.axis || 'Rating') + '</th><th>Count</th><th>Share</th></tr></thead><tbody>'
-      + steps.map(function (s, i) {
-        return '<tr><th scope="row">' + esc(s.label) + '</th><td>' + (+s.value || 0).toLocaleString() + '</td><td>' + Math.round(pct[i]) + '%</td></tr>';
-      }).join('') + '</tbody></table></div>';
-    return frame(o,
-      '<div class="bpc-lik"><div class="bpc-stack">' + seg + '</div>'
-      + '<span class="bpc-zero" style="left:' + before.toFixed(2) + '%"></span></div>'
-      + '<div class="bpc-lik-foot"><span>' + Math.round(good) + '% above the middle</span>'
-      + '<span>' + Math.round(bad) + '% below</span></div>',
-      '<div class="bpc-legend bpc-legend-v">' + keys + '</div>', table);
-  };
+  /* The hole earns its place by holding the total, and by becoming whatever
+     you point at. Delegated like everything else, so a donut works the
+     moment it lands in the DOM. */
+  function hubTo(el, html) {
+    var wrap = el.closest ? el.closest('.bpc-donut') : null; if (!wrap) return;
+    var hub = wrap.querySelector('.bpc-hub'); if (!hub) return;
+    hub.innerHTML = html || wrap.getAttribute('data-hub0') || '';
+  }
+  document.addEventListener('pointerover', function (e) {
+    var t = e.target.closest ? e.target.closest('.bpc-slice, .bpc-drow2') : null;
+    if (!t) return;
+    hubTo(t, t.getAttribute('data-hub'));
+    var wrap = t.closest('.bpc-donut'), k = t.getAttribute('data-k');
+    if (wrap) wrap.querySelectorAll('[data-k]').forEach(function (n) {
+      n.classList.toggle('on', n.getAttribute('data-k') === k);
+    });
+  });
+  document.addEventListener('pointerout', function (e) {
+    var t = e.target.closest ? e.target.closest('.bpc-slice, .bpc-drow2') : null;
+    if (!t) return;
+    var wrap = t.closest('.bpc-donut'); if (!wrap) return;
+    if (e.relatedTarget && wrap.contains(e.relatedTarget) && e.relatedTarget.closest('.bpc-slice, .bpc-drow2')) return;
+    hubTo(t, '');
+    wrap.querySelectorAll('[data-k]').forEach(function (n) { n.classList.remove('on'); });
+  });
 
   /* ==================================================================
      DIVERGING — how far each row sits either side of a baseline, with the
@@ -659,7 +684,7 @@
     var plot = e.target.closest ? e.target.closest('.bpc-plot') : null;
     if (!plot) return;
     var tip = plot.querySelector('.bpc-tip');
-    var hit = e.target.closest('.bpc-hit, .bpc-row, .bpc-seg, .bpc-dot');
+    var hit = e.target.closest('.bpc-hit, .bpc-row, .bpc-slice');
     if (!hit || !tip) { if (tip) tip.hidden = true; hideCross(plot); return; }
 
     var html;
