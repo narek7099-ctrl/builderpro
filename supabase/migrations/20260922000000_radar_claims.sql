@@ -105,8 +105,14 @@ returns int language sql security definer set search_path = public as $$
   ) select count(*)::int from gone;
 $$;
 -- Postgres grants EXECUTE to PUBLIC by default, and this one deletes rows.
--- It is the scheduled job's, nobody else's.
+-- It is the scheduled job's, nobody else's — but revoking from PUBLIC takes
+-- it away from the job too unless the job's role is named explicitly. Whether
+-- service_role already holds it depends on default privileges having been set
+-- up, and this must not depend on that: the sweep's only caller swallows its
+-- own errors, so a silent permission denial would mean claims never expire
+-- and nobody would find out until a contractor asked why the map was empty.
 revoke all on function public.radar_sweep_claims() from public;
+grant execute on function public.radar_sweep_claims() to service_role;
 
 -- Real work on a lead pushes its expiry out. Called by the portal when a
 -- contact is actually made, not when the card is opened.
