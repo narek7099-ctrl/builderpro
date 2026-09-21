@@ -20541,13 +20541,21 @@ function rdMedian(a){ if(!a.length)return 0; var b=a.slice().sort(function(x,y){
    into 27-to-63 with nothing ever scoring well. These are bites out of what
    is left between the age fit and the top, combined so that they stack with
    diminishing returns and can approach 99 without ever reaching it. */
-var RD_W={ crew:0.55, storm:0.50, block:0.28, spend:0.22, fresh:0.18 };
+var RD_W={ crew:0.55, storm:0.50, sale:0.42, block:0.28, spend:0.22, size:0.12, fresh:0.18 };
 
 function rdRescore(leads,t,fresh,anchors){
   var grid=rdGrid(leads);
   /* the area's own typical job value, so "spends well" means well for HERE */
-  var allVals=[]; leads.forEach(function(p){var v=rdValOf(p); if(v>0)allVals.push(v);});
-  var cityMed=rdMedian(allVals);
+  /* Two medians for the area: what homes are assessed at, where parcels
+     give us that, and what permits get declared at where they do not. */
+  var assessed=[],declared=[],sqfts=[];
+  leads.forEach(function(p){
+    if(p.value>0)assessed.push(p.value);
+    var v=rdValOf(p); if(v>0)declared.push(v);
+    if(p.sqft>0)sqfts.push(p.sqft);
+  });
+  var valMed=rdMedian(assessed.length>=8?assessed:declared);
+  var sqftMed=rdMedian(sqfts);
 
   leads.forEach(function(p){
     p.storm=false; p.stormFresh=false; p.anchor=null;
@@ -20603,17 +20611,43 @@ function rdRescore(leads,t,fresh,anchors){
       if(n>0){ f.block=Math.min(1,Math.log2(1+n)/Math.log2(13)); if(n>=4)why.push(n+' more due on the same block'); }
     }
 
-    /* what the street spends, against what this area spends. A proxy for
-       affluence, not a measurement of it, and weighted like one. */
+    /* What the place is worth, against what this area is worth. When parcel
+       data is present this is an assessed value — a real number. Without it,
+       it falls back to what neighbours declared on their permits, which was
+       always a proxy standing in for one. */
     f.spend=0.5;                                   /* unknown sits in the middle */
-    if(cityMed>0){
-      var vals=rdNear(grid,leads,p,1).map(rdValOf).filter(function(v){return v>0;});
-      if(vals.length>=3){
-        var ratio=rdMedian(vals)/cityMed;
-        f.spend=Math.max(0,Math.min(1,0.5+Math.log2(ratio)/2));
-        if(ratio>=1.6)why.push('neighbours spending well above average on their homes');
+    if(valMed>0){
+      var own=p.value||0;
+      if(own>0){
+        var vr=own/valMed;
+        f.spend=Math.max(0,Math.min(1,0.5+Math.log2(vr)/2.2));
+        if(vr>=1.5)why.push('worth about '+(Math.round(vr*10)/10)+'\u00d7 the typical home around here');
+      } else {
+        var vals=rdNear(grid,leads,p,1).map(rdValOf).filter(function(v){return v>0;});
+        if(vals.length>=3){
+          var ratio=rdMedian(vals)/valMed;
+          f.spend=Math.max(0,Math.min(1,0.5+Math.log2(ratio)/2));
+          if(ratio>=1.6)why.push('neighbours spending well above average on their homes');
+        }
       }
     }
+
+    /* Just bought. The strongest intent signal there is, and only parcel
+       data carries it: people spend on a house in the first year they own
+       it, and the effect decays fast after that. */
+    f.sale=0;
+    if(p.lastSaleAt){
+      var months=(Date.now()-p.lastSaleAt)/(30.4*864e5);
+      if(months>=0&&months<=18){
+        f.sale=Math.max(0,1-months/18);
+        if(months<=12)why.push('changed hands '+(months<1?'this month':Math.round(months)+' months ago'));
+      }
+    }
+
+    /* How big the job is. A real thing, but a small one — a large house is
+       worth more per visit, it is not more likely to need the work. */
+    f.size=0.5;
+    if(p.sqft>0&&sqftMed>0)f.size=Math.max(0,Math.min(1,0.5+Math.log2(p.sqft/sqftMed)/2));
 
     /* how fresh the triggering signal is, for the kinds that hang on one */
     f.fresh=p.signalAt?Math.max(0,1-((Date.now()-p.signalAt)/864e5)/90):0.35;
@@ -20630,10 +20664,11 @@ function rdRescore(leads,t,fresh,anchors){
     /* what is left between here and the top, claimed with diminishing
        returns: two strong signals beat one, but not by twice as much */
     var left=1;
-    ['crew','storm','block','fresh'].forEach(function(k){
+    ['crew','storm','sale','block','fresh'].forEach(function(k){
       left*=1-RD_W[k]*Math.max(0,Math.min(1,f[k]||0));
     });
     if(f.spend>0.5)left*=1-RD_W.spend*((f.spend-0.5)*2);
+    if(f.size>0.5)left*=1-RD_W.size*((f.size-0.5)*2);
 
     p.score=Math.max(1,Math.min(99,Math.round(base+(99-base)*(1-left))));
     p.parts=f;
@@ -22617,6 +22652,7 @@ window.bpFmHangers=function(){
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
+<script src="portal/radar-parcels.js?v=20260922a"></script>
 <script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260921a"></script>
 <script src="portal/supply.js?v=20260921h"></script>
