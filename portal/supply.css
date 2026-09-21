@@ -391,7 +391,7 @@
 /* inside a card the price line is a stack, not a sentence */
 #bpx .sp-card-price .sp-pk-sup,#bpx .sp-card-price .sp-pk-more{flex-basis:100%;font-size:11.5px}
 #bpx .sp-card-price .sp-pk-stk{font-size:11px}
-#bpx .sp-card .sp-pk-stores{margin-top:auto;padding-top:2px}
+#bpx .sp-card .sp-pk-stores{padding-top:2px}
 #bpx .sp-card .sp-store{font-size:10.5px;padding:2px 7px}
 #bpx .sp-card-add{display:block;text-align:center;border:1px solid var(--line);border-radius:9px;padding:7px 0;font-size:12.5px;font-weight:650;color:var(--grey);background:var(--tint,#f4f6fa)}
 #bpx .sp-card:hover .sp-card-add{border-color:var(--blue);color:#fff;background:var(--blue)}
@@ -553,7 +553,12 @@
 #bpx .sp-card-price .sp-pk-none{font-size:12px}
 
 /* who carries it, as marks — the way you scan a shelf */
-#bpx .sp-card-at{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+/* The store row no longer claims the spare space — the Add button does,
+   so every button in a row sits on the same line whatever the card above
+   it holds. Cards in a grid row already stretch to equal height, so an
+   auto top margin on the last child is all the alignment needs. A card
+   with no price and no stockists is exactly the one that used to ride up. */
+#bpx .sp-card-at{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding-top:4px;min-height:26px}
 #bpx .sp-at{border:0;background:none;padding:0;cursor:pointer;line-height:0;border-radius:7px}
 #bpx .sp-at .sp-mark{width:26px;height:26px;border-radius:7px;border:1px solid var(--line)}
 #bpx .sp-at .sp-mark i{font-size:9.5px}
@@ -563,5 +568,71 @@
 #bpx .sp-at.mine .sp-mark{border-color:#7fc9a3;box-shadow:0 0 0 1px #7fc9a3}
 #bpx .sp-at-more{font-size:11px;color:var(--grey-l,var(--grey));margin-left:2px}
 
-#bpx .sp-card-add{margin-top:6px;padding:8px 0;font-size:12.5px}
+#bpx .sp-card-add{margin-top:auto;padding:8px 0;font-size:12.5px}
 #bpx .sp-card:hover .sp-card-add{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ==================================================================
+   ONE MATERIAL, IN FULL — the aisle-side label behind a card.
+   ================================================================== */
+#bpx .sp-md{display:flex;flex-direction:column;gap:16px}
+#bpx .sp-md-top{display:flex;gap:16px;align-items:flex-start}
+#bpx .sp-md-art{flex:none;width:116px;height:116px;border-radius:14px;display:flex;
+  align-items:center;justify-content:center;background:var(--soft);color:var(--grey)}
+#bpx .sp-md-art .sp-ic.huge{width:62px;height:62px;stroke-width:1.4}
+#bpx .sp-md-art[data-fam=roof] {color:#a2542c;background:rgba(162,84,44,.09)}
+#bpx .sp-md-art[data-fam=hvac] {color:#1f7a8c;background:rgba(31,122,140,.09)}
+#bpx .sp-md-art[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.09)}
+#bpx .sp-md-art[data-fam=elec] {color:#a4711a;background:rgba(164,113,26,.1)}
+#bpx .sp-md-art[data-fam=paint]{color:#7a4fa3;background:rgba(122,79,163,.09)}
+#bpx .sp-md-art[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.09)}
+#bpx .sp-md-art[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.1)}
+#bpx .sp-md-art[data-fam=pool] {color:#0277bd;background:rgba(2,119,189,.09)}
+#bpx .sp-md-art[data-fam=surf] {color:#8d6e63;background:rgba(141,110,99,.1)}
+#bpx .sp-md-art[data-fam=wood] {color:#6d4c41;background:rgba(109,76,65,.1)}
+#bpx .sp-md-id{flex:1;min-width:0}
+#bpx .sp-md-id h3{margin:0 0 6px;font-size:19px;line-height:1.3;letter-spacing:-.01em}
+#bpx .sp-md-meta{display:flex;gap:7px;flex-wrap:wrap;font-size:11.5px;color:var(--grey);margin-bottom:10px}
+#bpx .sp-md-meta span{background:var(--soft);border-radius:999px;padding:3px 9px;text-transform:capitalize}
+#bpx .sp-md-cat{font-weight:700;letter-spacing:.03em;text-transform:uppercase !important}
+#bpx .sp-md-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+#bpx .sp-md-head b{font-size:26px;font-weight:750;letter-spacing:-.03em}
+#bpx .sp-md-head small{flex-basis:100%;font-size:12px;color:var(--grey)}
+#bpx .sp-md-sec{border-top:1px solid var(--line);padding-top:14px}
+#bpx .sp-md-h{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--grey);margin-bottom:9px}
+#bpx .sp-md-rows{display:flex;flex-direction:column;gap:6px}
+#bpx .sp-md-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;
+  border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:13px}
+#bpx .sp-md-who{display:flex;align-items:center;gap:9px;min-width:0}
+#bpx .sp-md-who .sp-mark{width:28px;height:28px;border-radius:7px}
+#bpx .sp-md-who .sp-mark i{font-size:10px}
+#bpx .sp-md-who b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+#bpx .sp-md-p{font-weight:750;font-variant-numeric:tabular-nums}
+#bpx .sp-md-s em{font-style:normal;font-size:11.5px;color:var(--grey-l,var(--grey))}
+#bpx .sp-md-sku{font:600 11px ui-monospace,Menlo,monospace;color:var(--grey-l,var(--grey))}
+/* minmax(0,1fr), not 1fr: a grid track's default minimum is min-content,
+   so a long chain name and its Add button pushed the second column out
+   past the edge of the modal instead of ellipsing inside it. */
+#bpx .sp-md-chains{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(max-width:560px){#bpx .sp-md-chains{grid-template-columns:minmax(0,1fr)}
+  #bpx .sp-md-row{grid-template-columns:minmax(0,1fr) auto}#bpx .sp-md-sku{display:none}}
+#bpx .sp-md-chain{display:flex;align-items:center;gap:10px;text-align:left;width:100%;font:inherit;color:inherit;
+  border:1px solid var(--line);border-radius:11px;background:var(--card,#fff);padding:9px 11px;cursor:pointer}
+#bpx .sp-md-chain:hover{border-color:var(--blue)}
+#bpx .sp-md-chain.on{border-color:#9fd9b8;background:linear-gradient(0deg,rgba(15,122,61,.04),rgba(15,122,61,.04)),var(--card,#fff)}
+#bpx .sp-md-chain>span{flex:1;min-width:0}
+#bpx .sp-md-chain b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .sp-md-chain small{display:block;font-size:11px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .sp-md-tag{flex:none;font-size:11.5px;font-weight:650;color:var(--grey);
+  border:1px solid var(--line);border-radius:7px;padding:4px 9px;background:var(--tint,#f4f6fa)}
+#bpx .sp-md-chain.on .sp-md-tag{color:#0f7a3d;border-color:#9fd9b8;background:#e7f7ee}
+#bpx .sp-md-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  border-top:1px solid var(--line);padding-top:14px}
+#bpx .sp-md-qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#bpx .sp-md-qty button{border:0;background:var(--tint,#f4f6fa);color:var(--ink);font-size:17px;
+  width:38px;height:40px;cursor:pointer;line-height:1}
+#bpx .sp-md-qty button:hover{background:var(--blue);color:#fff}
+#bpx .sp-md-qty input{width:58px;height:40px;text-align:center;border:0 !important;border-radius:0 !important;
+  box-shadow:none !important;background:var(--card,#fff) !important;font-weight:650;margin:0}
+#bpx .sp-md-foot .bpx-btn{margin:0}
+#bpx.bpx-dark .sp-md-art{background:rgba(255,255,255,.05)}

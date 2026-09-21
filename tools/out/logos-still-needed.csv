@@ -1,0 +1,38 @@
+id,company,have_logo
+abc,"ABC Supply",yes
+srs,"SRS Distribution",yes
+beacon,"Beacon Building Products",yes
+carter,"Carter Lumber",NO
+ferguson,"Ferguson",yes
+winsupply,"Winsupply",NO
+johnstone,"Johnstone Supply",NO
+ced,"CED (Consolidated Electrical)",NO
+graybar,"Graybar",NO
+sherwin,"Sherwin-Williams",yes
+benmoore,"Benjamin Moore",NO
+siteone,"SiteOne Landscape Supply",yes
+whitecap,"White Cap",NO
+lw,"L&W Supply",NO
+fbm,"Foundation Building Materials",NO
+bfs,"Builders FirstSource",NO
+e84,"84 Lumber",NO
+fastenal,"Fastenal",NO
+poolcorp,"POOLCORP / SCP Distributors",NO
+heritagepool,"Heritage Pool Supply",NO
+leslies,"Leslie's Pool Supplies",NO
+floordecor,"Floor & Decor",yes
+msi,"MSI Surfaces",NO
+tileshop,"The Tile Shop",NO
+cosentino,"Cosentino",NO
+richelieu,"Richelieu Hardware",NO
+metrie,"Metrie",NO
+homedepot_pro,"Home Depot Pro",NO
+lowes_pro,"Lowe's Pro",yes
+menards,"Menards",NO
+supplyhouse,"SupplyHouse.com",NO
+pexuniverse,"PexUniverse",NO
+hvacdirect,"HVACDirect",NO
+grainger,"Grainger",NO
+zoro,"Zoro",NO
+amazonbiz,"Amazon Business",NO
+northerntool,"Northern Tool",NO
