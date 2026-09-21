@@ -29,7 +29,21 @@
   --maxw:1200px;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+/* Lenis drives the scrolling on this page, and it requires scroll-behavior
+   to be auto: with smooth set, every scroll Lenis performs gets re-animated
+   by the browser on top of it and the two fight — the page stalls, jumps
+   back, or simply refuses to move under a continuous gesture. Lenis marks
+   the root with .lenis when it takes over, so CSS smoothing is kept for
+   exactly the case where nothing else is doing it. */
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+html:not(.lenis){scroll-behavior:smooth;}
+html.lenis{scroll-behavior:auto;}
+/* Lenis's own required rules, which were never included. Without the first
+   the page can fight the wrapper's height; without the second lenis.stop()
+   halts the scroll without anything on screen saying so. */
+html.lenis,html.lenis body{height:auto;}
+html.lenis.lenis-stopped{overflow:hidden;}
+@media(prefers-reduced-motion:reduce){html:not(.lenis){scroll-behavior:auto;}}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;overflow-x:hidden;}
 a{text-decoration:none;color:inherit;}
 button{font-family:inherit;cursor:pointer;border:none;background:none;}
@@ -22260,9 +22274,9 @@ window.bpFmHangers=function(){
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/dash.js?v=20260921b"></script>
-<script src="site/vendor/lenis.min.js?v=20260919-i"></script>
+<script src="site/vendor/lenis.min.js?v=20260921-a"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
 <script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>
 <script src="site/vendor/SplitText.min.js?v=20260919-i"></script>
-<script src="site/site.js?v=20260919-i"></script>
+<script src="site/site.js?v=20260921-a"></script>
 </html>
