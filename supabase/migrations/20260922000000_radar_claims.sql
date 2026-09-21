@@ -28,8 +28,10 @@ create table if not exists public.radar_seats (
   lng        double precision not null,
   radius_mi  numeric not null default 25 check (radius_mi > 0 and radius_mi <= 120),
   active     boolean not null default true,
-  -- the daily allowance. Comes from the plan: 3 on the middle one, 5 on the
-  -- top. Null falls back to RADAR_FREE_PER_DAY below.
+  -- The daily allowance, from the plan: 3 on the middle one, 5 on the top.
+  -- Null means "no seat row decided this yet" and the claim function falls
+  -- back to 3, so an existing client is never locked out by a table they
+  -- have never heard of.
   per_day    int,
   -- minutes east of UTC, so "3 a day" resets at midnight where they live
   -- rather than at six in the evening. The portal sends it on sign-in.
