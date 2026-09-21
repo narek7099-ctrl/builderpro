@@ -162,12 +162,18 @@ async function logSupply(area: string, trade: string, row: Record<string, number
 /* Doors handed back by claims that lapsed. At any real scale this is the
    larger of the two supplies — the permit feeds trickle, the fortnight
    recycles — so it is counted separately or the numbers will mislead. */
-async function sweepClaims(): Promise<number> {
+async function sweepClaims(): Promise<{ n: number; err: string }> {
+  /* Returns the error rather than swallowing it. A sweep that cannot run
+     means claims never expire, doors never come back, and the map slowly
+     empties — which looks like a thin feed rather than a broken job, so it
+     has to be visible in the run output. */
   try {
     const r = await fetch(`${SB_URL}/rest/v1/rpc/radar_sweep_claims`, { method: "POST", headers: sbH, body: "{}" });
-    if (r.ok) return Number(await r.json()) || 0;
-  } catch { /* non-fatal */ }
-  return 0;
+    if (r.ok) return { n: Number(await r.json()) || 0, err: "" };
+    return { n: 0, err: `sweep ${r.status}: ${(await r.text()).slice(0, 180)}` };
+  } catch (e) {
+    return { n: 0, err: "sweep failed: " + String(e).slice(0, 180) };
+  }
 }
 
 /* Doors already locked to somebody. They are not supply, and dealing one
@@ -214,7 +220,8 @@ Deno.serve(async (req) => {
   const seen = await existingNames();
   /* first, hand back everything that lapsed — those doors are supply for the
      run that is about to happen, not the next one */
-  const recycled = await sweepClaims();
+  const swept = await sweepClaims();
+  const recycled = swept.n;
   const results: Record<string, unknown>[] = [];
 
   for (const t of terrs) {
@@ -268,5 +275,5 @@ Deno.serve(async (req) => {
     });
     results.push({ email: t.email, trade, zips, permits: permits.length, candidates: scored.length, added, notified });
   }
-  return json({ ok: true, ran_at: new Date().toISOString(), territories: results });
+  return json({ ok: true, ran_at: new Date().toISOString(), recycled, sweep_error: swept.err || undefined, territories: results });
 });
