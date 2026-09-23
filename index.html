@@ -21681,15 +21681,16 @@ function lsRender(){
           +'<div class="ls-url"><code>'+bpEsc(url)+'</code>'
             +'<button class="bpx-rowbtn" onclick="lsCopy(this,\''+s.id+'\')">Copy</button></div>'
           +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Treat it like a password — anyone with this URL can file leads into your account.</div>'
-          /* The email route, for the vendors that will never offer a webhook
-             — which is most of them. One forwarding rule in the inbox
-             their notifications already reach. */
-          +(lsInboxAddr(s)?('<label class="st-lab" style="display:block;margin:14px 0 4px;font-weight:600;font-size:12px">Or forward their emails here</label>'
-            +'<div class="ls-url"><code>'+bpEsc(lsInboxAddr(s))+'</code>'
-              +'<button class="bpx-rowbtn" onclick="lsCopyMail(this,\''+s.id+'\')">Copy</button></div>'
-            +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'
-            +'<a onclick="lsHowTo(\''+s.id+'\')" style="color:#2f6bff;cursor:pointer;text-decoration:underline">How to set the forward up</a>'
-            +' · use this if '+bpEsc(lsVendorName(s.vendor))+' won’t post to a URL.</div>'):'')
+          /* The Gmail route, for the vendors that will never post to a URL
+             — which is most of them. A script that runs in the contractor's
+             OWN Google account: no inbound mail service to pay for, and no
+             restricted-scope review, because nothing here ever holds a token
+             to their mailbox. */
+          +'<label class="st-lab" style="display:block;margin:14px 0 4px;font-weight:600;font-size:12px">Or read them straight out of Gmail</label>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+            +'<button class="bpx-rowbtn" onclick="lsGmail(\''+s.id+'\')">'
+            +'<span class="ms" style="font-size:14px;vertical-align:-2px">mail</span> Set up Gmail reader</button>'
+            +'<span class="bpx-mut" style="font-size:11.5px">free · about five minutes, once</span></div>'
           +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'
             +'<button class="bpx-rowbtn" onclick="lsToggle(\''+s.id+'\')">'+(s.active?'Pause':'Resume')+'</button>'
             +'<button class="bpx-rowbtn" onclick="lsTest(\''+s.id+'\')" title="Send a fake lead through it, end to end">Send a test lead</button>'
@@ -21728,34 +21729,135 @@ window.lsCopy=function(btn,id){
   bpRepCopy(lsHookUrl(s),btn);
 };
 
-window.lsCopyMail=function(btn,id){
+/* ===== The Gmail reader ====================================================
+   A script that runs in the contractor's own Google account, on their own
+   authorisation, every five minutes. It searches their mail for the senders
+   this source uses and posts each new one to the endpoint we already have.
+
+   This shape was chosen over the two obvious alternatives for reasons worth
+   writing down, because both look easier from the outside:
+
+   An inbound-email service (Postmark, Mailgun) means MX records and a
+   monthly bill, and the bill is what ruled it out.
+
+   Asking Google for permission to read their mailbox ourselves means the
+   gmail.readonly scope, which Google classes as restricted: a paid annual
+   security assessment before more than a hundred people can connect, and a
+   refresh token of ours that could read everything they own. This way we
+   never hold such a token at all. The contractor authorises their own
+   script, it reads only what the search matches, and they can delete it
+   from their own account without asking us.
+
+   The cost is honest: pasting a script feels technical the first time, and
+   a five-minute trigger is a few minutes slower than a webhook. */
+function lsScriptFor(s){
+  var url=(window.BP_URL||'https://YOUR-PROJECT.supabase.co')
+    +'/functions/v1/lead-email?k='+encodeURIComponent(s.secret||'');
+  var q=(window.mailSenders?mailSenders.queryFor([s],1):'');
+  var inbox=lsInboxAddr(s)||((s.inbox_slug||'')+'@leads.builderpro-os.com');
+  return [
+    '/**',
+    ' * BuilderPro — sends new '+lsVendorName(s.vendor)+' leads to your BuilderPro account.',
+    ' *',
+    ' * It runs in YOUR Google account, under your own permission. It reads only',
+    ' * the messages matching SEARCH below, and it never deletes or sends anything.',
+    ' * Remove it any time from script.google.com.',
+    ' */',
+    "var ENDPOINT = '"+url+"';",
+    "var INBOX    = '"+inbox+"';   // tells BuilderPro which source this is",
+    "var SEARCH   = '"+q+"';",
+    "var TAG      = 'BuilderPro-Sent';   // label put on what has been sent",
+    '',
+    'function sendNewLeads() {',
+    '  if (!SEARCH) return;                      // no senders configured: do nothing',
+    '  var label = GmailApp.getUserLabelByName(TAG) || GmailApp.createLabel(TAG);',
+    '  var threads = GmailApp.search(SEARCH + " -label:" + TAG, 0, 25);',
+    '  for (var i = 0; i < threads.length; i++) {',
+    '    var msgs = threads[i].getMessages();',
+    '    for (var j = 0; j < msgs.length; j++) {',
+    '      var m = msgs[j];',
+    '      UrlFetchApp.fetch(ENDPOINT, {',
+    '        method: "post",',
+    '        contentType: "application/json",',
+    '        muteHttpExceptions: true,',
+    '        payload: JSON.stringify({',
+    '          to: INBOX,',
+    '          from: m.getFrom(),',
+    '          subject: m.getSubject(),',
+    '          text: m.getPlainBody()',
+    '        })',
+    '      });',
+    '    }',
+    '    // labelled whether or not it worked, so one bad message cannot loop',
+    '    // forever. BuilderPro ignores duplicates anyway.',
+    '    threads[i].addLabel(label);',
+    '  }',
+    '}',
+    '',
+    '/** Run this ONCE to start it running every five minutes. */',
+    'function install() {',
+    '  var old = ScriptApp.getProjectTriggers();',
+    '  for (var i = 0; i < old.length; i++) ScriptApp.deleteTrigger(old[i]);',
+    '  ScriptApp.newTrigger("sendNewLeads").timeBased().everyMinutes(5).create();',
+    '  sendNewLeads();',
+    '}'
+  ].join('\n');
+}
+
+window.lsGmail=function(id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
-  bpRepCopy(lsInboxAddr(s),btn);
+  var q=(window.mailSenders?mailSenders.queryFor([s],1):'');
+  if(!q){
+    bpModal('<h3>Tell us who sends these leads first</h3>'
+      +'<div class="bpx-sub">'+bpEsc(lsVendorName(s.vendor))+' has no known sending address on file, so the script would have nothing to search for.</div>'
+      +'<p style="font-size:13.5px;line-height:1.65;color:var(--grey)">Open one of their lead emails, copy the address it came from, and add it to this source. '
+      +'The reader searches by sender — deliberately, so it never reads anything else in the mailbox.</p>'
+      +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'
+      +'<button class="bpx-btn" onclick="lsSenders(\''+s.id+'\')">Add their address</button></div>');
+    return;
+  }
+  var code=lsScriptFor(s);
+  bpModal('<h3>Read '+bpEsc(lsVendorName(s.vendor))+' leads out of Gmail</h3>'
+    +'<div class="bpx-sub">A small script that runs in your own Google account. Free, and you can delete it yourself any time.</div>'
+    +'<ol style="font-size:13.5px;line-height:1.8;color:var(--grey);padding-left:20px;margin:12px 0">'
+    +'<li>Open <b>script.google.com</b> and click <b>New project</b>.</li>'
+    +'<li>Delete whatever is in the editor and paste in the script below.</li>'
+    +'<li>Click <b>Save</b>, choose <b>install</b> from the function dropdown at the top, then <b>Run</b>.</li>'
+    +'<li>Google will ask for permission. It is your own script, so it warns that it is unverified — '
+      +'choose <b>Advanced</b> then <b>Go to (unsafe)</b>, and allow it.</li>'
+    +'<li>That is it. It checks every five minutes from now on.</li>'
+    +'</ol>'
+    +'<div class="ls-code"><pre id="lsCode">'+bpEsc(code)+'</pre></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'
+    +'<button class="bpx-btn" onclick="bpRepCopy(document.getElementById(\'lsCode\').textContent,this)">Copy the script</button></div>'
+    +'<p style="font-size:12px;line-height:1.6;color:var(--grey-l);margin-top:12px">It reads only messages from '
+    +bpEsc((window.mailSenders?mailSenders.domainsFor(s.vendor,s.sender_domains):[]).join(', '))
+    +' — nothing else in your mailbox is touched, and it never sends or deletes mail.</p>');
 };
 
-/* Written for somebody who has never set a mail filter up. The steps are
-   Gmail's because that is what most of them use; the principle is the same
-   in Outlook and the wording says so rather than pretending otherwise. */
-window.lsHowTo=function(id){
+/* Extra sending addresses for a source. Needed by every seller that is not
+   one of the big platforms, and the reader matches nothing at all until one
+   is set — which is the intended failure, not an oversight. */
+window.lsSenders=function(id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
-  var addr=lsInboxAddr(s), v=lsVendorName(s.vendor);
-  bpModal('<h3>Forward '+bpEsc(v)+' leads here</h3>'
-    +'<div class="bpx-sub">Five minutes, once. After that every lead they email you arrives in BuilderPro by itself.</div>'
-    +'<div class="ls-url" style="margin:10px 0"><code>'+bpEsc(addr)+'</code>'
-      +'<button class="bpx-rowbtn" onclick="bpRepCopy(\''+addr+'\',this)">Copy</button></div>'
-    +'<ol style="font-size:13.5px;line-height:1.75;color:var(--grey);padding-left:20px;margin:12px 0">'
-    +'<li>In Gmail, open <b>Settings → Forwarding and POP/IMAP → Add a forwarding address</b> and paste the address above.</li>'
-    +'<li>Google emails that address a confirmation code. It lands here, not in your inbox — '
-      +'reload this page and the code will be at the top of <b>Leads received</b>.</li>'
-    +'<li>Paste the code back into Gmail to confirm it.</li>'
-    +'<li>Then <b>Settings → Filters → Create a new filter</b>. In <b>From</b>, put the address '
-      +bpEsc(v)+' sends leads from. Tick <b>Forward it to</b> and choose the address above.</li>'
-    +'</ol>'
-    +'<p style="font-size:13px;line-height:1.65;color:var(--grey)">Filter on the sender, not on everything. Forwarding a whole inbox '
-    +'sends invoices and personal mail through here too, and they pile up as unusable leads.</p>'
-    +'<p style="font-size:13px;line-height:1.65;color:var(--grey)">Outlook and the rest have the same two pieces under different names: '
-    +'a forwarding address to verify, then a rule that decides which mail uses it.</p>'
-    +'<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Got it</button></div>');
+  bpModal('<h3>Who sends these leads?</h3>'
+    +'<div class="bpx-sub">The address their notifications arrive from. Paste as many as you like, separated by commas.</div>'
+    +'<label>Sending addresses</label>'
+    +'<input id="ls-sd" value="'+bpEsc(s.sender_domains||'')+'" placeholder="leads@acmeleads.com, notify@example.com" '
+      +'style="width:100%;padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit">'
+    +'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Only the domain is used, so any address at that company works. '
+    +'This is what the Gmail reader searches for — keep it tight and it can never see anything else.</div>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button>'
+    +'<button class="bpx-btn" onclick="lsSendersSave(\''+s.id+'\')">Save</button></div>');
+};
+window.lsSendersSave=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  var v=((q('ls-sd')||{}).value||'').trim();
+  s.sender_domains=v;
+  Promise.resolve(BP_SB.from('lead_sources').update({sender_domains:v}).eq('id',id))
+    .then(function(){ bpCloseModal(); lsRender(); },
+          function(e){ var m=q('bpx-mmsg'); if(m){m.style.color='#dc2626';m.textContent=(e&&e.message)||'Couldn’t save that.';} });
 };
 
 window.lsAddOpen=function(){
@@ -21825,6 +21927,8 @@ window.bpCsvLeadEvents=function(){
 
 var lsCss=document.createElement('style');
 lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}'
+  +'.ls-code{max-height:320px;overflow:auto;background:#0f172a;border-radius:10px;padding:12px 14px;margin:6px 0}'
+  +'.ls-code pre{margin:0;font:11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#d7e3f7;white-space:pre}'
   +'.ls-card.off{opacity:.62}'
   +'.ls-nums{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}'
   +'.ls-nums div{font-size:11.5px;color:var(--grey)}'
@@ -22654,6 +22758,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
 <script src="portal/radar-parcels.js?v=20260922a"></script>
+<script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260921a"></script>
 <script src="portal/supply.js?v=20260921h"></script>

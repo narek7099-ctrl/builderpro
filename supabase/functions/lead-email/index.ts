@@ -64,11 +64,7 @@ function slugOf(to: string): string {
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
 
-  if (HOOK_SECRET) {
-    const k = new URL(req.url).searchParams.get("k") ?? "";
-    if (k !== HOOK_SECRET) return json({ ok: false, error: "no" }, 401);
-  }
-
+  const k = new URL(req.url).searchParams.get("k") ?? "";
   const msg = await readMessage(req);
   const slug = slugOf(msg.to);
 
@@ -85,6 +81,23 @@ Deno.serve(async (req) => {
   const rows = await sr.json().catch(() => []);
   const src = Array.isArray(rows) && rows.length ? rows[0] : null;
   if (!src) return json({ ok: true, skipped: "unknown or paused inbox" });
+
+  /* Two callers, two credentials.
+
+     An inbound-email provider posts every contractor's mail through one URL,
+     so it carries the shared LEAD_EMAIL_SECRET. A Gmail script lives in one
+     contractor's own Google account, where they can read it — so it carries
+     that source's own key and nothing else. A single shared secret pasted
+     into every customer's script would not be a secret at all, and the first
+     person to look at their own script would hold everyone's.
+
+     Checked after the source is resolved, because the per-source key cannot
+     be compared until we know which source is being addressed. A wrong key
+     is a 401: unlike a message we merely cannot use, this one is worth the
+     caller retrying once they fix it. */
+  if (HOOK_SECRET && k !== HOOK_SECRET && k !== src.secret) {
+    return json({ ok: false, error: "bad key for this source" }, 401);
+  }
 
   /* Setting the forward up means Google emails a confirmation code to the
      address being verified, which is this one. Left alone it would be filed
