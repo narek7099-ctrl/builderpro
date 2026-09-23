@@ -2989,9 +2989,6 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     var grd=ctx.createRadialGradient(w/2,h*0.83,0,w/2,h*0.83,w*0.42);
     grd.addColorStop(0,'rgba(0,21,48,.16)'); grd.addColorStop(1,'rgba(0,21,48,0)');
     ctx.fillStyle=grd; ctx.beginPath(); ctx.ellipse(w/2,h*0.83,w*0.30-bob*3*dpr,h*0.075,0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='rgba(0,21,48,.05)'; ctx.lineWidth=1*dpr;
-    for(var gx=-6; gx<=6; gx++){ var xx=w/2+gx*w*0.06; ctx.beginPath(); ctx.moveTo(w/2+(xx-w/2)*0.55,h*0.72); ctx.lineTo(xx,h*0.98); ctx.stroke(); }
-    for(var gz=0; gz<5; gz++){ var yy=h*0.72+gz*h*0.065; ctx.beginPath(); ctx.moveTo(w*0.14,yy); ctx.lineTo(w*0.86,yy); ctx.stroke(); }
     ctx.restore();
 
     /* how far along each visual beat is */
@@ -3021,15 +3018,6 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
       ctx.beginPath(); F.pts.forEach(function(p,i){ i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); }); ctx.closePath(); ctx.fill(); ctx.stroke();
     });
     ctx.restore();
-
-    /* scan beam, while imagery is being read */
-    if(T>2.4&amp;&amp;T<6.2){
-      var bp=((T-2.4)/1.9)%1, by=h*0.12+bp*h*0.72;
-      var bg=ctx.createLinearGradient(0,by-h*0.10,0,by+2);
-      bg.addColorStop(0,'rgba(0,111,255,0)'); bg.addColorStop(1,'rgba(0,111,255,.10)');
-      ctx.fillStyle=bg; ctx.fillRect(w*0.1,by-h*0.10,w*0.8,h*0.10);
-      ctx.fillStyle='rgba(0,111,255,.55)'; ctx.fillRect(w*0.1,by,w*0.8,1*dpr);
-    }
 
     /* roof lines, drawn edge by edge */
     if(edgeP>0){
