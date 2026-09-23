@@ -21843,6 +21843,20 @@ var LS_VENDORS=[
    here only so the page can show the address. */
 var LS_INBOX_DOMAIN='leads.builderpro-os.com';
 function lsInboxAddr(s){ return s&&s.inbox_slug?(s.inbox_slug+'@'+LS_INBOX_DOMAIN):''; }
+/* The two platforms nearly every residential contractor already buys from.
+   Given their own tiles with their own logos, because "connect a source" is
+   an abstraction and "connect Angi" is a thing somebody recognises from
+   across the room. Everything else stays behind the generic option. */
+var LS_MAIN=['angi','thumbtack'];
+function lsLogo(v){
+  return (v==='angi'||v==='thumbtack')?('assets/leadsources/'+v+'.png'):'';
+}
+/* The two platforms nearly every residential contractor already buys from.
+   Given their own tiles with their own logos, because "connect a source" is
+   an abstraction and "connect Angi" is a thing somebody recognises from
+   across the room. Everything else stays behind the generic option. */
+var LS_MAIN=['angi','thumbtack'];
+function lsLogo(v){ return (v==='angi'||v==='thumbtack')?('assets/leadsources/'+v+'.png'):''; }
 function lsVendorName(k){var r=LS_VENDORS.filter(function(x){return x[0]===k;})[0];return r?r[1]:k;}
 var _lsSources=[],_lsEvents=[],_lsErr='';
 
@@ -21851,6 +21865,17 @@ function lsHookUrl(s){
     +(s.secret?('?k='+s.secret):'');
 }
 
+/* the same load, as a promise, for callers that need to act on the result */
+function bpLeadSources0(){
+  return Promise.all([
+    Promise.resolve(BP_SB.from('lead_sources').select('*').order('created_at',{ascending:false})).catch(function(e){return {error:e};}),
+    Promise.resolve(BP_SB.from('lead_events').select('*').order('received_at',{ascending:false}).limit(100)).catch(function(){return {data:[]};})
+  ]).then(function(r){
+    if(r[0]&&r[0].error){ _lsErr='load'; } else { _lsErr=''; _lsSources=(r[0].data)||[]; }
+    _lsEvents=(r[1]&&r[1].data)||[];
+    lsRender();
+  });
+}
 function bpLeadSources(){
   var area=q('bpxViewArea');
   if(!(window.BP_LIVE&&window.BP_SB)){
@@ -21902,7 +21927,20 @@ function lsRender(){
     +'<div class="bpx-mut" style="font-size:13px;line-height:1.6;max-width:70ch">The leads you already buy — Angi, Thumbtack, '
     +'a local seller, your own website — arriving here the second the vendor sends them, so '+bpEsc(BP_AI_NAME)
     +' answers the homeowner while they still have the tab open. On a shared lead that is usually the whole contest.</div></div>'
-    +'<button class="bpx-btn" style="width:auto;margin:0;padding:10px 18px" onclick="lsAddOpen()">+ Connect a source</button></div>';
+    +'</div>';
+
+  /* One click per platform. Creating the source and opening its setup are one
+     action here, because they were never two decisions — nobody adds "an
+     Angi source" and then wonders what to do with it. */
+  var already={}; _lsSources.forEach(function(x){already[x.vendor]=1;});
+  var connect='<div class="ls-connect">'+LS_MAIN.map(function(v){
+    var on=already[v];
+    return '<button class="ls-tile'+(on?' on':'')+'" onclick="lsQuickAdd(\''+v+'\')">'
+      +'<img src="'+lsLogo(v)+'" alt="'+bpEsc(lsVendorName(v))+'">'
+      +'<span>'+(on?'Connected \u00b7 set it up again':'Connect '+bpEsc(lsVendorName(v)))+'</span></button>';
+  }).join('')
+  +'<button class="ls-tile other" onclick="lsAddOpen()"><span class="ms">add</span>'
+  +'<span>Somewhere else<small>your own site, a local seller</small></span></button></div>';
 
   var tiles='<div class="bpx-stats" style="margin:14px 0">'
     +'<div class="bpx-stat"><span>Leads in, 30 days</span><b>'+acc30.length+'</b></div>'
@@ -21925,9 +21963,12 @@ function lsRender(){
         var s=x.s, url=lsHookUrl(s);
         var last=s.last_lead_at?('last lead '+rdAgo(Date.parse(s.last_lead_at))):'nothing received yet';
         var cpl=x.acc30&&x.spend?bpMoneyFmt(x.spend/x.acc30):(s.cost_per_lead?bpMoneyFmt(s.cost_per_lead):'—');
+        var lg=lsLogo(s.vendor);
         return '<div class="bpx-panel ls-card'+(s.active?'':' off')+'">'
-          +'<div class="bpx-chead" style="margin-bottom:8px"><div><b style="font-size:15px">'+bpEsc(s.label||lsVendorName(s.vendor))+'</b>'
-            +'<div class="bpx-mut" style="font-size:12px">'+bpEsc(lsVendorName(s.vendor))+' · '+bpEsc(last)+'</div></div>'
+          +'<div class="bpx-chead" style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px">'
+            +(lg?'<img class="ls-logo" src="'+lg+'" alt="'+bpEsc(lsVendorName(s.vendor))+'">':'')
+            +'<div><b style="font-size:15px">'+bpEsc(s.label||lsVendorName(s.vendor))+'</b>'
+            +'<div class="bpx-mut" style="font-size:12px">'+bpEsc(lsVendorName(s.vendor))+' · '+bpEsc(last)+'</div></div></div>'
             +'<span class="bpx-badge'+(s.active?' ok':'')+'">'+(s.active?'Live':'Paused')+'</span></div>'
           +'<div class="ls-nums"><div><b>'+x.acc30+'</b><span>leads, 30d</span></div>'
             +'<div><b>'+cpl+'</b><span>per lead</span></div>'
@@ -21953,11 +21994,10 @@ function lsRender(){
             +bpDelBtn("lsDel('"+s.id+"')",'Disconnect this source')
           +'</div></div>';
       }).join('')+'</div>'
-    : '<div class="bpx-panel"><div class="bpx-empty2"><b>No sources connected yet.</b>'
-      +'<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Connect one and you get a webhook URL to paste into that vendor’s '
-      +'lead-delivery settings. Every lead they send lands in Contacts and starts your follow-up straight away — '
-      +'no inbox to watch, no copying numbers across.</div>'
-      +'<button class="bpx-btn" style="width:auto;margin-top:12px;padding:10px 18px" onclick="lsAddOpen()">+ Connect a source</button></div></div>';
+    : '<div class="bpx-panel"><div class="bpx-empty2"><b>Nothing connected yet.</b>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Pick a platform above. Every lead it sends lands in Contacts '
+      +'and starts your follow-up within seconds \u2014 no inbox to watch, no numbers copied across by hand. '
+      +'On a shared lead that speed is usually the whole contest.</div></div></div>';
 
   var recent=_lsEvents.length
     ? '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:10px">'
@@ -21977,7 +22017,7 @@ function lsRender(){
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
     : '';
 
-  area.innerHTML=head+tiles+chart+cards+recent;
+  area.innerHTML=head+connect+tiles+chart+cards+recent;
 }
 
 window.lsCopy=function(btn,id){
@@ -22060,6 +22100,24 @@ function lsScriptFor(s){
   ].join('\n');
 }
 
+/* Connect a platform in one press: make the source, then go straight into
+   setting it up. If they already have one for that platform we reuse it
+   rather than making a second — two Angi sources would split the lead
+   count and the cost-per-lead across both, which is worse than useless. */
+window.lsQuickAdd=function(vendor){
+  var exist=_lsSources.filter(function(x){return x.vendor===vendor;})[0];
+  if(exist){ lsGmail(exist.id); return; }
+  if(!(window.BP_LIVE&&window.BP_SB)){ alert('Sign in to connect a lead source.'); return; }
+  Promise.resolve(BP_SB.from('lead_sources').insert({vendor:vendor,label:lsVendorName(vendor)}).select())
+    .then(function(r){
+      if(r&&r.error)throw r.error;
+      return bpLeadSources0().then(function(){
+        var made=_lsSources.filter(function(x){return x.vendor===vendor;})[0];
+        if(made)lsGmail(made.id);
+      });
+    },function(e){ alert((e&&e.message)||'Couldn\u2019t connect that just now.'); });
+};
+
 window.lsGmail=function(id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
   var q=(window.mailSenders?mailSenders.queryFor([s],1):'');
@@ -22073,22 +22131,38 @@ window.lsGmail=function(id){
     return;
   }
   var code=lsScriptFor(s);
+  /* The whole point of this screen is that it is four short actions, not a
+     tutorial. One button does the two things a person cannot do at once —
+     copies the script and opens the editor — so by the time Google's tab
+     loads the script is already on the clipboard and the only thing left is
+     to paste it. */
   bpModal('<h3>Read '+bpEsc(lsVendorName(s.vendor))+' leads out of Gmail</h3>'
     +'<div class="bpx-sub">A small script that runs in your own Google account. Free, and you can delete it yourself any time.</div>'
-    +'<ol style="font-size:13.5px;line-height:1.8;color:var(--grey);padding-left:20px;margin:12px 0">'
-    +'<li>Open <b>script.google.com</b> and click <b>New project</b>.</li>'
-    +'<li>Delete whatever is in the editor and paste in the script below.</li>'
-    +'<li>Click <b>Save</b>, choose <b>install</b> from the function dropdown at the top, then <b>Run</b>.</li>'
-    +'<li>Google will ask for permission. It is your own script, so it warns that it is unverified — '
-      +'choose <b>Advanced</b> then <b>Go to (unsafe)</b>, and allow it.</li>'
-    +'<li>That is it. It checks every five minutes from now on.</li>'
-    +'</ol>'
-    +'<div class="ls-code"><pre id="lsCode">'+bpEsc(code)+'</pre></div>'
+    +'<button class="bpx-btn ls-go" onclick="lsGmailGo(this)"><span class="ms">content_copy</span> Copy the script &amp; open Google</button>'
+    +'<div class="ls-steps">'
+      +'<div><b>1</b><span>In the tab that opens, press <b>New project</b> if it asks, then select everything in the editor and <b>paste</b>.</span></div>'
+      +'<div><b>2</b><span>Press <b>Save</b> (the disk icon).</span></div>'
+      +'<div><b>3</b><span>Choose <b>install</b> from the dropdown at the top, then press <b>Run</b>.</span></div>'
+      +'<div><b>4</b><span>Google asks for permission. It is your own script, so it warns that it is unverified — '
+        +'pick <b>Advanced</b>, then <b>Go to (unsafe)</b>, then <b>Allow</b>.</span></div>'
+    +'</div>'
+    +'<div class="bpx-mut" style="font-size:12px;margin:10px 0 4px">That is it — it checks every five minutes from then on. '
+      +'The script is below if you want to read it first.</div>'
+    +'<details class="ls-peek"><summary>Show the script</summary><div class="ls-code"><pre id="lsCode">'+bpEsc(code)+'</pre></div></details>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'
-    +'<button class="bpx-btn" onclick="bpRepCopy(document.getElementById(\'lsCode\').textContent,this)">Copy the script</button></div>'
+    +'<button class="bpx-btn ghost" onclick="bpRepCopy(document.getElementById(\'lsCode\').textContent,this)">Copy again</button></div>'
     +'<p style="font-size:12px;line-height:1.6;color:var(--grey-l);margin-top:12px">It reads only messages from '
     +bpEsc((window.mailSenders?mailSenders.domainsFor(s.vendor,s.sender_domains):[]).join(', '))
     +' — nothing else in your mailbox is touched, and it never sends or deletes mail.</p>');
+};
+
+/* Copy, then open. In that order and in the same click, because a browser
+   only allows the clipboard to be written during a real user gesture — do
+   it after the new tab opens and it is silently refused. */
+window.lsGmailGo=function(btn){
+  var el=document.getElementById('lsCode');
+  if(el)bpRepCopy(el.textContent,btn);
+  window.open('https://script.google.com/home/projects/create','_blank','noopener');
 };
 
 /* Extra sending addresses for a source. Needed by every seller that is not
@@ -22185,6 +22259,27 @@ var lsCss=document.createElement('style');
 lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}'
   +'.ls-code{max-height:320px;overflow:auto;background:#0f172a;border-radius:10px;padding:12px 14px;margin:6px 0}'
   +'.ls-code pre{margin:0;font:11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#d7e3f7;white-space:pre}'
+  /* connect tiles: the two platforms, big enough to recognise from a phone */
+  +'.ls-connect{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:0 0 18px}'
+  +'.ls-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:128px;padding:18px 16px;'
+    +'border:1px solid var(--line);border-radius:14px;background:var(--card,#fff);cursor:pointer;font:inherit;text-align:center;'
+    +'transition:border-color .15s,transform .15s,box-shadow .15s}'
+  +'.ls-tile:hover{border-color:#b9c9de;transform:translateY(-1px);box-shadow:0 10px 26px -18px rgba(0,0,0,.45)}'
+  +'.ls-tile.on{border-color:#2f6bff;background:rgba(47,107,255,.04)}'
+  /* the two logos have very different shapes \u2014 one wordmark, one square
+     mark \u2014 so a fixed box with contain keeps them optically level */
+  +'.ls-tile img{max-height:38px;max-width:150px;object-fit:contain}'
+  +'.ls-tile span{font-size:13px;font-weight:600;color:var(--ink);line-height:1.35}'
+  +'.ls-tile small{display:block;font-weight:400;font-size:11.5px;color:var(--grey);margin-top:2px}'
+  +'.ls-tile.other .ms{font-size:30px;color:var(--grey)}'
+  +'.ls-logo{height:26px;max-width:92px;object-fit:contain;flex:0 0 auto}'
+  /* setup steps */
+  +'.ls-go{width:100%;margin:14px 0 6px;padding:13px 18px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px}'
+  +'.ls-steps{display:flex;flex-direction:column;gap:9px;margin:12px 0 4px}'
+  +'.ls-steps div{display:flex;gap:11px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:var(--grey)}'
+  +'.ls-steps b{flex:0 0 auto;width:21px;height:21px;border-radius:50%;background:var(--soft);border:1px solid var(--line);'
+    +'display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--ink)}'
+  +'.ls-peek summary{cursor:pointer;font-size:12.5px;color:#2f6bff;margin:4px 0}'
   +'.ls-card.off{opacity:.62}'
   +'.ls-nums{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}'
   +'.ls-nums div{font-size:11.5px;color:var(--grey)}'
