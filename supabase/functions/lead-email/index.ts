@@ -24,7 +24,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const HOOK_SECRET = Deno.env.get("LEAD_EMAIL_SECRET") ?? "";
 
-import { parseEmail, forwardCode } from "./email-parse.js";
+import { parseEmail, forwardCode, normaliseInbound } from "./email-parse.js";
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
@@ -36,18 +36,11 @@ const sb = (path: string, init: RequestInit = {}) =>
   });
 
 /* ---------------------------------------------------------------- providers */
-/* Every inbound-email service posts the same message in its own shape.
-   SendGrid and Mailgun send multipart form data, Postmark sends JSON, a
-   Cloudflare Email Worker sends whatever we tell it to. Reading all of them
-   costs about fifteen lines and means the choice of provider is not baked
-   into the code — which matters, because that choice is usually made by
-   whoever manages the DNS rather than by whoever writes this. */
+/* The field mapping lives in email-parse.js so tools/email-parse.test.js can
+   run it against real Postmark, Mailgun and SendGrid payloads. A mapping that
+   misses does not throw — every message simply parses as empty, and the only
+   symptom is leads that never arrive. */
 type Msg = { to: string; from: string; subject: string; text: string; html: string };
-
-const first = (...v: unknown[]) => {
-  for (const x of v) { const s = typeof x === "string" ? x.trim() : ""; if (s) return s; }
-  return "";
-};
 
 async function readMessage(req: Request): Promise<Msg> {
   const type = (req.headers.get("content-type") ?? "").toLowerCase();
@@ -58,14 +51,7 @@ async function readMessage(req: Request): Promise<Msg> {
   } else {
     try { o = await req.json(); } catch { o = {}; }
   }
-  return {
-    // SendGrid "to" / Mailgun "recipient" / Postmark "OriginalRecipient"
-    to: first(o.to, o.To, o.recipient, o.OriginalRecipient, o.ToFull, o.envelope_to),
-    from: first(o.from, o.From, o.sender, o.FromFull),
-    subject: first(o.subject, o.Subject),
-    text: first(o.text, o.TextBody, o["body-plain"], o["stripped-text"], o.plain),
-    html: first(o.html, o.HtmlBody, o["body-html"], o["stripped-html"]),
-  };
+  return normaliseInbound(o) as Msg;
 }
 
 /* The envelope's "to" can be "Leads <ab3k9x2p7q@leads.example.com>, other@…"

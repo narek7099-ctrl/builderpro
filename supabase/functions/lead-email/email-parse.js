@@ -228,6 +228,41 @@
     };
   }
 
+  /* ----------------------------------------------- provider envelopes --- */
+  /* Every inbound-email service posts the same message under its own field
+     names. Postmark sends JSON with TitleCase keys, Mailgun and SendGrid send
+     form data with lower-case and hyphenated ones, a Cloudflare Worker sends
+     whatever it is told to.
+
+     Reading all of them costs a few lines and keeps the provider choice out
+     of the code, which matters because that choice gets made by whoever
+     manages the DNS rather than by whoever writes this. Here rather than in
+     the function so it can be tested against real payloads: a mapping that
+     misses means every message parses as empty, and the only symptom is
+     leads that never arrive. */
+  function pickStr(o, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = o[keys[i]];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+    }
+    return '';
+  }
+
+  function normaliseInbound(o) {
+    o = (o && typeof o === 'object') ? o : {};
+    return {
+      /* Postmark OriginalRecipient / Mailgun recipient / SendGrid to.
+         OriginalRecipient first: on a forwarded message it is the address the
+         mail was actually delivered to, which is the one carrying our slug,
+         while To can still say the contractor's own inbox. */
+      to: pickStr(o, ['OriginalRecipient', 'recipient', 'envelope_to', 'to', 'To']),
+      from: pickStr(o, ['From', 'from', 'sender']),
+      subject: pickStr(o, ['Subject', 'subject']),
+      text: pickStr(o, ['TextBody', 'text', 'body-plain', 'stripped-text', 'plain']),
+      html: pickStr(o, ['HtmlBody', 'html', 'body-html', 'stripped-html'])
+    };
+  }
+
   /* ------------------------------------------------- forwarding codes --- */
   /* Setting a Gmail forward up means Google emails a confirmation code TO the
      address being verified — which is this one. So the code arrives here,
@@ -268,6 +303,7 @@
   }
 
   var api = { parseEmail: parseEmail, htmlToText: htmlToText, fields: fields, forwardCode: forwardCode,
+    normaliseInbound: normaliseInbound,
     nameFromSubject: nameFromSubject, isVendorEmail: isVendorEmail };
   root.emailParse = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
