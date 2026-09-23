@@ -22161,18 +22161,32 @@ window.lsGmail=function(id){
        styling it as a round badge caught every bold word inside the
        sentences too \u2014 so "New project" and "Save" each became their own
        little circle on their own line, and the list read as debris. */
+    /* Written from watching somebody do it wrong. Each step names what is
+       actually on screen, in Google's own wording rather than a paraphrase,
+       because both places people get stuck are moments where the screen does
+       not look like the instruction. */
     +'<ol class="ls-steps">'
-      +'<li><i>1</i><span><b>Delete everything already in the editor first</b> \u2014 it starts with a few lines of '
-        +'<code>myFunction</code>. Tap in the code, select all (\u2318A or Ctrl+A), delete, <b>then paste</b>. '
-        +'Pasting without clearing puts this script inside theirs and nothing will run.</span></li>'
-      +'<li><i>2</i><span>Press <b>Save</b> \u2014 the disk icon.</span></li>'
-      +'<li><i>3</i><span>Choose <b>install</b> from the dropdown at the top, then press <b>Run</b>. '
-        +'If that dropdown says <b>No functions</b>, the old code is still in there \u2014 clear it and paste again.</span></li>'
-      +'<li><i>4</i><span>Google asks for permission. It is your own script, so it warns that it is unverified: '
-        +'pick <b>Advanced</b>, then <b>Go to (unsafe)</b>, then <b>Allow</b>.</span></li>'
+      +'<li><i>1</i><span><b>Empty the editor.</b> Google starts you with three lines beginning '
+        +'<code>function myFunction()</code>. Tap into the code, select it all (<b>⌘A</b> or <b>Ctrl+A</b>) and delete. '
+        +'It has to be completely blank — paste on top of those lines and your script ends up inside theirs, '
+        +'where nothing can run it.</span></li>'
+      +'<li><i>2</i><span><b>Paste</b> (<b>⌘V</b> or <b>Ctrl+V</b>) — it is already on your clipboard. '
+        +'Line 1 should now read <code>/**</code>. If it still says <code>function myFunction()</code>, go back to step 1.</span></li>'
+      +'<li><i>3</i><span><b>Save</b> — the floppy-disk icon above the code, or <b>⌘S</b>. '
+        +'The grey <b>Unsaved changes</b> beside the project name disappears.</span></li>'
+      +'<li><i>4</i><span>In the bar above the code, open the dropdown next to <b>Debug</b>, choose <b>install</b>, '
+        +'then press <b>Run</b>.'
+        +'<span class="ls-note">Says <b>No functions</b>? The old code is still in there — do steps 1 and 2 again.</span></span></li>'
+      +'<li><i>5</i><span>Google asks you to <b>Review permissions</b>. Pick your account. It then warns '
+        +'<b>Google hasn’t verified this app</b> — expected, since you wrote it a minute ago. '
+        +'Choose <b>Advanced</b>, then <b>Go to Untitled project (unsafe)</b>, then <b>Allow</b>.</span></li>'
     +'</ol>'
-    +'<div class="bpx-mut" style="font-size:12px;margin:10px 0 4px">That is it — it checks every five minutes from then on. '
-      +'The script is below if you want to read it first.</div>'
+    +'<div class="ls-done"><span class="ms">check_circle</span><span><b>Done — it runs immediately, then every five minutes.</b> '
+      +'Any '+bpEsc(lsVendorName(s.vendor))+' lead from the last day should appear in <b>Leads received</b> within a minute. '
+      +'Older mail is left alone, so you will not get a year of history in one go.</span></div>'
+    +'<div class="bpx-mut" style="font-size:12px;margin:12px 0 4px">Nothing after ten minutes? Open a real '
+      +bpEsc(lsVendorName(s.vendor))+' email and look at who sent it. If that address is not in the list at the bottom of this box, '
+      +'add it with <b>Add their address</b> on the source, then set this up again.</div>'
     +'<details class="ls-peek"><summary>Show the script</summary><div class="ls-code"><pre id="lsCode">'+bpEsc(code)+'</pre></div></details>'
     /* width:auto, or the shared .bpx-btn width:100% turns each into a
        full-width slab and the row wraps into a stack \u2014 which is what ate
@@ -22317,6 +22331,15 @@ lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fi
     +'border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-style:normal;'
     +'font-size:12px;font-weight:700;color:var(--ink)}'
   +'.ls-peek summary{cursor:pointer;font-size:12.5px;color:#2f6bff;margin:4px 0}'
+  /* the "if it says X" aside, set apart so it reads as a rescue rather than
+     another thing to do */
+  +'.ls-note{display:block;margin-top:5px;font-size:12.5px;color:#b45309;background:#fff8ec;border:1px solid #f2dfbd;'
+    +'border-radius:8px;padding:6px 10px;line-height:1.5}'
+  +'.ls-done{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;padding:12px 14px;border-radius:11px;'
+    +'background:#eefaf1;border:1px solid #cfe9d8;font-size:13px;line-height:1.6;color:#256b42}'
+  +'.ls-done .ms{font-size:19px;flex:0 0 auto;color:#15803d}'
+  +'.ls-steps code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);border:1px solid var(--line);'
+    +'border-radius:5px;padding:1px 5px;color:var(--ink)}'
   +'.ls-card.off{opacity:.62}'
   +'.ls-nums{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}'
   +'.ls-nums div{font-size:11.5px;color:var(--grey)}'

@@ -24,7 +24,7 @@ const {chromium}=require('playwright');
    const cs=el=>getComputedStyle(el);
    return {
      wide: card.classList.contains('wide')&&card.getBoundingClientRect().width>600,
-     fourSteps: steps.length===4,
+     fiveSteps: steps.length===5,
      // the number is a circle
      numIsBadge: cs(num).borderRadius.startsWith('50%')&&Math.round(parseFloat(cs(num).width))===24,
      // and the bold words inside the sentence are NOT
@@ -38,13 +38,16 @@ const {chromium}=require('playwright');
      // the sentence is not shredded across many lines
      firstStepLines: Math.round(steps[0].querySelector('span').getBoundingClientRect().height
                      / parseFloat(cs(steps[0].querySelector('span')).lineHeight)),
-     logoIsWordmark: true
+     // the rescue aside is set apart, not just another sentence in the step
+     hasAside: !!document.querySelector('.ls-steps .ls-note'),
+     // and the "done" confirmation tells them where to look next
+     saysWhereToLook: document.querySelector('.ls-done').textContent.includes('Leads received')
    };
  });
  console.log(JSON.stringify(r,null,1));
  console.log('ERRORS:',errs.length?errs:'none');
- const bad = !r.wide||!r.fourSteps||!r.numIsBadge||!r.boldIsInline||!r.oneRowPerStep
-   || r.firstStepLines>3 || errs.length;
+ const bad = !r.wide||!r.fiveSteps||!r.numIsBadge||!r.boldIsInline||!r.oneRowPerStep
+   || r.firstStepLines>4 || !r.hasAside || !r.saysWhereToLook || errs.length;
  console.log(bad?'FAIL':'gmail setup dialog reads as a list');
  await b.close(); process.exit(bad?1:0);
 })();
