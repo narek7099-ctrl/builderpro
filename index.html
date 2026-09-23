@@ -2974,25 +2974,27 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     var w=cv.width, h=cv.height;
     ctx.clearRect(0,0,w,h);
 
-    /* ease the model toward the measured one once it arrives */
-    var tgt=st.target||st.model, cur=st.model, k=Math.min(1, 0.06);
-    ['W','D','pitch'].forEach(function(f){ cur[f]+= (tgt[f]-cur[f])*k; });
+    /* Nothing is drawn until the measurement is in: the house that appears
+       is theirs from its first frame, never a stand-in that changes shape. */
+    if(!st.target){ st.raf=requestAnimationFrame(draw); return; }
+    if(st.arrive===undefined) st.arrive=T;
+    var cur=st.target;
     var geo=st.planes? st.planes.geo : buildGeometry(cur);
     var pm=st.planes? st.planes.m : cur;
 
     var yaw=st.still? st.yaw : (st.yaw=0.62+now*0.32);
-    var bob=reduced()?0:Math.sin(now*1.3)*0.45;
-    var P=makeProj(cv, pm, yaw, bob);
+    var P0=makeProj(cv, pm, yaw, 0);
 
-    /* ground: a faint survey grid and the house's shadow, well below it */
-    ctx.save();
-    var grd=ctx.createRadialGradient(w/2,h*0.83,0,w/2,h*0.83,w*0.42);
-    grd.addColorStop(0,'rgba(0,21,48,.16)'); grd.addColorStop(1,'rgba(0,21,48,0)');
-    ctx.fillStyle=grd; ctx.beginPath(); ctx.ellipse(w/2,h*0.83,w*0.30-bob*3*dpr,h*0.075,0,0,Math.PI*2); ctx.fill();
-    ctx.restore();
+    /* keep it centred: measure where this frame's house lands and shift it
+       so its middle sits in the middle, eased so the turn does not jitter */
+    var mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+    geo.faces.forEach(function(f){ f.v.forEach(function(v){ var q=P0(v); if(q.x<mnx)mnx=q.x; if(q.x>mxx)mxx=q.x; if(q.y<mny)mny=q.y; if(q.y>mxy)mxy=q.y; }); });
+    var tx=w/2-(mnx+mxx)/2, ty=h/2-(mny+mxy)/2;
+    if(st.cx===undefined){ st.cx=tx; st.cy=ty; } else { st.cx+=(tx-st.cx)*0.12; st.cy+=(ty-st.cy)*0.12; }
+    var P=function(v){ var q=P0(v); return {x:q.x+st.cx, y:q.y+st.cy, z:q.z}; };
 
     /* how far along each visual beat is */
-    var appear=Math.min(1, T/1.6);                            /* house fades in */
+    var appear=Math.min(1, (T-st.arrive)/1.2);               /* house fades in once it is known */
     var edgeP=Math.max(0, Math.min(1,(T-5.8)/2.8));             /* roof lines draw */
     var tintP=Math.max(0, Math.min(1,(T-7.0)/1.8));             /* planes light up */
     var labelP=Math.max(0, Math.min(1,(T-9.0)/1.2));            /* measurements  */
@@ -3113,7 +3115,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     stage.classList.add('on');
     var cv=$('rs-cv');
     st={ cv:cv, ctx:cv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
-         clock:0, idx:-1, data:undefined, model:modelFor(2000, 22), target:null, yaw:0.62 };
+         clock:0, idx:-1, data:undefined, target:null, yaw:0.62 };
     /* the continue button stays off until the numbers are in */
     try{ eS.sqft=0; eS.usedMap=false; eCheckBtn1(); }catch(e){}
     draw(); tick();
