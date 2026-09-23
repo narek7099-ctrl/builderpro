@@ -1918,7 +1918,452 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
 #est-embed #e-zippanel .e-shdr{margin:-16px -32px 14px !important;width:auto !important;max-width:none !important;}
 @media(max-width:640px){#est-embed #e-zippanel .e-shdr{margin:-16px -16px 12px !important;}}
 </style>
-<script id="bp-theme-applier">/* BuilderPro embed theme — injected into every public embed page by
+<!--RS-BEGIN--><!-- ROOF SCAN — injected into the roofing estimator by tools/inject-roof-scan.py.
+     Edit this file, then run:  python3 tools/inject-roof-scan.py && python3 tools/build-embeds.py
+
+     Replaces "trace your roof with dots" with a measured scan. The measurement
+     is real — it is the same satellite roof measurement (Google Solar, through
+     the rapid-handler function) the estimator already fetched and then threw
+     half of away: it kept the slope and made the homeowner trace the area by
+     hand. Now it keeps both.
+
+     The 15 seconds are deliberate. The answer usually arrives in one or two,
+     and a number that appears instantly reads as a guess; one that visibly
+     took work reads as measured. The time is spent on a white-block model of
+     THEIR roof — its footprint and slope come from the measurement, so a
+     steep roof looks steep — while the steps name what really happened.
+
+     If satellite has no read on the address (new build, rural, dense tree
+     cover), the scan says so plainly and hands over to the old trace map and
+     the manual size slider, which are kept for exactly that. -->
+<style id="rs-style">
+#est-embed .e-addrpanel.rs-mode #e-mapwrap,
+#est-embed .e-addrpanel.rs-mode .e-flatrow,
+#est-embed .e-addrpanel.rs-mode #e-mresult,
+#est-embed .e-addrpanel.rs-mode #e-slopecard,
+#est-embed .e-addrpanel.rs-mode #e-manualbtn,
+#est-embed .e-addrpanel.rs-mode #e-sldwrap{display:none !important;}
+#est-embed .rs-stage{display:none;position:relative;margin:14px 0 6px;border-radius:16px;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 0%,#1d3a6e 0%,#10244a 55%,#0b1a37 100%);color:#fff;
+  box-shadow:0 18px 40px -18px rgba(8,22,52,.55);}
+#est-embed .rs-stage.on{display:block;animation:rsIn .5s cubic-bezier(.22,1,.36,1) both;}
+@keyframes rsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#est-embed .rs-canvas-wrap{position:relative;height:300px;}
+#est-embed .rs-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+#est-embed .rs-addr{position:absolute;left:16px;top:14px;right:16px;display:flex;align-items:center;gap:8px;
+  font-size:11.5px;letter-spacing:.02em;color:rgba(214,228,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#est-embed .rs-addr i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#5b93ff;box-shadow:0 0 0 0 rgba(91,147,255,.7);animation:rsPing 1.6s infinite;}
+@keyframes rsPing{0%{box-shadow:0 0 0 0 rgba(91,147,255,.65)}100%{box-shadow:0 0 0 10px rgba(91,147,255,0)}}
+#est-embed .rs-readout{position:absolute;right:16px;bottom:14px;text-align:right;font-variant-numeric:tabular-nums;}
+#est-embed .rs-readout b{display:block;font-family:'Space Grotesk','Inter',sans-serif;font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff;}
+#est-embed .rs-readout span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(190,210,245,.75);}
+#est-embed .rs-readout{opacity:0;transition:opacity .4s;}
+#est-embed .rs-readout.on{opacity:1;}
+#est-embed .rs-panel{padding:16px 18px 18px;background:rgba(6,16,36,.35);border-top:1px solid rgba(140,175,235,.14);}
+#est-embed .rs-now{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk','Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:-.005em;min-height:22px;}
+#est-embed .rs-now .rs-spin{flex:0 0 16px;width:16px;height:16px;border-radius:50%;border:2px solid rgba(140,175,235,.25);border-top-color:#8fb4ff;animation:rsSpin .8s linear infinite;}
+@keyframes rsSpin{to{transform:rotate(360deg)}}
+#est-embed .rs-sub{font-size:12.5px;color:rgba(198,214,244,.78);margin:4px 0 12px 26px;line-height:1.5;min-height:19px;}
+#est-embed .rs-bar{height:4px;border-radius:4px;background:rgba(140,175,235,.16);overflow:hidden;}
+#est-embed .rs-bar i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#3f7bff,#8fb4ff);box-shadow:0 0 12px rgba(91,147,255,.6);transition:width .25s linear;}
+#est-embed .rs-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;}
+#est-embed .rs-steps div{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(170,192,232,.45);line-height:1.3;transition:color .3s;}
+#est-embed .rs-steps div.act{color:#cfe0ff;}
+#est-embed .rs-steps div.done{color:#7fd3a0;}
+#est-embed .rs-steps div.done:before{content:'\2713  ';}
+@media(max-width:560px){#est-embed .rs-steps{grid-template-columns:repeat(3,1fr);} #est-embed .rs-steps div:nth-child(n+4){display:none;} #est-embed .rs-canvas-wrap{height:250px;}}
+/* the measurements, once the scan has finished */
+#est-embed .rs-result{display:none;}
+#est-embed .rs-result.on{display:block;animation:rsIn .45s cubic-bezier(.22,1,.36,1) both;}
+#est-embed .rs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(140,175,235,.16);border-radius:12px;overflow:hidden;margin-top:2px;}
+#est-embed .rs-grid div{background:#0f2248;padding:12px 12px 11px;}
+#est-embed .rs-grid b{display:block;font-family:'Space Grotesk','Inter',sans-serif;font-size:20px;font-weight:700;letter-spacing:-.01em;color:#fff;font-variant-numeric:tabular-nums;}
+#est-embed .rs-grid span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(180,202,240,.72);margin-top:3px;}
+#est-embed .rs-grid div:first-child b{color:#9cc2ff;}
+@media(max-width:560px){#est-embed .rs-grid{grid-template-columns:repeat(2,1fr);}}
+#est-embed .rs-note{font-size:12px;color:rgba(198,214,244,.8);line-height:1.55;margin:12px 0 0;}
+#est-embed .rs-fix{display:inline-block;margin-top:10px;background:none;border:0;padding:0;font:inherit;font-size:12.5px;color:#9cc2ff;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+#est-embed .rs-fix:hover{color:#fff;}
+#est-embed .rs-fix:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px;border-radius:3px;}
+#est-embed .rs-fail{color:#ffd7a8;}
+@media(prefers-reduced-motion:reduce){#est-embed .rs-stage.on,#est-embed .rs-result.on{animation:none;} #est-embed .rs-addr i,#est-embed .rs-now .rs-spin{animation:none;}}
+</style>
+<script id="rs-script">
+(function(){
+  /* ── timeline: when each step begins, in seconds. The last entry is the end. ── */
+  var RS_STEPS=[
+    {t:0.0,  k:'Locating your property',        s:'Matching the address to its parcel'},
+    {t:2.6,  k:'Pulling satellite imagery',      s:'High-resolution overhead imagery of the roof'},
+    {t:5.6,  k:'Detecting roof planes',          s:'Finding every edge, ridge and hip'},
+    {t:8.8,  k:'Measuring the slope',            s:'Reading pitch from the surface model'},
+    {t:11.8, k:'Calculating true roof area',     s:'Footprint × slope — the surface you actually shingle'}
+  ];
+  var RS_END=15.0;
+  var RS_WAIT_MAX=28;      /* never hold the homeowner longer than this for a slow answer */
+  var RS_LABELS=['Locate','Imagery','Roof planes','Slope','Area'];
+
+  var st=null;             /* the running scan */
+
+  function $(id){ return document.getElementById(id); }
+  function reduced(){ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
+
+  /* ── stage markup, built once, placed where the trace map used to sit ── */
+  function ensureStage(){
+    var stage=$('rs-stage'); if(stage) return stage;
+    var panel=$('e-addrpanel'), anchor=$('e-mapwrap'); if(!panel||!anchor) return null;
+    stage=document.createElement('div'); stage.className='rs-stage'; stage.id='rs-stage';
+    stage.setAttribute('role','status'); stage.setAttribute('aria-live','polite');
+    stage.innerHTML=
+      '<div class="rs-canvas-wrap"><canvas id="rs-cv" aria-hidden="true"></canvas>'
+     +'<div class="rs-addr"><i></i><span id="rs-addr"></span></div>'
+     +'<div class="rs-readout" id="rs-readout"><b id="rs-rv">0</b><span id="rs-rl">sq ft of roof</span></div></div>'
+     +'<div class="rs-panel">'
+     +  '<div id="rs-live"><div class="rs-now"><span class="rs-spin"></span><span id="rs-now">Starting scan</span></div>'
+     +  '<div class="rs-sub" id="rs-sub"></div><div class="rs-bar"><i id="rs-bar"></i></div>'
+     +  '<div class="rs-steps" id="rs-steps">'+RS_LABELS.map(function(l){ return '<div>'+l+'</div>'; }).join('')+'</div></div>'
+     +  '<div class="rs-result" id="rs-result"></div>'
+     +'</div>';
+    anchor.parentNode.insertBefore(stage, anchor);
+    return stage;
+  }
+
+  /* ── the house model, in feet ──────────────────────────────────────────────
+     Footprint from the measured area and slope: plan = true area × cos(slope).
+     Proportioned 1.55 : 1, which is close to the median US single-family
+     footprint. Satellite gives the area and the pitch, not the plan shape, so
+     the shape is the typical one and the size and steepness are theirs. */
+  function modelFor(trueSqft, pitchDeg){
+    var p=Math.max(0, Math.min(55, pitchDeg||22));
+    var plan=Math.max(600, (trueSqft||2000)*Math.cos(p*Math.PI/180));
+    var D=Math.sqrt(plan/1.55), W=D*1.55;
+    return { W:W, D:D, H:10, pitch:p, o:1.6 };
+  }
+
+  function buildGeometry(m){
+    var W=m.W/2, D=m.D/2, H=m.H, o=m.o;
+    var faces=[], roofEdges=[];
+    /* walls */
+    var g=[[-W,0,-D],[W,0,-D],[W,0,D],[-W,0,D]], t=[[-W,H,-D],[W,H,-D],[W,H,D],[-W,H,D]];
+    for(var i=0;i<4;i++){ var j=(i+1)%4; faces.push({v:[g[i],g[j],t[j],t[i]], kind:'wall'}); }
+    var tan=Math.tan(m.pitch*Math.PI/180);
+    var ex=W+o, ez=D+o, eh=H-o*tan*0.6;       /* eaves overhang the walls a little */
+    var e=[[-ex,eh,-ez],[ex,eh,-ez],[ex,eh,ez],[-ex,eh,ez]];
+    if(m.pitch<5){
+      var top=H+1.2;
+      faces.push({v:[[-ex,top,-ez],[ex,top,-ez],[ex,top,ez],[-ex,top,ez]], kind:'roof'});
+      roofEdges=[[[-ex,top,-ez],[ex,top,-ez]],[[ex,top,-ez],[ex,top,ez]],[[ex,top,ez],[-ex,top,ez]],[[-ex,top,ez],[-ex,top,-ez]]];
+      return {faces:faces, roofEdges:roofEdges, ridge:null, eave:roofEdges[0]};
+    }
+    /* hip roof: ridge runs along the long side */
+    var rh=eh+ez*tan, rx=Math.max(0.5, ex-ez);
+    var r1=[-rx,rh,0], r2=[rx,rh,0];
+    faces.push({v:[e[0],e[1],r2,r1], kind:'roof'});     /* front slope  */
+    faces.push({v:[e[2],e[3],r1,r2], kind:'roof'});     /* back slope   */
+    faces.push({v:[e[1],e[2],r2], kind:'roof'});        /* right hip    */
+    faces.push({v:[e[3],e[0],r1], kind:'roof'});        /* left hip     */
+    /* drawn in the order a roofer would read them: eaves, then hips, then the ridge */
+    roofEdges=[[e[0],e[1]],[e[1],e[2]],[e[2],e[3]],[e[3],e[0]],[e[0],r1],[e[1],r2],[e[2],r2],[e[3],r1],[r1,r2]];
+    return {faces:faces, roofEdges:roofEdges, ridge:[r1,r2], eave:[e[0],e[1]]};
+  }
+
+  /* ── projection ── */
+  function makeProj(cv, m, yaw, bob){
+    var w=cv.width, h=cv.height, tilt=0.46;
+    var span=Math.max(m.W, m.D)+m.o*2;
+    var scale=Math.min(w, h*1.45)/(span*1.55);
+    var cy=Math.cos(yaw), sy=Math.sin(yaw), ct=Math.cos(tilt), stl=Math.sin(tilt);
+    return function(p){
+      var x=p[0]*cy - p[2]*sy, z=p[0]*sy + p[2]*cy, y=p[1]-m.H*0.9+bob;
+      /* camera above and in front, looking down: far points sit higher on
+         screen, high points sit nearer the camera */
+      var y2=y*ct + z*stl, z2=z*ct - y*stl;
+      var persp=1/(1+z2/(span*6));
+      return {x:w/2 + x*scale*persp, y:h*0.53 - y2*scale*persp, z:z2};
+    };
+  }
+
+  function shade(face, P, kind){
+    /* light from above-left-front, in screen space after projection */
+    var a=P(face.v[0]), b=P(face.v[1]), c=P(face.v[2]);
+    var ux=b.x-a.x, uy=b.y-a.y, vx=c.x-a.x, vy=c.y-a.y;
+    var cross=ux*vy-uy*vx;                        /* sign = facing */
+    var lit=Math.abs(cross)/(Math.hypot(ux,uy)*Math.hypot(vx,vy)+1e-6);
+    var k=kind==='roof'?(0.86+lit*0.14):(0.72+lit*0.22);
+    return k;
+  }
+
+  function draw(){
+    if(!st) return;
+    var cv=st.cv, ctx=st.ctx, dpr=st.dpr;
+    var r=cv.getBoundingClientRect();
+    if(cv.width!==Math.round(r.width*dpr)||cv.height!==Math.round(r.height*dpr)){ cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); }
+    var now=(performance.now()-st.t0)/1000, T=st.clock;
+    var w=cv.width, h=cv.height;
+    ctx.clearRect(0,0,w,h);
+
+    /* ease the model toward the measured one once it arrives */
+    var tgt=st.target||st.model, cur=st.model, k=Math.min(1, 0.06);
+    ['W','D','pitch'].forEach(function(f){ cur[f]+= (tgt[f]-cur[f])*k; });
+    var geo=buildGeometry(cur);
+
+    var yaw=st.still? st.yaw : (st.yaw=0.62+now*0.32);
+    var bob=reduced()?0:Math.sin(now*1.3)*0.45;
+    var P=makeProj(cv, cur, yaw, bob);
+
+    /* ground: a faint survey grid and the house's shadow, well below it */
+    ctx.save();
+    var grd=ctx.createRadialGradient(w/2,h*0.83,0,w/2,h*0.83,w*0.42);
+    grd.addColorStop(0,'rgba(5,12,28,.55)'); grd.addColorStop(1,'rgba(5,12,28,0)');
+    ctx.fillStyle=grd; ctx.beginPath(); ctx.ellipse(w/2,h*0.83,w*0.30-bob*3*dpr,h*0.075,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(120,160,230,.10)'; ctx.lineWidth=1*dpr;
+    for(var gx=-6; gx<=6; gx++){ var xx=w/2+gx*w*0.06; ctx.beginPath(); ctx.moveTo(w/2+(xx-w/2)*0.55,h*0.72); ctx.lineTo(xx,h*0.98); ctx.stroke(); }
+    for(var gz=0; gz<5; gz++){ var yy=h*0.72+gz*h*0.065; ctx.beginPath(); ctx.moveTo(w*0.14,yy); ctx.lineTo(w*0.86,yy); ctx.stroke(); }
+    ctx.restore();
+
+    /* how far along each visual beat is */
+    var appear=Math.min(1, T/1.6);                            /* house fades in */
+    var edgeP=Math.max(0, Math.min(1,(T-5.8)/2.8));             /* roof lines draw */
+    var tintP=Math.max(0, Math.min(1,(T-7.0)/1.8));             /* planes light up */
+    var labelP=Math.max(0, Math.min(1,(T-9.0)/1.2));            /* measurements  */
+
+    /* faces, back to front */
+    var faces=geo.faces.map(function(f){ var pts=f.v.map(P), z=pts.reduce(function(s,p){ return s+p.z; },0)/pts.length; return {f:f,pts:pts,z:z}; });
+    faces.sort(function(a,b){ return b.z-a.z; });
+    ctx.save(); ctx.globalAlpha=appear;
+    faces.forEach(function(F){
+      var s=shade(F.f,P,F.f.kind);
+      var base=F.f.kind==='roof'?[246,249,255]:[233,238,247];
+      var col=base.map(function(c){ return Math.round(c*s); });
+      if(F.f.kind==='roof'&&tintP>0){ col=[Math.round(col[0]-(col[0]-205)*tintP*0.55),Math.round(col[1]-(col[1]-222)*tintP*0.55),Math.round(col[2]-(col[2]-255)*tintP*0.25)]; }
+      ctx.fillStyle='rgb('+col.join(',')+')';
+      ctx.strokeStyle='rgba(40,70,130,.22)'; ctx.lineWidth=1*dpr; ctx.lineJoin='round';
+      ctx.beginPath(); F.pts.forEach(function(p,i){ i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); }); ctx.closePath(); ctx.fill(); ctx.stroke();
+    });
+    ctx.restore();
+
+    /* scan beam, while imagery is being read */
+    if(T>2.4&&T<6.2){
+      var bp=((T-2.4)/1.9)%1, by=h*0.12+bp*h*0.72;
+      var bg=ctx.createLinearGradient(0,by-h*0.10,0,by+2);
+      bg.addColorStop(0,'rgba(91,147,255,0)'); bg.addColorStop(1,'rgba(143,180,255,.30)');
+      ctx.fillStyle=bg; ctx.fillRect(w*0.1,by-h*0.10,w*0.8,h*0.10);
+      ctx.fillStyle='rgba(190,215,255,.9)'; ctx.fillRect(w*0.1,by,w*0.8,1.5*dpr);
+    }
+
+    /* roof lines, drawn edge by edge */
+    if(edgeP>0){
+      var n=geo.roofEdges.length, done=edgeP*n;
+      ctx.save(); ctx.lineCap='round'; ctx.shadowColor='rgba(91,147,255,.9)'; ctx.shadowBlur=8*dpr;
+      for(var i=0;i<n;i++){
+        var part=Math.max(0,Math.min(1,done-i)); if(part<=0) break;
+        var a=P(geo.roofEdges[i][0]), b=P(geo.roofEdges[i][1]);
+        ctx.strokeStyle= (geo.ridge&&i===n-1)?'#ffd27a':'#5b93ff';
+        ctx.lineWidth=2.4*dpr;
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(a.x+(b.x-a.x)*part, a.y+(b.y-a.y)*part); ctx.stroke();
+        ctx.fillStyle='#dbe8ff'; ctx.beginPath(); ctx.arc(a.x,a.y,2.4*dpr,0,Math.PI*2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    /* dimension tags on the ridge and the front eave, from the real model */
+    if(labelP>0&&st.target){
+      ctx.save(); ctx.globalAlpha=labelP;
+      var boxes=[];
+      var tag=function(seg, text, lift){
+        var a=P(seg[0]), b=P(seg[1]); var mx=(a.x+b.x)/2, my=(a.y+b.y)/2-lift*dpr;
+        ctx.font='600 '+(11*dpr)+'px Inter,system-ui,sans-serif';
+        var tw=ctx.measureText(text).width+14*dpr, th=20*dpr;
+        /* step clear of any tag already placed */
+        for(var q=0;q<boxes.length;q++){ var o=boxes[q]; if(Math.abs(o.x-mx)<(o.w+tw)/2+4*dpr && Math.abs(o.y-my)<th+4*dpr){ my=o.y-th-6*dpr; } }
+        boxes.push({x:mx,y:my,w:tw});
+        ctx.fillStyle='rgba(8,20,46,.86)'; ctx.strokeStyle='rgba(143,180,255,.55)'; ctx.lineWidth=1*dpr;
+        roundRect(ctx, mx-tw/2, my-th/2, tw, th, 6*dpr); ctx.fill(); ctx.stroke();
+        ctx.fillStyle='#e6efff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, mx, my+0.5*dpr);
+      };
+      var m=cur;
+      /* the eave nearest the viewer, so its tag is never hidden behind the roof */
+      var eaves=geo.roofEdges.slice(0,4), near=eaves[0], nz=1e9;
+      eaves.forEach(function(e2,i){ var z=(P(e2[0]).z+P(e2[1]).z)/2; if(z<nz){ nz=z; near=e2; } });
+      var len=Math.hypot(near[1][0]-near[0][0], near[1][2]-near[0][2]);
+      tag(near, 'Eave '+Math.round(len)+' ft', -16);
+      if(geo.ridge){ tag(geo.ridge, 'Ridge '+Math.round(Math.max(1,(m.W+2*m.o)-(m.D+2*m.o)))+' ft', 16); }
+      ctx.restore();
+    }
+
+    st.raf=requestAnimationFrame(draw);
+  }
+  function roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+  /* ── the clock: steps advance on schedule, but the last one waits for the answer ── */
+  function tick(){
+    if(!st) return;
+    var el=(performance.now()-st.t0)/1000;
+    /* hold on "measuring the slope" until the measurement is actually here:
+       the clock stops, the house keeps turning, nothing jumps */
+    var holdAt=RS_STEPS[4].t-0.2, raw=el-(st.paused||0);
+    if(st.data===undefined && raw>holdAt){
+      st.paused=el-holdAt; raw=holdAt;
+      if(el>RS_WAIT_MAX){ finish(null); return; }
+    }
+    if(st.failed && raw>=RS_STEPS[2].t){ finish(null); return; }
+    st.clock=Math.min(RS_END, raw);
+    var T=st.clock;
+
+    var idx=0; for(var i=0;i<RS_STEPS.length;i++){ if(T>=RS_STEPS[i].t) idx=i; }
+    if(idx!==st.idx){
+      st.idx=idx;
+      $('rs-now').textContent=RS_STEPS[idx].k+'…';
+      $('rs-sub').textContent=RS_STEPS[idx].s;
+      var ds=$('rs-steps').children; for(var j=0;j<ds.length;j++){ ds[j].className=j<idx?'done':(j===idx?'act':''); }
+    }
+    /* once the slope is known, say it — this is the moment it stops feeling generic */
+    if(idx===3&&st.target&&!st.saidPitch){ st.saidPitch=1; $('rs-sub').textContent='Slope found: '+pitchText(st.target.pitch); }
+    $('rs-bar').style.width=Math.round(T/RS_END*100)+'%';
+
+    /* the area counts up through the last step */
+    if(st.target&&T>=RS_STEPS[4].t){
+      var f=Math.min(1,(T-RS_STEPS[4].t)/(RS_END-RS_STEPS[4].t-0.4)); f=1-Math.pow(1-f,3);
+      $('rs-readout').classList.add('on'); $('rs-rv').textContent=Math.round(st.data.trueSqft*f).toLocaleString();
+    }
+    if(T>=RS_END && st.data){ finish(st.data); return; }
+    st.timer=setTimeout(tick, 60);
+  }
+
+  function pitchText(deg){
+    var over12=Math.round(12*Math.tan(deg*Math.PI/180));
+    return deg<5 ? 'flat / low-slope' : (over12+'/12 pitch ('+Math.round(deg)+'°)');
+  }
+
+  /* ── start: called the moment an address is chosen ── */
+  window.eRoofScanStart=function(addr){
+    var stage=ensureStage(); if(!stage) return;
+    var panel=$('e-addrpanel'); panel.classList.add('rs-mode'); panel.classList.remove('rs-fallback');
+    stop();
+    $('rs-addr').textContent=String(addr||'').split(',').slice(0,3).join(',');
+    $('rs-live').style.display=''; $('rs-result').className='rs-result'; $('rs-result').innerHTML='';
+    $('rs-readout').classList.remove('on'); $('rs-rv').textContent='0'; $('rs-bar').style.width='0';
+    var ds=$('rs-steps').children; for(var j=0;j<ds.length;j++) ds[j].className='';
+    stage.classList.add('on');
+    var cv=$('rs-cv');
+    st={ cv:cv, ctx:cv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
+         clock:0, idx:-1, data:undefined, model:modelFor(2000, 22), target:null, yaw:0.62 };
+    /* the continue button stays off until the numbers are in */
+    try{ eS.sqft=0; eS.usedMap=false; eCheckBtn1(); }catch(e){}
+    draw(); tick();
+  };
+
+  /* ── the measurement, from the satellite read (or null if there wasn't one) ── */
+  window.eRoofScanData=function(d){
+    if(!st) return;
+    if(d && d.totalAreaSqft>0){
+      var pitch=+d.avgPitchDegrees||0;
+      var trueSqft=Math.round(d.totalAreaSqft);
+      var plan=Math.round(trueSqft*Math.cos(pitch*Math.PI/180));
+      st.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch };
+      st.target=modelFor(trueSqft, pitch);
+    } else {
+      st.data=null; st.failed=true;
+    }
+  };
+
+  function finish(data){
+    if(!st) return;
+    clearTimeout(st.timer);
+    var res=$('rs-result');
+    $('rs-live').style.display='none';
+    if(!data){
+      st.still=true;
+      res.innerHTML='<div class="rs-now rs-fail">We couldn’t get a clean read on this roof from satellite</div>'
+        +'<p class="rs-note">It happens with new builds, heavy tree cover and some rural addresses. Trace it on the map below instead — it takes about a minute — or enter a rough size.</p>';
+      res.className='rs-result on';
+      fallback(true);
+      return;
+    }
+    $('rs-bar').style.width='100%';
+    $('rs-rv').textContent=data.trueSqft.toLocaleString();
+    setTimeout(function(){ var ro=$('rs-readout'); if(ro) ro.classList.remove('on'); }, 900);
+    var squares=Math.ceil(data.trueSqft/100);
+    res.innerHTML=
+      '<div class="rs-grid">'
+      +'<div><b>'+data.trueSqft.toLocaleString()+'</b><span>Roof area, sq ft</span></div>'
+      +'<div><b>'+squares+'</b><span>Roofing squares</span></div>'
+      +'<div><b>'+(data.pitch<5?'Flat':Math.round(12*Math.tan(data.pitch*Math.PI/180))+'/12')+'</b><span>Pitch'+(data.pitch>=5?' · '+Math.round(data.pitch)+'°':'')+'</span></div>'
+      +'<div><b>'+data.planSqft.toLocaleString()+'</b><span>Footprint, sq ft</span></div>'
+      +'</div>'
+      +'<p class="rs-note">Measured from satellite. Roof area is the sloped surface you actually shingle — larger than the footprint because the roof is pitched. Squares are before waste; your roofer adds that on site.</p>'
+      +'<button type="button" class="rs-fix" onclick="eRoofScanFix()">Not your roof? Measure it yourself</button>';
+    res.className='rs-result on';
+
+    /* hand the numbers to the estimator exactly as a trace would have */
+    try{
+      eS.sqft=data.trueSqft; eS.planSqft=data.planSqft; eS.usedMap=true;
+      eS.solarPitchDeg=Math.round(data.pitch*10)/10;
+      eS.pitch=eSolarPitchCategory(data.pitch); eS.flatRoof=data.pitch<5;
+      eMeasurePitch=eDegToPitch(data.pitch);
+      eSolarPreselectPitch(eS.pitch);
+      eCheckBtn1();
+      var b=$('e-btn1'); if(b){ b.classList.add('rs-ready'); }
+    }catch(e){}
+    /* let the finished model settle and keep turning, slower */
+    st.done=true;
+  }
+
+  function stop(){ if(st){ clearTimeout(st.timer); cancelAnimationFrame(st.raf); } st=null; }
+
+  function fallback(showMap){
+    var panel=$('e-addrpanel'); panel.classList.remove('rs-mode'); panel.classList.add('rs-fallback');
+    var mw=$('e-mapwrap'); if(mw) mw.style.display='block';
+    try{ if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },120); }catch(e){}
+  }
+
+  window.eRoofScanFix=function(){
+    try{ eClearDrawing(); }catch(e){}
+    var stage=$('rs-stage'); stage.classList.remove('on');
+    stop(); fallback(true);
+    var mw=$('e-mapwrap'); if(mw&&mw.scrollIntoView) mw.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+
+  /* ── wire into the estimator ──────────────────────────────────────────────
+     Wrapped rather than rewritten, so the trace map, the manual slider and the
+     pricing logic underneath are exactly what they were. */
+  function wire(){
+    if(typeof eSelectAddress!=='function'||typeof eSolarMeasure!=='function') return false;
+    var _select=eSelectAddress;
+    eSelectAddress=window.eSelectAddress=function(fullAddr, lat, lon, stateAbbr){
+      window.eRoofScanStart(fullAddr);
+      return _select.apply(this, arguments);
+    };
+    /* the map is still initialised underneath, ready for the fallback; it
+       just is not shown while the scan runs */
+    if(typeof eInitMap==='function'){
+      var _init=eInitMap;
+      eInitMap=window.eInitMap=function(){
+        var r; try{ r=_init.apply(this, arguments); }catch(e){}
+        return r;
+      };
+    }
+    eSolarMeasure=window.eSolarMeasure=function(lat, lon){
+      if(window.RS_DEMO){ setTimeout(function(){ window.eRoofScanData(window.RS_DEMO); }, 1400); return; }
+      fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d&&d.centerLat&&d.centerLng&&typeof eLmap!=='undefined'&&eLmap){ try{ eLmap.setView([d.centerLat,d.centerLng],20); }catch(e){} }
+          window.eRoofScanData(d&&d.found&&d.totalAreaSqft>0 ? d : null);
+        })
+        .catch(function(){ window.eRoofScanData(null); });
+    };
+    /* the step copy no longer asks anyone to trace */
+    var sub=document.querySelector('#e-addrpanel .e-ssub');
+    if(sub) sub.textContent='Enter the address and we’ll measure the roof from satellite — area, pitch and all. Nothing to draw.';
+    /* going back to the ZIP step abandons a scan in progress */
+    if(typeof eZipBack==='function'){ var _back=eZipBack; eZipBack=window.eZipBack=function(){ stop(); var s=$('rs-stage'); if(s) s.classList.remove('on'); return _back.apply(this, arguments); }; }
+    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=$('e-addrpanel'); if(p){ p.classList.remove('rs-mode','rs-fallback'); } return _rs.apply(this, arguments); }; }
+    return true;
+  }
+  if(!wire()){ document.addEventListener('DOMContentLoaded', wire); }
+})();
+</script>
+<!--RS-END--><script id="bp-theme-applier">/* BuilderPro embed theme — injected into every public embed page by
    tools/build-embeds.py, and mirrored in book/index.html.
 
    Reads the owner's saved look from embed_themes (colours, font, corner radius,
