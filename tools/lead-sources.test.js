@@ -43,8 +43,9 @@ const {chromium}=require('playwright');
      hasChart:h.includes('bpc-plot')||h.includes('<svg'),
      exportFn:typeof window.bpCsvLeadEvents==='function',
      testFn:typeof window.lsTest==='function',
-     inbox:h.includes('ab3k9x2p7q@leads.builderpro-os.com')&&h.includes('mn4r7t8w2v@leads.builderpro-os.com'),
-     howTo:typeof window.lsHowTo==='function'&&h.includes('How to set the forward up')
+     gmailBtn:(h.match(/lsGmail\(/g)||[]).length===2&&h.includes('Set up Gmail reader'),
+     scriptFn:typeof window.lsScriptFor==='function'||typeof lsScriptFor==='function',
+     sendersFn:typeof window.lsSenders==='function'
    };
  });
  console.log(JSON.stringify(r,null,1));
@@ -52,7 +53,7 @@ const {chromium}=require('playwright');
  const wantA='https://proj.supabase.co/functions/v1/lead-intake/11111111-1111-1111-1111-111111111111?k=abc123';
  const wantB='https://proj.supabase.co/functions/v1/lead-intake/22222222-2222-2222-2222-222222222222';
  const bad = !r.url.includes(wantA) || !r.url.includes(wantB) || !r.bothCards || !r.pausedShown
-   || !r.leadRow || !r.dupBadge || !r.warned || !r.exportFn || !r.testFn || !r.inbox || !r.howTo || errs.length;
+   || !r.leadRow || !r.dupBadge || !r.warned || !r.exportFn || !r.testFn || !r.gmailBtn || !r.sendersFn || errs.length;
  console.log(bad?'FAIL':'lead sources page behaves');
  await b.close(); process.exit(bad?1:0);
 })();
