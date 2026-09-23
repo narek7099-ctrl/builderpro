@@ -17258,7 +17258,7 @@ window.bpProjOpen=function(id){
   var n=new Date(); _bpProjCal={y:n.getFullYear(),m:n.getMonth()};
   if(_bpProjDates.length){ var f0=new Date(_bpProjDates.slice().sort()[0]+'T12:00:00'); if(!isNaN(f0.getTime())){_bpProjCal={y:f0.getFullYear(),m:f0.getMonth()};} }
   var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
-  var tabs=[['details','Details'],['money','Money'],['materials','Materials'],['schedule','Schedule'],['contract','Contract'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length]];
+  var tabs=[['details','Details'],['money','Money'],['crew','Crew'],['materials','Materials'],['schedule','Schedule'],['contract','Contract'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length]];
   /* crew runs the job, not the money: no Money tab, no Contract tab */
   if(window.bpTeamIsCrew&&bpTeamIsCrew())tabs=tabs.filter(function(t){return t[0]!=='money'&&t[0]!=='contract';});
   var pane=function(k,html){return '<div data-pj-pane="'+k+'"'+(k==='details'?'':' hidden')+'>'+html+'</div>';};
@@ -17284,6 +17284,11 @@ window.bpProjOpen=function(id){
         +'The gap between the two is the profit, so a budget is the only thing that tells you, mid-job, whether it is still there.</div>'
       +'<div id="bpx-pj-budget"></div>'
       +'<label style="margin-top:18px">Expenses</label><div class="bpx-mut" style="font-size:12px;margin-bottom:4px">Materials, crew, permits — these roll into your Finances.</div><div id="bpx-pj-exps"></div><div class="bpx-addexp" onclick="bpProjExpAdd()">+ Add expense</div>')
+    +pane('crew',
+      '<label style="margin-top:0">Who is on this job</label>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">Assign your people, then log the days they work. '
+        +'Those hours become the labour line on this job\u2019s budget \u2014 at what they really cost you, not at their wage.</div>'
+      +'<div id="bpx-pj-crew"></div>')
     +pane('materials',
       '<label style="margin-top:0">Materials</label><div class="bpx-mut" style="font-size:12px;margin-bottom:8px">What you have ordered for this job, and the way to order more. Bills land on it in Finances.</div>'
       +'<div id="bpx-pj-mat"><div class="bpx-empty2">Loading\u2026</div></div>')
@@ -17315,7 +17320,7 @@ window.bpProjOpen=function(id){
       +'<input type="file" id="bpx-pj-scan" accept="image/*" capture="environment" style="display:none" onchange="bpProjDoc(event,true)">')
     +'<div style="display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line-2);padding-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='95vw';mc.style.padding='28px 32px';}
-  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBudgetRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
+  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBudgetRender(); bpProjCrewRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
   if(window.bpProjMaterials) bpProjMaterials(j.id); else { var mh=document.getElementById('bpx-pj-mat'); if(mh) mh.innerHTML='<div class="bpx-mut" style="font-size:13px">Supply is still loading. Open the Supply branch once and come back.</div>'; }
 };
 window.bpProjTab=function(t){
@@ -17492,6 +17497,80 @@ window.bpProjDoc=function(e,scan){
   e.target.value='';
 };
 var _bpProjExp=[];
+/* ===== Who is on this job =================================================
+   Assignment and hours are two different things and the tab keeps them
+   apart on purpose. Assigning somebody says who is expected on site, which
+   is a plan; logging hours says who was actually there and for how long,
+   which is what the job cost. Contractors routinely assign four and send
+   three, so a design that inferred one from the other would be wrong in
+   whichever direction it guessed.
+
+   The assignment lives on the job itself, since the job is already a blob
+   and "who is on this" is part of it. The hours live in their own table,
+   because they accumulate forever and get asked questions of. */
+function bpProjCrewRender(){
+  var el=document.getElementById('bpx-pj-crew'); if(!el)return;
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  if(!window.BP_CREW||!window.bpEmpsActive){
+    el.innerHTML='<div class="bpx-empty2">Loading your crew…</div>'; return;
+  }
+  var all=bpEmpsActive();
+  if(!all.length){
+    el.innerHTML='<div class="bpx-empty2"><b>No people added yet.</b>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Add your crew under '
+      +'<b>Projects → Employees</b> and they will be assignable here.</div>'
+      +'<button class="bpx-btn" style="width:auto;margin-top:12px;padding:9px 16px;font-size:13px" '
+      +'onclick="bpCloseModal();bpNav(\'employees\')">Open Employees</button></div>';
+    return;
+  }
+  var on=(j.crew||[]).slice();
+  var tally=bpProjHours(j.id), cost=bpProjLabour(j.id);
+
+  var sum=(tally.hours>0||tally.ot>0)
+    ? '<div class="bg-top" style="margin-bottom:12px">'
+      +'<div><b>'+(tally.hours+tally.ot)+'</b><span>hours logged</span></div>'
+      +'<div><b>'+bpMoneyFmt(cost)+'</b><span>labour so far</span></div>'
+      +'<div><b>'+tally.people+'</b><span>'+(tally.people===1?'person':'people')+' worked it</span></div>'
+      +(tally.ot>0?'<div><b>'+tally.ot+'</b><span>overtime hours</span></div>':'')
+      +'</div>'
+    : '';
+
+  var rows=all.map(function(e){
+    var isOn=on.indexOf(e.id)>=0;
+    var mine=0,myH=0;
+    (BP_CREW.entries||[]).forEach(function(t){
+      if(t.job_id===j.id&&t.employee_id===e.id){mine+=+t.cost||0;myH+=(+t.hours||0)+(+t.ot_hours||0);}
+    });
+    return '<label class="cw-row'+(isOn?' on':'')+'">'
+      +'<input type="checkbox" '+(isOn?'checked':'')+' onchange="bpProjCrewSet(\''+e.id+'\',this.checked)">'
+      +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'
+        +(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
+        +'<span class="bpx-mut" style="display:block;font-size:11.5px">'
+        +(bpBurdenedRate(e)>0?bpRateFmt(bpBurdenedRate(e))+'/hr to you':'no rate set')
+        +(e.kind==='1099'?' · 1099':'')+'</span></span>'
+      +(myH>0?'<span class="cw-h">'+myH+' h<span class="bpx-mut" style="display:block;font-size:11px">'+bpMoneyFmt(mine)+'</span></span>'
+        :'<span class="cw-h bpx-mut">—</span>')
+      +'</label>';
+  }).join('');
+
+  el.innerHTML=sum+'<div class="cw-list">'+rows+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
+    +'<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpHoursOpen(\''+j.id+'\')">+ Log a day</button>'
+    +'<button class="bpx-rowbtn" onclick="bpCloseModal();bpNav(\'employees\')">All hours</button></div>'
+    +(on.length&&!(tally.hours>0)
+      ? '<div class="bpx-mut" style="font-size:11.5px;margin-top:10px">Assigned, but no hours logged yet — so this job’s budget '
+        +'still shows no labour against it.</div>' : '');
+}
+
+window.bpProjCrewSet=function(empId,on){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  var list=(j.crew||[]).filter(function(x){return x!==empId;});
+  if(on)list.push(empId);
+  j.crew=list;
+  bpJobsSet(jobs);
+  bpProjCrewRender();
+};
+
 /* ===== Project budgets ====================================================
    A budget here is a COST ceiling, not a price. That distinction is the
    whole feature: the estimate is what the customer pays and the contractor
@@ -17713,6 +17792,8 @@ window.bpProjSave=function(){
   j.estimate=bpParseMoney(g('bpx-pj-est'));
   var paidRaw=g('bpx-pj-paid').trim();
   j.collected=paidRaw?bpParseMoney(paidRaw):null;
+  /* crew is written the moment it is toggled, so it is read back rather
+     than rebuilt from the form here */
   j.budget={};
   bpBudgetCats().forEach(function(c){ var v=+(_bpProjBudget||{})[c]||0; if(v>0)j.budget[c]=v; });
   if(!Object.keys(j.budget).length)delete j.budget;
@@ -22068,7 +22149,14 @@ bgCss.textContent='.bg-grid{display:flex;flex-direction:column;gap:9px}'
   +'.bg-top div{font-size:11.5px;color:var(--grey)}'
   +'.bg-top b{display:block;font-size:18px;color:var(--ink);letter-spacing:-.02em}'
   +'.bg-warn{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:#b45309;background:#fff8ec;border:1px solid #f2dfbd;border-radius:10px;padding:10px 12px;margin-bottom:12px}'
-  +'@media(max-width:620px){.bg-row{grid-template-columns:1fr 100px;grid-template-areas:"n i" "m m"}.bg-name{grid-area:n}.bg-in{grid-area:i}.bg-meter{grid-area:m}}';
+  +'@media(max-width:620px){.bg-row{grid-template-columns:1fr 100px;grid-template-areas:"n i" "m m"}.bg-name{grid-area:n}.bg-in{grid-area:i}.bg-meter{grid-area:m}}'
+  /* ---- crew on a job ---- */
+  +'.cw-list{display:flex;flex-direction:column;gap:6px}'
+  +'.cw-row{display:flex;align-items:center;gap:11px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s}'
+  +'.cw-row:hover{border-color:#b9c9de}.cw-row.on{border-color:#2f6bff;background:rgba(47,107,255,.05)}'
+  +'.cw-row input{width:17px;height:17px;flex:0 0 auto;accent-color:#2f6bff;cursor:pointer}'
+  +'.cw-n{flex:1;min-width:0;font-size:13.5px}'
+  +'.cw-h{flex:0 0 auto;text-align:right;font-size:13px;font-weight:600;color:var(--ink)}';
 document.head.appendChild(bgCss);
 
 </script>
