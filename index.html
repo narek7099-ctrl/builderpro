@@ -14074,7 +14074,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Messaging',s:'Your texts and emails with leads, in one place.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},employees:{t:'Employees',s:'Your crew, what an hour of their time really costs you, and the hours that went into each job.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},leadsources:{t:'Lead Sources',s:'The leads you already buy — Angi, Thumbtack, your own website — arriving here the second they are sent, so they get answered first.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},suppliers:{t:'Where I buy',s:'The supply houses you use, and what they charge you.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Texts',s:'Your text conversations with leads and customers — the channel they read standing on the drive.'},email:{t:'Email',s:'Your email threads, where the longer conversations live.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},employees:{t:'Employees',s:'Your crew, what an hour of their time really costs you, and the hours that went into each job.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},leadsources:{t:'Lead Sources',s:'The leads you already buy — Angi, Thumbtack, your own website — arriving here the second they are sent, so they get answered first.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},suppliers:{t:'Where I buy',s:'The supply houses you use, and what they charge you.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -14090,7 +14090,7 @@ var BP_NAV=[
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['employees','Employees'],['calendar','Calendar'],['calculator','My Calculator']]},
   {id:'supply',l:'Supply',ico:'supply',kids:[['supply','Order materials'],['supplyorders','Orders'],['suppliers','Where I buy']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['payouts','Payouts']]},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['leadsources','Lead Sources'],['contacts','Contacts'],['messaging','Messaging']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['leadradar','Lead Radar'],['leadsources','Lead Sources'],['contacts','Contacts'],['messaging','Texts'],['email','Email']]},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['social','Social Media'],['competitors','Competitors'],['reputation','Reputation']]}
 ];
 var BP_NAV_FOOT=[['settings','Settings','settings']];
@@ -14155,7 +14155,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,leadsources:bpLeadSources,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
+  ({dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,leadsources:bpLeadSources,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
 }
@@ -16657,9 +16657,31 @@ async function bpLoadConvos(){
     var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
     var d=await r.json(); _bpConvos=d.conversations||[];
     var el=q('bpx-convlist');
-    if(!_bpConvos.length){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">No conversations yet.</div>'; return; }
+
+    /* Split, then say how many are on the other side. That count is not
+       decoration: this classification can be wrong, and the link across is
+       how somebody finds a conversation that landed in the wrong place. */
+    var mine=[],other=[];
+    for(var k=0;k<_bpConvos.length;k++){
+      (bpConvChannel(_bpConvos[k])===_bpMsgView?mine:other).push(_bpConvos[k]);
+    }
+    var otherView=(_bpMsgView==='email')?'messaging':'email';
+    var otherName=(_bpMsgView==='email')?'Texts':'Email';
+    var oc=q('bpx-otherchan');
+    if(oc){
+      oc.innerHTML=other.length
+        ? '<button class="bpx-ghostbtn" onclick="bpNav(\''+otherView+'\')">'
+          +'<span class=ms>'+(_bpMsgView==='email'?'sms':'mail')+'</span> '+other.length+' in '+otherName+'</button>' : '';
+    }
+
+    if(!mine.length){
+      el.innerHTML='<div class="bpx-tempty" style="padding:24px">No '+(_bpMsgView==='email'?'email threads':'texts')+' yet.'
+        +(other.length?'<div style="margin-top:8px"><a onclick="bpNav(\''+otherView+'\')" style="color:#2f6bff;cursor:pointer;text-decoration:underline">'
+          +other.length+' conversation'+(other.length===1?'':'s')+' in '+otherName+'</a></div>':'')+'</div>';
+      return;
+    }
     var html='';
-    for(var i=0;i<_bpConvos.length;i++){ var c=_bpConvos[i]; var t=bpMsgTime(c);
+    for(var i=0;i<mine.length;i++){ var c=mine[i]; var t=bpMsgTime(c);
       html+='<div class="bpx-conv'+(c.unread?' unreadrow':'')+'" id="conv-'+c.id+'" onclick="bpOpenConv(\''+c.id+'\')">'
         +bpAvatar(c.name||'?',40)
         +'<div class="bpx-conv-main"><div class="bpx-conv-top"><span class="bpx-conv-name">'+bpEsc(c.name||'Unknown')+'</span>'+(t?'<span class="bpx-conv-time">'+t+'</span>':'')+'</div>'
@@ -16821,27 +16843,64 @@ function bpFmtSched(iso){try{return new Date(iso).toLocaleString('en-US',{weekda
 var BPSCHED_NOTE='<div class="bpx-when-note">Scheduling isn’t set up yet. Deploy the <b>ghl-schedule</b> worker (see <b>supabase/functions/ghl-schedule/SETUP.md</b>) to enable it. <b>Send now</b> works regardless.</div>';
 
 /* Messaging header with Broadcast + Scheduled */
-function bpRenderMessaging(){
+/* ===== Texts and email, told apart ========================================
+   One inbox holding both was the complaint, and rightly: a text is read in
+   thirty seconds standing on a drive, an email is read at a desk that
+   evening. Mixed together, the urgent one is buried under the other.
+
+   So: two pages over one conversation list. The awkward part is deciding
+   which conversation belongs where, because GoHighLevel's conversation
+   search does not put a channel on every row, and the edge function in
+   front of it is deployed rather than checked in — so what it actually
+   forwards cannot be read from here.
+
+   The classification is therefore defensive, and the property that matters
+   is that NOTHING becomes invisible: each page shows the other's count with
+   a link across. A conversation in the wrong tab is an annoyance; one that
+   has silently vanished from both is a lost customer. */
+function bpConvChannel(c){
+  var t=String((c&&(c.type||c.lastMessageType||c.channel))||'').toLowerCase();
+  if(/email/.test(t))return 'email';
+  if(/sms|text|phone|call/.test(t))return 'sms';
+  /* No channel on the row. Fall back to what they can actually be reached
+     on: somebody with only an address cannot be texted. When both exist the
+     answer is genuinely unknown, and it goes to texts because that is the
+     channel a contractor lives in — with the count on the other page
+     making it findable either way. */
+  if(c&&c.email&&!c.phone)return 'email';
+  return 'sms';
+}
+window.bpConvChannel=bpConvChannel;
+var _bpMsgView='sms';
+function bpRenderMessaging(){ _bpMsgView='sms'; bpRenderInbox(); }
+function bpEmailPage(){ _bpMsgView='email'; bpRenderInbox(); }
+window.bpEmailPage=bpEmailPage;
+
+function bpRenderInbox(){
+  var isMail=_bpMsgView==='email';
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-msgbar"><div class="bpx-msgbar-t">Conversations</div>'
-      +'<div class="bpx-msgbar-btns"><button class="bpx-ghostbtn" onclick="bpSchedListOpen()"><span class=ms>schedule</span> Scheduled</button>'
-      +'<button class="bpx-addbtn" onclick="bpBulkOpen()"><span class=ms>mail</span> Broadcast</button></div></div>'
+    '<div class="bpx-msgbar"><div class="bpx-msgbar-t">'+(isMail?'Email':'Texts')+'</div>'
+      +'<div class="bpx-msgbar-btns"><span id="bpx-otherchan"></span>'
+      +'<button class="bpx-ghostbtn" onclick="bpSchedListOpen()"><span class=ms>schedule</span> Scheduled</button>'
+      +'<button class="bpx-addbtn" onclick="bpBulkOpen('+(isMail?"'Email'":'')+')"><span class=ms>'+(isMail?'mail':'sms')+'</span> Broadcast</button></div></div>'
     +'<div class="bpx-inbox">'
       +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
-      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
+      +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>'+(isMail?'mail':'chat')+'</span></div>'
+        +'Select a '+(isMail?'thread':'conversation')+' to view messages.</div></div>'
     +'</div>';
   bpLoadConvos();
 }
 
 /* Broadcast composer + When */
-window.bpBulkOpen=async function(){
+window.bpBulkOpen=async function(chan){
   bpModal('<h3>Broadcast</h3><div class="bpx-sub">Loading your contacts…</div>');
   await bpEnsureContacts();
   var tags={}; _bpContacts.forEach(function(c){(c.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});});
   var tagOpts=Object.keys(tags).sort().map(function(t){return '<option value="tag:'+bpEsc(t)+'">Tag: '+bpEsc(t)+' ('+tags[t]+')</option>';}).join('');
-  _bpBulkChan='SMS'; _bpBulkWhen='now';
+  /* opened from the Email page, the broadcast starts on email */
+  _bpBulkChan=(chan==='Email')?'Email':'SMS'; _bpBulkWhen='now';
   bpModal('<h3>Broadcast</h3><div class="bpx-sub">Send a text or email to many contacts — now or scheduled.</div>'
-    +'<label>Channel</label><div class="bpx-bulk-tabs"><button id="bk-ch-SMS" class="on" onclick="bpBulkChan(\'SMS\')">Text (SMS)</button><button id="bk-ch-Email" onclick="bpBulkChan(\'Email\')">Email</button></div>'
+    +'<label>Channel</label><div class="bpx-bulk-tabs"><button id="bk-ch-SMS" class="'+(_bpBulkChan==='SMS'?'on':'')+'" onclick="bpBulkChan(\'SMS\')">Text (SMS)</button><button id="bk-ch-Email" class="'+(_bpBulkChan==='Email'?'on':'')+'" onclick="bpBulkChan(\'Email\')">Email</button></div>'
     +'<div id="bk-subwrap" style="display:none"><label>Subject</label><input id="bk-subject" placeholder="Subject line"></div>'
     +'<label>Send to</label><select id="bk-aud" onchange="bpBulkCount()"><option value="__all">All contacts</option>'+tagOpts+'</select>'
     +'<label>Message</label><textarea id="bk-msg" placeholder="Type your message…"></textarea>'
