@@ -21,7 +21,7 @@
   window.bpOwnerId = function (u) { return T.owner || (u && u.id) || T.uid || null; };
 
   /* what each role may open */
-  var CREW = { dashboard: 1, activejobs: 1, calendar: 1, supply: 1, supplyorders: 1, suppliers: 1, messaging: 1, contacts: 1 };
+  var CREW = { dashboard: 1, activejobs: 1, calendar: 1, supply: 1, supplyorders: 1, suppliers: 1, messaging: 1, email: 1, contacts: 1 };
   window.bpTeamAllows = function (view) {
     if (T.role === 'crew') return !!CREW[view];
     return true;
