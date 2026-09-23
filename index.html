@@ -17235,6 +17235,7 @@ window.bpProjOpen=function(id){
   _bpProjId=id; j.sched=j.sched||{}; j.photos=j.photos||[];
   _bpProjDates=(j.sched.dates||[]).slice();
   _bpProjExp=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt,note:e.note,key:e.key};});
+  _bpProjBudget=Object.assign({},j.budget||{});
   // one-time migrate: old start/target/weekday schedules become real booked dates
   if(!_bpProjDates.length&&j.sched.start){
     var dw=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -17273,6 +17274,10 @@ window.bpProjOpen=function(id){
         +'<div><label>Estimate</label><input id="bpx-pj-est" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.estimate?bpMoneyFmt(j.estimate):'')+'"></div>'
         +'<div><label>Paid so far</label><input id="bpx-pj-paid" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.collected!=null?bpMoneyFmt(j.collected):'')+'"></div>'
         +'<div><label>Balance due</label><div id="bpx-pj-bal" style="padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;background:var(--soft);font-weight:700;font-size:14.5px">$0</div></div></div>'
+      +'<label style="margin-top:18px">Budget</label>'
+      +'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">What this job is allowed to <b>cost</b> — not what the customer pays. '
+        +'The gap between the two is the profit, so a budget is the only thing that tells you, mid-job, whether it is still there.</div>'
+      +'<div id="bpx-pj-budget"></div>'
       +'<label style="margin-top:18px">Expenses</label><div class="bpx-mut" style="font-size:12px;margin-bottom:4px">Materials, crew, permits — these roll into your Finances.</div><div id="bpx-pj-exps"></div><div class="bpx-addexp" onclick="bpProjExpAdd()">+ Add expense</div>')
     +pane('materials',
       '<label style="margin-top:0">Materials</label><div class="bpx-mut" style="font-size:12px;margin-bottom:8px">What you have ordered for this job, and the way to order more. Bills land on it in Finances.</div>'
@@ -17305,7 +17310,7 @@ window.bpProjOpen=function(id){
       +'<input type="file" id="bpx-pj-scan" accept="image/*" capture="environment" style="display:none" onchange="bpProjDoc(event,true)">')
     +'<div style="display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line-2);padding-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='95vw';mc.style.padding='28px 32px';}
-  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
+  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBudgetRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
   if(window.bpProjMaterials) bpProjMaterials(j.id); else { var mh=document.getElementById('bpx-pj-mat'); if(mh) mh.innerHTML='<div class="bpx-mut" style="font-size:13px">Supply is still loading. Open the Supply branch once and come back.</div>'; }
 };
 window.bpProjTab=function(t){
@@ -17482,18 +17487,121 @@ window.bpProjDoc=function(e,scan){
   e.target.value='';
 };
 var _bpProjExp=[];
+/* ===== Project budgets ====================================================
+   A budget here is a COST ceiling, not a price. That distinction is the
+   whole feature: the estimate is what the customer pays and the contractor
+   already knows it by heart, but almost none of them know, on the Tuesday
+   of a job, whether the money they set aside for materials is still there.
+   By the time the job is closed out and the numbers are added up, it is too
+   late to do anything about it.
+
+   Budgeted per category rather than as one number, because "you have spent
+   $9,400 of $12,000" is not actionable and "you are $900 over on materials
+   with the labour still to come" is. The categories are the ones expenses
+   already use, so nothing has to be re-entered.
+
+   Labour is filled in from logged hours rather than typed, once the crew
+   is on the job — see bpProjLabour. It is the line contractors get wrong
+   most often, because a day of four people is not one line item they ever
+   remember to write down. */
+var _bpProjBudget = null;
+
+function bpBudgetCats(){ return ['Materials','Labor / crew','Subcontractor','Permits','Other']; }
+
+/* What this job has actually cost so far, per category. Expenses are what
+   was typed in; labour is computed from hours logged against the job, so it
+   is right even when nobody remembered to add it as an expense. */
+function bpProjSpend(j){
+  var out={};
+  (_bpProjExp||[]).forEach(function(e){
+    var amt=bpParseMoney(e.amt); if(!(amt>0))return;
+    var c=e.cat||'Other';
+    out[c]=(out[c]||0)+amt;
+  });
+  var lab=(window.bpProjLabour?bpProjLabour(j.id):0)||0;
+  if(lab>0)out['Labor / crew']=(out['Labor / crew']||0)+lab;
+  return {by:out,labour:lab};
+}
+
+function bpProjBudgetRender(){
+  var el=document.getElementById('bpx-pj-budget'); if(!el)return;
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
+  if(!_bpProjBudget)_bpProjBudget=Object.assign({},j.budget||{});
+  var spend=bpProjSpend(j), cats=bpBudgetCats();
+  var totB=0,totS=0;
+  cats.forEach(function(c){ totB+=(+_bpProjBudget[c]||0); totS+=(spend.by[c]||0); });
+  /* anything spent under a category with no budget line still counts against
+     the job — leaving it out would make the total look healthier than it is */
+  Object.keys(spend.by).forEach(function(c){ if(cats.indexOf(c)<0)totS+=spend.by[c]; });
+
+  var row=function(c){
+    var b=+_bpProjBudget[c]||0, sp=spend.by[c]||0;
+    var pct=b>0?Math.min(150,Math.round(sp/b*100)):(sp>0?100:0);
+    var over=b>0&&sp>b;
+    var bar=b>0||sp>0
+      ? '<div class="bg-track"><i style="width:'+Math.min(100,pct)+'%;background:'
+        +(over?'#dc2626':pct>=85?'#f59e0b':'#15803d')+'"></i></div>' : '<div class="bg-track"></div>';
+    var right=b>0
+      ? '<span class="'+(over?'bad':'')+'">'+bpMoneyFmt(sp)+' of '+bpMoneyFmt(b)
+        +(over?(' · '+bpMoneyFmt(sp-b)+' over'):(' · '+bpMoneyFmt(b-sp)+' left'))+'</span>'
+      : (sp>0?'<span class="bpx-mut">'+bpMoneyFmt(sp)+' spent · no budget set</span>':'<span class="bpx-mut">—</span>');
+    var lockLab=c==='Labor / crew'&&spend.labour>0;
+    return '<div class="bg-row"><div class="bg-name">'+bpEsc(c)
+      +(lockLab?' <span class="bpx-mut" style="font-weight:400;font-size:11px">incl. '+bpMoneyFmt(spend.labour)+' logged hours</span>':'')+'</div>'
+      +'<input class="bg-in" data-bcat="'+bpEsc(c)+'" placeholder="$0" value="'+(b?bpMoneyFmt(b):'')+'" oninput="bpProjBudgetEdit(this)">'
+      +'<div class="bg-meter">'+bar+'<div class="bg-note">'+right+'</div></div></div>';
+  };
+
+  var left=totB-totS, overall=totB>0?Math.round(totS/totB*100):0;
+  var head=totB>0
+    ? '<div class="bg-top'+(left<0?' bad':left/totB<0.15?' warn':'')+'">'
+      +'<div><b>'+bpMoneyFmt(totS)+'</b><span>spent so far</span></div>'
+      +'<div><b>'+bpMoneyFmt(totB)+'</b><span>budgeted</span></div>'
+      +'<div><b>'+(left<0?'−'+bpMoneyFmt(-left):bpMoneyFmt(left))+'</b><span>'+(left<0?'over budget':'still to spend')+'</span></div>'
+      +(j.estimate>0?'<div><b>'+bpMoneyFmt(j.estimate-totS)+'</b><span>profit if it lands here</span></div>':'')
+      +'</div>'
+      +(left<0?'<div class="bg-warn"><span class="ms">warning</span> This job is '+bpMoneyFmt(-left)+' over its budget. '
+        +(j.estimate>0&&j.estimate-totS<0?'It is now losing money — the costs have passed the estimate.'
+          :'Still profitable against the estimate, but the margin you planned has gone.')+'</div>':'')
+    : '<div class="bpx-mut" style="font-size:12.5px;margin-bottom:10px">No budget set. Put a number against the lines that matter '
+      +'and this tells you where you stand while you can still do something about it.'
+      +(j.estimate>0?' A common starting point on a '+bpMoneyFmt(j.estimate)+' job is about '+bpMoneyFmt(j.estimate*0.65)+' of cost — but use your own numbers.':'')+'</div>';
+
+  el.innerHTML=head+'<div class="bg-grid">'+cats.map(row).join('')+'</div>';
+}
+
+window.bpProjBudgetEdit=function(inp){
+  var c=inp.getAttribute('data-bcat'); if(!c)return;
+  _bpProjBudget[c]=bpParseMoney(inp.value);
+  clearTimeout(window._bpBgT);
+  /* redrawn on a delay: rewriting the row under the cursor on every
+     keystroke moves the caret and fights whoever is typing */
+  window._bpBgT=setTimeout(function(){
+    var act=document.activeElement, id=act&&act.getAttribute?act.getAttribute('data-bcat'):null;
+    bpProjBudgetRender();
+    if(id){var again=document.querySelector('[data-bcat="'+id+'"]'); if(again){again.focus();
+      try{again.setSelectionRange(again.value.length,again.value.length);}catch(e){}}}
+  },700);
+};
+
 function bpProjExpRender(){
   var el=document.getElementById('bpx-pj-exps'); if(!el)return;
   el.innerHTML=_bpProjExp.map(function(e,i){
-    return '<div class="bpx-exprow"><select onchange="_bpProjExp['+i+'].cat=this.value">'+bpCatOpts(e.cat)+'</select>'
-      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpProjExp['+i+'].amt=this.value">'
+    return '<div class="bpx-exprow"><select onchange="_bpProjExp['+i+'].cat=this.value;bpBudgetLater()">'+bpCatOpts(e.cat)+'</select>'
+      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpProjExp['+i+'].amt=this.value;bpBudgetLater()">'
       +'<button class="bpx-exprm" onclick="bpProjExpDel('+i+')">×</button></div>'
       /* a supply bill carries where it came from; say so instead of showing a bare number */
       +(e.note?'<div class="bpx-expnote"><span class="ms">receipt_long</span>'+bpEsc(e.note)+'</div>':'');
   }).join('')||'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:4px">No expenses logged yet.</div>';
 }
-window.bpProjExpAdd=function(){ _bpProjExp.push({cat:'Materials',amt:''}); bpProjExpRender(); };
-window.bpProjExpDel=function(i){ _bpProjExp.splice(i,1); bpProjExpRender(); };
+/* The meters follow the expense list, but not on every keystroke: redrawing
+   the block under the cursor would fight whoever is typing an amount. */
+window.bpBudgetLater=function(){
+  clearTimeout(window._bpBgT2);
+  window._bpBgT2=setTimeout(function(){ if(document.getElementById('bpx-pj-budget'))bpProjBudgetRender(); },600);
+};
+window.bpProjExpAdd=function(){ _bpProjExp.push({cat:'Materials',amt:''}); bpProjExpRender(); bpProjBudgetRender(); };
+window.bpProjExpDel=function(i){ _bpProjExp.splice(i,1); bpProjExpRender(); bpProjBudgetRender(); };
 window.bpProjBal=function(){
   var el=document.getElementById('bpx-pj-bal'); if(!el)return;
   var g=function(id){var e2=document.getElementById(id);return e2?e2.value:'';};
@@ -17600,6 +17708,9 @@ window.bpProjSave=function(){
   j.estimate=bpParseMoney(g('bpx-pj-est'));
   var paidRaw=g('bpx-pj-paid').trim();
   j.collected=paidRaw?bpParseMoney(paidRaw):null;
+  j.budget={};
+  bpBudgetCats().forEach(function(c){ var v=+(_bpProjBudget||{})[c]||0; if(v>0)j.budget[c]=v; });
+  if(!Object.keys(j.budget).length)delete j.budget;
   j.expenses=_bpProjExp.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt),note:e.note||'',key:e.key||''};}).filter(function(e){return e.amt>0;});
   var dates=_bpProjDates.slice().sort();
   var t0=g('bpx-pj-time'),t1=g('bpx-pj-end');
@@ -21937,6 +22048,24 @@ lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fi
   +'.ls-url code{flex:1;min-width:0;font-size:11.5px;overflow-x:auto;white-space:nowrap;color:var(--ink)}'
   +'.bpx-hero2{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}';
 document.head.appendChild(lsCss);
+/* ---- project budget meters ---- */
+var bgCss=document.createElement('style');
+bgCss.textContent='.bg-grid{display:flex;flex-direction:column;gap:9px}'
+  +'.bg-row{display:grid;grid-template-columns:minmax(120px,1.1fr) 110px minmax(150px,1.6fr);gap:10px;align-items:center}'
+  +'.bg-name{font-size:13px;font-weight:600;color:var(--ink)}'
+  +'.bg-in{width:100%;box-sizing:border-box;padding:.5rem .7rem;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit}'
+  +'.bg-track{height:6px;border-radius:4px;background:var(--soft);overflow:hidden;border:1px solid var(--line)}'
+  +'.bg-track i{display:block;height:100%;border-radius:4px;transition:width .25s}'
+  +'.bg-note{font-size:11.5px;margin-top:3px;color:var(--grey)}'
+  +'.bg-note .bad{color:#dc2626;font-weight:600}'
+  +'.bg-top{display:flex;gap:20px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--soft);margin-bottom:12px}'
+  +'.bg-top.warn{border-color:#f2dfbd;background:#fff8ec}.bg-top.bad{border-color:#f3c9c9;background:#fff5f5}'
+  +'.bg-top div{font-size:11.5px;color:var(--grey)}'
+  +'.bg-top b{display:block;font-size:18px;color:var(--ink);letter-spacing:-.02em}'
+  +'.bg-warn{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:#b45309;background:#fff8ec;border:1px solid #f2dfbd;border-radius:10px;padding:10px 12px;margin-bottom:12px}'
+  +'@media(max-width:620px){.bg-row{grid-template-columns:1fr 100px;grid-template-areas:"n i" "m m"}.bg-name{grid-area:n}.bg-in{grid-area:i}.bg-meter{grid-area:m}}';
+document.head.appendChild(bgCss);
+
 </script>
 
 
