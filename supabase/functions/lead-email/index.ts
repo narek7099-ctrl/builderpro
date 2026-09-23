@@ -24,7 +24,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const HOOK_SECRET = Deno.env.get("LEAD_EMAIL_SECRET") ?? "";
 
-import { parseEmail } from "./email-parse.js";
+import { parseEmail, forwardCode } from "./email-parse.js";
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
@@ -100,7 +100,18 @@ Deno.serve(async (req) => {
   const src = Array.isArray(rows) && rows.length ? rows[0] : null;
   if (!src) return json({ ok: true, skipped: "unknown or paused inbox" });
 
-  const lead = parseEmail(msg) as { name: string; phone: string; email: string; address: string; job: string };
+  /* Setting the forward up means Google emails a confirmation code to the
+     address being verified, which is this one. Left alone it would be filed
+     as an unusable lead with the code buried in the stored payload — and the
+     contractor stranded at step two of their own setup instructions. So it
+     is pulled out and put in the open, labelled as what it is rather than
+     dressed up as a lead. */
+  const code = forwardCode(msg) as { code: string; link: string } | null;
+  const lead = code
+    ? { name: "\u2709 Forwarding code " + code.code, phone: "", email: "", address: "",
+        job: "Confirmation code " + code.code + " \u2014 paste this back into the forwarding screen you came from."
+          + (code.link ? " Or open: " + code.link : "") }
+    : parseEmail(msg) as { name: string; phone: string; email: string; address: string; job: string };
 
   /* No phone and no email means the forwarding rule is catching the wrong
      messages — a weekly summary, a billing notice. Passed along anyway: the

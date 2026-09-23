@@ -228,7 +228,46 @@
     };
   }
 
-  var api = { parseEmail: parseEmail, htmlToText: htmlToText, fields: fields,
+  /* ------------------------------------------------- forwarding codes --- */
+  /* Setting a Gmail forward up means Google emails a confirmation code TO the
+     address being verified — which is this one. So the code arrives here,
+     inside a message with no phone and no email, and would otherwise be
+     filed as an unusable lead with the code buried in the stored payload
+     where nobody can read it. That would strand the contractor at step two
+     of their own setup instructions.
+
+     Pulled out and put in the open instead. Not a lead, and not pretending
+     to be one: it lands in the list clearly labelled, with the code in
+     plain sight. */
+  function forwardCode(msg) {
+    msg = msg || {};
+    var from = String(msg.from || '').toLowerCase();
+    var subject = String(msg.subject || '');
+    var text = String(msg.text || '');
+    if (!text && msg.html) text = htmlToText(msg.html);
+    var body = subject + '\n' + text;
+
+    var isGoogle = from.indexOf('forwarding-noreply@google.com') >= 0;
+    var looksLikeOne = /confirm(?:ation|ing)?\b[\s\S]{0,80}?\bcode\b|verify (?:your|this) (?:forwarding|email)|forwarding confirmation/i.test(body);
+    if (!isGoogle && !looksLikeOne) return null;
+
+    /* Google's is nine digits; other providers use six to ten. Take the one
+       nearest the word "code" rather than the first number in the message,
+       because these emails also quote the address and the date. */
+    var code = '';
+    var near = /code[^0-9]{0,40}(\d{6,10})/i.exec(body) || /(\d{6,10})[^0-9]{0,40}\bcode/i.exec(body);
+    if (near) code = near[1];
+    if (!code && isGoogle) { var any = /\b(\d{9})\b/.exec(body); if (any) code = any[1]; }
+    if (!code) return null;
+
+    var link = '';
+    var lm = /(https?:\/\/[^\s"'<>]*(?:verify|confirm)[^\s"'<>]*)/i.exec(body);
+    if (lm) link = lm[1];
+
+    return { code: code, link: link };
+  }
+
+  var api = { parseEmail: parseEmail, htmlToText: htmlToText, fields: fields, forwardCode: forwardCode,
     nameFromSubject: nameFromSubject, isVendorEmail: isVendorEmail };
   root.emailParse = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
