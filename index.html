@@ -785,7 +785,7 @@ section{padding:0;}
     <div class="sec-head center rv" style="margin-bottom:36px">
       <span class="eye">Live demo tools</span>
       <h2>An instant estimator for<br><em>every trade</em></h2>
-      <p>Give homeowners an instant professional estimate experience, the same tools we embed on your BuilderPro OS website. Use the arrows to slide between trades: roofing, HVAC, countertops, trim, painting, pools, and landscaping.</p>
+      <p>Give homeowners an instant professional estimate experience, the same tools we embed on your BuilderPro OS website. Use the arrows to slide between trades: roofing, HVAC, countertops, trim, painting, pools, landscaping, plumbing, electrical, and remodeling.</p>
     </div>
     <div class="est-3up rv">
       <div class="c"><div class="est-art house"><svg viewBox="0 0 230 185" aria-hidden="true"><g transform="translate(105.5,92.8)"><polygon points="64.95,37.50 12.99,67.50 12.99,30.00 64.95,0.00" fill="#c9d8ff"/><polygon points="-51.96,30.00 12.99,67.50 12.99,30.00 -51.96,-7.50" fill="#eef3ff"/><polygon points="0.00,-37.50 64.95,0.00 12.99,30.00 -51.96,-7.50" fill="#1e4fd6"/><polygon points="38.97,-12.00 7.79,6.00 7.79,-28.50 38.97,-46.50" fill="#c9d8ff"/><polygon points="-31.18,-16.50 7.79,6.00 7.79,-28.50 -31.18,-51.00" fill="#eef3ff"/><polygon points="0.00,-69.00 38.97,-46.50 7.79,-28.50 -31.18,-51.00" fill="#14399c"/><polygon points="-42.87,23.25 -27.28,32.25 -27.28,15.75 -42.87,6.75" fill="#f4b45f"/><polygon points="-18.19,37.50 -2.60,46.50 -2.60,30.00 -18.19,21.00" fill="#f4b45f"/><polygon points="0.00,60.00 11.69,66.75 11.69,44.25 0.00,37.50" fill="#12347f"/><polygon points="-25.98,-25.50 -6.50,-14.25 -6.50,-32.25 -25.98,-43.50" fill="#f4b45f"/><polygon points="1.30,-65.25 9.09,-60.75 -11.69,-48.75 -19.49,-53.25" fill="#2f6bff"/><polygon points="11.69,-59.25 19.49,-54.75 -1.30,-42.75 -9.09,-47.25" fill="#2f6bff"/><polygon points="22.08,-53.25 29.88,-48.75 9.09,-36.75 1.30,-41.25" fill="#2f6bff"/><rect x="21.4" y="66.0" width="4" height="11" rx="2" fill="#7a5a3c"/><circle cx="23.4" cy="60.0" r="9" fill="#3fa85b"/><circle cx="26.4" cy="57.0" r="6.5" fill="#5fbf74"/></g></svg></div><b>Home &amp; roof</b><span>Aerial measurements for roofing, siding &amp; windows</span></div>
@@ -12555,6 +12555,51 @@ document.addEventListener('click',function(e){
 </script></html>"></iframe></div>
         </div>
       </div>
+      <!-- The three newest trades load the real page from /embed instead of
+           carrying a second, escaped copy of it inline. The older seven
+           predate that and still inline theirs; those are the pages that
+           have drifted from their /embed originals before. Same shell,
+           same chrome — one source of truth and ~4,500 fewer lines. -->
+      <div class="est-slide">
+        <div class="est-shell">
+          <div class="est-hdr">
+            <div class="est-dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+            <div class="est-tbar">BuilderPro OS, Plumbing Estimator</div>
+            <div class="est-live"><span class="bdot"></span> Live demo</div>
+          </div>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Plumbing Estimator" src="embed/plumbing.html"></iframe></div>
+        </div>
+      </div>
+      <!-- The three newest trades load the real page from /embed instead of
+           carrying a second, escaped copy of it inline. The older seven
+           predate that and still inline theirs; those are the pages that
+           have drifted from their /embed originals before. Same shell,
+           same chrome — one source of truth and ~4,500 fewer lines. -->
+      <div class="est-slide">
+        <div class="est-shell">
+          <div class="est-hdr">
+            <div class="est-dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+            <div class="est-tbar">BuilderPro OS, Electrical Estimator</div>
+            <div class="est-live"><span class="bdot"></span> Live demo</div>
+          </div>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Electrical Estimator" src="embed/electrical.html"></iframe></div>
+        </div>
+      </div>
+      <!-- The three newest trades load the real page from /embed instead of
+           carrying a second, escaped copy of it inline. The older seven
+           predate that and still inline theirs; those are the pages that
+           have drifted from their /embed originals before. Same shell,
+           same chrome — one source of truth and ~4,500 fewer lines. -->
+      <div class="est-slide">
+        <div class="est-shell">
+          <div class="est-hdr">
+            <div class="est-dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+            <div class="est-tbar">BuilderPro OS, Remodel Estimator</div>
+            <div class="est-live"><span class="bdot"></span> Live demo</div>
+          </div>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Remodel Estimator" src="embed/general.html"></iframe></div>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -12563,13 +12608,18 @@ document.addEventListener('click',function(e){
 </section>
 <script>
 /* ---- estimator carousel ---- */
-var estIdx=0,EST_N=7;
+/* Slide order, by calculator id. The portal's "Preview" button finds a
+   trade in here by name rather than by its position in BP_CALC_IDS — the
+   two lists are ordered differently, and indexing one with the other sent
+   landscaping to the painting slide. */
+var EST_SLIDES=["roofing","hvac","countertops","trim","painting","pools","landscaping","plumbing","electrical","general"];
+var estIdx=0,EST_N=EST_SLIDES.length;
 function estCarousel(d){estCarouselGo(estIdx+d);}
 function estCarouselGo(i){i=Math.max(0,Math.min(EST_N-1,i));estIdx=i;var tr=document.getElementById("estTrack");if(tr)tr.style.transform="translateX(-"+(i*100)+"%)";var p=document.getElementById("estPrev"),n=document.getElementById("estNext");if(p)p.disabled=(i===0);if(n)n.disabled=(i===EST_N-1);var ds=document.querySelectorAll("#estCdots .est-cdot");for(var k=0;k<ds.length;k++)ds[k].classList.toggle("on",k===i);var sl=document.querySelectorAll("#estTrack .est-slide");for(var k2=0;k2<sl.length;k2++)sl[k2].classList.toggle("on",k2===i);}
 document.addEventListener('DOMContentLoaded',function(){var s0=document.querySelector('#estTrack .est-slide');if(s0)s0.classList.add('on');});
 function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d.head||d.getElementsByTagName("head")[0];if(!head||d.getElementById("bp-inh"))return;var src=document.querySelectorAll("style,link[rel=\"stylesheet\"]");for(var i=0;i<src.length;i++){var n=src[i];if(n.tagName==="STYLE"){if(n.textContent&&n.textContent.indexOf("@font-face")>=0){var s=d.createElement("style");s.textContent=n.textContent;head.appendChild(s);}}else{var href=n.getAttribute("href")||"";if(href.indexOf("fonts.")>=0){var l=d.createElement("link");l.rel="stylesheet";l.href=href;head.appendChild(l);}}}var m=d.createElement("meta");m.id="bp-inh";head.appendChild(m);}catch(e){}}
 (function(){var fs=document.querySelectorAll(".est-frame");for(var i=0;i<fs.length;i++){(function(fr){if(fr.contentDocument&&fr.contentDocument.readyState==="complete")bpFrameInherit(fr);fr.addEventListener("load",function(){bpFrameInherit(fr);});})(fs[i]);}})();
-(function(){var labels=["Roof","HVAC","Countertops","Trim","Painting","Pool","Landscaping"];var el=document.getElementById("estCdots");if(!el)return;var h="";labels.forEach(function(l,i){h+='<button class="est-cdot'+(i===0?" on":"")+'" onclick="estCarouselGo('+i+')">'+l+'</button>';});el.innerHTML=h;})();
+(function(){var labels=["Roof","HVAC","Countertops","Trim","Painting","Pool","Landscaping","Plumbing","Electrical","Remodel"];var el=document.getElementById("estCdots");if(!el)return;var h="";labels.forEach(function(l,i){h+='<button class="est-cdot'+(i===0?" on":"")+'" onclick="estCarouselGo('+i+')">'+l+'</button>';});el.innerHTML=h;})();
 </script>
 
 <!-- ======== INDUSTRY CALCULATORS ======== -->
@@ -14804,7 +14854,10 @@ window.bpCalcReset=function(){
   else done('Back to defaults.');
 };
 function bpCalcPreview(){
-  var cid=window._bpCalcCur||bpCalcAssigned(),idx=BP_CALC_IDX[cid]||0;
+  var cid=window._bpCalcCur||bpCalcAssigned();
+  /* by id, not by BP_CALC_IDS position — the carousel is in a different
+     order, so indexing it with the other list opened the wrong trade */
+  var idx=(typeof EST_SLIDES!=='undefined')?EST_SLIDES.indexOf(cid):-1; if(idx<0)idx=0;
   bpClose();
   setTimeout(function(){if(typeof estCarouselGo==='function')estCarouselGo(idx);var s=document.getElementById('estimator');if(s)s.scrollIntoView({behavior:'smooth'});},260);
 }
