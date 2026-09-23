@@ -45,7 +45,17 @@ const {chromium}=require('playwright');
      testFn:typeof window.lsTest==='function',
      gmailBtn:(h.match(/lsGmail\(/g)||[]).length===2&&h.includes('Set up Gmail reader'),
      scriptFn:typeof window.lsScriptFor==='function'||typeof lsScriptFor==='function',
-     sendersFn:typeof window.lsSenders==='function'
+     sendersFn:typeof window.lsSenders==='function',
+     // the two platforms get their own tiles, with real logo files
+     angiTile:h.includes('assets/leadsources/angi.png')&&h.includes('lsQuickAdd(\'angi\')'),
+     thumbTile:h.includes('assets/leadsources/thumbtack.png')&&h.includes('lsQuickAdd(\'thumbtack\')'),
+     otherTile:h.includes('Somewhere else'),
+     // angi is already connected in the fixture, so its tile says so rather
+     // than offering to make a second one
+     angiShowsConnected:h.includes('Connected'),
+     logoOnCard:(h.match(/class="ls-logo"/g)||[]).length===1,
+     quickAddFn:typeof window.lsQuickAdd==='function',
+     oneButtonFn:typeof window.lsGmailGo==='function'
    };
  });
  console.log(JSON.stringify(r,null,1));
@@ -53,7 +63,8 @@ const {chromium}=require('playwright');
  const wantA='https://proj.supabase.co/functions/v1/lead-intake/11111111-1111-1111-1111-111111111111?k=abc123';
  const wantB='https://proj.supabase.co/functions/v1/lead-intake/22222222-2222-2222-2222-222222222222';
  const bad = !r.url.includes(wantA) || !r.url.includes(wantB) || !r.bothCards || !r.pausedShown
-   || !r.leadRow || !r.dupBadge || !r.warned || !r.exportFn || !r.testFn || !r.gmailBtn || !r.sendersFn || errs.length;
+   || !r.leadRow || !r.dupBadge || !r.warned || !r.exportFn || !r.testFn || !r.gmailBtn || !r.sendersFn || !r.angiTile || !r.thumbTile || !r.otherTile
+   || !r.angiShowsConnected || !r.logoOnCard || !r.quickAddFn || !r.oneButtonFn || errs.length;
  console.log(bad?'FAIL':'lead sources page behaves');
  await b.close(); process.exit(bad?1:0);
 })();
