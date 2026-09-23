@@ -1937,72 +1937,70 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
      cover), the scan says so plainly and hands over to the old trace map and
      the manual size slider, which are kept for exactly that. -->
 <style id="rs-style">
+/* The main site's own tokens (index.html :root): Geist, ink #001530, grey
+   #788493, hairline #dce3ec, blue #006fff, and its one easing curve.
+   White on white; the house carries the depth, not the frame. */
+#est-embed .rs-stage,#est-embed .rs-result{--rs-ink:#001530;--rs-grey:#788493;--rs-line:#dce3ec;--rs-line2:#eef1f6;--rs-blue:#006fff;--rs-blue-l:#e6f0ff;--rs-ease:cubic-bezier(.22,1,.36,1);
+  font-family:'Geist',system-ui,-apple-system,sans-serif;}
 #est-embed .e-addrpanel.rs-mode #e-mapwrap,
 #est-embed .e-addrpanel.rs-mode .e-flatrow,
 #est-embed .e-addrpanel.rs-mode #e-mresult,
 #est-embed .e-addrpanel.rs-mode #e-slopecard,
 #est-embed .e-addrpanel.rs-mode #e-manualbtn,
 #est-embed .e-addrpanel.rs-mode #e-sldwrap{display:none !important;}
-#est-embed .rs-stage{display:none;position:relative;margin:14px 0 6px;border-radius:16px;overflow:hidden;
-  background:radial-gradient(120% 90% at 50% 0%,#1d3a6e 0%,#10244a 55%,#0b1a37 100%);color:#fff;
-  box-shadow:0 18px 40px -18px rgba(8,22,52,.55);}
-#est-embed .rs-stage.on{display:block;animation:rsIn .5s cubic-bezier(.22,1,.36,1) both;}
-@keyframes rsIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#est-embed .rs-stage{display:none;position:relative;margin:14px 0 6px;border:1px solid var(--rs-line);border-radius:18px;overflow:hidden;background:#fff;color:var(--rs-ink);}
+#est-embed .rs-stage.on{display:block;animation:rsIn .6s var(--rs-ease) both;}
+@keyframes rsIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 #est-embed .rs-canvas-wrap{position:relative;height:300px;}
 #est-embed .rs-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
-#est-embed .rs-addr{position:absolute;left:16px;top:14px;right:16px;display:flex;align-items:center;gap:8px;
-  font-size:11.5px;letter-spacing:.02em;color:rgba(214,228,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#est-embed .rs-addr i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#5b93ff;box-shadow:0 0 0 0 rgba(91,147,255,.7);animation:rsPing 1.6s infinite;}
-@keyframes rsPing{0%{box-shadow:0 0 0 0 rgba(91,147,255,.65)}100%{box-shadow:0 0 0 10px rgba(91,147,255,0)}}
-#est-embed .rs-readout{position:absolute;right:16px;bottom:14px;text-align:right;font-variant-numeric:tabular-nums;}
-#est-embed .rs-readout b{display:block;font-family:'Space Grotesk','Inter',sans-serif;font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff;}
-#est-embed .rs-readout span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(190,210,245,.75);}
-#est-embed .rs-readout{opacity:0;transition:opacity .4s;}
+#est-embed .rs-addr{position:absolute;left:18px;top:16px;right:18px;display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;color:var(--rs-grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#est-embed .rs-addr i{flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:var(--rs-blue);}
+#est-embed .rs-readout{position:absolute;right:18px;bottom:16px;text-align:right;font-variant-numeric:tabular-nums;opacity:0;transition:opacity .5s var(--rs-ease);}
 #est-embed .rs-readout.on{opacity:1;}
-#est-embed .rs-panel{padding:16px 18px 18px;background:rgba(6,16,36,.35);border-top:1px solid rgba(140,175,235,.14);}
-#est-embed .rs-now{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk','Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:-.005em;min-height:22px;}
-#est-embed .rs-now .rs-spin{flex:0 0 16px;width:16px;height:16px;border-radius:50%;border:2px solid rgba(140,175,235,.25);border-top-color:#8fb4ff;animation:rsSpin .8s linear infinite;}
-@keyframes rsSpin{to{transform:rotate(360deg)}}
-#est-embed .rs-sub{font-size:12.5px;color:rgba(198,214,244,.78);margin:4px 0 12px 26px;line-height:1.5;min-height:19px;}
-#est-embed .rs-bar{height:4px;border-radius:4px;background:rgba(140,175,235,.16);overflow:hidden;}
-#est-embed .rs-bar i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#3f7bff,#8fb4ff);box-shadow:0 0 12px rgba(91,147,255,.6);transition:width .25s linear;}
-#est-embed .rs-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;}
-#est-embed .rs-steps div{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:rgba(170,192,232,.45);line-height:1.3;transition:color .3s;}
-#est-embed .rs-steps div.act{color:#cfe0ff;}
-#est-embed .rs-steps div.done{color:#7fd3a0;}
-#est-embed .rs-steps div.done:before{content:'\2713  ';}
-@media(max-width:560px){#est-embed .rs-steps{grid-template-columns:repeat(3,1fr);} #est-embed .rs-steps div:nth-child(n+4){display:none;} #est-embed .rs-canvas-wrap{height:250px;}}
+#est-embed .rs-readout b{display:block;font-size:30px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--rs-ink);}
+#est-embed .rs-readout span{font-size:12px;color:var(--rs-grey);}
+#est-embed .rs-panel{padding:16px 18px 18px;border-top:1px solid var(--rs-line2);}
+/* the loading line: one label, a percentage, a bar */
+#est-embed .rs-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px;}
+#est-embed .rs-row b{font-size:14px;font-weight:600;letter-spacing:-.01em;color:var(--rs-ink);}
+#est-embed .rs-row span{font-size:13px;font-weight:500;color:var(--rs-grey);font-variant-numeric:tabular-nums;}
+#est-embed .rs-bar{height:4px;border-radius:4px;background:var(--rs-line2);overflow:hidden;}
+#est-embed .rs-bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--rs-blue);transition:width .3s linear;}
+@media(max-width:560px){#est-embed .rs-canvas-wrap{height:250px;}}
 /* the measurements, once the scan has finished */
 #est-embed .rs-result{display:none;}
-#est-embed .rs-result.on{display:block;animation:rsIn .45s cubic-bezier(.22,1,.36,1) both;}
-#est-embed .rs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(140,175,235,.16);border-radius:12px;overflow:hidden;margin-top:2px;}
-#est-embed .rs-grid div{background:#0f2248;padding:12px 12px 11px;}
-#est-embed .rs-grid b{display:block;font-family:'Space Grotesk','Inter',sans-serif;font-size:20px;font-weight:700;letter-spacing:-.01em;color:#fff;font-variant-numeric:tabular-nums;}
-#est-embed .rs-grid span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(180,202,240,.72);margin-top:3px;}
-#est-embed .rs-grid div:first-child b{color:#9cc2ff;}
+#est-embed .rs-result.on{display:block;animation:rsIn .5s var(--rs-ease) both;}
+#est-embed .rs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+#est-embed .rs-grid div{border:1px solid var(--rs-line);border-radius:12px;padding:12px 14px;background:#fff;}
+#est-embed .rs-grid b{display:block;font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--rs-ink);font-variant-numeric:tabular-nums;}
+#est-embed .rs-grid span{display:block;font-size:12px;color:var(--rs-grey);margin-top:2px;}
+#est-embed .rs-grid div:first-child{background:var(--rs-blue-l);border-color:transparent;}
+#est-embed .rs-grid div:first-child b{color:var(--rs-blue);}
 @media(max-width:560px){#est-embed .rs-grid{grid-template-columns:repeat(2,1fr);}}
-#est-embed .rs-note{font-size:12px;color:rgba(198,214,244,.8);line-height:1.55;margin:12px 0 0;}
-#est-embed .rs-fix{display:inline-block;margin-top:10px;background:none;border:0;padding:0;font:inherit;font-size:12.5px;color:#9cc2ff;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
-#est-embed .rs-fix:hover{color:#fff;}
-#est-embed .rs-fix:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px;border-radius:3px;}
-#est-embed .rs-fail{color:#ffd7a8;}
-@media(prefers-reduced-motion:reduce){#est-embed .rs-stage.on,#est-embed .rs-result.on{animation:none;} #est-embed .rs-addr i,#est-embed .rs-now .rs-spin{animation:none;}}
+#est-embed .rs-note{font-size:12.5px;color:var(--rs-grey);line-height:1.55;margin:12px 0 0;}
+#est-embed .rs-fix{display:inline-block;margin-top:8px;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:500;color:var(--rs-blue);cursor:pointer;}
+#est-embed .rs-fix:hover{text-decoration:underline;text-underline-offset:3px;}
+#est-embed .rs-fix:focus-visible{outline:2px solid var(--rs-blue);outline-offset:3px;border-radius:3px;}
+#est-embed .rs-fail{font-size:14px;font-weight:600;color:var(--rs-ink);}
+@media(prefers-reduced-motion:reduce){#est-embed .rs-stage.on,#est-embed .rs-result.on{animation:none;}}
 </style>
 <script id="rs-script">
 (function(){
   /* ── timeline: when each step begins, in seconds. The last entry is the end. ── */
   var RS_STEPS=[
-    {t:0.0,  k:'Locating your property',        s:'Matching the address to its parcel'},
-    {t:2.6,  k:'Pulling satellite imagery',      s:'High-resolution overhead imagery of the roof'},
-    {t:5.6,  k:'Detecting roof planes',          s:'Finding every edge, ridge and hip'},
-    {t:8.8,  k:'Measuring the slope',            s:'Reading pitch from the surface model'},
-    {t:11.8, k:'Calculating true roof area',     s:'Footprint × slope — the surface you actually shingle'}
+    {t:0.0,  k:'Locating your home',            s:''},
+    {t:2.6,  k:'Analyzing satellite imagery',   s:''},
+    {t:5.6,  k:'Mapping your roof',             s:''},
+    {t:8.8,  k:'Measuring pitch',               s:''},
+    {t:11.8, k:'Calculating roof area',         s:''}
   ];
   var RS_END=15.0;
   var RS_WAIT_MAX=28;      /* never hold the homeowner longer than this for a slow answer */
   var RS_LABELS=['Locate','Imagery','Roof planes','Slope','Area'];
 
   var st=null;             /* the running scan */
+  (function(){ try{ if(document.getElementById('rs-geist')) return; var l=document.createElement('link'); l.id='rs-geist'; l.rel='stylesheet';
+    l.href='https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap'; (document.head||document.documentElement).appendChild(l); }catch(e){} })();
 
   function $(id){ return document.getElementById(id); }
   function reduced(){ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } }
@@ -2018,9 +2016,8 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
      +'<div class="rs-addr"><i></i><span id="rs-addr"></span></div>'
      +'<div class="rs-readout" id="rs-readout"><b id="rs-rv">0</b><span id="rs-rl">sq ft of roof</span></div></div>'
      +'<div class="rs-panel">'
-     +  '<div id="rs-live"><div class="rs-now"><span class="rs-spin"></span><span id="rs-now">Starting scan</span></div>'
-     +  '<div class="rs-sub" id="rs-sub"></div><div class="rs-bar"><i id="rs-bar"></i></div>'
-     +  '<div class="rs-steps" id="rs-steps">'+RS_LABELS.map(function(l){ return '<div>'+l+'</div>'; }).join('')+'</div></div>'
+     +  '<div id="rs-live"><div class="rs-row"><b id="rs-now">Analyzing your roof</b><span id="rs-pct">0%</span></div>'
+     +  '<div class="rs-bar"><i id="rs-bar"></i></div></div>'
      +  '<div class="rs-result" id="rs-result"></div>'
      +'</div>';
     anchor.parentNode.insertBefore(stage, anchor);
@@ -2148,7 +2145,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
          screen, high points sit nearer the camera */
       var y2=y*ct + z*stl, z2=z*ct - y*stl;
       var persp=1/(1+z2/(span*6));
-      return {x:w/2 + x*scale*persp, y:h*0.53 - y2*scale*persp, z:z2};
+      return {x:w/2 + x*scale*persp, y:h*0.48 - y2*scale*persp, z:z2};
     };
   }
 
@@ -2158,7 +2155,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     var ux=b.x-a.x, uy=b.y-a.y, vx=c.x-a.x, vy=c.y-a.y;
     var cross=ux*vy-uy*vx;                        /* sign = facing */
     var lit=Math.abs(cross)/(Math.hypot(ux,uy)*Math.hypot(vx,vy)+1e-6);
-    var k=kind==='roof'?(0.86+lit*0.14):(0.72+lit*0.22);
+    var k=kind==='roof'?(0.90+lit*0.10):(0.84+lit*0.16);
     return k;
   }
 
@@ -2184,9 +2181,9 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     /* ground: a faint survey grid and the house's shadow, well below it */
     ctx.save();
     var grd=ctx.createRadialGradient(w/2,h*0.83,0,w/2,h*0.83,w*0.42);
-    grd.addColorStop(0,'rgba(5,12,28,.55)'); grd.addColorStop(1,'rgba(5,12,28,0)');
+    grd.addColorStop(0,'rgba(0,21,48,.16)'); grd.addColorStop(1,'rgba(0,21,48,0)');
     ctx.fillStyle=grd; ctx.beginPath(); ctx.ellipse(w/2,h*0.83,w*0.30-bob*3*dpr,h*0.075,0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='rgba(120,160,230,.10)'; ctx.lineWidth=1*dpr;
+    ctx.strokeStyle='rgba(0,21,48,.05)'; ctx.lineWidth=1*dpr;
     for(var gx=-6; gx<=6; gx++){ var xx=w/2+gx*w*0.06; ctx.beginPath(); ctx.moveTo(w/2+(xx-w/2)*0.55,h*0.72); ctx.lineTo(xx,h*0.98); ctx.stroke(); }
     for(var gz=0; gz<5; gz++){ var yy=h*0.72+gz*h*0.065; ctx.beginPath(); ctx.moveTo(w*0.14,yy); ctx.lineTo(w*0.86,yy); ctx.stroke(); }
     ctx.restore();
@@ -2208,11 +2205,13 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     ctx.save(); ctx.globalAlpha=appear;
     faces.forEach(function(F){
       var s=shade(F.f,P,F.f.kind);
-      var base=F.f.kind==='roof'?[246,249,255]:[233,238,247];
+      /* white roof; walls a cool grey that deepens on the side turned from
+         the light, so the block reads as a solid on a white page */
+      var base=F.f.kind==='roof'?[255,255,255]:[226,232,240];
       var col=base.map(function(c){ return Math.round(c*s); });
-      if(F.f.kind==='roof'&&tintP>0){ col=[Math.round(col[0]-(col[0]-205)*tintP*0.55),Math.round(col[1]-(col[1]-222)*tintP*0.55),Math.round(col[2]-(col[2]-255)*tintP*0.25)]; }
+      if(F.f.kind==='roof'&&tintP>0){ col=[Math.round(col[0]-(col[0]-230)*tintP*0.6),Math.round(col[1]-(col[1]-240)*tintP*0.6),Math.round(col[2]-(col[2]-255)*tintP*0.6)]; }
       ctx.fillStyle='rgb('+col.join(',')+')';
-      ctx.strokeStyle='rgba(40,70,130,.22)'; ctx.lineWidth=1*dpr; ctx.lineJoin='round';
+      ctx.strokeStyle='rgba(0,21,48,.16)'; ctx.lineWidth=1*dpr; ctx.lineJoin='round';
       ctx.beginPath(); F.pts.forEach(function(p,i){ i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); }); ctx.closePath(); ctx.fill(); ctx.stroke();
     });
     ctx.restore();
@@ -2221,22 +2220,22 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     if(T>2.4&&T<6.2){
       var bp=((T-2.4)/1.9)%1, by=h*0.12+bp*h*0.72;
       var bg=ctx.createLinearGradient(0,by-h*0.10,0,by+2);
-      bg.addColorStop(0,'rgba(91,147,255,0)'); bg.addColorStop(1,'rgba(143,180,255,.30)');
+      bg.addColorStop(0,'rgba(0,111,255,0)'); bg.addColorStop(1,'rgba(0,111,255,.10)');
       ctx.fillStyle=bg; ctx.fillRect(w*0.1,by-h*0.10,w*0.8,h*0.10);
-      ctx.fillStyle='rgba(190,215,255,.9)'; ctx.fillRect(w*0.1,by,w*0.8,1.5*dpr);
+      ctx.fillStyle='rgba(0,111,255,.55)'; ctx.fillRect(w*0.1,by,w*0.8,1*dpr);
     }
 
     /* roof lines, drawn edge by edge */
     if(edgeP>0){
       var n=geo.roofEdges.length, done=edgeP*n;
-      ctx.save(); ctx.lineCap='round'; ctx.shadowColor='rgba(91,147,255,.9)'; ctx.shadowBlur=8*dpr;
+      ctx.save(); ctx.lineCap='round';
       for(var i=0;i<n;i++){
         var part=Math.max(0,Math.min(1,done-i)); if(part<=0) break;
         var a=P(geo.roofEdges[i][0]), b=P(geo.roofEdges[i][1]);
-        ctx.strokeStyle= (geo.ridge&&i===n-1)?'#ffd27a':'#5b93ff';
-        ctx.lineWidth=2.4*dpr;
+        ctx.strokeStyle='#006fff';
+        ctx.lineWidth=2*dpr;
         ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(a.x+(b.x-a.x)*part, a.y+(b.y-a.y)*part); ctx.stroke();
-        ctx.fillStyle='#dbe8ff'; ctx.beginPath(); ctx.arc(a.x,a.y,2.4*dpr,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#006fff'; ctx.beginPath(); ctx.arc(a.x,a.y,2.2*dpr,0,Math.PI*2); ctx.fill();
       }
       ctx.restore();
     }
@@ -2247,14 +2246,14 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
       var boxes=[];
       var tag=function(seg, text, lift){
         var a=P(seg[0]), b=P(seg[1]); var mx=(a.x+b.x)/2, my=(a.y+b.y)/2-lift*dpr;
-        ctx.font='600 '+(11*dpr)+'px Inter,system-ui,sans-serif';
+        ctx.font='600 '+(11*dpr)+'px Geist,system-ui,sans-serif';
         var tw=ctx.measureText(text).width+14*dpr, th=20*dpr;
         /* step clear of any tag already placed */
         for(var q=0;q<boxes.length;q++){ var o=boxes[q]; if(Math.abs(o.x-mx)<(o.w+tw)/2+4*dpr && Math.abs(o.y-my)<th+4*dpr){ my=o.y-th-6*dpr; } }
         boxes.push({x:mx,y:my,w:tw});
-        ctx.fillStyle='rgba(8,20,46,.86)'; ctx.strokeStyle='rgba(143,180,255,.55)'; ctx.lineWidth=1*dpr;
+        ctx.fillStyle='#ffffff'; ctx.strokeStyle='#dce3ec'; ctx.lineWidth=1*dpr;
         roundRect(ctx, mx-tw/2, my-th/2, tw, th, 6*dpr); ctx.fill(); ctx.stroke();
-        ctx.fillStyle='#e6efff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, mx, my+0.5*dpr);
+        ctx.fillStyle='#001530'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text, mx, my+0.5*dpr);
       };
       var m=cur;
       /* the eave nearest the viewer, so its tag is never hidden behind the roof */
@@ -2289,13 +2288,10 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     var idx=0; for(var i=0;i<RS_STEPS.length;i++){ if(T>=RS_STEPS[i].t) idx=i; }
     if(idx!==st.idx){
       st.idx=idx;
-      $('rs-now').textContent=RS_STEPS[idx].k+'…';
-      $('rs-sub').textContent=RS_STEPS[idx].s;
-      var ds=$('rs-steps').children; for(var j=0;j<ds.length;j++){ ds[j].className=j<idx?'done':(j===idx?'act':''); }
+      $('rs-now').textContent=RS_STEPS[idx].k;
     }
     /* once the slope is known, say it — this is the moment it stops feeling generic */
-    if(idx===3&&st.target&&!st.saidPitch){ st.saidPitch=1; $('rs-sub').textContent='Slope found: '+pitchText(st.target.pitch); }
-    $('rs-bar').style.width=Math.round(T/RS_END*100)+'%';
+    var pc=Math.round(T/RS_END*100); $('rs-bar').style.width=pc+'%'; $('rs-pct').textContent=pc+'%';
 
     /* the area counts up through the last step */
     if(st.target&&T>=RS_STEPS[4].t){
@@ -2319,7 +2315,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     $('rs-addr').textContent=String(addr||'').split(',').slice(0,3).join(',');
     $('rs-live').style.display=''; $('rs-result').className='rs-result'; $('rs-result').innerHTML='';
     $('rs-readout').classList.remove('on'); $('rs-rv').textContent='0'; $('rs-bar').style.width='0';
-    var ds=$('rs-steps').children; for(var j=0;j<ds.length;j++) ds[j].className='';
+    $('rs-pct').textContent='0%'; $('rs-now').textContent='Analyzing your roof';
     stage.classList.add('on');
     var cv=$('rs-cv');
     st={ cv:cv, ctx:cv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
@@ -2351,8 +2347,8 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     $('rs-live').style.display='none';
     if(!data){
       st.still=true;
-      res.innerHTML='<div class="rs-now rs-fail">We couldn’t get a clean read on this roof from satellite</div>'
-        +'<p class="rs-note">It happens with new builds, heavy tree cover and some rural addresses. Trace it on the map below instead — it takes about a minute — or enter a rough size.</p>';
+      res.innerHTML='<div class="rs-fail">We couldn’t measure this roof from satellite</div>'
+        +'<p class="rs-note">Common with new builds and heavy tree cover. Trace it on the map below, or enter a rough size.</p>';
       res.className='rs-result on';
       fallback(true);
       return;
@@ -2368,7 +2364,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
       +'<div><b>'+(data.pitch<5?'Flat':Math.round(12*Math.tan(data.pitch*Math.PI/180))+'/12')+'</b><span>Pitch'+(data.pitch>=5?' · '+Math.round(data.pitch)+'°':'')+'</span></div>'
       +(data.planes>1 ? '<div><b>'+data.planes+'</b><span>Roof planes</span></div>' : '<div><b>'+data.planSqft.toLocaleString()+'</b><span>Footprint, sq ft</span></div>')
       +'</div>'
-      +'<p class="rs-note">Measured from satellite. Roof area is the sloped surface you actually shingle — larger than the footprint because the roof is pitched. Squares are before waste; your roofer adds that on site.</p>'
+      +'<p class="rs-note">Measured from satellite. Roof area includes the slope.</p>'
       +'<button type="button" class="rs-fix" onclick="eRoofScanFix()">Not your roof? Measure it yourself</button>';
     res.className='rs-result on';
 
