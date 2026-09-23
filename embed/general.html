@@ -1,6 +1,6 @@
 <!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Electrical Estimator</title>
+<title>Remodel Estimator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -523,9 +523,9 @@ html,body{margin:0;background:#f6f8fb;font-family:'Inter','Space Grotesk',system
 #est-embed .e-consent{background:var(--soft) !important;border:1px solid var(--line) !important;color:#6a6a70 !important;border-radius:9px !important;}
 #est-embed .e-consent b{color:var(--ink) !important;}
 </style><style>
-/* No AI visualiser on this trade: wiring lives inside the walls, so there is
-   nothing to render a picture of. The column is hidden rather than left
-   sitting there inviting a photo nothing will be done with. */
+/* No AI visualiser on this trade: "a remodel" is not one look that can be
+   previewed on a photo, so the column is hidden rather than left sitting
+   there inviting a photo nothing will be done with. */
 #est-embed .e-vizphoto,#est-embed .e-vizsplit>.e-vizphoto{display:none !important;}
 #est-embed .e-vizsplit{display:block !important;}
 </style>
@@ -544,52 +544,61 @@ const E_CONFIG = {
   aiEditUrl: "",
   aiEditKey: "",
 
-  /* ELECTRICAL is base + per sq ft of the HOME.
-     Rewiring scales with the house. A panel upgrade, an EV charger or a
-     generator does not — those cost the same in a bungalow and a mansion.
-     Pretending either scaled would be wrong in opposite directions, so the
-     jobs that scale carry a per-sq-ft figure and the rest carry none.
+  /* GENERAL CONTRACTING is priced per square foot of the area being
+     remodelled — not of the whole house. A $300/sq ft kitchen figure is
+     $300 across the kitchen, and a homeowner who reads it as the whole
+     house gets a number four times too big. Step 1 asks for the area and
+     says so in as many words.
 
-     2024–25 US averages, replaced the moment the contractor sets their own
-     in the portal. */
+     The spread is enormous and honestly so: a bathroom is the most
+     expensive room per square foot in the house, because everything
+     costly in a remodel — plumbing, tile, waterproofing, fixtures — is
+     packed into forty square feet. A basement is the cheapest, because
+     most of it is framing and drywall over a floor that already exists.
+
+     2024–25 US averages, replaced the moment the contractor sets their
+     own in the portal. */
   pricing: {
-    "panel":      { label:"Panel Upgrade to 200A",        baseLow:1800, baseHigh:4500,  perLow:0,   perHigh:0,   note:"The usual first step before anything else" },
-    "sub-panel":  { label:"Sub-Panel",                    baseLow:900,  baseHigh:2500,  perLow:0,   perHigh:0,   note:"For a garage, shop or addition" },
-    "rewire":     { label:"Whole-Home Rewire",            baseLow:2000, baseHigh:4500,  perLow:4.0, perHigh:9.0, note:"Every circuit replaced · scales with the house" },
-    "partial":    { label:"Partial Rewire / Old Circuits", baseLow:900, baseHigh:2200,  perLow:1.5, perHigh:4.0, note:"Replacing the worst of it, not all of it" },
-    "ev":         { label:"EV Charger (Level 2)",         baseLow:800,  baseHigh:2500,  perLow:0,   perHigh:0,   note:"240V circuit and the charger fitted" },
-    "generator":  { label:"Standby Generator",            baseLow:6000, baseHigh:15000, perLow:0,   perHigh:0,   note:"Whole-home backup · automatic transfer" },
-    "service":    { label:"Service Mast / Meter",         baseLow:1200, baseHigh:3500,  perLow:0,   perHigh:0,   note:"The overhead or underground supply itself" },
-    "lighting":   { label:"Recessed / Interior Lighting", baseLow:600,  baseHigh:1800,  perLow:1.0, perHigh:3.0, note:"Cans, fixtures and switching" },
-    "outlets":    { label:"Add Outlets & Circuits",       baseLow:300,  baseHigh:1200,  perLow:0,   perHigh:0,   note:"A handful of new points" },
-    "smart":      { label:"Smart Home / Structured Wiring",baseLow:1500,baseHigh:6000,  perLow:0,   perHigh:0,   note:"Data, control and low-voltage" },
-    "surge":      { label:"Whole-Home Surge Protection",  baseLow:300,  baseHigh:900,   perLow:0,   perHigh:0,   note:"At the panel · protects everything downstream" },
+    "kitchen":  { label:"Kitchen Remodel",          low:125, high:375, note:"Cabinets, counters, appliances \u00b7 the most common big job" },
+    "bathroom": { label:"Bathroom Remodel",         low:250, high:650, note:"The dearest room per sq ft \u00b7 it is all plumbing and tile" },
+    "basement": { label:"Basement Finishing",       low:50,  high:120, note:"The cheapest space you can add \u00b7 the shell is already there" },
+    "addition": { label:"Room Addition",            low:200, high:400, note:"New foundation, roof and walls \u00b7 a permit job" },
+    "whole":    { label:"Whole-Home Remodel",       low:100, high:250, note:"Everything at once \u00b7 cheaper per sq ft than room by room" },
+    "garage":   { label:"Garage Conversion",        low:100, high:220, note:"Insulation, floor, and somewhere else for the car" },
+    "adu":      { label:"ADU / Guest Suite",        low:200, high:450, note:"A small separate home \u00b7 its own kitchen and bath" },
+    "outdoor":  { label:"Deck / Outdoor Living",    low:40,  high:120, note:"Deck, patio or covered porch" },
+    "attic":    { label:"Attic Conversion",         low:120, high:280, note:"Only if the headroom and the floor joists allow it" },
   },
 
+  /* The eight things that turn up on a change order, priced as their own
+     line so they are decided now rather than discovered in week three.
+     Flat trade prices — deliberately NOT multiplied by the finish level,
+     because a permit does not cost more because the tile is nicer. */
   addons: {
-    "permit":    { label:"Permit & Inspection",       low:200, high:800,  desc:"Required on panel and service work" },
-    "gfci":      { label:"GFCI / AFCI Upgrades",      low:200, high:900,  desc:"Code now where it was not before" },
-    "drywall":   { label:"Drywall Patch & Paint",     low:400, high:2200, desc:"Closing up after running new cable" },
-    "trenching": { label:"Trenching / Underground",   low:800, high:4000, desc:"Digging in a run to a shop or gate" },
-    "fans":      { label:"Ceiling Fans",              low:200, high:900,  desc:"Fitted and switched" },
-    "exterior":  { label:"Exterior / Landscape Lighting", low:700, high:3500, desc:"Outside circuits and fittings" },
-    "hot-tub":   { label:"Hot Tub / Spa Circuit",     low:600, high:1800, desc:"Dedicated 240V with a disconnect" },
-    "detectors": { label:"Smoke / CO Detectors",      low:250, high:900,  desc:"Interlinked and hard-wired" },
+    "design":     { label:"Plans, Design & Permits",     low:1500, high:9000,  desc:"Drawings and city approval \u00b7 required on most of these" },
+    "structural": { label:"Structural / Wall Removal",   low:3000, high:15000, desc:"Taking a wall out needs a beam and an engineer" },
+    "electrical": { label:"Electrical Service Upgrade",  low:1800, high:5000,  desc:"Older panels rarely carry a remodel" },
+    "hvac":       { label:"HVAC Extension",              low:2500, high:9000,  desc:"Heating and cooling the new space" },
+    "plumbing":   { label:"Plumbing Relocation",         low:1500, high:7000,  desc:"Moving a sink, bath or drain line" },
+    "windows":    { label:"Windows & Exterior Doors",    low:2000, high:12000, desc:"New openings, or replacing what is there" },
+    "flooring":   { label:"Flooring Throughout",         low:2500, high:15000, desc:"Often left out of a per-room quote" },
+    "temp":       { label:"Storage / Temporary Living",  low:1000, high:6000,  desc:"Somewhere to put the furniture, or you" },
   },
 
-  /* Aluminium branch wiring through the late sixties and seventies,
-     knob-and-tube before that. Both turn a simple job into a rewire
-     conversation, which is exactly the warning a homeowner should get
-     before the quote rather than after. */
-  qualityMult: { "2000s":1.00, "1980s":1.08, "1960s":1.20, "pre60":1.35 },
-  /* Open framing is the cheapest electrical work there is. Plaster and
-     masonry the most expensive, and the gap is enormous. */
-  accessMult:  { "open":0.82, "attic":1.00, "finished":1.25, "plaster":1.45 },
-  terrainMult: { "1":1.00, "2":1.10, "3":1.20 },
-  regionMult:  { "northeast":1.16, "west-coast":1.20, "midwest":0.96, "southeast":0.93, "southwest":1.00, "mountain":1.02 },
-  /* A full panel is the hidden cost: the job you asked for turns into that
-     job plus a panel upgrade. */
-  projectMult: { "space":1.00, "full":1.12, "upgrade":1.30, "new":0.90 },
+  /* Finish level is the single biggest lever a homeowner actually controls.
+     The same kitchen, same footprint, same crew, is roughly twice the money
+     in luxury finishes as in builder-grade — and that is the choice, not a
+     surcharge somebody sprang on them. */
+  qualityMult: { "builder":0.80, "standard":1.00, "premium":1.35, "luxury":1.80 },
+  /* Structural work. Moving or removing anything load-bearing pulls in an
+     engineer, a beam and an inspection, and is where remodel budgets go. */
+  terrainMult: { "none":1.00, "minor":1.15, "major":1.40, "footprint":1.60 },
+  accessMult:  { "easy":1.00, "moderate":1.10, "difficult":1.25 },
+  regionMult:  { "northeast":1.18, "west-coast":1.24, "midwest":0.94, "southeast":0.92, "southwest":1.00, "mountain":1.03 },
+  /* Living in the house through the work costs real money: dust walls,
+     working around the family, and stopping every evening. Phasing it
+     costs more again — the crew mobilises twice. */
+  projectMult: { "vacant":0.95, "living":1.08, "phased":1.15, "new":1.00 },
 };
 </script>
 <script>
@@ -599,7 +608,7 @@ var shell = document.getElementById('est-embed-shell');
 shell.innerHTML = `
 <div id="est-embed">
   <div class="e-topbar">
-    <div class="e-tlogo"><div class="e-ldot"></div>Electrical<span>Estimator</span></div>
+    <div class="e-tlogo"><div class="e-ldot"></div>Remodel<span>Estimator</span></div>
     <div class="e-tstep" id="e-tstep">Step <b>1</b> of 9 — Location</div>
   </div>
   <div class="e-prog"><div class="e-pfill" id="e-pfill" style="width:9%"></div></div>
@@ -625,28 +634,28 @@ shell.innerHTML = `
       <div class="e-addrpanel" id="e-addrpanel" style="display:none">
         <div class="e-shdr">
           <span class="e-seye">Your project</span>
-          <div class="e-stitle">How Big Is<br><em>Your Home?</em></div>
-          <div class="e-ssub">Roughly — the finished square footage. Rewiring scales with it; a panel upgrade or an EV charger does not, and the next step sorts out which.</div>
+          <div class="e-stitle">How Big Is<br><em>The Space?</em></div>
+          <div class="e-ssub">The area being remodelled — not the whole house. A kitchen is usually 150–250 sq ft, a bathroom 35–100, a basement 600–1,200. Pace it out if you are not sure; close is fine.</div>
         </div>
 
         <div class="e-card e-poolsize" id="e-sldwrap" style="display:block">
-          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Home size</div>
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Area being remodelled</div>
           <div class="e-presets">
-            <button type="button" class="e-preset" onclick="eCtPreset(1200)">Smaller<span>~1,200 sq ft</span></button>
-            <button type="button" class="e-preset" onclick="eCtPreset(2000)">Average<span>~2,000 sq ft</span></button>
-            <button type="button" class="e-preset" onclick="eCtPreset(3200)">Larger<span>~3,200 sq ft</span></button>
+            <button type="button" class="e-preset" onclick="eCtPreset(60)">A bathroom<span>~60 sq ft</span></button>
+            <button type="button" class="e-preset" onclick="eCtPreset(200)">A kitchen<span>~200 sq ft</span></button>
+            <button type="button" class="e-preset" onclick="eCtPreset(900)">A basement<span>~900 sq ft</span></button>
           </div>
           <div class="e-slddisp">
-            <div class="e-sldval" id="e-sldval">2,000</div>
+            <div class="e-sldval" id="e-sldval">200</div>
             <div class="e-sldunit">sq ft</div>
           </div>
-          <input type="range" class="e-sld" id="e-sld" min="600" max="6000" step="50" value="2000" oninput="eHandleSlider(this.value)">
-          <div class="e-sldlbl"><span>600</span><span>3,000</span><span>6,000+</span></div>
-          <div style="font-size:11px;color:#3a6286;margin-top:10px;line-height:1.6">Finished space only — leave out the garage unless it is being wired too. Close is fine.</div>
+          <input type="range" class="e-sld" id="e-sld" min="30" max="4000" step="10" value="200" oninput="eHandleSlider(this.value)">
+          <div class="e-sldlbl"><span>30</span><span>2,000</span><span>4,000+</span></div>
+          <div style="font-size:11px;color:#3a6286;margin-top:10px;line-height:1.6">Just the rooms being worked on. For a whole-home remodel, use the finished square footage of the house.</div>
         </div>
         <div class="e-btnrow">
           <button class="e-btnback" onclick="eZipBack()">← Back</button>
-          <button class="e-btnmain" id="e-btn1" onclick="eGo(2)" disabled>Continue — The Job →</button>
+          <button class="e-btnmain" id="e-btn1" onclick="eGo(2)" disabled>Continue — The Project →</button>
         </div>
       <div class="e-stepdots" id="e-dots1"></div>
       </div>
@@ -657,8 +666,8 @@ shell.innerHTML = `
   <div class="e-sp" id="e-sp2">
     <div class="e-shdr">
       <span class="e-seye">Step 2 of 9</span>
-      <div class="e-stitle">What Do You<br><em>Need Done?</em></div>
-      <div class="e-ssub">Pick the closest match. Some jobs cost the same in any house — an EV charger, a surge protector; others scale with how much of the house is being wired. This works both out.</div>
+      <div class="e-stitle">What Are You<br><em>Remodelling?</em></div>
+      <div class="e-ssub">Pick the closest match. The prices below are per square foot of that space, so a $300 kitchen figure is $300 across the kitchen — not across the house.</div>
     </div>
     <div class="e-sbody">
       <div class="e-vizsplit">
@@ -684,7 +693,7 @@ shell.innerHTML = `
     <div class="e-shdr">
       <span class="e-seye">Step 3 of 9</span>
       <div class="e-stitle">Any Features or<br><em>Add-Ons?</em></div>
-      <div class="e-ssub">Optional. Each one adds to the estimate, and several are required by code rather than optional in practice — the note says which.</div>
+      <div class="e-ssub">Optional, but this is the honest part of a remodel quote. These are the eight things that most often turn up as a change order in week three. Tick anything you think applies and it goes in the number now.</div>
     </div>
     <div class="e-sbody">
       <div class="e-vizsplit">
@@ -695,7 +704,7 @@ shell.innerHTML = `
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(2,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn3" onclick="eGo(4)">Continue — House Age →</button>
+        <button class="e-btnmain" id="e-btn3" onclick="eGo(4)">Continue — Finish Level →</button>
       </div>
       <div class="e-stepdots" id="e-dots3"></div>
     </div>
@@ -705,18 +714,18 @@ shell.innerHTML = `
   <div class="e-sp" id="e-sp4">
     <div class="e-shdr">
       <span class="e-seye">Step 4 of 9</span>
-      <div class="e-stitle">How Old Is<br><em>The House?</em></div>
-      <div class="e-ssub">This is the honest one. Aluminium branch wiring was normal through the late sixties and seventies, and knob-and-tube before that. Either one turns a small job into a bigger conversation, and it is better to hear that now than after the quote.</div>
+      <div class="e-stitle">What Level Of<br><em>Finish?</em></div>
+      <div class="e-ssub">The biggest lever you actually control. Same room, same crew, same footprint — luxury finishes run to roughly twice builder-grade. That is a choice, not a surcharge, and it is worth making it on purpose.</div>
     </div>
     <div class="e-sbody">
       <div class="e-vizsplit">
         <div class="e-vizcol">
         <div class="e-card" style="padding:12px 14px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'quality','2000s')"><div class="e-oi-em">🏡</div><div class="e-oi-info"><div class="e-oi-lbl">Built 2000 or later</div><div class="e-oi-desc">Modern copper wiring, breakers and grounded outlets throughout</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'quality','1980s')"><div class="e-oi-em">🏠</div><div class="e-oi-info"><div class="e-oi-lbl">1980s–90s</div><div class="e-oi-desc">Copper and breakers · usually just short on circuits</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'quality','1960s')"><div class="e-oi-em">🛠️</div><div class="e-oi-info"><div class="e-oi-lbl">1960s–70s</div><div class="e-oi-desc">Often aluminium branch wiring · every connection needs treating</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'quality','pre60')"><div class="e-oi-em">🏚️</div><div class="e-oi-info"><div class="e-oi-lbl">Before 1960</div><div class="e-oi-desc">Knob-and-tube or ungrounded cloth wiring · expect surprises</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'quality','builder')"><div class="e-oi-em">📦</div><div class="e-oi-info"><div class="e-oi-lbl">Builder-grade</div><div class="e-oi-desc">Stock cabinets, laminate, big-box fixtures · does the job well</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'quality','standard')"><div class="e-oi-em">🏠</div><div class="e-oi-info"><div class="e-oi-lbl">Standard</div><div class="e-oi-desc">Semi-custom cabinets, quartz, mid-range tile · where most land</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'quality','premium')"><div class="e-oi-em">✨</div><div class="e-oi-info"><div class="e-oi-lbl">Premium</div><div class="e-oi-desc">Custom cabinetry, stone, name-brand appliances</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'quality','luxury')"><div class="e-oi-em">💎</div><div class="e-oi-info"><div class="e-oi-lbl">Luxury / fully custom</div><div class="e-oi-desc">Designed and built to order · roughly twice builder-grade</div></div><div class="e-oi-radio">✓</div></div>
         </div>
         </div>
         </div>
@@ -724,7 +733,7 @@ shell.innerHTML = `
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(3,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn4" onclick="eGo(5)" disabled>Continue — Your Panel →</button>
+        <button class="e-btnmain" id="e-btn4" onclick="eGo(5)" disabled>Continue — Living Here →</button>
       </div>
       <div class="e-stepdots" id="e-dots4"></div>
     </div>
@@ -734,22 +743,21 @@ shell.innerHTML = `
   <div class="e-sp" id="e-sp5">
     <div class="e-shdr">
       <span class="e-seye">Step 5 of 9</span>
-      <div class="e-stitle">What Does Your<br><em>Panel Look Like?</em></div>
-      <div class="e-ssub">The one thing that most often changes the price. If the panel is full, the job you asked for becomes that job plus a panel upgrade — and almost nobody knows that going in. Open the panel door and look; it is written on the main breaker at the top.</div>
+      <div class="e-stitle">Will You Be Living<br><em>Here Through It?</em></div>
+      <div class="e-ssub">It sounds like a courtesy question and it is not. Working around a family means dust walls, protected routes, and stopping at a civilised hour every evening — and that is real time on the schedule.</div>
     </div>
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em">🚧</div><div class="e-oi-info"><div class="e-oi-lbl">New build or gutted to the studs</div><div class="e-oi-desc">Nothing to work around · the cheapest electrical work there is</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','space')"><div class="e-oi-em">🟢</div><div class="e-oi-info"><div class="e-oi-lbl">200A with empty slots</div><div class="e-oi-desc">Room to add circuits · no panel work needed</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','full')"><div class="e-oi-em">🟠</div><div class="e-oi-info"><div class="e-oi-lbl">Panel is full — every slot used</div><div class="e-oi-desc">Needs tandems or a sub-panel to fit anything new</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','upgrade')"><div class="e-oi-em">🔴</div><div class="e-oi-info"><div class="e-oi-lbl">100A or less, or a fuse box</div><div class="e-oi-desc">The service itself has to come up first · budget for that</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','full')"><div class="e-oi-em">❓</div><div class="e-oi-info"><div class="e-oi-lbl">I don’t know</div><div class="e-oi-desc">Fine — we assume it is tight, and confirm on site</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','vacant')"><div class="e-oi-em">📦</div><div class="e-oi-info"><div class="e-oi-lbl">The house will be empty</div><div class="e-oi-desc">Crew has the run of it · fastest and cheapest way to do this</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','living')"><div class="e-oi-em">👪</div><div class="e-oi-info"><div class="e-oi-lbl">We’ll be living here</div><div class="e-oi-desc">Dust walls, protected routes, and a finish time each day</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','phased')"><div class="e-oi-em">🔁</div><div class="e-oi-info"><div class="e-oi-lbl">In stages, as budget allows</div><div class="e-oi-desc">The crew mobilises more than once · costs more in total</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em">🚧</div><div class="e-oi-info"><div class="e-oi-lbl">New construction</div><div class="e-oi-desc">Building it rather than changing it</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(4,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn5" onclick="eGo(6)" disabled>Continue — What It’s Doing →</button>
+        <button class="e-btnmain" id="e-btn5" onclick="eGo(6)" disabled>Continue — Timing →</button>
       </div>
       <div class="e-stepdots" id="e-dots5"></div>
     </div>
@@ -759,21 +767,21 @@ shell.innerHTML = `
   <div class="e-sp" id="e-sp6">
     <div class="e-shdr">
       <span class="e-seye">Step 6 of 9</span>
-      <div class="e-stitle">What Is It<br><em>Doing Now?</em></div>
-      <div class="e-ssub">Not a price question — it tells whoever calls you back what to bring, and whether this is a today job or a next-week one. If anything here is burning, warm or smells hot, stop and switch it off at the breaker.</div>
+      <div class="e-stitle">Where Are You<br><em>Up To?</em></div>
+      <div class="e-ssub">Not a price question — it tells whoever calls you back what the conversation should be. Somebody with drawings already drawn needs a very different call from somebody still deciding whether to do this at all.</div>
     </div>
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em">🚨</div><div class="e-oi-info"><div class="e-oi-lbl">Burning smell, sparks, or a hot outlet</div><div class="e-oi-desc">Switch it off at the breaker and call today</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em">⚠️</div><div class="e-oi-info"><div class="e-oi-lbl">Breakers tripping, or part of the house is dead</div><div class="e-oi-desc">Something is overloaded or failing · this week</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em">💡</div><div class="e-oi-info"><div class="e-oi-lbl">Flickering, buzzing, or not enough outlets</div><div class="e-oi-desc">Annoying rather than urgent · worth fixing properly</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em">🔧</div><div class="e-oi-info"><div class="e-oi-lbl">Nothing wrong — adding or upgrading</div><div class="e-oi-desc">A remodel, an addition, or a car to charge</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em">📐</div><div class="e-oi-info"><div class="e-oi-lbl">Drawings done — ready to build</div><div class="e-oi-desc">Plans in hand · looking for a price and a start date</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em">🗓️</div><div class="e-oi-info"><div class="e-oi-lbl">Decided — want to start in a few months</div><div class="e-oi-desc">Budget set · needs a designer or plans next</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em">💡</div><div class="e-oi-info"><div class="e-oi-lbl">Still working out what it would cost</div><div class="e-oi-desc">Deciding whether the scope is affordable at all</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em">🚨</div><div class="e-oi-info"><div class="e-oi-lbl">Repairing damage — water, fire or storm</div><div class="e-oi-desc">Possibly an insurance job · different process, say so on the call</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(5,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn6" onclick="eGo(7)" disabled>Continue — Stories →</button>
+        <button class="e-btnmain" id="e-btn6" onclick="eGo(7)" disabled>Continue — Structural →</button>
       </div>
       <div class="e-stepdots" id="e-dots6"></div>
     </div>
@@ -783,20 +791,21 @@ shell.innerHTML = `
   <div class="e-sp" id="e-sp7">
     <div class="e-shdr">
       <span class="e-seye">Step 7 of 9</span>
-      <div class="e-stitle">How Many<br><em>Stories?</em></div>
-      <div class="e-ssub">Getting cable from the panel to the top floor is the slow part. Every storey above the first adds drilling, fishing and another ladder.</div>
+      <div class="e-stitle">Is Anything<br><em>Moving?</em></div>
+      <div class="e-ssub">Where remodel budgets actually go. Keep every wall where it is and this is finishes and fixtures. Take one out and you have an engineer, a beam, an inspection and a schedule that grew.</div>
     </div>
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'terrain','1')"><div class="e-oi-em">1️⃣</div><div class="e-oi-info"><div class="e-oi-lbl">1 story</div><div class="e-oi-desc">Everything on one level</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'terrain','2')"><div class="e-oi-em">2️⃣</div><div class="e-oi-info"><div class="e-oi-lbl">2 stories</div><div class="e-oi-desc">Cable has to be fished up through the walls</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'terrain','3')"><div class="e-oi-em">3️⃣</div><div class="e-oi-info"><div class="e-oi-lbl">3 or more stories</div><div class="e-oi-desc">Longer vertical runs and more wall to open</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','none')"><div class="e-oi-em">🛋️</div><div class="e-oi-info"><div class="e-oi-lbl">Nothing moves</div><div class="e-oi-desc">Same layout · new finishes, cabinets and fixtures</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','minor')"><div class="e-oi-em">🚪</div><div class="e-oi-info"><div class="e-oi-lbl">A doorway or a non-load-bearing wall</div><div class="e-oi-desc">Minor framing · no beam needed</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','major')"><div class="e-oi-em">🔨</div><div class="e-oi-info"><div class="e-oi-lbl">Taking out a load-bearing wall</div><div class="e-oi-desc">Beam, posts, an engineer’s letter and an inspection</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'terrain','footprint')"><div class="e-oi-em">🏗️</div><div class="e-oi-info"><div class="e-oi-lbl">Changing the footprint of the house</div><div class="e-oi-desc">Foundation and roof work · full permit and plans</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(6,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn7" onclick="eGo(8)" disabled>Continue — Wall Access →</button>
+        <button class="e-btnmain" id="e-btn7" onclick="eGo(8)" disabled>Continue — Site Access →</button>
       </div>
       <div class="e-stepdots" id="e-dots7"></div>
     </div>
@@ -806,16 +815,15 @@ shell.innerHTML = `
   <div class="e-sp" id="e-sp8">
     <div class="e-shdr">
       <span class="e-seye">Step 8 of 9</span>
-      <div class="e-stitle">What Are The<br><em>Walls Like?</em></div>
-      <div class="e-ssub">The single biggest swing on the labour. Open framing an electrician can wire in a day; running the same cable through 1920s plaster and lath can take three, and every hole has to be patched afterwards.</div>
+      <div class="e-stitle">How Easy Is The<br><em>Site To Work?</em></div>
+      <div class="e-ssub">Last one. Materials in and debris out happens every single day of the job, so a crew that can back a truck to the door finishes sooner than one carrying sheets of drywall up two flights.</div>
     </div>
     <div class="e-sbody">
       <div class="e-card" style="padding:14px 18px">
         <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'access','open')"><div class="e-oi-em">🔨</div><div class="e-oi-info"><div class="e-oi-lbl">Open framing — studs are showing</div><div class="e-oi-desc">Under construction or gutted · nothing to patch</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'access','attic')"><div class="e-oi-em">🏠</div><div class="e-oi-info"><div class="e-oi-lbl">Drywall, with an attic or basement to work from</div><div class="e-oi-desc">The normal house · cable drops in from above or below</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'access','finished')"><div class="e-oi-em">🧱</div><div class="e-oi-info"><div class="e-oi-lbl">Finished everywhere — no attic, no basement</div><div class="e-oi-desc">Slab home or finished above · walls have to be opened and patched</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'access','plaster')"><div class="e-oi-em">🗿</div><div class="e-oi-info"><div class="e-oi-lbl">Plaster and lath, or masonry</div><div class="e-oi-desc">Older home · slow to cut, slow to repair · the expensive one</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'access','easy')"><div class="e-oi-em">🚚</div><div class="e-oi-info"><div class="e-oi-lbl">Easy — truck can get close</div><div class="e-oi-desc">Driveway or street parking, ground floor, somewhere for a dumpster</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'access','moderate')"><div class="e-oi-em">🚶</div><div class="e-oi-info"><div class="e-oi-lbl">Moderate — a walk or a flight of stairs</div><div class="e-oi-desc">Upper floor, or a carry from where the truck can stop</div></div><div class="e-oi-radio">✓</div></div>
+          <div class="e-oi" onclick="ePickQ(this,'access','difficult')"><div class="e-oi-em">🚧</div><div class="e-oi-info"><div class="e-oi-lbl">Difficult — tight street, HOA, or no parking</div><div class="e-oi-desc">Permit parking, lift access, or restricted working hours</div></div><div class="e-oi-radio">✓</div></div>
         </div>
       </div>
       <div class="e-btnrow">
@@ -843,8 +851,8 @@ shell.innerHTML = `
           <div class="e-fg"><label class="e-fl">Phone Number *</label><input class="e-fi" id="e-ph" type="tel" placeholder="(555) 000-0000" oninput="eChkForm()"></div>
           <div class="e-fg"><label class="e-fl">Email Address *</label><input class="e-fi" id="e-em" type="email" placeholder="john@email.com" oninput="eChkForm()"></div>
         </div>
-        <div class="e-fg"><label class="e-fl">Additional Notes (Optional)</label><input class="e-fi" id="e-nt" type="text" placeholder="Panel brand, what keeps tripping, where the car parks, timeline..."></div>
-        <div class="e-consent">By submitting you consent to receive communications from <b id="e-cco">Your Company</b> regarding your electrical estimate. Message &amp; data rates may apply. Reply STOP to opt out. We never sell your information.</div>
+        <div class="e-fg"><label class="e-fl">Additional Notes (Optional)</label><input class="e-fi" id="e-nt" type="text" placeholder="What you have in mind, must-haves, budget range, timeline..."></div>
+        <div class="e-consent">By submitting you consent to receive communications from <b id="e-cco">Your Company</b> regarding your remodeling estimate. Message &amp; data rates may apply. Reply STOP to opt out. We never sell your information.</div>
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(8,true)">← Back</button>
@@ -862,9 +870,9 @@ shell.innerHTML = `
         <div style="font-family:'Space Grotesk','Inter',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px;color:#fff">Calculating Your Estimate</div>
         <div class="e-ldsteps">
           <div class="e-ldstp act" id="e-ld1"><div class="e-lddot"></div>Working out the size of the job</div>
-          <div class="e-ldstp" id="e-ld2"><div class="e-lddot"></div>Estimating materials and circuit count</div>
+          <div class="e-ldstp" id="e-ld2"><div class="e-lddot"></div>Estimating materials and finish level</div>
           <div class="e-ldstp" id="e-ld3"><div class="e-lddot"></div>Applying regional labor rates</div>
-          <div class="e-ldstp" id="e-ld4"><div class="e-lddot"></div>Adjusting for panel capacity and wall access</div>
+          <div class="e-ldstp" id="e-ld4"><div class="e-lddot"></div>Adjusting for structural work and site access</div>
           <div class="e-ldstp" id="e-ld5"><div class="e-lddot"></div>Generating your estimate</div>
         </div>
       </div>
@@ -881,14 +889,14 @@ shell.innerHTML = `
         <div class="e-rnote" id="e-rnote"></div>
       </div>
       <div class="e-rgrid">
-        <div class="e-rbox"><div class="e-rbv" id="e-rv1">—</div><div class="e-rbl">Home size</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv2">—</div><div class="e-rbl">Job</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv3">—</div><div class="e-rbl">House age</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv4">—</div><div class="e-rbl">Stories</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv1">—</div><div class="e-rbl">Area</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv2">—</div><div class="e-rbl">Project</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv3">—</div><div class="e-rbl">Finish level</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv4">—</div><div class="e-rbl">Structural</div></div>
         <div class="e-rbox"><div class="e-rbv" id="e-rv5">—</div><div class="e-rbl">Region</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv6">—</div><div class="e-rbl">Wall access</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv6">—</div><div class="e-rbl">Site access</div></div>
       </div>
-      <div class="e-disc">This is a preliminary estimate based on your inputs. Final pricing varies with local labour rates, what the existing wiring turns out to be, panel capacity, permit and inspection fees in your city, and how much wall has to be opened and patched. Electrical work needs a licensed electrician and, on most of these jobs, a permit — an on-site look is required for a firm quote.</div>
+      <div class="e-disc">This is a preliminary estimate based on your inputs. Remodelling has the widest range of any trade, and for a real reason: what is found behind the walls once they are open — rot, old wiring, failed plumbing, missing structure — is not knowable from a form. Final pricing also depends on local labour rates, the specific products chosen, plan and permit fees in your city, and how much structural work an engineer signs off on. Expect an on-site walkthrough and a written scope before any firm number.</div>
       <div class="e-rcta">
         <button class="e-btnmain" id="e-rctabtn">Book a Free Inspection</button>
         <div class="e-rctasub">Free · No obligation · Response within 24 hours</div>
@@ -949,7 +957,7 @@ function eSearchAddress(query) {
   var url = 'https://nominatim.openstreetmap.org/search'
     + '?q=' + encodeURIComponent(query)
     + '&format=json&addressdetails=1&limit=8&countrycodes=us&bounded=0';
-  fetch(url, { headers:{ 'Accept-Language':'en-US,en;q=0.9', 'User-Agent':'ElectricalEstimator/1.0' } })
+  fetch(url, { headers:{ 'Accept-Language':'en-US,en;q=0.9', 'User-Agent':'RemodelEstimator/1.0' } })
   .then(function(r){ return r.json(); })
   .then(function(data){
     var filtered = (data||[]).filter(function(r){
@@ -1111,7 +1119,7 @@ function eDegToPitch(deg){ var x=Math.round(12*Math.tan((deg||0)*Math.PI/180)); 
 function eSetMeasurePitch(pp){ eMeasurePitch=pp; eS.solarPitchDeg=null; eUpdateAreaDisplay(); }
 function eToggleFlat(on){ eS.flatRoof=on; if(on) eS.pitch='flat'; eUpdateAreaDisplay(); }
 function eHandleZip(v){ try{ eS.zip=(v||'').replace(/[^0-9]/g,'').slice(0,5); var b=document.getElementById('e-zipcont'); if(b) b.disabled=(eS.zip.length!==5); }catch(e){} }
-function eZipNext(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(z)z.style.display='none'; if(a)a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 Home Size'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+function eZipNext(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(z)z.style.display='none'; if(a)a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 The Space'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
 function eZipBack(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(a)a.style.display='none'; if(z)z.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 ZIP'; }
 function eCurrentPlanTotal(){ var t=eFacetTotal; if(eClickPts.length>=3) t+=eCalcSqFt(eClickPts); return Math.round(t); }
 function eUpdateAreaDisplay(){
@@ -1201,7 +1209,7 @@ function eHandleSlider(v) {
 function eUpdateSlider(v){ document.getElementById('e-sld').value=v; eHandleSlider(v); }
 
 /* MATERIALS */
-var E_ICONS={'panel':'⚡','sub-panel':'📦','rewire':'🏠','partial':'🧩','ev':'🔌','generator':'🔋','service':'📡','lighting':'💡','outlets':'🔋','smart':'📱','surge':'🛡️'}; E_ICONS['outlets']='🔌';
+var E_ICONS={'kitchen':'🍳','bathroom':'🛁','basement':'📦','addition':'🏗️','whole':'🏠','garage':'🚗','adu':'🏡','outdoor':'🌳','attic':'📐'};
 /* Polished duotone add-on icons (dark accent + light tint, no emojis).
    D = deep accent, L = light tint. Wrapped in a 24×24 viewBox. */
 function eSvgD(inner){ return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none">'+inner+'</svg>'; }
@@ -1246,9 +1254,7 @@ function eSwatch(key){
    "per sq ft" on an EV charger would be nonsense, and quoting only the base
    on a whole-home rewire would understate it by tens of thousands. */
 function ePriceHint(v){
-  var base='$'+Number(v.baseLow).toLocaleString()+'\u2013$'+Number(v.baseHigh).toLocaleString();
-  if(!(v.perLow>0||v.perHigh>0)) return base+' installed';
-  return base+' + $'+v.perLow+'\u2013$'+v.perHigh+' per sq ft';
+  return '$'+Number(v.low).toLocaleString()+'–$'+Number(v.high).toLocaleString()+' per sq ft';
 }
 function eBuildMats() {
   var l=document.getElementById('e-matlist'), html='';
@@ -1482,30 +1488,30 @@ function eGo(n, back) {
   eCur=n;
   var _dn=Math.min(n,9); var pct=Math.round((_dn/9)*100);
   document.getElementById('e-pfill').style.width=pct+'%';
-  var names=['','Home Size','The Job','Add-Ons','House Age','Your Panel','Right Now','Stories','Wall Access','Your Info','Calculating',''];
+  var names=['','The Space','The Project','Add-Ons','Finish Level','Living Here','Timing','Structural','Site Access','Your Info','Calculating',''];
   document.getElementById('e-tstep').innerHTML=n<=E_TOTAL?'Step <b>'+_dn+'</b> of 9 — '+(names[n]||''):'<b>✓ Estimate Complete</b>';
   // Only scroll if the top of the estimator is above the viewport
   var embed=document.getElementById('est-embed-shell');
   if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
-  if(n===1){ var _z=document.getElementById('e-zippanel'),_a=document.getElementById('e-addrpanel'); if(_z)_z.style.display='none'; if(_a)_a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 Home Size'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+  if(n===1){ var _z=document.getElementById('e-zippanel'),_a=document.getElementById('e-addrpanel'); if(_z)_z.style.display='none'; if(_a)_a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 The Space'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
 }
 
 /* SUBMIT + RESULT */
 function eCalcPrice(){
-  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['panel'];
-  var qm=E_CONFIG.qualityMult[eS.quality]||1.00;   /* house age      */
-  var tm=E_CONFIG.terrainMult[eS.terrain]||1.00;   /* stories    */
-  var am=E_CONFIG.accessMult[eS.access]||1.00;     /* wall access    */
-  var prm=E_CONFIG.projectMult[eS.project]||1.00;  /* panel capacity */
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['kitchen'];
+  var qm=E_CONFIG.qualityMult[eS.quality]||1.00;   /* finish level    */
+  var tm=E_CONFIG.terrainMult[eS.terrain]||1.00;   /* structural work */
+  var am=E_CONFIG.accessMult[eS.access]||1.00;     /* site access     */
+  var prm=E_CONFIG.projectMult[eS.project]||1.00;  /* occupancy       */
   var rm=parseFloat(E_CONFIG.regionMult[eS.region]||1.00);
-  var sqft=Math.max(200, eS.sqft||2000);           /* the slider is home square footage */
+  var sqft=Math.max(20, eS.sqft||200);           /* the slider is home square footage */
 
-  /* Fixed base plus a per-sq-ft amount. An EV charger costs the same in a
-     small house and a large one, so its per-sq-ft figure is
-     zero and only the base applies; a rewire is almost entirely per sq ft.
-     One shape covers both, which a flat rate per anything cannot. */
-  var lowRaw  = (p.baseLow  + sqft*p.perLow ) * qm*tm*am*prm*rm;
-  var highRaw = (p.baseHigh + sqft*p.perHigh) * qm*tm*am*prm*rm;
+  /* Per square foot of the area being remodelled, straight through. A
+     remodel has no meaningful fixed base: a 40 sq ft bathroom and a 200 sq
+     ft one are the same job at different sizes, and every cost in it —
+     labour, tile, cabinetry, fixtures — scales with the room. */
+  var lowRaw  = sqft*p.low  * qm*tm*am*prm*rm;
+  var highRaw = sqft*p.high * qm*tm*am*prm*rm;
   var add=eAddonTotals();
 
   /* Rounded to $50 so it reads as an estimate rather than a quote. Add-ons
@@ -1518,7 +1524,7 @@ function eCalcPrice(){
 }
 function eDoSubmit() {
   var _est = eCalcPrice();
-  if(E_CONFIG.webhookUrl){ fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:document.getElementById('e-fn').value,lastName:document.getElementById('e-ln').value,phone:document.getElementById('e-ph').value,email:document.getElementById('e-em').value,notes:document.getElementById('e-nt').value,address:eS.addr,homeSqft:eS.sqft,jobType:eS.material,houseAge:eS.quality,stories:eS.terrain,wallAccess:eS.access,project:eS.project,addons:Object.keys(eS.addons||{}).join(', '),region:eS.region,urgency:eS.urgency,estimateLow:_est.low,estimateHigh:_est.high,estimateValue:_est.mid,source:E_CONFIG.companyName+' Electrical Estimator',timestamp:new Date().toISOString()})}).catch(function(){}); }
+  if(E_CONFIG.webhookUrl){ fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:document.getElementById('e-fn').value,lastName:document.getElementById('e-ln').value,phone:document.getElementById('e-ph').value,email:document.getElementById('e-em').value,notes:document.getElementById('e-nt').value,address:eS.addr,areaSqft:eS.sqft,projectType:eS.material,finishLevel:eS.quality,structural:eS.terrain,siteAccess:eS.access,project:eS.project,addons:Object.keys(eS.addons||{}).join(', '),region:eS.region,urgency:eS.urgency,estimateLow:_est.low,estimateHigh:_est.high,estimateValue:_est.mid,source:E_CONFIG.companyName+' Remodel Estimator',timestamp:new Date().toISOString()})}).catch(function(){}); }
   eGo(10);
   var ids=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'], li=0;
   function eNextStep(){ if(li>=ids.length){ setTimeout(eShowResult,500); return; } document.getElementById(ids[li]).classList.remove('act'); document.getElementById(ids[li]).classList.add('done'); li++; if(li<ids.length) document.getElementById(ids[li]).classList.add('act'); setTimeout(eNextStep,680); }
@@ -1526,10 +1532,10 @@ function eDoSubmit() {
 }
 function eTitle(s){ s=(s||'').replace(/-/g,' '); return s.charAt(0).toUpperCase()+s.slice(1); }
 function eShowResult() {
-  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['panel'];
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['kitchen'];
   var est=eCalcPrice();
   document.getElementById('e-rrange').innerHTML='$'+est.low.toLocaleString()+' — <em>$'+est.high.toLocaleString()+'</em>';
-  document.getElementById('e-rnote').textContent=est.area.toLocaleString()+' sq ft · '+p.label+' · '+eTitle(eS.quality)+' · '+eTitle(eS.terrain)+'-story · '+eTitle(eS.project)+(est.addons&&est.addons.count?' · '+est.addons.count+' add-on'+(est.addons.count>1?'s':''):'')+' · '+eS.regionLabel+(eS.usedMap?' · Instant estimate':' · Instant estimate');
+  document.getElementById('e-rnote').textContent=est.area.toLocaleString()+' sq ft · '+p.label+' · '+eTitle(eS.quality)+' · '+eTitle(eS.terrain)+' structural · '+eTitle(eS.project)+(est.addons&&est.addons.count?' · '+est.addons.count+' add-on'+(est.addons.count>1?'s':''):'')+' · '+eS.regionLabel+(eS.usedMap?' · Instant estimate':' · Instant estimate');
   document.getElementById('e-rv1').textContent=est.area.toLocaleString()+' sq ft';
   document.getElementById('e-rv2').textContent=p.label;
   document.getElementById('e-rv3').textContent=eTitle(eS.quality)||'—';
@@ -1550,7 +1556,7 @@ function eShowResult() {
 /* RESTART */
 function eRestart() {
   eS={sqft:0,material:'',quality:'',project:'',region:'national',regionLabel:'National Average',urgency:'',terrain:'',access:'',addons:{},color:null,cabinet:null,photoOrig:null,photoNew:null,vizView:'orig',photoKey:'',imgEl:null};
-  eUpdateSlider(2000);
+  eUpdateSlider(200);
   eVizSyncAll();
   var _cc=document.getElementById('e-colorcard'); if(_cc)_cc.style.display='none';
   document.querySelectorAll('#est-embed .e-oi').forEach(function(i){ i.classList.remove('sel'); });
@@ -1562,7 +1568,7 @@ function eRestart() {
   document.getElementById('e-spR').classList.remove('active');
   eCur=1; eGo(1);
   document.getElementById('e-pfill').style.width='9%';
-  document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 — Home Size';
+  document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 — The Space';
 }
 
 /* ═══ INIT — all functions defined above, safe to call now ═══ */
@@ -1574,7 +1580,7 @@ eBuildAddons();
 eBuildCabinets();
 eVizInit();
 eBuildAllDots();
-eUpdateSlider(2000);
+eUpdateSlider(200);
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.e-asearch')) {
     var s = document.getElementById('e-suggestions');
@@ -1584,7 +1590,7 @@ document.addEventListener('click', function(e) {
 
 </script>
 
-<script>(function(){try{var CID="electrical",U="https://ttzwzouhiwdwamuimhpo.supabase.co",A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")||"").replace(/[^0-9a-f-]/gi,"");}catch(e){}if(OWN&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=OWN;fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=pricing",{headers:{apikey:A,Authorization:"Bearer "+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof E_CONFIG==="undefined"||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!=="object"||v===null){if(typeof v==="number")E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!=="object")return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});["eBuildMats","eBuildAddons","eBuildColors","eBuildHeight","eBuildCabinets","eBuildScope"].forEach(function(fn){try{if(typeof window[fn]==="function")window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
+<script>(function(){try{var CID="general",U="https://ttzwzouhiwdwamuimhpo.supabase.co",A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")||"").replace(/[^0-9a-f-]/gi,"");}catch(e){}if(OWN&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=OWN;fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=pricing",{headers:{apikey:A,Authorization:"Bearer "+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof E_CONFIG==="undefined"||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!=="object"||v===null){if(typeof v==="number")E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!=="object")return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});["eBuildMats","eBuildAddons","eBuildColors","eBuildHeight","eBuildCabinets","eBuildScope"].forEach(function(fn){try{if(typeof window[fn]==="function")window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
 <style>
 /* --- BuilderPro polish: staggered step reveal, button feel, loading --- */
 #est-embed .e-sp.active .e-shdr{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .05s;}
