@@ -22139,21 +22139,33 @@ window.lsGmail=function(id){
   bpModal('<h3>Read '+bpEsc(lsVendorName(s.vendor))+' leads out of Gmail</h3>'
     +'<div class="bpx-sub">A small script that runs in your own Google account. Free, and you can delete it yourself any time.</div>'
     +'<button class="bpx-btn ls-go" onclick="lsGmailGo(this)"><span class="ms">content_copy</span> Copy the script &amp; open Google</button>'
-    +'<div class="ls-steps">'
-      +'<div><b>1</b><span>In the tab that opens, press <b>New project</b> if it asks, then select everything in the editor and <b>paste</b>.</span></div>'
-      +'<div><b>2</b><span>Press <b>Save</b> (the disk icon).</span></div>'
-      +'<div><b>3</b><span>Choose <b>install</b> from the dropdown at the top, then press <b>Run</b>.</span></div>'
-      +'<div><b>4</b><span>Google asks for permission. It is your own script, so it warns that it is unverified — '
-        +'pick <b>Advanced</b>, then <b>Go to (unsafe)</b>, then <b>Allow</b>.</span></div>'
-    +'</div>'
+    /* The step number is an <i>, not a <b>. It used to be a <b>, and the rule
+       styling it as a round badge caught every bold word inside the
+       sentences too \u2014 so "New project" and "Save" each became their own
+       little circle on their own line, and the list read as debris. */
+    +'<ol class="ls-steps">'
+      +'<li><i>1</i><span>In the tab that opens, press <b>New project</b> if it asks, then select everything already in the editor and <b>paste</b> over it.</span></li>'
+      +'<li><i>2</i><span>Press <b>Save</b> \u2014 the disk icon.</span></li>'
+      +'<li><i>3</i><span>Choose <b>install</b> from the dropdown at the top, then press <b>Run</b>.</span></li>'
+      +'<li><i>4</i><span>Google asks for permission. It is your own script, so it warns that it is unverified: '
+        +'pick <b>Advanced</b>, then <b>Go to (unsafe)</b>, then <b>Allow</b>.</span></li>'
+    +'</ol>'
     +'<div class="bpx-mut" style="font-size:12px;margin:10px 0 4px">That is it — it checks every five minutes from then on. '
       +'The script is below if you want to read it first.</div>'
     +'<details class="ls-peek"><summary>Show the script</summary><div class="ls-code"><pre id="lsCode">'+bpEsc(code)+'</pre></div></details>'
-    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'
-    +'<button class="bpx-btn ghost" onclick="bpRepCopy(document.getElementById(\'lsCode\').textContent,this)">Copy again</button></div>'
+    /* width:auto, or the shared .bpx-btn width:100% turns each into a
+       full-width slab and the row wraps into a stack \u2014 which is what ate
+       the bottom third of this dialog. */
+    +'<div class="row"><button class="bpx-btn ghost" style="width:auto;margin:0;padding:10px 18px" '
+      +'onclick="bpRepCopy(document.getElementById(\'lsCode\').textContent,this)">Copy again</button>'
+    +'<button class="bpx-btn" style="width:auto;margin:0;padding:10px 24px" onclick="bpCloseModal()">Done</button></div>'
     +'<p style="font-size:12px;line-height:1.6;color:var(--grey-l);margin-top:12px">It reads only messages from '
     +bpEsc((window.mailSenders?mailSenders.domainsFor(s.vendor,s.sender_domains):[]).join(', '))
     +' — nothing else in your mailbox is touched, and it never sends or deletes mail.</p>');
+  /* This one is a set of instructions, not a form. At the default 440px the
+     steps wrap every few words and the list stops reading as a list. */
+  var card=document.querySelector('#bpx-modal .bpx-modalcard');
+  if(card)card.classList.add('wide');
 };
 
 /* Copy, then open. In that order and in the same click, because a browser
@@ -22274,11 +22286,15 @@ lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fi
   +'.ls-tile.other .ms{font-size:30px;color:var(--grey)}'
   +'.ls-logo{height:26px;max-width:92px;object-fit:contain;flex:0 0 auto}'
   /* setup steps */
-  +'.ls-go{width:100%;margin:14px 0 6px;padding:13px 18px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px}'
-  +'.ls-steps{display:flex;flex-direction:column;gap:9px;margin:12px 0 4px}'
-  +'.ls-steps div{display:flex;gap:11px;align-items:flex-start;font-size:13.5px;line-height:1.55;color:var(--grey)}'
-  +'.ls-steps b{flex:0 0 auto;width:21px;height:21px;border-radius:50%;background:var(--soft);border:1px solid var(--line);'
-    +'display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--ink)}'
+  +'.ls-go{width:100%;margin:18px 0 4px;padding:15px 20px;font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:9px}'
+  +'.ls-steps{list-style:none;margin:18px 0 6px;padding:0;display:flex;flex-direction:column;gap:14px}'
+  +'.ls-steps li{display:flex;gap:13px;align-items:flex-start;font-size:14px;line-height:1.65;color:var(--grey)}'
+  +'.ls-steps span{flex:1;min-width:0}'
+  +'.ls-steps b{font-weight:700;color:var(--ink)}'
+  /* the number badge, and ONLY the number badge */
+  +'.ls-steps > li > i{flex:0 0 auto;width:24px;height:24px;margin-top:1px;border-radius:50%;background:var(--soft);'
+    +'border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-style:normal;'
+    +'font-size:12px;font-weight:700;color:var(--ink)}'
   +'.ls-peek summary{cursor:pointer;font-size:12.5px;color:#2f6bff;margin:4px 0}'
   +'.ls-card.off{opacity:.62}'
   +'.ls-nums{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}'
