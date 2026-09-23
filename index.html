@@ -2845,6 +2845,76 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     return { W:W, D:D, H:10, pitch:p, o:1.6 };
   }
 
+
+  /* ── their actual roof, from the planes satellite found ────────────────────
+     Solar returns every roof plane with its slope, the compass direction it
+     faces, its height and a north-up bounding box. Houses are rarely built
+     square to north, so first find the house's own grid (planes face along
+     it, 90° apart), turn everything onto that grid, and each plane becomes a
+     rectangle sloping one of four ways. Its size comes from its measured
+     ground area, so a garage wing is garage-sized and sits where the garage
+     is. Under each plane, walls to the ground — a white block, not a render,
+     but the outline and the roof are theirs. */
+  function planesModel(roof){
+    var ps=(roof&amp;&amp;roof.planes)||[]; if(ps.length<2) return null;
+    var lat0=0,lng0=0; ps.forEach(function(p){ lat0+=p.lat; lng0+=p.lng; }); lat0/=ps.length; lng0/=ps.length;
+    var FT=3.28084, kx=111320*Math.cos(lat0*Math.PI/180)*FT, kz=110574*FT;
+    function loc(la,ln){ return [ (ln-lng0)*kx, -(la-lat0)*kz ]; }        /* x east, z south */
+    /* the house's grid: circular mean of the facing directions, folded to 90° */
+    var sx=0, sy=0; ps.forEach(function(p){ var a=p.azimuth*Math.PI/180*4, w=p.groundSqft; sx+=Math.cos(a)*w; sy+=Math.sin(a)*w; });
+    var th=Math.atan2(sy,sx)/4, ct=Math.cos(-th), st2=Math.sin(-th);
+    function rot(v){ return [v[0]*ct - v[1]*st2, v[0]*st2 + v[1]*ct]; }
+    var facets=ps.map(function(p){
+      var c=rot(loc(p.lat,p.lng));
+      /* Solar's box is north-up around a plane that is turned th off north.
+         For a w×d rectangle turned th, the box is  Bx = w|cos|+d|sin|,
+         Bz = w|sin|+d|cos|  — solve that for w and d. Shrinking the loose box
+         evenly instead would square every plane off: a 52 ft eave came out 32.
+         Near 45° the two equations say the same thing, so there it falls
+         back to the even shrink. Either way the result is trimmed to the
+         plane's measured ground area. */
+      var a=loc(p.sw[0],p.sw[1]), b=loc(p.ne[0],p.ne[1]);
+      var Bx=Math.abs(b[0]-a[0]), Bz=Math.abs(b[1]-a[1]);
+      var cc=Math.abs(Math.cos(th)), ss=Math.abs(Math.sin(th)), den=cc*cc-ss*ss, ex, ez;
+      if(Math.abs(den)>0.25){ ex=(Bx*cc-Bz*ss)/den; ez=(Bz*cc-Bx*ss)/den; }
+      if(!(ex>2&amp;&amp;ez>2)){ ex=Bx; ez=Bz; }
+      var g=Math.max(20,p.groundSqft), k=Math.sqrt(g/(ex*ez));
+      ex=Math.max(4,ex*k); ez=Math.max(4,ez*k);
+      /* which of the four grid directions this plane slopes down toward */
+      var q=Math.round(((p.azimuth*Math.PI/180 - th)/(Math.PI/2)))%4; if(q<0) q+=4;
+      var dir=[[0,-1],[1,0],[0,1],[-1,0]][q];                          /* north, east, south, west */
+      return {cx:c[0], cz:c[1], ex:ex, ez:ez, dir:dir, pitch:p.pitch, h:p.h*FT};
+    });
+    /* centre it, and put the ground one storey under the lowest eave */
+    var minX=1e9,maxX=-1e9,minZ=1e9,maxZ=-1e9,lowEave=1e9,top=-1e9;
+    facets.forEach(function(f){
+      minX=Math.min(minX,f.cx-f.ex/2); maxX=Math.max(maxX,f.cx+f.ex/2);
+      minZ=Math.min(minZ,f.cz-f.ez/2); maxZ=Math.max(maxZ,f.cz+f.ez/2);
+      var half=(f.dir[0]?f.ex:f.ez)/2, rise=half*Math.tan(Math.min(60,f.pitch)*Math.PI/180);
+      f.rise=rise; lowEave=Math.min(lowEave,f.h-rise); top=Math.max(top,f.h+rise);
+    });
+    var ox=(minX+maxX)/2, oz=(minZ+maxZ)/2, base=lowEave-10;
+    var faces=[], roofEdges=[], eaves=[];
+    facets.forEach(function(f, gi){
+      var x0=f.cx-ox-f.ex/2, x1=f.cx-ox+f.ex/2, z0=f.cz-oz-f.ez/2, z1=f.cz-oz+f.ez/2;
+      var hc=f.h-base, flat=f.pitch<5;
+      /* height of the roof at a corner: lower on the downslope side */
+      function hy(x,z){ if(flat) return hc; var t=f.dir[0]? (x-(x0+x1)/2)/((x1-x0)/2)*f.dir[0] : (z-(z0+z1)/2)/((z1-z0)/2)*f.dir[1]; return hc - t*f.rise; }
+      var c=[[x0,z0],[x1,z0],[x1,z1],[x0,z1]];
+      var top4=c.map(function(p){ return [p[0],hy(p[0],p[1]),p[1]]; });
+      var bot4=c.map(function(p){ return [p[0],0,p[1]]; });
+      for(var i=0;i<4;i++){ var j=(i+1)%4; faces.push({v:[bot4[i],bot4[j],top4[j],top4[i]], kind:'wall', grp:gi}); }
+      faces.push({v:top4, kind:'roof', grp:gi});
+      for(var i2=0;i2<4;i2++){ roofEdges.push([top4[i2],top4[(i2+1)%4]]); }
+      /* the eave is the low edge of the plane */
+      var lo=[0,1,2,3].filter(function(i){ return Math.abs(top4[i][1]-(hc-f.rise))<0.01; });
+      if(lo.length===2) eaves.push([top4[lo[0]],top4[lo[1]]]);
+    });
+    var W=maxX-minX, D=maxZ-minZ;
+    return { m:{ W:W, D:D, H:(top-base)*0.7, pitch:0, o:0 },
+             geo:{ faces:faces, roofEdges:roofEdges, ridge:null, eaves:eaves.length?eaves:roofEdges.slice(0,4), planes:facets.length } };
+  }
+
   function buildGeometry(m){
     var W=m.W/2, D=m.D/2, H=m.H, o=m.o;
     var faces=[], roofEdges=[];
@@ -2858,7 +2928,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
       var top=H+1.2;
       faces.push({v:[[-ex,top,-ez],[ex,top,-ez],[ex,top,ez],[-ex,top,ez]], kind:'roof'});
       roofEdges=[[[-ex,top,-ez],[ex,top,-ez]],[[ex,top,-ez],[ex,top,ez]],[[ex,top,ez],[-ex,top,ez]],[[-ex,top,ez],[-ex,top,-ez]]];
-      return {faces:faces, roofEdges:roofEdges, ridge:null, eave:roofEdges[0]};
+      return {faces:faces, roofEdges:roofEdges, ridge:null, eave:roofEdges[0], eaves:roofEdges.slice(0,4)};
     }
     /* hip roof: ridge runs along the long side */
     var rh=eh+ez*tan, rx=Math.max(0.5, ex-ez);
@@ -2869,7 +2939,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     faces.push({v:[e[3],e[0],r1], kind:'roof'});        /* left hip     */
     /* drawn in the order a roofer would read them: eaves, then hips, then the ridge */
     roofEdges=[[e[0],e[1]],[e[1],e[2]],[e[2],e[3]],[e[3],e[0]],[e[0],r1],[e[1],r2],[e[2],r2],[e[3],r1],[r1,r2]];
-    return {faces:faces, roofEdges:roofEdges, ridge:[r1,r2], eave:[e[0],e[1]]};
+    return {faces:faces, roofEdges:roofEdges, ridge:[r1,r2], eave:[e[0],e[1]], eaves:roofEdges.slice(0,4)};
   }
 
   /* ── projection ── */
@@ -2910,11 +2980,12 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     /* ease the model toward the measured one once it arrives */
     var tgt=st.target||st.model, cur=st.model, k=Math.min(1, 0.06);
     ['W','D','pitch'].forEach(function(f){ cur[f]+= (tgt[f]-cur[f])*k; });
-    var geo=buildGeometry(cur);
+    var geo=st.planes? st.planes.geo : buildGeometry(cur);
+    var pm=st.planes? st.planes.m : cur;
 
     var yaw=st.still? st.yaw : (st.yaw=0.62+now*0.32);
     var bob=reduced()?0:Math.sin(now*1.3)*0.45;
-    var P=makeProj(cv, cur, yaw, bob);
+    var P=makeProj(cv, pm, yaw, bob);
 
     /* ground: a faint survey grid and the house's shadow, well below it */
     ctx.save();
@@ -2934,7 +3005,12 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
 
     /* faces, back to front */
     var faces=geo.faces.map(function(f){ var pts=f.v.map(P), z=pts.reduce(function(s,p){ return s+p.z; },0)/pts.length; return {f:f,pts:pts,z:z}; });
-    faces.sort(function(a,b){ return b.z-a.z; });
+    var gz={}; faces.forEach(function(F){ var g=F.f.grp; if(g===undefined) return; var o=gz[g]||(gz[g]={s:0,n:0}); F.pts.forEach(function(p){ o.s+=p.z; o.n++; }); });
+    faces.sort(function(a,b){
+      var ga=a.f.grp, gb=b.f.grp;
+      if(ga!==undefined&amp;&amp;gb!==undefined&amp;&amp;ga!==gb) return gz[gb].s/gz[gb].n - gz[ga].s/gz[ga].n;
+      return b.z-a.z;
+    });
     ctx.save(); ctx.globalAlpha=appear;
     faces.forEach(function(F){
       var s=shade(F.f,P,F.f.kind);
@@ -2988,8 +3064,9 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
       };
       var m=cur;
       /* the eave nearest the viewer, so its tag is never hidden behind the roof */
-      var eaves=geo.roofEdges.slice(0,4), near=eaves[0], nz=1e9;
-      eaves.forEach(function(e2,i){ var z=(P(e2[0]).z+P(e2[1]).z)/2; if(z<nz){ nz=z; near=e2; } });
+      var eaves=geo.eaves, near=eaves[0], nz=1e9;
+      var zs=eaves.map(function(e2){ return (P(e2[0]).z+P(e2[1]).z)/2; }), zm=zs.reduce(function(a,b){return a+b;},0)/zs.length, best=-1;
+      eaves.forEach(function(e2,i){ var L=Math.hypot(e2[1][0]-e2[0][0], e2[1][2]-e2[0][2]); if(zs[i]<=zm+1e-6 &amp;&amp; L>best){ best=L; near=e2; } });
       var len=Math.hypot(near[1][0]-near[0][0], near[1][2]-near[0][2]);
       tag(near, 'Eave '+Math.round(len)+' ft', -16);
       if(geo.ridge){ tag(geo.ridge, 'Ridge '+Math.round(Math.max(1,(m.W+2*m.o)-(m.D+2*m.o)))+' ft', 16); }
@@ -3065,8 +3142,9 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
       var pitch=+d.avgPitchDegrees||0;
       var trueSqft=Math.round(d.totalAreaSqft);
       var plan=Math.round(trueSqft*Math.cos(pitch*Math.PI/180));
-      st.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch };
+      st.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch, planes:(d.roof&amp;&amp;d.roof.planes&amp;&amp;d.roof.planes.length)||0 };
       st.target=modelFor(trueSqft, pitch);
+      try{ st.planes=planesModel(d.roof); }catch(e){ st.planes=null; }   /* no planes: the typical-house model stays */
     } else {
       st.data=null; st.failed=true;
     }
@@ -3094,7 +3172,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
       +'<div><b>'+data.trueSqft.toLocaleString()+'</b><span>Roof area, sq ft</span></div>'
       +'<div><b>'+squares+'</b><span>Roofing squares</span></div>'
       +'<div><b>'+(data.pitch<5?'Flat':Math.round(12*Math.tan(data.pitch*Math.PI/180))+'/12')+'</b><span>Pitch'+(data.pitch>=5?' · '+Math.round(data.pitch)+'°':'')+'</span></div>'
-      +'<div><b>'+data.planSqft.toLocaleString()+'</b><span>Footprint, sq ft</span></div>'
+      +(data.planes>1 ? '<div><b>'+data.planes+'</b><span>Roof planes</span></div>' : '<div><b>'+data.planSqft.toLocaleString()+'</b><span>Footprint, sq ft</span></div>')
       +'</div>'
       +'<p class=&quot;rs-note&quot;>Measured from satellite. Roof area is the sloped surface you actually shingle — larger than the footprint because the roof is pitched. Squares are before waste; your roofer adds that on site.</p>'
       +'<button type=&quot;button&quot; class=&quot;rs-fix&quot; onclick=&quot;eRoofScanFix()&quot;>Not your roof? Measure it yourself</button>';
