@@ -21581,6 +21581,12 @@ var LS_VENDORS=[
   ['website','My website','A form on their own site'],
   ['generic','Other seller','Any ping-post seller or spreadsheet']
 ];
+/* Where inbound lead email lands. One subdomain, MX-pointed at whichever
+   inbound provider the DNS ends up with; each source gets its own short
+   mailbox on it. Changing this is a DNS job, not a code one — it lives
+   here only so the page can show the address. */
+var LS_INBOX_DOMAIN='leads.builderpro-os.com';
+function lsInboxAddr(s){ return s&&s.inbox_slug?(s.inbox_slug+'@'+LS_INBOX_DOMAIN):''; }
 function lsVendorName(k){var r=LS_VENDORS.filter(function(x){return x[0]===k;})[0];return r?r[1]:k;}
 var _lsSources=[],_lsEvents=[],_lsErr='';
 
@@ -21675,6 +21681,15 @@ function lsRender(){
           +'<div class="ls-url"><code>'+bpEsc(url)+'</code>'
             +'<button class="bpx-rowbtn" onclick="lsCopy(this,\''+s.id+'\')">Copy</button></div>'
           +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Treat it like a password — anyone with this URL can file leads into your account.</div>'
+          /* The email route, for the vendors that will never offer a webhook
+             — which is most of them. One forwarding rule in the inbox
+             their notifications already reach. */
+          +(lsInboxAddr(s)?('<label class="st-lab" style="display:block;margin:14px 0 4px;font-weight:600;font-size:12px">Or forward their emails here</label>'
+            +'<div class="ls-url"><code>'+bpEsc(lsInboxAddr(s))+'</code>'
+              +'<button class="bpx-rowbtn" onclick="lsCopyMail(this,\''+s.id+'\')">Copy</button></div>'
+            +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'
+            +'<a onclick="lsHowTo(\''+s.id+'\')" style="color:#2f6bff;cursor:pointer;text-decoration:underline">How to set the forward up</a>'
+            +' · use this if '+bpEsc(lsVendorName(s.vendor))+' won’t post to a URL.</div>'):'')
           +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'
             +'<button class="bpx-rowbtn" onclick="lsToggle(\''+s.id+'\')">'+(s.active?'Pause':'Resume')+'</button>'
             +'<button class="bpx-rowbtn" onclick="lsTest(\''+s.id+'\')" title="Send a fake lead through it, end to end">Send a test lead</button>'
@@ -21711,6 +21726,36 @@ function lsRender(){
 window.lsCopy=function(btn,id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
   bpRepCopy(lsHookUrl(s),btn);
+};
+
+window.lsCopyMail=function(btn,id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  bpRepCopy(lsInboxAddr(s),btn);
+};
+
+/* Written for somebody who has never set a mail filter up. The steps are
+   Gmail's because that is what most of them use; the principle is the same
+   in Outlook and the wording says so rather than pretending otherwise. */
+window.lsHowTo=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  var addr=lsInboxAddr(s), v=lsVendorName(s.vendor);
+  bpModal('<h3>Forward '+bpEsc(v)+' leads here</h3>'
+    +'<div class="bpx-sub">Five minutes, once. After that every lead they email you arrives in BuilderPro by itself.</div>'
+    +'<div class="ls-url" style="margin:10px 0"><code>'+bpEsc(addr)+'</code>'
+      +'<button class="bpx-rowbtn" onclick="bpRepCopy(\''+addr+'\',this)">Copy</button></div>'
+    +'<ol style="font-size:13.5px;line-height:1.75;color:var(--grey);padding-left:20px;margin:12px 0">'
+    +'<li>In Gmail, open <b>Settings → Forwarding and POP/IMAP → Add a forwarding address</b> and paste the address above.</li>'
+    +'<li>Google emails that address a confirmation code. It lands here, not in your inbox — '
+      +'reload this page and the code will be at the top of <b>Leads received</b>.</li>'
+    +'<li>Paste the code back into Gmail to confirm it.</li>'
+    +'<li>Then <b>Settings → Filters → Create a new filter</b>. In <b>From</b>, put the address '
+      +bpEsc(v)+' sends leads from. Tick <b>Forward it to</b> and choose the address above.</li>'
+    +'</ol>'
+    +'<p style="font-size:13px;line-height:1.65;color:var(--grey)">Filter on the sender, not on everything. Forwarding a whole inbox '
+    +'sends invoices and personal mail through here too, and they pile up as unusable leads.</p>'
+    +'<p style="font-size:13px;line-height:1.65;color:var(--grey)">Outlook and the rest have the same two pieces under different names: '
+    +'a forwarding address to verify, then a rule that decides which mail uses it.</p>'
+    +'<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Got it</button></div>');
 };
 
 window.lsAddOpen=function(){

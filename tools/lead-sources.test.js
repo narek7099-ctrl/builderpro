@@ -13,9 +13,9 @@ const {chromium}=require('playwright');
    const now=Date.now(), day=864e5;
    const sources=[
      {id:'11111111-1111-1111-1111-111111111111',vendor:'angi',label:'Angi — roofing',secret:'abc123',
-      cost_per_lead:65,active:true,total_leads:2,last_lead_at:new Date(now-2*3600e3).toISOString()},
+      inbox_slug:'ab3k9x2p7q',cost_per_lead:65,active:true,total_leads:2,last_lead_at:new Date(now-2*3600e3).toISOString()},
      {id:'22222222-2222-2222-2222-222222222222',vendor:'website',label:'My site',secret:'',
-      cost_per_lead:null,active:false,total_leads:1,last_lead_at:new Date(now-5*day).toISOString()}
+      inbox_slug:'mn4r7t8w2v',cost_per_lead:null,active:false,total_leads:1,last_lead_at:new Date(now-5*day).toISOString()}
    ];
    const events=[
      {id:'e1',source_id:sources[0].id,name:'Dana Whitfield',phone:'(512) 555-0134',email:'d@x.com',
@@ -42,7 +42,9 @@ const {chromium}=require('playwright');
      warned:h.includes('Treat it like a password'),
      hasChart:h.includes('bpc-plot')||h.includes('<svg'),
      exportFn:typeof window.bpCsvLeadEvents==='function',
-     testFn:typeof window.lsTest==='function'
+     testFn:typeof window.lsTest==='function',
+     inbox:h.includes('ab3k9x2p7q@leads.builderpro-os.com')&&h.includes('mn4r7t8w2v@leads.builderpro-os.com'),
+     howTo:typeof window.lsHowTo==='function'&&h.includes('How to set the forward up')
    };
  });
  console.log(JSON.stringify(r,null,1));
@@ -50,7 +52,7 @@ const {chromium}=require('playwright');
  const wantA='https://proj.supabase.co/functions/v1/lead-intake/11111111-1111-1111-1111-111111111111?k=abc123';
  const wantB='https://proj.supabase.co/functions/v1/lead-intake/22222222-2222-2222-2222-222222222222';
  const bad = !r.url.includes(wantA) || !r.url.includes(wantB) || !r.bothCards || !r.pausedShown
-   || !r.leadRow || !r.dupBadge || !r.warned || !r.exportFn || !r.testFn || errs.length;
+   || !r.leadRow || !r.dupBadge || !r.warned || !r.exportFn || !r.testFn || !r.inbox || !r.howTo || errs.length;
  console.log(bad?'FAIL':'lead sources page behaves');
  await b.close(); process.exit(bad?1:0);
 })();
