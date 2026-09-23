@@ -133,6 +133,57 @@ check('homeowner address accepted', isVendorEmail('dana@example.com'), false);
 check('subject with a lead prefix', nameFromSubject('New lead: Dana Whitfield - Roofing'), 'Dana Whitfield');
 has('html to text splits rows', htmlToText('<tr><td>A</td><td>B</td></tr>'), 'A\tB');
 
+/* --- provider envelopes -------------------------------------------------
+   A mapping that misses does not throw. Every message just parses as empty
+   and the only symptom is leads that never arrive, so these are worth
+   pinning to the real payload shapes. */
+const { normaliseInbound } = require('../supabase/functions/lead-email/email-parse.js');
+
+/* Postmark: JSON, TitleCase, ToFull is an array of objects and must be
+   ignored in favour of the string fields. */
+const pm = normaliseInbound({
+  From: 'Angi Leads <leads@angi.com>',
+  FromFull: { Email: 'leads@angi.com', Name: 'Angi Leads' },
+  To: 'ab3k9x2p7q@leads.builderpro-os.com',
+  ToFull: [{ Email: 'ab3k9x2p7q@leads.builderpro-os.com', Name: '' }],
+  OriginalRecipient: 'ab3k9x2p7q@leads.builderpro-os.com',
+  Subject: 'New Lead: Roof repair',
+  TextBody: 'Name: Dana Whitfield\nPhone: 5125550134',
+  HtmlBody: '<p>Name: Dana Whitfield</p>',
+  MessageID: 'a8c1...'
+});
+check('postmark to', pm.to, 'ab3k9x2p7q@leads.builderpro-os.com');
+check('postmark from', pm.from, 'Angi Leads <leads@angi.com>');
+check('postmark subject', pm.subject, 'New Lead: Roof repair');
+has('postmark text', pm.text, 'Dana Whitfield');
+has('postmark html', pm.html, 'Dana Whitfield');
+
+/* and it must reach the same lead as a webhook would */
+const pmLead = parseEmail(pm);
+check('postmark end to end name', pmLead.name, 'Dana Whitfield');
+check('postmark end to end phone', pmLead.phone, '5125550134');
+
+/* Postmark forwarded: To is still the contractor's own inbox, and only
+   OriginalRecipient carries our slug. Taking To here would lose the source. */
+const pmFwd = normaliseInbound({
+  To: 'me@myroofingco.com',
+  OriginalRecipient: 'mn4r7t8w2v@leads.builderpro-os.com',
+  Subject: 'Fwd: lead', TextBody: 'x'
+});
+check('forwarded uses the delivered-to address', pmFwd.to, 'mn4r7t8w2v@leads.builderpro-os.com');
+
+/* Mailgun / SendGrid: form data, lower case, hyphenated */
+const mg = normaliseInbound({
+  recipient: 'ab3k9x2p7q@leads.builderpro-os.com',
+  sender: 'leads@angi.com',
+  subject: 'New Lead',
+  'body-plain': 'Phone: 5125550134',
+  'body-html': '<p>Phone: 5125550134</p>'
+});
+check('mailgun recipient', mg.to, 'ab3k9x2p7q@leads.builderpro-os.com');
+has('mailgun text', mg.text, '5125550134');
+check('empty envelope is safe', normaliseInbound(null).to, '');
+
 /* --- Gmail's forwarding confirmation ------------------------------------
    This lands on the inbound address, not in their inbox, so the code has to
    be readable in the list or the contractor is stranded halfway through
