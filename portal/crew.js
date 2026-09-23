@@ -26,6 +26,14 @@
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s); };
   var money = function (n) { return window.bpMoneyFmt ? bpMoneyFmt(n) : ('$' + Math.round(n || 0)); };
   var live = function () { return !!(window.BP_LIVE && window.BP_SB); };
+  /* Totals round to the dollar; an hourly RATE does not. $34.50 against $35
+     is a thousand dollars over a working year, and the rate is the number
+     this whole page is arguing about. */
+  var rate = function (n) {
+    n = +n || 0;
+    return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  window.bpRateFmt = rate;
 
   var S = { emps: [], entries: [], loaded: false, err: '', tab: 'people' };
   window.BP_CREW = S;
@@ -250,10 +258,10 @@
     if (!(per > 0)) { hint.innerHTML = 'Put the wage in and this shows what the hour really costs you.'; return; }
     var real = per * (1 + bur / 100);
     hint.innerHTML = bur > 0
-      ? 'An hour of this person costs you <b>' + money(real) + '</b>, not ' + money(per) + '. That is the number jobs are costed at.'
+      ? 'An hour of this person costs you <b>' + rate(real) + '</b>, not ' + rate(per) + '. That is the number jobs are costed at.'
         + (pt === 'salary' ? ' (Salary is spread over a nominal 2,080-hour year.)' : '')
       : '<span style="color:#b45309">Payroll tax and workers’ comp usually add 25–50% on top of the wage, and roofing comp rates '
-        + 'are among the highest of any trade. At 0% this person is costed at ' + money(per) + '/hr and every job using them will look '
+        + 'are among the highest of any trade. At 0% this person is costed at ' + rate(per) + '/hr and every job using them will look '
         + 'more profitable than it is. Your comp policy or accountant has the real number.</span>';
   };
 
@@ -408,6 +416,7 @@
         if (window._bpCurView === 'employees') render();
         /* the project budget's labour line has just moved */
         if (document.getElementById('bpx-pj-budget') && window.bpProjBudgetRender) bpProjBudgetRender();
+        if (document.getElementById('bpx-pj-crew') && window.bpProjCrewRender) bpProjCrewRender();
       });
     }, function (er) {
       if (btn) { btn.disabled = false; btn.textContent = 'Log it'; }
