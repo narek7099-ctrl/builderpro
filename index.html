@@ -22050,7 +22050,13 @@ function lsScriptFor(s){
   var url=(window.BP_URL||'https://YOUR-PROJECT.supabase.co')
     +'/functions/v1/lead-email?k='+encodeURIComponent(s.secret||'');
   var q=(window.mailSenders?mailSenders.queryFor([s],1):'');
-  var inbox=lsInboxAddr(s)||((s.inbox_slug||'')+'@leads.builderpro-os.com');
+  /* No slug means no script. The fallback here used to be
+     ('' + '@leads.builderpro-os.com'), which produced a script that looked
+     perfectly fine, ran without error, and filed nothing — the endpoint
+     could not tell which source the mail belonged to, so it skipped every
+     message. A missing identifier has to stop the whole thing, loudly. */
+  var inbox=lsInboxAddr(s);
+  if(!inbox)return '';
   return [
     '/**',
     ' * BuilderPro — sends new '+lsVendorName(s.vendor)+' leads to your BuilderPro account.',
@@ -22131,6 +22137,18 @@ window.lsGmail=function(id){
     return;
   }
   var code=lsScriptFor(s);
+  if(!code){
+    bpModal('<h3>This source has no inbox address yet</h3>'
+      +'<div class="bpx-sub">Which means the Lead Sources email tables are not fully set up in your database.</div>'
+      +'<p style="font-size:13.5px;line-height:1.65;color:var(--grey)">Every source needs a short identifier \u2014 '
+      +'it is what tells BuilderPro which vendor an arriving email belongs to. This one has none, so the reader would '
+      +'run happily and file nothing at all.</p>'
+      +'<p style="font-size:13.5px;line-height:1.65;color:var(--grey)">Run the <b>lead_email</b> migration '
+      +'(<code style="font-size:12px">20260924000000_lead_email.sql</code>) in the Supabase SQL editor, reload this page, '
+      +'and the button will work.</p>'
+      +'<div class="row"><button class="bpx-btn" style="width:auto;margin:0;padding:10px 22px" onclick="bpCloseModal()">Got it</button></div>');
+    return;
+  }
   /* The whole point of this screen is that it is four short actions, not a
      tutorial. One button does the two things a person cannot do at once —
      copies the script and opens the editor — so by the time Google's tab
@@ -22144,9 +22162,12 @@ window.lsGmail=function(id){
        sentences too \u2014 so "New project" and "Save" each became their own
        little circle on their own line, and the list read as debris. */
     +'<ol class="ls-steps">'
-      +'<li><i>1</i><span>In the tab that opens, press <b>New project</b> if it asks, then select everything already in the editor and <b>paste</b> over it.</span></li>'
+      +'<li><i>1</i><span><b>Delete everything already in the editor first</b> \u2014 it starts with a few lines of '
+        +'<code>myFunction</code>. Tap in the code, select all (\u2318A or Ctrl+A), delete, <b>then paste</b>. '
+        +'Pasting without clearing puts this script inside theirs and nothing will run.</span></li>'
       +'<li><i>2</i><span>Press <b>Save</b> \u2014 the disk icon.</span></li>'
-      +'<li><i>3</i><span>Choose <b>install</b> from the dropdown at the top, then press <b>Run</b>.</span></li>'
+      +'<li><i>3</i><span>Choose <b>install</b> from the dropdown at the top, then press <b>Run</b>. '
+        +'If that dropdown says <b>No functions</b>, the old code is still in there \u2014 clear it and paste again.</span></li>'
       +'<li><i>4</i><span>Google asks for permission. It is your own script, so it warns that it is unverified: '
         +'pick <b>Advanced</b>, then <b>Go to (unsafe)</b>, then <b>Allow</b>.</span></li>'
     +'</ol>'

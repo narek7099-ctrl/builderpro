@@ -17,6 +17,10 @@ const {chromium}=require('playwright');
    const local={id:'g1',vendor:'generic',label:'Acme',secret:'k2',inbox_slug:'mn4r7t8w2v',
                 sender_domains:'leads@acmeleads.com'};
    const bare={id:'g2',vendor:'generic',label:'Nobody',secret:'k3',inbox_slug:'zz9q8w7e6r'};
+   // a source with no inbox slug must produce NO script at all. The old
+   // fallback made '@leads.builderpro-os.com' — a script that ran fine and
+   // filed nothing, because the endpoint could not tell which source it was.
+   const slugless={id:'x1',vendor:'angi',label:'Angi',secret:'k9'};
    const a=lsScriptFor(angi), g=lsScriptFor(local);
    return {
      endpoint:a.includes("ENDPOINT = 'https://proj.supabase.co/functions/v1/lead-email?k=srckey123'"),
@@ -31,7 +35,9 @@ const {chromium}=require('playwright');
      deletesOldTriggers:a.includes('deleteTrigger'),
      noSend:!/sendEmail|GmailApp\.send|moveToTrash|\.delete\(/.test(a),
      // the script is pasted as-is: a stray backtick or unescaped quote breaks it
-     parses:(()=>{ try{ new Function(a); return true; }catch(e){ return String(e); } })()
+     parses:(()=>{ try{ new Function(a); return true; }catch(e){ return String(e); } })(),
+     noSlugNoScript: lsScriptFor(slugless)==='',
+     inboxHasSlugBeforeAt: /var INBOX    = '[a-z2-9]{10}@/.test(a)
    };
  });
  console.log(JSON.stringify(r,null,1));
@@ -40,7 +46,8 @@ const {chromium}=require('playwright');
    || !r.installs || !r.deletesOldTriggers || !r.noSend || r.parses!==true
    || !/from:angi\.com/.test(r.search) || !/newer_than:1d/.test(r.search)
    || !/from:acmeleads\.com/.test(r.localSearch)
-   || r.bareSearch !== '';     // no senders configured must mean no search at all
+   || r.bareSearch !== ''     // no senders configured must mean no search at all
+   || !r.noSlugNoScript || !r.inboxHasSlugBeforeAt;
  console.log(bad?'FAIL':'generated gmail script behaves');
  await b.close(); process.exit(bad?1:0);
 })();
