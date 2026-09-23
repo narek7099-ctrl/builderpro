@@ -133,5 +133,29 @@ check('homeowner address accepted', isVendorEmail('dana@example.com'), false);
 check('subject with a lead prefix', nameFromSubject('New lead: Dana Whitfield - Roofing'), 'Dana Whitfield');
 has('html to text splits rows', htmlToText('<tr><td>A</td><td>B</td></tr>'), 'A\tB');
 
-console.log(fails ? '\n' + fails + ' FAILED' : 'email parser behaves · vendor footers kept out');
+/* --- Gmail's forwarding confirmation ------------------------------------
+   This lands on the inbound address, not in their inbox, so the code has to
+   be readable in the list or the contractor is stranded halfway through
+   setting the forward up. */
+const { forwardCode } = require('../supabase/functions/lead-email/email-parse.js');
+const gm = forwardCode({
+  from: 'Gmail Team <forwarding-noreply@google.com>',
+  subject: '(#057620342) Gmail Forwarding Confirmation - Receive Mail from me@myroofingco.com',
+  text: [
+    'me@myroofingco.com has requested to automatically forward mail to your address.',
+    'Confirmation code: 057620342',
+    'To allow it, please click the link below:',
+    'https://mail.google.com/mail/vf-ANGjdJ8-confirm'
+  ].join('\n')
+});
+check('gmail code found', gm && gm.code, '057620342');
+has('gmail link found', gm && gm.link, 'confirm');
+
+/* a real lead must never be mistaken for a confirmation */
+check('a lead is not a code', forwardCode({
+  from: 'leads@angi.com', subject: 'New Lead',
+  text: 'Name: Dana Whitfield\nPhone: 5125550134\nJob number 88213456'
+}), null);
+
+console.log(fails ? '\n' + fails + ' FAILED' : 'email parser behaves · vendor footers kept out, forwarding codes surfaced');
 process.exit(fails ? 1 : 0);
