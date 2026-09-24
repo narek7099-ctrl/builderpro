@@ -214,20 +214,34 @@
   }
 
   /* ── projection ── */
-  function makeProj(cv, m, yaw, bob){
-    var w=cv.width, h=cv.height, tilt=0.46;
-    var span=Math.max(m.W, m.D)+m.o*2;
-    var scale=Math.min(w, h*1.45)/(span*1.55);
-    var cy=Math.cos(yaw), sy=Math.sin(yaw), ct=Math.cos(tilt), stl=Math.sin(tilt);
+  /* The house turns about a vertical axis through its own centre, and the
+     framing is worked out once from the model rather than every frame: the
+     scale fits the house's widest turning circle, so no angle of the turn
+     is ever larger than another, and the centre never moves. Measuring each
+     frame's outline and re-centring on it (as before) chased a shape that
+     changes as it turns, which read as the house shaking. Orthographic, for
+     the same reason — perspective makes the near corner swell and shrink. */
+  function frameFor(geo){
+    var mn=[1e9,1e9,1e9], mx=[-1e9,-1e9,-1e9];
+    geo.faces.forEach(function(f){ f.v.forEach(function(v){ for(var i=0;i<3;i++){ if(v[i]<mn[i])mn[i]=v[i]; if(v[i]>mx[i])mx[i]=v[i]; } }); });
+    var c=[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2], R=0;
+    geo.faces.forEach(function(f){ f.v.forEach(function(v){ var d=Math.hypot(v[0]-c[0], v[2]-c[2]); if(d>R)R=d; }); });
+    return {c:c, R:Math.max(1,R), H:Math.max(1,mx[1]-mn[1])};
+  }
+  function makeProj(cv, fr, yaw){
+    var w=cv.width, h=cv.height, tilt=0.46, ct=Math.cos(tilt), stl=Math.sin(tilt);
+    var needW=2*fr.R, needH=2*fr.R*stl + fr.H*ct;
+    var scale=Math.min(w*0.78/needW, h*0.74/needH);
+    var cy=Math.cos(yaw), sy=Math.sin(yaw);
     return function(p){
-      var x=p[0]*cy - p[2]*sy, z=p[0]*sy + p[2]*cy, y=p[1]-m.H*0.9+bob;
-      /* camera above and in front, looking down: far points sit higher on
-         screen, high points sit nearer the camera */
-      var y2=y*ct + z*stl, z2=z*ct - y*stl;
-      var persp=1/(1+z2/(span*6));
-      return {x:w/2 + x*scale*persp, y:h*0.48 - y2*scale*persp, z:z2};
+      var px=p[0]-fr.c[0], py=p[1]-fr.c[1], pz=p[2]-fr.c[2];
+      var x=px*cy - pz*sy, z=px*sy + pz*cy;
+      /* camera above and in front, looking down */
+      var y2=py*ct + z*stl, z2=z*ct - py*stl;
+      return {x:w/2 + x*scale, y:h/2 - y2*scale, z:z2};
     };
   }
+
 
   function shade(face, P, kind){
     /* light from above-left-front, in screen space after projection */
@@ -257,15 +271,8 @@
     var pm=st.planes? st.planes.m : cur;
 
     var yaw=st.still? st.yaw : (st.yaw=0.62+now*0.32);
-    var P0=makeProj(cv, pm, yaw, 0);
-
-    /* keep it centred: measure where this frame's house lands and shift it
-       so its middle sits in the middle, eased so the turn does not jitter */
-    var mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
-    geo.faces.forEach(function(f){ f.v.forEach(function(v){ var q=P0(v); if(q.x<mnx)mnx=q.x; if(q.x>mxx)mxx=q.x; if(q.y<mny)mny=q.y; if(q.y>mxy)mxy=q.y; }); });
-    var tx=w/2-(mnx+mxx)/2, ty=h/2-(mny+mxy)/2;
-    if(st.cx===undefined){ st.cx=tx; st.cy=ty; } else { st.cx+=(tx-st.cx)*0.12; st.cy+=(ty-st.cy)*0.12; }
-    var P=function(v){ var q=P0(v); return {x:q.x+st.cx, y:q.y+st.cy, z:q.z}; };
+    if(!st.frame||st.frameGeo!==geo){ st.frame=frameFor(geo); st.frameGeo=geo; }
+    var P=makeProj(cv, st.frame, yaw);
 
     /* how far along each visual beat is */
     var appear=Math.min(1, (T-st.arrive)/1.2);               /* house fades in once it is known */
