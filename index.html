@@ -2818,7 +2818,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     stage=document.createElement('div'); stage.className='rs-stage'; stage.id='rs-stage';
     stage.setAttribute('role','status'); stage.setAttribute('aria-live','polite');
     stage.innerHTML=
-      '<div class=&quot;rs-canvas-wrap&quot;><canvas id=&quot;rs-cv&quot; aria-hidden=&quot;true&quot;></canvas>'
+      '<div class=&quot;rs-canvas-wrap&quot;><canvas id=&quot;rs-mapcv&quot; aria-hidden=&quot;true&quot;></canvas><canvas id=&quot;rs-cv&quot; aria-hidden=&quot;true&quot;></canvas>'
      +'<div class=&quot;rs-addr&quot;><i></i><span id=&quot;rs-addr&quot;></span></div>'
      +'<div class=&quot;rs-readout&quot; id=&quot;rs-readout&quot;><b id=&quot;rs-rv&quot;>0</b><span id=&quot;rs-rl&quot;>sq ft of roof</span></div></div>'
      +'<div class=&quot;rs-panel&quot;>'
@@ -3131,40 +3131,83 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
   }
 
   /* the map, drawn flat at ground level through the same camera as the house */
-  function drawMap(ctx, P, w, h, dpr, map, foot, alpha, footA){
-    var mc=st.mc||(st.mc=document.createElement('canvas'));
-    if(mc.width!==w||mc.height!==h){ mc.width=w; mc.height=h; }
-    var m=mc.getContext('2d'); m.setTransform(1,0,0,1,0,0); m.clearRect(0,0,w,h);
-    function path(ring){ m.beginPath(); ring.forEach(function(q,i){ var s=P([q[0],0,q[1]]); i?m.lineTo(s.x,s.y):m.moveTo(s.x,s.y); }); }
-    m.fillStyle='#f3f5f8'; m.fillRect(0,0,w,h);
+  /* The map is flat, and the camera is orthographic, so every frame's view
+     of it is just a stretch-and-turn of one top-down picture. It is painted
+     once (twice: a wide one for the opening and a sharp close one for the
+     lot) and each frame only places that picture — one drawImage instead of
+     re-drawing a few hundred roads and houses 60 times a second. */
+  function paintMap(map, halfFt, px, core){
+    var c=document.createElement('canvas'); c.width=c.height=px;
+    var m=c.getContext('2d'), k=px/(2*halfFt);
+    m.setTransform(k,0,0,k,px/2,px/2);            /* world feet -> texture pixels, origin in the middle */
+    function path(ring){ m.beginPath(); ring.forEach(function(q,i){ i?m.lineTo(q[0],q[1]):m.moveTo(q[0],q[1]); }); }
+    m.fillStyle='#f3f5f8'; m.fillRect(-halfFt,-halfFt,2*halfFt,2*halfFt);
     m.fillStyle='#e7eee4'; map.park.forEach(function(r){ path(r); m.fill(); });
     m.fillStyle='#dde8f3'; map.water.forEach(function(r){ path(r); m.fill(); });
     m.lineCap='butt'; m.lineJoin='round';   /* square ends: round caps draw a loop at every dead end up close */
-    /* casing first, then the white road on top, the Positron way */
-    m.strokeStyle='#dfe4ea'; map.roads.forEach(function(rd){ m.lineWidth=(rd.w+6)*P.scale; path(rd.pts); m.stroke(); });
-    m.strokeStyle='#ffffff'; map.roads.forEach(function(rd){ m.lineWidth=rd.w*P.scale; path(rd.pts); m.stroke(); });
-    /* the neighbours; the map's own outline of THIS house is left out, the
-       measured one takes its place */
-    var centres=(foot||[]).map(function(f){ var x=0,z=0; f.forEach(function(v){ x+=v[0]; z+=v[2]; }); return [x/f.length, z/f.length]; });
-    m.fillStyle='#e4e8ee'; m.strokeStyle='#d3d9e1'; m.lineWidth=1*dpr;
-    map.blds.forEach(function(r){
-      for(var i=0;i<centres.length;i++){ if(rsInside(centres[i], r)) return; }
-      path(r); m.fill(); m.stroke();
-    });
-    if(foot&amp;&amp;footA>0){
-      m.globalAlpha=footA; m.fillStyle='rgba(0,111,255,.16)'; m.strokeStyle='#006fff'; m.lineWidth=1.6*dpr;
-      foot.forEach(function(f){ path(f.map(function(v){ return [v[0],v[2]]; })); m.closePath(); m.fill(); m.stroke(); });
-      m.globalAlpha=1;
-    }
-    /* soften to white at the edges, so the map sits in the card rather than
+    m.strokeStyle='#dfe4ea'; map.roads.forEach(function(rd){ m.lineWidth=rd.w+6; path(rd.pts); m.stroke(); });
+    m.strokeStyle='#ffffff'; map.roads.forEach(function(rd){ m.lineWidth=rd.w; path(rd.pts); m.stroke(); });
+    /* every building, this one included: the measured outline is drawn
+       over its own, and repainting to cut it out cost a visible hitch at
+       the moment the house arrived */
+    m.fillStyle='#e4e8ee'; m.strokeStyle='#d3d9e1'; m.lineWidth=1/k;
+    map.blds.forEach(function(r){ path(r); m.fill(); m.stroke(); });
+    /* soften to nothing toward the edge, so it sits in the card rather than
        being cut off by it */
+    m.setTransform(1,0,0,1,0,0);
     m.globalCompositeOperation='destination-in';
-    var R=Math.min(w,h)*0.62, gr=m.createRadialGradient(w/2,h/2,R*0.45,w/2,h/2,R);
+    var gr=m.createRadialGradient(px/2,px/2,px*core,px/2,px/2,px*0.5);
     gr.addColorStop(0,'rgba(0,0,0,1)'); gr.addColorStop(1,'rgba(0,0,0,0)');
-    m.fillStyle=gr; m.fillRect(0,0,w,h);
-    m.globalCompositeOperation='source-over';
-    ctx.save(); ctx.globalAlpha=alpha; ctx.drawImage(mc,0,0); ctx.restore();
+    m.fillStyle=gr; m.fillRect(0,0,px,px);
+    return {c:c, half:halfFt};
   }
+
+  /* painted as soon as the street arrives, in its own task, so no frame
+     of the animation ever waits on it */
+  function rsPaintMaps(me){
+    if(!me||!me.map||me.mapWide) return;
+    setTimeout(function(){ if(st!==me) return;
+      me.mapWide=paintMap(me.map, RS_MAP_R, 1536, 0.22);
+      setTimeout(function(){ if(st!==me) return; me.mapNear=paintMap(me.map, 260, 2048, 0.40); }, 0);
+    }, 0);
+  }
+
+  function drawMap(ctx, P, dpr, alpha, foot, footA){
+    if(!st.mapWide) return;
+    /* the affine map from the ground plane to the screen, read off the camera */
+    var o=P([0,0,0]), ex=P([1,0,0]), ez=P([0,0,1]);
+    var A=ex.x-o.x, B=ex.y-o.y, C=ez.x-o.x, D=ez.y-o.y;
+    var pxPerFt=Math.max(1e-6, Math.hypot(A,B)), ftPerPx=1/pxPerFt;
+    var nearA=st.mapNear ? Math.max(0, Math.min(1, (0.9-ftPerPx)/0.5)) : 0;
+    /* half the view's diagonal, in feet: once the close picture's solid
+       middle covers it, the wide one underneath is never seen */
+    var viewFt=Math.hypot(ctx.canvas.width, ctx.canvas.height)/2*ftPerPx;
+    var needWide=!(nearA>=1 &amp;&amp; viewFt<260*0.8);
+    ctx.save();
+    [needWide?st.mapWide:null, nearA>0?st.mapNear:null].forEach(function(tx, i){
+      if(!tx) return;
+      var k=tx.c.width/(2*tx.half);
+      ctx.globalAlpha=alpha*(i===0?1:nearA);
+      ctx.setTransform(A/k, B/k, C/k, D/k, o.x - (A+C)*tx.half, o.y - (B+D)*tx.half);
+      ctx.drawImage(tx.c, 0, 0);
+    });
+    ctx.setTransform(1,0,0,1,0,0);
+    if(foot&amp;&amp;footA>0){
+      ctx.globalAlpha=alpha*footA; ctx.fillStyle='rgba(0,111,255,.16)'; ctx.strokeStyle='#006fff'; ctx.lineWidth=1.6*dpr; ctx.lineJoin='round';
+      foot.forEach(function(f){ ctx.beginPath(); f.forEach(function(v,i){ var q=P([v[0],0,v[2]]); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); }); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+    }
+    /* and in screen space too, so however close the camera is the map sits
+       in the card as a soft pool rather than running to its edges */
+    var cw=ctx.canvas.width, chh=ctx.canvas.height, R=Math.min(cw,chh)*0.72;
+    ctx.globalAlpha=1; ctx.globalCompositeOperation='destination-in';
+    var vg=ctx.createRadialGradient(cw/2,chh/2,R*0.42,cw/2,chh/2,R);
+    vg.addColorStop(0,'rgba(0,0,0,1)'); vg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=vg; ctx.fillRect(0,0,cw,chh);
+    ctx.globalCompositeOperation='source-over';
+    ctx.restore();
+  }
+
+
 
   function ease(t){ t=Math.max(0,Math.min(1,t)); return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; }
   function span(T,a,b){ return Math.max(0,Math.min(1,(T-a)/(b-a))); }
@@ -3194,7 +3237,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     var r=cv.getBoundingClientRect();
     if(cv.width!==Math.round(r.width*dpr)||cv.height!==Math.round(r.height*dpr)){ cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr); }
     var nowMs=performance.now(), dt=Math.min(0.05,(nowMs-(st.lastMs||nowMs))/1000); st.lastMs=nowMs;
-    var T=st.clock, w=cv.width, h=cv.height;
+    var T=st.clockHeld||st.clockAt===undefined ? st.clock : Math.min(RS_END, st.clock+(nowMs-st.clockAt)/1000), w=cv.width, h=cv.height;
     ctx.clearRect(0,0,w,h);
 
     var geo=null;
@@ -3220,9 +3263,17 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
 
     /* the street */
     var mapA=Math.min(span(T,0,0.8), 1-span(T,9.2,10.8));
-    if(st.map&amp;&amp;mapA>0){
+    if(st.map&amp;&amp;!st.mapWide) rsPaintMaps(st);
+    /* The map has a layer of its own, underneath, at 1× pixels: it is soft
+       by design, and blending it at a phone's 2–3× was most of the frame's
+       cost. The house stays sharp on the layer above. */
+    var mcv=st.mcv, mctx=st.mctx, mr=mcv.getBoundingClientRect();
+    if(mcv.width!==Math.round(mr.width)||mcv.height!==Math.round(mr.height)){ mcv.width=Math.round(mr.width); mcv.height=Math.round(mr.height); }
+    if(mapA>0||st.mapDrawn){ mctx.clearRect(0,0,mcv.width,mcv.height); st.mapDrawn=false; }
+    var PM=makeProj(mcv,{c:st.cam.c,R:st.cam.R,H:st.cam.H,tilt:tilt,yaw:yaw,zoom:zoom,grow:1});
+    if(st.mapWide&amp;&amp;mapA>0){ st.mapDrawn=true;
       var footA=geo?Math.min(span(T,Math.max(3.0,start),Math.max(4.2,start+1.2)),1):0;
-      drawMap(ctx,P0,w,h,dpr,st.map,geo&amp;&amp;geo.foot,mapA,footA);
+      drawMap(mctx,PM,1,mapA,geo&amp;&amp;geo.foot,footA);
     }
     if(!geo||grow<=0.01){ st.raf=requestAnimationFrame(draw); return; }
 
@@ -3305,6 +3356,10 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     }
     if(st.failed &amp;&amp; raw>=RS_STEPS[2].t){ finish(null); return; }
     st.clock=Math.min(RS_END, raw);
+    /* tick() runs 16 times a second, which is plenty for the words and the
+       bar but not for motion: frames read the clock through clockNow(),
+       which carries it forward between ticks unless it is holding */
+    st.clockAt=performance.now(); st.clockHeld=(st.data===undefined &amp;&amp; raw>=holdAt) || st.clock>=RS_END;
     var T=st.clock;
 
     var idx=0; for(var i=0;i<RS_STEPS.length;i++){ if(T>=RS_STEPS[i].t) idx=i; }
@@ -3339,8 +3394,8 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&amp;&amp;ev.data
     $('rs-readout').classList.remove('on'); $('rs-rv').textContent='0'; $('rs-bar').style.width='0';
     $('rs-pct').textContent='0%'; $('rs-now').textContent='Analyzing your roof';
     stage.classList.add('on');
-    var cv=$('rs-cv');
-    st={ cv:cv, ctx:cv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
+    var cv=$('rs-cv'), mcv=$('rs-mapcv');
+    st={ cv:cv, ctx:cv.getContext('2d'), mcv:mcv, mctx:mcv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
          clock:0, idx:-1, data:undefined, target:null, yaw:0.62 };
     /* the continue button stays off until the numbers are in */
     try{ eS.sqft=0; eS.usedMap=false; eCheckBtn1(); }catch(e){}
