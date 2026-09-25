@@ -3060,9 +3060,80 @@ document.addEventListener('click', function(e) {
      on the calculator's own steps. */
   function seeded(){ var str=String((st&&st.addrText)||'x'), h=2166136261; for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
     return function(){ h=Math.imul(h^(h>>>15),2246822507); h=Math.imul(h^(h>>>13),3266489909); h^=h>>>16; return (h>>>0)/4294967296; }; }
+  /* ── the yard, measured from the map ───────────────────────────────────────
+     The map has houses and streets but no property lines, so the lot is
+     estimated: every spot nearer this house than any neighbour's, short of
+     the street and never past it, within 140 ft. Less the house, that is the
+     yard; the part behind the house (away from the street) is the back yard.
+     Sampled on a 3 ft grid squared to the house, once, when the house is
+     settled. */
+  function measureYard(geo){
+    var m=st&&st.map; if(!m||!geo||!geo.foot) return null;
+    var H=hx(geo), foot=geo.foot[0].map(function(p){ return [p[0],p[2]]; });
+    var fx=0,fz=0; foot.forEach(function(p){ fx+=p[0]; fz+=p[1]; }); fx/=foot.length; fz/=foot.length;
+    function segD(px,pz,a,b){ var ex=b[0]-a[0], ez=b[1]-a[1], L=ex*ex+ez*ez||1, t=Math.max(0,Math.min(1,((px-a[0])*ex+(pz-a[1])*ez)/L)), dx=a[0]+ex*t-px, dz=a[1]+ez*t-pz; return Math.sqrt(dx*dx+dz*dz); }
+    function ringD(px,pz,r){ if(rsInside([px,pz],r)) return 0; var d=1e9; for(var i=0;i<r.length;i++){ var e=segD(px,pz,r[i],r[(i+1)%r.length]); if(e<d) d=e; } return d; }
+    function cross(p,q,a,b){ function o(u,v,w){ return (v[0]-u[0])*(w[1]-u[1])-(v[1]-u[1])*(w[0]-u[0]); }
+      return (o(p,q,a)>0)!==(o(p,q,b)>0) && (o(a,b,p)>0)!==(o(a,b,q)>0); }
+    var REACH=140, lim=Math.max(H.a1-H.a0,H.b1-H.b0)/2+REACH;
+    /* the neighbours: real houses nearby, not this one, not sheds */
+    var nb=[]; m.blds.forEach(function(r){ var a=Math.abs(ringArea(r)); if(a<250) return;
+      var cx=0,cz=0; r.forEach(function(p){ cx+=p[0]; cz+=p[1]; }); cx/=r.length; cz/=r.length;
+      if(rsInside([cx,cz],foot)||Math.hypot(cx-fx,cz-fz)>lim*1.6) return;
+      var x0=1e9,x1=-1e9,z0=1e9,z1=-1e9; r.forEach(function(p){ x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]); z0=Math.min(z0,p[1]); z1=Math.max(z1,p[1]); });
+      nb.push({r:r,x0:x0,x1:x1,z0:z0,z1:z1}); });
+    var rs=[]; m.roads.forEach(function(rd){ for(var i=0;i+1<rd.pts.length;i++){ var a=rd.pts[i], b=rd.pts[i+1];
+      if(segD(fx,fz,a,b)<lim*1.4) rs.push({a:a,b:b,w:rd.w/2+8}); } });
+    var fa=H.front[0], fb=H.front[1], back=Math.min(H.a0*fa+H.b0*fb, H.a1*fa+H.b1*fb, H.a0*fa+H.b1*fb, H.a1*fa+H.b0*fb);
+    var G=3, n=Math.ceil(lim/G), cells={}, lot=0, backN=0, c0=[(H.a0+H.a1)/2,(H.b0+H.b1)/2];
+    for(var i=-n;i<=n;i++) for(var j=-n;j<=n;j++){
+      var a=c0[0]+i*G, b=c0[1]+j*G, w=H.w(a,0,b), px=w[0], pz=w[2];
+      var d=ringD(px,pz,foot); if(d>REACH) continue;
+      var ok=true;
+      for(var k=0;k<nb.length&&ok;k++){ var B=nb[k], bx=Math.max(B.x0-px,0,px-B.x1), bz=Math.max(B.z0-pz,0,pz-B.z1);
+        if(Math.sqrt(bx*bx+bz*bz)<d && ringD(px,pz,B.r)<d) ok=false; }
+      for(var k2=0;k2<rs.length&&ok;k2++){ var R=rs[k2]; if(segD(px,pz,R.a,R.b)<R.w || cross([fx,fz],[px,pz],R.a,R.b)) ok=false; }
+      if(!ok) continue;
+      cells[i+','+j]=1; lot++;
+      if(d>0 && a*fa+b*fb<back) backN++;
+    }
+    var footA=Math.abs(ringArea(foot)), lotA=lot*G*G, yard=Math.max(0,lotA-footA), backA=backN*G*G;
+    if(yard<200) return null;
+    /* the outline of the measured ground: cell edges chained into loops on
+       the grid's corners, then simplified, so diagonals read as straight
+       lines rather than stairs */
+    var nx={};
+    function E(p,q){ (nx[p]=nx[p]||[]).push(q); }
+    Object.keys(cells).forEach(function(key){ var ij=key.split(','), i=+ij[0], j=+ij[1];
+      /* corners are named by (2i±1, 2j±1); walk each cell's open sides counter-clockwise */
+      var A=(2*i-1)+','+(2*j-1), B=(2*i+1)+','+(2*j-1), C=(2*i+1)+','+(2*j+1), D=(2*i-1)+','+(2*j+1);
+      if(!cells[i+','+(j-1)]) E(A,B); if(!cells[(i+1)+','+j]) E(B,C);
+      if(!cells[i+','+(j+1)]) E(C,D); if(!cells[(i-1)+','+j]) E(D,A); });
+    var loops=[];
+    Object.keys(nx).forEach(function(st0){
+      while(nx[st0]&&nx[st0].length){ var lp=[st0], cur=nx[st0].pop();
+        for(var g=0; cur!==st0 && g<20000; g++){ lp.push(cur); var o=nx[cur]; if(!o||!o.length) break; cur=o.pop(); }
+        if(lp.length>3) loops.push(lp.map(function(k){ var ij=k.split(','); return [c0[0]+(+ij[0])*G/2, c0[1]+(+ij[1])*G/2]; })); } });
+    function dp(pts,tol){ if(pts.length<3) return pts; var a=pts[0], b=pts[pts.length-1], bi=0, bd=0;
+      for(var i=1;i<pts.length-1;i++){ var d=segD(pts[i][0],pts[i][1],a,b); if(d>bd){ bd=d; bi=i; } }
+      if(bd<=tol) return [a,b]; return dp(pts.slice(0,bi+1),tol).slice(0,-1).concat(dp(pts.slice(bi),tol)); }
+    var shapes=loops.map(function(lp){ lp.push(lp[0]); var q=dp(lp,G*0.9); q.pop();
+      return q.map(function(p){ return H.w(p[0],0.05,p[1]); }); }).filter(function(q){ return q.length>=3; });
+    var pool=Math.max(150, Math.min(800, Math.round(backA*0.18/10)*10));
+    return { yard:Math.round(yard/10)*10, back:Math.round(backA/10)*10, pool:pool, shapes:shapes };
+  }
+  function drawYard(ctx,P,alpha){
+    var y=st.yard; if(!y||alpha<=0.01) return;
+    ctx.save(); ctx.globalAlpha=alpha;
+    ctx.fillStyle='rgba(0,111,255,.10)'; ctx.strokeStyle=BLUE; ctx.lineWidth=1.4; ctx.lineJoin='round'; ctx.beginPath();
+    y.shapes.forEach(function(q){ q.forEach(function(p,i){ var o=P(p); i?ctx.lineTo(o.x,o.y):ctx.moveTo(o.x,o.y); }); ctx.closePath(); });
+    ctx.fill('evenodd');
+    ctx.stroke(); ctx.restore();
+  }
+
   function randomPool(){ if(st._pool) return st._pool; var r=seeded();
     var shapes=['rect','freeform','kidney','l'], sizes=[288,400,512,650];
-    return (st._pool={shape:'rect', size:sizes[Math.floor(r()*4)]}); }
+    return (st._pool={shape:'rect', size:(st.yard&&st.yard.pool)||sizes[Math.floor(r()*4)]}); }
   function randomYard(){ if(st._yard) return st._yard; var r=seeded(); r(); r();
     return (st._yard={size:900+Math.round(r()*1800), shrubs:4+Math.floor(r()*5), stones:3+Math.floor(r()*4)}); }
 
@@ -3133,9 +3204,11 @@ document.addEventListener('click', function(e) {
     if(st.mapWide&&mapA>0){ st.mapDrawn=true;
       var footA=geo?Math.min(span(T,Math.max(3.0,start),Math.max(4.2,start+1.2)),1):0;
       drawMap(mctx,PM,1,mapA,geo&&geo.foot,footA);
+      if(st.yard) drawYard(mctx,PM,Math.min(mapA,span(T,6.0,7.2)));
     }
     if(!geo||grow<=0.01){ st.raf=requestAnimationFrame(draw); return; }
     st.geoLocked=geo;
+    if(st.yard===undefined && (TRADE==='pools'||TRADE==='landscaping')){ try{ st.yard=measureYard(geo); }catch(e){ st.yard=null; } }
 
     /* ground-level work (pool, yard) sits under the house */
     if(fin&&fin.under) fin.under(ctx,P1,dpr,now);
@@ -3300,10 +3373,13 @@ document.addEventListener('click', function(e) {
     painting:    function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(Math.round(Math.sqrt(d.planSqft)*4*9)),'Exterior wall, approx. sq ft']]; },
     electrical:  function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(d.planSqft),'Home size to price']]; },
     general:     function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(d.trueSqft),'Roof area, sq ft']]; },
+    pools:       function(d){ var y=st&&st.yard; return y ? [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(y.back),'Back yard, approx. sq ft'],[fmt(y.pool),'Pool that fits, sq ft']] : [[fmt(d.planSqft),'Home footprint, sq ft']]; },
+    landscaping: function(d){ var y=st&&st.yard; return y ? [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(y.yard),'Yard, approx. sq ft']] : [[fmt(d.planSqft),'Home footprint, sq ft']]; },
     _:           function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft']]; }
   };
   var PREFILL = {
-    hvac:function(d){ return d.planSqft; }, painting:function(d){ return d.planSqft; }, electrical:function(d){ return d.planSqft; }
+    hvac:function(d){ return d.planSqft; }, painting:function(d){ return d.planSqft; }, electrical:function(d){ return d.planSqft; },
+    pools:function(){ return st&&st.yard ? st.yard.pool : null; }, landscaping:function(){ return st&&st.yard ? st.yard.yard : null; }
   };
   function fmt(n){ return (typeof n==='number') ? Math.round(n).toLocaleString() : String(n); }
 
