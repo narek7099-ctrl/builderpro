@@ -313,7 +313,7 @@
     var sized = jobs.filter(function (j) { return (+j.estimate || 0) > 0; });
     var avg = sized.length ? sized.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0) / sized.length : 0;
     var t = function (l, v, note, go) { return '<div class="bpx-stat dash-tile' + (go ? ' go' : '') + '"' + (go ? ' onclick="bpNav(\'' + go + '\')"' : '') + '><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="note">' + note + '</div></div>'; };
-    return '<div class="bpx-stats dash-nums" style="margin-top:16px">'
+    return '<div class="bpx-stats dash-nums db-foot">'
       + t('New leads this month', D.leads ? D.leads.n : '&middot;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', D.leads ? 'contacts' : 'marketing')
       + t('Appointments this month', D.leads ? D.leads.a : '&middot;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page' : 'your booking page feeds this', 'calendar')
       + t('Won this month', String(wonM.length), wonM.length ? money(wonVal) + ' of work' : 'nothing marked won yet', 'activejobs')
@@ -322,19 +322,141 @@
       + (doneM.length ? '<div class="dash-foot-note">' + doneM.length + (doneM.length === 1 ? ' project' : ' projects') + ' finished this month, ' + money(doneVal) + ' collected.</div>' : '');
   }
 
-  /* ---------- the page ---------- */
+  /* ---------- the top line: who, when, and the three things started from here ---------- */
+  function topline() {
+    var co = ((window.bpSettingsGet && bpSettingsGet().company) || {});
+    var h = new Date().getHours();
+    var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '.</div>'
+      + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
+      + '<div class="db-acts"><button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
+      + '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add project</button>'
+      + '<button class="bpx-btn" onclick="bpNav(\'supply\')">Order materials</button></div></div>';
+  }
+
+  /* ---------- four numbers, two by two, in one card ---------- */
+  function kpis() {
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [], act = jobs.filter(function (j) { return j.status === 'active'; });
+    var fin; try { fin = bpFinData(); } catch (e) { fin = { inc: [], exp: [] }; }
+    var mk = monthKey(Date.now());
+    var inM = fin.inc.filter(function (x) { return x.when && monthKey(x.when) === mk; }).reduce(function (t, x) { return t + x.amt; }, 0);
+    var outM = fin.exp.filter(function (x) { return x.when && monthKey(x.when) === mk; }).reduce(function (t, x) { return t + x.amt; }, 0);
+    var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
+    var inMotion = act.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
+    var net = inM - outM;
+    var k = function (lbl, val, sub, go, tone) {
+      return '<div class="db-k" onclick="bpNav(\'' + go + '\')"><span class="db-kl">' + lbl + '</span><span class="db-kv' + (tone ? ' ' + tone : '') + '">' + val + '</span><span class="db-ks">' + sub + '</span></div>';
+    };
+    return '<div class="bpx-panel db-kpis">'
+      + k('Kept this month', money(net), money(inM) + ' in · ' + money(outM) + ' out', 'finances', net < 0 ? 'neg' : 'blue')
+      + k('Owed to you', money(owed), owed ? 'on active projects' : 'all collected', 'finances')
+      + k('In motion', String(act.length), money(inMotion) + ' of work', 'activejobs')
+      + k('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')
+      + '</div>';
+  }
+
+  /* ---------- money in and out, month by month, as columns ---------- */
+  function flow() {
+    var fin; try { fin = bpFinData(); } catch (e) { return ''; }
+    var inM = bpChart.byMonth(fin.inc, 6, function (x) { return x.when; }, function (x) { return x.amt; });
+    var outM = bpChart.byMonth(fin.exp, 6, function (x) { return x.when; }, function (x) { return x.amt; });
+    var any = inM.values.concat(outM.values).some(function (v) { return v > 0; });
+    if (!any) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Money in and out', empty: 'Collect on a job or log an expense, and six months of it lines up here.' }) + '</div>';
+    var net = inM.values.reduce(function (t, v) { return t + v; }, 0) - outM.values.reduce(function (t, v) { return t + v; }, 0);
+    return '<div class="bpx-panel">' + bpChart.columns({
+      title: 'Money in and out', lead: 'last six months · ' + (net >= 0 ? money(net) + ' kept' : money(-net) + ' down'),
+      x: { label: 'Month', values: inM.labels },
+      series: [{ name: 'Money in', values: inM.values }, { name: 'Money out', values: outM.values }],
+      fmt: money, height: 230,
+    }) + '</div>';
+  }
+
+  /* ---------- the pipeline: where the work is, in dollars ---------- */
+  function pipeline() {
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [];
+    var act = jobs.filter(function (j) { return j.status === 'active'; });
+    var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
+    var got = act.reduce(function (t, j) { return t + (+j.collected || 0); }, 0);
+    var quoted = D.deals ? +D.deals.v || 0 : 0;
+    var rows = [{ label: 'Quoted, waiting', value: quoted }, { label: 'Won, still owed', value: owed }, { label: 'Won, collected', value: got }];
+    if (!rows.some(function (r) { return r.value > 0; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Your pipeline', empty: 'Send an estimate or win a project and it shows up here, quoted to collected.' }) + '</div>';
+    return '<div class="bpx-panel">' + bpChart.donut({
+      title: 'Your pipeline', lead: 'quoted to collected', rows: rows, fixed: true, fmt: money,
+      centreNote: 'in the pipeline', axis: 'Stage',
+    }) + '</div>';
+  }
+
+  /* ---------- where the money goes ---------- */
+  function spend() {
+    var fin; try { fin = bpFinData(); } catch (e) { return ''; }
+    var cut = Date.now() - 183 * 864e5, cat = {};
+    fin.exp.forEach(function (x) { if (x.when && x.when >= cut) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; } });
+    var rows = Object.keys(cat).map(function (c) { return { label: c, value: cat[c] }; });
+    if (!rows.length) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Where the money goes', empty: 'Log an expense or match a supply bill and your costs break down here.' }) + '</div>';
+    return '<div class="bpx-panel">' + bpChart.ranked({ title: 'Where the money goes', lead: 'last six months', rows: rows, fmt: money, axis: 'Category', max: 6 }) + '</div>';
+  }
+
+  /* ---------- example data, so the page can be seen before anyone signs in ---------- */
+  function demoShim() {
+    if (live()) return null;
+    var now = Date.now(), day = 864e5, iso = function (d) { return new Date(now + d * day).toISOString().slice(0, 10); };
+    var jobs = [
+      { id: 'd1', name: 'Mike Johnson', title: 'Full re-roof, architectural', estimate: 18400, collected: 9200, status: 'active', wonAt: now - 12 * day, sched: { dates: [iso(0), iso(1)], time: '7:00 AM' }, expenses: [] },
+      { id: 'd2', name: 'Sarah Malik', title: 'Storm repair and gutters', estimate: 7600, collected: 0, status: 'active', wonAt: now - 5 * day, sched: { dates: [iso(3)] }, expenses: [] },
+      { id: 'd3', name: 'Carlos Rivera', title: 'Leak repair', estimate: 2100, collected: 1050, status: 'active', wonAt: now - 3 * day, sched: { dates: [iso(5)] }, expenses: [] },
+    ];
+    var done = [['Dana Meyers', 14200, 8900], ['Jessica Tran', 21600, 13100], ['Ethan Wells', 6400, 3900], ['Nina Patel', 9800, 6700], ['Omar Haddad', 4300, 2600]];
+    done.forEach(function (d, i) { jobs.push({ id: 'x' + i, name: d[0], title: 'Re-roof', estimate: d[1], collected: d[1], status: 'done', wonAt: now - (40 + i * 30) * day, doneAt: now - (20 + i * 31) * day,
+      expenses: [{ cat: 'Materials', amt: Math.round(d[2] * .6) }, { cat: 'Labor / crew', amt: Math.round(d[2] * .32) }, { cat: 'Permits', amt: Math.round(d[2] * .08) }] }); });
+    var inc = [], exp = [];
+    jobs.forEach(function (j) {
+      if (j.collected) inc.push({ amt: j.collected, when: j.doneAt || now - 2 * day, type: 'Job' });
+      (j.expenses || []).forEach(function (e) { exp.push({ amt: e.amt, when: j.doneAt, type: e.cat }); });
+    });
+    for (var m = 0; m < 6; m++) { exp.push({ amt: 640, when: now - m * 30 * day, type: 'Ads' }); exp.push({ amt: 380, when: now - m * 30 * day, type: 'Fuel' }); }
+    var fin = { inc: inc, exp: exp };
+    fin.income = inc.reduce(function (t, x) { return t + x.amt; }, 0); fin.expense = exp.reduce(function (t, x) { return t + x.amt; }, 0);
+    var keep = { jg: window.bpJobsGet, fd: window.bpFinData };
+    window.bpJobsGet = function () { return jobs; };
+    window.bpFinData = function () { return fin; };
+    if (D.deals === undefined) D.deals = { n: 4, v: 38400 };
+    if (D.unread === undefined) D.unread = 2;
+    if (D.leads === undefined) D.leads = { n: '23', a: '9' };
+    if (D.contracts === undefined) D.contracts = [{ customer_name: 'Sarah Malik', status: 'viewed', sent_at: new Date(now - 2 * day).toISOString() }];
+    if (D.events === undefined) { D.events = [
+      { start: new Date(now).toISOString(), time: '10:00 AM', name: 'Priya Shah', what: 'Roof inspection' },
+      { start: new Date(now + 2 * day).toISOString(), time: '2:00 PM', name: 'Tom Becker', what: 'Storm inspection' },
+      { start: new Date(now + 4 * day).toISOString(), time: '9:30 AM', name: 'Lena Ortiz', what: 'Estimate walk-through' }]; D.appts = D.events; }
+    return function () { window.bpJobsGet = keep.jg; window.bpFinData = keep.fd; };
+  }
+
+  /* ---------- the page ----------
+     A grid of mixed sizes rather than one column of equal panels: the
+     numbers and the money chart open it side by side, then three charts in
+     a row, the projects across the full width, and the lists last. */
   window.bpDashboard = function () {
     var el = $('bpxViewArea'); if (!el) return;
     var crew = !!(window.bpTeamIsCrew && bpTeamIsCrew());
-    el.innerHTML = (live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
-      + hero(crew)
-      + (crew ? '' : checklist())
-      + projects(crew)
-      + (crew
-        ? '<div style="margin-top:16px">' + week() + '</div>'
-        : '<div class="dash-two">' + attention() + week() + moneyChart() + activity() + '</div>'
-          + '<div style="margin-top:16px">' + jobsChart() + '</div>'
-          + footStats());
+    var undo = demoShim();
+    try {
+      el.innerHTML = (live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
+        + topline()
+        + (crew ? '' : checklist())
+        + (crew
+          ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
+          : '<div class="db-grid">'
+            + '<div class="db-c4">' + kpis() + '</div>'
+            + '<div class="db-c8">' + flow() + '</div>'
+            + '<div class="db-c4">' + pipeline() + '</div>'
+            + '<div class="db-c4">' + spend() + '</div>'
+            + '<div class="db-c4">' + attention() + '</div>'
+            + '<div class="db-c12">' + projects(crew) + '</div>'
+            + '<div class="db-c7">' + jobsChart() + '</div>'
+            + '<div class="db-c5">' + week() + '</div>'
+            + '<div class="db-c5">' + footStats() + '</div>'
+            + '<div class="db-c7">' + activity() + '</div>'
+            + '</div>');
+    } finally { if (undo) undo(); }
     fetchState();
   };
 

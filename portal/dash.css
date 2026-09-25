@@ -385,3 +385,35 @@
 }
 #bpx .cw-ev.tiny{display:flex;align-items:center;padding-top:0;padding-bottom:0}
 #bpx .cw-ev.tiny b{font-size:11px}
+
+/* ---------- the dashboard grid (2026-09) ----------
+   Twelve columns, mixed spans: numbers beside the money chart, three
+   charts in a row, projects full width, lists last. Every cell stretches
+   so neighbours end on one line. */
+#bpx .db-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:4px 0 18px}
+#bpx .db-greet{font-size:28px;font-weight:600;letter-spacing:-.03em;line-height:1.05;color:var(--ink)}
+#bpx .db-date{font-size:14px;color:var(--grey);margin-top:6px}
+#bpx .db-acts{display:flex;gap:6px;flex-wrap:wrap}
+#bpx .db-acts .bpx-btn{width:auto;margin:0;padding:12px 18px}
+#bpx .db-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px;align-items:stretch}
+#bpx .db-grid>div{display:flex;flex-direction:column;min-width:0}
+#bpx .db-grid>div>.bpx-panel,#bpx .db-grid>div>.dash-projs,#bpx .db-grid>div>.bpx-stats{flex:1;margin:0 !important}
+#bpx .db-c4{grid-column:span 4}#bpx .db-c5{grid-column:span 5}#bpx .db-c7{grid-column:span 7}#bpx .db-c8{grid-column:span 8}#bpx .db-c12{grid-column:span 12}
+@media(max-width:1180px){#bpx .db-c4,#bpx .db-c5,#bpx .db-c7,#bpx .db-c8{grid-column:span 6}#bpx .db-grid>.db-c8{grid-column:span 12}}
+@media(max-width:760px){#bpx .db-grid>div{grid-column:span 12 !important}}
+
+/* four numbers, two by two */
+#bpx .db-kpis{display:grid !important;grid-template-columns:1fr 1fr;padding:0 !important;overflow:hidden}
+#bpx .db-k{display:flex;flex-direction:column;gap:6px;padding:22px 22px 20px;cursor:pointer;transition:background-color .3s ease}
+#bpx .db-k:hover{background:var(--soft)}
+#bpx .db-k:nth-child(odd){border-right:1px solid var(--line-2)}
+#bpx .db-k:nth-child(-n+2){border-bottom:1px solid var(--line-2)}
+#bpx .db-kl{font-size:12px;font-weight:600;text-transform:uppercase;color:var(--grey)}
+#bpx .db-kv{font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1;color:var(--ink);font-feature-settings:'tnum'}
+#bpx .db-kv.blue{color:var(--blue)}#bpx .db-kv.neg{color:#b3392f}
+#bpx .db-ks{font-size:12.5px;color:var(--grey)}
+
+/* the lead-and-won tiles become a 2x2 in their cell */
+#bpx .db-foot{display:grid !important;grid-template-columns:1fr 1fr !important;gap:8px !important}
+#bpx .db-foot + .dash-foot-note{display:none}
+#bpx .db-grid .dash-projs{background:transparent}
