@@ -26530,7 +26530,7 @@ var GHL_OPP_URL=BP_URL+'/functions/v1/ghl-opportunities';
 var BP_HED={'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'};
 function bpApi(url,payload){return fetch(url,{method:'POST',headers:BP_HED,body:JSON.stringify(payload||{})}).then(function(r){return r.json();});}
 /* real roofing photography — used wherever a job has no photo of its own */
-var BP_IMG=['assets/roofing/roof-crew','assets/roofing/roof-underlayment','assets/roofing/roof-decking','assets/roofing/roof-completed'];
+var BP_IMG=['assets/roofing/roof-crew','assets/roofing/roof-underlayment','assets/roofing/roof-decking','assets/roofing/roof-completed','assets/roofing/roof-inspection'];
 function bpStockImg(seed,small){
   var n=0,s=String(seed||'');
   for(var i=0;i<s.length;i++)n=(n*31+s.charCodeAt(i))>>>0;

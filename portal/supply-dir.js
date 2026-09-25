@@ -209,7 +209,7 @@
      and fall back on the 404: with nothing here the page asks for nothing
      and every tile wears its lettermark. Drop <id>.png in that folder and
      add the id here — that is the whole job. See the README in there. */
-  SP.LOGOS = 'abc amazonbiz beacon benmoore bfs carter ced cosentino e84 fastenal fbm ferguson floordecor grainger graybar heritagepool homedepot_pro hvacdirect johnstone leslies lowes_pro lw menards metrie msi northerntool pexuniverse poolcorp richelieu sherwin siteone srs tileshop whitecap winsupply'.split(' ').filter(Boolean);
+  SP.LOGOS = 'abc amazonbiz beacon benmoore bfs carter ced cosentino e84 fastenal fbm ferguson floordecor grainger graybar heritagepool homedepot_pro hvacdirect johnstone leslies lowes_pro lw menards metrie msi northerntool pexuniverse poolcorp richelieu sherwin siteone srs supplyhouse tileshop whitecap winsupply zoro'.split(' ').filter(Boolean);
 
   /* Some brands only publish a square app-icon lockup — white mark on a
      solid brand colour. Those already carry their own tile, so they fill
