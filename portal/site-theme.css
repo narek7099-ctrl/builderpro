@@ -1,0 +1,216 @@
+/* ==================================================================
+   SITE THEME for the portal: the software, dressed in the marketing
+   site's design system (site/site.css), the same way the calculators
+   were (embed-src/site-theme.html).
+
+   The system, from site/site.css:
+     type     General Sans (Geist behind it). Headlines 600 at -0.03em,
+              uppercase 12px 600 captions for labels
+     colour   canvas #edf2f6, cards white, ink #001530, muted #788493,
+              ONE accent #006fff, hairlines rgba(0,0,0,.10)
+     shape    16px cards, flat (no drop shadows), every button a fully
+              rounded uppercase pill; ink by default, blue on hover
+     motion   ease-settle for things arriving, ease-pill for fills,
+              .3s colour changes on hover, no lifts or glows
+
+   Loaded after every other portal stylesheet. #bpx#bpx outranks the
+   older layers on specificity; !important only where they used it.
+   ================================================================== */
+
+/* ---------- tokens ---------- */
+#bpx#bpx{
+  --sans:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --ease:cubic-bezier(.39,.575,.565,1);          /* ease-settle */
+  --ease-out:cubic-bezier(.215,.61,.355,1);      /* ease-pill */
+  --r-lg:16px; --r-md:12px; --r-sm:10px;
+  font-family:var(--sans);
+}
+#bpx#bpx:not(.bpx-dark){
+  --bg:#edf2f6; --bg-2:#dce3ec; --card:#ffffff; --soft:#f4f7fa;
+  --line:rgba(0,0,0,.10); --line-2:#e6ebf1;
+  --ink:#001530; --ink-2:#001530; --grey:#788493; --grey-l:#9aa3b1; --mu:#788493;
+  --blue:#006fff; --blue-d:#003db8; --blue-l:#e6f0ff; --blue-glow:transparent;
+  --edge:transparent;
+  --side-a:#ffffff; --side-b:#ffffff;
+  --bpc-s1:#006fff; --bpc-grid:#e6ebf1;
+}
+#bpx#bpx.bpx-dark{
+  --bg:#000c1c; --bg-2:#0a1628; --card:#0c1a2e; --soft:#11213a;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.07);
+  --ink:#edf2f6; --grey:#93a0b2; --grey-l:#6c7a8e; --mu:#93a0b2;
+  --blue:#3d8bff; --blue-d:#8db8ff; --blue-l:#0f2a52; --blue-glow:transparent;
+  --edge:transparent;
+  --side-a:#0c1a2e; --side-b:#0c1a2e;
+}
+#bpx#bpx, #bpx#bpx *:not(.ms):not(svg):not(path):not(canvas):not(code):not(pre):not(.material-symbols-rounded){font-family:var(--sans)}
+#bpx#bpx ::selection{background:var(--blue);color:#fff}
+/* the site has no grain; its flat areas are flat */
+#bpx#bpx::after{display:none}
+
+/* ---------- shell: the sidebar is a white card sitting 6px inside the canvas ---------- */
+#bpx#bpx .bpx-side{
+  background:var(--card) !important;border:0 !important;box-shadow:none !important;
+  margin:6px 0 6px 6px;border-radius:var(--r-lg);padding:22px 12px !important;
+  height:calc(100vh - 12px);position:sticky;top:6px;
+}
+#bpx#bpx .bpx-side::before{display:none}
+#bpx#bpx .bpx-side .bpx-brand2{color:var(--ink) !important;font-weight:700;letter-spacing:-.03em;margin-bottom:24px}
+#bpx#bpx .bpx-side .bpx-brand2 span{color:var(--blue) !important}
+#bpx#bpx .bpx-nav a{
+  color:var(--ink) !important;font-weight:500;font-size:14px;border-radius:40px !important;padding:10px 14px !important;
+  box-shadow:none !important;transform:none !important;
+  transition:background-color .3s ease,color .3s ease !important;
+}
+#bpx#bpx .bpx-nav a:hover{background:var(--bg-2) !important;color:var(--ink) !important}
+#bpx#bpx .bpx-nav a.on,#bpx#bpx .bpx-nav .bpx-sub a.on{background:var(--ink) !important;color:#fff !important;font-weight:600;box-shadow:none !important}
+#bpx#bpx.bpx-dark .bpx-nav a.on,#bpx#bpx.bpx-dark .bpx-nav .bpx-sub a.on{background:var(--blue) !important}
+#bpx#bpx .bpx-grp-h{color:var(--grey) !important}
+#bpx#bpx .bpx-grp.has-on .bpx-grp-h{color:var(--ink) !important}
+#bpx#bpx .bpx-sub-in::before{background:var(--line) !important}
+#bpx#bpx .bpx-nav-foot,#bpx#bpx .bpx-user2{border-top:1px solid var(--line) !important}
+#bpx#bpx .bpx-side .bpx-uemail{color:var(--grey) !important}
+#bpx#bpx .bpx-side .bpx-logout{
+  background:transparent !important;border:1px solid var(--line) !important;color:var(--ink) !important;
+  border-radius:40px !important;box-shadow:none !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase;
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease !important;
+}
+#bpx#bpx .bpx-side .bpx-logout:hover{background:var(--ink) !important;border-color:var(--ink) !important;color:#fff !important}
+#bpx#bpx .bpx-mobbar{background:var(--card) !important;border-bottom:1px solid var(--line) !important}
+#bpx#bpx .bpx-mobbar a{color:var(--ink) !important;border-color:var(--line) !important;border-radius:40px}
+#bpx#bpx .bpx-mobbar a.on{background:var(--ink) !important;border-color:var(--ink) !important;color:#fff !important}
+
+/* ---------- page header: the site's headline scale ---------- */
+#bpx#bpx .bpx-main{padding:30px 34px 40px}
+#bpx#bpx .bpx-mhdr h1{font-weight:600 !important;font-size:34px !important;letter-spacing:-.03em !important;line-height:1 !important;color:var(--ink) !important}
+#bpx#bpx .bpx-mhdr p{color:var(--grey) !important;font-size:15px;margin-top:10px}
+
+/* ---------- surfaces: flat white cards, 16px ---------- */
+#bpx#bpx .bpx-panel,#bpx#bpx .bpx-stat,#bpx#bpx .bpx-card,#bpx#bpx .bpx-cd-card,#bpx#bpx .bpx-auto-card,#bpx#bpx .bg-sheet{
+  background:var(--card) !important;border:0 !important;border-radius:var(--r-lg) !important;box-shadow:none !important;
+  transition:background-color .3s ease !important;transform:none !important;
+}
+#bpx#bpx .bpx-cwrap{border:1px solid var(--line) !important;border-radius:var(--r-md) !important;box-shadow:none !important}
+#bpx#bpx .bpx-ptitle{font-weight:600 !important;font-size:16px !important;letter-spacing:-.02em !important;color:var(--ink) !important}
+#bpx#bpx .bpx-ptitle .lg2{color:var(--grey);font-weight:400;font-size:13px;letter-spacing:0}
+
+/* stats: caption label, big 600 number */
+#bpx#bpx .bpx-stat .lbl{color:var(--grey) !important;font-size:12px !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:uppercase}
+#bpx#bpx .bpx-stat .val{font-weight:600 !important;font-size:30px !important;letter-spacing:-.03em !important;color:var(--ink) !important}
+#bpx#bpx .bpx-stat .val.blue{color:var(--blue) !important}
+
+/* ---------- buttons: one shape, the uppercase pill ---------- */
+#bpx#bpx .bpx-btn:not(.ghost),#bpx#bpx .bpx-addbtn,#bpx#bpx .bpx-rowbtn.primary,#bpx#bpx .bpx-donebtn,#bpx#bpx .bpx-savebtn{
+  background:var(--ink) !important;background-image:none !important;color:#fff !important;border:1px solid var(--ink) !important;
+  border-radius:40px !important;box-shadow:none !important;filter:none !important;transform:none !important;
+  font-size:12px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0 !important;line-height:1.1;
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease,opacity .3s ease !important;
+}
+#bpx#bpx .bpx-btn:not(.ghost):hover,#bpx#bpx .bpx-addbtn:hover,#bpx#bpx .bpx-rowbtn.primary:hover,#bpx#bpx .bpx-donebtn:hover,#bpx#bpx .bpx-savebtn:hover{
+  background:var(--blue) !important;border-color:var(--blue) !important;box-shadow:none !important;transform:none !important;filter:none !important;
+}
+#bpx#bpx.bpx-dark .bpx-btn:not(.ghost),#bpx#bpx.bpx-dark .bpx-addbtn,#bpx#bpx.bpx-dark .bpx-rowbtn.primary,#bpx#bpx.bpx-dark .bpx-donebtn,#bpx#bpx.bpx-dark .bpx-savebtn{background:var(--blue) !important;border-color:var(--blue) !important}
+#bpx#bpx.bpx-dark .bpx-btn:not(.ghost):hover,#bpx#bpx.bpx-dark .bpx-addbtn:hover{background:#fff !important;border-color:#fff !important;color:#001530 !important}
+#bpx#bpx .bg-call:not(.off){background:#16a34a !important;background-image:none !important;border-radius:40px !important;box-shadow:none !important}
+
+#bpx#bpx .bpx-btn.ghost,#bpx#bpx .bpx-rowbtn:not(.primary),#bpx#bpx .bpx-ghostbtn,#bpx#bpx .bpx-logo-up,#bpx#bpx .bpx-logo-rm,#bpx#bpx .sg-decline,#bpx#bpx .bpx-mtab{
+  background:transparent !important;color:var(--ink) !important;border:1px solid var(--line) !important;border-radius:40px !important;
+  box-shadow:none !important;transform:none !important;
+  font-size:12px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0 !important;
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease !important;
+}
+#bpx#bpx .bpx-btn.ghost:hover,#bpx#bpx .bpx-rowbtn:not(.primary):hover,#bpx#bpx .bpx-ghostbtn:hover,#bpx#bpx .bpx-mtab:hover{
+  background:var(--ink) !important;border-color:var(--ink) !important;color:#fff !important;box-shadow:none !important;transform:none !important;
+}
+#bpx#bpx.bpx-dark .bpx-btn.ghost:hover,#bpx#bpx.bpx-dark .bpx-rowbtn:not(.primary):hover,#bpx#bpx.bpx-dark .bpx-ghostbtn:hover{background:#fff !important;border-color:#fff !important;color:#001530 !important}
+#bpx#bpx .bpx-iconbtn,#bpx#bpx .bpx-calnav button{
+  background:transparent !important;border:1px solid var(--line) !important;border-radius:100px !important;box-shadow:none !important;transform:none !important;color:var(--ink) !important;
+  transition:background-color .2s ease,border-color .2s ease !important;
+}
+#bpx#bpx .bpx-iconbtn:hover,#bpx#bpx .bpx-calnav button:hover{background:var(--bg-2) !important;border-color:var(--bg-2) !important}
+#bpx#bpx .bpx-delbtn{background:transparent !important;border:1px solid rgba(220,38,38,.3) !important;color:#dc2626 !important;border-radius:40px !important;box-shadow:none !important;
+  font-size:12px !important;font-weight:600 !important;text-transform:uppercase}
+#bpx#bpx .bpx-delbtn:hover{background:#dc2626 !important;border-color:#dc2626 !important;color:#fff !important}
+#bpx#bpx .bpx-linkbtn{color:var(--blue) !important;font-weight:600}
+#bpx#bpx button:focus-visible,#bpx#bpx a:focus-visible{outline:3px solid var(--blue) !important;outline-offset:3px}
+
+/* ---------- tabs: pills, the active one ink ---------- */
+#bpx#bpx .bpx-jobtabs{background:transparent !important;box-shadow:none !important;padding:0 !important;gap:6px !important;border-radius:0 !important;flex-wrap:wrap}
+#bpx#bpx .bpx-jt{
+  background:var(--card) !important;border:1px solid var(--line) !important;border-radius:40px !important;color:var(--ink) !important;box-shadow:none !important;
+  padding:10px 16px !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0 !important;
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease !important;
+}
+#bpx#bpx .bpx-jt:hover{background:var(--bg-2) !important;border-color:var(--bg-2) !important}
+#bpx#bpx .bpx-jt.on,#bpx#bpx .bpx-jt.active{background:var(--ink) !important;border-color:var(--ink) !important;color:#fff !important;box-shadow:none !important}
+#bpx#bpx.bpx-dark .bpx-jt.on,#bpx#bpx.bpx-dark .bpx-jt.active{background:var(--blue) !important;border-color:var(--blue) !important}
+
+/* ---------- badges and pills ---------- */
+#bpx#bpx .bpx-badge,#bpx#bpx .bpx-pill{border-radius:40px !important;font-size:11px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0 !important;box-shadow:none !important}
+#bpx#bpx .bpx-badge{background:var(--blue-l) !important;color:var(--blue-d) !important}
+
+/* ---------- forms ---------- */
+#bpx#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),#bpx#bpx select,#bpx#bpx textarea{
+  border:1px solid var(--line) !important;border-radius:var(--r-md) !important;background:var(--card) !important;color:var(--ink) !important;box-shadow:none !important;
+  transition:border-color .3s ease,box-shadow .3s ease !important;
+}
+#bpx#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,#bpx#bpx select:focus,#bpx#bpx textarea:focus{
+  border-color:var(--blue) !important;box-shadow:0 0 0 3px rgba(0,111,255,.15) !important;outline:none !important;
+}
+#bpx#bpx input[type=checkbox],#bpx#bpx input[type=radio],#bpx#bpx input[type=range]{accent-color:var(--blue)}
+#bpx#bpx label,#bpx#bpx .st-lab{color:var(--ink)}
+
+/* ---------- tables: caption headers, hairline rows ---------- */
+#bpx#bpx .bpx-ctable thead th,#bpx#bpx .bpx-table th{
+  background:transparent !important;color:var(--grey) !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase;letter-spacing:0 !important;
+  border-bottom:1px solid var(--line) !important;
+}
+#bpx#bpx .bpx-ctable td,#bpx#bpx .bpx-table td{border-bottom:1px solid var(--line-2) !important}
+#bpx#bpx .bpx-ctable tbody tr{transition:background-color .3s ease}
+
+/* ---------- modals: a white card over a soft ink veil ---------- */
+#bpx#bpx .bpx-modal{background:rgba(0,21,48,.45) !important;backdrop-filter:blur(8px)}
+#bpx#bpx .bpx-modalcard{border:0 !important;border-radius:var(--r-lg) !important;box-shadow:0 0 5px rgba(0,0,0,.10) !important;animation:bpxThemeIn .45s cubic-bezier(.39,.575,.565,1) both}
+#bpx#bpx .bpx-modalcard h3{font-weight:600 !important;letter-spacing:-.03em !important;font-size:22px !important}
+@keyframes bpxThemeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ---------- notes and empty states ---------- */
+#bpx#bpx .bpx-when-note,#bpx#bpx .bpx-ga-note,#bpx#bpx .bg-note,#bpx#bpx .bg-warn{border-radius:var(--r-md) !important;box-shadow:none !important}
+#bpx#bpx .bpx-skel{border-radius:8px}
+
+/* ---------- motion: views settle in, nothing bounces ---------- */
+#bpx#bpx #bpxViewArea > *{animation:bpxThemeIn .5s cubic-bezier(.39,.575,.565,1) both}
+@media (prefers-reduced-motion:reduce){#bpx#bpx *{animation:none !important;transition:none !important}}
+
+/* ---------- supply and other modules that brought their own gradients ---------- */
+#bpx#bpx [class*="sp-"] .bpx-btn:not(.ghost),#bpx#bpx .sp-inline{background-image:none !important}
+#bpx#bpx .sp-aisle,#bpx#bpx .sp-card,#bpx#bpx .sp-pk-card{box-shadow:none !important;transform:none !important}
+#bpx#bpx .sp-aisle:hover{border-color:var(--ink) !important}
+#bpx#bpx .sp-dept.on{background:var(--ink) !important;border-color:var(--ink) !important}
+#bpx#bpx .sp-dept{border-radius:40px !important}
+
+/* ---------- mobile ---------- */
+@media (max-width:820px){
+  #bpx#bpx .bpx-side{margin:0;border-radius:0;height:auto;position:static}
+  #bpx#bpx .bpx-main{padding:20px 16px 32px}
+  #bpx#bpx .bpx-mhdr h1{font-size:28px !important}
+}
+
+/* ---------- dashboard ---------- */
+#bpx#bpx .dash-hero{border:0 !important;box-shadow:none !important;border-radius:var(--r-lg) !important;background:var(--card) !important}
+#bpx#bpx .dash-hero::after{display:none}
+#bpx#bpx .hero-cta{background:var(--ink) !important;color:#fff !important;border:1px solid var(--ink) !important;border-radius:40px !important;padding:12px 18px !important;
+  font-size:12px !important;font-weight:600 !important;text-transform:uppercase;box-shadow:none !important;transition:background-color .3s ease,border-color .3s ease !important}
+#bpx#bpx .hero-cta:hover{background:var(--blue) !important;border-color:var(--blue) !important}
+#bpx#bpx .pj-card{box-shadow:none !important;border:0 !important;border-radius:var(--r-lg) !important;transition:background-color .3s ease !important}
+#bpx#bpx .pj-card:hover{transform:none !important;box-shadow:none !important}
+#bpx#bpx .dash-tile.go:hover{transform:none !important;box-shadow:none !important;background:var(--soft) !important}
+
+/* ---------- hover: colour, never a lift or a glow ---------- */
+#bpx#bpx .sp-card:hover,#bpx#bpx .sp-card:focus-visible,#bpx#bpx .sp-chain:hover,#bpx#bpx .sp-dir-c:hover,#bpx#bpx .sp-aisle:hover{transform:none !important;box-shadow:none !important;border-color:var(--ink) !important}
+#bpx#bpx .sp-pk-box:focus-within{border-color:var(--blue) !important;box-shadow:0 0 0 3px rgba(0,111,255,.15) !important}
+#bpx#bpx .sp-pk-box{border-radius:40px !important}
+
+/* ---------- charts: the site's blue leads, tooltips are flat cards ---------- */
+#bpx#bpx .bpc-tip{box-shadow:0 0 5px rgba(0,0,0,.10) !important;border-radius:var(--r-md) !important;border:0 !important}
+#bpx#bpx .bpc-t{font-weight:600 !important;font-size:16px !important;letter-spacing:-.02em !important}
+#bpx#bpx .bpc-empty .bpc-none{background:var(--soft) !important;color:var(--grey) !important;border-color:var(--line) !important}
