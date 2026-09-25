@@ -41,7 +41,7 @@ extra = r'''
 #est-embed .e-addrpanel.hs-done #e-mresult,
 #est-embed .e-addrpanel.hs-done #e-slopecard,
 #est-embed .e-addrpanel.hs-done #e-manualbtn{display:none !important;}
-#est-embed .rs-grid.hs-grid3{grid-template-columns:repeat(3,1fr);}
+#est-embed .rs-grid.hs-grid3{grid-template-columns:repeat(3,1fr);}#est-embed .rs-grid.hs-grid2{grid-template-columns:1fr 1fr;}#est-embed .rs-grid.hs-grid1{grid-template-columns:1fr;}
 @media(max-width:560px){#est-embed .rs-grid.hs-grid3{grid-template-columns:1fr 1fr;}}
 /* the questions pool and landscaping ask before the shot */
 #est-embed .hs-q{display:none;padding:22px 22px 24px;}
