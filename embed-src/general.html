@@ -1671,7 +1671,187 @@ document.addEventListener('click', function(e) {
 #est-embed #e-zippanel .e-shdr{margin:-16px -32px 14px !important;width:auto !important;max-width:none !important;}
 @media(max-width:640px){#est-embed #e-zippanel .e-shdr{margin:-16px -16px 12px !important;}}
 </style>
-</body><style>
+<!--ST-BEGIN--><!-- SITE THEME — dresses an estimator in the marketing site's design system
+     (site/site.css), so the calculator reads as part of the website rather
+     than a widget dropped into it.
+
+     Injected by tools/inject-roof-scan.py; applied to roofing first. Written
+     against the class names every estimator shares (.e-shdr, .e-oi,
+     .e-btnmain ...), so extending it to the other nine is a list change, not
+     a rewrite.
+
+     The system, from site/site.css:
+       type     General Sans (Geist behind it), 600 headlines at -0.03em,
+                uppercase 12px 600 captions
+       colour   canvas #edf2f6, cards white, ink #001530, muted #788493,
+                ONE accent #006fff, hairlines rgba(0,0,0,.10)
+       shape    16px cards, 6px gaps between cards, no drop shadows,
+                every button a fully rounded uppercase pill
+       motion   ease-settle for things arriving, ease-pill for fills,
+                .3s colour changes on hover
+
+     It sits after every other stylesheet on the page and is specific enough
+     to win without fighting line by line; the older layers underneath carry
+     !important in places, so this does too, deliberately and only there. -->
+<style id="bp-site-theme">
+#est-embed{
+  --st-canvas:#edf2f6; --st-soft:#dce3ec; --st-muted:#788493; --st-ink:#001530;
+  --st-blue:#006fff; --st-blue-d:#003db8; --st-blue-l:#e6f0ff; --st-stroke:rgba(0,0,0,.10);
+  --st-radius:16px; --st-gap:6px;
+  --st-settle:cubic-bezier(.39,.575,.565,1); --st-pill:cubic-bezier(.215,.61,.355,1);
+  --st-font:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  /* the estimator's own tokens, pointed at the site's */
+  --a:#006fff !important; --al:#006fff !important; --ag:rgba(0,111,255,.14) !important;
+  --pri:#006fff !important; --pri-d:#003db8 !important; --ink:#001530 !important; --ink-2:#788493 !important;
+  --line:rgba(0,0,0,.10) !important; --mu:#788493 !important; --txt:#001530 !important; --bs:#dce3ec !important;
+}
+
+/* ---- ground and type ---------------------------------------------------- */
+html body #est-embed#est-embed, html body #est-embed#est-embed > .e-app{background:var(--st-canvas) !important;color:var(--st-ink) !important;}
+html body #est-embed#est-embed{border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed, html body #est-embed#est-embed *:not(canvas):not(svg):not(path):not(i.bpi){font-family:var(--st-font) !important;}
+html body #est-embed#est-embed ::selection{background:var(--st-blue);color:#fff;}
+
+/* ---- top bar: the site's navbar, as a white card ------------------------- */
+html body #est-embed#est-embed .e-topbar{background:#fff !important;border:0 !important;border-radius:var(--st-radius) var(--st-radius) 0 0 !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-tlogo{color:var(--st-ink) !important;font-weight:700 !important;font-size:20px !important;letter-spacing:-.03em !important;}
+html body #est-embed#est-embed .e-tlogo span{color:var(--st-blue) !important;font-weight:700 !important;}
+html body #est-embed#est-embed .e-ldot{background:var(--st-blue) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-tstep{font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-tstep b{color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-prog{background:var(--st-soft) !important;height:3px !important;}
+html body #est-embed#est-embed .e-pfill{background:var(--st-blue) !important;box-shadow:none !important;transition:width .5s var(--st-pill) !important;}
+
+/* ---- tabs: pills ---------------------------------------------------------- */
+html body #est-embed#est-embed .e-tabs{background:#fff !important;border:0 !important;gap:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-tab{border-radius:40px !important;padding:12px 20px !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;
+  background:#fff !important;color:var(--st-ink) !important;border:1px solid var(--st-stroke) !important;box-shadow:none !important;transition:background-color .3s ease,color .3s ease,border-color .3s ease !important;}
+html body #est-embed#est-embed .e-tab:hover{background:var(--st-soft) !important;border-color:var(--st-soft) !important;}
+html body #est-embed#est-embed .e-tab.on,html body #est-embed#est-embed .e-tab.active,html body #est-embed#est-embed .e-tab[aria-selected="true"]{background:var(--st-ink) !important;color:#fff !important;border-color:var(--st-ink) !important;}
+
+/* ---- the step header: a white card, not a dark banner --------------------
+   #est-embed#est-embed: two ids, so the site's rules outrank the older
+   '#est-embed .e-shdr .e-stitle' layers without matching their chains. */
+html body #est-embed#est-embed .e-shdr{background:#fff !important;background-image:none !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;
+  padding:28px 28px 26px !important;margin:0 0 var(--st-gap) !important;color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-shdr::before,html body #est-embed#est-embed .e-shdr::after{display:none !important;}
+html body #est-embed#est-embed .e-seye{display:block !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;line-height:.9 !important;color:var(--st-muted) !important;margin-bottom:14px !important;}
+html body #est-embed#est-embed .e-stitle{font-size:40px !important;line-height:1 !important;letter-spacing:-.03em !important;font-weight:600 !important;color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-stitle em{font-style:normal !important;color:var(--st-blue) !important;background:none !important;-webkit-text-fill-color:currentColor !important;}
+html body #est-embed#est-embed .e-ssub{font-size:16px !important;line-height:1.4 !important;font-weight:400 !important;color:var(--st-muted) !important;margin-top:14px !important;max-width:560px !important;}
+@media(max-width:560px){html body #est-embed#est-embed .e-stitle{font-size:30px !important;} html body #est-embed#est-embed .e-shdr{padding:22px 20px 20px !important;}}
+
+/* ---- cards and the option rows -------------------------------------------- */
+html body #est-embed#est-embed .e-card,html body #est-embed#est-embed .e-zipwrap,html body #est-embed#est-embed .e-olist{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-olist{padding:var(--st-gap) !important;gap:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-card .e-olist{padding:0 !important;}
+html body #est-embed#est-embed .e-oi{background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:12px !important;box-shadow:none !important;
+  transition:background-color .3s ease,border-color .3s ease,transform .4s var(--st-settle) !important;}
+html body #est-embed#est-embed .e-oi:hover{background:var(--st-canvas) !important;border-color:var(--st-soft) !important;transform:none !important;}
+html body #est-embed#est-embed .e-oi.sel{background:var(--st-blue-l) !important;border-color:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-oi-lbl{font-weight:600 !important;color:var(--st-ink) !important;letter-spacing:-.01em !important;}
+html body #est-embed#est-embed .e-oi-desc{color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-oi-tag{background:var(--st-canvas) !important;color:var(--st-ink) !important;border:0 !important;border-radius:40px !important;font-weight:600 !important;}
+html body #est-embed#est-embed .e-oi-radio{border:1px solid var(--st-soft) !important;background:#fff !important;color:transparent !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-oi.sel .e-oi-radio{background:var(--st-blue) !important;border-color:var(--st-blue) !important;color:#fff !important;}
+html body #est-embed#est-embed .e-oi-em,html body #est-embed#est-embed .e-oi-emchip{background:var(--st-canvas) !important;border:0 !important;box-shadow:none !important;}
+
+/* ---- fields ----------------------------------------------------------------- */
+html body #est-embed#est-embed .e-fi,html body #est-embed#est-embed .e-zipinput,html body #est-embed#est-embed .e-asearch-input,html body #est-embed#est-embed select,html body #est-embed#est-embed textarea{
+  background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:12px !important;color:var(--st-ink) !important;box-shadow:none !important;
+  transition:border-color .3s ease,box-shadow .3s ease !important;}
+html body #est-embed#est-embed .e-fi:focus,html body #est-embed#est-embed .e-zipinput:focus,html body #est-embed#est-embed .e-asearch-input:focus{border-color:var(--st-blue) !important;box-shadow:0 0 0 3px rgba(0,111,255,.14) !important;outline:none !important;}
+html body #est-embed#est-embed .e-asearch{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;padding:var(--st-gap) !important;margin-bottom:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-asearch-input{border:0 !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-fl,html body #est-embed#est-embed .e-ziplabel{font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-suggestions{background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:12px !important;box-shadow:0 12px 30px rgba(0,21,48,.08) !important;}
+html body #est-embed#est-embed .e-suggestion:hover{background:var(--st-canvas) !important;}
+html body #est-embed#est-embed .e-consent{background:var(--st-canvas) !important;border:0 !important;border-radius:12px !important;color:var(--st-muted) !important;}
+
+/* ---- the ZIP card: laid out, not left at the card's edge -------------------
+   One white card like the header above it, the same inner padding, a label
+   that reads as a caption, a roomy input, and the hint set under it. The
+   header card's old negative margins (from the navy banner days) are undone
+   so both cards share one left edge. */
+html body #est-embed#est-embed #e-zippanel .e-shdr{margin:0 0 var(--st-gap) !important;width:auto !important;max-width:none !important;}
+html body #est-embed#est-embed .e-zipwrap{padding:24px 28px 26px !important;margin:0 0 var(--st-gap) !important;display:flex !important;flex-direction:column !important;gap:10px !important;}
+html body #est-embed#est-embed .e-ziplabel{margin:0 !important;}
+html body #est-embed#est-embed .e-zipinput{width:100% !important;max-width:320px !important;height:56px !important;padding:0 18px !important;font-size:20px !important;font-weight:500 !important;letter-spacing:.04em !important;font-variant-numeric:tabular-nums !important;}
+html body #est-embed#est-embed .e-zipinput::placeholder{color:#b3bcc7 !important;letter-spacing:.02em !important;}
+html body #est-embed#est-embed .e-ziphint{margin:0 !important;font-size:13px !important;color:var(--st-muted) !important;}
+@media(max-width:560px){html body #est-embed#est-embed .e-zipwrap{padding:20px !important;} html body #est-embed#est-embed .e-zipinput{max-width:none !important;}}
+
+/* ---- buttons: the site's one shape --------------------------------------- */
+html body #est-embed#est-embed .e-btnrow{gap:var(--st-gap) !important;margin-top:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-btnmain,html body #est-embed#est-embed .e-restart,html body #est-embed#est-embed .e-btnback,html body #est-embed#est-embed .e-manualbtn{
+  border-radius:40px !important;padding:15px 22px !important;font-size:12px !important;font-weight:600 !important;line-height:.9 !important;text-transform:uppercase !important;letter-spacing:0 !important;
+  box-shadow:none !important;transform:none !important;background-image:none !important;
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease,opacity .3s ease !important;}
+html body #est-embed#est-embed .e-btnmain{background:var(--st-ink) !important;color:#fff !important;border:1px solid var(--st-ink) !important;}
+html body #est-embed#est-embed .e-btnmain:not(:disabled):hover{background:var(--st-blue) !important;border-color:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-btnmain:disabled{background:var(--st-soft) !important;border-color:var(--st-soft) !important;color:var(--st-muted) !important;opacity:1 !important;}
+html body #est-embed#est-embed .e-btnback,html body #est-embed#est-embed .e-manualbtn,html body #est-embed#est-embed .e-restart{text-decoration:none !important;background:#fff !important;color:var(--st-ink) !important;border:1px solid var(--st-stroke) !important;}
+html body #est-embed#est-embed .e-btnback:hover,html body #est-embed#est-embed .e-manualbtn:hover,html body #est-embed#est-embed .e-restart:hover{background:var(--st-ink) !important;color:#fff !important;border-color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-btnmain:focus-visible,html body #est-embed#est-embed .e-btnback:focus-visible,html body #est-embed#est-embed .e-tab:focus-visible{outline:3px solid var(--st-blue) !important;outline-offset:3px !important;}
+html body #est-embed#est-embed .e-sdot{background:var(--st-soft) !important;}
+html body #est-embed#est-embed .e-sdot.act{background:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-sdot.done{background:var(--st-ink) !important;}
+
+/* ---- slider -------------------------------------------------------------------- */
+html body #est-embed#est-embed .e-sldval{color:var(--st-ink) !important;font-weight:600 !important;letter-spacing:-.03em !important;}
+html body #est-embed#est-embed input[type=range].e-sld::-webkit-slider-thumb{background:var(--st-blue) !important;border:3px solid #fff !important;box-shadow:0 0 0 1px var(--st-stroke) !important;}
+html body #est-embed#est-embed .e-preset{border-radius:40px !important;border:1px solid var(--st-stroke) !important;background:#fff !important;color:var(--st-ink) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-preset.on{background:var(--st-ink) !important;color:#fff !important;border-color:var(--st-ink) !important;}
+
+/* ---- calculating ------------------------------------------------------------------ */
+html body #est-embed#est-embed .e-ldpanel{background:#fff !important;border-radius:var(--st-radius) !important;}
+html body #est-embed#est-embed .e-ldpanel *{color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-ldring{border-color:var(--st-soft) !important;border-top-color:var(--st-blue) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-ldstp{background:transparent !important;border:0 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-ldstp.act{color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-lddot{background:var(--st-soft) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-ldstp.act .e-lddot{background:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-ldstp.done .e-lddot{background:var(--st-ink) !important;}
+
+/* ---- the result: the site's blue card, then white stat cards -------------- */
+html body #est-embed#est-embed .e-rhero{background:var(--st-blue) !important;background-image:none !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-rhero::before,html body #est-embed#est-embed .e-rhero::after{display:none !important;}
+html body #est-embed#est-embed .e-rhero,html body #est-embed#est-embed .e-rhero *{color:#fff !important;}
+html body #est-embed#est-embed .e-rrange{font-weight:600 !important;letter-spacing:-.03em !important;}
+html body #est-embed#est-embed .e-rrange em{font-style:normal !important;color:#fff !important;-webkit-text-fill-color:#fff !important;opacity:.72;}
+html body #est-embed#est-embed .e-rbadge{background:rgba(255,255,255,.16) !important;border:0 !important;border-radius:40px !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;}
+html body #est-embed#est-embed .e-rlbl{font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;opacity:.8;}
+html body #est-embed#est-embed .e-rgrid{gap:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-rbox{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-rbv{color:var(--st-ink) !important;font-weight:600 !important;letter-spacing:-.02em !important;}
+html body #est-embed#est-embed .e-rbl{color:var(--st-muted) !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;}
+html body #est-embed#est-embed .e-disc{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-rcta{background:#fff !important;border-radius:var(--st-radius) !important;}
+html body #est-embed#est-embed .e-rctasub{color:var(--st-muted) !important;}
+
+/* ---- the roof scan sits as one more white card on the canvas ------------- */
+html body #est-embed#est-embed .rs-stage{border:0 !important;border-radius:var(--st-radius) !important;margin:var(--st-gap) 0 !important;}
+html body #est-embed#est-embed .rs-stage,html body #est-embed#est-embed .rs-result{--rs-ink:#001530;--rs-blue:#006fff;}
+
+/* ---- motion: steps arrive the way the site's sections do ------------------ */
+html body #est-embed#est-embed .e-sp.active .e-shdr{animation:stIn .7s var(--st-settle) both !important;}
+html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st-settle) both .08s !important;}
+@keyframes stIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){html body #est-embed#est-embed .e-sp.active .e-shdr,html body #est-embed#est-embed .e-sp.active .e-sbody{animation:none !important;}}
+</style>
+<script id="bp-site-theme-fonts">
+/* General Sans is the site's face and comes from Fontshare, as it does on the
+   site; Geist from Google Fonts backs it up. Added once, only if missing. */
+(function(){ try{
+  [['st-gs','https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap'],
+   ['st-geist','https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap']].forEach(function(f){
+    if(document.getElementById(f[0])) return;
+    var l=document.createElement('link'); l.id=f[0]; l.rel='stylesheet'; l.href=f[1];
+    (document.head||document.documentElement).appendChild(l);
+  });
+}catch(e){} })();
+</script>
+<!--ST-END--></body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
 #est-embed button:active{transform:scale(.95);}

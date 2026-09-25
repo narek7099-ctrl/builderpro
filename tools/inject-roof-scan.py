@@ -2,21 +2,21 @@
 """Put the roofing estimator's add-ons into its source.
 
   embed-src/roof-scan.html   the satellite roof scan
-  embed-src/site-theme.html  the marketing site's design system, applied last
+  (the site theme goes in through tools/inject-theme.py, for all ten)
 
 The roofing estimator's source is the <iframe srcdoc="..."> on the marketing
 carousel in index.html (see tools/build-embeds.py), so the scan goes in there,
 escaped for the attribute, between markers. Re-running replaces the block
 rather than adding a second one.
 
-    python3 tools/inject-roof-scan.py && python3 tools/build-embeds.py
+    python3 tools/inject-roof-scan.py && python3 tools/inject-theme.py && python3 tools/build-embeds.py
 """
 import io, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'index.html')
-BLOCKS = [('roof-scan.html', '<!--RS-BEGIN-->', '<!--RS-END-->'),
-          ('site-theme.html', '<!--ST-BEGIN-->', '<!--ST-END-->')]
+# the site theme is placed by tools/inject-theme.py, for all ten calculators
+BLOCKS = [('roof-scan.html', '<!--RS-BEGIN-->', '<!--RS-END-->')]
 
 s = io.open(SRC, encoding='utf-8').read()
 
