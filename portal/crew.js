@@ -441,82 +441,141 @@
   };
 
   /* -------------------------------------------------------- pay period --- */
-  /* Gross, for export. It says gross and means gross: no withholding, no
-     deductions, no filing. Showing a "net pay" here would be a number
-     somebody trusts, and we have no business computing it. */
-  function payPeriod(el) {
-    var end = new Date(), start = new Date(Date.now() - 13 * 864e5);
-    var f = (S.payFrom || start.toISOString().slice(0, 10)), t = (S.payTo || end.toISOString().slice(0, 10));
-    var rows = S.entries.filter(function (x) { return x.worked_on >= f && x.worked_on <= t; });
+  /* Every two weeks, what each person is owed for that fortnight. Nothing is
+     money until the contractor says it went out: "Mark paid" books it as an
+     expense in Finances (W-2 as Labor / crew, 1099 as Subcontractor), and
+     un-marking takes that entry back out. The Finances entry carries the
+     person and the period, so the button always knows its own state.
+     Gross is gross: no withholding, no filing — that stays with whoever
+     runs their payroll. */
+  var DAY = 864e5;
+  function ymd(t) { var d = new Date(t); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function at(s) { return new Date(s + 'T12:00:00').getTime(); }
+  function anchor() { var a = null; try { a = localStorage.getItem('bpPayAnchor'); } catch (e) {} return a || '2026-01-05'; }
+  /* the fortnight containing day t, as [from, to] */
+  function periodOf(t) {
+    var n = Math.floor((at(ymd(t)) - at(anchor())) / (14 * DAY));
+    var f = at(anchor()) + n * 14 * DAY;
+    return [ymd(f), ymd(f + 13 * DAY)];
+  }
+  function nice(s) { return new Date(at(s)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  function payKey(empId, from) { return 'pay:' + empId + ':' + from; }
+  function finEntry(key) { var f = window.bpFinGet ? bpFinGet() : []; for (var i = 0; i < f.length; i++) if (f[i].payKey === key) return f[i]; return null; }
 
+  function dueFor(from, to) {
     var by = {};
-    rows.forEach(function (x) {
+    S.entries.forEach(function (x) {
+      if (x.worked_on < from || x.worked_on > to) return;
       var e = bpEmpById(x.employee_id); if (!e) return;
-      var k = e.id;
-      by[k] = by[k] || { e: e, h: 0, ot: 0, cost: 0, jobs: {} };
-      by[k].h += +x.hours || 0; by[k].ot += +x.ot_hours || 0; by[k].cost += +x.cost || 0;
-      if (x.job_name) by[k].jobs[x.job_name] = 1;
+      var r = by[e.id] = by[e.id] || { e: e, h: 0, ot: 0, cost: 0, jobs: {} };
+      r.h += +x.hours || 0; r.ot += +x.ot_hours || 0; r.cost += +x.cost || 0;
+      if (x.job_name) r.jobs[x.job_name] = 1;
     });
-    var list = Object.keys(by).map(function (k) { return by[k]; });
+    /* salaried people are owed their fortnight whether or not hours were logged */
+    S.emps.forEach(function (e) {
+      if (e.active && e.pay_type === 'salary' && !by[e.id]) by[e.id] = { e: e, h: 0, ot: 0, cost: 0, jobs: {} };
+    });
+    return Object.keys(by).map(function (k) {
+      var r = by[k], e = r.e, rt = +e.rate || 0;
+      r.gross = e.pay_type === 'hourly' ? r.h * rt + r.ot * rt * 1.5
+        : e.pay_type === 'day' ? (r.h / 8) * rt
+        : rt / 26;
+      r.gross = Math.round(r.gross * 100) / 100;
+      r.key = payKey(e.id, from); r.paid = finEntry(r.key);
+      return r;
+    }).filter(function (r) { return r.gross > 0 || r.paid; })
+      .sort(function (a, b) { return a.e.name.localeCompare(b.e.name); });
+  }
 
-    var gross = function (r) {
-      var e = r.e;
-      if (e.pay_type === 'hourly') return r.h * (+e.rate || 0) + r.ot * (+e.rate || 0) * 1.5;
-      if (e.pay_type === 'day') return (r.h / 8) * (+e.rate || 0);
-      return 0;  /* salary is an agreement about the period, not about these hours */
-    };
-    var totG = 0, totC = 0;
-    list.forEach(function (r) { totG += gross(r); totC += r.cost; });
+  function payPeriod(el) {
+    var cur = periodOf(Date.now());
+    var f = S.payFrom || cur[0], t = ymd(at(f) + 13 * DAY);
+    var list = dueFor(f, t);
+    var owed = 0, paid = 0;
+    list.forEach(function (r) { if (r.paid) paid += +r.paid.amount || 0; else owed += r.gross; });
+
+    /* the last eight fortnights, newest first, each with how much is still unpaid */
+    var opts = [];
+    for (var i = 0; i < 8; i++) {
+      var pf = ymd(at(cur[0]) - i * 14 * DAY), pt = ymd(at(pf) + 13 * DAY);
+      var left = dueFor(pf, pt).filter(function (r) { return !r.paid; }).reduce(function (s2, r) { return s2 + r.gross; }, 0);
+      opts.push('<option value="' + pf + '"' + (pf === f ? ' selected' : '') + '>' + nice(pf) + ' – ' + nice(pt)
+        + (i === 0 ? ' (this period)' : '') + (left > 0 ? ' · ' + money(left) + ' due' : '') + '</option>');
+    }
 
     var head = '<div class="bpx-chead" style="margin-bottom:10px">'
       + '<div class="bpx-ptitle" style="margin:0">Pay period'
-      + '<span class="lg2" style="margin-left:8px">what to hand to whoever runs your payroll</span></div>'
+      + '<span class="lg2" style="margin-left:8px">every two weeks, what each person is owed</span></div>'
       + (window.bpCsvBtn ? bpCsvBtn('bpCsvPay()', 'Export') : '') + '</div>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">'
-      + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">From</label>'
-        + '<input type="date" value="' + f + '" onchange="bpPayRange(this.value,null)"></div>'
-      + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">To</label>'
-        + '<input type="date" value="' + t + '" onchange="bpPayRange(null,this.value)"></div></div>';
+      + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">Period</label>'
+        + '<select onchange="bpPayPick(this.value)">' + opts.join('') + '</select></div>'
+      + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">Periods start on</label>'
+        + '<input type="date" value="' + anchor() + '" onchange="bpPayAnchor(this.value)"></div></div>';
 
-    /* Said once, plainly, and not buried: this is not a payroll run. */
     var note = '<div class="bg-warn" style="margin-top:14px"><span class="ms">info</span><span>'
-      + '<b>This is not a payroll run.</b> These are gross figures for the period — no tax withheld, nothing filed, no money moved. '
-      + 'Hand them to Gusto, QuickBooks, ADP or your bookkeeper, whichever you already use. '
-      + 'What you get here that they cannot give you is the job each hour went into.</span></div>';
+      + '<b>Mark paid once the money has gone out.</b> That books it in Finances as an expense — W-2 wages as Labor / crew, 1099 as Subcontractor. '
+      + 'Amounts are gross: no tax is withheld or filed here, so hand them to Gusto, QuickBooks, ADP or your bookkeeper as usual.</span></div>';
 
     if (!list.length) {
-      el.innerHTML = head + '<div class="bpx-empty2">No hours logged in this period.</div>' + note; return;
+      el.innerHTML = head + '<div class="bpx-empty2">Nothing owed for ' + nice(f) + ' – ' + nice(t) + '. Log hours under Hours and they show up here.</div>' + note; return;
     }
 
     el.innerHTML = head
-      + '<div class="bg-top"><div><b>' + money(totG) + '</b><span>gross wages</span></div>'
-      + '<div><b>' + money(totC) + '</b><span>true cost with burden</span></div>'
-      + '<div><b>' + money(totC - totG) + '</b><span>tax, comp and the rest</span></div>'
+      + '<div class="bg-top"><div><b>' + money(owed) + '</b><span>still to pay</span></div>'
+      + '<div><b>' + money(paid) + '</b><span>paid, in Finances</span></div>'
       + '<div><b>' + list.length + '</b><span>' + (list.length === 1 ? 'person' : 'people') + '</span></div></div>'
       + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
-      + '<th>Who</th><th>Type</th><th>Hours</th><th>OT</th><th>Gross</th><th>Costs you</th><th>Jobs</th>'
+      + '<th>Who</th><th>Type</th><th>Hours</th><th>OT</th><th>Due</th><th>Jobs</th><th></th>'
       + '</tr></thead><tbody>'
       + list.map(function (r) {
-          var g = gross(r);
+          var amt = r.paid ? +r.paid.amount || 0 : r.gross;
           return '<tr><td><b>' + esc(r.e.name) + '</b></td>'
             + '<td><span class="bpx-badge' + (r.e.kind === '1099' ? '' : ' ok') + '">' + (r.e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
-            + '<td>' + r.h + '</td><td>' + (r.ot || '—') + '</td>'
-            + '<td>' + (r.e.pay_type === 'salary' ? '<span class="bpx-mut">salaried</span>' : '<b>' + money(g) + '</b>') + '</td>'
-            + '<td>' + money(r.cost) + '</td>'
-            + '<td class="bpx-mut" style="font-size:11.5px">' + esc(Object.keys(r.jobs).join(', ') || '—') + '</td></tr>';
+            + '<td>' + (r.e.pay_type === 'salary' && !r.h ? '<span class="bpx-mut">salary</span>' : r.h) + '</td><td>' + (r.ot || '—') + '</td>'
+            + '<td><b>' + money(amt) + '</b></td>'
+            + '<td class="bpx-mut" style="font-size:11.5px">' + esc(Object.keys(r.jobs).join(', ') || '—') + '</td>'
+            + '<td style="text-align:right">' + (r.paid
+                ? '<button class="bpx-btn ghost" style="padding:6px 12px;font-size:12px" title="Undo: takes it back out of Finances" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',0)">✓ Paid</button>'
+                : '<button class="bpx-btn" style="padding:6px 12px;font-size:12px" onclick="bpPayMark(\'' + r.e.id + '\',\'' + f + '\',1)">Mark paid</button>')
+            + '</td></tr>';
         }).join('')
-      + '</tbody></table></div>' + note;
+      + '</tbody></table></div>'
+      + (owed > 0 && list.filter(function (r) { return !r.paid; }).length > 1
+          ? '<div style="margin-top:10px;text-align:right"><button class="bpx-btn" onclick="bpPayAll(\'' + f + '\')">Mark everyone paid · ' + money(owed) + '</button></div>' : '')
+      + note;
   }
 
-  window.bpPayRange = function (f, t) {
-    if (f) S.payFrom = f;
-    if (t) S.payTo = t;
+  function book(r, from) {
+    var to = ymd(at(from) + 13 * DAY), fin = bpFinGet();
+    fin.unshift({ id: 'f' + Date.now() + Math.floor(Math.random() * 1000), kind: 'expense', amount: r.gross,
+      category: r.e.kind === '1099' ? 'Subcontractor' : 'Labor / crew',
+      note: 'Pay — ' + r.e.name + ', ' + nice(from) + '–' + nice(to), when: Date.now(), payKey: r.key });
+    bpFinSet(fin);
+  }
+  window.bpPayMark = function (empId, from, on) {
+    var key = payKey(empId, from);
+    if (on) {
+      var r = dueFor(from, ymd(at(from) + 13 * DAY)).filter(function (x) { return x.e.id === empId; })[0];
+      if (r && !r.paid) book(r, from);
+    } else {
+      bpFinSet(bpFinGet().filter(function (x) { return x.payKey !== key; }));
+    }
     pane();
+  };
+  window.bpPayAll = function (from) {
+    dueFor(from, ymd(at(from) + 13 * DAY)).forEach(function (r) { if (!r.paid && r.gross > 0) book(r, from); });
+    pane();
+  };
+  window.bpPayPick = function (f) { S.payFrom = f; pane(); };
+  window.bpPayAnchor = function (v) {
+    if (!v) return; try { localStorage.setItem('bpPayAnchor', v); } catch (e) {}
+    S.payFrom = null; pane();
   };
 
   window.bpCsvPay = function () {
-    var f = S.payFrom, t = S.payTo;
-    var rows = S.entries.filter(function (x) { return (!f || x.worked_on >= f) && (!t || x.worked_on <= t); });
+    var f = S.payFrom || periodOf(Date.now())[0], t = ymd(at(f) + 13 * DAY);
+    var rows = S.entries.filter(function (x) { return x.worked_on >= f && x.worked_on <= t; });
     var by = {};
     rows.forEach(function (x) {
       var e = bpEmpById(x.employee_id); if (!e) return;

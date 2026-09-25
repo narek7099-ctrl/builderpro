@@ -1212,19 +1212,57 @@
           + '<span>Add it anyway and whoever you order from will price it.</span>'
           + '<span class="sp-pk-empty-b"><button class="bpx-rowbtn" onclick="SP.pickAddRaw()">Add &ldquo;' + esc(String(q).trim()) + '&rdquo; anyway</button></span></div>';
       }
+    } else if (!PICK.cat) {
+      /* nothing asked for: the store's aisles, as tiles */
+      return aisles();
     } else {
-      var rec = recent(240);
-      if (rec.length >= 4) { rows = rec; lbl = 'What you buy most'; }
-      else { rows = browse(); lbl = 'Common on your kind of job'; }
+      /* inside an aisle: everything in it, not just what fit on one page */
+      rows = browse(); lbl = '';
     }
-    var bar = deptBar(rows);
+    var searching = norm(q).length >= 2;
+    var bar = searching ? deptBar(rows) : '';
     if (PICK.cat) rows = rows.filter(function (g) { return catOf({ name: g.name, category: g.cat }) === PICK.cat; });
+    if (!searching) {
+      return '<div class="sp-aisle-top"><button class="bpx-linkbtn" onclick="SP.pickCat(\'\')">&larr; All categories</button>'
+        + '<div class="sp-aisle-h">' + icon(PICK.cat) + '<b>' + esc(PICK.cat) + '</b><span>' + rows.length + (rows.length === 1 ? ' product' : ' products') + '</span></div></div>'
+        + '<div class="sp-shelf">' + rows.slice(0, Math.min(PICK.n || PAGE, rows.length)).map(pickCard).join('') + '</div>'
+        + (rows.length > (PICK.n || PAGE) ? '<div class="sp-more"><button class="bpx-rowbtn" onclick="SP.pickMore()">Show ' + Math.min(rows.length - (PICK.n || PAGE), PAGE) + ' more</button><span class="bpx-mut">' + (PICK.n || PAGE) + ' of ' + rows.length + '</span></div>' : '');
+    }
     var n = Math.min(PICK.n || PAGE, rows.length);
     var more = rows.length - n;
     return bar
       + '<div class="sp-pk-lbl">' + lbl + (PICK.cat ? ' &middot; ' + esc(PICK.cat) : '') + '</div>'
       + '<div class="sp-shelf">' + rows.slice(0, n).map(pickCard).join('') + '</div>'
       + (more > 0 ? '<div class="sp-more"><button class="bpx-rowbtn" onclick="SP.pickMore()">Show ' + Math.min(more, PAGE) + ' more</button><span class="bpx-mut">' + n + ' of ' + rows.length + '</span></div>' : '');
+  }
+  /* Every category in the catalog as a tile: what it is, how many products,
+     a few of them by name. Their own trade's aisles first, then the rest,
+     so a roofer lands on shingles and a plumber on pipe. */
+  function aisles() {
+    var t = PICK.trade, by = {};
+    index().list.forEach(function (g) {
+      var c = catOf({ name: g.name, category: g.cat }), o = by[c] = by[c] || { n: 0, mine: 0, priced: 0, eg: [] };
+      o.n++; if (t && g.trade === t) o.mine++; if (g.offers.length) o.priced++;
+      if (o.eg.length < 3) o.eg.push(g.name);
+    });
+    var cats = Object.keys(by).sort(function (a, b) {
+      return (by[b].mine > 0) - (by[a].mine > 0) || by[b].priced - by[a].priced || by[b].n - by[a].n || (a < b ? -1 : 1);
+    });
+    var tile = function (c) {
+      var o = by[c];
+      return '<button class="sp-aisle" data-c="' + esc(c) + '" onclick="SP.pickCat(this.dataset.c)">'
+        + '<span class="sp-aisle-art" data-fam="' + (FAM_OF[c] || 'other') + '">' + catArt(c, 'big') + '</span>'
+        + '<span class="sp-aisle-txt"><b>' + esc(c) + '</b><small>' + o.n + (o.n === 1 ? ' product' : ' products')
+        + (o.priced ? ' &middot; ' + o.priced + ' priced' : '') + '</small>'
+        + '<em>' + esc(o.eg.join(', ')) + '</em></span><span class="sp-aisle-go" aria-hidden="true">&rsaquo;</span></button>';
+    };
+    var mine = cats.filter(function (c) { return by[c].mine > 0; }), rest = cats.filter(function (c) { return !(by[c].mine > 0); });
+    var rec = recent(8);
+    return (rec.length >= 4 ? '<div class="sp-pk-lbl">What you buy most</div><div class="sp-shelf">' + rec.slice(0, 4).map(pickCard).join('') + '</div>' : '')
+      + (mine.length && rest.length
+          ? '<div class="sp-pk-lbl">Your trade</div><div class="sp-aisles">' + mine.map(tile).join('') + '</div>'
+            + '<div class="sp-pk-lbl">Everything else</div><div class="sp-aisles">' + rest.map(tile).join('') + '</div>'
+          : '<div class="sp-pk-lbl">Shop by category</div><div class="sp-aisles">' + cats.map(tile).join('') + '</div>');
   }
   SP.pickMore = function () { PICK.n = (PICK.n || PAGE) + PAGE; pickRedraw(); };
   /* the aisle you walk when you have not asked for anything: the catalog
