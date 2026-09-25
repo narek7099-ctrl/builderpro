@@ -2238,6 +2238,61 @@ document.addEventListener('click', function(e) {
     return (a0>0 && Math.abs(a1-a0)/a0<=0.12) ? out : pts;
   }
 
+  /* a squared-up outline, split into its wings — the main block and each
+     ell — and a hip roof over each, crossing where they meet, the way real
+     roofs on L and T houses do. Only for outlines whose walls all run on
+     two axes; anything else keeps the inset roof. */
+  function wingRoofs(pts,tan){
+    var n=pts.length, lo=0, th=0;
+    for(var i=0;i<n;i++){ var p=pts[i], q=pts[(i+1)%n], l=Math.hypot(q[0]-p[0],q[1]-p[1]); if(l>lo){ lo=l; th=Math.atan2(q[1]-p[1],q[0]-p[0]); } }
+    var c=Math.cos(th), s=Math.sin(th);
+    var loc=pts.map(function(p){ return [p[0]*c+p[1]*s, -p[0]*s+p[1]*c]; });
+    for(var j=0;j<n;j++){ var A=loc[j], B=loc[(j+1)%n]; if(Math.abs(A[0]-B[0])>0.6&&Math.abs(A[1]-B[1])>0.6) return null; }
+    function uniq(v){ v.sort(function(x,y){ return x-y; }); var o=[]; v.forEach(function(x){ if(!o.length||x-o[o.length-1]>0.6) o.push(x); }); return o; }
+    var xs=uniq(loc.map(function(p){ return p[0]; })), zs=uniq(loc.map(function(p){ return p[1]; }));
+    if(xs.length>12||zs.length>12) return null;
+    function inPoly(x,z){ var ins=false; for(var i=0,k=n-1;i<n;k=i++){ var a=loc[i], b=loc[k];
+      if((a[1]>z)!==(b[1]>z) && x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0]) ins=!ins; } return ins; }
+    var X=xs.length-1, Z=zs.length-1, cell=[], cov=[];
+    for(var ix=0;ix<X;ix++){ cell.push([]); cov.push([]); for(var iz=0;iz<Z;iz++){ cell[ix].push(inPoly((xs[ix]+xs[ix+1])/2,(zs[iz]+zs[iz+1])/2)); cov[ix].push(false); } }
+    function full(x0,x1,z0,z1){ for(var a=x0;a<=x1;a++) for(var b=z0;b<=z1;b++) if(!cell[a][b]) return false; return true; }
+    var rects=[];
+    for(var guard=0;guard<8;guard++){
+      /* the largest rectangle of house that still covers something uncovered */
+      var best=null, ba=0;
+      for(var x0=0;x0<X;x0++) for(var z0=0;z0<Z;z0++){ if(!cell[x0][z0]) continue;
+        for(var x1=x0;x1<X&&cell[x1][z0];x1++) for(var z1=z0;z1<Z;z1++){ if(!full(x0,x1,z0,z1)) break;
+          var fresh=false; for(var a2=x0;a2<=x1&&!fresh;a2++) for(var b2=z0;b2<=z1;b2++) if(!cov[a2][b2]){ fresh=true; break; }
+          if(!fresh) continue;
+          var ar=(xs[x1+1]-xs[x0])*(zs[z1+1]-zs[z0]); if(ar>ba){ ba=ar; best=[x0,x1,z0,z1]; } } }
+      if(!best) break;
+      for(var a3=best[0];a3<=best[1];a3++) for(var b3=best[2];b3<=best[3];b3++) cov[a3][b3]=true;
+      rects.push([xs[best[0]],xs[best[1]+1],zs[best[2]],zs[best[3]+1]]);
+    }
+    if(!rects.length) return null;
+    var E=10, faces=[], edges=[];
+    function W(x,y,z){ return [x*c-z*s, y, x*s+z*c]; }
+    rects.forEach(function(r){
+      var x0=r[0], x1=r[1], z0=r[2], z1=r[3], lx=x1-x0, lz=z1-z0;
+      if(lx<3||lz<3) return;
+      var half=Math.min(lx,lz)/2, Y=E+half*tan, a,b,cc,d, r0, r1;
+      if(lx>=lz){ var zm=(z0+z1)/2; r0=W(x0+half,Y,zm); r1=W(x1-half,Y,zm); }
+      else { var xm=(x0+x1)/2; r0=W(xm,Y,z0+half); r1=W(xm,Y,z1-half); }
+      a=W(x0,E,z0); b=W(x1,E,z0); cc=W(x1,E,z1); d=W(x0,E,z1);
+      if(lx>=lz){
+        faces.push({v:[a,b,r1,r0],kind:'roof'}); faces.push({v:[cc,d,r0,r1],kind:'roof'});
+        faces.push({v:[d,a,r0],kind:'roof'}); faces.push({v:[b,cc,r1],kind:'roof'});
+        edges.push([a,r0],[d,r0],[b,r1],[cc,r1]);
+      } else {
+        faces.push({v:[b,cc,r1,r0],kind:'roof'}); faces.push({v:[d,a,r0,r1],kind:'roof'});
+        faces.push({v:[a,b,r0],kind:'roof'}); faces.push({v:[cc,d,r1],kind:'roof'});
+        edges.push([a,r0],[b,r0],[cc,r1],[d,r1]);
+      }
+      if(Math.hypot(r0[0]-r1[0],r0[2]-r1[2])>0.3) edges.push([r0,r1]);
+    });
+    return faces.length ? {faces:faces, edges:edges} : null;
+  }
+
   function polyModel(ring, pitchDeg){
     var pts=ring.map(function(p){ return [p[0],p[1]]; });
     if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
@@ -2251,7 +2306,15 @@ document.addEventListener('click', function(e) {
     pts=straighten(pts);
     var A=ringArea(pts); if(A<0){ pts.reverse(); A=-A; }
     var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
-    var tan=Math.tan(Math.max(8,Math.min(50,pitchDeg||22))*Math.PI/180);
+    /* homes read as pitched: missing or near-flat pitch is taken as 18° at least */
+    var tan=Math.tan(Math.max(18,Math.min(50,pitchDeg||22))*Math.PI/180);
+    var wings=wingRoofs(pts,tan);
+    if(wings){
+      var gw=pts.map(function(p){ return [p[0],0,p[1]]; }), ew=pts.map(function(p){ return [p[0],10,p[1]]; }), fw=[], evw=[];
+      for(var iw=0;iw<n;iw++){ var jw=(iw+1)%n; fw.push({v:[gw[iw],gw[jw],ew[jw],ew[iw]], kind:'wall'}); evw.push([ew[iw],ew[jw]]); }
+      var lw=0, thw=0; for(var i5=0;i5<n;i5++){ var pa5=pts[i5], pb5=pts[(i5+1)%n], l5=Math.hypot(pb5[0]-pa5[0],pb5[1]-pa5[1]); if(l5>lw){ lw=l5; thw=Math.atan2(pb5[1]-pa5[1],pb5[0]-pa5[0]); } }
+      return { faces:fw.concat(wings.faces), roofEdges:evw.concat(wings.edges), ridge:null, eaves:evw, foot:[gw], axes:{th:thw}, fromMap:true };
+    }
     function unit(a,b){ var dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1; return [dx/l,dz/l]; }
     function inset(dd){
       var q=[]; for(var i=0;i<n;i++){
@@ -2762,7 +2825,9 @@ document.addEventListener('click', function(e) {
           var n=walls2.length, p=span(T,8.8,11.8)*n;
           ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
           for(var i=0;i<n;i++){ var q=Math.max(0,Math.min(1,p-i)); if(q<=0) break;
-            var v=walls2[i].v; chain(ctx,P,[[v[0],v[1]],[v[1],v[2]],[v[2],v[3]],[v[3],v[0]]],q,BLUE,1.6*dpr); }
+            var v=walls2[i].v, pp=v.map(P), ar=0; for(var k=0;k<4;k++){ var A=pp[k], B=pp[(k+1)%4]; ar+=A.x*B.y-B.x*A.y; }
+            if(ar>=0) continue;   /* the far side: its outline would show through the roof */
+            chain(ctx,P,[[v[3],v[0]],[v[0],v[1]],[v[1],v[2]]],q,BLUE,1.6*dpr); }
           ctx.restore();
         } };
     },
@@ -2915,7 +2980,7 @@ document.addEventListener('click', function(e) {
     return function(){ h=Math.imul(h^(h>>>15),2246822507); h=Math.imul(h^(h>>>13),3266489909); h^=h>>>16; return (h>>>0)/4294967296; }; }
   function randomPool(){ if(st._pool) return st._pool; var r=seeded();
     var shapes=['rect','freeform','kidney','l'], sizes=[288,400,512,650];
-    return (st._pool={shape:shapes[Math.floor(r()*4)], size:sizes[Math.floor(r()*4)]}); }
+    return (st._pool={shape:'rect', size:sizes[Math.floor(r()*4)]}); }
   function randomYard(){ if(st._yard) return st._yard; var r=seeded(); r(); r();
     return (st._yard={size:900+Math.round(r()*1800), shrubs:4+Math.floor(r()*5), stones:3+Math.floor(r()*4)}); }
 

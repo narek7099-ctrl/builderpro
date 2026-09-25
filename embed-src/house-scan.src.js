@@ -490,7 +490,9 @@
           var n=walls2.length, p=span(T,8.8,11.8)*n;
           ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
           for(var i=0;i<n;i++){ var q=Math.max(0,Math.min(1,p-i)); if(q<=0) break;
-            var v=walls2[i].v; chain(ctx,P,[[v[0],v[1]],[v[1],v[2]],[v[2],v[3]],[v[3],v[0]]],q,BLUE,1.6*dpr); }
+            var v=walls2[i].v, pp=v.map(P), ar=0; for(var k=0;k<4;k++){ var A=pp[k], B=pp[(k+1)%4]; ar+=A.x*B.y-B.x*A.y; }
+            if(ar>=0) continue;   /* the far side: its outline would show through the roof */
+            chain(ctx,P,[[v[3],v[0]],[v[0],v[1]],[v[1],v[2]]],q,BLUE,1.6*dpr); }
           ctx.restore();
         } };
     },
@@ -643,7 +645,7 @@
     return function(){ h=Math.imul(h^(h>>>15),2246822507); h=Math.imul(h^(h>>>13),3266489909); h^=h>>>16; return (h>>>0)/4294967296; }; }
   function randomPool(){ if(st._pool) return st._pool; var r=seeded();
     var shapes=['rect','freeform','kidney','l'], sizes=[288,400,512,650];
-    return (st._pool={shape:shapes[Math.floor(r()*4)], size:sizes[Math.floor(r()*4)]}); }
+    return (st._pool={shape:'rect', size:sizes[Math.floor(r()*4)]}); }
   function randomYard(){ if(st._yard) return st._yard; var r=seeded(); r(); r();
     return (st._yard={size:900+Math.round(r()*1800), shrubs:4+Math.floor(r()*5), stones:3+Math.floor(r()*4)}); }
 
