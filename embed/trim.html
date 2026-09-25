@@ -1657,15 +1657,16 @@ document.addEventListener('click', function(e) {
      countertops  the roof lifts off and the camera drops into a kitchen
      trim         the roof lifts off; baseboard, casing and crown trace a room
      painting     every wall is traced and washed (a room, for interior jobs)
-     pools        asked first: shape, size, where. The pool is dug and filled
-                  in that spot
-     landscaping  asked first: which yard, how big. That yard is laid out
+     pools        a pool is outlined, dug and filled in the back yard
+     landscaping  the back yard is laid out: lawn, planting, stepping stones
      plumbing     the house turns to glass; supply lines run in to the fixtures
      electrical   the house turns to glass; circuits run out from the panel
      general      the whole house, every edge traced
 
-   Nothing here is coloured by the homeowner's choices except pools and
-   landscaping — how things will LOOK is the image generator's job.
+   Everything is white — how things will LOOK is the image generator's job —
+   and nothing waits on the homeowner's choices: the pool and the yard are
+   picked at random (the same for the same address), and the real questions
+   come after the scan, on the calculator's own steps.
 
    The measurement is the roof scan's: rapid-handler's building read, so the
    house is theirs. What it hands to each calculator is the step-1 number that
@@ -2073,6 +2074,87 @@ document.addEventListener('click', function(e) {
     return k;
   }
 
+  /* ── the house, from the building outline on the map ──────────────────────
+     The house the homeowner sees should be the outline they have just watched
+     light up on the map, not a shape pieced together from roof sections. So
+     when the map has this building, its outline is the footprint: the walls
+     are that outline raised, and the roof comes in from every eave at the
+     measured pitch, meeting in a ridge or a small flat top — a hip roof that
+     fits any outline, L-shapes and all. The roof sections model is kept for
+     where the map has no outline (rural, brand-new streets). */
+  function ringArea(r){ var a=0; for(var i=0;i<r.length;i++){ var p=r[i], q=r[(i+1)%r.length]; a+=p[0]*q[1]-q[0]*p[1]; } return a/2; }
+  function worldOf(o, lat, lng){ var FT=3.28084; return [(lng-o.lng)*111320*Math.cos(o.lat*Math.PI/180)*FT, -(lat-o.lat)*110574*FT]; }
+
+  function polyModel(ring, pitchDeg){
+    var pts=ring.map(function(p){ return [p[0],p[1]]; });
+    if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
+    /* tidy: drop near-duplicate corners and corners on a straight line */
+    var out=[]; pts.forEach(function(p){ var q=out[out.length-1]; if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>=1.2) out.push(p); });
+    if(out.length>2&&Math.hypot(out[0][0]-out[out.length-1][0],out[0][1]-out[out.length-1][1])<1.2) out.pop();
+    var o2=[]; for(var j=0;j<out.length;j++){ var a0=out[(j-1+out.length)%out.length], b=out[j], c=out[(j+1)%out.length];
+      var cr=(b[0]-a0[0])*(c[1]-b[1])-(b[1]-a0[1])*(c[0]-b[0]), L=Math.hypot(b[0]-a0[0],b[1]-a0[1])*Math.hypot(c[0]-b[0],c[1]-b[1]);
+      if(Math.abs(cr)>0.03*L) o2.push(b); }
+    pts=o2.length>=3?o2:out; if(pts.length<3) return null;
+    var A=ringArea(pts); if(A<0){ pts.reverse(); A=-A; }
+    var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
+    var tan=Math.tan(Math.max(8,Math.min(50,pitchDeg||22))*Math.PI/180);
+    function unit(a,b){ var dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1; return [dx/l,dz/l]; }
+    function inset(dd){
+      var q=[]; for(var i=0;i<n;i++){
+        var e1=unit(pts[(i-1+n)%n],pts[i]), e2=unit(pts[i],pts[(i+1)%n]);
+        var n1=[-e1[1],e1[0]], n2=[-e2[1],e2[0]], bx=n1[0]+n2[0], bz=n1[1]+n2[1], bl=Math.hypot(bx,bz)||1;
+        bx/=bl; bz/=bl; var k=dd/Math.max(0.35, bx*n1[0]+bz*n1[1]);
+        q.push([pts[i][0]+bx*k, pts[i][1]+bz*k]);
+      } return q;
+    }
+    /* how far the roof comes in: most of the way to the middle of the
+       narrowest part, backed off until no roof edge turns inside out */
+    var d=Math.min(22, 0.9*A/(per/2)), top=null;
+    for(var t=0;t<10;t++){ var q=inset(d), ok=true;
+      for(var k2=0;k2<n;k2++){ var o=unit(pts[k2],pts[(k2+1)%n]), ql=[q[(k2+1)%n][0]-q[k2][0], q[(k2+1)%n][1]-q[k2][1]];
+        if(o[0]*ql[0]+o[1]*ql[1] < -0.05){ ok=false; break; } }
+      if(ok){ top=q; break; } d*=0.8; }
+    if(!top) return null;
+    var E=10, Y=E+d*tan;
+    var g=pts.map(function(p){ return [p[0],0,p[1]]; }), e=pts.map(function(p){ return [p[0],E,p[1]]; }), tp=top.map(function(p){ return [p[0],Y,p[1]]; });
+    var faces=[], roofEdges=[], eaves=[];
+    for(var i2=0;i2<n;i2++){ var j2=(i2+1)%n;
+      faces.push({v:[g[i2],g[j2],e[j2],e[i2]], kind:'wall'});
+      faces.push({v:[e[i2],e[j2],tp[j2],tp[i2]], kind:'roof'});
+      eaves.push([e[i2],e[j2]]); }
+    if(Math.abs(ringArea(top))>4) faces.push({v:tp.slice(), kind:'roof'});
+    roofEdges=eaves.concat(e.map(function(p,i){ return [p,tp[i]]; }));
+    for(var i3=0;i3<n;i3++){ var a3=tp[i3], b3=tp[(i3+1)%n]; if(Math.hypot(a3[0]-b3[0],a3[2]-b3[2])>0.5) roofEdges.push([a3,b3]); }
+    var lo=0, th=0; for(var i4=0;i4<n;i4++){ var pa=pts[i4], pb=pts[(i4+1)%n], l=Math.hypot(pb[0]-pa[0],pb[1]-pa[1]); if(l>lo){ lo=l; th=Math.atan2(pb[1]-pa[1],pb[0]-pa[0]); } }
+    return { faces:faces, roofEdges:roofEdges, ridge:null, eaves:eaves, foot:[g], axes:{th:th}, fromMap:true };
+  }
+
+  /* the map's outline of THIS building: the one the measured centre falls
+     inside, else the nearest one close by */
+  function polyFromMap(s){
+    var m=s.map; if(!m||!m.blds||!m.blds.length) return null;
+    var c=s.bc||[0,0], inside=null, ia=1e12, near=null, nd=70;
+    m.blds.forEach(function(r){
+      var a=Math.abs(ringArea(r)); if(a<250||a>40000) return;
+      if(rsInside(c,r)){ if(a<ia){ ia=a; inside=r; } return; }
+      var cx=0,cz=0; r.forEach(function(p){ cx+=p[0]; cz+=p[1]; }); cx/=r.length; cz/=r.length;
+      var dd=Math.hypot(cx-c[0],cz-c[1]); if(dd<nd){ nd=dd; near=r; }
+    });
+    var r2=inside||near; if(!r2) return null;
+    return polyModel(r2, s.data&&s.data.pitch!=null ? s.data.pitch : 22);
+  }
+
+  /* which house to draw: the map's outline when there is one, else the roof
+     sections, else the typical house. Decided before the house rises and
+     then held, so it never changes shape in front of anyone. */
+  function pickGeo(s){
+    if(!s.target) return null;
+    if(s.geoLocked) return s.geoLocked;
+    if(s.map&&!s.polyTried){ s.polyTried=true; try{ s.poly=polyFromMap(s); }catch(e){ s.poly=null; } }
+    if(s.poly) return s.poly;
+    return s.planes? s.planes.geo : (s.gen||(s.gen=buildGeometry(s.target)));
+  }
+
 
 
   /* ── per-trade words ───────────────────────────────────────────────────── */
@@ -2151,21 +2233,23 @@ document.addEventListener('click', function(e) {
     hvac: function(T,H,now){
       var sa=H.side[0], sb=H.side[1];
       /* on the side wall, a little toward the back, clear of the wall */
-      var ca = sa!==0 ? (sa>0?H.a1+4.2:H.a0-4.2) : (H.a0+H.a1)/2 - H.front[0]*(H.a1-H.a0)*0.15;
-      var cb = sb!==0 ? (sb>0?H.b1+4.2:H.b0-4.2) : (H.b0+H.b1)/2 - H.front[1]*(H.b1-H.b0)*0.15;
-      var rise=ease(span(T,8.4,9.4)), top=0.35+3.2*rise;
+      /* a big unit, set close against the wall — just its pad's width out */
+      var U=2.6, gap=U+0.9;
+      var ca = sa!==0 ? (sa>0?H.a1+gap:H.a0-gap) : (H.a0+H.a1)/2 - H.front[0]*(H.a1-H.a0)*0.15;
+      var cb = sb!==0 ? (sb>0?H.b1+gap:H.b0-gap) : (H.b0+H.b1)/2 - H.front[1]*(H.b1-H.b0)*0.15;
+      var rise=ease(span(T,8.4,9.4)), top=0.35+4.4*rise;
       var faces=[].concat(
-        box(H, ca-2.2,ca+2.2, 0,0.35, cb-2.2,cb+2.2, 'pad', {fill:[236,240,245]}),
-        rise>0.02 ? box(H, ca-1.8,ca+1.8, 0.35,top, cb-1.8,cb+1.8, 'unit', {fill:[250,251,253], top:'fan'}) : []);
+        box(H, ca-U-0.6,ca+U+0.6, 0,0.35, cb-U-0.6,cb+U+0.6, 'pad', {fill:[236,240,245]}),
+        rise>0.02 ? box(H, ca-U,ca+U, 0.35,top, cb-U,cb+U, 'unit', {fill:[250,251,253], top:'fan'}) : []);
       var camP=ease(span(T,10.0,12.2));
       return {
         faces:faces, houseA:1-0.7*camP,
         face2: faceTo(H,ca,cb),
-        cam: camP>0 ? {c:H.w(ca,2,cb), R:14, H:6, p:camP} : null,
+        cam: camP>0 ? {c:H.w(ca,2.5,cb), R:15, H:7, p:camP} : null,
         face: function(ctx,P,F,dpr){
           if(!F.f.style||F.f.style.top!=='fan'||F.f.kind!=='top') return;
           /* the fan grille and blades, turning, on the unit's top */
-          var ang=now*7, R=1.45, y=top+0.01, pts=[];
+          var ang=now*7, R=U*0.8, y=top+0.01, pts=[];
           for(var i=0;i<=28;i++){ var t=i/28*Math.PI*2; pts.push(P(H.w(ca+Math.cos(t)*R, y, cb+Math.sin(t)*R))); }
           ctx.save(); ctx.globalAlpha*=rise; ctx.strokeStyle='rgba(0,21,48,.35)'; ctx.lineWidth=1*dpr;
           ctx.beginPath(); pts.forEach(function(q,i){ i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); }); ctx.stroke();
@@ -2178,7 +2262,7 @@ document.addEventListener('click', function(e) {
           /* the refrigerant line, from the unit into the wall */
           var wa = sa!==0 ? (sa>0?H.a1:H.a0) : ca, wb = sb!==0 ? (sb>0?H.b1:H.b0) : cb;
           ctx.save(); ctx.lineCap='round';
-          chain(ctx,P,[[H.w(ca-sa*1.8,1.6,cb-sb*1.8),H.w(wa,1.6,wb)],[H.w(wa,1.6,wb),H.w(wa,7,wb)]], span(T,9.6,10.6), BLUE, 2*dpr);
+          chain(ctx,P,[[H.w(ca-sa*U,1.6,cb-sb*U),H.w(wa,1.6,wb)],[H.w(wa,1.6,wb),H.w(wa,7,wb)]], span(T,9.6,10.6), BLUE, 2*dpr);
           ctx.restore();
         }
       };
@@ -2312,7 +2396,7 @@ document.addEventListener('click', function(e) {
     },
 
     pools: function(T,H){
-      var q=st.q||{}, poly=poolPoly(q), loc=q.where||'back';
+      var q=randomPool(), poly=poolPoly(q), loc='back';
       var dir = loc==='front' ? H.front : loc==='side' ? H.side : [-H.front[0],-H.front[1]];
       var ext = dir[0]!==0 ? (H.a1-H.a0)/2 : (H.b1-H.b0)/2;
       var len = dir[0]!==0 ? poly.ext[0] : poly.ext[1];
@@ -2334,14 +2418,14 @@ document.addEventListener('click', function(e) {
           if(ground>0){ ctx.globalAlpha=ground; ctx.fillStyle='#f3f5f8'; ctx.beginPath(); opening.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; }
           if(depth>0.05){
             ctx.beginPath(); opening.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.clip();
-            ctx.fillStyle='#e6ebf1'; ctx.beginPath(); bot.map(P).forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill();
+            ctx.fillStyle='#eef1f5'; ctx.beginPath(); bot.map(P).forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill();
             for(var j=0;j<top.length;j++){ var k2=(j+1)%top.length;
               var quad=[top[j],top[k2],bot[k2],bot[j]].map(P), sa=0;
               for(var m=0;m<4;m++){ var A=quad[m], B=quad[(m+1)%4]; sa+=A.x*B.y-B.x*A.y; }
               if(sa*area<0) continue;
-              ctx.fillStyle='#d9e0e8'; ctx.beginPath(); quad.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); }
+              ctx.fillStyle='#e2e7ee'; ctx.beginPath(); quad.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); }
             if(fill>0){ var wy=-depth+(depth-0.6)*fill, water=ringPts(H,ring,wy).map(P);
-              ctx.fillStyle='rgba(120,190,255,'+(0.55*fill+0.15)+')'; ctx.beginPath(); water.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); }
+              ctx.fillStyle='rgba(255,255,255,'+(0.75*fill+0.1)+')'; ctx.beginPath(); water.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); }
           }
           ctx.restore();
           var edges=[]; for(var e=0;e<top.length;e++) edges.push([top[e],top[(e+1)%top.length]]);
@@ -2350,7 +2434,7 @@ document.addEventListener('click', function(e) {
     },
 
     landscaping: function(T,H){
-      var q=st.q||{}, where=q.where||'back', size=q.size||1200;
+      var q=randomYard(), where='back', size=q.size;
       var patches=[];
       var mk=function(dir,area){
         var alongA = dir[0]===0, width=(alongA?(H.a1-H.a0):(H.b1-H.b0))+16, depth=Math.max(14,Math.min(70,area/width));
@@ -2373,17 +2457,18 @@ document.addEventListener('click', function(e) {
         under: function(ctx,P,dpr,now){
           patches.forEach(function(r,pi){
             var ring=ringPts(H,r,0), scr=ring.map(P), g=span(T,9.6+pi*0.3,10.8+pi*0.3);
-            if(g>0){ ctx.save(); ctx.globalAlpha=g; ctx.fillStyle='#e3efdc'; ctx.beginPath(); scr.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); ctx.restore(); }
+            if(g>0){ ctx.save(); ctx.globalAlpha=g; ctx.fillStyle='#f3f5f8'; ctx.beginPath(); scr.forEach(function(s,i){ i?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); ctx.restore(); }
             var edges=[]; for(var e=0;e<4;e++) edges.push([ring[e],ring[(e+1)%4]]);
             ctx.save(); ctx.lineCap='round'; chain(ctx,P,edges,span(T,8.6+pi*0.3,9.6+pi*0.3),BLUE,2*dpr); ctx.restore();
             /* shrubs along the far edge and stepping stones across */
             var a0=Math.min(r[0][0],r[2][0]), a1=Math.max(r[0][0],r[2][0]), b0=Math.min(r[0][1],r[2][1]), b1=Math.max(r[0][1],r[2][1]);
-            for(var s=0;s<7;s++){ var t=(s+0.5)/7, pop=ease(span(T,10.8+s*0.15+pi*0.3,11.3+s*0.15+pi*0.3)); if(pop<=0) continue;
+            for(var s=0;s<q.shrubs;s++){ var t=(s+0.5)/q.shrubs, pop=ease(span(T,10.8+s*0.15+pi*0.3,11.3+s*0.15+pi*0.3)); if(pop<=0) continue;
               var sp = (a1-a0)>(b1-b0) ? H.w(a0+(a1-a0)*t,1.2,b0+(b1-b0)*0.18) : H.w(a0+(a1-a0)*0.18,1.2,b0+(b1-b0)*t);
               var sc=P(sp), rr=Math.max(3, P.scale*1.6)*pop;
-              ctx.fillStyle='#9fc98f'; ctx.beginPath(); ctx.arc(sc.x,sc.y,rr,0,Math.PI*2); ctx.fill();
-              ctx.fillStyle='#b8d9aa'; ctx.beginPath(); ctx.arc(sc.x-rr*0.3,sc.y-rr*0.3,rr*0.55,0,Math.PI*2); ctx.fill(); }
-            for(var k=0;k<5;k++){ var t2=(k+0.5)/5, on=span(T,11.8+k*0.12+pi*0.3,12.2+k*0.12+pi*0.3); if(on<=0) continue;
+              ctx.fillStyle='#ffffff'; ctx.strokeStyle='rgba(0,21,48,.22)'; ctx.lineWidth=1*dpr;
+              ctx.beginPath(); ctx.arc(sc.x,sc.y,rr,0,Math.PI*2); ctx.fill(); ctx.stroke();
+              ctx.fillStyle='#eef1f5'; ctx.beginPath(); ctx.arc(sc.x+rr*0.25,sc.y+rr*0.25,rr*0.55,0,Math.PI*2); ctx.fill(); }
+            for(var k=0;k<q.stones;k++){ var t2=(k+0.5)/q.stones, on=span(T,11.8+k*0.12+pi*0.3,12.2+k*0.12+pi*0.3); if(on<=0) continue;
               var ca=(a1-a0)>(b1-b0) ? (a0+a1)/2 : a0+(a1-a0)*t2, cb=(a1-a0)>(b1-b0) ? b0+(b1-b0)*t2 : (b0+b1)/2;
               var st2=ringPts(H,[[ca-1.2,cb-0.8],[ca+1.2,cb-0.8],[ca+1.2,cb+0.8],[ca-1.2,cb+0.8]],0.05).map(P);
               ctx.globalAlpha=on; ctx.fillStyle='#ffffff'; ctx.strokeStyle='rgba(0,21,48,.2)'; ctx.lineWidth=1*dpr;
@@ -2392,6 +2477,17 @@ document.addEventListener('click', function(e) {
         } };
     }
   };
+
+  /* "Random", but the same for the same address: seeded from it, so going
+     back and forth never shows a different pool. The real choices come after,
+     on the calculator's own steps. */
+  function seeded(){ var str=String((st&&st.addrText)||'x'), h=2166136261; for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
+    return function(){ h=Math.imul(h^(h>>>15),2246822507); h=Math.imul(h^(h>>>13),3266489909); h^=h>>>16; return (h>>>0)/4294967296; }; }
+  function randomPool(){ if(st._pool) return st._pool; var r=seeded();
+    var shapes=['rect','freeform','kidney','l'], sizes=[288,400,512,650];
+    return (st._pool={shape:shapes[Math.floor(r()*4)], size:sizes[Math.floor(r()*4)]}); }
+  function randomYard(){ if(st._yard) return st._yard; var r=seeded(); r(); r();
+    return (st._yard={size:900+Math.round(r()*1800), shrubs:4+Math.floor(r()*5), stones:3+Math.floor(r()*4)}); }
 
   /* pool outlines, centred, in feet (a, b) */
   function poolPoly(q){
@@ -2417,7 +2513,7 @@ document.addEventListener('click', function(e) {
     ctx.clearRect(0,0,w,h);
 
     var geo=null;
-    if(st.target){ geo=st.planes? st.planes.geo : st.gen; if(st.arrive===undefined) st.arrive=T; }
+    if(st.target){ geo=pickGeo(st); if(st.arrive===undefined) st.arrive=T; }
     if(geo&&(!st.frame||st.frameGeo!==geo)){ st.frame=frameFor(geo); st.frameGeo=geo; }
     var H=geo?hx(geo):null;
     var fin=(geo&&T>=8.2&&FINALE[TRADE]) ? FINALE[TRADE](T,H,now,geo) : null;
@@ -2462,6 +2558,7 @@ document.addEventListener('click', function(e) {
       drawMap(mctx,PM,1,mapA,geo&&geo.foot,footA);
     }
     if(!geo||grow<=0.01){ st.raf=requestAnimationFrame(draw); return; }
+    st.geoLocked=geo;
 
     /* ground-level work (pool, yard) sits under the house */
     if(fin&&fin.under) fin.under(ctx,P1,dpr,now);
@@ -2559,35 +2656,8 @@ document.addEventListener('click', function(e) {
     return stage;
   }
 
-  /* ── pool and landscaping ask before the shot, so the shot can show it ─────── */
-  var QUESTIONS = {
-    pools: [
-      {k:'shape', t:'Pool shape', o:[['rect','Rectangle'],['freeform','Freeform'],['kidney','Kidney'],['l','L-shape']]},
-      {k:'size',  t:'Size',       o:[[288,'Small · 12×24'],[512,'Medium · 16×32'],[800,'Large · 20×40']]},
-      {k:'where', t:'Where',      o:[['back','Back yard'],['side','Side yard'],['front','Front yard']]}
-    ],
-    landscaping: [
-      {k:'where', t:'Which yard', o:[['back','Back yard'],['front','Front yard'],['both','Both']]},
-      {k:'size',  t:'About how big', o:[[600,'Small · ~600 sq ft'],[1500,'Medium · ~1,500'],[3000,'Large · ~3,000']]}
-    ]
-  };
-  function askFirst(go){
-    var qs=QUESTIONS[TRADE]; if(!qs){ go(); return; }
-    var box=$('hs-q'), ans={};
-    qs.forEach(function(q){ ans[q.k]=q.o[q.k==='size'?1:0][0]; });
-    box.innerHTML=qs.map(function(q){
-      return '<div class="hs-qrow"><div class="hs-qt">'+q.t+'</div><div class="hs-qo">'
-        +q.o.map(function(o,i){ return '<button type="button" class="hs-chip'+(ans[q.k]===o[0]?' on':'')+'" data-k="'+q.k+'" data-v="'+o[0]+'">'+o[1]+'</button>'; }).join('')
-        +'</div></div>';
-    }).join('')+'<button type="button" class="hs-go" id="hs-go">'+(TRADE==='pools'?'Show my pool':'Show my yard')+'</button>';
-    box.className='hs-q on';
-    $('hs-canvas').style.display='none'; $('hs-livepanel').style.display='none';
-    box.querySelectorAll('.hs-chip').forEach(function(b){ b.onclick=function(){
-      var k=b.getAttribute('data-k'), v=b.getAttribute('data-v'); ans[k]=isNaN(+v)?v:+v;
-      box.querySelectorAll('.hs-chip[data-k="'+k+'"]').forEach(function(x){ x.classList.toggle('on', x===b); });
-    }; });
-    $('hs-go').onclick=function(){ box.className='hs-q'; box.innerHTML=''; $('hs-canvas').style.display=''; $('hs-livepanel').style.display=''; go(ans); };
-  }
+  /* nothing is asked before the shot any more; askFirst just starts it */
+  function askFirst(go){ go(); }
 
   /* ── start: when an address is chosen ─────────────────────────────────────── */
   function begin(addr){
@@ -2602,7 +2672,7 @@ document.addEventListener('click', function(e) {
     /* the scan state exists from the moment the address is picked, so the
        street and the measurement start loading while any questions are asked */
     st={ cv:cv, ctx:cv.getContext('2d'), mcv:mcv, mctx:mcv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1),
-         t0:performance.now(), clock:0, idx:-1, data:undefined, target:null, waiting:true };
+         t0:performance.now(), clock:0, idx:-1, data:undefined, target:null, waiting:true, addrText:String(addr||'') };
     /* where the scan replaces the trace, the size is the scan's to give;
        where the size is asked on its own step, leave it as that step set it */
     if(!$('hs-addrpanel')){ try{ eS.sqft=0; eCheckBtn1(); }catch(e){} }
@@ -2620,6 +2690,7 @@ document.addEventListener('click', function(e) {
       var pitch=+d.avgPitchDegrees||0, trueSqft=Math.round(d.totalAreaSqft), plan=Math.round(trueSqft*Math.cos(pitch*Math.PI/180));
       me.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch, planes:(d.roof&&d.roof.planes&&d.roof.planes.length)||0 };
       me.target=modelFor(trueSqft, pitch);
+      me.bc=(me.origin&&d.centerLat&&d.centerLng) ? worldOf(me.origin,d.centerLat,d.centerLng) : [0,0];
       try{ me.planes=planesModel(d.roof, me.origin); }catch(e){ me.planes=null; }
       if(!me.planes){
         var g0=buildGeometry(me.target), o=me.origin;
@@ -2640,13 +2711,10 @@ document.addEventListener('click', function(e) {
     hvac:        function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[d.planes>1?d.planes:'—','Roof planes'],[fmt(d.planSqft),'Living area to size for']]; },
     painting:    function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(Math.round(Math.sqrt(d.planSqft)*4*9)),'Exterior wall, approx. sq ft'],[d.planes>1?d.planes:'—','Roof planes']]; },
     electrical:  function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[d.planes>1?d.planes:'—','Roof planes'],[fmt(d.planSqft),'Home size to price']]; },
-    pools:       function(d,q){ return [[fmt(q.size),'Pool surface, sq ft'],[({back:'Back',side:'Side',front:'Front'})[q.where]+' yard','Location'],[fmt(d.planSqft),'Home footprint, sq ft']]; },
-    landscaping: function(d,q){ return [[fmt(q.size),'Yard to landscape, sq ft'],[({back:'Back yard',front:'Front yard',both:'Front & back'})[q.where],'Where'],[fmt(d.planSqft),'Home footprint, sq ft']]; },
     _:           function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[d.planes>1?d.planes:'—','Roof planes'],[fmt(d.trueSqft),'Roof area, sq ft']]; }
   };
   var PREFILL = {
-    hvac:function(d){ return d.planSqft; }, painting:function(d){ return d.planSqft; }, electrical:function(d){ return d.planSqft; },
-    pools:function(d,q){ return q.size; }, landscaping:function(d,q){ return q.size; }
+    hvac:function(d){ return d.planSqft; }, painting:function(d){ return d.planSqft; }, electrical:function(d){ return d.planSqft; }
   };
   function fmt(n){ return (typeof n==='number') ? Math.round(n).toLocaleString() : String(n); }
 
@@ -2672,7 +2740,7 @@ document.addEventListener('click', function(e) {
 
   function handoff(data, q){
     var pn=panel(); pn.classList.remove('hs-mode'); pn.classList.add('hs-done');
-    var v = (data&&PREFILL[TRADE]) ? PREFILL[TRADE](data,q) : (PREFILL[TRADE]&&(TRADE==='pools'||TRADE==='landscaping') ? PREFILL[TRADE]({},q) : null);
+    var v = (data&&PREFILL[TRADE]) ? PREFILL[TRADE](data,q) : null;
     var sw=$('e-sldwrap'), sld=$('e-sld');
     if(sw&&!$('hs-addrpanel')){ sw.style.display='block'; try{ window.eManualOpen=true; eManualOpen=true; }catch(e){} }
     if(sld&&typeof eUpdateSlider==='function'){

@@ -2416,6 +2416,87 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     return k;
   }
 
+  /* ── the house, from the building outline on the map ──────────────────────
+     The house the homeowner sees should be the outline they have just watched
+     light up on the map, not a shape pieced together from roof sections. So
+     when the map has this building, its outline is the footprint: the walls
+     are that outline raised, and the roof comes in from every eave at the
+     measured pitch, meeting in a ridge or a small flat top — a hip roof that
+     fits any outline, L-shapes and all. The roof sections model is kept for
+     where the map has no outline (rural, brand-new streets). */
+  function ringArea(r){ var a=0; for(var i=0;i<r.length;i++){ var p=r[i], q=r[(i+1)%r.length]; a+=p[0]*q[1]-q[0]*p[1]; } return a/2; }
+  function worldOf(o, lat, lng){ var FT=3.28084; return [(lng-o.lng)*111320*Math.cos(o.lat*Math.PI/180)*FT, -(lat-o.lat)*110574*FT]; }
+
+  function polyModel(ring, pitchDeg){
+    var pts=ring.map(function(p){ return [p[0],p[1]]; });
+    if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
+    /* tidy: drop near-duplicate corners and corners on a straight line */
+    var out=[]; pts.forEach(function(p){ var q=out[out.length-1]; if(!q||Math.hypot(p[0]-q[0],p[1]-q[1])>=1.2) out.push(p); });
+    if(out.length>2&&Math.hypot(out[0][0]-out[out.length-1][0],out[0][1]-out[out.length-1][1])<1.2) out.pop();
+    var o2=[]; for(var j=0;j<out.length;j++){ var a0=out[(j-1+out.length)%out.length], b=out[j], c=out[(j+1)%out.length];
+      var cr=(b[0]-a0[0])*(c[1]-b[1])-(b[1]-a0[1])*(c[0]-b[0]), L=Math.hypot(b[0]-a0[0],b[1]-a0[1])*Math.hypot(c[0]-b[0],c[1]-b[1]);
+      if(Math.abs(cr)>0.03*L) o2.push(b); }
+    pts=o2.length>=3?o2:out; if(pts.length<3) return null;
+    var A=ringArea(pts); if(A<0){ pts.reverse(); A=-A; }
+    var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
+    var tan=Math.tan(Math.max(8,Math.min(50,pitchDeg||22))*Math.PI/180);
+    function unit(a,b){ var dx=b[0]-a[0], dz=b[1]-a[1], l=Math.hypot(dx,dz)||1; return [dx/l,dz/l]; }
+    function inset(dd){
+      var q=[]; for(var i=0;i<n;i++){
+        var e1=unit(pts[(i-1+n)%n],pts[i]), e2=unit(pts[i],pts[(i+1)%n]);
+        var n1=[-e1[1],e1[0]], n2=[-e2[1],e2[0]], bx=n1[0]+n2[0], bz=n1[1]+n2[1], bl=Math.hypot(bx,bz)||1;
+        bx/=bl; bz/=bl; var k=dd/Math.max(0.35, bx*n1[0]+bz*n1[1]);
+        q.push([pts[i][0]+bx*k, pts[i][1]+bz*k]);
+      } return q;
+    }
+    /* how far the roof comes in: most of the way to the middle of the
+       narrowest part, backed off until no roof edge turns inside out */
+    var d=Math.min(22, 0.9*A/(per/2)), top=null;
+    for(var t=0;t<10;t++){ var q=inset(d), ok=true;
+      for(var k2=0;k2<n;k2++){ var o=unit(pts[k2],pts[(k2+1)%n]), ql=[q[(k2+1)%n][0]-q[k2][0], q[(k2+1)%n][1]-q[k2][1]];
+        if(o[0]*ql[0]+o[1]*ql[1] < -0.05){ ok=false; break; } }
+      if(ok){ top=q; break; } d*=0.8; }
+    if(!top) return null;
+    var E=10, Y=E+d*tan;
+    var g=pts.map(function(p){ return [p[0],0,p[1]]; }), e=pts.map(function(p){ return [p[0],E,p[1]]; }), tp=top.map(function(p){ return [p[0],Y,p[1]]; });
+    var faces=[], roofEdges=[], eaves=[];
+    for(var i2=0;i2<n;i2++){ var j2=(i2+1)%n;
+      faces.push({v:[g[i2],g[j2],e[j2],e[i2]], kind:'wall'});
+      faces.push({v:[e[i2],e[j2],tp[j2],tp[i2]], kind:'roof'});
+      eaves.push([e[i2],e[j2]]); }
+    if(Math.abs(ringArea(top))>4) faces.push({v:tp.slice(), kind:'roof'});
+    roofEdges=eaves.concat(e.map(function(p,i){ return [p,tp[i]]; }));
+    for(var i3=0;i3<n;i3++){ var a3=tp[i3], b3=tp[(i3+1)%n]; if(Math.hypot(a3[0]-b3[0],a3[2]-b3[2])>0.5) roofEdges.push([a3,b3]); }
+    var lo=0, th=0; for(var i4=0;i4<n;i4++){ var pa=pts[i4], pb=pts[(i4+1)%n], l=Math.hypot(pb[0]-pa[0],pb[1]-pa[1]); if(l>lo){ lo=l; th=Math.atan2(pb[1]-pa[1],pb[0]-pa[0]); } }
+    return { faces:faces, roofEdges:roofEdges, ridge:null, eaves:eaves, foot:[g], axes:{th:th}, fromMap:true };
+  }
+
+  /* the map's outline of THIS building: the one the measured centre falls
+     inside, else the nearest one close by */
+  function polyFromMap(s){
+    var m=s.map; if(!m||!m.blds||!m.blds.length) return null;
+    var c=s.bc||[0,0], inside=null, ia=1e12, near=null, nd=70;
+    m.blds.forEach(function(r){
+      var a=Math.abs(ringArea(r)); if(a<250||a>40000) return;
+      if(rsInside(c,r)){ if(a<ia){ ia=a; inside=r; } return; }
+      var cx=0,cz=0; r.forEach(function(p){ cx+=p[0]; cz+=p[1]; }); cx/=r.length; cz/=r.length;
+      var dd=Math.hypot(cx-c[0],cz-c[1]); if(dd<nd){ nd=dd; near=r; }
+    });
+    var r2=inside||near; if(!r2) return null;
+    return polyModel(r2, s.data&&s.data.pitch!=null ? s.data.pitch : 22);
+  }
+
+  /* which house to draw: the map's outline when there is one, else the roof
+     sections, else the typical house. Decided before the house rises and
+     then held, so it never changes shape in front of anyone. */
+  function pickGeo(s){
+    if(!s.target) return null;
+    if(s.geoLocked) return s.geoLocked;
+    if(s.map&&!s.polyTried){ s.polyTried=true; try{ s.poly=polyFromMap(s); }catch(e){ s.poly=null; } }
+    if(s.poly) return s.poly;
+    return s.planes? s.planes.geo : (s.gen||(s.gen=buildGeometry(s.target)));
+  }
+
   /* The shot, on the scan's own clock (T):
        0.0–5.0  their street from above, closing in on the lot
        3.0–4.2  their roof's outline lights up blue on the map
@@ -2435,7 +2516,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     ctx.clearRect(0,0,w,h);
 
     var geo=null;
-    if(st.target){ geo=st.planes? st.planes.geo : (st.gen||(st.gen=buildGeometry(st.target))); if(st.arrive===undefined) st.arrive=T; }
+    if(st.target){ geo=pickGeo(st); if(st.arrive===undefined) st.arrive=T; }
     if(geo&&(!st.frame||st.frameGeo!==geo)){ st.frame=frameFor(geo); st.frameGeo=geo; }
 
     /* the camera eases toward the house once it is known */
@@ -2470,6 +2551,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
       drawMap(mctx,PM,1,mapA,geo&&geo.foot,footA);
     }
     if(!geo||grow<=0.01){ st.raf=requestAnimationFrame(draw); return; }
+    st.geoLocked=geo;
 
     var edgeP=span(T,7.8,10.4), tintP=span(T,8.6,10.4), labelP=span(T,10.6,11.8);
 
@@ -2605,6 +2687,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
       var plan=Math.round(trueSqft*Math.cos(pitch*Math.PI/180));
       st.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch, planes:(d.roof&&d.roof.planes&&d.roof.planes.length)||0 };
       st.target=modelFor(trueSqft, pitch);
+      st.bc=(st.origin&&d.centerLat&&d.centerLng) ? worldOf(st.origin,d.centerLat,d.centerLng) : [0,0];
       try{ st.planes=planesModel(d.roof, st.origin); }catch(e){ st.planes=null; }   /* no planes: the typical-house model stays */
       if(!st.planes){
         /* the typical-house model, set down where the building is rather than
