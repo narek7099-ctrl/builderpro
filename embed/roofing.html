@@ -2819,6 +2819,19 @@ html body #est-embed#est-embed .e-suggestions{background:#fff !important;border:
 html body #est-embed#est-embed .e-suggestion:hover{background:var(--st-canvas) !important;}
 html body #est-embed#est-embed .e-consent{background:var(--st-canvas) !important;border:0 !important;border-radius:12px !important;color:var(--st-muted) !important;}
 
+/* ---- the ZIP card: laid out, not left at the card's edge -------------------
+   One white card like the header above it, the same inner padding, a label
+   that reads as a caption, a roomy input, and the hint set under it. The
+   header card's old negative margins (from the navy banner days) are undone
+   so both cards share one left edge. */
+html body #est-embed#est-embed #e-zippanel .e-shdr{margin:0 0 var(--st-gap) !important;width:auto !important;max-width:none !important;}
+html body #est-embed#est-embed .e-zipwrap{padding:24px 28px 26px !important;margin:0 0 var(--st-gap) !important;display:flex !important;flex-direction:column !important;gap:10px !important;}
+html body #est-embed#est-embed .e-ziplabel{margin:0 !important;}
+html body #est-embed#est-embed .e-zipinput{width:100% !important;max-width:320px !important;height:56px !important;padding:0 18px !important;font-size:20px !important;font-weight:500 !important;letter-spacing:.04em !important;font-variant-numeric:tabular-nums !important;}
+html body #est-embed#est-embed .e-zipinput::placeholder{color:#b3bcc7 !important;letter-spacing:.02em !important;}
+html body #est-embed#est-embed .e-ziphint{margin:0 !important;font-size:13px !important;color:var(--st-muted) !important;}
+@media(max-width:560px){html body #est-embed#est-embed .e-zipwrap{padding:20px !important;} html body #est-embed#est-embed .e-zipinput{max-width:none !important;}}
+
 /* ---- buttons: the site's one shape --------------------------------------- */
 html body #est-embed#est-embed .e-btnrow{gap:var(--st-gap) !important;margin-top:var(--st-gap) !important;}
 html body #est-embed#est-embed .e-btnmain,html body #est-embed#est-embed .e-restart,html body #est-embed#est-embed .e-btnback,html body #est-embed#est-embed .e-manualbtn{
