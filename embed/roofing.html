@@ -2115,7 +2115,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
     seen.forEach(function(v){ delete v._w; });
     var W=maxX-minX, D=maxZ-minZ;
     return { m:{ W:W, D:D, H:(top-base)*0.7, pitch:0, o:0 },
-             geo:{ faces:faces, roofEdges:roofEdges, ridge:null, eaves:eaves.length?eaves:roofEdges.slice(0,4), planes:facets.length, foot:foot } };
+             geo:{ faces:faces, roofEdges:roofEdges, ridge:null, eaves:eaves.length?eaves:roofEdges.slice(0,4), planes:facets.length, foot:foot, axes:{th:th} } };   /* axes: the house's own grid, for the other trades' scenes */
   }
 
   function buildGeometry(m){
