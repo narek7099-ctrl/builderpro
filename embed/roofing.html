@@ -2427,6 +2427,42 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
   function ringArea(r){ var a=0; for(var i=0;i<r.length;i++){ var p=r[i], q=r[(i+1)%r.length]; a+=p[0]*q[1]-q[0]*p[1]; } return a/2; }
   function worldOf(o, lat, lng){ var FT=3.28084; return [(lng-o.lng)*111320*Math.cos(o.lat*Math.PI/180)*FT, -(lat-o.lat)*110574*FT]; }
 
+  /* Square the outline up. Map outlines are traced by hand from imagery,
+     so a wall that is straight in life comes in a degree or two off, with
+     one-foot jogs where the tracer's clicks wandered. Built literally, the
+     house rises with crooked walls. So: find the house's own grid (the
+     length-weighted average direction of its edges, folded to 90°), snap
+     every edge within 22° of it onto the grid, drop jogs under 2.5 ft, and
+     rebuild the corners from the snapped walls. A genuinely angled wall (a
+     bay, a 45° corner) means the outline is left as the map has it, and so
+     does any result that would change the area by more than 12%. */
+  function straighten(pts){
+    var n=pts.length; if(n<4) return pts;
+    var sx=0, sy=0;
+    for(var i=0;i<n;i++){ var a=pts[i], b=pts[(i+1)%n], dx=b[0]-a[0], dz=b[1]-a[1], L=Math.hypot(dx,dz), g=Math.atan2(dz,dx)*4; sx+=L*Math.cos(g); sy+=L*Math.sin(g); }
+    var th=Math.atan2(sy,sx)/4, c=Math.cos(th), s2=Math.sin(th);
+    var R=pts.map(function(p){ return [p[0]*c+p[1]*s2, -p[0]*s2+p[1]*c]; });
+    var lim=Math.sin(22*Math.PI/180), E=[];
+    for(var j=0;j<n;j++){ var p=R[j], q=R[(j+1)%n], ex=q[0]-p[0], ey=q[1]-p[1], L2=Math.hypot(ex,ey)||1e-9;
+      if(Math.abs(ey)/L2<lim) E.push({t:'h', L:L2, v:(p[1]+q[1])/2});
+      else if(Math.abs(ex)/L2<lim) E.push({t:'v', L:L2, v:(p[0]+q[0])/2});
+      else return pts; }
+    for(var guard=0; guard<200; guard++){
+      var changed=false;
+      if(E.length>4){ for(var k=0;k<E.length;k++){ if(E[k].L<2.5){ E.splice(k,1); changed=true; break; } } }
+      if(!changed){ for(var k2=0;k2<E.length;k2++){ var m=(k2+1)%E.length; if(E.length>1&&E[k2].t===E[m].t){
+        var Lt=E[k2].L+E[m].L, merged={t:E[k2].t, L:Lt, v:(E[k2].v*E[k2].L+E[m].v*E[m].L)/Lt};
+        if(m===0){ E.splice(k2,1); E[0]=merged; } else { E.splice(k2,2,merged); }
+        changed=true; break; } } }
+      if(!changed) break;
+    }
+    if(E.length<4||E.length%2) return pts;
+    var out=[]; for(var i2=0;i2<E.length;i2++){ var pr=E[(i2-1+E.length)%E.length], cu=E[i2];
+      var x=cu.t==='v'?cu.v:pr.v, y=cu.t==='h'?cu.v:pr.v; out.push([x*c - y*s2, x*s2 + y*c]); }
+    var a0=Math.abs(ringArea(pts)), a1=Math.abs(ringArea(out));
+    return (a0>0 && Math.abs(a1-a0)/a0<=0.12) ? out : pts;
+  }
+
   function polyModel(ring, pitchDeg){
     var pts=ring.map(function(p){ return [p[0],p[1]]; });
     if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
@@ -2437,6 +2473,7 @@ window.addEventListener('message',function(ev){ try{ if(ev.data&&ev.data.bp==='r
       var cr=(b[0]-a0[0])*(c[1]-b[1])-(b[1]-a0[1])*(c[0]-b[0]), L=Math.hypot(b[0]-a0[0],b[1]-a0[1])*Math.hypot(c[0]-b[0],c[1]-b[1]);
       if(Math.abs(cr)>0.03*L) o2.push(b); }
     pts=o2.length>=3?o2:out; if(pts.length<3) return null;
+    pts=straighten(pts);
     var A=ringArea(pts); if(A<0){ pts.reverse(); A=-A; }
     var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
     var tan=Math.tan(Math.max(8,Math.min(50,pitchDeg||22))*Math.PI/180);

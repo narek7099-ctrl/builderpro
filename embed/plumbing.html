@@ -2202,6 +2202,42 @@ document.addEventListener('click', function(e) {
   function ringArea(r){ var a=0; for(var i=0;i<r.length;i++){ var p=r[i], q=r[(i+1)%r.length]; a+=p[0]*q[1]-q[0]*p[1]; } return a/2; }
   function worldOf(o, lat, lng){ var FT=3.28084; return [(lng-o.lng)*111320*Math.cos(o.lat*Math.PI/180)*FT, -(lat-o.lat)*110574*FT]; }
 
+  /* Square the outline up. Map outlines are traced by hand from imagery,
+     so a wall that is straight in life comes in a degree or two off, with
+     one-foot jogs where the tracer's clicks wandered. Built literally, the
+     house rises with crooked walls. So: find the house's own grid (the
+     length-weighted average direction of its edges, folded to 90°), snap
+     every edge within 22° of it onto the grid, drop jogs under 2.5 ft, and
+     rebuild the corners from the snapped walls. A genuinely angled wall (a
+     bay, a 45° corner) means the outline is left as the map has it, and so
+     does any result that would change the area by more than 12%. */
+  function straighten(pts){
+    var n=pts.length; if(n<4) return pts;
+    var sx=0, sy=0;
+    for(var i=0;i<n;i++){ var a=pts[i], b=pts[(i+1)%n], dx=b[0]-a[0], dz=b[1]-a[1], L=Math.hypot(dx,dz), g=Math.atan2(dz,dx)*4; sx+=L*Math.cos(g); sy+=L*Math.sin(g); }
+    var th=Math.atan2(sy,sx)/4, c=Math.cos(th), s2=Math.sin(th);
+    var R=pts.map(function(p){ return [p[0]*c+p[1]*s2, -p[0]*s2+p[1]*c]; });
+    var lim=Math.sin(22*Math.PI/180), E=[];
+    for(var j=0;j<n;j++){ var p=R[j], q=R[(j+1)%n], ex=q[0]-p[0], ey=q[1]-p[1], L2=Math.hypot(ex,ey)||1e-9;
+      if(Math.abs(ey)/L2<lim) E.push({t:'h', L:L2, v:(p[1]+q[1])/2});
+      else if(Math.abs(ex)/L2<lim) E.push({t:'v', L:L2, v:(p[0]+q[0])/2});
+      else return pts; }
+    for(var guard=0; guard<200; guard++){
+      var changed=false;
+      if(E.length>4){ for(var k=0;k<E.length;k++){ if(E[k].L<2.5){ E.splice(k,1); changed=true; break; } } }
+      if(!changed){ for(var k2=0;k2<E.length;k2++){ var m=(k2+1)%E.length; if(E.length>1&&E[k2].t===E[m].t){
+        var Lt=E[k2].L+E[m].L, merged={t:E[k2].t, L:Lt, v:(E[k2].v*E[k2].L+E[m].v*E[m].L)/Lt};
+        if(m===0){ E.splice(k2,1); E[0]=merged; } else { E.splice(k2,2,merged); }
+        changed=true; break; } } }
+      if(!changed) break;
+    }
+    if(E.length<4||E.length%2) return pts;
+    var out=[]; for(var i2=0;i2<E.length;i2++){ var pr=E[(i2-1+E.length)%E.length], cu=E[i2];
+      var x=cu.t==='v'?cu.v:pr.v, y=cu.t==='h'?cu.v:pr.v; out.push([x*c - y*s2, x*s2 + y*c]); }
+    var a0=Math.abs(ringArea(pts)), a1=Math.abs(ringArea(out));
+    return (a0>0 && Math.abs(a1-a0)/a0<=0.12) ? out : pts;
+  }
+
   function polyModel(ring, pitchDeg){
     var pts=ring.map(function(p){ return [p[0],p[1]]; });
     if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
@@ -2212,6 +2248,7 @@ document.addEventListener('click', function(e) {
       var cr=(b[0]-a0[0])*(c[1]-b[1])-(b[1]-a0[1])*(c[0]-b[0]), L=Math.hypot(b[0]-a0[0],b[1]-a0[1])*Math.hypot(c[0]-b[0],c[1]-b[1]);
       if(Math.abs(cr)>0.03*L) o2.push(b); }
     pts=o2.length>=3?o2:out; if(pts.length<3) return null;
+    pts=straighten(pts);
     var A=ringArea(pts); if(A<0){ pts.reverse(); A=-A; }
     var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
     var tan=Math.tan(Math.max(8,Math.min(50,pitchDeg||22))*Math.PI/180);
@@ -2320,11 +2357,14 @@ document.addEventListener('click', function(e) {
     geo._hx=H; return H;
   }
   /* a box in house coordinates -> faces in the world */
-  function box(H, a0,a1, y0,y1, b0,b1, grp, style){
+  /* deco: [side b0, side a1, side b1, side a0, top] drawers, called right
+     after that face is painted, so detail is hidden exactly when its face
+     is. cull: a wall that should not be drawn while it faces the camera. */
+  function box(H, a0,a1, y0,y1, b0,b1, grp, style, deco, cull){
     var P=function(a,y,b){ return H.w(a,y,b); };
     var v=[P(a0,y0,b0),P(a1,y0,b0),P(a1,y0,b1),P(a0,y0,b1),P(a0,y1,b0),P(a1,y1,b0),P(a1,y1,b1),P(a0,y1,b1)];
     var f=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7]];
-    return f.map(function(ix,i){ return {v:ix.map(function(k){ return v[k]; }), kind:i===4?'top':'side', grp:grp, style:style||{}}; });
+    return f.map(function(ix,i){ return {v:ix.map(function(k){ return v[k]; }), kind:i===4?'top':'side', grp:grp, style:style||{}, deco:deco&&deco[i], cull:cull}; });
   }
   function seg(ctx,P,a,b,part,col,wpx){ if(part<=0) return; var A=P(a),B=P(b); ctx.strokeStyle=col; ctx.lineWidth=wpx; ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(A.x+(B.x-A.x)*part, A.y+(B.y-A.y)*part); ctx.stroke(); }
   /* draw a chain of segments progressively, p in 0..1 across the whole chain */
@@ -2334,6 +2374,139 @@ document.addEventListener('click', function(e) {
   function ringPts(H, poly, y){ return poly.map(function(q){ return H.w(q[0],y,q[1]); }); }
 
   var BLUE='#006fff', INK='rgba(0,21,48,.16)';
+
+  /* ── subjects that replace the house ──────────────────────────────────────
+     Built around (0,0) in house coordinates, i.e. where the house stood. */
+  function dissolve(T){ return 1-ease(span(T,8.3,9.4)); }
+  function subjectCam(T,c,R,Hh,tilt){ return {c:c, R:R, H:Hh, tilt:tilt, p:ease(span(T,8.5,10.2))}; }
+  function ln(ctx,P,a,b){ var A=P(a),B=P(b); ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke(); }
+  function loop(ctx,P,pts,fill){ ctx.beginPath(); pts.forEach(function(p,i){ var q=P(p); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); }); ctx.closePath(); if(fill){ ctx.fillStyle=fill; ctx.fill(); } ctx.stroke(); }
+  var LINE='rgba(0,21,48,.3)', LINE2='rgba(0,21,48,.45)';
+
+  /* a condenser: pad, base pan, louvred cabinet with corner posts, service
+     panel and line set, a disconnect on its post, and a guarded fan turning */
+  function hvacUnit(T,H,now){
+    var W=2.0, k1=ease(span(T,8.8,9.3)), k2=ease(span(T,9.1,10.1)), k3=ease(span(T,9.9,10.4)), det=span(T,10.1,11.2);
+    var top=0.65+3.0*k2, lid=top+0.24*k3;
+    function side(s,t,y){ var e=W+0.002; return s===0?H.w(t*W,y,-e):s===1?H.w(e,y,t*W):s===2?H.w(-t*W,y,e):H.w(-e,y,-t*W); }
+    function louvres(s,from,to){ return function(ctx,P,dpr){ if(det<=0) return;
+      ctx.save(); ctx.globalAlpha*=det; ctx.lineWidth=1*dpr; ctx.strokeStyle=LINE;
+      for(var y=0.95;y<=top-0.3;y+=0.2) ln(ctx,P,side(s,from,y),side(s,to,y));
+      ctx.strokeStyle=LINE2; [-0.93,0.93].forEach(function(t){ ln(ctx,P,side(s,t,0.68),side(s,t,top-0.02)); });
+      ctx.restore(); }; }
+    function service(ctx,P,dpr){ louvres(3,0.1,0.86)(ctx,P,dpr); if(det<=0) return;
+      ctx.save(); ctx.globalAlpha*=det; ctx.lineWidth=1.2*dpr; ctx.strokeStyle=LINE2;
+      loop(ctx,P,[side(3,-0.86,1.05),side(3,-0.05,1.05),side(3,-0.05,top-0.4),side(3,-0.86,top-0.4)],'rgba(255,255,255,.9)');
+      [[-0.78,1.2],[-0.13,1.2],[-0.78,top-0.55],[-0.13,top-0.55]].forEach(function(q){ var c=P(side(3,q[0],q[1])); ctx.fillStyle=LINE2; ctx.beginPath(); ctx.arc(c.x,c.y,1.4*dpr,0,Math.PI*2); ctx.fill(); });
+      /* the line set: suction (insulated, blue) and liquid, out and down */
+      var o1=side(3,0.35,0.95), o2=side(3,0.6,0.95);
+      ctx.lineCap='round';
+      ctx.strokeStyle=BLUE; ctx.lineWidth=3.2*dpr; ln(ctx,P,o1,H.w(-W-1.1,0.95,-0.35*W)); ln(ctx,P,H.w(-W-1.1,0.95,-0.35*W),H.w(-W-1.1,0.3,-0.35*W));
+      ctx.strokeStyle=LINE2; ctx.lineWidth=1.8*dpr; ln(ctx,P,o2,H.w(-W-0.8,0.95,-0.6*W)); ln(ctx,P,H.w(-W-0.8,0.95,-0.6*W),H.w(-W-0.8,0.3,-0.6*W));
+      ctx.restore(); }
+    function fan(ctx,P,dpr){ if(k3<0.5) return;
+      var y=lid+0.005, ang=now*6, ring=function(r){ var pts=[]; for(var i=0;i<40;i++){ var t=i/40*Math.PI*2; pts.push(H.w(Math.cos(t)*r,y,Math.sin(t)*r)); } return pts; };
+      ctx.save(); ctx.lineWidth=1*dpr;
+      /* blades under the guard */
+      for(var k=0;k<3;k++){ var a0=ang+k*Math.PI*2/3, bl=[];
+        [[0.35,-0.34],[1.6,-0.2],[1.6,0.26],[0.35,0.3]].forEach(function(q){ bl.push(H.w(Math.cos(a0+q[1])*q[0],y,Math.sin(a0+q[1])*q[0])); });
+        ctx.strokeStyle=BLUE; loop(ctx,P,bl,'rgba(0,111,255,.10)'); }
+      ctx.strokeStyle=LINE; [1.75,1.4,1.05,0.7].forEach(function(r){ loop(ctx,P,ring(r),null); });
+      for(var sp=0;sp<12;sp++){ var t2=sp/12*Math.PI*2; ln(ctx,P,H.w(Math.cos(t2)*0.36,y,Math.sin(t2)*0.36),H.w(Math.cos(t2)*1.75,y,Math.sin(t2)*1.75)); }
+      ctx.strokeStyle=LINE2; loop(ctx,P,ring(0.34),'#ffffff');
+      ctx.restore(); }
+    function disc(ctx,P,dpr){ if(det<=0) return; ctx.save(); ctx.globalAlpha*=det; ctx.strokeStyle=LINE2; ctx.lineWidth=1*dpr;
+      loop(ctx,P,[H.w(2.752,1.9,-2.35),H.w(2.752,1.9,-1.85),H.w(2.752,2.8,-1.85),H.w(2.752,2.8,-2.35)],null);
+      ln(ctx,P,H.w(2.752,2.35,-2.25),H.w(2.752,2.35,-1.95)); ctx.restore(); }
+    var faces=[];
+    if(k1>0.01) faces=faces.concat(box(H,-2.9,2.9,0,0.3*k1+0.01,-2.9,2.9,'pad',{fill:[236,240,245]}));
+    if(k1>0.3) faces=faces.concat(box(H,-2.25,2.25,0.3,0.3+0.35*k1,-2.25,2.25,'pan',{fill:[241,244,248]}));
+    if(k2>0.01) faces=faces.concat(box(H,-W,W,0.65,top,-W,W,'cab',{fill:[250,251,253]},[louvres(0,-0.86,0.86),louvres(1,-0.86,0.86),louvres(2,-0.86,0.86),service,null]));
+    if(k3>0.01) faces=faces.concat(box(H,-W-0.12,W+0.12,top,lid,-W-0.12,W+0.12,'lid',{fill:[252,253,254]},[null,null,null,null,fan]));
+    if(k2>0.4) faces=faces.concat(box(H,2.45,2.75,0.3,0.3+2.7*k2,-2.45,-1.75,'disc',{fill:[247,249,251]},[null,disc,null,null,null]));
+    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,H.w(0,2.1,0),3.7,4.4,0.52) };
+  }
+
+  /* a kitchen: an L of base cabinets with doors and drawers, a counter slab,
+     sink and cooktop, uppers, a fridge column, an island with stools */
+  function kitchen(T,H,now){
+    var kf=ease(span(T,8.8,9.2)), kb=ease(span(T,9.0,9.8)), ks=ease(span(T,9.7,10.0)), ku=ease(span(T,9.8,10.4)), kt=ease(span(T,10.2,10.6)), det=span(T,10.3,11.4);
+    var ch=2.95*kb+0.01, sh=ch+0.2*ks;
+    var faces=[], F=function(){ faces=faces.concat(box.apply(null,arguments)); };
+    function doors(axis,fixed,from,to,y0,y1,drawer){ return function(ctx,P,dpr){ if(det<=0) return; ctx.save(); ctx.globalAlpha*=det; ctx.strokeStyle=LINE; ctx.lineWidth=1*dpr;
+      var pt=function(t,y){ return axis==='a'?H.w(t,y,fixed):H.w(fixed,y,t); };
+      for(var t=from+1.5;t<to-0.3;t+=1.5) ln(ctx,P,pt(t,y0+0.25),pt(t,y1-0.1));
+      if(drawer) ln(ctx,P,pt(from+0.08,y1-0.55),pt(to-0.08,y1-0.55));
+      ctx.strokeStyle=LINE2; ctx.lineWidth=2*dpr; for(var t2=from+0.75;t2<to;t2+=1.5) ln(ctx,P,pt(t2-0.25,y1-(drawer?0.75:0.4)),pt(t2+0.25,y1-(drawer?0.75:0.4)));
+      ctx.restore(); }; }
+    function sink(ctx,P,dpr){ if(det<=0) return; ctx.save(); ctx.globalAlpha*=det; ctx.strokeStyle=LINE2; ctx.lineWidth=1.2*dpr; var y=sh+0.005;
+      loop(ctx,P,[H.w(-1,y,-4.75),H.w(1.6,y,-4.75),H.w(1.6,y,-3.45),H.w(-1,y,-3.45)],'#eef1f5');
+      ctx.lineWidth=2.2*dpr; ln(ctx,P,H.w(0.3,y,-4.9),H.w(0.3,y+1.1,-4.9)); ln(ctx,P,H.w(0.3,y+1.1,-4.9),H.w(0.3,y+1.1,-4.3)); ctx.restore(); }
+    function cooktop(ctx,P,dpr){ if(det<=0) return; ctx.save(); ctx.globalAlpha*=det; ctx.strokeStyle=LINE2; ctx.lineWidth=1.2*dpr; var y=sh+0.005;
+      [[-5.4,-1.6],[-4.6,-1.6],[-5.4,-0.6],[-4.6,-0.6]].forEach(function(c){ var pts=[]; for(var i=0;i<24;i++){ var t=i/24*Math.PI*2; pts.push(H.w(c[0]+Math.cos(t)*0.3,y,c[1]+Math.sin(t)*0.3)); } loop(ctx,P,pts,null); });
+      ctx.restore(); }
+    function fridge(ctx,P,dpr){ if(det<=0) return; ctx.save(); ctx.globalAlpha*=det; ctx.strokeStyle=LINE; ctx.lineWidth=1*dpr;
+      ln(ctx,P,H.w(7.4,0.1,-2.39),H.w(7.4,6.7,-2.39)); ln(ctx,P,H.w(6.05,2.6,-2.39),H.w(8.75,2.6,-2.39));
+      ctx.strokeStyle=LINE2; ctx.lineWidth=2*dpr; ln(ctx,P,H.w(7.2,3.4,-2.39),H.w(7.2,5.2,-2.39)); ln(ctx,P,H.w(7.6,3.4,-2.39),H.w(7.6,5.2,-2.39)); ctx.restore(); }
+    if(kf>0.01) F(H,-7,9.5,0,0.12,-5.6,5.2,'floor',{fill:[242,245,249]});
+    if(kb>0.01){
+      F(H,-6,6,0.12,ch,-5,-3,'run1',{fill:[250,251,253]},[null,null,doors('a',-2.998,-6,6,0.12,ch,true),null,null]);
+      F(H,-6,-4,0.12,ch,-3,3,'run2',{fill:[250,251,253]},[null,doors('b',-3.998,-3,3,0.12,ch,true),null,null,null]);
+      F(H,-1.5,3.5,0.12,ch,0,2.6,'isl',{fill:[250,251,253]},[doors('a',-0.002,-1.5,3.5,0.12,ch,false),null,null,null,null]);
+    }
+    if(ks>0.01){
+      F(H,-6.1,6.1,ch,sh,-5.05,-2.85,'top1',{fill:[255,255,255]},[null,null,null,null,sink]);
+      F(H,-6.1,-3.85,ch,sh,-2.85,3.1,'top2',{fill:[255,255,255]},[null,null,null,null,cooktop]);
+      F(H,-1.7,3.7,ch,sh,-0.15,3.1,'top3',{fill:[255,255,255]});
+    }
+    if(ku>0.01){
+      F(H,-6,6,4.9,4.9+2.4*ku,-5,-4,'upper',{fill:[250,251,253]},[null,null,doors('a',-3.998,-6,6,4.9,4.9+2.4*ku,false),null,null]);
+      F(H,6,8.8,0.12,0.12+6.7*ku,-5,-2.4,'fridge',{fill:[248,250,252]},[null,null,fridge,null,null]);
+    }
+    if(kt>0.01){ [-0.6,1,2.6].forEach(function(a,i){ F(H,a-0.4,a+0.4,0.12,0.12+2.3*kt,3.5,4.3,'stool'+i,{fill:[246,248,251]}); }); }
+    var tops=[]; var rect=function(a0,a1,b0,b1){ var c=[H.w(a0,sh,b0),H.w(a1,sh,b0),H.w(a1,sh,b1),H.w(a0,sh,b1)]; tops.push([c[0],c[1]],[c[1],c[2]],[c[2],c[3]],[c[3],c[0]]); };
+    rect(-6.1,6.1,-5.05,-2.85); rect(-6.1,-3.85,-2.85,3.1); rect(-1.7,3.7,-0.15,3.1);
+    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,H.w(1.2,2.4,-0.6),9.2,7.8,0.55),
+      over: function(ctx,P,dpr){ if(ks<0.9) return; ctx.save(); ctx.lineCap='round'; chain(ctx,P,tops,span(T,10.8,12.2),BLUE,2*dpr); ctx.restore(); } };
+  }
+
+  /* a room, seen as a dollhouse: the walls turned toward the camera step
+     aside so the inside stays in view as it turns. Trim traces baseboard,
+     door and window casing and crown; painting traces and washes the walls. */
+  function room(T,H,now,mode){
+    var A=7, B=6, Hh=9, t=0.35, kf=ease(span(T,8.8,9.3)), kw=ease(span(T,9.2,10.2)), wh=Hh*kw+0.01;
+    var cen=H.w(0,4,0);
+    function cull(dirA,dirB){ return function(P){ var c=P(H.w(dirA*A,4,dirB*B)), o=P(H.w(dirA*(A+3),4,dirB*(B+3))); return o.z<c.z; }; }
+    /* one wall's worth of detail, drawn on its inner face */
+    function inner(w){ return function(ctx,P,dpr){
+      var pt=function(s,y){ return w==='n'?H.w(s,y,-B+0.003):w==='s'?H.w(s,y,B-0.003):w==='w'?H.w(-A+0.003,y,s):H.w(A-0.003,y,s); };
+      var len=(w==='n'||w==='s')?A:B;
+      ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+      if(mode==='trim'){
+        var bp=span(T,10.4,11.4), cp=span(T,12.0,13.0);
+        if(bp>0){ ctx.strokeStyle=BLUE; ctx.lineWidth=2.2*dpr; seg(ctx,P,pt(-len,0.45),pt(len,0.45),bp,BLUE,2.2*dpr); ctx.globalAlpha*=0.5; seg(ctx,P,pt(-len,0.2),pt(len,0.2),bp,LINE2,1*dpr); ctx.globalAlpha/=0.5; }
+        if(w==='n'){ var dp=span(T,11.2,12.0); chain(ctx,P,[[pt(1,0.15),pt(1,7)],[pt(1,7),pt(4,7)],[pt(4,7),pt(4,0.15)]],dp,BLUE,2.2*dpr);
+          if(dp>0){ ctx.globalAlpha*=dp*0.6; chain(ctx,P,[[pt(0.7,0.15),pt(0.7,7.3)],[pt(0.7,7.3),pt(4.3,7.3)],[pt(4.3,7.3),pt(4.3,0.15)]],1,LINE2,1*dpr); ctx.globalAlpha/=Math.max(dp*0.6,1e-6); } }
+        if(w==='w'){ var wp=span(T,11.6,12.4); chain(ctx,P,[[pt(-2,3),pt(2,3)],[pt(2,3),pt(2,6.5)],[pt(2,6.5),pt(-2,6.5)],[pt(-2,6.5),pt(-2,3)]],wp,BLUE,2.2*dpr);
+          if(wp>0) seg(ctx,P,pt(-2.4,2.85),pt(2.4,2.85),wp,LINE2,1.6*dpr); }
+        if(cp>0){ seg(ctx,P,pt(-len,8.55),pt(len,8.55),cp,BLUE,2.2*dpr); seg(ctx,P,pt(-len,8.85),pt(len,8.85),cp,LINE2,1*dpr); }
+      } else {
+        var i={n:0,e:1,s:2,w:3}[w], tp=span(T,10.2+i*0.5,11.1+i*0.5), wash=span(T,12.2,13.3);
+        var q=[pt(-len,0.15),pt(len,0.15),pt(len,Hh),pt(-len,Hh)];
+        if(wash>0){ ctx.globalAlpha*=0.16*wash; ctx.fillStyle=BLUE; ctx.beginPath(); q.forEach(function(p,j){ var s2=P(p); j?ctx.lineTo(s2.x,s2.y):ctx.moveTo(s2.x,s2.y); }); ctx.closePath(); ctx.fill(); ctx.globalAlpha/=0.16*wash; }
+        chain(ctx,P,[[q[0],q[1]],[q[1],q[2]],[q[2],q[3]],[q[3],q[0]]],tp,BLUE,2*dpr);
+      }
+      ctx.restore(); }; }
+    var faces=[];
+    if(kf>0.01) faces=faces.concat(box(H,-A-t,A+t,0,0.15,-B-t,B+t,'floor',{fill:[242,245,249]}));
+    if(kw>0.01){
+      faces=faces.concat(box(H,-A-t,A+t,0,wh,-B-t,-B,'wn',{fill:[247,249,252]},[null,null,inner('n'),null,null],cull(0,-1)));
+      faces=faces.concat(box(H,-A-t,A+t,0,wh,B,B+t,'ws',{fill:[247,249,252]},[inner('s'),null,null,null,null],cull(0,1)));
+      faces=faces.concat(box(H,-A-t,-A,0,wh,-B,B,'ww',{fill:[247,249,252]},[null,inner('w'),null,null,null],cull(-1,0)));
+      faces=faces.concat(box(H,A,A+t,0,wh,-B,B,'we',{fill:[247,249,252]},[null,null,null,inner('e'),null],cull(1,0)));
+    }
+    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,cen,9.6,9.5,0.6) };
+  }
 
   /* ── the endings ─────────────────────────────────────────────────────────────
      Each returns what this frame adds: extra faces (sorted with the house),
@@ -2347,104 +2520,14 @@ document.addEventListener('click', function(e) {
   function lift(T){ return {roofLift:30*ease(span(T,8.4,9.8)), roofA:1-span(T,8.6,9.6)}; }
 
   var FINALE = {
-    hvac: function(T,H,now){
-      var sa=H.side[0], sb=H.side[1];
-      /* on the side wall, a little toward the back, clear of the wall */
-      /* a big unit, set close against the wall — just its pad's width out */
-      var U=2.6, gap=U+0.9;
-      var ca = sa!==0 ? (sa>0?H.a1+gap:H.a0-gap) : (H.a0+H.a1)/2 - H.front[0]*(H.a1-H.a0)*0.15;
-      var cb = sb!==0 ? (sb>0?H.b1+gap:H.b0-gap) : (H.b0+H.b1)/2 - H.front[1]*(H.b1-H.b0)*0.15;
-      var rise=ease(span(T,8.4,9.4)), top=0.35+4.4*rise;
-      var faces=[].concat(
-        box(H, ca-U-0.6,ca+U+0.6, 0,0.35, cb-U-0.6,cb+U+0.6, 'pad', {fill:[236,240,245]}),
-        rise>0.02 ? box(H, ca-U,ca+U, 0.35,top, cb-U,cb+U, 'unit', {fill:[250,251,253], top:'fan'}) : []);
-      var camP=ease(span(T,10.0,12.2));
-      return {
-        faces:faces, houseA:1-0.7*camP,
-        face2: faceTo(H,ca,cb),
-        cam: camP>0 ? {c:H.w(ca,2.5,cb), R:15, H:7, p:camP} : null,
-        face: function(ctx,P,F,dpr){
-          if(!F.f.style||F.f.style.top!=='fan'||F.f.kind!=='top') return;
-          /* the fan grille and blades, turning, on the unit's top */
-          var ang=now*7, R=U*0.8, y=top+0.01, pts=[];
-          for(var i=0;i<=28;i++){ var t=i/28*Math.PI*2; pts.push(P(H.w(ca+Math.cos(t)*R, y, cb+Math.sin(t)*R))); }
-          ctx.save(); ctx.globalAlpha*=rise; ctx.strokeStyle='rgba(0,21,48,.35)'; ctx.lineWidth=1*dpr;
-          ctx.beginPath(); pts.forEach(function(q,i){ i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); }); ctx.stroke();
-          ctx.strokeStyle=BLUE; ctx.lineWidth=2*dpr; ctx.lineCap='round';
-          for(var k=0;k<4;k++){ var t2=ang+k*Math.PI/2, c0=P(H.w(ca,y,cb)), c1=P(H.w(ca+Math.cos(t2)*R*0.9, y, cb+Math.sin(t2)*R*0.9));
-            ctx.beginPath(); ctx.moveTo(c0.x,c0.y); ctx.lineTo(c1.x,c1.y); ctx.stroke(); }
-          ctx.restore();
-        },
-        over: function(ctx,P,dpr){
-          /* the refrigerant line, from the unit into the wall */
-          var wa = sa!==0 ? (sa>0?H.a1:H.a0) : ca, wb = sb!==0 ? (sb>0?H.b1:H.b0) : cb;
-          ctx.save(); ctx.lineCap='round';
-          chain(ctx,P,[[H.w(ca-sa*U,1.6,cb-sb*U),H.w(wa,1.6,wb)],[H.w(wa,1.6,wb),H.w(wa,7,wb)]], span(T,9.6,10.6), BLUE, 2*dpr);
-          ctx.restore();
-        }
-      };
-    },
-
-    countertops: function(T,H){
-      var L=lift(T), r=roomBox(H), k=ease(span(T,9.4,10.4)), h=3*k+0.01;
-      var faces=[], run=function(a0,a1,b0,b1,g){ faces=faces.concat(box(H,a0,a1,0,h,b0,b1,g,{fill:[250,251,253]})); };
-      if(k>0.02){
-        run(r.a0, r.a1, r.b0, r.b0+2.2, 'k1');                          /* along the back wall */
-        run(r.a0, r.a0+2.2, r.b0+2.2, r.b1-1, 'k2');                    /* the return */
-        var ia=(r.a0+r.a1)/2+1, ib=(r.b0+r.b1)/2+1;
-        run(ia-3, ia+3, ib-1.5, ib+1.5, 'k3');                           /* the island */
-      }
-      var camP=ease(span(T,9.6,11.8));
-      return { faces:faces, roofLift:L.roofLift, roofA:L.roofA, houseA:1-0.75*span(T,9.0,10.2),
-        cam: camP>0 ? {c:H.w((r.a0+r.a1)/2,2,(r.b0+r.b1)/2), R:Math.max(17,(r.a1-r.a0)*1.1), H:4, tilt:0.78, p:camP} : null,
-        over: function(ctx,P,dpr){
-          var p=span(T,10.4,11.8); if(p<=0||k<0.5) return;
-          var tops=[];
-          var rect=function(a0,a1,b0,b1){ var c=[H.w(a0,h,b0),H.w(a1,h,b0),H.w(a1,h,b1),H.w(a0,h,b1)]; tops.push([c[0],c[1]],[c[1],c[2]],[c[2],c[3]],[c[3],c[0]]); };
-          rect(r.a0,r.a1,r.b0,r.b0+2.2); rect(r.a0,r.a0+2.2,r.b0+2.2,r.b1-1);
-          var ia=(r.a0+r.a1)/2+1, ib=(r.b0+r.b1)/2+1; rect(ia-3,ia+3,ib-1.5,ib+1.5);
-          ctx.save(); ctx.lineCap='round'; chain(ctx,P,tops,p,BLUE,2*dpr); ctx.restore();
-        } };
-    },
-
-    trim: function(T,H){
-      var L=lift(T), r=roomBox(H), k=ease(span(T,9.2,10.0));
-      var faces=k>0.02 ? box(H,r.a0,r.a1,0,0.15,r.b0,r.b1,'floor',{fill:[244,246,249]}) : [];
-      var camP=ease(span(T,9.4,11.4));
-      return { faces:faces, roofLift:L.roofLift, roofA:L.roofA, houseA:1-0.78*span(T,9.0,10.0),
-        cam: camP>0 ? {c:H.w((r.a0+r.a1)/2,3.5,(r.b0+r.b1)/2), R:Math.max(16,(r.a1-r.a0)*1.05), H:9, tilt:0.68, p:camP} : null,
-        over: function(ctx,P,dpr){
-          var loop=function(y){ var c=[H.w(r.a0,y,r.b0),H.w(r.a1,y,r.b0),H.w(r.a1,y,r.b1),H.w(r.a0,y,r.b1)]; return [[c[0],c[1]],[c[1],c[2]],[c[2],c[3]],[c[3],c[0]]]; };
-          ctx.save(); ctx.lineCap='round';
-          /* the room's corners, faint, so the trim has walls to sit on */
-          if(k>0.5){ ctx.globalAlpha=0.5*k; [[r.a0,r.b0],[r.a1,r.b0],[r.a1,r.b1],[r.a0,r.b1]].forEach(function(q){ seg(ctx,P,H.w(q[0],0,q[1]),H.w(q[0],9,q[1]),1,'rgba(0,21,48,.3)',1*dpr); }); ctx.globalAlpha=1; }
-          chain(ctx,P,loop(0.45),span(T,10.2,11.4),BLUE,2.2*dpr);                        /* baseboard */
-          var da=r.a0+(r.a1-r.a0)*0.55;
-          chain(ctx,P,[[H.w(da,0,r.b0),H.w(da,7,r.b0)],[H.w(da,7,r.b0),H.w(da+3,7,r.b0)],[H.w(da+3,7,r.b0),H.w(da+3,0,r.b0)]],span(T,11.2,12.1),BLUE,2.2*dpr);   /* door casing */
-          chain(ctx,P,loop(8.7),span(T,11.9,13.1),BLUE,2.2*dpr);                         /* crown */
-          ctx.restore();
-        } };
-    },
-
+    /* HVAC, countertops, trim and interior painting: the house has done its
+       job once it has risen. It dissolves, and the subject builds up where it
+       stood and becomes the thing that turns, filling the frame. */
+    hvac: function(T,H,now){ return hvacUnit(T,H,now); },
+    countertops: function(T,H,now){ return kitchen(T,H,now); },
+    trim: function(T,H,now){ return room(T,H,now,'trim'); },
     painting: function(T,H,now,geo){
-      var interior = (typeof eS!=='undefined' && eS.mode==='interior');
-      if(interior){
-        var L=lift(T), r=roomBox(H), camP=ease(span(T,9.4,11.4));
-        var walls=[[r.a0,r.b0,r.a1,r.b0],[r.a1,r.b0,r.a1,r.b1],[r.a1,r.b1,r.a0,r.b1],[r.a0,r.b1,r.a0,r.b0]];
-        return { faces:[], roofLift:L.roofLift, roofA:L.roofA, houseA:1-0.78*span(T,9.0,10.0),
-          cam: camP>0 ? {c:H.w((r.a0+r.a1)/2,4,(r.b0+r.b1)/2), R:Math.max(16,(r.a1-r.a0)*1.05), H:9, tilt:0.68, p:camP} : null,
-          over: function(ctx,P,dpr){
-            ctx.save(); ctx.lineCap='round';
-            walls.forEach(function(wl,i){
-              var p=span(T,10.0+i*0.7,10.9+i*0.7); if(p<=0) return;
-              var c=[H.w(wl[0],0,wl[1]),H.w(wl[2],0,wl[3]),H.w(wl[2],9,wl[3]),H.w(wl[0],9,wl[1])];
-              var wash=span(T,12.4,13.4);
-              if(wash>0){ ctx.globalAlpha=0.18*wash; ctx.fillStyle=BLUE; ctx.beginPath(); c.forEach(function(q,j){ var s=P(q); j?ctx.lineTo(s.x,s.y):ctx.moveTo(s.x,s.y); }); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; }
-              chain(ctx,P,[[c[0],c[1]],[c[1],c[2]],[c[2],c[3]],[c[3],c[0]]],p,BLUE,2*dpr);
-            });
-            ctx.restore();
-          } };
-      }
+      if(typeof eS!=='undefined' && eS.mode==='interior') return room(T,H,now,'paint');
       /* exterior: every wall of their house, traced, then washed */
       var walls2=geo.faces.filter(function(f){ return f.kind==='wall'; });
       return { faces:[], houseA:1,
@@ -2704,11 +2787,12 @@ document.addEventListener('click', function(e) {
       c2.fillStyle='rgb('+col.join(',')+')'; c2.strokeStyle=INK; c2.lineWidth=1*dpr; c2.lineJoin='round';
       c2.beginPath(); F.pts.forEach(function(p,i){ i?c2.lineTo(p.x,p.y):c2.moveTo(p.x,p.y); }); c2.closePath(); c2.fill(); c2.stroke();
       if(fin&&fin.face) fin.face(c2,F.PP,F,dpr);
+      if(F.f.deco) F.f.deco(c2,F.PP,dpr);
       c2.restore();
     }
     var growA=Math.min(1,grow*4);
     if(houseA>=0.999){
-      faces.forEach(function(F){ var a=F.a*growA; if(a>0.01) paint(ctx,F,a); });
+      faces.forEach(function(F){ if(F.extra&&F.f.cull&&F.f.cull(F.PP)) return; var a=F.a*(F.extra?1:growA); if(a>0.01) paint(ctx,F,a); });
     } else {
       /* Faded face by face, a house's walls pile up where they overlap into
          grey smears. Drawn whole on its own layer and faded as one picture,
@@ -2718,7 +2802,7 @@ document.addEventListener('click', function(e) {
       var hctx=hc.getContext('2d'); hctx.clearRect(0,0,w,h);
       faces.forEach(function(F){ if(!F.extra){ var a=F.a*growA; if(a>0.01) paint(hctx,F,a); } });
       ctx.save(); ctx.globalAlpha=Math.max(0,houseA); ctx.drawImage(hc,0,0); ctx.restore();
-      faces.forEach(function(F){ if(F.extra) paint(ctx,F,1); });
+      faces.forEach(function(F){ if(F.extra&&!(F.f.cull&&F.f.cull(F.PP))) paint(ctx,F,1); });
     }
     /* a see-through house keeps its outline, so it still reads as a house */
     if(fin&&fin.ghostEdges&&houseA<0.6){
