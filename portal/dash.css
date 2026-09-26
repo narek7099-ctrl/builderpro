@@ -530,3 +530,12 @@
 #bpx .ls-pv-ghost:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 #bpx .ls-pv-ghost.ls-pv-off:hover{background:#dc2626;border-color:#dc2626}
 #bpx .ls-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+#bpx .bpx-mailtabs{display:flex;gap:6px;margin:0 0 12px}
+#bpx .bpx-mailtabs button{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:40px;border:1px solid var(--line,#e3e6ec);background:transparent;font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:inherit}
+#bpx .bpx-mailtabs button .ms{font-size:18px}
+#bpx .bpx-mailtabs button.on{background:#0b1220;color:#fff;border-color:#0b1220}
+#bpx .bpx-mi-q{height:36px;border-radius:40px;border:1px solid var(--line,#e3e6ec);padding:0 14px;font:inherit;font-size:13px;min-width:0;width:220px;max-width:50vw;background:transparent;color:inherit}
+#bpx .bpx-thread:has(.bpx-mi-body){display:flex;flex-direction:column}
+#bpx .bpx-mi-head{padding:16px 18px;border-bottom:1px solid var(--line,#e3e6ec)}
+#bpx .bpx-mi-head h3{margin:0 0 6px;font-size:17px}
+#bpx .bpx-mi-body{flex:1;width:100%;min-height:480px;border:0;background:#fff;border-radius:0 0 12px 12px}
