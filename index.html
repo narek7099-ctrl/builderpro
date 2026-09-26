@@ -34708,6 +34708,7 @@ window.lsDiscover=function(){
 window.lsMailConnect=function(p){
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'start',provider:p}).then(function(r){
     if(r&&r.ok&&r.url){ location.href=r.url; return; }
+    if(r&&r.error==='not_configured'){ _lsMailNote=(p==='gmail'?'Gmail':'Outlook')+' connection is almost ready. We\u2019re finishing setup on our side, so try again soon.'; lsRender(); if(window.console)console.warn(r.reason); return; }
     alert((r&&r.reason)||'That connection is not available right now.');
   }).catch(function(){ alert('Could not reach the server. Try again.'); });
 };
