@@ -34487,7 +34487,7 @@ function lsLogo(v){
 var LS_MAIN=['angi','thumbtack'];
 function lsLogo(v){ return (v==='angi'||v==='thumbtack')?('assets/leadsources/'+v+'.png'):''; }
 function lsVendorName(k){var r=LS_VENDORS.filter(function(x){return x[0]===k;})[0];return r?r[1]:k;}
-var _lsSources=[],_lsEvents=[],_lsErr='';
+var _lsSources=[],_lsEvents=[],_lsErr='',_lsMail=null,_lsMailNote='';
 
 function lsHookUrl(s){
   return (window.BP_URL||'https://YOUR-PROJECT.supabase.co')+'/functions/v1/lead-intake/'+s.id
@@ -34514,8 +34514,16 @@ function bpLeadSources(){
   area.innerHTML='<div class="bpx-panel"><div class="bpx-mut" style="font-size:13px">Loading your lead sources…</div></div>';
   Promise.all([
     Promise.resolve(BP_SB.from('lead_sources').select('*').order('created_at',{ascending:false})).catch(function(e){return {error:e};}),
-    Promise.resolve(BP_SB.from('lead_events').select('*').order('received_at',{ascending:false}).limit(100)).catch(function(){return {data:[]};})
+    Promise.resolve(BP_SB.from('lead_events').select('*').order('received_at',{ascending:false}).limit(100)).catch(function(){return {data:[]};}),
+    Promise.resolve(BP_SB.from('mail_connections').select('id,provider,email,status,error,last_checked,last_found,found_total')).catch(function(){return {data:[]};})
   ]).then(function(r){
+    _lsMail=((r[2]&&r[2].data)||[]).filter(function(x){return x.provider==='outlook';})[0]||null;
+    /* back from Microsoft: say so, and look straight away */
+    var mq=(location.search.match(/[?&]mail=([a-z]+)/)||[])[1];
+    if(mq){ try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
+      _lsMailNote=mq==='connected'?'Outlook is connected. Checking it for leads now…':mq==='cancelled'?'Outlook was not connected.':'Outlook could not be connected. Try again.';
+      if(mq==='connected'&&_lsMail) setTimeout(function(){lsOutlookCheck(true);},300); }
+    else if(_lsMail&&_lsMail.status==='connected'&&(!_lsMail.last_checked||Date.now()-Date.parse(_lsMail.last_checked)>5*60*1000)) setTimeout(function(){lsOutlookCheck(true);},300);
     if(r[0]&&r[0].error){
       _lsErr=(String((r[0].error&&r[0].error.message)||'').indexOf('does not exist')>=0)
         ? 'The lead_sources tables haven’t been created yet — run the Lead Sources SQL and reload.'
@@ -34603,7 +34611,11 @@ function lsRender(){
             +'<div><b>'+cpl+'</b><span>per lead</span></div>'
             +'<div><b>'+x.dup+'</b><span>duplicate</span></div>'
             +'<div><b>'+x.bad+'</b><span>unusable</span></div></div>'
-          +'<label class="st-lab" style="display:block;margin:12px 0 4px;font-weight:600;font-size:12px">Webhook URL — paste this into '+bpEsc(lsVendorName(s.vendor))+'</label>'
+          +(lsInboxAddr(s)?'<label class="st-lab" style="display:block;margin:12px 0 4px;font-weight:600;font-size:12px">Its email address — have '+bpEsc(lsVendorName(s.vendor))+' send leads here</label>'
+            +'<div class="ls-url"><code>'+bpEsc(lsInboxAddr(s))+'</code>'
+            +'<button class="bpx-rowbtn" onclick="lsCopyAddr(this,\''+s.id+'\')">Copy</button>'
+            +'<button class="bpx-rowbtn primary" onclick="lsHowTo(\''+s.id+'\')">How to set it up</button></div>':'')
+          +'<label class="st-lab" style="display:block;margin:14px 0 4px;font-weight:600;font-size:12px">Or, if '+bpEsc(lsVendorName(s.vendor))+' can post to a URL (webhook)</label>'
           +'<div class="ls-url"><code>'+bpEsc(url)+'</code>'
             +'<button class="bpx-rowbtn" onclick="lsCopy(this,\''+s.id+'\')">Copy</button></div>'
           +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Treat it like a password — anyone with this URL can file leads into your account.</div>'
@@ -34646,9 +34658,80 @@ function lsRender(){
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
     : '';
 
-  area.innerHTML=head+connect+tiles+chart+cards+recent;
+  area.innerHTML=head+lsInboxPanel()+connect+tiles+chart+cards+recent;
 }
 
+/* ===== Connecting an inbox, and a source's own address =====================
+   Three ways in, easiest first:
+   1. Connect Outlook: sign in once, the mail-connect function reads only the
+      lead platforms' emails out of the inbox every five minutes.
+   2. The source's own address (xxxx@leads.builderpro-os.com): give it to the
+      platform as the lead email, or forward to it. Received by Cloudflare,
+      read by lead-email.
+   3. The Gmail reader script, for Gmail until Google verifies the app. */
+function lsInboxPanel(){
+  var m=_lsMail, note=_lsMailNote?'<div class="ls-note">'+bpEsc(_lsMailNote)+'</div>':'';
+  var ol;
+  if(m&&m.status==='connected'){
+    ol='<div class="ls-ib-row"><span class="ms ls-ib-ic">mail</span><div class="ls-ib-t"><b>Outlook connected</b><span>'+bpEsc(m.email||'')
+      +' · checked '+(m.last_checked?bpEsc(rdAgo(Date.parse(m.last_checked))):'not yet')+(m.found_total?' · '+m.found_total+' lead email'+(m.found_total===1?'':'s')+' filed':'')+'</span></div>'
+      +'<button class="bpx-rowbtn" onclick="lsOutlookCheck()">Check now</button><button class="bpx-rowbtn" onclick="lsOutlookOff()">Disconnect</button></div>';
+  } else if(m&&m.status==='error'){
+    ol='<div class="ls-ib-row"><span class="ms ls-ib-ic">mail</span><div class="ls-ib-t"><b>Outlook needs reconnecting</b><span>'+bpEsc(m.error||'')+'</span></div>'
+      +'<button class="bpx-btn" onclick="lsOutlook()">Reconnect Outlook</button></div>';
+  } else {
+    ol='<div class="ls-ib-row"><span class="ms ls-ib-ic">mail</span><div class="ls-ib-t"><b>Outlook or Microsoft 365</b><span>Sign in once. Every Angi, Thumbtack or HomeAdvisor lead email in your inbox is filed here within five minutes. Nothing else in your mail is opened.</span></div>'
+      +'<button class="bpx-btn" onclick="lsOutlook()">Connect Outlook</button></div>';
+  }
+  var gm='<div class="ls-ib-row"><img src="assets/brand/google-g.png" alt=""><div class="ls-ib-t"><b>Gmail</b><span>Use the email address on each source below: add it in the platform, or forward to it from Gmail (we catch Gmail\u2019s confirmation code for you). One-click Gmail connect arrives once Google finishes reviewing the app.</span></div></div>';
+  return '<div class="bpx-panel ls-inbox"><div class="bpx-ptitle">Get leads from your email automatically<span class="lg2">no copying, no forwarding rules to maintain</span></div>'+note+ol+gm+'</div>';
+}
+window.lsOutlook=function(){
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'start'}).then(function(r){
+    if(r&&r.ok&&r.url){ location.href=r.url; return; }
+    alert((r&&r.reason)||'Outlook connection is not available right now.');
+  }).catch(function(){ alert('Could not reach the server. Try again.'); });
+};
+window.lsOutlookCheck=function(quiet){
+  if(!quiet){ _lsMailNote='Checking your inbox…'; lsRender(); }
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'check'}).then(function(r){
+    _lsMailNote=r&&r.ok?(r.found?r.found+' lead email'+(r.found===1?'':'s')+' found and filed.':'Checked. No new lead emails.'):'The check did not complete. '+((r&&r.error)||'');
+    bpLeadSources();
+  }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRender(); });
+};
+window.lsOutlookOff=function(){
+  if(!confirm('Disconnect Outlook? Lead emails will stop arriving from it. Nothing in your mailbox changes.'))return;
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'disconnect'}).then(function(){ _lsMailNote='Outlook disconnected.'; bpLeadSources(); });
+};
+window.lsCopyAddr=function(btn,id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  bpRepCopy(lsInboxAddr(s),btn);
+};
+/* What to do on each platform, step by step. Where a platform lets you set
+   the lead-notification email, that is the cleanest; where it does not, a
+   forward from the inbox the leads already reach does the same job. */
+window.lsHowTo=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  var a=lsInboxAddr(s), v=s.vendor, nm=lsVendorName(v);
+  var code='<div class="ls-url" style="margin:6px 0 14px"><code>'+bpEsc(a)+'</code><button class="bpx-rowbtn" onclick="bpRepCopy(\''+a+'\',this)">Copy</button></div>';
+  var plat={
+    angi:['Sign in to your Angi Pro account (the website or the Angi Pro app).','Open your account or business profile settings and find where new-lead notifications are emailed.','Add the address above as an email for lead notifications. Keep your own address there too if you like.','Save. The next lead Angi sends lands in BuilderPro and in Contacts.'],
+    homeadvisor:['Sign in to your HomeAdvisor Pro account.','Open your account settings, then lead or notification preferences.','Add the address above as a lead-notification email and save.'],
+    thumbtack:['Sign in to Thumbtack for Professionals.','Open Settings, then Notifications.','Where new leads and messages are emailed, add or change the email to the address above, then save.','If Thumbtack only allows your login email, use the forwarding steps below instead.'],
+    networx:['Sign in to your Networx account.','Open your lead delivery or notification settings.','Add the address above as a lead-delivery email and save.'],
+    modernize:['Sign in to your Modernize contractor portal.','Open lead delivery settings.','Add the address above as a lead email and save.'],
+  }[v]||['Wherever this source emails you new leads (a website form, a local seller, a directory), set the address above as where those emails go, or add it as a second recipient.'];
+  bpModal('<h3>Send '+bpEsc(nm)+' leads to BuilderPro</h3>'
+    +'<div class="bpx-sub">This source\u2019s own address. Anything '+bpEsc(nm)+' sends to it becomes a lead here within seconds, and '+bpEsc(BP_AI_NAME)+' replies to the homeowner.</div>'
+    +code
+    +'<div class="ls-steps"><b>In '+bpEsc(nm)+'</b><ol>'+plat.map(function(t){return '<li>'+bpEsc(t)+'</li>';}).join('')+'</ol></div>'
+    +'<div class="ls-steps"><b>Or forward from your inbox</b><ol>'
+      +'<li>Gmail: Settings → See all settings → Forwarding and POP/IMAP → Add a forwarding address → paste the address above.</li>'
+      +'<li>Google emails a confirmation code to that address. We catch it: it appears in <b>Leads received</b> on this page within a minute. Type it back into Gmail.</li>'
+      +'<li>Then create a filter: <b>From</b> '+bpEsc((window.mailSenders?mailSenders.domainsFor(v,s.sender_domains):[]).join(' OR ')||'the platform\u2019s sending address')+' → <b>Forward it to</b> the address above.</li>'
+      +'<li>Outlook: simpler still, use <b>Connect Outlook</b> at the top of this page.</li></ol></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="lsTest(\''+s.id+'\');bpCloseModal()">Send a test lead</button><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>');
+};
 window.lsCopy=function(btn,id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
   bpRepCopy(lsHookUrl(s),btn);
@@ -35818,7 +35901,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260927a">
+<link rel="stylesheet" href="portal/dash.css?v=20260928a">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
