@@ -558,3 +558,13 @@
 #bpx .mi-sub,#bpx .mi-snip{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;margin-top:2px}
 #bpx .mi-snip{opacity:.55;font-size:12.5px}
 #bpx .mi-row.unread .mi-from,#bpx .mi-row.unread .mi-sub{font-weight:700}
+#bpx .mi-bundle .mi-av{background:#eef2ff;color:#4f46e5}
+#bpx .mi-bundle .mi-av .ms{font-size:18px}
+#bpx .mi-av.b-promotions{background:#e8f6ee;color:#15803d}
+#bpx .mi-av.b-social{background:#e8f0fe;color:#1a56db}
+#bpx .mi-av.b-updates{background:#fef3e2;color:#b45309}
+#bpx .mi-count{flex:none;font-size:11px;font-weight:700;color:#fff;background:#2f6bff;border-radius:20px;padding:2px 8px}
+#bpx .mi-back{align-items:center;gap:8px;font-size:14px}
+#bpx .mi-back .ms{font-size:20px}
+#bpx .mi-folders{flex-wrap:wrap}
+#bpx .mi-folders button{min-width:70px}

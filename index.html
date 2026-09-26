@@ -29503,7 +29503,7 @@ window.bpMyInboxFolder=function(f){ _bpMyInbox.folder=f; _bpMyInbox.sel=''; bpMy
 function bpMiText(t){ var d=document.createElement('textarea'); d.innerHTML=String(t||''); return d.value; }
 window.bpMailTab=function(t){ _bpMailTab=t; bpRenderInbox(); };
 function bpMailTabs(){
-  return '<div class="bpx-mailtabs"><button class="'+(_bpMailTab==='ghl'?'on':'')+'" onclick="bpMailTab(\'ghl\')"><span class=ms>forum</span> Customers</button>'
+  return '<div class="bpx-mailtabs"><button class="'+(_bpMailTab==='ghl'?'on':'')+'" onclick="bpMailTab(\'ghl\')"><span class=ms>forum</span> Business</button>'
     +'<button class="'+(_bpMailTab==='inbox'?'on':'')+'" onclick="bpMailTab(\'inbox\')"><span class=ms>inbox</span> My inbox</button></div>';
 }
 function bpMyInboxRender(){
@@ -29513,7 +29513,7 @@ function bpMyInboxRender(){
       +'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button></div></div>'
     +bpMailTabs()
     +'<div class="bpx-inbox"><div class="bpx-convlist mi-list"><div class="mi-folders">'
-      +[['inbox','inbox','Inbox'],['starred','star','Starred'],['spam','report','Spam']].map(function(f){
+      +[['inbox','inbox','Inbox'],['starred','star','Starred'],['sent','send','Sent'],['spam','report','Spam']].map(function(f){
         return '<button class="'+(_bpMyInbox.folder===f[0]?'on':'')+'" onclick="bpMyInboxFolder(\''+f[0]+'\')"><span class=ms>'+f[1]+'</span>'+f[2]+'</button>'; }).join('')
       +'</div><div id="bpx-convlist" class="mi-scroll"><div class="bpx-tempty" style="padding:24px">Loading\u2026</div></div></div>'
     +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>mail</span></div>Select an email to read it.</div></div></div>';
@@ -29530,9 +29530,20 @@ window.bpMyInboxLoad=function(qs,more){
       return;
     }
     _bpMyInbox.items=more?_bpMyInbox.items.concat(r.items):r.items; _bpMyInbox.next=r.next||'';
-    if(!_bpMyInbox.items.length){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">'+(_bpMyInbox.q?'Nothing matches that search.':_bpMyInbox.folder==='spam'?'No spam. Nice.':_bpMyInbox.folder==='starred'?'No starred emails.':'Your inbox is empty.')+'</div>'; return; }
-    el.innerHTML=_bpMyInbox.items.map(function(m){
-      var who=bpMiText(String(m.from||'').replace(/\s*<[^>]+>\s*$/,'').replace(/^"|"$/g,'')||m.from);
+    if(!_bpMyInbox.items.length&&!(r.bundles||[]).length&&!(['promotions','social','updates','other'].indexOf(_bpMyInbox.folder)>=0)){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">'+(_bpMyInbox.q?'Nothing matches that search.':_bpMyInbox.folder==='spam'?'No spam. Nice.':_bpMyInbox.folder==='starred'?'No starred emails.':'Your inbox is empty.')+'</div>'; return; }
+    if(!more) _bpMyInbox.bundles=r.bundles||[];
+    var BICON={promotions:'sell',social:'group',updates:'info',other:'inbox'};
+    var sub=['promotions','social','updates','other'].indexOf(_bpMyInbox.folder)>=0;
+    var head=sub?'<div class="mi-row mi-back" onclick="bpMyInboxFolder(\'inbox\')"><span class=ms>arrow_back</span><b>'+bpEsc(_bpMyInbox.folder.charAt(0).toUpperCase()+_bpMyInbox.folder.slice(1))+'</b></div>'
+      :(_bpMyInbox.folder==='inbox'&&!_bpMyInbox.q?(_bpMyInbox.bundles||[]).map(function(x){
+        return '<div class="mi-row mi-bundle" onclick="bpMyInboxFolder(\''+x.key+'\')"><div class="mi-av b-'+x.key+'"><span class=ms>'+(BICON[x.key]||'inbox')+'</span></div>'
+          +'<div class="mi-main"><div class="mi-top"><span class="mi-from">'+bpEsc(x.name)+'</span>'+(x.unread?'<span class="mi-count">'+x.unread+' new</span>':'')+'</div>'
+          +'<div class="mi-snip">'+(x.key==='other'?'Everything Outlook sorted out of Focused':'Bundled, like in Gmail')+'</div></div></div>';
+      }).join(''):'');
+    el.innerHTML=head+_bpMyInbox.items.map(function(m){
+      var src=_bpMyInbox.folder==='sent'?(m.to||''):(m.from||'');
+      var who=bpMiText(String(src).split(',')[0].replace(/\s*<[^>]+>\s*$/,'').replace(/^"|"$/g,'').trim()||src);
+      if(_bpMyInbox.folder==='sent') who='To: '+who;
       var d=m.date?new Date(m.date):null, today=d&&d.toDateString()===new Date().toDateString();
       var when=d?(today?d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})):'';
       var ini=(who.replace(/[^A-Za-z0-9]/g,'').charAt(0)||'?').toUpperCase();
@@ -29567,7 +29578,7 @@ window.bpMyInboxOpen=function(id){
    inbox switch to that tab and open the email there. */
 window.bpMailCompose=function(o){
   o=o||{}; _bpMailTab='ghl'; bpRenderInbox();
-  bpModal('<h3>New email</h3><div class="bpx-sub">Sent from your BuilderPro email, and kept in this contact\u2019s history under Customers.</div>'
+  bpModal('<h3>New email</h3><div class="bpx-sub">Sent from your BuilderPro email, and kept in this contact\u2019s history under Business.</div>'
     +'<label>To</label><input id="bpx-mc-to" type="email" placeholder="name@example.com" value="'+bpEsc(o.to||'')+'">'
     +'<label>Name <span class="bpx-mut" style="font-weight:400">(if they are new)</span></label><input id="bpx-mc-name" value="'+bpEsc(o.name||'')+'">'
     +'<label>Subject</label><input id="bpx-mc-sub" value="'+bpEsc(o.subject||'')+'">'
@@ -29609,6 +29620,7 @@ function bpRenderInbox(){
     '<div class="bpx-msgbar"><div class="bpx-msgbar-t">'+(isMail?'Email':'Texts')+'</div>'
       +'<div class="bpx-msgbar-btns"><span id="bpx-otherchan"></span>'
       +'<button class="bpx-ghostbtn" onclick="bpSchedListOpen()"><span class=ms>schedule</span> Scheduled</button>'
+      +(isMail?'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button>':'')
       +'<button class="bpx-addbtn" onclick="bpBulkOpen('+(isMail?"'Email'":'')+')"><span class=ms>'+(isMail?'mail':'sms')+'</span> Broadcast</button></div></div>'
     +(isMail?bpMailTabs():'')
     +'<div class="bpx-inbox">'
@@ -36140,7 +36152,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928g">
+<link rel="stylesheet" href="portal/dash.css?v=20260928h">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>

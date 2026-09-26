@@ -357,7 +357,8 @@ Deno.serve(async (req) => {
     if (!t.access_token) return json({ ok: false, error: "sign-in expired" });
     const H = { Authorization: `Bearer ${t.access_token}` };
     const q = String(b.q ?? "").slice(0, 200);
-    const folder = b.folder === "spam" || b.folder === "starred" ? b.folder : "inbox";
+    const FOLDERS = ["inbox", "starred", "sent", "spam", "promotions", "social", "updates", "other"];
+    const folder = FOLDERS.includes(String(b.folder)) ? String(b.folder) : "inbox";
     if (c.provider === "gmail") {
       if (b.op === "message") {
         const m = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(String(b.id))}?format=full`, { headers: H });
@@ -367,18 +368,30 @@ Deno.serve(async (req) => {
         const body = gmailBody(g.payload ?? {});
         return json({ ok: true, from: hdr("from"), to: hdr("to"), subject: hdr("subject"), date: hdr("date"), html: body.html, text: body.text });
       }
-      const l = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=30&labelIds=${folder === "spam" ? "SPAM&includeSpamTrash=true" : folder === "starred" ? "STARRED" : "INBOX"}${q ? "&q=" + encodeURIComponent(q) : ""}${b.page ? "&pageToken=" + encodeURIComponent(b.page) : ""}`, { headers: H });
+      /* Like Gmail itself: the inbox is the Primary tab, and Promotions,
+         Social and Updates are bundled into one row each above it. */
+      const LBL: Record<string, string> = { spam: "SPAM&includeSpamTrash=true", starred: "STARRED", sent: "SENT", promotions: "CATEGORY_PROMOTIONS", social: "CATEGORY_SOCIAL", updates: "CATEGORY_UPDATES", inbox: "INBOX" };
+      const gq = [folder === "inbox" && !q ? "category:primary" : "", q].filter(Boolean).join(" ");
+      const l = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=30&labelIds=${LBL[folder] ?? "INBOX"}${gq ? "&q=" + encodeURIComponent(gq) : ""}${b.page ? "&pageToken=" + encodeURIComponent(b.page) : ""}`, { headers: H });
+      let bundles: { key: string; name: string; unread: number; total: number }[] = [];
+      if (folder === "inbox" && !q && !b.page) {
+        bundles = (await Promise.all([["promotions", "CATEGORY_PROMOTIONS", "Promotions"], ["social", "CATEGORY_SOCIAL", "Social"], ["updates", "CATEGORY_UPDATES", "Updates"]].map(async ([key, id, name]) => {
+          const r2 = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/labels/${id}`, { headers: H });
+          const d2 = r2.ok ? await r2.json() : {};
+          return { key, name, unread: Number(d2.messagesUnread) || 0, total: Number(d2.messagesTotal) || 0 };
+        }))).filter((x) => x.total > 0);
+      }
       if (!l.ok) return json({ ok: false, error: `Gmail answered ${l.status}` });
       const ld = await l.json();
       const items = await Promise.all(((ld.messages ?? []) as { id: string }[]).map(async (it) => {
-        const m = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${it.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`, { headers: H });
+        const m = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${it.id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date`, { headers: H });
         if (!m.ok) return null;
         const g = await m.json();
         const hdr = (n: string) => String(((g.payload?.headers ?? []) as { name: string; value: string }[]).find((h) => h.name.toLowerCase() === n)?.value ?? "");
-        return { id: it.id, from: hdr("from"), subject: hdr("subject"), snippet: String(g.snippet ?? ""), date: Number(g.internalDate) || Date.parse(hdr("date")) || 0,
+        return { id: it.id, from: hdr("from"), to: hdr("to"), subject: hdr("subject"), snippet: String(g.snippet ?? ""), date: Number(g.internalDate) || Date.parse(hdr("date")) || 0,
           unread: ((g.labelIds ?? []) as string[]).includes("UNREAD") };
       }));
-      return json({ ok: true, email: c.email, provider: c.provider, next: ld.nextPageToken ?? "", items: items.filter(Boolean) });
+      return json({ ok: true, email: c.email, provider: c.provider, next: ld.nextPageToken ?? "", bundles, items: items.filter(Boolean) });
     }
     if (b.op === "message") {
       const m = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(String(b.id))}?$select=from,toRecipients,subject,receivedDateTime,body`, { headers: { ...H, Prefer: 'outlook.body-content-type="html"' } });
@@ -388,17 +401,26 @@ Deno.serve(async (req) => {
       return json({ ok: true, from: fa.name ? `${fa.name} <${fa.address}>` : fa.address ?? "", to: ((f.toRecipients ?? []) as { emailAddress: { address: string } }[]).map((x) => x.emailAddress.address).join(", "),
         subject: f.subject ?? "", date: f.receivedDateTime ?? "", html: String(f.body?.content ?? ""), text: "" });
     }
-    const box = folder === "spam" ? "junkemail" : "inbox";
-    const u = b.page ? String(b.page) : `https://graph.microsoft.com/v1.0/me/${folder === "starred" ? "messages" : `mailFolders/${box}/messages`}?$select=id,from,subject,bodyPreview,receivedDateTime,isRead&$top=30`
-      + (q ? `&$search="${q.replace(/"/g, "")}"` : folder === "starred" ? "&$filter=flag/flagStatus eq 'flagged'" : "&$orderby=receivedDateTime desc");
+    /* Outlook's own split: Focused is the inbox, Other is bundled like
+       Gmail's Promotions. */
+    const box = folder === "spam" ? "junkemail" : folder === "sent" ? "sentitems" : "inbox";
+    const filt = folder === "starred" ? "flag/flagStatus eq 'flagged'" : folder === "inbox" ? "inferenceClassification eq 'focused'" : folder === "other" ? "inferenceClassification eq 'other'" : "";
+    const u = b.page ? String(b.page) : `https://graph.microsoft.com/v1.0/me/${folder === "starred" ? "messages" : `mailFolders/${box}/messages`}?$select=id,from,toRecipients,subject,bodyPreview,receivedDateTime,isRead&$top=30`
+      + (q ? `&$search="${q.replace(/"/g, "")}"` : filt ? `&$filter=${encodeURIComponent(filt)}` : "&$orderby=receivedDateTime desc");
+    let bundles: { key: string; name: string; unread: number; total: number }[] = [];
+    if (folder === "inbox" && !q && !b.page) {
+      const oc = await fetch(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$count=true&$top=1&$select=id&$filter=${encodeURIComponent("inferenceClassification eq 'other' and isRead eq false")}`, { headers: { ...H, ConsistencyLevel: "eventual" } });
+      const od = oc.ok ? await oc.json() : {};
+      bundles = [{ key: "other", name: "Other", unread: Number(od["@odata.count"]) || 0, total: 1 }];
+    }
     if (!u.startsWith("https://graph.microsoft.com/")) return json({ ok: false, error: "bad page" }, 400);
     const l = await fetch(u, { headers: H });
     if (!l.ok) return json({ ok: false, error: `Outlook answered ${l.status}` });
     const ld = await l.json();
-    const items = ((ld.value ?? []) as { id: string; from?: { emailAddress?: { name?: string; address?: string } }; subject?: string; bodyPreview?: string; receivedDateTime?: string; isRead?: boolean }[])
-      .map((m) => ({ id: m.id, from: m.from?.emailAddress?.name ? `${m.from.emailAddress.name} <${m.from.emailAddress.address}>` : m.from?.emailAddress?.address ?? "",
+    const items = ((ld.value ?? []) as { id: string; from?: { emailAddress?: { name?: string; address?: string } }; toRecipients?: { emailAddress?: { name?: string; address?: string } }[]; subject?: string; bodyPreview?: string; receivedDateTime?: string; isRead?: boolean }[])
+      .map((m) => ({ id: m.id, to: (m.toRecipients ?? []).map((x) => x.emailAddress?.name || x.emailAddress?.address || "").join(", "), from: m.from?.emailAddress?.name ? `${m.from.emailAddress.name} <${m.from.emailAddress.address}>` : m.from?.emailAddress?.address ?? "",
         subject: m.subject ?? "", snippet: m.bodyPreview ?? "", date: Date.parse(m.receivedDateTime ?? "") || 0, unread: m.isRead === false }));
-    return json({ ok: true, email: c.email, provider: c.provider, next: ld["@odata.nextLink"] ?? "", items });
+    return json({ ok: true, email: c.email, provider: c.provider, next: ld["@odata.nextLink"] ?? "", bundles, items });
   }
   if (b.op === "disconnect") {
     await sb(`mail_connections?owner=eq.${who.owner}&provider=eq.${prov}`, { method: "DELETE" });
