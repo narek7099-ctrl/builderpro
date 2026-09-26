@@ -28079,9 +28079,12 @@ var _bpContacts=[];
     (typeof bpJobsGet==='function'?bpJobsGet():[]).forEach(function(j){
       if(j.status!=='active'||!j.sched||!(j.sched.dates||[]).length) return;
       if((j.sched.dates||[]).indexOf(iso)<0) return;
-      var t=j.sched.time||'', from=t?bpMins(t):null;
-      var to=t?bpMins(j.sched.end||bpProjEndFromDur(t,j.sched.dur)):null;
-      out.push({from:from,to:to,kind:'crew',allDay:!t,title:j.name||'Project',sub:(j.title||'Project')+' · crew on site',act:"bpProjOpen('"+j.id+"')",ref:'crew:'+j.id});
+      /* a time set for this one day on the Projects schedule wins over the project's own */
+      var sl=(j.sched.slots&&j.sched.slots[iso])||null;
+      var t=(sl&&sl.t)||j.sched.time||'', from=t?bpMins(t):null;
+      var to=t?(sl?from+(+sl.dur||120):bpMins(j.sched.end||bpProjEndFromDur(t,j.sched.dur))):null;
+      var cr=window.pjCrew?pjCrew(j.crew):null;
+      out.push({from:from,to:to,kind:'crew',allDay:!t,title:j.name||'Project',sub:(j.title||'Project')+' · '+(cr?cr.name:'crew')+' on site',act:"bpProjOpen('"+j.id+"')",ref:'crew:'+j.id});
     });
     (typeof bpNotesFor==='function'?bpNotesFor(iso):[]).forEach(function(n){
       var from=n.at?bpMins(n.at):null;
@@ -28369,8 +28372,10 @@ var _bpContacts=[];
       var ds=(j.sched.dates||[]).slice();
       if(ds.indexOf(day)>=0){ bpWkSay('That project already works '+lbl+'.',true); return; }
       var at=ds.indexOf(wasDay); if(at<0) return;
-      ds[at]=day; j.sched.dates=ds.sort(); bpJobsSet(jobs); bpDrawWeek();
-      bpWkSay('Crew day moved to '+lbl+'. The start time is set on the project, so every day of it starts together.');
+      ds[at]=day; j.sched.dates=ds.sort();
+      if(j.sched.slots&&j.sched.slots[wasDay]){ j.sched.slots[day]=j.sched.slots[wasDay]; delete j.sched.slots[wasDay]; }
+      bpJobsSet(jobs); bpDrawWeek();
+      bpWkSay('Crew day moved to '+lbl+'. To change its hours, open Active Projects \u2192 Schedule & map.');
       return;
     }
     if(t==='appt'){
@@ -30226,7 +30231,11 @@ function pjShop(){ var c=(bpSettingsGet().company)||{}; return c.address||''; }
    side, days across; tap + to book a job into a crew's day. */
 var PJ_COLORS=['#2f6bff','#16a34a','#ea580c','#9333ea','#db2777','#0891b2','#ca8a04','#475569'];
 function pjCrews(){ return (bpSettingsGet().crews)||[]; }
+window.pjCrews=pjCrews;
+/* which crew an employee is in (Employees page shows it) */
+window.bpCrewOfEmp=function(empId){ return pjCrews().filter(function(c){return (c.members||[]).indexOf(empId)>-1;})[0]||null; };
 function pjCrew(id){ return pjCrews().filter(function(c){return c.id===id;})[0]||null; }
+window.pjCrew=pjCrew;
 function pjCrewsSave(list){ var s=bpSettingsGet(); s.crews=list; bpSettingsSet(s); bpSettingsPush(s); }
 window.bpPjCrew=function(id){ _pjRoute.crew=id; _pjRoute.sel={}; bpPjStops(); var pl=q('pj-plan'); if(pl)pl.innerHTML=''; };
 var _pjWeek=0;
@@ -30368,7 +30377,7 @@ window.bpCrewsOpen=function(){
         +(emps.length?'<div class="pjc-mem">'+emps.map(function(e){return '<label><input type="checkbox" '+((c.members||[]).indexOf(e.id)>-1?'checked':'')+' onchange="bpCrewMem('+i+',\''+e.id+'\',this.checked)">'+bpEsc(e.name)+'</label>';}).join('')+'</div>'
           :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Add people under Projects → Employees to put them in crews.</div>')+'</div>';
     }).join(''):'<div class="bpx-mut" style="margin:6px 0 10px">No crews yet.</div>')+'</div>'
-    +'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" onclick="bpCloseModal();bpActiveJobs()">Done</button></div>');
+    +'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" onclick="bpCloseModal();if(window._bpCurView===\'employees\'&&window.bpEmployees)bpEmployees();else bpActiveJobs()">Done</button></div>');
 };
 window.bpCrewAdd=function(){ var l=pjCrews().slice(); l.push({id:'c'+Date.now().toString(36),name:'Crew '+(l.length+1),color:PJ_COLORS[l.length%PJ_COLORS.length],members:[]}); pjCrewsSave(l); bpCrewsOpen(); };
 window.bpCrewEdit=function(i,k,v){ var l=pjCrews().slice(); if(!l[i])return; l[i]=Object.assign({},l[i]); l[i][k]=k==='name'?(String(v).trim()||l[i].name):v; pjCrewsSave(l); if(k==='color') bpCrewsOpen(); };
@@ -30532,12 +30541,14 @@ window.bpProjCalEvents=function(y,m){
     if(j.status!=='active'||!j.sched) return;
     if(j.sched.dates&&j.sched.dates.length){
       var sorted=j.sched.dates.slice().sort();
-      var when=bpProjTimeLbl(j.sched.time,j.sched.dur);
+      var when0=bpProjTimeLbl(j.sched.time,j.sched.dur);
+      var crN=(window.pjCrew&&pjCrew(j.crew))?' \u00b7 '+pjCrew(j.crew).name:'';
       sorted.forEach(function(iso){
+        var sl=j.sched.slots&&j.sched.slots[iso], when=sl?bpProjTimeLbl(sl.t,sl.dur):when0;
         var dd=new Date(iso+'T12:00:00'); if(isNaN(dd.getTime()))return;
         if(dd.getFullYear()!==y||dd.getMonth()!==m)return;
         var mark=(iso===sorted[0]?' · start':(sorted.length>1&&iso===sorted[sorted.length-1]?' · last day':''));
-        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:bpEsc(j.name||'Project')+mark+(when?' · '+when:'')});
+        (out[dd.getDate()]=out[dd.getDate()]||[]).push({id:j.id,label:bpEsc(j.name||'Project')+mark+(when?' · '+when:'')+bpEsc(crN)});
       });
       return;
     }
@@ -30597,6 +30608,7 @@ window.bpProjOpen=function(id){
         +'<div><label>Phone</label>'+inp('bpx-pj-phone','(555) 555-5555',j.phone)+'</div>'
         +'<div><label>Email</label>'+inp('bpx-pj-email','name@email.com',j.email)+'</div></div>'
       +'<label>Address</label>'+inp('bpx-pj-addr','Job site address',j.addr)
+      +(window.pjCrews&&pjCrews().length?'<label>Crew</label><select id="bpx-pj-crew"><option value="">No crew</option>'+pjCrews().map(function(c){ return '<option value="'+c.id+'"'+(j.crew===c.id?' selected':'')+'>'+bpEsc(c.name)+(window.bpEmpById&&(c.members||[]).length?' \u2014 '+bpEsc((c.members||[]).map(function(id){var e=bpEmpById(id);return e?e.name:'';}).filter(Boolean).join(', ')):'')+'</option>'; }).join('')+'</select>':'')
       +((j.addr||'').trim().length>6?'<div style="margin-top:7px"><button class="bpx-rowbtn" onclick="rdFromJob(\''+j.id+'\')" title="Open the radar on this street — the homes around a job you are on are your warmest doors">Work this street →</button></div>':'')
       +'<label>Job</label>'+inp('bpx-pj-title','e.g. Roof replacement',j.title)
       +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:90px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>')
@@ -31133,7 +31145,10 @@ window.bpProjSave=function(){
   var t0=g('bpx-pj-time'),t1=g('bpx-pj-end');
   var mins=function(t){var p=String(t).split(':');return (+p[0])*60+(+p[1]||0);};
   var dur=(t0&&t1)?(mins(t1)-mins(t0)):0; if(!(dur>0))dur=480;
-  j.sched={notes:g('bpx-pj-notes'),dates:dates,time:t0,end:t1,dur:String(dur),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:''};
+  var oldSlots=(j.sched&&j.sched.slots)||{}, slots={};
+  dates.forEach(function(dd){ if(oldSlots[dd]) slots[dd]=oldSlots[dd]; });
+  j.sched={notes:g('bpx-pj-notes'),dates:dates,time:t0,end:t1,dur:String(dur),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:'',slots:slots};
+  var crSel=q('bpx-pj-crew'); if(crSel) j.crew=crSel.value||undefined;
   bpJobsSet(jobs); bpCloseModal();
   if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };
@@ -36761,7 +36776,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/radar-key.js?v=20260922b"></script>
 <script src="portal/radar-parcels.js?v=20260922a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20260927a"></script>
+<script src="portal/crew.js?v=20260928a"></script>
 <script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260927a"></script>
 <script src="portal/supply.js?v=20260927a"></script>
