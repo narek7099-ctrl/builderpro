@@ -216,7 +216,19 @@
     else if (task && !job) job = task;
     if (!job) job = subject.replace(/^(re|fwd?|fw)\s*:\s*/i, '').trim();
 
+    /* What the platform charged for this lead, when the email says so
+       ("Lead cost: $32.50", "You were charged $18"). Empty when it does not,
+       and the source's own cost per lead is used instead. */
+    var money = function (t) { var m = String(t || '').match(/\$\s?(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/); return m ? m[1].replace(/,/g, '') : ''; };
+    var cost = money(val(['leadcost', 'leadprice', 'leadfee', 'costofthislead', 'priceofthislead',
+      'amountcharged', 'charged', 'youpaid', 'price', 'cost', 'fee']));
+    if (!cost) {
+      var cm = body.match(/(?:lead\s*(?:cost|price|fee)|cost of (?:this|the) lead|price of (?:this|the) lead|(?:you were|you've been|we) charged|amount charged|you paid|charged to your (?:account|card))[^$\n]{0,30}\$\s?(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/i);
+      if (cm) cost = cm[1].replace(/,/g, '');
+    }
+
     return {
+      lead_cost: cost,
       name: name || '',
       phone: phone || '',
       email: (email || '').toLowerCase(),
