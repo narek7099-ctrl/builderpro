@@ -153,6 +153,7 @@
     var head = '<div class="bpx-chead" style="margin-bottom:12px">'
       + '<div class="bpx-ptitle" style="margin:0">Your people'
       + '<span class="lg2" style="margin-left:8px">everyone who works on your jobs, on the books or on a 1099</span></div>'
+      + (window.bpCrewsOpen ? '<button class="bpx-btn ghost" style="width:auto;margin:0 8px 0 0;padding:9px 16px;font-size:13px" onclick="bpCrewsOpen()">Crews</button>' : '')
       + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpEmpOpen()">+ Add someone</button></div>';
 
     if (!S.emps.length) {
@@ -169,7 +170,9 @@
         : money(e.rate) + '/yr';
       return '<tr' + (e.active ? '' : ' style="opacity:.55"') + '>'
         + '<td><b>' + esc(e.name || 'Unnamed') + '</b>'
-          + (e.trade ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.trade) + '</div>' : '') + '</td>'
+          + (e.trade ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.trade) + '</div>' : '')
+          + (function () { var c = window.bpCrewOfEmp ? bpCrewOfEmp(e.id) : null;
+              return c ? '<div style="font-size:11.5px;margin-top:2px;color:' + c.color + ';font-weight:600">\u25CF ' + esc(c.name) + '</div>' : ''; })() + '</td>'
         + '<td>' + (e.phone ? '<a href="tel:' + esc(e.phone) + '" style="color:#2f6bff;text-decoration:none">' + esc(e.phone) + '</a>' : '—')
           + (e.email ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.email) + '</div>' : '') + '</td>'
         + '<td><span class="bpx-badge' + (e.kind === '1099' ? '' : ' ok') + '">' + (e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
