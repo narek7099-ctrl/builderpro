@@ -30146,6 +30146,7 @@ function bpActiveJobs(){
   var active=jobs.filter(function(j){return j.status==='active';});
   var done=jobs.filter(function(j){return j.status==='done';});
   var rows, head, pgNav='';
+  if(_bpJobTab==='map'){ bpJobMapView(active,done); return; }
   if(_bpJobTab==='active'){
     head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Progress</th><th>Dates</th><th>Status</th><th></th></tr>';
     var pgA=bpPage('jobsA',active,10,'bpActiveJobs()'); pgNav=pgA.nav;
@@ -30177,11 +30178,138 @@ function bpActiveJobs(){
       +(starred.length?starred.length+' of 4 · tap ☆ on a project to pin it here':'Tap ☆ on up to four projects to keep them here, and first on your dashboard')+'</span></div>'
       +(starred.length?bpProjCards(starred,!!(window.bpTeamIsCrew&&bpTeamIsCrew())):'')+'</div>':'')
     +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
-      +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
+      +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
+      +'<button class="bpx-jt'+(_bpJobTab==='map'?' on':'')+'" onclick="bpJobTab(\'map\')"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
 }
 window.bpJobTab=function(t){_bpJobTab=t;bpActiveJobs();};
+/* ===== Projects map + route planning ========================================
+   Every active project with an address, on a map. Addresses are geocoded once
+   (OpenStreetMap) and the point is saved on the project. The route planner
+   takes a day's jobs (or any you tick), orders them from your shop address
+   by shortest hop, and hands the ordered stops to Google Maps for the real
+   driving directions. Distances here are straight-line, so "about". */
+var _pjMap=null,_pjLayer=null,_pjRoute={date:'',sel:{},order:[]};
+function pjIso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function pjOnDay(iso){
+  if(typeof bpProjCalEvents!=='function')return [];
+  var d=new Date(iso+'T12:00:00'), ev=bpProjCalEvents(d.getFullYear(),d.getMonth())[d.getDate()]||[];
+  var ids={}; ev.forEach(function(e){ids[e.id]=1;}); return Object.keys(ids);
+}
+function pjKm(a,b){ var R=6371,t=Math.PI/180,dl=(b.lat-a.lat)*t,dn=(b.lng-a.lng)*t,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dn/2)*Math.sin(dn/2); return 2*R*Math.asin(Math.sqrt(x)); }
+/* nearest stop next, then untangle crossings (2-opt): good for a day's handful */
+function pjOrder(start,pts){
+  var left=pts.slice(), out=[], cur=start;
+  while(left.length){ var bi=0,bd=1e9; left.forEach(function(p,i){var d=pjKm(cur,p); if(d<bd){bd=d;bi=i;}}); cur=left.splice(bi,1)[0]; out.push(cur); }
+  var len=function(r){ var t=0,c=start; r.forEach(function(p){t+=pjKm(c,p);c=p;}); return t; };
+  for(var it=0,better=true;better&&it<50;it++){ better=false;
+    for(var i=0;i<out.length-1;i++)for(var k=i+1;k<out.length;k++){
+      var r=out.slice(0,i).concat(out.slice(i,k+1).reverse(),out.slice(k+1)); if(len(r)+1e-9<len(out)){out=r;better=true;} } }
+  return {stops:out,km:len(out)};
+}
+var _pjGeoQ=Promise.resolve();
+function pjGeocode(addr){
+  /* one lookup a second: OpenStreetMap's rule for its free geocoder */
+  _pjGeoQ=_pjGeoQ.then(function(){ return new Promise(function(res){ setTimeout(res,1100); }); }).then(function(){
+    return fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+encodeURIComponent(addr))
+      .then(function(r){return r.json();}).then(function(d){ return d&&d[0]?{lat:+d[0].lat,lng:+d[0].lon}:null; }).catch(function(){return null;});
+  });
+  return _pjGeoQ;
+}
+function pjShop(){ var c=(bpSettingsGet().company)||{}; return c.address||''; }
+function bpJobMapView(active,done){
+  var today=pjIso(new Date()); if(!_pjRoute.date) _pjRoute.date=today;
+  var withA=active.filter(function(j){return (j.addr||'').trim();}), noA=active.filter(function(j){return !(j.addr||'').trim();});
+  q('bpxViewArea').innerHTML=
+    '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
+      +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
+      +'<button class="bpx-jt on"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div></div>'
+    +'<div class="pj-mapwrap"><div class="pj-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
+    +'<aside class="pj-route"><div class="pj-rh"><b>Plan a route</b><span class="bpx-mut">From '+(pjShop()?bpEsc(pjShop()):'your shop (add your address in Settings → Business)')+'</span></div>'
+      +'<label class="pj-lab">Day</label><div class="pj-day"><input type="date" id="pj-date" value="'+_pjRoute.date+'" onchange="bpPjDay(this.value)"><button class="bpx-rowbtn" onclick="bpPjDay(\''+today+'\')">Today</button></div>'
+      +'<label class="pj-lab">Stops</label><div id="pj-stops" class="pj-stops"></div>'
+      +'<button class="bpx-btn" style="width:100%;margin-top:10px" onclick="bpPjPlan()"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">route</span>Plan best order</button>'
+      +'<div id="pj-plan"></div></aside></div>'
+    +(noA.length?'<div class="pj-noaddr"><span class="ms">location_off</span><div><b>'+noA.length+' project'+(noA.length===1?'':'s')+' without an address</b> won’t show on the map: '
+      +noA.slice(0,6).map(function(j){return '<a onclick="bpProjOpen(\''+j.id+'\')">'+bpEsc(j.name||'Project')+'</a>';}).join(', ')+(noA.length>6?'…':'')+'</div></div>':'');
+  bpPjStops();
+  rdEnsureLeaflet(function(){ bpPjDraw(withA); });
+}
+function bpPjStops(){
+  var el=q('pj-stops'); if(!el)return;
+  var act=bpJobsGet().filter(function(j){return j.status==='active'&&(j.addr||'').trim();});
+  var day=pjOnDay(_pjRoute.date);
+  if(!Object.keys(_pjRoute.sel).length) day.forEach(function(id){_pjRoute.sel[id]=1;});
+  if(!act.length){ el.innerHTML='<div class="bpx-mut" style="font-size:13px">Add addresses to your projects to plan routes.</div>'; return; }
+  act.sort(function(a,b){ return (day.indexOf(b.id)>-1)-(day.indexOf(a.id)>-1); });
+  el.innerHTML=act.map(function(j){
+    return '<label class="pj-stop"><input type="checkbox" '+(_pjRoute.sel[j.id]?'checked':'')+' onchange="bpPjSel(\''+j.id+'\',this.checked)"><div><b>'+bpEsc(j.name||'Project')+'</b>'
+      +'<span>'+bpEsc(j.addr)+'</span></div>'+(day.indexOf(j.id)>-1?'<em>Scheduled</em>':'')+'</label>';
+  }).join('');
+}
+window.bpPjDay=function(iso){ _pjRoute.date=iso; _pjRoute.sel={}; var d=q('pj-date'); if(d)d.value=iso; bpPjStops(); var pl=q('pj-plan'); if(pl)pl.innerHTML=''; if(_pjLayer&&_pjLayer.route){_pjMap.removeLayer(_pjLayer.route);_pjLayer.route=null;} };
+window.bpPjSel=function(id,on){ if(on)_pjRoute.sel[id]=1; else delete _pjRoute.sel[id]; };
+async function pjPoint(j){
+  if(j.geo&&j.geo.addr===j.addr&&isFinite(j.geo.lat)) return j.geo;
+  var g=await pjGeocode(j.addr); if(!g) return null;
+  var jobs=bpJobsGet(), x=jobs.filter(function(y){return y.id===j.id;})[0];
+  if(x){ x.geo={lat:g.lat,lng:g.lng,addr:j.addr}; bpJobsSet(jobs); }
+  return {lat:g.lat,lng:g.lng,addr:j.addr};
+}
+async function bpPjDraw(jobs){
+  var el=q('pjMap'); if(!el||!window.L)return;
+  if(_pjMap){ try{_pjMap.remove();}catch(e){} _pjMap=null; }
+  el.innerHTML='';
+  _pjMap=L.map('pjMap',{zoomControl:true,scrollWheelZoom:false}).setView([39.5,-98.35],4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(_pjMap);
+  _pjLayer={pins:L.layerGroup().addTo(_pjMap),route:null};
+  var pts=[];
+  for(var i=0;i<jobs.length;i++){
+    var j=jobs[i], g=await pjPoint(j); if(!g||!_pjMap) continue;
+    pts.push([g.lat,g.lng]);
+    L.marker([g.lat,g.lng],{icon:L.divIcon({className:'pj-pin',html:'<span></span>',iconSize:[22,22],iconAnchor:[11,11]})})
+      .bindPopup('<b>'+bpEsc(j.name||'Project')+'</b><br>'+bpEsc(j.title||'')+'<br><span style="color:#6b7280">'+bpEsc(j.addr)+'</span><br><a style="cursor:pointer;color:#2f6bff" onclick="bpProjOpen(\''+j.id+'\')">Open project</a>')
+      .addTo(_pjLayer.pins);
+    if(pts.length===1) _pjMap.setView(pts[0],12); else _pjMap.fitBounds(pts,{padding:[40,40],maxZoom:14});
+  }
+  if(!pts.length) el.insertAdjacentHTML('beforeend','<div class="pj-mapempty">No project addresses could be placed yet. Add a job-site address in a project’s details.</div>');
+}
+window.bpPjPlan=async function(){
+  var out=q('pj-plan'); out.innerHTML='<div class="bpx-mut" style="font-size:13px;margin-top:10px">Working it out…</div>';
+  var jobs=bpJobsGet().filter(function(j){return _pjRoute.sel[j.id]&&(j.addr||'').trim();});
+  if(!jobs.length){ out.innerHTML='<div class="pj-warn">Tick at least one stop.</div>'; return; }
+  var shopAddr=pjShop(), shop=shopAddr?await pjGeocode(shopAddr):null;
+  var pts=[]; for(var i=0;i<jobs.length;i++){ var g=await pjPoint(jobs[i]); if(g) pts.push({lat:g.lat,lng:g.lng,j:jobs[i]}); }
+  if(!pts.length){ out.innerHTML='<div class="pj-warn">Couldn’t find those addresses on the map.</div>'; return; }
+  var start=shop||pts[0], r=pjOrder(start,shop?pts:pts.slice(1)); var stops=shop?r.stops:[pts[0]].concat(r.stops);
+  var mi=Math.round(r.km*0.621*10)/10;
+  /* Google Maps: origin, up to 9 waypoints, destination; ends back at the shop */
+  var enc=function(x){return encodeURIComponent(x);};
+  var chunk=stops.slice(0,10), dest=shop?shopAddr:chunk[chunk.length-1].j.addr, way=(shop?chunk:chunk.slice(0,-1)).map(function(p){return p.j.addr;});
+  var gurl='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+enc(shop?shopAddr:chunk[0].j.addr)+'&destination='+enc(dest)+(way.length?'&waypoints='+way.map(enc).join('%7C'):'');
+  out.innerHTML='<div class="pj-plan"><div class="pj-sum"><b>'+stops.length+' stop'+(stops.length===1?'':'s')+'</b><span>about '+mi+' mi straight-line'+(shop?', from and back to the shop':'')+'</span></div>'
+    +'<ol>'+(shop?'<li class="shop"><span>S</span>Shop</li>':'')+stops.map(function(p,i){return '<li><span>'+(i+1)+'</span><div><b>'+bpEsc(p.j.name||'Project')+'</b><small>'+bpEsc(p.j.addr)+'</small></div></li>';}).join('')+'</ol>'
+    +'<a class="bpx-btn" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+gurl+'" target="_blank" rel="noopener"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">navigation</span>Open in Google Maps</a>'
+    +(stops.length>10?'<div class="pj-warn">Google Maps takes 10 stops at a time; the first 10 are in the link.</div>':'')
+    +'<button class="bpx-rowbtn" style="margin-top:8px;width:100%" onclick="bpPjCopy()">Copy stop list to text the crew</button></div>';
+  _pjRoute.order=stops.map(function(p){return p.j;});
+  if(_pjMap){
+    if(_pjLayer.route) _pjMap.removeLayer(_pjLayer.route);
+    var line=(shop?[[shop.lat,shop.lng]]:[]).concat(stops.map(function(p){return [p.lat,p.lng];})).concat(shop?[[shop.lat,shop.lng]]:[]);
+    _pjLayer.route=L.layerGroup().addTo(_pjMap);
+    L.polyline(line,{color:'#2f6bff',weight:3,opacity:.8,dashArray:'6 6'}).addTo(_pjLayer.route);
+    stops.forEach(function(p,i){ L.marker([p.lat,p.lng],{icon:L.divIcon({className:'pj-num',html:'<span>'+(i+1)+'</span>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(_pjLayer.route); });
+    if(shop) L.marker([shop.lat,shop.lng],{icon:L.divIcon({className:'pj-num shop',html:'<span>S</span>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(_pjLayer.route);
+    _pjMap.fitBounds(line,{padding:[40,40],maxZoom:14});
+  }
+};
+window.bpPjCopy=function(){
+  var t='Route for '+new Date(_pjRoute.date+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+':\n'
+    +_pjRoute.order.map(function(j,i){return (i+1)+'. '+(j.name||'Project')+' — '+j.addr;}).join('\n');
+  try{ navigator.clipboard.writeText(t); alert('Copied. Paste it into a text to your crew.'); }catch(e){ prompt('Copy this:',t); }
+};
+
 /* up to four starred projects: pinned on the Projects page and first on the dashboard */
 window.bpProjStar=function(id){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j)return;
@@ -36436,7 +36564,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928o">
+<link rel="stylesheet" href="portal/dash.css?v=20260928p">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
