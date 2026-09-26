@@ -29588,7 +29588,14 @@ window.bpMailCompose=function(o){
     +'<div class="mc-line"><span>Subject</span><input id="bpx-mc-sub" value="'+bpEsc(o.subject||'')+'"></div>'
     +'<div id="bpx-mc-msg" class="mc-body" contenteditable="true" data-ph="Write your email\u2026"></div>'
     +'<div class="mc-files" id="bpx-mc-files"></div>'
+    +'<div class="mc-sigpanel" id="bpx-mc-sigp" hidden><div class="mc-sigtitle">Your signature</div>'
+      +'<div id="bpx-mc-siged" class="mc-siged" contenteditable="true" data-ph="e.g. Narek \u00b7 BuilderPro Roofing \u00b7 (555) 123-4567"></div>'
+      +'<label class="mc-sigauto"><input type="checkbox" id="bpx-mc-sigauto" checked> Add it to every new email</label>'
+      +'<div class="mc-sigbtns"><button type="button" class="mc-sigb" onclick="bpMcSigOpen(true)">Cancel</button>'
+      +'<button type="button" class="mc-sigb" onclick="bpMcSigInsert()">Insert here</button>'
+      +'<button type="button" class="mc-sigb pri" onclick="bpMcSigSave()">Save</button></div></div>'
     +'<div class="mc-toolbar">'+'<button type="button" class="mc-tb" title="Bold" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'bold\')"><span class=ms>format_bold</span></button>'+'<button type="button" class="mc-tb" title="Italic" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'italic\')"><span class=ms>format_italic</span></button>'+'<button type="button" class="mc-tb" title="Underline" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'underline\')"><span class=ms>format_underlined</span></button>'+'<button type="button" class="mc-tb" title="Bulleted list" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'insertUnorderedList\')"><span class=ms>format_list_bulleted</span></button>'+'<button type="button" class="mc-tb" title="Numbered list" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'insertOrderedList\')"><span class=ms>format_list_numbered</span></button>'+'<button type="button" class="mc-tb" title="Link" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'createLink\')"><span class=ms>link</span></button>'+'<button type="button" class="mc-tb" title="Clear formatting" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'removeFormat\')"><span class=ms>format_clear</span></button>'
+    +'<span class="mc-sep"></span><button type="button" class="mc-tb mc-tb-w" title="Signature" onclick="bpMcSigOpen()"><span class=ms>signature</span><em>Signature</em></button>'
     +'<span class="mc-sep"></span><label class="mc-tb" title="Attach files"><span class=ms>attach_file</span><input type="file" multiple hidden onchange="bpMcAttach(this)"></label></div>'
     +'<div class="mc-foot"><button class="mc-send" id="bpx-mc-send" onclick="bpMailComposeSend()">Send<span class=ms>send</span></button>'
     +'<span class="bpx-mmsg" id="bpx-mmsg"></span><span class="mc-note">Sent from your BuilderPro email \u00b7 saved under Business</span></div></div>';
@@ -29603,9 +29610,46 @@ window.bpMailCompose=function(o){
     dl.innerHTML=(_bpContacts||[]).filter(function(c){return c.email;}).map(function(c){return '<option value="'+bpEsc(c.email)+'">'+bpEsc(c.name||'')+'</option>';}).join('');
     sync();
   });
+  bpMcSigLoad().then(function(sg){ if(sg&&sg.auto&&sg.html) bpMcSigInsert(true); });
   setTimeout(function(){ var f=q(o.to?'bpx-mc-msg':'bpx-mc-to'); if(f)f.focus(); },60);
 };
-var _bpMcFiles=[];
+var _bpMcFiles=[], _bpMcSig=null;
+/* Signature: one per user, kept in mail_signatures so it follows them to any device. */
+async function bpMcSigLoad(){
+  if(_bpMcSig) return _bpMcSig;
+  try{ var r=await BP_SB.from('mail_signatures').select('html,auto').maybeSingle(); _bpMcSig=(r&&r.data)||{html:'',auto:true}; }
+  catch(e){ _bpMcSig={html:'',auto:true}; }
+  return _bpMcSig;
+}
+window.bpMcSigOpen=async function(close){
+  var p=q('bpx-mc-sigp'); if(!p)return;
+  if(close===true||!p.hidden){ p.hidden=true; return; }
+  var sg=await bpMcSigLoad();
+  q('bpx-mc-siged').innerHTML=sg.html||''; q('bpx-mc-sigauto').checked=sg.auto!==false;
+  p.hidden=false; q('bpx-mc-siged').focus();
+};
+window.bpMcSigSave=async function(){
+  var html=q('bpx-mc-siged').innerHTML.trim(), auto=q('bpx-mc-sigauto').checked;
+  if(!(q('bpx-mc-siged').innerText||'').trim()) html='';
+  var r=await BP_SB.from('mail_signatures').upsert({html:html,auto:auto,updated_at:new Date().toISOString()});
+  if(r&&r.error){ alert('Could not save the signature.'); return; }
+  _bpMcSig={html:html,auto:auto};
+  q('bpx-mc-sigp').hidden=true;
+  var ed=q('bpx-mc-msg'), old=ed&&ed.querySelector('.mc-sig');
+  if(old) old.remove();
+  if(html) bpMcSigInsert(true);
+};
+/* the signature sits at the end of the email, in its own block so it can be swapped */
+window.bpMcSigInsert=function(quiet){
+  var ed=q('bpx-mc-msg'); if(!ed)return;
+  var html=quiet?(_bpMcSig&&_bpMcSig.html):q('bpx-mc-siged').innerHTML.trim();
+  if(!html)return;
+  var old=ed.querySelector('.mc-sig'); if(old) old.remove();
+  var d=document.createElement('div'); d.className='mc-sig'; d.innerHTML='<br>'+html;
+  if(!ed.firstChild) ed.appendChild(document.createElement('div')).appendChild(document.createElement('br'));
+  ed.appendChild(d);
+  if(!quiet) q('bpx-mc-sigp').hidden=true;
+};
 window.bpMcFmt=function(cmd){
   var ed=q('bpx-mc-msg'); if(!ed)return; ed.focus();
   if(cmd==='createLink'){ var u=prompt('Link address','https://'); if(!u)return; if(!/^https?:\/\//i.test(u)) u='https://'+u; document.execCommand('createLink',false,u); return; }
@@ -29643,7 +29687,8 @@ window.bpMailComposeSend=async function(){
   var msg=q('bpx-mmsg'), btn=q('bpx-mc-send');
   var fail=function(t){ msg.style.color='#dc2626'; msg.textContent=t; btn.disabled=false; btn.textContent='Send email'; };
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return fail('Enter a valid email address.');
-  if(!text) return fail('Write a message first.');
+  var sigEl=ed.querySelector('.mc-sig'), sigTxt=sigEl?(sigEl.innerText||'').trim():'';
+  if(!text||text===sigTxt) return fail('Write a message first.');
   if(_bpMcFiles.some(function(f){return !f.url&&!f.err;})) return fail('Wait for the attachments to finish uploading.');
   btn.disabled=true; btn.textContent='Sending\u2026'; msg.textContent='';
   try{
@@ -36204,7 +36249,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928j">
+<link rel="stylesheet" href="portal/dash.css?v=20260928k">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>

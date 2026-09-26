@@ -600,3 +600,15 @@
 .mc-file.err small{color:#dc2626}
 .mc-file button{border:0;background:transparent;cursor:pointer;display:flex;color:#6b7280;padding:2px}
 .mc-file .ms{font-size:17px}
+.mc-tb.mc-tb-w{width:auto;padding:0 10px;gap:6px}
+.mc-tb em{font-style:normal;font-size:13px;font-weight:600}
+.mc-sig{color:#555}
+.mc-sigpanel{margin:0 14px 10px;border:1px solid #e6e8ee;border-radius:12px;padding:12px 14px;background:#fafbfc}
+.mc-sigpanel[hidden]{display:none}
+.mc-sigtitle{font-size:13px;font-weight:700;margin-bottom:8px;color:#111}
+.mc-siged{min-height:70px;max-height:160px;overflow-y:auto;background:#fff;border:1px solid #e3e6ec;border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.5;outline:0;color:#111}
+.mc-siged:empty::before{content:attr(data-ph);color:#9aa1ad}
+.mc-sigauto{display:flex;align-items:center;gap:8px;font-size:13px;color:#374151;margin:10px 0}
+.mc-sigbtns{display:flex;gap:8px;justify-content:flex-end}
+.mc-sigb{border:1px solid #e3e6ec;background:#fff;color:#111;border-radius:40px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.mc-sigb.pri{background:#2f6bff;border-color:#2f6bff;color:#fff}
