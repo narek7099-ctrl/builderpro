@@ -29578,15 +29578,31 @@ window.bpMyInboxOpen=function(id){
    inbox switch to that tab and open the email there. */
 window.bpMailCompose=function(o){
   o=o||{}; _bpMailTab='ghl'; bpRenderInbox();
-  bpModal('<h3>New email</h3><div class="bpx-sub">Sent from your BuilderPro email, and kept in this contact\u2019s history under Business.</div>'
-    +'<label>To</label><input id="bpx-mc-to" type="email" placeholder="name@example.com" value="'+bpEsc(o.to||'')+'">'
-    +'<label>Name <span class="bpx-mut" style="font-weight:400">(if they are new)</span></label><input id="bpx-mc-name" value="'+bpEsc(o.name||'')+'">'
-    +'<label>Subject</label><input id="bpx-mc-sub" value="'+bpEsc(o.subject||'')+'">'
-    +'<label>Message</label><textarea id="bpx-mc-msg" style="min-height:160px" placeholder="Write your email\u2026"></textarea>'
-    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
-    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-mc-send" onclick="bpMailComposeSend()">Send email</button></div>');
+  /* A real mail composer: wide, To / Subject as lines, a big body, Send at the bottom. */
+  var old=q('bpx-mc'); if(old) old.remove();
+  var w=document.createElement('div'); w.id='bpx-mc'; w.className='mc-wrap';
+  w.innerHTML='<div class="mc-box" role="dialog" aria-label="New message">'
+    +'<div class="mc-head"><b>'+(o.to?'Reply':'New message')+'</b><button class="mc-x" onclick="bpMailComposeClose()" aria-label="Close"><span class=ms>close</span></button></div>'
+    +'<div class="mc-line"><span>To</span><input id="bpx-mc-to" type="email" list="bpx-mc-list" autocomplete="off" placeholder="Name or email" value="'+bpEsc(o.to||'')+'"><datalist id="bpx-mc-list"></datalist></div>'
+    +'<div class="mc-line" id="bpx-mc-namerow" style="display:none"><span>Name</span><input id="bpx-mc-name" placeholder="New contact\u2019s name" value="'+bpEsc(o.name||'')+'"></div>'
+    +'<div class="mc-line"><span>Subject</span><input id="bpx-mc-sub" value="'+bpEsc(o.subject||'')+'"></div>'
+    +'<textarea id="bpx-mc-msg" class="mc-body" placeholder="Write your email\u2026"></textarea>'
+    +'<div class="mc-foot"><button class="mc-send" id="bpx-mc-send" onclick="bpMailComposeSend()">Send<span class=ms>send</span></button>'
+    +'<span class="bpx-mmsg" id="bpx-mmsg"></span><span class="mc-note">Sent from your BuilderPro email \u00b7 saved under Business</span></div></div>';
+  document.body.appendChild(w);
+  w.addEventListener('click',function(e){ if(e.target===w) bpMailComposeClose(); });
+  var to=q('bpx-mc-to');
+  var known=function(){ var v=to.value.trim().toLowerCase(); return (_bpContacts||[]).some(function(c){return String(c.email||'').toLowerCase()===v;}); };
+  var sync=function(){ q('bpx-mc-namerow').style.display=(to.value.indexOf('@')>0&&!known())?'':'none'; };
+  to.addEventListener('input',sync);
+  bpEnsureContacts().then(function(){
+    var dl=q('bpx-mc-list'); if(!dl)return;
+    dl.innerHTML=(_bpContacts||[]).filter(function(c){return c.email;}).map(function(c){return '<option value="'+bpEsc(c.email)+'">'+bpEsc(c.name||'')+'</option>';}).join('');
+    sync();
+  });
   setTimeout(function(){ var f=q(o.to?'bpx-mc-msg':'bpx-mc-to'); if(f)f.focus(); },60);
 };
+window.bpMailComposeClose=function(){ var w=q('bpx-mc'); if(w) w.remove(); };
 window.bpMailComposeSend=async function(){
   var to=q('bpx-mc-to').value.trim().toLowerCase(), name=q('bpx-mc-name').value.trim(), sub=q('bpx-mc-sub').value.trim(), text=q('bpx-mc-msg').value.trim();
   var msg=q('bpx-mmsg'), btn=q('bpx-mc-send');
@@ -29610,7 +29626,7 @@ window.bpMailComposeSend=async function(){
       body:JSON.stringify({action:'send',msgType:'Email',contactId:cid,message:text,subject:sub||'Message from your BuilderPro team'})}).then(function(r){return r.json();});
     if(res&&res.ok===false) return fail('Could not send. '+(res.error||''));
     msg.style.color='#15803d'; msg.textContent='Sent.';
-    setTimeout(function(){ bpCloseModal(); bpRenderInbox(); },700);
+    setTimeout(function(){ bpMailComposeClose(); bpRenderInbox(); },700);
   }catch(e){ fail('Could not send. Please try again.'); }
 };
 function bpRenderInbox(){
@@ -36152,7 +36168,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928h">
+<link rel="stylesheet" href="portal/dash.css?v=20260928i">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
