@@ -30235,14 +30235,86 @@ function pjWeekDays(){
   var out=[]; for(var i=0;i<7;i++){ out.push(new Date(d)); d.setDate(d.getDate()+1); } return out;
 }
 window.bpPjWeek=function(n){ _pjWeek=n===0?0:_pjWeek+n; bpPjBoard(); };
+/* The board has two views: Day (hour by hour, crews side by side, the
+   default) and Week. A job's time on a given day is j.sched.slots[day]
+   ({t:'08:00',dur:minutes}); without one it falls back to the project's
+   own start time and length. */
+var _pjBView='day', _pjBDay='';
+var PJ_H0=6, PJ_H1=20, PJ_PX=52;   /* 6 AM to 8 PM, 52px an hour */
+function pjSlot(j,iso){
+  var sl=(j.sched&&j.sched.slots&&j.sched.slots[iso])||{};
+  var t=sl.t||(j.sched&&j.sched.time)||'08:00', d=+(sl.dur||(j.sched&&j.sched.time&&j.sched.dur)||120)||120;
+  var p=t.split(':'), m=(+p[0]||0)*60+(+p[1]||0);
+  return {t:t,start:m,dur:d};
+}
+function pjHm(m){ m=Math.max(0,Math.min(m,23*60+59)); return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+(m%60)).slice(-2); }
+window.bpPjBView=function(v){ _pjBView=v; bpPjBoard(); };
+window.bpPjDayNav=function(n){ var d=new Date((_pjBDay||pjIso(new Date()))+'T12:00:00'); d.setDate(d.getDate()+n); _pjBDay=n===0?pjIso(new Date()):pjIso(d); bpPjBoard(); if(window.bpPjDay) bpPjDay(_pjBDay); };
 function bpPjBoard(){
   var el=q('pj-board'); if(!el)return;
+  var seg='<div class="bpx-jobtabs pjb-seg"><button class="bpx-jt'+(_pjBView==='day'?' on':'')+'" onclick="bpPjBView(\'day\')">Day</button><button class="bpx-jt'+(_pjBView==='week'?' on':'')+'" onclick="bpPjBView(\'week\')">Week</button></div>';
+  if(_pjBView==='week') return bpPjWeekBoard(el,seg);
+  if(!_pjBDay) _pjBDay=_pjRoute.date||pjIso(new Date());
+  var iso=_pjBDay, crews=pjCrews(), today=pjIso(new Date());
+  var jobs=bpJobsGet().filter(function(j){return j.status==='active';}), on=pjOnDay(iso);
+  var cols=crews.concat([{id:'',name:crews.length?'No crew yet':'All jobs',color:'#94a3b8'}]);
+  var lbl=new Date(iso+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
+  var hours=[]; for(var h=PJ_H0;h<PJ_H1;h++) hours.push(h);
+  var H=(PJ_H1-PJ_H0)*PJ_PX;
+  var nowLine=''; if(iso===today){ var n=new Date(), nm=n.getHours()*60+n.getMinutes(); if(nm>=PJ_H0*60&&nm<=PJ_H1*60) nowLine='<div class="pjd-now" style="top:'+((nm-PJ_H0*60)/60*PJ_PX)+'px"></div>'; }
+  el.innerHTML='<div class="pjb"><div class="pjb-top"><b>Schedule</b>'+seg
+      +'<div class="pjb-nav"><button onclick="bpPjDayNav(-1)" aria-label="Previous day"><span class=ms>chevron_left</span></button><span>'+lbl+'</span>'
+      +'<button onclick="bpPjDayNav(1)" aria-label="Next day"><span class=ms>chevron_right</span></button>'+(iso!==today?'<button class="pjb-today" onclick="bpPjDayNav(0)">Today</button>':'')+'</div>'
+      +(crews.length?'':'<span class="bpx-mut" style="font-size:12.5px">Tip: set up <a onclick="bpCrewsOpen()">crews</a> to give each one its own column.</span>')+'</div>'
+    +'<div class="pjd" style="grid-template-columns:58px repeat('+cols.length+',minmax(170px,1fr))">'
+      +'<div></div>'+cols.map(function(c){ return '<div class="pjd-ch"><i style="background:'+c.color+'"></i>'+bpEsc(c.name)+'</div>'; }).join('')
+      +'<div class="pjd-hours" style="height:'+H+'px">'+hours.map(function(h){return '<div style="height:'+PJ_PX+'px">'+((h%12)||12)+(h<12?' AM':' PM')+'</div>';}).join('')+'</div>'
+      +cols.map(function(c){
+        var mine=jobs.filter(function(j){ return on.indexOf(j.id)>-1&&(c.id?j.crew===c.id:!pjCrew(j.crew)); });
+        var blocks=mine.map(function(j){ var sl=pjSlot(j,iso); return {j:j,sl:sl}; }).sort(function(a,b){return a.sl.start-b.sl.start;});
+        /* side by side when two jobs overlap in the same crew */
+        var lanes=[]; blocks.forEach(function(b){ var k=0; while(lanes[k]!=null&&lanes[k]>b.sl.start) k++; lanes[k]=b.sl.start+b.sl.dur; b.lane=k; });
+        var nl=Math.max(1,lanes.length);
+        return '<div class="pjd-col" style="height:'+H+'px">'
+          +hours.map(function(h){ return '<button class="pjd-slot" style="height:'+PJ_PX+'px" onclick="bpPjBookOpen(\''+c.id+'\',\''+iso+'\',\''+pjHm(h*60)+'\')" aria-label="Book at '+((h%12)||12)+(h<12?' AM':' PM')+'"></button>'; }).join('')
+          +blocks.map(function(b){
+            var top=Math.max(0,(b.sl.start-PJ_H0*60)/60*PJ_PX), ht=Math.max(22,b.sl.dur/60*PJ_PX-3);
+            return '<div class="pjd-job" style="top:'+top+'px;height:'+ht+'px;left:calc('+(b.lane*100/nl)+'% + 3px);width:calc('+(100/nl)+'% - 6px);border-left-color:'+c.color+';background:'+c.color+'14" onclick="bpPjSlotOpen(\''+b.j.id+'\',\''+iso+'\')">'
+              +'<b>'+bpEsc(b.j.name||'Project')+'</b><small>'+bpProjT12(pjHm(b.sl.start))+' – '+bpProjT12(pjHm(b.sl.start+b.sl.dur))+'</small>'
+              +(ht>60&&b.j.addr?'<small>'+bpEsc(b.j.addr)+'</small>':'')+'</div>';
+          }).join('')+nowLine+'</div>';
+      }).join('')
+    +'</div></div>';
+}
+/* one job on one day: time, length, crew */
+window.bpPjSlotOpen=function(jobId,iso){
+  var j=bpJobsGet().filter(function(x){return x.id===jobId;})[0]; if(!j)return;
+  var sl=pjSlot(j,iso), crews=pjCrews();
+  var durs=[[60,'1 hour'],[90,'1½ hours'],[120,'2 hours'],[180,'3 hours'],[240,'4 hours'],[300,'5 hours'],[360,'6 hours'],[480,'8 hours (all day)'],[600,'10 hours']];
+  if(!durs.some(function(d){return d[0]===sl.dur;})) durs.push([sl.dur,Math.round(sl.dur/6)/10+' hours']);
+  bpModal('<h3>'+bpEsc(j.name||'Project')+'</h3><div class="bpx-sub">'+bpEsc(j.title||'')+(j.addr?' · '+bpEsc(j.addr):'')+'<br>'+new Date(iso+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+'</div>'
+    +'<label>Start</label><input type="time" id="pjs-t" value="'+sl.t+'" step="900">'
+    +'<label>How long</label><select id="pjs-d">'+durs.map(function(d){return '<option value="'+d[0]+'"'+(d[0]===sl.dur?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select>'
+    +(crews.length?'<label>Crew</label><select id="pjs-c"><option value="">No crew</option>'+crews.map(function(c){return '<option value="'+c.id+'"'+(j.crew===c.id?' selected':'')+'>'+bpEsc(c.name)+'</option>';}).join('')+'</select>':'')
+    +'<div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="bpx-btn ghost" style="color:#dc2626" onclick="bpPjUnbook(\''+j.id+'\',\''+iso+'\');bpCloseModal()">Remove from this day</button>'
+    +'<button class="bpx-btn ghost" onclick="bpCloseModal();bpProjOpen(\''+j.id+'\')">Open project</button>'
+    +'<button class="bpx-btn" onclick="bpPjSlotSave(\''+j.id+'\',\''+iso+'\')">Save</button></div>');
+};
+window.bpPjSlotSave=function(jobId,iso){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j)return;
+  j.sched=j.sched||{}; j.sched.slots=j.sched.slots||{};
+  j.sched.slots[iso]={t:(q('pjs-t').value||'08:00'),dur:+q('pjs-d').value||120};
+  if(!j.sched.dates) j.sched.dates=[]; if(j.sched.dates.indexOf(iso)<0){ j.sched.dates.push(iso); j.sched.dates.sort(); }
+  var c=q('pjs-c'); if(c) j.crew=c.value||undefined;
+  bpJobsSet(jobs); bpCloseModal(); bpPjBoard(); bpPjStops();
+};
+function bpPjWeekBoard(el,seg){
   var days=pjWeekDays(), today=pjIso(new Date()), crews=pjCrews();
   var jobs=bpJobsGet().filter(function(j){return j.status==='active';});
   var onDay={}; days.forEach(function(d){ onDay[pjIso(d)]=pjOnDay(pjIso(d)); });
   var rowsDef=crews.concat([{id:'',name:crews.length?'No crew yet':'All jobs',color:'#94a3b8'}]);
   var lbl=days[0].toLocaleDateString([], {month:'short',day:'numeric'})+' – '+days[6].toLocaleDateString([], {month:'short',day:'numeric'});
-  el.innerHTML='<div class="pjb"><div class="pjb-top"><b>Schedule</b><div class="pjb-nav"><button onclick="bpPjWeek(-1)" aria-label="Previous week"><span class=ms>chevron_left</span></button>'
+  el.innerHTML='<div class="pjb"><div class="pjb-top"><b>Schedule</b>'+seg+'<div class="pjb-nav"><button onclick="bpPjWeek(-1)" aria-label="Previous week"><span class=ms>chevron_left</span></button>'
       +'<span>'+lbl+'</span><button onclick="bpPjWeek(1)" aria-label="Next week"><span class=ms>chevron_right</span></button>'+(_pjWeek?'<button class="pjb-today" onclick="bpPjWeek(0)">This week</button>':'')+'</div>'
       +(crews.length?'':'<span class="bpx-mut" style="font-size:12.5px">Tip: set up <a onclick="bpCrewsOpen()">crews</a> to schedule and route each one separately.</span>')+'</div>'
     +'<div class="pjb-grid" style="grid-template-columns:150px repeat(7,minmax(110px,1fr))"><div class="pjb-h"></div>'
@@ -30255,34 +30327,35 @@ function bpPjBoard(){
           var here=mine.filter(function(j){return onDay[iso].indexOf(j.id)>-1;});
           return '<div class="pjb-cell'+(iso===today?' today':'')+'">'+here.map(function(j){
               var byDate=j.sched&&j.sched.dates&&j.sched.dates.indexOf(iso)>-1;
-              return '<div class="pjb-chip" style="border-left-color:'+c.color+'" onclick="bpProjOpen(\''+j.id+'\')" title="'+bpEsc((j.title||'')+(j.addr?' · '+j.addr:''))+'"><span>'+bpEsc(j.name||'Project')+'</span>'
+              return '<div class="pjb-chip" style="border-left-color:'+c.color+'" onclick="bpPjSlotOpen(\''+j.id+'\',\''+iso+'\')" title="'+bpEsc((j.title||'')+(j.addr?' · '+j.addr:''))+'"><span>'+bpEsc(j.name||'Project')+'</span>'
                 +(byDate?'<button onclick="event.stopPropagation();bpPjUnbook(\''+j.id+'\',\''+iso+'\')" aria-label="Remove from this day"><span class=ms>close</span></button>':'')+'</div>';
             }).join('')
             +'<button class="pjb-add" onclick="bpPjBookOpen(\''+c.id+'\',\''+iso+'\')" aria-label="Book a job"><span class=ms>add</span></button></div>';
         }).join('');
     }).join('')+'</div></div>';
 }
-window.bpPjBookOpen=function(crewId,iso){
+window.bpPjBookOpen=function(crewId,iso,t){
   var c=pjCrew(crewId), jobs=bpJobsGet().filter(function(j){return j.status==='active';});
   var already=pjOnDay(iso);
   var d=new Date(iso+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'});
-  bpModal('<h3>Book a job'+(c?' for '+bpEsc(c.name):'')+'</h3><div class="bpx-sub">'+d+'</div>'
+  bpModal('<h3>Book a job'+(c?' for '+bpEsc(c.name):'')+'</h3><div class="bpx-sub">'+d+(t?' at '+bpProjT12(t):'')+'</div>'
     +(jobs.length?'<div class="pjb-pick">'+jobs.map(function(j){ var cr=pjCrew(j.crew), on=already.indexOf(j.id)>-1;
-      return '<button '+(on?'disabled':'')+' onclick="bpPjBook(\''+j.id+'\',\''+crewId+'\',\''+iso+'\')"><div><b>'+bpEsc(j.name||'Project')+'</b><small>'+bpEsc(j.title||'')+(j.addr?' · '+bpEsc(j.addr):'')+'</small></div>'
+      return '<button '+(on?'disabled':'')+' onclick="bpPjBook(\''+j.id+'\',\''+crewId+'\',\''+iso+'\',\''+(t||'')+'\')"><div><b>'+bpEsc(j.name||'Project')+'</b><small>'+bpEsc(j.title||'')+(j.addr?' · '+bpEsc(j.addr):'')+'</small></div>'
         +(on?'<em>Booked</em>':cr&&cr.id!==crewId?'<em style="color:'+cr.color+'">'+bpEsc(cr.name)+'</em>':'')+'</button>'; }).join('')+'</div>'
       :'<div class="bpx-mut">No active projects yet.</div>')
     +(c&&jobs.some(function(j){return j.crew&&j.crew!==crewId;})?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">Booking a job from another crew moves the job to '+bpEsc(c.name)+'.</div>':'')
     +'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
 };
-window.bpPjBook=function(jobId,crewId,iso){
+window.bpPjBook=function(jobId,crewId,iso,t){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j)return;
   j.sched=j.sched||{}; j.sched.dates=(j.sched.dates||[]).filter(function(x){return x!==iso;}).concat([iso]).sort();
+  if(t){ j.sched.slots=j.sched.slots||{}; j.sched.slots[iso]={t:t,dur:(j.sched.slots[iso]&&j.sched.slots[iso].dur)||120}; }
   if(crewId) j.crew=crewId;
   bpJobsSet(jobs); bpCloseModal(); bpPjBoard(); bpPjStops(); if(_pjMap) bpPjDraw(bpJobsGet().filter(function(x){return x.status==='active'&&(x.addr||'').trim();}));
 };
 window.bpPjUnbook=function(jobId,iso){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j||!j.sched||!j.sched.dates)return;
-  j.sched.dates=j.sched.dates.filter(function(x){return x!==iso;}); bpJobsSet(jobs); bpPjBoard(); bpPjStops();
+  j.sched.dates=j.sched.dates.filter(function(x){return x!==iso;}); if(j.sched.slots) delete j.sched.slots[iso]; bpJobsSet(jobs); bpPjBoard(); bpPjStops();
 };
 /* Crews: name, colour, who is in it */
 window.bpCrewsOpen=function(){
@@ -30341,7 +30414,7 @@ function bpPjStops(){
       +'<span>'+bpEsc(j.addr)+'</span></div>'+(day.indexOf(j.id)>-1?'<em>Scheduled</em>':'')+'</label>';
   }).join('');
 }
-window.bpPjDay=function(iso){ _pjRoute.date=iso; _pjRoute.sel={}; var d=q('pj-date'); if(d)d.value=iso; bpPjStops(); var pl=q('pj-plan'); if(pl)pl.innerHTML=''; if(_pjLayer&&_pjLayer.route){_pjMap.removeLayer(_pjLayer.route);_pjLayer.route=null;} };
+window.bpPjDay=function(iso){ _pjRoute.date=iso; if(_pjBDay!==iso){ _pjBDay=iso; if(q('pj-board')) bpPjBoard(); } _pjRoute.sel={}; var d=q('pj-date'); if(d)d.value=iso; bpPjStops(); var pl=q('pj-plan'); if(pl)pl.innerHTML=''; if(_pjLayer&&_pjLayer.route){_pjMap.removeLayer(_pjLayer.route);_pjLayer.route=null;} };
 window.bpPjSel=function(id,on){ if(on)_pjRoute.sel[id]=1; else delete _pjRoute.sel[id]; };
 async function pjPoint(j){
   if(j.geo&&j.geo.addr===j.addr&&isFinite(j.geo.lat)) return j.geo;
@@ -36682,7 +36755,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928r">
+<link rel="stylesheet" href="portal/dash.css?v=20260928s">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
