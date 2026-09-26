@@ -26617,8 +26617,10 @@ function bpEnterPortal2(email){
   bpBuildNav();
   bpBuildMobbar();
   var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return c==='social'?'social':'marketing';}if(/[?&]mail=/.test(location.search))return 'leadsources';}catch(e){}return null;})();
-  bpNav(landed||'dashboard');
+  bpNav(landed||(window.bpTeamHome?bpTeamHome():'dashboard'));
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
+  /* business settings (company, crews, business number) follow the account, not the device */
+  if(window.bpSettingsPull) try{ bpSettingsPull(); }catch(e){}
   bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpNav('dashboard'); });
   /* the crew's hours are what the labour line on every project budget reads,
      so they load with the jobs rather than only when the page is opened */
@@ -26652,7 +26654,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Texts',s:'Your text conversations with leads and customers — the channel they read standing on the drive.'},email:{t:'Email',s:'Your email threads, where the longer conversations live.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},employees:{t:'Employees',s:'Your crew, what an hour of their time really costs you, and the hours that went into each job.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},leadsources:{t:'Lead Sources',s:'The leads you already buy — Angi, Thumbtack, your own website — arriving here the second they are sent, so they get answered first.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},suppliers:{t:'Where I buy',s:'The supply houses you use, and what they charge you.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={crewclock:{t:'Clock in',s:'Clock in when you get to the job, and out when you leave.'},crewhome:{t:'My crew',s:'Who you work with, and how to reach the office.'},crewprojects:{t:'Projects',s:'Your crew\u2019s jobs. Add photos, documents and blueprints.'},crewid:{t:'My ID',s:'Your crew badge.'},dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Texts',s:'Your text conversations with leads and customers — the channel they read standing on the drive.'},email:{t:'Email',s:'Your email threads, where the longer conversations live.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},employees:{t:'Employees',s:'Your crew, what an hour of their time really costs you, and the hours that went into each job.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},leadradar:{t:'Lead Radar',s:'Homes in your service area most likely to need your trade — scored from public permit records and recent storms.'},leadsources:{t:'Lead Sources',s:'The leads you already buy — Angi, Thumbtack, your own website — arriving here the second they are sent, so they get answered first.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},suppliers:{t:'Where I buy',s:'The supply houses you use, and what they charge you.'},calculator:{t:'My Calculator',s:'What your customer sees on your website \u2014 preview it, customize it, embed it.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -26677,11 +26679,15 @@ function bpNavGroupOf(v){
     if(g.kids)for(var j=0;j<g.kids.length;j++)if(g.kids[j][0]===v)return g.id;}
   return null;
 }
-var BP_MS={dashboard:'grid_view',projects:'construction',supply:'inventory_2',finances:'payments',leads:'radar',marketing:'campaign',ai:'smart_toy',settings:'tune'};
+var BP_MS={crewclock:'schedule',crewhome:'groups',crewprojects:'construction',crewid:'badge',dashboard:'grid_view',projects:'construction',supply:'inventory_2',finances:'payments',leads:'radar',marketing:'campaign',ai:'smart_toy',settings:'tune'};
 function bpBuildNav(){
   var ic=function(k){return '<span class="ms">'+(BP_MS[k]||'circle')+'</span>';};
   var h='';
   var ok=function(v){return !window.bpTeamAllows||bpTeamAllows(v);};
+  if(window.bpTeamIsCrew&&bpTeamIsCrew()){
+    h=[['crewclock','Clock in'],['crewprojects','Projects'],['crewhome','My crew'],['crewid','My ID']].map(function(x){return '<a data-view="'+x[0]+'" onclick="bpNav(\''+x[0]+'\')">'+ic(x[0])+'<span>'+x[1]+'</span></a>';}).join('');
+    document.getElementById('bpxNav').innerHTML=h; return;
+  }
   BP_NAV.forEach(function(g){
     if(!g.kids){if(!ok(g.id))return;h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
     g={id:g.id,l:g.l,ico:g.ico,kids:g.kids.filter(function(k){return ok(k[0]);})}; if(!g.kids.length)return;
@@ -26708,7 +26714,7 @@ function bpNavToggle(gid){
   bpNavRemember();
 }
 function bpBuildMobbar(){
-  var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals'||v==='ai')return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
+  var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals'||v==='ai')return;if(window.bpTeamAllows&&!bpTeamAllows(v))return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
   document.getElementById('bpxMobbar').innerHTML=h;
 }
 /* circular loader in the middle of the portal while a view builds */
@@ -26721,7 +26727,7 @@ function bpSpin(on){
   s._t=setTimeout(function(){s.classList.remove('on');},450);
 }
 function bpNav(v){
-  if(window.bpTeamAllows&&!bpTeamAllows(v))v='dashboard';
+  if(window.bpTeamAllows&&!bpTeamAllows(v))v=window.bpTeamHome?bpTeamHome():'dashboard';
   window._bpCurView=v;
   document.querySelectorAll('#bpxNav a[data-view]').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
   var gid=bpNavGroupOf(v);
@@ -26733,7 +26739,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
-  ({dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,leadsources:bpLeadSources,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
+  ({crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,leadsources:bpLeadSources,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
 }
@@ -30109,11 +30115,11 @@ function bpJobsSet(a){ _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringi
 function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} return _bpFin; }
 function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 function bpFinCloudPush(){
-  if(!BP_LIVE) return;
+  if(!BP_LIVE||(window.bpTeamIsCrew&&bpTeamIsCrew())) return;
   BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},window.bpOwnerId&&bpOwnerId()?{owner:bpOwnerId()}:{})).then(function(){}).catch(function(){});
 }
 function bpFinCloudLoad(){
-  if(!BP_LIVE||_bpFinLoaded) return Promise.resolve();
+  if(!BP_LIVE||_bpFinLoaded||(window.bpTeamIsCrew&&bpTeamIsCrew())) return Promise.resolve();
   return BP_SB.from('portal_finance').select('jobs,fin').maybeSingle().then(function(r){
     _bpFinLoaded=true;
     if(r&&r.data){
@@ -33318,6 +33324,8 @@ async function bpSettingsPull(){
       bpSettingsSet(merged);
       if(document.querySelector('.bpx-set-grid'))bpSettings();
     }
+    /* settings saved on this device before the server table existed: send them up once */
+    else if(r&&!r.error&&!(window.bpTeamIsCrew&&bpTeamIsCrew())){ var loc=bpSettingsGet(); if(loc&&Object.keys(loc).length) bpSettingsPush(loc); }
   }catch(e){}
 }
 function bpDataUrlToBlob(d){var parts=d.split(',');var mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/png';var bin=atob(parts[1]);var n=bin.length;var arr=new Uint8Array(n);while(n--)arr[n]=bin.charCodeAt(n);return new Blob([arr],{type:mime});}
@@ -36820,13 +36828,13 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928u">
+<link rel="stylesheet" href="portal/dash.css?v=20260928v">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
-<script src="portal/team.js?v=20260919c"></script>
+<script src="portal/team.js?v=20260928a"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
 <script src="portal/radar-parcels.js?v=20260922a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20260928b"></script>
+<script src="portal/crew.js?v=20260928c"></script>
 <script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260927a"></script>
 <script src="portal/supply.js?v=20260927a"></script>
@@ -36836,6 +36844,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/dash.js?v=20260927a"></script>
 <script src="portal/pfiles.js?v=20260927a"></script>
+<script src="portal/crewapp.js?v=20260928a"></script>
 <script src="site/vendor/lenis.min.js?v=20260921-a"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
 <script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>

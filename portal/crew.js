@@ -157,6 +157,8 @@
       + '<span class="lg2" style="margin-left:8px">everyone who works on your jobs, on the books or on a 1099</span></div>'
       + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpEmpOpen()">+ Add someone</button></div>';
 
+    head += '<div id="bpClockNow"></div>';
+    setTimeout(function () { if (window.bpClockNowFill) bpClockNowFill(); }, 0);
     if (!S.emps.length) {
       el.innerHTML = head + '<div class="bpx-empty2"><b>Nobody added yet.</b>'
         + '<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Add your crew and you can put their hours against a job — '
