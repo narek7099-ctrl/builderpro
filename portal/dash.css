@@ -699,3 +699,44 @@
 .pj-pin span{display:block;width:22px;height:22px;border-radius:50%;background:#2f6bff;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);box-sizing:border-box}
 .pj-num span{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#2f6bff;color:#fff;font:700 12px/1 system-ui;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);box-sizing:border-box}
 .pj-num.shop span{background:#0b1220}
+/* Projects: schedule board + crews */
+#bpx .pjb{background:var(--card,#fff);border:1px solid var(--line,#e7e9ee);border-radius:16px;padding:14px;margin:10px 0 14px;overflow-x:auto}
+#bpx .pjb-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+#bpx .pjb-top a{color:#2f6bff;cursor:pointer;text-decoration:underline}
+#bpx .pjb-nav{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600}
+#bpx .pjb-nav button{border:1px solid var(--line,#e3e6ec);background:transparent;border-radius:8px;height:30px;min-width:30px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:inherit;font:inherit;font-size:12.5px}
+#bpx .pjb-today{padding:0 10px}
+#bpx .pjb-grid{display:grid;gap:4px;min-width:960px}
+#bpx .pjb-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;opacity:.6;padding:4px 6px;display:flex;align-items:baseline;gap:6px}
+#bpx .pjb-h small{font-size:14px;opacity:1;font-weight:700;letter-spacing:0}
+#bpx .pjb-h.today{opacity:1;color:#2f6bff}
+#bpx .pjb-crew{display:flex;gap:8px;align-items:flex-start;padding:8px 6px;border-top:1px solid var(--line,#eef0f3)}
+#bpx .pjb-crew i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:4px}
+#bpx .pjb-crew b{display:block;font-size:13px}
+#bpx .pjb-crew small{display:block;font-size:11.5px;opacity:.6}
+#bpx .pjb-cell{min-height:64px;border-radius:10px;background:rgba(0,0,0,.025);padding:5px;display:flex;flex-direction:column;gap:4px;border-top:1px solid transparent}
+#bpx .pjb-cell.today{background:rgba(47,107,255,.06)}
+#bpx .pjb-chip{display:flex;align-items:center;gap:4px;background:var(--card,#fff);border:1px solid var(--line,#e7e9ee);border-left:3px solid #2f6bff;border-radius:7px;padding:4px 4px 4px 7px;font-size:12px;font-weight:600;cursor:pointer}
+#bpx .pjb-chip span:first-child{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pjb-chip button{border:0;background:transparent;cursor:pointer;display:flex;padding:0;opacity:.45;color:inherit}
+#bpx .pjb-chip button .ms{font-size:14px}
+#bpx .pjb-add{border:1px dashed var(--line,#d6dae2);background:transparent;border-radius:7px;height:24px;cursor:pointer;opacity:.5;color:inherit;display:flex;align-items:center;justify-content:center}
+#bpx .pjb-add:hover{opacity:1;border-color:#2f6bff;color:#2f6bff}
+#bpx .pjb-add .ms{font-size:16px}
+#bpx .pjb-pick{display:flex;flex-direction:column;gap:6px;max-height:380px;overflow-y:auto}
+#bpx .pjb-pick button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line,#e3e6ec);background:transparent;border-radius:10px;padding:10px 12px;cursor:pointer;font:inherit;color:inherit}
+#bpx .pjb-pick button>div{flex:1;min-width:0}
+#bpx .pjb-pick button:disabled{opacity:.5;cursor:default}
+#bpx .pjb-pick b{display:block;font-size:13.5px}
+#bpx .pjb-pick small{display:block;font-size:12px;opacity:.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pjb-pick em{font-style:normal;font-size:11px;font-weight:700;flex:none}
+#bpx .pj-sel{width:100%;height:38px;border:1px solid var(--line,#e3e6ec);border-radius:10px;padding:0 10px;font:inherit;background:transparent;color:inherit}
+#bpx .pjc{border:1px solid var(--line,#e3e6ec);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+#bpx .pjc-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#bpx .pjc-name{flex:1;min-width:120px;height:36px;border:1px solid var(--line,#e3e6ec);border-radius:8px;padding:0 10px;font:inherit;font-weight:600;background:transparent;color:inherit}
+#bpx .pjc-colors{display:flex;gap:5px}
+#bpx .pjc-colors button{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+#bpx .pjc-colors button.on{border-color:#fff;box-shadow:0 0 0 2px #111}
+#bpx .pjc-del{border:0;background:transparent;cursor:pointer;opacity:.5;color:inherit;display:flex}
+#bpx .pjc-mem{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px}
+#bpx .pjc-mem label{display:flex;align-items:center;gap:5px;cursor:pointer}
