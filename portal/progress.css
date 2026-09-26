@@ -73,3 +73,22 @@
   #bpx .bpp-ask-b{width:100%}
   #bpx .bpp-ask-b .bpx-rowbtn{flex:1}
 }
+
+/* ---------- the phase editor ---------- */
+#bpx .bpp-ed{display:flex;flex-direction:column;gap:6px}
+#bpx .bpp-er{display:grid;grid-template-columns:22px minmax(0,1fr) 92px 170px auto;gap:8px;align-items:center}
+#bpx .bpp-er-n{font-size:12px;font-weight:600;color:var(--grey);text-align:center}
+#bpx .bpp-er input{margin:0 !important;width:100%;box-sizing:border-box}
+#bpx .bpp-er-d,#bpx .bpp-er-dl{display:flex;align-items:center;gap:6px;margin:0 !important;font-size:12px;color:var(--grey);font-weight:500}
+#bpx .bpp-er-d input{width:56px}
+#bpx .bpp-er-dl span{white-space:nowrap}
+#bpx .bpp-er-mv{display:flex;gap:4px}
+#bpx .bpp-er-mv button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;font-size:13px;line-height:1}
+#bpx .bpp-er-mv button:hover:not(:disabled){background:var(--ink);color:#fff;border-color:var(--ink)}
+#bpx .bpp-er-mv button:disabled{opacity:.35;cursor:default}
+#bpx .bpp-ed-acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px}
+#bpx .bpp-ed-acts .bpx-rowbtn{margin:0}
+#bpx .bpp-ed-save{display:flex !important;align-items:center;gap:8px;font-weight:500 !important;margin-top:14px !important}
+@media(max-width:640px){#bpx .bpp-er{grid-template-columns:22px 1fr 92px;}#bpx .bpp-er-dl{grid-column:2/4}#bpx .bpp-er-mv{grid-column:2/4}}
+#bpx label.bpp-ed-save{display:flex !important;flex-direction:row;justify-content:flex-start;gap:8px;width:auto}
+#bpx label.bpp-ed-save input{width:auto !important;margin:0 !important;flex:none}
