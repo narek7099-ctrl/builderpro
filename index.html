@@ -29501,15 +29501,17 @@ window.bpEmailPage=bpEmailPage;
 var _bpMailTab='ghl', _bpMyInbox={items:[],next:'',q:'',sel:'',folder:'inbox'};
 window.bpMyInboxFolder=function(f){ _bpMyInbox.folder=f; _bpMyInbox.sel=''; bpMyInboxRender(); };
 function bpMiText(t){ var d=document.createElement('textarea'); d.innerHTML=String(t||''); return d.value; }
-window.bpMailTab=function(t){ _bpMailTab=t; bpRenderInbox(); };
+window.bpMailTab=function(t){ _bpMailTab=t; window._bpMiConn=false; bpRenderInbox(); };
 function bpMailTabs(){
   return '<div class="bpx-mailtabs"><button class="'+(_bpMailTab==='ghl'?'on':'')+'" onclick="bpMailTab(\'ghl\')"><span class=ms>forum</span> Business</button>'
     +'<button class="'+(_bpMailTab==='inbox'?'on':'')+'" onclick="bpMailTab(\'inbox\')"><span class=ms>inbox</span> My inbox</button></div>';
 }
 function bpMyInboxRender(){
+  if(window._bpMiConn){ bpMailConnView(); return; }
   q('bpxViewArea').innerHTML='<div class="bpx-msgbar"><div class="bpx-msgbar-t">Email</div>'
       +'<div class="bpx-msgbar-btns"><input id="bpx-mi-q" class="bpx-mi-q" placeholder="Search your inbox" value="'+bpEsc(_bpMyInbox.q)+'" onkeydown="if(event.key===\'Enter\')bpMyInboxLoad(this.value)">'
       +'<button class="bpx-ghostbtn" onclick="bpMyInboxLoad(q(\'bpx-mi-q\').value)"><span class=ms>refresh</span></button>'
+      +'<button class="bpx-ghostbtn" onclick="bpMailConnView()"><span class=ms>link</span> Connections</button>'
       +'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button></div></div>'
     +bpMailTabs()
     +'<div class="bpx-inbox"><div class="bpx-convlist mi-list"><div class="mi-folders">'
@@ -29519,13 +29521,28 @@ function bpMyInboxRender(){
     +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>mail</span></div>Select an email to read it.</div></div></div>';
   bpMyInboxLoad(_bpMyInbox.q);
 }
+window.bpMailConnGo=function(){ _bpMailTab='inbox'; window._bpMiConn=true; bpNav('email'); };
+/* Email \u2192 My inbox \u2192 Connections: Gmail and Outlook, connected, checked, disconnected. */
+function bpMailConnDraw(){
+  window._lsCtx='email';
+  q('bpxViewArea').innerHTML='<div class="bpx-msgbar"><div class="bpx-msgbar-t">Email</div></div>'+bpMailTabs()
+    +'<div style="margin-bottom:12px"><button class="bpx-rowbtn" onclick="window._bpMiConn=false;bpMyInboxRender()">\u2190 Back to my inbox</button></div>'+lsInboxPanel();
+}
+window.bpMailConnView=function(){
+  window._lsCtx='email'; window._bpMiConn=true;
+  if(!q('bpxViewArea'))return;
+  q('bpxViewArea').innerHTML='<div class="bpx-tempty" style="padding:24px">Loading\u2026</div>';
+  Promise.resolve(BP_SB.from('mail_connections').select('id,provider,email,status,error,last_checked,last_found,found_total')).then(function(r){
+    _lsMail=(r&&r.data)||[]; bpMailConnDraw();
+  },function(){ _lsMail=[]; bpMailConnDraw(); });
+};
 window.bpMyInboxLoad=function(qs,more){
   _bpMyInbox.q=qs||'';
   var el=q('bpx-convlist'); if(!el)return;
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'inbox',q:_bpMyInbox.q,folder:_bpMyInbox.folder,page:more?_bpMyInbox.next:''}).then(function(r){
     if(!r||!r.ok){
       el.innerHTML='<div class="bpx-tempty" style="padding:24px">'+(r&&r.error==='not connected'
-        ?'No inbox connected yet.<br><br><button class="bpx-btn" style="width:auto;padding:10px 18px" onclick="bpNav(\'leadsources\');setTimeout(function(){lsShow(\'conn\')},400)">Connect Gmail or Outlook</button>'
+        ?'No inbox connected yet.<br><br><button class="bpx-btn" style="width:auto;padding:10px 18px" onclick="bpMailConnView()">Connect Gmail or Outlook</button>'
         :r&&r.error==='sign-in expired'?'Your email sign-in expired. Reconnect it under Lead Sources \u2192 Connections.':'Could not load your inbox. '+bpEsc((r&&r.error)||''))+'</div>';
       return;
     }
@@ -34909,6 +34926,7 @@ function bpLeadSources0(){
   });
 }
 function bpLeadSources(){
+  window._lsCtx='leads';
   var area=q('bpxViewArea');
   if(!(window.BP_LIVE&&window.BP_SB)){
     area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">Sign in to connect a lead source.</div></div>';
@@ -34927,7 +34945,6 @@ function bpLeadSources(){
       var pv=mq.indexOf('gmail')===0?'Gmail':'Outlook';
       var fq=decodeURIComponent((location.search.match(/[?&]found=([^&#]*)/)||[])[1]||'');
       _lsMailNote=/connected$/.test(mq)?(fq?pv+' is connected. We found '+fq.split(',').map(lsVendorName).join(' and ')+' in your inbox, so their leads now arrive here automatically.':pv+' is connected. We didn\u2019t find Angi, Thumbtack or HomeAdvisor emails in the last four months. When one arrives, add it below.'):mq==='cancelled'?'The inbox was not connected.':'The inbox could not be connected. Try again.';
-      window._lsView='conn';
       if(/connected$/.test(mq)&&_lsMail.length) setTimeout(function(){lsOutlookCheck(true);},300); }
     else if(_lsMail.some(function(m){return m.status==='connected'&&(!m.last_checked||Date.now()-Date.parse(m.last_checked)>5*60*1000);})) setTimeout(function(){lsOutlookCheck(true);},300);
     if(r[0]&&r[0].error){
@@ -34972,7 +34989,6 @@ window.lsLeadDel=function(id){
   });
 };
 
-window.lsShow=function(v){ window._lsView=v; lsRender(); try{ window.scrollTo(0,0); }catch(e){} };
 function lsRender(){
   var area=q('bpxViewArea'); if(!area)return;
   if(_lsErr){ area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">'+bpEsc(_lsErr)+'</div></div>'; return; }
@@ -35091,17 +35107,17 @@ function lsRender(){
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
     : '';
 
-  /* Email connections live on their own screen, reached from the button
-     above the sources; the main screen is the sources and their leads. */
-  if(window._lsView==='conn'){
-    area.innerHTML='<div style="margin-bottom:12px"><button class="bpx-rowbtn" onclick="lsShow(\'main\')">\u2190 Back to lead sources</button></div>'+lsInboxPanel();
-    return;
-  }
+  /* Lead Sources only asks for one thing: connect the inbox the leads land in.
+     Managing the connection (disconnect, check now, Outlook vs Gmail) lives
+     under Email \u2192 My inbox \u2192 Connections. */
   var mails=(_lsMail||[]).filter(function(m){return m.status==='connected';});
-  var bar='<div class="ls-bar">'
-    +'<div class="bpx-mut" style="font-size:13px">'+(mails.length?'Reading leads from '+mails.map(function(m){return bpEsc(m.email||m.provider);}).join(' and '):'No email connected yet')+'</div>'
-    +'<button class="bpx-btn" style="width:auto;padding:10px 18px" onclick="lsShow(\'conn\')"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">link</span>Connections</button></div>'
-    +(_lsMailNote?'<div class="ls-note" style="margin-bottom:12px">'+bpEsc(_lsMailNote)+'</div>':'');
+  var bar=mails.length
+    ?'<div class="ls-bar ls-bar-ok"><div><span class="ms">check_circle</span><b>Getting leads from '+mails.map(function(m){return bpEsc(m.email||m.provider);}).join(' and ')+'</b>'
+      +'<span class="bpx-mut">Checked every 5 minutes'+(mails[0].last_checked?' \u00b7 last '+bpEsc(rdAgo(Date.parse(mails[0].last_checked))):'')+'</span></div>'
+      +'<button class="bpx-rowbtn" onclick="bpMailConnGo()">Manage in Email</button></div>'
+    :'<div class="ls-bar ls-bar-go"><div><b>Connect the email your leads go to</b><span class="bpx-mut">Press Connect and allow access. We find Angi, Thumbtack, HomeAdvisor and the rest in your inbox, and every new lead lands here.</span></div>'
+      +'<button class="bpx-btn" style="width:auto;padding:11px 22px" onclick="lsConnectPick()"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">mail</span>Connect email</button></div>';
+  bar+=(_lsMailNote?'<div class="ls-note" style="margin-bottom:12px">'+bpEsc(_lsMailNote)+'</div>':'');
   area.innerHTML=tiles+chart+bar+cards+recent;
 }
 
@@ -35144,20 +35160,32 @@ function lsInboxPanel(){
     +'<button class="bpx-linkbtn" onclick="lsAddOpen()">Add another source (your website form, a local seller)</button></div>'
     +'</div>';
 }
+/* The connection screen is drawn on the Email page now; these send the
+   refresh to whichever page is showing it. */
+function lsRefresh(){ if(window._lsCtx==='email') bpMailConnView(); else bpLeadSources(); }
+function lsRedraw(){ if(window._lsCtx==='email') bpMailConnDraw(); else lsRender(); }
+window.lsConnectPick=function(){
+  var L=function(p,label,mark){ return '<a class="ls-pv-btn '+p+'" style="margin-top:10px" href="'+location.pathname+'?mailstart='+p+'" target="_blank" onclick="lsMailPending();bpCloseModal()">'+mark+'<span>'+label+'</span></a>'; };
+  bpModal('<h3>Connect your email</h3><div class="bpx-sub">Pick the one your lead emails arrive in. It opens in a new tab: sign in, press Allow, and you\u2019re done.</div>'
+    +'<div>'+L('gmail','Continue with Google','<img src="assets/brand/google-g.png" alt="">')
+    +L('outlook','Continue with Microsoft','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3" fill="#0a64d8"/><path d="M3.5 6.5 12 12.5l8.5-6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>')+'</div>'
+    +'<div class="bpx-mut" style="font-size:12px;margin-top:12px">Only emails from your lead platforms are filed as leads.</div>'
+    +'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button></div>');
+};
 window.lsDiscover=function(){
-  _lsMailNote='Looking through your inbox for lead platforms\u2026'; lsRender();
+  _lsMailNote='Looking through your inbox for lead platforms\u2026'; lsRedraw();
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'discover'}).then(function(r){
     var f=(r&&r.found)||[];
     _lsMailNote=f.length?'Found '+f.map(lsVendorName).join(' and ')+'. Their leads arrive here automatically.':'No Angi, Thumbtack or HomeAdvisor emails in the last four months.';
-    bpLeadSources();
-  }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRender(); });
+    lsRefresh();
+  }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRedraw(); });
 };
 /* The sign-in opens as an ordinary link in a new tab (browsers never block
    those, unlike window.open after a server call). That tab starts the
    Google/Microsoft sign-in itself; see the ?mailstart= handler. */
 window.lsMailPending=function(){
   try{ localStorage.setItem('bp-mail-pending',String(Date.now())); }catch(e){}
-  _lsMailNote='Finish in the new tab. This page updates when you\u2019re done.'; setTimeout(lsRender,50);
+  _lsMailNote='Finish in the new tab. This page updates when you\u2019re done.'; setTimeout(lsRedraw,50);
 };
 (function(){
   var m=location.search.match(/[?&]mailstart=(gmail|outlook)/); if(!m)return;
@@ -35189,7 +35217,7 @@ window.lsMailConnect=function(p){
 };
 window.lsMailOff=function(p){
   if(!confirm('Disconnect '+(p==='gmail'?'Gmail':'Outlook')+'? Lead emails will stop arriving from it. Nothing in your mailbox changes.'))return;
-  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'disconnect',provider:p}).then(function(){ _lsMailNote='Disconnected.'; bpLeadSources(); });
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'disconnect',provider:p}).then(function(){ _lsMailNote='Disconnected.'; lsRefresh(); });
 };
 window.lsOutlook=function(){ return lsMailConnect('outlook');
 };
@@ -35200,11 +35228,11 @@ window._lsOutlookOld=function(){
   }).catch(function(){ alert('Could not reach the server. Try again.'); });
 };
 window.lsOutlookCheck=function(quiet){
-  if(!quiet){ _lsMailNote='Checking your inbox…'; lsRender(); }
+  if(!quiet){ _lsMailNote='Checking your inbox…'; lsRedraw(); }
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'check'}).then(function(r){
     _lsMailNote=r&&r.ok?(r.found?r.found+' lead email'+(r.found===1?'':'s')+' found and filed.':'Checked. No new lead emails.'):'The check did not complete. '+((r&&r.error)||'');
-    bpLeadSources();
-  }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRender(); });
+    lsRefresh();
+  }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRedraw(); });
 };
 window.lsOutlookOff=function(){
   if(!confirm('Disconnect Outlook? Lead emails will stop arriving from it. Nothing in your mailbox changes.'))return;
@@ -36408,7 +36436,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928n">
+<link rel="stylesheet" href="portal/dash.css?v=20260928o">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
