@@ -495,3 +495,7 @@
 #bpx .ls-card .ls-url code{white-space:normal;word-break:break-all;text-overflow:clip}
 #bpx .bpx-stat>span{display:block;font-size:12px;font-weight:600;text-transform:uppercase;color:var(--grey);margin-bottom:6px}
 #bpx .bpx-stat>b{display:block;font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--ink)}
+#bpx .ls-ib-foot{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--line-2)}
+#bpx .ls-ib-foot .bpx-rowbtn{margin:0}
+#bpx .ls-adv{margin-top:12px;border-top:1px solid var(--line-2);padding-top:8px}
+#bpx .ls-adv summary{cursor:pointer;font-size:12px;font-weight:600;text-transform:uppercase;color:var(--grey)}
