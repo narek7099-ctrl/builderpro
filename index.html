@@ -28027,10 +28027,12 @@ var _bpContacts=[];
       +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='week'?' on':'')+'" onclick="bpCalView(\'week\')"><span class=ms>view_week</span> Week</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
       +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
+        +((all||jobs)?'<button class="bpx-btn ghost cal-today" onclick="bpCrewBookOpen()"><span class=ms>groups</span> Schedule a crew</button>':'')
         +(all?'<button class="bpx-btn ghost cal-today" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>roofing</span> Book inspection</button><button class="bpx-btn" onclick="bpNoteOpen()"><span class=ms>add</span> Add note or to-do</button>'
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
       +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">'+(_bpCalView==='week'?'Drag a box to move it · click an empty slot to write a note or a to-do':'Tap any day to see it or add to it')+'</span></div>':'')
+      +((all||jobs)?bpCalCrewBar():'')
       +'<div class="cal-layout">'
       +(_bpCalView==='day'
         ? '<div class="bpx-panel cal-panel"><div id="bpx-dayview" class="cd-wrap"></div></div>'
@@ -28062,10 +28064,21 @@ var _bpContacts=[];
   function bpMins(hhmm){ var p=String(hhmm||'').split(':'); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); }
   function bpClock(m){ var h=Math.floor(m/60),mm=m%60,ap=h>=12?'PM':'AM',h12=h%12||12; return h12+(mm?':'+('0'+mm).slice(-2):'')+' '+ap; }
   window.bpCalView=function(v){ _bpCalView=v; bpRenderCalendar(); };
+  window.bpCalRefresh=function(){ bpRenderCalendar(); };
+  /* crews on the calendar: show one crew's days, or everyone's */
+  var _bpCalCrew='';
+  window.bpCalCrew=function(id){ _bpCalCrew=id; bpRenderCalendar(); };
+  function bpCalCrewBar(){
+    var cs=window.pjCrews?pjCrews():[]; if(!cs.length) return '';
+    var b=function(id,label,col){ return '<button class="cal-crewb'+(_bpCalCrew===id?' on':'')+'" onclick="bpCalCrew(\''+id+'\')">'+(col?'<i style="background:'+col+'"></i>':'')+bpEsc(label)+'</button>'; };
+    return '<div class="cal-crews"><span class="bpx-mut">Crews</span>'+b('','All')+cs.map(function(c){ return b(c.id,c.name,c.color); }).join('')+b('none','No crew','#94a3b8')+'</div>';
+  }
+  window.bpCalCrewBar=bpCalCrewBar;
   window.bpDayPick=function(iso){ _bpDaySel=iso; _bpCalDate=new Date(iso+'T12:00:00'); bpDrawDay(); };
   window.bpDayMove=function(n){ var d=new Date(_bpDaySel+'T12:00:00'); d.setDate(d.getDate()+n); bpDayPick(bpIso(d)); };
   window.bpDayToday=function(){ bpDayPick(bpIso(new Date())); };
 
+  function bpCrewCss(x){ return x.color?';border-left:4px solid '+x.color+';background:'+x.color+'22':''; }
   /* everything on the selected day, as {from,to,kind,title,sub,go} in minutes */
   function bpDayItems(iso){
     var out=[], y=+iso.slice(0,4), mo=+iso.slice(5,7)-1, dd=+iso.slice(8,10);
@@ -28084,7 +28097,8 @@ var _bpContacts=[];
       var t=(sl&&sl.t)||j.sched.time||'', from=t?bpMins(t):null;
       var to=t?(sl?from+(+sl.dur||120):bpMins(j.sched.end||bpProjEndFromDur(t,j.sched.dur))):null;
       var cr=window.pjCrew?pjCrew(j.crew):null;
-      out.push({from:from,to:to,kind:'crew',allDay:!t,title:j.name||'Project',sub:(j.title||'Project')+' · '+(cr?cr.name:'crew')+' on site',act:"bpProjOpen('"+j.id+"')",ref:'crew:'+j.id});
+      if(_bpCalCrew&&(_bpCalCrew==='none'?cr:(!cr||cr.id!==_bpCalCrew))) return;
+      out.push({from:from,to:to,kind:'crew',allDay:!t,color:cr?cr.color:'',title:j.name||'Project',sub:(j.title||'Project')+' · '+(cr?cr.name:'no crew'),act:"bpPjSlotOpen('"+j.id+"','"+iso+"')",ref:'crew:'+j.id});
     });
     (typeof bpNotesFor==='function'?bpNotesFor(iso):[]).forEach(function(n){
       var from=n.at?bpMins(n.at):null;
@@ -28152,7 +28166,7 @@ var _bpContacts=[];
     var blocks=timed.map(function(x){
       var top=TOP+(x.from-open)/60*PX, h=Math.max(38,(x.to-x.from)/60*PX-3);   /* a half-hour block still has to fit both its lines */
       var w=100/x.lanes, left=(x.col||0)*w;
-      return '<div class="cd-ev '+x.kind+(x.done?' done':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 2px);width:calc('+w+'% - 6px)" onclick="'+x.act+'">'
+      return '<div class="cd-ev '+x.kind+(x.done?' done':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 2px);width:calc('+w+'% - 6px)'+bpCrewCss(x)+'" onclick="'+x.act+'">'
         +'<b>'+bpEsc(x.title)+'</b><span>'+bpClock(x.from)+' – '+bpClock(x.to)+(x.sub?' · '+bpEsc(x.sub):'')+'</span></div>';
     }).join('');
 
@@ -28166,12 +28180,13 @@ var _bpContacts=[];
       +'</div>'
       +'<div class="cd-strip">'+strip+'</div>'
       +(allDay.length?'<div class="cd-allday">'+allDay.map(function(x){
-          return '<div class="cd-ev '+x.kind+(x.done?' done':'')+' flat" onclick="'+x.act+'"><b>'+bpEsc(x.title)+'</b><span>'+bpEsc(x.sub)+'</span></div>';
+          return '<div class="cd-ev '+x.kind+(x.done?' done':'')+' flat" style="'+bpCrewCss(x)+'" onclick="'+x.act+'"><b>'+bpEsc(x.title)+'</b><span>'+bpEsc(x.sub)+'</span></div>';
         }).join('')+'</div>':'')
       +'<div class="cd-grid" style="height:'+H+'px">'+lines+nowLine+'<div class="cd-lane">'+blocks+'</div>'
         +(timed.length?'':'<div class="cd-free">Nothing on the clock. Tap a day above, or add something to this one.</div>')+'</div>'
       +'<div class="cd-foot"><button class="bpx-rowbtn" onclick="bpDaySheet(\''+iso+'\',true)"><span class=ms>add</span> Add to this day</button>'
-        +'<button class="bpx-rowbtn" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>event</span> Book an inspection</button></div>';
+        +'<button class="bpx-rowbtn" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>event</span> Book an inspection</button>'
+        +'<button class="bpx-rowbtn" onclick="bpCrewBookOpen(\''+iso+'\')"><span class=ms>groups</span> Schedule a crew</button></div>';
   }
 
 /* ==== Week view: the whole week against the clock ==================
@@ -28246,7 +28261,7 @@ var _bpContacts=[];
 
       var untimed=items.filter(function(x){return x.from==null;}); if(untimed.length) anyUntimed=true;
       allday+='<div class="cw-ad'+(isToday?' today':'')+'">'+untimed.map(function(x){
-        return '<div class="cw-ev '+x.kind+(x.done?' done':'')+' flat"'+bpWkAttrs(x,iso)+'><b>'+bpEsc(x.title)+'</b></div>';
+        return '<div class="cw-ev '+x.kind+(x.done?' done':'')+' flat" style="'+bpCrewCss(x)+'"'+bpWkAttrs(x,iso)+'><b>'+bpEsc(x.title)+'</b></div>';
       }).join('')+'</div>';
 
       /* side by side when they overlap, so nothing hides behind anything */
@@ -28266,7 +28281,7 @@ var _bpContacts=[];
         var w=100/x.lanes, left=(x.col||0)*w;
         /* a quarter-hour box has room for a title or a time, never both */
         var line=h<32?'':'<span>'+bpClock(x.from)+(h>=44?' – '+bpClock(x.to):'')+'</span>';
-        return '<div class="cw-ev '+x.kind+(x.done?' done':'')+(h<32?' tiny':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 1px);width:calc('+w+'% - 3px)"'+bpWkAttrs(x,iso)
+        return '<div class="cw-ev '+x.kind+(x.done?' done':'')+(h<32?' tiny':'')+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 1px);width:calc('+w+'% - 3px)'+bpCrewCss(x)+'"'+bpWkAttrs(x,iso)
           +' aria-label="'+bpEsc(x.title+', '+bpClock(x.from))+'"><b>'+bpEsc(x.title)+'</b>'+line+'</div>';
       }).join('');
       var nowL='';
@@ -30184,7 +30199,7 @@ function bpActiveJobs(){
       +(starred.length?bpProjCards(starred,!!(window.bpTeamIsCrew&&bpTeamIsCrew())):'')+'</div>':'')
     +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
-      +'<button class="bpx-jt'+(_bpJobTab==='map'?' on':'')+'" onclick="bpJobTab(\'map\')"><span class="ms" style="font-size:16px;vertical-align:-3px">calendar_view_week</span> Schedule & map</button></div>'
+      +'<button class="bpx-jt'+(_bpJobTab==='map'?' on':'')+'" onclick="bpJobTab(\'map\')"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
 }
@@ -30309,13 +30324,14 @@ window.bpPjSlotOpen=function(jobId,iso){
     +'<button class="bpx-btn ghost" onclick="bpCloseModal();bpProjOpen(\''+j.id+'\')">Open project</button>'
     +'<button class="bpx-btn" onclick="bpPjSlotSave(\''+j.id+'\',\''+iso+'\')">Save</button></div>');
 };
+function pjAfterEdit(){ if(window._bpCurView==='calendar'&&window.bpCalRefresh) bpCalRefresh(); else { if(q('pj-board'))bpPjBoard(); if(q('pj-stops'))bpPjStops(); } }
 window.bpPjSlotSave=function(jobId,iso){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j)return;
   j.sched=j.sched||{}; j.sched.slots=j.sched.slots||{};
   j.sched.slots[iso]={t:(q('pjs-t').value||'08:00'),dur:+q('pjs-d').value||120};
   if(!j.sched.dates) j.sched.dates=[]; if(j.sched.dates.indexOf(iso)<0){ j.sched.dates.push(iso); j.sched.dates.sort(); }
   var c=q('pjs-c'); if(c) j.crew=c.value||undefined;
-  bpJobsSet(jobs); bpCloseModal(); bpPjBoard(); bpPjStops();
+  bpJobsSet(jobs); bpCloseModal(); pjAfterEdit();
 };
 function bpPjWeekBoard(el,seg){
   var days=pjWeekDays(), today=pjIso(new Date()), crews=pjCrews();
@@ -30343,6 +30359,30 @@ function bpPjWeekBoard(el,seg){
         }).join('');
     }).join('')+'</div></div>';
 }
+/* Calendar → Schedule a crew: which job, which crew, which day, what hours */
+window.bpCrewBookOpen=function(iso){
+  iso=iso||pjIso(new Date());
+  var jobs=bpJobsGet().filter(function(j){return j.status==='active';}), crews=pjCrews();
+  if(!jobs.length){ alert('Add an active project first.'); return; }
+  var durs=[[60,'1 hour'],[120,'2 hours'],[180,'3 hours'],[240,'4 hours'],[360,'6 hours'],[480,'8 hours (all day)'],[600,'10 hours']];
+  bpModal('<h3>Schedule a crew</h3><div class="bpx-sub">Books the job on the calendar, on that crew’s day.</div>'
+    +'<label>Job</label><select id="cb-job">'+jobs.map(function(j){return '<option value="'+j.id+'">'+bpEsc((j.name||'Project')+' — '+(j.title||''))+'</option>';}).join('')+'</select>'
+    +(crews.length?'<label>Crew</label><select id="cb-crew">'+crews.map(function(c){return '<option value="'+c.id+'">'+bpEsc(c.name)+'</option>';}).join('')+'<option value="">No crew</option></select>'
+      :'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">No crews yet. Make them under <a style="color:#2f6bff;cursor:pointer" onclick="bpCloseModal();bpNav(\'employees\')">Employees</a>.</div>')
+    +'<label>Day</label><input type="date" id="cb-day" value="'+iso+'">'
+    +'<div style="display:flex;gap:10px"><div style="flex:1"><label>Start</label><input type="time" id="cb-t" value="08:00" step="900"></div>'
+    +'<div style="flex:1"><label>How long</label><select id="cb-d">'+durs.map(function(d){return '<option value="'+d[0]+'"'+(d[0]===480?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select></div></div>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpCrewBookSave()">Schedule</button></div>');
+};
+window.bpCrewBookSave=function(){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===q('cb-job').value;})[0], iso=q('cb-day').value;
+  if(!j||!iso){ q('bpx-mmsg').style.color='#dc2626'; q('bpx-mmsg').textContent='Pick a job and a day.'; return; }
+  j.sched=j.sched||{}; j.sched.dates=(j.sched.dates||[]).filter(function(x){return x!==iso;}).concat([iso]).sort();
+  j.sched.slots=j.sched.slots||{}; j.sched.slots[iso]={t:q('cb-t').value||'08:00',dur:+q('cb-d').value||480};
+  var c=q('cb-crew'); if(c) j.crew=c.value||undefined;
+  bpJobsSet(jobs); bpCloseModal(); pjAfterEdit();
+};
 window.bpPjBookOpen=function(crewId,iso,t){
   var c=pjCrew(crewId), jobs=bpJobsGet().filter(function(j){return j.status==='active';});
   var already=pjOnDay(iso);
@@ -30360,41 +30400,52 @@ window.bpPjBook=function(jobId,crewId,iso,t){
   j.sched=j.sched||{}; j.sched.dates=(j.sched.dates||[]).filter(function(x){return x!==iso;}).concat([iso]).sort();
   if(t){ j.sched.slots=j.sched.slots||{}; j.sched.slots[iso]={t:t,dur:(j.sched.slots[iso]&&j.sched.slots[iso].dur)||120}; }
   if(crewId) j.crew=crewId;
-  bpJobsSet(jobs); bpCloseModal(); bpPjBoard(); bpPjStops(); if(_pjMap) bpPjDraw(bpJobsGet().filter(function(x){return x.status==='active'&&(x.addr||'').trim();}));
+  bpJobsSet(jobs); bpCloseModal(); pjAfterEdit(); if(_pjMap&&q('pjMap')) bpPjDraw(bpJobsGet().filter(function(x){return x.status==='active'&&(x.addr||'').trim();}));
 };
 window.bpPjUnbook=function(jobId,iso){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j||!j.sched||!j.sched.dates)return;
-  j.sched.dates=j.sched.dates.filter(function(x){return x!==iso;}); if(j.sched.slots) delete j.sched.slots[iso]; bpJobsSet(jobs); bpPjBoard(); bpPjStops();
+  j.sched.dates=j.sched.dates.filter(function(x){return x!==iso;}); if(j.sched.slots) delete j.sched.slots[iso]; bpJobsSet(jobs); pjAfterEdit();
 };
 /* Crews: name, colour, who is in it */
-window.bpCrewsOpen=function(){
+/* Crews live on the Employees page (Employees → Crews); the same editor
+   opens as a window from anywhere else. */
+window.bpCrewsHtml=function(inline){
   var crews=pjCrews(), emps=window.bpEmpsActive?bpEmpsActive():[];
-  bpModal('<h3>Crews</h3><div class="bpx-sub">Each crew gets its own row on the schedule, its own colour on the map, and its own route.</div>'
-    +'<div id="pj-crewlist">'+(crews.length?crews.map(function(c,i){
-      return '<div class="pjc"><div class="pjc-top"><input class="pjc-name" value="'+bpEsc(c.name)+'" onchange="bpCrewEdit('+i+',\'name\',this.value)">'
+  return (inline?'<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Crews<span class="lg2" style="margin-left:8px">each crew gets its own colour on the calendar and the map, and its own route</span></div>'
+      +'<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpCrewAdd()">+ Add crew</button></div>'
+    :'<h3>Crews</h3><div class="bpx-sub">Each crew gets its own colour on the calendar and the map, and its own route.</div>')
+    +(crews.length?crews.map(function(c,i){
+      return '<div class="pjc"><div class="pjc-top"><i class="pjc-dot" style="background:'+c.color+'"></i><input class="pjc-name" value="'+bpEsc(c.name)+'" onchange="bpCrewEdit('+i+',\'name\',this.value)">'
         +'<div class="pjc-colors">'+PJ_COLORS.map(function(col){return '<button style="background:'+col+'" class="'+(c.color===col?'on':'')+'" onclick="bpCrewEdit('+i+',\'color\',\''+col+'\')" aria-label="Colour"></button>';}).join('')+'</div>'
         +'<button class="pjc-del" onclick="bpCrewDel('+i+')" aria-label="Delete crew"><span class=ms>delete</span></button></div>'
-        +(emps.length?'<div class="pjc-mem">'+emps.map(function(e){return '<label><input type="checkbox" '+((c.members||[]).indexOf(e.id)>-1?'checked':'')+' onchange="bpCrewMem('+i+',\''+e.id+'\',this.checked)">'+bpEsc(e.name)+'</label>';}).join('')+'</div>'
-          :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Add people under Projects → Employees to put them in crews.</div>')+'</div>';
-    }).join(''):'<div class="bpx-mut" style="margin:6px 0 10px">No crews yet.</div>')+'</div>'
-    +'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" onclick="bpCloseModal();if(window._bpCurView===\'employees\'&&window.bpEmployees)bpEmployees();else bpActiveJobs()">Done</button></div>');
+        +(emps.length?'<div class="pjc-mem">'+emps.map(function(e){ var other=window.bpCrewOfEmp&&bpCrewOfEmp(e.id); return '<label><input type="checkbox" '+((c.members||[]).indexOf(e.id)>-1?'checked':'')+' onchange="bpCrewMem('+i+',\''+e.id+'\',this.checked)">'+bpEsc(e.name)
+            +(other&&other.id!==c.id?'<small style="color:'+other.color+'">'+bpEsc(other.name)+'</small>':'')+'</label>';}).join('')+'</div>'
+          :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Add people on the People tab to put them in crews.</div>')+'</div>';
+    }).join(''):'<div class="bpx-empty2"><b>No crews yet.</b><div class="bpx-mut" style="font-size:13px;margin-top:4px">Make one per team you send out, e.g. “Roof crew A” and “Gutter crew”.</div></div>')
+    +(inline?'':'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" onclick="bpCloseModal();pjAfterEdit()">Done</button></div>');
 };
-window.bpCrewAdd=function(){ var l=pjCrews().slice(); l.push({id:'c'+Date.now().toString(36),name:'Crew '+(l.length+1),color:PJ_COLORS[l.length%PJ_COLORS.length],members:[]}); pjCrewsSave(l); bpCrewsOpen(); };
-window.bpCrewEdit=function(i,k,v){ var l=pjCrews().slice(); if(!l[i])return; l[i]=Object.assign({},l[i]); l[i][k]=k==='name'?(String(v).trim()||l[i].name):v; pjCrewsSave(l); if(k==='color') bpCrewsOpen(); };
+window.bpCrewsOpen=function(){
+  if(window._bpCurView!=='employees'){ bpModal(bpCrewsHtml(false)); return; }
+  if(window.bpCrewTab) bpCrewTab('crews');
+};
+function bpCrewsRefresh(){
+  if(window.bpCrewTabIs&&bpCrewTabIs('crews')) bpCrewTab('crews');
+  else if(q('bpx-modal')) bpModal(bpCrewsHtml(false));
+}
+window.bpCrewAdd=function(){ var l=pjCrews().slice(); l.push({id:'c'+Date.now().toString(36),name:'Crew '+(l.length+1),color:PJ_COLORS[l.length%PJ_COLORS.length],members:[]}); pjCrewsSave(l); bpCrewsRefresh(); };
+window.bpCrewEdit=function(i,k,v){ var l=pjCrews().slice(); if(!l[i])return; l[i]=Object.assign({},l[i]); l[i][k]=k==='name'?(String(v).trim()||l[i].name):v; pjCrewsSave(l); if(k==='color') bpCrewsRefresh(); };
 window.bpCrewMem=function(i,emp,on){ var l=pjCrews().slice(); if(!l[i])return; var m=(l[i].members||[]).filter(function(x){return x!==emp;}); if(on)m.push(emp);
   /* one person, one crew */
   l=l.map(function(c,k){ return k===i?Object.assign({},c,{members:m}):Object.assign({},c,{members:(c.members||[]).filter(function(x){return !on||x!==emp;})}); });
-  pjCrewsSave(l); bpCrewsOpen(); };
-window.bpCrewDel=function(i){ var l=pjCrews().slice(); if(!l[i]||!confirm('Delete '+l[i].name+'? Its jobs stay, just without a crew.'))return; l.splice(i,1); pjCrewsSave(l); bpCrewsOpen(); };
+  pjCrewsSave(l); bpCrewsRefresh(); };
+window.bpCrewDel=function(i){ var l=pjCrews().slice(); if(!l[i]||!confirm('Delete '+l[i].name+'? Its jobs stay, just without a crew.'))return; l.splice(i,1); pjCrewsSave(l); bpCrewsRefresh(); };
 function bpJobMapView(active,done){
   var today=pjIso(new Date()); if(!_pjRoute.date) _pjRoute.date=today;
   var withA=active.filter(function(j){return (j.addr||'').trim();}), noA=active.filter(function(j){return !(j.addr||'').trim();});
   q('bpxViewArea').innerHTML=
     '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
-      +'<button class="bpx-jt on"><span class="ms" style="font-size:16px;vertical-align:-3px">calendar_view_week</span> Schedule & map</button></div>'
-      +'<button class="bpx-addbtn" onclick="bpCrewsOpen()"><span class=ms>groups</span> Crews</button></div>'
-    +'<div id="pj-board"></div>'
+      +'<button class="bpx-jt on"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div></div>'
     +'<div class="pj-mapwrap"><div class="pj-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
     +'<aside class="pj-route"><div class="pj-rh"><b>Plan a route</b><span class="bpx-mut">From '+(pjShop()?bpEsc(pjShop()):'your shop (add your address in Settings → Business)')+'</span></div>'
       +'<label class="pj-lab">Day</label><div class="pj-day"><input type="date" id="pj-date" value="'+_pjRoute.date+'" onchange="bpPjDay(this.value)"><button class="bpx-rowbtn" onclick="bpPjDay(\''+today+'\')">Today</button></div>'
@@ -30405,7 +30456,6 @@ function bpJobMapView(active,done){
       +'<div id="pj-plan"></div></aside></div>'
     +(noA.length?'<div class="pj-noaddr"><span class="ms">location_off</span><div><b>'+noA.length+' project'+(noA.length===1?'':'s')+' without an address</b> won’t show on the map: '
       +noA.slice(0,6).map(function(j){return '<a onclick="bpProjOpen(\''+j.id+'\')">'+bpEsc(j.name||'Project')+'</a>';}).join(', ')+(noA.length>6?'…':'')+'</div></div>':'');
-  bpPjBoard();
   bpPjStops();
   rdEnsureLeaflet(function(){ bpPjDraw(withA); });
   if(window.bpCrewLoad) try{ Promise.resolve(bpCrewLoad()).then(function(){}); }catch(e){}
@@ -36770,13 +36820,13 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928s">
+<link rel="stylesheet" href="portal/dash.css?v=20260928u">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
 <script src="portal/radar-parcels.js?v=20260922a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20260928a"></script>
+<script src="portal/crew.js?v=20260928b"></script>
 <script src="portal/charts.js?v=20260921e"></script>
 <script src="portal/progress.js?v=20260927a"></script>
 <script src="portal/supply.js?v=20260927a"></script>

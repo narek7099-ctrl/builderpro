@@ -129,7 +129,7 @@
       area.innerHTML = '<div class="bpx-panel"><div class="bpx-empty2">Couldn’t load your crew just now.</div></div>'; return;
     }
 
-    var tabs = [['people', 'People'], ['hours', 'Hours'], ['pay', 'Pay period']];
+    var tabs = [['people', 'People'], ['crews', 'Crews'], ['hours', 'Hours'], ['pay', 'Pay period']];
     area.innerHTML = '<div class="bpx-panel">'
       + '<div class="bpx-jobtabs bpx-mtabs">'
       + tabs.map(function (t) {
@@ -140,10 +140,12 @@
   }
 
   window.bpCrewTab = function (t) { S.tab = t; render(); };
+  window.bpCrewTabIs = function (t) { return S.tab === t && !!$('bpCrewPane'); };
 
   function pane() {
     var el = $('bpCrewPane'); if (!el) return;
     if (S.tab === 'people') return people(el);
+    if (S.tab === 'crews') { el.innerHTML = window.bpCrewsHtml ? bpCrewsHtml(true) : ''; return; }
     if (S.tab === 'hours') return hours(el);
     return payPeriod(el);
   }
@@ -153,7 +155,6 @@
     var head = '<div class="bpx-chead" style="margin-bottom:12px">'
       + '<div class="bpx-ptitle" style="margin:0">Your people'
       + '<span class="lg2" style="margin-left:8px">everyone who works on your jobs, on the books or on a 1099</span></div>'
-      + (window.bpCrewsOpen ? '<button class="bpx-btn ghost" style="width:auto;margin:0 8px 0 0;padding:9px 16px;font-size:13px" onclick="bpCrewsOpen()">Crews</button>' : '')
       + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpEmpOpen()">+ Add someone</button></div>';
 
     if (!S.emps.length) {
