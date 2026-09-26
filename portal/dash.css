@@ -743,3 +743,18 @@
 #bpx .pj-plan li>div{flex:1;min-width:0}
 #bpx .pj-leg{font-style:normal;font-size:11.5px;font-weight:600;color:#2f6bff;white-space:nowrap;flex:none;margin-left:auto}
 #bpx .pj-leg:empty{display:none}
+/* Projects: day schedule, hour by hour */
+#bpx .pjb-seg{margin:0}
+#bpx .pjd{display:grid;gap:0 6px;min-width:560px}
+#bpx .pjd-ch{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:4px 6px 8px}
+#bpx .pjd-ch i{width:10px;height:10px;border-radius:50%;flex:none}
+#bpx .pjd-hours{font-size:11px;opacity:.55;text-align:right}
+#bpx .pjd-hours>div{transform:translateY(-7px);padding-right:6px}
+#bpx .pjd-col{position:relative;border-radius:10px;background:rgba(0,0,0,.02);overflow:hidden}
+#bpx .pjd-slot{display:block;width:100%;border:0;border-top:1px solid var(--line,#eceef2);background:transparent;cursor:pointer;padding:0}
+#bpx .pjd-slot:hover{background:rgba(47,107,255,.06)}
+#bpx .pjd-job{position:absolute;border:1px solid var(--line,#e3e6ec);border-left:4px solid #2f6bff;border-radius:8px;padding:4px 7px;cursor:pointer;overflow:hidden;box-sizing:border-box;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#bpx .pjd-job b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pjd-job small{display:block;font-size:11px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pjd-now{position:absolute;left:0;right:0;height:2px;background:#ef4444;z-index:2;pointer-events:none}
+#bpx .pjd-now::before{content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:#ef4444}
