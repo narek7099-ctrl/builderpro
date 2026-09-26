@@ -24,7 +24,11 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const HOOK_SECRET = Deno.env.get("LEAD_EMAIL_SECRET") ?? "";
 
-import { parseEmail, forwardCode, normaliseInbound } from "./email-parse.js";
+/* email-parse.js is plain script (so node tests can load it too): it attaches
+   itself to globalThis rather than exporting. */
+import "./email-parse.js";
+// deno-lint-ignore no-explicit-any
+const { parseEmail, forwardCode, normaliseInbound } = (globalThis as any).emailParse;
 import PostalMime from "npm:postal-mime@2";
 
 const json = (b: unknown, s = 200) =>
