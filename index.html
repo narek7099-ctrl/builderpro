@@ -26578,6 +26578,25 @@ else bpWatchLock();
 window.addEventListener('pageshow',bpSyncLock);
 /* coming back from an ad-account connection lands on the site — open the portal straight away */
 if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
+/* Back from connecting Gmail/Outlook. In the tab we opened for it: hand the
+   result to the tab that asked, and close. Otherwise open the portal on
+   Lead Sources, which reads ?mail= itself. */
+(function(){
+  var m=location.search.match(/[?&]mail=[^&#]*/); if(!m)return;
+  if(window.name==='bp-mail'){
+    try{ localStorage.setItem('bp-mail-done',location.search+'|'+Date.now()); }catch(e){}
+    try{ window.close(); }catch(e){}
+    window.name='';
+  }
+  if(!/[#&]sign=/.test(location.hash||'')) setTimeout(bpOpenPortal,60);
+})();
+window.addEventListener('storage',function(e){
+  if(e.key!=='bp-mail-done'||!e.newValue)return;
+  var qs=e.newValue.split('|')[0];
+  try{ history.replaceState(null,'',location.pathname+qs+'#leadsources'); }catch(x){}
+  if(window.bpNav)bpNav('leadsources'); else if(window.bpLeadSources)bpLeadSources();
+  try{ window.focus(); }catch(x){}
+});
 function bpEnterPortal(email){
   /* whose account is this? decided before the sidebar or any data */
   var go=function(){ bpEnterPortal2(email); if(window.bpTeamStamp)bpTeamStamp(); };
@@ -26592,7 +26611,7 @@ function bpEnterPortal2(email){
   document.getElementById('bpxApp').classList.add('on');
   bpBuildNav();
   bpBuildMobbar();
-  var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return c==='social'?'social':'marketing';}}catch(e){}return null;})();
+  var landed=(function(){try{var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return c==='social'?'social':'marketing';}if(/[?&]mail=/.test(location.search))return 'leadsources';}catch(e){}return null;})();
   bpNav(landed||'dashboard');
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
   bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpNav('dashboard'); });
@@ -34540,6 +34559,37 @@ function bpLeadSources(){
   });
 }
 
+/* What a lead cost: per source (applied to new leads) and per lead. */
+window.lsSetCost=function(id){
+  var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
+  var v=prompt('What does '+(s.label||lsVendorName(s.vendor))+' charge you per lead? (in dollars)',s.cost_per_lead||'');
+  if(v===null)return; v=parseFloat(String(v).replace(/[^0-9.]/g,''))||0;
+  var none=_lsEvents.filter(function(e){return e.source_id===id&&!(+e.cost);});
+  var fill=none.length&&v&&confirm('Also set $'+v+' on the '+none.length+' lead'+(none.length>1?'s':'')+' from this source that have no cost yet?');
+  Promise.resolve(BP_SB.from('lead_sources').update({cost_per_lead:v}).eq('id',id)).then(function(r){
+    if(r&&r.error){alert('Could not save the cost.');return;}
+    s.cost_per_lead=v;
+    if(!fill){lsRender();return;}
+    return Promise.resolve(BP_SB.from('lead_events').update({cost:v}).in('id',none.map(function(e){return e.id;}))).then(function(r2){
+      if(!(r2&&r2.error))none.forEach(function(e){e.cost=v;}); lsRender();
+    });
+  });
+};
+window.lsLeadCost=function(id,el){
+  var v=el.value===''?0:Math.max(0,parseFloat(el.value)||0);
+  Promise.resolve(BP_SB.from('lead_events').update({cost:v}).eq('id',id)).then(function(r){
+    if(r&&r.error){alert('Could not save the cost.');return;}
+    _lsEvents.forEach(function(e){if(e.id===id)e.cost=v;}); lsRender();
+  });
+};
+window.lsLeadDel=function(id){
+  if(!confirm('Delete this lead? It is removed from this list and from your spend. The contact it created stays in Contacts.'))return;
+  Promise.resolve(BP_SB.from('lead_events').delete().eq('id',id)).then(function(r){
+    if(r&&r.error){alert('Could not delete the lead.');return;}
+    _lsEvents=_lsEvents.filter(function(e){return e.id!==id;}); lsRender();
+  });
+};
+
 function lsRender(){
   var area=q('bpxViewArea'); if(!area)return;
   if(_lsErr){ area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">'+bpEsc(_lsErr)+'</div></div>'; return; }
@@ -34629,6 +34679,7 @@ function lsRender(){
           +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'
             +'<button class="bpx-rowbtn" onclick="lsToggle(\''+s.id+'\')">'+(s.active?'Pause':'Resume')+'</button>'
             +'<button class="bpx-rowbtn" onclick="lsTest(\''+s.id+'\')" title="Send a fake lead through it, end to end">Send a test lead</button>'
+            +'<button class="bpx-rowbtn" onclick="lsSetCost(\''+s.id+'\')" title="What this source charges you for each lead">'+(s.cost_per_lead?'Cost '+bpMoneyFmt(s.cost_per_lead)+'/lead':'Set lead cost')+'</button>'
             +bpDelBtn("lsDel('"+s.id+"')",'Disconnect this source')
           +'</div></div>';
       }).join('')+'</div>'
@@ -34641,7 +34692,7 @@ function lsRender(){
     ? '<div class="bpx-panel" style="margin-top:16px"><div class="bpx-chead" style="margin-bottom:10px">'
       +'<div class="bpx-ptitle" style="margin:0">Leads received<span class="lg2" style="margin-left:8px">newest first</span></div>'
       +bpCsvBtn('bpCsvLeadEvents()','Export')+'</div>'
-      +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Job</th><th>Source</th><th>Status</th><th>When</th></tr></thead><tbody>'
+      +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Job</th><th>Source</th><th>Status</th><th>Cost</th><th>When</th><th></th></tr></thead><tbody>'
       +_lsEvents.slice(0,40).map(function(e){
         var s=_lsSources.filter(function(x){return x.id===e.source_id;})[0]||{};
         var badge=e.status==='accepted'?'ok':e.status==='duplicate'?'warn':'bad';
@@ -34649,7 +34700,9 @@ function lsRender(){
           +'<td style="max-width:280px">'+bpEsc((e.job||'').slice(0,90))+'</td>'
           +'<td>'+bpEsc(s.label||lsVendorName(s.vendor||'')||'—')+'</td>'
           +'<td><span class="bpx-badge '+badge+'" title="'+bpEsc(e.reason||'')+'">'+bpEsc(e.status)+'</span></td>'
-          +'<td class="bpx-mut">'+bpEsc(rdAgo(Date.parse(e.received_at)))+'</td></tr>';
+          +'<td><input class="ls-cost" type="number" min="0" step="0.01" inputmode="decimal" placeholder="$0" value="'+(e.cost!=null&&+e.cost?(+e.cost):'')+'" onchange="lsLeadCost(\''+e.id+'\',this)" aria-label="What this lead cost"></td>'
+          +'<td class="bpx-mut">'+bpEsc(rdAgo(Date.parse(e.received_at)))+'</td>'
+          +'<td>'+bpDelBtn("lsLeadDel('"+e.id+"')",'Delete this lead')+'</td></tr>';
       }).join('')+'</tbody></table></div>'
       +'<div class="bpx-mut" style="font-size:11.5px;margin-top:9px">Duplicates and unusable leads are kept, not thrown away — '
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
@@ -34706,8 +34759,15 @@ window.lsDiscover=function(){
   }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRender(); });
 };
 window.lsMailConnect=function(p){
+  /* Google/Microsoft open in their own tab, opened now (inside the click, so
+     no popup blocker) and pointed at the sign-in once we have the URL. When
+     it finishes it tells this tab and closes itself. */
+  var w=null; try{ w=window.open('about:blank','bp-mail'); }catch(e){}
+  if(w){ try{ w.document.write('<p style="font:15px system-ui;padding:40px;color:#555">Opening '+(p==='gmail'?'Google':'Microsoft')+'\u2026</p>'); }catch(e){} }
+  _lsMailNote='Finish in the new tab. This page updates when you\u2019re done.'; lsRender();
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'start',provider:p}).then(function(r){
-    if(r&&r.ok&&r.url){ location.href=r.url; return; }
+    if(r&&r.ok&&r.url){ if(w&&!w.closed)w.location.href=r.url; else location.href=r.url; return; }
+    if(w)try{w.close();}catch(e){}
     if(r&&r.error==='not_configured'){ _lsMailNote=(p==='gmail'?'Gmail':'Outlook')+' connection is almost ready. We\u2019re finishing setup on our side, so try again soon.'; lsRender(); if(window.console)console.warn(r.reason); return; }
     alert((r&&r.reason)||'That connection is not available right now.');
   }).catch(function(){ alert('Could not reach the server. Try again.'); });
