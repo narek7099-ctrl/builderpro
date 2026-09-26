@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
     return Response.redirect(`${PORTAL_URL}?mail=${st.p}-connected&found=${encodeURIComponent(found.join(","))}#leadsources`, 302);
   }
 
-  let b: { op?: string; provider?: string } = {};
+  let b: { op?: string; provider?: string; id?: string; q?: string; page?: string } = {};
   try { b = await req.json(); } catch { /* no body */ }
 
   if (b.op === "poll") {
@@ -343,6 +343,60 @@ Deno.serve(async (req) => {
       } catch { /* next */ }
     }
     return json({ ok: true, found: Array.from(all) });
+  }
+  /* The Email page's "My inbox" tab: the contractor reading their own
+     mailbox inside the portal. Read-only, and on their request only; the
+     5-minute check above still opens nothing but lead senders. */
+  if (b.op === "inbox" || b.op === "message") {
+    const r = await sb(`mail_connections?owner=eq.${who.owner}&status=eq.connected&select=provider,token_enc,email&order=created_at.asc`);
+    const cs = (r.ok ? await r.json() : []) as { provider: Prov; token_enc: string; email: string }[];
+    const c = cs.find((x) => x.provider === b.provider) ?? cs[0];
+    if (!c) return json({ ok: false, error: "not connected" });
+    let t: { access_token?: string } = {};
+    try { t = await tokenCall(c.provider, { grant_type: "refresh_token", refresh_token: await unseal(c.token_enc) }); } catch { /* below */ }
+    if (!t.access_token) return json({ ok: false, error: "sign-in expired" });
+    const H = { Authorization: `Bearer ${t.access_token}` };
+    const q = String(b.q ?? "").slice(0, 200);
+    if (c.provider === "gmail") {
+      if (b.op === "message") {
+        const m = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(String(b.id))}?format=full`, { headers: H });
+        if (!m.ok) return json({ ok: false, error: "not found" });
+        const g = await m.json();
+        const hdr = (n: string) => String(((g.payload?.headers ?? []) as { name: string; value: string }[]).find((h) => h.name.toLowerCase() === n)?.value ?? "");
+        const body = gmailBody(g.payload ?? {});
+        return json({ ok: true, from: hdr("from"), to: hdr("to"), subject: hdr("subject"), date: hdr("date"), html: body.html, text: body.text });
+      }
+      const l = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=30&labelIds=INBOX${q ? "&q=" + encodeURIComponent(q) : ""}${b.page ? "&pageToken=" + encodeURIComponent(b.page) : ""}`, { headers: H });
+      if (!l.ok) return json({ ok: false, error: `Gmail answered ${l.status}` });
+      const ld = await l.json();
+      const items = await Promise.all(((ld.messages ?? []) as { id: string }[]).map(async (it) => {
+        const m = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${it.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`, { headers: H });
+        if (!m.ok) return null;
+        const g = await m.json();
+        const hdr = (n: string) => String(((g.payload?.headers ?? []) as { name: string; value: string }[]).find((h) => h.name.toLowerCase() === n)?.value ?? "");
+        return { id: it.id, from: hdr("from"), subject: hdr("subject"), snippet: String(g.snippet ?? ""), date: Number(g.internalDate) || Date.parse(hdr("date")) || 0,
+          unread: ((g.labelIds ?? []) as string[]).includes("UNREAD") };
+      }));
+      return json({ ok: true, email: c.email, provider: c.provider, next: ld.nextPageToken ?? "", items: items.filter(Boolean) });
+    }
+    if (b.op === "message") {
+      const m = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(String(b.id))}?$select=from,toRecipients,subject,receivedDateTime,body`, { headers: { ...H, Prefer: 'outlook.body-content-type="html"' } });
+      if (!m.ok) return json({ ok: false, error: "not found" });
+      const f = await m.json();
+      const fa = f.from?.emailAddress ?? {};
+      return json({ ok: true, from: fa.name ? `${fa.name} <${fa.address}>` : fa.address ?? "", to: ((f.toRecipients ?? []) as { emailAddress: { address: string } }[]).map((x) => x.emailAddress.address).join(", "),
+        subject: f.subject ?? "", date: f.receivedDateTime ?? "", html: String(f.body?.content ?? ""), text: "" });
+    }
+    const u = b.page ? String(b.page) : `https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$select=id,from,subject,bodyPreview,receivedDateTime,isRead&$top=30`
+      + (q ? `&$search="${q.replace(/"/g, "")}"` : "&$orderby=receivedDateTime desc");
+    if (!u.startsWith("https://graph.microsoft.com/")) return json({ ok: false, error: "bad page" }, 400);
+    const l = await fetch(u, { headers: H });
+    if (!l.ok) return json({ ok: false, error: `Outlook answered ${l.status}` });
+    const ld = await l.json();
+    const items = ((ld.value ?? []) as { id: string; from?: { emailAddress?: { name?: string; address?: string } }; subject?: string; bodyPreview?: string; receivedDateTime?: string; isRead?: boolean }[])
+      .map((m) => ({ id: m.id, from: m.from?.emailAddress?.name ? `${m.from.emailAddress.name} <${m.from.emailAddress.address}>` : m.from?.emailAddress?.address ?? "",
+        subject: m.subject ?? "", snippet: m.bodyPreview ?? "", date: Date.parse(m.receivedDateTime ?? "") || 0, unread: m.isRead === false }));
+    return json({ ok: true, email: c.email, provider: c.provider, next: ld["@odata.nextLink"] ?? "", items });
   }
   if (b.op === "disconnect") {
     await sb(`mail_connections?owner=eq.${who.owner}&provider=eq.${prov}`, { method: "DELETE" });
