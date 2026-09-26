@@ -30383,8 +30383,9 @@ window.bpPjPlan=async function(){
   var enc=function(x){return encodeURIComponent(x);};
   var chunk=stops.slice(0,10), dest=shop?shopAddr:chunk[chunk.length-1].j.addr, way=(shop?chunk:chunk.slice(0,-1)).map(function(p){return p.j.addr;});
   var gurl='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+enc(shop?shopAddr:chunk[0].j.addr)+'&destination='+enc(dest)+(way.length?'&waypoints='+way.map(enc).join('%7C'):'');
-  out.innerHTML='<div class="pj-plan"><div class="pj-sum"><b>'+stops.length+' stop'+(stops.length===1?'':'s')+'</b><span>about '+mi+' mi straight-line'+(shop?', from and back to the shop':'')+'</span></div>'
-    +'<ol>'+(shop?'<li class="shop"><span>S</span>Shop</li>':'')+stops.map(function(p,i){return '<li><span>'+(i+1)+'</span><div><b>'+bpEsc(p.j.name||'Project')+'</b><small>'+bpEsc(p.j.addr)+'</small></div></li>';}).join('')+'</ol>'
+  out.innerHTML='<div class="pj-plan"><div class="pj-sum"><b>'+stops.length+' stop'+(stops.length===1?'':'s')+'</b><span id="pj-total">about '+mi+' mi straight-line'+(shop?', from and back to the shop':'')+'</span></div>'
+    +'<ol>'+(shop?'<li class="shop"><span>S</span>Shop</li>':'')+stops.map(function(p,i){return '<li><span>'+(i+1)+'</span><div><b>'+bpEsc(p.j.name||'Project')+'</b><small>'+bpEsc(p.j.addr)+'</small></div><em class="pj-leg" id="pj-leg-'+i+'"></em></li>';}).join('')
+      +(shop?'<li class="shop"><span>S</span>Back to shop<em class="pj-leg" id="pj-leg-back"></em></li>':'')+'</ol>'
     +'<a class="bpx-btn" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="'+gurl+'" target="_blank" rel="noopener"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">navigation</span>Open in Google Maps</a>'
     +(stops.length>10?'<div class="pj-warn">Google Maps takes 10 stops at a time; the first 10 are in the link.</div>':'')
     +'<button class="bpx-rowbtn" style="margin-top:8px;width:100%" onclick="bpPjCopy()">Copy stop list to text the crew</button></div>';
@@ -30393,12 +30394,34 @@ window.bpPjPlan=async function(){
     if(_pjLayer.route) _pjMap.removeLayer(_pjLayer.route);
     var line=(shop?[[shop.lat,shop.lng]]:[]).concat(stops.map(function(p){return [p.lat,p.lng];})).concat(shop?[[shop.lat,shop.lng]]:[]);
     _pjLayer.route=L.layerGroup().addTo(_pjMap);
-    L.polyline(line,{color:'#2f6bff',weight:3,opacity:.8,dashArray:'6 6'}).addTo(_pjLayer.route);
+    var straight=L.polyline(line,{color:'#2f6bff',weight:3,opacity:.5,dashArray:'6 6'}).addTo(_pjLayer.route);
+    pjRoad(line,shop?stops.length:stops.length-1,!!shop,straight);
     stops.forEach(function(p,i){ L.marker([p.lat,p.lng],{icon:L.divIcon({className:'pj-num',html:'<span>'+(i+1)+'</span>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(_pjLayer.route); });
     if(shop) L.marker([shop.lat,shop.lng],{icon:L.divIcon({className:'pj-num shop',html:'<span>S</span>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(_pjLayer.route);
     _pjMap.fitBounds(line,{padding:[40,40],maxZoom:14});
   }
 };
+/* The drive itself: the route along real roads and the minutes between each
+   stop, from OpenStreetMap's routing service (OSRM). If it can't be reached,
+   the dashed straight line stays and the minutes are left out. */
+function pjRoad(line,n,hasShop,straight){
+  var coords=line.map(function(p){return p[1].toFixed(5)+','+p[0].toFixed(5);}).join(';');
+  fetch('https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson&steps=false')
+    .then(function(r){return r.json();}).then(function(d){
+      var rt=d&&d.routes&&d.routes[0]; if(!rt||!_pjMap||!_pjLayer.route) return;
+      _pjLayer.route.removeLayer(straight);
+      var pts=rt.geometry.coordinates.map(function(c){return [c[1],c[0]];});
+      L.polyline(pts,{color:'#fff',weight:8,opacity:.9}).addTo(_pjLayer.route);
+      L.polyline(pts,{color:'#2f6bff',weight:5,opacity:.95}).addTo(_pjLayer.route);
+      var fmt=function(sec){ var m=Math.max(1,Math.round(sec/60)); return m<60?m+' min':Math.floor(m/60)+' h '+(m%60)+' min'; };
+      (rt.legs||[]).forEach(function(l,i){
+        /* with a shop, leg 0 is shop\u2192stop 1 and the last leg is back to the shop */
+        var id=hasShop?(i<n?'pj-leg-'+i:'pj-leg-back'):'pj-leg-'+(i+1);
+        var el=q(id); if(el) el.textContent=fmt(l.duration)+' \u00b7 '+(Math.round(l.distance/160.934)/10)+' mi';
+      });
+      var tot=q('pj-total'); if(tot) tot.textContent=fmt(rt.duration)+' of driving \u00b7 '+(Math.round(rt.distance/160.934)/10)+' mi'+(hasShop?', from and back to the shop':'');
+    }).catch(function(){});
+}
 window.bpPjCopy=function(){
   var t='Route for '+new Date(_pjRoute.date+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+':\n'
     +_pjRoute.order.map(function(j,i){return (i+1)+'. '+(j.name||'Project')+' — '+j.addr;}).join('\n');
@@ -36659,7 +36682,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928q">
+<link rel="stylesheet" href="portal/dash.css?v=20260928r">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
