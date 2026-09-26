@@ -32954,6 +32954,7 @@ function bpSettings(){
     ['business','Business','storefront','Who you are, and how customers reach you.'],
     ['hours','Hours & replies','schedule','When you\'re open, and what a missed call gets back.'],
     ['owner','Owner','person','Personalises your dashboard, messages and estimates.'],
+    ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
     ['ridge',''+BP_AI_NAME+' AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
@@ -33001,6 +33002,7 @@ function bpSettings(){
         f('set-oname','Owner name',o.name,'Full name')
         +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
         +f('set-oemail','Owner email',o.email,'owner@company.com','email','Saved to your account.'))
+      +sec('phone','<div id="bpx-ph-host"></div>')
       +sec('ridge','<div id="bpx-rg-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
@@ -33019,20 +33021,94 @@ function bpSettings(){
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
         +'</div>'):'')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='appearance')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='appearance'||_bpSetSec==='phone')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   bpSettingsPull();
   if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpAtlasView('bpx-rg-host'); }
+  if(_bpSetSec==='phone') bpPhoneRender();
 }
 var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','ridge','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','phone','ridge','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='appearance');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
+  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='appearance'||t==='phone');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
   if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
+  if(t==='phone') bpPhoneRender();
+};
+/* ===== Business number =====================================================
+   Customers text the number they already know, not the BuilderPro one. This
+   walks the contractor to the right way of bringing that number in:
+   port it (everything moves), text-enable it (landline/VoIP: texts move,
+   calls stay), or forward to the BuilderPro number while one of those is
+   done. The request goes to the BuilderPro team, who do the carrier side. */
+var BP_PH_PATHS={
+  port:{t:'Move your number to BuilderPro',tag:'Recommended',ic:'swap_horiz',
+    who:'Any number, including a cell.',
+    what:'Your number moves to BuilderPro. Customers keep texting and calling the same number, and every text lands in Texts where '+BP_AI_NAME+' can answer. Calls ring through to your cell, or the LeadConnector app.',
+    time:'1 to 3 weeks. Your number keeps working the whole time.',
+    need:['A recent phone bill (the page with your account number and service address)','The account number, and the transfer PIN (cell carriers give this in their app or by calling)','The name on the account and the service address','A signature on the transfer form we send you'],
+    note:'If it is your personal cell, it moves off that phone. You would call and text from the LeadConnector app instead.'},
+  text:{t:'Text-enable your number',tag:'Landline or office phone',ic:'sms',
+    who:'Landlines, office phone systems and toll-free numbers. Not cell phones.',
+    what:'Only texting moves to BuilderPro. Calls stay exactly where they are today, with your current phone company.',
+    time:'Usually a few days.',
+    need:['A recent phone bill showing the number','The name on the account','A signature on the authorization form we send you'],
+    note:'We confirm your number can be text-enabled before anything changes.'},
+  fwd:{t:'Forward to your BuilderPro number',tag:'Quickest',ic:'phone_forwarded',
+    who:'Anyone, today. Good while a move is in progress.',
+    what:'Set your phone to forward calls you do not pick up to your BuilderPro number. A missed caller gets a text within seconds, and the conversation carries on here. Use the BuilderPro number on your website, Google profile and ads from now on.',
+    time:'Minutes.',
+    need:['Your BuilderPro number (we send it to you)','Conditional call forwarding turned on with your phone company (often by dialing *71 or *61 plus the number; your carrier can confirm)'],
+    note:'Texts people send straight to your old number still only reach your phone.'}
+};
+function bpPhoneState(){ var s=bpSettingsGet(); return s.phone||{}; }
+function bpPhoneSave(ph){ var s=bpSettingsGet(); s.phone=Object.assign({},s.phone||{},ph); bpSettingsSet(s); bpSettingsPush(s); }
+window.bpPhoneType=function(t){ bpPhoneSave({type:t,path:t==='cell'?'port':(t==='landline'||t==='voip')?'text':'port'}); bpPhoneRender(); };
+window.bpPhonePath=function(p){ bpPhoneSave({path:p}); bpPhoneRender(); };
+function bpPhoneRender(){
+  var el=q('bpx-ph-host'); if(!el)return;
+  var ph=bpPhoneState(), c=(bpSettingsGet().company)||{};
+  var num=ph.number||c.phone||'';
+  var types=[['cell','A cell phone','smartphone'],['landline','A landline or office phone','call'],['voip','Internet phone (RingCentral, Google Voice, Grasshopper…)','cloud'],['unsure','Not sure','help']];
+  var path=ph.path||'';
+  var status=ph.status==='requested'?'<div class="ph-status"><span class=ms>schedule</span><div><b>Request sent '+(ph.requestedAt?bpEsc(new Date(ph.requestedAt).toLocaleDateString()):'')+'</b><span>Our team will email you the forms within 1 business day. You can change your choice below and send it again.</span></div></div>'
+    :ph.status==='live'?'<div class="ph-status ok"><span class=ms>check_circle</span><div><b>Your number is connected</b><span>Texts to '+bpEsc(num)+' arrive in Texts, and '+bpEsc(BP_AI_NAME)+' answers them.</span></div></div>':'';
+  var step=function(n,title,body){ return '<div class="ph-step"><div class="ph-n">'+n+'</div><div class="ph-sb"><div class="ph-st">'+title+'</div>'+body+'</div></div>'; };
+  el.innerHTML=status
+    +'<div class="ph-why"><span class=ms>info</span><div>BuilderPro gives you a number for '+bpEsc(BP_AI_NAME)+' and texting, but your customers text the number they already have. Bring that number in and you only ever have one.</div></div>'
+    +step(1,'Your business number','<input id="ph-num" class="ph-in" type="tel" placeholder="(555) 555-5555" value="'+bpEsc(num)+'" onchange="bpPhoneSave({number:this.value.trim()})">')
+    +step(2,'What kind of number is it?','<div class="ph-types">'+types.map(function(t){return '<button type="button" class="ph-type'+(ph.type===t[0]?' on':'')+'" onclick="bpPhoneType(\''+t[0]+'\')"><span class=ms>'+t[2]+'</span>'+t[1]+'</button>';}).join('')+'</div>')
+    +(ph.type?step(3,'Pick how to bring it in','<div class="ph-paths">'+['port','text','fwd'].map(function(k){
+        var P=BP_PH_PATHS[k], bad=(k==='text'&&ph.type==='cell');
+        return '<button type="button" class="ph-path'+(path===k?' on':'')+(bad?' off':'')+'" '+(bad?'disabled title="Cell numbers cannot be text-enabled"':'onclick="bpPhonePath(\''+k+'\')"')+'>'
+          +'<div class="ph-ph"><span class=ms>'+P.ic+'</span><b>'+P.t+'</b>'+(k===(ph.type==='landline'||ph.type==='voip'?'text':'port')?'<em>Best fit</em>':'<em class="g">'+P.tag+'</em>')+'</div>'
+          +'<p>'+P.who+'</p><small>'+P.time+'</small></button>';
+      }).join('')+'</div>'):'')
+    +(ph.type&&path?step(4,'What happens, and what we need',(function(P){
+        return '<p class="ph-what">'+P.what+'</p><div class="ph-need"><b>Have these ready</b><ul>'+P.need.map(function(x){return '<li><span class=ms>check</span>'+x+'</li>';}).join('')+'</ul></div>'
+          +(P.note?'<div class="ph-note"><span class=ms>error</span>'+P.note+'</div>':'');
+      })(BP_PH_PATHS[path])):'')
+    +(ph.type&&path?step(5,'Texting registration','<p class="ph-what">US carriers require every business that texts customers to register first (it is called A2P 10DLC). It takes 1 to 2 weeks and without it texts get blocked. We file it for you; we just need:</p>'
+        +'<div class="ph-need"><ul>'+['Your legal business name, exactly as registered','Your EIN (tax ID). Sole proprietors can use their name and address instead','Your business address and website'].map(function(x){return '<li><span class=ms>check</span>'+x+'</li>';}).join('')+'</ul></div>'
+        +'<div class="ph-two"><input id="ph-legal" class="ph-in" placeholder="Legal business name" value="'+bpEsc(ph.legal||'')+'"><input id="ph-ein" class="ph-in" placeholder="EIN (optional for sole proprietors)" value="'+bpEsc(ph.ein||'')+'"></div>'):'')
+    +(ph.type&&path?'<div class="ph-foot"><span class="bpx-mmsg" id="ph-msg"></span><button class="bpx-btn" style="width:auto;padding:12px 22px" onclick="bpPhoneSend()">'+(ph.status==='requested'?'Send updated request':'Send to BuilderPro')+'</button></div>':'');
+}
+window.bpPhoneSend=async function(){
+  var m=q('ph-msg'), num=(q('ph-num')||{}).value||'', legal=((q('ph-legal')||{}).value||'').trim(), ein=((q('ph-ein')||{}).value||'').trim();
+  if(!/\d{7,}/.test(num.replace(/\D/g,'')+'')){ m.style.color='#dc2626'; m.textContent='Enter your business number first.'; return; }
+  var ph=bpPhoneState(), P=BP_PH_PATHS[ph.path], c=(bpSettingsGet().company)||{};
+  var u=await bpSetUser(); if(!u){ m.style.color='#dc2626'; m.textContent='Sign in again, then send.'; return; }
+  m.style.color='var(--blue)'; m.textContent='Sending…';
+  var r=await bpSetSB.from('support_requests').insert({owner:bpOwnerId(u),email:u.email,kind:'phone',
+    subject:'Business number: '+P.t+' — '+(c.name||u.email),
+    body:'Number: '+num+'\nType: '+ph.type+'\nChosen: '+P.t+'\nLegal name: '+(legal||'(not given)')+'\nEIN: '+(ein||'(not given)')+'\nBusiness: '+(c.name||'')+' · '+(c.address||'')+' · '+(c.website||'')});
+  if(r.error){ m.style.color='#dc2626'; m.textContent='Could not send. '+(r.error.message||''); return; }
+  /* the EIN goes to the team in the request only; it is not kept in settings */
+  bpPhoneSave({number:num.trim(),legal:legal,status:'requested',requestedAt:new Date().toISOString()});
+  bpPhoneRender(); var m2=q('ph-msg'); if(m2){ m2.style.color='#15803d'; m2.textContent='Sent. Watch your email for the forms.'; }
 };
 window.bpHrsCopy=function(){
   var from=(q('hrs-mon-from')||{}).value||'08:00', to=(q('hrs-mon-to')||{}).value||'17:00';
@@ -36320,7 +36396,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928l">
+<link rel="stylesheet" href="portal/dash.css?v=20260928m">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
