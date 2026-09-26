@@ -34713,7 +34713,8 @@ function lsRender(){
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
     : '';
 
-  area.innerHTML=head+lsInboxPanel()+tiles+chart+cards+recent;
+  /* the page header already names and explains the page */
+  area.innerHTML=lsInboxPanel()+tiles+chart+cards+recent;
 }
 
 /* ===== Connecting an inbox, and a source's own address =====================
