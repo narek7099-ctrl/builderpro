@@ -37,21 +37,34 @@ revoke all on public.mail_connections from anon, authenticated;
 grant select (id, owner, provider, email, status, error, last_checked, last_found, found_total, created_at)
   on public.mail_connections to authenticated;
 
--- ---------- the five-minute check (optional but recommended) ----------
--- Inboxes are also checked whenever the contractor opens Lead Sources or taps
--- "Check now", so nothing is lost without this; this makes it automatic.
---   1. Database > Extensions: enable pg_cron and pg_net (already on if you
---      set up the social scheduler).
---   2. Edge Functions > mail-connect > Secrets: CRON_SECRET (reuse the same one).
---   3. Put that value in place of CHANGE-ME below and run this block.
+-- ---------- keys, generated here and kept in Vault ----------
+-- The token-encryption key and the scheduler's secret. mail-connect reads them
+-- through mail_vault(), callable by the service role only, so neither has to
+-- be pasted into the function's secrets.
 do $$
 begin
-  perform cron.schedule(
-    'mail-connect-poll', '*/5 * * * *',
-    $c$ select net.http_post(
-          url     := 'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/mail-connect',
-          headers := '{"Content-Type":"application/json","x-cron-secret":"CHANGE-ME"}'::jsonb,
-          body    := '{"op":"poll"}'::jsonb) $c$);
-exception when others then
-  raise notice 'scheduler not installed (%). Enable pg_cron + pg_net and re-run this block.', sqlerrm;
+  if not exists (select 1 from vault.secrets where name = 'mail_token_key') then
+    perform vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'mail_token_key', 'mail-connect: encrypts stored inbox sign-ins');
+  end if;
+  if not exists (select 1 from vault.secrets where name = 'mail_cron_secret') then
+    perform vault.create_secret(encode(extensions.gen_random_bytes(24), 'hex'), 'mail_cron_secret', 'mail-connect: authenticates the 5-minute check');
+  end if;
 end $$;
+
+create or replace function public.mail_vault(p_name text) returns text
+language sql stable security definer set search_path = public, vault as $$
+  select decrypted_secret from vault.decrypted_secrets
+   where name = p_name and p_name in ('mail_token_key', 'mail_cron_secret') limit 1;
+$$;
+revoke all on function public.mail_vault(text) from public, anon, authenticated;
+grant execute on function public.mail_vault(text) to service_role;
+
+-- ---------- every five minutes, the secret read from Vault at run time ----------
+select cron.unschedule('mail-connect-poll') where exists (select 1 from cron.job where jobname = 'mail-connect-poll');
+select cron.schedule('mail-connect-poll', '*/5 * * * *', $c$
+  select net.http_post(
+    url := 'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/mail-connect',
+    headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',
+      (select decrypted_secret from vault.decrypted_secrets where name = 'mail_cron_secret')),
+    body := '{"op":"poll"}'::jsonb)
+$c$);

@@ -52,7 +52,10 @@ const sb = (path: string, init: RequestInit = {}) =>
    shapes. It is the part most likely to be wrong and least likely to say
    so: a field name that does not match just yields a lead with no phone
    number, which looks like a bad lead rather than a bug. */
-import { parseLead } from "./parse.js";
+import "./parse.js";
+// parse.js is plain script (node tests load it too): it attaches to globalThis
+// deno-lint-ignore no-explicit-any
+const { parseLead } = (globalThis as any).leadParse;
 
 type Lead = { name: string; phone: string; phoneKey: string; email: string; address: string; job: string };
 

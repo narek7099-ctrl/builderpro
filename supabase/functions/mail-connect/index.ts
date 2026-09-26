@@ -21,9 +21,8 @@
 // Secrets: MS_CLIENT_ID, MS_CLIENT_SECRET   from the Azure app registration (Outlook)
 //          GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET  a Google OAuth client (Gmail); falls back to
 //                                           GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
-//          MAIL_TOKEN_KEY                   any long random string; encrypts stored tokens
+//          MAIL_TOKEN_KEY, CRON_SECRET      optional: both default to keys kept in Supabase Vault
 //          LEAD_EMAIL_SECRET                the same value lead-email uses
-//          CRON_SECRET                      the same value the social scheduler uses
 //          PORTAL_URL                       where to send people back (default https://builderpro-os.com)
 // Redirect URI to register with both Azure and Google: <SUPABASE_URL>/functions/v1/mail-connect
 // Gmail's read scope is "restricted": until Google verifies the app, only the
@@ -34,7 +33,7 @@ const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const MS_ID = Deno.env.get("MS_CLIENT_ID") ?? "";
 const MS_SECRET = Deno.env.get("MS_CLIENT_SECRET") ?? "";
-const TOKEN_KEY = Deno.env.get("MAIL_TOKEN_KEY") ?? "";
+let TOKEN_KEY = Deno.env.get("MAIL_TOKEN_KEY") ?? "";
 const LEAD_SECRET = Deno.env.get("LEAD_EMAIL_SECRET") ?? "";
 const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
 const PORTAL_URL = Deno.env.get("PORTAL_URL") ?? "https://builderpro-os.com";
@@ -88,8 +87,19 @@ async function readState(s: string): Promise<{ o: string; p: Prov } | null> {
   try { const d = JSON.parse(atob(p)); return Date.now() - d.t < 30 * 60 * 1000 && (d.p === "outlook" || d.p === "gmail") ? { o: d.o, p: d.p } : null; } catch { return null; }
 }
 
+/* Keys kept in Supabase Vault (migration 20260928000000_mail_connections.sql),
+   so nothing has to be pasted into the function's secrets: the token key and
+   the scheduler's secret. Readable only with the service role. */
+async function vault(name: string): Promise<string> {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/mail_vault`, { method: "POST",
+    headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_name: name }) });
+  return r.ok ? String((await r.json()) ?? "") : "";
+}
+async function tokenKey() { if (!TOKEN_KEY) TOKEN_KEY = await vault("mail_token_key"); return TOKEN_KEY; }
+
 /* ---------- the stored token, encrypted at rest ---------- */
 async function aesKey() {
+  await tokenKey();
   const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(TOKEN_KEY));
   return crypto.subtle.importKey("raw", h, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
@@ -250,7 +260,9 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch { /* no body */ }
 
   if (b.op === "poll") {
-    if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) return json({ ok: false, error: "forbidden" }, 403);
+    const given = req.headers.get("x-cron-secret") ?? "";
+    const want = CRON_SECRET || await vault("mail_cron_secret");
+    if (!want || given !== want) return json({ ok: false, error: "forbidden" }, 403);
     const r = await sb("mail_connections?status=eq.connected&select=id,owner,provider,token_enc,last_checked,found_total");
     const conns: Conn[] = r.ok ? await r.json() : [];
     let found = 0;
@@ -264,9 +276,9 @@ Deno.serve(async (req) => {
 
   if (b.op === "start") {
     const c = P[prov];
-    if (!c.id || !c.secret || !TOKEN_KEY) return json({ ok: false, error: "not_configured", reason: prov === "gmail"
-      ? "Gmail connection is not set up on this project yet (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, MAIL_TOKEN_KEY)."
-      : "Outlook connection is not set up on this project yet (MS_CLIENT_ID, MS_CLIENT_SECRET, MAIL_TOKEN_KEY)." });
+    if (!c.id || !c.secret || !(await tokenKey())) return json({ ok: false, error: "not_configured", reason: prov === "gmail"
+      ? "Gmail connection is not set up on this project yet (GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET)."
+      : "Outlook connection is not set up on this project yet (MS_CLIENT_ID, MS_CLIENT_SECRET)." });
     const u = new URL(c.auth);
     u.searchParams.set("client_id", c.id);
     u.searchParams.set("response_type", "code");
