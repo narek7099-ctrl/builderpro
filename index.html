@@ -34668,21 +34668,31 @@ function lsRender(){
    3. The Gmail reader script, for Gmail until Google verifies the app. */
 function lsInboxPanel(){
   var note=_lsMailNote?'<div class="ls-note">'+bpEsc(_lsMailNote)+'</div>':'';
-  var row=function(p,label,icon,blurb){
+  /* two cards, each with the provider's own style of sign-in button */
+  var OL='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3" fill="#0a64d8"/><path d="M3.5 6.5 12 12.5l8.5-6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var GG='<img src="assets/brand/google-g.png" alt="">';
+  var row=function(p,label,blurb){
     var m=(_lsMail||[]).filter(function(x){return x.provider===p;})[0];
-    var ic=icon?'<img src="'+icon+'" alt="">':'<span class="ms ls-ib-ic">mail</span>';
-    if(m&&m.status==='connected') return '<div class="ls-ib-row">'+ic+'<div class="ls-ib-t"><b>'+label+' connected</b><span>'+bpEsc(m.email||'')
-      +' · checked '+(m.last_checked?bpEsc(rdAgo(Date.parse(m.last_checked))):'not yet')+(m.found_total?' · '+m.found_total+' lead email'+(m.found_total===1?'':'s')+' filed':'')+'</span></div>'
-      +'<button class="bpx-rowbtn" onclick="lsOutlookCheck()">Check now</button><button class="bpx-rowbtn" onclick="lsMailOff(\''+p+'\')">Disconnect</button></div>';
-    if(m&&m.status==='error') return '<div class="ls-ib-row">'+ic+'<div class="ls-ib-t"><b>'+label+' needs reconnecting</b><span>'+bpEsc(m.error||'')+'</span></div>'
-      +'<button class="bpx-btn" onclick="lsMailConnect(\''+p+'\')">Reconnect '+label+'</button></div>';
-    return '<div class="ls-ib-row">'+ic+'<div class="ls-ib-t"><b>'+label+'</b><span>'+blurb+'</span></div><button class="bpx-btn" onclick="lsMailConnect(\''+p+'\')">Connect '+label+'</button></div>';
+    var mark=p==='gmail'?GG:OL;
+    var head='<div class="ls-pv-h"><span class="ls-pv-mark">'+mark+'</span><div><b>'+label+'</b>';
+    if(m&&m.status==='connected') return '<div class="ls-pv on">'+head
+        +'<span class="ls-pv-st"><i></i>Connected</span></div></div>'
+      +'<div class="ls-pv-mail">'+bpEsc(m.email||'')+'</div>'
+      +'<div class="ls-pv-meta">Checked '+(m.last_checked?bpEsc(rdAgo(Date.parse(m.last_checked))):'not yet')+(m.found_total?' · '+m.found_total+' lead'+(m.found_total===1?'':'s')+' filed':'')+'</div>'
+      +'<div class="ls-pv-acts"><button class="ls-pv-ghost" onclick="lsOutlookCheck()">Check now</button><button class="ls-pv-ghost ls-pv-off" onclick="lsMailOff(\''+p+'\')">Disconnect</button></div></div>';
+    if(m&&m.status==='error') return '<div class="ls-pv err">'+head+'<span class="ls-pv-st warn"><i></i>Needs reconnecting</span></div></div>'
+      +'<div class="ls-pv-meta">'+bpEsc(m.error||'')+'</div>'
+      +'<button class="ls-pv-btn '+p+'" onclick="lsMailConnect(\''+p+'\')">'+mark+'<span>Reconnect '+label+'</span></button></div>';
+    return '<div class="ls-pv">'+head+'</div></div><div class="ls-pv-meta">'+blurb+'</div>'
+      +'<button class="ls-pv-btn '+p+'" onclick="lsMailConnect(\''+p+'\')">'+mark+'<span>'+(p==='gmail'?'Continue with Google':'Continue with Microsoft')+'</span></button></div>';
   };
   var any=(_lsMail||[]).some(function(m){return m.status==='connected';});
   return '<div class="bpx-panel ls-inbox"><div class="bpx-ptitle">Get leads from your email automatically<span class="lg2">press Allow once, that\u2019s it</span></div>'
     +'<div class="bpx-mut" style="font-size:13px;line-height:1.6;margin:4px 0 6px">Connect the inbox your lead emails already go to. We find which platforms send you leads (Angi, Thumbtack, HomeAdvisor and more) and every new lead lands here within five minutes, and '+bpEsc(BP_AI_NAME)+' replies to the homeowner.</div>'+note
-    +row('gmail','Gmail','assets/brand/google-g.png','Every Angi, Thumbtack or HomeAdvisor lead email is filed here within five minutes. BuilderPro only ever searches for your lead platforms’ emails; nothing else is opened.')
-    +row('outlook','Outlook','','Outlook or Microsoft 365. Lead emails are filed here within five minutes. Only emails from your lead platforms are opened.')
+    +'<div class="ls-pvs">'
+    +row('gmail','Gmail','Gmail or Google Workspace. We only ever search for your lead platforms\u2019 emails; nothing else is opened.')
+    +row('outlook','Outlook','Outlook or Microsoft 365. Only emails from your lead platforms are opened.')
+    +'</div>'
     +'<div class="ls-ib-foot">'+(any?'<button class="bpx-rowbtn" onclick="lsDiscover()">Look for lead platforms again</button>':'')
     +'<button class="bpx-linkbtn" onclick="lsAddOpen()">Add another source (your website form, a local seller)</button></div>'
     +'</div>';
@@ -35922,7 +35932,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928b">
+<link rel="stylesheet" href="portal/dash.css?v=20260928c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
