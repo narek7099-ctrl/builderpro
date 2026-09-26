@@ -34740,9 +34740,9 @@ function lsInboxPanel(){
       +'<div class="ls-pv-acts"><button class="ls-pv-ghost" onclick="lsOutlookCheck()">Check now</button><button class="ls-pv-ghost ls-pv-off" onclick="lsMailOff(\''+p+'\')">Disconnect</button></div></div>';
     if(m&&m.status==='error') return '<div class="ls-pv err">'+head+'<span class="ls-pv-st warn"><i></i>Needs reconnecting</span></div></div>'
       +'<div class="ls-pv-meta">'+bpEsc(m.error||'')+'</div>'
-      +'<button class="ls-pv-btn '+p+'" onclick="lsMailConnect(\''+p+'\')">'+mark+'<span>Reconnect '+label+'</span></button></div>';
+      +'<a class="ls-pv-btn '+p+'" href="'+location.pathname+'?mailstart='+p+'" target="_blank" onclick="lsMailPending()">'+mark+'<span>Reconnect '+label+'</span></a></div>';
     return '<div class="ls-pv">'+head+'</div></div><div class="ls-pv-meta">'+blurb+'</div>'
-      +'<button class="ls-pv-btn '+p+'" onclick="lsMailConnect(\''+p+'\')">'+mark+'<span>'+(p==='gmail'?'Continue with Google':'Continue with Microsoft')+'</span></button></div>';
+      +'<a class="ls-pv-btn '+p+'" href="'+location.pathname+'?mailstart='+p+'" target="_blank" onclick="lsMailPending()">'+mark+'<span>'+(p==='gmail'?'Continue with Google':'Continue with Microsoft')+'</span></a></div>';
   };
   var any=(_lsMail||[]).some(function(m){return m.status==='connected';});
   return '<div class="bpx-panel ls-inbox"><div class="bpx-ptitle">Get leads from your email automatically<span class="lg2">press Allow once, that\u2019s it</span></div>'
@@ -34763,6 +34763,26 @@ window.lsDiscover=function(){
     bpLeadSources();
   }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRender(); });
 };
+/* The sign-in opens as an ordinary link in a new tab (browsers never block
+   those, unlike window.open after a server call). That tab starts the
+   Google/Microsoft sign-in itself; see the ?mailstart= handler. */
+window.lsMailPending=function(){
+  try{ localStorage.setItem('bp-mail-pending',String(Date.now())); }catch(e){}
+  _lsMailNote='Finish in the new tab. This page updates when you\u2019re done.'; setTimeout(lsRender,50);
+};
+(function(){
+  var m=location.search.match(/[?&]mailstart=(gmail|outlook)/); if(!m)return;
+  var p=m[1], who=p==='gmail'?'Google':'Microsoft';
+  var cover=document.createElement('div');
+  cover.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;font:16px system-ui;color:#444;padding:24px;text-align:center';
+  cover.textContent='Opening '+who+'\u2026';
+  (document.body||document.documentElement).appendChild(cover);
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'start',provider:p}).then(function(r){
+    if(r&&r.ok&&r.url){ location.replace(r.url); return; }
+    cover.textContent=r&&r.error==='not_configured'?(p==='gmail'?'Gmail':'Outlook')+' connection is almost ready. Close this tab and try again soon.'
+      :r&&/sign in/.test(r.error||'')?'Sign in to BuilderPro first, then press Continue with '+who+' again.':'That connection is not available right now. Close this tab and try again.';
+  }).catch(function(){ cover.textContent='Could not reach the server. Close this tab and try again.'; });
+})();
 window.lsMailConnect=function(p){
   /* Google/Microsoft open in their own tab, opened now (inside the click, so
      no popup blocker) and pointed at the sign-in once we have the URL. When
@@ -35999,7 +36019,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928c">
+<link rel="stylesheet" href="portal/dash.css?v=20260928d">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
