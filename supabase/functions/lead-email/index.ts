@@ -25,6 +25,7 @@ const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const HOOK_SECRET = Deno.env.get("LEAD_EMAIL_SECRET") ?? "";
 
 import { parseEmail, forwardCode, normaliseInbound } from "./email-parse.js";
+import PostalMime from "npm:postal-mime@2";
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
@@ -50,6 +51,21 @@ async function readMessage(req: Request): Promise<Msg> {
     f.forEach((v, k) => { if (typeof v === "string") o[k] = v; });
   } else {
     try { o = await req.json(); } catch { o = {}; }
+  }
+  /* The Cloudflare Email Worker (workers/lead-inbox) sends the message whole,
+     as raw MIME, with the envelope recipient beside it. Parsed here, so the
+     worker stays a paste-in script with no build step. */
+  if (typeof o.raw === "string" && o.raw) {
+    try {
+      const m = await PostalMime.parse(o.raw as string);
+      return {
+        to: String(o.envelope_to ?? "") || (m.to || []).map((a: { address?: string }) => a.address ?? "").join(", "),
+        from: m.from?.address ? (m.from.name ? `${m.from.name} <${m.from.address}>` : m.from.address) : String(o.from ?? ""),
+        subject: m.subject ?? "",
+        text: m.text ?? "",
+        html: m.html ?? "",
+      };
+    } catch { /* fall through to the field mapping */ }
   }
   return normaliseInbound(o) as Msg;
 }

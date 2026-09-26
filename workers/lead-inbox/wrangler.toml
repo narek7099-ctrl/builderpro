@@ -1,0 +1,9 @@
+# Only needed to deploy from the command line (`npx wrangler deploy`).
+# Pasting worker.js into the Cloudflare dashboard works just as well.
+name = "lead-inbox"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+LEAD_EMAIL_URL = "https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-email"
+# LEAD_EMAIL_SECRET is a secret: npx wrangler secret put LEAD_EMAIL_SECRET
