@@ -452,12 +452,19 @@
   function ymd(t) { var d = new Date(t); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function at(s) { return new Date(s + 'T12:00:00').getTime(); }
   function anchor() { var a = null; try { a = localStorage.getItem('bpPayAnchor'); } catch (e) {} return a || '2026-01-05'; }
-  /* the fortnight containing day t, as [from, to] */
+  /* how often they pay: weekly, every two weeks, or monthly */
+  function freq() { var f = null; try { f = localStorage.getItem('bpPayFreq'); } catch (e) {} return f === 'weekly' || f === 'monthly' ? f : 'biweekly'; }
+  /* the period containing day t, as [from, to] */
   function periodOf(t) {
-    var n = Math.floor((at(ymd(t)) - at(anchor())) / (14 * DAY));
-    var f = at(anchor()) + n * 14 * DAY;
-    return [ymd(f), ymd(f + 13 * DAY)];
+    if (freq() === 'monthly') { var d = new Date(at(ymd(t))); return [ymd(new Date(d.getFullYear(), d.getMonth(), 1, 12).getTime()), ymd(new Date(d.getFullYear(), d.getMonth() + 1, 0, 12).getTime())]; }
+    var len = freq() === 'weekly' ? 7 : 14;
+    var n = Math.floor((at(ymd(t)) - at(anchor())) / (len * DAY));
+    var f = at(anchor()) + n * len * DAY;
+    return [ymd(f), ymd(f + (len - 1) * DAY)];
   }
+  function periodEnd(from) { return periodOf(at(from))[1]; }
+  function periodBefore(from) { return periodOf(at(from) - DAY)[0]; }
+  function perYear() { return freq() === 'weekly' ? 52 : freq() === 'monthly' ? 12 : 26; }
   function nice(s) { return new Date(at(s)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
   function payKey(empId, from) { return 'pay:' + empId + ':' + from; }
   function finEntry(key) { var f = window.bpFinGet ? bpFinGet() : []; for (var i = 0; i < f.length; i++) if (f[i].payKey === key) return f[i]; return null; }
@@ -479,7 +486,7 @@
       var r = by[k], e = r.e, rt = +e.rate || 0;
       r.gross = e.pay_type === 'hourly' ? r.h * rt + r.ot * rt * 1.5
         : e.pay_type === 'day' ? (r.h / 8) * rt
-        : rt / 26;
+        : rt / perYear();
       r.gross = Math.round(r.gross * 100) / 100;
       r.key = payKey(e.id, from); r.paid = finEntry(r.key);
       return r;
@@ -489,15 +496,15 @@
 
   function payPeriod(el) {
     var cur = periodOf(Date.now());
-    var f = S.payFrom || cur[0], t = ymd(at(f) + 13 * DAY);
+    var f = S.payFrom || cur[0], t = periodEnd(f);
     var list = dueFor(f, t);
     var owed = 0, paid = 0;
     list.forEach(function (r) { if (r.paid) paid += +r.paid.amount || 0; else owed += r.gross; });
 
     /* the last eight fortnights, newest first, each with how much is still unpaid */
     var opts = [];
-    for (var i = 0; i < 8; i++) {
-      var pf = ymd(at(cur[0]) - i * 14 * DAY), pt = ymd(at(pf) + 13 * DAY);
+    for (var i = 0, pf = cur[0]; i < 8; i++, pf = periodBefore(pf)) {
+      var pt = periodEnd(pf);
       var left = dueFor(pf, pt).filter(function (r) { return !r.paid; }).reduce(function (s2, r) { return s2 + r.gross; }, 0);
       opts.push('<option value="' + pf + '"' + (pf === f ? ' selected' : '') + '>' + nice(pf) + ' – ' + nice(pt)
         + (i === 0 ? ' (this period)' : '') + (left > 0 ? ' · ' + money(left) + ' due' : '') + '</option>');
@@ -505,13 +512,16 @@
 
     var head = '<div class="bpx-chead" style="margin-bottom:10px">'
       + '<div class="bpx-ptitle" style="margin:0">Pay period'
-      + '<span class="lg2" style="margin-left:8px">every two weeks, what each person is owed</span></div>'
+      + '<span class="lg2" style="margin-left:8px">' + ({ weekly: 'every week', biweekly: 'every two weeks', monthly: 'every month' })[freq()] + ', what each person is owed</span></div>'
       + (window.bpCsvBtn ? bpCsvBtn('bpCsvPay()', 'Export') : '') + '</div>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">'
       + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">Period</label>'
         + '<select onchange="bpPayPick(this.value)">' + opts.join('') + '</select></div>'
-      + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">Periods start on</label>'
-        + '<input type="date" value="' + anchor() + '" onchange="bpPayAnchor(this.value)"></div></div>';
+      + '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">You pay</label>'
+        + '<select onchange="bpPayFreq(this.value)">' + [['weekly', 'Weekly'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Monthly']].map(function (o) {
+          return '<option value="' + o[0] + '"' + (freq() === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>'
+      + (freq() === 'monthly' ? '' : '<div><label class="st-lab" style="display:block;font-size:12px;font-weight:600">Periods start on</label>'
+        + '<input type="date" value="' + anchor() + '" onchange="bpPayAnchor(this.value)"></div>') + '</div>';
 
     var note = '<div class="bg-warn" style="margin-top:14px"><span class="ms">info</span><span>'
       + '<b>Mark paid once the money has gone out.</b> That books it in Finances as an expense — W-2 wages as Labor / crew, 1099 as Subcontractor. '
@@ -547,7 +557,7 @@
   }
 
   function book(r, from) {
-    var to = ymd(at(from) + 13 * DAY), fin = bpFinGet();
+    var to = periodEnd(from), fin = bpFinGet();
     fin.unshift({ id: 'f' + Date.now() + Math.floor(Math.random() * 1000), kind: 'expense', amount: r.gross,
       category: r.e.kind === '1099' ? 'Subcontractor' : 'Labor / crew',
       note: 'Pay — ' + r.e.name + ', ' + nice(from) + '–' + nice(to), when: Date.now(), payKey: r.key });
@@ -556,7 +566,7 @@
   window.bpPayMark = function (empId, from, on) {
     var key = payKey(empId, from);
     if (on) {
-      var r = dueFor(from, ymd(at(from) + 13 * DAY)).filter(function (x) { return x.e.id === empId; })[0];
+      var r = dueFor(from, periodEnd(from)).filter(function (x) { return x.e.id === empId; })[0];
       if (r && !r.paid) book(r, from);
     } else {
       bpFinSet(bpFinGet().filter(function (x) { return x.payKey !== key; }));
@@ -564,17 +574,18 @@
     pane();
   };
   window.bpPayAll = function (from) {
-    dueFor(from, ymd(at(from) + 13 * DAY)).forEach(function (r) { if (!r.paid && r.gross > 0) book(r, from); });
+    dueFor(from, periodEnd(from)).forEach(function (r) { if (!r.paid && r.gross > 0) book(r, from); });
     pane();
   };
   window.bpPayPick = function (f) { S.payFrom = f; pane(); };
+  window.bpPayFreq = function (v) { try { localStorage.setItem('bpPayFreq', v); } catch (e) {} S.payFrom = null; pane(); };
   window.bpPayAnchor = function (v) {
     if (!v) return; try { localStorage.setItem('bpPayAnchor', v); } catch (e) {}
     S.payFrom = null; pane();
   };
 
   window.bpCsvPay = function () {
-    var f = S.payFrom || periodOf(Date.now())[0], t = ymd(at(f) + 13 * DAY);
+    var f = S.payFrom || periodOf(Date.now())[0], t = periodEnd(f);
     var rows = S.entries.filter(function (x) { return x.worked_on >= f && x.worked_on <= t; });
     var by = {};
     rows.forEach(function (x) {

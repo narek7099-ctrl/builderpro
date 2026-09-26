@@ -3628,16 +3628,27 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
       var host=KIND==="calc"?document.getElementById("est-embed"):document.querySelector(".side");
       if(!host){ if(++tries<40) setTimeout(mount,150); return; }
       var lg=document.getElementById("bp-logo");
-      if(logo){ if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; lg.style.cssText="padding:"+(KIND==="calc"?"18px 20px 0":"0 0 14px")+";display:flex;align-items:center"; host.insertBefore(lg,host.firstChild); } lg.innerHTML='<img src="'+logo.replace(/"/g,"&quot;")+'" alt="" style="max-height:'+(t.logoSize||44)+'px;max-width:220px;object-fit:contain">'; }
-      else if(lg) lg.parentNode.removeChild(lg);
+      var logoImg=logo?'<img src="'+logo.replace(/"/g,"&quot;")+'" alt="" style="display:block;max-height:'+(t.logoSize||44)+'px;max-width:200px;object-fit:contain">':'';
       if(KIND!=="calc"){
+        if(logo){ if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; host.insertBefore(lg,host.firstChild); } lg.style.cssText="padding:0 0 14px;display:flex;align-items:center"; lg.innerHTML=logoImg; }
+        else if(lg) lg.parentNode.removeChild(lg);
         var hv=document.getElementById("bp-hero");
-        if(hero){ if(!hv){ hv=document.createElement("div"); hv.id="bp-hero"; host.insertBefore(hv,host.firstChild); } hv.style.cssText="margin:-28px -26px 18px;height:150px;background:linear-gradient(150deg,rgba(18,35,61,.55),rgba(30,58,99,.35)),url("+JSON.stringify(hero)+") center/cover"; if(document.body.classList.contains("embed")){} }
+        if(hero){ if(!hv){ hv=document.createElement("div"); hv.id="bp-hero"; host.insertBefore(hv,host.firstChild); } hv.style.cssText="margin:-28px -26px 18px;height:150px;background:linear-gradient(150deg,rgba(18,35,61,.55),rgba(30,58,99,.35)),url("+JSON.stringify(hero)+") center/cover"; }
         else if(hv) hv.parentNode.removeChild(hv);
       } else {
+        /* The calculator: the logo sits ON the header photo, in its top-right
+           corner. With no photo it keeps to the top-right of the calculator.
+           A logo with a transparent background is what reads on a photo;
+           the portal says so where the logo is uploaded. */
         var hc=document.getElementById("bp-hero");
-        if(hero){ if(!hc){ hc=document.createElement("div"); hc.id="bp-hero"; host.insertBefore(hc,host.firstChild); } hc.style.cssText="height:160px;background:linear-gradient(150deg,rgba(18,35,61,.55),rgba(30,58,99,.35)),url("+JSON.stringify(hero)+") center/cover"; }
-        else if(hc) hc.parentNode.removeChild(hc);
+        if(hero){ if(!hc){ hc=document.createElement("div"); hc.id="bp-hero"; host.insertBefore(hc,host.firstChild); } hc.style.cssText="position:relative;height:160px;background:linear-gradient(150deg,rgba(18,35,61,.35),rgba(30,58,99,.15)),url("+JSON.stringify(hero)+") center/cover"; }
+        else if(hc){ hc.parentNode.removeChild(hc); hc=null; }
+        if(logo){
+          if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; }
+          if(hc){ if(lg.parentNode!==hc) hc.appendChild(lg); lg.style.cssText="position:absolute;top:14px;right:16px;display:flex;align-items:center;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))"; }
+          else { if(lg.parentNode!==host||host.firstChild!==lg) host.insertBefore(lg,host.firstChild); lg.style.cssText="padding:16px 20px 0;display:flex;justify-content:flex-end;align-items:center"; }
+          lg.innerHTML=logoImg;
+        } else if(lg&&lg.parentNode) lg.parentNode.removeChild(lg);
       }
     })();
   }

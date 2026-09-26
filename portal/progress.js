@@ -46,8 +46,23 @@
     general:   [['Get started', 1], ['Main work', 3], ['Finish up', 1], ['Final walk', 1]],
   };
   P.setFor = function (trade) {
+    /* the contractor's own phases, when they have saved a set */
+    var own = P.mine();
+    if (own) return own.map(function (r) { return { name: r.name, days: r.days }; });
     var key = (window.SP && SP.tradeKey) ? SP.tradeKey(trade) : '';
     return (SETS[key] || SETS.general).map(function (r) { return { name: r[0], days: r[1] }; });
+  };
+  /* saved in settings, so it follows the account rather than one browser */
+  P.mine = function () {
+    var c = ((window.bpSettingsGet && bpSettingsGet().company) || {});
+    return Array.isArray(c.phases) && c.phases.length ? c.phases : null;
+  };
+  P.saveMine = function (rows) {
+    if (!window.bpSettingsGet || !window.bpSettingsSet) return;
+    var st = bpSettingsGet(); st.company = st.company || {};
+    st.company.phases = rows ? rows.map(function (r) { return { name: r.name, days: r.days }; }) : null;
+    bpSettingsSet(st);
+    if (window.bpSettingsPush) try { bpSettingsPush(st); } catch (e) {}
   };
   P.sets = SETS;
 
@@ -88,6 +103,22 @@
     return { start: iso(start), phases: out, startedAt: new Date().toISOString() };
   };
 
+  /* A plan from the contractor's own rows. Each phase ends its number of
+     working days after the one before, unless it carries its own deadline,
+     which then holds and the phases after it run on from there. Rows that
+     came from an existing plan keep their key, done state and slips. */
+  P.buildFrom = function (rows, startIso, old) {
+    var start = startIso ? parse(startIso) : nextWork(today());
+    var cur = new Date(start.getTime() - 86400000), out = [];
+    rows.forEach(function (r, i) {
+      var days = Math.max(1, Math.round(+r.days || 1));
+      cur = r.deadline ? parse(r.deadline) : addWork(cur, days);
+      out.push({ key: r.key || ('p' + i + Math.random().toString(36).slice(2, 6)), name: String(r.name || 'Phase').trim() || 'Phase',
+        days: days, due: iso(cur), fixed: !!r.deadline, doneAt: r.doneAt || null, slips: +r.slips || 0 });
+    });
+    return { start: iso(start), phases: out, startedAt: (old && old.startedAt) || new Date().toISOString() };
+  };
+
   P.of = function (job) { return job && job.plan && job.plan.phases && job.plan.phases.length ? job.plan : null; };
 
   /* Progress is weighted by days, not by how many boxes are ticked. */
@@ -125,7 +156,7 @@
     if (i < 0) return null;
     var before = pl.phases[pl.phases.length - 1].due;
     for (var k = i; k < pl.phases.length; k++) {
-      if (pl.phases[k].doneAt) continue;
+      if (pl.phases[k].doneAt || (pl.phases[k].fixed && k !== i)) continue;   /* a fixed deadline holds */
       pl.phases[k].due = iso(addWork(parse(pl.phases[k].due), days));
     }
     pl.phases[i].slips = (+pl.phases[i].slips || 0) + days;
@@ -289,30 +320,72 @@
           + (ph.doneAt ? 'Mark not done' : 'Mark done') + '">' + (ph.doneAt ? '<span class="ms">check</span>' : '') + '</button>'
           + '<div class="bpp-ph-t"><b>' + esc(ph.name) + '</b>'
           + '<span>' + (ph.doneAt ? 'done ' + P.pretty(P.iso(new Date(ph.doneAt))) : 'due ' + P.pretty(ph.due))
-          + ' · ' + ph.days + (ph.days === 1 ? ' day' : ' days')
+          + ' · ' + ph.days + (ph.days === 1 ? ' day' : ' days') + (ph.fixed ? ' · fixed deadline' : '')
           + (ph.slips ? ' · slipped ' + ph.slips : '') + '</span></div>'
           + (ph.doneAt || !late ? '' : '<button class="bpx-rowbtn" onclick="bpPlanNo(\'' + jid + '\',\'' + ph.key + '\')">Not yet</button>')
           + '</div>';
       }).join('') + '</div>'
-      + '<div class="bpp-foot"><button class="bpx-linkbtn" onclick="bpPlanStart(\'' + jid + '\')">Start the plan over</button>'
+      + '<div class="bpp-foot"><button class="bpx-rowbtn" onclick="bpPlanStart(\'' + jid + '\')">Edit phases and deadlines</button>'
       + (pr.slipped ? '<span class="bpx-mut">' + pr.slipped + (pr.slipped === 1 ? ' day' : ' days') + ' slipped so far</span>' : '')
       + '</div></div>';
   };
 
+  /* ---------- the phase editor ----------
+     Every contractor runs a job their own way, so the phases are theirs:
+     rename, re-time, add, remove, reorder, and pin a phase to a deadline.
+     The set can be saved as their default for every new job. */
+  var ED = { jid: '', rows: [], start: '' };
+  function edRows() {
+    return ED.rows.map(function (r, i) {
+      return '<div class="bpp-er">'
+        + '<span class="bpp-er-n">' + (i + 1) + '</span>'
+        + '<input class="bpp-er-name" value="' + esc(r.name) + '" placeholder="Phase name" oninput="bpPlanEd(' + i + ',\'name\',this.value)">'
+        + '<label class="bpp-er-d"><input type="number" min="1" max="90" value="' + esc(String(r.days)) + '" oninput="bpPlanEd(' + i + ',\'days\',this.value)"><span>days</span></label>'
+        + '<label class="bpp-er-dl" title="Optional: the date this phase must be done by"><span>Due by</span><input type="date" value="' + esc(r.deadline || '') + '" onchange="bpPlanEd(' + i + ',\'deadline\',this.value)"></label>'
+        + '<span class="bpp-er-mv"><button type="button" onclick="bpPlanEdMove(' + i + ',-1)" aria-label="Move up"' + (i ? '' : ' disabled') + '>↑</button>'
+        + '<button type="button" onclick="bpPlanEdMove(' + i + ',1)" aria-label="Move down"' + (i < ED.rows.length - 1 ? '' : ' disabled') + '>↓</button>'
+        + '<button type="button" onclick="bpPlanEdDel(' + i + ')" aria-label="Remove">×</button></span></div>';
+    }).join('');
+  }
+  function edDraw() { var el = document.getElementById('bpp-ed'); if (el) el.innerHTML = edRows(); }
+  window.bpPlanEd = function (i, k, v) { var r = ED.rows[i]; if (!r) return; r[k] = k === 'days' ? Math.max(1, +v || 1) : v; };
+  window.bpPlanEdMove = function (i, d) { var j = i + d; if (j < 0 || j >= ED.rows.length) return; var t = ED.rows[i]; ED.rows[i] = ED.rows[j]; ED.rows[j] = t; edDraw(); };
+  window.bpPlanEdDel = function (i) { if (ED.rows.length < 2) return; ED.rows.splice(i, 1); edDraw(); };
+  window.bpPlanEdAdd = function () { ED.rows.push({ name: '', days: 1 }); edDraw(); var ins = document.querySelectorAll('.bpp-er-name'); if (ins.length) ins[ins.length - 1].focus(); };
+  window.bpPlanEdReset = function (which) {
+    ED.rows = (which === 'trade' ? (function () { var k = (window.SP && SP.tradeKey) ? SP.tradeKey(((window.bpSettingsGet && bpSettingsGet().company) || {}).trade) : ''; return (P.sets[k] || P.sets.general).map(function (r) { return { name: r[0], days: r[1] }; }); })() : P.setFor(''));
+    edDraw();
+  };
+
   window.bpPlanStart = function (jid) {
     var j = byId(jid); if (!j) return;
-    var start = (j.sched && j.sched.dates && j.sched.dates[0]) || P.iso(P.addWork(new Date(), 1));
-    window.bpModal('<h3>Plan the phases</h3>'
-      + '<div class="bpx-sub">These are the usual stages for your trade with the working days each one takes. Change anything that is not how you work — the dates lay themselves out from the start.</div>'
-      + '<label>First day on site</label><input id="bpp-start" type="date" value="' + esc(start) + '">'
+    var pl = P.of(j);
+    ED.jid = jid;
+    ED.start = (pl && pl.start) || (j.sched && j.sched.dates && j.sched.dates[0]) || P.iso(P.addWork(new Date(), 1));
+    ED.rows = pl
+      ? pl.phases.map(function (ph) { return { key: ph.key, name: ph.name, days: ph.days, deadline: ph.fixed ? ph.due : '', doneAt: ph.doneAt, slips: ph.slips }; })
+      : P.setFor(((window.bpSettingsGet && bpSettingsGet().company) || {}).trade).map(function (r) { return { name: r.name, days: r.days }; });
+    window.bpModal('<h3>' + (pl ? 'Edit the phases' : 'Plan the phases') + '</h3>'
+      + '<div class="bpx-sub">Your phases, your way. Name them, set how many working days each takes, and give any phase a hard deadline. '
+      + 'The dates lay themselves out from the first day on site.' + (P.mine() ? ' These start from your saved phases.' : '') + '</div>'
+      + '<label>First day on site</label><input id="bpp-start" type="date" value="' + esc(ED.start) + '">'
+      + '<label style="margin-top:14px">Phases</label><div id="bpp-ed" class="bpp-ed">' + edRows() + '</div>'
+      + '<div class="bpp-ed-acts"><button type="button" class="bpx-rowbtn" onclick="bpPlanEdAdd()">+ Add a phase</button>'
+      + '<button type="button" class="bpx-linkbtn" onclick="bpPlanEdReset(\'trade\')">Use the standard phases for my trade</button></div>'
+      + '<label class="bpp-ed-save"><input type="checkbox" id="bpp-mine"' + (P.mine() ? '' : ' checked') + '> Save these as my phases for every new job</label>'
       + '<div class="bpx-mmsg" id="bpp-msg"></div>'
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button>'
-      + '<button class="bpx-btn" onclick="bpPlanCreate(\'' + jid + '\')">Lay out the schedule</button></div>');
+      + '<button class="bpx-btn" onclick="bpPlanCreate(\'' + jid + '\')">' + (pl ? 'Save the phases' : 'Lay out the schedule') + '</button></div>');
+    var card = document.querySelector('#bpx-modal .bpx-modalcard'); if (card) card.style.maxWidth = '720px';
   };
   window.bpPlanCreate = function (jid) {
     var j = byId(jid); if (!j) return;
+    var rows = ED.rows.filter(function (r) { return String(r.name || '').trim(); });
+    var msg = document.getElementById('bpp-msg');
+    if (!rows.length) { if (msg) { msg.style.color = '#dc2626'; msg.textContent = 'Add at least one phase with a name.'; } return; }
     var v = (document.getElementById('bpp-start') || {}).value || '';
-    j.plan = P.build(j, v || null);
+    j.plan = P.buildFrom(rows, v || null, j.plan);
+    if ((document.getElementById('bpp-mine') || {}).checked) P.saveMine(rows);
     save(); window.bpCloseModal(); redraw();
   };
   window.bpPlanToggle = function (jid, key) {

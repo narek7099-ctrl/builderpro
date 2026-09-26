@@ -27198,7 +27198,7 @@ function bpCustomizeView(){
     +'<label class="cz-check"><input type="checkbox" data-th="hideBrand"'+(t.hideBrand?' checked':'')+'> Hide the small “'+(isCalc?'BuilderPro':'Scheduling by BuilderPro')+'” line</label>'
     +'</div></details>';
   var images='<details class="cz-sec"><summary><span class="cz-sec-t">Images</span><span class="cz-sec-s">Your logo and a header photo</span><span class=ms>expand_more</span></summary><div class="cz-sec-b">'
-    +img('logo','Logo','Shown at the top. PNG with a transparent background looks best.')
+    +img('logo','Logo','Sits in the top-right corner of your header photo. Use a PNG with a transparent background (no white box) so it sits cleanly on the photo.')+'<div id="cz-logo-chk" class="bpx-mut" style="font-size:12px;margin:-4px 0 10px"></div>'
     +'<div class="cz-field" style="max-width:260px"><label>Logo size</label><div class="cz-range"><input type="range" min="24" max="96" step="2" data-th="logoSize" value="'+(t.logoSize||44)+'"><span id="cz-logo-v">'+(t.logoSize||44)+'px</span></div></div>'
     +img('hero','Header photo','A finished roof, your crew, your truck. Sits '+(isCalc?'above the calculator':'at the top of the side panel')+' under a soft navy tint.')
     +'</div></details>';
@@ -27253,6 +27253,7 @@ function bpCzFill(){
   var rv=q('cz-radius-v'); if(rv) rv.textContent=(t.radius===''||t.radius==null)?'Default':t.radius+'px';
   var lv=q('cz-logo-v'); if(lv) lv.textContent=(t.logoSize||44)+'px';
   ['logo','hero'].forEach(function(k){ var p=q('cz-img-'+k); if(p) p.innerHTML=t[k]?'<img src="'+bpEsc(t[k])+'" alt="">':'<span class=ms>image</span>'; });
+  bpCzLogoCheck(t.logo);
 }
 function bpCzWire(){
   var root=document.querySelector('.cz'); if(!root) return;
@@ -29771,7 +29772,7 @@ function bpCatList(){return ['Materials','Labor / crew','Subcontractor','Ads','F
 function bpCatOpts(sel){return bpCatList().map(function(c){return '<option'+(c===sel?' selected':'')+'>'+c+'</option>';}).join('');}
 function bpJobCell(j){
   var av=(j.photos&&j.photos[0])
-    ? '<img src="'+j.photos[0]+'" style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto">'
+    ? (window.bpPF?bpPF.img(j.photos[0],'style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto"'):'<img src="'+j.photos[0]+'" style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto">')
     : '<img src="'+bpStockImg(j.id,true)+'" alt="" loading="lazy" style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto;opacity:.85">';
   return '<div class="bpx-cnamecell">'+av+'<div><div class="bpx-cname">'+bpEsc(j.name||'Job')+'</div><div class="bpx-js">'+bpEsc(j.title||'Job')+'</div></div></div>';
 }
@@ -29814,7 +29815,7 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td>'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
+      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-rstar'+(j.starred?' on':'')+'" title="'+(j.starred?'Unstar':'Star: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'\u2605':'\u2606')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done <span class=ms>check</span></button></td></tr>';
     }).join(''):'<tr><td colspan="6" style="padding:0"><div class="bpx-emptyhero"><img src="assets/roofing/roof-decking-sm.jpg" alt="" loading="lazy"><div><b>No active projects yet</b><div class="bpx-mut" style="font-size:13px;margin-top:3px">When a deposit is paid the job lands here automatically — or add one with <b>+ Add job</b>.</div></div></div></td></tr>';
   } else {
@@ -29828,14 +29829,25 @@ function bpActiveJobs(){
         +'<td class="bpx-r"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Edit</button></td></tr>';
     }).join(''):'<tr><td colspan="6" class="bpx-empty2">No completed jobs yet.</td></tr>';
   }
+  var starred=active.filter(function(j){return j.starred;}).slice(0,4);
   q('bpxViewArea').innerHTML=
     (_bpJobTab==='active'&&window.bpPlanCheckin?bpPlanCheckin():'')
+    +(_bpJobTab==='active'&&window.bpProjCards?'<div class="dash-projs pj-starred"><div class="dash-sec"><h3>Starred</h3><span class="bpx-mut" style="font-size:12.5px">'
+      +(starred.length?starred.length+' of 4 · tap ☆ on a project to pin it here':'Tap ☆ on up to four projects to keep them here, and first on your dashboard')+'</span></div>'
+      +(starred.length?bpProjCards(starred,!!(window.bpTeamIsCrew&&bpTeamIsCrew())):'')+'</div>':'')
     +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
 }
 window.bpJobTab=function(t){_bpJobTab=t;bpActiveJobs();};
+/* up to four starred projects: pinned on the Projects page and first on the dashboard */
+window.bpProjStar=function(id){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j)return;
+  if(!j.starred&&jobs.filter(function(x){return x.starred&&x.status==='active';}).length>=4){alert('Four projects can be starred at a time. Unstar one first.');return;}
+  j.starred=!j.starred; bpJobsSet(jobs);
+  if(window._bpCurView==='dashboard'&&window.bpDashboard)bpDashboard(); else bpActiveJobs();
+};
 window.bpAddJobOpen=function(){
   bpModal('<h3>Add a job</h3><div class="bpx-sub">For a job that didn’t come through the pipeline.</div>'
     +'<label>Customer name</label><input id="bpx-nj-name" placeholder="Full name">'
@@ -29912,7 +29924,7 @@ window.bpProjOpen=function(id){
   var n=new Date(); _bpProjCal={y:n.getFullYear(),m:n.getMonth()};
   if(_bpProjDates.length){ var f0=new Date(_bpProjDates.slice().sort()[0]+'T12:00:00'); if(!isNaN(f0.getTime())){_bpProjCal={y:f0.getFullYear(),m:f0.getMonth()};} }
   var inp=function(id2,ph,val){return '<input id="'+id2+'" placeholder="'+ph+'" value="'+bpEsc(val||'')+'">';};
-  var tabs=[['details','Details'],['money','Money'],['crew','Crew'],['materials','Materials'],['schedule','Schedule'],['contract','Contract'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length]];
+  var tabs=[['details','Details'],['money','Money'],['crew','Crew'],['materials','Materials'],['schedule','Schedule'],['contract','Contract'],['photos','Photos · '+j.photos.length],['docs','Documents · '+(j.docs||[]).length],['blueprints','Blueprints · '+(j.blueprints||[]).length]];
   /* crew runs the job, not the money: no Money tab, no Contract tab */
   if(window.bpTeamIsCrew&&bpTeamIsCrew())tabs=tabs.filter(function(t){return t[0]!=='money'&&t[0]!=='contract';});
   var pane=function(k,html){return '<div data-pj-pane="'+k+'"'+(k==='details'?'':' hidden')+'>'+html+'</div>';};
@@ -29958,12 +29970,13 @@ window.bpProjOpen=function(id){
         +'<label>End time</label><input type="time" id="bpx-pj-end" style="display:block;width:100%;box-sizing:border-box" value="'+bpEsc(j.sched.end||bpProjEndFromDur(j.sched.time||'09:00',j.sched.dur||'480'))+'">'
         +'<div class="bpx-mut" style="font-size:12px;margin-top:10px">Applies to every booked day.</div></div></div>')
     +pane('photos',
-      '<label style="margin-top:0">Photos ('+j.photos.length+'/12)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
+      '<label style="margin-top:0">Photos ('+j.photos.length+'/24)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:4px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">')
+    +pane('blueprints',window.bpPF?bpPF.bpPane(j):'')
     +pane('contract','<div id="bpx-pj-contract"><div class="bpx-empty2">Loading…</div></div>')
     +pane('docs',
-      '<label style="margin-top:0">Documents ('+(j.docs||[]).length+'/6)</label>'
+      '<label style="margin-top:0">Documents ('+(j.docs||[]).length+'/32)</label>'
       +'<div class="bpx-mut" style="font-size:12px;margin-bottom:6px">Contracts, permits, receipts — as files or scanned straight from the camera.</div>'
       +'<div id="bpx-pj-docs"></div>'
       +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'
@@ -29974,7 +29987,7 @@ window.bpProjOpen=function(id){
       +'<input type="file" id="bpx-pj-scan" accept="image/*" capture="environment" style="display:none" onchange="bpProjDoc(event,true)">')
     +'<div style="display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line-2);padding-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='95vw';mc.style.padding='28px 32px';}
-  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBudgetRender(); bpProjCrewRender(); bpProjBal(); bpProjDocsRender(j); bpCtLoad(j);
+  bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBudgetRender(); bpProjCrewRender(); bpProjBal(); bpProjDocsRender(j); if(window.bpPF)bpPF.bpRender(j); bpCtLoad(j);
   if(window.bpProjMaterials) bpProjMaterials(j.id); else { var mh=document.getElementById('bpx-pj-mat'); if(mh) mh.innerHTML='<div class="bpx-mut" style="font-size:13px">Supply is still loading. Open the Supply branch once and come back.</div>'; }
 };
 window.bpProjTab=function(t){
@@ -29982,6 +29995,8 @@ window.bpProjTab=function(t){
   document.querySelectorAll('[data-pj-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-pj-tab')===t);});
   document.querySelectorAll('[data-pj-pane]').forEach(function(p){p.hidden=p.getAttribute('data-pj-pane')!==t;});
 };
+/* push a document, show it at once, then move it to storage (portal/pfiles.js) */
+function bpDocPush(j,doc){ j.docs.push(doc); if(window.bpPF&&doc.d&&!bpPF.isRef(doc.d)){ var raw=doc.d; bpPF.adopt(j,'docs',raw,doc.n||'document',function(){return doc.d===raw?raw:null;},function(jj,ref){doc.d=ref;}); } }
 function bpProjDocsRender(j){
   var el=document.getElementById('bpx-pj-docs'); if(!el)return;
   el.innerHTML=(j.docs||[]).map(function(d,i){
@@ -29996,6 +30011,7 @@ function bpProjDocsRender(j){
 window.bpProjDocOpen=function(i){
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   var d=(j.docs||[])[i]; if(!d)return;
+  if(window.bpPF&&bpPF.isRef(d.d)){ bpPF.open(d.d,d.t); return; }
   try{
     var parts=d.d.split(','), bin=atob(parts[1]), arr=new Uint8Array(bin.length);
     for(var k=0;k<bin.length;k++)arr[k]=bin.charCodeAt(k);
@@ -30007,7 +30023,7 @@ window.bpProjDocDel=function(i){
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   var d=(j.docs||[])[i]; if(!d)return;
   if(!confirm('Remove "'+(d.n||'this document')+'" from the project?'))return;
-  j.docs.splice(i,1); bpProjDocsRender(j);
+  var gd=j.docs.splice(i,1)[0]; if(window.bpPF&&gd)bpPF.remove(gd.d); bpProjDocsRender(j);
 };
 /* real document scanning: OpenCV + jscanify find the paper, crop it, and flatten
    the perspective — loaded on demand the first time Scan is used */
@@ -30077,11 +30093,11 @@ function bpScanFinishPdf(){
       doc.addImage(p.d,'JPEG',0,0,wmm,hmm);
     });
     off();
-    j.docs.push({n:nm,t:'application/pdf',d:doc.output('datauristring')});
+    bpDocPush(j,{n:nm,t:'application/pdf',d:doc.output('datauristring')});
     bpProjDocsRender(j);
   }).catch(function(){
     off();
-    pages.forEach(function(p,i){ if(j.docs.length<6)j.docs.push({n:nm+' — p'+(i+1),t:'image/jpeg',d:p.d}); });
+    pages.forEach(function(p,i){ if(j.docs.length<32)bpDocPush(j,{n:nm+' — p'+(i+1),t:'image/jpeg',d:p.d}); });
     bpProjDocsRender(j);
   });
 }
@@ -30089,15 +30105,15 @@ window.bpProjDoc=function(e,scan){
   var f=e.target.files&&e.target.files[0]; if(!f)return;
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   j.docs=j.docs||[];
-  if(j.docs.length>=6){alert('Up to 6 documents per project.');return;}
+  if(j.docs.length>=32){alert('Up to 32 documents per project.');return;}
   var isPdf=/pdf/i.test(f.type)||/\.pdf$/i.test(f.name);
-  var finish=function(canvas,nm){ j.docs.push({n:nm,t:'image/jpeg',d:canvas.toDataURL('image/jpeg',0.82)}); bpProjDocsRender(j); };
+  var finish=function(canvas,nm){ bpDocPush(j,{n:nm,t:'image/jpeg',d:canvas.toDataURL('image/jpeg',0.82)}); bpProjDocsRender(j); };
   var scanDate='Scan '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
   var waitOff=function(){ var w=document.getElementById('bpx-scanwait'); if(w)w.remove(); };
   if(isPdf){
-    if(f.size>1500000){alert('PDF is too large — keep it under 1.5 MB (or scan pages instead).');e.target.value='';return;}
+    if(f.size>(BP_LIVE?25000000:1500000)){alert(BP_LIVE?'That PDF is over 25 MB. Split it or scan the pages instead.':'PDF is too large — keep it under 1.5 MB (or scan pages instead).');e.target.value='';return;}
     var r=new FileReader();
-    r.onload=function(){ j.docs.push({n:f.name,t:'application/pdf',d:r.result}); bpProjDocsRender(j); };
+    r.onload=function(){ bpDocPush(j,{n:f.name,t:'application/pdf',d:r.result}); bpProjDocsRender(j); };
     r.readAsDataURL(f);
   }else{
     var r2=new FileReader();
@@ -30406,7 +30422,7 @@ window.bpProjDelete=function(){
 function bpProjPhotosRender(j){
   var el=document.getElementById('bpx-pj-photos'); if(!el)return;
   el.innerHTML=(j.photos||[]).map(function(p,i){
-    return '<div style="position:relative"><img src="'+p+'" style="width:74px;height:74px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">'
+    return '<div style="position:relative;cursor:zoom-in" onclick="if(event.target.tagName===\'IMG\'&&window.bpPF)bpPF.open((bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]||{photos:[]}).photos['+i+'])">'+(window.bpPF?bpPF.img(p,'style="width:74px;height:74px;object-fit:cover;border-radius:9px;border:1px solid var(--line)"'):'<img src="'+p+'" style="width:74px;height:74px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">')
       +'<button onclick="bpProjPhotoDel('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#dc2626;color:#fff;font-size:12px;cursor:pointer;line-height:1">×</button></div>';
   }).join('')||'<span class="bpx-mut" style="font-size:12.5px">No photos yet.</span>';
 }
@@ -30414,16 +30430,17 @@ window.bpProjPhoto=function(e){
   var f=e.target.files&&e.target.files[0]; if(!f)return;
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   j.photos=j.photos||[];
-  if(j.photos.length>=12){alert('Up to 12 photos per project.');return;}
+  if(j.photos.length>=24){alert('Up to 24 photos per project.');return;}
   var r=new FileReader();
   r.onload=function(){
     var img=new Image();
     img.onload=function(){
-      var mx=800,w=img.width,h=img.height;
+      var mx=BP_LIVE?1600:800,w=img.width,h=img.height;
       if(w>mx||h>mx){var k=mx/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k);}
       var cv=document.createElement('canvas');cv.width=w;cv.height=h;
       cv.getContext('2d').drawImage(img,0,0,w,h);
-      j.photos.push(cv.toDataURL('image/jpeg',0.72));
+      var du=cv.toDataURL('image/jpeg',BP_LIVE?0.82:0.72); j.photos.push(du);
+      if(window.bpPF)bpPF.adopt(j,'photos',du,'photo.jpg',function(jj){return jj.photos.indexOf(du)>=0?du:null;},function(jj,ref){var k2=jj.photos.indexOf(du);if(k2>=0)jj.photos[k2]=ref;bpProjPhotosRender(jj);});
       bpProjPhotosRender(j);
     };
     img.src=r.result;
@@ -30433,7 +30450,7 @@ window.bpProjPhoto=function(e){
 };
 window.bpProjPhotoDel=function(i){
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
-  (j.photos||[]).splice(i,1); bpProjPhotosRender(j);
+  var gone=(j.photos||[]).splice(i,1)[0]; if(window.bpPF)bpPF.remove(gone); bpProjPhotosRender(j);
 };
 window.bpProjSave=function(){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
@@ -31493,6 +31510,19 @@ window.bpFinAddOpen=function(kind){
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpFinAddSave(\''+kind+'\')">Add</button></div>');
 };
+/* A logo with a solid background shows as a box on the header photo. Read
+   the four corners: if they are opaque, say so, kindly, once. */
+function bpCzLogoCheck(url){
+  var el=q('cz-logo-chk'); if(!el) return; el.textContent=''; if(!url) return;
+  var im=new Image(); im.crossOrigin='anonymous';
+  im.onload=function(){ try{
+    var c=document.createElement('canvas'),w=c.width=Math.min(200,im.width),h=c.height=Math.max(1,Math.round(im.height*w/im.width)),x=c.getContext('2d'); x.drawImage(im,0,0,w,h);
+    var a=[[1,1],[w-2,1],[1,h-2],[w-2,h-2]].map(function(p){return x.getImageData(p[0],p[1],1,1).data[3];});
+    if(a.every(function(v){return v>240;})){ el.style.color='#b45309'; el.textContent='This logo has a solid background, so it will show as a box on the photo. A transparent PNG looks much better.'; }
+    else { el.style.color='#0f7a3d'; el.textContent='Transparent background: this will sit cleanly on the photo.'; }
+  }catch(e){} };
+  im.src=url;
+}
 window.bpFinRecUi=function(){ var r=(q('bpx-fa-rec')||{}).value; var w=q('bpx-fa-startwrap'), h=q('bpx-fa-rechint'); if(w)w.hidden=!r; if(h)h.hidden=!r; };
 window.bpFinAddSave=function(kind){
   var amt=bpParseMoney((q('bpx-fa-amt')||{}).value);
@@ -32661,7 +32691,11 @@ function bpSettings(){
         +f('set-oemail','Owner email',o.email,'owner@company.com','email','Saved to your account.'))
       +sec('ridge','<div id="bpx-rg-host"></div>')
       +sec('appearance',
-        row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg))
+        row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
+        +row('Dashboard layout','Overview opens on the charts. Command center keeps your numbers and to-dos in a column on the right. Projects first leads with your jobs.',
+          (function(){ var cur='overview'; try{cur=localStorage.getItem('bpDashLayout')||'overview';}catch(e){}
+            return '<div class="bpx-jobtabs" id="bpx-dash-seg">'+[['overview','Overview'],['command','Command center'],['projects','Projects first']].map(function(o2){
+              return '<button type="button" class="bpx-jt'+(cur===o2[0]?' on':'')+'" onclick="try{localStorage.setItem(\'bpDashLayout\',\''+o2[0]+'\')}catch(e){};var p=this.parentNode.children;for(var i=0;i<p.length;i++)p[i].classList.toggle(\'on\',p[i]===this)">'+o2[1]+'</button>'; }).join('')+'</div>'; })()))
       +(SECS.some(function(t){return t[0]==='team';})?sec('team',window.bpTeamPanel?bpTeamPanel():''):'')
       +(SECS.some(function(t){return t[0]==='plan';})?sec('plan',
         '<div class="st-plan">'
@@ -35782,23 +35816,24 @@ window.bpRepCopy=function(text,btn){
 
 </body>
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
-<link rel="stylesheet" href="portal/progress.css?v=20260921a">
+<link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260926a">
+<link rel="stylesheet" href="portal/dash.css?v=20260927a">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
 <script src="portal/radar-parcels.js?v=20260922a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20260925p"></script>
+<script src="portal/crew.js?v=20260927a"></script>
 <script src="portal/charts.js?v=20260921e"></script>
-<script src="portal/progress.js?v=20260921a"></script>
-<script src="portal/supply.js?v=20260925a"></script>
+<script src="portal/progress.js?v=20260927a"></script>
+<script src="portal/supply.js?v=20260927a"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260919c"></script>
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
-<script src="portal/dash.js?v=20260926a"></script>
+<script src="portal/dash.js?v=20260927a"></script>
+<script src="portal/pfiles.js?v=20260927a"></script>
 <script src="site/vendor/lenis.min.js?v=20260921-a"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
 <script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>

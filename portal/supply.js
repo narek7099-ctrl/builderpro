@@ -615,6 +615,21 @@
       .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpSupply(); var f = document.getElementById('sp-pk-q'); if (f) f.focus(); })
       .catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
   };
+  /* A takeoff from a blueprint, one "qty unit item" per line, onto a new
+     list for that project. Each line keeps its words; matching to catalog
+     items and prices happens where it always does, on the list. */
+  SP.pasteList = function (text, jobId) {
+    var j = jobs().filter(function (x) { return x.id === jobId; })[0];
+    var items = String(text || '').split('\n').map(function (l) {
+      var m = l.trim().match(/^([\d.]+)\s+(\S+)\s+(.+)$/); if (!l.trim()) return null;
+      return m ? { key: uid('k'), name: m[3].trim(), qty: +m[1] || 1, unit: m[2], sku: '', cat: catOfName(m[3]) }
+        : { key: uid('k'), name: l.trim(), qty: 1, unit: 'ea', sku: '', cat: catOfName(l) };
+    }).filter(Boolean);
+    return db.insert('parts_lists', { name: 'Takeoff for ' + (j ? j.name : 'a project'), job_id: j ? j.id : '', job_name: j ? j.name : '',
+      priority: SP.priority, status: 'draft', items: items })
+      .then(function (row) { SP.lists.unshift(row); SP.list = row; SP.plans = null; window.bpSupply(); flash(items.length + ' lines from the blueprint are on the list'); })
+      .catch(function (e) { alert('Could not start a list. ' + (e.message || '')); });
+  };
   var saveT = null;
   function saveList() { var L = SP.list; if (!L) return; clearTimeout(saveT); saveT = setTimeout(function () { db.update('parts_lists', L.id, { name: L.name, job_id: L.job_id || '', job_name: L.job_name || '', priority: SP.priority, items: L.items }).catch(function () {}); }, 500); }
   SP.listMeta = function () { var L = SP.list; if (!L) return; L.name = ($('sp-l-name') || {}).value || L.name; var jid = ($('sp-l-job') || {}).value || ''; L.job_id = jid; var j = jobs().filter(function (x) { return x.id === jid; })[0]; L.job_name = j ? j.name : ''; saveList(); };
