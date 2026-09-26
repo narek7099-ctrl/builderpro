@@ -29507,7 +29507,8 @@ function bpMailTabs(){
 function bpMyInboxRender(){
   q('bpxViewArea').innerHTML='<div class="bpx-msgbar"><div class="bpx-msgbar-t">Email</div>'
       +'<div class="bpx-msgbar-btns"><input id="bpx-mi-q" class="bpx-mi-q" placeholder="Search your inbox" value="'+bpEsc(_bpMyInbox.q)+'" onkeydown="if(event.key===\'Enter\')bpMyInboxLoad(this.value)">'
-      +'<button class="bpx-ghostbtn" onclick="bpMyInboxLoad(q(\'bpx-mi-q\').value)"><span class=ms>refresh</span></button></div></div>'
+      +'<button class="bpx-ghostbtn" onclick="bpMyInboxLoad(q(\'bpx-mi-q\').value)"><span class=ms>refresh</span></button>'
+      +'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button></div></div>'
     +bpMailTabs()
     +'<div class="bpx-inbox"><div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading your inbox\u2026</div></div>'
     +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>mail</span></div>Select an email to read it.</div></div></div>';
@@ -29542,11 +29543,55 @@ window.bpMyInboxOpen=function(id){
     if(!r||!r.ok){ th.innerHTML='<div class="bpx-tempty" style="padding:24px">Could not open that email.</div>'; return; }
     var body=r.html||('<pre style="white-space:pre-wrap;font:14px/1.5 system-ui">'+bpEsc(r.text||'')+'</pre>');
     th.innerHTML='<div class="bpx-mi-head"><h3>'+bpEsc(r.subject||'(no subject)')+'</h3>'
-      +'<div class="bpx-mut" style="font-size:12.5px">From '+bpEsc(r.from)+'<br>'+bpEsc(r.date?new Date(r.date).toLocaleString():'')+'</div></div>'
+      +'<div class="bpx-mut" style="font-size:12.5px">From '+bpEsc(r.from)+'<br>'+bpEsc(r.date?new Date(r.date).toLocaleString():'')+'</div>'
+      +'<button class="bpx-addbtn" style="margin-top:10px" id="bpx-mi-reply"><span class=ms>reply</span> Reply</button></div>'
       +'<iframe class="bpx-mi-body" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>';
     /* sandboxed with no scripts: an email is someone else's HTML */
+    var addr=(String(r.from||'').match(/<([^>]+)>/)||[])[1]||String(r.from||'').trim();
+    var nm=String(r.from||'').replace(/\s*<[^>]+>\s*$/,'').replace(/^"|"$/g,'').trim();
+    q('bpx-mi-reply').onclick=function(){ bpMailCompose({to:addr,name:nm&&nm!==addr?nm:'',subject:/^re:/i.test(r.subject||'')?r.subject:'Re: '+(r.subject||'')}); };
     th.querySelector('iframe').srcdoc='<base target="_blank"><style>body{font:14px/1.5 system-ui;margin:16px;color:#222;word-wrap:break-word}img{max-width:100%;height:auto}</style>'+body;
   }).catch(function(){ th.innerHTML='<div class="bpx-tempty" style="padding:24px">Could not reach the server.</div>'; });
+};
+/* Sending goes through GHL (the Customers tab), which is where replies are
+   tracked and where the contact's history lives. Compose / Reply in My
+   inbox switch to that tab and open the email there. */
+window.bpMailCompose=function(o){
+  o=o||{}; _bpMailTab='ghl'; bpRenderInbox();
+  bpModal('<h3>New email</h3><div class="bpx-sub">Sent from your BuilderPro email, and kept in this contact\u2019s history under Customers.</div>'
+    +'<label>To</label><input id="bpx-mc-to" type="email" placeholder="name@example.com" value="'+bpEsc(o.to||'')+'">'
+    +'<label>Name <span class="bpx-mut" style="font-weight:400">(if they are new)</span></label><input id="bpx-mc-name" value="'+bpEsc(o.name||'')+'">'
+    +'<label>Subject</label><input id="bpx-mc-sub" value="'+bpEsc(o.subject||'')+'">'
+    +'<label>Message</label><textarea id="bpx-mc-msg" style="min-height:160px" placeholder="Write your email\u2026"></textarea>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-mc-send" onclick="bpMailComposeSend()">Send email</button></div>');
+  setTimeout(function(){ var f=q(o.to?'bpx-mc-msg':'bpx-mc-to'); if(f)f.focus(); },60);
+};
+window.bpMailComposeSend=async function(){
+  var to=q('bpx-mc-to').value.trim().toLowerCase(), name=q('bpx-mc-name').value.trim(), sub=q('bpx-mc-sub').value.trim(), text=q('bpx-mc-msg').value.trim();
+  var msg=q('bpx-mmsg'), btn=q('bpx-mc-send');
+  var fail=function(t){ msg.style.color='#dc2626'; msg.textContent=t; btn.disabled=false; btn.textContent='Send email'; };
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return fail('Enter a valid email address.');
+  if(!text) return fail('Write a message first.');
+  btn.disabled=true; btn.textContent='Sending\u2026'; msg.textContent='';
+  try{
+    await bpEnsureContacts();
+    var find=function(){ return (_bpContacts||[]).filter(function(c){return String(c.email||'').toLowerCase()===to;})[0]; };
+    var c=find(), cid=c&&c.id;
+    if(!cid){
+      /* not a contact yet: add them, so the email and any reply land in Customers */
+      var cr=await fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
+        body:JSON.stringify({action:'create',name:name||to.split('@')[0],phone:'',email:to})}).then(function(r){return r.json();});
+      cid=(cr&&((cr.contact&&cr.contact.id)||cr.id||(cr.data&&cr.data.contact&&cr.data.contact.id)))||'';
+      if(!cid){ _bpContacts=[]; await bpEnsureContacts(); c=find(); cid=c&&c.id; }
+      if(!cid) return fail('Could not add '+to+' as a contact, so the email was not sent.');
+    }
+    var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
+      body:JSON.stringify({action:'send',msgType:'Email',contactId:cid,message:text,subject:sub||'Message from your BuilderPro team'})}).then(function(r){return r.json();});
+    if(res&&res.ok===false) return fail('Could not send. '+(res.error||''));
+    msg.style.color='#15803d'; msg.textContent='Sent.';
+    setTimeout(function(){ bpCloseModal(); bpRenderInbox(); },700);
+  }catch(e){ fail('Could not send. Please try again.'); }
 };
 function bpRenderInbox(){
   var isMail=_bpMsgView==='email';
