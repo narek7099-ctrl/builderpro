@@ -29781,6 +29781,17 @@ window.bpMailComposeSend=async function(){
     setTimeout(function(){ bpMailComposeClose(); bpRenderInbox(); },700);
   }catch(e){ fail('Could not send. Please try again.'); }
 };
+/* Until the business number is connected and the A2P registration approved,
+   texting from here is on hold: say so where they would look for it. */
+function bpTextsPendingBanner(){
+  var ph=(bpSettingsGet().phone)||{};
+  if(ph.status==='live') return '';
+  var sent=ph.status==='requested'||ph.status==='pending';
+  return '<div class="bpx-a2p"><span class=ms>'+(sent?'hourglass_top':'info')+'</span><div><b>'+(sent?'Pending A2P authorization':'Connect your business number to start texting')+'</b>'
+    +'<span>'+(sent?'Texting turns on once the carriers approve your registration, usually 1 to 2 weeks. Nothing to do on your side.'
+      :'Bring in the number your customers already text, and every text lands here.')+'</span></div>'
+    +(sent?'':'<button class="bpx-rowbtn" onclick="bpNav(\'settings\');setTimeout(function(){bpSetTab(\'phone\')},300)">Set it up</button>')+'</div>';
+}
 function bpRenderInbox(){
   var isMail=_bpMsgView==='email';
   if(isMail&&_bpMailTab==='inbox'){ bpMyInboxRender(); return; }
@@ -29791,6 +29802,7 @@ function bpRenderInbox(){
       +(isMail?'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button>':'')
       +'<button class="bpx-addbtn" onclick="bpBulkOpen('+(isMail?"'Email'":'')+')"><span class=ms>'+(isMail?'mail':'sms')+'</span> Broadcast</button></div></div>'
     +(isMail?bpMailTabs():'')
+    +(!isMail?bpTextsPendingBanner():'')
     +'<div class="bpx-inbox">'
       +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
       +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>'+(isMail?'mail':'chat')+'</span></div>'
@@ -33074,7 +33086,7 @@ function bpPhoneRender(){
   var num=ph.number||c.phone||'';
   var types=[['cell','A cell phone','smartphone'],['landline','A landline or office phone','call'],['voip','Internet phone (RingCentral, Google Voice, Grasshopper…)','cloud'],['unsure','Not sure','help']];
   var path=ph.path||'';
-  var status=ph.status==='requested'?'<div class="ph-status"><span class=ms>schedule</span><div><b>Request sent '+(ph.requestedAt?bpEsc(new Date(ph.requestedAt).toLocaleDateString()):'')+'</b><span>Our team will email you the forms within 1 business day. You can change your choice below and send it again.</span></div></div>'
+  var status=(ph.status==='requested'||ph.status==='pending')?'<div class="ph-status"><span class=ms>hourglass_top</span><div><b>Pending A2P authorization</b><span>Request sent '+(ph.requestedAt?bpEsc(new Date(ph.requestedAt).toLocaleDateString()):'')+'. Texting turns on once the carriers approve your registration, usually 1 to 2 weeks. We email you the forms within 1 business day; you can change your choice below and send it again.</span></div></div>'
     :ph.status==='live'?'<div class="ph-status ok"><span class=ms>check_circle</span><div><b>Your number is connected</b><span>Texts to '+bpEsc(num)+' arrive in Texts, and '+bpEsc(BP_AI_NAME)+' answers them.</span></div></div>':'';
   var step=function(n,title,body){ return '<div class="ph-step"><div class="ph-n">'+n+'</div><div class="ph-sb"><div class="ph-st">'+title+'</div>'+body+'</div></div>'; };
   el.innerHTML=status
@@ -36396,7 +36408,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928m">
+<link rel="stylesheet" href="portal/dash.css?v=20260928n">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
