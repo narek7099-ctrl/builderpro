@@ -26583,10 +26583,15 @@ if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))
    Lead Sources, which reads ?mail= itself. */
 (function(){
   var m=location.search.match(/[?&]mail=[^&#]*/); if(!m)return;
-  if(window.name==='bp-mail'){
+  /* Google and Microsoft wipe the tab's name on the way through, so the tab
+     we opened is recognised by the note the asking tab left instead. close()
+     only works on a tab a script opened, so if this is not that tab it
+     simply stays, showing the portal. */
+  var pend=0; try{ pend=+localStorage.getItem('bp-mail-pending')||0; localStorage.removeItem('bp-mail-pending'); }catch(e){}
+  if(window.name==='bp-mail'||(pend&&Date.now()-pend<30*60*1000)){
     try{ localStorage.setItem('bp-mail-done',location.search+'|'+Date.now()); }catch(e){}
-    try{ window.close(); }catch(e){}
     window.name='';
+    try{ window.close(); }catch(e){}
   }
   if(!/[#&]sign=/.test(location.hash||'')) setTimeout(bpOpenPortal,60);
 })();
@@ -34763,6 +34768,7 @@ window.lsMailConnect=function(p){
      no popup blocker) and pointed at the sign-in once we have the URL. When
      it finishes it tells this tab and closes itself. */
   var w=null; try{ w=window.open('about:blank','bp-mail'); }catch(e){}
+  if(w){ try{ localStorage.setItem('bp-mail-pending',String(Date.now())); }catch(e){} }
   if(w){ try{ w.document.write('<p style="font:15px system-ui;padding:40px;color:#555">Opening '+(p==='gmail'?'Google':'Microsoft')+'\u2026</p>'); }catch(e){} }
   _lsMailNote='Finish in the new tab. This page updates when you\u2019re done.'; lsRender();
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'start',provider:p}).then(function(r){

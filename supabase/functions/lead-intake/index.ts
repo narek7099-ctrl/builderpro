@@ -155,6 +155,11 @@ Deno.serve(async (req) => {
   if (!src) return json({ ok: false, error: "unknown webhook" }, 404);
 
   const body = await readBody(req, url);
+  /* the price the platform's own email quoted, when lead-email found one */
+  const emailCost = (b: unknown): number | null => {
+    const v = parseFloat(String((b as Record<string, unknown>)?.lead_cost ?? ""));
+    return isFinite(v) && v >= 0 && v < 10000 ? v : null;
+  };
   const lead = parseLead(body) as Lead;
 
   // A lead with no way to reach anybody is not a lead. Recorded as rejected
@@ -211,7 +216,7 @@ Deno.serve(async (req) => {
       source_id: src.id, owner: src.owner,
       name: lead.name, phone: lead.phone, email: lead.email, address: lead.address, job: lead.job,
       status, reason, contact_id: contactId,
-      cost: status === "accepted" ? src.cost_per_lead : null,
+      cost: status === "accepted" ? (emailCost(body) ?? src.cost_per_lead) : null,
       raw: body,
     }),
   });
