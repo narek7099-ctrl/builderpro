@@ -656,3 +656,8 @@
 #bpx .ph-note{display:flex;gap:8px;margin-top:10px;font-size:13px;color:#92400e;background:#fff8eb;border-radius:10px;padding:10px 12px}
 #bpx .ph-note .ms{font-size:18px}
 #bpx .ph-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding-top:16px;border-top:1px solid var(--line,#eceef2)}
+#bpx .bpx-a2p{display:flex;align-items:center;gap:12px;background:#fff8eb;border:1px solid #f7e2b8;border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:13.5px}
+#bpx .bpx-a2p .ms{color:#b45309;font-size:22px;flex:none}
+#bpx .bpx-a2p>div{flex:1;min-width:0}
+#bpx .bpx-a2p b{display:block}
+#bpx .bpx-a2p span:not(.ms){opacity:.8}
