@@ -661,3 +661,10 @@
 #bpx .bpx-a2p>div{flex:1;min-width:0}
 #bpx .bpx-a2p b{display:block}
 #bpx .bpx-a2p span:not(.ms){opacity:.8}
+#bpx .ls-bar{background:var(--card,#fff);border:1px solid var(--line,#e7e9ee);border-radius:14px;padding:14px 16px}
+#bpx .ls-bar>div{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+#bpx .ls-bar b{font-size:14.5px}
+#bpx .ls-bar .bpx-mut{font-size:13px}
+#bpx .ls-bar-ok>div{flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 10px}
+#bpx .ls-bar-ok .ms{color:#15803d;font-size:20px}
+#bpx .ls-bar-go{border-color:#cfdcff;background:#f5f8ff}
