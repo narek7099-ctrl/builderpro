@@ -147,6 +147,7 @@ const VENDOR_SENDERS: Record<string, string[]> = {
   networx: ["networx.com", "networxsystems.com"],
   modernize: ["modernize.com", "email.modernize.com"],
 };
+const VENDOR_NAMES: Record<string, string> = { angi: "Angi", homeadvisor: "HomeAdvisor", thumbtack: "Thumbtack", networx: "Networx", modernize: "Modernize" };
 type Src = { id: string; vendor: string; sender_domains: string; inbox_slug: string; active: boolean };
 function domainsOf(s: Src) {
   return (VENDOR_SENDERS[s.vendor] ?? []).concat(String(s.sender_domains || "").split(/[\s,;]+/))
@@ -159,6 +160,39 @@ function sourceFor(sources: Src[], address: string): Src | null {
 }
 
 /* ---------- checking one inbox ---------- */
+/* ---------- finding the contractor's lead platforms for them ----------
+   Right after they press Allow: which of the lead platforms has emailed this
+   inbox in the last four months? Each one found becomes a lead source, so
+   there is nothing to pick and nothing to paste. Only a yes/no per platform
+   is asked of the mailbox (one message id at most); nothing is opened. */
+async function discover(owner: string, prov: Prov, access: string): Promise<string[]> {
+  const H = { Authorization: `Bearer ${access}` };
+  const found: string[] = [];
+  for (const v of Object.keys(VENDOR_SENDERS)) {
+    const doms = VENDOR_SENDERS[v];
+    let hit = false;
+    try {
+      if (prov === "gmail") {
+        const q = `(${doms.map((d) => "from:" + d).join(" OR ")}) newer_than:120d`;
+        const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=1&q=${encodeURIComponent(q)}`, { headers: H });
+        const d = r.ok ? await r.json() : {};
+        hit = !!(d.messages && d.messages.length);
+      } else {
+        const r = await fetch(`https://graph.microsoft.com/v1.0/me/messages?$top=1&$select=id&$search="from:${doms[0]}"`, { headers: H });
+        const d = r.ok ? await r.json() : {};
+        hit = !!(d.value && d.value.length);
+      }
+    } catch { /* next platform */ }
+    if (hit) found.push(v);
+  }
+  if (!found.length) return [];
+  const er = await sb(`lead_sources?owner=eq.${owner}&select=vendor`);
+  const have = new Set(((er.ok ? await er.json() : []) as { vendor: string }[]).map((x) => x.vendor));
+  const add = found.filter((v) => !have.has(v)).map((v) => ({ owner, vendor: v, label: VENDOR_NAMES[v] ?? v }));
+  if (add.length) await sb("lead_sources", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(add) });
+  return found;
+}
+
 type Conn = { id: string; owner: string; provider: Prov; token_enc: string; last_checked: string | null; found_total: number };
 async function checkOne(c: Conn): Promise<{ found: number; error?: string }> {
   const sr = await sb(`lead_sources?owner=eq.${c.owner}&active=eq.true&select=id,vendor,sender_domains,inbox_slug,active`);
@@ -253,7 +287,8 @@ Deno.serve(async (req) => {
       method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({ owner: st.o, provider: st.p, email, token_enc: await seal(t.refresh_token), status: "connected", error: "", last_checked: null }),
     });
-    return back(st.p + "-connected");
+    const found = await discover(st.o, st.p, t.access_token).catch(() => [] as string[]);
+    return Response.redirect(`${PORTAL_URL}?mail=${st.p}-connected&found=${encodeURIComponent(found.join(","))}#leadsources`, 302);
   }
 
   let b: { op?: string; provider?: string } = {};
@@ -296,6 +331,18 @@ Deno.serve(async (req) => {
     let found = 0, err = "";
     for (const c of cs) { const o = await checkOne(c); found += o.found; if (o.error) err = o.error; }
     return json({ ok: !err, found, error: err || undefined });
+  }
+  if (b.op === "discover") {
+    const r = await sb(`mail_connections?owner=eq.${who.owner}&status=eq.connected&select=provider,token_enc`);
+    const cs = (r.ok ? await r.json() : []) as { provider: Prov; token_enc: string }[];
+    const all = new Set<string>();
+    for (const c of cs) {
+      try {
+        const t = await tokenCall(c.provider, { grant_type: "refresh_token", refresh_token: await unseal(c.token_enc) });
+        if (t.access_token) (await discover(who.owner, c.provider, t.access_token)).forEach((v) => all.add(v));
+      } catch { /* next */ }
+    }
+    return json({ ok: true, found: Array.from(all) });
   }
   if (b.op === "disconnect") {
     await sb(`mail_connections?owner=eq.${who.owner}&provider=eq.${prov}`, { method: "DELETE" });

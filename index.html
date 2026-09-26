@@ -34525,7 +34525,8 @@ function bpLeadSources(){
     var mq=(location.search.match(/[?&]mail=([a-z]+)/)||[])[1];
     if(mq){ try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
       var pv=mq.indexOf('gmail')===0?'Gmail':'Outlook';
-      _lsMailNote=/connected$/.test(mq)?pv+' is connected. Checking it for leads now…':mq==='cancelled'?'The inbox was not connected.':'The inbox could not be connected. Try again.';
+      var fq=decodeURIComponent((location.search.match(/[?&]found=([^&#]*)/)||[])[1]||'');
+      _lsMailNote=/connected$/.test(mq)?(fq?pv+' is connected. We found '+fq.split(',').map(lsVendorName).join(' and ')+' in your inbox, so their leads now arrive here automatically.':pv+' is connected. We didn\u2019t find Angi, Thumbtack or HomeAdvisor emails in the last four months. When one arrives, add it below.'):mq==='cancelled'?'The inbox was not connected.':'The inbox could not be connected. Try again.';
       if(/connected$/.test(mq)&&_lsMail.length) setTimeout(function(){lsOutlookCheck(true);},300); }
     else if(_lsMail.some(function(m){return m.status==='connected'&&(!m.last_checked||Date.now()-Date.parse(m.last_checked)>5*60*1000);})) setTimeout(function(){lsOutlookCheck(true);},300);
     if(r[0]&&r[0].error){
@@ -34619,28 +34620,20 @@ function lsRender(){
             +'<div class="ls-url"><code>'+bpEsc(lsInboxAddr(s))+'</code>'
             +'<button class="bpx-rowbtn" onclick="lsCopyAddr(this,\''+s.id+'\')">Copy</button>'
             +'<button class="bpx-rowbtn primary" onclick="lsHowTo(\''+s.id+'\')">How to set it up</button></div>':'')
-          +'<label class="st-lab" style="display:block;margin:14px 0 4px;font-weight:600;font-size:12px">'+(LS_INBOX_LIVE?'Or, if ':'If ')+bpEsc(lsVendorName(s.vendor))+' can post to a URL (webhook)</label>'
-          +'<div class="ls-url"><code>'+bpEsc(url)+'</code>'
-            +'<button class="bpx-rowbtn" onclick="lsCopy(this,\''+s.id+'\')">Copy</button></div>'
-          +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Treat it like a password — anyone with this URL can file leads into your account.</div>'
-          /* The Gmail route, for the vendors that will never post to a URL
-             — which is most of them. A script that runs in the contractor's
-             OWN Google account: no inbound mail service to pay for, and no
-             restricted-scope review, because nothing here ever holds a token
-             to their mailbox. */
-          +'<label class="st-lab" style="display:block;margin:14px 0 4px;font-weight:600;font-size:12px">Or read them straight out of Gmail</label>'
-          +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
-            +'<button class="bpx-rowbtn" onclick="lsGmail(\''+s.id+'\')">'
-            +'<span class="ms" style="font-size:14px;vertical-align:-2px">mail</span> Set up Gmail reader</button>'
-            +'<span class="bpx-mut" style="font-size:11.5px">free · about five minutes, once</span></div>'
+          +'<details class="ls-adv"><summary>Advanced</summary>'
+            +'<label class="st-lab" style="display:block;margin:10px 0 4px;font-weight:600;font-size:12px">If '+bpEsc(lsVendorName(s.vendor))+' can post to a URL (webhook)</label>'
+            +'<div class="ls-url"><code>'+bpEsc(url)+'</code><button class="bpx-rowbtn" onclick="lsCopy(this,\''+s.id+'\')">Copy</button></div>'
+            +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Treat it like a password \u2014 anyone with this URL can file leads into your account.</div>'
+            +'<button class="bpx-rowbtn" style="margin-top:10px" onclick="lsSenders(\''+s.id+'\')">Email addresses this source sends from</button>'
+          +'</details>'
           +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">'
             +'<button class="bpx-rowbtn" onclick="lsToggle(\''+s.id+'\')">'+(s.active?'Pause':'Resume')+'</button>'
             +'<button class="bpx-rowbtn" onclick="lsTest(\''+s.id+'\')" title="Send a fake lead through it, end to end">Send a test lead</button>'
             +bpDelBtn("lsDel('"+s.id+"')",'Disconnect this source')
           +'</div></div>';
       }).join('')+'</div>'
-    : '<div class="bpx-panel"><div class="bpx-empty2"><b>Nothing connected yet.</b>'
-      +'<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Pick a platform above. Every lead it sends lands in Contacts '
+    : '<div class="bpx-panel"><div class="bpx-empty2"><b>No lead sources yet.</b>'
+      +'<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Connect your email above and we find them for you. Every lead they send lands in Contacts '
       +'and starts your follow-up within seconds \u2014 no inbox to watch, no numbers copied across by hand. '
       +'On a shared lead that speed is usually the whole contest.</div></div></div>';
 
@@ -34662,7 +34655,7 @@ function lsRender(){
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
     : '';
 
-  area.innerHTML=head+lsInboxPanel()+connect+tiles+chart+cards+recent;
+  area.innerHTML=head+lsInboxPanel()+tiles+chart+cards+recent;
 }
 
 /* ===== Connecting an inbox, and a source's own address =====================
@@ -34685,11 +34678,23 @@ function lsInboxPanel(){
       +'<button class="bpx-btn" onclick="lsMailConnect(\''+p+'\')">Reconnect '+label+'</button></div>';
     return '<div class="ls-ib-row">'+ic+'<div class="ls-ib-t"><b>'+label+'</b><span>'+blurb+'</span></div><button class="bpx-btn" onclick="lsMailConnect(\''+p+'\')">Connect '+label+'</button></div>';
   };
-  return '<div class="bpx-panel ls-inbox"><div class="bpx-ptitle">Get leads from your email automatically<span class="lg2">sign in once, nothing to forward</span></div>'+note
+  var any=(_lsMail||[]).some(function(m){return m.status==='connected';});
+  return '<div class="bpx-panel ls-inbox"><div class="bpx-ptitle">Get leads from your email automatically<span class="lg2">press Allow once, that\u2019s it</span></div>'
+    +'<div class="bpx-mut" style="font-size:13px;line-height:1.6;margin:4px 0 6px">Connect the inbox your lead emails already go to. We find which platforms send you leads (Angi, Thumbtack, HomeAdvisor and more) and every new lead lands here within five minutes, and '+bpEsc(BP_AI_NAME)+' replies to the homeowner.</div>'+note
     +row('gmail','Gmail','assets/brand/google-g.png','Every Angi, Thumbtack or HomeAdvisor lead email is filed here within five minutes. BuilderPro only ever searches for your lead platforms’ emails; nothing else is opened.')
     +row('outlook','Outlook','','Outlook or Microsoft 365. Lead emails are filed here within five minutes. Only emails from your lead platforms are opened.')
+    +'<div class="ls-ib-foot">'+(any?'<button class="bpx-rowbtn" onclick="lsDiscover()">Look for lead platforms again</button>':'')
+    +'<button class="bpx-linkbtn" onclick="lsAddOpen()">Add another source (your website form, a local seller)</button></div>'
     +'</div>';
 }
+window.lsDiscover=function(){
+  _lsMailNote='Looking through your inbox for lead platforms\u2026'; lsRender();
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'discover'}).then(function(r){
+    var f=(r&&r.found)||[];
+    _lsMailNote=f.length?'Found '+f.map(lsVendorName).join(' and ')+'. Their leads arrive here automatically.':'No Angi, Thumbtack or HomeAdvisor emails in the last four months.';
+    bpLeadSources();
+  }).catch(function(){ _lsMailNote='Could not reach the server.'; lsRender(); });
+};
 window.lsMailConnect=function(p){
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'start',provider:p}).then(function(r){
     if(r&&r.ok&&r.url){ location.href=r.url; return; }
@@ -35917,7 +35922,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928a">
+<link rel="stylesheet" href="portal/dash.css?v=20260928b">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
