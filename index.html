@@ -29498,7 +29498,9 @@ window.bpEmailPage=bpEmailPage;
 
 /* Email page, two tabs: Customers (the GHL threads with your contacts) and
    My inbox (the Gmail/Outlook connected under Lead Sources, read-only). */
-var _bpMailTab='ghl', _bpMyInbox={items:[],next:'',q:'',sel:''};
+var _bpMailTab='ghl', _bpMyInbox={items:[],next:'',q:'',sel:'',folder:'inbox'};
+window.bpMyInboxFolder=function(f){ _bpMyInbox.folder=f; _bpMyInbox.sel=''; bpMyInboxRender(); };
+function bpMiText(t){ var d=document.createElement('textarea'); d.innerHTML=String(t||''); return d.value; }
 window.bpMailTab=function(t){ _bpMailTab=t; bpRenderInbox(); };
 function bpMailTabs(){
   return '<div class="bpx-mailtabs"><button class="'+(_bpMailTab==='ghl'?'on':'')+'" onclick="bpMailTab(\'ghl\')"><span class=ms>forum</span> Customers</button>'
@@ -29510,14 +29512,17 @@ function bpMyInboxRender(){
       +'<button class="bpx-ghostbtn" onclick="bpMyInboxLoad(q(\'bpx-mi-q\').value)"><span class=ms>refresh</span></button>'
       +'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button></div></div>'
     +bpMailTabs()
-    +'<div class="bpx-inbox"><div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading your inbox\u2026</div></div>'
+    +'<div class="bpx-inbox"><div class="bpx-convlist mi-list"><div class="mi-folders">'
+      +[['inbox','inbox','Inbox'],['starred','star','Starred'],['spam','report','Spam']].map(function(f){
+        return '<button class="'+(_bpMyInbox.folder===f[0]?'on':'')+'" onclick="bpMyInboxFolder(\''+f[0]+'\')"><span class=ms>'+f[1]+'</span>'+f[2]+'</button>'; }).join('')
+      +'</div><div id="bpx-convlist" class="mi-scroll"><div class="bpx-tempty" style="padding:24px">Loading\u2026</div></div></div>'
     +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>mail</span></div>Select an email to read it.</div></div></div>';
   bpMyInboxLoad(_bpMyInbox.q);
 }
 window.bpMyInboxLoad=function(qs,more){
   _bpMyInbox.q=qs||'';
   var el=q('bpx-convlist'); if(!el)return;
-  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'inbox',q:_bpMyInbox.q,page:more?_bpMyInbox.next:''}).then(function(r){
+  bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'inbox',q:_bpMyInbox.q,folder:_bpMyInbox.folder,page:more?_bpMyInbox.next:''}).then(function(r){
     if(!r||!r.ok){
       el.innerHTML='<div class="bpx-tempty" style="padding:24px">'+(r&&r.error==='not connected'
         ?'No inbox connected yet.<br><br><button class="bpx-btn" style="width:auto;padding:10px 18px" onclick="bpNav(\'leadsources\');setTimeout(function(){lsShow(\'conn\')},400)">Connect Gmail or Outlook</button>'
@@ -29525,19 +29530,23 @@ window.bpMyInboxLoad=function(qs,more){
       return;
     }
     _bpMyInbox.items=more?_bpMyInbox.items.concat(r.items):r.items; _bpMyInbox.next=r.next||'';
-    if(!_bpMyInbox.items.length){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">'+(_bpMyInbox.q?'Nothing matches that search.':'Your inbox is empty.')+'</div>'; return; }
+    if(!_bpMyInbox.items.length){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">'+(_bpMyInbox.q?'Nothing matches that search.':_bpMyInbox.folder==='spam'?'No spam. Nice.':_bpMyInbox.folder==='starred'?'No starred emails.':'Your inbox is empty.')+'</div>'; return; }
     el.innerHTML=_bpMyInbox.items.map(function(m){
-      var who=String(m.from||'').replace(/\s*<[^>]+>\s*$/,'').replace(/^"|"$/g,'')||m.from;
-      return '<div class="bpx-conv'+(m.id===_bpMyInbox.sel?' sel':'')+'" id="bpxMi-'+bpEsc(m.id)+'" onclick="bpMyInboxOpen(\''+bpEsc(m.id)+'\')">'
-        +'<div class="cn"><span style="'+(m.unread?'':'font-weight:500')+'">'+bpEsc(who)+'</span><span class="bpx-mut" style="font-size:11px;font-weight:400">'+(m.date?bpEsc(rdAgo(m.date)):'')+'</span></div>'
-        +'<div class="cp" style="color:var(--ink,#111);'+(m.unread?'font-weight:600':'')+'">'+bpEsc(m.subject||'(no subject)')+'</div>'
-        +'<div class="cp">'+bpEsc(m.snippet||'')+'</div></div>';
+      var who=bpMiText(String(m.from||'').replace(/\s*<[^>]+>\s*$/,'').replace(/^"|"$/g,'')||m.from);
+      var d=m.date?new Date(m.date):null, today=d&&d.toDateString()===new Date().toDateString();
+      var when=d?(today?d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})):'';
+      var ini=(who.replace(/[^A-Za-z0-9]/g,'').charAt(0)||'?').toUpperCase();
+      return '<div class="mi-row'+(m.unread?' unread':'')+(m.id===_bpMyInbox.sel?' sel':'')+'" id="bpxMi-'+bpEsc(m.id)+'" onclick="bpMyInboxOpen(\''+bpEsc(m.id)+'\')">'
+        +'<div class="mi-av">'+bpEsc(ini)+'</div><div class="mi-main">'
+        +'<div class="mi-top"><span class="mi-from">'+bpEsc(who)+'</span><span class="mi-when">'+bpEsc(when)+'</span></div>'
+        +'<div class="mi-sub">'+bpEsc(bpMiText(m.subject)||'(no subject)')+'</div>'
+        +'<div class="mi-snip">'+bpEsc(bpMiText(m.snippet))+'</div></div></div>';
     }).join('')+(_bpMyInbox.next?'<div style="padding:12px;text-align:center"><button class="bpx-rowbtn" onclick="bpMyInboxLoad(_bpMyInbox.q,true)">Load more</button></div>':'');
   }).catch(function(){ el.innerHTML='<div class="bpx-tempty" style="padding:24px">Could not reach the server.</div>'; });
 };
 window.bpMyInboxOpen=function(id){
   _bpMyInbox.sel=id;
-  document.querySelectorAll('#bpx-convlist .bpx-conv').forEach(function(d){d.classList.toggle('sel',d.id==='bpxMi-'+id);});
+  document.querySelectorAll('#bpx-convlist .mi-row').forEach(function(d){d.classList.toggle('sel',d.id==='bpxMi-'+id);d.id==='bpxMi-'+id&&d.classList.remove('unread');});
   var th=q('bpx-thread'); th.innerHTML='<div class="bpx-tempty" style="padding:24px">Opening\u2026</div>';
   bpAuthApi(BP_URL+'/functions/v1/mail-connect',{op:'message',id:id}).then(function(r){
     if(!r||!r.ok){ th.innerHTML='<div class="bpx-tempty" style="padding:24px">Could not open that email.</div>'; return; }
@@ -36131,7 +36140,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928f">
+<link rel="stylesheet" href="portal/dash.css?v=20260928g">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>

@@ -539,3 +539,22 @@
 #bpx .bpx-mi-head{padding:16px 18px;border-bottom:1px solid var(--line,#e3e6ec)}
 #bpx .bpx-mi-head h3{margin:0 0 6px;font-size:17px}
 #bpx .bpx-mi-body{flex:1;width:100%;min-height:480px;border:0;background:#fff;border-radius:0 0 12px 12px}
+/* My inbox list */
+#bpx .mi-list{display:flex;flex-direction:column;padding:0;overflow:hidden}
+#bpx .mi-folders{display:flex;gap:4px;padding:10px;border-bottom:1px solid var(--line,#e7e9ee)}
+#bpx .mi-folders button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 6px;border:0;border-radius:10px;background:transparent;font:inherit;font-size:13px;font-weight:600;color:inherit;opacity:.65;cursor:pointer}
+#bpx .mi-folders button .ms{font-size:18px}
+#bpx .mi-folders button.on{background:rgba(47,107,255,.1);color:#2f6bff;opacity:1}
+#bpx .mi-scroll{flex:1;overflow-y:auto;max-height:70vh}
+#bpx .mi-row{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--line,#eef0f3);cursor:pointer;position:relative}
+#bpx .mi-row:hover{background:rgba(0,0,0,.025)}
+#bpx .mi-row.sel{background:rgba(47,107,255,.08)}
+#bpx .mi-row.unread::before{content:"";position:absolute;left:4px;top:26px;width:6px;height:6px;border-radius:50%;background:#2f6bff}
+#bpx .mi-av{flex:none;width:34px;height:34px;border-radius:50%;background:#e8edf7;color:#40506b;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+#bpx .mi-main{flex:1;min-width:0;display:block}
+#bpx .mi-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+#bpx .mi-from{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#bpx .mi-when{flex:none;font-size:11.5px;opacity:.55}
+#bpx .mi-sub,#bpx .mi-snip{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;margin-top:2px}
+#bpx .mi-snip{opacity:.55;font-size:12.5px}
+#bpx .mi-row.unread .mi-from,#bpx .mi-row.unread .mi-sub{font-weight:700}

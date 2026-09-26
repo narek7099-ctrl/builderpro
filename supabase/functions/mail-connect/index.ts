@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
     return Response.redirect(`${PORTAL_URL}?mail=${st.p}-connected&found=${encodeURIComponent(found.join(","))}#leadsources`, 302);
   }
 
-  let b: { op?: string; provider?: string; id?: string; q?: string; page?: string } = {};
+  let b: { op?: string; provider?: string; id?: string; q?: string; page?: string; folder?: string } = {};
   try { b = await req.json(); } catch { /* no body */ }
 
   if (b.op === "poll") {
@@ -357,6 +357,7 @@ Deno.serve(async (req) => {
     if (!t.access_token) return json({ ok: false, error: "sign-in expired" });
     const H = { Authorization: `Bearer ${t.access_token}` };
     const q = String(b.q ?? "").slice(0, 200);
+    const folder = b.folder === "spam" || b.folder === "starred" ? b.folder : "inbox";
     if (c.provider === "gmail") {
       if (b.op === "message") {
         const m = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(String(b.id))}?format=full`, { headers: H });
@@ -366,7 +367,7 @@ Deno.serve(async (req) => {
         const body = gmailBody(g.payload ?? {});
         return json({ ok: true, from: hdr("from"), to: hdr("to"), subject: hdr("subject"), date: hdr("date"), html: body.html, text: body.text });
       }
-      const l = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=30&labelIds=INBOX${q ? "&q=" + encodeURIComponent(q) : ""}${b.page ? "&pageToken=" + encodeURIComponent(b.page) : ""}`, { headers: H });
+      const l = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=30&labelIds=${folder === "spam" ? "SPAM&includeSpamTrash=true" : folder === "starred" ? "STARRED" : "INBOX"}${q ? "&q=" + encodeURIComponent(q) : ""}${b.page ? "&pageToken=" + encodeURIComponent(b.page) : ""}`, { headers: H });
       if (!l.ok) return json({ ok: false, error: `Gmail answered ${l.status}` });
       const ld = await l.json();
       const items = await Promise.all(((ld.messages ?? []) as { id: string }[]).map(async (it) => {
@@ -387,8 +388,9 @@ Deno.serve(async (req) => {
       return json({ ok: true, from: fa.name ? `${fa.name} <${fa.address}>` : fa.address ?? "", to: ((f.toRecipients ?? []) as { emailAddress: { address: string } }[]).map((x) => x.emailAddress.address).join(", "),
         subject: f.subject ?? "", date: f.receivedDateTime ?? "", html: String(f.body?.content ?? ""), text: "" });
     }
-    const u = b.page ? String(b.page) : `https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$select=id,from,subject,bodyPreview,receivedDateTime,isRead&$top=30`
-      + (q ? `&$search="${q.replace(/"/g, "")}"` : "&$orderby=receivedDateTime desc");
+    const box = folder === "spam" ? "junkemail" : "inbox";
+    const u = b.page ? String(b.page) : `https://graph.microsoft.com/v1.0/me/${folder === "starred" ? "messages" : `mailFolders/${box}/messages`}?$select=id,from,subject,bodyPreview,receivedDateTime,isRead&$top=30`
+      + (q ? `&$search="${q.replace(/"/g, "")}"` : folder === "starred" ? "&$filter=flag/flagStatus eq 'flagged'" : "&$orderby=receivedDateTime desc");
     if (!u.startsWith("https://graph.microsoft.com/")) return json({ ok: false, error: "bad page" }, 400);
     const l = await fetch(u, { headers: H });
     if (!l.ok) return json({ ok: false, error: `Outlook answered ${l.status}` });
