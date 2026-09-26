@@ -30262,7 +30262,8 @@ async function bpPjDraw(jobs){
   if(_pjMap){ try{_pjMap.remove();}catch(e){} _pjMap=null; }
   el.innerHTML='';
   _pjMap=L.map('pjMap',{zoomControl:true,scrollWheelZoom:false}).setView([39.5,-98.35],4);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(_pjMap);
+  /* the same keyless basemap chain Lead Radar uses, with its fallbacks */
+  bpTileLayer(_pjMap,'street');
   _pjLayer={pins:L.layerGroup().addTo(_pjMap),route:null};
   var pts=[];
   for(var i=0;i<jobs.length;i++){
