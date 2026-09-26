@@ -34551,6 +34551,7 @@ function bpLeadSources(){
       var pv=mq.indexOf('gmail')===0?'Gmail':'Outlook';
       var fq=decodeURIComponent((location.search.match(/[?&]found=([^&#]*)/)||[])[1]||'');
       _lsMailNote=/connected$/.test(mq)?(fq?pv+' is connected. We found '+fq.split(',').map(lsVendorName).join(' and ')+' in your inbox, so their leads now arrive here automatically.':pv+' is connected. We didn\u2019t find Angi, Thumbtack or HomeAdvisor emails in the last four months. When one arrives, add it below.'):mq==='cancelled'?'The inbox was not connected.':'The inbox could not be connected. Try again.';
+      window._lsView='conn';
       if(/connected$/.test(mq)&&_lsMail.length) setTimeout(function(){lsOutlookCheck(true);},300); }
     else if(_lsMail.some(function(m){return m.status==='connected'&&(!m.last_checked||Date.now()-Date.parse(m.last_checked)>5*60*1000);})) setTimeout(function(){lsOutlookCheck(true);},300);
     if(r[0]&&r[0].error){
@@ -34595,6 +34596,7 @@ window.lsLeadDel=function(id){
   });
 };
 
+window.lsShow=function(v){ window._lsView=v; lsRender(); try{ window.scrollTo(0,0); }catch(e){} };
 function lsRender(){
   var area=q('bpxViewArea'); if(!area)return;
   if(_lsErr){ area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">'+bpEsc(_lsErr)+'</div></div>'; return; }
@@ -34713,8 +34715,18 @@ function lsRender(){
       +'they are what you show the vendor when the invoice does not match what arrived.</div></div>'
     : '';
 
-  /* the page header already names and explains the page */
-  area.innerHTML=lsInboxPanel()+tiles+chart+cards+recent;
+  /* Email connections live on their own screen, reached from the button
+     above the sources; the main screen is the sources and their leads. */
+  if(window._lsView==='conn'){
+    area.innerHTML='<div style="margin-bottom:12px"><button class="bpx-rowbtn" onclick="lsShow(\'main\')">\u2190 Back to lead sources</button></div>'+lsInboxPanel();
+    return;
+  }
+  var mails=(_lsMail||[]).filter(function(m){return m.status==='connected';});
+  var bar='<div class="ls-bar">'
+    +'<div class="bpx-mut" style="font-size:13px">'+(mails.length?'Reading leads from '+mails.map(function(m){return bpEsc(m.email||m.provider);}).join(' and '):'No email connected yet')+'</div>'
+    +'<button class="bpx-btn" style="width:auto;padding:10px 18px" onclick="lsShow(\'conn\')"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">link</span>Connections</button></div>'
+    +(_lsMailNote?'<div class="ls-note" style="margin-bottom:12px">'+bpEsc(_lsMailNote)+'</div>':'');
+  area.innerHTML=tiles+chart+bar+cards+recent;
 }
 
 /* ===== Connecting an inbox, and a source's own address =====================
@@ -36020,7 +36032,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928d">
+<link rel="stylesheet" href="portal/dash.css?v=20260928e">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>

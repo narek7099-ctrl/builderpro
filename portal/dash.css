@@ -529,3 +529,4 @@
 #bpx .ls-pv-ghost{flex:1;height:36px;border-radius:40px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 12px/1 var(--sans);text-transform:uppercase;cursor:pointer;transition:background-color .3s ease,color .3s ease,border-color .3s ease}
 #bpx .ls-pv-ghost:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 #bpx .ls-pv-ghost.ls-pv-off:hover{background:#dc2626;border-color:#dc2626}
+#bpx .ls-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
