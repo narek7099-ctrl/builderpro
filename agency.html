@@ -132,6 +132,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <button data-tab="forms" onclick="go('forms')">Forms & Submissions</button>
         <button data-tab="fields" onclick="go('fields')">Custom Fields</button>
         <button data-tab="calendars" onclick="go('calendars')">Calendars</button>
+        <button data-tab="phones" onclick="go('phones')">Phone numbers</button>
         <button data-tab="activity" onclick="go('activity')">Activity & Memory</button>
       </nav>
     </aside>
@@ -332,6 +333,46 @@ function go(tab){
   else if(tab==='fields')viewFields();
   else if(tab==='calendars')viewCalendars();
   else if(tab==='activity')viewActivity();
+  else if(tab==='phones')viewPhones();
+}
+
+/* ---------- Phone numbers: clients bringing their business number in ----------
+   A client's Texts page says "Pending A2P authorization" until their row here
+   is marked Live. Served by the phone-admin function (same ADMIN_EMAILS). */
+var PH_PATH={port:'Move number',text:'Text-enable',fwd:'Forward'};
+var PH_TYPE={cell:'Cell',landline:'Landline',voip:'Internet phone',unsure:'Not sure'};
+async function phoneApi(body){
+  var r=await fetch(SB_URL+'/functions/v1/phone-admin',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'apikey':SB_ANON,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.status===403 && await refreshToken()) return phoneApi(body);
+  return r.json();
+}
+async function viewPhones(){
+  el('view').innerHTML='<h2>Phone numbers</h2><div class="muted" style="margin:-4px 0 14px">Clients who started Settings \u2192 Business number. Mark a client <b>Live</b> once their number is connected in GHL and the A2P registration is approved; their Texts page stops saying \u201cPending\u201d.</div><div id="phlist" class="muted">Loading\u2026</div>';
+  try{
+    var r=await phoneApi({op:'list'});
+    if(r.ok===false){ el('phlist').innerHTML='<div class="muted">Could not load: '+esc(r.error||'')+'</div>'; return; }
+    var rows=r.data||[];
+    if(!rows.length){ el('phlist').innerHTML='<div class="muted">No clients have started the Business number step yet.</div>'; return; }
+    var badge=function(st){ return st==='live'?'<span style="color:var(--ok);font-weight:600">\u25CF Live</span>'
+      :(st==='pending'||st==='requested')?'<span style="color:#fbbf24;font-weight:600">\u25CF Pending A2P</span>':'<span class="muted">Not sent</span>'; };
+    el('phlist').innerHTML='<table><thead><tr><th>Client</th><th>Number</th><th>Plan</th><th>Status</th><th></th></tr></thead><tbody>'
+      +rows.map(function(x){
+        return '<tr><td><b>'+esc(x.business||x.email)+'</b><div class="muted" style="font-size:12px">'+esc(x.email)+(x.legal?' \u00b7 '+esc(x.legal):'')+'</div></td>'
+          +'<td>'+esc(x.number||'\u2014')+'<div class="muted" style="font-size:12px">'+esc(PH_TYPE[x.type]||'')+'</div></td>'
+          +'<td>'+esc(PH_PATH[x.path]||'\u2014')+(x.requestedAt?'<div class="muted" style="font-size:12px">sent '+esc(String(x.requestedAt).slice(0,10))+'</div>':'')+'</td>'
+          +'<td>'+badge(x.status)+(x.liveAt&&x.status==='live'?'<div class="muted" style="font-size:12px">since '+esc(String(x.liveAt).slice(0,10))+'</div>':'')+'</td>'
+          +'<td style="white-space:nowrap;text-align:right">'
+            +(x.status!=='live'?'<button class="btn" style="background:var(--ok);color:#06281c;border:0;border-radius:8px;padding:7px 12px;font-weight:600" onclick="phoneSet(\''+esc(x.user_id)+'\',\'live\',\''+esc(x.business||x.email).replace(/'/g,'')+'\')">Mark live</button>'
+              :'<button style="background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px" onclick="phoneSet(\''+esc(x.user_id)+'\',\'pending\',\''+esc(x.business||x.email).replace(/'/g,'')+'\')">Back to pending</button>')
+          +'</td></tr>';
+      }).join('')+'</tbody></table>';
+  }catch(e){ el('phlist').innerHTML='<div class="muted">Could not load: '+esc(e.message)+'</div>'; }
+}
+async function phoneSet(uid,status,name){
+  if(!confirm(status==='live'?'Mark '+name+' live? Their texting switches on.':'Put '+name+' back to Pending A2P?'))return;
+  var r=await phoneApi({op:'set',user_id:uid,status:status});
+  if(r.ok===false){ alert('Could not update: '+(r.error||'')); return; }
+  viewPhones();
 }
 
 /* ---------- Activity (audit log) + AI Memory ---------- */
