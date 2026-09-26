@@ -21,13 +21,16 @@
   window.bpOwnerId = function (u) { return T.owner || (u && u.id) || T.uid || null; };
 
   /* what each role may open */
-  var CREW = { dashboard: 1, activejobs: 1, calendar: 1, supply: 1, supplyorders: 1, suppliers: 1, messaging: 1, email: 1, contacts: 1 };
+  /* crew get their own four pages (portal/crewapp.js), nothing else */
+  var CREW = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1 };
+  var CREW_ONLY = CREW;
   window.bpTeamAllows = function (view) {
     if (T.role === 'crew') return !!CREW[view];
-    return true;
+    return !CREW_ONLY[view];
   };
   window.bpTeamIsCrew = function () { return T.role === 'crew'; };
   window.bpTeamIsOwner = function () { return T.role === 'owner'; };
+  window.bpTeamHome = function () { return T.role === 'crew' ? 'crewclock' : 'dashboard'; };
 
   /* who am I working for? asked once per sign-in, before data loads */
   window.bpTeamResolve = function () {
@@ -38,6 +41,7 @@
       T.uid = u.id;
       return BP_SB.rpc('bp_team_claim').then(function (r) {
         var row = r && r.data && r.data[0];
+        T.email = u.email || '';
         if (row) { T.owner = row.owner; T.role = row.role === 'office' ? 'office' : 'crew'; T.name = row.name || ''; T.ownerEmail = row.owner_email || ''; }
         return T;
       }).catch(function () { return T; });
