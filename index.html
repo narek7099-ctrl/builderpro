@@ -29588,6 +29588,10 @@ window.bpMailCompose=function(o){
     +'<div class="mc-line"><span>Subject</span><input id="bpx-mc-sub" value="'+bpEsc(o.subject||'')+'"></div>'
     +'<div id="bpx-mc-msg" class="mc-body" contenteditable="true" data-ph="Write your email\u2026"></div>'
     +'<div class="mc-files" id="bpx-mc-files"></div>'
+    +'<div class="mc-sigpanel" id="bpx-mc-tplp" hidden><div class="mc-sigtitle">Templates<span class="mc-tplhint">{first_name} fills in the recipient\u2019s first name</span></div>'
+      +'<div class="mc-tpls" id="bpx-mc-tpls"></div>'
+      +'<div class="mc-sigbtns"><button type="button" class="mc-sigb" onclick="bpMcTplOpen(true)">Close</button>'
+      +'<button type="button" class="mc-sigb pri" onclick="bpMcTplSave()">Save this email as a template</button></div></div>'
     +'<div class="mc-sigpanel" id="bpx-mc-sigp" hidden><div class="mc-sigtitle">Your signature</div>'
       +'<div id="bpx-mc-siged" class="mc-siged" contenteditable="true" data-ph="e.g. Narek \u00b7 BuilderPro Roofing \u00b7 (555) 123-4567"></div>'
       +'<label class="mc-sigauto"><input type="checkbox" id="bpx-mc-sigauto" checked> Add it to every new email</label>'
@@ -29595,7 +29599,8 @@ window.bpMailCompose=function(o){
       +'<button type="button" class="mc-sigb" onclick="bpMcSigInsert()">Insert here</button>'
       +'<button type="button" class="mc-sigb pri" onclick="bpMcSigSave()">Save</button></div></div>'
     +'<div class="mc-toolbar">'+'<button type="button" class="mc-tb" title="Bold" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'bold\')"><span class=ms>format_bold</span></button>'+'<button type="button" class="mc-tb" title="Italic" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'italic\')"><span class=ms>format_italic</span></button>'+'<button type="button" class="mc-tb" title="Underline" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'underline\')"><span class=ms>format_underlined</span></button>'+'<button type="button" class="mc-tb" title="Bulleted list" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'insertUnorderedList\')"><span class=ms>format_list_bulleted</span></button>'+'<button type="button" class="mc-tb" title="Numbered list" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'insertOrderedList\')"><span class=ms>format_list_numbered</span></button>'+'<button type="button" class="mc-tb" title="Link" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'createLink\')"><span class=ms>link</span></button>'+'<button type="button" class="mc-tb" title="Clear formatting" onmousedown="event.preventDefault()" onclick="bpMcFmt(\'removeFormat\')"><span class=ms>format_clear</span></button>'
-    +'<span class="mc-sep"></span><button type="button" class="mc-tb mc-tb-w" title="Signature" onclick="bpMcSigOpen()"><span class=ms>signature</span><em>Signature</em></button>'
+    +'<span class="mc-sep"></span><button type="button" class="mc-tb mc-tb-w" title="Templates" onclick="bpMcTplOpen()"><span class=ms>description</span><em>Templates</em></button>'
+    +'<button type="button" class="mc-tb mc-tb-w" title="Signature" onclick="bpMcSigOpen()"><span class=ms>signature</span><em>Signature</em></button>'
     +'<span class="mc-sep"></span><label class="mc-tb" title="Attach files"><span class=ms>attach_file</span><input type="file" multiple hidden onchange="bpMcAttach(this)"></label></div>'
     +'<div class="mc-foot"><button class="mc-send" id="bpx-mc-send" onclick="bpMailComposeSend()">Send<span class=ms>send</span></button>'
     +'<span class="bpx-mmsg" id="bpx-mmsg"></span><span class="mc-note">Sent from your BuilderPro email \u00b7 saved under Business</span></div></div>';
@@ -29614,6 +29619,71 @@ window.bpMailCompose=function(o){
   setTimeout(function(){ var f=q(o.to?'bpx-mc-msg':'bpx-mc-to'); if(f)f.focus(); },60);
 };
 var _bpMcFiles=[], _bpMcSig=null;
+/* Templates: a few ready-made ones, plus the business's own (mail_templates,
+   shared with the whole team). {first_name} is filled in when one is used. */
+var BP_MC_TPL_BUILTIN=[
+  {name:'Estimate follow-up',subject:'Following up on your estimate',html:'Hi {first_name},<br><br>I wanted to follow up on the estimate we sent over. Do you have any questions, or anything you would like us to adjust?<br><br>We have openings on the schedule in the next couple of weeks, so just reply here and we can get you on the calendar.'},
+  {name:'Inspection booked',subject:'Your inspection is booked',html:'Hi {first_name},<br><br>Thanks for booking an inspection with us. We will be there at the scheduled time, and it usually takes about an hour. You do not need to be home for the outside, but we will walk you through what we find either way.<br><br>If anything changes, just reply to this email.'},
+  {name:'Thank you after the job',subject:'Thank you!',html:'Hi {first_name},<br><br>Thank you for choosing us. It was a pleasure working on your home. If anything comes up, reply here and we will take care of it.'},
+  {name:'Review request',subject:'Would you leave us a quick review?',html:'Hi {first_name},<br><br>We are glad the project went well. If you have a minute, a short review would mean a lot to a local business like ours and helps your neighbors find us.<br><br>Thank you!'},
+  {name:'Checking in',subject:'Checking in',html:'Hi {first_name},<br><br>Just checking in to see if you are still planning your project. Happy to answer any questions or come by for a free look whenever it suits you.'}
+];
+var _bpMcTpls=null;
+async function bpMcTplLoad(force){
+  if(_bpMcTpls&&!force) return _bpMcTpls;
+  try{ var r=await BP_SB.from('mail_templates').select('id,name,subject,html').order('created_at',{ascending:false}); _bpMcTpls=(r&&r.data)||[]; }
+  catch(e){ _bpMcTpls=[]; }
+  return _bpMcTpls;
+}
+function bpMcTplRender(){
+  var el=q('bpx-mc-tpls'); if(!el)return;
+  var row=function(t,i,own){
+    return '<div class="mc-tpl" onclick="bpMcTplUse('+(own?'\'o\'':'\'b\'')+','+i+')"><div><b>'+bpEsc(t.name||'Untitled')+'</b><small>'+bpEsc(t.subject||'')+'</small></div>'
+      +(own?'<button type="button" title="Delete template" onclick="event.stopPropagation();bpMcTplDel('+i+')"><span class=ms>delete</span></button>':'<span class="mc-tplb">Starter</span>')+'</div>';
+  };
+  el.innerHTML=((_bpMcTpls||[]).length?'<div class="mc-tplh">Yours</div>'+_bpMcTpls.map(function(t,i){return row(t,i,true);}).join(''):'')
+    +'<div class="mc-tplh">Starters</div>'+BP_MC_TPL_BUILTIN.map(function(t,i){return row(t,i,false);}).join('');
+}
+window.bpMcTplOpen=async function(close){
+  var p=q('bpx-mc-tplp'); if(!p)return;
+  if(close===true||!p.hidden){ p.hidden=true; return; }
+  var sp=q('bpx-mc-sigp'); if(sp) sp.hidden=true;
+  p.hidden=false; q('bpx-mc-tpls').innerHTML='<div class="mc-tplh">Loading\u2026</div>';
+  await bpMcTplLoad(); bpMcTplRender();
+};
+function bpMcFirstName(){
+  var to=(q('bpx-mc-to').value||'').trim().toLowerCase();
+  var c=(_bpContacts||[]).filter(function(x){return String(x.email||'').toLowerCase()===to;})[0];
+  var n=(c&&c.name)||(q('bpx-mc-name')&&q('bpx-mc-name').value)||'';
+  return String(n).trim().split(/\s+/)[0]||'there';
+}
+window.bpMcTplUse=function(kind,i){
+  var t=kind==='o'?(_bpMcTpls||[])[i]:BP_MC_TPL_BUILTIN[i]; if(!t)return;
+  var ed=q('bpx-mc-msg'), fn=bpEsc(bpMcFirstName());
+  var written=(ed.innerText||'').trim(), sig=ed.querySelector('.mc-sig'), sigTxt=sig?(sig.innerText||'').trim():'';
+  if(written&&written!==sigTxt&&!confirm('Replace what you have written with this template?')) return;
+  var sub=q('bpx-mc-sub'); if(t.subject&&(!sub.value.trim()||!/^re:/i.test(sub.value))) sub.value=t.subject.replace(/\{first_name\}/g,bpMcFirstName());
+  var keep=sig?sig.outerHTML:'';
+  ed.innerHTML='<div>'+String(t.html||'').replace(/\{first_name\}/g,fn)+'</div>'+keep;
+  q('bpx-mc-tplp').hidden=true; ed.focus();
+};
+window.bpMcTplSave=async function(){
+  var ed=q('bpx-mc-msg'), clone=ed.cloneNode(true), sig=clone.querySelector('.mc-sig'); if(sig) sig.remove();
+  if(!(clone.innerText||clone.textContent||'').trim()){ alert('Write the email first, then save it as a template.'); return; }
+  var name=prompt('Name this template',q('bpx-mc-sub').value.trim()||''); if(!name)return;
+  /* the recipient's name goes back to {first_name}, so the template fits anyone */
+  var fn=bpMcFirstName(), html=clone.innerHTML;
+  if(fn&&fn!=='there') html=html.split(bpEsc(fn)).join('{first_name}');
+  var r=await BP_SB.from('mail_templates').insert({name:name.slice(0,80),subject:q('bpx-mc-sub').value.trim(),html:html});
+  if(r&&r.error){ alert('Could not save the template.'); return; }
+  await bpMcTplLoad(true); bpMcTplRender();
+};
+window.bpMcTplDel=async function(i){
+  var t=(_bpMcTpls||[])[i]; if(!t||!confirm('Delete the template \u201c'+(t.name||'')+'\u201d?'))return;
+  var r=await BP_SB.from('mail_templates').delete().eq('id',t.id);
+  if(r&&r.error){ alert('Could not delete it.'); return; }
+  await bpMcTplLoad(true); bpMcTplRender();
+};
 /* Signature: one per user, kept in mail_signatures so it follows them to any device. */
 async function bpMcSigLoad(){
   if(_bpMcSig) return _bpMcSig;
@@ -29624,6 +29694,7 @@ async function bpMcSigLoad(){
 window.bpMcSigOpen=async function(close){
   var p=q('bpx-mc-sigp'); if(!p)return;
   if(close===true||!p.hidden){ p.hidden=true; return; }
+  var tp=q('bpx-mc-tplp'); if(tp) tp.hidden=true;
   var sg=await bpMcSigLoad();
   q('bpx-mc-siged').innerHTML=sg.html||''; q('bpx-mc-sigauto').checked=sg.auto!==false;
   p.hidden=false; q('bpx-mc-siged').focus();
@@ -36249,7 +36320,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20260921e">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928k">
+<link rel="stylesheet" href="portal/dash.css?v=20260928l">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260919c"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
