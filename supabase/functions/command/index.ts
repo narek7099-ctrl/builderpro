@@ -102,7 +102,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
   switch (name) {
     case "ghl": return await callGHL(String(input.op), (input.args ?? {}) as Record<string, string>);
     case "accounts_list": {
-      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
+      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
       return r.ok ? await r.json() : { error: r.status };
     }
     case "account_create": return await createAccount(input as Record<string, string>);
@@ -272,13 +272,21 @@ function transcript(rows: { role: string; content: unknown }[]) {
 }
 
 /* ------------------------------------------------------------ admin gate --- */
-// 24/7: pg_cron calls ?shift every 30 min; each call runs the team whose last
-// shift is oldest, so every team works a shift every 3 hours around the clock.
+// 24/7: pg_cron calls ?shift every 5 min. Each tick onboards new sign-ups; every
+// 30 min it also runs the team whose last shift is oldest (each team every 3h).
 async function shift(req: Request) {
   const cfg = await sb("ai_config?select=key,value"); const rows: { key: string; value: string }[] = cfg.ok ? await cfg.json() : [];
   const get = (k: string) => rows.find((r) => r.key === k)?.value ?? "";
   if (!get("cron_key") || req.headers.get("x-cron-key") !== get("cron_key")) return json({ ok: false }, 403);
-  if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, skipped: true });
+  // onboarding runs in the background so the scheduler's 5-second call returns
+  // deno-lint-ignore no-explicit-any
+  const bg = (p: Promise<unknown>) => (globalThis as any).EdgeRuntime?.waitUntil?.(p);
+  bg(autoOnboard().catch(() => {}));
+  const onboard = "started";
+  if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, onboard, skipped: true });
+  // the scheduler ticks every 5 min for onboarding; a team shift only every 30
+  const lastAny = Math.max(0, ...rows.filter((r) => r.key.startsWith("shift_")).map((r) => Date.parse(r.value) || 0));
+  if (Date.now() - lastAny < 29 * 6e4) return json({ ok: true, onboard });
   let pick = "", oldest = Infinity;
   for (const k of Object.keys(AGENTS)) { const t = Date.parse(get("shift_" + k) || "1970-01-01"); if (t < oldest) { oldest = t; pick = k; } }
   const now = new Date().toISOString();
@@ -291,6 +299,43 @@ async function shift(req: Request) {
   // deno-lint-ignore no-explicit-any
   (globalThis as any).EdgeRuntime?.waitUntil?.(run);
   return json({ ok: true, agent: pick });
+}
+
+// New sign-ups, without the owner: retry a GHL build that failed (3 tries,
+// then Support is told), then the Builder team checks and finishes the setup.
+async function autoOnboard() {
+  const done: string[] = [];
+  const r = await sb(`accounts?onboard_state=in.(new,provisioned)&created_at=lt.${new Date(Date.now() - 2 * 6e4).toISOString()}&select=*&order=created_at.asc&limit=5`);
+  const rows = r.ok ? await r.json() : [];
+  for (const a of rows) {
+    const log: string[] = Array.isArray(a.setup_log) ? a.setup_log : [];
+    if (!a.ghl_location_id) {
+      if (a.onboard_attempts >= 3) {
+        await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "failed" }) });
+        await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: "setup_failed", subject: "GHL setup failed for " + a.business, body: "Automatic GHL setup failed 3 times. Last: " + log.slice(-1)[0] }) }).catch(() => {});
+        done.push(a.email + ": failed, sent to Support"); continue;
+      }
+      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade });
+      await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: p.locationId, onboard_attempts: a.onboard_attempts + 1,
+        onboard_state: p.locationId ? "provisioned" : "new", setup_log: [...log, `Retry ${a.onboard_attempts + 1}:`, ...p.steps, ...(p.error ? ["Error: " + p.error] : [])] }) });
+      done.push(a.email + (p.locationId ? ": GHL built" : ": retry failed"));
+      continue;
+    }
+    if (!Deno.env.get("ANTHROPIC_API_KEY")) continue;
+    // one Builder check per tick keeps each run short
+    await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "onboarding" }) });
+    const th = await newThread("builder", "Onboard: " + a.business, "shift");
+    const out = await runAgent(AGENTS.builder, th, `A new client just signed up and their GHL sub-account was built automatically. Finish their setup without the owner.
+Client: ${a.full_name}, ${a.business}, ${a.email}, ${a.phone || "no phone"}, trade: ${a.trade || "unknown"}. GHL locationId: ${a.ghl_location_id}.
+Setup log so far: ${log.join(" | ")}
+1) Check the sub-account: custom values (Business Name/Phone/Email), calendars, tags, users. Add what's missing (a booking calendar, trade tags).
+2) Fill in their AI receptionist knowledge (brain_save) with sensible defaults for a ${a.trade || "contractor"} business: services, hours (Mon-Fri 8-6), tone, FAQs.
+3) Report in 3-5 lines what you set up and anything the owner must do.`);
+    await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "onboarded", setup_log: [...log, "Builder team finished setup: " + out.reply.slice(0, 300)] }) });
+    done.push(a.email + ": onboarded by Builder");
+    break;
+  }
+  return done;
 }
 
 async function admin(req: Request): Promise<string> {
