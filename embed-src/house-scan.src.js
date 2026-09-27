@@ -30,6 +30,9 @@
    slider opens for them as before. */
 (function(){
   var TRADE = window.HS_TRADE || 'general';
+  /* pool and landscaping ask the homeowner to trace the yard first; the scan
+     then runs on that outline (the shared trace, in roof-scan.html) */
+  var TRACE = TRADE==='pools' || TRADE==='landscaping';
   var HS_END = 15.0, HS_WAIT_MAX = 28;
   var st = null;
   (function(){ try{ if(document.getElementById('rs-geist')) return; var l=document.createElement('link'); l.id='rs-geist'; l.rel='stylesheet';
@@ -206,7 +209,10 @@
     var q=randomYard(), k0=ease(span(T,8.8,9.4)), k1=ease(span(T,9.3,10.1)), k2=ease(span(T,9.9,10.9)), k3=ease(span(T,10.5,11.5)), k4=ease(span(T,11.0,11.8));
     var X=22, Z=16, faces=[];
     if(k0>0.01){
-      faces.push(ground(H,[[-X*k0,-Z*k0],[X*k0,-Z*k0],[X*k0,Z*k0],[-X*k0,Z*k0]],0,'#f3f6f9', function(ctx,P,dpr){
+      /* the lawn: the yard they traced, when they traced one */
+      var lawn=H.loc ? H.loc.map(function(p){ return [p[0]*k0,p[1]*k0]; }) : [[-X*k0,-Z*k0],[X*k0,-Z*k0],[X*k0,Z*k0],[-X*k0,Z*k0]];
+      faces.push(ground(H,lawn,0,'#f3f6f9', function(ctx,P,dpr){
+        if(H.loc) return;
         /* mowing stripes, faint */
         ctx.strokeStyle='rgba(0,21,48,.05)'; ctx.lineWidth=5*dpr;
         for(var a=-X+4;a<X;a+=6){ var p=P(H.w(a*k0,0.01,-Z*k0)), r=P(H.w(a*k0,0.01,Z*k0)); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(r.x,r.y); ctx.stroke(); }
@@ -248,7 +254,7 @@
       for(var st2=0;st2<q.stones;st2++){ var tt=(st2+0.5)/q.stones, sa=-X+17+(X-6)*tt, sb=-Z+8+(Z-4)*tt*0.7;
         faces=faces.concat(box(H,sa-1.1,sa+1.1,0,0.15*k4+0.01,sb-0.8,sb+0.8,'stone'+st2,{fill:[252,253,254]})); }
     }
-    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,H.w(0,2.5,0),X*0.95,10,0.62) };
+    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,H.w(0,2.5,0),Math.max(X*0.95,Math.min(90,(H.reach||0)*0.9)),10,0.62) };
   }
 
   /* plumbing, as the thing itself: a water heater with its flue, the cold
@@ -553,7 +559,7 @@
         over: function(ctx,P,dpr){ ctx.save(); ctx.lineCap='round'; chain(ctx,P,edges,span(T,10.2,12.8),BLUE,1.6*dpr); ctx.restore(); } };
     },
 
-    pools: function(T,H,now){ return poolScene(T,H,now); },
+    pools: function(T,H,now){ return poolScene(T,yardH(H),now); },
     _poolOld: function(T,H){
       var q=randomPool(), poly=poolPoly(q), loc='back';
       var dir = loc==='front' ? H.front : loc==='side' ? H.side : [-H.front[0],-H.front[1]];
@@ -592,7 +598,7 @@
         } };
     },
 
-    landscaping: function(T,H,now){ return yardScene(T,H,now); },
+    landscaping: function(T,H,now){ return yardScene(T,yardH(H),now); },
     _yardOld: function(T,H){
       var q=randomYard(), where='back', size=q.size;
       var patches=[];
@@ -705,6 +711,30 @@
     var pool=Math.max(150, Math.min(800, Math.round(backA*0.18/10)*10));
     return { yard:Math.round(yard/10)*10, back:Math.round(backA/10)*10, pool:pool, shapes:shapes };
   }
+  /* the yard as traced: its area is the measurement, its outline the lawn */
+  function yardFromTrace(){
+    var w=st.traceW; if(!w||w.length<3) return null;
+    var area=st.traceSq||Math.abs(ringArea(w));
+    var pool=Math.max(150, Math.min(800, Math.round(area*0.18/10)*10));
+    return { yard:Math.round(area), back:Math.round(area), pool:pool, traced:true,
+             shapes:[w.map(function(p){ return [p[0],0.05,p[1]]; })] };
+  }
+  /* the house's frame moved onto the traced yard, turned to its long side,
+     so the pool and the garden are built where the homeowner drew them */
+  function yardH(H){
+    var w=st&&st.traceW; if(!w||w.length<3) return H;
+    if(st._yh&&st._yh.of===H) return st._yh;
+    var A=0,cx=0,cz=0,n=w.length;
+    for(var i=0;i<n;i++){ var p=w[i], q=w[(i+1)%n], cr=p[0]*q[1]-q[0]*p[1]; A+=cr; cx+=(p[0]+q[0])*cr; cz+=(p[1]+q[1])*cr; }
+    if(Math.abs(A)<1e-6){ cx=0; cz=0; w.forEach(function(p){ cx+=p[0]; cz+=p[1]; }); cx/=n; cz/=n; } else { cx/=3*A; cz/=3*A; }
+    var lo=0, th=0; for(var j=0;j<n;j++){ var a=w[j], b=w[(j+1)%n], l=Math.hypot(b[0]-a[0],b[1]-a[1]); if(l>lo){ lo=l; th=Math.atan2(b[1]-a[1],b[0]-a[0]); } }
+    var u=[Math.cos(th),Math.sin(th)], v=[-Math.sin(th),Math.cos(th)], reach=0;
+    var loc=w.map(function(p){ var dx=p[0]-cx, dz=p[1]-cz; reach=Math.max(reach,Math.hypot(dx,dz)); return [dx*u[0]+dz*u[1], dx*v[0]+dz*v[1]]; });
+    var Y={}; for(var k in H) Y[k]=H[k];
+    Y.c=[cx,cz]; Y.u=u; Y.v=v; Y.loc=loc; Y.reach=reach; Y.of=H;
+    Y.w=function(a,y,b){ return [cx+u[0]*a+v[0]*b, y, cz+u[1]*a+v[1]*b]; };
+    return (st._yh=Y);
+  }
   function drawYard(ctx,P,alpha){
     var y=st.yard; if(!y||alpha<=0.01) return;
     ctx.save(); ctx.globalAlpha=alpha;
@@ -787,11 +817,11 @@
     if(st.mapWide&&mapA>0){ st.mapDrawn=true;
       var footA=geo?Math.min(span(T,Math.max(3.0,start),Math.max(4.2,start+1.2)),1):0;
       drawMap(mctx,PM,1,mapA,geo&&geo.foot,footA);
-      if(st.yard) drawYard(mctx,PM,Math.min(mapA,span(T,6.0,7.2)));
+      if(st.yard) drawYard(mctx,PM,Math.min(mapA,st.yard.traced?span(T,1.2,2.4):span(T,6.0,7.2)));
     }
     if(!geo||grow<=0.01){ st.raf=requestAnimationFrame(draw); return; }
     st.geoLocked=geo;
-    if(st.yard===undefined && (TRADE==='pools'||TRADE==='landscaping')){ try{ st.yard=measureYard(geo); }catch(e){ st.yard=null; } }
+    if(st.yard===undefined && TRACE){ try{ st.yard=st.traceW ? yardFromTrace() : measureYard(geo); }catch(e){ st.yard=null; } }
 
     /* ground-level work (pool, yard) sits under the house */
     if(fin&&fin.under) fin.under(ctx,P1,dpr,now);
@@ -866,7 +896,7 @@
     var holdAt=STEP_T[4]-0.2, raw=el-(st.paused||0);
     if(st.data===undefined && raw>holdAt){
       st.paused=el-holdAt; raw=holdAt;
-      if(el>HS_WAIT_MAX){ finish(null); return; }
+      if(el>HS_WAIT_MAX){ if(TRACE&&st.traceW){ hsData(null); } else { finish(null); return; } }
     }
     if(st.failed && raw>=STEP_T[2]){ finish(null); return; }
     st.clock=Math.min(HS_END, raw);
@@ -905,6 +935,7 @@
 
   /* ── start: when an address is chosen ─────────────────────────────────────── */
   function begin(addr){
+    if(TRACE) return beginTrace(addr);
     var stage=ensureStage(); if(!stage) return;
     var pn=panel(); pn.classList.add('hs-mode'); pn.classList.remove('hs-done','hs-fallback');
     stop();
@@ -928,6 +959,48 @@
     });
   }
 
+  /* pool and landscaping: the address is picked, the map comes up for the
+     trace, and the street and satellite read load meanwhile */
+  function beginTrace(addr){
+    var stage=ensureStage(); if(!stage) return;
+    var pn=panel(); pn.classList.remove('hs-mode','hs-done','hs-fallback');
+    stop(); stage.classList.remove('on');
+    $('rs-addr').textContent=String(addr||'').split(',').slice(0,3).join(',');
+    var cv=$('rs-cv'), mcv=$('rs-mapcv');
+    st={ cv:cv, ctx:cv.getContext('2d'), mcv:mcv, mctx:mcv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1),
+         t0:performance.now(), clock:0, idx:-1, data:undefined, target:null, waiting:true, addrText:String(addr||'') };
+    try{ eS.sqft=0; eCheckBtn1(); }catch(e){}
+    rsTraceReset();
+    rsTraceOpen({kind:TRADE==='pools'?'backyard':'yard', onDone:hsTraced, onSkip:hsSkip});
+  }
+  function hsTraced(pts, sq){
+    if(!st) return;
+    if(!st.origin) st.origin={lat:pts[0].lat, lng:pts[0].lng};
+    st.traceLL=pts; st.traceSq=sq; st.traceW=rsTraceWorld(pts, st.origin);
+    hsRun();
+  }
+  function hsRun(){
+    var me=st; if(!me) return;
+    clearTimeout(me.timer); cancelAnimationFrame(me.raf);
+    me.yard=undefined; me._yh=null; me._pool=null; me._yard=null; me.done=false; me.cam=null; me.arrive=undefined;
+    me.geoLocked=null; me.frame=null; me.frameGeo=null; me.mapDrawn=false; me.q={}; me.waiting=false;
+    me.t0=performance.now(); me.paused=0; me.clock=0; me.clockAt=undefined; me.clockHeld=false; me.lastMs=undefined; me.spin=0; me.idx=-1;
+    var pn=panel(); pn.classList.add('hs-mode'); pn.classList.remove('hs-done','hs-fallback');
+    $('rs-live').style.display=''; $('rs-result').className='rs-result'; $('rs-result').innerHTML='';
+    $('rs-bar').style.width='0'; $('rs-pct').textContent='0%'; $('rs-now').textContent=label(0);
+    var stage=$('rs-stage'); stage.classList.add('on');
+    try{ if(stage.scrollIntoView) stage.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
+    draw(); tick();
+  }
+  function hsSkip(){ var pn=panel(); pn.classList.remove('hs-mode'); var mw=$('e-mapwrap'); if(mw) mw.style.display='none'; handoff(null, {}); }
+  window.hsRedraw=function(){
+    if(st){ clearTimeout(st.timer); cancelAnimationFrame(st.raf); }
+    var s=$('rs-stage'); if(s) s.classList.remove('on');
+    var pn=panel(); pn.classList.remove('hs-mode','hs-done','hs-fallback');
+    if(!rsT) rsTraceOpen({kind:TRADE==='pools'?'backyard':'yard', onDone:hsTraced, onSkip:hsSkip}); else rsTraceShow();
+    var mw=$('e-mapwrap'); if(mw&&mw.scrollIntoView) mw.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+
   function hsData(d){
     var me=st; if(!me) return;
     if(d && d.totalAreaSqft>0){
@@ -947,6 +1020,11 @@
         }
         me.gen=g0;
       }
+    } else if(TRACE){
+      /* no satellite read: the yard is still theirs, the house is a typical
+         one at the address, and nothing about the house is claimed */
+      me.data={ trueSqft:0, planSqft:0, pitch:22, planes:0, none:true };
+      me.target=modelFor(2000, 22); me.gen=buildGeometry(me.target);
     } else { me.data=null; me.failed=true; }
   }
 
@@ -956,8 +1034,8 @@
     painting:    function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(Math.round(Math.sqrt(d.planSqft)*4*9)),'Exterior wall, approx. sq ft']]; },
     electrical:  function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(d.planSqft),'Home size to price']]; },
     general:     function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(d.trueSqft),'Roof area, sq ft']]; },
-    pools:       function(d){ var y=st&&st.yard; return y ? [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(y.back),'Back yard, approx. sq ft'],[fmt(y.pool),'Pool that fits, sq ft']] : [[fmt(d.planSqft),'Home footprint, sq ft']]; },
-    landscaping: function(d){ var y=st&&st.yard; return y ? [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(y.yard),'Yard, approx. sq ft']] : [[fmt(d.planSqft),'Home footprint, sq ft']]; },
+    pools:       function(d){ var y=st&&st.yard, h=d.planSqft?[[fmt(d.planSqft),'Home footprint, sq ft']]:[]; return y ? h.concat([[fmt(y.back),y.traced?'Backyard traced, sq ft':'Back yard, approx. sq ft'],[fmt(y.pool),'Pool that fits, sq ft']]) : h; },
+    landscaping: function(d){ var y=st&&st.yard, h=d.planSqft?[[fmt(d.planSqft),'Home footprint, sq ft']]:[]; return y ? h.concat([[fmt(y.yard),y.traced?'Yard traced, sq ft':'Yard, approx. sq ft']]) : h; },
     _:           function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft']]; }
   };
   var PREFILL = {
@@ -980,7 +1058,8 @@
     $('rs-bar').style.width='100%';
     var cards=(RESULT[TRADE]||RESULT._)(data,q);
     res.innerHTML='<div class="rs-grid hs-grid'+cards.length+'">'+cards.map(function(c){ return '<div><b>'+c[0]+'</b><span>'+c[1]+'</span></div>'; }).join('')+'</div>'
-      +'<p class="rs-note">'+(PREFILL[TRADE]?'Measured from satellite. Adjust the size below if it’s off.':'Measured from satellite. Now tell us about the job.')+'</p>';
+      +'<p class="rs-note">'+(st.traceW?(TRADE==='pools'?'Backyard measured from the outline you traced; the pool size is a starting point. Adjust it below.':'Measured from the outline you traced. Adjust the size below if it’s off.'):PREFILL[TRADE]?'Measured from satellite. Adjust the size below if it’s off.':'Measured from satellite. Now tell us about the job.')+'</p>'
+      +(st.traceW?'<button type="button" class="rs-fix" onclick="hsRedraw()">Redraw the outline</button>':'');
     res.className='rs-result on';
     handoff(data, q);
     st.done=true;
@@ -1043,18 +1122,24 @@
       var r; try{ r=_select.apply(this, arguments); }catch(e){}
       return r;
     };
-    if(typeof eInitMap==='function'){ var _init=eInitMap; eInitMap=window.eInitMap=function(){ var r; try{ r=_init.apply(this, arguments); }catch(e){} return r; }; }
+    if(typeof eInitMap==='function'){ var _init=eInitMap; eInitMap=window.eInitMap=function(){ var r; try{ r=_init.apply(this, arguments); }catch(e){}
+      if(TRACE&&rsTraceActive()){ rsTraceAttach(); try{ eLmap.setZoom(19); }catch(e){} }
+      return r; }; }
     eSolarMeasure=window.eSolarMeasure=function(lat, lon){
       rsMapLoad(lat, lon);
       if(window.RS_DEMO){ setTimeout(function(){ hsData(window.RS_DEMO); }, 1400); return; }
       fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
         .then(function(r){ return r.json(); })
-        .then(function(d){ hsData(d&&d.found&&d.totalAreaSqft>0 ? d : null); })
+        .then(function(d){ if(TRACE&&d&&d.centerLat&&d.centerLng) rsTraceCenter(d.centerLat, d.centerLng, 19); hsData(d&&d.found&&d.totalAreaSqft>0 ? d : null); })
         .catch(function(){ hsData(null); });
     };
     var sub=document.querySelector('#e-addrpanel .e-ssub');
-    if(sub&&$('e-mapwrap')) sub.textContent='Enter the address and we’ll find your home from satellite. Nothing to draw.';
-    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=panel(); if(p) p.classList.remove('hs-mode','hs-done','hs-fallback'); return _rs.apply(this, arguments); }; }
+    if(sub&&$('e-mapwrap')) sub.textContent= TRACE
+      ? (TRADE==='pools' ? 'Enter the address, then tap the corners of your backyard on the satellite map. We’ll measure it and show a pool that fits.'
+                         : 'Enter the address, then tap the corners of the yard you want landscaped on the satellite map. We’ll measure it for you.')
+      : 'Enter the address and we’ll find your home from satellite. Nothing to draw.';
+    if(TRACE&&typeof eZipBack==='function'){ var _zb=eZipBack; eZipBack=window.eZipBack=function(){ stop(); rsTraceReset(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=panel(); if(p) p.classList.remove('hs-mode','hs-done'); return _zb.apply(this, arguments); }; }
+    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); if(TRACE) rsTraceReset(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=panel(); if(p) p.classList.remove('hs-mode','hs-done','hs-fallback'); return _rs.apply(this, arguments); }; }
     window.hsDebug={ get st(){ return st; } };
     return true;
   }

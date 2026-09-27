@@ -1,21 +1,20 @@
 <!-- ROOF SCAN — injected into the roofing estimator by tools/inject-roof-scan.py.
      Edit this file, then run:  python3 tools/inject-roof-scan.py && python3 tools/build-embeds.py
 
-     Replaces "trace your roof with dots" with a measured scan. The measurement
-     is real — it is the same satellite roof measurement (Google Solar, through
-     the rapid-handler function) the estimator already fetched and then threw
-     half of away: it kept the slope and made the homeowner trace the area by
-     hand. Now it keeps both.
+     The homeowner traces the roof on the satellite map (tap each corner, tap
+     the first one to close), and only then does the scan run. The house in
+     the scan rises from THAT outline; the slope, and hip or gable, come from
+     the satellite read (Google Solar, through the rapid-handler function),
+     which loads in the background while they trace. Roof area is the traced
+     plan area over cos(pitch); with no satellite read, a typical 22°.
 
-     The 15 seconds are deliberate. The answer usually arrives in one or two,
-     and a number that appears instantly reads as a guess; one that visibly
-     took work reads as measured. The time is spent on a white-block model of
-     THEIR roof — its footprint and slope come from the measurement, so a
-     steep roof looks steep — while the steps name what really happened.
+     The 15 seconds are deliberate. A number that appears instantly reads as
+     a guess; one that visibly took work reads as measured. The steps name
+     what really happened.
 
-     If satellite has no read on the address (new build, rural, dense tree
-     cover), the scan says so plainly and hands over to the old trace map and
-     the manual size slider, which are kept for exactly that. -->
+     The trace controller and its CSS sit inside the block shared with the
+     house scan (tools/build-house-scan.py), so pool and landscaping trace
+     the yard with the same map tools. -->
 <style id="rs-style">
 /* The main site's own tokens (index.html :root): Geist, ink #001530, grey
    #788493, hairline #dce3ec, blue #006fff, and its one easing curve.
@@ -63,6 +62,31 @@
 #est-embed .rs-fix:focus-visible{outline:2px solid var(--rs-blue);outline-offset:3px;border-radius:3px;}
 #est-embed .rs-fail{font-size:14px;font-weight:600;color:var(--rs-ink);}
 @media(prefers-reduced-motion:reduce){#est-embed .rs-stage.on,#est-embed .rs-result.on{animation:none;}}
+/* the trace: the satellite map, the homeowner taps the corners, then the scan */
+#est-embed .rs-tracing #e-mapwrap{display:block !important;}
+#est-embed .rs-tracing .e-maptb,#est-embed .rs-tracing .e-mhint,#est-embed .rs-tracing #e-solarbanner,
+#est-embed .rs-tracing #e-mresult,#est-embed .rs-tracing #e-slopecard,#est-embed .rs-tracing .e-flatrow,
+#est-embed .rs-tracing #e-manualbtn,#est-embed .rs-tracing #e-sldwrap{display:none !important;}
+#est-embed .rs-thead,#est-embed .rs-tfoot{display:none;}
+#est-embed .rs-tracing .rs-thead,#est-embed .rs-tracing .rs-tfoot{display:flex;}
+#est-embed .rs-thead{--rs-ink:#001530;--rs-grey:#788493;--rs-blue:#006fff;font-family:'Geist',system-ui,-apple-system,sans-serif;align-items:flex-start;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid #eef1f6;}
+#est-embed .rs-tstep{flex:0 0 26px;height:26px;border-radius:50%;background:var(--rs-blue);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+#est-embed .rs-tmsg{display:flex;flex-direction:column;gap:3px;min-width:0;}
+#est-embed .rs-tmsg b{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--rs-ink);line-height:1.3;}
+#est-embed .rs-tmsg span{font-size:13px;color:var(--rs-grey);line-height:1.45;font-variant-numeric:tabular-nums;}
+#est-embed .rs-tfoot{--rs-ink:#001530;--rs-grey:#788493;--rs-blue:#006fff;--rs-line:#dce3ec;font-family:'Geist',system-ui,-apple-system,sans-serif;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 16px;background:#fff;border-top:1px solid #eef1f6;}
+#est-embed .rs-tbtn{appearance:none;border:1px solid var(--rs-line);background:#fff;color:var(--rs-ink);border-radius:40px;min-height:44px;padding:0 18px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+#est-embed .rs-tbtn:hover:not(:disabled){background:#f3f6fa;}
+#est-embed .rs-tbtn:disabled{opacity:.4;cursor:default;}
+#est-embed .rs-tgo{appearance:none;margin-left:auto;border:1px solid var(--rs-blue);background:var(--rs-blue);color:#fff;border-radius:40px;min-height:44px;padding:0 22px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:opacity .2s ease;}
+#est-embed .rs-tgo:disabled{background:#c9d3df;border-color:#c9d3df;cursor:default;}
+#est-embed .rs-tbtn:focus-visible,#est-embed .rs-tgo:focus-visible{outline:3px solid var(--rs-blue);outline-offset:2px;}
+#est-embed .rs-tskip{flex:1 0 100%;margin:2px 0 0;text-align:left;font-size:12.5px;}
+#est-embed .rs-tracing #e-mapel{touch-action:none;}
+#est-embed .rs-vx{background:#fff;border:2px solid #006fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,21,48,.35);}
+#est-embed .rs-vx.rs-v0{background:#006fff;border-color:#fff;}
+#est-embed .rs-vx.rs-v0.rs-close{box-shadow:0 0 0 6px rgba(0,111,255,.30),0 1px 3px rgba(0,21,48,.35);}
+@media(max-width:560px){#est-embed .rs-tgo{flex:1 0 100%;margin-left:0;order:3;}#est-embed .rs-tbtn{flex:1 1 0;}#est-embed .rs-tskip{order:4;}}
 </style>
 <script id="rs-script">
 (function(){
@@ -114,6 +138,148 @@
     var plan=Math.max(600, (trueSqft||2000)*Math.cos(p*Math.PI/180));
     var D=Math.sqrt(plan/1.55), W=D*1.55;
     return { W:W, D:D, H:10, pitch:p, o:1.6 };
+  }
+
+  /* ── the trace ──────────────────────────────────────────────────────────────
+     Before any scan, the homeowner outlines the thing being priced on the
+     satellite map — their roof, their yard — by tapping its corners, and
+     closes it by tapping the first one again. The scan then builds from that
+     outline: it is their shape and their size, not a guess from the map.
+     Drawn on the estimator's own Leaflet map (eLmap), with its own layers and
+     its own click handler, so it works the same with a mouse or a finger:
+     a tap is a corner, a drag pans, Undo and Clear are big buttons. Shared
+     with the house scan (pool and landscaping trace the yard). */
+  var rsT=null;
+  var RS_TCOPY={
+    roof:     {main:'Tap each corner of your roof', sub:'Go around the outside edge of the roof. Tap the first point again to finish.', go:'Scan my roof', skip:'Can’t see your roof? Enter the size instead'},
+    yard:     {main:'Tap each corner of the yard you want landscaped', sub:'Go around the area to be worked on. Tap the first point again to finish.', go:'Scan my yard', skip:'Can’t trace it? Enter the size instead'},
+    backyard: {main:'Tap each corner of your backyard', sub:'Go around the yard where the pool would go. Tap the first point again to finish.', go:'Scan my backyard', skip:'Can’t trace it? Pick a pool size instead'}
+  };
+  function rsMapObj(){ try{ return (typeof eLmap!=='undefined' && eLmap) ? eLmap : null; }catch(e){ return null; } }
+  function rsLLArea(pts){
+    if(!pts||pts.length<3) return 0;
+    var R=6378137, a=0, n=pts.length;
+    for(var i=0;i<n;i++){ var j=(i+1)%n, l1=pts[i].lat*Math.PI/180, l2=pts[j].lat*Math.PI/180, dl=(pts[j].lng-pts[i].lng)*Math.PI/180; a+=dl*(2+Math.sin(l1)+Math.sin(l2)); }
+    return Math.round(Math.abs(a*R*R/2)*10.7639);
+  }
+  function rsTracePanel(){ return document.getElementById('hs-addrpanel') || document.getElementById('e-addrpanel'); }
+  function rsTraceUI(){
+    var mw=document.getElementById('e-mapwrap'), el=document.getElementById('e-mapel'); if(!mw||!el) return false;
+    if(document.getElementById('rs-thead')) return true;
+    var h=document.createElement('div'); h.className='rs-thead'; h.id='rs-thead';
+    h.innerHTML='<div class="rs-tstep" aria-hidden="true">✓</div><div class="rs-tmsg" role="status" aria-live="polite"><b id="rs-tmain"></b><span id="rs-tsub"></span></div>';
+    mw.insertBefore(h, mw.firstChild);
+    var f=document.createElement('div'); f.className='rs-tfoot'; f.id='rs-tfoot';
+    f.innerHTML='<button type="button" class="rs-tbtn" id="rs-tundo">Undo</button><button type="button" class="rs-tbtn" id="rs-tclear">Clear</button>'
+      +'<button type="button" class="rs-tgo" id="rs-tgo" disabled></button><button type="button" class="rs-fix rs-tskip" id="rs-tskip"></button>';
+    el.parentNode.insertBefore(f, el.nextSibling);
+    document.getElementById('rs-tundo').onclick=function(){ if(!rsT) return; if(rsT.closed) rsT.closed=false; else rsT.pts.pop(); rsTraceDraw(); };
+    document.getElementById('rs-tclear').onclick=function(){ if(!rsT) return; rsT.pts=[]; rsT.closed=false; rsTraceDraw(); };
+    document.getElementById('rs-tgo').onclick=function(){ if(!rsT||rsT.pts.length<3) return; rsT.closed=true; rsTraceDraw(); rsTraceDone(); };
+    document.getElementById('rs-tskip').onclick=function(){ if(!rsT) return; var o=rsT.o; rsTraceHide(); if(o.onSkip) o.onSkip(); };
+    return true;
+  }
+  /* o: {kind:'roof'|'yard'|'backyard', onDone(latlngs, sqft), onSkip()} */
+  function rsTraceOpen(o){
+    rsT={o:o, pts:[], closed:false, lay:[]};
+    rsTraceShow();
+  }
+  window.rsTraceState=function(){ return rsT ? {n:rsT.pts.length, closed:rsT.closed, sqft:rsLLArea(rsT.pts)} : null; };   /* for tests */
+  function rsTraceShow(){
+    if(!rsT||!rsTraceUI()) return;
+    var c=RS_TCOPY[rsT.o.kind]||RS_TCOPY.roof;
+    document.getElementById('rs-tgo').textContent=c.go;
+    document.getElementById('rs-tskip').textContent=c.skip;
+    var p=rsTracePanel(); if(p) p.classList.add('rs-tracing');
+    rsTraceAttach();
+  }
+  function rsTraceHide(){ var p=rsTracePanel(); if(p) p.classList.remove('rs-tracing'); }
+  function rsTraceActive(){ var p=rsTracePanel(); return !!(rsT && p && p.classList.contains('rs-tracing')); }
+  /* called when the map exists (and again whenever the estimator re-inits it) */
+  function rsTraceAttach(){
+    var m=rsMapObj(); if(!rsT) return;
+    if(m){
+      try{ eSetTool('pan'); }catch(e){}           /* the estimator's own drawing tools stay idle; dragging pans */
+      try{ m.dragging.enable(); m.getContainer().style.cursor='crosshair'; }catch(e){}
+      if(!m._rsBound){ m.on('click', rsTraceClick); m._rsBound=true; }
+      setTimeout(function(){ try{ m.invalidateSize(); }catch(e){} }, 120);
+    }
+    /* pools place a draggable pool shape on the map once it is ready; while
+       the yard is being traced that waits */
+    if(typeof ePoolMode==='function' && !ePoolMode._rs){
+      var _pm=ePoolMode, w=function(){ if(rsTraceActive()){ try{ eClearDrawing(); }catch(e){} try{ eSetTool('pan'); }catch(e){} return; } return _pm.apply(this, arguments); };
+      w._rs=true; try{ ePoolMode=w; }catch(e){} window.ePoolMode=w;
+    }
+    rsTraceDraw();
+  }
+  function rsTraceCenter(lat, lng, zoom){
+    var m=rsMapObj(); if(!m||!rsT||rsT.pts.length) return;
+    try{ m.setView([lat,lng], zoom||m.getZoom()); }catch(e){}
+  }
+  function rsTraceClick(e){
+    if(!rsTraceActive()||rsT.closed) return;
+    var m=rsMapObj();
+    if(rsT.pts.length>=3 && m){
+      var a=m.latLngToContainerPoint(rsT.pts[0]), b=m.latLngToContainerPoint(e.latlng);
+      if(Math.hypot(a.x-b.x, a.y-b.y)<24){ rsT.closed=true; rsTraceDraw(); return; }
+    }
+    rsT.pts.push(e.latlng); rsTraceDraw();
+  }
+  function rsTraceDraw(){
+    if(!rsT) return;
+    var m=rsMapObj(), pts=rsT.pts, n=pts.length, closed=rsT.closed&&n>=3;
+    if(m && typeof L!=='undefined'){
+      rsT.lay.forEach(function(l){ try{ m.removeLayer(l); }catch(e){} }); rsT.lay=[];
+      if(n>=3) rsT.lay.push(L.polygon(pts,{color:'#006fff',weight:closed?3:2,dashArray:closed?null:'6 6',fillColor:'#006fff',fillOpacity:closed?0.22:0.12,interactive:false}).addTo(m));
+      else if(n===2) rsT.lay.push(L.polyline(pts,{color:'#006fff',weight:3,interactive:false}).addTo(m));
+      if(n>=3&&!closed) rsT.lay.push(L.polyline(pts,{color:'#006fff',weight:3,interactive:false}).addTo(m));
+      pts.forEach(function(p,i){
+        var first=i===0, sz=first?18:14, cls='rs-vx'+(first?' rs-v0':'')+(first&&n>=3&&!closed?' rs-close':'');
+        rsT.lay.push(L.marker(p,{interactive:false,keyboard:false,icon:L.divIcon({className:cls,iconSize:[sz,sz]})}).addTo(m));
+      });
+    }
+    var c=RS_TCOPY[rsT.o.kind]||RS_TCOPY.roof, sq=rsLLArea(pts), main, sub;
+    if(!n){ main=c.main; sub=c.sub; }
+    else if(n<3){ main=c.main; sub=n+' corner'+(n>1?'s':'')+' placed — keep going. Drag to move the map.'; }
+    else if(!closed){ main='Tap the first point to finish'; sub=n+' corners · about '+sq.toLocaleString()+' sq ft so far. Or tap “'+c.go+'”.'; }
+    else { main='Outline done · '+sq.toLocaleString()+' sq ft'; sub='Looks right? Start the scan. Undo reopens the outline.'; }
+    var mn=document.getElementById('rs-tmain'), sb=document.getElementById('rs-tsub');
+    if(mn) mn.textContent=main; if(sb) sb.textContent=sub;
+    var u=document.getElementById('rs-tundo'), cl=document.getElementById('rs-tclear'), g=document.getElementById('rs-tgo');
+    if(u) u.disabled=!n; if(cl) cl.disabled=!n; if(g) g.disabled=n<3;
+  }
+  function rsTraceDone(){
+    if(!rsT||rsT.pts.length<3) return;
+    var pts=rsT.pts.map(function(p){ return {lat:p.lat, lng:p.lng}; }), sq=rsLLArea(pts), o=rsT.o;
+    rsTraceHide();
+    if(o.onDone) o.onDone(pts, sq);
+  }
+  /* forget the outline: a new address, back to the ZIP, start over */
+  function rsTraceReset(){
+    var m=rsMapObj();
+    if(rsT&&m){ rsT.lay.forEach(function(l){ try{ m.removeLayer(l); }catch(e){} }); }
+    rsTraceHide(); rsT=null;
+  }
+
+  /* the outline in the scan's world: north-up feet around the origin */
+  function rsTraceWorld(pts, origin){ return pts.map(function(p){ return worldOf(origin, p.lat, p.lng); }); }
+
+  /* Which way the roof runs, from the planes satellite found: how much of
+     the roof faces along the outline's long side (hip ends, or a ridge
+     running across) against how much faces across it (the two main slopes).
+     Almost nothing along it: gable ends. Otherwise a hip. Null when there
+     are no planes. */
+  function rsRoofStyle(roof, ring){
+    var ps=(roof&&roof.planes)||[]; if(ps.length<2||!ring||ring.length<3) return null;
+    var lo=0, th=0, n=ring.length;
+    for(var i=0;i<n;i++){ var p=ring[i], q=ring[(i+1)%n], l=Math.hypot(q[0]-p[0],q[1]-p[1]); if(l>lo){ lo=l; th=Math.atan2(q[1]-p[1],q[0]-p[0]); } }
+    var ux=Math.cos(th), uz=Math.sin(th), along=0, across=0, flat=0;
+    ps.forEach(function(p){ var w=Math.max(0,+p.groundSqft||0); if(!w) return;
+      if((+p.pitch||0)<5){ flat+=w; return; }
+      var az=(+p.azimuth||0)*Math.PI/180, fx=Math.sin(az), fz=-Math.cos(az);   /* facing, x east z south */
+      if(Math.abs(fx*ux+fz*uz)>0.7071) along+=w; else across+=w; });
+    var tot=along+across; if(tot<=0) return null;
+    return {gable: along<0.12*tot, along:Math.round(along), across:Math.round(across)};
   }
 
 
@@ -547,7 +713,7 @@
      ell — and a hip roof over each, crossing where they meet, the way real
      roofs on L and T houses do. Only for outlines whose walls all run on
      two axes; anything else keeps the inset roof. */
-  function wingRoofs(pts,tan){
+  function wingRoofs(pts,tan,style){
     var n=pts.length, lo=0, th=0;
     for(var i=0;i<n;i++){ var p=pts[i], q=pts[(i+1)%n], l=Math.hypot(q[0]-p[0],q[1]-p[1]); if(l>lo){ lo=l; th=Math.atan2(q[1]-p[1],q[0]-p[0]); } }
     var c=Math.cos(th), s=Math.sin(th);
@@ -576,21 +742,27 @@
     }
     if(!rects.length) return null;
     var E=10, faces=[], edges=[];
+    /* style (from the satellite roof planes): gable ends instead of hips.
+       Only for a plain rectangle; wings keep hips so their roofs meet
+       cleanly. */
+    var gable=!!(style&&style.gable&&rects.length===1);
     function W(x,y,z){ return [x*c-z*s, y, x*s+z*c]; }
     rects.forEach(function(r){
       var x0=r[0], x1=r[1], z0=r[2], z1=r[3], lx=x1-x0, lz=z1-z0;
       if(lx<3||lz<3) return;
-      var half=Math.min(lx,lz)/2, Y=E+half*tan, a,b,cc,d, r0, r1;
-      if(lx>=lz){ var zm=(z0+z1)/2; r0=W(x0+half,Y,zm); r1=W(x1-half,Y,zm); }
-      else { var xm=(x0+x1)/2; r0=W(xm,Y,z0+half); r1=W(xm,Y,z1-half); }
+      var alongX=lx>=lz;
+      var half=(alongX?lz:lx)/2, Y=E+half*tan, a,b,cc,d, r0, r1, inset=gable?0:half;
+      if(alongX){ var zm=(z0+z1)/2; r0=W(x0+inset,Y,zm); r1=W(x1-inset,Y,zm); }
+      else { var xm=(x0+x1)/2; r0=W(xm,Y,z0+inset); r1=W(xm,Y,z1-inset); }
       a=W(x0,E,z0); b=W(x1,E,z0); cc=W(x1,E,z1); d=W(x0,E,z1);
-      if(lx>=lz){
+      var ek=gable?'wall':'roof';
+      if(alongX){
         faces.push({v:[a,b,r1,r0],kind:'roof'}); faces.push({v:[cc,d,r0,r1],kind:'roof'});
-        faces.push({v:[d,a,r0],kind:'roof'}); faces.push({v:[b,cc,r1],kind:'roof'});
+        faces.push({v:[d,a,r0],kind:ek}); faces.push({v:[b,cc,r1],kind:ek});
         edges.push([a,r0],[d,r0],[b,r1],[cc,r1]);
       } else {
         faces.push({v:[b,cc,r1,r0],kind:'roof'}); faces.push({v:[d,a,r0,r1],kind:'roof'});
-        faces.push({v:[a,b,r0],kind:'roof'}); faces.push({v:[cc,d,r1],kind:'roof'});
+        faces.push({v:[a,b,r0],kind:ek}); faces.push({v:[cc,d,r1],kind:ek});
         edges.push([a,r0],[b,r0],[cc,r1],[d,r1]);
       }
       if(Math.hypot(r0[0]-r1[0],r0[2]-r1[2])>0.3) edges.push([r0,r1]);
@@ -598,7 +770,9 @@
     return faces.length ? {faces:faces, edges:edges} : null;
   }
 
-  function polyModel(ring, pitchDeg){
+  /* opts: {style} from rsRoofStyle, {flat} for a flat or low-slope roof */
+  function polyModel(ring, pitchDeg, opts){
+    opts=opts||{};
     var pts=ring.map(function(p){ return [p[0],p[1]]; });
     if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
     /* tidy: drop near-duplicate corners and corners on a straight line */
@@ -613,7 +787,15 @@
     var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
     /* homes read as pitched: missing or near-flat pitch is taken as 18° at least */
     var tan=Math.tan(Math.max(18,Math.min(50,pitchDeg||22))*Math.PI/180);
-    var wings=wingRoofs(pts,tan);
+    if(opts.flat){
+      /* a flat roof: the walls, a parapet-thick slab on top */
+      var gf=pts.map(function(p){ return [p[0],0,p[1]]; }), ef=pts.map(function(p){ return [p[0],11,p[1]]; }), ff=[], evf=[];
+      for(var i6=0;i6<n;i6++){ var j6=(i6+1)%n; ff.push({v:[gf[i6],gf[j6],ef[j6],ef[i6]], kind:'wall'}); evf.push([ef[i6],ef[j6]]); }
+      ff.push({v:ef.slice(), kind:'roof'});
+      var lf=0, thf=0; for(var i7=0;i7<n;i7++){ var pa7=pts[i7], pb7=pts[(i7+1)%n], l7=Math.hypot(pb7[0]-pa7[0],pb7[1]-pa7[1]); if(l7>lf){ lf=l7; thf=Math.atan2(pb7[1]-pa7[1],pb7[0]-pa7[0]); } }
+      return { faces:ff, roofEdges:evf, ridge:null, eaves:evf, foot:[gf], axes:{th:thf}, fromMap:true };
+    }
+    var wings=wingRoofs(pts,tan,opts.style);
     if(wings){
       var gw=pts.map(function(p){ return [p[0],0,p[1]]; }), ew=pts.map(function(p){ return [p[0],10,p[1]]; }), fw=[], evw=[];
       for(var iw=0;iw<n;iw++){ var jw=(iw+1)%n; fw.push({v:[gw[iw],gw[jw],ew[jw],ew[iw]], kind:'wall'}); evw.push([ew[iw],ew[jw]]); }
@@ -808,7 +990,8 @@
     var holdAt=RS_STEPS[4].t-0.2, raw=el-(st.paused||0);
     if(st.data===undefined && raw>holdAt){
       st.paused=el-holdAt; raw=holdAt;
-      if(el>RS_WAIT_MAX){ finish(null); return; }
+      /* satellite never answered: the outline is theirs, the slope is the typical one */
+      if(el>RS_WAIT_MAX){ if(st.trace){ st.solar=null; rsRoofBuild(); } else { finish(null); return; } }
     }
     if(st.failed && raw>=RS_STEPS[2].t){ finish(null); return; }
     st.clock=Math.min(RS_END, raw);
@@ -840,51 +1023,78 @@
     return deg<5 ? 'flat / low-slope' : (over12+'/12 pitch ('+Math.round(deg)+'°)');
   }
 
-  /* ── start: called the moment an address is chosen ── */
+  /* ── start: called the moment an address is chosen. The street map and the
+     satellite read start loading now, in the background; the scan itself
+     waits until the homeowner has traced the roof. ── */
   window.eRoofScanStart=function(addr){
     var stage=ensureStage(); if(!stage) return;
-    var panel=$('e-addrpanel'); panel.classList.add('rs-mode'); panel.classList.remove('rs-fallback');
-    stop();
+    var panel=$('e-addrpanel'); panel.classList.remove('rs-mode','rs-fallback');
+    stop(); stage.classList.remove('on');
     $('rs-addr').textContent=String(addr||'').split(',').slice(0,3).join(',');
+    var cv=$('rs-cv'), mcv=$('rs-mapcv');
+    st={ cv:cv, ctx:cv.getContext('2d'), mcv:mcv, mctx:mcv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
+         clock:0, idx:-1, data:undefined, target:null, yaw:0.62, waiting:true, solar:undefined };
+    /* the continue button stays off until the numbers are in */
+    try{ eS.sqft=0; eS.usedMap=false; eCheckBtn1(); }catch(e){}
+    var b=$('e-btn1'); if(b) b.classList.remove('rs-ready');
+    rsTraceReset();
+    rsTraceOpen({kind:'roof', onDone:rsRoofTraced, onSkip:rsRoofSkip});
+  };
+
+  /* the outline is closed: the scan runs on it */
+  function rsRoofTraced(pts, sq){
+    if(!st) return;
+    if(!st.origin) st.origin={lat:pts[0].lat, lng:pts[0].lng};
+    st.traceLL=pts; st.tracePlan=sq; st.trace=rsTraceWorld(pts, st.origin);
+    rsRoofRun();
+  }
+  function rsRoofRun(){
+    var s=st; if(!s) return;
+    clearTimeout(s.timer); cancelAnimationFrame(s.raf);
+    s.t0=performance.now(); s.clock=0; s.idx=-1; s.paused=0; s.clockAt=undefined; s.clockHeld=false; s.lastMs=undefined; s.spin=0;
+    s.cam=null; s.arrive=undefined; s.geoLocked=null; s.poly=null; s.polyTried=true; s.frame=null; s.frameGeo=null;
+    s.done=false; s.still=false; s.data=undefined; s.target=null; s.failed=false; s.waiting=false; s.mapDrawn=false;
+    var panel=$('e-addrpanel'); panel.classList.add('rs-mode'); panel.classList.remove('rs-fallback');
     $('rs-live').style.display=''; $('rs-result').className='rs-result'; $('rs-result').innerHTML='';
     $('rs-readout').classList.remove('on'); $('rs-rv').textContent='0'; $('rs-bar').style.width='0';
     $('rs-pct').textContent='0%'; $('rs-now').textContent='Analyzing your roof';
-    stage.classList.add('on');
-    var cv=$('rs-cv'), mcv=$('rs-mapcv');
-    st={ cv:cv, ctx:cv.getContext('2d'), mcv:mcv, mctx:mcv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1), t0:performance.now(),
-         clock:0, idx:-1, data:undefined, target:null, yaw:0.62 };
-    /* the continue button stays off until the numbers are in */
-    try{ eS.sqft=0; eS.usedMap=false; eCheckBtn1(); }catch(e){}
+    var stage=$('rs-stage'); stage.classList.add('on');
+    try{ if(stage.scrollIntoView) stage.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
+    rsRoofBuild();
     draw(); tick();
-  };
+  }
+  /* The numbers and the house, from the trace plus whatever satellite said.
+     Plan area is the traced outline's; the slope turns it into roof area
+     (plan ÷ cos pitch). No satellite read: a typical 22° slope. Called
+     again if the satellite answer lands after the scan has started — until
+     the house has risen, it takes the measured slope. */
+  function rsRoofBuild(){
+    var s=st; if(!s||!s.trace) return;
+    var d=s.solar, has=!!(d&&d.totalAreaSqft>0);
+    var pitch=has ? Math.max(0, +d.avgPitchDegrees||0) : 22, flat=has&&pitch<5;
+    var plan=s.tracePlan, trueSqft=Math.round(flat ? plan : plan/Math.cos(Math.min(60,pitch)*Math.PI/180));
+    var nPlanes=has&&d.roof&&d.roof.planes ? d.roof.planes.length : 0;
+    var style=null; try{ style=has ? rsRoofStyle(d.roof, s.trace) : null; }catch(e){}
+    s.target=modelFor(trueSqft, pitch);
+    if(!s.geoLocked){
+      try{ s.poly=polyModel(s.trace, pitch, {flat:flat, style:style}); }catch(e){ s.poly=null; }
+      if(!s.poly){ var cx=0, cz=0; s.trace.forEach(function(p){ cx+=p[0]; cz+=p[1]; }); cx/=s.trace.length; cz/=s.trace.length;
+        var g0=buildGeometry(s.target), seen=[], mv=function(v){ if(v._m) return; v._m=1; seen.push(v); v[0]+=cx; v[2]+=cz; };
+        g0.faces.forEach(function(f){ f.v.forEach(mv); }); g0.roofEdges.forEach(function(e){ mv(e[0]); mv(e[1]); }); (g0.foot||[]).forEach(function(f){ f.forEach(mv); });
+        if(g0.ridge){ mv(g0.ridge[0]); mv(g0.ridge[1]); } seen.forEach(function(v){ delete v._m; }); s.gen=g0; }
+    }
+    if(s.solar!==undefined){
+      s.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch, planes:nPlanes, solar:has, gable:!!(style&&style.gable),
+               satSqft: has ? Math.round(d.totalAreaSqft) : 0 };
+    }
+  }
 
-  /* ── the measurement, from the satellite read (or null if there wasn't one) ── */
+  /* ── the satellite read (or null if there wasn't one) ── */
   window.eRoofScanData=function(d){
     if(!st) return;
-    if(d && d.totalAreaSqft>0){
-      var pitch=+d.avgPitchDegrees||0;
-      var trueSqft=Math.round(d.totalAreaSqft);
-      var plan=Math.round(trueSqft*Math.cos(pitch*Math.PI/180));
-      st.data={ trueSqft:trueSqft, planSqft:plan, pitch:pitch, planes:(d.roof&&d.roof.planes&&d.roof.planes.length)||0 };
-      st.target=modelFor(trueSqft, pitch);
-      st.bc=(st.origin&&d.centerLat&&d.centerLng) ? worldOf(st.origin,d.centerLat,d.centerLng) : [0,0];
-      try{ st.planes=planesModel(d.roof, st.origin); }catch(e){ st.planes=null; }   /* no planes: the typical-house model stays */
-      if(!st.planes){
-        /* the typical-house model, set down where the building is rather than
-           where the address pin fell */
-        var g0=buildGeometry(st.target), o=st.origin;
-        if(o&&d.centerLat&&d.centerLng){
-          var FT=3.28084, dx=(d.centerLng-o.lng)*111320*Math.cos(o.lat*Math.PI/180)*FT, dz=-(d.centerLat-o.lat)*110574*FT, seen=[];
-          var mv=function(v){ if(v._m) return; v._m=1; seen.push(v); v[0]+=dx; v[2]+=dz; };
-          g0.faces.forEach(function(f){ f.v.forEach(mv); }); g0.roofEdges.forEach(function(e){ mv(e[0]); mv(e[1]); });
-          (g0.foot||[]).forEach(function(f){ f.forEach(mv); }); if(g0.ridge){ mv(g0.ridge[0]); mv(g0.ridge[1]); }
-          seen.forEach(function(v){ delete v._m; });
-        }
-        st.gen=g0;
-      }
-    } else {
-      st.data=null; st.failed=true;
-    }
+    st.solar=(d && d.totalAreaSqft>0) ? d : null;
+    if(st.solar && d.centerLat && d.centerLng) rsTraceCenter(d.centerLat, d.centerLng, 20);
+    if(st.trace) rsRoofBuild();
   };
 
   function finish(data){
@@ -894,8 +1104,9 @@
     $('rs-live').style.display='none';
     if(!data){
       st.still=true;
-      res.innerHTML='<div class="rs-fail">We couldn’t measure this roof from satellite</div>'
-        +'<p class="rs-note">Common with new builds and heavy tree cover. Trace it on the map below, or enter a rough size.</p>';
+      res.innerHTML='<div class="rs-fail">We couldn’t measure this roof</div>'
+        +'<p class="rs-note">Trace it again on the map, or enter a rough size.</p>'
+        +'<button type="button" class="rs-fix" onclick="eRoofScanFix()">Redraw the outline</button>';
       res.className='rs-result on';
       fallback(true);
       return;
@@ -903,25 +1114,31 @@
     $('rs-bar').style.width='100%';
     $('rs-rv').textContent=data.trueSqft.toLocaleString();
     setTimeout(function(){ var ro=$('rs-readout'); if(ro) ro.classList.remove('on'); }, 900);
-    var squares=Math.ceil(data.trueSqft/100);
+    var squares=Math.ceil(data.trueSqft/100), flat=data.solar&&data.pitch<5;
+    var note = data.solar
+      ? 'Area from the outline you traced; slope measured from satellite'+(data.planes>1?' ('+data.planes+' roof planes'+(data.gable?', gable ends':'')+')':'')+'. Roof area includes the slope.'
+      : 'Area from the outline you traced. Satellite had no slope for this address, so a typical 5/12 pitch is used — you can change it on the next steps.';
     res.innerHTML=
       '<div class="rs-grid">'
       +'<div><b>'+data.trueSqft.toLocaleString()+'</b><span>Roof area, sq ft</span></div>'
       +'<div><b>'+squares+'</b><span>Roofing squares</span></div>'
-      +'<div><b>'+(data.pitch<5?'Flat':Math.round(12*Math.tan(data.pitch*Math.PI/180))+'/12')+'</b><span>Pitch'+(data.pitch>=5?' · '+Math.round(data.pitch)+'°':'')+'</span></div>'
-      +(data.planes>1 ? '<div><b>'+data.planes+'</b><span>Roof planes</span></div>' : '<div><b>'+data.planSqft.toLocaleString()+'</b><span>Footprint, sq ft</span></div>')
+      +'<div><b>'+(flat?'Flat':Math.round(12*Math.tan(data.pitch*Math.PI/180))+'/12')+'</b><span>Pitch'+(!flat?' · '+Math.round(data.pitch)+'°':'')+(data.solar?'':' (typical)')+'</span></div>'
+      +'<div><b>'+data.planSqft.toLocaleString()+'</b><span>Footprint traced, sq ft</span></div>'
       +'</div>'
-      +'<p class="rs-note">Measured from satellite. Roof area includes the slope.</p>'
-      +'<button type="button" class="rs-fix" onclick="eRoofScanFix()">Not your roof? Measure it yourself</button>';
+      +'<p class="rs-note">'+note+'</p>'
+      +'<button type="button" class="rs-fix" onclick="eRoofScanFix()">Redraw the outline</button>';
     res.className='rs-result on';
 
     /* hand the numbers to the estimator exactly as a trace would have */
     try{
       eS.sqft=data.trueSqft; eS.planSqft=data.planSqft; eS.usedMap=true;
-      eS.solarPitchDeg=Math.round(data.pitch*10)/10;
-      eS.pitch=eSolarPitchCategory(data.pitch); eS.flatRoof=data.pitch<5;
-      eMeasurePitch=eDegToPitch(data.pitch);
-      eSolarPreselectPitch(eS.pitch);
+      eS.flatRoof=!!flat;
+      if(data.solar){
+        eS.solarPitchDeg=Math.round(data.pitch*10)/10;
+        eS.pitch=eSolarPitchCategory(data.pitch);
+        eMeasurePitch=eDegToPitch(data.pitch);
+        eSolarPreselectPitch(eS.pitch);
+      } else { eS.solarPitchDeg=null; }
       eCheckBtn1();
       var b=$('e-btn1'); if(b){ b.classList.add('rs-ready'); }
     }catch(e){}
@@ -937,15 +1154,26 @@
     try{ if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },120); }catch(e){}
   }
 
+  /* can't trace it: the size slider, as before */
+  function rsRoofSkip(){
+    var panel=$('e-addrpanel'); panel.classList.remove('rs-mode'); panel.classList.add('rs-fallback');
+    var mw=$('e-mapwrap'); if(mw) mw.style.display='none';
+    try{ if(!eManualOpen) eToggleManual(); }catch(e){}
+  }
+
+  /* "Redraw": back to the map, with the outline as it was, to adjust or clear */
   window.eRoofScanFix=function(){
-    try{ eClearDrawing(); }catch(e){}
-    var stage=$('rs-stage'); stage.classList.remove('on');
-    stop(); fallback(true);
+    if(st){ clearTimeout(st.timer); cancelAnimationFrame(st.raf); st.done=false; }
+    var stage=$('rs-stage'); if(stage) stage.classList.remove('on');
+    var panel=$('e-addrpanel'); panel.classList.remove('rs-mode','rs-fallback');
+    try{ eS.sqft=0; eS.usedMap=false; eCheckBtn1(); }catch(e){}
+    var b=$('e-btn1'); if(b) b.classList.remove('rs-ready');
+    if(!rsT) rsTraceOpen({kind:'roof', onDone:rsRoofTraced, onSkip:rsRoofSkip}); else rsTraceShow();
     var mw=$('e-mapwrap'); if(mw&&mw.scrollIntoView) mw.scrollIntoView({behavior:'smooth',block:'center'});
   };
 
   /* ── wire into the estimator ──────────────────────────────────────────────
-     Wrapped rather than rewritten, so the trace map, the manual slider and the
+     Wrapped rather than rewritten, so the map, the manual slider and the
      pricing logic underneath are exactly what they were. */
   function wire(){
     if(typeof eSelectAddress!=='function'||typeof eSolarMeasure!=='function') return false;
@@ -954,12 +1182,12 @@
       window.eRoofScanStart(fullAddr);
       return _select.apply(this, arguments);
     };
-    /* the map is still initialised underneath, ready for the fallback; it
-       just is not shown while the scan runs */
+    /* the estimator's map is the trace map: once it is up, the trace takes it */
     if(typeof eInitMap==='function'){
       var _init=eInitMap;
       eInitMap=window.eInitMap=function(){
         var r; try{ r=_init.apply(this, arguments); }catch(e){}
+        if(rsTraceActive()) rsTraceAttach();
         return r;
       };
     }
@@ -968,18 +1196,15 @@
       if(window.RS_DEMO){ setTimeout(function(){ window.eRoofScanData(window.RS_DEMO); }, 1400); return; }
       fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
         .then(function(r){ return r.json(); })
-        .then(function(d){
-          if(d&&d.centerLat&&d.centerLng&&typeof eLmap!=='undefined'&&eLmap){ try{ eLmap.setView([d.centerLat,d.centerLng],20); }catch(e){} }
-          window.eRoofScanData(d&&d.found&&d.totalAreaSqft>0 ? d : null);
-        })
+        .then(function(d){ window.eRoofScanData(d&&d.found&&d.totalAreaSqft>0 ? d : null); })
         .catch(function(){ window.eRoofScanData(null); });
     };
-    /* the step copy no longer asks anyone to trace */
     var sub=document.querySelector('#e-addrpanel .e-ssub');
-    if(sub) sub.textContent='Enter the address and we’ll measure the roof from satellite — area, pitch and all. Nothing to draw.';
+    if(sub) sub.textContent='Enter the address, then tap the corners of your roof on the satellite map. We measure the slope from satellite and build your roof from your outline.';
     /* going back to the ZIP step abandons a scan in progress */
-    if(typeof eZipBack==='function'){ var _back=eZipBack; eZipBack=window.eZipBack=function(){ stop(); var s=$('rs-stage'); if(s) s.classList.remove('on'); return _back.apply(this, arguments); }; }
-    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=$('e-addrpanel'); if(p){ p.classList.remove('rs-mode','rs-fallback'); } return _rs.apply(this, arguments); }; }
+    if(typeof eZipBack==='function'){ var _back=eZipBack; eZipBack=window.eZipBack=function(){ stop(); rsTraceReset(); var s=$('rs-stage'); if(s) s.classList.remove('on'); return _back.apply(this, arguments); }; }
+    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); rsTraceReset(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=$('e-addrpanel'); if(p){ p.classList.remove('rs-mode','rs-fallback'); } return _rs.apply(this, arguments); }; }
+    window.rsDebug={ get st(){ return st; }, get trace(){ return rsT; } };
     return true;
   }
   if(!wire()){ document.addEventListener('DOMContentLoaded', wire); }
