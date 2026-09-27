@@ -74,7 +74,7 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .sw input:checked{background:var(--pri)}.sw input:checked:after{transform:translateX(14px)}
 .board{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);overflow:auto}
 .board{background:#fff}.board:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#dce3ec 1px,transparent 1px);background-size:20px 20px;pointer-events:none;mask-image:radial-gradient(80% 70% at 50% 40%,#000,transparent)}
-.board-in{position:relative;min-width:1120px;height:640px}
+.board{overflow:hidden}.board-in{position:relative;width:1120px;height:700px}
 .board svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .ln{fill:none;stroke:var(--line2);stroke-width:1.25}
 .ln.tool{stroke-dasharray:3 4;stroke:#cfd8e3}
@@ -146,7 +146,7 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .empty{padding:28px;text-align:center;color:var(--mut)}
 .warnbar{background:#fff8e6;border-bottom:1px solid #f1dfae;color:#6b4a00;padding:10px 24px;font-size:13px}
 .warnbar b{color:#3d2a00}
-@media (max-width:760px){.grid2{grid-template-columns:1fr}main{padding:16px}.top{padding:0 16px}}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}main{padding:16px}.top{padding:0 16px}.top .sub,#who{display:none}.btn{white-space:nowrap}.nd.work .box:after{display:none}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}.pk{display:none}}
 </style>
 </head>
@@ -254,6 +254,7 @@ var TOOLSET={ceo:[['ti-sparkles','Claude','model'],['ti-database','Memory','shar
   builder:[['ti-plug-connected','GHL','build'],['ti-layout-dashboard','BuilderPro','receptionist']],
   research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']]};
 var STATUS={}, SHIFTS=true, CONNS=[];
+var CONN_ICON={higgsfield:'ti-movie',zapier:'ti-bolt',stripe:'ti-credit-card',supabase:'ti-server',clickup:'ti-checkbox',github:'ti-brand-github',airtable:'ti-table',linear:'ti-list-check'};
 function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
 async function viewTeam(){
   el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. Each team works a shift every 3 hours.</p></div>'
@@ -264,8 +265,24 @@ async function viewTeam(){
   drawBoard();
   var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
 }
+function fitBoard(){
+  var bd=el('bd'); if(!bd)return; var box=bd.parentElement, w=box.clientWidth, sc=Math.min(1,w/1120);
+  bd.style.transform='scale('+sc+')'; bd.style.transformOrigin='0 0'; box.style.height=Math.ceil(700*sc)+'px';
+}
+window.addEventListener('resize',function(){ if(TAB==='team'){ if((window.innerWidth<700)!==window._narrow){drawBoard();} else fitBoard(); } });
+function drawList(){
+  /* phones: the same team as a simple list, no canvas */
+  el('bd').parentElement.style.height='auto'; el('bd').style.transform='none'; el('bd').style.width='auto'; el('bd').style.height='auto';
+  el('bd').innerHTML='<div style="display:grid;gap:10px;padding:14px">'+Object.keys(NAMES).map(function(k){
+    var st=STATUS[k]||{},last=st.last,live=isLive(k),mine=CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;});
+    var tools=(TOOLSET[k]||[]).filter(function(t){return !t[3];}).map(function(t){return t[1];}).concat(mine.map(function(c){return c.label||c.name;})).filter(function(v,i,a){return a.indexOf(v)===i;});
+    return '<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+'" style="position:static;transform:none;opacity:1;animation:none;width:100%" onclick="openAgent(\''+k+'\')"><div class="box" style="width:100%">'+(st.pending?'<span class="badge">'+st.pending+'</span>':'')
+      +'<span class="ico"><i class="ti '+ICON[k]+'"></i></span><span style="flex:1;min-width:0"><div class="t">'+NAMES[k]+'</div><div class="s" style="max-width:none">'+(live?'Working now':last?(last.created_by==='shift'?'Last shift ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div><div class="s" style="max-width:none;margin-top:2px">'+esc(tools.join(' \u00b7 '))+'</div></span></div></button>';}).join('')+'</div>';
+}
 function isLive(k){var l=(STATUS[k]||{}).last;return !!(l&&Date.now()-Date.parse(l.updated_at)<5*6e4);}
 function drawBoard(){
+  window._narrow=window.innerWidth<700; if(window._narrow)return drawList();
+  el('bd').style.width=''; el('bd').style.height='';
   /* Motion is state: an idle link carries one slow packet (the wire is up);
      a team that is working gets an orange flowing link and a ring. */
   var W=1000,H=640,px=function(p){return [p[0]*W/100,p[1]*H/100]};
@@ -276,11 +293,13 @@ function drawBoard(){
     if(k!=='ceo'){ var y0=c[1]+30,y1=p[1]-30, d='M'+c[0]+','+y0+' C'+c[0]+','+(y0+100)+' '+p[0]+','+(y1-100)+' '+p[0]+','+y1, pid='pp'+k;
       svg+='<path id="'+pid+'" class="ln" d="'+d+'"/>'+(live?'<path class="ln hot" d="'+d+'"/>':'')
         +'<circle r="'+(live?2.6:2)+'" class="pk'+(live?' hot':'')+'"><animateMotion dur="'+(live?1.6:5.5+idx*0.6)+'s" begin="'+(idx*0.9)+'s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .25 1"><mpath href="#'+pid+'"/></animateMotion></circle>'; }
-    var tools=(TOOLSET[k]||[]).concat(CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;}).map(function(c){return ['ti-plug-connected',c.label||c.name,'connected'];})), n=tools.length;
+    var mine=CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;}), used={};
+    var tools=(TOOLSET[k]||[]).map(function(t){var c=mine.filter(function(c){return (c.label||c.name).toLowerCase()===t[1].toLowerCase();})[0]; if(c){used[c.name]=1;return [t[0],t[1],'connected'];} return t;})
+      .concat(mine.filter(function(c){return !used[c.name];}).map(function(c){return [CONN_ICON[c.name]||'ti-plug-connected',c.label||c.name,'connected'];})), n=tools.length;
     tools.forEach(function(t,i){
       var tx,ty,td;
       if(k==='ceo'){ tx=c[0]+(i?250:-250); ty=c[1]; td='M'+(c[0]+(i?108:-108))+','+c[1]+' L'+(tx+(i?-22:22))+','+ty; }
-      else { tx=p[0]+(i-(n-1)/2)*(n>3?50:64); ty=p[1]+(n>3&&i%2?185:150); td='M'+p[0]+','+(p[1]+30)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-22); }
+      else { var row=Math.floor(i/3), inRow=Math.min(3,n-row*3), col=i%3; tx=p[0]+(col-(inRow-1)/2)*62+(row&&inRow%2?31:0); ty=p[1]+140+row*84; td='M'+p[0]+','+(p[1]+30)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-22); }
       svg+='<path class="ln tool" d="'+td+'"/>';
       nodes+='<div class="tl'+(t[3]?' soon':'')+'" style="--dl:'+(dl+0.25)+'s;left:'+(tx/W*100)+'%;top:'+(ty/H*100)+'%"><i class="ti '+t[0]+'"></i>'+esc(t[1])+'<small>'+esc(t[2])+'</small></div>';
     });
@@ -290,6 +309,7 @@ function drawBoard(){
   });
   var nlive=Object.keys(NAMES).filter(isLive).length;
   el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of 6 working</span><span>shifts <b>'+(SHIFTS?'every 3h':'paused')+'</b></span><span>auto-onboarding <b>on</b></span></div>';
+  fitBoard();
 }
 function closeDr(){el('dr').classList.remove('open');el('scr').classList.remove('open');drawBoard();}
 async function openAgent(k){
@@ -395,11 +415,10 @@ var TEAMKEYS=['ceo','sales','marketing','support','builder','research'];
 var PRESETS=[['higgsfield','Higgsfield','https://mcp.higgsfield.ai/mcp','marketing'],['canva','Canva','https://mcp.canva.com/mcp','marketing'],['github','GitHub','https://api.githubcopilot.com/mcp/','builder'],['supabase','Supabase','https://mcp.supabase.com/mcp','support']];
 var SERVICES=[
   {k:'higgsfield',n:'Higgsfield',u:'https://mcp.higgsfield.ai/mcp',t:['marketing'],i:'ti-movie',d:'AI images and video for ads and posts.'},
-  {k:'canva',n:'Canva',u:'https://mcp.canva.com/mcp',t:['marketing'],i:'ti-palette',d:'Designs, flyers and social graphics.'},
   {k:'zapier',n:'Zapier',u:'https://mcp.zapier.com/api/mcp/mcp',t:['marketing','ceo'],i:'ti-bolt',d:'Thousands of apps, including posting to Instagram and Facebook.'},
   {k:'stripe',n:'Stripe',u:'https://mcp.stripe.com',t:['ceo','sales'],i:'ti-credit-card',d:'Customers, subscriptions and payments.'},
   {k:'supabase',n:'Supabase',u:'https://mcp.supabase.com/mcp',t:['support','builder'],i:'ti-server',d:'Your database and backend, full admin.'},
-  {k:'notion',n:'Notion',u:'https://mcp.notion.com/mcp',t:['ceo','research'],i:'ti-notebook',d:'Docs, notes and plans.'},
+  {k:'clickup',n:'ClickUp',u:'https://mcp.clickup.com/mcp',t:['ceo','research'],i:'ti-checkbox',d:'Tasks, docs and notes. Works great on iPad.'},
   {k:'github',n:'GitHub',u:'https://api.githubcopilot.com/mcp/',t:['builder'],i:'ti-brand-github',d:'Your website code. Needs an access token.',token:1}];
 async function viewConn(){
   el('view').innerHTML=(window._connNote||'')+'<h2>Connections</h2><div class="muted" style="margin:-6px 0 16px;max-width:70ch">Sign in once and your teams can use it from then on. Actions through these run right away (they skip Approvals), so each one only goes to the teams shown on it.</div>'
