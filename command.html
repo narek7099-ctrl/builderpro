@@ -254,7 +254,7 @@ var TOOLSET={ceo:[['ti-sparkles','Claude','model'],['ti-database','Memory','shar
   builder:[['ti-plug-connected','GHL','build'],['ti-layout-dashboard','BuilderPro','receptionist']],
   research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']]};
 var STATUS={}, SHIFTS=true, CONNS=[];
-var CONN_ICON={higgsfield:'ti-movie',zapier:'ti-bolt',stripe:'ti-credit-card',supabase:'ti-server',clickup:'ti-checkbox',github:'ti-brand-github',airtable:'ti-table',linear:'ti-list-check'};
+var CONN_ICON={facebook:'ti-brand-facebook',instagram:'ti-brand-instagram',higgsfield:'ti-movie',zapier:'ti-bolt',stripe:'ti-credit-card',supabase:'ti-server',clickup:'ti-checkbox',github:'ti-brand-github',airtable:'ti-table',linear:'ti-list-check'};
 function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
 async function viewTeam(){
   el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. Each team works a shift every 3 hours.</p></div>'
@@ -432,7 +432,14 @@ async function viewConn(){
   var r=await api({op:'mcp_list'}); var rows=r.data||[]; window._conns=rows;
   var byName={}; rows.forEach(function(x){byName[x.name]=x;});
   var cards=SERVICES.map(function(sv){return {sv:sv,x:byName[sv.k]}}).concat(rows.filter(function(x){return !SERVICES.some(function(sv){return sv.k===x.name})}).map(function(x){return {sv:{k:x.name,n:x.label||x.name,u:x.url,t:x.agents,i:'ti-plug-connected',d:x.url,token:!x.signin},x:x}}));
-  el('svcGrid').innerHTML=cards.map(function(c){
+  var mt=r.meta||{};
+  var metaCard='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center"><span style="width:38px;height:38px;border-radius:10px;background:#e6f0ff;color:var(--pri);display:grid;place-items:center;font-size:20px"><i class="ti ti-brand-facebook"></i></span><div style="flex:1"><b>Facebook &amp; Instagram</b><div>'
+    +(mt.connected?'<span class="st ok"><i class="ti ti-circle-check"></i>Connected</span>':!mt.ready?'<span class="st warn"><i class="ti ti-settings"></i>One-time setup</span>':'<span class="st off">Not connected</span>')+'</div></div></div>'
+    +'<div class="muted" style="font-size:13px;min-height:2.6em">'+(mt.connected?esc((mt.pages||[]).join(', ')):'Post to your Page and Instagram, and see how posts do. Posts wait for your approval.')+'</div><div class="muted" style="font-size:12px">For: Marketing Team, CEO</div><div>'
+    +(mt.connected?'<button class="btn sm" onclick="metaGo(this)">Sign in again</button> <button class="btn sm" onclick="metaOff()">Disconnect</button>'
+      :!mt.ready?'<button class="btn sm pri" onclick="metaHow()">How to set up</button>':'<button class="btn sm pri" onclick="metaGo(this)">Sign in with Facebook</button>')+'</div></div>';
+  window._metaRedirect=mt.redirect||'';
+  el('svcGrid').innerHTML=metaCard+cards.map(function(c){
     var sv=c.sv,x=c.x,on=x&&x.connected&&x.enabled, teams=(x?x.agents:sv.t).map(function(k){return NAMES[k]||k}).join(', ');
     var st=on?'<span class="st ok"><i class="ti ti-circle-check"></i>Connected'+(x.stays?'':' ')+'</span>':x&&x.connected&&!x.enabled?'<span class="st off">Paused</span>':x&&x.error?'<span class="st warn"><i class="ti ti-alert-triangle"></i>Sign in again</span>':'<span class="st off">Not connected</span>';
     var btn=on?'<button class="btn sm" onclick="svcTeams(\''+sv.k+'\')">Teams</button> <button class="btn sm" onclick="svcOff(\''+sv.k+'\')">Disconnect</button>'
@@ -441,6 +448,19 @@ async function viewConn(){
     return '<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center"><span style="width:38px;height:38px;border-radius:10px;background:#e6f0ff;color:var(--pri);display:grid;place-items:center;font-size:20px"><i class="ti '+sv.i+'"></i></span><div style="flex:1"><b>'+esc(sv.n)+'</b><div>'+st+'</div></div></div>'
       +'<div class="muted" style="font-size:13px;min-height:2.6em">'+esc(sv.d)+'</div><div class="muted" style="font-size:12px">For: '+esc(teams||'no team yet')+'</div><div>'+btn+'</div></div>';
   }).join('');
+}
+async function metaGo(b){ b.disabled=true; b.textContent='Opening Facebook\u2026'; var r=await api({op:'meta_start'}); if(r.url){location.href=r.url;return;} alert(r.error||'Could not start.'); viewConn(); }
+async function metaOff(){ if(!confirm('Disconnect Facebook & Instagram? Your teams can no longer post or read insights.'))return; await api({op:'meta_disconnect'}); viewConn(); }
+function metaHow(){
+  el('view').insertAdjacentHTML('afterbegin','<div class="card" id="metaHelp" style="margin-bottom:14px"><b>Facebook &amp; Instagram: one-time setup (about 10 minutes)</b><ol style="margin:10px 0 0 18px;line-height:1.8;font-size:14px">'
+    +'<li>Your Instagram must be a <b>Business or Creator</b> account, linked to your Facebook Page (Instagram app: Settings, Account type and tools).</li>'
+    +'<li>Go to <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com/apps</a>, click <b>Create app</b>, choose <b>Other</b> then <b>Business</b>, name it \u201cBuilderPro Command Center\u201d.</li>'
+    +'<li>In the app, add <b>Facebook Login for Business</b>. Under its Settings, add this to <b>Valid OAuth Redirect URIs</b>:<br><code style="user-select:all;background:var(--bg2);padding:3px 6px;border-radius:6px;font-size:12px">'+esc(window._metaRedirect)+'</code></li>'
+    +'<li>Also add <b>Instagram</b> (Instagram API with Facebook Login) to the app.</li>'
+    +'<li>In <b>App settings \u2192 Basic</b>, copy the <b>App ID</b> and <b>App secret</b>. In Supabase \u2192 Edge Functions \u2192 Secrets add them as <code>META_APP_ID</code> and <code>META_APP_SECRET</code>.</li>'
+    +'<li>Come back here and click <b>Sign in with Facebook</b>. Pick your Page and its Instagram when Facebook asks.</li></ol>'
+    +'<div class="muted" style="font-size:13px;margin-top:8px">Leave the app in Development mode. As its admin you can post to your own Page and Instagram without Meta\u2019s app review.</div></div>');
+  el('metaHelp').scrollIntoView({behavior:'smooth'});
 }
 function svcDef(k){ return SERVICES.filter(function(s){return s.k===k})[0]||(function(){var x=(window._conns||[]).filter(function(c){return c.name===k})[0];return x?{k:x.name,n:x.label,u:x.url,t:x.agents}:null})(); }
 async function svcSignIn(k,b){
