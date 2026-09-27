@@ -1663,6 +1663,31 @@ document.addEventListener('click', function(e) {
 #est-embed .rs-fix:focus-visible{outline:2px solid var(--rs-blue);outline-offset:3px;border-radius:3px;}
 #est-embed .rs-fail{font-size:14px;font-weight:600;color:var(--rs-ink);}
 @media(prefers-reduced-motion:reduce){#est-embed .rs-stage.on,#est-embed .rs-result.on{animation:none;}}
+/* the trace: the satellite map, the homeowner taps the corners, then the scan */
+#est-embed .rs-tracing #e-mapwrap{display:block !important;}
+#est-embed .rs-tracing .e-maptb,#est-embed .rs-tracing .e-mhint,#est-embed .rs-tracing #e-solarbanner,
+#est-embed .rs-tracing #e-mresult,#est-embed .rs-tracing #e-slopecard,#est-embed .rs-tracing .e-flatrow,
+#est-embed .rs-tracing #e-manualbtn,#est-embed .rs-tracing #e-sldwrap{display:none !important;}
+#est-embed .rs-thead,#est-embed .rs-tfoot{display:none;}
+#est-embed .rs-tracing .rs-thead,#est-embed .rs-tracing .rs-tfoot{display:flex;}
+#est-embed .rs-thead{--rs-ink:#001530;--rs-grey:#788493;--rs-blue:#006fff;font-family:'Geist',system-ui,-apple-system,sans-serif;align-items:flex-start;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid #eef1f6;}
+#est-embed .rs-tstep{flex:0 0 26px;height:26px;border-radius:50%;background:var(--rs-blue);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+#est-embed .rs-tmsg{display:flex;flex-direction:column;gap:3px;min-width:0;}
+#est-embed .rs-tmsg b{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--rs-ink);line-height:1.3;}
+#est-embed .rs-tmsg span{font-size:13px;color:var(--rs-grey);line-height:1.45;font-variant-numeric:tabular-nums;}
+#est-embed .rs-tfoot{--rs-ink:#001530;--rs-grey:#788493;--rs-blue:#006fff;--rs-line:#dce3ec;font-family:'Geist',system-ui,-apple-system,sans-serif;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 16px;background:#fff;border-top:1px solid #eef1f6;}
+#est-embed .rs-tbtn{appearance:none;border:1px solid var(--rs-line);background:#fff;color:var(--rs-ink);border-radius:40px;min-height:44px;padding:0 18px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+#est-embed .rs-tbtn:hover:not(:disabled){background:#f3f6fa;}
+#est-embed .rs-tbtn:disabled{opacity:.4;cursor:default;}
+#est-embed .rs-tgo{appearance:none;margin-left:auto;border:1px solid var(--rs-blue);background:var(--rs-blue);color:#fff;border-radius:40px;min-height:44px;padding:0 22px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:opacity .2s ease;}
+#est-embed .rs-tgo:disabled{background:#c9d3df;border-color:#c9d3df;cursor:default;}
+#est-embed .rs-tbtn:focus-visible,#est-embed .rs-tgo:focus-visible{outline:3px solid var(--rs-blue);outline-offset:2px;}
+#est-embed .rs-tskip{flex:1 0 100%;margin:2px 0 0;text-align:left;font-size:12.5px;}
+#est-embed .rs-tracing #e-mapel{touch-action:none;}
+#est-embed .rs-vx{background:#fff;border:2px solid #006fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,21,48,.35);}
+#est-embed .rs-vx.rs-v0{background:#006fff;border-color:#fff;}
+#est-embed .rs-vx.rs-v0.rs-close{box-shadow:0 0 0 6px rgba(0,111,255,.30),0 1px 3px rgba(0,21,48,.35);}
+@media(max-width:560px){#est-embed .rs-tgo{flex:1 0 100%;margin-left:0;order:3;}#est-embed .rs-tbtn{flex:1 1 0;}#est-embed .rs-tskip{order:4;}}
 
 /* while the house scan runs, and after, the trace tools stay out of the way;
    they come back only if the scan finds nothing */
@@ -1725,6 +1750,9 @@ document.addEventListener('click', function(e) {
    slider opens for them as before. */
 (function(){
   var TRADE = window.HS_TRADE || 'general';
+  /* pool and landscaping ask the homeowner to trace the yard first; the scan
+     then runs on that outline (the shared trace, in roof-scan.html) */
+  var TRACE = TRADE==='pools' || TRADE==='landscaping';
   var HS_END = 15.0, HS_WAIT_MAX = 28;
   var st = null;
   (function(){ try{ if(document.getElementById('rs-geist')) return; var l=document.createElement('link'); l.id='rs-geist'; l.rel='stylesheet';
@@ -1742,6 +1770,148 @@ document.addEventListener('click', function(e) {
     var plan=Math.max(600, (trueSqft||2000)*Math.cos(p*Math.PI/180));
     var D=Math.sqrt(plan/1.55), W=D*1.55;
     return { W:W, D:D, H:10, pitch:p, o:1.6 };
+  }
+
+  /* ── the trace ──────────────────────────────────────────────────────────────
+     Before any scan, the homeowner outlines the thing being priced on the
+     satellite map — their roof, their yard — by tapping its corners, and
+     closes it by tapping the first one again. The scan then builds from that
+     outline: it is their shape and their size, not a guess from the map.
+     Drawn on the estimator's own Leaflet map (eLmap), with its own layers and
+     its own click handler, so it works the same with a mouse or a finger:
+     a tap is a corner, a drag pans, Undo and Clear are big buttons. Shared
+     with the house scan (pool and landscaping trace the yard). */
+  var rsT=null;
+  var RS_TCOPY={
+    roof:     {main:'Tap each corner of your roof', sub:'Go around the outside edge of the roof. Tap the first point again to finish.', go:'Scan my roof', skip:'Can’t see your roof? Enter the size instead'},
+    yard:     {main:'Tap each corner of the yard you want landscaped', sub:'Go around the area to be worked on. Tap the first point again to finish.', go:'Scan my yard', skip:'Can’t trace it? Enter the size instead'},
+    backyard: {main:'Tap each corner of your backyard', sub:'Go around the yard where the pool would go. Tap the first point again to finish.', go:'Scan my backyard', skip:'Can’t trace it? Pick a pool size instead'}
+  };
+  function rsMapObj(){ try{ return (typeof eLmap!=='undefined' && eLmap) ? eLmap : null; }catch(e){ return null; } }
+  function rsLLArea(pts){
+    if(!pts||pts.length<3) return 0;
+    var R=6378137, a=0, n=pts.length;
+    for(var i=0;i<n;i++){ var j=(i+1)%n, l1=pts[i].lat*Math.PI/180, l2=pts[j].lat*Math.PI/180, dl=(pts[j].lng-pts[i].lng)*Math.PI/180; a+=dl*(2+Math.sin(l1)+Math.sin(l2)); }
+    return Math.round(Math.abs(a*R*R/2)*10.7639);
+  }
+  function rsTracePanel(){ return document.getElementById('hs-addrpanel') || document.getElementById('e-addrpanel'); }
+  function rsTraceUI(){
+    var mw=document.getElementById('e-mapwrap'), el=document.getElementById('e-mapel'); if(!mw||!el) return false;
+    if(document.getElementById('rs-thead')) return true;
+    var h=document.createElement('div'); h.className='rs-thead'; h.id='rs-thead';
+    h.innerHTML='<div class="rs-tstep" aria-hidden="true">✓</div><div class="rs-tmsg" role="status" aria-live="polite"><b id="rs-tmain"></b><span id="rs-tsub"></span></div>';
+    mw.insertBefore(h, mw.firstChild);
+    var f=document.createElement('div'); f.className='rs-tfoot'; f.id='rs-tfoot';
+    f.innerHTML='<button type="button" class="rs-tbtn" id="rs-tundo">Undo</button><button type="button" class="rs-tbtn" id="rs-tclear">Clear</button>'
+      +'<button type="button" class="rs-tgo" id="rs-tgo" disabled></button><button type="button" class="rs-fix rs-tskip" id="rs-tskip"></button>';
+    el.parentNode.insertBefore(f, el.nextSibling);
+    document.getElementById('rs-tundo').onclick=function(){ if(!rsT) return; if(rsT.closed) rsT.closed=false; else rsT.pts.pop(); rsTraceDraw(); };
+    document.getElementById('rs-tclear').onclick=function(){ if(!rsT) return; rsT.pts=[]; rsT.closed=false; rsTraceDraw(); };
+    document.getElementById('rs-tgo').onclick=function(){ if(!rsT||rsT.pts.length<3) return; rsT.closed=true; rsTraceDraw(); rsTraceDone(); };
+    document.getElementById('rs-tskip').onclick=function(){ if(!rsT) return; var o=rsT.o; rsTraceHide(); if(o.onSkip) o.onSkip(); };
+    return true;
+  }
+  /* o: {kind:'roof'|'yard'|'backyard', onDone(latlngs, sqft), onSkip()} */
+  function rsTraceOpen(o){
+    rsT={o:o, pts:[], closed:false, lay:[]};
+    rsTraceShow();
+  }
+  window.rsTraceState=function(){ return rsT ? {n:rsT.pts.length, closed:rsT.closed, sqft:rsLLArea(rsT.pts)} : null; };   /* for tests */
+  function rsTraceShow(){
+    if(!rsT||!rsTraceUI()) return;
+    var c=RS_TCOPY[rsT.o.kind]||RS_TCOPY.roof;
+    document.getElementById('rs-tgo').textContent=c.go;
+    document.getElementById('rs-tskip').textContent=c.skip;
+    var p=rsTracePanel(); if(p) p.classList.add('rs-tracing');
+    rsTraceAttach();
+  }
+  function rsTraceHide(){ var p=rsTracePanel(); if(p) p.classList.remove('rs-tracing'); }
+  function rsTraceActive(){ var p=rsTracePanel(); return !!(rsT && p && p.classList.contains('rs-tracing')); }
+  /* called when the map exists (and again whenever the estimator re-inits it) */
+  function rsTraceAttach(){
+    var m=rsMapObj(); if(!rsT) return;
+    if(m){
+      try{ eSetTool('pan'); }catch(e){}           /* the estimator's own drawing tools stay idle; dragging pans */
+      try{ m.dragging.enable(); m.getContainer().style.cursor='crosshair'; }catch(e){}
+      if(!m._rsBound){ m.on('click', rsTraceClick); m._rsBound=true; }
+      setTimeout(function(){ try{ m.invalidateSize(); }catch(e){} }, 120);
+    }
+    /* pools place a draggable pool shape on the map once it is ready; while
+       the yard is being traced that waits */
+    if(typeof ePoolMode==='function' && !ePoolMode._rs){
+      var _pm=ePoolMode, w=function(){ if(rsTraceActive()){ try{ eClearDrawing(); }catch(e){} try{ eSetTool('pan'); }catch(e){} return; } return _pm.apply(this, arguments); };
+      w._rs=true; try{ ePoolMode=w; }catch(e){} window.ePoolMode=w;
+    }
+    rsTraceDraw();
+  }
+  function rsTraceCenter(lat, lng, zoom){
+    var m=rsMapObj(); if(!m||!rsT||rsT.pts.length) return;
+    try{ m.setView([lat,lng], zoom||m.getZoom()); }catch(e){}
+  }
+  function rsTraceClick(e){
+    if(!rsTraceActive()||rsT.closed) return;
+    var m=rsMapObj();
+    if(rsT.pts.length>=3 && m){
+      var a=m.latLngToContainerPoint(rsT.pts[0]), b=m.latLngToContainerPoint(e.latlng);
+      if(Math.hypot(a.x-b.x, a.y-b.y)<24){ rsT.closed=true; rsTraceDraw(); return; }
+    }
+    rsT.pts.push(e.latlng); rsTraceDraw();
+  }
+  function rsTraceDraw(){
+    if(!rsT) return;
+    var m=rsMapObj(), pts=rsT.pts, n=pts.length, closed=rsT.closed&&n>=3;
+    if(m && typeof L!=='undefined'){
+      rsT.lay.forEach(function(l){ try{ m.removeLayer(l); }catch(e){} }); rsT.lay=[];
+      if(n>=3) rsT.lay.push(L.polygon(pts,{color:'#006fff',weight:closed?3:2,dashArray:closed?null:'6 6',fillColor:'#006fff',fillOpacity:closed?0.22:0.12,interactive:false}).addTo(m));
+      else if(n===2) rsT.lay.push(L.polyline(pts,{color:'#006fff',weight:3,interactive:false}).addTo(m));
+      if(n>=3&&!closed) rsT.lay.push(L.polyline(pts,{color:'#006fff',weight:3,interactive:false}).addTo(m));
+      pts.forEach(function(p,i){
+        var first=i===0, sz=first?18:14, cls='rs-vx'+(first?' rs-v0':'')+(first&&n>=3&&!closed?' rs-close':'');
+        rsT.lay.push(L.marker(p,{interactive:false,keyboard:false,icon:L.divIcon({className:cls,iconSize:[sz,sz]})}).addTo(m));
+      });
+    }
+    var c=RS_TCOPY[rsT.o.kind]||RS_TCOPY.roof, sq=rsLLArea(pts), main, sub;
+    if(!n){ main=c.main; sub=c.sub; }
+    else if(n<3){ main=c.main; sub=n+' corner'+(n>1?'s':'')+' placed — keep going. Drag to move the map.'; }
+    else if(!closed){ main='Tap the first point to finish'; sub=n+' corners · about '+sq.toLocaleString()+' sq ft so far. Or tap “'+c.go+'”.'; }
+    else { main='Outline done · '+sq.toLocaleString()+' sq ft'; sub='Looks right? Start the scan. Undo reopens the outline.'; }
+    var mn=document.getElementById('rs-tmain'), sb=document.getElementById('rs-tsub');
+    if(mn) mn.textContent=main; if(sb) sb.textContent=sub;
+    var u=document.getElementById('rs-tundo'), cl=document.getElementById('rs-tclear'), g=document.getElementById('rs-tgo');
+    if(u) u.disabled=!n; if(cl) cl.disabled=!n; if(g) g.disabled=n<3;
+  }
+  function rsTraceDone(){
+    if(!rsT||rsT.pts.length<3) return;
+    var pts=rsT.pts.map(function(p){ return {lat:p.lat, lng:p.lng}; }), sq=rsLLArea(pts), o=rsT.o;
+    rsTraceHide();
+    if(o.onDone) o.onDone(pts, sq);
+  }
+  /* forget the outline: a new address, back to the ZIP, start over */
+  function rsTraceReset(){
+    var m=rsMapObj();
+    if(rsT&&m){ rsT.lay.forEach(function(l){ try{ m.removeLayer(l); }catch(e){} }); }
+    rsTraceHide(); rsT=null;
+  }
+
+  /* the outline in the scan's world: north-up feet around the origin */
+  function rsTraceWorld(pts, origin){ return pts.map(function(p){ return worldOf(origin, p.lat, p.lng); }); }
+
+  /* Which way the roof runs, from the planes satellite found: how much of
+     the roof faces along the outline's long side (hip ends, or a ridge
+     running across) against how much faces across it (the two main slopes).
+     Almost nothing along it: gable ends. Otherwise a hip. Null when there
+     are no planes. */
+  function rsRoofStyle(roof, ring){
+    var ps=(roof&&roof.planes)||[]; if(ps.length<2||!ring||ring.length<3) return null;
+    var lo=0, th=0, n=ring.length;
+    for(var i=0;i<n;i++){ var p=ring[i], q=ring[(i+1)%n], l=Math.hypot(q[0]-p[0],q[1]-p[1]); if(l>lo){ lo=l; th=Math.atan2(q[1]-p[1],q[0]-p[0]); } }
+    var ux=Math.cos(th), uz=Math.sin(th), along=0, across=0, flat=0;
+    ps.forEach(function(p){ var w=Math.max(0,+p.groundSqft||0); if(!w) return;
+      if((+p.pitch||0)<5){ flat+=w; return; }
+      var az=(+p.azimuth||0)*Math.PI/180, fx=Math.sin(az), fz=-Math.cos(az);   /* facing, x east z south */
+      if(Math.abs(fx*ux+fz*uz)>0.7071) along+=w; else across+=w; });
+    var tot=along+across; if(tot<=0) return null;
+    return {gable: along<0.12*tot, along:Math.round(along), across:Math.round(across)};
   }
 
 
@@ -2175,7 +2345,7 @@ document.addEventListener('click', function(e) {
      ell — and a hip roof over each, crossing where they meet, the way real
      roofs on L and T houses do. Only for outlines whose walls all run on
      two axes; anything else keeps the inset roof. */
-  function wingRoofs(pts,tan){
+  function wingRoofs(pts,tan,style){
     var n=pts.length, lo=0, th=0;
     for(var i=0;i<n;i++){ var p=pts[i], q=pts[(i+1)%n], l=Math.hypot(q[0]-p[0],q[1]-p[1]); if(l>lo){ lo=l; th=Math.atan2(q[1]-p[1],q[0]-p[0]); } }
     var c=Math.cos(th), s=Math.sin(th);
@@ -2204,21 +2374,27 @@ document.addEventListener('click', function(e) {
     }
     if(!rects.length) return null;
     var E=10, faces=[], edges=[];
+    /* style (from the satellite roof planes): gable ends instead of hips.
+       Only for a plain rectangle; wings keep hips so their roofs meet
+       cleanly. */
+    var gable=!!(style&&style.gable&&rects.length===1);
     function W(x,y,z){ return [x*c-z*s, y, x*s+z*c]; }
     rects.forEach(function(r){
       var x0=r[0], x1=r[1], z0=r[2], z1=r[3], lx=x1-x0, lz=z1-z0;
       if(lx<3||lz<3) return;
-      var half=Math.min(lx,lz)/2, Y=E+half*tan, a,b,cc,d, r0, r1;
-      if(lx>=lz){ var zm=(z0+z1)/2; r0=W(x0+half,Y,zm); r1=W(x1-half,Y,zm); }
-      else { var xm=(x0+x1)/2; r0=W(xm,Y,z0+half); r1=W(xm,Y,z1-half); }
+      var alongX=lx>=lz;
+      var half=(alongX?lz:lx)/2, Y=E+half*tan, a,b,cc,d, r0, r1, inset=gable?0:half;
+      if(alongX){ var zm=(z0+z1)/2; r0=W(x0+inset,Y,zm); r1=W(x1-inset,Y,zm); }
+      else { var xm=(x0+x1)/2; r0=W(xm,Y,z0+inset); r1=W(xm,Y,z1-inset); }
       a=W(x0,E,z0); b=W(x1,E,z0); cc=W(x1,E,z1); d=W(x0,E,z1);
-      if(lx>=lz){
+      var ek=gable?'wall':'roof';
+      if(alongX){
         faces.push({v:[a,b,r1,r0],kind:'roof'}); faces.push({v:[cc,d,r0,r1],kind:'roof'});
-        faces.push({v:[d,a,r0],kind:'roof'}); faces.push({v:[b,cc,r1],kind:'roof'});
+        faces.push({v:[d,a,r0],kind:ek}); faces.push({v:[b,cc,r1],kind:ek});
         edges.push([a,r0],[d,r0],[b,r1],[cc,r1]);
       } else {
         faces.push({v:[b,cc,r1,r0],kind:'roof'}); faces.push({v:[d,a,r0,r1],kind:'roof'});
-        faces.push({v:[a,b,r0],kind:'roof'}); faces.push({v:[cc,d,r1],kind:'roof'});
+        faces.push({v:[a,b,r0],kind:ek}); faces.push({v:[cc,d,r1],kind:ek});
         edges.push([a,r0],[b,r0],[cc,r1],[d,r1]);
       }
       if(Math.hypot(r0[0]-r1[0],r0[2]-r1[2])>0.3) edges.push([r0,r1]);
@@ -2226,7 +2402,9 @@ document.addEventListener('click', function(e) {
     return faces.length ? {faces:faces, edges:edges} : null;
   }
 
-  function polyModel(ring, pitchDeg){
+  /* opts: {style} from rsRoofStyle, {flat} for a flat or low-slope roof */
+  function polyModel(ring, pitchDeg, opts){
+    opts=opts||{};
     var pts=ring.map(function(p){ return [p[0],p[1]]; });
     if(pts.length>1&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1]) pts.pop();
     /* tidy: drop near-duplicate corners and corners on a straight line */
@@ -2241,7 +2419,15 @@ document.addEventListener('click', function(e) {
     var n=pts.length, per=0; for(var i=0;i<n;i++){ var p0=pts[i], p1=pts[(i+1)%n]; per+=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]); }
     /* homes read as pitched: missing or near-flat pitch is taken as 18° at least */
     var tan=Math.tan(Math.max(18,Math.min(50,pitchDeg||22))*Math.PI/180);
-    var wings=wingRoofs(pts,tan);
+    if(opts.flat){
+      /* a flat roof: the walls, a parapet-thick slab on top */
+      var gf=pts.map(function(p){ return [p[0],0,p[1]]; }), ef=pts.map(function(p){ return [p[0],11,p[1]]; }), ff=[], evf=[];
+      for(var i6=0;i6<n;i6++){ var j6=(i6+1)%n; ff.push({v:[gf[i6],gf[j6],ef[j6],ef[i6]], kind:'wall'}); evf.push([ef[i6],ef[j6]]); }
+      ff.push({v:ef.slice(), kind:'roof'});
+      var lf=0, thf=0; for(var i7=0;i7<n;i7++){ var pa7=pts[i7], pb7=pts[(i7+1)%n], l7=Math.hypot(pb7[0]-pa7[0],pb7[1]-pa7[1]); if(l7>lf){ lf=l7; thf=Math.atan2(pb7[1]-pa7[1],pb7[0]-pa7[0]); } }
+      return { faces:ff, roofEdges:evf, ridge:null, eaves:evf, foot:[gf], axes:{th:thf}, fromMap:true };
+    }
+    var wings=wingRoofs(pts,tan,opts.style);
     if(wings){
       var gw=pts.map(function(p){ return [p[0],0,p[1]]; }), ew=pts.map(function(p){ return [p[0],10,p[1]]; }), fw=[], evw=[];
       for(var iw=0;iw<n;iw++){ var jw=(iw+1)%n; fw.push({v:[gw[iw],gw[jw],ew[jw],ew[iw]], kind:'wall'}); evw.push([ew[iw],ew[jw]]); }
@@ -2474,7 +2660,10 @@ document.addEventListener('click', function(e) {
     var q=randomYard(), k0=ease(span(T,8.8,9.4)), k1=ease(span(T,9.3,10.1)), k2=ease(span(T,9.9,10.9)), k3=ease(span(T,10.5,11.5)), k4=ease(span(T,11.0,11.8));
     var X=22, Z=16, faces=[];
     if(k0>0.01){
-      faces.push(ground(H,[[-X*k0,-Z*k0],[X*k0,-Z*k0],[X*k0,Z*k0],[-X*k0,Z*k0]],0,'#f3f6f9', function(ctx,P,dpr){
+      /* the lawn: the yard they traced, when they traced one */
+      var lawn=H.loc ? H.loc.map(function(p){ return [p[0]*k0,p[1]*k0]; }) : [[-X*k0,-Z*k0],[X*k0,-Z*k0],[X*k0,Z*k0],[-X*k0,Z*k0]];
+      faces.push(ground(H,lawn,0,'#f3f6f9', function(ctx,P,dpr){
+        if(H.loc) return;
         /* mowing stripes, faint */
         ctx.strokeStyle='rgba(0,21,48,.05)'; ctx.lineWidth=5*dpr;
         for(var a=-X+4;a<X;a+=6){ var p=P(H.w(a*k0,0.01,-Z*k0)), r=P(H.w(a*k0,0.01,Z*k0)); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(r.x,r.y); ctx.stroke(); }
@@ -2516,7 +2705,7 @@ document.addEventListener('click', function(e) {
       for(var st2=0;st2<q.stones;st2++){ var tt=(st2+0.5)/q.stones, sa=-X+17+(X-6)*tt, sb=-Z+8+(Z-4)*tt*0.7;
         faces=faces.concat(box(H,sa-1.1,sa+1.1,0,0.15*k4+0.01,sb-0.8,sb+0.8,'stone'+st2,{fill:[252,253,254]})); }
     }
-    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,H.w(0,2.5,0),X*0.95,10,0.62) };
+    return { faces:faces, houseA:dissolve(T), cam:subjectCam(T,H.w(0,2.5,0),Math.max(X*0.95,Math.min(90,(H.reach||0)*0.9)),10,0.62) };
   }
 
   /* plumbing, as the thing itself: a water heater with its flue, the cold
@@ -2821,7 +3010,7 @@ document.addEventListener('click', function(e) {
         over: function(ctx,P,dpr){ ctx.save(); ctx.lineCap='round'; chain(ctx,P,edges,span(T,10.2,12.8),BLUE,1.6*dpr); ctx.restore(); } };
     },
 
-    pools: function(T,H,now){ return poolScene(T,H,now); },
+    pools: function(T,H,now){ return poolScene(T,yardH(H),now); },
     _poolOld: function(T,H){
       var q=randomPool(), poly=poolPoly(q), loc='back';
       var dir = loc==='front' ? H.front : loc==='side' ? H.side : [-H.front[0],-H.front[1]];
@@ -2860,7 +3049,7 @@ document.addEventListener('click', function(e) {
         } };
     },
 
-    landscaping: function(T,H,now){ return yardScene(T,H,now); },
+    landscaping: function(T,H,now){ return yardScene(T,yardH(H),now); },
     _yardOld: function(T,H){
       var q=randomYard(), where='back', size=q.size;
       var patches=[];
@@ -2973,6 +3162,30 @@ document.addEventListener('click', function(e) {
     var pool=Math.max(150, Math.min(800, Math.round(backA*0.18/10)*10));
     return { yard:Math.round(yard/10)*10, back:Math.round(backA/10)*10, pool:pool, shapes:shapes };
   }
+  /* the yard as traced: its area is the measurement, its outline the lawn */
+  function yardFromTrace(){
+    var w=st.traceW; if(!w||w.length<3) return null;
+    var area=st.traceSq||Math.abs(ringArea(w));
+    var pool=Math.max(150, Math.min(800, Math.round(area*0.18/10)*10));
+    return { yard:Math.round(area), back:Math.round(area), pool:pool, traced:true,
+             shapes:[w.map(function(p){ return [p[0],0.05,p[1]]; })] };
+  }
+  /* the house's frame moved onto the traced yard, turned to its long side,
+     so the pool and the garden are built where the homeowner drew them */
+  function yardH(H){
+    var w=st&&st.traceW; if(!w||w.length<3) return H;
+    if(st._yh&&st._yh.of===H) return st._yh;
+    var A=0,cx=0,cz=0,n=w.length;
+    for(var i=0;i<n;i++){ var p=w[i], q=w[(i+1)%n], cr=p[0]*q[1]-q[0]*p[1]; A+=cr; cx+=(p[0]+q[0])*cr; cz+=(p[1]+q[1])*cr; }
+    if(Math.abs(A)<1e-6){ cx=0; cz=0; w.forEach(function(p){ cx+=p[0]; cz+=p[1]; }); cx/=n; cz/=n; } else { cx/=3*A; cz/=3*A; }
+    var lo=0, th=0; for(var j=0;j<n;j++){ var a=w[j], b=w[(j+1)%n], l=Math.hypot(b[0]-a[0],b[1]-a[1]); if(l>lo){ lo=l; th=Math.atan2(b[1]-a[1],b[0]-a[0]); } }
+    var u=[Math.cos(th),Math.sin(th)], v=[-Math.sin(th),Math.cos(th)], reach=0;
+    var loc=w.map(function(p){ var dx=p[0]-cx, dz=p[1]-cz; reach=Math.max(reach,Math.hypot(dx,dz)); return [dx*u[0]+dz*u[1], dx*v[0]+dz*v[1]]; });
+    var Y={}; for(var k in H) Y[k]=H[k];
+    Y.c=[cx,cz]; Y.u=u; Y.v=v; Y.loc=loc; Y.reach=reach; Y.of=H;
+    Y.w=function(a,y,b){ return [cx+u[0]*a+v[0]*b, y, cz+u[1]*a+v[1]*b]; };
+    return (st._yh=Y);
+  }
   function drawYard(ctx,P,alpha){
     var y=st.yard; if(!y||alpha<=0.01) return;
     ctx.save(); ctx.globalAlpha=alpha;
@@ -3055,11 +3268,11 @@ document.addEventListener('click', function(e) {
     if(st.mapWide&&mapA>0){ st.mapDrawn=true;
       var footA=geo?Math.min(span(T,Math.max(3.0,start),Math.max(4.2,start+1.2)),1):0;
       drawMap(mctx,PM,1,mapA,geo&&geo.foot,footA);
-      if(st.yard) drawYard(mctx,PM,Math.min(mapA,span(T,6.0,7.2)));
+      if(st.yard) drawYard(mctx,PM,Math.min(mapA,st.yard.traced?span(T,1.2,2.4):span(T,6.0,7.2)));
     }
     if(!geo||grow<=0.01){ st.raf=requestAnimationFrame(draw); return; }
     st.geoLocked=geo;
-    if(st.yard===undefined && (TRADE==='pools'||TRADE==='landscaping')){ try{ st.yard=measureYard(geo); }catch(e){ st.yard=null; } }
+    if(st.yard===undefined && TRACE){ try{ st.yard=st.traceW ? yardFromTrace() : measureYard(geo); }catch(e){ st.yard=null; } }
 
     /* ground-level work (pool, yard) sits under the house */
     if(fin&&fin.under) fin.under(ctx,P1,dpr,now);
@@ -3134,7 +3347,7 @@ document.addEventListener('click', function(e) {
     var holdAt=STEP_T[4]-0.2, raw=el-(st.paused||0);
     if(st.data===undefined && raw>holdAt){
       st.paused=el-holdAt; raw=holdAt;
-      if(el>HS_WAIT_MAX){ finish(null); return; }
+      if(el>HS_WAIT_MAX){ if(TRACE&&st.traceW){ hsData(null); } else { finish(null); return; } }
     }
     if(st.failed && raw>=STEP_T[2]){ finish(null); return; }
     st.clock=Math.min(HS_END, raw);
@@ -3173,6 +3386,7 @@ document.addEventListener('click', function(e) {
 
   /* ── start: when an address is chosen ─────────────────────────────────────── */
   function begin(addr){
+    if(TRACE) return beginTrace(addr);
     var stage=ensureStage(); if(!stage) return;
     var pn=panel(); pn.classList.add('hs-mode'); pn.classList.remove('hs-done','hs-fallback');
     stop();
@@ -3196,6 +3410,48 @@ document.addEventListener('click', function(e) {
     });
   }
 
+  /* pool and landscaping: the address is picked, the map comes up for the
+     trace, and the street and satellite read load meanwhile */
+  function beginTrace(addr){
+    var stage=ensureStage(); if(!stage) return;
+    var pn=panel(); pn.classList.remove('hs-mode','hs-done','hs-fallback');
+    stop(); stage.classList.remove('on');
+    $('rs-addr').textContent=String(addr||'').split(',').slice(0,3).join(',');
+    var cv=$('rs-cv'), mcv=$('rs-mapcv');
+    st={ cv:cv, ctx:cv.getContext('2d'), mcv:mcv, mctx:mcv.getContext('2d'), dpr:Math.min(2, window.devicePixelRatio||1),
+         t0:performance.now(), clock:0, idx:-1, data:undefined, target:null, waiting:true, addrText:String(addr||'') };
+    try{ eS.sqft=0; eCheckBtn1(); }catch(e){}
+    rsTraceReset();
+    rsTraceOpen({kind:TRADE==='pools'?'backyard':'yard', onDone:hsTraced, onSkip:hsSkip});
+  }
+  function hsTraced(pts, sq){
+    if(!st) return;
+    if(!st.origin) st.origin={lat:pts[0].lat, lng:pts[0].lng};
+    st.traceLL=pts; st.traceSq=sq; st.traceW=rsTraceWorld(pts, st.origin);
+    hsRun();
+  }
+  function hsRun(){
+    var me=st; if(!me) return;
+    clearTimeout(me.timer); cancelAnimationFrame(me.raf);
+    me.yard=undefined; me._yh=null; me._pool=null; me._yard=null; me.done=false; me.cam=null; me.arrive=undefined;
+    me.geoLocked=null; me.frame=null; me.frameGeo=null; me.mapDrawn=false; me.q={}; me.waiting=false;
+    me.t0=performance.now(); me.paused=0; me.clock=0; me.clockAt=undefined; me.clockHeld=false; me.lastMs=undefined; me.spin=0; me.idx=-1;
+    var pn=panel(); pn.classList.add('hs-mode'); pn.classList.remove('hs-done','hs-fallback');
+    $('rs-live').style.display=''; $('rs-result').className='rs-result'; $('rs-result').innerHTML='';
+    $('rs-bar').style.width='0'; $('rs-pct').textContent='0%'; $('rs-now').textContent=label(0);
+    var stage=$('rs-stage'); stage.classList.add('on');
+    try{ if(stage.scrollIntoView) stage.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
+    draw(); tick();
+  }
+  function hsSkip(){ var pn=panel(); pn.classList.remove('hs-mode'); var mw=$('e-mapwrap'); if(mw) mw.style.display='none'; handoff(null, {}); }
+  window.hsRedraw=function(){
+    if(st){ clearTimeout(st.timer); cancelAnimationFrame(st.raf); }
+    var s=$('rs-stage'); if(s) s.classList.remove('on');
+    var pn=panel(); pn.classList.remove('hs-mode','hs-done','hs-fallback');
+    if(!rsT) rsTraceOpen({kind:TRADE==='pools'?'backyard':'yard', onDone:hsTraced, onSkip:hsSkip}); else rsTraceShow();
+    var mw=$('e-mapwrap'); if(mw&&mw.scrollIntoView) mw.scrollIntoView({behavior:'smooth',block:'center'});
+  };
+
   function hsData(d){
     var me=st; if(!me) return;
     if(d && d.totalAreaSqft>0){
@@ -3215,6 +3471,11 @@ document.addEventListener('click', function(e) {
         }
         me.gen=g0;
       }
+    } else if(TRACE){
+      /* no satellite read: the yard is still theirs, the house is a typical
+         one at the address, and nothing about the house is claimed */
+      me.data={ trueSqft:0, planSqft:0, pitch:22, planes:0, none:true };
+      me.target=modelFor(2000, 22); me.gen=buildGeometry(me.target);
     } else { me.data=null; me.failed=true; }
   }
 
@@ -3224,8 +3485,8 @@ document.addEventListener('click', function(e) {
     painting:    function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(Math.round(Math.sqrt(d.planSqft)*4*9)),'Exterior wall, approx. sq ft']]; },
     electrical:  function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(d.planSqft),'Home size to price']]; },
     general:     function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(d.trueSqft),'Roof area, sq ft']]; },
-    pools:       function(d){ var y=st&&st.yard; return y ? [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(y.back),'Back yard, approx. sq ft'],[fmt(y.pool),'Pool that fits, sq ft']] : [[fmt(d.planSqft),'Home footprint, sq ft']]; },
-    landscaping: function(d){ var y=st&&st.yard; return y ? [[fmt(d.planSqft),'Home footprint, sq ft'],[fmt(y.yard),'Yard, approx. sq ft']] : [[fmt(d.planSqft),'Home footprint, sq ft']]; },
+    pools:       function(d){ var y=st&&st.yard, h=d.planSqft?[[fmt(d.planSqft),'Home footprint, sq ft']]:[]; return y ? h.concat([[fmt(y.back),y.traced?'Backyard traced, sq ft':'Back yard, approx. sq ft'],[fmt(y.pool),'Pool that fits, sq ft']]) : h; },
+    landscaping: function(d){ var y=st&&st.yard, h=d.planSqft?[[fmt(d.planSqft),'Home footprint, sq ft']]:[]; return y ? h.concat([[fmt(y.yard),y.traced?'Yard traced, sq ft':'Yard, approx. sq ft']]) : h; },
     _:           function(d){ return [[fmt(d.planSqft),'Home footprint, sq ft']]; }
   };
   var PREFILL = {
@@ -3248,7 +3509,8 @@ document.addEventListener('click', function(e) {
     $('rs-bar').style.width='100%';
     var cards=(RESULT[TRADE]||RESULT._)(data,q);
     res.innerHTML='<div class="rs-grid hs-grid'+cards.length+'">'+cards.map(function(c){ return '<div><b>'+c[0]+'</b><span>'+c[1]+'</span></div>'; }).join('')+'</div>'
-      +'<p class="rs-note">'+(PREFILL[TRADE]?'Measured from satellite. Adjust the size below if it’s off.':'Measured from satellite. Now tell us about the job.')+'</p>';
+      +'<p class="rs-note">'+(st.traceW?(TRADE==='pools'?'Backyard measured from the outline you traced; the pool size is a starting point. Adjust it below.':'Measured from the outline you traced. Adjust the size below if it’s off.'):PREFILL[TRADE]?'Measured from satellite. Adjust the size below if it’s off.':'Measured from satellite. Now tell us about the job.')+'</p>'
+      +(st.traceW?'<button type="button" class="rs-fix" onclick="hsRedraw()">Redraw the outline</button>':'');
     res.className='rs-result on';
     handoff(data, q);
     st.done=true;
@@ -3311,18 +3573,24 @@ document.addEventListener('click', function(e) {
       var r; try{ r=_select.apply(this, arguments); }catch(e){}
       return r;
     };
-    if(typeof eInitMap==='function'){ var _init=eInitMap; eInitMap=window.eInitMap=function(){ var r; try{ r=_init.apply(this, arguments); }catch(e){} return r; }; }
+    if(typeof eInitMap==='function'){ var _init=eInitMap; eInitMap=window.eInitMap=function(){ var r; try{ r=_init.apply(this, arguments); }catch(e){}
+      if(TRACE&&rsTraceActive()){ rsTraceAttach(); try{ eLmap.setZoom(19); }catch(e){} }
+      return r; }; }
     eSolarMeasure=window.eSolarMeasure=function(lat, lon){
       rsMapLoad(lat, lon);
       if(window.RS_DEMO){ setTimeout(function(){ hsData(window.RS_DEMO); }, 1400); return; }
       fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
         .then(function(r){ return r.json(); })
-        .then(function(d){ hsData(d&&d.found&&d.totalAreaSqft>0 ? d : null); })
+        .then(function(d){ if(TRACE&&d&&d.centerLat&&d.centerLng) rsTraceCenter(d.centerLat, d.centerLng, 19); hsData(d&&d.found&&d.totalAreaSqft>0 ? d : null); })
         .catch(function(){ hsData(null); });
     };
     var sub=document.querySelector('#e-addrpanel .e-ssub');
-    if(sub&&$('e-mapwrap')) sub.textContent='Enter the address and we’ll find your home from satellite. Nothing to draw.';
-    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=panel(); if(p) p.classList.remove('hs-mode','hs-done','hs-fallback'); return _rs.apply(this, arguments); }; }
+    if(sub&&$('e-mapwrap')) sub.textContent= TRACE
+      ? (TRADE==='pools' ? 'Enter the address, then tap the corners of your backyard on the satellite map. We’ll measure it and show a pool that fits.'
+                         : 'Enter the address, then tap the corners of the yard you want landscaped on the satellite map. We’ll measure it for you.')
+      : 'Enter the address and we’ll find your home from satellite. Nothing to draw.';
+    if(TRACE&&typeof eZipBack==='function'){ var _zb=eZipBack; eZipBack=window.eZipBack=function(){ stop(); rsTraceReset(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=panel(); if(p) p.classList.remove('hs-mode','hs-done'); return _zb.apply(this, arguments); }; }
+    if(typeof eRestart==='function'){ var _rs=eRestart; eRestart=window.eRestart=function(){ stop(); if(TRACE) rsTraceReset(); var s=$('rs-stage'); if(s) s.classList.remove('on'); var p=panel(); if(p) p.classList.remove('hs-mode','hs-done','hs-fallback'); return _rs.apply(this, arguments); }; }
     window.hsDebug={ get st(){ return st; } };
     return true;
   }
