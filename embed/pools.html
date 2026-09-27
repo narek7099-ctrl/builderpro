@@ -3645,48 +3645,6 @@ html body #est-embed#est-embed .e-sp.active .e-shdr{animation:stIn .7s var(--st-
 html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st-settle) both .08s !important;}
 @keyframes stIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){html body #est-embed#est-embed .e-sp.active .e-shdr,html body #est-embed#est-embed .e-sp.active .e-sbody{animation:none !important;}}
-
-/* ── SINGLE CARD LAYOUT ─────────────────────────────────────────────────
-   The whole estimator is one centered card: a slim header, a thin progress
-   line, one big question, tap-sized tiles, one button. The inner panels stop
-   being cards of their own, so nothing stacks box-inside-box. */
-html body #est-embed#est-embed{max-width:600px !important;margin:24px auto !important;background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:28px !important;box-shadow:0 30px 60px -30px rgba(0,21,48,.25) !important;overflow:hidden !important;}
-html body #est-embed#est-embed > .e-app,html body #est-embed#est-embed .e-app{background:#fff !important;}
-html body #est-embed#est-embed .e-topbar{padding:22px 28px 0 !important;background:#fff !important;border:0 !important;}
-html body #est-embed#est-embed .e-tlogo{font-size:15px !important;}
-html body #est-embed#est-embed .e-tstep{font-size:11px !important;letter-spacing:.06em !important;}
-html body #est-embed#est-embed .e-tabs{padding:14px 28px 0 !important;background:#fff !important;border:0 !important;gap:6px !important;}
-html body #est-embed#est-embed .e-tab{padding:8px 14px !important;font-size:11px !important;min-height:0 !important;}
-html body #est-embed#est-embed .e-prog{margin:18px 28px 0 !important;height:4px !important;border-radius:99px !important;background:var(--st-soft) !important;overflow:hidden !important;border:0 !important;}
-html body #est-embed#est-embed .e-pfill{border-radius:99px !important;background:var(--st-blue) !important;}
-html body #est-embed#est-embed .e-sbody{padding:8px 28px 28px !important;max-width:none !important;margin:0 !important;background:#fff !important;}
-html body #est-embed#est-embed .e-shdr,html body #est-embed#est-embed #e-zippanel .e-shdr,html body #est-embed#est-embed .e-card,html body #est-embed#est-embed .e-zipwrap,html body #est-embed#est-embed .e-olist{background:transparent !important;padding:0 !important;margin:0 0 18px !important;border-radius:0 !important;}
-html body #est-embed#est-embed .e-shdr{padding-top:18px !important;}
-html body #est-embed#est-embed .e-seye{font-size:11px !important;color:var(--st-blue) !important;}
-html body #est-embed#est-embed .e-stitle{font-size:30px !important;line-height:1.1 !important;margin:6px 0 8px !important;}
-html body #est-embed#est-embed .e-stitle br{display:none !important;}
-html body #est-embed#est-embed .e-stitle em{margin-left:.25em !important;}
-html body #est-embed#est-embed .e-ssub{font-size:15px !important;max-width:none !important;}
-html body #est-embed#est-embed .e-zipinput{max-width:none !important;width:100% !important;font-size:22px !important;height:58px !important;border-radius:14px !important;}
-html body #est-embed#est-embed .e-ziphint{display:none !important;}
-html body #est-embed#est-embed .e-olist{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;}
-html body #est-embed#est-embed .e-oi{flex-direction:column !important;align-items:flex-start !important;gap:6px !important;padding:16px !important;border:1.5px solid var(--st-stroke) !important;border-radius:16px !important;background:#fff !important;margin:0 !important;position:relative !important;min-height:0 !important;}
-html body #est-embed#est-embed .e-oi.on,html body #est-embed#est-embed .e-oi.selected,html body #est-embed#est-embed .e-oi.sel{border-color:var(--st-blue) !important;background:var(--st-blue-l) !important;}
-html body #est-embed#est-embed .e-oi-em{font-size:26px !important;margin:0 !important;}
-html body #est-embed#est-embed .e-oi-lbl{font-size:15px !important;}
-html body #est-embed#est-embed .e-oi-desc{font-size:12.5px !important;}
-html body #est-embed#est-embed .e-oi-tag{position:absolute !important;top:12px !important;right:12px !important;margin:0 !important;}
-html body #est-embed#est-embed .e-oi-radio{display:none !important;}
-html body #est-embed#est-embed .e-btnrow{margin:6px 0 0 !important;padding:0 !important;display:flex !important;gap:8px !important;}
-html body #est-embed#est-embed .e-btnrow .e-btnmain{flex:1 !important;height:54px !important;}
-html body #est-embed#est-embed .e-stepdots{display:none !important;}
-@media(max-width:620px){html body #est-embed#est-embed{margin:0 !important;border-radius:0 !important;border:0 !important;box-shadow:none !important;} html body #est-embed#est-embed .e-olist{grid-template-columns:1fr !important;} html body #est-embed#est-embed .e-stitle{font-size:26px !important;}}
-html body #est-embed#est-embed .e-sp > .e-shdr{padding:26px 28px 0 !important;margin:0 0 14px !important;}
-html body #est-embed#est-embed .e-vizsplit{display:flex !important;flex-direction:column !important;gap:14px !important;grid-template-columns:none !important;}
-html body #est-embed#est-embed .e-vizcol,html body #est-embed#est-embed .e-vizphoto{width:100% !important;max-width:none !important;flex:none !important;}
-html body #est-embed#est-embed .e-vizphoto{min-height:0 !important;}
-@media(max-width:620px){html body #est-embed#est-embed .e-sp > .e-shdr{padding:22px 20px 0 !important;} html body #est-embed#est-embed .e-sbody{padding:8px 20px 24px !important;} html body #est-embed#est-embed .e-topbar{padding:18px 20px 0 !important;} html body #est-embed#est-embed .e-tabs{padding:12px 20px 0 !important;} html body #est-embed#est-embed .e-prog{margin:14px 20px 0 !important;}}
-@media(max-width:620px){html body #est-embed#est-embed .e-oi{flex-direction:row !important;align-items:center !important;gap:12px !important;padding:12px 14px !important;} html body #est-embed#est-embed .e-oi-em{flex:none !important;} html body #est-embed#est-embed .e-oi-tag{position:static !important;margin-left:auto !important;}}
 </style>
 <script id="bp-site-theme-fonts">
 /* General Sans is the site's face and comes from Fontshare, as it does on the
