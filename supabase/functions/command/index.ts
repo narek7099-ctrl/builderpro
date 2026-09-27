@@ -29,7 +29,8 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 type Agent = { key: string; name: string; role: string; web: boolean; routine?: string; auto: (tool: string, input: Record<string, unknown>) => boolean };
 const readOnly = (tool: string, input: Record<string, unknown>) =>
   ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats", "db_read"].includes(tool) ||
-  (tool === "ghl" && isRead(String(input.op ?? ""))) || tool === "memory_save";
+  (tool === "ghl" && isRead(String(input.op ?? ""))) || tool === "memory_save" ||
+  (tool === "social" && ["accounts", "recent"].includes(String(input.op ?? "")));
 const AGENTS: Record<string, Agent> = {
   ceo: { routine: "Review the business: stats, accounts, pending approvals, and what the teams logged since your last shift. Pick the one or two things that matter most right now and delegate them. Finish with a short brief for the owner.", key: "ceo", name: "CEO", web: true, role:
     "You run the company day to day with the owner. You set priorities, keep the other five on track, and turn the owner's goals into concrete work. Delegate real work to the right team with the delegate tool, then pull their answers together into a clear recommendation. You read everything; changes you want made go to the owner for approval.",
@@ -37,7 +38,7 @@ const AGENTS: Record<string, Agent> = {
   sales: { routine: "Check trials ending soon and new sign-ups. For each, decide the next step and add a note or task on their GHL contact. Draft follow-ups (don't send). Report who needs the owner's attention.", key: "sales", name: "Sales Team", web: true, role:
     "You turn trials and leads into paying contractors. You watch trials that are about to end, find who is engaged and who went quiet, write follow-ups and call scripts, and suggest offers. You may add notes and tasks on contacts yourself; sending anything to a customer waits for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
-  marketing: { routine: "Research what's working in contractor marketing right now and draft one concrete piece: an ad, a post, or an email. Instagram and Facebook posting is coming soon; for now leave drafts in your report.", key: "marketing", name: "Marketing Team", web: true, role:
+  marketing: { routine: "Research what's working in contractor marketing right now and draft one concrete piece: an ad, a post, or an email. If Facebook & Instagram are connected, check how recent posts did and queue one post for the owner's approval (social fb_post / ig_post); otherwise leave drafts in your report.", key: "marketing", name: "Marketing Team", web: true, role:
     "You bring contractors in: positioning, ad copy, landing-page copy, email and text campaigns, social posts, and SEO pages for each trade. Research competitors on the web. Drafts are free; anything published or sent to customers waits for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
   support: { routine: "Check support and cancellation requests, business-number requests, and new accounts whose setup log shows a failure or no GHL sub-account. Diagnose each and propose the fix.", key: "support", name: "Support Team", web: false, role:
@@ -71,13 +72,15 @@ const TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object", properties: { locationId: { type: "string" }, business_name: { type: "string" }, services: { type: "string" }, pricing: { type: "string" }, hours: { type: "string" }, service_area: { type: "string" }, faqs: { type: "string" }, tone: { type: "string" }, custom_instructions: { type: "string" } }, required: ["locationId"] } },
   { name: "db_read", description: "Read BuilderPro's own database (the software the contractors use). Tables: accounts, support_requests, client_settings, ai_brain, time_clock, audit_log, ai_approvals. filter is PostgREST syntax like 'status=eq.trial' (optional).",
     input_schema: { type: "object", properties: { table: { type: "string", enum: DB_TABLES }, select: { type: "string" }, filter: { type: "string" }, limit: { type: "number" } }, required: ["table"] } },
+  { name: "social", description: "The owner's own Facebook Page and Instagram business account (after they sign in with Facebook in Connections). op accounts: the Pages and Instagram accounts. op recent: latest posts with likes/comments/reach (args: page_id or ig_id). op fb_post: post to a Facebook Page (page_id, message, optional link or image_url). op ig_post: post an image to Instagram (ig_id, image_url must be a public https image, caption). Posting waits for the owner's approval.",
+    input_schema: { type: "object", properties: { op: { type: "string", enum: ["accounts", "recent", "fb_post", "ig_post"] }, page_id: { type: "string" }, ig_id: { type: "string" }, message: { type: "string" }, caption: { type: "string" }, link: { type: "string" }, image_url: { type: "string" } }, required: ["op"] } },
   { name: "memory_save", description: "Remember something for the whole team (a decision, a preference of the owner, a finding).", input_schema: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } },
   { name: "memory_list", description: "What the team has saved to memory.", input_schema: { type: "object", properties: {} } },
   { name: "delegate", description: "(CEO only) Hand a task to one of the teams and get their answer back.",
     input_schema: { type: "object", properties: { team: { type: "string", enum: ["sales", "marketing", "support", "builder", "research"] }, task: { type: "string" } }, required: ["team", "task"] } },
 ];
 function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
-  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)));
+  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)) && (x.name !== "social" || ["ceo", "marketing"].includes(a.key)));
   if (a.web) t.push({ type: "web_search_20260209", name: "web_search", max_uses: 5 } as unknown as Anthropic.Messages.ToolUnion);
   return t;
 }
@@ -170,6 +173,73 @@ async function oauthCallback(url: URL) {
   return back("connected=" + encodeURIComponent(c.label || c.name));
 }
 
+
+/* Facebook & Instagram through the owner's own Meta app (META_APP_ID /
+   META_APP_SECRET). As the app's admin the owner can post to their own Page
+   and Instagram without Meta's app review. Page tokens from a long-lived user
+   token don't expire, so this stays connected. */
+const META_APP_ID = Deno.env.get("META_APP_ID") ?? "";
+const META_APP_SECRET = Deno.env.get("META_APP_SECRET") ?? "";
+const META_REDIRECT = `${SB_URL}/functions/v1/command/meta-callback`;
+const META_SCOPES = "pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish,instagram_manage_insights,business_management";
+const G = "https://graph.facebook.com/v19.0";
+type MetaPage = { id: string; name: string; token: string; ig?: { id: string; username: string } };
+async function cfgGet(k: string) { const r = await sb(`ai_config?key=eq.${k}&select=value`); return r.ok ? ((await r.json())[0]?.value ?? "") : ""; }
+async function cfgSet(k: string, v: string) { await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: k, value: v }) }); }
+async function metaGet(): Promise<{ pages: MetaPage[]; at?: string } | null> { const v = await cfgGet("meta"); try { return v ? JSON.parse(v) : null; } catch { return null; } }
+async function metaStart() {
+  if (!META_APP_ID || !META_APP_SECRET) throw new Error("Add META_APP_ID and META_APP_SECRET in Supabase secrets first (steps are on the card).");
+  const state = rnd(24); await cfgSet("meta_state", state + "|" + Date.now());
+  return `https://www.facebook.com/v19.0/dialog/oauth?${new URLSearchParams({ client_id: META_APP_ID, redirect_uri: META_REDIRECT, state, scope: META_SCOPES, response_type: "code" })}`;
+}
+async function metaCallback(url: URL) {
+  const back = (q: string) => Response.redirect(`${Deno.env.get("SITE_URL") ?? "https://builderpro-os.com"}/command.html?${q}`, 302);
+  const [st, ts] = (await cfgGet("meta_state")).split("|");
+  if (!st || st !== url.searchParams.get("state") || Date.now() - Number(ts) > 20 * 6e4) return back("conn_error=" + encodeURIComponent("That Facebook sign-in expired. Try again."));
+  await cfgSet("meta_state", "");
+  const code = url.searchParams.get("code");
+  if (!code) return back("conn_error=" + encodeURIComponent(url.searchParams.get("error_description") ?? "Facebook sign-in was cancelled."));
+  try {
+    const q = (o: Record<string, string>) => new URLSearchParams({ client_id: META_APP_ID, client_secret: META_APP_SECRET, ...o });
+    const t1 = await (await fetch(`${G}/oauth/access_token?${q({ redirect_uri: META_REDIRECT, code })}`)).json();
+    if (!t1.access_token) throw new Error(t1.error?.message ?? "no token");
+    const t2 = await (await fetch(`${G}/oauth/access_token?${q({ grant_type: "fb_exchange_token", fb_exchange_token: t1.access_token })}`)).json();
+    const user = t2.access_token ?? t1.access_token;
+    const acc = await (await fetch(`${G}/me/accounts?fields=id,name,access_token,instagram_business_account{id,username}&limit=50&access_token=${encodeURIComponent(user)}`)).json();
+    const pages: MetaPage[] = (acc.data ?? []).map((p: { id: string; name: string; access_token: string; instagram_business_account?: { id: string; username: string } }) => ({ id: p.id, name: p.name, token: p.access_token, ig: p.instagram_business_account }));
+    if (!pages.length) throw new Error("No Facebook Pages came back. Pick your Page (and its Instagram) when Facebook asks.");
+    await cfgSet("meta", JSON.stringify({ pages, at: new Date().toISOString() }));
+    return back("connected=" + encodeURIComponent("Facebook & Instagram (" + pages.map((p) => p.name).join(", ") + ")"));
+  } catch (e) { return back("conn_error=" + encodeURIComponent(String(e).replace(/^Error: /, "").slice(0, 160))); }
+}
+async function social(input: Record<string, unknown>): Promise<unknown> {
+  const m = await metaGet();
+  if (!m?.pages?.length) return { error: "Facebook & Instagram aren't connected. Ask the owner to sign in under Connections." };
+  const op = String(input.op);
+  if (op === "accounts") return m.pages.map((p) => ({ page_id: p.id, page: p.name, ig_id: p.ig?.id ?? null, instagram: p.ig?.username ?? null }));
+  const pg = m.pages.find((p) => p.id === input.page_id || p.ig?.id === input.ig_id) ?? m.pages[0];
+  const gj = async (path: string, init?: RequestInit) => (await fetch(`${G}/${path}${path.includes("?") ? "&" : "?"}access_token=${encodeURIComponent(pg.token)}`, init)).json();
+  if (op === "recent") {
+    if (input.ig_id || (!input.page_id && pg.ig)) return await gj(`${input.ig_id ?? pg.ig!.id}/media?fields=caption,media_type,permalink,timestamp,like_count,comments_count&limit=10`);
+    return await gj(`${pg.id}/posts?fields=message,permalink_url,created_time,shares,reactions.summary(true),comments.summary(true)&limit=10`);
+  }
+  if (op === "fb_post") {
+    const body = new URLSearchParams({ message: String(input.message ?? "") });
+    if (input.image_url) { body.set("url", String(input.image_url)); body.set("caption", String(input.message ?? "")); return await gj(`${pg.id}/photos`, { method: "POST", body }); }
+    if (input.link) body.set("link", String(input.link));
+    return await gj(`${pg.id}/feed`, { method: "POST", body });
+  }
+  if (op === "ig_post") {
+    const ig = String(input.ig_id ?? pg.ig?.id ?? "");
+    if (!ig) return { error: "This Page has no Instagram business account attached." };
+    const c = await gj(`${ig}/media`, { method: "POST", body: new URLSearchParams({ image_url: String(input.image_url ?? ""), caption: String(input.caption ?? input.message ?? "") }) });
+    if (!c.id) return { error: c.error?.message ?? "Instagram didn't accept the image. It must be a public https JPG/PNG." };
+    for (let i = 0; i < 10; i++) { const s2 = await gj(`${c.id}?fields=status_code`); if (s2.status_code === "FINISHED") break; if (s2.status_code === "ERROR") return { error: "Instagram couldn't process the image." }; await new Promise((r) => setTimeout(r, 2000)); }
+    return await gj(`${ig}/media_publish`, { method: "POST", body: new URLSearchParams({ creation_id: c.id }) });
+  }
+  return { error: "unknown op" };
+}
+
 async function memoryText(): Promise<string> {
   const r = await sb("ai_memory?select=note&order=id.desc&limit=40");
   const rows = r.ok ? await r.json() : [];
@@ -233,6 +303,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
       const r = await sb(`${t}?select=${encodeURIComponent(String(input.select ?? "*"))}${f ? "&" + f : ""}&limit=${Math.min(Number(input.limit) || 50, 200)}`);
       return r.ok ? await r.json() : { error: r.status, detail: (await r.text()).slice(0, 200) };
     }
+    case "social": return await social(input);
     case "memory_save": { const r = await sb("ai_memory", { method: "POST", body: JSON.stringify({ note: String(input.note).slice(0, 2000) }) }); return { ok: r.ok }; }
     case "memory_list": { const r = await sb("ai_memory?select=id,note,created_at&order=id.desc&limit=100"); return r.ok ? await r.json() : []; }
     case "delegate": {
@@ -446,6 +517,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (new URL(req.url).searchParams.get("shift") !== null) return await shift(req);
   if (new URL(req.url).searchParams.get("oauth_cb") !== null) return await oauthCallback(new URL(req.url));
+  if (new URL(req.url).pathname.endsWith("/meta-callback")) return await metaCallback(new URL(req.url));
   const who = await admin(req);
   if (!who) return json({ ok: false, error: "not authorized" }, 403);
   let b: Record<string, unknown> = {};
@@ -471,7 +543,10 @@ Deno.serve(async (req) => {
     }
     const c = await sb("ai_config?key=eq.shifts_on&select=value"); const on = ((c.ok ? await c.json() : [])[0]?.value ?? "true") === "true";
     const m = await sb("ai_mcp?enabled=eq.true&select=name,label,agents"); 
-    return json({ ok: true, data: out, shifts_on: on, connections: m.ok ? await m.json() : [] });
+    const mm = await metaGet();
+    const conns = m.ok ? await m.json() : [];
+    if (mm?.pages?.length) conns.push({ name: "facebook", label: "Facebook", agents: ["marketing", "ceo"] }, ...(mm.pages.some((p) => p.ig) ? [{ name: "instagram", label: "Instagram", agents: ["marketing", "ceo"] }] : []));
+    return json({ ok: true, data: out, shifts_on: on, connections: conns });
   }
   if (op === "shifts") {
     await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shifts_on", value: b.on ? "true" : "false" }) });
@@ -480,10 +555,13 @@ Deno.serve(async (req) => {
   if (op === "mcp_list") {
     const r = await sb("ai_mcp?select=*&order=id.asc");
     const rows: Mcp[] = r.ok ? await r.json() : [];
-    return json({ ok: true, data: rows.map((x) => ({ id: x.id, name: x.name, label: x.label, url: x.url, agents: x.agents, disabled_tools: x.disabled_tools, enabled: (x as unknown as { enabled: boolean }).enabled,
+    const mm = await metaGet();
+    return json({ ok: true, meta: { ready: !!(META_APP_ID && META_APP_SECRET), redirect: META_REDIRECT, connected: !!mm?.pages?.length, pages: (mm?.pages ?? []).map((p) => p.name + (p.ig ? " + @" + p.ig.username : "")) }, data: rows.map((x) => ({ id: x.id, name: x.name, label: x.label, url: x.url, agents: x.agents, disabled_tools: x.disabled_tools, enabled: (x as unknown as { enabled: boolean }).enabled,
       signin: !!x.oauth?.client_id || !x.token, connected: !!x.token, stays: !!x.refresh_token, error: x.oauth?.error ?? "",
       token: x.token && !x.oauth?.client_id ? "••••" + x.token.slice(-4) : "" })) });
   }
+  if (op === "meta_start") { try { return json({ ok: true, url: await metaStart() }); } catch (e) { return json({ ok: false, error: String(e).replace(/^Error: /, "") }, 400); } }
+  if (op === "meta_disconnect") { await cfgSet("meta", ""); return json({ ok: true }); }
   if (op === "mcp_oauth_start") {
     try { return json({ ok: true, url: await oauthStart(Number(b.id)) }); }
     catch (e) { return json({ ok: false, error: String(e).replace(/^Error: /, "") }, 400); }
