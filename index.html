@@ -284,6 +284,42 @@ section{padding:0;}
 .t-n{font-weight:600;font-size:14px;}
 .t-r{font-size:12.5px;color:var(--grey);}
 
+
+/* ==== pricing v2 ==== */
+.pl-add svg{width:24px;height:24px}.pl-trust svg{width:18px;height:18px;color:#006fff}.pl-xx{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';-webkit-font-smoothing:antialiased;overflow:hidden;display:inline-block;width:1em}
+.pl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gutter,6px);align-items:stretch}
+.pl{display:flex;flex-direction:column;padding:2.25rem 2rem 2.25rem;position:relative;overflow:hidden}
+.pl_tag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:#eef3f8;color:#5d6b7c}
+.pl_tag i{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+.pl_name{font-size:1.6rem;font-weight:600;letter-spacing:-.02em;margin:1.1rem 0 .4rem}
+.pl_price{display:flex;align-items:baseline;gap:6px}
+.pl_price b{font-size:3.6rem;font-weight:600;letter-spacing:-.045em;line-height:1}
+.pl_price span{font-size:15px;opacity:.6}
+.pl_desc{margin:.9rem 0 1.6rem;font-size:15px;line-height:1.5;color:#6b7888;min-height:3em}
+.pl .btn{width:100%;justify-content:center;text-align:center}
+.pl_rule{display:flex;align-items:center;gap:10px;margin:1.8rem 0 1.1rem;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8a96a4}
+.pl_rule:after{content:'';flex:1;height:1px;background:rgba(0,21,48,.1)}
+.pl ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.8rem;font-size:15px}
+.pl li{display:flex;gap:10px;align-items:flex-start;line-height:1.35}
+.pl li svg{flex:none;width:20px;height:20px;padding:3px;border-radius:50%;background:#e6f0ff;stroke:#006fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;margin-top:-1px}
+.pl.is-pop{background:linear-gradient(160deg,#1a7dff 0%,#006fff 45%,#0058d6 100%);color:#fff;box-shadow:0 40px 80px -30px rgba(0,111,255,.6);transform:translateY(-10px)}
+.pl.is-pop:before{content:'';position:absolute;width:420px;height:420px;right:-160px;top:-180px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.28),rgba(255,255,255,0) 65%);pointer-events:none}
+.pl.is-pop .pl_tag{background:rgba(255,255,255,.18);color:#fff}
+.pl.is-pop .pl_desc,.pl.is-dark .pl_desc{color:rgba(255,255,255,.78)}
+.pl.is-pop .pl_rule,.pl.is-dark .pl_rule{color:rgba(255,255,255,.6)}
+.pl.is-pop .pl_rule:after,.pl.is-dark .pl_rule:after{background:rgba(255,255,255,.2)}
+.pl.is-pop li svg{background:rgba(255,255,255,.2);stroke:#fff}
+.pl.is-dark{background:#001530;color:#fff}
+.pl.is-dark .pl_tag{background:rgba(255,255,255,.1);color:#9ec5ff}
+.pl.is-dark li svg{background:rgba(0,111,255,.25);stroke:#6fb0ff}
+.pl-adds{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter,6px)}
+.pl-add{display:flex;align-items:center;gap:16px;padding:1.4rem 1.6rem}
+.pl-add_ic{flex:none;width:48px;height:48px;border-radius:14px;background:#e6f0ff;color:#006fff;display:grid;place-items:center}
+.pl-add b{font-size:17px;font-weight:600}.pl-add p{margin:3px 0 0;font-size:14px;color:#6b7888;line-height:1.45}
+.pl-add_p{margin-left:auto;font-size:1.6rem;font-weight:600;letter-spacing:-.03em;white-space:nowrap}.pl-add_p small{font-size:14px;font-weight:500;color:#8a96a4}
+.pl-trust{display:flex;justify-content:center;flex-wrap:wrap;gap:12px 34px;padding:1.2rem 1.5rem;font-size:14.5px;color:#4a5869}
+.pl-trust>span{display:inline-flex;align-items:center;gap:8px}.pl-trust .ms{color:#006fff;font-size:20px}
+@media(max-width:900px){.pl-grid,.pl-adds{grid-template-columns:1fr}.pl.is-pop{transform:none}.pl_desc{min-height:0}}
 /* ==== pricing ==== */
 .plan_price{display:block;font-size:34px;font-weight:600;letter-spacing:-.03em;margin:14px 0 10px;line-height:1}.plan_price small{font-size:14px;font-weight:500;opacity:.7;letter-spacing:0}
 .pricing-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;align-items:start;}
@@ -25390,64 +25426,40 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
       <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Plans</span></div>
       <h2 class="h-m" data-split="heading">Three plans.<br>One <span class="accent">mission.</span></h2>
     </div>
-    <div class="plans">
-      <div class="card plan">
-        <span class="plan_tag">Starter</span>
-        <span class="t-l">Foundation</span>
-        <span class="plan_desc">Lisa on your phone, your schedule and your customers in one place. 14-day free trial included.</span>
-        <ul>
-          <li>Lisa AI receptionist, 150 call minutes</li>
-          <li>Missed-call text-back</li>
-          <li>Calendar and public booking page</li>
-          <li>Contacts, texts and email</li>
-          <li>Estimates, invoices and payments</li>
-          <li>Review requests</li>
-          <li>1 instant-quote calculator</li>
-        </ul>
-        <span class="plan_price">$99<small> / month</small></span><a class="btn is-outline" href="signup.html?plan=foundation">Start free trial</a>
+    <div class="pl-grid">
+      <div class="card pl ">
+        <span class="pl_tag">Starter</span>
+        <div class="pl_name">Foundation</div>
+        <div class="pl_price"><b>$99</b><span>/ month</span></div>
+        <p class="pl_desc">Never miss a call. Lisa, your schedule and your customers in one place.</p>
+        <a class="btn is-outline" href="signup.html?plan=foundation">Start free trial</a>
+        <div class="pl_rule"><span>What's included</span></div>
+        <ul><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Lisa AI receptionist, 150 call minutes</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Missed-call text-back</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Calendar and booking page</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Contacts, texts and email</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Estimates, invoices and payments</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Review requests</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>1 instant-quote calculator</span></li></ul>
       </div>
-      <div class="card plan is-blue on-blue">
-        <span class="plan_tag">Most popular</span>
-        <span class="t-l">BuilderPro OS</span>
-        <span class="plan_desc">The full operating system: every job, every dollar and every customer, run from one login. 14-day free trial included.</span>
-        <ul>
-          <li>Everything in Foundation</li>
-          <li>300 Lisa call minutes, up to 5 users</li>
-          <li>Projects, contracts and e-signature</li>
-          <li>Finances, budgets and profit per job</li>
-          <li>Employees, hours and payroll</li>
-          <li>Supply and material orders</li>
-          <li>All calculators and Roof Age Checker</li>
-          <li>Lead Radar (3 a day) and Lead Sources</li>
-          <li>Social, reputation and competitors</li>
-        </ul>
-        <span class="plan_price">$199<small> / month</small></span><a class="btn is-on-blue" href="signup.html?plan=os">Start free trial</a>
+      <div class="card pl is-pop">
+        <span class="pl_tag"><i></i>Most popular</span>
+        <div class="pl_name">BuilderPro OS</div>
+        <div class="pl_price"><b>$199</b><span>/ month</span></div>
+        <p class="pl_desc">The full operating system: every job, every dollar and every customer from one login.</p>
+        <a class="btn is-on-blue" href="signup.html?plan=os">Start free trial</a>
+        <div class="pl_rule"><span>What's included</span></div>
+        <ul><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Everything in Foundation</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>300 call minutes, up to 5 users</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Projects, contracts and e-signature</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Finances, budgets and payroll</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Supply and material orders</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>All calculators and Roof Age Checker</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Lead Radar and Lead Sources</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Social, reputation and competitors</span></li></ul>
       </div>
-      <div class="card plan">
-        <span class="plan_tag">Built to grow</span>
-        <span class="t-l">Enterprise</span>
-        <span class="plan_desc">For growing crews and multiple locations, with an AI team that works alongside you. 14-day free trial included.</span>
-        <ul>
-          <li>Everything in BuilderPro OS</li>
-          <li>AI Team included ($49 value)</li>
-          <li>500 Lisa call minutes</li>
-          <li>Lead Radar: 5 a day, first pick</li>
-          <li>Unlimited users and locations</li>
-          <li>Lisa trained on your documents</li>
-          <li>Priority support</li>
-        </ul>
-        <span class="plan_price">$299<small> / month</small></span><a class="btn is-outline" href="signup.html?plan=enterprise">Start free trial</a>
+      <div class="card pl is-dark">
+        <span class="pl_tag">Built to grow</span>
+        <div class="pl_name">Enterprise</div>
+        <div class="pl_price"><b>$299</b><span>/ month</span></div>
+        <p class="pl_desc">For growing crews and multiple locations, with an AI team working alongside you.</p>
+        <a class="btn is-on-blue" href="signup.html?plan=enterprise">Start free trial</a>
+        <div class="pl_rule"><span>What's included</span></div>
+        <ul><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Everything in BuilderPro OS</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>AI Team included ($49 value)</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>500 call minutes</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Lead Radar: 5 a day, first pick</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Unlimited users and locations</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Lisa trained on your documents</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Priority support</span></li></ul>
       </div>
     </div>
-    <div class="card addon">
-      <div><span class="t-s" style="display:block">Need a website?</span><span class="b-s muted">We build it on one of the four model sites above, tailor it to your brand, and host and maintain it, with your calculator, booking page and Lisa built in. Add it to any plan.</span></div>
-      <div class="addon_price">$49<small> / month</small></div>
+    <div class="pl-adds">
+      <div class="card pl-add"><span class="pl-add_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><div><b>Website</b><p>We build and host your site, with your calculator, booking page and Lisa built in.</p></div><div class="pl-add_p">$49<small>/mo</small></div></div>
+      <div class="card pl-add"><span class="pl-add_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14.5 14.2c.8-.3 1.6-.4 2.5-.4 2.5 0 4 1.8 4 4.2"/></svg></span><div><b>AI Team</b><p>Sales, marketing and office assistants plus a 7am brief. Included with Enterprise.</p></div><div class="pl-add_p">$49<small>/mo</small></div></div>
     </div>
-    <div class="card addon">
-      <div><span class="t-s" style="display:block">AI Team</span><span class="b-s muted">Sales, marketing and office assistants that follow up on leads, draft posts and send you a 7am brief. Included with Enterprise.</span></div>
-      <div class="addon_price">$49<small> / month</small></div>
-    </div>
-    <div class="card plan-note">No long-term contracts. Cancel anytime. Extra Lisa call minutes are $0.25 each.</div>
+    <div class="card pl-trust"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>14 days free</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>No contracts, cancel anytime</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Extra call minutes $0.25 each</span></div>
   </div>
 </section>
 
