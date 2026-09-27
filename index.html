@@ -251,8 +251,8 @@ section{padding:0;}
 .est-carousel{position:relative;max-width:860px;margin:40px auto 0;}
 .est-viewport{overflow:hidden;border-radius:22px;box-shadow:0 30px 70px rgba(20,30,60,.10);}
 .est-track{display:flex;transition:transform .65s cubic-bezier(.22,1,.36,1);}
-.est-slide{flex:0 0 100%;width:100%;align-self:flex-start;transition:opacity .5s ease,transform .65s cubic-bezier(.22,1,.36,1);opacity:.35;transform:scale(.965);}
-.est-slide.on{opacity:1;transform:none;}
+.est-slide{flex:0 0 100%;width:100%;align-self:flex-start;transition:opacity .5s ease;opacity:.35;}
+.est-slide.on{opacity:1;}
 .est-viewport{border-radius:22px;box-shadow:0 30px 70px rgba(20,30,60,.12);border:1px solid var(--line);position:relative;}
 .est-viewport::before{content:'';position:absolute;inset:-1px;border-radius:23px;padding:1px;background:linear-gradient(135deg,rgba(47,107,255,.45),rgba(123,200,255,.2),rgba(47,107,255,0) 60%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;z-index:4;}
 .est-carousel .est-shell{margin:0;box-shadow:none;border:none;border-radius:0;}
@@ -4177,7 +4177,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, HVAC Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="HVAC Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="HVAC Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>HVAC Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -7752,7 +7752,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Countertop Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Countertop Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Countertop Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>Countertop Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -11597,7 +11597,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Trim Carpentry Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Trim Carpentry Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Trim Carpentry Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>Trim Carpentry Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -15349,7 +15349,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Painting Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Painting Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Painting Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>Painting Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -19181,7 +19181,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Pool Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Pool Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Pool Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>Pool Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -23132,7 +23132,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Landscaping Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Landscaping Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Landscaping Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>Landscaping Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -26939,7 +26939,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Plumbing Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Plumbing Estimator" src="embed/plumbing.html"></iframe></div>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Plumbing Estimator" data-src="embed/plumbing.html"></iframe></div>
         </div>
       </div>
       <!-- The three newest trades load the real page from /embed instead of
@@ -26954,7 +26954,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Electrical Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Electrical Estimator" src="embed/electrical.html"></iframe></div>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Electrical Estimator" data-src="embed/electrical.html"></iframe></div>
         </div>
       </div>
       <!-- The three newest trades load the real page from /embed instead of
@@ -26969,7 +26969,7 @@ document.addEventListener('click',function(e){
             <div class="est-tbar">BuilderPro OS, Remodel Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Remodel Estimator" src="embed/general.html"></iframe></div>
+          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Remodel Estimator" data-src="embed/general.html"></iframe></div>
         </div>
       </div>
       </div>
@@ -26987,7 +26987,9 @@ document.addEventListener('click',function(e){
 var EST_SLIDES=["roofing","hvac","countertops","trim","painting","pools","landscaping","plumbing","electrical","general"];
 var estIdx=0,EST_N=EST_SLIDES.length;
 function estCarousel(d){estCarouselGo(estIdx+d);}
-function estCarouselGo(i){i=Math.max(0,Math.min(EST_N-1,i));estIdx=i;var tr=document.getElementById("estTrack");if(tr)tr.style.transform="translateX(-"+(i*100)+"%)";var p=document.getElementById("estPrev"),n=document.getElementById("estNext");if(p)p.disabled=(i===0);if(n)n.disabled=(i===EST_N-1);var ds=document.querySelectorAll("#estCdots .est-cdot");for(var k=0;k<ds.length;k++)ds[k].classList.toggle("on",k===i);var sl=document.querySelectorAll("#estTrack .est-slide");for(var k2=0;k2<sl.length;k2++)sl[k2].classList.toggle("on",k2===i);}
+function estCarouselGo(i){i=Math.max(0,Math.min(EST_N-1,i));estIdx=i;var tr=document.getElementById("estTrack");if(tr)tr.style.transform="translateX(-"+(i*100)+"%)";var p=document.getElementById("estPrev"),n=document.getElementById("estNext");if(p)p.disabled=(i===0);if(n)n.disabled=(i===EST_N-1);var ds=document.querySelectorAll("#estCdots .est-cdot");for(var k=0;k<ds.length;k++)ds[k].classList.toggle("on",k===i);var sl=document.querySelectorAll("#estTrack .est-slide");for(var k2=0;k2<sl.length;k2++)sl[k2].classList.toggle("on",k2===i);estLoad(i);}
+/* only the calculator on screen is loaded; the rest wait until their tab is opened */
+function estLoad(i){var f=document.querySelectorAll("#estTrack .est-frame")[i];if(!f)return;var d=f.getAttribute("data-srcdoc");if(d!=null){f.removeAttribute("data-srcdoc");f.setAttribute("srcdoc",d);}var u=f.getAttribute("data-src");if(u){f.removeAttribute("data-src");f.setAttribute("src",u);}}
 document.addEventListener('DOMContentLoaded',function(){var s0=document.querySelector('#estTrack .est-slide');if(s0)s0.classList.add('on');});
 function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d.head||d.getElementsByTagName("head")[0];if(!head||d.getElementById("bp-inh"))return;var src=document.querySelectorAll("style,link[rel=\"stylesheet\"]");for(var i=0;i<src.length;i++){var n=src[i];if(n.tagName==="STYLE"){if(n.textContent&&n.textContent.indexOf("@font-face")>=0){var s=d.createElement("style");s.textContent=n.textContent;head.appendChild(s);}}else{var href=n.getAttribute("href")||"";if(href.indexOf("fonts.")>=0){var l=d.createElement("link");l.rel="stylesheet";l.href=href;head.appendChild(l);}}}var m=d.createElement("meta");m.id="bp-inh";head.appendChild(m);}catch(e){}}
 (function(){var fs=document.querySelectorAll(".est-frame");for(var i=0;i<fs.length;i++){(function(fr){if(fr.contentDocument&&fr.contentDocument.readyState==="complete"){bpFrameInherit(fr);bpFrameLock(fr);}fr.addEventListener("load",function(){bpFrameInherit(fr);bpFrameLock(fr);});})(fs[i]);}})();
@@ -26996,7 +26998,7 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
 function bpFrameLock(fr){try{var d=fr.contentDocument;if(!d||!d.body||fr._bpLock)return;fr._bpLock=1;fr.setAttribute("scrolling","no");
   var st=d.createElement("style");st.textContent="html,body{overflow:hidden!important;height:auto!important;min-height:0!important}";d.head.appendChild(st);
   var fit=function(){var h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);if(h>0&&Math.abs(h-fr.offsetHeight)>2)fr.style.height=h+"px";};
-  fit();if(window.ResizeObserver){new ResizeObserver(fit).observe(d.body);}d.addEventListener("click",function(){setTimeout(fit,60);setTimeout(fit,600);});setInterval(fit,1500);}catch(e){}}
+  fit();if(window.ResizeObserver){new ResizeObserver(fit).observe(d.body);}d.addEventListener("click",function(){setTimeout(fit,60);setTimeout(fit,600);});}catch(e){}}
 (function(){var labels=["Roof","HVAC","Countertops","Trim","Painting","Pool","Landscaping","Plumbing","Electrical","Remodel"];var el=document.getElementById("estCdots");if(!el)return;var h="";labels.forEach(function(l,i){h+='<button class="est-cdot'+(i===0?" on":"")+'" onclick="estCarouselGo('+i+')">'+l+'</button>';});el.innerHTML=h;})();
 </script>
 
@@ -28993,7 +28995,7 @@ window.bpCalcFrameReload=function(){
   if(!src){ host.innerHTML='<div class="bpx-empty2" style="padding:40px">Preview isn\'t available for this calculator.</div>'; return; }
   var f=document.createElement('iframe');
   f.className='bpx-calc-iframe'; f.setAttribute('title','Live calculator preview');
-  f.setAttribute('srcdoc',src.getAttribute('srcdoc')||'');
+  f.setAttribute('srcdoc',src.getAttribute('srcdoc')||src.getAttribute('data-srcdoc')||'');
   host.appendChild(f);
 };
 function bpCalcRender(cid,override){
