@@ -298,7 +298,8 @@ function drawBoard(){
       .concat(mine.filter(function(c){return !used[c.name];}).map(function(c){return [CONN_ICON[c.name]||'ti-plug-connected',c.label||c.name,'connected'];})), n=tools.length;
     tools.forEach(function(t,i){
       var tx,ty,td;
-      if(k==='ceo'){ tx=c[0]+(i?250:-250); ty=c[1]; td='M'+(c[0]+(i?108:-108))+','+c[1]+' L'+(tx+(i?-22:22))+','+ty; }
+      if(k==='ceo'){ var sd=i%2?1:-1, j=Math.floor(i/2), cc=j%3, rw=Math.floor(j/3); tx=c[0]+sd*(230+cc*88); ty=c[1]+rw*92;
+        td=rw?'M'+(c[0]+sd*(230+cc*88))+','+(c[1]+22)+' L'+tx+','+(ty-22):'M'+(c[0]+sd*(cc?230+(cc-1)*88+22:108))+','+c[1]+' L'+(tx-sd*22)+','+ty; }
       else { var row=Math.floor(i/3), inRow=Math.min(3,n-row*3), col=i%3; tx=p[0]+(col-(inRow-1)/2)*62+(row&&inRow%2?31:0); ty=p[1]+140+row*84; td='M'+p[0]+','+(p[1]+30)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-22); }
       svg+='<path class="ln tool" d="'+td+'"/>';
       nodes+='<div class="tl'+(t[3]?' soon':'')+'" style="--dl:'+(dl+0.25)+'s;left:'+(tx/W*100)+'%;top:'+(ty/H*100)+'%"><i class="ti '+t[0]+'"></i>'+esc(t[1])+'<small>'+esc(t[2])+'</small></div>';
