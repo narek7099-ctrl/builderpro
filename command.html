@@ -6,61 +6,60 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap"><link rel="icon" href="assets/brand/logo-mark-64.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-/* One theme: a dark operations console. Zinc neutrals, one signal accent
-   (BuilderPro orange), used only for action and live state. Radius scale:
-   6px controls, 10px surfaces. */
-:root{--bg:#0d0d0f;--bg2:#111114;--card:#16161a;--card2:#1b1b20;--line:#26262c;--line2:#34343c;--ink:#ececef;--mut:#8d8d97;--dim:#5d5d66;
-  --pri:#ff6b2c;--pri-ink:#1a0c05;--pri-soft:rgba(255,107,44,.12);--ok:#3ecf8e;--warn:#e8b44c;--danger:#f0616d;
-  --r1:6px;--r2:10px;--sans:'Geist',ui-sans-serif,system-ui,sans-serif;--mono:'Geist Mono',ui-monospace,Menlo,monospace;--ease:cubic-bezier(.16,1,.3,1)}
+/* Same theme as builderpro-os.com: light, #edf2f6 canvas, white 16px panels,
+   navy ink, one blue accent, pill buttons, General Sans + Geist. */
+:root{--bg:#edf2f6;--bg2:#f6f8fb;--card:#ffffff;--card2:#f4f7fa;--line:#dce3ec;--line2:#cfd8e3;--ink:#001530;--mut:#788493;--dim:#9aa3b1;
+  --pri:#006fff;--pri-d:#003db8;--pri-ink:#ffffff;--pri-soft:rgba(0,111,255,.14);--ok:#1faa5a;--warn:#c98a0b;--danger:#e0574e;--pill:#0b1021;
+  --r1:10px;--r2:16px;--sans:'General Sans','Geist',system-ui,sans-serif;--mono:'Geist',ui-sans-serif,system-ui,sans-serif;--ease:cubic-bezier(.39,.575,.565,1)}
 *{margin:0;padding:0;box-sizing:border-box}
-html{color-scheme:dark}
+html{color-scheme:light}
 body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased;letter-spacing:-.005em}
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 .muted{color:var(--mut)}
 .num,.kpi .v,td.muted,.bstat{font-variant-numeric:tabular-nums}
-.btn{background:var(--card2);border:1px solid var(--line2);border-radius:var(--r1);padding:8px 14px;font-weight:500;transition:background .15s,border-color .15s,transform .1s}
-.btn:hover{background:#23232a;border-color:#44444d}
+.btn{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 18px;color:var(--ink);font-weight:500;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover{border-color:var(--line2);background:var(--bg2)}
 .btn:active{transform:translateY(1px)}
 .btn.pri{background:var(--pri);border-color:var(--pri);color:var(--pri-ink);font-weight:600}
-.btn.pri:hover{background:#ff7d45}
-.btn.ok{background:var(--ok);border-color:var(--ok);color:#06231a;font-weight:600}
-.btn.sm{padding:5px 11px;font-size:12.5px}
+.btn.pri:hover{background:var(--pri-d);border-color:var(--pri-d)}
+.btn.ok{background:var(--pill);border-color:var(--pill);color:#fff;font-weight:600}
+.btn.sm{padding:6px 13px;font-size:12.5px}
 .btn:disabled{opacity:.5;cursor:default}
-input,textarea,select{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r1);padding:9px 12px;outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+input,textarea,select{background:#fff;color:var(--ink);border:1px solid var(--line2);border-radius:var(--r1);padding:9px 12px;outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
 input::placeholder,textarea::placeholder{color:var(--dim)}
 input:focus,textarea:focus,select:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}
 :focus-visible{outline:2px solid var(--pri);outline-offset:2px}
-.login{min-height:100dvh;display:grid;place-items:center;padding:16px;background:radial-gradient(60% 50% at 50% 0%,rgba(255,107,44,.07),transparent 70%)}
+.login{min-height:100dvh;display:grid;place-items:center;padding:16px}
 .login .card{width:100%;max-width:360px;padding:28px}
 .login h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
 .login label{display:block;font-size:12.5px;color:var(--mut);margin:14px 0 6px;font-weight:500}
 .err{color:var(--danger);font-size:13px;margin-top:10px;min-height:1em}
-.top{display:flex;align-items:center;gap:12px;height:56px;padding:0 20px;border-bottom:1px solid var(--line);background:rgba(13,13,15,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:5}
-.top b{font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
-.top b .mk{width:22px;height:22px;border-radius:5px;background:var(--pri);color:var(--pri-ink);display:grid;place-items:center;font-size:14px}
+.top{display:flex;align-items:center;gap:12px;height:64px;padding:0 24px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:5}
+.top>b{font-weight:600;font-size:17px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}.top .bp b{font-weight:600}
+.top b img{width:28px;height:28px}.top b .bp b{color:var(--pri)}
 .top b span.sub{color:var(--mut);font-weight:400}
-.tabs{display:flex;gap:2px;overflow-x:auto;padding:0 16px;border-bottom:1px solid var(--line);background:var(--bg)}
-.tabs button{background:none;border:0;padding:12px 12px 11px;color:var(--mut);white-space:nowrap;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .2s var(--ease)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:10px 20px;background:transparent}
+.tabs button{background:none;border:1px solid transparent;border-radius:999px;padding:8px 16px;color:var(--mut);white-space:nowrap;font-weight:500;transition:color .15s,background .2s,border-color .2s}
 .tabs button:hover{color:var(--ink)}
-.tabs button.on{color:var(--ink);border-bottom-color:var(--pri)}
-.tabs .n{background:var(--pri);color:var(--pri-ink);border-radius:9px;padding:0 6px;font-size:11px;margin-left:6px;font-weight:600;font-family:var(--mono)}
-main{padding:24px 20px;max-width:1240px;margin:0 auto;animation:enter .45s var(--ease)}
+.tabs button.on{color:var(--ink);background:#fff;border-color:var(--line)}
+.tabs .n{background:var(--pri);color:#fff;border-radius:9px;padding:0 6px;font-size:11px;margin-left:6px;font-weight:600}
+main{padding:14px 20px 32px;max-width:1240px;margin:0 auto;animation:enter .45s var(--ease)}
 @keyframes enter{from{opacity:0;transform:translateY(6px)}}
-h2{font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:14px}
+h2{font-size:22px;font-weight:600;letter-spacing:-.025em;margin-bottom:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:16px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin-bottom:18px}
 .kpis .kpi{background:var(--card);border:0;border-radius:0;padding:14px 16px}
 .kpi .l{font-size:12.5px;color:var(--mut)}
-.kpi .v{font:500 26px/1.2 var(--mono);letter-spacing:-.03em;margin-top:4px}
+.kpi .v{font:600 28px/1.2 var(--sans);letter-spacing:-.03em;margin-top:4px}
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:11px 10px;vertical-align:top}
 tbody tr+tr td{border-top:1px solid var(--line)}
-tbody tr:hover td{background:rgba(255,255,255,.015)}
+tbody tr:hover td{background:var(--bg2)}
 th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--line2)}
 .tw{overflow-x:auto}
 .st{font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:5px}
@@ -74,30 +73,30 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .sw input:after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .25s var(--ease)}
 .sw input:checked{background:var(--pri)}.sw input:checked:after{transform:translateX(14px)}
 .board{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);overflow:auto}
-.board:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1px);background-size:20px 20px;pointer-events:none;mask-image:radial-gradient(80% 70% at 50% 40%,#000,transparent)}
+.board{background:#fff}.board:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#dce3ec 1px,transparent 1px);background-size:20px 20px;pointer-events:none;mask-image:radial-gradient(80% 70% at 50% 40%,#000,transparent)}
 .board-in{position:relative;min-width:1120px;height:640px}
 .board svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .ln{fill:none;stroke:var(--line2);stroke-width:1.25}
-.ln.tool{stroke-dasharray:3 4;stroke:#2d2d34}
+.ln.tool{stroke-dasharray:3 4;stroke:#cfd8e3}
 .ln.hot{stroke:var(--pri);stroke-width:1.5;stroke-dasharray:4 8;animation:flow 1s linear infinite}
 @keyframes flow{to{stroke-dashoffset:-12}}
-.pk{fill:var(--ink);opacity:.55}
+.pk{fill:var(--pri);opacity:.45}
 .pk.hot{fill:var(--pri);opacity:1}
 .nd{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;color:var(--ink);opacity:0;animation:pop .6s var(--ease) forwards;animation-delay:var(--dl,0s)}
 @keyframes pop{from{opacity:0;transform:translate(-50%,-44%)}to{opacity:1;transform:translate(-50%,-50%)}}
 .nd .box{background:var(--card);border:1px solid var(--line2);border-radius:var(--r2);padding:11px 12px;display:flex;align-items:center;gap:11px;width:196px;position:relative;text-align:left;transition:border-color .2s,transform .2s var(--ease),background .2s}
-.nd:hover .box{border-color:#4a4a54;transform:translateY(-2px);background:var(--card2)}
+.nd:hover .box{border-color:var(--pri);box-shadow:0 8px 24px -12px rgba(0,21,48,.25);transform:translateY(-2px);background:var(--card2)}
 .nd.on .box{border-color:var(--pri)}
 .nd.lead .box{width:216px;padding:13px 14px}
-.nd .ico{width:34px;height:34px;border-radius:var(--r1);display:grid;place-items:center;flex:none;background:var(--card2);border:1px solid var(--line2);color:var(--ink);font-size:18px}
+.nd .ico{width:36px;height:36px;border-radius:var(--r1);display:grid;place-items:center;flex:none;background:#e6f0ff;border:0;color:var(--pri);color:var(--ink);font-size:18px}
 .nd.lead .ico{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
 .nd .t{font-weight:600;font-size:13.5px;white-space:nowrap;letter-spacing:-.01em}
 .nd .s{font-size:12px;color:var(--mut);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nd.work .box{border-color:rgba(255,107,44,.6)}
+.nd.work .box{border-color:rgba(0,111,255,.5)}
 .nd.work .box:after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:1px solid var(--pri);animation:ring 1.6s var(--ease) infinite;pointer-events:none}
 @keyframes ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.06,1.18)}}
 .nd.work .s{color:var(--pri)}
-.nd .badge{position:absolute;top:-8px;right:-8px;background:var(--pri);color:var(--pri-ink);font:600 10.5px/18px var(--mono);border-radius:9px;min-width:18px;padding:0 5px;text-align:center}
+.nd .badge{position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;font:600 10.5px/18px var(--sans);border-radius:9px;min-width:18px;padding:0 5px;text-align:center}
 .tl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;color:var(--ink);width:78px;text-align:center;opacity:0;animation:fade .6s var(--ease) forwards;animation-delay:var(--dl,0s)}
 @keyframes fade{to{opacity:1}}
 .tl i{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--line2);display:grid;place-items:center;font-size:18px;color:var(--mut);font-style:normal}
@@ -105,13 +104,13 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .tl.soon{opacity:0;animation-name:fadeSoon}
 @keyframes fadeSoon{to{opacity:.4}}
 .tl.soon i{border-style:dashed}
-.bstat{position:absolute;left:16px;bottom:12px;font:12px var(--mono);color:var(--dim);display:flex;gap:18px}
+.bstat{position:absolute;left:18px;bottom:14px;font:500 12.5px var(--sans);color:var(--dim);display:flex;gap:18px}
 .bstat b{color:var(--mut);font-weight:500}
 .bstat .on{color:var(--ok)}
 /* ---- chat drawer ---- */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;z-index:19}
+.scrim{position:fixed;inset:0;background:rgba(0,21,48,.25);opacity:0;pointer-events:none;transition:opacity .3s;z-index:19}
 .scrim.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--bg2);border-left:1px solid var(--line);z-index:20;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .45s var(--ease)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:#fff;box-shadow:-20px 0 60px -20px rgba(0,21,48,.25);border-left:1px solid var(--line);z-index:20;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .45s var(--ease)}
 .drawer.open{transform:none}
 .drawer .hd{display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border-bottom:1px solid var(--line)}
 .drawer .hd b{display:flex;align-items:center;gap:9px;font-weight:600}
@@ -121,32 +120,32 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .xbtn:hover{background:var(--card2);color:var(--ink)}
 .msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
 .m{max-width:100%;animation:enter .35s var(--ease)}
-.m.user{align-self:flex-end;max-width:85%;background:var(--card2);border:1px solid var(--line2);border-radius:var(--r2);padding:9px 13px;white-space:pre-wrap}
+.m.user{align-self:flex-end;max-width:85%;background:var(--pri);color:#fff;border:0;border-radius:var(--r2);padding:9px 13px;white-space:pre-wrap}
 .m.assistant{align-self:flex-start;line-height:1.6}
-.m.sys{align-self:flex-start;font:12px var(--mono);color:var(--dim)}
+.m.sys{align-self:flex-start;font:500 12.5px var(--sans);color:var(--mut)}
 .m.sys.busy:after{content:"";display:inline-block;width:6px;height:12px;background:var(--pri);margin-left:6px;vertical-align:-2px;animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
 .m.assistant h3,.m.assistant h4{font-size:14px;font-weight:600;margin:10px 0 4px}
 .m.assistant ul,.m.assistant ol{padding-left:20px;margin:4px 0}
 .m.assistant p{margin:4px 0}
 .m.assistant a{color:var(--pri)}
-.m.assistant code{background:var(--card2);padding:1px 5px;border-radius:4px;font:12.5px var(--mono)}
+.m.assistant code{background:var(--bg2);padding:1px 5px;border-radius:4px;font:12.5px ui-monospace,Menlo,monospace}
 .tools{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.tools span{font:11.5px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:var(--r1);padding:1px 7px}
+.tools span{font:500 11.5px var(--sans);background:var(--bg2);color:var(--dim);border:1px solid var(--line);border-radius:var(--r1);padding:1px 7px}
 .compose{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
 .compose textarea{resize:none;height:44px}
 .intro{color:var(--mut);font-size:13px}
 .hint{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-.hint button{text-align:left;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:var(--r1);padding:9px 12px;transition:border-color .15s,background .15s}
+.hint button{text-align:left;font-size:13px;background:var(--bg2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r1);padding:9px 12px;transition:border-color .15s,background .15s}
 .hint button:hover{border-color:var(--line2);background:var(--card2)}
 .appr{display:flex;flex-direction:column;gap:10px}
 .appr .card{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.appr pre{white-space:pre-wrap;font:12px var(--mono);color:var(--mut);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);padding:10px;max-height:160px;overflow:auto;width:100%}
+.appr pre{white-space:pre-wrap;font:12px ui-monospace,Menlo,monospace;color:var(--mut);background:var(--bg2);border:1px solid var(--line);border-radius:var(--r1);padding:10px;max-height:160px;overflow:auto;width:100%}
 .pill{font-size:12px;border-radius:var(--r1);padding:1px 8px;background:var(--card2);border:1px solid var(--line2);color:var(--mut)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .empty{padding:28px;text-align:center;color:var(--mut)}
-.warnbar{background:rgba(232,180,76,.08);border-bottom:1px solid rgba(232,180,76,.2);color:#e9cf98;padding:10px 20px;font-size:13px}
-.warnbar b{color:#fff}
+.warnbar{background:#fff8e6;border-bottom:1px solid #f1dfae;color:#6b4a00;padding:10px 24px;font-size:13px}
+.warnbar b{color:#3d2a00}
 @media (max-width:760px){.grid2{grid-template-columns:1fr}main{padding:16px}.top{padding:0 16px}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}.pk{display:none}}
 </style>
@@ -154,7 +153,7 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 <body>
 <div id="login" class="login">
   <div class="card">
-    <h2>Command Center</h2>
+    <img src="assets/brand/logo-mark-64.png" alt="" width="36" height="36" style="margin-bottom:14px"><h2>Command Center</h2>
     <div class="muted" style="font-size:13px;margin-top:2px">Sign in with your owner account.</div>
     <label>Email</label><input id="email" type="email" autocomplete="username">
     <label>Password</label><input id="pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
@@ -164,7 +163,7 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 </div>
 
 <div id="app" class="hidden">
-  <div class="top"><b><span class="mk"><i class="ti ti-hexagon-letter-b"></i></span>BuilderPro <span class="sub">Command Center</span></b><span class="muted" id="who" style="margin-left:auto;font-size:12px"></span><button class="btn sm" onclick="doLogout()">Sign out</button></div>
+  <div class="top"><b><img src="assets/brand/logo-mark-64.png" alt=""><span class="bp">Builder<b>Pro</b></span> <span class="sub">Command Center</span></b><span class="muted" id="who" style="margin-left:auto;font-size:12px"></span><button class="btn sm" onclick="doLogout()">Sign out</button></div>
   <div class="tabs" id="tabs"></div>
   <div id="warn"></div>
   <main id="view"></main>
