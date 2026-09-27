@@ -842,7 +842,7 @@ section{padding:0;}
             <div class="est-tbar">BuilderPro OS, Roof Estimator</div>
             <div class="est-live"><span class="bdot"></span> Live demo</div>
           </div>
-          <div class="est-frame-wrap"><iframe class="est-frame" loading="lazy" title="Roof Estimator" srcdoc="<!doctype html>
+          <div class="est-frame-wrap"><iframe class="est-frame" title="Roof Estimator" data-srcdoc="<!doctype html>
 <html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;>
 <title>Roof Estimator</title>
 <link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
@@ -26989,6 +26989,8 @@ var estIdx=0,EST_N=EST_SLIDES.length;
 function estCarousel(d){estCarouselGo(estIdx+d);}
 function estCarouselGo(i){i=Math.max(0,Math.min(EST_N-1,i));estIdx=i;var tr=document.getElementById("estTrack");if(tr)tr.style.transform="translateX(-"+(i*100)+"%)";var p=document.getElementById("estPrev"),n=document.getElementById("estNext");if(p)p.disabled=(i===0);if(n)n.disabled=(i===EST_N-1);var ds=document.querySelectorAll("#estCdots .est-cdot");for(var k=0;k<ds.length;k++)ds[k].classList.toggle("on",k===i);var sl=document.querySelectorAll("#estTrack .est-slide");for(var k2=0;k2<sl.length;k2++)sl[k2].classList.toggle("on",k2===i);estLoad(i);}
 /* only the calculator on screen is loaded; the rest wait until their tab is opened */
+/* the first calculator loads while the page is idle, before anyone scrolls to it */
+(function(){var go=function(){estLoad(0);};window.addEventListener("load",function(){(window.requestIdleCallback||function(f){setTimeout(f,1200);})(go,{timeout:2500});});})();
 function estLoad(i){var f=document.querySelectorAll("#estTrack .est-frame")[i];if(!f)return;var d=f.getAttribute("data-srcdoc");if(d!=null){f.removeAttribute("data-srcdoc");f.setAttribute("srcdoc",d);}var u=f.getAttribute("data-src");if(u){f.removeAttribute("data-src");f.setAttribute("src",u);}}
 document.addEventListener('DOMContentLoaded',function(){var s0=document.querySelector('#estTrack .est-slide');if(s0)s0.classList.add('on');});
 function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d.head||d.getElementsByTagName("head")[0];if(!head||d.getElementById("bp-inh"))return;var src=document.querySelectorAll("style,link[rel=\"stylesheet\"]");for(var i=0;i<src.length;i++){var n=src[i];if(n.tagName==="STYLE"){if(n.textContent&&n.textContent.indexOf("@font-face")>=0){var s=d.createElement("style");s.textContent=n.textContent;head.appendChild(s);}}else{var href=n.getAttribute("href")||"";if(href.indexOf("fonts.")>=0){var l=d.createElement("link");l.rel="stylesheet";l.href=href;head.appendChild(l);}}}var m=d.createElement("meta");m.id="bp-inh";head.appendChild(m);}catch(e){}}
@@ -26997,6 +26999,13 @@ function bpFrameInherit(fr){try{var d=fr.contentDocument;if(!d)return;var head=d
    whatever step is showing, and the page scrolls instead. */
 function bpFrameLock(fr){try{var d=fr.contentDocument;if(!d||!d.body||fr._bpLock)return;fr._bpLock=1;fr.setAttribute("scrolling","no");
   var st=d.createElement("style");st.textContent="html,body{overflow:hidden!important;height:auto!important;min-height:0!important}";d.head.appendChild(st);
+  /* the frame is the page's height now, so anything inside that scrolls
+     "itself" into view scrolls the whole website instead. Only let that
+     happen right after the visitor taps inside the calculator, and never
+     let focusing a field move the page. */
+  var w=fr.contentWindow,tap=0;d.addEventListener("pointerdown",function(){tap=Date.now();},true);d.addEventListener("keydown",function(){tap=Date.now();},true);
+  var EP=w.Element.prototype,siv=EP.scrollIntoView;EP.scrollIntoView=function(){if(Date.now()-tap<1500)return siv.apply(this,arguments);};
+  var HP=w.HTMLElement.prototype,fo=HP.focus;HP.focus=function(o){return fo.call(this,Object.assign({},o||{},{preventScroll:true}));};
   var fit=function(){var h=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight);if(h>0&&Math.abs(h-fr.offsetHeight)>2)fr.style.height=h+"px";};
   fit();if(window.ResizeObserver){new ResizeObserver(fit).observe(d.body);}d.addEventListener("click",function(){setTimeout(fit,60);setTimeout(fit,600);});}catch(e){}}
 (function(){var labels=["Roof","HVAC","Countertops","Trim","Painting","Pool","Landscaping","Plumbing","Electrical","Remodel"];var el=document.getElementById("estCdots");if(!el)return;var h="";labels.forEach(function(l,i){h+='<button class="est-cdot'+(i===0?" on":"")+'" onclick="estCarouselGo('+i+')">'+l+'</button>';});el.innerHTML=h;})();
