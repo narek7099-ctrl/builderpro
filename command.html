@@ -393,27 +393,55 @@ async function forget(id){ await api({op:'memory_delete',id:id}); viewMemory(); 
 /* ---------- Connections: outside tools the teams can use (MCP) ---------- */
 var TEAMKEYS=['ceo','sales','marketing','support','builder','research'];
 var PRESETS=[['higgsfield','Higgsfield','https://mcp.higgsfield.ai/mcp','marketing'],['canva','Canva','https://mcp.canva.com/mcp','marketing'],['github','GitHub','https://api.githubcopilot.com/mcp/','builder'],['supabase','Supabase','https://mcp.supabase.com/mcp','support']];
+var SERVICES=[
+  {k:'higgsfield',n:'Higgsfield',u:'https://mcp.higgsfield.ai/mcp',t:['marketing'],i:'ti-movie',d:'AI images and video for ads and posts.'},
+  {k:'canva',n:'Canva',u:'https://mcp.canva.com/mcp',t:['marketing'],i:'ti-palette',d:'Designs, flyers and social graphics.'},
+  {k:'zapier',n:'Zapier',u:'https://mcp.zapier.com/api/mcp/mcp',t:['marketing','ceo'],i:'ti-bolt',d:'Thousands of apps, including posting to Instagram and Facebook.'},
+  {k:'stripe',n:'Stripe',u:'https://mcp.stripe.com',t:['ceo','sales'],i:'ti-credit-card',d:'Customers, subscriptions and payments.'},
+  {k:'supabase',n:'Supabase',u:'https://mcp.supabase.com/mcp',t:['support','builder'],i:'ti-server',d:'Your database and backend, full admin.'},
+  {k:'notion',n:'Notion',u:'https://mcp.notion.com/mcp',t:['ceo','research'],i:'ti-notebook',d:'Docs, notes and plans.'},
+  {k:'github',n:'GitHub',u:'https://api.githubcopilot.com/mcp/',t:['builder'],i:'ti-brand-github',d:'Your website code. Needs an access token.',token:1}];
 async function viewConn(){
-  el('view').innerHTML=(window._connNote||'')+'<h2>Connections</h2><div class="muted" style="margin:-6px 0 14px;max-width:70ch">Give your teams outside tools. Paste the service’s MCP server address and an access key from that service. <b>Actions through these run right away and skip Approvals</b>, so only give each tool to the teams that need it, and switch off single actions you don’t want used.</div>'
-    +'<div class="card" style="margin-bottom:14px"><b id="cfTitle">Add a connection</b><input type="hidden" id="cfId">'
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px">'+PRESETS.map(function(p){return '<button class="btn sm" onclick="connPreset(\''+p[0]+'\')">'+p[1]+'</button>'}).join('')+'</div>'
-    +'<div class="grid2"><input id="cfLabel" placeholder="Name, e.g. Higgsfield"><input id="cfUrl" placeholder="MCP server address (https://...)">'
-    +'<input id="cfTok" type="password" placeholder="Access key (leave blank for Sign in, or to keep the saved one)" autocomplete="off"><input id="cfOff" placeholder="Actions to switch off (optional, comma separated)"></div>'
+  el('view').innerHTML=(window._connNote||'')+'<h2>Connections</h2><div class="muted" style="margin:-6px 0 16px;max-width:70ch">Sign in once and your teams can use it from then on. Actions through these run right away (they skip Approvals), so each one only goes to the teams shown on it.</div>'
+    +'<div id="svcGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:22px"><div class="muted">Loading…</div></div>'
+    +'<details class="card" id="cfBox"><summary style="cursor:pointer;font-weight:600">Add another service or edit one</summary><input type="hidden" id="cfId">'
+    +'<div class="grid2" style="margin-top:12px"><input id="cfLabel" placeholder="Name"><input id="cfUrl" placeholder="MCP server address (https://...)">'
+    +'<input id="cfTok" type="password" placeholder="Access key (leave blank to sign in instead)" autocomplete="off"><input id="cfOff" placeholder="Actions to switch off (optional, comma separated)"></div>'
     +'<div style="margin:12px 0 6px;font-size:13px" class="muted">Which teams can use it</div><div style="display:flex;gap:12px;flex-wrap:wrap">'+TEAMKEYS.map(function(k){return '<label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" style="width:auto" data-team="'+k+'">'+NAMES[k]+'</label>'}).join('')+'</div>'
-    +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px"><button class="btn pri" onclick="connSave(this)">Save</button><button class="btn" onclick="viewConn()">Clear</button><span id="cfMsg" style="font-size:13px"></span></div></div>'
-    +'<div id="cfList" class="card tw">Loading…</div>';
+    +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px"><button class="btn pri" onclick="connSave(this)">Save</button><span id="cfMsg" style="font-size:13px"></span></div></details>';
   window._connNote='';
   var r=await api({op:'mcp_list'}); var rows=r.data||[]; window._conns=rows;
-  el('cfList').innerHTML=rows.length?'<table><thead><tr><th>Service</th><th>Teams</th><th>Key</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(function(x,i){
-    return '<tr><td><b>'+esc(x.label||x.name)+'</b><div class="muted" style="font-size:12px">'+esc(x.url)+'</div>'+(x.disabled_tools&&x.disabled_tools.length?'<div class="muted" style="font-size:12px">Off: '+esc(x.disabled_tools.join(', '))+'</div>':'')+'</td>'
-      +'<td>'+esc((x.agents||[]).map(function(k){return NAMES[k]||k}).join(', ')||'None')+'</td><td class="muted">'+(x.token?esc(x.token):x.connected?(x.stays?'Signed in, stays connected':'Signed in'):'Not signed in')+'</td>'
-      +'<td>'+(!x.connected?'<span class="st warn"><i class="ti ti-login"></i>Needs sign-in</span>'+(x.error?'<div class="muted" style="font-size:12px">'+esc(x.error)+'</div>':''):x.enabled?'<span class="st ok"><i class="ti ti-circle-check"></i>Connected</span>':'<span class="st off">Off</span>')+'</td>'
-      +'<td style="text-align:right;white-space:nowrap">'+(!x.connected?'<button class="btn sm pri" onclick="connSignIn('+x.id+',this)">Sign in with '+esc(x.label||x.name)+'</button> ':'')+'<button class="btn sm" onclick="connEdit('+i+')">Edit</button> <button class="btn sm" onclick="connToggle('+i+')">'+(x.enabled?'Turn off':'Turn on')+'</button> <button class="btn sm" onclick="connDel('+x.id+')">Remove</button></td></tr>'}).join('')+'</tbody></table>'
-    :'<div class="empty">No connections yet. Start with Higgsfield: click it above, tick Marketing, save, and sign in.</div>';
+  var byName={}; rows.forEach(function(x){byName[x.name]=x;});
+  var cards=SERVICES.map(function(sv){return {sv:sv,x:byName[sv.k]}}).concat(rows.filter(function(x){return !SERVICES.some(function(sv){return sv.k===x.name})}).map(function(x){return {sv:{k:x.name,n:x.label||x.name,u:x.url,t:x.agents,i:'ti-plug-connected',d:x.url,token:!x.signin},x:x}}));
+  el('svcGrid').innerHTML=cards.map(function(c){
+    var sv=c.sv,x=c.x,on=x&&x.connected&&x.enabled, teams=(x?x.agents:sv.t).map(function(k){return NAMES[k]||k}).join(', ');
+    var st=on?'<span class="st ok"><i class="ti ti-circle-check"></i>Connected'+(x.stays?'':' ')+'</span>':x&&x.connected&&!x.enabled?'<span class="st off">Paused</span>':x&&x.error?'<span class="st warn"><i class="ti ti-alert-triangle"></i>Sign in again</span>':'<span class="st off">Not connected</span>';
+    var btn=on?'<button class="btn sm" onclick="svcTeams(\''+sv.k+'\')">Teams</button> <button class="btn sm" onclick="svcOff(\''+sv.k+'\')">Disconnect</button>'
+      :sv.token?'<button class="btn sm pri" onclick="svcToken(\''+sv.k+'\')">Add token</button>'
+      :'<button class="btn sm pri" onclick="svcSignIn(\''+sv.k+'\',this)">Sign in with '+esc(sv.n)+'</button>';
+    return '<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:10px;align-items:center"><span style="width:38px;height:38px;border-radius:10px;background:#e6f0ff;color:var(--pri);display:grid;place-items:center;font-size:20px"><i class="ti '+sv.i+'"></i></span><div style="flex:1"><b>'+esc(sv.n)+'</b><div>'+st+'</div></div></div>'
+      +'<div class="muted" style="font-size:13px;min-height:2.6em">'+esc(sv.d)+'</div><div class="muted" style="font-size:12px">For: '+esc(teams||'no team yet')+'</div><div>'+btn+'</div></div>';
+  }).join('');
 }
+function svcDef(k){ return SERVICES.filter(function(s){return s.k===k})[0]||(function(){var x=(window._conns||[]).filter(function(c){return c.name===k})[0];return x?{k:x.name,n:x.label,u:x.url,t:x.agents}:null})(); }
+async function svcSignIn(k,b){
+  var sv=svcDef(k), x=(window._conns||[]).filter(function(c){return c.name===k})[0];
+  b.disabled=true; b.textContent='Opening sign-in…';
+  var id=x&&x.id;
+  if(!id){ var r=await api({op:'mcp_save',name:sv.k,label:sv.n,url:sv.u,agents:sv.t,enabled:true}); if(!r.ok){alert(r.error||'Could not set it up.');return viewConn();} id=r.id; }
+  connSignIn(id,b);
+}
+async function svcToken(k){
+  var sv=svcDef(k), x=(window._conns||[]).filter(function(c){return c.name===k})[0];
+  var t=prompt('Paste your '+sv.n+' access token.'+(k==='github'?' Create one at github.com/settings/tokens (fine-grained, repo access).':'')); if(!t)return;
+  var r=await api({op:'mcp_save',id:x&&x.id,name:sv.k,label:sv.n,url:sv.u,agents:x?x.agents:sv.t,token:t.trim(),enabled:true});
+  if(!r.ok)alert(r.error||'Could not save.'); viewConn();
+}
+function svcTeams(k){ var i=(window._conns||[]).findIndex(function(c){return c.name===k}); if(i<0)return; el('cfBox').open=true; connEdit(i); }
+async function svcOff(k){ var x=(window._conns||[]).filter(function(c){return c.name===k})[0]; if(!x||!confirm('Disconnect '+(x.label||x.name)+'? Your teams lose access right away.'))return; await api({op:'mcp_delete',id:x.id}); viewConn(); }
 function connPreset(k){var p=PRESETS.filter(function(x){return x[0]===k})[0]; el('cfLabel').value=p[1]; if(p[2])el('cfUrl').value=p[2]; document.querySelectorAll('[data-team]').forEach(function(c){c.checked=c.getAttribute('data-team')===p[3];}); el('cfUrl').focus();}
-function connEdit(i){var x=window._conns[i]; el('cfTitle').textContent='Edit '+(x.label||x.name); el('cfId').value=x.id; el('cfLabel').value=x.label||x.name; el('cfUrl').value=x.url; el('cfTok').value=''; el('cfOff').value=(x.disabled_tools||[]).join(', ');
-  document.querySelectorAll('[data-team]').forEach(function(c){c.checked=(x.agents||[]).indexOf(c.getAttribute('data-team'))>=0;}); window.scrollTo({top:0,behavior:'smooth'});}
+function connEdit(i){var x=window._conns[i]; el('cfId').value=x.id; el('cfLabel').value=x.label||x.name; el('cfUrl').value=x.url; el('cfTok').value=''; el('cfOff').value=(x.disabled_tools||[]).join(', '); if(el('cfBox'))el('cfBox').scrollIntoView({behavior:'smooth'});
+  document.querySelectorAll('[data-team]').forEach(function(c){c.checked=(x.agents||[]).indexOf(c.getAttribute('data-team'))>=0;});}
 async function connSave(b){
   var label=el('cfLabel').value.trim(), id=el('cfId').value;
   var cur=id?window._conns.filter(function(x){return String(x.id)===id})[0]:null;
