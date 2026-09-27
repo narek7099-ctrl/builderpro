@@ -31,7 +31,14 @@ Deno.serve(async (req) => {
   if (!(await verified(raw, req.headers.get("stripe-signature") ?? ""))) return new Response("bad signature", { status: 400 });
   const ev = JSON.parse(raw), o = ev.data?.object ?? {};
   const patch = async (uid: string, body: Record<string, unknown>) => { if (uid) await sb(`accounts?user_id=eq.${uid}`, { method: "PATCH", body: JSON.stringify(body) }); };
-  if (ev.type === "checkout.session.completed" && o.mode === "subscription") {
+  // the $49 AI Team add-on is its own subscription, tagged metadata.kind = ai_addon
+  const addon = (o.metadata?.kind ?? "") === "ai_addon";
+  if (addon && ev.type === "checkout.session.completed") {
+    await patch(o.client_reference_id || o.metadata?.user_id, { ai_addon: "active", ai_addon_sub_id: o.subscription ?? "" });
+  } else if (addon && (ev.type === "customer.subscription.updated" || ev.type === "customer.subscription.deleted")) {
+    const st = ev.type.endsWith("deleted") ? "cancelled" : ({ trialing: "active", active: "active", past_due: "past_due", unpaid: "past_due", canceled: "cancelled", incomplete_expired: "cancelled" } as Record<string, string>)[o.status] ?? o.status;
+    await patch(o.metadata?.user_id, { ai_addon: st, ai_addon_sub_id: o.id });
+  } else if (ev.type === "checkout.session.completed" && o.mode === "subscription") {
     await patch(o.client_reference_id || o.metadata?.user_id, { status: "trial", stripe_subscription_id: o.subscription ?? "", stripe_customer_id: o.customer ?? "", checkout_url: "" });
   } else if (ev.type === "customer.subscription.updated" || ev.type === "customer.subscription.deleted") {
     const uid = o.metadata?.user_id;
