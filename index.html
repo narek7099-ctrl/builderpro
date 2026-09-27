@@ -285,6 +285,7 @@ section{padding:0;}
 .t-r{font-size:12.5px;color:var(--grey);}
 
 /* ==== pricing ==== */
+.plan_price{display:block;font-size:34px;font-weight:600;letter-spacing:-.03em;margin:14px 0 10px;line-height:1}.plan_price small{font-size:14px;font-weight:500;opacity:.7;letter-spacing:0}
 .pricing-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;align-items:start;}
 .pc{background:#fff;border:1px solid var(--line);border-radius:22px;padding:32px 28px;position:relative;}
 .pc.pop{border-color:var(--blue);box-shadow:0 30px 70px rgba(47,107,255,.14);}
@@ -408,13 +409,9 @@ section{padding:0;}
       <div class="drawer_field"><label class="b-s" for="dfPhone">Phone</label><input id="dfPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0148"></div>
       <div class="drawer_field"><label class="b-s" for="dfEmail">Email</label><input id="dfEmail" type="email" autocomplete="email" inputmode="email" placeholder="dana@whitfieldplumbing.com"></div>
     </div>
-    <div class="drawer_two">
-      <div class="drawer_field"><label class="b-s" for="dfMsg">Your trade</label><input id="dfMsg" type="text" placeholder="Plumbing"></div>
-      <div class="drawer_field"><label class="b-s" for="dfPass">Create a password</label><input id="dfPass" type="password" autocomplete="new-password" placeholder="8+ characters"></div>
-    </div>
     <input id="dfWeb" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
     <button class="btn" type="submit" onclick="dlContactSend(this)">Start my free trial</button>
-    <div class="b-s muted" style="margin-top:8px">14 days free. No card. Your portal opens right away.</div>
+    <div class="b-s muted" style="margin-top:8px">14 days free. Plans from $99 a month.</div>
     <div class="drawer_msg" aria-live="polite"></div>
   </form>
 </aside>
@@ -25405,7 +25402,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
           <li>Contacts and messaging</li>
           <li>Estimates and invoices</li>
         </ul>
-        <a class="btn is-outline" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20Foundation%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20Foundation%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0APhone%3A">Request a quote</a>
+        <span class="plan_price">$99<small> / month</small></span><a class="btn is-outline" href="signup.html?plan=foundation">Start free trial</a>
       </div>
       <div class="card plan is-blue on-blue">
         <span class="plan_tag">Most popular</span>
@@ -25421,7 +25418,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
           <li>Lead Radar, exclusive territory</li>
           <li>Priority support and monthly review</li>
         </ul>
-        <a class="btn is-on-blue" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20BuilderPro%20OS%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20BuilderPro%20OS%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0APhone%3A">Request a quote</a>
+        <span class="plan_price">$199<small> / month</small></span><a class="btn is-on-blue" href="signup.html?plan=os">Start free trial</a>
       </div>
       <div class="card plan">
         <span class="plan_tag">Performance</span>
@@ -25434,7 +25431,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
           <li>Advanced CRM and custom AI training</li>
           <li>Weekly strategy calls and a dedicated manager</li>
         </ul>
-        <a class="btn is-outline" href="mailto:support@builderpro-os.com?subject=Quote%20request%20%E2%80%94%20Enterprise%20plan&body=Hi%20BuilderPro%20team%2C%0D%0A%0D%0AI%27d%20like%20a%20quote%20for%20the%20Enterprise%20plan.%0D%0A%0D%0ABusiness%20name%3A%0D%0ATrade%3A%0D%0ACity%20%2F%20service%20area%3A%0D%0AMonthly%20ad%20budget%3A%0D%0APhone%3A">Request a quote</a>
+        <span class="plan_price">$299<small> / month</small></span><a class="btn is-outline" href="signup.html?plan=enterprise">Start free trial</a>
       </div>
     </div>
     <div class="card addon">
@@ -26607,6 +26604,30 @@ window.addEventListener('storage',function(e){
   if(window.bpNav)bpNav('leadsources'); else if(window.bpLeadSources)bpLeadSources();
   try{ window.focus(); }catch(x){}
 });
+/* Which plan this account is on, and where billing stands, from the
+   accounts row signup.html created (Stripe keeps its status current). */
+var BP_PLANS={foundation:{name:'Foundation',price:99},os:{name:'BuilderPro OS',price:199},enterprise:{name:'Enterprise',price:299}};
+function bpPlan(){
+  var a=window._bpAcct||{}, pl=BP_PLANS[a.plan]||BP_PLANS[((bpSettingsGet().plan||{}).key)]||BP_PLANS.os;
+  var st=a.status||'active', days=a.trial_ends_at?Math.max(0,Math.ceil((Date.parse(a.trial_ends_at)-Date.now())/864e5)):0;
+  var m={trial:['Free trial','ok','Free trial, '+days+' day'+(days===1?'':'s')+' left. Billed monthly after that, cancel any time.'],
+    checkout:['Card needed','warn','Add a card to keep your free trial going.'],past_due:['Payment due','warn','Your last payment did not go through. Update your card to keep your account running.'],
+    cancelled:['Cancelled','warn','Your plan is cancelled.'],active:['Active','ok','Billed monthly, cancel any time.']}[st]||['Active','ok','Billed monthly, cancel any time.'];
+  return {name:pl.name,price:pl.price,label:m[0],badge:m[1],note:m[2],status:st};
+}
+async function bpAcctLoad(){
+  if(!BP_LIVE)return;
+  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url').maybeSingle(); if(r&&r.data){ window._bpAcct=r.data; bpBillBanner(); } }catch(e){}
+}
+function bpBillBanner(){
+  var a=window._bpAcct||{}, old=document.getElementById('bpBill'); if(old)old.remove();
+  if(a.status!=='checkout'&&a.status!=='past_due')return;
+  var host=document.getElementById('bpxApp'); if(!host)return;
+  var d=document.createElement('div'); d.id='bpBill';
+  d.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;background:#0b1021;color:#fff;border-radius:999px;padding:10px 12px 10px 18px;display:flex;gap:12px;align-items:center;font-size:14px;box-shadow:0 12px 30px -10px rgba(0,21,48,.5)';
+  d.innerHTML=(a.status==='checkout'?'Add a card to keep your 14-day free trial.':'Your last payment did not go through.')+'<a href="signup.html?step=pay" style="background:#006fff;color:#fff;border-radius:999px;padding:7px 14px;text-decoration:none;font-weight:500">'+(a.status==='checkout'?'Add card':'Update card')+'</a>';
+  host.appendChild(d);
+}
 function bpEnterPortal(email){
   /* whose account is this? decided before the sidebar or any data */
   var go=function(){ bpEnterPortal2(email); if(window.bpTeamStamp)bpTeamStamp(); };
@@ -26626,6 +26647,7 @@ function bpEnterPortal2(email){
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
   /* business settings (company, crews, business number) follow the account, not the device */
   if(window.bpSettingsPull) try{ bpSettingsPull(); }catch(e){}
+  bpAcctLoad();
   bpFinCloudLoad().then(function(){ if(window._bpCurView==='activejobs'||window._bpCurView==='finances') bpNav(window._bpCurView); else if(window._bpCurView==='dashboard') bpNav('dashboard'); });
   /* the crew's hours are what the labour line on every project budget reads,
      so they load with the jobs rather than only when the page is opened */
@@ -26635,30 +26657,15 @@ function bpEnterPortal2(email){
 }
 /* ---- website sign-up: instant account + free trial, then straight into the portal ---- */
 function dlContactSend(btn){
+  /* the drawer is the first step of signup.html: carry what they typed across */
   var v=function(i){var e=document.getElementById(i);return e?e.value.trim():'';};
-  var box=btn.form.querySelector('.drawer_msg');
-  var d={name:v('dfName'),business:v('dfBiz'),phone:v('dfPhone'),email:v('dfEmail').toLowerCase(),trade:v('dfMsg'),password:document.getElementById('dfPass').value,website:v('dfWeb')};
-  var say=function(t,bad){box.textContent=t;box.style.color=bad?'#d64545':'';};
-  if(!d.name||!d.business||!d.email){say('Please fill in your name, business and email.',1);return;}
-  if(!/^\S+@\S+\.\S+$/.test(d.email)){say('That email doesn\u2019t look right.',1);return;}
-  if((d.password||'').length<8){say('Pick a password with at least 8 characters.',1);return;}
-  btn.disabled=true;var lbl=btn.textContent;btn.textContent='Setting up your account\u2026';say('');
-  fetch(BP_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify(d)})
-  .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
-  .then(function(x){
-    if(x.j&&x.j.exists){throw new Error('You already have an account with that email. Use Log in instead.');}
-    if(!x.j||!x.j.ok)throw new Error((x.j&&x.j.error)||'We couldn\u2019t create your account. Try again, or call us.');
-    say('You\u2019re in. Opening your portal\u2026');
-    if(!BP_LIVE)return;
-    return BP_SB.auth.signInWithPassword({email:d.email,password:d.password}).then(function(r){
-      if(r.error)throw r.error;
-      var c=document.querySelector('#drawer .js-close-drawer');if(c)c.click();
-      bpOpenPortal();
-    });
-  })
-  .catch(function(e){say((e&&e.message)||'Something went wrong.',1);})
-  .then(function(){btn.disabled=false;btn.textContent=lbl;});
+  if(v('dfWeb'))return;
+  var q=new URLSearchParams({plan:'os'});
+  [['name','dfName'],['business','dfBiz'],['phone','dfPhone'],['email','dfEmail']].forEach(function(x){if(v(x[1]))q.set(x[0],v(x[1]));});
+  location.href='signup.html?'+q.toString();
 }
+/* signup.html and the "Log in" links land here with ?portal=1 */
+document.addEventListener('DOMContentLoaded',function(){ if(/[?&]portal=1/.test(location.search)){ try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){} setTimeout(function(){ if(window.bpOpenPortal)bpOpenPortal(); },50); } });
 function bpDoAuth(){
   var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
   if(!email||!pw){msg.className='bpx-msg err';msg.textContent='Please enter your email and password.';return;}
@@ -33424,7 +33431,7 @@ function bpSettings(){
         +'<div class="st-id"><div class="st-logo">'+(BPLOGO?('<img src="'+BPLOGO+'" alt="">'):'<span class="ms">storefront</span>')+'</div>'
           +'<div><b>'+bpEsc(c.name||'Your business')+'</b><span>'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</span></div></div>'
         +'<div class="st-navs" role="navigation" aria-label="Settings sections">'+rail+'</div>'
-        +'<div class="st-plan"><span class="ms">verified</span>BuilderPro OS · $199/mo</div>'
+        +'<div class="st-plan"><span class="ms">verified</span>'+bpEsc(bpPlan().name)+' · $'+bpPlan().price+'/mo</div>'
       +'</aside>'
       +'<div class="st-body">'
       +sec('business',
@@ -33465,8 +33472,8 @@ function bpSettings(){
       +(SECS.some(function(t){return t[0]==='team';})?sec('team',window.bpTeamPanel?bpTeamPanel():''):'')
       +(SECS.some(function(t){return t[0]==='plan';})?sec('plan',
         '<div class="st-plan">'
-          +'<div class="st-plan-top"><div><div class="st-plan-eyebrow">Your plan</div><div class="st-planhead"><b>BuilderPro OS</b><span class="bpx-badge ok">Active</span></div><div class="bpx-mut" style="font-size:13px;margin-top:4px">One plan, everything included. Billed monthly, cancel any time.</div></div>'
-            +'<div class="st-price">$199<span> / month</span></div></div>'
+          +'<div class="st-plan-top"><div><div class="st-plan-eyebrow">Your plan</div><div class="st-planhead"><b>'+bpEsc(bpPlan().name)+'</b><span class="bpx-badge '+bpPlan().badge+'">'+bpPlan().label+'</span></div><div class="bpx-mut" style="font-size:13px;margin-top:4px">'+bpPlan().note+'</div></div>'
+            +'<div class="st-price">$'+bpPlan().price+'<span> / month</span></div></div>'
           +'<div class="st-feats">'+feats.map(function(x){return '<div><span class="ms">check_circle</span><span>'+x+'</span></div>';}).join('')+'</div>'
         +'</div>'
         +'<div class="st-plan-row">'
