@@ -36,8 +36,8 @@ h1{font-size:30px;font-weight:600;letter-spacing:-.03em;line-height:1.15}
 .plan .nm{font-size:18px;font-weight:600;letter-spacing:-.02em}
 .plan .pr{font-size:30px;font-weight:600;letter-spacing:-.03em;margin:4px 0}
 .plan .pr small{font-size:14px;color:var(--mut);font-weight:500;letter-spacing:0}
-.plan ul{list-style:none;font-size:13.5px;color:#34435a;display:flex;flex-direction:column;gap:4px;margin-top:6px}
-.plan li:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue);margin:0 8px 2px 0}
+.plan ul{list-style:none;font-size:13.5px;color:#34435a;display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.plan li{position:relative;padding-left:16px;line-height:1.4}.plan li:before{content:"";position:absolute;left:0;top:.5em;width:6px;height:6px;border-radius:50%;background:var(--blue)}
 .plan.pop{background:linear-gradient(180deg,#f3f8ff,#fff)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
 .grid .full{grid-column:1/-1}
@@ -97,9 +97,9 @@ var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
 var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
 var SB=window.supabase?window.supabase.createClient(SB_URL,SB_ANON):null;
 var PLANS=[
-  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Review requests','1 instant-quote calculator']},
-  {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','300 Lisa call minutes, up to 5 users','Projects, contracts, e-signature','Finances, budgets and profit per job','Employees, hours and payroll','Supply and material orders','All calculators and Roof Age Checker','Lead Radar (3 a day) and Lead Sources','Social, reputation and competitors']},
-  {k:'enterprise',tag:'Built to grow',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','AI Team included ($49 value)','500 Lisa call minutes','Lead Radar: 5 a day, first pick','Unlimited users and locations','Lisa trained on your documents','Priority support']}];
+  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa answers calls and texts','Calendar and booking page','Estimates, invoices, payments','150 call minutes']},
+  {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','Projects, finances and crews','Lead Radar and all calculators','300 call minutes, 5 users']},
+  {k:'enterprise',tag:'Built to grow',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','AI Team included','5 Lead Radar claims a day','500 call minutes, unlimited users']}];
 var ADDONS=[{k:'ai',n:'AI Team',p:49,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator, booking page and Lisa built in.'}];
 var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete','Other'];
 var SERVICES={Roofing:['Roof replacement','Roof repair','Storm damage','Inspections','Gutters','Skylights'],Plumbing:['Leak repair','Drain cleaning','Water heaters','Repiping','Sewer lines','Fixtures'],HVAC:['AC install','Furnace install','Repairs','Maintenance plans','Ductwork','Heat pumps'],
