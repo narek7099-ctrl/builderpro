@@ -196,7 +196,7 @@ async function stripe(path: string, body: Record<string, string>) {
 
 // 7am in the contractor's time zone: the Office assistant writes the day's brief
 async function briefs() {
-  const r = await sb("accounts?ai_addon=eq.active&select=*");
+  const r = await sb("accounts?or=(ai_addon.eq.active,and(plan.eq.enterprise,status.in.(trial,active)))&select=*");
   const rows: (Acct & { ai_brief_at: string | null })[] = r.ok ? await r.json() : [];
   const done: string[] = [];
   for (const a of rows) {
@@ -235,12 +235,12 @@ Deno.serve(async (req) => {
   let b: Record<string, unknown> = {};
   try { b = await req.json(); } catch { /* none */ }
   const op = String(b.op ?? "status");
-  const on = acct.ai_addon === "active";
+  const on = acct.ai_addon === "active" || (acct.plan === "enterprise" && ["trial", "active"].includes(String((acct as unknown as { status: string }).status)));
 
   if (op === "status") {
     const us = await usage(u.id);
     const p = await sb(`cai_approvals?owner=eq.${u.id}&status=eq.pending&select=id`);
-    return json({ ok: true, addon: acct.ai_addon, price: PRICE, cap: CAP, used: us.messages ?? 0, pending: p.ok ? (await p.json()).length : 0,
+    return json({ ok: true, addon: on ? "active" : acct.ai_addon, included: acct.plan === "enterprise", price: PRICE, cap: CAP, used: us.messages ?? 0, pending: p.ok ? (await p.json()).length : 0,
       crm: !!acct.ghl_location_id, agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name })) });
   }
   if (op === "subscribe") {

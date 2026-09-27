@@ -25396,11 +25396,13 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <span class="t-l">Foundation</span>
         <span class="plan_desc">Lisa on your phone, your schedule and your customers in one place. 14-day free trial included.</span>
         <ul>
-          <li>Lisa AI receptionist, 24/7</li>
+          <li>Lisa AI receptionist, 150 call minutes</li>
           <li>Missed-call text-back</li>
           <li>Calendar and public booking page</li>
-          <li>Contacts and messaging</li>
-          <li>Estimates and invoices</li>
+          <li>Contacts, texts and email</li>
+          <li>Estimates, invoices and payments</li>
+          <li>Review requests</li>
+          <li>1 instant-quote calculator</li>
         </ul>
         <span class="plan_price">$99<small> / month</small></span><a class="btn is-outline" href="signup.html?plan=foundation">Start free trial</a>
       </div>
@@ -25410,35 +25412,42 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <span class="plan_desc">The full operating system: every job, every dollar and every customer, run from one login. 14-day free trial included.</span>
         <ul>
           <li>Everything in Foundation</li>
-          <li>Projects with photos, schedule and costs</li>
-          <li>Contracts with e-signature</li>
-          <li>Finances with profit per job</li>
-          <li>Instant-quote calculator for your site</li>
-          <li>Marketing: reviews, social and ads in one place</li>
-          <li>Lead Radar, exclusive territory</li>
-          <li>Priority support and monthly review</li>
+          <li>300 Lisa call minutes, up to 5 users</li>
+          <li>Projects, contracts and e-signature</li>
+          <li>Finances, budgets and profit per job</li>
+          <li>Employees, hours and payroll</li>
+          <li>Supply and material orders</li>
+          <li>All calculators and Roof Age Checker</li>
+          <li>Lead Radar (3 a day) and Lead Sources</li>
+          <li>Social, reputation and competitors</li>
         </ul>
         <span class="plan_price">$199<small> / month</small></span><a class="btn is-on-blue" href="signup.html?plan=os">Start free trial</a>
       </div>
       <div class="card plan">
-        <span class="plan_tag">Performance</span>
+        <span class="plan_tag">Built to grow</span>
         <span class="t-l">Enterprise</span>
-        <span class="plan_desc">A done-for-you growth engine. We build, run and optimise your paid campaigns. You cover the ad spend.</span>
+        <span class="plan_desc">For growing crews and multiple locations, with an AI team that works alongside you. 14-day free trial included.</span>
         <ul>
           <li>Everything in BuilderPro OS</li>
-          <li>Paid ads management and optimisation</li>
-          <li>Professional ad filming and editing</li>
-          <li>Advanced CRM and custom AI training</li>
-          <li>Weekly strategy calls and a dedicated manager</li>
+          <li>AI Team included ($49 value)</li>
+          <li>500 Lisa call minutes</li>
+          <li>Lead Radar: 5 a day, first pick</li>
+          <li>Unlimited users and locations</li>
+          <li>Lisa trained on your documents</li>
+          <li>Priority support</li>
         </ul>
         <span class="plan_price">$299<small> / month</small></span><a class="btn is-outline" href="signup.html?plan=enterprise">Start free trial</a>
       </div>
     </div>
     <div class="card addon">
-      <div><span class="t-s" style="display:block">Need a website?</span><span class="b-s muted">We build it on one of the four model sites above, tailor it to your brand, and host and maintain it. Add it to any plan.</span></div>
+      <div><span class="t-s" style="display:block">Need a website?</span><span class="b-s muted">We build it on one of the four model sites above, tailor it to your brand, and host and maintain it, with your calculator, booking page and Lisa built in. Add it to any plan.</span></div>
       <div class="addon_price">$49<small> / month</small></div>
     </div>
-    <div class="card plan-note">No long-term contracts. Cancel anytime. Live in 3 to 4 days.</div>
+    <div class="card addon">
+      <div><span class="t-s" style="display:block">AI Team</span><span class="b-s muted">Sales, marketing and office assistants that follow up on leads, draft posts and send you a 7am brief. Included with Enterprise.</span></div>
+      <div class="addon_price">$49<small> / month</small></div>
+    </div>
+    <div class="card plan-note">No long-term contracts. Cancel anytime. Extra Lisa call minutes are $0.25 each.</div>
   </div>
 </section>
 
@@ -26606,7 +26615,31 @@ window.addEventListener('storage',function(e){
 });
 /* Which plan this account is on, and where billing stands, from the
    accounts row signup.html created (Stripe keeps its status current). */
-var BP_PLANS={foundation:{name:'Foundation',price:99},os:{name:'BuilderPro OS',price:199},enterprise:{name:'Enterprise',price:299}};
+var BP_PLANS={foundation:{name:'Foundation',price:99,min:150},os:{name:'BuilderPro OS',price:199,min:300},enterprise:{name:'Enterprise',price:299,min:500}};
+/* What each plan leaves out. Locked pages stay in the sidebar with a lock and
+   open an upgrade card, so the contractor sees what the next plan gives them.
+   No accounts row (demo, older clients) means nothing is locked. */
+var BP_LOCK={foundation:['activejobs','employees','supply','supplyorders','suppliers','finances','ledger','leadradar','leadsources','marketing','social','competitors']};
+var BP_WHY={activejobs:'Projects, contracts and e-signature',employees:'Employees, hours and payroll',supply:'Supply and material orders',supplyorders:'Supply and material orders',suppliers:'Supply and material orders',
+  finances:'Finances and profit per job',ledger:'Finances and profit per job',leadradar:'Lead Radar',leadsources:'Lead Sources',marketing:'Ads and listings',social:'Social Media',competitors:'Competitor Analysis'};
+function bpLocked(v){ var p=(window._bpAcct||{}).plan; return !!(BP_LOCK[p]&&BP_LOCK[p].indexOf(v)>=0); }
+function bpUpgradeCard(v){
+  return '<div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #dbe3ec;border-radius:22px;padding:34px;text-align:center">'
+    +'<div style="width:52px;height:52px;border-radius:50%;background:#eaf2ff;color:#006fff;display:grid;place-items:center;margin:0 auto 16px"><span class="ms">lock</span></div>'
+    +'<h2 style="margin:0 0 8px;font-size:22px;color:#001530">'+(BP_WHY[v]||'This page')+' is on BuilderPro OS</h2>'
+    +'<p style="color:#5b6b7f;margin:0 0 20px;line-height:1.5">Your Foundation plan covers Lisa, your calendar, customers, estimates and invoices. BuilderPro OS adds projects, finances, crews, supply, Lead Radar and marketing for $199 a month.</p>'
+    +'<button class="bpx-btn" onclick="bpChangePlan(\'os\')">Upgrade to BuilderPro OS</button>'
+    +'<div style="margin-top:12px"><a href="#" onclick="bpNav(\'settings\');return false" style="color:#006fff;font-size:14px">Compare plans in Settings</a></div></div>';
+}
+async function bpChangePlan(plan,addons){
+  if(!confirm(plan?'Switch to '+BP_PLANS[plan].name+' for $'+BP_PLANS[plan].price+' a month? The difference is prorated on your next bill.':'Update your add-ons? The difference is prorated on your next bill.'))return;
+  try{
+    var ses=(await BP_SB.auth.getSession()).data.session;
+    var r=await fetch(BP_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+ses.access_token},body:JSON.stringify({op:'change',plan:plan||undefined,addons:addons||{}})});
+    var d=await r.json(); if(!d.ok)throw new Error(d.error||'Could not change your plan.');
+    await bpAcctLoad(); bpBuildNav(); bpNav(window._bpCurView||'dashboard');
+  }catch(e){ alert(e.message||e); }
+}
 function bpPlan(){
   var a=window._bpAcct||{}, pl=BP_PLANS[a.plan]||BP_PLANS[((bpSettingsGet().plan||{}).key)]||BP_PLANS.os;
   var st=a.status||'active', days=a.trial_ends_at?Math.max(0,Math.ceil((Date.parse(a.trial_ends_at)-Date.now())/864e5)):0;
@@ -26617,7 +26650,7 @@ function bpPlan(){
 }
 async function bpAcctLoad(){
   if(!BP_LIVE)return;
-  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url').maybeSingle(); if(r&&r.data){ window._bpAcct=r.data; bpBillBanner(); } }catch(e){}
+  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,ai_addon,profile').maybeSingle(); if(r&&r.data){ var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
 }
 function bpBillBanner(){
   var a=window._bpAcct||{}, old=document.getElementById('bpBill'); if(old)old.remove();
@@ -26731,7 +26764,7 @@ function bpBuildNav(){
     g={id:g.id,l:g.l,ico:g.ico,kids:g.kids.filter(function(k){return ok(k[0]);})}; if(!g.kids.length)return;
     h+='<div class="bpx-grp" data-grp="'+g.id+'">'
       +'<a class="bpx-grp-h" onclick="bpNavToggle(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span><svg class="bpx-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>'
-      +'<div class="bpx-sub"><div class="bpx-sub-in">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span></a>';}).join('')+'</div></div></div>';
+      +'<div class="bpx-sub"><div class="bpx-sub-in">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span>'+(bpLocked(k[0])?'<span class="ms" style="font-size:14px;margin-left:auto;opacity:.5">lock</span>':'')+'</a>';}).join('')+'</div></div></div>';
   });
   h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.filter(function(f){return ok(f[0]);}).map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
   document.getElementById('bpxNav').innerHTML=h;
@@ -26777,6 +26810,7 @@ function bpNav(v){
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
+  if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); bpScrollTop(); return; }
   ({crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,payouts:bpPayouts,leadradar:bpRadar,leadsources:bpLeadSources,marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
@@ -33423,7 +33457,15 @@ function bpSettings(){
     return '<section id="set-sec-'+id+'" class="st-sec"'+(_bpSetSec===id?'':' style="display:none"')+'><div class="st-head"><h2>'+t[1]+'</h2><p>'+t[3]+'</p></div>'+body+'</section>';};
   var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
       return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o2[0]?' on':'')+'" onclick="bpApplyTheme(\''+o2[0]+'\');bpSettings()"><span class="ms">'+o2[2]+'</span> '+o2[1]+'</button>';}).join('')+'</div>';
-  var feats=[BP_AI_NAME+' AI receptionist, 24/7','Lead Radar: claim the doors before anyone else','Marketing: Meta, Google, Yelp, reputation','Invoices, estimates, contracts and payments','Projects, scheduling and finances','Your calculator, embeddable on your site','Priority support'];
+  var _pk=(window._bpAcct||{}).plan||'os', _ad=((window._bpAcct||{}).profile||{}).addons||{};
+  var feats=({foundation:[BP_AI_NAME+' AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Review requests','1 instant-quote calculator'],
+    os:['Everything in Foundation','300 '+BP_AI_NAME+' call minutes, up to 5 users','Projects, contracts and e-signature','Finances, budgets and payroll','Supply and material orders','All calculators','Lead Radar (3 a day) and Lead Sources','Social, reputation and competitors'],
+    enterprise:['Everything in BuilderPro OS','AI Team included','500 '+BP_AI_NAME+' call minutes','Lead Radar: 5 a day, first pick','Unlimited users and locations','Priority support']})[_pk]||[];
+  var planPick='<div class="st-plan-row">'+['foundation','os','enterprise'].map(function(k){var P=BP_PLANS[k],me=k===_pk;
+      return '<div class="st-plan-card"><b>'+P.name+'</b><p>$'+P.price+' / month · '+P.min+' call minutes</p>'+(me?'<span class="bpx-badge ok">Your plan</span>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\''+k+'\')">'+(P.price>BP_PLANS[_pk].price?'Upgrade':'Switch')+'</button>')+'</div>';}).join('')+'</div>'
+    +'<div class="st-plan-row">'+[['ai','AI Team','Sales, marketing and office assistants, plus a 7am brief.'],['website','Website','We build and host your site, with your calculator, booking page and '+BP_AI_NAME+' built in.']].map(function(a){
+      var inc=a[0]==='ai'&&_pk==='enterprise', on=inc||_ad[a[0]]||(a[0]==='ai'&&(window._bpAcct||{}).ai_addon==='active');
+      return '<div class="st-plan-card"><b>'+a[1]+'</b><p>'+a[2]+'</p>'+(inc?'<span class="bpx-badge ok">Included</span>':on?'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':false})">Remove · $49/mo</button>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':true})">Add for $49/mo</button>')+'</div>';}).join('')+'</div>';
 
   q('bpxViewArea').innerHTML=
     '<div class="st">'
@@ -33476,6 +33518,7 @@ function bpSettings(){
             +'<div class="st-price">$'+bpPlan().price+'<span> / month</span></div></div>'
           +'<div class="st-feats">'+feats.map(function(x){return '<div><span class="ms">check_circle</span><span>'+x+'</span></div>';}).join('')+'</div>'
         +'</div>'
+        +((window._bpAcct||{}).plan?planPick:'')
         +'<div class="st-plan-row">'
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'

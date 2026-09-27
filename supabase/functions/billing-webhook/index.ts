@@ -45,6 +45,8 @@ Deno.serve(async (req) => {
     const body: Record<string, unknown> = { status: ev.type.endsWith("deleted") ? "cancelled" : (STATUS[o.status] ?? o.status), stripe_subscription_id: o.id };
     if (o.trial_end) body.trial_ends_at = new Date(o.trial_end * 1000).toISOString();
     if (o.metadata?.plan) body.plan = o.metadata.plan;
+    // an AI Team bought with the plan lives and dies with the plan's subscription
+    if (String(o.metadata?.addons ?? "").split(",").includes("ai")) body.ai_addon = body.status === "trial" ? "active" : body.status;
     await patch(uid, body);
   }
   return new Response("ok");

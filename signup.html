@@ -80,6 +80,9 @@ h1{font-size:30px;font-weight:600;letter-spacing:-.03em;line-height:1.15}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 @media(max-width:720px){.plans,.grid{grid-template-columns:1fr}.panel{padding:22px}.hr{grid-template-columns:1fr 80px;}.hr input[type=time]{grid-column:span 1}h1{font-size:25px}.rev{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.addons{display:grid;gap:10px}.addon{display:flex;gap:12px;align-items:flex-start;border:1px solid #dbe3ec;border-radius:14px;padding:14px 16px;cursor:pointer;background:#fff}
+.addon input{margin-top:3px;width:18px;height:18px;accent-color:#006fff}.addon b{color:#001530}.addon em{font-style:normal;color:#006fff;font-weight:500;margin-left:6px}.addon small{display:block;color:#5b6b7f;margin-top:3px;font-size:13px}
+.addon.inc{background:#f3f8ff;border-color:#b9d6ff;cursor:default}.total{margin:16px 0 0;color:#5b6b7f}.total b{color:#001530}
 </style>
 </head>
 <body>
@@ -94,18 +97,21 @@ var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
 var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
 var SB=window.supabase?window.supabase.createClient(SB_URL,SB_ANON):null;
 var PLANS=[
-  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa AI receptionist, 24/7','Missed-call text-back','Calendar and booking page','Contacts and messaging','Estimates and invoices']},
-  {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','Projects, contracts, e-signature','Finances and profit per job','Instant-quote calculator','Marketing and Lead Radar']},
-  {k:'enterprise',tag:'Performance',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','Paid ads management','Ad filming and editing','Custom AI training','Weekly strategy calls']}];
+  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Review requests','1 instant-quote calculator']},
+  {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','300 Lisa call minutes, up to 5 users','Projects, contracts, e-signature','Finances, budgets and profit per job','Employees, hours and payroll','Supply and material orders','All calculators and Roof Age Checker','Lead Radar (3 a day) and Lead Sources','Social, reputation and competitors']},
+  {k:'enterprise',tag:'Built to grow',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','AI Team included ($49 value)','500 Lisa call minutes','Lead Radar: 5 a day, first pick','Unlimited users and locations','Lisa trained on your documents','Priority support']}];
+var ADDONS=[{k:'ai',n:'AI Team',p:49,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator, booking page and Lisa built in.'}];
 var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete','Other'];
 var SERVICES={Roofing:['Roof replacement','Roof repair','Storm damage','Inspections','Gutters','Skylights'],Plumbing:['Leak repair','Drain cleaning','Water heaters','Repiping','Sewer lines','Fixtures'],HVAC:['AC install','Furnace install','Repairs','Maintenance plans','Ductwork','Heat pumps'],
   Electrical:['Panel upgrades','Rewiring','EV chargers','Lighting','Generators','Troubleshooting'],'General contracting':['Additions','New builds','Kitchens','Bathrooms','Decks','Permits'],Remodeling:['Kitchens','Bathrooms','Basements','Flooring','Whole-home'],
   Painting:['Interior','Exterior','Cabinets','Commercial'],Landscaping:['Design','Patios','Irrigation','Maintenance','Sod'],Pools:['New pools','Resurfacing','Equipment','Cleaning'],Countertops:['Quartz','Granite','Install','Fabrication']};
 var DAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
-var S={plan:'os',profile:{hours:{}}};
+var S={plan:'os',addons:{},profile:{hours:{}}};
 DAYS.forEach(function(d){S.profile.hours[d[0]]={open:d[0]!=='sun',from:'08:00',to:d[0]==='sat'?'13:00':'17:00'};});
 try{var sv=JSON.parse(sessionStorage.getItem('bp_signup')||'null');if(sv){S=sv;delete S.password;}}catch(e){}
 var qs=new URLSearchParams(location.search);
+if(!S.addons)S.addons={};
+if(qs.get('website'))S.addons.website=true;
 if(qs.get('plan')&&PLANS.some(function(p){return p.k===qs.get('plan')}))S.plan=qs.get('plan');
 ['name','email','phone','business'].forEach(function(k){if(qs.get(k))S[k]=qs.get(k);});
 var STEP=0, STEPS=['plan','account','business','services','ai','review'];
@@ -153,14 +159,18 @@ function render(){
     +'</div>'+nav('Review');
   if(st==='review'){ var pl=PLANS.filter(function(p){return p.k===S.plan})[0];
     h='<h1>Check and start your trial</h1><p class="sub">Next you add a card with Stripe. You are not charged today.</p><dl class="rev">'
-    +[['Plan',pl.n+', $'+pl.p+' / month after 14 days'],['Name',S.name],['Email',S.email],['Phone',S.phone],['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea],['Services',P.services],['AI receptionist',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()]]
+    +[['Plan',pl.n+', $'+pl.p+' / month'],['Name',S.name],['Email',S.email],['Phone',S.phone],['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea],['Services',P.services],['AI receptionist',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()]]
       .map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1]||'-')+'</dd>'}).join('')+'</dl>'
+    +'<h2 style="font-size:17px;margin:22px 0 10px">Add-ons</h2><div class="addons">'+ADDONS.map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
+      return '<label class="addon'+(inc?' inc':'')+'"><input type="checkbox" '+(inc||S.addons[a.k]?'checked ':'')+(inc?'disabled ':'')+'onchange="S.addons.'+a.k+'=this.checked;persist();render()"><span><b>'+a.n+'</b> <em>'+(inc?'Included':'+$'+a.p+' / month')+'</em><small>'+a.d+'</small></span></label>';}).join('')+'</div>'
+    +'<p class="total">Total after the trial: <b>$'+total()+' / month</b></p>'
     +'<div class="note">As soon as you finish, we build your BuilderPro account, your GoHighLevel workspace, your booking calendar and your AI receptionist from these answers. It is ready when you log in.</div>'
     +nav('Start 14-day free trial'); }
   $('view').innerHTML='<div class="panel">'+h+'</div>';
   var f=$('view').querySelector('input:not([type=checkbox]):not(.hp),select,textarea'); if(f&&STEP)f.focus({preventScroll:true});
   window.scrollTo({top:0,behavior:'smooth'});
 }
+function total(){var pl=PLANS.filter(function(p){return p.k===S.plan})[0];return pl.p+(S.addons.ai&&S.plan!=='enterprise'?49:0)+(S.addons.website?49:0);}
 function chip(b){var t=$('iSvc'),cur=t.value.split(/\s*,\s*/).filter(Boolean),x=b.textContent,i=cur.indexOf(x);if(i>=0)cur.splice(i,1);else cur.push(x);t.value=cur.join(', ');b.classList.toggle('on',i<0);}
 function need(ids){var bad=null;ids.forEach(function(i){var e=$(i),f=e.closest('.f'),ok=!!e.value.trim();f.classList.toggle('err',!ok);if(!ok&&!bad)bad=e;});if(bad){bad.focus();$('msg').textContent='Please fill in the highlighted fields.';return false;}return true;}
 function collect(){
@@ -190,7 +200,7 @@ async function submit(){
   var b=$('nx');b.disabled=true;b.textContent='Creating your account...';$('msg').textContent='';
   try{
     var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+SB_ANON},
-      body:JSON.stringify({plan:S.plan,name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
+      body:JSON.stringify({plan:S.plan,addons:{ai:!!S.addons.ai&&S.plan!=='enterprise',website:!!S.addons.website},name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
     var j=await r.json();
     if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="index.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start 14-day free trial';return;}
     if(!j.ok)throw new Error(j.error||'Something went wrong.');
