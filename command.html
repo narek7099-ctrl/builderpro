@@ -392,23 +392,24 @@ async function forget(id){ await api({op:'memory_delete',id:id}); viewMemory(); 
 
 /* ---------- Connections: outside tools the teams can use (MCP) ---------- */
 var TEAMKEYS=['ceo','sales','marketing','support','builder','research'];
-var PRESETS=[['higgsfield','Higgsfield','','marketing'],['github','GitHub','https://api.githubcopilot.com/mcp/','builder'],['supabase','Supabase','https://mcp.supabase.com/mcp','support'],['canva','Canva','','marketing']];
+var PRESETS=[['higgsfield','Higgsfield','https://mcp.higgsfield.ai/mcp','marketing'],['canva','Canva','https://mcp.canva.com/mcp','marketing'],['github','GitHub','https://api.githubcopilot.com/mcp/','builder'],['supabase','Supabase','https://mcp.supabase.com/mcp','support']];
 async function viewConn(){
-  el('view').innerHTML='<h2>Connections</h2><div class="muted" style="margin:-6px 0 14px;max-width:70ch">Give your teams outside tools. Paste the service’s MCP server address and an access key from that service. <b>Actions through these run right away and skip Approvals</b>, so only give each tool to the teams that need it, and switch off single actions you don’t want used.</div>'
+  el('view').innerHTML=(window._connNote||'')+'<h2>Connections</h2><div class="muted" style="margin:-6px 0 14px;max-width:70ch">Give your teams outside tools. Paste the service’s MCP server address and an access key from that service. <b>Actions through these run right away and skip Approvals</b>, so only give each tool to the teams that need it, and switch off single actions you don’t want used.</div>'
     +'<div class="card" style="margin-bottom:14px"><b id="cfTitle">Add a connection</b><input type="hidden" id="cfId">'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px">'+PRESETS.map(function(p){return '<button class="btn sm" onclick="connPreset(\''+p[0]+'\')">'+p[1]+'</button>'}).join('')+'</div>'
     +'<div class="grid2"><input id="cfLabel" placeholder="Name, e.g. Higgsfield"><input id="cfUrl" placeholder="MCP server address (https://...)">'
-    +'<input id="cfTok" type="password" placeholder="Access key (leave blank to keep the saved one)" autocomplete="off"><input id="cfOff" placeholder="Actions to switch off (optional, comma separated)"></div>'
+    +'<input id="cfTok" type="password" placeholder="Access key (leave blank for Sign in, or to keep the saved one)" autocomplete="off"><input id="cfOff" placeholder="Actions to switch off (optional, comma separated)"></div>'
     +'<div style="margin:12px 0 6px;font-size:13px" class="muted">Which teams can use it</div><div style="display:flex;gap:12px;flex-wrap:wrap">'+TEAMKEYS.map(function(k){return '<label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" style="width:auto" data-team="'+k+'">'+NAMES[k]+'</label>'}).join('')+'</div>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px"><button class="btn pri" onclick="connSave(this)">Save</button><button class="btn" onclick="viewConn()">Clear</button><span id="cfMsg" style="font-size:13px"></span></div></div>'
     +'<div id="cfList" class="card tw">Loading…</div>';
+  window._connNote='';
   var r=await api({op:'mcp_list'}); var rows=r.data||[]; window._conns=rows;
   el('cfList').innerHTML=rows.length?'<table><thead><tr><th>Service</th><th>Teams</th><th>Key</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(function(x,i){
     return '<tr><td><b>'+esc(x.label||x.name)+'</b><div class="muted" style="font-size:12px">'+esc(x.url)+'</div>'+(x.disabled_tools&&x.disabled_tools.length?'<div class="muted" style="font-size:12px">Off: '+esc(x.disabled_tools.join(', '))+'</div>':'')+'</td>'
-      +'<td>'+esc((x.agents||[]).map(function(k){return NAMES[k]||k}).join(', ')||'None')+'</td><td class="muted">'+esc(x.token||'none')+'</td>'
-      +'<td>'+(x.enabled?'<span class="st ok"><i class="ti ti-circle-check"></i>On</span>':'<span class="st off">Off</span>')+'</td>'
-      +'<td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="connEdit('+i+')">Edit</button> <button class="btn sm" onclick="connToggle('+i+')">'+(x.enabled?'Turn off':'Turn on')+'</button> <button class="btn sm" onclick="connDel('+x.id+')">Remove</button></td></tr>'}).join('')+'</tbody></table>'
-    :'<div class="empty">No connections yet. Start with Higgsfield for Marketing: paste its MCP address and your Higgsfield key above.</div>';
+      +'<td>'+esc((x.agents||[]).map(function(k){return NAMES[k]||k}).join(', ')||'None')+'</td><td class="muted">'+(x.token?esc(x.token):x.connected?(x.stays?'Signed in, stays connected':'Signed in'):'Not signed in')+'</td>'
+      +'<td>'+(!x.connected?'<span class="st warn"><i class="ti ti-login"></i>Needs sign-in</span>'+(x.error?'<div class="muted" style="font-size:12px">'+esc(x.error)+'</div>':''):x.enabled?'<span class="st ok"><i class="ti ti-circle-check"></i>Connected</span>':'<span class="st off">Off</span>')+'</td>'
+      +'<td style="text-align:right;white-space:nowrap">'+(!x.connected?'<button class="btn sm pri" onclick="connSignIn('+x.id+',this)">Sign in with '+esc(x.label||x.name)+'</button> ':'')+'<button class="btn sm" onclick="connEdit('+i+')">Edit</button> <button class="btn sm" onclick="connToggle('+i+')">'+(x.enabled?'Turn off':'Turn on')+'</button> <button class="btn sm" onclick="connDel('+x.id+')">Remove</button></td></tr>'}).join('')+'</tbody></table>'
+    :'<div class="empty">No connections yet. Start with Higgsfield: click it above, tick Marketing, save, and sign in.</div>';
 }
 function connPreset(k){var p=PRESETS.filter(function(x){return x[0]===k})[0]; el('cfLabel').value=p[1]; if(p[2])el('cfUrl').value=p[2]; document.querySelectorAll('[data-team]').forEach(function(c){c.checked=c.getAttribute('data-team')===p[3];}); el('cfUrl').focus();}
 function connEdit(i){var x=window._conns[i]; el('cfTitle').textContent='Edit '+(x.label||x.name); el('cfId').value=x.id; el('cfLabel').value=x.label||x.name; el('cfUrl').value=x.url; el('cfTok').value=''; el('cfOff').value=(x.disabled_tools||[]).join(', ');
@@ -420,11 +421,18 @@ async function connSave(b){
     agents:[].slice.call(document.querySelectorAll('[data-team]:checked')).map(function(c){return c.getAttribute('data-team')}),enabled:cur?cur.enabled:true};
   b.disabled=true; var r=await api(body); b.disabled=false;
   if(!r.ok){el('cfMsg').style.color='var(--danger)';el('cfMsg').textContent=r.error||'Could not save.';return;}
+  if(!body.token&&(!cur||!cur.connected)&&r.id)return connSignIn(r.id,b);
   viewConn();
 }
+async function connSignIn(id,b){ if(b){b.disabled=true;b.textContent='Opening sign-in\u2026';}
+  var r=await api({op:'mcp_oauth_start',id:id});
+  if(r.url){location.href=r.url;return;}
+  if(b)b.disabled=false; alert(r.error||'Could not start sign-in.'); viewConn(); }
 async function connToggle(i){var x=window._conns[i]; await api({op:'mcp_save',id:x.id,name:x.name,label:x.label,url:x.url,agents:x.agents,disabled_tools:x.disabled_tools,enabled:!x.enabled}); viewConn();}
 async function connDel(id){ if(!confirm('Remove this connection? Teams lose access right away.'))return; await api({op:'mcp_delete',id:id}); viewConn(); }
 
+(function(){var q=new URLSearchParams(location.search);var ok=q.get('connected'),er=q.get('conn_error');
+  if(ok||er){TAB='conn';history.replaceState(null,'',location.pathname);window._connNote=ok?'<div class="warnbar" style="background:#e9f8ef;color:#0f5132;border-color:#b9e6c9">'+esc(ok)+' is connected. Your teams can use it now, and it stays connected.</div>':'<div class="warnbar" style="background:#fdecec;color:#7a1f1f;border-color:#f3c2c2">Sign-in didn\u2019t finish: '+esc(er)+'</div>';}})();
 if(TOKEN)start();
 </script>
 </body>
