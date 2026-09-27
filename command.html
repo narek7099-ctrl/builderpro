@@ -240,10 +240,10 @@ async function start(){
 }
 async function countPending(){ var r=await api({op:'approvals',status:'pending'}); PENDING=(r.data||[]).length; drawTabs(); }
 function drawTabs(){
-  var T=[['team','AI Team'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['memory','Memory']];
+  var T=[['team','AI Team'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['memory','Memory'],['conn','Connections']];
   el('tabs').innerHTML=T.map(function(t){return '<button class="'+(t[0]===TAB?'on':'')+'" onclick="tab(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
 }
-function tab(t){TAB=t;drawTabs();({team:viewTeam,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory})[t]()}
+function tab(t){TAB=t;drawTabs();({team:viewTeam,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory,conn:viewConn})[t]()}
 
 /* ---------- AI team: the org board ---------- */
 var POS={ceo:[50,13],sales:[10.5,47],marketing:[30.3,47],support:[50,47],builder:[69.7,47],research:[89.5,47]};
@@ -253,7 +253,7 @@ var TOOLSET={ceo:[['ti-sparkles','Claude','model'],['ti-database','Memory','shar
   support:[['ti-layout-dashboard','BuilderPro','requests'],['ti-plug-connected','GHL','sub-accounts'],['ti-server','Supabase','read']],
   builder:[['ti-plug-connected','GHL','build'],['ti-layout-dashboard','BuilderPro','receptionist']],
   research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']]};
-var STATUS={}, SHIFTS=true;
+var STATUS={}, SHIFTS=true, CONNS=[];
 function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
 async function viewTeam(){
   el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. Each team works a shift every 3 hours.</p></div>'
@@ -262,7 +262,7 @@ async function viewTeam(){
     +'<div class="scrim" id="scr" onclick="closeDr()"></div><div class="drawer" id="dr"><div class="hd"><b id="drT"></b><select id="drTh" onchange="openThread(this.value||null)"></select><button class="xbtn" aria-label="Close" onclick="closeDr()"><i class="ti ti-x"></i></button></div>'
     +'<div class="msgs" id="msgs"></div><div class="compose"><textarea id="inp" placeholder="Message…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div>';
   drawBoard();
-  var r=await api({op:'status'}); STATUS=r.data||{}; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
+  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
 }
 function isLive(k){var l=(STATUS[k]||{}).last;return !!(l&&Date.now()-Date.parse(l.updated_at)<5*6e4);}
 function drawBoard(){
@@ -276,11 +276,11 @@ function drawBoard(){
     if(k!=='ceo'){ var y0=c[1]+30,y1=p[1]-30, d='M'+c[0]+','+y0+' C'+c[0]+','+(y0+100)+' '+p[0]+','+(y1-100)+' '+p[0]+','+y1, pid='pp'+k;
       svg+='<path id="'+pid+'" class="ln" d="'+d+'"/>'+(live?'<path class="ln hot" d="'+d+'"/>':'')
         +'<circle r="'+(live?2.6:2)+'" class="pk'+(live?' hot':'')+'"><animateMotion dur="'+(live?1.6:5.5+idx*0.6)+'s" begin="'+(idx*0.9)+'s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .25 1"><mpath href="#'+pid+'"/></animateMotion></circle>'; }
-    var tools=TOOLSET[k]||[], n=tools.length;
+    var tools=(TOOLSET[k]||[]).concat(CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;}).map(function(c){return ['ti-plug-connected',c.label||c.name,'connected'];})), n=tools.length;
     tools.forEach(function(t,i){
       var tx,ty,td;
       if(k==='ceo'){ tx=c[0]+(i?250:-250); ty=c[1]; td='M'+(c[0]+(i?108:-108))+','+c[1]+' L'+(tx+(i?-22:22))+','+ty; }
-      else { tx=p[0]+(i-(n-1)/2)*64; ty=p[1]+150; td='M'+p[0]+','+(p[1]+30)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-22); }
+      else { tx=p[0]+(i-(n-1)/2)*(n>3?50:64); ty=p[1]+(n>3&&i%2?185:150); td='M'+p[0]+','+(p[1]+30)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-22); }
       svg+='<path class="ln tool" d="'+td+'"/>';
       nodes+='<div class="tl'+(t[3]?' soon':'')+'" style="--dl:'+(dl+0.25)+'s;left:'+(tx/W*100)+'%;top:'+(ty/H*100)+'%"><i class="ti '+t[0]+'"></i>'+esc(t[1])+'<small>'+esc(t[2])+'</small></div>';
     });
@@ -388,6 +388,42 @@ async function viewMemory(){
   el('mm').innerHTML=rows.length?'<table><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.note)+'</td><td class="muted" style="white-space:nowrap;font-size:12px">'+esc(String(x.created_at).slice(0,10))+'</td><td style="text-align:right"><button class="btn sm" onclick="forget('+x.id+')">Forget</button></td></tr>'}).join('')+'</tbody></table>':'<span class="muted">Nothing saved yet.</span>';
 }
 async function forget(id){ await api({op:'memory_delete',id:id}); viewMemory(); }
+
+
+/* ---------- Connections: outside tools the teams can use (MCP) ---------- */
+var TEAMKEYS=['ceo','sales','marketing','support','builder','research'];
+var PRESETS=[['higgsfield','Higgsfield','','marketing'],['github','GitHub','https://api.githubcopilot.com/mcp/','builder'],['supabase','Supabase','https://mcp.supabase.com/mcp','support'],['canva','Canva','','marketing']];
+async function viewConn(){
+  el('view').innerHTML='<h2>Connections</h2><div class="muted" style="margin:-6px 0 14px;max-width:70ch">Give your teams outside tools. Paste the service’s MCP server address and an access key from that service. <b>Actions through these run right away and skip Approvals</b>, so only give each tool to the teams that need it, and switch off single actions you don’t want used.</div>'
+    +'<div class="card" style="margin-bottom:14px"><b id="cfTitle">Add a connection</b><input type="hidden" id="cfId">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px">'+PRESETS.map(function(p){return '<button class="btn sm" onclick="connPreset(\''+p[0]+'\')">'+p[1]+'</button>'}).join('')+'</div>'
+    +'<div class="grid2"><input id="cfLabel" placeholder="Name, e.g. Higgsfield"><input id="cfUrl" placeholder="MCP server address (https://...)">'
+    +'<input id="cfTok" type="password" placeholder="Access key (leave blank to keep the saved one)" autocomplete="off"><input id="cfOff" placeholder="Actions to switch off (optional, comma separated)"></div>'
+    +'<div style="margin:12px 0 6px;font-size:13px" class="muted">Which teams can use it</div><div style="display:flex;gap:12px;flex-wrap:wrap">'+TEAMKEYS.map(function(k){return '<label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" style="width:auto" data-team="'+k+'">'+NAMES[k]+'</label>'}).join('')+'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px"><button class="btn pri" onclick="connSave(this)">Save</button><button class="btn" onclick="viewConn()">Clear</button><span id="cfMsg" style="font-size:13px"></span></div></div>'
+    +'<div id="cfList" class="card tw">Loading…</div>';
+  var r=await api({op:'mcp_list'}); var rows=r.data||[]; window._conns=rows;
+  el('cfList').innerHTML=rows.length?'<table><thead><tr><th>Service</th><th>Teams</th><th>Key</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(function(x,i){
+    return '<tr><td><b>'+esc(x.label||x.name)+'</b><div class="muted" style="font-size:12px">'+esc(x.url)+'</div>'+(x.disabled_tools&&x.disabled_tools.length?'<div class="muted" style="font-size:12px">Off: '+esc(x.disabled_tools.join(', '))+'</div>':'')+'</td>'
+      +'<td>'+esc((x.agents||[]).map(function(k){return NAMES[k]||k}).join(', ')||'None')+'</td><td class="muted">'+esc(x.token||'none')+'</td>'
+      +'<td>'+(x.enabled?'<span class="st ok"><i class="ti ti-circle-check"></i>On</span>':'<span class="st off">Off</span>')+'</td>'
+      +'<td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="connEdit('+i+')">Edit</button> <button class="btn sm" onclick="connToggle('+i+')">'+(x.enabled?'Turn off':'Turn on')+'</button> <button class="btn sm" onclick="connDel('+x.id+')">Remove</button></td></tr>'}).join('')+'</tbody></table>'
+    :'<div class="empty">No connections yet. Start with Higgsfield for Marketing: paste its MCP address and your Higgsfield key above.</div>';
+}
+function connPreset(k){var p=PRESETS.filter(function(x){return x[0]===k})[0]; el('cfLabel').value=p[1]; if(p[2])el('cfUrl').value=p[2]; document.querySelectorAll('[data-team]').forEach(function(c){c.checked=c.getAttribute('data-team')===p[3];}); el('cfUrl').focus();}
+function connEdit(i){var x=window._conns[i]; el('cfTitle').textContent='Edit '+(x.label||x.name); el('cfId').value=x.id; el('cfLabel').value=x.label||x.name; el('cfUrl').value=x.url; el('cfTok').value=''; el('cfOff').value=(x.disabled_tools||[]).join(', ');
+  document.querySelectorAll('[data-team]').forEach(function(c){c.checked=(x.agents||[]).indexOf(c.getAttribute('data-team'))>=0;}); window.scrollTo({top:0,behavior:'smooth'});}
+async function connSave(b){
+  var label=el('cfLabel').value.trim(), id=el('cfId').value;
+  var cur=id?window._conns.filter(function(x){return String(x.id)===id})[0]:null;
+  var body={op:'mcp_save',id:id||undefined,name:cur?cur.name:label,label:label,url:el('cfUrl').value.trim(),token:el('cfTok').value.trim()||undefined,disabled_tools:el('cfOff').value,
+    agents:[].slice.call(document.querySelectorAll('[data-team]:checked')).map(function(c){return c.getAttribute('data-team')}),enabled:cur?cur.enabled:true};
+  b.disabled=true; var r=await api(body); b.disabled=false;
+  if(!r.ok){el('cfMsg').style.color='var(--danger)';el('cfMsg').textContent=r.error||'Could not save.';return;}
+  viewConn();
+}
+async function connToggle(i){var x=window._conns[i]; await api({op:'mcp_save',id:x.id,name:x.name,label:x.label,url:x.url,agents:x.agents,disabled_tools:x.disabled_tools,enabled:!x.enabled}); viewConn();}
+async function connDel(id){ if(!confirm('Remove this connection? Teams lose access right away.'))return; await api({op:'mcp_delete',id:id}); viewConn(); }
 
 if(TOKEN)start();
 </script>

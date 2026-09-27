@@ -82,6 +82,15 @@ function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
   return t;
 }
 
+// Outside tools (Higgsfield, GitHub, Canva...) connected in the Connections tab,
+// reached through Claude's MCP connector. These run immediately: the owner
+// chooses which teams get each one and can switch off single tools.
+type Mcp = { name: string; label: string; url: string; token: string; agents: string[]; disabled_tools: string[] };
+async function mcpFor(agent: string): Promise<Mcp[]> {
+  const r = await sb(`ai_mcp?enabled=eq.true&agents=cs.{${agent}}&select=name,label,url,token,agents,disabled_tools`);
+  return r.ok ? await r.json() : [];
+}
+
 async function memoryText(): Promise<string> {
   const r = await sb("ai_memory?select=note&order=id.desc&limit=40");
   const rows = r.ok ? await r.json() : [];
@@ -93,7 +102,7 @@ async function system(a: Agent): Promise<string> {
 BuilderPro sells "BuilderPro OS" to contractors (roofers, plumbers, HVAC, electricians, remodelers...): a portal plus a GoHighLevel sub-account per client, an AI receptionist that answers calls and texts, lead tools, estimates, invoices, crews and scheduling. Plans: Foundation $99/mo, BuilderPro OS $199/mo, Enterprise $299/mo, each with a 14-day free trial (card taken at sign-up by Stripe). New contractors sign up on the website and answer onboarding questions; each gets a GHL sub-account built from the owner's snapshot.
 The team: CEO, Sales, Marketing, Support, Builder, Research. You are the ${a.name}.
 Your job: ${a.role}
-How to work: use your tools to look things up rather than guessing. When a change needs the owner's approval, the tool call is queued for them and you are told so; don't retry it, just say what you proposed and why. Be direct and concrete, like a sharp employee reporting to the owner. Use short headings and lists when they help. Today is ${new Date().toISOString().slice(0, 10)}.
+How to work: use your tools to look things up rather than guessing. Tools from connected services (e.g. Higgsfield for images and video) run immediately and may cost credits, so use them when the task calls for it, not speculatively. When a change needs the owner's approval, the tool call is queued for them and you are told so; don't retry it, just say what you proposed and why. Be direct and concrete, like a sharp employee reporting to the owner. Use short headings and lists when they help. Today is ${new Date().toISOString().slice(0, 10)}.
 ${mem ? "\nThe team's memory (things the owner told you, decisions, findings):\n" + mem : ""}`;
 }
 
@@ -102,7 +111,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
   switch (name) {
     case "ghl": return await callGHL(String(input.op), (input.args ?? {}) as Record<string, string>);
     case "accounts_list": {
-      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,plan,price_monthly,profile,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
+      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,price_monthly,profile,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
       return r.ok ? await r.json() : { error: r.status };
     }
     case "account_create": return await createAccount(input as Record<string, string>);
@@ -216,6 +225,9 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
   const client = new Anthropic();
   const sys = await system(a);
   const messages = await history(thread);
+  const conns = await mcpFor(a.key);
+  const tools: unknown[] = toolsFor(a);
+  for (const c of conns) tools.push({ type: "mcp_toolset", mcp_server_name: c.name, ...(c.disabled_tools.length ? { configs: Object.fromEntries(c.disabled_tools.map((t) => [t, { enabled: false }])) } : {}) });
   const first: Anthropic.Beta.Messages.BetaMessageParam = { role: "user", content: userText };
   const lastM = messages[messages.length - 1];
   if (lastM && lastM.role === "user") (lastM.content as unknown[]).push({ type: "text", text: userText }); else messages.push(first);
@@ -225,9 +237,10 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
   for (let i = 0; i < (depth ? 6 : 10); i++) {
     // deno-lint-ignore no-explicit-any
     const res: any = await client.beta.messages.create({
-      model: MODEL, max_tokens: 16000, system: sys, messages, tools: toolsFor(a),
+      model: MODEL, max_tokens: 16000, system: sys, messages, tools,
       thinking: { type: "adaptive" }, output_config: { effort: depth ? "low" : "medium" },
-      betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
+      betas: ["server-side-fallback-2026-07-01", ...(conns.length ? ["mcp-client-2025-11-20"] : [])], fallbacks: "default",
+      ...(conns.length ? { mcp_servers: conns.map((c) => ({ type: "url", name: c.name, url: c.url, ...(c.token ? { authorization_token: c.token } : {}) })) } : {}),
     // deno-lint-ignore no-explicit-any
     } as any);
     messages.push({ role: "assistant", content: res.content }); await save(thread, "assistant", res.content);
@@ -266,7 +279,7 @@ function transcript(rows: { role: string; content: unknown }[]) {
     const blocks = (m.content as { type: string; text?: string; name?: string; input?: Record<string, unknown>; content?: unknown }[]) ?? [];
     if (m.role === "user") { if (blocks.every((b) => b.type === "tool_result")) continue; }
     const text = blocks.filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
-    const tools = blocks.filter((b) => b.type === "tool_use" || b.type === "server_tool_use").map((b) => b.name === "ghl" ? "GHL " + (b.input?.op ?? "") : b.name === "web_search" ? "Searched: " + (b.input?.query ?? "") : String(b.name).replace(/_/g, " "));
+    const tools = blocks.filter((b) => b.type === "tool_use" || b.type === "server_tool_use" || b.type === "mcp_tool_use").map((b) => b.type === "mcp_tool_use" ? String((b as { server_name?: string }).server_name ?? "") + ": " + String(b.name ?? "").replace(/_/g, " ") : b.name === "ghl" ? "GHL " + (b.input?.op ?? "") : b.name === "web_search" ? "Searched: " + (b.input?.query ?? "") : String(b.name).replace(/_/g, " "));
     if (text || tools.length) out.push({ role: m.role, text, tools });
   }
   return out;
@@ -377,12 +390,31 @@ Deno.serve(async (req) => {
       out[k] = { last: (t.ok ? await t.json() : [])[0] ?? null, pending: (p.ok ? await p.json() : []).length };
     }
     const c = await sb("ai_config?key=eq.shifts_on&select=value"); const on = ((c.ok ? await c.json() : [])[0]?.value ?? "true") === "true";
-    return json({ ok: true, data: out, shifts_on: on });
+    const m = await sb("ai_mcp?enabled=eq.true&select=name,label,agents"); 
+    return json({ ok: true, data: out, shifts_on: on, connections: m.ok ? await m.json() : [] });
   }
   if (op === "shifts") {
     await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shifts_on", value: b.on ? "true" : "false" }) });
     return json({ ok: true });
   }
+  if (op === "mcp_list") {
+    const r = await sb("ai_mcp?select=id,name,label,url,token,agents,disabled_tools,enabled&order=id.asc");
+    const rows = r.ok ? await r.json() : [];
+    return json({ ok: true, data: rows.map((x: Mcp & { token: string }) => ({ ...x, token: x.token ? "••••" + x.token.slice(-4) : "" })) });
+  }
+  if (op === "mcp_save") {
+    const name = String(b.name ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+    const url = String(b.url ?? "").trim();
+    if (!name || !/^https:\/\//.test(url)) return json({ ok: false, error: "Give it a name and an https:// address." }, 400);
+    const row: Record<string, unknown> = { name, label: String(b.label ?? name).slice(0, 60), url, enabled: b.enabled !== false,
+      agents: (Array.isArray(b.agents) ? b.agents : []).map(String).filter((k) => AGENTS[k]),
+      disabled_tools: (Array.isArray(b.disabled_tools) ? b.disabled_tools : String(b.disabled_tools ?? "").split(",")).map((t) => String(t).trim()).filter(Boolean) };
+    if (b.token) row.token = String(b.token).trim();
+    const r = b.id ? await sb(`ai_mcp?id=eq.${Number(b.id)}`, { method: "PATCH", body: JSON.stringify(row) })
+      : await sb("ai_mcp", { method: "POST", body: JSON.stringify(row) });
+    return r.ok ? json({ ok: true }) : json({ ok: false, error: r.status === 409 ? "That name is taken." : "Could not save." }, 400);
+  }
+  if (op === "mcp_delete") { await sb(`ai_mcp?id=eq.${Number(b.id)}`, { method: "DELETE" }); return json({ ok: true }); }
   if (op === "threads") { const r = await sb(`ai_threads?agent=eq.${encodeURIComponent(String(b.agent))}&select=id,title,created_by,updated_at&order=updated_at.desc&limit=50`); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
   if (op === "thread") { const r = await sb(`ai_messages?thread_id=eq.${encodeURIComponent(String(b.id))}&select=role,content&order=id.asc`); return json({ ok: true, data: transcript(r.ok ? await r.json() : []) }); }
   if (op === "approvals") { const r = await sb(`ai_approvals?select=*&order=created_at.desc&limit=100${b.status ? "&status=eq." + encodeURIComponent(String(b.status)) : ""}`); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
