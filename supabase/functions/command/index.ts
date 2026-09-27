@@ -26,33 +26,34 @@ const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
 /* ------------------------------------------------------------ the team --- */
-type Agent = { key: string; name: string; role: string; web: boolean; auto: (tool: string, input: Record<string, unknown>) => boolean };
+type Agent = { key: string; name: string; role: string; web: boolean; routine?: string; auto: (tool: string, input: Record<string, unknown>) => boolean };
 const readOnly = (tool: string, input: Record<string, unknown>) =>
-  ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats"].includes(tool) ||
+  ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats", "db_read"].includes(tool) ||
   (tool === "ghl" && isRead(String(input.op ?? ""))) || tool === "memory_save";
 const AGENTS: Record<string, Agent> = {
-  ceo: { key: "ceo", name: "CEO", web: true, role:
+  ceo: { routine: "Review the business: stats, accounts, pending approvals, and what the teams logged since your last shift. Pick the one or two things that matter most right now and delegate them. Finish with a short brief for the owner.", key: "ceo", name: "CEO", web: true, role:
     "You run the company day to day with the owner. You set priorities, keep the other five on track, and turn the owner's goals into concrete work. Delegate real work to the right team with the delegate tool, then pull their answers together into a clear recommendation. You read everything; changes you want made go to the owner for approval.",
     auto: (t, i) => readOnly(t, i) || t === "delegate" },
-  sales: { key: "sales", name: "Sales Team", web: true, role:
+  sales: { routine: "Check trials ending soon and new sign-ups. For each, decide the next step and add a note or task on their GHL contact. Draft follow-ups (don't send). Report who needs the owner's attention.", key: "sales", name: "Sales Team", web: true, role:
     "You turn trials and leads into paying contractors. You watch trials that are about to end, find who is engaged and who went quiet, write follow-ups and call scripts, and suggest offers. You may add notes and tasks on contacts yourself; sending anything to a customer waits for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
-  marketing: { key: "marketing", name: "Marketing Team", web: true, role:
+  marketing: { routine: "Research what's working in contractor marketing right now and draft one concrete piece: an ad, a post, or an email. Instagram and Facebook posting is coming soon; for now leave drafts in your report.", key: "marketing", name: "Marketing Team", web: true, role:
     "You bring contractors in: positioning, ad copy, landing-page copy, email and text campaigns, social posts, and SEO pages for each trade. Research competitors on the web. Drafts are free; anything published or sent to customers waits for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
-  support: { key: "support", name: "Support Team", web: false, role:
+  support: { routine: "Check support and cancellation requests, business-number requests, and new accounts whose setup log shows a failure or no GHL sub-account. Diagnose each and propose the fix.", key: "support", name: "Support Team", web: false, role:
     "You keep clients happy and set up correctly. Check a client's GHL setup, their AI receptionist, support and cancellation requests, and business-number requests, and work out what's wrong and how to fix it. Replies to clients and account changes wait for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
-  builder: { key: "builder", name: "Builder Team", web: false, role:
+  builder: { routine: "Audit the newest client sub-accounts: custom values, calendars, tags, and the AI receptionist knowledge. Fill in anything missing that you're allowed to, and list what still needs the owner.", key: "builder", name: "Builder Team", web: false, role:
     "You build and configure: clients' GHL sub-accounts (custom fields, custom values, calendars, tags, products), and their AI receptionist knowledge. You may make those setup changes yourself. Deleting anything, contacting customers, or creating/changing accounts waits for the owner.",
     auto: (t, i) => readOnly(t, i) || t === "brain_save" ||
       (t === "ghl" && ["customfields.create", "customvalues.create", "customvalues.update", "calendars.create", "tags.create", "products.create"].includes(String(i.op))) },
-  research: { key: "research", name: "Research Team", web: true, role:
+  research: { routine: "Pick one open question that would help the business (lead sources, competitors, pricing, a trade's market) and research it with sources. Save the key finding to memory.", key: "research", name: "Research Team", web: true, role:
     "You find things out: markets, competitors, pricing, lead sources, tools, regulations, and anything the others need. Search the web, read our own data, and report clearly with sources. Save findings worth keeping to memory. You don't change anything.",
     auto: (t, i) => readOnly(t, i) },
 };
 
 /* ------------------------------------------------------------ tools --- */
+const DB_TABLES = ["accounts", "support_requests", "client_settings", "ai_brain", "time_clock", "audit_log", "ai_approvals"];
 const TOOLS: Anthropic.Tool[] = [
   { name: "ghl", description: "Run one GoHighLevel operation. Read ops end in .list/.messages/.submissions. Most need args.locationId (the client's sub-account id; get ids from locations.list or accounts_list). Args are strings.",
     input_schema: { type: "object", properties: { op: { type: "string", enum: GHL_OPS }, args: { type: "object", additionalProperties: { type: "string" } }, why: { type: "string", description: "one line: why, shown to the owner if approval is needed" } }, required: ["op", "args"] } },
@@ -68,13 +69,15 @@ const TOOLS: Anthropic.Tool[] = [
   { name: "brain_get", description: "Read a client's AI receptionist knowledge (by their GHL locationId).", input_schema: { type: "object", properties: { locationId: { type: "string" } }, required: ["locationId"] } },
   { name: "brain_save", description: "Update a client's AI receptionist knowledge.",
     input_schema: { type: "object", properties: { locationId: { type: "string" }, business_name: { type: "string" }, services: { type: "string" }, pricing: { type: "string" }, hours: { type: "string" }, service_area: { type: "string" }, faqs: { type: "string" }, tone: { type: "string" }, custom_instructions: { type: "string" } }, required: ["locationId"] } },
+  { name: "db_read", description: "Read BuilderPro's own database (the software the contractors use). Tables: accounts, support_requests, client_settings, ai_brain, time_clock, audit_log, ai_approvals. filter is PostgREST syntax like 'status=eq.trial' (optional).",
+    input_schema: { type: "object", properties: { table: { type: "string", enum: DB_TABLES }, select: { type: "string" }, filter: { type: "string" }, limit: { type: "number" } }, required: ["table"] } },
   { name: "memory_save", description: "Remember something for the whole team (a decision, a preference of the owner, a finding).", input_schema: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } },
   { name: "memory_list", description: "What the team has saved to memory.", input_schema: { type: "object", properties: {} } },
   { name: "delegate", description: "(CEO only) Hand a task to one of the teams and get their answer back.",
     input_schema: { type: "object", properties: { team: { type: "string", enum: ["sales", "marketing", "support", "builder", "research"] }, task: { type: "string" } }, required: ["team", "task"] } },
 ];
 function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
-  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => x.name !== "delegate" || a.key === "ceo");
+  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)));
   if (a.web) t.push({ type: "web_search_20260209", name: "web_search", max_uses: 5 } as unknown as Anthropic.Messages.ToolUnion);
   return t;
 }
@@ -134,6 +137,12 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
       ["business_name", "services", "pricing", "hours", "service_area", "faqs", "tone", "custom_instructions"].forEach((k) => { if (input[k] !== undefined) row[k] = input[k]; });
       const r = await sb("ai_brain?on_conflict=slug", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=representation" }, body: JSON.stringify(row) });
       return r.ok ? { ok: true } : { error: r.status };
+    }
+    case "db_read": {
+      const t = String(input.table); if (!DB_TABLES.includes(t)) return { error: "table not allowed" };
+      const f = String(input.filter ?? "").replace(/[^\w.,=()*:@%+\-&]/g, "");
+      const r = await sb(`${t}?select=${encodeURIComponent(String(input.select ?? "*"))}${f ? "&" + f : ""}&limit=${Math.min(Number(input.limit) || 50, 200)}`);
+      return r.ok ? await r.json() : { error: r.status, detail: (await r.text()).slice(0, 200) };
     }
     case "memory_save": { const r = await sb("ai_memory", { method: "POST", body: JSON.stringify({ note: String(input.note).slice(0, 2000) }) }); return { ok: r.ok }; }
     case "memory_list": { const r = await sb("ai_memory?select=id,note,created_at&order=id.desc&limit=100"); return r.ok ? await r.json() : []; }
@@ -263,6 +272,27 @@ function transcript(rows: { role: string; content: unknown }[]) {
 }
 
 /* ------------------------------------------------------------ admin gate --- */
+// 24/7: pg_cron calls ?shift every 30 min; each call runs the team whose last
+// shift is oldest, so every team works a shift every 3 hours around the clock.
+async function shift(req: Request) {
+  const cfg = await sb("ai_config?select=key,value"); const rows: { key: string; value: string }[] = cfg.ok ? await cfg.json() : [];
+  const get = (k: string) => rows.find((r) => r.key === k)?.value ?? "";
+  if (!get("cron_key") || req.headers.get("x-cron-key") !== get("cron_key")) return json({ ok: false }, 403);
+  if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, skipped: true });
+  let pick = "", oldest = Infinity;
+  for (const k of Object.keys(AGENTS)) { const t = Date.parse(get("shift_" + k) || "1970-01-01"); if (t < oldest) { oldest = t; pick = k; } }
+  const now = new Date().toISOString();
+  await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shift_" + pick, value: now }) });
+  const a = AGENTS[pick];
+  const run = (async () => {
+    const th = await newThread(a.key, "Shift " + now.slice(0, 16).replace("T", " "), "shift");
+    await runAgent(a, th, "Your scheduled shift. " + a.routine + " Work on your own; the owner will read your report later. Keep the report short: what you did, what you found, what needs the owner.");
+  })().catch(() => {});
+  // deno-lint-ignore no-explicit-any
+  (globalThis as any).EdgeRuntime?.waitUntil?.(run);
+  return json({ ok: true, agent: pick });
+}
+
 async function admin(req: Request): Promise<string> {
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!token || !ADMIN_EMAILS.length) return "";
@@ -274,6 +304,7 @@ async function admin(req: Request): Promise<string> {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (new URL(req.url).searchParams.get("shift") !== null) return await shift(req);
   const who = await admin(req);
   if (!who) return json({ ok: false, error: "not authorized" }, 403);
   let b: Record<string, unknown> = {};
@@ -289,6 +320,20 @@ Deno.serve(async (req) => {
     const thread = b.thread_id ? String(b.thread_id) : await newThread(a.key, msg, who);
     try { const out = await runAgent(a, thread, msg); return json({ ok: true, thread_id: thread, ...out }); }
     catch (e) { return json({ ok: false, thread_id: thread, error: String(e).slice(0, 400) }, 500); }
+  }
+  if (op === "status") {
+    const out: Record<string, unknown> = {};
+    for (const k of Object.keys(AGENTS)) {
+      const t = await sb(`ai_threads?agent=eq.${k}&select=id,title,updated_at,created_by&order=updated_at.desc&limit=1`);
+      const p = await sb(`ai_approvals?agent=eq.${k}&status=eq.pending&select=id`);
+      out[k] = { last: (t.ok ? await t.json() : [])[0] ?? null, pending: (p.ok ? await p.json() : []).length };
+    }
+    const c = await sb("ai_config?key=eq.shifts_on&select=value"); const on = ((c.ok ? await c.json() : [])[0]?.value ?? "true") === "true";
+    return json({ ok: true, data: out, shifts_on: on });
+  }
+  if (op === "shifts") {
+    await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shifts_on", value: b.on ? "true" : "false" }) });
+    return json({ ok: true });
   }
   if (op === "threads") { const r = await sb(`ai_threads?agent=eq.${encodeURIComponent(String(b.agent))}&select=id,title,created_by,updated_at&order=updated_at.desc&limit=50`); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
   if (op === "thread") { const r = await sb(`ai_messages?thread_id=eq.${encodeURIComponent(String(b.id))}&select=role,content&order=id.asc`); return json({ ok: true, data: transcript(r.ok ? await r.json() : []) }); }

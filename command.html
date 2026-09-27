@@ -41,6 +41,29 @@ table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:600}
 .tw{overflow-x:auto}
+/* org board (n8n-style) */
+.board{position:relative;background:#141418 radial-gradient(#2c2b33 1px,transparent 1px) 0 0/18px 18px;border-radius:16px;overflow:auto;border:1px solid #26252d}
+.board-in{position:relative;min-width:1120px;height:640px}
+.board svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.nd{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:#e9e7f0;text-align:center;cursor:pointer;background:none;border:0}
+.nd .box{background:#1e1d24;border:1.5px solid #4a4855;border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;width:186px;transition:border-color .15s,box-shadow .15s;position:relative}
+.nd:hover .box,.nd.on .box{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 25%,transparent)}
+.nd .ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;background:var(--c);flex:none}
+.nd .t{font-weight:600;font-size:13px;text-align:left}
+.nd .s{font-size:11px;color:#9b98a8;text-align:left;max-width:118px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nd .t{white-space:nowrap}
+.nd .dot{position:absolute;top:-5px;right:-5px;width:11px;height:11px;border-radius:50%;background:#555;border:2px solid #141418}
+.nd .dot.live{background:#34d399;animation:pl 1.4s infinite}
+.nd .badge{position:absolute;top:-9px;left:-9px;background:var(--pri);color:#fff;font-size:10px;border-radius:9px;padding:0 6px}
+@keyframes pl{50%{box-shadow:0 0 0 6px rgba(52,211,153,0)}0%{box-shadow:0 0 0 0 rgba(52,211,153,.6)}}
+.tl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#cfcdd8;width:74px;text-align:center}
+.tl i{width:44px;height:44px;border-radius:50%;background:#1e1d24;border:1.5px solid #4a4855;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:700}
+.tl.soon{opacity:.5}
+.tl small{color:#86838f;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px}
+.bhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:var(--card);border-left:1px solid var(--line);z-index:20;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s;box-shadow:-10px 0 30px rgba(0,0,0,.2)}
+.drawer.open{transform:none}
+.drawer .hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.drawer .hd select{width:auto;max-width:200px;padding:5px 8px;font-size:12px;margin-left:auto}
 /* team */
 .team{display:grid;grid-template-columns:220px 1fr;gap:14px;height:calc(100vh - 150px);min-height:480px}
 .side{display:flex;flex-direction:column;gap:6px;overflow:auto}
@@ -169,30 +192,66 @@ function drawTabs(){
 }
 function tab(t){TAB=t;drawTabs();({team:viewTeam,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory})[t]()}
 
-/* ---------- AI team ---------- */
-function viewTeam(){
-  el('view').innerHTML='<div class="team"><div class="side" id="side"></div><div class="chat"><div class="msgs" id="msgs"></div>'
-    +'<div class="compose"><textarea id="inp" placeholder="Message the team…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div></div>';
-  drawSide(); openThread(THREAD);
+/* ---------- AI team: the org board ---------- */
+var POS={ceo:[50,13],sales:[9,47],marketing:[29.5,47],support:[50,47],builder:[70.5,47],research:[91,47]};
+var TOOLSET={ceo:[['A\\','Claude','model'],['M','Memory','shared'],['D','Delegates','5 teams']],
+  sales:[['G','GHL','contacts, notes'],['B','BuilderPro','accounts'],['W','Web','search']],
+  marketing:[['IG','Instagram','soon',1],['f','Facebook','soon',1],['W','Web','search']],
+  support:[['B','BuilderPro','requests'],['G','GHL','sub-accounts'],['S','Supabase','read']],
+  builder:[['G','GHL','build'],['B','BuilderPro','AI receptionist']],
+  research:[['W','Web','search'],['M','Memory','findings']]};
+var STATUS={}, SHIFTS=true;
+function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
+async function viewTeam(){
+  el('view').innerHTML='<div class="bhead"><h2 style="margin:0">Your AI team</h2><span class="muted" style="font-size:13px">Click anyone to talk to them. They work a shift every 3 hours, around the clock.</span>'
+    +'<label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="shOn" style="width:auto" onchange="api({op:\'shifts\',on:this.checked})"> 24/7 shifts on</label></div>'
+    +'<div class="board"><div class="board-in" id="bd"></div></div>'
+    +'<div class="drawer" id="dr"><div class="hd"><b id="drT"></b><select id="drTh" onchange="openThread(this.value||null)"></select><button class="btn sm" onclick="el(\'dr\').classList.remove(\'open\')">✕</button></div>'
+    +'<div class="msgs" id="msgs"></div><div class="compose"><textarea id="inp" placeholder="Message…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div>';
+  drawBoard();
+  var r=await api({op:'status'}); STATUS=r.data||{}; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
 }
-async function drawSide(){
-  var h=Object.keys(NAMES).map(function(k){return '<button class="ag'+(k===AGENT?' on':'')+'" onclick="pickAgent(\''+k+'\')"><i style="background:'+AG[k].c+'">'+NAMES[k][0]+'</i><span>'+NAMES[k]+'<small>'+AG[k].d+'</small></span></button>'}).join('');
-  el('side').innerHTML=h+'<div class="threads" id="threads"><span class="muted" style="font-size:12px">Loading…</span></div>';
-  var r=await api({op:'threads',agent:AGENT});
-  var th=r.data||[];
-  el('threads').innerHTML='<button onclick="openThread(null)" class="'+(THREAD?'':'on')+'">+ New conversation</button>'+th.map(function(t){return '<button title="'+esc(t.title)+'" class="'+(t.id===THREAD?'on':'')+'" onclick="openThread(\''+t.id+'\')">'+(t.created_by==='ceo'?'↳ ':'')+esc(t.title)+'</button>'}).join('');
+function drawBoard(){
+  var W=1000,H=640,px=function(p){return [p[0]*W/100,p[1]*H/100]};
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">';
+  var c=px(POS.ceo), nodes='';
+  Object.keys(NAMES).forEach(function(k){
+    var p=px(POS[k]), st=STATUS[k]||{}, last=st.last;
+    if(k!=='ceo'){ var y0=c[1]+34,y1=p[1]-34; svg+='<path d="M'+c[0]+','+y0+' C'+c[0]+','+(y0+90)+' '+p[0]+','+(y1-90)+' '+p[0]+','+y1+'" fill="none" stroke="#6b6877" stroke-width="1.6"/><circle cx="'+p[0]+'" cy="'+y1+'" r="3.5" fill="#9b98a8"/>'; }
+    var tools=TOOLSET[k]||[], n=tools.length;
+    tools.forEach(function(t,i){
+      var tx,ty;
+      if(k==='ceo'){ tx=[c[0]-230,c[0]+230,c[0]-340][i]; ty=c[1]+(i==2?0:0); if(i==2){tx=c[0]+340;} }
+      else { tx=p[0]+(i-(n-1)/2)*62; ty=p[1]+150; }
+      if(k==='ceo'&&i==2)return; // delegation is the lines themselves
+      svg+=k==='ceo'?'<path d="M'+(tx<c[0]?tx+24:tx-24)+','+ty+' L'+(tx<c[0]?c[0]-90:c[0]+90)+','+c[1]+'" stroke="#6b6877" stroke-dasharray="5 5" fill="none" stroke-width="1.3"/>'
+        :'<path d="M'+p[0]+','+(p[1]+34)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-24)+'" stroke="#6b6877" stroke-dasharray="5 5" fill="none" stroke-width="1.3"/>';
+      nodes+='<div class="tl'+(t[3]?' soon':'')+'" style="left:'+(tx/W*100)+'%;top:'+(ty/H*100)+'%"><i>'+esc(t[0])+'</i>'+esc(t[1])+'<small>'+esc(t[2])+'</small></div>';
+    });
+    var live=last&&Date.now()-Date.parse(last.updated_at)<5*6e4;
+    nodes+='<button class="nd'+(k===AGENT&&el('dr')&&el('dr').classList.contains('open')?' on':'')+'" style="left:'+POS[k][0]+'%;top:'+POS[k][1]+'%;--c:'+AG[k].c+'" onclick="openAgent(\''+k+'\')"><div class="box">'
+      +(st.pending?'<span class="badge">'+st.pending+'</span>':'')+'<span class="dot'+(live?' live':'')+'"></span><span class="ico">'+NAMES[k][0]+'</span><span><div class="t">'+NAMES[k]+'</div><div class="s">'
+      +(live?'Working now…':last?esc(last.created_by==='shift'?'Shift':'Chat')+' '+ago(last.updated_at):esc(AG[k].d))+'</div></span></div></button>';
+  });
+  el('bd').innerHTML=svg+'</svg>'+nodes;
 }
-function pickAgent(k){AGENT=k;THREAD=null;drawSide();openThread(null)}
+async function openAgent(k){
+  AGENT=k; THREAD=null; el('dr').classList.add('open'); el('drT').innerHTML='<span style="color:'+AG[k].c+'">●</span> '+NAMES[k]; drawBoard();
+  el('drTh').innerHTML='<option value="">New conversation</option>';
+  openThread(null);
+  var r=await api({op:'threads',agent:k});
+  el('drTh').innerHTML='<option value="">+ New conversation</option>'+(r.data||[]).map(function(t){return '<option value="'+t.id+'">'+(t.created_by==='shift'?'⏱ ':t.created_by==='ceo'?'↳ ':'')+esc(t.title)+'</option>'}).join('');
+}
 async function openThread(id){
-  THREAD=id; var box=el('msgs');
-  document.querySelectorAll('#threads button').forEach(function(b){b.classList.toggle('on',(b.getAttribute('onclick')||'').indexOf(id||'null')>=0)});
+  THREAD=id; var box=el('msgs'); if(el('drTh'))el('drTh').value=id||'';
   if(!id){ box.innerHTML='<div class="m sys">'+NAMES[AGENT]+' — '+AG[AGENT].d+'</div><div class="hint">'+AG[AGENT].h.map(function(x){return '<button onclick="el(\'inp\').value=this.textContent;send()">'+esc(x)+'</button>'}).join('')+'</div>'; return; }
   box.innerHTML='<div class="m sys">Loading…</div>';
-  var r=await api({op:'thread',id:id}); box.innerHTML=''; (r.data||[]).forEach(addMsg); box.scrollTop=box.scrollHeight;
+  var r=await api({op:'thread',id:id}); box.innerHTML='';
+  (r.data||[]).forEach(function(m){ if(m.role==='user'&&/^Your scheduled shift/.test(m.text||''))m={role:'sys',text:'Scheduled shift'}; addMsg(m); }); box.scrollTop=box.scrollHeight;
 }
 function addMsg(m){
   var box=el('msgs'),d=document.createElement('div');
-  if(m.role==='user'&&/^\[The owner (approved|rejected)/.test(m.text||'')){d.className='m sys';d.textContent=m.text.slice(0,200);}
+  if(m.role==='sys'||(m.role==='user'&&/^\[The owner (approved|rejected)/.test(m.text||''))){d.className='m sys';d.textContent=(m.text||'').slice(0,200);}
   else if(m.role==='user'){d.className='m user';d.textContent=m.text;}
   else{d.className='m assistant';d.innerHTML=(m.tools&&m.tools.length?'<div class="tools">'+m.tools.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>':'')+md(m.text);}
   box.appendChild(d); box.scrollTop=box.scrollHeight;
@@ -204,11 +263,11 @@ async function send(){
   var w=document.createElement('div');w.className='m sys';w.textContent=NAMES[AGENT]+' is working… (can take a minute)';el('msgs').appendChild(w);
   var r=await api({op:'chat',agent:AGENT,thread_id:THREAD,message:t}).catch(function(e){return {ok:false,error:e.message}});
   BUSY=false; el('sendb').disabled=false;
-  if(r.thread_id){THREAD=r.thread_id;}
-  if(r.thread_id){ await openThread(THREAD); drawSide(); } else w.remove();
+  if(r.thread_id){ var fresh=!THREAD; THREAD=r.thread_id; if(fresh){var o=document.createElement('option');o.value=THREAD;o.textContent=t.slice(0,60);el('drTh').insertBefore(o,el('drTh').children[1]);} await openThread(THREAD); } else w.remove();
   if(!r.ok) addMsg({role:'assistant',text:'⚠️ '+(r.error||'Something went wrong.')});
-  if(r.approvals&&r.approvals.length){ var n=document.createElement('div');n.className='m sys';n.textContent=r.approvals.length+' action(s) waiting for your approval → Approvals tab';el('msgs').appendChild(n); countPending(); }
+  if(r.approvals&&r.approvals.length){ addMsg({role:'sys',text:r.approvals.length+' action(s) waiting for your approval → Approvals tab'}); countPending(); }
 }
+setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;drawBoard();} }); },60000);
 
 /* ---------- Approvals ---------- */
 async function viewApprovals(){
