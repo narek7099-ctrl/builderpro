@@ -85,10 +85,89 @@ function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
 // Outside tools (Higgsfield, GitHub, Canva...) connected in the Connections tab,
 // reached through Claude's MCP connector. These run immediately: the owner
 // chooses which teams get each one and can switch off single tools.
-type Mcp = { name: string; label: string; url: string; token: string; agents: string[]; disabled_tools: string[] };
+type Mcp = { id: number; name: string; label: string; url: string; token: string; refresh_token: string; expires_at: string | null; oauth: Record<string, string>; agents: string[]; disabled_tools: string[] };
 async function mcpFor(agent: string): Promise<Mcp[]> {
-  const r = await sb(`ai_mcp?enabled=eq.true&agents=cs.{${agent}}&select=name,label,url,token,agents,disabled_tools`);
-  return r.ok ? await r.json() : [];
+  const r = await sb(`ai_mcp?enabled=eq.true&agents=cs.{${agent}}&select=*`);
+  const rows: Mcp[] = r.ok ? await r.json() : [];
+  const out: Mcp[] = [];
+  for (const c of rows) {
+    // signed-in connections: renew the login a couple of minutes before it runs out
+    if (c.refresh_token && c.expires_at && Date.parse(c.expires_at) - Date.now() < 120e3) await refreshMcp(c).catch(() => {});
+    if (c.token) out.push(c);
+  }
+  return out;
+}
+
+/* "Sign in with ..." for MCP servers that use OAuth (Higgsfield, Canva...):
+   discover the server's login, register this Command Center as an app once,
+   send the owner to sign in, keep the token and renew it with the refresh token. */
+const OAUTH_REDIRECT = `${SB_URL}/functions/v1/command?oauth_cb=1`;
+const b64url = (buf: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const rnd = (n = 32) => b64url(crypto.getRandomValues(new Uint8Array(n)));
+async function discover(url: string) {
+  const u = new URL(url);
+  const getJ = async (x: string) => { try { const r = await fetch(x, { headers: { Accept: "application/json" } }); return r.ok ? await r.json() : null; } catch { return null; } };
+  const pr = (await getJ(`${u.origin}/.well-known/oauth-protected-resource${u.pathname}`)) ?? (await getJ(`${u.origin}/.well-known/oauth-protected-resource`)) ?? {};
+  const cands = [u.origin, ...((pr.authorization_servers ?? []) as string[])];
+  for (const as of cands) {
+    const base = as.replace(/\/$/, "");
+    const m = (await getJ(`${base}/.well-known/oauth-authorization-server`)) ?? (await getJ(`${base}/.well-known/openid-configuration`));
+    if (m?.authorization_endpoint && m?.token_endpoint) return { meta: m, scopes: ((pr.scopes_supported ?? m.scopes_supported ?? []) as string[]).join(" ") };
+  }
+  throw new Error("This service doesn't offer a sign-in we can use. Try an access key instead.");
+}
+async function oauthStart(id: number) {
+  const r = await sb(`ai_mcp?id=eq.${id}&select=*`); const c: Mcp = (r.ok ? await r.json() : [])[0];
+  if (!c) throw new Error("Connection not found.");
+  const { meta, scopes } = await discover(c.url);
+  let clientId = c.oauth?.client_id ?? "", secret = c.oauth?.client_secret ?? "";
+  if (!clientId || c.oauth?.token_endpoint !== meta.token_endpoint) {
+    if (!meta.registration_endpoint) throw new Error("This service needs an app registered by hand. Use an access key instead.");
+    const reg = await fetch(meta.registration_endpoint, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_name: "BuilderPro Command Center", redirect_uris: [OAUTH_REDIRECT], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none", scope: scopes || undefined }) });
+    const d = await reg.json().catch(() => ({}));
+    if (!reg.ok || !d.client_id) throw new Error("The service refused to register this app: " + JSON.stringify(d).slice(0, 160));
+    clientId = d.client_id; secret = d.client_secret ?? "";
+  }
+  await sb(`ai_mcp?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ oauth: { client_id: clientId, client_secret: secret, token_endpoint: meta.token_endpoint, authorization_endpoint: meta.authorization_endpoint, scope: scopes } }) });
+  const verifier = rnd(48), state = rnd(24);
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  await sb("ai_mcp_oauth_state", { method: "POST", body: JSON.stringify({ state, conn_id: id, verifier }) });
+  const q = new URLSearchParams({ response_type: "code", client_id: clientId, redirect_uri: OAUTH_REDIRECT, code_challenge: challenge, code_challenge_method: "S256", state, resource: c.url });
+  if (scopes) q.set("scope", scopes);
+  return `${meta.authorization_endpoint}?${q}`;
+}
+async function tokenCall(c: Mcp, form: Record<string, string>) {
+  const o = c.oauth ?? {};
+  const body = new URLSearchParams({ client_id: o.client_id, ...form, resource: c.url });
+  if (o.client_secret) body.set("client_secret", o.client_secret);
+  const r = await fetch(o.token_endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" }, body });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.access_token) throw new Error(d.error_description ?? d.error ?? `sign-in failed (${r.status})`);
+  const patch: Record<string, unknown> = { token: d.access_token, expires_at: d.expires_in ? new Date(Date.now() + Number(d.expires_in) * 1000).toISOString() : null, oauth: { ...o, error: "" } };
+  if (d.refresh_token) patch.refresh_token = d.refresh_token;
+  await sb(`ai_mcp?id=eq.${c.id}`, { method: "PATCH", body: JSON.stringify(patch) });
+  c.token = d.access_token; if (d.refresh_token) c.refresh_token = d.refresh_token;
+}
+async function refreshMcp(c: Mcp) {
+  try { await tokenCall(c, { grant_type: "refresh_token", refresh_token: c.refresh_token }); }
+  catch (e) {
+    // the login can't be renewed: park it until the owner signs in again
+    await sb(`ai_mcp?id=eq.${c.id}`, { method: "PATCH", body: JSON.stringify({ token: "", oauth: { ...c.oauth, error: String(e).slice(0, 160) } }) });
+    c.token = "";
+  }
+}
+async function oauthCallback(url: URL) {
+  const back = (q: string) => Response.redirect(`${Deno.env.get("SITE_URL") ?? "https://builderpro-os.com"}/command.html?${q}`, 302);
+  const state = url.searchParams.get("state") ?? "", code = url.searchParams.get("code") ?? "";
+  const g = await sb(`ai_mcp_oauth_state?state=eq.${encodeURIComponent(state)}&select=*`); const st = (g.ok ? await g.json() : [])[0];
+  if (!st || Date.now() - Date.parse(st.created_at) > 20 * 6e4) return back("conn_error=" + encodeURIComponent("That sign-in link expired. Try again."));
+  await sb(`ai_mcp_oauth_state?state=eq.${encodeURIComponent(state)}`, { method: "DELETE" });
+  if (!code) return back("conn_error=" + encodeURIComponent(url.searchParams.get("error_description") ?? url.searchParams.get("error") ?? "Sign-in was cancelled."));
+  const r = await sb(`ai_mcp?id=eq.${st.conn_id}&select=*`); const c: Mcp = (r.ok ? await r.json() : [])[0];
+  try { await tokenCall(c, { grant_type: "authorization_code", code, redirect_uri: OAUTH_REDIRECT, code_verifier: st.verifier }); await sb(`ai_mcp?id=eq.${c.id}`, { method: "PATCH", body: JSON.stringify({ enabled: true }) }); }
+  catch (e) { return back("conn_error=" + encodeURIComponent(String(e).slice(0, 160))); }
+  return back("connected=" + encodeURIComponent(c.label || c.name));
 }
 
 async function memoryText(): Promise<string> {
@@ -366,6 +445,7 @@ async function admin(req: Request): Promise<string> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (new URL(req.url).searchParams.get("shift") !== null) return await shift(req);
+  if (new URL(req.url).searchParams.get("oauth_cb") !== null) return await oauthCallback(new URL(req.url));
   const who = await admin(req);
   if (!who) return json({ ok: false, error: "not authorized" }, 403);
   let b: Record<string, unknown> = {};
@@ -398,9 +478,15 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
   if (op === "mcp_list") {
-    const r = await sb("ai_mcp?select=id,name,label,url,token,agents,disabled_tools,enabled&order=id.asc");
-    const rows = r.ok ? await r.json() : [];
-    return json({ ok: true, data: rows.map((x: Mcp & { token: string }) => ({ ...x, token: x.token ? "••••" + x.token.slice(-4) : "" })) });
+    const r = await sb("ai_mcp?select=*&order=id.asc");
+    const rows: Mcp[] = r.ok ? await r.json() : [];
+    return json({ ok: true, data: rows.map((x) => ({ id: x.id, name: x.name, label: x.label, url: x.url, agents: x.agents, disabled_tools: x.disabled_tools, enabled: (x as unknown as { enabled: boolean }).enabled,
+      signin: !!x.oauth?.client_id || !x.token, connected: !!x.token, stays: !!x.refresh_token, error: x.oauth?.error ?? "",
+      token: x.token && !x.oauth?.client_id ? "••••" + x.token.slice(-4) : "" })) });
+  }
+  if (op === "mcp_oauth_start") {
+    try { return json({ ok: true, url: await oauthStart(Number(b.id)) }); }
+    catch (e) { return json({ ok: false, error: String(e).replace(/^Error: /, "") }, 400); }
   }
   if (op === "mcp_save") {
     const name = String(b.name ?? "").toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
@@ -409,10 +495,11 @@ Deno.serve(async (req) => {
     const row: Record<string, unknown> = { name, label: String(b.label ?? name).slice(0, 60), url, enabled: b.enabled !== false,
       agents: (Array.isArray(b.agents) ? b.agents : []).map(String).filter((k) => AGENTS[k]),
       disabled_tools: (Array.isArray(b.disabled_tools) ? b.disabled_tools : String(b.disabled_tools ?? "").split(",")).map((t) => String(t).trim()).filter(Boolean) };
-    if (b.token) row.token = String(b.token).trim();
+    if (b.token) { row.token = String(b.token).trim(); row.refresh_token = ""; row.oauth = {}; }
     const r = b.id ? await sb(`ai_mcp?id=eq.${Number(b.id)}`, { method: "PATCH", body: JSON.stringify(row) })
-      : await sb("ai_mcp", { method: "POST", body: JSON.stringify(row) });
-    return r.ok ? json({ ok: true }) : json({ ok: false, error: r.status === 409 ? "That name is taken." : "Could not save." }, 400);
+      : await sb("ai_mcp", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(row) });
+    const saved = !b.id && r.ok ? (await r.json())[0] : null;
+    return r.ok ? json({ ok: true, id: saved?.id ?? b.id }) : json({ ok: false, error: r.status === 409 ? "That name is taken." : "Could not save." }, 400);
   }
   if (op === "mcp_delete") { await sb(`ai_mcp?id=eq.${Number(b.id)}`, { method: "DELETE" }); return json({ ok: true }); }
   if (op === "threads") { const r = await sb(`ai_threads?agent=eq.${encodeURIComponent(String(b.agent))}&select=id,title,created_by,updated_at&order=updated_at.desc&limit=50`); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
