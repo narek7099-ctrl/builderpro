@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Command Center</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--line:#e4e1da;--ink:#16151a;--mut:#6f6b78;--pri:#e8612c;--soft:#f0eee9;--ok:#1f9d60;--warn:#c98a0b;--danger:#d64545;}
+@media (prefers-color-scheme:dark){:root{--bg:#0f0f13;--card:#18171d;--line:#2a2833;--ink:#eceaf3;--mut:#9b98a8;--soft:#1f1e26;--ok:#34d399;--warn:#fbbf24;--danger:#f2555a;}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.muted{color:var(--mut)}
+.btn{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:8px 13px}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.btn.sm{padding:5px 10px;font-size:12px}
+input,textarea,select{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none;width:100%}
+input:focus,textarea:focus{border-color:var(--pri)}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.login .card{width:100%;max-width:360px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+.login label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px}
+.err{color:var(--danger);font-size:13px;margin-top:10px;min-height:1em}
+.top{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5}
+.top b span{color:var(--pri)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--card)}
+.tabs button{background:none;border:0;padding:7px 12px;border-radius:8px;color:var(--mut);white-space:nowrap}
+.tabs button.on{background:var(--soft);color:var(--ink);font-weight:600}
+.tabs .n{background:var(--pri);color:#fff;border-radius:9px;padding:0 6px;font-size:11px;margin-left:4px}
+main{padding:18px;max-width:1200px;margin:0 auto}
+h2{font-size:19px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.kpi{flex:1;min-width:140px}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.kpi .v{font-size:24px;font-weight:700}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:600}
+.tw{overflow-x:auto}
+/* team */
+.team{display:grid;grid-template-columns:220px 1fr;gap:14px;height:calc(100vh - 150px);min-height:480px}
+.side{display:flex;flex-direction:column;gap:6px;overflow:auto}
+.ag{display:flex;gap:10px;align-items:center;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.ag.on{border-color:var(--pri)}
+.ag i{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;color:#fff;flex:none}
+.ag small{display:block;color:var(--mut);font-size:11px}
+.threads{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.threads button{background:none;border:0;text-align:left;padding:6px 8px;border-radius:7px;font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.threads button.on{background:var(--soft);color:var(--ink)}
+.chat{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.m{max-width:760px}
+.m.user{align-self:flex-end;background:var(--pri);color:#fff;border-radius:14px 14px 4px 14px;padding:9px 13px;white-space:pre-wrap}
+.m.assistant{align-self:flex-start}
+.m.sys{align-self:center;font-size:12px;color:var(--mut);background:var(--soft);border-radius:8px;padding:5px 10px}
+.m.assistant h3,.m.assistant h4{font-size:14px;margin:8px 0 3px}
+.m.assistant ul,.m.assistant ol{padding-left:20px;margin:4px 0}
+.m.assistant p{margin:4px 0}
+.m.assistant a{color:var(--pri)}
+.m.assistant code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:12.5px}
+.tools{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.tools span{font-size:11px;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:1px 7px;color:var(--mut)}
+.compose{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+.compose textarea{resize:none;height:46px}
+.hint{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hint button{font-size:12px;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:4px 10px}
+.appr{display:flex;flex-direction:column;gap:10px}
+.appr .card{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.appr pre{white-space:pre-wrap;font-size:12px;background:var(--soft);border-radius:8px;padding:8px;max-height:160px;overflow:auto;width:100%}
+.pill{font-size:11px;border-radius:9px;padding:1px 8px;background:var(--soft);border:1px solid var(--line)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:760px){.team{grid-template-columns:1fr;height:auto}.side{flex-direction:row;overflow-x:auto}.ag{min-width:150px}.threads{display:none}.chat{height:70vh}.grid2{grid-template-columns:1fr}main{padding:12px}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+  <div class="card">
+    <h2 style="margin-bottom:2px">Command Center</h2>
+    <div class="muted" style="font-size:13px">Owner sign-in</div>
+    <label>Email</label><input id="email" type="email" autocomplete="username">
+    <label>Password</label><input id="pass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn pri" style="width:100%;margin-top:16px" onclick="doLogin()">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top"><b>Builder<span>Pro</span> Command Center</b><span class="muted" id="who" style="margin-left:auto;font-size:12px"></span><button class="btn sm" onclick="doLogout()">Sign out</button></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="warn"></div>
+  <main id="view"></main>
+</div>
+
+<script>
+var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
+var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+var TOKEN=localStorage.getItem('cc_tok')||'', RTOK=localStorage.getItem('cc_rtok')||'';
+var ME=null, TAB='team', AGENT='ceo', THREAD=null, BUSY=false, PENDING=0;
+var AG={ceo:{c:'#e8612c',d:'Runs the company, delegates to the teams',h:['What should we focus on this week?','Get every team to report on where we stand','Which trials should we save before they end?']},
+  sales:{c:'#1f9d60',d:'Trials → paying customers',h:['Which trials end in the next 3 days?','Write a follow-up for trials that went quiet','Draft a call script for a roofer on day 10 of the trial']},
+  marketing:{c:'#7c5cff',d:'Ads, copy, campaigns, SEO',h:['Write 3 Facebook ads for plumbers','Plan a 30-day content calendar','How do competitors position themselves?']},
+  support:{c:'#2f80ed',d:'Client setup, requests, fixes',h:['Any open support or cancellation requests?','Check which clients have no AI receptionist','Who is waiting on a business number?']},
+  builder:{c:'#c98a0b',d:'Builds and configures GHL accounts',h:['Audit the newest client sub-account setup','Add standard roofing tags to a client','Fill in a client\'s AI receptionist knowledge']},
+  research:{c:'#8a8f98',d:'Markets, competitors, sources',h:['Top 5 lead sources for HVAC contractors in 2026','Compare our pricing with Jobber and ServiceTitan','Which trades grow fastest in Texas?']}};
+var NAMES={ceo:'CEO',sales:'Sales Team',marketing:'Marketing Team',support:'Support Team',builder:'Builder Team',research:'Research Team'};
+
+function el(i){return document.getElementById(i)}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function md(t){
+  var h=esc(t||'');
+  h=h.replace(/```([\s\S]*?)```/g,function(_,c){return '<pre style="white-space:pre-wrap;background:var(--soft);padding:8px;border-radius:8px;font-size:12px">'+c+'</pre>'});
+  h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  var out=[],list=null;
+  h.split('\n').forEach(function(l){
+    var m;
+    if(m=l.match(/^\s*[-*] (.*)/)){ if(list!=='ul'){if(list)out.push('</'+list+'>');out.push('<ul>');list='ul'} out.push('<li>'+m[1]+'</li>'); return; }
+    if(m=l.match(/^\s*\d+[.)] (.*)/)){ if(list!=='ol'){if(list)out.push('</'+list+'>');out.push('<ol>');list='ol'} out.push('<li>'+m[1]+'</li>'); return; }
+    if(list){out.push('</'+list+'>');list=null}
+    if(m=l.match(/^#{1,2} (.*)/)) out.push('<h3>'+m[1]+'</h3>');
+    else if(m=l.match(/^#{3,6} (.*)/)) out.push('<h4>'+m[1]+'</h4>');
+    else if(l.trim()) out.push('<p>'+l+'</p>');
+  });
+  if(list)out.push('</'+list+'>');
+  return out.join('');
+}
+
+async function doLogin(){
+  var e=el('email').value.trim(),p=el('pass').value; el('loginErr').textContent='';
+  try{
+    var r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});
+    var d=await r.json(); if(!r.ok||!d.access_token){el('loginErr').textContent=d.error_description||d.msg||'Sign-in failed.';return}
+    TOKEN=d.access_token;RTOK=d.refresh_token||'';localStorage.setItem('cc_tok',TOKEN);localStorage.setItem('cc_rtok',RTOK);start();
+  }catch(x){el('loginErr').textContent='Network error.'}
+}
+function doLogout(){localStorage.removeItem('cc_tok');localStorage.removeItem('cc_rtok');location.reload()}
+async function refresh(){
+  if(!RTOK)return false;
+  var r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:RTOK})});
+  var d=await r.json().catch(function(){return {}}); if(!r.ok||!d.access_token)return false;
+  TOKEN=d.access_token;RTOK=d.refresh_token||RTOK;localStorage.setItem('cc_tok',TOKEN);localStorage.setItem('cc_rtok',RTOK);return true;
+}
+async function call(fn,body,retried){
+  var r=await fetch(SB_URL+'/functions/v1/'+fn,{method:'POST',headers:{Authorization:'Bearer '+TOKEN,apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.status===403&&!retried&&await refresh())return call(fn,body,true);
+  var d=await r.json().catch(function(){return {ok:false,error:'HTTP '+r.status}});
+  if(r.status===403&&!retried)d.denied=true;
+  return d;
+}
+var api=function(b){return call('command',b)};
+
+async function start(){
+  el('login').classList.add('hidden');
+  var me=await api({op:'me'});
+  if(!me.ok){ el('login').classList.remove('hidden'); el('loginErr').textContent=me.denied?'This login is not an admin.':(me.error||'Could not sign in.'); return; }
+  ME=me; el('app').classList.remove('hidden'); el('who').textContent=me.email;
+  var w=[]; if(!me.ai)w.push('Add <b>ANTHROPIC_API_KEY</b> in Supabase → Edge Functions → Secrets so the team can think.');
+  if(!me.snapshot)w.push('Add <b>GHL_SNAPSHOT_ID</b> so new accounts are built from your snapshot.');
+  el('warn').innerHTML=w.length?'<div style="background:#fff4e0;color:#6b4a00;padding:9px 18px;font-size:13px">'+w.join(' ')+'</div>':'';
+  countPending(); tab(TAB);
+}
+async function countPending(){ var r=await api({op:'approvals',status:'pending'}); PENDING=(r.data||[]).length; drawTabs(); }
+function drawTabs(){
+  var T=[['team','AI Team'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['memory','Memory']];
+  el('tabs').innerHTML=T.map(function(t){return '<button class="'+(t[0]===TAB?'on':'')+'" onclick="tab(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
+}
+function tab(t){TAB=t;drawTabs();({team:viewTeam,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory})[t]()}
+
+/* ---------- AI team ---------- */
+function viewTeam(){
+  el('view').innerHTML='<div class="team"><div class="side" id="side"></div><div class="chat"><div class="msgs" id="msgs"></div>'
+    +'<div class="compose"><textarea id="inp" placeholder="Message the team…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div></div>';
+  drawSide(); openThread(THREAD);
+}
+async function drawSide(){
+  var h=Object.keys(NAMES).map(function(k){return '<button class="ag'+(k===AGENT?' on':'')+'" onclick="pickAgent(\''+k+'\')"><i style="background:'+AG[k].c+'">'+NAMES[k][0]+'</i><span>'+NAMES[k]+'<small>'+AG[k].d+'</small></span></button>'}).join('');
+  el('side').innerHTML=h+'<div class="threads" id="threads"><span class="muted" style="font-size:12px">Loading…</span></div>';
+  var r=await api({op:'threads',agent:AGENT});
+  var th=r.data||[];
+  el('threads').innerHTML='<button onclick="openThread(null)" class="'+(THREAD?'':'on')+'">+ New conversation</button>'+th.map(function(t){return '<button title="'+esc(t.title)+'" class="'+(t.id===THREAD?'on':'')+'" onclick="openThread(\''+t.id+'\')">'+(t.created_by==='ceo'?'↳ ':'')+esc(t.title)+'</button>'}).join('');
+}
+function pickAgent(k){AGENT=k;THREAD=null;drawSide();openThread(null)}
+async function openThread(id){
+  THREAD=id; var box=el('msgs');
+  document.querySelectorAll('#threads button').forEach(function(b){b.classList.toggle('on',(b.getAttribute('onclick')||'').indexOf(id||'null')>=0)});
+  if(!id){ box.innerHTML='<div class="m sys">'+NAMES[AGENT]+' — '+AG[AGENT].d+'</div><div class="hint">'+AG[AGENT].h.map(function(x){return '<button onclick="el(\'inp\').value=this.textContent;send()">'+esc(x)+'</button>'}).join('')+'</div>'; return; }
+  box.innerHTML='<div class="m sys">Loading…</div>';
+  var r=await api({op:'thread',id:id}); box.innerHTML=''; (r.data||[]).forEach(addMsg); box.scrollTop=box.scrollHeight;
+}
+function addMsg(m){
+  var box=el('msgs'),d=document.createElement('div');
+  if(m.role==='user'&&/^\[The owner (approved|rejected)/.test(m.text||'')){d.className='m sys';d.textContent=m.text.slice(0,200);}
+  else if(m.role==='user'){d.className='m user';d.textContent=m.text;}
+  else{d.className='m assistant';d.innerHTML=(m.tools&&m.tools.length?'<div class="tools">'+m.tools.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>':'')+md(m.text);}
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+async function send(){
+  var t=el('inp').value.trim(); if(!t||BUSY)return; BUSY=true; el('inp').value=''; el('sendb').disabled=true;
+  if(!THREAD)el('msgs').innerHTML='';
+  addMsg({role:'user',text:t});
+  var w=document.createElement('div');w.className='m sys';w.textContent=NAMES[AGENT]+' is working… (can take a minute)';el('msgs').appendChild(w);
+  var r=await api({op:'chat',agent:AGENT,thread_id:THREAD,message:t}).catch(function(e){return {ok:false,error:e.message}});
+  BUSY=false; el('sendb').disabled=false;
+  if(r.thread_id){THREAD=r.thread_id;}
+  if(r.thread_id){ await openThread(THREAD); drawSide(); } else w.remove();
+  if(!r.ok) addMsg({role:'assistant',text:'⚠️ '+(r.error||'Something went wrong.')});
+  if(r.approvals&&r.approvals.length){ var n=document.createElement('div');n.className='m sys';n.textContent=r.approvals.length+' action(s) waiting for your approval → Approvals tab';el('msgs').appendChild(n); countPending(); }
+}
+
+/* ---------- Approvals ---------- */
+async function viewApprovals(){
+  el('view').innerHTML='<h2>Approvals</h2><div class="muted" style="margin:-6px 0 12px">Actions your team wants to take that need your OK. Setup and notes run on their own; anything that contacts customers, deletes, or changes accounts waits here.</div><div id="ap" class="appr muted">Loading…</div><h2 style="margin-top:22px;font-size:15px">Recent decisions</h2><div id="apd" class="tw muted"></div>';
+  var r=await api({op:'approvals'}); var rows=r.data||[];
+  var p=rows.filter(function(x){return x.status==='pending'}), d=rows.filter(function(x){return x.status!=='pending'});
+  el('ap').innerHTML=p.length?p.map(function(x){return '<div class="card"><div style="flex:1;min-width:240px"><span class="pill" style="border-color:'+(AG[x.agent]||{}).c+'">'+esc(NAMES[x.agent]||x.agent)+'</span> <b>'+esc(x.tool==='ghl'?'GHL '+(x.input||{}).op:x.tool.replace(/_/g,' '))+'</b><div class="muted" style="font-size:12px">'+esc(String(x.created_at).replace('T',' ').slice(0,16))+'</div><div style="margin-top:6px">'+esc(x.summary)+'</div></div>'
+    +'<div style="display:flex;gap:6px"><button class="btn ok sm" onclick="decide(\''+x.id+'\',\'approve\',this)">Approve</button><button class="btn sm" onclick="decide(\''+x.id+'\',\'reject\',this)">Reject</button></div><pre>'+esc(JSON.stringify(x.input,null,2))+'</pre></div>'}).join(''):'<div class="card muted">Nothing waiting.</div>';
+  el('ap').classList.remove('muted');
+  el('apd').innerHTML=d.length?'<table><thead><tr><th>When</th><th>Team</th><th>Action</th><th>Result</th></tr></thead><tbody>'+d.slice(0,40).map(function(x){return '<tr><td class="muted" style="white-space:nowrap">'+esc(String(x.decided_at||x.created_at).replace('T',' ').slice(0,16))+'</td><td>'+esc(NAMES[x.agent]||x.agent)+'</td><td>'+esc(x.summary).slice(0,160)+'</td><td>'+(x.status==='approved'?'<span style="color:var(--ok)">Done</span>':x.status==='failed'?'<span style="color:var(--danger)" title="'+esc(JSON.stringify(x.result).slice(0,300))+'">Failed</span>':'<span class="muted">Rejected</span>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">None yet.</span>';
+}
+async function decide(id,op,b){
+  var note=''; if(op==='reject'){note=prompt('Tell the team why (optional):')||'';}
+  b.disabled=true; var r=await api({op:op,id:id,note:note});
+  if(r.ok===false)alert(r.error||'Failed'); else if(r.status==='failed')alert('It ran but failed: '+JSON.stringify(r.result).slice(0,300));
+  countPending(); viewApprovals();
+}
+
+/* ---------- Accounts ---------- */
+async function viewAccounts(){
+  el('view').innerHTML='<h2>Accounts</h2><div class="kpis" id="kp"></div>'
+    +'<div class="card" style="margin-bottom:14px"><b>Create an account</b><div class="muted" style="font-size:12px;margin-bottom:8px">Makes their BuilderPro login (they get an email to set a password), a GHL sub-account from your snapshot, and their AI receptionist.</div>'
+    +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></div>'
+    +'<div class="card tw" id="al">Loading…</div>';
+  var s=await api({op:'stats'}); var st=s.data||{};
+  el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');
+  var r=await api({op:'accounts'}); var rows=r.data||[];
+  el('al').innerHTML=rows.length?'<table><thead><tr><th>Business</th><th>Contact</th><th>Trade</th><th>Status</th><th>GHL</th><th>Joined</th></tr></thead><tbody>'+rows.map(function(x){
+    var left=Math.ceil((Date.parse(x.trial_ends_at)-Date.now())/864e5);
+    return '<tr><td><b>'+esc(x.business)+'</b></td><td>'+esc(x.full_name)+'<div class="muted" style="font-size:12px">'+esc(x.email)+(x.phone?' · '+esc(x.phone):'')+'</div></td><td>'+esc(x.trade||'—')+'</td>'
+      +'<td>'+esc(x.status)+(x.status==='trial'?'<div class="muted" style="font-size:12px">'+(left>0?left+' days left':'ended')+'</div>':'')+'</td>'
+      +'<td>'+(x.ghl_location_id?'<span style="color:var(--ok)" title="'+esc((x.setup_log||[]).join('\n'))+'">✓ '+esc(x.ghl_location_id.slice(0,8))+'</span>':'<span class="muted" title="'+esc((x.setup_log||[]).join('\n'))+'">not yet</span>')+'</td>'
+      +'<td class="muted">'+esc(String(x.created_at).slice(0,10))+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">No accounts yet. They appear here when contractors start a free trial on the website.</span>';
+}
+async function newAcct(b){
+  var v={op:'account_create',name:el('naName').value.trim(),business:el('naBiz').value.trim(),email:el('naEmail').value.trim(),phone:el('naPhone').value.trim(),trade:el('naTrade').value.trim()};
+  if(!v.name||!v.business||!v.email){el('naOut').textContent='Name, business and email are needed.';return}
+  b.disabled=true;el('naOut').textContent='Creating… (up to a minute)';
+  var r=await api(v); b.disabled=false;
+  el('naOut').innerHTML=r.error&&!r.steps?'<span style="color:var(--danger)">'+esc(r.error)+'</span>':'<span style="color:var(--ok)">Created.</span> '+esc((r.steps||[]).join(' · '))+(r.error?' <span style="color:var(--danger)">'+esc(r.error)+'</span>':'');
+  if(!r.error)setTimeout(viewAccounts,2500);
+}
+
+/* ---------- Phone numbers (phone-admin) ---------- */
+var PH_PATH={port:'Move number',text:'Text-enable',fwd:'Forward'};
+async function viewPhones(){
+  el('view').innerHTML='<h2>Phone numbers</h2><div class="muted" style="margin:-6px 0 12px">Clients who started Settings → Business number. Mark a client Live once the number is connected in GHL and A2P is approved.</div><div class="card tw" id="ph">Loading…</div>';
+  var r=await call('phone-admin',{op:'list'}); var rows=r.data||[];
+  if(r.ok===false){el('ph').textContent='Could not load: '+(r.error||'');return}
+  el('ph').innerHTML=rows.length?'<table><thead><tr><th>Client</th><th>Number</th><th>Plan</th><th>Status</th><th></th></tr></thead><tbody>'+rows.map(function(x){
+    return '<tr><td><b>'+esc(x.business||x.email)+'</b><div class="muted" style="font-size:12px">'+esc(x.email)+'</div></td><td>'+esc(x.number||'—')+'</td><td>'+esc(PH_PATH[x.path]||'—')+'</td>'
+      +'<td>'+(x.status==='live'?'<span style="color:var(--ok)">● Live</span>':(x.status==='pending'||x.status==='requested')?'<span style="color:var(--warn)">● Pending A2P</span>':'<span class="muted">Not sent</span>')+'</td>'
+      +'<td style="text-align:right">'+(x.status!=='live'?'<button class="btn ok sm" onclick="phoneSet(\''+esc(x.user_id)+'\',\'live\')">Mark live</button>':'<button class="btn sm" onclick="phoneSet(\''+esc(x.user_id)+'\',\'pending\')">Back to pending</button>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">No clients have started the Business number step yet.</span>';
+}
+async function phoneSet(uid,st){ if(!confirm(st==='live'?'Mark live? Their texting switches on.':'Put back to Pending A2P?'))return; var r=await call('phone-admin',{op:'set',user_id:uid,status:st}); if(r.ok===false)alert(r.error||'Failed'); viewPhones(); }
+
+/* ---------- Memory ---------- */
+async function viewMemory(){
+  el('view').innerHTML='<h2>Team memory</h2><div class="muted" style="margin:-6px 0 12px">Every agent reads this before it works. Tell any agent "remember that…" to add to it.</div><div class="card tw" id="mm">Loading…</div>';
+  var r=await api({op:'memory'}); var rows=r.data||[];
+  el('mm').innerHTML=rows.length?'<table><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.note)+'</td><td class="muted" style="white-space:nowrap;font-size:12px">'+esc(String(x.created_at).slice(0,10))+'</td><td style="text-align:right"><button class="btn sm" onclick="forget('+x.id+')">Forget</button></td></tr>'}).join('')+'</tbody></table>':'<span class="muted">Nothing saved yet.</span>';
+}
+async function forget(id){ await api({op:'memory_delete',id:id}); viewMemory(); }
+
+if(TOKEN)start();
+</script>
+</body>
+</html>

@@ -408,8 +408,13 @@ section{padding:0;}
       <div class="drawer_field"><label class="b-s" for="dfPhone">Phone</label><input id="dfPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0148"></div>
       <div class="drawer_field"><label class="b-s" for="dfEmail">Email</label><input id="dfEmail" type="email" autocomplete="email" inputmode="email" placeholder="dana@whitfieldplumbing.com"></div>
     </div>
-    <div class="drawer_field"><label class="b-s" for="dfMsg">Your trade and crew size</label><textarea id="dfMsg" rows="4" placeholder="Plumbing, six of us, two trucks. Tired of missing calls on the job."></textarea></div>
-    <button class="btn" type="submit" onclick="dlContactSend(this)">Send</button>
+    <div class="drawer_two">
+      <div class="drawer_field"><label class="b-s" for="dfMsg">Your trade</label><input id="dfMsg" type="text" placeholder="Plumbing"></div>
+      <div class="drawer_field"><label class="b-s" for="dfPass">Create a password</label><input id="dfPass" type="password" autocomplete="new-password" placeholder="8+ characters"></div>
+    </div>
+    <input id="dfWeb" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+    <button class="btn" type="submit" onclick="dlContactSend(this)">Start my free trial</button>
+    <div class="b-s muted" style="margin-top:8px">14 days free. No card. Your portal opens right away.</div>
     <div class="drawer_msg" aria-live="polite"></div>
   </form>
 </aside>
@@ -26627,6 +26632,32 @@ function bpEnterPortal2(email){
   if(window.bpCrewLoad)bpCrewLoad(true).then(function(){
     if(document.getElementById('bpx-pj-budget')&&window.bpProjBudgetRender)bpProjBudgetRender();
   });
+}
+/* ---- website sign-up: instant account + free trial, then straight into the portal ---- */
+function dlContactSend(btn){
+  var v=function(i){var e=document.getElementById(i);return e?e.value.trim():'';};
+  var box=btn.form.querySelector('.drawer_msg');
+  var d={name:v('dfName'),business:v('dfBiz'),phone:v('dfPhone'),email:v('dfEmail').toLowerCase(),trade:v('dfMsg'),password:document.getElementById('dfPass').value,website:v('dfWeb')};
+  var say=function(t,bad){box.textContent=t;box.style.color=bad?'#d64545':'';};
+  if(!d.name||!d.business||!d.email){say('Please fill in your name, business and email.',1);return;}
+  if(!/^\S+@\S+\.\S+$/.test(d.email)){say('That email doesn\u2019t look right.',1);return;}
+  if((d.password||'').length<8){say('Pick a password with at least 8 characters.',1);return;}
+  btn.disabled=true;var lbl=btn.textContent;btn.textContent='Setting up your account\u2026';say('');
+  fetch(BP_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify(d)})
+  .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+  .then(function(x){
+    if(x.j&&x.j.exists){throw new Error('You already have an account with that email. Use Log in instead.');}
+    if(!x.j||!x.j.ok)throw new Error((x.j&&x.j.error)||'We couldn\u2019t create your account. Try again, or call us.');
+    say('You\u2019re in. Opening your portal\u2026');
+    if(!BP_LIVE)return;
+    return BP_SB.auth.signInWithPassword({email:d.email,password:d.password}).then(function(r){
+      if(r.error)throw r.error;
+      var c=document.querySelector('#drawer .js-close-drawer');if(c)c.click();
+      bpOpenPortal();
+    });
+  })
+  .catch(function(e){say((e&&e.message)||'Something went wrong.',1);})
+  .then(function(){btn.disabled=false;btn.textContent=lbl;});
 }
 function bpDoAuth(){
   var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
