@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Start your BuilderPro trial</title>
+<meta name="description" content="Pick a plan, tell us about your business, and BuilderPro sets everything up for you.">
+<link rel="icon" href="assets/brand/logo-mark-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
+<style>
+:root{--bg:#edf2f6;--card:#fff;--line:#dce3ec;--line2:#cfd8e3;--ink:#001530;--mut:#788493;--dim:#9aa3b1;--blue:#006fff;--blue-d:#003db8;--blue-l:#e6f0ff;--pill:#0b1021;--ok:#1faa5a;--bad:#e0574e;
+  --sans:'General Sans','Geist',system-ui,sans-serif;--ease:cubic-bezier(.39,.575,.565,1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100dvh}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue)}
+.top{display:flex;align-items:center;gap:10px;height:68px;padding:0 24px;max-width:1100px;margin:0 auto}
+.top a.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:600;font-size:18px;letter-spacing:-.02em}
+.top a.logo b{color:var(--blue);font-weight:600}
+.top .have{margin-left:auto;font-size:14px;color:var(--mut)}
+.wrap{max-width:760px;margin:0 auto;padding:8px 20px 60px}
+.prog{display:flex;gap:6px;margin:6px 0 22px}
+.prog i{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .4s var(--ease)}
+.prog i.on{background:var(--blue)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:32px;animation:in .45s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+h1{font-size:30px;font-weight:600;letter-spacing:-.03em;line-height:1.15}
+.sub{color:var(--mut);margin:6px 0 24px;max-width:56ch}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.plan{border:1.5px solid var(--line);border-radius:16px;padding:18px;text-align:left;background:#fff;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s var(--ease);display:flex;flex-direction:column;gap:6px}
+.plan:hover{border-color:var(--line2);transform:translateY(-2px)}
+.plan.on{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,111,255,.12)}
+.plan .tag{font-size:12px;color:var(--mut);font-weight:500}
+.plan .nm{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.plan .pr{font-size:30px;font-weight:600;letter-spacing:-.03em;margin:4px 0}
+.plan .pr small{font-size:14px;color:var(--mut);font-weight:500;letter-spacing:0}
+.plan ul{list-style:none;font-size:13.5px;color:#34435a;display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.plan li:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue);margin:0 8px 2px 0}
+.plan.pop{background:linear-gradient(180deg,#f3f8ff,#fff)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.grid .full{grid-column:1/-1}
+.f label{display:block;font-size:13.5px;font-weight:500;margin-bottom:6px}
+.f .h{font-size:12.5px;color:var(--mut);margin-top:5px}
+.f input,.f select,.f textarea{width:100%;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:11px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.f textarea{min-height:92px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,111,255,.12)}
+.f input::placeholder,.f textarea::placeholder{color:var(--dim)}
+.f.err input,.f.err select,.f.err textarea{border-color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;transition:.15s}
+.chips button:hover{border-color:var(--blue);color:var(--blue)}
+.chips button.on{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d)}
+.hrs{display:grid;gap:6px}
+.hr{display:grid;grid-template-columns:120px 90px 1fr 1fr;gap:10px;align-items:center;font-size:14px}
+.hr input[type=time]{padding:8px 10px}
+.hr label.sw{display:flex;align-items:center;gap:6px;font-weight:500;margin:0}
+.hr.off input[type=time]{opacity:.35}
+.nav{display:flex;align-items:center;gap:10px;margin-top:28px}
+.btn{border:0;border-radius:999px;padding:12px 22px;font-weight:500;cursor:pointer;transition:background .2s,transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--blue);color:#fff;margin-left:auto}
+.btn.pri:hover{background:var(--blue-d)}
+.btn.ghost{background:none;color:var(--mut);padding-left:4px}
+.btn:disabled{opacity:.55;cursor:default}
+.msg{color:var(--bad);font-size:14px;margin-top:14px;min-height:1.2em}
+.rev{display:grid;grid-template-columns:150px 1fr;gap:8px 16px;font-size:14px}
+.rev dt{color:var(--mut)}
+.rev dd{white-space:pre-wrap}
+.note{background:var(--blue-l);color:var(--blue-d);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:18px}
+.steps{list-style:none;display:flex;flex-direction:column;gap:10px;margin:18px 0}
+.steps li{display:flex;gap:10px;align-items:center;font-size:15px;color:var(--mut)}
+.steps li i{width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);flex:none;position:relative}
+.steps li.done{color:var(--ink)}
+.steps li.done i{background:var(--ok);border-color:var(--ok)}
+.steps li.done i:after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.steps li.run i{border-color:var(--blue);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+@media(max-width:720px){.plans,.grid{grid-template-columns:1fr}.panel{padding:22px}.hr{grid-template-columns:1fr 80px;}.hr input[type=time]{grid-column:span 1}h1{font-size:25px}.rev{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><a class="logo" href="index.html"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><span>Builder<b>Pro</b></span></a><span class="have">Have an account? <a href="index.html?portal=1">Log in</a></span></div>
+<div class="wrap">
+  <div class="prog" id="prog"></div>
+  <div id="view"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
+var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+var SB=window.supabase?window.supabase.createClient(SB_URL,SB_ANON):null;
+var PLANS=[
+  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa AI receptionist, 24/7','Missed-call text-back','Calendar and booking page','Contacts and messaging','Estimates and invoices']},
+  {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','Projects, contracts, e-signature','Finances and profit per job','Instant-quote calculator','Marketing and Lead Radar']},
+  {k:'enterprise',tag:'Performance',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','Paid ads management','Ad filming and editing','Custom AI training','Weekly strategy calls']}];
+var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete','Other'];
+var SERVICES={Roofing:['Roof replacement','Roof repair','Storm damage','Inspections','Gutters','Skylights'],Plumbing:['Leak repair','Drain cleaning','Water heaters','Repiping','Sewer lines','Fixtures'],HVAC:['AC install','Furnace install','Repairs','Maintenance plans','Ductwork','Heat pumps'],
+  Electrical:['Panel upgrades','Rewiring','EV chargers','Lighting','Generators','Troubleshooting'],'General contracting':['Additions','New builds','Kitchens','Bathrooms','Decks','Permits'],Remodeling:['Kitchens','Bathrooms','Basements','Flooring','Whole-home'],
+  Painting:['Interior','Exterior','Cabinets','Commercial'],Landscaping:['Design','Patios','Irrigation','Maintenance','Sod'],Pools:['New pools','Resurfacing','Equipment','Cleaning'],Countertops:['Quartz','Granite','Install','Fabrication']};
+var DAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
+var S={plan:'os',profile:{hours:{}}};
+DAYS.forEach(function(d){S.profile.hours[d[0]]={open:d[0]!=='sun',from:'08:00',to:d[0]==='sat'?'13:00':'17:00'};});
+try{var sv=JSON.parse(sessionStorage.getItem('bp_signup')||'null');if(sv){S=sv;delete S.password;}}catch(e){}
+var qs=new URLSearchParams(location.search);
+if(qs.get('plan')&&PLANS.some(function(p){return p.k===qs.get('plan')}))S.plan=qs.get('plan');
+['name','email','phone','business'].forEach(function(k){if(qs.get(k))S[k]=qs.get(k);});
+var STEP=0, STEPS=['plan','account','business','services','ai','review'];
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function persist(){try{var c=JSON.parse(JSON.stringify(S));delete c.password;sessionStorage.setItem('bp_signup',JSON.stringify(c));}catch(e){}}
+function fld(id,label,val,o){o=o||{};var t=o.type||'text';
+  var ctl=t==='textarea'?'<textarea id="'+id+'" placeholder="'+esc(o.ph||'')+'">'+esc(val||'')+'</textarea>'
+   :t==='select'?'<select id="'+id+'">'+o.opts.map(function(x){return '<option'+(x===val?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>'
+   :'<input id="'+id+'" type="'+t+'" value="'+esc(val||'')+'" placeholder="'+esc(o.ph||'')+'"'+(o.ac?' autocomplete="'+o.ac+'"':'')+'>';
+  return '<div class="f'+(o.full?' full':'')+'"><label for="'+id+'">'+label+'</label>'+ctl+(o.h?'<div class="h">'+o.h+'</div>':'')+(o.extra||'')+'</div>';}
+function v(id){var e=$(id);return e?e.value.trim():''}
+function prog(){$('prog').innerHTML=STEPS.map(function(_,i){return '<i class="'+(i<=STEP?'on':'')+'"></i>'}).join('');}
+function nav(nextLabel){return '<div class="msg" id="msg"></div><div class="nav">'+(STEP?'<button class="btn ghost" onclick="go(-1)">Back</button>':'')+'<button class="btn pri" id="nx" onclick="go(1)">'+(nextLabel||'Continue')+'</button></div>';}
+function render(){
+  prog(); var h='', P=S.profile;
+  var st=STEPS[STEP];
+  if(st==='plan') h='<h1>Pick your plan</h1><p class="sub">Every plan starts with 14 days free. Cancel any time before the trial ends and you pay nothing.</p><div class="plans">'
+    +PLANS.map(function(p){return '<button class="plan'+(p.k===S.plan?' on':'')+(p.pop?' pop':'')+'" onclick="S.plan=\''+p.k+'\';render()"><span class="tag">'+p.tag+'</span><span class="nm">'+p.n+'</span><span class="pr">$'+p.p+'<small> / month</small></span><ul>'+p.f.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></button>'}).join('')+'</div>'+nav();
+  if(st==='account') h='<h1>Create your account</h1><p class="sub">This is how you log in to BuilderPro.</p><div class="grid">'
+    +fld('iName','Your full name',S.name,{ac:'name'})+fld('iPhone','Mobile phone',S.phone,{type:'tel',ac:'tel',ph:'(512) 555-0148'})
+    +fld('iEmail','Email',S.email,{type:'email',ac:'email',full:1})+fld('iPass','Password',S.password||'',{type:'password',ac:'new-password',ph:'8 or more characters',full:1})
+    +'</div><input class="hp" id="iWeb" tabindex="-1" autocomplete="off" aria-hidden="true">'+nav();
+  if(st==='business') h='<h1>About your business</h1><p class="sub">We use this to build your account, your booking page and your AI receptionist.</p><div class="grid">'
+    +fld('iBiz','Business name',S.business,{ac:'organization'})+fld('iTrade','Trade',S.trade||'Roofing',{type:'select',opts:TRADES})
+    +fld('iAddr','Street address',P.address,{ac:'address-line1',full:1})
+    +fld('iCity','City',P.city,{ac:'address-level2'})+'<div class="grid" style="gap:14px">'+fld('iState','State',P.state,{ac:'address-level1',ph:'TX'})+fld('iZip','ZIP',P.zip,{ac:'postal-code'})+'</div>'
+    +fld('iArea','Service area',P.serviceArea,{full:1,ph:'Austin, Round Rock, Georgetown, or ZIPs',h:'Your AI receptionist tells callers whether you cover them.'})
+    +fld('iSite','Website',P.website,{ph:'yourcompany.com'})+fld('iLic','License number',P.license,{ph:'Optional'})
+    +fld('iCrew','Crew size',P.crewSize||'2 to 5',{type:'select',opts:['Just me','2 to 5','6 to 15','16 to 50','More than 50']})+fld('iYears','Years in business',P.years||'1 to 5',{type:'select',opts:['Under 1','1 to 5','6 to 15','More than 15']})
+    +'</div>'+nav();
+  if(st==='services'){ var sug=SERVICES[S.trade]||[], cur=(P.services||'').split(/\s*,\s*/).filter(Boolean);
+    h='<h1>Services and hours</h1><p class="sub">What you do, roughly what it costs, and when you are open.</p><div class="grid">'
+    +fld('iSvc','Services you offer',P.services,{type:'textarea',full:1,ph:'Separate with commas',extra:sug.length?'<div class="chips">'+sug.map(function(x){return '<button type="button" class="'+(cur.indexOf(x)>=0?'on':'')+'" onclick="chip(this)">'+esc(x)+'</button>'}).join('')+'</div>':''})
+    +fld('iPrice','Typical prices',P.pricing,{type:'textarea',full:1,ph:'e.g. Roof replacement usually $9,000 to $18,000. Repairs start at $350. Free inspections.',h:'Ranges are fine. Leave blank if you never quote by phone.'})
+    +fld('iEmerg','Emergency or after-hours service',P.emergency||'No',{type:'select',opts:['No','Yes, 24/7','Yes, evenings and weekends','Yes, for existing customers']})
+    +'<div class="f full"><label>Opening hours</label><div class="hrs">'+DAYS.map(function(d){var x=P.hours[d[0]];return '<div class="hr'+(x.open?'':' off')+'"><span>'+d[1]+'</span><label class="sw"><input type="checkbox" data-d="'+d[0]+'" '+(x.open?'checked':'')+' onchange="this.closest(\'.hr\').classList.toggle(\'off\',!this.checked)"> Open</label><input type="time" data-f="'+d[0]+'" value="'+x.from+'"><input type="time" data-t="'+d[0]+'" value="'+x.to+'"></div>'}).join('')+'</div></div>'
+    +'</div>'+nav(); }
+  if(st==='ai') h='<h1>Your AI receptionist</h1><p class="sub">She answers your calls and texts from day one. Tell her how to sound and what matters.</p><div class="grid">'
+    +fld('iAi','Her name',P.assistantName||'Lisa')+fld('iTone','How she should sound',P.tone||'Friendly',{type:'select',opts:['Friendly','Professional','Warm and casual','Straight to the point']})
+    +fld('iGoal','Main goal on every call',P.leadGoal||'Book a free inspection or estimate',{type:'select',full:1,opts:['Book a free inspection or estimate','Take a message and have me call back','Give a price range, then book','Send them to my booking page']})
+    +fld('iFaq','Questions customers always ask',P.faqs,{type:'textarea',full:1,ph:'Do you offer financing? Yes, through GreenSky.\nAre you insured? Yes, fully licensed and insured.\nHow soon can you come out? Usually within 48 hours.'})
+    +fld('iLang','Languages you speak',P.languages||'English',{})+fld('iRef','How did you hear about us?',P.referral,{ph:'Optional'})
+    +fld('iNotes','Anything else she should know',P.notes,{type:'textarea',full:1,ph:'Optional'})
+    +'</div>'+nav('Review');
+  if(st==='review'){ var pl=PLANS.filter(function(p){return p.k===S.plan})[0];
+    h='<h1>Check and start your trial</h1><p class="sub">Next you add a card with Stripe. You are not charged today.</p><dl class="rev">'
+    +[['Plan',pl.n+', $'+pl.p+' / month after 14 days'],['Name',S.name],['Email',S.email],['Phone',S.phone],['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea],['Services',P.services],['AI receptionist',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()]]
+      .map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1]||'-')+'</dd>'}).join('')+'</dl>'
+    +'<div class="note">As soon as you finish, we build your BuilderPro account, your GoHighLevel workspace, your booking calendar and your AI receptionist from these answers. It is ready when you log in.</div>'
+    +nav('Start 14-day free trial'); }
+  $('view').innerHTML='<div class="panel">'+h+'</div>';
+  var f=$('view').querySelector('input:not([type=checkbox]):not(.hp),select,textarea'); if(f&&STEP)f.focus({preventScroll:true});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function chip(b){var t=$('iSvc'),cur=t.value.split(/\s*,\s*/).filter(Boolean),x=b.textContent,i=cur.indexOf(x);if(i>=0)cur.splice(i,1);else cur.push(x);t.value=cur.join(', ');b.classList.toggle('on',i<0);}
+function need(ids){var bad=null;ids.forEach(function(i){var e=$(i),f=e.closest('.f'),ok=!!e.value.trim();f.classList.toggle('err',!ok);if(!ok&&!bad)bad=e;});if(bad){bad.focus();$('msg').textContent='Please fill in the highlighted fields.';return false;}return true;}
+function collect(){
+  var st=STEPS[STEP],P=S.profile;
+  if(st==='account'){ if(!need(['iName','iPhone','iEmail','iPass']))return false;
+    if(!/^\S+@\S+\.\S+$/.test(v('iEmail'))){$('msg').textContent='That email does not look right.';return false;}
+    if($('iPass').value.length<8){$('msg').textContent='Use a password of at least 8 characters.';return false;}
+    S.name=v('iName');S.phone=v('iPhone');S.email=v('iEmail').toLowerCase();S.password=$('iPass').value;S.hp=v('iWeb'); }
+  if(st==='business'){ if(!need(['iBiz','iCity','iState','iArea']))return false;
+    S.business=v('iBiz');S.trade=v('iTrade');P.address=v('iAddr');P.city=v('iCity');P.state=v('iState');P.zip=v('iZip');P.serviceArea=v('iArea');P.website=v('iSite');P.license=v('iLic');P.crewSize=v('iCrew');P.years=v('iYears'); }
+  if(st==='services'){ if(!need(['iSvc']))return false;
+    P.services=v('iSvc');P.pricing=v('iPrice');P.emergency=v('iEmerg')==='No'?'':v('iEmerg');
+    DAYS.forEach(function(d){P.hours[d[0]]={open:document.querySelector('[data-d='+d[0]+']').checked,from:document.querySelector('[data-f='+d[0]+']').value||'08:00',to:document.querySelector('[data-t='+d[0]+']').value||'17:00'};}); }
+  if(st==='ai'){ P.assistantName=v('iAi')||'Lisa';P.tone=v('iTone');P.leadGoal=v('iGoal');P.faqs=v('iFaq');P.languages=v('iLang');P.referral=v('iRef');P.notes=v('iNotes'); }
+  try{P.timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;}catch(e){}
+  persist(); return true;
+}
+function go(d){
+  if(d<0){STEP=Math.max(0,STEP-1);render();return;}
+  if(!collect())return;
+  if(STEPS[STEP]==='review')return submit();
+  if(STEPS[STEP]==='account'&&!S.password){return;}
+  STEP++;render();
+}
+async function submit(){
+  if(!S.password){STEP=1;render();$('msg').textContent='Enter your password again to finish.';return;}
+  var b=$('nx');b.disabled=true;b.textContent='Creating your account...';$('msg').textContent='';
+  try{
+    var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+SB_ANON},
+      body:JSON.stringify({plan:S.plan,name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
+    var j=await r.json();
+    if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="index.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start 14-day free trial';return;}
+    if(!j.ok)throw new Error(j.error||'Something went wrong.');
+    if(SB){await SB.auth.signInWithPassword({email:S.email,password:S.password}).catch(function(){});}
+    sessionStorage.removeItem('bp_signup');
+    if(j.checkout_url){b.textContent='Opening secure checkout...';location.href=j.checkout_url;return;}
+    location.href='signup.html?done=1';
+  }catch(e){$('msg').textContent=e.message||'Something went wrong.';b.disabled=false;b.textContent='Start 14-day free trial';}
+}
+/* after Stripe: show the build finishing, then send them into their portal */
+async function done(){
+  $('prog').innerHTML='';
+  $('view').innerHTML='<div class="panel"><h1>You are in. We are setting everything up.</h1><p class="sub">This takes about a minute. You can open BuilderPro now; anything still running finishes in the background.</p><ul class="steps" id="stp"></ul><div class="nav"><a class="btn pri" href="index.html?portal=1" style="text-decoration:none">Open my BuilderPro</a></div></div>';
+  var tick=async function(){
+    var a=null; try{ if(SB){ var r=await SB.from('accounts').select('status,ghl_location_id,onboard_state,setup_log,checkout_url').maybeSingle(); a=r.data; } }catch(e){}
+    var log=(a&&a.setup_log||[]).join(' ');
+    var items=[['Your BuilderPro login and settings',!!a],['Your GoHighLevel workspace',!!(a&&a.ghl_location_id)],['Business details and booking calendar',/details filled/i.test(log)],['Your AI receptionist',/receptionist/i.test(log)],['Final check by our Builder team',a&&a.onboard_state==='onboarded']];
+    var first=true; $('stp').innerHTML=items.map(function(x){var c=x[1]?'done':(first?(first=false,'run'):'');return '<li class="'+c+'"><i></i>'+x[0]+'</li>'}).join('');
+    if(a&&a.status==='checkout'&&a.checkout_url&&!$('payag')){ $('stp').insertAdjacentHTML('afterend','<div class="note" id="payag">Your card is not on file yet. <a href="'+esc(a.checkout_url)+'">Finish checkout</a> to keep your trial.</div>'); }
+    if(!(a&&a.onboard_state==='onboarded'))setTimeout(tick,4000);
+  }; tick();
+}
+async function payAgain(){
+  $('prog').innerHTML='';
+  $('view').innerHTML='<div class="panel"><h1>Checkout was not finished</h1><p class="sub">Your account is saved and your setup is already running. Add a card to start your 14-day free trial. You are not charged today.</p><div class="msg" id="msg"></div><div class="nav"><button class="btn pri" id="nx" onclick="resume()">Add card and start trial</button></div></div>';
+}
+async function resume(){
+  var b=$('nx');b.disabled=true;b.textContent='Opening checkout...';
+  try{ var ses=SB&&(await SB.auth.getSession()).data.session; if(!ses){location.href='index.html?portal=1';return;}
+    var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+ses.access_token},body:JSON.stringify({op:'resume'})});
+    var j=await r.json(); if(!j.ok||!j.checkout_url)throw new Error(j.error||'Could not open checkout.'); location.href=j.checkout_url;
+  }catch(e){$('msg').textContent=e.message;b.disabled=false;b.textContent='Add card and start trial';}
+}
+if(qs.get('done'))done(); else if(qs.get('step')==='pay')payAgain(); else render();
+</script>
+</body>
+</html>

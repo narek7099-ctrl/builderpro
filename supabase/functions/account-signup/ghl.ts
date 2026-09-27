@@ -130,10 +130,19 @@ export async function callGHL(op: string, args: A): Promise<{ ok: boolean; statu
 
 /* A new client, end to end: GHL sub-account from the snapshot, business
    custom values, their AI receptionist brain, and a GHL login. */
-export async function provisionClient(a: { name: string; business: string; email: string; phone?: string; trade?: string }): Promise<{ ok: boolean; locationId: string; steps: string[]; error?: string }> {
+// deno-lint-ignore no-explicit-any
+type Profile = Record<string, any>;
+const DAYS = [["mon", "Mon"], ["tue", "Tue"], ["wed", "Wed"], ["thu", "Thu"], ["fri", "Fri"], ["sat", "Sat"], ["sun", "Sun"]];
+export function hoursText(h: Profile | undefined): string {
+  if (!h) return "";
+  return DAYS.map(([k, n]) => { const d = h[k]; return d && d.open ? `${n} ${d.from}-${d.to}` : `${n} closed`; }).join(", ");
+}
+export async function provisionClient(a: { name: string; business: string; email: string; phone?: string; trade?: string; profile?: Profile }): Promise<{ ok: boolean; locationId: string; steps: string[]; error?: string }> {
+  const pf: Profile = a.profile ?? {};
   const steps: string[] = [];
   if (!GHL_API_KEY || !GHL_COMPANY_ID) return { ok: false, locationId: "", steps, error: "GHL_API_KEY / GHL_COMPANY_ID not set" };
-  const body: Record<string, unknown> = { companyId: GHL_COMPANY_ID, name: a.business || a.name, phone: a.phone || undefined, email: a.email, country: "US" };
+  const body: Record<string, unknown> = { companyId: GHL_COMPANY_ID, name: a.business || a.name, phone: a.phone || undefined, email: a.email, country: "US",
+    address: pf.address || undefined, city: pf.city || undefined, state: pf.state || undefined, postalCode: pf.zip || undefined, website: pf.website || undefined, timezone: pf.timezone || undefined };
   if (GHL_SNAPSHOT_ID) body.snapshotId = GHL_SNAPSHOT_ID;
   const cr = await fetch(`${GHL_BASE}/locations/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify(body) });
   const cd = await cr.json().catch(() => ({}));
@@ -143,7 +152,8 @@ export async function provisionClient(a: { name: string; business: string; email
   if (!locationId) return { ok: true, locationId, steps };
   try {
     const lt = await locationToken(locationId);
-    for (const [n, v] of [["Business Name", a.business], ["Business Phone", a.phone], ["Business Email", a.email]]) {
+    for (const [n, v] of [["Business Name", a.business], ["Business Phone", a.phone], ["Business Email", a.email], ["Business Address", [pf.address, pf.city, pf.state, pf.zip].filter(Boolean).join(", ")],
+      ["Business Website", pf.website], ["Service Area", pf.serviceArea], ["Business Hours", hoursText(pf.hours)], ["Trade", a.trade], ["Owner Name", a.name], ["License Number", pf.license]]) {
       if (v) await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { method: "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name: n, value: v }) }).catch(() => {});
     }
     steps.push("Business details filled in");
@@ -155,9 +165,12 @@ export async function provisionClient(a: { name: string; business: string; email
   } catch { /* optional */ }
   const rb = await sb("ai_brain?on_conflict=slug", {
     method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify({ slug: locationId, is_demo: false, ghl_location_id: locationId, owner_email: a.email, booking_calendar_id: calId, assistant_name: "Lisa", business_name: a.business, industry: a.trade || "", tone: "Friendly", phone: a.phone || "" }),
+    body: JSON.stringify({ slug: locationId, is_demo: false, ghl_location_id: locationId, owner_email: a.email, booking_calendar_id: calId,
+      assistant_name: pf.assistantName || "Lisa", business_name: a.business, industry: a.trade || "", tone: pf.tone || "Friendly", phone: a.phone || "",
+      services: pf.services || "", pricing: pf.pricing || "", hours: hoursText(pf.hours), service_area: pf.serviceArea || "", faqs: pf.faqs || "",
+      custom_instructions: [pf.emergency ? "We offer emergency service: " + pf.emergency : "", pf.leadGoal ? "Main goal on every call: " + pf.leadGoal : "", pf.languages ? "Languages spoken: " + pf.languages : "", pf.notes || ""].filter(Boolean).join("\n") }),
   });
-  if (rb.ok) steps.push("AI receptionist set up");
+  if (rb.ok) steps.push("AI receptionist set up" + (pf.services ? " with their services, hours and FAQs" : ""));
   try {
     const [first, ...rest] = (a.name || "").trim().split(/\s+/);
     const ur = await fetch(`${GHL_BASE}/users/`, {

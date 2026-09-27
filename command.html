@@ -234,6 +234,7 @@ async function start(){
   ME=me; el('app').classList.remove('hidden'); el('who').textContent=me.email;
   var w=[]; if(!me.ai)w.push('Add <b>ANTHROPIC_API_KEY</b> in Supabase to Edge Functions to Secrets so the team can think.');
   if(!me.snapshot)w.push('Add <b>GHL_SNAPSHOT_ID</b> so new accounts are built from your snapshot.');
+  if(me.stripe===false)w.push('Add <b>STRIPE_SECRET_KEY</b> so sign-ups add a card for their trial.');
   el('warn').innerHTML=w.length?'<div class="warnbar">'+w.join(' ')+'</div>':'';
   countPending(); tab(TAB);
 }
@@ -349,11 +350,11 @@ async function viewAccounts(){
     +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></div>'
     +'<div class="card tw" id="al">Loading…</div>';
   var s=await api({op:'stats'}); var st=s.data||{};
-  el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');
+  el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['MRR','$'+(st.mrr_paying||0)],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');
   var r=await api({op:'accounts'}); var rows=r.data||[];
-  el('al').innerHTML=rows.length?'<table><thead><tr><th>Business</th><th>Contact</th><th>Trade</th><th>Status</th><th>Setup</th><th>Joined</th></tr></thead><tbody>'+rows.map(function(x){
+  el('al').innerHTML=rows.length?'<table><thead><tr><th>Business</th><th>Contact</th><th>Plan</th><th>Trade</th><th>Status</th><th>Setup</th><th>Joined</th></tr></thead><tbody>'+rows.map(function(x){
     var left=Math.ceil((Date.parse(x.trial_ends_at)-Date.now())/864e5);
-    return '<tr><td><b>'+esc(x.business)+'</b></td><td>'+esc(x.full_name)+'<div class="muted" style="font-size:12px">'+esc(x.email)+(x.phone?' · '+esc(x.phone):'')+'</div></td><td>'+esc(x.trade||'-')+'</td>'
+    return '<tr><td><b>'+esc(x.business)+'</b></td><td>'+esc(x.full_name)+'<div class="muted" style="font-size:12px">'+esc(x.email)+(x.phone?' · '+esc(x.phone):'')+'</div></td><td>'+esc(({foundation:'Foundation',os:'BuilderPro OS',enterprise:'Enterprise'})[x.plan]||x.plan||'-')+(x.price_monthly?'<div class="muted" style="font-size:12px">$'+x.price_monthly+'/mo</div>':'')+'</td><td>'+esc(x.trade||'-')+'</td>'
       +'<td>'+esc(x.status)+(x.status==='trial'?'<div class="muted" style="font-size:12px">'+(left>0?left+' days left':'ended')+'</div>':'')+'</td>'
       +'<td title="'+esc((x.setup_log||[]).join('\n'))+'">'+({onboarded:'<span class="st ok"><i class="ti ti-circle-check"></i>Set up by AI</span>',onboarding:'<span class="st warn"><i class="ti ti-loader-2"></i>Builder working</span>',failed:'<span class="st bad"><i class="ti ti-alert-triangle"></i>Failed, sent to Support</span>'}[x.onboard_state]||(x.ghl_location_id?'<span class="st ok"><i class="ti ti-check"></i>GHL built</span>':'<span class="st off">Building</span>'))+'</td>'
       +'<td class="muted">'+esc(String(x.created_at).slice(0,10))+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">No accounts yet. They appear here when contractors start a free trial on the website.</span>';

@@ -57,7 +57,7 @@ const DB_TABLES = ["accounts", "support_requests", "client_settings", "ai_brain"
 const TOOLS: Anthropic.Tool[] = [
   { name: "ghl", description: "Run one GoHighLevel operation. Read ops end in .list/.messages/.submissions. Most need args.locationId (the client's sub-account id; get ids from locations.list or accounts_list). Args are strings.",
     input_schema: { type: "object", properties: { op: { type: "string", enum: GHL_OPS }, args: { type: "object", additionalProperties: { type: "string" } }, why: { type: "string", description: "one line: why, shown to the owner if approval is needed" } }, required: ["op", "args"] } },
-  { name: "accounts_list", description: "BuilderPro client accounts (self-serve sign-ups): email, business, status, trial end, GHL location id, setup log.",
+  { name: "accounts_list", description: "BuilderPro client accounts (self-serve sign-ups): email, business, plan, status, trial end, GHL location id, their sign-up answers, setup log.",
     input_schema: { type: "object", properties: { status: { type: "string", description: "trial | active | past_due | cancelled; omit for all" } } } },
   { name: "account_create", description: "Create a new client account end to end: BuilderPro login (they get an email to set a password), GHL sub-account from the snapshot, AI receptionist. Needs owner approval.",
     input_schema: { type: "object", properties: { name: { type: "string" }, business: { type: "string" }, email: { type: "string" }, phone: { type: "string" }, trade: { type: "string" } }, required: ["name", "business", "email"] } },
@@ -90,7 +90,7 @@ async function memoryText(): Promise<string> {
 async function system(a: Agent): Promise<string> {
   const mem = await memoryText();
   return `You are the ${a.name} at BuilderPro, an AI employee in the owner's Command Center.
-BuilderPro sells "BuilderPro OS" to contractors (roofers, plumbers, HVAC, electricians, remodelers...): a portal plus a GoHighLevel sub-account per client, an AI receptionist that answers calls and texts, lead tools, estimates, invoices, crews and scheduling. New contractors sign up on the website for a free trial; each gets a GHL sub-account built from the owner's snapshot.
+BuilderPro sells "BuilderPro OS" to contractors (roofers, plumbers, HVAC, electricians, remodelers...): a portal plus a GoHighLevel sub-account per client, an AI receptionist that answers calls and texts, lead tools, estimates, invoices, crews and scheduling. Plans: Foundation $99/mo, BuilderPro OS $199/mo, Enterprise $299/mo, each with a 14-day free trial (card taken at sign-up by Stripe). New contractors sign up on the website and answer onboarding questions; each gets a GHL sub-account built from the owner's snapshot.
 The team: CEO, Sales, Marketing, Support, Builder, Research. You are the ${a.name}.
 Your job: ${a.role}
 How to work: use your tools to look things up rather than guessing. When a change needs the owner's approval, the tool call is queued for them and you are told so; don't retry it, just say what you proposed and why. Be direct and concrete, like a sharp employee reporting to the owner. Use short headings and lists when they help. Today is ${new Date().toISOString().slice(0, 10)}.
@@ -102,7 +102,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
   switch (name) {
     case "ghl": return await callGHL(String(input.op), (input.args ?? {}) as Record<string, string>);
     case "accounts_list": {
-      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
+      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,plan,price_monthly,profile,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
       return r.ok ? await r.json() : { error: r.status };
     }
     case "account_create": return await createAccount(input as Record<string, string>);
@@ -121,11 +121,12 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
       return r.ok ? await r.json() : { error: r.status };
     }
     case "business_stats": {
-      const r = await sb("accounts?select=status,created_at,trial_ends_at,email,business");
-      const rows: { status: string; created_at: string; trial_ends_at: string; email: string; business: string }[] = r.ok ? await r.json() : [];
+      const r = await sb("accounts?select=status,plan,price_monthly,created_at,trial_ends_at,email,business");
+      const rows: { status: string; plan: string; price_monthly: number; created_at: string; trial_ends_at: string; email: string; business: string }[] = r.ok ? await r.json() : [];
       const by: Record<string, number> = {}; rows.forEach((x) => (by[x.status] = (by[x.status] || 0) + 1));
+      const plans: Record<string, number> = {}; rows.forEach((x) => (plans[x.plan] = (plans[x.plan] || 0) + 1));
       const ago = (d: number) => rows.filter((x) => Date.now() - Date.parse(x.created_at) < d * 864e5).length;
-      return { total: rows.length, by_status: by, signups_7d: ago(7), signups_30d: ago(30),
+      return { total: rows.length, by_status: by, by_plan: plans, mrr_paying: rows.filter((x) => x.status === "active").reduce((s, x) => s + (x.price_monthly || 0), 0), signups_7d: ago(7), signups_30d: ago(30),
         trials_ending_3d: rows.filter((x) => x.status === "trial" && Date.parse(x.trial_ends_at) - Date.now() < 3 * 864e5 && Date.parse(x.trial_ends_at) > Date.now()).map((x) => ({ email: x.email, business: x.business, ends: x.trial_ends_at })) };
     }
     case "brain_get": {
@@ -165,7 +166,7 @@ async function createAccount(a: Record<string, string>) {
   await sb("accounts", { method: "POST", body: JSON.stringify({ user_id: u.id, email, full_name: a.name, business: a.business, phone: a.phone ?? "", trade: a.trade ?? "" }) });
   await sb("client_settings?on_conflict=user_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ user_id: u.id, email, data: { company: { name: a.business, phone: a.phone ?? "", email }, owner: { name: a.name, email } } }) });
   const p = await provisionClient({ name: a.name, business: a.business, email, phone: a.phone, trade: a.trade });
-  await sb(`accounts?user_id=eq.${u.id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: p.locationId, setup_log: p.error ? [...p.steps, "Error: " + p.error] : p.steps }) });
+  await sb(`accounts?user_id=eq.${u.id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: p.locationId, onboard_state: p.locationId ? "provisioned" : "new", setup_log: p.error ? [...p.steps, "Error: " + p.error] : p.steps }) });
   return { ok: p.ok, email, locationId: p.locationId, steps: p.steps, error: p.error, note: "They got an email invite to set their password." };
 }
 
@@ -315,7 +316,7 @@ async function autoOnboard() {
         await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: "setup_failed", subject: "GHL setup failed for " + a.business, body: "Automatic GHL setup failed 3 times. Last: " + log.slice(-1)[0] }) }).catch(() => {});
         done.push(a.email + ": failed, sent to Support"); continue;
       }
-      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade });
+      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade, profile: a.profile });
       await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: p.locationId, onboard_attempts: a.onboard_attempts + 1,
         onboard_state: p.locationId ? "provisioned" : "new", setup_log: [...log, `Retry ${a.onboard_attempts + 1}:`, ...p.steps, ...(p.error ? ["Error: " + p.error] : [])] }) });
       done.push(a.email + (p.locationId ? ": GHL built" : ": retry failed"));
@@ -326,10 +327,12 @@ async function autoOnboard() {
     await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "onboarding" }) });
     const th = await newThread("builder", "Onboard: " + a.business, "shift");
     const out = await runAgent(AGENTS.builder, th, `A new client just signed up and their GHL sub-account was built automatically. Finish their setup without the owner.
-Client: ${a.full_name}, ${a.business}, ${a.email}, ${a.phone || "no phone"}, trade: ${a.trade || "unknown"}. GHL locationId: ${a.ghl_location_id}.
+Client: ${a.full_name}, ${a.business}, ${a.email}, ${a.phone || "no phone"}, trade: ${a.trade || "unknown"}, plan: ${a.plan}. GHL locationId: ${a.ghl_location_id}.
+Their sign-up answers (use these, don't invent): ${JSON.stringify(a.profile ?? {})}
 Setup log so far: ${log.join(" | ")}
 1) Check the sub-account: custom values (Business Name/Phone/Email), calendars, tags, users. Add what's missing (a booking calendar, trade tags).
-2) Fill in their AI receptionist knowledge (brain_save) with sensible defaults for a ${a.trade || "contractor"} business: services, hours (Mon-Fri 8-6), tone, FAQs.
+2) Check their AI receptionist knowledge (brain_get). It was filled from their answers; complete any gap (services list, FAQs a caller of a ${a.trade || "contractor"} business would ask) with brain_save, keeping their own words.
+   Add a product for each main service they listed, and a tag for their trade and for their plan.
 3) Report in 3-5 lines what you set up and anything the owner must do.`);
     await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "onboarded", setup_log: [...log, "Builder team finished setup: " + out.reply.slice(0, 300)] }) });
     done.push(a.email + ": onboarded by Builder");
@@ -356,7 +359,7 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch { /* none */ }
   const op = String(b.op ?? "");
 
-  if (op === "me") return json({ ok: true, email: who, ai: !!Deno.env.get("ANTHROPIC_API_KEY"), snapshot: !!Deno.env.get("GHL_SNAPSHOT_ID"),
+  if (op === "me") return json({ ok: true, email: who, ai: !!Deno.env.get("ANTHROPIC_API_KEY"), snapshot: !!Deno.env.get("GHL_SNAPSHOT_ID"), stripe: !!Deno.env.get("STRIPE_SECRET_KEY"),
     agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name })) });
   if (op === "chat") {
     const a = AGENTS[String(b.agent)]; if (!a) return json({ ok: false, error: "no such agent" }, 400);
