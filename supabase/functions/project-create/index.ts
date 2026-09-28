@@ -33,6 +33,9 @@ Deno.serve(async (req) => {
 
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
+  // GHL's standard Webhook action nests custom keys under customData
+  if (b.customData && typeof b.customData === "object") b = { ...b, ...(b.customData as Record<string, unknown>) };
+  if (!b.contactId && b.contact_id) b.contactId = b.contact_id;
 
   const email = String(b.owner_email ?? FALLBACK_EMAIL).trim();
   const name = String(b.name ?? "").trim() || "New job";

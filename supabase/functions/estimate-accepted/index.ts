@@ -52,8 +52,10 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
-  const loc = String(b.locationId ?? "").trim();
-  const contactId = String(b.contactId ?? "").trim();
+  // GHL's standard Webhook action nests our keys under customData
+  const cd = (b.customData ?? {}) as Record<string, unknown>;
+  const loc = String(b.locationId ?? cd.locationId ?? (b.location as Record<string, unknown>)?.id ?? "").trim();
+  const contactId = String(b.contactId ?? cd.contactId ?? b.contact_id ?? "").trim();
   if (!loc || !contactId) return json({ ok: false, error: "locationId and contactId required" }, 400);
 
   const t = await locationToken(loc);
