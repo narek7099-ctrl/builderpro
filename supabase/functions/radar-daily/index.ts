@@ -204,6 +204,8 @@ async function notifyOwner(email: string, leads: { addr: string; score: number; 
   if (!id) return false;
   const list = leads.map((l, i) => `${i + 1}. ${l.addr} — ${l.score} (${l.why})`).join("\n");
   try { await fetch(`${GHL_BASE}/contacts/${id}/notes`, { method: "POST", headers: ghlH, body: JSON.stringify({ body: `📡 Lead Radar daily — ${leads.length} new leads to contact today:\n${list}\nOpen your portal → Lead Radar to see them on the map.` }) }); } catch { /* optional */ }
+  // the count the workflow's owner SMS reads ({{contact.radar_digest_count}})
+  try { await fetch(`${GHL_BASE}/contacts/${id}`, { method: "PUT", headers: ghlH, body: JSON.stringify({ customFields: [{ key: "radar_digest_count", field_value: String(leads.length) }] }) }); } catch { /* optional */ }
   // remove + re-add tag so the workflow re-triggers every day
   try { await fetch(`${GHL_BASE}/contacts/${id}/tags`, { method: "DELETE", headers: ghlH, body: JSON.stringify({ tags: ["radar-digest"] }) }); } catch { /* ok */ }
   const r2 = await fetch(`${GHL_BASE}/contacts/${id}/tags`, { method: "POST", headers: ghlH, body: JSON.stringify({ tags: ["radar-digest"] }) });
