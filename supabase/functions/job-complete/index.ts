@@ -61,13 +61,22 @@ Deno.serve(async (req) => {
 
   if (!(await verifyUser(req))) return json({ ok: false, error: "not signed in" }, 401);
 
-  let body: { contactId?: string };
+  let body: { contactId?: string; nextService?: string };
   try { body = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   const contactId = (body.contactId ?? "").toString().trim();
   if (!contactId) return json({ ok: false, error: "contactId required" }, 400);
+  const nextService = /^\d{4}-\d{2}-\d{2}$/.test(body.nextService ?? "") ? body.nextService! : "";
 
   const token = await ghlToken();
   if (!token) return json({ ok: false, error: "no GHL token configured" }, 500);
+
+  // 0) the sign-off's next maintenance date -> contact field; the OS/Enterprise
+  //    "Maintenance Reminder" workflow texts the customer 14 days before it
+  if (nextService) {
+    try {
+      await fetch(`${GHL_BASE}/contacts/${contactId}`, { method: "PUT", headers: ghlHeaders(token), body: JSON.stringify({ customFields: [{ key: "next_service_date", field_value: nextService }] }) });
+    } catch { /* the tag below still goes on */ }
+  }
 
   // 1) make sure the tag exists at the location level (best-effort — applying a
   //    tag to a contact also auto-creates it in GHL, so a failure here is fine)
