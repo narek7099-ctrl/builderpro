@@ -233,7 +233,14 @@ async function onboardFull(a: Record<string, string>) {
   // 2) personalize: set business custom values the snapshot's automations use
   try {
     const lt = await locationToken(locationId);
-    const cv = async (name: string, value?: string) => { if (value) { try { await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { method: "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name, value }) }); } catch { /* ignore */ } } };
+    // snapshots already carry these custom values: update by name, create only if missing
+    const have: { id: string; name: string }[] = await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { headers: ghlHeaders(lt) })
+      .then((r) => r.json()).then((d) => d?.customValues ?? []).catch(() => []);
+    const cv = async (name: string, value?: string) => {
+      if (!value) return;
+      const cur = have.find((x) => String(x.name).toLowerCase() === name.toLowerCase());
+      try { await fetch(`${GHL_BASE}/locations/${locationId}/customValues${cur ? "/" + cur.id : ""}`, { method: cur ? "PUT" : "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name, value }) }); } catch { /* ignore */ }
+    };
     await cv("Business Name", a.name); await cv("Business Phone", a.phone); await cv("Business Email", a.email);
     steps.push("Set business custom values (name / phone / email)");
   } catch { /* ignore */ }
@@ -245,7 +252,9 @@ async function onboardFull(a: Record<string, string>) {
     const calR = await fetch(`${GHL_BASE}/calendars/?locationId=${locationId}`, { headers: ghlHeaders(lt2) });
     const calD = await calR.json();
     const cals = calD?.calendars || [];
-    if (Array.isArray(cals) && cals.length) { bookingCalId = cals[0].id; steps.push("Linked their booking calendar (" + (cals[0].name || bookingCalId) + ")"); }
+    // prefer the Inspection calendar (OS/Enterprise snapshots also have Job + Maintenance Visit)
+    const pick = Array.isArray(cals) ? (cals.find((c: { name?: string }) => /inspection/i.test(c.name ?? "")) ?? cals[0]) : null;
+    if (pick) { bookingCalId = pick.id; steps.push("Linked their booking calendar (" + (pick.name || bookingCalId) + ")"); }
   } catch { /* ignore */ }
 
   // 3) create the client's AI receptionist brain (Nova/Lisa)
