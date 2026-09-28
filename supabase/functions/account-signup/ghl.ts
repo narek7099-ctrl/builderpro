@@ -155,22 +155,25 @@ export async function provisionClient(a: { name: string; business: string; email
   if (!locationId) return { ok: true, locationId, steps };
   try {
     const lt = await locationToken(locationId);
-    // the template snapshot already has these values as placeholders: update them, never duplicate
-    const ex = await (await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { headers: ghlHeaders(lt) })).json().catch(() => ({}));
-    const byName = new Map(((ex?.customValues ?? []) as { id: string; name: string }[]).map((c) => [String(c.name).toLowerCase(), c.id]));
+    // the plan snapshot already has these custom values (placeholders), so update
+    // the existing one by name; create it only when the snapshot doesn't have it
+    const have: { id: string; name: string }[] = await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { headers: ghlHeaders(lt) })
+      .then((r) => r.json()).then((d) => d?.customValues ?? []).catch(() => []);
     for (const [n, v] of [["Business Name", a.business], ["Business Phone", a.phone], ["Business Email", a.email], ["Business Address", [pf.address, pf.city, pf.state, pf.zip].filter(Boolean).join(", ")],
-      ["Business Website", pf.website], ["Service Area", pf.serviceArea], ["Business Hours", hoursText(pf.hours)], ["Trade", a.trade], ["Owner Name", a.name], ["License Number", pf.license]]) {
+      ["Business Website", pf.website], ["Service Area", pf.serviceArea], ["Business Hours", hoursText(pf.hours)], ["Trade", a.trade], ["Owner Name", a.name], ["License Number", pf.license],
+      ["Owner Email", a.email], ["Owner Phone", a.phone]]) {
       if (!v) continue;
-      const id = byName.get(String(n).toLowerCase());
-      await fetch(`${GHL_BASE}/locations/${locationId}/customValues${id ? "/" + id : ""}`, { method: id ? "PUT" : "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name: n, value: v }) }).catch(() => {});
+      const cur = have.find((x) => String(x.name).toLowerCase() === String(n).toLowerCase());
+      await fetch(`${GHL_BASE}/locations/${locationId}/customValues${cur ? "/" + cur.id : ""}`, { method: cur ? "PUT" : "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name: n, value: v }) }).catch(() => {});
     }
     steps.push("Business details filled in");
   } catch { /* optional */ }
   let calId = "";
   try {
     const cd2 = await (await fetch(`${GHL_BASE}/calendars/?locationId=${locationId}`, { headers: ghlHeaders(await locationToken(locationId)) })).json();
-    const cals: { id: string; name: string }[] = cd2?.calendars ?? [];
-    calId = (cals.find((c) => /inspection|estimate|consult/i.test(c.name)) ?? cals[0])?.id ?? "";
+    // OS/Enterprise snapshots also carry Job + Maintenance Visit calendars; the AI books inspections
+    const cals: { id: string; name?: string }[] = cd2?.calendars ?? [];
+    calId = (cals.find((c) => /inspection/i.test(c.name ?? "")) ?? cals[0])?.id ?? "";
   } catch { /* optional */ }
   const rb = await sb("ai_brain?on_conflict=slug", {
     method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
