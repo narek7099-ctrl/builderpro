@@ -479,7 +479,7 @@ async function autoOnboard() {
         await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: "setup_failed", subject: "GHL setup failed for " + a.business, body: "Automatic GHL setup failed 3 times. Last: " + log.slice(-1)[0] }) }).catch(() => {});
         done.push(a.email + ": failed, sent to Support"); continue;
       }
-      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade, profile: a.profile });
+      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade, profile: a.profile, plan: a.plan });
       await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: p.locationId, onboard_attempts: a.onboard_attempts + 1,
         onboard_state: p.locationId ? "provisioned" : "new", setup_log: [...log, `Retry ${a.onboard_attempts + 1}:`, ...p.steps, ...(p.error ? ["Error: " + p.error] : [])] }) });
       done.push(a.email + (p.locationId ? ": GHL built" : ": retry failed"));

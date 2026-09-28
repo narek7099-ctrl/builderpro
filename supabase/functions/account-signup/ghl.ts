@@ -137,18 +137,20 @@ export function hoursText(h: Profile | undefined): string {
   if (!h) return "";
   return DAYS.map(([k, n]) => { const d = h[k]; return d && d.open ? `${n} ${d.from}-${d.to}` : `${n} closed`; }).join(", ");
 }
-export async function provisionClient(a: { name: string; business: string; email: string; phone?: string; trade?: string; profile?: Profile }): Promise<{ ok: boolean; locationId: string; steps: string[]; error?: string }> {
+export async function provisionClient(a: { name: string; business: string; email: string; phone?: string; trade?: string; profile?: Profile; plan?: string }): Promise<{ ok: boolean; locationId: string; steps: string[]; error?: string }> {
   const pf: Profile = a.profile ?? {};
   const steps: string[] = [];
   if (!GHL_API_KEY || !GHL_COMPANY_ID) return { ok: false, locationId: "", steps, error: "GHL_API_KEY / GHL_COMPANY_ID not set" };
   const body: Record<string, unknown> = { companyId: GHL_COMPANY_ID, name: a.business || a.name, phone: a.phone || undefined, email: a.email, country: "US",
     address: pf.address || undefined, city: pf.city || undefined, state: pf.state || undefined, postalCode: pf.zip || undefined, website: pf.website || undefined, timezone: pf.timezone || undefined };
-  if (GHL_SNAPSHOT_ID) body.snapshotId = GHL_SNAPSHOT_ID;
+  // each plan has its own template snapshot; the generic one is the fallback
+  const snap = (a.plan && Deno.env.get("GHL_SNAPSHOT_" + a.plan.toUpperCase())) || GHL_SNAPSHOT_ID;
+  if (snap) body.snapshotId = snap;
   const cr = await fetch(`${GHL_BASE}/locations/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify(body) });
   const cd = await cr.json().catch(() => ({}));
   if (!cr.ok) return { ok: false, locationId: "", steps, error: `GHL said ${cr.status}: ${JSON.stringify(cd).slice(0, 200)}` };
   const locationId = cd?.id || cd?.location?.id || cd?._id || "";
-  steps.push("GHL sub-account created" + (GHL_SNAPSHOT_ID ? " from your snapshot" : " (no GHL_SNAPSHOT_ID set, so it's empty)"));
+  steps.push("GHL sub-account created" + (snap ? " from the " + (a.plan || "default") + " snapshot" : " (no snapshot set, so it's empty)"));
   if (!locationId) return { ok: true, locationId, steps };
   try {
     const lt = await locationToken(locationId);
