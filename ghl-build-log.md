@@ -45,5 +45,56 @@ Spec: GHL-BUILD-SPEC.md. Demo and client sub-accounts are read-only.
 - **SNAPSHOT "BuilderPro Foundation" = `m8xaXFkznoQZLjySnFlZ`** (from BP Foundation Template, all assets: 24 workflow items incl. folders, 35 tags, 22 custom values, 41 custom fields, pipeline Jobs, calendar Inspection, Conversation AI Lisa, Voice AI Lisa, knowledge base, review settings).
 - Created sub-account **BP OS Template** = location `e3hrfIp2KFkCb2c34qbI` from snapshot BuilderPro Foundation (no sample data, agency-own). Snapshot loaded (pipeline Jobs present).
 - Code (for OS/Enterprise): job-complete now accepts `nextService` and writes contact field `next_service_date` (the portal sends it from the installation sign-off); radar-daily writes `radar_digest_count` on the owner contact before tagging `radar-digest`. Both functions need redeploying.
-- Paused: Chrome window went hidden (minimized/locked screen) — GHL stops rendering; resuming when it is visible again.
+- Paused: Chrome window went hidden (minimized/locked screen) — GHL stops rendering; resumed when visible again (a "Tax ID" billing prompt appeared; dismissed, not filled).
+- OS: pipeline Jobs = New Lead, Contacted, Inspection Scheduled, Estimate Due, Estimate Sent, Decision Pending, Deposit Requested, In Progress, Job Complete, Paid in Full, Lost, Reactivation ("Won" renamed to Paid in Full so the Foundation workflows keep the stage id). Stage reordering done by dispatching HTML5 drag events (plain click-drag doesn't register).
+- OS: calendars Job (8 h slots, slug bp-job-3cb5a9f0) and Maintenance Visit (60 min, slug bp-maintenance-3cb5a9f0), both copies of Inspection.
+- OS: contact fields Next Service Date (`next_service_date`, date) and Radar Digest Count (`radar_digest_count`, number); tags deposit-paid, paid-in-full, maint-due-6m/12m/24m, maintenance-due, review-positive, review-feedback (43 tags); custom value Deposit Percent = 30.
+- Found: the snapshot carries custom value names but not their values (all blank in OS). Provisioning used to POST (create) them, which can't fill an existing one -> fixed account-signup / command / ai-team / agency to update by name. Also the AI booking calendar is now the one named Inspection, not calendars[0].
+- GHL's "Send invoice" workflow action needs a named user and a fixed invoice template, so it can't send a deposit sized to each estimate. New function `estimate-accepted` does it (Deposit Percent x accepted estimate total, sends by SMS+email, tags deposit-sent).
+- OS **08 Estimate Accepted - Deposit**: stop 07 -> tag estimate-accepted -> webhook estimate-accepted (locationId, contactId) -> stage Deposit Requested -> customer SMS "deposit invoice is on its way" -> owner alert.
+- OS **10 Invoice Paid - Deposit or Paid in Full**: if deposit-sent and not deposit-paid -> tag deposit-paid, stage In Progress, webhook project-create (owner_email = Business Email custom value, name, phone, contactId -> Active Job in the portal), owner alert "book it on the Job calendar". Else -> remove from 15 + 16, stage Paid in Full (won), tags customer + invoice-paid + paid-in-full + review-requested, remove bot-active, owner alert. Re-entry on.
+- OS **15 Job Complete - Final Invoice Due** (copy of 06): tag job-complete -> stage Job Complete -> owner alert "send the final invoice" -> wait for final-sent or paid-in-full, 1 day -> loop.
+- OS **16 Final Invoice Chase** (copy of 07): tag final-sent -> 2d reminder SMS -> 3d reminder SMS -> 4d owner alert "call them". Stop on response, 8am-8pm. 10 removes the contact when paid.
+- OS **07**: after the first follow-up, stage -> Decision Pending.
+- OS **02 Speed to Lead**: extra trigger tag `lead-source` (Lead Sources leads carry new-lead + lead-source; re-entry off, so one enrollment).
+- OS **17 Radar Contacted - Opener**: tag radar-contacted -> BP Opener = radar copy -> tag bot-active (-> 01, which skips customers/in-pipeline/excluded).
+- OS **18 Radar Digest - Owner SMS**: tag radar-digest (radar-daily re-tags the owner's own contact daily) -> SMS "Your {{contact.radar_digest_count}} new Lead Radar leads are ready". Re-entry on.
+- OS **19 Maintenance Reminder**: triggers custom date reminder (Next Service Date, 14 days before, match year) OR tag maintenance-due -> SMS "your maintenance is due in the next couple of weeks, reply with a day" -> owner alert "book it on the Maintenance Visit calendar" -> remove maintenance-due. Re-entry on, Mon-Fri 8-5 contact time.
+- OS **19b Maintenance Timer (maint-due tags)**: tags maint-due-6m / 12m / 24m -> wait 168 / 351 / 716 days -> tag maintenance-due (-> 19) -> wait 14 days -> Go to the first wait (repeats every 6 / 12 / 24 months).
+- OS **11 Review Request - Rating Routing**: 1d -> "How did we do? Reply 1-5" -> wait for reply (3 days) -> reply contains 4 or 5: Google review link + tag review-positive; contains 1-3: apology asking what went wrong + owner alert (no review link); other reply: owner alert. Stop on response turned OFF here (it would end the workflow at the rating reply).
+- OS **20 Job and Maintenance Appointments**: appointment confirmed on Job or Maintenance Visit calendar -> confirmation SMS -> 1 day before -> reminder. Mon-Sat 8-5 contact time.
 - Design: GHL if/else branches never rejoin and "wait for reply" needs an SMS in the same workflow, so every entry workflow only sets contact field `bp_opener` (its own opener line) and adds `bot-active`; 01 does all messaging.
+- **OS TEST (Narek Test, contact dIsQBzwV5QY0U9JT9fDC, timezone Asia/Tokyo so customer SMS sit in quiet hours):**
+  - new-lead + lead-source -> 02: bot-active, in-pipeline, opportunity New Lead. PASS.
+  - Inspection booked -> Inspection Scheduled; inspection-done -> Estimate Due. PASS.
+  - Estimate EST-1 $1000 sent -> Estimate Sent (07, then Decision Pending after the first follow-up). PASS.
+  - Accepted on the customer link -> 08: estimate-accepted tag, stage Deposit Requested. PASS. The webhook step errored ("Needs review") because estimate-accepted is not deployed yet, so the deposit invoice was created by hand for the rest of the test.
+  - Deposit invoice $300 marked sent + manual payment -> 10 deposit branch: deposit-paid, stage In Progress. PASS (project-create webhook needs the redeploy with the customData fix).
+  - Tag job-complete -> 15: stage Job Complete, then exits when final-sent arrives. PASS.
+  - Tag final-sent -> 16 enrolled. Final Invoice $700 paid -> 10 final branch: removed from 15 + 16 (0 active), stage Paid in Full, status Won, tags customer + invoice-paid + paid-in-full + review-requested, bot-active removed. PASS. 11 enrolled.
+  - Tags maintenance-due + maint-due-6m -> 19 and 19b enrolled. PASS.
+  - Not live-tested: 18 (needs the Owner Phone set at provisioning) and 20 (Job-calendar confirmation, same trigger as the tested Inspection flow).
+- **SNAPSHOT "BuilderPro OS" = `cdRGIx2azgolhnDj257c`** (from BP OS Template, all assets: 31 workflow items incl. folders, 43 tags, 23 custom values, 43 custom fields, pipeline Jobs (12 stages), calendars Inspection + Job + Maintenance Visit, Conversation AI, Voice AI, knowledge bases, review settings).
+- Created sub-account **BP Enterprise Template** = location `bjhV3CSImxxjN0HW23uJ` from snapshot BuilderPro OS (agency-own). GHL still added 5 "(Example)" sample contacts + a few sample tags (follow up, warm lead, high-priority); contacts are not snapshot assets, so they don't reach clients. Left as is (no deletions).
+- Enterprise: custom values Location Name / Location Address / Location Phone / Location Service Area (blank; filled per location). Customer copy already uses custom values only; no hard-coded addresses.
+- Enterprise: tags ai-team-alert (the AI Team adds it through its contacts.tag tool to page the owner) and priority-support.
+- Enterprise folder **5 Enterprise**:
+  - **21 Priority Owner Alerts**: triggers tag ai-team-alert / intent-storm / missed-call / estimate-accepted / review-feedback -> internal SMS to {{custom_values.owner_phone}} -> internal email to {{custom_values.owner_email}} ("Priority: {{contact.name}} needs you now") -> remove ai-team-alert. Re-entry on, no time window.
+  - **22 Priority Support Request**: tag priority-support -> internal email to support@builderpro-os.com with business name, location id, owner name/phone/email, contact -> remove priority-support.
+- Enterprise Lisa: new knowledge base **Lisa - Company Documents** (empty, upload-ready for price lists, warranties, FAQs) attached as a Knowledge Base Trigger; prompt gains a Location line (location_name / address / phone / service_area as live chips, falls back to the business facts when blank). Prompt still reads the ridge_* values.
+- Found: snapshots do **not** carry Lisa's channel deployment (Deploy tab shows SMS / Chat widget "Configure" in OS and Enterprise even though Foundation had them). Each client account needs Lisa assigned to SMS + Chat widget after provisioning (manual or via API).
+- For testing only, Enterprise Owner Email = support@builderpro-os.com and Owner Phone = +18184531111 (snapshots carry names, not values; provisioning overwrites them by name).
+- **ENTERPRISE TEST (Narek Test, contact jWpn4wGZgDqsI04sbX8p):**
+  - new-lead + lead-source + intent-storm -> 02 (opportunity New Lead, Lisa opener, bot-active, in-pipeline), 03c (ai-qualified), 21 (owner email "Priority: Narek Test needs you now" delivered; owner SMS failed only for lack of a number). PASS.
+  - Inspection booked -> Inspection Scheduled + confirmation SMS; inspection-done -> Estimate Due. PASS.
+  - Estimate EST-1 $1000 sent -> Estimate Sent; accepted on the customer link -> 08 (estimate-accepted, Deposit Requested, deposit SMS) and 21 again (owner email). PASS (08 webhook errors until estimate-accepted is deployed, as in OS).
+  - Deposit $300 paid -> 10 deposit branch -> In Progress. PASS.
+  - job-complete + final-sent + priority-support + ai-team-alert -> 15 Job Complete; 22 support email delivered; 21 owner email; both tags removed afterwards. PASS.
+  - Final $700 paid -> 10 final branch: Won, customer + invoice-paid + paid-in-full + review-requested, bot-active removed. PASS.
+  - 21: 3 enrollments, 22: 1, 0 active.
+- **SNAPSHOT "BuilderPro Enterprise" = `cWoCOr2RJDfc3x3FxnQm`** (from BP Enterprise Template, all assets: 34 workflow items incl. folders, 48 tags, 27 custom values, 43 custom fields, pipeline Jobs, 3 calendars, Conversation AI, Voice AI, 4 knowledge bases, review settings).
+
+## Snapshot IDs
+- BuilderPro Foundation: `m8xaXFkznoQZLjySnFlZ`
+- BuilderPro OS: `cdRGIx2azgolhnDj257c`
+- BuilderPro Enterprise: `cWoCOr2RJDfc3x3FxnQm`
