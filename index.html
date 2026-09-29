@@ -28441,7 +28441,7 @@ function bpPlanInfo(){
 }
 async function bpAcctLoad(){
   if(!BP_LIVE)return;
-  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,ai_addon,profile').maybeSingle(); if(r&&r.data){ var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
+  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
 }
 function bpBillBanner(){
   var a=window._bpAcct||{}, old=document.getElementById('bpBill'); if(old)old.remove();
@@ -28927,7 +28927,7 @@ var BP_CALC_ALIAS={
   countertops:['countertop','counter top','counters','granite','quartz','stone','surfacing','fabricat']
 };
 function bpCalcAssigned(){
-  var t='';try{t=(((bpSettingsGet()||{}).company||{}).trade||'').toLowerCase();}catch(e){}
+  var t='';try{t=((((bpSettingsGet()||{}).company||{}).trade)||((window._bpAcct||{}).trade)||'').toLowerCase();}catch(e){}
   var id=null;
   if(t){BP_CALC_IDS.forEach(function(p){ if(!id&&(t.indexOf(p[0])>-1||p[1].toLowerCase().indexOf(t)>-1||t.indexOf(p[1].toLowerCase())>-1)) id=p[0]; });}
   if(!id&&t){
@@ -28998,13 +28998,15 @@ window.bpCalcTab=function(t){
    matching one so the client edits prices beside the thing their customer actually uses */
 window.bpCalcFrameReload=function(){
   var host=document.getElementById('bpCalcPreviewBox'); if(!host) return;
-  var cid=window._bpCalcCur||bpCalcAssigned(), idx=BP_CALC_IDX[cid];
-  var src=document.querySelectorAll('#estimator .est-frame')[idx];
+  var cid=window._bpCalcCur||bpCalcAssigned();
+  var T={roofing:'Roof',hvac:'HVAC',plumbing:'Plumbing',electrical:'Electrical',general:'Remodel',landscaping:'Landscaping',pools:'Pool',trim:'Trim Carpentry',painting:'Painting',countertops:'Countertop'};
+  var src=document.querySelector('#estimator .est-frame[title="'+(T[cid]||'Roof')+' Estimator"]');
   host.innerHTML='';
   if(!src){ host.innerHTML='<div class="bpx-empty2" style="padding:40px">Preview isn\'t available for this calculator.</div>'; return; }
   var f=document.createElement('iframe');
   f.className='bpx-calc-iframe'; f.setAttribute('title','Live calculator preview');
-  f.setAttribute('srcdoc',src.getAttribute('srcdoc')||src.getAttribute('data-srcdoc')||'');
+  var sd=src.getAttribute('srcdoc')||src.getAttribute('data-srcdoc'), su=src.getAttribute('src')||src.getAttribute('data-src');
+  if(sd) f.setAttribute('srcdoc',sd); else if(su) f.setAttribute('src',su);
   host.appendChild(f);
 };
 function bpCalcRender(cid,override){
@@ -35179,16 +35181,22 @@ function bpSettingsSet(o){try{localStorage.setItem('bpSettings',JSON.stringify(o
 // Pull this client's saved settings from the server; refresh the form if open.
 async function bpSettingsPull(){
   var u=await bpSetUser(); if(!u)return;
+  /* the settings cache is per device; never let one account see (or save) another's */
+  var oid=bpOwnerId(u), prevOwner=null; try{prevOwner=localStorage.getItem('bpSettingsOwner');}catch(e){}
+  var sameOwner=(prevOwner===oid);
+  if(prevOwner&&!sameOwner){ bpSettingsSet({}); try{localStorage.removeItem('bpCalcId');}catch(e){} }
+  try{localStorage.setItem('bpSettingsOwner',oid);}catch(e){}
   try{
-    var r=await bpSetSB.from('client_settings').select('data').eq('user_id',bpOwnerId(u)).maybeSingle();
+    var r=await bpSetSB.from('client_settings').select('data').eq('user_id',oid).maybeSingle();
     if(r&&r.data&&r.data.data){
       var merged=r.data.data, local=bpSettingsGet();
       if(local.company&&local.company.logo){merged.company=merged.company||{};if(!merged.company.logo)merged.company.logo=local.company.logo;}
       bpSettingsSet(merged);
       if(document.querySelector('.bpx-set-grid'))bpSettings();
+      if(window._bpCurView==='calculator')bpCalculator();
     }
     /* settings saved on this device before the server table existed: send them up once */
-    else if(r&&!r.error&&!(window.bpTeamIsCrew&&bpTeamIsCrew())){ var loc=bpSettingsGet(); if(loc&&Object.keys(loc).length) bpSettingsPush(loc); }
+    else if(r&&!r.error&&sameOwner&&!(window.bpTeamIsCrew&&bpTeamIsCrew())){ var loc=bpSettingsGet(); if(loc&&Object.keys(loc).length) bpSettingsPush(loc); }
   }catch(e){}
 }
 function bpDataUrlToBlob(d){var parts=d.split(',');var mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/png';var bin=atob(parts[1]);var n=bin.length;var arr=new Uint8Array(n);while(n--)arr[n]=bin.charCodeAt(n);return new Blob([arr],{type:mime});}
