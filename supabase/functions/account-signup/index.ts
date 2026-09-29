@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
   // GHL + AI receptionist in the background; the command center's onboarding
   // queue retries a failed build and has the Builder team finish the setup
   const work = (async () => {
-    const r = await provisionClient({ name, business, email, phone, trade, profile });
+    const r = await provisionClient({ name, business, email, phone, trade, profile, plan });
     await sb(`accounts?user_id=eq.${uid}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: r.locationId, onboard_state: r.locationId ? "provisioned" : "new", setup_log: r.error ? [...r.steps, "Error: " + r.error] : r.steps }) });
   })().catch(async (e) => { await sb(`accounts?user_id=eq.${uid}`, { method: "PATCH", body: JSON.stringify({ setup_log: ["Error: " + String(e).slice(0, 200)] }) }); });
   try { (globalThis as unknown as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime?.waitUntil(work); } catch { await work; }
