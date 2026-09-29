@@ -177,7 +177,7 @@
   var S = { plan: null, sel: '01', mine: 1 };
   var avail = function (w) { return w.from <= S.plan; };
   var variant = function (w) { var x = w.v[0]; w.v.forEach(function (y) { if (y.from <= S.plan) x = y; }); return x; };
-  var status = function (w) { if (S.plan > 0 && w.from === S.plan) return 'new'; var x = variant(w); if (S.plan > 0 && x.from === S.plan && w.from < S.plan) return 'chg'; return ''; };
+  var status = function (w) { return ''; }; var status0 = function (w) { if (S.plan > 0 && w.from === S.plan) return 'new'; var x = variant(w); if (S.plan > 0 && x.from === S.plan && w.from < S.plan) return 'chg'; return ''; };
   var conn = '<div class="wa-conn"><div class="wa-ln"></div><div class="wa-plus">+</div><div class="wa-ln"></div></div>';
   function stepHTML(s) {
     if (!Array.isArray(s)) return branchHTML(s);
@@ -193,7 +193,7 @@
     return '<div class="wa-bwrap"><div class="wa-node"><div class="wa-ic wa-logic">' + svg('fork') + '</div><div><div class="wa-nt">If / Else</div><div class="wa-nd">' + b['if'] + '</div></div></div><div class="wa-ln" style="height:14px"></div><div class="wa-cols">' + cols + '</div></div>';
   }
   function trigHTML(tr) {
-    var m = TRIG[tr[0]], isNew = tr[2] != null && tr[2] === S.plan && S.plan > 0;
+    var m = TRIG[tr[0]], isNew = false;
     return '<div class="wa-tcard' + (isNew ? ' added' : '') + '"><div class="wa-th"><div class="wa-ti">' + svg(m[1]) + '</div><div class="wa-tk">' + m[0] + '</div></div><div class="wa-tb">' + fmt(tr[1]) + (isNew ? ' <span class="wa-dot new">NEW</span>' : '') + '</div></div>';
   }
   function render() {
@@ -201,10 +201,7 @@
     var w0 = WF.filter(function (w) { return w.id === S.sel; })[0]; if (!w0 || !avail(w0)) S.sel = '01';
     var list = WF.filter(avail);
     var nNew = list.filter(function (w) { return status(w) === 'new'; }).length, nChg = list.filter(function (w) { return status(w) === 'chg'; }).length;
-    var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations running</span>'
-      + (S.plan > 0 ? '<span class="wa-pill new">' + nNew + ' added in ' + PLANS[S.plan].name + '</span>' + (nChg ? '<span class="wa-pill chg">' + nChg + ' upgraded</span>' : '') : '') + '</div>'
-      + '<div class="wa-plans">' + PLANS.map(function (p, i) { return '<button data-p="' + i + '" class="' + (i === S.plan ? 'on' : '') + '"><b>' + p.name + (i === S.mine ? ' · yours' : '') + '</b><span>' + p.price + ' / mo</span></button>'; }).join('') + '</div></div>';
-    if (S.plan > S.mine) h += '<div class="wa-up">You are previewing the ' + PLANS[S.plan].name + ' plan. <a href="#" data-upg="' + PLANS[S.plan].k + '">Upgrade</a> to switch these on in your account.</div>';
+    var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations running on your ' + PLANS[S.plan].name + ' plan</span></div></div>';
     h += '<div class="wa-lay"><aside class="wa-list">';
     [1, 2, 3, 4, 5].forEach(function (f) {
       var items = WF.filter(function (w) { return w.folder === f && avail(w); }); if (!items.length) return;
@@ -214,10 +211,10 @@
     var w = WF.filter(function (x) { return x.id === S.sel; })[0], x = variant(w), st = status(w), note = '';
     if (st === 'new') note = '<div class="wa-note newn">Added in ' + PLANS[S.plan].name + '.</div>';
     else if (st === 'chg') note = '<div class="wa-note"><b>Upgraded in ' + PLANS[S.plan].name + ':</b> ' + x.change + '</div>';
-    else if (w.v.length > 1 && S.plan < w.v[w.v.length - 1].from) { var up = w.v[w.v.length - 1]; note = '<div class="wa-note soft">On ' + PLANS[up.from].name + ': ' + up.change + '</div>'; }
+    
     var n = x.triggers.length, W = n * 232 - 12;
     var merge = n > 1 ? '<div class="wa-merge"><svg viewBox="0 0 ' + W + ' 28" preserveAspectRatio="none" style="width:' + W + 'px">' + x.triggers.map(function (_, i) { var X = i * 232 + 110, c = W / 2; return '<path d="M' + X + ' 0 C' + X + ' 14 ' + c + ' 14 ' + c + ' 28" fill="none" stroke="#c3cbd6" stroke-width="2"/>'; }).join('') + '</svg></div>' : '<div class="wa-ln" style="height:20px"></div>';
-    h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + (S.plan > S.mine ? 'Preview' : 'Live') + '</span></div>' + note
+    h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + 'Live' + '</span></div>' + note
       + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'
       + '<div class="wa-leg"><span><i class="wa-msg"></i>Customer message</span><span><i class="wa-contact"></i>Contact / tags</span><span><i class="wa-pipe"></i>Pipeline</span><span><i class="wa-alert"></i>Alert to you</span><span><i class="wa-wait"></i>Wait</span><span><i class="wa-sys"></i>System</span><span><i class="wa-logic"></i>If / else</span></div>'
@@ -231,7 +228,7 @@
   }
   window.bpAutomations = function () {
     var k = (window._bpAcct || {}).plan, i = PLANS.map(function (p) { return p.k; }).indexOf(k);
-    S.mine = i < 0 ? 1 : i; if (S.plan == null) S.plan = S.mine;
+    S.mine = i < 0 ? 1 : i; S.plan = S.mine;
     render();
   };
 
