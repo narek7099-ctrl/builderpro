@@ -233,7 +233,7 @@ async function start(){
   if(!me.ok){ el('login').classList.remove('hidden'); el('loginErr').textContent=me.denied?'This login is not an admin.':(me.error||'Could not sign in.'); return; }
   ME=me; el('app').classList.remove('hidden'); el('who').textContent=me.email;
   var w=[]; if(!me.ai)w.push('Add <b>ANTHROPIC_API_KEY</b> in Supabase to Edge Functions to Secrets so the team can think.');
-  if(!me.snapshot)w.push('Add <b>GHL_SNAPSHOT_ID</b> so new accounts are built from your snapshot.');
+  /* each plan builds from its own template snapshot (Foundation, OS, Enterprise), set in sign-up */
   if(me.stripe===false)w.push('Add <b>STRIPE_SECRET_KEY</b> so sign-ups add a card for their trial.');
   el('warn').innerHTML=w.length?'<div class="warnbar">'+w.join(' ')+'</div>':'';
   countPending(); tab(TAB);
