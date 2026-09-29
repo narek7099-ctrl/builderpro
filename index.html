@@ -28431,7 +28431,7 @@ async function bpChangePlan(plan,addons){
     await bpAcctLoad(); bpBuildNav(); bpNav(window._bpCurView||'dashboard');
   }catch(e){ alert(e.message||e); }
 }
-function bpPlan(){
+function bpPlanInfo(){
   var a=window._bpAcct||{}, pl=BP_PLANS[a.plan]||BP_PLANS[((bpSettingsGet().plan||{}).key)]||BP_PLANS.os;
   var st=a.status||'active', days=a.trial_ends_at?Math.max(0,Math.ceil((Date.parse(a.trial_ends_at)-Date.now())/864e5)):0;
   var m={trial:['Free trial','ok','Free trial, '+days+' day'+(days===1?'':'s')+' left. Billed monthly after that, cancel any time.'],
@@ -35264,7 +35264,7 @@ function bpSettings(){
         +'<div class="st-id"><div class="st-logo">'+(BPLOGO?('<img src="'+BPLOGO+'" alt="">'):'<span class="ms">storefront</span>')+'</div>'
           +'<div><b>'+bpEsc(c.name||'Your business')+'</b><span>'+bpEsc(c.trade||'Trade not set')+(c.serviceArea?' · '+bpEsc(c.serviceArea):'')+'</span></div></div>'
         +'<div class="st-navs" role="navigation" aria-label="Settings sections">'+rail+'</div>'
-        +'<div class="st-plan"><span class="ms">verified</span>'+bpEsc(bpPlan().name)+' · $'+bpPlan().price+'/mo</div>'
+        +'<div class="st-plan"><span class="ms">verified</span>'+bpEsc(bpPlanInfo().name)+' · $'+bpPlanInfo().price+'/mo</div>'
       +'</aside>'
       +'<div class="st-body">'
       +sec('business',
@@ -35305,8 +35305,8 @@ function bpSettings(){
       +(SECS.some(function(t){return t[0]==='team';})?sec('team',window.bpTeamPanel?bpTeamPanel():''):'')
       +(SECS.some(function(t){return t[0]==='plan';})?sec('plan',
         '<div class="st-plan">'
-          +'<div class="st-plan-top"><div><div class="st-plan-eyebrow">Your plan</div><div class="st-planhead"><b>'+bpEsc(bpPlan().name)+'</b><span class="bpx-badge '+bpPlan().badge+'">'+bpPlan().label+'</span></div><div class="bpx-mut" style="font-size:13px;margin-top:4px">'+bpPlan().note+'</div></div>'
-            +'<div class="st-price">$'+bpPlan().price+'<span> / month</span></div></div>'
+          +'<div class="st-plan-top"><div><div class="st-plan-eyebrow">Your plan</div><div class="st-planhead"><b>'+bpEsc(bpPlanInfo().name)+'</b><span class="bpx-badge '+bpPlanInfo().badge+'">'+bpPlanInfo().label+'</span></div><div class="bpx-mut" style="font-size:13px;margin-top:4px">'+bpPlanInfo().note+'</div></div>'
+            +'<div class="st-price">$'+bpPlanInfo().price+'<span> / month</span></div></div>'
           +'<div class="st-feats">'+feats.map(function(x){return '<div><span class="ms">check_circle</span><span>'+x+'</span></div>';}).join('')+'</div>'
         +'</div>'
         +((window._bpAcct||{}).plan?planPick:'')
