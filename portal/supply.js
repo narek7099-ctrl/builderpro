@@ -142,6 +142,7 @@
     if (view('supply')) window.bpSupply();
     else if (view('supplyorders')) window.bpSupplyOrders();
     else if (view('suppliers')) window.bpSuppliers();
+    else if (view('prices') && window.bpPrices) window.bpPrices();
   }
   function supById(id) { return SP.sup.filter(function (s) { return s.id === id; })[0]; }
   function itemsOf(id) { return SP.items.filter(function (i) { return i.supplier_id === id; }); }
@@ -1850,6 +1851,8 @@
   SP.barcode = barcodeSvg;
   SP.plan = plan;
   SP.search = search;   /* used by matlists.js */
+  /* used by prices.js */
+  SP.index = function () { return index().list; }; SP.chainOf = chainOf; SP.chainName = chainName; SP.isSample = isSample;
   /* used by supply-scan.js */
   SP.db = db; SP.supById = supById; SP.itemsOf = itemsOf; SP.load = load; SP.money = money; SP.stockBadge = stockBadge;
 

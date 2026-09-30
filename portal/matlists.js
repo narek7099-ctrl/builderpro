@@ -85,6 +85,27 @@
   function options(q) {
     if (!window.SP || !SP.search) return [];
     var out = [];
+    /* one line per supplier that sells it, with their price, so the
+       supplier is picked by price; the cheapest real price is marked */
+    if (window.PR && PR.cells) {
+      SP.search(q, 8).forEach(function (g, gi) {
+        var cells = PR.cells(g).filter(function (c) { return c.kind !== 'none'; });
+        /* ballparks alone are the same number everywhere: one line is enough */
+        if (!cells.some(function (c) { return c.kind === 'yours'; })) cells = cells.slice(0, 1);
+        if (cells.length === 1) { var c1 = cells[0]; out.push({ name: g.name, sku: c1.sku || '', supplierId: c1.sup.id, supplierName: c1.sup.name, unit: c1.unit || g.unit || 'ea', price: c1.price || 0, kind: c1.kind, n: 1 }); return; }
+        if (!cells.length) {
+          var mid = PR.mid(g);
+          out.push({ name: g.name, sku: '', supplierId: '', supplierName: '', unit: g.unit || 'ea', price: mid, kind: mid ? 'typical' : 'none', gi: gi, first: true, n: 1 });
+          return;
+        }
+        var best = PR.best(cells);
+        cells.forEach(function (c, k) {
+          out.push({ name: g.name, sku: c.sku || '', supplierId: c.sup.id, supplierName: c.sup.name, unit: c.unit || g.unit || 'ea', price: c.price || 0, kind: c.kind,
+            gi: gi, first: k === 0, n: cells.length, cheap: best != null && c === cells[best] && cells.length > 1 });
+        });
+      });
+      return out.slice(0, 24);
+    }
     SP.search(q, 12).forEach(function (g) {
       if (g.offers && g.offers.length) {
         g.offers.slice(0, 3).forEach(function (o) {
@@ -106,6 +127,12 @@
     var o = ML._opts[key] = options(v);
     box.hidden = false;
     box.innerHTML = (o.length ? o.map(function (x, i) {
+      if (x.n > 1) {
+        return (x.first ? '<div class="ml-opt-g">' + esc(x.name) + ' <small>' + x.n + ' suppliers</small></div>' : '')
+          + '<button class="ml-opt ml-opt-sub' + (x.cheap ? ' ml-opt-cheap' : '') + '" onmousedown="event.preventDefault()" onclick="ML.pick(' + tArg(t) + ',' + i + ')"><span class="ml-opt-n">' + esc(x.supplierName)
+          + (x.sku ? ' <small>' + esc(x.sku) + '</small>' : '') + (x.cheap ? ' <span class="ml-cheap">cheapest</span>' : '') + '</span><span class="ml-opt-s">' + (x.kind === 'yours' ? 'your price' : 'typical') + '</span>'
+          + '<span class="ml-opt-p">' + (x.price ? (x.kind === 'typical' ? '~' : '') + money(x.price) + '<small>/' + esc(x.unit) + '</small>' : '<small>no price</small>') + '</span></button>';
+      }
       return '<button class="ml-opt" onmousedown="event.preventDefault()" onclick="ML.pick(' + tArg(t) + ',' + i + ')"><span class="ml-opt-n">' + esc(x.name)
         + (x.sku ? ' <small>' + esc(x.sku) + '</small>' : '') + '</span><span class="ml-opt-s">' + esc(x.supplierName || 'Any supplier') + '</span>'
         + '<span class="ml-opt-p">' + (x.price ? money(x.price) + '<small>/' + esc(x.unit) + (x.kind === 'typical' ? ' typical' : '') + '</small>' : '<small>no price</small>') + '</span></button>';
@@ -119,6 +146,12 @@
     d.save(); ML.q[t.kind + '-' + t.id] = ''; redraw(t);
     var q = $('ml-q-' + t.kind + '-' + t.id); if (q) q.focus();
   }
+  /* used by prices.js: put one item on a job's list */
+  window.bpMatAddItem = function (jobId, it) {
+    var j = jobById(jobId), m = listOf(j, true); if (!m) return false;
+    m.items.push(Object.assign({ id: uid('mi'), qty: 1, addedAt: Date.now(), addedAfterSend: m.status !== 'draft', by: who(), custom: false }, it));
+    saveJobs(); return true;
+  };
   ML.pick = function (kind, id, i) {
     var o = (ML._opts[kind + '-' + id] || [])[i]; if (!o) return;
     push(T(kind, id), { name: o.name, sku: o.sku, supplierId: o.supplierId, supplierName: o.supplierName, unit: o.unit, price: o.price, custom: false });
@@ -330,7 +363,7 @@
 
   /* ---------- pages ---------- */
   function tabs(active) {
-    var t = [['matlists', 'Material lists'], ['mattemplates', 'Templates'], ['suppliers', 'Where I buy']];
+    var t = [['matlists', 'Material lists'], ['prices', 'Prices'], ['mattemplates', 'Templates'], ['suppliers', 'Where I buy']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   ML.tabs = tabs;
@@ -454,6 +487,8 @@
     + '#bpx .ml-res{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(10,20,40,.12);z-index:40;max-height:340px;overflow:auto}'
     + '#bpx .ml-opt{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line-2);padding:9px 12px;font:inherit;font-size:13.5px;cursor:pointer;color:inherit}'
     + '#bpx .ml-opt:hover{background:var(--soft)}#bpx .ml-opt small{color:var(--grey);font-size:11px}#bpx .ml-opt-s{font-size:12px;color:var(--grey);white-space:nowrap}#bpx .ml-opt-p{font-weight:600;white-space:nowrap;text-align:right}'
+    + '#bpx .ml-opt-g{padding:8px 12px 3px;font-size:13px;font-weight:600;border-top:1px solid var(--line-2)}#bpx .ml-opt-g small{color:var(--grey);font-weight:400;font-size:11px}'
+    + '#bpx .ml-opt-sub{padding:6px 12px 6px 24px;font-size:13px}#bpx .ml-opt-cheap{background:rgba(31,170,90,.07)}#bpx .ml-cheap{font-size:10.5px;font-weight:700;color:#178048;background:rgba(31,170,90,.14);border-radius:5px;padding:1px 6px;margin-left:4px}'
     + '#bpx .ml-opt-custom{display:block;color:var(--blue,#006fff);font-weight:600}#bpx .ml-opt-none{padding:10px 12px;font-size:13px}'
     + '#bpx .ml-tbl td{vertical-align:middle;padding:7px 8px}#bpx .ml-tbl th{padding:8px}#bpx .ml-name{font-weight:600}#bpx .ml-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#bpx .ml-meta small{color:var(--grey);font-size:11px}'
     + '#bpx .ml-in{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit;font-size:13.5px;background:#fff;width:100%;box-sizing:border-box;min-width:0}'
