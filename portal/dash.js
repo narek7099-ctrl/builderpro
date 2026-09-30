@@ -114,7 +114,7 @@
        One or two get a wide layout with the photo beside the detail, three
        or four get photo cards. No empty columns either way. */
     var shown = jobs.slice(0, 4);
-    return '<div class="dash-projs"><div class="dash-sec"><h3>' + (shown.some(function (j) { return j.starred; }) ? 'Starred projects' : 'Projects in motion') + '</h3><button class="bpx-linkbtn" onclick="bpNav(\'activejobs\')">'
+    return '<div class="dash-projs"><div class="dash-sec"><h3>' + (shown.some(function (j) { return j.starred; }) ? 'Marked projects' : 'Projects in motion') + '</h3><button class="bpx-linkbtn" onclick="bpNav(\'activejobs\')">'
       + (jobs.length > shown.length ? 'All ' + jobs.length + ' projects' : 'All projects') + '</button></div>' + projCards(shown, crew) + '</div>';
   }
   /* the photo cards, shared with the Projects page's starred row */
@@ -133,7 +133,7 @@
       else meta.push('no photos yet');
       return '<article class="pj-card" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
 
-        + '<div class="pj-img">' + '<button class="pj-star' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unstar' : 'Star this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? '\u2605' : '\u2606') + '</button>' + (!img ? '<div class="pj-nophoto"><span class=ms>add_a_photo</span>No photo yet</div>' : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
+        + '<div class="pj-img">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (!img ? '<div class="pj-nophoto"><span class=ms>add_a_photo</span>No photo yet</div>' : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
         + '<div class="pj-body"><div class="pj-h"><b>' + esc(j.name) + '</b>' + (crew ? '' : '<span class="pj-amt">' + money(est) + '</span>') + '</div>'
         + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
         + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'
