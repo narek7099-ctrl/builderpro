@@ -82,6 +82,15 @@
       img.src = url;
     });
   }
+  /* the same reader, for callers with their own review screen (receipts.js):
+     resolves to the parsed document, rejects when the reader is unreachable */
+  SP.scanShrink = shrink;
+  SP.scanRead = function (file) {
+    if (!live() || !window.bpAuthApi) return Promise.reject(new Error('offline'));
+    return shrink(file).then(function (out) { return toBase64(out.blob).then(function (b64) { return { mime: out.mime, data: b64 }; }); })
+      .then(function (payload) { return window.bpAuthApi(window.BP_URL + '/functions/v1/supply-scan', { op: 'scan', mime: payload.mime, data: payload.data }); })
+      .then(function (r) { if (!r || !r.ok || !r.doc) throw new Error((r && (r.reason || r.error)) || 'Could not read that document.'); return r.doc; });
+  };
   SP.scanFile = function (file) {
     if (SP.scan.busy) return;
     SP.scan.busy = true; SP.scan.file = file.name || 'document';

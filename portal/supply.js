@@ -155,7 +155,7 @@
     return '<div class="bpx-stats">' + t('Places you buy', mine + (ex ? ' <small class="sp-ex">+' + ex + ' example</small>' : '')) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
   }
   function tabs(active) {
-    var t = [['matlists', 'Material lists'], ['mattemplates', 'Templates'], ['suppliers', 'Where I buy']];
+    var t = [['matlists', 'Lists'], ['mattemplates', 'Templates'], ['suppliers', 'Suppliers']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   /* The one line that makes the dependency visible: what we can price, and
@@ -165,7 +165,7 @@
     if (!n) return '';
     var names = mine.slice(0, 3).map(function (s) { return esc(s.name); }).join(', ') + (n > 3 ? ' and ' + (n - 3) + ' more' : '');
     return '<div class="sp-where"><span>Prices from <b>' + names + '</b></span>'
-      + '<span class="sp-where-a"><button class="bpx-linkbtn" onclick="SP.dirOpen()">Add supplier</button><button class="bpx-linkbtn" onclick="bpNav(\'suppliers\')">Where I buy</button></span></div>';
+      + '<span class="sp-where-a"><button class="bpx-linkbtn" onclick="SP.dirOpen()">Add supplier</button><button class="bpx-linkbtn" onclick="bpNav(\'suppliers\')">Suppliers</button></span></div>';
   }
   function state() {
     if (SP.err) return '<div class="sp-note bad"><span class=ms>error</span>' + esc(SP.err) + ' <button class="bpx-rowbtn" onclick="SP.reload()">Retry</button></div>';
@@ -311,14 +311,16 @@
     var mine = SP.sup.filter(function (x) { return !isSample(x); });
     var h = tabs('suppliers') + state() + supKpis();
 
-    h += '<div class="bpx-chead" style="margin:18px 0 12px"><div class="bpx-ptitle" style="margin:0">Where I buy'
+    h += '<div class="bpx-chead" style="margin:18px 0 12px"><div class="bpx-ptitle" style="margin:0">Suppliers'
       + '<span class="lg2">' + (SP.sup.length ? SP.sup.length + (SP.sup.length === 1 ? ' supply house' : ' supply houses') : 'nothing added yet') + '</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
       + (SP.sup.length ? '' : '<button class="bpx-btn ghost sp-inline" onclick="SP.addSamples()">Add sample suppliers</button>')
+      + '<button class="bpx-btn ghost sp-inline" onclick="SP.dirOpen ? SP.dirOpen() : SP.supOpen()">+ Add supplier</button>'
       + '<button class="bpx-addbtn" onclick="SP.supOpen()">+ Add one by hand</button></div></div>';
 
     if (!SP.sup.length) h += firstRun();
     else h += '<div class="sp-grid">' + SP.sup.map(supCard).join('') + '</div>';
+    if (SP.rcSection) h += SP.rcSection();
 
     h += supCharts();
     h += connectGrid(mine);
@@ -377,6 +379,7 @@
       + '<div class="sp-sup-id"><b>' + esc(s.name) + '</b>' + (isSample(s) ? ' <span class="bpx-badge warn">Example</span>' : '')
       + '<span class="bpx-mut">' + esc([s.branch, s.address].filter(Boolean).join(', ') || 'No branch set') + '</span></div>'
       + '<div class="sp-drive">' + (s.drive_min != null ? '<b>' + s.drive_min + '</b> min' : '<b>?</b> min') + '</div></div>'
+      + (SP.rcStats ? SP.rcStats(s) : '')
       + '<div class="sp-sup-meta">' + connLine + (st.learned ? ' <span class="sp-learn"><span class="ms">auto_awesome</span>' + st.learned + ' from your paperwork</span>' : '') + '</div>'
       + (st.items ? '<div class="sp-sup-nums">'
           + '<div><b>' + st.items.toLocaleString() + '</b><span>prices</span></div>'
@@ -385,10 +388,11 @@
           + (vsBadge(st) ? '<div class="sp-sup-vs">' + vsBadge(st) + '<span class="bpx-mut">against the catalog&rsquo;s typical price for the same material</span></div>' : '')
         : '<div class="bpx-mut sp-sup-empty">No prices yet. Ask for a quote, then photograph it.</div>')
       + '<div class="sp-sup-meta bpx-mut">' + [s.account_no ? 'Acct ' + esc(s.account_no) : '', s.will_call ? 'Will-call' : '', s.delivery ? 'Delivers' + (s.delivery_fee > 0 ? ' ' + money(s.delivery_fee) : ' free') : ''].filter(Boolean).join(' &middot; ') + '</div>'
+      + (SP.rcOpen ? '<button class="bpx-btn rc-up" onclick="SP.rcOpen(\'' + s.id + '\')"><span class="ms">photo_camera</span>Upload receipt</button>' : '')
       + '<div class="sp-sup-acts">'
       + (st.items
-        ? '<button class="bpx-rowbtn primary" onclick="SP.scanOpen()">Photograph a bill</button><button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">See their prices</button>'
-        : '<button class="bpx-rowbtn primary" onclick="SP.quoteAsk(\'' + s.id + '\')">Ask for their prices</button><button class="bpx-rowbtn" onclick="SP.scanOpen()">Photograph a bill</button>')
+        ? '<button class="bpx-rowbtn" onclick="SP.itemsOpen(\'' + s.id + '\')">See their prices</button>'
+        : '<button class="bpx-rowbtn" onclick="SP.quoteAsk(\'' + s.id + '\')">Ask for their prices</button>')
       + '</div><div class="sp-links">'
       + '<button class="bpx-linkbtn" onclick="SP.importOpen(\'' + s.id + '\')">Import a price file</button>'
       + (conn.type === 'api' ? '<button class="bpx-linkbtn" onclick="SP.sync(\'' + s.id + '\',this)">Sync stock</button>' : isSample(s) ? '<button class="bpx-linkbtn" onclick="SP.loadSample(\'' + s.id + '\')">' + (st.items ? 'Refresh example stock' : 'Load example prices') + '</button>' : '')
