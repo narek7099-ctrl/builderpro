@@ -33184,7 +33184,9 @@ function bpFinChart(d){
   if(!any) return bpChart.empty({title:'Money in and out',
     empty:'Mark a job done with what you collected, or log an expense, and six months of it appears here.'});
   var net=inc.values.reduce(function(a,b){return a+b;},0)-exp.values.reduce(function(a,b){return a+b;},0);
-  return bpChart.line({
+  /* grouped thin columns, as on the dashboard: each month is a bucket, and
+     in beside out in the same bucket is the comparison being made */
+  return bpChart.columns({
     title:'Money in and out',
     lead:'last six months · '+(net>=0?'kept ':'down ')+bpMoneyFmt(Math.abs(net)),
     x:{label:'Month',values:inc.labels},
@@ -33807,7 +33809,7 @@ function bpInvCharts(){
   });
   var grand=paid+owed;
   if(!(grand>0))return '';
-  var left='<div>'+bpChart.progress({
+  var left='<div>'+bpChart.gauge({
     title:'Collected against everything you have billed',
     value:paid,target:grand,fmt:bpMoneyFmt,
     tone:owed>paid?'warn':'',
@@ -33818,7 +33820,7 @@ function bpInvCharts(){
     lead:bpMoneyFmt(owed)+' outstanding · by how far past its due date',
     x:{label:'Age',values:LATE},
     series:[{name:'Outstanding',values:aging}],
-    fmt:bpMoneyFmt,height:200
+    fmt:bpMoneyFmt,height:200,ordinal:true
   }):bpChart.empty({title:'How late the unpaid ones are',empty:'Everything you have billed is paid. Nothing is aging.'}))+'</div>';
   return '<div class="bpc-two" style="margin-bottom:16px">'+left+right+'</div>';
 }
@@ -33837,7 +33839,7 @@ function bpEstCharts(){
   var tot=Object.keys(byStatus).reduce(function(t,k){return t+byStatus[k];},0);
   if(!(tot>0))return '';
   return '<div class="bpc-two" style="margin-bottom:16px">'
-    +'<div>'+(decided>0?bpChart.progress({
+    +'<div>'+(decided>0?bpChart.gauge({
       title:'Of the quotes that got an answer, what you won',
       value:won,target:decided,fmt:bpMoneyFmt,
       note:open>0?bpMoneyFmt(open)+' still waiting on a yes':'nothing still waiting'
@@ -34510,7 +34512,7 @@ function bpSoCharts(){
   chan=chan.filter(function(c){return c.value>0;});
   var eng=posts.length>=2?bpChart.byMonth(posts,6,function(p){return p.at;},function(p){return +p.engagement||0;}):null;
   var left=eng&&eng.values.some(function(v){return v>0;})
-    ? bpChart.columns({title:'Engagement, month by month',
+    ? bpChart.area({title:'Engagement, month by month',
         lead:'likes, comments and clicks on the posts we can see',
         x:{label:'Month',values:eng.labels},
         series:[{name:'Engagement',values:eng.values}],fmt:bpNum,height:200})
@@ -34980,10 +34982,10 @@ function bpMkCharts(){
      their own figures in the listings panel below. */
   leads=leads.filter(function(x){return x.value>0;});spend=spend.filter(function(x){return x.value>0;});
   var totL=leads.reduce(function(t,x){return t+x.value;},0),totS=spend.reduce(function(t,x){return t+x.value;},0);
-  var left=leads.length?bpChart.donut({title:'Where leads come from',
-      lead:'from ads · last 30 days',
-      rows:leads,fmt:bpNum,axis:'Source',valueHead:'Leads',
-      centre:bpNum(totL),centreNote:totL===1?'lead':'leads'})
+  /* two or three sources is a ranking, not a pie: sorted bars, count at the tip */
+  var left=leads.length?bpChart.ranked({title:'Where leads come from',
+      lead:bpNum(totL)+(totL===1?' lead':' leads')+' from ads · last 30 days',
+      rows:leads,fmt:bpNum,axis:'Source',valueHead:'Leads'})
     : bpChart.empty({title:'Where leads come from',
         empty:'Connect an ad account or your Google listing and every lead is attributed here.'});
   /* Spend on its own only says who is biggest. What it costs to buy one lead
@@ -34995,10 +34997,9 @@ function bpMkCharts(){
   var right=cpl.length?bpChart.ranked({title:'What each lead costs you',
       lead:bpMoneyFmt(totS)+' in 30 days'+(totL>0?' · '+bpMoneyFmt(totS/totL)+' a lead overall':'')+' · shorter is better',
       rows:cpl,fmt:bpMoneyFmt,axis:'Channel'})
-    : spend.length?bpChart.donut({title:'What you spent to get them',
-        lead:'no leads attributed to it yet',
-        rows:spend,fmt:bpMoneyFmt,axis:'Channel',
-        centre:bpMoneyFmt(totS),centreNote:'in 30 days'})
+    : spend.length?bpChart.ranked({title:'What you spent to get them',
+        lead:bpMoneyFmt(totS)+' in 30 days · no leads attributed to it yet',
+        rows:spend,fmt:bpMoneyFmt,axis:'Channel'})
     : bpChart.empty({title:'What each lead costs you',
         empty:'Connect Meta or Google Ads and your spend shows here beside the leads it bought.'});
   return '<div class="bpc-two" style="margin-bottom:16px"><div class="bpx-panel">'+left+'</div><div class="bpx-panel">'+right+'</div></div>';
@@ -35689,7 +35690,7 @@ function rdCharts(shown){
       title:'How the scores fall',
       lead:shown.length+' door'+(shown.length===1?'':'s')+' above your filter · '+hot+' worth knocking first',
       x:{label:'Band',values:BANDS.map(function(b){return b[0];})},
-      series:[{name:'Doors',values:vals}],fmt:bpNum,height:200
+      series:[{name:'Doors',values:vals}],fmt:bpNum,height:200,ordinal:true
     })+'</div><div class="bpx-panel">'+bpChart.ranked({
       title:'What is driving the scores',
       lead:storm?storm+' of them also had a storm pass nearby':'from public permit records and roof age',
@@ -35788,11 +35789,17 @@ function rdHeldRender(){
     if(c.state==='dead'){n.d++;return;} if(r>=1)n.t++; if(r>=2)n.b++; if(r>=3)n.w++; });
   var pct=function(a,b){return b?Math.round(a/b*100)+'%':'\u2014';};
   var live=n.total-n.d;
-  var funnel='<div class="rd-funnel">'
+  /* stages that each narrow the one before: a funnel, with the rate
+     against the stage before on every step */
+  var funnel=(window.bpChart&&live>0?'<div class="bpx-panel" style="margin-bottom:6px">'+bpChart.funnel({
+      title:'How your doors are going',
+      lead:n.w+' won from '+live+' held'+(n.d?' · '+n.d+' marked dead':''),
+      steps:[{label:'Held',value:live},{label:'Talked',value:n.t},{label:'Booked',value:n.b},{label:'Won',value:n.w}],fmt:bpNum
+    })+'</div>':'<div class="rd-funnel">'
     +'<div><b>'+live+'</b><span>held</span></div><i>\u203a</i>'
     +'<div><b>'+n.t+'</b><span>talked \u00b7 '+pct(n.t,live)+'</span></div><i>\u203a</i>'
     +'<div><b>'+n.b+'</b><span>booked \u00b7 '+pct(n.b,n.t)+'</span></div><i>\u203a</i>'
-    +'<div class="win"><b>'+n.w+'</b><span>won \u00b7 '+pct(n.w,n.b)+'</span></div></div>'
+    +'<div class="win"><b>'+n.w+'</b><span>won \u00b7 '+pct(n.w,n.b)+'</span></div></div>')
     +'<div class="bpx-mut" style="font-size:11.5px;margin:6px 0 12px">Each rate is against the stage before it. '
     +'Door-to-door for '+bpEsc((RADAR_TRADES[_rdTrade]||{}).l||'this trade')+' usually runs about 1 in 4 talked to, '
     +'1 in 3 of those booked, half of those won. A stage well under that is the one to work on.</div>';
@@ -37984,7 +37991,11 @@ function bpRepCharts(all){
       lead:'monthly average of the reviews we can see · '+labels[0]+' to '+labels[labels.length-1],
       x:{label:'Month',values:labels},
       series:[{name:'Average rating',values:avg}],
-      fmt:bpChart.NAMED.rating, fmtKind:'rating', height:200
+      fmt:bpChart.NAMED.rating, fmtKind:'rating', height:200,
+      /* a rating lives between 1 and 5; from zero the line is a flat stripe
+         at the top. No wash under it — an area from a raised floor would
+         draw a quantity that is not there. */
+      yFrom:Math.max(1,Math.floor(Math.min.apply(null,avg.filter(function(v){return v>0;}).concat([5]))*2)/2-0.5), yTo:5, area:false
     });
   }
   if(!trend)trend=bpChart.empty({title:'Where your rating stands',
@@ -37998,8 +38009,10 @@ function bpRepCharts(all){
   /* the one reading a rating distribution is for: how much of it is good */
   var above=dist[4]+dist[3], below=dist[1]+dist[0];
   var pc=function(n){return Math.round(n/all.length*100);};
-  var spread=all.length?bpChart.donut({title:'How the stars fall',
-    lead:all.length+' review'+(all.length===1?'':'s')+' \u00b7 '+pc(above)+'% four stars or better, '+pc(below)+'% two or worse',
+  /* five to one, top to bottom, bars from one baseline: reading "how much of
+     it is good" is comparing lengths, which a ring does worse */
+  var spread=all.length?bpChart.ranked({title:'How the stars fall',
+    lead:(mean?mean.toFixed(1)+'\u2605 average \u00b7 ':'')+all.length+' review'+(all.length===1?'':'s')+' \u00b7 '+pc(above)+'% four stars or better, '+pc(below)+'% two or worse',
     rows:distRows, fixed:true,
     ramp:['var(--bpc-pos2)','var(--bpc-pos1)','var(--bpc-mid)','var(--bpc-neg1)','var(--bpc-neg2)'],
     centre:mean?mean.toFixed(1)+'\u2605':String(all.length),
@@ -38711,18 +38724,18 @@ window.bpRepCopy=function(text,btn){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/charts.css?v=20260921e">
+<link rel="stylesheet" href="portal/charts.css?v=20260930a">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20260928v">
+<link rel="stylesheet" href="portal/dash.css?v=20260930a">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <script src="portal/team.js?v=20260928a"></script>
 <script src="portal/radar-key.js?v=20260922b"></script>
 <script src="portal/radar-parcels.js?v=20260922a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20260928c"></script>
-<script src="portal/charts.js?v=20260921e"></script>
-<script src="portal/progress.js?v=20260927a"></script>
+<script src="portal/crew.js?v=20260930a"></script>
+<script src="portal/charts.js?v=20260930a"></script>
+<script src="portal/progress.js?v=20260930a"></script>
 <script src="portal/supply.js?v=20260930c"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
@@ -38731,7 +38744,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20260930c"></script>
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20260930c"></script>
+<script src="portal/dash.js?v=20260930d"></script>
 <script src="portal/pfiles.js?v=20260927a"></script>
 <script src="portal/crewapp.js?v=20260928a"></script>
 <script src="portal/aiteam.js?v=20260929a"></script>

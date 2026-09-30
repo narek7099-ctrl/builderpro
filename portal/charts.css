@@ -1,164 +1,222 @@
 /* ==================================================================
-   Chart styling. The palette slots are declared once here, in both
-   themes, and every chart is written against the role rather than a
-   hex — so the light and dark sets swap in one place and no chart can
-   quietly use a colour that was never validated.
+   Chart styling. Every colour a chart uses is a role declared here, in
+   both themes, so light and dark swap in one place and no chart can use
+   a colour that was never validated.
 
-   These values were run through the data-viz validator against this
-   portal's own surfaces (white, and #121826 in dark). Both sets pass
-   the lightness band, chroma floor, CVD separation and normal-vision
-   floor. Two light slots (aqua, yellow) fall under 3:1 on white, which
-   obliges relief — hence the direct value labels on every ranked row
-   and the table under every chart. Do not substitute a hex here
-   without re-running the validator on both surfaces.
+   Validated with the data-viz validator (validate_palette.js):
+   - categorical s1..s5, light on #f6f9ff: band, chroma, CVD (worst
+     adjacent dE 9.1), normal-vision (22.9) PASS; s3/s4 under 3:1 -> relief
+     by direct labels and the table under every chart.
+   - categorical s1..s5, dark on #121826: all PASS (CVD 8.4, NV 19.8,
+     contrast all >= 3:1).
+   - ordinal o1..o5 (one blue), --ordinal, light on #f6f9ff and dark on
+     #121826: monotone L, adjacent dL >= 0.06, pale end 2.03:1 / 2.77:1.
+   Do not substitute a hex without re-running it on both surfaces.
    ================================================================== */
 #bpx{
-  /* Diverging: two hues either side of a neutral gray, for polarity — a
-     rating against the middle of the scale, a price against typical. Blue
-     and orange rather than the obvious green and red, because green/red is
-     the one pair a colourblind reader cannot separate. Each arm was checked
-     as a one-hue ramp (monotone lightness, visible steps, pale end still
-     reading against the surface) and the two poles as a pair: worst case
-     ΔE 28.9 under protanopia against a target of 8. */
-  --bpc-pos2:#1a4fd0; --bpc-pos1:#7aa4ff;
-  --bpc-mid:#9aa6b6;
-  --bpc-neg1:#f2a173; --bpc-neg2:#c2410c;
+  /* the soft blue a chart panel sits on */
+  --bpc-surface:#f6f9ff;
 
   --bpc-s1:#2f6bff;   /* blue — the portal's own, slot 1 */
   --bpc-s2:#eb6834;   /* orange */
   --bpc-s3:#1baf7a;   /* aqua */
   --bpc-s4:#eda100;   /* yellow */
   --bpc-s5:#4a3aa7;   /* violet */
+
+  /* ordinal: one blue, pale to deep, for things in an order */
+  --bpc-o1:#8fb0ff; --bpc-o2:#5e8cff; --bpc-o3:#2f6bff; --bpc-o4:#1f4fd0; --bpc-o5:#173a99;
+  --bpc-track:#e3ebff;  /* a meter's unfilled track: a paler step of the same blue */
+
+  /* diverging: blue against orange either side of a gray */
+  --bpc-pos2:#1a4fd0; --bpc-pos1:#7aa4ff;
+  --bpc-mid:#9aa6b6;
+  --bpc-neg1:#f2a173; --bpc-neg2:#c2410c;
+
   --bpc-other:#9aa6b6;
   --bpc-warn:#b45309;
-  --bpc-grid:#e8ecf3;
-  --bpc-area:.13;
+  --bpc-grid:#e4eaf4;
+  --bpc-axis:#c9d3e3;
+  --bpc-good-t:#0f7a3d; --bpc-good-b:#e3f5ea;
+  --bpc-bad-t:#b3392f;  --bpc-bad-b:#fdecea;
 }
 #bpx.bpx-dark{
-  /* stepped for the dark surface, not flipped: the pale end of each arm has
-     to lighten to stay visible on #121826, and both were re-validated there */
+  --bpc-surface:#121826;
+  --bpc-s1:#3987e5; --bpc-s2:#d95926; --bpc-s3:#199e70; --bpc-s4:#c98500; --bpc-s5:#9085e9;
+  /* the ramp flips its anchor on dark: more is lighter */
+  --bpc-o1:#2c56c9; --bpc-o2:#4a7cf5; --bpc-o3:#7aa2ff; --bpc-o4:#a8c3ff; --bpc-o5:#d3e1ff;
+  --bpc-track:#1c2a47;
   --bpc-pos2:#a9c4ff; --bpc-pos1:#4f7fe0;
   --bpc-mid:#6d7887;
   --bpc-neg1:#c05a26; --bpc-neg2:#f0a173;
-
-  /* the same five hues, stepped for the dark surface — not an inversion */
-  --bpc-s1:#3987e5; --bpc-s2:#d95926; --bpc-s3:#199e70; --bpc-s4:#c98500; --bpc-s5:#9085e9;
   --bpc-other:#6d7887;
   --bpc-warn:#e0a555;
-  --bpc-grid:#242c3a;
-  --bpc-area:.2;
+  --bpc-grid:#222c3d;
+  --bpc-axis:#34415a;
+  --bpc-good-t:#5fe39a; --bpc-good-b:#12301f;
+  --bpc-bad-t:#ff8a80;  --bpc-bad-b:#3a1717;
 }
 
-#bpx .bpc{margin:0;display:flex;flex-direction:column;gap:10px}
-#bpx .bpc-cap{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:0}
-#bpx .bpc-t{font-size:14px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
-#bpx .bpc-lead{font-size:12.5px;color:var(--grey)}
+/* soft light-blue panels wherever a chart lives */
+#bpx:not(.bpx-dark) .bpx-panel:has(.bpc:not(.bpc-empty)),
+#bpx:not(.bpx-dark) .db-st{background:var(--bpc-surface) !important;border-color:#e2e9f7 !important}
 
-/* legend: present whenever there is more than one series, so identity is
-   never carried by colour alone */
+#bpx .bpc{margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+#bpx .bpc-cap{display:flex;flex-direction:column;gap:2px;padding:0}
+#bpx .bpc-t{font-size:14px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+#bpx .bpc-lead{font-size:12.5px;color:var(--grey);line-height:1.45}
+
+/* legend: present whenever there is more than one series. The key mirrors
+   the mark — a swatch for bars, a short line for lines, a dot for dots. */
 #bpx .bpc-legend{display:flex;gap:14px;flex-wrap:wrap}
 #bpx .bpc-key{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--grey)}
 #bpx .bpc-key i{width:10px;height:10px;border-radius:3px;flex:none}
+#bpx .bpc-key.ln i{width:14px;height:2px;border-radius:2px}
+#bpx .bpc-key.dot i{border-radius:50%}
+#bpx .bpc-key i.tl-done{background:var(--bpc-s1)}
+#bpx .bpc-key i.tl-todo{background:var(--bpc-surface);box-shadow:inset 0 0 0 2px var(--bpc-o2)}
+#bpx .bpc-key i.tl-late{background:var(--bpc-warn)}
+#bpx .bpc-key i.tl-today{background:var(--grey)}
 
-#bpx .bpc-plot{position:relative}
-#bpx .bpc-plot svg{display:block;width:100%}
-/* strokes stay the thickness they were drawn at however the viewBox scales */
+#bpx .bpc-plot{position:relative;min-width:0}
+#bpx .bpc-plot svg{display:block;width:100%;overflow:visible}
 #bpx .bpc-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
-#bpx .bpc-area{opacity:var(--bpc-area);stroke:none}
-#bpx .bpc-end{stroke:var(--card,#fff);stroke-width:2;vector-effect:non-scaling-stroke}
+#bpx .bpc-area{stroke:none}
+#bpx .bpc-end{stroke:var(--bpc-surface);stroke-width:2;vector-effect:non-scaling-stroke;transition:r .12s}
+#bpx .bpc-plot.hov .bpc-end.on{r:5.5}
+#bpx .bpc-endlab{fill:var(--ink);font-size:12px;font-weight:650;font-family:inherit}
 #bpx .bpc-grid{stroke:var(--bpc-grid);stroke-width:1;vector-effect:non-scaling-stroke}
-#bpx .bpc-base{stroke:var(--line)}
-#bpx .bpc-ax{fill:var(--grey);font-size:11px;font-family:inherit}
+#bpx .bpc-base,#bpx .bpc-zero{stroke:var(--bpc-axis)}
+#bpx .bpc-ax{fill:var(--grey);font-size:11px;font-family:inherit;font-variant-numeric:tabular-nums}
+#bpx .bpc-cap-v{fill:var(--grey);font-size:11px;font-weight:600;font-family:inherit}
 #bpx .bpc-hit{fill:transparent}
-#bpx .bpc-cross{stroke:var(--grey-l,var(--grey));stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
-/* the `hidden` attribute is implemented by a UA rule that only matches HTML
-   elements, so an SVG <line hidden> was drawn anyway — a dashed line down the
-   left edge of every line chart, parked at x=0 waiting for a hover */
+#bpx .bpc-cross{stroke:var(--bpc-axis);stroke-width:1;vector-effect:non-scaling-stroke}
 #bpx svg .bpc-cross[hidden]{display:none}
 #bpx .bpc-bar{transition:opacity .12s}
-#bpx .bpc-plot:hover .bpc-bar{opacity:.82}
+#bpx .bpc-plot.hov .bpc-bar{opacity:.45}
+#bpx .bpc-plot.hov .bpc-bar.on{opacity:1}
 
-/* tooltip */
-#bpx .bpc-tip{position:absolute;z-index:4;pointer-events:none;background:var(--card,#fff);
+/* tooltip: the value leads, the name follows; line keys, not boxes */
+#bpx .bpc-tip{position:absolute;z-index:6;pointer-events:none;background:var(--card,#fff);
   border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;
-  box-shadow:0 8px 24px rgba(11,21,43,.12);min-width:120px}
-#bpx .bpc-tip b{display:block;font-size:12px;margin-bottom:4px}
+  box-shadow:0 8px 24px rgba(11,21,43,.14);min-width:120px;max-width:260px}
+#bpx .bpc-tip b{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px}
+#bpx .bpc-tip b.x{font-size:12px;font-weight:600;color:var(--grey)}
 #bpx .bpc-tip span{display:flex;align-items:center;gap:6px;color:var(--grey);white-space:nowrap}
-#bpx .bpc-tip i{width:8px;height:8px;border-radius:2px;flex:none}
-#bpx .bpc-tip em{font-style:normal;font-weight:700;color:var(--ink);margin-left:auto;font-variant-numeric:tabular-nums}
+#bpx .bpc-tip i{width:10px;height:2px;border-radius:2px;flex:none}
+#bpx .bpc-tip i.sw{width:8px;height:8px}
+#bpx .bpc-tip em{font-style:normal;font-weight:700;color:var(--ink);margin-left:auto;padding-left:12px;font-variant-numeric:tabular-nums}
 
-/* ranked rows — the label reads along the bar, and the value is always
-   written out, which is the relief the contrast warning asks for */
-#bpx .bpc-rows{display:flex;flex-direction:column;gap:7px}
-#bpx .bpc-row{display:grid;grid-template-columns:minmax(72px,30%) minmax(0,1fr) auto;gap:10px;align-items:center}
+/* ranked rows — thin bar from a single baseline, 4px rounded at the data
+   end, value written at the tip */
+#bpx .bpc-rows{display:flex;flex-direction:column;gap:8px}
+#bpx .bpc-row{display:grid;grid-template-columns:minmax(72px,32%) minmax(0,1fr) auto;gap:10px;align-items:center;outline:none;border-radius:6px}
 #bpx .bpc-rl{font-size:12.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#bpx .bpc-rt{height:12px;border-radius:99px;background:var(--soft);overflow:hidden}
-#bpx .bpc-rt i{display:block;height:100%;border-radius:99px}
+#bpx .bpc-rt{height:10px;position:relative;border-left:1px solid var(--bpc-axis)}
+#bpx .bpc-rt i{display:block;height:100%;border-radius:0 4px 4px 0;transition:opacity .12s}
 #bpx .bpc-rv{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
-#bpx .bpc-row:hover .bpc-rt{outline:1px solid var(--line)}
+#bpx .bpc-rows:hover .bpc-rt i{opacity:.5}
+#bpx .bpc-row:hover .bpc-rt i,#bpx .bpc-row:focus-visible .bpc-rt i{opacity:1}
+#bpx .bpc-row:focus-visible{box-shadow:0 0 0 2px var(--bpc-o1)}
 #bpx .bpc-row.mine .bpc-rl,#bpx .bpc-row.mine .bpc-rv{font-weight:750}
-@media(max-width:520px){#bpx .bpc-row{grid-template-columns:minmax(64px,40%) minmax(0,1fr) auto}}
+@media(max-width:520px){#bpx .bpc-row{grid-template-columns:minmax(64px,38%) minmax(0,1fr) auto}}
+
+/* funnel: stepped bars, the rate against the stage before under the count */
+#bpx .bpc-funnel .bpc-rt{height:22px;border-left:0}
+#bpx .bpc-funnel .bpc-rt i{border-radius:4px}
+#bpx .bpc-funnel .bpc-rv{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;min-width:48px}
+#bpx .bpc-funnel .bpc-rv small{font-size:11px;font-weight:600;color:var(--grey)}
 
 /* ---------- donut: the total in the hole, the detail beside it ---------- */
-#bpx .bpc-donut{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
-#bpx .bpc-ring{position:relative;flex:none;width:208px;height:208px}
-#bpx .bpc-ring svg{display:block;width:208px;height:208px}
-#bpx .bpc-slice{transition:opacity .13s,transform .13s;transform-origin:104px 104px}
-#bpx .bpc-donut:hover .bpc-slice{opacity:.55}
-#bpx .bpc-slice.on{opacity:1;transform:scale(1.035)}
-/* the hub sits in the hole and never eats the pointer, or the slice behind
-   it would lose its own hover */
+#bpx .bpc-donut{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+#bpx .bpc-ring{position:relative;flex:none;width:184px;height:184px}
+#bpx .bpc-ring svg{display:block;width:184px;height:184px}
+#bpx .bpc-ringbg{fill:none;stroke:var(--bpc-track)}
+#bpx .bpc-slice{transition:opacity .13s,transform .13s;transform-origin:100px 100px}
+#bpx .bpc-donut:hover .bpc-slice{opacity:.5}
+#bpx .bpc-slice.on{opacity:1 !important;transform:scale(1.03)}
 #bpx .bpc-hub{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;pointer-events:none;text-align:center;padding:0 34px}
-#bpx .bpc-hub b{font-size:23px;font-weight:750;letter-spacing:-.02em;color:var(--ink);line-height:1.15}
+#bpx .bpc-hub b{font-size:22px;font-weight:750;letter-spacing:-.02em;color:var(--ink);line-height:1.15;font-variant-numeric:normal}
 #bpx .bpc-hub span{font-size:11.5px;color:var(--grey);margin-top:3px;line-height:1.35}
-
-/* capped, so the value never drifts half a card away from the name it
-   belongs to on a wide panel */
-#bpx .bpc-dlist{flex:1;min-width:190px;max-width:460px;display:flex;flex-direction:column;gap:2px}
+#bpx .bpc-dlist{flex:1;min-width:180px;max-width:440px;display:flex;flex-direction:column;gap:2px}
 #bpx .bpc-drow2{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;gap:10px;align-items:center;
   padding:6px 8px;border-radius:8px;font-size:12.5px}
-#bpx .bpc-drow2.on{background:var(--soft)}
+#bpx .bpc-drow2.on{background:var(--bpc-track)}
 #bpx .bpc-drow2 i{width:10px;height:10px;border-radius:3px}
 #bpx .bpc-dname{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #bpx .bpc-drow2 b{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 #bpx .bpc-drow2 em{font-style:normal;color:var(--grey);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
-@media(max-width:420px){
-  #bpx .bpc-donut{gap:16px;justify-content:center}
+@media(max-width:480px){
+  #bpx .bpc-donut{gap:14px;justify-content:center}
   #bpx .bpc-dlist{min-width:100%}
 }
 @media(prefers-reduced-motion:reduce){#bpx .bpc-slice{transition:none}#bpx .bpc-slice.on{transform:none}}
 
-/* ---------- diverging rows: a side, not just a length ---------- */
-#bpx .bpc-drow .bpc-dt{position:relative;height:14px;border-radius:99px;background:var(--soft)}
-#bpx .bpc-drow .bpc-dt i{position:absolute;top:0;bottom:0;border-radius:99px}
-#bpx .bpc-axis0{position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line);transform:translateX(-.5px)}
+/* ---------- diverging rows ---------- */
+#bpx .bpc-drow .bpc-dt{position:relative;height:10px;border-left:0}
+#bpx .bpc-drow .bpc-dt i{position:absolute;top:0;bottom:0}
+#bpx .bpc-drow .bpc-dt i.r{border-radius:0 4px 4px 0}
+#bpx .bpc-drow .bpc-dt i.l{border-radius:4px 0 0 4px}
+#bpx .bpc-axis0{position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--bpc-axis);transform:translateX(-.5px)}
 #bpx .bpc-dfoot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--grey);
-  border-top:1px solid var(--line);padding-top:7px}
+  border-top:1px solid var(--bpc-grid);padding-top:7px}
 
 /* ---------- scatter ---------- */
-#bpx .bpc-dot{stroke:var(--card,#fff);stroke-width:2;vector-effect:non-scaling-stroke;transition:opacity .12s}
+#bpx .bpc-dot{stroke:var(--bpc-surface);stroke-width:2;vector-effect:non-scaling-stroke;transition:opacity .12s}
 #bpx .bpc-plot:hover .bpc-dot{opacity:.7}
 #bpx .bpc-dot.mine,#bpx .bpc-plot:hover .bpc-dot.mine{opacity:1}
 #bpx .bpc-dotlab{fill:var(--ink);font-size:12px;font-weight:650;font-family:inherit}
 #bpx .bpc-axname{fill:var(--grey-l,var(--grey));font-size:11px}
 
 /* ---------- dumbbell ---------- */
-#bpx .bpc-dbar{stroke:var(--line);stroke-width:3;stroke-linecap:round;vector-effect:non-scaling-stroke}
-#bpx .bpc-dend{stroke:var(--card,#fff);stroke-width:2;vector-effect:non-scaling-stroke}
+#bpx .bpc-dbar{stroke:var(--bpc-track);stroke-width:4;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#bpx .bpc-dend{stroke:var(--bpc-surface);stroke-width:2;vector-effect:non-scaling-stroke}
 #bpx .bpc-dbl{fill:var(--ink);font-size:12.5px}
-#bpx .bpc-dgap{fill:var(--bpc-pos2);font-size:12px;font-weight:700;font-family:inherit;font-variant-numeric:tabular-nums}
-#bpx .bpc-dgap.neg{fill:var(--bpc-neg2)}
+#bpx .bpc-dgap{fill:var(--ink);font-size:12px;font-weight:700;font-family:inherit;font-variant-numeric:tabular-nums}
 
-/* progress */
-#bpx .bpc-ptrack{height:10px;border-radius:99px;background:var(--soft);overflow:hidden}
+/* ---------- progress ---------- */
+#bpx .bpc-prog .bpc-cap{flex-direction:row;justify-content:space-between;align-items:baseline;gap:10px}
+#bpx .bpc-ptrack{display:block;height:8px;border-radius:99px;background:var(--bpc-track);overflow:hidden}
 #bpx .bpc-ptrack i{display:block;height:100%;border-radius:99px;transition:width .4s ease}
 #bpx .bpc-pfoot{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--grey)}
 #bpx .bpc-pfoot span:first-child{font-weight:700;color:var(--ink)}
 @media(prefers-reduced-motion:reduce){#bpx .bpc-ptrack i{transition:none}}
 
+/* ---------- gauge ---------- */
+#bpx .bpc-gauge{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+#bpx .bpc-gsvg{width:220px !important;max-width:100%;height:auto;flex:none}
+#bpx .bpc-gtrack{fill:none;stroke:var(--bpc-track);stroke-linecap:round}
+#bpx .bpc-gfill{fill:none;stroke:var(--bpc-s1);stroke-linecap:round}
+#bpx .bpc-gfill.warn{stroke:var(--bpc-warn)}
+#bpx .bpc-gv{fill:var(--ink);font-size:34px;font-weight:700;letter-spacing:-.03em;font-family:inherit}
+#bpx .bpc-gside{flex:1;min-width:150px;display:flex;flex-direction:column;gap:6px}
+#bpx .bpc-gnum{font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+#bpx .bpc-gnum small{font-size:13px;font-weight:500;color:var(--grey);letter-spacing:0}
+#bpx .bpc-gnote{font-size:12.5px;color:var(--grey);line-height:1.45}
+
+/* ---------- sparkline + delta chip ---------- */
+#bpx .bpc-sparkwrap{margin-top:auto}
+#bpx .bpc-spark{display:block;width:100%;height:48px}
+#bpx .bpc-sl{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#bpx .bpc-sdot-r{stroke:var(--bpc-surface);stroke-width:12;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#bpx .bpc-sdot{stroke-width:8;stroke-linecap:round;vector-effect:non-scaling-stroke}
+#bpx .bpc-delta{display:inline-flex;align-items:center;font-size:11.5px;font-weight:650;border-radius:40px;padding:2px 8px;white-space:nowrap}
+#bpx .bpc-delta.good{background:var(--bpc-good-b);color:var(--bpc-good-t)}
+#bpx .bpc-delta.bad{background:var(--bpc-bad-b);color:var(--bpc-bad-t)}
+#bpx .bpc-delta.flat{background:var(--bpc-track);color:var(--grey)}
+
+/* ---------- timeline ---------- */
+#bpx .bpc-tlline{stroke:var(--bpc-track);stroke-width:4;stroke-linecap:round}
+#bpx .bpc-tldone{stroke:var(--bpc-s1);stroke-width:4;stroke-linecap:round}
+#bpx .bpc-tltoday{stroke:var(--grey);stroke-width:1.5}
+#bpx .bpc-tldot{stroke-width:2.5}
+#bpx .bpc-tldot.done{fill:var(--bpc-s1);stroke:var(--bpc-surface)}
+#bpx .bpc-tldot.todo{fill:var(--bpc-surface);stroke:var(--bpc-o2)}
+#bpx .bpc-tldot.late{fill:var(--bpc-warn);stroke:var(--bpc-surface)}
+#bpx .bpc-tlname{fill:var(--ink);font-size:12px;font-weight:600;font-family:inherit}
+
 /* the numbers behind the picture — always available, never in the way */
-#bpx .bpc-tbl{border-top:1px solid var(--line);padding-top:8px}
+#bpx .bpc-tbl{border-top:1px solid var(--bpc-grid);padding-top:8px}
 #bpx .bpc-tbl summary{font-size:12px;color:var(--grey);cursor:pointer;list-style:none}
 #bpx .bpc-tbl summary::-webkit-details-marker{display:none}
 #bpx .bpc-tbl summary:before{content:'▸ ';font-size:10px}
@@ -172,8 +230,7 @@
 #bpx .bpc-tbl td{font-variant-numeric:tabular-nums}
 
 #bpx .bpc-empty .bpc-none{border:1px dashed var(--line);border-radius:12px;padding:26px 16px;
-  text-align:center;font-size:13px;color:var(--grey);background:var(--tint,#f4f6fa)}
+  text-align:center;font-size:13px;color:var(--grey);background:var(--soft,#f4f6fa)}
 
-/* two charts side by side where there is room, stacked where there is not */
 #bpx .bpc-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 @media(max-width:1000px){#bpx .bpc-two{grid-template-columns:minmax(0,1fr)}}

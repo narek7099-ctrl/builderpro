@@ -307,11 +307,15 @@
     }
     var pr = P.progress(j), t = P.iso(new Date());
     return '<div class="bpp-panel">'
-      + (window.bpChart ? bpChart.progress({
-        title: 'Progress', value: pr.doneDays, target: pr.totalDays,
-        fmt: function (n) { return n + (n === 1 ? ' day' : ' days'); },
-        tone: pr.late.length ? 'warn' : '',
-        note: pr.complete ? 'all phases done' : 'finish ' + P.pretty(pr.finish),
+      /* dated milestones are a timeline: where each phase lands, which are
+         done, which are late, and where today sits among them */
+      + (window.bpChart ? bpChart.timeline({
+        title: 'Progress',
+        lead: pr.pct + '% · ' + pr.doneDays + ' of ' + pr.totalDays + ' days done · '
+          + (pr.complete ? 'all phases done' : 'finish ' + P.pretty(pr.finish))
+          + (pr.late.length ? ' · ' + pr.late.length + ' late' : ''),
+        start: pl.start, today: t,
+        items: pl.phases.map(function (ph) { return { label: ph.name, date: ph.due, done: !!ph.doneAt, late: !ph.doneAt && ph.due <= t }; }),
       }) : '')
       + '<div class="bpp-phases">' + pl.phases.map(function (ph) {
         var late = !ph.doneAt && ph.due <= t;
