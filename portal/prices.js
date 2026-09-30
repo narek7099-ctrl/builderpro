@@ -83,7 +83,7 @@
   }
 
   /* ---------- rendering ---------- */
-  function ico(cat) { return SP.icon ? '<span class="sp-chip pr-ic" title="' + esc(cat) + '">' + SP.icon(cat) + '</span>' : ''; }
+  function ico() { return ''; }
   function date(ts) { return ts ? new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
   function priceHtml(c, ri, cheap) {
     var key = ri + ':' + c.sup.id;
@@ -127,7 +127,7 @@
     var ks = Object.keys(cats).sort();
     if (PR.cat && ks.indexOf(PR.cat) < 0) ks.unshift(PR.cat);
     return '<div class="pr-cats"><button class="pr-cat' + (!PR.cat ? ' on' : '') + '" onclick="PR.catSet(\'\')">All</button>' + ks.map(function (k) {
-      return '<button class="pr-cat' + (PR.cat === k ? ' on' : '') + '" data-c="' + esc(k) + '" onclick="PR.catSet(this.dataset.c)">' + (SP.icon ? SP.icon(k) : '') + esc(k) + ' <small>' + (cats[k] || 0) + '</small></button>';
+      return '<button class="pr-cat' + (PR.cat === k ? ' on' : '') + '" data-c="' + esc(k) + '" onclick="PR.catSet(this.dataset.c)">' + esc(k) + ' <small>' + (cats[k] || 0) + '</small></button>';
     }).join('') + '</div>';
   }
   function supHead(s) {
