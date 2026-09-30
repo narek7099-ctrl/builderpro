@@ -35248,6 +35248,7 @@ function bpSettings(){
     ['owner','Owner','person','Personalises your dashboard, messages and estimates.'],
     ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
     ['ridge',''+BP_AI_NAME+' AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
+    ['brain','AI Brain','psychology','Teach '+BP_AI_NAME+' from your prices, jobs and reviews, and answer what she couldn\'t.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
@@ -35304,6 +35305,7 @@ function bpSettings(){
         +f('set-oemail','Owner email',o.email,'owner@company.com','email','Saved to your account.'))
       +sec('phone','<div id="bpx-ph-host"></div>')
       +sec('ridge','<div id="bpx-rg-host"></div>')
+      +sec('brain','<div id="bpx-br-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
         +row('Dashboard layout','Overview opens on the charts. Command center keeps your numbers and to-dos in a column on the right. Projects first leads with your jobs.',
@@ -35322,22 +35324,24 @@ function bpSettings(){
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
         +'</div>'):'')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='appearance'||_bpSetSec==='phone')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   bpSettingsPull();
   if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpAtlasView('bpx-rg-host'); }
   if(_bpSetSec==='phone') bpPhoneRender();
+  if(_bpSetSec==='brain'&&window.bpBrainRender) bpBrainRender();
 }
 var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','phone','ridge','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','phone','ridge','brain','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='appearance'||t==='phone');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
+  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
   if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
   if(t==='phone') bpPhoneRender();
+  if(t==='brain'&&window.bpBrainRender) bpBrainRender();
 };
 /* ===== Business number =====================================================
    Customers text the number they already know, not the BuilderPro one. This
@@ -38731,6 +38735,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aiteam.js?v=20260929a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
 <script src="portal/automations.js?v=20260929b"></script>
+<script src="portal/aibrain.js?v=20260930a"></script>
 <script src="site/vendor/lenis.min.js?v=20260921-a"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
 <script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>
