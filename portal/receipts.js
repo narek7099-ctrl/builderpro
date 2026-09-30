@@ -168,7 +168,7 @@
     R = SP.rc = blank(supId);
     var s = SP.supById(supId) || {};
     window.bpModal('<h3>Upload a receipt</h3>'
-      + '<div class="bpx-sub">From <b>' + esc(s.name || 'this supplier') + '</b>' + (s.branch ? ', ' + esc(s.branch) : '') + '. We read the date, the lines and the total, then you pick the job it was for.</div>'
+      + '<div class="bpx-sub"><span style="display:inline;font-weight:700">From ' + esc(s.name || 'this supplier') + (s.branch ? ', ' + esc(s.branch) : '') + '.</span> We read the date, the lines and the total, then you pick the job it was for.</div>'
       + '<div class="rc-drop" id="rc-drop"><span class="ms">receipt_long</span><b>Take a photo or choose a file</b>'
       + '<span class="bpx-mut">Photo or PDF, flat and in good light.</span>'
       + '<div class="rc-drop-b"><label class="bpx-btn" for="rc-cam"><span class="ms">photo_camera</span>Take a photo</label>'
