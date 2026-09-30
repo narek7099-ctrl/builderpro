@@ -488,8 +488,12 @@
   }
 
   /* ---------- example data, so the page can be seen before anyone signs in ---------- */
-  function demoShim() {
-    if (live()) return null;
+  function hasOwnData() {
+    var j = (window.bpJobsGet && bpJobsGet()) || [], f = (window.bpFinData && bpFinData()) || {};
+    return j.length > 0 || (f.inc && f.inc.length) || (f.exp && f.exp.length);
+  }
+  function demoShim(force) {
+    if (live() && !force) return null;
     var now = Date.now(), day = 864e5, iso = function (d) { return new Date(now + d * day).toISOString().slice(0, 10); };
     var jobs = [
       { id: 'd1', name: 'Mike Johnson', title: 'Full re-roof, architectural', estimate: 18400, collected: 9200, status: 'active', wonAt: now - 12 * day, sched: { dates: [iso(0), iso(1)], time: '7:00 AM' }, expenses: [] },
@@ -528,11 +532,14 @@
   window.bpDashboard = function () {
     var el = $('bpxViewArea'); if (!el) return;
     var crew = !!(window.bpTeamIsCrew && bpTeamIsCrew());
-    var undo = demoShim();
+    var sample = live() && !hasOwnData();
+    var cl = crew ? '' : checklist();   /* the setup steps always read the account's real state */
+    var undo = demoShim(sample);
     try {
-      el.innerHTML = (live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
+      el.innerHTML = (sample ? '<div class="sp-note warn"><span class="ms">science</span>Example numbers, so you can see how it looks. Add a project or log money and this switches to your own.</div>'
+        : live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
         + topline()
-        + (crew ? '' : checklist())
+        + cl
         + (crew
           ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
           : body(layoutOf(), crew));   /* the layout is chosen under Settings > Appearance */
