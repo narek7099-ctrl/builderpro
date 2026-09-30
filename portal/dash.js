@@ -103,7 +103,7 @@
   function projects(crew) {
     var jobs = ((window.bpJobsGet && bpJobsGet()) || []).filter(function (j) { return j.status === 'active'; });
     if (!jobs.length) {
-      return '<div class="bpx-panel dash-projs-empty"><img src="assets/roofing/roof-underlayment-sm.jpg" alt="" loading="lazy">'
+      return '<div class="bpx-panel dash-projs-empty">'
         + '<div><b>No projects running</b><span class="bpx-mut">Win a deal in Close Deals, or add one straight away. Photos, the schedule and the costs all live on the project.</span>'
         + '<button class="bpx-btn ghost sp-inline" onclick="bpNav(\'activejobs\')">Open Active Projects</button></div></div>';
     }
@@ -121,7 +121,7 @@
   function projCards(shown, crew) {
     var iso = new Date().toISOString().slice(0, 10), split = shown.length <= 2;
     var cards = shown.map(function (j) {
-      var img = (j.photos && j.photos[0]) || (window.bpStockImg ? bpStockImg(j.id) : 'assets/roofing/roof-completed.jpg');
+      var img = (j.photos && j.photos[0]) || '';
       var est = +j.estimate || 0, paid = +j.collected || 0;
       var pct = est > 0 ? Math.min(100, Math.round(paid / est * 100)) : 0;
       var today = j.sched && (j.sched.dates || []).indexOf(iso) >= 0;
@@ -133,7 +133,7 @@
       else meta.push('no photos yet');
       return '<article class="pj-card" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
 
-        + '<div class="pj-img">' + '<button class="pj-star' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unstar' : 'Star this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? '\u2605' : '\u2606') + '</button>' + (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">') + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
+        + '<div class="pj-img">' + '<button class="pj-star' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unstar' : 'Star this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? '\u2605' : '\u2606') + '</button>' + (!img ? '<div class="pj-nophoto"><span class=ms>add_a_photo</span>No photo yet</div>' : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
         + '<div class="pj-body"><div class="pj-h"><b>' + esc(j.name) + '</b>' + (crew ? '' : '<span class="pj-amt">' + money(est) + '</span>') + '</div>'
         + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
         + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'
