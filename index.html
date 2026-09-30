@@ -67,6 +67,7 @@ section{padding:0;}
 .modal-body{padding:22px;}
 
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
+.pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
 <link rel="stylesheet" href="site/site.css?v=20260919-i">
 <script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919-i"}}</script>
@@ -32049,7 +32050,7 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-rstar'+(j.starred?' on':'')+'" title="'+(j.starred?'Unstar':'Star: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'\u2605':'\u2606')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
+      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-mark'+(j.starred?' on':'')+'" title="'+(j.starred?'Unmark':'Mark: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'Marked':'Mark')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done <span class=ms>check</span></button></td></tr>';
     }).join(''):'<tr><td colspan="6" style="padding:0"><div class="bpx-emptyhero"><div><b>No active projects yet</b><div class="bpx-mut" style="font-size:13px;margin-top:3px">When a deposit is paid the job lands here automatically — or add one with <b>+ Add job</b>.</div></div></div></td></tr>';
   } else {
@@ -32066,8 +32067,8 @@ function bpActiveJobs(){
   var starred=active.filter(function(j){return j.starred;}).slice(0,4);
   q('bpxViewArea').innerHTML=
     (_bpJobTab==='active'&&window.bpPlanCheckin?bpPlanCheckin():'')
-    +(_bpJobTab==='active'&&window.bpProjCards?'<div class="dash-projs pj-starred"><div class="dash-sec"><h3>Starred</h3><span class="bpx-mut" style="font-size:12.5px">'
-      +(starred.length?starred.length+' of 4 · tap ☆ on a project to pin it here':'Tap ☆ on up to four projects to keep them here, and first on your dashboard')+'</span></div>'
+    +(_bpJobTab==='active'&&window.bpProjCards?'<div class="dash-projs pj-starred"><div class="dash-sec"><h3>Marked</h3><span class="bpx-mut" style="font-size:12.5px">'
+      +(starred.length?starred.length+' of 4 · tap Mark on a project to pin it here':'Tap Mark on up to four projects to keep them here, and first on your dashboard')+'</span></div>'
       +(starred.length?bpProjCards(starred,!!(window.bpTeamIsCrew&&bpTeamIsCrew())):'')+'</div>':'')
     +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpJobTab==='active'?' on':'')+'" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt'+(_bpJobTab==='done'?' on':'')+'" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
@@ -38730,7 +38731,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20260930c"></script>
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20260930b"></script>
+<script src="portal/dash.js?v=20260930c"></script>
 <script src="portal/pfiles.js?v=20260927a"></script>
 <script src="portal/crewapp.js?v=20260928a"></script>
 <script src="portal/aiteam.js?v=20260929a"></script>
