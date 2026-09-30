@@ -158,13 +158,13 @@
   };
   ML.custom = function (kind, id) {
     var nm = String(ML.q[kind + '-' + id] || '').trim();
-    push(T(kind, id), { name: nm || 'Custom item', sku: '', supplierId: '', supplierName: '', unit: 'ea', price: 0, custom: true });
+    push(T(kind, id), { name: nm || '', sku: '', supplierId: '', supplierName: '', unit: 'ea', qty: '', price: '', note: '', custom: true });
     if (!nm) setTimeout(function () { var ins = document.querySelectorAll('#ml-ed-' + kind + '-' + id + ' .ml-in-name'); if (ins.length) ins[ins.length - 1].focus(); }, 0);
   };
   ML.edit = function (kind, id, itemId, k, v) {
     var t = T(kind, id), d = doc(t); if (!d) return;
     var it = d.items.filter(function (x) { return x.id === itemId; })[0]; if (!it) return;
-    it[k] = (k === 'qty' || k === 'price') ? Math.max(0, num(v)) : String(v);
+    it[k] = (k === 'qty' || k === 'price') ? (String(v).trim() === '' ? '' : Math.max(0, num(v))) : String(v);
     d.save(); redraw(t);
   };
   ML.del = function (kind, id, itemId) {
@@ -185,7 +185,7 @@
   };
 
   /* ---------- templates ---------- */
-  var tplItem = function (it) { return { id: uid('mi'), name: it.name, sku: it.sku || '', supplierId: it.supplierId || '', supplierName: it.supplierName || '', unit: it.unit || 'ea', qty: +it.qty || 1, price: +it.price || 0, custom: !!it.custom }; };
+  var tplItem = function (it) { return { id: uid('mi'), name: it.name, sku: it.sku || '', supplierId: it.supplierId || '', supplierName: it.supplierName || '', unit: it.unit || 'ea', qty: it.qty === '' ? '' : (+it.qty || 1), price: it.price === '' ? '' : (+it.price || 0), note: it.note || '', custom: !!it.custom }; };
   ML.saveTpl = function (jid) {
     var j = jobById(jid), m = listOf(j); if (!m || !m.items.length) { window.bpToast && bpToast('The list is empty.'); return; }
     var name = prompt('Name this template', (j.title || 'Job') + ' materials'); if (name == null) return;
@@ -230,8 +230,8 @@
       + '.pb{margin-top:22px}@media print{.pb{display:none}body{margin:12mm}}</style></head><body>'
       + '<h1>' + esc(biz()) + '</h1><div class="m">Material list for <b>' + esc(j.name || 'Job') + '</b>' + (j.title ? ' &middot; ' + esc(j.title) : '') + (j.addr ? ' &middot; ' + esc(j.addr) : '')
       + '<br>Supplier: <b>' + esc(sup) + '</b> &middot; ' + new Date().toLocaleDateString() + '</div>'
-      + '<table><thead><tr><th>Item</th><th class="n">Qty</th><th>Unit</th><th>Notes</th>' + (np ? '' : '<th class="n">Unit price</th><th class="n">Total</th>') + '</tr></thead><tbody>' + rows + '</tbody>'
-      + (np ? '' : '<tfoot><tr><td colspan="5" class="n">Total</td><td class="n">' + money(total(items)) + '</td></tr></tfoot>') + '</table>'
+      + '<table><thead><tr><th>Item</th><th class="n">Qty</th><th>Unit</th><th>Notes</th>' + (np ? '' : '<th class="n">Est. price</th><th class="n">Est. total</th>') + '</tr></thead><tbody>' + rows + '</tbody>'
+      + (np ? '' : '<tfoot><tr><td colspan="5" class="n">Estimated total</td><td class="n">' + money(total(items)) + '</td></tr></tfoot>') + '</table>'
       + '<button class="pb" onclick="window.print()">Print</button></body></html>';
     var w = window.open('', '_blank'); if (!w) { alert('Allow pop-ups to print the list.'); return; }
     w.document.open(); w.document.write(html); w.document.close();
@@ -239,8 +239,8 @@
   ML.text = function (jid, gi) {
     var j = jobById(jid) || {}, g = groupAt(jid, gi), sup = g.name, items = g.items, np = ML.noPrices;
     return biz() + '\nMaterial list: ' + (j.name || 'Job') + (j.title ? ' - ' + j.title : '') + (j.addr ? '\nJob site: ' + j.addr : '') + '\nSupplier: ' + sup + '\n\n'
-      + items.map(function (it) { return (+it.qty || 0) + ' ' + (it.unit || 'ea') + '  ' + it.name + (it.sku ? ' (' + it.sku + ')' : '') + (np ? '' : '  @ ' + money(it.price) + ' = ' + money(line(it))); }).join('\n')
-      + (np ? '' : '\n\nTotal: ' + money(total(items)));
+      + items.map(function (it) { return (it.qty === '' || it.qty == null ? '' : (+it.qty || 0) + ' ') + (it.unit || 'ea') + '  ' + it.name + (it.sku ? ' (' + it.sku + ')' : '') + (it.note ? ' - ' + it.note : '') + (np || !+it.price ? '' : '  @ ' + money(it.price) + ' = ' + money(line(it))); }).join('\n')
+      + (np ? '' : '\n\nEstimated total: ' + money(total(items)));
   };
   ML.copy = function (jid, gi, btn) {
     var txt = ML.text(jid, gi);
@@ -306,7 +306,7 @@
         h += '<div class="ml-sub"><div class="ml-sub-h">One list per supplier. Print it, or copy it into a text or email.'
           + '<label class="ml-chk"><input type="checkbox" ' + (ML.noPrices ? 'checked' : '') + ' onchange="ML.noPricesSet(\'' + jid + '\',this.checked)"> Leave prices off</label></div>'
           + (gs.length ? gs.map(function (g, gi) {
-            return '<div class="ml-srow"><span><b>' + esc(g.name) + '</b> <span class="bpx-mut">' + g.items.length + (g.items.length === 1 ? ' item' : ' items') + ' &middot; ' + money(total(g.items)) + '</span></span><span class="ml-srow-a">'
+            return '<div class="ml-srow"><span><b>' + esc(g.name) + '</b> <span class="bpx-mut">' + g.items.length + (g.items.length === 1 ? ' item' : ' items') + ' &middot; ' + money(total(g.items)) + ' estimated</span></span><span class="ml-srow-a">'
               + '<button class="bpx-rowbtn" onclick="ML.print(\'' + jid + '\',' + gi + ')">Print list</button>'
               + '<button class="bpx-rowbtn" onclick="ML.copy(\'' + jid + '\',' + gi + ',this)">Copy as text</button></span></div>';
           }).join('') : '<div class="bpx-mut">Nothing on the list yet.</div>')
@@ -315,29 +315,32 @@
     }
     /* add box */
     h += '<div class="ml-add"><span class="ms">search</span><input id="ml-q-' + key + '" class="ml-q" placeholder="Add an item: search your suppliers and the catalog (e.g. shingles, pex 3/4)" autocomplete="off" value="' + esc(ML.q[key] || '') + '" oninput="ML.find(' + a + ',this.value)" onfocus="ML.find(' + a + ',this.value)" onblur="setTimeout(function(){var a=document.activeElement;if(a&&a.id===\'ml-q-' + key + '\')return;var r=document.getElementById(\'ml-res-' + key + '\');if(r)r.hidden=true;},150)">'
-      + '<button class="bpx-rowbtn" onclick="ML.custom(' + a + ')">Add custom item</button>'
+      + '<button class="bpx-rowbtn" onclick="ML.custom(' + a + ')">+ Custom line</button>'
       + '<div class="ml-res" id="ml-res-' + key + '" hidden></div></div>';
     /* table */
-    if (!items.length) h += '<div class="ml-empty bpx-mut">No items yet. Search above to add real products from your suppliers, or add a custom item.</div>';
+    if (!items.length) h += '<div class="ml-empty bpx-mut">No items yet. Search above to add products from your suppliers and the catalog, or add a custom line and write whatever you need.</div>';
     else {
-      h += '<table class="bpx-table ml-tbl"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th>Supplier</th><th class="ml-n">Unit price</th><th class="ml-n">Line total</th><th></th></tr></thead><tbody>'
+      h += '<table class="bpx-table ml-tbl"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th>Supplier</th><th class="ml-n">Est. price</th><th class="ml-n">Est. total</th><th></th></tr></thead><tbody>'
         + items.map(function (it) {
-          var ed = function (k, v, cls, type) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + ' value="' + esc(v) + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
+          var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
+          var blank = function (v) { return v === '' || v == null; };
           return '<tr' + (it.addedAfterSend ? ' class="ml-late"' : '') + '><td data-l="Item">'
-            + (it.custom ? ed('name', it.name, 'ml-in-name') : '<div class="ml-name">' + esc(it.name) + '</div>')
+            + (it.custom ? ed('name', it.name, 'ml-in-name', 0, 'Write anything: item, size, color') : '<div class="ml-name">' + esc(it.name) + '</div>')
             + '<div class="ml-meta">' + (it.sku ? '<small>' + esc(it.sku) + '</small>' : '') + (it.custom ? '<small>custom</small>' : '')
-            + (it.addedAfterSend ? '<span class="ml-tag">Added after sending</span>' : '') + (it.coId ? '<span class="ml-tag ml-tag-ok">On change order</span>' : '') + '</div></td>'
-            + '<td data-l="Qty" class="ml-n">' + ed('qty', +it.qty || 0, 'ml-in-num', 1) + '</td>'
+            + (it.addedAfterSend ? '<span class="ml-tag">Added after sending</span>' : '') + (it.coId ? '<span class="ml-tag ml-tag-ok">On change order</span>' : '') + '</div>'
+            + '<input class="ml-in ml-in-note" placeholder="Notes (color, length, where it goes)" value="' + esc(it.note || '') + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'note\',this.value)"></td>'
+            + '<td data-l="Qty" class="ml-n">' + ed('qty', blank(it.qty) ? '' : +it.qty || 0, 'ml-in-num', 1, 'optional') + '</td>'
             + '<td data-l="Unit">' + (it.custom ? ed('unit', it.unit || 'ea', 'ml-in-unit') : esc(it.unit || 'ea')) + '</td>'
-            + '<td data-l="Supplier">' + (it.custom ? ed('supplierName', it.supplierName || '', 'ml-in-sup') : esc(it.supplierName || '—')) + '</td>'
-            + '<td data-l="Unit price" class="ml-n">' + ed('price', (+it.price || 0).toFixed(2), 'ml-in-num', 1) + '</td>'
-            + '<td data-l="Line total" class="ml-n ml-lt">' + money(line(it)) + '</td>'
+            + '<td data-l="Supplier">' + (it.custom ? ed('supplierName', it.supplierName || '', 'ml-in-sup', 0, 'optional') : esc(it.supplierName || '—')) + '</td>'
+            + '<td data-l="Est. price" class="ml-n">' + ed('price', blank(it.price) ? '' : (+it.price || 0).toFixed(2), 'ml-in-num', 1, 'optional') + '</td>'
+            + '<td data-l="Est. total" class="ml-n ml-lt">' + (blank(it.price) || blank(it.qty) ? '<span class="bpx-mut">—</span>' : money(line(it))) + '</td>'
             + '<td class="ml-x"><button class="ml-rm" title="Remove" aria-label="Remove ' + esc(it.name) + '" onclick="ML.del(' + a + ',\'' + it.id + '\')">&times;</button></td></tr>';
         }).join('') + '</tbody></table>';
       /* footer */
       var gs2 = bySupplier(items);
       h += '<div class="ml-foot">' + (gs2.length > 1 ? gs2.map(function (g) { return '<div class="ml-fr"><span>' + esc(g.name) + '</span><span>' + money(total(g.items)) + '</span></div>'; }).join('') : '')
-        + '<div class="ml-fr ml-grand"><span>Total</span><span>' + money(total(items)) + '</span></div></div>';
+        + '<div class="ml-fr ml-grand"><span>Estimated total</span><span>' + money(total(items)) + '</span></div>'
+        + '<div class="ml-fr ml-small bpx-mut"><span>A plan, not spending. Receipts are what count as cost.</span></div></div>';
     }
     /* change orders */
     if (m) {
@@ -363,7 +366,7 @@
 
   /* ---------- pages ---------- */
   function tabs(active) {
-    var t = [['matlists', 'Material lists'], ['prices', 'Prices'], ['mattemplates', 'Templates'], ['suppliers', 'Where I buy']];
+    var t = [['matlists', 'Lists'], ['mattemplates', 'Templates'], ['suppliers', 'Suppliers']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   ML.tabs = tabs;
@@ -389,26 +392,26 @@
     var withList = rows.filter(function (j) { return j.materials && j.materials.items && j.materials.items.length; });
     var grand = withList.reduce(function (t, j) { return t + ML.total(j); }, 0);
     var h = tabs('matlists')
-      + '<div class="ml-top"><div class="bpx-mut">' + withList.length + (withList.length === 1 ? ' list' : ' lists') + ' &middot; ' + money(grand) + ' in materials</div>'
+      + '<div class="ml-top"><div class="bpx-mut">' + withList.length + (withList.length === 1 ? ' list' : ' lists') + ' &middot; ' + money(grand) + ' estimated. Planning only; receipts on Suppliers are what count as cost.</div>'
       + '<button class="bpx-btn ml-new" onclick="ML.newing=!ML.newing;bpMatLists()">+ New list</button></div>';
     if (ML.newing) {
       var tl = tpls();
-      h += '<div class="bpx-panel ml-newp"><div class="ml-sub-h"><b>New material list</b></div><div class="ml-newf">'
+      h += '<div class="bpx-panel ml-newp"><div class="ml-sub-h"><b>New list</b></div><div class="ml-newf">'
         + '<label>Job<select id="ml-new-job">' + rows.map(function (j) { return '<option value="' + j.id + '">' + esc(j.name || 'Job') + (j.title ? ' — ' + esc(j.title) : '') + '</option>'; }).join('') + '</select></label>'
         + '<label>Start from<select id="ml-new-tpl"><option value="">Blank list</option>' + tl.map(function (tp) { return '<option value="' + tp.id + '">' + esc(tp.name) + ' (' + tp.items.length + ' items)</option>'; }).join('') + '</select></label>'
         + '<button class="bpx-rowbtn ml-primary" onclick="ML.create()">Create</button></div>'
         + (rows.length ? '' : '<div class="bpx-mut">No open jobs. Add a project first.</div>') + '</div>';
     }
-    h += '<div class="bpx-panel ml-panel">' + (rows.length ? '<table class="bpx-table ml-jobs"><thead><tr><th>Job</th><th class="ml-n">Items</th><th class="ml-n">Total</th><th>Status</th><th>Suppliers</th><th></th></tr></thead><tbody>'
+    h += '<div class="bpx-panel ml-panel">' + (rows.length ? '<table class="bpx-table ml-jobs"><thead><tr><th>Job</th><th class="ml-n">Items</th><th class="ml-n">Estimated</th><th>Status</th><th>Suppliers</th><th></th></tr></thead><tbody>'
       + rows.map(function (j) {
         var m = j.materials, n = m && m.items ? m.items.length : 0;
         var sups = m ? bySupplier(m.items).map(function (g) { return g.name; }) : [];
         return '<tr class="ml-jrow" onclick="ML.open=\'' + j.id + '\';bpMatLists()"><td data-l="Job"><b>' + esc(j.name || 'Job') + '</b><div class="bpx-mut ml-small">' + esc(j.title || '') + (j.status === 'done' ? ' &middot; done' : '') + '</div></td>'
-          + '<td data-l="Items" class="ml-n">' + n + '</td><td data-l="Total" class="ml-n">' + (n ? money(ML.total(j)) : '—') + '</td>'
+          + '<td data-l="Items" class="ml-n">' + n + '</td><td data-l="Estimated" class="ml-n">' + (n ? money(ML.total(j)) : '—') + '</td>'
           + '<td data-l="Status">' + (n || m ? statusPill(m.status) : '<span class="bpx-mut ml-small">No list</span>') + '</td>'
           + '<td data-l="Suppliers" class="ml-sups">' + (sups.length ? esc(sups.join(', ')) : '<span class="bpx-mut">—</span>') + '</td>'
           + '<td class="ml-x"><button class="bpx-rowbtn">Open</button></td></tr>';
-      }).join('') + '</tbody></table>' : '<div class="ml-empty bpx-mut">No jobs yet. Material lists hang off a project, so add one in Active Projects first.</div>') + '</div>';
+      }).join('') + '</tbody></table>' : '<div class="ml-empty bpx-mut">No jobs yet. Lists hang off a project, so add one in Active Projects first.</div>') + '</div>';
     area.innerHTML = h; done();
   };
   ML.create = function () {
@@ -427,17 +430,39 @@
       var tp = tplById(ML.tplOpen);
       area.innerHTML = h + '<div class="bpx-panel ml-panel"><div class="ml-head"><button class="bpx-rowbtn" onclick="ML.tplOpen=null;bpMatTemplates()">&larr; All templates</button>'
         + '<div class="ml-head-t"><b>' + esc(tp.name) + '</b><span class="bpx-mut">Template &middot; quantities and prices are a starting point</span></div>'
-        + '<button class="bpx-rowbtn" onclick="ML.tplRename(\'' + tp.id + '\')">Rename</button></div>' + editor(T('tpl', tp.id)) + '</div>';
+        + '<button class="bpx-rowbtn ml-primary" onclick="ML.tplUse(\'' + tp.id + '\')">Use on a job</button><button class="bpx-rowbtn" onclick="ML.tplRename(\'' + tp.id + '\')">Rename</button></div>'
+        + (ML.tplUsing === tp.id ? useBox(tp) : '') + editor(T('tpl', tp.id)) + '</div>';
       done(); return;
     }
     ML.tplOpen = null;
     h += '<div class="ml-top"><div class="bpx-mut">Lists you use again and again. Start a job&rsquo;s list from one in a tap.</div><button class="bpx-btn ml-new" onclick="ML.tplNew()">+ New template</button></div>'
-      + '<div class="bpx-panel ml-panel">' + (tl.length ? '<table class="bpx-table ml-jobs"><thead><tr><th>Template</th><th class="ml-n">Items</th><th class="ml-n">Total</th><th></th></tr></thead><tbody>'
+      + '<div class="bpx-panel ml-panel">' + (tl.length ? '<table class="bpx-table ml-jobs"><thead><tr><th>Template</th><th class="ml-n">Items</th><th class="ml-n">Estimated</th><th></th></tr></thead><tbody>'
         + tl.map(function (tp) {
-          return '<tr class="ml-jrow" onclick="ML.tplOpen=\'' + tp.id + '\';bpMatTemplates()"><td data-l="Template"><b>' + esc(tp.name) + '</b></td><td data-l="Items" class="ml-n">' + tp.items.length + '</td><td data-l="Total" class="ml-n">' + money(total(tp.items)) + '</td>'
-            + '<td class="ml-x"><button class="bpx-rowbtn">Open</button> <button class="bpx-rowbtn" onclick="event.stopPropagation();ML.tplDel(\'' + tp.id + '\')">Delete</button></td></tr>';
+          return '<tr class="ml-jrow" onclick="ML.tplOpen=\'' + tp.id + '\';bpMatTemplates()"><td data-l="Template"><b>' + esc(tp.name) + '</b></td><td data-l="Items" class="ml-n">' + tp.items.length + '</td><td data-l="Estimated" class="ml-n">' + money(total(tp.items)) + '</td>'
+            + '<td class="ml-x"><button class="bpx-rowbtn ml-primary" onclick="event.stopPropagation();ML.tplUse(\'' + tp.id + '\')">Use on a job</button> <button class="bpx-rowbtn">Open</button> <button class="bpx-rowbtn" onclick="event.stopPropagation();ML.tplDel(\'' + tp.id + '\')">Delete</button></td></tr>'
+            + (ML.tplUsing === tp.id ? '<tr class="ml-use"><td colspan="4">' + useBox(tp) + '</td></tr>' : '');
         }).join('') + '</tbody></table>' : '<div class="ml-empty bpx-mut">No templates yet. Open a material list and tap &ldquo;Save as template&rdquo;, or start one here.</div>') + '</div>';
     area.innerHTML = h; done();
+  };
+
+  /* "Use on a job": creates that job's list, or adds to the one it has */
+  function useBox(tp) {
+    var js = jobs().filter(function (j) { return j.status !== 'done'; });
+    if (!js.length) return '<div class="ml-sub bpx-mut">No open jobs. Add a project first.</div>';
+    return '<div class="ml-sub ml-usebox"><div class="ml-sub-h"><b>Put &ldquo;' + esc(tp.name) + '&rdquo; on a job</b></div><div class="ml-newf">'
+      + '<label>Job<select id="ml-use-job">' + js.map(function (j) {
+        var n = j.materials && j.materials.items ? j.materials.items.length : 0;
+        return '<option value="' + j.id + '">' + esc(j.name || 'Job') + (j.title ? ' — ' + esc(j.title) : '') + (n ? ' (adds to its ' + n + '-item list)' : ' (new list)') + '</option>';
+      }).join('') + '</select></label>'
+      + '<button class="bpx-rowbtn" onclick="ML.tplUsing=null;bpMatTemplates()">Cancel</button><button class="bpx-rowbtn ml-primary" onclick="ML.tplUseGo(\'' + tp.id + '\')">Add ' + tp.items.length + (tp.items.length === 1 ? ' item' : ' items') + '</button></div></div>';
+  }
+  ML.tplUse = function (tid) { ML.tplUsing = ML.tplUsing === tid ? null : tid; window.bpMatTemplates(); };
+  ML.tplUseGo = function (tid) {
+    var jid = ($('ml-use-job') || {}).value, tp = tplById(tid), j = jobById(jid); if (!tp || !j) return;
+    var had = !!(j.materials && j.materials.items && j.materials.items.length);
+    ML.applyTpl(jid, tid); ML.tplUsing = null;
+    window.bpToast && bpToast((had ? 'Added to ' : 'Started a list for ') + (j.name || 'the job') + '.');
+    ML.open = jid; bpNav('matlists');
   };
 
   /* ---------- the Materials tab on a project ---------- */
@@ -446,7 +471,8 @@
   window.bpProjMaterials = function (jobId) {
     var el = $('bpx-pj-mat'); if (!el) return;
     var j = jobById(jobId); listOf(j, true);
-    el.innerHTML = editor(T('job', jobId));
+    el.innerHTML = '<div class="ml-pj-h"><b>List</b> <span class="bpx-mut">planning only, estimated</span></div>' + editor(T('job', jobId))
+      + (window.bpReceiptsFor ? window.bpReceiptsFor(jobId) : '');
     ensureSP(function () {});
   };
 
@@ -462,10 +488,10 @@
       var el = $('bpx-pj-budget'), j = jobById(window._bpProjId); if (!el || !j) return;
       var t = ML.total(j), co = ML.coTotal(j); if (!t && !co) return;
       var b = +((window._bpProjBudget || {})['Materials']) || 0;
-      el.insertAdjacentHTML('beforeend', '<div class="ml-bud"><span class="ms">list_alt</span><span>Material list: <b>' + money(t) + '</b>'
-        + (b ? ' against a ' + money(b) + ' materials budget' + (t > b ? ' <b class="ml-bad">(' + money(t - b) + ' over)</b>' : '') : '')
+      el.insertAdjacentHTML('beforeend', '<div class="ml-bud"><span class="ms">list_alt</span><span>Planned (material list, estimated): <b>' + money(t) + '</b>'
+        + (b ? ' vs a ' + money(b) + ' materials budget' + (t > b ? ' <b class="ml-bad">(planned ' + money(t - b) + ' over)</b>' : '') : '')
         + (co ? ' &middot; Change orders: <b>' + money(co) + '</b>' : '')
-        + '<br><span class="bpx-mut">Planned, not spent: bills count once they are logged as expenses.</span></span></div>');
+        + '<br><span class="bpx-mut">Planned, not spent. Only receipts and expenses count as cost.</span></span></div>');
     };
   }
 
@@ -492,6 +518,7 @@
     + '#bpx .ml-opt-custom{display:block;color:var(--blue,#006fff);font-weight:600}#bpx .ml-opt-none{padding:10px 12px;font-size:13px}'
     + '#bpx .ml-tbl td{vertical-align:middle;padding:7px 8px}#bpx .ml-tbl th{padding:8px}#bpx .ml-name{font-weight:600}#bpx .ml-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}#bpx .ml-meta small{color:var(--grey);font-size:11px}'
     + '#bpx .ml-in{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit;font-size:13.5px;background:#fff;width:100%;box-sizing:border-box;min-width:0}'
+    + '#bpx .ml-in-note{margin-top:5px;font-size:12.5px;padding:5px 8px;background:var(--soft)}#bpx .ml-pj-h{font-size:13.5px;margin-bottom:8px}#bpx .ml-use td{background:var(--soft);cursor:default}#bpx .ml-jobs .ml-use td{grid-column:1/-1;display:block}#bpx .ml-usebox{margin:8px 0}#bpx .ml-usebox select{max-width:100%}'
     + '#bpx .ml-in-num{width:88px;text-align:right}#bpx .ml-in-unit{width:64px}#bpx .ml-in-name{font-weight:600}#bpx .ml-lt{font-weight:600}'
     + '#bpx .ml-rm{border:0;background:none;color:var(--grey);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px}#bpx .ml-rm:hover{color:#dc2626;background:#fdecec}'
     + '#bpx .ml-late td{background:#fffbf0}#bpx .ml-tag{font-size:10.5px;font-weight:600;background:#fdf1dc;color:#a8710f;border-radius:5px;padding:1px 6px}#bpx .ml-tag-ok{background:rgba(31,170,90,.12);color:#178048}'
