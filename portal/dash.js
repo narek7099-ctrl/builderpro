@@ -390,7 +390,7 @@
     var rows = [{ label: 'Quoted, waiting', value: quoted }, { label: 'Won, still owed', value: owed }, { label: 'Won, collected', value: got }];
     if (!rows.some(function (r) { return r.value > 0; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Your pipeline', empty: 'Send an estimate or win a project and it shows up here, quoted to collected.' }) + '</div>';
     return '<div class="bpx-panel">' + bpChart.donut({
-      title: 'Your pipeline', lead: 'quoted to collected', rows: rows, fixed: true, fmt: money,
+      title: 'Your pipeline', lead: 'quoted to collected', rows: rows, fixed: true, ordinal: true, fmt: money,
       centreNote: 'in the pipeline', axis: 'Stage',
     }) + '</div>';
   }
@@ -415,46 +415,35 @@
     var wonV = bpChart.byMonth(jobs.filter(function (j) { return j.wonAt; }), 6, function (j) { return +j.wonAt; }, function (j) { return +j.estimate || 0; });
     return { labels: inM.labels, inc: inM.values, out: outM.values, net: inM.values.map(function (v, i) { return v - outM.values[i]; }), won: won.values, wonV: wonV.values, fin: fin, jobs: jobs };
   }
-  /* a sparkline: one series, no axes, the last point marked */
-  function spark(vals, tone) {
-    var W = 120, H = 34, mx = Math.max.apply(null, vals.concat([1])), mn = Math.min.apply(null, vals.concat([0]));
-    var pts = vals.map(function (v, i) { return [i * W / (vals.length - 1 || 1), H - 3 - (v - mn) / ((mx - mn) || 1) * (H - 6)]; });
-    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join('');
-    var last = pts[pts.length - 1];
-    return '<svg class="db-spark ' + (tone || '') + '" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">'
-      + '<path class="a" d="' + d + 'L' + W + ' ' + H + 'L0 ' + H + 'Z"></path><path class="l" d="' + d + '"></path>'
-      + '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3"></circle></svg>';
-  }
-  function trend(vals) {
-    var a = vals[vals.length - 2] || 0, b = vals[vals.length - 1] || 0;
-    if (!a) return '';
-    var p = Math.round((b - a) / Math.abs(a) * 100);
-    return '<span class="db-trend ' + (p >= 0 ? 'up' : 'down') + '">' + (p >= 0 ? '&#9650; ' : '&#9660; ') + Math.abs(p) + '%</span>';
-  }
+  /* A headline figure with its trend: the number, a delta chip against last
+     month (coloured by whether that direction is good, arrowed so colour is
+     never alone), and a six-month sparkline. The kit draws both, so a tile
+     here and a chart on Finances are the same blue and the same line. */
   function sparkTiles(M) {
-    var jobs = M.jobs, act = jobs.filter(function (j) { return j.status === 'active'; });
-    var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
     var L = M.inc.length - 1;
-    var t = function (lbl, val, sub, vals, go, tone) {
-      return '<div class="bpx-panel db-st" onclick="bpNav(\'' + go + '\')"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>' + trend(vals) + '</div>'
-        + '<div class="db-kv' + (tone ? ' ' + tone : '') + '">' + val + '</div><div class="db-ks">' + sub + '</div>' + spark(vals, tone) + '</div>';
+    var t = function (lbl, val, sub, vals, go, o) {
+      o = o || {};
+      return '<div class="bpx-panel db-st" onclick="bpNav(\'' + go + '\')"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>'
+        + bpChart.delta(vals[L - 1], vals[L], { upIsGood: o.upIsGood }) + '</div>'
+        + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="db-ks">' + sub + '</div>'
+        + bpChart.spark(vals, { tone: o.tone === 'neg' ? 'neg' : '', fmt: o.fmt || money, labels: M.labels }) + '</div>';
     };
     return [
       t('Money in', money(M.inc[L]), 'this month', M.inc, 'finances'),
-      t('Kept', money(M.net[L]), 'this month, after costs', M.net, 'finances', M.net[L] < 0 ? 'neg' : 'blue'),
-      t('Projects won', String(M.won[L]), money(M.wonV[L]) + ' of work this month', M.won, 'activejobs'),
-      t('Money out', money(M.out[L]), 'this month, all costs', M.out, 'finances'),
+      t('Kept', money(M.net[L]), 'this month, after costs', M.net, 'finances', { tone: M.net[L] < 0 ? 'neg' : 'blue' }),
+      t('Projects won', String(M.won[L]), money(M.wonV[L]) + ' of work this month', M.won, 'activejobs', { fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
+      t('Money out', money(M.out[L]), 'this month, all costs', M.out, 'finances', { upIsGood: false }),
     ];
   }
   function netLine(M) {
     if (!M.net.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'What you kept', empty: 'Six months of income less costs, once the money starts moving.' }) + '</div>';
-    return '<div class="bpx-panel">' + bpChart.line({ title: 'What you kept', lead: 'income less costs, by month', x: { label: 'Month', values: M.labels },
+    return '<div class="bpx-panel">' + bpChart.area({ title: 'What you kept', lead: 'income less costs, by month', x: { label: 'Month', values: M.labels },
       series: [{ name: 'Kept', values: M.net }], fmt: money, height: 190 }) + '</div>';
   }
   function wonCols(M) {
     if (!M.won.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Projects won', empty: 'Win a deal and each month counts up here.' }) + '</div>';
     return '<div class="bpx-panel">' + bpChart.columns({ title: 'Projects won', lead: 'by month', x: { label: 'Month', values: M.labels },
-      series: [{ name: 'Won', values: M.won }], fmt: function (v) { return String(Math.round(v)); }, height: 190 }) + '</div>';
+      series: [{ name: 'Won', values: M.won }], fmt: bpChart.NAMED.count, fmtKind: 'count', height: 190 }) + '</div>';
   }
   function spendDonut(M) {
     var cut = Date.now() - 183 * 864e5, cat = {};

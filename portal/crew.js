@@ -353,7 +353,24 @@
         + '<td class="bpx-r"><button class="bpx-rowbtn" onclick="bpHoursDel(\'' + t.id + '\')">Remove</button></td></tr>';
     }).join('');
 
-    el.innerHTML = head + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
+    /* who carried the last 30 days: people are names, so horizontal bars,
+       longest first, hours at the tip */
+    var cut = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10), per = {};
+    S.entries.forEach(function (t) {
+      if (String(t.worked_on || '') < cut) return;
+      var e = bpEmpById(t.employee_id), k = e ? e.name : 'Removed';
+      per[k] = (per[k] || 0) + (+t.hours || 0) + (+t.ot_hours || 0);
+    });
+    var who = Object.keys(per).filter(function (k) { return per[k] > 0; });
+    var hrs = function (n) { n = Math.round(n * 10) / 10; return n + (n === 1 ? ' hr' : ' hrs'); };
+    var chart = (window.bpChart && who.length >= 2) ? '<div style="margin:4px 0 16px">' + bpChart.ranked({
+      title: 'Hours by person', lead: 'last 30 days, overtime included · '
+        + hrs(who.reduce(function (t, k) { return t + per[k]; }, 0)) + ' in all',
+      rows: who.map(function (k) { return { label: k, value: per[k] }; }),
+      fmt: hrs, axis: 'Person', valueHead: 'Hours',
+    }) + '</div>' : '';
+
+    el.innerHTML = head + chart + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
       + '<th>Day</th><th>Who</th><th>Job</th><th>Hours</th><th>Cost to you</th><th></th>'
       + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
       + '<div class="bpx-mut" style="font-size:11.5px;margin-top:9px">Cost is the burdened rate at the time it was logged — '
