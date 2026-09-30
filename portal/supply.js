@@ -154,7 +154,7 @@
     return '<div class="bpx-stats">' + t('Places you buy', mine + (ex ? ' <small class="sp-ex">+' + ex + ' example</small>' : '')) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
   }
   function tabs(active) {
-    var t = [['supply', 'Order materials'], ['supplyorders', 'Orders'], ['suppliers', 'Where I buy']];
+    var t = [['matlists', 'Material lists'], ['mattemplates', 'Templates'], ['suppliers', 'Where I buy']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   /* The one line that makes the dependency visible: what we can price, and
@@ -1849,6 +1849,7 @@
   };
   SP.barcode = barcodeSvg;
   SP.plan = plan;
+  SP.search = search;   /* used by matlists.js */
   /* used by supply-scan.js */
   SP.db = db; SP.supById = supById; SP.itemsOf = itemsOf; SP.load = load; SP.money = money; SP.stockBadge = stockBadge;
 
