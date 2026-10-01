@@ -88,3 +88,8 @@ for t in TRADES:
 
 for t, n in built:
     print('embed/%s.html  %d bytes' % (t, n))
+
+# the per-trade Health and Damage checkers read each calculator's lead webhook
+# from the pages just written, so they are rebuilt alongside them
+import runpy
+runpy.run_path(os.path.join(ROOT, 'tools', 'build-checkers.py'), run_name='__main__')
