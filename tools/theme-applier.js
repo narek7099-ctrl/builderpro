@@ -76,6 +76,13 @@
   }
   window.__bpApplyTheme=apply;
   window.addEventListener("message",function(e){ var d=e&&e.data; if(d&&d.type==="bp-theme"&&d.theme&&typeof d.theme==="object") apply(d.theme); });
+  /* auto-resize: tell the host page how tall the content is, so the optional
+     resize script in the portal's embed code can size the iframe to fit */
+  if(KIND==="calc"&&window.parent!==window){
+    var lastH=0, report=function(){ try{ var h=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0)); if(h&&Math.abs(h-lastH)>2){ lastH=h; parent.postMessage({bp:"height",h:h},"*"); } }catch(e){} };
+    try{ if(window.ResizeObserver) new ResizeObserver(report).observe(document.documentElement); }catch(e){}
+    window.addEventListener("load",report); setInterval(report,1200);
+  }
   if(OWN){
     fetch(U+"/rest/v1/embed_themes?owner=eq."+OWN+"&kind=eq."+KIND+"&select=theme",{headers:{apikey:A,Authorization:"Bearer "+A}})
       .then(function(r){return r.ok?r.json():[];}).then(function(rows){ if(Array.isArray(rows)&&rows[0]&&rows[0].theme) apply(rows[0].theme); }).catch(function(){});

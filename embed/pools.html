@@ -1,6 +1,6 @@
 <!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pool Estimator</title>
+<title>Pool Estimator</title><!--OG-BEGIN--><meta name="description" content="Answer a few quick questions and see a real price range for your project. Free, no sign-up."><meta property="og:type" content="website"><meta property="og:site_name" content="BuilderPro"><meta property="og:title" content="Get your instant pool quote in 60 seconds"><meta property="og:description" content="Answer a few quick questions and see a real price range for your project. Free, no sign-up."><meta property="og:url" content="https://builderpro-os.com/embed/pools.html"><meta property="og:image" content="https://builderpro-os.com/embed/og/quote-pools.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Instant Pools Quote"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Get your instant pool quote in 60 seconds"><meta name="twitter:description" content="Answer a few quick questions and see a real price range for your project. Free, no sign-up."><meta name="twitter:image" content="https://builderpro-os.com/embed/og/quote-pools.png"><!--OG-END-->
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -4282,6 +4282,13 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
   }
   window.__bpApplyTheme=apply;
   window.addEventListener("message",function(e){ var d=e&&e.data; if(d&&d.type==="bp-theme"&&d.theme&&typeof d.theme==="object") apply(d.theme); });
+  /* auto-resize: tell the host page how tall the content is, so the optional
+     resize script in the portal's embed code can size the iframe to fit */
+  if(KIND==="calc"&&window.parent!==window){
+    var lastH=0, report=function(){ try{ var h=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0)); if(h&&Math.abs(h-lastH)>2){ lastH=h; parent.postMessage({bp:"height",h:h},"*"); } }catch(e){} };
+    try{ if(window.ResizeObserver) new ResizeObserver(report).observe(document.documentElement); }catch(e){}
+    window.addEventListener("load",report); setInterval(report,1200);
+  }
   if(OWN){
     fetch(U+"/rest/v1/embed_themes?owner=eq."+OWN+"&kind=eq."+KIND+"&select=theme",{headers:{apikey:A,Authorization:"Bearer "+A}})
       .then(function(r){return r.ok?r.json():[];}).then(function(rows){ if(Array.isArray(rows)&&rows[0]&&rows[0].theme) apply(rows[0].theme); }).catch(function(){});

@@ -283,6 +283,16 @@ function merge(){
   var band={minor:[c.maint[0],c.repair[1]],moderate:[c.maint[1],c.repair[1]],severe:[c.repair[0],c.major[1]]}[sev];
   lo=Math.max(lo,band[0]); hi=Math.min(hi,band[1]);
   el=Math.max(lo,Math.min(hi,el)); eh=Math.max(el,Math.min(hi,eh));
+  /* A scan range like "$450 – $22,000" is no help to anyone. Cap the spread,
+     and only let it run from a repair into a full replacement when the damage
+     is severe AND the homeowner said it covers several areas or more. */
+  var ext=S.ans.extent?S.ans.extent.i:1, large=sev==='severe'&&ext>=2;
+  eh=Math.min(eh,Math.max(el*4,el+c.repair[1]));
+  if(!large&&el<c.major[0]&&eh>c.repair[1]){
+    var bd=(sev==='severe'&&el>=c.repair[1])?c.major:c.repair;
+    el=Math.max(bd[0],Math.min(bd[1],el)); eh=Math.max(el,Math.min(bd[1],eh));
+  }
+  el=Math.round(el); eh=Math.round(eh);
   var urg=String(A.urgency||''); if(/urgent|immediate|24|today/i.test(R.urgency)&&!/urgent|immediate/i.test(urg))urg=R.urgency;
   return {damages:dm.length?dm:R.damages,cause:A.cause||R.cause,urgency:urg||R.urgency,repair:A.repair||R.repair,estimate:{low:el,high:eh},insurance:A.insurance||R.insurance,sev:sev,source:'scan'};
 }
