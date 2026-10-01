@@ -11,7 +11,7 @@ const {chromium}=require('playwright');
  await p.route('**://**',r=>r.request().url().startsWith('http://localhost:8771')?r.continue():r.abort());
  await p.goto('http://localhost:8771/index.html',{waitUntil:'domcontentloaded'});
  const r=await p.evaluate(()=>{
-   const WANT=['roofing','hvac','plumbing','electrical','general','landscaping','pools','trim','painting','countertops'];
+   const WANT=['roofing','hvac','plumbing','electrical','general','landscaping','pools','trim','painting','countertops','concrete','flooring'];
    const out={missing:[],bad:[],idxWrong:[],noName:[]};
    const names=Object.fromEntries(BP_CALC_IDS);
    WANT.forEach(id=>{
@@ -40,7 +40,9 @@ const {chromium}=require('playwright');
     ['General Contractor','general'],['GC','general'],['Remodeling','general'],
     ['Roofer','roofing'],['Painter','painting'],['Landscaper','landscaping'],
     ['Pool Builder','pools'],['Finish Carpenter','trim'],['Granite & Quartz','countertops'],
-    ['Heating and Air','hvac'],['Air Conditioning','hvac']
+    ['Heating and Air','hvac'],['Air Conditioning','hvac'],
+    ['Concrete & Paving','concrete'],['Concrete Contractor','concrete'],['Driveways & Patios','concrete'],['Asphalt Paving','concrete'],
+    ['Flooring','flooring'],['Hardwood Floors','flooring'],['LVP Installer','flooring'],['Carpet & Tile','flooring']
    ].forEach(([typed,want])=>{
      window._bpSettingsStub={company:{trade:typed}};
      const got=(function(){ const real=window.bpSettingsGet;
@@ -54,7 +56,7 @@ const {chromium}=require('playwright');
  console.log(JSON.stringify(r,null,1));
  console.log('ERRORS:',errs.length?errs:'none');
  const o=r.out;
- const bad=Object.keys(o.alias||{}).length||o.missing.length||o.bad.length||o.idxWrong.length||o.noName.length||r.count!==10||r.ids!==10||errs.length;
- console.log(bad?'FAIL':'all ten trades have a usable model');
+ const bad=Object.keys(o.alias||{}).length||o.missing.length||o.bad.length||o.idxWrong.length||o.noName.length||r.count!==12||r.ids!==12||errs.length;
+ console.log(bad?'FAIL':'all twelve trades have a usable model');
  await b.close(); process.exit(bad?1:0);
 })();

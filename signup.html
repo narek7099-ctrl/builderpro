@@ -101,10 +101,11 @@ var PLANS=[
   {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','Projects, finances and crews','Lead Radar and all calculators','300 call minutes, 5 users']},
   {k:'enterprise',tag:'Built to grow',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','AI Team included','5 Lead Radar claims a day','500 call minutes, unlimited users']}];
 var ADDONS=[{k:'ai',n:'AI Team',p:49,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator, booking page and Lisa built in.'}];
-var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete','Other'];
+var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete & Paving','Other'];
 var SERVICES={Roofing:['Roof replacement','Roof repair','Storm damage','Inspections','Gutters','Skylights'],Plumbing:['Leak repair','Drain cleaning','Water heaters','Repiping','Sewer lines','Fixtures'],HVAC:['AC install','Furnace install','Repairs','Maintenance plans','Ductwork','Heat pumps'],
   Electrical:['Panel upgrades','Rewiring','EV chargers','Lighting','Generators','Troubleshooting'],'General contracting':['Additions','New builds','Kitchens','Bathrooms','Decks','Permits'],Remodeling:['Kitchens','Bathrooms','Basements','Flooring','Whole-home'],
-  Painting:['Interior','Exterior','Cabinets','Commercial'],Landscaping:['Design','Patios','Irrigation','Maintenance','Sod'],Pools:['New pools','Resurfacing','Equipment','Cleaning'],Countertops:['Quartz','Granite','Install','Fabrication']};
+  Painting:['Interior','Exterior','Cabinets','Commercial'],Landscaping:['Design','Patios','Irrigation','Maintenance','Sod'],Pools:['New pools','Resurfacing','Equipment','Cleaning'],Countertops:['Quartz','Granite','Install','Fabrication'],
+  Flooring:['LVP & laminate','Hardwood','Tile','Carpet','Refinishing','Stairs'],'Concrete & Paving':['Driveways','Patios','Stamped concrete','Walkways','Asphalt','Pavers']};
 var DAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
 var S={plan:'os',addons:{},profile:{hours:{}}};
 DAYS.forEach(function(d){S.profile.hours[d[0]]={open:d[0]!=='sun',from:'08:00',to:d[0]==='sat'?'13:00':'17:00'};});

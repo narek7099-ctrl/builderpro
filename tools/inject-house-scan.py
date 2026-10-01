@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Put the house scan into the nine calculators other than roofing.
+"""Put the house scan into the eleven calculators other than roofing.
 
 Each gets embed-src/house-scan.html plus a one-line HS_TRADE telling it which
 ending to play, between markers so re-running replaces rather than stacks:
-the six whose source is a srcdoc in index.html, and the three in embed-src/.
+the six whose source is a srcdoc in index.html, and the five in embed-src/.
 
     python3 tools/build-house-scan.py
     python3 tools/inject-house-scan.py && python3 tools/inject-theme.py && python3 tools/build-embeds.py
@@ -13,7 +13,7 @@ import io, os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'index.html')
 INLINE = ['hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping']
-STANDALONE = ['plumbing', 'electrical', 'general']
+STANDALONE = ['plumbing', 'electrical', 'general', 'concrete', 'flooring']
 BEGIN, END = '<!--HS-BEGIN-->', '<!--HS-END-->'
 engine = io.open(os.path.join(ROOT, 'embed-src', 'house-scan.html'), encoding='utf-8').read()
 

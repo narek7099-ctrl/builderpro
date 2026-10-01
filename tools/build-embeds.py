@@ -13,14 +13,14 @@ There are two kinds of source, for a reason:
     marketing carousel, so those slides render with no extra request. The
     srcdoc IS the source; embed/ is generated from it.
 
-  * The three newest live as whole files in embed-src/ and are loaded by URL
+  * The five newest live as whole files in embed-src/ and are loaded by URL
     on the carousel instead. Inlining a 120 KB document twice to save one
     lazy-loaded request is a poor trade, and an escaped copy is miserable to
     edit. New trades should go here.
 
 Either way this patches the pricing loader to honour ?u=<owner uuid> and
 appends the theme applier, so a contractor's saved colours, font and logo
-reach all ten. Re-run it whenever an estimator changes.
+reach all twelve. Re-run it whenever an estimator changes.
 
     python3 tools/build-embeds.py
 """
@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'index.html')
 OUT = os.path.join(ROOT, 'embed')
 INLINE = ['roofing', 'hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping']
-STANDALONE = ['plumbing', 'electrical', 'general']
+STANDALONE = ['plumbing', 'electrical', 'general', 'concrete', 'flooring']
 TRADES = INLINE + STANDALONE
 SRC_DIR = os.path.join(ROOT, 'embed-src')
 
