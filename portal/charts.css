@@ -105,6 +105,7 @@
 #bpx .bpc-tip i{width:10px;height:2px;border-radius:2px;flex:none}
 #bpx .bpc-tip i.sw{width:8px;height:8px}
 #bpx .bpc-tip em{font-style:normal;font-weight:700;color:var(--ink);margin-left:auto;padding-left:12px;font-variant-numeric:tabular-nums}
+#bpx .bpc-tip span.note{margin-top:4px;padding-top:4px;border-top:1px solid var(--line-2,var(--line));font-weight:600;color:var(--ink)}
 
 /* ranked rows — thin bar from a single baseline, 4px rounded at the data
    end, value written at the tip */
