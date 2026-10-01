@@ -117,6 +117,27 @@
     return '<div class="dash-projs"><div class="dash-sec"><h3>' + (shown.some(function (j) { return j.starred; }) ? 'Marked projects' : 'Projects in motion') + '</h3><button class="bpx-linkbtn" onclick="bpNav(\'activejobs\')">'
       + (jobs.length > shown.length ? 'All ' + jobs.length + ' projects' : 'All projects') + '</button></div>' + projCards(shown, crew) + '</div>';
   }
+  /* No photo yet: a soft tile that says what kind of job it is, rather
+     than a big grey box apologising for a missing picture. */
+  function jobIcon(j) {
+    var t = String((j.title || '') + ' ' + (j.trade || '')).toLowerCase();
+    var map = [[/gutter|downspout/, 'water_drop'], [/leak|water/, 'water_damage'], [/storm|hail|wind/, 'thunderstorm'],
+      [/roof|shingle|metal|flat|tpo|slate|tile/, 'roofing'], [/sid(ing|e)/, 'home'], [/window|door/, 'window'],
+      [/paint/, 'format_paint'], [/deck|fence|porch/, 'fence'], [/solar/, 'solar_power'], [/hvac|furnace|air/, 'mode_fan'],
+      [/plumb|pipe/, 'plumbing'], [/electric|wiring|panel/, 'electrical_services'], [/kitchen|bath|remodel/, 'kitchen'],
+      [/insul|attic/, 'heat'], [/chimney|mason|brick/, 'foundation']];
+    for (var i = 0; i < map.length; i++) if (map[i][0].test(t)) return map[i][1];
+    return 'construction';
+  }
+  function initials(n) {
+    var p = String(n || '').trim().split(/\s+/).filter(Boolean);
+    return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase();
+  }
+  function noPhoto(j) {
+    return '<div class="pj-np"><span class="pj-np-ico"><span class="ms">' + jobIcon(j) + '</span></span>'
+      + '<span class="pj-np-t"><b>' + esc(j.title || 'Project') + '</b><small>' + esc(initials(j.name)) + ' &middot; ' + esc(j.name || '') + '</small></span>'
+      + '<button class="pj-np-add" onclick="event.stopPropagation();bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\');if(window.bpProjTab)bpProjTab(\'photos\')},60)"><span class="ms">add</span>Add photo</button></div>';
+  }
   /* the photo cards, shared with the Projects page's starred row */
   function projCards(shown, crew) {
     var iso = new Date().toISOString().slice(0, 10), split = shown.length <= 2;
@@ -130,10 +151,9 @@
       if (today) meta.push('<b class="pj-live"><i></i>Crew on site today</b>');
       else if (nDays) meta.push(nDays + (nDays === 1 ? ' day booked' : ' days booked'));
       if (j.photos && j.photos.length) meta.push(j.photos.length + (j.photos.length === 1 ? ' photo' : ' photos'));
-      else meta.push('no photos yet');
       return '<article class="pj-card" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
 
-        + '<div class="pj-img">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (!img ? '<div class="pj-nophoto"><span class=ms>add_a_photo</span>No photo yet</div>' : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
+        + '<div class="pj-img' + (img ? '' : ' pj-noimg') + '">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (!img ? noPhoto(j) : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
         + '<div class="pj-body"><div class="pj-h"><b>' + esc(j.name) + '</b>' + (crew ? '' : '<span class="pj-amt">' + money(est) + '</span>') + '</div>'
         + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
         + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'
@@ -144,6 +164,37 @@
   }
 
   window.bpProjCards = projCards;
+
+  /* ---------- the period the money figures cover; the owner picks ---------- */
+  var PERIODS = [['month', 'This month'], ['6m', '6 months'], ['1y', '1 year']];
+  function periodKey() { var v = null; try { v = localStorage.getItem('bpDashPeriod'); } catch (e) {} return PERIODS.some(function (p) { return p[0] === v; }) ? v : 'month'; }
+  D.period = function (v) { try { localStorage.setItem('bpDashPeriod', v); } catch (e) {} window.bpDashboard(); };
+  function periodOf(k) {
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth(), b = [];
+    var mon = function (yy, mm) { return new Date(yy, mm, 1).getTime(); };
+    if (k === 'month') {
+      var last = new Date(y, m + 1, 0).getDate();
+      for (var d = 1; d <= last; d += 7) {
+        var e = Math.min(d + 6, last);
+        b.push({ label: new Date(y, m, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + (e > d ? '\u2013' + e : ''), start: new Date(y, m, d).getTime(), end: new Date(y, m, e + 1).getTime() });
+      }
+      return { k: k, start: mon(y, m), end: mon(y, m + 1), pStart: mon(y, m - 1), pEnd: mon(y, m), buckets: b, axis: 'Week', word: 'this month', vs: 'last month', by: 'by week' };
+    }
+    var n = k === '1y' ? 12 : 6;
+    for (var i = n - 1; i >= 0; i--) {
+      var dt = new Date(y, m - i, 1);
+      b.push({ label: dt.toLocaleDateString('en-US', { month: 'short' }), start: dt.getTime(), end: mon(y, m - i + 1) });
+    }
+    return { k: k, start: mon(y, m - n + 1), end: mon(y, m + 1), pStart: mon(y, m - 2 * n + 1), pEnd: mon(y, m - n + 1), buckets: b, axis: 'Month',
+      word: 'last ' + n + ' months', vs: 'the ' + n + ' months before', by: 'by month' };
+  }
+  function periodSwitch(cur) {
+    return '<div class="db-per" role="group" aria-label="Period">' + PERIODS.map(function (p) {
+      return '<button class="' + (p[0] === cur ? 'on' : '') + '" aria-pressed="' + (p[0] === cur) + '" onclick="BP_DASH.period(\'' + p[0] + '\')">' + p[1] + '</button>';
+    }).join('') + '</div>';
+  }
+  var P = periodOf('month');
+  function inP(t, a, b) { t = +t; return t >= a && t < b; }
   /* ---------- the four numbers ---------- */
   function monthKey(t) { var d = new Date(t); return d.getFullYear() + '-' + d.getMonth(); }
   function numbers() {
@@ -210,25 +261,32 @@
       fmt: money, height: 200,
     }) + '</div>';
   }
+  /* Each finished job as a pair of thin columns, what came in beside what
+     it cost: the same marks and the same two colours as Money in and out,
+     so the two charts read as one. The profit sits over each pair. */
   function jobsChart() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
-    var rows = jobs.filter(function (j) { return j.status === 'done' && j.collected != null; }).map(function (j) {
+    var all = jobs.filter(function (j) { return j.status === 'done' && j.collected != null && inP(j.doneAt, P.start, P.end); })
+      .sort(function (a, b) { return (+b.doneAt || 0) - (+a.doneAt || 0); });
+    var T = 'What each job cost, and what it brought in';
+    if (!all.length) return '<div class="bpx-panel">' + bpChart.empty({ title: T,
+      empty: (jobs.some(function (j) { return j.status === 'done'; }) ? 'No job finished ' + P.word + '. ' : '') + 'Mark a project done and put in what you collected. Each one shows here with its costs beside it.' }) + '</div>';
+    var rows = all.map(function (j) {
       var c = +j.collected || 0, e = (j.expenses || []).reduce(function (t, x) { return t + (+x.amt || 0); }, 0);
-      return { label: j.name || 'Job', a: e, b: c, profit: c - e };
-    }).sort(function (x, y) { return y.profit - x.profit; });
-    if (!rows.length) return '<div class="bpx-panel">' + bpChart.empty({
-      title: 'What each job cost, and what it brought in',
-      empty: 'Mark a project done and put in what you collected. Each one shows here with its costs beside it.',
-    }) + '</div>';
-    /* A single bar of profit hides the size of the job it came off: $2,000
-       kept on a $4,000 repair and $2,000 kept on a $40,000 re-roof are not
-       the same week. Both numbers, and the distance between them, in one row. */
-    var kept = rows.reduce(function (t, r) { return t + r.profit; }, 0);
-    return '<div class="bpx-panel">' + bpChart.dumbbell({
-      title: 'What each job cost, and what it brought in',
-      lead: rows.length + (rows.length === 1 ? ' finished job ' : ' finished jobs ') + '\u00b7 ' + money(kept) + ' kept across them',
-      rows: rows, aName: 'What it cost', bName: 'What you collected',
-      fmt: money, axis: 'Job', max: 7,
+      return { j: j, c: c, e: e, p: c - e };
+    });
+    var kept = rows.reduce(function (t, r) { return t + r.p; }, 0);
+    var shown = rows.slice(0, 8).reverse();
+    var last = function (r) { var w = String(r.j.name || r.j.title || 'Job').trim().split(/\s+/); return w[w.length - 1]; };
+    var sgn = function (v) { return (v < 0 ? '\u2212' : '+') + bpChart.compact(Math.abs(v), true); };
+    return '<div class="bpx-panel">' + bpChart.columns({
+      title: T,
+      lead: rows.length + (rows.length === 1 ? ' finished job' : ' finished jobs') + ' \u00b7 ' + money(kept) + ' kept' + (rows.length > shown.length ? ' \u00b7 latest ' + shown.length + ' shown' : ''),
+      x: { label: 'Job', values: shown.map(last) },
+      series: [{ name: 'What you collected', values: shown.map(function (r) { return r.c; }) }, { name: 'What it cost', values: shown.map(function (r) { return r.e; }) }],
+      groupCaps: shown.map(function (r) { return sgn(r.p); }),
+      notes: shown.map(function (r) { return (r.j.name || '') + (r.j.title ? ', ' + r.j.title : '') + ' \u00b7 kept ' + (r.p < 0 ? '\u2212' : '') + money(Math.abs(r.p)) + (r.c > 0 ? ' (' + Math.round(r.p / r.c * 100) + '%)' : ''); }),
+      fmt: money, height: 220,
     }) + '</div>';
   }
 
@@ -347,9 +405,8 @@
   function kpis() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [], act = jobs.filter(function (j) { return j.status === 'active'; });
     var fin; try { fin = bpFinData(); } catch (e) { fin = { inc: [], exp: [] }; }
-    var mk = monthKey(Date.now());
-    var inM = fin.inc.filter(function (x) { return x.when && monthKey(x.when) === mk; }).reduce(function (t, x) { return t + x.amt; }, 0);
-    var outM = fin.exp.filter(function (x) { return x.when && monthKey(x.when) === mk; }).reduce(function (t, x) { return t + x.amt; }, 0);
+    var inM = fin.inc.filter(function (x) { return inP(x.when, P.start, P.end); }).reduce(function (t, x) { return t + x.amt; }, 0);
+    var outM = fin.exp.filter(function (x) { return inP(x.when, P.start, P.end); }).reduce(function (t, x) { return t + x.amt; }, 0);
     var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
     var inMotion = act.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
     var net = inM - outM;
@@ -357,7 +414,7 @@
       return '<div class="db-k" onclick="bpNav(\'' + go + '\')"><span class="db-kl">' + lbl + '</span><span class="db-kv' + (tone ? ' ' + tone : '') + '">' + val + '</span><span class="db-ks">' + sub + '</span></div>';
     };
     return '<div class="bpx-panel db-kpis">'
-      + k('Kept this month', money(net), money(inM) + ' in · ' + money(outM) + ' out', 'finances', net < 0 ? 'neg' : 'blue')
+      + k('Kept ' + P.word, money(net), money(inM) + ' in · ' + money(outM) + ' out', 'finances', net < 0 ? 'neg' : 'blue')
       + k('Owed to you', money(owed), owed ? 'on active projects' : 'all collected', 'finances')
       + k('In motion', String(act.length), money(inMotion) + ' of work', 'activejobs')
       + k('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')
@@ -367,14 +424,14 @@
   /* ---------- money in and out, month by month, as columns ---------- */
   function flow() {
     var fin; try { fin = bpFinData(); } catch (e) { return ''; }
-    var inM = bpChart.byMonth(fin.inc, 6, function (x) { return x.when; }, function (x) { return x.amt; });
-    var outM = bpChart.byMonth(fin.exp, 6, function (x) { return x.when; }, function (x) { return x.amt; });
+    var inM = bpChart.byBuckets(fin.inc, P.buckets, function (x) { return x.when; }, function (x) { return x.amt; });
+    var outM = bpChart.byBuckets(fin.exp, P.buckets, function (x) { return x.when; }, function (x) { return x.amt; });
     var any = inM.values.concat(outM.values).some(function (v) { return v > 0; });
-    if (!any) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Money in and out', empty: 'Collect on a job or log an expense, and six months of it lines up here.' }) + '</div>';
+    if (!any) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Money in and out', empty: 'Nothing in or out ' + P.word + '. Collect on a job or log an expense, and it lines up here.' }) + '</div>';
     var net = inM.values.reduce(function (t, v) { return t + v; }, 0) - outM.values.reduce(function (t, v) { return t + v; }, 0);
     return '<div class="bpx-panel">' + bpChart.columns({
-      title: 'Money in and out', lead: 'last six months · ' + (net >= 0 ? money(net) + ' kept' : money(-net) + ' down'),
-      x: { label: 'Month', values: inM.labels },
+      title: 'Money in and out', lead: P.word + ' ' + P.by + ' · ' + (net >= 0 ? money(net) + ' kept' : money(-net) + ' down'),
+      x: { label: P.axis, values: inM.labels },
       series: [{ name: 'Money in', values: inM.values }, { name: 'Money out', values: outM.values }],
       fmt: money, height: 230,
     }) + '</div>';
@@ -398,59 +455,66 @@
   /* ---------- where the money goes ---------- */
   function spend() {
     var fin; try { fin = bpFinData(); } catch (e) { return ''; }
-    var cut = Date.now() - 183 * 864e5, cat = {};
-    fin.exp.forEach(function (x) { if (x.when && x.when >= cut) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; } });
+    var cat = {};
+    fin.exp.forEach(function (x) { if (inP(x.when, P.start, P.end)) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; } });
     var rows = Object.keys(cat).map(function (c) { return { label: c, value: cat[c] }; });
     if (!rows.length) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Where the money goes', empty: 'Log an expense or match a supply bill and your costs break down here.' }) + '</div>';
-    return '<div class="bpx-panel">' + bpChart.ranked({ title: 'Where the money goes', lead: 'last six months', rows: rows, fmt: money, axis: 'Category', max: 6 }) + '</div>';
+    return '<div class="bpx-panel">' + bpChart.ranked({ title: 'Where the money goes', lead: P.word, rows: rows, fmt: money, axis: 'Category', max: 6 }) + '</div>';
   }
 
   /* ---------- month-by-month series, for sparklines and the smaller charts ---------- */
   function monthly() {
     var fin; try { fin = bpFinData(); } catch (e) { fin = { inc: [], exp: [] }; }
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
-    var inM = bpChart.byMonth(fin.inc, 6, function (x) { return x.when; }, function (x) { return x.amt; });
-    var outM = bpChart.byMonth(fin.exp, 6, function (x) { return x.when; }, function (x) { return x.amt; });
-    var won = bpChart.byMonth(jobs.filter(function (j) { return j.wonAt; }), 6, function (j) { return +j.wonAt; }, function () { return 1; });
-    var wonV = bpChart.byMonth(jobs.filter(function (j) { return j.wonAt; }), 6, function (j) { return +j.wonAt; }, function (j) { return +j.estimate || 0; });
-    return { labels: inM.labels, inc: inM.values, out: outM.values, net: inM.values.map(function (v, i) { return v - outM.values[i]; }), won: won.values, wonV: wonV.values, fin: fin, jobs: jobs };
+    var W = function (x) { return x.when; }, A = function (x) { return x.amt; };
+    var Jw = function (j) { return +j.wonAt; }, won = jobs.filter(function (j) { return j.wonAt; });
+    var inM = bpChart.byBuckets(fin.inc, P.buckets, W, A), outM = bpChart.byBuckets(fin.exp, P.buckets, W, A);
+    var wonN = bpChart.byBuckets(won, P.buckets, Jw, function () { return 1; });
+    var wonV = bpChart.byBuckets(won, P.buckets, Jw, function (j) { return +j.estimate || 0; });
+    var sum = function (rows, a, b, get, val) { return rows.reduce(function (t, r) { return t + (inP(get(r), a, b) ? val(r) : 0); }, 0); };
+    var tot = function (a, b) {
+      var i = sum(fin.inc, a, b, W, A), o = sum(fin.exp, a, b, W, A);
+      return { inc: i, out: o, net: i - o, won: sum(won, a, b, Jw, function () { return 1; }), wonV: sum(won, a, b, Jw, function (j) { return +j.estimate || 0; }) };
+    };
+    return { labels: inM.labels, inc: inM.values, out: outM.values, net: inM.values.map(function (v, i) { return v - outM.values[i]; }),
+      won: wonN.values, wonV: wonV.values, cur: tot(P.start, P.end), prev: tot(P.pStart, P.pEnd), fin: fin, jobs: jobs };
   }
-  /* A headline figure with its trend: the number, a delta chip against last
-     month (coloured by whether that direction is good, arrowed so colour is
-     never alone), and a six-month sparkline. The kit draws both, so a tile
-     here and a chart on Finances are the same blue and the same line. */
+  /* A headline figure with its trend: the total for the period, a delta
+     chip against the period before it (coloured by whether that direction
+     is good, arrowed so colour is never alone), and a sparkline of the
+     period's weeks or months. */
   function sparkTiles(M) {
-    var L = M.inc.length - 1;
-    var t = function (lbl, val, sub, vals, go, o) {
+    var t = function (lbl, key, val, sub, vals, go, o) {
       o = o || {};
       return '<div class="bpx-panel db-st" onclick="bpNav(\'' + go + '\')"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>'
-        + bpChart.delta(vals[L - 1], vals[L], { upIsGood: o.upIsGood }) + '</div>'
+        + bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs }) + '</div>'
         + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="db-ks">' + sub + '</div>'
         + bpChart.spark(vals, { tone: o.tone === 'neg' ? 'neg' : '', fmt: o.fmt || money, labels: M.labels }) + '</div>';
     };
+    var C = M.cur;
     return [
-      t('Money in', money(M.inc[L]), 'this month', M.inc, 'finances'),
-      t('Kept', money(M.net[L]), 'this month, after costs', M.net, 'finances', { tone: M.net[L] < 0 ? 'neg' : 'blue' }),
-      t('Projects won', String(M.won[L]), money(M.wonV[L]) + ' of work this month', M.won, 'activejobs', { fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
-      t('Money out', money(M.out[L]), 'this month, all costs', M.out, 'finances', { upIsGood: false }),
+      t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances'),
+      t('Kept', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : 'blue' }),
+      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
+      t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false }),
     ];
   }
   function netLine(M) {
-    if (!M.net.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'What you kept', empty: 'Six months of income less costs, once the money starts moving.' }) + '</div>';
-    return '<div class="bpx-panel">' + bpChart.area({ title: 'What you kept', lead: 'income less costs, by month', x: { label: 'Month', values: M.labels },
+    if (!M.net.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'What you kept', empty: 'Income less costs ' + P.by + ', once the money starts moving ' + P.word + '.' }) + '</div>';
+    return '<div class="bpx-panel">' + bpChart.area({ title: 'What you kept', lead: 'income less costs, ' + P.by + ' · ' + P.word, x: { label: P.axis, values: M.labels },
       series: [{ name: 'Kept', values: M.net }], fmt: money, height: 190 }) + '</div>';
   }
   function wonCols(M) {
-    if (!M.won.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Projects won', empty: 'Win a deal and each month counts up here.' }) + '</div>';
-    return '<div class="bpx-panel">' + bpChart.columns({ title: 'Projects won', lead: 'by month', x: { label: 'Month', values: M.labels },
+    if (!M.won.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Projects won', empty: 'Nothing won ' + P.word + '. Win a deal and it counts up here.' }) + '</div>';
+    return '<div class="bpx-panel">' + bpChart.columns({ title: 'Projects won', lead: P.by + ' · ' + P.word, x: { label: P.axis, values: M.labels },
       series: [{ name: 'Won', values: M.won }], fmt: bpChart.NAMED.count, fmtKind: 'count', height: 190 }) + '</div>';
   }
   function spendDonut(M) {
-    var cut = Date.now() - 183 * 864e5, cat = {};
-    M.fin.exp.forEach(function (x) { if (x.when && x.when >= cut) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; } });
+    var cat = {};
+    M.fin.exp.forEach(function (x) { if (inP(x.when, P.start, P.end)) { var c = x.type || 'Other'; cat[c] = (cat[c] || 0) + x.amt; } });
     var rows = Object.keys(cat).map(function (c) { return { label: c, value: cat[c] }; });
-    if (!rows.length) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Where the money goes', empty: 'Log an expense or match a supply bill and your costs split up here.' }) + '</div>';
-    return '<div class="bpx-panel">' + bpChart.donut({ title: 'Where the money goes', lead: 'last six months', rows: rows, fmt: money, centreNote: 'spent', axis: 'Category' }) + '</div>';
+    if (!rows.length) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Where the money goes', empty: 'Nothing spent ' + P.word + '. Log an expense or match a supply bill and your costs split up here.' }) + '</div>';
+    return '<div class="bpx-panel">' + bpChart.donut({ title: 'Where the money goes', lead: P.word, rows: rows, fmt: money, centreNote: 'spent', axis: 'Category' }) + '</div>';
   }
   function collection(M) {
     var act = M.jobs.filter(function (j) { return j.status === 'active' && (+j.estimate || 0) > 0; });
@@ -471,18 +535,19 @@
   }
   function cells(list) { return '<div class="db-grid">' + list.map(function (c) { return '<div class="db-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; }
   function body(lay, crew) {
-    var M = monthly(), st = sparkTiles(M);
+    P = periodOf(periodKey());
+    var M = monthly(), st = sparkTiles(M), per = periodSwitch(P.k);
     if (lay === 'command') {
-      return '<div class="db-split"><div class="db-main">'
+      return per + '<div class="db-split"><div class="db-main">'
         + cells([[12, flow()], [6, pipeline()], [6, spendDonut(M)], [12, jobsChart()], [12, projects(crew)]])
         + '</div><div class="db-rail">' + kpis() + attention() + week() + activity() + '</div></div>';
     }
     if (lay === 'projects') {
       return cells([[12, projects(crew)], [5, collection(M)], [7, week()]])
-        + '<div class="db-row4">' + st.join('') + '</div>'
+        + per + '<div class="db-row4">' + st.join('') + '</div>'
         + cells([[6, flow()], [6, netLine(M)], [4, pipeline()], [4, spend()], [4, attention()], [12, activity()]]);
     }
-    return '<div class="db-row4">' + st.join('') + '</div>'
+    return per + '<div class="db-row4">' + st.join('') + '</div>'
       + cells([[8, flow()], [4, pipeline()], [4, spendDonut(M)], [4, netLine(M)], [4, wonCols(M)],
         [12, projects(crew)], [8, jobsChart()], [4, collection(M)], [4, attention()], [4, week()], [4, activity()]]);
   }

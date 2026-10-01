@@ -215,7 +215,7 @@
       xn: o.xName || '', yn: o.yName || '', an: o.aName || '', bn: o.bName || '',
       xf: (o.xFmt || plain) === money ? 'money' : 'plain',
       yfk: o.yFmtKind || '', y0: o.yFrom, y1: o.yTo, mx: o.max,
-      ar: o.area === false ? 0 : 1, od: o.ordinal ? 1 : 0, cl: o.capLabels === false ? 0 : 1,
+      ar: o.area === false ? 0 : 1, nt: o.notes || null, gc: o.groupCaps || null, od: o.ordinal ? 1 : 0, cl: o.capLabels === false ? 0 : 1,
     }));
     return frame(o, svg, legend, table, cls)
       .replace('<div class="bpc-plot">', '<div class="bpc-plot" data-chart="' + spec + '">');
@@ -238,7 +238,7 @@
       xName: d.xn, yName: d.yn, aName: d.an, bName: d.bn,
       xFmt: fmtOf(d.xf), yFmt: NAMED[d.yfk] || fmtOf(d.f),
       yFrom: d.y0, yTo: d.y1, max: d.mx,
-      area: d.ar !== 0, ordinal: !!d.od, capLabels: d.cl !== 0,
+      area: d.ar !== 0, ordinal: !!d.od, notes: d.nt, groupCaps: d.gc, capLabels: d.cl !== 0,
     };
   }
   var DRAW = { line: lineSvg, cols: colsSvg, scatter: scatterSvg, dumbbell: dumbbellSvg, timeline: timelineSvg };
@@ -299,7 +299,7 @@
     var x = o.x || { values: [] }, series = o.series || [], fmt = o.fmt || money;
     var n = x.values.length, sc = yScale(series, o), af = axisFmt(fmt);
     var H = heightFor(o, W), P = { t: 18, r: 16, b: 26, l: gutterFor(sc, af) };
-    var iw = W - P.l - P.r, ih = H - P.t - P.b;
+    var iw = Math.max(24, W - P.l - P.r), ih = H - P.t - P.b;
     /* inset the first and last point half a step, so the end dots and
        their labels are not sitting on the frame */
     var inset = n > 1 ? Math.min(18, iw / (n - 1) / 2) : 0;
@@ -371,8 +371,11 @@
     var x = o.x || { values: [] }, series = o.series || [], fmt = o.fmt || plain;
     var n = x.values.length, sc = yScale(series, o), af = axisFmt(fmt);
     var caps = series.length === 1 && n <= 8 && o.capLabels !== false;
-    var H = heightFor(o, W), P = { t: caps ? 22 : 14, r: 14, b: 26, l: gutterFor(sc, af) };
-    var iw = W - P.l - P.r, ih = H - P.t - P.b;
+    /* a grouped chart may carry one figure per group (a job's profit), set
+       above the taller bar in ink, never in a series colour */
+    var gcaps = series.length > 1 && o.groupCaps && n <= 10;
+    var H = heightFor(o, W), P = { t: caps || gcaps ? 22 : 14, r: 14, b: 26, l: gutterFor(sc, af) };
+    var iw = Math.max(24, W - P.l - P.r), ih = H - P.t - P.b;
     var band = iw / n;
     var bw = Math.max(3, Math.min(24, (band * 0.62 - 2 * (series.length - 1)) / series.length));
     var grpW = bw * series.length + 2 * (series.length - 1), pad = (band - grpW) / 2;
@@ -389,6 +392,10 @@
         if (h > 0.5) bars += '<path class="bpc-bar" data-i="' + i + '" d="' + colPath(x0 + (bw + 2) * si, y, bw, h) + '" fill="' + fill + '"/>';
         if (caps && v > 0) bars += '<text class="bpc-cap-v" x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" text-anchor="middle">' + esc(axisFmt(fmt)(v)) + '</text>';
       });
+      if (gcaps && o.groupCaps[i] != null && o.groupCaps[i] !== '') {
+        var top = Math.max.apply(null, series.map(function (s) { return Math.max(0, +s.values[i] || 0); }));
+        bars += '<text class="bpc-cap-v" x="' + (x0 + grpW / 2).toFixed(1) + '" y="' + (py(top) - 6).toFixed(1) + '" text-anchor="middle">' + esc(o.groupCaps[i]) + '</text>';
+      }
       if (!(i % step) || i === n - 1) {
         var t = String(lbl);
         var maxCh = Math.max(4, Math.floor(band * step / 6.4));
@@ -876,7 +883,7 @@
       var i = +hit.getAttribute('data-i'), f = NAMED[d.fk] || fmtOf(d.f), line = d.k === 'line';
       html = '<b class="x">' + esc(d.x[i]) + '</b>' + d.s.map(function (s, si) {
         return '<span><i class="' + (line ? 'ln' : 'sw') + '" style="background:' + slot(si) + '"></i>' + esc(s.n) + '<em>' + esc(f(s.v[i])) + '</em></span>';
-      }).join('');
+      }).join('') + (d.nt && d.nt[i] ? '<span class="note">' + esc(d.nt[i]) + '</span>' : '');
       var cross = plot.querySelector('.bpc-cross');
       if (cross) {
         var cx = +hit.getAttribute('x') + (+hit.getAttribute('width')) / 2;
@@ -907,6 +914,15 @@
   }, true);
 
   /* ---------- helpers the views use ---------- */
+  /* sum rows into caller-made buckets [{label, start, end}] (end exclusive) */
+  C.byBuckets = function (rows, buckets, getWhen, getAmt) {
+    var out = buckets.map(function () { return 0; });
+    (rows || []).forEach(function (r) {
+      var w = +getWhen(r); if (!w) return;
+      for (var i = 0; i < buckets.length; i++) if (w >= buckets[i].start && w < buckets[i].end) { out[i] += (+getAmt(r) || 0); break; }
+    });
+    return { labels: buckets.map(function (b) { return b.label; }), values: out };
+  };
   C.byMonth = function (rows, n, getWhen, getAmt) {
     n = n || 6;
     var now = new Date(), keys = [], labels = [], idx = {};

@@ -196,7 +196,7 @@
 #bpx .pj-card:hover{transform:translateY(-3px);box-shadow:inset 0 1px 0 var(--edge),0 18px 36px -18px rgba(var(--sh-c,16 24 40),.6)}
 #bpx .pj-img{position:relative;aspect-ratio:16/10;background:var(--soft)}
 #bpx .pj-img img{width:100%;height:100%;object-fit:cover;display:block}
-#bpx .pj-flag{position:absolute;left:10px;top:10px;background:var(--blue);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;box-shadow:0 6px 16px -8px rgba(0,0,0,.7)}
+#bpx .pj-flag{position:absolute;left:10px;bottom:10px;background:var(--blue);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;box-shadow:0 6px 16px -8px rgba(0,0,0,.7)}
 #bpx .pj-body{padding:12px 14px 14px}
 #bpx .pj-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 #bpx .pj-h b{font-size:14.5px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -842,3 +842,107 @@
 #bpx .ca-now>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13.5px;padding:4px 0}
 #bpx .ca-now>div>span{opacity:.65}
 #bpx .ca-now em{margin:0}
+
+/* ---------- period: this month / 6 months / 1 year ---------- */
+#bpx .db-per{display:inline-flex;gap:2px;padding:3px;margin:0 0 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line-2,var(--line))}
+#bpx .db-per button{border:0;background:transparent;color:var(--grey);font:600 13px/1 inherit;padding:8px 14px;border-radius:999px;cursor:pointer;transition:background-color .2s ease,color .2s ease}
+#bpx .db-per button:hover{color:var(--ink)}
+#bpx .db-per button.on{background:var(--card,#fff);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.12),0 0 0 1px var(--line-2,var(--line))}
+#bpx .db-per button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+
+/* ---------- a project with no photo yet: a soft tile, not a grey box ---------- */
+#bpx .pj-img.pj-noimg{aspect-ratio:auto;height:112px;background:linear-gradient(135deg,#e9edff 0%,#dfe5ff 48%,#eee8ff 100%);overflow:hidden}
+#bpx .pj-img.pj-noimg::after{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.7),rgba(255,255,255,0) 70%);pointer-events:none}
+#bpx .pj-row.split .pj-img.pj-noimg{height:100%;min-height:150px}
+#bpx .pj-np{position:absolute;inset:0;display:flex;align-items:flex-end;gap:10px;padding:12px 12px 12px 14px;z-index:1}
+#bpx .pj-np-ico{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.78);color:#4e6ef2;box-shadow:0 4px 12px -6px rgba(78,110,242,.55)}
+#bpx .pj-np-ico .ms{font-size:24px}
+#bpx .pj-np-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx .pj-np-t b{font-size:13.5px;color:#1c2a55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pj-np-t small{font-size:11.5px;color:#55628a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pj-np-add{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:3px;border:0;border-radius:999px;padding:5px 10px 5px 7px;background:rgba(255,255,255,.85);color:#3550c8;font:600 11.5px/1 inherit;cursor:pointer;transition:background-color .2s ease}
+#bpx .pj-np-add .ms{font-size:15px}
+#bpx .pj-np-add:hover{background:#fff}
+#bpx .pj-np-add:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+#bpx.bpx-dark .pj-img.pj-noimg{background:linear-gradient(135deg,#1d2546 0%,#222a52 50%,#2a2450 100%)}
+#bpx.bpx-dark .pj-img.pj-noimg::after{background:radial-gradient(circle,rgba(140,160,255,.18),rgba(140,160,255,0) 70%)}
+#bpx.bpx-dark .pj-np-ico{background:rgba(255,255,255,.08);color:#9fb2ff;box-shadow:none}
+#bpx.bpx-dark .pj-np-t b{color:#e6eaff}#bpx.bpx-dark .pj-np-t small{color:#a6b0d6}
+#bpx.bpx-dark .pj-np-add{background:rgba(255,255,255,.1);color:#c3cfff}
+#bpx.bpx-dark .pj-np-add:hover{background:rgba(255,255,255,.18)}
+#bpx.bpx-dark .db-per button.on{background:var(--card)}
+
+/* ---------- Finances > Archive ---------- */
+#bpx .arc-set{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+#bpx .arc-set-t{display:flex;flex-direction:column;gap:3px;flex:1;min-width:220px}
+#bpx .arc-set-t b{font-size:14.5px}#bpx .arc-set-t .bpx-mut{font-size:12.5px;line-height:1.5}
+#bpx .arc-sel{font:600 14px/1.2 inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card,#fff);color:var(--ink);min-width:150px}
+#bpx .arc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+#bpx .arc-card{text-align:left;font:inherit;color:inherit;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:14px;
+  box-shadow:inset 0 1px 0 var(--edge,transparent),0 10px 26px -20px rgba(16,24,40,.45);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+#bpx .arc-card:hover{transform:translateY(-2px);border-color:#c9d3ff;box-shadow:0 18px 34px -20px rgba(16,24,40,.55)}
+#bpx .arc-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#bpx .arc-card-h{display:flex;align-items:center;gap:12px}
+#bpx .arc-fold{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#e9edff,#dfe5ff);color:#4e6ef2}
+#bpx .arc-fold .ms{font-size:24px}
+#bpx .arc-card-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx .arc-card-n b{font-size:18px;letter-spacing:-.02em;color:var(--ink)}#bpx .arc-card-n small{font-size:12px;color:var(--grey)}
+#bpx .arc-badge{flex:none;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:#e6f0ff;color:#1d4fc4}
+#bpx .arc-badge.done{background:var(--soft);color:var(--grey)}
+#bpx .arc-card-k{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+#bpx .arc-card-k span{display:flex;flex-direction:column;gap:2px}
+#bpx .arc-card-k small{font-size:11.5px;color:var(--grey);text-transform:uppercase;font-weight:600;letter-spacing:.02em}
+#bpx .arc-card-k b{font-size:16px;font-feature-settings:'tnum';color:var(--ink)}
+#bpx .arc-card-k b.pos{color:#0f7a3d}#bpx .arc-card-k b.neg{color:#b3392f}
+#bpx .arc-card-f{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--grey);border-top:1px solid var(--line-2,var(--line));padding-top:10px}
+#bpx .arc-card-f .ms{font-size:18px}
+#bpx .arc-top{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;margin-bottom:14px}
+#bpx .arc-back{display:inline-flex;align-items:center;gap:4px}
+#bpx .arc-back .ms{font-size:18px}
+#bpx .arc-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;flex:1;min-width:200px}
+#bpx .arc-title h2{margin:0;font-size:24px;letter-spacing:-.03em;color:var(--ink)}
+#bpx .arc-title .arc-badge{align-self:center}
+#bpx .arc-acts{display:flex;gap:8px;flex-wrap:wrap}
+#bpx .arc-acts .bpx-csv[disabled]{opacity:.5;cursor:not-allowed}
+#bpx .arc-print{width:auto!important;margin:0!important;padding:8px 14px!important;font-size:12.5px!important;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#bpx .arc-print .ms{font-size:16px}
+#bpx .arc-note{font-size:12.5px;color:#1d4fc4;background:#eef3ff;border-radius:10px;padding:8px 12px;margin-bottom:12px}
+#bpx .arc-two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;margin-bottom:12px}
+#bpx .arc-two>.bpx-panel{margin:0}
+@media(max-width:1000px){#bpx .arc-two{grid-template-columns:1fr}}
+#bpx .arc-pl tr.sec th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);padding-top:14px}
+#bpx .arc-pl tr.tot td{font-weight:700;border-top:1px solid var(--line)}
+#bpx .arc-pl tr.net td{font-weight:800;font-size:15px;border-top:2px solid var(--ink)}
+#bpx .arc-pl tr.net.pos td:last-child{color:#0f7a3d}#bpx .arc-pl tr.net.neg td:last-child{color:#b3392f}
+#bpx .arc-ck{width:34px}
+#bpx .arc-ck input{width:16px;height:16px;accent-color:#4e6ef2;cursor:pointer}
+#bpx .arc-months tr.fut td{color:var(--grey-l)}
+#bpx .arc-months tr.on td{background:#f3f6ff}
+#bpx .arc-months tfoot td{font-weight:700;border-top:1px solid var(--line)}
+#bpx .arc-sub{font-size:11.5px}
+#bpx.bpx-dark .arc-fold{background:linear-gradient(135deg,#1d2546,#2a2450);color:#9fb2ff}
+#bpx.bpx-dark .arc-badge{background:#1b2a4d;color:#9fc0ff}
+#bpx.bpx-dark .arc-note{background:#16213d;color:#a9c2ff}
+#bpx.bpx-dark .arc-months tr.on td{background:#161f38}
+#bpx.bpx-dark .arc-card-k b.pos,#bpx.bpx-dark .arc-pl tr.net.pos td:last-child{color:#5fd39a}
+#bpx.bpx-dark .arc-card-k b.neg,#bpx.bpx-dark .arc-pl tr.net.neg td:last-child{color:#ff9b8c}
+@media(max-width:600px){#bpx .arc-acts{width:100%}#bpx .arc-acts>button{flex:1 1 auto}#bpx .arc-months th:nth-child(6),#bpx .arc-months td:nth-child(6){display:none}}
+
+/* the printable P&L: hidden on screen, the only thing on the page in print */
+#arcPrint{display:none}
+@media print{
+  body.arc-printing>*{display:none!important}
+  body.arc-printing>#arcPrint{display:block!important;color:#111;background:#fff;font:13px/1.45 -apple-system,system-ui,'Segoe UI',Roboto,sans-serif;padding:0 4mm}
+  #arcPrint .arcp-h{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}
+  #arcPrint h1{font-size:22px;margin:0}#arcPrint .arcp-h p{margin:2px 0 0;color:#555}
+  #arcPrint .arcp-co{text-align:right;display:flex;flex-direction:column}#arcPrint .arcp-co span{color:#555}
+  #arcPrint .arcp-k{display:flex;gap:24px;margin-bottom:14px}
+  #arcPrint .arcp-k span{display:flex;flex-direction:column}#arcPrint .arcp-k small{color:#555;text-transform:uppercase;font-size:10px}#arcPrint .arcp-k b{font-size:16px}
+  #arcPrint table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  #arcPrint td,#arcPrint th{padding:5px 6px;border-bottom:1px solid #ddd;text-align:left}
+  #arcPrint .bpx-r,#arcPrint .arcp-j td:nth-child(n+3),#arcPrint .arcp-j th:nth-child(n+3){text-align:right}
+  #arcPrint tr.sec th{text-transform:uppercase;font-size:10.5px;color:#555;padding-top:12px}
+  #arcPrint tr.tot td{font-weight:700}#arcPrint tr.net td{font-weight:800;border-top:2px solid #111}
+  #arcPrint h2{font-size:15px;margin:10px 0 6px}
+  #arcPrint .arcp-f{color:#777;font-size:10.5px;margin-top:18px}
+}
