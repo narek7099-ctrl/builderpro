@@ -32,7 +32,7 @@
   --blue:#006fff; --blue-d:#003db8; --blue-l:#e6f0ff; --blue-glow:transparent;
   --edge:transparent;
   --side-a:#ffffff; --side-b:#ffffff;
-  --bpc-s1:#006fff; --bpc-grid:#e6ebf1;
+  --bpc-grid:#e6ebf1;
 }
 #bpx#bpx.bpx-dark{
   --bg:#000c1c; --bg-2:#0a1628; --card:#0c1a2e; --soft:#11213a;

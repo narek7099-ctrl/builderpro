@@ -505,7 +505,7 @@
       expenses: [{ cat: 'Materials', amt: Math.round(d[2] * .6) }, { cat: 'Labor / crew', amt: Math.round(d[2] * .32) }, { cat: 'Permits', amt: Math.round(d[2] * .08) }] }); });
     var inc = [], exp = [];
     jobs.forEach(function (j) {
-      if (j.collected) inc.push({ amt: j.collected, when: j.doneAt || now - 2 * day, type: 'Job' });
+      if (j.collected) inc.push({ amt: j.collected, when: j.doneAt || now, type: 'Job' });
       (j.expenses || []).forEach(function (e) { exp.push({ amt: e.amt, when: j.doneAt, type: e.cat }); });
     });
     for (var m = 0; m < 6; m++) { exp.push({ amt: 640, when: now - m * 30 * day, type: 'Ads' }); exp.push({ amt: 380, when: now - m * 30 * day, type: 'Fuel' }); }
