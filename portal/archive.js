@@ -81,8 +81,8 @@
     }
     return head + '<div class="arc-grid">' + ys.map(function (y) {
       var r = range(y), S = sumUp(D, r.start, r.end), live = y === cur;
-      return '<button class="arc-card" onclick="BP_ARC.open(' + y + ')">'
-        + '<div class="arc-card-h"><span class="arc-fold"><span class="ms">' + (live ? 'folder_open' : 'folder') + '</span></span>'
+      return '<button class="arc-card" data-fy="' + y + '" onclick="BP_ARC.open(' + y + ', this)">'
+        + '<div class="arc-card-h"><span class="arc-fold"><span class="ms">' + 'folder' + '</span></span>'
         + '<span class="arc-card-n"><b>' + esc(name(y)) + '</b><small>' + esc(span(y)) + '</small></span>'
         + (live ? '<span class="arc-badge">In progress</span>' : '<span class="arc-badge done">Closed</span>') + '</div>'
         + '<div class="arc-card-k">'
@@ -172,8 +172,26 @@
     if (window.bpSpin) bpSpin(false);
   }
   window.bpFinArchive = function () { A.fy = null; A.sel = {}; render(); };
-  A.open = function (y) { A.fy = +y; A.sel = {}; render(); if (window.bpScrollTop) bpScrollTop(); };
-  A.back = function () { A.fy = null; A.sel = {}; render(); };
+  /* the folder opens: its icon flips open and the card lifts, then the year
+     unfolds in; going back folds the year away and the folder closes again */
+  var calm = function () { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+  var swap = function (card, open) { var i = card && card.querySelector('.arc-fold .ms'); if (i) i.textContent = open ? 'folder_open' : 'folder'; };
+  A.open = function (y, card) {
+    var go = function () { A.fy = +y; A.sel = {}; render(); var r = area().querySelector('.arc'); if (r && !calm()) r.classList.add('arc-unfold'); if (window.bpScrollTop) bpScrollTop(); };
+    if (!card || calm()) return go();
+    swap(card, true); card.classList.add('arc-opening');
+    setTimeout(go, 320);
+  };
+  A.back = function () {
+    var was = A.fy, r = area() && area().querySelector('.arc');
+    var go = function () {
+      A.fy = null; A.sel = {}; render();
+      var c = area().querySelector('.arc-card[data-fy="' + was + '"]');
+      if (c && !calm()) { swap(c, true); c.classList.add('arc-closing'); setTimeout(function () { swap(c, false); }, 260); setTimeout(function () { c.classList.remove('arc-closing'); }, 600); }
+    };
+    if (!r || calm()) return go();
+    r.classList.add('arc-fold-away'); setTimeout(go, 260);
+  };
   A.pick = function (i, on) { if (on) A.sel[i] = 1; else delete A.sel[i]; render(); };
   A.pickAll = function (on) { A.sel = {}; if (on) for (var i = 0; i < 12; i++) A.sel[i] = 1; render(); };
   A.setStart = function (v) {
