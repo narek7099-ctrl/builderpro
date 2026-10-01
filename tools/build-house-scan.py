@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble embed-src/house-scan.html — the map-to-house shot for the nine
+"""Assemble embed-src/house-scan.html — the map-to-house shot for the eleven
 calculators other than roofing.
 
 The map, the house model, the camera and the shading are the roof scan's, so
@@ -55,6 +55,22 @@ extra = r'''
 #est-embed .hs-chip:focus-visible,#est-embed .hs-go:focus-visible{outline:3px solid var(--rs-blue);outline-offset:3px;}
 #est-embed .hs-go{appearance:none;align-self:flex-start;border:1px solid var(--rs-ink);background:var(--rs-ink);color:#fff;border-radius:40px;padding:15px 22px;font:inherit;font-size:12px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:background-color .3s ease,border-color .3s ease;}
 #est-embed .hs-go:hover{background:var(--rs-blue);border-color:var(--rs-blue);}
+/* concrete traces several areas: the ones done so far, the live total, scan */
+#est-embed .hs-areas{display:none;}
+#est-embed .rs-tracing .hs-areas.on{display:flex;}
+#est-embed .hs-areas{--rs-ink:#001530;--rs-grey:#788493;--rs-blue:#006fff;--rs-line:#dce3ec;font-family:'Geist',system-ui,-apple-system,sans-serif;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 14px;background:#f7f9fc;border-top:1px solid #eef1f6;}
+#est-embed .hs-areas-l{display:flex;flex-wrap:wrap;gap:6px;min-width:0;}
+#est-embed .hs-area{display:inline-flex;align-items:center;gap:6px;padding:7px 8px 7px 12px;border-radius:40px;background:#fff;border:1px solid var(--rs-line);font-size:13px;font-weight:500;color:var(--rs-ink);font-variant-numeric:tabular-nums;}
+#est-embed .hs-area.cur{border-style:dashed;color:var(--rs-grey);padding-right:12px;}
+#est-embed .hs-area button{appearance:none;border:0;background:#eef1f6;color:var(--rs-ink);width:22px;height:22px;border-radius:50%;font:inherit;font-size:14px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+#est-embed .hs-area button:hover{background:var(--rs-ink);color:#fff;}
+#est-embed .hs-areas-r{display:flex;align-items:center;gap:12px;margin-left:auto;}
+#est-embed .hs-areas-t{font-size:13px;color:var(--rs-grey);white-space:nowrap;}
+#est-embed .hs-areas-t b{font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--rs-ink);}
+#est-embed .hs-areas .rs-tgo{margin-left:0;}
+/* once an area is filed, "Add this area" steps back and Scan leads */
+#est-embed .hs-multi #rs-tgo:not(:disabled){background:#fff;color:var(--rs-blue,#006fff);}
+@media(max-width:560px){#est-embed .hs-areas-r{width:100%;justify-content:space-between;}#est-embed .hs-areas .rs-tgo{flex:0 1 auto;order:0;}}
 '''
 
 header = ('<!-- HOUSE SCAN — built by tools/build-house-scan.py from embed-src/house-scan.src.js\n'

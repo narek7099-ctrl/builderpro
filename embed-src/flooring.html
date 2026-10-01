@@ -1,10 +1,8 @@
-<!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->
+<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Remodel Estimator</title>
+<title>Flooring Estimator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--bg:#ffffff;--card:#ffffff;--border:#e3e8ef;--bs:#e3e8ef;
 --text:#1b2a41;--txt:#1b2a41;--mu:#6b7a90;--muted:#6b7a90;
@@ -447,70 +445,6 @@ html,body{margin:0;background:#f6f8fb;font-family:'Inter','Space Grotesk',system
 /* Loading ring on brand color */
 #est-embed .e-ldring{border-top-color:var(--pri) !important;}
 #est-embed .e-ldstp.done{color:#1a8a4a !important;}
-/* size picker + presets */
-#est-embed .e-poolsize{background:linear-gradient(160deg,#f2f8ff,#e7f1fb) !important;border:1px solid #bcd7f0 !important;box-shadow:0 4px 16px rgba(47,107,255,.12) !important;}
-#est-embed .e-sldval{color:#2f6bff !important;}
-#est-embed .e-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
-#est-embed .e-preset{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border:1px solid #bcd7f0;border-radius:10px;background:#fff;color:#0c0c0d;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .18s;text-align:center;}
-#est-embed .e-preset span{font-size:10px;font-weight:400;color:#9a9aa0;}
-#est-embed .e-preset:hover{border-color:#2f6bff;background:#f2f8ff;}
-#est-embed .e-preset.on{border-color:#2f6bff;background:#2f6bff;color:#fff;box-shadow:0 0 0 1px #2f6bff;}
-#est-embed .e-preset.on span{color:rgba(255,255,255,.85);}
-/* ---- AI VISUALIZER (photo left, options right) ---- */
-#est-embed .e-viz{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:14px;}
-@media (max-width:720px){ #est-embed .e-viz{grid-template-columns:1fr;} }
-#est-embed .e-vizphoto{position:sticky;top:12px;}
-#est-embed .e-vizsplit{display:flex;gap:18px;align-items:flex-start;}
-#est-embed .e-vizsplit>.e-vizcol{flex:1;min-width:0;}
-#est-embed .e-vizsplit>.e-vizphoto{width:320px;flex:none;}
-@media(max-width:720px){#est-embed .e-vizsplit{flex-direction:column;}#est-embed .e-vizsplit>.e-vizphoto{width:100%;}}
-#est-embed .e-vizupload{border:2px dashed #bcd4ea;border-radius:14px;background:#f7fbff;padding:34px 18px;text-align:center;cursor:pointer;transition:all .18s;}
-#est-embed .e-vizupload:hover{border-color:#2f6bff;background:#eef6ff;}
-#est-embed .e-vizstage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #e9e8e3;background:#0c0c0d;min-height:200px;display:flex;align-items:center;justify-content:center;}
-#est-embed .e-vizimg{width:100%;display:block;}
-#est-embed .e-vizstage{position:relative;}
-#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:rgba(247,250,253,.78);backdrop-filter:blur(2px);border-radius:12px;text-align:center;padding:16px;}
-#est-embed .e-vizspin{width:34px;height:34px;border-radius:50%;border:3px solid #cfe0f2;border-top-color:#2f6bff;animation:e-vizspin .9s linear infinite;}
-@keyframes e-vizspin{to{transform:rotate(360deg);}}
-#est-embed .e-vizloading b{font-size:14px;color:#0c0c0d;}
-#est-embed .e-vizloading span{font-size:11.5px;color:#6a6a70;max-width:230px;line-height:1.4;}
-#est-embed .e-vizbadge{position:absolute;top:10px;left:10px;background:rgba(47,107,255,.92);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
-#est-embed .e-vizbar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
-#est-embed .e-vizbtn{flex:1;min-width:90px;padding:8px 10px;border:1px solid #e0ded6;border-radius:8px;background:#fff;color:#0c0c0d;font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
-#est-embed .e-vizbtn.on{background:#2f6bff;border-color:#2f6bff;color:#fff;}
-#est-embed .e-vizbtn.ghost{flex:0 0 auto;color:#6a6a70;}
-#est-embed .e-vizbtn.ghost:hover{border-color:#2f6bff;color:#2f6bff;}
-#est-embed .e-vizhint{font-size:11px;color:#9a9aa0;margin-top:8px;line-height:1.5;text-align:center;}
-#est-embed .e-vizcv{width:100%;display:block;border-radius:14px;cursor:crosshair;background:#0c0c0d;touch-action:none;}
-#est-embed .e-vizimg{width:100%;display:block;border-radius:14px;background:#f6f8fb;}
-#est-embed .e-vizhelp{margin-top:8px;font-size:12px;font-weight:600;color:#2f6bff;text-align:center;background:#eef6ff;border:1px solid #d5e6f6;border-radius:8px;padding:8px 10px;}
-#est-embed .e-vizprevlbl{font-size:11px;color:#9a9aa0;text-align:center;margin-top:8px;}
-#est-embed .e-vizgen{width:100%;margin-top:10px;padding:13px 16px;border:none;border-radius:10px;background:linear-gradient(180deg,#3a7cc0,#2f6bff);color:#fff;font:600 15px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(47,107,255,.28);transition:all .18s;}
-#est-embed .e-vizgen:hover{background:linear-gradient(180deg,#3f83c9,#1b56ee);box-shadow:0 6px 20px rgba(47,107,255,.34);transform:translateY(-1px);}
-/* Material / add-on swatch thumbnails */
-#est-embed .e-oi-sw{width:48px;height:48px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid #e9e8e3;box-shadow:0 1px 3px rgba(15,27,45,.08);}
-#est-embed .e-oi-emchip{width:48px;height:48px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#f6faff,#e9f1fb);border:1px solid #dbe6f2;box-shadow:0 1px 3px rgba(15,27,45,.06),inset 0 1px 0 #fff;}
-#est-embed .e-oi{gap:12px !important;}
-#est-embed .e-vizgen:disabled{background:#f0efe9;color:#9a9aa0;cursor:not-allowed;box-shadow:none;transform:none;}
-/* color chips */
-#est-embed .e-colorrow{display:flex;flex-wrap:wrap;gap:8px;}
-#est-embed .e-colorchip{display:flex;align-items:center;gap:7px;padding:7px 12px 7px 8px;border:1px solid #e9e8e3;border-radius:20px;background:#fff;color:#0c0c0d;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
-#est-embed .e-colordot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
-#est-embed .e-colorchip:hover{border-color:#2f6bff;}
-#est-embed .e-colorchip.on{border-color:#2f6bff;background:#faf8f4;box-shadow:0 0 0 1px #2f6bff;}
-#est-embed .e-colornone{background:#f0f2f5 !important;color:#9a9aa0;display:flex;align-items:center;justify-content:center;font-size:11px;}
-/* measuring help */
-#est-embed .e-helpbtn{display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;padding:9px 14px;border:1px solid #bcd7f0;border-radius:9px;background:#f2f8ff;color:#2f6bff;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
-#est-embed .e-helpbtn:hover{background:#e6f0fb;border-color:#2f6bff;}
-#est-embed .e-modal{position:fixed;inset:0;background:rgba(15,27,45,.5);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px;}
-#est-embed .e-modalbox{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-#est-embed .e-modalhd{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #f4f2ec;font:700 16px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0c0c0d;position:sticky;top:0;background:#fff;}
-#est-embed .e-modalx{border:none;background:#f2f6fb;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;color:#6a6a70;}
-#est-embed .e-modalbody{padding:18px 20px;color:#6a6a70;font-size:14px;line-height:1.6;}
-#est-embed .e-modalbody ol{padding-left:20px;margin:12px 0;} #est-embed .e-modalbody li{margin-bottom:9px;}
-#est-embed .e-modalnote{background:#f2f8ff;border:1px solid #d5e6f6;border-radius:10px;padding:12px 14px;margin:12px 0;font-size:13px;color:#1b56ee;}
-#est-embed .e-vizsens{margin-top:8px;font-size:12px;color:#6a6a70;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;}
-#est-embed .e-vizbtn.sm{flex:0 0 auto;min-width:0;padding:5px 10px;font-size:11px;}
 
 /* ---- YOUR INFO slide: form fields were near-transparent white on a
    white card, so they vanished. Give them real surfaces. ---- */
@@ -522,107 +456,160 @@ html,body{margin:0;background:#f6f8fb;font-family:'Inter','Space Grotesk',system
 #est-embed .e-fl{color:#6a6a70 !important;font-weight:600 !important;letter-spacing:1.5px !important;}
 #est-embed .e-consent{background:var(--soft) !important;border:1px solid var(--line) !important;color:#6a6a70 !important;border-radius:9px !important;}
 #est-embed .e-consent b{color:var(--ink) !important;}
-</style><style>
-/* No AI visualiser on this trade: "a remodel" is not one look that can be
-   previewed on a photo, so the column is hidden rather than left sitting
-   there inviting a photo nothing will be done with. */
-#est-embed .e-vizphoto,#est-embed .e-vizsplit>.e-vizphoto{display:none !important;}
-#est-embed .e-vizsplit{display:block !important;}
-</style>
-</head>
+
+/* ---- AI VISUALIZER (photo left, options right) ---- */
+#est-embed .e-viz{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-bottom:14px;}
+@media (max-width:720px){ #est-embed .e-viz{grid-template-columns:1fr;} }
+#est-embed .e-vizphoto{position:sticky;top:12px;}
+#est-embed .e-vizupload{border:2px dashed #bcd4ea;border-radius:14px;background:#f7fbff;padding:34px 18px;text-align:center;cursor:pointer;transition:all .18s;}
+#est-embed .e-vizupload:hover{border-color:#2f6bff;background:#eef6ff;}
+#est-embed .e-vizstage{position:relative;border-radius:14px;overflow:hidden;border:1px solid #e9e8e3;background:#0c0c0d;min-height:200px;display:flex;align-items:center;justify-content:center;}
+#est-embed .e-vizimg{width:100%;display:block;}
+#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,27,45,.55);color:#fff;backdrop-filter:blur(2px);}
+#est-embed .e-vizbadge{position:absolute;top:10px;left:10px;background:rgba(47,107,255,.92);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+#est-embed .e-vizbar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+#est-embed .e-vizbtn{flex:1;min-width:90px;padding:8px 10px;border:1px solid #e0ded6;border-radius:8px;background:#fff;color:#0c0c0d;font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
+#est-embed .e-vizbtn.on{background:#2f6bff;border-color:#2f6bff;color:#fff;}
+#est-embed .e-vizbtn.ghost{flex:0 0 auto;color:#6a6a70;}
+#est-embed .e-vizbtn.ghost:hover{border-color:#2f6bff;color:#2f6bff;}
+#est-embed .e-vizhint{font-size:11px;color:#9a9aa0;margin-top:8px;line-height:1.5;text-align:center;}
+#est-embed .e-vizimg{width:100%;display:block;border-radius:14px;background:#f6f8fb;}
+#est-embed .e-vizgen{width:100%;margin-top:10px;padding:13px 16px;border:none;border-radius:10px;background:linear-gradient(180deg,#3a7cc0,#2f6bff);color:#fff;font:600 15px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(47,107,255,.28);transition:all .18s;}
+#est-embed .e-vizgen:hover{background:linear-gradient(180deg,#3f83c9,#1b56ee);box-shadow:0 6px 20px rgba(47,107,255,.34);transform:translateY(-1px);}
+#est-embed .e-vizgen:disabled{background:#f0efe9;color:#9a9aa0;cursor:not-allowed;box-shadow:none;transform:none;}
+/* Material / add-on swatch thumbnails */
+#est-embed .e-oi-sw{width:48px;height:48px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid #e9e8e3;box-shadow:0 1px 3px rgba(15,27,45,.08);}
+#est-embed .e-oi-emchip{width:48px;height:48px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;background:linear-gradient(180deg,#f6faff,#e9f1fb);border:1px solid #dbe6f2;box-shadow:0 1px 3px rgba(15,27,45,.06),inset 0 1px 0 #fff;}
+#est-embed .e-oi{gap:12px !important;}
+/* color chips */
+#est-embed .e-colorrow{display:flex;flex-wrap:wrap;gap:8px;}
+#est-embed .e-colorchip{display:flex;align-items:center;gap:7px;padding:7px 12px 7px 8px;border:1px solid #e9e8e3;border-radius:20px;background:#fff;color:#0c0c0d;font:600 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;cursor:pointer;transition:all .15s;}
+#est-embed .e-colordot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;}
+#est-embed .e-colorchip:hover{border-color:#2f6bff;}
+#est-embed .e-colorchip.on{border-color:#2f6bff;background:#faf8f4;box-shadow:0 0 0 1px #2f6bff;}
+#est-embed .e-colornone{background:#f0f2f5 !important;color:#9a9aa0;display:flex;align-items:center;justify-content:center;font-size:11px;}
+/* photo beside options (early-design canvas) */
+#est-embed .e-vizsplit{display:flex;gap:18px;align-items:flex-start;}
+#est-embed .e-vizsplit>.e-vizcol{flex:1;min-width:0;}
+#est-embed .e-vizsplit>.e-vizphoto{width:320px;flex:none;}
+@media(max-width:720px){#est-embed .e-vizsplit{flex-direction:column;}#est-embed .e-vizsplit>.e-vizphoto{width:100%;}}
+/* gating / loading overlay */
+#est-embed .e-vizstage{position:relative;}
+#est-embed .e-vizloading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;background:rgba(247,250,253,.78);backdrop-filter:blur(2px);border-radius:12px;text-align:center;padding:16px;}
+#est-embed .e-vizspin{width:34px;height:34px;border-radius:50%;border:3px solid #cfe0f2;border-top-color:#2f6bff;animation:e-vizspin .9s linear infinite;}
+@keyframes e-vizspin{to{transform:rotate(360deg);}}
+#est-embed .e-vizloading b{font-size:14px;color:#0c0c0d;}
+#est-embed .e-vizloading span{font-size:11.5px;color:#6a6a70;max-width:230px;line-height:1.4;}
+</style></head>
 <body><div class="est-stage"><div id="est-embed-shell"></div></div>
 <script>
 /* ═══════════════════════════════════════════════════
-   ESTIMATOR CONFIG
+   ESTIMATOR CONFIG — Flooring
+   Priced per sq ft of the rooms the homeowner sketches on the grid, fully
+   installed (materials + labor). 2026 US installed ranges. Every number
+   can be overridden per contractor from the portal's pricing editor
+   (calculator_pricing, calc_id "flooring"); the loader at the bottom
+   merges their row in.
 ═══════════════════════════════════════════════════ */
 const E_CONFIG = {
   companyName: "Your Company",
   accentColor: "#2f6bff",
-  ctaText: "Book a Free Visit",
+  ctaText: "Book a Free In-Home Measure",
   ctaUrl: "#",
-  webhookUrl: "https://services.leadconnectorhq.com/hooks/aUs7E5m1gmLXoeIV3WM9/webhook-trigger/ef3ddaf4-7cde-4c97-90f6-2b4d0b5cf3d1",
-  aiEditUrl: "",
-  aiEditKey: "",
-
-  /* GENERAL CONTRACTING is priced per square foot of the area being
-     remodelled — not of the whole house. A $300/sq ft kitchen figure is
-     $300 across the kitchen, and a homeowner who reads it as the whole
-     house gets a number four times too big. Step 1 asks for the area and
-     says so in as many words.
-
-     The spread is enormous and honestly so: a bathroom is the most
-     expensive room per square foot in the house, because everything
-     costly in a remodel — plumbing, tile, waterproofing, fixtures — is
-     packed into forty square feet. A basement is the cheapest, because
-     most of it is framing and drywall over a floor that already exists.
-
-     2024–25 US averages, replaced the moment the contractor sets their
-     own in the portal. */
+  webhookUrl: "https://services.leadconnectorhq.com/hooks/aUs7E5m1gmLXoeIV3WM9/webhook-trigger/ef3ddaf4-7cde-4c97-90f6-28560e86346d",
+  aiEditUrl: "https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ai-visualizer",
+  aiEditKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso",
+  /* floor, per sq ft installed at a standard (mid) grade */
   pricing: {
-    "kitchen":  { label:"Kitchen Remodel",          low:125, high:375, note:"Cabinets, counters, appliances \u00b7 the most common big job" },
-    "bathroom": { label:"Bathroom Remodel",         low:250, high:650, note:"The dearest room per sq ft \u00b7 it is all plumbing and tile" },
-    "basement": { label:"Basement Finishing",       low:50,  high:120, note:"The cheapest space you can add \u00b7 the shell is already there" },
-    "addition": { label:"Room Addition",            low:200, high:400, note:"New foundation, roof and walls \u00b7 a permit job" },
-    "whole":    { label:"Whole-Home Remodel",       low:100, high:250, note:"Everything at once \u00b7 cheaper per sq ft than room by room" },
-    "garage":   { label:"Garage Conversion",        low:100, high:220, note:"Insulation, floor, and somewhere else for the car" },
-    "adu":      { label:"ADU / Guest Suite",        low:200, high:450, note:"A small separate home \u00b7 its own kitchen and bath" },
-    "outdoor":  { label:"Deck / Outdoor Living",    low:40,  high:120, note:"Deck, patio or covered porch" },
-    "attic":    { label:"Attic Conversion",         low:120, high:280, note:"Only if the headroom and the floor joists allow it" },
+    "lvp":            { label:"Luxury Vinyl Plank / Tile (LVP/LVT)", low:4.5, high:9,  note:"Waterproof, warm underfoot · great for kitchens & basements",
+      colors:[{name:"Natural Oak",hex:"#b88c5e",desc:"natural light-oak luxury vinyl plank"},{name:"Gray Wash",hex:"#a39d95",desc:"gray-washed oak luxury vinyl plank"},{name:"Walnut",hex:"#6b4a33",desc:"dark walnut luxury vinyl plank"}] },
+    "laminate":       { label:"Laminate",                            low:4,   high:8,  note:"Budget-friendly wood look · scratch resistant",
+      colors:[{name:"Honey Oak",hex:"#c39563",desc:"honey-oak laminate flooring"},{name:"Driftwood",hex:"#9e968a",desc:"driftwood-gray laminate flooring"},{name:"Espresso",hex:"#4b3326",desc:"espresso-brown laminate flooring"}] },
+    "eng-hardwood":   { label:"Engineered Hardwood",                 low:8,   high:15, note:"Real wood top layer · stable over slabs",
+      colors:[{name:"White Oak",hex:"#c7a57e",desc:"wide-plank engineered white oak"},{name:"Hickory",hex:"#9b6e45",desc:"rustic engineered hickory"},{name:"Smoked Oak",hex:"#6e5948",desc:"smoked engineered oak"}] },
+    "solid-hardwood": { label:"Solid Hardwood",                      low:10,  high:18, note:"Site-finished or prefinished · refinishable for decades",
+      colors:[{name:"Red Oak",hex:"#b07a52",desc:"site-finished solid red oak"},{name:"Maple",hex:"#d8b98d",desc:"light solid maple"},{name:"Walnut",hex:"#5a3c2a",desc:"solid American walnut"}] },
+    "tile":           { label:"Porcelain / Ceramic Tile",            low:10,  high:22, note:"Most durable · bathrooms, kitchens, entries",
+      colors:[{name:"Warm White",hex:"#e7e2d8",desc:"large-format warm-white porcelain tile"},{name:"Stone Gray",hex:"#9a9792",desc:"stone-look gray porcelain tile"},{name:"Wood-Look",hex:"#a97f58",desc:"wood-look porcelain plank tile"}] },
+    "carpet":         { label:"Carpet & Pad",                        low:3.5, high:8,  note:"Soft and quiet · bedrooms and family rooms",
+      colors:[{name:"Oatmeal",hex:"#cbbfa9",desc:"oatmeal-beige plush carpet"},{name:"Greige",hex:"#a8a196",desc:"greige textured carpet"},{name:"Charcoal",hex:"#55575b",desc:"charcoal berber carpet"}] }
   },
-
-  /* The eight things that turn up on a change order, priced as their own
-     line so they are decided now rather than discovered in week three.
-     Flat trade prices — deliberately NOT multiplied by the finish level,
-     because a permit does not cost more because the tile is nicer. */
+  /* the grade of the product itself */
+  qualityMult: { "economy":0.85, "standard":1.00, "premium":1.25, "luxury":1.55 },
+  /* which rooms: bathrooms and kitchens mean more cuts per foot */
+  areaMult: { "living":1.00, "kitchen":1.05, "bath":1.18, "basement":1.06, "whole":0.97 },
+  /* tearing out the old floor, $/sq ft, haul-off included */
+  removal: {
+    "none":     { label:"Nothing — bare subfloor",       low:0,    high:0 },
+    "carpet":   { label:"Carpet & pad",                  low:0.75, high:1.5 },
+    "floating": { label:"Laminate or floating vinyl",    low:1.0,  high:2.0 },
+    "tile":     { label:"Ceramic or stone tile",         low:2.5,  high:5.0 },
+    "hardwood": { label:"Nailed-down hardwood",          low:2.0,  high:4.0 },
+    "glued":    { label:"Glued-down vinyl or wood",      low:2.5,  high:5.5 }
+  },
+  /* getting the subfloor flat and sound, $/sq ft */
+  subfloor: {
+    "good":    { label:"Flat and solid",                low:0,   high:0 },
+    "patch":   { label:"Minor patching & screws",       low:0.5, high:1.25 },
+    "level":   { label:"Self-leveling compound",        low:2.0, high:4.5 },
+    "replace": { label:"Replace subfloor panels",       low:4.5, high:8.0 }
+  },
+  /* underlayment and moisture barrier, $/sq ft */
+  underlay: {
+    "standard": { label:"Standard underlayment",          low:0,   high:0 },
+    "premium":  { label:"Premium acoustic underlayment",  low:0.5, high:1.25 },
+    "moisture": { label:"Moisture barrier",               low:0.4, high:1.0 },
+    "both":     { label:"Moisture barrier + acoustic",    low:0.9, high:2.0 }
+  },
+  /* stairs, per step (tread + riser + nosing), by floor type */
+  stairs: {
+    "lvp":            { label:"LVP stairs",            low:100, high:200 },
+    "laminate":       { label:"Laminate stairs",       low:90,  high:180 },
+    "eng-hardwood":   { label:"Engineered wood stairs",low:150, high:290 },
+    "solid-hardwood": { label:"Hardwood stairs",       low:175, high:340 },
+    "tile":           { label:"Tile stairs",           low:120, high:260 },
+    "carpet":         { label:"Carpet stairs",         low:40,  high:90 }
+  },
+  /* baseboards & trim, per linear ft of wall */
+  trim: {
+    "none":      { label:"Leave as is",                low:0,    high:0 },
+    "reinstall": { label:"Remove & reinstall existing",low:1.0,  high:2.25 },
+    "quarter":   { label:"Add quarter round / shoe",   low:1.25, high:2.75 },
+    "new":       { label:"New baseboards, painted",    low:3.5,  high:8.0 }
+  },
+  regionMult: { "northeast":1.18, "west-coast":1.24, "midwest":0.96, "southeast":0.92, "southwest":1.02, "mountain":1.06, "national":1.00 },
+  /* extras. unit: room = per room, door = per doorway, job = once */
   addons: {
-    "design":     { label:"Plans, Design & Permits",     low:1500, high:9000,  desc:"Drawings and city approval \u00b7 required on most of these" },
-    "structural": { label:"Structural / Wall Removal",   low:3000, high:15000, desc:"Taking a wall out needs a beam and an engineer" },
-    "electrical": { label:"Electrical Service Upgrade",  low:1800, high:5000,  desc:"Older panels rarely carry a remodel" },
-    "hvac":       { label:"HVAC Extension",              low:2500, high:9000,  desc:"Heating and cooling the new space" },
-    "plumbing":   { label:"Plumbing Relocation",         low:1500, high:7000,  desc:"Moving a sink, bath or drain line" },
-    "windows":    { label:"Windows & Exterior Doors",    low:2000, high:12000, desc:"New openings, or replacing what is there" },
-    "flooring":   { label:"Flooring Throughout",         low:2500, high:15000, desc:"Often left out of a per-room quote" },
-    "temp":       { label:"Storage / Temporary Living",  low:1000, high:6000,  desc:"Somewhere to put the furniture, or you" },
+    "furniture":   { label:"Furniture moving",           unit:"room", low:60,  high:150, icon:"🛋", desc:"We move it out and back in, room by room" },
+    "transitions": { label:"Transitions & thresholds",   unit:"door", low:40,  high:110, icon:"▭", desc:"Matching strips where the new floor meets another" },
+    "doors":       { label:"Door undercutting",          unit:"door", low:25,  high:60,  icon:"🚪", desc:"Trim door bottoms so they clear the new height" },
+    "haul":        { label:"Disposal & haul-away",       unit:"job",  low:150, high:500, icon:"🚚", desc:"Old flooring and job waste taken away" },
+    "heated":      { label:"Radiant floor heating mat",  unit:"job",  low:900, high:2500,icon:"🔥", desc:"Electric warming mat under tile or LVP (one room)" }
   },
-
-  /* Finish level is the single biggest lever a homeowner actually controls.
-     The same kitchen, same footprint, same crew, is roughly twice the money
-     in luxury finishes as in builder-grade — and that is the choice, not a
-     surcharge somebody sprang on them. */
-  qualityMult: { "builder":0.80, "standard":1.00, "premium":1.35, "luxury":1.80 },
-  /* Structural work. Moving or removing anything load-bearing pulls in an
-     engineer, a beam and an inspection, and is where remodel budgets go. */
-  terrainMult: { "none":1.00, "minor":1.15, "major":1.40, "footprint":1.60 },
-  accessMult:  { "easy":1.00, "moderate":1.10, "difficult":1.25 },
-  regionMult:  { "northeast":1.18, "west-coast":1.24, "midwest":0.94, "southeast":0.92, "southwest":1.00, "mountain":1.03 },
-  /* Living in the house through the work costs real money: dust walls,
-     working around the family, and stopping every evening. Phasing it
-     costs more again — the crew mobilises twice. */
-  projectMult: { "vacant":0.95, "living":1.08, "phased":1.15, "new":1.00 },
+  minJob: { "min": { label:"Minimum job", low:1200, high:2000 } }
 };
 </script>
 <script>
 /* ═══ Build and inject estimator HTML into shell ═══ */
-/* All functions global so inline handlers (oninput/onclick) can reach them */
 var shell = document.getElementById('est-embed-shell');
 shell.innerHTML = `
 <div id="est-embed">
   <div class="e-topbar">
-    <div class="e-tlogo"><div class="e-ldot"></div>Remodel<span>Estimator</span></div>
-    <div class="e-tstep" id="e-tstep">Step <b>1</b> of 9 — Location</div>
+    <div class="e-tlogo"><div class="e-ldot"></div>Flooring<span>Estimator</span></div>
+    <div class="e-tstep" id="e-tstep">Step <b>1</b> of 11 — Location</div>
   </div>
   <div class="e-prog"><div class="e-pfill" id="e-pfill" style="width:9%"></div></div>
 
   <div class="e-app">
 
-  <!-- STEP 1 -->
+  <!-- STEP 1 — ADDRESS + ROOM SKETCH -->
   <div class="e-sp active" id="e-sp1">
     <div class="e-sbody">
       <div class="e-zippanel" id="e-zippanel">
         <div class="e-shdr">
           <span class="e-seye">Get started</span>
           <div class="e-stitle">What's your<br><em>ZIP code?</em></div>
-          <div class="e-ssub">We use this to estimate local labour and material pricing for your area. Next, tell us a little about the house.</div>
+          <div class="e-ssub">We use this to estimate local labor and material pricing for your area. Next, you'll sketch the rooms getting new floors.</div>
         </div>
         <div class="e-zipwrap">
           <label class="e-ziplabel" for="e-zipIn">Your ZIP code</label>
@@ -633,211 +620,244 @@ shell.innerHTML = `
       </div>
       <div class="e-addrpanel" id="e-addrpanel" style="display:none">
         <div class="e-shdr">
-          <span class="e-seye">Your project</span>
-          <div class="e-stitle">How Big Is<br><em>The Space?</em></div>
-          <div class="e-ssub">The area being remodelled — not the whole house. A kitchen is usually 150–250 sq ft, a bathroom 35–100, a basement 600–1,200. Pace it out if you are not sure; close is fine.</div>
+          <span class="e-seye">Your home</span>
+          <div class="e-stitle">What's the<br><em>Property Address?</em></div>
+          <div class="e-ssub">Enter the address, then draw your rooms on the grid — or pick a quick preset. Square footage adds up as you go.</div>
         </div>
-
-        <div class="e-card e-poolsize" id="e-sldwrap" style="display:block">
-          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Area being remodelled</div>
-          <div class="e-presets">
-            <button type="button" class="e-preset" onclick="eCtPreset(60)">A bathroom<span>~60 sq ft</span></button>
-            <button type="button" class="e-preset" onclick="eCtPreset(200)">A kitchen<span>~200 sq ft</span></button>
-            <button type="button" class="e-preset" onclick="eCtPreset(900)">A basement<span>~900 sq ft</span></button>
+      <div class="e-asearch">
+        <div class="e-asearch-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <input type="text" class="e-asearch-input" id="e-addrIn" placeholder="Start typing a US address..." autocomplete="off" oninput="eHandleAddrInput(event)" onkeydown="eHandleAddrKey(event)">
+        <div class="e-suggestions" id="e-suggestions"></div>
+      </div>
+      <!-- the room sketcher: indoors there's nothing to trace on a map, so the
+           rooms are drawn on a grid instead. It sits where the map sits on the
+           outdoor trades, and the house scan hides and shows it the same way. -->
+      <div class="e-mapwrap fl-wrap" id="e-mapwrap">
+        <div class="fl-head">
+          <div class="fl-step" aria-hidden="true">✓</div>
+          <div class="fl-msg" role="status" aria-live="polite"><b id="fl-main">Draw the rooms getting new floors</b><span id="fl-sub">Drag on the grid to draw a room, or tap a preset below.</span></div>
+        </div>
+        <div class="fl-tools">
+          <div class="fl-seg" role="group" aria-label="Room shape">
+            <button type="button" class="fl-tool on" data-shape="rect" onclick="flTool('rect')"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Room</button>
+            <button type="button" class="fl-tool" data-shape="L" onclick="flTool('L')"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 3h6v5h6v5H2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>L-shape</button>
           </div>
-          <div class="e-slddisp">
-            <div class="e-sldval" id="e-sldval">200</div>
-            <div class="e-sldunit">sq ft</div>
-          </div>
-          <input type="range" class="e-sld" id="e-sld" min="30" max="4000" step="10" value="200" oninput="eHandleSlider(this.value)">
-          <div class="e-sldlbl"><span>30</span><span>2,000</span><span>4,000+</span></div>
-          <div style="font-size:11px;color:#3a6286;margin-top:10px;line-height:1.6">Just the rooms being worked on. For a whole-home remodel, use the finished square footage of the house.</div>
+          <div class="fl-presets" id="fl-presets"></div>
         </div>
-        <div class="e-btnrow">
-          <button class="e-btnback" onclick="eZipBack()">← Back</button>
-          <button class="e-btnmain" id="e-btn1" onclick="eGo(2)" disabled>Continue — The Project →</button>
+        <div class="fl-canvas" id="fl-canvas"><svg id="fl-svg" role="img" aria-label="Room sketch grid"></svg><div class="fl-empty" id="fl-empty">Drag here to draw a room</div></div>
+        <div class="fl-rooms" id="fl-rooms"></div>
+        <div class="fl-foot">
+          <button type="button" class="fl-btn" id="fl-undo" onclick="flUndo()">Undo</button>
+          <button type="button" class="fl-btn" id="fl-clear" onclick="flClear()">Clear</button>
+          <div class="fl-total"><b id="fl-total">0</b> sq ft</div>
+          <button type="button" class="fl-go" id="fl-go" onclick="flDone()" disabled>Scan my floor plan</button>
+          <button type="button" class="fl-skip" id="fl-skip" onclick="flSkip()">Rather not draw? Enter the total instead</button>
         </div>
+      </div>
+      <div class="e-mresult" id="e-mresult"><div><div class="e-mrn" id="e-mrn">—</div><div class="e-mrl">sq ft of floor</div></div><div class="e-mrsq" id="e-msq">— sq ft</div></div>
+      <button class="e-manualbtn" id="e-manualbtn" onclick="eToggleManual()">Know your square footage? Enter it instead</button>
+      <div class="e-card e-sldwrap" id="e-sldwrap">
+        <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--al);margin-bottom:10px">Floor Area</div>
+        <div class="e-slddisp">
+          <div class="e-sldval" id="e-sldval">500</div>
+          <div class="e-sldunit">sq ft</div>
+        </div>
+        <input type="range" class="e-sld" id="e-sld" min="40" max="6000" step="10" value="500" oninput="eHandleSlider(this.value)">
+        <div class="e-sldlbl"><span>40 sq ft</span><span>3,000</span><span>6,000 sq ft</span></div>
+        <div style="font-size:11px;color:var(--mu);margin-top:10px;line-height:1.6">Bathroom: 40–100 sq ft · Bedroom: 120–200 · Living room: 250–400 · Whole first floor: 1,000–2,000</div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eZipBack()">← Back</button>
+        <button class="e-btnmain" id="e-btn1" onclick="eGo(2)" disabled>Continue — Rooms →</button>
+      </div>
       <div class="e-stepdots" id="e-dots1"></div>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2 — MATERIAL -->
+  <!-- STEP 2 — WHERE -->
   <div class="e-sp" id="e-sp2">
     <div class="e-shdr">
-      <span class="e-seye">Step 2 of 9</span>
-      <div class="e-stitle">What Are You<br><em>Remodelling?</em></div>
-      <div class="e-ssub">Pick the closest match. The prices below are per square foot of that space, so a $300 kitchen figure is $300 across the kitchen — not across the house.</div>
+      <span class="e-seye">Step 2 of 11</span>
+      <div class="e-stitle">Where's the<br><em>New Floor Going?</em></div>
+      <div class="e-ssub">Bathrooms and kitchens have more cuts around cabinets and fixtures, so they take longer per foot.</div>
     </div>
     <div class="e-sbody">
-      <div class="e-vizsplit">
-        <div class="e-vizcol">
-      <div class="e-card" style="padding:12px 14px"><div class="e-olist" id="e-matlist"></div></div>
-      <div class="e-card" id="e-colorcard" style="display:none;padding:14px 16px;margin-top:10px">
-        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Choose a color / finish</div>
-        <div class="e-colorrow" id="e-colorrow"></div>
-      </div>
-        </div>
-        <div class="e-vizphoto" data-viz="preview"></div>
-      </div>
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-q-area"></div></div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(1,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn2" onclick="eGo(3)" disabled>Continue — Add-Ons →</button>
+        <button class="e-btnmain" id="e-btn2" onclick="eGo(3)" disabled>Continue — Floor Type →</button>
       </div>
       <div class="e-stepdots" id="e-dots2"></div>
     </div>
   </div>
 
-  <!-- STEP 3 — FEATURES / ADD-ONS (optional, multi-select) -->
+  <!-- STEP 3 — FLOOR TYPE -->
   <div class="e-sp" id="e-sp3">
     <div class="e-shdr">
-      <span class="e-seye">Step 3 of 9</span>
-      <div class="e-stitle">Any Features or<br><em>Add-Ons?</em></div>
-      <div class="e-ssub">Optional, but this is the honest part of a remodel quote. These are the eight things that most often turn up as a change order in week three. Tick anything you think applies and it goes in the number now.</div>
+      <span class="e-seye">Step 3 of 11</span>
+      <div class="e-stitle">What Kind of<br><em>Floor?</em></div>
+      <div class="e-ssub">Prices shown per sq ft, fully installed — flooring, labor and standard underlayment — at a mid-range grade.</div>
     </div>
     <div class="e-sbody">
       <div class="e-vizsplit">
         <div class="e-vizcol">
-      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-addonlist"></div></div>
+          <div class="e-card" style="padding:12px 14px"><div class="e-olist" id="e-matlist"></div></div>
+          <div class="e-card" id="e-colorcard" style="display:none;padding:14px 16px;margin-top:10px">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2f6bff;font-weight:700;margin-bottom:10px">Choose a look</div>
+            <div class="e-colorrow" id="e-colorrow"></div>
+          </div>
         </div>
         <div class="e-vizphoto" data-viz="preview"></div>
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(2,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn3" onclick="eGo(4)">Continue — Finish Level →</button>
+        <button class="e-btnmain" id="e-btn3" onclick="eGo(4)" disabled>Continue — Quality →</button>
       </div>
       <div class="e-stepdots" id="e-dots3"></div>
     </div>
   </div>
 
-  <!-- STEP 4 — STORIES -->
+  <!-- STEP 4 — QUALITY -->
   <div class="e-sp" id="e-sp4">
     <div class="e-shdr">
-      <span class="e-seye">Step 4 of 9</span>
-      <div class="e-stitle">What Level Of<br><em>Finish?</em></div>
-      <div class="e-ssub">The biggest lever you actually control. Same room, same crew, same footprint — luxury finishes run to roughly twice builder-grade. That is a choice, not a surcharge, and it is worth making it on purpose.</div>
+      <span class="e-seye">Step 4 of 11</span>
+      <div class="e-stitle">What Quality<br><em>Level?</em></div>
+      <div class="e-ssub">Wear layer, plank size, wood species and brand all move the price. Pick the tier that fits.</div>
     </div>
     <div class="e-sbody">
-      <div class="e-vizsplit">
-        <div class="e-vizcol">
-        <div class="e-card" style="padding:12px 14px">
-        <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'quality','builder')"><div class="e-oi-em">📦</div><div class="e-oi-info"><div class="e-oi-lbl">Builder-grade</div><div class="e-oi-desc">Stock cabinets, laminate, big-box fixtures · does the job well</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'quality','standard')"><div class="e-oi-em">🏠</div><div class="e-oi-info"><div class="e-oi-lbl">Standard</div><div class="e-oi-desc">Semi-custom cabinets, quartz, mid-range tile · where most land</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'quality','premium')"><div class="e-oi-em">✨</div><div class="e-oi-info"><div class="e-oi-lbl">Premium</div><div class="e-oi-desc">Custom cabinetry, stone, name-brand appliances</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'quality','luxury')"><div class="e-oi-em">💎</div><div class="e-oi-info"><div class="e-oi-lbl">Luxury / fully custom</div><div class="e-oi-desc">Designed and built to order · roughly twice builder-grade</div></div><div class="e-oi-radio">✓</div></div>
-        </div>
-        </div>
-        </div>
-        <div class="e-vizphoto" data-viz="preview"></div>
-      </div>
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-q-quality"></div></div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(3,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn4" onclick="eGo(5)" disabled>Continue — Living Here →</button>
+        <button class="e-btnmain" id="e-btn4" onclick="eGo(5)" disabled>Continue — Removal →</button>
       </div>
       <div class="e-stepdots" id="e-dots4"></div>
     </div>
   </div>
 
-  <!-- STEP 5 — PROJECT TYPE -->
+  <!-- STEP 5 — REMOVAL -->
   <div class="e-sp" id="e-sp5">
     <div class="e-shdr">
-      <span class="e-seye">Step 5 of 9</span>
-      <div class="e-stitle">Will You Be Living<br><em>Here Through It?</em></div>
-      <div class="e-ssub">It sounds like a courtesy question and it is not. Working around a family means dust walls, protected routes, and stopping at a civilised hour every evening — and that is real time on the schedule.</div>
+      <span class="e-seye">Step 5 of 11</span>
+      <div class="e-stitle">What's There<br><em>Now?</em></div>
+      <div class="e-ssub">Tearing out the old floor and hauling it away is priced per sq ft. Glued-down floors and tile take the most work.</div>
     </div>
     <div class="e-sbody">
-      <div class="e-card" style="padding:14px 18px">
-        <div class="e-olist">
-          <div class="e-oi" onclick="ePick(this,'project','vacant')"><div class="e-oi-em">📦</div><div class="e-oi-info"><div class="e-oi-lbl">The house will be empty</div><div class="e-oi-desc">Crew has the run of it · fastest and cheapest way to do this</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','living')"><div class="e-oi-em">👪</div><div class="e-oi-info"><div class="e-oi-lbl">We’ll be living here</div><div class="e-oi-desc">Dust walls, protected routes, and a finish time each day</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','phased')"><div class="e-oi-em">🔁</div><div class="e-oi-info"><div class="e-oi-lbl">In stages, as budget allows</div><div class="e-oi-desc">The crew mobilises more than once · costs more in total</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePick(this,'project','new')"><div class="e-oi-em">🚧</div><div class="e-oi-info"><div class="e-oi-lbl">New construction</div><div class="e-oi-desc">Building it rather than changing it</div></div><div class="e-oi-radio">✓</div></div>
-        </div>
-      </div>
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-q-removal"></div></div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(4,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn5" onclick="eGo(6)" disabled>Continue — Timing →</button>
+        <button class="e-btnmain" id="e-btn5" onclick="eGo(6)" disabled>Continue — Subfloor →</button>
       </div>
       <div class="e-stepdots" id="e-dots5"></div>
     </div>
   </div>
 
-  <!-- STEP 6 — URGENCY -->
+  <!-- STEP 6 — SUBFLOOR -->
   <div class="e-sp" id="e-sp6">
     <div class="e-shdr">
-      <span class="e-seye">Step 6 of 9</span>
-      <div class="e-stitle">Where Are You<br><em>Up To?</em></div>
-      <div class="e-ssub">Not a price question — it tells whoever calls you back what the conversation should be. Somebody with drawings already drawn needs a very different call from somebody still deciding whether to do this at all.</div>
+      <span class="e-seye">Step 6 of 11</span>
+      <div class="e-stitle">How's the<br><em>Subfloor?</em></div>
+      <div class="e-ssub">New floors need a flat, solid base. Not sure? Bouncy spots, squeaks or dips usually mean some leveling.</div>
     </div>
     <div class="e-sbody">
-      <div class="e-card" style="padding:14px 18px">
-        <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'urgency','emergency')"><div class="e-oi-em">📐</div><div class="e-oi-info"><div class="e-oi-lbl">Drawings done — ready to build</div><div class="e-oi-desc">Plans in hand · looking for a price and a start date</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','within-week')"><div class="e-oi-em">🗓️</div><div class="e-oi-info"><div class="e-oi-lbl">Decided — want to start in a few months</div><div class="e-oi-desc">Budget set · needs a designer or plans next</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','within-month')"><div class="e-oi-em">💡</div><div class="e-oi-info"><div class="e-oi-lbl">Still working out what it would cost</div><div class="e-oi-desc">Deciding whether the scope is affordable at all</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'urgency','flexible')"><div class="e-oi-em">🚨</div><div class="e-oi-info"><div class="e-oi-lbl">Repairing damage — water, fire or storm</div><div class="e-oi-desc">Possibly an insurance job · different process, say so on the call</div></div><div class="e-oi-radio">✓</div></div>
-        </div>
-      </div>
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-q-subfloor"></div></div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(5,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn6" onclick="eGo(7)" disabled>Continue — Structural →</button>
+        <button class="e-btnmain" id="e-btn6" onclick="eGo(7)" disabled>Continue — Stairs &amp; Trim →</button>
       </div>
       <div class="e-stepdots" id="e-dots6"></div>
     </div>
   </div>
 
-  <!-- STEP 7 — DAMAGES -->
+  <!-- STEP 7 — STAIRS + TRIM -->
   <div class="e-sp" id="e-sp7">
     <div class="e-shdr">
-      <span class="e-seye">Step 7 of 9</span>
-      <div class="e-stitle">Is Anything<br><em>Moving?</em></div>
-      <div class="e-ssub">Where remodel budgets actually go. Keep every wall where it is and this is finishes and fixtures. Take one out and you have an engineer, a beam, an inspection and a schedule that grew.</div>
+      <span class="e-seye">Step 7 of 11</span>
+      <div class="e-stitle">Stairs &amp;<br><em>Baseboards</em></div>
+      <div class="e-ssub">Stairs are priced per step. Baseboards are priced by the length of wall around the rooms you drew.</div>
     </div>
     <div class="e-sbody">
-      <div class="e-card" style="padding:14px 18px">
-        <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'terrain','none')"><div class="e-oi-em">🛋️</div><div class="e-oi-info"><div class="e-oi-lbl">Nothing moves</div><div class="e-oi-desc">Same layout · new finishes, cabinets and fixtures</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'terrain','minor')"><div class="e-oi-em">🚪</div><div class="e-oi-info"><div class="e-oi-lbl">A doorway or a non-load-bearing wall</div><div class="e-oi-desc">Minor framing · no beam needed</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'terrain','major')"><div class="e-oi-em">🔨</div><div class="e-oi-info"><div class="e-oi-lbl">Taking out a load-bearing wall</div><div class="e-oi-desc">Beam, posts, an engineer’s letter and an inspection</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'terrain','footprint')"><div class="e-oi-em">🏗️</div><div class="e-oi-info"><div class="e-oi-lbl">Changing the footprint of the house</div><div class="e-oi-desc">Foundation and roof work · full permit and plans</div></div><div class="e-oi-radio">✓</div></div>
+      <div class="e-card" style="padding:16px 18px">
+        <div class="e-qlbl">Stairs getting the new floor</div>
+        <div class="fl-stairs">
+          <button type="button" class="fl-stepbtn" onclick="eStairs(-1)" aria-label="One fewer step">−</button>
+          <div class="fl-stairval"><b id="e-stairs">0</b><span>steps</span></div>
+          <button type="button" class="fl-stepbtn" onclick="eStairs(1)" aria-label="One more step">+</button>
+          <div class="fl-stairnote" id="e-stairnote">A full flight is usually 12–14 steps.</div>
         </div>
+      </div>
+      <div class="e-card" style="padding:14px 18px;margin-top:10px">
+        <div class="e-qlbl">Baseboards &amp; trim</div>
+        <div class="e-olist" id="e-q-trim"></div>
       </div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(6,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn7" onclick="eGo(8)" disabled>Continue — Site Access →</button>
+        <button class="e-btnmain" id="e-btn7" onclick="eGo(8)" disabled>Continue — Underlayment →</button>
       </div>
       <div class="e-stepdots" id="e-dots7"></div>
     </div>
   </div>
 
-  <!-- STEP 8 — INSURANCE -->
+  <!-- STEP 8 — UNDERLAYMENT -->
   <div class="e-sp" id="e-sp8">
     <div class="e-shdr">
-      <span class="e-seye">Step 8 of 9</span>
-      <div class="e-stitle">How Easy Is The<br><em>Site To Work?</em></div>
-      <div class="e-ssub">Last one. Materials in and debris out happens every single day of the job, so a crew that can back a truck to the door finishes sooner than one carrying sheets of drywall up two flights.</div>
+      <span class="e-seye">Step 8 of 11</span>
+      <div class="e-stitle">Underlayment &amp;<br><em>Moisture Barrier</em></div>
+      <div class="e-ssub">Over concrete slabs and basements a vapor barrier protects the floor. Acoustic pads quiet floors upstairs.</div>
     </div>
     <div class="e-sbody">
-      <div class="e-card" style="padding:14px 18px">
-        <div class="e-olist">
-          <div class="e-oi" onclick="ePickQ(this,'access','easy')"><div class="e-oi-em">🚚</div><div class="e-oi-info"><div class="e-oi-lbl">Easy — truck can get close</div><div class="e-oi-desc">Driveway or street parking, ground floor, somewhere for a dumpster</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'access','moderate')"><div class="e-oi-em">🚶</div><div class="e-oi-info"><div class="e-oi-lbl">Moderate — a walk or a flight of stairs</div><div class="e-oi-desc">Upper floor, or a carry from where the truck can stop</div></div><div class="e-oi-radio">✓</div></div>
-          <div class="e-oi" onclick="ePickQ(this,'access','difficult')"><div class="e-oi-em">🚧</div><div class="e-oi-info"><div class="e-oi-lbl">Difficult — tight street, HOA, or no parking</div><div class="e-oi-desc">Permit parking, lift access, or restricted working hours</div></div><div class="e-oi-radio">✓</div></div>
-        </div>
-      </div>
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-q-underlay"></div></div>
       <div class="e-btnrow">
         <button class="e-btnback" onclick="eGo(7,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn8" onclick="eGo(9)" disabled>Continue — Your Info →</button>
+        <button class="e-btnmain" id="e-btn8" onclick="eGo(9)" disabled>Continue — Extras →</button>
       </div>
       <div class="e-stepdots" id="e-dots8"></div>
     </div>
   </div>
 
-  <!-- STEP 9 — LEAD FORM -->
+  <!-- STEP 9 — EXTRAS -->
   <div class="e-sp" id="e-sp9">
     <div class="e-shdr">
-      <span class="e-seye">Step 9 of 9</span>
+      <span class="e-seye">Step 9 of 11</span>
+      <div class="e-stitle">Any<br><em>Extras?</em></div>
+      <div class="e-ssub">Optional — pick anything you'd like us to handle. Skip if you've got it covered.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-vizsplit">
+        <div class="e-vizcol">
+          <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-addonlist"></div></div>
+        </div>
+        <div class="e-vizphoto" data-viz="preview"></div>
+      </div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(8,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn9" onclick="eGo(10)">Continue — Timeline →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots9"></div>
+    </div>
+  </div>
+
+  <!-- STEP 10 — URGENCY -->
+  <div class="e-sp" id="e-sp10">
+    <div class="e-shdr">
+      <span class="e-seye">Step 10 of 11</span>
+      <div class="e-stitle">How Soon Do You<br><em>Need This Done?</em></div>
+      <div class="e-ssub">Some floors need a few days to acclimate in the house before install — we'll plan around that.</div>
+    </div>
+    <div class="e-sbody">
+      <div class="e-card" style="padding:14px 18px"><div class="e-olist" id="e-q-urgency"></div></div>
+      <div class="e-btnrow">
+        <button class="e-btnback" onclick="eGo(9,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn10" onclick="eGo(11)" disabled>Continue — Your Info →</button>
+      </div>
+      <div class="e-stepdots" id="e-dots10"></div>
+    </div>
+  </div>
+
+  <!-- STEP 11 — LEAD FORM -->
+  <div class="e-sp" id="e-sp11">
+    <div class="e-shdr">
+      <span class="e-seye">Step 11 of 11</span>
       <div class="e-stitle">Almost Done —<br><em>Your Info.</em></div>
       <div class="e-ssub">Enter your contact details and we'll generate your personalized estimate. We never share your information.</div>
     </div>
@@ -851,28 +871,28 @@ shell.innerHTML = `
           <div class="e-fg"><label class="e-fl">Phone Number *</label><input class="e-fi" id="e-ph" type="tel" placeholder="(555) 000-0000" oninput="eChkForm()"></div>
           <div class="e-fg"><label class="e-fl">Email Address *</label><input class="e-fi" id="e-em" type="email" placeholder="john@email.com" oninput="eChkForm()"></div>
         </div>
-        <div class="e-fg"><label class="e-fl">Additional Notes (Optional)</label><input class="e-fi" id="e-nt" type="text" placeholder="What you have in mind, must-haves, budget range, timeline..."></div>
-        <div class="e-consent">By submitting you consent to receive communications from <b id="e-cco">Your Company</b> regarding your remodeling estimate. Message &amp; data rates may apply. Reply STOP to opt out. We never sell your information.</div>
+        <div class="e-fg"><label class="e-fl">Additional Notes (Optional)</label><input class="e-fi" id="e-nt" type="text" placeholder="Pets, radiant heat, a product you like, move-in date..."></div>
+        <div class="e-consent">By submitting you consent to receive communications from <b id="e-cco">Your Company</b> regarding your flooring estimate. Message &amp; data rates may apply. Reply STOP to opt out. We never sell your information.</div>
       </div>
       <div class="e-btnrow">
-        <button class="e-btnback" onclick="eGo(8,true)">← Back</button>
-        <button class="e-btnmain" id="e-btn9" onclick="eDoSubmit()" disabled>Generate My Estimate →</button>
+        <button class="e-btnback" onclick="eGo(10,true)">← Back</button>
+        <button class="e-btnmain" id="e-btn11" onclick="eDoSubmit()" disabled>Generate My Estimate →</button>
       </div>
-      <div class="e-stepdots" id="e-dots9"></div>
+      <div class="e-stepdots" id="e-dots11"></div>
     </div>
   </div>
 
-  <!-- STEP 10 — LOADING -->
-  <div class="e-sp" id="e-sp10">
+  <!-- STEP 12 — LOADING -->
+  <div class="e-sp" id="e-sp12">
     <div class="e-ldpanel">
       <div class="e-ldring"></div>
       <div style="text-align:center">
         <div style="font-family:'Space Grotesk','Inter',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px;color:#fff">Calculating Your Estimate</div>
         <div class="e-ldsteps">
-          <div class="e-ldstp act" id="e-ld1"><div class="e-lddot"></div>Working out the size of the job</div>
-          <div class="e-ldstp" id="e-ld2"><div class="e-lddot"></div>Estimating materials and finish level</div>
+          <div class="e-ldstp act" id="e-ld1"><div class="e-lddot"></div>Measuring your rooms</div>
+          <div class="e-ldstp" id="e-ld2"><div class="e-lddot"></div>Estimating flooring, waste &amp; underlayment</div>
           <div class="e-ldstp" id="e-ld3"><div class="e-lddot"></div>Applying regional labor rates</div>
-          <div class="e-ldstp" id="e-ld4"><div class="e-lddot"></div>Adjusting for structural work and site access</div>
+          <div class="e-ldstp" id="e-ld4"><div class="e-lddot"></div>Adding prep, stairs &amp; trim</div>
           <div class="e-ldstp" id="e-ld5"><div class="e-lddot"></div>Generating your estimate</div>
         </div>
       </div>
@@ -889,16 +909,17 @@ shell.innerHTML = `
         <div class="e-rnote" id="e-rnote"></div>
       </div>
       <div class="e-rgrid">
-        <div class="e-rbox"><div class="e-rbv" id="e-rv1">—</div><div class="e-rbl">Area</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv2">—</div><div class="e-rbl">Project</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv3">—</div><div class="e-rbl">Finish level</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv4">—</div><div class="e-rbl">Structural</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv1">—</div><div class="e-rbl">Floor Area</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv2">—</div><div class="e-rbl">Floor</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv3">—</div><div class="e-rbl">Quality</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv4">—</div><div class="e-rbl">Rooms</div></div>
         <div class="e-rbox"><div class="e-rbv" id="e-rv5">—</div><div class="e-rbl">Region</div></div>
-        <div class="e-rbox"><div class="e-rbv" id="e-rv6">—</div><div class="e-rbl">Site access</div></div>
+        <div class="e-rbox"><div class="e-rbv" id="e-rv6">—</div><div class="e-rbl">Per Sq Ft</div></div>
       </div>
-      <div class="e-disc">This is a preliminary estimate based on your inputs. Remodelling has the widest range of any trade, and for a real reason: what is found behind the walls once they are open — rot, old wiring, failed plumbing, missing structure — is not knowable from a form. Final pricing also depends on local labour rates, the specific products chosen, plan and permit fees in your city, and how much structural work an engineer signs off on. Expect an on-site walkthrough and a written scope before any firm number.</div>
+      <div class="e-card e-rlines" id="e-rlines"></div>
+      <div class="e-disc">This is a preliminary estimate based on your inputs. Final pricing varies with the exact product, subfloor and moisture readings, room layout, waste factor, furniture and local labor rates. An in-home measure is required for a firm quote.</div>
       <div class="e-rcta">
-        <button class="e-btnmain" id="e-rctabtn">Book a Free Inspection</button>
+        <button class="e-btnmain" id="e-rctabtn">Book a Free In-Home Measure</button>
         <div class="e-rctasub">Free · No obligation · Response within 24 hours</div>
         <button class="e-restart" onclick="eRestart()">← Start a new estimate</button>
       </div>
@@ -906,42 +927,233 @@ shell.innerHTML = `
   </div>
 
   </div><!-- /e-app -->
-
 </div><!-- /est-embed -->
 `;
 
 /* ═══ ESTIMATOR JAVASCRIPT ═══ */
-var eS = {
-  addr:'', sqft:0, planSqft:0, usedMap:false, lat:0, lon:0,
-  material:'', quality:'', project:'',
-  region:'national', regionLabel:'National Average',
-  urgency:'', terrain:'', access:'', addons:{},
-  color:null, cabinet:null, photoOrig:null, photoNew:null, vizView:'orig', photoKey:'', imgEl:null
-};
-var E_TOTAL = 11;
+function eFresh(){ return {
+  addr:'', sqft:0, planSqft:0, usedMap:false, lat:0, lon:0, zip:'',
+  area:'', material:'', quality:'', removal:'', subfloor:'', trim:'', underlay:'', urgency:'', stairs:0,
+  rooms:0, perimFt:0, sketchSqft:0,
+  region:'national', regionLabel:'National Average', addons:{},
+  photoOrig:null, photoNew:null, vizView:'new', photoKey:'', color:null
+}; }
+var eS = eFresh();
+var E_TOTAL = 12;      /* 11 visible steps + the calculating screen */
+var E_SHOWN = 11;
 var eCur = 1;
-var eLmap = null;
 var eManualOpen = false;
 var eAddrTimer = null;
-var eDrawModeActive = false;
-var eClickPts = [];
-var eClickMarkers = [];
-var eClickPoly = null;
-var eClickLine = null;
-var eFacets = [];
-var eFacetTotal = 0;
-var eMeasurePitch = '4/12';
-var eTileStd = null, eTileHD = null, eImageryHD = true;
-var eTool = 'draw';
-var eMeasurePts = [], eMeasureMarkers = [], eMeasureLine = null, eMeasureLabels = [], eMeasureLines = [];
 
+function eMoneyR(lo,hi,unit){ if(!lo&&!hi) return 'Included'; return '+$'+(+lo).toLocaleString()+'–$'+(+hi).toLocaleString()+(unit||''); }
+function ePct(m){ m=+m||1; if(Math.abs(m-1)<0.005) return 'Base'; return (m>1?'+':'−')+Math.round(Math.abs(m-1)*100)+'%'; }
+function eSqTag(group,k){ var d=E_CONFIG[group][k]; return d?eMoneyR(d.low,d.high,'/sq ft'):''; }
+var E_Q = {
+  area: { step:2, opts:[
+    ['living','🛋','Living Areas & Bedrooms','Open rooms with straight runs',function(){ return ePct(E_CONFIG.areaMult.living); }],
+    ['kitchen','🍳','Kitchen & Dining','Cuts around cabinets, islands and appliances',function(){ return ePct(E_CONFIG.areaMult.kitchen); }],
+    ['bath','🛁','Bathroom(s)','Small rooms, toilets and vanities to work around',function(){ return ePct(E_CONFIG.areaMult.bath); }],
+    ['basement','🏚','Basement','On concrete — moisture matters',function(){ return ePct(E_CONFIG.areaMult.basement); }],
+    ['whole','🏠','Whole Home / Several Areas','One floor throughout, room to room',function(){ return ePct(E_CONFIG.areaMult.whole); }]
+  ]},
+  quality: { step:4, opts:[
+    ['economy','🏷','Economy','Builder-grade product, thinner wear layer',function(){ return ePct(E_CONFIG.qualityMult.economy); }],
+    ['standard','⭐','Standard','Good mid-range product · most popular',function(){ return ePct(E_CONFIG.qualityMult.standard); }],
+    ['premium','💎','Premium','Thicker wear layer, wider planks, better brands',function(){ return ePct(E_CONFIG.qualityMult.premium); }],
+    ['luxury','✨','Luxury','Designer lines, exotic species, large-format tile',function(){ return ePct(E_CONFIG.qualityMult.luxury); }]
+  ]},
+  removal: { step:5, opts:[
+    ['none','✅','Nothing — Bare Subfloor','New construction, or it\'s already out',function(){ return eSqTag('removal','none'); }],
+    ['carpet','🧶','Carpet & Pad','Pull carpet, pad and tack strip',function(){ return eSqTag('removal','carpet'); }],
+    ['floating','🪵','Laminate or Floating Vinyl','Click-together floors come up quickly',function(){ return eSqTag('removal','floating'); }],
+    ['tile','🔲','Ceramic or Stone Tile','Break out tile and the mortar bed',function(){ return eSqTag('removal','tile'); }],
+    ['hardwood','🔨','Nailed-Down Hardwood','Pry up boards and pull the nails',function(){ return eSqTag('removal','hardwood'); }],
+    ['glued','🧴','Glued-Down Vinyl or Wood','Scrape and grind the adhesive off',function(){ return eSqTag('removal','glued'); }]
+  ]},
+  subfloor: { step:6, opts:[
+    ['good','✅','Flat & Solid','No dips, squeaks or soft spots',function(){ return eSqTag('subfloor','good'); }],
+    ['patch','🔧','Minor Patching','A few squeaks, seams or low spots',function(){ return eSqTag('subfloor','patch'); }],
+    ['level','📏','Needs Leveling','Noticeable dips or humps — self-leveler',function(){ return eSqTag('subfloor','level'); }],
+    ['replace','🧱','Replace Damaged Subfloor','Water damage, rot or soft areas',function(){ return eSqTag('subfloor','replace'); }]
+  ]},
+  trim: { step:7, opts:[
+    ['none','○','Leave Baseboards As Is','Keep what\'s there',function(){ return 'Included'; }],
+    ['reinstall','↩️','Remove & Reinstall','Pull, then put the existing ones back',function(){ var d=E_CONFIG.trim.reinstall; return eMoneyR(d.low,d.high,'/lf'); }],
+    ['quarter','◜','Add Quarter Round','Small trim to cover the expansion gap',function(){ var d=E_CONFIG.trim.quarter; return eMoneyR(d.low,d.high,'/lf'); }],
+    ['new','📐','New Baseboards','Installed, caulked and painted',function(){ var d=E_CONFIG.trim.new; return eMoneyR(d.low,d.high,'/lf'); }]
+  ]},
+  underlay: { step:8, opts:[
+    ['standard','▱','Standard Underlayment','What the floor needs, included in the price',function(){ return 'Included'; }],
+    ['premium','🔇','Premium Acoustic Pad','Quieter, softer underfoot — great upstairs',function(){ return eSqTag('underlay','premium'); }],
+    ['moisture','💧','Moisture Barrier','For concrete slabs and basements',function(){ return eSqTag('underlay','moisture'); }],
+    ['both','🛡','Moisture Barrier + Acoustic','Best protection and the quietest floor',function(){ return eSqTag('underlay','both'); }]
+  ]},
+  urgency: { step:10, opts:[
+    ['emergency','🚨','ASAP','Water damage, a sale or a move-in date',function(){ return 'Priority'; }],
+    ['within-month','📅','Within a Month','Ready to pick a product and schedule',function(){ return ''; }],
+    ['within-season','🗓️','In the Next Few Months','Planning ahead',function(){ return ''; }],
+    ['flexible','🔄','Flexible — Just Pricing','Comparing floors and budgets',function(){ return ''; }]
+  ]}
+};
+var E_NEED = {2:['area'],3:['material'],4:['quality'],5:['removal'],6:['subfloor'],7:['trim'],8:['underlay'],10:['urgency']};
 
+/* ═══ ROOM SKETCHER ═══
+   Rooms are rectangles or L-shapes in feet on a 1 ft grid. Drag on empty
+   grid to draw one, drag a room to move it, drag its corner dot to resize,
+   or type the sizes in the list. The house scan opens it once an address is
+   picked (window.flSketchOpen) and gets the rooms back when they scan. */
+var FL={ rooms:[], sel:-1, shape:'rect', hist:[], cb:null, home:0, gw:48, gh:32, drag:null, seq:0 };
+var FL_NAMES=['Living room','Family room','Kitchen','Dining room','Bedroom','Primary bedroom','Bathroom','Hallway','Entry','Office','Basement','Laundry','First floor','Other'];
+var FL_PRESETS=[['Living room',16,20],['Kitchen',12,14],['Bedroom',12,12],['Bathroom',8,10],['Hallway',4,16]];
+function flArea(r){ return Math.max(0, r.w*r.l - (r.shape==='L'?Math.min(r.nw,r.w-1)*Math.min(r.nl,r.l-1):0)); }
+function flPts(r){
+  if(r.shape!=='L') return [[r.x,r.y],[r.x+r.w,r.y],[r.x+r.w,r.y+r.l],[r.x,r.y+r.l]];
+  var nw=Math.min(r.nw,r.w-1), nl=Math.min(r.nl,r.l-1);
+  return [[r.x,r.y],[r.x+r.w-nw,r.y],[r.x+r.w-nw,r.y+nl],[r.x+r.w,r.y+nl],[r.x+r.w,r.y+r.l],[r.x,r.y+r.l]];
+}
+function flTotal(){ var t=0; FL.rooms.forEach(function(r){ t+=flArea(r); }); return Math.round(t); }
+function flPerim(){ var t=0; FL.rooms.forEach(function(r){ t+=2*(r.w+r.l); }); return Math.round(t); }
+function flSnap(){ FL.hist.push(JSON.stringify(FL.rooms)); if(FL.hist.length>40) FL.hist.shift(); }
+function flUndo(){ if(!FL.hist.length) return; FL.rooms=JSON.parse(FL.hist.pop()); FL.sel=Math.min(FL.sel,FL.rooms.length-1); flRender(); }
+function flClear(){ if(!FL.rooms.length) return; flSnap(); FL.rooms=[]; FL.sel=-1; flRender(); }
+function flTool(s){ FL.shape=s; document.querySelectorAll('#est-embed .fl-tool').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-shape')===s); }); }
+function flFree(w,l){
+  /* the first spot, left to right and top to bottom, where a w×l room fits */
+  for(var y=0;y<200;y+=1){ for(var x=0;x<=Math.max(0,FL.gw-w);x+=1){
+    var hit=FL.rooms.some(function(r){ return x<r.x+r.w && x+w>r.x && y<r.y+r.l && y+l>r.y; });
+    if(!hit) return [x,y]; } }
+  return [0,0];
+}
+function flAdd(name,w,l,shape){
+  flSnap();
+  var p=flFree(w,l), r={id:++FL.seq, name:name, x:p[0], y:p[1], w:w, l:l, shape:shape||'rect', nw:Math.round(w/2), nl:Math.round(l/2)};
+  FL.rooms.push(r); FL.sel=FL.rooms.length-1; flRender();
+}
+function flPreset(i){ var p=FL_PRESETS[i]; flAdd(p[0],p[1],p[2],'rect'); }
+function flWhole(){
+  var sq=FL.home||1500, w=Math.max(10,Math.round(Math.sqrt(sq*1.5))), l=Math.max(10,Math.round(sq/w));
+  flAdd('First floor',w,l,'rect');
+}
+window.flHomeSqft=function(v){ FL.home=Math.round(+v||0); flPresets(); };
+function flPresets(){
+  var el=document.getElementById('fl-presets'); if(!el) return;
+  var whole=FL.home?'Whole first floor ≈ '+FL.home.toLocaleString()+' sq ft':'Whole first floor ≈ 1,500 sq ft';
+  el.innerHTML='<button type="button" class="fl-chip fl-chip-main" onclick="flWhole()">'+whole+'</button>'
+    +FL_PRESETS.map(function(p,i){ return '<button type="button" class="fl-chip" onclick="flPreset('+i+')">+ '+p[0]+'</button>'; }).join('');
+}
+function flRender(){
+  var svg=document.getElementById('fl-svg'); if(!svg) return;
+  /* the grid grows to fit the rooms, never smaller than 48 × 32 ft */
+  var mx=48, my=32; FL.rooms.forEach(function(r){ mx=Math.max(mx,r.x+r.w+6); my=Math.max(my,r.y+r.l+6); });
+  FL.gw=Math.ceil(mx/4)*4; FL.gh=Math.ceil(Math.max(my,FL.gw*0.6)/4)*4;
+  svg.setAttribute('viewBox','-1 -1 '+(FL.gw+2)+' '+(FL.gh+2));
+  var g='';
+  for(var x=0;x<=FL.gw;x++) g+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+FL.gh+'" class="'+(x%5?'fl-g1':'fl-g5')+'"/>';
+  for(var y=0;y<=FL.gh;y++) g+='<line x1="0" y1="'+y+'" x2="'+FL.gw+'" y2="'+y+'" class="'+(y%5?'fl-g1':'fl-g5')+'"/>';
+  var rs=FL.rooms.map(function(r,i){
+    var pts=flPts(r).map(function(p){ return p.join(','); }).join(' '), on=i===FL.sel, fs=Math.max(0.9,Math.min(1.5,Math.min(r.w,r.l)/6));
+    return '<g class="fl-room'+(on?' on':'')+'" data-i="'+i+'"><polygon points="'+pts+'"/>'
+      +'<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.l/2-fs*0.2)+'" font-size="'+fs+'" class="fl-rn">'+eEsc(r.name)+'</text>'
+      +'<text x="'+(r.x+r.w/2)+'" y="'+(r.y+r.l/2+fs*1.05)+'" font-size="'+(fs*0.82)+'" class="fl-rd">'+r.w+'′ × '+r.l+'′ · '+flArea(r)+' sq ft</text>'
+      +(on?'<circle class="fl-h" data-h="'+i+'" cx="'+(r.x+r.w)+'" cy="'+(r.y+r.l)+'" r="0.9"/>':'')+'</g>';
+  }).join('');
+  var ghost=FL.drag&&FL.drag.mode==='draw'&&FL.drag.w>0?'<rect class="fl-ghost" x="'+FL.drag.x+'" y="'+FL.drag.y+'" width="'+FL.drag.w+'" height="'+FL.drag.l+'"/>':'';
+  svg.innerHTML='<g>'+g+'</g>'+rs+ghost;
+  var em=document.getElementById('fl-empty'); if(em) em.style.display=FL.rooms.length||FL.drag?'none':'flex';
+  flList(); flStatus();
+}
+function flList(){
+  var el=document.getElementById('fl-rooms'); if(!el) return;
+  if(!FL.rooms.length){ el.innerHTML=''; return; }
+  el.innerHTML=FL.rooms.map(function(r,i){
+    var opts=FL_NAMES.map(function(n){ return '<option'+(n===r.name?' selected':'')+'>'+n+'</option>'; }).join('');
+    if(FL_NAMES.indexOf(r.name)<0) opts='<option selected>'+eEsc(r.name)+'</option>'+opts;
+    var num=function(f,v){ return '<input type="number" inputmode="numeric" min="1" max="200" value="'+v+'" aria-label="'+f+'" onchange="flSet('+i+',\''+f+'\',this.value)">'; };
+    return '<div class="fl-row'+(i===FL.sel?' on':'')+'" onclick="flPick('+i+',event)">'
+      +'<select aria-label="Room name" onchange="flSet('+i+',\'name\',this.value)">'+opts+'</select>'
+      +'<div class="fl-dims">'+num('w',r.w)+'<span>×</span>'+num('l',r.l)+'<span>ft</span></div>'
+      +(r.shape==='L'?'<div class="fl-dims fl-cut"><em>cut-out</em>'+num('nw',Math.min(r.nw,r.w-1))+'<span>×</span>'+num('nl',Math.min(r.nl,r.l-1))+'</div>':'')
+      +'<b class="fl-sq">'+flArea(r).toLocaleString()+' sq ft</b>'
+      +'<button type="button" class="fl-del" aria-label="Remove '+eEsc(r.name)+'" onclick="flDel('+i+',event)">×</button></div>';
+  }).join('');
+}
+function flPick(i,ev){ if(ev&&ev.target&&/INPUT|SELECT|BUTTON/.test(ev.target.tagName)) return; FL.sel=i; flRender(); }
+function flSet(i,f,v){
+  var r=FL.rooms[i]; if(!r) return; flSnap();
+  if(f==='name') r.name=v; else { v=Math.max(1,Math.min(200,Math.round(+v||1))); r[f]=v; if(f==='w'||f==='l'){ r.w=Math.max(2,r.w); r.l=Math.max(2,r.l); } }
+  FL.sel=i; flRender();
+}
+function flDel(i,ev){ if(ev) ev.stopPropagation(); flSnap(); FL.rooms.splice(i,1); FL.sel=Math.min(FL.sel,FL.rooms.length-1); flRender(); }
+function flStatus(){
+  var t=flTotal(), n=FL.rooms.length;
+  var tt=document.getElementById('fl-total'); if(tt) tt.textContent=t.toLocaleString();
+  var mn=document.getElementById('fl-main'), sb=document.getElementById('fl-sub');
+  if(mn) mn.textContent=n?n+' room'+(n>1?'s':'')+' · '+t.toLocaleString()+' sq ft':'Draw the rooms getting new floors';
+  var ov=FL.rooms.some(function(r,i){ return FL.rooms.some(function(q,j){ return j>i && r.x<q.x+q.w && r.x+r.w>q.x && r.y<q.y+q.l && r.y+r.l>q.y; }); });
+  if(sb) sb.textContent=!n?'Drag on the grid to draw a room, or tap a preset below.':ov?'Two rooms overlap — that floor would be counted twice. Drag one aside.':'Drag a room to move it, its corner dot to resize, or type exact sizes below. Add every room, then scan.';
+  var go=document.getElementById('fl-go'); if(go) go.disabled=!t;
+  var u=document.getElementById('fl-undo'); if(u) u.disabled=!FL.hist.length;
+  var c=document.getElementById('fl-clear'); if(c) c.disabled=!n;
+}
+function flPt(ev){
+  var svg=document.getElementById('fl-svg'), m=svg.getScreenCTM(); if(!m) return {x:0,y:0};
+  var p=svg.createSVGPoint(); p.x=ev.clientX; p.y=ev.clientY; p=p.matrixTransform(m.inverse());
+  return {x:p.x, y:p.y};
+}
+function flWire(){
+  var svg=document.getElementById('fl-svg'); if(!svg||svg._fl) return; svg._fl=1;
+  svg.addEventListener('pointerdown',function(ev){
+    var p=flPt(ev), t=ev.target, h=t.getAttribute&&t.getAttribute('data-h'), gEl=t.closest&&t.closest('.fl-room');
+    try{ svg.setPointerCapture(ev.pointerId); }catch(e){}
+    if(h!=null){ flSnap(); FL.drag={mode:'size', i:+h}; }
+    else if(gEl){ var i=+gEl.getAttribute('data-i'), r=FL.rooms[i]; flSnap(); FL.sel=i; FL.drag={mode:'move', i:i, dx:p.x-r.x, dy:p.y-r.y, moved:false}; flRender(); }
+    else { FL.drag={mode:'draw', sx:Math.max(0,Math.round(p.x)), sy:Math.max(0,Math.round(p.y)), x:0, y:0, w:0, l:0}; }
+    ev.preventDefault();
+  });
+  svg.addEventListener('pointermove',function(ev){
+    var d=FL.drag; if(!d) return; var p=flPt(ev);
+    if(d.mode==='draw'){ var x=Math.max(0,Math.round(p.x)), y=Math.max(0,Math.round(p.y));
+      d.x=Math.min(d.sx,x); d.y=Math.min(d.sy,y); d.w=Math.abs(x-d.sx); d.l=Math.abs(y-d.sy); flRender(); }
+    else if(d.mode==='move'){ var r=FL.rooms[d.i]; var nx=Math.max(0,Math.round(p.x-d.dx)), ny=Math.max(0,Math.round(p.y-d.dy)); if(nx!==r.x||ny!==r.y){ r.x=nx; r.y=ny; d.moved=true; flRender(); } }
+    else if(d.mode==='size'){ var r2=FL.rooms[d.i]; var w=Math.max(2,Math.round(p.x-r2.x)), l=Math.max(2,Math.round(p.y-r2.y)); if(w!==r2.w||l!==r2.l){ r2.w=w; r2.l=l; flRender(); } }
+  });
+  var up=function(){
+    var d=FL.drag; if(!d) return; FL.drag=null;
+    if(d.mode==='draw'){
+      if(d.w>=2&&d.l>=2){ flSnap(); FL.rooms.push({id:++FL.seq, name:FL.rooms.length?'Bedroom':'Living room', x:d.x, y:d.y, w:d.w, l:d.l, shape:FL.shape, nw:Math.max(1,Math.round(d.w/2)), nl:Math.max(1,Math.round(d.l/2))}); FL.sel=FL.rooms.length-1; }
+      else FL.sel=-1;
+    } else if(d.mode==='move'&&!d.moved){ FL.hist.pop(); }
+    flRender();
+  };
+  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',up);
+}
+window.flSketchOpen=function(o){
+  FL.cb=o||null; if(o&&o.homeSqft){ var h=o.homeSqft(); if(h) FL.home=Math.round(h); }
+  var mw=document.getElementById('e-mapwrap'); if(mw) mw.style.display='block';
+  var mb=document.getElementById('e-manualbtn'); if(mb) mb.style.display='none';
+  flWire(); flPresets(); flRender();
+};
+function flHand(){
+  eS.rooms=FL.rooms.length; eS.perimFt=flPerim(); eS.sketchSqft=flTotal();
+  eS.roomList=FL.rooms.map(function(r){ return r.name+' '+r.w+'x'+r.l+(r.shape==='L'?' (L)':''); }).join(', ');
+}
+function flDone(){
+  var t=flTotal(); if(!t) return;
+  flHand();
+  var rooms=FL.rooms.map(function(r){ return {name:r.name, pts:flPts(r)}; });
+  if(FL.cb&&FL.cb.onDone) FL.cb.onDone(rooms, t);
+  else { eS.sqft=t; eS.usedMap=true; eUpdateSlider(Math.round(t/10)*10); eCheckBtn1(); }
+}
+function flSkip(){
+  eS.rooms=0; eS.perimFt=0;
+  if(FL.cb&&FL.cb.onSkip) FL.cb.onSkip();
+  else { document.getElementById('e-mapwrap').style.display='none'; eManualOpen=false; eToggleManual(); }
+}
 
 /* ADDRESS SEARCH */
 function eHandleAddrInput(e) {
   var val = e.target.value;
   eS.addr = '';
-  eS.sqft = eS.usedMap ? eS.sqft : 0;
   eCheckBtn1();
   clearTimeout(eAddrTimer);
   var box = document.getElementById('e-suggestions');
@@ -957,7 +1169,7 @@ function eSearchAddress(query) {
   var url = 'https://nominatim.openstreetmap.org/search'
     + '?q=' + encodeURIComponent(query)
     + '&format=json&addressdetails=1&limit=8&countrycodes=us&bounded=0';
-  fetch(url, { headers:{ 'Accept-Language':'en-US,en;q=0.9', 'User-Agent':'RemodelEstimator/1.0' } })
+  fetch(url, { headers:{ 'Accept-Language':'en-US,en;q=0.9' } })
   .then(function(r){ return r.json(); })
   .then(function(data){
     var filtered = (data||[]).filter(function(r){
@@ -968,13 +1180,13 @@ function eSearchAddress(query) {
       var badType = ['country','state','county','city','town','village','ocean','sea','river','lake','park','forest','administrative','boundary','continent'].indexOf(t)>-1;
       return !badType&&(goodType||hasNumber);
     });
-    if(!filtered.length) filtered=(data||[]).filter(function(r){ var addr=r.address||{}; return (addr.country_code||'').toLowerCase()==='us'&&(addr.road||addr.house_number)&&!['country','state','county'].includes((r.type||'').toLowerCase()); });
+    if(!filtered.length) filtered=(data||[]).filter(function(r){ var addr=r.address||{}; return (addr.country_code||'').toLowerCase()==='us'&&(addr.road||addr.house_number)&&['country','state','county'].indexOf((r.type||'').toLowerCase())<0; });
     eRenderSuggestions(filtered.slice(0,5));
   }).catch(function(){ eRenderSuggestions([]); });
 }
 function eDetectRegion(stateAbbr) {
   var s=(stateAbbr||'').toUpperCase();
-  var regions={northeast:['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD'],'west-coast':['CA','WA','OR','HI','AK'],midwest:['IL','IN','OH','MI','WI','MN','IA','MO','ND','SD','NE','KS'],southeast:['TX','FL','GA','NC','SC','VA','WV','AL','MS','TN','KY','AR','LA','OK'],southwest:['AZ','NV','NM','CO'],mountain:['UT','ID','MT','WY']};
+  var regions={northeast:['ME','NH','VT','MA','RI','CT','NY','NJ','PA','DE','MD'],'west-coast':['CA','WA','OR','HI','AK'],midwest:['IL','IN','OH','MI','WI','MN','IA','MO','ND','SD','NE','KS'],southeast:['TX','FL','GA','NC','SC','VA','WV','AL','MS','TN','KY','AR','LA','OK'],southwest:['AZ','NV','NM','UT'],mountain:['CO','WY','MT','ID']};
   var labels={northeast:'Northeast','west-coast':'West Coast',midwest:'Midwest',southeast:'Southeast',southwest:'Southwest',mountain:'Mountain'};
   for(var reg in regions){ if(regions[reg].indexOf(s)>-1){ eS.region=reg; eS.regionLabel=labels[reg]; return; } }
   eS.region='national'; eS.regionLabel='National Average';
@@ -997,41 +1209,25 @@ function eRenderSuggestions(data) {
 }
 var E_SOLAR_URL='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/rapid-handler';
 var E_SOLAR_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
-function eSolarPitchCategory(deg){ if(deg<5)return 'flat'; if(deg<15)return 'low'; if(deg<30)return 'medium'; if(deg<40)return 'steep'; return 'very-steep'; }
-function eSolarPreselectPitch(cat){ var els=document.querySelectorAll('.e-oi'); for(var i=0;i<els.length;i++){ var oc=els[i].getAttribute('onclick')||''; if(oc.indexOf("'pitch','"+cat+"'")>=0){ try{ ePick(els[i],'pitch',cat); }catch(e){} break; } } }
-function eSolarShowResult(d){
-  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Home located — now draw the rooms you want floored.';
-  var mw=document.getElementById('e-mapwrap');
-  var banner=document.getElementById('e-solarbanner');
-  if(!banner){ banner=document.createElement('div'); banner.id='e-solarbanner'; banner.style.cssText='margin:0 0 12px;padding:12px 14px;border:1px solid #b6e0c2;background:#eef9f1;border-radius:10px;color:#166534;font-size:13px;line-height:1.5'; if(mw&&mw.parentNode) mw.parentNode.insertBefore(banner, mw); }
-  banner.innerHTML='✓ We centered the map on your property. Now <b>draw each room you want floored</b> — click each corner, double-click to finish, and repeat for more rooms.';
-}
+/* the satellite read of the home: its footprint sizes the "whole first
+   floor" preset. The house scan wraps this to play its shot as well. */
 function eSolarMeasure(lat, lon){
-  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Locating your property\u2026';
   fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({lat:lat,lng:lon}) })
     .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d && d.found){
-        eS.solarPitchDeg=d.avgPitchDegrees; eS.pitch=eSolarPitchCategory(d.avgPitchDegrees);
-        eMeasurePitch=eDegToPitch(d.avgPitchDegrees);
-        var _ps=document.getElementById('e-pitchsel'); if(_ps) _ps.value=eMeasurePitch;
-        eSolarShowResult(d);
-        if(d.centerLat&&d.centerLng&&eLmap){ eLmap.setView([d.centerLat,d.centerLng],20); setTimeout(function(){ try{eLmap.invalidateSize();}catch(e){} },150); }
-      } else {
-        if(stat) stat.textContent='Draw your rooms below to measure the floor area.';
-      }
-    })
-    .catch(function(){ if(stat) stat.textContent='Draw your rooms below to measure the floor area.'; });
+    .then(function(d){ if(d&&d.found&&d.totalAreaSqft>0){ var pl=Math.round(d.totalAreaSqft*Math.cos((+d.avgPitchDegrees||0)*Math.PI/180)); window.flHomeSqft(pl); } })
+    .catch(function(){});
 }
 function eSelectAddress(fullAddr, lat, lon, stateAbbr) {
   document.getElementById('e-addrIn').value=fullAddr.split(',').slice(0,4).join(',');
   document.getElementById('e-suggestions').classList.remove('open');
   eS.addr=fullAddr;
   eGeocodePrecise(fullAddr, lat, lon, stateAbbr);
+  /* the sketcher opens now; the house scan (when present) reopens it with its own hooks */
+  if(typeof window.hsDebug==='undefined') window.flSketchOpen(null);
+  eCheckBtn1();
 }
 function eGeocodePrecise(fullAddr, lat, lon, stateAbbr){
-  var stat=document.getElementById('e-mstat'); if(stat) stat.textContent='Locating the property\u2026';
-  function proceed(uLat, uLon, uState){ eS.lat=uLat; eS.lon=uLon; eDetectRegion(uState||stateAbbr); eInitMap(uLat, uLon); eSolarMeasure(uLat, uLon); }
+  function proceed(uLat, uLon, uState){ eS.lat=uLat; eS.lon=uLon; eDetectRegion(uState||stateAbbr); eSolarMeasure(uLat, uLon); }
   fetch(E_SOLAR_URL,{ method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+E_SOLAR_ANON,'apikey':E_SOLAR_ANON}, body:JSON.stringify({address:fullAddr}) })
     .then(function(r){ return r.json(); })
     .then(function(d){ if(d && d.geocoded && d.lat && d.lng){ proceed(d.lat, d.lng, d.state||stateAbbr); } else { proceed(lat, lon, stateAbbr); } })
@@ -1039,237 +1235,81 @@ function eGeocodePrecise(fullAddr, lat, lon, stateAbbr){
 }
 function eEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function eEscQ(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-
-/* MAP */
-function eInitMap(lat, lon) {
-  document.getElementById('e-mapwrap').style.display='block';
-  eClearDrawing();
-  if(!eLmap){
-    eLmap=L.map('e-mapel',{ center:[lat,lon], zoom:20, maxZoom:23, zoomControl:true, attributionControl:false, doubleClickZoom:false });
-    eTileStd=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:23,maxNativeZoom:19});
-    eTileHD=L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:23,maxNativeZoom:21,subdomains:['mt0','mt1','mt2','mt3']});
-    (eImageryHD?eTileHD:eTileStd).addTo(eLmap);
-    eLmap.on('click', eOnMapClick);
-    eLmap.on('dblclick', eOnMapDblClick);
-  } else {
-    eLmap.setView([lat,lon],20);
-    setTimeout(function(){ eLmap.invalidateSize(); },100);
-  }
-  eSetDrawMode(true);
-}
-function eSetTool(t){
-  eTool=t; eDrawModeActive=(t==='draw');
-  var db=document.getElementById('e-btndraw'), pb=document.getElementById('e-btnpan'), mb=document.getElementById('e-btnmeasure');
-  if(db) db.classList.toggle('on',t==='draw');
-  if(pb) pb.classList.toggle('on',t==='pan');
-  if(mb) mb.classList.toggle('on',t==='measure');
-  if(eLmap){ eLmap.getContainer().style.cursor=(t==='pan')?'':'crosshair'; if(t==='pan') eLmap.dragging.enable(); else eLmap.dragging.disable(); }
-}
-function eSetDrawMode(active){ eSetTool(active?'draw':'pan'); }
-function eOnMapClick(e) {
-  if(eTool==='measure'){ eMeasureClick(e); return; }
-  if(eTool!=='draw') return;
-  var pt=e.latlng; eClickPts.push(pt);
-  var m=L.circleMarker(pt,{radius:5,color:'#ffffff',fillColor:'#9cc8ee',fillOpacity:1,weight:2,interactive:false}).addTo(eLmap);
-  eClickMarkers.push(m);
-  eRedrawShape();
-  var n=eClickPts.length;
-  document.getElementById('e-mstat').textContent=n<3?n+' point'+(n>1?'s':'')+' placed — need 3 minimum (double-click to finish)':n+' points — double-click or click Clear when done';
-}
-function eOnMapDblClick(e){ if(eTool==='measure'){ if(eMeasurePts.length>=2) eFinishMeasure(); return; } if(eTool==='draw'&&eClickPts.length>=3) eFinishPolygon(); }
-function eRedrawShape() {
-  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
-  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
-  if(eClickPts.length>=2) eClickLine=L.polyline(eClickPts,{color:'#9cc8ee',weight:2,opacity:0.8,interactive:false}).addTo(eLmap);
-  if(eClickPts.length>=3){
-    eClickPoly=L.polygon(eClickPts,{color:'#9cc8ee',weight:2,fillColor:'#2f6bff',fillOpacity:0.22,interactive:false}).addTo(eLmap);
-  }
-  eUpdateAreaDisplay();
-}
-function eFinishPolygon() {
-  if(eClickPts.length<3) return;
-  var sqft=eCalcSqFt(eClickPts);
-  var poly=L.polygon(eClickPts,{color:'#7ad19a',weight:2,fillColor:'#2f6bff',fillOpacity:0.28,interactive:false}).addTo(eLmap);
-  eFacets.push({sqft:sqft, poly:poly});
-  eFacetTotal+=sqft;
-  eClickMarkers.forEach(function(m){ if(eLmap) eLmap.removeLayer(m); }); eClickMarkers=[];
-  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
-  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
-  eClickPts=[];
-  eUpdateAreaDisplay();
-  document.getElementById('e-mstat').textContent=eFacets.length+' section'+(eFacets.length>1?'s':'')+' traced · total '+eCurrentPlanTotal().toLocaleString()+' sq ft. Trace another, or Clear.';
-  eSetDrawMode(true);
-}
-function eCalcSqFt(pts) {
-  if(!pts||pts.length<3) return 0;
-  var R=6378137, area=0, n=pts.length;
-  for(var i=0;i<n;i++){ var j=(i+1)%n, lat1=pts[i].lat*Math.PI/180, lat2=pts[j].lat*Math.PI/180, dLon=(pts[j].lng-pts[i].lng)*Math.PI/180; area+=dLon*(2+Math.sin(lat1)+Math.sin(lat2)); }
-  return Math.round(Math.abs(area*R*R/2)*10.7639);
-}
-function eToggleImagery(){
-  eImageryHD=!eImageryHD;
-  if(!eLmap) return;
-  if(eImageryHD){ if(eTileStd) eLmap.removeLayer(eTileStd); eTileHD.addTo(eLmap); }
-  else { if(eTileHD) eLmap.removeLayer(eTileHD); eTileStd.addTo(eLmap); }
-  var b=document.getElementById('e-btnhd'); if(b) b.textContent='HD: '+(eImageryHD?'On':'Off');
-}
-function eSlopeFactor(pp){ var r=parseFloat((pp||'0/12').split('/')[0])||0; return Math.sqrt(r*r+144)/12; }
-function eSlopeToCat(pp){ var r=parseFloat((pp||'4/12').split('/')[0])||0; if(r<1)return 'flat'; if(r<4)return 'low'; if(r<7)return 'medium'; if(r<10)return 'steep'; return 'very-steep'; }
-function eDegToPitch(deg){ var x=Math.round(12*Math.tan((deg||0)*Math.PI/180)); var opts=[0,3,4,6,8,10,12]; var best=opts[0],bd=1e9; for(var i=0;i<opts.length;i++){ var dd=Math.abs(opts[i]-x); if(dd<bd){bd=dd;best=opts[i];} } return best+'/12'; }
-function eSetMeasurePitch(pp){ eMeasurePitch=pp; eS.solarPitchDeg=null; eUpdateAreaDisplay(); }
-function eToggleFlat(on){ eS.flatRoof=on; if(on) eS.pitch='flat'; eUpdateAreaDisplay(); }
 function eHandleZip(v){ try{ eS.zip=(v||'').replace(/[^0-9]/g,'').slice(0,5); var b=document.getElementById('e-zipcont'); if(b) b.disabled=(eS.zip.length!==5); }catch(e){} }
-function eZipNext(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(z)z.style.display='none'; if(a)a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 The Space'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
-function eZipBack(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(a)a.style.display='none'; if(z)z.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 ZIP'; }
-function eCurrentPlanTotal(){ var t=eFacetTotal; if(eClickPts.length>=3) t+=eCalcSqFt(eClickPts); return Math.round(t); }
-function eUpdateAreaDisplay(){
-  var plan=eCurrentPlanTotal();                 // traced project area = the number we price on
-  var mrn=document.getElementById('e-mrn'); if(mrn) mrn.textContent=plan.toLocaleString();
-  var msq=document.getElementById('e-msq'); if(msq) msq.textContent=plan.toLocaleString()+' sq ft project area';
-  var ta=document.getElementById('e-truearea'); if(ta) ta.textContent='Total project area: '+plan.toLocaleString()+' sq ft';
-  var si=document.getElementById('e-slopeinfo'); if(si){ si.textContent = 'Rooms measured from your drawing'; }
-  var res=document.getElementById('e-mresult'); if(res) res.style.display=plan>0?'flex':'none';
-  var card=document.getElementById('e-slopecard'); if(card) card.style.display=plan>0?'block':'none';
-  if(plan>0){ eS.sqft=plan; eS.planSqft=plan; eS.usedMap=true; }
-  eCheckBtn1();
-}
-function eDistFt(a,b){
-  var R=6371000, dLat=(b.lat-a.lat)*Math.PI/180, dLon=(b.lng-a.lng)*Math.PI/180;
-  var la1=a.lat*Math.PI/180, la2=b.lat*Math.PI/180;
-  var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)*Math.sin(dLon/2);
-  return 2*R*Math.asin(Math.sqrt(h))*3.28084;
-}
-function eMeasureLabelMarker(mid,txt){
-  return L.marker(mid,{interactive:false,icon:L.divIcon({className:'',html:'<div style="background:#dc2626;color:#fff;font:700 11px Inter,system-ui,sans-serif;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35)">'+txt+'</div>',iconSize:[0,0]})}).addTo(eLmap);
-}
-function eMeasureClick(e){
-  eMeasurePts.push(e.latlng);
-  eMeasureMarkers.push(L.circleMarker(e.latlng,{radius:4,color:'#fff',fillColor:'#dc2626',fillOpacity:1,weight:2,interactive:false}).addTo(eLmap));
-  eMeasureRedraw();
-}
-function eMeasureRedraw(){
-  if(eMeasureLine){ eLmap.removeLayer(eMeasureLine); eMeasureLine=null; }
-  eMeasureLabels.forEach(function(l){ eLmap.removeLayer(l); }); eMeasureLabels=[];
-  if(eMeasurePts.length>=2){
-    eMeasureLine=L.polyline(eMeasurePts,{color:'#dc2626',weight:3,opacity:.9,interactive:false}).addTo(eLmap);
-    var total=0;
-    for(var i=1;i<eMeasurePts.length;i++){
-      var a=eMeasurePts[i-1], b=eMeasurePts[i], d=eDistFt(a,b); total+=d;
-      eMeasureLabels.push(eMeasureLabelMarker(L.latLng((a.lat+b.lat)/2,(a.lng+b.lng)/2), Math.round(d)+' ft'));
-    }
-    document.getElementById('e-mstat').textContent='Measuring \u00b7 total '+Math.round(total)+' ft (double-click to finish)';
-  } else {
-    document.getElementById('e-mstat').textContent='Click two points to measure a length (double-click to finish)';
-  }
-}
-function eFinishMeasure(){
-  if(eMeasurePts.length<2) return;
-  var total=0; for(var i=1;i<eMeasurePts.length;i++) total+=eDistFt(eMeasurePts[i-1],eMeasurePts[i]);
-  eMeasureLines.push({line:eMeasureLine, labels:eMeasureLabels.slice(), markers:eMeasureMarkers.slice()});
-  eMeasureLine=null; eMeasureLabels=[]; eMeasureMarkers=[]; eMeasurePts=[];
-  document.getElementById('e-mstat').textContent='Measured '+Math.round(total)+' ft \u00b7 measure another, or switch tools.';
-}
-function eClearDrawing() {
-  eClickPts=[]; eClickMarkers.forEach(function(m){ if(eLmap) eLmap.removeLayer(m); }); eClickMarkers=[];
-  if(eClickLine){ eLmap.removeLayer(eClickLine); eClickLine=null; }
-  if(eClickPoly){ eLmap.removeLayer(eClickPoly); eClickPoly=null; }
-  eFacets.forEach(function(f){ if(eLmap&&f.poly) eLmap.removeLayer(f.poly); }); eFacets=[]; eFacetTotal=0;
-  eMeasureLines.forEach(function(g){ if(g.line) eLmap.removeLayer(g.line); g.labels.forEach(function(l){ eLmap.removeLayer(l); }); g.markers.forEach(function(m){ eLmap.removeLayer(m); }); }); eMeasureLines=[];
-  if(eMeasureLine){ eLmap.removeLayer(eMeasureLine); eMeasureLine=null; }
-  eMeasureLabels.forEach(function(l){ eLmap.removeLayer(l); }); eMeasureLabels=[];
-  eMeasureMarkers.forEach(function(m){ eLmap.removeLayer(m); }); eMeasureMarkers=[]; eMeasurePts=[];
-  eS.sqft=0; eS.usedMap=false;
-  document.getElementById('e-mresult').style.display='none';
-  var card=document.getElementById('e-slopecard'); if(card) card.style.display='none';
-  document.getElementById('e-mstat').textContent='Click each corner of a roof section to trace it (triangles OK). Double-click to finish each section.';
-  if(eLmap) eSetDrawMode(true);
-  eCheckBtn1();
-}
+function eZipNext(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(z)z.style.display='none'; if(a)a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of '+E_SHOWN+' — Address'; }
+function eZipBack(){ var z=document.getElementById('e-zippanel'), a=document.getElementById('e-addrpanel'); if(a)a.style.display='none'; if(z)z.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of '+E_SHOWN+' — Location'; }
+function eClearDrawing(){}
 
-/* SLIDER */
-function eToggleManual() {}
-function eCtPreset(v){ eUpdateSlider(v); }
+/* SLIDER — manual size */
+function eToggleManual() {
+  eManualOpen=!eManualOpen;
+  document.getElementById('e-sldwrap').style.display=eManualOpen?'block':'none';
+  document.getElementById('e-manualbtn').textContent=eManualOpen?"Hide manual entry ↑":"Know your square footage? Enter it instead";
+  if(eManualOpen) eHandleSlider(document.getElementById('e-sld').value);
+}
 function eHandleSlider(v) {
+  var s=document.getElementById('e-sld');
   document.getElementById('e-sldval').textContent=parseInt(v).toLocaleString();
-  /* the fill and the preset highlight both read the slider's own range and
-     the presets' own values, so changing the range in the markup is enough
-     — nothing here has to be kept in step by hand */
-  var sld=document.getElementById('e-sld'), lo=+sld.min, hi=+sld.max;
-  var pct=(v-lo)/((hi-lo)||1)*100;
-  sld.style.background='linear-gradient(90deg,var(--a) '+pct+'%,var(--bs) '+pct+'%)';
-  eS.sqft=parseInt(v);
-  var pv=parseInt(v);
-  document.querySelectorAll('#est-embed .e-preset').forEach(function(b){
-    var m=/eCtPreset\((\d+)\)/.exec(b.getAttribute('onclick')||'');
-    b.classList.toggle('on', !!m && +m[1]===pv);
-  });
-  eCheckBtn1();
+  var pct=(v-s.min)/(s.max-s.min)*100;
+  s.style.background='linear-gradient(90deg,var(--a) '+pct+'%,var(--bs) '+pct+'%)';
+  if(eManualOpen){ eS.sqft=parseInt(v); eCheckBtn1(); }
 }
-
 function eUpdateSlider(v){ document.getElementById('e-sld').value=v; eHandleSlider(v); }
 
-/* MATERIALS */
-var E_ICONS={'kitchen':'🍳','bathroom':'🛁','basement':'📦','addition':'🏗️','whole':'🏠','garage':'🚗','adu':'🏡','outdoor':'🌳','attic':'📐'};
-/* Polished duotone add-on icons (dark accent + light tint, no emojis).
-   D = deep accent, L = light tint. Wrapped in a 24×24 viewBox. */
+/* FLOORS — canvas swatches so every option looks finished */
 function eSvgD(inner){ return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none">'+inner+'</svg>'; }
 var _D='#2f6bff', _L='#bcd6f0';
 var E_SVG={
-  /* undermount sink cut into a counter slab, with faucet */
-  'sink-cutout': eSvgD('<rect x="2" y="6" width="20" height="4" rx="1.4" fill="'+_D+'"/><rect x="5" y="10" width="14" height="8.5" rx="2.4" fill="'+_L+'"/><rect x="7.3" y="12" width="9.4" height="4.6" rx="1.6" fill="'+_D+'"/><path d="M12 6V4.3a1.6 1.6 0 0 1 1.6-1.6H15.4" stroke="'+_D+'" stroke-width="1.7" stroke-linecap="round"/>'),
-  /* cooktop with four burners */
-  'cooktop':     eSvgD('<rect x="3" y="4" width="18" height="16" rx="3" fill="'+_L+'"/><circle cx="8.5" cy="9" r="2.4" fill="'+_D+'"/><circle cx="15.5" cy="9" r="2.4" fill="'+_D+'"/><circle cx="8.5" cy="15.5" r="2.4" fill="'+_D+'"/><circle cx="15.5" cy="15.5" r="2.4" fill="'+_D+'"/>'),
-  /* slab backsplash rising up the wall behind counter */
-  'backsplash':  eSvgD('<rect x="3" y="3" width="18" height="10" rx="1.4" fill="'+_L+'"/><path d="M9 3v10M15 3v10M3 8h18" stroke="#fff" stroke-width="1.3"/><rect x="2" y="15" width="20" height="4" rx="1.4" fill="'+_D+'"/>'),
-  /* island with the slab pouring down the side */
-  'waterfall':   eSvgD('<path d="M3 6h18v3H3z" fill="'+_D+'"/><path d="M16 9h5v12h-5z" fill="'+_L+'"/><path d="M18.5 9v12" stroke="#fff" stroke-width="1.2"/><path d="M3 12h11v2H3z" fill="'+_L+'"/>'),
-  /* gooseneck faucet + supply lines */
-  'plumbing':    eSvgD('<path d="M8 21h9" stroke="'+_D+'" stroke-width="2" stroke-linecap="round"/><path d="M10 21v-5h6a4.5 4.5 0 0 0 4.5-4.5V7" stroke="'+_D+'" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="18.6" y="4.4" width="4" height="3" rx="1" fill="'+_L+'"/><path d="M4 16h5v5H4z" fill="'+_L+'"/>'),
-  /* haul-away dump truck */
-  'haul':        eSvgD('<path d="M2 8l9-2v8H2z" fill="'+_L+'"/><rect x="2" y="14" width="12" height="2" fill="'+_D+'"/><path d="M14 10h4l3.5 3.5V16H14z" fill="'+_D+'"/><circle cx="6" cy="18" r="2.1" fill="'+_D+'"/><circle cx="17" cy="18" r="2.1" fill="'+_D+'"/>')
+  'furniture':   eSvgD('<rect x="3" y="10" width="18" height="7" rx="2" fill="'+_L+'"/><path d="M5 10V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2" stroke="'+_D+'" stroke-width="1.7"/><path d="M5 17v2M19 17v2" stroke="'+_D+'" stroke-width="1.8" stroke-linecap="round"/>'),
+  'transitions': eSvgD('<rect x="3" y="6" width="8" height="12" fill="'+_L+'"/><rect x="13" y="6" width="8" height="12" fill="#e8eef6"/><rect x="10" y="5" width="4" height="14" rx="1" fill="'+_D+'"/>'),
+  'doors':       eSvgD('<rect x="6" y="3" width="12" height="16" rx="1" fill="'+_L+'"/><circle cx="15" cy="11" r="1" fill="'+_D+'"/><path d="M3 21h18" stroke="'+_D+'" stroke-width="1.8" stroke-linecap="round"/><path d="M7 19.5h10" stroke="'+_D+'" stroke-width="1.2" stroke-dasharray="2 1.5"/>'),
+  'haul':        eSvgD('<rect x="2" y="8" width="12" height="8" rx="1" fill="'+_L+'"/><path d="M14 10h4l3 3v3h-7z" fill="'+_D+'"/><circle cx="6" cy="17.5" r="1.8" fill="'+_D+'"/><circle cx="17" cy="17.5" r="1.8" fill="'+_D+'"/>'),
+  'heated':      eSvgD('<rect x="3" y="14" width="18" height="5" rx="1" fill="'+_L+'"/><path d="M8 11c-1.2-1.4 1.2-2.6 0-4M12 11c-1.2-1.4 1.2-2.6 0-4M16 11c-1.2-1.4 1.2-2.6 0-4" stroke="'+_D+'" stroke-width="1.6" stroke-linecap="round"/>')
 };
-/* Clean material swatch — a real product photo if E_CONFIG…img is set,
-   otherwise a tidy generated swatch so it looks complete out of the box. */
 var eSwCache={};
 function eSwatch(key){
   if(eSwCache[key]) return eSwCache[key];
   var t=document.createElement('canvas'); t.width=t.height=120; var c=t.getContext('2d');
   function grad(a,b){ var g=c.createLinearGradient(0,0,120,120); g.addColorStop(0,a); g.addColorStop(1,b); c.fillStyle=g; c.fillRect(0,0,120,120); }
+  function planks(cols,line,h){ for(var y=0,r=0;y<120;y+=h,r++){ var x=-((r*37)%60); while(x<120){ var w=50+((r*13+x)%30); c.fillStyle=cols[(r+Math.round(x))%cols.length]; c.fillRect(x,y,w,h); c.strokeStyle=line; c.lineWidth=1.5; c.strokeRect(x,y,w,h); x+=w; } } }
   function speck(n,cols,sz,al){ c.globalAlpha=al||1; for(var i=0;i<n;i++){ c.fillStyle=cols[Math.floor(Math.random()*cols.length)]; var x=Math.random()*120,y=Math.random()*120,r=sz*(0.4+Math.random()); c.beginPath();c.arc(x,y,r,0,6.283);c.fill(); } c.globalAlpha=1; }
-  function vein(col,n,w){ c.strokeStyle=col; c.lineCap='round'; for(var i=0;i<n;i++){ c.lineWidth=(w||1)*(0.6+Math.random()); c.beginPath(); var x=Math.random()*120,y=-6; c.moveTo(x,y); for(var s=0;s<8;s++){ x+=(Math.random()-0.5)*30; y+=16; c.quadraticCurveTo(x+8,y-8,x,y);} c.stroke(); } }
   switch(key){
-    case 'laminate': grad('#e0d3bf','#d3c5ad'); speck(140,['#cdbfa6','#e8decd'],0.8,0.5); break;
-    case 'butcher': grad('#c68d54','#a86c34'); for(var i=0;i<120;i+=6){ c.strokeStyle='rgba(120,80,40,'+(0.15+Math.random()*0.18)+')'; c.lineWidth=1+Math.random(); c.beginPath();c.moveTo(0,i);c.bezierCurveTo(40,i-2,80,i+2,120,i);c.stroke(); } break;
-    case 'solid-surface': grad('#f3f0ea','#e9e5dc'); speck(50,['#e7e3da'],0.7,0.35); break;
-    case 'granite': grad('#606060','#787878'); speck(420,['#454545','#9a9a9a','#333','#cbcbcb','#7d7060'],1.1,0.85); break;
-    case 'quartz': grad('#f7f6f3','#eeece8'); speck(90,['#e7e6e2','#dedcd7'],0.7,0.5); vein('rgba(200,200,200,0.4)',1,1); break;
-    case 'marble': grad('#f8f7f4','#efeee9'); vein('rgba(150,150,155,0.5)',2,1.4); vein('rgba(120,120,128,0.28)',2,0.8); break;
-    case 'porcelain': grad('#d6d9db','#c9ccce'); speck(30,['#c6c9cb'],0.8,0.3); break;
-    case 'quartzite': grad('#f1f3f5','#e6e9ec'); vein('rgba(120,132,145,0.45)',3,1.5); break;
-    default: grad('#e6e2da','#d8d3c8');
+    case 'lvp': planks(['#c29a6c','#b88c5e','#caa478'],'rgba(80,55,30,.35)',20); break;
+    case 'laminate': planks(['#c8996a','#bf8f5f','#d1a576'],'rgba(80,55,30,.4)',24); break;
+    case 'eng-hardwood': planks(['#c7a57e','#bb976f','#d0b08a'],'rgba(70,50,30,.35)',30); break;
+    case 'solid-hardwood': planks(['#b07a52','#a56f48','#ba855c'],'rgba(60,35,20,.4)',14); break;
+    case 'tile': grad('#e9e5dc','#dcd7cc'); c.strokeStyle='#bdb7aa'; c.lineWidth=2.5; for(var x=0;x<=120;x+=60){ c.beginPath(); c.moveTo(x,0); c.lineTo(x,120); c.stroke(); c.beginPath(); c.moveTo(0,x); c.lineTo(120,x); c.stroke(); } break;
+    case 'carpet': grad('#cdc2ad','#c0b49d'); speck(900,['#b9ad95','#d6ccb9','#c6bba5'],0.9,0.7); break;
+    default: grad('#c7a57e','#bb976f');
   }
   eSwCache[key]=t.toDataURL('image/jpeg',0.85); return eSwCache[key];
-}
-/* A flat price for a fixed job, base + a rate for one that scales. Saying
-   "per sq ft" on an EV charger would be nonsense, and quoting only the base
-   on a whole-home rewire would understate it by tens of thousands. */
-function ePriceHint(v){
-  return '$'+Number(v.low).toLocaleString()+'–$'+Number(v.high).toLocaleString()+' per sq ft';
 }
 function eBuildMats() {
   var l=document.getElementById('e-matlist'), html='';
   Object.keys(E_CONFIG.pricing).forEach(function(k){
     var v=E_CONFIG.pricing[k];
-    html+='<div class="e-oi" onclick="ePick(this,\'material\',\''+k+'\');eMatPicked(\''+k+'\')">'
-      +'<div class="e-oi-emchip">'+(E_ICONS[k]||'\U0001F527')+'</div>'
+    html+='<div class="e-oi'+(eS.material===k?' sel':'')+'" onclick="ePickQ(this,\'material\',\''+k+'\');eMatPicked(\''+k+'\')">'
+      +'<img class="e-oi-sw" src="'+(v.img||eSwatch(k))+'" alt="">'
       +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
-      +'<div class="e-oi-desc">'+ePriceHint(v)+' · '+v.note+'</div></div>'
+      +'<div class="e-oi-desc">$'+v.low+'–$'+v.high+'/sq ft installed · '+v.note+'</div></div>'
       +'<div class="e-oi-radio">✓</div></div>';
   });
   l.innerHTML=html;
+  eBuildQuestions(); eBuildAddons(); eStairNote();
 }
-/* When a material is chosen, reveal its color options. */
+function eBuildQuestions(){
+  Object.keys(E_Q).forEach(function(key){
+    var el=document.getElementById('e-q-'+key); if(!el) return;
+    el.innerHTML=E_Q[key].opts.map(function(o){
+      var tag=o[4]?o[4]():'';
+      return '<div class="e-oi'+(eS[key]===o[0]?' sel':'')+'" onclick="ePickQ(this,\''+key+'\',\''+o[0]+'\')"><div class="e-oi-em">'+o[1]+'</div>'
+        +'<div class="e-oi-info"><div class="e-oi-lbl">'+o[2]+'</div><div class="e-oi-desc">'+o[3]+'</div></div>'
+        +(tag?'<div class="e-oi-tag"'+(tag==='Priority'?' style="color:var(--red)"':'')+'>'+tag+'</div>':'')+'<div class="e-oi-radio">✓</div></div>';
+    }).join('');
+  });
+}
 function eMatPicked(k){
+  eStairNote();
   var m=E_CONFIG.pricing[k]; var card=document.getElementById('e-colorcard'), row=document.getElementById('e-colorrow');
   if(!m||!m.colors||!m.colors.length){ if(card)card.style.display='none'; eS.color=null; eVisualize(); return; }
   var html='';
@@ -1278,7 +1318,7 @@ function eMatPicked(k){
       +'<span class="e-colordot" style="background:'+col.hex+'"></span>'+col.name+'</button>';
   });
   if(row) row.innerHTML=html; if(card) card.style.display='block';
-  eS.color=m.colors[0];   // default first color
+  eS.color=m.colors[0];
   eVisualize();
 }
 function ePickColor(k,i,el){
@@ -1289,47 +1329,30 @@ function ePickColor(k,i,el){
   if(el) el.classList.add('on');
   eVisualize();
 }
-/* Optional cabinet color preview */
-function eBuildCabinets(){
-  var row=document.getElementById('e-cabrow'); if(!row||!E_CONFIG.cabinetColors) return;
-  var html='';
-  E_CONFIG.cabinetColors.forEach(function(col,i){
-    var dot = col.hex ? '<span class="e-colordot" style="background:'+col.hex+'"></span>' : '<span class="e-colordot e-colornone">∅</span>';
-    html+='<button type="button" class="e-colorchip'+(i===0?' on':'')+'" onclick="ePickCabinet('+i+',this)">'+dot+col.name+'</button>';
-  });
-  row.innerHTML=html;
+/* STAIRS */
+function eStairs(d){ eS.stairs=Math.max(0,Math.min(40,(eS.stairs||0)+d)); document.getElementById('e-stairs').textContent=eS.stairs; eStairNote(); }
+function eStairNote(){
+  var el=document.getElementById('e-stairnote'); if(!el) return;
+  var s=E_CONFIG.stairs[eS.material];
+  el.textContent=s?('$'+s.low+'–$'+s.high+' per step for '+(E_CONFIG.pricing[eS.material]||{label:''}).label.toLowerCase()+' · a full flight is usually 12–14 steps.'):'A full flight is usually 12–14 steps.';
 }
-function ePickCabinet(i,el){
-  var c=E_CONFIG.cabinetColors[i];
-  eS.cabinet = (c&&c.desc) ? c : null;   // index 0 = "Keep current" (no change)
-  document.querySelectorAll('#e-cabrow .e-colorchip').forEach(function(b){ b.classList.remove('on'); });
-  if(el) el.classList.add('on');
-  eVisualize();
-}
-/* ═══ AI VISUALIZER — one shared photo across steps 2/3/4 ═══ */
-/* ═══ FREE VISUALIZER — client-side texture overlay (no AI, no backend) ═══
-   Upload a photo, trace the counter, and each material fills the traced area
-   with a procedural texture that keeps the original lighting (multiply blend). */
+/* ═══ AI VISUALIZER — upload a room photo, preview the chosen floor ═══ */
 var VIZ_PANEL =
   '<div class="e-vizupload" onclick="this.querySelector(\'input\').click()">'
   +'<input type="file" accept="image/*" style="display:none" onchange="ePhotoUpload(this)">'
   +'<div class="e-vizuptxt"><div style="margin-bottom:6px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#9a9aa0" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1L8 4h8l1.5 2h1A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg></div>'
-  +'<div style="font-weight:600;color:#0c0c0d">Upload a photo of your kitchen</div>'
-  +'<div style="font-size:12px;color:#9a9aa0;margin-top:4px">Then tap the button to see your material — photorealistic AI</div></div></div>'
-  +'<div class="e-vizstage" style="display:none"><img class="e-vizimg" alt="Your kitchen">'
+  +'<div style="font-weight:600;color:#0c0c0d">Upload a photo of your room</div>'
+  +'<div style="font-size:12px;color:#9a9aa0;margin-top:4px">Then tap the button to see the new floor — photorealistic AI</div></div></div>'
+  +'<div class="e-vizstage" style="display:none"><img class="e-vizimg" alt="Your room">'
   +'<div class="e-vizloading" style="display:none"><div class="e-vizspin"></div><b>AI modifying…</b><span class="e-vizloadsub">Photo will be available after your design answers are complete.</span></div>'
   +'<div class="e-vizbadge" style="display:none">AI preview</div></div>'
-  +'<button class="e-vizgen" onclick="eVizGenerate()" style="display:none">See it on my kitchen</button>'
+  +'<button class="e-vizgen" onclick="eVizGenerate()" style="display:none">View Design</button>'
   +'<div class="e-vizbar" style="display:none">'
   +'<button class="e-vizbtn" data-view="orig" onclick="eVizShow(\'orig\')">Original</button>'
   +'<button class="e-vizbtn on" data-view="new" onclick="eVizShow(\'new\')">Preview</button>'
   +'<button class="e-vizbtn ghost" onclick="this.closest(\'.e-vizphoto\').querySelector(\'input\').click()">↻ Photo</button></div>'
   +'<div class="e-vizhint" style="display:none">Photorealistic AI preview — final look may vary slightly.</div>';
-function eMeasureHelp(show){ var m=document.getElementById('e-measmodal'); if(m) m.style.display=show?'flex':'none'; }
-function eVizInit(){
-  document.querySelectorAll('#est-embed [data-viz]').forEach(function(el){ el.innerHTML=VIZ_PANEL; });
-  eVizSyncAll();
-}
+function eVizInit(){ document.querySelectorAll('#est-embed [data-viz]').forEach(function(el){ el.innerHTML=VIZ_PANEL; }); eVizSyncAll(); }
 function ePhotoUpload(input){
   var fl=input.files&&input.files[0]; if(!fl) return;
   var r=new FileReader();
@@ -1337,30 +1360,20 @@ function ePhotoUpload(input){
   r.readAsDataURL(fl);
 }
 function eVizShow(which){ eS.vizView=which; eVizSyncAll(); }
-/* One combined prompt from all current choices, applied to the ORIGINAL photo. */
 function eBuildVizPrompt(){
   var m=E_CONFIG.pricing[eS.material]; if(!m) return null;
-  var desc = (eS.color&&eS.color.desc) ? eS.color.desc : (m.label.toLowerCase()+' plumbing jobs');
-  var keepCabs = !(eS.cabinet&&eS.cabinet.desc);   // don't "keep" cabinets if we're recoloring them
-  var keep = (keepCabs?'cabinets, ':'')+'walls, appliances, flooring, windows, lighting';
-  var parts=['Replace only the kitchen plumbing jobs in this photo with realistic '+desc+'. Keep the '+keep+' and the overall layout exactly the same; change nothing except what is described here.'];
-  var edge={standard:'Give the plumbing a beveled edge profile.',premium:'Give the plumbing a rounded bullnose edge.',luxury:'Give the plumbing a decorative ogee edge.'};
-  if(eS.quality&&edge[eS.quality]) parts.push(edge[eS.quality]);
-  var add={backsplash:'Also add a matching slab backsplash in the same material behind the counter.',waterfall:'Also add a waterfall edge where the plumbing flows vertically down the side of the island.'};
-  if(eS.addons) Object.keys(eS.addons).forEach(function(k){ if(add[k]) parts.push(add[k]); });
-  if(eS.cabinet&&eS.cabinet.desc){ parts.push('Also refinish the kitchen cabinets — '+eS.cabinet.desc+' — keeping their existing door style, layout and hardware.'); }
-  return parts.join(' ');
+  var fl=(eS.color&&eS.color.desc)?eS.color.desc:m.label.toLowerCase();
+  return 'Replace only the floor in this room photo with newly installed '+fl+'. Keep the walls, furniture, cabinets, windows, lighting and everything else exactly the same. Photorealistic, preserve the original camera angle, perspective and lighting.'
+    +(eS.trim==='new'?' Add fresh white baseboards along the walls.':'');
 }
-/* Cost guardrails: (1) render only on explicit button tap, (2) cache each
-   photo+prompt so re-viewing the same combo never charges again. */
 var eVizCache={}, eVizBusy=false;
 function eVizGenerate(){
   if(!eS.photoOrig) return;
-  if(!eS.material){ eVizHint('Pick a material first, then tap to preview it.'); return; }
+  if(!eS.material){ eVizHint('Pick a floor first, then tap to preview it.'); return; }
   if(!E_CONFIG.aiEditUrl){ eVizHint('AI preview turns on once your endpoint is set (E_CONFIG.aiEditUrl).'); return; }
   var prompt=eBuildVizPrompt(); if(!prompt) return;
   var key=(eS.photoKey||'')+'|'+prompt;
-  if(eVizCache[key]){ eS.photoNew=eVizCache[key]; eS.vizView='new'; eVizSyncAll(); return; }   // cached = no charge
+  if(eVizCache[key]){ eS.photoNew=eVizCache[key]; eS.vizView='new'; eVizSyncAll(); return; }
   if(eVizBusy) return;
   eVizBusy=true; eS.vizView='new'; eVizSetLoading(true); eVizSyncAll();
   var headers={'Content-Type':'application/json'};
@@ -1376,26 +1389,23 @@ function eVizGenerate(){
     .catch(function(){ eVizSetLoading(false); eVizBusy=false; eVizHint('Preview unavailable right now — your estimate is unaffected.'); eS.vizView='orig'; eVizSyncAll(); });
 }
 function eVizHint(t){ document.querySelectorAll('#est-embed .e-vizhint').forEach(function(h){ h.textContent=t; h.style.display='block'; }); }
-/* Design answers are "complete" when a material is chosen AND either that
-   material has no color options OR a color has been chosen. */
+function eVizSetLoading(on){
+  document.querySelectorAll('#est-embed .e-vizstage').forEach(function(s){ if(on)s.style.display='flex'; });
+  document.querySelectorAll('#est-embed .e-vizloading').forEach(function(l){ l.style.display=on?'flex':'none'; });
+}
 function eVizAnswersComplete(){
   if(!eS.material) return false;
   var m=E_CONFIG.pricing[eS.material];
-  var hasColors = !!(m && m.colors && m.colors.length);
-  if(hasColors && !eS.color) return false;
+  if(m && m.colors && m.colors.length) return !!eS.color;
   return true;
 }
-function eVizSetLoading(on){ eVizBusy=on; eVizSyncAll(); }
 function eVizGenLabel(){
-  var complete=eVizAnswersComplete();
-  var ready = complete && !!eS.photoOrig;   // answers complete AND a photo present
-  document.querySelectorAll('#est-embed .e-vizgen').forEach(function(b){
-    b.disabled = !ready;
-    b.textContent = complete ? 'View Design' : 'Complete your design answers first';
-  });
+  var ready = eVizAnswersComplete() && !!eS.photoOrig;
+  document.querySelectorAll('#est-embed .e-vizgen').forEach(function(b){ b.disabled = !ready; b.textContent = eS.material ? 'View Design' : 'Choose a floor first'; });
 }
-function eVisualize(){ eVizGenLabel(); }   /* material/edge/add-on change = just refresh the button label (free) */
+function eVisualize(){ eVizSyncAll(); }
 function eVizSyncAll(){
+  var complete=eVizAnswersComplete();
   document.querySelectorAll('#est-embed .e-vizphoto').forEach(function(ph){
     var up=ph.querySelector('.e-vizupload'), stg=ph.querySelector('.e-vizstage'), gen=ph.querySelector('.e-vizgen'), bar=ph.querySelector('.e-vizbar');
     var load=ph.querySelector('.e-vizloading'), sub=ph.querySelector('.e-vizloadsub');
@@ -1404,34 +1414,28 @@ function eVizSyncAll(){
       var img=ph.querySelector('.e-vizimg'); if(img) img.src=(eS.vizView==='new'&&eS.photoNew)?eS.photoNew:eS.photoOrig;
       var badge=ph.querySelector('.e-vizbadge'); if(badge) badge.style.display=(eS.vizView==='new'&&eS.photoNew)?'block':'none';
       ph.querySelectorAll('.e-vizbtn[data-view]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-view')===eS.vizView); });
-      /* gating overlay */
-      if(eVizBusy){
-        if(sub)sub.textContent='This usually takes a few seconds…';
-        if(load)load.style.display='flex';
-      } else if(!eVizAnswersComplete()){
-        if(sub)sub.textContent='Photo will be available after your design answers are complete.';
-        if(load)load.style.display='flex';
-      } else {
-        if(load)load.style.display='none';
-      }
+      if(eVizBusy){ if(sub) sub.textContent='This usually takes a few seconds…'; if(load) load.style.display='flex'; }
+      else if(!complete){ if(sub) sub.textContent='Photo will be available after your design answers are complete.'; if(load) load.style.display='flex'; }
+      else { if(load) load.style.display='none'; }
     } else {
       if(up)up.style.display='block'; if(stg)stg.style.display='none'; if(gen)gen.style.display='none'; if(bar)bar.style.display='none';
-      if(load)load.style.display='none';
+      if(load) load.style.display='none';
     }
   });
   eVizGenLabel();
 }
-/* ADD-ONS (multi-select, optional) */
+/* EXTRAS (multi-select, optional) */
+function eAddonUnit(v){ return v.unit==='room'?'/room':v.unit==='door'?'/doorway':''; }
 function eBuildAddons() {
   var l=document.getElementById('e-addonlist'); if(!l) return; var html='';
   Object.keys(E_CONFIG.addons).forEach(function(k){
     var v=E_CONFIG.addons[k];
-    var thumb = v.img ? '<img class="e-oi-sw" src="'+v.img+'" alt="'+v.label+'">' : '<div class="e-oi-emchip">'+(E_SVG[k]||v.icon||'➕')+'</div>';
-    html+='<div class="e-oi" data-addon="'+k+'" onclick="eToggleAddon(this,\''+k+'\')">'
+    var thumb = v.img ? '<img class="e-oi-sw" src="'+v.img+'" alt="">' : '<div class="e-oi-emchip">'+(E_SVG[k]||v.icon||'➕')+'</div>';
+    html+='<div class="e-oi'+(eS.addons&&eS.addons[k]?' sel':'')+'" data-addon="'+k+'" onclick="eToggleAddon(this,\''+k+'\')">'
       +thumb
       +'<div class="e-oi-info"><div class="e-oi-lbl">'+v.label+'</div>'
       +'<div class="e-oi-desc">'+v.desc+'</div></div>'
-      +'<div class="e-oi-tag">+$'+v.low.toLocaleString()+'–$'+v.high.toLocaleString()+'</div>'
+      +'<div class="e-oi-tag">+$'+(+v.low).toLocaleString()+'–$'+(+v.high).toLocaleString()+eAddonUnit(v)+'</div>'
       +'<div class="e-oi-radio">✓</div></div>';
   });
   l.innerHTML=html;
@@ -1440,45 +1444,39 @@ function eToggleAddon(el, key){
   if(!eS.addons) eS.addons={};
   if(eS.addons[key]){ delete eS.addons[key]; el.classList.remove('sel'); }
   else { eS.addons[key]=true; el.classList.add('sel'); }
-  eVisualize();   // update the live preview (only backsplash/waterfall are visual)
-}
-function eAddonTotals(){
-  var low=0, high=0, n=0;
-  if(eS.addons){ Object.keys(eS.addons).forEach(function(k){ var v=E_CONFIG.addons[k]; if(v){ low+=v.low; high+=v.high; n++; } }); }
-  return {low:low, high:high, count:n};
+  eVisualize();
 }
 
-/* SELECTION HELPERS */
-function ePick(el, key, val) {
+/* SELECTION */
+function ePickQ(el, key, val) {
   var list=el.closest('.e-olist');
   list.querySelectorAll('.e-oi').forEach(function(i){ i.classList.remove('sel'); });
   el.classList.add('sel'); eS[key]=val;
-  var map2={material:'e-btn2',pitch:'e-btn3',quality:'e-btn4',project:'e-btn5'};
-  if(map2[key]) document.getElementById(map2[key]).disabled=false;
+  var step=key==='material'?3:(E_Q[key]&&E_Q[key].step);
+  if(step) eStepCheck(step);
 }
-function ePickQ(el, key, val) {
-  el.closest('.e-olist').querySelectorAll('.e-oi').forEach(function(i){ i.classList.remove('sel'); });
-  el.classList.add('sel'); eS[key]=val;
-  var btnMap={urgency:'e-btn6',terrain:'e-btn7',access:'e-btn8'};
-  if(btnMap[key]) document.getElementById(btnMap[key]).disabled=false;
+function eStepCheck(n){
+  var b=document.getElementById('e-btn'+n); if(!b) return;
+  var need=E_NEED[n]||[]; b.disabled=!need.every(function(k){ return !!eS[k]; });
 }
 function eChkForm() {
-  var ok=document.getElementById('e-fn').value.trim()&&document.getElementById('e-ln').value.trim()&&document.getElementById('e-ph').value.trim().length>=7&&document.getElementById('e-em').value.includes('@');
-  document.getElementById('e-btn9').disabled=!ok;
+  var ok=document.getElementById('e-fn').value.trim()&&document.getElementById('e-ln').value.trim()&&document.getElementById('e-ph').value.trim().length>=7&&document.getElementById('e-em').value.indexOf('@')>-1;
+  document.getElementById('e-btn11').disabled=!ok;
 }
-function eCheckBtn1(){ var b=document.getElementById('e-btn1'); if(b) b.disabled=!(eS.sqft>0); }
+function eCheckBtn1(){ document.getElementById('e-btn1').disabled=!(eS.addr&&eS.sqft>0); }
 
 /* DOTS */
 function eBuildAllDots() {
-  for(var s=1;s<=E_TOTAL;s++){
+  for(var s=1;s<=E_SHOWN;s++){
     var el=document.getElementById('e-dots'+s); if(!el) continue;
     var html='';
-    for(var i=1;i<=E_TOTAL;i++){ var cls=i<s?'done':i===s?'act':''; html+='<div class="e-sdot '+cls+'"></div>'; }
+    for(var i=1;i<=E_SHOWN;i++){ var cls=i<s?'done':i===s?'act':''; html+='<div class="e-sdot '+cls+'"></div>'; }
     el.innerHTML=html;
   }
 }
 
 /* NAVIGATION */
+var E_NAMES=['','Address & Rooms','Where','Floor Type','Quality','Removal','Subfloor','Stairs & Trim','Underlayment','Extras','Timeline','Your Info','Calculating'];
 function eGo(n, back) {
   var oldEl=document.getElementById(eCur<=E_TOTAL?'e-sp'+eCur:'e-spR');
   oldEl.classList.remove('active','back');
@@ -1486,111 +1484,194 @@ function eGo(n, back) {
   nextEl.classList.add('active');
   if(back){ nextEl.classList.add('back'); setTimeout(function(){ nextEl.classList.remove('back'); },450); }
   eCur=n;
-  var _dn=Math.min(n,9); var pct=Math.round((_dn/9)*100);
+  var _dn=Math.min(n,E_SHOWN); var pct=Math.round((_dn/E_SHOWN)*100);
   document.getElementById('e-pfill').style.width=pct+'%';
-  var names=['','The Space','The Project','Add-Ons','Finish Level','Living Here','Timing','Structural','Site Access','Your Info','Calculating',''];
-  document.getElementById('e-tstep').innerHTML=n<=E_TOTAL?'Step <b>'+_dn+'</b> of 9 — '+(names[n]||''):'<b>✓ Estimate Complete</b>';
-  // Only scroll if the top of the estimator is above the viewport
+  document.getElementById('e-tstep').innerHTML=n<=E_TOTAL?'Step <b>'+_dn+'</b> of '+E_SHOWN+' — '+(E_NAMES[n]||''):'<b>✓ Estimate Complete</b>';
   var embed=document.getElementById('est-embed-shell');
   if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
-  if(n===1){ var _z=document.getElementById('e-zippanel'),_a=document.getElementById('e-addrpanel'); if(_z)_z.style.display='none'; if(_a)_a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 \u2014 The Space'; if(eLmap) setTimeout(function(){ eLmap.invalidateSize(); },150); }
+  if(n===1){ var _z=document.getElementById('e-zippanel'),_a=document.getElementById('e-addrpanel'); if(_z)_z.style.display='none'; if(_a)_a.style.display='block'; document.getElementById('e-tstep').innerHTML='Step <b>1</b> of '+E_SHOWN+' — Address'; }
+  if(n===2) flHand();
 }
 
-/* SUBMIT + RESULT */
+/* PRICE — every piece as a line item, low and high */
+function eScale(){
+  /* rooms and wall length from the sketch, scaled if they changed the size after */
+  var a=eS.sqft||0, sk=eS.sketchSqft||0;
+  var rooms=eS.rooms||Math.max(1,Math.round(a/250));
+  var perim=(eS.perimFt&&sk)?Math.round(eS.perimFt*Math.sqrt(a/sk)):Math.round(4.6*Math.sqrt(a)*Math.max(1,Math.sqrt(rooms))*0.9);
+  return {rooms:rooms, perim:perim, doors:Math.max(1,rooms)};
+}
 function eCalcPrice(){
-  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['kitchen'];
-  var qm=E_CONFIG.qualityMult[eS.quality]||1.00;   /* finish level    */
-  var tm=E_CONFIG.terrainMult[eS.terrain]||1.00;   /* structural work */
-  var am=E_CONFIG.accessMult[eS.access]||1.00;     /* site access     */
-  var prm=E_CONFIG.projectMult[eS.project]||1.00;  /* occupancy       */
-  var rm=parseFloat(E_CONFIG.regionMult[eS.region]||1.00);
-  var sqft=Math.max(20, eS.sqft||200);           /* the slider is home square footage */
-
-  /* Per square foot of the area being remodelled, straight through. A
-     remodel has no meaningful fixed base: a 40 sq ft bathroom and a 200 sq
-     ft one are the same job at different sizes, and every cost in it —
-     labour, tile, cabinetry, fixtures — scales with the room. */
-  var lowRaw  = sqft*p.low  * qm*tm*am*prm*rm;
-  var highRaw = sqft*p.high * qm*tm*am*prm*rm;
-  var add=eAddonTotals();
-
-  /* Rounded to $50 so it reads as an estimate rather than a quote. Add-ons
-     are flat trade prices and are NOT multiplied — a permit fee does not get
-     more expensive because the house is old. */
-  var low =Math.round(lowRaw /50)*50 + add.low;
-  var high=Math.round(highRaw/50)*50 + add.high;
-  return {low:low, high:high, mid:Math.round((low+high)/2), area:sqft,
-          lowPer:Math.round(lowRaw/sqft), highPer:Math.round(highRaw/sqft), addons:add};
+  var C=E_CONFIG, area=eS.sqft||0, k=eScale();
+  var p=C.pricing[eS.material]||C.pricing['lvp'];
+  var qm=+C.qualityMult[eS.quality]||1, am=+C.areaMult[eS.area]||1, rm=+(C.regionMult[eS.region]||1);
+  var lines=[];
+  function add(label,lo,hi,sub){ lo=Math.round(lo/10)*10; hi=Math.round(hi/10)*10; if(hi<=0) return; lines.push({label:label,sub:sub||'',low:lo,high:hi}); }
+  add(p.label, area*p.low*qm*am*rm, area*p.high*qm*am*rm, area.toLocaleString()+' sq ft · '+eTitle(eS.quality||'standard')+(eS.color?' · '+eS.color.name:''));
+  var r=C.removal[eS.removal]; if(r) add('Remove old floor', area*r.low*rm, area*r.high*rm, r.label);
+  var s=C.subfloor[eS.subfloor]; if(s) add('Subfloor prep', area*s.low*rm, area*s.high*rm, s.label);
+  var u=C.underlay[eS.underlay]; if(u) add('Underlayment', area*u.low*rm, area*u.high*rm, u.label);
+  var st=C.stairs[eS.material]; if(st&&eS.stairs>0) add('Stairs', eS.stairs*st.low*qm*rm, eS.stairs*st.high*qm*rm, eS.stairs+' step'+(eS.stairs>1?'s':'')+' · tread, riser & nosing');
+  var t=C.trim[eS.trim]; if(t) add('Baseboards & trim', k.perim*t.low*rm, k.perim*t.high*rm, t.label+' · '+k.perim.toLocaleString()+' linear ft');
+  Object.keys(eS.addons||{}).forEach(function(key){ var v=C.addons[key]; if(!v) return;
+    var q=v.unit==='room'?k.rooms:v.unit==='door'?k.doors:1;
+    add(v.label, q*v.low*rm, q*v.high*rm, v.unit==='room'?q+' room'+(q>1?'s':''):v.unit==='door'?q+' doorway'+(q>1?'s':''):'Per project'); });
+  var low=0, high=0; lines.forEach(function(l){ low+=l.low; high+=l.high; });
+  var mj=(C.minJob&&C.minJob.min)||{low:0,high:0}, mjl=Math.round(mj.low*rm/10)*10, mjh=Math.round(mj.high*rm/10)*10;
+  if(high<mjh){ var dl=Math.max(0,mjl-low), dh=mjh-high; lines.push({label:'Minimum job',sub:'Small rooms have a set-up minimum',low:dl,high:dh}); low+=dl; high+=dh; }
+  low=Math.round(low/50)*50; high=Math.round(high/50)*50;
+  return {low:low, high:high, mid:Math.round((low+high)/2), area:area, lines:lines, lowPer:area?low/area:0, highPer:area?high/area:0, rooms:k.rooms, perim:k.perim};
 }
 function eDoSubmit() {
   var _est = eCalcPrice();
-  if(E_CONFIG.webhookUrl){ fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName:document.getElementById('e-fn').value,lastName:document.getElementById('e-ln').value,phone:document.getElementById('e-ph').value,email:document.getElementById('e-em').value,notes:document.getElementById('e-nt').value,address:eS.addr,areaSqft:eS.sqft,projectType:eS.material,finishLevel:eS.quality,structural:eS.terrain,siteAccess:eS.access,project:eS.project,addons:Object.keys(eS.addons||{}).join(', '),region:eS.region,urgency:eS.urgency,estimateLow:_est.low,estimateHigh:_est.high,estimateValue:_est.mid,source:E_CONFIG.companyName+' Remodel Estimator',timestamp:new Date().toISOString()})}).catch(function(){}); }
-  eGo(10);
+  if(E_CONFIG.webhookUrl){ fetch(E_CONFIG.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    firstName:document.getElementById('e-fn').value,lastName:document.getElementById('e-ln').value,phone:document.getElementById('e-ph').value,email:document.getElementById('e-em').value,notes:document.getElementById('e-nt').value,
+    address:eS.addr,zip:eS.zip,projectAreaSqft:eS.sqft,rooms:_est.rooms,roomList:eS.roomList||'',area:eS.area,material:eS.material,color:eS.color?eS.color.name:'',quality:eS.quality,removal:eS.removal,subfloor:eS.subfloor,stairs:eS.stairs,trim:eS.trim,underlayment:eS.underlay,
+    addons:Object.keys(eS.addons||{}).join(', '),region:eS.region,urgency:eS.urgency,
+    lineItems:_est.lines.map(function(l){ return l.label+': $'+l.low+'-$'+l.high; }).join(' | '),
+    estimateLow:_est.low,estimateHigh:_est.high,estimateValue:_est.mid,ownerId:E_CONFIG.ownerId||'',source:E_CONFIG.companyName+' Flooring Estimator',timestamp:new Date().toISOString()})}).catch(function(){}); }
+  eGo(12);
   var ids=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'], li=0;
   function eNextStep(){ if(li>=ids.length){ setTimeout(eShowResult,500); return; } document.getElementById(ids[li]).classList.remove('act'); document.getElementById(ids[li]).classList.add('done'); li++; if(li<ids.length) document.getElementById(ids[li]).classList.add('act'); setTimeout(eNextStep,680); }
   setTimeout(eNextStep,680);
 }
 function eTitle(s){ s=(s||'').replace(/-/g,' '); return s.charAt(0).toUpperCase()+s.slice(1); }
+function eLabelOf(key,val){ var q=E_Q[key]; if(!q) return eTitle(val); for(var i=0;i<q.opts.length;i++) if(q.opts[i][0]===val) return q.opts[i][2]; return eTitle(val); }
+function eRenderLines(est){
+  var el=document.getElementById('e-rlines'); if(!el) return;
+  var $=function(n){ return '$'+Math.round(n).toLocaleString(); };
+  el.innerHTML='<div class="e-rl-h">What\'s included<span>Low – high</span></div>'
+    +est.lines.map(function(l){ return '<div class="e-rl"><div class="e-rl-l"><b>'+eEsc(l.label)+'</b>'+(l.sub?'<span>'+eEsc(l.sub)+'</span>':'')+'</div><div class="e-rl-v">'+$(l.low)+' – '+$(l.high)+'</div></div>'; }).join('')
+    +'<div class="e-rl e-rl-t"><div class="e-rl-l"><b>Estimated total</b>'+(eS.region!=='national'?'<span>Includes '+eEsc(eS.regionLabel)+' pricing</span>':'')+'</div><div class="e-rl-v">'+$(est.low)+' – '+$(est.high)+'</div></div>';
+}
 function eShowResult() {
-  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['kitchen'];
+  var p=E_CONFIG.pricing[eS.material]||E_CONFIG.pricing['lvp'];
   var est=eCalcPrice();
   document.getElementById('e-rrange').innerHTML='$'+est.low.toLocaleString()+' — <em>$'+est.high.toLocaleString()+'</em>';
-  document.getElementById('e-rnote').textContent=est.area.toLocaleString()+' sq ft · '+p.label+' · '+eTitle(eS.quality)+' · '+eTitle(eS.terrain)+' structural · '+eTitle(eS.project)+(est.addons&&est.addons.count?' · '+est.addons.count+' add-on'+(est.addons.count>1?'s':''):'')+' · '+eS.regionLabel+(eS.usedMap?' · Instant estimate':' · Instant estimate');
+  document.getElementById('e-rnote').textContent=est.area.toLocaleString()+' sq ft · '+p.label+' · '+eTitle(eS.quality)+' · '+eLabelOf('area',eS.area)+(eS.stairs?' · '+eS.stairs+' stairs':'')+(Object.keys(eS.addons||{}).length?' · '+Object.keys(eS.addons).length+' extra'+(Object.keys(eS.addons).length>1?'s':''):'')+' · '+eS.regionLabel;
   document.getElementById('e-rv1').textContent=est.area.toLocaleString()+' sq ft';
   document.getElementById('e-rv2').textContent=p.label;
   document.getElementById('e-rv3').textContent=eTitle(eS.quality)||'—';
-  document.getElementById('e-rv4').textContent=eTitle(eS.terrain)||'—';
+  document.getElementById('e-rv4').textContent=String(est.rooms);
   document.getElementById('e-rv5').textContent=eS.regionLabel||'National Average';
-  /* the access answer swings the labour more than anything else here, so it
-     earns the last box rather than a per-unit rate that means little when
-     most of these jobs are priced as a whole */
-  document.getElementById('e-rv6').textContent=eTitle(eS.access)||'\u2014';
-  document.getElementById('e-sp10').classList.remove('active');
+  document.getElementById('e-rv6').textContent='$'+est.lowPer.toFixed(2)+'–$'+est.highPer.toFixed(2)+'/sq ft';
+  eRenderLines(est);
+  document.getElementById('e-sp12').classList.remove('active');
   document.getElementById('e-spR').classList.add('active');
   document.getElementById('e-pfill').style.width='100%';
   document.getElementById('e-tstep').innerHTML='<b>✓ Estimate Complete</b>';
+  eCur=E_TOTAL+1;
   var embed=document.getElementById('est-embed-shell');
   if(embed){ var rect=embed.getBoundingClientRect(); if(rect.top<0) embed.scrollIntoView({behavior:'smooth',block:'start'}); }
 }
 
 /* RESTART */
 function eRestart() {
-  eS={sqft:0,material:'',quality:'',project:'',region:'national',regionLabel:'National Average',urgency:'',terrain:'',access:'',addons:{},color:null,cabinet:null,photoOrig:null,photoNew:null,vizView:'orig',photoKey:'',imgEl:null};
-  eUpdateSlider(200);
-  eVizSyncAll();
+  eS=eFresh();
+  FL.rooms=[]; FL.sel=-1; FL.hist=[]; FL.home=0; flRender(); flPresets();
   var _cc=document.getElementById('e-colorcard'); if(_cc)_cc.style.display='none';
-  document.querySelectorAll('#est-embed .e-oi').forEach(function(i){ i.classList.remove('sel'); });
-  document.querySelectorAll('#est-embed .e-rb').forEach(function(b){ b.classList.remove('on'); });
-  for(var i=1;i<=9;i++){ var b=document.getElementById('e-btn'+i); if(b) b.disabled=true; }
+  document.getElementById('e-stairs').textContent='0';
+  eVizSyncAll();
+  document.getElementById('e-addrIn').value='';
+  document.getElementById('e-mapwrap').style.display='none';
+  document.getElementById('e-sldwrap').style.display='none';
+  var mb=document.getElementById('e-manualbtn'); if(mb) mb.style.display='';
+  eManualOpen=false;
+  document.getElementById('e-manualbtn').textContent="Know your square footage? Enter it instead";
+  eBuildMats();
+  for(var i=1;i<=E_SHOWN;i++){ var b=document.getElementById('e-btn'+i); if(b&&i!==9) b.disabled=true; }
   ['e-fn','e-ln','e-ph','e-em','e-nt'].forEach(function(id){ document.getElementById(id).value=''; });
-  var ldIds=['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'];
-  ldIds.forEach(function(id,idx){ var el=document.getElementById(id); el.classList.remove('done','act'); if(idx===0) el.classList.add('act'); });
+  ['e-ld1','e-ld2','e-ld3','e-ld4','e-ld5'].forEach(function(id,idx){ var el=document.getElementById(id); el.classList.remove('done','act'); if(idx===0) el.classList.add('act'); });
   document.getElementById('e-spR').classList.remove('active');
-  eCur=1; eGo(1);
+  eGo(1);
   document.getElementById('e-pfill').style.width='9%';
-  document.getElementById('e-tstep').innerHTML='Step <b>1</b> of 9 — The Space';
 }
 
-/* ═══ INIT — all functions defined above, safe to call now ═══ */
+/* ═══ INIT ═══ */
 document.getElementById('e-cco').textContent = E_CONFIG.companyName;
 document.getElementById('e-rctabtn').textContent = E_CONFIG.ctaText;
 document.getElementById('e-rctabtn').onclick = function() { window.open(E_CONFIG.ctaUrl,'_blank'); };
 eBuildMats();
-eBuildAddons();
-eBuildCabinets();
 eVizInit();
 eBuildAllDots();
-eUpdateSlider(200);
+eUpdateSlider(500);
+flPresets(); flRender();
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.e-asearch')) {
-    var s = document.getElementById('e-suggestions');
-    if (s) s.classList.remove('open');
-  }
+  if (!e.target.closest('.e-asearch')) { var s = document.getElementById('e-suggestions'); if (s) s.classList.remove('open'); }
 });
+</script><script>(function(){try{var CID="flooring",U="https://ttzwzouhiwdwamuimhpo.supabase.co",A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")||"").replace(/[^0-9a-f-]/gi,"");}catch(e){}if(OWN&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=OWN;fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=pricing",{headers:{apikey:A,Authorization:"Bearer "+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof E_CONFIG==="undefined"||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!=="object"||v===null){if(typeof v==="number")E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!=="object")return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});["eBuildMats","eBuildAddons","eBuildColors","eBuildHeight","eBuildCabinets","eBuildScope"].forEach(function(fn){try{if(typeof window[fn]==="function")window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
+<style>
+/* questions with two parts on one step, the result's line items */
+#est-embed .e-qlbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.02em;color:#6b7a90;margin:2px 0 10px;}
+#est-embed .e-rlines{padding:6px 20px 8px !important;margin-top:12px;}
+#est-embed .e-rl-h{display:flex;justify-content:space-between;align-items:center;padding:14px 0 10px;font-size:12px;font-weight:600;text-transform:uppercase;color:#6b7a90;border-bottom:1px solid #eef1f6;}
+#est-embed .e-rl{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid #eef1f6;}
+#est-embed .e-rl:last-child{border-bottom:0;}
+#est-embed .e-rl-l{display:flex;flex-direction:column;gap:3px;min-width:0;}
+#est-embed .e-rl-l b{font-size:14.5px;font-weight:600;color:#001530;letter-spacing:-.01em;}
+#est-embed .e-rl-l span{font-size:12.5px;color:#6b7a90;}
+#est-embed .e-rl-v{font-size:14.5px;font-weight:600;color:#001530;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#est-embed .e-rl-t b,#est-embed .e-rl-t .e-rl-v{font-size:16px;color:#006fff;}
+@media(max-width:560px){#est-embed .e-rlines{padding:4px 14px 6px !important;}#est-embed .e-rl-v{font-size:13.5px;}}
 
-</script>
+/* ===== the room sketcher (styled like the satellite trace on the outdoor trades) ===== */
+#est-embed .fl-wrap{--fl-ink:#001530;--fl-grey:#788493;--fl-line:#dce3ec;--fl-blue:#006fff;--fl-blue-l:#e6f0ff;background:#fff;border:1px solid var(--fl-line) !important;border-radius:18px !important;overflow:hidden;font-family:'Geist','Inter',system-ui,-apple-system,sans-serif;}
+#est-embed .fl-head{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid #eef1f6;}
+#est-embed .fl-step{flex:0 0 26px;height:26px;border-radius:50%;background:var(--fl-blue);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+#est-embed .fl-msg{display:flex;flex-direction:column;gap:3px;min-width:0;}
+#est-embed .fl-msg b{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--fl-ink);line-height:1.3;font-variant-numeric:tabular-nums;}
+#est-embed .fl-msg span{font-size:13px;color:var(--fl-grey);line-height:1.45;}
+#est-embed .fl-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px 4px;}
+#est-embed .fl-seg{display:inline-flex;border:1px solid var(--fl-line);border-radius:40px;padding:3px;gap:2px;}
+#est-embed .fl-tool{appearance:none;display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--fl-ink);border-radius:40px;min-height:36px;padding:0 14px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;}
+#est-embed .fl-tool.on{background:var(--fl-ink);color:#fff;}
+#est-embed .fl-presets{display:flex;flex-wrap:wrap;gap:6px;}
+#est-embed .fl-chip{appearance:none;border:1px solid var(--fl-line);background:#fff;color:var(--fl-ink);border-radius:40px;min-height:36px;padding:0 13px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background-color .2s,border-color .2s;}
+#est-embed .fl-chip:hover{background:#f3f6fa;}
+#est-embed .fl-chip-main{background:var(--fl-blue-l);border-color:transparent;color:var(--fl-blue);font-weight:600;}
+#est-embed .fl-canvas{position:relative;margin:10px 16px 0;border:1px solid #eef1f6;border-radius:12px;background:#fbfcfe;overflow:hidden;}
+#est-embed #fl-svg{display:block;width:100%;height:auto;max-height:420px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair;}
+#est-embed .fl-g1{stroke:#eef2f7;stroke-width:.05;}
+#est-embed .fl-g5{stroke:#dfe6ef;stroke-width:.09;}
+#est-embed .fl-room polygon{fill:rgba(0,111,255,.10);stroke:var(--fl-blue);stroke-width:.16;stroke-linejoin:round;cursor:move;}
+#est-embed .fl-room.on polygon{fill:rgba(0,111,255,.18);stroke-width:.26;}
+#est-embed .fl-room text{text-anchor:middle;pointer-events:none;font-family:'Geist','Inter',system-ui,sans-serif;}
+#est-embed .fl-rn{fill:var(--fl-ink);font-weight:600;}
+#est-embed .fl-rd{fill:var(--fl-grey);font-variant-numeric:tabular-nums;}
+#est-embed .fl-h{fill:#fff;stroke:var(--fl-blue);stroke-width:.22;cursor:nwse-resize;}
+#est-embed .fl-ghost{fill:rgba(0,111,255,.08);stroke:var(--fl-blue);stroke-width:.14;stroke-dasharray:.5 .4;}
+#est-embed .fl-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-size:14px;font-weight:500;color:var(--fl-grey);}
+#est-embed .fl-rooms{display:flex;flex-direction:column;gap:6px;padding:10px 16px 0;}
+#est-embed .fl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:8px 8px 8px 10px;border:1px solid #eef1f6;border-radius:12px;background:#fff;cursor:pointer;}
+#est-embed .fl-row.on{border-color:var(--fl-blue);background:#f7faff;}
+#est-embed .fl-row select{flex:1 1 140px;min-width:0;height:36px;border:1px solid var(--fl-line);border-radius:9px;padding:0 8px;font:inherit;font-size:13px;color:var(--fl-ink);background:#fff;}
+#est-embed .fl-dims{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--fl-grey);}
+#est-embed .fl-dims input{width:52px;height:36px;border:1px solid var(--fl-line);border-radius:9px;padding:0 6px;font:inherit;font-size:13.5px;text-align:center;color:var(--fl-ink);font-variant-numeric:tabular-nums;}
+#est-embed .fl-dims em{font-style:normal;font-size:11.5px;text-transform:uppercase;font-weight:600;margin-right:2px;}
+#est-embed .fl-sq{margin-left:auto;font-size:13.5px;font-weight:600;color:var(--fl-ink);white-space:nowrap;font-variant-numeric:tabular-nums;}
+#est-embed .fl-del{appearance:none;border:0;background:#eef1f6;color:var(--fl-ink);width:28px;height:28px;border-radius:50%;font:inherit;font-size:16px;line-height:1;cursor:pointer;flex:none;}
+#est-embed .fl-del:hover{background:var(--fl-ink);color:#fff;}
+#est-embed .fl-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 16px;margin-top:12px;border-top:1px solid #eef1f6;}
+#est-embed .fl-btn{appearance:none;border:1px solid var(--fl-line);background:#fff;color:var(--fl-ink);border-radius:40px;min-height:44px;padding:0 18px;font:inherit;font-size:14px;font-weight:500;cursor:pointer;}
+#est-embed .fl-btn:disabled{opacity:.4;cursor:default;}
+#est-embed .fl-total{margin-left:auto;font-size:13px;color:var(--fl-grey);white-space:nowrap;}
+#est-embed .fl-total b{font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--fl-ink);font-variant-numeric:tabular-nums;}
+#est-embed .fl-go{appearance:none;border:1px solid var(--fl-blue);background:var(--fl-blue);color:#fff;border-radius:40px;min-height:44px;padding:0 22px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;}
+#est-embed .fl-go:disabled{opacity:.4;cursor:default;}
+#est-embed .fl-skip{appearance:none;flex-basis:100%;text-align:left;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:500;color:var(--fl-blue);cursor:pointer;}
+#est-embed .fl-skip:hover{text-decoration:underline;text-underline-offset:3px;}
+#est-embed .fl-wrap button:focus-visible,#est-embed .fl-wrap input:focus-visible,#est-embed .fl-wrap select:focus-visible{outline:2px solid var(--fl-blue);outline-offset:2px;}
+@media(max-width:560px){#est-embed .fl-total{margin-left:0;order:-1;flex-basis:100%;}#est-embed .fl-go{margin-left:auto;}#est-embed .fl-tools,#est-embed .fl-rooms,#est-embed .fl-foot{padding-left:12px;padding-right:12px;}#est-embed .fl-canvas{margin:10px 12px 0;}#est-embed .fl-sq{margin-left:0;}}
+/* stairs stepper */
+#est-embed .fl-stairs{display:flex;flex-wrap:wrap;align-items:center;gap:12px;}
+#est-embed .fl-stepbtn{appearance:none;width:48px;height:48px;border-radius:50%;border:1px solid #dce3ec;background:#fff;color:#001530;font:inherit;font-size:22px;line-height:1;cursor:pointer;}
+#est-embed .fl-stepbtn:hover{background:#001530;color:#fff;border-color:#001530;}
+#est-embed .fl-stairval{display:flex;align-items:baseline;gap:6px;min-width:84px;justify-content:center;}
+#est-embed .fl-stairval b{font-size:34px;font-weight:600;letter-spacing:-.03em;color:#001530;font-variant-numeric:tabular-nums;}
+#est-embed .fl-stairval span{font-size:13px;color:#6b7a90;}
+#est-embed .fl-stairnote{flex-basis:100%;font-size:12.5px;color:#6b7a90;}
+</style>
 
-<script>(function(){try{var CID="general",U="https://ttzwzouhiwdwamuimhpo.supabase.co",A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")||"").replace(/[^0-9a-f-]/gi,"");}catch(e){}if(OWN&&typeof E_CONFIG!=="undefined")E_CONFIG.ownerId=OWN;fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=pricing",{headers:{apikey:A,Authorization:"Bearer "+A}}).then(function(r){return r.json();}).then(function(rows){if(!rows||!rows.length)return;var p=rows[0].pricing||{};if(typeof E_CONFIG==="undefined"||!E_CONFIG)return;Object.keys(p).forEach(function(prop){if(!E_CONFIG[prop])return;Object.keys(p[prop]).forEach(function(k){if(!(k in E_CONFIG[prop]))return;var v=p[prop][k];if(typeof v!=="object"||v===null){if(typeof v==="number")E_CONFIG[prop][k]=v;return;}if(typeof E_CONFIG[prop][k]!=="object")return;Object.keys(v).forEach(function(f){E_CONFIG[prop][k][f]=v[f];});});});["eBuildMats","eBuildAddons","eBuildColors","eBuildHeight","eBuildCabinets","eBuildScope"].forEach(function(fn){try{if(typeof window[fn]==="function")window[fn]();}catch(e){}});}).catch(function(){});}catch(e){}})();</script>
 <style>
 /* --- BuilderPro polish: staggered step reveal, button feel, loading --- */
 #est-embed .e-sp.active .e-shdr{animation:eRise .5s cubic-bezier(.22,1,.28,1) both .05s;}
@@ -1671,7 +1752,7 @@ document.addEventListener('click', function(e) {
 #est-embed #e-zippanel .e-shdr{margin:-16px -32px 14px !important;width:auto !important;max-width:none !important;}
 @media(max-width:640px){#est-embed #e-zippanel .e-shdr{margin:-16px -16px 12px !important;}}
 </style>
-<!--HS-BEGIN--><script>window.HS_TRADE="general";</script><!-- HOUSE SCAN — built by tools/build-house-scan.py from embed-src/house-scan.src.js
+<!--HS-BEGIN--><script>window.HS_TRADE="flooring";</script><!-- HOUSE SCAN — built by tools/build-house-scan.py from embed-src/house-scan.src.js
      and the shared map/house block of embed-src/roof-scan.html. Edit those, not this. -->
 <style id="hs-style">
 /* The main site's own tokens (index.html :root): Geist, ink #001530, grey
@@ -4106,90 +4187,7 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
   });
 }catch(e){} })();
 </script>
-<!--ST-END--><script id="bp-theme-applier">/* BuilderPro embed theme — injected into every public embed page by
-   tools/build-embeds.py, and mirrored in book/index.html.
-
-   Reads the owner's saved look from embed_themes (colours, font, corner radius,
-   logo, header image) and applies it. Also listens for a postMessage of
-   {type:"bp-theme", theme} so the portal's Customize page can preview edits
-   live inside an iframe before they are saved. */
-(function(){
-  var U="https://ttzwzouhiwdwamuimhpo.supabase.co";
-  var A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
-  var KIND="calc";
-  var q=new URLSearchParams(location.search), OWN=(q.get("u")||"").replace(/[^0-9a-f-]/gi,"");
-  var FONTS={"Geist":"Geist:wght@400;500;600;700;800","Inter":"Inter:wght@400;500;600;700;800","Plus Jakarta Sans":"Plus+Jakarta+Sans:wght@400;500;600;700;800","Manrope":"Manrope:wght@400;500;600;700;800","DM Sans":"DM+Sans:wght@400;500;600;700","Space Grotesk":"Space+Grotesk:wght@400;500;600;700","Lato":"Lato:wght@400;700;900","Roboto":"Roboto:wght@400;500;700","Nunito":"Nunito:wght@400;600;700;800","Poppins":"Poppins:wght@400;500;600;700","Montserrat":"Montserrat:wght@400;500;600;700;800","Playfair Display":"Playfair+Display:wght@500;600;700"};
-  function hex(c){ c=String(c||"").trim(); return /^#[0-9a-f]{6}$/i.test(c)?c:(/^#[0-9a-f]{3}$/i.test(c)?"#"+c[1]+c[1]+c[2]+c[2]+c[3]+c[3]:""); }
-  function rgba(h,a){ h=hex(h); if(!h) return ""; return "rgba("+parseInt(h.slice(1,3),16)+","+parseInt(h.slice(3,5),16)+","+parseInt(h.slice(5,7),16)+","+a+")"; }
-  function lighten(h,amt){ h=hex(h); if(!h) return ""; var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); var f=function(v){return Math.round(v+(255-v)*amt);}; return "#"+[f(r),f(g),f(b)].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join(""); }
-  function darken(h,amt){ h=hex(h); if(!h) return ""; var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); var f=function(v){return Math.round(v*(1-amt));}; return "#"+[f(r),f(g),f(b)].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join(""); }
-  function safeUrl(u){ u=String(u||"").trim(); return (/^https?:\/\//i.test(u)||/^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/i.test(u))?u:""; }
-  function ensureFont(name){
-    if(!FONTS[name]||document.getElementById("bp-font-"+name.replace(/\W/g,""))) return;
-    var l=document.createElement("link"); l.id="bp-font-"+name.replace(/\W/g,""); l.rel="stylesheet";
-    l.href="https://fonts.googleapis.com/css2?family="+FONTS[name]+"&display=swap"; document.head.appendChild(l);
-  }
-  function apply(t){
-    t=t||{}; window.__bpThemeCur=t;
-    var css="", p=hex(t.primary), bg=hex(t.bg), card=hex(t.card), ink=hex(t.text), r=(t.radius===""||t.radius==null)?null:Math.max(0,Math.min(28,+t.radius||0));
-    if(t.font&&FONTS[t.font]) ensureFont(t.font);
-    if(KIND==="calc"){
-      var sel="#est-embed";
-      if(p) css+=sel+"{--a:"+p+" !important;--al:"+lighten(p,.55)+" !important;--ag:"+rgba(p,.18)+" !important;--blue-l:"+lighten(p,.45)+" !important;--cyan:"+lighten(p,.45)+" !important}";
-      if(bg) css+="html,body,.est-stage{background:"+bg+" !important}";
-      if(card) css+=sel+"{--card:"+card+" !important;--bg:"+card+" !important;background:"+card+" !important}";
-      if(ink) css+=sel+"{--txt:"+ink+" !important;--text:"+ink+" !important;--w:"+ink+" !important;color:"+ink+" !important}";
-      if(t.font) css+=sel+","+sel+" *{font-family:'"+t.font+"',system-ui,sans-serif !important}";
-      if(r!=null) css+=sel+" button,"+sel+" input,"+sel+" select,"+sel+" .e-card,"+sel+" .e-btn,"+sel+" [class*='card'],"+sel+" [class*='btn']{border-radius:"+r+"px !important}#est-embed{border-radius:"+Math.min(r+6,28)+"px !important}";
-      if(t.hideBrand) css+=sel+" [class*='powered'],"+sel+" [class*='brand']{display:none !important}";
-    } else {
-      if(p) css+=":root{--blue:"+p+" !important;--blue-hi:"+lighten(p,.22)+" !important;--blue-act:"+darken(p,.18)+" !important;--blue-soft:"+lighten(p,.86)+" !important}";
-      if(bg) css+="html,body{background:"+bg+" !important}";
-      if(card) css+=":root{--card:"+card+" !important;--soft:"+lighten(card,.0)+" !important}.side{background:"+darken(card,.03)+" !important}";
-      if(ink) css+=":root{--ink:"+ink+" !important;--body:"+ink+" !important}";
-      if(t.font) css+="html,body,button,input,textarea,select{font-family:'"+t.font+"',system-ui,sans-serif !important}";
-      if(r!=null) css+=".card{border-radius:"+r+"px !important}.tray{border-radius:"+(r+8)+"px !important}.chip,.mdt-sel,.mdt-opt,.btn,.f input,.f textarea,.summary{border-radius:"+Math.max(4,Math.round(r*.7))+"px !important}";
-      if(t.hideBrand) css+=".brand{display:none !important}";
-    }
-    var st=document.getElementById("bp-theme"); if(!st){ st=document.createElement("style"); st.id="bp-theme"; document.head.appendChild(st); } st.textContent=css;
-    // images: a logo above the content, and (booking page) a header photo in the side panel
-    var logo=safeUrl(t.logo), hero=safeUrl(t.hero);
-    var tries=0; (function mount(){
-      var host=KIND==="calc"?document.getElementById("est-embed"):document.querySelector(".side");
-      if(!host){ if(++tries<40) setTimeout(mount,150); return; }
-      var lg=document.getElementById("bp-logo");
-      var logoImg=logo?'<img src="'+logo.replace(/"/g,"&quot;")+'" alt="" style="display:block;max-height:'+(t.logoSize||44)+'px;max-width:200px;object-fit:contain">':'';
-      if(KIND!=="calc"){
-        if(logo){ if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; host.insertBefore(lg,host.firstChild); } lg.style.cssText="padding:0 0 14px;display:flex;align-items:center"; lg.innerHTML=logoImg; }
-        else if(lg) lg.parentNode.removeChild(lg);
-        var hv=document.getElementById("bp-hero");
-        if(hero){ if(!hv){ hv=document.createElement("div"); hv.id="bp-hero"; host.insertBefore(hv,host.firstChild); } hv.style.cssText="margin:-28px -26px 18px;height:150px;background:linear-gradient(150deg,rgba(18,35,61,.55),rgba(30,58,99,.35)),url("+JSON.stringify(hero)+") center/cover"; }
-        else if(hv) hv.parentNode.removeChild(hv);
-      } else {
-        /* The calculator: the logo sits ON the header photo, in its top-right
-           corner. With no photo it keeps to the top-right of the calculator.
-           A logo with a transparent background is what reads on a photo;
-           the portal says so where the logo is uploaded. */
-        var hc=document.getElementById("bp-hero");
-        if(hero){ if(!hc){ hc=document.createElement("div"); hc.id="bp-hero"; host.insertBefore(hc,host.firstChild); } hc.style.cssText="position:relative;height:160px;background:linear-gradient(150deg,rgba(18,35,61,.35),rgba(30,58,99,.15)),url("+JSON.stringify(hero)+") center/cover"; }
-        else if(hc){ hc.parentNode.removeChild(hc); hc=null; }
-        if(logo){
-          if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; }
-          if(hc){ if(lg.parentNode!==hc) hc.appendChild(lg); lg.style.cssText="position:absolute;top:14px;right:16px;display:flex;align-items:center;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))"; }
-          else { if(lg.parentNode!==host||host.firstChild!==lg) host.insertBefore(lg,host.firstChild); lg.style.cssText="padding:16px 20px 0;display:flex;justify-content:flex-end;align-items:center"; }
-          lg.innerHTML=logoImg;
-        } else if(lg&&lg.parentNode) lg.parentNode.removeChild(lg);
-      }
-    })();
-  }
-  window.__bpApplyTheme=apply;
-  window.addEventListener("message",function(e){ var d=e&&e.data; if(d&&d.type==="bp-theme"&&d.theme&&typeof d.theme==="object") apply(d.theme); });
-  if(OWN){
-    fetch(U+"/rest/v1/embed_themes?owner=eq."+OWN+"&kind=eq."+KIND+"&select=theme",{headers:{apikey:A,Authorization:"Bearer "+A}})
-      .then(function(r){return r.ok?r.json():[];}).then(function(rows){ if(Array.isArray(rows)&&rows[0]&&rows[0].theme) apply(rows[0].theme); }).catch(function(){});
-  }
-})();
-</script></body><style>
+<!--ST-END--></body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
 #est-embed button:active{transform:scale(.95);}

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Dress every estimator in the marketing site's design system.
 
-embed-src/site-theme.html goes into all ten calculators, between markers, so
+embed-src/site-theme.html goes into all twelve calculators, between markers, so
 re-running replaces it rather than stacking a second copy:
 
   * the seven whose source is an <iframe srcdoc> on the marketing carousel
     in index.html (escaped for the attribute), and
-  * the three whose source is a whole file in embed-src/.
+  * the five whose source is a whole file in embed-src/.
 
 Then rebuild the public pages:
 
@@ -17,7 +17,7 @@ import io, os, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'index.html')
 INLINE = ['roofing', 'hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping']
-STANDALONE = ['plumbing', 'electrical', 'general']
+STANDALONE = ['plumbing', 'electrical', 'general', 'concrete', 'flooring']
 BEGIN, END = '<!--ST-BEGIN-->', '<!--ST-END-->'
 
 theme = io.open(os.path.join(ROOT, 'embed-src', 'site-theme.html'), encoding='utf-8').read()
