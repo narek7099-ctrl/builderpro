@@ -3,7 +3,7 @@
      var CK_TOOL='health'|'damage', CK_TRADE='<trade>', CK_WEBHOOK='<the trade calculator's lead webhook>';
    Each finished check is filed exactly like the Roof Age Checker:
      - a row in roof_checks (calc_id = '<tool>:<trade>') so it shows in the portal
-       under Lead Radar → Checks, and
+       under Leads → Checks, and
      - a POST to the trade calculator's lead webhook with tool:'health'|'damage'. */
 (function(){
 var SB='https://ttzwzouhiwdwamuimhpo.supabase.co';
@@ -346,6 +346,10 @@ function save(r){
   hook.firstName=nm[0]||''; hook.lastName=nm.slice(1).join(' '); hook.phone=c.phone||''; hook.email=c.email||''; hook.address=c.addr||''; hook.zip=zip; hook.timestamp=new Date().toISOString();
   try{if(CK_WEBHOOK)fetch(CK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hook)}).catch(function(){});}catch(e){}
   try{parent.postMessage({bp:'checker-done',tool:TOOL,trade:CK_TRADE,score:row.score,label:row.label},'*');}catch(e){}
+  /* for the owner's site tracker (embed/track.js): a completed check is a
+     conversion, and one that left a phone or email is a lead */
+  try{parent.postMessage({bp:'bp:tool-done',tool:TOOL,trade:CK_TRADE},'*');}catch(e){}
+  if(c.phone||c.email){try{parent.postMessage({bp:'bp:lead',tool:TOOL,trade:CK_TRADE},'*');}catch(e){}}
 }
 
 document.addEventListener('DOMContentLoaded',function(){go(0);});

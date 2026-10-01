@@ -4140,6 +4140,24 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
     try{ if(window.ResizeObserver) new ResizeObserver(report).observe(document.documentElement); }catch(e){}
     window.addEventListener("load",report); setInterval(report,1200);
   }
+  /* conversion events for the owner's site tracker (embed/track.js):
+     'bp:tool-open' when a tool loads inside a page, 'bp:lead' when a
+     calculator sends its lead webhook (the checkers post their own). */
+  if(KIND==="calc"&&window.parent!==window){
+    var TOOLID=(location.pathname.split("/").pop()||"").replace(/\.html$/,"");
+    var tkind=/^health-/.test(TOOLID)?"health":/^damage-/.test(TOOLID)?"damage":"quote";
+    try{ parent.postMessage({bp:"bp:tool-open",tool:tkind,id:TOOLID},"*"); }catch(e){}
+    if(tkind==="quote"&&window.fetch){
+      var leadSent=false, of=window.fetch;
+      window.fetch=function(u,o){
+        try{
+          var hook=(typeof E_CONFIG!=="undefined"&&E_CONFIG.webhookUrl)||"";
+          if(!leadSent&&hook&&String(u)===hook&&o&&String(o.method||"").toUpperCase()==="POST"){ leadSent=true; parent.postMessage({bp:"bp:lead",tool:tkind,id:TOOLID},"*"); }
+        }catch(e){}
+        return of.apply(this,arguments);
+      };
+    }
+  }
   if(OWN){
     fetch(U+"/rest/v1/embed_themes?owner=eq."+OWN+"&kind=eq."+KIND+"&select=theme",{headers:{apikey:A,Authorization:"Bearer "+A}})
       .then(function(r){return r.ok?r.json():[];}).then(function(rows){ if(Array.isArray(rows)&&rows[0]&&rows[0].theme) apply(rows[0].theme); }).catch(function(){});
