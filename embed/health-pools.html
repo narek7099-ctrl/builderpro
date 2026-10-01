@@ -1,6 +1,6 @@
 <!doctype html><!-- built by tools/build-checkers.py from embed-src/checkers/; edit the source, not this file -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pools Health Check</title><meta name="robots" content="noindex">
+<title>Pools Health Check</title><!--OG-BEGIN--><meta name="description" content="Six quick questions, an instant health score, what to fix first and what it should cost."><meta property="og:type" content="website"><meta property="og:site_name" content="BuilderPro"><meta property="og:title" content="Free 45-second pool health check"><meta property="og:description" content="Six quick questions, an instant health score, what to fix first and what it should cost."><meta property="og:url" content="https://builderpro-os.com/embed/health-pools.html"><meta property="og:image" content="https://builderpro-os.com/embed/og/health-pools.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Pools Health Check"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Free 45-second pool health check"><meta name="twitter:description" content="Six quick questions, an instant health score, what to fix first and what it should cost."><meta name="twitter:image" content="https://builderpro-os.com/embed/og/health-pools.png"><!--OG-END--><meta name="robots" content="noindex">
 <style>/* Health / Damage checker — shares the estimator tokens (--a accent, --txt ink,
    --card) so the site theme and the owner's saved theme both reach it. */
 html,body{margin:0;padding:0;background:#edf2f6;}
@@ -546,6 +546,16 @@ function merge(){
   var band={minor:[c.maint[0],c.repair[1]],moderate:[c.maint[1],c.repair[1]],severe:[c.repair[0],c.major[1]]}[sev];
   lo=Math.max(lo,band[0]); hi=Math.min(hi,band[1]);
   el=Math.max(lo,Math.min(hi,el)); eh=Math.max(el,Math.min(hi,eh));
+  /* A scan range like "$450 – $22,000" is no help to anyone. Cap the spread,
+     and only let it run from a repair into a full replacement when the damage
+     is severe AND the homeowner said it covers several areas or more. */
+  var ext=S.ans.extent?S.ans.extent.i:1, large=sev==='severe'&&ext>=2;
+  eh=Math.min(eh,Math.max(el*4,el+c.repair[1]));
+  if(!large&&el<c.major[0]&&eh>c.repair[1]){
+    var bd=(sev==='severe'&&el>=c.repair[1])?c.major:c.repair;
+    el=Math.max(bd[0],Math.min(bd[1],el)); eh=Math.max(el,Math.min(bd[1],eh));
+  }
+  el=Math.round(el); eh=Math.round(eh);
   var urg=String(A.urgency||''); if(/urgent|immediate|24|today/i.test(R.urgency)&&!/urgent|immediate/i.test(urg))urg=R.urgency;
   return {damages:dm.length?dm:R.damages,cause:A.cause||R.cause,urgency:urg||R.urgency,repair:A.repair||R.repair,estimate:{low:el,high:eh},insurance:A.insurance||R.insurance,sev:sev,source:'scan'};
 }
@@ -864,6 +874,13 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
   }
   window.__bpApplyTheme=apply;
   window.addEventListener("message",function(e){ var d=e&&e.data; if(d&&d.type==="bp-theme"&&d.theme&&typeof d.theme==="object") apply(d.theme); });
+  /* auto-resize: tell the host page how tall the content is, so the optional
+     resize script in the portal's embed code can size the iframe to fit */
+  if(KIND==="calc"&&window.parent!==window){
+    var lastH=0, report=function(){ try{ var h=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0)); if(h&&Math.abs(h-lastH)>2){ lastH=h; parent.postMessage({bp:"height",h:h},"*"); } }catch(e){} };
+    try{ if(window.ResizeObserver) new ResizeObserver(report).observe(document.documentElement); }catch(e){}
+    window.addEventListener("load",report); setInterval(report,1200);
+  }
   if(OWN){
     fetch(U+"/rest/v1/embed_themes?owner=eq."+OWN+"&kind=eq."+KIND+"&select=theme",{headers:{apikey:A,Authorization:"Bearer "+A}})
       .then(function(r){return r.ok?r.json():[];}).then(function(rows){ if(Array.isArray(rows)&&rows[0]&&rows[0].theme) apply(rows[0].theme); }).catch(function(){});
