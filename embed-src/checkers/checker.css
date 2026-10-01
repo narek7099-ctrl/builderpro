@@ -1,0 +1,83 @@
+/* Health / Damage checker — shares the estimator tokens (--a accent, --txt ink,
+   --card) so the site theme and the owner's saved theme both reach it. */
+html,body{margin:0;padding:0;background:#edf2f6;}
+#est-embed.ck{--a:#006fff;--txt:#001530;--mu:#788493;--card:#fff;--line:rgba(0,0,0,.10);--soft:#dce3ec;
+  --good:#15803d;--watch:#b45309;--act:#c2410c;--urg:#b91c1c;
+  font-family:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:var(--txt);
+  max-width:560px;margin:0 auto;padding:12px 16px 24px;box-sizing:border-box;min-height:100vh;}
+#est-embed.ck *{box-sizing:border-box;}
+.ck-top{display:flex;align-items:center;gap:10px;margin:4px 0 14px;}
+.ck-back{flex:0 0 auto;width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ck-back[hidden]{visibility:hidden;display:flex;}
+.ck-bar{flex:1;height:8px;border-radius:99px;background:var(--soft);overflow:hidden;}
+.ck-bar i{display:block;height:100%;width:0;background:var(--a);border-radius:99px;transition:width .35s cubic-bezier(.22,1,.28,1);}
+.ck-cnt{flex:0 0 auto;font-size:12px;font-weight:600;color:var(--mu);min-width:38px;text-align:right;}
+.ck-card{background:var(--card);border-radius:16px;padding:22px 18px;animation:ckIn .28s cubic-bezier(.22,1,.28,1) both;}
+.ck-card.back{animation-name:ckBack;}
+@keyframes ckIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes ckBack{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.ck-kicker{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--a);margin:0 0 8px;}
+.ck-h{font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.02em;margin:0 0 6px;}
+.ck-sub{font-size:15px;color:var(--mu);margin:0 0 18px;line-height:1.45;}
+.ck-opts{display:grid;gap:10px;}
+.ck-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:16px;font-weight:500;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;}
+.ck-opt:active{transform:scale(.985);}
+.ck-opt:hover{border-color:var(--a);}
+.ck-opt.on{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--card));}
+.ck-opt b{flex:0 0 auto;width:22px;height:22px;border-radius:99px;border:2px solid var(--line);}
+.ck-opt.on b{border:7px solid var(--a);}
+.e-btnmain.ck-main,.ck-main{display:block;width:100%;min-height:56px;margin-top:18px;border-radius:999px;border:0;background:var(--txt);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer;}
+.ck-main:disabled{opacity:.45;cursor:default;}
+.ck-ghost{display:block;width:100%;min-height:50px;margin-top:10px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--txt);font:inherit;font-size:15px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;line-height:47px;}
+.ck-link{display:block;margin:12px auto 0;background:none;border:0;color:var(--mu);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;}
+.ck-f{display:block;margin:0 0 10px;}
+.ck-f span{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em;}
+.ck-f input{width:100%;min-height:52px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font:inherit;font-size:16px;color:var(--txt);background:var(--card);}
+.ck-f input:focus{outline:none;border-color:var(--a);}
+.ck-f input.bad{border-color:var(--urg);}
+.ck-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mu);margin-top:4px;}
+/* gauge */
+.ck-gauge{position:relative;width:240px;max-width:80%;margin:4px auto 0;}
+.ck-gauge svg{display:block;width:100%;height:auto;}
+.ck-gauge .num{margin-top:-2px;text-align:center;font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1;}
+.ck-gauge .num small{display:block;font-size:12px;font-weight:600;color:var(--mu);letter-spacing:0;margin-top:2px;}
+.ck-status{display:table;margin:12px auto 6px;padding:7px 16px;border-radius:999px;font-weight:700;font-size:15px;color:#fff;}
+.ck-good{--c:var(--good)}.ck-watch{--c:var(--watch)}.ck-act{--c:var(--act)}.ck-urgent{--c:var(--urg)}
+.ck-status{background:var(--c);}
+.ck-sec{margin-top:20px;}
+.ck-sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:0 0 8px;font-weight:600;}
+.ck-why div{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.4;}
+.ck-why div:first-child{border-top:0;}
+.ck-why em{flex:0 0 auto;font-style:normal;font-weight:700;min-width:34px;color:var(--c,var(--mu));}
+.ck-why em.ok{color:var(--good);}
+.ck-steps{margin:0;padding-left:20px;font-size:15px;line-height:1.5;}
+.ck-cost{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--a) 7%,var(--card));margin-top:8px;font-size:14px;}
+.ck-cost b{font-size:19px;white-space:nowrap;}
+.ck-note{font-size:12.5px;color:var(--mu);margin-top:8px;line-height:1.45;}
+.ck-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--soft);margin:0 6px 6px 0;}
+.ck-pill.sev-severe{background:var(--urg);color:#fff}.ck-pill.sev-moderate{background:var(--act);color:#fff}.ck-pill.sev-minor{background:var(--watch);color:#fff}
+.ck-ins{padding:12px 14px;border-radius:12px;border:1.5px dashed var(--line);font-size:14px;line-height:1.45;margin-top:8px;}
+/* photos */
+.ck-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;border-radius:16px;border:2px dashed var(--line);background:color-mix(in srgb,var(--a) 4%,var(--card));cursor:pointer;font-weight:600;font-size:16px;text-align:center;padding:16px;}
+.ck-drop svg{width:40px;height:40px;stroke:var(--a);fill:none;stroke-width:1.8;}
+.ck-drop small{font-weight:500;color:var(--mu);font-size:13px;}
+.ck-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.ck-thumbs div{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--soft);}
+.ck-thumbs img{width:100%;height:100%;object-fit:cover;display:block;}
+.ck-thumbs button{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:99px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:16px;cursor:pointer;}
+.ck-shot{position:relative;border-radius:14px;overflow:hidden;background:#000;line-height:0;max-width:100%;}
+.ck-scanwrap .ck-shot img{max-height:55vh;width:auto;max-width:100%;margin:0 auto}.ck-scanwrap{display:flex;justify-content:center}
+.ck-shot img{width:100%;height:auto;display:block;}
+.ck-shot .box{position:absolute;border:2.5px solid #ff3b30;border-radius:6px;box-shadow:0 0 0 2000px rgba(0,0,0,0) ;animation:ckBox .35s ease-out both;}
+.ck-shot .box span{position:absolute;left:-2px;top:-24px;background:#ff3b30;color:#fff;font-size:11.5px;line-height:1;padding:5px 7px;border-radius:5px 5px 5px 0;white-space:nowrap;font-weight:700;}
+.ck-shot .box.low{top:auto}
+@keyframes ckBox{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}
+.ck-scan{position:absolute;left:0;right:0;top:0;height:3px;background:var(--a);box-shadow:0 0 18px 6px color-mix(in srgb,var(--a) 60%,transparent);animation:ckScan 1.4s ease-in-out infinite alternate;}
+.ck-shot.scanning::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 0 96%,color-mix(in srgb,var(--a) 22%,transparent) 96% 100%) 0 0/100% 22px,linear-gradient(90deg,transparent 0 96%,color-mix(in srgb,var(--a) 22%,transparent) 96% 100%) 0 0/22px 100%;opacity:.6;}
+@keyframes ckScan{from{top:0}to{top:calc(100% - 3px)}}
+.ck-scanmsg{display:flex;align-items:center;gap:10px;font-weight:600;margin-top:14px;font-size:15px;}
+.ck-spin{width:18px;height:18px;border-radius:99px;border:2.5px solid var(--soft);border-top-color:var(--a);animation:ckSpin .8s linear infinite;flex:0 0 auto;}
+@keyframes ckSpin{to{transform:rotate(360deg)}}
+.ck-photos{display:grid;gap:10px;}
+@media (min-width:700px){#est-embed.ck{padding-top:24px}.ck-card{padding:28px 28px}.ck-h{font-size:27px}}
+@media (prefers-reduced-motion:reduce){.ck-card,.ck-scan,.ck-shot .box{animation:none!important}}

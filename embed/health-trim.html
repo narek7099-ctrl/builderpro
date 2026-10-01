@@ -1,0 +1,872 @@
+<!doctype html><!-- built by tools/build-checkers.py from embed-src/checkers/; edit the source, not this file -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trim & Carpentry Health Check</title><meta name="robots" content="noindex">
+<style>/* Health / Damage checker — shares the estimator tokens (--a accent, --txt ink,
+   --card) so the site theme and the owner's saved theme both reach it. */
+html,body{margin:0;padding:0;background:#edf2f6;}
+#est-embed.ck{--a:#006fff;--txt:#001530;--mu:#788493;--card:#fff;--line:rgba(0,0,0,.10);--soft:#dce3ec;
+  --good:#15803d;--watch:#b45309;--act:#c2410c;--urg:#b91c1c;
+  font-family:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:var(--txt);
+  max-width:560px;margin:0 auto;padding:12px 16px 24px;box-sizing:border-box;min-height:100vh;}
+#est-embed.ck *{box-sizing:border-box;}
+.ck-top{display:flex;align-items:center;gap:10px;margin:4px 0 14px;}
+.ck-back{flex:0 0 auto;width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.ck-back[hidden]{visibility:hidden;display:flex;}
+.ck-bar{flex:1;height:8px;border-radius:99px;background:var(--soft);overflow:hidden;}
+.ck-bar i{display:block;height:100%;width:0;background:var(--a);border-radius:99px;transition:width .35s cubic-bezier(.22,1,.28,1);}
+.ck-cnt{flex:0 0 auto;font-size:12px;font-weight:600;color:var(--mu);min-width:38px;text-align:right;}
+.ck-card{background:var(--card);border-radius:16px;padding:22px 18px;animation:ckIn .28s cubic-bezier(.22,1,.28,1) both;}
+.ck-card.back{animation-name:ckBack;}
+@keyframes ckIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes ckBack{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.ck-kicker{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--a);margin:0 0 8px;}
+.ck-h{font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.02em;margin:0 0 6px;}
+.ck-sub{font-size:15px;color:var(--mu);margin:0 0 18px;line-height:1.45;}
+.ck-opts{display:grid;gap:10px;}
+.ck-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:16px;font-weight:500;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;}
+.ck-opt:active{transform:scale(.985);}
+.ck-opt:hover{border-color:var(--a);}
+.ck-opt.on{border-color:var(--a);background:color-mix(in srgb,var(--a) 9%,var(--card));}
+.ck-opt b{flex:0 0 auto;width:22px;height:22px;border-radius:99px;border:2px solid var(--line);}
+.ck-opt.on b{border:7px solid var(--a);}
+.e-btnmain.ck-main,.ck-main{display:block;width:100%;min-height:56px;margin-top:18px;border-radius:999px;border:0;background:var(--txt);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer;}
+.ck-main:disabled{opacity:.45;cursor:default;}
+.ck-ghost{display:block;width:100%;min-height:50px;margin-top:10px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--txt);font:inherit;font-size:15px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;line-height:47px;}
+.ck-link{display:block;margin:12px auto 0;background:none;border:0;color:var(--mu);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;}
+.ck-f{display:block;margin:0 0 10px;}
+.ck-f span{display:block;font-size:12px;font-weight:600;color:var(--mu);margin:0 0 4px;text-transform:uppercase;letter-spacing:.04em;}
+.ck-f input{width:100%;min-height:52px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);font:inherit;font-size:16px;color:var(--txt);background:var(--card);}
+.ck-f input:focus{outline:none;border-color:var(--a);}
+.ck-f input.bad{border-color:var(--urg);}
+.ck-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mu);margin-top:4px;}
+/* gauge */
+.ck-gauge{position:relative;width:240px;max-width:80%;margin:4px auto 0;}
+.ck-gauge svg{display:block;width:100%;height:auto;}
+.ck-gauge .num{margin-top:-2px;text-align:center;font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1;}
+.ck-gauge .num small{display:block;font-size:12px;font-weight:600;color:var(--mu);letter-spacing:0;margin-top:2px;}
+.ck-status{display:table;margin:12px auto 6px;padding:7px 16px;border-radius:999px;font-weight:700;font-size:15px;color:#fff;}
+.ck-good{--c:var(--good)}.ck-watch{--c:var(--watch)}.ck-act{--c:var(--act)}.ck-urgent{--c:var(--urg)}
+.ck-status{background:var(--c);}
+.ck-sec{margin-top:20px;}
+.ck-sec h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);margin:0 0 8px;font-weight:600;}
+.ck-why div{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.4;}
+.ck-why div:first-child{border-top:0;}
+.ck-why em{flex:0 0 auto;font-style:normal;font-weight:700;min-width:34px;color:var(--c,var(--mu));}
+.ck-why em.ok{color:var(--good);}
+.ck-steps{margin:0;padding-left:20px;font-size:15px;line-height:1.5;}
+.ck-cost{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--a) 7%,var(--card));margin-top:8px;font-size:14px;}
+.ck-cost b{font-size:19px;white-space:nowrap;}
+.ck-note{font-size:12.5px;color:var(--mu);margin-top:8px;line-height:1.45;}
+.ck-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--soft);margin:0 6px 6px 0;}
+.ck-pill.sev-severe{background:var(--urg);color:#fff}.ck-pill.sev-moderate{background:var(--act);color:#fff}.ck-pill.sev-minor{background:var(--watch);color:#fff}
+.ck-ins{padding:12px 14px;border-radius:12px;border:1.5px dashed var(--line);font-size:14px;line-height:1.45;margin-top:8px;}
+/* photos */
+.ck-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;border-radius:16px;border:2px dashed var(--line);background:color-mix(in srgb,var(--a) 4%,var(--card));cursor:pointer;font-weight:600;font-size:16px;text-align:center;padding:16px;}
+.ck-drop svg{width:40px;height:40px;stroke:var(--a);fill:none;stroke-width:1.8;}
+.ck-drop small{font-weight:500;color:var(--mu);font-size:13px;}
+.ck-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.ck-thumbs div{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--soft);}
+.ck-thumbs img{width:100%;height:100%;object-fit:cover;display:block;}
+.ck-thumbs button{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:99px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:16px;cursor:pointer;}
+.ck-shot{position:relative;border-radius:14px;overflow:hidden;background:#000;line-height:0;max-width:100%;}
+.ck-scanwrap .ck-shot img{max-height:55vh;width:auto;max-width:100%;margin:0 auto}.ck-scanwrap{display:flex;justify-content:center}
+.ck-shot img{width:100%;height:auto;display:block;}
+.ck-shot .box{position:absolute;border:2.5px solid #ff3b30;border-radius:6px;box-shadow:0 0 0 2000px rgba(0,0,0,0) ;animation:ckBox .35s ease-out both;}
+.ck-shot .box span{position:absolute;left:-2px;top:-24px;background:#ff3b30;color:#fff;font-size:11.5px;line-height:1;padding:5px 7px;border-radius:5px 5px 5px 0;white-space:nowrap;font-weight:700;}
+.ck-shot .box.low{top:auto}
+@keyframes ckBox{from{opacity:0;transform:scale(1.15)}to{opacity:1;transform:none}}
+.ck-scan{position:absolute;left:0;right:0;top:0;height:3px;background:var(--a);box-shadow:0 0 18px 6px color-mix(in srgb,var(--a) 60%,transparent);animation:ckScan 1.4s ease-in-out infinite alternate;}
+.ck-shot.scanning::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 0 96%,color-mix(in srgb,var(--a) 22%,transparent) 96% 100%) 0 0/100% 22px,linear-gradient(90deg,transparent 0 96%,color-mix(in srgb,var(--a) 22%,transparent) 96% 100%) 0 0/22px 100%;opacity:.6;}
+@keyframes ckScan{from{top:0}to{top:calc(100% - 3px)}}
+.ck-scanmsg{display:flex;align-items:center;gap:10px;font-weight:600;margin-top:14px;font-size:15px;}
+.ck-spin{width:18px;height:18px;border-radius:99px;border:2.5px solid var(--soft);border-top-color:var(--a);animation:ckSpin .8s linear infinite;flex:0 0 auto;}
+@keyframes ckSpin{to{transform:rotate(360deg)}}
+.ck-photos{display:grid;gap:10px;}
+@media (min-width:700px){#est-embed.ck{padding-top:24px}.ck-card{padding:28px 28px}.ck-h{font-size:27px}}
+@media (prefers-reduced-motion:reduce){.ck-card,.ck-scan,.ck-shot .box{animation:none!important}}
+</style></head>
+<body><div id="est-embed" class="ck" data-tool="health" data-trade="trim">
+<div class="ck-top"><button class="ck-back" id="ck-back" onclick="ckBack()" aria-label="Back" hidden>&#8249;</button><div class="ck-bar"><i id="ck-bar"></i></div><span class="ck-cnt" id="ck-cnt"></span></div>
+<div id="ck-stage" aria-live="polite"></div></div>
+<script>var CK_TOOL="health",CK_TRADE="trim",CK_WEBHOOK="https://services.leadconnectorhq.com/hooks/aUs7E5m1gmLXoeIV3WM9/webhook-trigger/ef3ddaf4-7cde-4c97-90f6-28560e86346d";
+/* Per-trade question sets for the Health checker and the Damage checker.
+   Built into embed/health-<trade>.html and embed/damage-<trade>.html by
+   tools/build-checkers.py — edit here, not in embed/.
+
+   health.qs[]   one question per screen. Each option is
+                 [label, points off the 100, what this answer means]
+   cost          default rough ranges in USD, used for the result's estimate.
+                 maint = tune-up / small fix, repair = real repair,
+                 major = replacement / big job. An owner can override any of
+                 them in their calculator pricing row (pricing.checker).
+   damage.where  where the damage is; each option names the damage type the
+                 rules engine assumes when the photo scan isn't available.
+*/
+var CK_TRADES = {
+roofing:{name:'Roofing',noun:'roof',
+  cost:{maint:[250,650],repair:[450,1900],major:[9500,22000]},
+  health:{title:'Roof Health Check',qs:[
+    {id:'age',q:'How old is your roof?',hint:'Your best guess is fine.',opts:[['Under 8 years',0,'Young roof — most of its life is ahead of it.'],['8–15 years',10,'Mid-life — a good time for an inspection.'],['15–22 years',28,'Late life for shingles — plan ahead.'],['Over 22 years',42,'Past the typical lifespan of an asphalt roof.'],['Not sure',14,'Unknown age — we assume mid-life until inspected.']]},
+    {id:'mat',q:'What is it made of?',opts:[['Asphalt shingles',0,'Asphalt shingles typically last 20–25 years.'],['Metal',-6,'Metal roofs last 40+ years.'],['Tile',-6,'Tile roofs last 50 years, but underlayment ages sooner.'],['Flat / low slope',8,'Flat roofs wear faster and pond water.'],['Not sure',0,'We\'ll confirm the material on site.']]},
+    {id:'shingles',q:'Any missing, curling or cracked shingles?',opts:[['None I can see',0,'Surface looks intact from the ground.'],['A few',12,'Missing or curling shingles let water in.'],['Lots of them',24,'Widespread wear — the roof is losing its seal.'],['Not sure',4,'Hard to see from the ground — worth a look.']]},
+    {id:'leak',q:'Any ceiling stains or leaks inside?',opts:[['No',0,'No sign of water getting in.'],['Old stain, dry now',10,'A past leak — make sure it was fixed properly.'],['Yes, recently',26,'Water is getting in now — act before it spreads.']]},
+    {id:'granules',q:'Granules in the gutters or moss on the roof?',opts:[['No',0,'Shingle surface looks healthy.'],['Some granules',9,'Shingles are wearing through their top coat.'],['Moss or algae',6,'Moss holds moisture against the roof.'],['Both',14,'Wear and moisture together speed up aging.']]},
+    {id:'storm',q:'Hail or high wind in the last year?',opts:[['No',0,'No recent storm stress.'],['Yes',9,'Storm damage often isn\'t visible from the ground — and may be covered by insurance.'],['Not sure',3,'Worth checking your area\'s storm history.']]}
+  ]},
+  damage:{title:'Roof Damage Check',
+    where:[['Shingles / roof surface','Missing or damaged shingles'],['Flashing, vents or chimney','Flashing failure'],['Ceiling or attic (inside)','Active roof leak'],['Gutters or edges','Gutter / fascia damage']],
+    worse:'Is water getting in right now?',worseOpts:['Yes, it\'s leaking','Only when it rains hard','No leak','Not sure']}},
+hvac:{name:'HVAC',noun:'HVAC system',
+  cost:{maint:[120,320],repair:[350,1800],major:[6500,14500]},
+  health:{title:'HVAC Health Check',qs:[
+    {id:'age',q:'How old is your AC or furnace?',opts:[['Under 6 years',0,'Young system — mostly maintenance.'],['6–12 years',10,'Mid-life — parts start to wear.'],['12–17 years',26,'Near the end of a typical 15-year life.'],['Over 17 years',40,'Past typical lifespan — failures get likely and costly.'],['Not sure',12,'We\'ll read the age off the unit\'s data plate.']]},
+    {id:'service',q:'When was it last serviced?',opts:[['Within a year',0,'Regular service keeps efficiency up.'],['1–3 years ago',8,'Overdue for a tune-up.'],['Over 3 years / never',16,'Dirty coils and low charge cost you every month.'],['Not sure',6,'A tune-up is a cheap way to find out.']]},
+    {id:'temps',q:'Uneven temperatures between rooms?',opts:[['No, it\'s even',0,'Air is reaching the whole house.'],['A little',6,'Often ductwork or airflow — usually a cheap fix.'],['Some rooms are way off',14,'Duct leaks or an undersized system.']]},
+    {id:'noise',q:'Any strange noises or smells?',opts:[['No',0,'Sounds normal.'],['Rattling or buzzing',10,'Loose parts or a failing capacitor/motor.'],['Grinding, squealing or burning smell',22,'A motor or bearing is failing — shut it off and call.'],['Not sure',3,'We\'ll listen during the visit.']]},
+    {id:'bills',q:'Energy bills rising?',opts:[['No',0,'Efficiency looks steady.'],['A bit',6,'Efficiency is slipping.'],['Noticeably',14,'The system is working much harder than it should.']]},
+    {id:'cycle',q:'Does it run constantly or short-cycle?',opts:[['Runs normally',0,'Normal cycling.'],['Runs nonstop',12,'Low refrigerant, dirty coils or undersized.'],['Turns on and off a lot',12,'Short-cycling wears out the compressor.']]}
+  ]},
+  damage:{title:'HVAC Damage Check',
+    where:[['Outdoor unit / condenser','Condenser damage'],['Indoor unit / furnace','Furnace or air handler fault'],['Ducts or vents','Duct damage / leak'],['Water around the unit','Condensate leak']],
+    worse:'Is the system still working?',worseOpts:['Not working at all','Working poorly','Working fine','Not sure']}},
+plumbing:{name:'Plumbing',noun:'plumbing',
+  cost:{maint:[150,400],repair:[350,2000],major:[3500,15000]},
+  health:{title:'Plumbing Health Check',qs:[
+    {id:'pipes',q:'How old is the home (or its pipes)?',opts:[['Built after 2000',0,'Modern PEX/copper — long life left.'],['1970–2000',10,'Copper or early plastic — check fittings.'],['Before 1970',24,'May have galvanized or cast iron nearing end of life.'],['Polybutylene (grey pipe)',30,'Polybutylene is known to fail suddenly.'],['Not sure',8,'We\'ll identify pipe material on site.']]},
+    {id:'wh',q:'How old is the water heater?',opts:[['Under 6 years',0,'Plenty of life left.'],['6–10 years',10,'Mid-to-late life — flush it yearly.'],['Over 10 years',22,'Tank heaters usually fail at 8–12 years.'],['Tankless',0,'Tankless units last 20 years with descaling.'],['Not sure',8,'The age is on its label.']]},
+    {id:'pressure',q:'How is the water pressure?',opts:[['Strong',0,'Pressure is healthy.'],['Weak in places',10,'Buildup or a partial blockage.'],['Banging or very high',10,'High pressure strains every fixture.']]},
+    {id:'leaks',q:'Any leaks, drips or water stains?',opts:[['None',0,'No sign of leaks.'],['A dripping faucet',4,'Small, but it adds up on the bill.'],['Stains or damp spots',22,'Hidden leaks cause mold and rot.']]},
+    {id:'drains',q:'Slow drains or backups?',opts:[['No',0,'Drains are flowing.'],['One slow drain',6,'Usually a local clog.'],['Several, or sewer smell',20,'Points to the main line — camera it before it backs up.']]},
+    {id:'water',q:'Water color or taste issues?',opts:[['No',0,'Water looks normal.'],['Rusty or discolored',14,'Corroding pipes or water heater.'],['Not sure',2,'Easy to test during a visit.']]}
+  ]},
+  damage:{title:'Plumbing Damage Check',
+    where:[['Under a sink or fixture','Fixture or supply-line leak'],['Ceiling or wall','Hidden pipe leak'],['Water heater','Water heater leak'],['Floor / drain / sewer','Drain or sewer backup']],
+    worse:'Is water actively leaking?',worseOpts:['Yes, right now','On and off','No, it stopped','Not sure']}},
+electrical:{name:'Electrical',noun:'electrical system',
+  cost:{maint:[150,400],repair:[300,1600],major:[2200,6500]},
+  health:{title:'Electrical Safety Check',qs:[
+    {id:'panel',q:'What brand is your electrical panel?',hint:'It\'s printed inside the panel door.',opts:[['A common brand (Square D, Siemens, Eaton…)',0,'Mainstream panel brands are fine.'],['Federal Pacific or Zinsco',34,'Federal Pacific and Zinsco panels have known breaker failures — a fire risk. Replacement is recommended.'],['Fuse box',26,'Fuses are outdated and often overloaded.'],['Not sure',8,'Snap a photo of the label — we\'ll check it.']]},
+    {id:'age',q:'How old is the home\'s wiring?',opts:[['Under 20 years',0,'Modern wiring.'],['20–40 years',8,'Usually fine; may lack today\'s safety devices.'],['Over 40 years',18,'May have aluminum, cloth or knob-and-tube wiring.'],['Not sure',6,'An inspection will tell.']]},
+    {id:'flicker',q:'Do lights flicker or dim?',opts:[['No',0,'Stable power.'],['Sometimes, when appliances start',8,'Circuits may be overloaded.'],['Often',18,'Loose connections — a common fire cause.']]},
+    {id:'trip',q:'Breakers tripping?',opts:[['Rarely or never',0,'Circuits are coping.'],['Now and then',8,'A circuit is near its limit.'],['Often',18,'Overloaded circuits or a fault — get it checked.']]},
+    {id:'outlets',q:'Any 2-prong outlets, or warm/buzzing outlets?',opts:[['No',0,'Outlets look up to date.'],['2-prong outlets',10,'Ungrounded outlets — no protection for electronics or people.'],['Warm, buzzing or scorched',30,'Stop using it — this is a fire warning sign.']]},
+    {id:'gfci',q:'GFCI outlets in kitchen and bathrooms?',opts:[['Yes',0,'Shock protection where water is.'],['No / not sure',8,'Code requires GFCI near water — cheap and important.']]}
+  ]},
+  damage:{title:'Electrical Damage Check',
+    where:[['Outlet or switch','Damaged outlet / switch'],['Electrical panel','Panel or breaker damage'],['Wiring or fixture','Damaged wiring / fixture'],['Outside (meter, service line)','Service entrance damage']],
+    worse:'Any burning smell, sparks or heat?',worseOpts:['Yes','It happened once','No','Not sure']}},
+pools:{name:'Pools',noun:'pool',
+  cost:{maint:[150,450],repair:[500,2800],major:[6000,16000]},
+  health:{title:'Pool Health Check',qs:[
+    {id:'equip',q:'How old is the pump and filter?',opts:[['Under 5 years',0,'Equipment is young.'],['5–10 years',10,'Seals and motors start to wear.'],['Over 10 years',22,'Near end of life — and old pumps waste power.'],['Not sure',8,'We\'ll check the labels.']]},
+    {id:'surface',q:'When was it last resurfaced?',opts:[['Under 8 years',0,'Surface has life left.'],['8–15 years',10,'Plaster is aging.'],['Over 15 / never',20,'Rough or etched plaster is due.'],['Not sure',6,'We\'ll read the surface on site.']]},
+    {id:'cracks',q:'Any cracks or loose tile?',opts:[['No',0,'Shell and tile look sound.'],['Hairline cracks or a few tiles',10,'Surface cracks — monitor and patch.'],['Large cracks or many tiles',24,'Possible structural movement.']]},
+    {id:'loss',q:'Losing more water than usual?',opts:[['No',0,'No sign of leaks.'],['A little',10,'Could be evaporation — a bucket test tells.'],['Over 1/4 inch a day',20,'Likely a leak in the shell or plumbing.']]},
+    {id:'pump',q:'Pump noise?',opts:[['Quiet',0,'Pump sounds healthy.'],['Humming or rattling',10,'Bearings or a clogged impeller.'],['Screeching or won\'t prime',18,'The motor is failing.']]},
+    {id:'water',q:'Trouble keeping water clear?',opts:[['No',0,'Chemistry and filtration are working.'],['Sometimes',6,'Filter may need cleaning.'],['Constant algae or cloudiness',14,'Filtration isn\'t keeping up.']]}
+  ]},
+  damage:{title:'Pool Damage Check',
+    where:[['Pool surface / plaster','Surface cracking or delamination'],['Tile or coping','Tile / coping damage'],['Pump, filter or heater','Equipment failure'],['Deck around the pool','Deck cracking']],
+    worse:'Is the pool losing water?',worseOpts:['Yes, a lot','A little','No','Not sure']}},
+landscaping:{name:'Landscaping',noun:'yard',
+  cost:{maint:[150,500],repair:[800,3500],major:[6000,20000]},
+  health:{title:'Yard Health Check',qs:[
+    {id:'lawn',q:'How does the lawn look?',opts:[['Thick and green',0,'Healthy turf.'],['Thin or patchy',12,'Soil, shade or watering issues.'],['Mostly dead or weeds',24,'Needs renovation or new sod.']]},
+    {id:'irr',q:'How is the irrigation?',opts:[['Works well',0,'Coverage looks right.'],['Dry spots or broken heads',12,'Heads or zones need repair.'],['No system / doesn\'t work',14,'Watering by hand rarely keeps up.']]},
+    {id:'drain',q:'Water pooling after rain?',opts:[['No',0,'Drainage is fine.'],['Some puddles',10,'Grading or soil compaction.'],['Water near the foundation',24,'Water against the house can damage the foundation.']]},
+    {id:'trees',q:'Trees and shrubs?',opts:[['Healthy and trimmed',0,'Plantings are in good shape.'],['Overgrown',8,'Overdue for pruning.'],['Dead branches or limbs over the house',18,'A risk to the roof in a storm.']]},
+    {id:'beds',q:'Beds, mulch and edging?',opts:[['Tidy',0,'Beds are maintained.'],['Weedy or bare',8,'Fresh mulch and edging go a long way.']]},
+    {id:'hard',q:'Any walls, steps or pavers shifting?',opts:[['No',0,'Hardscape is stable.'],['A little',10,'Base settling — fix it before it spreads.'],['Yes, leaning or heaving',20,'Retaining wall or base failure.']]}
+  ]},
+  damage:{title:'Yard Damage Check',
+    where:[['Lawn','Turf damage'],['Trees or shrubs','Tree / storm damage'],['Irrigation','Irrigation break'],['Walls, pavers or drainage','Erosion / hardscape failure']],
+    worse:'Is it getting worse or causing water problems?',worseOpts:['Yes, quickly','Slowly','No','Not sure']}},
+painting:{name:'Painting',noun:'paint',
+  cost:{maint:[300,900],repair:[1200,4000],major:[4000,12000]},
+  health:{title:'Paint Health Check',qs:[
+    {id:'age',q:'How long since the last paint job?',opts:[['Under 4 years',0,'Fresh paint.'],['4–8 years',10,'Mid-life for exterior paint.'],['Over 8 years',24,'Exterior paint usually needs redoing every 7–10 years.'],['Not sure',8,'We\'ll judge it on site.']]},
+    {id:'peel',q:'Any peeling, cracking or bubbling?',opts:[['No',0,'Film is intact.'],['In a few spots',12,'Moisture is getting behind the paint.'],['Lots of it',24,'The coating has failed — bare wood is exposed.']]},
+    {id:'chalk',q:'Does a white chalky residue rub off?',opts:[['No',0,'Binder is intact.'],['A little',6,'Paint is starting to break down.'],['Yes, heavily',12,'Chalking means the paint is spent.']]},
+    {id:'fade',q:'Fading or uneven color?',opts:[['No',0,'Color is holding.'],['Some fading',6,'UV wear, mostly cosmetic.'],['Very faded',10,'Protection is thinning.']]},
+    {id:'wood',q:'Any soft or rotted wood (trim, siding)?',opts:[['No',0,'Substrate is sound.'],['A spot or two',14,'Repair before painting or it spreads.'],['Several areas',24,'Carpentry repairs needed first.']]},
+    {id:'scope',q:'Interior, exterior or both?',opts:[['Exterior',0,'We\'ll focus outside.'],['Interior',0,'We\'ll focus inside.'],['Both',0,'We\'ll look at both.']]}
+  ]},
+  damage:{title:'Paint Damage Check',
+    where:[['Exterior siding','Peeling / failed exterior paint'],['Trim, doors or windows','Trim paint failure / wood rot'],['Interior walls','Interior wall damage'],['Ceilings','Ceiling stain / water damage']],
+    worse:'Is there moisture or a leak behind it?',worseOpts:['Yes','Maybe','No','Not sure']}},
+concrete:{name:'Concrete & Paving',noun:'concrete',
+  cost:{maint:[200,700],repair:[900,4000],major:[5000,15000]},
+  health:{title:'Concrete Health Check',qs:[
+    {id:'age',q:'How old is the concrete?',opts:[['Under 10 years',0,'Young slab.'],['10–25 years',10,'Mid-life — sealing extends it.'],['Over 25 years',20,'Older concrete is due for repair or replacement.'],['Not sure',6,'We\'ll judge it on site.']]},
+    {id:'cracks',q:'What do the cracks look like?',opts:[['None or hairline',0,'Normal shrinkage cracks.'],['Wider than a pencil',14,'Movement underneath — seal to keep water out.'],['Wide and uneven (one side higher)',26,'Settlement — a trip hazard and a sign of base failure.']]},
+    {id:'settle',q:'Any sinking or settling?',opts:[['No',0,'Slab is level.'],['A little',12,'Leveling (mudjacking/foam) can save it.'],['Yes, clearly',24,'Significant settlement — repair or replace.']]},
+    {id:'spall',q:'Flaking or pitted surface (spalling)?',opts:[['No',0,'Surface is intact.'],['In spots',10,'Freeze-thaw or salt damage.'],['Widespread',20,'The surface is breaking down.']]},
+    {id:'drain',q:'Does water pool or run toward the house?',opts:[['No',0,'Drainage is fine.'],['Some pooling',8,'Low spots hold water.'],['Toward the house',18,'Water against the foundation — fix the slope.']]},
+    {id:'seal',q:'Ever been sealed?',opts:[['Within 3 years',0,'Protected.'],['Longer ago / never',6,'Sealing every few years stops water damage.'],['Not sure',3,'Easy to check with a water drop test.']]}
+  ]},
+  damage:{title:'Concrete Damage Check',
+    where:[['Driveway','Driveway cracking'],['Sidewalk or walkway','Settled / heaved walkway'],['Patio or pool deck','Patio cracking / spalling'],['Steps or foundation','Step / foundation crack']],
+    worse:'Is it a trip hazard or getting worse?',worseOpts:['Yes, a trip hazard','Getting wider','Stable','Not sure']}},
+flooring:{name:'Flooring',noun:'floors',
+  cost:{maint:[150,500],repair:[400,2200],major:[4000,14000]},
+  health:{title:'Floor Health Check',qs:[
+    {id:'age',q:'How old are the floors?',opts:[['Under 8 years',0,'Floors are young.'],['8–20 years',10,'Mid-life — refinishing or wear layers matter.'],['Over 20 years',20,'Most carpet, laminate and vinyl are done by now.'],['Not sure',6,'We\'ll identify them on site.']]},
+    {id:'type',q:'What type of floor?',opts:[['Hardwood',0,'Hardwood can be refinished several times.'],['Laminate or vinyl',4,'Can\'t be refinished — damaged planks are replaced.'],['Carpet',6,'Carpet lasts 8–12 years.'],['Tile',0,'Tile lasts decades if the grout is kept.']]},
+    {id:'squeak',q:'Squeaks or soft spots?',opts:[['No',0,'Subfloor is solid.'],['Some squeaks',6,'Loose subfloor fasteners — fixable.'],['Soft or bouncy spots',20,'Subfloor damage, often from water.']]},
+    {id:'gaps',q:'Gaps, cupping or lifting?',opts:[['No',0,'Boards are stable.'],['Small gaps',6,'Seasonal humidity movement.'],['Cupping or lifting',18,'Moisture is getting into the floor.']]},
+    {id:'water',q:'Any water damage or stains?',opts:[['No',0,'No water damage.'],['Old stains',10,'Past water — check the subfloor.'],['Recent or ongoing',24,'Fix the source fast to stop mold and rot.']]},
+    {id:'wear',q:'Scratches and wear?',opts:[['Minor',0,'Normal wear.'],['Worn traffic paths',8,'The finish is worn through.'],['Heavy damage',14,'Replacement or a full refinish.']]}
+  ]},
+  damage:{title:'Floor Damage Check',
+    where:[['Kitchen or bathroom','Water-damaged flooring'],['Living areas / bedrooms','Surface wear / scratches'],['Near a door or window','Moisture / weather damage'],['Stairs','Stair tread damage']],
+    worse:'Is the floor still getting wet?',worseOpts:['Yes','Sometimes','No','Not sure']}},
+countertops:{name:'Countertops',noun:'countertops',
+  cost:{maint:[150,400],repair:[300,1200],major:[3000,8500]},
+  health:{title:'Countertop Health Check',qs:[
+    {id:'mat',q:'What are your countertops made of?',opts:[['Granite or quartz',0,'Durable stone.'],['Marble',4,'Beautiful but stains and etches.'],['Laminate',8,'Laminate wears and swells at seams.'],['Tile or other',8,'Grout lines stain and crack.']]},
+    {id:'age',q:'How old are they?',opts:[['Under 10 years',0,'Plenty of life.'],['10–20 years',10,'Showing their age.'],['Over 20 years',18,'Likely due for an update.'],['Not sure',6,'We\'ll take a look.']]},
+    {id:'chips',q:'Chips or cracks?',opts:[['None',0,'Intact.'],['Small chips',8,'Usually repairable.'],['Cracks',20,'Cracks can spread — repair or replace.']]},
+    {id:'stain',q:'Stains or dull spots?',opts:[['No',0,'Surface is sealed.'],['Some',8,'Sealing or polishing helps.'],['Many',14,'The surface has absorbed a lot.']]},
+    {id:'seams',q:'Seams or edges separating or swelling?',opts:[['No',0,'Seams are tight.'],['A little',10,'Re-epoxy the seam.'],['Swollen or lifting',20,'Water is getting under — common with laminate.']]},
+    {id:'sealed',q:'When were they last sealed? (stone)',opts:[['Within a year',0,'Protected.'],['Longer / never',6,'Stone should be sealed every 1–2 years.'],['Not stone / not sure',0,'We\'ll advise on care.']]}
+  ]},
+  damage:{title:'Countertop Damage Check',
+    where:[['Edge or corner','Edge chip'],['Middle of the counter','Crack'],['Around the sink','Water damage / seam failure'],['Backsplash','Backsplash damage']],
+    worse:'Is it getting worse or loose?',worseOpts:['Yes','A little','No','Not sure']}},
+trim:{name:'Trim & Carpentry',noun:'trim',
+  cost:{maint:[150,500],repair:[400,1800],major:[2500,8000]},
+  health:{title:'Trim Health Check',qs:[
+    {id:'age',q:'How old is the trim and molding?',opts:[['Under 10 years',0,'Young.'],['10–25 years',8,'Joints open over time.'],['Over 25 years',14,'Original trim often needs repair.'],['Not sure',4,'We\'ll look.']]},
+    {id:'gaps',q:'Gaps or open joints?',opts:[['No',0,'Joints are tight.'],['Small gaps',6,'Caulk and touch-up.'],['Large gaps',14,'Movement or poor install.']]},
+    {id:'rot',q:'Soft or rotted wood (doors, windows, exterior)?',opts:[['No',0,'Sound wood.'],['A spot or two',16,'Rot spreads — replace the bad sections.'],['Several areas',28,'Moisture is getting in at several points.']]},
+    {id:'paint',q:'Paint failing on trim?',opts:[['No',0,'Protected.'],['Some',8,'Bare wood soaks up water.'],['A lot',14,'Wood is exposed.']]},
+    {id:'doors',q:'Doors sticking or not latching?',opts:[['No',0,'Frames are square.'],['One or two',6,'Usually an adjustment.'],['Several',14,'Settlement or swelling.']]},
+    {id:'goal',q:'What are you hoping for?',opts:[['Fix what\'s broken',0,'We\'ll focus on repairs.'],['Upgrade the look',0,'We\'ll include an upgrade option.'],['Both',0,'Repair plus upgrade.']]}
+  ]},
+  damage:{title:'Trim Damage Check',
+    where:[['Exterior trim / fascia','Rotted exterior trim'],['Window or door casing','Damaged casing'],['Baseboards','Damaged baseboard'],['Stairs or railing','Stair / railing damage']],
+    worse:'Is it soft, wet or getting worse?',worseOpts:['Yes','A little','No','Not sure']}},
+general:{name:'General Remodel',noun:'home',
+  cost:{maint:[300,1000],repair:[2000,10000],major:[15000,60000]},
+  health:{title:'Home Health Check',qs:[
+    {id:'age',q:'How old is the home?',opts:[['Under 15 years',0,'Systems are young.'],['15–35 years',10,'Systems are reaching mid-life.'],['35–60 years',18,'Original systems are often due.'],['Over 60 years',24,'Expect older wiring, plumbing and structure.']]},
+    {id:'updated',q:'When was it last updated?',opts:[['Within 10 years',0,'Recently updated.'],['10–25 years',8,'Dated finishes.'],['Never / original',16,'Due for a refresh.']]},
+    {id:'systems',q:'Are the big systems (roof, HVAC, water heater) original?',opts:[['No, replaced',0,'Major systems updated.'],['Some are',10,'Plan for replacements.'],['All original',20,'Several big costs may be coming.']]},
+    {id:'water',q:'Any signs of water — stains, musty smells, mold?',opts:[['No',0,'No water signs.'],['A little',12,'Find the source before remodeling.'],['Yes, clearly',24,'Water damage needs fixing first.']]},
+    {id:'struct',q:'Cracks in walls, sloping floors or sticking doors?',opts:[['No',0,'Structure looks sound.'],['Minor',8,'Normal settling.'],['Significant',22,'Possible structural movement — inspect before work.']]},
+    {id:'goal',q:'What would you like to do?',opts:[['Kitchen',0,'Kitchens are the most popular remodel.'],['Bathroom',0,'Bathrooms are a quick win.'],['Whole home or addition',0,'We\'ll plan it in phases.'],['Just fix problems',0,'We\'ll start with repairs.']]}
+  ]},
+  damage:{title:'Home Damage Check',
+    where:[['Walls or ceiling','Drywall / water damage'],['Kitchen or bathroom','Water damage at fixtures'],['Floors','Floor / subfloor damage'],['Exterior','Exterior / siding damage']],
+    worse:'Is it getting worse or still wet?',worseOpts:['Yes','A little','No','Not sure']}}
+};
+</script>
+<script>/* Health / Damage checker engine — one engine, per-trade data in trades.js.
+   The build (tools/build-checkers.py) prepends:
+     var CK_TOOL='health'|'damage', CK_TRADE='<trade>', CK_WEBHOOK='<the trade calculator's lead webhook>';
+   Each finished check is filed exactly like the Roof Age Checker:
+     - a row in roof_checks (calc_id = '<tool>:<trade>') so it shows in the portal
+       under Lead Radar → Checks, and
+     - a POST to the trade calculator's lead webhook with tool:'health'|'damage'. */
+(function(){
+var SB='https://ttzwzouhiwdwamuimhpo.supabase.co';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
+var AI_TIMEOUT=20000, SCAN_MIN=2600, SCAN_MAX=4500;
+var T=CK_TRADES[CK_TRADE], TOOL=CK_TOOL;
+var OWN=''; try{OWN=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+var CFG={company:'',bookingUrl:'',cost:JSON.parse(JSON.stringify(T.cost)),owner:OWN||null};
+var S={i:0,ans:{},photos:[],ai:null,aiState:'idle',aiStart:0,saved:false,contact:{}};
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var money=function(n){n=Math.round(n/50)*50;return '$'+n.toLocaleString('en-US');};
+var range=function(r){return money(r[0])+' – '+money(r[1]);};
+
+/* owner's prices and booking link: same row the trade's calculator reads */
+try{
+  fetch(SB+'/rest/v1/calculator_pricing?calc_id=eq.'+CK_TRADE+(OWN?'&owner=eq.'+OWN:'')+'&select=pricing,owner',{headers:{apikey:ANON,Authorization:'Bearer '+ANON}})
+  .then(function(r){return r.ok?r.json():[];}).then(function(rows){
+    if(!rows||!rows.length)return; var p=rows[0].pricing||{};
+    if(rows[0].owner)CFG.owner=rows[0].owner;
+    if(typeof p.bookingUrl==='string')CFG.bookingUrl=p.bookingUrl;
+    if(typeof p.companyName==='string')CFG.company=p.companyName;
+    var c=p.checker||{}; ['maint','repair','major'].forEach(function(k){var v=c[k];if(Array.isArray(v)&&v.length===2&&+v[0]>=0&&+v[1]>=+v[0])CFG.cost[k]=[+v[0],+v[1]];});
+  }).catch(function(){});
+}catch(e){}
+
+/* ---------- screens ---------- */
+var COMMON_DMG=[
+  {id:'cause',q:'What happened?',opts:['Storm or weather — recently','Sudden event (impact, burst, accident)','It got worse slowly over time','Not sure']},
+  {id:'extent',q:'How big is the damage?',opts:['One small spot','One area','Several areas','Widespread']}
+];
+function screens(){
+  if(TOOL==='health'){
+    var a=[{k:'intro'}]; T.health.qs.forEach(function(q){a.push({k:'q',q:q});}); a.push({k:'contact'}); a.push({k:'result'}); return a;
+  }
+  var d=T.damage;
+  return [{k:'photos'},{k:'scan'},
+    {k:'dq',q:{id:'where',q:'Where is the damage?',opts:d.where.map(function(w){return w[0];})}},
+    {k:'dq',q:COMMON_DMG[0]},{k:'dq',q:COMMON_DMG[1]},
+    {k:'dq',q:{id:'worse',q:d.worse,opts:d.worseOpts}},
+    {k:'contact'},{k:'report'}];
+}
+var SC=screens();
+function go(n){
+  var back=n<S.i; S.i=n; var s=SC[n], st=$('ck-stage');
+  var total=SC.length-1; $('ck-bar').style.width=Math.round(n/total*100)+'%';
+  $('ck-cnt').textContent=n<total?(n+1)+'/'+total:'Done';
+  $('ck-back').hidden=!(n>0&&n<total&&s.k!=='scan'&&SC[n-1].k!=='scan');
+  var h='';
+  if(s.k==='intro')h=introHtml();
+  else if(s.k==='q'||s.k==='dq')h=qHtml(s.q,s.k==='dq');
+  else if(s.k==='contact')h=contactHtml();
+  else if(s.k==='photos')h=photosHtml();
+  else if(s.k==='scan')h=scanHtml();
+  else if(s.k==='result')h=resultHtml();
+  else if(s.k==='report')h='<div class="ck-card"><div class="ck-scanmsg"><span class="ck-spin"></span>Finishing your damage report…</div></div>';
+  st.innerHTML=h.replace('class="ck-card"','class="ck-card'+(back?' back':'')+'"');
+  try{window.scrollTo(0,0);}catch(e){}
+  if(s.k==='scan')runScan();
+  if(s.k==='report')finishReport();
+  if(s.k==='result')save(lastHealth);
+  if(s.k==='photos')bindPhotos();
+  try{parent.postMessage({bp:'checker-step',tool:TOOL,trade:CK_TRADE,step:n,of:total},'*');}catch(e){}
+}
+window.ckBack=function(){if(S.i>0)go(S.i-1);};
+
+function introHtml(){
+  var n=T.health.qs.length;
+  return '<div class="ck-card"><p class="ck-kicker">'+esc(T.name)+' · free check</p><h1 class="ck-h">'+esc(T.health.title)+'</h1>'
+    +'<p class="ck-sub">'+n+' quick taps, about 30 seconds. You\'ll get a health score for your '+esc(T.noun)+', what each answer means, and a rough cost for any work.</p>'
+    +'<button class="e-btnmain ck-main" onclick="ckNext()">Start my check</button>'
+    +'<div class="ck-meta"><span>✓ No sign-up needed</span><span>✓ Instant result</span></div></div>';
+}
+window.ckNext=function(){go(S.i+1);};
+function qHtml(q,dmg){
+  var cur=S.ans[q.id];
+  var opts=q.opts.map(function(o,i){var lab=dmg?o:o[0];return '<button class="ck-opt'+(cur&&cur.i===i?' on':'')+'" onclick="ckPick(\''+q.id+'\','+i+',this)"><b></b><span>'+esc(lab)+'</span></button>';}).join('');
+  return '<div class="ck-card"><h2 class="ck-h">'+esc(q.q)+'</h2>'+(q.hint?'<p class="ck-sub">'+esc(q.hint)+'</p>':'<p class="ck-sub">Tap one.</p>')+'<div class="ck-opts">'+opts+'</div></div>';
+}
+window.ckPick=function(id,i,btn){
+  var s=SC[S.i], q=s.q, o=q.opts[i];
+  S.ans[id]=s.k==='dq'?{i:i,label:o,q:q.q}:{i:i,label:o[0],pts:o[1],mean:o[2],q:q.q};
+  var bs=btn.parentNode.querySelectorAll('.ck-opt'); for(var k=0;k<bs.length;k++)bs[k].classList.toggle('on',bs[k]===btn);
+  setTimeout(function(){if(SC[S.i]===s)go(S.i+1);},180);
+};
+function contactHtml(){
+  var c=S.contact;
+  return '<div class="ck-card"><h2 class="ck-h">Where should we send your '+(TOOL==='health'?'result':'report')+'?</h2><p class="ck-sub">Optional — leave a number and we\'ll follow up with a free inspection time.</p>'
+    +'<label class="ck-f"><span>Name</span><input id="ck-name" autocomplete="name" value="'+esc(c.name)+'"></label>'
+    +'<label class="ck-f"><span>Phone</span><input id="ck-phone" type="tel" autocomplete="tel" inputmode="tel" value="'+esc(c.phone)+'"></label>'
+    +'<label class="ck-f"><span>Email</span><input id="ck-email" type="email" autocomplete="email" value="'+esc(c.email)+'"></label>'
+    +'<label class="ck-f"><span>ZIP or address</span><input id="ck-addr" autocomplete="postal-code" value="'+esc(c.addr)+'"></label>'
+    +'<button class="e-btnmain ck-main" id="ck-go" onclick="ckContact(false)">See my '+(TOOL==='health'?'health score':'damage report')+' →</button>'
+    +'<button class="ck-link" onclick="ckContact(true)">Skip and see it</button></div>';
+}
+window.ckContact=function(skip){
+  var g=function(id){return (($(id)||{}).value||'').trim();};
+  S.contact={name:g('ck-name'),phone:g('ck-phone'),email:g('ck-email'),addr:g('ck-addr')};
+  if(!skip){
+    var ph=S.contact.phone.replace(/\D/g,'');
+    if(ph&&ph.length<10){$('ck-phone').classList.add('bad');$('ck-phone').focus();return;}
+    if(S.contact.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(S.contact.email)){$('ck-email').classList.add('bad');$('ck-email').focus();return;}
+  }
+  if(TOOL==='health')lastHealth=computeHealth();
+  go(S.i+1);
+};
+
+/* ---------- health ---------- */
+var BANDS={good:{label:'Good',cls:'ck-good',db:'good'},watch:{label:'Watch',cls:'ck-watch',db:'mid'},act:{label:'Act soon',cls:'ck-act',db:'warn'},urgent:{label:'Urgent',cls:'ck-urgent',db:'bad'}};
+var lastHealth=null;
+function computeHealth(){
+  var score=100, why=[];
+  T.health.qs.forEach(function(q){var a=S.ans[q.id]; if(!a)return; score-=a.pts; why.push({pts:a.pts,q:q.q,a:a.label,mean:a.mean});});
+  score=Math.max(5,Math.min(98,Math.round(score)));
+  var band=score>=75?'good':score>=55?'watch':score>=35?'act':'urgent', c=CFG.cost, est, work;
+  if(band==='good'){est=c.maint;work='Routine maintenance / tune-up';}
+  else if(band==='watch'){est=[c.maint[0],Math.round((c.maint[1]+c.repair[1])/2)];work='Maintenance plus small repairs';}
+  else if(band==='act'){est=c.repair;work='Repairs';}
+  else {est=[c.repair[0],c.repair[1]];work='Repairs — replacement may be needed';}
+  return {score:score,band:band,why:why,est:est,work:work,major:band==='urgent'||band==='act'?c.major:null};
+}
+function gauge(score,cls){
+  var r=90, len=Math.PI*r, f=score/100, ang=-90+180*f;
+  return '<div class="ck-gauge '+cls+'"><svg viewBox="0 0 220 128" aria-hidden="true">'
+    +'<path d="M20 112 A90 90 0 0 1 200 112" fill="none" stroke="var(--soft)" stroke-width="18" stroke-linecap="round"/>'
+    +'<path d="M20 112 A90 90 0 0 1 200 112" fill="none" stroke="var(--c)" stroke-width="18" stroke-linecap="round" stroke-dasharray="'+(len*f).toFixed(1)+' '+len.toFixed(1)+'"/>'
+    +'<g transform="rotate('+ang.toFixed(1)+' 110 112)"><line x1="110" y1="112" x2="110" y2="34" stroke="var(--txt)" stroke-width="3" stroke-linecap="round"/><circle cx="110" cy="112" r="6" fill="var(--txt)"/></g>'
+    +'</svg><div class="num">'+score+'<small>out of 100</small></div></div>';
+}
+function resultHtml(){
+  var r=lastHealth||computeHealth(); lastHealth=r; var B=BANDS[r.band];
+  var bad=r.why.filter(function(w){return w.pts>0;}).sort(function(a,b){return b.pts-a.pts;});
+  var steps=[];
+  if(r.band==='good')steps=['Keep up routine maintenance — a check-up every 1–2 years.','Re-run this check after any big storm or change you notice.'];
+  else {
+    if(bad[0])steps.push('Biggest concern — '+bad[0].a.toLowerCase()+': '+bad[0].mean);
+    if(bad[1])steps.push('Also worth checking — '+bad[1].a.toLowerCase()+': '+bad[1].mean);
+    steps.push(r.band==='urgent'?'Book an inspection this week — waiting usually makes the repair bigger.':'Book an inspection in the next few weeks and get a written estimate.');
+  }
+  var ctas=bookCtas(r.band==='good');
+  return '<div class="ck-card '+B.cls+'"><p class="ck-kicker" style="text-align:center">Your '+esc(T.noun)+' health</p>'+gauge(r.score,B.cls)
+    +'<div class="ck-status">'+B.label+'</div>'
+    +'<div class="ck-sec"><h3>What your answers mean</h3><div class="ck-why">'+r.why.map(function(w){return '<div><em class="'+(w.pts>0?'':'ok')+'">'+(w.pts>0?'−'+w.pts:'✓')+'</em><span><b>'+esc(w.a)+'.</b> '+esc(w.mean)+'</span></div>';}).join('')+'</div></div>'
+    +'<div class="ck-sec"><h3>Recommended next steps</h3><ol class="ck-steps">'+steps.map(function(s){return '<li>'+esc(s)+'</li>';}).join('')+'</ol></div>'
+    +'<div class="ck-sec"><h3>Rough cost of likely work</h3><div class="ck-cost"><span>'+esc(r.work)+'</span><b>'+range(r.est)+'</b></div>'
+    +(r.major?'<div class="ck-cost"><span>If replacement is needed</span><b>'+range(r.major)+'</b></div>':'')
+    +'<p class="ck-note">A ballpark from typical local pricing — an inspection gives you the real number.</p></div>'
+    +ctas+'<button class="ck-link" onclick="ckRestart()">Start over</button></div>';
+}
+function bookCtas(estFirst){
+  var est='<a class="ck-ghost" href="'+esc(estUrl())+'" target="_top" onclick="return ckEst()">Get a full estimate</a>';
+  var book='<button class="e-btnmain ck-main" onclick="ckBook()">Book a free inspection</button>';
+  return '<div class="ck-sec">'+(estFirst?est.replace('ck-ghost','ck-ghost')+book.replace('e-btnmain ck-main','ck-ghost'):book+est)+'</div>';
+}
+function estUrl(){return CK_TRADE+'.html'+(OWN?'?u='+OWN:'');}
+window.ckEst=function(){try{parent.postMessage({bp:'estimate',trade:CK_TRADE},'*');}catch(e){} location.href=estUrl(); return false;};
+window.ckBook=function(){
+  try{parent.postMessage({bp:'book',trade:CK_TRADE,tool:TOOL,address:S.contact.addr||''},'*');}catch(e){}
+  if(CFG.bookingUrl){window.open(CFG.bookingUrl,'_blank','noopener');return;}
+  location.href=estUrl();
+};
+window.ckRestart=function(){S.ans={};S.photos=[];S.ai=null;S.aiState='idle';S.saved=false;lastHealth=null;go(0);};
+
+/* ---------- damage: photos ---------- */
+function photosHtml(){
+  return '<div class="ck-card"><p class="ck-kicker">'+esc(T.name)+' · free damage check</p><h1 class="ck-h">'+esc(T.damage.title)+'</h1>'
+    +'<p class="ck-sub">Snap 1–3 photos of the damage. We\'ll scan them, ask 4 quick questions, and give you a damage report with a repair estimate.</p>'
+    +'<label class="ck-drop" id="ck-drop"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
+    +'<span id="ck-droplab">Take or upload a photo</span><small>Up to 3 · close-up and one wider shot work best</small>'
+    +'<input id="ck-file" type="file" accept="image/*" capture="environment" multiple hidden></label>'
+    +'<div class="ck-thumbs" id="ck-thumbs"></div>'
+    +'<button class="e-btnmain ck-main" id="ck-scanbtn" onclick="ckStartScan()" disabled>Scan my photos</button>'
+    +'<button class="ck-link" onclick="ckNoPhoto()">No photo? Answer the questions instead</button></div>';
+}
+function bindPhotos(){
+  var inp=$('ck-file'); if(!inp)return;
+  inp.onchange=function(){
+    var files=[].slice.call(inp.files||[]).filter(function(f){return /^image\//.test(f.type)||/\.(jpe?g|png|webp|heic)$/i.test(f.name);});
+    var room=3-S.photos.length; files=files.slice(0,room);
+    Promise.all(files.map(prep)).then(function(list){list.forEach(function(p){if(p)S.photos.push(p);});drawThumbs();});
+    inp.value='';
+  };
+  drawThumbs();
+}
+function drawThumbs(){
+  var el=$('ck-thumbs'); if(!el)return;
+  el.innerHTML=S.photos.map(function(p,i){return '<div><img src="'+p.view+'" alt="Photo '+(i+1)+'"><button aria-label="Remove photo" onclick="ckDelPhoto('+i+')">×</button></div>';}).join('');
+  var b=$('ck-scanbtn'); if(b)b.disabled=!S.photos.length;
+  var d=$('ck-drop'); if(d)d.style.display=S.photos.length>=3?'none':'';
+  var l=$('ck-droplab'); if(l)l.textContent=S.photos.length?'Add another photo':'Take or upload a photo';
+}
+window.ckDelPhoto=function(i){S.photos.splice(i,1);drawThumbs();};
+/* downscale on the phone: 1024px for the scan, 320px thumbnails for the lead */
+function prep(file){
+  return new Promise(function(res){
+    var url=URL.createObjectURL(file), img=new Image();
+    img.onload=function(){
+      var mk=function(max,q){var s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*s));c.height=Math.max(1,Math.round(img.naturalHeight*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q);};
+      var big=mk(1024,.82); res({view:big,data:big.split(',')[1],thumb:mk(320,.6)}); URL.revokeObjectURL(url);
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);res(null);};
+    img.src=url;
+  });
+}
+window.ckNoPhoto=function(){S.photos=[];S.aiState='skipped';go(2);};
+window.ckStartScan=function(){if(!S.photos.length)return;callAI();go(1);};
+
+/* the photo scan runs while the homeowner answers; the report waits for it at most AI_TIMEOUT */
+function callAI(){
+  S.aiState='pending'; S.ai=null; S.aiStart=Date.now();
+  var ctl=new AbortController(), t=setTimeout(function(){ctl.abort();},AI_TIMEOUT);
+  var body={trade:CK_TRADE,tradeName:T.name,owner:CFG.owner,images:S.photos.map(function(p){return {mime:'image/jpeg',data:p.data};}),
+    answers:{},ranges:{maint:CFG.cost.maint,repair:CFG.cost.repair,major:CFG.cost.major},types:T.damage.where.map(function(w){return w[1];})};
+  S.aiP=fetch(SB+'/functions/v1/damage-scan',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json',apikey:ANON,Authorization:'Bearer '+ANON},body:JSON.stringify(body)})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){clearTimeout(t);if(d&&d.ok&&Array.isArray(d.damages)){S.ai=d;S.aiState='done';}else S.aiState='failed';if(S.onAI)S.onAI();})
+    .catch(function(){clearTimeout(t);S.aiState='failed';if(S.onAI)S.onAI();});
+}
+function scanHtml(){
+  var p=S.photos[0];
+  return '<div class="ck-card"><h2 class="ck-h">Scanning your photo'+(S.photos.length>1?'s':'')+'…</h2>'
+    +'<div class="ck-scanwrap"><div class="ck-shot scanning" id="ck-shot"><img src="'+p.view+'" alt=""><div class="ck-scan"></div></div></div>'
+    +'<div class="ck-scanmsg" id="ck-scanmsg"><span class="ck-spin"></span><span id="ck-scantxt">Looking for '+esc(T.noun)+' damage…</span></div></div>';
+}
+function boxesHtml(list){
+  return list.map(function(d){var b=d.box||[0,0,0,0],low=b[1]<.08;return '<div class="box" style="left:'+(b[0]*100).toFixed(1)+'%;top:'+(b[1]*100).toFixed(1)+'%;width:'+(b[2]*100).toFixed(1)+'%;height:'+(b[3]*100).toFixed(1)+'%"><span style="'+(low?'top:auto;bottom:-24px;border-radius:0 5px 5px 5px':'')+'">'+esc(d.type)+'</span></div>';}).join('');
+}
+function runScan(){
+  var t0=Date.now(), msgs=['Checking surfaces…','Measuring the affected area…','Matching damage patterns…'], mi=0, done=false;
+  var tick=setInterval(function(){var el=$('ck-scantxt');if(el&&S.aiState==='pending')el.textContent=msgs[mi++%msgs.length];},900);
+  var finish=function(){
+    if(done)return; done=true; clearInterval(tick); S.onAI=null;
+    var shot=$('ck-shot'), txt=$('ck-scantxt');
+    if(S.aiState==='done'&&shot){
+      var mine=S.ai.damages.filter(function(d){return (d.photo|0)===0&&d.box;});
+      shot.classList.remove('scanning'); var sl=shot.querySelector('.ck-scan'); if(sl)sl.remove();
+      shot.insertAdjacentHTML('beforeend',boxesHtml(mine));
+      if(txt)txt.textContent=S.ai.damages.length?'Found '+S.ai.damages.length+' area'+(S.ai.damages.length>1?'s':'')+' — 4 quick questions next.':'Scan done — 4 quick questions next.';
+      setTimeout(function(){if(SC[S.i].k==='scan')go(2);},1100);
+    } else {
+      if(txt)txt.textContent='Got it — 4 quick questions while we finish.';
+      setTimeout(function(){if(SC[S.i].k==='scan')go(2);},500);
+    }
+  };
+  var check=function(){var e=Date.now()-t0; if((S.aiState!=='pending'&&e>=SCAN_MIN)||e>=SCAN_MAX)finish();};
+  S.onAI=function(){var e=Date.now()-t0; setTimeout(check,Math.max(0,SCAN_MIN-e));};
+  setTimeout(check,SCAN_MIN); setTimeout(check,SCAN_MAX);
+}
+
+/* ---------- damage: report ---------- */
+var SEV_ORDER={minor:0,moderate:1,severe:2};
+function rules(){
+  var a=S.ans, c=CFG.cost;
+  var where=a.where?a.where.i:0, cause=a.cause?a.cause.i:3, ext=a.extent?a.extent.i:1, worse=a.worse?a.worse.i:3;
+  var wv=[3,2,0,1][worse], pts=ext+wv;
+  var sev=pts>=4?'severe':pts>=2?'moderate':'minor';
+  if(CK_TRADE==='electrical'&&worse<=1)sev='severe';
+  var type=T.damage.where[where][1];
+  var urgency=sev==='severe'||worse===0?'Urgent — get it looked at within 24–48 hours':sev==='moderate'?'Soon — within the next 2 weeks':'Plan it — within the next few months';
+  if(CK_TRADE==='electrical'&&worse===0)urgency='Urgent — turn off that circuit and call an electrician today';
+  var est=sev==='minor'?[c.maint[0],Math.round(c.repair[0]+(c.repair[1]-c.repair[0])*.25)]:sev==='moderate'?c.repair:[Math.round((c.repair[0]+c.repair[1])/2),Math.round(c.repair[1]+(c.major[0]-c.repair[1])*.5)];
+  if(est[1]<est[0])est=[est[1],est[0]];
+  var causeTxt=['Storm or weather damage','Sudden impact or failure','Gradual wear, age or moisture over time','Unclear — an inspection will confirm the cause'][cause];
+  var ins=cause===0?'Likely — storm and weather damage is commonly covered by homeowners insurance. Photograph everything and call before repairs.':cause===1?'Possibly — sudden, accidental damage is often covered; gradual wear usually isn\'t.':cause===2?'Unlikely — insurers usually treat wear and slow leaks as maintenance.':'Unclear — the inspection will tell you whether it\'s worth filing.';
+  var repair=sev==='minor'?'Spot repair of the damaged '+T.noun+' area':sev==='moderate'?'Repair the damaged area and check what\'s around it':'Repair or partial replacement — confirm the extent on site first';
+  return {damages:[{type:type,severity:sev,confidence:null}],cause:causeTxt,urgency:urgency,repair:repair,estimate:{low:est[0],high:est[1]},insurance:ins,sev:sev,source:'answers'};
+}
+function merge(){
+  var R=rules(); if(S.aiState!=='done'||!S.ai)return R;
+  var A=S.ai, c=CFG.cost, lo=c.maint[0], hi=c.major[1];
+  var dm=(A.damages||[]).filter(function(d){return d&&d.type;});
+  var top=dm.reduce(function(m,d){return Math.max(m,SEV_ORDER[d.severity]!=null?SEV_ORDER[d.severity]:1);},-1);
+  var sev=top<0?R.sev:['minor','moderate','severe'][Math.max(top,SEV_ORDER[R.sev]-(R.sev==='severe'?0:1))];
+  var e=A.estimate||{}, el=+e.low, eh=+e.high;
+  if(!(el>0&&eh>=el)){el=R.estimate.low;eh=R.estimate.high;}
+  /* keep the scan's number inside the band its severity calls for */
+  var band={minor:[c.maint[0],c.repair[1]],moderate:[c.maint[1],c.repair[1]],severe:[c.repair[0],c.major[1]]}[sev];
+  lo=Math.max(lo,band[0]); hi=Math.min(hi,band[1]);
+  el=Math.max(lo,Math.min(hi,el)); eh=Math.max(el,Math.min(hi,eh));
+  var urg=String(A.urgency||''); if(/urgent|immediate|24|today/i.test(R.urgency)&&!/urgent|immediate/i.test(urg))urg=R.urgency;
+  return {damages:dm.length?dm:R.damages,cause:A.cause||R.cause,urgency:urg||R.urgency,repair:A.repair||R.repair,estimate:{low:el,high:eh},insurance:A.insurance||R.insurance,sev:sev,source:'scan'};
+}
+function finishReport(){
+  var render=function(){S.onAI=null; var r=merge(); lastDamage=r; $('ck-stage').innerHTML=reportHtml(r); save(r);};
+  if(S.aiState!=='pending')return render();
+  var left=Math.max(0,AI_TIMEOUT-(Date.now()-S.aiStart));
+  var to=setTimeout(function(){S.aiState='failed';render();},left);
+  S.onAI=function(){clearTimeout(to);render();};
+}
+var lastDamage=null;
+function reportHtml(r){
+  var sevCls={minor:'ck-watch',moderate:'ck-act',severe:'ck-urgent'}[r.sev], sevLab={minor:'Minor',moderate:'Moderate',severe:'Severe'}[r.sev];
+  var scanned=r.source==='scan';
+  var photos=S.photos.map(function(p,i){var mine=scanned?r.damages.filter(function(d){return (d.photo|0)===i&&d.box;}):[];return '<div class="ck-shot"><img src="'+p.view+'" alt="Photo '+(i+1)+'">'+boxesHtml(mine)+'</div>';}).join('');
+  return '<div class="ck-card '+sevCls+'"><p class="ck-kicker">'+esc(T.damage.title)+' · report</p>'
+    +'<h1 class="ck-h">'+esc(r.damages[0].type)+'</h1>'
+    +'<div class="ck-status" style="margin:10px 0 4px">'+sevLab+' damage</div>'
+    +'<div style="margin-top:10px">'+r.damages.map(function(d){return '<span class="ck-pill sev-'+esc(d.severity)+'">'+esc(d.type)+(d.confidence?' · '+Math.round(d.confidence*100)+'%':'')+'</span>';}).join('')+'</div>'
+    +(scanned?'':'<p class="ck-note">'+(S.photos.length?'The photo scan isn\'t available right now, so this report is based on your answers. Your photos are attached for the inspector to review.':'Based on your answers.')+'</p>')
+    +(photos?'<div class="ck-sec"><h3>'+(scanned?'What the scan found':'Your photos')+'</h3><div class="ck-photos">'+photos+'</div></div>':'')
+    +'<div class="ck-sec"><h3>Likely cause</h3><p style="margin:0;font-size:15px;line-height:1.5">'+esc(r.cause)+'</p></div>'
+    +'<div class="ck-sec"><h3>Urgency</h3><p style="margin:0;font-size:15px;line-height:1.5;font-weight:600">'+esc(r.urgency)+'</p></div>'
+    +'<div class="ck-sec"><h3>Recommended repair</h3><p style="margin:0;font-size:15px;line-height:1.5">'+esc(r.repair)+'</p>'
+    +'<div class="ck-cost"><span>Estimated repair</span><b>'+range([r.estimate.low,r.estimate.high])+'</b></div><p class="ck-note">A ballpark from typical local pricing — an on-site inspection confirms the scope and price.</p></div>'
+    +'<div class="ck-sec"><h3>Insurance claim likely?</h3><div class="ck-ins">'+esc(r.insurance)+'</div></div>'
+    +bookCtas(false)+'<button class="ck-link" onclick="ckRestart()">Check something else</button></div>';
+}
+
+/* ---------- filing the lead ---------- */
+function save(r){
+  if(S.saved||!r)return; S.saved=true;
+  var c=S.contact, host=''; try{host=(document.referrer||'').replace(/^https?:\/\//,'').split('/')[0]||(parent!==window?'embed':location.host);}catch(e){host='embed';}
+  var zip=((c.addr||'').match(/\b\d{5}\b/)||[''])[0], row, hook;
+  var answers=Object.keys(S.ans).map(function(k){return (S.ans[k].q||k)+': '+S.ans[k].label;});
+  if(TOOL==='health'){
+    var B=BANDS[r.band];
+    row={score:r.score,band:B.db,label:B.label+' · '+T.name+' health',issues:r.why.filter(function(w){return w.pts>0;}).map(function(w){return w.a;}).slice(0,12)};
+    hook={score:r.score,status:B.label,estimateLow:r.est[0],estimateHigh:r.est[1],answers:answers};
+  } else {
+    var sc={minor:70,moderate:45,severe:20}[r.sev];
+    row={score:sc,band:{minor:'mid',moderate:'warn',severe:'bad'}[r.sev],label:r.damages[0].type+' · '+r.sev,
+      issues:r.damages.map(function(d){return d.type+' ('+d.severity+')';}).concat(answers.map(function(a){return 'q:'+a;})).concat(S.photos.map(function(p){return 'photo:'+p.thumb;}))};
+    hook={score:sc,status:r.sev,damages:r.damages,cause:r.cause,urgency:r.urgency,repair:r.repair,estimateLow:r.estimate.low,estimateHigh:r.estimate.high,insurance:r.insurance,scanned:r.source==='scan',answers:answers,photos:S.photos.map(function(p){return p.thumb;})};
+  }
+  row.owner=CFG.owner; row.calc_id=TOOL+':'+CK_TRADE; row.material=T.name; row.address=c.addr||null; row.zip=zip||null;
+  row.name=c.name||''; row.phone=c.phone||''; row.email=c.email||''; row.host=host;
+  try{fetch(SB+'/rest/v1/roof_checks',{method:'POST',headers:{'Content-Type':'application/json',apikey:ANON,Authorization:'Bearer '+ANON,Prefer:'return=minimal'},body:JSON.stringify(row)}).catch(function(){});}catch(e){}
+  var nm=(c.name||'').split(' ');
+  hook.source=(CFG.company?CFG.company+' ':'')+(TOOL==='health'?T.health.title:T.damage.title); hook.tool=TOOL; hook.trade=CK_TRADE;
+  hook.firstName=nm[0]||''; hook.lastName=nm.slice(1).join(' '); hook.phone=c.phone||''; hook.email=c.email||''; hook.address=c.addr||''; hook.zip=zip; hook.timestamp=new Date().toISOString();
+  try{if(CK_WEBHOOK)fetch(CK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hook)}).catch(function(){});}catch(e){}
+  try{parent.postMessage({bp:'checker-done',tool:TOOL,trade:CK_TRADE,score:row.score,label:row.label},'*');}catch(e){}
+}
+
+document.addEventListener('DOMContentLoaded',function(){go(0);});
+if(document.readyState!=='loading')go(0);
+})();
+</script>
+<!--ST-BEGIN--><!-- SITE THEME — dresses an estimator in the marketing site's design system
+     (site/site.css), so the calculator reads as part of the website rather
+     than a widget dropped into it.
+
+     Injected by tools/inject-roof-scan.py; applied to roofing first. Written
+     against the class names every estimator shares (.e-shdr, .e-oi,
+     .e-btnmain ...), so extending it to the other nine is a list change, not
+     a rewrite.
+
+     The system, from site/site.css:
+       type     General Sans (Geist behind it), 600 headlines at -0.03em,
+                uppercase 12px 600 captions
+       colour   canvas #edf2f6, cards white, ink #001530, muted #788493,
+                ONE accent #006fff, hairlines rgba(0,0,0,.10)
+       shape    16px cards, 6px gaps between cards, no drop shadows,
+                every button a fully rounded uppercase pill
+       motion   ease-settle for things arriving, ease-pill for fills,
+                .3s colour changes on hover
+
+     It sits after every other stylesheet on the page and is specific enough
+     to win without fighting line by line; the older layers underneath carry
+     !important in places, so this does too, deliberately and only there. -->
+<style id="bp-site-theme">
+#est-embed{
+  --st-canvas:#edf2f6; --st-soft:#dce3ec; --st-muted:#788493; --st-ink:#001530;
+  --st-blue:#006fff; --st-blue-d:#003db8; --st-blue-l:#e6f0ff; --st-stroke:rgba(0,0,0,.10);
+  --st-radius:16px; --st-gap:6px;
+  --st-settle:cubic-bezier(.39,.575,.565,1); --st-pill:cubic-bezier(.215,.61,.355,1);
+  --st-font:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  /* the estimator's own tokens, pointed at the site's */
+  --a:#006fff !important; --al:#006fff !important; --ag:rgba(0,111,255,.14) !important;
+  --pri:#006fff !important; --pri-d:#003db8 !important; --ink:#001530 !important; --ink-2:#788493 !important;
+  --line:rgba(0,0,0,.10) !important; --mu:#788493 !important; --txt:#001530 !important; --bs:#dce3ec !important;
+}
+
+/* ---- ground and type ---------------------------------------------------- */
+html body #est-embed#est-embed, html body #est-embed#est-embed > .e-app{background:var(--st-canvas) !important;color:var(--st-ink) !important;}
+html body #est-embed#est-embed{border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed, html body #est-embed#est-embed *:not(canvas):not(svg):not(path):not(i.bpi){font-family:var(--st-font) !important;}
+html body #est-embed#est-embed ::selection{background:var(--st-blue);color:#fff;}
+
+/* ---- top bar: the site's navbar, as a white card ------------------------- */
+html body #est-embed#est-embed .e-topbar{background:#fff !important;border:0 !important;border-radius:var(--st-radius) var(--st-radius) 0 0 !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-tlogo{color:var(--st-ink) !important;font-weight:700 !important;font-size:20px !important;letter-spacing:-.03em !important;}
+html body #est-embed#est-embed .e-tlogo span{color:var(--st-blue) !important;font-weight:700 !important;}
+html body #est-embed#est-embed .e-ldot{background:var(--st-blue) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-tstep{font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-tstep b{color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-prog{background:var(--st-soft) !important;height:3px !important;}
+html body #est-embed#est-embed .e-pfill{background:var(--st-blue) !important;box-shadow:none !important;transition:width .5s var(--st-pill) !important;}
+
+/* ---- tabs: pills ---------------------------------------------------------- */
+html body #est-embed#est-embed .e-tabs{background:#fff !important;border:0 !important;gap:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-tab{border-radius:40px !important;padding:12px 20px !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;
+  background:#fff !important;color:var(--st-ink) !important;border:1px solid var(--st-stroke) !important;box-shadow:none !important;transition:background-color .3s ease,color .3s ease,border-color .3s ease !important;}
+html body #est-embed#est-embed .e-tab:hover{background:var(--st-soft) !important;border-color:var(--st-soft) !important;}
+html body #est-embed#est-embed .e-tab.on,html body #est-embed#est-embed .e-tab.active,html body #est-embed#est-embed .e-tab[aria-selected="true"]{background:var(--st-ink) !important;color:#fff !important;border-color:var(--st-ink) !important;}
+
+/* ---- the step header: a white card, not a dark banner --------------------
+   #est-embed#est-embed: two ids, so the site's rules outrank the older
+   '#est-embed .e-shdr .e-stitle' layers without matching their chains. */
+html body #est-embed#est-embed .e-shdr{background:#fff !important;background-image:none !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;
+  padding:28px 28px 26px !important;margin:0 0 var(--st-gap) !important;color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-shdr::before,html body #est-embed#est-embed .e-shdr::after{display:none !important;}
+html body #est-embed#est-embed .e-seye{display:block !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;line-height:.9 !important;color:var(--st-muted) !important;margin-bottom:14px !important;}
+html body #est-embed#est-embed .e-stitle{font-size:40px !important;line-height:1 !important;letter-spacing:-.03em !important;font-weight:600 !important;color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-stitle em{font-style:normal !important;color:var(--st-blue) !important;background:none !important;-webkit-text-fill-color:currentColor !important;}
+html body #est-embed#est-embed .e-ssub{font-size:16px !important;line-height:1.4 !important;font-weight:400 !important;color:var(--st-muted) !important;margin-top:14px !important;max-width:560px !important;}
+@media(max-width:560px){html body #est-embed#est-embed .e-stitle{font-size:30px !important;} html body #est-embed#est-embed .e-shdr{padding:22px 20px 20px !important;}}
+
+/* ---- cards and the option rows -------------------------------------------- */
+html body #est-embed#est-embed .e-card,html body #est-embed#est-embed .e-zipwrap,html body #est-embed#est-embed .e-olist{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-olist{padding:var(--st-gap) !important;gap:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-card .e-olist{padding:0 !important;}
+html body #est-embed#est-embed .e-oi{background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:12px !important;box-shadow:none !important;
+  transition:background-color .3s ease,border-color .3s ease,transform .4s var(--st-settle) !important;}
+html body #est-embed#est-embed .e-oi:hover{background:var(--st-canvas) !important;border-color:var(--st-soft) !important;transform:none !important;}
+html body #est-embed#est-embed .e-oi.sel{background:var(--st-blue-l) !important;border-color:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-oi-lbl{font-weight:600 !important;color:var(--st-ink) !important;letter-spacing:-.01em !important;}
+html body #est-embed#est-embed .e-oi-desc{color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-oi-tag{background:var(--st-canvas) !important;color:var(--st-ink) !important;border:0 !important;border-radius:40px !important;font-weight:600 !important;}
+html body #est-embed#est-embed .e-oi-radio{border:1px solid var(--st-soft) !important;background:#fff !important;color:transparent !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-oi.sel .e-oi-radio{background:var(--st-blue) !important;border-color:var(--st-blue) !important;color:#fff !important;}
+html body #est-embed#est-embed .e-oi-em,html body #est-embed#est-embed .e-oi-emchip{background:var(--st-canvas) !important;border:0 !important;box-shadow:none !important;}
+
+/* ---- fields ----------------------------------------------------------------- */
+html body #est-embed#est-embed .e-fi,html body #est-embed#est-embed .e-zipinput,html body #est-embed#est-embed .e-asearch-input,html body #est-embed#est-embed select,html body #est-embed#est-embed textarea{
+  background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:12px !important;color:var(--st-ink) !important;box-shadow:none !important;
+  transition:border-color .3s ease,box-shadow .3s ease !important;}
+html body #est-embed#est-embed .e-fi:focus,html body #est-embed#est-embed .e-zipinput:focus,html body #est-embed#est-embed .e-asearch-input:focus{border-color:var(--st-blue) !important;box-shadow:0 0 0 3px rgba(0,111,255,.14) !important;outline:none !important;}
+html body #est-embed#est-embed .e-asearch{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;padding:var(--st-gap) !important;margin-bottom:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-asearch-input{border:0 !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-fl,html body #est-embed#est-embed .e-ziplabel{font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-suggestions{background:#fff !important;border:1px solid var(--st-stroke) !important;border-radius:12px !important;box-shadow:0 12px 30px rgba(0,21,48,.08) !important;}
+html body #est-embed#est-embed .e-suggestion:hover{background:var(--st-canvas) !important;}
+html body #est-embed#est-embed .e-consent{background:var(--st-canvas) !important;border:0 !important;border-radius:12px !important;color:var(--st-muted) !important;}
+
+/* ---- the ZIP card: laid out, not left at the card's edge -------------------
+   One white card like the header above it, the same inner padding, a label
+   that reads as a caption, a roomy input, and the hint set under it. The
+   header card's old negative margins (from the navy banner days) are undone
+   so both cards share one left edge. */
+html body #est-embed#est-embed #e-zippanel .e-shdr{margin:0 0 var(--st-gap) !important;width:auto !important;max-width:none !important;}
+html body #est-embed#est-embed .e-zipwrap{padding:24px 28px 26px !important;margin:0 0 var(--st-gap) !important;display:flex !important;flex-direction:column !important;gap:10px !important;}
+html body #est-embed#est-embed .e-ziplabel{margin:0 !important;}
+html body #est-embed#est-embed .e-zipinput{width:100% !important;max-width:320px !important;height:56px !important;padding:0 18px !important;font-size:20px !important;font-weight:500 !important;letter-spacing:.04em !important;font-variant-numeric:tabular-nums !important;}
+html body #est-embed#est-embed .e-zipinput::placeholder{color:#b3bcc7 !important;letter-spacing:.02em !important;}
+html body #est-embed#est-embed .e-ziphint{margin:0 !important;font-size:13px !important;color:var(--st-muted) !important;}
+@media(max-width:560px){html body #est-embed#est-embed .e-zipwrap{padding:20px !important;} html body #est-embed#est-embed .e-zipinput{max-width:none !important;}}
+
+/* ---- buttons: the site's one shape --------------------------------------- */
+html body #est-embed#est-embed .e-btnrow{gap:var(--st-gap) !important;margin-top:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-btnmain,html body #est-embed#est-embed .e-restart,html body #est-embed#est-embed .e-btnback,html body #est-embed#est-embed .e-manualbtn{
+  border-radius:40px !important;padding:15px 22px !important;font-size:12px !important;font-weight:600 !important;line-height:.9 !important;text-transform:uppercase !important;letter-spacing:0 !important;
+  box-shadow:none !important;transform:none !important;background-image:none !important;
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease,opacity .3s ease !important;}
+html body #est-embed#est-embed .e-btnmain{background:var(--st-ink) !important;color:#fff !important;border:1px solid var(--st-ink) !important;}
+html body #est-embed#est-embed .e-btnmain:not(:disabled):hover{background:var(--st-blue) !important;border-color:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-btnmain:disabled{background:var(--st-soft) !important;border-color:var(--st-soft) !important;color:var(--st-muted) !important;opacity:1 !important;}
+html body #est-embed#est-embed .e-btnback,html body #est-embed#est-embed .e-manualbtn,html body #est-embed#est-embed .e-restart{text-decoration:none !important;background:#fff !important;color:var(--st-ink) !important;border:1px solid var(--st-stroke) !important;}
+html body #est-embed#est-embed .e-btnback:hover,html body #est-embed#est-embed .e-manualbtn:hover,html body #est-embed#est-embed .e-restart:hover{background:var(--st-ink) !important;color:#fff !important;border-color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-btnmain:focus-visible,html body #est-embed#est-embed .e-btnback:focus-visible,html body #est-embed#est-embed .e-tab:focus-visible{outline:3px solid var(--st-blue) !important;outline-offset:3px !important;}
+html body #est-embed#est-embed .e-sdot{background:var(--st-soft) !important;}
+html body #est-embed#est-embed .e-sdot.act{background:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-sdot.done{background:var(--st-ink) !important;}
+
+/* ---- slider -------------------------------------------------------------------- */
+html body #est-embed#est-embed .e-sldval{color:var(--st-ink) !important;font-weight:600 !important;letter-spacing:-.03em !important;}
+html body #est-embed#est-embed input[type=range].e-sld::-webkit-slider-thumb{background:var(--st-blue) !important;border:3px solid #fff !important;box-shadow:0 0 0 1px var(--st-stroke) !important;}
+html body #est-embed#est-embed .e-preset{border-radius:40px !important;border:1px solid var(--st-stroke) !important;background:#fff !important;color:var(--st-ink) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-preset.on{background:var(--st-ink) !important;color:#fff !important;border-color:var(--st-ink) !important;}
+
+/* ---- calculating ------------------------------------------------------------------ */
+html body #est-embed#est-embed .e-ldpanel{background:#fff !important;border-radius:var(--st-radius) !important;}
+html body #est-embed#est-embed .e-ldpanel *{color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-ldring{border-color:var(--st-soft) !important;border-top-color:var(--st-blue) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-ldstp{background:transparent !important;border:0 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-ldstp.act{color:var(--st-ink) !important;}
+html body #est-embed#est-embed .e-lddot{background:var(--st-soft) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-ldstp.act .e-lddot{background:var(--st-blue) !important;}
+html body #est-embed#est-embed .e-ldstp.done .e-lddot{background:var(--st-ink) !important;}
+
+/* ---- the result: the site's blue card, then white stat cards -------------- */
+html body #est-embed#est-embed .e-rhero{background:var(--st-blue) !important;background-image:none !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-rhero::before,html body #est-embed#est-embed .e-rhero::after{display:none !important;}
+html body #est-embed#est-embed .e-rhero,html body #est-embed#est-embed .e-rhero *{color:#fff !important;}
+html body #est-embed#est-embed .e-rrange{font-weight:600 !important;letter-spacing:-.03em !important;}
+html body #est-embed#est-embed .e-rrange em{font-style:normal !important;color:#fff !important;-webkit-text-fill-color:#fff !important;opacity:.72;}
+html body #est-embed#est-embed .e-rbadge{background:rgba(255,255,255,.16) !important;border:0 !important;border-radius:40px !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;}
+html body #est-embed#est-embed .e-rlbl{font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;opacity:.8;}
+html body #est-embed#est-embed .e-rgrid{gap:var(--st-gap) !important;}
+html body #est-embed#est-embed .e-rbox{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;box-shadow:none !important;}
+html body #est-embed#est-embed .e-rbv{color:var(--st-ink) !important;font-weight:600 !important;letter-spacing:-.02em !important;}
+html body #est-embed#est-embed .e-rbl{color:var(--st-muted) !important;font-size:12px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:0 !important;}
+html body #est-embed#est-embed .e-disc{background:#fff !important;border:0 !important;border-radius:var(--st-radius) !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-rcta{background:#fff !important;border-radius:var(--st-radius) !important;}
+html body #est-embed#est-embed .e-rctasub{color:var(--st-muted) !important;}
+
+/* ---- the roof scan sits as one more white card on the canvas ------------- */
+html body #est-embed#est-embed .rs-stage{border:0 !important;border-radius:var(--st-radius) !important;margin:var(--st-gap) 0 !important;}
+html body #est-embed#est-embed .rs-stage,html body #est-embed#est-embed .rs-result{--rs-ink:#001530;--rs-blue:#006fff;}
+
+/* ---- motion: steps arrive the way the site's sections do ------------------ */
+html body #est-embed#est-embed .e-sp.active .e-shdr{animation:stIn .7s var(--st-settle) both !important;}
+html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st-settle) both .08s !important;}
+@keyframes stIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){html body #est-embed#est-embed .e-sp.active .e-shdr,html body #est-embed#est-embed .e-sp.active .e-sbody{animation:none !important;}}
+</style>
+<script id="bp-site-theme-fonts">
+/* General Sans is the site's face and comes from Fontshare, as it does on the
+   site; Geist from Google Fonts backs it up. Added once, only if missing. */
+(function(){ try{
+  [['st-gs','https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap'],
+   ['st-geist','https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap']].forEach(function(f){
+    if(document.getElementById(f[0])) return;
+    var l=document.createElement('link'); l.id=f[0]; l.rel='stylesheet'; l.href=f[1];
+    (document.head||document.documentElement).appendChild(l);
+  });
+}catch(e){} })();
+</script>
+<!--ST-END-->
+<script id="bp-theme-applier">/* BuilderPro embed theme — injected into every public embed page by
+   tools/build-embeds.py, and mirrored in book/index.html.
+
+   Reads the owner's saved look from embed_themes (colours, font, corner radius,
+   logo, header image) and applies it. Also listens for a postMessage of
+   {type:"bp-theme", theme} so the portal's Customize page can preview edits
+   live inside an iframe before they are saved. */
+(function(){
+  var U="https://ttzwzouhiwdwamuimhpo.supabase.co";
+  var A="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
+  var KIND="calc";
+  var q=new URLSearchParams(location.search), OWN=(q.get("u")||"").replace(/[^0-9a-f-]/gi,"");
+  var FONTS={"Geist":"Geist:wght@400;500;600;700;800","Inter":"Inter:wght@400;500;600;700;800","Plus Jakarta Sans":"Plus+Jakarta+Sans:wght@400;500;600;700;800","Manrope":"Manrope:wght@400;500;600;700;800","DM Sans":"DM+Sans:wght@400;500;600;700","Space Grotesk":"Space+Grotesk:wght@400;500;600;700","Lato":"Lato:wght@400;700;900","Roboto":"Roboto:wght@400;500;700","Nunito":"Nunito:wght@400;600;700;800","Poppins":"Poppins:wght@400;500;600;700","Montserrat":"Montserrat:wght@400;500;600;700;800","Playfair Display":"Playfair+Display:wght@500;600;700"};
+  function hex(c){ c=String(c||"").trim(); return /^#[0-9a-f]{6}$/i.test(c)?c:(/^#[0-9a-f]{3}$/i.test(c)?"#"+c[1]+c[1]+c[2]+c[2]+c[3]+c[3]:""); }
+  function rgba(h,a){ h=hex(h); if(!h) return ""; return "rgba("+parseInt(h.slice(1,3),16)+","+parseInt(h.slice(3,5),16)+","+parseInt(h.slice(5,7),16)+","+a+")"; }
+  function lighten(h,amt){ h=hex(h); if(!h) return ""; var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); var f=function(v){return Math.round(v+(255-v)*amt);}; return "#"+[f(r),f(g),f(b)].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join(""); }
+  function darken(h,amt){ h=hex(h); if(!h) return ""; var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); var f=function(v){return Math.round(v*(1-amt));}; return "#"+[f(r),f(g),f(b)].map(function(v){return ("0"+v.toString(16)).slice(-2);}).join(""); }
+  function safeUrl(u){ u=String(u||"").trim(); return (/^https?:\/\//i.test(u)||/^data:image\/(png|jpe?g|webp|gif|svg\+xml);base64,/i.test(u))?u:""; }
+  function ensureFont(name){
+    if(!FONTS[name]||document.getElementById("bp-font-"+name.replace(/\W/g,""))) return;
+    var l=document.createElement("link"); l.id="bp-font-"+name.replace(/\W/g,""); l.rel="stylesheet";
+    l.href="https://fonts.googleapis.com/css2?family="+FONTS[name]+"&display=swap"; document.head.appendChild(l);
+  }
+  function apply(t){
+    t=t||{}; window.__bpThemeCur=t;
+    var css="", p=hex(t.primary), bg=hex(t.bg), card=hex(t.card), ink=hex(t.text), r=(t.radius===""||t.radius==null)?null:Math.max(0,Math.min(28,+t.radius||0));
+    if(t.font&&FONTS[t.font]) ensureFont(t.font);
+    if(KIND==="calc"){
+      var sel="#est-embed";
+      if(p) css+=sel+"{--a:"+p+" !important;--al:"+lighten(p,.55)+" !important;--ag:"+rgba(p,.18)+" !important;--blue-l:"+lighten(p,.45)+" !important;--cyan:"+lighten(p,.45)+" !important}";
+      if(bg) css+="html,body,.est-stage{background:"+bg+" !important}";
+      if(card) css+=sel+"{--card:"+card+" !important;--bg:"+card+" !important;background:"+card+" !important}";
+      if(ink) css+=sel+"{--txt:"+ink+" !important;--text:"+ink+" !important;--w:"+ink+" !important;color:"+ink+" !important}";
+      if(t.font) css+=sel+","+sel+" *{font-family:'"+t.font+"',system-ui,sans-serif !important}";
+      if(r!=null) css+=sel+" button,"+sel+" input,"+sel+" select,"+sel+" .e-card,"+sel+" .e-btn,"+sel+" [class*='card'],"+sel+" [class*='btn']{border-radius:"+r+"px !important}#est-embed{border-radius:"+Math.min(r+6,28)+"px !important}";
+      if(t.hideBrand) css+=sel+" [class*='powered'],"+sel+" [class*='brand']{display:none !important}";
+    } else {
+      if(p) css+=":root{--blue:"+p+" !important;--blue-hi:"+lighten(p,.22)+" !important;--blue-act:"+darken(p,.18)+" !important;--blue-soft:"+lighten(p,.86)+" !important}";
+      if(bg) css+="html,body{background:"+bg+" !important}";
+      if(card) css+=":root{--card:"+card+" !important;--soft:"+lighten(card,.0)+" !important}.side{background:"+darken(card,.03)+" !important}";
+      if(ink) css+=":root{--ink:"+ink+" !important;--body:"+ink+" !important}";
+      if(t.font) css+="html,body,button,input,textarea,select{font-family:'"+t.font+"',system-ui,sans-serif !important}";
+      if(r!=null) css+=".card{border-radius:"+r+"px !important}.tray{border-radius:"+(r+8)+"px !important}.chip,.mdt-sel,.mdt-opt,.btn,.f input,.f textarea,.summary{border-radius:"+Math.max(4,Math.round(r*.7))+"px !important}";
+      if(t.hideBrand) css+=".brand{display:none !important}";
+    }
+    var st=document.getElementById("bp-theme"); if(!st){ st=document.createElement("style"); st.id="bp-theme"; document.head.appendChild(st); } st.textContent=css;
+    // images: a logo above the content, and (booking page) a header photo in the side panel
+    var logo=safeUrl(t.logo), hero=safeUrl(t.hero);
+    var tries=0; (function mount(){
+      var host=KIND==="calc"?document.getElementById("est-embed"):document.querySelector(".side");
+      if(!host){ if(++tries<40) setTimeout(mount,150); return; }
+      var lg=document.getElementById("bp-logo");
+      var logoImg=logo?'<img src="'+logo.replace(/"/g,"&quot;")+'" alt="" style="display:block;max-height:'+(t.logoSize||44)+'px;max-width:200px;object-fit:contain">':'';
+      if(KIND!=="calc"){
+        if(logo){ if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; host.insertBefore(lg,host.firstChild); } lg.style.cssText="padding:0 0 14px;display:flex;align-items:center"; lg.innerHTML=logoImg; }
+        else if(lg) lg.parentNode.removeChild(lg);
+        var hv=document.getElementById("bp-hero");
+        if(hero){ if(!hv){ hv=document.createElement("div"); hv.id="bp-hero"; host.insertBefore(hv,host.firstChild); } hv.style.cssText="margin:-28px -26px 18px;height:150px;background:linear-gradient(150deg,rgba(18,35,61,.55),rgba(30,58,99,.35)),url("+JSON.stringify(hero)+") center/cover"; }
+        else if(hv) hv.parentNode.removeChild(hv);
+      } else {
+        /* The calculator: the logo sits ON the header photo, in its top-right
+           corner. With no photo it keeps to the top-right of the calculator.
+           A logo with a transparent background is what reads on a photo;
+           the portal says so where the logo is uploaded. */
+        var hc=document.getElementById("bp-hero");
+        if(hero){ if(!hc){ hc=document.createElement("div"); hc.id="bp-hero"; host.insertBefore(hc,host.firstChild); } hc.style.cssText="position:relative;height:160px;background:linear-gradient(150deg,rgba(18,35,61,.35),rgba(30,58,99,.15)),url("+JSON.stringify(hero)+") center/cover"; }
+        else if(hc){ hc.parentNode.removeChild(hc); hc=null; }
+        if(logo){
+          if(!lg){ lg=document.createElement("div"); lg.id="bp-logo"; }
+          if(hc){ if(lg.parentNode!==hc) hc.appendChild(lg); lg.style.cssText="position:absolute;top:14px;right:16px;display:flex;align-items:center;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))"; }
+          else { if(lg.parentNode!==host||host.firstChild!==lg) host.insertBefore(lg,host.firstChild); lg.style.cssText="padding:16px 20px 0;display:flex;justify-content:flex-end;align-items:center"; }
+          lg.innerHTML=logoImg;
+        } else if(lg&&lg.parentNode) lg.parentNode.removeChild(lg);
+      }
+    })();
+  }
+  window.__bpApplyTheme=apply;
+  window.addEventListener("message",function(e){ var d=e&&e.data; if(d&&d.type==="bp-theme"&&d.theme&&typeof d.theme==="object") apply(d.theme); });
+  if(OWN){
+    fetch(U+"/rest/v1/embed_themes?owner=eq."+OWN+"&kind=eq."+KIND+"&select=theme",{headers:{apikey:A,Authorization:"Bearer "+A}})
+      .then(function(r){return r.ok?r.json():[];}).then(function(rows){ if(Array.isArray(rows)&&rows[0]&&rows[0].theme) apply(rows[0].theme); }).catch(function(){});
+  }
+})();
+</script></body></html>
