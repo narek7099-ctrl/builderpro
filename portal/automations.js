@@ -26,6 +26,7 @@
     cal: '<rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2"/>',
     doc: '<path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 13h7M9 17h5" stroke="currentColor" stroke-width="2"/>',
     spark: '<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+    folderOpen: '<path d="M3 6h7l2 2h7v3H7l-4 8z M7 11h15l-4 8H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
     folder: '<path d="M3 6h7l2 2h9v11H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
   };
   var svg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + '</svg>'; };
@@ -174,7 +175,7 @@
   ];
 
   var fmt = function (s) { return String(s).replace(/\{\{([^}]+)\}\}/g, function (m, k) { return '<span class="wa-chip">' + k.trim() + '</span>'; }); };
-  var S = { plan: null, sel: '01', mine: 1 };
+  var S = { plan: null, sel: '01', mine: 1, open: null };
   var avail = function (w) { return w.from <= S.plan; };
   var variant = function (w) { var x = w.v[0]; w.v.forEach(function (y) { if (y.from <= S.plan) x = y; }); return x; };
   var status = function (w) { return ''; }; var status0 = function (w) { if (S.plan > 0 && w.from === S.plan) return 'new'; var x = variant(w); if (S.plan > 0 && x.from === S.plan && w.from < S.plan) return 'chg'; return ''; };
@@ -205,8 +206,11 @@
     h += '<div class="wa-lay"><aside class="wa-list">';
     [1, 2, 3, 4, 5].forEach(function (f) {
       var items = WF.filter(function (w) { return w.folder === f && avail(w); }); if (!items.length) return;
-      h += '<div class="wa-fold">' + svg('folder') + FOLDERS[f] + '</div>';
+      if (!S.open) { S.open = {}; var sw = WF.filter(function (w) { return w.id === S.sel; })[0]; S.open[sw ? sw.folder : 1] = 1; }
+      var op = !!S.open[f];
+      h += '<button class="wa-fold' + (op ? ' open' : '') + '" data-fold="' + f + '" aria-expanded="' + op + '"><span class="wa-fi">' + svg(op ? 'folderOpen' : 'folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + items.length + '</span><svg class="wa-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="wa-fbody' + (op ? ' open' : '') + '"><div class="wa-fin">';
       items.forEach(function (w) { var st = status(w), x = variant(w); h += '<button class="wa-wf' + (w.id === S.sel ? ' on' : '') + '" data-id="' + w.id + '"><span class="wa-num">' + w.id + '</span><span class="wa-nm">' + (x.name || w.name) + '</span>' + (st ? '<span class="wa-dot ' + st + '">' + (st === 'new' ? 'NEW' : 'UPGRADED') + '</span>' : '') + '</button>'; });
+      h += '</div></div>';
     });
     var w = WF.filter(function (x) { return x.id === S.sel; })[0], x = variant(w), st = status(w), note = '';
     if (st === 'new') note = '<div class="wa-note newn">Added in ' + PLANS[S.plan].name + '.</div>';
@@ -221,6 +225,12 @@
       + '<p class="wa-foot">Texts to customers only go out in quiet hours (8am–8pm in their time zone). These run inside your CRM automatically; nothing to set up.</p></main></div></div>';
     area.innerHTML = h;
     area.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { S.plan = +b.getAttribute('data-p'); render(); }; });
+    area.querySelectorAll('[data-fold]').forEach(function (b) { b.onclick = function () {
+      var f = +b.getAttribute('data-fold'), op = !S.open[f]; S.open[f] = op ? 1 : 0;
+      b.classList.toggle('open', op); b.setAttribute('aria-expanded', op);
+      b.querySelector('.wa-fi').innerHTML = svg(op ? 'folderOpen' : 'folder');
+      var bd = b.nextElementSibling; if (bd) bd.classList.toggle('open', op);
+    }; });
     area.querySelectorAll('[data-id]').forEach(function (b) { b.onclick = function () { S.sel = b.getAttribute('data-id'); render(); }; });
     var u = area.querySelector('[data-upg]'); if (u) u.onclick = function (e) { e.preventDefault(); if (window.bpChangePlan) bpChangePlan(u.getAttribute('data-upg')); };
     var cv = area.querySelector('.wa-canvas'); if (cv) cv.scrollLeft = (cv.scrollWidth - cv.clientWidth) / 2;
@@ -240,7 +250,12 @@
     + '.wa-up{background:#e6f0ff;border-radius:12px;padding:10px 14px;font-size:14px;color:#001530}.wa-up a{color:#006fff;font-weight:600}'
     + '.wa-lay{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px;align-items:start}@media(max-width:900px){.wa-lay{grid-template-columns:minmax(0,1fr)}}'
     + '.wa-list{background:#fff;border:1px solid #dce3ec;border-radius:16px;padding:6px 0;max-height:calc(100vh - 220px);overflow:auto;position:sticky;top:12px}@media(max-width:900px){.wa-list{position:static;max-height:320px}}'
-    + '.wa-fold{display:flex;align-items:center;gap:6px;padding:10px 14px 4px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#788493;font-weight:600}.wa-fold svg{width:14px;height:14px}'
+    + '.wa-fold{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;cursor:pointer;font:inherit;text-align:left;padding:10px 14px;margin-top:2px;border-radius:10px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#788493;font-weight:600;transition:background .2s,color .2s}.wa-fold:hover{background:rgba(78,110,242,.07);color:#4e6ef2}.wa-fold.open{color:#334155}'
+    + '.wa-fi{display:inline-flex;transition:transform .3s cubic-bezier(.2,.8,.2,1)}.wa-fold.open .wa-fi{transform:scale(1.12);color:#4e6ef2}.wa-fold svg{width:15px;height:15px}.wa-fn{flex:1}'
+    + '.wa-fc{font-size:10.5px;letter-spacing:0;padding:1px 7px;border-radius:999px;background:rgba(120,132,147,.12);color:#788493}'
+    + '.wa-chev{width:14px!important;height:14px!important;transition:transform .3s cubic-bezier(.2,.8,.2,1)}.wa-fold.open .wa-chev{transform:rotate(90deg)}'
+    + '.wa-fbody{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1),opacity .25s}.wa-fbody.open{grid-template-rows:1fr;opacity:1}.wa-fin{overflow:hidden;min-height:0}'
+    + '@media (prefers-reduced-motion:reduce){.wa-fbody,.wa-chev,.wa-fi{transition:none}}'
     + '.wa-wf{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:34px 1fr auto;gap:6px;align-items:center;width:100%;padding:7px 14px;font-size:13.5px}.wa-wf:hover{background:#f5f8fb}.wa-wf.on{background:#e6f0ff}.wa-num{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#788493}'
     + '.wa-dot{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px}.wa-dot.new{background:#e3f5ea;color:#1e9e5a}.wa-dot.chg{background:#fcf1de;color:#b06f0c}'
     + '.wa-det{display:flex;flex-direction:column;gap:12px;min-width:0}.wa-dh{background:#fff;border:1px solid #dce3ec;border-radius:16px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}.wa-crumb{font-size:12px;color:#788493}.wa-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.wa-row h2{margin:0;font-size:18px;font-weight:600}'
