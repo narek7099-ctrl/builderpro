@@ -140,15 +140,18 @@
       var isImg = /^image\//.test(b.t || '');
       return '<div class="pf-bp">'
         + '<div class="pf-bp-r"><div class="pf-bp-th">' + (isImg ? PF.img(b.d, 'alt=""') : '<span class="ms">description</span>') + '</div>'
-        + '<div class="pf-bp-n"><b>' + esc(b.n || 'Blueprint') + '</b><small>' + (b.a ? 'Analyzed ' + new Date(b.a.analyzed_at).toLocaleDateString() : (b.busy ? 'Reading the drawing…' : 'Not analyzed yet')) + '</small></div>'
+        + '<div class="pf-bp-n"><b>' + esc(b.n || 'Blueprint') + '</b><small>' + (b.a ? 'Analyzed ' + new Date(b.a.analyzed_at).toLocaleDateString() : (b.busy ? 'Reading the drawing…' : 'Not analyzed yet'))
+        + (function () { var mk = b.id && j.blueprintMarks && j.blueprintMarks[b.id], n = mk && (mk.objs || []).length; return n ? ' · ' + n + ' markup' + (n === 1 ? '' : 's') : ''; })() + '</small></div>'
         + '<button class="bpx-rowbtn" onclick="bpPF.bpOpen(' + i + ')">View</button>'
+        + (window.bpBpEdit ? '<button class="bpx-rowbtn" onclick="bpBpEdit(' + i + ')"><span class="ms" style="font-size:16px;vertical-align:-3px">edit</span> Edit / Mark up</button>' : '')
         + '<button class="bpx-rowbtn primary" ' + (b.busy ? 'disabled' : '') + ' onclick="bpPF.bpAnalyze(' + i + ')">' + (b.a ? 'Re-analyze' : 'Analyze') + '</button>'
         + '<button class="bpx-exprm" onclick="bpPF.bpDel(' + i + ')" aria-label="Remove">×</button></div>'
         + (b.err ? '<div class="pf-err">' + esc(b.err) + '</div>' : '')
         + analysisHtml(b.a).replace('%I%', String(i))
         + '</div>';
     }).join('') || '<div class="bpx-mut" style="font-size:12.5px">No blueprints yet.</div>';
-    var tab = document.querySelector('[data-pj-tab="blueprints"]'); if (tab) tab.textContent = 'Blueprints · ' + list.length;
+    var tab = document.querySelector('[data-pj-tab="blueprints"]'), tn = tab && tab.querySelector('.pjs-n');
+    if (tn) tn.textContent = list.length ? String(list.length) : ''; else if (tab) tab.textContent = 'Blueprints · ' + list.length;
   };
 
   PF.bpAdd = function (e) {
@@ -159,7 +162,7 @@
     if (f.size > 25 * 1024 * 1024) { alert('That file is over 25 MB. Send the sheets you need as a smaller PDF.'); return; }
     var r = new FileReader();
     r.onload = function () {
-      var entry = { n: f.name, t: f.type || 'application/pdf', d: r.result };
+      var entry = { id: 'bp' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), n: f.name, t: f.type || 'application/pdf', d: r.result };
       j.blueprints.push(entry); PF.bpRender(j);
       PF.adopt(j, 'blueprints', entry.d, f.name, function () { return entry.d; }, function (_, ref) { entry.d = ref; });
     };
@@ -169,7 +172,9 @@
   PF.bpDel = function (i) {
     var j = job(), b = j && (j.blueprints || [])[i]; if (!b) return;
     if (!confirm('Remove "' + (b.n || 'this blueprint') + '" from the project?')) return;
-    PF.remove(b.d); j.blueprints.splice(i, 1); PF.bpRender(j);
+    PF.remove(b.d); j.blueprints.splice(i, 1);
+    if (b.id && j.blueprintMarks) delete j.blueprintMarks[b.id];
+    PF.bpRender(j);
     try { bpJobsSet(bpJobsGet()); } catch (e) {}
   };
   PF.bpAnalyze = function (i) {

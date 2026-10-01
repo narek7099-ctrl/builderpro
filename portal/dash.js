@@ -158,7 +158,7 @@
         + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
         + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'
           + '<div class="pj-pay">' + (est > 0 ? pct + '% paid · ' + money(Math.max(est - paid, 0)) + ' due' : 'no amount set') + '</div>')
-        + '<div class="pj-meta">' + meta.join(' · ') + '</div></div></article>';
+        + '<div class="pj-meta">' + meta.join(' · ') + '</div>' + (window.bpPermitChip && (j.permits || []).length ? '<div class="pj-meta">' + bpPermitChip(j) + '</div>' : '') + '</div></article>';
     }).join('');
     return '<div class="pj-row' + (split ? ' split' : '') + '" style="grid-template-columns:repeat(' + shown.length + ',minmax(0,1fr))">' + cards + '</div>';
   }

@@ -32050,7 +32050,7 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-mark'+(j.starred?' on':'')+'" title="'+(j.starred?'Unmark':'Mark: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'Marked':'Mark')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
+      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-mark'+(j.starred?' on':'')+'" title="'+(j.starred?'Unmark':'Mark: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'Marked':'Mark')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(window.bpPermitChip&&(j.permits||[]).length?'<div class="pjrow-chip" style="margin-left:52px">'+bpPermitChip(j)+'</div>':'')+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done <span class=ms>check</span></button></td></tr>';
     }).join(''):'<tr><td colspan="6" style="padding:0"><div class="bpx-emptyhero"><div><b>No active projects yet</b><div class="bpx-mut" style="font-size:13px;margin-top:3px">When a deposit is paid the job lands here automatically — or add one with <b>+ Add job</b>.</div></div></div></td></tr>';
   } else {
@@ -35462,7 +35462,8 @@ window.bpLogoRemove=function(){BPLOGO='';var pv=q('set-logopv');if(pv)pv.innerHT
 window.bpSettingsSave=function(){
   var g=function(id){var e=q(id);return e?e.value.trim():'';};
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
-  var data={company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}};
+  /* keep what this form does not edit (licenses, crews, receptionist, phone…) */
+  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
   bpSettingsSet(data);
   var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ';}
   bpSettingsPush(data).then(function(ok){
@@ -38744,9 +38745,12 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20260930c"></script>
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261001b"></script>
+<script src="portal/dash.js?v=20261001p"></script>
 <script src="portal/archive.js?v=20261001b"></script>
-<script src="portal/pfiles.js?v=20260927a"></script>
+<script src="portal/pfiles.js?v=20261001p"></script>
+<script src="portal/permits.js?v=20261001p"></script>
+<script src="portal/projsheet.js?v=20261001p"></script>
+<script src="portal/bpedit.js?v=20261001p"></script>
 <script src="portal/crewapp.js?v=20260928a"></script>
 <script src="portal/aiteam.js?v=20260929a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
@@ -38758,4 +38762,6 @@ window.bpRepCopy=function(text,btn){
 <script src="site/vendor/SplitText.min.js?v=20260919-i"></script>
 <script src="site/site.js?v=20260921-a"></script>
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
+<link rel="stylesheet" href="portal/projsheet.css?v=20261001p">
+<link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
 </html>
