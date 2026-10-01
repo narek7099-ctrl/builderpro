@@ -17,20 +17,20 @@
   /* the soft blue a chart panel sits on */
   --bpc-surface:#f6f9ff;
 
-  --bpc-s1:#2f6bff;   /* blue — the portal's own, slot 1 */
-  --bpc-s2:#eb6834;   /* orange */
-  --bpc-s3:#1baf7a;   /* aqua */
-  --bpc-s4:#eda100;   /* yellow */
-  --bpc-s5:#4a3aa7;   /* violet */
+  --bpc-s1:#4e6ef2;   /* blue — the portal's own, slot 1 */
+  --bpc-s2:#e0789a;   /* orange */
+  --bpc-s3:#5a46b8;   /* aqua */
+  --bpc-s4:#1f9e8f;   /* yellow */
+  --bpc-s5:#b8324f;   /* violet */
 
   /* ordinal: one blue, pale to deep, for things in an order */
-  --bpc-o1:#8fb0ff; --bpc-o2:#5e8cff; --bpc-o3:#2f6bff; --bpc-o4:#1f4fd0; --bpc-o5:#173a99;
-  --bpc-track:#e3ebff;  /* a meter's unfilled track: a paler step of the same blue */
+  --bpc-o1:#b8c3fb; --bpc-o2:#8d9df6; --bpc-o3:#6680f0; --bpc-o4:#4a62dc; --bpc-o5:#3445b0;
+  --bpc-track:#e6eafd;  /* a meter's unfilled track: a paler step of the same blue */
 
   /* diverging: blue against orange either side of a gray */
-  --bpc-pos2:#1a4fd0; --bpc-pos1:#7aa4ff;
+  --bpc-pos2:#3445b0; --bpc-pos1:#8d9df6;
   --bpc-mid:#9aa6b6;
-  --bpc-neg1:#f2a173; --bpc-neg2:#c2410c;
+  --bpc-neg1:#eba3b8; --bpc-neg2:#b8324f;
 
   --bpc-other:#9aa6b6;
   --bpc-warn:#b45309;
@@ -41,13 +41,13 @@
 }
 #bpx.bpx-dark{
   --bpc-surface:#121826;
-  --bpc-s1:#3987e5; --bpc-s2:#d95926; --bpc-s3:#199e70; --bpc-s4:#c98500; --bpc-s5:#9085e9;
+  --bpc-s1:#5577f0; --bpc-s2:#d9668c; --bpc-s3:#7d6ae0; --bpc-s4:#1f9e8f; --bpc-s5:#d44a64;
   /* the ramp flips its anchor on dark: more is lighter */
-  --bpc-o1:#2c56c9; --bpc-o2:#4a7cf5; --bpc-o3:#7aa2ff; --bpc-o4:#a8c3ff; --bpc-o5:#d3e1ff;
+  --bpc-o1:#3445b0; --bpc-o2:#4a62dc; --bpc-o3:#6f87f2; --bpc-o4:#9dabf7; --bpc-o5:#cbd3fc;
   --bpc-track:#1c2a47;
-  --bpc-pos2:#a9c4ff; --bpc-pos1:#4f7fe0;
+  --bpc-pos2:#9dabf7; --bpc-pos1:#4a62dc;
   --bpc-mid:#6d7887;
-  --bpc-neg1:#c05a26; --bpc-neg2:#f0a173;
+  --bpc-neg1:#b8324f; --bpc-neg2:#eba3b8;
   --bpc-other:#6d7887;
   --bpc-warn:#e0a555;
   --bpc-grid:#222c3d;
