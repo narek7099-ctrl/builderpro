@@ -28,6 +28,9 @@
     ['squarespace', 'Squarespace', 'Settings → Advanced → Code Injection → paste into Header → Save.'],
     ['godaddy', 'GoDaddy', 'Website Builder → Settings → Site-wide code (Head HTML) → paste → Save, then Publish.'],
     ['webflow', 'Webflow', 'Site settings → Custom code → Head code → paste → Save, then Publish the site.'],
+    ['shopify', 'Shopify', 'Online Store → Themes → … → Edit code → layout/theme.liquid → paste just before </head> → Save.'],
+    ['netlify', 'Netlify', 'Site configuration → Build & deploy → Post processing → Snippet injection → Add snippet → Insert before </head> → paste → Save.'],
+    ['github', 'GitHub / code', 'Open your site’s main HTML file (index.html or your layout template), paste just before </head>, commit and deploy.'],
     ['other', 'Other / custom', 'Paste it just before </head> on every page (or in your template’s header), then publish.']
   ];
 
@@ -587,7 +590,6 @@
     if (useGoogle()) return googleBody();
     var top = flash();
     if (connected()) top = switcher() + top;
-    else top += connectCard();
     return top + snippetBody();
   }
 
