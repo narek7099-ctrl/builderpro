@@ -58,6 +58,8 @@
     key: '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     dots: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+    aiteam: '<rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 4v4M9 13h.01M15 13h.01M9 17h6"/>',
     collapse: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M16 10l-2 2 2 2"/>'
   };
   function ico(k, cls) { return '<svg class="hl-i' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (P[k] || P.page) + '</svg>'; }
@@ -93,10 +95,11 @@
   function planName() { try { return window.bpPlanInfo ? bpPlanInfo().name : ''; } catch (e) { return ''; } }
 
   function paintAcct() {
-    var b = $('hlBiz'); if (b) b.textContent = bizName();
-    var p = $('hlPlan'); if (p) p.textContent = crew() ? 'Crew' : (planName() || 'BuilderPro');
-    var logo = (sets().company || {}).logo, lg = $('hlAcctLogo');
-    if (lg) lg.innerHTML = logo && /^(data:image|https?:)/.test(logo) ? '<img src="' + esc(logo) + '" alt="">' : '<span>' + esc(initials(bizName())) + '</span>';
+    /* the card is BuilderPro's, always: the mark and the name, then whose account it is */
+    var b = $('hlBiz'); if (b) b.textContent = 'BuilderPro';
+    var p = $('hlPlan'); if (p) p.textContent = bizName() + ' \u00b7 ' + (crew() ? 'Crew' : (planName() || 'OS'));
+    var lg = $('hlAcctLogo');
+    if (lg && !lg.querySelector('img')) lg.innerHTML = '<img src="assets/brand/logo-mark-128.png" alt="" width="30" height="30">';
     var av = $('hlAv'); if (av) av.textContent = initials(ownerName() || window._bpEmail || bizName());
   }
 
@@ -140,10 +143,11 @@
   };
 
   /* views that are not in the sidebar still belong to a section */
-  var EXTRA = { closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'projects' };
+  var EXTRA = { closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
   function secOf(v) {
     if (crew()) return v;
     if (v === 'settings') return 'settings';
+    if (v === 'customize') return (window._bpCust && _bpCust.kind === 'calendar') ? 'calendar' : 'leads';
     var g = window.bpNavGroupOf ? bpNavGroupOf(v) : null;
     return g || EXTRA[v] || null;
   }
@@ -272,13 +276,16 @@
   /* ---------- account card ---------- */
   S.acctMenu = function (btn) {
     var c = crew();
-    S.menu(btn, c ? [{ t: 'Sign out', ico: 'out', fn: function () { bpLogout(); } }] : [
-      { t: 'Business details', ico: 'settings', fn: function () { bpNav('settings'); } },
-      { t: 'Plan & billing', ico: 'card', fn: function () { S.plan(); } },
-      { t: 'Team', ico: 'team', fn: function () { bpNav('settings'); } },
-      { sep: 1 },
-      { t: 'Back to website', ico: 'globe', fn: S.leave }
-    ], { head: '<b>' + esc(bizName()) + '</b><small>' + esc(c ? 'Crew' : (planName() || '')) + '</small>', side: !phone() && app().classList.contains('hl-min') });
+    var sw = function () { return '<span class="hl-sw' + (dark() ? ' on' : '') + '" aria-hidden="true"><i></i></span>'; };
+    var items = [];
+    if (!c && allows('settings')) items.push({ t: 'Business settings', ico: 'settings', fn: function () { bpNav('settings'); } });
+    if (!c && allows('settings')) items.push({ t: 'Plan & billing', ico: 'card', fn: S.plan });
+    items.push({ t: 'Switch theme', ico: 'moon', keep: true, right: sw(), fn: function (b) { if (window.bpToggleTheme) bpToggleTheme(); var s = b.querySelector('.hl-sw'); if (s) s.classList.toggle('on', dark()); b.setAttribute('aria-checked', String(dark())); } });
+    items.push({ t: 'Back to website', ico: 'globe', fn: S.leave });
+    items.push({ sep: 1 });
+    items.push({ t: 'Sign out', ico: 'out', fn: function () { bpLogout(); } });
+    var m = S.menu(btn, items, { head: '<b>' + esc(bizName()) + '</b><small>' + esc(c ? 'Crew' : (planName() || 'OS')) + '</small>', side: !phone() && app().classList.contains('hl-min') });
+    if (m) { var d = [].slice.call(m.querySelectorAll('.hl-mi')).filter(function (x) { return /Switch theme/.test(x.textContent); })[0]; if (d) { d.setAttribute('role', 'menuitemcheckbox'); d.setAttribute('aria-checked', String(dark())); } }
   };
   S.plan = function () {
     bpNav('settings');
