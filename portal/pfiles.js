@@ -198,6 +198,6 @@
     var j = job(), b = j && (j.blueprints || [])[i]; if (!b || !b.a) return;
     var lines = (b.a.takeoff || []).map(function (t) { return (t.qty || 1) + ' ' + (t.unit || '') + ' ' + t.item; }).join('\n');
     if (window.SP && SP.pasteList) { window.bpCloseModal && bpCloseModal(); bpNav('supply'); setTimeout(function () { SP.pasteList(lines, j.id); }, 120); return; }
-    try { navigator.clipboard.writeText(lines); alert('Takeoff copied. Paste it into Order materials to price it.'); } catch (e) { prompt('Copy the takeoff:', lines); }
+    try { navigator.clipboard.writeText(lines); (window.bpToast?bpToast('Takeoff copied. Paste it into Order materials to price it.','success'):0); } catch (e) { prompt('Copy the takeoff:', lines); }
   };
 })();

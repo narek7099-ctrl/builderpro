@@ -30008,7 +30008,7 @@ function bpAskDel(what,extra){
 /* ---- CSV export: bpCsv('contacts',[headers],[[row],[row]]) ---- */
 function bpCsvCell(v){ v=(v==null?'':String(v)); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 function bpCsv(name,head,rows){
-  if(!rows||!rows.length){alert('Nothing to export yet.');return;}
+  if(!rows||!rows.length){bpToast('Nothing to export yet.','info');return;}
   var lines=[head.map(bpCsvCell).join(',')].concat(rows.map(function(r){return r.map(bpCsvCell).join(',');}));
   /* the BOM makes Excel read it as UTF-8 instead of mangling accents and the — dash */
   var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
@@ -30049,8 +30049,8 @@ function bpFinDue(d){
     ? rows.slice(0,8).map(function(r){
         var pct=r.est>0?Math.min(100,Math.round(r.paid/r.est*100)):0;
         return '<div style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+r.id+'\')},60)">'
-          +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px"><b>'+bpEsc(r.n)+'</b><span class="bpx-num" style="color:#b45309;font-weight:700">'+bpMoneyFmt(r.due)+' due</span></div>'
-          +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:#8a97a0;margin:2px 0 5px">'+bpEsc(r.t||'Job')+'<span>'+bpMoneyFmt(r.paid)+' of '+bpMoneyFmt(r.est)+' paid</span></div>'
+          +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px"><b>'+bpEsc(r.n)+'</b><span class="bpx-num" style="color:var(--warn-t,#b45309);font-weight:700">'+bpMoneyFmt(r.due)+' due</span></div>'
+          +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--mu,#8a97a0);margin:2px 0 5px">'+bpEsc(r.t||'Job')+'<span>'+bpMoneyFmt(r.paid)+' of '+bpMoneyFmt(r.est)+' paid</span></div>'
           +'<div style="height:5px;border-radius:99px;background:#eef0f4;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:#2f6bff;border-radius:99px"></i></div></div>';
       }).join('')+(rows.length>8?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">+ '+(rows.length-8)+' more in Active Projects</div>':'')
     : '<div class="bpx-mut" style="font-size:13px;padding:22px 0;text-align:center">Nothing outstanding — every active job is fully collected. <span class=ms>celebration</span></div>';
@@ -30059,21 +30059,21 @@ function bpFinDue(d){
 function bpEsc(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function bpContacts(){
   if(!BP_LIVE){bpContactsMock();return;}
-  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th></tr></thead><tbody id="bpxCbody"><tr><td colspan="5" style="padding:22px;color:#8a97a0">Loading your contacts…</td></tr></tbody></table><div id="bpxCnav" style="padding:0 14px 12px"></div></div>';
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-panel" style="padding:0;overflow-x:auto"><table class="bpx-table"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Tags</th><th>Added</th></tr></thead><tbody id="bpxCbody"><tr><td colspan="5" style="padding:22px;color:var(--mu,#8a97a0)">Loading your contacts…</td></tr></tbody></table><div id="bpxCnav" style="padding:0 14px 12px"></div></div>';
   bpApi(GHL_DASH_URL,{view:'contacts'}).then(function(d){
     window._bpCtList=(d&&d.contactsList)||[];
     bpContactsDraw();
-  }).catch(function(){var b=document.getElementById('bpxCbody');if(b)b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">Could not load contacts right now. Please try again shortly.</td></tr>';});
+  }).catch(function(){var b=document.getElementById('bpxCbody');if(b)b.innerHTML='<tr><td colspan="5" style="padding:22px;color:var(--mu,#8a97a0)">Could not load contacts right now. Please try again shortly.</td></tr>';});
 }
 window.bpContactsDraw=function(){
   var list=window._bpCtList||[],b=document.getElementById('bpxCbody'),nv=document.getElementById('bpxCnav');
   if(!b)return;
-  if(!list.length){b.innerHTML='<tr><td colspan="5" style="padding:22px;color:#8a97a0">No contacts yet.</td></tr>';if(nv)nv.innerHTML='';return;}
+  if(!list.length){b.innerHTML='<tr><td colspan="5" style="padding:22px;color:var(--mu,#8a97a0)">No contacts yet.</td></tr>';if(nv)nv.innerHTML='';return;}
   var pg=bpPage('contacts',list,10,'bpContactsDraw()');
   var h='';pg.items.forEach(function(c){
     var tags='';(c.tags||[]).forEach(function(t){tags+='<span class="bpx-pill new" style="margin-right:4px">'+bpEsc(t)+'</span>';});
     var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-    h+='<tr><td class="bpx-cname">'+bpEsc(c.name)+'</td><td>'+bpEsc(c.phone)+'</td><td>'+bpEsc(c.email)+'</td><td>'+(tags||'<span style="color:#8a97a0">—</span>')+'</td><td style="color:#8a97a0">'+added+'</td></tr>';
+    h+='<tr><td class="bpx-cname">'+bpEsc(c.name)+'</td><td>'+bpEsc(c.phone)+'</td><td>'+bpEsc(c.email)+'</td><td>'+(tags||'<span style="color:var(--mu,#8a97a0)">—</span>')+'</td><td style="color:var(--mu,#8a97a0)">'+added+'</td></tr>';
   });
   b.innerHTML=h;
   if(nv)nv.innerHTML=pg.nav;
@@ -30092,13 +30092,13 @@ var BP_CONVOS=[
 ];
 function bpMessaging(){
   if(!BP_LIVE){bpMessagingMock();return;}
-  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpxConvList"><div style="padding:16px;color:#8a97a0">Loading…</div></div><div class="bpx-thread" id="bpxThread"><div style="padding:22px;color:#8a97a0">Select a conversation to view messages.</div></div></div>';
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpxConvList">'+(window.bpSkel?bpSkel('list'):'')+'</div><div class="bpx-thread" id="bpxThread"><div style="padding:22px;color:var(--mu,#8a97a0)">Select a conversation to view messages.</div></div></div>';
   bpApi(GHL_MSG_URL,{action:'list'}).then(function(d){
     _bpLiveConvos=(d&&d.conversations)||[];var el=document.getElementById('bpxConvList');if(!el)return;
-    if(!_bpLiveConvos.length){el.innerHTML='<div style="padding:16px;color:#8a97a0">No conversations yet.</div>';return;}
+    if(!_bpLiveConvos.length){el.innerHTML='<div style="padding:16px;color:var(--mu,#8a97a0)">No conversations yet.</div>';return;}
     var h='';_bpLiveConvos.forEach(function(c){h+='<div class="bpx-conv" id="bpxConv-'+c.id+'" onclick="bpOpenLiveConv(\''+c.id+'\')"><div class="cn">'+bpEsc(c.name)+(c.unread?' <span class="bpx-pill new">'+c.unread+'</span>':'')+'</div><div class="cp">'+(c.dir==='outbound'?'You: ':'')+bpEsc(c.last||'—')+'</div></div>';});
     el.innerHTML=h;
-  }).catch(function(){var el=document.getElementById('bpxConvList');if(el)el.innerHTML='<div style="padding:16px;color:#8a97a0">Could not load conversations.</div>';});
+  }).catch(function(){var el=document.getElementById('bpxConvList');if(el)el.innerHTML='<div style="padding:16px;color:var(--mu,#8a97a0)">Could not load conversations.</div>';});
 }
 var _bpLiveConvos=[],_bpCurConv=null,_bpMsgType='SMS';
 function bpOpenLiveConv(id){
@@ -30107,7 +30107,7 @@ function bpOpenLiveConv(id){
   var cur=document.getElementById('bpxConv-'+id);if(cur)cur.classList.add('sel');
   _bpMsgType=_bpCurConv.phone?'SMS':'Email';
   var info=(_bpCurConv.phone||'')+(_bpCurConv.phone&&_bpCurConv.email?' · ':'')+(_bpCurConv.email||'');
-  document.getElementById('bpxThread').innerHTML='<div class="bpx-thead">'+bpEsc(_bpCurConv.name)+' <span style="color:#8a97a0;font-weight:400;font-size:12px">'+bpEsc(info)+'</span></div><div id="bpxCInfo"></div><div class="bpx-tbody" id="bpxTbody"><div style="padding:18px;color:#8a97a0">Loading messages…</div></div><div class="bpx-reply"><input id="bpxReplyIn" placeholder="Type a reply…" onkeydown="if(event.key===\'Enter\')bpSendLive()"><button onclick="bpSendLive()">Send</button></div>';
+  document.getElementById('bpxThread').innerHTML='<div class="bpx-thead">'+bpEsc(_bpCurConv.name)+' <span style="color:var(--mu,#8a97a0);font-weight:400;font-size:12px">'+bpEsc(info)+'</span></div><div id="bpxCInfo"></div><div class="bpx-tbody" id="bpxTbody"><div style="padding:18px;color:var(--mu,#8a97a0)">Loading messages…</div></div><div class="bpx-reply"><input id="bpxReplyIn" placeholder="Type a reply…" onkeydown="if(event.key===\'Enter\')bpSendLive()"><button onclick="bpSendLive()">Send</button></div>';
   bpRenderCInfo();
   bpLoadThread(id);
 }
@@ -30122,8 +30122,8 @@ function bpRenderCInfo(){
     return (nm&&jn===nm)||(ph&&jp&&jp===ph);
   });
   var chips=[];
-  if(_bpCurConv.phone)chips.push('<a href="tel:'+bpEsc(_bpCurConv.phone)+'" style="text-decoration:none;color:#2f6bff"><span class=ms>call</span> '+bpEsc(_bpCurConv.phone)+'</a>');
-  if(_bpCurConv.email)chips.push('<a href="mailto:'+bpEsc(_bpCurConv.email)+'" style="text-decoration:none;color:#2f6bff"><span class=ms>mail</span> '+bpEsc(_bpCurConv.email)+'</a>');
+  if(_bpCurConv.phone)chips.push('<a href="tel:'+bpEsc(_bpCurConv.phone)+'" style="text-decoration:none;color:var(--blue,#2f6bff)"><span class=ms>call</span> '+bpEsc(_bpCurConv.phone)+'</a>');
+  if(_bpCurConv.email)chips.push('<a href="mailto:'+bpEsc(_bpCurConv.email)+'" style="text-decoration:none;color:var(--blue,#2f6bff)"><span class=ms>mail</span> '+bpEsc(_bpCurConv.email)+'</a>');
   var jobsHtml=jobs.length?jobs.map(function(j){
     var st=j.status==='done'?'<span class=ms>check_circle</span> Completed':'<span class=ms>construction</span> In progress';
     var tgt=(j.sched&&j.sched.target)?(' · target '+bpEsc(j.sched.target)):'';
@@ -30138,14 +30138,14 @@ function bpRenderCInfo(){
 function bpLoadThread(id){
   bpApi(GHL_MSG_URL,{action:'thread',id:id}).then(function(d){
     var msgs=(d&&d.messages)||[],b=document.getElementById('bpxTbody');if(!b)return;
-    if(!msgs.length){b.innerHTML='<div style="padding:18px;color:#8a97a0">No messages yet. Send the first one below.</div>';return;}
+    if(!msgs.length){b.innerHTML='<div style="padding:18px;color:var(--mu,#8a97a0)">No messages yet. Send the first one below.</div>';return;}
     var h='';msgs.forEach(function(m){
-      if(m.activity){h+='<div style="text-align:center;color:#8a97a0;font-size:11px;margin:6px 0">'+bpEsc(m.activity)+'</div>';return;}
+      if(m.activity){h+='<div style="text-align:center;color:var(--mu,#8a97a0);font-size:11px;margin:6px 0">'+bpEsc(m.activity)+'</div>';return;}
       if(!m.body)return;
       h+='<div class="bpx-bub '+(m.dir==='outbound'?'out':'in')+'">'+bpEsc(m.body)+'</div>';
     });
     b.innerHTML=h;b.scrollTop=b.scrollHeight;
-  }).catch(function(){var b=document.getElementById('bpxTbody');if(b)b.innerHTML='<div style="padding:18px;color:#8a97a0">Could not load messages.</div>';});
+  }).catch(function(){var b=document.getElementById('bpxTbody');if(b)b.innerHTML='<div style="padding:18px;color:var(--mu,#8a97a0)">Could not load messages.</div>';});
 }
 function bpSendLive(){
   var inp=document.getElementById('bpxReplyIn');if(!inp||!_bpCurConv)return;
@@ -30153,7 +30153,7 @@ function bpSendLive(){
   bpApi(GHL_MSG_URL,{action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your BuilderPro team'}).then(function(res){
     if(res&&res.ok){inp.value='';setTimeout(function(){bpLoadThread(_bpCurConv.id);},800);}
     else{alert('Could not send'+(res&&res.status?(' ('+res.status+')'):'')+'. Please try again.');}
-  }).catch(function(){alert('Could not send. Please try again.');}).then(function(){inp.disabled=false;inp.focus();});
+  }).catch(function(){bpToast('Could not send. Please try again.','error');}).then(function(){inp.disabled=false;inp.focus();});
 }
 function bpMessagingMock(){
   var list='';BP_CONVOS.forEach(function(c,i){list+='<div class="bpx-conv'+(i===0?' sel':'')+'" onclick="bpOpenConv('+i+')"><div class="cn">'+c.n+'</div><div class="cp">'+c.p+'</div></div>';});
@@ -30174,19 +30174,19 @@ function bpSendReply(inp){
 }
 function bpCalendar(){
   if(!BP_LIVE){bpCalendarMock();return;}
-  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-upnext"><div class="bpx-ptitle" style="font-size:16px;margin-bottom:14px">Upcoming inspections</div><div id="bpxUpList"><div style="padding:14px;color:#8a97a0">Loading your calendar…</div></div></div>';
+  document.getElementById('bpxViewArea').innerHTML='<div class="bpx-upnext"><div class="bpx-ptitle" style="font-size:16px;margin-bottom:14px">Upcoming inspections</div><div id="bpxUpList"><div style="padding:14px;color:var(--mu,#8a97a0)">Loading your calendar…</div></div></div>';
   bpApi(GHL_CAL_URL,{action:'list',cal:'inspection'}).then(function(d){
     var events=(d&&d.events)||[],el=document.getElementById('bpxUpList');if(!el)return;
     var now=Date.now();
     var up=events.filter(function(e){return new Date(e.start).getTime()>=now-3600000;}).sort(function(a,b){return new Date(a.start)-new Date(b.start);}).slice(0,10);
-    if(!up.length){el.innerHTML='<div style="padding:14px;color:#8a97a0">No upcoming appointments.</div>';return;}
+    if(!up.length){el.innerHTML='<div style="padding:14px;color:var(--mu,#8a97a0)">No upcoming appointments.</div>';return;}
     var mn=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'],h='';
     up.forEach(function(e){var dt=new Date(e.start);
       var time=dt.toLocaleDateString('en-US',{weekday:'short'})+' · '+dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+(e.title?(' — '+bpEsc(e.title)):'');
-      h+='<div class="bpx-uprow"><div class="bpx-update"><div class="mo">'+mn[dt.getMonth()]+'</div><div class="dy">'+dt.getDate()+'</div></div><div style="flex:1"><div class="bpx-upname">'+bpEsc(e.title||'Appointment')+(e.address?' <span style="color:#8a97a0;font-weight:400">· '+bpEsc(e.address)+'</span>':'')+'</div><div class="bpx-uptime">'+time+'</div></div><span class="bpx-pill booked">'+bpEsc(e.status||'Confirmed')+'</span></div>';
+      h+='<div class="bpx-uprow"><div class="bpx-update"><div class="mo">'+mn[dt.getMonth()]+'</div><div class="dy">'+dt.getDate()+'</div></div><div style="flex:1"><div class="bpx-upname">'+bpEsc(e.title||'Appointment')+(e.address?' <span style="color:var(--mu,#8a97a0);font-weight:400">· '+bpEsc(e.address)+'</span>':'')+'</div><div class="bpx-uptime">'+time+'</div></div><span class="bpx-pill booked">'+bpEsc(e.status||'Confirmed')+'</span></div>';
     });
     el.innerHTML=h;
-  }).catch(function(){var el=document.getElementById('bpxUpList');if(el)el.innerHTML='<div style="padding:14px;color:#8a97a0">Could not load your calendar right now.</div>';});
+  }).catch(function(){var el=document.getElementById('bpxUpList');if(el)el.innerHTML='<div style="padding:14px;color:var(--mu,#8a97a0)">Could not load your calendar right now.</div>';});
 }
 function bpCalendarMock(){
   var appts=[['AUG','12','Mike Johnson','Tue · 10:00 AM — Storm inspection'],['AUG','14','Sarah Malik','Thu · 2:00 PM — Full roof measure'],['AUG','15','Nina Patel','Fri · 9:30 AM — Insurance inspection'],['AUG','18','Jessica Tran','Mon · 11:00 AM — New build consult'],['AUG','20','Ethan Wells','Wed · 3:30 PM — Annual inspection']];
@@ -30224,8 +30224,8 @@ function bpMarkWonLive(oppId,contactId){
     if(d&&d.ok){
       _bpLiveDeals=_bpLiveDeals.filter(function(x){return x.opportunityId!==oppId;});bpDrawLiveDeals();
       bpApi(GHL_OPP_URL,{action:'won_list'}).then(function(w){bpDrawLiveWon((w&&w.opportunities)||[]);}).catch(function(){});
-    }else{if(btn){btn.disabled=false;btn.textContent='Mark as won';}alert('Something went wrong marking that deal won. Please try again.');}
-  }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Mark as won';}alert('Network issue. Please try again in a moment.');});
+    }else{if(btn){btn.disabled=false;btn.textContent='Mark as won';}bpToast('Something went wrong marking that deal won. Please try again.','error');}
+  }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Mark as won';}bpToast('Network issue. Please try again in a moment.','error');});
 }
 function bpDrawDeals(){
   var h='<div class="bpx-sec-h">Ready to close</div><div class="bpx-sec-p">These homeowners have their estimate and are deciding. When one signs, mark it won — it updates your pipeline instantly.</div><div id="bpxDealList">';
@@ -31793,7 +31793,7 @@ var _bpContacts=[];
   function bpCalConnHtml(){
     var s=_bpCalLink;
     if(!s.show) return '';
-    var err=s.msg?'<div style="font-size:12.5px;font-weight:600;color:#b91c1c;margin-top:8px">'+bpEsc(s.msg)+'</div>':'';
+    var err=s.msg?'<div style="font-size:12.5px;font-weight:600;color:var(--err-t,#b91c1c);margin-top:8px">'+bpEsc(s.msg)+'</div>':'';
     if(s.cals==='loading') return '<div class="cal-conn"><div class="cal-conn-h">Connect your inspection calendar</div><div class="bpx-mut" style="font-size:12.5px">Reading your calendars\u2026</div></div>';
     var h='<div class="cal-conn"><div class="cal-conn-h">Connect your inspection calendar</div>';
     var needLoc=(s.reason==='no_row'||s.reason==='no_location')&&!(s.cals&&s.cals.length);
@@ -31828,7 +31828,7 @@ var _bpContacts=[];
     el.innerHTML='<div class="cal-side-h"><b>Your booking page</b><span class="bpx-badge">'+(s.ready===false?'Not live yet':'Inspections')+'</span></div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">Homeowners pick a month, a day and a time on your open inspection calendar. Put it on your website, in your Google profile, and in every text.</div>'
       +(s.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>This page can\u2019t show open times until you say which calendar takes inspections. Until then visitors see your phone number instead.</span></div>':'')
-      +(s.ready===true&&s.mode==='portal'?'<div class="bpx-mut" style="font-size:12.5px;margin:-4px 0 12px;display:flex;gap:6px;align-items:flex-start"><span class=ms style="font-size:17px;color:#15803d">check_circle</span><span>Books into the same Inspections calendar you see above. Homeowners get the outside view, you get the inside one.</span></div>':'')
+      +(s.ready===true&&s.mode==='portal'?'<div class="bpx-mut" style="font-size:12.5px;margin:-4px 0 12px;display:flex;gap:6px;align-items:flex-start"><span class=ms style="font-size:17px;color:var(--ok-t,#15803d)">check_circle</span><span>Books into the same Inspections calendar you see above. Homeowners get the outside view, you get the inside one.</span></div>':'')
       +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
       +bpCalConnHtml()
       +'<div class="cal-url"><span class=ms>link</span><span class="cal-url-t">'+bpEsc(url)+'</span></div>'
@@ -32194,7 +32194,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
 /* ===== Restored Messaging: Text/Email + GHL ===== */
 /* ==== bpRenderMessaging ==== */
   function bpRenderMessaging(){
-    q('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpx-convlist"><div class="bpx-slotempty" style="padding:1rem">Loading\u2026</div></div><div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty">Select a conversation to view messages.</div></div></div>';
+    q('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpx-convlist">'+(window.bpSkel?bpSkel('list'):'')+'</div><div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty">Select a conversation to view messages.</div></div></div>';
     bpLoadConvos();
   }
 
@@ -32225,7 +32225,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
     q('bpx-thread').innerHTML=
       '<div class="bpx-thead">'+bpEsc(_bpCurConv.name)+' <span style="color:var(--mu);font-weight:400;font-size:.8rem">'+bpEsc(contactInfo)+'</span></div>'
       +'<div class="bpx-tabs"><div class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">Text</div><div class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">Email</div></div>'
-      +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages\u2026</div></div>'
+      +'<div class="bpx-tbody" id="bpx-tbody">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
       +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message\u2026" onkeydown="if(event.key===\'Enter\')bpSendMsg()"><button onclick="bpSendMsg()">Send</button></div>';
     bpSetMsgType(_bpMsgType);
     bpLoadThread(id);
@@ -32261,7 +32261,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
       var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your roofer'})}).then(function(r){return r.json();});
       if(res.ok){ inp.value=''; setTimeout(function(){ bpLoadThread(_bpCurConv.id); },800); }
       else { alert('Could not send'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'); }
-    }catch(e){ alert('Could not send. Please try again.'); }
+    }catch(e){ bpToast('Could not send. Please try again.','error'); }
     inp.disabled=false; inp.focus();
   };
 
@@ -32439,7 +32439,7 @@ window.bpContactPage=function(id){
     return (j.contactId&&j.contactId===id)||(c.name&&j.name===c.name)||(c.phone&&j.phone&&j.phone.replace(/\D/g,'')===c.phone.replace(/\D/g,''));
   });
   var jobsHtml=jobs.length?jobs.map(function(j){
-    var st=j.status==='done'?'<span class="bpx-badge" style="background:#dcfce7;color:#15803d">Done <span class=ms>check</span></span>':'<span class="bpx-badge">In progress</span>';
+    var st=j.status==='done'?'<span class="bpx-badge" style="background:#dcfce7;color:var(--ok-t,#15803d)">Done <span class=ms>check</span></span>':'<span class="bpx-badge">In progress</span>';
     return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)">'
       +'<div style="flex:1;min-width:0"><b style="font-size:13.5px">'+bpEsc(j.title||'Job')+'</b><div class="bpx-mut" style="font-size:12px">'+bpMoneyFmt(j.estimate)+(j.collected!=null?' · '+bpMoneyFmt(j.collected)+' collected':'')+'</div></div>'
       +st+'<button class="bpx-rowbtn" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\''+j.id+'\')},60)">Open</button></div>';
@@ -32455,7 +32455,7 @@ window.bpContactPage=function(id){
       +'<div style="height:6px;background:linear-gradient(90deg,'+stage[1]+','+stage[1]+'66)"></div>'
       +'<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:20px 22px">'
       +bpAvatar(c.name||'?',60)
-      +'<div style="flex:1;min-width:220px"><div style="font-size:21px;font-weight:800;color:#0f2540">'+bpEsc(c.name||'Unnamed contact')+'</div>'
+      +'<div style="flex:1;min-width:220px"><div style="font-size:21px;font-weight:800;color:var(--ink,#0f2540)">'+bpEsc(c.name||'Unnamed contact')+'</div>'
         +'<div style="margin-top:7px">'+stageChip+'</div></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+act+'</div>'
     +'</div></div>'
@@ -32466,7 +32466,7 @@ window.bpContactPage=function(id){
       +row('Stage',stageChip)
       +row('Added',added)
       +'<div style="display:flex;gap:8px;margin-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px" onclick="bpOpenEdit(\''+c.id+'\')">Edit</button>'
-      +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px;color:#dc2626;border-color:#f3c4c4" onclick="bpOpenDelete(\''+c.id+'\')">Delete</button></div>'
+      +'<button class="bpx-btn ghost" style="width:auto;margin-top:0;padding:9px 15px;color:var(--err-t,#dc2626);border-color:#f3c4c4" onclick="bpOpenDelete(\''+c.id+'\')">Delete</button></div>'
     +'</div>'
     +'<div class="bpx-panel"><div class="bpx-ptitle">Jobs with this customer</div>'+jobsHtml+'</div>'
     +'</div>';
@@ -32490,7 +32490,7 @@ window.bpMsgContact=async function(){
 };
 function bpRenderMessaging(){
   q('bpxViewArea').innerHTML='<div class="bpx-inbox">'
-    +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
+    +'<div class="bpx-convlist" id="bpx-convlist">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
     +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
   +'</div>';
   bpLoadConvos();
@@ -32519,7 +32519,7 @@ async function bpLoadConvos(){
 
     if(!mine.length){
       el.innerHTML='<div class="bpx-tempty" style="padding:24px">No '+(_bpMsgView==='email'?'email threads':'texts')+' yet.'
-        +(other.length?'<div style="margin-top:8px"><a onclick="bpNav(\''+otherView+'\')" style="color:#2f6bff;cursor:pointer;text-decoration:underline">'
+        +(other.length?'<div style="margin-top:8px"><a onclick="bpNav(\''+otherView+'\')" style="color:var(--blue,#2f6bff);cursor:pointer;text-decoration:underline">'
           +other.length+' conversation'+(other.length===1?'':'s')+' in '+otherName+'</a></div>':'')+'</div>';
       return;
     }
@@ -32552,7 +32552,7 @@ window.bpOpenConv=async function(id){
       +'<span class="bpx-rowbtn" style="margin-left:auto;flex:0 0 auto">Profile →</span></div>'
     +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
       +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
-    +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages…</div></div>'
+    +'<div class="bpx-tbody" id="bpx-tbody">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
     +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message…" onkeydown="if(event.key===\'Enter\')bpSendMsg()">'
       +'<button class="bpx-sendbtn" title="Send" onclick="bpSendMsg()">'+SEND+'</button></div>';
   bpSetMsgType(_bpMsgType);
@@ -32583,7 +32583,7 @@ function bpRenderMessaging(){
     '<div class="bpx-msgbar"><div class="bpx-msgbar-t">Conversations</div>'
       +'<button class="bpx-addbtn" onclick="bpBulkOpen()"><span class=ms>mail</span> Broadcast</button></div>'
     +'<div class="bpx-inbox">'
-      +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
+      +'<div class="bpx-convlist" id="bpx-convlist">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
       +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
     +'</div>';
   bpLoadConvos();
@@ -32740,7 +32740,7 @@ function bpMyInboxRender(){
     +'<div class="bpx-inbox"><div class="bpx-convlist mi-list"><div class="mi-folders">'
       +[['inbox','inbox','Inbox'],['starred','star','Starred'],['sent','send','Sent'],['spam','report','Spam']].map(function(f){
         return '<button class="'+(_bpMyInbox.folder===f[0]?'on':'')+'" onclick="bpMyInboxFolder(\''+f[0]+'\')"><span class=ms>'+f[1]+'</span>'+f[2]+'</button>'; }).join('')
-      +'</div><div id="bpx-convlist" class="mi-scroll"><div class="bpx-tempty" style="padding:24px">Loading\u2026</div></div></div>'
+      +'</div><div id="bpx-convlist" class="mi-scroll">'+(window.bpSkel?bpSkel('list'):'')+'</div></div>'
     +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>mail</span></div>Select an email to read it.</div></div></div>';
   bpMyInboxLoad(_bpMyInbox.q);
 }
@@ -32754,7 +32754,7 @@ function bpMailConnDraw(){
 window.bpMailConnView=function(){
   window._lsCtx='email'; window._bpMiConn=true;
   if(!q('bpxViewArea'))return;
-  q('bpxViewArea').innerHTML='<div class="bpx-tempty" style="padding:24px">Loading\u2026</div>';
+  q('bpxViewArea').innerHTML=''+(window.bpSkel?bpSkel('list'):'')+'';
   Promise.resolve(BP_SB.from('mail_connections').select('id,provider,email,status,error,last_checked,last_found,found_total')).then(function(r){
     _lsMail=(r&&r.data)||[]; bpMailConnDraw();
   },function(){ _lsMail=[]; bpMailConnDraw(); });
@@ -32909,19 +32909,19 @@ window.bpMcTplUse=function(kind,i){
 };
 window.bpMcTplSave=async function(){
   var ed=q('bpx-mc-msg'), clone=ed.cloneNode(true), sig=clone.querySelector('.mc-sig'); if(sig) sig.remove();
-  if(!(clone.innerText||clone.textContent||'').trim()){ alert('Write the email first, then save it as a template.'); return; }
+  if(!(clone.innerText||clone.textContent||'').trim()){ bpToast('Write the email first, then save it as a template.','warning'); return; }
   var name=prompt('Name this template',q('bpx-mc-sub').value.trim()||''); if(!name)return;
   /* the recipient's name goes back to {first_name}, so the template fits anyone */
   var fn=bpMcFirstName(), html=clone.innerHTML;
   if(fn&&fn!=='there') html=html.split(bpEsc(fn)).join('{first_name}');
   var r=await BP_SB.from('mail_templates').insert({name:name.slice(0,80),subject:q('bpx-mc-sub').value.trim(),html:html});
-  if(r&&r.error){ alert('Could not save the template.'); return; }
+  if(r&&r.error){ bpToast('Could not save the template.','error'); return; }
   await bpMcTplLoad(true); bpMcTplRender();
 };
 window.bpMcTplDel=async function(i){
   var t=(_bpMcTpls||[])[i]; if(!t||!confirm('Delete the template \u201c'+(t.name||'')+'\u201d?'))return;
   var r=await BP_SB.from('mail_templates').delete().eq('id',t.id);
-  if(r&&r.error){ alert('Could not delete it.'); return; }
+  if(r&&r.error){ bpToast('Could not delete it.','error'); return; }
   await bpMcTplLoad(true); bpMcTplRender();
 };
 /* Signature: one per user, kept in mail_signatures so it follows them to any device. */
@@ -32943,7 +32943,7 @@ window.bpMcSigSave=async function(){
   var html=q('bpx-mc-siged').innerHTML.trim(), auto=q('bpx-mc-sigauto').checked;
   if(!(q('bpx-mc-siged').innerText||'').trim()) html='';
   var r=await BP_SB.from('mail_signatures').upsert({html:html,auto:auto,updated_at:new Date().toISOString()});
-  if(r&&r.error){ alert('Could not save the signature.'); return; }
+  if(r&&r.error){ bpToast('Could not save the signature.','error'); return; }
   _bpMcSig={html:html,auto:auto};
   q('bpx-mc-sigp').hidden=true;
   var ed=q('bpx-mc-msg'), old=ed&&ed.querySelector('.mc-sig');
@@ -33044,7 +33044,7 @@ function bpRenderInbox(){
     +(isMail?bpMailTabs():'')
     +(!isMail?bpTextsPendingBanner():'')
     +'<div class="bpx-inbox">'
-      +'<div class="bpx-convlist" id="bpx-convlist"><div class="bpx-tempty" style="padding:24px">Loading…</div></div>'
+      +'<div class="bpx-convlist" id="bpx-convlist">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
       +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>'+(isMail?'mail':'chat')+'</span></div>'
         +'Select a '+(isMail?'thread':'conversation')+' to view messages.</div></div>'
     +'</div>';
@@ -33170,7 +33170,7 @@ window.bpOpenConv=async function(id){
       +'<span class="bpx-rowbtn" style="margin-left:auto;flex:0 0 auto">Profile →</span></div>'
     +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
       +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
-    +'<div class="bpx-tbody" id="bpx-tbody"><div class="bpx-tempty">Loading messages…</div></div>'
+    +'<div class="bpx-tbody" id="bpx-tbody">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
     +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message…" onkeydown="if(event.key===\'Enter\')bpSendMsg()">'
       +'<button class="bpx-clockbtn" title="Schedule for later" onclick="bpSchedOneOpen()">'+CLOCK+'</button>'
       +'<button class="bpx-sendbtn" title="Send" onclick="bpSendMsg()">'+SEND+'</button></div>';
@@ -33523,7 +33523,7 @@ window.bpPjSlotOpen=function(jobId,iso){
     +'<label>Start</label><input type="time" id="pjs-t" value="'+sl.t+'" step="900">'
     +'<label>How long</label><select id="pjs-d">'+durs.map(function(d){return '<option value="'+d[0]+'"'+(d[0]===sl.dur?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select>'
     +(crews.length?'<label>Crew</label><select id="pjs-c"><option value="">No crew</option>'+crews.map(function(c){return '<option value="'+c.id+'"'+(j.crew===c.id?' selected':'')+'>'+bpEsc(c.name)+'</option>';}).join('')+'</select>':'')
-    +'<div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="bpx-btn ghost" style="color:#dc2626" onclick="bpPjUnbook(\''+j.id+'\',\''+iso+'\');bpCloseModal()">Remove from this day</button>'
+    +'<div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="bpx-btn ghost" style="color:var(--err-t,#dc2626)" onclick="bpPjUnbook(\''+j.id+'\',\''+iso+'\');bpCloseModal()">Remove from this day</button>'
     +'<button class="bpx-btn ghost" onclick="bpCloseModal();bpProjOpen(\''+j.id+'\')">Open project</button>'
     +'<button class="bpx-btn" onclick="bpPjSlotSave(\''+j.id+'\',\''+iso+'\')">Save</button></div>');
 };
@@ -33566,12 +33566,12 @@ function bpPjWeekBoard(el,seg){
 window.bpCrewBookOpen=function(iso){
   iso=iso||pjIso(new Date());
   var jobs=bpJobsGet().filter(function(j){return j.status==='active';}), crews=pjCrews();
-  if(!jobs.length){ alert('Add an active project first.'); return; }
+  if(!jobs.length){ bpToast('Add an active project first.','warning'); return; }
   var durs=[[60,'1 hour'],[120,'2 hours'],[180,'3 hours'],[240,'4 hours'],[360,'6 hours'],[480,'8 hours (all day)'],[600,'10 hours']];
   bpModal('<h3>Schedule a crew</h3><div class="bpx-sub">Books the job on the calendar, on that crew’s day.</div>'
     +'<label>Job</label><select id="cb-job">'+jobs.map(function(j){return '<option value="'+j.id+'">'+bpEsc((j.name||'Project')+' — '+(j.title||''))+'</option>';}).join('')+'</select>'
     +(crews.length?'<label>Crew</label><select id="cb-crew">'+crews.map(function(c){return '<option value="'+c.id+'">'+bpEsc(c.name)+'</option>';}).join('')+'<option value="">No crew</option></select>'
-      :'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">No crews yet. Make them under <a style="color:#2f6bff;cursor:pointer" onclick="bpCloseModal();bpNav(\'employees\')">Employees</a>.</div>')
+      :'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">No crews yet. Make them under <a style="color:var(--blue,#2f6bff);cursor:pointer" onclick="bpCloseModal();bpNav(\'employees\')">Employees</a>.</div>')
     +'<label>Day</label><input type="date" id="cb-day" value="'+iso+'">'
     +'<div style="display:flex;gap:10px"><div style="flex:1"><label>Start</label><input type="time" id="cb-t" value="08:00" step="900"></div>'
     +'<div style="flex:1"><label>How long</label><select id="cb-d">'+durs.map(function(d){return '<option value="'+d[0]+'"'+(d[0]===480?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select></div></div>'
@@ -33760,13 +33760,13 @@ function pjRoad(line,n,hasShop,straight){
 window.bpPjCopy=function(){
   var t='Route for '+new Date(_pjRoute.date+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+':\n'
     +_pjRoute.order.map(function(j,i){return (i+1)+'. '+(j.name||'Project')+' — '+j.addr;}).join('\n');
-  try{ navigator.clipboard.writeText(t); alert('Copied. Paste it into a text to your crew.'); }catch(e){ prompt('Copy this:',t); }
+  try{ navigator.clipboard.writeText(t); bpToast('Copied. Paste it into a text to your crew.','success'); }catch(e){ prompt('Copy this:',t); }
 };
 
 /* up to four starred projects: pinned on the Projects page and first on the dashboard */
 window.bpProjStar=function(id){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j)return;
-  if(!j.starred&&jobs.filter(function(x){return x.starred&&x.status==='active';}).length>=4){alert('Four projects can be starred at a time. Unstar one first.');return;}
+  if(!j.starred&&jobs.filter(function(x){return x.starred&&x.status==='active';}).length>=4){bpToast('Four projects can be starred at a time. Unstar one first.','warning');return;}
   j.starred=!j.starred; bpJobsSet(jobs);
   if(window._bpCurView==='dashboard'&&window.bpDashboard)bpDashboard(); else bpActiveJobs();
 };
@@ -33909,7 +33909,7 @@ window.bpProjOpen=function(id){
       +'</div>'
       +'<input type="file" id="bpx-pj-doc" accept="image/*,.pdf,application/pdf" style="display:none" onchange="bpProjDoc(event)">'
       +'<input type="file" id="bpx-pj-scan" accept="image/*" capture="environment" style="display:none" onchange="bpProjDoc(event,true)">')
-    +'<div style="display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line-2);padding-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:#dc2626;border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
+    +'<div style="display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:nowrap;border-top:1px solid var(--line-2);padding-top:16px"><button class="bpx-btn ghost" style="width:auto;margin-top:0;color:var(--err-t,#dc2626);border-color:#f3c4c4;font-size:13.5px" onclick="bpProjDelete()">Delete project</button><span style="flex:1"></span><button class="bpx-btn ghost" style="width:auto;margin-top:0" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 26px" onclick="bpProjSave()">Save</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='760px';mc.style.width='95vw';mc.style.padding='28px 32px';}
   bpProjCalDraw(); bpProjPhotosRender(j); bpProjExpRender(); bpProjBudgetRender(); bpProjCrewRender(); bpProjBal(); bpProjDocsRender(j); if(window.bpPF)bpPF.bpRender(j); bpCtLoad(j);
   if(window.bpProjMaterials) bpProjMaterials(j.id); else { var mh=document.getElementById('bpx-pj-mat'); if(mh) mh.innerHTML='<div class="bpx-mut" style="font-size:13px">Supply is still loading. Open the Supply branch once and come back.</div>'; }
@@ -33926,7 +33926,7 @@ function bpProjDocsRender(j){
   el.innerHTML=(j.docs||[]).map(function(d,i){
     var isPdf=(d.t||'').indexOf('pdf')>-1;
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eef1f6;font-size:13px">'
-      +'<span style="flex:0 0 auto;width:30px;height:30px;border-radius:7px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#64748b">'+(isPdf?'PDF':'IMG')+'</span>'
+      +'<span style="flex:0 0 auto;width:30px;height:30px;border-radius:7px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--mu,#64748b)">'+(isPdf?'PDF':'IMG')+'</span>'
       +'<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+bpEsc(d.n||'Document')+'</span>'
       +'<button class="bpx-rowbtn" onclick="bpProjDocOpen('+i+')">View</button>'
       +'<button class="bpx-exprm" onclick="bpProjDocDel('+i+')">×</button></div>';
@@ -34029,7 +34029,7 @@ window.bpProjDoc=function(e,scan){
   var f=e.target.files&&e.target.files[0]; if(!f)return;
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   j.docs=j.docs||[];
-  if(j.docs.length>=32){alert('Up to 32 documents per project.');return;}
+  if(j.docs.length>=32){bpToast('Up to 32 documents per project.','warning');return;}
   var isPdf=/pdf/i.test(f.type)||/\.pdf$/i.test(f.name);
   var finish=function(canvas,nm){ bpDocPush(j,{n:nm,t:'image/jpeg',d:canvas.toDataURL('image/jpeg',0.82)}); bpProjDocsRender(j); };
   var scanDate='Scan '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
@@ -34354,7 +34354,7 @@ window.bpProjPhoto=function(e){
   var f=e.target.files&&e.target.files[0]; if(!f)return;
   var j=bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   j.photos=j.photos||[];
-  if(j.photos.length>=24){alert('Up to 24 photos per project.');return;}
+  if(j.photos.length>=24){bpToast('Up to 24 photos per project.','warning');return;}
   var r=new FileReader();
   r.onload=function(){
     var img=new Image();
@@ -34723,7 +34723,7 @@ function bpCtRender(note){
   var el=document.getElementById('bpx-pj-contract'); if(!el)return;
   var j=_bpCt.job||{};
   if(!_bpCt.loaded){ el.innerHTML='<div class="bpx-empty2">Loading…</div>'; return; }
-  var warn=note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:10px 13px;font-size:12.5px;margin-bottom:12px">'+bpEsc(note)+'</div>':'';
+  var warn=note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:var(--warn-t,#b45309);border-radius:10px;padding:10px 13px;font-size:12.5px;margin-bottom:12px">'+bpEsc(note)+'</div>':'';
   var offline=!(window.BP_LIVE&&window.BP_SB)?'<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:12.5px;font-weight:600;margin-bottom:12px">Sign in to create and send contracts.</div>':'';
   var list=_bpCt.rows.length?_bpCt.rows.map(function(c){
     var when=c.signed_at?('Signed '+new Date(c.signed_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})):(c.sent_at?('Sent '+new Date(c.sent_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})):'Not sent yet');
@@ -34852,12 +34852,12 @@ window.bpCtPrint=function(id){
   w.document.write('<!doctype html><meta charset="utf-8"><title>'+bpEsc(c.title||'Agreement')+'</title>'
     +'<style>@page{size:letter;margin:.7in}body{margin:0;font:13px/1.6 Inter,-apple-system,Segoe UI,sans-serif;color:#0f172a}'
     +'.bpx-ct-doc{max-width:none}.bpx-ct-head{display:flex;justify-content:space-between;border-bottom:2px solid #0f172a;padding-bottom:10px;margin-bottom:18px}'
-    +'.bpx-ct-head b{display:block;font-size:16px}.bpx-ct-head span{display:block;font-size:11.5px;color:#64748b}'
+    +'.bpx-ct-head b{display:block;font-size:16px}.bpx-ct-head span{display:block;font-size:11.5px;color:var(--mu,#64748b)}'
     +'pre{white-space:pre-wrap;font:inherit;margin:0}'
     +'.bpx-ct-sig{display:flex;gap:26px;align-items:flex-end;margin-top:26px;border-top:1px solid #cbd5e1;padding-top:16px}'
-    +'.bpx-ct-sig .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#64748b;margin-bottom:4px}'
+    +'.bpx-ct-sig .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu,#64748b);margin-bottom:4px}'
     +'.bpx-ct-sig img{display:block;height:54px}.bpx-ct-sig .nm{border-top:1px solid #0f172a;margin-top:4px;padding-top:3px;font-weight:600}'
-    +'.bpx-mut{color:#64748b}</style>'+bpCtDoc(c,c.status==='signed')
+    +'.bpx-mut{color:var(--mu,#64748b)}</style>'+bpCtDoc(c,c.status==='signed')
     +'<scr'+'ipt>setTimeout(function(){window.print();},400);</scr'+'ipt>');
   w.document.close();
 };
@@ -35250,7 +35250,7 @@ window.bpEstPrev=function(){
     +'<div style="text-align:right;color:#4b5563;font-size:11.5px;line-height:1.7">'+addrLines.map(function(x){return bpEsc(x);}).join('<br>')+'</div>'
     +'<div style="display:flex;gap:26px;margin-top:26px;flex-wrap:wrap">'
       +'<div style="flex:1.2;min-width:110px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Prepared for</div><div style="color:#4b5563">'+(cust?bpEsc(cust):'—')+'</div></div>'
-      +'<div style="flex:1;min-width:110px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Estimate Number</div><div style="color:#6b7280">EST-000001</div></div>'
+      +'<div style="flex:1;min-width:110px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Estimate Number</div><div style="color:var(--mu,#6b7280)">EST-000001</div></div>'
       +'<div style="flex:1;min-width:130px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Issue Date</div><div style="color:#111827">'+fmt(iss)+'</div>'
         +'<div style="font-weight:700;color:#111827;margin:10px 0 5px">Valid Until</div><div style="color:#111827">'+fmt(exp)+'</div></div>'
     +'</div>'
@@ -35263,7 +35263,7 @@ window.bpEstPrev=function(){
         +'<th style="text-align:right;padding:0 0 8px;font-weight:700;text-transform:uppercase">Subtotal</th></tr>'
       +'<tr><td colspan="5" style="border-top:2px solid #2f6bff"></td></tr></thead>'
       +'<tbody><tr style="border-bottom:1px solid #eef1f7">'
-        +'<td style="padding:12px 0"><b style="color:#111827">'+bpEsc(t)+'</b>'+(desc?'<div style="color:#6b7280;font-size:10.5px;margin-top:2px">'+bpEsc(desc)+'</div>':'')+'</td>'
+        +'<td style="padding:12px 0"><b style="color:#111827">'+bpEsc(t)+'</b>'+(desc?'<div style="color:var(--mu,#6b7280);font-size:10.5px;margin-top:2px">'+bpEsc(desc)+'</div>':'')+'</td>'
         +'<td style="padding:12px 0" class="bpx-num">'+money(amt)+'</td>'
         +'<td style="text-align:center;padding:12px 0">1</td>'
         +'<td style="text-align:center;padding:12px 0">—</td>'
@@ -35375,7 +35375,7 @@ window.bpInvPrev=function(){
     +'<div style="text-align:right;color:#4b5563;font-size:11.5px;line-height:1.7">'+addrLines.map(function(x){return bpEsc(x);}).join('<br>')+'</div>'
     +'<div style="display:flex;gap:26px;margin-top:26px;flex-wrap:wrap">'
       +'<div style="flex:1.2;min-width:110px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Billed to</div><div style="color:#4b5563">'+(cust?bpEsc(cust):'—')+'</div></div>'
-      +'<div style="flex:1;min-width:110px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Invoice Number</div><div style="color:#6b7280">INV-000001</div></div>'
+      +'<div style="flex:1;min-width:110px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Invoice Number</div><div style="color:var(--mu,#6b7280)">INV-000001</div></div>'
       +'<div style="flex:1;min-width:130px"><div style="font-weight:700;color:#111827;margin-bottom:5px">Issue Date</div><div style="color:#111827">'+fmt(iss)+'</div>'
         +'<div style="font-weight:700;color:#111827;margin:10px 0 5px">Due Date</div><div style="color:#111827">'+(dd===0?fmt(iss):fmt(due))+'</div></div>'
     +'</div>'
@@ -35388,7 +35388,7 @@ window.bpInvPrev=function(){
         +'<th style="text-align:right;padding:0 0 8px;font-weight:700;text-transform:uppercase">Subtotal</th></tr>'
       +'<tr><td colspan="5" style="border-top:2px solid #2f6bff"></td></tr></thead>'
       +'<tbody><tr style="border-bottom:1px solid #eef1f7">'
-        +'<td style="padding:12px 0"><b style="color:#111827">'+bpEsc(t)+'</b>'+(desc?'<div style="color:#6b7280;font-size:10.5px;margin-top:2px">'+bpEsc(desc)+'</div>':'')+'</td>'
+        +'<td style="padding:12px 0"><b style="color:#111827">'+bpEsc(t)+'</b>'+(desc?'<div style="color:var(--mu,#6b7280);font-size:10.5px;margin-top:2px">'+bpEsc(desc)+'</div>':'')+'</td>'
         +'<td style="padding:12px 0" class="bpx-num">'+money(amt)+'</td>'
         +'<td style="text-align:center;padding:12px 0">1</td>'
         +'<td style="text-align:center;padding:12px 0">—</td>'
@@ -35814,9 +35814,9 @@ function bpSoKpis(){
     +tile('Scheduled',L?bpNum(sched):'—',sched?'posts waiting to go out':'nothing queued yet');
 }
 function bpSoPane(){
-  if(!_bpSo.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  if(!_bpSo.loaded)return ''+(window.bpSkel?bpSkel('panel'):'')+'';
   var h='';
-  if(_bpSo.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpSo.note)+'</div>';
+  if(_bpSo.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:var(--warn-t,#b45309);border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpSo.note)+'</div>';
   if(_bpSo.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px"><span class=ms>warning</span> DEMO DATA — sample accounts and posts. Sign in to connect yours.</div>';
   var t=_bpSo.tab;
   if(t==='posts')return h+bpSoPostsPane();
@@ -35886,7 +35886,7 @@ function bpSoPostsPane(){
     var errs=Object.keys(res).filter(function(c){return res[c]&&!res[c].ok;}).map(function(c){return (BP_SO_CH[c]||{n:c}).n+': '+res[c].error;});
     return '<div class="bpx-so-row">'+(p.image_url?'<img src="'+bpEsc(p.image_url)+'" alt="" loading="lazy">':'<div class="bpx-so-noimg"></div>')
       +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">'+bpSoStatus(p)+'<span class="bpx-mut" style="font-size:12px">'+wtxt+'</span>'+chips+'</div>'
-      +'<div class="bpx-so-txt">'+bpEsc(p.text||'(photo only)')+'</div>'+(errs.length?'<div style="color:#b91c1c;font-size:12px;margin-top:4px">'+bpEsc(errs.join(' · '))+'</div>':'')+'</div>'
+      +'<div class="bpx-so-txt">'+bpEsc(p.text||'(photo only)')+'</div>'+(errs.length?'<div style="color:var(--err-t,#b91c1c);font-size:12px;margin-top:4px">'+bpEsc(errs.join(' · '))+'</div>':'')+'</div>'
       +'<div style="display:flex;gap:6px;flex-shrink:0">'+(p.status==='scheduled'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoCompose(\''+bpEsc(p.id)+'\')">Edit</button>':'')+(p.status==='failed'||p.status==='partial'?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoRetry(\''+bpEsc(p.id)+'\')">Retry</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDelete(\''+bpEsc(p.id)+'\')" title="Remove"><span class=ms>close</span></button></div></div>';
   };
   var h=head;
@@ -35945,7 +35945,7 @@ window.bpSoCompose=function(editId,presetDate){
   var local=function(d){if(!d)return '';var z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16);};
   var chk=function(k){var on=p?(p.channels||[]).indexOf(k)>=0:!!conn[k];return '<label class="bpx-so-ck'+(conn[k]?'':' off')+'"><input type="checkbox" data-so-ch="'+k+'" '+(on&&conn[k]?'checked':'')+' '+(conn[k]?'':'disabled')+' onchange="bpSoCount()"> '+bpSoChip(k)+(conn[k]?'':'<span class="bpx-mut" style="font-size:11px;margin-left:6px">not connected</span>')+'</label>';};
   bpModal('<h3>'+(p?'Edit post':'New post')+'</h3>'
-    +(any?'':'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:8px">Connect an account first — nothing is connected yet.</div>')
+    +(any?'':'<div style="background:#fff7ed;border:1px solid #fed7aa;color:var(--warn-t,#b45309);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:8px">Connect an account first — nothing is connected yet.</div>')
     +'<label>Post to</label><div class="bpx-so-cks">'+chk('facebook')+chk('instagram')+chk('gbp')+'</div>'
     +'<label>What do you want to say? <span id="bpx-so-cnt" class="bpx-mut" style="font-weight:400;float:right"></span></label><textarea id="bpx-so-text" placeholder="Just finished a full replacement on Oak Hill Dr — before and after below. Free inspections all month." oninput="bpSoCount()">'+bpEsc(p?p.text||'':'')+'</textarea>'
     +'<label>Photo <span class="bpx-mut" style="font-weight:400">— required for Instagram</span></label>'
@@ -36095,9 +36095,9 @@ function bpCpKpis(){
     +tile('Tracking',L?bpNum(_bpCp.rows.length):'—',_bpCp.demo?'demo set':(_bpCp.needsKey?'not switched on yet':'rivals, refreshed daily'));
 }
 function bpCpPane(){
-  if(!_bpCp.loaded)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
+  if(!_bpCp.loaded)return ''+(window.bpSkel?bpSkel('panel'):'')+'';
   var h='';
-  if(_bpCp.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpCp.note)+'</div>';
+  if(_bpCp.note)h+='<div style="background:#fff7ed;border:1px solid #fed7aa;color:var(--warn-t,#b45309);border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpCp.note)+'</div>';
   if(_bpCp.demo)h+='<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:600;margin-bottom:12px"><span class=ms>warning</span> DEMO DATA — illustrative businesses, not your real market. Sign in to track the businesses in your area.</div>';
   else if(_bpCp.needsKey)h+='<div style="background:var(--tint);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 13px;font-size:13px;margin-bottom:12px"><span class=ms>info</span> Competitor lookups aren\'t switched on for this account yet, so nothing is listed below. Ask your BuilderPro contact to enable them.</div>';
   var t=_bpCp.tab;
@@ -36138,7 +36138,7 @@ function bpCpScorePane(){
   var list=bpCpRanked();
   if(!list.length)return '<div class="bpx-panel"><div class="bpx-mk-empty"><b>No competitors tracked yet</b>Search the businesses in your area and track the ones you run into on bids.<div style="margin-top:14px"><button class="bpx-btn" style="width:auto;margin-top:0;padding:10px 18px" onclick="bpCpTab(\'find\')">Find competitors</button></div></div></div>';
   var rows=list.map(function(x){
-    var vel=x.vel==null?'<span class="bpx-mut">—</span>':(x.vel>0?'<span style="color:#15803d;font-weight:600">+'+x.vel+'</span>':'<span class="bpx-mut">0</span>');
+    var vel=x.vel==null?'<span class="bpx-mut">—</span>':(x.vel>0?'<span style="color:var(--ok-t,#15803d);font-weight:600">+'+x.vel+'</span>':'<span class="bpx-mut">0</span>');
     var meta=x.you?'<span class="bpx-badge">You</span>':[x.price,x.dist!=null?x.dist+' mi':'',x.claimed===false?'<span class="bpx-badge warn">unclaimed</span>':''].filter(Boolean).join(' · ');
     return '<tr'+(x.you?' class="bpx-cp-you"':'')+'><td class="bpx-r bpx-num" style="width:40px;color:var(--grey)">#'+x.rank+'</td>'
       +'<td class="bpx-cname"><div>'+bpEsc(x.name||'')+'</div><div class="bpx-mut" style="font-size:11.5px;font-weight:400">'+(meta||'')+'</div></td>'
@@ -36288,8 +36288,8 @@ function bpMkKpis(){
 }
 function bpMkPane(){
   var t=_bpMk.tab;
-  if(!_bpMk.loaded&&window.BP_LIVE)return '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div><div class="bpx-skel" style="width:70%"></div></div>';
-  var note=_bpMk.note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:#b45309;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpMk.note)+'</div>':'';
+  if(!_bpMk.loaded&&window.BP_LIVE)return ''+(window.bpSkel?bpSkel('panel'):'')+'';
+  var note=_bpMk.note?'<div style="background:#fff7ed;border:1px solid #fed7aa;color:var(--warn-t,#b45309);border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px">'+bpEsc(_bpMk.note)+'</div>':'';
   if(note)return note+bpMkPaneBody(t);
   return bpMkPaneBody(t);
 }
@@ -36351,9 +36351,9 @@ function bpMkPaneBody(t){
   /* overview */
   var m=bpMkStat('meta'),g=bpMkStat('google_ads'),b=bpMkStat('gbp'),y=bpMkStat('yelp');
   var rep='';
-  if(bpMkConn('yelp')){rep+='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:30px;font-weight:800;color:#0f2540">'+(y.rating||'—')+'</span><span class="bpx-mk-stars">'+'★'.repeat(Math.round(+y.rating||0))+'</span><span class="bpx-mut" style="font-size:12.5px">'+bpNum(y.reviews||0)+' Yelp reviews</span></div>'
+  if(bpMkConn('yelp')){rep+='<div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:30px;font-weight:800;color:var(--ink,#0f2540)">'+(y.rating||'—')+'</span><span class="bpx-mk-stars">'+'★'.repeat(Math.round(+y.rating||0))+'</span><span class="bpx-mut" style="font-size:12.5px">'+bpNum(y.reviews||0)+' Yelp reviews</span></div>'
     +((y.reviewsList||[]).map(function(r){return '<div class="bpx-mk-rev"><span class="bpx-mk-stars">'+'★'.repeat(+r.rating||0)+'</span> <b>'+bpEsc(r.user||'')+'</b><div class="bpx-mut">'+bpEsc(r.text||'')+'</div></div>';}).join(''));}
-  if(bpMkConn('gbp')){rep+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:'+(rep?'14px':'0')+'">'+[['Calls',b.calls],['Directions',b.directions],['Site clicks',b.website]].map(function(x){return '<div style="background:var(--soft);border-radius:10px;padding:10px 12px"><div class="bpx-mut" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">'+x[0]+'</div><div style="font-size:20px;font-weight:800;color:#0f2540">'+bpNum(x[1]||0)+'</div></div>';}).join('')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:8px">From your Google Business Profile · last 30 days</div>';}
+  if(bpMkConn('gbp')){rep+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:'+(rep?'14px':'0')+'">'+[['Calls',b.calls],['Directions',b.directions],['Site clicks',b.website]].map(function(x){return '<div style="background:var(--soft);border-radius:10px;padding:10px 12px"><div class="bpx-mut" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">'+x[0]+'</div><div style="font-size:20px;font-weight:800;color:var(--ink,#0f2540)">'+bpNum(x[1]||0)+'</div></div>';}).join('')+'</div><div class="bpx-mut" style="font-size:12px;margin-top:8px">From your Google Business Profile · last 30 days</div>';}
   if(!rep)rep='<div class="bpx-mut" style="font-size:13px">Connect Google Business Profile or Yelp to track calls, directions, and reviews.</div>';
   /* the ranked chart above replaced the hand-drawn source bars: same numbers,
      one chart language, and a table under it */
@@ -36764,7 +36764,7 @@ window.bpCancelOpen=function(){
     +'</select>'
     +'<label>Anything we could have done better?</label><textarea id="bpx-cx-notes" style="width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Optional — but it really helps us improve."></textarea>'
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
-    +'<div class="row" style="margin-top:14px"><button class="bpx-btn" onclick="bpCloseModal()">Keep my plan</button><button class="bpx-btn ghost" id="bpx-cx-go" style="color:#dc2626;border-color:#f3c4c4" onclick="bpCancelSend()">Request cancellation</button></div>');
+    +'<div class="row" style="margin-top:14px"><button class="bpx-btn" onclick="bpCloseModal()">Keep my plan</button><button class="bpx-btn ghost" id="bpx-cx-go" style="color:var(--err-t,#dc2626);border-color:#f3c4c4" onclick="bpCancelSend()">Request cancellation</button></div>');
 };
 window.bpCancelSend=async function(){
   var g=function(id){var e=q(id);return e?e.value:'';}, m=q('bpx-mmsg'), btn=q('bpx-cx-go');
@@ -37060,7 +37060,7 @@ function bpLeadSources(){
     area.innerHTML='<div class="bpx-panel"><div class="bpx-empty2">Sign in to connect a lead source.</div></div>';
     return;
   }
-  area.innerHTML='<div class="bpx-panel"><div class="bpx-mut" style="font-size:13px">Loading your lead sources…</div></div>';
+  area.innerHTML=''+(window.bpSkel?bpSkel('table'):'')+'';
   Promise.all([
     Promise.resolve(BP_SB.from('lead_sources').select('*').order('created_at',{ascending:false})).catch(function(e){return {error:e};}),
     Promise.resolve(BP_SB.from('lead_events').select('*').order('received_at',{ascending:false}).limit(100)).catch(function(){return {data:[]};}),
@@ -37094,7 +37094,7 @@ window.lsSetCost=function(id){
   var none=_lsEvents.filter(function(e){return e.source_id===id&&!(+e.cost);});
   var fill=none.length&&v&&confirm('Also set $'+v+' on the '+none.length+' lead'+(none.length>1?'s':'')+' from this source that have no cost yet?');
   Promise.resolve(BP_SB.from('lead_sources').update({cost_per_lead:v}).eq('id',id)).then(function(r){
-    if(r&&r.error){alert('Could not save the cost.');return;}
+    if(r&&r.error){bpToast('Could not save the cost.','error');return;}
     s.cost_per_lead=v;
     if(!fill){lsRender();return;}
     return Promise.resolve(BP_SB.from('lead_events').update({cost:v}).in('id',none.map(function(e){return e.id;}))).then(function(r2){
@@ -37105,14 +37105,14 @@ window.lsSetCost=function(id){
 window.lsLeadCost=function(id,el){
   var v=el.value===''?0:Math.max(0,parseFloat(el.value)||0);
   Promise.resolve(BP_SB.from('lead_events').update({cost:v}).eq('id',id)).then(function(r){
-    if(r&&r.error){alert('Could not save the cost.');return;}
+    if(r&&r.error){bpToast('Could not save the cost.','error');return;}
     _lsEvents.forEach(function(e){if(e.id===id)e.cost=v;}); lsRender();
   });
 };
 window.lsLeadDel=function(id){
   if(!confirm('Delete this lead? It is removed from this list and from your spend. The contact it created stays in Contacts.'))return;
   Promise.resolve(BP_SB.from('lead_events').delete().eq('id',id)).then(function(r){
-    if(r&&r.error){alert('Could not delete the lead.');return;}
+    if(r&&r.error){bpToast('Could not delete the lead.','error');return;}
     _lsEvents=_lsEvents.filter(function(e){return e.id!==id;}); lsRender();
   });
 };
@@ -37223,7 +37223,7 @@ function lsRender(){
       +_lsEvents.slice(0,40).map(function(e){
         var s=_lsSources.filter(function(x){return x.id===e.source_id;})[0]||{};
         var badge=e.status==='accepted'?'ok':e.status==='duplicate'?'warn':'bad';
-        return '<tr><td>'+bpEsc(e.name||'—')+'</td><td>'+(e.phone?'<a href="tel:'+bpEsc(e.phone)+'" style="color:#2f6bff;text-decoration:none">'+bpEsc(e.phone)+'</a>':'—')+'</td>'
+        return '<tr><td>'+bpEsc(e.name||'—')+'</td><td>'+(e.phone?'<a href="tel:'+bpEsc(e.phone)+'" style="color:var(--blue,#2f6bff);text-decoration:none">'+bpEsc(e.phone)+'</a>':'—')+'</td>'
           +'<td style="max-width:280px">'+bpEsc((e.job||'').slice(0,90))+'</td>'
           +'<td>'+bpEsc(s.label||lsVendorName(s.vendor||'')||'—')+'</td>'
           +'<td><span class="bpx-badge '+badge+'" title="'+bpEsc(e.reason||'')+'">'+bpEsc(e.status)+'</span></td>'
@@ -37639,7 +37639,7 @@ window.lsToggle=function(id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
   s.active=!s.active; lsRender();
   Promise.resolve(BP_SB.from('lead_sources').update({active:s.active}).eq('id',id))
-    .then(function(){},function(){ s.active=!s.active; lsRender(); alert('Couldn’t save that — try again.'); });
+    .then(function(){},function(){ s.active=!s.active; lsRender(); bpToast('Couldn’t save that — try again.','error'); });
 };
 window.lsDel=function(id){
   var s=_lsSources.filter(function(x){return x.id===id;})[0]; if(!s)return;
@@ -37662,7 +37662,7 @@ window.lsTest=function(id){
       address:'1 Test Street',job:'Test lead sent from BuilderPro — safe to delete.'})})
   .then(function(r){return r.json().catch(function(){return {};});})
   .then(function(d){
-    if(d&&d.ok)alert('It went through — status "'+d.status+'". Check Contacts for "Test Lead '+stamp+'".');
+    if(d&&d.ok)bpToast('It went through — status "'+d.status+'". Check Contacts for "Test Lead '+stamp+'".');
     else alert('The webhook answered with an error: '+((d&&d.error)||'unknown')+'\n\nIf it says the function was not found, deploy lead-intake first.');
     bpLeadSources();
   }).catch(function(){ alert('Couldn’t reach the webhook. If lead-intake hasn’t been deployed yet, that’s why.'); });
@@ -37705,14 +37705,14 @@ lsCss.textContent='.bpx-cards2{display:grid;grid-template-columns:repeat(auto-fi
   +'.ls-steps > li > i{flex:0 0 auto;width:24px;height:24px;margin-top:1px;border-radius:50%;background:var(--soft);'
     +'border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-style:normal;'
     +'font-size:12px;font-weight:700;color:var(--ink)}'
-  +'.ls-peek summary{cursor:pointer;font-size:12.5px;color:#2f6bff;margin:4px 0}'
+  +'.ls-peek summary{cursor:pointer;font-size:12.5px;color:var(--blue,#2f6bff);margin:4px 0}'
   /* the "if it says X" aside, set apart so it reads as a rescue rather than
      another thing to do */
-  +'.ls-note{display:block;margin-top:5px;font-size:12.5px;color:#b45309;background:#fff8ec;border:1px solid #f2dfbd;'
+  +'.ls-note{display:block;margin-top:5px;font-size:12.5px;color:var(--warn-t,#b45309);background:#fff8ec;border:1px solid #f2dfbd;'
     +'border-radius:8px;padding:6px 10px;line-height:1.5}'
   +'.ls-done{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;padding:12px 14px;border-radius:11px;'
     +'background:#eefaf1;border:1px solid #cfe9d8;font-size:13px;line-height:1.6;color:#256b42}'
-  +'.ls-done .ms{font-size:19px;flex:0 0 auto;color:#15803d}'
+  +'.ls-done .ms{font-size:19px;flex:0 0 auto;color:var(--ok-t,#15803d)}'
   +'.ls-steps code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);border:1px solid var(--line);'
     +'border-radius:5px;padding:1px 5px;color:var(--ink)}'
   +'.ls-card.off{opacity:.62}'
@@ -37732,12 +37732,12 @@ bgCss.textContent='.bg-grid{display:flex;flex-direction:column;gap:9px}'
   +'.bg-track{height:6px;border-radius:4px;background:var(--soft);overflow:hidden;border:1px solid var(--line)}'
   +'.bg-track i{display:block;height:100%;border-radius:4px;transition:width .25s}'
   +'.bg-note{font-size:11.5px;margin-top:3px;color:var(--grey)}'
-  +'.bg-note .bad{color:#dc2626;font-weight:600}'
+  +'.bg-note .bad{color:var(--err-t,#dc2626);font-weight:600}'
   +'.bg-top{display:flex;gap:20px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:var(--soft);margin-bottom:12px}'
   +'.bg-top.warn{border-color:#f2dfbd;background:#fff8ec}.bg-top.bad{border-color:#f3c9c9;background:#fff5f5}'
   +'.bg-top div{font-size:11.5px;color:var(--grey)}'
   +'.bg-top b{display:block;font-size:18px;color:var(--ink);letter-spacing:-.02em}'
-  +'.bg-warn{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:#b45309;background:#fff8ec;border:1px solid #f2dfbd;border-radius:10px;padding:10px 12px;margin-bottom:12px}'
+  +'.bg-warn{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.55;color:var(--warn-t,#b45309);background:#fff8ec;border:1px solid #f2dfbd;border-radius:10px;padding:10px 12px;margin-bottom:12px}'
   +'@media(max-width:620px){.bg-row{grid-template-columns:1fr 100px;grid-template-areas:"n i" "m m"}.bg-name{grid-area:n}.bg-in{grid-area:i}.bg-meter{grid-area:m}}'
   /* ---- crew on a job ---- */
   +'.cw-list{display:flex;flex-direction:column;gap:6px}'
@@ -38596,4 +38596,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/projsheet.css?v=20261001p">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="portal/theme-hl.css?v=20261002a">
+<script src="portal/ui-kit.js?v=20261002a"></script>
 </html>
