@@ -67,23 +67,23 @@ async function runAll(){
   if(pr.d&&pr.d.ok&&pr.d.probe){
     row('Probe mode','ok','Checks ran server-side via system-test — immune to browser CORS/cache issues.');
     var expect={
-      'ai-response':[400,'Ridge/Nova brains'],'AGENCY':[0,'command center'],'job-done':[401,'Mark done → GHL tag'],
+      'ai-response':[400,'Ridge/Nova brains'],'job-done':[401,'Mark done → GHL tag'],
       'ghl-invoice':[200,'invoices + tagging'],'ghl-estimate':[200,'estimates'],'ghl-schedule':[200,'scheduled sends'],
       'project-create':[400,'deposit-paid webhook']};
     pr.d.probe.forEach(function(x){
+      if(x.name==='AGENCY')return; // retired: the Command Center uses the command function
       var meta=expect[x.name]||[0,''];
       var ok=false,msg='HTTP '+x.status+' · '+x.body;
       if(x.status===404){row(x.name+' ('+meta[1]+')','bad','NOT DEPLOYED (404)');return;}
       if(x.status===0){row(x.name+' ('+meta[1]+')','bad',x.body);return;}
       try{var j=JSON.parse(x.body);if(j&&j.ok===true)ok=true;}catch(e){}
       if(meta[0]&&x.status===meta[0])ok=true;
-      if(x.name==='AGENCY'&&x.status>0&&x.status<500)ok=true;
       if(x.name==='project-create'&&/owner_email|POST only|required/.test(x.body))ok=true;
       row(x.name+' ('+meta[1]+')',ok?'ok':'bad',msg);
     });
   } else {
     row('Probe mode','warn','system-test probe unavailable ('+(pr.nf?'not deployed / old version':(pr.err||'error'))+') — falling back to direct browser checks, which CORS can block. Redeploy system-test with the probe code for reliable results.');
-    var basics=[['ai-response','ai-response',{mode:'ping'}],['AGENCY','AGENCY',{op:'ping'}],['job-done','job-done',{}],
+    var basics=[['ai-response','ai-response',{mode:'ping'}],['job-done','job-done',{}],
       ['ghl-invoice','ghl-invoice',{action:'list'}],
       ['ghl-estimate','ghl-estimate',{action:'list'}],['ghl-schedule','ghl-schedule',{action:'list'}],['project-create','project-create',{}]];
     for(var i=0;i<basics.length;i++){
