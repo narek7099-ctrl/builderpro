@@ -178,15 +178,17 @@
     if (hasData && !ck) {
       return '<div class="bpx-panel ws-inst ws-compact"><div class="ws-inst-h"><span class="ms ws-ok">check_circle</span><div><b>Tracking is on</b><div class="bpx-mut">Your site is sending visits. No cookies, no personal data.</div></div></div>' + acts + '</div>';
     }
+    var opts = PLATFORMS.map(function (p) { return '<option value="' + p[0] + '"' + (p[0] === W.platform ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('');
+    var step = function (n, t, body) { return '<li class="ws-step"><span class="ws-sn">' + n + '</span><div class="ws-sb"><b>' + t + '</b>' + body + '</div></li>'; };
     return '<div class="bpx-panel ws-inst">'
-      + '<div class="ws-inst-h"><span class="ms ws-ic">insights</span><div><b>Track visits to your own website</b>'
-      + '<div class="bpx-mut">Copy one line into your site’s &lt;head&gt;. It counts visits, where they came from, calls and form fills, and who opened your calculators. No cookies, no personal data.</div></div></div>'
-      + acts
-      + '<div class="ws-plat"><label for="ws-plat">Where is your site built?</label><select id="ws-plat" onchange="bpWebPlatform(this.value)">'
-      + PLATFORMS.map(function (p) { return '<option value="' + p[0] + '"' + (p[0] === W.platform ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('')
-      + '</select><div class="ws-tip"><span class="ms">tips_and_updates</span><span>' + esc(pl[2]) + '</span></div></div>'
-      + status
-      + (W.uid ? '' : '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Sign in and the snippet carries your account id, so visits land in your account.</div>')
+      + '<div class="ws-inst-h"><div><b>Connect your website in 3 steps</b>'
+      + '<div class="bpx-mut">Takes about a minute. No cookies, no personal data.</div></div></div>'
+      + '<ol class="ws-steps">'
+      + step(1, 'Copy your code', '<div class="ws-sx"><button class="bpx-btn ws-copy" id="ws-copy" data-copy="' + esc(snippet()) + '" onclick="bpWebCopy(this)"><span class="ms">content_copy</span> Copy code</button></div>')
+      + step(2, 'Paste it into your site', '<div class="ws-sx"><select id="ws-plat" aria-label="Where is your site built?" onchange="bpWebPlatform(this.value)">' + opts + '</select></div><div class="ws-tip">' + esc(pl[2]) + '</div>')
+      + step(3, 'Check it worked', '<div class="ws-sx"><button class="bpx-btn ghost ws-btn" onclick="bpWebCheck()"><span class="ms">wifi_tethering</span> Check now</button></div><div class="bpx-mut" style="font-size:12.5px">Open your website once first, then press Check now.</div>' + status)
+      + '</ol>'
+      + (W.uid ? '' : '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Sign in so the code carries your account and visits land in your portal.</div>')
       + '</div>';
   }
 
@@ -315,6 +317,7 @@
       + '#bpx .ws-acts{display:flex;gap:8px;flex-wrap:wrap}'
       + '#bpx .ws-acts .bpx-btn{width:auto;margin:0;display:inline-flex;align-items:center;gap:6px;padding:10px 16px;font-size:14px}'
       + '#bpx .ws-acts .ms{font-size:18px}'
+      + '#bpx .ws-steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:12px}#bpx .ws-step{display:flex;gap:14px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}#bpx .ws-sn{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#4e6ef2;color:#fff;font-weight:700;font-size:13.5px}#bpx .ws-sb{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}#bpx .ws-sb b{font-size:14.5px;color:var(--ink)}#bpx .ws-sx select{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:13.5px;min-width:200px;max-width:100%}#bpx .ws-step .ws-tip{font-size:13px;color:var(--grey);line-height:1.5}'
       + '#bpx .ws-plat{margin-top:16px;display:grid;grid-template-columns:auto minmax(0,220px);gap:8px 12px;align-items:center}'
       + '#bpx .ws-plat label{font-size:13px;font-weight:600;color:var(--ink)}'
       + '#bpx .ws-plat select{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:13.5px}'
