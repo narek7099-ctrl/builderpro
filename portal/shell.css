@@ -272,8 +272,9 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-c12 > .dash-projs{background:var(--card);border:1px solid var(--line);border-radius:var(--hl-r);padding:12px 14px 14px}
 #bpx#bpx#bpx#bpx .hl-grid .pj-row{gap:12px}
 @media (max-width:1280px){
-  #bpx#bpx#bpx#bpx .hl-c3{grid-column:span 6} #bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c5{grid-column:span 6} #bpx#bpx#bpx#bpx .hl-c8{grid-column:span 12}
+  #bpx#bpx#bpx#bpx .hl-c3{grid-column:span 6} #bpx#bpx#bpx#bpx .hl-c5{grid-column:span 6}
 }
+@media (max-width:1000px){ #bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c8{grid-column:span 12} }
 @media (max-width:760px){
   #bpx#bpx#bpx#bpx .hl-c3,#bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c5,#bpx#bpx#bpx#bpx .hl-c8{grid-column:span 12}
   #bpx#bpx#bpx#bpx .hl-w .bpc-donut{flex-wrap:wrap;justify-content:center}
@@ -332,3 +333,18 @@ html.bp-appmode body{overflow:hidden}
   #bpx#bpx#bpx#bpx .db-acts .db-per button{flex:1}
   #bpx#bpx#bpx#bpx .oaw-panel{left:12px !important;right:12px !important;width:auto !important}
 }
+/* compact stat cards: title, figure, a note, an optional small chart */
+#bpx#bpx#bpx#bpx .hl-mini{display:flex;flex-direction:column;min-height:128px;cursor:pointer;overflow:hidden}
+#bpx#bpx#bpx#bpx .hl-mv{margin-top:8px;font:600 26px/1.15 var(--sans) !important;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx .hl-mv small{font-size:14px;font-weight:500;color:var(--mu);margin-left:2px}
+#bpx#bpx#bpx#bpx .hl-mv.warn{color:var(--warn-t,#b45309)} #bpx#bpx#bpx#bpx .hl-mv.neg{color:var(--err-t)}
+#bpx#bpx#bpx#bpx .hl-ms{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--mu)}
+#bpx#bpx#bpx#bpx .hl-mini .bpc-sparkwrap{margin:auto -14px -14px;padding-top:8px}
+#bpx#bpx#bpx#bpx .hl-mini .bpc-spark{height:40px}
+#bpx#bpx#bpx#bpx .hl-mini .bpc{margin-top:10px}
+#bpx#bpx#bpx#bpx .hl-mini .bpc-row{font-size:12px}
+#bpx#bpx#bpx#bpx .hl-gauge .bpc-gauge{gap:12px;flex-wrap:nowrap}
+#bpx#bpx#bpx#bpx .hl-gauge .bpc-gsvg{width:150px !important}
+#bpx#bpx#bpx#bpx .hl-gauge .bpc-gside{min-width:0}
+#bpx#bpx#bpx#bpx .hl-gauge .bpc-gnum{font-size:15px}
+#bpx#bpx#bpx#bpx .hl-gauge .bpc-gnote{font-size:12px;color:var(--mu)}
