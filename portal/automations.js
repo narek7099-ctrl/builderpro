@@ -104,8 +104,6 @@
         { label: 'Skip', when: 'in-pipeline or do-not-contact', steps: [E] },
         { label: 'New contact', steps: [['email', 'Thanks, we got your message. {{custom_values.business_name}}, {{custom_values.business_phone}}'], ['tag', tg('new-lead') + ' → 02 Speed to Lead'], E] }
       ] }] })] },
-    { id: '17', name: 'Radar Contacted - Opener', folder: 1, from: 1, v: [v(1, { triggers: [['tag', 'Tag added: ' + tg('radar-contacted')]], steps: [['field', 'BP Opener = the Lead Radar opener line'], ['tag', tg('bot-active') + ' → 01 AI Qualifier (skips customers and excluded)'], E] })] },
-    { id: '18', name: 'Radar Digest - Owner SMS', folder: 1, from: 1, v: [v(1, { triggers: [['tag', 'Tag added: ' + tg('radar-digest') + ' (sent each day by Lead Radar)']], settings: ['Re-entry on'], steps: [['sms', 'Your {{contact.radar_digest_count}} new Lead Radar leads are ready'], E] })] },
     { id: '05', name: 'Appointment (confirm, reminders, post-visit check)', folder: 2, from: 0, v: [v(0, {
       triggers: [['appt', 'Confirmed or new, calendar Inspection (Lisa, widget, booking page)']], settings: ['Contact time zone, 8am–8pm'],
       steps: [['tag', tg('appointment-booked') + ' ' + tg('in-pipeline')], ['opp', 'Jobs → Inspection Scheduled'],

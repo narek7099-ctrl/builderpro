@@ -2,7 +2,7 @@
 // Creates a "BP System Test" contact, then walks it through the whole flow via
 // real GHL events so every workflow actually fires:
 //   estimate sent -> deposit invoice -> RECORD PAYMENT (fires Invoice Paid!)
-//   -> job-complete tag -> final invoice -> record payment -> radar tags.
+//   -> job-complete tag -> final invoice -> record payment.
 // Returns a step-by-step report. {action:'run', phone:'+1...'} runs it;
 // {action:'cleanup'} deletes the test contact afterwards.
 //
@@ -103,13 +103,10 @@ Deno.serve(async (req) => {
       ["ai-response", "POST", { mode: "ping" }],
       ["AGENCY", "POST", { op: "ping" }],
       ["job-done", "POST", {}],
-      ["radar-sync", "POST", {}],
-      ["skip-trace", "POST", {}],
       ["ghl-invoice", "POST", { action: "list" }],
       ["ghl-estimate", "POST", { action: "list" }],
       ["ghl-schedule", "POST", { action: "list" }],
       ["project-create", "POST", {}],
-      ["radar-daily", "PUT", null], // PUT = existence check without running the scan
     ];
     const out: Record<string, unknown>[] = [];
     for (const [name, method, body] of targets) {
@@ -185,8 +182,6 @@ Deno.serve(async (req) => {
       const p2 = await recordPayment(t, fin.id);
       steps.push({ step: "Record payment on Final → fires paid-in-full → review chain", ok: p2.ok, detail: p2.ok ? "payment recorded" : (p2.err ?? "") });
     }
-    const rc = await addTags(t, cid, ["radar-contacted"]);
-    steps.push({ step: "Tag radar-contacted → fires Lead Radar workflow", ok: rc, detail: rc ? "applied" : "failed" });
     return json({
       ok: steps.every((x) => x.ok), steps,
       now_check: [

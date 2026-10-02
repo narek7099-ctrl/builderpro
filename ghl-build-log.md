@@ -98,3 +98,57 @@ Spec: GHL-BUILD-SPEC.md. Demo and client sub-accounts are read-only.
 - BuilderPro Foundation: `m8xaXFkznoQZLjySnFlZ`
 - BuilderPro OS: `cdRGIx2azgolhnDj257c`
 - BuilderPro Enterprise: `cWoCOr2RJDfc3x3FxnQm`
+
+---
+
+## Lead Radar removal - Oct 1, 2026
+
+Scope: BP Foundation Template, BP OS Template, BP Enterprise Template only. Demo and client accounts not touched.
+
+### BP Foundation Template (pCL8sOwRPGo5ADh7S2wl)
+- Workflows: none had "radar" in the name (20 workflows, unchanged).
+- Tags deleted (5): radar, radar-contacted, radar-digest, radar-prospect, radar-auto. Restorable in GHL for 2 months.
+- Custom fields: no radar field existed. Custom values: none mention radar.
+- Jobs pipeline: no radar stage (New Lead, Contacted, Inspection Scheduled, Estimate Due, Estimate Sent, Won, Lost, Reactivation). Unchanged.
+
+### BP OS Template (e3hrfIp2KFkCb2c34qbI)
+- Workflows deleted (2): 17 Radar Contacted - Opener, 18 Radar Digest - Owner SMS. In the Deleted tab for 30 days.
+- Tags deleted (5): radar, radar-contacted, radar-digest, radar-prospect, radar-auto.
+- Custom field deleted: Radar Digest Count ({{contact.radar_digest_count}}). Permanent.
+- Custom values: none mention radar.
+- 01 AI Qualifier: checked, no change needed. Trigger is tag bot-active; Excluded branch is system-test or do-not-contact; Opener SMS is "Hi {first name}, this is Lisa with {Business Name}, {BP Opener}" with no radar text. Still Published.
+- Jobs pipeline: no radar stage. Unchanged.
+- Workflows list "Needs review": 0 after the deletions.
+
+### BP Enterprise Template (bjhV3CSImxxjN0HW23uJ)
+- Workflows deleted (2): 17 Radar Contacted - Opener, 18 Radar Digest - Owner SMS.
+- Tags deleted (5): radar, radar-contacted, radar-digest, radar-prospect, radar-auto.
+- Custom field deleted: Radar Digest Count. Permanent.
+- Custom values: none mention radar. Jobs pipeline: no radar stage.
+- Workflows list "Needs review": 0 after the deletions.
+
+### Snapshots (refreshed in place, all assets, v1 -> v2)
+- BuilderPro Foundation - refreshed Oct 1 9:11 PM. ID expected unchanged: m8xaXFkznoQZLjySnFlZ
+- BuilderPro OS - refreshed Oct 1 9:11 PM. ID expected unchanged: cdRGIx2azgolhnDj257c
+- BuilderPro Enterprise - refreshed Oct 1 9:09 PM. ID expected unchanged: cWoCOr2RJDfc3x3FxnQm
+No new snapshots were created. The IDs were not re-read from GHL; a refresh keeps the same snapshot record.
+
+### Not done
+- Did not open every remaining workflow one by one. Only 01 AI Qualifier (OS) was opened. The "Needs review (0)" count is the evidence that nothing else references the deleted tags or field.
+- Did not search SMS/email templates, snippets, trigger links, forms, smart lists, or the Conversation AI / Voice AI prompts for "radar".
+- Did not run the test contact (new lead -> AI Qualifier -> booked appointment).
+- The BP Opener custom field was kept: 01 AI Qualifier's opener SMS uses it for every lead type.
+
+### Follow-up: search and test (Oct 1, 2026, later the same evening)
+
+Search for "radar":
+- BP OS Template: Snippets - none exist. Trigger links - none exist. Conversation AI agent "Lisa" prompt - no match. Voice AI agent "Lisa (calls)" prompt - no match.
+- BP Enterprise Template: Conversation AI agent "Lisa" prompt - no match.
+- Not checked: Enterprise Voice AI prompt, Enterprise snippets/trigger links, anything in Foundation beyond tags/fields/values, email templates, forms, smart lists.
+
+Test in BP OS Template with contact "Claude Test" (no phone or email, so no text or email was sent to anyone):
+1. Added tag new-lead -> 02 Speed to Lead added bot-active -> 01 AI Qualifier created opportunity "Claude Test" in Jobs / New Lead and added in-pipeline.
+2. Booked an Inspection appointment (Oct 2, 8-9 AM) by hand -> tag appointment-booked added, opportunity moved New Lead -> Inspection Scheduled.
+3. Final tags: new-lead, bot-active, in-pipeline, appointment-booked. No radar tag was applied.
+- Not tested: the SMS conversation with Lisa and her booking the appointment herself (the contact has no phone). OS only; Foundation and Enterprise were not test-run.
+- Left in the OS template: contact "Claude Test", its opportunity and the Oct 2 test appointment. Contacts are not part of snapshots.

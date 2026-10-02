@@ -35,9 +35,7 @@ button.run{background:#2f6bff;color:#fff;border:0;border-radius:11px;padding:13p
 </div>
 
 <div class="sec">Live-fire tests (create real data — run deliberately)</div>
-<div class="danger">Runs the real 7am radar scan now: adds up to 10 real leads per territory to GHL + Today's Picks, and fires the digest tag.
-<br><button onclick="fireRadar(this)">Run radar-daily now</button><span id="radarOut"></span></div>
-<div class="danger" style="border-color:#a5b8f5;background:#f4f7ff"><b style="color:#2457d6">🧪 Full pipeline test</b> — creates a "BP System Test" contact and pushes it through the ENTIRE flow with real GHL events: deposit invoice → payment recorded (fires your Won workflow + project webhook) → job-complete → final invoice → payment (fires paid-in-full → review) → radar tags. Run <b>Phase 1</b>, wait a minute, RELOAD the portal and check Active Projects — then run <b>Phase 2</b>. (Two phases so the tag routing sees the same timeline as a real customer.)
+<div class="danger" style="border-color:#a5b8f5;background:#f4f7ff"><b style="color:#2457d6">🧪 Full pipeline test</b> — creates a "BP System Test" contact and pushes it through the ENTIRE flow with real GHL events: deposit invoice → payment recorded (fires your Won workflow + project webhook) → job-complete → final invoice → payment (fires paid-in-full → review). Run <b>Phase 1</b>, wait a minute, RELOAD the portal and check Active Projects — then run <b>Phase 2</b>. (Two phases so the tag routing sees the same timeline as a real customer.)
 <br><input id="stPhone" placeholder="+1 555 555 5555 (optional)" style="margin-top:8px;padding:9px 12px;border:1px solid #d6dbe6;border-radius:8px;font-family:inherit;width:220px">
 <br><button style="border-color:#a5b8f5;color:#2457d6" onclick="firePhase(this,'phase1')">▶ Phase 1 — deposit paid</button>
 <button style="border-color:#a5b8f5;color:#2457d6;margin-left:8px" onclick="firePhase(this,'phase2')">▶ Phase 2 — finish job</button>
@@ -70,9 +68,8 @@ async function runAll(){
     row('Probe mode','ok','Checks ran server-side via system-test — immune to browser CORS/cache issues.');
     var expect={
       'ai-response':[400,'Ridge/Nova brains'],'AGENCY':[0,'command center'],'job-done':[401,'Mark done → GHL tag'],
-      'radar-sync':[401,'Add prospect / Contacted'],'skip-trace':[401,'owner lookup'],
       'ghl-invoice':[200,'invoices + tagging'],'ghl-estimate':[200,'estimates'],'ghl-schedule':[200,'scheduled sends'],
-      'project-create':[400,'deposit-paid webhook'],'radar-daily':[405,'7am auto-leads']};
+      'project-create':[400,'deposit-paid webhook']};
     pr.d.probe.forEach(function(x){
       var meta=expect[x.name]||[0,''];
       var ok=false,msg='HTTP '+x.status+' · '+x.body;
@@ -82,13 +79,12 @@ async function runAll(){
       if(meta[0]&&x.status===meta[0])ok=true;
       if(x.name==='AGENCY'&&x.status>0&&x.status<500)ok=true;
       if(x.name==='project-create'&&/owner_email|POST only|required/.test(x.body))ok=true;
-      if(x.name==='radar-daily'&&(x.status===405||/POST\/GET/.test(x.body)))ok=true;
       row(x.name+' ('+meta[1]+')',ok?'ok':'bad',msg);
     });
   } else {
     row('Probe mode','warn','system-test probe unavailable ('+(pr.nf?'not deployed / old version':(pr.err||'error'))+') — falling back to direct browser checks, which CORS can block. Redeploy system-test with the probe code for reliable results.');
     var basics=[['ai-response','ai-response',{mode:'ping'}],['AGENCY','AGENCY',{op:'ping'}],['job-done','job-done',{}],
-      ['radar-sync','radar-sync',{}],['skip-trace','skip-trace',{}],['ghl-invoice','ghl-invoice',{action:'list'}],
+      ['ghl-invoice','ghl-invoice',{action:'list'}],
       ['ghl-estimate','ghl-estimate',{action:'list'}],['ghl-schedule','ghl-schedule',{action:'list'}],['project-create','project-create',{}]];
     for(var i=0;i<basics.length;i++){
       var r=await post(basics[i][1],basics[i][2]);
@@ -97,13 +93,7 @@ async function runAll(){
       else row(basics[i][0],'ok','HTTP '+r.status);
     }
   }
-  row('Cron schedules','warn','This page can\'t see pg_cron. Verify in Supabase → SQL editor: <b>select jobname,schedule,active from cron.job;</b> — expect radar-daily (0 14 * * *) and ghl-schedule-run (*/5 * * * *).');
-}
-async function fireRadar(btn){
-  btn.disabled=true; var o=document.getElementById('radarOut'); o.textContent=' Running…';
-  var r=await post('radar-daily',{});
-  o.textContent=' '+JSON.stringify(r.d||r).slice(0,300);
-  btn.disabled=false;
+  row('Cron schedules','warn','This page can\'t see pg_cron. Verify in Supabase → SQL editor: <b>select jobname,schedule,active from cron.job;</b> — expect ghl-schedule-run (*/5 * * * *).');
 }
 async function firePhase(btn,ph){
   btn.disabled=true; var o=document.getElementById('fullOut'); o.innerHTML='Running '+ph+'…';
