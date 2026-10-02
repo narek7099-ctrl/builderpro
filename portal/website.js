@@ -587,7 +587,7 @@
     if (useGoogle()) return googleBody();
     var top = flash();
     if (connected()) top = switcher() + top;
-    else if (G.st && G.st.configured) top += connectCard();
+    else top += connectCard();
     return top + snippetBody();
   }
 
@@ -599,6 +599,7 @@
   };
   window.bpWebGoogle = function () {
     if (G.busy) return;
+    if (G.st && !G.st.configured) { alert('Google sign-in is being set up. Use the BuilderPro snippet below for now.'); return; }
     G.busy = true; B.render();
     var ret = location.origin + location.pathname + '?portal=1';
     api({ op: 'auth_url', return: ret }).then(function (d) {
