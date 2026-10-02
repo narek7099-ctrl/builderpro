@@ -29136,7 +29136,6 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 <!-- ===== ATLAS CHATBOT ===== -->
 <!-- ===== CLIENT PORTAL ===== -->
 <div id="bpx">
-  <button class="bpx-close" onclick="bpClose()" aria-label="Close"><span class="ms">close</span></button><button class="bpx-themebtn" id="bpxThemeBtn" onclick="bpToggleTheme()" title="Toggle theme" aria-label="Toggle theme"><span class="ms">dark_mode</span></button>
   <!-- login -->
   <div class="bpx-auth" id="bpxLogin">
     <div class="bpx-wrap">
@@ -29156,19 +29155,34 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
       <div class="bpx-foot2">Powered by BuilderPro OS</div>
     </div>
   </div>
-  <!-- app -->
+  <!-- app: dark sidebar, slim white top bar, section tabs, content (portal/shell.js) -->
   <div class="bpx-app" id="bpxApp">
-    <aside class="bpx-side">
-      <div class="bpx-brand2"><svg class="bpmark" width="46" height="46" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>
-      <!-- built by bpBuildNav() from BP_NAV — five branches, then Lisa AI + Settings pinned below -->
+    <aside class="bpx-side" id="bpxSide" aria-label="Main">
+      <button type="button" class="hl-acct" id="hlAcct" onclick="bpShell.acctMenu(this)" aria-haspopup="menu">
+        <span class="hl-acct-logo" id="hlAcctLogo"><svg class="bpmark" width="22" height="22" aria-hidden="true"><use href="#bpMark"/></svg></span>
+        <span class="hl-acct-t"><b id="hlBiz">BuilderPro</b><small id="hlPlan">Plan</small></span>
+        <svg class="hl-acct-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9l4-4 4 4M16 15l-4 4-4-4"/></svg>
+      </button>
+      <div class="hl-srow">
+        <button type="button" class="hl-search" onclick="bpShell.palette()" title="Search (Ctrl+K)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search</span><kbd id="hlKbd">Ctrl K</kbd></button>
+        <button type="button" class="hl-quick" onclick="bpShell.quick(this)" title="Quick add" aria-label="Quick add" aria-haspopup="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
       <nav class="bpx-nav" id="bpxNav"></nav>
-      <div class="bpx-user2"><div class="bpx-uemail" id="bpxUemail">—</div><button class="bpx-logout" onclick="bpLogout()">Sign out</button></div>
+      <div class="hl-sfoot" id="hlSideFoot"></div>
     </aside>
+    <div class="hl-scrim" onclick="bpShell.drawer(false)"></div>
     <main class="bpx-main">
-      <div class="bpx-mobbar" id="bpxMobbar"></div>
-      <div class="bpx-mhdr"><h1 id="bpxVtitle">Dashboard</h1><p id="bpxVsub">Your BuilderPro overview.</p></div>
+      <header class="hl-top" id="hlTop">
+        <button type="button" class="hl-burger" onclick="bpShell.drawer()" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="hl-ttl"><h1 id="bpxVtitle">Dashboard</h1><p id="bpxVsub" hidden></p></div>
+        <div class="hl-tacts" id="hlTacts"></div>
+      </header>
+      <div class="hl-tabs" id="hlTabs" role="tablist" hidden></div>
+      <div class="bpx-mobbar" id="bpxMobbar" hidden></div>
+      <div class="bpx-mhdr" hidden></div>
       <div id="bpxViewArea"></div>
     </main>
+    <span id="bpxUemail" hidden></span>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -29723,9 +29737,10 @@ function bpFriendly(m){if(!m)return 'Something went wrong. Please try again.';if
 
 function bpOpenPortal(){
   document.getElementById('bpx').classList.add('open');bpSyncLock();
+  if(window.bpShell)bpShell.appUrl(true);
   if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){bpEnterPortal(r.data.session.user.email);}}).catch(function(){});}
 }
-function bpClose(){document.getElementById('bpx').classList.remove('open');bpSyncLock();}
+function bpClose(){document.getElementById('bpx').classList.remove('open');bpSyncLock();if(window.bpShell)bpShell.appUrl(false);}
 /* The page behind an overlay must not scroll, and the page behind NOTHING
    must. Five different functions were setting body.style.overflow by hand and
    clearing it by hand, so the truth depended on them running in the right
@@ -29845,6 +29860,7 @@ function bpEnterPortal2(email){
   document.getElementById('bpxApp').classList.add('on');
   bpBuildNav();
   bpBuildMobbar();
+  if(window.bpShell)bpShell.enter(email);
   var landed=(function(){try{if(/[?&]aiteam=/.test(location.search)){history.replaceState(null,'',location.pathname+location.hash);return 'aiteam';}var c=new URLSearchParams(location.search).get('connected');if(c){history.replaceState(null,'',location.pathname+location.hash);return c==='social'?'social':'marketing';}if(/[?&]mail=/.test(location.search))return 'leadsources';}catch(e){}return null;})();
   bpNav(landed||(window.bpTeamHome?bpTeamHome():'dashboard'));
   if(window._bpCurView==='closedeals')window._bpCurView='dashboard';
@@ -29868,7 +29884,7 @@ function dlContactSend(btn){
   location.href='signup.html?'+q.toString();
 }
 /* signup.html and the "Log in" links land here with ?portal=1 */
-document.addEventListener('DOMContentLoaded',function(){ if(/[?&]portal=1/.test(location.search)){ try{if(!/[?&]aiteam=/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);}catch(e){} setTimeout(function(){ if(window.bpOpenPortal)bpOpenPortal(); },50); } });
+document.addEventListener('DOMContentLoaded',function(){ if(/[?&](portal|app)=1/.test(location.search)){ document.documentElement.classList.add('bp-appmode'); try{if(!/[?&]aiteam=/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);}catch(e){} setTimeout(function(){ if(window.bpOpenPortal)bpOpenPortal(); },50); } });
 function bpDoAuth(){
   var email=document.getElementById('bpxEmail').value.trim(),pw=document.getElementById('bpxPassword').value,msg=document.getElementById('bpxAuthMsg');
   if(!email||!pw){msg.className='bpx-msg err';msg.textContent='Please enter your email and password.';return;}
@@ -29891,11 +29907,12 @@ function bpForgot(){
 }
 function bpLogout(){
   if(BP_LIVE){BP_SB.auth.signOut().catch(function(){});}
+  if(window.bpShell)bpShell.closeAll();
   document.getElementById('bpxApp').classList.remove('on');
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={connections:{t:'Connections',s:'Connect your website so visits, calls and calculator leads show up under Website.'},aiteam:{t:'AI Team',s:'Your Sales, Marketing and Office assistants. You approve anything before it goes to a customer.'},crewclock:{t:'Clock in',s:'Clock in when you get to the job, and out when you leave.'},crewhome:{t:'My crew',s:'Who you work with, and how to reach the office.'},crewprojects:{t:'Projects',s:'Your crew\u2019s jobs. Add photos, documents and blueprints.'},crewid:{t:'My ID',s:'Your crew badge.'},dashboard:{t:'Dashboard',s:'What needs doing, and where the money is.'},messaging:{t:'Texts',s:'Your text conversations with leads and customers — the channel they read standing on the drive.'},email:{t:'Email',s:'Your email threads, where the longer conversations live.'},contacts:{t:'Contacts',s:'Every lead and customer BuilderPro captures for you.'},calendar:{t:'Calendar',s:'Your upcoming inspections and appointments.'},closedeals:{t:'Close Deals',s:'Homeowners deciding on their estimate — close them here.'},activejobs:{t:'Active Projects',s:'Projects in motion — photos, schedule, and costs.'},installations:{t:'Installations',s:'What you installed, when, and when it is due for service. Every finished job is signed off here.'},employees:{t:'Employees',s:'Your crew, what an hour of their time really costs you, and the hours that went into each job.'},finances:{t:'Finances',s:'Income, expenses, and profit — synced to your account.'},invoices:{t:'Invoices',s:'Bills you’ve sent — and what’s still owed.'},estimates:{t:'Estimates',s:'Quotes waiting on a yes.'},ledger:{t:'Income & expenses',s:'Every dollar in and out.'},finarchive:{t:'Archive',s:'Every business year, filed: profit and loss, month by month, ready for your accountant.'},payouts:{t:'Payouts',s:'Where the money from your invoices lands.'},checks:{t:'Checks',s:'Homeowners who ran a health, damage or roof-age check on your site, with their score.'},website:{t:'Website',s:'Who visits your own website, where they come from, and how many become leads.'},automations:{t:'Automations',s:'Everything your CRM does on its own, step by step — from the first text to the review request.'},leadsources:{t:'Lead Sources',s:'The leads you already buy — Angi, Thumbtack, your own website — arriving here the second they are sent, so they get answered first.'},marketing:{t:'Ads & Listings',s:'Your ads and listings \u2014 Meta, Google, Yelp \u2014 connected and measured in one place.'},social:{t:'Social Media',s:'Connect your accounts, see what\u2019s working, and schedule posts from one place.'},competitors:{t:'Competitors',s:'How the other contractors in your area show up online \u2014 and where you can beat them.'},reputation:{t:'Reputation',s:'Your reviews on Google, Yelp and Facebook in one place, and the fastest way to ask for more.'},supply:{t:'Order materials',s:'Say what the job needs. We tell you where to buy it cheapest, or closest.'},supplyorders:{t:'Orders',s:'What you have ordered, the barcode for the counter, and whether the bill matched.'},matlists:{t:'Lists',s:'A planning sheet per job: what it needs, how many, and from whom. Estimates only; receipts are what count as cost.'},prices:{t:'Prices',s:'What each of your suppliers sells, and what they charge you, side by side.'},mattemplates:{t:'Templates',s:'Saved lists you order again and again. Use one on a job in a tap.'},suppliers:{t:'Suppliers',s:'The supply houses you use. Upload a receipt, pick the job, and it counts toward that job\u2019s cost.'},calculator:{t:'My Calculators',s:'Your quote calculator, health check and damage check \u2014 preview, embed, link, QR code and share on social.'},customize:{t:'Customize',s:'Change how it looks on your website, with a live preview beside your edits.'},ai:{t:''+BP_AI_NAME+' AI',s:'Your 24/7 AI receptionist \u2014 what it knows, how it sounds, and how it\u2019s performing.'},settings:{t:'Settings',s:'Your business and owner details.'}};
+var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},checks:{t:'Checks',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Lists',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -29906,13 +29923,18 @@ var BP_ICO={
   ai:'<path d="M12 2a7 7 0 0 1 7 7v3a7 7 0 0 1-14 0V9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M12 18v3"/><circle cx="9.5" cy="10" r=".8"/><circle cx="14.5" cy="10" r=".8"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 3.6h.09A1.65 1.65 0 0 0 9 2.09V2a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 14 3.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 8v.09A1.65 1.65 0 0 0 21.91 9H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
 };
+/* The sidebar is one flat list; each entry is a page or a section whose
+   pages show as tabs across the top of the content (portal/shell.js).
+   g:2 starts the second group. */
 var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
-  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active Projects'],['installations','Installations'],['employees','Employees'],['calendar','Calendar'],['calculator','My Calculators'],['aiteam','AI Team']]},
-  {id:'supply',l:'Supply',ico:'supply',kids:[['matlists','Lists'],['mattemplates','Templates'],['suppliers','Suppliers']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
+  {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['leadsources','Lead Sources'],['checks','Checks'],['automations','Automations']]},
+  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['installations','Installations'],['employees','Employees'],['calendar','Calendar'],['calculator','Calculators'],['aiteam','AI Team']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['finarchive','Archive'],['payouts','Payouts']]},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['leadsources','Lead Sources'],['checks','Checks'],['automations','Automations'],['contacts','Contacts'],['messaging','Texts'],['email','Email']]},
-  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['website','Website'],['social','Social Media'],['competitors','Competitors'],['reputation','Reputation']]}
+  {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Lists'],['mattemplates','Templates'],['suppliers','Suppliers']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
+  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['website','Website'],['social','Social Media'],['competitors','Competitors']]},
+  {id:'reputation',l:'Reputation',ico:'reputation'}
 ];
 var BP_NAV_FOOT=[['settings','Settings','settings']];
 function bpNavGroupOf(v){
@@ -29921,25 +29943,7 @@ function bpNavGroupOf(v){
   return null;
 }
 var BP_MS={crewclock:'schedule',crewhome:'groups',crewprojects:'construction',crewid:'badge',dashboard:'grid_view',projects:'construction',supply:'inventory_2',finances:'payments',leads:'person_search',marketing:'campaign',ai:'smart_toy',aiteam:'diversity_3',settings:'tune'};
-function bpBuildNav(){
-  var ic=function(k){return '<span class="ms">'+(BP_MS[k]||'circle')+'</span>';};
-  var h='';
-  var ok=function(v){return !window.bpTeamAllows||bpTeamAllows(v);};
-  if(window.bpTeamIsCrew&&bpTeamIsCrew()){
-    h=[['crewclock','Clock in'],['crewprojects','Projects'],['crewhome','My crew'],['crewid','My ID']].map(function(x){return '<a data-view="'+x[0]+'" onclick="bpNav(\''+x[0]+'\')">'+ic(x[0])+'<span>'+x[1]+'</span></a>';}).join('');
-    document.getElementById('bpxNav').innerHTML=h; return;
-  }
-  BP_NAV.forEach(function(g){
-    if(!g.kids){if(!ok(g.id))return;h+='<a data-view="'+g.id+'" onclick="bpNav(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span></a>';return;}
-    g={id:g.id,l:g.l,ico:g.ico,kids:g.kids.filter(function(k){return ok(k[0]);})}; if(!g.kids.length)return;
-    h+='<div class="bpx-grp" data-grp="'+g.id+'">'
-      +'<a class="bpx-grp-h" onclick="bpNavToggle(\''+g.id+'\')">'+ic(g.ico)+'<span>'+g.l+'</span><svg class="bpx-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></a>'
-      +'<div class="bpx-sub"><div class="bpx-sub-in">'+g.kids.map(function(k){return '<a data-view="'+k[0]+'" onclick="bpNav(\''+k[0]+'\')"><span>'+k[1]+'</span>'+(bpLocked(k[0])?'<span class="ms" style="font-size:14px;margin-left:auto;opacity:.5">lock</span>':'')+'</a>';}).join('')+'</div></div></div>';
-  });
-  h+='<div class="bpx-nav-foot">'+BP_NAV_FOOT.filter(function(f){return ok(f[0]);}).map(function(f){return '<a data-view="'+f[0]+'" onclick="bpNav(\''+f[0]+'\')">'+ic(f[2])+'<span>'+f[1]+'</span></a>';}).join('')+'</div>';
-  document.getElementById('bpxNav').innerHTML=h;
-  bpNavOpenSet().forEach(function(id){ var g=document.querySelector('#bpxNav .bpx-grp[data-grp="'+id+'"]'); if(g)g.classList.add('open'); });
-}
+function bpBuildNav(){ if(window.bpShell)bpShell.buildNav(); }
 /* A branch header opens or closes its own branch and nothing else: tapping
    "Projects" must not yank you off the page you are reading, and it must not
    slam the other branches shut either. Any number can be open, and the set is
@@ -29954,10 +29958,7 @@ function bpNavToggle(gid){
   g.classList.toggle('open',!g.classList.contains('open'));
   bpNavRemember();
 }
-function bpBuildMobbar(){
-  var h='';Object.keys(BPVIEWS).forEach(function(v){if(v==='closedeals'||v==='ai'||v==='supply'||v==='supplyorders'||v==='prices')return;if(window.bpTeamAllows&&!bpTeamAllows(v))return;h+='<a data-mv="'+v+'" onclick="bpNav(\''+v+'\')">'+BPVIEWS[v].t+'</a>';});
-  document.getElementById('bpxMobbar').innerHTML=h;
-}
+function bpBuildMobbar(){ /* phones use the sidebar drawer now (portal/shell.js) */ }
 /* circular loader in the middle of the portal while a view builds */
 function bpSpin(on){
   var s=document.getElementById('bpxSpin');
@@ -29970,13 +29971,8 @@ function bpSpin(on){
 function bpNav(v){
   if(window.bpTeamAllows&&!bpTeamAllows(v))v=window.bpTeamHome?bpTeamHome():'dashboard';
   window._bpCurView=v;
-  document.querySelectorAll('#bpxNav a[data-view]').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-view')===v);});
-  var gid=bpNavGroupOf(v);
-  document.querySelectorAll('#bpxNav .bpx-grp').forEach(function(g){var mine=g.getAttribute('data-grp')===gid;if(mine)g.classList.add('open');g.classList.toggle('has-on',mine);});
-  if(gid)bpNavRemember();
-  document.querySelectorAll('#bpxMobbar a').forEach(function(a){a.classList.toggle('on',a.getAttribute('data-mv')===v);});
-  document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
-  document.getElementById('bpxVsub').textContent=BPVIEWS[v].s;
+  if(window.bpShell)bpShell.sync(v);
+  else document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
   var area=document.getElementById('bpxViewArea');
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
@@ -30024,18 +30020,30 @@ function bpCsv(name,head,rows){
 }
 function bpCsvBtn(fn,label){ return '<button class="bpx-btn ghost bpx-csv" onclick="'+fn+'" title="Download as a spreadsheet">'+bpCsvIcon+(label||'Export CSV')+'</button>'; }
 var bpCsvIcon='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-2px;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-/* generic list pager: bpPage('key', items, perPage, 'redrawFn()') -> {items: pageSlice, nav: html} */
-var _bpPg={};
+/* generic list pager: bpPage('key', items, perPage, 'redrawFn()') -> {items: pageSlice, nav: html}
+   25 rows a page. The footer carries the key, the redraw call and the
+   statuses it saw, so the table toolbar (portal/shell.js) can search and
+   filter the whole list, not just the page on screen. */
+var _bpPg={},_bpPgQ={},_bpPgF={};
 function bpPage(key,items,per,renderCall){
+  per=Math.max(per||0,25);
+  var all=items.length, sts={};
+  items.forEach(function(it){ if(it&&it.status!=null&&typeof it.status!=='object')sts[String(it.status).toLowerCase()]=1; });
+  var qv=(_bpPgQ[key]||'').toLowerCase(), fv=_bpPgF[key]||'';
+  if(qv||fv)items=items.filter(function(it){
+    if(fv&&String(it&&it.status||'').toLowerCase()!==fv)return false;
+    if(!qv)return true;
+    try{ return JSON.stringify(it).toLowerCase().indexOf(qv)>=0; }catch(e){ return true; }
+  });
   var n=Math.max(1,Math.ceil(items.length/per));
   var p=Math.min(Math.max(_bpPg[key]||1,1),n); _bpPg[key]=p;
-  var nav='';
-  if(items.length>per){
-    nav='<div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px;font-size:12.5px;color:#6a6a70">'
-      +'<button class="bpx-rowbtn" style="'+(p<=1?'opacity:.35;pointer-events:none':'')+'" onclick="bpPgGo(\''+key+'\','+(p-1)+',\''+renderCall+'\')">‹ Prev</button>'
-      +'<span>Page '+p+' of '+n+' · '+items.length+' total</span>'
-      +'<button class="bpx-rowbtn" style="'+(p>=n?'opacity:.35;pointer-events:none':'')+'" onclick="bpPgGo(\''+key+'\','+(p+1)+',\''+renderCall+'\')">Next ›</button></div>';
-  }
+  var a=items.length?(p-1)*per+1:0, b=Math.min(p*per,items.length);
+  var esc=function(x){return String(x).replace(/&/g,'&amp;').replace(/"/g,'&quot;');};
+  var nav='<div class="hl-pgfoot" data-pgk="'+esc(key)+'" data-call="'+esc(renderCall)+'" data-total="'+items.length+'" data-all="'+all+'" data-st="'+esc(Object.keys(sts).join('|'))+'">'
+    +(items.length>per?'<span>'+a+'\u2013'+b+' of '+items.length+'</span>'
+      +'<button class="hl-pgb" aria-label="Previous page"'+(p<=1?' disabled':'')+' onclick="bpPgGo(\''+key+'\','+(p-1)+',this.parentNode.getAttribute(\'data-call\'))">\u2039</button>'
+      +'<button class="hl-pgb" aria-label="Next page"'+(p>=n?' disabled':'')+' onclick="bpPgGo(\''+key+'\','+(p+1)+',this.parentNode.getAttribute(\'data-call\'))">\u203a</button>':'')
+    +'</div>';
   return {items:items.slice((p-1)*per,p*per),nav:nav};
 }
 window.bpPgGo=function(key,p,call){ _bpPg[key]=p; try{ new Function(call)(); }catch(e){} };
@@ -37924,7 +37932,7 @@ function bpRepRender(){
         +'<div class="rp-rev-b"><div class="rp-rev-t">'+bpRepStars(r.rating)+'<b>'+bpEsc(r.user)+'</b><span class="bpx-mut">'+bpRepWhen(r.at)+' · '+r.platName+'</span>'+(r.replied?'<span class="bpx-badge ok">Replied</span>':(r.rating<=3?'<span class="bpx-badge warn">Needs a reply</span>':''))+'</div>'
         +(r.text?'<div class="rp-rev-x">'+bpEsc(r.text)+'</div>':'<div class="rp-rev-x bpx-mut">Rating only, no text.</div>')+'</div>'
         +(r.manage?'<a class="bpx-rowbtn" style="text-decoration:none;flex:0 0 auto" href="'+bpEsc(r.manage)+'" target="_blank" rel="noopener">Reply</a>':'')+'</div>';
-    }).join('')+pg.nav:'<div class="bpx-empty2">No reviews to show yet.</div>')
+    }).join('')+pg.nav:'<div class="bpx-empty2">No reviews to show yet.</div>'+pg.nav)
     +'</div>';
   var askBox='<div class="bpx-panel" id="rpAsk" style="margin-top:16px"><div class="bpx-ptitle">Ask for a review<span class="lg2">right after a job, while they’re still happy</span></div>'
     +'<div class="rp-ask"><div><label class="st-lab" style="display:block;font-weight:600;font-size:13px;margin-bottom:6px">Message</label><textarea id="rpAskMsg">'+bpEsc(ask)+'</textarea>'
@@ -38623,6 +38631,8 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="portal/theme-hl.css?v=20261002a">
-<script src="portal/ui-kit.js?v=20261002a"></script>
+<link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
+<link rel="stylesheet" href="portal/shell.css?v=20261002a">
+<script src="portal/ui-kit.js?v=20261002b"></script>
+<script src="portal/shell.js?v=20261002a"></script>
 </html>

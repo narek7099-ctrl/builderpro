@@ -307,6 +307,12 @@
 
   /* ---------- needs attention: what is waiting on them, only when non-zero ---------- */
   function attention() {
+    var rows = attRows();
+    return '<div class="bpx-panel"><div class="bpx-ptitle">Needs you<span class="lg2">' + (rows.length ? rows.length + (rows.length === 1 ? ' thing' : ' things') + ' waiting' : 'nothing waiting') + '</span></div>'
+      + (rows.length ? '<div class="dash-att">' + rows.map(function (r) { return '<div class="dash-att-r' + (r.tone ? ' ' + r.tone : '') + '" onclick="bpNav(\'' + r.go + '\')"><span class="ms">' + r.ico + '</span><span>' + r.t + '</span><span class="ms go">chevron_right</span></div>'; }).join('') + '</div>'
+        : '<div class="dash-empty">Nothing is waiting on you. Bills matched, orders sent, contracts signed.</div>') + '</div>';
+  }
+  function attRows() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [], rows = [];
     var todayIso = new Date().toISOString().slice(0, 10);
     var late = jobs.filter(function (j) { return j.status === 'active' && j.sched && j.sched.target && String(j.sched.target) < todayIso && ((+j.estimate || 0) - (+j.collected || 0)) > 0; });
@@ -319,9 +325,7 @@
     if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders' });
     if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging' });
     if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' waiting on a yes' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals' });
-    return '<div class="bpx-panel"><div class="bpx-ptitle">Needs you<span class="lg2">' + (rows.length ? rows.length + (rows.length === 1 ? ' thing' : ' things') + ' waiting' : 'nothing waiting') + '</span></div>'
-      + (rows.length ? '<div class="dash-att">' + rows.map(function (r) { return '<div class="dash-att-r' + (r.tone ? ' ' + r.tone : '') + '" onclick="bpNav(\'' + r.go + '\')"><span class="ms">' + r.ico + '</span><span>' + r.t + '</span><span class="ms go">chevron_right</span></div>'; }).join('') + '</div>'
-        : '<div class="dash-empty">Nothing is waiting on you. Bills matched, orders sent, contracts signed.</div>') + '</div>';
+    return rows;
   }
 
   /* ---------- this week: crews and appointments, day by day ---------- */
@@ -347,6 +351,13 @@
 
   /* ---------- recent: what happened, newest first, from timestamps we already keep ---------- */
   function activity() {
+    var ev = actRows();
+    var ago = function (t) { var m = Math.round((Date.now() - t) / 60000); if (m < 60) return m + 'm'; var h = Math.round(m / 60); if (h < 24) return h + 'h'; var d = Math.round(h / 24); return d + 'd'; };
+    return '<div class="bpx-panel"><div class="bpx-ptitle">Recent<span class="lg2">newest first</span></div>'
+      + (ev.length ? '<div class="dash-act">' + ev.map(function (e) { return '<div class="dash-act-r" onclick="bpNav(\'' + e.go + '\')"><small>' + ago(e.t) + '</small><span>' + e.txt + '</span></div>'; }).join('') + '</div>'
+        : '<div class="dash-empty">As you order materials, send contracts and finish jobs, they show here.</div>') + '</div>';
+  }
+  function actRows() {
     var ev = [], jobs = (window.bpJobsGet && bpJobsGet()) || [];
     var add = function (t, txt, go) { if (t && !isNaN(t)) ev.push({ t: t, txt: txt, go: go }); };
     ((window.SP && SP.pos) || []).forEach(function (p) {
@@ -363,12 +374,13 @@
       add(+j.wonAt, esc(j.name) + ' won' + (j.estimate ? ', ' + money(j.estimate) : ''), 'activejobs');
     });
     ev.sort(function (a, b) { return b.t - a.t; });
-    ev = ev.slice(0, 7);
-    var ago = function (t) { var m = Math.round((Date.now() - t) / 60000); if (m < 60) return m + 'm'; var h = Math.round(m / 60); if (h < 24) return h + 'h'; var d = Math.round(h / 24); return d + 'd'; };
-    return '<div class="bpx-panel"><div class="bpx-ptitle">Recent<span class="lg2">newest first</span></div>'
-      + (ev.length ? '<div class="dash-act">' + ev.map(function (e) { return '<div class="dash-act-r" onclick="bpNav(\'' + e.go + '\')"><small>' + ago(e.t) + '</small><span>' + e.txt + '</span></div>'; }).join('') + '</div>'
-        : '<div class="dash-empty">As you order materials, send contracts and finish jobs, they show here.</div>') + '</div>';
+    return ev.slice(0, 7);
   }
+  /* the top bar's bell: what needs you, then what happened (portal/shell.js) */
+  D.feed = function () {
+    var undo = demoShim(live() && !hasOwnData());
+    try { return { needs: attRows(), recent: actRows() }; } catch (e) { return { needs: [], recent: [] }; } finally { if (undo) undo(); }
+  };
 
   /* ---------- the foot: four figures about the business, not the day ---------- */
   function footStats() {
@@ -394,9 +406,9 @@
     var co = ((window.bpSettingsGet && bpSettingsGet().company) || {});
     var h = new Date().getHours();
     var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '.</div>'
+    return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div>'
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
-      + '<div class="db-acts"><button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
+      + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + '<button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
       + '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add project</button>'
       + '<button class="bpx-btn" onclick="bpNav(\'supply\')">Order materials</button></div></div>';
   }
@@ -524,6 +536,54 @@
       + '</div>';
   }
 
+  /* ---------- the widget board: every card has a title, a kebab, one job ---------- */
+  function W(go, html, cls) {
+    return '<div class="hl-w' + (cls ? ' ' + cls : '') + '"><button class="hl-keb" aria-label="Widget menu" onclick="event.stopPropagation();BP_DASH.kebab(this,\'' + go + '\')">'
+      + '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>' + html + '</div>';
+  }
+  function kpiW(title, val, sub, go, o) {
+    o = o || {};
+    return W(go, '<div class="bpx-panel hl-kpi" onclick="bpNav(\'' + go + '\')"><div class="hl-wh">' + title + '</div>'
+      + '<div class="hl-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="hl-ks">' + (o.delta || '') + '<span>' + sub + '</span></div></div>');
+  }
+  function widgets(M) {
+    var jobs = M.jobs, act = jobs.filter(function (j) { return j.status === 'active'; }), C = M.cur;
+    var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
+    var inMotion = act.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
+    var dl = function (k, up) { return bpChart.delta(M.prev[k], C[k], { upIsGood: up, vs: P.vs }); };
+    var g = function (list) { return '<div class="hl-grid">' + list.map(function (c) { return '<div class="hl-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; };
+    var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
+    return g([
+      [3, kpiW('Money in', money(C.inc), P.word, 'finances', { delta: dl('inc') })],
+      [5, W('activejobs', pipeline())],
+      [4, W('finances', spendDonut(M))],
+      [4, W('finances', flow())],
+      [5, W('finances', netLine(M))],
+      [3, stack(kpiW('Kept', money(C.net), 'after costs', 'finances', { tone: C.net < 0 ? 'neg' : 'blue', delta: dl('net') }), kpiW('Money out', money(C.out), 'all costs', 'finances', { delta: dl('out', false) }))],
+      [3, stack(kpiW('Owed to you', money(owed), owed ? 'on active projects' : 'all collected', 'finances'), kpiW('In motion', String(act.length), money(inMotion) + ' of work', 'activejobs'))],
+      [4, W('activejobs', wonCols(M))],
+      [5, W('activejobs', collection(M))],
+      [4, W('dashboard', attention())],
+      [4, W('calendar', week())],
+      [4, W('dashboard', activity())],
+      [3, kpiW('New leads', D.leads ? D.leads.n : '&middot;', 'this month', D.leads ? 'contacts' : 'marketing')],
+      [3, kpiW('Appointments', D.leads ? D.leads.a : '&middot;', 'this month', 'calendar')],
+      [3, kpiW('Projects won', String(C.won), money(C.wonV) + ' of work', 'activejobs', { delta: dl('won') })],
+      [3, kpiW('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
+      [12, projects(false)],
+      [12, W('finances', jobsChart())]
+    ]);
+  }
+  D.kebab = function (btn, go) {
+    if (!window.bpShell) { bpNav(go); return; }
+    var name = (window.BPVIEWS && BPVIEWS[go] && BPVIEWS[go].t) || 'page';
+    bpShell.menu(btn, [
+      { t: 'Open ' + name, fn: function () { bpNav(go); } },
+      { t: 'Refresh', fn: function () { window.bpDashboard(); } },
+      { t: 'Change layout', fn: function () { bpNav('settings'); } }
+    ], { align: 'right' });
+  };
+
   /* ---------- three ways to lay the page out; the owner picks ---------- */
   var LAYOUTS = [['overview', 'Overview'], ['command', 'Command center'], ['projects', 'Projects first']];
   function layoutOf() { var v = null; try { v = localStorage.getItem('bpDashLayout'); } catch (e) {} return LAYOUTS.some(function (l) { return l[0] === v; }) ? v : 'overview'; }
@@ -547,9 +607,7 @@
         + per + '<div class="db-row4">' + st.join('') + '</div>'
         + cells([[6, flow()], [6, netLine(M)], [4, pipeline()], [4, spend()], [4, attention()], [12, activity()]]);
     }
-    return per + '<div class="db-row4">' + st.join('') + '</div>'
-      + cells([[8, flow()], [4, pipeline()], [4, spendDonut(M)], [4, netLine(M)], [4, wonCols(M)],
-        [12, projects(crew)], [8, jobsChart()], [4, collection(M)], [4, attention()], [4, week()], [4, activity()]]);
+    return widgets(M);
   }
 
   /* ---------- example data, so the page can be seen before anyone signs in ---------- */
