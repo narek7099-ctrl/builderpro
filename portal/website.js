@@ -247,7 +247,8 @@
       : C.empty({ title: 'Calculator funnel', empty: 'Once people visit, you see how many open your calculator and how many become leads.' }))
       + '<div class="bpx-mut ws-fnote">Counts tools from My Calculators embedded on your site. <a href="#" onclick="bpNav(\'calculator\');return false">Get the embed code</a></div></div>';
 
-    return installCard(!!real) + note + per + tiles(cur, prev, S, P)
+    var hint = real ? '' : '<div class="sp-note" style="margin-bottom:12px"><span class="ms">link</span>Not connected yet. <a href="#" onclick="bpNav(\'connections\');return false">Connect your website in Connections</a> to see your real numbers.</div>';
+    return hint + note + per + tiles(cur, prev, S, P)
       + '<div class="db-grid ws-grid">'
       + '<div class="db-c12">' + area + '</div>'
       + '<div class="ws-c6">' + pagesC + '</div><div class="ws-c6">' + srcC + '</div>'
@@ -257,11 +258,19 @@
 
   function render() {
     var area = $('bpxViewArea'); if (!area) return;
+    if (W.conn) { area.innerHTML = '<div class="ws-page">' + installCard(false) + '</div>'; if (window.bpSpin) bpSpin(false); return; }
     area.innerHTML = '<div class="ws-page">' + (window.BP_WEB_G ? BP_WEB_G.page(body) : body()) + '</div>';
     if (window.bpSpin) bpSpin(false);
   }
 
+  W.conn = false;
+  window.bpWebConnections = function () {
+    css();
+    var go = function () { if (window._bpCurView !== 'connections') return; var a = $('bpxViewArea'); if (a) a.innerHTML = '<div class="ws-page">' + installCard(false) + '</div>'; if (window.bpSpin) bpSpin(false); };
+    W.conn = true; withUid(go); go();
+  };
   window.bpWebsite = function () {
+    W.conn = false;
     css();
     if (window.BP_WEB_G) BP_WEB_G.start();
     withUid(function () {
