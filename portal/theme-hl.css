@@ -436,3 +436,19 @@
 #bpx#bpx#bpx.bpx-dark .sp-note.warn{border-color:#93370D !important}
 #bpx#bpx#bpx.bpx-dark .sp-note.bad{border-color:#912018 !important}
 #bpx#bpx#bpx.bpx-dark .sp-note.good{border-color:#085D3A !important}
+
+/* ---- audit fixes (2026-10-02) ------------------------------------------
+   The floating "Ask Lisa" button (.oaw-btn, z-index 99999, 58px at 18px from
+   the corner) sat on top of the sticky Settings "Save changes" bar and on top
+   of modal footers. Keep sticky save bars clear of it, and hide it while a
+   portal modal is open. */
+#bpx .st-foot,#bpx .bpx-set-foot{padding-right:84px}
+body:has(#bpx-modal) .oaw-btn,body:has(#bpx-mc) .oaw-btn{display:none !important}
+
+/* Automations draws its own light canvas and list (portal/automations.js) but
+   leaves node titles to inherit the page colour, so in dark mode they came out
+   near-white on white. Pin the text colour to the widget's own light surfaces. */
+#bpx .wa-lay{color:#101828}
+/* "of 589" / "+3 example" notes in the Suppliers stats: amber-900 on the dark
+   stat card was 2.4:1 */
+#bpx.bpx-dark .sp-ex{color:#fbbf24}
