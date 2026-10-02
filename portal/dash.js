@@ -546,6 +546,137 @@
     return W(go, '<div class="bpx-panel hl-kpi" onclick="bpNav(\'' + go + '\')"><div class="hl-wh">' + title + '</div>'
       + '<div class="hl-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="hl-ks">' + (o.delta || '') + '<span>' + sub + '</span></div></div>');
   }
+  /* ---------- the smaller figures: one number each, from the same jobs and money ---------- */
+  function avg(a) { return a.length ? a.reduce(function (t, v) { return t + v; }, 0) / a.length : 0; }
+  function pct(a, b) { return b > 0 ? Math.round(a / b * 100) : 0; }
+  function jobCost(j) { return (j.expenses || []).reduce(function (t, x) { return t + (+x.amt || 0); }, 0); }
+  function jobKind(j) {
+    var t = String(j.trade || j.type || j.title || '').trim();
+    t = t.split(/\s[—–-]\s|:|\(|,/)[0].trim();
+    return t && !/^job$/i.test(t) ? t.slice(0, 28) : 'Other work';
+  }
+  function miniW(title, val, sub, go, o) {
+    o = o || {};
+    return W(go, '<div class="bpx-panel hl-mini" onclick="bpNav(\'' + go + '\')"><div class="hl-wh">' + title + '</div>'
+      + '<div class="hl-mv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="hl-ms">' + (o.delta || '') + '<span>' + sub + '</span></div>'
+      + (o.chart || '') + '</div>');
+  }
+  function stats(M) {
+    var jobs = M.jobs, now = Date.now(), day = 864e5, S = {};
+    var bk = function (rows, get, val) { return bpChart.byBuckets(rows, P.buckets, get, val).values; };
+    var won = jobs.filter(function (j) { return j.wonAt; }), Jw = function (j) { return +j.wonAt; }, Jd = function (j) { return +j.doneAt; };
+    var done = jobs.filter(function (j) { return j.status === 'done' && j.doneAt; });
+    var inCur = function (rows, get) { return rows.filter(function (r) { return inP(get(r), P.start, P.end); }); };
+    var inPrev = function (rows, get) { return rows.filter(function (r) { return inP(get(r), P.pStart, P.pEnd); }); };
+    var est = function (j) { return +j.estimate || 0; };
+    /* average job size: what the projects won this period were priced at */
+    var wc = inCur(won, Jw), wp = inPrev(won, Jw);
+    S.avgJob = { cur: avg(wc.map(est)), prev: avg(wp.map(est)), n: wc.length };
+    var wonV = bk(won, Jw, est), wonN = bk(won, Jw, function () { return 1; });
+    S.avgJob.spark = wonV.map(function (v, i) { return wonN[i] ? v / wonN[i] : 0; });
+    /* finished: count, revenue, margin, cycle time */
+    var dc = inCur(done, Jd), dp = inPrev(done, Jd);
+    S.done = { cur: dc.length, prev: dp.length, spark: bk(done, Jd, function () { return 1; }), val: dc.reduce(function (t, j) { return t + (+j.collected || 0); }, 0) };
+    var coll = dc.reduce(function (t, j) { return t + (+j.collected || 0); }, 0), cost = dc.reduce(function (t, j) { return t + jobCost(j); }, 0);
+    S.margin = { kept: coll - cost, coll: coll };
+    var cyc = function (rows) { return avg(rows.filter(function (j) { return j.wonAt && +j.doneAt > +j.wonAt; }).map(function (j) { return (+j.doneAt - +j.wonAt) / day; })); };
+    S.cycle = { cur: Math.round(cyc(dc)), prev: Math.round(cyc(dp)), n: dc.filter(function (j) { return j.wonAt; }).length };
+    S.revPer = { cur: dc.length ? coll / dc.length : 0, prev: dp.length ? dp.reduce(function (t, j) { return t + (+j.collected || 0); }, 0) / dp.length : 0 };
+    /* win rate: won this period against everything quoted (won plus still out) */
+    var out = D.deals ? +D.deals.n || 0 : 0;
+    S.win = { won: wc.length, quoted: wc.length + out };
+    /* active and owed, with how long it has been owed */
+    var act = jobs.filter(function (j) { return j.status === 'active'; });
+    S.active = { n: act.length, v: act.reduce(function (t, j) { return t + est(j); }, 0) };
+    var age = [['Under 30 days', 0], ['30–60 days', 0], ['Over 60 days', 0]], owed = 0;
+    act.forEach(function (j) {
+      var o = Math.max(est(j) - (+j.collected || 0), 0); if (!o) return; owed += o;
+      var d = j.wonAt ? (now - +j.wonAt) / day : 0; age[d > 60 ? 2 : d > 30 ? 1 : 0][1] += o;
+    });
+    S.owed = { v: owed, age: age };
+    /* billed against collected, on every job running or finished this period */
+    var billed = act.concat(dc);
+    S.billed = { got: billed.reduce(function (t, j) { return t + (+j.collected || 0); }, 0), of: billed.reduce(function (t, j) { return t + est(j); }, 0) };
+    /* where the costs go, as a share of what came in */
+    var expC = M.fin.exp.filter(function (x) { return inP(x.when, P.start, P.end); });
+    var share = function (re) { return expC.filter(function (x) { return re.test(x.type || x.cat || ''); }).reduce(function (t, x) { return t + x.amt; }, 0); };
+    S.mat = share(/material|suppl/i); S.lab = share(/labou?r|crew|payroll|wage/i);
+    var spk = function (re) { return bk(M.fin.exp.filter(function (x) { return re.test(x.type || x.cat || ''); }), function (x) { return x.when; }, function (x) { return x.amt; }); };
+    S.matSpark = spk(/material|suppl/i); S.labSpark = spk(/labou?r|crew|payroll|wage/i);
+    /* repeat customers: a name on more than one project */
+    var by = {}; jobs.forEach(function (j) { var k = String(j.name || '').trim().toLowerCase(); if (k) by[k] = (by[k] || 0) + 1; });
+    var names = Object.keys(by); S.repeat = { n: names.filter(function (k) { return by[k] > 1; }).length, of: names.length };
+    /* revenue by kind of work, on jobs won or finished this period */
+    var kinds = {}; jobs.forEach(function (j) {
+      var v = j.status === 'done' && inP(j.doneAt, P.start, P.end) ? +j.collected || 0 : (j.status === 'active' && inP(j.wonAt, P.start, P.end) ? est(j) : 0);
+      if (v > 0) { var k = jobKind(j); kinds[k] = (kinds[k] || 0) + v; }
+    });
+    S.kinds = Object.keys(kinds).map(function (k) { return { label: k, value: kinds[k] }; });
+    /* appointments ahead */
+    var ahead = (D.events || []).filter(function (e) { var t = Date.parse(e.start); return !isNaN(t) && t >= new Date().setHours(0, 0, 0, 0) && t < now + 7 * day; });
+    S.appts = { n: ahead.length, next: ahead.sort(function (a, b) { return Date.parse(a.start) - Date.parse(b.start); })[0] };
+    /* permits still open, and the ones running out */
+    var permits = []; jobs.forEach(function (j) { (j.permits || []).forEach(function (p) { permits.push(p); }); });
+    var open = permits.filter(function (p) { return p.status !== 'Closed' && p.status !== 'Passed'; });
+    var soon = open.filter(function (p) { if (!p.expires) return false; var t = Date.parse(p.expires + 'T12:00:00'); return !isNaN(t) && (t - now) / day <= 14; });
+    S.permits = { n: open.length, soon: soon.length, all: permits.length };
+    /* installed work due for service in the next 30 days, or late */
+    var ins = jobs.filter(function (j) { return j.install && j.install.date; }), due = 0, late = 0;
+    ins.forEach(function (j) { var n = window.bpInstallNext ? bpInstallNext(j.install) : null; if (!n) return; var left = (n - now) / day; if (left < 0) late++; else if (left <= 30) due++; });
+    S.installs = { n: due + late, late: late, all: ins.length };
+    /* best stretch: the strongest bucket of the period by what was kept */
+    var bi = -1; M.net.forEach(function (v, i) { if (bi < 0 || v > M.net[bi]) bi = i; });
+    S.best = { label: bi >= 0 ? M.labels[bi] : '', v: bi >= 0 ? M.net[bi] : 0, any: M.net.some(function (v) { return v; }) };
+    /* running balance across the period */
+    var run = 0; S.balance = M.net.map(function (v) { run += v; return run; });
+    return S;
+  }
+  function moreWidgets(M) {
+    var S = stats(M), dl = function (p, c, up) { return bpChart.delta(p, c, { upIsGood: up, vs: P.vs }); };
+    var sp = function (v, fmt) { return bpChart.spark(v, { fmt: fmt || money, labels: M.labels }); };
+    var cnt = function (w) { return function (v) { return Math.round(v) + ' ' + w + (Math.round(v) === 1 ? '' : 's'); }; };
+    var share = function (v) { return M.cur.inc > 0 ? pct(v, M.cur.inc) + '%' : '—'; };
+    var mini = {
+      avgJob: miniW('Average job size', S.avgJob.n ? money(S.avgJob.cur) : '—', S.avgJob.n ? S.avgJob.n + ' won ' + P.word : 'nothing won ' + P.word, 'activejobs',
+        { delta: S.avgJob.n ? dl(S.avgJob.prev, S.avgJob.cur) : '', chart: sp(S.avgJob.spark) }),
+      done: miniW('Jobs completed', String(S.done.cur), money(S.done.val) + ' collected', 'activejobs', { delta: dl(S.done.prev, S.done.cur), chart: sp(S.done.spark, cnt('job')) }),
+      cycle: miniW('Won to done', S.cycle.n ? S.cycle.cur + '<small> days</small>' : '—', S.cycle.n ? 'average, ' + S.cycle.n + ' finished ' + P.word : 'no finished jobs ' + P.word, 'activejobs',
+        { delta: S.cycle.n ? dl(S.cycle.prev, S.cycle.cur, false) : '' }),
+      revPer: miniW('Revenue per project', S.done.cur ? money(S.revPer.cur) : '—', 'finished ' + P.word, 'finances', { delta: S.done.cur ? dl(S.revPer.prev, S.revPer.cur) : '' }),
+      repeat: miniW('Repeat customers', String(S.repeat.n), S.repeat.of ? pct(S.repeat.n, S.repeat.of) + '% of ' + S.repeat.of + ' customers' : 'no customers yet', 'contacts'),
+      mat: miniW('Materials', share(S.mat), money(S.mat) + ' of revenue ' + P.word, 'finances', { chart: sp(S.matSpark) }),
+      lab: miniW('Labor', share(S.lab), money(S.lab) + ' of revenue ' + P.word, 'finances', { chart: sp(S.labSpark) }),
+      permits: miniW('Open permits', String(S.permits.n), S.permits.all ? (S.permits.soon ? S.permits.soon + ' expiring within 14 days' : 'none expiring soon') : 'no permits on projects yet', 'activejobs',
+        { tone: S.permits.soon ? 'warn' : '' }),
+      installs: miniW('Maintenance due', String(S.installs.n), S.installs.all ? (S.installs.late ? S.installs.late + ' overdue, ' : '') + 'next 30 days' : 'no installations signed off yet', 'installations',
+        { tone: S.installs.late ? 'warn' : '' }),
+      appts: miniW('Next 7 days', String(S.appts.n), S.appts.next ? 'appointments · next: ' + esc(S.appts.next.name || '') : 'appointments booked', 'calendar'),
+      best: miniW('Best ' + (P.k === 'month' ? 'week' : 'month'), S.best.any ? money(S.best.v) : '—', S.best.any ? esc(S.best.label) + ' · kept, ' + P.word : 'nothing kept ' + P.word, 'finances',
+        { tone: S.best.v < 0 ? 'neg' : '' })
+    };
+    var gauge = function (title, v, of, fmt, note, go, tone) {
+      return W(go, '<div class="bpx-panel hl-gauge">' + bpChart.gauge({ title: title, value: v, target: of, fmt: fmt, note: note, tone: tone }) + '</div>');
+    };
+    var countF = function (v) { return String(Math.round(v)); };
+    var margin = S.margin.coll > 0
+      ? gauge('Gross margin', Math.max(S.margin.kept, 0), S.margin.coll, money, 'kept on jobs finished ' + P.word, 'finances', S.margin.kept / S.margin.coll < 0.2 ? 'warn' : '')
+      : W('finances', '<div class="bpx-panel">' + bpChart.empty({ title: 'Gross margin', empty: 'Finish a job ' + P.word + ' with its costs and the share you kept shows here.' }) + '</div>');
+    var win = S.win.quoted > 0
+      ? gauge('Win rate', S.win.won, S.win.quoted, countF, 'won of quoted ' + P.word, 'closedeals')
+      : W('closedeals', '<div class="bpx-panel">' + bpChart.empty({ title: 'Win rate', empty: 'Send an estimate and the share you win shows here.' }) + '</div>');
+    var billed = S.billed.of > 0
+      ? W('finances', '<div class="bpx-panel hl-gauge">' + bpChart.gauge({ title: 'Collected vs billed', value: S.billed.got, target: S.billed.of, fmt: money, note: 'on running jobs and jobs finished ' + P.word }) + '</div>')
+      : W('finances', '<div class="bpx-panel">' + bpChart.empty({ title: 'Collected vs billed', empty: 'Win a project and what you have been paid against its price shows here.' }) + '</div>');
+    var owed = W('finances', '<div class="bpx-panel hl-mini"><div class="hl-wh">Owed to you</div><div class="hl-mv">' + money(S.owed.v) + '</div><div class="hl-ms"><span>on ' + S.active.n + ' active project' + (S.active.n === 1 ? '' : 's') + ', by age</span></div>'
+      + (S.owed.v > 0 ? bpChart.ranked({ rows: S.owed.age.map(function (a) { return { label: a[0], value: a[1] }; }), fixed: true, fmt: money, ramp: ['var(--bpc-s1)', 'var(--bpc-warn)', 'var(--bpc-neg2)'], axis: 'Age' }) : '') + '</div>');
+    var kinds = W('activejobs', '<div class="bpx-panel">' + (S.kinds.length
+      ? bpChart.ranked({ title: 'Top kinds of work', lead: 'by revenue, ' + P.word, rows: S.kinds, fmt: money, max: 5, axis: 'Kind of work' })
+      : bpChart.empty({ title: 'Top kinds of work', empty: 'Win or finish a project ' + P.word + ' and the kinds of work that pay most rank here.' })) + '</div>');
+    var bal = W('finances', '<div class="bpx-panel">' + (S.best.any
+      ? bpChart.line({ title: 'Running balance', lead: 'income less costs, added up ' + P.by + ' · ' + P.word, x: { label: P.axis, values: M.labels }, series: [{ name: 'Balance', values: S.balance }], fmt: money, height: 190 })
+      : bpChart.empty({ title: 'Running balance', empty: 'Once money moves ' + P.word + ', the running total shows here.' })) + '</div>');
+    return { mini: mini, margin: margin, win: win, billed: billed, owed: owed, kinds: kinds, bal: bal, active: S.active };
+  }
   function widgets(M) {
     var jobs = M.jobs, act = jobs.filter(function (j) { return j.status === 'active'; }), C = M.cur;
     var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
@@ -554,17 +685,21 @@
     var g = function (list) { return '<div class="hl-grid">' + list.map(function (c) { return '<div class="hl-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; };
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
     var st = sparkTiles(M), gos = ['finances', 'finances', 'activejobs', 'finances'];
+    var X = moreWidgets(M), m = X.mini;
     return g([
+      [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
       [3, kpiW('New leads', D.leads ? D.leads.n : '&middot;', 'this month', D.leads ? 'contacts' : 'marketing')],
       [3, kpiW('Appointments', D.leads ? D.leads.a : '&middot;', 'this month', 'calendar')],
-      [3, kpiW('Projects won', String(C.won), money(C.wonV) + ' of work', 'activejobs', { delta: dl('won') })],
+      [3, kpiW('Active projects', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs')],
       [3, kpiW('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
-      [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
       [8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
-      [4, W('finances', spendDonut(M))],
-      [4, W('finances', netLine(M))],
-      [4, W('activejobs', wonCols(M))],
+      [3, m.avgJob], [3, m.revPer], [3, m.done], [3, m.cycle],
+      [4, X.margin], [4, X.win], [4, X.billed],
+      [3, m.mat], [3, m.lab], [3, m.best], [3, m.repeat],
+      [8, X.bal], [4, X.kinds],
+      [4, X.owed], [4, W('finances', spendDonut(M))], [4, W('activejobs', wonCols(M))],
+      [4, m.permits], [4, m.installs], [4, m.appts],
       [12, projects(false)],
       [8, W('finances', jobsChart())],
       [4, W('activejobs', collection(M))],
@@ -622,8 +757,11 @@
       { id: 'd2', name: 'Sarah Malik', title: 'Storm repair and gutters', estimate: 7600, collected: 0, status: 'active', wonAt: now - 5 * day, sched: { dates: [iso(3)] }, expenses: [] },
       { id: 'd3', name: 'Carlos Rivera', title: 'Leak repair', estimate: 2100, collected: 1050, status: 'active', wonAt: now - 3 * day, sched: { dates: [iso(5)] }, expenses: [] },
     ];
-    var done = [['Dana Meyers', 14200, 8900], ['Jessica Tran', 21600, 13100], ['Ethan Wells', 6400, 3900], ['Nina Patel', 9800, 6700], ['Omar Haddad', 4300, 2600]];
-    done.forEach(function (d, i) { jobs.push({ id: 'x' + i, name: d[0], title: 'Re-roof', estimate: d[1], collected: d[1], status: 'done', wonAt: now - (40 + i * 30) * day, doneAt: now - (20 + i * 31) * day,
+    jobs[0].permits = [{ id: 'p1', status: 'Approved', expires: iso(9) }];
+    jobs[1].permits = [{ id: 'p2', status: 'Applied' }];
+    var done = [['Dana Meyers', 14200, 8900, 'Re-roof'], ['Jessica Tran', 21600, 13100, 'Re-roof'], ['Ethan Wells', 6400, 3900, 'Gutters'], ['Nina Patel', 9800, 6700, 'Siding repair'], ['Omar Haddad', 4300, 2600, 'Leak repair'], ['Mike Johnson', 3200, 1900, 'Gutters']];
+    done.forEach(function (d, i) { jobs.push({ id: 'x' + i, name: d[0], title: d[3], estimate: d[1], collected: d[1], status: 'done', wonAt: now - (40 + i * 30) * day, doneAt: now - (20 + i * 31) * day,
+      install: i < 3 ? { date: now - (20 + i * 31) * day, period: i + 1, item: d[3] } : undefined,
       expenses: [{ cat: 'Materials', amt: Math.round(d[2] * .6) }, { cat: 'Labor / crew', amt: Math.round(d[2] * .32) }, { cat: 'Permits', amt: Math.round(d[2] * .08) }] }); });
     var inc = [], exp = [];
     jobs.forEach(function (j) {
