@@ -553,25 +553,24 @@
     var dl = function (k, up) { return bpChart.delta(M.prev[k], C[k], { upIsGood: up, vs: P.vs }); };
     var g = function (list) { return '<div class="hl-grid">' + list.map(function (c) { return '<div class="hl-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; };
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
+    var st = sparkTiles(M), gos = ['finances', 'finances', 'activejobs', 'finances'];
     return g([
-      [3, kpiW('Money in', money(C.inc), P.word, 'finances', { delta: dl('inc') })],
-      [5, W('activejobs', pipeline())],
-      [4, W('finances', spendDonut(M))],
-      [4, W('finances', flow())],
-      [5, W('finances', netLine(M))],
-      [3, stack(kpiW('Kept', money(C.net), 'after costs', 'finances', { tone: C.net < 0 ? 'neg' : 'blue', delta: dl('net') }), kpiW('Money out', money(C.out), 'all costs', 'finances', { delta: dl('out', false) }))],
-      [3, stack(kpiW('Owed to you', money(owed), owed ? 'on active projects' : 'all collected', 'finances'), kpiW('In motion', String(act.length), money(inMotion) + ' of work', 'activejobs'))],
-      [4, W('activejobs', wonCols(M))],
-      [5, W('activejobs', collection(M))],
-      [4, W('dashboard', attention())],
-      [4, W('calendar', week())],
-      [4, W('dashboard', activity())],
       [3, kpiW('New leads', D.leads ? D.leads.n : '&middot;', 'this month', D.leads ? 'contacts' : 'marketing')],
       [3, kpiW('Appointments', D.leads ? D.leads.a : '&middot;', 'this month', 'calendar')],
       [3, kpiW('Projects won', String(C.won), money(C.wonV) + ' of work', 'activejobs', { delta: dl('won') })],
       [3, kpiW('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
+      [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
+      [8, W('finances', flow())],
+      [4, W('activejobs', pipeline())],
+      [4, W('finances', spendDonut(M))],
+      [4, W('finances', netLine(M))],
+      [4, W('activejobs', wonCols(M))],
       [12, projects(false)],
-      [12, W('finances', jobsChart())]
+      [8, W('finances', jobsChart())],
+      [4, W('activejobs', collection(M))],
+      [4, W('dashboard', attention())],
+      [4, W('calendar', week())],
+      [4, W('dashboard', activity())]
     ]);
   }
   D.kebab = function (btn, go) {

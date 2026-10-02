@@ -38,8 +38,8 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-acct{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:7px 8px;border-radius:8px;background:rgba(255,255,255,.05);
   border:1px solid var(--hl-side-line);color:#fff;text-align:left;cursor:pointer;font:inherit;transition:background-color 120ms ease;box-sizing:border-box}
 #bpx#bpx#bpx#bpx .hl-acct:hover{background:rgba(255,255,255,.09)}
-#bpx#bpx#bpx#bpx .hl-acct-logo{width:30px;height:30px;flex:0 0 30px;border-radius:6px;background:#fff;color:#232D3B;display:grid;place-items:center;overflow:hidden;font-size:12px;font-weight:700}
-#bpx#bpx#bpx#bpx .hl-acct-logo img{width:100%;height:100%;object-fit:cover}
+#bpx#bpx#bpx#bpx .hl-acct-logo{width:30px;height:30px;flex:0 0 30px;border-radius:6px;background:transparent;color:#232D3B;display:grid;place-items:center;overflow:hidden;font-size:12px;font-weight:700}
+#bpx#bpx#bpx#bpx .hl-acct-logo img{width:100%;height:100%;object-fit:contain}
 #bpx#bpx#bpx#bpx .hl-acct-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
 #bpx#bpx#bpx#bpx .hl-acct-t b{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bpx#bpx#bpx#bpx .hl-acct-t small{font-size:11.5px;color:var(--hl-side-mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -237,7 +237,13 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .db-per button{border-radius:4px !important;padding:0 10px !important;height:26px;font-size:12.5px !important;font-weight:500 !important}
 #bpx#bpx#bpx#bpx .dash-setup,#bpx#bpx#bpx#bpx .dash-mini{margin-bottom:12px !important}
 #bpx#bpx#bpx#bpx .hl-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:stretch}
-#bpx#bpx#bpx#bpx .hl-c3{grid-column:span 3} #bpx#bpx#bpx#bpx .hl-c4{grid-column:span 4} #bpx#bpx#bpx#bpx .hl-c5{grid-column:span 5} #bpx#bpx#bpx#bpx .hl-c12{grid-column:span 12}
+#bpx#bpx#bpx#bpx .hl-c3{grid-column:span 3} #bpx#bpx#bpx#bpx .hl-c4{grid-column:span 4} #bpx#bpx#bpx#bpx .hl-c5{grid-column:span 5} #bpx#bpx#bpx#bpx .hl-c8{grid-column:span 8} #bpx#bpx#bpx#bpx .hl-c12{grid-column:span 12}
+#bpx#bpx#bpx#bpx .hl-w.hl-spk > .db-st{padding:12px 14px 0 !important;gap:4px}
+#bpx#bpx#bpx#bpx .hl-spk .db-st-h{padding-right:26px;gap:6px}
+#bpx#bpx#bpx#bpx .hl-spk .db-kl{font-size:13.5px;font-weight:600;text-transform:none;color:var(--ink)}
+#bpx#bpx#bpx#bpx .hl-spk .db-kv{font-size:28px}
+#bpx#bpx#bpx#bpx .hl-spk .bpc-sparkwrap{margin:6px -14px 0}
+#bpx#bpx#bpx#bpx .hl-spk .bpc-spark{height:44px}
 #bpx#bpx#bpx#bpx .hl-grid > div{min-width:0}
 #bpx#bpx#bpx#bpx .hl-w{position:relative;height:100%}
 #bpx#bpx#bpx#bpx .hl-w > .bpx-panel{height:100%;margin:0 !important;box-sizing:border-box;padding:12px 14px 14px !important}
@@ -266,10 +272,10 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-c12 > .dash-projs{background:var(--card);border:1px solid var(--line);border-radius:var(--hl-r);padding:12px 14px 14px}
 #bpx#bpx#bpx#bpx .hl-grid .pj-row{gap:12px}
 @media (max-width:1280px){
-  #bpx#bpx#bpx#bpx .hl-c3{grid-column:span 6} #bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c5{grid-column:span 6}
+  #bpx#bpx#bpx#bpx .hl-c3{grid-column:span 6} #bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c5{grid-column:span 6} #bpx#bpx#bpx#bpx .hl-c8{grid-column:span 12}
 }
 @media (max-width:760px){
-  #bpx#bpx#bpx#bpx .hl-c3,#bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c5{grid-column:span 12}
+  #bpx#bpx#bpx#bpx .hl-c3,#bpx#bpx#bpx#bpx .hl-c4,#bpx#bpx#bpx#bpx .hl-c5,#bpx#bpx#bpx#bpx .hl-c8{grid-column:span 12}
   #bpx#bpx#bpx#bpx .hl-w .bpc-donut{flex-wrap:wrap;justify-content:center}
 }
 
