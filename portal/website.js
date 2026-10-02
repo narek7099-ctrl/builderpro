@@ -252,12 +252,13 @@
 
   function render() {
     var area = $('bpxViewArea'); if (!area) return;
-    area.innerHTML = '<div class="ws-page">' + body() + '</div>';
+    area.innerHTML = '<div class="ws-page">' + (window.BP_WEB_G ? BP_WEB_G.page(body) : body()) + '</div>';
     if (window.bpSpin) bpSpin(false);
   }
 
   window.bpWebsite = function () {
     css();
+    if (window.BP_WEB_G) BP_WEB_G.start();
     withUid(function () {
       if (window._bpCurView !== 'website') return;
       if (live() && !W.loaded) {
@@ -329,5 +330,355 @@
   }
 
   /* exposed for tests */
-  window.BP_WEB = { stats: stats, srcOf: srcOf, example: example, state: W };
+  window.BP_WEB = { stats: stats, srcOf: srcOf, example: example, state: W, render: render, periodDef: periodDef, num: num, pct: pct, fmtTime: fmtTime, esc: esc, live: live };
+})();
+
+/* ---------------- Google Analytics + Search Console (primary source) ----------------
+   "Sign in with Google" through the google-analytics edge function. The function
+   holds the (encrypted) refresh token; this page only ever sees numbers.
+   States: function not configured → snippet page exactly as before.
+           configured, not connected → Google connect card above the snippet page.
+           connected → source switch (Google Analytics / BuilderPro snippet),
+           property + site picker, then the GA dashboard + "Google Search". */
+(function () {
+  'use strict';
+  var B = window.BP_WEB; if (!B) return;
+  var esc = B.esc, num = B.num, pct = B.pct, fmtTime = B.fmtTime, W = B.state;
+  var FN = (window.BP_URL || 'https://ttzwzouhiwdwamuimhpo.supabase.co') + '/functions/v1/google-analytics';
+  var G = { st: null, asked: false, src: null, props: null, propsLoading: false, rep: {}, repLoading: {}, err: '', menu: false, busy: false, flash: '', picking: false };
+  try { var ss = localStorage.getItem('bpWebSrc'); if (ss === 'google' || ss === 'snippet') G.src = ss; } catch (e) {}
+
+  /* came back from Google's consent screen */
+  (function () {
+    var m = /[?&]google=(connected|cancelled|error)\b/.exec(location.search);
+    if (!m) return;
+    G.flash = m[1]; if (m[1] === 'connected') G.src = 'google';
+    try { var u = new URL(location.href); u.searchParams.delete('google'); history.replaceState(null, '', u.toString()); } catch (e) {}
+    var tries = 0, go = function () {
+      if (document.getElementById('bpxViewArea') && typeof window.bpNav === 'function') { try { bpNav('website'); } catch (e) {} return; }
+      if (++tries < 40) setTimeout(go, 250);
+    };
+    setTimeout(go, 400);
+  })();
+
+  function api(body) {
+    var tokP = (window.BP_SB && BP_SB.auth && BP_SB.auth.getSession) ? Promise.resolve(BP_SB.auth.getSession()).then(function (s) { return (s && s.data && s.data.session && s.data.session.access_token) || ''; }, function () { return ''; }) : Promise.resolve('');
+    var anon = window.BP_ANON || '';
+    return tokP.then(function (tok) {
+      return fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: anon, Authorization: 'Bearer ' + (tok || anon) }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Bad response (' + r.status + ')' }; }); });
+    }).catch(function () { return { ok: false, error: 'network' }; });
+  }
+  var rerender = function () { if (window._bpCurView === 'website') B.render(); };
+  var connected = function () { return !!(G.st && G.st.configured && G.st.connected); };
+  var useGoogle = function () { return connected() && G.src !== 'snippet'; };
+  var rangeN = function () { return W.period === '7d' ? 7 : W.period === '90d' ? 90 : 30; };
+
+  function start() {
+    if (G.asked) { if (useGoogle()) ensure(); return; }
+    G.asked = true;
+    api({ op: 'status' }).then(function (d) {
+      G.st = d && d.ok ? d : { configured: false, connected: false };
+      if (connected() && !G.src) G.src = 'google';
+      if (useGoogle()) ensure();
+      rerender();
+    });
+  }
+  function ensure() {
+    var st = G.st;
+    if (!st.ga_property && !st.gsc_site) { G.picking = true; }
+    if (G.picking) { loadProps(); return; }
+    loadReport(rangeN());
+  }
+  function loadProps() {
+    if (G.props || G.propsLoading) return;
+    G.propsLoading = true;
+    api({ op: 'properties' }).then(function (d) {
+      G.propsLoading = false;
+      if (d && d.ok) G.props = d; else { G.props = { ga: [], gsc: [] }; G.err = errText(d); }
+      rerender();
+    });
+  }
+  function loadReport(n) {
+    if (G.rep[n] || G.repLoading[n]) return;
+    G.repLoading[n] = true;
+    api({ op: 'report', range: n }).then(function (d) {
+      G.repLoading[n] = false;
+      if (d && d.ok) { G.rep[n] = d; G.err = ''; } else G.err = errText(d);
+      rerender();
+    });
+  }
+  function errText(d) {
+    var e = (d && (d.error || d.message)) || 'unknown';
+    if (e === 'reconnect') return 'Google access was removed. Disconnect and connect again.';
+    if (e === 'not_configured') return 'Google sign-in is not set up on BuilderPro yet.';
+    if (e === 'sign in required') return 'Sign in to use Google Analytics.';
+    return 'Google said: ' + e;
+  }
+
+  /* ---------- pieces ---------- */
+  var GLOGO = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+  var gBtn = function () { return '<button class="ws-gbtn" id="ws-gbtn" onclick="bpWebGoogle()"' + (G.busy ? ' disabled' : '') + '><span class="ws-glogo">' + GLOGO + '</span><span>' + (G.busy ? 'Opening Google…' : 'Sign in with Google') + '</span></button>'; };
+
+  function flash() {
+    if (!G.flash) return '';
+    var f = G.flash; G.flash = '';
+    if (f === 'connected') return '<div class="sp-note ok ws-gflash"><span class="ms">check_circle</span>Google is connected. Pick the website below.</div>';
+    if (f === 'cancelled') return '<div class="sp-note warn ws-gflash"><span class="ms">info</span>Google sign-in was cancelled. Nothing was connected.</div>';
+    return '<div class="sp-note bad ws-gflash"><span class="ms">error</span>Couldn’t connect Google. Please try again.</div>';
+  }
+
+  function connectCard() {
+    return '<div class="bpx-panel ws-gcard"><div class="ws-gcard-t"><div class="ws-gic">' + GLOGO.replace(/18/g, '26') + '</div><div>'
+      + '<b>See your Google Analytics and Google Search numbers here</b>'
+      + '<div class="bpx-mut">Sign in with the Google account that runs your website’s Analytics or Search Console. BuilderPro only <b>reads</b> your numbers. It can’t change anything, and you can disconnect any time.</div></div></div>'
+      + '<div class="ws-gcard-a">' + gBtn() + '<span class="bpx-mut ws-gor">No Google Analytics? Use the BuilderPro snippet below.</span></div></div>';
+  }
+
+  function switcher() {
+    var s = useGoogle() ? 'google' : 'snippet';
+    var email = G.st && G.st.email ? esc(G.st.email) : 'Google account';
+    return '<div class="ws-srcbar"><div class="db-per ws-src" role="group" aria-label="Data source">'
+      + '<button class="' + (s === 'google' ? 'on' : '') + '" aria-pressed="' + (s === 'google') + '" onclick="bpWebSrc(\'google\')">Google Analytics</button>'
+      + '<button class="' + (s === 'snippet' ? 'on' : '') + '" aria-pressed="' + (s === 'snippet') + '" onclick="bpWebSrc(\'snippet\')">BuilderPro snippet</button></div>'
+      + '<div class="ws-gacct"><span class="ws-gdot"></span><span class="ws-gmail" title="' + email + '">' + email + '</span>'
+      + '<button class="ws-kebab" aria-label="Google options" aria-expanded="' + G.menu + '" onclick="bpWebGMenu(event)"><span class="ms">more_vert</span></button>'
+      + (G.menu ? '<div class="ws-menu" role="menu"><button role="menuitem" onclick="bpWebGPick()"><span class="ms">tune</span>Change website</button>'
+        + '<button role="menuitem" onclick="bpWebGRefresh()"><span class="ms">refresh</span>Refresh numbers</button>'
+        + '<button role="menuitem" class="bad" onclick="bpWebGDisconnect()"><span class="ms">link_off</span>Disconnect Google</button></div>' : '')
+      + '</div></div>';
+  }
+
+  function picker() {
+    var P = G.props;
+    if (!P) return '<div class="bpx-panel ws-pick"><div class="bpx-mut"><span class="ms ws-spin">progress_activity</span> Finding your Google Analytics properties and Search Console sites…</div></div>';
+    var st = G.st || {};
+    var ga = P.ga || [], gsc = P.gsc || [];
+    var gaSel = '<select id="ws-gaprop"><option value="">— None —</option>' + ga.map(function (p) {
+      return '<option value="' + esc(p.id) + '"' + (p.id === st.ga_property || (!st.ga_property && ga.length === 1) ? ' selected' : '') + '>' + esc(p.name) + ' · ' + esc(p.account) + '</option>';
+    }).join('') + '</select>';
+    var gscSel = '<select id="ws-gscsite"><option value="">— None —</option>' + gsc.map(function (s) {
+      return '<option value="' + esc(s.site) + '"' + (s.site === st.gsc_site || (!st.gsc_site && gsc.length === 1) ? ' selected' : '') + '>' + esc(s.site.replace(/^sc-domain:/, '') + (/^sc-domain:/.test(s.site) ? ' (whole domain)' : '')) + '</option>';
+    }).join('') + '</select>';
+    return '<div class="bpx-panel ws-pick"><b>Which website should we show?</b>'
+      + '<div class="ws-pick-g"><label for="ws-gaprop">Google Analytics property</label>' + gaSel
+      + (ga.length ? '' : '<div class="ws-pick-n">No GA4 properties on this Google account' + (P.ga_error ? ' (' + esc(P.ga_error) + ')' : '') + '.</div>')
+      + '<label for="ws-gscsite">Search Console site</label>' + gscSel
+      + (gsc.length ? '' : '<div class="ws-pick-n">No verified Search Console sites on this account' + (P.gsc_error ? ' (' + esc(P.gsc_error) + ')' : '') + '.</div>')
+      + '</div><div class="ws-acts"><button class="bpx-btn" onclick="bpWebGSave()"><span class="ms">check</span> Show my numbers</button>'
+      + (st.ga_property || st.gsc_site ? '<button class="bpx-btn ghost" onclick="bpWebGCancelPick()">Cancel</button>' : '') + '</div></div>';
+  }
+
+  /* group GA/GSC daily rows into the page's buckets */
+  function bucketize(P, rows, get, how) {
+    return P.buckets.map(function (bk) {
+      var sum = 0, n = 0;
+      rows.forEach(function (r) { var t = Date.parse(r.date + 'T12:00:00'); if (t >= bk.start && t < bk.end) { sum += get(r); n++; } });
+      return how === 'avg' ? (n ? sum / n : 0) : sum;
+    });
+  }
+
+  /* Google data stops at yesterday (Search Console ~2 days back): drop the
+     trailing buckets that have no data yet so lines don't dive to zero */
+  function trimP(P, rows) {
+    var last = 0; rows.forEach(function (r) { var t = Date.parse(r.date + 'T12:00:00'); if (t > last) last = t; });
+    if (!last) return P;
+    var Q = {}; for (var k in P) Q[k] = P[k];
+    Q.buckets = P.buckets.filter(function (b) { return b.start <= last; });
+    return Q.buckets.length > 1 ? Q : P;
+  }
+  function gaSection(rep, P) {
+    var C = bpChart, count = C.NAMED.count;
+    var labels = P.buckets.map(function (b) { return b.label; });
+    var ga = rep.ga;
+    if (!ga) return '<div class="sp-note warn"><span class="ms">info</span>No Google Analytics property picked. <a href="#" onclick="bpWebGPick();return false">Pick one</a> to see visitors.</div>';
+    if (ga.error) return '<div class="sp-note bad"><span class="ms">error</span>Google Analytics: ' + esc(ga.error) + '</div>';
+    var t = ga.totals || {}, p = ga.previous || {}, by = ga.byDate || [];
+    P = trimP(P, by); labels = P.buckets.map(function (b) { return b.label; });
+    var S = {
+      users: bucketize(P, by, function (r) { return r.users; }), views: bucketize(P, by, function (r) { return r.views; }),
+      avg: bucketize(P, by, function (r) { return r.avg; }, 'avg'), ke: bucketize(P, by, function (r) { return r.keyEvents; })
+    };
+    var tile = function (lbl, cur, prev, val, sub, vals, fmt, tone) {
+      return '<div class="bpx-panel db-st ws-st"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>' + C.delta(prev, cur, { vs: P.vs }) + '</div>'
+        + '<div class="db-kv' + (tone ? ' ' + tone : '') + '">' + val + '</div><div class="db-ks">' + sub + '</div>' + C.spark(vals, { fmt: fmt, labels: labels }) + '</div>';
+    };
+    var kpis = '<div class="ws-kpis ws-k4">'
+      + tile('Visitors', t.users, p.users, num(t.users), P.word, S.users, function (v) { return num(v) + ' visitors'; })
+      + tile('Page views', t.views, p.views, num(t.views), (t.users ? (t.views / t.users).toFixed(1) : '0') + ' per visitor', S.views, function (v) { return num(v) + ' views'; })
+      + tile('Avg visit', t.avg, p.avg, fmtTime(t.avg), 'time per visit', S.avg, fmtTime)
+      + tile('Key events', t.keyEvents, p.keyEvents, num(t.keyEvents), 'calls, forms, goals you set in GA', S.ke, function (v) { return num(v) + ' events'; }, 'blue')
+      + '</div>';
+    var area = '<div class="bpx-panel">' + C.area({ title: 'Visitors over time', lead: P.by + ' · ' + P.word, x: { label: P.by === 'by day' ? 'Day' : 'Week of', values: labels },
+      series: [{ name: 'Visitors', values: S.users }], fmt: count, fmtKind: 'count', height: 210 }) + '</div>';
+    var pages = (ga.pages || []).map(function (r) { return { label: r.path, value: r.views }; });
+    var pagesC = '<div class="bpx-panel">' + (pages.length ? C.ranked({ title: 'Top pages', lead: 'page views · ' + P.word, rows: pages, fmt: count, max: 8 }) : C.empty({ title: 'Top pages', empty: 'No page views ' + P.word + '.' })) + '</div>';
+    var src = (ga.sources || []).map(function (r) { return { label: r.source || '(not set)', value: r.sessions }; });
+    var srcC = '<div class="bpx-panel">' + (src.length ? C.ranked({ title: 'Traffic sources', lead: 'visits by channel · ' + P.word, rows: src, fmt: count, max: 8 }) : C.empty({ title: 'Traffic sources', empty: 'No visits ' + P.word + '.' })) + '</div>';
+    var DN = { mobile: 'Phone', desktop: 'Computer', tablet: 'Tablet' };
+    var dev = (ga.devices || []).map(function (r) { return { label: DN[r.device] || r.device, value: r.users }; });
+    var devC = '<div class="bpx-panel">' + (dev.length ? C.donut({ title: 'Devices', lead: 'visitors · ' + P.word, rows: dev, fmt: count, centre: num(t.users), centreNote: 'visitors', fixed: true }) : C.empty({ title: 'Devices', empty: 'No visits ' + P.word + '.' })) + '</div>';
+    return kpis + '<div class="db-grid ws-grid"><div class="db-c12">' + area + '</div>'
+      + '<div class="ws-c6">' + pagesC + '</div><div class="ws-c6">' + srcC + '</div>'
+      + '<div class="ws-c6">' + devC + '</div><div class="ws-c6">' + funnel(P) + '</div></div>';
+  }
+
+  /* calculator funnel still comes from the snippet's events */
+  function funnel(P) {
+    var C = bpChart, count = C.NAMED.count;
+    var real = W.rows && W.rows.length ? W.rows : null;
+    if (!real) return C.empty({ title: 'Calculator leads', empty: 'Google Analytics can’t see who opens your BuilderPro calculators. Add the BuilderPro snippet to your site to also see calculator leads here.' })
+      + '<div class="bpx-mut ws-fnote"><a href="#" onclick="bpWebSrc(\'snippet\');return false">Get the snippet</a></div>';
+    var cur = B.stats(real, P.start, P.end);
+    return (cur.visitors ? C.funnel({ title: 'Calculator funnel', lead: 'from the BuilderPro snippet · ' + P.word,
+      steps: [{ label: 'Visits', value: cur.visitors }, { label: 'Opened a tool', value: cur.tools }, { label: 'Lead', value: cur.toolLeads }], fmt: count })
+      : C.empty({ title: 'Calculator funnel', empty: 'No snippet visits ' + P.word + '.' }));
+  }
+
+  function gscSection(rep, P) {
+    var C = bpChart, count = C.NAMED.count;
+    var g = rep.gsc;
+    var head = '<div class="ws-sech"><span class="ms">search</span><div><b>Google Search</b><div class="bpx-mut">How people find you on Google · from Search Console (about 2 days behind)</div></div></div>';
+    if (!g) return head + '<div class="sp-note warn"><span class="ms">info</span>No Search Console site picked. <a href="#" onclick="bpWebGPick();return false">Pick one</a> to see searches.</div>';
+    if (g.error) return head + '<div class="sp-note bad"><span class="ms">error</span>Search Console: ' + esc(g.error) + '</div>';
+    var t = g.totals || {}, p = g.previous || {}, by = g.byDate || [];
+    P = trimP(P, by);
+    var labels = P.buckets.map(function (b) { return b.label; });
+    var clicks = bucketize(P, by, function (r) { return r.clicks; }), impr = bucketize(P, by, function (r) { return r.impressions; });
+    var ctrS = clicks.map(function (c, i) { return impr[i] ? c / impr[i] * 100 : 0; });
+    var tile = function (lbl, cur, prev, val, sub, vals, fmt, up) {
+      return '<div class="bpx-panel db-st ws-st"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>' + C.delta(prev, cur, { vs: P.vs, upIsGood: up }) + '</div>'
+        + '<div class="db-kv">' + val + '</div><div class="db-ks">' + sub + '</div>' + (vals ? C.spark(vals, { fmt: fmt, labels: labels }) : '') + '</div>';
+    };
+    var kpis = '<div class="ws-kpis ws-k4">'
+      + tile('Clicks', t.clicks, p.clicks, num(t.clicks), 'from Google search', clicks, function (v) { return num(v) + ' clicks'; })
+      + tile('Impressions', t.impressions, p.impressions, num(t.impressions), 'times you showed up', impr, function (v) { return num(v) + ' impressions'; })
+      + tile('Click rate', t.ctr, p.ctr, pct(t.ctr), 'of people who saw you clicked', ctrS, pct)
+      + tile('Avg position', t.position, p.position, (Math.round((+t.position || 0) * 10) / 10).toFixed(1), 'lower is better (1 = top)', null, null, false)
+      + '</div>';
+    var area = '<div class="bpx-panel">' + C.area({ title: 'Clicks from Google over time', lead: P.by + ' · ' + P.word, x: { label: P.by === 'by day' ? 'Day' : 'Week of', values: labels },
+      series: [{ name: 'Clicks', values: clicks }], fmt: count, fmtKind: 'count', height: 190 }) + '</div>';
+    var q = g.queries || [];
+    var table = '<div class="bpx-panel"><div class="ws-tt"><b>Top searches</b><span class="bpx-mut">what people typed before finding you · ' + P.word + '</span></div>'
+      + (q.length ? '<div class="ws-tw"><table class="ws-tbl"><thead><tr><th>Search</th><th>Clicks</th><th>Shown</th><th class="ws-hide-s">Click rate</th><th class="ws-hide-s">Position</th></tr></thead><tbody>'
+        + q.map(function (r) { return '<tr><td>' + esc(r.query) + '</td><td>' + num(r.clicks) + '</td><td>' + num(r.impressions) + '</td><td class="ws-hide-s">' + pct(r.ctr) + '</td><td class="ws-hide-s">' + (Math.round(r.position * 10) / 10).toFixed(1) + '</td></tr>'; }).join('')
+        + '</tbody></table></div>' : '<div class="bpx-mut">No searches ' + P.word + ' yet.</div>') + '</div>';
+    return head + kpis + '<div class="db-grid ws-grid"><div class="ws-c6">' + table + '</div><div class="ws-c6">' + area + '</div></div>';
+  }
+
+  function googleBody() {
+    var per = '<div class="db-per" role="group" aria-label="Period">' + [['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days']].map(function (p) {
+      return '<button class="' + (p[0] === W.period ? 'on' : '') + '" aria-pressed="' + (p[0] === W.period) + '" onclick="bpWebPeriod(\'' + p[0] + '\')">' + p[1] + '</button>';
+    }).join('') + '</div>';
+    var out = switcher() + flash();
+    if (G.picking) return out + (G.err ? '<div class="sp-note bad"><span class="ms">error</span>' + esc(G.err) + '</div>' : '') + picker();
+    var n = rangeN(), rep = G.rep[n];
+    if (!rep) {
+      loadReport(n);
+      return out + (G.err ? '<div class="sp-note bad"><span class="ms">error</span>' + esc(G.err) + '</div>' : '') + per
+        + '<div class="bpx-panel ws-load"><span class="ms ws-spin">progress_activity</span> Getting your numbers from Google…</div>';
+    }
+    var P = B.periodDef(W.period);
+    return out + per + gaSection(rep, P) + gscSection(rep, P);
+  }
+
+  function page(snippetBody) {
+    gcss();
+    if (useGoogle()) return googleBody();
+    var top = flash();
+    if (connected()) top = switcher() + top;
+    else if (G.st && G.st.configured) top += connectCard();
+    return top + snippetBody();
+  }
+
+  /* ---------- actions ---------- */
+  window.bpWebSrc = function (s) {
+    G.src = s; G.menu = false; try { localStorage.setItem('bpWebSrc', s); } catch (e) {}
+    if (s === 'google' && connected()) ensure();
+    B.render();
+  };
+  window.bpWebGoogle = function () {
+    if (G.busy) return;
+    G.busy = true; B.render();
+    var ret = location.origin + location.pathname + '?portal=1';
+    api({ op: 'auth_url', return: ret }).then(function (d) {
+      G.busy = false;
+      if (d && d.ok && d.url) { location.assign(d.url); return; }
+      G.err = errText(d); B.render();
+      alert(G.err);
+    });
+  };
+  window.bpWebGMenu = function (ev) {
+    if (ev) ev.stopPropagation();
+    G.menu = !G.menu; B.render();
+    if (G.menu) setTimeout(function () {
+      var close = function (e) { if (e.target.closest && e.target.closest('.ws-menu')) return; document.removeEventListener('click', close, true); if (G.menu) { G.menu = false; B.render(); } };
+      document.addEventListener('click', close, true);
+    }, 0);
+  };
+  window.bpWebGPick = function () { G.menu = false; G.picking = true; G.src = 'google'; loadProps(); B.render(); };
+  window.bpWebGCancelPick = function () { G.picking = false; ensure(); B.render(); };
+  window.bpWebGRefresh = function () { G.menu = false; G.rep = {}; G.err = ''; ensure(); B.render(); };
+  window.bpWebGSave = function () {
+    var ga = ($('ws-gaprop') || {}).value || null, gsc = ($('ws-gscsite') || {}).value || null;
+    if (!ga && !gsc) { alert('Pick a Google Analytics property or a Search Console site.'); return; }
+    api({ op: 'select', ga_property: ga, gsc_site: gsc }).then(function (d) {
+      if (!d || !d.ok) { G.err = errText(d); B.render(); return; }
+      G.st.ga_property = ga; G.st.gsc_site = gsc; G.picking = false; G.rep = {}; G.err = '';
+      ensure(); B.render();
+    });
+  };
+  window.bpWebGDisconnect = function () {
+    G.menu = false;
+    if (!confirm('Disconnect Google? BuilderPro will stop reading your Analytics and Search Console numbers.')) { B.render(); return; }
+    api({ op: 'disconnect' }).then(function (d) {
+      if (!d || !d.ok) { alert(errText(d)); return; }
+      G.st = { ok: true, configured: true, connected: false }; G.props = null; G.rep = {}; G.picking = false; G.src = null; G.err = '';
+      try { localStorage.removeItem('bpWebSrc'); } catch (e) {}
+      B.render();
+    });
+  };
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* period changes need a fetch for that range */
+  var _per = window.bpWebPeriod;
+  window.bpWebPeriod = function (k) { _per(k); if (useGoogle() && !G.picking) { loadReport(rangeN()); } };
+
+  function gcss() {
+    if ($('ws-gcss')) return;
+    var st = document.createElement('style'); st.id = 'ws-gcss';
+    st.textContent = ''
+      /* Google's sign-in button (light / dark per the brand guidelines) */
+      + '#bpx .ws-gbtn{display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1px solid #747775;border-radius:4px;background:#fff;color:#1f1f1f;font:500 14px/20px Roboto,"Google Sans",Arial,sans-serif;letter-spacing:.25px;cursor:pointer;white-space:nowrap;transition:background .2s,box-shadow .2s}'
+      + '#bpx .ws-gbtn:hover{background:#f8f9fa;box-shadow:0 1px 2px rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15)}#bpx .ws-gbtn:focus-visible{outline:2px solid #4285f4;outline-offset:2px}#bpx .ws-gbtn[disabled]{opacity:.6;cursor:default}'
+      + '#bpx .ws-glogo{display:grid;place-items:center;width:18px;height:18px}'
+      + '#bpx.bpx-dark .ws-gbtn{background:#131314;border-color:#8e918f;color:#e3e3e3}#bpx.bpx-dark .ws-gbtn:hover{background:#1f1f20}'
+      + '#bpx .ws-gcard{padding:20px 22px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}'
+      + '#bpx .ws-gcard-t{display:flex;gap:14px;align-items:flex-start;flex:1 1 380px;min-width:0}#bpx .ws-gcard-t b{font-size:16px;color:var(--ink)}#bpx .ws-gcard-t .bpx-mut{font-size:13px;margin-top:3px;line-height:1.5;max-width:620px}#bpx .ws-gcard-t .bpx-mut b{font-size:inherit}'
+      + '#bpx .ws-gic{width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center;background:var(--soft)}'
+      + '#bpx .ws-gcard-a{display:flex;flex-direction:column;align-items:flex-start;gap:6px}#bpx .ws-gor{font-size:12px}'
+      + '#bpx .ws-srcbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}#bpx .ws-src{margin:0}'
+      + '#bpx .ws-gacct{position:relative;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--grey);min-width:0}'
+      + '#bpx .ws-gmail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}'
+      + '#bpx .ws-gdot{width:8px;height:8px;border-radius:50%;background:#16a34a;flex:none}'
+      + '#bpx .ws-kebab{border:0;background:none;color:var(--grey);cursor:pointer;width:32px;height:32px;border-radius:8px;display:grid;place-items:center}#bpx .ws-kebab:hover{background:var(--soft)}'
+      + '#bpx .ws-menu{position:absolute;right:0;top:36px;z-index:30;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:4px;min-width:200px}'
+      + '#bpx .ws-menu button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:9px 10px;border-radius:7px;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer;text-align:left}#bpx .ws-menu button:hover{background:var(--soft)}#bpx .ws-menu button .ms{font-size:18px}#bpx .ws-menu .bad{color:#b91c1c}'
+      + '#bpx .ws-pick{padding:20px 22px;margin-bottom:14px}#bpx .ws-pick>b{font-size:16px;color:var(--ink)}'
+      + '#bpx .ws-pick-g{display:grid;grid-template-columns:auto minmax(0,420px);gap:10px 14px;align-items:center;margin:14px 0}'
+      + '#bpx .ws-pick-g label{font-size:13px;font-weight:600;color:var(--ink)}#bpx .ws-pick-g select{padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);font:inherit;font-size:13.5px;min-width:0}'
+      + '#bpx .ws-pick-n{grid-column:2;font-size:12px;color:var(--grey);margin-top:-6px}'
+      + '#bpx .ws-load{padding:28px;text-align:center;color:var(--grey)}#bpx .ws-spin{animation:wsSpin 1s linear infinite;vertical-align:middle}@keyframes wsSpin{to{transform:rotate(360deg)}}'
+      + '#bpx .ws-k4{grid-template-columns:repeat(4,minmax(0,1fr))}'
+      + '#bpx .ws-sech{display:flex;gap:12px;align-items:center;margin:22px 0 10px}#bpx .ws-sech>.ms{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--soft);color:var(--blue)}#bpx .ws-sech b{font-size:16px;color:var(--ink)}#bpx .ws-sech .bpx-mut{font-size:12.5px}'
+      + '#bpx .ws-tt{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}#bpx .ws-tt b{color:var(--ink)}#bpx .ws-tt .bpx-mut{font-size:12px}'
+      + '#bpx .ws-tw{overflow-x:auto}#bpx .ws-tbl{width:100%;border-collapse:collapse;font-size:13px}#bpx .ws-tbl th{text-align:right;font-weight:600;color:var(--grey);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}#bpx .ws-tbl th:first-child,#bpx .ws-tbl td:first-child{text-align:left}'
+      + '#bpx .ws-tbl td{text-align:right;padding:8px;border-bottom:1px solid var(--line);color:var(--ink);font-variant-numeric:tabular-nums}#bpx .ws-tbl td:first-child{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+      + '@media(max-width:1180px){#bpx .ws-k4{grid-template-columns:repeat(2,minmax(0,1fr))}}'
+      + '@media(max-width:760px){#bpx .ws-pick-g{grid-template-columns:1fr}#bpx .ws-pick-n{grid-column:1}#bpx .ws-hide-s{display:none}#bpx .ws-gmail{max-width:150px}#bpx .ws-tbl td:first-child{max-width:170px}}'
+      + '@media(max-width:380px){#bpx .ws-k4{grid-template-columns:1fr}}';
+    document.head.appendChild(st);
+  }
+
+  window.BP_WEB_G = { start: start, page: page, state: G };
 })();
