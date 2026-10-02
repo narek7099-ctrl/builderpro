@@ -78,7 +78,7 @@ colors:
   error-soft: "#fee2e2"
   info: "#1b56ee"
   info-soft: "#eef3ff"
-  # lead-score ramp (Lead Radar dots, roof-health rings)
+  # lead-score ramp (roof-health rings)
   score-hot: "#e11d48"
   score-warm: "#f59e0b"
   score-cool: "#eab308"

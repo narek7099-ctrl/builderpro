@@ -97,7 +97,6 @@ async function change(a: any, plan: string, want: Addons) {
   await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ plan, price_monthly: price,
     profile: { ...(a.profile ?? {}), addons: { ai: addons.includes("ai"), website: addons.includes("website") } },
     ...(addons.includes("ai") ? { ai_addon: "active" } : a.ai_addon === "active" && !a.ai_addon_sub_id ? { ai_addon: "off" } : {}) }) });
-  await sb(`radar_seats?email=eq.${encodeURIComponent(a.email)}`, { method: "PATCH", body: JSON.stringify({ per_day: plan === "enterprise" ? 5 : 3 }) }).catch(() => {});
   return json({ ok: true, plan, price, addons });
 }
 

@@ -3099,6 +3099,8 @@ function aiReply(text){
 var _bpJobs=null,_bpFin=null,_bpFinLoaded=false;
 function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} return _bpJobs; }
 function bpJobsSet(a){ _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+/* next maintenance date from the job's installation sign-off, as YYYY-MM-DD (or "") */
+function bpNextServiceYmd(j){ var n=(j&&j.install&&window.bpInstallNext)?bpInstallNext(j.install):null; if(!n) return ''; var d=new Date(n); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
 function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} return _bpFin; }
 function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 function bpFinCloudPush(){
@@ -3219,8 +3221,7 @@ window.bpJobSum=function(){
 };
 window.bpJobUseEst=function(){ var j=bpJobsGet().filter(function(x){return x.id===_bpJobDoneId;})[0]; if(j){ q('bpx-jd-col').value=bpMoneyFmt(j.estimate); bpJobSum(); } };
 window.bpJobDoneSave=function(id,skip){
-  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return;
-  if(!skip){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return;  if(!skip){
     var col=bpParseMoney((q('bpx-jd-col')||{}).value);
     j.collected= col>0 ? col : (j.collected!=null?j.collected:null);
     j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt)};}).filter(function(e){return e.amt>0;});
@@ -3233,7 +3234,7 @@ window.bpJobDoneSave=function(id,skip){
       var t=sn&&sn.data&&sn.data.session&&sn.data.session.access_token; if(!t) return;
       return fetch(BP_URL+'/functions/v1/job-complete',{method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
-        body:JSON.stringify({contactId:j.contactId})});
+        body:JSON.stringify({contactId:j.contactId,nextService:bpNextServiceYmd(j)})});
     }).catch(function(){});
   }
   if(window._bpCurView==='finances') bpFinances(); else bpActiveJobs();

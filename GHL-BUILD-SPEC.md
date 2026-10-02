@@ -28,15 +28,11 @@ template sub-accounts and their snapshots. Keep a running log in `ghl-build-log.
 9. A 45-day wait on tags nothing applies. Fix: every wait condition must reference a tag some workflow applies.
 10. Email auto-responder had no filters. Fix: only first-time inbound from a new contact.
 11. "Not interested" never marked Lost. Fix: opportunity status Lost.
-12. Radar Digest waited on a tag nothing applied. (The portal now applies `radar-digest` — see below.)
 
 ## Tags the BuilderPro software sends (MUST exist, spelled exactly, and be listened for)
 | Tag | Sent by | Meaning / workflow it should start |
 |---|---|---|
 | `new-lead`, `lead-source`, `<vendor>` (e.g. `angi`, `thumbtack`), `<trade>` | lead-intake webhook (Lead Sources page) | New purchased lead → speed-to-lead: AI Qualifier immediately |
-| `radar`, `<trade>`, `auto` / `radar-prospect`, `radar-auto` | radar-sync / radar-daily | Lead Radar prospect — nurture only, never treat as inbound |
-| `radar-contacted` | portal, when the contractor claims + contacts a Radar door | AI Qualifier (radar opener copy) |
-| `radar-digest` | radar-daily | Owner SMS "your new Lead Radar leads are in" (use the count custom field, not a hard-coded 10) |
 | `booking-page` | book-public (public inspection booking page) | Appointment workflow (it books into the location's inspection calendar) |
 | `job-complete` | portal "Mark job done" (+ required installation sign-off) | Job Complete → final invoice chase → review request |
 | `deposit-sent` | portal invoice sent as deposit | Deposit Requested stage; listen for invoice paid |
@@ -78,8 +74,7 @@ Reactivation (90 days after Lost/No decision), New-contact email auto-reply.
 ### OS ($199) — load the Foundation snapshot, then add
 Full job pipeline above; Estimate Due owner reminder loop; Deposit Requested (auto deposit invoice);
 Deposit paid → In Progress; `job-complete` → Job Complete → final invoice chase; final paid → Paid in Full →
-review; Lead Sources speed-to-lead (`new-lead` + `lead-source`); Lead Radar opener (`radar-contacted`) and
-`radar-digest` owner SMS; Maintenance reminders (tag `maint-due-6m`, `maint-due-12m`, `maint-due-24m` or a
+review; Lead Sources speed-to-lead (`new-lead` + `lead-source`); Maintenance reminders (tag `maint-due-6m`, `maint-due-12m`, `maint-due-24m` or a
 date field `next_service_date` → reminder 14 days before, book on Maintenance Visit calendar); social/reputation
 review routing (4–5★ → Google link, 1–3★ → private feedback to owner). Up to 5 users.
 
