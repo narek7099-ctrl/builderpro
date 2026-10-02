@@ -247,7 +247,7 @@
       : C.empty({ title: 'Calculator funnel', empty: 'Once people visit, you see how many open your calculator and how many become leads.' }))
       + '<div class="bpx-mut ws-fnote">Counts tools from My Calculators embedded on your site. <a href="#" onclick="bpNav(\'calculator\');return false">Get the embed code</a></div></div>';
 
-    var hint = real ? '' : '<div class="sp-note" style="margin-bottom:12px"><span class="ms">link</span>Not connected yet. <a href="#" onclick="bpNav(\'connections\');return false">Connect your website in Connections</a> to see your real numbers.</div>';
+    var hint = real ? '' : '<div class="sp-note" style="margin-bottom:12px"><span class="ms">link</span>Not connected yet. <a href="#" onclick="bpWebTab(1);return false">Connect your website in the Connections tab</a> to see your real numbers.</div>';
     return hint + note + per + tiles(cur, prev, S, P)
       + '<div class="db-grid ws-grid">'
       + '<div class="db-c12">' + area + '</div>'
@@ -256,21 +256,23 @@
       + '</div>';
   }
 
+  function tabs() {
+    return '<div class="bpx-jobtabs" style="margin-bottom:16px"><button class="bpx-jt' + (W.conn ? '' : ' on') + '" onclick="bpWebTab(0)">Overview</button><button class="bpx-jt' + (W.conn ? ' on' : '') + '" onclick="bpWebTab(1)">Connections</button></div>';
+  }
+  window.bpWebTab = function (c) { W.conn = !!c; render(); };
   function render() {
     var area = $('bpxViewArea'); if (!area) return;
-    if (W.conn) { area.innerHTML = '<div class="ws-page">' + installCard(false) + '</div>'; if (window.bpSpin) bpSpin(false); return; }
-    area.innerHTML = '<div class="ws-page">' + (window.BP_WEB_G ? BP_WEB_G.page(body) : body()) + '</div>';
+    if (W.conn) { area.innerHTML = '<div class="ws-page">' + tabs() + installCard(false) + '</div>'; if (window.bpSpin) bpSpin(false); return; }
+    area.innerHTML = '<div class="ws-page">' + tabs() + (window.BP_WEB_G ? BP_WEB_G.page(body) : body()) + '</div>';
     if (window.bpSpin) bpSpin(false);
   }
 
   W.conn = false;
   window.bpWebConnections = function () {
     css();
-    var go = function () { if (window._bpCurView !== 'connections') return; var a = $('bpxViewArea'); if (a) a.innerHTML = '<div class="ws-page">' + installCard(false) + '</div>'; if (window.bpSpin) bpSpin(false); };
-    W.conn = true; withUid(go); go();
+    W.conn = true; bpNav('website');
   };
   window.bpWebsite = function () {
-    W.conn = false;
     css();
     if (window.BP_WEB_G) BP_WEB_G.start();
     withUid(function () {
