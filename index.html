@@ -29691,11 +29691,15 @@ function bpPlexus(cv,opts){
       ctx.fillStyle='#2f6bff';ctx.fill();}
     ctx.shadowBlur=0;
     ctx.restore();
-    if(!reduce&&document.contains(cv))requestAnimationFrame(step);
+    if(!document.contains(cv)){ window.removeEventListener('resize',onResize); return; }
+    if(!reduce)requestAnimationFrame(step);
   }
   cv.addEventListener('mousemove',function(e){var r=cv.getBoundingClientRect();mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;});
   cv.addEventListener('mouseleave',function(){mouse.x=-999;mouse.y=-999;});
-  size();window.addEventListener('resize',size);step();
+  /* the portal re-creates this canvas on every visit to its view; drop the
+     resize hook once the old canvas is gone so listeners do not pile up */
+  function onResize(){ if(!document.contains(cv)){ window.removeEventListener('resize',onResize); return; } size(); }
+  size();window.addEventListener('resize',onResize);step();
 }
 bpPlexus(document.getElementById('atlasNet'));
 
@@ -30156,11 +30160,13 @@ function bpSendLive(){
   }).catch(function(){bpToast('Could not send. Please try again.','error');}).then(function(){inp.disabled=false;inp.focus();});
 }
 function bpMessagingMock(){
-  var list='';BP_CONVOS.forEach(function(c,i){list+='<div class="bpx-conv'+(i===0?' sel':'')+'" onclick="bpOpenConv('+i+')"><div class="cn">'+c.n+'</div><div class="cp">'+c.p+'</div></div>';});
+  var list='';BP_CONVOS.forEach(function(c,i){list+='<div class="bpx-conv'+(i===0?' sel':'')+'" onclick="bpOpenMockConv('+i+')"><div class="cn">'+c.n+'</div><div class="cp">'+c.p+'</div></div>';});
   document.getElementById('bpxViewArea').innerHTML='<div class="bpx-inbox"><div class="bpx-convlist" id="bpxConvList">'+list+'</div><div class="bpx-thread" id="bpxThread"></div></div>';
-  bpOpenConv(0);
+  bpOpenMockConv(0);
 }
-function bpOpenConv(i){
+/* demo inbox opener. Named apart from the live window.bpOpenConv(id), which
+   is defined later and used to shadow this one, so demo rows did nothing. */
+function bpOpenMockConv(i){
   var c=BP_CONVOS[i];
   document.querySelectorAll('#bpxConvList .bpx-conv').forEach(function(el,idx){el.classList.toggle('sel',idx===i);});
   var body='';c.msgs.forEach(function(m){body+='<div class="bpx-bub '+m[0]+'">'+m[1]+'</div>';});
@@ -31931,7 +31937,9 @@ var _bpContacts=[];
 /* ==== bpOpenBook ==== */
   window.bpOpenBook=async function(){
     bpModal('<h3>Book\u2026</h3><div class="bpx-sub">Loading your contacts\u2026</div>');
+    var _bpLd=q('bpx-modal');
     await bpEnsureContacts();
+    if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
     var opts=''; for(var i=0;i<_bpContacts.length;i++){ opts+='<option value="'+_bpContacts[i].id+'">'+bpEsc(_bpContacts[i].name)+'</option>'; }
     var contactSel='<label>Contact</label><select id="bpx-bk-contact" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'+(opts||'<option value="">No contacts found</option>')+'</select>';
     if(_bpCalKind==='jobs'){
@@ -32158,10 +32166,16 @@ var _bpContacts=[];
   function bpFormatLA(d){ var g={}; new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d).forEach(function(x){g[x.type]=x.value;}); var off; try{ off=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',timeZoneName:'longOffset'}).formatToParts(d).find(function(x){return x.type==='timeZoneName';}).value.replace('GMT',''); }catch(e){ off='-08:00'; } if(g.hour==='24') g.hour='00'; return g.year+'-'+g.month+'-'+g.day+'T'+g.hour+':'+g.minute+':00'+(off||'-08:00'); }
 
 /* ==== bpModal ==== */
-  function bpModal(html){ var old=q('bpx-modal'); if(old) old.remove(); var m=document.createElement('div'); m.className='bpx-modal'; m.id='bpx-modal'; m.innerHTML='<div class="bpx-modalcard">'+html+'</div>'; m.onclick=function(e){ if(e.target===m) bpCloseModal(); }; document.getElementById('bpx').appendChild(m); }
+  function bpModal(html){ var old=q('bpx-modal'); if(old) old.remove(); var m=document.createElement('div'); m.className='bpx-modal'; m.id='bpx-modal'; m.innerHTML='<div class="bpx-modalcard">'+html+'</div>'; m.onclick=function(e){ if(e.target===m) bpCloseModal(); }; if(!old) window._bpModalRet=document.activeElement; document.getElementById('bpx').appendChild(m);
+    /* move focus into the dialog (the card, not a field, so phones do not pop the keyboard) */
+    var mc=m.firstChild; if(mc&&!mc.contains(document.activeElement)){ mc.setAttribute('tabindex','-1'); mc.style.outline='none'; try{ mc.focus({preventScroll:true}); }catch(e){} } }
 
 /* ==== bpCloseModal ==== */
-  window.bpCloseModal=function(){ var m=q('bpx-modal'); if(m) m.remove(); };
+  window.bpCloseModal=function(){ var m=q('bpx-modal'); if(m) m.remove();
+    /* hand focus back to whatever opened the modal, if it is still on the page */
+    var r=window._bpModalRet; window._bpModalRet=null; if(m&&r&&r.focus&&document.contains(r)) try{ r.focus({preventScroll:true}); }catch(e){} };
+  /* Esc closes the portal modal (projsheet.js handles its own and calls preventDefault) */
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!e.defaultPrevented&&q('bpx-modal')&&!document.querySelector('.bpe')){ e.preventDefault(); bpCloseModal(); } });
 
 /* ==== bpField ==== */
   function bpField(id,label,val,ph){ return '<label>'+label+'</label><input id="'+id+'" value="'+bpEsc(val||'')+'" placeholder="'+ph+'">'; }
@@ -32500,6 +32514,7 @@ async function bpLoadConvos(){
     var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
     var d=await r.json(); _bpConvos=d.conversations||[];
     var el=q('bpx-convlist');
+    if(!el) return; /* left the page while the request was in flight */
 
     /* Split, then say how many are on the other side. That count is not
        decoration: this classification can be wrong, and the link across is
@@ -32533,7 +32548,7 @@ async function bpLoadConvos(){
       +'</div>';
     }
     el.innerHTML=html;
-  }catch(e){ q('bpx-convlist').innerHTML='<div class="bpx-tempty" style="padding:24px">Could not load conversations.</div>'; }
+  }catch(e){ var ce=q('bpx-convlist'); if(ce) ce.innerHTML='<div class="bpx-tempty" style="padding:24px">Could not load conversations.</div>'; }
 }
 window.bpOpenConv=async function(id){
   _bpCurConv=null; for(var i=0;i<_bpConvos.length;i++){ if(_bpConvos[i].id===id) _bpCurConv=_bpConvos[i]; }
@@ -32590,7 +32605,9 @@ function bpRenderMessaging(){
 }
 window.bpBulkOpen=async function(){
   bpModal('<h3>Broadcast</h3><div class="bpx-sub">Loading your contacts…</div>');
+  var _bpLd=q('bpx-modal');
   await bpEnsureContacts();
+  if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
   var tags={}; _bpContacts.forEach(function(c){(c.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});});
   var tagOpts=Object.keys(tags).sort().map(function(t){return '<option value="tag:'+bpEsc(t)+'">Tag: '+bpEsc(t)+' ('+tags[t]+')</option>';}).join('');
   _bpBulkChan='SMS';
@@ -33054,7 +33071,9 @@ function bpRenderInbox(){
 /* Broadcast composer + When */
 window.bpBulkOpen=async function(chan){
   bpModal('<h3>Broadcast</h3><div class="bpx-sub">Loading your contacts…</div>');
+  var _bpLd=q('bpx-modal');
   await bpEnsureContacts();
+  if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
   var tags={}; _bpContacts.forEach(function(c){(c.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});});
   var tagOpts=Object.keys(tags).sort().map(function(t){return '<option value="tag:'+bpEsc(t)+'">Tag: '+bpEsc(t)+' ('+tags[t]+')</option>';}).join('');
   /* opened from the Email page, the broadcast starts on email */
@@ -33328,7 +33347,7 @@ function bpFinCloudLoad(){
     }
   }).catch(function(){});
 }
-function bpMoneyFmt(n){return '$'+Math.round(+n||0).toLocaleString();}
+function bpMoneyFmt(n){var r=Math.round(+n||0);return (r<0?'\u2212$':'$')+Math.abs(r).toLocaleString();}
 function bpParseMoney(s){return +String(s==null?'':s).replace(/[^0-9.]/g,'')||0;}
 function bpJobExp(j){return (j.expenses||[]).reduce(function(s,e){return s+(+e.amt||0);},0);}
 function bpAgo(ts){if(!ts)return '—';var d=Math.floor((Date.now()-ts)/86400000);return d<=0?'today':(d===1?'yesterday':d+'d ago');}
@@ -35207,7 +35226,9 @@ window.bpEstDraw=function(){
 };
 window.bpEstOpen=async function(){
   bpModal('<h3>New estimate</h3><div class="bpx-sub">Loading your contacts…</div>');
+  var _bpLd=q('bpx-modal');
   await bpEnsureContacts();
+  if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
   bpCloseModal();
   var opts=_bpContacts.map(function(c){return '<option value="'+bpEsc(c.id)+'" data-name="'+bpEsc(c.name||'')+'" data-phone="'+bpEsc(c.phone||'')+'" data-email="'+bpEsc(c.email||'')+'">'+bpEsc(c.name||c.phone||c.email||'Contact')+'</option>';}).join('');
   bpModal('<h3>New estimate</h3><div class="bpx-sub">A formal quote your customer can accept with one tap. Acceptance fires your workflows — and can auto-create the deposit invoice.</div>'
@@ -35331,7 +35352,9 @@ window.bpInvDraw=function(){
 };
 window.bpInvOpen=async function(){
   bpModal('<h3>New invoice</h3><div class="bpx-sub">Loading your contacts…</div>');
+  var _bpLd=q('bpx-modal');
   await bpEnsureContacts();
+  if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
   bpCloseModal();
   var opts=_bpContacts.map(function(c){return '<option value="'+bpEsc(c.id)+'" data-name="'+bpEsc(c.name||'')+'" data-phone="'+bpEsc(c.phone||'')+'" data-email="'+bpEsc(c.email||'')+'">'+bpEsc(c.name||c.phone||c.email||'Contact')+'</option>';}).join('');
   bpModal('<h3>New invoice</h3><div class="bpx-sub">The customer gets a payment link by text or email. When they pay, your workflows fire automatically.</div>'
@@ -36790,6 +36813,9 @@ window.bpLogoPick=function(e){var file=e.target.files&&e.target.files[0];if(!fil
 window.bpLogoRemove=function(){BPLOGO='';var pv=q('set-logopv');if(pv)pv.innerHTML='<span id="set-logoimg">Logo</span>';var fi=q('set-logofile');if(fi)fi.value='';};
 window.bpSettingsSave=function(){
   var g=function(id){var e=q(id);return e?e.value.trim():'';};
+  /* the business email goes on invoices and estimates, so a typo is worth catching */
+  var em0=g('set-cemail');
+  if(em0&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em0)){var mm=q('bpx-setmsg');if(mm){mm.style.color='#dc2626';mm.textContent='That email doesn\u2019t look right.';}var ei=q('set-cemail');if(ei)ei.focus();return;}
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   /* keep what this form does not edit (licenses, crews, receptionist, phone…) */
   var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
