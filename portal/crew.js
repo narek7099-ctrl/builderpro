@@ -172,10 +172,10 @@
         : e.pay_type === 'day' ? money(e.rate) + '/day'
         : money(e.rate) + '/yr';
       return '<tr' + (e.active ? '' : ' style="opacity:.55"') + '>'
-        + '<td><b>' + esc(e.name || 'Unnamed') + '</b>'
+        + '<td><div class="emp-who">' + (window.bpAvatar ? bpAvatar.html(e.photo_url, e.name, 'emp-av') : '') + '<div><b>' + esc(e.name || 'Unnamed') + '</b>'
           + (e.trade ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.trade) + '</div>' : '')
           + (function () { var c = window.bpCrewOfEmp ? bpCrewOfEmp(e.id) : null;
-              return c ? '<div style="font-size:11.5px;margin-top:2px;color:' + c.color + ';font-weight:600">\u25CF ' + esc(c.name) + '</div>' : ''; })() + '</td>'
+              return c ? '<div style="font-size:11.5px;margin-top:2px;color:' + c.color + ';font-weight:600">\u25CF ' + esc(c.name) + '</div>' : ''; })() + '</div></div></td>'
         + '<td>' + (e.phone ? '<a href="tel:' + esc(e.phone) + '" style="color:#2f6bff;text-decoration:none">' + esc(e.phone) + '</a>' : '—')
           + (e.email ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.email) + '</div>' : '') + '</td>'
         + '<td><span class="bpx-badge' + (e.kind === '1099' ? '' : ' ok') + '">' + (e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
@@ -205,6 +205,7 @@
       + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
       + '<th>Name</th><th>Contact</th><th>Type</th><th>Rate</th><th>Real cost</th><th></th>'
       + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + warn;
+    if (window.bpAvatar) bpAvatar.fill(el);
   }
 
   window.bpEmpOpen = function (id) {
@@ -215,6 +216,9 @@
     };
     bpModal('<h3>' + (e ? 'Edit ' + esc(e.name || 'person') : 'Add someone') + '</h3>'
       + '<div class="bpx-sub">Everyone who works on your jobs — employees and subcontractors alike.</div>'
+      + (e && window.bpAvatar ? '<div class="emp-ph"><button type="button" class="emp-phb" onclick="bpEmpPhoto(\'' + e.id + '\')" aria-label="Change photo">' + bpAvatar.html(e.photo_url, e.name, 'emp-av lg') + '</button>'
+          + '<div><b>Photo</b><span>Shows on their ID card and next to their name.</span><div class="emp-phacts"><button type="button" class="bpx-rowbtn" onclick="bpEmpPhoto(\'' + e.id + '\')">' + (e.photo_url ? 'Change' : 'Upload') + '</button>'
+          + (e.photo_url ? '<button type="button" class="bpx-rowbtn" onclick="bpEmpPhoto(\'' + e.id + '\',true)">Remove</button>' : '') + '</div></div></div>' : '')
       + '<label>Name</label>' + inp('name', 'Full name', f.name)
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
         + '<div><label>Phone</label>' + inp('phone', '(555) 555-5555', f.phone) + '</div>'
@@ -244,6 +248,30 @@
         + '<span style="display:flex;gap:10px"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button>'
         + '<button class="bpx-btn" id="emp-go" onclick="bpEmpSave(' + (e ? "'" + e.id + "'" : 'null') + ')">Save</button></span></div>');
     bpEmpKind();
+    if (e && window.bpAvatar) bpAvatar.fill($('bpx-modal'));
+  };
+
+  /* the owner sets or clears someone's photo (the same file their ID card uses) */
+  window.bpEmpPhoto = function (id, remove) {
+    var e = bpEmpById(id); if (!e || !window.bpAvatar) return;
+    var save = function (ref) {
+      return Promise.resolve(BP_SB.from('employees').update({ photo_url: ref }).eq('id', id)).then(function (r) {
+        if (r && r.error) throw r.error;
+        e.photo_url = ref; bpEmpOpen(id); if ($('bpCrewPane')) render();
+      });
+    };
+    if (remove) {
+      if (!confirm('Remove ' + (e.name || 'their') + '’s photo?')) return;
+      var old = String(e.photo_url || '');
+      save(null).then(function () { if (old.indexOf('sb:') === 0) BP_SB.storage.from('project-files').remove([old.slice(3).split('#')[0]]).catch(function () {}); })
+        .catch(function (x) { msg((x && x.message) || 'Couldn’t remove the photo.'); });
+      return;
+    }
+    bpAvatar.pick((e.name || 'Their') + ' — photo').then(function (blob) {
+      if (!blob) { bpEmpOpen(id); return; }
+      var owner = e.owner || (window.bpOwnerId && bpOwnerId());
+      return bpAvatar.upload(owner, id, blob).then(save);
+    }).catch(function (x) { bpEmpOpen(id); setTimeout(function () { msg((x && x.message) || 'Couldn’t save the photo.'); }, 50); });
   };
 
   /* The hint under the rate is the whole argument of this page in two lines,
