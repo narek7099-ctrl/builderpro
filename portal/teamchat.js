@@ -341,7 +341,7 @@
     if (!ps.length) return '<div class="tc-note">Nobody else signs in yet. Invite people under Settings › Team, or give an employee a login.</div>';
     return '<div class="tc-pick">' + ps.map(function (p) {
       return '<label class="tc-pr"><input type="checkbox" class="' + cls + '" value="' + esc(p.user_id) + '"' + (sel[p.user_id] ? ' checked' : '') + '>'
-        + '<span class="tc-av sm" style="--c:' + hue(p.user_id) + '">' + esc(initials(p.name)) + '</span><span><b>' + esc(p.name) + '</b><small>' + esc(p.role === 'office' ? 'Office' : p.role === 'owner' ? 'Owner' : 'Crew') + '</small></span></label>';
+        + '<span class="tc-av sm" style="--c:' + hue(p.user_id) + '">' + esc(initials(p.name)) + '</span><span><b>' + esc(p.name) + '</b><small>' + esc(p.role === 'office' ? 'Office' : p.role === 'owner' ? 'Owner' : p.role === 'sub' ? 'Subcontractor' : 'Crew') + '</small></span></label>';
     }).join('') + '</div>';
   }
   window.bpTcGroup = function (id) {
@@ -388,7 +388,7 @@
   window.bpTcNewDirect = function (btn) {
     loadPeople().then(function () {
       var ps = (C.people || []).filter(function (p) { return p.user_id !== me(); });
-      var items = ps.length ? ps.map(function (p) { return { t: p.name, ico: 'user', right: '<small>' + esc(p.role === 'office' ? 'Office' : 'Crew') + '</small>', fn: function () { window.bpTcDirect(p.user_id); } }; })
+      var items = ps.length ? ps.map(function (p) { return { t: p.name, ico: 'user', right: '<small>' + esc(p.role === 'office' ? 'Office' : p.role === 'sub' ? 'Subcontractor' : 'Crew') + '</small>', fn: function () { window.bpTcDirect(p.user_id); } }; })
         : [{ t: 'Nobody else signs in yet', ico: 'team', fn: function () { bpNav('settings'); } }];
       if (window.bpShell && bpShell.menu) bpShell.menu(btn, [{ label: 'Message someone' }].concat(items), { align: 'left' });
       else if (ps[0]) window.bpTcDirect(ps[0].user_id);

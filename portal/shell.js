@@ -91,22 +91,26 @@
   }
   function ownerName() { var s = sets(), o = s.owner || {}; return o.name || [o.first, o.last].filter(Boolean).join(' ') || ''; }
   function crew() { return !!(window.bpTeamIsCrew && bpTeamIsCrew()); }
+  function sub() { return !!(window.bpTeamIsSub && bpTeamIsSub()); }
   function allows(v) { return !window.bpTeamAllows || bpTeamAllows(v); }
   function planName() { try { return window.bpPlanInfo ? bpPlanInfo().name : ''; } catch (e) { return ''; } }
 
   function paintAcct() {
     /* the card is BuilderPro's, always: the mark and the name, then whose account it is */
     var b = $('hlBiz'); if (b) b.textContent = 'BuilderPro';
-    var p = $('hlPlan'); if (p) p.textContent = bizName() + ' \u00b7 ' + (crew() ? 'Crew' : (planName() || 'OS'));
+    var p = $('hlPlan'); if (p) p.textContent = bizName() + ' \u00b7 ' + (sub() ? 'Subcontractor' : crew() ? 'Crew' : (planName() || 'OS'));
     var lg = $('hlAcctLogo');
     if (lg && !lg.querySelector('img')) lg.innerHTML = '<img src="assets/brand/logo-mark-128.png" alt="" width="30" height="30">';
     var av = $('hlAv'); if (av) av.textContent = initials(ownerName() || window._bpEmail || bizName());
     /* a crew login shows their own name and photo (portal/crewapp.js) */
-    if (crew() && window.bpCrewPaintMe) bpCrewPaintMe();
+    if (sub() && window.bpSubPaintMe) bpSubPaintMe();
+    else if (crew() && window.bpCrewPaintMe) bpCrewPaintMe();
   }
 
   /* ---------- sidebar ---------- */
   var CREW = [['crewclock', 'Clock in', 'clock'], ['crewprojects', 'Projects', 'projects'], ['crewhome', 'My crew', 'crew'], ['crewid', 'My ID', 'badge'], ['crewmsgs', 'Messages', 'convos']];
+  var SUBNAV = [['subjobs', 'Jobs', 'projects'], ['subinvoices', 'Invoices', 'finances'], ['subchanges', 'Change orders', 'page'], ['subcomply', 'Compliance', 'badge'], ['crewmsgs', 'Messages', 'convos'], ['subcompany', 'My company', 'crew']];
+  function limitedNav() { return sub() ? SUBNAV : CREW; }
   function kidsOf(g) { return (g.kids || []).filter(function (k) { return allows(k[0]); }); }
   function firstOf(g) {
     var ks = kidsOf(g); if (!ks.length) return g.id;
@@ -125,7 +129,7 @@
     };
     var h = '';
     if (crew()) {
-      h = CREW.map(function (x) { return row('data-view="' + x[0] + '" data-sec="' + x[0] + '"', x[1], x[2], "bpNav('" + x[0] + "')"); }).join('');
+      h = limitedNav().map(function (x) { return row('data-view="' + x[0] + '" data-sec="' + x[0] + '"', x[1], x[2], "bpNav('" + x[0] + "')"); }).join('');
     } else {
       (window.BP_NAV || []).forEach(function (g) {
         if (g.kids) { if (!kidsOf(g).length) return; }
@@ -286,7 +290,7 @@
     items.push({ t: 'Back to website', ico: 'globe', fn: S.leave });
     items.push({ sep: 1 });
     items.push({ t: 'Sign out', ico: 'out', fn: function () { bpLogout(); } });
-    var m = S.menu(btn, items, { head: '<b>' + esc(bizName()) + '</b><small>' + esc(c ? 'Crew' : (planName() || 'OS')) + '</small>', side: !phone() && app().classList.contains('hl-min') });
+    var m = S.menu(btn, items, { head: '<b>' + esc(bizName()) + '</b><small>' + esc(sub() ? 'Subcontractor' : c ? 'Crew' : (planName() || 'OS')) + '</small>', side: !phone() && app().classList.contains('hl-min') });
     if (m) { var d = [].slice.call(m.querySelectorAll('.hl-mi')).filter(function (x) { return /Switch theme/.test(x.textContent); })[0]; if (d) { d.setAttribute('role', 'menuitemcheckbox'); d.setAttribute('aria-checked', String(dark())); } }
   };
   S.plan = function () {
@@ -391,7 +395,7 @@
       if (seen[v] || !allows(v) || !(window.BPVIEWS && BPVIEWS[v])) return; seen[v] = 1;
       out.push({ kind: 'Pages', t: label, sub: sec || '', ico: 'page', go: function () { bpNav(v); } });
     };
-    if (crew()) { CREW.forEach(function (x) { add(x[0], x[1]); }); return out; }
+    if (crew()) { limitedNav().forEach(function (x) { add(x[0], x[1]); }); return out; }
     (window.BP_NAV || []).forEach(function (g) {
       if (g.kids) kidsOf(g).forEach(function (k) { add(k[0], k[1] === 'Overview' || k[1] === 'Active' ? g.l + ' ' + k[1].toLowerCase() : k[1], g.l); });
       else add(g.id, g.l);

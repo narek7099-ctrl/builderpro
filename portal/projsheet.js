@@ -19,11 +19,11 @@
   var money = function (n) { return window.bpMoneyFmt ? bpMoneyFmt(n) : '$' + Math.round(+n || 0); };
   var TABS = {
     details: ['Overview', 'dashboard'], money: ['Money', 'payments'], schedule: ['Schedule', 'calendar_month'],
-    crew: ['Crew', 'groups'], materials: ['Materials', 'inventory_2'], permits: ['Permits', 'assignment'],
+    crew: ['Crew', 'groups'], subs: ['Subs', 'handyman'], materials: ['Materials', 'inventory_2'], permits: ['Permits', 'assignment'],
     contract: ['Contract', 'contract'], photos: ['Photos', 'photo_library'], docs: ['Documents', 'folder'],
     blueprints: ['Blueprints', 'architecture']
   };
-  var ORDER = ['details', 'money', 'schedule', 'crew', 'materials', 'permits', 'contract', 'photos', 'docs', 'blueprints'];
+  var ORDER = ['details', 'money', 'schedule', 'crew', 'subs', 'materials', 'permits', 'contract', 'photos', 'docs', 'blueprints'];
   var lastFocus = null;
 
   function job(id) { return (window.bpJobsGet ? bpJobsGet() : []).filter(function (x) { return x.id === (id || window._bpProjId); })[0]; }
@@ -128,6 +128,7 @@
     var bar = card.querySelector('#bpx-pj-tabs'); if (!bar) return;
     var have = Array.prototype.map.call(bar.querySelectorAll('[data-pj-tab]'), function (b) { return b.getAttribute('data-pj-tab'); });
     if (have.indexOf('permits') < 0) have.push('permits');
+    if (!isCrew() && window.bpSubsTab && have.indexOf('subs') < 0) have.push('subs');
     var keys = ORDER.filter(function (k) { return have.indexOf(k) >= 0; }).concat(have.filter(function (k) { return ORDER.indexOf(k) < 0; }));
     bar.className = 'pjs-tabs'; bar.setAttribute('role', 'tablist'); bar.setAttribute('aria-label', 'Project sections');
     bar.innerHTML = keys.map(function (k, i) {
@@ -155,6 +156,12 @@
     perm.innerHTML = '<div id="bpx-pj-permits"></div>';
     Array.prototype.forEach.call(panes, function (p) { body.appendChild(p); });
     var docs = body.querySelector('[data-pj-pane="docs"]'); body.insertBefore(perm, docs || null);
+    /* subcontractors (portal/subs.js): owner and office only */
+    if (!isCrew() && window.bpSubsTab) {
+      var sp = document.createElement('div'); sp.setAttribute('data-pj-pane', 'subs'); sp.hidden = true;
+      sp.innerHTML = '<div id="bpx-pj-subs"></div>';
+      body.insertBefore(sp, body.querySelector('[data-pj-pane="materials"]') || null);
+    }
     var foot = card.querySelector(':scope > div:last-child');
     var tabs = card.querySelector('#bpx-pj-tabs');
     tabs.after(body);
@@ -166,12 +173,13 @@
     }
     Array.prototype.forEach.call(body.querySelectorAll('[data-pj-pane]'), function (p) {
       var k = p.getAttribute('data-pj-pane');
-      if (k !== 'permits' && k !== 'contract' && k !== 'materials') cardify(p, k);
-      else if (k !== 'permits') { var s = document.createElement('section'); s.className = 'pjs-sec'; while (p.firstChild) s.appendChild(p.firstChild); p.appendChild(s); }
+      if (k !== 'permits' && k !== 'contract' && k !== 'materials' && k !== 'subs') cardify(p, k);
+      else if (k !== 'permits' && k !== 'subs') { var s = document.createElement('section'); s.className = 'pjs-sec'; while (p.firstChild) s.appendChild(p.firstChild); p.appendChild(s); }
       p.setAttribute('role', 'tabpanel');
     });
     if (window.bpPermitsReset) bpPermitsReset();
     if (window.bpPermitsRender) bpPermitsRender(j);
+    if (!isCrew() && window.bpSubsTabOpen) bpSubsTabOpen(j);
     decorate();
     lastFocus = document.activeElement;
     setTimeout(function () { var x = card.querySelector('.pjs-x'); if (x) x.focus({ preventScroll: true }); }, 30);
@@ -195,6 +203,7 @@
       if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       var body = document.querySelector('.pjs .pjs-body'); if (body) body.scrollTop = 0;
       if (t === 'permits' && window.bpPermitsRender) bpPermitsRender();
+      if (t === 'subs' && window.bpSubsTabOpen) bpSubsTabOpen(job());
       return r;
     };
 
