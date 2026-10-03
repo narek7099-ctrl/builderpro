@@ -166,6 +166,35 @@
 #bpx .cs-sheet .ca-file small{margin-left:auto;font-size:12px;color:var(--grey)}
 #bpx .cs-sheet .ca-add{margin-top:0}
 
+/* ---------- crew material requests + receipts (crewapp.js matPane) ---------- */
+#bpx .cs-mat>div.cm-crew{background:linear-gradient(90deg,rgba(79,70,229,.06),transparent 70%);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:8px}
+#bpx .cm-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;font-style:normal}
+#bpx .cm-by,#bpx .cm-st{display:inline-block;font-size:11px;font-weight:600;border-radius:20px;padding:1px 8px;background:#eef2ff;color:#3730a3}
+#bpx .cm-by.me{background:#e0e7ff}
+#bpx .cm-st.wait{background:#fdf1dc;color:#a8710f}#bpx .cm-st.ok{background:rgba(31,170,90,.12);color:#178048}#bpx .cm-st.bad{background:#fdecec;color:#b42318}
+#bpx .cs-mat .cm-q{display:flex;align-items:flex-start;gap:4px}
+#bpx .cm-rm{border:0;background:none;color:var(--grey);cursor:pointer;width:32px;height:32px;margin:-6px -6px -6px 2px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center}
+#bpx .cm-rm .ms{font-size:19px}#bpx .cm-rm:hover,#bpx .cm-rm:focus-visible{color:#b42318;background:#fdecec}
+#bpx .cs-sheet .cm-addbtn{width:100%;justify-content:center;margin-top:12px;cursor:pointer;font:inherit;background:transparent}
+#bpx .cm-form{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--soft,#f6f8fb)}
+#bpx .cm-form .cm-h{font-weight:700;font-size:14px}
+#bpx .cm-form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;margin:0;color:var(--ink)}
+#bpx .cm-form input:not([type=file]){padding:10px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:16px;background:var(--card,#fff);color:var(--ink);width:100%;box-sizing:border-box;min-width:0}
+#bpx .cm-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#bpx .cm-acts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+#bpx .cm-file{flex-direction:row !important;align-items:center;gap:8px !important;border:2px dashed var(--line);border-radius:10px;padding:14px;cursor:pointer;background:var(--card,#fff);font-weight:600}
+#bpx .cm-file input{position:absolute;opacity:0;width:1px;height:1px}#bpx .cm-file:focus-within{outline:2px solid var(--bpc-s1,#4e6ef2)}
+#bpx .cm-file span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#bpx .cm-lock{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:11px 12px;border-radius:10px;background:#fdf1dc;color:#7a520a}
+#bpx .cm-lock b{display:block;font-size:13.5px}#bpx .cm-lock span:not(.ms){font-size:12.5px}
+#bpx .cm-ltag{background:#fdf1dc !important;color:#a8710f !important}#bpx .cm-ltag .ms{font-size:12px;vertical-align:-2px;margin-right:2px}
+#bpx .cm-sub{font-size:13px;margin:0 0 4px}
+#bpx .cm-rcs{margin-top:10px}
+#bpx .cm-rc{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-2,var(--line))}
+#bpx .cm-rc:last-child{border-bottom:0}#bpx .cm-rc>.ms{color:var(--grey)}
+#bpx .cm-rc>div{flex:1;min-width:0}#bpx .cm-rc b{display:block;font-size:14px}#bpx .cm-rc small{display:block;font-size:12px;color:var(--grey);margin-bottom:3px}
+#bpx .cm-ph{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--grey);border:1px solid var(--line)}
+
 /* ---------- worker record: ratings, jobs done, experience (portal/reviews.js) ---------- */
 #bpx .rv-stars{display:inline-flex;gap:1px;line-height:1;vertical-align:middle}
 #bpx .rv-st{color:var(--line,#d8dde5);font-size:14px}

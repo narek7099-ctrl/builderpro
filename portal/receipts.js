@@ -82,13 +82,16 @@
       + '<span class="lg2">What you actually bought. Each one is a Materials expense on its job.</span></div>'
       + (Object.keys(sups).length > 1 ? '<select class="rc-filter" onchange="SP.rcFilter=this.value;bpSuppliers()"><option value="">All suppliers</option>'
         + Object.keys(sups).map(function (k) { return '<option value="' + esc(k) + '"' + (SP.rcFilter === k ? ' selected' : '') + '>' + esc(sups[k]) + '</option>'; }).join('') + '</select>' : '') + '</div>';
+    var pc = SP.rcCrewPending();
+    if (pc.length) h += '<div class="bpx-panel rc-list rc-pendall"><div class="rc-job-h"><span>Crew receipts to approve <span class="ml-newb rc">' + pc.length + '</span></span></div>'
+      + pc.map(function (x) { return crewRow(x.j, x.r).replace('<div class="rc-row-m"><b>', '<div class="rc-row-m"><b>' + esc(x.j.name || 'Job') + ': '); }).join('') + '</div>';
     if (!rs.length) return h + '<div class="bpx-panel rc-empty bpx-mut">No receipts yet. Tap &ldquo;Upload receipt&rdquo; on a supplier after you buy something.</div>';
     return h + '<div class="bpx-panel rc-list">' + rs.map(rowHtml).join('') + '</div>';
   };
   function rowHtml(r, onJob) {
     return '<div class="rc-row"><div class="rc-row-m"><b>' + esc(onJob ? r.supplierName : jobName(r)) + '</b>'
       + '<span class="bpx-mut">' + esc(fmtDate(r.date)) + (onJob ? '' : ' &middot; ' + esc(r.supplierName)) + (r.number ? ' &middot; #' + esc(r.number) : '')
-      + ' &middot; ' + (r.lines || []).length + ((r.lines || []).length === 1 ? ' line' : ' lines') + '</span></div>'
+      + (r.crewReceiptId ? ' &middot; from ' + esc(first(r.addedBy && r.addedBy.name || 'crew')) : ' &middot; ' + (r.lines || []).length + ((r.lines || []).length === 1 ? ' line' : ' lines')) + '</span></div>'
       + '<b class="rc-row-t">' + money(r.total) + '</b><span class="rc-row-a">'
       + (r.image ? '<button class="bpx-rowbtn" onclick="SP.rcView(\'' + r.id + '\')">View</button>' : '')
       + '<button class="bpx-rowbtn rc-del" onclick="SP.rcDel(\'' + r.id + '\')" aria-label="Delete receipt">Delete</button></span></div>';
@@ -103,21 +106,81 @@
   window.bpReceiptsFor = function (jobId) {
     var rs = byJob(jobId).sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
     var t = rs.reduce(function (s, r) { return s + (+r.total || 0); }, 0);
-    return '<div class="rc-job"><div class="rc-job-h"><span>Bought <span class="bpx-mut">(counts toward cost)</span></span><b>' + money(t) + '</b></div>'
+    return '<div class="rc-job">' + crewBox(jobId) + '<div class="rc-job-h"><span>Bought <span class="bpx-mut">(counts toward cost)</span></span><b>' + money(t) + '</b></div>'
       + (rs.length ? rs.map(function (r) { return rowHtml(r, true); }).join('')
         : '<div class="bpx-mut rc-job-e">No receipts on this job yet. Upload one from Supply &rsaquo; Suppliers.</div>')
       + '<button class="bpx-linkbtn" onclick="bpCloseModal&&bpCloseModal();bpNav(\'suppliers\')">Upload a receipt</button></div>';
   };
 
+  /* ---------- crew receipts ----------
+     The crew uploads through crew_receipt_add (database); it waits on the
+     job as j.crewReceipts[] {status:'pending'} until someone here approves
+     it (a receipt + its Materials expense, exactly like rcSave) or rejects it. */
+  var crewName = function (cr) { return String((cr.addedBy && cr.addedBy.name) || 'Crew'); };
+  var first = function (n) { return String(n || '').split(' ')[0]; };
+  function crewRow(j, cr) {
+    var when = window.ML && ML.whenTxt ? ML.whenTxt(cr.at) : '';
+    var pend = cr.status === 'pending';
+    return '<div class="rc-crew ' + esc(cr.status || '') + '" data-crew-rc="' + esc(cr.id) + '"><span class="rc-cav">' + esc(first(crewName(cr)).charAt(0).toUpperCase()) + '</span>'
+      + '<div class="rc-row-m"><b>' + esc(first(crewName(cr))) + ' uploaded a receipt <span class="rc-amt">' + money(cr.amount) + '</span></b>'
+      + '<span class="bpx-mut">' + [cr.supplier ? esc(cr.supplier) : '', cr.note ? esc(cr.note) : '', when].filter(Boolean).join(' &middot; ') + (pend ? '' : ' &middot; ' + (cr.status === 'approved' ? 'approved' : 'rejected')) + '</span></div>'
+      + '<span class="rc-row-a">' + (cr.image ? '<button class="bpx-rowbtn" onclick="SP.rcCrewView(\'' + esc(j.id) + '\',\'' + esc(cr.id) + '\')">Photo</button>' : '')
+      + (pend ? '<button class="bpx-rowbtn rc-rej" onclick="SP.rcCrewDecide(\'' + esc(j.id) + '\',\'' + esc(cr.id) + '\',false)">Reject</button>'
+        + '<button class="bpx-rowbtn rc-ok" onclick="SP.rcCrewDecide(\'' + esc(j.id) + '\',\'' + esc(cr.id) + '\',true)">Approve</button>' : '') + '</span></div>';
+  }
+  function crewBox(jobId) {
+    var j = jobsAll().filter(function (x) { return x.id === jobId; })[0]; if (!j) return '';
+    var cr = (j.crewReceipts || []).filter(function (r) { return r && r.id; });
+    var pend = cr.filter(function (r) { return r.status === 'pending'; }), rej = cr.filter(function (r) { return r.status === 'rejected'; }).slice(-3);
+    if (!pend.length && !rej.length) return '';
+    return '<div class="rc-crewbox"><div class="rc-job-h"><span>From the crew' + (pend.length ? ' <span class="ml-newb rc">' + pend.length + ' to approve</span>' : '') + '</span>'
+      + (pend.length ? '<b>' + money(pend.reduce(function (t, r) { return t + (+r.amount || 0); }, 0)) + ' waiting</b>' : '') + '</div>'
+      + pend.concat(rej).map(function (r) { return crewRow(j, r); }).join('')
+      + (pend.length ? '<div class="bpx-mut rc-job-e">Approving adds it here as a Materials expense on this job. Rejecting keeps it out of your costs.</div>' : '') + '</div>';
+  }
+  SP.rcCrewPending = function () {
+    var out = []; jobsAll().forEach(function (j) { (j.crewReceipts || []).forEach(function (r) { if (r && r.status === 'pending') out.push({ j: j, r: r }); }); });
+    return out;
+  };
+  SP.rcCrewView = function (jobId, id) {
+    var j = jobsAll().filter(function (x) { return x.id === jobId; })[0], cr = j && (j.crewReceipts || []).filter(function (x) { return x.id === id; })[0];
+    if (!cr || !cr.image) return;
+    if (window.bpPF && bpPF.open) bpPF.open(cr.image, cr.mime || 'image/jpeg');
+  };
+  SP.rcCrewDecide = function (jobId, id, yes) {
+    var js = jobsAll(), j = js.filter(function (x) { return x.id === jobId; })[0];
+    var cr = j && (j.crewReceipts || []).filter(function (x) { return x.id === id; })[0];
+    if (!cr || cr.status !== 'pending') { refresh(jobId); return; }
+    var me = window.ML && ML.actor ? ML.actor() : { uid: '', name: 'Owner', role: 'owner' };
+    var sup = (SP.sup || []).filter(function (s) { return cr.supplier && String(s.name || '').toLowerCase() === String(cr.supplier).toLowerCase(); })[0];
+    var d = new Date(+cr.at || Date.now());
+    var rec = yes ? { id: uid('rc'), supplierId: sup ? sup.id : '', supplierName: sup ? sup.name : (cr.supplier || 'Crew receipt'), jobId: j.id, jobName: j.name || 'Job',
+      date: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'), number: '', lines: [], tax: 0, total: r2(cr.amount),
+      image: cr.image || '', mime: cr.mime || '', file: '', read: 'crew', at: Date.now(), note: cr.note || '', crewReceiptId: cr.id, addedBy: cr.addedBy || null } : null;
+    if (yes && !(rec.total > 0)) { window.bpToast && bpToast('That receipt has no amount.'); return; }
+    var prev = JSON.stringify(cr);
+    cr.status = yes ? 'approved' : 'rejected'; cr.decidedAt = Date.now(); cr.decidedBy = me;
+    if (rec) cr.receiptId = rec.id;
+    if (window.ML && ML.log) ML.log(j, { action: yes ? 'receipt-approve' : 'receipt-reject', item: cr.supplier || 'Receipt', receiptId: cr.id, amount: cr.amount, whose: crewName(cr) });
+    if (yes) {
+      try { rec.expKey = writeExpense(rec); }
+      catch (e) { Object.keys(cr).forEach(function (k) { delete cr[k]; }); Object.assign(cr, JSON.parse(prev)); window.bpToast && bpToast('Could not add the expense. ' + (e.message || '')); return; }
+      var a = all(); a.unshift(rec); setAll(a);
+    } else bpJobsSet(js);
+    refresh(jobId);
+    if (window._bpCurView === 'suppliers') window.bpSuppliers();
+    window.bpToast && bpToast(yes ? money(rec.total) + ' from ' + first(crewName(cr)) + ' added to ' + (j.name || 'the job') + ' as a Materials expense.' : 'Receipt rejected. It stays out of your costs.');
+  };
+
   /* ---------- expense ---------- */
-  function expenseNote(r) { return r.supplierName + ' receipt' + (r.number ? ' #' + r.number : ''); }
+  function expenseNote(r) { return (r.supplierName || 'Crew') + ' receipt' + (r.number ? ' #' + r.number : '') + (r.addedBy && r.addedBy.name ? ' (from ' + first(r.addedBy.name) + ')' : ''); }
   function writeExpense(r) {
     var key = 'rc' + r.id, when = dateTs(r.date);
     if (r.jobId) {
       var js = jobsAll(), j = js.filter(function (x) { return x.id === r.jobId; })[0];
       if (!j) throw new Error('That job is gone.');
       j.expenses = (j.expenses || []).filter(function (e) { return e.key !== key; });
-      j.expenses.push({ cat: 'Materials', amt: r2(r.total), note: expenseNote(r), key: key, when: when, receiptId: r.id });
+      j.expenses.push(Object.assign({ cat: 'Materials', amt: r2(r.total), note: expenseNote(r), key: key, when: when, receiptId: r.id }, r.crewReceiptId ? { crewReceiptId: r.crewReceiptId, by: r.addedBy && r.addedBy.name || '' } : {}));
       bpJobsSet(js);
     } else {
       var fin = (window.bpFinGet ? bpFinGet() : []).filter(function (e) { return e.id !== key; });
@@ -327,6 +390,9 @@
     + '#bpx .rc-in{border:1px solid var(--line);border-radius:7px;padding:7px 8px;font:inherit;font-size:13.5px;background:#fff;width:100%;box-sizing:border-box;min-width:0}'
     + '#bpx .rc-tot{display:flex;justify-content:flex-end;gap:10px;margin-top:10px}#bpx .rc-tot label{width:130px}#bpx .rc-big input{font-weight:700;font-size:16px}'
     + '#bpx .rc-diff{text-align:right;font-size:12.5px;margin-top:4px}#bpx .rc-learn{margin-top:12px}#bpx .rc-foot-n{font-size:12.5px;margin-top:6px}'
+    + '#bpx .rc-crewbox{margin:-2px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line-2)}#bpx .rc-crew{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2);flex-wrap:wrap}#bpx .rc-crew:last-of-type{border-bottom:0}'
+    + '#bpx .rc-crew.rejected{opacity:.6}#bpx .rc-cav{width:28px;height:28px;border-radius:50%;background:#4f46e5;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}'
+    + '#bpx .rc-amt{color:var(--ink)}#bpx .rc-ok{background:#178048;border-color:#178048;color:#fff}#bpx .rc-rej{color:#b3392f}#bpx .rc-pendall{margin-bottom:12px;border-color:#c7d2fe}'
     + '@media(max-width:640px){#bpx .rc-grid{flex-direction:column}#bpx .rc-thumb{width:100%;max-height:200px}#bpx .rc-lh{display:none}'
     + '#bpx .rc-line{grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line-2);padding:8px 0;position:relative}#bpx .rc-line .rc-nm{grid-column:1/-1;width:calc(100% - 34px)}#bpx .rc-line .rc-x{position:absolute;right:0;top:12px}'
     + '#bpx .rc-tot label{flex:1;width:auto}#bpx .rc-row-a{margin-left:auto}}';

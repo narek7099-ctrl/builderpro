@@ -355,7 +355,7 @@
       if (C.job && jobs.some(function (j) { return j.id === C.job; }) && !$('bpx-modal')) sheet();
     }).catch(fail);
   };
-  window.bpCrewJob = function (id) { C.job = id; C.tab = 'details'; sheet(); };
+  window.bpCrewJob = function (id) { C.job = id; C.tab = 'details'; C.matForm = false; C.rcForm = false; C.rcFile = null; sheet(); };
 
   /* ---------------------------------------------- read-only project sheet --- */
   var TABS = [['details', 'Overview', 'dashboard'], ['schedule', 'Schedule', 'calendar_month'], ['crew', 'Crew', 'groups'], ['materials', 'Materials', 'inventory_2'],
@@ -432,12 +432,7 @@
         + (ppl.length ? sec('Assigned to this job', ppl.map(function (m) { return personRow(m, '#475467', m.name === myName); }).join('')) : '')
         + (!cr && !ppl.length ? none('groups', 'Nobody listed', 'The office hasn’t put a crew or people on this job yet.') : '');
     }
-    if (t === 'materials') {
-      var it = j.materials || [];
-      return it.length ? sec('Material list' + (j.materialsStatus ? ' <span class="cs-tag">' + esc(j.materialsStatus) + '</span>' : ''), '<div class="cs-mat"><div class="cs-mh"><span>Item</span><span>Qty</span></div>' + it.map(function (x) {
-          return '<div><span><b>' + esc(x.name || 'Item') + '</b>' + (x.note || x.supplier ? '<small>' + esc([x.supplier, x.note].filter(Boolean).join(' · ')) + '</small>' : '') + '</span><span>' + esc(x.qty == null ? '' : x.qty) + (x.unit ? ' ' + esc(x.unit) : '') + '</span></div>';
-        }).join('') + '</div>') : none('inventory_2', 'No material list yet', 'When the office builds the list for this job, it shows up here.');
-    }
+    if (t === 'materials') return matPane(j);
     if (t === 'permits') {
       var pm = j.permits || [];
       return pm.length ? '<div class="pm-list">' + pm.map(function (p) {
@@ -458,6 +453,125 @@
         : '<div class="ca-files">' + list.map(function (f) { return '<a class="ca-file" data-ref="' + esc(f.d || '') + '" target="_blank" rel="noopener"><span class="ms">' + (t === 'docs' ? 'description' : 'architecture') + '</span><b>' + esc(f.n || 'File') + '</b>' + (f.t ? '<small>' + pretty(f.t) + (f.by ? ' · ' + esc(f.by) : '') + '</small>' : '') + '</a>'; }).join('') + '</div>')
       : '<div class="bpx-mut" style="margin-top:12px">No ' + what + ' yet.</div>'));
   }
+  /* ------------------------------------------- materials + receipts ---
+     The crew can ask for materials (crew_material_add) and take back what
+     they asked for while the office hasn't acted (crew_material_remove).
+     Receipts they paid go up with a photo (crew_receipt_add) and wait for
+     the office to approve them. Prices of the office's items never reach
+     this page; amounts show only on the crew member's own receipts. */
+  var MAT_ERR = { locked: 'The office locked this list. Call them if you need something.', name: 'Give the item a name (up to 120 characters).',
+    qty: 'Quantity has to be a number, like 6 or 2.5.', unit: 'Keep the unit short, like bdl, box or roll.', note: 'Keep the note under 300 characters.',
+    'not yours': 'You can only take off items you added.', 'already ordered': 'The office already approved or ordered that one. Call them to change it.',
+    'not your job': 'You’re no longer on this job.', 'not found': 'That’s already gone.', 'too many': 'That’s a lot of requests. Call the office.',
+    amount: 'Enter the amount on the receipt, like 84.20.', supplier: 'Keep the store name short.', image: 'The photo didn’t upload right. Try again.',
+    'already decided': 'The office already dealt with that receipt.' };
+  function first(n) { return String(n || '').split(' ')[0]; }
+  function money2(n) { n = +n || 0; return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function matMsg(id, t, cls) { var m = $(id); if (m) { m.className = 'ca-msg ' + (cls || ''); m.textContent = t || ''; } }
+  function matPane(j) {
+    var it = j.materials || [], locked = !!j.materialsLocked, rc = j.crewReceipts || [];
+    var stTxt = { draft: 'Draft', sent: 'Ordered', received: 'Received' }[j.materialsStatus] || j.materialsStatus;
+    var chip = function (x) {
+      var who = x.byCrew ? (x.mine ? '<span class="cm-by me">You asked</span>' : '<span class="cm-by">Requested by ' + esc(first(x.addedBy)) + '</span>') : '';
+      var st = !x.byCrew ? '' : x.status === 'requested' ? '<span class="cm-st wait">Waiting on office</span>' : x.status === 'approved' ? '<span class="cm-st ok">Approved</span>' : x.status === 'ordered' ? '<span class="cm-st ok">Ordered</span>' : '';
+      return who + st;
+    };
+    var canRm = function (x) { return x.mine && x.status === 'requested' && !locked && x.id; };
+    var list = it.length ? '<div class="cs-mat"><div class="cs-mh"><span>Item</span><span>Qty</span></div>' + it.map(function (x) {
+        return '<div class="' + (x.byCrew ? 'cm-crew' : '') + '" data-cm-item="' + esc(x.id || '') + '"><span><b>' + esc(x.name || 'Item') + '</b>'
+          + (x.note || x.supplier ? '<small>' + esc([x.supplier, x.note].filter(Boolean).join(' · ')) + '</small>' : '')
+          + (x.byCrew ? '<em class="cm-chips">' + chip(x) + '</em>' : '') + '</span>'
+          + '<span class="cm-q">' + esc(x.qty == null ? '' : x.qty) + (x.unit ? ' ' + esc(x.unit) : '')
+          + (canRm(x) ? '<button type="button" class="cm-rm" aria-label="Take ' + esc(x.name || 'item') + ' off the list" onclick="bpCrewMatRemove(\'' + esc(x.id) + '\')"><span class="ms">close</span></button>' : '') + '</span></div>';
+      }).join('') + '</div>' : '<div class="bpx-mut" style="margin:6px 0 4px">Nothing on the list yet.' + (locked ? '' : ' Add what you need below.') + '</div>';
+    var form = locked ? '<div class="cm-lock"><span class="ms">lock</span><div><b>The list is locked</b><span>The order went in. Call the office if you need something else.</span></div></div><div class="ca-msg" id="cm-msg"></div>'
+      : C.matForm ? '<form class="cm-form" onsubmit="event.preventDefault();bpCrewMatAdd()"><div class="cm-h">Ask for something</div>'
+          + '<label>What do you need?<input id="cm-name" maxlength="120" required placeholder="e.g. Ice & water shield" autocomplete="off"></label>'
+          + '<div class="cm-2"><label>How many<input id="cm-qty" inputmode="decimal" maxlength="10" placeholder="6"></label>'
+          + '<label>Unit<input id="cm-unit" maxlength="20" list="cm-units" placeholder="roll"></label></div>'
+          + '<datalist id="cm-units"><option value="ea"><option value="bdl"><option value="box"><option value="roll"><option value="sq"><option value="sheet"><option value="bag"><option value="ft"><option value="gal"><option value="tube"></datalist>'
+          + '<label>Note (optional)<input id="cm-note" maxlength="300" placeholder="Color, size, where it goes"></label>'
+          + '<div class="ca-msg" id="cm-msg"></div><div class="cm-acts"><button type="button" class="pm-btn ghost" onclick="bpCrewMatForm(false)">Cancel</button><button type="submit" class="pm-btn" id="cm-go"><span class="ms">add</span>Add to list</button></div></form>'
+        : '<button type="button" class="ca-add cm-addbtn" onclick="bpCrewMatForm(true)"><span class="ms">add_circle</span>Add item</button><div class="ca-msg" id="cm-msg"></div>';
+    var rcl = rc.length ? '<div class="cm-rcs">' + rc.slice().reverse().map(function (r) {
+        var st = r.status === 'approved' ? '<span class="cm-st ok">Approved</span>' : r.status === 'rejected' ? '<span class="cm-st bad">Not approved</span>' : '<span class="cm-st wait">Waiting on office</span>';
+        return '<div class="cm-rc" data-cm-rc="' + esc(r.id) + '"><span class="ms">receipt_long</span><div><b>' + money2(r.amount) + (r.supplier ? ' · ' + esc(r.supplier) : '') + '</b><small>' + pretty(r.at ? new Date(+r.at).toISOString() : '') + (r.note ? ' · ' + esc(r.note) : '') + '</small>' + st + '</div>'
+          + (r.image ? '<a class="cm-ph" data-ref="' + esc(r.image) + '" target="_blank" rel="noopener" aria-label="Open the photo"><span class="ms">image</span></a>' : '')
+          + (r.status === 'pending' ? '<button type="button" class="cm-rm" aria-label="Delete this receipt" onclick="bpCrewRcRemove(\'' + esc(r.id) + '\')"><span class="ms">delete</span></button>' : '') + '</div>';
+      }).join('') + '</div>' : '';
+    var rform = C.rcForm ? '<form class="cm-form" onsubmit="event.preventDefault();bpCrewRcAdd()"><div class="cm-h">Upload a receipt</div>'
+        + '<label class="cm-file"><span class="ms">photo_camera</span><span id="cr-fn">' + (C.rcFile ? esc(C.rcFile.name) : 'Take a photo of the receipt') + '</span><input type="file" id="cr-file" accept="image/*,application/pdf" onchange="bpCrewRcFile(this)"></label>'
+        + '<div class="cm-2"><label>Amount paid<input id="cr-amt" inputmode="decimal" maxlength="10" placeholder="84.20" required></label>'
+        + '<label>Store<input id="cr-sup" maxlength="80" placeholder="Home Depot"></label></div>'
+        + '<label>What was it for? (optional)<input id="cr-note" maxlength="300" placeholder="Extra nails, valley flashing"></label>'
+        + '<div class="ca-msg" id="cr-msg"></div><div class="cm-acts"><button type="button" class="pm-btn ghost" onclick="bpCrewRcForm(false)">Cancel</button><button type="submit" class="pm-btn" id="cr-go"><span class="ms">upload</span>Send to office</button></div></form>'
+      : '<button type="button" class="ca-add cm-addbtn" onclick="bpCrewRcForm(true)"><span class="ms">add_a_photo</span>Upload a receipt</button><div class="ca-msg" id="cr-msg"></div>';
+    return sec('Material list' + (stTxt ? ' <span class="cs-tag">' + esc(stTxt) + '</span>' : '') + (locked ? ' <span class="cs-tag cm-ltag"><span class="ms">lock</span>Locked</span>' : ''), list + form)
+      + sec('My receipts', '<p class="bpx-mut cm-sub">Bought something for this job? Send the receipt. The office approves it.</p>' + rform + rcl);
+  }
+  function refreshSheet() {
+    return load(true).then(function () {
+      body();
+      var j = curJob(); if (j) { var n = counts(j); document.querySelectorAll('.cs-sheet [data-cs-tab]').forEach(function (x) { var c = x.querySelector('.pjs-n'); if (c) c.textContent = n[x.getAttribute('data-cs-tab')] || ''; }); }
+    });
+  }
+  function rpcRes(r) { if (r && r.error) throw r.error; return (r && r.data) || {}; }
+  window.bpCrewMatForm = function (on) { C.matForm = !!on; body(); if (on) setTimeout(function () { var n = $('cm-name'); if (n) n.focus(); }, 30); };
+  window.bpCrewMatAdd = function () {
+    var v = function (id) { return String(($(id) || {}).value || '').trim(); };
+    var item = { name: v('cm-name'), qty: v('cm-qty').replace(/,/g, '.'), unit: v('cm-unit'), note: v('cm-note') };
+    if (!item.name) { matMsg('cm-msg', MAT_ERR.name, 'bad'); return; }
+    if (item.qty && !/^\d{1,6}(\.\d{1,3})?$/.test(item.qty)) { matMsg('cm-msg', MAT_ERR.qty, 'bad'); return; }
+    var go = $('cm-go'); if (go) { go.disabled = true; go.textContent = 'Adding…'; }
+    var jobId = C.job;
+    Promise.resolve(BP_SB.rpc('crew_material_add', { p_job: jobId, p_item: item })).then(rpcRes).then(function (d) {
+      if (!d.ok) { if (go) { go.disabled = false; go.innerHTML = '<span class="ms">add</span>Add to list'; } matMsg('cm-msg', MAT_ERR[d.error] || 'That didn’t go through. Try again.', 'bad'); if (d.error === 'locked' || d.error === 'not your job') { C.matForm = false; return refreshSheet().then(function () { matMsg('cm-msg', MAT_ERR[d.error], 'bad'); }); } return; }
+      C.matForm = false;
+      return refreshSheet().then(function () { matMsg('cm-msg', item.name + ' added. The office sees it was you.', 'ok'); });
+    }).catch(function () { if (go) { go.disabled = false; go.innerHTML = '<span class="ms">add</span>Add to list'; } matMsg('cm-msg', 'Couldn’t reach the server. Try again.', 'bad'); });
+  };
+  window.bpCrewMatRemove = function (id) {
+    var j = curJob(), x = j && (j.materials || []).filter(function (m) { return m.id === id; })[0]; if (!x) return;
+    if (!confirm('Take ' + (x.name || 'this item') + ' off the list?')) return;
+    Promise.resolve(BP_SB.rpc('crew_material_remove', { p_job: C.job, p_item_id: id })).then(rpcRes).then(function (d) {
+      return refreshSheet().then(function () { matMsg('cm-msg', d.ok ? (x.name || 'Item') + ' taken off.' : (MAT_ERR[d.error] || 'That didn’t go through.'), d.ok ? 'ok' : 'bad'); });
+    }).catch(function () { matMsg('cm-msg', 'Couldn’t reach the server. Try again.', 'bad'); });
+  };
+  window.bpCrewRcForm = function (on) { C.rcForm = !!on; C.rcFile = null; body(); };
+  window.bpCrewRcFile = function (inp) {
+    var f = inp.files && inp.files[0]; C.rcFile = f || null;
+    var n = $('cr-fn'); if (n) n.textContent = f ? f.name : 'Take a photo of the receipt';
+    if (f && f.size > 25 * 1024 * 1024) { C.rcFile = null; matMsg('cr-msg', 'That file is over 25 MB.', 'bad'); }
+  };
+  window.bpCrewRcAdd = function () {
+    var v = function (id) { return String(($(id) || {}).value || '').trim(); };
+    var amt = v('cr-amt').replace(/[$,\s]/g, '');
+    if (!C.rcFile) { matMsg('cr-msg', 'Add a photo of the receipt first.', 'bad'); return; }
+    if (!/^\d{1,6}(\.\d{1,2})?$/.test(amt) || !(+amt > 0)) { matMsg('cr-msg', MAT_ERR.amount, 'bad'); return; }
+    var go = $('cr-go'); if (go) { go.disabled = true; go.textContent = 'Sending…'; }
+    var jobId = C.job, f = C.rcFile, sup = v('cr-sup'), note = v('cr-note');
+    var reset = function () { if (go) { go.disabled = false; go.innerHTML = '<span class="ms">upload</span>Send to office'; } };
+    shrink(f).then(function (data) { return bpPF.upload(jobId, 'receipts', data, f.name || 'receipt.jpg'); }).then(function (ref) {
+      var mime = /^image\//.test(f.type) ? 'image/jpeg' : (f.type || '');
+      return Promise.resolve(BP_SB.rpc('crew_receipt_add', { p_job: jobId, p_receipt: { amount: amt, supplier: sup, note: note, image: ref, mime: mime } })).then(rpcRes).then(function (d) {
+        if (!d.ok) {
+          reset(); matMsg('cr-msg', MAT_ERR[d.error] || 'That didn’t go through. Try again.', 'bad');
+          try { BP_SB.storage.from('project-files').remove([String(ref).slice(3)]); } catch (e) {}
+          return;
+        }
+        C.rcForm = false; C.rcFile = null;
+        return refreshSheet().then(function () { matMsg('cr-msg', money2(amt) + ' receipt sent. The office will approve it.', 'ok'); });
+      });
+    }).catch(function () { reset(); matMsg('cr-msg', 'Upload failed. Check your signal and try again.', 'bad'); });
+  };
+  window.bpCrewRcRemove = function (id) {
+    if (!confirm('Delete this receipt? The office hasn’t seen it yet.')) return;
+    Promise.resolve(BP_SB.rpc('crew_receipt_remove', { p_job: C.job, p_id: id })).then(rpcRes).then(function (d) {
+      if (d.ok && d.image && String(d.image).indexOf('sb:') === 0) { try { Promise.resolve(BP_SB.storage.from('project-files').remove([String(d.image).slice(3)])).catch(function () {}); } catch (e) {} }
+      return refreshSheet().then(function () { matMsg('cr-msg', d.ok ? 'Receipt deleted.' : (MAT_ERR[d.error] || 'That didn’t go through.'), d.ok ? 'ok' : 'bad'); });
+    }).catch(function () { matMsg('cr-msg', 'Couldn’t reach the server. Try again.', 'bad'); });
+  };
+
   function counts(j) {
     return { photos: (j.photos || []).length, docs: (j.docs || []).length, blueprints: (j.blueprints || []).length, permits: (j.permits || []).length, materials: (j.materials || []).length };
   }
