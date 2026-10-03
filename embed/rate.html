@@ -16,7 +16,7 @@ html,body{margin:0;padding:0;background:#edf2f6;}
 @keyframes rtIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.rt-card{animation:none}}
 .rt-biz{display:flex;align-items:center;gap:12px;}
-.rt-biz img{width:48px;height:48px;border-radius:12px;object-fit:contain;background:#fff;border:1px solid var(--line);}
+.rt-biz img{display:block;width:auto;height:auto;max-height:40px;max-width:45%;object-fit:contain;flex:0 0 auto;}
 .rt-biz .ph{width:48px;height:48px;border-radius:12px;background:var(--a);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;flex:0 0 auto;}
 .rt-biz b{display:block;font-size:17px;letter-spacing:-.01em;}
 .rt-biz span{display:block;font-size:13px;color:var(--mu);margin-top:2px;}
@@ -47,9 +47,16 @@ html,body{margin:0;padding:0;background:#edf2f6;}
 .rt-skel{height:120px;border-radius:16px;background:linear-gradient(90deg,var(--card),#f4f7fa,var(--card));background-size:200% 100%;animation:rtSk 1.2s linear infinite;margin-bottom:8px;}
 @keyframes rtSk{to{background-position:-200% 0}}
 .rt-foot{text-align:center;font-size:12px;color:var(--mu);margin-top:14px;}
+/* "Powered by BuilderPro": small, after the contractor's content */
+.bp-pow-wrap{display:flex;justify-content:center;margin-top:18px;}
+.bp-pow{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;font-size:12px;line-height:1;color:var(--mu);text-decoration:none;white-space:nowrap;}
+.bp-pow img{width:14px;height:14px;display:block;opacity:.85;}
+.bp-pow b{font-weight:600;}
+.bp-pow:hover{background:rgba(0,0,0,.04);color:var(--txt);}
 </style>
 </head><body>
-<div id="est-embed" class="ck"><div id="rt"><div class="rt-skel"></div><div class="rt-skel"></div></div></div>
+<div id="est-embed" class="ck"><div id="rt"><div class="rt-skel"></div><div class="rt-skel"></div></div>
+<div class="bp-pow-wrap"><a class="bp-pow" href="https://builderpro-os.com/?ref=portal" target="_blank" rel="noopener"><img src="../assets/brand/logo-mark-32.png" width="14" height="14" alt="">Powered by <b>BuilderPro</b></a></div></div>
 <script>
 (function(){
 var FN='https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/worker-review';

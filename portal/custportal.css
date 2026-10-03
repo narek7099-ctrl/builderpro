@@ -54,3 +54,14 @@
 #bpx .cp-req p{font-size:13.5px;line-height:1.5;margin:6px 0 10px;color:var(--ink);overflow-wrap:anywhere}
 #bpx .cp-req .bpx-btn{width:auto;margin:0;padding:8px 13px;display:inline-flex;align-items:center;gap:5px;font-size:13px}
 #bpx .cp-req .bpx-btn .ms{font-size:17px}
+
+/* no-logo nudge at the top of the Customer tab */
+#bpx .cp-nudge{display:flex;align-items:flex-start;gap:10px;background:#fff8eb;border:1px solid #f6d79b;border-radius:12px;padding:10px 10px 10px 12px;margin:0 0 12px}
+#bpx .cp-nudge>.ms{color:#b45309;font-size:20px;flex-shrink:0;margin-top:1px}
+#bpx .cp-nudge>div{flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:#92400e}
+#bpx .cp-nudge b{display:block;color:#7c2d12;font-size:13px}
+#bpx .cp-nudge-go{background:none;border:0;padding:0;font:inherit;font-weight:600;color:#b45309;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+#bpx .cp-nudge-x{background:none;border:0;padding:2px;border-radius:6px;color:#b45309;cursor:pointer;display:flex;flex-shrink:0}
+#bpx .cp-nudge-x .ms{font-size:18px}
+#bpx .cp-nudge-x:hover{background:rgba(180,83,9,.1)}
+#bpx.bpx-dark .cp-nudge{background:#2a2113;border-color:#5b4520}#bpx.bpx-dark .cp-nudge>div{color:#e9c48c}#bpx.bpx-dark .cp-nudge b{color:#fcd9a5}
