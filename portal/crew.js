@@ -439,7 +439,7 @@
         if (window._bpCurView === 'employees') render();
         /* the project budget's labour line has just moved */
         if (document.getElementById('bpx-pj-budget') && window.bpProjBudgetRender) bpProjBudgetRender();
-        if (document.getElementById('bpx-pj-crew') && window.bpProjCrewRender) bpProjCrewRender();
+        if (document.getElementById('bpx-pj-people') && window.bpProjCrewRender) bpProjCrewRender();
       });
     }, function (er) {
       if (btn) { btn.disabled = false; btn.textContent = 'Log it'; }
