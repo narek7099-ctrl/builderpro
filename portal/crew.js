@@ -91,7 +91,15 @@
 
   /* ------------------------------------------------------------- load --- */
   window.bpCrewLoad = function (force) {
-    if (!live()) { S.loaded = true; S.err = 'signed-out'; return Promise.resolve(S); }
+    if (!live()) {
+      /* the signed-out example portal: sample people with a work record
+         (portal/reviews.js), so the page shows what it does */
+      var X = window.BP_REV_SAMPLE;
+      if (X && !S.sample) { S.emps = X.emps.map(function (e) { return Object.assign({}, e); }); S.entries = []; S.sample = true; }
+      S.loaded = true; S.err = X ? '' : 'signed-out';
+      return (window.bpRevLoad ? bpRevLoad() : Promise.resolve()).then(function () { return S; });
+    }
+    S.sample = false;
     if (S.loaded && !force) return Promise.resolve(S);
     return Promise.all([
       Promise.resolve(BP_SB.from('employees').select('*').order('name')).catch(function (e) { return { error: e }; }),
@@ -105,7 +113,7 @@
       } else { S.err = ''; S.emps = r[0].data || []; }
       S.entries = (r[1] && r[1].data) || [];
       S.loaded = true;
-      return S;
+      return window.bpRevLoad ? bpRevLoad(true).then(function () { return S; }, function () { return S; }) : S;
     });
   };
 
@@ -155,8 +163,13 @@
     var head = '<div class="bpx-chead" style="margin-bottom:12px">'
       + '<div class="bpx-ptitle" style="margin:0">Your people'
       + '<span class="lg2" style="margin-left:8px">everyone who works on your jobs, on the books or on a 1099</span></div>'
-      + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpEmpOpen()">+ Add someone</button></div>';
+      + '<span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
+      + (S.emps.length > 1 ? '<label class="emp-sort">Sort<select onchange="bpEmpSort(this.value)">'
+          + [['name', 'Name'], ['rating', 'Rating'], ['jobs', 'Jobs done'], ['exp', 'Experience']].map(function (o) {
+              return '<option value="' + o[0] + '"' + (S.sort === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' : '')
+      + '<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpEmpOpen()">+ Add someone</button></span></div>';
 
+    if (S.sample) head += '<div class="emp-sample"><span class="ms">info</span><span>Sample crew. Sign in and your own people, their completed jobs and client ratings show here.</span></div>';
     head += '<div id="bpClockNow"></div>';
     setTimeout(function () { if (window.bpClockNowFill) bpClockNowFill(); }, 0);
     if (!S.emps.length) {
@@ -166,24 +179,34 @@
       return;
     }
 
-    var rows = S.emps.map(function (e) {
+    var list = S.emps.slice(), st = {};
+    if (window.bpWorkerStats) list.forEach(function (e) { st[e.id] = bpWorkerStats(e.id); });
+    if (S.sort && S.sort !== 'name') list.sort(function (a, b) {
+      var x = st[a.id] || {}, y = st[b.id] || {};
+      if (S.sort === 'rating') return (y.reviews ? y.rating : -1) - (x.reviews ? x.rating : -1) || (y.reviews || 0) - (x.reviews || 0);
+      if (S.sort === 'jobs') return (y.jobsDone || 0) - (x.jobsDone || 0);
+      return (+a.started_trade_year || 9999) - (+b.started_trade_year || 9999);
+    });
+    var rows = list.map(function (e) {
       var r = hourlyOf(e), b = burdenedOf(e);
       var rateTxt = e.pay_type === 'hourly' ? money(e.rate) + '/hr'
         : e.pay_type === 'day' ? money(e.rate) + '/day'
         : money(e.rate) + '/yr';
       return '<tr' + (e.active ? '' : ' style="opacity:.55"') + '>'
-        + '<td><div class="emp-who">' + (window.bpAvatar ? bpAvatar.html(e.photo_url, e.name, 'emp-av') : '') + '<div><b>' + esc(e.name || 'Unnamed') + '</b>'
+        + '<td><div class="emp-who">' + (window.bpAvatar ? bpAvatar.html(e.photo_url, e.name, 'emp-av') : '') + '<div><button type="button" class="emp-name" onclick="bpEmpProfile(\'' + e.id + '\')" title="Open profile"><b>' + esc(e.name || 'Unnamed') + '</b></button>'
           + (e.trade ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.trade) + '</div>' : '')
           + (function () { var c = window.bpCrewOfEmp ? bpCrewOfEmp(e.id) : null;
               return c ? '<div style="font-size:11.5px;margin-top:2px;color:' + c.color + ';font-weight:600">\u25CF ' + esc(c.name) + '</div>' : ''; })() + '</div></div></td>'
         + '<td>' + (e.phone ? '<a href="tel:' + esc(e.phone) + '" style="color:#2f6bff;text-decoration:none">' + esc(e.phone) + '</a>' : '—')
           + (e.email ? '<div class="bpx-mut" style="font-size:11.5px">' + esc(e.email) + '</div>' : '') + '</td>'
+        + '<td>' + (window.bpEmpRecordHtml ? bpEmpRecordHtml(e) : '') + '</td>'
         + '<td><span class="bpx-badge' + (e.kind === '1099' ? '' : ' ok') + '">' + (e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
         + '<td>' + rateTxt + '</td>'
         + '<td>' + (b > 0 ? '<b>' + money(b) + '</b>/hr' : '—')
           + (e.burden_pct > 0 ? '<div class="bpx-mut" style="font-size:11.5px">+' + e.burden_pct + '% burden</div>'
             : (e.kind === 'w2' ? '<div class="bpx-mut" style="font-size:11.5px;color:#b45309">no burden set</div>' : '')) + '</td>'
         + '<td class="bpx-r" style="white-space:nowrap">'
+          + (window.bpEmpProfile ? '<button class="bpx-rowbtn" onclick="bpEmpProfile(\'' + e.id + '\')">Profile</button>' : '')
           + '<button class="bpx-rowbtn" onclick="bpEmpOpen(\'' + e.id + '\')">Edit</button>'
           + '<button class="bpx-rowbtn" onclick="bpEmpToggle(\'' + e.id + '\')">' + (e.active ? 'Deactivate' : 'Reactivate') + '</button>'
         + '</td></tr>';
@@ -203,10 +226,12 @@
 
     el.innerHTML = head
       + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
-      + '<th>Name</th><th>Contact</th><th>Type</th><th>Rate</th><th>Real cost</th><th></th>'
+      + '<th>Name</th><th>Contact</th><th>Record</th><th>Type</th><th>Rate</th><th>Real cost</th><th></th>'
       + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + warn;
     if (window.bpAvatar) bpAvatar.fill(el);
   }
+
+  window.bpEmpSort = function (v) { S.sort = v; pane(); };
 
   window.bpEmpOpen = function (id) {
     var e = id ? bpEmpById(id) : null;
@@ -241,7 +266,14 @@
           + '<div style="display:flex;align-items:center;gap:6px"><input id="emp-burden" type="number" min="0" max="200" step="1" '
           + 'value="' + (+f.burden_pct || '') + '" placeholder="0" oninput="bpEmpKind()" style="flex:1"><span class="bpx-mut">%</span></div></div></div>'
       + '<div class="bpx-mut" id="emp-hint" style="font-size:12px;margin-top:8px;line-height:1.6"></div>'
-      + '<label>Notes</label>' + inp('notes', 'Certifications, who to call, anything else', f.notes)
+      + '<div class="bpx-sub" style="margin:16px 0 0;font-weight:600;color:var(--ink,inherit)">Experience</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+        + '<div><label>Started in the trade</label><input id="emp-sty" type="number" min="1940" max="' + new Date().getFullYear() + '" placeholder="e.g. 2012" value="' + esc(f.started_trade_year || '') + '"></div>'
+        + '<div><label>With you since</label><input id="emp-hired" type="date" value="' + esc(f.hired_on || (f.created_at ? String(f.created_at).slice(0, 10) : '')) + '"></div></div>'
+      + '<label>Skills <span class="bpx-mut" style="font-weight:400">(comma separated)</span></label>' + inp('skills', 'Shingle, Flat roof, Gutters', (f.skills || []).join(', '))
+      + '<label>Certifications</label>' + inp('certs', 'OSHA 30, manufacturer certified installer', f.certifications)
+      + '<label>About them</label><textarea id="emp-bio" rows="2" maxlength="600" placeholder="A line or two. They see this on their ID.">' + esc(f.bio || '') + '</textarea>'
+      + '<label>Notes</label>' + inp('notes', 'Who to call, anything else', f.notes)
       + '<div class="bpx-mmsg" id="bpx-mmsg"></div>'
       + '<div class="row" style="justify-content:space-between">'
         + (e ? '<span class="bpx-skip" onclick="bpEmpDel(\'' + e.id + '\')">Remove</span>' : '<span></span>')
@@ -278,11 +310,11 @@
      so it updates live rather than sitting in help nobody opens. */
   window.bpEmpKind = function () {
     var kind = ($('emp-kind') || {}).value, pt = ($('emp-pt') || {}).value;
-    var rate = window.bpParseMoney ? bpParseMoney(($('emp-rate') || {}).value || '0') : 0;
+    var amt = window.bpParseMoney ? bpParseMoney(($('emp-rate') || {}).value || '0') : 0;
     var bur = +($('emp-burden') || {}).value || 0;
     var lab = $('emp-ratelab'); if (lab) lab.textContent = pt === 'hourly' ? 'Per hour' : pt === 'day' ? 'Per day' : 'Per year';
     var hint = $('emp-hint'); if (!hint) return;
-    var per = pt === 'hourly' ? rate : pt === 'day' ? rate / 8 : rate / 2080;
+    var per = pt === 'hourly' ? amt : pt === 'day' ? amt / 8 : amt / 2080;
     if (kind === '1099') {
       hint.innerHTML = 'A 1099 subcontractor invoices you, so there is no payroll tax or comp on top — leave the extra at 0. '
         + 'Whether someone really is a subcontractor is a legal test, not a preference; if you direct their hours and supply their tools, '
@@ -311,10 +343,33 @@
       burden_pct: kind === '1099' ? 0 : Math.max(0, Math.min(200, +($('emp-burden') || {}).value || 0)),
       notes: g('notes')
     };
+    var sty = parseInt(g('sty'), 10), yr = new Date().getFullYear();
+    var prof = {
+      started_trade_year: sty >= 1940 && sty <= yr ? sty : null,
+      skills: g('skills').split(',').map(function (x) { return x.trim(); }).filter(Boolean).slice(0, 20),
+      certifications: g('certs') || null,
+      bio: (($('emp-bio') || {}).value || '').trim().slice(0, 600) || null
+    };
+    if (g('hired')) prof.hired_on = g('hired');
+    Object.keys(prof).forEach(function (k) { row[k] = prof[k]; });
+    if (S.sample) {   /* example portal: nothing to save to */
+      if (id) Object.assign(bpEmpById(id) || {}, row);
+      else S.emps.push(Object.assign({ id: 'sx-' + Date.now(), active: true, created_at: new Date().toISOString() }, row));
+      bpCloseModal(); render(); return;
+    }
     var btn = $('emp-go'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
-    var q = id ? BP_SB.from('employees').update(row).eq('id', id)
-               : BP_SB.from('employees').insert(Object.assign({ owner: window.bpOwnerId ? bpOwnerId() : undefined }, row));
-    Promise.resolve(q).then(function (r) {
+    var send = function (r0) {
+      return id ? BP_SB.from('employees').update(r0).eq('id', id)
+                : BP_SB.from('employees').insert(Object.assign({ owner: window.bpOwnerId ? bpOwnerId() : undefined }, r0));
+    };
+    Promise.resolve(send(row)).then(function (r) {
+      /* the experience columns not migrated yet: save the rest */
+      if (r && r.error && /started_trade_year|hired_on|skills|certifications|bio/.test(String(r.error.message || ''))) {
+        Object.keys(prof).forEach(function (k) { delete row[k]; });
+        return send(row);
+      }
+      return r;
+    }).then(function (r) {
       if (r && r.error) throw r.error;
       bpCloseModal(); bpCrewLoad(true).then(render);
     }, function (e) {
@@ -327,6 +382,7 @@
   window.bpEmpToggle = function (id) {
     var e = bpEmpById(id); if (!e) return;
     e.active = !e.active; render();
+    if (S.sample) return;
     Promise.resolve(BP_SB.from('employees').update({ active: e.active }).eq('id', id))
       .then(function () {}, function () { e.active = !e.active; render(); });
   };

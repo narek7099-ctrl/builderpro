@@ -547,9 +547,54 @@
         + '<div class="ca-phacts"><button class="pm-btn" onclick="bpCrewPhoto()"><span class="ms">photo_camera</span>' + (e.photo ? 'Change photo' : 'Add a photo') + '</button>'
           + (e.photo ? '<button class="pm-btn ghost" onclick="bpCrewPhotoRemove()"><span class="ms">delete</span>Remove</button>' : '') + '</div><div class="ca-msg" id="ca-phmsg" style="text-align:center"></div>'
         + '<div class="bpx-panel ca-idinfo">' + (e.phone ? '<div><span>Phone</span><b>' + esc(e.phone) + '</b></div>' : '') + (e.email ? '<div><span>Email</span><b>' + esc(e.email) + '</b></div>' : '')
-          + '<div><span>Employer</span><b>' + esc(b.name || '') + (b.phone ? ' · ' + esc(b.phone) : '') + '</b></div></div></div>';
+          + '<div><span>Employer</span><b>' + esc(b.name || '') + (b.phone ? ' · ' + esc(b.phone) : '') + '</b></div></div>'
+        + recordHtml(e, C.me.stats, C.me.reviews) + '</div>';
       AV.fill(area());
     }).catch(fail);
+  };
+  /* My record: jobs completed, what customers said (first names only),
+     experience. No money: crew_me() leaves job value out. */
+  function starsHtml(r, sz) {
+    if (window.bpStars) return bpStars(r, sz);
+    var h = ''; for (var i = 1; i <= 5; i++) h += '<span class="rv-st' + (r >= i - .25 ? ' on' : '') + '">\u2605</span>'; return '<span class="rv-stars">' + h + '</span>';
+  }
+  function recordHtml(e, st, revs) {
+    st = st || {}; revs = Array.isArray(revs) ? revs : [];
+    var yr = new Date().getFullYear(), exp = +e.startedTradeYear ? Math.max(0, yr - (+e.startedTradeYear)) : null;
+    var hired = e.hiredOn || e.since, hd = hired ? new Date(String(hired).length <= 10 ? hired + 'T12:00:00' : hired) : null;
+    var mo = hd && !isNaN(hd) ? Math.max(0, Math.round((Date.now() - hd.getTime()) / (30.44 * 864e5))) : null;
+    var ten = mo == null ? '—' : mo < 12 ? (mo <= 1 ? 'New' : mo + ' mo') : Math.floor(mo / 12) + ' yr' + (Math.floor(mo / 12) === 1 ? '' : 's');
+    var n = +st.reviews || 0, avg = +st.rating || 0, skills = Array.isArray(e.skills) ? e.skills.filter(Boolean) : [];
+    return '<div class="bpx-panel ca-rec"><div class="ca-recp"><h4>My record</h4><button class="bpx-rowbtn" onclick="bpCrewProfileEdit()"><span class="ms" style="font-size:15px;vertical-align:-3px">edit</span> About me</button></div>'
+      + '<div class="ca-rech">' + (n ? '<b>' + avg.toFixed(1) + '</b>' + starsHtml(avg, 20) + '<span class="bpx-mut" style="font-size:13px">' + n + ' review' + (n === 1 ? '' : 's') + '</span>'
+          : '<span class="bpx-mut" style="font-size:13.5px">No customer ratings yet. They show up here after a job is finished.</span>') + '</div>'
+      + '<div class="ca-recg"><div><b>' + (+st.jobsDone || 0) + '</b><span>jobs completed</span></div>'
+        + '<div><b>' + (exp == null ? '—' : exp) + '</b><span>' + (exp == null ? 'years experience' : 'yr' + (exp === 1 ? '' : 's') + ' experience') + '</span></div>'
+        + '<div><b>' + ten + '</b><span>with ' + esc((C.me.business && C.me.business.name) || 'the company') + '</span></div></div>'
+      + (e.bio ? '<p class="rv-bio" style="margin:12px 0 0">' + esc(e.bio) + '</p>' : '')
+      + (skills.length ? '<div class="rv-chips" style="margin-top:10px">' + skills.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</div>' : '')
+      + (e.certifications ? '<div class="rv-cert" style="margin-top:6px"><span class="ms">workspace_premium</span>' + esc(e.certifications) + '</div>' : '')
+      + (revs.length ? '<div class="ca-recs">' + revs.slice(0, 6).map(function (r) {
+          return '<div class="rv-rev"><div class="rv-revh">' + starsHtml(+r.rating || 0, 13) + '<b>' + esc(r.customer || 'Customer') + '</b><em>' + pretty(r.at) + '</em></div>'
+            + (r.comment ? '<p>' + esc(r.comment) + '</p>' : '') + '</div>';
+        }).join('') + '</div>' : '')
+      + '</div>';
+  }
+  window.bpCrewProfileEdit = function () {
+    var e = C.me && C.me.employee; if (!e) return;
+    bpModal('<h3>About me</h3><div class="bpx-sub">Your boss sees this on your profile. Your experience and start date are set by the office.</div>'
+      + '<label>A line about you</label><textarea id="ca-bio" rows="3" maxlength="600" placeholder="e.g. Ten years on steep roofs, love a clean job site.">' + esc(e.bio || '') + '</textarea>'
+      + '<label>Skills <span class="bpx-mut" style="font-weight:400">(comma separated)</span></label><input id="ca-skills" placeholder="Shingle, Flat roof, Gutters" value="' + esc((e.skills || []).join(', ')) + '">'
+      + '<div class="ca-msg" id="ca-pmsg"></div>'
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="ca-pgo" onclick="bpCrewProfileSave()">Save</button></div>');
+  };
+  window.bpCrewProfileSave = function () {
+    var bio = (($('ca-bio') || {}).value || '').trim(), sk = (($('ca-skills') || {}).value || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    var go = $('ca-pgo'); if (go) { go.disabled = true; go.textContent = 'Saving…'; }
+    Promise.resolve(BP_SB.rpc('crew_set_profile', { p_bio: bio, p_skills: sk })).then(function (r) {
+      if (r && r.error) throw r.error; if (!r || !r.data) throw new Error('not saved');
+      bpCloseModal(); bpCrewId();
+    }).catch(function () { if (go) { go.disabled = false; go.textContent = 'Save'; } var m = $('ca-pmsg'); if (m) { m.className = 'ca-msg bad'; m.textContent = 'Couldn’t save. Try again.'; } });
   };
   function phMsg(t, cls) { var m = $('ca-phmsg'); if (m) { m.className = 'ca-msg ' + (cls || ''); m.textContent = t; } }
   function setPhoto(ref) {
