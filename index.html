@@ -33864,6 +33864,7 @@ window.bpProjOpen=function(id){
   _bpProjId=id; j.sched=j.sched||{}; j.photos=j.photos||[];
   _bpProjDates=(j.sched.dates||[]).slice();
   _bpProjExp=(j.expenses||[]).map(function(e){return Object.assign({},e);});
+  window._bpProjExp0=(j.expenses||[]).map(function(e){return {key:e.key};});
   _bpProjBudget=Object.assign({},j.budget||{});
   // one-time migrate: old start/target/weekday schedules become real booked dates
   if(!_bpProjDates.length&&j.sched.start){
@@ -34452,7 +34453,10 @@ window.bpProjSave=function(){
   j.budget={};
   bpBudgetCats().forEach(function(c){ var v=+(_bpProjBudget||{})[c]||0; if(v>0)j.budget[c]=v; });
   if(!Object.keys(j.budget).length)delete j.budget;
+  var expBefore=j.expenses||[];
   j.expenses=_bpProjExp.map(function(e){return Object.assign({},e,{cat:e.cat,amt:bpParseMoney(e.amt),note:e.note||'',key:e.key||''});}).filter(function(e){return e.amt>0;});
+  /* crew receipts: an expense deleted here takes its receipt with it */
+  if(window.bpCrewRcKeep)bpCrewRcKeep(j,window._bpProjExp0,expBefore);
   var dates=_bpProjDates.slice().sort();
   var t0=g('bpx-pj-time'),t1=g('bpx-pj-end');
   var mins=function(t){var p=String(t).split(':');return (+p[0])*60+(+p[1]||0);};
@@ -34468,6 +34472,7 @@ window.bpJobDoneOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
   _bpJobDoneId=id;
   _bpJobExpDraft=(j.expenses||[]).map(function(e){return {cat:e.cat,amt:e.amt,note:e.note,key:e.key};});
+  window._bpJobExpDraft0=(j.expenses||[]).map(function(e){return {key:e.key};});
   if(!_bpJobExpDraft.length) _bpJobExpDraft=[{cat:'Materials',amt:''}];
   bpModal('<h3>'+(j.status==='done'?'Edit job':'Mark job done')+' — '+bpEsc(j.name)+'</h3>'
     +'<div class="bpx-sub">'+bpEsc(j.title||'Job')+' · everything below is optional.</div>'
@@ -34504,7 +34509,11 @@ window.bpJobDoneSave=function(id,skip){
   if(!skip){
     var col=bpParseMoney((q('bpx-jd-col')||{}).value);
     j.collected= col>0 ? col : (j.collected!=null?j.collected:null);
-    j.expenses=_bpJobExpDraft.map(function(e){return {cat:e.cat,amt:bpParseMoney(e.amt),note:e.note||'',key:e.key||''};}).filter(function(e){return e.amt>0;});
+    var expBefore=j.expenses||[], byKey={};
+    expBefore.forEach(function(e){ if(e&&e.key)byKey[e.key]=e; });
+    /* keep what the form doesn't show (receipt links, crew marks) on expenses it kept */
+    j.expenses=_bpJobExpDraft.map(function(e){return Object.assign({},e.key&&byKey[e.key]||{},{cat:e.cat,amt:bpParseMoney(e.amt),note:e.note||'',key:e.key||''});}).filter(function(e){return e.amt>0;});
+    if(window.bpCrewRcKeep)bpCrewRcKeep(j,window._bpJobExpDraft0,expBefore);
   }
   j.status='done'; j.doneAt=j.doneAt||Date.now();
   bpJobsSet(jobs); bpCloseModal();

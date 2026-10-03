@@ -65,7 +65,6 @@
     var s = ML.seenAt(j.id);
     return m.log.filter(function (e) { return e && e.by && e.by.role === 'crew' && +e.at > s; }).length;
   };
-  ML.pendingReceipts = function (j) { return ((j && j.crewReceipts) || []).filter(function (r) { return r && r.status === 'pending'; }).length; };
   ML.seen = function (jid) {
     if (!jid) return; var a = seenAll(); a[jid] = Date.now();
     try { localStorage.setItem('bpMatSeen', JSON.stringify(a)); } catch (e) {}
@@ -74,11 +73,11 @@
   /* "2 new" on the project's Materials tab */
   ML.badgeTab = function (jid) {
     var b = document.querySelector('[data-pj-tab="materials"]'); if (!b || jid !== window._bpProjId) return;
-    var j = jobById(jid), n = ML.newCount(j), p = ML.pendingReceipts(j), x = b.querySelector('.ml-newb');
-    var t = n ? n + ' new' : p ? p + ' receipt' + (p === 1 ? '' : 's') : '';
+    var j = jobById(jid), n = ML.newCount(j), x = b.querySelector('.ml-newb');
+    var t = n ? n + ' new' : '';
     if (!t) { if (x) x.remove(); return; }
     if (!x) { x = document.createElement('span'); x.className = 'ml-newb'; b.appendChild(x); }
-    x.textContent = t; x.title = (n ? n + ' change' + (n === 1 ? '' : 's') + ' by the crew since you last looked' : '') + (p ? (n ? '; ' : '') + p + ' crew receipt' + (p === 1 ? '' : 's') + ' to approve' : '');
+    x.textContent = t; x.title = n + ' change' + (n === 1 ? '' : 's') + ' by the crew since you last looked';
   };
   document.addEventListener('click', function (e) {
     var t = e.target && e.target.closest && e.target.closest('[data-pj-tab="materials"]');
@@ -90,7 +89,7 @@
   function idsOf(a) { var o = {}; (a || []).forEach(function (x) { if (x && x.id) o[x.id] = 1; }); return o; }
   ML.mergeCrew = function (lj, sj) {
     if (!lj || !sj) return false;
-    var before = JSON.stringify([lj.materials || null, lj.crewReceipts || null, lj.crewReceiptsGone || null]);
+    var before = JSON.stringify([lj.materials || null, lj.crewReceipts || null, lj.crewReceiptsGone || null, lj.expenses || null]);
     var sm = sj.materials && typeof sj.materials === 'object' ? sj.materials : null;
     if (sm) {
       var m = listOf(lj, true), gone = {};
@@ -114,8 +113,14 @@
       }).concat((sj.crewReceipts || []).filter(function (r) { return r && r.id && !mine[r.id] && !rg[r.id]; }));
       lj.crewReceiptsGone = Object.keys(rg);
       if (!lj.crewReceiptsGone.length) delete lj.crewReceiptsGone;
+      /* crew receipts are expenses the moment they are posted ('crewrc:<id>') */
+      var isCrew = function (e) { return e && typeof e.key === 'string' && e.key.indexOf('crewrc:') === 0; };
+      var hk = {}; (lj.expenses || []).forEach(function (e) { if (e && e.key) hk[e.key] = 1; });
+      var add = (sj.expenses || []).filter(function (e) { return isCrew(e) && !hk[e.key] && !rg[e.key.slice(7)]; });
+      var drop = (lj.expenses || []).some(function (e) { return isCrew(e) && rg[e.key.slice(7)]; });
+      if (add.length || drop) lj.expenses = (lj.expenses || []).filter(function (e) { return !(isCrew(e) && rg[e.key.slice(7)]); }).concat(add);
     }
-    return JSON.stringify([lj.materials || null, lj.crewReceipts || null, lj.crewReceiptsGone || null]) !== before;
+    return JSON.stringify([lj.materials || null, lj.crewReceipts || null, lj.crewReceiptsGone || null, lj.expenses || null]) !== before;
   };
   var syncAt = 0, syncing = null;
   ML.sync = function (force) {
@@ -443,8 +448,9 @@
       approve: 'approved ' + it + (q ? ' (' + esc(q) + ')' : ''),
       status: 'marked the list <b>' + esc(e.after === 'sent' ? 'sent to supplier' : e.after === 'received' ? 'received' : 'draft') + '</b>',
       lock: 'locked the list for crew', unlock: 'unlocked the list for crew',
-      receipt: 'uploaded a receipt <b>' + amt + '</b>' + (e.item && e.item !== 'Receipt' ? ' · ' + esc(e.item) : ''),
-      'receipt-remove': 'withdrew a receipt <b>' + amt + '</b>',
+      receipt: 'added a receipt <b>' + amt + '</b>' + (e.item && e.item !== 'Receipt' ? ' · ' + esc(e.item) : ''),
+      'receipt-remove': 'deleted a receipt <b>' + amt + '</b>' + (e.item && e.item !== 'Receipt' ? ' · ' + esc(e.item) : ''),
+      'receipt-delete': 'deleted a receipt <b>' + amt + '</b>' + (e.whose ? ' from ' + esc(String(e.whose).split(' ')[0]) : ''),
       'receipt-approve': 'approved a receipt <b>' + amt + '</b>' + (e.whose ? ' from ' + esc(String(e.whose).split(' ')[0]) : ''),
       'receipt-reject': 'rejected a receipt <b>' + amt + '</b>' + (e.whose ? ' from ' + esc(String(e.whose).split(' ')[0]) : '')
     }[e.action] || esc(e.action || 'changed') + ' ' + it;
@@ -605,10 +611,9 @@
       + rows.map(function (j) {
         var m = j.materials, n = m && m.items ? m.items.length : 0;
         var sups = m ? bySupplier(m.items).map(function (g) { return g.name; }) : [];
-        var nw = ML.newCount(j), pr = ML.pendingReceipts(j);
+        var nw = ML.newCount(j);
         return '<tr class="ml-jrow" onclick="ML.open=\'' + j.id + '\';bpMatLists()"><td data-l="Job"><b>' + esc(j.name || 'Job') + '</b>'
           + (nw ? ' <span class="ml-newb" title="Changes by the crew since you last looked">' + nw + ' new change' + (nw === 1 ? '' : 's') + '</span>' : '')
-          + (pr ? ' <span class="ml-newb rc" title="Crew receipts waiting for you">' + pr + ' receipt' + (pr === 1 ? '' : 's') + ' to approve</span>' : '')
           + '<div class="bpx-mut ml-small">' + esc(j.title || '') + (j.status === 'done' ? ' &middot; done' : '') + '</div></td>'
           + '<td data-l="Items" class="ml-n">' + n + '</td><td data-l="Estimated" class="ml-n">' + (n ? money(ML.total(j)) : '—') + '</td>'
           + '<td data-l="Status">' + (n || m ? statusPill(m.status) : '<span class="bpx-mut ml-small">No list</span>') + '</td>'
