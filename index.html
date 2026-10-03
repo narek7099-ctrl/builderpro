@@ -34829,7 +34829,7 @@ window.bpCtNew=function(){
     +'<div class="bpx-mmsg" id="bpx-ct-msg"></div>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-ct-save" onclick="bpCtSave()">Create contract</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='680px';mc.style.width='95vw';}
-  bpUsLoad().then(bpUsCtBlock);
+  _bpUs.signCt=false; bpUsLoad().then(bpUsCtBlock);
 };
 window.bpCtSave=function(){
   var g=function(id){var e=q(id);return e?e.value.trim():'';};
@@ -34849,7 +34849,7 @@ window.bpCtSave=function(){
       customer_name:name,customer_email:g('bpx-ct-email')||null,customer_phone:j.phone||null,
       address:g('bpx-ct-addr')||null,body:body,scope:j.title||null,
       amount:amt||null,deposit:+g('bpx-ct-dep').replace(/[^0-9.]/g,'')||null
-    },us?{contractor_signature:us.image,contractor_name:us.name||null,contractor_signed_at:new Date().toISOString()}:{})).select();
+    },us&&_bpUs.signCt?{contractor_signature:us.image,contractor_name:us.name||null,contractor_signed_at:new Date().toISOString()}:{})).select();
   }).then(function(r){
     if(r&&r.error)throw r.error;
     bpCloseModal(); bpCtLoad(j);
@@ -34918,7 +34918,7 @@ function bpCtDoc(c,signed){
 window.bpCtView=function(id){
   var c=bpCtRow(id); if(!c)return;
   bpModal('<h3>'+bpEsc(c.title||'Agreement')+' '+bpCtStatus(c)+'</h3>'+bpCtDoc(c,c.status==='signed')
-    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'+(c.status==='signed'?'<button class="bpx-btn" onclick="bpCtPrint(\''+c.id+'\')">Print / save PDF</button>':'')+'</div>');
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>'+(!c.contractor_signature&&c.status!=='void'&&c.status!=='declined'?'<button class="bpx-btn" onclick="bpCtSignSaved(\''+c.id+'\')"><span class=ms>signature</span> Sign</button>':'')+(c.status==='signed'?'<button class="bpx-btn" onclick="bpCtPrint(\''+c.id+'\')">Print / save PDF</button>':'')+'</div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='720px';mc.style.width='95vw';}
 };
 window.bpCtPrint=function(id){
@@ -35042,16 +35042,34 @@ window.bpUsSettings=bpUsSettings;
 function bpUsCtBlock(){
   var h=q('bpx-ct-usig'); if(!h)return;
   var r=_bpUs.row;
+  if(r&&_bpUs.signCt){
+    h.innerHTML='<div class="bpx-us-ct"><div class="bpx-us-ct-h"><span class="ms">verified</span> Signed by you as <b>'+bpEsc(r.name||'')+'</b> <button type="button" class="bpx-rowbtn" style="margin-left:auto" onclick="bpUsCtSign(false)">Undo</button></div>'+bpUsShow(r)+'</div>';
+    return;
+  }
   if(r){
-    h.innerHTML='<div class="bpx-us-ct"><div class="bpx-us-ct-h"><span class="ms">verified</span> Signed by you as <b>'+bpEsc(r.name||'')+'</b></div>'+bpUsShow(r)
-      +'<div class="bpx-mut" style="font-size:11.5px">Your saved signature goes on this contract as the Contractor. Change it in Settings › Your signature.</div></div>';
+    h.innerHTML='<div class="bpx-us-ct"><div class="bpx-us-ct-h"><span class="ms">draw</span> Contractor signature</div>'
+      +'<div class="bpx-mut" style="font-size:11.5px;margin-bottom:8px">Tap Sign to put your saved signature on this contract. You can also sign it later from the contract.</div>'
+      +'<button type="button" class="bpx-btn" id="bpx-ct-signbtn" onclick="bpUsCtSign(true)"><span class="ms">signature</span> Sign</button></div>';
     return;
   }
   h.innerHTML='<div class="bpx-us-ct"><div class="bpx-us-ct-h"><span class="ms">draw</span> Add your signature <span class="bpx-mut" style="font-weight:400">— optional</span></div>'
-    +'<div class="bpx-mut" style="font-size:11.5px;margin-bottom:8px">Sign once and it\'s saved, so every contract after this goes out already signed by you. Skip it and this one goes without.</div>'
+    +'<div class="bpx-mut" style="font-size:11.5px;margin-bottom:8px">Draw it once and it\'s saved. After that you just tap Sign on any contract.</div>'
     +bpUsEditor('ct')+'</div>';
   bpUsMount('ct',function(){ bpUsCtBlock(); });
 }
+window.bpUsCtSign=function(on){ _bpUs.signCt=!!on; bpUsCtBlock(); };
+/* sign an already-created contract with the saved signature */
+window.bpCtSignSaved=function(id){
+  var c=bpCtRow(id); if(!c)return;
+  if(!_bpUs.loaded){ bpUsLoad().then(function(){ bpCtSignSaved(id); }); return; }
+  var r=_bpUs.row;
+  if(!r){ bpCloseModal(); _bpSetSec='signature'; bpNav('settings'); bpToast('Save your signature first, then tap Sign on the contract.'); return; }
+  var patch={contractor_signature:r.image,contractor_name:r.name||null,contractor_signed_at:new Date().toISOString()};
+  Promise.resolve(BP_SB.from('contracts').update(patch).eq('id',id)).then(function(x){
+    if(x&&x.error)throw x.error;
+    Object.assign(c,patch); bpCtView(id); bpCtRender&&bpCtRender();
+  }).then(null,function(){ bpToast('Couldn\'t sign it. Try again.','error'); });
+};
 /* both halves of the signature block — contractor (if they signed) and owner */
 function bpCtCompany(c){ var m=/between (.+?) \("Contractor"\)/.exec((c&&c.body)||''); return (m&&m[1])||(((bpSettingsGet()||{}).company||{}).name)||'Contractor'; }
 function bpCtSigBlocks(c,cls,ownerPending){
