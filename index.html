@@ -33409,7 +33409,7 @@ function bpActiveJobs(){
       if(j.sched&&j.sched.dates&&j.sched.dates.length)extra.push(j.sched.dates.length+' day'+(j.sched.dates.length===1?'':'s')+' booked'+(j.sched.time?' · '+bpProjTimeLbl(j.sched.time,j.sched.dur):''));
       else if(j.sched&&j.sched.days&&j.sched.days.length)extra.push(j.sched.days.join(', ')+(j.sched.hours?' · '+bpEsc(j.sched.hours)+'h/day':''));
       if(j.photos&&j.photos.length)extra.push(j.photos.length+' photo'+(j.photos.length===1?'':'s'));
-      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-mark'+(j.starred?' on':'')+'" title="'+(j.starred?'Unmark':'Mark: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'Marked':'Mark')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(window.bpPermitChip&&(j.permits||[]).length?'<div class="pjrow-chip" style="margin-left:52px">'+bpPermitChip(j)+'</div>':'')+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
+      return '<tr style="cursor:pointer" onclick="bpProjOpen(\''+j.id+'\')"><td><div style="display:flex;align-items:center;gap:6px"><button class="pj-mark'+(j.starred?' on':'')+'" title="'+(j.starred?'Unmark':'Mark: pin it to the top')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')">'+(j.starred?'Marked':'Mark')+'</button><div style="flex:1;min-width:0">'+bpJobCell(j)+(window.bpPermitChip&&(j.permits||[]).length?'<div class="pjrow-chip" style="margin-left:52px">'+bpPermitChip(j)+'</div>':'')+(window.bpJobWhoLbl&&bpJobWhoLbl(j)?'<div class="pjrow-who" style="margin-left:52px;margin-top:3px;font-size:11.5px"><span class="bpx-mut"><span class="ms" style="font-size:14px;vertical-align:-3px">groups</span> '+bpEsc(bpJobWhoLbl(j))+'</span></div>':'')+(extra.length?'<div class="bpx-mut" style="font-size:11.5px;margin-top:2px;margin-left:52px">'+extra.join(' · ')+'</div>':'')+'</div></div></td><td class="bpx-r bpx-num">'+bpMoneyFmt(j.estimate)+'</td><td style="min-width:150px">'+(window.bpPlan?(bpPlan.of(j)?bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div>':'<button class="bpx-rowbtn" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')">Plan the phases</button>'):'')+'</td><td class="bpx-mut" style="white-space:nowrap">'+(bpJobDates(j)||'<span class="bpx-dash">—</span>')+'</td><td><span class="bpx-badge">In progress</span></td>'
         +'<td class="bpx-r" style="white-space:nowrap"><button class="bpx-rowbtn" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Details</button> <button class="bpx-donebtn" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done <span class=ms>check</span></button></td></tr>';
     }).join(''):'<tr><td colspan="6" style="padding:0"><div class="bpx-emptyhero"><div><b>No active projects yet</b><div class="bpx-mut" style="font-size:13px;margin-top:3px">When a deposit is paid the job lands here automatically — or add one with <b>+ Add job</b>.</div></div></div></td></tr>';
   } else {
@@ -33804,6 +33804,8 @@ window.bpAddJobOpen=function(){
     +'<label>Customer name</label><input id="bpx-nj-name" placeholder="Full name">'
     +'<label>Job</label><input id="bpx-nj-title" placeholder="e.g. Roof replacement">'
     +'<label>Estimate (optional)</label><input id="bpx-nj-est" placeholder="$0">'
+    +(window.pjCrews&&pjCrews().length?'<label>Crew (optional)</label><select id="bpx-nj-crew"><option value="">No crew</option>'+pjCrews().map(function(c){return '<option value="'+c.id+'">'+bpEsc(c.name)+'</option>';}).join('')+'</select>':'')
+    +(window.bpEmpsActive&&bpEmpsActive().length?'<label>People on it (optional)</label><div class="cw-list" id="bpx-nj-people">'+bpEmpsActive().map(function(e){return '<label class="cw-row"><input type="checkbox" value="'+bpEsc(e.id)+'"><span class="cw-n"><b>'+bpEsc(e.name)+'</b>'+(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')+'</span></label>';}).join('')+'</div>':'')
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" onclick="bpAddJobSave()">Add job</button></div>');
 };
@@ -33812,6 +33814,9 @@ window.bpAddJobSave=function(){
   if(!nm){ q('bpx-mmsg').style.color='#dc2626'; q('bpx-mmsg').textContent='Enter a customer name.'; return; }
   var jobs=bpJobsGet();
   jobs.unshift({id:'j'+Date.now()+Math.floor(Math.random()*1000),name:nm,phone:'',title:((q('bpx-nj-title')||{}).value||'Job').trim()||'Job',estimate:bpParseMoney((q('bpx-nj-est')||{}).value),collected:null,status:'active',expenses:[],dealId:null,wonAt:Date.now(),doneAt:null});
+  var njc=q('bpx-nj-crew'); if(njc&&njc.value) jobs[0].crew=njc.value;
+  var ppl=[].slice.call(document.querySelectorAll('#bpx-nj-people input:checked')).map(function(x){ var e=bpEmpById(x.value); return e?bpJobAssigneeEntry(e):null; }).filter(Boolean);
+  if(ppl.length) jobs[0].assignees=ppl;
   bpJobsSet(jobs); bpCloseModal(); bpActiveJobs();
 };
 /* project details: schedule, notes, photos (synced to the cloud with the project) */
@@ -33907,7 +33912,7 @@ window.bpProjOpen=function(id){
       '<label style="margin-top:0">Who is on this job</label>'
       +'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">Assign your people, then log the days they work. '
         +'Those hours become the labour line on this job\u2019s budget \u2014 at what they really cost you, not at their wage.</div>'
-      +'<div id="bpx-pj-crew"></div>')
+      +'<div id="bpx-pj-people"></div>')
     +pane('materials',
       '<label style="margin-top:0">Materials</label><div class="bpx-mut" style="font-size:12px;margin-bottom:8px">The material list for this job: what it needs, how many, and from whom. Anything added after it is sent can become a change order.</div>'
       +'<div id="bpx-pj-mat"><div class="bpx-empty2">Loading\u2026</div></div>')
@@ -34131,8 +34136,28 @@ var _bpProjExp=[];
    The assignment lives on the job itself, since the job is already a blob
    and "who is on this" is part of it. The hours live in their own table,
    because they accumulate forever and get asked questions of. */
+/* Who is on a job: j.crew is ONE crew id (string), j.assignees the people
+   booked on it directly: [{employeeId, teamId, name}]. teamId is the
+   employee's team login (employees.team_id) so the crew portal can match.
+   Older jobs kept a bare array of employee ids in j.crew; read as assignees. */
+function bpJobAssignees(j){
+  if(!j) return [];
+  var out=(Array.isArray(j.assignees)?j.assignees:[]).filter(function(a){return a&&a.employeeId;});
+  if(Array.isArray(j.crew)) j.crew.forEach(function(id){
+    if(id&&!out.some(function(a){return a.employeeId===id;})){ var e=window.bpEmpById?bpEmpById(id):null; out.push({employeeId:id,teamId:(e&&e.team_id)||null,name:(e&&e.name)||''}); }
+  });
+  return out;
+}
+window.bpJobAssignees=bpJobAssignees;
+function bpJobAssigneeEntry(e){ return {employeeId:e.id,teamId:e.team_id||null,name:e.name||''}; }
+/* "Crew A · Mark Jones, Ana Ruiz" for lists and calendars ('' when nobody) */
+window.bpJobWhoLbl=function(j){
+  var cr=(window.pjCrew&&typeof j.crew==='string')?pjCrew(j.crew):null;
+  var ppl=bpJobAssignees(j).map(function(a){ var e=window.bpEmpById?bpEmpById(a.employeeId):null; return (e&&e.name)||a.name||''; }).filter(Boolean);
+  return (cr?cr.name:'')+(cr&&ppl.length?' · ':'')+ppl.join(', ');
+};
 function bpProjCrewRender(){
-  var el=document.getElementById('bpx-pj-crew'); if(!el)return;
+  var el=document.getElementById('bpx-pj-people'); if(!el)return;
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
   if(!window.BP_CREW||!window.bpEmpsActive){
     el.innerHTML='<div class="bpx-empty2">Loading your crew…</div>'; return;
@@ -34146,7 +34171,7 @@ function bpProjCrewRender(){
       +'onclick="bpCloseModal();bpNav(\'employees\')">Open Employees</button></div>';
     return;
   }
-  var on=(j.crew||[]).slice();
+  var on=bpJobAssignees(j).map(function(a){return a.employeeId;});
   var tally=bpProjHours(j.id), cost=bpProjLabour(j.id);
 
   var sum=(tally.hours>0||tally.ot>0)
@@ -34176,7 +34201,10 @@ function bpProjCrewRender(){
       +'</label>';
   }).join('');
 
-  el.innerHTML=sum+'<div class="cw-list">'+rows+'</div>'
+  var crw=(typeof j.crew==='string'&&window.pjCrew)?pjCrew(j.crew):null;
+  el.innerHTML=sum
+    +(crw?'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">Crew <b>'+bpEsc(crw.name)+'</b> is on this job too (change it on Details). Tick anyone else to add them on their own.</div>':'')
+    +'<div class="cw-list">'+rows+'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
     +'<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpHoursOpen(\''+j.id+'\')">+ Log a day</button>'
     +'<button class="bpx-rowbtn" onclick="bpCloseModal();bpNav(\'employees\')">All hours</button></div>'
@@ -34187,9 +34215,12 @@ function bpProjCrewRender(){
 
 window.bpProjCrewSet=function(empId,on){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
-  var list=(j.crew||[]).filter(function(x){return x!==empId;});
-  if(on)list.push(empId);
-  j.crew=list;
+  var list=bpJobAssignees(j).filter(function(a){return a.employeeId!==empId;});
+  var e=on&&window.bpEmpById?bpEmpById(empId):null;
+  if(on) list.push(e?bpJobAssigneeEntry(e):{employeeId:empId,teamId:null,name:''});
+  j.assignees=list;
+  if(Array.isArray(j.crew)) delete j.crew;   /* legacy people list now lives in assignees */
+  var sel=q('bpx-pj-crew'); if(sel&&sel.value) j.crew=sel.value;
   bpJobsSet(jobs);
   bpProjCrewRender();
 };
@@ -34429,7 +34460,7 @@ window.bpProjSave=function(){
   var oldSlots=(j.sched&&j.sched.slots)||{}, slots={};
   dates.forEach(function(dd){ if(oldSlots[dd]) slots[dd]=oldSlots[dd]; });
   j.sched={notes:g('bpx-pj-notes'),dates:dates,time:t0,end:t1,dur:String(dur),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:'',slots:slots};
-  var crSel=q('bpx-pj-crew'); if(crSel) j.crew=crSel.value||undefined;
+  var crSel=q('bpx-pj-crew'); if(crSel&&crSel.tagName==='SELECT'){ if(Array.isArray(j.crew)){ j.assignees=bpJobAssignees(j); } j.crew=crSel.value||undefined; }
   bpJobsSet(jobs); bpCloseModal();
   if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
 };

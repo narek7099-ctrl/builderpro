@@ -3,7 +3,7 @@
 
      Clock in    clock in / out at a job, with where they were standing
      My crew     who they work with, and how to reach the office
-     Projects    their crew's active jobs: read the details, add photos,
+     Projects    active jobs assigned to them or their crew: read the details, add photos,
                  documents and blueprints. No money, and no editing.
      My ID       their badge
 
@@ -71,7 +71,7 @@
         body = '<div class="ca-clock"><div class="ca-dot"></div><div class="ca-st"><b>Not clocked in</b><span>Pick the job you’re at, then clock in. Your location is checked against the job address.</span></div></div>'
           + (jobs.length ? (today.length ? '<div class="ca-h">Today</div>' + today.map(function (j, i) { return opt(j, i === 0); }).join('') : '')
               + (rest.length ? '<div class="ca-h">Other projects</div>' + rest.map(function (j, i) { return opt(j, !today.length && i === 0); }).join('') : '')
-            : '<div class="bpx-mut" style="margin:8px 0 12px">No projects for your crew right now. You can still clock in.</div>')
+            : '<div class="bpx-mut" style="margin:8px 0 12px">No projects assigned to you right now. You can still clock in.</div>')
           + '<button class="ca-big" id="ca-go" onclick="bpCrewClockGo(\'in\')"><span class="ms">login</span>Clock in</button>';
       }
       area().innerHTML = '<div class="ca-wrap"><div class="ca-hello">' + hello + ', ' + esc((me.employee.name || '').split(' ')[0]) + '</div>'
@@ -160,7 +160,7 @@
             + (j.addr ? '<small><span class="ms">location_on</span>' + esc(j.addr) + '</small>' : '')
             + (next ? '<small><span class="ms">event</span>' + (next === iso(new Date()) ? 'Today' : new Date(next + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })) + (slotLbl(j, next) ? ' · ' + slotLbl(j, next) : '') + '</small>' : '') + '</div>'
             + '<div class="ca-counts"><span><span class="ms">photo_camera</span>' + (j.photos || []).length + '</span><span><span class="ms">description</span>' + (j.docs || []).length + '</span><span><span class="ms">architecture</span>' + (j.blueprints || []).length + '</span></div></button>';
-        }).join('') : '<div class="bpx-panel ca-empty"><span class="ms">construction</span><b>No projects for your crew</b><p>When your boss books your crew on a job, it shows up here.</p></div>') + '</div>';
+        }).join('') : '<div class="bpx-panel ca-empty"><span class="ms">construction</span><b>No projects for you yet</b><p>When your boss puts you (or your crew) on a job, it shows up here.</p></div>') + '</div>';
     }).catch(fail);
   };
   window.bpCrewJob = function (id) { C.job = id; C.tab = 'photos'; detail(); };
