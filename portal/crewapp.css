@@ -165,3 +165,80 @@
 #bpx .cs-sheet .ca-mate:last-child{border-bottom:0}
 #bpx .cs-sheet .ca-file small{margin-left:auto;font-size:12px;color:var(--grey)}
 #bpx .cs-sheet .ca-add{margin-top:0}
+
+/* ---------- worker record: ratings, jobs done, experience (portal/reviews.js) ---------- */
+#bpx .rv-stars{display:inline-flex;gap:1px;line-height:1;vertical-align:middle}
+#bpx .rv-st{color:var(--line,#d8dde5);font-size:14px}
+#bpx .rv-st.on{color:#f5a524}
+#bpx .rv-st.half{background:linear-gradient(90deg,#f5a524 50%,var(--line,#d8dde5) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
+#bpx .rv-rec{font-size:13px;white-space:nowrap}
+#bpx .rv-rate{font-weight:700;color:#b7791f}
+#bpx .emp-name{border:0;background:none;padding:0;margin:0;width:auto;font:inherit;color:inherit;cursor:pointer;text-align:left}
+#bpx .emp-name:hover b{color:var(--blue,#2f6bff);text-decoration:underline}
+#bpx .emp-sort{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--grey)}
+#bpx .emp-sort select{width:auto;margin:0;padding:6px 10px;font-size:13px;border-radius:10px}
+#bpx .emp-sample{display:flex;gap:8px;align-items:center;font-size:12.5px;padding:9px 12px;border-radius:10px;background:var(--bpc-track,#eef2ff);margin-bottom:12px}
+#bpx .bpx-modalcard.rv-wide{max-width:860px}
+#bpx .rv-ph{display:flex;gap:16px;align-items:center;position:relative;padding-right:30px}
+#bpx .rv-av.bp-av{width:76px;height:76px;font-size:24px}
+#bpx .rv-pn h3{margin:0 0 2px}
+#bpx .rv-kick{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey)}
+#bpx .rv-big{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px}
+#bpx .rv-big b{font-size:18px}
+#bpx .rv-x{position:absolute;top:-6px;right:-6px;width:34px;height:34px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;font-size:24px;color:var(--grey);cursor:pointer}
+#bpx .rv-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:18px 0 6px}
+#bpx .rv-tile{border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+#bpx .rv-tile span{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--grey)}
+#bpx .rv-tile b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}
+#bpx .rv-tile b small{font-size:12px;font-weight:600;color:var(--grey)}
+#bpx .rv-tile em{display:block;font-style:normal;font-size:11.5px;color:var(--grey);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx .rv-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+#bpx .rv-col{min-width:0}
+#bpx .rv-sh{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);margin:16px 0 8px}
+#bpx .rv-dist>div{display:grid;grid-template-columns:34px 1fr 26px;gap:8px;align-items:center;font-size:12.5px;padding:2px 0}
+#bpx .rv-dist i{display:block;height:8px;border-radius:99px;background:var(--bpc-track,#eef0f4);overflow:hidden}
+#bpx .rv-dist i b{display:block;height:100%;background:#f5a524;border-radius:99px}
+#bpx .rv-dist em{font-style:normal;text-align:right;color:var(--grey);font-variant-numeric:tabular-nums}
+#bpx .rv-bio{font-size:13.5px;line-height:1.55;margin:0 0 8px}
+#bpx .rv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+#bpx .rv-chips span{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--bpc-track,#eef2ff)}
+#bpx .rv-cert{display:flex;gap:6px;align-items:center;font-size:13px}
+#bpx .rv-cert .ms{font-size:18px;color:#b7791f}
+#bpx .rv-jobs>div{display:grid;grid-template-columns:1fr auto;gap:0 10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+#bpx .rv-jobs span{color:var(--grey);font-size:12px}
+#bpx .rv-jobs em{font-style:normal;color:var(--grey);font-size:12px;grid-column:2;grid-row:2;text-align:right}
+#bpx .rv-jobs strong{grid-column:2;grid-row:1;text-align:right;font-variant-numeric:tabular-nums}
+#bpx .rv-revs{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}
+#bpx .rv-rev{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+#bpx .rv-revh{display:flex;align-items:center;gap:8px}
+#bpx .rv-revh em{margin-left:auto;font-style:normal;color:var(--grey);font-size:12px}
+#bpx .rv-rev p{margin:6px 0 2px;line-height:1.5}
+#bpx .rv-rev .bpx-mut{font-size:11.5px}
+@media(max-width:760px){#bpx .rv-tiles{grid-template-columns:repeat(2,minmax(0,1fr))} #bpx .rv-cols{grid-template-columns:1fr;gap:0}}
+/* the ask-for-a-review dialog */
+#bpx .rv-askic{width:48px;height:48px;border-radius:14px;background:#fff4dc;color:#d38b00;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+#bpx .rv-askw{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+#bpx .rv-askw>span{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:3px 10px 3px 3px;border:1px solid var(--line);border-radius:99px}
+#bpx .rv-askw .emp-av.bp-av{width:26px;height:26px;font-size:10px}
+#bpx .rv-link{display:flex;gap:8px;align-items:center}
+#bpx .rv-link input{flex:1;min-width:0;margin:0;font-size:13px}
+#bpx .rv-link .bpx-btn{width:auto;margin:0;padding:10px 14px;white-space:nowrap}
+#bpx .rv-acts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+@media(max-width:520px){#bpx .rv-acts{grid-template-columns:1fr}}
+#bpx .rv-acts .bpx-btn{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;text-decoration:none;font-size:13px;padding:10px 8px}
+#bpx .rv-acts .ms{font-size:18px}
+#bpx .rv-again{display:inline-flex;align-items:center;gap:6px;margin:4px 0 6px}
+#bpx .rv-again .ms{font-size:16px;color:#d38b00}
+/* crew My ID: my record */
+#bpx .ca-rec{margin-top:14px}
+#bpx .ca-rec h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.65}
+#bpx .ca-rech{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+#bpx .ca-rech b{font-size:30px;letter-spacing:-.02em}
+#bpx .ca-rech .rv-st{font-size:20px}
+#bpx .ca-recg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#bpx .ca-recg>div{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+#bpx .ca-recg b{display:block;font-size:20px}
+#bpx .ca-recg span{font-size:11.5px;opacity:.65}
+#bpx .ca-recs{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+#bpx .ca-recp{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#bpx .ca-recp .bpx-rowbtn{margin:0}
