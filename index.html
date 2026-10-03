@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
-<script>try{if(/[#&]sign=[a-f0-9]{20,64}/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
+<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64})/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
@@ -29773,7 +29773,7 @@ else bpWatchLock();
    inline style it had when it left */
 window.addEventListener('pageshow',bpSyncLock);
 /* coming back from an ad-account connection lands on the site — open the portal straight away */
-if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
+if(/[?&]connected=/.test(location.search)&&!/[#&](sign|home)=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
 /* Back from connecting Gmail/Outlook. In the tab we opened for it: hand the
    result to the tab that asked, and close. Otherwise open the portal on
    Lead Sources, which reads ?mail= itself. */
@@ -29789,7 +29789,7 @@ if(/[?&]connected=/.test(location.search)&&!/[#&]sign=/.test(location.hash||''))
     window.name='';
     try{ window.close(); }catch(e){}
   }
-  if(!/[#&]sign=/.test(location.hash||'')) setTimeout(bpOpenPortal,60);
+  if(!/[#&](sign|home)=/.test(location.hash||'')) setTimeout(bpOpenPortal,60);
 })();
 window.addEventListener('storage',function(e){
   if(e.key!=='bp-mail-done'||!e.newValue)return;
@@ -34947,6 +34947,7 @@ var _bpUs={row:null,loaded:false,pads:{}};
 function bpPadMount(cv,onDraw){
   var P={drew:false,x:null};
   var fit=function(){
+    if(!document.contains(cv))return;
     var r=cv.getBoundingClientRect(); if(!r.width)return;
     var dpr=Math.min(window.devicePixelRatio||1,3),data=P.drew?cv.toDataURL():null;
     cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
@@ -35145,6 +35146,7 @@ function bpSignRender(){
 function bpSignPad(){
   var cv=document.getElementById('sgPad'); if(!cv)return;
   var fit=function(){
+    if(!document.contains(cv))return;
     var r=cv.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,3);
     var data=cv.width?cv.toDataURL():null;
     cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
@@ -35213,6 +35215,188 @@ function bpSignDone(){
 }
 /* the signing page takes over the whole document when the link carries a token */
 try{ bpSignRoute(); }catch(e){}
+
+/* ===== Customer portal — what the homeowner opens from #home=<token> =======
+   No login, like the signing page: the token is the credential, and every
+   read and write goes through the customer-portal function, which answers
+   for this one job only. Branded with the contractor, not with BuilderPro.
+   Shows progress, schedule, crew (first names), shared photos and documents,
+   contracts, what's paid and due (Pay now), messages and change orders the
+   homeowner approves with a drawn signature (the signing page's pad). ======*/
+var CP_URL=BP_URL+'/functions/v1/customer-portal';
+var _bpHp={token:'',d:null,tab:'overview',co:null};
+function bpHpEscA(s){return bpEsc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function bpHpMoney(n){n=+n||0;return (n<0?'−$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function bpHpDay(s,o){if(!s)return '';var d=new Date(/^\d{4}-\d{2}-\d{2}$/.test(s)?s+'T12:00:00':s);return isNaN(d)?'':d.toLocaleDateString('en-US',o||{weekday:'short',month:'short',day:'numeric'});}
+function bpHpApi(op,extra){
+  return fetch(CP_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},
+    body:JSON.stringify(Object.assign({op:op,token:_bpHp.token},extra||{}))}).then(function(r){return r.json();});
+}
+function bpHomeRoute(){
+  var m=/[#&]home=([a-f0-9]{40,64})/i.exec(location.hash||'');
+  if(!m)return false;
+  _bpHp.token=m[1].toLowerCase();
+  _bpHp.paid=/[#&]paid=1/.test(location.hash||'');
+  document.body.classList.add('bp-signing','bp-home');
+  var host=document.createElement('div'); host.id='bpSign'; host.className='hp'; document.body.appendChild(host);
+  host.innerHTML='<div class="sg-wrap"><div class="sg-card"><div class="sg-load">Loading your project…</div></div></div>';
+  bpHpLoad();
+  return true;
+}
+function bpHpLoad(){
+  return bpHpApi('get').then(function(d){
+    if(!d||!d.ok){bpHpErr(d&&d.error==='not_found'?'This link isn\'t active. It may have been turned off or replaced. Ask your contractor for a new one.':(d&&d.error)||'We couldn\'t load your project.');return;}
+    _bpHp.d=d; bpHpRender();
+  }).catch(function(){bpHpErr('We couldn\'t load your project just now. Check your connection and reload the page.');});
+}
+function bpHpErr(msg){
+  var h=document.getElementById('bpSign'); if(!h)return;
+  h.innerHTML='<div class="sg-wrap"><div class="sg-card"><h1 class="sg-h">Project unavailable</h1><p class="sg-p">'+bpEsc(msg)+'</p></div></div>';
+}
+var BP_HP_TABS=[['overview','Overview','home'],['photos','Photos','photo_library'],['docs','Documents','folder'],['pay','Payments','payments'],['msgs','Messages','chat'],['changes','Changes','edit_document']];
+function bpHpRender(){
+  var d=_bpHp.d,h=document.getElementById('bpSign'); if(!h||!d)return;
+  var b=d.business||{},j=d.job||{};
+  if(b.name)document.title=b.name+' · Your project';
+  var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
+  var badge={changes:pend,msgs:0,photos:(d.photos||[]).length,docs:(d.docs||[]).length+(d.contracts||[]).length};
+  var pct=j.progress;
+  h.innerHTML='<div class="hp-wrap">'
+    +'<header class="hp-top">'
+      +(b.logo?'<img class="hp-logo" src="'+bpHpEscA(b.logo)+'" alt="">':'<div class="hp-mono" aria-hidden="true">'+bpEsc((b.name||'?').charAt(0).toUpperCase())+'</div>')
+      +'<div class="hp-biz"><b>'+bpEsc(b.name||'Your contractor')+'</b>'+(b.phone?'<a href="tel:'+bpHpEscA(String(b.phone).replace(/[^\d+]/g,''))+'">'+bpEsc(b.phone)+'</a>':'')+'</div>'
+    +'</header>'
+    +'<section class="hp-hero">'
+      +'<div class="hp-hi">'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Your project')+'</div>'
+      +'<h1>'+bpEsc(j.title||'Project')+'</h1>'
+      +(j.addr?'<div class="hp-addr"><span class=ms>location_on</span>'+bpEsc(j.addr)+'</div>':'')
+      +'<div class="hp-st">'+(j.status==='done'?'<span class="hp-pill done"><span class=ms>task_alt</span>Complete</span>':'<span class="hp-pill live"><i></i>In progress</span>')
+        +(j.next_visit&&j.status!=='done'?'<span class="hp-pill"><span class=ms>event</span>Next visit '+bpEsc(bpHpDay(j.next_visit))+(j.time?' · '+bpEsc(j.time):'')+'</span>':'')+'</div>'
+      +(pct!=null?'<div class="hp-bar" role="img" aria-label="'+pct+'% complete"><i style="width:'+pct+'%"></i></div><div class="hp-barl"><b>'+pct+'% complete</b>'+(j.finish&&j.status!=='done'?'<span>Planned finish '+bpEsc(bpHpDay(j.finish,{month:'short',day:'numeric'}))+'</span>':'')+'</div>':'')
+    +'</section>'
+    +(_bpHp.paid?'<div class="hp-note ok"><span class=ms>check_circle</span>Thanks, your payment went through. It can take a few minutes to show here.</div>':'')
+    +'<nav class="hp-tabs" role="tablist">'+BP_HP_TABS.map(function(t){
+      return '<button type="button" role="tab" aria-selected="'+(_bpHp.tab===t[0])+'" class="'+(_bpHp.tab===t[0]?'on':'')+'" onclick="bpHpTab(\''+t[0]+'\')"><span class=ms>'+t[2]+'</span>'+t[1]+(t[0]==='changes'&&badge.changes?'<em>'+badge.changes+'</em>':'')+'</button>';
+    }).join('')+'</nav>'
+    +'<main class="hp-body" id="hpBody">'+bpHpPane(_bpHp.tab)+'</main>'
+    +'<footer class="hp-foot">This page is private to you. Please don\'t share the link.'+(b.email?' Questions? <a href="mailto:'+bpHpEscA(b.email)+'">'+bpEsc(b.email)+'</a>':'')+'</footer>'
+  +'</div>';
+  if(_bpHp.tab==='msgs'){var l=document.getElementById('hpThread');if(l)l.scrollTop=l.scrollHeight;}
+  if(_bpHp.co)bpHpCoSign(_bpHp.co,true);
+}
+window.bpHpTab=function(t){_bpHp.tab=t;_bpHp.co=null;bpHpRender();var n=document.querySelector('.hp-tabs .on');if(n&&n.scrollIntoView)n.scrollIntoView({block:'nearest',inline:'nearest'});};
+function bpHpCard(title,body,cls){return '<section class="hp-card'+(cls?' '+cls:'')+'">'+(title?'<h2>'+title+'</h2>':'')+body+'</section>';}
+function bpHpEmpty(ico,t){return '<div class="hp-empty"><span class=ms>'+ico+'</span>'+t+'</div>';}
+function bpHpPane(t){
+  var d=_bpHp.d,j=d.job||{},m=d.money||{};
+  if(t==='overview'){
+    var ph=(j.phases||[]),nextIx=-1; ph.forEach(function(p,i){if(nextIx<0&&!p.done)nextIx=i;});
+    var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
+    return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review<span class="ms hp-go">chevron_right</span></button>':'')
+      +bpHpCard('Schedule',(ph.length?'<ol class="hp-ph">'+ph.map(function(p,i){
+          return '<li class="'+(p.done?'done':i===nextIx?'now':'')+'"><i>'+(p.done?'<span class=ms>check</span>':'')+'</i><b>'+bpEsc(p.name||'Phase')+'</b><span>'+(p.done?'Done':i===nextIx?'Up next':'')+(p.due?(p.done?'':' · ')+(p.done?'':bpEsc(bpHpDay(p.due))):'')+'</span></li>';
+        }).join('')+'</ol>':'')
+        +((j.visits||[]).length?'<div class="hp-sub">Scheduled visits</div><div class="hp-days">'+j.visits.map(function(v){return '<span>'+bpEsc(bpHpDay(v))+'</span>';}).join('')+'</div>':'')
+        +(!ph.length&&!(j.visits||[]).length?bpHpEmpty('event','Your contractor hasn\'t set dates yet. They\'ll show here once they do.'):''))
+      +((d.crew||[]).length?bpHpCard('Your crew','<div class="hp-crew">'+d.crew.map(function(c){
+          return '<div class="hp-mate">'+(c.photo?'<img src="'+bpHpEscA(c.photo)+'" alt="">':'<span class="hp-av">'+bpEsc((c.name||'?').charAt(0))+'</span>')+'<div><b>'+bpEsc(c.name||'Crew')+'</b>'+(c.trade?'<span>'+bpEsc(c.trade)+'</span>':'')+'</div></div>';
+        }).join('')+'</div>'):'')
+      +bpHpCard('Payments','<div class="hp-money"><div><small>Contract</small><b>'+bpHpMoney(m.contract)+'</b></div><div><small>Paid</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
+        +'<button type="button" class="hp-link" onclick="bpHpTab(\'pay\')">See payments<span class=ms>chevron_right</span></button>');
+  }
+  if(t==='photos'){
+    return bpHpCard('Progress photos',(d.photos||[]).length?'<div class="hp-ph-grid">'+d.photos.map(function(p){return '<a href="'+bpHpEscA(p.url)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+bpHpEscA(p.url)+'" alt="Project photo"></a>';}).join('')+'</div>'
+      :bpHpEmpty('photo_camera','No photos shared yet. Your contractor will add progress photos here.'));
+  }
+  if(t==='docs'){
+    var ct=d.contracts||[],dc=d.docs||[],pm=d.permits||[];
+    return bpHpCard('Contracts',ct.length?ct.map(function(c){
+        return '<a class="hp-row" href="'+bpHpEscA(c.link)+'" target="_blank" rel="noopener"><span class="ms hp-ic">contract</span><div><b>'+bpEsc(c.title||'Agreement')+'</b><span>'+(c.status==='signed'?'Signed '+bpEsc(bpHpDay(c.signed_at,{month:'short',day:'numeric',year:'numeric'})):'Ready for your signature')+'</span></div>'+(c.status==='signed'?'<span class="hp-tag ok">Signed</span>':'<span class="hp-tag warn">Sign</span>')+'</a>';
+      }).join(''):bpHpEmpty('contract','No contracts yet.'))
+      +bpHpCard('Documents',dc.length?dc.map(function(x){
+        return '<a class="hp-row" href="'+bpHpEscA(x.url)+'" target="_blank" rel="noopener"><span class="ms hp-ic">'+(x.type==='pdf'?'picture_as_pdf':'image')+'</span><div><b>'+bpEsc(x.name)+'</b><span>'+(x.type==='pdf'?'PDF':'Image')+'</span></div><span class="ms">open_in_new</span></a>';
+      }).join(''):bpHpEmpty('folder_open','Nothing shared yet. Permits, warranties and other paperwork show here when your contractor shares them.'))
+      +(pm.length?bpHpCard('Permits',pm.map(function(p){
+        return '<div class="hp-row"><span class="ms hp-ic">assignment</span><div><b>'+bpEsc(p.type||'Permit')+(p.number?' · #'+bpEsc(p.number):'')+'</b><span>'+bpEsc(p.status||'')+(p.expires?' · expires '+bpEsc(bpHpDay(p.expires,{month:'short',day:'numeric',year:'numeric'})):'')+'</span></div></div>';
+      }).join('')):'');
+  }
+  if(t==='pay'){
+    var pays=m.payments||[];
+    return bpHpCard('',''
+        +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract)+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders)+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
+        +(m.due>0?(d.canPay?'<label class="sg-f"><span>Amount to pay</span><input id="hpAmt" inputmode="decimal" value="'+(+m.due).toFixed(2)+'"></label><div class="sg-msg" id="hpPayMsg"></div><button class="sg-btn" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span> Pay now by card</button><div class="hp-fine">You\'ll pay on a secure Stripe page. Your card details never reach this site.</div>'
+          :'<div class="hp-fine">To pay, contact '+bpEsc((d.business||{}).name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
+      +bpHpCard('Card payments',pays.length?pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
+        :bpHpEmpty('receipt_long','No card payments yet. Payments made another way are included in Paid so far.'));
+  }
+  if(t==='msgs'){
+    var ms=d.messages||[];
+    return bpHpCard('Messages','<div class="hp-thread" id="hpThread">'+(ms.length?ms.map(function(x){
+        return '<div class="hp-msg'+(x.mine?' me':'')+'"><div>'+bpEsc(x.body).replace(/\n/g,'<br>')+'</div><small>'+(x.mine?'You':bpEsc(x.author||''))+' · '+bpEsc(new Date(x.at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'</small></div>';
+      }).join(''):bpHpEmpty('chat','Ask a question or leave a note for your contractor.'))+'</div>'
+      +'<div class="hp-send"><textarea id="hpMsg" rows="2" maxlength="2000" placeholder="Write a message…"></textarea><button class="sg-btn" id="hpSend" onclick="bpHpSend()" aria-label="Send"><span class=ms>send</span></button></div><div class="sg-msg" id="hpMsgErr"></div>');
+  }
+  if(t==='changes'){
+    var cs=d.changes||[];
+    return cs.length?cs.map(function(c){
+      var st=c.status==='approved'?'<span class="hp-tag ok">Approved</span>':c.status==='declined'?'<span class="hp-tag">Declined</span>':'<span class="hp-tag warn">Needs your answer</span>';
+      return bpHpCard('','<div class="hp-co-h"><div><b>'+bpEsc(c.title)+'</b><span>Sent '+bpEsc(bpHpDay(c.at,{month:'short',day:'numeric'}))+'</span></div>'+st+'</div>'
+        +(c.description?'<p class="hp-co-d">'+bpEsc(c.description).replace(/\n/g,'<br>')+'</p>':'')
+        +'<div class="hp-co-amt">'+(c.amount>=0?'Adds ':'Takes off ')+'<b>'+bpHpMoney(Math.abs(c.amount))+'</b> '+(c.amount>=0?'to':'from')+' your contract</div>'
+        +(c.status==='approved'&&c.signature?'<div class="sg-sigs"><div class="sg-sigs-blk"><div class="lbl">Approved by</div><img src="'+bpHpEscA(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div><div class="dt">'+bpEsc(bpHpDay(c.signed_at,{month:'short',day:'numeric',year:'numeric'}))+'</div></div></div>':'')
+        +(c.status==='pending'?'<div id="hpCo-'+c.id+'"><div class="hp-co-acts"><button class="sg-btn" onclick="bpHpCoSign(\''+c.id+'\')">Review and approve</button><button class="sg-decline" onclick="bpHpCoDecline(\''+c.id+'\')">Decline this change</button></div></div>':''),'hp-co');
+    }).join(''):bpHpCard('Changes',bpHpEmpty('edit_document','No change orders. If the work changes, your contractor will send it here for you to approve.'));
+  }
+  return '';
+}
+/* approve: the signing page's pad, name and consent (same ids, same checks) */
+window.bpHpCoSign=function(id,keep){
+  var host=document.getElementById('hpCo-'+id); if(!host)return;
+  _bpHp.co=id; if(!keep)_bpSg.drew=false;
+  host.innerHTML='<div class="sg-sign"><div class="sg-lbl">Sign to approve</div>'
+    +'<div class="sg-padwrap"><canvas id="sgPad" class="sg-pad"></canvas><button class="sg-clear" onclick="bpSignClear()">Clear</button><span class="sg-hint" id="sgHint">Draw your signature with your finger</span></div>'
+    +'<label class="sg-f"><span>Your full name</span><input id="sgName" autocomplete="name" placeholder="Type your name" oninput="bpSignCheck()"></label>'
+    +'<label class="sg-consent"><input type="checkbox" id="sgConsent" onchange="bpSignCheck()"><span>I approve this change, including the price change, and agree to sign electronically.</span></label>'
+    +'<div class="sg-msg" id="sgMsg"></div>'
+    +'<button class="sg-btn" id="sgGo" disabled onclick="bpHpCoApprove(\''+id+'\')">Approve change</button>'
+    +'<button class="sg-decline" onclick="_bpHp.co=null;bpHpRender()">Cancel</button></div>';
+  _bpSg.drew=false; bpSignPad();
+};
+window.bpHpCoApprove=function(id){
+  var b=document.getElementById('sgGo'),msg=document.getElementById('sgMsg'),cv=document.getElementById('sgPad');
+  var name=((document.getElementById('sgName')||{}).value||'').trim();
+  if(!name||!_bpSg.drew){if(msg)msg.textContent='Please add your signature and name.';return;}
+  b.disabled=true; b.textContent='Approving…';
+  bpHpApi('change_order_decide',{id:id,decision:'approve',signer_name:name,signature:cv.toDataURL('image/png'),consent:!!(document.getElementById('sgConsent')||{}).checked})
+    .then(function(d){
+      if(!d||!d.ok){b.disabled=false;b.textContent='Approve change';if(msg)msg.textContent=(d&&d.error)||'Something went wrong. Please try again.';return;}
+      _bpHp.d=d;_bpHp.co=null;bpHpRender();
+    }).catch(function(){b.disabled=false;b.textContent='Approve change';if(msg)msg.textContent='Couldn\'t reach the server. Check your connection and try again.';});
+};
+window.bpHpCoDecline=function(id){
+  var note=prompt('Decline this change? You can add a note for your contractor (optional).','');
+  if(note===null)return;
+  bpHpApi('change_order_decide',{id:id,decision:'decline',note:note}).then(function(d){if(d&&d.ok){_bpHp.d=d;bpHpRender();}else alert((d&&d.error)||'Something went wrong.');}).catch(function(){});
+};
+window.bpHpSend=function(){
+  var t=document.getElementById('hpMsg'),b=document.getElementById('hpSend'),e=document.getElementById('hpMsgErr');
+  var v=(t&&t.value||'').trim(); if(!v)return;
+  b.disabled=true;
+  bpHpApi('message',{body:v}).then(function(d){
+    if(!d||!d.ok){b.disabled=false;if(e)e.textContent=(d&&d.error)||'Couldn\'t send. Try again.';return;}
+    _bpHp.d=d;bpHpRender();
+  }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
+};
+window.bpHpPay=function(){
+  var b=document.getElementById('hpPay'),e=document.getElementById('hpPayMsg');
+  var a=((document.getElementById('hpAmt')||{}).value||'').replace(/[$,\s]/g,'');
+  b.disabled=true;
+  bpHpApi('pay',{amount:a}).then(function(d){
+    if(d&&d.ok&&d.url){location.href=d.url;return;}
+    b.disabled=false;if(e)e.textContent=(d&&d.error)||'The payment page couldn\'t be opened.';
+  }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
+};
+try{ bpHomeRoute(); }catch(e){}
 
 /* ===== Payouts — the contractor connects their OWN Stripe once, inside their
    own sub-account, because that is the connection the invoices and the
@@ -35869,6 +36053,110 @@ body.bp-signing{background:#eef1f6;}
 #bpSign .sg-when{font-size:11.5px;color:#8b93a1;margin-top:5px;}
 @media print{body.bp-signing{background:#fff;}#bpSign .sg-card{box-shadow:none;max-width:none;padding:0;}
   #bpSign .sg-doc{max-height:none;border:0;padding:0;background:none;}#bpSign .sg-btn,#bpSign .sg-decline,#bpSign .sg-brand{display:none;}}
+
+/* customer portal (#home=<token>): the signing page's look, with tabs */
+#bpSign.hp{min-height:100vh;}
+#bpSign .hp-wrap{max-width:760px;margin:0 auto;padding:18px 16px 50px;box-sizing:border-box;color:#0c0c0d;}
+#bpSign .hp-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+#bpSign .hp-logo{height:44px;max-width:150px;object-fit:contain;border-radius:8px;background:#fff;}
+#bpSign .hp-mono{width:44px;height:44px;border-radius:12px;background:#2f6bff;color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#bpSign .hp-biz{min-width:0;}
+#bpSign .hp-biz b{display:block;font-size:16.5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#bpSign .hp-biz a{font-size:13px;color:#2f6bff;text-decoration:none;font-weight:600;}
+#bpSign .hp-hero{background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(16,24,40,.08);padding:22px 22px 20px;}
+#bpSign .hp-hi{font-size:13px;color:#6b7280;font-weight:600;}
+#bpSign .hp-hero h1{font-size:25px;font-weight:700;letter-spacing:-.5px;line-height:1.2;margin:4px 0 6px;overflow-wrap:anywhere;}
+#bpSign .hp-addr{display:flex;align-items:center;gap:4px;font-size:13.5px;color:#4b5563;}
+#bpSign .hp-addr .ms{font-size:17px;color:#9aa3b2;}
+#bpSign .hp-st{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px;}
+#bpSign .hp-pill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:99px;background:#f1f4f9;color:#374151;}
+#bpSign .hp-pill .ms{font-size:16px;}
+#bpSign .hp-pill.live{background:#eef4ff;color:#1b56ee;}
+#bpSign .hp-pill.live i{width:7px;height:7px;border-radius:50%;background:#2f6bff;}
+#bpSign .hp-pill.done{background:#ecfdf5;color:#15803d;}
+#bpSign .hp-bar{height:10px;border-radius:99px;background:#eef1f6;overflow:hidden;margin-top:16px;}
+#bpSign .hp-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2f6bff,#22c55e);}
+#bpSign .hp-barl{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#6b7280;margin-top:7px;}
+#bpSign .hp-barl b{color:#0c0c0d;}
+#bpSign .hp-tabs{display:flex;gap:6px;overflow-x:auto;margin:16px -16px 12px;padding:4px 16px;scrollbar-width:none;position:sticky;top:0;z-index:2;background:#eef1f6;}
+#bpSign .hp-tabs::-webkit-scrollbar{display:none;}
+@media(min-width:720px){#bpSign .hp-tabs{flex-wrap:wrap;overflow:visible;}}
+#bpSign .hp-tabs button{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px solid #dfe4ec;background:#fff;border-radius:99px;padding:8px 13px;font:inherit;font-size:13.5px;font-weight:600;color:#4b5563;cursor:pointer;}
+#bpSign .hp-tabs button .ms{font-size:18px;}
+#bpSign .hp-tabs button.on{background:#0c0c0d;border-color:#0c0c0d;color:#fff;}
+#bpSign .hp-tabs em{font-style:normal;background:#f59e0b;color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;}
+#bpSign .hp-card{background:#fff;border-radius:16px;box-shadow:0 6px 24px rgba(16,24,40,.06);padding:18px 18px;margin-bottom:12px;}
+#bpSign .hp-card h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:#6b7280;margin:0 0 12px;}
+#bpSign .hp-sub{font-size:12px;font-weight:700;color:#6b7280;margin:16px 0 8px;}
+#bpSign .hp-empty{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:#6b7280;padding:4px 0;}
+#bpSign .hp-empty .ms{color:#9aa3b2;}
+#bpSign .hp-note{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;text-align:left;border:0;border-radius:14px;padding:13px 15px;font:inherit;font-size:14px;font-weight:600;margin:12px 0;}
+#bpSign .hp-note.ok{background:#ecfdf5;color:#15803d;}
+#bpSign .hp-note.warn{background:#fff7e6;color:#9a5b00;cursor:pointer;}
+#bpSign .hp-note .hp-go{margin-left:auto;}
+#bpSign .hp-ph{list-style:none;margin:0;padding:0;}
+#bpSign .hp-ph li{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid #f0f2f6;font-size:14px;}
+#bpSign .hp-ph li:first-child{border-top:0;}
+#bpSign .hp-ph li i{width:22px;height:22px;border-radius:50%;border:2px solid #d5dbe5;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;}
+#bpSign .hp-ph li.done i{background:#22c55e;border-color:#22c55e;color:#fff;}
+#bpSign .hp-ph li.done i .ms{font-size:15px;}
+#bpSign .hp-ph li.now i{border-color:#2f6bff;box-shadow:0 0 0 4px rgba(47,107,255,.14);}
+#bpSign .hp-ph li b{flex:1;min-width:0;font-weight:600;}
+#bpSign .hp-ph li.done b{color:#6b7280;}
+#bpSign .hp-ph li span{font-size:12.5px;color:#6b7280;white-space:nowrap;}
+#bpSign .hp-ph li.now span{color:#1b56ee;font-weight:600;}
+#bpSign .hp-days{display:flex;gap:6px;flex-wrap:wrap;}
+#bpSign .hp-days span{background:#f1f4f9;border-radius:8px;padding:5px 9px;font-size:12.5px;font-weight:600;color:#374151;}
+#bpSign .hp-crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+#bpSign .hp-mate{display:flex;align-items:center;gap:10px;min-width:0;}
+#bpSign .hp-mate img,#bpSign .hp-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+#bpSign .hp-av{background:#eef4ff;color:#1b56ee;display:flex;align-items:center;justify-content:center;font-weight:700;}
+#bpSign .hp-mate b{display:block;font-size:14px;}
+#bpSign .hp-mate span{display:block;font-size:12.5px;color:#6b7280;}
+#bpSign .hp-money{display:flex;gap:8px;flex-wrap:wrap;}
+#bpSign .hp-money>div{flex:1;min-width:120px;background:#f6f8fb;border:1px solid #e4e9f0;border-radius:12px;padding:10px 12px;}
+#bpSign .hp-money small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;}
+#bpSign .hp-money b{display:block;font-size:17px;margin-top:2px;font-variant-numeric:tabular-nums;}
+#bpSign .hp-money span{display:block;font-size:11.5px;color:#6b7280;margin-top:2px;}
+#bpSign .hp-money .due{background:#eef4ff;border-color:#cfdcff;}
+#bpSign .hp-money.big b{font-size:21px;}
+#bpSign .hp-link{display:inline-flex;align-items:center;gap:2px;margin-top:10px;background:none;border:0;padding:0;font:inherit;font-size:13.5px;font-weight:600;color:#2f6bff;cursor:pointer;}
+#bpSign .hp-fine{font-size:12px;color:#8b93a1;margin-top:10px;line-height:1.5;}
+#bpSign .sg-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+#bpSign .hp-ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+#bpSign .hp-ph-grid a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#eef1f6;}
+#bpSign .hp-ph-grid img{width:100%;height:100%;object-fit:cover;display:block;}
+@media(max-width:480px){#bpSign .hp-ph-grid{grid-template-columns:repeat(2,1fr);}}
+#bpSign .hp-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid #f0f2f6;text-decoration:none;color:inherit;min-width:0;}
+#bpSign .hp-row:first-of-type{border-top:0;}
+#bpSign .hp-row>div{flex:1;min-width:0;}
+#bpSign .hp-row b{display:block;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#bpSign .hp-row span{font-size:12.5px;color:#6b7280;}
+#bpSign .hp-row>.ms{color:#9aa3b2;font-size:19px;}
+#bpSign .hp-ic{width:36px;height:36px;border-radius:9px;background:#f1f4f9;color:#4b5563 !important;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+#bpSign .hp-tag{flex-shrink:0;font-size:11.5px !important;font-weight:700;border-radius:99px;padding:3px 9px;background:#f1f4f9;color:#4b5563 !important;}
+#bpSign .hp-tag.ok{background:#ecfdf5;color:#15803d !important;}
+#bpSign .hp-tag.warn{background:#fff7e6;color:#9a5b00 !important;}
+#bpSign .hp-thread{max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px;}
+#bpSign .hp-msg{max-width:82%;align-self:flex-start;}
+#bpSign .hp-msg>div{background:#f1f4f9;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:14px;line-height:1.5;overflow-wrap:anywhere;}
+#bpSign .hp-msg.me{align-self:flex-end;}
+#bpSign .hp-msg.me>div{background:#2f6bff;color:#fff;border-radius:14px 14px 4px 14px;}
+#bpSign .hp-msg small{display:block;font-size:11px;color:#8b93a1;margin:3px 4px 0;}
+#bpSign .hp-msg.me small{text-align:right;}
+#bpSign .hp-send{display:flex;gap:8px;align-items:flex-end;margin-top:12px;}
+#bpSign .hp-send textarea{flex:1;min-width:0;border:1px solid #dfe4ec;border-radius:12px;padding:11px 12px;font:inherit;font-size:15px;resize:vertical;box-sizing:border-box;}
+#bpSign .hp-send textarea:focus{outline:none;border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.14);}
+#bpSign .hp-send .sg-btn{width:auto;margin:0;padding:12px 15px;}
+#bpSign .hp-co-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+#bpSign .hp-co-h b{display:block;font-size:16px;}
+#bpSign .hp-co-h span{font-size:12.5px;color:#6b7280;}
+#bpSign .hp-co-d{font-size:14px;line-height:1.6;color:#374151;margin:10px 0 0;overflow-wrap:anywhere;}
+#bpSign .hp-co-amt{margin-top:12px;background:#f6f8fb;border:1px solid #e4e9f0;border-radius:10px;padding:10px 12px;font-size:14px;}
+#bpSign .hp-co-acts{margin-top:14px;}
+#bpSign .hp-foot{text-align:center;font-size:12px;color:#8b93a1;margin-top:20px;line-height:1.6;}
+#bpSign .hp-foot a{color:#6b7280;}
+@media(max-width:600px){#bpSign .hp-hero{padding:18px 16px;border-radius:14px;}#bpSign .hp-hero h1{font-size:22px;}#bpSign .hp-card{padding:16px 14px;border-radius:14px;}}
 
 .bpx-pay-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;}
 .bpx-pay-flow>div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
@@ -38833,7 +39121,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
-<script src="portal/projsheet.js?v=20261004a"></script>
+<script src="portal/projsheet.js?v=20261006a"></script>
+<script src="portal/custportal.js?v=20261006a"></script>
 <script src="portal/bpedit.js?v=20261001p"></script>
 <script src="portal/crewapp.js?v=20261003d"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
@@ -38857,6 +39146,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/projsheet.css?v=20261001p">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261003d">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
+<link rel="stylesheet" href="portal/custportal.css?v=20261006a">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">

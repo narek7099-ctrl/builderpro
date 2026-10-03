@@ -155,7 +155,8 @@ Deno.serve(async (req) => {
           customer_email: String(who?.email ?? ""),
           description: String(obj?.description ?? "").slice(0, 300),
           invoice_ref: String(meta.bp_invoice ?? ""),
-          job_id: meta.bp_job || null,
+          // job ids are not uuids ("j1727..."); the job is credited by creditJob below
+          job_id: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(meta.bp_job ?? "")) ? meta.bp_job : null,
           paid_at: new Date().toISOString(),
         }),
       });
