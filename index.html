@@ -35324,9 +35324,9 @@ function bpHpPane(t){
     var pays=m.payments||[];
     return bpHpCard('',''
         +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract)+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders)+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
-        +(m.due>0?(d.canPay?'<label class="sg-f"><span>Amount to pay</span><input id="hpAmt" inputmode="decimal" value="'+(+m.due).toFixed(2)+'"></label><div class="sg-msg" id="hpPayMsg"></div><button class="sg-btn" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span> Pay now by card</button><div class="hp-fine">You\'ll pay on a secure Stripe page. Your card details never reach this site.</div>'
+        +(m.due>0?(d.canPay?'<div class="sg-msg" id="hpPayMsg"></div><button class="sg-btn" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span> Pay my invoice</button><div class="hp-fine">Opens your invoice from '+bpEsc((d.business||{}).name||'your contractor')+' on a secure payment page. Your card details never reach this site.</div>'
           :'<div class="hp-fine">To pay, contact '+bpEsc((d.business||{}).name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
-      +bpHpCard('Card payments',pays.length?pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
+      +bpHpCard('Online payments',pays.length?pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
         :bpHpEmpty('receipt_long','No card payments yet. Payments made another way are included in Paid so far.'));
   }
   if(t==='msgs'){
@@ -35389,10 +35389,10 @@ window.bpHpSend=function(){
 };
 window.bpHpPay=function(){
   var b=document.getElementById('hpPay'),e=document.getElementById('hpPayMsg');
-  var a=((document.getElementById('hpAmt')||{}).value||'').replace(/[$,\s]/g,'');
   b.disabled=true;
-  bpHpApi('pay',{amount:a}).then(function(d){
+  bpHpApi('pay',{}).then(function(d){
     if(d&&d.ok&&d.url){location.href=d.url;return;}
+    if(d&&d.ok&&d.sent){if(e){e.style.color='var(--ok,#15803d)';e.textContent=d.message;}return;}
     b.disabled=false;if(e)e.textContent=(d&&d.error)||'The payment page couldn\'t be opened.';
   }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
 };

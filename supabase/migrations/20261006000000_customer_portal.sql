@@ -30,7 +30,7 @@
 create table if not exists public.customer_portal_links (
   owner          uuid not null,
   job_id         text not null,
-  token          text not null unique default encode(gen_random_bytes(24), 'hex'),
+  token          text not null unique default encode(extensions.gen_random_bytes(24), 'hex'),
   enabled        boolean not null default true,
   share_photos   jsonb not null default '[]'::jsonb,
   share_docs     jsonb not null default '[]'::jsonb,
