@@ -101,6 +101,8 @@
     var lg = $('hlAcctLogo');
     if (lg && !lg.querySelector('img')) lg.innerHTML = '<img src="assets/brand/logo-mark-128.png" alt="" width="30" height="30">';
     var av = $('hlAv'); if (av) av.textContent = initials(ownerName() || window._bpEmail || bizName());
+    /* a crew login shows their own name and photo (portal/crewapp.js) */
+    if (crew() && window.bpCrewPaintMe) bpCrewPaintMe();
   }
 
   /* ---------- sidebar ---------- */
@@ -375,7 +377,10 @@
     items.push({ t: 'Back to website', ico: 'globe', fn: S.leave });
     items.push({ sep: 1 });
     items.push({ t: 'Sign out', ico: 'out', fn: function () { bpLogout(); } });
-    var m = S.menu(btn, items, { align: 'right', head: '<span class="hl-av sm">' + esc(initials(ownerName() || window._bpEmail || name)) + '</span><span><b>' + esc(name) + '</b><small>' + esc(window._bpEmail || '') + '</small></span>', cls: 'hl-prof' });
+    var me = c && window.bpMeAvatar;
+    if (me && me.name) name = me.name;
+    var m = S.menu(btn, items, { align: 'right', head: (me && window.bpAvatar ? bpAvatar.html(me.ref, me.name, 'hl-av sm') : '<span class="hl-av sm">' + esc(initials(ownerName() || window._bpEmail || name)) + '</span>') + '<span><b>' + esc(name) + '</b><small>' + esc(window._bpEmail || '') + '</small></span>', cls: 'hl-prof' });
+    if (m && me && window.bpAvatar) bpAvatar.fill(m);
     if (m) { var d = [].slice.call(m.querySelectorAll('.hl-mi')).filter(function (x) { return /Dark mode/.test(x.textContent); })[0]; if (d) { d.setAttribute('role', 'menuitemcheckbox'); d.setAttribute('aria-checked', String(dark())); } }
   };
 
