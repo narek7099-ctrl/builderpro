@@ -456,15 +456,18 @@
   /* ------------------------------------------- materials + receipts ---
      The crew can ask for materials (crew_material_add) and take back what
      they asked for while the office hasn't acted (crew_material_remove).
-     Receipts they paid go up with a photo (crew_receipt_add) and wait for
-     the office to approve them. Prices of the office's items never reach
+     Receipts they paid go up with a photo (crew_receipt_add) and count as a
+     job expense right away; they can delete their own for 24 hours. Prices of the office's items never reach
      this page; amounts show only on the crew member's own receipts. */
   var MAT_ERR = { locked: 'The office locked this list. Call them if you need something.', name: 'Give the item a name (up to 120 characters).',
     qty: 'Quantity has to be a number, like 6 or 2.5.', unit: 'Keep the unit short, like bdl, box or roll.', note: 'Keep the note under 300 characters.',
     'not yours': 'You can only take off items you added.', 'already ordered': 'The office already approved or ordered that one. Call them to change it.',
     'not your job': 'You’re no longer on this job.', 'not found': 'That’s already gone.', 'too many': 'That’s a lot of requests. Call the office.',
     amount: 'Enter the amount on the receipt, like 84.20.', supplier: 'Keep the store name short.', image: 'The photo didn’t upload right. Try again.',
-    'already decided': 'The office already dealt with that receipt.' };
+    'already decided': 'The office already dealt with that receipt.',
+    'too late': 'It’s been more than 24 hours. Ask the office to change or delete it.' };
+  var RC_UNDO = 24 * 3600 * 1000;
+  function rcCanDel(r) { return (r.status === 'posted' || r.status === 'pending') && r.at && Date.now() - +r.at < RC_UNDO; }
   function first(n) { return String(n || '').split(' ')[0]; }
   function money2(n) { n = +n || 0; return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function matMsg(id, t, cls) { var m = $(id); if (m) { m.className = 'ca-msg ' + (cls || ''); m.textContent = t || ''; } }
@@ -494,20 +497,20 @@
           + '<div class="ca-msg" id="cm-msg"></div><div class="cm-acts"><button type="button" class="pm-btn ghost" onclick="bpCrewMatForm(false)">Cancel</button><button type="submit" class="pm-btn" id="cm-go"><span class="ms">add</span>Add to list</button></div></form>'
         : '<button type="button" class="ca-add cm-addbtn" onclick="bpCrewMatForm(true)"><span class="ms">add_circle</span>Add item</button><div class="ca-msg" id="cm-msg"></div>';
     var rcl = rc.length ? '<div class="cm-rcs">' + rc.slice().reverse().map(function (r) {
-        var st = r.status === 'approved' ? '<span class="cm-st ok">Approved</span>' : r.status === 'rejected' ? '<span class="cm-st bad">Not approved</span>' : '<span class="cm-st wait">Waiting on office</span>';
+        var st = r.status === 'rejected' ? '<span class="cm-st bad">Not counted</span>' : '<span class="cm-st ok">Counted in job costs</span>';
         return '<div class="cm-rc" data-cm-rc="' + esc(r.id) + '"><span class="ms">receipt_long</span><div><b>' + money2(r.amount) + (r.supplier ? ' · ' + esc(r.supplier) : '') + '</b><small>' + pretty(r.at ? new Date(+r.at).toISOString() : '') + (r.note ? ' · ' + esc(r.note) : '') + '</small>' + st + '</div>'
           + (r.image ? '<a class="cm-ph" data-ref="' + esc(r.image) + '" target="_blank" rel="noopener" aria-label="Open the photo"><span class="ms">image</span></a>' : '')
-          + (r.status === 'pending' ? '<button type="button" class="cm-rm" aria-label="Delete this receipt" onclick="bpCrewRcRemove(\'' + esc(r.id) + '\')"><span class="ms">delete</span></button>' : '') + '</div>';
+          + (rcCanDel(r) ? '<button type="button" class="cm-rm" aria-label="Delete this receipt" title="You can delete it for 24 hours after uploading" onclick="bpCrewRcRemove(\'' + esc(r.id) + '\')"><span class="ms">delete</span></button>' : '') + '</div>';
       }).join('') + '</div>' : '';
     var rform = C.rcForm ? '<form class="cm-form" onsubmit="event.preventDefault();bpCrewRcAdd()"><div class="cm-h">Upload a receipt</div>'
         + '<label class="cm-file"><span class="ms">photo_camera</span><span id="cr-fn">' + (C.rcFile ? esc(C.rcFile.name) : 'Take a photo of the receipt') + '</span><input type="file" id="cr-file" accept="image/*,application/pdf" onchange="bpCrewRcFile(this)"></label>'
         + '<div class="cm-2"><label>Amount paid<input id="cr-amt" inputmode="decimal" maxlength="10" placeholder="84.20" required></label>'
         + '<label>Store<input id="cr-sup" maxlength="80" placeholder="Home Depot"></label></div>'
         + '<label>What was it for? (optional)<input id="cr-note" maxlength="300" placeholder="Extra nails, valley flashing"></label>'
-        + '<div class="ca-msg" id="cr-msg"></div><div class="cm-acts"><button type="button" class="pm-btn ghost" onclick="bpCrewRcForm(false)">Cancel</button><button type="submit" class="pm-btn" id="cr-go"><span class="ms">upload</span>Send to office</button></div></form>'
+        + '<div class="ca-msg" id="cr-msg"></div><div class="cm-acts"><button type="button" class="pm-btn ghost" onclick="bpCrewRcForm(false)">Cancel</button><button type="submit" class="pm-btn" id="cr-go"><span class="ms">upload</span>Add receipt</button></div></form>'
       : '<button type="button" class="ca-add cm-addbtn" onclick="bpCrewRcForm(true)"><span class="ms">add_a_photo</span>Upload a receipt</button><div class="ca-msg" id="cr-msg"></div>';
     return sec('Material list' + (stTxt ? ' <span class="cs-tag">' + esc(stTxt) + '</span>' : '') + (locked ? ' <span class="cs-tag cm-ltag"><span class="ms">lock</span>Locked</span>' : ''), list + form)
-      + sec('My receipts', '<p class="bpx-mut cm-sub">Bought something for this job? Send the receipt. The office approves it.</p>' + rform + rcl);
+      + sec('My receipts', '<p class="bpx-mut cm-sub">Bought something for this job? Add the receipt. It counts in the job’s costs right away. Made a mistake? You can delete it for 24 hours.</p>' + rform + rcl);
   }
   function refreshSheet() {
     return load(true).then(function () {
@@ -548,9 +551,9 @@
     var amt = v('cr-amt').replace(/[$,\s]/g, '');
     if (!C.rcFile) { matMsg('cr-msg', 'Add a photo of the receipt first.', 'bad'); return; }
     if (!/^\d{1,6}(\.\d{1,2})?$/.test(amt) || !(+amt > 0)) { matMsg('cr-msg', MAT_ERR.amount, 'bad'); return; }
-    var go = $('cr-go'); if (go) { go.disabled = true; go.textContent = 'Sending…'; }
+    var go = $('cr-go'); if (go) { go.disabled = true; go.textContent = 'Adding…'; }
     var jobId = C.job, f = C.rcFile, sup = v('cr-sup'), note = v('cr-note');
-    var reset = function () { if (go) { go.disabled = false; go.innerHTML = '<span class="ms">upload</span>Send to office'; } };
+    var reset = function () { if (go) { go.disabled = false; go.innerHTML = '<span class="ms">upload</span>Add receipt'; } };
     shrink(f).then(function (data) { return bpPF.upload(jobId, 'receipts', data, f.name || 'receipt.jpg'); }).then(function (ref) {
       var mime = /^image\//.test(f.type) ? 'image/jpeg' : (f.type || '');
       return Promise.resolve(BP_SB.rpc('crew_receipt_add', { p_job: jobId, p_receipt: { amount: amt, supplier: sup, note: note, image: ref, mime: mime } })).then(rpcRes).then(function (d) {
@@ -560,12 +563,12 @@
           return;
         }
         C.rcForm = false; C.rcFile = null;
-        return refreshSheet().then(function () { matMsg('cr-msg', money2(amt) + ' receipt sent. The office will approve it.', 'ok'); });
+        return refreshSheet().then(function () { matMsg('cr-msg', money2(amt) + ' receipt added to the job’s costs.', 'ok'); });
       });
     }).catch(function () { reset(); matMsg('cr-msg', 'Upload failed. Check your signal and try again.', 'bad'); });
   };
   window.bpCrewRcRemove = function (id) {
-    if (!confirm('Delete this receipt? The office hasn’t seen it yet.')) return;
+    if (!confirm('Delete this receipt? It comes off the job’s costs too.')) return;
     Promise.resolve(BP_SB.rpc('crew_receipt_remove', { p_job: C.job, p_id: id })).then(rpcRes).then(function (d) {
       if (d.ok && d.image && String(d.image).indexOf('sb:') === 0) { try { Promise.resolve(BP_SB.storage.from('project-files').remove([String(d.image).slice(3)])).catch(function () {}); } catch (e) {} }
       return refreshSheet().then(function () { matMsg('cr-msg', d.ok ? 'Receipt deleted.' : (MAT_ERR[d.error] || 'That didn’t go through.'), d.ok ? 'ok' : 'bad'); });
