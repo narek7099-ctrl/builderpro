@@ -272,13 +272,15 @@ returns integer language sql stable security definer set search_path = public as
    where m.created_at > me.last_read_at and m.sender <> auth.uid();
 $$;
 
+revoke execute on function public.team_chat_name(uuid) from authenticated;
 revoke all on function public.team_chat_is_member(uuid), public.team_chat_in_account(uuid, uuid),
   public.team_chat_name(uuid), public.team_chat_people(), public.team_chat_list(),
   public.team_chat_create_group(text, uuid[]), public.team_chat_set_members(uuid, uuid[]),
   public.team_chat_open_direct(uuid), public.team_chat_mark_read(uuid), public.team_chat_unread(),
   public.team_chat_on_message() from public, anon;
+-- team_chat_name stays internal: it would otherwise hand out any user's email
 grant execute on function public.team_chat_is_member(uuid), public.team_chat_in_account(uuid, uuid),
-  public.team_chat_name(uuid), public.team_chat_people(), public.team_chat_list(),
+  public.team_chat_people(), public.team_chat_list(),
   public.team_chat_create_group(text, uuid[]), public.team_chat_set_members(uuid, uuid[]),
   public.team_chat_open_direct(uuid), public.team_chat_mark_read(uuid), public.team_chat_unread()
   to authenticated;
