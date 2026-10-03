@@ -623,3 +623,15 @@ begin
   end loop;
 end $$;
 revoke all on function public.bp_now_ms() from public, anon;
+
+-- ---------------------------------------------------------------- 8 ---
+-- a sub never punches the time clock. Applied live by patching crew_clock's
+-- body in place (inserting this line right after its "begin"):
+--   if public.bp_is_sub() then return jsonb_build_object('ok', false, 'error', 'subcontractors do not clock in'); end if;
+do $$ declare d text; begin
+  d := pg_get_functiondef('public.crew_clock(text,text,text,double precision,double precision,double precision,double precision,boolean)'::regprocedure);
+  if position('bp_is_sub' in d) = 0 then
+    d := replace(d, E'begin\n  if p_kind not in (''in'',''out'')', E'begin\n  if public.bp_is_sub() then return jsonb_build_object(''ok'', false, ''error'', ''subcontractors do not clock in''); end if;\n  if p_kind not in (''in'',''out'')');
+    execute d;
+  end if;
+end $$;
