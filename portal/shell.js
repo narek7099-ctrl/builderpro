@@ -104,7 +104,7 @@
   }
 
   /* ---------- sidebar ---------- */
-  var CREW = [['crewclock', 'Clock in', 'clock'], ['crewprojects', 'Projects', 'projects'], ['crewhome', 'My crew', 'crew'], ['crewid', 'My ID', 'badge']];
+  var CREW = [['crewclock', 'Clock in', 'clock'], ['crewprojects', 'Projects', 'projects'], ['crewhome', 'My crew', 'crew'], ['crewid', 'My ID', 'badge'], ['crewmsgs', 'Messages', 'convos']];
   function kidsOf(g) { return (g.kids || []).filter(function (k) { return allows(k[0]); }); }
   function firstOf(g) {
     var ks = kidsOf(g); if (!ks.length) return g.id;
