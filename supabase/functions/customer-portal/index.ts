@@ -12,9 +12,10 @@
 //   POST { op:"message", token, body }
 //   POST { op:"change_order_decide", token, id, decision:"approve"|"decline",
 //          signer_name, signature (data:image/png), consent:true, note? }
-//   POST { op:"pay", token, amount? } -> { ok, url } Stripe Checkout on the
-//          contractor's own connected account, the stripe-pay approach
-//          (direct charge, no fee, account decided here, never by the caller)
+//   POST { op:"pay", token } -> { ok, url } the homeowner's newest open
+//          HighLevel invoice in the contractor's own sub-account (so the money
+//          lands in their Stripe). If GHL gives no payable link, the invoice is
+//          re-sent to the homeowner by text and email -> { ok, sent:true }
 //
 // Never returned: the owner id, other jobs, phone numbers of the crew, crew
 // pay, subcontractors and their prices or invoices, expenses or profit.
@@ -23,12 +24,45 @@
 //
 // Deploy:  supabase functions deploy customer-portal --no-verify-jwt
 // Secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (injected), PORTAL_URL,
-//          STRIPE_SECRET_KEY (only for Pay now).
+//          GHL_TOKEN or GHL_API_KEY + GHL_COMPANY_ID (only for Pay now).
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const PORTAL_URL = Deno.env.get("PORTAL_URL") ?? "https://builderpro-os.com";
-const SK = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
+const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
+const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
+const GHL_BASE = "https://services.leadconnectorhq.com";
+const ghlH = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
+// same token rules as ghl-invoice
+async function ghlToken(loc: string): Promise<string> {
+  if (GHL_TOKEN) return GHL_TOKEN;
+  if (GHL_API_KEY && GHL_COMPANY_ID && loc) {
+    try {
+      const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: loc }).toString(),
+      });
+      if (r.ok) { const d = await r.json(); if (d?.access_token) return d.access_token; }
+    } catch { /* fall through */ }
+  }
+  return GHL_API_KEY;
+}
+// the owner's own GHL sub-account; never a shared fallback (wrong Stripe)
+async function ghlLocation(owner: string): Promise<string> {
+  const r = rows(await rest(`ai_brain?owner=eq.${owner}&select=ghl_location_id&limit=1`))[0];
+  return String(r?.ghl_location_id ?? "");
+}
+// first https link anywhere in the invoice that looks like its payment page
+function payLink(o: unknown, depth = 0): string {
+  if (depth > 4 || !o || typeof o !== "object") return "";
+  for (const [k, v] of Object.entries(o as Row)) {
+    if (typeof v === "string" && /^https:\/\//.test(v) && /(invoice|pay|preview)/i.test(k + " " + v) && !/\.(png|jpe?g|svg|pdf)(\?|$)/i.test(v)) return v;
+  }
+  for (const v of Object.values(o as Row)) { const u = payLink(v, depth + 1); if (u) return u; }
+  return "";
+}
 const BUCKET = "project-files";
 
 const cors = {
@@ -116,13 +150,13 @@ function moneyOf(job: Row, changes: Row[], payments: Row[]) {
 async function view(c: Ctx) {
   const { link: l, job: j } = c;
   const owner = l.owner, jid = encodeURIComponent(l.job_id);
-  const [cs, msgs, cos, cts, pays, acct] = await Promise.all([
+  const [cs, msgs, cos, cts, pays, loc] = await Promise.all([
     rest(`client_settings?user_id=eq.${owner}&select=data&limit=1`),
     rest(`customer_messages?owner=eq.${owner}&job_id=eq.${jid}&select=id,from_customer,author,body,created_at,read_at&order=created_at.asc&limit=300`),
     rest(`customer_change_orders?owner=eq.${owner}&job_id=eq.${jid}&status=neq.void&select=id,title,description,amount,status,signer_name,signed_at,signature,created_at&order=created_at.desc`),
     rest(`contracts?owner=eq.${owner}&job_id=eq.${jid}&status=in.(sent,viewed,signed)&select=title,status,token,amount,signed_at,sent_at&order=created_at.desc`),
     rest(`stripe_payments?owner=eq.${owner}&invoice_ref=eq.${encodeURIComponent("portal:" + l.job_id)}&status=eq.succeeded&select=amount,paid_at,currency&order=paid_at.desc&limit=50`),
-    rest(`stripe_accounts?owner=eq.${owner}&select=charges_enabled,account_id&limit=1`),
+    ghlLocation(owner),
   ]);
   const data = rows(cs)[0]?.data ?? {};
   const co = data.company ?? {};
@@ -150,7 +184,6 @@ async function view(c: Ctx) {
   const tot = phases.reduce((t, p) => t + p.days, 0), done = phases.reduce((t, p) => t + (p.done ? p.days : 0), 0);
   const changes = rows(cos);
   const payments = rows(pays).map((p: Row) => ({ amount: r2(num(p.amount) / 100), at: p.paid_at }));
-  const ac = rows(acct)[0];
 
   return {
     ok: true,
@@ -167,7 +200,7 @@ async function view(c: Ctx) {
       finish: phases.length ? phases[phases.length - 1].due : "",
     },
     money: moneyOf(j, changes, payments),
-    canPay: !!(SK && ac?.account_id && ac?.charges_enabled),
+    canPay: !!(loc && (GHL_TOKEN || GHL_API_KEY)),
     crew,
     photos, docs,
     contracts: rows(cts).map((k: Row) => ({ title: clean(k.title, 160), status: k.status, signed_at: k.signed_at, amount: k.amount, link: `${PORTAL_URL}#sign=${k.token}` })),
@@ -247,40 +280,33 @@ Deno.serve(async (req) => {
 
     if (b.op === "pay") {
       if (limited("pay:" + ip, 10)) return json({ ok: false, error: "Too many attempts. Try again in a few minutes." }, 429);
-      if (!SK) return json({ ok: false, reason: "not_configured", error: "Online payment isn't set up yet. Contact your contractor to pay." });
-      const ac = rows(await rest(`stripe_accounts?owner=eq.${owner}&select=account_id,charges_enabled,currency&limit=1`))[0];
-      const accountId = String(ac?.account_id ?? "");
-      if (!accountId || !ac?.charges_enabled) return json({ ok: false, reason: "not_connected", error: "Online payment isn't set up yet. Contact your contractor to pay." });
-      const cos = rows(await rest(`customer_change_orders?owner=eq.${owner}&job_id=eq.${jid}&status=eq.approved&select=id,amount,status`));
-      const due = moneyOf(c.job, cos, []).due;
-      // the homeowner may pay part of it, never more than is due
-      const want = b.amount == null || b.amount === "" ? due : num(String(b.amount).replace(/[$,\s]/g, ""));
-      const cents = Math.round(Math.min(want, due) * 100);
-      if (!(cents >= 50) || cents > 99_999_999) return json({ ok: false, error: due > 0 ? "Enter an amount between $0.50 and the balance due." : "Nothing is due right now." });
-      const label = (`${clean(c.job.title, 120) || "Project"} payment`).slice(0, 250);
-      const back = `${PORTAL_URL}#home=${l.token}`;
-      const meta = { bp_owner: owner, bp_invoice: `portal:${l.job_id}`.slice(0, 80), bp_job: String(l.job_id).slice(0, 64) };
-      const body: Record<string, string> = {
-        mode: "payment",
-        "line_items[0][quantity]": "1",
-        "line_items[0][price_data][currency]": String(ac?.currency || "usd"),
-        "line_items[0][price_data][unit_amount]": String(cents),
-        "line_items[0][price_data][product_data][name]": label,
-        success_url: `${back}&paid=1`,
-        cancel_url: back,
-      };
-      for (const [k, v] of Object.entries(meta)) { body[`metadata[${k}]`] = v; body[`payment_intent_data[metadata][${k}]`] = v; }
-      const em = String(c.job.email ?? "");
-      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) body.customer_email = em;
-      body["payment_intent_data[description]"] = `${label} — ${first(c.job.name)}`.slice(0, 200);
-      const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${SK}`, "Content-Type": "application/x-www-form-urlencoded", "Stripe-Account": accountId },
-        body: new URLSearchParams(body).toString(),
+      const no = (error: string) => json({ ok: false, error });
+      const loc = await ghlLocation(owner);
+      const t = loc ? await ghlToken(loc) : "";
+      if (!loc || !t) return no("Online payment isn't set up yet. Contact your contractor to pay.");
+      const r = await fetch(`${GHL_BASE}/invoices/?altId=${loc}&altType=location&limit=100&offset=0`, { headers: ghlH(t) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) return no("Your invoice couldn't be opened. Try again, or contact your contractor.");
+      // this homeowner's invoices: same email, else same name
+      const em = String(c.job.email ?? "").trim().toLowerCase(), nm = String(c.job.name ?? "").trim().toLowerCase();
+      const open = arr(d?.invoices).filter((v) => {
+        const cd = (v.contactDetails ?? {}) as Row;
+        const st = String(v.status ?? "").toLowerCase();
+        const mine = (em && String(cd.email ?? "").toLowerCase() === em) || (nm && String(cd.name ?? "").trim().toLowerCase() === nm);
+        return mine && !["paid", "void", "draft"].includes(st);
+      }).sort((x, y) => String(y.createdAt ?? "").localeCompare(String(x.createdAt ?? "")));
+      const inv = open[0];
+      if (!inv) return no("There's no open invoice yet. Your contractor will send one when a payment is due.");
+      const id = String(inv._id ?? inv.id ?? "");
+      const full = await fetch(`${GHL_BASE}/invoices/${id}?altId=${loc}&altType=location`, { headers: ghlH(t) }).then((x) => x.ok ? x.json() : {}).catch(() => ({}));
+      const url = payLink(full) || payLink(inv);
+      if (url) return json({ ok: true, url, amount: num(inv.amountDue ?? inv.total) });
+      // no link in the API answer: send it to them again, it carries the Pay button
+      const rs = await fetch(`${GHL_BASE}/invoices/${id}/send`, {
+        method: "POST", headers: ghlH(t), body: JSON.stringify({ altId: loc, altType: "location", action: "sms_and_email", liveMode: true }),
       });
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok || !out?.url) return json({ ok: false, reason: "stripe", error: "The payment page couldn't be opened. Try again, or contact your contractor." });
-      return json({ ok: true, url: out.url, amount: cents / 100 });
+      if (!rs.ok) return no("Your invoice couldn't be opened. Contact your contractor to pay.");
+      return json({ ok: true, sent: true, message: "We just sent your invoice to your phone and email. Tap Pay in that message to pay securely." });
     }
 
     return json({ ok: false, error: "unknown op" }, 400);
