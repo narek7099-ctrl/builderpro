@@ -35254,18 +35254,19 @@ function bpHpErr(msg){
   h.innerHTML='<div class="sg-wrap"><div class="sg-card"><h1 class="sg-h">Project unavailable</h1><p class="sg-p">'+bpEsc(msg)+'</p></div></div>';
 }
 /* app shell: sidebar on desktop (>=900px), app bar + bottom tab bar on phones.
-   Changes has no tab on phones; it's reached from the Overview banner/card,
-   and the Overview tab carries its badge. */
-var BP_HP_TABS=[['overview','Overview','space_dashboard','Overview'],['photos','Photos','photo_library','Photos'],['docs','Documents','folder_open','Docs'],['pay','Payments','account_balance_wallet','Pay'],['msgs','Messages','forum','Messages'],['changes','Changes','edit_document','Changes']];
+   Phones get Home, Schedule, Photos, Pay, Messages and More; More opens a
+   sheet with Documents and Changes (and carries their combined badge). */
+var BP_HP_TABS=[['overview','Overview','space_dashboard','Home'],['sched','Schedule','calendar_month','Schedule'],['photos','Photos','photo_library','Photos'],['docs','Documents','folder_open','Docs'],['pay','Payments','account_balance_wallet','Pay'],['msgs','Messages','forum','Messages'],['changes','Changes','edit_document','Changes']];
+var BP_HP_PHONE=['overview','sched','photos','pay','msgs','more'],BP_HP_MORE=['docs','changes'];
 var BP_HP_REQ=/^change request:\s*/i;
 function bpHpSkel(){
   return '<div class="hp-app hp-skel" aria-busy="true" aria-label="Loading your project">'
     +'<aside class="hp-side"><div class="hp-brand"><i class="sk sk-av"></i><div style="flex:1"><i class="sk" style="width:70%"></i><i class="sk sm" style="width:45%"></i></div></div>'
-      +'<div class="hp-nav">'+[1,2,3,4,5,6].map(function(){return '<i class="sk nav"></i>';}).join('')+'</div></aside>'
+      +'<div class="hp-nav">'+[1,2,3,4,5,6,7].map(function(){return '<i class="sk nav"></i>';}).join('')+'</div></aside>'
     +'<div class="hp-main"><header class="hp-bar"><i class="sk" style="width:180px;height:16px"></i></header>'
       +'<div class="hp-content"><div class="hp-card"><i class="sk" style="width:40%;height:22px"></i><i class="sk" style="width:60%"></i><i class="sk" style="width:100%;height:10px;margin-top:18px"></i></div>'
       +'<div class="hp-grid"><div class="hp-card"><i class="sk" style="width:30%"></i><i class="sk"></i><i class="sk"></i><i class="sk" style="width:70%"></i></div><div class="hp-card"><i class="sk" style="width:30%"></i><i class="sk"></i><i class="sk" style="width:50%"></i></div></div></div></div>'
-    +'<nav class="hp-tabbar">'+[1,2,3,4,5].map(function(){return '<span><i class="sk sk-ic"></i></span>';}).join('')+'</nav>'
+    +'<nav class="hp-tabbar">'+[1,2,3,4,5,6].map(function(){return '<span><i class="sk sk-ic"></i></span>';}).join('')+'</nav>'
   +'</div>';
 }
 function bpHpInitials(s){var w=String(s||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?').charAt(0)+(w.length>1?w[1].charAt(0):'')).toUpperCase();}
@@ -35288,17 +35289,21 @@ function bpHpRender(){
   if(b.name)document.title=b.name+' · Your project';
   if(_bpHp.tab==='msgs')bpHpMarkSeen();
   var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
-  var badge={changes:pend,msgs:bpHpUnread()};
+  var unsigned=(d.contracts||[]).filter(function(c){return c.status!=='signed';}).length;
+  var badge={changes:pend,msgs:bpHpUnread(),docs:unsigned};
+  badge.more=badge.changes+badge.docs;
   var stPill=j.status==='done'?'<span class="hp-pill done"><span class=ms>task_alt</span>Complete</span>':'<span class="hp-pill live"><i></i>In progress</span>';
   var cur=BP_HP_TABS.filter(function(t){return t[0]===_bpHp.tab;})[0]||BP_HP_TABS[0];
   var navBtn=function(t,phone){
     var n=badge[t[0]]||0;
-    if(phone&&t[0]==='overview')n=badge.changes;   /* changes live under Overview on phones */
-    var on=_bpHp.tab===t[0]||(phone&&t[0]==='overview'&&_bpHp.tab==='changes');
-    return '<button type="button" class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-hp-tab="'+t[0]+'" onclick="bpHpTab(\''+t[0]+'\')">'
+    var on=_bpHp.tab===t[0]||(t[0]==='more'&&BP_HP_MORE.indexOf(_bpHp.tab)>=0);
+    var go=t[0]==='more'?'bpHpMore(true)':'bpHpTab(\''+t[0]+'\')';
+    return '<button type="button" class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-hp-tab="'+t[0]+'" onclick="'+go+'"'+(t[0]==='more'?' aria-haspopup="dialog"':'')+'>'
       +'<span class="hp-ico"><span class=ms>'+t[2]+'</span>'+(n?'<em class="hp-badge'+(t[0]==='msgs'?' blue':'')+'" aria-label="'+n+' new">'+n+'</em>':'')+'</span>'
       +'<span class="hp-lbl">'+(phone?t[3]:t[1])+'</span></button>';
   };
+  _bpHp.badge=badge;
+  var phoneTabs=BP_HP_PHONE.map(function(k){return k==='more'?['more','More','menu','More']:BP_HP_TABS.filter(function(t){return t[0]===k;})[0];});
   h.innerHTML='<div class="hp-app'+(_bpHp.tab==='msgs'?' is-chat':'')+'">'
     +'<aside class="hp-side">'
       +'<div class="hp-brand">'+bpHpAvatar(b,'lg')+'<div><b>'+bpEsc(b.name||'Your contractor')+'</b><span>Client portal</span></div></div>'
@@ -35323,7 +35328,8 @@ function bpHpRender(){
         +'<main class="hp-pane'+(_bpHp.anim?' hp-in':'')+'" id="hpBody">'+bpHpPane(_bpHp.tab)+'</main>'
       +'</div>'
     +'</div>'
-    +'<nav class="hp-tabbar" aria-label="Project sections">'+BP_HP_TABS.slice(0,5).map(function(t){return navBtn(t,true);}).join('')+'</nav>'
+    +'<nav class="hp-tabbar" aria-label="Project sections">'+phoneTabs.map(function(t){return navBtn(t,true);}).join('')+'</nav>'
+    +(_bpHp.more?bpHpMoreSheet():'')
   +'</div>';
   _bpHp.anim=false;
   if(_bpHp.tab==='msgs'){var l=document.getElementById('hpThread');if(l)l.scrollTop=l.scrollHeight;}
@@ -35331,7 +35337,7 @@ function bpHpRender(){
 }
 window.bpHpTab=function(t){
   var changed=_bpHp.tab!==t;
-  _bpHp.tab=t;_bpHp.co=null;_bpHp.req=false;_bpHp.anim=changed;bpHpRender();
+  _bpHp.tab=t;_bpHp.co=null;_bpHp.req=false;_bpHp.more=false;_bpHp.anim=changed;bpHpRender();
   if(changed)try{window.scrollTo(0,0);}catch(e){}
 };
 function bpHpCard(title,body,cls,act){return '<section class="hp-card'+(cls?' '+cls:'')+'">'+(title?'<div class="hp-card-h"><h2>'+title+'</h2>'+(act||'')+'</div>':'')+body+'</section>';}
@@ -35368,7 +35374,7 @@ function bpHpPane(t){
           return '<li class="'+(p.done?'done':i===nextIx?'now':'')+'"><i>'+(p.done?'<span class=ms>check</span>':'')+'</i><b>'+bpEsc(p.name||'Phase')+'</b><span>'+(p.done?'Done':i===nextIx?'Up next':'')+(p.due&&!p.done?(i===nextIx?' · ':'')+bpEsc(bpHpDay(p.due)):'')+'</span></li>';
         }).join('')+'</ol>':'')
         +((j.visits||[]).length?'<div class="hp-sub">Scheduled visits</div><div class="hp-days">'+j.visits.map(function(v){return '<span>'+bpEsc(bpHpDay(v))+'</span>';}).join('')+'</div>':'')
-        +(!ph.length&&!(j.visits||[]).length?bpHpEmpty('event','Your contractor hasn\'t set dates yet. They\'ll show here once they do.'):''));
+        +(!ph.length&&!(j.visits||[]).length?bpHpEmpty('event','Your contractor hasn\'t set dates yet. They\'ll show here once they do.'):''),'','<button type="button" class="hp-link" id="hpSeeSched" onclick="bpHpTab(\'sched\')">See full schedule<span class=ms>chevron_right</span></button>');
     var crew=(d.crew||[]).length?bpHpCard('Your crew','<div class="hp-crew">'+d.crew.map(function(c){
           return '<div class="hp-mate">'+(c.photo?'<img src="'+bpHpEscA(c.photo)+'" alt="">':'<span class="hp-av">'+bpEsc((c.name||'?').charAt(0))+'</span>')+'<div><b>'+bpEsc(c.name||'Crew')+'</b>'+(c.trade?'<span>'+bpEsc(c.trade)+'</span>':'')+'</div></div>';
         }).join('')+'</div>'):'';
@@ -35383,6 +35389,7 @@ function bpHpPane(t){
         +'<button type="button" class="hp-card hp-rowcard" onclick="bpHpTab(\'changes\')"><span class="ms hp-ic">edit_document</span><div><b>Changes</b><span>'+(pend?pend+' waiting for your approval':'Approve changes or request one')+'</span></div>'+(pend?'<em class="hp-badge">'+pend+'</em>':'')+'<span class="ms">chevron_right</span></button>'
       +'</div></div>';
   }
+  if(t==='sched')return bpHpSched();
   if(t==='photos'){
     var n=(d.photos||[]).length;
     return bpHpCard('Progress photos'+(n?' <span class="hp-count">'+n+'</span>':''),n?'<div class="hp-ph-grid">'+d.photos.map(function(p){return '<a href="'+bpHpEscA(p.url)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+bpHpEscA(p.url)+'" alt="Project photo"></a>';}).join('')+'</div>'
@@ -35461,6 +35468,194 @@ function bpHpPane(t){
   }
   return '';
 }
+/* ---- More sheet (phones): Documents and Changes ---- */
+function bpHpMoreSheet(){
+  var bd=_bpHp.badge||{},d=_bpHp.d||{};
+  var pend=bd.changes||0,uns=bd.docs||0,nDocs=(d.docs||[]).length+(d.contracts||[]).length;
+  var row=function(k,ico,t,sub,n){return '<button type="button" class="hp-sheet-row'+(_bpHp.tab===k?' on':'')+'" data-hp-more="'+k+'" onclick="bpHpTab(\''+k+'\')"><span class="ms hp-ic">'+ico+'</span><div><b>'+t+'</b><span>'+sub+'</span></div>'+(n?'<em class="hp-badge" aria-label="'+n+' new">'+n+'</em>':'')+'<span class="ms">chevron_right</span></button>';};
+  return '<div class="hp-sheet-bg" onclick="bpHpMore(false)"></div>'
+    +'<div class="hp-sheet" id="hpMore" role="dialog" aria-modal="true" aria-label="More">'
+      +'<div class="hp-sheet-grip" aria-hidden="true"></div><div class="hp-sheet-h"><b>More</b><button type="button" class="hp-iconbtn" aria-label="Close" onclick="bpHpMore(false)"><span class=ms>close</span></button></div>'
+      +row('docs','folder_open','Documents',uns?uns+' waiting for your signature':nDocs?nDocs+' contracts &amp; files':'Contracts, permits and files',uns)
+      +row('changes','edit_document','Changes',pend?pend+' waiting for your approval':'Approve changes or request one',pend)
+    +'</div>';
+}
+window.bpHpMore=function(open){
+  _bpHp.more=!!open;bpHpRender();
+  if(open){var f=document.querySelector('#hpMore .hp-sheet-row');if(f)f.focus();}
+};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_bpHp.more)bpHpMore(false);});
+
+/* ---- Schedule: summary, phase stepper, visits by week, inspections,
+   month calendar and .ics files made in the browser ---- */
+function bpHpD(s){return new Date(s+'T12:00:00');}
+function bpHpIsoL(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function bpHpToday(){return bpHpIsoL(new Date());}
+function bpHpAddDays(s,n){var d=bpHpD(s);d.setDate(d.getDate()+n);return bpHpIsoL(d);}
+function bpHpDiff(a,b){return Math.round((bpHpD(b)-bpHpD(a))/864e5);}
+/* "07:30", "7:30 AM", "8am" -> "07:30"; anything else -> "" */
+function bpHpClock24(s){
+  var m=/^\s*(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?/i.exec(String(s||'')); if(!m)return '';
+  var h=+m[1],mi=+(m[2]||0),ap=(m[3]||'').charAt(0).toLowerCase();
+  if(!m[2]&&!ap)return '';
+  if(ap==='p'&&h<12)h+=12; if(ap==='a'&&h===12)h=0;
+  return h>23||mi>59?'':('0'+h).slice(-2)+':'+('0'+mi).slice(-2);
+}
+function bpHpClock(hm){var p=hm.split(':'),h=+p[0],m=+p[1];return (h%12||12)+(m?':'+('0'+m).slice(-2):'')+' '+(h<12?'AM':'PM');}
+function bpHpWin(v){
+  if(!v.t)return '';
+  if(!v.dur)return bpHpClock(v.t);
+  var p=v.t.split(':'),e=(+p[0])*60+(+p[1])+v.dur;e=Math.min(e,23*60+59);
+  return bpHpClock(v.t)+' – '+bpHpClock(('0'+Math.floor(e/60)).slice(-2)+':'+('0'+e%60).slice(-2));
+}
+function bpHpSchedData(){
+  var d=_bpHp.d||{},j=d.job||{},today=bpHpToday();
+  var src=(j.schedule&&j.schedule.length)?j.schedule:(j.visits||[]).map(function(x){return {date:x};});
+  var dflt=bpHpClock24(j.time);
+  var visits=src.filter(function(v){return v&&/^\d{4}-\d{2}-\d{2}$/.test(v.date);}).map(function(v){
+    var t=v.time||dflt;return {date:v.date,t:t,dur:v.time?(+v.dur||0):0,txt:!t&&j.time?String(j.time):''};
+  }).sort(function(a,b){return a.date<b.date?-1:1;});
+  var ph=j.phases||[],nextIx=-1; ph.forEach(function(p,i){if(nextIx<0&&!p.done)nextIx=i;});
+  var phases=ph.map(function(p,i){
+    var st=p.done?'done':(p.due&&p.due<today)?'late':(i===nextIx||(p.start&&p.start<=today))?'now':'up';
+    return {name:p.name||'Phase',start:p.start||'',due:p.due||'',days:+p.days||0,st:st,i:i};
+  });
+  var insp=[];(d.permits||[]).forEach(function(pm){(pm.inspections||[]).forEach(function(x){insp.push({kind:x.kind||'Inspection',date:x.date||'',result:x.result||'Pending',permit:pm.type||''});});});
+  insp.sort(function(a,b){return (a.date||'9')<(b.date||'9')?-1:1;});
+  return {j:j,today:today,visits:visits,phases:phases,insp:insp,cur:nextIx>=0?phases[nextIx]:null,
+    start:j.start||(phases[0]&&phases[0].start)||(visits[0]&&visits[0].date)||'',
+    finish:j.finish||(visits.length?visits[visits.length-1].date:'')};
+}
+var BP_HP_ST={done:['Done','ok','check'],now:['In progress','now',''],up:['Upcoming','',''],late:['Late','bad','priority_high']};
+function bpHpRange(a,b){
+  var o={month:'short',day:'numeric'};
+  if(a&&b&&a!==b)return bpHpDay(a,o)+' – '+bpHpDay(b,o);
+  return bpHpDay(b||a,o);
+}
+function bpHpCrewLine(){var c=(_bpHp.d.crew||[]).map(function(x){return x.name;}).filter(Boolean);return c.length?c.slice(0,4).join(', ')+(c.length>4?' +'+(c.length-4):''):'';}
+function bpHpSched(){
+  var S=bpHpSchedData(),j=S.j,today=S.today,b=_bpHp.d.business||{};
+  var up=S.visits.filter(function(v){return v.date>=today;});
+  if(!S.phases.length&&!S.visits.length&&!S.insp.length){
+    return bpHpCard('Schedule',bpHpEmpty('calendar_month','<b>Nothing scheduled yet.</b> When '+bpEsc(b.name||'your contractor')+' sets the plan and visit days, you\'ll see every phase, visit and inspection here.',
+      '<button type="button" class="hp-btn ghost sm" onclick="bpHpTab(\'msgs\')"><span class=ms>chat</span>Ask about timing</button>'),'hp-sc-empty');
+  }
+  var left=S.finish?bpHpDiff(today,S.finish):null;
+  var pct=j.progress!=null?j.progress:null;
+  var lateN=S.phases.filter(function(p){return p.st==='late';}).length;
+  var sum='<section class="hp-card hp-sc-sum">'
+    +'<div class="hp-sc-top"><div><small>Current phase</small><b>'+(j.status==='done'?'Complete':S.cur?bpEsc(S.cur.name):'—')+'</b>'
+      +(S.cur&&j.status!=='done'?'<span class="hp-chip '+BP_HP_ST[S.cur.st][1]+'">'+BP_HP_ST[S.cur.st][0]+'</span>':'')+'</div>'
+      +(pct!=null?'<div class="hp-sc-pct"><b>'+pct+'%</b><small>complete</small></div>':'')+'</div>'
+    +(pct!=null?'<div class="hp-prog" role="img" aria-label="'+pct+'% complete"><i style="width:'+pct+'%"></i></div>':'')
+    +'<dl class="hp-sc-kv">'
+      +'<div><dt>Start</dt><dd>'+(S.start?bpEsc(bpHpDay(S.start,{month:'short',day:'numeric',year:'numeric'})):'Not set')+'</dd></div>'
+      +'<div><dt>Planned finish</dt><dd>'+(S.finish?bpEsc(bpHpDay(S.finish,{month:'short',day:'numeric',year:'numeric'})):'Not set')+'</dd></div>'
+      +'<div><dt>Days remaining</dt><dd>'+(j.status==='done'?'Done':left==null?'—':left>0?left+(left===1?' day':' days'):left===0?'Finishes today':'<span class="hp-bad">'+(-left)+' days over</span>')+'</dd></div>'
+      +'<div><dt>Next visit</dt><dd>'+(up[0]?bpEsc(bpHpDay(up[0].date,{weekday:'short',month:'short',day:'numeric'})):'None scheduled')+'</dd></div>'
+    +'</dl>'
+    +(lateN?'<div class="hp-note warn hp-sc-late"><span class=ms>schedule</span><span>'+(lateN===1?'One phase is':lateN+' phases are')+' running past the planned date. '+bpEsc(b.contact||b.name||'Your contractor')+' can tell you the new timing.</span></div>':'')
+  +'</section>';
+  var view=_bpHp.schedView==='cal'?'cal':'list';
+  var seg='<div class="hp-seg" role="tablist" aria-label="Schedule view">'
+    +'<button type="button" role="tab" id="hpViewList" aria-selected="'+(view==='list')+'" class="'+(view==='list'?'on':'')+'" onclick="bpHpSchedView(\'list\')"><span class=ms>view_agenda</span>List</button>'
+    +'<button type="button" role="tab" id="hpViewCal" aria-selected="'+(view==='cal')+'" class="'+(view==='cal'?'on':'')+'" onclick="bpHpSchedView(\'cal\')"><span class=ms>calendar_view_month</span>Calendar</button></div>';
+  var allIcs=up.length?'<button type="button" class="hp-btn ghost sm" id="hpIcsAll" onclick="bpHpIcsAll()"><span class=ms>event_available</span>Add all to my calendar</button>':'';
+  var bar='<div class="hp-sc-bar">'+seg+allIcs+'</div>';
+  if(view==='cal')return sum+bar+bpHpCal(S);
+  /* phases stepper */
+  var steps=S.phases.length?bpHpCard('Phases <span class="hp-count">'+S.phases.length+'</span>','<ol class="hp-step">'+S.phases.map(function(p){
+      var st=BP_HP_ST[p.st];
+      return '<li class="'+p.st+'" data-ph="'+p.i+'"><i>'+(st[2]?'<span class=ms>'+st[2]+'</span>':'')+'</i><div class="hp-step-b">'
+        +'<div class="hp-step-t"><b>'+bpEsc(p.name)+'</b><span class="hp-chip '+st[1]+'">'+st[0]+'</span></div>'
+        +'<span class="hp-step-m"><span class=ms>date_range</span>'+(p.start||p.due?bpEsc(bpHpRange(p.start,p.due)):'Dates not set')+(p.days?' · '+p.days+(p.days===1?' day':' days'):'')+'</span>'
+      +'</div></li>';
+    }).join('')+'</ol>'):'';
+  /* visits grouped by week (Monday start) */
+  var crew=bpHpCrewLine(),wk={},order=[];
+  up.forEach(function(v){var d=bpHpD(v.date),m=bpHpIsoL(new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7)));if(!wk[m]){wk[m]=[];order.push(m);}wk[m].push(v);});
+  var t0=bpHpD(today),thisMon=bpHpIsoL(new Date(t0.getFullYear(),t0.getMonth(),t0.getDate()-((t0.getDay()+6)%7)));
+  var wkLbl=function(m){return m===thisMon?'This week':m===bpHpAddDays(thisMon,7)?'Next week':'Week of '+bpHpDay(m,{month:'short',day:'numeric'});};
+  var visits=bpHpCard('Upcoming visits'+(up.length?' <span class="hp-count">'+up.length+'</span>':''),up.length?order.map(function(m){
+      return '<div class="hp-wk"><div class="hp-sub">'+bpEsc(wkLbl(m))+'</div>'+wk[m].map(function(v){
+        var w=bpHpWin(v)||v.txt;
+        return '<div class="hp-visit" data-visit="'+v.date+'"><div class="hp-dt'+(v.date===today?' today':'')+'"><small>'+bpEsc(bpHpDay(v.date,{weekday:'short'}))+'</small><b>'+bpHpD(v.date).getDate()+'</b></div>'
+          +'<div class="hp-visit-b"><b>'+bpEsc(bpHpDay(v.date,{weekday:'long',month:'long',day:'numeric'}))+(v.date===today?' <span class="hp-chip now">Today</span>':'')+'</b>'
+            +'<span><span class=ms>schedule</span>'+(w?bpEsc(w):'Time to be confirmed')+'</span>'
+            +(crew?'<span><span class=ms>group</span>'+bpEsc(crew)+'</span>':'')+'</div>'
+          +'<button type="button" class="hp-iconbtn hp-ics" aria-label="Add '+bpHpEscA(bpHpDay(v.date))+' to my calendar" title="Add to my calendar" onclick="bpHpIcsOne(\''+v.date+'\')"><span class=ms>calendar_add_on</span></button></div>';
+      }).join('')+'</div>';
+    }).join(''):bpHpEmpty('event','No visits on the calendar right now. New visit days show up here as soon as they\'re booked.'));
+  var insp=S.insp.length?bpHpCard('Inspections <span class="hp-count">'+S.insp.length+'</span>','<ol class="hp-tl">'+S.insp.map(function(x){
+      var r=x.result==='Passed'?['ok','check_circle','Passed']:x.result==='Failed'?['bad','cancel','Failed']:(x.date&&x.date<today)?['','pending','Awaiting result']:['now','pending','Scheduled'];
+      return '<li class="'+r[0]+'"><span class="ms hp-tl-ic">'+r[1]+'</span><div><b>'+bpEsc(x.kind)+' inspection</b><span>'+(x.date?bpEsc(bpHpDay(x.date,{weekday:'short',month:'short',day:'numeric'})):'Date to be set')+(x.permit?' · '+bpEsc(x.permit)+' permit':'')+'</span></div><span class="hp-chip '+r[0]+'">'+r[2]+'</span></li>';
+    }).join('')+'</ol><p class="hp-fine">Someone usually needs to be home or leave access for the inspector. '+bpEsc(b.contact||b.name||'Your contractor')+' will confirm.</p>'):'';
+  return sum+bar+'<div class="hp-grid"><div class="hp-col">'+steps+(steps?'':visits)+'</div><div class="hp-col">'+(steps?visits:'')+insp+'</div></div>';
+}
+window.bpHpSchedView=function(v){_bpHp.schedView=v;bpHpRender();};
+/* month calendar: visit days, inspection days, phase spans; tap a day for detail */
+function bpHpCal(S){
+  var today=S.today;
+  if(!_bpHp.calM){var up=S.visits.filter(function(v){return v.date>=today;})[0];_bpHp.calM=(up?up.date:today).slice(0,7);}
+  var ym=_bpHp.calM.split('-'),y=+ym[0],mo=+ym[1]-1,first=new Date(y,mo,1,12),nDays=new Date(y,mo+1,0).getDate();
+  var on=function(iso){
+    var o={v:S.visits.filter(function(v){return v.date===iso;}),x:S.insp.filter(function(x){return x.date===iso;}),
+      p:S.phases.filter(function(p){var a=p.start||p.due,z=p.due||p.start;return a&&iso>=a&&iso<=z;})};
+    return o;
+  };
+  var cells='',lead=first.getDay();
+  for(var k=0;k<lead;k++)cells+='<span class="hp-cd out"></span>';
+  for(var dd=1;dd<=nDays;dd++){
+    var iso=bpHpIsoL(new Date(y,mo,dd,12)),o=on(iso),cls=[];
+    if(o.p.length)cls.push('ph',o.p.some(function(p){return p.st==='late';})?'ph-late':'');
+    if(o.v.length)cls.push('vis'); if(o.x.length)cls.push('ins');
+    if(iso===today)cls.push('today'); if(iso===_bpHp.calDay)cls.push('sel');
+    cells+='<button type="button" class="hp-cd '+cls.join(' ')+'" data-day="'+iso+'" onclick="bpHpCalDay(\''+iso+'\')" aria-label="'+bpHpEscA(bpHpDay(iso,{weekday:'long',month:'long',day:'numeric'}))+(o.v.length?', visit':'')+(o.x.length?', inspection':'')+'"'+(iso===_bpHp.calDay?' aria-pressed="true"':'')+'><span>'+dd+'</span><i>'+(o.v.length?'<em class="d-v"></em>':'')+(o.x.length?'<em class="d-x"></em>':'')+'</i></button>';
+  }
+  var head='<div class="hp-cal-h"><button type="button" class="hp-iconbtn" aria-label="Previous month" onclick="bpHpCalMove(-1)"><span class=ms>chevron_left</span></button>'
+    +'<b>'+first.toLocaleDateString('en-US',{month:'long',year:'numeric'})+'</b>'
+    +'<button type="button" class="hp-iconbtn" aria-label="Next month" onclick="bpHpCalMove(1)"><span class=ms>chevron_right</span></button></div>';
+  var wd='<div class="hp-cal-wd">'+['S','M','T','W','T','F','S'].map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>';
+  var legend='<div class="hp-cal-lg"><span><em class="d-v"></em>Visit</span><span><em class="d-x"></em>Inspection</span><span><em class="d-p"></em>Phase</span><span><em class="d-l"></em>Late phase</span></div>';
+  var det='';
+  if(_bpHp.calDay){
+    var o=on(_bpHp.calDay),crew=bpHpCrewLine(),items='';
+    o.v.forEach(function(v){items+='<div class="hp-row"><span class="ms hp-ic">construction</span><div><b>Crew visit</b><span>'+bpEsc(bpHpWin(v)||v.txt||'Time to be confirmed')+(crew?' · '+bpEsc(crew):'')+'</span></div><button type="button" class="hp-iconbtn hp-ics" aria-label="Add to my calendar" onclick="bpHpIcsOne(\''+v.date+'\')"><span class=ms>calendar_add_on</span></button></div>';});
+    o.x.forEach(function(x){items+='<div class="hp-row"><span class="ms hp-ic">fact_check</span><div><b>'+bpEsc(x.kind)+' inspection</b><span>'+bpEsc(x.result)+(x.permit?' · '+bpEsc(x.permit)+' permit':'')+'</span></div></div>';});
+    o.p.forEach(function(p){var st=BP_HP_ST[p.st];items+='<div class="hp-row"><span class="ms hp-ic">flag</span><div><b>'+bpEsc(p.name)+'</b><span>'+bpEsc(bpHpRange(p.start,p.due))+'</span></div><span class="hp-chip '+st[1]+'">'+st[0]+'</span></div>';});
+    det='<div class="hp-cal-det" id="hpCalDet"><div class="hp-sub">'+bpEsc(bpHpDay(_bpHp.calDay,{weekday:'long',month:'long',day:'numeric'}))+'</div>'+(items||'<p class="hp-fine">Nothing scheduled this day.</p>')+'</div>';
+  }
+  return bpHpCard('','<div class="hp-cal">'+head+wd+'<div class="hp-cal-g">'+cells+'</div>'+legend+'</div>'+det,'hp-cal-card');
+}
+window.bpHpCalMove=function(n){var p=(_bpHp.calM||bpHpToday().slice(0,7)).split('-'),d=new Date(+p[0],+p[1]-1+n,1,12);_bpHp.calM=bpHpIsoL(d).slice(0,7);_bpHp.calDay='';bpHpRender();};
+window.bpHpCalDay=function(iso){_bpHp.calDay=_bpHp.calDay===iso?'':iso;bpHpRender();var e=document.getElementById('hpCalDet');if(e&&e.scrollIntoView&&innerWidth<900)e.scrollIntoView({block:'nearest'});};
+/* .ics: floating local times (the visit is at the house, in the house's time) */
+function bpHpIcsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');}
+function bpHpIcsText(vs){
+  var d=_bpHp.d||{},j=d.job||{},b=d.business||{},crew=bpHpCrewLine();
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z');
+  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//BuilderPro//Client portal//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  vs.forEach(function(v){
+    var ymd=v.date.replace(/-/g,'');
+    L.push('BEGIN:VEVENT','UID:'+ymd+'-'+(_bpHp.token||'x').slice(0,12)+'@builderpro-os.com','DTSTAMP:'+stamp);
+    if(v.t){
+      var p=v.t.split(':'),s=(+p[0])*60+(+p[1]),e=Math.min(s+(v.dur||60),23*60+59);
+      var hm=function(m){return ('0'+Math.floor(m/60)).slice(-2)+('0'+m%60).slice(-2)+'00';};
+      L.push('DTSTART:'+ymd+'T'+hm(s),'DTEND:'+ymd+'T'+hm(e));
+    }else L.push('DTSTART;VALUE=DATE:'+ymd,'DTEND;VALUE=DATE:'+bpHpAddDays(v.date,1).replace(/-/g,''));
+    L.push('SUMMARY:'+bpHpIcsEsc((b.name||'Contractor')+' visit · '+(j.title||'Your project')));
+    if(j.addr)L.push('LOCATION:'+bpHpIcsEsc(j.addr));
+    L.push('DESCRIPTION:'+bpHpIcsEsc((crew?'Crew: '+crew+'\n':'')+(v.t?'':(v.txt?'Time: '+v.txt+'\n':'Time to be confirmed\n'))+(b.phone?'Questions? Call '+b.phone:'')),'END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(function(l){var o=[];while(l.length>74){o.push(l.slice(0,74));l=' '+l.slice(74);}o.push(l);return o.join('\r\n');}).join('\r\n')+'\r\n';
+}
+function bpHpIcsSave(vs,name){
+  var txt=bpHpIcsText(vs);_bpHp.lastIcs=txt;
+  try{var u=URL.createObjectURL(new Blob([txt],{type:'text/calendar;charset=utf-8'})),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove();},1500);}catch(e){}
+}
+window.bpHpIcsOne=function(iso){var v=bpHpSchedData().visits.filter(function(x){return x.date===iso;});if(v.length)bpHpIcsSave(v,'visit-'+iso+'.ics');};
+window.bpHpIcsAll=function(){var S=bpHpSchedData(),v=S.visits.filter(function(x){return x.date>=S.today;});if(v.length)bpHpIcsSave(v,'project-visits.ics');};
 window.bpHpReqForm=function(){_bpHp.req=true;_bpHp.reqSent=false;bpHpRender();var t=document.getElementById('hpReq');if(t){t.focus();if(t.scrollIntoView)t.scrollIntoView({block:'center'});}};
 window.bpHpReqSend=function(){
   var t=document.getElementById('hpReq'),b=document.getElementById('hpReqSend'),e=document.getElementById('hpReqErr');
@@ -36419,6 +36614,112 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .sk-av{width:40px;height:40px;border-radius:10px;margin:0;flex-shrink:0;}
 #bpSign .sk-ic{width:40px;height:22px;border-radius:99px;}
 @keyframes hpSk{from{background-position:200% 0;}to{background-position:-200% 0;}}
+/* More sheet (phones) */
+#bpSign .hp-sheet-bg{position:fixed;inset:0;z-index:30;background:rgba(15,23,41,.38);animation:hpFade .18s ease-out;}
+#bpSign .hp-sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;background:#fff;border-radius:18px 18px 0 0;padding:8px 14px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(16,24,40,.18);animation:hpUp .22s cubic-bezier(.2,.8,.2,1);}
+#bpSign .hp-sheet-grip{width:38px;height:4px;border-radius:99px;background:#d5dbe5;margin:2px auto 8px;}
+#bpSign .hp-sheet-h{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px;}
+#bpSign .hp-sheet-h b{font-size:16px;font-weight:700;}
+#bpSign .hp-sheet-row{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;padding:13px 6px;border-top:1px solid var(--hp-line2);cursor:pointer;border-radius:10px;}
+#bpSign .hp-sheet-row:hover,#bpSign .hp-sheet-row.on{background:var(--hp-soft);}
+#bpSign .hp-sheet-row>div{flex:1;min-width:0;}
+#bpSign .hp-sheet-row b{display:block;font-size:15px;font-weight:600;}
+#bpSign .hp-sheet-row span:not(.ms){display:block;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-sheet-row .ms{color:var(--hp-grey2);}
+#bpSign .hp-sheet-row .hp-ic{width:38px;height:38px;border-radius:10px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+@media(min-width:900px){#bpSign .hp-sheet,#bpSign .hp-sheet-bg{display:none;}}
+@keyframes hpUp{from{transform:translateY(100%);}to{transform:none;}}
+@keyframes hpFade{from{opacity:0;}to{opacity:1;}}
+@media(prefers-reduced-motion:reduce){#bpSign .hp-sheet,#bpSign .hp-sheet-bg{animation:none;}}
+#bpSign .hp-tabbar .hp-ico{width:min(52px,100%);}
+@media(max-width:380px){#bpSign .hp-tabbar>button{font-size:10.5px;}}
+/* schedule */
+#bpSign .hp-chip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 8px;background:var(--hp-soft);color:var(--hp-ink2);white-space:nowrap;flex-shrink:0;}
+#bpSign .hp-chip.ok{background:#ecfdf5;color:#15803d;}
+#bpSign .hp-chip.now{background:var(--hp-bluesoft);color:var(--hp-blue2);}
+#bpSign .hp-chip.bad{background:#fef2f2;color:#b91c1c;}
+#bpSign .hp-bad{color:#b91c1c;font-weight:600;}
+#bpSign .hp-sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+#bpSign .hp-sc-top>div:first-child{min-width:0;}
+#bpSign .hp-sc-top small,#bpSign .hp-sc-kv dt{display:block;font-size:12px;color:var(--hp-grey);font-weight:500;}
+#bpSign .hp-sc-top b{display:block;font-size:20px;font-weight:700;letter-spacing:-.015em;margin:2px 0 6px;overflow-wrap:anywhere;}
+#bpSign .hp-sc-pct{text-align:right;flex-shrink:0;}
+#bpSign .hp-sc-pct b{font-size:26px;margin:0;}
+#bpSign .hp-sc-sum .hp-prog{margin:14px 0 4px;}
+#bpSign .hp-sc-kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 0;}
+@media(min-width:900px){#bpSign .hp-sc-kv{grid-template-columns:repeat(4,minmax(0,1fr));}}
+#bpSign .hp-sc-kv div{background:var(--hp-soft);border-radius:10px;padding:10px 12px;min-width:0;}
+#bpSign .hp-sc-kv dd{margin:2px 0 0;font-size:14.5px;font-weight:600;color:var(--hp-ink);}
+#bpSign .hp-sc-late{margin:14px 0 0;}
+#bpSign .hp-sc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px;}
+#bpSign .hp-seg{display:inline-flex;background:#e9ecf1;border-radius:10px;padding:3px;}
+#bpSign .hp-seg button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--hp-grey);padding:7px 14px;border-radius:8px;cursor:pointer;}
+#bpSign .hp-seg button .ms{font-size:18px;width:18px;overflow:hidden;flex-shrink:0;}
+#bpSign .hp-sc-bar .hp-btn .ms,#bpSign .hp-step-m .ms,#bpSign .hp-visit-b>span .ms{width:1em;overflow:hidden;}
+#bpSign .hp-seg button.on{background:#fff;color:var(--hp-ink);box-shadow:0 1px 2px rgba(16,24,40,.08);}
+#bpSign .hp-step{list-style:none;margin:0;padding:0;}
+#bpSign .hp-step li{position:relative;display:flex;gap:12px;padding:0 0 18px;}
+#bpSign .hp-step li:last-child{padding-bottom:0;}
+#bpSign .hp-step li:not(:last-child)::before{content:'';position:absolute;left:11px;top:26px;bottom:2px;width:2px;background:var(--hp-line);border-radius:2px;}
+#bpSign .hp-step li.done:not(:last-child)::before{background:#86efac;}
+#bpSign .hp-step li>i{width:24px;height:24px;border-radius:50%;border:2px solid #d5dbe5;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+#bpSign .hp-step li>i .ms{font-size:15px;}
+#bpSign .hp-step li.done>i{background:#22c55e;border-color:#22c55e;color:#fff;}
+#bpSign .hp-step li.now>i{border-color:var(--hp-blue);box-shadow:0 0 0 4px rgba(47,107,255,.14);}
+#bpSign .hp-step li.now>i::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--hp-blue);}
+#bpSign .hp-step li.late>i{background:#ef4444;border-color:#ef4444;color:#fff;}
+#bpSign .hp-step-b{flex:1;min-width:0;}
+#bpSign .hp-step-t{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#bpSign .hp-step-t b{font-size:14.5px;font-weight:600;min-width:0;overflow-wrap:anywhere;}
+#bpSign .hp-step li.done .hp-step-t b{color:var(--hp-grey);}
+#bpSign .hp-step-m{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--hp-grey);margin-top:3px;}
+#bpSign .hp-step-m .ms{font-size:15px;color:var(--hp-grey2);}
+#bpSign .hp-wk+.hp-wk{margin-top:14px;}
+#bpSign .hp-visit{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--hp-line2);}
+#bpSign .hp-wk .hp-sub+.hp-visit{border-top:0;}
+#bpSign .hp-dt{width:46px;flex-shrink:0;text-align:center;border:1px solid var(--hp-line);border-radius:10px;padding:5px 0 6px;background:#fff;}
+#bpSign .hp-dt small{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--hp-blue2);}
+#bpSign .hp-dt b{display:block;font-size:19px;font-weight:700;line-height:1.1;}
+#bpSign .hp-dt.today{background:var(--hp-blue);border-color:var(--hp-blue);}
+#bpSign .hp-dt.today small,#bpSign .hp-dt.today b{color:#fff;}
+#bpSign .hp-visit-b{flex:1;min-width:0;}
+#bpSign .hp-visit-b>b{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;font-weight:600;}
+#bpSign .hp-visit-b>span{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--hp-grey);margin-top:2px;min-width:0;}
+#bpSign .hp-visit-b>span .ms{font-size:15px;color:var(--hp-grey2);flex-shrink:0;}
+#bpSign .hp-ics{flex-shrink:0;cursor:pointer;color:var(--hp-blue2);overflow:hidden;}
+#bpSign .hp-tl{list-style:none;margin:0;padding:0;}
+#bpSign .hp-tl li{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--hp-line2);}
+#bpSign .hp-tl li:first-child{border-top:0;padding-top:0;}
+#bpSign .hp-tl li>div{flex:1;min-width:0;}
+#bpSign .hp-tl b{display:block;font-size:14px;font-weight:600;}
+#bpSign .hp-tl span:not(.ms):not(.hp-chip){display:block;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-tl-ic{font-size:22px;color:var(--hp-grey2);}
+#bpSign .hp-tl li.ok .hp-tl-ic{color:#16a34a;}#bpSign .hp-tl li.bad .hp-tl-ic{color:#dc2626;}#bpSign .hp-tl li.now .hp-tl-ic{color:var(--hp-blue);}
+#bpSign .hp-cal-card{max-width:760px;}
+#bpSign .hp-cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+#bpSign .hp-cal-h b{font-size:15.5px;font-weight:700;}
+#bpSign .hp-cal-h .hp-iconbtn{cursor:pointer;}
+#bpSign .hp-cal-wd,#bpSign .hp-cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+#bpSign .hp-cal-wd span{text-align:center;font-size:11.5px;font-weight:600;color:var(--hp-grey2);padding:2px 0 4px;}
+#bpSign .hp-cd{position:relative;aspect-ratio:1/1;min-height:40px;border:0;border-radius:10px;background:none;font:inherit;color:var(--hp-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:0;}
+#bpSign .hp-cd.out{cursor:default;}
+@media(min-width:600px){#bpSign .hp-cd{aspect-ratio:auto;height:52px;}}
+#bpSign .hp-cd span{font-size:14px;font-weight:500;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+@media(hover:hover){#bpSign .hp-cd:not(.out):not(.ph):hover{background:var(--hp-soft);}}
+#bpSign .hp-cd.ph{background:#f3f6ff;}
+#bpSign .hp-cd.ph-late{background:#fff1f1;}
+#bpSign .hp-cd.today span{background:var(--hp-ink);color:#fff;font-weight:700;}
+#bpSign .hp-cd.vis span{font-weight:700;color:var(--hp-blue2);}
+#bpSign .hp-cd.today.vis span{color:#fff;}
+#bpSign .hp-cd.sel{box-shadow:inset 0 0 0 2px var(--hp-blue);}
+#bpSign .hp-cd i{display:flex;gap:3px;height:6px;}
+#bpSign .hp-cal em,#bpSign .hp-cal-lg em{display:inline-block;width:6px;height:6px;border-radius:50%;}
+#bpSign .d-v{background:var(--hp-blue);}#bpSign .d-x{background:#f59e0b;}
+#bpSign .hp-cal-lg em.d-p{width:12px;height:8px;border-radius:3px;background:#dfe7ff;}
+#bpSign .hp-cal-lg em.d-l{width:12px;height:8px;border-radius:3px;background:#ffd9d9;}
+#bpSign .hp-cal-lg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12px;color:var(--hp-grey);}
+#bpSign .hp-cal-lg span{display:inline-flex;align-items:center;gap:6px;}
+#bpSign .hp-cal-det{margin-top:14px;border-top:1px solid var(--hp-line2);padding-top:12px;}
 @media print{#bpSign .hp-side,#bpSign .hp-tabbar,#bpSign .hp-bar{display:none;}}
 #bpSign .hp-app.is-chat .hp-content{padding-bottom:86px;}
 @media(min-width:900px){#bpSign .hp-app.is-chat .hp-content{padding-bottom:28px;}}

@@ -7,7 +7,10 @@
 //   POST { op:"get", token }
 //     -> { ok, business:{name, logo, phone, email, contact (owner's first name)}, job:{...}, money:{...},
 //          crew:[{name, trade, photo}], photos:[{url}], docs:[{name, type, url}],
-//          contracts:[{title, status, signed_at, link}], permits:[...],
+//          contracts:[{title, status, signed_at, link}],
+//          permits:[{type, number, status, approved, expires, inspections:[{kind, date, result}]}],
+//          job also carries start (plan start), phases[].start, and
+//          schedule:[{date, time ("HH:MM" or ""), dur (minutes)}] for every scheduled day,
 //          messages:[...], changes:[...], payments:[...], canPay }
 //   POST { op:"message", token, body }
 //   POST { op:"change_order_decide", token, id, decision:"approve"|"decline",
@@ -136,6 +139,14 @@ async function byToken(token: unknown): Promise<Ctx | null> {
 }
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
+const isoDay = (s: unknown) => { const v = String(s ?? "").slice(0, 10); return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : ""; };
+// the next Monday-to-Friday day after an ISO date
+function nextWorkDay(s: string): string {
+  const d = new Date(s + "T12:00:00Z");
+  if (isNaN(d.getTime())) return "";
+  do d.setUTCDate(d.getUTCDate() + 1); while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
+  return iso(d);
+}
 
 /* contract total: the job's estimate plus approved change orders the owner's
    portal has not yet folded into it (it remembers which in job.custCoApplied) */
@@ -182,7 +193,24 @@ async function view(c: Ctx) {
 
   const today = iso(new Date());
   const dates = arr(j.sched?.dates).map(String).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
-  const phases = arr(j.plan?.phases).map((p) => ({ name: clean(p?.name, 80), days: num(p?.days) || 1, due: clean(p?.due, 10), done: !!p?.doneAt }));
+  // phases: each starts the working day after the one before it ends (the
+  // plan's own rule, portal/progress.js); the first starts on plan.start
+  const planStart = isoDay(j.plan?.start);
+  let prevDue = "";
+  const phases = arr(j.plan?.phases).map((p, i) => {
+    const due = isoDay(p?.due);
+    const start = i === 0 ? planStart : prevDue ? nextWorkDay(prevDue) : "";
+    prevDue = due;
+    return { name: clean(p?.name, 80), days: num(p?.days) || 1, due, start: start && due && start > due ? due : start, done: !!p?.doneAt };
+  });
+  // every scheduled day with its time window (slots[day] = {t:"HH:MM", dur:minutes}),
+  // past ones too so the calendar can show them; nothing else from the slot
+  const slots: Row = (j.sched?.slots && typeof j.sched.slots === "object") ? j.sched.slots : {};
+  const schedule = dates.slice(-120).map((d) => {
+    const sl = slots[d] && typeof slots[d] === "object" ? slots[d] : null;
+    const t = /^\d{1,2}:\d{2}$/.test(String(sl?.t ?? "")) ? String(sl.t) : "";
+    return { date: d, time: t, dur: t ? Math.max(0, Math.min(24 * 60, Math.round(num(sl?.dur)))) : 0 };
+  });
   const tot = phases.reduce((t, p) => t + p.days, 0), done = phases.reduce((t, p) => t + (p.done ? p.days : 0), 0);
   const changes = rows(cos);
   const payments = rows(pays).map((p: Row) => ({ amount: r2(num(p.amount) / 100), at: p.paid_at }));
@@ -200,6 +228,8 @@ async function view(c: Ctx) {
       phases, next_visit: dates.find((d) => d >= today) || "", time: clean(j.sched?.time, 40),
       visits: dates.filter((d) => d >= today).slice(0, 10),
       finish: phases.length ? phases[phases.length - 1].due : "",
+      start: planStart || phases.find((p) => p.start)?.start || dates[0] || "",
+      schedule,
     },
     money: moneyOf(j, changes, payments),
     canPay: !!(loc && (GHL_TOKEN || GHL_API_KEY)),
@@ -208,6 +238,10 @@ async function view(c: Ctx) {
     contracts: rows(cts).map((k: Row) => ({ title: clean(k.title, 160), status: k.status, signed_at: k.signed_at, amount: k.amount, link: `${PORTAL_URL}#sign=${k.token}` })),
     permits: arr(j.permits).filter((p) => p && String(p.gone ?? "") !== "true").map((p) => ({
       type: clean(p.type, 80), number: clean(p.number, 60), status: clean(p.status, 40), approved: clean(p.approved, 10), expires: clean(p.expires, 10),
+      // inspections: what, when, result only (no inspector notes, no fees)
+      inspections: arr(p.inspections).filter((x) => x && (x.date || x.kind)).slice(0, 30).map((x) => ({
+        kind: clean(x.kind, 80), date: isoDay(x.date), result: ["Passed", "Failed", "Pending"].includes(String(x.result)) ? String(x.result) : "Pending",
+      })),
     })),
     messages: rows(msgs).map((m: Row) => ({ id: m.id, mine: !!m.from_customer, author: m.from_customer ? "" : clean(m.author, 60) || contact || clean(co.name, 60), body: m.body, at: m.created_at, read: !!m.read_at })),
     changes: changes.map((x: Row) => ({ id: x.id, title: x.title, description: x.description, amount: num(x.amount), status: x.status, signer_name: x.signer_name, signed_at: x.signed_at, signature: x.status === "approved" ? x.signature : null, at: x.created_at })),
