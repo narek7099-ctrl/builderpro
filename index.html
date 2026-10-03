@@ -35224,7 +35224,7 @@ try{ bpSignRoute(); }catch(e){}
    contracts, what's paid and due (Pay now), messages and change orders the
    homeowner approves with a drawn signature (the signing page's pad). ======*/
 var CP_URL=BP_URL+'/functions/v1/customer-portal';
-var _bpHp={token:'',d:null,tab:'overview',co:null};
+var _bpHp={token:'',d:null,tab:'overview',co:null,req:false,reqSent:false,anim:false};
 function bpHpEscA(s){return bpEsc(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function bpHpMoney(n){n=+n||0;return (n<0?'−$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function bpHpDay(s,o){if(!s)return '';var d=new Date(/^\d{4}-\d{2}-\d{2}$/.test(s)?s+'T12:00:00':s);return isNaN(d)?'':d.toLocaleDateString('en-US',o||{weekday:'short',month:'short',day:'numeric'});}
@@ -35239,7 +35239,7 @@ function bpHomeRoute(){
   _bpHp.paid=/[#&]paid=1/.test(location.hash||'');
   document.body.classList.add('bp-signing','bp-home');
   var host=document.createElement('div'); host.id='bpSign'; host.className='hp'; document.body.appendChild(host);
-  host.innerHTML='<div class="sg-wrap"><div class="sg-card"><div class="sg-load">Loading your project…</div></div></div>';
+  host.innerHTML=bpHpSkel();
   bpHpLoad();
   return true;
 }
@@ -35253,59 +35253,139 @@ function bpHpErr(msg){
   var h=document.getElementById('bpSign'); if(!h)return;
   h.innerHTML='<div class="sg-wrap"><div class="sg-card"><h1 class="sg-h">Project unavailable</h1><p class="sg-p">'+bpEsc(msg)+'</p></div></div>';
 }
-var BP_HP_TABS=[['overview','Overview','home'],['photos','Photos','photo_library'],['docs','Documents','folder'],['pay','Payments','payments'],['msgs','Messages','chat'],['changes','Changes','edit_document']];
+/* app shell: sidebar on desktop (>=900px), app bar + bottom tab bar on phones.
+   Changes has no tab on phones; it's reached from the Overview banner/card,
+   and the Overview tab carries its badge. */
+var BP_HP_TABS=[['overview','Overview','space_dashboard','Overview'],['photos','Photos','photo_library','Photos'],['docs','Documents','folder_open','Docs'],['pay','Payments','account_balance_wallet','Pay'],['msgs','Messages','forum','Messages'],['changes','Changes','edit_document','Changes']];
+var BP_HP_REQ=/^change request:\s*/i;
+function bpHpSkel(){
+  return '<div class="hp-app hp-skel" aria-busy="true" aria-label="Loading your project">'
+    +'<aside class="hp-side"><div class="hp-brand"><i class="sk sk-av"></i><div style="flex:1"><i class="sk" style="width:70%"></i><i class="sk sm" style="width:45%"></i></div></div>'
+      +'<div class="hp-nav">'+[1,2,3,4,5,6].map(function(){return '<i class="sk nav"></i>';}).join('')+'</div></aside>'
+    +'<div class="hp-main"><header class="hp-bar"><i class="sk" style="width:180px;height:16px"></i></header>'
+      +'<div class="hp-content"><div class="hp-card"><i class="sk" style="width:40%;height:22px"></i><i class="sk" style="width:60%"></i><i class="sk" style="width:100%;height:10px;margin-top:18px"></i></div>'
+      +'<div class="hp-grid"><div class="hp-card"><i class="sk" style="width:30%"></i><i class="sk"></i><i class="sk"></i><i class="sk" style="width:70%"></i></div><div class="hp-card"><i class="sk" style="width:30%"></i><i class="sk"></i><i class="sk" style="width:50%"></i></div></div></div></div>'
+    +'<nav class="hp-tabbar">'+[1,2,3,4,5].map(function(){return '<span><i class="sk sk-ic"></i></span>';}).join('')+'</nav>'
+  +'</div>';
+}
+function bpHpInitials(s){var w=String(s||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?').charAt(0)+(w.length>1?w[1].charAt(0):'')).toUpperCase();}
+function bpHpAvatar(b,cls){
+  return b.logo?'<img class="hp-avi '+(cls||'')+'" src="'+bpHpEscA(b.logo)+'" alt="">':'<span class="hp-avi mono '+(cls||'')+'" aria-hidden="true">'+bpEsc(bpHpInitials(b.contact||b.name||'?'))+'</span>';
+}
+function bpHpTel(b){return b.phone?'tel:'+bpHpEscA(String(b.phone).replace(/[^\d+]/g,'')):'';}
+function bpHpSeenKey(){return 'bpHpSeen:'+_bpHp.token;}
+function bpHpUnread(){
+  var seen=''; try{seen=localStorage.getItem(bpHpSeenKey())||'';}catch(e){}
+  return (_bpHp.d.messages||[]).filter(function(m){return !m.mine&&String(m.at||'')>seen;}).length;
+}
+function bpHpMarkSeen(){
+  var ms=_bpHp.d.messages||[],last=ms.length?String(ms[ms.length-1].at||''):'';
+  if(last)try{localStorage.setItem(bpHpSeenKey(),last);}catch(e){}
+}
 function bpHpRender(){
   var d=_bpHp.d,h=document.getElementById('bpSign'); if(!h||!d)return;
   var b=d.business||{},j=d.job||{};
   if(b.name)document.title=b.name+' · Your project';
+  if(_bpHp.tab==='msgs')bpHpMarkSeen();
   var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
-  var badge={changes:pend,msgs:0,photos:(d.photos||[]).length,docs:(d.docs||[]).length+(d.contracts||[]).length};
-  var pct=j.progress;
-  h.innerHTML='<div class="hp-wrap">'
-    +'<header class="hp-top">'
-      +(b.logo?'<img class="hp-logo" src="'+bpHpEscA(b.logo)+'" alt="">':'<div class="hp-mono" aria-hidden="true">'+bpEsc((b.name||'?').charAt(0).toUpperCase())+'</div>')
-      +'<div class="hp-biz"><b>'+bpEsc(b.name||'Your contractor')+'</b>'+(b.phone?'<a href="tel:'+bpHpEscA(String(b.phone).replace(/[^\d+]/g,''))+'">'+bpEsc(b.phone)+'</a>':'')+'</div>'
-    +'</header>'
-    +'<section class="hp-hero">'
-      +'<div class="hp-hi">'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Your project')+'</div>'
-      +'<h1>'+bpEsc(j.title||'Project')+'</h1>'
-      +(j.addr?'<div class="hp-addr"><span class=ms>location_on</span>'+bpEsc(j.addr)+'</div>':'')
-      +'<div class="hp-st">'+(j.status==='done'?'<span class="hp-pill done"><span class=ms>task_alt</span>Complete</span>':'<span class="hp-pill live"><i></i>In progress</span>')
-        +(j.next_visit&&j.status!=='done'?'<span class="hp-pill"><span class=ms>event</span>Next visit '+bpEsc(bpHpDay(j.next_visit))+(j.time?' · '+bpEsc(j.time):'')+'</span>':'')+'</div>'
-      +(pct!=null?'<div class="hp-bar" role="img" aria-label="'+pct+'% complete"><i style="width:'+pct+'%"></i></div><div class="hp-barl"><b>'+pct+'% complete</b>'+(j.finish&&j.status!=='done'?'<span>Planned finish '+bpEsc(bpHpDay(j.finish,{month:'short',day:'numeric'}))+'</span>':'')+'</div>':'')
-    +'</section>'
-    +(_bpHp.paid?'<div class="hp-note ok"><span class=ms>check_circle</span>Thanks, your payment went through. It can take a few minutes to show here.</div>':'')
-    +'<nav class="hp-tabs" role="tablist">'+BP_HP_TABS.map(function(t){
-      return '<button type="button" role="tab" aria-selected="'+(_bpHp.tab===t[0])+'" class="'+(_bpHp.tab===t[0]?'on':'')+'" onclick="bpHpTab(\''+t[0]+'\')"><span class=ms>'+t[2]+'</span>'+t[1]+(t[0]==='changes'&&badge.changes?'<em>'+badge.changes+'</em>':'')+'</button>';
-    }).join('')+'</nav>'
-    +'<main class="hp-body" id="hpBody">'+bpHpPane(_bpHp.tab)+'</main>'
-    +'<footer class="hp-foot">This page is private to you. Please don\'t share the link.'+(b.email?' Questions? <a href="mailto:'+bpHpEscA(b.email)+'">'+bpEsc(b.email)+'</a>':'')+'</footer>'
+  var badge={changes:pend,msgs:bpHpUnread()};
+  var stPill=j.status==='done'?'<span class="hp-pill done"><span class=ms>task_alt</span>Complete</span>':'<span class="hp-pill live"><i></i>In progress</span>';
+  var cur=BP_HP_TABS.filter(function(t){return t[0]===_bpHp.tab;})[0]||BP_HP_TABS[0];
+  var navBtn=function(t,phone){
+    var n=badge[t[0]]||0;
+    if(phone&&t[0]==='overview')n=badge.changes;   /* changes live under Overview on phones */
+    var on=_bpHp.tab===t[0]||(phone&&t[0]==='overview'&&_bpHp.tab==='changes');
+    return '<button type="button" class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-hp-tab="'+t[0]+'" onclick="bpHpTab(\''+t[0]+'\')">'
+      +'<span class="hp-ico"><span class=ms>'+t[2]+'</span>'+(n?'<em class="hp-badge'+(t[0]==='msgs'?' blue':'')+'" aria-label="'+n+' new">'+n+'</em>':'')+'</span>'
+      +'<span class="hp-lbl">'+(phone?t[3]:t[1])+'</span></button>';
+  };
+  h.innerHTML='<div class="hp-app'+(_bpHp.tab==='msgs'?' is-chat':'')+'">'
+    +'<aside class="hp-side">'
+      +'<div class="hp-brand">'+bpHpAvatar(b,'lg')+'<div><b>'+bpEsc(b.name||'Your contractor')+'</b><span>Client portal</span></div></div>'
+      +'<nav class="hp-nav" aria-label="Project sections">'+BP_HP_TABS.map(function(t){return navBtn(t,false);}).join('')+'</nav>'
+      +'<div class="hp-side-foot">'
+        +'<div class="hp-who">'+bpHpAvatar(b)+'<div><b>'+bpEsc(b.contact||b.name||'Your contractor')+'</b><span>'+(b.contact&&b.name?bpEsc(b.name):'Your contractor')+'</span></div></div>'
+        +'<div class="hp-who-acts">'+(b.phone?'<a class="hp-btn ghost sm" href="'+bpHpTel(b)+'"><span class=ms>call</span>Call</a>':'')
+          +'<button type="button" class="hp-btn ghost sm" onclick="bpHpTab(\'msgs\')"><span class=ms>chat</span>Message</button></div>'
+        +'<p class="hp-priv"><span class=ms>lock</span>Private to you. Please don\'t share this link.</p>'
+      +'</div>'
+    +'</aside>'
+    +'<div class="hp-main">'
+      +'<header class="hp-bar">'
+        +'<div class="hp-bar-m">'+bpHpAvatar(b)+'</div>'
+        +'<div class="hp-proj"><div class="hp-proj-t"><b>'+bpEsc(j.title||'Your project')+'</b><span class="hp-desk">'+stPill+'</span></div>'
+          +'<span class="hp-proj-s">'+(j.addr?'<span class=ms>location_on</span>'+bpEsc(j.addr):bpEsc(b.name||''))+'</span></div>'
+        +'<div class="hp-bar-r">'+(b.phone?'<a class="hp-iconbtn" href="'+bpHpTel(b)+'" aria-label="Call '+bpHpEscA(b.name||'your contractor')+'"><span class=ms>call</span></a>':'')
+          +'<span class="hp-crumb hp-desk">'+bpEsc(cur[1])+'</span></div>'
+      +'</header>'
+      +'<div class="hp-content">'
+        +(_bpHp.paid?'<div class="hp-note ok"><span class=ms>check_circle</span>Thanks, your payment went through. It can take a few minutes to show here.</div>':'')
+        +'<main class="hp-pane'+(_bpHp.anim?' hp-in':'')+'" id="hpBody">'+bpHpPane(_bpHp.tab)+'</main>'
+      +'</div>'
+    +'</div>'
+    +'<nav class="hp-tabbar" aria-label="Project sections">'+BP_HP_TABS.slice(0,5).map(function(t){return navBtn(t,true);}).join('')+'</nav>'
   +'</div>';
+  _bpHp.anim=false;
   if(_bpHp.tab==='msgs'){var l=document.getElementById('hpThread');if(l)l.scrollTop=l.scrollHeight;}
   if(_bpHp.co)bpHpCoSign(_bpHp.co,true);
 }
-window.bpHpTab=function(t){_bpHp.tab=t;_bpHp.co=null;bpHpRender();var n=document.querySelector('.hp-tabs .on');if(n&&n.scrollIntoView)n.scrollIntoView({block:'nearest',inline:'nearest'});};
-function bpHpCard(title,body,cls){return '<section class="hp-card'+(cls?' '+cls:'')+'">'+(title?'<h2>'+title+'</h2>':'')+body+'</section>';}
-function bpHpEmpty(ico,t){return '<div class="hp-empty"><span class=ms>'+ico+'</span>'+t+'</div>';}
+window.bpHpTab=function(t){
+  var changed=_bpHp.tab!==t;
+  _bpHp.tab=t;_bpHp.co=null;_bpHp.req=false;_bpHp.anim=changed;bpHpRender();
+  if(changed)try{window.scrollTo(0,0);}catch(e){}
+};
+function bpHpCard(title,body,cls,act){return '<section class="hp-card'+(cls?' '+cls:'')+'">'+(title?'<div class="hp-card-h"><h2>'+title+'</h2>'+(act||'')+'</div>':'')+body+'</section>';}
+function bpHpEmpty(ico,t,extra){return '<div class="hp-empty"><span class="hp-empty-ic"><span class=ms>'+ico+'</span></span><p>'+t+'</p>'+(extra||'')+'</div>';}
+function bpHpReqs(){return (_bpHp.d.messages||[]).filter(function(m){return m.mine&&BP_HP_REQ.test(m.body||'');});}
+function bpHpDayLabel(at){
+  var d=new Date(at); if(isNaN(d))return '';
+  var t=new Date(); t.setHours(0,0,0,0); var x=new Date(d); x.setHours(0,0,0,0);
+  var diff=Math.round((t-x)/864e5);
+  return diff===0?'Today':diff===1?'Yesterday':d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:d.getFullYear()===t.getFullYear()?undefined:'numeric'});
+}
+function bpHpTime(at){var d=new Date(at);return isNaN(d)?'':d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
 function bpHpPane(t){
-  var d=_bpHp.d,j=d.job||{},m=d.money||{};
+  var d=_bpHp.d,j=d.job||{},m=d.money||{},b=d.business||{};
   if(t==='overview'){
     var ph=(j.phases||[]),nextIx=-1; ph.forEach(function(p,i){if(nextIx<0&&!p.done)nextIx=i;});
     var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
-    return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review<span class="ms hp-go">chevron_right</span></button>':'')
-      +bpHpCard('Schedule',(ph.length?'<ol class="hp-ph">'+ph.map(function(p,i){
-          return '<li class="'+(p.done?'done':i===nextIx?'now':'')+'"><i>'+(p.done?'<span class=ms>check</span>':'')+'</i><b>'+bpEsc(p.name||'Phase')+'</b><span>'+(p.done?'Done':i===nextIx?'Up next':'')+(p.due?(p.done?'':' · ')+(p.done?'':bpEsc(bpHpDay(p.due))):'')+'</span></li>';
+    var pct=j.progress;
+    var hero='<section class="hp-card hp-hero">'
+      +'<div class="hp-hi">'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s where things stand':'Here\'s where things stand')+'</div>'
+      +'<h1>'+bpEsc(j.title||'Your project')+'</h1>'
+      +(j.addr?'<div class="hp-addr"><span class=ms>location_on</span>'+bpEsc(j.addr)+'</div>':'')
+      +'<div class="hp-st">'+(j.status==='done'?'<span class="hp-pill done"><span class=ms>task_alt</span>Complete</span>':'<span class="hp-pill live"><i></i>In progress</span>')
+        +(j.next_visit&&j.status!=='done'?'<span class="hp-pill"><span class=ms>event</span>Next visit '+bpEsc(bpHpDay(j.next_visit))+(j.time?' · '+bpEsc(j.time):'')+'</span>':'')+'</div>'
+      +(pct!=null?'<div class="hp-prog" role="img" aria-label="'+pct+'% complete"><i style="width:'+pct+'%"></i></div><div class="hp-progl"><b>'+pct+'% complete</b>'+(j.finish&&j.status!=='done'?'<span>Planned finish '+bpEsc(bpHpDay(j.finish,{month:'short',day:'numeric'}))+'</span>':'')+'</div>':'')
+    +'</section>';
+    var stats='<div class="hp-stats">'
+      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'pay\')"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b><span>of '+bpHpMoney(m.contract)+'</span></button>'
+      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'changes\')"><small>Changes</small><b>'+(pend?pend+' to review':'None waiting')+'</b><span>'+(pend?'Needs your answer':'Request a change')+'</span></button>'
+      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'photos\')"><small>Photos</small><b>'+(d.photos||[]).length+'</b><span>shared with you</span></button>'
+      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'docs\')"><small>Documents</small><b>'+((d.docs||[]).length+(d.contracts||[]).length)+'</b><span>contracts &amp; files</span></button>'
+    +'</div>';
+    var sched=bpHpCard('Schedule',(ph.length?'<ol class="hp-ph">'+ph.map(function(p,i){
+          return '<li class="'+(p.done?'done':i===nextIx?'now':'')+'"><i>'+(p.done?'<span class=ms>check</span>':'')+'</i><b>'+bpEsc(p.name||'Phase')+'</b><span>'+(p.done?'Done':i===nextIx?'Up next':'')+(p.due&&!p.done?(i===nextIx?' · ':'')+bpEsc(bpHpDay(p.due)):'')+'</span></li>';
         }).join('')+'</ol>':'')
         +((j.visits||[]).length?'<div class="hp-sub">Scheduled visits</div><div class="hp-days">'+j.visits.map(function(v){return '<span>'+bpEsc(bpHpDay(v))+'</span>';}).join('')+'</div>':'')
-        +(!ph.length&&!(j.visits||[]).length?bpHpEmpty('event','Your contractor hasn\'t set dates yet. They\'ll show here once they do.'):''))
-      +((d.crew||[]).length?bpHpCard('Your crew','<div class="hp-crew">'+d.crew.map(function(c){
+        +(!ph.length&&!(j.visits||[]).length?bpHpEmpty('event','Your contractor hasn\'t set dates yet. They\'ll show here once they do.'):''));
+    var crew=(d.crew||[]).length?bpHpCard('Your crew','<div class="hp-crew">'+d.crew.map(function(c){
           return '<div class="hp-mate">'+(c.photo?'<img src="'+bpHpEscA(c.photo)+'" alt="">':'<span class="hp-av">'+bpEsc((c.name||'?').charAt(0))+'</span>')+'<div><b>'+bpEsc(c.name||'Crew')+'</b>'+(c.trade?'<span>'+bpEsc(c.trade)+'</span>':'')+'</div></div>';
-        }).join('')+'</div>'):'')
-      +bpHpCard('Payments','<div class="hp-money"><div><small>Contract</small><b>'+bpHpMoney(m.contract)+'</b></div><div><small>Paid</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
-        +'<button type="button" class="hp-link" onclick="bpHpTab(\'pay\')">See payments<span class=ms>chevron_right</span></button>');
+        }).join('')+'</div>'):'';
+    var pay=bpHpCard('Payments','<div class="hp-money"><div><small>Contract</small><b>'+bpHpMoney(m.contract)+'</b></div><div><small>Paid</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance</small><b>'+bpHpMoney(m.due)+'</b></div></div>','','<button type="button" class="hp-link" onclick="bpHpTab(\'pay\')">View<span class=ms>chevron_right</span></button>');
+    var ms=d.messages||[],lastIn=ms.filter(function(x){return !x.mine;}).slice(-1)[0];
+    var talk=bpHpCard('Your contractor','<div class="hp-who">'+bpHpAvatar(b)+'<div><b>'+bpEsc(b.contact||b.name||'Your contractor')+'</b><span>'+(b.contact&&b.name?bpEsc(b.name):'Usually replies within a few hours')+'</span></div></div>'
+      +(lastIn?'<button type="button" class="hp-last" onclick="bpHpTab(\'msgs\')"><span>'+bpEsc(lastIn.body).slice(0,140)+'</span><small>'+bpEsc(bpHpDayLabel(lastIn.at))+'</small></button>':'')
+      +'<div class="hp-who-acts"><button type="button" class="hp-btn sm" onclick="bpHpTab(\'msgs\')"><span class=ms>chat</span>Message</button>'+(b.phone?'<a class="hp-btn ghost sm" href="'+bpHpTel(b)+'"><span class=ms>call</span>Call</a>':'')+'</div>');
+    return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
+      +hero+stats
+      +'<div class="hp-grid"><div class="hp-col">'+sched+crew+'</div><div class="hp-col">'+pay+talk
+        +'<button type="button" class="hp-card hp-rowcard" onclick="bpHpTab(\'changes\')"><span class="ms hp-ic">edit_document</span><div><b>Changes</b><span>'+(pend?pend+' waiting for your approval':'Approve changes or request one')+'</span></div>'+(pend?'<em class="hp-badge">'+pend+'</em>':'')+'<span class="ms">chevron_right</span></button>'
+      +'</div></div>';
   }
   if(t==='photos'){
-    return bpHpCard('Progress photos',(d.photos||[]).length?'<div class="hp-ph-grid">'+d.photos.map(function(p){return '<a href="'+bpHpEscA(p.url)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+bpHpEscA(p.url)+'" alt="Project photo"></a>';}).join('')+'</div>'
+    var n=(d.photos||[]).length;
+    return bpHpCard('Progress photos'+(n?' <span class="hp-count">'+n+'</span>':''),n?'<div class="hp-ph-grid">'+d.photos.map(function(p){return '<a href="'+bpHpEscA(p.url)+'" target="_blank" rel="noopener"><img loading="lazy" src="'+bpHpEscA(p.url)+'" alt="Project photo"></a>';}).join('')+'</div>'
       :bpHpEmpty('photo_camera','No photos shared yet. Your contractor will add progress photos here.'));
   }
   if(t==='docs'){
@@ -35322,33 +35402,77 @@ function bpHpPane(t){
   }
   if(t==='pay'){
     var pays=m.payments||[];
-    return bpHpCard('',''
+    return bpHpCard('Balance',''
         +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract)+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders)+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
-        +(m.due>0?(d.canPay?'<div class="sg-msg" id="hpPayMsg"></div><button class="sg-btn" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span> Pay my invoice</button><div class="hp-fine">Opens your invoice from '+bpEsc((d.business||{}).name||'your contractor')+' on a secure payment page. Your card details never reach this site.</div>'
-          :'<div class="hp-fine">To pay, contact '+bpEsc((d.business||{}).name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
+        +(m.due>0?(d.canPay?'<div class="sg-msg" id="hpPayMsg"></div><button class="hp-btn lg" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span>Pay my invoice</button><div class="hp-fine"><span class=ms>lock</span>Opens your invoice from '+bpEsc(b.name||'your contractor')+' on a secure payment page. Your card details never reach this site.</div>'
+          :'<div class="hp-fine">To pay, contact '+bpEsc(b.name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
       +bpHpCard('Online payments',pays.length?pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
         :bpHpEmpty('receipt_long','No card payments yet. Payments made another way are included in Paid so far.'));
   }
   if(t==='msgs'){
-    var ms=d.messages||[];
-    return bpHpCard('Messages','<div class="hp-thread" id="hpThread">'+(ms.length?ms.map(function(x){
-        return '<div class="hp-msg'+(x.mine?' me':'')+'"><div>'+bpEsc(x.body).replace(/\n/g,'<br>')+'</div><small>'+(x.mine?'You':bpEsc(x.author||''))+' · '+bpEsc(new Date(x.at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))+'</small></div>';
-      }).join(''):bpHpEmpty('chat','Ask a question or leave a note for your contractor.'))+'</div>'
-      +'<div class="hp-send"><textarea id="hpMsg" rows="2" maxlength="2000" placeholder="Write a message…"></textarea><button class="sg-btn" id="hpSend" onclick="bpHpSend()" aria-label="Send"><span class=ms>send</span></button></div><div class="sg-msg" id="hpMsgErr"></div>');
+    var ms2=d.messages||[],who=b.contact||b.name||'Your contractor',lastDay='',lastMine=-1;
+    ms2.forEach(function(x,i){if(x.mine)lastMine=i;});
+    var rows=ms2.map(function(x,i){
+      var day=bpHpDayLabel(x.at),out='';
+      if(day!==lastDay){out+='<div class="hp-day"><span>'+bpEsc(day)+'</span></div>';lastDay=day;}
+      var nx=ms2[i+1],tail=!nx||nx.mine!==x.mine||bpHpDayLabel(nx.at)!==day;
+      var req=x.mine&&BP_HP_REQ.test(x.body||'');
+      var body=req?'<span class="hp-req-tag"><span class=ms>edit_note</span>Change request</span>'+bpEsc(String(x.body).replace(BP_HP_REQ,'')).replace(/\n/g,'<br>'):bpEsc(x.body).replace(/\n/g,'<br>');
+      out+='<div class="hp-msg'+(x.mine?' me':'')+(tail?' tail':'')+'">'
+        +(x.mine?'':'<span class="hp-msg-av">'+(tail?bpHpAvatar(b,'xs'):'')+'</span>')
+        +'<div class="hp-msg-c">'+(!x.mine&&x.author&&x.author!==who?'<span class="hp-msg-a">'+bpEsc(x.author)+'</span>':'')
+          +'<div class="hp-bub">'+body+'</div>'
+          +(tail?'<small>'+bpEsc(bpHpTime(x.at))+(x.mine&&i===lastMine?' · Delivered':'')+'</small>':'')+'</div></div>';
+      return out;
+    }).join('');
+    return '<section class="hp-card hp-chat">'
+      +'<header class="hp-chat-h">'+bpHpAvatar(b)+'<div class="hp-chat-who"><b>'+bpEsc(who)+(b.contact&&b.name?' <span>· '+bpEsc(b.name)+'</span>':'')+'</b>'
+        +'<small><i class="hp-on"></i>Usually replies within a few hours</small></div>'
+        +(b.phone?'<a class="hp-btn ghost sm" href="'+bpHpTel(b)+'" aria-label="Call '+bpHpEscA(who)+'"><span class=ms>call</span><span class="hp-desk">'+bpEsc(b.phone)+'</span></a>':'')+'</header>'
+      +'<div class="hp-thread" id="hpThread">'+(ms2.length?rows:'<div class="hp-chat-empty">'+bpHpAvatar(b,'lg')+'<b>Message '+bpEsc(who)+'</b><p>Ask a question or leave a note. '+bpEsc(who==='Your contractor'?'They':who)+' will see it next time they check in.</p></div>')+'</div>'
+      +'<div class="hp-compose"><textarea id="hpMsg" rows="1" maxlength="2000" placeholder="Message '+bpHpEscA(who)+'…" onkeydown="bpHpKey(event)" oninput="bpHpGrow(this)"></textarea>'
+        +'<button class="hp-send-b" id="hpSend" onclick="bpHpSend()" aria-label="Send"><span class=ms>arrow_upward</span></button></div>'
+      +'<div class="sg-msg hp-chat-err" id="hpMsgErr"></div>'
+    +'</section>';
   }
   if(t==='changes'){
-    var cs=d.changes||[];
-    return cs.length?cs.map(function(c){
+    var cs=d.changes||[],reqs=bpHpReqs();
+    var head='<section class="hp-card hp-chg-h"><div><h1>Changes</h1><p>Your contractor sends changes here for you to approve. Want something different? Request a change.</p></div>'
+      +(_bpHp.req?'':'<button type="button" class="hp-btn" id="hpReqOpen" onclick="bpHpReqForm()"><span class=ms>add</span>Request a change</button>')+'</section>'
+      +(_bpHp.req?'<section class="hp-card hp-reqf" id="hpReqForm"><div class="hp-card-h"><h2>Request a change</h2></div>'
+        +'<label class="hp-fl" for="hpReq">What would you like changed?</label>'
+        +'<textarea id="hpReq" rows="4" maxlength="1800" placeholder="e.g. Could we switch to the charcoal shingle color? Or add a gutter guard on the back side?"></textarea>'
+        +'<p class="hp-fine">'+bpEsc(b.contact||b.name||'Your contractor')+' gets this as a message. If it changes the price or the schedule, they\'ll send a change order here for you to approve.</p>'
+        +'<div class="sg-msg" id="hpReqErr"></div>'
+        +'<div class="hp-acts"><button type="button" class="hp-btn ghost" onclick="_bpHp.req=false;bpHpRender()">Cancel</button><button type="button" class="hp-btn" id="hpReqSend" onclick="bpHpReqSend()"><span class=ms>send</span>Send request</button></div></section>':'')
+      +(_bpHp.reqSent?'<div class="hp-note ok"><span class=ms>check_circle</span>Request sent. You\'ll see the reply in Messages.</div>':'');
+    var list=cs.length?cs.map(function(c){
       var st=c.status==='approved'?'<span class="hp-tag ok">Approved</span>':c.status==='declined'?'<span class="hp-tag">Declined</span>':'<span class="hp-tag warn">Needs your answer</span>';
       return bpHpCard('','<div class="hp-co-h"><div><b>'+bpEsc(c.title)+'</b><span>Sent '+bpEsc(bpHpDay(c.at,{month:'short',day:'numeric'}))+'</span></div>'+st+'</div>'
         +(c.description?'<p class="hp-co-d">'+bpEsc(c.description).replace(/\n/g,'<br>')+'</p>':'')
-        +'<div class="hp-co-amt">'+(c.amount>=0?'Adds ':'Takes off ')+'<b>'+bpHpMoney(Math.abs(c.amount))+'</b> '+(c.amount>=0?'to':'from')+' your contract</div>'
+        +'<div class="hp-co-amt"><span class=ms>'+(c.amount>=0?'add_circle':'remove_circle')+'</span><span>'+(c.amount>=0?'Adds ':'Takes off ')+'<b>'+bpHpMoney(Math.abs(c.amount))+'</b> '+(c.amount>=0?'to':'from')+' your contract</span></div>'
         +(c.status==='approved'&&c.signature?'<div class="sg-sigs"><div class="sg-sigs-blk"><div class="lbl">Approved by</div><img src="'+bpHpEscA(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div><div class="dt">'+bpEsc(bpHpDay(c.signed_at,{month:'short',day:'numeric',year:'numeric'}))+'</div></div></div>':'')
-        +(c.status==='pending'?'<div id="hpCo-'+c.id+'"><div class="hp-co-acts"><button class="sg-btn" onclick="bpHpCoSign(\''+c.id+'\')">Review and approve</button><button class="sg-decline" onclick="bpHpCoDecline(\''+c.id+'\')">Decline this change</button></div></div>':''),'hp-co');
-    }).join(''):bpHpCard('Changes',bpHpEmpty('edit_document','No change orders. If the work changes, your contractor will send it here for you to approve.'));
+        +(c.status==='pending'?'<div id="hpCo-'+c.id+'"><div class="hp-co-acts"><button class="sg-btn" onclick="bpHpCoSign(\''+c.id+'\')">Review and approve</button><button class="sg-decline" onclick="bpHpCoDecline(\''+c.id+'\')">Decline this change</button></div></div>':''),'hp-co'+(c.status==='pending'?' pend':''));
+    }).join(''):bpHpCard('',bpHpEmpty('edit_document','<b>No change orders yet.</b> Your contractor sends changes here for you to approve. Want something different? <button type="button" class="hp-inl" onclick="bpHpReqForm()">Request a change</button>.'));
+    var mine=reqs.length?bpHpCard('Your requests',reqs.slice().reverse().map(function(r){
+        return '<div class="hp-row"><span class="ms hp-ic">edit_note</span><div><b class="hp-wb">'+bpEsc(String(r.body).replace(BP_HP_REQ,''))+'</b><span>Sent '+bpEsc(bpHpDay(r.at,{month:'short',day:'numeric'}))+'</span></div><span class="hp-tag">Sent</span></div>';
+      }).join('')):'';
+    return head+list+mine;
   }
   return '';
 }
+window.bpHpReqForm=function(){_bpHp.req=true;_bpHp.reqSent=false;bpHpRender();var t=document.getElementById('hpReq');if(t){t.focus();if(t.scrollIntoView)t.scrollIntoView({block:'center'});}};
+window.bpHpReqSend=function(){
+  var t=document.getElementById('hpReq'),b=document.getElementById('hpReqSend'),e=document.getElementById('hpReqErr');
+  var v=(t&&t.value||'').trim(); if(!v){if(e)e.textContent='Tell your contractor what you\'d like changed.';return;}
+  b.disabled=true;
+  bpHpApi('message',{body:'Change request: '+v}).then(function(d){
+    if(!d||!d.ok){b.disabled=false;if(e)e.textContent=(d&&d.error)||'Couldn\'t send. Try again.';return;}
+    _bpHp.d=d;_bpHp.req=false;_bpHp.reqSent=true;bpHpRender();
+  }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
+};
+window.bpHpKey=function(ev){if(ev.key==='Enter'&&!ev.shiftKey&&!ev.isComposing){ev.preventDefault();bpHpSend();}};
+window.bpHpGrow=function(t){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,140)+'px';};
 /* approve: the signing page's pad, name and consent (same ids, same checks) */
 window.bpHpCoSign=function(id,keep){
   var host=document.getElementById('hpCo-'+id); if(!host)return;
@@ -35384,7 +35508,7 @@ window.bpHpSend=function(){
   b.disabled=true;
   bpHpApi('message',{body:v}).then(function(d){
     if(!d||!d.ok){b.disabled=false;if(e)e.textContent=(d&&d.error)||'Couldn\'t send. Try again.';return;}
-    _bpHp.d=d;bpHpRender();
+    _bpHp.d=d;bpHpRender();var t2=document.getElementById('hpMsg');if(t2)t2.focus();
   }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
 };
 window.bpHpPay=function(){
@@ -36054,109 +36178,250 @@ body.bp-signing{background:#eef1f6;}
 @media print{body.bp-signing{background:#fff;}#bpSign .sg-card{box-shadow:none;max-width:none;padding:0;}
   #bpSign .sg-doc{max-height:none;border:0;padding:0;background:none;}#bpSign .sg-btn,#bpSign .sg-decline,#bpSign .sg-brand{display:none;}}
 
-/* customer portal (#home=<token>): the signing page's look, with tabs */
-#bpSign.hp{min-height:100vh;}
-#bpSign .hp-wrap{max-width:760px;margin:0 auto;padding:18px 16px 50px;box-sizing:border-box;color:#0c0c0d;}
-#bpSign .hp-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-#bpSign .hp-logo{height:44px;max-width:150px;object-fit:contain;border-radius:8px;background:#fff;}
-#bpSign .hp-mono{width:44px;height:44px;border-radius:12px;background:#2f6bff;color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-#bpSign .hp-biz{min-width:0;}
-#bpSign .hp-biz b{display:block;font-size:16.5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#bpSign .hp-biz a{font-size:13px;color:#2f6bff;text-decoration:none;font-weight:600;}
-#bpSign .hp-hero{background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(16,24,40,.08);padding:22px 22px 20px;}
-#bpSign .hp-hi{font-size:13px;color:#6b7280;font-weight:600;}
-#bpSign .hp-hero h1{font-size:25px;font-weight:700;letter-spacing:-.5px;line-height:1.2;margin:4px 0 6px;overflow-wrap:anywhere;}
-#bpSign .hp-addr{display:flex;align-items:center;gap:4px;font-size:13.5px;color:#4b5563;}
-#bpSign .hp-addr .ms{font-size:17px;color:#9aa3b2;}
+/* customer portal (#home=<token>): an app shell. Sidebar >=900px; app bar +
+   bottom tab bar on phones. Neutral greys, one blue accent, 12px cards. */
+#bpSign.hp{--hp-bg:#f6f7f9;--hp-card:#fff;--hp-line:#e6e9ef;--hp-line2:#f0f2f5;--hp-ink:#0f1729;--hp-ink2:#374151;--hp-grey:#6b7280;--hp-grey2:#9aa3b2;--hp-soft:#f2f4f7;--hp-blue:#2f6bff;--hp-blue2:#1b56ee;--hp-bluesoft:#eef3ff;
+  min-height:100vh;background:var(--hp-bg);color:var(--hp-ink);font-family:'Geist',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+body.bp-home{background:#f6f7f9;}
+#bpSign .hp-app{min-height:100vh;display:flex;}
+#bpSign .hp-app *{box-sizing:border-box;}
+#bpSign .hp-desk{display:none;}
+/* sidebar */
+#bpSign .hp-side{display:none;}
+@media(min-width:900px){
+  #bpSign .hp-desk{display:inline-flex;}
+  #bpSign .hp-side{display:flex;flex-direction:column;position:sticky;top:0;height:100vh;width:256px;flex-shrink:0;background:var(--hp-card);border-right:1px solid var(--hp-line);padding:18px 14px;}
+}
+#bpSign .hp-brand{display:flex;align-items:center;gap:11px;padding:4px 8px 18px;border-bottom:1px solid var(--hp-line2);margin-bottom:12px;min-width:0;}
+#bpSign .hp-brand>div{min-width:0;}
+#bpSign .hp-brand b{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-brand span{display:block;font-size:12px;color:var(--hp-grey);}
+#bpSign .hp-nav{display:flex;flex-direction:column;gap:2px;}
+#bpSign .hp-nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;border-radius:9px;padding:9px 10px;font:inherit;font-size:14px;font-weight:500;color:var(--hp-ink2);cursor:pointer;text-align:left;transition:background .15s,color .15s;}
+#bpSign .hp-nav button:hover{background:var(--hp-soft);}
+#bpSign .hp-nav button.on{background:var(--hp-bluesoft);color:var(--hp-blue2);font-weight:600;}
+#bpSign .hp-nav .hp-ico{display:flex;align-items:center;}
+#bpSign .hp-nav .hp-ico .ms{font-size:20px;}
+#bpSign .hp-nav .hp-lbl{flex:1;}
+#bpSign .hp-nav .hp-ico{order:0;}#bpSign .hp-nav .hp-badge{position:absolute;right:10px;}
+#bpSign .hp-nav button{position:relative;}
+#bpSign .hp-badge{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
+#bpSign .hp-badge.blue{background:var(--hp-blue);}
+#bpSign .hp-side-foot{margin-top:auto;border-top:1px solid var(--hp-line2);padding:14px 8px 0;}
+#bpSign .hp-who{display:flex;align-items:center;gap:10px;min-width:0;}
+#bpSign .hp-who>div{min-width:0;}
+#bpSign .hp-who b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-who span{display:block;font-size:12.5px;color:var(--hp-grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-who-acts{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+#bpSign .hp-priv{display:flex;gap:6px;align-items:flex-start;font-size:11.5px;color:var(--hp-grey2);line-height:1.45;margin:14px 0 0;}
+#bpSign .hp-priv .ms{font-size:15px;}
+/* avatars */
+#bpSign .hp-avi{width:36px;height:36px;border-radius:10px;flex-shrink:0;object-fit:contain;background:#fff;border:1px solid var(--hp-line);}
+#bpSign .hp-avi.mono{display:inline-flex;align-items:center;justify-content:center;background:var(--hp-blue);border-color:transparent;color:#fff;font-weight:700;font-size:13.5px;letter-spacing:.02em;}
+#bpSign .hp-avi.lg{width:40px;height:40px;font-size:15px;}
+#bpSign .hp-avi.xs{width:28px;height:28px;border-radius:50%;font-size:11px;}
+/* main + top bar */
+#bpSign .hp-main{flex:1;min-width:0;display:flex;flex-direction:column;}
+#bpSign .hp-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 16px;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.6) blur(10px);-webkit-backdrop-filter:saturate(1.6) blur(10px);border-bottom:1px solid var(--hp-line);}
+@media(min-width:900px){#bpSign .hp-bar{padding:12px 32px;min-height:68px;}#bpSign .hp-bar-m{display:none;}}
+#bpSign .hp-proj{flex:1;min-width:0;}
+#bpSign .hp-proj-t{display:flex;align-items:center;gap:10px;min-width:0;}
+#bpSign .hp-proj-t b{font-size:15.5px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+#bpSign .hp-proj-s{display:flex;align-items:center;gap:3px;font-size:12.5px;color:var(--hp-grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-proj-s .ms{font-size:15px;color:var(--hp-grey2);}
+#bpSign .hp-bar-r{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#bpSign .hp-crumb{font-size:13px;color:var(--hp-grey);font-weight:500;}
+#bpSign .hp-iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--hp-line);display:inline-flex;align-items:center;justify-content:center;color:var(--hp-ink2);text-decoration:none;background:#fff;}
+#bpSign .hp-iconbtn .ms{font-size:20px;}
+#bpSign .hp-content{width:100%;max-width:1080px;margin:0 auto;padding:16px 16px 96px;}
+@media(min-width:900px){#bpSign .hp-content{padding:28px 32px 48px;}}
+#bpSign .hp-pane.hp-in{animation:hpIn .22s ease-out;}
+@keyframes hpIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+@media(prefers-reduced-motion:reduce){#bpSign .hp-pane.hp-in{animation:none;}}
+/* bottom tab bar (phones) */
+#bpSign .hp-tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--hp-line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));}
+@media(min-width:900px){#bpSign .hp-tabbar{display:none;}}
+#bpSign .hp-tabbar>button,#bpSign .hp-tabbar>span{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;font:inherit;font-size:11px;font-weight:500;color:var(--hp-grey);padding:4px 0;cursor:pointer;}
+#bpSign .hp-tabbar .hp-ico{position:relative;display:flex;align-items:center;justify-content:center;width:52px;height:28px;border-radius:99px;transition:background .15s;}
+#bpSign .hp-tabbar .hp-ico .ms{font-size:22px;}
+#bpSign .hp-tabbar button.on{color:var(--hp-blue2);font-weight:600;}
+#bpSign .hp-tabbar button.on .hp-ico{background:var(--hp-bluesoft);}
+#bpSign .hp-tabbar button.on .ms{font-variation-settings:'FILL' 1;}
+#bpSign .hp-tabbar .hp-badge{position:absolute;top:-3px;right:6px;border:2px solid #fff;height:19px;}
+#bpSign .hp-tabbar .hp-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+/* cards */
+#bpSign .hp-card{display:block;width:100%;background:var(--hp-card);border:1px solid var(--hp-line);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);text-align:left;font:inherit;color:inherit;}
+@media(max-width:600px){#bpSign .hp-card{padding:16px 14px;}}
+#bpSign .hp-card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+#bpSign .hp-card h2{font-size:14px;font-weight:600;color:var(--hp-ink);margin:0;letter-spacing:-.005em;display:flex;align-items:center;gap:8px;}
+#bpSign .hp-count{font-size:12px;font-weight:600;color:var(--hp-grey);background:var(--hp-soft);border-radius:99px;padding:1px 8px;}
+#bpSign .hp-grid{display:grid;grid-template-columns:1fr;gap:0 14px;}
+@media(min-width:900px){#bpSign .hp-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);}}
+#bpSign .hp-col{min-width:0;}
+#bpSign .hp-hero h1{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin:4px 0 6px;overflow-wrap:anywhere;}
+@media(max-width:600px){#bpSign .hp-hero h1{font-size:21px;}}
+#bpSign .hp-hi{font-size:13px;color:var(--hp-grey);font-weight:500;}
+#bpSign .hp-addr{display:flex;align-items:center;gap:4px;font-size:13.5px;color:var(--hp-ink2);}
+#bpSign .hp-addr .ms{font-size:17px;color:var(--hp-grey2);}
 #bpSign .hp-st{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 2px;}
-#bpSign .hp-pill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:99px;background:#f1f4f9;color:#374151;}
-#bpSign .hp-pill .ms{font-size:16px;}
-#bpSign .hp-pill.live{background:#eef4ff;color:#1b56ee;}
-#bpSign .hp-pill.live i{width:7px;height:7px;border-radius:50%;background:#2f6bff;}
+#bpSign .hp-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--hp-soft);color:var(--hp-ink2);white-space:nowrap;}
+#bpSign .hp-pill .ms{font-size:15px;}
+#bpSign .hp-pill.live{background:var(--hp-bluesoft);color:var(--hp-blue2);}
+#bpSign .hp-pill.live i{width:7px;height:7px;border-radius:50%;background:var(--hp-blue);box-shadow:0 0 0 3px rgba(47,107,255,.18);}
 #bpSign .hp-pill.done{background:#ecfdf5;color:#15803d;}
-#bpSign .hp-bar{height:10px;border-radius:99px;background:#eef1f6;overflow:hidden;margin-top:16px;}
-#bpSign .hp-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2f6bff,#22c55e);}
-#bpSign .hp-barl{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#6b7280;margin-top:7px;}
-#bpSign .hp-barl b{color:#0c0c0d;}
-#bpSign .hp-tabs{display:flex;gap:6px;overflow-x:auto;margin:16px -16px 12px;padding:4px 16px;scrollbar-width:none;position:sticky;top:0;z-index:2;background:#eef1f6;}
-#bpSign .hp-tabs::-webkit-scrollbar{display:none;}
-@media(min-width:720px){#bpSign .hp-tabs{flex-wrap:wrap;overflow:visible;}}
-#bpSign .hp-tabs button{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px solid #dfe4ec;background:#fff;border-radius:99px;padding:8px 13px;font:inherit;font-size:13.5px;font-weight:600;color:#4b5563;cursor:pointer;}
-#bpSign .hp-tabs button .ms{font-size:18px;}
-#bpSign .hp-tabs button.on{background:#0c0c0d;border-color:#0c0c0d;color:#fff;}
-#bpSign .hp-tabs em{font-style:normal;background:#f59e0b;color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;}
-#bpSign .hp-card{background:#fff;border-radius:16px;box-shadow:0 6px 24px rgba(16,24,40,.06);padding:18px 18px;margin-bottom:12px;}
-#bpSign .hp-card h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:#6b7280;margin:0 0 12px;}
-#bpSign .hp-sub{font-size:12px;font-weight:700;color:#6b7280;margin:16px 0 8px;}
-#bpSign .hp-empty{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:#6b7280;padding:4px 0;}
-#bpSign .hp-empty .ms{color:#9aa3b2;}
-#bpSign .hp-note{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;text-align:left;border:0;border-radius:14px;padding:13px 15px;font:inherit;font-size:14px;font-weight:600;margin:12px 0;}
-#bpSign .hp-note.ok{background:#ecfdf5;color:#15803d;}
-#bpSign .hp-note.warn{background:#fff7e6;color:#9a5b00;cursor:pointer;}
+#bpSign .hp-prog{height:8px;border-radius:99px;background:var(--hp-soft);overflow:hidden;margin-top:16px;}
+#bpSign .hp-prog i{display:block;height:100%;border-radius:99px;background:var(--hp-blue);transition:width .6s ease;}
+#bpSign .hp-progl{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--hp-grey);margin-top:7px;}
+#bpSign .hp-progl b{color:var(--hp-ink);font-weight:600;}
+#bpSign .hp-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+@media(min-width:900px){#bpSign .hp-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}}
+#bpSign .hp-stat{display:block;text-align:left;background:var(--hp-card);border:1px solid var(--hp-line);border-radius:12px;padding:13px 14px;font:inherit;color:inherit;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s;}
+#bpSign .hp-stat:hover,#bpSign .hp-rowcard:hover{border-color:#cdd5e1;box-shadow:0 2px 8px rgba(16,24,40,.06);}
+#bpSign .hp-stat small{display:block;font-size:12px;color:var(--hp-grey);font-weight:500;}
+#bpSign .hp-stat b{display:block;font-size:17px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-stat span{display:block;font-size:11.5px;color:var(--hp-grey2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-rowcard{display:flex;align-items:center;gap:12px;cursor:pointer;}
+#bpSign .hp-rowcard>div{flex:1;min-width:0;}
+#bpSign .hp-rowcard b{display:block;font-size:14px;font-weight:600;}
+#bpSign .hp-rowcard span:not(.ms){display:block;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-rowcard>.ms{color:var(--hp-grey2);}
+#bpSign .hp-last{display:block;width:100%;text-align:left;border:0;background:var(--hp-soft);border-radius:10px;padding:10px 12px;margin-top:12px;font:inherit;cursor:pointer;color:inherit;}
+#bpSign .hp-last span{display:block;font-size:13.5px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;}
+#bpSign .hp-last small{display:block;font-size:11.5px;color:var(--hp-grey2);margin-top:3px;}
+/* buttons */
+#bpSign .hp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--hp-blue);background:var(--hp-blue);color:#fff;border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s;}
+#bpSign .hp-btn:hover:not(:disabled){background:var(--hp-blue2);}
+#bpSign .hp-btn:disabled{opacity:.55;cursor:not-allowed;}
+#bpSign .hp-btn .ms{font-size:18px;}
+#bpSign .hp-btn.ghost{background:#fff;color:var(--hp-ink2);border-color:var(--hp-line);}
+#bpSign .hp-btn.ghost:hover:not(:disabled){background:var(--hp-soft);}
+#bpSign .hp-btn.sm{padding:7px 12px;font-size:13px;border-radius:9px;}
+#bpSign .hp-btn.lg{width:100%;padding:14px;font-size:15.5px;border-radius:12px;margin-top:6px;}
+#bpSign .hp-link{display:inline-flex;align-items:center;gap:1px;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--hp-blue);cursor:pointer;}
+#bpSign .hp-link .ms{font-size:18px;}
+#bpSign .hp-inl{background:none;border:0;padding:0;font:inherit;color:var(--hp-blue);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+#bpSign .hp-acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px;}
+/* lists & bits */
+#bpSign .hp-sub{font-size:12px;font-weight:600;color:var(--hp-grey);margin:16px 0 8px;}
+#bpSign .hp-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:18px 10px;color:var(--hp-grey);}
+#bpSign .hp-empty p{margin:0;font-size:13.5px;line-height:1.55;max-width:420px;}
+#bpSign .hp-empty p b{color:var(--hp-ink);display:block;margin-bottom:2px;}
+#bpSign .hp-empty-ic{width:44px;height:44px;border-radius:12px;background:var(--hp-soft);display:flex;align-items:center;justify-content:center;}
+#bpSign .hp-empty-ic .ms{font-size:22px;color:var(--hp-grey);}
+#bpSign .hp-note{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid transparent;border-radius:12px;padding:12px 14px;font:inherit;font-size:14px;font-weight:600;margin:0 0 14px;}
+#bpSign .hp-note>span:not(.ms){flex:1;min-width:0;}
+#bpSign .hp-note.ok{background:#ecfdf5;border-color:#c9f0dc;color:#15803d;}
+#bpSign .hp-note.warn{background:#fff8eb;border-color:#fbe3b4;color:#92560a;cursor:pointer;}
 #bpSign .hp-note .hp-go{margin-left:auto;}
 #bpSign .hp-ph{list-style:none;margin:0;padding:0;}
-#bpSign .hp-ph li{display:flex;align-items:center;gap:11px;padding:9px 0;border-top:1px solid #f0f2f6;font-size:14px;}
-#bpSign .hp-ph li:first-child{border-top:0;}
-#bpSign .hp-ph li i{width:22px;height:22px;border-radius:50%;border:2px solid #d5dbe5;flex-shrink:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;}
+#bpSign .hp-ph li{display:flex;align-items:center;gap:11px;padding:10px 0;border-top:1px solid var(--hp-line2);font-size:14px;}
+#bpSign .hp-ph li:first-child{border-top:0;padding-top:2px;}
+#bpSign .hp-ph li i{width:22px;height:22px;border-radius:50%;border:2px solid #d5dbe5;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 #bpSign .hp-ph li.done i{background:#22c55e;border-color:#22c55e;color:#fff;}
 #bpSign .hp-ph li.done i .ms{font-size:15px;}
-#bpSign .hp-ph li.now i{border-color:#2f6bff;box-shadow:0 0 0 4px rgba(47,107,255,.14);}
-#bpSign .hp-ph li b{flex:1;min-width:0;font-weight:600;}
-#bpSign .hp-ph li.done b{color:#6b7280;}
-#bpSign .hp-ph li span{font-size:12.5px;color:#6b7280;white-space:nowrap;}
-#bpSign .hp-ph li.now span{color:#1b56ee;font-weight:600;}
+#bpSign .hp-ph li.now i{border-color:var(--hp-blue);box-shadow:0 0 0 4px rgba(47,107,255,.14);}
+#bpSign .hp-ph li b{flex:1;min-width:0;font-weight:500;}
+#bpSign .hp-ph li.done b{color:var(--hp-grey);}
+#bpSign .hp-ph li span{font-size:12.5px;color:var(--hp-grey);white-space:nowrap;}
+#bpSign .hp-ph li.now span{color:var(--hp-blue2);font-weight:600;}
 #bpSign .hp-days{display:flex;gap:6px;flex-wrap:wrap;}
-#bpSign .hp-days span{background:#f1f4f9;border-radius:8px;padding:5px 9px;font-size:12.5px;font-weight:600;color:#374151;}
-#bpSign .hp-crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+#bpSign .hp-days span{background:var(--hp-soft);border-radius:8px;padding:5px 9px;font-size:12.5px;font-weight:500;color:var(--hp-ink2);}
+#bpSign .hp-crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
 #bpSign .hp-mate{display:flex;align-items:center;gap:10px;min-width:0;}
-#bpSign .hp-mate img,#bpSign .hp-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-#bpSign .hp-mate .hp-av{font-size:16px;background:#eef4ff;color:#1b56ee;display:flex;align-items:center;justify-content:center;font-weight:700;}
-#bpSign .hp-mate b{display:block;font-size:14px;}
-#bpSign .hp-mate span{display:block;font-size:12.5px;color:#6b7280;}
+#bpSign .hp-mate img,#bpSign .hp-av{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+#bpSign .hp-mate .hp-av{font-size:15px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:flex;align-items:center;justify-content:center;font-weight:700;}
+#bpSign .hp-mate b{display:block;font-size:14px;font-weight:600;}
+#bpSign .hp-mate span{display:block;font-size:12.5px;color:var(--hp-grey);}
 #bpSign .hp-money{display:flex;gap:8px;flex-wrap:wrap;}
-#bpSign .hp-money>div{flex:1;min-width:120px;background:#f6f8fb;border:1px solid #e4e9f0;border-radius:12px;padding:10px 12px;}
-#bpSign .hp-money small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;}
-#bpSign .hp-money b{display:block;font-size:17px;margin-top:2px;font-variant-numeric:tabular-nums;}
-#bpSign .hp-money span{display:block;font-size:11.5px;color:#6b7280;margin-top:2px;}
-#bpSign .hp-money .due{background:#eef4ff;border-color:#cfdcff;}
-#bpSign .hp-money.big b{font-size:21px;}
-#bpSign .hp-link{display:inline-flex;align-items:center;gap:2px;margin-top:10px;background:none;border:0;padding:0;font:inherit;font-size:13.5px;font-weight:600;color:#2f6bff;cursor:pointer;}
-#bpSign .hp-fine{font-size:12px;color:#8b93a1;margin-top:10px;line-height:1.5;}
-#bpSign .sg-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;}
-#bpSign .hp-ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
-#bpSign .hp-ph-grid a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;background:#eef1f6;}
-#bpSign .hp-ph-grid img{width:100%;height:100%;object-fit:cover;display:block;}
+#bpSign .hp-money>div{flex:1;min-width:110px;background:var(--hp-soft);border-radius:10px;padding:10px 12px;}
+#bpSign .hp-money small{display:block;font-size:12px;color:var(--hp-grey);font-weight:500;}
+#bpSign .hp-money b{display:block;font-size:16px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;}
+#bpSign .hp-money span{display:block;font-size:11.5px;color:var(--hp-grey);margin-top:2px;}
+#bpSign .hp-money .due{background:var(--hp-bluesoft);}
+#bpSign .hp-money .due b{color:var(--hp-blue2);}
+#bpSign .hp-money.big b{font-size:21px;}#bpSign .hp-money.big>div{min-width:150px;}#bpSign .hp-money b{overflow-wrap:anywhere;}
+#bpSign .hp-fine{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--hp-grey);margin:10px 0 0;line-height:1.5;}
+#bpSign .hp-fine .ms{font-size:15px;}
+#bpSign .hp-ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;}
+#bpSign .hp-ph-grid a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--hp-soft);}
+#bpSign .hp-ph-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s;}
+#bpSign .hp-ph-grid a:hover img{transform:scale(1.03);}
 @media(max-width:480px){#bpSign .hp-ph-grid{grid-template-columns:repeat(2,1fr);}}
-#bpSign .hp-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid #f0f2f6;text-decoration:none;color:inherit;min-width:0;}
-#bpSign .hp-row:first-of-type{border-top:0;}
+#bpSign .hp-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--hp-line2);text-decoration:none;color:inherit;min-width:0;}
+#bpSign .hp-card-h+.hp-row,#bpSign .hp-row:first-child{border-top:0;padding-top:2px;}
 #bpSign .hp-row>div{flex:1;min-width:0;}
 #bpSign .hp-row b{display:block;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#bpSign .hp-row span{font-size:12.5px;color:#6b7280;}
-#bpSign .hp-row>.ms{color:#9aa3b2;font-size:19px;}
-#bpSign .hp-ic{width:36px;height:36px;border-radius:9px;background:#f1f4f9;color:#4b5563 !important;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
-#bpSign .hp-tag{flex-shrink:0;font-size:11.5px !important;font-weight:700;border-radius:99px;padding:3px 9px;background:#f1f4f9;color:#4b5563 !important;}
+#bpSign .hp-row b.hp-wb{white-space:normal;overflow-wrap:anywhere;font-weight:500;line-height:1.45;}
+#bpSign .hp-row span{font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-row>.ms{color:var(--hp-grey2);font-size:19px;}
+#bpSign .hp-ic{width:36px;height:36px;border-radius:9px;background:var(--hp-soft);color:var(--hp-ink2) !important;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+#bpSign .hp-tag{flex-shrink:0;font-size:11.5px !important;font-weight:600;border-radius:99px;padding:3px 9px;background:var(--hp-soft);color:var(--hp-ink2) !important;white-space:nowrap;}
 #bpSign .hp-tag.ok{background:#ecfdf5;color:#15803d !important;}
-#bpSign .hp-tag.warn{background:#fff7e6;color:#9a5b00 !important;}
-#bpSign .hp-thread{max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px;}
-#bpSign .hp-msg{max-width:82%;align-self:flex-start;}
-#bpSign .hp-msg>div{background:#f1f4f9;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:14px;line-height:1.5;overflow-wrap:anywhere;}
+#bpSign .hp-tag.warn{background:#fff8eb;color:#92560a !important;}
+/* messages */
+#bpSign .hp-chat{display:flex;flex-direction:column;padding:0;overflow:hidden;margin:0;height:calc(100vh - 60px - 32px - 70px);height:calc(100dvh - 60px - 32px - 70px - env(safe-area-inset-bottom));min-height:380px;}
+@media(min-width:900px){#bpSign .hp-chat{height:calc(100vh - 68px - 56px);height:calc(100dvh - 68px - 56px);max-width:860px;margin:0 auto;}}
+#bpSign .hp-chat-h{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--hp-line);background:#fff;}
+#bpSign .hp-chat-who{flex:1;min-width:0;}
+#bpSign .hp-chat-who b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-chat-who b span{font-weight:400;color:var(--hp-grey);}
+#bpSign .hp-chat-who small{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-on{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;}
+#bpSign .hp-thread{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:3px;background:#fbfbfc;overscroll-behavior:contain;}
+#bpSign .hp-day{display:flex;justify-content:center;margin:12px 0 8px;}
+#bpSign .hp-day span{font-size:11.5px;font-weight:600;color:var(--hp-grey);background:var(--hp-soft);border-radius:99px;padding:3px 10px;}
+#bpSign .hp-msg{display:flex;align-items:flex-end;gap:8px;max-width:86%;align-self:flex-start;}
+#bpSign .hp-msg.tail{margin-bottom:8px;}
 #bpSign .hp-msg.me{align-self:flex-end;}
-#bpSign .hp-msg.me>div{background:#2f6bff;color:#fff;border-radius:14px 14px 4px 14px;}
-#bpSign .hp-msg small{display:block;font-size:11px;color:#8b93a1;margin:3px 4px 0;}
-#bpSign .hp-msg.me small{text-align:right;}
-#bpSign .hp-send{display:flex;gap:8px;align-items:flex-end;margin-top:12px;}
-#bpSign .hp-send textarea{flex:1;min-width:0;border:1px solid #dfe4ec;border-radius:12px;padding:11px 12px;font:inherit;font-size:15px;resize:vertical;box-sizing:border-box;}
-#bpSign .hp-send textarea:focus{outline:none;border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.14);}
-#bpSign .hp-send .sg-btn{width:auto;margin:0;padding:12px 15px;}
+#bpSign .hp-msg-av{width:28px;flex-shrink:0;align-self:flex-end;margin-bottom:18px;}
+#bpSign .hp-msg-c{min-width:0;display:flex;flex-direction:column;}
+#bpSign .hp-msg.me .hp-msg-c{align-items:flex-end;}
+#bpSign .hp-msg-a{font-size:11.5px;color:var(--hp-grey);margin:0 0 2px 4px;}
+#bpSign .hp-bub{background:#eef0f3;color:var(--hp-ink);border-radius:16px 16px 16px 6px;padding:9px 13px;font-size:14.5px;line-height:1.45;overflow-wrap:anywhere;}
+#bpSign .hp-msg.me .hp-bub{background:var(--hp-blue);color:#fff;border-radius:16px 16px 6px 16px;}
+#bpSign .hp-msg small{font-size:11px;color:var(--hp-grey2);margin:3px 6px 0;}
+#bpSign .hp-req-tag{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;opacity:.85;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
+#bpSign .hp-req-tag .ms{font-size:15px;}
+#bpSign .hp-chat-empty{margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:20px;color:var(--hp-grey);}
+#bpSign .hp-chat-empty b{color:var(--hp-ink);font-size:15px;margin-top:6px;}
+#bpSign .hp-chat-empty p{margin:0;font-size:13.5px;max-width:300px;line-height:1.5;}
+#bpSign .hp-compose{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--hp-line);background:#fff;}
+#bpSign .hp-compose textarea{flex:1;min-width:0;border:1px solid var(--hp-line);background:var(--hp-soft);border-radius:20px;padding:10px 15px;font:inherit;font-size:15px;line-height:1.4;resize:none;max-height:140px;color:var(--hp-ink);}
+#bpSign .hp-compose textarea:focus{outline:none;border-color:var(--hp-blue);background:#fff;box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+#bpSign .hp-send-b{width:42px;height:42px;border-radius:50%;border:0;background:var(--hp-blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+#bpSign .hp-send-b:disabled{opacity:.5;}
+#bpSign .hp-send-b .ms{font-size:22px;}
+#bpSign .hp-chat-err{padding:0 14px;min-height:0;margin:0;}
+#bpSign .hp-chat-err:not(:empty){padding:4px 14px 8px;}
+/* changes */
+#bpSign .hp-chg-h{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+#bpSign .hp-chg-h>div{flex:1;min-width:220px;}
+#bpSign .hp-chg-h h1{font-size:20px;font-weight:700;letter-spacing:-.015em;margin:0 0 4px;}
+#bpSign .hp-chg-h p{margin:0;font-size:13.5px;color:var(--hp-grey);line-height:1.5;}
+@media(max-width:600px){#bpSign .hp-chg-h .hp-btn{width:100%;}}
+#bpSign .hp-reqf{border-color:#cfdcff;box-shadow:0 0 0 3px rgba(47,107,255,.08);}
+#bpSign .hp-fl{display:block;font-size:13px;font-weight:600;color:var(--hp-ink2);margin-bottom:6px;}
+#bpSign .hp-reqf textarea{width:100%;border:1px solid var(--hp-line);border-radius:10px;padding:11px 12px;font:inherit;font-size:15px;line-height:1.45;resize:vertical;color:var(--hp-ink);}
+#bpSign .hp-reqf textarea:focus{outline:none;border-color:var(--hp-blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+#bpSign .hp-co.pend{border-color:#fbe3b4;}
 #bpSign .hp-co-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
-#bpSign .hp-co-h b{display:block;font-size:16px;}
-#bpSign .hp-co-h span{font-size:12.5px;color:#6b7280;}
-#bpSign .hp-co-d{font-size:14px;line-height:1.6;color:#374151;margin:10px 0 0;overflow-wrap:anywhere;}
-#bpSign .hp-co-amt{margin-top:12px;background:#f6f8fb;border:1px solid #e4e9f0;border-radius:10px;padding:10px 12px;font-size:14px;}
+#bpSign .hp-co-h>div{min-width:0;}
+#bpSign .hp-co-h b{display:block;font-size:16px;font-weight:600;overflow-wrap:anywhere;}
+#bpSign .hp-co-h span{font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-co-d{font-size:14px;line-height:1.6;color:var(--hp-ink2);margin:10px 0 0;overflow-wrap:anywhere;}
+#bpSign .hp-co-amt{display:flex;align-items:center;gap:8px;margin-top:12px;background:var(--hp-soft);border-radius:10px;padding:10px 12px;font-size:14px;}
+#bpSign .hp-co-amt .ms{font-size:19px;color:var(--hp-grey);}
 #bpSign .hp-co-acts{margin-top:14px;}
-#bpSign .hp-foot{text-align:center;font-size:12px;color:#8b93a1;margin-top:20px;line-height:1.6;}
-#bpSign .hp-foot a{color:#6b7280;}
-@media(max-width:600px){#bpSign .hp-hero{padding:18px 16px;border-radius:14px;}#bpSign .hp-hero h1{font-size:22px;}#bpSign .hp-card{padding:16px 14px;border-radius:14px;}}
+#bpSign .sg-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:10px;}
+/* skeleton */
+#bpSign .sk{display:block;height:12px;border-radius:6px;margin:8px 0;background:linear-gradient(90deg,#eceff3 25%,#f5f6f8 50%,#eceff3 75%);background-size:200% 100%;animation:hpSk 1.2s linear infinite;}
+#bpSign .sk.sm{height:9px;}#bpSign .sk.nav{height:30px;margin:6px 0;border-radius:8px;}
+#bpSign .sk-av{width:40px;height:40px;border-radius:10px;margin:0;flex-shrink:0;}
+#bpSign .sk-ic{width:40px;height:22px;border-radius:99px;}
+@keyframes hpSk{from{background-position:200% 0;}to{background-position:-200% 0;}}
+@media print{#bpSign .hp-side,#bpSign .hp-tabbar,#bpSign .hp-bar{display:none;}}
+#bpSign .hp-app.is-chat .hp-content{padding-bottom:86px;}
+@media(min-width:900px){#bpSign .hp-app.is-chat .hp-content{padding-bottom:28px;}}
 
 .bpx-pay-flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;}
 .bpx-pay-flow>div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
@@ -39122,7 +39387,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
 <script src="portal/projsheet.js?v=20261006a"></script>
-<script src="portal/custportal.js?v=20261006a"></script>
+<script src="portal/custportal.js?v=20261007a"></script>
 <script src="portal/bpedit.js?v=20261001p"></script>
 <script src="portal/crewapp.js?v=20261003d"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
@@ -39146,7 +39411,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/projsheet.css?v=20261001p">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261003d">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
-<link rel="stylesheet" href="portal/custportal.css?v=20261006a">
+<link rel="stylesheet" href="portal/custportal.css?v=20261007a">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">

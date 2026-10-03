@@ -5,7 +5,7 @@
 // thing it talks to. Every answer is about the one job the token belongs to.
 //
 //   POST { op:"get", token }
-//     -> { ok, business:{name, logo, phone, email}, job:{...}, money:{...},
+//     -> { ok, business:{name, logo, phone, email, contact (owner's first name)}, job:{...}, money:{...},
 //          crew:[{name, trade, photo}], photos:[{url}], docs:[{name, type, url}],
 //          contracts:[{title, status, signed_at, link}], permits:[...],
 //          messages:[...], changes:[...], payments:[...], canPay }
@@ -160,6 +160,8 @@ async function view(c: Ctx) {
   ]);
   const data = rows(cs)[0]?.data ?? {};
   const co = data.company ?? {};
+  // the person the homeowner is talking to: the owner's first name, if set
+  const contact = first(data.owner?.name);
 
   // crew: the job's crew (settings.crews) and people put on it directly —
   // first names, trade and photo only
@@ -189,7 +191,7 @@ async function view(c: Ctx) {
     ok: true,
     business: {
       name: clean(co.name, 120), logo: /^https:\/\//i.test(String(co.logoUrl ?? "")) ? co.logoUrl : "",
-      phone: clean(co.phone, 40), email: clean(co.email, 120),
+      phone: clean(co.phone, 40), email: clean(co.email, 120), contact,
     },
     job: {
       title: clean(j.title, 160), customer: first(j.name), addr: clean(j.addr, 200),
@@ -207,7 +209,7 @@ async function view(c: Ctx) {
     permits: arr(j.permits).filter((p) => p && String(p.gone ?? "") !== "true").map((p) => ({
       type: clean(p.type, 80), number: clean(p.number, 60), status: clean(p.status, 40), approved: clean(p.approved, 10), expires: clean(p.expires, 10),
     })),
-    messages: rows(msgs).map((m: Row) => ({ id: m.id, mine: !!m.from_customer, author: m.from_customer ? "" : clean(m.author, 60) || clean(co.name, 60), body: m.body, at: m.created_at, read: !!m.read_at })),
+    messages: rows(msgs).map((m: Row) => ({ id: m.id, mine: !!m.from_customer, author: m.from_customer ? "" : clean(m.author, 60) || contact || clean(co.name, 60), body: m.body, at: m.created_at, read: !!m.read_at })),
     changes: changes.map((x: Row) => ({ id: x.id, title: x.title, description: x.description, amount: num(x.amount), status: x.status, signer_name: x.signer_name, signed_at: x.signed_at, signature: x.status === "approved" ? x.signature : null, at: x.created_at })),
   };
 }
