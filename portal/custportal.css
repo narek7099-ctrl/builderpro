@@ -42,3 +42,15 @@
 #bpx .cp-sig img{height:46px;max-width:180px;background:#fff;border-radius:6px;border:1px solid var(--line)}
 #bpx .cp-sig b{display:block;font-size:13px}#bpx .cp-sig span{display:block;font-size:11.5px;color:var(--grey)}
 #bpx .cp-sec-gap{height:6px}
+#bpx .cp-coh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+#bpx#bpx .cp-coh .pjs-h{margin:0 !important}
+#bpx .cp-coh .bpx-btn{width:auto;margin:0;padding:8px 13px;display:inline-flex;align-items:center;gap:5px;font-size:13px}
+#bpx .cp-coh .bpx-btn .ms{font-size:17px}
+#bpx .cp-req{border:1px solid #fbe3b4;background:#fff8eb;border-radius:12px;padding:11px 13px;margin-bottom:8px;max-width:100%;box-sizing:border-box;align-self:stretch}
+#bpx .cp-req-h{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#bpx .cp-req-h .ms{font-size:18px;color:#b45309}
+#bpx .cp-req-h b{font-size:13px;color:#92400e}
+#bpx .cp-req-h small{font-size:11.5px;color:var(--grey);margin-left:auto}
+#bpx .cp-req p{font-size:13.5px;line-height:1.5;margin:6px 0 10px;color:var(--ink);overflow-wrap:anywhere}
+#bpx .cp-req .bpx-btn{width:auto;margin:0;padding:8px 13px;display:inline-flex;align-items:center;gap:5px;font-size:13px}
+#bpx .cp-req .bpx-btn .ms{font-size:17px}

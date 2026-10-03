@@ -27,6 +27,10 @@
   var arr = function (x) { return Array.isArray(x) ? x : []; };
   var money = function (n) { n = +n || 0; return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   var BASE = 'https://builderpro-os.com/';
+  /* the homeowner's "Request a change" (Changes tab on their page) arrives as
+     a message starting with this; shown here as a card that starts a CO */
+  var REQ = /^change request:\s*/i;
+  function isReq(m) { return !!(m && m.from_customer && REQ.test(m.body || '')); }
   var C = { job: null, link: null, msgs: [], cos: [], unread: {} };
 
   function isCrew() { return !!(window.bpTeamIsCrew && bpTeamIsCrew()); }
@@ -167,12 +171,16 @@
       + '<div class="bpx-mut cp-none">Contracts you send show on their page by themselves. Money shows as contract total, paid and balance only.</div></section>';
     var msgSec = !L ? '' : '<section class="pjs-sec"><div class="pjs-h">Messages' + (unread ? ' <span class="cp-new">' + unread + ' new</span>' : '') + '</div>'
       + '<div class="cp-thread" id="cp-thread">' + (C.msgs.length ? C.msgs.map(function (m) {
+          if (isReq(m)) return reqCard(m, first);
           return '<div class="cp-msg' + (m.from_customer ? '' : ' me') + '"><div>' + esc(m.body).replace(/\n/g, '<br>') + '</div><small>' + (m.from_customer ? esc(first || 'Homeowner') : 'You') + ' · ' + esc(new Date(m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + (!m.from_customer && m.read_at ? ' · Seen' : '') + '</small></div>';
         }).join('') : '<div class="bpx-mut">No messages yet. The homeowner can write to you from their page.</div>') + '</div>'
       + '<div class="cp-send"><textarea id="cp-msg" rows="2" maxlength="4000" placeholder="Write to ' + escA(first || 'the homeowner') + '…"></textarea><button type="button" class="bpx-btn" onclick="bpCustSend()"><span class="ms">send</span>Send</button></div>'
       + '<div class="bpx-mut cp-none">They see it next time they open their page. Text them the link if it’s urgent.</div></section>';
     var st = { pending: ['Waiting on homeowner', 'warn'], approved: ['Approved', 'ok'], declined: ['Declined', 'bad'], 'void': ['Withdrawn', ''] };
-    var coSec = !L ? '' : '<section class="pjs-sec"><div class="pjs-h">Change orders for the homeowner</div>'
+    var reqs = C.msgs.filter(isReq).slice(-3).reverse();
+    var coSec = !L ? '' : '<section class="pjs-sec" id="cp-cosec"><div class="cp-coh"><div class="pjs-h">Change orders for the homeowner</div>'
+      + '<button type="button" class="bpx-btn" id="cp-coadd" onclick="bpCustCoForm()"><span class="ms">add</span>New change order</button></div>'
+      + (reqs.length ? '<div class="cp-sub">Requested by ' + esc(first || 'the homeowner') + '</div>' + reqs.map(function (m) { return reqCard(m, first); }).join('') + '<div class="cp-sec-gap"></div>' : '')
       + (C.cos.length ? C.cos.map(function (c) {
           var s = st[c.status] || [c.status, ''];
           return '<div class="cp-co"><div class="cp-co-h"><div><b>' + esc(c.title) + '</b><span>' + money(c.amount) + ' · sent ' + esc(new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) + '</span></div><em class="cp-st ' + s[1] + '">' + s[0] + '</em></div>'
@@ -182,7 +190,7 @@
             + (c.status === 'pending' ? '<div class="cp-acts sm"><button type="button" class="bpx-rowbtn" onclick="bpCustCoVoid(\'' + c.id + '\')">Withdraw</button></div>' : '')
             + '</div>';
         }).join('') : '<div class="bpx-mut cp-none">None yet. Extra work or a price change? Send it here and they approve it with a signature on their phone.</div>')
-      + '<div id="cp-coform"></div><button type="button" class="pm-btn" id="cp-coadd" onclick="bpCustCoForm()"><span class="ms">add</span>New change order</button></section>';
+      + '<div id="cp-coform"></div></section>';
     h.innerHTML = linkSec + shareSec + coSec + msgSec;
     badge(unread);
     var tb = $('cp-thread'); if (tb) tb.scrollTop = tb.scrollHeight;
@@ -190,6 +198,16 @@
     var pane = h.closest('[data-pj-pane]'); if (pane && !pane.hidden) markRead();
   }
   window.bpCustDraw = draw;
+  function reqCard(m, first) {
+    return '<div class="cp-req"><div class="cp-req-h"><span class="ms">edit_note</span><b>Change request from ' + esc(first || 'the homeowner') + '</b><small>' + esc(new Date(m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</small></div>'
+      + '<p>' + esc(String(m.body || '').replace(REQ, '')).replace(/\n/g, '<br>') + '</p>'
+      + '<button type="button" class="bpx-btn" onclick="bpCustCoFromMsg(\'' + escA(m.id) + '\')"><span class="ms">post_add</span>Create change order from this</button></div>';
+  }
+  window.bpCustCoFromMsg = function (id) {
+    var m = C.msgs.filter(function (x) { return String(x.id) === String(id); })[0]; if (!m) return;
+    var txt = String(m.body || '').replace(REQ, '').trim(), line = txt.split(/\n/)[0];
+    window.bpCustCoForm({ title: line.length > 80 ? line.slice(0, 77).replace(/\s+\S*$/, '') + '…' : line, desc: 'Requested by the homeowner: ' + txt });
+  };
 
   window.bpCustCreate = function () {
     DB.ins('customer_portal_links', { job_id: C.job }).then(function (r) { C.link = r; draw(); toast('Link created. Copy it or text it to the homeowner.'); })
@@ -228,17 +246,23 @@
     DB.ins('customer_messages', { job_id: C.job, body: v, author: co }).then(function (r) { C.msgs.push(r); draw(); })
       .catch(function (e) { toast('Couldn’t send: ' + ((e && e.message) || 'error'), 'warning'); });
   };
-  window.bpCustCoForm = function () {
+  window.bpCustCoForm = function (pre) {
     var h = $('cp-coform'); if (!h) return;
+    pre = pre && typeof pre === 'object' ? pre : {};
     h.innerHTML = '<div class="cm-form"><div class="cm-h">New change order</div>'
-      + '<label>What’s changing<input id="cp-co-t" maxlength="200" placeholder="e.g. Replace 3 sheets of rotted decking"></label>'
-      + '<label>Details<textarea id="cp-co-d" rows="3" maxlength="4000" placeholder="What you found, what you’ll do, any effect on the schedule"></textarea></label>'
+      + '<label>What’s changing<input id="cp-co-t" maxlength="200" placeholder="e.g. Replace 3 sheets of rotted decking" value="' + escA(pre.title || '') + '"></label>'
+      + '<label>Details<textarea id="cp-co-d" rows="3" maxlength="4000" placeholder="What you found, what you’ll do, any effect on the schedule">' + esc(pre.desc || '') + '</textarea></label>'
       + '<label>Price change<input id="cp-co-a" inputmode="decimal" placeholder="e.g. 450 (use -150 for a credit)"></label>'
       + '<div class="bpx-mut" style="font-size:12px">The homeowner approves it on their page with a drawn signature. Once approved it’s added to this job’s contract total.</div>'
       + '<div class="ca-msg" id="cp-co-msg"></div>'
-      + '<div class="sa-fa"><button class="bpx-btn ghost" onclick="document.getElementById(\'cp-coform\').innerHTML=\'\';document.getElementById(\'cp-coadd\').hidden=false">Cancel</button><button class="bpx-btn" onclick="bpCustCoSave()">Send to homeowner</button></div></div>';
-    var add = $('cp-coadd'); if (add) add.hidden = true;
-    var f = $('cp-co-t'); if (f) f.focus();
+      + '<div class="sa-fa"><button class="bpx-btn ghost" onclick="bpCustCoCancel()">Cancel</button><button class="bpx-btn" onclick="bpCustCoSave()">Send to homeowner</button></div></div>';
+    ['cp-coadd'].forEach(function (k) { var x = $(k); if (x) x.hidden = true; });
+    if (h.scrollIntoView) h.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    var f = pre.title ? $('cp-co-a') : $('cp-co-t'); if (f) f.focus({ preventScroll: true });
+  };
+  window.bpCustCoCancel = function () {
+    var h = $('cp-coform'); if (h) h.innerHTML = '';
+    ['cp-coadd'].forEach(function (k) { var x = $(k); if (x) x.hidden = false; });
   };
   window.bpCustCoSave = function () {
     var t = String(($('cp-co-t') || {}).value || '').trim(), d = String(($('cp-co-d') || {}).value || '').trim();
