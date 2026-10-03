@@ -29912,7 +29912,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},checks:{t:'Checks',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Lists',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},checks:{t:'Checks',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Lists',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -29928,7 +29928,7 @@ var BP_ICO={
    g:2 starts the second group. */
 var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
-  {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email']]},
+  {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
   {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['leadsources','Lead Sources'],['checks','Checks'],['automations','Automations'],['calculator','Calculators']]},
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['installations','Installations'],['employees','Employees']]},
@@ -29979,7 +29979,7 @@ function bpNav(v){
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
   if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); bpScrollTop(); return; }
-  ({crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
+  ({crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
 }
@@ -38626,7 +38626,8 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
 <link rel="stylesheet" href="portal/dash.css?v=20261001c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
-<script src="portal/team.js?v=20260928a"></script>
+<link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
+<script src="portal/team.js?v=20261003a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20260930a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
@@ -38646,6 +38647,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/projsheet.js?v=20261001p"></script>
 <script src="portal/bpedit.js?v=20261001p"></script>
 <script src="portal/crewapp.js?v=20260928a"></script>
+<script src="portal/teamchat.js?v=20261003a"></script>
 <script src="portal/aiteam.js?v=20260929a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
 <script src="portal/automations.js?v=20261001b"></script>
@@ -38667,5 +38669,5 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261002a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
-<script src="portal/shell.js?v=20261002a"></script>
+<script src="portal/shell.js?v=20261003a"></script>
 </html>

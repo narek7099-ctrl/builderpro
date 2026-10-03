@@ -22,7 +22,7 @@
 
   /* what each role may open */
   /* crew get their own four pages (portal/crewapp.js), nothing else */
-  var CREW = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1 };
+  var CREW = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1 };
   var CREW_ONLY = CREW;
   window.bpTeamAllows = function (view) {
     if (T.role === 'crew') return !!CREW[view];
