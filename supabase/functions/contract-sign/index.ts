@@ -6,7 +6,8 @@
 // and never the owner's other data.
 //
 // Public (no auth, token is the credential):
-//   { op:"get",     token }            -> the contract as the signer should see it
+//   { op:"get",     token }            -> the contract as the signer should see it,
+//                                         plus company:{name, logo, color} (contractor brand)
 //   { op:"sign",    token, signer_name, signer_email, signature, kind, consent }
 //   { op:"decline", token, note }
 //
@@ -65,6 +66,24 @@ const forSigner = (r: Row) => ({
   contractor_signed_at: r.contractor_signed_at,
 });
 
+// The contractor's brand for the signing page header — name, https logo and a
+// validated #rrggbb accent from client_settings.data.company. Nothing else.
+async function companyOf(owner: unknown): Promise<{ name: string; logo: string; color: string }> {
+  const out = { name: "", logo: "", color: "" };
+  if (typeof owner !== "string" || !/^[0-9a-f-]{36}$/i.test(owner)) return out;
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/client_settings?user_id=eq.${owner}&select=data&limit=1`, { headers: sbH });
+    const rows = r.ok ? await r.json() : [];
+    const co = (Array.isArray(rows) && rows[0]?.data?.company) || {};
+    out.name = String(co.name ?? "").trim().slice(0, 120);
+    const logo = String(co.logoUrl ?? "");
+    out.logo = /^https:\/\//i.test(logo) && logo.length < 2000 ? logo : "";
+    const color = String(co.brandColor ?? "");
+    out.color = /^#[0-9a-f]{6}$/i.test(color) ? color : "";
+  } catch { /* brand is optional */ }
+  return out;
+}
+
 async function userFromJwt(jwt: string): Promise<{ id: string } | null> {
   if (!jwt) return null;
   try {
@@ -105,7 +124,7 @@ Deno.serve(async (req) => {
       await patch(row.id, { status: "viewed", viewed_at: new Date().toISOString(), audit: trail(row, "viewed", req) });
       row.status = "viewed";
     }
-    return json({ ok: true, contract: forSigner(row) });
+    return json({ ok: true, contract: forSigner(row), company: await companyOf(row.owner) });
   }
 
   if (b.op === "sign") {
@@ -118,7 +137,7 @@ Deno.serve(async (req) => {
     const sig = String(b.signature ?? "");
     const kind = b.kind === "typed" ? "typed" : "drawn";
     if (name.length < 2) return json({ ok: false, error: "Please type your full legal name." });
-    if (b.consent !== true) return json({ ok: false, error: "Please tick the box agreeing to sign electronically." });
+    if ((b as Row).consent !== true) return json({ ok: false, error: "Please tick the box agreeing to sign electronically." });
     if (!sig || !/^data:image\/png;base64,/.test(sig) || sig.length > 400000) {
       return json({ ok: false, error: "Please add your signature." });
     }

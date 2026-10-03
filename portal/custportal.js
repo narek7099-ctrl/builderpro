@@ -191,13 +191,32 @@
             + '</div>';
         }).join('') : '<div class="bpx-mut cp-none">None yet. Extra work or a price change? Send it here and they approve it with a signature on their phone.</div>')
       + '<div id="cp-coform"></div></section>';
-    h.innerHTML = linkSec + shareSec + coSec + msgSec;
+    h.innerHTML = logoNudge() + linkSec + shareSec + coSec + msgSec;
     badge(unread);
     var tb = $('cp-thread'); if (tb) tb.scrollTop = tb.scrollHeight;
     if (window.bpPF && bpPF.hydrate) try { bpPF.hydrate(h); } catch (e) {}
     var pane = h.closest('[data-pj-pane]'); if (pane && !pane.hidden) markRead();
   }
   window.bpCustDraw = draw;
+
+  /* no logo yet: the homeowner's page shows initials. A quiet, dismissible
+     pointer to Settings, once per device. */
+  var NUDGE_KEY = 'bpCustLogoNudgeOff';
+  function hasLogo() { var c = ((window.bpSettingsGet ? bpSettingsGet() : {}) || {}).company || {}; return !!(c.logo || c.logoUrl); }
+  function logoNudge() {
+    var off = false; try { off = localStorage.getItem(NUDGE_KEY) === '1'; } catch (e) {}
+    if (off || hasLogo()) return '';
+    return '<div class="cp-nudge" id="cp-lognudge" role="note"><span class="ms">add_photo_alternate</span>'
+      + '<div><b>Your logo isn’t set</b><span>The homeowner’s page, contracts and review page show your logo and brand colour. </span>'
+      + '<button type="button" class="cp-nudge-go" onclick="bpCustLogoGo()">Add it in Settings</button></div>'
+      + '<button type="button" class="cp-nudge-x" aria-label="Dismiss" onclick="bpCustLogoDismiss()"><span class="ms">close</span></button></div>';
+  }
+  window.bpCustLogoDismiss = function () { try { localStorage.setItem(NUDGE_KEY, '1'); } catch (e) {} var n = $('cp-lognudge'); if (n) n.remove(); };
+  window.bpCustLogoGo = function () {
+    if (window.bpCloseModal) try { bpCloseModal(); } catch (e) {}
+    window._bpSetSec = 'business';
+    if (window.bpNav) bpNav('settings');
+  };
   function reqCard(m, first) {
     return '<div class="cp-req"><div class="cp-req-h"><span class="ms">edit_note</span><b>Change request from ' + esc(first || 'the homeowner') + '</b><small>' + esc(new Date(m.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</small></div>'
       + '<p>' + esc(String(m.body || '').replace(REQ, '')).replace(/\n/g, '<br>') + '</p>'

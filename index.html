@@ -35087,7 +35087,30 @@ function bpCtSigBlocks(c,cls,ownerPending){
    No login. The token in the link is the credential, and every read and write
    goes through the contract-sign function so this page never touches the
    contracts table. =========================================================*/
-var _bpSg={token:'',c:null,pad:null,drew:false};
+/* Homeowner pages wear the contractor's brand. bpBrandVars turns their saved
+   company.brandColor (#rrggbb) into the accent tokens the portal and the
+   signing page read: fill, readable text on the fill (white or dark, whichever
+   contrasts more), a darker shade that reads as text on white, a hover, a soft
+   tint and a focus ring. Anything not a valid hex leaves the BuilderPro blue. */
+function bpBrandHex(v){v=String(v||'').trim();return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():'';}
+function bpBrandVars(hex){
+  hex=bpBrandHex(hex); if(!hex)return '';
+  var rgb=[1,3,5].map(function(i){return parseInt(hex.substr(i,2),16);});
+  var lum=function(c){var a=c.map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*a[0]+.7152*a[1]+.0722*a[2];};
+  var con=function(a,b){var x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+  var W=[255,255,255],K=[15,23,41];
+  var on=con(rgb,W)>=con(rgb,K)?'#ffffff':'#0f1729';
+  var mix=function(c,t,f){return c.map(function(v,i){return Math.round(v+(t[i]-v)*f);});};
+  var css=function(c){return '#'+c.map(function(v){return ('0'+v.toString(16)).slice(-2);}).join('');};
+  var ink=rgb.slice(),n=0; while(con(ink,W)<4.6&&n++<40) ink=mix(ink,[0,0,0],.08);
+  return '--hp-blue:'+hex+';--hp-on:'+on+';--hp-blue2:'+css(ink)+';--hp-hover:'+css(mix(rgb,on==='#ffffff'?[0,0,0]:[255,255,255],.12))
+    +';--hp-bluesoft:'+css(mix(rgb,W,.9))+';--hp-ring:rgba('+rgb.join(',')+',.18);';
+}
+/* the small credit on homeowner pages; the contractor's brand leads, this follows */
+function bpPoweredBy(cls){
+  return '<a class="bp-pow'+(cls?' '+cls:'')+'" href="https://builderpro-os.com/?ref=portal" target="_blank" rel="noopener"><img src="assets/brand/logo-mark-32.png" width="14" height="14" alt="">Powered by <b>BuilderPro</b></a>';
+}
+var _bpSg={token:'',c:null,pad:null,drew:false,co:null};
 function bpSignRoute(){
   var m=/[#&]sign=([a-f0-9]{20,64})/i.exec(location.hash||'');
   if(!m)return false;
@@ -35099,26 +35122,30 @@ function bpSignRoute(){
     .then(function(r){return r.json();})
     .then(function(d){
       if(!d||!d.ok){bpSignErr(d&&d.error==='void'?'This agreement has been cancelled by the contractor.':'We couldn\'t find that agreement. Check the link, or ask your contractor to resend it.');return;}
-      _bpSg.c=d.contract; bpSignRender();
+      _bpSg.c=d.contract; _bpSg.co=d.company||null;
+      var st=bpBrandVars(_bpSg.co&&_bpSg.co.color),hs=document.getElementById('bpSign');
+      if(hs&&st){hs.setAttribute('style',st);hs.classList.add('br');}
+      if(_bpSg.co&&_bpSg.co.name)document.title=_bpSg.co.name+' · Agreement';
+      bpSignRender();
     })
     .catch(function(){bpSignErr('We couldn\'t load the agreement just now. Check your connection and reload the page.');});
   return true;
 }
 function bpSignErr(msg){
   var h=document.getElementById('bpSign'); if(!h)return;
-  h.innerHTML='<div class="sg-wrap"><div class="sg-card"><div class="sg-brand"><svg class="bpmark" width="30" height="30"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>'
-    +'<h1 class="sg-h">Agreement unavailable</h1><p class="sg-p">'+bpEsc(msg)+'</p></div></div>';
+  h.innerHTML='<div class="sg-wrap"><div class="sg-card">'
+    +'<h1 class="sg-h">Agreement unavailable</h1><p class="sg-p">'+bpEsc(msg)+'</p></div>'+bpPoweredBy()+'</div>';
 }
 function bpSignRender(){
   var c=_bpSg.c,h=document.getElementById('bpSign'); if(!h||!c)return;
   if(c.status==='signed'){ bpSignDone(); return; }
   if(c.status==='declined'){
-    h.innerHTML='<div class="sg-wrap"><div class="sg-card"><h1 class="sg-h">You declined this agreement</h1><p class="sg-p">If that was a mistake, contact your contractor and they can send it again.</p></div></div>';
+    h.innerHTML='<div class="sg-wrap"><div class="sg-card">'+bpSignBrand(c)+'<h1 class="sg-h">You declined this agreement</h1><p class="sg-p">If that was a mistake, contact your contractor and they can send it again.</p></div>'+bpPoweredBy()+'</div>';
     return;
   }
   h.innerHTML='<div class="sg-wrap">'
     +'<div class="sg-card">'
-      +'<div class="sg-brand"><svg class="bpmark" width="30" height="30"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>'
+      +bpSignBrand(c)
       +'<h1 class="sg-h">Your agreement is ready to sign</h1>'
       +'<p class="sg-p">Please read it through. Nothing is agreed until you sign at the bottom, and you can close this page and come back to the same link any time.</p>'
       +'<div class="sg-meta">'
@@ -35139,8 +35166,15 @@ function bpSignRender(){
         +'<button class="sg-decline" onclick="bpSignDecline()">I don\'t want to sign this</button>'
       +'</div>'
       +'<div class="sg-foot">Your name, the time you signed and your IP address are recorded with this agreement, as required for electronic signatures in the US.</div>'
-    +'</div></div>';
+    +'</div>'+bpPoweredBy()+'</div>';
   bpSignPad();
+}
+/* the contractor's logo (or their initial and name) heads the agreement */
+function bpSignBrand(c){
+  var co=_bpSg.co||{},nm=co.name||bpCtCompany(c);
+  if(nm==='Contractor')nm='';
+  if(co.logo)return '<div class="sg-brand"><img class="sg-logo" src="'+bpHpEscA(co.logo)+'" alt="'+bpHpEscA(nm||'Contractor logo')+'"></div>';
+  return nm?'<div class="sg-brand"><span class="sg-mono" aria-hidden="true">'+bpEsc(nm.charAt(0).toUpperCase())+'</span><b class="sg-co">'+bpEsc(nm)+'</b></div>':'';
 }
 /* signature pad — pointer events cover finger, stylus and mouse in one path */
 function bpSignPad(){
@@ -35205,13 +35239,14 @@ window.bpSignDecline=function(){
 function bpSignDone(){
   var c=_bpSg.c,h=document.getElementById('bpSign'); if(!h)return;
   h.innerHTML='<div class="sg-wrap"><div class="sg-card">'
+    +bpSignBrand(c)
     +'<div class="sg-tick"><span class=ms>check</span></div>'
     +'<h1 class="sg-h" style="text-align:center">You\'re all signed</h1>'
     +'<p class="sg-p" style="text-align:center">Thanks'+(c&&c.signer_name?', '+bpEsc(c.signer_name.split(' ')[0]):'')+'. Your contractor has been notified. Keep this page or print a copy for your records.</p>'
     +'<div class="sg-doc" style="margin-top:18px"><pre>'+bpEsc((c&&c.body)||'')+'</pre></div>'
     +(c?bpCtSigBlocks(c,'sg-sigs',''):'')
     +'<button class="sg-btn" style="margin-top:18px" onclick="window.print()">Print / save a copy</button>'
-    +'</div></div>';
+    +'</div>'+bpPoweredBy()+'</div>';
 }
 /* the signing page takes over the whole document when the link carries a token */
 try{ bpSignRoute(); }catch(e){}
@@ -35270,8 +35305,13 @@ function bpHpSkel(){
   +'</div>';
 }
 function bpHpInitials(s){var w=String(s||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?').charAt(0)+(w.length>1?w[1].charAt(0):'')).toUpperCase();}
+/* the contractor's logo, at its own shape (wordmarks stay wide) */
+function bpHpLogo(b,cls){return '<img class="hp-logo'+(cls?' '+cls:'')+'" src="'+bpHpEscA(b.logo)+'" alt="'+bpHpEscA(b.name||'Contractor logo')+'">';}
+/* the contact person: their initials, never the logo squeezed into a tile */
+function bpHpPerson(b,cls){return '<span class="hp-avi mono '+(cls||'')+'" aria-hidden="true">'+bpEsc(bpHpInitials(b.contact||b.name||'?'))+'</span>';}
+/* people (the contact, chat bubbles) get initials; the logo has its own spots */
 function bpHpAvatar(b,cls){
-  return b.logo?'<img class="hp-avi '+(cls||'')+'" src="'+bpHpEscA(b.logo)+'" alt="">':'<span class="hp-avi mono '+(cls||'')+'" aria-hidden="true">'+bpEsc(bpHpInitials(b.contact||b.name||'?'))+'</span>';
+  return bpHpPerson(b,cls);
 }
 function bpHpTel(b){return b.phone?'tel:'+bpHpEscA(String(b.phone).replace(/[^\d+]/g,'')):'';}
 function bpHpSeenKey(){return 'bpHpSeen:'+_bpHp.token;}
@@ -35287,6 +35327,7 @@ function bpHpRender(){
   var d=_bpHp.d,h=document.getElementById('bpSign'); if(!h||!d)return;
   var b=d.business||{},j=d.job||{};
   if(b.name)document.title=b.name+' · Your project';
+  var bst=bpBrandVars(b.color); if(bst){h.setAttribute('style',bst);h.classList.add('br');}else{h.removeAttribute('style');h.classList.remove('br');}
   if(_bpHp.tab==='msgs')bpHpMarkSeen();
   var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
   var unsigned=(d.contracts||[]).filter(function(c){return c.status!=='signed';}).length;
@@ -35306,18 +35347,20 @@ function bpHpRender(){
   var phoneTabs=BP_HP_PHONE.map(function(k){return k==='more'?['more','More','menu','More']:BP_HP_TABS.filter(function(t){return t[0]===k;})[0];});
   h.innerHTML='<div class="hp-app'+(_bpHp.tab==='msgs'?' is-chat':'')+'">'
     +'<aside class="hp-side">'
-      +'<div class="hp-brand">'+bpHpAvatar(b,'lg')+'<div><b>'+bpEsc(b.name||'Your contractor')+'</b><span>Client portal</span></div></div>'
+      +(b.logo?'<div class="hp-brand has-logo">'+bpHpLogo(b)+'<div><b>'+bpEsc(b.name||'Your contractor')+'</b><span>Client portal</span></div></div>'
+        :'<div class="hp-brand">'+bpHpAvatar(b,'lg')+'<div><b>'+bpEsc(b.name||'Your contractor')+'</b><span>Client portal</span></div></div>')
       +'<nav class="hp-nav" aria-label="Project sections">'+BP_HP_TABS.map(function(t){return navBtn(t,false);}).join('')+'</nav>'
       +'<div class="hp-side-foot">'
         +'<div class="hp-who">'+bpHpAvatar(b)+'<div><b>'+bpEsc(b.contact||b.name||'Your contractor')+'</b><span>'+(b.contact&&b.name?bpEsc(b.name):'Your contractor')+'</span></div></div>'
         +'<div class="hp-who-acts">'+(b.phone?'<a class="hp-btn ghost sm" href="'+bpHpTel(b)+'"><span class=ms>call</span>Call</a>':'')
           +'<button type="button" class="hp-btn ghost sm" onclick="bpHpTab(\'msgs\')"><span class=ms>chat</span>Message</button></div>'
         +'<p class="hp-priv"><span class=ms>lock</span>Private to you. Please don\'t share this link.</p>'
+        +bpPoweredBy('side')
       +'</div>'
     +'</aside>'
     +'<div class="hp-main">'
       +'<header class="hp-bar">'
-        +'<div class="hp-bar-m">'+bpHpAvatar(b)+'</div>'
+        +'<div class="hp-bar-m">'+(b.logo?bpHpLogo(b,'sm'):bpHpAvatar(b))+'</div>'
         +'<div class="hp-proj"><div class="hp-proj-t"><b>'+bpEsc(j.title||'Your project')+'</b><span class="hp-desk">'+stPill+'</span></div>'
           +'<span class="hp-proj-s">'+(j.addr?'<span class=ms>location_on</span>'+bpEsc(j.addr):bpEsc(b.name||''))+'</span></div>'
         +'<div class="hp-bar-r">'+(b.phone?'<a class="hp-iconbtn" href="'+bpHpTel(b)+'" aria-label="Call '+bpHpEscA(b.name||'your contractor')+'"><span class=ms>call</span></a>':'')
@@ -35326,6 +35369,7 @@ function bpHpRender(){
       +'<div class="hp-content">'
         +(_bpHp.paid?'<div class="hp-note ok"><span class=ms>check_circle</span>Thanks, your payment went through. It can take a few minutes to show here.</div>':'')
         +'<main class="hp-pane'+(_bpHp.anim?' hp-in':'')+'" id="hpBody">'+bpHpPane(_bpHp.tab)+'</main>'
+        +'<footer class="hp-powm">'+bpPoweredBy()+'</footer>'
       +'</div>'
     +'</div>'
     +'<nav class="hp-tabbar" aria-label="Project sections">'+phoneTabs.map(function(t){return navBtn(t,true);}).join('')+'</nav>'
@@ -36331,12 +36375,27 @@ html.bp-signing-boot body{background:#eef1f6;}
 /* public signing page */
 body.bp-signing>*:not(#bpSign):not(script):not(style):not(link):not(svg){display:none !important;}
 body.bp-signing{background:#eef1f6;}
-#bpSign .sg-wrap{min-height:100vh;padding:26px 16px 60px;display:flex;justify-content:center;align-items:flex-start;}
+#bpSign .sg-wrap{min-height:100vh;padding:26px 16px 40px;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;}
 #bpSign .sg-card{background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(16,24,40,.10);max-width:680px;width:100%;padding:30px 30px 34px;}
 @media(max-width:600px){#bpSign .sg-card{padding:22px 18px 28px;border-radius:14px;}}
 #bpSign .sg-brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
 #bpSign .sg-brand .wm{font-size:20px;font-weight:700;letter-spacing:-.03em;color:#4a5568;}
 #bpSign .sg-brand .wm span{color:#3b73b9;}
+#bpSign .sg-logo{display:block;width:auto;height:auto;max-height:36px;max-width:min(220px,70%);object-fit:contain;}
+#bpSign .sg-mono{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--hp-blue,#2f6bff);color:var(--hp-on,#fff);font-weight:700;font-size:15px;}
+#bpSign .sg-co{font-size:16px;font-weight:700;letter-spacing:-.01em;color:#0c0c0d;min-width:0;overflow-wrap:anywhere;}
+/* "Powered by BuilderPro": small, quiet, after the contractor's content */
+#bpSign .bp-pow{display:inline-flex;align-items:center;gap:6px;margin:18px auto 0;padding:6px 10px;border-radius:99px;font-size:12px;line-height:1;color:#8b93a1;text-decoration:none;font-family:'Geist',system-ui,-apple-system,sans-serif;white-space:nowrap;}
+#bpSign .bp-pow img{width:14px;height:14px;display:block;opacity:.85;}
+#bpSign .bp-pow b{font-weight:600;color:#6b7280;}
+#bpSign .bp-pow:hover{color:#4b5563;background:rgba(15,23,41,.04);}#bpSign .bp-pow:hover b{color:#374151;}
+#bpSign .bp-pow:focus-visible{outline:2px solid var(--hp-blue,#2f6bff);outline-offset:2px;}
+#bpSign .hp-side-foot .bp-pow{margin:12px 0 0 -10px;}
+#bpSign .hp-powm{display:flex;justify-content:center;padding:8px 0 4px;}
+@media(min-width:900px){#bpSign .hp-powm{display:none;}}
+#bpSign .hp-app.is-chat .hp-powm{display:none;}
+@media(max-width:899px){#bpSign .hp-side-foot .bp-pow{display:none;}}
+@media print{#bpSign .bp-pow{display:none;}}
 #bpSign .sg-h{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1.2;margin:0 0 8px;color:#0c0c0d;}
 #bpSign .sg-p{font-size:14.5px;line-height:1.6;color:#4b5563;margin:0 0 18px;}
 #bpSign .sg-load{padding:40px;text-align:center;color:#6b7280;}
@@ -36356,13 +36415,14 @@ body.bp-signing{background:#eef1f6;}
 #bpSign .sg-f span{display:block;font-size:12.5px;font-weight:600;color:#374151;margin-bottom:5px;}
 #bpSign .sg-f i{font-style:normal;font-weight:400;color:#9aa3b2;}
 #bpSign .sg-f input{width:100%;box-sizing:border-box;border:1px solid #dfe4ec;border-radius:10px;padding:12px 13px;font:inherit;font-size:15px;background:#fff;color:#0c0c0d;}
-#bpSign .sg-f input:focus{outline:none;border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.14);}
+#bpSign .sg-f input:focus{outline:none;border-color:var(--hp-blue,#2f6bff);box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.14));}
 #bpSign .sg-consent{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13px;line-height:1.55;color:#374151;cursor:pointer;}
-#bpSign .sg-consent input{width:19px;height:19px;flex-shrink:0;margin-top:1px;accent-color:#2f6bff;}
+#bpSign .sg-consent input{width:19px;height:19px;flex-shrink:0;margin-top:1px;accent-color:var(--hp-blue,#2f6bff);}
 #bpSign .sg-msg{color:#b91c1c;font-size:13px;min-height:18px;margin-top:8px;}
-#bpSign .sg-btn{width:100%;margin-top:8px;background:#2f6bff;color:#fff;border:0;border-radius:12px;padding:15px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;}
-#bpSign .sg-btn:hover:not(:disabled){background:#1b56ee;}
+#bpSign .sg-btn{width:100%;margin-top:8px;background:var(--hp-blue,#2f6bff);color:var(--hp-on,#fff);border:0;border-radius:12px;padding:15px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;}
+#bpSign .sg-btn:hover:not(:disabled){background:var(--hp-hover,#1b56ee);}
 #bpSign .sg-btn:disabled{background:#c9d8ff;cursor:not-allowed;}
+#bpSign.br .sg-btn:disabled{background:var(--hp-blue);opacity:.42;}
 #bpSign .sg-decline{display:block;margin:12px auto 0;background:none;border:0;color:#6b7280;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;}
 #bpSign .sg-foot{margin-top:20px;padding-top:14px;border-top:1px solid #eef1f6;font-size:11.5px;line-height:1.6;color:#8b93a1;}
 #bpSign .sg-tick{width:58px;height:58px;border-radius:50%;background:#ecfdf5;color:#15803d;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:4px auto 16px;}
@@ -36391,6 +36451,10 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-brand>div{min-width:0;}
 #bpSign .hp-brand b{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #bpSign .hp-brand span{display:block;font-size:12px;color:var(--hp-grey);}
+#bpSign .hp-brand.has-logo{flex-direction:column;align-items:flex-start;gap:10px;}
+#bpSign .hp-brand.has-logo>div{width:100%;}
+#bpSign .hp-logo{display:block;width:auto;height:auto;max-height:36px;max-width:100%;object-fit:contain;flex-shrink:0;}
+#bpSign .hp-logo.sm{max-height:32px;max-width:96px;}
 #bpSign .hp-nav{display:flex;flex-direction:column;gap:2px;}
 #bpSign .hp-nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;border-radius:9px;padding:9px 10px;font:inherit;font-size:14px;font-weight:500;color:var(--hp-ink2);cursor:pointer;text-align:left;transition:background .15s,color .15s;}
 #bpSign .hp-nav button:hover{background:var(--hp-soft);}
@@ -36401,7 +36465,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-nav .hp-ico{order:0;}#bpSign .hp-nav .hp-badge{position:absolute;right:10px;}
 #bpSign .hp-nav button{position:relative;}
 #bpSign .hp-badge{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1;}
-#bpSign .hp-badge.blue{background:var(--hp-blue);}
+#bpSign .hp-badge.blue{background:var(--hp-blue);color:var(--hp-on,#fff);}
 #bpSign .hp-side-foot{margin-top:auto;border-top:1px solid var(--hp-line2);padding:14px 8px 0;}
 #bpSign .hp-who{display:flex;align-items:center;gap:10px;min-width:0;}
 #bpSign .hp-who>div{min-width:0;}
@@ -36412,7 +36476,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-priv .ms{font-size:15px;}
 /* avatars */
 #bpSign .hp-avi{width:36px;height:36px;border-radius:10px;flex-shrink:0;object-fit:contain;background:#fff;border:1px solid var(--hp-line);}
-#bpSign .hp-avi.mono{display:inline-flex;align-items:center;justify-content:center;background:var(--hp-blue);border-color:transparent;color:#fff;font-weight:700;font-size:13.5px;letter-spacing:.02em;}
+#bpSign .hp-avi.mono{display:inline-flex;align-items:center;justify-content:center;background:var(--hp-blue);border-color:transparent;color:var(--hp-on,#fff);font-weight:700;font-size:13.5px;letter-spacing:.02em;}
 #bpSign .hp-avi.lg{width:40px;height:40px;font-size:15px;}
 #bpSign .hp-avi.xs{width:28px;height:28px;border-radius:50%;font-size:11px;}
 /* main + top bar */
@@ -36462,7 +36526,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:var(--hp-soft);color:var(--hp-ink2);white-space:nowrap;}
 #bpSign .hp-pill .ms{font-size:15px;}
 #bpSign .hp-pill.live{background:var(--hp-bluesoft);color:var(--hp-blue2);}
-#bpSign .hp-pill.live i{width:7px;height:7px;border-radius:50%;background:var(--hp-blue);box-shadow:0 0 0 3px rgba(47,107,255,.18);}
+#bpSign .hp-pill.live i{width:7px;height:7px;border-radius:50%;background:var(--hp-blue);box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.18));}
 #bpSign .hp-pill.done{background:#ecfdf5;color:#15803d;}
 #bpSign .hp-prog{height:8px;border-radius:99px;background:var(--hp-soft);overflow:hidden;margin-top:16px;}
 #bpSign .hp-prog i{display:block;height:100%;border-radius:99px;background:var(--hp-blue);transition:width .6s ease;}
@@ -36484,17 +36548,17 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-last span{display:block;font-size:13.5px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;}
 #bpSign .hp-last small{display:block;font-size:11.5px;color:var(--hp-grey2);margin-top:3px;}
 /* buttons */
-#bpSign .hp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--hp-blue);background:var(--hp-blue);color:#fff;border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s;}
-#bpSign .hp-btn:hover:not(:disabled){background:var(--hp-blue2);}
+#bpSign .hp-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--hp-blue);background:var(--hp-blue);color:var(--hp-on,#fff);border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s;}
+#bpSign .hp-btn:hover:not(:disabled){background:var(--hp-hover,var(--hp-blue2));}
 #bpSign .hp-btn:disabled{opacity:.55;cursor:not-allowed;}
 #bpSign .hp-btn .ms{font-size:18px;}
 #bpSign .hp-btn.ghost{background:#fff;color:var(--hp-ink2);border-color:var(--hp-line);}
 #bpSign .hp-btn.ghost:hover:not(:disabled){background:var(--hp-soft);}
 #bpSign .hp-btn.sm{padding:7px 12px;font-size:13px;border-radius:9px;}
 #bpSign .hp-btn.lg{width:100%;padding:14px;font-size:15.5px;border-radius:12px;margin-top:6px;}
-#bpSign .hp-link{display:inline-flex;align-items:center;gap:1px;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--hp-blue);cursor:pointer;}
+#bpSign .hp-link{display:inline-flex;align-items:center;gap:1px;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--hp-blue2);cursor:pointer;}
 #bpSign .hp-link .ms{font-size:18px;}
-#bpSign .hp-inl{background:none;border:0;padding:0;font:inherit;color:var(--hp-blue);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+#bpSign .hp-inl{background:none;border:0;padding:0;font:inherit;color:var(--hp-blue2);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
 #bpSign .hp-acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px;}
 /* lists & bits */
 #bpSign .hp-sub{font-size:12px;font-weight:600;color:var(--hp-grey);margin:16px 0 8px;}
@@ -36514,7 +36578,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-ph li i{width:22px;height:22px;border-radius:50%;border:2px solid #d5dbe5;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 #bpSign .hp-ph li.done i{background:#22c55e;border-color:#22c55e;color:#fff;}
 #bpSign .hp-ph li.done i .ms{font-size:15px;}
-#bpSign .hp-ph li.now i{border-color:var(--hp-blue);box-shadow:0 0 0 4px rgba(47,107,255,.14);}
+#bpSign .hp-ph li.now i{border-color:var(--hp-blue);box-shadow:0 0 0 4px var(--hp-ring,rgba(47,107,255,.14));}
 #bpSign .hp-ph li b{flex:1;min-width:0;font-weight:500;}
 #bpSign .hp-ph li.done b{color:var(--hp-grey);}
 #bpSign .hp-ph li span{font-size:12.5px;color:var(--hp-grey);white-space:nowrap;}
@@ -36573,7 +36637,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-msg.me .hp-msg-c{align-items:flex-end;}
 #bpSign .hp-msg-a{font-size:11.5px;color:var(--hp-grey);margin:0 0 2px 4px;}
 #bpSign .hp-bub{background:#eef0f3;color:var(--hp-ink);border-radius:16px 16px 16px 6px;padding:9px 13px;font-size:14.5px;line-height:1.45;overflow-wrap:anywhere;}
-#bpSign .hp-msg.me .hp-bub{background:var(--hp-blue);color:#fff;border-radius:16px 16px 6px 16px;}
+#bpSign .hp-msg.me .hp-bub{background:var(--hp-blue);color:var(--hp-on,#fff);border-radius:16px 16px 6px 16px;}
 #bpSign .hp-msg small{font-size:11px;color:var(--hp-grey2);margin:3px 6px 0;}
 #bpSign .hp-req-tag{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;opacity:.85;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
 #bpSign .hp-req-tag .ms{font-size:15px;}
@@ -36582,8 +36646,8 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-chat-empty p{margin:0;font-size:13.5px;max-width:300px;line-height:1.5;}
 #bpSign .hp-compose{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--hp-line);background:#fff;}
 #bpSign .hp-compose textarea{flex:1;min-width:0;border:1px solid var(--hp-line);background:var(--hp-soft);border-radius:20px;padding:10px 15px;font:inherit;font-size:15px;line-height:1.4;resize:none;max-height:140px;color:var(--hp-ink);}
-#bpSign .hp-compose textarea:focus{outline:none;border-color:var(--hp-blue);background:#fff;box-shadow:0 0 0 3px rgba(47,107,255,.12);}
-#bpSign .hp-send-b{width:42px;height:42px;border-radius:50%;border:0;background:var(--hp-blue);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+#bpSign .hp-compose textarea:focus{outline:none;border-color:var(--hp-blue);background:#fff;box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.12));}
+#bpSign .hp-send-b{width:42px;height:42px;border-radius:50%;border:0;background:var(--hp-blue);color:var(--hp-on,#fff);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
 #bpSign .hp-send-b:disabled{opacity:.5;}
 #bpSign .hp-send-b .ms{font-size:22px;}
 #bpSign .hp-chat-err{padding:0 14px;min-height:0;margin:0;}
@@ -36594,10 +36658,10 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-chg-h h1{font-size:20px;font-weight:700;letter-spacing:-.015em;margin:0 0 4px;}
 #bpSign .hp-chg-h p{margin:0;font-size:13.5px;color:var(--hp-grey);line-height:1.5;}
 @media(max-width:600px){#bpSign .hp-chg-h .hp-btn{width:100%;}}
-#bpSign .hp-reqf{border-color:#cfdcff;box-shadow:0 0 0 3px rgba(47,107,255,.08);}
+#bpSign .hp-reqf{border-color:#cfdcff;box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.08));}
 #bpSign .hp-fl{display:block;font-size:13px;font-weight:600;color:var(--hp-ink2);margin-bottom:6px;}
 #bpSign .hp-reqf textarea{width:100%;border:1px solid var(--hp-line);border-radius:10px;padding:11px 12px;font:inherit;font-size:15px;line-height:1.45;resize:vertical;color:var(--hp-ink);}
-#bpSign .hp-reqf textarea:focus{outline:none;border-color:var(--hp-blue);box-shadow:0 0 0 3px rgba(47,107,255,.12);}
+#bpSign .hp-reqf textarea:focus{outline:none;border-color:var(--hp-blue);box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.12));}
 #bpSign .hp-co.pend{border-color:#fbe3b4;}
 #bpSign .hp-co-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
 #bpSign .hp-co-h>div{min-width:0;}
@@ -36665,7 +36729,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-step li>i{width:24px;height:24px;border-radius:50%;border:2px solid #d5dbe5;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;}
 #bpSign .hp-step li>i .ms{font-size:15px;}
 #bpSign .hp-step li.done>i{background:#22c55e;border-color:#22c55e;color:#fff;}
-#bpSign .hp-step li.now>i{border-color:var(--hp-blue);box-shadow:0 0 0 4px rgba(47,107,255,.14);}
+#bpSign .hp-step li.now>i{border-color:var(--hp-blue);box-shadow:0 0 0 4px var(--hp-ring,rgba(47,107,255,.14));}
 #bpSign .hp-step li.now>i::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--hp-blue);}
 #bpSign .hp-step li.late>i{background:#ef4444;border-color:#ef4444;color:#fff;}
 #bpSign .hp-step-b{flex:1;min-width:0;}
@@ -36681,7 +36745,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-dt small{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--hp-blue2);}
 #bpSign .hp-dt b{display:block;font-size:19px;font-weight:700;line-height:1.1;}
 #bpSign .hp-dt.today{background:var(--hp-blue);border-color:var(--hp-blue);}
-#bpSign .hp-dt.today small,#bpSign .hp-dt.today b{color:#fff;}
+#bpSign .hp-dt.today small,#bpSign .hp-dt.today b{color:var(--hp-on,#fff);}
 #bpSign .hp-visit-b{flex:1;min-width:0;}
 #bpSign .hp-visit-b>b{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;font-weight:600;}
 #bpSign .hp-visit-b>span{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--hp-grey);margin-top:2px;min-width:0;}
@@ -36694,7 +36758,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-tl b{display:block;font-size:14px;font-weight:600;}
 #bpSign .hp-tl span:not(.ms):not(.hp-chip){display:block;font-size:12.5px;color:var(--hp-grey);}
 #bpSign .hp-tl-ic{font-size:22px;color:var(--hp-grey2);}
-#bpSign .hp-tl li.ok .hp-tl-ic{color:#16a34a;}#bpSign .hp-tl li.bad .hp-tl-ic{color:#dc2626;}#bpSign .hp-tl li.now .hp-tl-ic{color:var(--hp-blue);}
+#bpSign .hp-tl li.ok .hp-tl-ic{color:#16a34a;}#bpSign .hp-tl li.bad .hp-tl-ic{color:#dc2626;}#bpSign .hp-tl li.now .hp-tl-ic{color:var(--hp-blue2);}
 #bpSign .hp-cal-card{max-width:760px;}
 #bpSign .hp-cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 #bpSign .hp-cal-h b{font-size:15.5px;font-weight:700;}
@@ -37567,7 +37631,22 @@ window.bpMkLaunchSend=async function(){
 /* logo */
 .bpx-logo-row{display:flex;align-items:center;gap:14px;}
 .bpx-logo-pv{width:64px;height:64px;border-radius:12px;border:1px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-size:11px;color:var(--grey-l);}
-.bpx-logo-pv img{width:100%;height:100%;object-fit:cover;}
+.bpx-logo-pv img{width:100%;height:100%;object-fit:contain;}
+/* no logo yet: say plainly where customers see it */
+.st-nudge{display:flex;gap:12px;align-items:flex-start;background:#fff8eb;border:1px solid #f6d79b;border-radius:12px;padding:12px 14px;margin:0 0 14px;}
+.st-nudge[hidden]{display:none;}
+.st-nudge>.ms{color:#b45309;font-size:22px;flex-shrink:0;margin-top:1px;}
+.st-nudge>div{flex:1;min-width:0;}
+.st-nudge b{display:block;font-size:13.5px;color:#7c2d12;}
+.st-nudge p{margin:3px 0 9px;font-size:12.5px;line-height:1.45;color:#92400e;}
+.st-nudge .bpx-logo-up{background:#fff;}
+#bpx.bpx-dark .st-nudge{background:#2a2113;border-color:#5b4520;}#bpx.bpx-dark .st-nudge b{color:#fcd9a5;}#bpx.bpx-dark .st-nudge p{color:#e9c48c;}
+/* brand colour */
+.st-brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+#bpx .st-ctl .st-brand input[type=color]{width:44px;height:40px;padding:3px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;flex-shrink:0;}
+#bpx .st-ctl .st-brand input[type=text]{width:116px;flex:0 0 auto;font-family:ui-monospace,monospace;text-transform:lowercase;}
+.st-brand-pv{display:inline-flex;align-items:center;gap:6px;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;background:#2f6bff;color:#fff;white-space:nowrap;}
+.st-brand-use{background:none;border:0;padding:0;font:inherit;font-size:12px;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
 .bpx-logo-btns{display:flex;gap:8px;}
 .bpx-logo-up,.bpx-logo-rm{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit;}
 .bpx-logo-up:hover{border-color:var(--blue);color:var(--blue);}
@@ -37674,6 +37753,7 @@ function bpSettings(){
       +'</span></div>';
   }).join('');
   var logoInner=BPLOGO?('<img id="set-logoimg" src="'+BPLOGO+'">'):'<span id="set-logoimg">Logo</span>';
+  var brandHex=bpBrandHex(c.brandColor), calcHex=bpBrandHex((bpCzThemeGet('calc')||{}).primary);
   var SECS=[
     ['business','Business','storefront','Who you are, and how customers reach you.'],
     ['hours','Hours & replies','schedule','When you\'re open, and what a missed call gets back.'],
@@ -37711,10 +37791,19 @@ function bpSettings(){
       +'<div class="st-body">'
       +sec('business',
         grp('Identity')
-        +row('Logo','Square works best. It appears on your dashboard, invoices, estimates and door hangers.',
+        +'<div class="st-nudge" id="set-lognudge"'+(BPLOGO?' hidden':'')+'><span class="ms">add_photo_alternate</span><div><b>Add your logo</b>'
+          +'<p>Your customers see it on their portal, contracts, review page and calculators. Until then they see your initials.</p>'
+          +'<button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload logo</button></div></div>'
+        +row('Logo','A transparent PNG or SVG works best, wide or square. It appears on your customer portal, contracts, review page, invoices and estimates.',
           '<div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
           +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
           +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>')
+        +row('Brand colour','Buttons, links and highlights on your customer portal and signing page. Text on it turns white or dark automatically.',
+          '<div class="st-brand"><input type="color" id="set-cbrandpick" value="'+(brandHex||calcHex||'#2f6bff')+'" oninput="bpBrandPick(this.value)" aria-label="Pick brand colour">'
+          +'<input type="text" id="set-cbrand" value="'+bpEsc(brandHex)+'" placeholder="#2f6bff" maxlength="7" oninput="bpBrandType(this.value)" aria-label="Brand colour hex">'
+          +'<span class="st-brand-pv" id="set-cbrandpv"'+(brandHex?' style="'+bpEsc(bpBrandVars(brandHex))+'background:var(--hp-blue);color:var(--hp-on)"':'')+'>Approve &amp; sign</span>'
+          +(calcHex&&calcHex!==brandHex?'<button type="button" class="st-brand-use" onclick="bpBrandPick(\''+calcHex+'\')">Use my calculator colour ('+calcHex+')</button>':'')
+          +'</div>','set-cbrand')
         +f('set-cname','Business name',c.name,'Acme Roofing')
         +f('set-ctrade','Trade',c.trade,'Roofing','text','Picks which calculator you get.')
         +'<datalist id="bpTradeList">'+BP_CALC_IDS.map(function(p){return '<option value="'+bpEsc(p[1])+'"></option>';}).join('')+'</datalist>'
@@ -37892,17 +37981,23 @@ window.bpHrsToggle=function(day){var ck=q('hrs-'+day+'-o');var t=q('hrs-'+day+'-
 };
 window.bpLogoPick=function(e){var file=e.target.files&&e.target.files[0];if(!file)return;
   if(file.size>1200000){alert('Please choose an image under ~1MB.');return;}
-  var r=new FileReader();r.onload=function(){BPLOGO=r.result;var pv=q('set-logopv');if(pv)pv.innerHTML='<img id="set-logoimg" src="'+BPLOGO+'">';};r.readAsDataURL(file);
+  var r=new FileReader();r.onload=function(){BPLOGO=r.result;var pv=q('set-logopv');if(pv)pv.innerHTML='<img id="set-logoimg" src="'+BPLOGO+'">';var n=q('set-lognudge');if(n)n.hidden=true;};r.readAsDataURL(file);
 };
-window.bpLogoRemove=function(){BPLOGO='';var pv=q('set-logopv');if(pv)pv.innerHTML='<span id="set-logoimg">Logo</span>';var fi=q('set-logofile');if(fi)fi.value='';};
+window.bpLogoRemove=function(){BPLOGO='';var pv=q('set-logopv');if(pv)pv.innerHTML='<span id="set-logoimg">Logo</span>';var fi=q('set-logofile');if(fi)fi.value='';var n=q('set-lognudge');if(n)n.hidden=false;};
+/* brand colour: the swatch and the hex box stay in step; the preview shows the readable text colour */
+function bpBrandPv(hex){var pv=q('set-cbrandpv');if(!pv)return;var st=bpBrandVars(hex);pv.setAttribute('style',st?st+'background:var(--hp-blue);color:var(--hp-on)':'');}
+window.bpBrandPick=function(v){var h=bpBrandHex(v);if(!h)return;var t=q('set-cbrand'),c=q('set-cbrandpick');if(t)t.value=h;if(c)c.value=h;bpBrandPv(h);};
+window.bpBrandType=function(v){v=String(v||'').trim();if(/^[0-9a-f]{6}$/i.test(v))v='#'+v;var h=bpBrandHex(v);if(h){var c=q('set-cbrandpick');if(c)c.value=h;}bpBrandPv(h);};
 window.bpSettingsSave=function(){
   var g=function(id){var e=q(id);return e?e.value.trim():'';};
   /* the business email goes on invoices and estimates, so a typo is worth catching */
   var em0=g('set-cemail');
   if(em0&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em0)){var mm=q('bpx-setmsg');if(mm){mm.style.color='#dc2626';mm.textContent='That email doesn\u2019t look right.';}var ei=q('set-cemail');if(ei)ei.focus();return;}
+  var br0=g('set-cbrand');if(br0&&/^[0-9a-f]{6}$/i.test(br0))br0='#'+br0;
+  if(br0&&!bpBrandHex(br0)){var mb=q('bpx-setmsg');if(mb){mb.style.color='#dc2626';mb.textContent='Brand colour should look like #1f3a5f.';}var bi=q('set-cbrand');if(bi)bi.focus();return;}
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   /* keep what this form does not edit (licenses, crews, receptionist, phone…) */
-  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
+  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO,brandColor:bpBrandHex(br0)},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
   bpSettingsSet(data);
   var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ';}
   bpSettingsPush(data).then(function(ok){
@@ -39688,7 +39783,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
 <script src="portal/projsheet.js?v=20261006a"></script>
-<script src="portal/custportal.js?v=20261007a"></script>
+<script src="portal/custportal.js?v=20261009b"></script>
 <script src="portal/bpedit.js?v=20261001p"></script>
 <script src="portal/crewapp.js?v=20261003d"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
@@ -39712,7 +39807,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/projsheet.css?v=20261001p">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261003d">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
-<link rel="stylesheet" href="portal/custportal.css?v=20261007a">
+<link rel="stylesheet" href="portal/custportal.css?v=20261009b">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">

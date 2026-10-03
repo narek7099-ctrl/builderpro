@@ -5,7 +5,7 @@
 // thing it talks to. Every answer is about the one job the token belongs to.
 //
 //   POST { op:"get", token }
-//     -> { ok, business:{name, logo, phone, email, contact (owner's first name)}, job:{...}, money:{...},
+//     -> { ok, business:{name, logo, color (#rrggbb or ""), phone, email, contact (owner's first name)}, job:{...}, money:{...},
 //          crew:[{name, trade, photo}], photos:[{url}], docs:[{name, type, url}],
 //          contracts:[{title, status, signed_at, link}],
 //          permits:[{type, number, status, approved, expires, inspections:[{kind, date, result}]}],
@@ -219,6 +219,7 @@ async function view(c: Ctx) {
     ok: true,
     business: {
       name: clean(co.name, 120), logo: /^https:\/\//i.test(String(co.logoUrl ?? "")) ? co.logoUrl : "",
+      color: /^#[0-9a-f]{6}$/i.test(String(co.brandColor ?? "")) ? String(co.brandColor) : "",
       phone: clean(co.phone, 40), email: clean(co.email, 120), contact,
     },
     job: {
