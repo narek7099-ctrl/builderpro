@@ -33,6 +33,121 @@
   var biz = function () { var c = (window.bpSettingsGet && bpSettingsGet().company) || {}; return c.name || 'Your business'; };
   var who = function () { try { return (window._bpUser && _bpUser.email) || localStorage.getItem('bpEmail') || ''; } catch (e) { return ''; } };
 
+  /* ---------- who changed what (crew changes come from crew_material_add / _remove) ----------
+     Every item carries addedBy {uid, name, role}; every change goes on
+     j.materials.log, newest last. Removed item ids go on j.materials.gone so
+     the database trigger (bp_jobs_keep_crew) doesn't put a crew line back
+     when this device saves. */
+  function actor() {
+    var T = window.BP_TEAM || {}, u = window._bpUser || {}, md = u.user_metadata || {};
+    var co = (window.bpSettingsGet && (bpSettingsGet() || {}).company) || {};
+    var nm = T.name || md.full_name || md.name || co.owner || String(u.email || who() || '').split('@')[0] || 'Owner';
+    return { uid: T.uid || u.id || '', name: String(nm), role: T.role === 'office' ? 'office' : 'owner' };
+  }
+  ML.actor = actor;
+  var meUid = function () { return actor().uid; };
+  function logIt(m, e) {
+    if (!m) return;
+    m.log = Array.isArray(m.log) ? m.log : [];
+    m.log.push(Object.assign({ id: uid('lg'), at: Date.now(), by: actor() }, e));
+    if (m.log.length > 300) m.log = m.log.slice(-300);
+  }
+  ML.log = function (j, e) { var m = listOf(j, true); logIt(m, e); };
+  function tomb(m, id) { if (!m || !id) return; m.gone = Array.isArray(m.gone) ? m.gone : []; if (m.gone.indexOf(id) < 0) m.gone.push(id); if (m.gone.length > 1000) m.gone = m.gone.slice(-1000); }
+  var initials = function (n) { var p = String(n || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); };
+  var qtyTxt = function (q, u) { return q === '' || q == null ? '' : (+q || 0) + (u ? ' ' + u : ''); };
+
+  /* last time the office looked at a job's list: per device */
+  function seenAll() { try { return JSON.parse(localStorage.getItem('bpMatSeen') || '{}') || {}; } catch (e) { return {}; } }
+  ML.seenAt = function (jid) { return +seenAll()[jid] || 0; };
+  ML.newCount = function (j) {
+    var m = j && j.materials; if (!m || !Array.isArray(m.log)) return 0;
+    var s = ML.seenAt(j.id);
+    return m.log.filter(function (e) { return e && e.by && e.by.role === 'crew' && +e.at > s; }).length;
+  };
+  ML.pendingReceipts = function (j) { return ((j && j.crewReceipts) || []).filter(function (r) { return r && r.status === 'pending'; }).length; };
+  ML.seen = function (jid) {
+    if (!jid) return; var a = seenAll(); a[jid] = Date.now();
+    try { localStorage.setItem('bpMatSeen', JSON.stringify(a)); } catch (e) {}
+    ML.badgeTab(jid);
+  };
+  /* "2 new" on the project's Materials tab */
+  ML.badgeTab = function (jid) {
+    var b = document.querySelector('[data-pj-tab="materials"]'); if (!b || jid !== window._bpProjId) return;
+    var j = jobById(jid), n = ML.newCount(j), p = ML.pendingReceipts(j), x = b.querySelector('.ml-newb');
+    var t = n ? n + ' new' : p ? p + ' receipt' + (p === 1 ? '' : 's') : '';
+    if (!t) { if (x) x.remove(); return; }
+    if (!x) { x = document.createElement('span'); x.className = 'ml-newb'; b.appendChild(x); }
+    x.textContent = t; x.title = (n ? n + ' change' + (n === 1 ? '' : 's') + ' by the crew since you last looked' : '') + (p ? (n ? '; ' : '') + p + ' crew receipt' + (p === 1 ? '' : 's') + ' to approve' : '');
+  };
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest && e.target.closest('[data-pj-tab="materials"]');
+    if (t && window._bpProjId) setTimeout(function () { ML.seen(window._bpProjId); }, 0);
+  }, true);
+
+  /* the crew writes straight to the database; bring those changes into this
+     device's copy (same rule as bp_jobs_keep_crew in the database) */
+  function idsOf(a) { var o = {}; (a || []).forEach(function (x) { if (x && x.id) o[x.id] = 1; }); return o; }
+  ML.mergeCrew = function (lj, sj) {
+    if (!lj || !sj) return false;
+    var before = JSON.stringify([lj.materials || null, lj.crewReceipts || null, lj.crewReceiptsGone || null]);
+    var sm = sj.materials && typeof sj.materials === 'object' ? sj.materials : null;
+    if (sm) {
+      var m = listOf(lj, true), gone = {};
+      (m.gone || []).concat(sm.gone || []).forEach(function (g) { if (typeof g === 'string') gone[g] = 1; });
+      var have = idsOf(m.items);
+      m.items = m.items.filter(function (it) { return !(it && it.id && gone[it.id]); })
+        .concat((sm.items || []).filter(function (it) { return it && it.id && it.addedBy && it.addedBy.role === 'crew' && !have[it.id] && !gone[it.id]; }));
+      m.gone = Object.keys(gone);
+      var hl = idsOf(m.log);
+      m.log = (m.log || []).concat((sm.log || []).filter(function (e) { return e && e.id && !hl[e.id]; }))
+        .sort(function (a, b) { return (+a.at || 0) - (+b.at || 0); }).slice(-300);
+      if (!m.log.length) delete m.log;
+      if (!m.gone.length) delete m.gone;
+    }
+    if (Array.isArray(sj.crewReceipts) || Array.isArray(lj.crewReceipts)) {
+      var rg = {}; (lj.crewReceiptsGone || []).concat(sj.crewReceiptsGone || []).forEach(function (g) { if (typeof g === 'string') rg[g] = 1; });
+      var srv = {}; (sj.crewReceipts || []).forEach(function (r) { if (r && r.id) srv[r.id] = r; });
+      var mine = idsOf(lj.crewReceipts);
+      lj.crewReceipts = (lj.crewReceipts || []).filter(function (r) { return !(r && r.id && rg[r.id]); }).map(function (r) {
+        var s = srv[r.id]; return s && r.status === 'pending' && s.status !== 'pending' ? s : r;
+      }).concat((sj.crewReceipts || []).filter(function (r) { return r && r.id && !mine[r.id] && !rg[r.id]; }));
+      lj.crewReceiptsGone = Object.keys(rg);
+      if (!lj.crewReceiptsGone.length) delete lj.crewReceiptsGone;
+    }
+    return JSON.stringify([lj.materials || null, lj.crewReceipts || null, lj.crewReceiptsGone || null]) !== before;
+  };
+  var syncAt = 0, syncing = null;
+  ML.sync = function (force) {
+    if (!(window.BP_LIVE && window.BP_SB) || (window.bpTeamIsCrew && bpTeamIsCrew())) return Promise.resolve(false);
+    if (syncing) return syncing;
+    if (!force && Date.now() - syncAt < 15000) return Promise.resolve(false);
+    syncAt = Date.now();
+    syncing = Promise.resolve(BP_SB.from('portal_finance').select('jobs').maybeSingle()).then(function (r) {
+      syncing = null;
+      var srv = r && r.data && Array.isArray(r.data.jobs) ? r.data.jobs : null; if (!srv) return false;
+      var js = jobs(), byId = {}, changed = false;
+      srv.forEach(function (s) { if (s && s.id) byId[s.id] = s; });
+      js.forEach(function (j) { if (j && byId[j.id] && ML.mergeCrew(j, byId[j.id])) changed = true; });
+      if (changed) {
+        try { localStorage.setItem('bpJobs', JSON.stringify(js)); } catch (e) {}
+        ML.repaint();
+      }
+      return changed;
+    }).catch(function () { syncing = null; return false; });
+    return syncing;
+  };
+  ML.repaint = function () {
+    Array.prototype.forEach.call(document.querySelectorAll('.ml-ed[id^="ml-ed-job-"]'), function (el) {
+      if (el.contains(document.activeElement) && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;   /* don't yank a field from under the user */
+      var jid = el.id.slice('ml-ed-job-'.length); el.outerHTML = editor(T('job', jid));
+    });
+    var rc = $('bpx-pj-mat') && $('bpx-pj-mat').querySelector('.rc-job');
+    if (rc && window.bpReceiptsFor && window._bpProjId) { var d = document.createElement('div'); d.innerHTML = bpReceiptsFor(window._bpProjId); rc.replaceWith(d.firstChild); }
+    if (window._bpProjId) ML.badgeTab(window._bpProjId);
+    if (window._bpCurView === 'matlists' && !ML.open && $('bpxViewArea') && !document.activeElement.classList.contains('ml-q')) window.bpMatLists();
+  };
+
   /* ---------- templates ---------- */
   function tpls() {
     try { var a = JSON.parse(localStorage.getItem('bpMatTemplates') || 'null'); if (Array.isArray(a)) return a; } catch (e) {}
@@ -142,14 +257,18 @@
   function push(t, it) {
     var d = doc(t); if (!d) return;
     var after = !!(d.m && d.m.status !== 'draft');
-    d.items.push(Object.assign({ id: uid('mi'), qty: 1, addedAt: Date.now(), addedAfterSend: after, by: who() }, it));
+    var row = Object.assign({ id: uid('mi'), qty: 1, addedAt: Date.now(), addedAfterSend: after, by: who() }, it);
+    if (d.m) { row.addedBy = actor(); logIt(d.m, { action: 'add', item: row.name || 'Custom line', itemId: row.id, qty: row.qty, unit: row.unit || '' }); }
+    d.items.push(row);
     d.save(); ML.q[t.kind + '-' + t.id] = ''; redraw(t);
     var q = $('ml-q-' + t.kind + '-' + t.id); if (q) q.focus();
   }
   /* used by prices.js: put one item on a job's list */
   window.bpMatAddItem = function (jobId, it) {
     var j = jobById(jobId), m = listOf(j, true); if (!m) return false;
-    m.items.push(Object.assign({ id: uid('mi'), qty: 1, addedAt: Date.now(), addedAfterSend: m.status !== 'draft', by: who(), custom: false }, it));
+    var row = Object.assign({ id: uid('mi'), qty: 1, addedAt: Date.now(), addedAfterSend: m.status !== 'draft', by: who(), custom: false, addedBy: actor() }, it);
+    m.items.push(row);
+    logIt(m, { action: 'add', item: row.name || 'Item', itemId: row.id, qty: row.qty, unit: row.unit || '' });
     saveJobs(); return true;
   };
   ML.pick = function (kind, id, i) {
@@ -164,23 +283,51 @@
   ML.edit = function (kind, id, itemId, k, v) {
     var t = T(kind, id), d = doc(t); if (!d) return;
     var it = d.items.filter(function (x) { return x.id === itemId; })[0]; if (!it) return;
+    var was = it[k];
     it[k] = (k === 'qty' || k === 'price') ? (String(v).trim() === '' ? '' : Math.max(0, num(v))) : String(v);
+    if (d.m && String(was == null ? '' : was) !== String(it[k])) {
+      logIt(d.m, k === 'qty' ? { action: 'qty', item: it.name || 'Item', itemId: it.id, before: was === undefined ? '' : was, after: it[k], unit: it.unit || '' }
+        : { action: 'edit', field: k, item: it.name || 'Item', itemId: it.id, before: k === 'price' ? undefined : was, after: k === 'price' ? undefined : it[k] });
+    }
     d.save(); redraw(t);
   };
   ML.del = function (kind, id, itemId) {
     var t = T(kind, id), d = doc(t); if (!d) return;
     var i = d.items.map(function (x) { return x.id; }).indexOf(itemId); if (i < 0) return;
+    var it = d.items[i];
+    if (d.m) { tomb(d.m, it.id); logIt(d.m, { action: 'remove', item: it.name || 'Item', itemId: it.id, qty: it.qty, unit: it.unit || '', whose: it.addedBy && it.addedBy.role === 'crew' ? it.addedBy.name : undefined }); }
     d.items.splice(i, 1); d.save(); redraw(t);
+  };
+  /* accept a crew request onto the order: the crew can no longer take it back */
+  ML.approve = function (jid, itemId) {
+    var j = jobById(jid), m = listOf(j); if (!m) return;
+    var it = m.items.filter(function (x) { return x.id === itemId; })[0]; if (!it || it.status !== 'requested') return;
+    it.status = 'approved';
+    logIt(m, { action: 'approve', item: it.name || 'Item', itemId: it.id, qty: it.qty, unit: it.unit || '', whose: it.addedBy && it.addedBy.name });
+    saveJobs(); redraw(T('job', jid));
+  };
+  ML.lock = function (jid, on) {
+    var j = jobById(jid), m = listOf(j, true); if (!m) return;
+    on = !!on; if (!!m.locked === on) return;
+    m.locked = on; logIt(m, { action: on ? 'lock' : 'unlock', item: '' });
+    saveJobs(); redraw(T('job', jid));
   };
 
   /* ---------- status ---------- */
   ML.status = function (jid, s) {
     var j = jobById(jid), m = listOf(j, true); if (!m) return;
     if (s === 'sent' && !m.items.length) { window.bpToast && bpToast('Add something to the list first.'); return; }
+    if (m.status === s) return;
     m.status = s;
-    if (s === 'sent') m.sentAt = Date.now();
+    if (s === 'sent') {
+      m.sentAt = Date.now();
+      /* what the crew asked for went out with the order; no more changes from them */
+      m.items.forEach(function (it) { if (it.status === 'requested' || it.status === 'approved') it.status = 'ordered'; });
+      m.locked = true;
+    }
     if (s === 'received') m.receivedAt = Date.now();
-    if (s === 'draft') m.sentAt = null;
+    if (s === 'draft') { m.sentAt = null; m.locked = false; }
+    logIt(m, { action: 'status', item: '', after: s });
     saveJobs(); redraw(T('job', jid));
   };
 
@@ -196,7 +343,8 @@
   ML.applyTpl = function (jid, tid) {
     var tp = tplById(tid), j = jobById(jid), m = listOf(j, true); if (!tp || !m) return;
     var after = m.status !== 'draft';
-    tp.items.forEach(function (it) { m.items.push(Object.assign(tplItem(it), { addedAt: Date.now(), addedAfterSend: after, by: who() })); });
+    tp.items.forEach(function (it) { m.items.push(Object.assign(tplItem(it), { addedAt: Date.now(), addedAfterSend: after, by: who(), addedBy: actor() })); });
+    if (tp.items.length) logIt(m, { action: 'add', item: tp.items.length + ' items from “' + tp.name + '”' });
     ML.tplPick = null; saveJobs(); redraw(T('job', jid));
   };
   ML.tplNew = function () {
@@ -274,6 +422,49 @@
     window.bpToast && bpToast('Change order for ' + money(co.amount) + ' recorded on ' + (j.name || 'the job') + '.');
   };
 
+  /* ---------- the change log ---------- */
+  function whenTxt(ts) {
+    var d = new Date(+ts); if (isNaN(d)) return '';
+    var t = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' ', '').toLowerCase();
+    var td = new Date(); td.setHours(0, 0, 0, 0);
+    if (d >= td) return t;
+    if (d >= new Date(td.getTime() - 864e5)) return 'yesterday ' + t;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + t;
+  }
+  ML.whenTxt = whenTxt;
+  function logLine(e) {
+    var by = e.by || {}, nm = by.uid && by.uid === meUid() ? 'You' : (String(by.name || 'Someone').split(' ')[0]);
+    var it = '<b>' + esc(e.item || 'an item') + '</b>', q = qtyTxt(e.qty, e.unit), amt = e.amount != null ? money(e.amount) : '';
+    var s = {
+      add: 'added ' + (q ? esc(q) + ' of ' : '') + it,
+      remove: 'removed ' + it + (e.whose && by.role !== 'crew' ? ' <span class="bpx-mut">(' + esc(String(e.whose).split(' ')[0]) + '’s request)</span>' : ''),
+      qty: 'changed ' + it + ' from ' + esc(qtyTxt(e.before, '') || 'no qty') + ' to ' + esc(qtyTxt(e.after, e.unit) || 'no qty'),
+      edit: 'edited the ' + esc(e.field === 'supplierName' ? 'supplier' : e.field || 'line') + ' on ' + it,
+      approve: 'approved ' + it + (q ? ' (' + esc(q) + ')' : ''),
+      status: 'marked the list <b>' + esc(e.after === 'sent' ? 'sent to supplier' : e.after === 'received' ? 'received' : 'draft') + '</b>',
+      lock: 'locked the list for crew', unlock: 'unlocked the list for crew',
+      receipt: 'uploaded a receipt <b>' + amt + '</b>' + (e.item && e.item !== 'Receipt' ? ' · ' + esc(e.item) : ''),
+      'receipt-remove': 'withdrew a receipt <b>' + amt + '</b>',
+      'receipt-approve': 'approved a receipt <b>' + amt + '</b>' + (e.whose ? ' from ' + esc(String(e.whose).split(' ')[0]) : ''),
+      'receipt-reject': 'rejected a receipt <b>' + amt + '</b>' + (e.whose ? ' from ' + esc(String(e.whose).split(' ')[0]) : '')
+    }[e.action] || esc(e.action || 'changed') + ' ' + it;
+    return '<b class="ml-lgn">' + esc(nm) + '</b> ' + s;
+  }
+  ML.logLine = logLine;
+  ML.logOpen = {};
+  function timeline(j, m) {
+    var lg = Array.isArray(m.log) ? m.log.filter(function (e) { return e && e.at; }) : [];
+    if (!lg.length || !j) return '';
+    var seen = ML.seenAt(j.id), fresh = ML.newCount(j), list = lg.slice().reverse().slice(0, 60);
+    var open = ML.logOpen[j.id] != null ? ML.logOpen[j.id] : fresh > 0;
+    return '<details class="ml-log"' + (open ? ' open' : '') + ' ontoggle="ML.logOpen[\'' + j.id + '\']=this.open">'
+      + '<summary><span class="ms">history</span>Changes <span class="bpx-mut">(' + lg.length + ')</span>' + (fresh ? '<span class="ml-newb">' + fresh + ' new</span>' : '') + '</summary>'
+      + '<ol>' + list.map(function (e) {
+        var by = e.by || {}, isNew = by.role === 'crew' && +e.at > seen;
+        return '<li class="' + (by.role === 'crew' ? 'crew' : '') + (isNew ? ' new' : '') + '"><i class="ml-av">' + esc(initials(by.name)) + '</i><span>' + logLine(e) + '</span><time>' + whenTxt(e.at) + '</time></li>';
+      }).join('') + '</ol>' + (lg.length > list.length ? '<div class="bpx-mut ml-small">Showing the latest ' + list.length + '.</div>' : '') + '</details>';
+  }
+
   /* ---------- the editor ---------- */
   function statusPill(s) {
     var map = { draft: ['Draft', 'ml-st-draft'], sent: ['Sent to supplier', 'ml-st-sent'], received: ['Received', 'ml-st-recv'] };
@@ -287,7 +478,9 @@
     if (m) {
       var jid = t.id;
       h += '<div class="ml-bar"><div class="ml-bar-l">' + statusPill(m.status)
-        + (m.sentAt ? '<span class="bpx-mut ml-small">sent ' + new Date(m.sentAt).toLocaleDateString() + '</span>' : '') + '</div><div class="ml-bar-r">'
+        + (m.sentAt ? '<span class="bpx-mut ml-small">sent ' + new Date(m.sentAt).toLocaleDateString() + '</span>' : '')
+        + '<label class="ml-lock" title="Locked: the crew can see the list but can\'t add to it or take things off. Sending the order locks it."><input type="checkbox" data-ml-lock="' + esc(jid) + '"' + (m.locked ? ' checked' : '') + ' onchange="ML.lock(\'' + jid + '\',this.checked)"><span class="ms">' + (m.locked ? 'lock' : 'lock_open') + '</span>' + (m.locked ? 'Locked for crew' : 'Crew can add') + '</label>'
+        + '</div><div class="ml-bar-r">'
         + (m.status === 'draft' ? '<button class="bpx-rowbtn ml-primary" onclick="ML.status(\'' + jid + '\',\'sent\')">Mark sent to supplier</button>' : '')
         + (m.status === 'sent' ? '<button class="bpx-rowbtn ml-primary" onclick="ML.status(\'' + jid + '\',\'received\')">Mark received</button>' : '')
         + (m.status !== 'draft' ? '<button class="bpx-rowbtn" onclick="ML.status(\'' + jid + '\',\'draft\')" title="Back to draft">Reopen</button>' : '')
@@ -324,10 +517,15 @@
         + items.map(function (it) {
           var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
           var blank = function (v) { return v === '' || v == null; };
-          return '<tr' + (it.addedAfterSend ? ' class="ml-late"' : '') + '><td data-l="Item">'
+          var ab = it.addedBy, crew = ab && ab.role === 'crew', mineIt = ab && ab.uid && ab.uid === meUid();
+          var byChip = ab && ab.name ? '<span class="ml-by' + (crew ? ' crew' : '') + '" title="' + esc((crew ? 'Requested by ' : 'Added by ') + ab.name + (it.addedAt ? ' · ' + whenTxt(it.addedAt) : '')) + '"><i>' + esc(initials(ab.name)) + '</i>'
+            + (crew ? 'Requested by ' + esc(String(ab.name).split(' ')[0]) : mineIt ? 'added by you' : 'added by ' + esc(String(ab.name).split(' ')[0])) + '</span>' : '';
+          var stChip = it.status === 'requested' ? '<span class="ml-tag ml-tag-req">Requested</span>' + (m ? '<button class="ml-ok" onclick="ML.approve(\'' + t.id + '\',\'' + it.id + '\')" title="Accept onto the order. The crew can no longer take it back.">Approve</button>' : '')
+            : it.status === 'approved' ? '<span class="ml-tag ml-tag-ok">Approved</span>' : it.status === 'ordered' && crew ? '<span class="ml-tag ml-tag-ok">Ordered</span>' : '';
+          return '<tr class="' + (it.addedAfterSend ? 'ml-late' : '') + (crew ? ' ml-crewrow' : '') + '" data-ml-item="' + esc(it.id) + '"><td data-l="Item">'
             + (it.custom ? ed('name', it.name, 'ml-in-name', 0, 'Write anything: item, size, color') : '<div class="ml-name">' + esc(it.name) + '</div>')
             + '<div class="ml-meta">' + (it.sku ? '<small>' + esc(it.sku) + '</small>' : '') + (it.custom ? '<small>custom</small>' : '')
-            + (it.addedAfterSend ? '<span class="ml-tag">Added after sending</span>' : '') + (it.coId ? '<span class="ml-tag ml-tag-ok">On change order</span>' : '') + '</div>'
+            + (it.addedAfterSend ? '<span class="ml-tag">Added after sending</span>' : '') + (it.coId ? '<span class="ml-tag ml-tag-ok">On change order</span>' : '') + byChip + stChip + '</div>'
             + '<input class="ml-in ml-in-note" placeholder="Notes (color, length, where it goes)" value="' + esc(it.note || '') + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'note\',this.value)"></td>'
             + '<td data-l="Qty" class="ml-n">' + ed('qty', blank(it.qty) ? '' : +it.qty || 0, 'ml-in-num', 1, 'optional') + '</td>'
             + '<td data-l="Unit">' + (it.custom ? ed('unit', it.unit || 'ea', 'ml-in-unit') : esc(it.unit || 'ea')) + '</td>'
@@ -359,6 +557,7 @@
           + '<div class="ml-fr ml-grand"><span>Change order amount</span><span id="ml-co-amt">' + money(coAmount()) + '</span></div>'
           + '<div class="ml-co-a"><button class="bpx-rowbtn" onclick="ML.coClose()">Cancel</button><button class="bpx-rowbtn ml-primary" onclick="ML.coSave()">Record change order</button></div></div>';
       }
+      h += timeline(d.job, m);
     }
     return h + '</div>';
   }
@@ -384,7 +583,7 @@
           + '<div class="ml-head-t"><b>' + esc(j.name || 'Job') + '</b><span class="bpx-mut">' + esc(j.title || '') + (j.addr ? ' &middot; ' + esc(j.addr) : '') + '</span></div>'
           + '<button class="bpx-rowbtn" onclick="bpProjOpen(\'' + j.id + '\');setTimeout(function(){bpProjTab(\'materials\')},30)">Open project</button></div>'
           + editor(T('job', j.id)) + '</div>';
-        done(); return;
+        done(); ML.sync(); ML.seen(j.id); return;
       }
       ML.open = null;
     }
@@ -406,18 +605,28 @@
       + rows.map(function (j) {
         var m = j.materials, n = m && m.items ? m.items.length : 0;
         var sups = m ? bySupplier(m.items).map(function (g) { return g.name; }) : [];
-        return '<tr class="ml-jrow" onclick="ML.open=\'' + j.id + '\';bpMatLists()"><td data-l="Job"><b>' + esc(j.name || 'Job') + '</b><div class="bpx-mut ml-small">' + esc(j.title || '') + (j.status === 'done' ? ' &middot; done' : '') + '</div></td>'
+        var nw = ML.newCount(j), pr = ML.pendingReceipts(j);
+        return '<tr class="ml-jrow" onclick="ML.open=\'' + j.id + '\';bpMatLists()"><td data-l="Job"><b>' + esc(j.name || 'Job') + '</b>'
+          + (nw ? ' <span class="ml-newb" title="Changes by the crew since you last looked">' + nw + ' new change' + (nw === 1 ? '' : 's') + '</span>' : '')
+          + (pr ? ' <span class="ml-newb rc" title="Crew receipts waiting for you">' + pr + ' receipt' + (pr === 1 ? '' : 's') + ' to approve</span>' : '')
+          + '<div class="bpx-mut ml-small">' + esc(j.title || '') + (j.status === 'done' ? ' &middot; done' : '') + '</div></td>'
           + '<td data-l="Items" class="ml-n">' + n + '</td><td data-l="Estimated" class="ml-n">' + (n ? money(ML.total(j)) : '—') + '</td>'
           + '<td data-l="Status">' + (n || m ? statusPill(m.status) : '<span class="bpx-mut ml-small">No list</span>') + '</td>'
           + '<td data-l="Suppliers" class="ml-sups">' + (sups.length ? esc(sups.join(', ')) : '<span class="bpx-mut">—</span>') + '</td>'
           + '<td class="ml-x"><button class="bpx-rowbtn">Open</button></td></tr>';
       }).join('') + '</tbody></table>' : '<div class="ml-empty bpx-mut">No jobs yet. Lists hang off a project, so add one in Active Projects first.</div>') + '</div>';
-    area.innerHTML = h; done();
+    area.innerHTML = h; done(); ML.sync();
   };
   ML.create = function () {
     var jid = ($('ml-new-job') || {}).value, tid = ($('ml-new-tpl') || {}).value; if (!jid) return;
     var j = jobById(jid), m = listOf(j, true);
-    if (tid) { var tp = tplById(tid); if (tp) tp.items.forEach(function (it) { m.items.push(Object.assign(tplItem(it), { addedAt: Date.now(), addedAfterSend: m.status !== 'draft', by: who() })); }); }
+    if (tid) {
+      var tp = tplById(tid);
+      if (tp) {
+        tp.items.forEach(function (it) { m.items.push(Object.assign(tplItem(it), { addedAt: Date.now(), addedAfterSend: m.status !== 'draft', by: who(), addedBy: actor() })); });
+        if (tp.items.length) logIt(m, { action: 'add', item: tp.items.length + ' items from “' + tp.name + '”' });
+      }
+    }
     saveJobs(); ML.newing = false; ML.open = jid; window.bpMatLists();
     setTimeout(function () { var q = $('ml-q-job-' + jid); if (q) q.focus(); }, 30);
   };
@@ -474,6 +683,8 @@
     el.innerHTML = '<div class="ml-pj-h"><b>List</b> <span class="bpx-mut">planning only, estimated</span></div>' + editor(T('job', jobId))
       + (window.bpReceiptsFor ? window.bpReceiptsFor(jobId) : '');
     ensureSP(function () {});
+    setTimeout(function () { ML.badgeTab(jobId); }, 0);
+    ML.sync(true);
   };
 
   /* ---------- budget: show the list beside it, never counted twice ----------
@@ -535,12 +746,25 @@
     + '#bpx .ml-co .ml-fr{min-width:0}#bpx .ml-co-a{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}'
     + '#bpx .ml-bud{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--soft);font-size:12.5px;line-height:1.45}#bpx .ml-bud .ms{font-size:18px;color:var(--grey)}#bpx .ml-bad{color:#dc2626}'
     + '@media(max-width:640px){#bpx .ml-tbl thead,#bpx .ml-jobs thead{display:none}#bpx .ml-tbl,#bpx .ml-tbl tbody,#bpx .ml-jobs,#bpx .ml-jobs tbody{display:block}'
-    + '#bpx .ml-tbl tr,#bpx .ml-jobs tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line-2);position:relative}'
+    + '#bpx#bpx#bpx#bpx#bpx .ml-tbl td,#bpx#bpx#bpx#bpx#bpx .ml-jobs td{height:auto !important}'
+    + '#bpx .ml-tbl tr,#bpx .ml-jobs tr{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:auto;height:auto !important;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line-2);position:relative}'
     + '#bpx .ml-tbl td,#bpx .ml-jobs td{display:flex;justify-content:space-between;align-items:center;gap:8px;border:0;padding:2px 0;text-align:left}'
     + '#bpx .ml-tbl td[data-l]:before,#bpx .ml-jobs td[data-l]:before{content:attr(data-l);font-size:11px;color:var(--grey);text-transform:uppercase;letter-spacing:.03em}'
     + '#bpx .ml-tbl td[data-l="Item"],#bpx .ml-jobs td[data-l="Job"],#bpx .ml-jobs td[data-l="Template"]{grid-column:1/-1;display:block;padding-right:34px}#bpx .ml-tbl td[data-l="Item"]:before,#bpx .ml-jobs td[data-l="Job"]:before,#bpx .ml-jobs td[data-l="Template"]:before{display:none}'
     + '#bpx .ml-tbl .ml-x{position:absolute;right:0;top:8px;width:auto}#bpx .ml-jobs .ml-x{grid-column:1/-1;justify-content:flex-end}#bpx .ml-jobs td[data-l="Suppliers"]{grid-column:1/-1}'
     + '#bpx .ml-in-num{width:90px}#bpx .ml-fr{min-width:0;width:100%}#bpx .ml-foot{align-items:stretch}#bpx .ml-opt{grid-template-columns:minmax(0,1fr) auto}#bpx .ml-opt-s{grid-column:1;grid-row:2}#bpx .ml-opt-p{grid-row:1/3;grid-column:2}}';
+  css += '#bpx .ml-by{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--grey);background:var(--soft,#f4f6fa);border-radius:20px;padding:1px 8px 1px 2px;white-space:nowrap}'
+    + '#bpx .ml-by i,#bpx .ml-av{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:#64748b;color:#fff;font-size:8.5px;font-weight:700;flex:0 0 auto}'
+    + '#bpx .ml-by.crew{background:#eef2ff;color:#3730a3;font-weight:600}#bpx .ml-by.crew i{background:#4f46e5}'
+    + '#bpx .ml-tag-req{background:#eef2ff;color:#3730a3}#bpx .ml-crewrow td{background:#fafaff}'
+    + '#bpx .ml-ok{border:1px solid #c7d2fe;background:#fff;color:#3730a3;font:inherit;font-size:11px;font-weight:600;border-radius:6px;padding:1px 8px;cursor:pointer}#bpx .ml-ok:hover{background:#eef2ff}'
+    + '#bpx .ml-lock{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;margin:0;cursor:pointer;color:var(--grey);border:1px solid var(--line);border-radius:7px;padding:3px 9px 3px 6px;white-space:nowrap}'
+    + '#bpx .ml-lock input{position:absolute;opacity:0;width:1px;height:1px}#bpx .ml-lock .ms{font-size:16px}#bpx .ml-lock:has(input:checked){color:#a8710f;background:#fdf1dc;border-color:#f3e1b5}#bpx .ml-lock:has(input:focus-visible){outline:2px solid var(--blue,#006fff)}'
+    + '#bpx .ml-newb{display:inline-block;margin-left:6px;background:#dc2626;color:#fff;font-size:10.5px;font-weight:700;border-radius:10px;padding:1px 7px;line-height:1.5;vertical-align:1px;white-space:nowrap}#bpx .ml-newb.rc{background:#4f46e5}'
+    + '#bpx .pjs-tab .ml-newb{margin-left:4px;font-size:10px;padding:0 6px}'
+    + '#bpx .ml-log{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:#fff}#bpx .ml-log summary{cursor:pointer;padding:10px 0;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;list-style:none}#bpx .ml-log summary::-webkit-details-marker{display:none}#bpx .ml-log summary .ms{font-size:18px;color:var(--grey)}'
+    + '#bpx .ml-log ol{list-style:none;margin:0;padding:0 0 8px;max-height:320px;overflow:auto}#bpx .ml-log li{display:flex;align-items:flex-start;gap:8px;padding:6px 4px;border-top:1px solid var(--line-2);font-size:13px;line-height:1.4}'
+    + '#bpx .ml-log li>span{flex:1;min-width:0}#bpx .ml-log time{font-size:11.5px;color:var(--grey);white-space:nowrap}#bpx .ml-log li.crew .ml-av{background:#4f46e5}#bpx .ml-log li.new{background:#fff7ed;border-radius:6px}#bpx .ml-log li.new time{color:#c2410c;font-weight:600}';
   var st = document.createElement('style'); st.id = 'ml-css'; st.textContent = css; document.head.appendChild(st);
 })();
 
