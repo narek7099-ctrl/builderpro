@@ -34825,9 +34825,11 @@ window.bpCtNew=function(){
       +'<div><label>Deposit at signing</label><input id="bpx-ct-dep" inputmode="decimal" value="'+(j.estimate?Math.round((+j.estimate||0)*0.3):'')+'"></div></div>'
     +'<label>Property address</label><input id="bpx-ct-addr" value="'+bpEsc(j.address||'')+'">'
     +'<label>Agreement</label><textarea id="bpx-ct-body" style="min-height:230px;font-size:13px;line-height:1.55">'+bpEsc(body)+'</textarea>'
+    +'<label>Contractor signature</label><div id="bpx-ct-usig"><div class="bpx-empty2" style="padding:10px">Loading…</div></div>'
     +'<div class="bpx-mmsg" id="bpx-ct-msg"></div>'
     +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-ct-save" onclick="bpCtSave()">Create contract</button></div>');
   var cards=document.querySelectorAll('.bpx-modalcard'); var mc=cards[cards.length-1]; if(mc){mc.style.maxWidth='680px';mc.style.width='95vw';}
+  bpUsLoad().then(bpUsCtBlock);
 };
 window.bpCtSave=function(){
   var g=function(id){var e=q(id);return e?e.value.trim():'';};
@@ -34836,14 +34838,18 @@ window.bpCtSave=function(){
   if(!name){msg.textContent='Who is this contract with?';return;}
   if(!body||body.length<40){msg.textContent='The agreement text looks empty.';return;}
   if(btn){btn.disabled=true;btn.textContent='Creating…';}
-  BP_SB.auth.getSession().then(function(sn){
+  /* drew on the inline pad but didn't press Save — save it for them; never blocks the contract */
+  Promise.resolve(!_bpUs.row&&_bpUs.pads.ct&&_bpUs.pads.ct.drew?bpUsSubmit('ct',true):null).then(null,function(){}).then(function(){
+    return BP_SB.auth.getSession();
+  }).then(function(sn){
     var u=sn&&sn.data&&sn.data.session&&sn.data.session.user; if(!u)throw new Error('sign in again');
-    return BP_SB.from('contracts').insert({
+    var us=_bpUs.row;
+    return BP_SB.from('contracts').insert(Object.assign({
       owner:bpOwnerId(u),job_id:j.id,title:(j.title?j.title+' — Agreement':'Roofing Agreement'),
       customer_name:name,customer_email:g('bpx-ct-email')||null,customer_phone:j.phone||null,
       address:g('bpx-ct-addr')||null,body:body,scope:j.title||null,
       amount:amt||null,deposit:+g('bpx-ct-dep').replace(/[^0-9.]/g,'')||null
-    }).select();
+    },us?{contractor_signature:us.image,contractor_name:us.name||null,contractor_signed_at:new Date().toISOString()}:{})).select();
   }).then(function(r){
     if(r&&r.error)throw r.error;
     bpCloseModal(); bpCtLoad(j);
@@ -34903,10 +34909,10 @@ function bpCtDoc(c,signed){
     +'<div class="bpx-ct-head"><div><b>'+bpEsc(co.name||'')+'</b>'+(co.phone?'<span>'+bpEsc(co.phone)+'</span>':'')+(co.license?'<span>Licence '+bpEsc(co.license)+'</span>':'')+'</div>'
       +'<div style="text-align:right"><b>'+bpEsc(c.title||'Agreement')+'</b><span>'+bpMoneyFmt(+c.amount||0)+'</span></div></div>'
     +'<pre>'+bpEsc(c.body||'')+'</pre>'
+    +bpCtSigBlocks(signed?c:Object.assign({},c,{signature:null}),'bpx-ct-sigs','Not signed yet')
     +(signed&&c.signature
-      ? '<div class="bpx-ct-sig"><div><div class="lbl">Signed by</div><img src="'+bpEsc(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div></div>'
-        +'<div class="bpx-mut" style="font-size:11px;line-height:1.6">'+new Date(c.signed_at).toLocaleString()+'<br>'+bpEsc(c.signer_email||'')+(c.signer_ip?'<br>IP '+bpEsc(c.signer_ip):'')+'<br>Consented to sign electronically</div></div>'
-      : '<div class="bpx-mut" style="font-size:12px;margin-top:16px;border-top:1px dashed var(--line);padding-top:12px">Not signed yet.</div>')
+      ? '<div class="bpx-mut bpx-ct-aud" style="font-size:11px;line-height:1.6">Owner signed '+new Date(c.signed_at).toLocaleString()+(c.signer_email?' · '+bpEsc(c.signer_email):'')+(c.signer_ip?' · IP '+bpEsc(c.signer_ip):'')+' · Consented to sign electronically</div>'
+      : '')
     +'</div>';
 }
 window.bpCtView=function(id){
@@ -34925,11 +34931,138 @@ window.bpCtPrint=function(id){
     +'pre{white-space:pre-wrap;font:inherit;margin:0}'
     +'.bpx-ct-sig{display:flex;gap:26px;align-items:flex-end;margin-top:26px;border-top:1px solid #cbd5e1;padding-top:16px}'
     +'.bpx-ct-sig .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mu,#64748b);margin-bottom:4px}'
-    +'.bpx-ct-sig img{display:block;height:54px}.bpx-ct-sig .nm{border-top:1px solid #0f172a;margin-top:4px;padding-top:3px;font-weight:600}'
+    +'.bpx-ct-sigs{display:flex;gap:40px;margin-top:26px;border-top:1px solid #cbd5e1;padding-top:16px}.bpx-ct-sigs-blk{flex:1}'
+    +'.bpx-ct-sigs .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#64748b}.bpx-ct-sigs .co{font-weight:600;margin-bottom:4px}'
+    +'.bpx-ct-sigs img{display:block;height:54px}.bpx-ct-sigs .nm{border-top:1px solid #0f172a;margin-top:4px;padding-top:3px;font-weight:600}.bpx-ct-sigs .dt,.bpx-ct-sigs .ph{font-size:11.5px;color:#64748b}.bpx-ct-aud{margin-top:10px}'
     +'.bpx-mut{color:var(--mu,#64748b)}</style>'+bpCtDoc(c,c.status==='signed')
     +'<scr'+'ipt>setTimeout(function(){window.print();},400);</scr'+'ipt>');
   w.document.close();
 };
+
+/* ===== Saved signature — the contractor draws it once (Settings, or inline the
+   first time they create a contract) and it is stamped on every contract as the
+   Contractor's signature. One row per user in user_signatures. ============*/
+var _bpUs={row:null,loaded:false,pads:{}};
+/* a drawing pad on any canvas — pointer events, retina-sharp, survives resize */
+function bpPadMount(cv,onDraw){
+  var P={drew:false,x:null};
+  var fit=function(){
+    var r=cv.getBoundingClientRect(); if(!r.width)return;
+    var dpr=Math.min(window.devicePixelRatio||1,3),data=P.drew?cv.toDataURL():null;
+    cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
+    var x=cv.getContext('2d'); x.scale(dpr,dpr);
+    x.lineWidth=2.2; x.lineCap='round'; x.lineJoin='round'; x.strokeStyle='#0f172a';
+    if(data){var im=new Image();im.onload=function(){x.drawImage(im,0,0,r.width,r.height);};im.src=data;}
+    P.x=x;
+  };
+  fit(); addEventListener('resize',function(){ if(cv.isConnected)fit(); });
+  var drawing=false,last=null;
+  var pt=function(e){var r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
+  cv.addEventListener('pointerdown',function(e){drawing=true;last=pt(e);try{cv.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();});
+  cv.addEventListener('pointermove',function(e){
+    if(!drawing||!P.x)return;
+    var p=pt(e); P.x.beginPath();P.x.moveTo(last.x,last.y);P.x.lineTo(p.x,p.y);P.x.stroke(); last=p;
+    if(!P.drew){P.drew=true;if(onDraw)onDraw();}
+    e.preventDefault();
+  });
+  var stop=function(){drawing=false;};
+  cv.addEventListener('pointerup',stop); cv.addEventListener('pointercancel',stop); cv.addEventListener('pointerleave',stop);
+  P.clear=function(){ if(P.x)P.x.clearRect(0,0,cv.width,cv.height); P.drew=false; };
+  P.png=function(){ return cv.toDataURL('image/png'); };
+  return P;
+}
+function bpUsLoad(force){
+  if(_bpUs.loaded&&!force)return Promise.resolve(_bpUs.row);
+  if(!(window.BP_LIVE&&window.BP_SB)){ _bpUs.loaded=true; return Promise.resolve(null); }
+  return Promise.resolve(BP_SB.from('user_signatures').select('image,name,updated_at').maybeSingle()).then(function(r){
+    _bpUs.row=(r&&!r.error&&r.data&&r.data.image)?r.data:null; _bpUs.loaded=true; return _bpUs.row;
+  },function(){ _bpUs.loaded=true; return null; });
+}
+function bpUsSave(image,name){
+  return BP_SB.auth.getSession().then(function(sn){
+    var u=sn&&sn.data&&sn.data.session&&sn.data.session.user; if(!u)throw new Error('sign in again');
+    var row={user_id:u.id,image:image,name:name,updated_at:new Date().toISOString()};
+    return Promise.resolve(BP_SB.from('user_signatures').upsert(row)).then(function(r){
+      if(r&&r.error)throw r.error; _bpUs.row=row; _bpUs.loaded=true; return row;
+    });
+  });
+}
+function bpUsDefName(){ var s=bpSettingsGet(); return (_bpUs.row&&_bpUs.row.name)||((s.owner||{}).name)||''; }
+/* the editor: pad + typed name + Save. k keys the pad; opts.skip adds the
+   "not now" wording for the inline contract version. */
+function bpUsEditor(k,opts){
+  opts=opts||{};
+  return '<div class="bpx-us-ed" data-us="'+k+'">'
+    +'<div class="sg-padwrap bpx-us-padwrap"><canvas class="sg-pad bpx-us-pad" id="bpx-us-pad-'+k+'"></canvas><button type="button" class="sg-clear" onclick="bpUsClear(\''+k+'\')">Clear</button><span class="sg-hint" id="bpx-us-hint-'+k+'">Draw your signature</span></div>'
+    +'<input id="bpx-us-name-'+k+'" class="bpx-us-name" autocomplete="name" placeholder="Your full name, as it appears on contracts" value="'+bpEsc(bpUsDefName())+'">'
+    +'<div class="bpx-us-act"><span class="bpx-mmsg" id="bpx-us-msg-'+k+'"></span>'
+      +(opts.cancel?'<button type="button" class="bpx-rowbtn" style="margin:0" onclick="'+opts.cancel+'">Cancel</button>':'')
+      +'<button type="button" class="bpx-rowbtn primary" style="margin:0" id="bpx-us-go-'+k+'" onclick="bpUsSubmit(\''+k+'\')">Save signature</button></div>'
+  +'</div>';
+}
+function bpUsMount(k,done){
+  var cv=q('bpx-us-pad-'+k); if(!cv)return;
+  _bpUs.pads[k]=bpPadMount(cv,function(){var h=q('bpx-us-hint-'+k);if(h)h.style.opacity='0';});
+  _bpUs.pads[k].done=done;
+}
+window.bpUsClear=function(k){ var P=_bpUs.pads[k]; if(P)P.clear(); var h=q('bpx-us-hint-'+k); if(h)h.style.opacity=''; };
+/* returns a promise; resolves null when there's nothing worth saving */
+window.bpUsSubmit=function(k,quiet){
+  var P=_bpUs.pads[k],msg=q('bpx-us-msg-'+k),btn=q('bpx-us-go-'+k);
+  var name=((q('bpx-us-name-'+k)||{}).value||'').trim();
+  if(!P||!P.drew){ if(!quiet&&msg)msg.textContent='Draw your signature first.'; return Promise.resolve(null); }
+  if(name.length<2){ if(!quiet&&msg)msg.textContent='Type your full name.'; return Promise.resolve(null); }
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  return bpUsSave(P.png(),name).then(function(row){ if(P.done)P.done(row); return row; },function(e){
+    if(btn){btn.disabled=false;btn.textContent='Save signature';}
+    if(msg)msg.textContent=/relation|does not exist|schema cache/i.test(String((e&&e.message)||e))?'Saved signatures aren\'t set up yet — run the migration first.':'Couldn\'t save: '+((e&&e.message)||'unknown error');
+    return null;
+  });
+};
+function bpUsShow(r){
+  return '<div class="bpx-us-cur"><img src="'+bpEsc(r.image)+'" alt="Your signature"><div class="nm">'+bpEsc(r.name||'')+'</div></div>';
+}
+/* Settings › Your signature */
+function bpUsSettings(edit){
+  var h=q('bpx-us-host'); if(!h)return;
+  if(!_bpUs.loaded){ h.innerHTML='<div class="bpx-empty2">Loading…</div>'; bpUsLoad().then(function(){bpUsSettings();}); return; }
+  var r=_bpUs.row;
+  if(!(window.BP_LIVE&&window.BP_SB)){ h.innerHTML='<div class="bpx-empty2">Sign in to save your signature.</div>'; return; }
+  h.innerHTML='<div class="st-grp">Signature on your contracts</div>'
+    +'<div class="st-row"><div class="st-lab"><label>Your signature</label><div class="st-hint">Signed on every contract you send, as the Contractor, next to the homeowner\'s. Only you can use it.</div></div><div class="st-ctl">'
+    +(r&&!edit
+      ? bpUsShow(r)+'<div class="bpx-us-act" style="justify-content:flex-start"><button type="button" class="bpx-rowbtn" style="margin:0" onclick="bpUsSettings(true)">Redraw</button>'
+        +(r.updated_at?'<span class="bpx-mut" style="font-size:11.5px">Saved '+new Date(r.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</span>':'')+'</div>'
+      : bpUsEditor('set',{cancel:r?'bpUsSettings()':''}))
+    +'</div></div>';
+  if(!r||edit) bpUsMount('set',function(){ bpToast&&bpToast('Signature saved.'); bpUsSettings(); });
+}
+window.bpUsSettings=bpUsSettings;
+/* New contract › who signs for the contractor */
+function bpUsCtBlock(){
+  var h=q('bpx-ct-usig'); if(!h)return;
+  var r=_bpUs.row;
+  if(r){
+    h.innerHTML='<div class="bpx-us-ct"><div class="bpx-us-ct-h"><span class="ms">verified</span> Signed by you as <b>'+bpEsc(r.name||'')+'</b></div>'+bpUsShow(r)
+      +'<div class="bpx-mut" style="font-size:11.5px">Your saved signature goes on this contract as the Contractor. Change it in Settings › Your signature.</div></div>';
+    return;
+  }
+  h.innerHTML='<div class="bpx-us-ct"><div class="bpx-us-ct-h"><span class="ms">draw</span> Add your signature <span class="bpx-mut" style="font-weight:400">— optional</span></div>'
+    +'<div class="bpx-mut" style="font-size:11.5px;margin-bottom:8px">Sign once and it\'s saved, so every contract after this goes out already signed by you. Skip it and this one goes without.</div>'
+    +bpUsEditor('ct')+'</div>';
+  bpUsMount('ct',function(){ bpUsCtBlock(); });
+}
+/* both halves of the signature block — contractor (if they signed) and owner */
+function bpCtCompany(c){ var m=/between (.+?) \("Contractor"\)/.exec((c&&c.body)||''); return (m&&m[1])||(((bpSettingsGet()||{}).company||{}).name)||'Contractor'; }
+function bpCtSigBlocks(c,cls,ownerPending){
+  var d=function(t){return t?new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';};
+  var co=c.contractor_signature
+    ? '<div class="'+cls+'-blk"><div class="lbl">Contractor</div><div class="co">'+bpEsc(bpCtCompany(c))+'</div><img src="'+bpEsc(c.contractor_signature)+'" alt="contractor signature"><div class="nm">'+bpEsc(c.contractor_name||'')+'</div><div class="dt">'+d(c.contractor_signed_at)+'</div></div>':'';
+  var ow=c.signature
+    ? '<div class="'+cls+'-blk"><div class="lbl">Owner</div><div class="co">'+bpEsc(c.customer_name||'Homeowner')+'</div><img src="'+bpEsc(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div><div class="dt">'+d(c.signed_at)+'</div></div>'
+    : (ownerPending?'<div class="'+cls+'-blk pend"><div class="lbl">Owner</div><div class="co">'+bpEsc(c.customer_name||'Homeowner')+'</div><div class="ph">'+ownerPending+'</div></div>':'');
+  return (co||ow)?'<div class="'+cls+'">'+co+ow+'</div>':'';
+}
 
 /* ===== Public signing page — what the homeowner opens from #sign=<token> =====
    No login. The token in the link is the credential, and every read and write
@@ -34975,6 +35108,7 @@ function bpSignRender(){
         +(c.address?'<div><span>Property</span><b>'+bpEsc(c.address)+'</b></div>':'')
       +'</div>'
       +'<div class="sg-doc"><pre>'+bpEsc(c.body||'')+'</pre></div>'
+      +bpCtSigBlocks(c,'sg-sigs',c.contractor_signature?'Your signature goes here once you sign below':'')
       +'<div class="sg-sign">'
         +'<div class="sg-lbl">Sign here</div>'
         +'<div class="sg-padwrap"><canvas id="sgPad" class="sg-pad"></canvas><button class="sg-clear" onclick="bpSignClear()">Clear</button><span class="sg-hint" id="sgHint">Draw your signature with your finger</span></div>'
@@ -35055,7 +35189,7 @@ function bpSignDone(){
     +'<h1 class="sg-h" style="text-align:center">You\'re all signed</h1>'
     +'<p class="sg-p" style="text-align:center">Thanks'+(c&&c.signer_name?', '+bpEsc(c.signer_name.split(' ')[0]):'')+'. Your contractor has been notified. Keep this page or print a copy for your records.</p>'
     +'<div class="sg-doc" style="margin-top:18px"><pre>'+bpEsc((c&&c.body)||'')+'</pre></div>'
-    +(c&&c.signature?'<div class="sg-signed"><div class="sg-lbl">Signed by</div><img src="'+bpEsc(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div><div class="sg-when">'+(c.signed_at?new Date(c.signed_at).toLocaleString():'')+'</div></div>':'')
+    +(c?bpCtSigBlocks(c,'sg-sigs',''):'')
     +'<button class="sg-btn" style="margin-top:18px" onclick="window.print()">Print / save a copy</button>'
     +'</div></div>';
 }
@@ -35645,6 +35779,30 @@ html.bp-signing-boot body{background:#eef1f6;}
 .bpx-ct-sig .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--grey);margin-bottom:4px;}
 .bpx-ct-sig img{display:block;height:50px;}
 .bpx-ct-sig .nm{border-top:1px solid var(--ink);margin-top:4px;padding-top:3px;font-weight:600;font-size:13px;}
+.bpx-ct-sigs{display:flex;gap:28px;margin-top:22px;border-top:1px solid var(--line);padding-top:14px;flex-wrap:wrap;}
+.bpx-ct-sigs-blk{flex:1;min-width:200px;}
+.bpx-ct-sigs .lbl,.sg-sigs .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--grey,#64748b);}
+.bpx-ct-sigs .co,.sg-sigs .co{font-weight:600;font-size:13px;margin:2px 0 4px;}
+.bpx-ct-sigs img,.sg-sigs img{display:block;height:50px;max-width:100%;background:#fff;border-radius:4px;}
+.bpx-ct-sigs .nm,.sg-sigs .nm{border-top:1px solid var(--ink,#0f172a);margin-top:4px;padding-top:3px;font-weight:600;font-size:13px;}
+.bpx-ct-sigs .dt,.bpx-ct-sigs .ph,.sg-sigs .dt,.sg-sigs .ph{font-size:11.5px;color:var(--grey,#64748b);}
+.bpx-ct-sigs .pend .ph,.sg-sigs .pend .ph{border-top:1px dashed var(--line,#cbd5e1);margin-top:54px;padding-top:4px;}
+.bpx-ct-aud{margin-top:10px;}
+.sg-sigs{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;border-top:1px solid #e4e9f0;padding-top:14px;}
+.sg-sigs-blk{flex:1;min-width:180px;}
+.bpx-us-padwrap{position:relative;}
+.bpx-us-pad{display:block;width:100%;height:150px;border:1.5px dashed var(--line,#cbd5e1);border-radius:10px;background:#fff;touch-action:none;cursor:crosshair;}
+.bpx-us-padwrap .sg-clear{position:absolute;top:8px;right:8px;background:#fff;border:1px solid #e4e9f0;border-radius:8px;padding:5px 11px;font:inherit;font-size:12px;font-weight:600;color:#4b5563;cursor:pointer;}
+.bpx-us-padwrap .sg-hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:12px;color:#94a3b8;pointer-events:none;transition:opacity .2s;}
+.bpx-us-name{width:100%;margin-top:8px;box-sizing:border-box;}
+.bpx-us-act{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;flex-wrap:wrap;}
+.bpx-us-act .bpx-mmsg{flex:1;margin:0;}
+.bpx-us-cur{display:inline-block;background:#fff;border:1px solid var(--line,#e2e8f0);border-radius:10px;padding:10px 16px;min-width:220px;max-width:100%;box-sizing:border-box;}
+.bpx-us-cur img{display:block;height:56px;max-width:100%;}
+.bpx-us-cur .nm{border-top:1px solid #0f172a;margin-top:4px;padding-top:3px;font-weight:600;font-size:13px;color:#0f172a;}
+.bpx-us-ct{border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:12px;margin-bottom:6px;}
+.bpx-us-ct-h{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:8px;}
+.bpx-us-ct-h .ms{font-size:18px;color:var(--ok,#16a34a);}
 .bpx-ct-link{margin-top:12px;background:var(--soft,#f6f8fb);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:12.5px;word-break:break-all;font-family:ui-monospace,monospace;}
 #bpx.bpx-dark .bpx-ct-doc,#bpx.bpx-dark .bpx-ct-link{background:#151b26;border-color:#232c3a;}
 #bpx.bpx-dark .bpx-ct-doc pre{color:#e6e9ef;}
@@ -36651,6 +36809,7 @@ function bpSettings(){
     ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
     ['ridge',''+BP_AI_NAME+' AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
     ['brain','AI Brain','psychology','Teach '+BP_AI_NAME+' from your prices, jobs and reviews, and answer what she couldn\'t.'],
+    ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
@@ -36709,6 +36868,7 @@ function bpSettings(){
       +sec('phone','<div id="bpx-ph-host"></div>')
       +sec('ridge','<div id="bpx-rg-host"></div>')
       +sec('brain','<div id="bpx-br-host"></div>')
+      +sec('signature','<div id="bpx-us-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
         +row('Dashboard layout','Overview opens on the charts. Command center keeps your numbers and to-dos in a column on the right. Projects first leads with your jobs.',
@@ -36727,7 +36887,7 @@ function bpSettings(){
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
         +'</div>'):'')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   /* the trade box suggests every trade with a calculator (Concrete & Paving, Flooring, ...) */
@@ -36736,17 +36896,19 @@ function bpSettings(){
   if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpAtlasView('bpx-rg-host'); }
   if(_bpSetSec==='phone') bpPhoneRender();
   if(_bpSetSec==='brain'&&window.bpBrainRender) bpBrainRender();
+  if(_bpSetSec==='signature') bpUsSettings();
 }
 var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','phone','ridge','brain','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','phone','ridge','brain','signature','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
+  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
   if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
   if(t==='phone') bpPhoneRender();
   if(t==='brain'&&window.bpBrainRender) bpBrainRender();
+  if(t==='signature') bpUsSettings();
 };
 /* ===== Business number =====================================================
    Customers text the number they already know, not the BuilderPro one. This

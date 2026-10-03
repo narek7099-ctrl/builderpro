@@ -61,6 +61,8 @@ const forSigner = (r: Row) => ({
   customer_name: r.customer_name, customer_email: r.customer_email,
   status: r.status, signed_at: r.signed_at, signer_name: r.signer_name,
   signature: r.signature, declined_at: r.declined_at,
+  contractor_signature: r.contractor_signature, contractor_name: r.contractor_name,
+  contractor_signed_at: r.contractor_signed_at,
 });
 
 async function userFromJwt(jwt: string): Promise<{ id: string } | null> {
