@@ -3,6 +3,10 @@
 //
 //   { op:"list" }                               -> { ok, members:[...] }
 //   { op:"invite", email, name, role }          -> { ok, member, emailed }
+//   { op:"invite", role:"sub", subId, email, name }
+//                                               -> same; also links
+//                                                  subcontractors.team_id
+//                                                  to the new team row
 //   { op:"role",   id, role }                   -> { ok }
 //   { op:"remove", id }                         -> { ok }
 //   { op:"resend", id }                         -> { ok, emailed }
@@ -69,9 +73,9 @@ Deno.serve(async (req) => {
   const mine = await rest(`team_members?member=eq.${user.id}&accepted_at=not.is.null&select=id&limit=1`);
   if (Array.isArray(mine) && mine.length) return json({ ok: false, error: "owner_only", reason: "Only the account owner can change the team." }, 403);
 
-  let b: { op?: string; email?: string; name?: string; role?: string; id?: string } = {};
+  let b: { op?: string; email?: string; name?: string; role?: string; id?: string; subId?: string } = {};
   try { b = await req.json(); } catch { /* no body */ }
-  const role = b.role === "office" ? "office" : "crew";
+  const role = b.role === "office" ? "office" : b.role === "sub" ? "sub" : "crew";
 
   if (b.op === "list") {
     const rows: Member[] = await rest(`team_members?owner=eq.${user.id}&select=*&order=created_at.asc`);
@@ -83,12 +87,22 @@ Deno.serve(async (req) => {
     const name = String(b.name ?? "").trim().slice(0, 80);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ ok: false, error: "bad_email", reason: "That does not look like an email address." });
     if (email === user.email.toLowerCase()) return json({ ok: false, error: "self", reason: "That is your own address." });
+    // a subcontractor invite is tied to one of the owner's subcontractor records
+    let subId = "";
+    if (role === "sub") {
+      subId = String(b.subId ?? "");
+      if (!/^[0-9a-f-]{36}$/i.test(subId)) return json({ ok: false, error: "no_sub", reason: "Pick the subcontractor first." });
+      const subs = await rest(`subcontractors?id=eq.${subId}&owner=eq.${user.id}&select=id,team_id&limit=1`);
+      if (!Array.isArray(subs) || !subs.length) return json({ ok: false, error: "no_sub", reason: "That subcontractor is not on your list." });
+      if (subs[0].team_id) return json({ ok: false, error: "exists", reason: "That subcontractor already has a login." });
+    }
     const existing: Member[] = await rest(`team_members?owner=eq.${user.id}&email=eq.${encodeURIComponent(email)}&select=*&limit=1`);
     if (existing.length) return json({ ok: false, error: "exists", reason: "They are already on your team." });
     const [row]: Member[] = await rest(`team_members`, {
       method: "POST", headers: { Prefer: "return=representation" },
       body: JSON.stringify({ owner: user.id, owner_email: user.email, email, name, role }),
     });
+    if (subId) await rest(`subcontractors?id=eq.${subId}&owner=eq.${user.id}`, { method: "PATCH", body: JSON.stringify({ team_id: row.id, email }) });
     const sent = await sendInvite(email, name, user.email);
     return json({ ok: true, member: clean(row), emailed: sent.emailed, note: sent.note });
   }
@@ -98,6 +112,8 @@ Deno.serve(async (req) => {
     const [row]: Member[] = await rest(`team_members?id=eq.${encodeURIComponent(id)}&owner=eq.${user.id}&select=*&limit=1`);
     if (!row) return json({ ok: false, error: "not_found" }, 404);
     if (b.op === "role") {
+      // a subcontractor login stays a subcontractor login, and nobody becomes one by a role switch
+      if (row.role === "sub" || role === "sub") return json({ ok: false, error: "sub_role", reason: "Subcontractor logins can't change role. Remove and re-invite instead." });
       await rest(`team_members?id=eq.${row.id}`, { method: "PATCH", body: JSON.stringify({ role }) });
       return json({ ok: true });
     }

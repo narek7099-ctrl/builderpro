@@ -86,14 +86,21 @@
   function emp(id) { return window.bpEmpById ? bpEmpById(id) : null; }
 
   /* who worked this job */
+  /* who worked this job: employees, then the subcontractors on it ({subId, name}) */
+  function withSubs(j, list) {
+    (Array.isArray(j.subs) ? j.subs : []).forEach(function (e) {
+      if (e && e.subId && !list.some(function (w) { return w.subId === e.subId; })) list.push({ subId: e.subId, name: e.name || 'Subcontractor' });
+    });
+    return list;
+  }
   window.bpJobWorkers = function (j) {
     if (!j) return [];
-    if (Array.isArray(j.workers) && j.workers.length) return j.workers.slice();
+    if (Array.isArray(j.workers) && j.workers.length) return withSubs(j, j.workers.slice());
     var ids = [], push = function (id) { if (id && ids.indexOf(String(id)) < 0) ids.push(String(id)); };
     (Array.isArray(j.assignees) ? j.assignees : []).forEach(function (a) { push(a && a.employeeId); });
     if (Array.isArray(j.crew)) j.crew.forEach(push);
     else if (typeof j.crew === 'string' && window.pjCrew) { var c = pjCrew(j.crew); ((c && c.members) || []).forEach(push); }
-    return ids.map(function (id) { var e = emp(id); return { employeeId: id, name: e ? e.name : '' }; });
+    return withSubs(j, ids.map(function (id) { var e = emp(id); return { employeeId: id, name: e ? e.name : '' }; }));
   };
   function workedOn(j, id) { return bpJobWorkers(j).some(function (w) { return w.employeeId === id; }); }
 
@@ -208,7 +215,7 @@
     bpModal('<div class="rv-ask"><div class="rv-askic"><span class="ms">star</span></div>'
       + '<h3>Ask ' + esc(cust) + ' to rate the crew</h3>'
       + '<div class="bpx-sub">' + esc(j.title || 'Job') + ' is done. Send this link and ' + esc(cust) + ' can rate the job and each person on it. It works once.</div>'
-      + (ws.length ? '<div class="rv-askw">' + ws.map(function (w) { var e = emp(w.employeeId);
+      + (ws.length ? '<div class="rv-askw">' + ws.map(function (w) { var e = w.employeeId ? emp(w.employeeId) : null;
           return '<span>' + (window.bpAvatar ? bpAvatar.html(e && e.photo_url, w.name || (e && e.name), 'emp-av') : '') + esc(w.name || (e && e.name) || 'Crew') + '</span>'; }).join('') + '</div>'
         : '<div class="bpx-mut" style="font-size:12.5px;margin:6px 0">Nobody was assigned to this job, so the link only asks for an overall rating.</div>')
       + '<label>Review link</label><div class="rv-link"><input id="rv-link" readonly value="' + esc(link) + '" onclick="this.select()"><button class="bpx-btn" id="rv-copy" onclick="bpReviewCopy()">Copy link</button></div>'

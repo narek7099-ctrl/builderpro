@@ -10,7 +10,9 @@
 //          workers:[{id, name, trade, photo}] }
 //        photo is a short-lived signed URL (private bucket) or the https URL
 //        stored on the employee. Nothing about money, addresses or phones of
-//        the workers leaves here.
+//        the workers leaves here. Subcontractors on the job come through the
+//        same list (workers entry {subId, name}; id = the sub's id, trade =
+//        their trade, name = their company) and are saved with sub_id.
 //   POST { t, overall?:1-5, comment?, ratings:[{employeeId, rating:1-5, comment?}] }
 //     -> { ok:true, reviewUrl? }
 //        One submit per token: the request is claimed with a conditional
@@ -73,7 +75,7 @@ async function signed(ref: string | null): Promise<string> {
   } catch { return ""; }
 }
 
-type Req = { token: string; owner: string; job_id: string; job_title: string | null; workers: { employeeId: string; name?: string }[]; customer_name: string | null; used_at: string | null };
+type Req = { token: string; owner: string; job_id: string; job_title: string | null; workers: { employeeId?: string; subId?: string; name?: string }[]; customer_name: string | null; used_at: string | null };
 
 async function loadRequest(t: string): Promise<Req | null> {
   const r = await rest(`review_requests?token=eq.${t}&select=token,owner,job_id,job_title,workers,customer_name,used_at`);
@@ -82,6 +84,9 @@ async function loadRequest(t: string): Promise<Req | null> {
 }
 function workerIds(q: Req): string[] {
   return (Array.isArray(q.workers) ? q.workers : []).map((w) => String(w?.employeeId || "")).filter((x) => UUID.test(x));
+}
+function subIds(q: Req): string[] {
+  return (Array.isArray(q.workers) ? q.workers : []).map((w) => String(w?.subId || "")).filter((x) => UUID.test(x));
 }
 const clean = (s: unknown, n: number) => String(s ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, n);
 
@@ -97,11 +102,13 @@ Deno.serve(async (req) => {
       if (!UUID.test(t)) return json({ ok: false, error: "This link isn't valid." }, 400);
       const q = await loadRequest(t);
       if (!q) return json({ ok: false, error: "This link isn't valid." }, 404);
-      const ids = workerIds(q);
-      const [cs, emps] = await Promise.all([
+      const ids = workerIds(q), sids = subIds(q);
+      const [cs, emps, subs] = await Promise.all([
         rest(`client_settings?user_id=eq.${q.owner}&select=data`),
         ids.length ? rest(`employees?owner=eq.${q.owner}&id=in.(${ids.join(",")})&select=id,name,trade,photo_url`) : Promise.resolve({ ok: true, status: 200, data: [] }),
+        sids.length ? rest(`subcontractors?owner=eq.${q.owner}&id=in.(${sids.join(",")})&select=id,company,trade`) : Promise.resolve({ ok: true, status: 200, data: [] }),
       ]);
+      const subById = new Map<string, any>((Array.isArray(subs.data) ? subs.data : []).map((s: any) => [s.id, s]));
       const co = (Array.isArray(cs.data) && (cs.data[0] as any)?.data?.company) || {};
       const byId = new Map<string, any>((Array.isArray(emps.data) ? emps.data : []).map((e: any) => [e.id, e]));
       const workers = await Promise.all(ids.map(async (id) => {
@@ -109,6 +116,10 @@ Deno.serve(async (req) => {
         const full = String(e?.name || snap?.name || "Crew member");
         return { id, name: full, trade: e?.trade || "", photo: await signed(e?.photo_url ?? null) };
       }));
+      for (const id of sids) {
+        const s = subById.get(id), snap = q.workers.find((w) => w.subId === id);
+        workers.push({ id, name: String(s?.company || snap?.name || "Subcontractor"), trade: s?.trade || "Subcontractor", photo: "" });
+      }
       return json({
         ok: true, used: !!q.used_at,
         business: { name: co.name || "", logo: /^https:\/\//i.test(co.logoUrl || "") ? co.logoUrl : "", phone: co.phone || "" },
@@ -127,7 +138,8 @@ Deno.serve(async (req) => {
     if (!q) return json({ ok: false, error: "This link isn't valid." }, 404);
     if (q.used_at) return json({ ok: false, error: "Thanks — this job has already been rated.", used: true }, 409);
 
-    const allowed = new Set(workerIds(q));
+    const subSet = new Set(subIds(q));
+    const allowed = new Set([...workerIds(q), ...subSet]);
     const seen = new Set<string>();
     const ratings = (Array.isArray(b.ratings) ? b.ratings : []).map((r: any) => ({
       employeeId: String(r?.employeeId || ""), rating: Math.round(Number(r?.rating)), comment: clean(r?.comment, 1000),
@@ -145,7 +157,8 @@ Deno.serve(async (req) => {
 
     if (ratings.length) {
       const rows = ratings.map((r: any) => ({
-        owner: q.owner, job_id: q.job_id, employee_id: r.employeeId, rating: r.rating, comment: r.comment || null,
+        owner: q.owner, job_id: q.job_id, employee_id: subSet.has(r.employeeId) ? null : r.employeeId,
+        sub_id: subSet.has(r.employeeId) ? r.employeeId : null, rating: r.rating, comment: r.comment || null,
         customer_name: q.customer_name, source: "link", request_token: t,
       }));
       const ins = await rest("worker_reviews", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(rows) });

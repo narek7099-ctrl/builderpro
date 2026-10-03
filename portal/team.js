@@ -21,16 +21,21 @@
   window.bpOwnerId = function (u) { return T.owner || (u && u.id) || T.uid || null; };
 
   /* what each role may open */
-  /* crew get their own four pages (portal/crewapp.js), nothing else */
+  /* crew get their own four pages (portal/crewapp.js), nothing else;
+     a subcontractor gets theirs (portal/subapp.js), and Messages */
   var CREW = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1 };
-  var CREW_ONLY = CREW;
+  var SUB = { subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, crewmsgs: 1, subcompany: 1 };
+  var CREW_ONLY = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1, subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, subcompany: 1 };
   window.bpTeamAllows = function (view) {
     if (T.role === 'crew') return !!CREW[view];
+    if (T.role === 'sub') return !!SUB[view];
     return !CREW_ONLY[view];
   };
-  window.bpTeamIsCrew = function () { return T.role === 'crew'; };
+  /* "crew" here means a limited login: no finances, no settings. A sub is one too. */
+  window.bpTeamIsCrew = function () { return T.role === 'crew' || T.role === 'sub'; };
+  window.bpTeamIsSub = function () { return T.role === 'sub'; };
   window.bpTeamIsOwner = function () { return T.role === 'owner'; };
-  window.bpTeamHome = function () { return T.role === 'crew' ? 'crewclock' : 'dashboard'; };
+  window.bpTeamHome = function () { return T.role === 'sub' ? 'subjobs' : T.role === 'crew' ? 'crewclock' : 'dashboard'; };
 
   /* who am I working for? asked once per sign-in, before data loads */
   window.bpTeamResolve = function () {
@@ -42,7 +47,7 @@
       return BP_SB.rpc('bp_team_claim').then(function (r) {
         var row = r && r.data && r.data[0];
         T.email = u.email || '';
-        if (row) { T.owner = row.owner; T.role = row.role === 'office' ? 'office' : 'crew'; T.name = row.name || ''; T.ownerEmail = row.owner_email || ''; }
+        if (row) { T.owner = row.owner; T.role = row.role === 'office' ? 'office' : row.role === 'sub' ? 'sub' : 'crew'; T.name = row.name || ''; T.ownerEmail = row.owner_email || ''; }
         return T;
       }).catch(function () { return T; });
     }).catch(function () { return T; });
@@ -51,15 +56,15 @@
   /* the sidebar footer says who you are working as */
   window.bpTeamStamp = function () {
     var el = $('bpxUemail'); if (!el || T.role === 'owner') return;
-    el.innerHTML = esc(el.textContent) + '<span class="tm-as">' + (T.role === 'office' ? 'Office' : 'Crew') + (T.ownerEmail ? ' at ' + esc(T.ownerEmail) : '') + '</span>';
+    el.innerHTML = esc(el.textContent) + '<span class="tm-as">' + (T.role === 'office' ? 'Office' : T.role === 'sub' ? 'Subcontractor' : 'Crew') + (T.ownerEmail ? ' at ' + esc(T.ownerEmail) : '') + '</span>';
   };
 
   /* ---------- the Team page, inside Settings ---------- */
   window.bpTeamPanel = function () {
-    if (T.role !== 'owner') return '<div class="bpx-panel"><div class="tm-note">You are signed in as ' + (T.role === 'office' ? 'office staff' : 'crew') + ' on this account. Only the owner can change the team.</div></div>';
+    if (T.role !== 'owner') return '<div class="bpx-panel"><div class="tm-note">You are signed in as ' + (T.role === 'office' ? 'office staff' : T.role === 'sub' ? 'a subcontractor' : 'crew') + ' on this account. Only the owner can change the team.</div></div>';
     if (T.members === null && live() && !T.busy) load();
     var rows = T.members || [];
-    var roleSel = function (m) { return '<select class="tm-role" onchange="bpTeamRole(\'' + m.id + '\',this.value)"><option value="office"' + (m.role === 'office' ? ' selected' : '') + '>Office</option><option value="crew"' + (m.role === 'crew' ? ' selected' : '') + '>Crew</option></select>'; };
+    var roleSel = function (m) { if (m.role === 'sub') return '<span class="tm-role tm-subr">Subcontractor</span>'; return '<select class="tm-role" onchange="bpTeamRole(\'' + m.id + '\',this.value)"><option value="office"' + (m.role === 'office' ? ' selected' : '') + '>Office</option><option value="crew"' + (m.role === 'crew' ? ' selected' : '') + '>Crew</option></select>'; };
     var list = !live() ? '<div class="tm-note">Sign in to add people to your account.</div>'
       : T.members === null ? '<div class="bpx-skel" style="width:60%"></div>'
       : !rows.length ? '<div class="tm-empty"><span class="ms">group_add</span><b>Just you so far.</b><span>Add your office and your crew leads below. Each one signs in with their own email and sees only what their role allows.</span></div>'
@@ -70,6 +75,7 @@
       }).join('') + '</div>';
     return '<div class="bpx-panel">'
       + '<div class="tm-roles"><div><b>Office</b><span>Everything you see, except billing and this page.</span></div><div><b>Crew</b><span>Projects, calendar, materials and messages. No money, no settings.</span></div></div>'
+      + '<div class="tm-note" style="margin-bottom:12px">Subcontractors get their own login from <a href="#" onclick="bpNav(\'subs\');return false">Projects &rsaquo; Subcontractors</a>: they see only the jobs you put them on.</div>'
       + list + '</div>'
       + '<div class="bpx-panel"><div class="bpx-ptitle">Add someone<span class="lg2">they get an email with a link to set their password</span></div>'
       + '<div class="tm-form"><input id="tm-name" placeholder="Their name"><input id="tm-email" type="email" placeholder="their@email.com"><select id="tm-role"><option value="crew">Crew</option><option value="office">Office</option></select><button class="bpx-btn sp-inline" id="tm-add" onclick="bpTeamInvite()">Send invite</button></div>'
