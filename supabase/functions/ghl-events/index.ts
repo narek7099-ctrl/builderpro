@@ -26,9 +26,14 @@ const TAGS: Record<string, string> = {
   job_scheduled: "bp-job-scheduled", visit_tomorrow: "bp-visit-tomorrow", crew_arrived: "bp-crew-arrived",
   job_completed: "bp-job-completed", payment_overdue: "bp-payment-overdue", job_anniversary: "bp-job-anniversary",
   storm_followup: "bp-storm-followup",
+  contract_signed: "bp-contract-signed", phase_done: "bp-phase-done", schedule_moved: "bp-schedule-moved",
+  payment_received: "bp-payment-received", change_order_waiting: "bp-change-order-waiting", inspection_scheduled: "bp-inspection-scheduled",
+  warranty_followup: "bp-warranty", message_unanswered: "bp-message-unanswered", over_budget: "bp-over-budget",
+  sub_insurance_expiring: "bp-sub-insurance-expiring",
 };
 const FIELDS = ["BP Job Name", "BP Job Address", "BP Job Amount", "BP Balance Due", "BP Start Date", "BP Visit Date",
-  "BP Crew Lead", "BP Portal Link", "BP Days Overdue", "BP Company Name", "BP Event Note"];
+  "BP Crew Lead", "BP Portal Link", "BP Days Overdue", "BP Company Name", "BP Event Note",
+  "BP Phase Name", "BP Next Phase", "BP Amount Paid", "BP Old Start Date", "BP Inspection", "BP Change Order", "BP Budget", "BP Spent"];
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const sbH = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
@@ -87,6 +92,7 @@ async function contactFor(loc: string, j: any): Promise<string> {
 const money = (n: number) => "$" + (Math.round((+n || 0) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const pretty = (d: string) => { const t = Date.parse(String(d).slice(0, 10) + "T12:00:00"); return isFinite(t) ? new Date(t).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : ""; };
 async function details(owner: string, j: any, ev: any) {
+  j = j || {};
   const dates = (j.sched?.dates || []).filter((x: string) => /^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
   let lead = "", company = "", portal = "";
   try {
@@ -97,7 +103,7 @@ async function details(owner: string, j: any, ev: any) {
     if (crew && crew.lead) { const e = await rest(`employees?id=eq.${crew.lead}&select=name`); lead = e?.[0]?.name || ""; }
   } catch (_) { /* optional */ }
   if (!lead && ev.data?.by) lead = ev.data.by;
-  try {
+  if (j.id) try {
     const l = await rest(`customer_portal_links?owner=eq.${owner}&job_id=eq.${encodeURIComponent(j.id)}&enabled=is.true&select=token`);
     if (l?.[0]?.token) portal = `${PORTAL}#home=${l[0].token}`;
   } catch (_) { /* optional */ }
@@ -108,7 +114,13 @@ async function details(owner: string, j: any, ev: any) {
     "BP Start Date": dates[0] ? pretty(dates[0]) : "", "BP Visit Date": ev.data?.date ? pretty(ev.data.date) : "",
     "BP Crew Lead": String(lead || "").split(" ")[0], "BP Portal Link": portal,
     "BP Days Overdue": ev.data?.days ? String(ev.data.days) : "", "BP Company Name": company,
-    "BP Event Note": String(ev.data?.note || ""),
+    "BP Event Note": String(ev.data?.note || (ev.data?.doc ? `Your ${ev.data.doc} expires ${pretty(ev.data.date)}` : "")),
+    "BP Phase Name": String(ev.data?.phase || ""), "BP Next Phase": String(ev.data?.next || ""),
+    "BP Amount Paid": ev.data?.amount != null && ev.kind === "payment_received" ? money(+ev.data.amount) : "",
+    "BP Old Start Date": ev.data?.old ? pretty(ev.data.old) : "",
+    "BP Inspection": ev.data?.inspection ? `${ev.data.inspection}${ev.data.permit ? " (" + ev.data.permit + " permit)" : ""}` : "",
+    "BP Change Order": ev.data?.change_order ? `${ev.data.change_order}${ev.data.amount ? " · " + money(+ev.data.amount) : ""}` : "",
+    "BP Budget": ev.data?.budget ? money(+ev.data.budget) : "", "BP Spent": ev.data?.spent ? money(+ev.data.spent) : "",
   };
 }
 
@@ -133,9 +145,10 @@ async function deliver() {
     if (!loc || !tokenFor(loc)) { await patch({ status: "skipped", error: "No HighLevel account connected" }); skipped++; continue; }
     try {
       if (!jobsOf[ev.owner]) { const f = await rest(`portal_finance?owner=eq.${ev.owner}&select=jobs`); jobsOf[ev.owner] = (f?.[0]?.jobs) || []; }
-      const j = jobsOf[ev.owner].find((x: any) => x && x.id === ev.job_id);
-      if (!j) { await patch({ status: "skipped", error: "Project no longer exists" }); skipped++; continue; }
-      const cid = await contactFor(loc, j);
+      const sub = ev.data?.sub;   // sub paperwork goes to the sub, not a customer
+      const j = sub ? null : jobsOf[ev.owner].find((x: any) => x && x.id === ev.job_id);
+      if (!sub && !j) { await patch({ status: "skipped", error: "Project no longer exists" }); skipped++; continue; }
+      const cid = await contactFor(loc, sub ? { name: sub.name || sub.company, phone: sub.phone, email: sub.email } : j);
       if (!cid) throw new Error("No contact");
       const map = await fields(loc, true);
       const vals = await details(ev.owner, j, ev);
