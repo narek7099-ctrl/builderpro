@@ -71,6 +71,7 @@
     job_new:                 { g: 1, t: 'New project added',                  ic: 'work',            r: 'o' },
     job_done:                { g: 1, t: 'Project finished',                   ic: 'done',        r: 'ocs' },
     job_assigned:            { g: 1, t: 'You are put on a project',           ic: 'assign',  r: 'c' },
+    ceo_report:              { g: 1, t: 'AI CEO morning briefing',            ic: 'note',      r: 'o' },
     payment_received:        { g: 2, t: 'Payment received',                   ic: 'pay',        r: 'o' },
     sub_invoice_unpaid:      { g: 2, t: 'Approved sub invoice still unpaid',  ic: 'wait',   r: 'o' },
     team_message:            { g: 3, t: 'Team chat messages',                 ic: 'chat',           r: 'ocs' },

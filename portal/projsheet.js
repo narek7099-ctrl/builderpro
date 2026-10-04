@@ -184,6 +184,14 @@
       else if (k !== 'permits' && k !== 'subs' && k !== 'cust') { var s = document.createElement('section'); s.className = 'pjs-sec'; while (p.firstChild) s.appendChild(p.firstChild); p.appendChild(s); }
       p.setAttribute('role', 'tabpanel');
     });
+    /* the AI CEO's ranked picks (portal/aiceo.js) at the top of the Crew tab:
+       owner and office only, fetched when the tab is first opened */
+    var crewPane = body.querySelector('[data-pj-pane="crew"]');
+    if (!isCrew() && window.bpCeoReco && crewPane) {
+      var rc = document.createElement('section'); rc.className = 'pjs-sec'; rc.id = 'pjs-reco'; rc.hidden = true;
+      crewPane.insertBefore(rc, crewPane.firstChild);
+      if (!crewPane.hidden) bpCeoReco(j);
+    }
     if (window.bpPermitsReset) bpPermitsReset();
     if (window.bpPermitsRender) bpPermitsRender(j);
     if (!isCrew() && window.bpSubsTabOpen) bpSubsTabOpen(j);
@@ -212,6 +220,7 @@
       var body = document.querySelector('.pjs .pjs-body'); if (body) body.scrollTop = 0;
       if (t === 'permits' && window.bpPermitsRender) bpPermitsRender();
       if (t === 'subs' && window.bpSubsTabOpen) bpSubsTabOpen(job());
+      if (t === 'crew' && window.bpCeoReco && !isCrew()) bpCeoReco(job());
       if (t === 'cust' && window.bpCustDraw) bpCustDraw();
       return r;
     };

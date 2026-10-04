@@ -8,7 +8,9 @@
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var A = window.BP_AITEAM = { st: null, agent: 'sales', thread: null, tab: 'board', busy: false };
+  var A = window.BP_AITEAM = { st: null, agent: 'sales', thread: null, tab: 'ceo', busy: false };
+  /* the AI CEO tab (portal/aiceo.js): owner and office, whether or not the add-on is on */
+  var ceoOn = function () { return !!window.bpCeoRender && !(window.bpTeamIsCrew && bpTeamIsCrew()); };
   var AG = {
     sales: { n: 'Sales', ic: 'trending_up', d: 'Follows up on leads and quotes so jobs don’t slip away.',
       h: ['Who should I follow up with today?', 'Write a text for a quote that went quiet', 'Give me a call script for a new lead'] },
@@ -81,11 +83,13 @@
   window.bpAiTeam = async function () {
     css();
     if (!window.BP_LIVE) { area().innerHTML = '<div class="bpx-panel"><div class="bpx-mut">Sign in to use your AI Team.</div></div>'; if (window.bpSpin) bpSpin(false); return; }
+    if (!ceoOn() && A.tab === 'ceo') A.tab = 'board';
+    if (ceoOn() && A.tab === 'ceo') { draw(); }   /* the CEO shows at once; the add-on status fills the tabs in */
     A.st = await api({ op: 'status' });
     if (window.bpSpin) bpSpin(false);
-    if (!A.st.ok) { area().innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc(A.st.error || 'Could not load.') + '</div></div>'; return; }
-    if (A.st.addon !== 'active') return pitch();
-    draw();
+    if (!A.st.ok && !ceoOn()) { area().innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc(A.st.error || 'Could not load.') + '</div></div>'; return; }
+    if (A.st.addon !== 'active' && !ceoOn()) return pitch();
+    if (A.tab === 'ceo') topBar(); else draw();
   };
 
 
@@ -141,9 +145,10 @@
     document.head.appendChild(c);
   }
 
-  function pitch() {
-    var st = A.st; boardCss();
-    area().innerHTML = '<div class="bpx-panel"><div class="ai-hero"><div class="pitch">'
+  function pitch(host) {
+    var st = A.st; boardCss(); host = host || area();
+    if (!st || !st.ok) { host.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc((st && st.error) || 'Could not load.') + '</div></div>'; return; }
+    host.innerHTML = '<div class="bpx-panel"><div class="ai-hero"><div class="pitch">'
       + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">Three assistants who know your business and work your leads, your marketing and your schedule. You approve anything before it goes to a customer.</div>'
       + '<div class="price">$' + st.price + '<small> / month</small></div><div class="bpx-mut" style="font-size:13px">Up to ' + st.cap + ' messages a month, plus a daily brief every morning. Cancel any time.</div>'
       + '<div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="bpx-btn" id="aiAdd">' + (st.addon === 'checkout' ? 'Finish checkout' : st.addon === 'past_due' ? 'Update payment' : 'Add AI Team') + '</button><span class="bpx-mmsg" id="aiMsg"></span></div>'
@@ -160,18 +165,36 @@
     };
   }
 
-  function draw() {
-    var st = A.st, pct = Math.min(100, Math.round(100 * st.used / Math.max(1, st.cap)));
-    boardCss();
-    area().innerHTML = '<div class="ai-top">'
-      + '<button class="ai-tab' + (A.tab === 'board' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>'
+  /* the tab row: AI CEO first, then the add-on's own tabs (or its pitch) */
+  function tabsHtml() {
+    var st = A.st || {}, on = st.ok && st.addon === 'active', pct = on ? Math.min(100, Math.round(100 * st.used / Math.max(1, st.cap))) : 0;
+    var ceo = ceoOn() ? '<button class="ai-tab' + (A.tab === 'ceo' ? ' on' : '') + '" data-ceo="1"><span class="ms">monitoring</span>AI CEO</button>' : '';
+    if (!A.st) return ceo;
+    if (!on) return ceo + '<button class="ai-tab' + (A.tab !== 'ceo' ? ' on' : '') + '" data-pitch="1"><span class="ms">diversity_3</span>AI Team</button>';
+    return ceo + '<button class="ai-tab' + (A.tab === 'board' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>'
       + Object.keys(AG).map(function (k) { return '<button class="ai-tab' + (A.tab === 'chat' && A.agent === k ? ' on' : '') + '" data-ag="' + k + '"><span class="ms">' + AG[k].ic + '</span>' + AG[k].n + '</button>'; }).join('')
       + '<button class="ai-tab' + (A.tab === 'wait' ? ' on' : '') + '" data-wait="1"><span class="ms">task_alt</span>Waiting for you' + (st.pending ? '<span class="n">' + st.pending + '</span>' : '') + '</button>'
-      + '<span class="ai-use" title="Messages you sent this month">' + st.used + ' of ' + st.cap + ' messages<i><b style="width:' + pct + '%"></b></i></span></div>'
-      + '<div id="aiBody"></div>';
-    area().querySelectorAll('[data-ag]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-ag'); A.thread = null; draw(); }; });
-    area().querySelector('[data-wait]').onclick = function () { A.tab = 'wait'; draw(); };
-    area().querySelector('[data-board]').onclick = function () { A.tab = 'board'; draw(); };
+      + '<span class="ai-use" title="Messages you sent this month">' + st.used + ' of ' + st.cap + ' messages<i><b style="width:' + pct + '%"></b></i></span>';
+  }
+  function wire() {
+    var a = area();
+    var c = a.querySelector('[data-ceo]'); if (c) c.onclick = function () { A.tab = 'ceo'; draw(); };
+    var p = a.querySelector('[data-pitch]'); if (p) p.onclick = function () { A.tab = 'pitch'; draw(); };
+    a.querySelectorAll('[data-ag]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-ag'); A.thread = null; draw(); }; });
+    var w = a.querySelector('[data-wait]'); if (w) w.onclick = function () { A.tab = 'wait'; draw(); };
+    var bd = a.querySelector('[data-board]'); if (bd) bd.onclick = function () { A.tab = 'board'; draw(); };
+  }
+  /* refresh just the tab row (the CEO body is already on screen) */
+  function topBar() { var t = area().querySelector('.ai-top'); if (!t) return draw(); t.innerHTML = tabsHtml(); wire(); }
+  function draw() {
+    boardCss();
+    var on = A.st && A.st.ok && A.st.addon === 'active';
+    if (!ceoOn() && A.tab === 'ceo') A.tab = on ? 'board' : 'pitch';
+    if (!on && A.tab !== 'ceo') A.tab = 'pitch';
+    area().innerHTML = '<div class="ai-top">' + tabsHtml() + '</div><div id="aiBody"></div>';
+    wire();
+    if (A.tab === 'ceo') return window.bpCeoRender($('aiBody'));
+    if (A.tab === 'pitch') return pitch($('aiBody'));
     if (A.tab === 'board') { $('aiBody').innerHTML = boardHtml(true); $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-open'); A.thread = null; draw(); }; }); }
     else if (A.tab === 'wait') approvals(); else chat();
   }
