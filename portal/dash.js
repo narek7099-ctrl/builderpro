@@ -799,6 +799,7 @@
       el.innerHTML = (sample ? '<div class="sp-note warn"><span class="ms">science</span>Example numbers, so you can see how it looks. Add a project or log money and this switches to your own.</div>'
         : live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
         + topline()
+        + (crew || !window.bpCeoDashCard ? '' : bpCeoDashCard(D.ceo))   /* the AI CEO's morning briefing (portal/aiceo.js) */
         + cl
         + (crew
           ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
@@ -831,6 +832,7 @@
       D.events = ((d && (d.appointments || d.events)) || []).map(function (a) { var t = a.start || a.startTime; return { start: t ? new Date(t).toISOString() : '', time: t ? new Date(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '', name: a.contact || a.contactName || a.title || a.name || 'Appointment', what: a.title || a.calendar || 'Inspection' }; });
       D.appts = D.events;
     }).catch(function () { D.events = null; D.appts = null; }));
+    if (D.ceo === undefined && !(window.bpTeamIsCrew && bpTeamIsCrew()) && window.bpCeoDashCard) jobs.push(BP_SB.from('ceo_reports').select('id,day,kind,source,stats,created_at').order('created_at', { ascending: false }).limit(1).then(function (r) { D.ceo = (r && r.data && r.data[0]) || null; }).catch(function () { D.ceo = null; }));
     if (D.contracts === undefined) jobs.push(BP_SB.from('contracts').select('id,title,customer_name,status,amount,sent_at,signed_at').order('created_at', { ascending: false }).limit(30).then(function (r) { D.contracts = (r && r.data) || []; }).catch(function () { D.contracts = []; }));
     if (D.unread === undefined) jobs.push(BP_SB.from('conversations').select('unread').gt('unread', 0).limit(200).then(function (r) { D.unread = ((r && r.data) || []).reduce(function (t, c) { return t + (+c.unread || 0); }, 0); }).catch(function () { D.unread = 0; }));
     if (D.deals === undefined && window.GHL_OPP_URL) jobs.push(window.bpApi(window.GHL_OPP_URL, { action: 'list' }).then(function (d) { var o = (d && d.opportunities) || []; D.deals = { n: o.length, v: o.reduce(function (t, x) { return t + (+x.value || 0); }, 0) }; }).catch(function () { D.deals = null; }));
