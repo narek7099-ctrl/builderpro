@@ -57,6 +57,29 @@
     }
   }
   SP.receipts = all;
+  /* the store is just a name now; it links to a saved supplier only when one matches */
+  function storeMatch(n) { n = String(n || '').trim().toLowerCase(); if (!n) return null; return (SP.sup || []).filter(function (s) { return String(s.name || '').trim().toLowerCase() === n; })[0] || null; }
+  function storeNames() { var seen = {}, out = []; (SP.sup || []).map(function (s) { return s.name; }).concat(all().map(function (r) { return r.supplierName; })).forEach(function (n) { n = String(n || '').trim(); if (n && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; out.push(n); } }); return out.sort(); }
+
+  /* ---------- the Receipts page ---------- */
+  window.bpReceiptsPage = function () {
+    var area = $('bpxViewArea'); if (!area) return;
+    if (!SP.loaded) { area.innerHTML = '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div></div>'; if (SP.load) SP.load(); return; }
+    var rs = all(), cr = SP.rcCrewAll(), ym = today().slice(0, 7), yr = today().slice(0, 4);
+    var rows = rs.map(function (r) { return { d: String(r.date || ''), a: +r.total || 0, job: r.jobId }; })
+      .concat(cr.map(function (x) { return { d: ymd(x.r.at), a: crewAmt(x.j, x.r), job: x.j.id }; }));
+    var sum = function (f) { return rows.filter(f).reduce(function (t, x) { return t + x.a; }, 0); };
+    var stat = function (l, v, n) { return '<div class="pjk-stat"><span>' + l + '</span><b>' + v + '</b>' + (n ? '<small>' + n + '</small>' : '') + '</div>'; };
+    area.innerHTML = '<div class="pjk-stats">'
+        + stat('This month', money(sum(function (x) { return x.d.slice(0, 7) === ym; })), (function (n) { return n + (n === 1 ? ' receipt' : ' receipts'); })(rows.filter(function (x) { return x.d.slice(0, 7) === ym; }).length))
+        + stat('This year', money(sum(function (x) { return x.d.slice(0, 4) === yr; })), '')
+        + stat('On jobs', money(sum(function (x) { return !!x.job; })), 'counted in job costs')
+        + stat('Overhead', money(sum(function (x) { return !x.job; })), 'not tied to a job')
+      + '</div>'
+      + '<div class="rc-hero"><div><b>Bought something?</b><span>Snap the receipt. We read the store, the items and the total, you pick the job, and it lands on that job as a Materials expense and in Finances.</span></div>'
+      + '<button class="bpx-addbtn" onclick="SP.rcOpen()"><span class="ms" style="font-size:18px;vertical-align:-4px">photo_camera</span> Upload receipt</button></div>'
+      + SP.rcSection();
+  };
   var bySup = function (id) { return all().filter(function (r) { return r.supplierId === id; }); };
   var byJob = function (id) { return all().filter(function (r) { return r.jobId === id; }); };
   function jobName(r) {
@@ -76,16 +99,16 @@
   SP.rcFilter = '';
   SP.rcSection = function () {
     var rs = all().slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)) || (b.at || 0) - (a.at || 0); });
-    if (SP.rcFilter) rs = rs.filter(function (r) { return r.supplierId === SP.rcFilter; });
-    var sups = {}; all().forEach(function (r) { sups[r.supplierId] = r.supplierName; });
+    if (SP.rcFilter) rs = rs.filter(function (r) { return (r.supplierId || 'n:' + r.supplierName) === SP.rcFilter; });
+    var sups = {}; all().forEach(function (r) { sups[r.supplierId || 'n:' + r.supplierName] = r.supplierName; });
     SP.rcCrewAll().forEach(function (x) { var su = crewSup(x.r); if (su) sups[su.id] = su.name; });
     var h = '<div class="bpx-chead" style="margin:22px 0 10px"><div class="bpx-ptitle" style="margin:0">Receipts'
       + '<span class="lg2">What you actually bought. Each one is a Materials expense on its job.</span></div>'
-      + (Object.keys(sups).length > 1 ? '<select class="rc-filter" onchange="SP.rcFilter=this.value;bpSuppliers()"><option value="">All suppliers</option>'
+      + (Object.keys(sups).length > 1 ? '<select class="rc-filter" onchange="SP.rcFilter=this.value;(window._bpCurView===\'receipts\'?bpReceiptsPage:bpSuppliers)()"><option value="">All suppliers</option>'
         + Object.keys(sups).map(function (k) { return '<option value="' + esc(k) + '"' + (SP.rcFilter === k ? ' selected' : '') + '>' + esc(sups[k]) + '</option>'; }).join('') + '</select>' : '') + '</div>';
     var cr = SP.rcCrewAll();
     if (SP.rcFilter) cr = cr.filter(function (x) { var s = crewSup(x.r); return s && s.id === SP.rcFilter; });
-    if (!rs.length && !cr.length) return h + '<div class="bpx-panel rc-empty bpx-mut">No receipts yet. Tap &ldquo;Upload receipt&rdquo; on a supplier after you buy something.</div>';
+    if (!rs.length && !cr.length) return h + '<div class="bpx-panel rc-empty bpx-mut">No receipts yet. Tap &ldquo;Upload receipt&rdquo; after you buy something.</div>';
     var rows = rs.map(function (r) { return { d: String(r.date || ''), at: +r.at || 0, h: rowHtml(r) }; })
       .concat(cr.map(function (x) { return { d: ymd(x.r.at), at: +x.r.at || 0, h: crewRow(x.j, x.r) }; }))
       .sort(function (a, b) { return b.d.localeCompare(a.d) || b.at - a.at; });
@@ -94,7 +117,7 @@
   function rowHtml(r, onJob) {
     return '<div class="rc-row"><div class="rc-row-m"><b>' + esc(onJob ? r.supplierName : jobName(r)) + '</b>'
       + '<span class="bpx-mut">' + esc(fmtDate(r.date)) + (onJob ? '' : ' &middot; ' + esc(r.supplierName)) + (r.number ? ' &middot; #' + esc(r.number) : '')
-      + (r.crewReceiptId ? ' &middot; from ' + esc(first(r.addedBy && r.addedBy.name || 'crew')) : ' &middot; ' + (r.lines || []).length + ((r.lines || []).length === 1 ? ' line' : ' lines')) + '</span></div>'
+      + (r.crewReceiptId ? ' &middot; from ' + esc(first(r.addedBy && r.addedBy.name || 'crew')) : (r.lines || []).length ? ' &middot; ' + (r.lines || []).length + ((r.lines || []).length === 1 ? ' line' : ' lines') : '') + '</span></div>'
       + '<b class="rc-row-t">' + money(r.total) + '</b><span class="rc-row-a">'
       + (r.image ? '<button class="bpx-rowbtn" onclick="SP.rcView(\'' + r.id + '\')">View</button>' : '')
       + '<button class="bpx-rowbtn rc-del" onclick="SP.rcDel(\'' + r.id + '\')" aria-label="Delete receipt">Delete</button></span></div>';
@@ -114,8 +137,8 @@
       .sort(function (a, b) { return b.d.localeCompare(a.d) || b.at - a.at; });
     return '<div class="rc-job"><div class="rc-job-h"><span>Bought <span class="bpx-mut">(counts toward cost)</span></span><b>' + money(t) + '</b></div>'
       + (rows.length ? rows.map(function (x) { return x.h; }).join('')
-        : '<div class="bpx-mut rc-job-e">No receipts on this job yet. Upload one from Supply &rsaquo; Suppliers.</div>')
-      + '<button class="bpx-linkbtn" onclick="bpCloseModal&&bpCloseModal();bpNav(\'suppliers\')">Upload a receipt</button></div>';
+        : '<div class="bpx-mut rc-job-e">No receipts on this job yet.</div>')
+      + '<button class="bpx-linkbtn" onclick="SP.rcOpen(\'\',\'' + jobId + '\')">Upload a receipt</button></div>';
   };
 
   /* ---------- crew receipts ----------
@@ -242,16 +265,16 @@
 
   /* ---------- upload + review ---------- */
   var R = SP.rc = null;
-  function blank(supId) {
-    var s = SP.supById(supId) || {};
-    return { supplierId: supId, supplierName: s.name || '', jobId: null, date: today(), number: '', lines: [], tax: '', total: '', totalTouched: false,
+  function blank(supId, jobId) {
+    var s = (supId && SP.supById(supId)) || {};
+    return { supplierId: s.id || '', supplierName: s.name || '', jobId: jobId == null ? null : jobId, date: today(), number: '', lines: [], tax: '', total: '', totalTouched: false,
       image: '', mime: '', file: '', read: '', learn: true };
   }
-  SP.rcOpen = function (supId) {
-    R = SP.rc = blank(supId);
-    var s = SP.supById(supId) || {};
+  SP.rcOpen = function (supId, jobId) {
+    R = SP.rc = blank(supId, jobId);
+    var s = (supId && SP.supById(supId)) || {};
     window.bpModal('<h3>Upload a receipt</h3>'
-      + '<div class="bpx-sub"><span style="display:inline;font-weight:700">From ' + esc(s.name || 'this supplier') + (s.branch ? ', ' + esc(s.branch) : '') + '.</span> We read the date, the lines and the total, then you pick the job it was for.</div>'
+      + '<div class="bpx-sub">' + (s.name ? '<span style="display:inline;font-weight:700">From ' + esc(s.name) + (s.branch ? ', ' + esc(s.branch) : '') + '.</span> ' : '') + 'We read the store, the date, the lines and the total, then you pick the job it was for.</div>'
       + '<div class="rc-drop" id="rc-drop"><span class="ms">receipt_long</span><b>Take a photo or choose a file</b>'
       + '<span class="bpx-mut">Photo or PDF, flat and in good light.</span>'
       + '<div class="rc-drop-b"><label class="bpx-btn" for="rc-cam"><span class="ms">photo_camera</span>Take a photo</label>'
@@ -286,6 +309,7 @@
         R.read = 'ok';
         if (d.dated) R.date = String(d.dated).slice(0, 10);
         R.number = d.invoice_no || '';
+        if (!R.supplierName && d.supplier_name) { R.supplierName = String(d.supplier_name); var ms = storeMatch(R.supplierName); R.supplierId = ms ? ms.id : ''; }
         R.lines = (d.lines || []).map(function (l) { return { id: uid('l'), name: l.name || '', sku: l.sku || '', qty: l.qty == null ? 1 : +l.qty, unit: l.unit || 'ea', price: +l.unit_price || 0, total: l.line_total != null ? +l.line_total : r2((+l.qty || 0) * (+l.unit_price || 0)) }; });
         R.tax = d.tax ? r2(d.tax) : '';
         if (d.total) { R.total = r2(d.total); R.totalTouched = true; }
@@ -307,7 +331,8 @@
     h += '<div class="rc-grid">'
       + (R.image && R.mime !== 'application/pdf' ? '<img class="rc-thumb" src="' + R.image + '" alt="Receipt photo">' : R.image ? '<div class="rc-thumb rc-pdf"><span class="ms">picture_as_pdf</span>' + esc(R.file) + '</div>' : '')
       + '<div class="rc-f">'
-      + '<label>Supplier<select id="rc-sup" onchange="SP.rcSet(\'supplierId\',this.value)">' + SP.sup.map(function (s) { return '<option value="' + s.id + '"' + (s.id === R.supplierId ? ' selected' : '') + '>' + esc(s.name) + (s.branch ? ', ' + esc(s.branch) : '') + '</option>'; }).join('') + '</select></label>'
+      + '<label>Store<input id="rc-sup" list="rc-sups" value="' + esc(R.supplierName) + '" placeholder="e.g. Home Depot, ABC Supply" onchange="SP.rcSet(\'supplierName\',this.value)"></label>'
+      + '<datalist id="rc-sups">' + storeNames().map(function (n) { return '<option value="' + esc(n) + '">'; }).join('') + '</datalist>'
       + '<label class="rc-req">Which job is this for?<select id="rc-job" onchange="SP.rcSet(\'jobId\',this.value)"><option value=""' + (R.jobId == null ? ' selected' : '') + ' disabled>Choose a job&hellip;</option>'
       + js.map(function (j) { return '<option value="' + j.id + '"' + (R.jobId === j.id ? ' selected' : '') + '>' + esc(j.name || 'Job') + (j.title ? ' — ' + esc(j.title) : '') + '</option>'; }).join('')
       + '<option value="__overhead"' + (R.jobId === '' ? ' selected' : '') + '>Overhead / no job</option></select></label>'
@@ -326,7 +351,7 @@
       + '<label class="rc-big">Total<input class="rc-in n" inputmode="decimal" id="rc-total" value="' + esc(R.total === '' ? '' : r2(R.total).toFixed(2)) + '" placeholder="0.00" onchange="SP.rcSet(\'total\',this.value)"></label></div>'
       + (R.lines.length && R.totalTouched && Math.abs(sumLines() + num(R.tax) - num(R.total)) > 0.02 ? '<div class="bpx-mut rc-diff">Lines plus tax come to ' + money(sumLines() + num(R.tax)) + '. <button class="bpx-linkbtn" onclick="SP.rcRetotal()">Use that</button></div>' : '');
     var priced = R.lines.filter(function (l) { return l.name && +l.price > 0; }).length, sname = (SP.supById(R.supplierId) || {}).name || 'this supplier';
-    h += '<label class="sp-check rc-learn"><input type="checkbox" id="rc-learn"' + (priced && R.learn ? ' checked' : '') + (priced ? '' : ' disabled') + ' onchange="SP.rc.learn=this.checked"> '
+    if (R.supplierId) h += '<label class="sp-check rc-learn"><input type="checkbox" id="rc-learn"' + (priced && R.learn ? ' checked' : '') + (priced ? '' : ' disabled') + ' onchange="SP.rc.learn=this.checked"> '
       + (priced ? 'Update ' + esc(sname) + '&rsquo;s price book with ' + (priced === 1 ? 'this real price' : 'these ' + priced + ' real prices') : 'No line prices to add to the price book') + '</label>'
       + '<div class="bpx-mut rc-foot-n">Saving adds one ' + money(R.total) + ' Materials expense to the job you pick, so it counts toward that job&rsquo;s cost and your Finances.</div>';
     $('rc-out').innerHTML = h; var mm = $('rc-msg'); if (mm) mm.textContent = '';
@@ -336,6 +361,7 @@
     if (!R) return;
     if (k === 'jobId') R.jobId = v === '__overhead' ? '' : v;
     else if (k === 'supplierId') { R.supplierId = v; R.supplierName = (SP.supById(v) || {}).name || ''; }
+    else if (k === 'supplierName') { R.supplierName = String(v || '').trim(); var ms = storeMatch(R.supplierName); R.supplierId = ms ? ms.id : ''; }
     else if (k === 'tax') R.tax = String(v).trim() === '' ? '' : num(v);
     else if (k === 'total') { R.total = String(v).trim() === '' ? '' : num(v); R.totalTouched = String(v).trim() !== ''; }
     else R[k] = v;
@@ -362,9 +388,11 @@
     if (R.jobId == null) { msg('Pick the job this receipt is for (or Overhead / no job).'); var js = $('rc-job'); if (js) js.focus(); return; }
     var tot = r2(num(R.total));
     if (!(tot > 0)) { msg('Enter the receipt total.'); var t = $('rc-total'); if (t) t.focus(); return; }
-    var sup = SP.supById(R.supplierId); if (!sup) { msg('Pick the supplier.'); return; }
+    var sup = (R.supplierId && SP.supById(R.supplierId)) || storeMatch(R.supplierName);
+    var store = sup ? sup.name : String(R.supplierName || '').trim();
+    if (!store) { msg('Type the store it came from.'); var si = $('rc-sup'); if (si) si.focus(); return; }
     var job = R.jobId ? jobsAll().filter(function (x) { return x.id === R.jobId; })[0] : null;
-    var rec = { id: uid('rc'), supplierId: sup.id, supplierName: sup.name, jobId: R.jobId, jobName: job ? job.name || 'Job' : '', date: R.date || today(), number: String(R.number || '').trim(),
+    var rec = { id: uid('rc'), supplierId: sup ? sup.id : '', supplierName: store, jobId: R.jobId, jobName: job ? job.name || 'Job' : '', date: R.date || today(), number: String(R.number || '').trim(),
       lines: R.lines.filter(function (l) { return String(l.name).trim() || +l.total; }).map(function (l) { return { name: String(l.name).trim(), sku: l.sku || '', qty: l.qty === '' ? null : +l.qty, unit: l.unit || 'ea', price: l.price === '' ? null : r2(l.price), total: l.total === '' ? null : r2(l.total) }; }),
       tax: R.tax === '' ? 0 : r2(R.tax), total: tot, image: R.image || '', mime: R.mime || '', file: R.file || '', read: R.read || 'hand', at: Date.now() };
     try { rec.expKey = writeExpense(rec); } catch (e) { msg('Could not add the expense. ' + (e.message || '')); return; }
@@ -376,7 +404,7 @@
       }).catch(function () {});
     }
     /* the price book: real prices at this supplier ("yours") */
-    var learn = R.learn && !!($('rc-learn') || {}).checked;
+    var learn = !!sup && R.learn && !!($('rc-learn') || {}).checked;
     var rows = learn ? rec.lines.filter(function (l) { return l.name && l.price > 0; }).map(function (l) {
       return { supplier_id: sup.id, sku: l.sku || slug(l.name), name: l.name, unit: l.unit || 'ea', price: l.price, source: 'receipt', source_at: new Date().toISOString(), source_ref: rec.number || '' };
     }) : [];
@@ -384,13 +412,15 @@
       R = SP.rc = null; window.bpCloseModal();
       window.bpToast && bpToast(money(tot) + ' added to ' + (job ? (job.name || 'the job') : 'overhead') + ' as a Materials expense.');
       if (window._bpCurView === 'suppliers') window.bpSuppliers();
+      if (window._bpCurView === 'receipts') window.bpReceiptsPage();
     };
     if (!rows.length) { done(); return; }
     SP.db.upsertItems(rows).then(function () { return SP.load(true); }).then(done, function () { done(); window.bpToast && bpToast('Receipt saved. The prices could not be added to the price book.'); });
   };
 
   /* ---------- styles ---------- */
-  var css = '#bpx .rc-up{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:2px 0 0;padding:12px 14px;font-size:15px}#bpx .rc-up .ms{font-size:20px}'
+  var css = '#bpx .rc-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid #e6e9f0;border-radius:14px;padding:16px 18px;margin-bottom:6px}#bpx .rc-hero>div{flex:1 1 300px;display:flex;flex-direction:column;gap:3px}#bpx .rc-hero b{font-size:15px}#bpx .rc-hero span{font-size:13px;color:#6b7280}#bpx.bpx-dark .rc-hero{background:#141b2b;border-color:#262f45}#bpx .rc-hero .ms{color:#fff}#bpx .rc-list .rc-row{border:0;border-bottom:1px solid var(--line-2);border-radius:0;box-shadow:none;background:transparent;padding:10px 0}#bpx .rc-list .rc-row:last-child{border-bottom:0}'
+    + '#bpx .rc-up{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:2px 0 0;padding:12px 14px;font-size:15px}#bpx .rc-up .ms{font-size:20px}'
     + '#bpx .rc-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px 6px;background:var(--tint,#f4f6fa)}'
     + '#bpx .rc-stats>div{text-align:center;min-width:0}#bpx .rc-stats b{display:block;font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#bpx .rc-stats span{display:block;font-size:10.5px;color:var(--grey);margin-top:1px}'
     + '#bpx .rc-filter{padding:7px 10px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13px;background:#fff;max-width:100%}'
