@@ -176,3 +176,10 @@ begin
 end $$;
 revoke all on function public.ghl_storm_followup(text[], text) from public, anon;
 grant execute on function public.ghl_storm_followup(text[], text) to authenticated;
+
+-- Schedule (run once, live):
+--   select cron.schedule('bp-ghl-events', '*/2 * * * *', $c$
+--     select net.http_post(url := 'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ghl-events',
+--       headers := jsonb_build_object('Content-Type','application/json','x-cron-key',(select value from public.ai_config where key='cron_key')),
+--       body := '{"op":"run"}'::jsonb, timeout_milliseconds := 60000); $c$);
+-- and ai_config 'ghl_events_owner' = the account whose events go to the default location.
