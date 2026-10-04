@@ -571,7 +571,8 @@
 
   /* ---------- pages ---------- */
   function tabs(active) {
-    var t = [['matlists', 'Lists'], ['mattemplates', 'Templates'], ['suppliers', 'Suppliers']];
+    return '';  /* the section tabs in the header already do this */
+    var t = [];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }
   ML.tabs = tabs;
@@ -597,7 +598,7 @@
     var withList = rows.filter(function (j) { return j.materials && j.materials.items && j.materials.items.length; });
     var grand = withList.reduce(function (t, j) { return t + ML.total(j); }, 0);
     var h = tabs('matlists')
-      + '<div class="ml-top"><div class="bpx-mut">' + withList.length + (withList.length === 1 ? ' list' : ' lists') + ' &middot; ' + money(grand) + ' estimated. Planning only; receipts on Suppliers are what count as cost.</div>'
+      + '<div class="ml-top"><div class="bpx-mut">' + withList.length + (withList.length === 1 ? ' list' : ' lists') + ' &middot; ' + money(grand) + ' estimated. Planning only; receipts are what count as cost.</div>'
       + '<button class="bpx-btn ml-new" onclick="ML.newing=!ML.newing;bpMatLists()">+ New list</button></div>';
     if (ML.newing) {
       var tl = tpls();

@@ -143,6 +143,7 @@
     else if (view('supplyorders')) window.bpSupplyOrders();
     else if (view('suppliers')) window.bpSuppliers();
     else if (view('prices') && window.bpPrices) window.bpPrices();
+    else if (view('receipts') && window.bpReceiptsPage) window.bpReceiptsPage();
   }
   function supById(id) { return SP.sup.filter(function (s) { return s.id === id; })[0]; }
   function itemsOf(id) { return SP.items.filter(function (i) { return i.supplier_id === id; }); }
