@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   var PLANS = [{ k: 'foundation', name: 'Foundation', price: '$99' }, { k: 'os', name: 'OS', price: '$199' }, { k: 'enterprise', name: 'Enterprise', price: '$299' }];
-  var FOLDERS = { 1: 'Leads and AI', 2: 'Appointments', 3: 'Estimates and Payments', 4: 'Follow-up and Reviews', 5: 'Enterprise' };
+  var FOLDERS = { 1: 'Leads and AI', 2: 'Appointments', 3: 'Estimates and Payments', 4: 'Follow-up and Reviews', 5: 'Enterprise', 6: 'Project automations' };
   var I = {
     sms: '<path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
     email: '<rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/>',
@@ -38,7 +38,7 @@
     alert: ['Internal notification', 'bell', 'alert'], wait: ['Wait', 'clock', 'wait'],
     hook: ['Webhook', 'bolt', 'sys'], rm: ['Remove from workflow', 'exit', 'sys']
   };
-  var TRIG = { tag: ['Contact tag', 'tag'], form: ['Form submitted', 'form'], hook: ['Inbound webhook', 'bolt'], ai: ['Conversation AI', 'spark'], call: ['Call status', 'phone'], reply: ['Customer replied', 'sms'], appt: ['Appointment status', 'cal'], est: ['Estimate status', 'doc'], inv: ['Invoice status', 'doc'], opp: ['Opportunity status', 'pipe'], date: ['Custom date reminder', 'cal'] };
+  var TRIG = { bp: ['BuilderPro event', 'bolt'], tag: ['Contact tag', 'tag'], form: ['Form submitted', 'form'], hook: ['Inbound webhook', 'bolt'], ai: ['Conversation AI', 'spark'], call: ['Call status', 'phone'], reply: ['Customer replied', 'sms'], appt: ['Appointment status', 'cal'], est: ['Estimate status', 'doc'], inv: ['Invoice status', 'doc'], opp: ['Opportunity status', 'pipe'], date: ['Custom date reminder', 'cal'] };
   var tg = function (t) { return '<span class="wa-tg">' + t + '</span>'; };
   var E = ['end'];
   function intent(k, t) { return { triggers: [['tag', 'Tag added: ' + tg('intent-' + k)], ['ai', 'Lisa action: ' + t]], steps: [['tag', tg('ai-qualified')], ['alert', 'All users (in-app): new ' + t.toLowerCase() + ' lead, opens the contact'], E] }; }
@@ -170,6 +170,45 @@
         ['alert', 'Email to {{custom_values.owner_email}}: Priority: {{contact.name}} needs you now', 'Internal notification · Email'],
         ['tagx', tg('ai-team-alert') + ' (so the AI Team can page again)'], E] })] },
     { id: '22', name: 'Priority Support Request', folder: 5, from: 2, v: [v(2, { triggers: [['tag', 'Tag added: ' + tg('priority-support')]], steps: [['alert', 'Email to BuilderPro support with your business and the contact', 'Internal notification · Email'], ['tagx', tg('priority-support')], E] })] }
+    ,
+    /* ---------- project automations: BuilderPro sends the event (tag + BP fields), the CRM workflow does the messaging ---------- */
+    { id: '30', kind: 'job_scheduled', name: 'Job Scheduled', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-job-scheduled') + ' (a project gets its first day booked, or the start moves)']],
+      settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
+      steps: [['sms', 'Your {{contact.bp_job_name}} is booked to start {{contact.bp_start_date}}. Follow along: {{contact.bp_portal_link}}'], ['email', 'Same message, subject “Your {{contact.bp_job_name}} is scheduled”'], E] })] },
+    { id: '31', kind: 'visit_tomorrow', name: 'Visit Tomorrow Reminder', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-visit-tomorrow') + ' (the day before each booked work day)']],
+      settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
+      steps: [['wait', 'Until 5:00 pm'], ['sms', 'Our crew will be at {{contact.bp_job_address}} tomorrow, {{contact.bp_visit_date}}. Please keep the driveway clear.'], E] })] },
+    { id: '32', kind: 'crew_arrived', name: 'Crew Arrived', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-crew-arrived') + ' (first clock-in on the job that day)']],
+      settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
+      steps: [{ 'if': 'Crew lead known?', paths: [
+        { label: 'Yes', when: 'BP Crew Lead is set', steps: [['sms', '{{contact.bp_crew_lead}} and the crew just arrived and are starting on your {{contact.bp_job_name}}. {{contact.bp_portal_link}}'], E] },
+        { label: 'No', steps: [['sms', 'Our crew just arrived and is starting on your {{contact.bp_job_name}}. {{contact.bp_portal_link}}'], E] }
+      ] }] })] },
+    { id: '33', kind: 'job_completed', name: 'Job Completed → Review → Referral', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-job-completed') + ' (the project is marked done)']],
+      settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
+      steps: [['sms', 'Your {{contact.bp_job_name}} is complete! Final photos and documents: {{contact.bp_portal_link}}'], ['wait', '2 days'], ['sms', 'Would you leave us a quick review? {{custom_values.google_review_link}}'], ['wait', '30 days'], ['sms', 'Know a neighbor who needs work done? Send them our way.'], ['tag', tg('past-customer')], E] })] },
+    { id: '34', kind: 'payment_overdue', name: 'Payment Overdue', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-payment-overdue') + ' (3, 7 and 14 days after done with a balance)']],
+      settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
+      steps: [{ 'if': 'BP Days Overdue', paths: [
+        { label: '3 days', steps: [['sms', 'A quick reminder that {{contact.bp_balance_due}} is still open on your {{contact.bp_job_name}}.'], E] },
+        { label: '7 days', steps: [['sms', 'Your balance of {{contact.bp_balance_due}} is a week past due. Anything holding it up?'], ['email', 'Same reminder by email'], E] },
+        { label: '14 days', steps: [['alert', '{{contact.name}} owes {{contact.bp_balance_due}}, 14 days. Call them.'], E] }
+      ] }] })] },
+    { id: '35', kind: 'job_anniversary', name: 'Yearly Check-up', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-job-anniversary') + ' (each year on the day a job was finished)']],
+      settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
+      steps: [['sms', 'It’s been a year since we finished your {{contact.bp_job_name}}. Want a free check-up? Reply YES.'], ['wait', 'For a reply, up to 3 days', 'Wait for reply'], { 'if': 'Replied YES?', paths: [
+        { label: 'Yes', steps: [['opp', 'Jobs → New Lead (check-up)'], ['alert', '“Book the check-up.”'], E] }, { label: 'No reply', steps: [E] } ] }] })] },
+    { id: '36', kind: 'storm_followup', name: 'Storm Follow-up', folder: 6, from: 0, v: [v(0, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-storm-followup') + ' (sent from BuilderPro for an area after a storm)']],
+      settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
+      steps: [['sms', 'After the recent storm we’re offering free roof checks for past customers. Want us to swing by? Reply YES. {{contact.bp_event_note}}'], ['wait', 'For a reply, up to 2 days', 'Wait for reply'], { 'if': 'Replied YES?', paths: [
+        { label: 'Yes', steps: [['opp', 'Jobs → New Lead (storm check)'], ['alert', '“Book the storm check.”'], E] }, { label: 'No reply', steps: [E] } ] }] })] }
   ];
 
   var fmt = function (s) { return String(s).replace(/\{\{([^}]+)\}\}/g, function (m, k) { return '<span class="wa-chip">' + k.trim() + '</span>'; }); };
@@ -202,7 +241,7 @@
     var nNew = list.filter(function (w) { return status(w) === 'new'; }).length, nChg = list.filter(function (w) { return status(w) === 'chg'; }).length;
     var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations running on your ' + PLANS[S.plan].name + ' plan</span></div></div>';
     h += '<div class="wa-lay"><aside class="wa-list">';
-    [1, 2, 3, 4, 5].forEach(function (f) {
+    [6, 1, 2, 3, 4, 5].forEach(function (f) {
       var items = WF.filter(function (w) { return w.folder === f && avail(w); }); if (!items.length) return;
       if (!S.open) { S.open = {}; var sw = WF.filter(function (w) { return w.id === S.sel; })[0]; S.open[sw ? sw.folder : 1] = 1; }
       var op = !!S.open[f];
@@ -216,7 +255,10 @@
     
     var n = x.triggers.length, W = n * 232 - 12;
     var merge = n > 1 ? '<div class="wa-merge"><svg viewBox="0 0 ' + W + ' 28" preserveAspectRatio="none" style="width:' + W + 'px">' + x.triggers.map(function (_, i) { var X = i * 232 + 110, c = W / 2; return '<path d="M' + X + ' 0 C' + X + ' 14 ' + c + ' 14 ' + c + ' 28" fill="none" stroke="#c3cbd6" stroke-width="2"/>'; }).join('') + '</svg></div>' : '<div class="wa-ln" style="height:20px"></div>';
-    h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + 'Live' + '</span></div>' + note
+    var fired = w.kind && S.fired ? S.fired[w.kind] : null;
+    var liveTxt = !w.kind || !S.fired ? 'Live' : fired ? 'Fired ' + fired.n + (fired.n === 1 ? ' time' : ' times') + ' · last ' + ago(fired.last) : 'Waiting for its first event';
+    if (w.kind) note += '<div class="wa-note soft">BuilderPro sends this event to your CRM with the job’s details in the <b>BP</b> fields; the workflow there sends the messages. Edit the wording in your CRM’s workflow builder.</div>';
+    h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + liveTxt + '</span></div>' + note
       + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'
       + '<div class="wa-leg"><span><i class="wa-msg"></i>Customer message</span><span><i class="wa-contact"></i>Contact / tags</span><span><i class="wa-pipe"></i>Pipeline</span><span><i class="wa-alert"></i>Alert to you</span><span><i class="wa-wait"></i>Wait</span><span><i class="wa-sys"></i>System</span><span><i class="wa-logic"></i>If / else</span></div>'
@@ -234,7 +276,20 @@
     var cv = area.querySelector('.wa-canvas'); if (cv) cv.scrollLeft = (cv.scrollWidth - cv.clientWidth) / 2;
     if (window.bpSpin) bpSpin(false);
   }
+  function ago(t) { var m = Math.round((Date.now() - Date.parse(t)) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' days ago'; }
+  /* how often each project automation has fired: the sent rows of ghl_events */
+  function loadFired() {
+    if (!(window.BP_LIVE && window.BP_SB)) return;
+    try {
+      Promise.resolve(BP_SB.from('ghl_events').select('kind,sent_at').eq('status', 'sent').order('sent_at', { ascending: false }).limit(1000)).then(function (r) {
+        if (!r || r.error) return;
+        var f = {}; (r.data || []).forEach(function (x) { var k = f[x.kind] || (f[x.kind] = { n: 0, last: x.sent_at }); k.n++; });
+        S.fired = f; if (window._bpCurView === 'automations') render();
+      }, function () {});
+    } catch (e) {}
+  }
   window.bpAutomations = function () {
+    loadFired();
     var k = (window._bpAcct || {}).plan, i = PLANS.map(function (p) { return p.k; }).indexOf(k);
     S.mine = i < 0 ? 1 : i; S.plan = S.mine;
     render();
