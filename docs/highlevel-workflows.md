@@ -26,6 +26,14 @@ Insert these with the **{ }** custom-value picker under *Contact → BP …*, or
 | BP Days Overdue | `{{contact.bp_days_overdue}}` | 7 |
 | BP Company Name | `{{contact.bp_company_name}}` | Summit Roofing Co |
 | BP Event Note | `{{contact.bp_event_note}}` | (storm follow-up note) |
+| BP Phase Name | `{{contact.bp_phase_name}}` | Tear-off |
+| BP Next Phase | `{{contact.bp_next_phase}}` | Install |
+| BP Amount Paid | `{{contact.bp_amount_paid}}` | $4,000 |
+| BP Old Start Date | `{{contact.bp_old_start_date}}` | Monday, October 12 |
+| BP Inspection | `{{contact.bp_inspection}}` | Final (Building permit) |
+| BP Change Order | `{{contact.bp_change_order}}` | Add skylight · $850 |
+| BP Budget | `{{contact.bp_budget}}` | $1,000 |
+| BP Spent | `{{contact.bp_spent}}` | $1,450 |
 
 Check the exact key in *Settings → Custom Fields* if the picker shows a different one.
 Fields can be empty (for example, no crew lead or no portal link yet); the
@@ -112,6 +120,99 @@ past customers whose job address is in that area.
 3. **On reply YES** → create opportunity / task "Book storm check".
 
 ---
+
+# More customer updates
+
+## 8. Contract signed → welcome — tag `bp-contract-signed`
+
+1. **Trigger:** Contact Tag Added → `bp-contract-signed`
+2. **SMS:**
+   > Thank you, {{contact.first_name}}! Your contract with {{contact.bp_company_name}} is signed. Here's what happens next: we pull permits, order materials, and lock in your crew day. Everything is tracked here: {{contact.bp_portal_link}}
+3. **If/Else** BP Start Date is set → SMS: "You're on the schedule for {{contact.bp_start_date}}."
+4. **Email** (optional): the same welcome, with what to expect on the day.
+
+## 9. Phase finished → progress update — tag `bp-phase-done`
+
+1. **Trigger:** Contact Tag Added → `bp-phase-done`
+2. **SMS:**
+   > Progress update on your {{contact.bp_job_name}}: {{contact.bp_phase_name}} is done ✅ Next up: {{contact.bp_next_phase}}. Photos: {{contact.bp_portal_link}}
+3. **If/Else** BP Next Phase is empty → SMS: "{{contact.bp_phase_name}} is done ✅ That was the last step; we'll be in touch to wrap up."
+
+## 10. Schedule pushed back → heads-up — tag `bp-schedule-moved`
+
+1. **Trigger:** Contact Tag Added → `bp-schedule-moved`
+2. **SMS:**
+   > Heads-up from {{contact.bp_company_name}}: your {{contact.bp_job_name}} start has moved from {{contact.bp_old_start_date}} to {{contact.bp_start_date}}. Sorry for the change, and reply here with any questions.
+3. **Internal notification** (optional): "Told {{contact.name}} about the new date."
+
+## 11. Payment received → thank-you — tag `bp-payment-received`
+
+1. **Trigger:** Contact Tag Added → `bp-payment-received`
+2. **SMS:**
+   > Thank you! We received {{contact.bp_amount_paid}} for your {{contact.bp_job_name}}. Remaining balance: {{contact.bp_balance_due}}.
+3. **If/Else** BP Balance Due is "$0" → SMS: "Your {{contact.bp_job_name}} is paid in full. Thank you!"
+
+## 12. Change order waiting → reminder — tag `bp-change-order-waiting`
+
+Fires when a change order is still unsigned after 2 days, then again after 5.
+
+1. **Trigger:** Contact Tag Added → `bp-change-order-waiting`
+2. **If/Else** on BP Days Overdue:
+   - **2** → SMS:
+     > Hi {{contact.first_name}}, a change to your project is waiting for your OK: {{contact.bp_change_order}}. You can review and sign it here: {{contact.bp_portal_link}}
+   - **5** → **Internal notification** to the owner: "{{contact.name}} hasn't signed {{contact.bp_change_order}} (5 days). Give them a call."
+
+## 13. Inspection scheduled → heads-up — tag `bp-inspection-scheduled`
+
+1. **Trigger:** Contact Tag Added → `bp-inspection-scheduled`
+2. **SMS:**
+   > Your {{contact.bp_inspection}} inspection is set for {{contact.bp_visit_date}}. The inspector may need access to the property; we'll let you know if you need to be home.
+
+## 14. Warranty → after completion — tag `bp-warranty`
+
+Fires about a week after the job is done.
+
+1. **Trigger:** Contact Tag Added → `bp-warranty`
+2. **SMS + Email:**
+   > Hi {{contact.first_name}}, your {{contact.bp_job_name}} is covered by our workmanship warranty. Your documents are saved here: {{contact.bp_portal_link}}. If anything ever comes up, just text this number.
+3. **Add tag** `warranty-sent`.
+
+---
+
+# Alerts to you (internal)
+
+These don't text the customer; they notify you or your team. Use HighLevel's
+**Internal Notification** action (SMS / email / in-app to the owner or assigned user).
+
+## 15. Customer message unanswered — tag `bp-message-unanswered`
+
+1. **Trigger:** Contact Tag Added → `bp-message-unanswered`
+2. **Internal notification** to the owner:
+   > {{contact.name}} messaged in the project portal 4+ hours ago and hasn't had a reply: "{{contact.bp_event_note}}"
+
+## 16. Job over budget — tag `bp-over-budget`
+
+1. **Trigger:** Contact Tag Added → `bp-over-budget`
+2. **Internal notification** to the owner:
+   > {{contact.bp_job_name}} for {{contact.name}} is over budget: {{contact.bp_spent}} spent against {{contact.bp_budget}}.
+
+## 17. Sub insurance expiring → text the sub — tag `bp-sub-insurance-expiring`
+
+This one is tagged on the **subcontractor's** contact, not a customer.
+
+1. **Trigger:** Contact Tag Added → `bp-sub-insurance-expiring`
+2. **SMS / Email to the contact (the sub):**
+   > Hi {{contact.first_name}}, this is {{contact.bp_company_name}}. {{contact.bp_event_note}}. Please upload a current copy in your BuilderPro sub portal so we can keep sending you work.
+3. **Internal notification** to the owner: "{{contact.name}}: {{contact.bp_event_note}}".
+
+---
+
+## Good to know
+
+- One contact can get several events close together (for example a payment and a
+  phase on the same day). Each event rewrites the BP fields, so read them **at the
+  start** of the workflow; avoid long waits before a message that uses them.
+- Example/demo projects never send anything.
 
 ## Testing a workflow
 
