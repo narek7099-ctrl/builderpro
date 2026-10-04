@@ -306,6 +306,21 @@
     C.route[j.id] = d; recoDraw(host, d);
   };
 
+  /* One-tap Assign for a job that is not open in the project sheet (the map's
+     panel and Plan the day): the same bpProjCrewSet path the Crew tab uses,
+     pointed at that job for the call. Drops the cached ranking for the job. */
+  function assignEmp(jobId, empId) {
+    if (!window.bpProjCrewSet || !jobId || !empId) return false;
+    var was = window._bpProjId;
+    window._bpProjId = jobId;
+    try { bpProjCrewSet(empId, true); } finally { window._bpProjId = was; }
+    delete C.route[jobId];
+    return onJob(curJob(jobId), { kind: 'employee', id: empId });
+  }
+  /* shared with portal/aiceo-map.js */
+  C.css = css; C.esc = esc; C.money = money; C.srcBadge = srcBadge; C.initials = initials;
+  C.follow = follow; C.onJob = onJob; C.curJob = curJob; C.allowed = allowed; C.assignEmp = assignEmp;
+
   /* ------------------------------------------------------ dashboard card --- */
   window.bpCeoDashCard = function (row) {
     css();
