@@ -139,7 +139,7 @@ declare
   lm0 date := (date_trunc('month', (now() at time zone 'utc')) - interval '1 month')::date;
   wk0 date := date_trunc('week', (now() at time zone 'utc'))::date;
   jobs jsonb; fin jsonb; out jsonb := '{}'::jsonb;
-  co jsonb;
+  co jsonb; ua_n int := 0; ua_l jsonb := '[]'::jsonb;
 begin
   if not public.bp_ceo_allowed(p_owner) then raise exception 'not allowed' using errcode = '42501'; end if;
 
@@ -182,16 +182,24 @@ begin
           select jsonb_build_object('job', id, 'label', lbl, 'balance', greatest(est - paid, 0)) b from public.bp_ceo_jobs(jobs)
            where status = 'active' and est - paid > 0 order by est - paid desc limit 5) z), '[]'::jsonb))));
 
+  -- leads waiting on a reply, only where the conversations mirror exists
+  if to_regclass('public.conversations') is not null then
+    begin
+      execute $q$select count(*), coalesce(jsonb_agg(jsonb_build_object('name', coalesce(nullif(contact_name, ''), phone, email, 'Lead'), 'contact', contact_id,
+                  'hours', round(extract(epoch from now() - last_at) / 3600), 'last', left(coalesce(last_message, ''), 120)) order by last_at), '[]'::jsonb)
+                from (select * from public.conversations where owner = $1 and last_dir = 'inbound' and coalesce(unread, 0) > 0
+                        and last_at >= now() - interval '14 days' and last_at < now() - interval '1 hour' order by last_at limit 10) c$q$
+        into ua_n, ua_l using p_owner;
+    exception when others then ua_n := 0; ua_l := '[]'::jsonb;
+    end;
+  end if;
+
   -- leads
   out := out || jsonb_build_object('leads', jsonb_build_object(
     'new_24h', (select count(*) from public.contacts where owner = p_owner and date_added >= now() - interval '24 hours'),
     'new_7d', (select count(*) from public.contacts where owner = p_owner and date_added >= now() - interval '7 days'),
-    'unanswered', (select count(*) from public.conversations where owner = p_owner and last_dir = 'inbound' and coalesce(unread, 0) > 0
-                     and last_at >= now() - interval '14 days' and last_at < now() - interval '1 hour'),
-    'unanswered_list', coalesce((select jsonb_agg(jsonb_build_object('name', coalesce(nullif(contact_name, ''), phone, email, 'Lead'), 'contact', contact_id,
-                         'hours', round(extract(epoch from now() - last_at) / 3600), 'last', left(coalesce(last_message, ''), 120)) order by last_at)
-                       from (select * from public.conversations where owner = p_owner and last_dir = 'inbound' and coalesce(unread, 0) > 0
-                               and last_at >= now() - interval '14 days' and last_at < now() - interval '1 hour' order by last_at limit 10) c), '[]'::jsonb),
+    'unanswered', ua_n,
+    'unanswered_list', ua_l,
     'recent', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'name', coalesce(nullif(name, ''), phone, email, 'Lead')) order by date_added desc)
                        from (select * from public.contacts where owner = p_owner and date_added >= now() - interval '7 days' order by date_added desc limit 10) c), '[]'::jsonb)));
 
