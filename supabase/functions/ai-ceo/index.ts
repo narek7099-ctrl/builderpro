@@ -268,15 +268,35 @@ async function dailyAll(budgetMs = 50000) {
 }
 
 // ----------------------------------------------------------------- route ---
-type Cand = { kind: string; id: string; name: string; trade: string; score: number; rating: number | null; reviews: number; years?: number; jobs_done: number; free: boolean; flags: string[]; reasons: string[]; conflicts: Snap[]; team_id?: string | null; explain?: string };
+type Cand = { kind: string; id: string; name: string; trade: string; score: number; rating: number | null; reviews: number; years?: number; jobs_done: number; free: boolean; flags: string[]; reasons: string[]; conflicts: Snap[]; team_id?: string | null; explain?: string; size?: number; color?: string; members?: Snap[] };
+function spanOf(job: Snap): string {
+  if (!Array.isArray(job.dates) || !job.dates.length) return "";
+  const ds = (job.dates as string[]).slice().sort(), a = fmtDay(ds[0]), z = fmtDay(ds[ds.length - 1]);
+  return ds.length === 1 ? a : a.split(" ")[0] === z.split(" ")[0] ? `${a}-${z.split(" ")[1]}` : `${a}-${z}`;
+}
+// "Roof crew A (3 people, 4.7★) - roofing crew, free Oct 6-9; this is a $25k job, so top-rated crew recommended."
+export function explainCrew(c: Cand, job: Snap, best: boolean): string {
+  const n = Number(c.size ?? arr(c.members).length) || 0;
+  const bits = [`${n} ${n === 1 ? "person" : "people"}`, c.rating != null ? `${Number(c.rating).toFixed(1)}★` : ""].filter(Boolean).join(", ");
+  const why: string[] = [];
+  const tr = String(c.trade || "general");
+  why.push(c.flags.includes("trade_mismatch") ? `${tr} crew, not a ${String(job.trade)} match` : `${tr} crew`);
+  const span = spanOf(job);
+  if (!c.free) why.push(`booked ${span || "those days"}${c.conflicts?.[0]?.label ? " on " + String(c.conflicts[0].label) : ""}`);
+  else if (span) why.push(`free ${span}`);
+  if (c.jobs_done > 0) why.push(`${c.jobs_done} finished job${c.jobs_done > 1 ? "s" : ""} together`);
+  let s = `${c.name} (${bits}) - ${why.join(", ")}`;
+  if (best && c.free && !c.flags.includes("trade_mismatch") && Number(job.weight) >= 1.3 && Number(job.estimate) > 0) s += `; this is a ${kMoney(Number(job.estimate))} job, so top-rated crew recommended`;
+  return s + ".";
+}
 export function explainRules(c: Cand, job: Snap, best: boolean): string {
+  if (c.kind === "crew") return explainCrew(c, job, best);
   const bits = [c.trade || (c.kind === "sub" ? "Sub" : ""), c.rating != null ? `${Number(c.rating).toFixed(1)}★` : "", c.years ? `${c.years} yrs` : ""].filter(Boolean).join(", ");
   const why: string[] = [];
   if (!c.flags.includes("trade_mismatch") && best) why.push(c.rating != null && c.rating >= 4.5 ? `best-rated ${String(job.trade)} pick` : `best ${String(job.trade)} match`);
   why.push(...c.reasons.filter((r) => !/matches this|★ from/.test(r)).map((r) => r.charAt(0).toLowerCase() + r.slice(1)));
   if (c.free && Array.isArray(job.dates) && job.dates.length) {
-    const ds = (job.dates as string[]).slice().sort(), a = fmtDay(ds[0]), z = fmtDay(ds[ds.length - 1]);
-    const span = ds.length === 1 ? a : a.split(" ")[0] === z.split(" ")[0] ? `${a}-${z.split(" ")[1]}` : `${a}-${z}`;
+    const span = spanOf(job);
     for (let i = 0; i < why.length; i++) if (/^free on the job/.test(why[i])) why[i] = `free ${span}`;
   }
   let s = `${c.name}${bits ? " (" + bits + ")" : ""} - ${why.join("; ")}`;
@@ -288,17 +308,19 @@ async function route(owner: string, jobId: string) {
   if (!r?.ok) return { ok: false, error: r?.error === "job not found" ? "Project not found." : "Could not rank people for this project." };
   const job = r.job as Snap, cands = arr<Cand>(r.candidates);
   cands.forEach((c, i) => { c.explain = explainRules(c, job, i === 0); });
+  // the best-matching crew (also in candidates, appended if it missed the top 5)
+  const bestCrew = r.best_crew ? cands.find((c) => c.kind === "crew" && c.id === (r.best_crew as Snap).id) ?? null : null;
   let source: "rules" | "claude" = "rules";
   if (aiKey() && cands.length) {
     const t = await claude(
-      `You explain staffing recommendations for a contractor. For each candidate write ONE short sentence (max 30 words) saying why they rank where they do. Use only facts in the JSON (trade, rating, reviews, years, jobs_done, free/conflicts, flags, reasons, the job's estimate and weight). Never invent numbers. A weight above 1.3 means a bigger-than-usual job where rating and experience matter more. Mention insurance problems for subs. Reply with only a JSON array of strings, same order as the candidates.`,
+      `You explain staffing recommendations for a contractor. For each candidate write ONE short sentence (max 30 words) saying why they rank where they do. Use only facts in the JSON (trade, rating, reviews, years, jobs_done, free/conflicts, flags, reasons, the job's estimate and weight). Never invent numbers. A weight above 1.3 means a bigger-than-usual job where rating and experience matter more. Mention insurance problems for subs. Candidates with kind "crew" are whole crews (size, members, the crew's trade, average rating): say so and whether they are free. Reply with only a JSON array of strings, same order as the candidates.`,
       JSON.stringify({ job, candidates: cands.map(({ explain: _e, ...c }) => c) }), 800, 25000);
     try {
       const a = JSON.parse(String(t ?? "").replace(/^```(json)?|```$/g, "").trim());
       if (Array.isArray(a) && a.length === cands.length && a.every((x) => typeof x === "string" && x.length > 5)) { cands.forEach((c, i) => { c.explain = plain(a[i]).slice(0, 300); }); source = "claude"; }
     } catch { /* keep the rules text */ }
   }
-  return { ok: true, job, candidates: cands, flagged: r.flagged ?? [], on_job: r.on_job ?? [], considered: r.considered ?? cands.length, source };
+  return { ok: true, job, candidates: cands, best_crew: bestCrew, flagged: r.flagged ?? [], on_job: r.on_job ?? [], considered: r.considered ?? cands.length, source };
 }
 
 // ------------------------------------------------------------------- ask ---
