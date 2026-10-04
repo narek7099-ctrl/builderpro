@@ -31129,7 +31129,7 @@ var _bpContacts=[];
     try{
       var parts=await Promise.all(kinds.map(one));
       if(parts.every(function(p){return p===null;})) throw new Error('down');
-      _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); });
+      _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); }); if(window.bpGhlSyncedIds){ var _gs=bpGhlSyncedIds(); _bpEvents=_bpEvents.filter(function(e){ return !(e.cal==='jobs'&&_gs[e.id]); }); }
       bpDrawCalendar();
     }catch(e){ var g=q('bpx-calgrid'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
   }
@@ -31874,7 +31874,7 @@ var _bpContacts=[];
     try{
       var parts=await Promise.all(kinds.map(one));
       if(parts.every(function(p){return p===null;})) throw new Error('down');
-      _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); });
+      _bpEvents=[]; parts.forEach(function(p){ if(p) _bpEvents=_bpEvents.concat(p); }); if(window.bpGhlSyncedIds){ var _gs=bpGhlSyncedIds(); _bpEvents=_bpEvents.filter(function(e){ return !(e.cal==='jobs'&&_gs[e.id]); }); }
       bpDrawCalendar();
     }catch(e){ var g=q('bpx-calgrid')||q('bpx-dayview'); if(g) g.innerHTML='<div class="bpx-cempty">Could not load your calendar right now.</div>'; }
   }
@@ -40023,6 +40023,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261013a"></script>
 <script src="portal/quickbooks.js?v=20261013b"></script>
+<script src="portal/ghlsync.js?v=20261013a"></script>
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261013a"></script>
