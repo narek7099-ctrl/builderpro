@@ -33826,8 +33826,39 @@ async function bpPjDraw(jobs){
     if(pts.length===1) _pjMap.setView(pts[0],12); else _pjMap.fitBounds(pts,{padding:[40,40],maxZoom:14});
   }
   if(window.bpCeoMapPins) bpCeoMapPins();
+  bpPjLive();
   if(!pts.length) el.insertAdjacentHTML('beforeend','<div class="pj-mapempty">No project addresses could be placed yet. Add a job-site address in a project’s details.</div>');
 }
+/* who is clocked in right now: a badge on each job pin, a dot where an off-site punch was made */
+async function bpPjLive(){
+  if(!_pjMap||!window.BP_LIVE||!window.BP_SB) return;
+  var map=_pjMap, r;
+  try{ r=await BP_SB.from('time_clock').select('employee_id,user_id,kind,at,job_id,on_site,lat,lng,distance_m,clocked_by_name')
+         .gte('at',new Date(Date.now()-36e5*20).toISOString()).order('at',{ascending:false}).limit(500); }catch(e){ return; }
+  if(map!==_pjMap||!r||!r.data) return;
+  var seen={}, open=[];
+  r.data.forEach(function(t){ var k=t.employee_id||t.user_id; if(!k||seen[k]) return; seen[k]=1; if(t.kind==='in') open.push(t); });
+  if(_pjLayer.live) map.removeLayer(_pjLayer.live);
+  _pjLayer.live=L.layerGroup().addTo(map);
+  var emps={}; ((window.bpEmpsActive&&bpEmpsActive())||[]).forEach(function(e){ emps[e.id]=e; });
+  var byJob={};
+  open.forEach(function(t){ (byJob[t.job_id||'']=byJob[t.job_id||'']||[]).push(t); });
+  Object.keys(byJob).forEach(function(jid){
+    var list=byJob[jid], mk=_pjLayer.mk[jid];
+    var rows=list.map(function(t){ var e=emps[t.employee_id], nm=e?e.name:'Crew member';
+      var where=t.on_site===true?'<span style="color:#15803d">● on site</span>':t.on_site===false?'<span style="color:#b45309">● '+(t.distance_m!=null?(t.distance_m>=1000?(t.distance_m/1609).toFixed(1)+' mi':Math.round(t.distance_m)+' m')+' away':'off site')+'</span>':'<span style="color:#6b7280">● no location</span>';
+      return '<div><b>'+bpEsc(nm)+'</b> · since '+new Date(t.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+' '+where+(t.clocked_by_name?'<span style="color:#6b7280"> · by '+bpEsc(t.clocked_by_name)+'</span>':'')+'</div>'; }).join('');
+    var onN=list.filter(function(t){return t.on_site===true;}).length;
+    if(mk){
+      L.marker(mk.getLatLng(),{icon:L.divIcon({className:'pj-live',html:'<span style="background:'+(onN===list.length?'#16a34a':'#d97706')+'">'+list.length+'</span>',iconSize:[22,22],iconAnchor:[-6,26]}),zIndexOffset:900})
+        .bindPopup('<b>Clocked in now</b><div style="margin-top:4px;font-size:12.5px;line-height:1.6">'+rows+'</div>').addTo(_pjLayer.live);
+    }
+    list.forEach(function(t){ if(t.on_site===false&&t.lat!=null&&t.lng!=null){ var e=emps[t.employee_id];
+      L.circleMarker([t.lat,t.lng],{radius:7,color:'#fff',weight:2,fillColor:'#d97706',fillOpacity:1})
+        .bindPopup('<b>'+bpEsc(e?e.name:'Crew member')+'</b><br>Clocked in here, off site').addTo(_pjLayer.live); } });
+  });
+}
+setInterval(function(){ if(_pjMap&&q('pjMap')&&document.visibilityState==='visible') bpPjLive(); },60000);
 window.bpPjPlan=async function(){
   var out=q('pj-plan'); out.innerHTML='<div class="bpx-mut" style="font-size:13px;margin-top:10px">Working it out…</div>';
   var jobs=bpJobsGet().filter(function(j){return _pjRoute.sel[j.id]&&(j.addr||'').trim();});
@@ -34263,7 +34294,7 @@ function bpProjCrewsSec(j){
       var ppl=window.bpCrewPeople?bpCrewPeople(c):[], tr=window.bpCrewTrade?bpCrewTrade(c):'', sel=c.id===cur;
       return '<div class="pjcw'+(sel?' on':'')+'" data-pjcw="'+bpEsc(c.id)+'" role="radio" aria-checked="'+sel+'" tabindex="0" style="--cc:'+c.color+'" onclick="bpProjCrewPick(\''+c.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bpProjCrewPick(\''+c.id+'\')}">'
         +'<i class="pjc-dot" style="background:'+c.color+'"></i>'
-        +'<div class="pjcw-t"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+(ppl.length?' · '+ppl.map(function(e){return bpEsc(e.name.split(' ')[0])+(c.lead===e.id&&window.bpCrewLeadBadge?bpCrewLeadBadge(c):'');}).join(', '):'')+'</small></div>'
+        +'<div class="pjcw-t"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+(ppl.length?' · '+ppl.map(function(e){return bpEsc(e.name.split(' ')[0]);}).join(', '):'')+'</small></div>'
         +(tr?'<span class="pjc-chip">'+bpEsc(tr)+'</span>':'')
         +(ppl.length&&window.bpCrewAvatars?bpCrewAvatars(ppl,c.color,3):'')
         +(sel?'<span class="pjcw-on"><span class="ms">check_circle</span>On this job</span><button type="button" class="bpx-linkbtn pjcw-un" onclick="event.stopPropagation();bpProjCrewPick(\'\')">Unassign</button>':'<span class="pjcw-pick">Assign</span>')
@@ -34329,7 +34360,7 @@ function bpProjCrewRender(){
     /* hours a crew lead clocked, and any the person disputed */
     var tags=(byL||disp)&&window.bpEntryTags?'<span style="display:block;margin-top:3px">'+(byL?bpByLeadTag(byL.clocked_by_name,byL.clocked_lat,byL.clocked_lng):'')+(disp?bpEntryTags({disputed_at:disp.disputed_at,dispute_note:disp.dispute_note}):'')+'</span>':'';
     if(cov) return '<div class="cw-row on pjcw-cov"><span class="ms" style="font-size:18px;color:'+crw.color+'">verified</span>'
-      +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'+(crw.lead===e.id&&window.bpCrewLeadBadge?bpCrewLeadBadge(crw):'')+(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
+      +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'+(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
       +'<span class="bpx-mut" style="display:block;font-size:11.5px">Covered by '+bpEsc(crw.name)+'</span>'+tags+'</span>'
       +(myH>0?'<span class="cw-h">'+myH+' h<span class="bpx-mut" style="display:block;font-size:11px">'+bpMoneyFmt(mine)+'</span></span>':'')+'</div>';
     return '<label class="cw-row'+(isOn?' on':'')+'">'
@@ -39909,7 +39940,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261001b">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20261011a">
+<link rel="stylesheet" href="portal/dash.css?v=20261012b">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261004a"></script>

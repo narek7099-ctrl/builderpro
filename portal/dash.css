@@ -691,6 +691,7 @@
 #bpx .pj-noaddr{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:13px;background:#fff8eb;border:1px solid #f7e2b8;border-radius:12px;padding:10px 12px}
 #bpx .pj-noaddr a{color:#2f6bff;cursor:pointer;text-decoration:underline}
 .pj-pin span{display:block;width:22px;height:22px;border-radius:50%;background:#2f6bff;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);box-sizing:border-box}
+.pj-live span{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font:700 11.5px/1 system-ui;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .pj-num span{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#2f6bff;color:#fff;font:700 12px/1 system-ui;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);box-sizing:border-box}
 .pj-num.shop span{background:#0b1220}
 /* Projects: schedule board + crews */
