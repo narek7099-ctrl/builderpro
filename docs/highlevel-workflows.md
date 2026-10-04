@@ -1,221 +1,223 @@
-# BuilderPro → HighLevel workflows: build sheet
+# BuilderPro project automations: HighLevel build instructions
 
-BuilderPro now sends events into HighLevel by **adding a tag** to the customer's
-contact, after filling in the **BP custom fields** with that job's details.
-Each workflow below starts on **Contact Tag Added** with one of these tags.
-BuilderPro removes and re-adds the tag each time, so a workflow fires every
-time the event happens, even for a returning customer.
+**For Claude on the owner's desktop (Claude Code + Chrome).** Read this whole file, then build
+everything in it. Keep a running log at the bottom of `ghl-build-log.md` (same style as the
+entries already there), then commit and push that file to the branch
+`claude/web-os-dashboard-design-ijwlrd`.
 
-Build them in the **BuilderPro Roofing** sub-account (location
-`aUs7E5m1gmLXoeIV3WM9`), test, then save them into the snapshot.
+## You are authorized: build without asking
 
-## The fields you can put in messages
+The owner has approved this whole build. **Do not stop to ask permission for each step.**
+Work straight through: create fields and tags, build, test and publish every workflow listed,
+file them in folders, and update the two snapshots. Only stop and ask if you hit:
 
-Insert these with the **{ }** custom-value picker under *Contact → BP …*, or type them:
+- something irreversible outside this list (deleting anything, changing billing, buying numbers),
+- a real blocker you can't work around (a login wall, a missing feature in the plan),
+- or anything that would message a real customer.
 
-| Field | Merge tag | Example |
+All the ground rules in `GHL-BUILD-SPEC.md` still apply. In particular:
+
+- **Only touch these two sub-accounts:** `BP OS Template` (`e3hrfIp2KFkCb2c34qbI`) and
+  `BP Enterprise Template` (`bjhV3CSImxxjN0HW23uJ`). Never change the demo account or any client account.
+- Never message real people. Test with a test contact named after the owner + "Test", on the owner's
+  own phone/email, or with no phone at all and read the execution logs.
+- Don't change the existing workflows 01–22. These are new workflows next to them.
+- Keep the Chrome window visible while you work (HighLevel pauses background tabs).
+
+## How these workflows get triggered
+
+BuilderPro's servers watch projects, crews, clock-ins, money and paperwork. When something
+happens, BuilderPro finds the customer's contact in the client's HighLevel account, fills in the
+**BP fields** below with that job's details, then **removes and re-adds a tag** such as
+`bp-job-completed`. Every workflow here starts on **Contact Tag Added** with one of those tags.
+BuilderPro already checks the client's plan before it sends anything, and skips customer
+messages for projects the owner has paused.
+
+## Which template gets what
+
+| Template sub-account | Build these | Count |
 |---|---|---|
-| BP Job Name | `{{contact.bp_job_name}}` | Roof Replacement |
-| BP Job Address | `{{contact.bp_job_address}}` | 6100 Vineland Ave, North Hollywood |
-| BP Job Amount | `{{contact.bp_job_amount}}` | $35,000 |
-| BP Balance Due | `{{contact.bp_balance_due}}` | $8,000 |
-| BP Start Date | `{{contact.bp_start_date}}` | Monday, October 5 |
-| BP Visit Date | `{{contact.bp_visit_date}}` | Tuesday, October 6 |
-| BP Crew Lead | `{{contact.bp_crew_lead}}` | Mark |
-| BP Portal Link | `{{contact.bp_portal_link}}` | the customer's private project page |
-| BP Days Overdue | `{{contact.bp_days_overdue}}` | 7 |
-| BP Company Name | `{{contact.bp_company_name}}` | Summit Roofing Co |
-| BP Event Note | `{{contact.bp_event_note}}` | (storm follow-up note) |
-| BP Phase Name | `{{contact.bp_phase_name}}` | Tear-off |
-| BP Next Phase | `{{contact.bp_next_phase}}` | Install |
-| BP Amount Paid | `{{contact.bp_amount_paid}}` | $4,000 |
-| BP Old Start Date | `{{contact.bp_old_start_date}}` | Monday, October 12 |
-| BP Inspection | `{{contact.bp_inspection}}` | Final (Building permit) |
-| BP Change Order | `{{contact.bp_change_order}}` | Add skylight · $850 |
-| BP Budget | `{{contact.bp_budget}}` | $1,000 |
-| BP Spent | `{{contact.bp_spent}}` | $1,450 |
+| **BP OS Template** (`e3hrfIp2KFkCb2c34qbI`) | 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 47 | 11 |
+| **BP Enterprise Template** (`bjhV3CSImxxjN0HW23uJ`) | every workflow in this file: 30–50 | 21 |
 
-Check the exact key in *Settings → Custom Fields* if the picker shows a different one.
-Fields can be empty (for example, no crew lead or no portal link yet); the
-messages below are written to read fine either way, or use an If/Else on the field.
+(Foundation gets none: it has no projects.) "51 Domino Reschedule" lives inside BuilderPro only;
+it reuses workflow 39, so there is nothing to build for it.
 
-## Settings for every workflow
-
-- **Allow re-entry: ON** (the same customer can have several jobs).
-- **Stop on response: ON** for anything that asks the customer something.
-- Send texts between **8:00 am and 8:00 pm** (Wait → "Wait until time window", or the workflow's time window setting).
-- Publish only after a test on the **bp system test** contact.
+Order: finish the OS template completely (fields, tags, workflows, tests), update its snapshot,
+then do the Enterprise template, then update its snapshot.
 
 ---
 
-## 1. Job scheduled — tag `bp-job-scheduled`
+## Step 1: custom fields (both templates)
 
-When a project gets its first day booked (or the start moves).
+*Settings → Custom Fields → Contact*, type **Single line text**, put them in a folder named
+**BuilderPro**. Names must be **exactly** these (BuilderPro looks them up by name):
 
-1. **Trigger:** Contact Tag Added → `bp-job-scheduled`
-2. **SMS:**
-   > Hi {{contact.first_name}}, this is {{contact.bp_company_name}}. Your {{contact.bp_job_name}} is booked to start {{contact.bp_start_date}}. You can follow every step here: {{contact.bp_portal_link}}
-3. **Email** (optional): same message, subject "Your {{contact.bp_job_name}} is scheduled".
+```
+BP Job Name        BP Job Address     BP Job Amount      BP Balance Due
+BP Start Date      BP Visit Date      BP Crew Lead       BP Portal Link
+BP Days Overdue    BP Company Name    BP Event Note      BP Phase Name
+BP Next Phase      BP Amount Paid     BP Old Start Date  BP Inspection
+BP Change Order    BP Budget          BP Spent
+```
 
-## 2. Visit tomorrow (appointment reminder) — tag `bp-visit-tomorrow`
+That's 19 fields. Their merge tags follow the name, e.g. `{{contact.bp_job_name}}`,
+`{{contact.bp_balance_due}}`. Check each key after creating it, and use whatever the picker shows.
 
-Fires the day before each booked work day.
+## Step 2: tags (both templates)
 
-1. **Trigger:** Contact Tag Added → `bp-visit-tomorrow`
-2. **Wait** until 5:00 pm (time window), so it lands the evening before.
-3. **SMS:**
-   > Reminder from {{contact.bp_company_name}}: our crew will be at {{contact.bp_job_address}} tomorrow, {{contact.bp_visit_date}}. Please keep the driveway clear and pets inside. Reply here with any questions.
+Create these tags so the triggers can be picked (Enterprise needs all; OS needs the first 11):
 
-## 3. Crew arrived (on site) — tag `bp-crew-arrived`
+```
+OS + Enterprise: bp-job-scheduled  bp-visit-tomorrow  bp-crew-arrived  bp-job-completed
+                 bp-payment-overdue  bp-contract-signed  bp-phase-done  bp-schedule-moved
+                 bp-payment-received  bp-change-order-waiting  bp-crew-no-show
+Enterprise only: bp-job-anniversary  bp-storm-followup  bp-inspection-scheduled  bp-warranty
+                 bp-message-unanswered  bp-over-budget  bp-sub-insurance-expiring
+                 bp-weather-risk  bp-materials-not-ready  bp-job-stalled
+Used by steps:   past-customer  warranty-sent
+```
 
-First clock-in on the job that day.
+## Step 3: folders
 
-1. **Trigger:** Contact Tag Added → `bp-crew-arrived`
-2. **SMS:**
-   > Good morning {{contact.first_name}}! {{contact.bp_crew_lead}} and the {{contact.bp_company_name}} crew just arrived and are starting on your {{contact.bp_job_name}}. Photos and progress: {{contact.bp_portal_link}}
-3. **If/Else** (optional): if BP Crew Lead is empty, use "Our crew just arrived…".
+Two new workflow folders: **6 Project automations** and **7 Alerts to you**. Name each
+workflow with its number, exactly as below, e.g. "30 Job Scheduled".
 
-## 4. Job completed → review → referral — tag `bp-job-completed`
+## Settings for every workflow below
 
-1. **Trigger:** Contact Tag Added → `bp-job-completed`
-2. **SMS (right away):**
-   > Your {{contact.bp_job_name}} is complete! Thank you for choosing {{contact.bp_company_name}}. Final photos and documents are here: {{contact.bp_portal_link}}
-3. **Wait** 2 days.
-4. **Send Review Request** (HighLevel's review action), or SMS:
-   > Hi {{contact.first_name}}, would you mind leaving us a quick review? It really helps a small business: [review link]
-5. **Wait** 30 days.
-6. **SMS:**
-   > Know a neighbor who needs work done? Send them our way and we'll take care of them like we did for you. Just reply with their name and number.
-7. **Add tag** `past-customer` (useful for campaigns).
-
-## 5. Payment overdue — tag `bp-payment-overdue`
-
-Fires 3, 7 and 14 days after a job is marked done while a balance is still owed.
-
-1. **Trigger:** Contact Tag Added → `bp-payment-overdue`
-2. **If/Else** on BP Days Overdue:
-   - **3** → SMS (friendly):
-     > Hi {{contact.first_name}}, a quick reminder that {{contact.bp_balance_due}} is still open on your {{contact.bp_job_name}}. You can pay here: [invoice link]. Thank you!
-   - **7** → SMS + Email (firmer):
-     > Hi {{contact.first_name}}, your balance of {{contact.bp_balance_due}} for {{contact.bp_job_name}} is now a week past due. Please let us know if anything is holding it up.
-   - **14** → **Internal notification** to the owner ("{{contact.name}} owes {{contact.bp_balance_due}}, 14 days") + **Create task** "Call about payment".
-
-## 6. Yearly check-up — tag `bp-job-anniversary`
-
-Fires once a year on the date a job was completed.
-
-1. **Trigger:** Contact Tag Added → `bp-job-anniversary`
-2. **SMS:**
-   > Hi {{contact.first_name}}, it's been a year since we finished your {{contact.bp_job_name}}. Want a free check-up to make sure everything is holding up? Reply YES and we'll book it.
-3. **If replied YES** (or on reply) → **Create opportunity** in the pipeline / book in the Inspections calendar.
-
-## 7. Storm follow-up — tag `bp-storm-followup`
-
-The owner sends this from BuilderPro for an area (ZIP codes or a city); it tags
-past customers whose job address is in that area.
-
-1. **Trigger:** Contact Tag Added → `bp-storm-followup`
-2. **SMS:**
-   > Hi {{contact.first_name}}, {{contact.bp_company_name}} here. After the recent storm we're offering free roof checks for our past customers. Want us to swing by? Reply YES. {{contact.bp_event_note}}
-3. **On reply YES** → create opportunity / task "Book storm check".
+- Trigger: **Contact Tag Added** → the tag shown. Filter: tag is that tag only.
+- **Allow re-entry: ON** (customers have several jobs; BuilderPro re-adds tags on purpose).
+- Customer messages: **contact time zone, 8:00 am – 8:00 pm**.
+- **Exclude** contacts tagged `system-test` or `do-not-contact` from customer messages (If/Else at the top → End).
+- Customer copy uses custom values (`{{custom_values.business_name}}`), never "BuilderPro".
+- Read the BP fields at the start: avoid long waits before a message that uses them (a second
+  event for the same customer rewrites the fields).
+- "Alert to you" = **Internal Notification** → in-app to all users (same as the existing workflows);
+  add SMS/email to `{{custom_values.owner_phone}}` / `{{custom_values.owner_email}}` where noted.
 
 ---
 
-# More customer updates
+# Folder 6: Project automations
 
-## 8. Contract signed → welcome — tag `bp-contract-signed`
+## 30 Job Scheduled · tag `bp-job-scheduled` · OS + Enterprise
+1. SMS: *Hi {{contact.first_name}}, this is {{custom_values.business_name}}. Your {{contact.bp_job_name}} is booked to start {{contact.bp_start_date}}. You can follow every step here: {{contact.bp_portal_link}}*
+2. Email: the same message, subject *Your {{contact.bp_job_name}} is scheduled*.
 
-1. **Trigger:** Contact Tag Added → `bp-contract-signed`
-2. **SMS:**
-   > Thank you, {{contact.first_name}}! Your contract with {{contact.bp_company_name}} is signed. Here's what happens next: we pull permits, order materials, and lock in your crew day. Everything is tracked here: {{contact.bp_portal_link}}
-3. **If/Else** BP Start Date is set → SMS: "You're on the schedule for {{contact.bp_start_date}}."
-4. **Email** (optional): the same welcome, with what to expect on the day.
+## 31 Visit Tomorrow Reminder · tag `bp-visit-tomorrow` · OS + Enterprise
+1. Wait until 5:00 pm (time-of-day wait), so it lands the evening before.
+2. SMS: *Reminder from {{custom_values.business_name}}: our crew will be at {{contact.bp_job_address}} tomorrow, {{contact.bp_visit_date}}. Please keep the driveway clear and pets inside. Reply here with any questions.*
 
-## 9. Phase finished → progress update — tag `bp-phase-done`
+## 32 Crew Arrived · tag `bp-crew-arrived` · OS + Enterprise
+1. If/Else **BP Crew Lead is not empty**:
+   - Yes → SMS: *Good morning {{contact.first_name}}! {{contact.bp_crew_lead}} and the {{custom_values.business_name}} crew just arrived and are starting on your {{contact.bp_job_name}}. Photos and progress: {{contact.bp_portal_link}}*
+   - No → SMS: *Good morning {{contact.first_name}}! Our crew just arrived and is starting on your {{contact.bp_job_name}}. Photos and progress: {{contact.bp_portal_link}}*
 
-1. **Trigger:** Contact Tag Added → `bp-phase-done`
-2. **SMS:**
-   > Progress update on your {{contact.bp_job_name}}: {{contact.bp_phase_name}} is done ✅ Next up: {{contact.bp_next_phase}}. Photos: {{contact.bp_portal_link}}
-3. **If/Else** BP Next Phase is empty → SMS: "{{contact.bp_phase_name}} is done ✅ That was the last step; we'll be in touch to wrap up."
+## 33 Job Completed → Review → Referral · tag `bp-job-completed` · OS + Enterprise
+Stop on response: ON.
+1. SMS: *Your {{contact.bp_job_name}} is complete! Thank you for choosing {{custom_values.business_name}}. Final photos and documents: {{contact.bp_portal_link}}*
+2. Wait 2 days.
+3. **Add tag `review-requested`** (this starts the existing 11 Review Request, so the customer gets exactly one review request; don't send a second one here).
+4. Wait 30 days.
+5. SMS: *Know a neighbor who needs work done? Send them our way and we'll take care of them like we did for you. Just reply with their name and number.*
+6. Add tag `past-customer`.
 
-## 10. Schedule pushed back → heads-up — tag `bp-schedule-moved`
+## 34 Payment Overdue · tag `bp-payment-overdue` · OS + Enterprise
+1. If the contact has tag `final-sent` → End (the existing 16 Final Invoice Chase already reminds them; no double reminders).
+2. If/Else on **BP Days Overdue**:
+   - `3` → SMS: *Hi {{contact.first_name}}, a quick reminder that {{contact.bp_balance_due}} is still open on your {{contact.bp_job_name}}. Thank you!*
+   - `7` → SMS: *Hi {{contact.first_name}}, your balance of {{contact.bp_balance_due}} for {{contact.bp_job_name}} is now a week past due. Please let us know if anything is holding it up.* + the same by Email.
+   - `14` → Alert to you: *{{contact.name}} owes {{contact.bp_balance_due}} on {{contact.bp_job_name}}, 14 days. Call them.* + Create task *Call about payment*.
 
-1. **Trigger:** Contact Tag Added → `bp-schedule-moved`
-2. **SMS:**
-   > Heads-up from {{contact.bp_company_name}}: your {{contact.bp_job_name}} start has moved from {{contact.bp_old_start_date}} to {{contact.bp_start_date}}. Sorry for the change, and reply here with any questions.
-3. **Internal notification** (optional): "Told {{contact.name}} about the new date."
+## 35 Yearly Check-up · tag `bp-job-anniversary` · Enterprise
+Stop on response: ON.
+1. SMS: *Hi {{contact.first_name}}, it's been a year since we finished your {{contact.bp_job_name}}. Want a free check-up to make sure everything is holding up? Reply YES and we'll book it.*
+2. Wait for reply, up to 3 days. If the reply contains "yes" → Create/update opportunity Jobs → New Lead + Alert to you *Book the check-up for {{contact.name}}*. Else → End.
 
-## 11. Payment received → thank-you — tag `bp-payment-received`
+## 36 Storm Follow-up · tag `bp-storm-followup` · Enterprise
+(The owner sends this from BuilderPro → Leads → Automations → 36, for an area.) Stop on response: ON.
+1. SMS: *Hi {{contact.first_name}}, {{custom_values.business_name}} here. After the recent storm we're offering free roof checks for our past customers. Want us to swing by? Reply YES. {{contact.bp_event_note}}*
+2. Wait for reply, up to 2 days. "yes" → opportunity Jobs → New Lead + Alert to you *Book the storm check for {{contact.name}}*. Else → End.
 
-1. **Trigger:** Contact Tag Added → `bp-payment-received`
-2. **SMS:**
-   > Thank you! We received {{contact.bp_amount_paid}} for your {{contact.bp_job_name}}. Remaining balance: {{contact.bp_balance_due}}.
-3. **If/Else** BP Balance Due is "$0" → SMS: "Your {{contact.bp_job_name}} is paid in full. Thank you!"
+## 37 Contract Signed → Welcome · tag `bp-contract-signed` · OS + Enterprise
+1. SMS: *Thank you, {{contact.first_name}}! Your contract with {{custom_values.business_name}} is signed. Next: we pull permits, order materials and lock in your crew day. Everything is tracked here: {{contact.bp_portal_link}}*
+2. If/Else **BP Start Date is not empty** → SMS: *You're on the schedule for {{contact.bp_start_date}}.* Else → End.
 
-## 12. Change order waiting → reminder — tag `bp-change-order-waiting`
+## 38 Phase Done → Progress Update · tag `bp-phase-done` · OS + Enterprise
+1. If/Else **BP Next Phase is not empty**:
+   - Yes → SMS: *Progress update on your {{contact.bp_job_name}}: {{contact.bp_phase_name}} is done ✅ Next up: {{contact.bp_next_phase}}. Photos: {{contact.bp_portal_link}}*
+   - No → SMS: *{{contact.bp_phase_name}} is done ✅ That was the last step on your {{contact.bp_job_name}}; we'll be in touch to wrap up.*
 
-Fires when a change order is still unsigned after 2 days, then again after 5.
+## 39 Schedule Pushed Back · tag `bp-schedule-moved` · OS + Enterprise
+1. SMS: *Heads-up from {{custom_values.business_name}}: your {{contact.bp_job_name}} start has moved from {{contact.bp_old_start_date}} to {{contact.bp_start_date}}. Sorry for the change, and reply here with any questions.*
+2. Alert to you: *Told {{contact.name}} about the new start date ({{contact.bp_start_date}}).*
 
-1. **Trigger:** Contact Tag Added → `bp-change-order-waiting`
-2. **If/Else** on BP Days Overdue:
-   - **2** → SMS:
-     > Hi {{contact.first_name}}, a change to your project is waiting for your OK: {{contact.bp_change_order}}. You can review and sign it here: {{contact.bp_portal_link}}
-   - **5** → **Internal notification** to the owner: "{{contact.name}} hasn't signed {{contact.bp_change_order}} (5 days). Give them a call."
+## 40 Payment Received → Thank You · tag `bp-payment-received` · OS + Enterprise
+1. If/Else **BP Balance Due is `$0`**:
+   - Yes → SMS: *Your {{contact.bp_job_name}} is paid in full. Thank you, {{contact.first_name}}!*
+   - No → SMS: *Thank you! We received {{contact.bp_amount_paid}} for your {{contact.bp_job_name}}. Remaining balance: {{contact.bp_balance_due}}.*
 
-## 13. Inspection scheduled → heads-up — tag `bp-inspection-scheduled`
+## 41 Change Order Waiting · tag `bp-change-order-waiting` · OS + Enterprise
+1. If/Else on **BP Days Overdue**:
+   - `2` → SMS: *Hi {{contact.first_name}}, a change to your project is waiting for your OK: {{contact.bp_change_order}}. You can review and sign it here: {{contact.bp_portal_link}}*
+   - `5` → Alert to you: *{{contact.name}} hasn't signed {{contact.bp_change_order}} (5 days). Give them a call.*
 
-1. **Trigger:** Contact Tag Added → `bp-inspection-scheduled`
-2. **SMS:**
-   > Your {{contact.bp_inspection}} inspection is set for {{contact.bp_visit_date}}. The inspector may need access to the property; we'll let you know if you need to be home.
+## 42 Inspection Scheduled · tag `bp-inspection-scheduled` · Enterprise
+1. SMS: *Your {{contact.bp_inspection}} inspection is set for {{contact.bp_visit_date}}. The inspector may need access to the property; we'll let you know if you need to be home.*
 
-## 14. Warranty → after completion — tag `bp-warranty`
+## 43 Warranty Info · tag `bp-warranty` · Enterprise
+1. SMS + Email: *Hi {{contact.first_name}}, your {{contact.bp_job_name}} is covered by our workmanship warranty. Your documents are saved here: {{contact.bp_portal_link}}. If anything ever comes up, just text this number.*
+2. Add tag `warranty-sent`.
 
-Fires about a week after the job is done.
+# Folder 7: Alerts to you
 
-1. **Trigger:** Contact Tag Added → `bp-warranty`
-2. **SMS + Email:**
-   > Hi {{contact.first_name}}, your {{contact.bp_job_name}} is covered by our workmanship warranty. Your documents are saved here: {{contact.bp_portal_link}}. If anything ever comes up, just text this number.
-3. **Add tag** `warranty-sent`.
+No time window on these (owner alerts go out right away). No customer messages, except 46,
+which texts the **subcontractor**.
+
+## 44 Customer Message Unanswered · tag `bp-message-unanswered` · Enterprise
+1. Alert to you (in-app + SMS to owner): *{{contact.name}} messaged in the project portal 4+ hours ago and hasn't had a reply: "{{contact.bp_event_note}}"*
+
+## 45 Job Over Budget · tag `bp-over-budget` · Enterprise
+1. Alert to you: *{{contact.bp_job_name}} for {{contact.name}} is over budget: {{contact.bp_spent}} spent against {{contact.bp_budget}}.*
+
+## 46 Sub Insurance Expiring · tag `bp-sub-insurance-expiring` · Enterprise
+This tag lands on the **subcontractor's** contact.
+1. SMS + Email to the contact: *Hi {{contact.first_name}}, this is {{custom_values.business_name}}. {{contact.bp_event_note}}. Please upload a current copy in your BuilderPro sub portal so we can keep sending you work.* (Contact time zone 8am–8pm on this one.)
+2. Alert to you: *{{contact.name}}: {{contact.bp_event_note}}.*
+
+## 47 Crew No-Show · tag `bp-crew-no-show` · OS + Enterprise
+(BuilderPro also alerts the crew lead in the crew app.)
+1. Alert to you (in-app + SMS to owner): *Nobody has clocked in on {{contact.bp_job_name}} for {{contact.name}}. {{contact.bp_event_note}}.*
+
+## 48 Weather Delay Warning · tag `bp-weather-risk` · Enterprise
+1. Alert to you (in-app + SMS to owner): *Weather risk tomorrow on {{contact.bp_job_name}} ({{contact.bp_job_address}}): {{contact.bp_event_note}}. Reschedule? Moving the date in BuilderPro texts the customer automatically.*
+
+## 49 Materials Not Ready · tag `bp-materials-not-ready` · Enterprise
+1. Alert to you: *{{contact.bp_job_name}} starts {{contact.bp_visit_date}} and its order list hasn't been sent to the supplier ({{contact.bp_event_note}}).*
+
+## 50 Stuck-Job Watchdog · tag `bp-job-stalled` · Enterprise
+1. Alert to you: *Stuck job: {{contact.bp_job_name}} for {{contact.name}}. {{contact.bp_event_note}}*
+   (BuilderPro writes the reason and the next step into BP Event Note, e.g. "Contract signed 3+ days ago and the job has no start date. Next: book the crew.")
 
 ---
 
-# Alerts to you (internal)
+## Step 4: test every workflow
 
-These don't text the customer; they notify you or your team. Use HighLevel's
-**Internal Notification** action (SMS / email / in-app to the owner or assigned user).
+For each workflow, on the test contact: fill the BP fields it uses with sample values (or leave
+some empty to test the If/Else), remove the tag if present, add it, open the workflow's
+**Execution logs** and check every step ran and every merge tag rendered. Quiet-hours steps
+showing "Waiting" are a pass. Log each result (PASS / what you fixed) in `ghl-build-log.md`.
 
-## 15. Customer message unanswered — tag `bp-message-unanswered`
+## Step 5: update the snapshots
 
-1. **Trigger:** Contact Tag Added → `bp-message-unanswered`
-2. **Internal notification** to the owner:
-   > {{contact.name}} messaged in the project portal 4+ hours ago and hasn't had a reply: "{{contact.bp_event_note}}"
+- After the OS template passes: update snapshot **BuilderPro OS** (`cdRGIx2azgolhnDj257c`)
+  from `BP OS Template`, all assets.
+- After the Enterprise template passes: update snapshot **BuilderPro Enterprise**
+  (`cWoCOr2RJDfc3x3FxnQm`) from `BP Enterprise Template`, all assets.
+- If HighLevel makes a new snapshot instead of updating, write the new IDs in the log so the
+  `GHL_SNAPSHOT_OS` / `GHL_SNAPSHOT_ENTERPRISE` secrets can be updated.
 
-## 16. Job over budget — tag `bp-over-budget`
+## Step 6: finish
 
-1. **Trigger:** Contact Tag Added → `bp-over-budget`
-2. **Internal notification** to the owner:
-   > {{contact.bp_job_name}} for {{contact.name}} is over budget: {{contact.bp_spent}} spent against {{contact.bp_budget}}.
-
-## 17. Sub insurance expiring → text the sub — tag `bp-sub-insurance-expiring`
-
-This one is tagged on the **subcontractor's** contact, not a customer.
-
-1. **Trigger:** Contact Tag Added → `bp-sub-insurance-expiring`
-2. **SMS / Email to the contact (the sub):**
-   > Hi {{contact.first_name}}, this is {{contact.bp_company_name}}. {{contact.bp_event_note}}. Please upload a current copy in your BuilderPro sub portal so we can keep sending you work.
-3. **Internal notification** to the owner: "{{contact.name}}: {{contact.bp_event_note}}".
-
----
-
-## Good to know
-
-- One contact can get several events close together (for example a payment and a
-  phase on the same day). Each event rewrites the BP fields, so read them **at the
-  start** of the workflow; avoid long waits before a message that uses them.
-- Example/demo projects never send anything.
-
-## Testing a workflow
-
-The **bp system test** contact already carries the BP fields. To fire a
-workflow without touching real customers: open that contact, remove the
-`bp-…` tag, add it again, and watch the workflow's *Execution logs*.
+Append the log, commit `ghl-build-log.md` with a message like "GHL: project automations 30–50
+built in OS + Enterprise templates", push to `claude/web-os-dashboard-design-ijwlrd`, and tell
+the owner: what was built where, test results, snapshot IDs, and anything you couldn't do.
