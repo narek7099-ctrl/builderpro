@@ -30,7 +30,14 @@ const TAGS: Record<string, string> = {
   payment_received: "bp-payment-received", change_order_waiting: "bp-change-order-waiting", inspection_scheduled: "bp-inspection-scheduled",
   warranty_followup: "bp-warranty", message_unanswered: "bp-message-unanswered", over_budget: "bp-over-budget",
   sub_insurance_expiring: "bp-sub-insurance-expiring",
+  crew_no_show: "bp-crew-no-show", materials_not_ready: "bp-materials-not-ready", job_stalled: "bp-job-stalled", weather_risk: "bp-weather-risk",
 };
+/* which plan gets which automation (Foundation gets none: it has no projects) */
+const OS_KINDS = ["job_scheduled", "visit_tomorrow", "crew_arrived", "job_completed", "payment_overdue", "payment_received",
+  "contract_signed", "phase_done", "schedule_moved", "change_order_waiting", "crew_no_show"];
+const allowed = (plan: string, kind: string) => plan === "enterprise" ? !!TAGS[kind] : plan === "os" ? OS_KINDS.includes(kind) : false;
+/* alerts to the owner still go out when a project's customer messages are paused */
+const INTERNAL = ["message_unanswered", "over_budget", "crew_no_show", "materials_not_ready", "job_stalled", "weather_risk", "sub_insurance_expiring"];
 const FIELDS = ["BP Job Name", "BP Job Address", "BP Job Amount", "BP Balance Due", "BP Start Date", "BP Visit Date",
   "BP Crew Lead", "BP Portal Link", "BP Days Overdue", "BP Company Name", "BP Event Note",
   "BP Phase Name", "BP Next Phase", "BP Amount Paid", "BP Old Start Date", "BP Inspection", "BP Change Order", "BP Budget", "BP Spent"];
@@ -114,7 +121,9 @@ async function details(owner: string, j: any, ev: any) {
     "BP Start Date": dates[0] ? pretty(dates[0]) : "", "BP Visit Date": ev.data?.date ? pretty(ev.data.date) : "",
     "BP Crew Lead": String(lead || "").split(" ")[0], "BP Portal Link": portal,
     "BP Days Overdue": ev.data?.days ? String(ev.data.days) : "", "BP Company Name": company,
-    "BP Event Note": String(ev.data?.note || (ev.data?.doc ? `Your ${ev.data.doc} expires ${pretty(ev.data.date)}` : "")),
+    "BP Event Note": String(ev.data?.note || (ev.data?.doc ? `Your ${ev.data.doc} expires ${pretty(ev.data.date)}` : "")
+      || (ev.kind === "crew_no_show" ? `Booked for ${ev.data?.start || "today"}, nobody has clocked in` : "")
+      || (ev.kind === "materials_not_ready" ? `${ev.data?.items || "The"} item order list is still a draft` : "")),
     "BP Phase Name": String(ev.data?.phase || ""), "BP Next Phase": String(ev.data?.next || ""),
     "BP Amount Paid": ev.data?.amount != null && ev.kind === "payment_received" ? money(+ev.data.amount) : "",
     "BP Old Start Date": ev.data?.old ? pretty(ev.data.old) : "",
@@ -124,30 +133,73 @@ async function details(owner: string, j: any, ev: any) {
   };
 }
 
+/* ---------- weather: tomorrow's booked jobs, checked once each, 3pm-9pm LA ---------- */
+async function weather() {
+  const la = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+  if (la.getHours() < 15 || la.getHours() > 21) return 0;
+  const t = new Date(la.getTime() + 864e5), tom = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  const fin = await rest(`portal_finance?select=owner,jobs`);
+  const accts: Record<string, any> = {}; let n = 0;
+  for (const row of fin || []) {
+    const jobs = (row.jobs || []).filter((j: any) => j && j.status === "active" && !j.sample && (j.sched?.dates || []).includes(tom)
+      && j.geo && isFinite(+j.geo.lat) && isFinite(+j.geo.lng));
+    if (!jobs.length) continue;
+    if ((await accountOf(row.owner, accts)).plan !== "enterprise") continue;
+    const done = await rest(`ghl_events?owner=eq.${row.owner}&dedupe=like.wx*${tom}&select=dedupe`).catch(() => []);
+    const seen = new Set((done || []).map((x: any) => x.dedupe));
+    for (const j of jobs) {
+      const key = `wx:${j.id}:${tom}`; if (seen.has(key)) continue;
+      let pp = 0, gust = 0;
+      try {
+        const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${+j.geo.lat}&longitude=${+j.geo.lng}&daily=precipitation_probability_max,wind_gusts_10m_max&wind_speed_unit=mph&timezone=America%2FLos_Angeles&start_date=${tom}&end_date=${tom}`)).json();
+        pp = +(w?.daily?.precipitation_probability_max?.[0] || 0); gust = +(w?.daily?.wind_gusts_10m_max?.[0] || 0);
+      } catch (_) { continue; }
+      const risky = pp >= 60 || gust >= 40;
+      const note = [pp >= 60 ? `${Math.round(pp)}% chance of rain` : "", gust >= 40 ? `gusts to ${Math.round(gust)} mph` : ""].filter(Boolean).join(", ");
+      /* a checked-and-fine job is stored as skipped, so it isn't fetched again tonight */
+      await rest(`ghl_events?on_conflict=owner,dedupe`, { method: "POST", headers: { Prefer: "return=minimal,resolution=ignore-duplicates" },
+        body: JSON.stringify({ owner: row.owner, kind: "weather_risk", job_id: j.id, dedupe: key, status: risky ? "pending" : "skipped",
+          error: risky ? null : `Forecast fine (${Math.round(pp)}% rain, ${Math.round(gust)} mph gusts)`, data: { date: tom, note, rain: pp, gust } }) }).catch(() => {});
+      if (risky) n++;
+    }
+  }
+  return n;
+}
+
 /* ---------- deliver ---------- */
+async function accountOf(owner: string, cache: Record<string, any>): Promise<{ plan: string; loc: string }> {
+  if (cache[owner]) return cache[owner];
+  let plan = "", loc = "";
+  try { const a = await rest(`accounts?user_id=eq.${owner}&select=plan,ghl_location_id`); plan = String(a?.[0]?.plan || "").toLowerCase(); loc = a?.[0]?.ghl_location_id || ""; } catch (_) { /* none */ }
+  const c = await rest(`ai_config?key=eq.ghl_events_owner&select=value`).catch(() => []);
+  const isHouse = !!(c?.[0]?.value && String(c[0].value) === owner);   // the BuilderPro house account runs everything
+  if (isHouse) plan = "enterprise";
+  if (plan !== "os" && plan !== "enterprise" && plan !== "foundation") plan = "os";   // trial: the OS set
+  if (isHouse) loc = DEF_LOC;
+  if (!loc) loc = await locationOf(owner, {});
+  return (cache[owner] = { plan, loc });
+}
 async function locationOf(owner: string, cache: Record<string, string>): Promise<string> {
   if (cache[owner] !== undefined) return cache[owner];
   let loc = "";
   try { const b = await rest(`ai_brain?owner=eq.${owner}&ghl_location_id=neq.&select=ghl_location_id&limit=1`); loc = b?.[0]?.ghl_location_id || ""; } catch (_) { /* none */ }
-  if (!loc) {
-    const c = await rest(`ai_config?key=eq.ghl_events_owner&select=value`).catch(() => []);
-    if (c?.[0]?.value && String(c[0].value) === owner) loc = DEF_LOC;
-  }
   return (cache[owner] = loc);
 }
 async function deliver() {
   const rows = await rest(`ghl_events?status=eq.pending&order=created_at.asc&limit=40&select=*`);
-  const locs: Record<string, string> = {}, jobsOf: Record<string, any[]> = {};
+  const accts: Record<string, any> = {}, jobsOf: Record<string, any[]> = {};
   let sent = 0, failed = 0, skipped = 0;
   for (const ev of rows || []) {
     const patch = (p: any) => rest(`ghl_events?id=eq.${ev.id}`, { method: "PATCH", body: JSON.stringify(p) }).catch(() => {});
-    const loc = await locationOf(ev.owner, locs);
+    const acct = await accountOf(ev.owner, accts), loc = acct.loc;
+    if (!allowed(acct.plan, ev.kind)) { await patch({ status: "skipped", error: "Not on your plan (" + acct.plan + ")" }); skipped++; continue; }
     if (!loc || !tokenFor(loc)) { await patch({ status: "skipped", error: "No HighLevel account connected" }); skipped++; continue; }
     try {
       if (!jobsOf[ev.owner]) { const f = await rest(`portal_finance?owner=eq.${ev.owner}&select=jobs`); jobsOf[ev.owner] = (f?.[0]?.jobs) || []; }
       const sub = ev.data?.sub;   // sub paperwork goes to the sub, not a customer
       const j = sub ? null : jobsOf[ev.owner].find((x: any) => x && x.id === ev.job_id);
       if (!sub && !j) { await patch({ status: "skipped", error: "Project no longer exists" }); skipped++; continue; }
+      if (j && j.autoPause && !INTERNAL.includes(ev.kind)) { await patch({ status: "skipped", error: "Automations paused for this project" }); skipped++; continue; }
       const cid = await contactFor(loc, sub ? { name: sub.name || sub.company, phone: sub.phone, email: sub.email } : j);
       if (!cid) throw new Error("No contact");
       const map = await fields(loc, true);
@@ -187,6 +239,7 @@ Deno.serve(async (req) => {
       return json({ ok: true, tags: c.tags || [], fields: (c.customFields || []).filter((f: any) => byId[f.id]).map((f: any) => ({ [byId[f.id]]: f.value })) });
     }
     if (body.scan !== false) await rpc("bp_ghl_scan_all").catch((e) => console.error("scan", e.message));
+    if (body.scan !== false) await weather().catch((e) => console.error("weather", e.message));
     return json({ ok: true, ...(await deliver()) });
   } catch (e) {
     console.error("ghl-events", (e as Error).message);

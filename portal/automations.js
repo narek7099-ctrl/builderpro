@@ -172,92 +172,122 @@
     { id: '22', name: 'Priority Support Request', folder: 5, from: 2, v: [v(2, { triggers: [['tag', 'Tag added: ' + tg('priority-support')]], steps: [['alert', 'Email to BuilderPro support with your business and the contact', 'Internal notification · Email'], ['tagx', tg('priority-support')], E] })] }
     ,
     /* ---------- project automations: BuilderPro sends the event (tag + BP fields), the CRM workflow does the messaging ---------- */
-    { id: '30', kind: 'job_scheduled', name: 'Job Scheduled', folder: 6, from: 0, v: [v(0, {
+    { id: '30', kind: 'job_scheduled', name: 'Job Scheduled', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-job-scheduled') + ' (a project gets its first day booked, or the start moves)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'Your {{contact.bp_job_name}} is booked to start {{contact.bp_start_date}}. Follow along: {{contact.bp_portal_link}}'], ['email', 'Same message, subject “Your {{contact.bp_job_name}} is scheduled”'], E] })] },
-    { id: '31', kind: 'visit_tomorrow', name: 'Visit Tomorrow Reminder', folder: 6, from: 0, v: [v(0, {
+    { id: '31', kind: 'visit_tomorrow', name: 'Visit Tomorrow Reminder', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-visit-tomorrow') + ' (the day before each booked work day)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [['wait', 'Until 5:00 pm'], ['sms', 'Our crew will be at {{contact.bp_job_address}} tomorrow, {{contact.bp_visit_date}}. Please keep the driveway clear.'], E] })] },
-    { id: '32', kind: 'crew_arrived', name: 'Crew Arrived', folder: 6, from: 0, v: [v(0, {
+    { id: '32', kind: 'crew_arrived', name: 'Crew Arrived', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-crew-arrived') + ' (first clock-in on the job that day)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [{ 'if': 'Crew lead known?', paths: [
         { label: 'Yes', when: 'BP Crew Lead is set', steps: [['sms', '{{contact.bp_crew_lead}} and the crew just arrived and are starting on your {{contact.bp_job_name}}. {{contact.bp_portal_link}}'], E] },
         { label: 'No', steps: [['sms', 'Our crew just arrived and is starting on your {{contact.bp_job_name}}. {{contact.bp_portal_link}}'], E] }
       ] }] })] },
-    { id: '33', kind: 'job_completed', name: 'Job Completed → Review → Referral', folder: 6, from: 0, v: [v(0, {
+    { id: '33', kind: 'job_completed', name: 'Job Completed → Review → Referral', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-job-completed') + ' (the project is marked done)']],
       settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
-      steps: [['sms', 'Your {{contact.bp_job_name}} is complete! Final photos and documents: {{contact.bp_portal_link}}'], ['wait', '2 days'], ['sms', 'Would you leave us a quick review? {{custom_values.google_review_link}}'], ['wait', '30 days'], ['sms', 'Know a neighbor who needs work done? Send them our way.'], ['tag', tg('past-customer')], E] })] },
-    { id: '34', kind: 'payment_overdue', name: 'Payment Overdue', folder: 6, from: 0, v: [v(0, {
+      steps: [['sms', 'Your {{contact.bp_job_name}} is complete! Final photos and documents: {{contact.bp_portal_link}}'], ['wait', '2 days'], ['tag', tg('review-requested') + ' → 11 Review Request (one review ask, not two)'], ['wait', '30 days'], ['sms', 'Know a neighbor who needs work done? Send them our way.'], ['tag', tg('past-customer')], E] })] },
+    { id: '34', kind: 'payment_overdue', name: 'Payment Overdue', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-payment-overdue') + ' (3, 7 and 14 days after done with a balance)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [{ 'if': 'BP Days Overdue', paths: [
+        { label: 'Invoice chase running', when: 'has tag final-sent (16 already reminds them)', steps: [E] },
         { label: '3 days', steps: [['sms', 'A quick reminder that {{contact.bp_balance_due}} is still open on your {{contact.bp_job_name}}.'], E] },
         { label: '7 days', steps: [['sms', 'Your balance of {{contact.bp_balance_due}} is a week past due. Anything holding it up?'], ['email', 'Same reminder by email'], E] },
         { label: '14 days', steps: [['alert', '{{contact.name}} owes {{contact.bp_balance_due}}, 14 days. Call them.'], E] }
       ] }] })] },
-    { id: '35', kind: 'job_anniversary', name: 'Yearly Check-up', folder: 6, from: 0, v: [v(0, {
+    { id: '35', kind: 'job_anniversary', name: 'Yearly Check-up', folder: 6, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-job-anniversary') + ' (each year on the day a job was finished)']],
       settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'It’s been a year since we finished your {{contact.bp_job_name}}. Want a free check-up? Reply YES.'], ['wait', 'For a reply, up to 3 days', 'Wait for reply'], { 'if': 'Replied YES?', paths: [
         { label: 'Yes', steps: [['opp', 'Jobs → New Lead (check-up)'], ['alert', '“Book the check-up.”'], E] }, { label: 'No reply', steps: [E] } ] }] })] },
-    { id: '36', kind: 'storm_followup', name: 'Storm Follow-up', folder: 6, from: 0, v: [v(0, {
+    { id: '36', kind: 'storm_followup', name: 'Storm Follow-up', folder: 6, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-storm-followup') + ' (sent from BuilderPro for an area after a storm)']],
       settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'After the recent storm we’re offering free roof checks for past customers. Want us to swing by? Reply YES. {{contact.bp_event_note}}'], ['wait', 'For a reply, up to 2 days', 'Wait for reply'], { 'if': 'Replied YES?', paths: [
         { label: 'Yes', steps: [['opp', 'Jobs → New Lead (storm check)'], ['alert', '“Book the storm check.”'], E] }, { label: 'No reply', steps: [E] } ] }] })] },
-    { id: '37', kind: 'contract_signed', name: 'Contract Signed → Welcome', folder: 6, from: 0, v: [v(0, {
+    { id: '37', kind: 'contract_signed', name: 'Contract Signed → Welcome', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-contract-signed') + ' (the customer e-signs the contract)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'Thank you! Your contract is signed. Next: permits, materials and your crew day. Track it all: {{contact.bp_portal_link}}'],
         { 'if': 'Start date set?', paths: [
           { label: 'Yes', steps: [['sms', 'You’re on the schedule for {{contact.bp_start_date}}.'], E] },
           { label: 'Not yet', steps: [E] } ] }] })] },
-    { id: '38', kind: 'phase_done', name: 'Phase Done → Progress Update', folder: 6, from: 0, v: [v(0, {
+    { id: '38', kind: 'phase_done', name: 'Phase Done → Progress Update', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-phase-done') + ' (a plan phase is checked off)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [{ 'if': 'Another phase next?', paths: [
         { label: 'Yes', steps: [['sms', '{{contact.bp_phase_name}} is done ✅ Next up: {{contact.bp_next_phase}}. Photos: {{contact.bp_portal_link}}'], E] },
         { label: 'Last phase', steps: [['sms', '{{contact.bp_phase_name}} is done ✅ That was the last step; we’ll be in touch to wrap up.'], E] } ] }] })] },
-    { id: '39', kind: 'schedule_moved', name: 'Schedule Pushed Back', folder: 6, from: 0, v: [v(0, {
+    { id: '39', kind: 'schedule_moved', name: 'Schedule Pushed Back', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-schedule-moved') + ' (the start date moves later)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'Heads-up: your {{contact.bp_job_name}} start moved from {{contact.bp_old_start_date}} to {{contact.bp_start_date}}. Sorry for the change.'], ['alert', 'Told the customer about the new date'], E] })] },
-    { id: '40', kind: 'payment_received', name: 'Payment Received → Thank You', folder: 6, from: 0, v: [v(0, {
+    { id: '40', kind: 'payment_received', name: 'Payment Received → Thank You', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-payment-received') + ' (money collected on the job goes up)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [{ 'if': 'Paid in full?', paths: [
         { label: 'Balance left', steps: [['sms', 'We received {{contact.bp_amount_paid}}. Remaining balance: {{contact.bp_balance_due}}. Thank you!'], E] },
         { label: 'Paid in full', steps: [['sms', 'Your {{contact.bp_job_name}} is paid in full. Thank you!'], E] } ] }] })] },
-    { id: '41', kind: 'change_order_waiting', name: 'Change Order Waiting', folder: 6, from: 0, v: [v(0, {
+    { id: '41', kind: 'change_order_waiting', name: 'Change Order Waiting', folder: 6, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-change-order-waiting') + ' (unsigned 2 days, then 5)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [{ 'if': 'BP Days Overdue', paths: [
         { label: '2 days', steps: [['sms', 'A change to your project is waiting for your OK: {{contact.bp_change_order}}. Review and sign: {{contact.bp_portal_link}}'], E] },
         { label: '5 days', steps: [['alert', '{{contact.name}} hasn’t signed {{contact.bp_change_order}} (5 days). Call them.'], E] } ] }] })] },
-    { id: '42', kind: 'inspection_scheduled', name: 'Inspection Scheduled', folder: 6, from: 0, v: [v(0, {
+    { id: '42', kind: 'inspection_scheduled', name: 'Inspection Scheduled', folder: 6, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-inspection-scheduled') + ' (a permit inspection gets a date)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'Your {{contact.bp_inspection}} inspection is set for {{contact.bp_visit_date}}. We’ll let you know if you need to be home.'], E] })] },
-    { id: '43', kind: 'warranty_followup', name: 'Warranty Info', folder: 6, from: 0, v: [v(0, {
+    { id: '43', kind: 'warranty_followup', name: 'Warranty Info', folder: 6, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-warranty') + ' (about a week after the job is done)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'Your {{contact.bp_job_name}} is covered by our workmanship warranty. Documents: {{contact.bp_portal_link}}'], ['email', 'Same message by email'], ['tag', tg('warranty-sent')], E] })] },
-    { id: '44', kind: 'message_unanswered', name: 'Customer Message Unanswered', folder: 7, from: 0, v: [v(0, {
+    { id: '44', kind: 'message_unanswered', name: 'Customer Message Unanswered', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-message-unanswered') + ' (portal message, no reply in 4 hours)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
       steps: [['alert', '{{contact.name}} messaged in the portal 4+ hours ago: “{{contact.bp_event_note}}”'], E] })] },
-    { id: '45', kind: 'over_budget', name: 'Job Over Budget', folder: 7, from: 0, v: [v(0, {
+    { id: '45', kind: 'over_budget', name: 'Job Over Budget', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-over-budget') + ' (job costs pass the budget)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
       steps: [['alert', '{{contact.bp_job_name}} is over budget: {{contact.bp_spent}} spent against {{contact.bp_budget}}'], E] })] },
-    { id: '46', kind: 'sub_insurance_expiring', name: 'Sub Insurance Expiring', folder: 7, from: 0, v: [v(0, {
+    { id: '46', kind: 'sub_insurance_expiring', name: 'Sub Insurance Expiring', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-sub-insurance-expiring') + ' (on the sub’s contact, 14 days before)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
-      steps: [['sms', 'To the sub: {{contact.bp_event_note}}. Please upload a current copy in your sub portal.'], ['alert', '{{contact.name}}: {{contact.bp_event_note}}'], E] })] }
+      steps: [['sms', 'To the sub: {{contact.bp_event_note}}. Please upload a current copy in your sub portal.'], ['alert', '{{contact.name}}: {{contact.bp_event_note}}'], E] })] },
+    { id: '47', kind: 'crew_no_show', name: 'Crew No-Show', folder: 7, from: 1, v: [v(1, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-crew-no-show') + ' (booked today, nobody clocked in an hour after the start)']],
+      settings: ['Re-entry on', 'No time window (alerts go out right away)'],
+      steps: [['alert', 'Nobody has clocked in on {{contact.bp_job_name}} for {{contact.name}}. {{contact.bp_event_note}}.'], ['note', 'BuilderPro also alerts the crew lead in the crew app'], E] })] },
+    { id: '48', kind: 'weather_risk', name: 'Weather Delay Warning', folder: 7, from: 2, v: [v(2, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-weather-risk') + ' (rain 60%+ or gusts 40 mph+ forecast for tomorrow’s job, checked 3–9 pm)']],
+      settings: ['Re-entry on', 'No time window (alerts go out right away)'],
+      steps: [['alert', 'Weather risk tomorrow on {{contact.bp_job_name}} ({{contact.bp_job_address}}): {{contact.bp_event_note}}. Reschedule? Moving the date texts the customer automatically.'], E] })] },
+    { id: '49', kind: 'materials_not_ready', name: 'Materials Not Ready', folder: 7, from: 2, v: [v(2, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-materials-not-ready') + ' (work tomorrow, the order list is still a draft)']],
+      settings: ['Re-entry on', 'No time window (alerts go out right away)'],
+      steps: [['alert', '{{contact.bp_job_name}} starts {{contact.bp_visit_date}} and its order list hasn’t been sent: {{contact.bp_event_note}}.'], E] })] },
+    { id: '50', kind: 'job_stalled', name: 'Stuck-Job Watchdog', folder: 7, from: 2, v: [v(2, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-job-stalled') + ' (a job stops moving between sale and payment)']],
+      settings: ['Re-entry on', 'No time window (alerts go out right away)'],
+      steps: [{ 'if': 'Where it stalled', paths: [
+        { label: 'No contract', when: 'sold 24h ago', steps: [['alert', '{{contact.bp_event_note}}'], E] },
+        { label: 'No start date', when: 'signed 3 days ago', steps: [['alert', '{{contact.bp_event_note}}'], E] },
+        { label: 'No progress', when: '5 days, no phase done', steps: [['alert', '{{contact.bp_event_note}}'], E] },
+        { label: 'Unpaid', when: 'done 2 days ago', steps: [['alert', '{{contact.bp_event_note}}'], E] }
+      ] }] })] },
+    { id: '51', name: 'Domino Reschedule', folder: 6, from: 2, v: [v(2, {
+      triggers: [['bp', 'In BuilderPro: one of a crew’s jobs starts later than before']],
+      settings: ['Runs inside BuilderPro', 'Asks before moving anything'],
+      steps: [['note', 'Shows the crew’s later jobs and asks “Move them too?”', 'Ask you'],
+        { 'if': 'Your answer', paths: [
+          { label: 'Move them', steps: [['field', 'Each later job moves the same number of days (Sundays skipped)', 'Move the jobs'], ['sms', 'Each customer gets 39 Schedule Pushed Back'], ['alert', 'The crew lead gets the new dates in the crew app'], E] },
+          { label: 'Leave them', steps: [E] }
+        ] }] })] }
   ];
 
   var fmt = function (s) { return String(s).replace(/\{\{([^}]+)\}\}/g, function (m, k) { return '<span class="wa-chip">' + k.trim() + '</span>'; }); };
@@ -291,11 +321,20 @@
     var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations running on your ' + PLANS[S.plan].name + ' plan</span></div></div>';
     h += '<div class="wa-lay"><aside class="wa-list">';
     [6, 7, 1, 2, 3, 4, 5].forEach(function (f) {
-      var items = WF.filter(function (w) { return w.folder === f && avail(w); }); if (!items.length) return;
+      var items = WF.filter(function (w) { return w.folder === f && avail(w); });
+      var locked = WF.filter(function (w) { return w.folder === f && !avail(w); });
+      if (!items.length && locked.length) {   /* a whole folder above this plan: show it, locked */
+        var need = Math.min.apply(null, locked.map(function (w) { return w.from; }));
+        h += '<div class="wa-fold wa-lock"><span class="wa-fi">' + svg('folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + locked.length + '</span></div>'
+          + '<div class="wa-lockn">Included in ' + PLANS[need].name + '. <a href="#" data-upg="' + PLANS[need].k + '">Upgrade</a></div>';
+        return;
+      }
+      if (!items.length) return;
       if (!S.open) { S.open = {}; var sw = WF.filter(function (w) { return w.id === S.sel; })[0]; S.open[sw ? sw.folder : 1] = 1; }
       var op = !!S.open[f];
       h += '<button class="wa-fold' + (op ? ' open' : '') + '" data-fold="' + f + '" aria-expanded="' + op + '"><span class="wa-fi">' + svg(op ? 'folderOpen' : 'folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + items.length + '</span><svg class="wa-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="wa-fbody' + (op ? ' open' : '') + '"><div class="wa-fin">';
       items.forEach(function (w) { var st = status(w), x = variant(w); h += '<button class="wa-wf' + (w.id === S.sel ? ' on' : '') + '" data-id="' + w.id + '"><span class="wa-num">' + w.id + '</span><span class="wa-nm">' + (x.name || w.name) + '</span>' + (st ? '<span class="wa-dot ' + st + '">' + (st === 'new' ? 'NEW' : 'UPGRADED') + '</span>' : '') + '</button>'; });
+      if (locked.length) { var nd = Math.min.apply(null, locked.map(function (w) { return w.from; })); h += '<div class="wa-lockn">+' + locked.length + ' more in ' + PLANS[nd].name + '. <a href="#" data-upg="' + PLANS[nd].k + '">Upgrade</a></div>'; }
       h += '</div></div>';
     });
     var w = WF.filter(function (x) { return x.id === S.sel; })[0], x = variant(w), st = status(w), note = '';
@@ -307,6 +346,9 @@
     var fired = w.kind && S.fired ? S.fired[w.kind] : null;
     var liveTxt = !w.kind || !S.fired ? 'Live' : fired ? 'Fired ' + fired.n + (fired.n === 1 ? ' time' : ' times') + ' · last ' + ago(fired.last) : 'Waiting for its first event';
     if (w.kind) note += '<div class="wa-note soft">BuilderPro sends this event to your CRM with the job’s details in the <b>BP</b> fields; the workflow there sends the messages. Edit the wording in your CRM’s workflow builder.</div>';
+    if (w.id === '36') note += '<div class="wa-storm"><b>Send a storm follow-up</b><span>Past customers whose job address contains any of these ZIP codes or towns get the text.</span>'
+      + '<input id="wa-st-area" placeholder="e.g. 91605, 91606, Van Nuys"><input id="wa-st-note" placeholder="Optional line added to the text (e.g. Hail on Oct 3)" maxlength="200">'
+      + '<button class="bpx-addbtn" id="wa-st-go">Send to past customers</button><div class="wa-st-msg" id="wa-st-msg"></div></div>';
     h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + liveTxt + '</span></div>' + note
       + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'
@@ -321,7 +363,20 @@
       var bd = b.nextElementSibling; if (bd) bd.classList.toggle('open', op);
     }; });
     area.querySelectorAll('[data-id]').forEach(function (b) { b.onclick = function () { S.sel = b.getAttribute('data-id'); render(); }; });
-    var u = area.querySelector('[data-upg]'); if (u) u.onclick = function (e) { e.preventDefault(); if (window.bpChangePlan) bpChangePlan(u.getAttribute('data-upg')); };
+    area.querySelectorAll('[data-upg]').forEach(function (u) { u.onclick = function (e) { e.preventDefault(); if (window.bpChangePlan) bpChangePlan(u.getAttribute('data-upg')); }; });
+    var sg = document.getElementById('wa-st-go');
+    if (sg) sg.onclick = function () {
+      var areas = String(document.getElementById('wa-st-area').value || '').split(/[,;\n]+/).map(function (x) { return x.trim(); }).filter(function (x) { return x.length >= 3; });
+      var msg = document.getElementById('wa-st-msg');
+      if (!areas.length) { msg.textContent = 'Type at least one ZIP code or town.'; return; }
+      if (!(window.BP_LIVE && window.BP_SB)) { msg.textContent = 'Sign in to send it.'; return; }
+      if (!confirm('Send the storm follow-up to past customers in ' + areas.join(', ') + '?')) return;
+      sg.disabled = true; msg.textContent = 'Finding past customers…';
+      Promise.resolve(BP_SB.rpc('ghl_storm_followup', { p_areas: areas, p_note: String(document.getElementById('wa-st-note').value || '') })).then(function (r) {
+        sg.disabled = false; var d = r && r.data;
+        msg.textContent = r && r.error ? 'Could not send: ' + r.error.message : d && d.ok ? (d.queued ? 'Sending to ' + d.queued + ' past customer' + (d.queued === 1 ? '' : 's') + ' in the next couple of minutes.' : 'No finished jobs found in those areas.') : 'Could not send.';
+      }, function () { sg.disabled = false; msg.textContent = 'Could not send.'; });
+    };
     var cv = area.querySelector('.wa-canvas'); if (cv) cv.scrollLeft = (cv.scrollWidth - cv.clientWidth) / 2;
     if (window.bpSpin) bpSpin(false);
   }
@@ -345,7 +400,9 @@
   };
 
   var css = document.createElement('style');
-  css.textContent = '.wa{display:flex;flex-direction:column;gap:14px;--wl:#c3cbd6}'
+  css.textContent = '.wa-lock{cursor:default;opacity:.7}.wa-lock:hover{background:none;color:#788493}.wa-lockn{font-size:12px;color:#788493;padding:2px 14px 10px 37px}.wa-lockn a{color:#006fff;font-weight:600}'
+    + '.wa-storm{display:flex;flex-direction:column;gap:8px;background:#f5f8fb;border:1px solid #dce3ec;border-radius:12px;padding:12px 14px}.wa-storm b{font-size:14px}.wa-storm span{font-size:12.5px;color:#56657a}.wa-storm input{width:100%}.wa-storm .bpx-addbtn{align-self:flex-start}.wa-st-msg{font-size:12.5px;color:#34435a}'
+    + '.wa{display:flex;flex-direction:column;gap:14px;--wl:#c3cbd6}'
     + '.wa-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}.wa-sum{display:flex;flex-wrap:wrap;gap:8px}'
     + '.wa-pill{display:inline-flex;align-items:center;font-size:12px;padding:4px 10px;border-radius:99px;background:#fff;border:1px solid #dce3ec;color:#34435a}.wa-pill.new{background:#e3f5ea;border-color:transparent;color:#1e9e5a;font-weight:600}.wa-pill.chg{background:#fcf1de;border-color:transparent;color:#b06f0c;font-weight:600}'
     + '.wa-plans{display:flex;gap:4px;background:#fff;border:1px solid #dce3ec;border-radius:12px;padding:4px}.wa-plans button{all:unset;cursor:pointer;padding:7px 14px;border-radius:9px;display:flex;flex-direction:column}.wa-plans b{font-size:13.5px;font-weight:600}.wa-plans span{font-size:11.5px;color:#788493}.wa-plans button.on{background:#006fff;color:#fff}.wa-plans button.on span{color:rgba(255,255,255,.8)}'
