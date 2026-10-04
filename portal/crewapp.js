@@ -12,6 +12,12 @@
                  (Overview, Schedule, Crew, Materials, Permits, Photos,
                  Documents, Blueprints). No money, no editing; adding
                  photos / documents / blueprints is allowed.
+                 A crew lead (crews[].lead in the owner's settings) also gets
+                 "Clock in crew" / "Clock out crew": tick who is actually
+                 there, confirm, and crew_clock_for() punches each of them
+                 exactly as if they had clocked themselves. Anyone clocked
+                 by someone else sees "Clocked in by Marcus" with a
+                 "Not me? Report" button (crew_clock_dispute()).
      My crew     who they work with, and how to reach the office
      My ID       their badge, with a profile photo they can change
      Messages    portal/teamchat.js
@@ -182,8 +188,9 @@
   function shifts(rows) {
     var asc = rows.slice().sort(function (a, b) { return Date.parse(a.at) - Date.parse(b.at); }), out = [], cur = null;
     asc.forEach(function (x) {
-      if (x.kind === 'in') { if (cur) out.push(cur); cur = { inAt: x.at, outAt: null, job: x.job_name, onSite: x.on_site, hours: null }; }
-      else if (cur) { cur.outAt = x.at; cur.hours = x.hours; out.push(cur); cur = null; }
+      var by = x.clocked_by_name && othersPunch(x) ? { id: x.id, kind: x.kind, name: x.clocked_by_name, at: x.at, disp: x.disputed_at } : null;
+      if (x.kind === 'in') { if (cur) out.push(cur); cur = { inAt: x.at, outAt: null, job: x.job_name, onSite: x.on_site, hours: null, by: by ? [by] : [] }; }
+      else if (cur) { cur.outAt = x.at; cur.hours = x.hours; if (by) cur.by.push(by); out.push(cur); cur = null; }
     });
     if (cur) out.push(cur);
     out.forEach(function (s) { s.ms = (s.outAt ? Date.parse(s.outAt) : Date.now()) - Date.parse(s.inAt); });
@@ -201,9 +208,14 @@
   }
   function jobLabel(j) { return (j.name || 'Project') + (j.title ? ' — ' + j.title : ''); }
 
+  function roster() {
+    return Promise.resolve(BP_SB.rpc('crew_lead_roster')).then(function (r) {
+      C.lead = (r && !r.error && r.data && r.data.crews && r.data.crews.length) ? r.data : null;
+    }).catch(function () { C.lead = null; });
+  }
   window.bpCrewClock = function () {
     stopTick(); wait();
-    load(true).then(function () {
+    Promise.all([load(true), roster()]).then(function () {
       if (unlinked()) return;
       var me = C.me, open = me.open, jobs = me.projects || [], day = iso(new Date());
       var today = jobs.filter(onToday), rest = jobs.filter(function (j) { return !onToday(j); });
@@ -215,7 +227,8 @@
           + '<small>On the clock</small><b>Clocked in at ' + clock(open.at) + '</b>'
           + '<span>' + (open.job_name ? 'on ' + esc(openJob ? (openJob.name || '') + ' job' : open.job_name) : 'No job picked') + '</span>'
           + (open.on_site === true ? '<em class="ok"><span class="ms">where_to_vote</span>Verified on site</em>' : open.on_site === false ? '<em class="warn"><span class="ms">wrong_location</span>Clocked in away from the job</em>' : '')
-          + '</div><div class="ck-timer"><small>Running</small><b id="ck-run">' + hms(Date.now() - Date.parse(open.at)) + '</b></div></div>';
+          + '</div><div class="ck-timer"><small>Running</small><b id="ck-run">' + hms(Date.now() - Date.parse(open.at)) + '</b></div></div>'
+          + (open.by_other ? byLead(open.id, 'in', open.clocked_by_name, open.at, open.disputed_at) : '');
         action = '<button class="ck-btn out" id="ca-go" onclick="bpCrewClockGo(\'out\')"><span class="ms">logout</span><span>Clock out</span></button>';
       } else {
         status = '<div class="ck-status"><div class="ck-pulse"><i></i></div><div class="ck-st"><small>Off the clock</small><b>Not clocked in</b>'
@@ -239,14 +252,15 @@
           + '<div class="ck-time" id="ck-time">' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '<small id="ck-sec">:' + ('0' + new Date().getSeconds()).slice(-2) + '</small></div>'
           + '<div class="ck-date">' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</div></div>'
           + '<div class="ck-biz">' + esc((me.business && me.business.name) || '') + '</div></div>'
-        + '<div class="ck-grid"><div class="bpx-panel ck-main">' + status + picker
+        + '<div class="ck-grid"><div class="ck-col"><div class="bpx-panel ck-main">' + status + picker
           + '<label class="ck-geo"><input type="checkbox" id="ck-geo"' + (geoOn ? ' checked' : '') + ' onchange="bpCrewGeo(this.checked)"><span class="ck-sw"></span>'
             + '<div><b>Share my location</b><span>Confirms you’re on site. Only saved with the punch.</span></div></label>'
           + action + '<div class="ca-msg" id="ca-msg"></div>'
           + '<div class="ck-sync"><span class="ms">cloud_done</span>Punches go straight to your timesheet in ' + esc((me.business && me.business.name) || 'BuilderPro') + '.</div></div>'
+          + leadHtml() + '</div>'
         + '<div class="ck-side"><div class="bpx-panel ck-sum"><div><small>Today</small><b id="ck-day">—</b></div><div><small>This week</small><b id="ck-week">—</b></div><div><small>Shifts this week</small><b id="ck-n">—</b></div></div>'
           + '<div class="bpx-panel"><div class="bpx-ptitle">Recent punches</div><div id="ca-log" class="bpx-mut">Loading…</div></div></div></div></div>';
-      history();
+      history(); AV.fill(area());
       C.tick = setInterval(function () {
         var t = $('ck-time'); if (!t) return stopTick();
         var n = new Date();
@@ -264,7 +278,7 @@
   }
   function history() {
     var since = new Date(weekStart().getTime() - 14 * 86400000).toISOString();
-    Promise.resolve(BP_SB.from('time_clock').select('kind,at,job_name,on_site,hours').gte('at', since).order('at', { ascending: false }).limit(200)).then(function (r) {
+    Promise.resolve(BP_SB.from('time_clock').select('id,kind,at,job_name,on_site,hours,clocked_by_name,clocked_by,disputed_at').gte('at', since).order('at', { ascending: false }).limit(200)).then(function (r) {
       var el = $('ca-log'); if (!el) return;
       var rows = (r && r.data) || [];
       C.log = shifts(rows); paintTotals();
@@ -275,7 +289,11 @@
         return '<div class="' + (s.outAt ? '' : 'live') + '"><div class="ck-ld"><b>' + new Date(s.inAt).getDate() + '</b><small>' + new Date(s.inAt).toLocaleDateString([], { weekday: 'short' }) + '</small></div>'
           + '<div class="ck-lt"><b>' + clock(s.inAt) + ' – ' + (s.outAt ? clock(s.outAt) : 'now') + '</b><span>' + (d === iso(new Date()) ? 'Today' : new Date(s.inAt).toLocaleDateString([], { month: 'short', day: 'numeric' })) + (s.job ? ' · ' + esc(s.job) : '') + '</span></div>'
           + '<div class="ck-lh"><b>' + (s.outAt && s.hours != null ? (+s.hours).toFixed(2) + ' h' : hm(s.ms)) + '</b>'
-            + (s.onSite === true ? '<em class="ok">on site</em>' : s.onSite === false ? '<em class="warn">off site</em>' : '') + '</div></div>';
+            + (s.onSite === true ? '<em class="ok">on site</em>' : s.onSite === false ? '<em class="warn">off site</em>' : '') + '</div>'
+          + (s.by && s.by.length ? '<div class="ck-lby">' + s.by.map(function (b) {
+              return '<span><span class="ms">supervisor_account</span>' + (b.kind === 'in' ? 'In' : 'Out') + ' by ' + esc(first(b.name)) + '</span>'
+                + (b.disp ? '<em class="ck-rep">Reported</em>' : '<button type="button" class="ck-repbtn" onclick="bpCrewDispute(\'' + esc(b.id) + '\',\'' + b.kind + '\')">Not me? Report</button>');
+            }).join('') + '</div>' : '') + '</div>';
       }).join('') + '</div>';
     }).catch(function () { var el = $('ca-log'); if (el) el.textContent = 'Couldn’t load your punches.'; });
   }
@@ -313,6 +331,137 @@
         }, 400);
       });
     }).catch(function () { if (msg) { msg.className = 'ca-msg bad'; msg.textContent = 'Couldn’t reach the server. Try again.'; } if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">' + (kind === 'in' ? 'login' : 'logout') + '</span><span>' + (kind === 'in' ? 'Clock in' : 'Clock out') + '</span>'; } });
+  };
+
+  /* ----------------------------------------------- clocked by someone else --- */
+  function othersPunch(x) { var me = (C.me && C.me.employee) || {}; var uid = (window.BP_TEAM && BP_TEAM.uid) || ''; return x.clocked_by ? (!uid || x.clocked_by !== uid) : (x.clocked_by_name && x.clocked_by_name !== me.name); }
+  function byLead(id, kind, name, at, disputed) {
+    return '<div class="ck-by' + (disputed ? ' rep' : '') + '"><span class="ms">' + (disputed ? 'flag' : 'supervisor_account') + '</span><div><b>Clocked ' + kind + ' by ' + esc(first(name) || 'your crew lead') + ' at ' + clock(at) + '</b>'
+      + '<span>' + (disputed ? 'You reported this punch. The office will check it before paying.' : 'Your crew lead did this from their phone. If you weren’t here, tell the office.') + '</span></div>'
+      + (disputed ? '' : '<button type="button" class="ck-repbtn" onclick="bpCrewDispute(\'' + esc(id) + '\',\'' + kind + '\')">Not me? Report</button>') + '</div>';
+  }
+  window.bpCrewDispute = function (id, kind) {
+    bpModal('<h3>Report this punch</h3><div class="bpx-sub">The office gets a high-priority alert and the hours are flagged before payday.</div>'
+      + '<label>What happened? <span class="bpx-mut" style="font-weight:400">(optional)</span></label><textarea id="ck-dnote" rows="3" maxlength="500" placeholder="e.g. I didn’t get there until 10."></textarea>'
+      + '<div class="ca-msg" id="ck-dmsg"></div>'
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="ck-dgo" onclick="bpCrewDisputeGo(\'' + esc(id) + '\')">Report it</button></div>');
+  };
+  window.bpCrewDisputeGo = function (id) {
+    var go = $('ck-dgo'), note = String(($('ck-dnote') || {}).value || '').trim();
+    if (go) { go.disabled = true; go.textContent = 'Sending…'; }
+    Promise.resolve(BP_SB.rpc('crew_clock_dispute', { p_clock_id: id, p_note: note })).then(function (r) {
+      if (r && r.error) throw r.error; var d = (r && r.data) || {};
+      if (!d.ok) throw new Error(d.error || 'no');
+      bpCloseModal(); bpCrewClock();
+      if (window.bpToast) bpToast('Reported. The office will check it.', 'success');
+    }).catch(function () { if (go) { go.disabled = false; go.textContent = 'Report it'; } var m = $('ck-dmsg'); if (m) { m.className = 'ca-msg bad'; m.textContent = 'Couldn’t send that. Try again.'; } });
+  };
+
+  /* ----------------------------------------------------- crew lead clock --- */
+  /* The lead ticks who is actually here: nothing starts ticked, people
+     already on the clock can't be ticked, and nothing is sent until the
+     lead confirms the names. */
+  C.lc = {};
+  function lcState(cid) { return C.lc[cid] = C.lc[cid] || { mode: 'in', sel: {} }; }
+  function leadHtml() {
+    var L = C.lead; if (!L || !L.crews) return '';
+    return L.crews.map(function (cr, ci) {
+      var st = lcState(cr.id), mem = cr.members || [], onNow = mem.filter(function (m) { return m.open; });
+      var tabs = '<div class="ckl-tabs" role="tablist"><button type="button" role="tab" aria-selected="' + (st.mode === 'in') + '" class="' + (st.mode === 'in' ? 'on' : '') + '" onclick="bpCrewLeadMode(' + ci + ',\'in\')"><span class="ms">login</span>Clock in crew</button>'
+        + '<button type="button" role="tab" aria-selected="' + (st.mode === 'out') + '" class="' + (st.mode === 'out' ? 'on' : '') + '" onclick="bpCrewLeadMode(' + ci + ',\'out\')"><span class="ms">logout</span>Clock out crew' + (onNow.length ? ' <i>' + onNow.length + '</i>' : '') + '</button></div>';
+      var body;
+      if (st.mode === 'in') {
+        var jobs = (C.me && C.me.projects) || [], day = iso(new Date());
+        var today = jobs.filter(onToday), rest = jobs.filter(function (j) { return !onToday(j); });
+        var cur = st.job != null ? st.job : ((today[0] || rest[0] || {}).id || '');
+        var opt = function (j) {
+          return '<label class="ck-job"><input type="radio" name="ckl-job-' + ci + '" value="' + esc(j.id) + '"' + (cur === j.id ? ' checked' : '') + ' onchange="bpCrewLeadJob(' + ci + ',this.value)">'
+            + '<span class="ck-jr"></span><div><b>' + esc(j.name || 'Project') + '</b><span>' + esc(j.title || '') + (j.addr ? ' · ' + esc(j.addr) : '') + '</span>'
+            + (onToday(j) ? '<small>Booked today' + (slotLbl(j, day) ? ' · ' + slotLbl(j, day) : '') + '</small>' : '') + '</div></label>';
+        };
+        var avail = mem.filter(function (m) { return !m.open; });
+        var n = avail.filter(function (m) { return st.sel[m.id]; }).length;
+        body = '<div class="ck-h">Which job?</div>' + today.concat(rest).map(opt).join('')
+          + '<label class="ck-job"><input type="radio" name="ckl-job-' + ci + '" value=""' + (cur === '' ? ' checked' : '') + ' onchange="bpCrewLeadJob(' + ci + ',this.value)"><span class="ck-jr"></span><div><b>No specific job</b><span>Shop time, pickup, travel</span></div></label>'
+          + '<div class="ck-h ckl-who">Who’s here? <span>Tick each person you can see on site.</span></div>'
+          + '<div class="ckl-list">' + mem.map(function (m) {
+              var dis = !!m.open;
+              return '<label class="ckl-p' + (dis ? ' dis' : '') + '"><input type="checkbox" data-ckl="' + esc(m.id) + '"' + (dis ? ' disabled' : '') + (!dis && st.sel[m.id] ? ' checked' : '') + ' onchange="bpCrewLeadTick(' + ci + ',\'' + esc(m.id) + '\',this.checked)">'
+                + '<span class="ckl-box"><span class="ms">check</span></span>' + AV.html(m.photo, m.name, 'ckl-av', 'background:' + esc(cr.color || '#475467'))
+                + '<div><b>' + esc(m.name) + (m.me ? ' <small>(you)</small>' : '') + '</b><span>' + (dis ? '<em class="ckl-in">Already clocked in · since ' + clock(m.open.at) + (m.open.by ? ' by ' + esc(first(m.open.by)) : '') + '</em>' : esc(m.trade || '')) + '</span></div></label>';
+            }).join('') + '</div>'
+          + '<button type="button" class="ck-btn ckl-go" id="ckl-go-' + ci + '"' + (n ? '' : ' disabled') + ' onclick="bpCrewLeadAsk(' + ci + ')"><span class="ms">group_add</span><span>' + (n ? 'Clock in ' + n + (n === 1 ? ' person' : ' people') : 'Tick who’s here') + '</span></button>';
+      } else {
+        var n2 = onNow.filter(function (m) { return st.sel[m.id]; }).length;
+        body = onNow.length ? '<div class="ck-h ckl-who">On the clock now <span>Tick who’s leaving, or clock one person out.</span></div><div class="ckl-list">' + onNow.map(function (m) {
+              return '<div class="ckl-p ckl-out"><label><input type="checkbox" data-ckl="' + esc(m.id) + '"' + (st.sel[m.id] ? ' checked' : '') + ' onchange="bpCrewLeadTick(' + ci + ',\'' + esc(m.id) + '\',this.checked)">'
+                + '<span class="ckl-box"><span class="ms">check</span></span>' + AV.html(m.photo, m.name, 'ckl-av', 'background:' + esc(cr.color || '#475467'))
+                + '<div><b>' + esc(m.name) + (m.me ? ' <small>(you)</small>' : '') + '</b><span>Since ' + clock(m.open.at) + ' · ' + hm(Date.now() - Date.parse(m.open.at)) + (m.open.job_name ? ' · ' + esc(m.open.job_name) : '') + '</span></div></label>'
+                + '<button type="button" class="ckl-one" onclick="bpCrewLeadOne(' + ci + ',\'' + esc(m.id) + '\')" aria-label="Clock out ' + esc(m.name) + '">Clock out</button></div>';
+            }).join('') + '</div>'
+            + '<button type="button" class="ck-btn out ckl-go" id="ckl-go-' + ci + '"' + (n2 ? '' : ' disabled') + ' onclick="bpCrewLeadAsk(' + ci + ')"><span class="ms">group_remove</span><span>' + (n2 ? 'Clock out ' + n2 + (n2 === 1 ? ' person' : ' people') : 'Tick who’s leaving') + '</span></button>'
+          : '<div class="ckl-none"><span class="ms">bedtime</span>Nobody in ' + esc(cr.name || 'your crew') + ' is on the clock.</div>';
+      }
+      return '<div class="bpx-panel ck-lead" id="ckl-' + ci + '" style="--cc:' + esc(cr.color || '#475467') + '">'
+        + '<div class="ckl-head"><i></i><div><small>Crew lead</small><b>' + esc(cr.name || 'Your crew') + '</b><span>' + mem.length + (mem.length === 1 ? ' person' : ' people') + ' · ' + onNow.length + ' on the clock</span></div></div>'
+        + tabs + body + '<div class="ca-msg' + (st.msg ? ' ' + st.msg[1] : '') + '" id="ckl-msg-' + ci + '" role="status">' + (st.msg ? esc(st.msg[0]) : '') + '</div>'
+        + '<div class="ckl-note"><span class="ms">' + (LS.get('caGeo') !== '0' ? 'my_location' : 'location_off') + '</span>' + (LS.get('caGeo') !== '0' ? 'Your phone’s location is saved with each punch.' : 'Location sharing is off, so no location is saved.') + ' Everyone you clock gets a notice and can report a mistake.</div></div>';
+    }).join('');
+  }
+  function leadPaint(ci) {
+    var cr = C.lead && C.lead.crews[ci], el = $('ckl-' + ci); if (!cr || !el) return;
+    var tmp = document.createElement('div'); tmp.innerHTML = leadHtml(); var nu = tmp.querySelector('#ckl-' + ci);
+    if (nu) { el.replaceWith(nu); AV.fill(nu); }
+  }
+  window.bpCrewLeadMode = function (ci, mode) { var cr = C.lead.crews[ci], st = lcState(cr.id); st.mode = mode; st.sel = {}; st.msg = null; leadPaint(ci); };
+  window.bpCrewLeadJob = function (ci, v) { lcState(C.lead.crews[ci].id).job = v; };
+  window.bpCrewLeadTick = function (ci, id, on) {
+    var st = lcState(C.lead.crews[ci].id); if (on) st.sel[id] = 1; else delete st.sel[id]; st.msg = null;
+    var y = window.scrollY; leadPaint(ci); window.scrollTo(0, y);
+  };
+  function picked(ci) {
+    var cr = C.lead.crews[ci], st = lcState(cr.id);
+    return (cr.members || []).filter(function (m) { return st.sel[m.id] && (st.mode === 'in' ? !m.open : !!m.open); });
+  }
+  function jobOf(id) { return ((C.me && C.me.projects) || []).filter(function (j) { return j.id === id; })[0]; }
+  function jobWords(j) { return j ? esc(j.name || 'Project') + (j.title ? ' ' + esc(String(j.title).toLowerCase()) : '') : ''; }
+  window.bpCrewLeadOne = function (ci, id) { var st = lcState(C.lead.crews[ci].id); st.sel = {}; st.sel[id] = 1; bpCrewLeadAsk(ci); };
+  window.bpCrewLeadAsk = function (ci) {
+    var cr = C.lead.crews[ci], st = lcState(cr.id), ppl = picked(ci); if (!ppl.length) return;
+    var jobId = st.mode === 'in' ? (function () { var r = document.querySelector('input[name="ckl-job-' + ci + '"]:checked'); return r ? r.value : ''; })() : '';
+    var j = jobOf(jobId), n = ppl.length, who = n + (n === 1 ? ' person' : ' people');
+    var q = st.mode === 'in' ? 'Clock in ' + who + (j ? ' on ' + jobWords(j) : '') + '?' : 'Clock out ' + (n === 1 ? esc(ppl[0].name) : who) + '?';
+    bpModal('<h3 class="ckl-q">' + q + '</h3><div class="bpx-sub">' + (st.mode === 'in' ? 'Only clock in people you can see here. ' : '') + 'Each of them gets a notice and can report it if it’s wrong.</div>'
+      + '<div class="ckl-conf">' + ppl.map(function (m) { return '<div>' + AV.html(m.photo, m.name, 'ckl-av', 'background:' + esc(cr.color || '#475467')) + '<b>' + esc(m.name) + (m.me ? ' <small>(you)</small>' : '') + '</b>'
+        + (st.mode === 'out' && m.open ? '<span>' + hm(Date.now() - Date.parse(m.open.at)) + '</span>' : '') + '</div>'; }).join('') + '</div>'
+      + '<div class="ca-msg" id="ckl-cmsg"></div>'
+      + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="ckl-yes" onclick="bpCrewLeadGo(' + ci + ',\'' + esc(jobId) + '\')">' + (st.mode === 'in' ? 'Yes, clock them in' : 'Yes, clock them out') + '</button></div>');
+    var md = $('bpx-modal'); if (md) AV.fill(md);
+  };
+  var LEAD_ERR = { 'already clocked in': 'was already clocked in', 'not clocked in': 'wasn’t clocked in', inactive: 'is no longer active', 'not found': 'isn’t on the books' };
+  window.bpCrewLeadGo = function (ci, jobId) {
+    var cr = C.lead.crews[ci], st = lcState(cr.id), ppl = picked(ci), kind = st.mode;
+    var yes = $('ckl-yes'), geo = LS.get('caGeo') !== '0';
+    if (yes) { yes.disabled = true; yes.textContent = geo ? 'Checking your location…' : 'Saving…'; }
+    (geo ? where() : Promise.resolve(null)).then(function (pos) {
+      return Promise.resolve(BP_SB.rpc('crew_clock_for', { p_kind: kind, p_job: jobId || '', p_employees: ppl.map(function (m) { return m.id; }),
+        p_lat: pos ? pos.lat : null, p_lng: pos ? pos.lng : null, p_acc: pos ? pos.acc : null, p_share: !!(geo && pos) }));
+    }).then(function (r) {
+      if (r && r.error) throw r.error;
+      var d = (r && r.data) || {};
+      if (!d.ok) {
+        var m = $('ckl-cmsg'); if (m) { m.className = 'ca-msg bad'; m.textContent = d.error === 'not in your crew' ? 'Someone on the list isn’t in your crew any more. Reload and try again.' : d.error === 'not your job' ? 'That job isn’t yours any more.' : d.error === 'not a lead' ? 'You’re no longer the crew lead.' : 'That didn’t go through.'; }
+        if (yes) { yes.disabled = false; yes.textContent = 'Try again'; } return;
+      }
+      var ok = (d.results || []).filter(function (x) { return x.ok; }), bad = (d.results || []).filter(function (x) { return !x.ok; });
+      st.sel = {};
+      st.msg = [(ok.length ? (kind === 'in' ? 'Clocked in ' : 'Clocked out ') + ok.map(function (x) { return first(x.name); }).join(', ') + '.' : 'Nobody was clocked ' + kind + '.')
+        + (bad.length ? ' ' + bad.map(function (x) { return (x.name || 'Someone') + ' ' + (LEAD_ERR[x.error] || 'couldn’t be clocked ' + kind); }).join('; ') + '.' : ''), bad.length ? 'warn' : 'ok'];
+      bpCloseModal(); bpCrewClock();
+    }).catch(function () {
+      var m = $('ckl-cmsg'); if (m) { m.className = 'ca-msg bad'; m.textContent = 'Couldn’t reach the server. Try again.'; }
+      if (yes) { yes.disabled = false; yes.textContent = 'Try again'; }
+    });
   };
 
   /* ------------------------------------------------------------ crew --- */
@@ -741,15 +890,16 @@
   /* ------------------------------------------ owner: who's on the clock --- */
   window.bpClockNowFill = function () {
     var el = $('bpClockNow'); if (!el || !window.BP_SB) return;
-    Promise.resolve(BP_SB.from('time_clock').select('user_id,employee_id,kind,at,job_name,on_site,distance_m').order('at', { ascending: false }).limit(300)).then(function (r) {
+    Promise.resolve(BP_SB.from('time_clock').select('user_id,employee_id,kind,at,job_name,on_site,distance_m,clocked_by_name,lat,lng,disputed_at').order('at', { ascending: false }).limit(300)).then(function (r) {
       var rows = (r && r.data) || [], last = {};
-      rows.forEach(function (x) { if (!last[x.user_id]) last[x.user_id] = x; });
+      rows.forEach(function (x) { var k = x.employee_id || x.user_id; if (k && !last[k]) last[k] = x; });
       var on = Object.keys(last).map(function (k) { return last[k]; }).filter(function (x) { return x.kind === 'in'; });
       var emp = function (x) { return window.bpEmpById && bpEmpById(x.employee_id); };
       el.innerHTML = '<div class="ca-now"><b><span class="ms">schedule</span>On the clock now</b>' + (on.length ? on.map(function (x) {
         var e = emp(x);
         return '<div>' + AV.html(e && e.photo_url, e ? e.name : '?', 'ca-nav') + '<b>' + esc(e ? e.name : 'Crew member') + '</b><span>' + esc(x.job_name || 'no job') + ' · since ' + clock(x.at) + ' · ' + hm(Date.now() - Date.parse(x.at)) + '</span>'
-          + (x.on_site === true ? '<em class="ok">on site</em>' : x.on_site === false ? '<em class="warn">' + (x.distance_m > 1609 ? (x.distance_m / 1609).toFixed(1) + ' mi' : Math.round(x.distance_m || 0) + ' m') + ' away</em>' : '') + '</div>';
+          + (x.on_site === true ? '<em class="ok">on site</em>' : x.on_site === false ? '<em class="warn">' + (x.distance_m > 1609 ? (x.distance_m / 1609).toFixed(1) + ' mi' : Math.round(x.distance_m || 0) + ' m') + ' away</em>' : '')
+          + (window.bpByLeadTag ? bpByLeadTag(x.clocked_by_name, x.lat, x.lng) : '') + (x.disputed_at ? '<em class="bad">Disputed</em>' : '') + '</div>';
       }).join('') : '<div class="bpx-mut">Nobody right now. Crew clock in from their own login.</div>') + '</div>';
       AV.fill(el);
     });

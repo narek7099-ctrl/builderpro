@@ -50,6 +50,8 @@
     check: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
     cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M12 14v3"/>',
     late: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    clock: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+    flag: '<path d="M5 22V4M5 4h11l-2 4 2 4H5"/>',
     permit: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/>',
     bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
     alert: '<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
@@ -77,6 +79,8 @@
     team_message:            { g: 3, t: 'Team chat messages',                 ic: 'chat',           r: 'ocs' },
     crew_receipt:            { g: 3, t: 'Crew adds a receipt',                ic: 'receipt',    r: 'o' },
     crew_material:           { g: 3, t: 'Crew asks for materials',            ic: 'box',     r: 'o' },
+    clocked_by_lead:         { g: 3, t: 'Your crew lead clocks you in or out', ic: 'clock',   r: 'c' },
+    clock_disputed:          { g: 3, t: 'Someone reports a punch made for them', ic: 'flag',  r: 'o' },
     review_new:              { g: 3, t: 'Customer reviews of the team',       ic: 'star',            r: 'oc' },
     customer_message:        { g: 4, t: 'Homeowner messages',                 ic: 'chat',            r: 'o' },
     customer_change_request: { g: 4, t: 'Homeowner change requests',          ic: 'note',       r: 'o' },
@@ -246,6 +250,11 @@
     if (v === 'teamchat') {
       bpNav(crew() ? 'crewmsgs' : 'teamchat');
       if (id) later(function () { var C = window.BP_TCHAT; if (C && (C.threads || []).some(function (t) { return t.id === id; }) && window.bpTcOpen) { bpTcOpen(id); return true; } });
+      return;
+    }
+    if (v === 'employees' && id && allowed('employees')) {
+      bpNav('employees');
+      later(function () { if (window.bpCrewTab && window.BP_CREW && BP_CREW.loaded && $('bpCrewPane')) { if (id === 'pay') bpCrewTab('pay'); else bpCrewTab(id); return true; } });
       return;
     }
     if (v === 'contacts') { bpNav('contacts'); if (id) setTimeout(function () { if (window.bpContactPage) bpContactPage(id); }, 80); return; }

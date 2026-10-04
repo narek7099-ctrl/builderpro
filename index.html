@@ -33682,7 +33682,7 @@ window.bpCrewsHtml=function(inline){
         +(saved?'<span class="pjc-ok"><span class=ms>check_circle</span>Saved</span>':'')
         +'<span class="pjc-act"><button class="bpx-btn ghost pjc-edit" '+(ed?'disabled ':'')+'onclick="bpCrewEditOpen(\''+c.id+'\')"><span class=ms>edit</span>Edit</button>'
         +'<button class="pjc-del" '+(ed?'disabled ':'')+'onclick="bpCrewDelId(\''+c.id+'\')" aria-label="Delete crew"><span class=ms>delete</span></button></span></div>'
-        +(ppl.length?'<div class="pjc-sum">'+bpCrewAvatars(ppl,c.color,5)+'<span class="pjc-names">'+ppl.map(function(e){return '<span><b>'+bpEsc(e.name)+'</b>'+(e.trade?' · '+bpEsc(e.trade):'')+'</span>';}).join('')+'</span></div>'
+        +(ppl.length?'<div class="pjc-sum">'+bpCrewAvatars(ppl,c.color,5)+'<span class="pjc-names">'+ppl.map(function(e){return '<span><b>'+bpEsc(e.name)+'</b>'+(c.lead===e.id?bpCrewLeadBadge(c):'')+(e.trade?' · '+bpEsc(e.trade):'')+'</span>';}).join('')+'</span></div>'
           :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Nobody in this crew yet. Tap Edit to add people.</div>')+'</div>';
     }).join(''):'<div class="bpx-empty2"><b>No crews yet.</b><div class="bpx-mut" style="font-size:13px;margin-top:4px">Make one per team you send out, e.g. “Roof crew A” and “Gutter crew”.</div></div>')
     +(inline?'':'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" '+(adding?'disabled ':'')+'onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" '+(ed?'disabled title="Save or cancel the crew you are editing first" ':'')+'onclick="bpCloseModal();pjAfterEdit()">Done</button></div>');
@@ -33698,6 +33698,11 @@ function bpCrewEditCard(ed,emps,crews){
         return '<label><input type="checkbox" '+(on?'checked':'')+' onchange="bpCrewMem(\''+e.id+'\',this.checked)"><span>'+bpEsc(e.name)+(e.trade?'<small class="bpx-mut"> · '+bpEsc(e.trade)+'</small>':'')+'</span>'
           +(other?'<small class="pjc-other" style="color:'+other.color+'">'+(on?'moves from ':'in ')+bpEsc(other.name)+'</small>':'')+'</label>';}).join('')+'</div>'
       :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Add people on the People tab to put them in crews.</div>')
+    +(function(){ var inC=emps.filter(function(e){return (c.members||[]).indexOf(e.id)>-1;});
+      return '<div class="pjc-leadsel"><label for="pjcLead">Crew leader</label><select id="pjcLead" onchange="bpCrewEdit(\'lead\',this.value||undefined)"'+(inC.length?'':' disabled')+'>'
+        +'<option value="">'+(inC.length?'No leader':'Add people first')+'</option>'
+        +inC.map(function(e){return '<option value="'+e.id+'"'+(c.lead===e.id?' selected':'')+'>'+bpEsc(e.name)+'</option>';}).join('')+'</select>'
+        +'<small>The leader can clock the whole crew in and out from their phone. Everyone they clock gets a notice and can report a mistake.</small></div>'; })()
     +'<div class="pjc-msg" id="pjcMsg" role="status"></div>'
     +'<div class="pjc-btns"><button class="bpx-btn ghost" id="pjcCancel" onclick="bpCrewCancel()">Cancel</button><button class="bpx-btn" id="pjcSave" onclick="bpCrewSave()"><span class=ms>save</span>Save crew</button></div></div>';
 }
@@ -33715,15 +33720,18 @@ window.bpCrewAdd=function(){ if(_bpCrewEd)return; var l=pjCrews();
   bpCrewsRefresh(); setTimeout(function(){ var n=q('pjcName'); if(n){ n.focus(); if(n.scrollIntoView) n.scrollIntoView({block:'nearest'}); } },0); };
 window.bpCrewEditOpen=function(id){ var c=pjCrew(id); if(!c||_bpCrewEd)return; _bpCrewSaved='';
   _bpCrewEd={isNew:false,id:id,draft:JSON.parse(JSON.stringify(c))}; bpCrewsRefresh(); };
-window.bpCrewEdit=function(k,v){ if(!_bpCrewEd)return; _bpCrewEd.draft[k]=v; if(k==='color') bpCrewsRefresh(); };
-window.bpCrewMem=function(emp,on){ if(!_bpCrewEd)return; var d=_bpCrewEd.draft; d.members=(d.members||[]).filter(function(x){return x!==emp;}); if(on) d.members.push(emp); bpCrewsRefresh(); };
+window.bpCrewEdit=function(k,v){ if(!_bpCrewEd)return; if(v===undefined) delete _bpCrewEd.draft[k]; else _bpCrewEd.draft[k]=v; if(k==='color') bpCrewsRefresh(); };
+window.bpCrewMem=function(emp,on){ if(!_bpCrewEd)return; var d=_bpCrewEd.draft, nm=q('pjcName'); if(nm) d.name=nm.value; d.members=(d.members||[]).filter(function(x){return x!==emp;}); if(on) d.members.push(emp); else if(d.lead===emp) delete d.lead; bpCrewsRefresh(); };
+/* the crew leader: one member, who can clock the crew in and out */
+window.bpCrewLeadBadge=function(c){ return '<span class="pjc-lead" style="--cc:'+((c&&c.color)||'#0b1220')+'" title="Crew leader: clocks the crew in and out"><span class="ms">star</span>Lead</span>'; };
 window.bpCrewCancel=function(){ _bpCrewEd=null; bpCrewsRefresh(); };
 window.bpCrewSave=function(){
   var ed=_bpCrewEd; if(!ed)return; var d=ed.draft, nm=q('pjcName'); if(nm) d.name=nm.value;
   d.name=String(d.name||'').trim(); var msg=q('pjcMsg');
   if(!d.name){ if(msg){ msg.className='pjc-msg err'; msg.textContent='Give the crew a name.'; } if(nm) nm.focus(); return; }
   /* one person, one crew: whoever is in this crew leaves any other */
-  var l=pjCrews().map(function(c){ return c.id===d.id?d:Object.assign({},c,{members:(c.members||[]).filter(function(x){return (d.members||[]).indexOf(x)<0;})}); });
+  if(d.lead&&(d.members||[]).indexOf(d.lead)<0) delete d.lead;
+  var l=pjCrews().map(function(c){ if(c.id===d.id) return d; var o=Object.assign({},c,{members:(c.members||[]).filter(function(x){return (d.members||[]).indexOf(x)<0;})}); if(o.lead&&o.members.indexOf(o.lead)<0) delete o.lead; return o; });
   if(ed.isNew) l.push(d);
   var b=q('pjcSave'), cx=q('pjcCancel'); if(b){ b.disabled=true; b.innerHTML='<span class=ms>progress_activity</span>Saving…'; } if(cx) cx.disabled=true;
   var p=pjCrewsSave(l);
@@ -34255,7 +34263,7 @@ function bpProjCrewsSec(j){
       var ppl=window.bpCrewPeople?bpCrewPeople(c):[], tr=window.bpCrewTrade?bpCrewTrade(c):'', sel=c.id===cur;
       return '<div class="pjcw'+(sel?' on':'')+'" data-pjcw="'+bpEsc(c.id)+'" role="radio" aria-checked="'+sel+'" tabindex="0" style="--cc:'+c.color+'" onclick="bpProjCrewPick(\''+c.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bpProjCrewPick(\''+c.id+'\')}">'
         +'<i class="pjc-dot" style="background:'+c.color+'"></i>'
-        +'<div class="pjcw-t"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+(ppl.length?' · '+bpEsc(ppl.map(function(e){return e.name.split(' ')[0];}).join(', ')):'')+'</small></div>'
+        +'<div class="pjcw-t"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+(ppl.length?' · '+ppl.map(function(e){return bpEsc(e.name.split(' ')[0])+(c.lead===e.id&&window.bpCrewLeadBadge?bpCrewLeadBadge(c):'');}).join(', '):'')+'</small></div>'
         +(tr?'<span class="pjc-chip">'+bpEsc(tr)+'</span>':'')
         +(ppl.length&&window.bpCrewAvatars?bpCrewAvatars(ppl,c.color,3):'')
         +(sel?'<span class="pjcw-on"><span class="ms">check_circle</span>On this job</span><button type="button" class="bpx-linkbtn pjcw-un" onclick="event.stopPropagation();bpProjCrewPick(\'\')">Unassign</button>':'<span class="pjcw-pick">Assign</span>')
@@ -34314,20 +34322,24 @@ function bpProjCrewRender(){
   var crw=(typeof j.crew==='string'&&window.pjCrew)?pjCrew(j.crew):null, inCrew=(crw&&crw.members)||[];
   var rows=all.map(function(e){
     var isOn=on.indexOf(e.id)>=0, cov=!isOn&&inCrew.indexOf(e.id)>=0;
-    if(cov) return '<div class="cw-row on pjcw-cov"><span class="ms" style="font-size:18px;color:'+crw.color+'">verified</span>'
-      +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'+(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
-      +'<span class="bpx-mut" style="display:block;font-size:11.5px">Covered by '+bpEsc(crw.name)+'</span></span></div>';
-    var mine=0,myH=0;
+    var mine=0,myH=0,byL=null,disp=null;
     (BP_CREW.entries||[]).forEach(function(t){
-      if(t.job_id===j.id&&t.employee_id===e.id){mine+=+t.cost||0;myH+=(+t.hours||0)+(+t.ot_hours||0);}
+      if(t.job_id===j.id&&t.employee_id===e.id){mine+=+t.cost||0;myH+=(+t.hours||0)+(+t.ot_hours||0); if(t.clocked_by_name&&!byL) byL=t; if(t.disputed_at&&!disp) disp=t;}
     });
+    /* hours a crew lead clocked, and any the person disputed */
+    var tags=(byL||disp)&&window.bpEntryTags?'<span style="display:block;margin-top:3px">'+(byL?bpByLeadTag(byL.clocked_by_name,byL.clocked_lat,byL.clocked_lng):'')+(disp?bpEntryTags({disputed_at:disp.disputed_at,dispute_note:disp.dispute_note}):'')+'</span>':'';
+    if(cov) return '<div class="cw-row on pjcw-cov"><span class="ms" style="font-size:18px;color:'+crw.color+'">verified</span>'
+      +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'+(crw.lead===e.id&&window.bpCrewLeadBadge?bpCrewLeadBadge(crw):'')+(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
+      +'<span class="bpx-mut" style="display:block;font-size:11.5px">Covered by '+bpEsc(crw.name)+'</span>'+tags+'</span>'
+      +(myH>0?'<span class="cw-h">'+myH+' h<span class="bpx-mut" style="display:block;font-size:11px">'+bpMoneyFmt(mine)+'</span></span>':'')+'</div>';
     return '<label class="cw-row'+(isOn?' on':'')+'">'
       +'<input type="checkbox" '+(isOn?'checked':'')+' onchange="bpProjCrewSet(\''+e.id+'\',this.checked)">'
       +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'
         +(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
         +'<span class="bpx-mut" style="display:block;font-size:11.5px">'
         +(bpBurdenedRate(e)>0?bpRateFmt(bpBurdenedRate(e))+'/hr to you':'no rate set')
-        +(e.kind==='1099'?' · 1099':'')+'</span></span>'
+        +(e.kind==='1099'?' · 1099':'')+'</span>'
+        +tags+'</span>'
       +(myH>0?'<span class="cw-h">'+myH+' h<span class="bpx-mut" style="display:block;font-size:11px">'+bpMoneyFmt(mine)+'</span></span>'
         :'<span class="cw-h bpx-mut">—</span>')
       +'</label>';
@@ -39902,7 +39914,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261004a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20261003c"></script>
+<script src="portal/crew.js?v=20261012a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
 <script src="portal/progress.js?v=20260930a"></script>
 <script src="portal/supply.js?v=20260930c"></script>
@@ -39920,7 +39932,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/projsheet.js?v=20261009a"></script>
 <script src="portal/custportal.js?v=20261009b"></script>
 <script src="portal/bpedit.js?v=20261001p"></script>
-<script src="portal/crewapp.js?v=20261011a"></script>
+<script src="portal/crewapp.js?v=20261012a"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
 <script src="portal/subapp.js?v=20261004a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
@@ -39942,7 +39954,7 @@ window.bpRepCopy=function(text,btn){
 <script src="site/site.js?v=20260921-a"></script>
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261011a">
-<link rel="stylesheet" href="portal/crewapp.css?v=20261003d">
+<link rel="stylesheet" href="portal/crewapp.css?v=20261012a">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
 <link rel="stylesheet" href="portal/custportal.css?v=20261009b">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261001p">
@@ -39953,5 +39965,5 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261004a"></script>
-<script src="portal/notify.js?v=20261009a"></script>
+<script src="portal/notify.js?v=20261012a"></script>
 </html>
