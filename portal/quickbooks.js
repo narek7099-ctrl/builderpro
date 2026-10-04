@@ -81,7 +81,8 @@
   function render() {
     var a = $('bpxViewArea'); if (!a || window._bpCurView !== 'quickbooks') return;
     var s = QB.st, h = '';
-    var logo = '<span class="qb-logo">qb</span>';
+    /* the QuickBooks mark (Simple Icons), in Intuit's QuickBooks green */
+    var logo = '<svg class="qb-logo" viewBox="0 0 24 24" role="img" aria-label="QuickBooks"><path fill="#2CA01C" d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm.642 4.1335c.9554 0 1.7296.776 1.7296 1.7332v9.0667h1.6c1.614 0 2.9275-1.3156 2.9275-2.933 0-1.6173-1.3136-2.9333-2.9276-2.9333h-.6654V7.3334h.6654c2.5722 0 4.6577 2.0897 4.6577 4.667 0 2.5774-2.0855 4.6666-4.6577 4.6666H12.642zM7.9837 7.333h3.3291v12.533c-.9555 0-1.73-.7759-1.73-1.7332V9.0662H7.9837c-1.6146 0-2.9277 1.316-2.9277 2.9334 0 1.6175 1.3131 2.9333 2.9277 2.9333h.6654v1.7332h-.6654c-2.5725 0-4.6577-2.0892-4.6577-4.6665 0-2.5771 2.0852-4.6666 4.6577-4.6666Z"/></svg>';
     if (!s) { a.innerHTML = '<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div></div>'; return; }
     if (s.demo) { a.innerHTML = '<div class="bpx-panel qb-hero">' + logo + '<div><b>QuickBooks</b><span>Sign in to connect your QuickBooks company.</span></div></div>'; return; }
     if (s.configured === false) { a.innerHTML = '<div class="bpx-panel qb-hero">' + logo + '<div><b>QuickBooks isn’t switched on yet</b><span>' + esc(s.error || '') + '</span></div></div>'; return; }
@@ -146,7 +147,7 @@
   function css() {
     if ($('qb-css')) return;
     var st = document.createElement('style'); st.id = 'qb-css';
-    st.textContent = '#bpx .qb-logo{width:44px;height:44px;border-radius:50%;background:#2ca01c;color:#fff;font-weight:800;font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;flex:0 0 auto;letter-spacing:-.5px}'
+    st.textContent = '#bpx .qb-logo{width:44px;height:44px;flex:0 0 auto;display:block}'
       + '#bpx .qb-hero,#bpx .qb-conn,#bpx .qb-send{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 20px}'
       + '#bpx .qb-hero>div,#bpx .qb-conn>div,#bpx .qb-h{flex:1 1 280px;display:flex;flex-direction:column;gap:4px;min-width:0}'
       + '#bpx .qb-hero b,#bpx .qb-conn b,#bpx .qb-h b{font-size:15.5px}#bpx .qb-hero span,#bpx .qb-conn span,#bpx .qb-h span{font-size:13px;color:#6b7280;line-height:1.5}'
