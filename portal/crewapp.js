@@ -447,7 +447,7 @@
     /* photos, docs, blueprints: view, and add (no edits, no deletes) */
     var list = j[t] || [], what = t === 'photos' ? 'photos' : t === 'docs' ? 'documents' : 'blueprints';
     var add = '<label class="ca-add"><span class="ms">' + (t === 'photos' ? 'add_a_photo' : 'upload_file') + '</span>Add ' + what
-      + '<input type="file" hidden multiple ' + (t === 'photos' ? 'accept="image/*"' : t === 'blueprints' ? 'accept="image/*,application/pdf"' : '') + ' onchange="bpCrewAdd(this)"></label><div class="ca-msg" id="ca-fmsg"></div>';
+      + '<input type="file" hidden multiple ' + (t === 'photos' ? 'accept="image/*"' : t === 'blueprints' ? 'accept="image/*,application/pdf"' : '') + ' onchange="bpCrewFileAdd(this)"></label><div class="ca-msg" id="ca-fmsg"></div>';
     return sec('', add + (list.length ? (t === 'photos'
         ? '<div class="ca-grid">' + list.map(function (p, i) { return '<a class="ca-ph" data-ref="' + esc(p) + '" target="_blank" rel="noopener"><img alt="Photo ' + (i + 1) + '"></a>'; }).join('') + '</div>'
         : '<div class="ca-files">' + list.map(function (f) { return '<a class="ca-file" data-ref="' + esc(f.d || '') + '" target="_blank" rel="noopener"><span class="ms">' + (t === 'docs' ? 'description' : 'architecture') + '</span><b>' + esc(f.n || 'File') + '</b>' + (f.t ? '<small>' + pretty(f.t) + (f.by ? ' · ' + esc(f.by) : '') + '</small>' : '') + '</a>'; }).join('') + '</div>')
@@ -625,7 +625,7 @@
       r.readAsDataURL(file);
     });
   }
-  window.bpCrewAdd = function (inp) {
+  window.bpCrewFileAdd = function (inp) {
     var files = [].slice.call(inp.files || []); inp.value = ''; if (!files.length) return;
     var kind = C.tab, jobId = C.job, m = $('ca-fmsg'), done = 0;
     if (m) { m.className = 'ca-msg'; m.textContent = 'Uploading ' + files.length + '…'; }
