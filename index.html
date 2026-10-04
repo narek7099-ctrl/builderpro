@@ -33399,6 +33399,7 @@ function bpActiveJobs(){
   var done=jobs.filter(function(j){return j.status==='done';});
   var rows, head, pgNav='';
   if(_bpJobTab==='map'){ bpJobMapView(active,done); return; }
+  if(_bpJobTab==='active'){ bpPjCardsView(active,done); return; }
   if(_bpJobTab==='active'){
     head='<tr><th>Job</th><th class="bpx-r">Estimate</th><th>Progress</th><th>Dates</th><th>Status</th><th></th></tr>';
     var pgA=bpPage('jobsA',active,10,'bpActiveJobs()'); pgNav=pgA.nav;
@@ -33434,6 +33435,75 @@ function bpActiveJobs(){
       +'<button class="bpx-jt'+(_bpJobTab==='map'?' on':'')+'" onclick="bpJobTab(\'map\')"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'+pgNav;
+}
+/* ---------- Active projects as cards ----------
+   One card per job: who and what, money in and still owed, where the work
+   stands, who is on it. Starred jobs sort first (and stay first on the
+   dashboard). Filters and search only redraw the grid, so typing keeps focus. */
+var _pjF='all', _pjQ='';
+function pjInit(n){ var p=String(n||'?').trim().split(/\s+/); return ((p[0]||'')[0]||'?').toUpperCase()+((p.length>1?p[p.length-1][0]:'')||'').toUpperCase(); }
+function pjKState(j){
+  var pr=window.bpPlan&&bpPlan.progress?bpPlan.progress(j):null;
+  return {pr:pr, late:!!(pr&&pr.late.length), noplan:!pr, nocrew:!(window.bpJobWhoLbl&&bpJobWhoLbl(j))};
+}
+function bpPjCardsView(active,done){
+  var tot=0,col=0,due=0,noplan=0,late=0,nocrew=0;
+  active.forEach(function(j){ var e=+j.estimate||0,c=+j.collected||0; tot+=e; col+=c; due+=Math.max(e-c,0); var k=pjKState(j); if(k.noplan)noplan++; if(k.late)late++; if(k.nocrew)nocrew++; });
+  var stat=function(l,v,n,cls){ return '<div class="pjk-stat'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+v+'</b>'+(n?'<small>'+n+'</small>':'')+'</div>'; };
+  var chip=function(k,l,n){ return '<button class="pjk-chip'+(_pjF===k?' on':'')+'" onclick="bpPjFilter(\''+k+'\')">'+l+(n!=null?' <em>'+n+'</em>':'')+'</button>'; };
+  q('bpxViewArea').innerHTML=
+    (window.bpPlanCheckin?bpPlanCheckin():'')
+    +'<div class="pjk-stats">'
+      +stat('Active projects',active.length,active.filter(function(j){return j.starred;}).length+' starred')
+      +stat('Contract value',bpMoneyFmt(tot),'')
+      +stat('Collected',bpMoneyFmt(col),tot>0?Math.round(col/tot*100)+'% of value':'','good')
+      +stat('Still owed',bpMoneyFmt(due),'','owe')
+    +'</div>'
+    +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt on" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
+      +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
+      +'<button class="bpx-jt" onclick="bpJobTab(\'map\')"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
+    +'<div class="pjk-bar"><div class="pjk-search"><span class="ms">search</span><input id="pjkQ" placeholder="Search customer, job or address" value="'+bpEsc(_pjQ)+'" oninput="_pjQ=this.value;bpPjGrid()"></div>'
+      +'<div class="pjk-chips">'+chip('all','All',active.length)+chip('starred','Starred',null)+(late?chip('late','Behind',late):'')+chip('noplan','No plan',noplan)+chip('nocrew','Nobody assigned',nocrew)+'</div></div>'
+    +'<div id="pjkGrid"></div>';
+  bpPjGrid();
+}
+window.bpPjFilter=function(k){ _pjF=k; document.querySelectorAll('.pjk-chip').forEach(function(b){ b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+k+"'")>0); }); bpPjGrid(); };
+window.bpPjGrid=function(){
+  var g=q('pjkGrid'); if(!g) return;
+  var t=_pjQ.trim().toLowerCase();
+  var list=bpJobsGet().filter(function(j){ return j.status==='active'; }).filter(function(j){
+    if(t&&(String(j.name||'')+' '+(j.title||'')+' '+(j.addr||'')).toLowerCase().indexOf(t)<0) return false;
+    var k=pjKState(j);
+    return _pjF==='all'||(_pjF==='starred'&&j.starred)||(_pjF==='late'&&k.late)||(_pjF==='noplan'&&k.noplan)||(_pjF==='nocrew'&&k.nocrew);
+  }).sort(function(a,b){ return (b.starred?1:0)-(a.starred?1:0); });
+  if(!list.length){ g.innerHTML=bpJobsGet().some(function(j){return j.status==='active';})
+      ? '<div class="pjk-empty">No projects match. <a onclick="_pjQ=\'\';bpPjFilter(\'all\');var i=q(\'pjkQ\');if(i)i.value=\'\'">Show all</a></div>'
+      : '<div class="pjk-empty"><b>No active projects yet</b><br>When a deposit is paid the job lands here automatically, or add one with <b>+ Add job</b>.</div>'; return; }
+  g.innerHTML='<div class="pjk-grid">'+list.map(bpPjCard).join('')+'</div>';
+};
+function bpPjCard(j){
+  var k=pjKState(j), pr=k.pr, e=+j.estimate||0, c=+j.collected||0, paidPct=e>0?Math.min(100,Math.round(c/e*100)):0;
+  var av=(j.photos&&j.photos[0])
+    ? (window.bpPF?bpPF.img(j.photos[0],'class="pjk-av"'):'<img class="pjk-av" src="'+j.photos[0]+'">')
+    : '<span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>';
+  var who=window.bpJobWhoLbl?bpJobWhoLbl(j):'', dates=bpJobDates(j);
+  var stage=!pr?'<span class="pjk-tag">Not planned</span>':k.late?'<span class="pjk-tag late">Behind</span>':pr.complete?'<span class="pjk-tag ok">Ready to close</span>':'<span class="pjk-tag on">'+pr.pct+'% done</span>';
+  var work=pr
+    ? '<div class="pjk-work">'+bpPlan.bar(j)+'<div class="bpp-sub">'+bpPlan.line(j)+'</div></div>'
+    : '<button class="pjk-plan" onclick="event.stopPropagation();bpPlanStart(\''+j.id+'\')"><span class="ms">add_task</span>Plan the phases<small>set the steps and dates so progress tracks itself</small></button>';
+  return '<div class="pjk'+(j.starred?' star':'')+'" onclick="bpProjOpen(\''+j.id+'\')">'
+    +'<div class="pjk-top">'+av+'<div class="pjk-id"><b>'+bpEsc(j.name||'Project')+'</b><span>'+bpEsc(j.title||'Job')+'</span></div>'
+      +'<button class="pjk-star'+(j.starred?' on':'')+'" title="'+(j.starred?'Unstar':'Star: keep it first here and on the dashboard')+'" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')"><span class="ms">star</span></button></div>'
+    +'<div class="pjk-row">'+stage+(window.bpPermitChip&&(j.permits||[]).length?bpPermitChip(j):'')+'</div>'
+    +'<div class="pjk-money"><div><b>'+bpMoneyFmt(e)+'</b><span>'+(j.collected!=null?bpMoneyFmt(c)+' paid · '+bpMoneyFmt(Math.max(e-c,0))+' owed':'Nothing collected yet')+'</span></div>'
+      +'<span class="pjk-pay" title="'+paidPct+'% paid"><i style="width:'+paidPct+'%"></i></span></div>'
+    +work
+    +'<div class="pjk-meta"><span class="'+(who?'':'mut')+'"><span class="ms">groups</span>'+(who?bpEsc(who):'Nobody assigned')+'</span>'
+      +'<span class="'+(dates?'':'mut')+'"><span class="ms">event</span>'+(dates||'No dates')+'</span></div>'
+    +'<div class="pjk-foot"><button class="pjk-open" onclick="event.stopPropagation();bpProjOpen(\''+j.id+'\')">Open</button>'
+      +'<button class="pjk-done" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')"><span class="ms">check</span>Mark done</button></div>'
+  +'</div>';
 }
 window.bpJobTab=function(t){_bpJobTab=t;bpActiveJobs();};
 /* ===== Projects map + route planning ========================================
@@ -39940,7 +40010,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261001b">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20261012b">
+<link rel="stylesheet" href="portal/dash.css?v=20261012c">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261004a"></script>
