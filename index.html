@@ -33678,17 +33678,20 @@ function bpJobMapView(active,done){
     '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
       +'<button class="bpx-jt on"><span class="ms" style="font-size:16px;vertical-align:-3px">map</span> Map & route</button></div></div>'
-    +'<div class="pj-mapwrap"><div class="pj-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
+    +'<div id="pjCeoBar" class="pjm-bar"></div>'
+    +'<div class="pj-mapwrap"><div class="pjm-col"><div class="pj-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div><div id="pjCeoPanel" class="pjm-panel" hidden></div></div>'
     +'<aside class="pj-route"><div class="pj-rh"><b>Plan a route</b><span class="bpx-mut">From '+(pjShop()?bpEsc(pjShop()):'your shop (add your address in Settings → Business)')+'</span></div>'
       +'<label class="pj-lab">Day</label><div class="pj-day"><input type="date" id="pj-date" value="'+_pjRoute.date+'" onchange="bpPjDay(this.value)"><button class="bpx-rowbtn" onclick="bpPjDay(\''+today+'\')">Today</button></div>'
       +'<label class="pj-lab">Crew</label><select id="pj-crew" class="pj-sel" onchange="bpPjCrew(this.value)"><option value="">All crews</option>'
         +pjCrews().map(function(c){return '<option value="'+c.id+'"'+(_pjRoute.crew===c.id?' selected':'')+'>'+bpEsc(c.name)+'</option>';}).join('')+'</select>'
       +'<label class="pj-lab">Stops</label><div id="pj-stops" class="pj-stops"></div>'
       +'<button class="bpx-btn" style="width:100%;margin-top:10px" onclick="bpPjPlan()"><span class="ms" style="font-size:18px;vertical-align:-4px;margin-right:6px">route</span>Plan best order</button>'
-      +'<div id="pj-plan"></div></aside></div>'
+      +'<div id="pj-plan"></div><div id="pjCeoDay" class="pjm-day"></div></aside></div>'
     +(noA.length?'<div class="pj-noaddr"><span class="ms">location_off</span><div><b>'+noA.length+' project'+(noA.length===1?'':'s')+' without an address</b> won’t show on the map: '
       +noA.slice(0,6).map(function(j){return '<a onclick="bpProjOpen(\''+j.id+'\')">'+bpEsc(j.name||'Project')+'</a>';}).join(', ')+(noA.length>6?'…':'')+'</div></div>':'');
   bpPjStops();
+  /* AI CEO on the map: pin colours, the job panel and Plan the day (portal/aiceo-map.js) */
+  if(window.bpCeoMapInit) bpCeoMapInit();
   bpEnsureLeaflet(function(){ bpPjDraw(withA); });
   if(window.bpCrewLoad) try{ Promise.resolve(bpCrewLoad()).then(function(){}); }catch(e){}
 }
@@ -33702,10 +33705,14 @@ function bpPjStops(){
   act.sort(function(a,b){ return (day.indexOf(b.id)>-1)-(day.indexOf(a.id)>-1); });
   el.innerHTML=act.map(function(j){
     return '<label class="pj-stop"><input type="checkbox" '+(_pjRoute.sel[j.id]?'checked':'')+' onchange="bpPjSel(\''+j.id+'\',this.checked)"><div><b>'+bpEsc(j.name||'Project')+'</b>'
-      +'<span>'+bpEsc(j.addr)+'</span></div>'+(day.indexOf(j.id)>-1?'<em>Scheduled</em>':'')+'</label>';
+      +'<span>'+bpEsc(j.addr)+'</span></div>'+(day.indexOf(j.id)>-1?'<em>Scheduled</em>':'')+(window.bpCeoStopBtn?bpCeoStopBtn(j):'')+'</label>';
   }).join('');
 }
 window.bpPjDay=function(iso){ _pjRoute.date=iso; if(_pjBDay!==iso){ _pjBDay=iso; if(q('pj-board')) bpPjBoard(); } _pjRoute.sel={}; var d=q('pj-date'); if(d)d.value=iso; bpPjStops(); var pl=q('pj-plan'); if(pl)pl.innerHTML=''; if(_pjLayer&&_pjLayer.route){_pjMap.removeLayer(_pjLayer.route);_pjLayer.route=null;} };
+/* for portal/aiceo-map.js: the pins on the map, and feeding stops into the planner */
+window.bpPjMarkers=function(){ return _pjMap&&_pjLayer?{map:_pjMap,layer:_pjLayer.pins,mk:_pjLayer.mk||{}}:null; };
+window.bpPjRouteState=function(){ return _pjRoute; };
+window.bpPjStopsRedraw=function(){ bpPjStops(); };
 window.bpPjSel=function(id,on){ if(on)_pjRoute.sel[id]=1; else delete _pjRoute.sel[id]; };
 async function pjPoint(j){
   if(j.geo&&j.geo.addr===j.addr&&isFinite(j.geo.lat)) return j.geo;
@@ -33721,17 +33728,21 @@ async function bpPjDraw(jobs){
   _pjMap=L.map('pjMap',{zoomControl:true,scrollWheelZoom:false}).setView([39.5,-98.35],4);
   /* the shared keyless basemap chain (map kit), with its fallbacks */
   bpTileLayer(_pjMap,'street');
-  _pjLayer={pins:L.layerGroup().addTo(_pjMap),route:null};
+  _pjLayer={pins:L.layerGroup().addTo(_pjMap),route:null,mk:{}};
   var pts=[];
   for(var i=0;i<jobs.length;i++){
     var j=jobs[i], g=await pjPoint(j); if(!g||!_pjMap) continue;
     pts.push([g.lat,g.lng]);
     var cr=pjCrew(j.crew);
-    L.marker([g.lat,g.lng],{icon:L.divIcon({className:'pj-pin',html:'<span'+(cr?' style="background:'+cr.color+'"':'')+'></span>',iconSize:[22,22],iconAnchor:[11,11]})})
-      .bindPopup('<b>'+bpEsc(j.name||'Project')+'</b>'+(cr?' <span style="color:'+cr.color+';font-weight:700">\u25CF '+bpEsc(cr.name)+'</span>':'')+'<br>'+bpEsc(j.title||'')+'<br><span style="color:#6b7280">'+bpEsc(j.addr)+'</span><br><a style="cursor:pointer;color:#2f6bff" onclick="bpProjOpen(\''+j.id+'\')">Open project</a>')
+    var ceoPin=window.bpCeoPinIcon?bpCeoPinIcon(j,cr):null;
+    var mk=L.marker([g.lat,g.lng],{icon:ceoPin||L.divIcon({className:'pj-pin',html:'<span'+(cr?' style="background:'+cr.color+'"':'')+'></span>',iconSize:[22,22],iconAnchor:[11,11]})});
+    _pjLayer.mk[j.id]=mk;
+    if(window.bpCeoMapSel) mk.on('click',(function(id){ return function(){ bpCeoMapSel(id); }; })(j.id));
+    mk.bindPopup('<b>'+bpEsc(j.name||'Project')+'</b>'+(cr?' <span style="color:'+cr.color+';font-weight:700">\u25CF '+bpEsc(cr.name)+'</span>':'')+'<br>'+bpEsc(j.title||'')+'<br><span style="color:#6b7280">'+bpEsc(j.addr)+'</span><br><a style="cursor:pointer;color:#2f6bff" onclick="bpProjOpen(\''+j.id+'\')">Open project</a>')
       .addTo(_pjLayer.pins);
     if(pts.length===1) _pjMap.setView(pts[0],12); else _pjMap.fitBounds(pts,{padding:[40,40],maxZoom:14});
   }
+  if(window.bpCeoMapPins) bpCeoMapPins();
   if(!pts.length) el.insertAdjacentHTML('beforeend','<div class="pj-mapempty">No project addresses could be placed yet. Add a job-site address in a project’s details.</div>');
 }
 window.bpPjPlan=async function(){
@@ -39794,7 +39805,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/subapp.js?v=20261004a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
 <script src="portal/aiteam.js?v=20261009a"></script>
-<script src="portal/aiceo.js?v=20261009a"></script>
+<script src="portal/aiceo.js?v=20261010a"></script>
+<script src="portal/aiceo-map.js?v=20261010a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261001b"></script>
