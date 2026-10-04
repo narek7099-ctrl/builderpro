@@ -271,3 +271,97 @@
 #bpx .ca-recs{margin-top:12px;display:flex;flex-direction:column;gap:8px}
 #bpx .ca-recp{display:flex;justify-content:space-between;align-items:center;gap:8px}
 #bpx .ca-recp .bpx-rowbtn{margin:0}
+
+/* ---------- clocked by someone else (member) ---------- */
+#bpx .ck-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+#bpx .ck-col>.bpx-panel{margin:0}
+#bpx .ck-by{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(47,107,255,.06);border:1px solid rgba(47,107,255,.22)}
+#bpx .ck-by>.ms{flex:none;font-size:22px;color:var(--blue,#2f6bff)}
+#bpx .ck-by>div{flex:1;min-width:0}
+#bpx .ck-by b{display:block;font-size:14px;color:var(--ink)}
+#bpx .ck-by span{display:block;font-size:12.5px;color:var(--grey);line-height:1.45}
+#bpx .ck-by.rep{background:rgba(220,38,38,.06);border-color:rgba(220,38,38,.25)}
+#bpx .ck-by.rep>.ms{color:#dc2626}
+#bpx .ck-repbtn{flex:none;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid rgba(220,38,38,.35);background:var(--card);color:#b42318;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+#bpx .ck-repbtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#bpx .ck-log>div{flex-wrap:wrap}
+#bpx .ck-lby{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-left:54px;font-size:12px;color:var(--grey)}
+#bpx .ck-lby>span{display:inline-flex;align-items:center;gap:4px}
+#bpx .ck-lby .ms{font-size:15px}
+#bpx .ck-lby .ck-repbtn{min-height:30px;padding:0 10px;font-size:12px}
+#bpx .ck-rep{font-style:normal;font-weight:700;color:#dc2626}
+
+/* ---------- crew lead: clock in / out the crew ---------- */
+#bpx .ck-lead{border-top:4px solid var(--cc,#475467)}
+#bpx .ckl-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+#bpx .ckl-head>i{flex:none;width:12px;height:12px;border-radius:50%;background:var(--cc,#475467)}
+#bpx .ckl-head small{display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--grey)}
+#bpx .ckl-head b{display:block;font-size:17px;color:var(--ink)}
+#bpx .ckl-head span{display:block;font-size:12.5px;color:var(--grey)}
+#bpx .ckl-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--soft);border:1px solid var(--line-2,var(--line));margin-bottom:14px}
+#bpx .ckl-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--grey);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+#bpx .ckl-tabs button .ms{font-size:18px}
+#bpx .ckl-tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+#bpx .ckl-tabs button i{font-style:normal;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#16a34a;color:#fff;font-size:11.5px;display:inline-flex;align-items:center;justify-content:center}
+#bpx .ckl-tabs button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#bpx .ckl-who{margin-top:14px}
+#bpx .ckl-who span{display:block;text-transform:none;letter-spacing:0;font-weight:500;font-size:12.5px;margin-top:2px}
+#bpx .ckl-list{display:flex;flex-direction:column;gap:8px}
+#bpx .ckl-p{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:border-color .2s,background-color .2s;position:relative}
+#bpx .ckl-p input{position:absolute;opacity:0;pointer-events:none}
+#bpx .ckl-p>div,#bpx .ckl-p>label>div{flex:1;min-width:0}
+#bpx .ckl-p b{display:block;font-size:14.5px;color:var(--ink)}
+#bpx .ckl-p b small{font-weight:500;color:var(--grey)}
+#bpx .ckl-p div>span{display:block;font-size:12.5px;color:var(--grey);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx .ckl-box{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:flex !important;align-items:center;justify-content:center;background:var(--card)}
+#bpx .ckl-box .ms{font-size:18px;color:#fff;opacity:0}
+#bpx .ckl-p:has(input:checked){border-color:#16a34a;background:rgba(22,163,74,.06)}
+#bpx .ckl-p:has(input:checked) .ckl-box{background:#16a34a;border-color:#16a34a}
+#bpx .ckl-p:has(input:checked) .ckl-box .ms{opacity:1}
+#bpx .ckl-p:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+#bpx .ckl-p.dis{cursor:not-allowed;background:var(--soft)}
+#bpx .ckl-p.dis .ckl-box{opacity:.45}
+#bpx .ckl-in{font-style:normal;font-weight:700;color:#15803d}
+#bpx .ckl-out{cursor:default}
+#bpx .ckl-out>label{display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer}
+#bpx .ckl-out:has(input:checked){border-color:#b42318;background:rgba(180,35,24,.05)}
+#bpx .ckl-out:has(input:checked) .ckl-box{background:#b42318;border-color:#b42318}
+#bpx .ckl-one{flex:none;min-height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+#bpx .ckl-one:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#bpx .ckl-av.bp-av,#bpx .ckl-conf .ckl-av.bp-av{flex:none;width:38px;height:38px;font-size:13px;color:#fff}
+#bpx .ckl-go{height:60px;font-size:17px}
+#bpx .ckl-go:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+#bpx .ckl-none{display:flex;align-items:center;gap:8px;padding:16px;border-radius:14px;background:var(--soft);color:var(--grey);font-size:14px}
+#bpx .ckl-note{display:flex;gap:6px;align-items:flex-start;margin-top:12px;font-size:12px;color:var(--grey);line-height:1.45}
+#bpx .ckl-note .ms{font-size:16px;flex:none}
+#bpx .ckl-conf{display:flex;flex-direction:column;gap:6px;margin:12px 0 4px}
+#bpx .ckl-conf>div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--soft)}
+#bpx .ckl-conf b{flex:1;font-size:14.5px;color:var(--ink)}
+#bpx .ckl-conf b small{font-weight:500;color:var(--grey)}
+#bpx .ckl-conf span:not(.bp-av):not(.bp-av span){font-size:12.5px;color:var(--grey)}
+
+/* ---------- owner side: who made a punch, disputes ---------- */
+#bpx .bylead{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px;border-radius:999px;background:rgba(47,107,255,.08);color:#2f5bd3;font-size:11.5px;font-weight:600;white-space:nowrap;font-style:normal}
+#bpx .bylead .ms{font-size:14px}
+#bpx .bylead a{color:inherit;display:inline-flex;align-items:center}
+#bpx .bpdisp{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px;border-radius:999px;background:rgba(220,38,38,.1);color:#b42318;font-size:11.5px;font-weight:700;white-space:nowrap;font-style:normal}
+#bpx .bpdisp .ms{font-size:14px}
+#bpx .bpdisp-note{display:block;font-size:11.5px;color:#b42318;margin-top:3px;white-space:normal}
+#bpx .ca-now em.bad{color:#dc2626}
+#bpx .pay-disp{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:12px;border-radius:12px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.3);color:#991b1b;font-size:13.5px}
+#bpx .pay-disp .ms{font-size:20px;color:#dc2626}
+#bpx .pay-disp b{color:#991b1b}
+#bpx .pay-disp button{margin-left:auto;flex:none;border:0;background:none;color:#b42318;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px}
+#bpx tr.te-disp td{background:rgba(220,38,38,.04)}
+#bpx .pjc-lead{display:inline-flex;align-items:center;gap:3px;margin-left:5px;padding:1px 7px;border-radius:999px;background:var(--cc,#0b1220);color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.02em;vertical-align:1px}
+#bpx .pjc-lead .ms{font-size:12px}
+#bpx .pjc-leadsel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+#bpx .pjc-leadsel label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey)}
+#bpx .pjc-leadsel select{min-height:40px;min-width:200px;max-width:100%}
+#bpx .pjc-leadsel small{flex-basis:100%;font-size:12px;color:var(--grey)}
+@media (max-width:640px){
+  #bpx .ck-lby{padding-left:0}
+  #bpx .ck-by{flex-wrap:wrap}
+  #bpx .ck-by .ck-repbtn{width:100%}
+}
+#bpx .pjc-names .pjc-lead,#bpx .pjc-lead span{opacity:1}

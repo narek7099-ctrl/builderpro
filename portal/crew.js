@@ -408,6 +408,36 @@
       .then(function () { bpCloseModal(); bpCrewLoad(true).then(render); }, function () { msg('Couldn’t remove them.'); });
   };
 
+  /* ------------------------------------------- punches made by a crew lead --- */
+  /* A crew lead can clock their crew in and out (crew_clock_for); those
+     shifts carry who did it and where the lead's phone was. The person can
+     report a punch they didn't make, which flags the entry here and in the
+     pay period until the owner or office clears it. */
+  window.bpByLeadTag = function (name, lat, lng) {
+    if (!name) return '';
+    var first = String(name).trim().split(/\s+/)[0];
+    return '<span class="bylead" title="Clocked by ' + esc(name) + ', the crew lead"><span class="ms">supervisor_account</span>by ' + esc(first) + ' (lead)'
+      + (isFinite(+lat) && isFinite(+lng) && lat != null && lng != null
+        ? ' <a href="https://www.google.com/maps/search/?api=1&query=' + (+lat) + ',' + (+lng) + '" target="_blank" rel="noopener" aria-label="Where ' + esc(first) + '’s phone was" title="Where ' + esc(first) + '’s phone was"><span class="ms">location_on</span></a>' : '')
+      + '</span>';
+  };
+  function dispTag(t, withNote) {
+    if (!t || !t.disputed_at) return '';
+    return '<span class="bpdisp" title="' + esc(t.dispute_note || 'Reported by the crew member') + '"><span class="ms">flag</span>Disputed</span>'
+      + (withNote && t.dispute_note ? '<span class="bpdisp-note">“' + esc(t.dispute_note) + '”</span>' : '');
+  }
+  window.bpEntryTags = function (t) { return (t ? bpByLeadTag(t.clocked_by_name, t.clocked_lat, t.clocked_lng) : '') + dispTag(t, false); };
+  window.bpHoursClear = function (id) {
+    var t = S.entries.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+    if (!confirm('Clear the dispute? Do this once you’ve checked the hours (edit or remove the entry if they were wrong).')) return;
+    Promise.resolve(BP_SB.rpc('crew_clock_dispute_clear', { p_id: id })).then(function (r) {
+      if (r && r.error) throw r.error;
+      t.disputed_at = null; render();
+    }, function () { alert('Couldn’t clear it. Try again.'); });
+  };
+  window.bpHoursDisputed = function () { S.tab = 'hours'; S.hoursOnly = 'disputed'; render(); };
+  window.bpHoursAll = function () { S.hoursOnly = ''; render(); };
+
   /* ------------------------------------------------------------ hours --- */
   function hours(el) {
     var head = '<div class="bpx-chead" style="margin-bottom:12px">'
@@ -427,14 +457,21 @@
       return;
     }
 
-    var rows = S.entries.slice(0, 120).map(function (t) {
+    var nDisp = S.entries.filter(function (t) { return t.disputed_at; }).length;
+    var shown = S.hoursOnly === 'disputed' ? S.entries.filter(function (t) { return t.disputed_at; }) : S.entries;
+    if (S.hoursOnly === 'disputed' || nDisp) head += '<div class="pay-disp"><span class="ms">flag</span><span>' + (S.hoursOnly === 'disputed'
+        ? 'Showing the <b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b>. Check each one, edit or remove it if it’s wrong, then clear the flag.'
+        : '<b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b> — a crew member says a lead’s punch was wrong.') + '</span>'
+      + '<button type="button" onclick="' + (S.hoursOnly === 'disputed' ? 'bpHoursAll()">Show all' : 'bpHoursDisputed()">Review') + '</button></div>';
+    var rows = shown.slice(0, 120).map(function (t) {
       var e = bpEmpById(t.employee_id);
-      return '<tr><td>' + esc(t.worked_on) + '</td>'
-        + '<td><b>' + esc(e ? e.name : 'Removed') + '</b></td>'
+      return '<tr' + (t.disputed_at ? ' class="te-disp"' : '') + '><td>' + esc(t.worked_on) + '</td>'
+        + '<td><b>' + esc(e ? e.name : 'Removed') + '</b>' + bpByLeadTag(t.clocked_by_name, t.clocked_lat, t.clocked_lng) + dispTag(t, true) + '</td>'
         + '<td>' + esc(t.job_name || '—') + '</td>'
         + '<td>' + (+t.hours || 0) + (t.ot_hours > 0 ? ' <span style="color:#b45309">+' + t.ot_hours + ' OT</span>' : '') + '</td>'
         + '<td>' + money(t.cost) + '</td>'
-        + '<td class="bpx-r"><button class="bpx-rowbtn" onclick="bpHoursDel(\'' + t.id + '\')">Remove</button></td></tr>';
+        + '<td class="bpx-r">' + (t.disputed_at ? '<button class="bpx-rowbtn" onclick="bpHoursClear(\'' + t.id + '\')">Clear flag</button> ' : '')
+        + '<button class="bpx-rowbtn" onclick="bpHoursDel(\'' + t.id + '\')">Remove</button></td></tr>';
     }).join('');
 
     /* who carried the last 30 days: people are names, so horizontal bars,
@@ -581,13 +618,15 @@
     S.entries.forEach(function (x) {
       if (x.worked_on < from || x.worked_on > to) return;
       var e = bpEmpById(x.employee_id); if (!e) return;
-      var r = by[e.id] = by[e.id] || { e: e, h: 0, ot: 0, cost: 0, jobs: {} };
+      var r = by[e.id] = by[e.id] || { e: e, h: 0, ot: 0, cost: 0, jobs: {}, disp: [], lead: {} };
       r.h += +x.hours || 0; r.ot += +x.ot_hours || 0; r.cost += +x.cost || 0;
+      if (x.disputed_at) r.disp.push(x);
+      if (x.clocked_by_name) r.lead[x.clocked_by_name] = x;
       if (x.job_name) r.jobs[x.job_name] = 1;
     });
     /* salaried people are owed their fortnight whether or not hours were logged */
     S.emps.forEach(function (e) {
-      if (e.active && e.pay_type === 'salary' && !by[e.id]) by[e.id] = { e: e, h: 0, ot: 0, cost: 0, jobs: {} };
+      if (e.active && e.pay_type === 'salary' && !by[e.id]) by[e.id] = { e: e, h: 0, ot: 0, cost: 0, jobs: {}, disp: [], lead: {} };
     });
     return Object.keys(by).map(function (k) {
       var r = by[k], e = r.e, rt = +e.rate || 0;
@@ -634,6 +673,9 @@
       + '<b>Mark paid once the money has gone out.</b> That books it in Finances as an expense — W-2 wages as Labor / crew, 1099 as Subcontractor. '
       + 'Amounts are gross: no tax is withheld or filed here, so hand them to Gusto, QuickBooks, ADP or your bookkeeper as usual.</span></div>';
 
+    var nDisp = list.reduce(function (n, r) { return n + r.disp.length; }, 0);
+    if (nDisp) head += '<div class="pay-disp" role="alert"><span class="ms">flag</span><span><b>' + nDisp + ' disputed ' + (nDisp === 1 ? 'entry' : 'entries') + '</b> — review before paying.</span>'
+      + '<button type="button" onclick="bpHoursDisputed()">Review</button></div>';
     if (!list.length) {
       el.innerHTML = head + '<div class="bpx-empty2">Nothing owed for ' + nice(f) + ' – ' + nice(t) + '. Log hours under Hours and they show up here.</div>' + note; return;
     }
@@ -647,7 +689,10 @@
       + '</tr></thead><tbody>'
       + list.map(function (r) {
           var amt = r.paid ? +r.paid.amount || 0 : r.gross;
-          return '<tr><td><b>' + esc(r.e.name) + '</b></td>'
+          var leads = Object.keys(r.lead);
+          return '<tr' + (r.disp.length ? ' class="te-disp"' : '') + '><td><b>' + esc(r.e.name) + '</b>'
+            + leads.map(function (k) { var x = r.lead[k]; return bpByLeadTag(k, x.clocked_lat, x.clocked_lng); }).join('')
+            + (r.disp.length ? '<span class="bpdisp" title="' + esc(r.disp.map(function (x) { return x.dispute_note || 'Reported'; }).join(' · ')) + '"><span class="ms">flag</span>Disputed' + (r.disp.length > 1 ? ' ×' + r.disp.length : '') + '</span>' : '') + '</td>'
             + '<td><span class="bpx-badge' + (r.e.kind === '1099' ? '' : ' ok') + '">' + (r.e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
             + '<td>' + (r.e.pay_type === 'salary' && !r.h ? '<span class="bpx-mut">salary</span>' : r.h) + '</td><td>' + (r.ot || '—') + '</td>'
             + '<td><b>' + money(amt) + '</b></td>'
