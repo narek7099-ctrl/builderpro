@@ -160,7 +160,7 @@ export function rulesReport(s: Snap): string {
   const nice = new Date(day + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
   const L: string[] = [];
   const list = (xs: Snap[], f: (x: Snap) => string, max = 3) => xs.slice(0, max).map(f).join("; ") + (xs.length > max ? `; +${xs.length - max} more` : "");
-  L.push(`Good morning${s.company ? ", " + s.company : ""}. Your briefing for ${nice}.`, "");
+  L.push(`Good morning${s.company ? ", " + String(s.company).replace(/\.+$/, "") : ""}. Your briefing for ${nice}.`, "");
 
   L.push("MONEY");
   const cm = Number(m.collected_month) || 0, clm = Number(m.collected_last_month) || 0, em = Number(m.expenses_month) || 0;
