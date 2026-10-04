@@ -22,7 +22,7 @@ const GHL = "https://services.leadconnectorhq.com";
 const DEF_LOC = Deno.env.get("GHL_LOCATION_ID") || "aUs7E5m1gmLXoeIV3WM9";
 const PORTAL = "https://builderpro-os.com/";
 
-export const TAGS: Record<string, string> = {
+const TAGS: Record<string, string> = {
   job_scheduled: "bp-job-scheduled", visit_tomorrow: "bp-visit-tomorrow", crew_arrived: "bp-crew-arrived",
   job_completed: "bp-job-completed", payment_overdue: "bp-payment-overdue", job_anniversary: "bp-job-anniversary",
   storm_followup: "bp-storm-followup",
@@ -166,6 +166,12 @@ Deno.serve(async (req) => {
       const loc = body.location || DEF_LOC;
       const map = await fields(loc, true);
       return json({ ok: true, location: loc, fields: FIELDS.map((n) => ({ name: n, id: map[n.toLowerCase()] || null })), tags: Object.values(TAGS) });
+    }
+    if (body.op === "peek" && body.contact) {   // read-only check of one contact's tags and BP fields
+      const loc = body.location || DEF_LOC, map = await fields(loc, false), byId: Record<string, string> = {};
+      Object.keys(map).forEach((k) => { byId[map[k]] = k; });
+      const c = (await ghl(loc, "GET", `/contacts/${body.contact}`)).contact || {};
+      return json({ ok: true, tags: c.tags || [], fields: (c.customFields || []).filter((f: any) => byId[f.id]).map((f: any) => ({ [byId[f.id]]: f.value })) });
     }
     if (body.scan !== false) await rpc("bp_ghl_scan_all").catch((e) => console.error("scan", e.message));
     return json({ ok: true, ...(await deliver()) });
