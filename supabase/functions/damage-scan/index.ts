@@ -92,6 +92,47 @@ function over(key: string, max: number, windowMs: number): boolean {
 }
 const MIN = 60 * 1000;
 
+// --- shared limits. The Map above only holds inside one isolate, so after it
+// passes, public.rate_take() (migration 20261008000000_scan_limits.sql)
+// counts across all of them. Any DB problem (no env, network, timeout, error)
+// falls back to the in-memory answer: a broken counter must never block a scan.
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+async function take(bucket: string, key: string, max: number, windowSec: number): Promise<boolean | null> {
+  if (!SB_URL || !SB_KEY) return null;
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 2500);
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/rate_take`, {
+      method: "POST", signal: ctl.signal,
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_bucket: bucket, p_key: key, p_max: max, p_window_sec: windowSec }),
+    });
+    if (!r.ok) return null;
+    const v: unknown = await r.json();
+    return typeof v === "boolean" ? v : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+// false = allowed (or the DB could not answer), true = over a shared limit
+async function overShared(ip: string): Promise<boolean> {
+  const checks: [string, string, number, number][] = [
+    ["scan_ip10", ip, 3, 600],
+    ["scan_ipday", ip, 10, 86400],
+    ["scan_all", "all", 600, 3600],
+  ];
+  // in order, so a visitor already over their own limit doesn't eat a global slot
+  for (const [b, k, m, w] of checks) {
+    const ok = await take(b, k, m, w);
+    if (ok === null) return false;
+    if (!ok) return true;
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ ok: false, error: "method" }, 405);
@@ -102,7 +143,7 @@ Deno.serve(async (req) => {
 
   const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || "anon";
   // 3 scans per 10 minutes and 10 a day per visitor; 600 an hour overall
-  if (over("ip10:" + ip, 3, 10 * MIN) || over("ipday:" + ip, 10, 1440 * MIN) || over("all", 600, 60 * MIN)) {
+  if (over("ip10:" + ip, 3, 10 * MIN) || over("ipday:" + ip, 10, 1440 * MIN) || over("all", 600, 60 * MIN) || await overShared(ip)) {
     return json({ ok: false, error: "rate_limited", reason: "You've run a few scans already. Please try again later, or contact the contractor for a free inspection." }, 429);
   }
 

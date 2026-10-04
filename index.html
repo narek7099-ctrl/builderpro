@@ -37762,6 +37762,7 @@ function bpSettings(){
     ['ridge',''+BP_AI_NAME+' AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
     ['brain','AI Brain','psychology','Teach '+BP_AI_NAME+' from your prices, jobs and reviews, and answer what she couldn\'t.'],
     ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
+    ['notify','Notifications','notifications','What lands in your bell, and how you hear about it.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
@@ -37830,6 +37831,7 @@ function bpSettings(){
       +sec('ridge','<div id="bpx-rg-host"></div>')
       +sec('brain','<div id="bpx-br-host"></div>')
       +sec('signature','<div id="bpx-us-host"></div>')
+      +sec('notify','<div id="bpx-nt-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
         +row('Dashboard layout','Overview opens on the charts. Command center keeps your numbers and to-dos in a column on the right. Projects first leads with your jobs.',
@@ -37848,7 +37850,7 @@ function bpSettings(){
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
         +'</div>'):'')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature'||_bpSetSec==='notify')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   /* the trade box suggests every trade with a calculator (Concrete & Paving, Flooring, ...) */
@@ -37858,18 +37860,20 @@ function bpSettings(){
   if(_bpSetSec==='phone') bpPhoneRender();
   if(_bpSetSec==='brain'&&window.bpBrainRender) bpBrainRender();
   if(_bpSetSec==='signature') bpUsSettings();
+  if(_bpSetSec==='notify'&&window.bpNotifySettings) bpNotifySettings();
 }
 var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','phone','ridge','brain','signature','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','phone','ridge','brain','signature','notify','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
-  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
+  var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature'||t==='notify');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
   if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
   if(t==='phone') bpPhoneRender();
   if(t==='brain'&&window.bpBrainRender) bpBrainRender();
   if(t==='signature') bpUsSettings();
+  if(t==='notify'&&window.bpNotifySettings) bpNotifySettings();
 };
 /* ===== Business number =====================================================
    Customers text the number they already know, not the BuilderPro one. This
@@ -39813,6 +39817,8 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261002a">
+<link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261004a"></script>
+<script src="portal/notify.js?v=20261008a"></script>
 </html>
