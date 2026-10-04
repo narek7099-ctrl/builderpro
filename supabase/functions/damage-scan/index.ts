@@ -79,6 +79,19 @@ Rules:
 - Plain language for a homeowner. No markdown.
 ${Object.keys(answers).length ? "The homeowner said: " + Object.entries(answers).map(([k, v]) => `${k}: ${v}`).join("; ") : ""}`;
 
+// --- rate limits (per isolate). Each scan is a paid AI call on a public page,
+// so one visitor gets a few scans, and the whole function has a ceiling.
+const hits = new Map<string, number[]>();
+function over(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const a = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
+  if (a.length >= max) { hits.set(key, a); return true; }
+  a.push(now); hits.set(key, a);
+  if (hits.size > 5000) for (const [k, v] of hits) if (!v.length || now - v[v.length - 1] > 864e5) hits.delete(k);
+  return false;
+}
+const MIN = 60 * 1000;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ ok: false, error: "method" }, 405);
@@ -86,6 +99,12 @@ Deno.serve(async (req) => {
 
   let b: Record<string, unknown> = {};
   try { b = await req.json(); } catch { /* no body */ }
+
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || "anon";
+  // 3 scans per 10 minutes and 10 a day per visitor; 600 an hour overall
+  if (over("ip10:" + ip, 3, 10 * MIN) || over("ipday:" + ip, 10, 1440 * MIN) || over("all", 600, 60 * MIN)) {
+    return json({ ok: false, error: "rate_limited", reason: "You've run a few scans already. Please try again later, or contact the contractor for a free inspection." }, 429);
+  }
 
   const trade = String(b.trade ?? "");
   if (!TRADES.includes(trade)) return json({ ok: false, error: "bad_trade" }, 400);
