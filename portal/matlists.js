@@ -628,14 +628,16 @@
     if (!withList.length) h += '<div class="pjk-empty">' + (rows.length ? 'No lists yet. Press <b>Start list</b> on a job above.' : 'No jobs yet. Lists hang off a project, so add one in Projects first.') + '</div>';
     else h += '<div class="pjk-grid">' + withList.map(function (j) {
       var m = j.materials, n = m.items.length, est = ML.total(j), got = bought(j), nw = ML.newCount(j);
-      var sups = bySupplier(m.items).map(function (g) { return g.name; }).filter(Boolean);
+      var sups = [], seenS = {};
+      m.items.forEach(function (it) { var nm = String(it.supplierName || it.supplier || '').trim(); if (nm && !seenS[nm.toLowerCase()]) { seenS[nm.toLowerCase()] = 1; sups.push(nm); } });
+      var noSup = m.items.filter(function (it) { return !String(it.supplierName || it.supplier || '').trim(); }).length;
       var pct = est > 0 ? Math.min(100, Math.round(got / est * 100)) : 0;
       return '<div class="pjk ml-card" onclick="ML.open=\'' + j.id + '\';bpMatLists()">'
         + '<div class="pjk-top"><span class="pjk-av"><span class="ms">inventory_2</span></span><div class="pjk-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>' + statusPill(m.status) + '</div>'
         + (nw ? '<div><span class="ml-newb">' + nw + ' new change' + (nw === 1 ? '' : 's') + ' from the crew</span></div>' : '')
         + '<div class="ml-nums"><div><b>' + n + '</b><span>item' + (n === 1 ? '' : 's') + '</span></div><div><b>' + money(est) + '</b><span>planned</span></div><div><b>' + money(got) + '</b><span>bought</span></div></div>'
         + '<div><span class="pjk-pay" title="' + pct + '% of the plan bought so far"><i style="width:' + pct + '%' + (got > est && est > 0 ? ';background:#d97706' : '') + '"></i></span>' + (got > est && est > 0 ? '<span class="ml-over">' + money(got - est) + ' over the plan</span>' : '') + '</div>'
-        + '<div class="pjk-meta"><span class="' + (sups.length ? '' : 'mut') + '"><span class="ms">storefront</span>' + (sups.length ? esc(sups.join(', ')) : 'No supplier picked') + '</span></div>'
+        + '<div class="pjk-meta"><span class="' + (sups.length ? '' : 'mut') + '"><span class="ms">storefront</span>' + (sups.length ? esc(sups.join(', ')) + (noSup ? ' <span class="bpx-mut">· ' + noSup + ' item' + (noSup === 1 ? '' : 's') + ' without one</span>' : '') : 'No supplier picked yet') + '</span></div>'
         + '<div class="pjk-foot"><button class="pjk-open" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open list</button>'
           + '<button class="pjk-done" onclick="event.stopPropagation();SP.rcOpen&&SP.rcOpen(\'\',\'' + j.id + '\')"><span class="ms">photo_camera</span>Add receipt</button></div>'
         + '</div>';
