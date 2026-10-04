@@ -7,7 +7,8 @@
      bpCeoRender(host)   the AI CEO tab (briefing, numbers, needs
                          attention, ask, past reports)
      bpCeoReco(job)      ranked people for a project, one-tap Assign
-                         (bpProjCrewSet) or Assign sub (bpSubAssign form).
+                         (bpProjCrewSet), Assign crew (bpJobSetCrew: j.crew)
+                         or Assign sub (bpSubAssign form).
                          Never assigns on its own.
      bpCeoDashCard(row)  the dashboard card for the latest ceo_reports row
    ================================================================== */
@@ -75,7 +76,7 @@
       '.ceo-empty{text-align:center;padding:26px 10px}.ceo-empty .ms{font-size:34px;color:var(--blue,#2563eb)}.ceo-empty b{display:block;margin:6px 0 4px}',
       '.ceo-wait{animation:ceoblink 1.2s ease-in-out infinite}@keyframes ceoblink{50%{opacity:.45}}',
       /* recommended panel (project sheet) */
-      '.rc-list{display:grid;gap:8px;margin-top:8px}',
+      '.rc-list{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:8px}',
       '.rc-row{border:1px solid var(--line,#e3e8ef);border-radius:12px;padding:11px 12px;background:var(--card,#fff);display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:4px 11px;align-items:center}',
       '.rc-av{width:36px;height:36px;border-radius:50%;background:var(--blue-l,#eaf1ff);color:var(--blue,#2563eb);display:grid;place-items:center;font-size:12.5px;font-weight:600}',
       '.rc-row.sub .rc-av{background:#f3e8ff;color:#7e22ce}',
@@ -92,6 +93,14 @@
       '.rc-btn{grid-row:1;grid-column:3;white-space:nowrap}',
       '.rc-btn .bpx-btn{width:auto !important;margin:0 !important;padding:7px 12px !important;font-size:12.5px !important}',
       '.rc-btn .done{font-size:12.5px;font-weight:600;color:#15803d;display:inline-flex;align-items:center;gap:3px}',
+      '.rc-row.crew .rc-av,.pjm-grp.crew .rc-av{background:var(--cc,#2563eb);color:#fff}',
+      '.rc-row.crew .rc-av .ms,.pjm-grp.crew .rc-av .ms{font-size:18px}',
+      '.rc-crew{display:flex;align-items:center;gap:8px;margin-top:4px;min-width:0}',
+      '.rc-crew .pjc-av{display:inline-flex;flex:none}',
+      '.rc-crew .pjc-av i{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:9.5px;font-weight:700;color:#fff;border:2px solid var(--card,#fff);margin-left:-6px}',
+      '.rc-crew .pjc-av i:first-child{margin-left:0}',
+      '.rc-crew small{font-size:11.5px;color:var(--mu,#6b7a90);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 0}',
+      '.rc-cdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}',
       '.rc-foot{font-size:12px;color:var(--mu,#6b7a90);margin-top:8px;line-height:1.5}',
       /* dashboard card */
       '.ceo-dash{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 16px;cursor:pointer}',
@@ -239,9 +248,27 @@
   function onJob(j, c) {
     if (!j) return false;
     if (c.kind === 'sub') return (Array.isArray(j.subs) ? j.subs : []).some(function (x) { return x.subId === c.id; });
+    if (c.kind === 'crew') return typeof j.crew === 'string' && j.crew === c.id;
     return (window.bpJobAssignees ? bpJobAssignees(j) : (j.assignees || [])).some(function (a) { return a.employeeId === c.id; });
   }
   function curJob(id) { return ((window.bpJobsGet && bpJobsGet()) || []).filter(function (x) { return x.id === id; })[0]; }
+  /* a crew candidate: colour dot avatar, member avatars, "Roofing crew · 3 people" */
+  function crewAv(c) { return '<span class="rc-av" aria-hidden="true" style="--cc:' + esc(c.color || '#2563eb') + '"><span class="ms">groups</span></span>'; }
+  function crewTrade(c) { var t = String(c.trade || ''); return (t ? t.charAt(0).toUpperCase() + t.slice(1) + ' crew' : 'Crew') + ' · ' + (+c.size || (c.members || []).length) + ' people'; }
+  function crewMembers(c) {
+    var m = c.members || [];
+    var av = window.bpCrewAvatars ? bpCrewAvatars(m, c.color, 4)
+      : '<span class="pjc-av">' + m.slice(0, 4).map(function (p) { return '<i style="background:' + esc(c.color || '#64748b') + '">' + esc(initials(p.name)) + '</i>'; }).join('') + '</span>';
+    return '<div class="rc-crew">' + av + '<small>' + esc(m.map(function (p) { return p.name + (p.trade ? ' (' + p.trade + ')' : ''); }).join(', ')) + '</small></div>';
+  }
+  /* Assign crew: the Crew tab's own path (bpJobSetCrew sets j.crew and drops the cached ranking) */
+  function assignCrew(jobId, crewId) {
+    if (!window.bpJobSetCrew || !jobId || !crewId) return false;
+    var okk = bpJobSetCrew(jobId, crewId);
+    delete C.route[jobId];
+    if (okk && window._bpProjId === jobId && window.bpProjCrewRender) bpProjCrewRender();
+    return okk && onJob(curJob(jobId), { kind: 'crew', id: crewId });
+  }
   function recoRow(c, j) {
     var fl = c.flags || [], tags = [];
     if (c.rating != null) tags.push('<span class="rc-tag">' + (+c.rating).toFixed(1) + '★ · ' + c.reviews + '</span>');
@@ -253,11 +280,14 @@
     if (fl.indexOf('trade_mismatch') >= 0) tags.push('<span class="rc-tag warn">Other trade</span>');
     var bd = c.breakdown || {}, bar = function (l, v) { return '<div>' + l + '<i><u style="width:' + Math.round((+v || 0) * 100) + '%"></u></i></div>'; };
     var on = onJob(curJob(window._bpProjId), c);
+    var crew = c.kind === 'crew';
     var btn = on ? '<span class="done"><span class="ms" style="font-size:16px">check</span>On the job</span>'
+      : crew ? '<button type="button" class="bpx-btn" data-rc-crew="' + esc(c.id) + '"><span class="ms" style="font-size:16px;vertical-align:-3px;margin-right:4px">groups</span>Assign crew</button>'
       : c.kind === 'sub' ? '<button type="button" class="bpx-btn ghost" data-rc-sub="' + esc(c.id) + '">Assign sub</button>'
         : '<button type="button" class="bpx-btn" data-rc-emp="' + esc(c.id) + '">Assign</button>';
-    return '<div class="rc-row' + (c.kind === 'sub' ? ' sub' : '') + '" data-rc="' + esc(c.id) + '"><span class="rc-av" aria-hidden="true">' + esc(initials(c.name)) + '</span>'
-      + '<div class="rc-n"><b>' + esc(c.name) + '</b> <span class="t">' + esc(c.trade || '') + (c.kind === 'sub' ? ' · Sub' : '') + '</span><div class="rc-tags">' + tags.join('') + '</div></div>'
+    return '<div class="rc-row' + (c.kind === 'sub' ? ' sub' : crew ? ' crew' : '') + '" data-rc="' + esc(c.id) + '">' + (crew ? crewAv(c) : '<span class="rc-av" aria-hidden="true">' + esc(initials(c.name)) + '</span>')
+      + '<div class="rc-n"><b>' + (crew ? '<i class="rc-cdot" style="background:' + esc(c.color || '#2563eb') + '"></i>' : '') + esc(c.name) + '</b> <span class="t">' + esc(crew ? crewTrade(c) : (c.trade || '')) + (c.kind === 'sub' ? ' · Sub' : '') + '</span>'
+      + (crew ? crewMembers(c) : '') + '<div class="rc-tags">' + tags.join('') + '</div></div>'
       + '<div class="rc-btn">' + btn + '</div>'
       + '<div class="rc-sc" title="Match score"><span class="rc-bar" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + (+c.score || 0) + '" aria-label="Match score"><i style="width:' + Math.max(3, Math.min(100, +c.score || 0)) + '%"></i></span><b>' + (+c.score || 0) + '</b></div>'
       + '<div class="rc-bd">' + bar('Trade', bd.trade) + bar('Rating', bd.rating) + bar('Experience', bd.experience) + bar('Availability', bd.availability) + '</div>'
@@ -279,6 +309,15 @@
         var c = (d.candidates || []).filter(function (x) { return x.id === id; })[0];
         if (window.bpToast) bpToast((c ? c.name : 'They') + ' is on this job.');
         recoDraw(host, d);
+      };
+    });
+    host.querySelectorAll('[data-rc-crew]').forEach(function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute('data-rc-crew'), jid = window._bpProjId;
+        var c = (d.candidates || []).filter(function (x) { return x.kind === 'crew' && x.id === id; })[0];
+        if (!assignCrew(jid, id)) { if (window.bpToast) bpToast('Could not assign the crew. Try from the Crew tab.'); return; }
+        if (window.bpToast) bpToast((c ? c.name : 'The crew') + ' is on this job.');
+        recoDraw(host, d);   /* the cached ranking is dropped; this list stays until Refresh */
       };
     });
     host.querySelectorAll('[data-rc-sub]').forEach(function (b) {
@@ -320,6 +359,7 @@
   /* shared with portal/aiceo-map.js */
   C.css = css; C.esc = esc; C.money = money; C.srcBadge = srcBadge; C.initials = initials;
   C.follow = follow; C.onJob = onJob; C.curJob = curJob; C.allowed = allowed; C.assignEmp = assignEmp;
+  C.assignCrew = assignCrew; C.crewAv = crewAv; C.crewTrade = crewTrade; C.crewMembers = crewMembers;
 
   /* ------------------------------------------------------ dashboard card --- */
   window.bpCeoDashCard = function (row) {

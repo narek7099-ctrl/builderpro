@@ -734,6 +734,37 @@
 #bpx .pjc-del{border:0;background:transparent;cursor:pointer;opacity:.5;color:inherit;display:flex}
 #bpx .pjc-mem{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px}
 #bpx .pjc-mem label{display:flex;align-items:center;gap:5px;cursor:pointer}
+/* Crews: saved cards + the editing card (explicit Save / Cancel) */
+#bpx .pjc-ttl{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+#bpx .pjc-ttl b{font-size:14.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx .pjc-ttl small{font-size:12px;opacity:.6}
+#bpx .pjc-chip{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:650;background:rgba(47,107,255,.1);color:#2f6bff;white-space:nowrap}
+#bpx.bpx-dark .pjc-chip{background:rgba(91,141,255,.16);color:#8fb0ff}
+#bpx .pjc-ok{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:650;color:#16a34a}
+#bpx .pjc-ok .ms{font-size:16px}
+#bpx .pjc-act{display:flex;align-items:center;gap:4px;margin-left:auto}
+#bpx .pjc-edit{width:auto;margin:0;height:32px;padding:0 12px;font-size:12.5px;display:inline-flex;align-items:center;gap:5px}
+#bpx .pjc-edit .ms{font-size:16px}
+#bpx .pjc-act button:disabled{opacity:.35;cursor:default}
+#bpx .pjc-sum{display:flex;align-items:center;gap:10px;margin-top:9px;min-width:0}
+#bpx .pjc-av{display:inline-flex;flex:none}
+#bpx .pjc-av i{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:10.5px;font-weight:700;color:#fff;border:2px solid var(--card,#fff);margin-left:-7px}
+#bpx .pjc-av i:first-child{margin-left:0}
+#bpx .pjc-av i.more{background:#94a3b8!important}
+#bpx .pjc-names{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;min-width:0}
+#bpx .pjc-names span{opacity:.8}
+#bpx .pjc-names b{font-weight:600}
+#bpx .pjc-editing{box-shadow:0 0 0 2px rgba(47,107,255,.18);padding:12px 14px}
+#bpx .pjc-elbl,#bpx .pjc-mlbl{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.55;margin-bottom:8px}
+#bpx .pjc-mlbl{margin:12px 0 0}
+#bpx .pjc-other{font-size:11px;font-weight:600}
+#bpx .pjc-msg{font-size:12.5px;min-height:0;margin-top:8px}
+#bpx .pjc-msg:empty{display:none}
+#bpx .pjc-msg.err{color:#dc2626}
+#bpx .pjc-btns{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+#bpx .pjc-btns .bpx-btn{width:auto;margin:0;padding:9px 16px;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+#bpx .pjc-btns .ms{font-size:17px}
+@media (max-width:520px){#bpx .pjc-btns .bpx-btn{flex:1;justify-content:center}#bpx .pjc-colors{flex-wrap:wrap}}
 #bpx .pj-plan li>div{flex:1;min-width:0}
 #bpx .pj-leg{font-style:normal;font-size:11.5px;font-weight:600;color:#2f6bff;white-space:nowrap;flex:none;margin-left:auto}
 #bpx .pj-leg:empty{display:none}

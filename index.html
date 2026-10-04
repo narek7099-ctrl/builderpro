@@ -33483,7 +33483,9 @@ window.pjCrews=pjCrews;
 window.bpCrewOfEmp=function(empId){ return pjCrews().filter(function(c){return (c.members||[]).indexOf(empId)>-1;})[0]||null; };
 function pjCrew(id){ return pjCrews().filter(function(c){return c.id===id;})[0]||null; }
 window.pjCrew=pjCrew;
-function pjCrewsSave(list){ var s=bpSettingsGet(); s.crews=list; bpSettingsSet(s); bpSettingsPush(s); }
+/* returns the server push (a promise of true/false) so Save can say Saved */
+function pjCrewsSave(list){ var s=bpSettingsGet(); s.crews=list; bpSettingsSet(s); return bpSettingsPush(s); }
+window.pjCrewsSave=pjCrewsSave;
 window.bpPjCrew=function(id){ _pjRoute.crew=id; _pjRoute.sel={}; bpPjStops(); var pl=q('pj-plan'); if(pl)pl.innerHTML=''; };
 var _pjWeek=0;
 function pjWeekDays(){
@@ -33638,25 +33640,68 @@ window.bpPjUnbook=function(jobId,iso){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j||!j.sched||!j.sched.dates)return;
   j.sched.dates=j.sched.dates.filter(function(x){return x!==iso;}); if(j.sched.slots) delete j.sched.slots[iso]; bpJobsSet(jobs); pjAfterEdit();
 };
-/* Crews: name, colour, who is in it */
-/* Crews live on the Employees page (Employees → Crews); the same editor
-   opens as a window from anywhere else. */
+/* A crew's trade is its members' most common trade ("Roofing crew"). The
+   same words as the AI CEO's ranking (bp_ceo_trade). */
+window.bpTradeCat=function(t){ var x=String(t||'').toLowerCase(); if(!x.trim())return '';
+  var m=[[/(pool|spa\b|hot tub)/,'Pools'],[/(countertop|granite|quartz)/,'Countertops'],[/(roof|shingle|gutter|soffit|fascia|flashing)/,'Roofing'],
+    [/(hvac|furnace|heat pump|air cond|duct|mini.?split|boiler)/,'HVAC'],[/(plumb|pipe|water heater|drain|sewer)/,'Plumbing'],
+    [/(electric|wiring|breaker|lighting|generator)/,'Electrical'],[/(paint|stain|drywall)/,'Painting'],[/(concrete|driveway|slab|flatwork|foundation|masonry|paver)/,'Concrete'],
+    [/(floor|carpet|hardwood|laminate|lvp|tile)/,'Flooring'],[/(landscap|lawn|irrigation|sprinkler|garden|tree|hardscape)/,'Landscaping'],
+    [/(trim|carpent|molding|cabinet|millwork)/,'Trim'],[/(remodel|general|handyman|framing|siding|window|door|deck|fence|labor|helper|foreman|lead)/,'General']];
+  for(var i=0;i<m.length;i++) if(m[i][0].test(x)) return m[i][1];
+  return x.charAt(0).toUpperCase()+x.slice(1); };
+window.bpCrewPeople=function(c){ var all=window.bpEmpsActive?bpEmpsActive():[], ids=(c&&c.members)||[];
+  return all.filter(function(e){return ids.indexOf(e.id)>-1;}); };
+window.bpCrewTrade=function(c){ var n={}, best='', k=0; bpCrewPeople(c).forEach(function(e){ var t=bpTradeCat(e.trade); if(!t)return; n[t]=(n[t]||0)+1; });
+  Object.keys(n).forEach(function(t){ if(n[t]>k||(n[t]===k&&best==='General')){ best=t; k=n[t]; } }); return best; };
+window.bpInitials=function(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0);}).join('').toUpperCase()||'?'; };
+/* little avatar stack, used by the crews page, the project sheet and the AI CEO */
+window.bpCrewAvatars=function(people,color,max){ max=max||4; var shown=people.slice(0,max);
+  return '<span class="pjc-av">'+shown.map(function(p){return '<i style="background:'+(color||'#64748b')+'" title="'+bpEsc(p.name||'')+'">'+bpEsc(bpInitials(p.name))+'</i>';}).join('')
+    +(people.length>max?'<i class="more">+'+(people.length-max)+'</i>':'')+'</span>'; };
+
+/* Crews: name, colour, who is in it. Nothing is saved until "Save crew":
+   the card being edited works on a draft (_bpCrewEd); Cancel throws the
+   draft away (a brand-new crew is never added). Saving writes the list to
+   client_settings and waits for the server before saying "Saved". */
+var _bpCrewEd=null, _bpCrewSaved='';
 window.bpCrewsHtml=function(inline){
-  var crews=pjCrews(), emps=window.bpEmpsActive?bpEmpsActive():[];
+  var crews=pjCrews(), emps=window.bpEmpsActive?bpEmpsActive():[], ed=_bpCrewEd;
+  var list=crews.slice(); if(ed&&ed.isNew) list.push(ed.draft);
+  var adding=!!(ed&&ed.isNew);
+  var addBtn='<button class="bpx-btn" id="pjcAdd" style="width:auto;margin:0;padding:9px 16px;font-size:13px"'+(adding?' disabled':'')+' onclick="bpCrewAdd()">+ Add crew</button>';
   return (inline?'<div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Crews<span class="lg2" style="margin-left:8px">each crew gets its own colour on the calendar and the map, and its own route</span></div>'
-      +'<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpCrewAdd()">+ Add crew</button></div>'
+      +addBtn+'</div>'
     :'<h3>Crews</h3><div class="bpx-sub">Each crew gets its own colour on the calendar and the map, and its own route.</div>')
-    +(crews.length?crews.map(function(c,i){
-      return '<div class="pjc"><div class="pjc-top"><i class="pjc-dot" style="background:'+c.color+'"></i><input class="pjc-name" value="'+bpEsc(c.name)+'" onchange="bpCrewEdit('+i+',\'name\',this.value)">'
-        +'<div class="pjc-colors">'+PJ_COLORS.map(function(col){return '<button style="background:'+col+'" class="'+(c.color===col?'on':'')+'" onclick="bpCrewEdit('+i+',\'color\',\''+col+'\')" aria-label="Colour"></button>';}).join('')+'</div>'
-        +'<button class="pjc-del" onclick="bpCrewDel('+i+')" aria-label="Delete crew"><span class=ms>delete</span></button></div>'
-        +(emps.length?'<div class="pjc-mem">'+emps.map(function(e){ var other=window.bpCrewOfEmp&&bpCrewOfEmp(e.id); return '<label><input type="checkbox" '+((c.members||[]).indexOf(e.id)>-1?'checked':'')+' onchange="bpCrewMem('+i+',\''+e.id+'\',this.checked)">'+bpEsc(e.name)
-            +(other&&other.id!==c.id?'<small style="color:'+other.color+'">'+bpEsc(other.name)+'</small>':'')+'</label>';}).join('')+'</div>'
-          :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Add people on the People tab to put them in crews.</div>')+'</div>';
+    +(list.length?list.map(function(c){
+      if(ed&&ed.id===c.id) return bpCrewEditCard(ed,emps,crews);
+      var ppl=bpCrewPeople(c), tr=bpCrewTrade(c), saved=_bpCrewSaved===c.id;
+      return '<div class="pjc pjc-saved" data-crew="'+bpEsc(c.id)+'" style="border-left:4px solid '+c.color+'"><div class="pjc-top"><i class="pjc-dot" style="background:'+c.color+'"></i>'
+        +'<div class="pjc-ttl"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+'</small></div>'
+        +(tr?'<span class="pjc-chip">'+bpEsc(tr)+' crew</span>':'')
+        +(saved?'<span class="pjc-ok"><span class=ms>check_circle</span>Saved</span>':'')
+        +'<span class="pjc-act"><button class="bpx-btn ghost pjc-edit" '+(ed?'disabled ':'')+'onclick="bpCrewEditOpen(\''+c.id+'\')"><span class=ms>edit</span>Edit</button>'
+        +'<button class="pjc-del" '+(ed?'disabled ':'')+'onclick="bpCrewDelId(\''+c.id+'\')" aria-label="Delete crew"><span class=ms>delete</span></button></span></div>'
+        +(ppl.length?'<div class="pjc-sum">'+bpCrewAvatars(ppl,c.color,5)+'<span class="pjc-names">'+ppl.map(function(e){return '<span><b>'+bpEsc(e.name)+'</b>'+(e.trade?' · '+bpEsc(e.trade):'')+'</span>';}).join('')+'</span></div>'
+          :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Nobody in this crew yet. Tap Edit to add people.</div>')+'</div>';
     }).join(''):'<div class="bpx-empty2"><b>No crews yet.</b><div class="bpx-mut" style="font-size:13px;margin-top:4px">Make one per team you send out, e.g. “Roof crew A” and “Gutter crew”.</div></div>')
-    +(inline?'':'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" onclick="bpCloseModal();pjAfterEdit()">Done</button></div>');
+    +(inline?'':'<div class="row" style="margin-top:12px"><button class="bpx-btn ghost" '+(adding?'disabled ':'')+'onclick="bpCrewAdd()">+ Add crew</button><button class="bpx-btn" '+(ed?'disabled title="Save or cancel the crew you are editing first" ':'')+'onclick="bpCloseModal();pjAfterEdit()">Done</button></div>');
 };
-window.bpCrewsOpen=function(){
+function bpCrewEditCard(ed,emps,crews){
+  var c=ed.draft;
+  return '<div class="pjc pjc-editing" id="pjcEdit" style="border-left:4px solid '+c.color+'">'
+    +'<div class="pjc-elbl">'+(ed.isNew?'New crew':'Editing crew')+'</div>'
+    +'<div class="pjc-top"><i class="pjc-dot" style="background:'+c.color+'"></i><input class="pjc-name" id="pjcName" aria-label="Crew name" placeholder="Crew name, e.g. Roof crew A" value="'+bpEsc(c.name)+'" oninput="bpCrewEdit(\'name\',this.value)">'
+    +'<div class="pjc-colors">'+PJ_COLORS.map(function(col){return '<button style="background:'+col+'" class="'+(c.color===col?'on':'')+'" onclick="bpCrewEdit(\'color\',\''+col+'\')" aria-label="Colour '+col+'"></button>';}).join('')+'</div></div>'
+    +(emps.length?'<div class="pjc-mlbl">Who is in it</div><div class="pjc-mem">'+emps.map(function(e){
+        var other=crews.filter(function(x){return x.id!==c.id&&(x.members||[]).indexOf(e.id)>-1;})[0], on=(c.members||[]).indexOf(e.id)>-1;
+        return '<label><input type="checkbox" '+(on?'checked':'')+' onchange="bpCrewMem(\''+e.id+'\',this.checked)"><span>'+bpEsc(e.name)+(e.trade?'<small class="bpx-mut"> · '+bpEsc(e.trade)+'</small>':'')+'</span>'
+          +(other?'<small class="pjc-other" style="color:'+other.color+'">'+(on?'moves from ':'in ')+bpEsc(other.name)+'</small>':'')+'</label>';}).join('')+'</div>'
+      :'<div class="bpx-mut" style="font-size:12.5px;margin-top:6px">Add people on the People tab to put them in crews.</div>')
+    +'<div class="pjc-msg" id="pjcMsg" role="status"></div>'
+    +'<div class="pjc-btns"><button class="bpx-btn ghost" id="pjcCancel" onclick="bpCrewCancel()">Cancel</button><button class="bpx-btn" id="pjcSave" onclick="bpCrewSave()"><span class=ms>save</span>Save crew</button></div></div>';
+}
+window.bpCrewsOpen=function(){ _bpCrewEd=null; _bpCrewSaved='';
   if(window._bpCurView!=='employees'){ bpModal(bpCrewsHtml(false)); return; }
   if(window.bpCrewTab) bpCrewTab('crews');
 };
@@ -33664,13 +33709,43 @@ function bpCrewsRefresh(){
   if(window.bpCrewTabIs&&bpCrewTabIs('crews')) bpCrewTab('crews');
   else if(q('bpx-modal')) bpModal(bpCrewsHtml(false));
 }
-window.bpCrewAdd=function(){ var l=pjCrews().slice(); l.push({id:'c'+Date.now().toString(36),name:'Crew '+(l.length+1),color:PJ_COLORS[l.length%PJ_COLORS.length],members:[]}); pjCrewsSave(l); bpCrewsRefresh(); };
-window.bpCrewEdit=function(i,k,v){ var l=pjCrews().slice(); if(!l[i])return; l[i]=Object.assign({},l[i]); l[i][k]=k==='name'?(String(v).trim()||l[i].name):v; pjCrewsSave(l); if(k==='color') bpCrewsRefresh(); };
-window.bpCrewMem=function(i,emp,on){ var l=pjCrews().slice(); if(!l[i])return; var m=(l[i].members||[]).filter(function(x){return x!==emp;}); if(on)m.push(emp);
-  /* one person, one crew */
-  l=l.map(function(c,k){ return k===i?Object.assign({},c,{members:m}):Object.assign({},c,{members:(c.members||[]).filter(function(x){return !on||x!==emp;})}); });
-  pjCrewsSave(l); bpCrewsRefresh(); };
-window.bpCrewDel=function(i){ var l=pjCrews().slice(); if(!l[i]||!confirm('Delete '+l[i].name+'? Its jobs stay, just without a crew.'))return; l.splice(i,1); pjCrewsSave(l); bpCrewsRefresh(); };
+window.bpCrewAdd=function(){ if(_bpCrewEd)return; var l=pjCrews();
+  _bpCrewEd={isNew:true,id:'c'+Date.now().toString(36),draft:null}; _bpCrewSaved='';
+  _bpCrewEd.draft={id:_bpCrewEd.id,name:'',color:PJ_COLORS[l.length%PJ_COLORS.length],members:[]};
+  bpCrewsRefresh(); setTimeout(function(){ var n=q('pjcName'); if(n){ n.focus(); if(n.scrollIntoView) n.scrollIntoView({block:'nearest'}); } },0); };
+window.bpCrewEditOpen=function(id){ var c=pjCrew(id); if(!c||_bpCrewEd)return; _bpCrewSaved='';
+  _bpCrewEd={isNew:false,id:id,draft:JSON.parse(JSON.stringify(c))}; bpCrewsRefresh(); };
+window.bpCrewEdit=function(k,v){ if(!_bpCrewEd)return; _bpCrewEd.draft[k]=v; if(k==='color') bpCrewsRefresh(); };
+window.bpCrewMem=function(emp,on){ if(!_bpCrewEd)return; var d=_bpCrewEd.draft; d.members=(d.members||[]).filter(function(x){return x!==emp;}); if(on) d.members.push(emp); bpCrewsRefresh(); };
+window.bpCrewCancel=function(){ _bpCrewEd=null; bpCrewsRefresh(); };
+window.bpCrewSave=function(){
+  var ed=_bpCrewEd; if(!ed)return; var d=ed.draft, nm=q('pjcName'); if(nm) d.name=nm.value;
+  d.name=String(d.name||'').trim(); var msg=q('pjcMsg');
+  if(!d.name){ if(msg){ msg.className='pjc-msg err'; msg.textContent='Give the crew a name.'; } if(nm) nm.focus(); return; }
+  /* one person, one crew: whoever is in this crew leaves any other */
+  var l=pjCrews().map(function(c){ return c.id===d.id?d:Object.assign({},c,{members:(c.members||[]).filter(function(x){return (d.members||[]).indexOf(x)<0;})}); });
+  if(ed.isNew) l.push(d);
+  var b=q('pjcSave'), cx=q('pjcCancel'); if(b){ b.disabled=true; b.innerHTML='<span class=ms>progress_activity</span>Saving…'; } if(cx) cx.disabled=true;
+  var p=pjCrewsSave(l);
+  Promise.resolve(p).then(function(ok){
+    /* signed out (the example portal) there is no account to push to: it stays on this device */
+    if(ok===false&&window.BP_LIVE) throw new Error('push');
+    _bpCrewEd=null; _bpCrewSaved=d.id; bpCrewsRefresh();
+    if(window.bpToast) bpToast(d.name+(ok===false?' saved on this device.':' saved.'),'success');
+    if(window.pjAfterEdit) try{ pjAfterEdit(); }catch(e){}
+    setTimeout(function(){ if(_bpCrewSaved===d.id){ _bpCrewSaved=''; var el=document.querySelector('.pjc-saved[data-crew="'+d.id+'"] .pjc-ok'); if(el) el.remove(); } },4000);
+  }).catch(function(){
+    /* kept on this device; the card stays open so they can try again */
+    ed.isNew=false;
+    var b2=q('pjcSave'), c2=q('pjcCancel'), m2=q('pjcMsg');
+    if(b2){ b2.disabled=false; b2.innerHTML='<span class=ms>save</span>Try again'; } if(c2) c2.disabled=false;
+    if(m2){ m2.className='pjc-msg err'; m2.textContent='Couldn’t save to your account. It’s kept on this device; check your connection and try again.'; }
+    if(window.bpToast) bpToast('Couldn’t save '+d.name+'. Try again.','error');
+  });
+};
+window.bpCrewDelId=function(id){ var l=pjCrews().slice(), i=l.map(function(c){return c.id;}).indexOf(id); if(i<0||!confirm('Delete '+l[i].name+'? Its jobs stay, just without a crew.'))return;
+  var nm=l[i].name; l.splice(i,1); Promise.resolve(pjCrewsSave(l)).then(function(ok){ ok=!(ok===false&&window.BP_LIVE); if(window.bpToast) bpToast(!ok?'Couldn’t remove '+nm+' from your account. Try again.':nm+' deleted.', !ok?'error':'success'); }); bpCrewsRefresh(); };
+window.bpCrewDel=function(i){ var c=pjCrews()[i]; if(c) bpCrewDelId(c.id); };
 function bpJobMapView(active,done){
   var today=pjIso(new Date()); if(!_pjRoute.date) _pjRoute.date=today;
   var withA=active.filter(function(j){return (j.addr||'').trim();}), noA=active.filter(function(j){return !(j.addr||'').trim();});
@@ -34168,6 +34243,47 @@ window.bpJobWhoLbl=function(j){
   var ppl=bpJobAssignees(j).map(function(a){ var e=window.bpEmpById?bpEmpById(a.employeeId):null; return (e&&e.name)||a.name||''; }).filter(Boolean);
   return (cr?cr.name:'')+(cr&&ppl.length?' · ':'')+ppl.join(', ');
 };
+/* Crews on the project's Crew tab: pick one crew for the job (j.crew = the
+   crew id, the same field the calendar, map, crew portal and
+   bp_crew_sees_job read), plus anyone else ticked below on their own. */
+function bpProjCrewsSec(j){
+  var crews=window.pjCrews?pjCrews():[]; if(!crews.length)
+    return '<div class="pjcw-h">Crews</div><div class="pjcw-none bpx-mut">No crews yet. <button type="button" class="bpx-linkbtn" onclick="bpCloseModal();bpNav(\'employees\');setTimeout(function(){window.bpCrewTab&&bpCrewTab(\'crews\')},60)">Make a crew</button> to send a whole team at once.</div>';
+  var cur=typeof j.crew==='string'?j.crew:'';
+  return '<div class="pjcw-h">Crews<span>'+(cur?'one crew per job':'pick a crew to send the whole team')+'</span></div>'
+    +'<div class="pjcw-list" role="radiogroup" aria-label="Crew on this job">'+crews.map(function(c){
+      var ppl=window.bpCrewPeople?bpCrewPeople(c):[], tr=window.bpCrewTrade?bpCrewTrade(c):'', sel=c.id===cur;
+      return '<div class="pjcw'+(sel?' on':'')+'" data-pjcw="'+bpEsc(c.id)+'" role="radio" aria-checked="'+sel+'" tabindex="0" style="--cc:'+c.color+'" onclick="bpProjCrewPick(\''+c.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bpProjCrewPick(\''+c.id+'\')}">'
+        +'<i class="pjc-dot" style="background:'+c.color+'"></i>'
+        +'<div class="pjcw-t"><b>'+bpEsc(c.name)+'</b><small>'+ppl.length+(ppl.length===1?' person':' people')+(ppl.length?' · '+bpEsc(ppl.map(function(e){return e.name.split(' ')[0];}).join(', ')):'')+'</small></div>'
+        +(tr?'<span class="pjc-chip">'+bpEsc(tr)+'</span>':'')
+        +(ppl.length&&window.bpCrewAvatars?bpCrewAvatars(ppl,c.color,3):'')
+        +(sel?'<span class="pjcw-on"><span class="ms">check_circle</span>On this job</span><button type="button" class="bpx-linkbtn pjcw-un" onclick="event.stopPropagation();bpProjCrewPick(\'\')">Unassign</button>':'<span class="pjcw-pick">Assign</span>')
+        +'</div>'; }).join('')+'</div>';
+}
+/* set (or clear, crewId '') the crew on any job; keeps the Details select in
+   step so Save doesn't put the old one back, and drops the AI CEO's cached
+   ranking for the job. Returns true when saved. */
+window.bpJobSetCrew=function(jobId,crewId){
+  var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===jobId;})[0]; if(!j)return false;
+  if(crewId&&!(window.pjCrew&&pjCrew(crewId)))return false;
+  if(Array.isArray(j.crew)){ j.assignees=bpJobAssignees(j); }
+  if(crewId) j.crew=crewId; else delete j.crew;
+  bpJobsSet(jobs);
+  if(window._bpProjId===jobId){ var sel=q('bpx-pj-crew'); if(sel) sel.value=crewId||''; }
+  if(window.BP_CEO&&BP_CEO.route) delete BP_CEO.route[jobId];
+  return true;
+};
+window.bpProjCrewPick=function(crewId){
+  var id=window._bpProjId, j0=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j0)return;
+  var was=typeof j0.crew==='string'?j0.crew:'';
+  if(crewId===was) return;
+  if(!bpJobSetCrew(id,crewId))return;
+  bpProjCrewRender();
+  var c=crewId&&pjCrew(crewId), old=was&&pjCrew(was);
+  if(window.bpToast) bpToast(c?c.name+' is on '+(j0.name||'this job')+'.':(old?old.name:'The crew')+' is off '+(j0.name||'this job')+'.');
+  if(window.bpCeoReco&&window.BP_CEO&&document.getElementById('pjs-reco')&&!document.getElementById('pjs-reco').hidden) bpCeoReco(bpJobsGet().filter(function(x){return x.id===id;})[0]);
+};
 function bpProjCrewRender(){
   var el=document.getElementById('bpx-pj-people'); if(!el)return;
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
@@ -34195,8 +34311,12 @@ function bpProjCrewRender(){
       +'</div>'
     : '';
 
+  var crw=(typeof j.crew==='string'&&window.pjCrew)?pjCrew(j.crew):null, inCrew=(crw&&crw.members)||[];
   var rows=all.map(function(e){
-    var isOn=on.indexOf(e.id)>=0;
+    var isOn=on.indexOf(e.id)>=0, cov=!isOn&&inCrew.indexOf(e.id)>=0;
+    if(cov) return '<div class="cw-row on pjcw-cov"><span class="ms" style="font-size:18px;color:'+crw.color+'">verified</span>'
+      +'<span class="cw-n"><b>'+bpEsc(e.name)+'</b>'+(e.trade?'<span class="bpx-mut"> · '+bpEsc(e.trade)+'</span>':'')
+      +'<span class="bpx-mut" style="display:block;font-size:11.5px">Covered by '+bpEsc(crw.name)+'</span></span></div>';
     var mine=0,myH=0;
     (BP_CREW.entries||[]).forEach(function(t){
       if(t.job_id===j.id&&t.employee_id===e.id){mine+=+t.cost||0;myH+=(+t.hours||0)+(+t.ot_hours||0);}
@@ -34213,9 +34333,9 @@ function bpProjCrewRender(){
       +'</label>';
   }).join('');
 
-  var crw=(typeof j.crew==='string'&&window.pjCrew)?pjCrew(j.crew):null;
   el.innerHTML=sum
-    +(crw?'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">Crew <b>'+bpEsc(crw.name)+'</b> is on this job too (change it on Details). Tick anyone else to add them on their own.</div>':'')
+    +bpProjCrewsSec(j)
+    +'<div class="pjcw-h">People<span>'+(crw?'tick anyone else to add them on their own':'tick who goes')+'</span></div>'
     +'<div class="cw-list">'+rows+'</div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
     +'<button class="bpx-btn" style="width:auto;margin:0;padding:9px 16px;font-size:13px" onclick="bpHoursOpen(\''+j.id+'\')">+ Log a day</button>'
@@ -39777,7 +39897,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261001b">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20261001c">
+<link rel="stylesheet" href="portal/dash.css?v=20261011a">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261004a"></script>
@@ -39805,8 +39925,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/subapp.js?v=20261004a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
 <script src="portal/aiteam.js?v=20261009a"></script>
-<script src="portal/aiceo.js?v=20261010a"></script>
-<script src="portal/aiceo-map.js?v=20261010a"></script>
+<script src="portal/aiceo.js?v=20261011a"></script>
+<script src="portal/aiceo-map.js?v=20261011a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261001b"></script>
@@ -39821,7 +39941,7 @@ window.bpRepCopy=function(text,btn){
 <script src="site/vendor/SplitText.min.js?v=20260919-i"></script>
 <script src="site/site.js?v=20260921-a"></script>
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
-<link rel="stylesheet" href="portal/projsheet.css?v=20261001p">
+<link rel="stylesheet" href="portal/projsheet.css?v=20261011a">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261003d">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
 <link rel="stylesheet" href="portal/custportal.css?v=20261009b">

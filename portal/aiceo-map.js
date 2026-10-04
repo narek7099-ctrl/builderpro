@@ -256,8 +256,16 @@
     else if (!d.ok) h += '<div class="bpx-mut" style="font-size:12.5px">' + esc(d.error || 'No recommendation right now.') + ' <button type="button" class="bpx-linkbtn" data-pjm-retry>Try again</button></div>';
     else {
       var top = (d.candidates || []).slice(0, 3);
+      /* the best crew always shows, even when three people outscore it */
+      var bc = d.best_crew || (d.candidates || []).filter(function (c) { return c.kind === 'crew'; })[0];
+      if (bc && !top.some(function (c) { return c.kind === 'crew' && c.id === bc.id; })) top.push(bc);
       h += top.length ? top.map(function (c) {
-        var sub = c.kind === 'sub', on = C.onJob(C.curJob(id), c);
+        var sub = c.kind === 'sub', crew = c.kind === 'crew', on = C.onJob(C.curJob(id), c);
+        if (crew) return '<div class="pjm-rc rc-row crew" style="display:grid" data-pjm-c="' + esc(c.id) + '">' + C.crewAv(c)
+          + '<div class="rc-n"><b><i class="rc-cdot" style="background:' + esc(c.color || '#2563eb') + '"></i>' + esc(c.name) + '</b><span class="pjm-sc" title="Match score">' + (+c.score || 0) + '</span> <span class="t">' + esc(C.crewTrade(c)) + '</span>'
+          + C.crewMembers(c) + '<div class="rc-tags">' + tags(c, false) + '</div></div>'
+          + '<div class="rc-btn">' + (on ? '<span class="done"><span class="ms" style="font-size:16px">check</span>On it</span>' : '<button type="button" class="bpx-btn" data-pjm-crew="' + esc(c.id) + '">Assign crew</button>') + '</div>'
+          + '<div class="rc-why">' + esc(c.explain || (c.reasons || []).join('; ')) + '</div></div>';
         var btn = on ? '<span class="done"><span class="ms" style="font-size:16px">check</span>On it</span>'
           : sub ? '<button type="button" class="bpx-btn ghost" data-pjm-sub="' + esc(c.id) + '">Assign sub</button>'
             : '<button type="button" class="bpx-btn" data-pjm-emp="' + esc(c.id) + '">Assign</button>';
@@ -281,6 +289,15 @@
         if (!C.assignEmp(id, eid)) { if (window.bpToast) bpToast('Could not assign. Try from the project.'); return; }
         M.keep[id] = d;
         if (window.bpToast) bpToast((c ? c.name : 'They') + ' is on ' + (j.name || 'this job') + '.');
+        refreshAll(); panelDraw(); if (M.day && M.day.shown) dayRun();
+      };
+    });
+    el.querySelectorAll('[data-pjm-crew]').forEach(function (b) {
+      b.onclick = function () {
+        var cid = b.getAttribute('data-pjm-crew'), c = (d.candidates || []).concat(d.best_crew ? [d.best_crew] : []).filter(function (x) { return x.kind === 'crew' && x.id === cid; })[0];
+        if (!C.assignCrew(id, cid)) { if (window.bpToast) bpToast('Could not assign the crew. Try from the project.'); return; }
+        M.keep[id] = d;
+        if (window.bpToast) bpToast((c ? c.name : 'The crew') + ' is on ' + (j.name || 'this job') + '.');
         refreshAll(); panelDraw(); if (M.day && M.day.shown) dayRun();
       };
     });
@@ -319,16 +336,17 @@
     var html = head + '<div class="bpx-mut" style="font-size:12.5px;margin-bottom:2px">' + D.n + ' job' + (D.n === 1 ? '' : 's') + ' scheduled' + (needs ? ' · ' + needs + ' with nobody on ' + (needs === 1 ? 'it' : 'them') : ' · everyone has a crew') + '</div>';
     html += gs.map(function (g, gi) {
       var routable = g.stops.filter(function (s) { return (s.j.addr || '').trim(); }).length;
-      return '<div class="pjm-grp" data-pjm-grp="' + esc(g.id) + '"><div class="pjm-gh"><span class="rc-av" aria-hidden="true">' + esc(C.initials(g.name)) + '</span><div><b>' + esc(g.name) + '</b><small>' + g.stops.length + ' stop' + (g.stops.length === 1 ? '' : 's') + (g.stops.some(function (s) { return s.sugg; }) ? ' · ' + g.stops.filter(function (s) { return s.sugg; }).length + ' suggested' : '') + '</small></div></div>'
+      return '<div class="pjm-grp' + (g.crew ? ' crew' : '') + '" data-pjm-grp="' + esc(g.id) + '"><div class="pjm-gh">' + (g.crew ? C.crewAv(g.crew) : '<span class="rc-av" aria-hidden="true">' + esc(C.initials(g.name)) + '</span>') + '<div><b>' + esc(g.name) + '</b><small>' + (g.crew ? esc(C.crewTrade(g.crew)) + ' · ' : '') + g.stops.length + ' stop' + (g.stops.length === 1 ? '' : 's') + (g.stops.some(function (s) { return s.sugg; }) ? ' · ' + g.stops.filter(function (s) { return s.sugg; }).length + ' suggested' : '') + '</small></div></div>'
         + '<ul class="pjm-gs">' + g.stops.map(function (s) {
-          var on = s.sugg && C.onJob(C.curJob(s.j.id), { kind: 'employee', id: g.id });
+          var on = s.sugg && C.onJob(C.curJob(s.j.id), { kind: g.crew ? 'crew' : 'employee', id: g.id });
           var tg = (s.sugg ? (on ? '<span class="rc-tag ok">Assigned</span>' : '<span class="rc-tag">Suggested · ' + (+s.c.score || 0) + '</span>') : '<span class="rc-tag ok">On the job</span>')
             + (s.busy ? '<span class="rc-tag bad">Busy that day</span>' : '') + (s.mis ? '<span class="rc-tag warn">Other trade</span>' : '')
             + ((s.j.addr || '').trim() ? '' : '<span class="rc-tag warn">No address</span>');
           return '<li><div><b>' + esc(s.j.name || 'Project') + '</b><small>' + esc(s.j.addr || s.j.title || '') + '</small><div class="rc-tags">' + tg + '</div>'
             + (s.warn ? '<div class="pj-warn" style="margin-top:5px">' + esc(s.warn) + '</div>' : '') + '</div>'
-            + (s.sugg && !on ? '<button type="button" class="bpx-btn" data-pjm-da="' + esc(s.j.id) + '" data-emp="' + esc(g.id) + '">Assign</button>' : '') + '</li>';
+            + (s.sugg && !on ? '<button type="button" class="bpx-btn" data-pjm-da="' + esc(s.j.id) + '" data-emp="' + esc(g.id) + '"' + (g.crew ? ' data-crew="1">Assign crew' : '>Assign') + '</button>' : '') + '</li>';
         }).join('') + '</ul>'
+        + (g.crew ? '<div class="rc-crew" style="margin:6px 0 0">' + (window.bpCrewAvatars ? bpCrewAvatars(g.crew.members || [], g.crew.color, 5) : '') + '<small>' + esc((g.crew.members || []).map(function (p) { return p.name; }).join(', ')) + '</small></div>' : '')
         + '<div class="pjm-gf"><button type="button" class="bpx-btn" data-pjm-route="' + gi + '"' + (routable ? '' : ' disabled') + '><span class="ms">route</span>Route this</button><span class="pjm-drive" data-pjm-drive="' + esc(g.id) + '">' + esc(D.drive[g.id] || '') + '</span></div></div>';
     }).join('');
     if (D.left.length) html += '<div class="pjm-grp"><div class="pjm-gh"><span class="rc-av" aria-hidden="true" style="background:var(--soft,#f6f8fb);color:var(--mu,#6b7a90)"><span class="ms" style="font-size:17px">help</span></span><div><b>Nobody to suggest</b><small>Open the job to pick someone</small></div></div><ul class="pjm-gs">'
@@ -339,7 +357,7 @@
     el.querySelectorAll('[data-pjm-da]').forEach(function (b) {
       b.onclick = function () {
         var jid = b.getAttribute('data-pjm-da'), eid = b.getAttribute('data-emp'), j = C.curJob(jid), g = gs.filter(function (x) { return x.id === eid; })[0];
-        if (!C.assignEmp(jid, eid)) return;
+        if (b.getAttribute('data-crew') ? !C.assignCrew(jid, eid) : !C.assignEmp(jid, eid)) { if (window.bpToast) bpToast('Could not assign. Try from the project.'); return; }
         if (window.bpToast) bpToast((g ? g.name : 'They') + ' is on ' + ((j && j.name) || 'the job') + '.');
         refreshAll(); dayDraw(); if (M.sel === jid) panelDraw();
       };
@@ -354,8 +372,8 @@
     D.ids = list.map(function (j) { return j.id; }); D.n = list.length;
     dayDraw();
     var groups = {}, order = [], left = [], need = 0;
-    var put = function (p, stop) { if (!groups[p.id]) { groups[p.id] = { id: p.id, name: p.name, stops: [] }; order.push(p.id); } groups[p.id].stops.push(stop); };
-    var unassigned = list.filter(function (j) { return !people(j).length; });
+    var put = function (p, stop) { if (!groups[p.id]) { groups[p.id] = { id: p.id, name: p.name, crew: p.crew || null, stops: [] }; order.push(p.id); } groups[p.id].stops.push(stop); };
+    var unassigned = list.filter(function (j) { return !people(j).length; }), takenCrew = {};
     need = unassigned.length;
     var ranks = canRank() ? await Promise.all(unassigned.map(function (j) { return getRoute(j.id); })) : unassigned.map(function () { return { ok: false, error: 'Sign in to get suggestions.' }; });
     if (M.day !== D) return;
@@ -367,7 +385,15 @@
       var emps = (d.candidates || []).filter(function (c) { return c.kind !== 'sub'; });
       var isBusy = function (c) { return (c.flags || []).indexOf('busy') >= 0 || c.free === false; };
       var isMis = function (c) { return (c.flags || []).indexOf('trade_mismatch') >= 0; };
+      /* people only: a crew is suggested on its own when it is free, matches the trade and scores at least as well */
+      var crews = emps.filter(function (c) { return c.kind === 'crew'; }).concat(d.best_crew ? [d.best_crew] : []);
+      emps = emps.filter(function (c) { return c.kind !== 'crew'; });
       var best = emps.filter(function (c) { return !isBusy(c) && !isMis(c); })[0] || emps.filter(function (c) { return !isBusy(c); })[0] || emps[0];
+      var bc = crews.filter(function (c) { return !isBusy(c) && !isMis(c) && !takenCrew[c.id]; })[0];
+      if (bc && (!best || isBusy(best) || isMis(best) || (+bc.score || 0) >= (+best.score || 0))) {
+        takenCrew[bc.id] = 1;
+        put({ id: bc.id, name: bc.name, crew: bc }, { j: j, sugg: true, c: bc, busy: false, mis: false, warn: '' }); return;
+      }
       if (!best) { var sub = (d.candidates || [])[0]; left.push({ j: j, why: sub ? 'Best fit is a sub: ' + sub.name + '. Assign them on the project.' : 'Nobody to rank yet' }); return; }
       var busy = isBusy(best), mis = isMis(best);
       var warn = busy ? best.name + ' is the best match but is busy that day. Check their other job before you assign.' : mis ? best.name + ' is free but works a different trade (' + (best.trade || 'other') + '). Nobody free in ' + ((d.job && d.job.trade) || 'this trade') + '.' : '';
