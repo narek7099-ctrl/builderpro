@@ -95,7 +95,7 @@
         + k('Materials', String(waiting), waiting ? 'waiting on you' : 'nothing waiting', 'supplyorders', waiting ? 'warn' : '');
     return '<div class="dash-hero">'
       + '<div class="hero-top"><div><div class="hero-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div><div class="hero-line">' + esc(line) + '</div></div>'
-      + '<button class="hero-cta" onclick="bpNav(\'supply\')"><span class="ms">add</span>Order materials</button></div>'
+      + '<button class="hero-cta" onclick="bpNav(\'matlists\')"><span class="ms">add</span>Order materials</button></div>'
       + '<div class="hero-ks">' + nums + '</div></div>';
   }
 
@@ -410,7 +410,7 @@
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
       + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + '<button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
       + '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add project</button>'
-      + '<button class="bpx-btn" onclick="bpNav(\'supply\')">Order materials</button></div></div>';
+      + '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order materials</button></div></div>';
   }
 
   /* ---------- four numbers, two by two, in one card ---------- */
