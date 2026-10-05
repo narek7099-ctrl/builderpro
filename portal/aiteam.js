@@ -37,26 +37,37 @@
       '.ai-tab .n{background:#e0574e;color:#fff;border-radius:9px;font-size:11px;padding:0 6px}',
       '.ai-use{margin-left:auto;font-size:13px;color:var(--mu,#788493);display:flex;align-items:center;gap:8px}',
       '.ai-use i{display:block;width:90px;height:6px;border-radius:6px;background:#e7ecf2;overflow:hidden}.ai-use i b{display:block;height:100%;background:var(--a,#006fff)}',
-      '.ai-wrap{display:grid;grid-template-columns:230px 1fr;gap:14px;min-height:560px}',
-      '.ai-side{display:flex;flex-direction:column;gap:4px;overflow:auto;max-height:640px}',
-      '.ai-side button{background:none;border:0;text-align:left;padding:8px 10px;border-radius:10px;font-size:13.5px;color:var(--mu,#788493);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}',
-      '.ai-side button.on,.ai-side button:hover{background:#eef3f8;color:var(--txt,#001530)}',
-      '.ai-chat{display:flex;flex-direction:column;border:1px solid var(--line,#dce3ec);border-radius:16px;background:#fff;overflow:hidden;min-height:560px}',
-      '.ai-msgs{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px;max-height:600px}',
-      '.ai-m{max-width:100%;line-height:1.6;font-size:14.5px}',
-      '.ai-m.u{align-self:flex-end;max-width:80%;background:var(--a,#006fff);color:#fff;border-radius:14px;padding:9px 13px;white-space:pre-wrap}',
-      '.ai-m.s{font-size:12.5px;color:var(--mu,#788493)}',
-      '.ai-m p{margin:4px 0}.ai-m ul,.ai-m ol{padding-left:20px;margin:4px 0}.ai-m h4{margin:10px 0 4px;font-size:14.5px}',
+      '.ai-wrap{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0;border:1px solid var(--line,#dce3ec);border-radius:16px;background:#fff;overflow:hidden;height:calc(100vh - 190px);min-height:480px}',
+      '.ai-side{display:flex;flex-direction:column;gap:2px;overflow:auto;padding:10px;background:#f7f8fa;border-right:1px solid var(--line,#dce3ec)}',
+      '.ai-side button{background:none;border:0;text-align:left;padding:8px 10px;border-radius:8px;font:inherit;font-size:13.5px;color:#34435a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;flex:none}',
+      '.ai-side button.on,.ai-side button:hover{background:#e9edf2;color:var(--txt,#001530)}',
+      '.ai-side .ai-new{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--txt,#001530);border:1px solid var(--line,#dce3ec);background:#fff;margin-bottom:8px}',
+      '.ai-side small{font-size:11.5px;color:var(--mu,#788493);padding:8px 10px 2px}',
+      '.ai-chat{display:flex;flex-direction:column;min-width:0;min-height:0}',
+      '.ai-msgs{flex:1;overflow:auto;padding:24px 16px 8px}',
+      '.ai-col{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}',
+      '.ai-m{line-height:1.65;font-size:15px;color:var(--txt,#001530)}',
+      '.ai-m.a{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px}',
+      '.ai-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:grid;place-items:center}.ai-av .ms{font-size:16px;color:#fff!important}',
+      '.ai-m.u{align-self:flex-end;max-width:75%;background:#f0f2f5;border-radius:18px;padding:10px 16px;white-space:pre-wrap}',
+      '.ai-m.s{font-size:13px;color:var(--mu,#788493);text-align:center}',
+      '.ai-m p{margin:0 0 10px}.ai-m p:last-child{margin-bottom:0}.ai-m ul,.ai-m ol{padding-left:22px;margin:0 0 10px}.ai-m h4{margin:14px 0 6px;font-size:15px}',
       '.ai-tools{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.ai-tools span{font-size:11.5px;color:var(--mu,#788493);background:#f3f6f9;border-radius:6px;padding:1px 7px}',
       '.ai-deep{font-size:11px;color:#003db8;background:#e6f0ff;border-radius:6px;padding:1px 7px;margin-left:4px}',
-      '.ai-comp{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line,#dce3ec)}',
-      '.ai-comp textarea{flex:1;resize:none;height:46px;border:1px solid var(--line,#dce3ec);border-radius:12px;padding:10px 12px;font:inherit;outline:none}',
-      '.ai-comp textarea:focus{border-color:var(--a,#006fff)}',
-      '.ai-hint{display:flex;flex-direction:column;gap:6px;margin-top:10px}.ai-hint button{text-align:left;background:#f6f8fb;border:1px solid var(--line,#dce3ec);border-radius:10px;padding:9px 12px;cursor:pointer;font:inherit;font-size:13.5px}',
+      '.ai-comp{padding:8px 16px 16px}',
+      '.ai-box{max-width:760px;margin:0 auto;display:flex;align-items:flex-end;gap:8px;border:1px solid var(--line,#dce3ec);border-radius:24px;padding:8px 8px 8px 18px;background:#fff;box-shadow:0 4px 18px -8px rgba(0,21,48,.18)}',
+      '.ai-box:focus-within{border-color:#b9c6d6}',
+      '#bpx#bpx#bpx#bpx .ai-box textarea{flex:1;resize:none;border:0!important;outline:0;box-shadow:none!important;background:transparent!important;padding:7px 0!important;min-height:22px!important;max-height:200px;font:inherit;font-size:15px!important;line-height:1.5}',
+      '.ai-send{width:36px;height:36px;border-radius:50%;border:0;background:var(--txt,#001530);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}.ai-send:disabled{opacity:.35;cursor:default}.ai-send .ms{font-size:20px;color:#fff!important}',
+      '.ai-fine{max-width:760px;margin:6px auto 0;text-align:center;font-size:11.5px;color:var(--mu,#788493)}',
+      '.ai-hello{text-align:center;padding:8vh 0 18px}.ai-hello .ai-av{width:48px;height:48px;margin:0 auto 14px}.ai-hello .ai-av .ms{font-size:24px}.ai-hello h2{margin:0 0 6px;font-size:24px;letter-spacing:-.02em}',
+      '.ai-hint{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}.ai-hint button{text-align:left;background:#fff;border:1px solid var(--line,#dce3ec);border-radius:14px;padding:12px 14px;cursor:pointer;font:inherit;font-size:13.5px;color:#34435a}.ai-hint button:hover{background:#f6f8fb}',
+      '.ai-wrap .ai-msgs{display:block;max-height:none;min-height:0;text-align:left}.ai-wrap .ai-m{display:block;max-width:none;gap:0}.ai-wrap .ai-m.a{display:grid}.ai-wrap .ai-m.u{max-width:75%}',
       '.ai-wait{animation:aiblink 1.2s ease-in-out infinite}@keyframes aiblink{50%{opacity:.4}}',
       '.ai-ap{border:1px solid var(--line,#dce3ec);border-radius:14px;padding:14px;background:#fff;display:grid;gap:8px}',
       '.ai-ap textarea{box-sizing:border-box;width:100%;min-height:80px;border:1px solid var(--line,#dce3ec);border-radius:10px;padding:10px;font:inherit}',
-      '@media(max-width:860px){.ai-hero,.ai-wrap{grid-template-columns:1fr}.ai-side{flex-direction:row;overflow-x:auto;max-height:none}.ai-use{margin-left:0;width:100%}}'
+      '@media(max-width:860px){.ai-hero,.ai-wrap{grid-template-columns:minmax(0,1fr)}.ai-wrap{height:calc(100vh - 230px);grid-template-rows:auto minmax(0,1fr)}.ai-side{flex-direction:row;align-items:center;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line,#dce3ec);padding:8px}.ai-side small{display:none}.ai-side .ai-new{margin:0}.ai-side button{max-width:180px}.ai-use{margin-left:0;width:100%}.ai-wrap .ai-m.u{max-width:88%}.ai-msgs{padding:16px 12px 8px}}',
+      '#bpx.bpx-dark .ai-wrap,#bpx.bpx-dark .ai-box,#bpx.bpx-dark .ai-hint button,#bpx.bpx-dark .ai-side .ai-new{background:#111827;border-color:#262f45}#bpx.bpx-dark .ai-side{background:#0d1320;border-color:#262f45}#bpx.bpx-dark .ai-m.u{background:#1e2738}#bpx.bpx-dark .ai-m,#bpx.bpx-dark .ai-side button.on{color:#e5e9f0}#bpx.bpx-dark .ai-side button.on,#bpx.bpx-dark .ai-side button:hover{background:#1e2738}#bpx.bpx-dark .ai-send{background:#e5e9f0;color:#111827}#bpx.bpx-dark .ai-send .ms{color:#111827!important}'
     ].join('\n');
     document.head.appendChild(s);
   }
@@ -199,45 +210,60 @@
     else if (A.tab === 'wait') approvals(); else chat();
   }
 
+  var AV = '<span class="ai-av"><span class="ms">auto_awesome</span></span>';
+  /* a ChatGPT/Claude-style screen: conversations on the left, one centered column, a rounded composer at the bottom */
+  window.bpChatShell = function (opts) {
+    return '<div class="ai-wrap"><div class="ai-side" id="aiSide"><button class="ai-new on" data-t=""><span class="ms">edit_square</span>New chat</button></div>'
+      + '<div class="ai-chat"><div class="ai-msgs" id="aiMsgs"><div class="ai-col" id="aiCol"></div></div>'
+      + '<div class="ai-comp"><div class="ai-box"><textarea id="aiIn" rows="1" maxlength="4000" placeholder="' + esc(opts.ph) + '"' + (opts.off ? ' disabled' : '') + '></textarea><button class="ai-send" id="aiSend" aria-label="Send" disabled><span class="ms">arrow_upward</span></button></div>'
+      + '<div class="ai-fine">' + esc(opts.fine || '') + '</div></div></div></div>';
+  };
+  window.bpChatWire = function (send) {
+    var i = $('aiIn'), b = $('aiSend'); if (!i) return;
+    var fit = function () { i.style.height = 'auto'; i.style.height = Math.min(200, i.scrollHeight) + 'px'; b.disabled = !i.value.trim() || i.disabled; };
+    i.oninput = fit; i.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (i.value.trim()) send(); } };
+    b.onclick = function () { if (i.value.trim()) send(); };
+    i.bpFit = fit; fit();
+  };
   async function chat() {
-    $('aiBody').innerHTML = '<div class="ai-wrap"><div class="ai-side" id="aiSide"><button class="on">+ New conversation</button></div><div class="ai-chat"><div class="ai-msgs" id="aiMsgs"></div>'
-      + '<div class="ai-comp"><textarea id="aiIn" placeholder="Ask ' + AG[A.agent].n + '..."></textarea><button class="bpx-btn" id="aiSend">Send</button></div></div></div>';
-    $('aiIn').onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
-    $('aiSend').onclick = send;
+    $('aiBody').innerHTML = bpChatShell({ ph: 'Message ' + AG[A.agent].n + '…', fine: 'Anything for a customer waits for your OK first.' });
+    bpChatWire(send);
     open(A.thread);
     var r = await api({ op: 'threads', agent: A.agent });
     var side = $('aiSide'); if (!side) return;
-    side.innerHTML = '<button data-t="">+ New conversation</button>' + (r.data || []).map(function (t) { return '<button data-t="' + t.id + '" title="' + esc(t.title) + '">' + (t.kind === 'brief' ? 'Brief: ' : '') + esc(t.title) + '</button>'; }).join('');
+    side.innerHTML = '<button class="ai-new" data-t=""><span class="ms">edit_square</span>New chat</button>' + ((r.data || []).length ? '<small>Recent</small>' : '') + (r.data || []).map(function (t) { return '<button data-t="' + t.id + '" title="' + esc(t.title) + '">' + (t.kind === 'brief' ? 'Brief: ' : '') + esc(t.title) + '</button>'; }).join('');
     side.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', (b.getAttribute('data-t') || null) === A.thread); b.onclick = function () { open(b.getAttribute('data-t') || null); side.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
   }
+  function col() { return $('aiCol'); }
+  function bottom() { var m = $('aiMsgs'); if (m) m.scrollTop = m.scrollHeight; }
   async function open(id) {
-    A.thread = id; var box = $('aiMsgs'); if (!box) return;
+    A.thread = id; var box = col(); if (!box) return;
     if (!id) {
-      box.innerHTML = '<div class="bpx-mut">' + AG[A.agent].d + ' Ask anything, or start with one of these.</div><div class="ai-hint">' + AG[A.agent].h.map(function (x) { return '<button>' + esc(x) + '</button>'; }).join('') + '</div>';
+      box.innerHTML = '<div class="ai-hello">' + AV + '<h2>How can ' + AG[A.agent].n + ' help?</h2><div class="bpx-mut">' + AG[A.agent].d + '</div></div><div class="ai-hint">' + AG[A.agent].h.map(function (x) { return '<button>' + esc(x) + '</button>'; }).join('') + '</div>';
       box.querySelectorAll('.ai-hint button').forEach(function (b) { b.onclick = function () { $('aiIn').value = b.textContent; send(); }; });
       return;
     }
-    box.innerHTML = '<div class="ai-m s">Loading...</div>';
+    box.innerHTML = '<div class="ai-m s">Loading…</div>';
     var r = await api({ op: 'thread', id: id }); box.innerHTML = '';
-    (r.data || []).forEach(add); box.scrollTop = box.scrollHeight;
+    (r.data || []).forEach(add); bottom();
   }
   function add(m) {
-    var box = $('aiMsgs'); if (!box) return; var d = document.createElement('div');
+    var box = col(); if (!box) return; var d = document.createElement('div');
     if (m.role === 'user' && /^\[The owner/.test(m.text || '')) { d.className = 'ai-m s'; d.textContent = m.text.replace(/^\[|\]$/g, '').slice(0, 160); }
     else if (m.role === 'user' && /^Write today's brief/.test(m.text || '')) { d.className = 'ai-m s'; d.textContent = 'Daily brief'; }
     else if (m.role === 'user') { d.className = 'ai-m u'; d.textContent = m.text; }
     else if (m.role === 's') { d.className = 'ai-m s' + (m.wait ? ' ai-wait' : ''); d.textContent = m.text; }
-    else { d.className = 'ai-m'; d.innerHTML = (m.tools && m.tools.length ? '<div class="ai-tools">' + m.tools.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + (m.deep ? '<span class="ai-deep">Deep thinking</span>' : '') + '</div>' : (m.deep ? '<div class="ai-tools"><span class="ai-deep">Deep thinking</span></div>' : '')) + md(m.text); }
-    box.appendChild(d); box.scrollTop = box.scrollHeight; return d;
+    else { d.className = 'ai-m a'; d.innerHTML = AV + '<div>' + (m.tools && m.tools.length ? '<div class="ai-tools">' + m.tools.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + (m.deep ? '<span class="ai-deep">Deep thinking</span>' : '') + '</div>' : (m.deep ? '<div class="ai-tools"><span class="ai-deep">Deep thinking</span></div>' : '')) + md(m.text) + '</div>'; }
+    box.appendChild(d); bottom(); return d;
   }
   async function send() {
     var inp = $('aiIn'), t = inp.value.trim(); if (!t || A.busy) return;
-    A.busy = true; inp.value = ''; $('aiSend').disabled = true;
-    if (!A.thread) $('aiMsgs').innerHTML = '';
+    A.busy = true; inp.value = ''; if (inp.bpFit) inp.bpFit(); $('aiSend').disabled = true;
+    if (!A.thread) col().innerHTML = '';
     add({ role: 'user', text: t });
     var w = add({ role: 's', text: AG[A.agent].n + ' is working on it...', wait: 1 });
     var r = await api({ op: 'chat', agent: A.agent, thread_id: A.thread, message: t });
-    A.busy = false; if ($('aiSend')) $('aiSend').disabled = false;
+    A.busy = false; if ($('aiIn') && $('aiIn').bpFit) $('aiIn').bpFit();
     if (w) w.remove();
     if (!r.ok) { add({ role: 's', text: r.error || 'Something went wrong.' }); return; }
     A.thread = r.thread_id; A.st.used++;

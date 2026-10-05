@@ -102,6 +102,11 @@
       '.rc-crew small{font-size:11.5px;color:var(--mu,#6b7a90);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 0}',
       '.rc-cdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}',
       '.rc-foot{font-size:12px;color:var(--mu,#6b7a90);margin-top:8px;line-height:1.5}',
+      '.ceo-file{display:flex;align-items:center;gap:12px;width:100%;max-width:420px;margin-top:10px;text-align:left;background:#fff;border:1px solid var(--line,#e3e8ef);border-radius:14px;padding:10px 12px;font:inherit;color:inherit;cursor:pointer}',
+      '.ceo-file:hover{border-color:var(--blue,#2563eb)}.ceo-fic{width:40px;height:40px;border-radius:10px;background:#eaf1ff;color:#2563eb;display:grid;place-items:center;flex:none}',
+      '.ceo-fx{flex:1;min-width:0}.ceo-fx b{display:block;font-size:14px}.ceo-fx small{font-size:12px;color:var(--mu,#6b7a90)}.ceo-fo{font-size:13px;font-weight:600;color:#2563eb}',
+      '.ceo-doc{min-width:0}.bpx-modalcard:has(.ceo-doc){max-width:min(1100px,96vw);width:100%}',
+      '#bpx.bpx-dark .ceo-file{background:#111827;border-color:#262f45}',
       /* dashboard card */
       '.ceo-dash{margin:0 0 16px;display:grid;gap:10px;min-width:0}',
       '.cd-top{display:flex;align-items:center;gap:10px}.cd-who{flex:1;min-width:0}.cd-who b{display:block;font-size:14px}.cd-who small{font-size:12px;color:var(--mu,#6b7a90)}',
@@ -189,68 +194,77 @@
         : '<div class="ceo-note"><span class="ms">check_circle</span>Nothing is overdue, expiring or waiting on you.</div>')
       + '</div>';
   }
+  var AV = '<span class="ai-av"><span class="ms">auto_awesome</span></span>';
+  /* the AI CEO is a chat; each briefing arrives as a file card you open */
+  function fileCard(r) {
+    var st = r.stats || {}, n = (st.attention || []).length, c = +st.critical || 0;
+    return '<button type="button" class="ceo-file" data-rep="' + esc(r.id) + '"><span class="ceo-fic"><span class="ms">description</span></span>'
+      + '<span class="ceo-fx"><b>Morning briefing · ' + fmtDay(r.day) + '</b><small>Report · ' + (c ? c + ' urgent · ' : '') + n + ' item' + (n === 1 ? '' : 's') + (r.kind === 'adhoc' ? ' · run by hand' : '') + '</small></span><span class="ceo-fo">Open</span></button>';
+  }
+  function introHtml(r) {
+    var st = (r && r.stats) || {}, c = +st.critical || 0, top = (st.attention || []).slice(0, 3);
+    if (!r) return '<div class="ai-hello">' + AV + '<h2>Your AI CEO</h2><div class="bpx-mut" style="max-width:52ch;margin:0 auto">Every morning I check money, leads, projects, permits, inspections, contracts, messages and your team, then write you a briefing. Run the first one now.</div><div style="margin-top:14px"><button type="button" class="bpx-btn" data-run>Write my first briefing</button></div></div>';
+    return '<div class="ai-m a">' + AV + '<div><p>' + (c ? 'Here’s your briefing. ' + c + ' thing' + (c > 1 ? 's need' : ' needs') + ' you today:' : 'Here’s your briefing. Nothing urgent today.') + '</p>'
+      + (top.length ? '<ol>' + top.map(function (x, i) { return '<li><a href="#" data-att="' + i + '">' + esc(x.title) + '</a></li>'; }).join('') + '</ol>' : '')
+      + fileCard(r) + '</div></div>';
+  }
   function draw() {
     var host = C.host; if (!host) return;
-    var r = C.cur, st = (r && r.stats) || {}, ai = !!(C.st && C.st.ai);
-    var today = new Date(); var iso = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
-    var head = '<div class="ceo-head"><span class="ceo-ic"><span class="ms">monitoring</span></span><div><h2>Morning briefing ' + (r ? srcBadge(r.source) : '') + '</h2>'
-      + '<div class="ceo-sub">' + (r ? fmtDay(r.day) + (String(r.day) === iso ? ' · today' : '') + (r.kind === 'adhoc' ? ' · run by hand' : '') : 'Your AI CEO reads the whole business every morning') + '</div></div>'
-      + '<div class="ceo-act"><button type="button" class="bpx-btn ceo-btn" id="ceoRun"><span class="ms">refresh</span>Run now</button></div></div>';
-    var brief = r
-      ? tilesHtml(st) + '<div class="ceo-grid"><div class="ceo-rep" id="ceoRep">' + repHtml(r.text) + '</div>' + attHtml(st.attention) + '</div>'
-      : '<div class="ceo-empty"><span class="ms">wb_sunny</span><b>No briefing yet</b><div class="bpx-mut" style="font-size:13.5px;max-width:46ch;margin:0 auto">Every morning the AI CEO checks money, leads, projects, permits, inspections, contracts, messages and your team, then tells you the 3 things to do first. Run the first one now.</div></div>';
-    var past = (C.st.reports || []);
-    host.innerHTML = '<div class="ceo"><section class="ceo-card" aria-label="Morning briefing">' + head + brief + '</section>'
-      + '<div class="ceo-row2"><section class="ceo-card ceo-ask" aria-label="Ask the CEO"><h3><span class="ms">forum</span>Ask the CEO</h3>'
-      + '<textarea id="ceoQ" maxlength="1000" placeholder="' + (ai ? 'e.g. Which projects are at risk this week?' : 'Ask about your numbers, projects or team') + '"' + (ai ? '' : ' disabled') + '></textarea>'
-      + '<div class="row"><button type="button" class="bpx-btn ceo-btn" id="ceoAsk"' + (ai ? '' : ' disabled') + '><span class="ms">send</span>Ask</button><span class="bpx-mmsg" id="ceoAskMsg"></span></div>'
-      + (ai ? '<div class="ceo-chips">' + ['Which projects are at risk this week?', 'Who is my best roofer right now?', 'Where is money stuck?'].map(function (q) { return '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>'
-        : '<div class="ceo-note" id="ceoKeyNote"><span class="ms">key</span><span>Connect Claude in Supabase to turn this on. Add <b>ANTHROPIC_API_KEY</b> under Edge Functions → Secrets. The briefing and recommendations already work without it.</span></div>')
-      + '<div class="ceo-qa" id="ceoQA">' + C.asks.map(qaHtml).join('') + '</div></section>'
-      + '<section class="ceo-card" aria-label="Past briefings"><h3><span class="ms">history</span>Past briefings</h3>'
-      + (past.length ? '<ul class="ceo-past">' + past.map(function (p) { return '<li><button type="button" data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '"><span>' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' <span class="bpx-mut" style="font-size:12px">· by hand</span>' : '') + '</span>' + srcBadge(p.source) + '</button></li>'; }).join('') + '</ul>'
-        : '<div class="bpx-mut" style="font-size:13px">Briefings you get show up here.</div>')
-      + '</section></div></div>';
-    $('ceoRun').onclick = run;
-    host.querySelectorAll('[data-att]').forEach(function (b) { b.onclick = function () { var x = (st.attention || [])[+b.getAttribute('data-att')]; if (x) follow(x.link, x.job); }; });
+    var r = C.cur, ai = !!(C.st && C.st.ai), past = C.st.reports || [];
+    host.innerHTML = bpChatShell({ ph: ai ? 'Ask your AI CEO…' : 'Connect Claude to ask questions', off: !ai,
+      fine: ai ? 'Your AI CEO reads your live numbers. Check anything important.' : 'Add ANTHROPIC_API_KEY under Supabase → Edge Functions → Secrets to turn on questions. Briefings already work.' });
+    var side = host.querySelector('#aiSide');
+    side.innerHTML = '<button class="ai-new" data-run><span class="ms">refresh</span>Run briefing now</button>'
+      + (past.length ? '<small>Briefings</small>' + past.map(function (p) { return '<button data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '"><span class="ms" style="font-size:16px;vertical-align:-3px;margin-right:6px">description</span>' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' · by hand' : '') + '</button>'; }).join('') : '');
+    var col = host.querySelector('#aiCol');
+    col.innerHTML = introHtml(r) + C.asks.slice().reverse().map(qaHtml).join('')
+      + (r && ai && !C.asks.length ? '<div class="ai-hint">' + ['Which projects are at risk this week?', 'Who is my best roofer right now?', 'Where is money stuck?'].map(function (q) { return '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>' : '');
+    host.querySelectorAll('[data-run]').forEach(function (b) { b.onclick = run; });
+    host.querySelectorAll('[data-att]').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); var x = ((r && r.stats && r.stats.attention) || [])[+b.getAttribute('data-att')]; if (x) follow(x.link, x.job); }; });
     host.querySelectorAll('[data-rep]').forEach(function (b) { b.onclick = function () { openRep(b.getAttribute('data-rep')); }; });
-    host.querySelectorAll('[data-q]').forEach(function (b) { b.onclick = function () { $('ceoQ').value = b.getAttribute('data-q'); ask(); }; });
-    var q = $('ceoQ'); if (q) q.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } };
-    $('ceoAsk').onclick = ask;
-    if (C.prefill && q && !q.disabled) { q.value = C.prefill; C.prefill = ''; ask(); } else if (q && C.prefill === '') q.focus();
+    host.querySelectorAll('[data-q]').forEach(function (b) { b.onclick = function () { $('aiIn').value = b.getAttribute('data-q'); ask(); }; });
+    bpChatWire(ask);
+    var m = host.querySelector('#aiMsgs'); if (m) m.scrollTop = m.scrollHeight;
+    var q = $('aiIn');
+    if (C.prefill && q && !q.disabled) { q.value = C.prefill; C.prefill = ''; ask(); } else if (q && C.prefill === '' && !q.disabled) { C.prefill = null; q.focus(); }
   }
-  function qaHtml(x) { return '<div><div class="ceo-q">' + esc(x.q) + '</div><div class="ceo-a' + (x.wait ? ' ceo-wait bpx-mut' : '') + '">' + esc(x.a) + '</div></div>'; }
+  function qaHtml(x) { return '<div class="ai-m u">' + esc(x.q) + '</div><div class="ai-m a">' + AV + '<div class="' + (x.wait ? 'ai-wait bpx-mut' : '') + '">' + (x.wait ? esc(x.a) : repHtml(x.a)) + '</div></div>'; }
+  /* the report itself, opened from its file card */
+  function showRep(r) {
+    var st = r.stats || {};
+    window.bpModal('<div class="ceo-doc"><div class="ceo-head"><span class="ceo-ic"><span class="ms">description</span></span><div><h2>Morning briefing ' + srcBadge(r.source) + '</h2><div class="ceo-sub">' + fmtDay(r.day) + (r.kind === 'adhoc' ? ' · run by hand' : '') + '</div></div>'
+      + '<div class="ceo-act"><button type="button" class="bpx-btn ghost" onclick="window.print()"><span class="ms">print</span>Print</button><button type="button" class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div></div>'
+      + tilesHtml(st) + '<div class="ceo-grid"><div class="ceo-rep">' + repHtml(r.text) + '</div>' + attHtml(st.attention) + '</div></div>');
+    document.querySelectorAll('.ceo-doc [data-att]').forEach(function (b) { b.onclick = function () { var x = (st.attention || [])[+b.getAttribute('data-att')]; if (x) { window.bpCloseModal(); follow(x.link, x.job); } }; });
+  }
   async function run() {
-    var b = $('ceoRun'); if (!b || C.busy) return;
-    C.busy = true; b.disabled = true; b.innerHTML = '<span class="ms">hourglass_top</span>Working…';
+    if (C.busy) return;
+    C.busy = true; C.host.querySelectorAll('[data-run]').forEach(function (b) { b.disabled = true; b.innerHTML = '<span class="ms">hourglass_top</span>Writing…'; });
     var r = await api({ op: 'daily' });
     C.busy = false;
-    if (!r.ok) { b.disabled = false; b.innerHTML = '<span class="ms">refresh</span>Run now'; if (window.bpToast) bpToast(r.error || 'Could not run the briefing.'); return; }
+    if (!r.ok) { draw(); if (window.bpToast) bpToast(r.error || 'Could not run the briefing.'); return; }
     C.cur = r.report; if (typeof r.ai === 'boolean') C.st.ai = r.ai;
     C.st.reports = [{ id: r.report.id, day: r.report.day, kind: r.report.kind, source: r.report.source, created_at: r.report.created_at }]
       .concat((C.st.reports || []).filter(function (p) { return !(p.day === r.report.day && p.kind === r.report.kind) && p.id !== r.report.id; })).slice(0, 14);
     C.st.latest = C.cur; draw();
-    if (window.bpToast) bpToast('Briefing updated.');
+    if (window.bpToast) bpToast('New briefing ready.');
   }
   async function openRep(id) {
-    if (C.cur && C.cur.id === id) return;
+    if (C.cur && C.cur.id === id) return showRep(C.cur);
     var r = await api({ op: 'report', id: id });
-    if (r.ok) { C.cur = r.report; draw(); var c = C.host && C.host.querySelector('.ceo-card'); if (c && c.scrollIntoView) c.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+    if (r.ok) showRep(r.report); else if (window.bpToast) bpToast(r.error || 'Could not open that briefing.');
   }
   async function ask() {
-    var q = $('ceoQ'), b = $('ceoAsk'), m = $('ceoAskMsg'); if (!q || q.disabled || C.busy) return;
+    var q = $('aiIn'); if (!q || q.disabled || C.busy) return;
     var t = q.value.trim(); if (!t) return;
-    C.busy = true; b.disabled = true; q.value = ''; m.textContent = '';
-    var item = { q: t, a: 'Thinking…', wait: true }; C.asks.unshift(item); C.asks = C.asks.slice(0, 6);
-    $('ceoQA').innerHTML = C.asks.map(qaHtml).join('');
+    C.busy = true; q.value = ''; if (q.bpFit) q.bpFit();
+    var item = { q: t, a: 'Thinking…', wait: true }; C.asks.unshift(item); C.asks = C.asks.slice(0, 20);
+    draw();
     var r = await api({ op: 'ask', question: t });
     C.busy = false;
     if (r.needsKey) { C.st.ai = false; C.asks.shift(); draw(); return; }
     item.wait = false; item.a = r.ok ? r.answer : (r.error || 'Could not answer.');
-    if (!r.ok) C.asks.shift();
-    if ($('ceoQA')) $('ceoQA').innerHTML = C.asks.map(qaHtml).join('');
-    if (!r.ok && m) m.textContent = r.error || 'Could not answer.';
-    if ($('ceoAsk')) $('ceoAsk').disabled = false;
+    draw();
   }
 
   /* ---------------------------------------- project sheet: Recommended --- */
