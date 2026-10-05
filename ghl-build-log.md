@@ -216,3 +216,11 @@ Left on "Claude Test": the 11 bp-* tags and the sample BP field values. Contacts
   - Stop on response is OFF here on purpose. With it on, the contact's reply would end the workflow before the yes branch could run. The reply wait does the same job.
   - HighLevel shows a notice that "Create/update opportunity" will be deprecated. Existing workflows keep working.
 - 36 Storm Follow-up (a duplicate of 35): trigger bp-storm-followup; storm SMS; 2-day reply wait; same yes branch (opportunity "{{contact.name}} - storm roof check", source "Storm follow-up"; alert "Book the storm check for {{contact.name}}"). Stop on response is OFF for the same reason. Published.
+- Folder 7 (no time window; made from duplicates of 47, so no Excluded check):
+  - 44 Customer Message Unanswered: trigger bp-message-unanswered; in-app alert plus SMS alert to {{custom_values.owner_phone}}. Published.
+  - 45 Job Over Budget: trigger bp-over-budget; in-app alert only. Published.
+  - 47 Crew No-Show: the copy from OS. Published.
+  - 48 Weather Delay Warning: trigger bp-weather-risk; in-app alert plus owner SMS. Published.
+  - 49 Materials Not Ready: trigger bp-materials-not-ready; in-app alert only. Published.
+  - 50 Stuck-Job Watchdog: trigger bp-job-stalled; in-app alert only. Published.
+  - 46 Sub Insurance Expiring (from a spare duplicate of 30, so it keeps the Excluded check and the 8 am-8 pm window): trigger bp-sub-insurance-expiring; SMS and email to the contact, who is the sub (subject "Your insurance certificate is expiring"); in-app alert "{{contact.name}}: {{contact.bp_event_note}}." Moved to folder 7. Published.
