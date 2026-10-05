@@ -267,7 +267,7 @@ async function storms(force?: string) {
     await rpc("bp_notify", { p_owner: row.owner, p_kind: "storm_alert", p_title: `Storm near ${n} past customer${n === 1 ? "" : "s"}`,
       p_body: `${summary} on ${nice}. Send them the free storm check text?`, p_link: `storm:${a.id}`, p_job: null, p_priority: "high",
       p_dedupe: `storm:${a.id}`, p_audience: "office" }).catch((e) => console.error("storm notify", e.message));
-    /* a text to the owner too (workflow 51 "Storm Alert" sends it to Owner Phone) */
+    /* a text to the owner too (workflow 52 "Storm Alert to You" sends it to Owner Phone) */
     await rest(`ghl_events?on_conflict=owner,dedupe`, { method: "POST", headers: { Prefer: "return=minimal,resolution=ignore-duplicates" },
       body: JSON.stringify({ owner: row.owner, kind: "storm_alert", job_id: hits[0].id, dedupe: `stormalert:${a.id}`,
         data: { note: `Storm near ${n} past customer${n === 1 ? "" : "s"}: ${summary}. Open BuilderPro to send the storm check text.` } }) }).catch(() => {});
