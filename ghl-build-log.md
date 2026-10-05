@@ -178,3 +178,25 @@ Built from docs/highlevel-workflows.md, in the HighLevel UI only.
   - 47 Crew No-Show: no Excluded check, no time window. In-app alert to all users, plus SMS alert to custom number {{custom_values.owner_phone}}.
 - In-app alerts: Internal Notification, type Notification, all users, redirect to Contact.
 - Workflow names use "->" in place of the arrow.
+
+### BP OS Template - tests (Oct 4, 2026, 6:06-6:12 PM PDT)
+Test contact: "Claude Test" (no phone, no email, no system-test tag). Did not use "Narek Test" because it has a phone number.
+Sample BP fields: Job Name Kitchen Remodel, Start/Visit Date Oct 14, Old Start Date Oct 10, Crew Lead Mike, Phase Demo, Next Phase Framing, Balance $3,000, Amount Paid $2,000, Days Overdue 3, Change Order "Add a window", Event Note "Test note", Portal Link https://example.com/p/test.
+Round 1: added all 11 bp-* tags at once. Every workflow enrolled the contact once.
+- 30 PASS: Send -> SMS + email (skipped: no phone/email) -> end.
+- 31 PASS: waiting for 5 pm.
+- 32 PASS: Has crew lead branch -> SMS.
+- 33 PASS: job complete SMS -> waiting 2 days.
+- 34 PASS: 3 days branch -> 3-day SMS.
+- 37 PASS: welcome SMS -> Has date -> start date SMS.
+- 38 PASS: Has next phase -> progress SMS.
+- 39 PASS: SMS, then the in-app alert ran (Executed).
+- 40 PASS: Balance left branch -> thanks SMS.
+- 41 PASS: Days Overdue 3 -> Other days -> no action.
+- 47 PASS: in-app alert ran; owner SMS skipped (Owner Phone custom value is blank in the template).
+Round 2 (Days Overdue 14, Balance Due $0; removed and re-added bp-payment-overdue and bp-payment-received):
+- 34: 14 days branch -> in-app alert ran. Task "Call about payment" was skipped: "Task cannot be created with both assigned to contact's assigned user or custom assigned user". The template has no users and the test contact has no owner. In a live account the task is created when the contact has an assigned user. Left unassigned on purpose; the alert covers it.
+- 40 PASS: Paid in full branch -> paid in full SMS.
+Not verified: rendered SMS/email text. Every customer message was skipped (no phone/email), and the logs do not show message bodies. Merge tags were checked in the builder (each one turned into a field chip).
+Not tested: 34 at 7 days, 41 at 2 and 5 days (same If/Else pattern as the branches that passed), 33's later steps (2- and 30-day waits).
+Left on "Claude Test": the 11 bp-* tags and the sample BP field values. Contacts are not part of snapshots.
