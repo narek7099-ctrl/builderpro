@@ -233,3 +233,15 @@ Round 1: added all 21 bp-* tags. Every workflow (30-50) enrolled the contact onc
 Round 2 (removed and re-added the six tags): 32 PASS (Has crew lead), 34 PASS (7 days branch: SMS + email), 37 PASS (Has date), 38 PASS (Has next phase), 40 PASS (Balance left), 41 PASS (Days Overdue 7 -> Other days, no action).
 Not verified: rendered message text (customer messages are skipped without a phone or email), and 35/36 reply handling (needs a real reply).
 Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP fields.
+
+### Snapshot BuilderPro Enterprise - refreshed (Oct 4, 2026, 7:44 PM)
+- Refreshed in place from BP Enterprise Template, all assets (225). Same ID expected: cWoCOr2RJDfc3x3FxnQm. No new snapshots were created, so GHL_SNAPSHOT_OS and GHL_SNAPSHOT_ENTERPRISE stay the same.
+
+### Summary - project automations build (Oct 4, 2026)
+- BP OS Template: 11 workflows published (30, 31, 32, 33, 34, 37, 38, 39, 40, 41 in "6 Project automations"; 47 in "7 Alerts to you"). Tested. Snapshot BuilderPro OS refreshed.
+- BP Enterprise Template: 21 workflows published (30-43 in folder 6; 44-50 in folder 7). Tested. Snapshot BuilderPro Enterprise refreshed.
+- Workflows 01-22, the demo account and client accounts were not touched. No message reached a real person: the test contacts have no phone or email, and Owner Phone is blank in both templates.
+- Still open for the owner:
+  1. 34's 14-day "Call about payment" task is skipped when the contact has no assigned user. It needs an owner on the contact (or a default assignee chosen per client).
+  2. Rendered message text was not checked end to end. Test with a contact on the owner's own phone if wanted.
+  3. 35 and 36 have Stop on response OFF on purpose (see the 35 note above).
