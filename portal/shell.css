@@ -114,7 +114,7 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-tab.on{color:var(--blue) !important;border-bottom-color:var(--blue) !important;font-weight:600 !important}
 #bpx#bpx#bpx#bpx .hl-tab .hl-i{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
 #bpx#bpx#bpx#bpx.bpx-dark .hl-tab.on{color:#84ADFF !important;border-bottom-color:#528BFF !important}
-#bpx#bpx#bpx#bpx #bpxViewArea{padding:16px 20px 40px;box-sizing:border-box;max-width:1600px}
+#bpx#bpx#bpx#bpx #bpxViewArea{padding:16px 24px 40px;box-sizing:border-box;max-width:2200px;margin-left:auto;margin-right:auto;width:100%}
 
 /* ---------- menus ---------- */
 #bpx#bpx#bpx#bpx .hl-menu{position:fixed;z-index:3000;min-width:220px;max-width:min(360px,calc(100vw - 16px));max-height:min(70vh,560px);overflow:auto;box-sizing:border-box;
@@ -198,6 +198,7 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-tsearch:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--hl-ring-c)}
 #bpx#bpx#bpx#bpx .hl-tsearch .hl-i{width:15px;height:15px;flex:0 0 15px;fill:none;stroke:var(--mu);stroke-width:2;stroke-linecap:round}
 #bpx#bpx#bpx#bpx .hl-tsearch input{flex:1;min-width:0;height:30px;min-height:0 !important;padding:0 !important;border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;font-size:13px !important}
+#bpx#bpx#bpx#bpx .cd-ask input{flex:1;min-width:0;height:32px;min-height:0 !important;padding:0 !important;border:0 !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;font-size:14px !important}
 #bpx#bpx#bpx#bpx .hl-tsearch input::-webkit-search-cancel-button{cursor:pointer}
 #bpx#bpx#bpx#bpx .hl-tfilt:empty{display:none}
 #bpx#bpx#bpx#bpx .hl-tfilt select{height:32px;padding:0 28px 0 10px !important;font-size:13px !important;width:auto}
