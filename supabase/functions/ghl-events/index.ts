@@ -31,13 +31,14 @@ const TAGS: Record<string, string> = {
   warranty_followup: "bp-warranty", message_unanswered: "bp-message-unanswered", over_budget: "bp-over-budget",
   sub_insurance_expiring: "bp-sub-insurance-expiring",
   crew_no_show: "bp-crew-no-show", materials_not_ready: "bp-materials-not-ready", job_stalled: "bp-job-stalled", weather_risk: "bp-weather-risk",
+  storm_alert: "bp-storm-alert",
 };
 /* which plan gets which automation (Foundation gets none: it has no projects) */
 const OS_KINDS = ["job_scheduled", "visit_tomorrow", "crew_arrived", "job_completed", "payment_overdue", "payment_received",
   "contract_signed", "phase_done", "schedule_moved", "change_order_waiting", "crew_no_show"];
 const allowed = (plan: string, kind: string) => plan === "enterprise" ? !!TAGS[kind] : plan === "os" ? OS_KINDS.includes(kind) : false;
 /* alerts to the owner still go out when a project's customer messages are paused */
-const INTERNAL = ["message_unanswered", "over_budget", "crew_no_show", "materials_not_ready", "job_stalled", "weather_risk", "sub_insurance_expiring"];
+const INTERNAL = ["message_unanswered", "over_budget", "crew_no_show", "materials_not_ready", "job_stalled", "weather_risk", "sub_insurance_expiring", "storm_alert"];
 const FIELDS = ["BP Job Name", "BP Job Address", "BP Job Amount", "BP Balance Due", "BP Start Date", "BP Visit Date",
   "BP Crew Lead", "BP Portal Link", "BP Days Overdue", "BP Company Name", "BP Event Note",
   "BP Phase Name", "BP Next Phase", "BP Amount Paid", "BP Old Start Date", "BP Inspection", "BP Change Order", "BP Budget", "BP Spent"];
@@ -166,6 +167,140 @@ async function weather() {
   return n;
 }
 
+/* ---------- storms: past customers near a hail or wind report, owner asked first ----------
+   Once a day after the NOAA Storm Prediction Center closes its report day (12Z),
+   read that day's hail and wind reports. For each Enterprise account, a done job
+   counts when its trade can be hurt by that storm and a report is within the
+   owner's radius (default 5 miles). One storm_alerts row per owner per day; the
+   owner taps Send (workflow 36) or Dismiss. Reminder at 24h, lapses at 72h, or
+   sends at 48h when they turned on data.automation.stormAutoSend. */
+type Rpt = { kind: "hail" | "wind"; size: number; speed: number; place: string; state: string; lat: number; lon: number };
+/* the storm a job's trade cares about; null = storms don't matter for it */
+const NOT_STORM = /(floor|carpet|hardwood|laminate|tile|countertop|granite|quartz|plumb|pipe|water heater|drain|electric|wiring|panel upgrade|kitchen|bath|interior|cabinet|trim|drywall|concrete|driveway|pool|remodel)/;
+function stormClass(t: string): string | null {
+  const x = String(t || "").toLowerCase();
+  if (/(roof|shingle|gutter|soffit|fascia|flashing)/.test(x)) return "roof";
+  if (/(siding|window|skylight)/.test(x)) return "exterior";
+  if (/solar/.test(x)) return "solar";
+  if (/(hvac|furnace|heat pump|air cond|\ba\/?c\b|condenser|mini.?split)/.test(x)) return "hvac";
+  if (/(fence|fencing|tree|landscap|lawn|yard|pergola|deck)/.test(x)) return "wind";
+  if (/paint/.test(x) && /(exterior|outside|house paint)/.test(x)) return "paint";
+  return null;
+}
+function jobStormClass(j: any, company: string): string | null {
+  const txt = [j.trade, j.type, j.title].filter(Boolean).join(" ") || String(j.notes || "");
+  const c = stormClass(txt); if (c) return c;
+  if (NOT_STORM.test(String(txt).toLowerCase())) return null;
+  return stormClass(company);   // a job that says nothing about its trade takes the company's
+}
+const HITS: Record<string, (r: Rpt) => boolean> = {
+  roof: (r) => r.kind === "hail" ? r.size >= 1 : r.speed >= 58,
+  exterior: (r) => r.kind === "hail" ? r.size >= 1 : r.speed >= 58,
+  solar: (r) => r.kind === "hail" && r.size >= 1,
+  wind: (r) => r.kind === "wind" && r.speed >= 58,
+  hvac: (r) => r.kind === "hail" && r.size >= 1.25,
+  paint: (r) => r.kind === "hail" && r.size >= 1.5,
+};
+const miles = (a: number, b: number, c: number, d: number) => {
+  const R = 3958.8, r = Math.PI / 180, dl = (c - a) * r, dn = (d - b) * r;
+  return 2 * R * Math.asin(Math.sqrt(Math.sin(dl / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(dn / 2) ** 2));
+};
+const rptText = (r: Rpt) => r.kind === "hail" ? `${r.size.toFixed(2)} in hail near ${r.place}, ${r.state}` : `${r.speed} mph wind near ${r.place}, ${r.state}`;
+async function spc(day: string): Promise<Rpt[]> {
+  const yymmdd = day.slice(2).replace(/-/g, ""), out: Rpt[] = [];
+  for (const kind of ["hail", "wind"] as const) {
+    const r = await fetch(`https://www.spc.noaa.gov/climo/reports/${yymmdd}_rpts_${kind}.csv`);
+    if (!r.ok) throw new Error(`spc ${kind} ${r.status}`);
+    (await r.text()).split("\n").slice(1).forEach((l) => {
+      const f = l.split(","); if (f.length < 7) return;
+      const v = +f[1], lat = +f[5], lon = +f[6]; if (!isFinite(lat) || !isFinite(lon) || !isFinite(v)) return;   // "UNK" wind speeds drop out
+      out.push({ kind, size: kind === "hail" ? v / 100 : 0, speed: kind === "wind" ? v : 0, place: f[2].trim(), state: f[4].trim(), lat, lon });
+    });
+  }
+  return out.filter((r) => r.kind === "hail" ? r.size >= 1 : r.speed >= 58);
+}
+async function storms(force?: string) {
+  const now = new Date();
+  const day = force || new Date(now.getTime() - 864e5).toISOString().slice(0, 10);   // the SPC day that closed at 12Z today
+  if (!force) {
+    if (now.getUTCHours() < 13) return 0;
+    const m = await rest(`ai_config?key=eq.storm_scan_day&select=value`).catch(() => []);
+    if (m?.[0]?.value === day) return 0;
+  }
+  const reports = await spc(day);
+  const mark = () => rest(`ai_config?on_conflict=key`, { method: "POST", headers: { Prefer: "return=minimal,resolution=merge-duplicates" }, body: JSON.stringify({ key: "storm_scan_day", value: day }) });
+  if (!reports.length) { if (!force) await mark().catch(() => {}); return 0; }
+  const fin = await rest(`portal_finance?select=owner,jobs`);
+  const accts: Record<string, any> = {}; let made = 0;
+  const since = new Date(now.getTime() - 90 * 864e5).toISOString();
+  for (const row of fin || []) {
+    if ((await accountOf(row.owner, accts)).plan !== "enterprise") continue;
+    const done = (row.jobs || []).filter((j: any) => j && j.status === "done" && !j.sample && !j.autoPause && j.geo && isFinite(+j.geo.lat) && isFinite(+j.geo.lng));
+    if (!done.length) continue;
+    const cs = (await rest(`client_settings?user_id=eq.${row.owner}&select=data`).catch(() => []))?.[0]?.data || {};
+    const acc = (await rest(`accounts?user_id=eq.${row.owner}&select=trade`).catch(() => []))?.[0] || {};
+    const company = String(cs.company?.trade || acc.trade || "");
+    const radius = Math.min(25, Math.max(1, +(cs.automation?.stormMiles) || 5));
+    const recent = new Set(((await rest(`ghl_events?owner=eq.${row.owner}&kind=eq.storm_followup&created_at=gte.${since}&select=job_id`).catch(() => [])) || []).map((x: any) => x.job_id));
+    const hits: any[] = [], used = new Map<string, Rpt>();
+    for (const j of done) {
+      if (recent.has(j.id)) continue;
+      const cls = jobStormClass(j, company); if (!cls) continue;
+      let best: Rpt | null = null, bd = 1e9;
+      for (const r of reports) {
+        if (!HITS[cls](r)) continue;
+        const d = miles(+j.geo.lat, +j.geo.lng, r.lat, r.lon);
+        if (d <= radius && d < bd) { best = r; bd = d; }
+      }
+      if (!best) continue;
+      hits.push({ id: j.id, name: j.name || "", addr: j.addr || "", miles: Math.round(bd * 10) / 10, why: rptText(best) });
+      used.set(`${best.lat},${best.lon},${best.kind}`, best);
+    }
+    if (!hits.length) continue;
+    const rp = [...used.values()].sort((a, b) => (b.size - a.size) || (b.speed - a.speed));
+    const summary = rptText(rp[0]) + (rp.length > 1 ? ` (+${rp.length - 1} more report${rp.length > 2 ? "s" : ""})` : "");
+    const ins = await rest(`storm_alerts?on_conflict=owner,day`, { method: "POST", headers: { Prefer: "return=representation,resolution=ignore-duplicates" },
+      body: JSON.stringify({ owner: row.owner, day, reports: rp.slice(0, 40), jobs: hits, summary }) }).catch((e) => { console.error("storm insert", e.message); return []; });
+    const a = ins?.[0]; if (!a) continue;
+    made++;
+    const n = hits.length, nice = new Date(day + "T12:00:00Z").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+    await rpc("bp_notify", { p_owner: row.owner, p_kind: "storm_alert", p_title: `Storm near ${n} past customer${n === 1 ? "" : "s"}`,
+      p_body: `${summary} on ${nice}. Send them the free storm check text?`, p_link: `storm:${a.id}`, p_job: null, p_priority: "high",
+      p_dedupe: `storm:${a.id}`, p_audience: "office" }).catch((e) => console.error("storm notify", e.message));
+    /* a text to the owner too (workflow 51 "Storm Alert" sends it to Owner Phone) */
+    await rest(`ghl_events?on_conflict=owner,dedupe`, { method: "POST", headers: { Prefer: "return=minimal,resolution=ignore-duplicates" },
+      body: JSON.stringify({ owner: row.owner, kind: "storm_alert", job_id: hits[0].id, dedupe: `stormalert:${a.id}`,
+        data: { note: `Storm near ${n} past customer${n === 1 ? "" : "s"}: ${summary}. Open BuilderPro to send the storm check text.` } }) }).catch(() => {});
+  }
+  if (!force) await mark().catch(() => {});
+  return made;
+}
+/* reminders, the 48h auto-send (if turned on) and the 72h lapse */
+async function stormTick() {
+  const rows = await rest(`storm_alerts?status=eq.pending&select=id,owner,created_at,reminded_at,jobs,summary`).catch(() => []);
+  const now = Date.now(), H = 36e5;
+  for (const a of rows || []) {
+    const age = (now - Date.parse(a.created_at)) / H, n = (a.jobs || []).length;
+    if (age >= 72) { await rest(`storm_alerts?id=eq.${a.id}&status=eq.pending`, { method: "PATCH", body: JSON.stringify({ status: "expired", decided_at: new Date().toISOString() }) }).catch(() => {}); continue; }
+    if (age >= 48) {
+      const cs = (await rest(`client_settings?user_id=eq.${a.owner}&select=data`).catch(() => []))?.[0]?.data || {};
+      if (cs.automation?.stormAutoSend) {
+        const k = await rpc("bp_storm_send", { p_owner: a.owner, p_id: a.id, p_jobs: null, p_note: null }).catch(() => -1);
+        if (+k >= 0) await rpc("bp_notify", { p_owner: a.owner, p_kind: "storm_alert", p_title: `Storm check text sent to ${k} past customer${+k === 1 ? "" : "s"}`,
+          p_body: `You didn’t answer within 48 hours, so it went out as your setting says. ${a.summary}.`, p_link: `storm:${a.id}`, p_job: null, p_priority: "normal",
+          p_dedupe: `storm-auto:${a.id}`, p_audience: "office" }).catch(() => {});
+        continue;
+      }
+    }
+    if (age >= 24 && !a.reminded_at) {
+      await rpc("bp_notify", { p_owner: a.owner, p_kind: "storm_alert", p_title: `Reminder: storm near ${n} past customer${n === 1 ? "" : "s"}`,
+        p_body: `${a.summary}. The offer lapses in 2 days if you don’t send it.`, p_link: `storm:${a.id}`, p_job: null, p_priority: "high",
+        p_dedupe: `storm-r:${a.id}`, p_audience: "office" }).catch(() => {});
+      await rest(`storm_alerts?id=eq.${a.id}`, { method: "PATCH", body: JSON.stringify({ reminded_at: new Date().toISOString() }) }).catch(() => {});
+    }
+  }
+}
+
 /* ---------- deliver ---------- */
 async function accountOf(owner: string, cache: Record<string, any>): Promise<{ plan: string; loc: string }> {
   if (cache[owner]) return cache[owner];
@@ -240,6 +375,9 @@ Deno.serve(async (req) => {
     }
     if (body.scan !== false) await rpc("bp_ghl_scan_all").catch((e) => console.error("scan", e.message));
     if (body.scan !== false) await weather().catch((e) => console.error("weather", e.message));
+    if (body.scan !== false) await storms().catch((e) => console.error("storms", e.message));
+    if (body.scan !== false) await stormTick().catch((e) => console.error("stormTick", e.message));
+    if (body.op === "storms") return json({ ok: true, made: await storms(String(body.day || "")) });   // a backfill/test for one SPC day
     return json({ ok: true, ...(await deliver()) });
   } catch (e) {
     console.error("ghl-events", (e as Error).message);
