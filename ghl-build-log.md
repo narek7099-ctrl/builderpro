@@ -152,3 +152,29 @@ Test in BP OS Template with contact "Claude Test" (no phone or email, so no text
 3. Final tags: new-lead, bot-active, in-pipeline, appointment-booked. No radar tag was applied.
 - Not tested: the SMS conversation with Lisa and her booking the appointment herself (the contact has no phone). OS only; Foundation and Enterprise were not test-run.
 - Left in the OS template: contact "Claude Test", its opportunity and the Oct 2 test appointment. Contacts are not part of snapshots.
+
+## Project automations 30-50 - Oct 4, 2026
+
+Built from docs/highlevel-workflows.md, in the HighLevel UI only.
+
+### BP OS Template (e3hrfIp2KFkCb2c34qbI) - build
+- Contact fields: 19 BP fields (contact.bp_*) in the "BuilderPro" folder.
+- Tags: the 11 OS bp-* tags plus past-customer.
+- Workflow folders: "6 Project automations", "7 Alerts to you".
+- Every workflow: trigger Contact Tag added = its bp-* tag; Allow re-entry ON; contact time zone.
+- Customer-message workflows (30-41): If/Else "Excluded?" first (system-test OR do-not-contact -> End); window 8:00 AM-8:00 PM, all 7 days.
+- Published, folder 6:
+  - 30 Job Scheduled: SMS + email.
+  - 31 Visit Tomorrow Reminder: wait until 5 pm, SMS.
+  - 32 Crew Arrived: If BP Crew Lead not empty, two SMS versions.
+  - 33 Job Completed -> Review -> Referral: SMS, wait 2 days, tag review-requested, wait 30 days, referral SMS, tag past-customer. Stop on response ON.
+  - 34 Payment Overdue: final-sent added to the Excluded check; If BP Days Overdue is 3 / 7 / 14 -> 3: SMS; 7: SMS + email (subject "Your balance for {{contact.bp_job_name}}"); 14: in-app alert + task "Call about payment" (due in 1 day).
+  - 37 Contract Signed -> Welcome: SMS, then If BP Start Date not empty -> start date SMS.
+  - 38 Phase Done -> Progress Update: If BP Next Phase not empty -> progress SMS, else last-phase SMS.
+  - 39 Schedule Pushed Back: SMS + in-app alert.
+  - 40 Payment Received -> Thank You: If BP Balance Due is "$0" (the exact format ghl-events sends for zero) -> paid in full SMS, else amount and balance SMS.
+  - 41 Change Order Waiting: If BP Days Overdue is 2 -> SMS; 5 -> in-app alert.
+- Published, folder 7:
+  - 47 Crew No-Show: no Excluded check, no time window. In-app alert to all users, plus SMS alert to custom number {{custom_values.owner_phone}}.
+- In-app alerts: Internal Notification, type Notification, all users, redirect to Contact.
+- Workflow names use "->" in place of the arrow.
