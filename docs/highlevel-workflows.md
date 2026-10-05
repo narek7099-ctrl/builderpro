@@ -204,6 +204,19 @@ This tag lands on the **subcontractor's** contact.
    (BuilderPro writes the whole message into BP Event Note, e.g. "Storm near 14 past customers: 1.75 in hail near Lorena, TX. Open BuilderPro to send the storm check text.")
    Build it like 48: folder 7, no Excluded check, no time window, re-entry on.
 
+## Payments run through BuilderPro now (read before touching 08, 10, 15, 16)
+Clients never connect Stripe in HighLevel. They connect it once in BuilderPro (Finances > Payouts).
+- **Invoices stay in HighLevel as the record.** BuilderPro creates them (portal Invoices, and 08's deposit via the estimate-accepted webhook), marks them "sent" without HighLevel messaging anyone, and texts/emails the customer a BuilderPro pay link instead.
+- **When the card goes through**, BuilderPro records the payment on the HighLevel invoice, so it shows Paid and **10 Invoice Paid** fires exactly as before; 15 and 16 stop as before.
+- **So: do not add HighLevel "Send invoice", text-to-pay, payment links or Stripe/payment-provider steps to any workflow, and do not connect Stripe in any template's Payments settings.** Leave 08, 10, 15 and 16 as they are.
+- 08's webhook action must keep calling `.../functions/v1/estimate-accepted` (now deployed) with locationId and contactId.
+
+## Each client's HighLevel key (owner does this per client, about a minute)
+BuilderPro reaches each client's sub-account with a Private Integration key:
+1. In the client's sub-account: Settings > Private Integrations > Create new integration, name it "BuilderPro".
+2. Scopes: contacts (read/write), contacts/tags, conversations/message (write), invoices (read/write), invoices/estimate (read), opportunities (read/write), calendars/events (read/write), locations/customFields (read/write), locations/customValues (read/write), users (read).
+3. Copy the key, then in the Command Center > Accounts, press **Add key** on that client's row and paste it. BuilderPro checks it with HighLevel before saving.
+
 ---
 
 ## Step 4: test every workflow

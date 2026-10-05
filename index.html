@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
-<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64})/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
+<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
@@ -29773,7 +29773,7 @@ else bpWatchLock();
    inline style it had when it left */
 window.addEventListener('pageshow',bpSyncLock);
 /* coming back from an ad-account connection lands on the site — open the portal straight away */
-if(/[?&]connected=/.test(location.search)&&!/[#&](sign|home)=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
+if(/[?&]connected=/.test(location.search)&&!/[#&](sign|home|pay)=/.test(location.hash||''))setTimeout(bpOpenPortal,60);
 /* Back from connecting Gmail/Outlook. In the tab we opened for it: hand the
    result to the tab that asked, and close. Otherwise open the portal on
    Lead Sources, which reads ?mail= itself. */
@@ -29789,7 +29789,7 @@ if(/[?&]connected=/.test(location.search)&&!/[#&](sign|home)=/.test(location.has
     window.name='';
     try{ window.close(); }catch(e){}
   }
-  if(!/[#&](sign|home)=/.test(location.hash||'')) setTimeout(bpOpenPortal,60);
+  if(!/[#&](sign|home|pay)=/.test(location.hash||'')) setTimeout(bpOpenPortal,60);
 })();
 window.addEventListener('storage',function(e){
   if(e.key!=='bp-mail-done'||!e.newValue)return;
@@ -35511,6 +35511,27 @@ function bpHpApi(op,extra){
   return fetch(CP_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},
     body:JSON.stringify(Object.assign({op:op,token:_bpHp.token},extra||{}))}).then(function(r){return r.json();});
 }
+/* ===== Pay link (#pay=<location>.<invoice>.<signature>) =====
+   What a customer opens from an invoice text or email. The card is paid on
+   the contractor's own Stripe (stripe-pay), which marks the invoice paid.
+   #pay=done is where Stripe sends them back after paying. */
+function bpPayRoute(){
+  var m=/[#&]pay=([A-Za-z0-9._-]+)/.exec(location.hash||''); if(!m)return false;
+  document.body.classList.add('bp-signing');
+  var host=document.createElement('div'); host.id='bpSign'; document.body.appendChild(host);
+  var card=function(icon,title,body){ host.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#eef1f6;font-family:Geist,system-ui,sans-serif"><div style="background:#fff;border:1px solid #e3e8ef;border-radius:16px;padding:32px 28px;max-width:420px;width:100%;text-align:center;box-sizing:border-box">'
+    +'<div style="font-size:40px;line-height:1;margin-bottom:12px">'+icon+'</div><h1 style="font-size:20px;margin:0 0 8px;color:#0f1729">'+title+'</h1><p style="margin:0;color:#56657a;font-size:14.5px;line-height:1.55">'+body+'</p></div></div>'; };
+  if(m[1]==='done'){ card('&#10003;','Payment received','Thank you! Your payment went through. A receipt is on its way to your email.'); return true; }
+  var p=m[1].split('.'); if(p.length!==3){ card('!','This link isn\'t valid','Ask your contractor to send it again.'); return true; }
+  card('&#128274;','Opening secure checkout&hellip;','One moment.');
+  fetch(BP_URL+'/functions/v1/stripe-pay',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({op:'invoice',l:p[0],i:p[1],s:p[2]})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok&&d.url){ location.replace(d.url); return; }
+      if(d&&d.paid){ card('&#10003;','Already paid','This invoice is already paid. Thank you!'); return; }
+      card('!','Payment couldn\'t open',bpEsc((d&&d.error)||'Try again in a minute, or contact your contractor.'));
+    }).catch(function(){ card('!','Payment couldn\'t open','Check your connection and try again.'); });
+  return true;
+}
 function bpHomeRoute(){
   var m=/[#&]home=([a-f0-9]{40,64})/i.exec(location.hash||'');
   if(!m)return false;
@@ -36003,20 +36024,18 @@ window.bpHpPay=function(){
     b.disabled=false;if(e)e.textContent=(d&&d.error)||'The payment page couldn\'t be opened.';
   }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
 };
-try{ bpHomeRoute(); }catch(e){}
+try{ bpPayRoute()||bpHomeRoute(); }catch(e){}
 
-/* ===== Payouts — the contractor connects their OWN Stripe once, inside their
-   own sub-account, because that is the connection the invoices and the
-   workflows actually charge through. Invoice money then goes straight from
-   the homeowner to their bank; we never hold it and take nothing on top.
-
-   There is no API for this: the Stripe connection lives inside the payments
-   settings UI and can only be authorised there. So the job here is to make
-   that one trip short and unmissable, deep-link straight to the right page,
-   and be honest that we cannot see inside their Stripe afterwards. ===== */
-var BP_PORTAL_DOMAIN='app.gohighlevel.com';   /* ← your white-label domain once it is live, so they never see the platform underneath */
+/* ===== Payouts — the contractor connects their OWN Stripe once, here in
+   BuilderPro (stripe-connect, Stripe Connect Standard). Every invoice and
+   deposit link is paid on that account (stripe-pay), so the money goes from
+   the homeowner straight to their bank; we never hold it and take nothing on
+   top. The invoices still live in the CRM, which is told when each is paid
+   (stripe-webhook), so the paid-invoice automations keep running. The
+   contractor never has to open the CRM for any of it. ===== */
 var BP_STRIPE_MARK='<svg class="bpx-stripe-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/></svg>';
-var _bpPay={loaded:false,loading:false,loc:'',note:'',flash:'',flashOk:true};
+var _bpPay={loaded:false,loading:false,acct:null,note:'',flash:'',flashOk:true,busy:false};
+var STRIPE_CONNECT_URL=BP_URL+'/functions/v1/stripe-connect';
 
 function bpPayouts(){
   q('bpxViewArea').innerHTML='<div id="bpx-pay"></div>';
@@ -36026,86 +36045,73 @@ function bpPayouts(){
 function bpPayLoad(){
   if(!(window.BP_LIVE&&window.BP_SB)){_bpPay.loaded=true;bpPayRender();return;}
   _bpPay.loading=true;
-  /* goes through the function, not the table: it claims the sub-account that
-     was set up for this email the first time the client signs in */
-  Promise.resolve(bpAuthApi(AI_BRAIN_URL,{op:'get'})).then(function(r){
-    _bpPay.loc=(r&&r.brain&&r.brain.ghl_location_id)||'';
-    _bpPay.loaded=true;_bpPay.loading=false;bpPayRender();
-  },function(){_bpPay.loaded=true;_bpPay.loading=false;_bpPay.note='Could not check your account setup — tap Retry.';bpPayRender();});
+  /* always the real state from Stripe, never what the browser remembers */
+  Promise.resolve(bpAuthApi(STRIPE_CONNECT_URL,{op:'status'})).then(function(r){
+    _bpPay.loading=false;_bpPay.loaded=true;
+    if(r&&r.reason==='not_configured')_bpPay.note='Card payments are being switched on for BuilderPro. Check back shortly.';
+    else if(r&&r.error)_bpPay.note=r.error;
+    _bpPay.acct=(r&&r.account)||null;bpPayRender();
+  },function(){_bpPay.loaded=true;_bpPay.loading=false;_bpPay.note='Could not check your Stripe connection. Tap Retry.';bpPayRender();});
 }
 window.bpPayRetry=function(){_bpPay.loaded=false;_bpPay.note='';_bpPay.flash='';bpPayRender();bpPayLoad();};
-
-/* We cannot read the Stripe connection back out of the payments settings, so
-   the contractor tells us when it is done and we date it. Said plainly on the
-   page rather than dressed up as something we verified. */
-function bpPayDoneAt(){ return (bpSettingsGet().payoutsStripeAt)||''; }
-window.bpPayMarkDone=function(){
-  var s=bpSettingsGet(); s.payoutsStripeAt=new Date().toISOString(); bpSettingsSet(s);
-  try{ bpSettingsPush(s); }catch(e){}
-  _bpPay.flash='Noted. Your invoices are payable by card from now on.';_bpPay.flashOk=true;bpPayRender();
+window.bpPayConnect=function(btn){
+  if(_bpPay.busy)return; _bpPay.busy=true; if(btn){btn.disabled=true;btn.lastChild.textContent='Opening Stripe…';}
+  Promise.resolve(bpAuthApi(STRIPE_CONNECT_URL,{op:'link'})).then(function(r){
+    _bpPay.busy=false;
+    if(r&&r.url){location.href=r.url;return;}
+    _bpPay.flash=(r&&(r.error||(r.reason==='not_configured'?'Card payments are being switched on for BuilderPro. Check back shortly.':r.detail)))||'Stripe could not be opened. Try again.';_bpPay.flashOk=false;bpPayRender();
+  },function(){_bpPay.busy=false;_bpPay.flash='Stripe could not be opened. Try again.';_bpPay.flashOk=false;bpPayRender();});
 };
-window.bpPayMarkUndone=function(){
-  var s=bpSettingsGet(); delete s.payoutsStripeAt; bpSettingsSet(s);
-  try{ bpSettingsPush(s); }catch(e){}
-  _bpPay.flash='';bpPayRender();
+window.bpPayDisconnect=function(){
+  if(!confirm('Stop taking card payments through this Stripe account? Your Stripe account and its money stay yours; BuilderPro just stops using it.'))return;
+  Promise.resolve(bpAuthApi(STRIPE_CONNECT_URL,{op:'disconnect'})).then(function(){_bpPay.acct=null;_bpPay.flash='Disconnected. Connect again any time.';_bpPay.flashOk=true;bpPayRender();});
 };
-/* the one page that can authorise it, opened straight at the right tab */
-function bpPayUrl(){
-  return _bpPay.loc?('https://'+BP_PORTAL_DOMAIN+'/v2/location/'+encodeURIComponent(_bpPay.loc)+'/payments/integrations'):'';
-}
+/* back from Stripe: #payouts=connected|refresh. Re-read the real state either way. */
+(function(){
+  var m=/^#payouts=(\w+)/.exec(location.hash||''); if(!m)return;
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  var n=0,t=setInterval(function(){
+    if(++n>120){clearInterval(t);return;}
+    if(!window.bpNav||!q('bpxViewArea')||!window._bpCurView)return;
+    clearInterval(t);_bpPay.loaded=false;bpNav('payouts');
+    if(m[1]==='refresh'&&window.bpToast)bpToast('That Stripe link expired. Tap Connect with Stripe to pick up where you left off.','warning');
+  },500);
+})();
 
 function bpPayRender(){
   var el=q('bpx-pay'); if(!el)return;
   if(!_bpPay.loaded){el.innerHTML='<div class="bpx-panel"><div class="bpx-skel" style="width:40%"></div><div class="bpx-skel"></div></div>';return;}
-  var done=bpPayDoneAt(),loc=_bpPay.loc,url=bpPayUrl();
-  var s=bpSettingsGet(),co=(s.company||{}).name||'your business';
-
-  var head='<div class="bpx-stripe-head">'+BP_STRIPE_MARK+'<div><b>Payments by Stripe</b><span>'
-    +(done?'Connected on '+new Date(done).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Not connected yet')
-    +'</span></div><span class="bpx-stripe-dot'+(done?' on':'')+'"></span></div>';
-
-  var flow='<div class="bpx-pay-flow"><div><b>Homeowner pays</b><span>card, on your invoice</span></div><i>→</i>'
+  var a=_bpPay.acct, ready=!!(a&&a.charges_enabled), due=(a&&a.requirements_due)||[];
+  var stateTxt=!a?'Not connected yet':ready?('Connected'+(a.business_name?' · '+a.business_name:'')+(a.livemode===false?' · test mode':'')):'Almost there: Stripe needs a few more details';
+  var head='<div class="bpx-stripe-head">'+BP_STRIPE_MARK+'<div><b>Payments by Stripe</b><span>'+bpEsc(stateTxt)+'</span></div><span class="bpx-stripe-dot'+(ready?' on':'')+'"></span></div>';
+  var flow='<div class="bpx-pay-flow"><div><b>Customer pays</b><span>card, from your invoice text</span></div><i>→</i>'
     +'<div class="on"><b>Your Stripe</b><span>your account, your name</span></div><i>→</i>'
     +'<div><b>Your bank</b><span>about 2 business days</span></div></div>'
-    +'<div class="bpx-mut" style="font-size:12.5px;margin:10px 0 18px">BuilderPro never holds or touches your money. We create the invoice and tell you when it’s paid — the payment itself goes straight from your customer to your own Stripe account. Stripe’s standard fee (2.9% + 30¢) applies; we add nothing on top.</div>';
-
+    +'<div class="bpx-mut" style="font-size:12.5px;margin:10px 0 18px">BuilderPro never holds or touches your money. We send the invoice and mark it paid; the payment goes straight from your customer to your own Stripe account. Stripe’s standard fee (2.9% + 30¢) applies; we add nothing on top.</div>';
   var flash=_bpPay.flash?'<div class="bpx-pay-band '+(_bpPay.flashOk?'ok':'warn')+'">'+bpEsc(_bpPay.flash)+'</div>':'';
-  var note=_bpPay.note?'<div class="bpx-pay-band warn">'+bpEsc(_bpPay.note)+'</div>':'';
-
-  /* the sub-account isn't linked to this login yet: nothing to point them at */
-  if(!loc){
-    el.innerHTML=head+flow+note
-      +'<div class="bpx-panel"><div class="bpx-ptitle">We’re still finishing your payments account</div>'
-      +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6;margin-bottom:14px">Card payments run through the payments account we set up for '+bpEsc(co)+'. Yours isn’t linked to this login yet. Tap below and we’ll finish it — you don’t need to do anything else, and we’ll let you know the moment it’s ready.</div>'
-      +'<div style="display:flex;gap:9px;flex-wrap:wrap"><a class="bpx-btn" style="width:auto;padding:11px 18px;text-decoration:none;display:inline-block" href="mailto:support@builderpro-os.com?subject=Finish%20my%20payments%20setup">Finish my setup</a>'
-      +'<button class="bpx-btn ghost" style="width:auto;padding:11px 18px" onclick="bpPayRetry()">Retry</button></div>'
-      +'<div class="bpx-mut" style="font-size:12px;margin-top:14px">Meanwhile everything else works — send invoices and estimates as usual, and record cash or cheque on a job. Only card payment is waiting on this.</div></div>'
-      +bpPayFaq();
-    return;
-  }
-
-  var step=function(n,t,d,extra){return '<div class="bpx-pay-step"><span class="n">'+n+'</span><div><b>'+t+'</b><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-top:3px">'+d+'</div>'+(extra||'')+'</div></div>';};
+  var note=_bpPay.note?'<div class="bpx-pay-band warn">'+bpEsc(_bpPay.note)+' <button class="bpx-linkbtn" onclick="bpPayRetry()">Retry</button></div>':'';
+  var step=function(n,t,d){return '<div class="bpx-pay-step"><span class="n">'+n+'</span><div><b>'+t+'</b><div class="bpx-mut" style="font-size:13px;line-height:1.55;margin-top:3px">'+d+'</div></div></div>';};
+  var btn='<button class="bpx-stripe-btn" style="margin-top:6px" onclick="bpPayConnect(this)">'+BP_STRIPE_MARK+'<span>'+(a?'Finish on Stripe':'Connect with Stripe')+'</span></button>';
   var body;
-
-  if(!done){
+  if(!a){
     body='<div class="bpx-panel"><div class="bpx-ptitle">Connect your Stripe<span class="lg2">one time, about two minutes</span></div>'
-      +step(1,'Open your payment settings','This opens your own payment settings in a new tab. You’re already signed in — nothing to look for, it lands on the right page.',
-        '<a class="bpx-stripe-btn" style="margin-top:11px;text-decoration:none" href="'+url+'" target="_blank" rel="noopener">'+BP_STRIPE_MARK+'Open payment settings</a>')
-      +step(2,'Tap Connect on Stripe','Stripe asks you to sign in, or to create an account if you don’t have one. You enter your own business details and the bank account you want paid into. Only you ever see or touch your bank details.')
-      +step(3,'Come back and tell us','We can’t see inside your Stripe, so tap this once it’s done and we’ll stop nagging you about it.',
-        '<button class="bpx-btn" style="width:auto;margin-top:11px;padding:10px 18px" onclick="bpPayMarkDone()">I’ve connected it</button>')
-      +'<div class="bpx-pay-ticks"><span>Your account, in your business’s name</span><span>Change the bank account any time</span><span>No cut of your jobs, ever</span></div></div>';
+      +step(1,'Tap Connect with Stripe','Stripe opens. Sign in if you already have a Stripe account, or make one in a couple of minutes.')
+      +step(2,'Enter your business and bank','Your business details and the bank account you want paid into. Only you and Stripe ever see your bank details.')
+      +step(3,'You’re back here, connected','Every invoice and deposit you send can be paid by card from then on.')
+      +btn+'<div class="bpx-pay-ticks"><span>Your account, in your business’s name</span><span>Change the bank account any time</span><span>No cut of your jobs, ever</span></div></div>';
+  }else if(!ready){
+    body='<div class="bpx-panel"><div class="bpx-ptitle">Stripe needs a few more details</div>'
+      +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6;margin-bottom:12px">Your account is linked, but Stripe won’t take card payments until it has everything it asks for'+(due.length?' ('+due.length+' item'+(due.length===1?'':'s')+')':'')+'. It only takes a minute.</div>'
+      +btn+'</div>';
   }else{
     body='<div class="bpx-panel"><div class="bpx-ptitle">Your Stripe is connected</div>'
-      +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6">Every invoice you send from Finances is payable by card, and the money lands in the bank account you linked, usually within two business days. You can change that bank account any time from the same screen.</div>'
-      +'<div class="bpx-mut" style="font-size:12.5px;line-height:1.55;margin-top:10px">We can’t see inside your Stripe from here, so this is what you told us. If an invoice ever won’t take a card, open your payment settings and check the connection is still there.</div>'
+      +'<div class="bpx-mut" style="font-size:13.5px;line-height:1.6">Every invoice and deposit you send has a secure pay link. When a customer pays, the money lands in your bank (usually within two business days), the invoice is marked paid, and the job’s “paid so far” updates by itself.</div>'
       +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:16px">'
-      +'<a class="bpx-btn" style="width:auto;padding:11px 18px;text-decoration:none;display:inline-block" href="'+url+'" target="_blank" rel="noopener">Open payment settings <span class=ms>arrow_outward</span></a>'
+      +'<a class="bpx-btn" style="width:auto;padding:11px 18px;text-decoration:none;display:inline-flex;align-items:center;gap:6px" href="https://dashboard.stripe.com/" target="_blank" rel="noopener">Open my Stripe <span class=ms style="font-size:18px">arrow_outward</span></a>'
       +'<button class="bpx-btn ghost" style="width:auto;padding:11px 18px" onclick="bpNav(\'invoices\')">Go to Invoices</button>'
-      +'<button class="bpx-btn ghost" style="width:auto;padding:11px 18px" onclick="bpPayMarkUndone()">Not connected?</button>'
-      +'</div></div>';
+      +'<button class="bpx-btn ghost" style="width:auto;padding:11px 18px" onclick="bpPayDisconnect()">Disconnect</button>'
+      +'</div>'+(a.payouts_enabled?'':'<div class="bpx-mut" style="font-size:12.5px;margin-top:10px">Stripe is holding payouts until your bank details are confirmed. Open your Stripe to finish.</div>')+'</div>';
   }
-
   el.innerHTML=head+flow+note+flash+body+bpPayFaq();
 }
 function bpPayFaq(){
@@ -36114,7 +36120,7 @@ function bpPayFaq(){
     +'<div class="bpx-pay-q"><b>Whose name is on the payment?</b><span>Yours. Your customer’s statement shows your business, and the Stripe account and bank details are yours.</span></div>'
     +'<div class="bpx-pay-q"><b>What if a customer disputes a charge?</b><span>It goes to you through Stripe, the same as any card payment you take today. We don’t sit in the middle of it.</span></div>'
     +'<div class="bpx-pay-q"><b>Can I still take cash or cheque?</b><span>Yes. Mark the job done in Active Projects with what you collected and it flows into Finances the same way.</span></div>'
-    +'<div class="bpx-pay-q"><b>Do I have to connect it more than once?</b><span>No. One Stripe account covers every invoice, and you only do this the once. Changing your bank later is done in Stripe, not here.</span></div></div>';
+    +'<div class="bpx-pay-q"><b>Do I have to connect it more than once?</b><span>No. One Stripe account covers every invoice, and you only do this the once. Changing your bank later is done in your Stripe dashboard.</span></div></div>';
 }
 
 /* Finances is a sidebar branch now — each sub-page just preselects a pane */

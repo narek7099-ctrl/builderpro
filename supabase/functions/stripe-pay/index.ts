@@ -1,8 +1,12 @@
-// NOT IN USE. Invoices are raised in the sub-account and charged through the
-// Stripe connected there, so this is not wired to anything and should not be
-// deployed. Kept because it is finished and ready if invoicing ever moves
-// in-house; the Payouts page walks the contractor through the sub-account
-// connection instead. See supabase/migrations/20260920000000_stripe_connect.sql.
+// IN USE (payments bridge). Customers pay invoices here, on the contractor's
+// own Stripe connected in BuilderPro; stripe-webhook then marks the HighLevel
+// invoice paid so the "Invoice Paid" workflows run.
+//
+//   POST { op:"invoice", l, i, s }   (no login: the link is signed)
+//     -> { ok:true, url }  Stripe Checkout for what is still owed on HighLevel
+//        invoice i in sub-account l. s = the server's signature of "l.i", so a
+//        link can't be edited to point at another invoice.
+//     -> { ok:false, paid:true } already paid
 //
 // stripe-pay — turns an invoice into a card payment link on the contractor's
 // OWN Stripe account.
@@ -56,6 +60,71 @@ async function effectiveOwner(id: string): Promise<string> {
   return id;
 }
 
+
+/* ---------- BuilderPro payments bridge ----------
+   Customers pay through the contractor's own Stripe connected in BuilderPro
+   (stripe-pay), not through HighLevel. The HighLevel invoice stays the record:
+   when the card goes through, stripe-webhook records the payment on it, so
+   "Invoice Paid" workflows fire as before. Contractors never see HighLevel. */
+const BR_SB = Deno.env.get("SUPABASE_URL") ?? "", BR_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const BR_SITE = Deno.env.get("PORTAL_URL") || "https://builderpro-os.com/";
+/* the client's own HighLevel key, saved from the Command Center */
+async function savedKey(loc: string): Promise<string> {
+  if (!loc || !BR_SB) return "";
+  try {
+    const r = await fetch(`${BR_SB}/rest/v1/ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token`, { headers: { apikey: BR_KEY, Authorization: `Bearer ${BR_KEY}` } });
+    return r.ok ? String((await r.json())?.[0]?.token ?? "") : "";
+  } catch { return ""; }
+}
+/* a pay link nobody can forge: location + invoice, signed on the server */
+async function paySig(loc: string, inv: string): Promise<string> {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(Deno.env.get("PAY_LINK_SECRET") || BR_KEY), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const s = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${loc}.${inv}`)));
+  return btoa(String.fromCharCode(...s)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "").slice(0, 22);
+}
+
+const money = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* a customer opening a pay link: the invoice's open balance, paid on the contractor's Stripe */
+async function invoiceCheckout(b: Record<string, string>): Promise<Response> {
+  const loc = String(b.l ?? ""), inv = String(b.i ?? ""), sig = String(b.s ?? "");
+  if (!/^[A-Za-z0-9]{6,40}$/.test(loc) || !/^[A-Za-z0-9_-]{6,60}$/.test(inv)) return json({ ok: false, error: "This payment link isn't valid." }, 400);
+  const want = await paySig(loc, inv);
+  if (sig.length !== want.length || [...want].reduce((d, ch, k) => d | (ch.charCodeAt(0) ^ sig.charCodeAt(k)), 0) !== 0) return json({ ok: false, error: "This payment link isn't valid." }, 400);
+  const t = await savedKey(loc) || Deno.env.get("GHL_TOKEN_" + loc) || Deno.env.get("GHL_TOKEN") || "";
+  if (!t) return json({ ok: false, error: "Online payment isn't set up yet. Contact your contractor to pay." });
+  const r = await fetch(`https://services.leadconnectorhq.com/invoices/${inv}?altId=${loc}&altType=location`, { headers: { Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json" } });
+  const v = r.ok ? await r.json().catch(() => ({})) : {};
+  if (!r.ok || !v) return json({ ok: false, error: "This invoice couldn't be found. Contact your contractor." });
+  const st = String(v.status ?? "").toLowerCase();
+  const due = Number(v.amountDue ?? (Number(v.total ?? 0) - Number(v.amountPaid ?? 0))) || 0;
+  if (st === "paid" || due <= 0) return json({ ok: false, paid: true, error: "This invoice is already paid. Thank you!" });
+  if (st === "void") return json({ ok: false, error: "This invoice was cancelled. Contact your contractor." });
+  /* whose Stripe: the BuilderPro account that owns this sub-account */
+  const own = async (q: string) => { const x = await fetch(`${SB_URL}/rest/v1/${q}`, { headers: sbH }); return x.ok ? (await x.json())?.[0] : null; };
+  const owner = (await own(`accounts?ghl_location_id=eq.${loc}&select=user_id&limit=1`))?.user_id
+    || (await own(`ai_brain?ghl_location_id=eq.${loc}&select=owner&limit=1`))?.owner || "";
+  const row = owner ? await own(`stripe_accounts?owner=eq.${owner}&select=account_id,charges_enabled,currency&limit=1`) : null;
+  if (!row?.account_id || !row?.charges_enabled) return json({ ok: false, error: "Online payment isn't set up yet. Contact your contractor to pay." });
+  const cents = Math.round(due * 100), cd = (v.contactDetails ?? {}) as Record<string, string>;
+  const label = `${String(v.name ?? "Invoice")}${v.invoiceNumber ? " #" + v.invoiceNumber : ""}`.slice(0, 250);
+  const md = { bp_owner: owner, bp_ghl_invoice: inv, bp_ghl_loc: loc, bp_invoice: String(v.invoiceNumber ?? inv).slice(0, 80), bp_job: "" };
+  const body: Record<string, string> = {
+    mode: "payment", "line_items[0][quantity]": "1",
+    "line_items[0][price_data][currency]": String(row.currency || v.currency || "usd").toLowerCase(),
+    "line_items[0][price_data][unit_amount]": String(cents),
+    "line_items[0][price_data][product_data][name]": label,
+    success_url: `${RETURN_URL}#pay=done`, cancel_url: `${RETURN_URL}#pay=${loc}.${inv}.${sig}`,
+  };
+  Object.entries(md).forEach(([k, x]) => { body[`metadata[${k}]`] = x; body[`payment_intent_data[metadata][${k}]`] = x; });
+  if (cd.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cd.email)) body.customer_email = cd.email;
+  body["payment_intent_data[description]"] = `${label}${cd.name ? " — " + cd.name : ""}`.slice(0, 200);
+  const res = await fetch("https://api.stripe.com/v1/checkout/sessions", { method: "POST",
+    headers: { Authorization: `Bearer ${SK}`, "Content-Type": "application/x-www-form-urlencoded", "Stripe-Account": row.account_id }, body: new URLSearchParams(body).toString() });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) return json({ ok: false, error: "Payment couldn't start. Try again in a minute." });
+  return json({ ok: true, url: out.url, amount: money(due), label, business: String((v.businessDetails ?? {}).name ?? "") });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
@@ -64,6 +133,7 @@ Deno.serve(async (req) => {
     jobId?: string; customerName?: string; customerEmail?: string;
   } = {};
   try { b = await req.json(); } catch { /* no body */ }
+  if (b.op === "invoice") return SK ? await invoiceCheckout(b as unknown as Record<string, string>) : json({ ok: false, error: "Online payment isn't set up yet. Contact your contractor to pay." });
   if (b.op !== "checkout") return json({ ok: false, error: "op: checkout" }, 400);
   if (!SK) return json({ ok: false, reason: "not_configured" });
 
