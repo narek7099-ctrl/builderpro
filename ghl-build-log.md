@@ -152,3 +152,96 @@ Test in BP OS Template with contact "Claude Test" (no phone or email, so no text
 3. Final tags: new-lead, bot-active, in-pipeline, appointment-booked. No radar tag was applied.
 - Not tested: the SMS conversation with Lisa and her booking the appointment herself (the contact has no phone). OS only; Foundation and Enterprise were not test-run.
 - Left in the OS template: contact "Claude Test", its opportunity and the Oct 2 test appointment. Contacts are not part of snapshots.
+
+## Project automations 30-50 - Oct 4, 2026
+
+Built from docs/highlevel-workflows.md, in the HighLevel UI only.
+
+### BP OS Template (e3hrfIp2KFkCb2c34qbI) - build
+- Contact fields: 19 BP fields (contact.bp_*) in the "BuilderPro" folder.
+- Tags: the 11 OS bp-* tags plus past-customer.
+- Workflow folders: "6 Project automations", "7 Alerts to you".
+- Every workflow: trigger Contact Tag added = its bp-* tag; Allow re-entry ON; contact time zone.
+- Customer-message workflows (30-41): If/Else "Excluded?" first (system-test OR do-not-contact -> End); window 8:00 AM-8:00 PM, all 7 days.
+- Published, folder 6:
+  - 30 Job Scheduled: SMS + email.
+  - 31 Visit Tomorrow Reminder: wait until 5 pm, SMS.
+  - 32 Crew Arrived: If BP Crew Lead not empty, two SMS versions.
+  - 33 Job Completed -> Review -> Referral: SMS, wait 2 days, tag review-requested, wait 30 days, referral SMS, tag past-customer. Stop on response ON.
+  - 34 Payment Overdue: final-sent added to the Excluded check; If BP Days Overdue is 3 / 7 / 14 -> 3: SMS; 7: SMS + email (subject "Your balance for {{contact.bp_job_name}}"); 14: in-app alert + task "Call about payment" (due in 1 day).
+  - 37 Contract Signed -> Welcome: SMS, then If BP Start Date not empty -> start date SMS.
+  - 38 Phase Done -> Progress Update: If BP Next Phase not empty -> progress SMS, else last-phase SMS.
+  - 39 Schedule Pushed Back: SMS + in-app alert.
+  - 40 Payment Received -> Thank You: If BP Balance Due is "$0" (the exact format ghl-events sends for zero) -> paid in full SMS, else amount and balance SMS.
+  - 41 Change Order Waiting: If BP Days Overdue is 2 -> SMS; 5 -> in-app alert.
+- Published, folder 7:
+  - 47 Crew No-Show: no Excluded check, no time window. In-app alert to all users, plus SMS alert to custom number {{custom_values.owner_phone}}.
+- In-app alerts: Internal Notification, type Notification, all users, redirect to Contact.
+- Workflow names use "->" in place of the arrow.
+
+### BP OS Template - tests (Oct 4, 2026, 6:06-6:12 PM PDT)
+Test contact: "Claude Test" (no phone, no email, no system-test tag). Did not use "Narek Test" because it has a phone number.
+Sample BP fields: Job Name Kitchen Remodel, Start/Visit Date Oct 14, Old Start Date Oct 10, Crew Lead Mike, Phase Demo, Next Phase Framing, Balance $3,000, Amount Paid $2,000, Days Overdue 3, Change Order "Add a window", Event Note "Test note", Portal Link https://example.com/p/test.
+Round 1: added all 11 bp-* tags at once. Every workflow enrolled the contact once.
+- 30 PASS: Send -> SMS + email (skipped: no phone/email) -> end.
+- 31 PASS: waiting for 5 pm.
+- 32 PASS: Has crew lead branch -> SMS.
+- 33 PASS: job complete SMS -> waiting 2 days.
+- 34 PASS: 3 days branch -> 3-day SMS.
+- 37 PASS: welcome SMS -> Has date -> start date SMS.
+- 38 PASS: Has next phase -> progress SMS.
+- 39 PASS: SMS, then the in-app alert ran (Executed).
+- 40 PASS: Balance left branch -> thanks SMS.
+- 41 PASS: Days Overdue 3 -> Other days -> no action.
+- 47 PASS: in-app alert ran; owner SMS skipped (Owner Phone custom value is blank in the template).
+Round 2 (Days Overdue 14, Balance Due $0; removed and re-added bp-payment-overdue and bp-payment-received):
+- 34: 14 days branch -> in-app alert ran. Task "Call about payment" was skipped: "Task cannot be created with both assigned to contact's assigned user or custom assigned user". The template has no users and the test contact has no owner. In a live account the task is created when the contact has an assigned user. Left unassigned on purpose; the alert covers it.
+- 40 PASS: Paid in full branch -> paid in full SMS.
+Not verified: rendered SMS/email text. Every customer message was skipped (no phone/email), and the logs do not show message bodies. Merge tags were checked in the builder (each one turned into a field chip).
+Not tested: 34 at 7 days, 41 at 2 and 5 days (same If/Else pattern as the branches that passed), 33's later steps (2- and 30-day waits).
+Left on "Claude Test": the 11 bp-* tags and the sample BP field values. Contacts are not part of snapshots.
+
+### Snapshot BuilderPro OS - refreshed (Oct 4, 2026, 6:16 PM)
+- Refreshed in place from BP OS Template, all assets (190). Same ID expected: cdRGIx2azgolhnDj257c.
+
+### BP Enterprise Template (bjhV3CSImxxjN0HW23uJ) - build
+- Contact folder "BuilderPro" created; the 19 BP fields created in it (Single line). Keys checked: contact.bp_job_name ... contact.bp_spent.
+- Copied 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 47 from BP OS Template with "Copy to sub-account" (all 11 "Success"). They arrive as drafts at the root. The copy also created each trigger tag.
+- Tags: all 21 bp-* tags plus past-customer and warranty-sent exist (review-requested and final-sent were already there). The Tags page drops every second create if you go too fast; created the missed ones again and checked each by search.
+- Workflow folders "6 Project automations" and "7 Alerts to you" at the root. Moved 30-41 into 6 and 47 into 7.
+- 30-41 published with "Publish all". The copies kept their settings (re-entry, stop on response on 33, 8 am-8 pm window, contact time zone) and their tag steps.
+- 42 Inspection Scheduled (made from a duplicate of 30): trigger bp-inspection-scheduled; Excluded check; SMS. Published.
+- 43 Warranty Info (from a duplicate of 30): trigger bp-warranty; Excluded check; SMS and email (subject "Your {{contact.bp_job_name}} warranty"); tag warranty-sent. Published.
+- 35 Yearly Check-up: trigger bp-job-anniversary; Excluded check; offer SMS; wait until the contact replies to that SMS, 3-day timeout. On a reply, If "Replied message" contains yes / Yes / YES: Create/update opportunity in Jobs > New Lead ("{{contact.name}} - yearly check-up", status open, source "Yearly check-up"), then in-app alert "Book the check-up for {{contact.name}}". Other reply or timeout: end. Published.
+  - Stop on response is OFF here on purpose. With it on, the contact's reply would end the workflow before the yes branch could run. The reply wait does the same job.
+  - HighLevel shows a notice that "Create/update opportunity" will be deprecated. Existing workflows keep working.
+- 36 Storm Follow-up (a duplicate of 35): trigger bp-storm-followup; storm SMS; 2-day reply wait; same yes branch (opportunity "{{contact.name}} - storm roof check", source "Storm follow-up"; alert "Book the storm check for {{contact.name}}"). Stop on response is OFF for the same reason. Published.
+- Folder 7 (no time window; made from duplicates of 47, so no Excluded check):
+  - 44 Customer Message Unanswered: trigger bp-message-unanswered; in-app alert plus SMS alert to {{custom_values.owner_phone}}. Published.
+  - 45 Job Over Budget: trigger bp-over-budget; in-app alert only. Published.
+  - 47 Crew No-Show: the copy from OS. Published.
+  - 48 Weather Delay Warning: trigger bp-weather-risk; in-app alert plus owner SMS. Published.
+  - 49 Materials Not Ready: trigger bp-materials-not-ready; in-app alert only. Published.
+  - 50 Stuck-Job Watchdog: trigger bp-job-stalled; in-app alert only. Published.
+  - 46 Sub Insurance Expiring (from a spare duplicate of 30, so it keeps the Excluded check and the 8 am-8 pm window): trigger bp-sub-insurance-expiring; SMS and email to the contact, who is the sub (subject "Your insurance certificate is expiring"); in-app alert "{{contact.name}}: {{contact.bp_event_note}}." Moved to folder 7. Published.
+
+### BP Enterprise Template - tests (Oct 4, 2026, 7:27-7:41 PM PDT)
+Created test contact "Claude Test" (no phone, no email) in Enterprise. Sample BP fields: Roof Replacement, 123 Test St, Balance $3,000, Start/Visit Oct 14, Old Start Oct 10, Crew Lead Mike, Days Overdue 7, Phase Tear-off, Next Phase Shingles, Amount Paid $2,000, Inspection "Final roofing", Change Order "Add a skylight", Budget $10,000, Spent $12,000, Event Note "Test note".
+Round 1: added all 21 bp-* tags. Every workflow (30-50) enrolled the contact once. 31, 33, 35 and 36 are waiting (5 pm / 2 days / reply), as designed. 43 added warranty-sent. 46 sent its in-app alert (SMS and email skipped: no phone or email).
+- FOUND AND FIXED: "Copy to sub-account" keeps the OS template's custom-field IDs inside If/Else conditions. In Enterprise those conditions showed a raw ID (e.g. "ggNDN5DLSmPy6Q50zCw9") and never matched: 34 took "Other days" with Days Overdue 7, and 32 took "No crew lead" with Crew Lead set. Merge tags in message text are not affected, because they are stored by key.
+  Re-picked the field in every copied BP-field condition: 32 (BP Crew Lead), 34 (BP Days Overdue, 3 branches), 37 (BP Start Date), 38 (BP Next Phase), 40 (BP Balance Due), 41 (BP Days Overdue, 2 branches). Saved; they stay published.
+Round 2 (removed and re-added the six tags): 32 PASS (Has crew lead), 34 PASS (7 days branch: SMS + email), 37 PASS (Has date), 38 PASS (Has next phase), 40 PASS (Balance left), 41 PASS (Days Overdue 7 -> Other days, no action).
+Not verified: rendered message text (customer messages are skipped without a phone or email), and 35/36 reply handling (needs a real reply).
+Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP fields.
+
+### Snapshot BuilderPro Enterprise - refreshed (Oct 4, 2026, 7:44 PM)
+- Refreshed in place from BP Enterprise Template, all assets (225). Same ID expected: cWoCOr2RJDfc3x3FxnQm. No new snapshots were created, so GHL_SNAPSHOT_OS and GHL_SNAPSHOT_ENTERPRISE stay the same.
+
+### Summary - project automations build (Oct 4, 2026)
+- BP OS Template: 11 workflows published (30, 31, 32, 33, 34, 37, 38, 39, 40, 41 in "6 Project automations"; 47 in "7 Alerts to you"). Tested. Snapshot BuilderPro OS refreshed.
+- BP Enterprise Template: 21 workflows published (30-43 in folder 6; 44-50 in folder 7). Tested. Snapshot BuilderPro Enterprise refreshed.
+- Workflows 01-22, the demo account and client accounts were not touched. No message reached a real person: the test contacts have no phone or email, and Owner Phone is blank in both templates.
+- Still open for the owner:
+  1. 34's 14-day "Call about payment" task is skipped when the contact has no assigned user. It needs an owner on the contact (or a default assignee chosen per client).
+  2. Rendered message text was not checked end to end. Test with a contact on the owner's own phone if wanted.
+  3. 35 and 36 have Stop on response OFF on purpose (see the 35 note above).
