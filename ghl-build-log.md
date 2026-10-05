@@ -224,3 +224,12 @@ Left on "Claude Test": the 11 bp-* tags and the sample BP field values. Contacts
   - 49 Materials Not Ready: trigger bp-materials-not-ready; in-app alert only. Published.
   - 50 Stuck-Job Watchdog: trigger bp-job-stalled; in-app alert only. Published.
   - 46 Sub Insurance Expiring (from a spare duplicate of 30, so it keeps the Excluded check and the 8 am-8 pm window): trigger bp-sub-insurance-expiring; SMS and email to the contact, who is the sub (subject "Your insurance certificate is expiring"); in-app alert "{{contact.name}}: {{contact.bp_event_note}}." Moved to folder 7. Published.
+
+### BP Enterprise Template - tests (Oct 4, 2026, 7:27-7:41 PM PDT)
+Created test contact "Claude Test" (no phone, no email) in Enterprise. Sample BP fields: Roof Replacement, 123 Test St, Balance $3,000, Start/Visit Oct 14, Old Start Oct 10, Crew Lead Mike, Days Overdue 7, Phase Tear-off, Next Phase Shingles, Amount Paid $2,000, Inspection "Final roofing", Change Order "Add a skylight", Budget $10,000, Spent $12,000, Event Note "Test note".
+Round 1: added all 21 bp-* tags. Every workflow (30-50) enrolled the contact once. 31, 33, 35 and 36 are waiting (5 pm / 2 days / reply), as designed. 43 added warranty-sent. 46 sent its in-app alert (SMS and email skipped: no phone or email).
+- FOUND AND FIXED: "Copy to sub-account" keeps the OS template's custom-field IDs inside If/Else conditions. In Enterprise those conditions showed a raw ID (e.g. "ggNDN5DLSmPy6Q50zCw9") and never matched: 34 took "Other days" with Days Overdue 7, and 32 took "No crew lead" with Crew Lead set. Merge tags in message text are not affected, because they are stored by key.
+  Re-picked the field in every copied BP-field condition: 32 (BP Crew Lead), 34 (BP Days Overdue, 3 branches), 37 (BP Start Date), 38 (BP Next Phase), 40 (BP Balance Due), 41 (BP Days Overdue, 2 branches). Saved; they stay published.
+Round 2 (removed and re-added the six tags): 32 PASS (Has crew lead), 34 PASS (7 days branch: SMS + email), 37 PASS (Has date), 38 PASS (Has next phase), 40 PASS (Balance left), 41 PASS (Days Overdue 7 -> Other days, no action).
+Not verified: rendered message text (customer messages are skipped without a phone or email), and 35/36 reply handling (needs a real reply).
+Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP fields.
