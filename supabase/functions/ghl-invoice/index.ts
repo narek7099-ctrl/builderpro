@@ -90,13 +90,14 @@ async function token(loc: string): Promise<string> {
 // The signed-in client's own GHL sub-account. Without it we must not fall back
 // to a shared location — that would put their customer's money in someone
 // else's Stripe, so we refuse instead.
-async function ownerLocation(jwt: string): Promise<string> {
-  if (!jwt || !SB_URL || !SB_SERVICE) return "";
+async function ownerLocation(jwt: string): Promise<{ id: string; loc: string }> {
+  const none = { id: "", loc: "" };
+  if (!jwt || !SB_URL || !SB_SERVICE) return none;
   try {
     const u = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${jwt}` } });
-    if (!u.ok) return "";
+    if (!u.ok) return none;
     const me0 = await u.json();
-    if (!me0?.id) return "";
+    if (!me0?.id) return none;
     const me = await effectiveOwner(me0.id, me0.email);
     const h = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` };
     const get = async (qs: string) => {
@@ -106,8 +107,16 @@ async function ownerLocation(jwt: string): Promise<string> {
       return String(rows?.[0]?.ghl_location_id ?? "");
     };
     // owned row first; otherwise the row onboarding set up for this email
-    return (await get(`owner=eq.${me.id}`)) || (me.email ? await get(`owner_email=ilike.${encodeURIComponent(me.email)}`) : "");
-  } catch { return ""; }
+    return { id: me.id, loc: (await get(`owner=eq.${me.id}`)) || (me.email ? await get(`owner_email=ilike.${encodeURIComponent(me.email)}`) : "") };
+  } catch { return none; }
+}
+/* whether the signed-in owner is the BuilderPro house account, the only one
+   allowed to use the shared demo sub-account */
+async function isHouse(id: string): Promise<boolean> {
+  if (!id) return false;
+  const r = await fetch(`${SB_URL}/rest/v1/ai_config?key=eq.ghl_events_owner&select=value`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }).catch(() => null);
+  const v = r && r.ok ? (await r.json())?.[0]?.value : "";
+  return !!v && String(v) === id;
 }
 
 const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
@@ -128,8 +137,12 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
   const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-  const loc = (await ownerLocation(jwt)) || LOC_FALLBACK;
-  if (!loc) return json({ ok: false, error: "Your payments account isn't set up yet — open Finances → Payouts." }, 409);
+  const who = await ownerLocation(jwt);
+  let loc = who.loc;
+  if (!who.id) return json({ ok: false, error: "Sign in to use invoices." }, 401);
+  /* a client's invoices only ever go in their own sub-account; never a shared one */
+  if (!loc && LOC_FALLBACK && await isHouse(who.id)) loc = LOC_FALLBACK;
+  if (!loc) return json({ ok: false, error: "Your account isn't fully set up yet. We'll let you know as soon as invoices are ready." }, 409);
   const t = await token(loc);
   if (!t) return json({ ok: false, error: "no GHL token" }, 500);
 
