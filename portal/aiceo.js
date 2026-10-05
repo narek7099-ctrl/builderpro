@@ -113,6 +113,10 @@
       '.cd-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:grid;place-items:center;flex:none}.cd-av .ms{font-size:18px}',
       '.cd-msg{margin:0;font-size:14.5px;line-height:1.5}',
       '.cd-list{display:grid;gap:6px}',
+      '.cd-more{display:grid;gap:10px}.cd-more[hidden]{display:none}.cd-more .ceo-tiles{margin:0}.cd-h{font-size:12px;font-weight:600;color:var(--mu,#6b7a90);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}',
+      '.cd-rep{max-height:320px;overflow:auto;border:1px solid var(--line,#e3e8ef);border-radius:10px;padding:12px 14px}',
+      '.cd-tog{justify-self:center;display:inline-flex;align-items:center;gap:4px;background:none;border:0;font:inherit;font-size:13px;font-weight:600;color:var(--blue,#2563eb);cursor:pointer;padding:4px 10px;border-radius:8px}.cd-tog:hover{background:var(--bg2,#f3f6fa)}',
+      '.cd-tog .ms{font-size:20px;transition:transform .2s}.cd-tog[aria-expanded=true] .ms{transform:rotate(180deg)}',
       '.cd-it{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--bg2,#f6f8fb);border:1px solid var(--line,#e3e8ef);border-radius:10px;padding:8px 10px;font:inherit;cursor:pointer;color:inherit;min-width:0}',
       '.cd-it:hover{border-color:var(--blue,#2563eb)}.cd-it>.ms{color:var(--blue,#2563eb);font-size:19px}.cd-it.hi>.ms:first-child{color:#dc2626}.cd-it .go{color:var(--mu,#6b7a90);margin-left:auto}',
       '.cd-tx{min-width:0;flex:1}.cd-tx b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cd-tx small{display:block;font-size:12px;color:var(--mu,#6b7a90);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
@@ -389,8 +393,14 @@
   window.bpCeoDashCard = function (row) {
     css();
     if (!allowed() || row === undefined) return '';
-    var st = (row && row.stats) || {}, items = (st.attention || []).slice(0, 3), crit = +st.critical || 0;
-    C.dash = items;
+    var st = (row && row.stats) || {}, all = st.attention || [], items = all.slice(0, 3), crit = +st.critical || 0;
+    C.dash = all;
+    var open = false; try { open = localStorage.getItem('bp-cd-open') === '1'; } catch (e) {}
+    var it = function (x, i) { return '<button type="button" class="cd-it' + (x.sev === 'high' ? ' hi' : '') + '" data-cd="' + i + '"><span class="ms">' + esc(x.icon || 'flag') + '</span><span class="cd-tx"><b>' + esc(x.title) + '</b><small>' + esc(x.detail || '') + '</small></span><span class="ms go">chevron_right</span></button>'; };
+    var more = row ? '<div class="cd-more" id="cdMore"' + (open ? '' : ' hidden') + '>' + tilesHtml(st)
+      + (all.length > 3 ? '<div class="cd-h">Also on your list</div><div class="cd-list">' + all.slice(3, 12).map(function (x, i) { return it(x, i + 3); }).join('') + '</div>' : '')
+      + (row.text ? '<div class="cd-h">The briefing</div><div class="ceo-rep cd-rep">' + repHtml(row.text) + '</div>' : '') + '</div>'
+      + '<button type="button" class="cd-tog" id="cdTog" aria-expanded="' + open + '" aria-controls="cdMore"><span>' + (open ? 'Show less' : 'Show more') + '</span><span class="ms">expand_more</span></button>' : '';
     var msg = !row ? 'I haven’t read your business yet. Open me and I’ll tell you the 3 things to do first.'
       : crit ? crit + ' thing' + (crit > 1 ? 's need' : ' needs') + ' you today. Start here:'
       : items.length ? 'Nothing urgent. A few things worth a look:' : 'Nothing urgent today. You’re clear.';
@@ -399,12 +409,18 @@
       + '<div class="cd-top"><span class="cd-av"><span class="ms">auto_awesome</span></span><div class="cd-who"><b>AI CEO</b><small>' + (row ? 'Briefing · ' + fmtDay(row.day) : 'Not run yet') + '</small></div>'
       + '<button type="button" class="bpx-linkbtn" onclick="bpNav(\'aiteam\')">Open</button></div>'
       + '<p class="cd-msg">' + msg + '</p>'
-      + (items.length ? '<div class="cd-list">' + items.map(function (x, i) { return '<button type="button" class="cd-it' + (x.sev === 'high' ? ' hi' : '') + '" data-cd="' + i + '"><span class="ms">' + esc(x.icon || 'flag') + '</span><span class="cd-tx"><b>' + esc(x.title) + '</b><small>' + esc(x.detail || '') + '</small></span><span class="ms go">chevron_right</span></button>'; }).join('') + '</div>' : '')
+      + (items.length ? '<div class="cd-list">' + items.map(it).join('') + '</div>' : '')
+      + more
       + '<form class="cd-ask" onsubmit="return false"><input id="cdQ" maxlength="1000" placeholder="Ask your AI CEO…" aria-label="Ask your AI CEO"><button type="submit" aria-label="Send"><span class="ms">arrow_upward</span></button></form>'
       + '</section>';
   };
   function wireDash() {
     document.querySelectorAll('[data-cd]').forEach(function (b) { b.onclick = function () { var x = (C.dash || [])[+b.getAttribute('data-cd')]; if (x) follow(x.link, x.job); }; });
+    var t = $('cdTog'), m = $('cdMore');
+    if (t && m) t.onclick = function () {
+      var o = m.hidden; m.hidden = !o; t.setAttribute('aria-expanded', o); t.firstChild.textContent = o ? 'Show less' : 'Show more';
+      try { localStorage.setItem('bp-cd-open', o ? '1' : '0'); } catch (e) {}
+    };
     var f = document.querySelector('.cd-ask'); if (!f) return;
     f.onsubmit = function (e) { e.preventDefault(); C.prefill = ($('cdQ').value || '').trim(); bpNav('aiteam'); return false; };
   }
