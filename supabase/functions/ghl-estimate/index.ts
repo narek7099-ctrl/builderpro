@@ -5,12 +5,15 @@
 //           amount, description?, expiryDays?, send:'sms'|'email'|'both', businessName?}
 //          {action:'list'}
 // Deploy:  supabase functions deploy ghl-estimate --no-verify-jwt
-// Secrets: GHL_TOKEN (location), GHL_LOCATION_ID; optional GHL_API_KEY+GHL_COMPANY_ID.
+// Keys: the signed-in client's own sub-account and key (ghl_keys); GHL_LOCATION_ID is the house account's demo only.
 
 const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
 const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
 const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
-const LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
+const LOC_FALLBACK = Deno.env.get("GHL_LOCATION_ID") ?? "";   // the house (demo) account only
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const BR_SB = SB_URL, BR_KEY = SB_SERVICE;
 const GHL_BASE = "https://services.leadconnectorhq.com";
 
 const cors = {
@@ -21,27 +24,85 @@ const cors = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const ghlH = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
 
-async function token(): Promise<string> {
+/* the client's own HighLevel key, saved from the Command Center */
+async function savedKey(loc: string): Promise<string> {
+  if (!loc || !BR_SB) return "";
+  try {
+    const r = await fetch(`${BR_SB}/rest/v1/ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token`, { headers: { apikey: BR_KEY, Authorization: `Bearer ${BR_KEY}` } });
+    return r.ok ? String((await r.json())?.[0]?.token ?? "") : "";
+  } catch { return ""; }
+}
+async function token(loc: string): Promise<string> {
+  const own = await savedKey(loc); if (own) return own;
   if (GHL_TOKEN) return GHL_TOKEN;
-  if (GHL_API_KEY && GHL_COMPANY_ID && LOC) {
+  if (GHL_API_KEY && GHL_COMPANY_ID && loc) {
     try {
       const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
         method: "POST",
         headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: LOC }).toString(),
+        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: loc }).toString(),
       });
       if (r.ok) { const d = await r.json(); if (d?.access_token) return d.access_token; }
     } catch { /* fall through */ }
   }
   return GHL_API_KEY;
 }
+// The signed-in client's own GHL sub-account. Without it we must not fall back
+// to a shared location — that would put their customer's money in someone
+// else's Stripe, so we refuse instead.
+async function ownerLocation(jwt: string): Promise<{ id: string; loc: string }> {
+  const none = { id: "", loc: "" };
+  if (!jwt || !SB_URL || !SB_SERVICE) return none;
+  try {
+    const u = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${jwt}` } });
+    if (!u.ok) return none;
+    const me0 = await u.json();
+    if (!me0?.id) return none;
+    const me = await effectiveOwner(me0.id, me0.email);
+    const h = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` };
+    const get = async (qs: string) => {
+      const r = await fetch(`${SB_URL}/rest/v1/ai_brain?${qs}&select=ghl_location_id&limit=1`, { headers: h });
+      if (!r.ok) return "";
+      const rows = await r.json();
+      return String(rows?.[0]?.ghl_location_id ?? "");
+    };
+    // owned row first; otherwise the row onboarding set up for this email
+    return { id: me.id, loc: (await get(`owner=eq.${me.id}`)) || (me.email ? await get(`owner_email=ilike.${encodeURIComponent(me.email)}`) : "") };
+  } catch { return none; }
+}
+/* whether the signed-in owner is the BuilderPro house account, the only one
+   allowed to use the shared demo sub-account */
+async function isHouse(id: string): Promise<boolean> {
+  if (!id) return false;
+  const r = await fetch(`${SB_URL}/rest/v1/ai_config?key=eq.ghl_events_owner&select=value`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } }).catch(() => null);
+  const v = r && r.ok ? (await r.json())?.[0]?.value : "";
+  return !!v && String(v) === id;
+}
+
+/* A team member works on their owner's account. After auth, swap the caller
+   for the owner they belong to (and the owner's email where a lookup is by
+   email), so everything downstream reads and writes the right rows. */
+async function effectiveOwner(id: string, email?: string): Promise<{ id: string; email: string }> {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/team_members?member=eq.${id}&accepted_at=not.is.null&select=owner,owner_email&limit=1`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } });
+    const rows = r.ok ? await r.json() : [];
+    if (rows?.[0]?.owner) return { id: rows[0].owner, email: rows[0].owner_email || email || "" };
+  } catch { /* fall through */ }
+  return { id, email: email ?? "" };
+}
 const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
-  if (!LOC) return json({ ok: false, error: "GHL_LOCATION_ID secret not set" }, 500);
-  const t = await token();
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const who = await ownerLocation(jwt);
+  let LOC = who.loc;
+  if (!who.id) return json({ ok: false, error: "Sign in to use estimates." }, 401);
+  /* a client's estimates live in their own sub-account (the deposit flow reads them there) */
+  if (!LOC && LOC_FALLBACK && await isHouse(who.id)) LOC = LOC_FALLBACK;
+  if (!LOC) return json({ ok: false, error: "Your account isn't fully set up yet. We'll let you know as soon as estimates are ready." }, 409);
+  const t = await token(LOC);
   if (!t) return json({ ok: false, error: "no GHL token" }, 500);
 
   let b: Record<string, unknown>;

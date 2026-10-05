@@ -36197,7 +36197,7 @@ function bpEstCharts(){
 function bpEstLoad(){
   var el=q('bpxEstList'); if(!el) return;
   if(!window.BP_LIVE){ el.innerHTML='<span class="bpx-mut">Estimates are available on live accounts.</span>'; return; }
-  fetch(GHL_EST_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})})
+  bpJwt().then(function(tok){ return fetch(GHL_EST_URL,{method:'POST',headers:{'Authorization':'Bearer '+(tok||BP_ANON),'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})}); })
   .then(function(r){ if(r.status===404) throw 'nf'; return r.json(); })
   .then(function(d){
     el.classList.remove('bpx-mut');
@@ -36309,7 +36309,8 @@ window.bpEstSend=async function(){
   var biz='Your contractor'; try{ biz=((bpSettingsGet()||{}).company||{}).name||biz; }catch(e){}
   btn.disabled=true; msg.style.color='var(--grey)'; msg.textContent='Creating estimate…';
   try{
-    var r=await fetch(GHL_EST_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
+    var _etok=await bpJwt();
+    var r=await fetch(GHL_EST_URL,{method:'POST',headers:{'Authorization':'Bearer '+(_etok||BP_ANON),'apikey':BP_ANON,'Content-Type':'application/json'},
       body:JSON.stringify({action:'create',contactId:op.value,contactName:op.getAttribute('data-name')||'Customer',phone:phone,email:email,title:t,amount:amt,description:(q('bpx-es-d')||{}).value||'',send:via,businessName:biz,expiryDays:+((q('bpx-es-exp')||{}).value||14)})});
     if(r.status===404){ msg.innerHTML=BPEST_NOTE; btn.disabled=false; return; }
     var d=await r.json();
