@@ -15,10 +15,9 @@
 //   POST { op:"message", token, body }
 //   POST { op:"change_order_decide", token, id, decision:"approve"|"decline",
 //          signer_name, signature (data:image/png), consent:true, note? }
-//   POST { op:"pay", token } -> { ok, url } the homeowner's newest open
-//          HighLevel invoice in the contractor's own sub-account (so the money
-//          lands in their Stripe). If GHL gives no payable link, the invoice is
-//          re-sent to the homeowner by text and email -> { ok, sent:true }
+//   POST { op:"pay", token } -> { ok, url } a BuilderPro pay link for the
+//          homeowner's newest open invoice: card checkout on the contractor's
+//          own Stripe (stripe-pay), which then marks the invoice paid
 //
 // Never returned: the owner id, other jobs, phone numbers of the crew, crew
 // pay, subcontractors and their prices or invoices, expenses or profit.
@@ -38,7 +37,32 @@ const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const ghlH = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
 // same token rules as ghl-invoice
+
+/* ---------- BuilderPro payments bridge ----------
+   Customers pay through the contractor's own Stripe connected in BuilderPro
+   (stripe-pay), not through HighLevel. The HighLevel invoice stays the record:
+   when the card goes through, stripe-webhook records the payment on it, so
+   "Invoice Paid" workflows fire as before. Contractors never see HighLevel. */
+const BR_SB = Deno.env.get("SUPABASE_URL") ?? "", BR_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const BR_SITE = Deno.env.get("PORTAL_URL") || "https://builderpro-os.com/";
+/* the client's own HighLevel key, saved from the Command Center */
+async function savedKey(loc: string): Promise<string> {
+  if (!loc || !BR_SB) return "";
+  try {
+    const r = await fetch(`${BR_SB}/rest/v1/ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token`, { headers: { apikey: BR_KEY, Authorization: `Bearer ${BR_KEY}` } });
+    return r.ok ? String((await r.json())?.[0]?.token ?? "") : "";
+  } catch { return ""; }
+}
+/* a pay link nobody can forge: location + invoice, signed on the server */
+async function paySig(loc: string, inv: string): Promise<string> {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(Deno.env.get("PAY_LINK_SECRET") || BR_KEY), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const s = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${loc}.${inv}`)));
+  return btoa(String.fromCharCode(...s)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "").slice(0, 22);
+}
+async function bpPayLink(loc: string, inv: string): Promise<string> { return `${BR_SITE}#pay=${loc}.${inv}.${await paySig(loc, inv)}`; }
+
 async function ghlToken(loc: string): Promise<string> {
+  const own = await savedKey(loc); if (own) return own;
   if (GHL_TOKEN) return GHL_TOKEN;
   if (GHL_API_KEY && GHL_COMPANY_ID && loc) {
     try {
@@ -56,15 +80,6 @@ async function ghlToken(loc: string): Promise<string> {
 async function ghlLocation(owner: string): Promise<string> {
   const r = rows(await rest(`ai_brain?owner=eq.${owner}&select=ghl_location_id&limit=1`))[0];
   return String(r?.ghl_location_id ?? "");
-}
-// first https link anywhere in the invoice that looks like its payment page
-function payLink(o: unknown, depth = 0): string {
-  if (depth > 4 || !o || typeof o !== "object") return "";
-  for (const [k, v] of Object.entries(o as Row)) {
-    if (typeof v === "string" && /^https:\/\//.test(v) && /(invoice|pay|preview)/i.test(k + " " + v) && !/\.(png|jpe?g|svg|pdf)(\?|$)/i.test(v)) return v;
-  }
-  for (const v of Object.values(o as Row)) { const u = payLink(v, depth + 1); if (u) return u; }
-  return "";
 }
 const BUCKET = "project-files";
 
@@ -233,7 +248,7 @@ async function view(c: Ctx) {
       schedule,
     },
     money: moneyOf(j, changes, payments),
-    canPay: !!(loc && (GHL_TOKEN || GHL_API_KEY)),
+    canPay: !!(loc && (GHL_TOKEN || GHL_API_KEY || await savedKey(loc))),
     crew,
     photos, docs,
     contracts: rows(cts).map((k: Row) => ({ title: clean(k.title, 160), status: k.status, signed_at: k.signed_at, amount: k.amount, link: `${PORTAL_URL}#sign=${k.token}` })),
@@ -335,15 +350,8 @@ Deno.serve(async (req) => {
       const inv = open[0];
       if (!inv) return no("There's no open invoice yet. Your contractor will send one when a payment is due.");
       const id = String(inv._id ?? inv.id ?? "");
-      const full = await fetch(`${GHL_BASE}/invoices/${id}?altId=${loc}&altType=location`, { headers: ghlH(t) }).then((x) => x.ok ? x.json() : {}).catch(() => ({}));
-      const url = payLink(full) || payLink(inv);
-      if (url) return json({ ok: true, url, amount: num(inv.amountDue ?? inv.total) });
-      // no link in the API answer: send it to them again, it carries the Pay button
-      const rs = await fetch(`${GHL_BASE}/invoices/${id}/send`, {
-        method: "POST", headers: ghlH(t), body: JSON.stringify({ altId: loc, altType: "location", action: "sms_and_email", liveMode: true }),
-      });
-      if (!rs.ok) return no("Your invoice couldn't be opened. Contact your contractor to pay.");
-      return json({ ok: true, sent: true, message: "We just sent your invoice to your phone and email. Tap Pay in that message to pay securely." });
+      /* paid through BuilderPro, into the contractor's own Stripe; paying marks this invoice paid */
+      return json({ ok: true, url: await bpPayLink(loc, id), amount: num(inv.amountDue ?? inv.total) });
     }
 
     return json({ ok: false, error: "unknown op" }, 400);

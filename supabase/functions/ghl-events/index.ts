@@ -14,7 +14,7 @@
 // Accounts without a HighLevel location are marked 'skipped'.
 //
 // Deploy with JWT verification off; the cron key is the check.
-// Secrets: GHL_TOKEN (or GHL_TOKEN_<locationId>), optional GHL_LOCATION_ID.
+// Keys: each client's own key in ghl_keys (Command Center), else secrets GHL_TOKEN_<locationId> / GHL_TOKEN.
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -53,10 +53,17 @@ async function rest(path: string, init: RequestInit = {}) {
 const rpc = (fn: string, args: unknown = {}) => rest(`rpc/${fn}`, { method: "POST", body: JSON.stringify(args) });
 
 /* ---------- HighLevel ---------- */
-const tokenFor = (loc: string) => Deno.env.get("GHL_TOKEN_" + loc) || Deno.env.get("GHL_TOKEN") || "";
+/* the client's own key (saved from the Command Center into ghl_keys), else the shared one */
+const keyCache: Record<string, string> = {};
+async function tokenFor(loc: string): Promise<string> {
+  if (keyCache[loc] !== undefined) return keyCache[loc];
+  let k = "";
+  try { k = (await rest(`ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token`))?.[0]?.token || ""; } catch (_) { /* none */ }
+  return (keyCache[loc] = k || Deno.env.get("GHL_TOKEN_" + loc) || Deno.env.get("GHL_TOKEN") || "");
+}
 async function ghl(loc: string, method: string, path: string, body?: unknown) {
   const r = await fetch(GHL + path, {
-    method, headers: { Authorization: `Bearer ${tokenFor(loc)}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" },
+    method, headers: { Authorization: `Bearer ${await tokenFor(loc)}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
   const t = await r.text(); let d: any = {}; try { d = JSON.parse(t); } catch (_) { /* text */ }
@@ -328,7 +335,7 @@ async function deliver() {
     const patch = (p: any) => rest(`ghl_events?id=eq.${ev.id}`, { method: "PATCH", body: JSON.stringify(p) }).catch(() => {});
     const acct = await accountOf(ev.owner, accts), loc = acct.loc;
     if (!allowed(acct.plan, ev.kind)) { await patch({ status: "skipped", error: "Not on your plan (" + acct.plan + ")" }); skipped++; continue; }
-    if (!loc || !tokenFor(loc)) { await patch({ status: "skipped", error: "No HighLevel account connected" }); skipped++; continue; }
+    if (!loc || !(await tokenFor(loc))) { await patch({ status: "skipped", error: "No HighLevel account connected" }); skipped++; continue; }
     try {
       if (!jobsOf[ev.owner]) { const f = await rest(`portal_finance?owner=eq.${ev.owner}&select=jobs`); jobsOf[ev.owner] = (f?.[0]?.jobs) || []; }
       const sub = ev.data?.sub;   // sub paperwork goes to the sub, not a customer
@@ -361,6 +368,7 @@ Deno.serve(async (req) => {
   const cfg = await rest(`ai_config?key=eq.cron_key&select=value`).catch(() => []);
   if (!key || !cfg?.[0]?.value || key !== cfg[0].value) return json({ ok: false, error: "forbidden" }, 403);
   let body: any = {}; try { body = await req.json(); } catch (_) { /* empty */ }
+  for (const k of Object.keys(keyCache)) delete keyCache[k];   // a key saved or replaced since the last run is picked up now
   try {
     if (body.op === "setup") {
       const loc = body.location || DEF_LOC;

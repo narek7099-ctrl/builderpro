@@ -1,8 +1,7 @@
-// NOT IN USE. Invoices are raised in the sub-account and charged through the
-// Stripe connected there, so this is not wired to anything and should not be
-// deployed. Kept because it is finished and ready if invoicing ever moves
-// in-house; the Payouts page walks the contractor through the sub-account
-// connection instead. See supabase/migrations/20260920000000_stripe_connect.sql.
+// IN USE (payments bridge). A pay link for a HighLevel invoice (stripe-pay
+// op "invoice") carries bp_ghl_invoice + bp_ghl_loc; when that card goes
+// through, the payment is recorded on the HighLevel invoice here, so it shows
+// as paid there and the "Invoice Paid" workflows (10, 15, 16) run unchanged.
 //
 // stripe-webhook — Stripe telling us a card went through on a contractor's
 // own connected account.
@@ -89,6 +88,35 @@ async function feeFor(paymentIntent: string, accountId: string): Promise<{ fee: 
   } catch { return { fee: 0, net: 0 }; }
 }
 
+
+/* ---------- BuilderPro payments bridge ----------
+   Customers pay through the contractor's own Stripe connected in BuilderPro
+   (stripe-pay), not through HighLevel. The HighLevel invoice stays the record:
+   when the card goes through, stripe-webhook records the payment on it, so
+   "Invoice Paid" workflows fire as before. Contractors never see HighLevel. */
+const BR_SB = Deno.env.get("SUPABASE_URL") ?? "", BR_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const BR_SITE = Deno.env.get("PORTAL_URL") || "https://builderpro-os.com/";
+/* the client's own HighLevel key, saved from the Command Center */
+async function savedKey(loc: string): Promise<string> {
+  if (!loc || !BR_SB) return "";
+  try {
+    const r = await fetch(`${BR_SB}/rest/v1/ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token`, { headers: { apikey: BR_KEY, Authorization: `Bearer ${BR_KEY}` } });
+    return r.ok ? String((await r.json())?.[0]?.token ?? "") : "";
+  } catch { return ""; }
+}
+
+/* mark the HighLevel invoice paid (HighLevel API: record a payment on an invoice) */
+async function markGhlPaid(loc: string, inv: string, dollars: number, intent: string): Promise<string> {
+  const t = await savedKey(loc) || Deno.env.get("GHL_TOKEN_" + loc) || Deno.env.get("GHL_TOKEN") || "";
+  if (!t) return "no HighLevel key for " + loc;
+  const r = await fetch(`https://services.leadconnectorhq.com/invoices/${inv}/record-payment`, {
+    method: "POST", headers: { Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ altId: loc, altType: "location", mode: "other", amount: Math.round(dollars * 100) / 100,
+      notes: `Paid by card through BuilderPro (Stripe ${intent})`, fulfilledAt: new Date().toISOString() }),
+  });
+  return r.ok ? "" : `record-payment ${r.status}: ${(await r.text()).slice(0, 200)}`;
+}
+
 /* put the money back on the job, the way a payment recorded by hand would */
 async function creditJob(owner: string, jobId: string, dollars: number, name: string) {
   if (!owner || !(dollars > 0)) return;
@@ -130,6 +158,9 @@ Deno.serve(async (req) => {
       if (!owner) return json({ ok: true, skipped: "unknown account" });
 
       const isSession = type === "checkout.session.completed";
+      /* invoice pay links always go through Checkout: act on the session only, so the
+         two events Stripe sends for one payment can't both mark the invoice paid */
+      if (!isSession && meta.bp_ghl_invoice) return json({ ok: true, skipped: "handled by checkout.session.completed" });
       const intent = String(isSession ? (obj?.payment_intent ?? "") : (obj?.id ?? ""));
       if (!intent) return json({ ok: true, skipped: "no payment intent" });
       // a Checkout session that has not actually been paid is not money
@@ -137,11 +168,23 @@ Deno.serve(async (req) => {
         return json({ ok: true, skipped: "session unpaid" });
       }
 
+      /* Stripe sends both checkout.session.completed and payment_intent.succeeded for
+         one card payment: handle each payment once, so the job and the invoice aren't
+         credited twice. A row that is already there means it was handled. */
+      const seen = await rest(`stripe_payments?payment_intent=eq.${encodeURIComponent(intent)}&select=id&limit=1`).catch(() => []);
+      if (seen?.length) return json({ ok: true, duplicate: intent });
+
       const amount = Number(isSession ? (obj?.amount_total ?? 0) : (obj?.amount_received ?? obj?.amount ?? 0)) || 0;
       const { fee, net } = await feeFor(intent, accountId);
       const who = isSession ? (obj?.customer_details ?? {}) : {};
       const name = String(who?.name ?? "");
 
+      /* a HighLevel invoice paid through BuilderPro: show it paid there too.
+         A failure answers 500 before anything is saved, so Stripe's retry starts clean. */
+      if (meta.bp_ghl_invoice && meta.bp_ghl_loc) {
+        const err = await markGhlPaid(meta.bp_ghl_loc, meta.bp_ghl_invoice, amount / 100, intent);
+        if (err && !/already|paid/i.test(err)) { console.error("markGhlPaid", err); return json({ ok: false, error: err }, 500); }
+      }
       await rest("stripe_payments", {
         method: "POST",
         headers: { Prefer: "resolution=merge-duplicates,return=representation" },

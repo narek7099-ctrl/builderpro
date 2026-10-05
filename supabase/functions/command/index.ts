@@ -599,7 +599,28 @@ Deno.serve(async (req) => {
     if (row.thread_id) await save(row.thread_id, "user", `[The owner approved: ${row.summary}. Result: ${JSON.stringify(result).slice(0, 3000)}]`);
     return json({ ok: true, status, result });
   }
-  if (op === "accounts") { const r = await sb("accounts?select=*&order=created_at.desc&limit=500"); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
+  if (op === "accounts") {
+    const r = await sb("accounts?select=*&order=created_at.desc&limit=500"), rows = r.ok ? await r.json() : [];
+    /* which sub-accounts have a HighLevel key saved (never the key itself) */
+    const k = await sb("ghl_keys?select=location_id,checked_at"), keys = k.ok ? await k.json() : [];
+    const has = new Map(keys.map((x: { location_id: string; checked_at: string }) => [x.location_id, x.checked_at]));
+    return json({ ok: true, data: rows.map((x: Record<string, unknown>) => ({ ...x, ghl_key: x.ghl_location_id ? has.get(String(x.ghl_location_id)) ?? null : null })) });
+  }
+  /* save a client's HighLevel key (Private Integration token from their sub-account):
+     checked against HighLevel first, so a wrong or mistyped key is never stored */
+  if (op === "ghl_key_set") {
+    const loc = String(b.location ?? "").trim(), tok = String(b.token ?? "").trim();
+    if (!/^[A-Za-z0-9]{10,40}$/.test(loc)) return json({ ok: false, error: "That location ID doesn't look right." }, 400);
+    if (tok.length < 20) return json({ ok: false, error: "Paste the whole key." }, 400);
+    const t = await fetch(`https://services.leadconnectorhq.com/locations/${loc}`, { headers: { Authorization: `Bearer ${tok}`, Version: "2021-07-28", Accept: "application/json" } });
+    if (!t.ok) return json({ ok: false, error: t.status === 401 || t.status === 403 ? "HighLevel turned that key down for this sub-account. Check it was made inside this client's sub-account and has the scopes in the guide." : `HighLevel said ${t.status}.` }, 400);
+    const name = String((await t.json().catch(() => ({})))?.location?.name ?? "");
+    const w = await sb("ghl_keys?on_conflict=location_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ location_id: loc, token: tok, label: name, checked_at: new Date().toISOString(), updated_at: new Date().toISOString() }) });
+    if (!w.ok) return json({ ok: false, error: "Could not save the key." }, 500);
+    if (b.user_id) await sb(`accounts?user_id=eq.${encodeURIComponent(String(b.user_id))}&ghl_location_id=is.null`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: loc }) });
+    return json({ ok: true, name });
+  }
   if (op === "stats") return json({ ok: true, data: await runTool("business_stats", {}, 0) });
   if (op === "memory") { const r = await sb("ai_memory?select=id,note,created_at&order=id.desc&limit=200"); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
   if (op === "memory_delete") { await sb(`ai_memory?id=eq.${Number(b.id)}`, { method: "DELETE" }); return json({ ok: true }); }
