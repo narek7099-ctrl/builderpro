@@ -200,3 +200,10 @@ Round 2 (Days Overdue 14, Balance Due $0; removed and re-added bp-payment-overdu
 Not verified: rendered SMS/email text. Every customer message was skipped (no phone/email), and the logs do not show message bodies. Merge tags were checked in the builder (each one turned into a field chip).
 Not tested: 34 at 7 days, 41 at 2 and 5 days (same If/Else pattern as the branches that passed), 33's later steps (2- and 30-day waits).
 Left on "Claude Test": the 11 bp-* tags and the sample BP field values. Contacts are not part of snapshots.
+
+### Snapshot BuilderPro OS - refreshed (Oct 4, 2026, 6:16 PM)
+- Refreshed in place from BP OS Template, all assets (190). Same ID expected: cdRGIx2azgolhnDj257c.
+
+### BP Enterprise Template (bjhV3CSImxxjN0HW23uJ) - build
+- Contact folder "BuilderPro" created; the 19 BP fields created in it (Single line). Keys checked: contact.bp_job_name ... contact.bp_spent.
+- Copied 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 47 from BP OS Template with "Copy to sub-account" (all 11 "Success"). They arrive as drafts at the root. The copy also created each trigger tag.
