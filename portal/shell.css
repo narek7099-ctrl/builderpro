@@ -349,3 +349,10 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-gauge .bpc-gside{min-width:0}
 #bpx#bpx#bpx#bpx .hl-gauge .bpc-gnum{font-size:15px}
 #bpx#bpx#bpx#bpx .hl-gauge .bpc-gnote{font-size:12px;color:var(--mu)}
+/* form fields never grow past the space they're given (Safari gives date/time inputs a minimum width that pushed them over the next field) */
+#bpx#bpx#bpx#bpx input,#bpx#bpx#bpx#bpx select,#bpx#bpx#bpx#bpx textarea{box-sizing:border-box;max-width:100%;min-width:0}
+#bpx#bpx#bpx#bpx input[type=date],#bpx#bpx#bpx#bpx input[type=time],#bpx#bpx#bpx#bpx input[type=datetime-local],#bpx#bpx#bpx#bpx input[type=month]{-webkit-appearance:none;appearance:none;min-width:0}
+#bpx#bpx#bpx#bpx input::-webkit-date-and-time-value{text-align:left}
+#bpx#bpx#bpx#bpx label{min-width:0}
+#bpx#bpx#bpx#bpx label>input[type=date],#bpx#bpx#bpx#bpx label>input[type=time],#bpx#bpx#bpx#bpx label>input[type=datetime-local]{display:block;width:100%}
+#bpx#bpx#bpx#bpx [style*="grid-template-columns"]>*,#bpx#bpx#bpx#bpx [style*="display:flex"]>div{min-width:0}
