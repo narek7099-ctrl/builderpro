@@ -245,3 +245,15 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
   1. 34's 14-day "Call about payment" task is skipped when the contact has no assigned user. It needs an owner on the contact (or a default assignee chosen per client).
   2. Rendered message text was not checked end to end. Test with a contact on the owner's own phone if wanted.
   3. 35 and 36 have Stop on response OFF on purpose (see the 35 note above).
+
+## Workflow 52 Storm Alert to You - Oct 4, 2026 (Enterprise only)
+
+- Pulled the branch; spec in docs/highlevel-workflows.md (52 · tag bp-storm-alert · build it like 48).
+- BP Enterprise Template: created tag bp-storm-alert. Duplicated 48 Weather Delay Warning as "52 Storm Alert to You" in "7 Alerts to you". Trigger: Contact Tag added = bp-storm-alert. Steps: in-app alert (all users, title "Storm near past customers", message {{contact.bp_event_note}}), then SMS alert to {{custom_values.owner_phone}} with {{contact.bp_event_note}}. No Excluded check, no time window, re-entry ON. Published.
+- Test (8:37 PM PDT) on Enterprise "Claude Test": BP Event Note set to "Storm near 14 past customers: 1.75 in hail near Lorena, TX. Open BuilderPro to send the storm check text." Added bp-storm-alert. PASS: both alert steps Executed, workflow finished.
+- Snapshot BuilderPro Enterprise refreshed in place, all assets (227), now v4, 8:40 PM. Same ID expected: cWoCOr2RJDfc3x3FxnQm.
+
+### Correction to earlier entries
+- Earlier entries say Owner Phone is blank in both templates. That is only true for BP OS Template. BP Enterprise Template's Owner Phone custom value is +1 818-453-1111, the same number as the "Narek Test" contact (the owner's own number).
+- So the Enterprise test runs sent owner-alert texts to that number: 44, 47 and 48 at 7:27 PM, and 52 at 8:37 PM. All four are marked "Executed". No customer messages went out: the test contact has no phone or email.
+- Clients get their own Owner Phone, but this template value ships with the snapshot. Clear it, or replace it with a placeholder, if new client accounts should not inherit it.
