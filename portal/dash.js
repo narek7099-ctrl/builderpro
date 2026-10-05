@@ -799,6 +799,7 @@
       el.innerHTML = (sample ? '<div class="sp-note warn"><span class="ms">science</span>Example numbers, so you can see how it looks. Add a project or log money and this switches to your own.</div>'
         : live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
         + topline()
+        + (crew || !window.bpStormDash ? '' : bpStormDash())   /* a storm near past customers, waiting for a yes (portal/storm.js) */
         + (crew || !window.bpCeoDashCard ? '' : bpCeoDashCard(D.ceo))   /* the AI CEO's morning briefing (portal/aiceo.js) */
         + cl
         + (crew

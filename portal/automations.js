@@ -287,12 +287,18 @@
         { 'if': 'Your answer', paths: [
           { label: 'Move them', steps: [['field', 'Each later job moves the same number of days (Sundays skipped)', 'Move the jobs'], ['sms', 'Each customer gets 39 Schedule Pushed Back'], ['alert', 'The crew lead gets the new dates in the crew app'], E] },
           { label: 'Leave them', steps: [E] }
-        ] }] })] }
+        ] }] })] },
+    { id: '52', kind: 'storm_alert', name: 'Storm Alert to You', folder: 7, from: 2, v: [v(2, {
+      triggers: [['bp', 'Tag added: ' + tg('bp-storm-alert') + ' (hail or damaging wind near past customers, from the National Weather Service reports)']],
+      settings: ['Re-entry on', 'No time window (alerts go out right away)'],
+      steps: [['alert', '{{contact.bp_event_note}}'], ['note', 'You approve it in BuilderPro (dashboard card or the notice); then Storm Follow-up (36) texts the customers you picked', 'You decide'], E] })] }
   ];
 
   var fmt = function (s) { return String(s).replace(/\{\{([^}]+)\}\}/g, function (m, k) { return '<span class="wa-chip">' + k.trim() + '</span>'; }); };
   var S = { plan: null, sel: '01', mine: 1, open: null };
-  var avail = function (w) { return w.from <= S.plan; };
+  /* storms only matter for some trades (portal/storm.js); for the rest the storm follow-up isn't shown at all */
+  var hidden = function (w) { return (w.id === '36' || w.id === '52') && !!window.bpStormTrade && !bpStormTrade(); };
+  var avail = function (w) { return w.from <= S.plan && !hidden(w); };
   var variant = function (w) { var x = w.v[0]; w.v.forEach(function (y) { if (y.from <= S.plan) x = y; }); return x; };
   var status = function (w) { return ''; }; var status0 = function (w) { if (S.plan > 0 && w.from === S.plan) return 'new'; var x = variant(w); if (S.plan > 0 && x.from === S.plan && w.from < S.plan) return 'chg'; return ''; };
   var conn = '<div class="wa-conn"><div class="wa-ln"></div><div class="wa-plus">+</div><div class="wa-ln"></div></div>';
@@ -322,7 +328,7 @@
     h += '<div class="wa-lay"><aside class="wa-list">';
     [6, 7, 1, 2, 3, 4, 5].forEach(function (f) {
       var items = WF.filter(function (w) { return w.folder === f && avail(w); });
-      var locked = WF.filter(function (w) { return w.folder === f && !avail(w); });
+      var locked = WF.filter(function (w) { return w.folder === f && !avail(w) && !hidden(w); });
       if (!items.length && locked.length) {   /* a whole folder above this plan: show it, locked */
         var need = Math.min.apply(null, locked.map(function (w) { return w.from; }));
         h += '<div class="wa-fold wa-lock"><span class="wa-fi">' + svg('folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + locked.length + '</span></div>'
@@ -348,7 +354,8 @@
     if (w.kind) note += '<div class="wa-note soft">BuilderPro sends this event to your CRM with the job’s details in the <b>BP</b> fields; the workflow there sends the messages. Edit the wording in your CRM’s workflow builder.</div>';
     if (w.id === '36') note += '<div class="wa-storm"><b>Send a storm follow-up</b><span>Past customers whose job address contains any of these ZIP codes or towns get the text.</span>'
       + '<input id="wa-st-area" placeholder="e.g. 91605, 91606, Van Nuys"><input id="wa-st-note" placeholder="Optional line added to the text (e.g. Hail on Oct 3)" maxlength="200">'
-      + '<button class="bpx-addbtn" id="wa-st-go">Send to past customers</button><div class="wa-st-msg" id="wa-st-msg"></div></div>';
+      + '<button class="bpx-addbtn" id="wa-st-go">Send to past customers</button><div class="wa-st-msg" id="wa-st-msg"></div></div>'
+      + (window.bpStormSettingsHtml ? bpStormSettingsHtml() : '');
     h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + liveTxt + '</span></div>' + note
       + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'

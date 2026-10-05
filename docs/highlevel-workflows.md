@@ -198,6 +198,12 @@ This tag lands on the **subcontractor's** contact.
 1. Alert to you: *Stuck job: {{contact.bp_job_name}} for {{contact.name}}. {{contact.bp_event_note}}*
    (BuilderPro writes the reason and the next step into BP Event Note, e.g. "Contract signed 3+ days ago and the job has no start date. Next: book the crew.")
 
+## 52 Storm Alert to You · tag `bp-storm-alert` · Enterprise
+(BuilderPro checks the National Weather Service storm reports every morning. When hail or damaging wind hit near past customers whose trade a storm can damage, it asks the owner first. This workflow is the text that asks; the owner then taps Send in BuilderPro, which fires 36 Storm Follow-up for the customers they picked.)
+1. Alert to you (in-app + SMS to owner): *{{contact.bp_event_note}}*
+   (BuilderPro writes the whole message into BP Event Note, e.g. "Storm near 14 past customers: 1.75 in hail near Lorena, TX. Open BuilderPro to send the storm check text.")
+   Build it like 48: folder 7, no Excluded check, no time window, re-entry on.
+
 ---
 
 ## Step 4: test every workflow
