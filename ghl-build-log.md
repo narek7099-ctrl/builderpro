@@ -207,3 +207,12 @@ Left on "Claude Test": the 11 bp-* tags and the sample BP field values. Contacts
 ### BP Enterprise Template (bjhV3CSImxxjN0HW23uJ) - build
 - Contact folder "BuilderPro" created; the 19 BP fields created in it (Single line). Keys checked: contact.bp_job_name ... contact.bp_spent.
 - Copied 30, 31, 32, 33, 34, 37, 38, 39, 40, 41, 47 from BP OS Template with "Copy to sub-account" (all 11 "Success"). They arrive as drafts at the root. The copy also created each trigger tag.
+- Tags: all 21 bp-* tags plus past-customer and warranty-sent exist (review-requested and final-sent were already there). The Tags page drops every second create if you go too fast; created the missed ones again and checked each by search.
+- Workflow folders "6 Project automations" and "7 Alerts to you" at the root. Moved 30-41 into 6 and 47 into 7.
+- 30-41 published with "Publish all". The copies kept their settings (re-entry, stop on response on 33, 8 am-8 pm window, contact time zone) and their tag steps.
+- 42 Inspection Scheduled (made from a duplicate of 30): trigger bp-inspection-scheduled; Excluded check; SMS. Published.
+- 43 Warranty Info (from a duplicate of 30): trigger bp-warranty; Excluded check; SMS and email (subject "Your {{contact.bp_job_name}} warranty"); tag warranty-sent. Published.
+- 35 Yearly Check-up: trigger bp-job-anniversary; Excluded check; offer SMS; wait until the contact replies to that SMS, 3-day timeout. On a reply, If "Replied message" contains yes / Yes / YES: Create/update opportunity in Jobs > New Lead ("{{contact.name}} - yearly check-up", status open, source "Yearly check-up"), then in-app alert "Book the check-up for {{contact.name}}". Other reply or timeout: end. Published.
+  - Stop on response is OFF here on purpose. With it on, the contact's reply would end the workflow before the yes branch could run. The reply wait does the same job.
+  - HighLevel shows a notice that "Create/update opportunity" will be deprecated. Existing workflows keep working.
+- 36 Storm Follow-up (a duplicate of 35): trigger bp-storm-followup; storm SMS; 2-day reply wait; same yes branch (opportunity "{{contact.name}} - storm roof check", source "Storm follow-up"; alert "Book the storm check for {{contact.name}}"). Stop on response is OFF for the same reason. Published.
