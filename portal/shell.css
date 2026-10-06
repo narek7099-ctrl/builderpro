@@ -356,3 +356,15 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx label{min-width:0}
 #bpx#bpx#bpx#bpx label>input[type=date],#bpx#bpx#bpx#bpx label>input[type=time],#bpx#bpx#bpx#bpx label>input[type=datetime-local]{display:block;width:100%}
 #bpx#bpx#bpx#bpx [style*="grid-template-columns"]>*,#bpx#bpx#bpx#bpx [style*="display:flex"]>div{min-width:0}
+
+/* ---------- buttons keep their text centred ----------
+   A button can carry its own inline display (an <a> with
+   style="display:inline-block", a full-width one with display:block).
+   That beats the flex centring above, and with the forced 0 vertical
+   padding the label sits at the top. Re-centre exactly those; a button
+   hidden with display:none is left alone. */
+#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display:inline-block"],
+#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display: inline-block"]{display:inline-flex !important;align-items:center !important;justify-content:center !important}
+#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display:block"],
+#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display: block"]{display:flex !important;align-items:center !important;justify-content:center !important}
+#bpx#bpx#bpx#bpx a:is(.bpx-btn,.bpx-addbtn,.bpx-rowbtn,.bpx-ghostbtn,.hero-cta){text-decoration:none}
