@@ -32,7 +32,7 @@
       h: ['Which projects are behind schedule?', 'Are any jobs over budget?', 'Which jobs have nobody assigned?'] }
   };
   /* how the chart groups them */
-  var DEPTS = [['Growth', 'trending_up', ['sales', 'marketing', 'research']], ['Customers', 'groups', ['clients', 'office']], ['Operations', 'engineering', ['projects', 'permits', 'workflows']]];
+  
 
   function css() {
     if ($('bpAiCss')) return;
@@ -119,39 +119,68 @@
   };
 
 
-  /* the team as an org chart: you on top, the AI CEO who watches the whole
-     business under you, then the departments and their assistants */
+  /* the team as a live board, like the owner's Command Center: the AI CEO
+     in the middle, the eight assistants around it, each wired to the CEO
+     with a link a packet travels along, and the tools each one uses */
+  var KIT = { sales: [['contacts', 'CRM'], ['sms', 'Texts'], ['travel_explore', 'Web']], marketing: [['campaign', 'Ads'], ['star', 'Reviews'], ['travel_explore', 'Web']],
+    research: [['travel_explore', 'Web'], ['query_stats', 'Prices']], clients: [['construction', 'Projects'], ['sms', 'Texts']], office: [['calendar_month', 'Calendar'], ['receipt_long', 'Invoices']],
+    projects: [['construction', 'Projects'], ['payments', 'Budgets']], permits: [['assignment', 'Permits'], ['travel_explore', 'Web']], workflows: [['account_tree', 'Pipeline'], ['label', 'Tags']] };
+  var RING = ['sales', 'marketing', 'research', 'clients', 'projects', 'permits', 'workflows', 'office'];
   function boardHtml(live) {
-    var biz = ''; try { biz = ((window.bpSettingsGet && bpSettingsGet().company) || {}).name || ''; } catch (e) {}
-    var node = function (k) {
-      return '<button type="button" class="aib-n" data-open="' + k + '"><span class="aib-i"><span class="ms">' + AG[k].ic + '</span></span><span class="aib-tx"><b>' + esc(AG[k].n) + '</b><em>' + esc(AG[k].d) + '</em></span></button>';
-    };
-    return '<div class="aib">'
-      + '<div class="aib-top"><div class="aib-n aib-you"><span class="aib-i"><span class="ms">person</span></span><span class="aib-tx"><b>You</b><em>' + esc(biz || 'Owner') + ' · you approve what goes out</em></span></div></div>'
-      + '<div class="aib-v"></div>'
-      + '<div class="aib-top"><button type="button" class="aib-n aib-ceo" data-ceoopen="1"><span class="aib-i"><span class="ms">monitoring</span></span><span class="aib-tx"><b>AI CEO</b><em>Watches the whole business, ranks what matters and routes work to the team</em></span></button></div>'
-      + '<div class="aib-v"></div>'
-      + '<div class="aib-depts">' + DEPTS.map(function (d) {
-        return '<div class="aib-d"><div class="aib-dh"><span class="ms">' + d[1] + '</span>' + d[0] + '</div>' + d[2].map(node).join('') + '</div>';
-      }).join('') + '</div>'
-      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + Object.keys(AG).length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
+    var W = 1000, H = 800, cx = 500, cy = 400, rx = 375, ry = 265, svg = '', nodes = '';
+    RING.forEach(function (k, i) {
+      var ang = (-90 + 22.5 + i * 45) * Math.PI / 180, x = cx + rx * Math.cos(ang), y = cy + ry * Math.sin(ang);
+      var mx = (cx + x) / 2, d = 'M' + cx + ',' + cy + ' C' + mx + ',' + cy + ' ' + mx + ',' + y + ' ' + x + ',' + y, id = 'aibl' + k;
+      svg += '<path id="' + id + '" class="aib-ln" d="' + d + '"/><circle r="2.4" class="aib-pk"><animateMotion dur="' + (4.8 + (i % 4) * 0.7) + 's" begin="' + (i * 0.55) + 's" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .25 1"><mpath href="#' + id + '"/></animateMotion></circle>';
+      /* its tools, fanned out on the far side from the CEO */
+      var kit = KIT[k] || [], out = x < cx ? -1 : 1, below = y > cy;
+      kit.forEach(function (t, j) {
+        var tx = x + out * (0) + (j - (kit.length - 1) / 2) * 66, ty = y + (below ? 92 : -92);
+        svg += '<path class="aib-ln aib-t" d="M' + x + ',' + (y + (below ? 30 : -30)) + ' L' + tx + ',' + (ty + (below ? -20 : 20)) + '"/>';
+        nodes += '<div class="aib-tl" style="--dl:' + (0.35 + i * 0.06) + 's;left:' + (tx / W * 100) + '%;top:' + (ty / H * 100) + '%"><i><span class="ms">' + t[0] + '</span></i>' + t[1] + '</div>';
+      });
+      nodes += '<button type="button" class="aib-n" data-open="' + k + '" style="--dl:' + (0.12 + i * 0.06) + 's;left:' + (x / W * 100) + '%;top:' + (y / H * 100) + '%"><span class="aib-box"><span class="aib-i"><span class="ms">' + AG[k].ic + '</span></span><span class="aib-tx"><b>' + esc(AG[k].n) + '</b><em>' + esc(AG[k].d) + '</em></span></span></button>';
+    });
+    /* the CEO's own wiring: the model it thinks with, and you, who approve */
+    [[-1, 'spark', 'Claude', 'AI model'], [1, 'task_alt', 'Approvals', 'you say yes']].forEach(function (t) {
+      var tx = cx + t[0] * 205;
+      svg += '<path class="aib-ln aib-t" d="M' + (cx + t[0] * 112) + ',' + cy + ' L' + (tx - t[0] * 24) + ',' + cy + '"/>';
+      nodes += '<div class="aib-tl" style="--dl:.3s;left:' + (tx / W * 100) + '%;top:' + (cy / H * 100) + '%"><i><span class="ms">' + (t[1] === 'spark' ? 'auto_awesome' : t[1]) + '</span></i>' + t[2] + '<small>' + t[3] + '</small></div>';
+    });
+    nodes += '<button type="button" class="aib-n aib-ceo" data-ceoopen="1" style="--dl:0s;left:50%;top:50%"><span class="aib-box"><span class="aib-i"><span class="ms">monitoring</span></span><span class="aib-tx"><b>AI CEO</b><em>Watches the whole business and routes work</em></span></span></button>';
+    var list = '<div class="aib-list">' + ['ceo'].concat(RING).map(function (k) {
+      var c = k === 'ceo';
+      return '<button type="button" class="aib-n' + (c ? ' aib-ceo' : '') + '" ' + (c ? 'data-ceoopen="1"' : 'data-open="' + k + '"') + '><span class="aib-box"><span class="aib-i"><span class="ms">' + (c ? 'monitoring' : AG[k].ic) + '</span></span><span class="aib-tx"><b>' + (c ? 'AI CEO' : esc(AG[k].n)) + '</b><em>' + (c ? 'Watches the whole business and routes work' : esc(AG[k].d)) + '</em></span></span></button>';
+    }).join('') + '</div>';
+    return '<div class="aib"><div class="aib-wrap"><div class="aib-in"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + svg + '</svg>' + nodes + '</div></div>' + list
+      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + RING.length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
   }
   function boardCss() {
     if (document.getElementById('aib-css')) return; var c = document.createElement('style'); c.id = 'aib-css';
-    c.textContent = '.aib{background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:16px;padding:20px 18px 6px;background-image:radial-gradient(var(--line,#e4e9ef) 1px,transparent 1px);background-size:18px 18px}'
-      + '.aib-top{display:flex;justify-content:center}.aib-v{width:2px;height:22px;background:var(--line,#c9d3df);margin:0 auto}'
-      + '.aib-n{display:flex;align-items:center;gap:10px;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:12px;padding:10px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%;box-shadow:0 4px 14px -10px rgba(0,21,48,.3);transition:border-color .15s,transform .15s,box-shadow .15s}'
-      + 'button.aib-n:hover{border-color:#2457d6;transform:translateY(-1px);box-shadow:0 8px 20px -12px rgba(36,87,214,.5)}'
-      + '.aib-you,.aib-ceo{width:min(380px,100%)}.aib-you{cursor:default}'
-      + '.aib-i{width:36px;height:36px;border-radius:10px;background:#e8efff;color:#2457d6;display:grid;place-items:center;flex:none}.aib-i .ms{font-size:20px}'
-      + '.aib-you .aib-i{background:#101828;color:#fff}.aib-ceo{border-color:#c7d7fe;background:linear-gradient(180deg,#f5f8ff,var(--card,#fff))}.aib-ceo .aib-i{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff}'
-      + '.aib-tx{min-width:0}.aib-n b{display:block;font-size:14px;color:var(--ink,#101828)}.aib-n em{display:block;font-style:normal;font-size:12px;line-height:1.35;color:var(--mu,#667085);margin-top:1px}'
-      + '.aib-depts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;position:relative;padding-top:20px;border-top:2px solid var(--line,#c9d3df);margin:0 calc(100%/6 - 7px)}'
-      + '.aib-depts{margin:0;border-top:0}.aib-depts:before{content:"";position:absolute;top:0;left:calc(100%/6);right:calc(100%/6);height:2px;background:var(--line,#c9d3df)}'
-      + '.aib-d{display:flex;flex-direction:column;gap:8px;position:relative;min-width:0}.aib-d:before{content:"";position:absolute;top:-20px;left:50%;width:2px;height:20px;background:var(--line,#c9d3df)}'
-      + '.aib-dh{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu,#667085);background:var(--soft,#f2f4f7);border:1px solid var(--line,#e4e7ec);border-radius:99px;padding:5px 10px;align-self:center}.aib-dh .ms{font-size:15px}'
-      + '.aib-foot{display:flex;flex-wrap:wrap;gap:18px;padding:14px 4px 10px;font-size:13px;color:var(--mu,#788493)}.aib-on{color:#15803d;font-weight:600}'
-      + '@media(max-width:820px){.aib-depts{grid-template-columns:1fr}.aib-depts:before,.aib-d:before{display:none}.aib-d{padding-top:6px}}';
+    c.textContent = '.aib{position:relative;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:16px;overflow:hidden}'
+      + '.aib:before{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--line,#dce3ec) 1px,transparent 1px);background-size:20px 20px;pointer-events:none;-webkit-mask-image:radial-gradient(80% 70% at 50% 45%,#000,transparent);mask-image:radial-gradient(80% 70% at 50% 45%,#000,transparent)}'
+      + '.aib-wrap{position:relative;width:100%}.aib-in{position:relative;width:100%;aspect-ratio:1000/800}'
+      + '.aib-in>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}'
+      + '.aib-ln{fill:none;stroke:var(--line,#c9d3df);stroke-width:1.3}.aib-t{stroke-dasharray:3 4;stroke:#cfd8e3}.aib-pk{fill:#2457d6;opacity:.7}'
+      + '.aib-n{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;opacity:0;animation:aibPop .6s cubic-bezier(.2,0,0,1) forwards;animation-delay:var(--dl,0s)}'
+      + '@keyframes aibPop{from{opacity:0;transform:translate(-50%,-44%)}to{opacity:1;transform:translate(-50%,-50%)}}'
+      + '.aib-box{display:flex;align-items:center;gap:10px;width:200px;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:12px;padding:10px 12px;text-align:left;box-shadow:0 4px 14px -10px rgba(0,21,48,.3);transition:border-color .2s,transform .2s,box-shadow .2s}'
+      + '.aib-n:hover .aib-box{border-color:#2457d6;transform:translateY(-2px);box-shadow:0 10px 24px -12px rgba(0,21,48,.3)}'
+      + '.aib-ceo .aib-box{width:224px;padding:13px 14px;border-color:#c7d7fe;background:linear-gradient(180deg,#f5f8ff,var(--card,#fff))}'
+      + '.aib-i{width:34px;height:34px;border-radius:9px;background:#e8efff;color:#2457d6;display:grid;place-items:center;flex:none}.aib-i .ms{font-size:19px}'
+      + '.aib-ceo .aib-i{width:38px;height:38px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff}'
+      + '.aib-tx{min-width:0}.aib-n b{display:block;font-size:13.5px;color:var(--ink,#101828);white-space:nowrap}'
+      + '.aib-n em{display:block;font-style:normal;font-size:11.5px;line-height:1.3;color:var(--mu,#667085);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '.aib-ceo em{max-width:160px}'
+      + '.aib-tl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink,#344054);width:72px;text-align:center;opacity:0;animation:aibFade .6s ease forwards;animation-delay:var(--dl,0s)}'
+      + '@keyframes aibFade{to{opacity:1}}'
+      + '.aib-tl i{width:34px;height:34px;border-radius:50%;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);display:grid;place-items:center;color:var(--mu,#667085);font-style:normal}.aib-tl i .ms{font-size:16px}'
+      + '.aib-tl small{color:var(--mu,#98a2b3);font-size:10px;margin-top:-2px}'
+      + '.aib-list{display:none;position:relative;padding:12px;gap:8px;flex-direction:column}.aib-list .aib-n{position:static;transform:none;opacity:1;animation:none;width:100%}.aib-list .aib-box{width:100%}.aib-list .aib-n em{max-width:none;white-space:normal}'
+      + '.aib-foot{position:relative;display:flex;flex-wrap:wrap;gap:18px;padding:12px 16px;font-size:13px;color:var(--mu,#788493);border-top:1px solid var(--line,#eef1f6)}.aib-on{color:#15803d;font-weight:600}'
+      /* the portal presses every button with transform:scale; these are placed by their transform, so keep it while pressed */
+      + '#bpx#bpx#bpx .aib-wrap .aib-n:active{transform:translate(-50%,-50%) scale(.98) !important}#bpx#bpx#bpx .aib-list .aib-n:active{transform:scale(.99) !important}'
+      + '@media(max-width:820px){.aib-wrap{display:none}.aib-list{display:flex}}';
     document.head.appendChild(c);
   }
 
