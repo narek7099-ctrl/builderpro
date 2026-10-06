@@ -1,8 +1,14 @@
 // ai-team: the $49/month AI Team add-on inside a contractor's portal.
-// Three assistants work on that contractor's own business only:
-//   Sales      leads, quotes, follow-ups          (web search)
-//   Marketing  ads, posts, promotions, reviews    (web search)
-//   Office     schedule, reminders, invoices, the daily brief
+// Eight assistants work on that contractor's own business only:
+//   Sales       leads, quotes, follow-ups          (web search)
+//   Marketing   ads, posts, promotions, reviews    (web search)
+//   Office      schedule, reminders, invoices, the daily brief
+//   Client Care progress updates, complaints, reviews
+//   Research    marketing tactics, competitor prices (web search)
+//   Workflows   leads and quotes stuck in the pipeline
+//   Permits     permits, inspections, office rules  (web search)
+//   Projects    overdue phases, overruns, no crew
+// The projects tool reads the contractor's jobs from portal_finance.
 // Models: Sonnet by default; heavy jobs (research, strategy, long plans) go
 // to Opus. Anything that contacts a customer or changes their data waits for
 // the contractor's approval. 150 messages a month per account.
@@ -32,6 +38,11 @@ const AGENTS: Record<string, Agent> = {
   sales: { key: "sales", name: "Sales", web: true, role: "You help win jobs: follow up on new leads and open quotes, write texts and emails that get replies, suggest who to call today, draft call scripts, and spot quotes going cold." },
   marketing: { key: "marketing", name: "Marketing", web: true, role: "You bring in customers: write Facebook and Google ads, social posts, promotions, review requests and replies, and ideas that fit a local contractor. Look at what nearby competitors do when it helps." },
   office: { key: "office", name: "Office", web: false, role: "You keep the business running: today's schedule, appointments, reminders, overdue invoices and quotes, tasks, and the daily brief. Be brief and practical." },
+  clients: { key: "clients", name: "Client Care", web: false, role: "You look after customers who already hired the business: check on active jobs and recent conversations, draft progress updates, reply to questions and complaints calmly, ask happy customers for reviews and referrals, and flag anyone who has gone unanswered. Use the projects tool to see where each job stands." },
+  research: { key: "research", name: "Market Research", web: true, role: "You research how to grow: marketing tactics that work for local contractors, what competitors nearby charge and promote, seasonal demand, ad channels and budgets, and new services worth offering. Back claims with what you find on the web and turn findings into a short plan the owner can act on this month." },
+  workflows: { key: "workflows", name: "Workflow Tracker", web: false, role: "You watch the sales pipeline and automations: find leads stuck in a stage, quotes with no follow-up, contacts missing tags or next steps, appointments without an outcome, and anything the automations should have caught. List what is stuck, how long, and the one action that unsticks each." },
+  permits: { key: "permits", name: "Permits", web: true, role: "You track permits on every active project: what is pending, approved, expired or missing, upcoming inspections and their results, and what each city or county permit office requires (forms, fees, turnaround, inspection booking). Use the projects tool for the job list and the web for office rules. Warn early about anything that could hold up a job." },
+  projects: { key: "projects", name: "Project Issues", web: false, role: "You watch active projects for trouble: phases past their due date, jobs over budget, jobs with no crew assigned, unpaid balances on finished work, missing materials or contracts, and work scheduled with nobody on it. Rank issues by what costs the most money or time and say who should do what." },
 };
 // what the assistants may do without asking; everything else waits for the contractor
 const AUTO_GHL = new Set(["contacts.list", "conversations.list", "conversations.messages", "pipelines.list", "opportunities.list", "calendars.list", "appointments.list", "tags.list", "notes.create", "tasks.create"]);
@@ -42,6 +53,8 @@ const HEAVY = /\b(research|strategy|strategic|plan for|business plan|grow|growth
 const TOOLS: Anthropic.Tool[] = [
   { name: "ghl", description: "Work in this contractor's CRM (GoHighLevel). Reads: contacts.list (args.query to search), conversations.list, conversations.messages (args.id), pipelines.list, opportunities.list, calendars.list, appointments.list (args.startTime/endTime ms), tags.list. Writes: notes.create/tasks.create (args.contactId, body/title/dueDate) run straight away; conversations.send (args.contactId, message, type SMS|Email, subject), contacts.create/update/tag, opportunities.create/move/status, appointments.create wait for the owner's approval. Args are strings; the account is filled in for you.",
     input_schema: { type: "object", properties: { op: { type: "string", enum: GHL_ALLOWED }, args: { type: "object", additionalProperties: { type: "string" } }, why: { type: "string", description: "one line the owner sees if approval is needed" } }, required: ["op", "args"] } },
+  { name: "projects", description: "This contractor's projects in BuilderPro: status, customer, address, estimate, collected, budget and spend, phases with due dates, crew assigned, schedule, permits with inspections, materials and contract state. args.status 'active' (default), 'done' or 'all'.",
+    input_schema: { type: "object", properties: { status: { type: "string", enum: ["active", "done", "all"] } } } },
   { name: "business_info", description: "This contractor's business details from BuilderPro: services, prices, hours, service area, plan.", input_schema: { type: "object", properties: {} } },
 ];
 
@@ -84,6 +97,21 @@ async function runTool(acct: Acct, name: string, input: Record<string, unknown>)
   if (name === "business_info") {
     const s = await sb(`client_settings?user_id=eq.${acct.user_id}&select=data`);
     return { plan: acct.plan, trade: acct.trade, answers: acct.profile, settings: s.ok ? ((await s.json())[0]?.data ?? {}) : {} };
+  }
+  if (name === "projects") {
+    const r = await sb(`portal_finance?owner=eq.${acct.user_id}&select=jobs&limit=1`);
+    const jobs = (r.ok ? ((await r.json())[0]?.jobs ?? []) : []) as Record<string, any>[];
+    const want = String(input.status || "active");
+    const spend = (j: Record<string, any>) => (j.expenses || []).reduce((s: number, e: Record<string, any>) => s + (+e.amt || 0), 0);
+    const list = jobs.filter((j) => want === "all" || (want === "done" ? j.status === "done" : j.status !== "done")).slice(0, 60).map((j) => ({
+      id: j.id, customer: j.name, job: j.title, status: j.status || "active", address: j.addr, estimate: +j.estimate || 0, collected: +j.collected || 0,
+      budget: j.budget?.total ?? null, spent: Math.round(spend(j)),
+      phases: (j.plan?.phases || j.phases || []).map((p: Record<string, any>) => ({ name: p.name || p.label, due: p.due, done: !!(p.doneAt || p.done) })),
+      crew: (j.assignees || []).map((a: Record<string, any>) => a.name).filter(Boolean), dates: (j.sched?.dates || []).slice(0, 12),
+      permits: (j.permits || []).map((p: Record<string, any>) => ({ type: p.type, number: p.number, office: p.office, status: p.status, applied: p.applied, approved: p.approved, expires: p.expires, inspections: p.inspections || [] })),
+      materials: (j.materials?.items || j.materials || []).length ?? 0, contract: j.contract?.status || null,
+    }));
+    return { today: new Date().toISOString().slice(0, 10), count: list.length, projects: list };
   }
   if (name === "ghl") {
     const op = String(input.op);
@@ -178,7 +206,7 @@ function transcript(rows: { role: string; content: unknown; model: string }[]) {
     const b = (m.content as { type: string; text?: string; name?: string; input?: Record<string, unknown> }[]) ?? [];
     if (m.role === "user" && b.every((x) => x.type === "tool_result")) continue;
     const text = b.filter((x) => x.type === "text").map((x) => x.text).join("\n").trim();
-    const tools = b.filter((x) => x.type === "tool_use" || x.type === "server_tool_use").map((x) => x.name === "web_search" ? "Searched: " + (x.input?.query ?? "") : x.name === "ghl" ? "CRM: " + String(x.input?.op ?? "").replace(".", " ") : "Checked business info");
+    const tools = b.filter((x) => x.type === "tool_use" || x.type === "server_tool_use").map((x) => x.name === "web_search" ? "Searched: " + (x.input?.query ?? "") : x.name === "ghl" ? "CRM: " + String(x.input?.op ?? "").replace(".", " ") : x.name === "projects" ? "Checked projects" : "Checked business info");
     if (text || tools.length) out.push({ role: m.role, text, tools, deep: m.model === OPUS });
   }
   return out;

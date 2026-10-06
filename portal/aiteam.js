@@ -1,6 +1,8 @@
 /* ==================================================================
-   AI Team: the $49/month add-on. Three assistants (Sales, Marketing,
-   Office) that work on this contractor's own leads, CRM and marketing.
+   AI Team: the $49/month add-on. Eight assistants (Sales, Marketing,
+   Research, Client Care, Office, Projects, Permits, Workflows) under the
+   AI CEO,
+   working on this contractor's own leads, CRM, projects and marketing.
    Everything they want to send to a customer waits under "Waiting for
    you" until the owner approves it. Backend: supabase/functions/ai-team.
    ================================================================== */
@@ -17,8 +19,20 @@
     marketing: { n: 'Marketing', ic: 'campaign', d: 'Writes your ads, posts and promotions.',
       h: ['Write 3 Facebook ads for this month', 'Plan a week of social posts', 'What are competitors near me offering?'] },
     office: { n: 'Office', ic: 'event_note', d: 'Your schedule, reminders, invoices and the 7am daily brief.',
-      h: ['What’s on my schedule this week?', 'Which quotes and invoices need chasing?', 'Summarize yesterday for me'] }
+      h: ['What’s on my schedule this week?', 'Which quotes and invoices need chasing?', 'Summarize yesterday for me'] },
+    clients: { n: 'Client Care', ic: 'handshake', d: 'Keeps customers updated, answered and happy, and asks for reviews.',
+      h: ['Which customers need a progress update?', 'Draft a reply to an upset customer', 'Who should I ask for a review this week?'] },
+    research: { n: 'Research', ic: 'travel_explore', d: 'Finds the marketing tactics and prices that work in your area.',
+      h: ['What are competitors near me charging?', 'Which ads work best for contractors right now?', 'Give me a 30-day marketing plan'] },
+    workflows: { n: 'Workflows', ic: 'account_tree', d: 'Finds leads and quotes stuck in your pipeline and automations.',
+      h: ['Which leads are stuck and why?', 'Which quotes never got a follow-up?', 'What did my automations miss this week?'] },
+    permits: { n: 'Permits', ic: 'assignment', d: 'Tracks permits, inspections and what each permit office needs.',
+      h: ['Which permits are pending or expiring?', 'What inspections are coming up?', 'What does my city need for a roofing permit?'] },
+    projects: { n: 'Projects', ic: 'construction', d: 'Watches jobs for overdue phases, overruns and missing crew.',
+      h: ['Which projects are behind schedule?', 'Are any jobs over budget?', 'Which jobs have nobody assigned?'] }
   };
+  /* how the chart groups them */
+  var DEPTS = [['Growth', 'trending_up', ['sales', 'marketing', 'research']], ['Customers', 'groups', ['clients', 'office']], ['Operations', 'engineering', ['projects', 'permits', 'workflows']]];
 
   function css() {
     if ($('bpAiCss')) return;
@@ -34,6 +48,7 @@
       '.ai-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}',
       '.ai-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line,#dce3ec);background:#fff;border-radius:999px;padding:8px 14px;font-weight:500;cursor:pointer}',
       '.ai-tab.on{border-color:var(--a,#006fff);background:#e6f0ff;color:#003db8}',
+      '@media(max-width:700px){.ai-top{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-4px;padding:2px 4px}.ai-top::-webkit-scrollbar{display:none}.ai-tab{flex:none}.ai-use{flex:none;margin-left:8px}}',
       '.ai-tab .n{background:#e0574e;color:#fff;border-radius:9px;font-size:11px;padding:0 6px}',
       '.ai-use{margin-left:auto;font-size:13px;color:var(--mu,#788493);display:flex;align-items:center;gap:8px}',
       '.ai-use i{display:block;width:90px;height:6px;border-radius:6px;background:#e7ecf2;overflow:hidden}.ai-use i b{display:block;height:100%;background:var(--a,#006fff)}',
@@ -104,55 +119,39 @@
   };
 
 
-  /* the team as an org board, like the owner's Command Center: you on top,
-     three assistants under you, and what each one works with */
-  var SVGI = {
-    you: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
-    sales: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
-    marketing: '<path d="M3 11l14-6v14L3 13z"/><path d="M7 13v5a2 2 0 0 0 4 0v-3"/>',
-    office: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
-    crm: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M16 11h5M18.5 8.5v5"/>',
-    chat: '<path d="M4 5h16v11H9l-5 4z"/>', web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
-    star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>', post: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 15l5-5 4 4 3-3 4 4"/>',
-    cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/>', inv: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>', sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
-    spark: '<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>', check: '<path d="M5 12.5l4.2 4.2L19 7"/>'
-  };
-  var ic = function (k) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + SVGI[k] + '</svg>'; };
-  var TOOLS = { sales: [['crm', 'CRM', 'contacts'], ['chat', 'Texts', 'follow-ups'], ['web', 'Web', 'search']],
-    marketing: [['post', 'Posts', 'and ads'], ['star', 'Reviews', 'replies'], ['web', 'Web', 'competitors']],
-    office: [['cal', 'Calendar', 'schedule'], ['inv', 'Invoices', 'and quotes'], ['sun', 'Brief', '7am daily']] };
+  /* the team as an org chart: you on top, the AI CEO who watches the whole
+     business under you, then the departments and their assistants */
   function boardHtml(live) {
-    var W = 1000, H = 560, X = { sales: 190, marketing: 500, office: 810 }, topY = 80, midY = 270, toolY = 450;
     var biz = ''; try { biz = ((window.bpSettingsGet && bpSettingsGet().company) || {}).name || ''; } catch (e) {}
-    var lines = '', nodes = '';
-    Object.keys(X).forEach(function (k, i) {
-      var x = X[k], d = 'M500,' + (topY + 34) + ' C500,' + (topY + 130) + ' ' + x + ',' + (midY - 130) + ' ' + x + ',' + (midY - 34);
-      lines += '<path class="aib-ln" id="aibp' + k + '" d="' + d + '"/><circle r="2.4" class="aib-pk"><animateMotion dur="' + (4.5 + i * .7) + 's" begin="' + (i * .8) + 's" repeatCount="indefinite"><mpath href="#aibp' + k + '"/></animateMotion></circle>';
-      nodes += '<button class="aib-n" style="left:' + (x / W * 100) + '%;top:' + (midY / H * 100) + '%" data-open="' + k + '"><span class="aib-i">' + ic(k) + '</span><span><b>' + AG[k].n + '</b><em>' + esc(AG[k].d.split('.')[0]) + '</em></span></button>';
-      TOOLS[k].forEach(function (t, j) {
-        var tx = x + (j - 1) * 92;
-        lines += '<path class="aib-ln aib-t" d="M' + x + ',' + (midY + 34) + ' C' + x + ',' + (midY + 100) + ' ' + tx + ',' + (toolY - 80) + ' ' + tx + ',' + (toolY - 24) + '"/>';
-        nodes += '<div class="aib-tl" style="left:' + (tx / W * 100) + '%;top:' + (toolY / H * 100) + '%"><span>' + ic(t[0]) + '</span>' + t[1] + '<small>' + t[2] + '</small></div>';
-      });
-    });
-    [[250, 'spark', 'Claude', 'AI model'], [750, 'check', 'Approvals', 'you say yes']].forEach(function (s) {
-      lines += '<path class="aib-ln aib-t" d="M' + (s[0] < 500 ? 380 : 620) + ',' + topY + ' L' + (s[0] + (s[0] < 500 ? 26 : -26)) + ',' + topY + '"/>';
-      nodes += '<div class="aib-tl" style="left:' + (s[0] / W * 100) + '%;top:' + (topY / H * 100) + '%"><span>' + ic(s[1]) + '</span>' + s[2] + '<small>' + s[3] + '</small></div>';
-    });
-    nodes += '<div class="aib-n aib-you" style="left:50%;top:' + (topY / H * 100) + '%"><span class="aib-i">' + ic('you') + '</span><span><b>You</b><em>' + esc(biz || 'Owner') + '</em></span></div>';
-    return '<div class="aib"><div class="aib-in"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + lines + '</svg>' + nodes + '</div>'
-      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>3 assistants</span><span>approve before anything sends</span>') + '</div></div>';
+    var node = function (k) {
+      return '<button type="button" class="aib-n" data-open="' + k + '"><span class="aib-i"><span class="ms">' + AG[k].ic + '</span></span><span class="aib-tx"><b>' + esc(AG[k].n) + '</b><em>' + esc(AG[k].d) + '</em></span></button>';
+    };
+    return '<div class="aib">'
+      + '<div class="aib-top"><div class="aib-n aib-you"><span class="aib-i"><span class="ms">person</span></span><span class="aib-tx"><b>You</b><em>' + esc(biz || 'Owner') + ' · you approve what goes out</em></span></div></div>'
+      + '<div class="aib-v"></div>'
+      + '<div class="aib-top"><button type="button" class="aib-n aib-ceo" data-ceoopen="1"><span class="aib-i"><span class="ms">monitoring</span></span><span class="aib-tx"><b>AI CEO</b><em>Watches the whole business, ranks what matters and routes work to the team</em></span></button></div>'
+      + '<div class="aib-v"></div>'
+      + '<div class="aib-depts">' + DEPTS.map(function (d) {
+        return '<div class="aib-d"><div class="aib-dh"><span class="ms">' + d[1] + '</span>' + d[0] + '</div>' + d[2].map(node).join('') + '</div>';
+      }).join('') + '</div>'
+      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + Object.keys(AG).length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
   }
   function boardCss() {
     if (document.getElementById('aib-css')) return; var c = document.createElement('style'); c.id = 'aib-css';
-    c.textContent = '.aib{background:#fff;border:1px solid #dce3ec;border-radius:18px;padding:10px 10px 0;overflow:hidden}.aib-in{position:relative;width:100%;aspect-ratio:1000/560;background-image:radial-gradient(#dfe5ec 1px,transparent 1px);background-size:18px 18px;border-radius:12px}'
-      + '.aib-in>svg{position:absolute;inset:0;width:100%;height:100%}.aib-ln{fill:none;stroke:#c9d3df;stroke-width:1.6}.aib-t{stroke-dasharray:4 5}.aib-pk{fill:#006fff}'
-      + '.aib-n{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dce3ec;border-radius:14px;padding:10px 14px;text-align:left;font:inherit;cursor:pointer;min-width:190px;box-shadow:0 6px 18px -10px rgba(0,21,48,.25);transition:border-color .2s,transform .2s}.aib-n:hover{border-color:#006fff;transform:translate(-50%,-52%)}'
-      + '.aib-you{cursor:default;min-width:200px}.aib-you:hover{transform:translate(-50%,-50%)}.aib-i{width:36px;height:36px;border-radius:10px;background:#e6f0ff;color:#006fff;display:grid;place-items:center;flex:none}.aib-you .aib-i{background:#006fff;color:#fff}.aib-i svg{width:19px;height:19px}'
-      + '.aib-n b{display:block;font-size:14px;color:#001530}.aib-n em{display:block;font-style:normal;font-size:12px;color:#788493;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '.aib-tl{position:absolute;transform:translate(-50%,-24px);display:flex;flex-direction:column;align-items:center;font-size:12px;color:#34435a;text-align:center}.aib-tl span{width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #dce3ec;display:grid;place-items:center;color:#5d6b7c;margin-bottom:5px}.aib-tl svg{width:17px;height:17px}.aib-tl small{font-size:11px;color:#9aa6b4}'
-      + '.aib-foot{display:flex;flex-wrap:wrap;gap:18px;padding:12px 8px;font-size:13px;color:#788493}.aib-on{color:#15803d;font-weight:600}'
-      + '@media(max-width:700px){.aib-in{aspect-ratio:auto;height:auto;display:flex;flex-direction:column;gap:8px;padding:8px;background:none}.aib-in>svg,.aib-tl{display:none}.aib-n{position:static;transform:none;width:100%}.aib-n:hover{transform:none}}';
+    c.textContent = '.aib{background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:16px;padding:20px 18px 6px;background-image:radial-gradient(var(--line,#e4e9ef) 1px,transparent 1px);background-size:18px 18px}'
+      + '.aib-top{display:flex;justify-content:center}.aib-v{width:2px;height:22px;background:var(--line,#c9d3df);margin:0 auto}'
+      + '.aib-n{display:flex;align-items:center;gap:10px;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:12px;padding:10px 12px;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%;box-shadow:0 4px 14px -10px rgba(0,21,48,.3);transition:border-color .15s,transform .15s,box-shadow .15s}'
+      + 'button.aib-n:hover{border-color:#2457d6;transform:translateY(-1px);box-shadow:0 8px 20px -12px rgba(36,87,214,.5)}'
+      + '.aib-you,.aib-ceo{width:min(380px,100%)}.aib-you{cursor:default}'
+      + '.aib-i{width:36px;height:36px;border-radius:10px;background:#e8efff;color:#2457d6;display:grid;place-items:center;flex:none}.aib-i .ms{font-size:20px}'
+      + '.aib-you .aib-i{background:#101828;color:#fff}.aib-ceo{border-color:#c7d7fe;background:linear-gradient(180deg,#f5f8ff,var(--card,#fff))}.aib-ceo .aib-i{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff}'
+      + '.aib-tx{min-width:0}.aib-n b{display:block;font-size:14px;color:var(--ink,#101828)}.aib-n em{display:block;font-style:normal;font-size:12px;line-height:1.35;color:var(--mu,#667085);margin-top:1px}'
+      + '.aib-depts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;position:relative;padding-top:20px;border-top:2px solid var(--line,#c9d3df);margin:0 calc(100%/6 - 7px)}'
+      + '.aib-depts{margin:0;border-top:0}.aib-depts:before{content:"";position:absolute;top:0;left:calc(100%/6);right:calc(100%/6);height:2px;background:var(--line,#c9d3df)}'
+      + '.aib-d{display:flex;flex-direction:column;gap:8px;position:relative;min-width:0}.aib-d:before{content:"";position:absolute;top:-20px;left:50%;width:2px;height:20px;background:var(--line,#c9d3df)}'
+      + '.aib-dh{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu,#667085);background:var(--soft,#f2f4f7);border:1px solid var(--line,#e4e7ec);border-radius:99px;padding:5px 10px;align-self:center}.aib-dh .ms{font-size:15px}'
+      + '.aib-foot{display:flex;flex-wrap:wrap;gap:18px;padding:14px 4px 10px;font-size:13px;color:var(--mu,#788493)}.aib-on{color:#15803d;font-weight:600}'
+      + '@media(max-width:820px){.aib-depts{grid-template-columns:1fr}.aib-depts:before,.aib-d:before{display:none}.aib-d{padding-top:6px}}';
     document.head.appendChild(c);
   }
 
@@ -160,7 +159,7 @@
     var st = A.st; boardCss(); host = host || area();
     if (!st || !st.ok) { host.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc((st && st.error) || 'Could not load.') + '</div></div>'; return; }
     host.innerHTML = '<div class="bpx-panel"><div class="ai-hero"><div class="pitch">'
-      + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">Three assistants who know your business and work your leads, your marketing and your schedule. You approve anything before it goes to a customer.</div>'
+      + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">An AI CEO and eight assistants who know your business: they work your leads, customers, marketing, projects and permits. You approve anything before it goes to a customer.</div>'
       + '<div class="price">$' + st.price + '<small> / month</small></div><div class="bpx-mut" style="font-size:13px">Up to ' + st.cap + ' messages a month, plus a daily brief every morning. Cancel any time.</div>'
       + '<div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="bpx-btn" id="aiAdd">' + (st.addon === 'checkout' ? 'Finish checkout' : st.addon === 'past_due' ? 'Update payment' : 'Add AI Team') + '</button><span class="bpx-mmsg" id="aiMsg"></span></div>'
       + (st.crm ? '' : '<div class="bpx-mut" style="font-size:12.5px;margin-top:10px">Your CRM is still being set up. Your assistants connect to it as soon as it is ready.</div>')
@@ -206,7 +205,8 @@
     wire();
     if (A.tab === 'ceo') return window.bpCeoRender($('aiBody'));
     if (A.tab === 'pitch') return pitch($('aiBody'));
-    if (A.tab === 'board') { $('aiBody').innerHTML = boardHtml(true); $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-open'); A.thread = null; draw(); }; }); }
+    if (A.tab === 'board') { $('aiBody').innerHTML = boardHtml(true); $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-open'); A.thread = null; draw(); }; });
+      var ce = $('aiBody').querySelector('[data-ceoopen]'); if (ce) ce.onclick = function () { if (ceoOn()) { A.tab = 'ceo'; draw(); } }; }
     else if (A.tab === 'wait') approvals(); else chat();
   }
 
