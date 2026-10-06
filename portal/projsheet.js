@@ -20,10 +20,10 @@
   var TABS = {
     details: ['Overview', 'dashboard'], money: ['Money', 'payments'], schedule: ['Schedule', 'calendar_month'],
     crew: ['Crew', 'groups'], subs: ['Subs', 'handyman'], materials: ['Materials', 'inventory_2'], permits: ['Permits', 'assignment'],
-    contract: ['Contract', 'contract'], cust: ['Customer', 'home'], photos: ['Photos', 'photo_library'], docs: ['Documents', 'folder'],
+    contract: ['Contract', 'contract'], cust: ['Customer', 'home'], inspect: ['Inspections', 'fact_check'], photos: ['Photos', 'photo_library'], docs: ['Documents', 'folder'],
     blueprints: ['Blueprints', 'architecture']
   };
-  var ORDER = ['details', 'money', 'schedule', 'crew', 'subs', 'materials', 'permits', 'contract', 'cust', 'photos', 'docs', 'blueprints'];
+  var ORDER = ['details', 'money', 'schedule', 'crew', 'subs', 'materials', 'permits', 'contract', 'cust', 'inspect', 'photos', 'docs', 'blueprints'];
   var lastFocus = null;
 
   function job(id) { return (window.bpJobsGet ? bpJobsGet() : []).filter(function (x) { return x.id === (id || window._bpProjId); })[0]; }
@@ -130,6 +130,7 @@
     if (have.indexOf('permits') < 0) have.push('permits');
     if (!isCrew() && window.bpSubsTab && have.indexOf('subs') < 0) have.push('subs');
     if (!isCrew() && window.bpCustTabOpen && have.indexOf('cust') < 0) have.push('cust');
+    if (window.bpInspMount && have.indexOf('inspect') < 0) have.push('inspect');
     var keys = ORDER.filter(function (k) { return have.indexOf(k) >= 0; }).concat(have.filter(function (k) { return ORDER.indexOf(k) < 0; }));
     bar.className = 'pjs-tabs'; bar.setAttribute('role', 'tablist'); bar.setAttribute('aria-label', 'Project sections');
     bar.innerHTML = keys.map(function (k, i) {
@@ -169,6 +170,12 @@
       cp.innerHTML = '<div id="bpx-pj-cust"></div>';
       body.insertBefore(cp, body.querySelector('[data-pj-pane="photos"]') || null);
     }
+    /* inspection reports (portal/inspect.js): the job's, and the lead's from before it was a job */
+    if (window.bpInspMount) {
+      var ip = document.createElement('div'); ip.setAttribute('data-pj-pane', 'inspect'); ip.hidden = true;
+      ip.innerHTML = '<section class="pjs-sec" id="bpx-pj-insp"></section>';
+      body.insertBefore(ip, body.querySelector('[data-pj-pane="photos"]') || null);
+    }
     var foot = card.querySelector(':scope > div:last-child');
     var tabs = card.querySelector('#bpx-pj-tabs');
     tabs.after(body);
@@ -180,8 +187,8 @@
     }
     Array.prototype.forEach.call(body.querySelectorAll('[data-pj-pane]'), function (p) {
       var k = p.getAttribute('data-pj-pane');
-      if (k !== 'permits' && k !== 'contract' && k !== 'materials' && k !== 'subs' && k !== 'cust') cardify(p, k);
-      else if (k !== 'permits' && k !== 'subs' && k !== 'cust') { var s = document.createElement('section'); s.className = 'pjs-sec'; while (p.firstChild) s.appendChild(p.firstChild); p.appendChild(s); }
+      if (k !== 'permits' && k !== 'contract' && k !== 'materials' && k !== 'subs' && k !== 'cust' && k !== 'inspect') cardify(p, k);
+      else if (k !== 'permits' && k !== 'subs' && k !== 'cust' && k !== 'inspect') { var s = document.createElement('section'); s.className = 'pjs-sec'; while (p.firstChild) s.appendChild(p.firstChild); p.appendChild(s); }
       p.setAttribute('role', 'tabpanel');
     });
     /* the AI CEO's ranked picks (portal/aiceo.js) at the top of the Crew tab:
@@ -222,6 +229,7 @@
       if (t === 'subs' && window.bpSubsTabOpen) bpSubsTabOpen(job());
       if (t === 'crew' && window.bpCeoReco && !isCrew()) bpCeoReco(job());
       if (t === 'cust' && window.bpCustDraw) bpCustDraw();
+      if (t === 'inspect' && window.bpInspMount) bpInspMount(document.getElementById('bpx-pj-insp'), bpInspJobCtx(job()));
       return r;
     };
 
