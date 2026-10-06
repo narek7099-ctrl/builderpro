@@ -72,7 +72,7 @@
     var crew = window.BP_CREWAPP && BP_CREWAPP.me && BP_CREWAPP.me.employee;
     return (crew && crew.name) || T.name || ((window.bpSettingsGet && bpSettingsGet().company) || {}).owner || '';
   }
-  function biz() { var c = (window.bpSettingsGet && bpSettingsGet().company) || {}; return { name: c.name || c.business || '', phone: c.phone || '', logo: c.logo || '', trade: c.trade || '', lic: c.license || c.lic || '' }; }
+  function biz() { var c = (window.bpSettingsGet && bpSettingsGet().company) || {}; return { name: c.name || c.business || '', phone: c.phone || '', logo: c.logo || '', trade: c.trade || (window._bpAcct || {}).trade || '', lic: c.license || c.lic || '' }; }
   function day(d) { if (!d) return ''; var x = new Date(String(d).length <= 10 ? d + 'T12:00:00' : d); return isNaN(x) ? '' : x.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
   function iso(d) { d = d || new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function excerpt(html) { var d = document.createElement('div'); d.innerHTML = String(html || '').replace(/<\/(h2|h3|p|li|div|blockquote)>/gi, ' </$1>'); return (d.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 140); }
@@ -102,21 +102,69 @@
 
   /* ---------------------------------------------------------- templates --- */
   function sec(h, items) { return '<h2>' + h + '</h2>' + (items ? '<ul data-check>' + items.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' : '<p><br></p>'); }
+  /* one template per trade; std() wraps a trade's own sections in the
+     summary / recommendations / next steps every report shares */
+  function std(overview, checks, extra) {
+    return function () {
+      return sec('Summary') + sec(overview[0], overview[1]) + sec(checks[0], checks[1]) + (extra || []).map(function (x) { return sec(x[0], x[1]); }).join('')
+        + sec('Recommendations') + sec('Next steps');
+    };
+  }
+  var TRADE_TPL = {
+    roof: { t: 'Roof inspection', re: /roof/i, b: std(['Roof overview', ['Roof type / material:', 'Approximate age:', 'Layers:', 'Pitch:']],
+      ['Condition', ['Shingles / surface', 'Flashing (chimney, walls, valleys)', 'Vents and boots', 'Gutters and downspouts', 'Decking (soft spots)', 'Attic ventilation']],
+      [['Damage found', ['Hail', 'Wind / missing shingles', 'Leaks / water stains']]]) },
+    hvac: { t: 'HVAC inspection', re: /hvac|heating|\bair\b|cooling|furnace|a\/c\b/i, b: std(['System overview', ['Equipment type (split, package, heat pump, furnace):', 'Make / model / serial:', 'Age:', 'Tonnage / BTU:', 'Refrigerant:']],
+      ['Checks', ['Thermostat operation', 'Air filter', 'Condenser coil and fins', 'Evaporator coil', 'Refrigerant pressures / superheat / subcool', 'Capacitors and contactor', 'Blower motor and wheel', 'Condensate drain and pan', 'Ductwork and returns', 'Burner, heat exchanger and flue', 'Carbon monoxide test']],
+      [['Readings', ['Supply temp:', 'Return temp:', 'Temperature split:', 'Static pressure:', 'Amp draw:']]]) },
+    plumbing: { t: 'Plumbing inspection', re: /plumb/i, b: std(['System overview', ['Supply pipe material:', 'Drain / waste material:', 'Water heater type / age:', 'Main shutoff location:']],
+      ['Checks', ['Water pressure', 'Visible leaks', 'Fixtures and faucets', 'Toilets', 'Drains (speed / clogs)', 'Water heater (anode, T&P valve, venting)', 'Sewer line / cleanouts', 'Shutoff valves', 'Hose bibs', 'Signs of corrosion']],
+      [['Readings', ['Static pressure (psi):', 'Water heater temp:']]]) },
+    electrical: { t: 'Electrical inspection', re: /electric/i, b: std(['Service overview', ['Service size (amps):', 'Panel make / age:', 'Main breaker:', 'Service entrance / meter condition:', 'Grounding and bonding:']],
+      ['Checks', ['Panel labelling', 'Breaker condition / double taps', 'Aluminum or knob-and-tube wiring', 'GFCI protection (kitchen, baths, exterior, garage)', 'AFCI protection', 'Outlets and switches', 'Smoke and CO detectors', 'Exterior and outbuilding wiring', 'Signs of overheating']],
+      [['Readings', ['Voltage L1-L2:', 'Load notes:']]]) },
+    general: { t: 'Remodel walkthrough', re: /general|remodel|contract/i, b: std(['Scope', ['Rooms / areas:', 'What the customer wants:', 'Budget range:', 'Timeline:']],
+      ['Existing conditions', ['Structure / framing', 'Walls and ceilings', 'Floors', 'Plumbing in the area', 'Electrical in the area', 'HVAC in the area', 'Moisture / mold', 'Permits likely needed']],
+      [['Measurements']]) },
+    landscaping: { t: 'Landscape assessment', re: /landscap|lawn|yard|garden/i, b: std(['Property overview', ['Lot size:', 'Sun / shade:', 'Soil type:', 'Slope:']],
+      ['Checks', ['Lawn condition', 'Trees and shrubs', 'Beds and mulch', 'Irrigation (zones, heads, leaks)', 'Drainage / standing water', 'Hardscape (patio, walls, paths)', 'Fencing', 'Lighting']],
+      [['Measurements']]) },
+    pools: { t: 'Pool inspection', re: /pool|spa/i, b: std(['Pool overview', ['Type (gunite, vinyl, fiberglass):', 'Size / gallons:', 'Age:', 'Heater:']],
+      ['Checks', ['Surface / liner', 'Tile and coping', 'Deck', 'Pump', 'Filter', 'Heater', 'Plumbing / visible leaks', 'Skimmers and returns', 'Lights and bonding', 'Safety (fence, gate, drain covers)']],
+      [['Water chemistry', ['pH:', 'Free chlorine:', 'Alkalinity:', 'Calcium hardness:', 'Cyanuric acid:']]]) },
+    trim: { t: 'Trim & carpentry assessment', re: /trim|carpent|millwork/i, b: std(['Scope', ['Rooms / areas:', 'Profile / style wanted:', 'Material (MDF, pine, poplar, PVC):', 'Paint or stain grade:']],
+      ['Existing conditions', ['Baseboard', 'Door casing', 'Window casing', 'Crown', 'Wainscoting / panels', 'Wall straightness', 'Gaps / caulk', 'Water damage or rot']],
+      [['Measurements (linear feet)']]) },
+    painting: { t: 'Paint assessment', re: /paint/i, b: std(['Scope', ['Interior / exterior:', 'Rooms or elevations:', 'Colors / sheen:', 'Number of coats:']],
+      ['Surface condition', ['Peeling / flaking', 'Cracks and holes', 'Water stains', 'Wood rot', 'Mildew', 'Caulk', 'Lead paint risk (pre-1978)', 'Prep and repairs needed']],
+      [['Measurements (sq ft)']]) },
+    countertops: { t: 'Countertop measure & assessment', re: /counter|granite|quartz|stone/i, b: std(['Scope', ['Material wanted:', 'Edge profile:', 'Sink type / mount:', 'Cooktop / appliance cutouts:', 'Backsplash:']],
+      ['Existing conditions', ['Cabinets level and secure', 'Cabinet support for stone', 'Existing top removal', 'Plumbing to disconnect', 'Walls square', 'Seam locations']],
+      [['Measurements (sq ft)']]) },
+    concrete: { t: 'Concrete & paving assessment', re: /concrete|paving|asphalt|driveway/i, b: std(['Scope', ['Area (driveway, patio, walk, slab):', 'Remove and replace or overlay:', 'Finish wanted:', 'Thickness:']],
+      ['Existing conditions', ['Cracks', 'Settling / heaving', 'Spalling / scaling', 'Drainage and slope', 'Tree roots', 'Base / subgrade', 'Access for trucks']],
+      [['Measurements (sq ft)']]) },
+    flooring: { t: 'Flooring assessment', re: /floor/i, b: std(['Scope', ['Rooms:', 'Flooring wanted:', 'Existing flooring to remove:', 'Stairs:', 'Transitions:']],
+      ['Subfloor & conditions', ['Subfloor level / flat', 'Squeaks or soft spots', 'Moisture (concrete test)', 'Door clearances', 'Baseboard to remove / reinstall', 'Furniture to move']],
+      [['Measurements (sq ft)']]) }
+  };
   var TPL = {
-    roof: { t: 'Roof inspection', b: function () {
-      return sec('Summary') + sec('Roof overview', ['Roof type / material:', 'Approximate age:', 'Layers:', 'Pitch:'])
-        + sec('Condition', ['Shingles / surface', 'Flashing (chimney, walls, valleys)', 'Vents and boots', 'Gutters and downspouts', 'Decking (soft spots)', 'Attic ventilation'])
-        + sec('Damage found', ['Hail', 'Wind / missing shingles', 'Leaks / water stains'])
-        + sec('Recommendations') + sec('Next steps'); } },
     damage: { t: 'Damage / insurance report', b: function () {
       return sec('Date of loss and cause') + sec('Areas affected', ['Roof', 'Siding', 'Windows / screens', 'Gutters', 'Interior'])
         + sec('Damage details') + sec('Measurements') + sec('Recommended scope of repair') + sec('Notes for the adjuster'); } },
-    general: { t: 'Site inspection', b: function () {
+    site: { t: 'Site inspection', b: function () {
       return sec('Summary') + sec('What the customer wants') + sec('Existing conditions') + sec('Measurements')
         + sec('Issues found') + sec('Recommendations') + sec('Next steps'); } },
     blank: { t: 'Inspection notes', b: function () { return '<p><br></p>'; } }
   };
-  function tplFor() { return /roof/i.test(biz().trade) ? 'roof' : 'general'; }
+  Object.keys(TRADE_TPL).forEach(function (k) { TPL[k] = TRADE_TPL[k]; });
+  /* the business's trade template; the job's own trade wins when it names one */
+  function tplFor(hint) {
+    var keys = Object.keys(TRADE_TPL), pick = function (txt) { return keys.filter(function (k) { return txt && TRADE_TPL[k].re.test(txt); })[0]; };
+    return pick(hint) || pick(biz().trade) || 'site';
+  }
+  /* chips: this trade first, then the shared ones */
+  function chipKeys(k) { return (TRADE_TPL[k] ? [k] : []).concat(['site', 'damage', 'blank']); }
 
   /* ------------------------------------------------------------- list --- */
   window.bpInspMount = function (el, ctx) {
@@ -151,7 +199,7 @@
   function refresh() { if (I.el && document.body.contains(I.el)) fetchList(I.ctx).then(function (rows) { I.list = rows; drawList(); }).catch(function () {}); }
 
   window.bpInspNew = function () {
-    var c = I.ctx || {}, k = tplFor();
+    var c = I.ctx || {}, k = tplFor(c.trade);
     var r = { id: uuid(), _new: true, contact_id: c.contactId || '', contact_name: c.name || '', address: c.addr || '', job_id: c.jobId || '',
       title: TPL[k].t, kind: k, body: TPL[k].b(), photos: [], status: 'draft', author_name: myName(), inspected_on: iso(), _fresh: true };
     editor(r);
@@ -167,7 +215,7 @@
     var host = document.getElementById('bpx') || document.body;
     var old = document.getElementById('insp-ed'); if (old) old.remove();
     var w = document.createElement('div'); w.id = 'insp-ed'; w.className = 'insp-ed'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'true'); w.setAttribute('aria-label', 'Inspection report');
-    var tplRow = r._fresh ? '<div class="insp-tpl" id="insp-tpl"><span>Start from</span>' + Object.keys(TPL).map(function (k) { return '<button type="button" class="' + (k === r.kind ? 'on' : '') + '" onclick="bpInspTpl(\'' + k + '\')">' + esc(TPL[k].t) + '</button>'; }).join('') + '</div>' : '';
+    var tplRow = r._fresh ? '<div class="insp-tpl" id="insp-tpl"><span>Start from</span>' + chipKeys(r.kind).map(function (k) { return '<button type="button" class="' + (k === r.kind ? 'on' : '') + '" onclick="bpInspTpl(\'' + k + '\')">' + esc(TPL[k].t) + '</button>'; }).join('') + '</div>' : '';
     w.innerHTML = '<div class="insp-bar">'
       + '<button type="button" class="insp-ib" onclick="bpInspClose()" aria-label="Close"><span class="ms">arrow_back</span></button>'
       + '<input class="insp-title" id="insp-title" value="' + esc(r.title) + '" aria-label="Report title"' + (ro ? ' readonly' : '') + '>'
@@ -409,7 +457,7 @@
       var c = _bpContacts.filter(function (x) { return (j.phone && x.phone && d(x.phone) === d(j.phone)) || (j.name && x.name === j.name); })[0];
       if (c) cid = c.id;
     }
-    return { jobId: j.id, contactId: cid, name: j.name || '', addr: j.addr || '' };
+    return { jobId: j.id, contactId: cid, name: j.name || '', addr: j.addr || '', trade: [j.trade, j.type, j.title].filter(Boolean).join(' ') };
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookContact); else hookContact();
