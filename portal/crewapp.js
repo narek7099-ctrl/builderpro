@@ -78,7 +78,10 @@
      A profile photo is stored at <owner>/employees/<id>/avatar.jpg in the
      private project-files bucket; employees.photo_url keeps
      "sb:<path>#<version>" (the version only busts caches). */
-  var AV = window.bpAvatar = { cache: {} };
+  /* index.html's bpAvatar(name, size) draws initials on the contact pages:
+     keep it callable and hang the photo helpers on it */
+  var AV = window.bpAvatar = typeof window.bpAvatar === 'function' ? window.bpAvatar : function () { return ''; };
+  AV.cache = {};
   AV.url = function (ref) {
     if (!ref) return Promise.resolve('');
     if (String(ref).indexOf('sb:') !== 0) return Promise.resolve(ref);
