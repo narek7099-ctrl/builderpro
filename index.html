@@ -32565,7 +32565,7 @@ window.bpOpenConv=async function(id){
   if(!_bpCurConv) return;
   var cs=document.querySelectorAll('#bpx-convlist .bpx-conv'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('sel');
   var cur=q('conv-'+id); if(cur) cur.classList.add('sel');
-  var hasPhone=!!_bpCurConv.phone; _bpMsgType = hasPhone?'SMS':'Email';
+  var hasPhone=!!_bpCurConv.phone; _bpMsgType=(typeof _bpMsgView!=='undefined'&&_bpMsgView==='email')?'Email':'SMS';
   var info=(_bpCurConv.phone||'')+(_bpCurConv.phone&&_bpCurConv.email?'  ·  ':'')+(_bpCurConv.email||'');
   var CHAT='<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.5 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 013.5 11.5 8.5 8.5 0 0112 3a8.5 8.5 0 019 8.5z"/></svg>';
   var MAIL='<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>';
@@ -32575,8 +32575,6 @@ window.bpOpenConv=async function(id){
       +'<div><div class="bpx-thead-name">'+bpEsc(_bpCurConv.name||'Unknown')+'</div>'
       +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div>'
       +'<span class="bpx-rowbtn" style="margin-left:auto;flex:0 0 auto">Profile →</span></div>'
-    +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
-      +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
     +'<div class="bpx-tbody" id="bpx-tbody">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
     +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message…" onkeydown="if(event.key===\'Enter\')bpSendMsg()">'
       +'<button class="bpx-sendbtn" title="Send" onclick="bpSendMsg()">'+SEND+'</button></div>';
@@ -33186,7 +33184,7 @@ window.bpOpenConv=async function(id){
   if(!_bpCurConv) return;
   var cs=document.querySelectorAll('#bpx-convlist .bpx-conv'); for(var k=0;k<cs.length;k++) cs[k].classList.remove('sel');
   var cur=q('conv-'+id); if(cur) cur.classList.add('sel');
-  var hasPhone=!!_bpCurConv.phone; _bpMsgType=hasPhone?'SMS':'Email';
+  var hasPhone=!!_bpCurConv.phone; /* the Texts tab replies by text, the Email tab by email */ _bpMsgType=(typeof _bpMsgView!=='undefined'&&_bpMsgView==='email')?'Email':'SMS';
   var info=(_bpCurConv.phone||'')+(_bpCurConv.phone&&_bpCurConv.email?'  ·  ':'')+(_bpCurConv.email||'');
   var CHAT='<svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 01-8.5 8.5 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 013.5 11.5 8.5 8.5 0 0112 3a8.5 8.5 0 019 8.5z"/></svg>';
   var MAIL='<svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>';
@@ -33197,8 +33195,6 @@ window.bpOpenConv=async function(id){
       +'<div><div class="bpx-thead-name">'+bpEsc(_bpCurConv.name||'Unknown')+'</div>'
       +(info?'<div class="bpx-thead-sub">'+bpEsc(info)+'</div>':'')+'</div>'
       +'<span class="bpx-rowbtn" style="margin-left:auto;flex:0 0 auto">Profile →</span></div>'
-    +'<div class="bpx-tabs"><button class="bpx-mtab" id="tab-SMS" onclick="bpSetMsgType(\'SMS\')">'+CHAT+'Text</button>'
-      +'<button class="bpx-mtab" id="tab-Email" onclick="bpSetMsgType(\'Email\')">'+MAIL+'Email</button></div>'
     +'<div class="bpx-tbody" id="bpx-tbody">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
     +'<div class="bpx-reply"><input id="bpx-replyin" placeholder="Type a message…" onkeydown="if(event.key===\'Enter\')bpSendMsg()">'
       +'<button class="bpx-clockbtn" title="Schedule for later" onclick="bpSchedOneOpen()">'+CLOCK+'</button>'
@@ -40041,7 +40037,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
 <script src="portal/projsheet.js?v=20261019a"></script>
-<script src="portal/contact.js?v=20261019a"></script>
+<script src="portal/contact.js?v=20261019b"></script>
 <script src="portal/inspect.js?v=20261019b"></script>
 <script src="portal/custportal.js?v=20261009b"></script>
 <script src="portal/bpedit.js?v=20261019a"></script>
@@ -40069,7 +40065,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261011a">
 <link rel="stylesheet" href="portal/inspect.css?v=20261019a">
-<link rel="stylesheet" href="portal/contact.css?v=20261019a">
+<link rel="stylesheet" href="portal/contact.css?v=20261019b">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261012a">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
 <link rel="stylesheet" href="portal/custportal.css?v=20261009b">

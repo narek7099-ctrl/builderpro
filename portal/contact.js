@@ -50,6 +50,7 @@
   };
   window.bpCtpInspect = function () {
     if (window.bpCtTab) bpCtTab('inspect');
+    var tb = document.querySelector('[data-ct-tab="inspect"]'); if (tb && tb.scrollIntoView) tb.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(function () { if (window.bpInspNew) bpInspNew(); }, 60);
   };
 

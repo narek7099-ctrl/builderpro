@@ -123,3 +123,5 @@
 #bpx #bpxViewArea .ctp-hero{padding:0 !important}
 #bpx #bpxViewArea .ctp-card{padding:16px 18px !important}
 @media (max-width:640px){ #bpx #bpxViewArea .ctp-card{padding:14px !important} }
+/* the Overview / Inspections tabs hide the grid; its forced display:grid must not win */
+#bpx #bpxViewArea .ctp-grid[hidden],#bpx #bpxViewArea [data-ct-pane][hidden]{display:none !important}
