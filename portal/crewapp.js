@@ -511,7 +511,7 @@
 
   /* ---------------------------------------------- read-only project sheet --- */
   var TABS = [['details', 'Overview', 'dashboard'], ['schedule', 'Schedule', 'calendar_month'], ['crew', 'Crew', 'groups'], ['materials', 'Materials', 'inventory_2'],
-    ['permits', 'Permits', 'assignment'], ['photos', 'Photos', 'photo_library'], ['docs', 'Documents', 'folder'], ['blueprints', 'Blueprints', 'architecture']];
+    ['permits', 'Permits', 'assignment'], ['inspect', 'Inspections', 'fact_check'], ['photos', 'Photos', 'photo_library'], ['docs', 'Documents', 'folder'], ['blueprints', 'Blueprints', 'architecture']];
   function curJob() { return (C.me && C.me.projects || []).filter(function (x) { return x.id === C.job; })[0]; }
   function phasesOf(j) {
     if (j.plan && Array.isArray(j.plan.phases) && j.plan.phases.length) return j.plan.phases.map(function (p) { return { name: p.name, due: p.due, done: !!p.doneAt, days: +p.days || 1 }; });
@@ -553,6 +553,7 @@
   function none(ico, t, p) { return '<div class="pjs-empty sm"><span class="ms">' + ico + '</span><b>' + t + '</b>' + (p ? '<p>' + p + '</p>' : '') + '</div>'; }
   function pane(j, t) {
     var s = j.sched || {};
+    if (t === 'inspect') return '<section class="pjs-sec" id="cs-insp"></section>';
     if (t === 'details') {
       var ph = telOf(j.phone);
       return sec('Customer & site', kv([
@@ -748,6 +749,7 @@
     var j = curJob(), b = $('cs-body'); if (!j || !b) return;
     b.innerHTML = '<div data-pj-pane="' + C.tab + '" role="tabpanel">' + pane(j, C.tab) + '</div>';
     b.scrollTop = 0;
+    if (C.tab === 'inspect' && window.bpInspMount) bpInspMount(b.querySelector('#cs-insp'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
     AV.fill(b);
     /* files in storage are private: fetch a short-lived link for each */
     b.querySelectorAll('[data-ref]').forEach(function (a) {
