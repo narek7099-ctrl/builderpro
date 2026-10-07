@@ -18710,10 +18710,6 @@ function bpPjCardsView(active,done){
     '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt on" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
       +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
-    +'<section class="pjk-live"><div class="pjk-lh"><div><b>Crew live</b><span>Where your projects are and who is clocked in right now. Updates every minute.</span></div>'
-      +'<button class="pjk-lgo" onclick="bpNav(\'routing\')"><span class="ms">route</span>Plan routes</button></div>'
-      +'<div class="pj-map pjk-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
-      +'<div class="pjr-legend"><span><i style="background:#2457d6"></i>Project</span><span><i style="background:#16a34a"></i>Crew on site</span><span><i style="background:#d97706"></i>Clocked in off site</span></div></section>'
     +(window.bpPlanCheckin?bpPlanCheckin():'')
     +'<div class="pjk-stats">'
       +stat('Active projects',active.length,marked.length+' marked')
@@ -18721,7 +18717,11 @@ function bpPjCardsView(active,done){
       +stat('Collected',bpMoneyFmt(col),tot>0?Math.round(col/tot*100)+'% of value':'','good')
       +stat('Still owed',bpMoneyFmt(due),'','owe')
     +'</div>'
-    +'<div class="ml-sec"><b>Marked</b><span class="bpx-mut">'+(marked.length?marked.length+' of 4 · tap the star on a project to pin it here':'Star up to four projects to keep them here, and first on your dashboard')+'</span></div>'
+    +'<section class="pjk-live" style="margin:16px 0 0"><div class="pjk-lh"><div><b>Crew live</b><span>Where your projects are and who is clocked in right now. Updates every minute.</span></div>'
+      +'<button class="pjk-lgo" onclick="bpNav(\'routing\')"><span class="ms">route</span>Plan routes</button></div>'
+      +'<div class="pj-map pjk-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
+      +'<div class="pjr-legend"><span><i style="background:#2457d6"></i>Project</span><span><i style="background:#16a34a"></i>Crew on site</span><span><i style="background:#d97706"></i>Clocked in off site</span></div></section>'
+    +'<div class="ml-sec" style="margin-top:22px"><b>Marked</b><span class="bpx-mut">'+(marked.length?marked.length+' of 4 · tap the star on a project to pin it here':'Star up to four projects to keep them here, and first on your dashboard')+'</span></div>'
     +(marked.length?'<div class="pjk-grid pjk-four">'+marked.map(bpPjCard).join('')+'</div>':'')
     +'<div class="ml-sec" style="margin-top:22px"><b>All projects</b></div>'
     +'<div class="pjk-bar"><div class="pjk-search"><span class="ms">search</span><input id="pjkQ" placeholder="Search customer, job or address" value="'+bpEsc(_pjQ)+'" oninput="_pjQ=this.value;_pjP=1;bpPjGrid()"></div>'
@@ -25320,7 +25320,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply.js?v=20261013a"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
-<script src="portal/receipts.js?v=20261020ar"></script>
+<script src="portal/receipts.js?v=20261020arc"></script>
 <script src="portal/quickbooks.js?v=20261013b"></script>
 <script src="portal/ghlsync.js?v=20261013a"></script>
 <script src="portal/autopause.js?v=20261016b"></script>
