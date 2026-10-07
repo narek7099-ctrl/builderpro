@@ -392,3 +392,8 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-acct-logo,#bpx#bpx#bpx#bpx .hl-acct-logo img{width:40px !important;height:40px !important}
 #bpx#bpx#bpx#bpx .hl-acct-logo{flex:0 0 44px !important;width:44px !important;height:44px !important;overflow:visible !important}
 #bpx#bpx#bpx#bpx .hl-acct-logo img{width:44px !important;height:44px !important;object-fit:contain;filter:brightness(2.1) saturate(1.15) drop-shadow(0 0 6px rgba(120,170,255,.35))}
+/* iPad/Safari: no rubber-band bounce in the app (it dragged the white top bar
+   and flashed white in the corner), and keep the sticky bar on its own layer */
+html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;background:#f3f5f9}
+#bpx#bpx#bpx#bpx .bpx-main{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
+#bpx#bpx#bpx#bpx .hl-top,#bpx#bpx#bpx#bpx .hl-tabs{transform:translateZ(0);backface-visibility:hidden}
