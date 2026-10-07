@@ -42,7 +42,6 @@
     w.innerHTML = '<div class="bpt-spot" aria-hidden="true"></div>'
       + '<div class="bpt-card" tabindex="-1"><div class="bpt-bar"><i></i></div>'
       + '<div class="bpt-top"><span class="bpt-n"></span><button type="button" class="bpt-x" data-t="close" aria-label="Close the tour"><span class="ms">close</span></button></div>'
-      + '<figure class="bpt-fig"><img alt="" decoding="async"></figure>'
       + '<h3 class="bpt-h"></h3><p class="bpt-p" aria-live="polite"></p>'
       + '<div class="bpt-dots" aria-hidden="true">' + STEPS.map(function () { return '<i></i>'; }).join('') + '</div>'
       + '<div class="bpt-act"><button type="button" class="bpt-b ghost" data-t="back" aria-label="Back"><span class="ms">arrow_back</span></button>'
@@ -81,7 +80,7 @@
       var r = el.getBoundingClientRect(), pad = 4;
       spot.style.cssText = 'left:' + (r.left - pad) + 'px;top:' + (r.top - pad) + 'px;width:' + (r.width + pad * 2) + 'px;height:' + (r.height + pad * 2) + 'px';
       spot.classList.add('on');
-      var cw = Math.min(440, W - 32), x = r.right + 18, y = Math.max(16, Math.min(r.top - 20, H - card.offsetHeight - 16));
+      var cw = Math.min(380, W - 32), x = r.right + 18, y = Math.max(16, Math.min(r.top - 20, H - card.offsetHeight - 16));
       if (x + cw > W - 16) x = W - cw - 16;
       card.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + cw + 'px';
       card.classList.remove('mid');
@@ -94,11 +93,7 @@
     var s = STEPS[T.i], c = T.el;
     c.querySelector('.bpt-n').textContent = (T.i + 1) + ' of ' + STEPS.length;
     c.querySelector('.bpt-h').textContent = s[2];
-    /* a picture of the page being described; the next one loads in the background */
-    var img = c.querySelector('.bpt-fig img'), src = 'assets/tour/' + T.i + '.jpg?v=1';
-    if (img.getAttribute('src') !== src) { img.parentNode.classList.remove('on'); img.onload = function () { img.parentNode.classList.add('on'); }; img.src = src; if (img.complete) img.parentNode.classList.add('on'); }
-    img.alt = s[2];
-    if (T.i + 1 < STEPS.length) { var pre = new Image(); pre.src = 'assets/tour/' + (T.i + 1) + '.jpg?v=1'; }
+
     c.querySelector('.bpt-p').textContent = s[3];
     c.querySelectorAll('.bpt-dots i').forEach(function (d, k) { d.className = k < T.i ? 'done' : k === T.i ? 'on' : ''; });
     c.querySelector('[data-t="back"]').disabled = T.i === 0;

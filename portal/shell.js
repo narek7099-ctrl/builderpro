@@ -99,7 +99,7 @@
     /* the card is BuilderPro's, always: the mark and the name, then whose account it is */
     /* the business leads; BuilderPro and the plan sit underneath as a badge */
     var b = $('hlBiz'); if (b) b.textContent = bizName() || 'BuilderPro';
-    var p = $('hlPlan'); if (p) p.innerHTML = '<span class="hl-plan">' + esc(sub() ? 'Subcontractor' : crew() ? 'Crew' : (String(planName() || 'OS').replace(/^BuilderPro\s*/i, '') || 'OS')) + '</span><span class="hl-bp">BuilderPro</span>';
+    var p = $('hlPlan'); if (p) p.innerHTML = '<span class="hl-plan">' + esc(sub() ? 'Subcontractor' : crew() ? 'Crew' : (String(planName() || 'OS').replace(/^BuilderPro\s*/i, '') || 'OS') + ' plan') + '</span>';
     var lg = $('hlAcctLogo');
     if (lg && !lg.querySelector('img')) lg.innerHTML = '<img src="assets/brand/logo-mark-128.png" alt="" width="30" height="30">';
     var av = $('hlAv'); if (av) av.textContent = initials(ownerName() || window._bpEmail || bizName());
@@ -118,7 +118,11 @@
     var last = LS.get('hlTab:' + g.id);
     return ks.some(function (k) { return k[0] === last; }) ? last : ks[0][0];
   }
+  /* belt and braces for browsers without overflow:clip */
+  function unshift() { var m = document.querySelector('#bpx .bpx-main'); if (m && m.scrollLeft) m.scrollLeft = 0; }
+  document.addEventListener('scroll', function (e) { if (e.target && e.target.classList && e.target.classList.contains('bpx-main') && e.target.scrollLeft) e.target.scrollLeft = 0; }, true);
   S.go = function (gid) {
+    unshift();
     var g = (window.BP_NAV || []).filter(function (x) { return x.id === gid; })[0];
     bpNav(g ? firstOf(g) : gid);
   };
