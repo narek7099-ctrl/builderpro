@@ -368,3 +368,15 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display:block"],
 #bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.bpx-donebtn,.bpx-savebtn,.bpx-ghostbtn,.hero-cta,.bpx-mtab,.bpx-rowbtn,.bpx-delbtn,.pm-btn,.pjs-act,.bpx-logo-up,.bpx-logo-rm,.sg-decline)[style*="display: block"]{display:flex !important;align-items:center !important;justify-content:center !important}
 #bpx#bpx#bpx#bpx a:is(.bpx-btn,.bpx-addbtn,.bpx-rowbtn,.bpx-ghostbtn,.hero-cta){text-decoration:none}
+
+/* ---------- sidebar top: the business, with its plan as a badge ---------- */
+#bpx#bpx#bpx#bpx .hl-acct{min-height:56px;padding:9px 10px;border-radius:12px;gap:11px;
+  background:linear-gradient(135deg,rgba(76,125,255,.20),rgba(124,58,237,.14) 60%,rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+#bpx#bpx#bpx#bpx .hl-acct:hover{background:linear-gradient(135deg,rgba(76,125,255,.28),rgba(124,58,237,.20) 60%,rgba(255,255,255,.06))}
+#bpx#bpx#bpx#bpx .hl-acct-logo{width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:#fff;padding:4px;box-shadow:0 4px 12px -4px rgba(0,0,0,.45)}
+#bpx#bpx#bpx#bpx .hl-acct-t b{font-size:14px;font-weight:700;letter-spacing:-.01em}
+#bpx#bpx#bpx#bpx .hl-acct-t small{display:flex;align-items:center;gap:6px;margin-top:3px;overflow:visible}
+#bpx#bpx#bpx#bpx .hl-plan{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  color:#fff;background:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+#bpx#bpx#bpx#bpx .hl-bp{font-size:11px;color:var(--hl-side-mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx .hl-min .hl-acct{background:transparent;border-color:transparent;box-shadow:none}

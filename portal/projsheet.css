@@ -294,3 +294,8 @@ body:has(.bpx-modal.pjs) .oaw-btn,body:has(.bpe) .oaw-btn{display:none !importan
 #bpx .pjs label.cw-row input[type=checkbox]{width:17px;height:17px;flex:0 0 auto;margin:0;padding:0}
 #bpx .pjs .cw-row .cw-n{flex:1;min-width:0}
 #bpx .pjs .cw-list{display:grid;gap:6px}
+/* breathing room on both ends of the tab row; a scrolling row drops its
+   right padding, so a spacer keeps the last tab off the edge */
+#bpx#bpx#bpx#bpx .pjs-tabs{padding:4px 28px 0 !important;gap:6px !important;scroll-padding-inline:28px}
+#bpx#bpx#bpx#bpx .pjs-tabs::after{content:"";flex:0 0 28px}
+@media (max-width:640px){#bpx#bpx#bpx#bpx .pjs-tabs{padding:4px 16px 0 !important;scroll-padding-inline:16px}#bpx#bpx#bpx#bpx .pjs-tabs::after{flex-basis:16px}}
