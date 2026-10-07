@@ -380,3 +380,10 @@ html.bp-appmode body{overflow:hidden}
    right. clip cannot be scrolled at all. */
 #bpx#bpx#bpx#bpx .bpx-main{overflow-x:clip !important}
 #bpx#bpx#bpx#bpx .hl-top,#bpx#bpx#bpx#bpx .hl-tabs{width:100%;min-width:0}
+/* sidebar top: just the BuilderPro logo */
+#bpx#bpx#bpx#bpx .hl-acct{background:transparent !important;border:0 !important;box-shadow:none !important;padding:8px 6px !important;gap:10px}
+#bpx#bpx#bpx#bpx .hl-acct #hlPlan,#bpx#bpx#bpx#bpx .hl-acct .hl-acct-chev{display:none !important}
+#bpx#bpx#bpx#bpx .hl-acct-logo{width:34px !important;height:34px !important;background:transparent !important}
+#bpx#bpx#bpx#bpx .hl-acct-logo img{width:34px;height:34px}
+#bpx#bpx#bpx#bpx .hl-acct #hlBiz{font-size:19px !important;font-weight:700 !important;letter-spacing:-.02em;color:#fff}
+#bpx#bpx#bpx#bpx .hl-acct:hover{background:rgba(255,255,255,.05) !important}

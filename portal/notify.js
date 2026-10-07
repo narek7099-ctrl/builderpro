@@ -69,6 +69,12 @@
   var GROUPS = ['Leads & sales', 'Projects', 'Money', 'Team', 'Customers', 'Subcontractors', 'Deadlines'];
   var KINDS = {
     lead_new:                { g: 0, t: 'New leads',                          ic: 'lead',      r: 'o' },
+    needs_inspection:        { g: 0, t: 'Lead waiting on an inspection or estimate', ic: 'lead', r: 'o' },
+    needs_estimate:          { g: 0, t: 'Estimate to send',                   ic: 'pen',  r: 'o' },
+    needs_invoice:           { g: 0, t: 'Invoice to send',                    ic: 'pay',  r: 'o' },
+    start_job:               { g: 0, t: 'Paid, project not started',          ic: 'work', r: 'o' },
+    text_message:            { g: 4, t: 'New text messages',                  ic: 'chat', r: 'o' },
+    reminder:                { g: 6, t: 'To-do reminders',                    ic: 'cal',  r: 'o' },
     contract_signed:         { g: 0, t: 'Contract signed',                    ic: 'pen',            r: 'o' },
     job_new:                 { g: 1, t: 'New project added',                  ic: 'work',            r: 'o' },
     job_done:                { g: 1, t: 'Project finished',                   ic: 'done',        r: 'ocs' },
