@@ -24,27 +24,46 @@ function bpChkLoad(){
     if(r&&r.error)throw r.error; bpChkRender((r&&r.data)||[],false);
   }).catch(function(e){ el.innerHTML='<span class="bpx-mut">Couldn\'t load checks'+(e&&/relation|does not exist/i.test(String(e.message||e))?' — the roof_checks table isn\'t created yet (run the migration).':'.')+'</span>'; });
 }
+/* Calculator leads are worked by the automations (they go straight into the
+   CRM and the follow-up workflows), so this page only reports on them:
+   how many, how warm, which tools and areas bring them, and the latest few. */
 function bpChkRender(rows,demo){
   var el=q('bpChkList'); if(!el)return; el.classList.remove('bpx-mut');
-  var tab=q('bpChkTab'); if(tab)tab.textContent='Checks'+(rows.length?' ('+rows.length+')':'');
-  if(!rows.length){ el.innerHTML='<span class="bpx-mut">Nothing yet. Every homeowner who runs a health or damage check (or the roof age check) on your site lands here with their score — even if they don\'t book.</span>'; return; }
-  var col=function(b){return b==='good'?'#15803d':b==='mid'?'#b45309':b==='warn'?'#c2410c':'#b91c1c';};
-  var pg=bpPage('checks',rows,10,'bpChkRender(window._bpChkRows,window._bpChkDemo)'); window._bpChkRows=rows; window._bpChkDemo=demo;
-  el.innerHTML=(demo?'<div style="background:#fff7ed;border:1px solid #f59e0b;color:#92400e;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:10px"><span class=ms>warning</span> DEMO — sample checks. Sign in to see the real ones from your site.</div>':'')
-    +pg.items.map(function(c){
-      var when=c.created_at?new Date(c.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
-      var ck=bpChkKind(c), iss=(c.issues||[]).filter(function(x){return !/^(photo|q):/.test(x);}), pics=(c.issues||[]).filter(function(x){return /^photo:data:image\/(jpeg|png|webp);base64,/.test(x);}).map(function(x){return x.slice(6);});
-      var facts=[c.age!=null?'~'+c.age+' yrs':'',ck.tool==='roof'?(c.material||''):'',iss.length?iss.join(', '):'no issues noted',c.storm==='yes'?'storm last year':'',c.permit_year?'permit '+c.permit_year:(c.built_year?'built '+c.built_year:'')].filter(Boolean).join(' · ');
-      var kind='<span class="bpx-badge" style="margin-right:4px">'+bpEsc(ck.label)+'</span>';
-      var thumbs=pics.length?'<div style="display:flex;gap:6px;margin-top:6px">'+pics.map(function(u){return '<a href="'+u+'" target="_blank" rel="noopener"><img src="'+u+'" alt="Damage photo" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';}).join('')+'</div>':'';
-      var who=c.name||c.phone?('<b>'+bpEsc(c.name||'No name')+'</b>'+(c.phone?' · <a href="tel:'+bpEsc(c.phone)+'" style="color:var(--blue);text-decoration:none">'+bpEsc(c.phone)+'</a>':'')+(c.email?' · '+bpEsc(c.email):'')):'<span class="bpx-mut">No contact left — address only</span>';
-      var st=c.status&&c.status!=='new'?'<span class="bpx-badge'+(c.status==='won'?' ok':c.status==='lost'?' bad':'')+'">'+bpEsc(c.status)+'</span>':'';
-      var acts=(c.status==='new'||!c.status)?'<button class="bpx-rowbtn primary" style="margin:0" onclick="bpChkStatus(this,\''+bpEsc(c.id)+'\',\'contacted\')">Contacted</button>':(c.status==='contacted'?'<button class="bpx-rowbtn primary" style="margin:0" onclick="bpChkStatus(this,\''+bpEsc(c.id)+'\',\'booked\')">Booked</button>':(c.status==='booked'?'<button class="bpx-rowbtn primary" style="margin:0" onclick="bpChkStatus(this,\''+bpEsc(c.id)+'\',\'won\')">Won</button>':''));
-      return '<div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap">'
-        +'<span title="'+bpEsc(c.label||'')+'" style="flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:'+col(c.band)+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">'+(c.score!=null?c.score:'—')+'</span>'
-        +'<div style="flex:1;min-width:200px"><div style="font-size:13.5px">'+kind+'<b>'+bpEsc(c.address||'Address not given')+'</b> '+st+'</div><div style="font-size:12.5px;margin-top:2px">'+who+'</div><div class="bpx-mut" style="font-size:11.5px;margin-top:2px">'+bpEsc((c.label&&ck.tool!=='roof'?c.label+' · ':'')+facts)+(when?' · '+when:'')+'</div>'+thumbs+'</div>'
-        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+(demo?'':bpDelBtn("bpChkDel('"+String(c.id).replace(/'/g,"")+"')",'Delete this check'))+acts+(c.address?'<a class="bpx-rowbtn" style="margin:0;text-decoration:none" href="https://maps.apple.com/?q='+encodeURIComponent(c.address)+'" target="_blank" rel="noopener">Map</a>':'')+'</div></div>';
-    }).join('')+pg.nav;
+  window._bpChkRows=rows; window._bpChkDemo=demo;
+  var DAY=864e5, now=Date.now(), t=function(c){return c.created_at?Date.parse(c.created_at):0;};
+  var m30=rows.filter(function(c){return now-t(c)<30*DAY;}), prev=rows.filter(function(c){var a=now-t(c);return a>=30*DAY&&a<60*DAY;});
+  var withC=rows.filter(function(c){return c.phone||c.email;}).length, urgent=m30.filter(function(c){return c.band==='bad'||c.band==='warn';}).length;
+  var pct=function(a,b){return b?Math.round(a/b*100):0;}, delta=prev.length?Math.round((m30.length-prev.length)/prev.length*100):null;
+  var tile=function(lbl,val,sub,ic){return '<div class="cl-tile"><span class="ms">'+ic+'</span><small>'+lbl+'</small><b>'+val+'</b><em>'+sub+'</em></div>';};
+  /* last 30 days, one bar a day */
+  var days=[];for(var i=29;i>=0;i--){var d0=new Date(now-i*DAY);d0.setHours(0,0,0,0);days.push({d:d0,n:0});}
+  m30.forEach(function(c){var d=new Date(t(c));d.setHours(0,0,0,0);days.forEach(function(x){if(x.d.getTime()===d.getTime())x.n++;});});
+  var mx=Math.max(1,Math.max.apply(0,days.map(function(x){return x.n;})));
+  var bars=days.map(function(x){return '<i title="'+x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+': '+x.n+'" style="height:'+Math.max(4,x.n/mx*100)+'%"'+(x.n?'':' class="z"')+'></i>';}).join('');
+  var count=function(fn){var o={};rows.forEach(function(c){var k=fn(c);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});};
+  var list=function(arr,empty){if(!arr.length)return '<div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>';var top=arr[0][1];return arr.slice(0,6).map(function(r){return '<div class="cl-row"><span>'+bpEsc(r[0])+'</span><i><b style="width:'+Math.round(r[1]/top*100)+'%"></b></i><em>'+r[1]+'</em></div>';}).join('');};
+  var tools=count(function(c){return bpChkKind(c).label;}), zips=count(function(c){return c.zip||'';});
+  var bands=[['bad','Needs attention now','#dc2626'],['warn','Needs attention soon','#ea580c'],['mid','Keep an eye on it','#d97706'],['good','Healthy','#16a34a']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
+  var bandBar=rows.length?'<div class="cl-stack">'+bands.filter(function(x){return x[1];}).map(function(x){return '<i style="flex:'+x[1]+';background:'+x[0][2]+'" title="'+x[0][1]+': '+x[1]+'"></i>';}).join('')+'</div><div class="cl-legend">'+bands.map(function(x){return '<span><i style="background:'+x[0][2]+'"></i>'+x[0][1]+' <b>'+x[1]+'</b></span>';}).join('')+'</div>':'<div class="bpx-mut" style="font-size:12.5px">No results yet.</div>';
+  var recent=rows.slice(0,8).map(function(c){
+    var ck=bpChkKind(c), when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    var col=c.band==='good'?'#16a34a':c.band==='mid'?'#d97706':c.band==='warn'?'#ea580c':'#dc2626';
+    return '<div class="cl-lead"><span class="cl-score" style="background:'+col+'">'+(c.score!=null?c.score:'–')+'</span><div><b>'+bpEsc(c.name||(c.phone?c.phone:'Anonymous'))+'</b><small>'+bpEsc(ck.label)+(c.zip?' · '+bpEsc(c.zip):'')+(c.label?' · '+bpEsc(c.label):'')+'</small></div><em>'+when+'</em></div>';
+  }).join('');
+  el.innerHTML=(demo?'<div class="cl-demo"><span class=ms>info</span> Sample numbers. Sign in to see your real calculator leads.</div>':'')
+    +'<div class="cl-tiles">'
+      +tile('Leads, last 30 days',m30.length,delta==null?'from your calculators':(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'% vs the 30 before','calculate')
+      +tile('Left contact info',pct(withC,rows.length)+'%',withC+' of '+rows.length+' all time','contact_phone')
+      +tile('Urgent, last 30 days',urgent,'need work now or soon','priority_high')
+      +tile('Top tool',tools.length?bpEsc(tools[0][0]):'—',tools.length?tools[0][1]+' leads':'no leads yet','star')
+    +'</div>'
+    +'<div class="cl-grid">'
+      +'<section class="cl-card cl-wide"><div class="cl-h"><b>Leads per day</b><span>last 30 days</span></div><div class="cl-bars">'+bars+'</div><div class="cl-axis"><span>'+days[0].d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span><span>Today</span></div></section>'
+      +'<section class="cl-card"><div class="cl-h"><b>Which tools bring leads</b></div>'+list(tools,'No leads yet.')+'</section>'
+      +'<section class="cl-card"><div class="cl-h"><b>Top ZIP codes</b></div>'+list(zips,'No ZIP codes yet.')+'</section>'
+      +'<section class="cl-card"><div class="cl-h"><b>How urgent</b></div>'+bandBar+'</section>'
+      +'<section class="cl-card"><div class="cl-h"><b>Latest leads</b><span>followed up automatically</span></div>'+(recent||'<div class="bpx-mut" style="font-size:12.5px">Nothing yet.</div>')+'</section>'
+    +'</div>';
 }
 /* Test runs, duplicates, and the contractor's own kids playing with the widget
    all land in here — they need to be able to clear them out. */
@@ -65,12 +84,29 @@ window.bpCsvRoofChecks=function(){var rows=window._bpChkRows||[];bpCsv('checks',
 /* the page shell */
 window.bpChecks=function(){
   var area=q('bpxViewArea'); if(!area)return;
-  area.innerHTML='<div class="bpx-panel">'
-    +'<div class="bpx-chead" style="margin-bottom:6px"><div><b id="bpChkTab" style="font-size:16px">Checks</b>'
-    +'<div class="bpx-mut" style="font-size:12.5px;margin-top:3px">Homeowners who ran a health or damage check (or the roof age check) on your site · the ones who left a number are warm</div></div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvRoofChecks()','Export CSV')
-    +'<button class="bpx-btn ghost" style="width:auto;margin:0;padding:9px 14px;font-size:13px" onclick="bpNav(\'calculator\')"><span class=ms style="font-size:17px;vertical-align:-4px;margin-right:4px">calculate</span>My Calculators</button></div></div>'
-    +'<div id="bpChkList" class="bpx-mut" style="font-size:13px">Loading checks…</div></div>';
+  bpChkCss();
+  area.innerHTML='<div class="cl">'
+    +'<div class="cl-top"><div><h2>Calculator leads</h2><p>Homeowners who used your calculators and checkers. They go straight into your automations, so follow-up happens on its own; this page shows how they are doing.</p></div>'
+    +'<div class="cl-acts">'+bpCsvBtn('bpCsvRoofChecks()','Export CSV')
+    +'<button class="bpx-btn ghost" onclick="bpNav(\'calculator\')"><span class=ms>calculate</span>My Calculators</button></div></div>'
+    +'<div id="bpChkList" class="bpx-mut" style="font-size:13px">Loading…</div></div>';
   if(window.bpSpin)bpSpin(false);
   bpChkLoad();
 };
+function bpChkCss(){
+  if(document.getElementById('cl-css'))return;var c=document.createElement('style');c.id='cl-css';
+  c.textContent='#bpx .cl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:16px}#bpx .cl-top h2{margin:0;font-size:20px;color:var(--ink)}#bpx .cl-top p{margin:4px 0 0;font-size:13px;color:var(--mu);max-width:620px}'
+   +'#bpx .cl-acts{display:flex;gap:8px;flex-wrap:wrap}#bpx .cl-acts .bpx-btn{width:auto;margin:0;gap:6px}#bpx .cl-acts .ms{font-size:17px}'
+   +'#bpx .cl-demo{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#92400e;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:8px 12px;margin-bottom:12px}#bpx .cl-demo .ms{font-size:18px}'
+   +'#bpx .cl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}'
+   +'#bpx .cl-tile{background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;min-width:0}#bpx .cl-tile .ms{position:absolute;right:14px;top:14px;font-size:20px;color:#2457d6;background:#eef3ff;border-radius:8px;padding:5px}'
+   +'#bpx .cl-tile small{display:block;font-size:12px;color:var(--mu);font-weight:600}#bpx .cl-tile b{display:block;font-size:24px;margin-top:6px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:30px}#bpx .cl-tile em{display:block;font-style:normal;font-size:12px;color:var(--mu);margin-top:2px}'
+   +'#bpx .cl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#bpx .cl-wide{grid-column:1/-1}'
+   +'#bpx .cl-card{background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}#bpx .cl-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}#bpx .cl-h b{font-size:14.5px;color:var(--ink)}#bpx .cl-h span{font-size:12px;color:var(--mu)}'
+   +'#bpx .cl-bars{display:flex;align-items:flex-end;gap:3px;height:120px}#bpx .cl-bars i{flex:1;background:#2457d6;border-radius:3px 3px 0 0;min-width:0}#bpx .cl-bars i.z{background:var(--line)}#bpx .cl-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--mu);margin-top:6px}'
+   +'#bpx .cl-row{display:grid;grid-template-columns:minmax(0,140px) 1fr 34px;align-items:center;gap:10px;padding:5px 0;font-size:13px}#bpx .cl-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}#bpx .cl-row i{height:8px;background:var(--soft,#f2f4f7);border-radius:6px;overflow:hidden}#bpx .cl-row i b{display:block;height:100%;background:#2457d6;border-radius:6px}#bpx .cl-row em{font-style:normal;text-align:right;font-weight:600;color:var(--ink)}'
+   +'#bpx .cl-stack{display:flex;height:14px;border-radius:8px;overflow:hidden;gap:2px}#bpx .cl-legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:12px;font-size:12.5px;color:var(--mu)}#bpx .cl-legend span{display:flex;align-items:center;gap:6px}#bpx .cl-legend i{width:9px;height:9px;border-radius:50%}#bpx .cl-legend b{color:var(--ink);margin-left:auto}'
+   +'#bpx .cl-lead{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line-2,var(--line))}#bpx .cl-lead:first-of-type{border-top:0}#bpx .cl-score{flex:0 0 32px;height:32px;border-radius:8px;color:#fff;font-weight:700;font-size:12.5px;display:grid;place-items:center}#bpx .cl-lead div{flex:1;min-width:0}#bpx .cl-lead b{display:block;font-size:13px;color:var(--ink)}#bpx .cl-lead small{display:block;font-size:11.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#bpx .cl-lead em{font-style:normal;font-size:12px;color:var(--mu)}'
+   +'@media(max-width:900px){#bpx .cl-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}#bpx .cl-grid{grid-template-columns:minmax(0,1fr)}}';
+  document.head.appendChild(c);
+}

@@ -15170,7 +15170,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Checks',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -15188,9 +15188,9 @@ var BP_NAV=[
   {id:'dashboard',l:'Dashboard',ico:'dashboard'},
   {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
-  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['leadsources','Lead Sources'],['checks','Checks'],['automations','Automations'],['calculator','Calculators']]},
+  {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['automations','Automations'],['calculator','Calculators']] /* 'leadsources' still opens if called, just out of the menu */},
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['installations','Installations'],['employees','Employees'],['subs','Subcontractors']]},
-  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['ledger','Income & expenses'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
+  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
   {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['receipts','Receipts'],['mattemplates','Templates']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['website','Website'],['social','Social Media'],['competitors','Competitors']]},
@@ -20102,6 +20102,7 @@ function bpFinCatChart(d){
     centre:bpMoneyFmt(tot),centreNote:'out, all time'});
 }
 function bpFinances(){
+  if(_bpFinView==='ledger')_bpFinView='overview';
   var d=bpFinData();
   var recRules=[]; bpFinGet().forEach(function(f,fi){ if(f.recur) recRules.push({f:f,fi:fi}); });
   var recMonthly=recRules.reduce(function(t,r){ return t+(r.f.kind==='expense'?bpRecurMonthly(r.f):0); },0);
@@ -20151,7 +20152,11 @@ function bpFinances(){
           +'</tbody></table></div>':'<div class="bpx-empty2">Nothing repeats yet. Add an expense or income and set <b>Repeats</b> to weekly, monthly or yearly — rent, software, insurance, a retainer.</div>')
         +'</div>'
       +'<div class="bpx-panel"><div class="bpx-chead" style="margin-bottom:12px"><div class="bpx-ptitle" style="margin:0">Per-job profit<span class="lg2" style="margin-left:8px">completed jobs — tap one to add income &amp; costs</span></div>'+bpCsvBtn('bpCsvJobs()')+'</div>'
-      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'+pjPg.nav+'</div>')
+      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Job</th><th class="bpx-r">Est.</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th></tr></thead><tbody>'+pjHtml+'</tbody></table></div>'+pjPg.nav+'</div>'
+      /* Income & expenses lives here now (the separate tab is gone) */
+      +'<div class="bpx-panel"><div class="bpx-ptitle">Income &amp; expenses<span class="lg2">every dollar in and out</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
+      +'<div class="bpx-finrow-btns">'+bpCsvBtn('bpCsvLedger()')+'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
+      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>')
     +vp('invoices',
       '<div class="bpx-panel"><div class="bpx-ptitle">Invoices<span class="lg2">real invoices — payment updates your account automatically</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxInvCount" style="font-size:12.5px"></span></div>'
@@ -20160,10 +20165,7 @@ function bpFinances(){
       '<div class="bpx-panel"><div class="bpx-ptitle">Estimates<span class="lg2">formal quotes your customer can accept with one tap</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxEstCount" style="font-size:12.5px"></span></div>'
       +'<div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>')
-    +vp('ledger',
-      '<div class="bpx-panel"><div class="bpx-ptitle">Income &amp; expenses<span class="lg2">every dollar in and out</span></div><div class="bpx-chead" style="margin-bottom:14px"><div class="bpx-jobtabs"><button class="bpx-jt'+(_bpFinTab==='all'?' on':'')+'" onclick="bpFinTab(\'all\')">All</button><button class="bpx-jt'+(_bpFinTab==='income'?' on':'')+'" onclick="bpFinTab(\'income\')">Income</button><button class="bpx-jt'+(_bpFinTab==='expense'?' on':'')+'" onclick="bpFinTab(\'expense\')">Expenses</button></div>'
-      +'<div class="bpx-finrow-btns">'+bpCsvBtn('bpCsvLedger()')+'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
-      +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>');
+
   bpInvLoad();
   bpEstLoad();
 }
@@ -25282,7 +25284,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply.js?v=20261013a"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
-<script src="portal/receipts.js?v=20261013a"></script>
+<script src="portal/receipts.js?v=20261020a"></script>
 <script src="portal/quickbooks.js?v=20261013b"></script>
 <script src="portal/ghlsync.js?v=20261013a"></script>
 <script src="portal/autopause.js?v=20261016b"></script>
@@ -25303,8 +25305,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/teamchat.js?v=20261004a"></script>
 <script src="portal/subapp.js?v=20261004a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
-<script src="portal/aiteam.js?v=20261019b"></script>
-<script src="portal/aiceo.js?v=20261016d"></script>
+<script src="portal/aiteam.js?v=20261020a"></script>
+<script src="portal/aiceo.js?v=20261020a"></script>
 <script src="portal/storm.js?v=20261017b"></script>
 <script src="portal/aiceo-map.js?v=20261011a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
@@ -25313,7 +25315,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aibrain.js?v=20260930a"></script>
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261001a"></script>
-<script src="portal/checks.js?v=20261001a"></script>
+<script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261002f"></script>
 <script src="site/vendor/lenis.min.js?v=20260921-a"></script>
 <script src="site/vendor/gsap.min.js?v=20260919-i"></script>
@@ -25321,7 +25323,7 @@ window.bpRepCopy=function(text,btn){
 <script src="site/vendor/SplitText.min.js?v=20260919-i"></script>
 <script src="site/site.js?v=20260921-a"></script>
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
-<link rel="stylesheet" href="portal/projsheet.css?v=20261011a">
+<link rel="stylesheet" href="portal/projsheet.css?v=20261020a">
 <link rel="stylesheet" href="portal/inspect.css?v=20261019a">
 <link rel="stylesheet" href="portal/contact.css?v=20261019b">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261012a">
@@ -25331,11 +25333,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
-<link rel="stylesheet" href="portal/shell.css?v=20261019a">
+<link rel="stylesheet" href="portal/shell.css?v=20261020a">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
-<script src="portal/shell.js?v=20261004a"></script>
+<script src="portal/shell.js?v=20261020a"></script>
 <script src="portal/notify.js?v=20261017a"></script>
-<script src="portal/tour.js?v=20261019a"></script>
-<link rel="stylesheet" href="portal/tour.css?v=20261019a">
+<script src="portal/tour.js?v=20261020a"></script>
+<link rel="stylesheet" href="portal/tour.css?v=20261020a">
 </html>

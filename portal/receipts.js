@@ -69,17 +69,57 @@
     var rows = rs.map(function (r) { return { d: String(r.date || ''), a: +r.total || 0, job: r.jobId }; })
       .concat(cr.map(function (x) { return { d: ymd(x.r.at), a: crewAmt(x.j, x.r), job: x.j.id }; }));
     var sum = function (f) { return rows.filter(f).reduce(function (t, x) { return t + x.a; }, 0); };
-    var stat = function (l, v, n) { return '<div class="pjk-stat"><span>' + l + '</span><b>' + v + '</b>' + (n ? '<small>' + n + '</small>' : '') + '</div>'; };
-    area.innerHTML = '<div class="pjk-stats">'
-        + stat('This month', money(sum(function (x) { return x.d.slice(0, 7) === ym; })), (function (n) { return n + (n === 1 ? ' receipt' : ' receipts'); })(rows.filter(function (x) { return x.d.slice(0, 7) === ym; }).length))
-        + stat('This year', money(sum(function (x) { return x.d.slice(0, 4) === yr; })), '')
-        + stat('On jobs', money(sum(function (x) { return !!x.job; })), 'counted in job costs')
-        + stat('Overhead', money(sum(function (x) { return !x.job; })), 'not tied to a job')
+    rcpCss();
+    var stat = function (ic, l, v, n) { return '<div class="rcp-stat"><span class="rcp-si"><span class="ms">' + ic + '</span></span><small>' + l + '</small><b>' + v + '</b>' + (n ? '<em>' + n + '</em>' : '') + '</div>'; };
+    var mN = rows.filter(function (x) { return x.d.slice(0, 7) === ym; }).length;
+    /* the last twelve months, one bar each */
+    var months = []; for (var i = 11; i >= 0; i--) { var d0 = new Date(); d0.setDate(1); d0.setMonth(d0.getMonth() - i); var k = d0.getFullYear() + '-' + String(d0.getMonth() + 1).padStart(2, '0'); months.push({ k: k, l: d0.toLocaleDateString('en-US', { month: 'short' }), v: sum(function (x) { return x.d.slice(0, 7) === k; }) }); }
+    var mx = Math.max.apply(0, months.map(function (m) { return m.v; }).concat([1]));
+    var chart = '<div class="rcp-bars">' + months.map(function (m) { return '<div class="rcp-bar" title="' + m.l + ': ' + money(m.v) + '"><i style="height:' + Math.max(m.v ? 6 : 2, Math.round(m.v / mx * 100)) + '%"' + (m.k === ym ? ' class="on"' : '') + '></i><small>' + m.l.charAt(0) + '</small></div>'; }).join('') + '</div>';
+    /* where the money goes: by store this year */
+    var bySt = {}; rs.forEach(function (r) { if (String(r.date || '').slice(0, 4) !== yr) return; var n = r.supplierName || 'Other'; bySt[n] = (bySt[n] || 0) + (+r.total || 0); });
+    var top = Object.keys(bySt).map(function (n) { return [n, bySt[n]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 5), tmax = top.length ? top[0][1] : 1;
+    var stores = top.length ? top.map(function (t) { return '<div class="rcp-st"><span class="rcp-av">' + esc(String(t[0]).charAt(0).toUpperCase()) + '</span><span class="rcp-sn">' + esc(t[0]) + '</span><i><b style="width:' + Math.round(t[1] / tmax * 100) + '%"></b></i><em>' + money(t[1]) + '</em></div>'; }).join('')
+      : '<div class="bpx-mut" style="font-size:12.5px">Your stores show up here once you add receipts.</div>';
+    var onJob = sum(function (x) { return !!x.job; }), over = sum(function (x) { return !x.job; }), tot = onJob + over;
+    area.innerHTML = '<div class="rcp">'
+      + '<div class="rcp-hero"><div class="rcp-hx"><span class="rcp-hi"><span class="ms">receipt_long</span></span><div><b>Bought something?</b><span>Snap the receipt. We read the store, the items and the total; you pick the job, and it lands on that job as a Materials cost and in Finances.</span></div></div>'
+      + '<button class="rcp-up" onclick="SP.rcOpen()"><span class="ms">photo_camera</span>Upload receipt</button></div>'
+      + '<div class="rcp-stats">'
+        + stat('calendar_today', 'This month', money(sum(function (x) { return x.d.slice(0, 7) === ym; })), mN + (mN === 1 ? ' receipt' : ' receipts'))
+        + stat('date_range', 'This year', money(sum(function (x) { return x.d.slice(0, 4) === yr; })), rows.filter(function (x) { return x.d.slice(0, 4) === yr; }).length + ' receipts')
+        + stat('construction', 'On jobs', money(onJob), 'counted in job costs')
+        + stat('apartment', 'Overhead', money(over), 'not tied to a job')
       + '</div>'
-      + '<div class="rc-hero"><div><b>Bought something?</b><span>Snap the receipt. We read the store, the items and the total, you pick the job, and it lands on that job as a Materials expense and in Finances.</span></div>'
-      + '<button class="bpx-addbtn" onclick="SP.rcOpen()"><span class="ms" style="font-size:18px;vertical-align:-4px">photo_camera</span> Upload receipt</button></div>'
-      + SP.rcSection();
+      + '<div class="rcp-grid"><section class="rcp-card"><div class="rcp-h"><b>Spending by month</b><span>last 12 months</span></div>' + chart + '</section>'
+      + '<section class="rcp-card"><div class="rcp-h"><b>Top stores</b><span>' + yr + '</span></div>' + stores
+      + (tot ? '<div class="rcp-split"><div class="rcp-sbar"><i style="flex:' + onJob + '"></i><i style="flex:' + over + '"></i></div><div class="rcp-sleg"><span><i></i>Jobs ' + Math.round(onJob / tot * 100) + '%</span><span><i class="o"></i>Overhead ' + Math.round(over / tot * 100) + '%</span></div></div>' : '')
+      + '</section></div>'
+      + SP.rcSection() + '</div>';
   };
+  function rcpCss() {
+    if (document.getElementById('rcp-css')) return; var c = document.createElement('style'); c.id = 'rcp-css';
+    c.textContent = '#bpx .rcp-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 22px;border-radius:14px;margin-bottom:14px;color:#fff;background:radial-gradient(120% 160% at 0% 0%,#3b82f6,transparent 60%),linear-gradient(135deg,#1d4ed8,#4338ca);box-shadow:0 14px 30px -18px rgba(29,78,216,.7)}'
+      + '#bpx .rcp-hx{display:flex;align-items:center;gap:14px;min-width:0;flex:1}#bpx .rcp-hi{flex:0 0 48px;width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center}#bpx .rcp-hi .ms{font-size:26px}'
+      + '#bpx .rcp-hx b{display:block;font-size:17px}#bpx .rcp-hx span{display:block;font-size:13px;opacity:.88;max-width:560px;margin-top:2px}'
+      + '#bpx .rcp-up{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:10px;background:#fff;color:#1d4ed8;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 6px 16px -8px rgba(0,0,0,.4)}#bpx .rcp-up:hover{background:#eef3ff}#bpx .rcp-up .ms{font-size:20px}'
+      + '#bpx .rcp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}'
+      + '#bpx .rcp-stat{background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;min-width:0}#bpx .rcp-si{position:absolute;right:12px;top:12px;width:32px;height:32px;border-radius:9px;background:#eef3ff;color:#2457d6;display:grid;place-items:center}#bpx .rcp-si .ms{font-size:18px}'
+      + '#bpx .rcp-stat small{display:block;font-size:12px;font-weight:600;color:var(--mu)}#bpx .rcp-stat b{display:block;font-size:22px;margin-top:6px;color:var(--ink);white-space:nowrap}#bpx .rcp-stat em{display:block;font-style:normal;font-size:12px;color:var(--mu);margin-top:2px}'
+      + '#bpx .rcp-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}#bpx .rcp-card{background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}'
+      + '#bpx .rcp-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}#bpx .rcp-h b{font-size:14.5px;color:var(--ink)}#bpx .rcp-h span{font-size:12px;color:var(--mu)}'
+      + '#bpx .rcp-bars{display:flex;align-items:flex-end;gap:8px;height:140px}#bpx .rcp-bar{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;min-width:0}#bpx .rcp-bar i{display:block;width:100%;max-width:28px;background:#c7d7fe;border-radius:6px 6px 2px 2px}#bpx .rcp-bar i.on{background:#2457d6}#bpx .rcp-bar small{font-size:11px;color:var(--mu)}'
+      + '#bpx .rcp-st{display:grid;grid-template-columns:28px minmax(0,110px) 1fr auto;align-items:center;gap:10px;padding:5px 0;font-size:13px}#bpx .rcp-av{width:28px;height:28px;border-radius:8px;background:#eef3ff;color:#2457d6;font-weight:700;display:grid;place-items:center;font-size:12.5px}#bpx .rcp-sn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}#bpx .rcp-st i{height:8px;background:var(--soft,#f2f4f7);border-radius:6px;overflow:hidden}#bpx .rcp-st i b{display:block;height:100%;background:#2457d6;border-radius:6px}#bpx .rcp-st em{font-style:normal;font-weight:600;color:var(--ink)}'
+      + '#bpx .rcp-split{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2,var(--line))}#bpx .rcp-sbar{display:flex;height:10px;border-radius:6px;overflow:hidden;gap:2px}#bpx .rcp-sbar i:first-child{background:#2457d6}#bpx .rcp-sbar i:last-child{background:#f59e0b}#bpx .rcp-sleg{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--mu)}#bpx .rcp-sleg i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#2457d6;margin-right:6px}#bpx .rcp-sleg i.o{background:#f59e0b}'
+      /* the list itself */
+      + '#bpx .rcp .rc-list{padding:4px 0 !important;border-radius:12px;overflow:hidden}#bpx .rcp .rc-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-2,var(--line))}#bpx .rcp .rc-row:last-child{border-bottom:0}#bpx .rcp .rc-row:hover{background:var(--soft,#f9fafb)}'
+      + '#bpx .rcp .rc-row::before{content:"";flex:0 0 36px;height:36px;border-radius:10px;background:#eef3ff url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%232457d6%27 stroke-width=%272%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M6 3h12v18l-3-2-3 2-3-2-3 2z%27/%3E%3Cpath d=%27M9 8h6M9 12h6%27/%3E%3C/svg%3E") center/18px no-repeat}'
+      + '#bpx .rcp .rc-row-m{flex:1;min-width:0}#bpx .rcp .rc-row-m b{display:block;font-size:14px;color:var(--ink)}#bpx .rcp .rc-row-m .bpx-mut{display:block;font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '#bpx .rcp .rc-row-t{font-size:15px;font-variant-numeric:tabular-nums;color:var(--ink)}#bpx .rcp .rc-row-a{display:flex;gap:6px}'
+      + '@media(max-width:900px){#bpx .rcp-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#bpx .rcp-grid{grid-template-columns:minmax(0,1fr)}}'
+      + '@media(max-width:560px){#bpx .rcp-up{width:100%}#bpx .rcp .rc-row{flex-wrap:wrap}#bpx .rcp .rc-row-a{width:100%;justify-content:flex-end}#bpx .rcp-stat b{font-size:18px}}';
+    document.head.appendChild(c);
+  }
   var bySup = function (id) { return all().filter(function (r) { return r.supplierId === id; }); };
   var byJob = function (id) { return all().filter(function (r) { return r.jobId === id; }); };
   function jobName(r) {

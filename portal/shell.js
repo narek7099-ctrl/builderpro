@@ -97,8 +97,9 @@
 
   function paintAcct() {
     /* the card is BuilderPro's, always: the mark and the name, then whose account it is */
-    var b = $('hlBiz'); if (b) b.textContent = 'BuilderPro';
-    var p = $('hlPlan'); if (p) p.textContent = bizName() + ' \u00b7 ' + (sub() ? 'Subcontractor' : crew() ? 'Crew' : (planName() || 'OS'));
+    /* the business leads; BuilderPro and the plan sit underneath as a badge */
+    var b = $('hlBiz'); if (b) b.textContent = bizName() || 'BuilderPro';
+    var p = $('hlPlan'); if (p) p.innerHTML = '<span class="hl-plan">' + esc(sub() ? 'Subcontractor' : crew() ? 'Crew' : (String(planName() || 'OS').replace(/^BuilderPro\s*/i, '') || 'OS')) + '</span><span class="hl-bp">BuilderPro</span>';
     var lg = $('hlAcctLogo');
     if (lg && !lg.querySelector('img')) lg.innerHTML = '<img src="assets/brand/logo-mark-128.png" alt="" width="30" height="30">';
     var av = $('hlAv'); if (av) av.textContent = initials(ownerName() || window._bpEmail || bizName());
