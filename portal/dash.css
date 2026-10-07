@@ -1051,3 +1051,35 @@
 #bpx.bpx-dark .pjk-plan{background:#16203a;border-color:#2c3a5e;color:#8fb0ff}
 #bpx.bpx-dark .pjk-chip.on{background:#e6e9f0;color:#0b1220}
 #bpx.bpx-dark .pjk-pay{background:#262f45}#bpx.bpx-dark .pjk-av{background:#1c2a4d;color:#8fb0ff}
+/* ---- card refresh (projects + order lists) ---- */
+#bpx .pjk-grid{grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+#bpx .pjk{border:1px solid #e9ecf2;border-radius:18px;padding:18px;gap:14px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+#bpx .pjk:hover{border-color:#d5dcea;box-shadow:0 12px 28px -10px rgba(16,24,40,.16);transform:translateY(-2px)}
+#bpx .pjk.star{border-color:#f3dc9f;box-shadow:0 1px 2px rgba(16,24,40,.04),inset 0 3px 0 #f5b301}
+#bpx .pjk-av{width:46px;height:46px;border-radius:14px;font-size:15px;background:linear-gradient(135deg,#eef3ff,#dfe8ff)}
+#bpx .pjk-id b{font-size:15.5px;letter-spacing:-.01em}
+#bpx .pjk-tag{font-size:11.5px;padding:4px 10px}
+#bpx .pjk-money{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:12px 13px;gap:9px}
+#bpx .pjk-money b{font-size:21px;letter-spacing:-.02em}
+#bpx .pjk-pay{height:6px;background:#e7eaf1}
+#bpx .pjk-pay i{background:linear-gradient(90deg,#22c55e,#16a34a)}
+#bpx .pjk-work{border-top:0;padding-top:0}
+#bpx .pjk-meta{gap:6px}
+#bpx .pjk-foot{border-top:1px solid #f0f2f6;padding-top:12px;margin-top:auto}
+#bpx .pjk-foot button{border-radius:11px;padding:10px}
+#bpx .pjk-open{background:#0b1220 !important;border-color:#0b1220 !important;color:#fff !important}
+#bpx .pjk-open:hover{background:#1f2937 !important}
+/* live crew map on Active, and the Routing page header */
+#bpx .pjk-live{margin-top:22px;background:#fff;border:1px solid #e9ecf2;border-radius:18px;padding:16px}
+#bpx .pjk-lh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+#bpx .pjk-lh b{display:block;font-size:15.5px}#bpx .pjk-lh span{font-size:12.5px;color:#6b7280}
+#bpx .pjk-lgo{display:inline-flex;align-items:center;gap:6px;border:1px solid #dfe3eb;background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;width:auto;margin:0}
+#bpx .pjk-lgo .ms{font-size:18px}
+#bpx .pjk-map{height:340px;border-radius:13px;overflow:hidden}
+#bpx .pjr-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+#bpx .pjr-head h2{margin:0 0 3px;font-size:20px;letter-spacing:-.01em}#bpx .pjr-head p{margin:0;font-size:13px;color:#6b7280;max-width:620px}
+#bpx .pjr-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#6b7280;margin-top:10px}
+#bpx .pjr-legend span{display:inline-flex;align-items:center;gap:6px}#bpx .pjr-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+#bpx.bpx-dark .pjk-money{background:#10172a;border-color:#262f45}
+#bpx.bpx-dark .pjk-live,#bpx.bpx-dark .pjk-lgo{background:#141b2b;border-color:#262f45;color:#e6e9f0}
+#bpx.bpx-dark .pjk-open{background:#e6e9f0 !important;color:#0b1220 !important}

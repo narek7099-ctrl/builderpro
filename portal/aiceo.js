@@ -127,30 +127,7 @@
       '#bpx.bpx-dark .rc-tag.ok{background:#0f2e1f;color:#86efac}#bpx.bpx-dark .rc-tag.warn{background:#3a2a0e;color:#f5c26b}#bpx.bpx-dark .rc-row.sub .rc-av{background:#2e1a47;color:#d8b4fe}',
       '@media(max-width:900px){.ceo-grid,.ceo-row2{grid-template-columns:minmax(0,1fr)}.ceo-head .ceo-act{margin-left:0;width:100%}}',
       '@media(max-width:520px){.ceo-card{padding:14px}.ceo-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ceo-tile b{font-size:18px}.rc-bd{grid-template-columns:repeat(2,minmax(0,1fr))}}',
-          /* the AI CEO chat: navy briefing rail, status bar, cards for answers */
-      '.ai-wrap.ceo-chat{border-color:#d7deea;box-shadow:0 10px 30px -18px rgba(16,24,40,.25)}',
-      '.ceo-chat .ai-side{background:linear-gradient(180deg,#0f1b33,#16264a);border-right:0;padding:12px}',
-      '.ceo-chat .ceo-sideh{display:flex;align-items:center;gap:8px;color:#fff;font-weight:700;font-size:13.5px;padding:6px 8px 12px}',
-      '.ceo-chat .ceo-sideh .ms{font-size:18px;color:#93b4ff}',
-      '.ceo-chat .ai-side small{color:#8ea0c2;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px;font-weight:700}',
-      '.ceo-chat .ai-side button{color:#c9d4ea}',
-      '.ceo-chat .ai-side button.on,.ceo-chat .ai-side button:hover{background:rgba(255,255,255,.09);color:#fff}',
-      '.ceo-chat .ai-side .ai-new{background:linear-gradient(135deg,#2563eb,#7c3aed);border:0;color:#fff;justify-content:center;box-shadow:0 6px 16px -8px rgba(124,58,237,.7)}',
-      '.ceo-chat .ai-side .ai-new:hover{filter:brightness(1.08);color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed)}',
-      '.ceo-bar{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line,#e7ebf1);background:linear-gradient(180deg,#f7f9ff,#fff)}',
-      '.ceo-hid{display:flex;align-items:center;gap:10px;min-width:0}.ceo-hid b{display:block;font-size:15px;color:var(--ink,#101828)}.ceo-hid small{display:block;font-size:12px;color:var(--mu,#667085)}',
-      '.ceo-hav{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:grid;place-items:center;flex:none}.ceo-hav .ms{font-size:20px}',
-      '.ceo-chips{display:flex;gap:6px;flex-wrap:wrap}',
-      '.ceo-chip{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:99px;font-size:12px;color:var(--mu,#475467);background:#fff;border:1px solid var(--line,#e4e7ec)}',
-      '.ceo-chip b{color:var(--ink,#101828)}.ceo-chip .ms{font-size:15px;color:#2457d6}.ceo-chip.bad .ms{color:#dc2626}.ceo-chip.bad{border-color:#fecaca;background:#fef2f2}.ceo-chip.ok .ms{color:#16a34a}',
-      '.ceo-chat .ai-m.a>div{background:#fff;border:1px solid var(--line,#e7ebf1);border-radius:4px 16px 16px 16px;padding:12px 16px;box-shadow:0 2px 8px -6px rgba(16,24,40,.2)}',
-      '.ceo-chat .ai-m.u{background:#2457d6;color:#fff;border-radius:16px 16px 4px 16px}',
-      '.ceo-chat .ai-msgs{background:#f8fafc}',
-      '.ceo-chat .ai-av{background:linear-gradient(135deg,#2563eb,#7c3aed)}',
-      '.ceo-chat .ceo-file{border-color:#c7d7fe;background:linear-gradient(180deg,#f5f8ff,#fff)}',
-      '.ceo-chat .ai-hint button{background:#fff}',
-      '#bpx.bpx-dark .ceo-bar{background:#161b26;border-color:#262c38}#bpx.bpx-dark .ceo-chip{background:#1a202c;border-color:#262c38}#bpx.bpx-dark .ceo-chat .ai-msgs{background:#0f141e}#bpx.bpx-dark .ceo-chat .ai-m.a>div{background:#161b26;border-color:#262c38}',
-].join('\n');
+    ].join('\n');
     document.head.appendChild(s);
   }
 
@@ -239,17 +216,9 @@
     var r = C.cur, ai = !!(C.st && C.st.ai), past = C.st.reports || [];
     host.innerHTML = bpChatShell({ ph: ai ? 'Ask your AI CEO…' : 'Connect Claude to ask questions', off: !ai,
       fine: ai ? 'Your AI CEO reads your live numbers. Check anything important.' : 'Add ANTHROPIC_API_KEY under Supabase → Edge Functions → Secrets to turn on questions. Briefings already work.' });
-    /* the CEO's own look: a navy briefing rail, and a status strip over the chat */
-    var wrap = host.querySelector('.ai-wrap'); if (wrap) wrap.classList.add('ceo-chat');
-    var st0 = (r && r.stats) || {}, t0 = st0.tiles || {}, chip = function (ic, v, l, cls) { return '<span class="ceo-chip ' + (cls || '') + '"><span class="ms">' + ic + '</span><b>' + v + '</b>' + l + '</span>'; };
-    var head = document.createElement('div'); head.className = 'ceo-bar';
-    head.innerHTML = '<div class="ceo-hid"><span class="ceo-hav"><span class="ms">monitoring</span></span><div><b>AI CEO</b><small>' + (r ? 'Last briefing ' + fmtDay(r.day) : 'No briefing yet') + ' · reads your whole business</small></div></div>'
-      + (r ? '<div class="ceo-chips">' + chip('priority_high', +st0.critical || 0, ' urgent', st0.critical ? 'bad' : 'ok') + chip('checklist', (st0.attention || []).length, ' to review')
-        + (t0.outstanding != null ? chip('account_balance_wallet', money(t0.outstanding), ' owed') : '') + (t0.collected_month != null ? chip('trending_up', money(t0.collected_month), ' this month', 'ok') : '') + '</div>' : '');
-    var chatEl = host.querySelector('.ai-chat'); if (chatEl) chatEl.insertBefore(head, chatEl.firstChild);
     var side = host.querySelector('#aiSide');
-    side.innerHTML = '<div class="ceo-sideh"><span class="ms">monitoring</span>Briefings</div><button class="ai-new" data-run><span class="ms">refresh</span>Run briefing now</button>'
-      + (past.length ? '<small>History</small>' + past.map(function (p) { return '<button data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '"><span class="ms" style="font-size:16px;vertical-align:-3px;margin-right:6px">description</span>' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' · by hand' : '') + '</button>'; }).join('') : '');
+    side.innerHTML = '<button class="ai-new" data-run><span class="ms">refresh</span>Run briefing now</button>'
+      + (past.length ? '<small>Briefings</small>' + past.map(function (p) { return '<button data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '"><span class="ms" style="font-size:16px;vertical-align:-3px;margin-right:6px">description</span>' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' · by hand' : '') + '</button>'; }).join('') : '');
     var col = host.querySelector('#aiCol');
     col.innerHTML = introHtml(r) + C.asks.slice().reverse().map(qaHtml).join('')
       + (r && ai && !C.asks.length ? '<div class="ai-hint">' + ['Which projects are at risk this week?', 'Who is my best roofer right now?', 'Where is money stuck?'].map(function (q) { return '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>' : '');
