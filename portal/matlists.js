@@ -612,38 +612,51 @@
       + '</div>'
       + '<div class="ml-how"><span class="ms">lightbulb</span><span><b>Plan here, record on Receipts.</b> A list is what you mean to buy: build it, then send it to your supply house. What you actually pay goes on <a onclick="bpNav(\'receipts\')">Receipts</a>, and that is what counts as cost.</span></div>';
 
-    /* jobs still waiting for a list */
-    if (without.length) {
-      h += '<div class="ml-sec"><b>Needs a list</b><span class="bpx-mut">' + without.length + ' job' + (without.length === 1 ? '' : 's') + '</span></div><div class="ml-need">'
-        + without.map(function (j) {
-          return '<div class="ml-needc"><div class="ml-needt"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + '</span></div>'
-            + '<div class="ml-needb">' + (tl.length ? '<select onchange="if(this.value){ML.startFor(\'' + j.id + '\',this.value)}" aria-label="Start from a template"><option value="">From a template…</option>'
-              + tl.map(function (tp) { return '<option value="' + tp.id + '">' + esc(tp.name) + ' (' + tp.items.length + ')</option>'; }).join('') + '</select>' : '')
-            + '<button class="bpx-rowbtn ml-primary" onclick="ML.startFor(\'' + j.id + '\')">Start list</button></div></div>';
-        }).join('') + '</div>';
-    }
-
-    /* the lists themselves */
-    h += '<div class="ml-sec"><b>Your lists</b><span class="bpx-mut">' + (withList.length ? 'tap one to add items, send or print' : '') + '</span></div>';
-    if (!withList.length) h += '<div class="pjk-empty">' + (rows.length ? 'No lists yet. Press <b>Start list</b> on a job above.' : 'No jobs yet. Lists hang off a project, so add one in Projects first.') + '</div>';
-    else h += '<div class="pjk-grid">' + withList.map(function (j) {
+    var card = function (j) {
+      if (!has(j)) return '<div class="pjk ml-card ml-nolist" onclick="ML.startFor(\'' + j.id + '\')">'
+        + '<div class="pjk-top"><span class="pjk-av"><span class="ms">inventory_2</span></span><div class="pjk-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + '</span></div><span class="ml-pill no">No list</span></div>'
+        + '<div class="ml-nl">No materials planned for this job yet. Start from scratch or from one of your templates.</div>'
+        + '<div class="pjk-foot"><button class="pjk-open" onclick="event.stopPropagation();ML.startFor(\'' + j.id + '\')"><span class="ms">add</span>Start list</button></div></div>';
       var m = j.materials, n = m.items.length, est = ML.total(j), got = bought(j), nw = ML.newCount(j);
       var sups = [], seenS = {};
       m.items.forEach(function (it) { var nm = String(it.supplierName || it.supplier || '').trim(); if (nm && !seenS[nm.toLowerCase()]) { seenS[nm.toLowerCase()] = 1; sups.push(nm); } });
-      var noSup = m.items.filter(function (it) { return !String(it.supplierName || it.supplier || '').trim(); }).length;
       var pct = est > 0 ? Math.min(100, Math.round(got / est * 100)) : 0;
       return '<div class="pjk ml-card" onclick="ML.open=\'' + j.id + '\';bpMatLists()">'
         + '<div class="pjk-top"><span class="pjk-av"><span class="ms">inventory_2</span></span><div class="pjk-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>' + statusPill(m.status) + '</div>'
         + (nw ? '<div><span class="ml-newb">' + nw + ' new change' + (nw === 1 ? '' : 's') + ' from the crew</span></div>' : '')
         + '<div class="ml-nums"><div><b>' + n + '</b><span>item' + (n === 1 ? '' : 's') + '</span></div><div><b>' + money(est) + '</b><span>planned</span></div><div><b>' + money(got) + '</b><span>bought</span></div></div>'
-        + '<div><span class="pjk-pay" title="' + pct + '% of the plan bought so far"><i style="width:' + pct + '%' + (got > est && est > 0 ? ';background:#d97706' : '') + '"></i></span>' + (got > est && est > 0 ? '<span class="ml-over">' + money(got - est) + ' over the plan</span>' : '') + '</div>'
-        + '<div class="pjk-meta"><span class="' + (sups.length ? '' : 'mut') + '"><span class="ms">storefront</span>' + (sups.length ? esc(sups.join(', ')) + (noSup ? ' <span class="bpx-mut">· ' + noSup + ' item' + (noSup === 1 ? '' : 's') + ' without one</span>' : '') : 'No supplier picked yet') + '</span></div>'
+        + '<div><span class="pjk-pay" title="' + pct + '% of the plan bought so far"><i style="width:' + pct + '%"></i></span>' + (got > est && est > 0 ? '<span class="ml-over">' + money(got - est) + ' over the plan</span>' : '') + '</div>'
+        + '<div class="pjk-meta"><span class="' + (sups.length ? '' : 'mut') + '"><span class="ms">storefront</span>' + (sups.length ? esc(sups.join(', ')) : 'No supplier picked yet') + '</span></div>'
         + '<div class="pjk-foot"><button class="pjk-open" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open list</button>'
-          + '<button class="pjk-done" onclick="event.stopPropagation();SP.rcOpen&&SP.rcOpen(\'\',\'' + j.id + '\')"><span class="ms">photo_camera</span>Add receipt</button></div>'
-        + '</div>';
-    }).join('') + '</div>';
+          + '<button class="pjk-done" onclick="event.stopPropagation();SP.rcOpen&&SP.rcOpen(\'\',\'' + j.id + '\')"><span class="ms">photo_camera</span>Add receipt</button></div></div>';
+    };
+    /* the same four marked projects as on Projects, then every other job in a list */
+    var marked = rows.filter(function (j) { return j.starred && j.status !== 'done'; }).slice(0, 4), mk = {};
+    marked.forEach(function (j) { mk[j.id] = 1; });
+    h += '<div class="ml-sec"><b>Marked</b><span class="bpx-mut">' + (marked.length ? 'your marked projects' : 'star a project in Projects to pin it here') + '</span></div>'
+      + (marked.length ? '<div class="pjk-grid">' + marked.map(card).join('') + '</div>' : '');
+    var rest = rows.filter(function (j) { return !mk[j.id]; }).sort(function (a, b) { return (has(a) ? 0 : 1) - (has(b) ? 0 : 1); });
+    h += '<div class="ml-sec" style="margin-top:22px"><b>All jobs</b><span class="bpx-mut">' + withList.length + ' with a list · ' + without.length + ' without</span></div>';
+    if (!rest.length) h += '<div class="pjk-empty">' + (rows.length ? 'Every job is in Marked above.' : 'No jobs yet. Lists hang off a project, so add one in Projects first.') + '</div>';
+    else {
+      var pages = Math.ceil(rest.length / 10); ML.pg = Math.min(Math.max(ML.pg || 1, 1), pages);
+      h += '<div class="pjl ml-rows">' + rest.slice((ML.pg - 1) * 10, ML.pg * 10).map(function (j) {
+        var on = has(j), m = j.materials;
+        return '<div class="pjl-r" onclick="' + (on ? 'ML.open=\'' + j.id + '\';bpMatLists()' : 'ML.startFor(\'' + j.id + '\')') + '">'
+          + '<span class="pjk-av"><span class="ms">inventory_2</span></span>'
+          + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>'
+          + '<div class="pjl-st">' + (on ? statusPill(m.status) : '<span class="ml-pill no">No list</span>') + '</div>'
+          + '<div class="pjl-m"><b>' + (on ? money(ML.total(j)) : '—') + '</b><small>' + (on ? m.items.length + ' item' + (m.items.length === 1 ? '' : 's') : 'nothing planned') + '</small></div>'
+          + '<div class="pjl-a">' + (on ? '<button class="pjl-b" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open list</button>'
+            : (tl.length ? '<select onclick="event.stopPropagation()" onchange="if(this.value){ML.startFor(\'' + j.id + '\',this.value)}" aria-label="Start from a template"><option value="">Template…</option>'
+              + tl.map(function (tp) { return '<option value="' + tp.id + '">' + esc(tp.name) + '</option>'; }).join('') + '</select>' : '')
+              + '<button class="pjl-b pri" onclick="event.stopPropagation();ML.startFor(\'' + j.id + '\')">Start list</button>') + '</div></div>';
+      }).join('') + '</div>'
+        + '<div class="pjl-ft"><span class="bpx-mut">' + ((ML.pg - 1) * 10 + 1) + '–' + Math.min(ML.pg * 10, rest.length) + ' of ' + rest.length + '</span>' + (window.bpPager10 ? bpPager10(pages, ML.pg, 'ML.page') : '') + '</div>';
+    }
     area.innerHTML = h; done(); ML.sync();
   };
+  ML.page = function (n) { ML.pg = n; window.bpMatLists(); };
   ML.startFor = function (jid, tid) {
     var j = jobById(jid); if (!j) return;
     var m = listOf(j, true);
@@ -745,16 +758,16 @@
   }
 
   /* ---------- styles ---------- */
-  var css = '#bpx .ml-how{display:flex;gap:10px;align-items:flex-start;background:#f6f8fc;border:1px solid #e6e9f0;border-radius:12px;padding:11px 14px;font-size:13px;color:#374151;margin-bottom:18px}#bpx .ml-how .ms{color:#d97706;font-size:19px}#bpx .ml-how a{color:var(--blue,#2f6bff);cursor:pointer;font-weight:600}'
+  var css = '#bpx .ml-how{display:flex;gap:10px;align-items:flex-start;background:#f6f8fc;border:1px solid #e6e9f0;border-radius:12px;padding:11px 14px;font-size:13px;color:#374151;margin-bottom:18px}#bpx .ml-how .ms{color:#2457d6;font-size:19px}#bpx .ml-how a{color:var(--blue,#2f6bff);cursor:pointer;font-weight:600}'
     + '#bpx .ml-sec{display:flex;align-items:baseline;gap:10px;margin:6px 0 10px}#bpx .ml-sec b{font-size:15px}#bpx .ml-sec .bpx-mut{font-size:12.5px}'
     + '#bpx .ml-need{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:22px}'
     + '#bpx .ml-needc{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e9ecf2;border-left:4px solid #f59e0b;border-radius:14px;padding:13px 14px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:box-shadow .15s,transform .15s}'
     + '#bpx .ml-needc:hover{box-shadow:0 10px 24px -12px rgba(16,24,40,.18);transform:translateY(-1px)}#bpx .ml-needb select{border-radius:9px}'
-    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av{background:linear-gradient(135deg,#fff4e6,#ffe6c7) !important}'
+    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
     + '#bpx .ml-needt{flex:1 1 140px;min-width:0;display:flex;flex-direction:column}#bpx .ml-needt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#bpx .ml-needt span{font-size:12px;color:#6b7280}'
     + '#bpx .ml-needb{display:flex;gap:6px;align-items:center}#bpx .ml-needb select{width:auto;max-width:160px;padding:7px 8px;font-size:12.5px}'
-    + '#bpx .ml-card .pjk-av{background:#fff4e6;color:#b45309}#bpx .ml-card .pjk-av .ms{font-size:21px}'
-    + '#bpx .ml-over{display:block;font-size:11.5px;color:#b45309;margin-top:4px;font-weight:600}#bpx .ml-nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#bpx .ml-nums>div{display:flex;flex-direction:column}#bpx .ml-nums b{font-size:16px;font-variant-numeric:tabular-nums}#bpx .ml-nums span{font-size:11.5px;color:#6b7280}'
+    + '#bpx .ml-card .pjk-av{background:#eef3ff;color:#2457d6}#bpx .ml-card .pjk-av .ms{font-size:21px}'
+    + '#bpx .ml-over{display:block;font-size:11.5px;color:#be123c;margin-top:4px;font-weight:600}#bpx .ml-nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#bpx .ml-nums>div{display:flex;flex-direction:column}#bpx .ml-nums b{font-size:16px;font-variant-numeric:tabular-nums}#bpx .ml-nums span{font-size:11.5px;color:#6b7280}'
     + '#bpx.bpx-dark .ml-how,#bpx.bpx-dark .ml-needc{background:#141b2b;border-color:#262f45;color:#c4c9d4}'
     + '#bpx .ml-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}'
     + '#bpx .ml-new{width:auto;margin:0;padding:9px 16px;font-size:13.5px}'

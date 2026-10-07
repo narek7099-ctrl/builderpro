@@ -18705,43 +18705,74 @@ function bpPjCardsView(active,done){
   active.forEach(function(j){ var e=+j.estimate||0,c=+j.collected||0; tot+=e; col+=c; due+=Math.max(e-c,0); var k=pjKState(j); if(k.noplan)noplan++; if(k.late)late++; if(k.nocrew)nocrew++; });
   var stat=function(l,v,n,cls){ return '<div class="pjk-stat'+(cls?' '+cls:'')+'"><span>'+l+'</span><b>'+v+'</b>'+(n?'<small>'+n+'</small>':'')+'</div>'; };
   var chip=function(k,l,n){ return '<button class="pjk-chip'+(_pjF===k?' on':'')+'" onclick="bpPjFilter(\''+k+'\')">'+l+(n!=null?' <em>'+n+'</em>':'')+'</button>'; };
+  var marked=active.filter(function(j){return j.starred;}).slice(0,4);
   q('bpxViewArea').innerHTML=
-    (window.bpPlanCheckin?bpPlanCheckin():'')
+    '<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt on" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
+      +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
+    +'<section class="pjk-live"><div class="pjk-lh"><div><b>Crew live</b><span>Where your projects are and who is clocked in right now. Updates every minute.</span></div>'
+      +'<button class="pjk-lgo" onclick="bpNav(\'routing\')"><span class="ms">route</span>Plan routes</button></div>'
+      +'<div class="pj-map pjk-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
+      +'<div class="pjr-legend"><span><i style="background:#2457d6"></i>Project</span><span><i style="background:#16a34a"></i>Crew on site</span><span><i style="background:#d97706"></i>Clocked in off site</span></div></section>'
+    +(window.bpPlanCheckin?bpPlanCheckin():'')
     +'<div class="pjk-stats">'
-      +stat('Active projects',active.length,active.filter(function(j){return j.starred;}).length+' starred')
+      +stat('Active projects',active.length,marked.length+' marked')
       +stat('Contract value',bpMoneyFmt(tot),'')
       +stat('Collected',bpMoneyFmt(col),tot>0?Math.round(col/tot*100)+'% of value':'','good')
       +stat('Still owed',bpMoneyFmt(due),'','owe')
     +'</div>'
-    +'<div class="bpx-chead"><div class="bpx-jobtabs"><button class="bpx-jt on" onclick="bpJobTab(\'active\')">Active · '+active.length+'</button>'
-      +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
-    +'<div class="pjk-bar"><div class="pjk-search"><span class="ms">search</span><input id="pjkQ" placeholder="Search customer, job or address" value="'+bpEsc(_pjQ)+'" oninput="_pjQ=this.value;bpPjGrid()"></div>'
-      +'<div class="pjk-chips">'+chip('all','All',active.length)+chip('starred','Starred',null)+(late?chip('late','Behind',late):'')+chip('noplan','No plan',noplan)+chip('nocrew','Nobody assigned',nocrew)+'</div></div>'
-    +'<div id="pjkGrid"></div>'
-    +'<section class="pjk-live"><div class="pjk-lh"><div><b>Crew live</b><span>Where your projects are and who is clocked in right now. Updates every minute.</span></div>'
-      +'<button class="pjk-lgo" onclick="bpNav(\'routing\')"><span class="ms">route</span>Plan routes</button></div>'
-      +'<div class="pj-map pjk-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
-      +'<div class="pjr-legend"><span><i style="background:#2457d6"></i>Project</span><span><i style="background:#16a34a"></i>Crew on site</span><span><i style="background:#d97706"></i>Clocked in off site</span></div></section>';
+    +'<div class="ml-sec"><b>Marked</b><span class="bpx-mut">'+(marked.length?marked.length+' of 4 · tap the star on a project to pin it here':'Star up to four projects to keep them here, and first on your dashboard')+'</span></div>'
+    +(marked.length?'<div class="pjk-grid pjk-four">'+marked.map(bpPjCard).join('')+'</div>':'')
+    +'<div class="ml-sec" style="margin-top:22px"><b>All projects</b></div>'
+    +'<div class="pjk-bar"><div class="pjk-search"><span class="ms">search</span><input id="pjkQ" placeholder="Search customer, job or address" value="'+bpEsc(_pjQ)+'" oninput="_pjQ=this.value;_pjP=1;bpPjGrid()"></div>'
+      +'<div class="pjk-chips">'+chip('all','All',active.length)+(late?chip('late','Behind',late):'')+chip('noplan','No plan',noplan)+chip('nocrew','Nobody assigned',nocrew)+'</div></div>'
+    +'<div id="pjkGrid"></div>';
   bpPjGrid();
-  var _withA=active.filter(function(j){return (j.addr||'').trim();});
-  bpEnsureLeaflet(function(){ bpPjDraw(_withA); });
+  var withA=active.filter(function(j){return (j.addr||'').trim();});
+  bpEnsureLeaflet(function(){ bpPjDraw(withA); });
 }
-window.bpPjFilter=function(k){ _pjF=k; document.querySelectorAll('.pjk-chip').forEach(function(b){ b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+k+"'")>0); }); bpPjGrid(); };
+var _pjP=1;
+window.bpPjFilter=function(k){ _pjF=k; _pjP=1; document.querySelectorAll('.pjk-chip').forEach(function(b){ b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+k+"'")>0); }); bpPjGrid(); };
+window.bpPjPage=function(n){ _pjP=n; bpPjGrid(); var g=q('pjkGrid'); if(g&&g.scrollIntoView) g.scrollIntoView({block:'nearest'}); };
+/* a numbered pager, 10 a page */
+window.bpPager10=bpPager10;
+function bpPager10(n,cur,fn){
+  if(n<=1) return '';
+  var h='<div class="pjl-pg"><button '+(cur<=1?'disabled':'')+' onclick="'+fn+'('+(cur-1)+')"><span class="ms">chevron_left</span></button>';
+  for(var i=1;i<=n;i++) h+='<button class="'+(i===cur?'on':'')+'" onclick="'+fn+'('+i+')">'+i+'</button>';
+  return h+'<button '+(cur>=n?'disabled':'')+' onclick="'+fn+'('+(cur+1)+')"><span class="ms">chevron_right</span></button></div>';
+}
 window.bpPjGrid=function(){
   var g=q('pjkGrid'); if(!g) return;
   var t=_pjQ.trim().toLowerCase();
-  var list=bpJobsGet().filter(function(j){ return j.status==='active'; }).filter(function(j){
+  var act=bpJobsGet().filter(function(j){ return j.status==='active'; });
+  var marked={}; act.filter(function(j){return j.starred;}).slice(0,4).forEach(function(j){marked[j.id]=1;});
+  var list=act.filter(function(j){
+    if(marked[j.id]) return false;
     if(t&&(String(j.name||'')+' '+(j.title||'')+' '+(j.addr||'')).toLowerCase().indexOf(t)<0) return false;
     var k=pjKState(j);
-    return _pjF==='all'||(_pjF==='starred'&&j.starred)||(_pjF==='late'&&k.late)||(_pjF==='noplan'&&k.noplan)||(_pjF==='nocrew'&&k.nocrew);
-  }).sort(function(a,b){ return (b.starred?1:0)-(a.starred?1:0); });
-  if(!list.length){ g.innerHTML=bpJobsGet().some(function(j){return j.status==='active';})
+    return _pjF==='all'||_pjF==='starred'||(_pjF==='late'&&k.late)||(_pjF==='noplan'&&k.noplan)||(_pjF==='nocrew'&&k.nocrew);
+  });
+  if(!list.length){ g.innerHTML=act.length>Object.keys(marked).length||t
       ? '<div class="pjk-empty">No projects match. <a onclick="_pjQ=\'\';bpPjFilter(\'all\');var i=q(\'pjkQ\');if(i)i.value=\'\'">Show all</a></div>'
-      : '<div class="pjk-empty"><b>No active projects yet</b><br>When a deposit is paid the job lands here automatically, or add one with <b>+ Add job</b>.</div>'; return; }
-  g.innerHTML='<div class="pjk-grid">'+list.map(bpPjCard).join('')+'</div>';
+      : '<div class="pjk-empty">'+(act.length?'Every active project is in Marked above.':'<b>No active projects yet</b><br>When a deposit is paid the job lands here automatically, or add one with <b>+ Add job</b>.')+'</div>'; return; }
+  var n=Math.ceil(list.length/10); _pjP=Math.min(Math.max(_pjP,1),n);
+  g.innerHTML='<div class="pjl">'+list.slice((_pjP-1)*10,_pjP*10).map(bpPjRow).join('')+'</div>'
+    +'<div class="pjl-ft"><span class="bpx-mut">'+((_pjP-1)*10+1)+'–'+Math.min(_pjP*10,list.length)+' of '+list.length+'</span>'+bpPager10(n,_pjP,'bpPjPage')+'</div>';
 };
+function bpPjRow(j){
+  var k=pjKState(j), pr=k.pr, e=+j.estimate||0, c=+j.collected||0, pct=e>0?Math.min(100,Math.round(c/e*100)):0;
+  var who=window.bpJobWhoLbl?bpJobWhoLbl(j):'';
+  var stage=!pr?'<span class="pjk-tag">Not planned</span>':k.late?'<span class="pjk-tag late">Behind</span>':pr.complete?'<span class="pjk-tag ok">Ready to close</span>':'<span class="pjk-tag on">'+pr.pct+'% done</span>';
+  return '<div class="pjl-r" onclick="bpProjOpen(\''+j.id+'\')">'
+    +'<span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>'
+    +'<div class="pjl-id"><b>'+bpEsc(j.name||'Project')+'</b><span>'+bpEsc(j.title||'Job')+(j.addr?' · '+bpEsc(j.addr):'')+'</span></div>'
+    +'<div class="pjl-st">'+stage+'</div>'
+    +'<div class="pjl-m"><b>'+bpMoneyFmt(e)+'</b><span class="pjk-pay"><i style="width:'+pct+'%"></i></span><small>'+pct+'% paid</small></div>'
+    +'<div class="pjl-w'+(who?'':' mut')+'"><span class="ms">groups</span>'+(who?bpEsc(who):'Nobody')+'</div>'
+    +'<div class="pjl-a"><button class="pjk-star" title="Mark it" onclick="event.stopPropagation();bpProjStar(\''+j.id+'\')"><span class="ms">star</span></button>'
+      +'<button class="pjl-b" onclick="event.stopPropagation();bpJobDoneOpen(\''+j.id+'\')">Mark done</button></div></div>';
+}
 function bpPjCard(j){
   var k=pjKState(j), pr=k.pr, e=+j.estimate||0, c=+j.collected||0, paidPct=e>0?Math.min(100,Math.round(c/e*100)):0;
   var av=(j.photos&&j.photos[0])
@@ -25278,7 +25309,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261001b">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
-<link rel="stylesheet" href="portal/dash.css?v=20261012cr">
+<link rel="stylesheet" href="portal/dash.css?v=20261012crst">
 <link rel="stylesheet" href="portal/team.css?v=20260919c">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261004a"></script>
@@ -25295,7 +25326,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/autopause.js?v=20261016b"></script>
 <script src="portal/supply-kits.js?v=20260919c"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
-<script src="portal/matlists.js?v=20261013cr"></script>
+<script src="portal/matlists.js?v=20261013crst"></script>
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261017a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
