@@ -387,3 +387,6 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-acct-logo img{width:34px;height:34px}
 #bpx#bpx#bpx#bpx .hl-acct #hlBiz{font-size:19px !important;font-weight:700 !important;letter-spacing:-.02em;color:#fff}
 #bpx#bpx#bpx#bpx .hl-acct:hover{background:rgba(255,255,255,.05) !important}
+#bpx#bpx#bpx#bpx .hl-acct .hl-acct-t{display:none !important}
+#bpx#bpx#bpx#bpx .hl-acct{justify-content:center !important;width:100%}
+#bpx#bpx#bpx#bpx .hl-acct-logo,#bpx#bpx#bpx#bpx .hl-acct-logo img{width:40px !important;height:40px !important}
