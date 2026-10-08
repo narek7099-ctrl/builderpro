@@ -286,16 +286,39 @@
     push(T(kind, id), { name: nm || '', sku: '', supplierId: '', supplierName: '', unit: 'ea', qty: '', price: '', note: '', custom: true });
     if (!nm) setTimeout(function () { var ins = document.querySelectorAll('#ml-ed-' + kind + '-' + id + ' .ml-in-name'); if (ins.length) ins[ins.length - 1].focus(); }, 0);
   };
+  /* while typing a quantity or price: the row, the total and an open
+     estimate follow along; the save, the log and the redraw wait for the
+     field to be left (ML.edit) */
+  ML._was = {};
+  ML.live = function (kind, id, itemId, k, v) {
+    var d = doc(T(kind, id)); if (!d) return;
+    var it = d.items.filter(function (x) { return x.id === itemId; })[0]; if (!it) return;
+    var key = itemId + ':' + k; if (!(key in ML._was)) ML._was[key] = it[k];
+    it[k] = String(v).trim() === '' ? '' : Math.max(0, num(v));
+    var row = document.querySelector('#ml-ed-' + kind + '-' + id + ' [data-ml-item="' + itemId + '"] .ml-lt');
+    if (row) row.innerHTML = it.price === '' || it.qty === '' ? '<span class="bpx-mut">—</span>' : money(line(it));
+    var g = document.querySelector('#ml-ed-' + kind + '-' + id + ' .ml-grand span:last-child'); if (g) g.textContent = money(total(d.items));
+    if (kind === 'job' && window.bpQbMat) bpQbMat(id);
+  };
+  /* redraw after a change without throwing the cursor out of the next box */
+  function redrawKeep(t) {
+    setTimeout(function () {
+      var a = document.activeElement, box = $('ml-ed-' + t.kind + '-' + t.id), row = a && a.closest && a.closest('[data-ml-item]'), at = null;
+      if (box && row && box.contains(row)) { var ins = row.querySelectorAll('input'); at = { id: row.getAttribute('data-ml-item'), i: Array.prototype.indexOf.call(ins, a), s: a.selectionStart }; }
+      redraw(t);
+      if (at && at.i > -1) { var r2 = document.querySelector('#ml-ed-' + t.kind + '-' + t.id + ' [data-ml-item="' + at.id + '"]'), el = r2 && r2.querySelectorAll('input')[at.i]; if (el) { el.focus(); try { if (el.type !== 'number' && at.s != null) el.setSelectionRange(at.s, at.s); } catch (e) {} } }
+    }, 0);
+  }
   ML.edit = function (kind, id, itemId, k, v) {
     var t = T(kind, id), d = doc(t); if (!d) return;
     var it = d.items.filter(function (x) { return x.id === itemId; })[0]; if (!it) return;
-    var was = it[k];
+    var key = itemId + ':' + k, was = key in ML._was ? ML._was[key] : it[k]; delete ML._was[key];
     it[k] = (k === 'qty' || k === 'price') ? (String(v).trim() === '' ? '' : Math.max(0, num(v))) : String(v);
     if (d.m && String(was == null ? '' : was) !== String(it[k])) {
       logIt(d.m, k === 'qty' ? { action: 'qty', item: it.name || 'Item', itemId: it.id, before: was === undefined ? '' : was, after: it[k], unit: it.unit || '' }
         : { action: 'edit', field: k, item: it.name || 'Item', itemId: it.id, before: k === 'price' ? undefined : was, after: k === 'price' ? undefined : it[k] });
     }
-    d.save(); redraw(t);
+    d.save(); redrawKeep(t);
   };
   ML.del = function (kind, id, itemId) {
     var t = T(kind, id), d = doc(t); if (!d) return;
@@ -530,7 +553,7 @@
     else {
       h += '<table class="bpx-table ml-tbl"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th>Supplier</th><th class="ml-n">Est. price</th><th class="ml-n">Est. total</th><th></th></tr></thead><tbody>'
         + items.map(function (it) {
-          var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
+          var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '"' + (k === 'qty' || k === 'price' ? ' oninput="ML.live(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)"' : '') + ' onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
           var blank = function (v) { return v === '' || v == null; };
           var ab = it.addedBy, crew = ab && ab.role === 'crew', mineIt = ab && ab.uid && ab.uid === meUid();
           var byChip = ab && ab.name ? '<span class="ml-by' + (crew ? ' crew' : '') + '" title="' + esc((crew ? 'Requested by ' : 'Added by ') + ab.name + (it.addedAt ? ' · ' + whenTxt(it.addedAt) : '')) + '"><i>' + esc(initials(ab.name)) + '</i>'
