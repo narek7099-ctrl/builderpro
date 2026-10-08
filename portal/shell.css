@@ -176,8 +176,25 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .bpx-btn:not(.ghost),#bpx#bpx#bpx#bpx .bpx-addbtn,#bpx#bpx#bpx#bpx .bpx-donebtn,#bpx#bpx#bpx#bpx .bpx-savebtn{font-weight:600 !important}
 #bpx#bpx#bpx#bpx .bpx-rowbtn,#bpx#bpx#bpx#bpx .bpx-delbtn{min-height:28px !important;padding:0 10px !important;font-size:12.5px !important}
 #bpx#bpx#bpx#bpx .bpx-iconbtn{min-width:30px !important;min-height:30px !important;border-radius:6px !important}
-#bpx#bpx#bpx#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),#bpx#bpx#bpx#bpx select{min-height:32px !important;border-radius:6px !important;font-size:13px !important}
-#bpx#bpx#bpx#bpx textarea{border-radius:6px !important;font-size:13px !important}
+/* one plain box everywhere: white, 1px grey border, 8px corners, no shadow,
+   12px of room inside. :where() keeps the padding low-priority so a field
+   that sets its own (an icon inside a search box) still wins. */
+#bpx :where(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=submit]):not([type=button]),select){padding:0 12px;box-sizing:border-box}
+#bpx :where(textarea){padding:10px 12px;box-sizing:border-box;line-height:1.45}
+#bpx#bpx#bpx#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),#bpx#bpx#bpx#bpx select{min-height:38px !important;border-radius:8px !important;font-size:14px !important;border:1px solid #d0d5dd !important;background-color:#fff !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx textarea{border-radius:8px !important;font-size:14px !important;border:1px solid #d0d5dd !important;background-color:#fff !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):hover,#bpx#bpx#bpx#bpx select:hover,#bpx#bpx#bpx#bpx textarea:hover{border-color:#98a2b3 !important}
+#bpx#bpx#bpx#bpx input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):focus,#bpx#bpx#bpx#bpx select:focus,#bpx#bpx#bpx#bpx textarea:focus{border-color:#2457d6 !important;box-shadow:0 0 0 3px rgba(36,87,214,.15) !important;outline:none !important}
+#bpx#bpx#bpx#bpx input:disabled,#bpx#bpx#bpx#bpx select:disabled,#bpx#bpx#bpx#bpx textarea:disabled{background-color:#f9fafb !important;color:#98a2b3 !important}
+#bpx#bpx#bpx#bpx.bpx-dark input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),#bpx#bpx#bpx#bpx.bpx-dark select,#bpx#bpx#bpx#bpx.bpx-dark textarea{background-color:#10172a !important;border-color:#2b3550 !important;color:#e6e9f0 !important}
+/* search fields with an icon: one box, the icon sits inside it */
+#bpx#bpx#bpx#bpx .ml-add{border:0 !important;padding:0 !important;background:transparent !important;gap:8px}
+#bpx#bpx#bpx#bpx .ml-add>.ms{position:absolute;left:11px;top:50%;transform:translateY(-50%);z-index:1;pointer-events:none;font-size:18px}
+#bpx#bpx#bpx#bpx .ml-add .ml-q{padding:0 12px 0 36px !important}
+/* fields that sit inside their own frame (search bars, % and $ boxes, the AI box): the frame is the box, the field has none */
+#bpx#bpx#bpx#bpx#bpx .cd-ask input,#bpx#bpx#bpx#bpx#bpx .pr-search input,#bpx#bpx#bpx#bpx#bpx .ai-box textarea,#bpx#bpx#bpx#bpx#bpx .hl-pal-in input,#bpx#bpx#bpx#bpx#bpx .hl-tsearch input,#bpx#bpx#bpx#bpx#bpx .insp-meta input,#bpx#bpx#bpx#bpx#bpx .qx-in input,#bpx#bpx#bpx#bpx#bpx .sp-pk-box input{border:0 !important;background:transparent !important;box-shadow:none !important;min-height:0 !important}
+#bpx#bpx#bpx#bpx#bpx .cd-ask input:focus,#bpx#bpx#bpx#bpx#bpx .pr-search input:focus,#bpx#bpx#bpx#bpx#bpx .ai-box textarea:focus,#bpx#bpx#bpx#bpx#bpx .hl-pal-in input:focus,#bpx#bpx#bpx#bpx#bpx .hl-tsearch input:focus,#bpx#bpx#bpx#bpx#bpx .insp-meta input:focus,#bpx#bpx#bpx#bpx#bpx .qx-in input:focus,#bpx#bpx#bpx#bpx#bpx .sp-pk-box input:focus{border:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx .cd-ask input:hover,#bpx#bpx#bpx#bpx#bpx .pr-search input:hover,#bpx#bpx#bpx#bpx#bpx .ai-box textarea:hover,#bpx#bpx#bpx#bpx#bpx .hl-pal-in input:hover,#bpx#bpx#bpx#bpx#bpx .hl-tsearch input:hover,#bpx#bpx#bpx#bpx#bpx .insp-meta input:hover,#bpx#bpx#bpx#bpx#bpx .qx-in input:hover,#bpx#bpx#bpx#bpx#bpx .sp-pk-box input:hover{border:0 !important}
 #bpx#bpx#bpx#bpx .bpx-panel,#bpx#bpx#bpx#bpx .bpx-stat,#bpx#bpx#bpx#bpx .bpx-card,#bpx#bpx#bpx#bpx .bpx-cd-card,#bpx#bpx#bpx#bpx .bpx-auto-card,#bpx#bpx#bpx#bpx .bg-sheet,#bpx#bpx#bpx#bpx .pj-card,#bpx#bpx#bpx#bpx .dash-hero,#bpx#bpx#bpx#bpx .dash-tile,#bpx#bpx#bpx#bpx .arc-card,#bpx#bpx#bpx#bpx .sp-card,#bpx#bpx#bpx#bpx .sp-pk-card,#bpx#bpx#bpx#bpx .bpx-cwrap,#bpx#bpx#bpx#bpx .hl-skel-card{
   border-radius:var(--hl-r) !important;box-shadow:none !important;border-color:var(--line) !important}
 #bpx#bpx#bpx#bpx .bpx-panel{padding:16px !important}
