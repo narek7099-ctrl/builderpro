@@ -551,7 +551,7 @@
     /* table */
     if (!items.length) h += '<div class="ml-empty bpx-mut">No items yet. Search above to add products from your suppliers and the catalog, or add a custom line and write whatever you need.</div>';
     else {
-      h += '<table class="bpx-table ml-tbl"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th>Supplier</th><th class="ml-n">Est. price</th><th class="ml-n">Est. total</th><th></th></tr></thead><tbody>'
+      h += '<table class="bpx-table ml-tbl"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th>Supplier</th>' + (lite ? '<th class="ml-n">Unit price</th><th class="ml-n">Total</th>' : '<th class="ml-n">Est. price</th><th class="ml-n">Est. total</th>') + '<th></th></tr></thead><tbody>'
         + items.map(function (it) {
           var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '"' + (k === 'qty' || k === 'price' ? ' oninput="ML.live(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)"' : '') + ' onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
           var blank = function (v) { return v === '' || v == null; };
@@ -576,7 +576,7 @@
       var gs2 = bySupplier(items);
       h += '<div class="ml-foot">' + (gs2.length > 1 ? gs2.map(function (g) { return '<div class="ml-fr"><span>' + esc(g.name) + '</span><span>' + money(total(g.items)) + '</span></div>'; }).join('') : '')
         + '<div class="ml-fr ml-grand"><span>' + (lite ? 'Materials cost' : 'Estimated total') + '</span><span>' + money(total(items)) + '</span></div>'
-        + '<div class="ml-fr ml-small bpx-mut"><span>A plan, not spending. Receipts are what count as cost.</span></div></div>';
+        + (lite ? '' : '<div class="ml-fr ml-small bpx-mut"><span>A plan, not spending. Receipts are what count as cost.</span></div>') + '</div>';
     }
     /* change orders */
     if (m && !lite) {
