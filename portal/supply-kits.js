@@ -216,7 +216,7 @@
     var k = allKits().filter(function (x) { return x.id === id; })[0]; if (!k) return;
     var size = +String(($('sp-kz-' + id) || {}).value || k.size).replace(/[^0-9.]/g, '') || k.size;
     var jobs = [];
-    try { jobs = (window.bpJobsGet ? bpJobsGet() : []).filter(function (j) { return j.status !== 'done'; }); } catch (e) {}
+    try { jobs = (window.bpJobsGet ? bpJobsGet() : []).filter(function (j) { return j.status !== 'done' && j.status !== 'quote'; }); } catch (e) {}
     var j = jobs[0];
     var items = k.items.map(function (it) { return { key: uid(), name: it.n, qty: qtyFor(it, size), unit: it.u }; });
     SP.db.insert('parts_lists', {

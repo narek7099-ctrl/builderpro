@@ -62,7 +62,7 @@
     var jobs = (typeof bpJobsGet === 'function' ? bpJobsGet() : []).filter(function (j) {
       return (j.contactId && j.contactId === id) || (c.name && j.name === c.name) || (c.phone && j.phone && digits(j.phone) === digits(c.phone));
     });
-    var est = jobs.reduce(function (s, j) { return s + (+j.estimate || 0); }, 0), got = jobs.reduce(function (s, j) { return s + (+j.collected || 0); }, 0);
+    var est = jobs.filter(function (j) { return j.status !== 'quote'; }).reduce(function (s, j) { return s + (+j.estimate || 0); }, 0), got = jobs.reduce(function (s, j) { return s + (+j.collected || 0); }, 0);
     var tags = (c.tags || []).filter(function (t) { return !MACHINE.test(t); }).slice(0, 6);
     var added = c.dateAdded ? new Date(c.dateAdded).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     var first = String(c.name || '').trim().split(/\s+/)[0] || 'them';
@@ -79,7 +79,8 @@
       + act('tel:' + c.phone, 'call', 'Call', !!c.phone)
       + act('sms:' + c.phone, 'sms', 'Text', !!c.phone)
       + act('mailto:' + c.email, 'mail', 'Email', !!c.email)
-      + act('', 'fact_check', 'New inspection', true, true, 'bpCtpInspect()')
+      + act('', 'fact_check', 'New inspection', true, false, 'bpCtpInspect()')
+      + act('', 'request_quote', 'Estimate', true, true, 'bpQuoteNew(\'' + c.id + '\')')
       + '</div></div></section>';
 
     var stats = '<div class="ctp-stats">'
@@ -101,6 +102,8 @@
 
     var jobsCard = '<section class="ctp-card"><div class="ctp-ch"><b>Jobs</b>' + (jobs.length ? '<span>' + jobs.length + '</span>' : '') + '</div>'
       + (jobs.length ? jobs.map(function (j) {
+        if (j.status === 'quote') { var qt = window.BPQ && BPQ.calc ? BPQ.calc(j.id) : null;
+          return '<button type="button" class="ctp-job" onclick="bpQuoteOpen(\'' + j.id + '\')"><span class="ctp-ji"><span class="ms">request_quote</span></span><span class="ctp-jt"><b>' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</b><small>' + money(qt ? qt.total : j.estimate) + ' · estimate ' + ((j.quote || {}).estId ? 'sent' : 'draft') + '</small></span><span class="ctp-js">Estimate</span><span class="ms ctp-go">chevron_right</span></button>'; }
         var done = j.status === 'done', pct = j.estimate ? Math.min(100, Math.round((+j.collected || 0) / j.estimate * 100)) : 0;
         return '<button type="button" class="ctp-job" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
           + '<span class="ctp-ji"><span class="ms">' + (done ? 'task_alt' : 'construction') + '</span></span>'

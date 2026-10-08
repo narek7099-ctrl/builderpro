@@ -147,7 +147,7 @@
   }
   function supById(id) { return SP.sup.filter(function (s) { return s.id === id; })[0]; }
   function itemsOf(id) { return SP.items.filter(function (i) { return i.supplier_id === id; }); }
-  function jobs() { try { return (window.bpJobsGet ? bpJobsGet() : []).filter(function (j) { return j.status !== 'done'; }); } catch (e) { return []; } }
+  function jobs() { try { return (window.bpJobsGet ? bpJobsGet() : []).filter(function (j) { return j.status !== 'done' && j.status !== 'quote'; }); } catch (e) { return []; } }
   function kpis() {
     var open = SP.pos.filter(function (p) { return p.status === 'sent' || p.status === 'ready'; }).length;
     var unrec = SP.pos.filter(function (p) { return p.status === 'invoiced' || p.status === 'picked_up'; }).length;
