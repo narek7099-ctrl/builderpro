@@ -148,7 +148,7 @@
     var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === j.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('')
       + (j.contactId && !contactBy(j.contactId) ? '<option value="' + esc(j.contactId) + '" selected>' + esc(j.name) + '</option>' : '');
     var head, body = '';
-    if (Q.tab === 'mat') { head = ['Materials', 'Search your suppliers and the catalog, or start from a template. This list becomes the job’s order list.', mk('mkMat', q.mkMat)]; body = '<div id="qb-mat">' + (window.ML && ML.editor ? ML.editor('job', j.id) : '') + '</div>'; }
+    if (Q.tab === 'mat') { head = ['Materials', 'Search your suppliers and the catalog, or start from a template. This list becomes the job’s order list.', mk('mkMat', q.mkMat)]; body = '<div class="qx-warn" id="qx-matwarn" hidden></div><div id="qb-mat">' + (window.ML && ML.editor ? ML.editor('job', j.id) : '') + '</div>'; }
     else if (Q.tab === 'lab') { head = ['Labor', 'The crew time this job takes. Pick an employee to use their rate with payroll costs included, or type your own.', mk('mkLab', q.mkLab)]; body = '<div id="qb-lab"></div>'; }
     else if (Q.tab === 'oth') { head = ['Other costs', 'Permits, dumpster, equipment, subcontractors: anything else the job costs you.', mk('mkOth', q.mkOth)]; body = '<div id="qb-oth"></div>'; }
     else { head = ['Price & send', 'Your cost, your mark-up, and what the customer sees.', '']; body = '<div id="qx-price"></div>'; }
@@ -259,6 +259,9 @@
       + stat('Tax', m0(c.tax), c.disc ? m0(c.disc) + ' discount' : '')
       + stat('Customer pays', m2(c.total), c.total ? 'what the estimate says' : 'add costs to price it');
     var tc = function (k, v) { var e = $('qx-tc-' + k); if (e) e.textContent = v ? ' · ' + m0(v) : ''; };
+    /* items on the list that add nothing because they have no price (or no quantity) */
+    var np = (j.materials.items || []).filter(function (it) { return !(+it.price > 0) || !(+it.qty > 0); });
+    var w = $('qx-matwarn'); if (w) { w.hidden = !np.length; w.innerHTML = np.length ? '<b>' + np.length + ' item' + (np.length === 1 ? ' has' : 's have') + ' no ' + (np.every(function (it) { return +it.price > 0; }) ? 'quantity' : 'price') + ' yet</b>, so ' + (np.length === 1 ? 'it adds' : 'they add') + ' nothing to the estimate: ' + np.slice(0, 4).map(function (it) { return esc(it.name || 'unnamed line'); }).join(', ') + (np.length > 4 ? '…' : '') + '. Type a price and quantity on ' + (np.length === 1 ? 'it' : 'each') + '.' : ''; }
     tc('mat', c.matCost); tc('lab', c.labCost); tc('oth', c.othCost);
     drawPrice(c);
   }
