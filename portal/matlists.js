@@ -195,6 +195,7 @@
     var el = $('ml-ed-' + t.kind + '-' + t.id); if (el) el.outerHTML = editor(t);
     if (window._bpCurView === 'matlists' && !ML.open) window.bpMatLists();
     if (t.kind === 'job' && $('bpx-pj-budget') && window.bpProjBudgetRender) bpProjBudgetRender();
+    if (t.kind === 'job' && window.bpQbMat) bpQbMat(t.id);
   }
   var T = function (kind, id) { return { kind: kind, id: id }; };
   var tArg = function (t) { return '\'' + t.kind + '\',\'' + t.id + '\''; };
@@ -480,8 +481,16 @@
     var d = doc(t); if (!d) return '<div id="ml-ed-' + t.kind + '-' + t.id + '" class="bpx-mut">Not found.</div>';
     var key = t.kind + '-' + t.id, a = tArg(t), items = d.items, m = d.m;
     var h = '<div class="ml-ed" id="ml-ed-' + key + '">';
+    var lite = !!(d.job && d.job.status === 'quote');
+    if (m && lite) {
+      h += '<div class="ml-bar ml-bar-lite"><div class="ml-bar-r"><button class="bpx-rowbtn" onclick="ML.useTpl(\'' + t.id + '\')">Use template</button><button class="bpx-rowbtn" onclick="ML.saveTpl(\'' + t.id + '\')">Save as template</button></div></div>';
+      if (ML.tplPick === t.id) {
+        var tl0 = tpls();
+        h += '<div class="ml-sub">' + (tl0.length ? '<div class="ml-sub-h">Add a template&rsquo;s items</div>' + tl0.map(function (tp) { return '<div class="ml-srow"><span><b>' + esc(tp.name) + '</b> <span class="bpx-mut">' + tp.items.length + (tp.items.length === 1 ? ' item' : ' items') + ' &middot; ' + money(total(tp.items)) + '</span></span><button class="bpx-rowbtn" onclick="ML.applyTpl(\'' + t.id + '\',\'' + tp.id + '\')">Add</button></div>'; }).join('') : '<div class="bpx-mut">No templates yet. Build a list, then "Save as template".</div>') + '</div>';
+      }
+    }
     /* top bar: status + actions */
-    if (m) {
+    if (m && !lite) {
       var jid = t.id;
       h += '<div class="ml-bar"><div class="ml-bar-l">' + statusPill(m.status)
         + (m.sentAt ? '<span class="bpx-mut ml-small">sent ' + new Date(m.sentAt).toLocaleDateString() + '</span>' : '')
@@ -543,11 +552,11 @@
       /* footer */
       var gs2 = bySupplier(items);
       h += '<div class="ml-foot">' + (gs2.length > 1 ? gs2.map(function (g) { return '<div class="ml-fr"><span>' + esc(g.name) + '</span><span>' + money(total(g.items)) + '</span></div>'; }).join('') : '')
-        + '<div class="ml-fr ml-grand"><span>Estimated total</span><span>' + money(total(items)) + '</span></div>'
+        + '<div class="ml-fr ml-grand"><span>' + (lite ? 'Materials cost' : 'Estimated total') + '</span><span>' + money(total(items)) + '</span></div>'
         + '<div class="ml-fr ml-small bpx-mut"><span>A plan, not spending. Receipts are what count as cost.</span></div></div>';
     }
     /* change orders */
-    if (m) {
+    if (m && !lite) {
       var ub = unbilled(m), cos = m.changeOrders;
       if (cos.length) h += '<div class="ml-cos"><div class="ml-fr"><span><b>Change orders: ' + money(ML.coTotal(d.job)) + '</b></span><span class="bpx-mut ml-small">' + cos.length + ' recorded</span></div>'
         + cos.map(function (c) { return '<div class="ml-fr ml-small"><span>' + new Date(c.at).toLocaleDateString() + ' &middot; ' + c.itemIds.length + (c.itemIds.length === 1 ? ' item' : ' items') + ' +' + c.markupPct + '%' + (c.note ? ' &middot; ' + esc(c.note) : '') + '</span><span>' + money(c.amount) + '</span></div>'; }).join('') + '</div>';
@@ -644,7 +653,7 @@
         var on = has(j), m = j.materials;
         return '<div class="pjl-r" onclick="' + (on ? 'ML.open=\'' + j.id + '\';bpMatLists()' : 'ML.startFor(\'' + j.id + '\')') + '">'
           + '<span class="pjk-av"><span class="ms">inventory_2</span></span>'
-          + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>'
+          + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + (j.status === 'quote' ? '<em class="ml-estag">Estimate</em> ' : '') + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>'
           + '<div class="pjl-st">' + (on ? statusPill(m.status) : '<span class="ml-pill no">No list</span>') + '</div>'
           + '<div class="pjl-m"><b>' + (on ? money(ML.total(j)) : '—') + '</b><small>' + (on ? m.items.length + ' item' + (m.items.length === 1 ? '' : 's') : 'nothing planned') + '</small></div>'
           + '<div class="pjl-a">' + (on ? '<button class="pjl-b" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open list</button>'
@@ -763,7 +772,7 @@
     + '#bpx .ml-need{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:22px}'
     + '#bpx .ml-needc{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e9ecf2;border-left:4px solid #f59e0b;border-radius:14px;padding:13px 14px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:box-shadow .15s,transform .15s}'
     + '#bpx .ml-needc:hover{box-shadow:0 10px 24px -12px rgba(16,24,40,.18);transform:translateY(-1px)}#bpx .ml-needb select{border-radius:9px}'
-    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
+    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-estag{font-style:normal;font-size:10.5px;font-weight:700;color:#2457d6;background:#eef3ff;border-radius:6px;padding:1px 6px;margin-right:4px}#bpx .ml-bar-lite{justify-content:flex-end}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
     + '#bpx .ml-needt{flex:1 1 140px;min-width:0;display:flex;flex-direction:column}#bpx .ml-needt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#bpx .ml-needt span{font-size:12px;color:#6b7280}'
     + '#bpx .ml-needb{display:flex;gap:6px;align-items:center}#bpx .ml-needb select{width:auto;max-width:160px;padding:7px 8px;font-size:12.5px}'
     + '#bpx .ml-card .pjk-av{background:#eef3ff;color:#2457d6}#bpx .ml-card .pjk-av .ms{font-size:21px}'

@@ -15170,7 +15170,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Routing',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewclock:{t:'Clock in',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Routing',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -15237,7 +15237,7 @@ function bpNav(v){
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
   if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); bpScrollTop(); return; }
-  ({crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
+  ({crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
 }
@@ -20198,12 +20198,13 @@ function bpFinances(){
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxInvCount" style="font-size:12.5px"></span></div>'
       +'<div id="bpxInvList" class="bpx-mut" style="font-size:13px">Loading invoices…</div></div>')
     +vp('estimates',
-      '<div class="bpx-panel"><div class="bpx-ptitle">Estimates<span class="lg2">formal quotes your customer can accept with one tap</span></div>'
+      '<div id="bpxQbSheets"></div><div class="bpx-panel"><div class="bpx-ptitle">Estimates<span class="lg2">formal quotes your customer can accept with one tap</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxEstCount" style="font-size:12.5px"></span></div>'
       +'<div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>')
 
   bpInvLoad();
   bpEstLoad();
+  if(window.bpQbSheets) bpQbSheets();
 }
 /* Only entries added by hand can be deleted here. Money that came from a job
    belongs to that job — deleting the row would silently disagree with the
@@ -25317,23 +25318,25 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/crew.js?v=20261012a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
 <script src="portal/progress.js?v=20260930a"></script>
-<script src="portal/supply.js?v=20261013a"></script>
+<script src="portal/supply.js?v=20261013aq"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
-<script src="portal/receipts.js?v=20261020arc"></script>
+<script src="portal/receipts.js?v=20261020arcq"></script>
 <script src="portal/quickbooks.js?v=20261013b"></script>
 <script src="portal/ghlsync.js?v=20261013a"></script>
 <script src="portal/autopause.js?v=20261016b"></script>
-<script src="portal/supply-kits.js?v=20260919c"></script>
+<script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
-<script src="portal/matlists.js?v=20261013crst"></script>
+<script src="portal/matlists.js?v=20261022a"></script>
+<script src="portal/quote.js?v=20261022ab"></script>
+<link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261017a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
 <script src="portal/projsheet.js?v=20261019a"></script>
-<script src="portal/contact.js?v=20261019b"></script>
+<script src="portal/contact.js?v=20261019bq"></script>
 <script src="portal/inspect.js?v=20261019b"></script>
 <script src="portal/custportal.js?v=20261009b"></script>
 <script src="portal/bpedit.js?v=20261019a"></script>
@@ -25372,7 +25375,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/shell.css?v=20261020arlmno">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
-<script src="portal/shell.js?v=20261020arl"></script>
+<script src="portal/shell.js?v=20261020arlqb"></script>
 <script src="portal/notify.js?v=20261022a"></script>
 <script src="portal/pipeline.js?v=20261022a"></script>
 <script src="portal/tour.js?v=20261020ar"></script>

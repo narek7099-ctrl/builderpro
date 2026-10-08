@@ -33,7 +33,7 @@
   var dateTs = function (s) { var t = Date.parse(String(s || '') + 'T12:00:00'); return isFinite(t) ? t : Date.now(); };
   var fmtDate = function (s) { var t = dateTs(s); return new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
   var jobsAll = function () { return window.bpJobsGet ? bpJobsGet() : []; };
-  var openJobs = function () { return jobsAll().filter(function (j) { return j.status !== 'done'; }); };
+  var openJobs = function () { return jobsAll().filter(function (j) { return j.status !== 'done' && j.status !== 'quote'; }); };
 
   /* ---------- store ---------- */
   function all() {

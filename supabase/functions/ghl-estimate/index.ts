@@ -2,7 +2,7 @@
 // (formal quotes the customer can Accept/Decline). Acceptance fires GHL's
 // estimate triggers, which can auto-create the deposit invoice.
 // Actions: {action:'create', contactId, contactName, phone?, email?, title,
-//           amount, description?, expiryDays?, send:'sms'|'email'|'both', businessName?}
+//           amount, items?:[{name,description,qty,amount}], discount?, description?, expiryDays?, send:'sms'|'email'|'both', businessName?}
 //          {action:'list'}
 // Deploy:  supabase functions deploy ghl-estimate --no-verify-jwt
 // Keys: the signed-in client's own sub-account and key (ghl_keys); GHL_LOCATION_ID is the house account's demo only.
@@ -23,6 +23,22 @@ const cors = {
 };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const ghlH = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
+
+/* line items from the portal's estimate builder; falls back to one line for the amount */
+function lineItems(b: Record<string, unknown>, title: string, desc: string, amount: number) {
+  const raw = Array.isArray(b.items) ? (b.items as Record<string, unknown>[]).slice(0, 80) : [];
+  const items = raw.map((it) => ({
+    name: String(it?.name ?? "").trim().slice(0, 120) || "Item",
+    description: String(it?.description ?? it?.name ?? "").trim().slice(0, 300) || "Item",
+    currency: "USD",
+    amount: Math.round(Math.max(0, Number(it?.amount ?? 0)) * 100) / 100,
+    qty: Math.max(0.01, Math.round(Number(it?.qty ?? 1) * 100) / 100 || 1),
+    taxes: [],
+  })).filter((it) => it.amount > 0);
+  if (!items.length) return { items: [{ name: title, description: desc || title, currency: "USD", amount, qty: 1, taxes: [] }], total: amount };
+  const total = Math.round(items.reduce((t, it) => t + Math.round(it.amount * it.qty * 100) / 100, 0) * 100) / 100;
+  return { items, total };
+}
 
 /* the client's own HighLevel key, saved from the Command Center */
 async function savedKey(loc: string): Promise<string> {
@@ -127,12 +143,17 @@ Deno.serve(async (req) => {
 
   if (b.action === "create") {
     const contactId = String(b.contactId ?? "").trim();
-    const amount = Number(b.amount ?? 0);
+    let amount = Number(b.amount ?? 0);
     const title = String(b.title ?? "Estimate").trim() || "Estimate";
-    if (!contactId || !(amount > 0)) return json({ ok: false, error: "contactId and amount required" }, 400);
+    const hasItems = Array.isArray(b.items) && (b.items as unknown[]).length > 0;
+    if (!contactId || !(amount > 0 || hasItems)) return json({ ok: false, error: "contactId and amount required" }, 400);
     const phone = String(b.phone ?? "").trim();
     const email = String(b.email ?? "").trim();
     const desc = String(b.description ?? "").trim();
+    const li = lineItems(b, title, desc, amount);
+    const disc = Math.min(Math.max(0, Math.round(Number(b.discount ?? 0) * 100) / 100), li.total);
+    amount = Math.round((li.total - disc) * 100) / 100;
+    if (!(amount > 0)) return json({ ok: false, error: "the total is $0" }, 400);
     const expiryDays = Math.max(1, Number(b.expiryDays ?? 14));
 
     const payload = {
@@ -140,8 +161,8 @@ Deno.serve(async (req) => {
       name: title,
       businessDetails: { name: String(b.businessName ?? "Your contractor") },
       currency: "USD",
-      items: [{ name: title, description: desc || title, currency: "USD", amount, qty: 1, taxes: [] }],
-      discount: { type: "percentage", value: 0 },
+      items: li.items,
+      discount: disc > 0 ? { type: "fixed", value: disc } : { type: "percentage", value: 0 },
       contactDetails: { id: contactId, name: String(b.contactName ?? "Customer"), phoneNo: phone || undefined, email: email || undefined },
       issueDate: day(0),
       expiryDate: day(expiryDays),

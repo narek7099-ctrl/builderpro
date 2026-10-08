@@ -154,7 +154,7 @@
   };
 
   /* views that are not in the sidebar still belong to a section */
-  var EXTRA = { closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
+  var EXTRA = { quote: 'finances', invoicebuilder: 'finances', closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
   function secOf(v) {
     if (crew()) return v;
     if (v === 'settings') return 'settings';
@@ -174,10 +174,12 @@
     var tabs = $('hlTabs');
     if (tabs) {
       var ks = g && g.kids ? kidsOf(g) : [];
-      if (ks.length && !ks.some(function (k) { return k[0] === v; }) && window.BPVIEWS && BPVIEWS[v]) ks = ks.concat([[v, BPVIEWS[v].t]]);
+      /* a page that belongs under one of the tabs lights that tab up */
+      var TAB_OF = { quote: 'estimates', invoicebuilder: 'invoices' }, tv = TAB_OF[v] || v;
+      if (ks.length && !ks.some(function (k) { return k[0] === tv; }) && window.BPVIEWS && BPVIEWS[v]) ks = ks.concat([[v, BPVIEWS[v].t]]);
       if (ks.length > 1) {
         tabs.innerHTML = ks.map(function (k) {
-          var on = k[0] === v;
+          var on = k[0] === tv;
           return '<button type="button" role="tab" aria-selected="' + on + '" class="hl-tab' + (on ? ' on' : '') + '" onclick="bpNav(\'' + k[0] + '\')">' + esc(k[1])
             + (window.bpLocked && bpLocked(k[0]) ? ' <svg class="hl-i hl-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' : '') + '</button>';
         }).join('');
