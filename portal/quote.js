@@ -409,9 +409,9 @@
     var cs = window._bpContacts || [], j = s.jobId ? job(s.jobId) : null, ct = contactBy(s.contactId);
     var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('');
     var opt = '';
-    if (s.type === 'deposit') opt = '<div class="qx-f3"><label>Deposit<span class="qx-in"><input type="number" min="1" max="100" step="any" value="' + esc(s.pct) + '" oninput="BPQ.invSet(\'pct\',this.value,1)"><i>%</i></span></label><label>Of the project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
-    if (s.type === 'progress') opt = '<div class="qx-f3"><label>Bill now<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.amount) + '" placeholder="0" oninput="BPQ.invSet(\'amount\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
-    if (s.type === 'final') opt = '<div class="qx-f3"><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label><label>Already billed<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.billed || '') + '" placeholder="0" oninput="BPQ.invSet(\'billed\',this.value,1)"></span></label></div>';
+    if (s.type === 'deposit') opt = '<div class="qx-f3"><label>Deposit<span class="qx-in"><input type="number" min="1" max="100" step="any" value="' + esc(s.pct) + '" oninput="BPQ.invSet(\'pct\',this.value,1)"><i>%</i></span></label><label>Of the project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
+    if (s.type === 'progress') opt = '<div class="qx-f3"><label>Bill now<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.amount) + '" placeholder="0" oninput="BPQ.invSet(\'amount\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
+    if (s.type === 'final') opt = '<div class="qx-f3"><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label><label>Already billed<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.billed || '') + '" placeholder="0" oninput="BPQ.invSet(\'billed\',this.value,1)"></span></label></div>';
     var hint = { full: 'Every line from the estimate. Change any of them, or add more.', deposit: 'A share of the total, up front. The title says Deposit, so your deposit workflow runs.', progress: 'An amount as the work moves along.', final: 'The total, less everything billed before. The title says Final balance.' }[s.type];
     area.innerHTML = '<div class="qx">'
       + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
@@ -447,7 +447,7 @@
     var s = Q.inv, st = $('qx-istats'); if (!st) return;
     var tot = invTotalFor(s.type);
     INV_T.forEach(function (t) { var e = $('qx-ta-' + t[0]); if (e) { var v = invTotalFor(t[0]); e.textContent = v > 0 ? ' · ' + m0(v) : ''; } });
-    st.innerHTML = stat('Project total', s.base ? m0(s.base) : '—', s.base ? 'from the estimate' : 'no estimate')
+    st.innerHTML = stat('Project total', s.base ? m0(s.base) : '—', s.baseManual ? 'typed in' : s.jobId ? 'from the estimate' : 'from the lines below')
       + stat('Billed before', m0(s.billed), '')
       + stat('This invoice', m2(tot), INV_T.filter(function (t) { return t[0] === s.type; })[0][1], 'good')
       + stat('Left to bill', s.base ? m0(Math.max(0, s.base - s.billed - tot)) : '—', 'after this one', s.base && s.base - s.billed - tot > 0 ? 'owe' : '');
@@ -458,15 +458,17 @@
     if (t === 'full' && s.lines.length === 1 && !s.lines[0].name && s.base) s.lines = [{ id: uid('il'), name: 'Project', desc: '', qty: 1, price: s.base }];
     invRender();
   };
-  Q.invSet = function (k, v, isNum) { Q.inv[k] = isNum ? Math.max(0, num(v)) : v; invPaint(); };
+  /* the project total follows the itemized lines, until it is typed by hand */
+  function invFollow() { var s = Q.inv; if (s && !s.baseManual) { s.base = invTotalFor('full'); var b = document.querySelectorAll('[data-qx-base]'); for (var i = 0; i < b.length; i++) if (b[i] !== document.activeElement) b[i].value = s.base || ''; } }
+  Q.invSet = function (k, v, isNum) { Q.inv[k] = isNum ? Math.max(0, num(v)) : v; if (k === 'base') Q.inv.baseManual = true; invPaint(); };
   Q.invRow = function (id, k, v, isNum) {
     var l = Q.inv.lines.filter(function (x) { return x.id === id; })[0]; if (!l) return;
     l[k] = isNum ? (String(v).trim() === '' ? '' : Math.max(0, num(v))) : v;
     var b = $('qb-il-' + id); if (b) b.textContent = m2((+l.qty || 0) * (+l.price || 0));
-    invPaint();
+    invFollow(); invPaint();
   };
-  Q.invAdd = function () { Q.inv.lines.push({ id: uid('il'), name: '', desc: '', qty: 1, price: '' }); invLinesDraw(); invPaint(); };
-  Q.invDel = function (id) { Q.inv.lines = Q.inv.lines.filter(function (x) { return x.id !== id; }); invLinesDraw(); invPaint(); };
+  Q.invAdd = function () { Q.inv.lines.push({ id: uid('il'), name: '', desc: '', qty: 1, price: '' }); invLinesDraw(); invPaint(); var r = document.querySelectorAll('#qb-ilines .qb-r'), l = r[r.length - 1]; var i = l && l.querySelector('input'); if (i) i.focus(); };
+  Q.invDel = function (id) { Q.inv.lines = Q.inv.lines.filter(function (x) { return x.id !== id; }); invLinesDraw(); invFollow(); invPaint(); };
   Q.invPreview = function () {
     var s = Q.inv, ct = contactBy(s.contactId), ls = invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; });
     bpModal('<h3>What ' + esc(ct ? ct.name : 'your customer') + ' sees</h3>' + doc('inv', { lines: ls, disc: s.type === 'full' ? r2(s.disc || 0) : 0, cust: ct ? ct.name : '', days: +s.days, desc: s.desc })
