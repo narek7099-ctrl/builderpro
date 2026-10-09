@@ -146,8 +146,10 @@
     var j = open || newSheet(c);
     bpQuoteOpen(j.id);
   };
-  window.bpQuoteOpen = function (id) {
+  window.bpQuoteOpen = function (id, mode) {
     Q.id = id; tidy(id);
+    /* an estimate opens as the estimate; an empty one opens ready to fill in */
+    var j0 = job(id); Q.mode = mode || (j0 && hasWork(j0) && calc(j0).total > 0 ? 'view' : 'edit');
     if (window.bpNav) bpNav('quote'); else render();
   };
   window.bpEstOpen = function () { bpQuoteNew(); };
@@ -159,16 +161,42 @@
   var seg = function (cur, opts, fn) { return '<div class="bpx-bulk-tabs qx-seg">' + opts.map(function (o) { return '<button type="button" class="' + (cur === o[0] ? 'on' : '') + '" onclick="' + fn + '(\'' + o[0] + '\')">' + o[1] + '</button>'; }).join('') + '</div>'; };
   var mk = function (k, v) { return '<label class="qx-mk">Mark-up<span class="qx-in"><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(v) + '" oninput="BPQ.set(\'' + k + '\',this.value,1)"><i>%</i></span></label>'; };
   var sec = function (n, title, sub, right, body, id) { return '<section class="bpx-panel qx-sec"' + (id ? ' id="' + id + '"' : '') + '><div class="qx-ph"><span class="qx-n">' + n + '</span><div class="qx-pt"><div class="bpx-ptitle">' + title + '</div><p>' + sub + '</p></div>' + right + '</div>' + body + '</section>'; };
+  Q.edit = function (on) { Q.mode = on ? 'edit' : 'view'; render(); var m = document.querySelector('.bpx-main'); if (m) m.scrollTop = 0; };
+  /* the estimate as the customer gets it, with what to do next */
+  function renderView(area, j) {
+    var q = quoteOf(j), c = calc(j), ct = contactBy(j.contactId);
+    var tone = c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low';
+    area.innerHTML = '<div class="qx qx-view">'
+      + '<a class="qx-back" onclick="bpNav(\'estimates\')">&larr; Estimates</a>'
+      + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</h2><span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span></div>'
+        + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.edit(1)">Edit estimate</button>'
+        + (q.estId ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
+        + '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (q.estId ? 'Send again' : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button></div></div>'
+      + '<div class="qb-msg" id="qb-msg"></div>'
+      + '<div class="qx-vgrid"><div class="qx-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>'
+      + '<aside class="bpx-panel qx-priv"><div class="bpx-ptitle">Only you see this</div>'
+        + '<table class="qx-st"><tbody><tr><td>Your cost</td><td></td><td>' + m2(c.cost) + '</td></tr><tr><td>Mark-up</td><td></td><td>' + m2(Math.max(0, c.total - c.tax - c.cost + c.disc)) + '</td></tr>'
+        + (c.tax ? '<tr><td>Tax</td><td></td><td>' + m2(c.tax) + '</td></tr>' : '') + '</tbody></table>'
+        + '<div class="qx-profit ' + tone + '"><span>Profit <b>' + m0(c.profit) + '</b></span><span>Margin <b>' + c.margin + '%</b></span></div>'
+        + '<table class="qx-st qx-st2"><tbody><tr><td>Customer</td><td></td><td>' + esc(ct ? ct.name : j.contactId ? j.name : '—') + '</td></tr>'
+        + '<tr><td>Sends by</td><td></td><td>' + ({ sms: 'Text', email: 'Email', both: 'Text and email' }[q.via] || 'Text') + '</td></tr>'
+        + '<tr><td>Valid for</td><td></td><td>' + (+q.validDays || 14) + ' days</td></tr></tbody></table>'
+        + '<div class="qx-foot"><a onclick="BPQ.edit(1)">Change anything</a><button class="bpx-delbtn" onclick="BPQ.remove()">Delete ' + (q.estId ? 'estimate' : 'draft') + '</button></div></aside></div>'
+      + '</div>';
+    if (window.bpSpin) bpSpin(false);
+  }
   function render() {
     var area = $('bpxViewArea'), j = job(Q.id);
     if (!area) return;
     if (!j) { area.innerHTML = '<div class="pjk-empty">That estimate is gone. <a onclick="bpNav(\'estimates\')">Back to estimates</a></div>'; if (window.bpSpin) bpSpin(false); return; }
+    if (Q.mode === 'view') { renderView(area, j); return; }
     var q = quoteOf(j), cs = window._bpContacts || [];
     var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === j.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('')
       + (j.contactId && !contactBy(j.contactId) ? '<option value="' + esc(j.contactId) + '" selected>' + esc(j.name) + '</option>' : '');
     area.innerHTML = '<div class="qx">'
       + '<a class="qx-back" onclick="bpNav(\'estimates\')">&larr; Estimates</a>'
-      + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'New estimate' : j.title) + '</h2><span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span></div></div>'
+      + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'New estimate' : j.title) + '</h2><span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span></div>'
+        + (calc(j).total > 0 ? '<button class="bpx-addbtn qx-done" onclick="BPQ.edit(0)">Done</button>' : '') + '</div>'
       + '<div class="qx-grid"><div class="qx-main">'
       + sec(1, 'Customer and job', 'Who it is for, and where.', '',
           '<div class="qx-f2"><label>Customer<select id="qb-c" onchange="BPQ.contact(this.value)">' + copts + '</select></label>'
@@ -364,7 +392,7 @@
       if (d && d.ok) {
         q.estId = d.id; q.sentAt = Date.now(); q.status = 'sent'; q.sentTotal = c.total; save(true);
         toast(d.sent ? 'Estimate sent to ' + j.name + '.' : 'Estimate saved, but sending failed. It is in your estimates as a draft.', d.sent ? 'success' : 'error');
-        render();
+        Q.mode = 'view'; render();
       } else { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); btn.disabled = false; }
     } catch (e) { say('Network error. Try again.'); btn.disabled = false; }
   };
@@ -395,14 +423,33 @@
     if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
     Q.inv = { contactId: contactId || null, jobId: jobId || null, type: 'full', pct: defs().depositPct, taxPct: defs().taxPct, amount: '', lines: [], base: 0, billed: 0, days: 7, via: 'sms', desc: '' };
     invLoad();
+    Q.inv.mode = Q.inv.jobId && invTotalFor(Q.inv.type) > 0 ? 'view' : 'edit';
     if (window.bpNav) bpNav('invoicebuilder'); else invRender();
   };
+  Q.invEdit = function (on) { Q.inv.mode = on ? 'edit' : 'view'; invRender(); var m = document.querySelector('.bpx-main'); if (m) m.scrollTop = 0; };
+  function invView(area) {
+    var s = Q.inv, ct = contactBy(s.contactId), j = s.jobId ? job(s.jobId) : null;
+    var ls = invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }), tot = invTotalFor(s.type);
+    var kind = { full: 'Itemized', deposit: 'Deposit (' + (+s.pct || 0) + '%)', progress: 'Progress payment', final: 'Final balance' }[s.type];
+    area.innerHTML = '<div class="qx qx-view">'
+      + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
+      + '<div class="bpx-chead"><div class="qx-h"><h2>Invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2><span class="bpx-badge">' + kind + '</span></div>'
+        + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.invEdit(1)">Edit invoice</button><button class="bpx-addbtn" id="qb-isend" onclick="BPQ.invSend()">Send ' + m2(tot) + '</button></div></div>'
+      + '<div class="qb-msg" id="qb-imsg"></div>'
+      + '<div class="qx-vgrid"><div class="qx-paper">' + doc('inv', { lines: ls, disc: s.type === 'full' ? r2(s.disc || 0) : 0, cust: ct ? ct.name : '', days: +s.days, desc: s.desc, title: j && j.title !== 'New estimate' ? j.title : '' }) + '</div>'
+      + '<aside class="bpx-panel qx-priv"><div class="bpx-ptitle">This invoice</div>'
+        + '<table class="qx-st"><tbody><tr><td>Project total</td><td></td><td>' + (s.base ? m2(s.base) : '—') + '</td></tr><tr><td>Billed before</td><td></td><td>' + m2(s.billed) + '</td></tr>'
+        + '<tr class="sub"><td>This invoice</td><td></td><td>' + m2(tot) + '</td></tr><tr><td>Left to bill after</td><td></td><td>' + (s.base ? m2(Math.max(0, s.base - s.billed - tot)) : '—') + '</td></tr></tbody></table>'
+        + '<table class="qx-st qx-st2"><tbody><tr><td>Due</td><td></td><td>' + (+s.days ? 'In ' + s.days + ' days' : 'On receipt') + '</td></tr><tr><td>Sends by</td><td></td><td>' + ({ sms: 'Text', email: 'Email', both: 'Text and email' }[s.via] || 'Text') + '</td></tr></tbody></table>'
+        + '<div class="qx-foot"><a onclick="BPQ.invEdit(1)">Change anything</a>' + (j ? '<a onclick="bpQuoteOpen(\'' + j.id + '\')">See the estimate</a>' : '') + '</div></aside></div></div>';
+    if (window.bpSpin) bpSpin(false);
+  }
   function invLoad() {
     var s = Q.inv, j = s.jobId ? job(s.jobId) : (s.contactId ? srcFor(s.contactId) : null);
     s.jobId = j ? j.id : null;
     if (j) {
       var c = calc(j);
-      s.lines = c.lines.map(function (l) { return { id: uid('il'), name: l.name, desc: l.desc || '', qty: l.qty, price: l.price }; });
+      s.lines = c.lines.map(function (l) { return { id: uid('il'), name: l.name, desc: l.desc || '', qty: l.qty, price: l.price, unit: l.unit || '' }; });
       s.base = c.total || +j.estimate || 0; s.billed = billed(j); s.desc = j.quote.desc || ''; s.via = j.quote.via || 'sms';
       if (s.disc == null) s.disc = c.disc;
       s.type = s.billed > 0 ? 'final' : 'full';
@@ -418,6 +465,7 @@
   }
   function invRender() {
     var area = $('bpxViewArea'), s = Q.inv; if (!area || !s) return;
+    if (s.mode === 'view') { invView(area); return; }
     var cs = window._bpContacts || [], j = s.jobId ? job(s.jobId) : null, ct = contactBy(s.contactId);
     var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('');
     var opt = '';
@@ -428,7 +476,7 @@
     var tax = s.type === 'full' && !j ? '<div class="qx-f2 qx-taxrow"><label>Sales tax<span class="qx-in"><input type="number" min="0" step="any" value="' + esc(s.taxPct || '') + '" placeholder="0" oninput="BPQ.invSet(\'taxPct\',this.value,1)"><i>%</i></span></label><p class="qx-hint">' + (Q.stateTax() ? Q.stateTax().st + ' state rate is ' + Q.stateTax().rate + '%. Add your city and county rate on top.' : 'Applied to every line above.') + '</p></div>' : '';
     area.innerHTML = '<div class="qx">'
       + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
-      + '<div class="bpx-chead"><div class="qx-h"><h2>New invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2></div></div>'
+      + '<div class="bpx-chead"><div class="qx-h"><h2>New invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2></div>' + (invTotalFor(s.type) > 0 ? '<button class="bpx-addbtn qx-done" onclick="BPQ.invEdit(0)">Done</button>' : '') + '</div>'
       + '<div class="qx-grid"><div class="qx-main">'
       + sec(1, 'Customer', j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines below.' : 'Who you are billing.'), '',
           '<div class="qx-f2"><label>Customer<select onchange="BPQ.invContact(this.value)">' + copts + '</select></label>'
