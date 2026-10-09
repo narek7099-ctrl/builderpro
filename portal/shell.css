@@ -414,3 +414,7 @@ html.bp-appmode body{overflow:hidden}
 html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;background:#f3f5f9}
 #bpx#bpx#bpx#bpx .bpx-main{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
 #bpx#bpx#bpx#bpx .hl-top,#bpx#bpx#bpx#bpx .hl-tabs{transform:translateZ(0);backface-visibility:hidden}
+/* order lists: the note and supplier on an item are quiet inline fields until used */
+#bpx#bpx#bpx#bpx#bpx .ml-in-note,#bpx#bpx#bpx#bpx#bpx .ml-in-sup{border-color:transparent !important;background:transparent !important;min-height:28px !important;height:28px;padding:0 6px !important;font-size:12.5px !important;color:#475467 !important;margin-left:-6px;width:auto;max-width:260px}
+#bpx#bpx#bpx#bpx#bpx .ml-in-note:hover,#bpx#bpx#bpx#bpx#bpx .ml-in-sup:hover{border-color:#e4e7ec !important}
+#bpx#bpx#bpx#bpx#bpx .ml-in-note:focus,#bpx#bpx#bpx#bpx#bpx .ml-in-sup:focus{border-color:#2457d6 !important;background:#fff !important}

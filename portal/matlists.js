@@ -515,16 +515,14 @@
     /* top bar: status + actions */
     if (m && !lite) {
       var jid = t.id;
-      h += '<div class="ml-bar"><div class="ml-bar-l">' + statusPill(m.status)
-        + (m.sentAt ? '<span class="bpx-mut ml-small">sent ' + new Date(m.sentAt).toLocaleDateString() + '</span>' : '')
-        + '<label class="ml-lock" title="Locked: the crew can see the list but can\'t add to it or take things off. Sending the order locks it."><input type="checkbox" data-ml-lock="' + esc(jid) + '"' + (m.locked ? ' checked' : '') + ' onchange="ML.lock(\'' + jid + '\',this.checked)"><span class="ms">' + (m.locked ? 'lock' : 'lock_open') + '</span>' + (m.locked ? 'Locked for crew' : 'Crew can add') + '</label>'
-        + '</div><div class="ml-bar-r">'
-        + (m.status === 'draft' ? '<button class="bpx-rowbtn ml-primary" onclick="ML.status(\'' + jid + '\',\'sent\')">Mark sent to supplier</button>' : '')
-        + (m.status === 'sent' ? '<button class="bpx-rowbtn ml-primary" onclick="ML.status(\'' + jid + '\',\'received\')">Mark received</button>' : '')
-        + (m.status !== 'draft' ? '<button class="bpx-rowbtn" onclick="ML.status(\'' + jid + '\',\'draft\')" title="Back to draft">Reopen</button>' : '')
-        + '<button class="bpx-rowbtn" onclick="ML.shareToggle(\'' + jid + '\')">Send / share</button>'
-        + '<button class="bpx-rowbtn" onclick="ML.useTpl(\'' + jid + '\')">Use template</button>'
+      var ST = [['draft', 'Draft'], ['sent', 'Sent to supplier'], ['received', 'Received']], si = Math.max(0, ['draft', 'sent', 'received'].indexOf(m.status));
+      h += '<div class="ml-bar2"><div class="ml-steps">' + ST.map(function (x, i) {
+          return '<button class="' + (i < si ? 'done' : i === si ? 'on' : '') + '" onclick="ML.status(\'' + jid + '\',\'' + x[0] + '\')" title="' + (i === si ? 'Where this list is' : 'Mark it ' + x[1].toLowerCase()) + '"><i>' + (i < si ? '&#10003;' : i + 1) + '</i>' + x[1] + '</button>';
+        }).join('<span class="ml-stl"></span>') + (m.sentAt && si > 0 ? '<span class="ml-sent">sent ' + new Date(m.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</span>' : '') + '</div>'
+        + '<div class="ml-tools"><button class="bpx-rowbtn" onclick="ML.shareToggle(\'' + jid + '\')">Send / share</button>'
+        + '<button class="bpx-rowbtn" onclick="ML.useTpl(\'' + jid + '\')">Add a template</button>'
         + '<button class="bpx-rowbtn" onclick="ML.saveTpl(\'' + jid + '\')">Save as template</button>'
+        + '<label class="ml-lock" title="Locked: the crew can see the list but can\'t add to it or take things off. Sending the order locks it."><input type="checkbox" data-ml-lock="' + esc(jid) + '"' + (m.locked ? ' checked' : '') + ' onchange="ML.lock(\'' + jid + '\',this.checked)">' + (m.locked ? 'Locked for crew' : 'Crew can add') + '</label>'
         + '</div></div>';
       if (ML.tplPick === jid) {
         var tl = tpls();
@@ -551,32 +549,36 @@
     /* table */
     if (!items.length) h += '<div class="ml-empty bpx-mut">No items yet. Search above to add products from your suppliers and the catalog, or add a custom line and write whatever you need.</div>';
     else {
-      h += '<table class="bpx-table ml-tbl"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th>Supplier</th>' + (lite ? '<th class="ml-n">Unit price</th><th class="ml-n">Total</th>' : '<th class="ml-n">Est. price</th><th class="ml-n">Est. total</th>') + '<th></th></tr></thead><tbody>'
-        + items.map(function (it) {
+      var row = function (it) {
           var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '"' + (k === 'qty' || k === 'price' ? ' oninput="ML.live(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)"' : '') + ' onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
           var blank = function (v) { return v === '' || v == null; };
-          var ab = it.addedBy, crew = ab && ab.role === 'crew', mineIt = ab && ab.uid && ab.uid === meUid();
-          var byChip = ab && ab.name ? '<span class="ml-by' + (crew ? ' crew' : '') + '" title="' + esc((crew ? 'Requested by ' : 'Added by ') + ab.name + (it.addedAt ? ' · ' + whenTxt(it.addedAt) : '')) + '"><i>' + esc(initials(ab.name)) + '</i>'
-            + (crew ? 'Requested by ' + esc(String(ab.name).split(' ')[0]) : mineIt ? 'added by you' : 'added by ' + esc(String(ab.name).split(' ')[0])) + '</span>' : '';
-          var stChip = it.status === 'requested' ? '<span class="ml-tag ml-tag-req">Requested</span>' + (m ? '<button class="ml-ok" onclick="ML.approve(\'' + t.id + '\',\'' + it.id + '\')" title="Accept onto the order. The crew can no longer take it back.">Approve</button>' : '')
-            : it.status === 'approved' ? '<span class="ml-tag ml-tag-ok">Approved</span>' : it.status === 'ordered' && crew ? '<span class="ml-tag ml-tag-ok">Ordered</span>' : '';
+          var ab = it.addedBy, crew = ab && ab.role === 'crew';
+          var byChip = crew && ab.name ? '<span class="ml-by crew" title="' + esc('Requested by ' + ab.name + (it.addedAt ? ' · ' + whenTxt(it.addedAt) : '')) + '"><i>' + esc(initials(ab.name)) + '</i>Requested by ' + esc(String(ab.name).split(' ')[0]) + '</span>' : '';
+          var stChip = it.status === 'requested' ? (m ? '<button class="ml-ok" onclick="ML.approve(\'' + t.id + '\',\'' + it.id + '\')" title="Accept onto the order. The crew can no longer take it back.">Approve</button>' : '<span class="ml-tag ml-tag-req">Requested</span>')
+            : it.status === 'approved' ? '<span class="ml-tag ml-tag-ok">Approved</span>' : '';
+          var tags = (it.addedAfterSend ? '<span class="ml-tag">Added after sending</span>' : '') + (it.coId ? '<span class="ml-tag ml-tag-ok">On change order</span>' : '') + byChip + stChip;
           return '<tr class="' + (it.addedAfterSend ? 'ml-late' : '') + (crew ? ' ml-crewrow' : '') + '" data-ml-item="' + esc(it.id) + '"><td data-l="Item">'
-            + (it.custom ? ed('name', it.name, 'ml-in-name', 0, 'Write anything: item, size, color') : '<div class="ml-name">' + esc(it.name) + '</div>')
-            + '<div class="ml-meta">' + (it.sku ? '<small>' + esc(it.sku) + '</small>' : '') + (it.custom ? '<small>custom</small>' : '')
-            + (it.addedAfterSend ? '<span class="ml-tag">Added after sending</span>' : '') + (it.coId ? '<span class="ml-tag ml-tag-ok">On change order</span>' : '') + byChip + stChip + '</div>'
-            + '<input class="ml-in ml-in-note" placeholder="Notes (color, length, where it goes)" value="' + esc(it.note || '') + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'note\',this.value)"></td>'
-            + '<td data-l="Qty" class="ml-n">' + ed('qty', blank(it.qty) ? '' : +it.qty || 0, 'ml-in-num', 1, 'optional') + '</td>'
+            + (it.custom ? ed('name', it.name, 'ml-in-name', 0, 'Write anything: item, size, color') : '<div class="ml-name">' + esc(it.name) + (it.sku ? ' <small>' + esc(it.sku) + '</small>' : '') + '</div>')
+            + (tags ? '<div class="ml-meta">' + tags + '</div>' : '')
+            + '<div class="ml-sub2"><input class="ml-in ml-in-note" placeholder="+ note" value="' + esc(it.note || '') + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'note\',this.value)">'
+            + (it.custom ? '<input class="ml-in ml-in-sup" placeholder="+ supplier" value="' + esc(it.supplierName || '') + '" onchange="ML.edit(' + a + ',\'' + it.id + '\',\'supplierName\',this.value)">' : '') + '</div></td>'
+            + '<td data-l="Qty" class="ml-n">' + ed('qty', blank(it.qty) ? '' : +it.qty || 0, 'ml-in-num', 1, '0') + '</td>'
             + '<td data-l="Unit">' + (it.custom ? ed('unit', it.unit || 'ea', 'ml-in-unit') : esc(it.unit || 'ea')) + '</td>'
-            + '<td data-l="Supplier">' + (it.custom ? ed('supplierName', it.supplierName || '', 'ml-in-sup', 0, 'optional') : esc(it.supplierName || '—')) + '</td>'
-            + '<td data-l="Est. price" class="ml-n">' + ed('price', blank(it.price) ? '' : (+it.price || 0).toFixed(2), 'ml-in-num', 1, 'optional') + '</td>'
-            + '<td data-l="Est. total" class="ml-n ml-lt">' + (blank(it.price) || blank(it.qty) ? '<span class="bpx-mut">—</span>' : money(line(it))) + '</td>'
+            + '<td data-l="Unit price" class="ml-n">' + ed('price', blank(it.price) ? '' : (+it.price || 0).toFixed(2), 'ml-in-num', 1, '0.00') + '</td>'
+            + '<td data-l="Total" class="ml-n ml-lt">' + (blank(it.price) || blank(it.qty) ? '<span class="bpx-mut">—</span>' : money(line(it))) + '</td>'
             + '<td class="ml-x"><button class="ml-rm" title="Remove" aria-label="Remove ' + esc(it.name) + '" onclick="ML.del(' + a + ',\'' + it.id + '\')">&times;</button></td></tr>';
-        }).join('') + '</tbody></table>';
+      };
+      var groups = bySupplier(items);
+      h += '<table class="bpx-table ml-tbl ml-tbl2"><thead><tr><th>Item</th><th class="ml-n">Qty</th><th>Unit</th><th class="ml-n">Unit price</th><th class="ml-n">Total</th><th></th></tr></thead>'
+        + groups.map(function (g) {
+          return '<tbody>' + (groups.length > 1 || g.name !== 'No supplier' ? '<tr class="ml-grp"><td colspan="4"><b>' + esc(g.name === 'No supplier' ? 'No supplier picked' : g.name) + '</b><span>' + g.items.length + ' item' + (g.items.length === 1 ? '' : 's') + '</span></td><td class="ml-n"><b>' + money(total(g.items)) + '</b></td><td></td></tr>' : '')
+            + g.items.map(row).join('') + '</tbody>';
+        }).join('') + '</table>';
       /* footer */
       var gs2 = bySupplier(items);
-      h += '<div class="ml-foot">' + (gs2.length > 1 ? gs2.map(function (g) { return '<div class="ml-fr"><span>' + esc(g.name) + '</span><span>' + money(total(g.items)) + '</span></div>'; }).join('') : '')
-        + '<div class="ml-fr ml-grand"><span>' + (lite ? 'Materials cost' : 'Estimated total') + '</span><span>' + money(total(items)) + '</span></div>'
-        + (lite ? '' : '<div class="ml-fr ml-small bpx-mut"><span>A plan, not spending. Receipts are what count as cost.</span></div>') + '</div>';
+      h += '<div class="ml-foot">'
+        + '<div class="ml-fr ml-grand"><span>' + (lite ? 'Materials cost' : 'List total') + '</span><span>' + money(total(items)) + '</span></div>'
+        + (lite ? '' : '<div class="ml-fr ml-small bpx-mut"><span>What you plan to buy. What you actually pay is on Receipts.</span></div>') + '</div>';
     }
     /* change orders */
     if (m && !lite) {
@@ -650,22 +652,34 @@
         + stat('Spent', money(spent), 'from receipts on these jobs')
         + stat(diff > 0 ? 'Over plan' : 'Under plan', money(Math.abs(diff)), over ? over + ' job' + (over === 1 ? '' : 's') + ' over' : 'across all lists', diff > 0 ? 'owe' : 'good')
       + '</div>'
-      + '<div class="ml-how"><span class="ms">info</span><span>Lists are made on the estimate: the materials you price for a job become its list here. What you actually pay is recorded on <a onclick="bpNav(\'receipts\')">Receipts</a>, and shows next to the plan.</span></div>';
+      + '<p class="ml-note">Lists come from your estimates. What you actually pay comes from <a onclick="bpNav(\'receipts\')">Receipts</a>.</p>';
+    var kindOf = function (j) { return j.status === 'quote' ? 'est' : j.status === 'done' ? 'done' : 'proj'; };
+    var F = ML.f || 'all', cnt = { all: lists.length, proj: 0, est: 0, done: 0 }; lists.forEach(function (j) { cnt[kindOf(j)]++; });
+    var shown = F === 'all' ? lists : lists.filter(function (j) { return kindOf(j) === F; });
+    var stOf = function (j) {
+      if (j.status === 'quote') return '<span class="ml-s est">Estimate</span>';
+      if (j.status === 'done') return '<span class="ml-s done">Finished</span>';
+      var s = (j.materials || {}).status; return s === 'received' ? '<span class="ml-s ok">Received</span>' : s === 'sent' ? '<span class="ml-s sent">Sent to supplier</span>' : '<span class="ml-s">Not ordered</span>';
+    };
     if (!lists.length) h += '<div class="pjk-empty">No lists yet. <a onclick="bpQuoteNew()">Build an estimate</a> and the materials you price on it show up here.</div>';
     else {
-      var pages = Math.ceil(lists.length / 10); ML.pg = Math.min(Math.max(ML.pg || 1, 1), pages);
-      h += '<div class="pjl ml-vs"><div class="pjl-r ml-vh"><span></span><span>Job</span><span>Planned</span><span>Spent</span><span>Difference</span><span></span></div>'
-        + lists.slice((ML.pg - 1) * 10, ML.pg * 10).map(function (j) {
+      h += '<div class="bpx-chead" style="margin:4px 0 10px"><div class="bpx-jobtabs">' + [['all', 'All'], ['proj', 'Projects'], ['est', 'Estimates'], ['done', 'Finished']].map(function (t) {
+          return '<button class="bpx-jt' + (F === t[0] ? ' on' : '') + '" onclick="ML.f=\'' + t[0] + '\';ML.pg=1;bpMatLists()">' + t[1] + ' · ' + cnt[t[0]] + '</button>'; }).join('') + '</div></div>';
+      var pages = Math.max(1, Math.ceil(shown.length / 10)); ML.pg = Math.min(Math.max(ML.pg || 1, 1), pages);
+      h += shown.length ? '<div class="pjl ml-vs"><div class="pjl-r ml-vh"><span>Job</span><span>Status</span><span class="r">Planned</span><span class="r">Spent</span><span class="r">Difference</span><span></span></div>'
+        + shown.slice((ML.pg - 1) * 10, ML.pg * 10).map(function (j) {
           var p = ML.total(j), b = bought(j), d = b - p, pct = p > 0 ? Math.min(100, Math.round(b / p * 100)) : 0;
-          var tag = !b ? '<span class="ml-pill no">Nothing bought yet</span>' : d > 0.005 ? '<span class="ml-vs-over">' + money(d) + ' over</span>' : '<span class="ml-vs-ok">' + money(-d) + ' under</span>';
-          return '<div class="pjl-r" onclick="ML.open=\'' + j.id + '\';bpMatLists()"><span class="pjk-av"><span class="ms">inventory_2</span></span>'
-            + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + (j.status === 'quote' ? '<em class="ml-estag">Estimate</em> ' : '') + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + ' · ' + j.materials.items.length + ' item' + (j.materials.items.length === 1 ? '' : 's') + '</span></div>'
-            + '<div class="pjl-m"><b>' + money(p) + '</b></div>'
-            + '<div class="pjl-m"><b>' + money(b) + '</b><span class="pjk-pay" title="' + pct + '% of the plan spent"><i style="width:' + pct + '%' + (d > 0.005 ? ';background:#dc2626' : '') + '"></i></span></div>'
-            + '<div class="pjl-st">' + tag + '</div>'
-            + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open</button></div></div>';
+          var diffTxt = !b ? '<span class="bpx-mut">—</span>' : d > 0.005 ? '<b class="ml-over">+' + money(d) + ' over</b>' : '<b class="ml-under">' + money(-d) + ' left</b>';
+          return '<div class="pjl-r" onclick="ML.open=\'' + j.id + '\';bpMatLists()">'
+            + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + ' · ' + j.materials.items.length + ' item' + (j.materials.items.length === 1 ? '' : 's') + '</span></div>'
+            + '<div>' + stOf(j) + '</div>'
+            + '<div class="r"><b>' + money(p) + '</b></div>'
+            + '<div class="r"><b>' + money(b) + '</b><span class="pjk-pay"><i style="width:' + pct + '%' + (d > 0.005 ? ';background:#dc2626' : '') + '"></i></span></div>'
+            + '<div class="r">' + diffTxt + '</div>'
+            + '<span class="ml-chev">&rsaquo;</span></div>';
         }).join('') + '</div>'
-        + '<div class="pjl-ft"><span class="bpx-mut">' + ((ML.pg - 1) * 10 + 1) + '–' + Math.min(ML.pg * 10, lists.length) + ' of ' + lists.length + '</span>' + (window.bpPager10 ? bpPager10(pages, ML.pg, 'ML.page') : '') + '</div>';
+        + '<div class="pjl-ft"><span class="bpx-mut">' + ((ML.pg - 1) * 10 + 1) + '–' + Math.min(ML.pg * 10, shown.length) + ' of ' + shown.length + '</span>' + (window.bpPager10 ? bpPager10(pages, ML.pg, 'ML.page') : '') + '</div>'
+        : '<div class="pjk-empty">Nothing here.</div>';
     }
     area.innerHTML = h; done(); ML.sync();
   };
@@ -776,7 +790,7 @@
     + '#bpx .ml-need{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:22px}'
     + '#bpx .ml-needc{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e9ecf2;border-left:4px solid #f59e0b;border-radius:14px;padding:13px 14px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:box-shadow .15s,transform .15s}'
     + '#bpx .ml-needc:hover{box-shadow:0 10px 24px -12px rgba(16,24,40,.18);transform:translateY(-1px)}#bpx .ml-needb select{border-radius:9px}'
-    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-vs .pjl-r{grid-template-columns:40px minmax(0,2.2fr) minmax(0,.9fr) minmax(0,1.2fr) minmax(0,1fr) auto}#bpx .ml-vh{cursor:default !important;background:#f9fafb;font-size:11.5px;font-weight:600;color:#98a2b3;padding-top:9px !important;padding-bottom:9px !important}#bpx .ml-vh:hover{background:#f9fafb !important}#bpx .ml-vs-over{font-size:12px;font-weight:700;color:#b42318;background:#fef3f2;border-radius:999px;padding:4px 10px;white-space:nowrap}#bpx .ml-vs-ok{font-size:12px;font-weight:700;color:#027a48;background:#ecfdf3;border-radius:999px;padding:4px 10px;white-space:nowrap}#bpx .ml-vsbar{display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:6px 28px;align-items:end;padding:12px 14px;margin:12px 0;border:1px solid var(--line);border-radius:12px}#bpx .ml-vsbar div{display:flex;flex-direction:column}#bpx .ml-vsbar small{font-size:11.5px;color:#667085}#bpx .ml-vsbar b{font-size:18px;font-variant-numeric:tabular-nums}#bpx .ml-vsbar b.over{color:#b42318}#bpx .ml-vsbar b.ok{color:#027a48}#bpx .ml-vsbar .pjk-pay{grid-column:1/-1}#bpx .ml-rc{margin-top:18px}@media (max-width:820px){#bpx .ml-vs .pjl-r{grid-template-columns:40px minmax(0,1fr) auto auto}#bpx .ml-vs .pjl-m{display:none}#bpx .ml-vs .pjl-st{display:block}#bpx .ml-vh{display:none !important}#bpx .ml-vsbar{grid-template-columns:repeat(3,1fr)}}#bpx .ml-estag{font-style:normal;font-size:10.5px;font-weight:700;color:#2457d6;background:#eef3ff;border-radius:6px;padding:1px 6px;margin-right:4px}#bpx .ml-bar-lite{justify-content:flex-end}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
+    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-vs .pjl-r{grid-template-columns:minmax(0,2.2fr) minmax(0,1.1fr) minmax(0,.9fr) minmax(0,1.1fr) minmax(0,1fr) 16px;gap:16px}#bpx .ml-vs .r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}#bpx .ml-vs .r .pjk-pay{width:100%;max-width:120px}#bpx .ml-vs .pjl-r b{font-variant-numeric:tabular-nums;font-size:14px}#bpx .ml-chev{color:#98a2b3;font-size:20px}#bpx .ml-over{color:#b42318 !important}#bpx .ml-under{color:#027a48 !important}#bpx .ml-s{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:#f2f4f7;color:#475467;white-space:nowrap}#bpx .ml-s.est{background:#eef3ff;color:#2457d6}#bpx .ml-s.sent{background:#fffaeb;color:#b54708}#bpx .ml-s.ok{background:#ecfdf3;color:#027a48}#bpx .ml-s.done{background:#f2f4f7;color:#667085}#bpx .ml-note{margin:-6px 0 14px;font-size:12.5px;color:#667085}#bpx .ml-note a{color:#2457d6;cursor:pointer;font-weight:600}#bpx .ml-vh{cursor:default !important;background:#f9fafb;font-size:11.5px;font-weight:600;color:#98a2b3;padding-top:9px !important;padding-bottom:9px !important}#bpx .ml-vh:hover{background:#f9fafb !important}#bpx .ml-vs-over{font-size:12px;font-weight:700;color:#b42318;background:#fef3f2;border-radius:999px;padding:4px 10px;white-space:nowrap}#bpx .ml-vs-ok{font-size:12px;font-weight:700;color:#027a48;background:#ecfdf3;border-radius:999px;padding:4px 10px;white-space:nowrap}#bpx .ml-vsbar{display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:6px 28px;align-items:end;padding:12px 14px;margin:12px 0;border:1px solid var(--line);border-radius:12px}#bpx .ml-vsbar div{display:flex;flex-direction:column}#bpx .ml-vsbar small{font-size:11.5px;color:#667085}#bpx .ml-vsbar b{font-size:18px;font-variant-numeric:tabular-nums}#bpx .ml-vsbar b.over{color:#b42318}#bpx .ml-vsbar b.ok{color:#027a48}#bpx .ml-vsbar .pjk-pay{grid-column:1/-1}#bpx .ml-rc{margin-top:18px}@media (max-width:820px){#bpx .ml-vs .pjl-r{grid-template-columns:minmax(0,1fr) auto auto 12px}#bpx .ml-vs .pjl-r>.r:nth-of-type(3),#bpx .ml-vs .pjl-r>.r:nth-of-type(4){display:none}#bpx .ml-vh{display:none !important}#bpx .ml-vsbar{grid-template-columns:repeat(3,1fr)}}#bpx .ml-bar2{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 14px}#bpx .ml-steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#bpx .ml-steps button{all:unset;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#98a2b3;cursor:pointer;padding:4px 2px}#bpx .ml-steps button i{font-style:normal;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:11.5px;background:#f2f4f7;color:#98a2b3}#bpx .ml-steps button.done{color:#344054}#bpx .ml-steps button.done i{background:#d1fadf;color:#027a48}#bpx .ml-steps button.on{color:#101828}#bpx .ml-steps button.on i{background:#2457d6;color:#fff}#bpx .ml-stl{width:22px;height:2px;background:#e4e7ec;border-radius:2px}#bpx .ml-sent{font-size:12px;color:#98a2b3;margin-left:6px}#bpx .ml-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}#bpx .ml-tools .ml-lock{margin-left:4px;font-size:12.5px;display:inline-flex;gap:6px;align-items:center;color:#475467}#bpx .ml-tbl2 .ml-grp td{background:#f9fafb;padding:9px 10px;border-top:1px solid #eaecf0;font-size:13px}#bpx .ml-tbl2 .ml-grp td span{color:#98a2b3;font-size:12px;margin-left:8px}#bpx .ml-tbl2 tbody tr:not(.ml-grp) td{padding-top:10px;padding-bottom:10px}#bpx .ml-name small{color:#98a2b3;font-weight:400;font-size:11.5px;margin-left:4px}#bpx .ml-sub2{display:flex;gap:6px;margin-top:2px}#bpx .ml-meta:empty{display:none}#bpx .ml-estag{font-style:normal;font-size:10.5px;font-weight:700;color:#2457d6;background:#eef3ff;border-radius:6px;padding:1px 6px;margin-right:4px}#bpx .ml-bar-lite{justify-content:flex-end}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
     + '#bpx .ml-needt{flex:1 1 140px;min-width:0;display:flex;flex-direction:column}#bpx .ml-needt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#bpx .ml-needt span{font-size:12px;color:#6b7280}'
     + '#bpx .ml-needb{display:flex;gap:6px;align-items:center}#bpx .ml-needb select{width:auto;max-width:160px;padding:7px 8px;font-size:12.5px}'
     + '#bpx .ml-card .pjk-av{background:#eef3ff;color:#2457d6}#bpx .ml-card .pjk-av .ms{font-size:21px}'
