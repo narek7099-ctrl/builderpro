@@ -225,10 +225,11 @@
     var q = j.quote, es = emps();
     el.innerHTML = (q.labor.length ? '<div class="qb-rows"><div class="qb-rh qb-lab"><span>Who / what</span><span>People</span><span>Hours each</span><span>Cost / hr</span><span>Cost</span><span></span></div>'
       + q.labor.map(function (l) {
-        var opt = '<option value="">Custom…</option>' + es.map(function (e) { return '<option value="' + esc(e.id) + '"' + (l.empId === e.id ? ' selected' : '') + '>' + esc(e.name) + '</option>'; }).join('');
+        var opt = '<option value="">Someone else…</option>' + es.map(function (e) { return '<option value="' + esc(e.id) + '"' + (l.empId === e.id ? ' selected' : '') + '>' + esc(e.name) + '</option>'; }).join('');
         return '<div class="qb-r qb-lab">'
-          + '<span class="qb-who">' + (es.length ? '<select onchange="BPQ.labEmp(\'' + l.id + '\',this.value)">' + opt + '</select>' : '')
-            + '<input value="' + esc(l.name || '') + '" placeholder="e.g. Tear-off crew" onchange="BPQ.row(\'labor\',\'' + l.id + '\',\'name\',this.value)"></span>'
+          /* an employee picked: just their name; otherwise a box to type who or what */
+          + '<span class="qb-who' + (l.empId ? ' emp' : '') + '">' + (es.length ? '<select onchange="BPQ.labEmp(\'' + l.id + '\',this.value)">' + opt + '</select>' : '')
+            + (l.empId ? '' : '<input value="' + esc(l.name || '') + '" placeholder="e.g. Tear-off crew" onchange="BPQ.row(\'labor\',\'' + l.id + '\',\'name\',this.value)">') + '</span>'
           + '<input type="number" min="1" step="1" inputmode="numeric" value="' + esc(l.people || 1) + '" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'people\',this.value,1)" aria-label="People">'
           + '<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.hours || '') + '" placeholder="0" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'hours\',this.value,1)" aria-label="Hours each">'
           + '<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.rate || '') + '" placeholder="0" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'rate\',this.value,1)" aria-label="Cost per hour">'
