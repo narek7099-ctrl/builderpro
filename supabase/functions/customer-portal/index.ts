@@ -11,7 +11,10 @@
 //          permits:[{type, number, status, approved, expires, inspections:[{kind, date, result}]}],
 //          job also carries start (plan start), phases[].start, and
 //          schedule:[{date, time ("HH:MM" or ""), dur (minutes)}] for every scheduled day,
-//          messages:[...], changes:[...], payments:[...], canPay }
+//          messages:[...], changes:[...], payments:[...], canPay,
+//          plan:{method, steps:[{name, amount, paid, state}], financing?, insurance?, offer?} }
+//          (the payment plan from portal/payplan.js: the schedule, the lender's
+//          apply link, the claim; never the lender fee or anything internal)
 //   POST { op:"message", token, body }
 //   POST { op:"change_order_decide", token, id, decision:"approve"|"decline",
 //          signer_name, signature (data:image/png), consent:true, note? }
@@ -173,6 +176,63 @@ function moneyOf(job: Row, changes: Row[], payments: Row[]) {
   return { contract, paid, due: r2(Math.max(contract - paid, 0)), changeOrders: r2(changes.filter((c) => c.status === "approved").reduce((t, c) => t + num(c.amount), 0)), payments };
 }
 
+/* the payment plan (portal/payplan.js keeps j.pay): the same maths, only
+   what the homeowner should see */
+const isLink = (s: unknown) => /^https:\/\/[^\s"'<>]+\.[^\s"'<>]+$/i.test(String(s ?? "")) && String(s).length < 600;
+function planOf(j: Row, C: number, fin: Row) {
+  const offer = isLink(fin?.link) ? { lender: clean(fin.lender, 60) || "our lender", link: String(fin.link) } : null;
+  const pay = j.pay && typeof j.pay === "object" ? j.pay as Row : null;
+  if (!pay) return { method: "", steps: [], offer };
+  const method = ["full", "deposit", "financing", "insurance"].includes(String(pay.method)) ? String(pay.method) : "";
+  const phases = arr(j.plan?.phases);
+  const finished = j.status === "done" || (phases.length > 0 && phases.every((p) => p && p.doneAt));
+  const agreed = j.status === "active" || j.status === "done" || j.quote?.status === "accepted";
+  const checks = arr(pay.ins?.checks);
+  const insRecv = r2(checks.reduce((t, c) => t + (c?.status === "received" ? num(c.amount) : 0), 0));
+  const st: { id: string; name: string; amount: number; trig: boolean }[] = [];
+  if (method === "full") st.push({ id: "full", name: "Full payment", amount: C, trig: pay.fullWhen === "done" ? finished : agreed });
+  if (method === "deposit") {
+    const d = pay.dep ?? {};
+    let dep = r2(C * num(d.pct) / 100);
+    if (num(d.capPct) > 0) dep = Math.min(dep, r2(C * num(d.capPct) / 100));
+    if (num(d.max) > 0) dep = Math.min(dep, num(d.max));
+    let used = Math.max(0, dep);
+    st.push({ id: "dep", name: "Deposit", amount: Math.max(0, dep), trig: agreed });
+    arr(pay.progress).forEach((s) => {
+      const a = r2(C * num(s?.pct) / 100); used += a;
+      const ph = String(s?.phase ?? "");
+      st.push({ id: String(s?.id ?? ""), name: clean(s?.name, 80) || "Progress payment", amount: a, trig: !!s?.ready || (!!ph && phases.some((p) => p && p.name === ph && p.doneAt)) });
+    });
+    st.push({ id: "final", name: "Final balance", amount: Math.max(0, r2(C - used)), trig: !!pay.finalReady || finished });
+  }
+  const ded = r2(num(pay.ins?.deductible));
+  if (method === "insurance" && ded > 0) st.push({ id: "ded", name: "Your deductible", amount: ded, trig: agreed });
+  let rem = r2(num(j.collected));
+  if (method === "insurance") rem = Math.max(0, r2(rem - insRecv));
+  const sent = (pay.sent && typeof pay.sent === "object") ? pay.sent as Row : {};
+  const steps = st.filter((s) => s.amount > 0.004).map((s) => {
+    const paid = Math.min(s.amount, rem); rem = r2(rem - paid);
+    const left = r2(s.amount - paid);
+    return { name: s.name, amount: r2(s.amount), paid: r2(paid), state: left <= 0.009 ? "paid" : (sent[s.id] || s.trig) ? "due" : "upcoming" };
+  });
+  const out: Row = { method, steps, offer: method === "financing" || method === "insurance" ? null : offer };
+  if (method === "financing") {
+    const f = pay.fin ?? {};
+    const link = isLink(f.link) ? String(f.link) : offer?.link ?? "";
+    out.financing = { lender: clean(f.lender, 60) || offer?.lender || "", link, status: ["offered", "applied", "approved", "funded"].includes(String(f.status)) ? String(f.status) : "offered", approved: r2(num(f.approved)) };
+  }
+  if (method === "insurance") {
+    const homeowner = Math.max(0, r2(num(j.collected) - insRecv));
+    const expected = r2(checks.reduce((t, c) => t + (["denied", "submitted", "received"].includes(String(c?.status)) ? 0 : num(c?.amount)), 0));
+    out.insurance = {
+      carrier: clean(pay.ins?.carrier, 80), claim: clean(pay.ins?.claim, 60),
+      deductible: ded, deductiblePaid: r2(Math.min(ded, homeowner)),
+      fromInsurer: insRecv, stillExpected: expected, completionSent: !!pay.ins?.completionAt,
+    };
+  }
+  return out;
+}
+
 async function view(c: Ctx) {
   const { link: l, job: j } = c;
   const owner = l.owner, jid = encodeURIComponent(l.job_id);
@@ -248,6 +308,7 @@ async function view(c: Ctx) {
       schedule,
     },
     money: moneyOf(j, changes, payments),
+    plan: planOf(j, moneyOf(j, changes, payments).contract, data.financing ?? {}),
     canPay: !!(loc && (GHL_TOKEN || GHL_API_KEY || await savedKey(loc))),
     crew,
     photos, docs,

@@ -406,6 +406,7 @@
       .sort(function (a, b) { return (b.status === 'active') - (a.status === 'active') || (b.quote.sentAt || 0) - (a.quote.sentAt || 0); })[0] || null;
   }
   var billed = function (j) { return r2(sum((j && j.quote && j.quote.invoices) || [], function (x) { return x.amount; })); };
+  var BPPx = function () { return window.BPP || null; };
   function invLines() {
     var s = Q.inv, j = s.jobId ? job(s.jobId) : null, title = (j && j.title !== 'New estimate' ? j.title : '') || 'the project';
     var full = s.base;
@@ -414,19 +415,21 @@
       var subt = r2(sum(s.lines, function (l) { return r2((+l.qty || 0) * (+l.price || 0)); }));
       return s.lines.concat([{ name: 'Sales tax (' + (+s.taxPct) + '%)', desc: '', qty: 1, price: r2(subt * (+s.taxPct) / 100) }]);
     }
-    var amt = s.type === 'deposit' ? r2(full * (+s.pct || 0) / 100) : s.type === 'final' ? r2(full - s.billed) : r2(+s.amount || 0);
-    var nm = s.type === 'deposit' ? 'Deposit (' + (+s.pct || 0) + '%): ' + title : s.type === 'final' ? 'Final balance: ' + title : 'Progress payment: ' + title;
-    var ds = s.type === 'final' && s.billed ? 'Total ' + m2(full) + ' less ' + m2(s.billed) + ' already billed' : s.type === 'deposit' ? 'Of ' + m2(full) : '';
+    /* a payment plan step brings its own amount and name (s.fixed, s.label) */
+    var mine = s.fixType === s.type, fx = mine && s.fixed != null && s.fixed !== '' ? r2(+s.fixed) : null;
+    var amt = fx != null ? fx : s.type === 'deposit' ? r2(full * (+s.pct || 0) / 100) : s.type === 'final' ? r2(full - s.billed) : r2(+s.amount || 0);
+    var nm = mine && s.label ? s.label + ': ' + title : s.type === 'deposit' ? 'Deposit (' + (+s.pct || 0) + '%): ' + title : s.type === 'final' ? 'Final balance: ' + title : 'Progress payment: ' + title;
+    var ds = mine && s.note != null ? s.note : s.type === 'final' && s.billed ? 'Total ' + m2(full) + ' less ' + m2(s.billed) + ' already billed' : s.type === 'deposit' ? 'Of ' + m2(full) : '';
     return [{ name: nm, desc: ds, qty: 1, price: Math.max(0, amt) }];
   }
-  window.bpInvoiceFrom = function (jid, mode) { var j = job(jid); bpInvOpen(j ? j.contactId : null, jid, mode); };
-  function invInit(contactId, jobId) {
-    Q.inv = { contactId: contactId || null, jobId: jobId || null, type: 'full', pct: defs().depositPct, taxPct: defs().taxPct, amount: '', lines: [], base: 0, billed: 0, days: 7, via: 'sms', desc: '' };
+  window.bpInvoiceFrom = function (jid, mode, stepId) { var j = job(jid); bpInvOpen(j ? j.contactId : null, jid, mode, stepId); };
+  function invInit(contactId, jobId, stepId) {
+    Q.inv = { contactId: contactId || null, jobId: jobId || null, stepId: stepId || null, type: 'full', pct: defs().depositPct, taxPct: defs().taxPct, amount: '', lines: [], base: 0, billed: 0, days: 7, via: 'sms', desc: '' };
     invLoad(); return Q.inv;
   }
-  window.bpInvOpen = async function (contactId, jobId, mode) {
+  window.bpInvOpen = async function (contactId, jobId, mode, stepId) {
     if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
-    invInit(contactId, jobId);
+    invInit(contactId, jobId, stepId);
     Q.inv.mode = mode || (Q.inv.jobId && invTotalFor(Q.inv.type) > 0 ? 'view' : 'edit');
     if (window.bpNav) bpNav('invoicebuilder'); else invRender();
   };
@@ -434,7 +437,7 @@
   function invView(area) {
     var s = Q.inv, ct = contactBy(s.contactId), j = s.jobId ? job(s.jobId) : null;
     var ls = invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }), tot = invTotalFor(s.type);
-    var kind = { full: 'Itemized', deposit: 'Deposit (' + (+s.pct || 0) + '%)', progress: 'Progress payment', final: 'Final balance' }[s.type];
+    var kind = s.fixType === s.type && s.label ? s.label : { full: 'Itemized', deposit: 'Deposit (' + (+s.pct || 0) + '%)', progress: 'Progress payment', final: 'Final balance' }[s.type];
     area.innerHTML = '<div class="qx qx-view">'
       + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
       + '<div class="bpx-chead"><div class="qx-h"><h2>Invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2><span class="bpx-badge">' + kind + '</span></div>'
@@ -451,13 +454,32 @@
   function invLoad() {
     var s = Q.inv, j = s.jobId ? job(s.jobId) : (s.contactId ? srcFor(s.contactId) : null);
     s.jobId = j ? j.id : null;
-    if (j) {
+    if (j && j.quote) {
       var c = calc(j);
       s.lines = c.lines.map(function (l) { return { id: uid('il'), name: l.name, desc: l.desc || '', qty: l.qty, price: l.price, unit: l.unit || '' }; });
-      s.base = c.total || +j.estimate || 0; s.billed = billed(j); s.desc = j.quote.desc || ''; s.via = j.quote.via || 'sms';
+      s.base = j.status === 'quote' ? (c.total || +j.estimate || 0) : (+j.estimate || c.total || 0); s.billed = billed(j); s.desc = j.quote.desc || ''; s.via = j.quote.via || 'sms';
       if (s.disc == null) s.disc = c.disc;
       s.type = s.billed > 0 ? 'final' : 'full';
+    } else if (j) {
+      /* a project with no estimate sheet: one line for the job (never gives it a quote) */
+      var t = +j.estimate || 0;
+      s.lines = [{ id: uid('il'), name: j.title || 'Project', desc: '', qty: 1, price: t || '' }];
+      s.base = t; s.billed = 0; s.disc = 0; s.desc = ''; s.via = 'sms';
+      s.type = 'full';
     } else { s.lines = [{ id: uid('il'), name: '', desc: '', qty: 1, price: '' }]; s.base = 0; s.billed = 0; s.disc = 0; }
+    if (!s.contactId && j && j.contactId) s.contactId = j.contactId;
+    /* the payment plan says which payment this is */
+    var P = BPPx(), st = j && j.pay && P ? (s.stepId ? P.step(j, s.stepId) : P.next(j)) : null;
+    if (st && (st.state === 'due' || st.state === 'sent')) {
+      s.stepId = st.id;
+      var paidBefore = r2(+j.collected || 0);
+      if (st.kind === 'full') { if (st.paid > 0) { s.type = 'final'; s.fixed = st.left; s.label = 'Final balance'; s.note = 'Total ' + m2(st.amount) + ' less ' + m2(st.paid) + ' paid'; } else s.type = 'full'; }
+      else if (st.kind === 'deposit') { s.type = 'deposit'; s.fixed = st.left; s.label = 'Deposit'; s.note = 'Of ' + m2(s.base); }
+      else if (st.kind === 'progress') { s.type = 'progress'; s.fixed = st.left; s.label = st.name; s.note = (st.pct ? st.pct + '% of ' + m2(s.base) : ''); }
+      else if (st.kind === 'final') { s.type = 'final'; s.fixed = st.left; s.label = 'Final balance'; s.note = paidBefore > 0 ? 'Total ' + m2(s.base) + ' less ' + m2(paidBefore) + ' paid' : ''; }
+      else if (st.kind === 'deductible') { s.type = 'progress'; s.fixed = st.left; s.label = 'Insurance deductible'; s.note = j.pay.ins && j.pay.ins.claim ? 'Claim ' + j.pay.ins.claim + (j.pay.ins.carrier ? ', ' + j.pay.ins.carrier : '') : ''; }
+      s.fixType = s.type;
+    } else s.stepId = null;
   }
   window.bpInvoicePage = function () { if (!Q.inv) { bpInvOpen(); return; } invRender(); };
   var INV_T = [['full', 'Itemized'], ['deposit', 'Deposit'], ['progress', 'Progress'], ['final', 'Final balance']];
@@ -473,16 +495,17 @@
     var cs = window._bpContacts || [], j = s.jobId ? job(s.jobId) : null, ct = contactBy(s.contactId);
     var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('');
     var opt = '';
-    if (s.type === 'deposit') opt = '<div class="qx-f2"><label>Deposit<span class="qx-in"><input type="number" min="1" max="100" step="any" value="' + esc(s.pct) + '" oninput="BPQ.invSet(\'pct\',this.value,1)"><i>%</i></span></label><label>Of the project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
-    if (s.type === 'progress') opt = '<div class="qx-f2"><label>Bill now<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.amount) + '" placeholder="0" oninput="BPQ.invSet(\'amount\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
-    if (s.type === 'final') opt = '<div class="qx-f2"><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label><label>Already billed<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.billed || '') + '" placeholder="0" oninput="BPQ.invSet(\'billed\',this.value,1)"></span></label></div>';
+    if (s.fixType === s.type && s.fixed != null && s.type !== 'full') opt = '<div class="qx-f2"><label>' + esc(s.label || 'Amount') + '<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.fixed) + '" oninput="BPQ.invSet(\'fixed\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div><p class="qx-hint">From the payment plan' + (s.note ? ': ' + esc(s.note) : '') + '.</p>';
+    else if (s.type === 'deposit') opt = '<div class="qx-f2"><label>Deposit<span class="qx-in"><input type="number" min="1" max="100" step="any" value="' + esc(s.pct) + '" oninput="BPQ.invSet(\'pct\',this.value,1)"><i>%</i></span></label><label>Of the project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
+    else if (s.type === 'progress') opt = '<div class="qx-f2"><label>Bill now<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.amount) + '" placeholder="0" oninput="BPQ.invSet(\'amount\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
+    else if (s.type === 'final') opt = '<div class="qx-f2"><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label><label>Already billed<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.billed || '') + '" placeholder="0" oninput="BPQ.invSet(\'billed\',this.value,1)"></span></label></div>';
     var hint = { full: j ? 'Every line from the estimate, with quantities, unit prices and tax. Change any of them, or add more.' : 'Type each line with its quantity and unit price. Tax is added below.', deposit: 'A share of the total, up front. The title says Deposit, so your deposit workflow runs.', progress: 'An amount as the work moves along.', final: 'The total, less everything billed before. The title says Final balance.' }[s.type];
     var tax = s.type === 'full' && !j ? '<div class="qx-f2 qx-taxrow"><label>Sales tax<span class="qx-in"><input type="number" min="0" step="any" value="' + esc(s.taxPct || '') + '" placeholder="0" oninput="BPQ.invSet(\'taxPct\',this.value,1)"><i>%</i></span></label><p class="qx-hint">' + (Q.stateTax() ? Q.stateTax().st + ' state rate is ' + Q.stateTax().rate + '%. Add your city and county rate on top.' : 'Applied to every line above.') + '</p></div>' : '';
     area.innerHTML = '<div class="qx">'
       + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
       + '<div class="bpx-chead"><div class="qx-h"><h2>New invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2></div>' + (invTotalFor(s.type) > 0 ? '<button class="bpx-addbtn qx-done" onclick="BPQ.invEdit(0)">Done</button>' : '') + '</div>'
       + '<div class="qx-grid"><div class="qx-main">'
-      + sec(1, 'Customer', j && j.sample ? 'Filled in from the sample estimate. Nothing here can be sent.' : j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines below.' : 'Who you are billing.'), '',
+      + sec(1, 'Customer', j && j.sample ? 'Filled in from the sample estimate. Nothing here can be sent.' : j && !j.quote ? 'Filled in from the project ' + esc(j.title || '') + '.' : j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines below.' : 'Who you are billing.'), '',
           '<div class="qx-f2"><label>Customer<select onchange="BPQ.invContact(this.value)">' + copts + '</select></label>'
           + '<label>Due<select onchange="BPQ.invSet(\'days\',this.value,1)">' + [[0, 'On receipt'], [7, 'In 7 days'], [14, 'In 14 days'], [30, 'In 30 days']].map(function (d) { return '<option value="' + d[0] + '"' + (+s.days === d[0] ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></label></div>'
           + '<label class="qx-lab">Note on the invoice <small>optional</small><textarea rows="2" onchange="BPQ.invSet(\'desc\',this.value)">' + esc(s.desc || '') + '</textarea></label>')
@@ -559,13 +582,17 @@
     if (s.via !== 'sms' && !ct.email) return say('This customer has no email. Send by text instead.');
     var jt = j && j.title !== 'New estimate' ? j.title : '';
     /* the words Deposit / Final in the title drive the contact tags and workflows */
-    var title = s.type === 'deposit' ? 'Deposit' + (jt ? ': ' + jt : '') : s.type === 'final' ? 'Final balance' + (jt ? ': ' + jt : '') : s.type === 'progress' ? 'Progress payment' + (jt ? ': ' + jt : '') : (jt || 'Invoice');
+    var title = s.label && s.fixType === s.type && s.type !== 'full' ? s.label + (jt ? ': ' + jt : '') : s.type === 'deposit' ? 'Deposit' + (jt ? ': ' + jt : '') : s.type === 'final' ? 'Final balance' + (jt ? ': ' + jt : '') : s.type === 'progress' ? 'Progress payment' + (jt ? ': ' + jt : '') : (jt || 'Invoice');
     btn.disabled = true; say('Sending…', true);
     try {
       var d = await post(GHL_INV_URL, { action: 'create', contactId: s.contactId, contactName: ct.name || 'Customer', phone: ct.phone || '', email: ct.email || '',
         title: title, amount: tot, items: gItems(ls), discount: disc, description: s.desc || '', send: s.via, businessName: biz(), dueDays: +s.days });
       if (d && d.ok) {
-        if (j) { quoteOf(j).invoices.push({ id: d.id || uid('inv'), type: s.type, amount: tot, at: Date.now() }); save(true); }
+        if (j) {
+          if (j.quote) quoteOf(j).invoices.push({ id: d.id || uid('inv'), type: s.type, amount: tot, at: Date.now() });
+          if (s.stepId && BPPx()) BPPx().markSent(j, s.stepId, tot, d.id || '');
+          save(true);
+        }
         toast('Invoice sent to ' + (ct.name || 'the customer') + '.', 'success');
         Q.inv = null; if (quick) { if ($('qb-qsend') && window.bpCloseModal) bpCloseModal(); if (window.bpQbInvs) bpQbInvs(); if (window.bpInvLoad) setTimeout(bpInvLoad, 1500); } else bpNav('invoices');
       } else { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); btn.disabled = false; }
@@ -641,22 +668,39 @@
   window.bpQbInvs = function () {
     var el = $('bpxQbInvs'); if (!el) return;
     Q._dirty = false;
-    var mine = jobs().filter(function (j) { return j && j.quote && !j.sample && j.status !== 'done' && (j.status === 'active' || hasWork(j)); });
+    var P = BPPx();
+    /* estimate sheets, and any project with a payment plan */
+    var mine = jobs().filter(function (j) { return j && !j.sample && ((j.quote && j.status !== 'done' && (j.status === 'active' || hasWork(j))) || (j.pay && P)); });
     if (!sampleOff()) mine.unshift(sampleJob());
-    var ready = [], waiting = [];
+    var ready = [], waiting = [], track = [];
     mine.forEach(function (j) {
-      if (agreed(j)) { var d = draftOf(j.id); if (d.total > 0.009) ready.push({ j: j, d: d }); }
-      else if (j.status === 'quote' && j.quote.estId) waiting.push(j);
+      if (!agreed(j)) { if (j.quote && j.status === 'quote' && j.quote.estId) waiting.push(j); return; }
+      if (j.pay && P) {
+        if (j.pay.method === 'financing' && ((j.pay.fin || {}).status !== 'funded')) track.push(j);
+        if (j.pay.method === 'insurance' && P.insTotals(j).owed > 0.009) track.push(j);
+        var nx = P.next(j);
+        if (nx) { var dn = draftOf(j.id); if (dn.total > 0.009) ready.push({ j: j, d: dn, st: nx }); }
+        return;
+      }
+      if (!j.quote) return;
+      var d = draftOf(j.id);
+      /* no plan yet: one invoice for what is left, unless it is paid */
+      if (d.total > 0.009 && !(d.s.base > 0 && (+j.collected || 0) >= d.s.base - 0.009)) ready.push({ j: j, d: d, st: null });
     });
     if (Q._dirty) save(true);
-    ready.sort(function (a, b) { return ((b.j.quote.acceptedAt || b.j.wonAt || 0) - (a.j.quote.acceptedAt || a.j.wonAt || 0)); });
+    ready.sort(function (a, b) { return ((b.j.quote || {}).acceptedAt || b.j.wonAt || 0) - ((a.j.quote || {}).acceptedAt || a.j.wonAt || 0); });
     var kind = { full: 'Itemized', deposit: 'Deposit', progress: 'Progress', final: 'Final balance' };
+    var chip = function (j) {
+      return '<button type="button" class="qb-pchip' + (j.pay ? '' : ' unset') + '" onclick="event.stopPropagation();BPP.choose(\'' + j.id + '\')" title="How the customer is paying">'
+        + (j.pay ? esc(P.label(j)) : 'Choose payment plan') + '<span class="ms">expand_more</span></button>';
+    };
     var row = function (x) {
-      var j = x.j, d = x.d, s = d.s, ttl = j.title === 'New estimate' ? 'Estimate' : j.title;
+      var j = x.j, d = x.d, s = d.s, st = x.st, ttl = j.title === 'New estimate' ? 'Estimate' : j.title;
+      var what = st ? esc(st.name) + (st.of > 1 ? ' · ' + st.n + ' of ' + st.of : '') : kind[s.type] + (s.billed > 0 ? ' · ' + m0(s.billed) + ' billed' : '');
       return '<div class="pjl-r qb-shr qb-ivr" onclick="BPQ.ivPreview(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">receipt_long</span></span>'
-        + '<div class="pjl-id"><b>' + esc(j.name || 'Customer') + '</b><span>' + esc(ttl) + '</span></div>'
-        + '<div class="pjl-st"><span class="pjk-tag on">' + (j.sample ? 'Sample' : s.billed > 0 ? 'Balance due' : 'Agreed') + '</span></div>'
-        + '<div class="pjl-m"><b>' + m0(d.total) + '</b><small>' + kind[s.type] + (s.billed > 0 ? ' · ' + m0(s.billed) + ' billed' : '') + '</small></div>'
+        + '<div class="pjl-id"><b>' + esc(j.name || 'Customer') + '</b><span>' + esc(ttl) + '</span>' + (P ? chip(j) : '') + '</div>'
+        + '<div class="pjl-st"><span class="pjk-tag on">' + (j.sample ? 'Sample' : st ? (st.state === 'sent' ? 'Sent' : 'Ready') : s.billed > 0 ? 'Balance due' : 'Agreed') + '</span></div>'
+        + '<div class="pjl-m"><b>' + m0(d.total) + '</b><small>' + what + '</small></div>'
         + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();BPQ.ivPreview(\'' + j.id + '\')">Preview</button>'
           + '<button class="pjl-b" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\',\'edit\')">Edit</button>'
           + '<button class="pjl-b pri" onclick="event.stopPropagation();BPQ.ivConfirm(\'' + j.id + '\')">Confirm and send</button></div></div>';
@@ -669,9 +713,29 @@
         + '<div class="pjl-m"><b>' + m0(c.total) + '</b><small>sent ' + (j.quote.sentAt ? new Date(j.quote.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '</small></div>'
         + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();BPQ.ivAgree(\'' + j.id + '\')">Mark agreed</button></div></div>';
     };
-    el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-ptitle">Ready to invoice<span class="lg2">estimates your customers agreed to, turned into invoices</span></div>'
+    /* financing and insurance: where the money stands */
+    var trow = function (j) {
+      var ttl = j.title === 'New estimate' ? 'Estimate' : j.title, tag = '', sub = '', amt = 0;
+      if (j.pay.method === 'financing') {
+        var f = j.pay.fin || {}, stx = { offered: 'Offered', applied: 'Applied', approved: 'Approved', funded: 'Funded' }[f.status || 'offered'];
+        tag = '<span class="pjk-tag ' + (f.status === 'funded' ? 'ok' : f.status === 'approved' ? 'on' : '') + '">' + stx + '</span>';
+        amt = f.funded ? r2((+f.funded || 0) + (+f.fee || 0)) : (+f.approved || P.contract(j));
+        sub = (f.lender || 'Lender') + (f.status === 'approved' && (j.status === 'done') ? ' · ask them to pay you' : f.status === 'funded' ? ' · paid to you' : f.status === 'approved' ? ' · approved' : ' · waiting on the customer');
+      } else {
+        var t = P.insTotals(j), ins = j.pay.ins || {};
+        tag = '<span class="pjk-tag ' + (t.owed > 0.009 ? 'on">Claim open' : 'ok">Paid') + '</span>';
+        amt = t.owed; sub = (ins.carrier || 'Insurance') + (ins.claim ? ' · claim ' + ins.claim : '') + ' · still owed';
+      }
+      return '<div class="pjl-r qb-shr" onclick="BPP.open(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">' + (j.pay.method === 'financing' ? 'account_balance' : 'shield') + '</span></span>'
+        + '<div class="pjl-id"><b>' + esc(j.name || 'Customer') + '</b><span>' + esc(ttl) + '</span></div>'
+        + '<div class="pjl-st">' + tag + '</div>'
+        + '<div class="pjl-m"><b>' + m0(amt) + '</b><small>' + esc(sub) + '</small></div>'
+        + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();BPP.open(\'' + j.id + '\')">Open</button></div></div>';
+    };
+    el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-ptitle">Ready to invoice<span class="lg2">the next payment due on each job</span></div>'
       + (ready.length ? '<div class="pjl">' + ready.map(row).join('') + '</div>'
-        : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, its invoice shows up here ready to confirm. <a onclick="BPQ.ivSample()">See an example</a></div>')
+        : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, or a payment on a job comes due, its invoice shows up here ready to confirm. <a onclick="BPQ.ivSample()">See an example</a></div>')
+      + (track.length ? '<div class="qb-wh">Financing and insurance <span>' + track.length + '</span></div><div class="pjl">' + track.map(trow).join('') + '</div>' : '')
       + (waiting.length ? '<div class="qb-wh">Sent, waiting on a yes <span>' + waiting.length + '</span></div><div class="pjl">' + waiting.map(wrow).join('') + '</div>' : '')
       + '</div>';
   };
@@ -679,7 +743,7 @@
   Q.ivPreview = function (jid) {
     var j = job(jid); if (!j) return;
     var d = draftOf(jid), s = d.s, ct = contactBy(j.contactId), sub = r2(sum(d.lines, function (l) { return r2((+l.qty || 0) * (+l.price || 0)); }));
-    bpModal('<h3>Invoice for ' + esc(ct ? ct.name : j.name) + (j.sample ? ' <span class="pjk-tag on" style="vertical-align:middle;margin-left:6px">Sample</span>' : '') + '</h3>'
+    bpModal('<h3>Invoice for ' + esc(ct ? ct.name : j.name) + (s.label && s.fixType === s.type ? ' <small class="qb-pvk">' + esc(s.label) + '</small>' : '') + (j.sample ? ' <span class="pjk-tag on" style="vertical-align:middle;margin-left:6px">Sample</span>' : '') + '</h3>'
       + doc('inv', { lines: d.lines, disc: s.type === 'full' ? r2(sub - d.total) : 0, cust: ct ? ct.name : j.name, days: +s.days, desc: s.desc, title: j.title === 'New estimate' ? '' : j.title })
       + '<div class="qb-msg" id="qb-qmsg"></div>'
       + '<div class="row qb-pvr">' + (j.sample ? '<button class="bpx-btn ghost qb-ivx-rm" onclick="bpCloseModal();BPQ.ivSampleOff()">Remove sample</button>' : '<button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button>')
@@ -687,7 +751,11 @@
         + '<button class="bpx-addbtn" id="qb-qsend" onclick="BPQ.ivConfirm(\'' + j.id + '\')">Confirm and send ' + m2(d.total) + '</button></div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '760px'; mc.style.width = '95vw'; }
   };
-  Q.ivAgree = function (jid) { var j = job(jid); if (!j) return; var q = quoteOf(j); q.status = 'accepted'; q.acceptedAt = Date.now(); save(true); bpQbInvs(); toast('Marked agreed. The invoice is ready to send.', 'success'); };
+  Q.ivAgree = function (jid) {
+    var j = job(jid); if (!j) return; var q = quoteOf(j); q.status = 'accepted'; q.acceptedAt = Date.now(); save(true); bpQbInvs();
+    /* agreed: now say how they are paying */
+    if (BPPx() && !j.pay) BPPx().choose(jid); else toast('Marked agreed. The invoice is ready to send.', 'success');
+  };
   Q.ivConfirm = async function (jid) {
     if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
     var keep = Q.inv, j = job(jid); invInit(j ? j.contactId : null, jid);

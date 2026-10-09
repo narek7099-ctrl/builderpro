@@ -20943,6 +20943,31 @@ window.bpHpTab=function(t){
   _bpHp.tab=t;_bpHp.co=null;_bpHp.req=false;_bpHp.more=false;_bpHp.anim=changed;bpHpRender();
   if(changed)try{window.scrollTo(0,0);}catch(e){}
 };
+/* the payment plan (customer-portal: plan) — schedule, financing, insurance claim */
+function bpHpPlan(d){
+  var p=d.plan||{},b=d.business||{},m=d.money||{},who=bpEsc(String(b.name||'your contractor').replace(/\.+$/,'')),out='';
+  var tag={paid:['ok','Paid'],due:['warn','Due now'],upcoming:['','Later']};
+  if((p.steps||[]).length&&p.method!=='insurance'){
+    out+=bpHpCard('Payment schedule',p.steps.map(function(s){var t=tag[s.state]||tag.upcoming;
+      return '<div class="hp-row"><span class="ms hp-ic">'+(s.state==='paid'?'task_alt':'event')+'</span><div><b>'+bpEsc(s.name)+'</b><span>'+bpHpMoney(s.amount)+(s.paid>0&&s.state!=='paid'?' · '+bpHpMoney(s.paid)+' paid':'')+'</span></div><span class="hp-tag '+t[0]+'">'+t[1]+'</span></div>';}).join('')
+      +'<div class="hp-fine">Each payment is invoiced when it comes due. Paid by check or cash? It shows here once '+who+' records it.</div>');
+  }
+  if(p.financing){
+    var f=p.financing,st={offered:'Not started',applied:'Application in',approved:'Approved',funded:'Paid by your lender'}[f.status]||'';
+    out+=bpHpCard('Financing'+(f.lender?' with '+bpEsc(f.lender):''),'<div class="hp-row"><span class="ms hp-ic">account_balance</span><div><b>'+bpEsc(st)+'</b><span>'+(f.status==='funded'?'Your lender paid '+who+'. You make your monthly payments to '+bpEsc(f.lender||'the lender')+'.':f.status==='approved'?'Approved'+(f.approved?' for '+bpHpMoney(f.approved):'')+'. When the work is finished, your lender pays '+who+' directly.':'Apply with '+bpEsc(f.lender||'the lender')+'. It takes a few minutes and you get an answer right away.')+'</span></div></div>'
+      +(f.link&&f.status!=='funded'?'<a class="hp-btn lg" href="'+bpHpEscA(f.link)+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span>'+(f.status==='offered'?'Apply for financing':'Check my financing')+'</a><div class="hp-fine"><span class=ms>lock</span>Opens '+bpEsc(f.lender||'the lender')+'\'s own secure site. Your financial details go only to them, never to '+who+'.</div>':''));
+  }
+  if(p.insurance){
+    var i=p.insurance;
+    out+=bpHpCard('Your insurance claim','<div class="hp-money"><div><small>Insurance company</small><b>'+bpEsc(i.carrier||'—')+'</b></div><div><small>Claim number</small><b>'+bpEsc(i.claim||'—')+'</b></div></div>'
+      +'<div class="hp-row"><span class="ms hp-ic">person</span><div><b>Your deductible</b><span>'+bpHpMoney(i.deductible)+(i.deductiblePaid>0&&i.deductiblePaid<i.deductible?' · '+bpHpMoney(i.deductiblePaid)+' paid':'')+'</span></div><span class="hp-tag '+(i.deductible>0&&i.deductiblePaid>=i.deductible-0.009?'ok">Paid':'warn">Due')+'</span></div>'
+      +'<div class="hp-row"><span class="ms hp-ic">shield</span><div><b>Paid by your insurance so far</b><span>'+bpHpMoney(i.fromInsurer)+'</span></div></div>'
+      +(i.stillExpected>0?'<div class="hp-row"><span class="ms hp-ic">hourglass_top</span><div><b>Still to come from your insurance</b><span>'+bpHpMoney(i.stillExpected)+(i.completionSent?' · completion paperwork sent to your insurer':' · released when the work is finished')+'</span></div></div>':'')
+      +'<div class="hp-fine">Your insurer pays in parts: a first check now, and the rest (the held-back depreciation) after the work is done and '+who+' sends them the completion paperwork. If a check comes to you, or is made out to you and your mortgage company, please pass it on to '+who+'.</div>');
+  }
+  if(p.offer&&m.due>0) out+=bpHpCard('Prefer monthly payments?','<div class="hp-row"><span class="ms hp-ic">account_balance</span><div><b>Pay over time with '+bpEsc(p.offer.lender)+'</b><span>Apply in a few minutes. If you are approved, your lender pays '+who+' and you pay them monthly.</span></div></div><a class="hp-btn ghost" href="'+bpHpEscA(p.offer.link)+'" target="_blank" rel="noopener"><span class=ms>open_in_new</span>See my options</a>');
+  return out;
+}
 function bpHpCard(title,body,cls,act){return '<section class="hp-card'+(cls?' '+cls:'')+'">'+(title?'<div class="hp-card-h"><h2>'+title+'</h2>'+(act||'')+'</div>':'')+body+'</section>';}
 function bpHpEmpty(ico,t,extra){return '<div class="hp-empty"><span class="hp-empty-ic"><span class=ms>'+ico+'</span></span><p>'+t+'</p>'+(extra||'')+'</div>';}
 function bpHpReqs(){return (_bpHp.d.messages||[]).filter(function(m){return m.mine&&BP_HP_REQ.test(m.body||'');});}
@@ -21016,6 +21041,7 @@ function bpHpPane(t){
         +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract)+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders)+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
         +(m.due>0?(d.canPay?'<div class="sg-msg" id="hpPayMsg"></div><button class="hp-btn lg" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span>Pay my invoice</button><div class="hp-fine"><span class=ms>lock</span>Opens your invoice from '+bpEsc(b.name||'your contractor')+' on a secure payment page. Your card details never reach this site.</div>'
           :'<div class="hp-fine">To pay, contact '+bpEsc(b.name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
+      +bpHpPlan(d)
       +bpHpCard('Online payments',pays.length?pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
         :bpHpEmpty('receipt_long','No card payments yet. Payments made another way are included in Paid so far.'));
   }
@@ -25330,7 +25356,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261022apuvwxyzabfgnos"></script>
-<script src="portal/quote.js?v=20261022abxmnpituvwfnu"></script>
+<script src="portal/quote.js?v=20261022abxmnpituvwfnv"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022axyzamnptvfnu">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261017a"></script>
@@ -25341,6 +25367,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/contact.js?v=20261019bq"></script>
 <script src="portal/inspect.js?v=20261019b"></script>
 <script src="portal/custportal.js?v=20261009b"></script>
+<script src="portal/payplan.js?v=20261009a"></script>
+<link rel="stylesheet" href="portal/payplan.css?v=20261009a">
 <script src="portal/bpedit.js?v=20261019a"></script>
 <script src="portal/crewapp.js?v=20261019a"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
