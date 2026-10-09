@@ -76,7 +76,7 @@
 
   /* ---------- the sheet lives on a job ---------- */
   var jobs = function () { return window.bpJobsGet ? bpJobsGet() : []; };
-  var job = function (id) { return jobs().filter(function (j) { return j && j.id === id; })[0] || null; };
+  var job = function (id) { return jobs().filter(function (j) { return j && j.id === id; })[0] || (id === 'jsample' && Q._sample) || null; };
   var saveT = null;
   function save(now) {
     clearTimeout(saveT);
@@ -445,7 +445,7 @@
         + '<table class="qx-st"><tbody><tr><td>Project total</td><td></td><td>' + (s.base ? m2(s.base) : '—') + '</td></tr><tr><td>Billed before</td><td></td><td>' + m2(s.billed) + '</td></tr>'
         + '<tr class="sub"><td>This invoice</td><td></td><td>' + m2(tot) + '</td></tr><tr><td>Left to bill after</td><td></td><td>' + (s.base ? m2(Math.max(0, s.base - s.billed - tot)) : '—') + '</td></tr></tbody></table>'
         + '<table class="qx-st qx-st2"><tbody><tr><td>Due</td><td></td><td>' + (+s.days ? 'In ' + s.days + ' days' : 'On receipt') + '</td></tr><tr><td>Sends by</td><td></td><td>' + ({ sms: 'Text', email: 'Email', both: 'Text and email' }[s.via] || 'Text') + '</td></tr></tbody></table>'
-        + '<div class="qx-foot"><a onclick="BPQ.invEdit(1)">Change anything</a>' + (j ? '<a onclick="bpQuoteOpen(\'' + j.id + '\')">See the estimate</a>' : '') + '</div></aside></div></div>';
+        + '<div class="qx-foot"><a onclick="BPQ.invEdit(1)">Change anything</a>' + (j && !j.sample ? '<a onclick="bpQuoteOpen(\'' + j.id + '\')">See the estimate</a>' : '') + '</div></aside></div></div>';
     if (window.bpSpin) bpSpin(false);
   }
   function invLoad() {
@@ -482,7 +482,7 @@
       + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
       + '<div class="bpx-chead"><div class="qx-h"><h2>New invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2></div>' + (invTotalFor(s.type) > 0 ? '<button class="bpx-addbtn qx-done" onclick="BPQ.invEdit(0)">Done</button>' : '') + '</div>'
       + '<div class="qx-grid"><div class="qx-main">'
-      + sec(1, 'Customer', j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines below.' : 'Who you are billing.'), '',
+      + sec(1, 'Customer', j && j.sample ? 'Filled in from the sample estimate. Nothing here can be sent.' : j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines below.' : 'Who you are billing.'), '',
           '<div class="qx-f2"><label>Customer<select onchange="BPQ.invContact(this.value)">' + copts + '</select></label>'
           + '<label>Due<select onchange="BPQ.invSet(\'days\',this.value,1)">' + [[0, 'On receipt'], [7, 'In 7 days'], [14, 'In 14 days'], [30, 'In 30 days']].map(function (d) { return '<option value="' + d[0] + '"' + (+s.days === d[0] ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></label></div>'
           + '<label class="qx-lab">Note on the invoice <small>optional</small><textarea rows="2" onchange="BPQ.invSet(\'desc\',this.value)">' + esc(s.desc || '') + '</textarea></label>')
@@ -612,12 +612,13 @@
     var out = { s: s, lines: invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }), total: invTotalFor(s.type) };
     Q.inv = was; return out;
   }
-  /* a worked example so the flow can be seen before a real customer says yes */
-  Q.ivSample = function (quiet) {
-    if (window.BP_LIVE && !window._bpFinLoaded) { if (!quiet) toast('Still loading your projects. Try again in a moment.'); return; }
-    var all = jobs(); if (all.some(function (j) { return j && j.sample; })) { if (!quiet) bpQbInvs(); return; }
-    var mat = function (n, q, u, p, sup) { return { id: uid('m'), name: n, qty: q, unit: u, price: p, supplier: sup || '' }; };
-    var j = { id: 'j' + Date.now() + 'smp', sample: true, name: 'Sample customer', phone: '', email: '', contactId: null, title: 'Roof replacement (sample)', addr: '128 Maple Ave',
+  /* a worked example so the flow can be seen before a real customer says yes.
+     It lives on the page only (never saved to the projects), and shows until
+     Remove sample is pressed. */
+  function sampleJob() {
+    if (Q._sample) return Q._sample;
+    var mat = function (n, q, u, p) { return { id: uid('m'), name: n, qty: q, unit: u, price: p, supplier: '' }; };
+    var j = { id: 'jsample', sample: true, name: 'Sample customer', phone: '', email: '', contactId: null, title: 'Roof replacement (sample)', addr: '128 Maple Ave',
       status: 'quote', estimate: 0, collected: null, expenses: [], createdAt: Date.now(),
       materials: { status: 'draft', sentAt: null, changeOrders: [], items: [
         mat('Architectural shingles (bundle)', 66, 'bdl', 38.5), mat('Synthetic underlayment (roll)', 8, 'roll', 92), mat('Ice and water shield (roll)', 4, 'roll', 118),
@@ -626,20 +627,23 @@
     var q = j.quote; q.labor = [{ id: uid('l'), name: 'Tear-off and install crew', people: 4, hours: 18, rate: 38 }];
     q.other = [{ id: uid('o'), name: 'Dumpster (20 yd)', cat: 'Dumpster', cost: 475 }, { id: uid('o'), name: 'Building permit', cat: 'Permits', cost: 260 }];
     q.estId = 'sample'; q.sentAt = Date.now() - 3 * 864e5; q.status = 'accepted'; q.acceptedAt = Date.now();
-    all.unshift(j); save(true); Q.ivOpen = j.id;
-    try { var st = bpSettingsGet() || {}; st.ivSampleShown = 1; bpSettingsSet(st); if (window.bpSettingsPush) bpSettingsPush(st); } catch (e) {}
-    if (!quiet) bpQbInvs();
-  };
+    return (Q._sample = j);
+  }
+  var sampleOff = function () { try { return !!(bpSettingsGet() || {}).ivSampleOff; } catch (e) { return false; } };
+  var setSampleOff = function (v) { try { var st = bpSettingsGet() || {}; if (v) st.ivSampleOff = 1; else delete st.ivSampleOff; bpSettingsSet(st); if (window.bpSettingsPush) bpSettingsPush(st); } catch (e) {} };
+  Q.ivSample = function () { setSampleOff(false); Q.ivOpen = 'jsample'; bpQbInvs(); };
   Q.ivSampleOff = function () {
-    var all = jobs(), left = all.filter(function (j) { return !(j && j.sample); });
-    all.length = 0; Array.prototype.push.apply(all, left); save(true); Q.ivOpen = null; Q.inv = null; bpQbInvs(); toast('Sample removed.', 'success');
+    setSampleOff(true); Q._sample = null; Q.ivOpen = null; if (Q.inv && Q.inv.jobId === 'jsample') Q.inv = null;
+    /* an older build saved the sample with the projects: clear that too */
+    var all = jobs(); if (all.some(function (j) { return j && j.sample; })) { var left = all.filter(function (j) { return !(j && j.sample); }); all.length = 0; Array.prototype.push.apply(all, left); save(true); }
+    bpQbInvs(); toast('Sample removed.', 'success');
   };
   window.bpQbInvs = function () {
     var el = $('bpxQbInvs'); if (!el) return;
-    if (window.BP_LIVE && !window._bpFinLoaded) { clearTimeout(Q._ivT); Q._ivT = setTimeout(bpQbInvs, 1500); }
-    try { if ((!window.BP_LIVE || window._bpFinLoaded) && !(bpSettingsGet() || {}).ivSampleShown) Q.ivSample(1); } catch (e) {}
     Q._dirty = false;
-    var mine = jobs().filter(function (j) { return j && j.quote && j.status !== 'done' && (j.status === 'active' || hasWork(j)); });
+    var mine = jobs().filter(function (j) { return j && j.quote && !j.sample && j.status !== 'done' && (j.status === 'active' || hasWork(j)); });
+    if (!sampleOff()) mine.unshift(sampleJob());
+    if (Q.ivOpen === undefined) Q.ivOpen = sampleOff() ? null : 'jsample';
     var ready = [], waiting = [];
     mine.forEach(function (j) {
       if (agreed(j)) { var d = draftOf(j.id); if (d.total > 0.009) ready.push({ j: j, d: d }); }
