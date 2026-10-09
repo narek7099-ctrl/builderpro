@@ -33,8 +33,10 @@
   </div>
   <div class="menu_body">
     <nav>
-      <a href="#trades" class="menu_link">What you get</a>
+      <a href="#simple" class="menu_link">Why simple</a>
+      <a href="#grow" class="menu_link">Grow with us</a>
       <a href="#how" class="menu_link">How it works</a>
+      <a href="#trades" class="menu_link">Every trade</a>
       <a href="#lisa" class="menu_link">Lisa AI</a>
       <a href="#estimator" class="menu_link">Estimator</a>
       <a href="#pricing" class="menu_link">Pricing</a>
@@ -74,8 +76,9 @@
       <div class="drawer_field"><label class="b-s" for="dfPhone">Phone</label><input id="dfPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0148"></div>
       <div class="drawer_field"><label class="b-s" for="dfEmail">Email</label><input id="dfEmail" type="email" autocomplete="email" inputmode="email" placeholder="dana@whitfieldplumbing.com"></div>
     </div>
-    <div class="drawer_field"><label class="b-s" for="dfMsg">Your trade and crew size</label><textarea id="dfMsg" rows="4" placeholder="Plumbing, six of us, two trucks. Tired of missing calls on the job."></textarea></div>
-    <button class="btn" type="submit" onclick="dlContactSend(this)">Send</button>
+    <input id="dfWeb" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+    <button class="btn" type="submit" onclick="dlContactSend(this)">Start my free trial</button>
+    <div class="b-s muted" style="margin-top:8px">14 days free. Plans from $99 a month.</div>
     <div class="drawer_msg" aria-live="polite"></div>
   </form>
 </aside>
@@ -96,14 +99,14 @@
 
       <div class="hero_left-mid">
         <h1 class="h-l" data-split="heading" data-split-load>
-          Software<br>for contractors,<br><span class="accent">reimagined.</span>
+          Simple software<br>for growing<br><span class="accent">contractors.</span>
         </h1>
       </div>
 
       <div class="hero_left-bot" data-pill-parent>
-        <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">What we do</span></div>
+        <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">The simple one</span></div>
         <p class="b-l" data-split="heading" data-split-load data-split-delay=".35">
-          One system that answers your phone, schedules the work, sends the estimate, signs the contract and collects the invoice. Built for every trade.
+          The big platforms are built for big offices. BuilderPro answers your phone, sends the estimate, schedules the crew and collects the money, so your time goes into growing.
         </p>
       </div>
     </div>
@@ -131,14 +134,14 @@
           </svg>
           <span id="heroNum">1</span>
         </div>
-        <div class="hero_step-title" data-step="1">Answer every call</div>
-        <div class="hero_step-title" data-step="2">Run every job</div>
-        <div class="hero_step-title" data-step="3">Know your numbers</div>
+        <div class="hero_step-title" data-step="1">Never miss a job</div>
+        <div class="hero_step-title" data-step="2">Run it from one screen</div>
+        <div class="hero_step-title" data-step="3">Grow on real numbers</div>
       </div>
       <div class="hero_story-bot">
         <p class="b-l hero_step-body" data-step="1" data-highlight-text>A customer calls while you are on a roof. Lisa picks up, answers their questions and books the visit before the next ring.</p>
         <p class="b-l hero_step-body" data-step="2" data-highlight-text>The estimate, the signed contract, the schedule, the photos and the invoice live on one project card, from first call to final payment.</p>
-        <p class="b-l hero_step-body" data-step="3" data-highlight-text>Income, expenses and profit on every job, updated as the money moves. Numbers a crew of two or twenty can read at a glance.</p>
+        <p class="b-l hero_step-body" data-step="3" data-highlight-text>Income, expenses and profit on every job, updated as the money moves. You see what is working, so you know when to hire the next crew.</p>
       </div>
     </div>
   </div>
@@ -151,11 +154,49 @@
 </section>
 
 
-<!-- ===================== 2. LOGO WALL ==================================== -->
+<!-- ===================== 2. THE SIMPLE ONE =============================
+  Why BuilderPro: the other platforms are built for big offices; this one is
+  built for the shop that is still growing.                                 -->
+<section class="section" id="simple" data-pill-parent>
+  <div class="stack">
+    <div class="card sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Why simple</span></div>
+      <h2 class="h-m" data-split="heading">Built for the business<br>you are <span class="accent">building.</span></h2>
+    </div>
+    <div class="sg-vs">
+      <div class="card is-outline sg-col">
+        <span class="sg-k">Most field service software</span>
+        <ul class="sg-list is-no">
+          <li><span class="sg-ic"></span>Built around a dispatcher and an office team</li>
+          <li><span class="sg-ic"></span>Onboarding and training that can take weeks</li>
+          <li><span class="sg-ic"></span>Per-user prices and paid add-ons for the basics</li>
+          <li><span class="sg-ic"></span>Screens for problems you do not have yet</li>
+        </ul>
+      </div>
+      <div class="card is-blue on-blue sg-col" navbar-logo-color-change>
+        <span class="sg-k">BuilderPro</span>
+        <ul class="sg-list is-yes">
+          <li><span class="sg-ic"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>Built for the owner who still answers the phone</li>
+          <li><span class="sg-ic"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>Set up for you and live in 3 to 4 days</li>
+          <li><span class="sg-ic"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>One flat monthly price, from $99. No per-tech fees</li>
+          <li><span class="sg-ic"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>The tools a growing crew uses every day, nothing else</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sg-3">
+      <div class="card sg-p"><span class="sg-n">01</span><b>Simple on day one</b><p>One login, plain words and one screen per job. If you can send a text, you can run BuilderPro.</p></div>
+      <div class="card sg-p"><span class="sg-n">02</span><b>Grows when you do</b><p>Add people, crews and locations as you hire. Your customers, jobs and numbers come with you.</p></div>
+      <div class="card sg-p"><span class="sg-n">03</span><b>Priced for where you are</b><p>Start at $99 a month. Move up a plan when the business does, not before.</p></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================== 3. LOGO WALL ==================================== -->
 <section class="section" aria-label="Works with">
   <div class="stack">
     <div class="card is-outline" style="text-align:center">
-      <p class="b-m">Connects to the tools you already pay for.<br>Small crew to fifty trucks.</p>
+      <p class="b-m">Works with the tools you already use.<br>One truck today, five tomorrow.</p>
     </div>
     <div class="marquee">
       <div class="marquee_track">
@@ -201,7 +242,182 @@
 </section>
 
 
-<!-- ===================== 3. WHAT YOU GET, BY TRADE ========================
+<!-- ===================== 4. GROW IN STAGES ==============================
+  The plans as the stages of a growing business.                             -->
+<section class="section" id="grow" data-pill-parent>
+  <div class="stack">
+    <div class="card is-outline is-grid-texture sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Grow with us</span></div>
+      <h2 class="h-m" data-split="heading">Start small.<br>Grow <span class="accent">without switching.</span></h2>
+    </div>
+    <div class="gw-grid">
+      <div class="card gw">
+        <div class="gw-top"><span class="gw-stage">Stage 1</span><span class="gw-bars" aria-hidden="true"><i class="on"></i><i></i><i></i></span></div>
+        <b class="gw-t">Just you</b>
+        <p>You are on the roof and the phone is ringing. Lisa answers, books the visit and texts back every missed call. Estimates, invoices and payments go out from your phone.</p>
+        <ul class="gw-l"><li>AI receptionist and missed-call text-back</li><li>Calendar and booking page</li><li>Estimates, invoices and payments</li></ul>
+        <a class="gw-plan" href="#pricing"><span>Foundation</span><b>$99<small>/mo</small></b></a>
+      </div>
+      <div class="card gw is-mid">
+        <div class="gw-top"><span class="gw-stage">Stage 2</span><span class="gw-bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span></div>
+        <b class="gw-t">A small crew</b>
+        <p>You have a few people and more jobs than you can keep in your head. Projects, contracts, payment plans, material lists and job costs keep every job and every dollar in one place.</p>
+        <ul class="gw-l"><li>Projects, contracts and e-signature</li><li>Deposits, progress payments, financing and insurance</li><li>Up to 5 users</li></ul>
+        <a class="gw-plan" href="#pricing"><span>BuilderPro OS</span><b>$199<small>/mo</small></b></a>
+      </div>
+      <div class="card gw is-top">
+        <div class="gw-top"><span class="gw-stage">Stage 3</span><span class="gw-bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+        <b class="gw-t">A growing team</b>
+        <p>More crews, more trucks, maybe a second location. An AI team follows up on quotes, runs your marketing and has your day ready at 7am.</p>
+        <ul class="gw-l"><li>AI Team included</li><li>Unlimited users and locations</li><li>Priority support</li></ul>
+        <a class="gw-plan" href="#pricing"><span>Enterprise</span><b>$299<small>/mo</small></b></a>
+      </div>
+    </div>
+    <div class="card gw-note"><span class="gw-note_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span><p>Moving up a plan takes one click. Your customers, jobs, photos and numbers stay right where they are. No migration, no new system to learn.</p><button class="btn js-open-drawer" type="button">Start free</button></div>
+  </div>
+</section>
+<style>
+/* the simple one + grow in stages */
+.sg-vs{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter)}
+.sg-col{display:flex;flex-direction:column;gap:1.4rem;padding:2.25rem 2rem}
+.sg-k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.sg-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1rem;font-size:1.0625rem;line-height:1.45}
+.sg-list li{display:flex;gap:.8rem;align-items:flex-start}
+.sg-ic{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;margin-top:.05rem}
+.sg-list.is-no{color:var(--gray-500)}
+.sg-list.is-no .sg-ic{border:1.5px solid var(--gray-300)}
+.sg-list.is-no .sg-ic::before{content:"";width:.6rem;height:1.5px;background:var(--gray-300)}
+.sg-list.is-yes .sg-ic{background:rgba(255,255,255,.2)}
+.sg-list.is-yes svg{width:.95rem;height:.95rem;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.sg-3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gutter)}
+.sg-p{display:flex;flex-direction:column;gap:.6rem;padding:2rem}
+.sg-n{font-size:12px;font-weight:600;color:var(--blue-500);letter-spacing:.04em}
+.sg-p b{font-size:1.35rem;font-weight:600;letter-spacing:-.02em}
+.sg-p p{margin:0;font-size:15px;line-height:1.55;color:var(--gray-500)}
+.gw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gutter);align-items:stretch}
+.gw{display:flex;flex-direction:column;gap:.9rem;padding:2rem}
+.gw-top{display:flex;justify-content:space-between;align-items:center}
+.gw-stage{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:var(--gray-100);color:var(--gray-500)}
+.gw-bars{display:flex;align-items:flex-end;gap:4px;height:22px}
+.gw-bars i{display:block;width:7px;border-radius:3px;background:var(--gray-200)}
+.gw-bars i:nth-child(1){height:8px}.gw-bars i:nth-child(2){height:14px}.gw-bars i:nth-child(3){height:22px}
+.gw-bars i.on{background:var(--blue-500)}
+.gw-t{font-size:1.6rem;font-weight:600;letter-spacing:-.025em;margin-top:.4rem}
+.gw p{margin:0;font-size:15px;line-height:1.55;color:var(--gray-500)}
+.gw-l{list-style:none;margin:.2rem 0 0;padding:0;display:flex;flex-direction:column;gap:.5rem;font-size:14px}
+.gw-l li{display:flex;gap:.55rem;align-items:flex-start}
+.gw-l li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--blue-500);margin-top:.5rem}
+.gw-plan{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:.9rem 1rem;border-radius:.75rem;background:var(--gray-100);font-size:14px;font-weight:500;transition:background .2s,color .2s}
+.gw-plan b{font-size:1.25rem;font-weight:600;white-space:nowrap}.gw-plan small{font-size:12px;font-weight:500;opacity:.7}
+.gw-plan:hover{background:var(--blue-500);color:#fff}
+.gw.is-top .gw-plan{background:var(--dark);color:#fff}
+.gw-note{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;padding:1.5rem 2rem}
+.gw-note_ic{flex:none;width:44px;height:44px;border-radius:12px;background:#e6f0ff;color:var(--blue-500);display:grid;place-items:center}.gw-note_ic svg{width:22px;height:22px}
+.gw-note p{flex:1;min-width:220px;margin:0;font-size:15.5px;line-height:1.5}
+@media(max-width:900px){.sg-vs,.sg-3,.gw-grid{grid-template-columns:1fr}.sg-col,.gw,.sg-p{padding:1.6rem 1.4rem}.sg-list{font-size:1rem}.gw-note{padding:1.4rem}.gw-note .btn{width:100%;justify-content:center}}
+</style>
+
+
+<!-- ===================== 5. HOW IT WORKS ==================================
+  Left column is sticky for the whole section; the right column scrolls past
+  in 100vh blocks. Each block activates the matching sticky visual.        -->
+<section class="section" id="how" data-pill-parent>
+  <div class="stack">
+    <div class="card is-outline is-grid-texture sec-head-card">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">How it works</span></div>
+      <h2 class="h-m" data-split="heading">Goodbye scattered apps,<br>hello <span class="accent">one</span> system.</h2>
+    </div>
+
+    <div class="sol_body">
+      <div class="sol_sticky">
+        <div class="sol_visual is-grid-texture">
+          <!-- 1: the flow, as rounded node chips joined by thin connector lines -->
+          <svg class="sol_img is-active" data-sol="0" viewBox="0 0 600 400" aria-label="From the call to the review, every step wired together">
+            <defs>
+              <filter id="flowShadow" x="-10%" y="-20%" width="120%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#001530" flood-opacity=".08"/></filter>
+            </defs>
+            <!-- one path threads through every step; a dash travels along it -->
+            <path class="flow_rail" d="M300 76 H430 Q460 76 460 106 V170 Q460 200 430 200 H170 Q140 200 140 230 V294 Q140 324 170 324 H300" fill="none" stroke="#c9d3df" stroke-width="2"/>
+            <path class="flow_dash" d="M300 76 H430 Q460 76 460 106 V170 Q460 200 430 200 H170 Q140 200 140 230 V294 Q140 324 170 324 H300" fill="none" stroke="#006fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="22 900"/>
+            <g font-family="General Sans, Geist, Arial, sans-serif" font-size="14" font-weight="500" filter="url(#flowShadow)">
+              <!-- step 1: blue -->
+              <rect x="40" y="48" width="180" height="56" rx="14" fill="#006fff"/>
+              <circle cx="70" cy="76" r="13" fill="rgba(255,255,255,.18)"/><text x="70" y="81" fill="#fff" text-anchor="middle" font-size="12" font-weight="600">1</text>
+              <text x="94" y="81" fill="#fff">Call answered</text>
+              <!-- step 2 -->
+              <rect x="240" y="48" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
+              <circle cx="270" cy="76" r="13" fill="#eef2f7"/><text x="270" y="81" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">2</text>
+              <text x="294" y="81" fill="#001530">Lisa books it</text>
+              <!-- step 3 -->
+              <rect x="380" y="172" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
+              <circle cx="410" cy="200" r="13" fill="#eef2f7"/><text x="410" y="205" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">3</text>
+              <text x="434" y="205" fill="#001530">Estimate sent</text>
+              <!-- step 4 -->
+              <rect x="180" y="172" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
+              <circle cx="210" cy="200" r="13" fill="#eef2f7"/><text x="210" y="205" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">4</text>
+              <text x="234" y="205" fill="#001530">Contract signed</text>
+              <!-- step 5 -->
+              <rect x="40" y="296" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
+              <circle cx="70" cy="324" r="13" fill="#eef2f7"/><text x="70" y="329" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">5</text>
+              <text x="94" y="329" fill="#001530">Invoice paid</text>
+              <!-- step 6: navy -->
+              <rect x="240" y="296" width="180" height="56" rx="14" fill="#001530"/>
+              <circle cx="270" cy="324" r="13" fill="rgba(255,255,255,.14)"/><text x="270" y="329" fill="#fff" text-anchor="middle" font-size="12" font-weight="600">6</text>
+              <text x="294" y="329" fill="#fff">Review requested</text>
+            </g>
+            <!-- the quiet steps that happen on their own -->
+            <g font-family="General Sans, Geist, Arial, sans-serif" font-size="11" font-weight="500" fill="#8a94a3">
+              <rect x="460" y="60" width="110" height="30" rx="9" fill="#e9edf3"/><text x="515" y="79" text-anchor="middle">Reminder sent</text>
+              <rect x="40" y="185" width="110" height="30" rx="9" fill="#e9edf3"/><text x="95" y="204" text-anchor="middle">Crew dispatched</text>
+              <rect x="460" y="309" width="110" height="30" rx="9" fill="#e9edf3"/><text x="515" y="328" text-anchor="middle">Profit logged</text>
+            </g>
+          </svg>
+          <!-- 2 and 3: the real product -->
+          <img class="sol_img sol_shot" data-sol="1" src="assets/site/portal-dashboard.png" alt="The BuilderPro dashboard: active projects, leads, jobs booked, profit and cash flow" loading="lazy">
+          <img class="sol_img sol_shot" data-sol="2" src="assets/site/portal-calendar.png" alt="The BuilderPro calendar with the week's appointments and jobs" loading="lazy">
+        </div>
+      </div>
+
+      <div class="sol_scroll">
+        <div class="sol_block" data-sol-block="0">
+          <div class="sol_block-top">
+            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg></span>
+            <h3 class="h-m" data-split="heading">From first call<br>to final invoice</h3>
+          </div>
+          <div class="sol_block-bot is-grid-texture">
+            <p class="b-m">Every step after the phone rings is wired together: the booking, the estimate, the contract, the schedule, the invoice and the review. You show up and do the work.</p>
+            <button class="btn js-open-drawer" type="button">Get started</button>
+          </div>
+        </div>
+
+        <div class="sol_block" data-sol-block="1">
+          <div class="sol_block-top">
+            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+            <h3 class="h-m" data-split="heading">One calm<br>dashboard</h3>
+          </div>
+          <div class="sol_block-bot is-grid-texture">
+            <p class="b-m">Calls answered, jobs in motion, invoices out and profit in, in a single view. It is the same dashboard your portal opens to every morning.</p>
+            <a href="#" class="btn" onclick="bpOpenPortal();return false;">Client login</a>
+          </div>
+        </div>
+
+        <div class="sol_block" data-sol-block="2">
+          <div class="sol_block-top">
+            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></span>
+            <h3 class="h-m" data-split="heading">Scheduled while<br>you are on site</h3>
+          </div>
+          <div class="sol_block-bot is-grid-texture">
+            <p class="b-m">Appointments, jobs, closed days and your own to-dos on one calendar, with a public booking page your customers can use at midnight.</p>
+            <button class="btn js-open-drawer" type="button">Get started</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================== 6. WHAT YOU GET, BY TRADE ========================
   Left = media mosaic that cross-fades. Right = accordion, one open at a time.
   Both are driven by the same index.                                       -->
 <section class="section" id="trades" data-pill-parent>
@@ -309,106 +525,7 @@
 </section>
 
 
-<!-- ===================== 4. HOW IT WORKS ==================================
-  Left column is sticky for the whole section; the right column scrolls past
-  in 100vh blocks. Each block activates the matching sticky visual.        -->
-<section class="section" id="how" data-pill-parent>
-  <div class="stack">
-    <div class="card is-outline is-grid-texture sec-head-card">
-      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">How it works</span></div>
-      <h2 class="h-m" data-split="heading">Goodbye scattered apps,<br>hello <span class="accent">one</span> system.</h2>
-    </div>
-
-    <div class="sol_body">
-      <div class="sol_sticky">
-        <div class="sol_visual is-grid-texture">
-          <!-- 1: the flow, as rounded node chips joined by thin connector lines -->
-          <svg class="sol_img is-active" data-sol="0" viewBox="0 0 600 400" aria-label="From the call to the review, every step wired together">
-            <defs>
-              <filter id="flowShadow" x="-10%" y="-20%" width="120%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#001530" flood-opacity=".08"/></filter>
-            </defs>
-            <!-- one path threads through every step; a dash travels along it -->
-            <path class="flow_rail" d="M300 76 H430 Q460 76 460 106 V170 Q460 200 430 200 H170 Q140 200 140 230 V294 Q140 324 170 324 H300" fill="none" stroke="#c9d3df" stroke-width="2"/>
-            <path class="flow_dash" d="M300 76 H430 Q460 76 460 106 V170 Q460 200 430 200 H170 Q140 200 140 230 V294 Q140 324 170 324 H300" fill="none" stroke="#006fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="22 900"/>
-            <g font-family="General Sans, Geist, Arial, sans-serif" font-size="14" font-weight="500" filter="url(#flowShadow)">
-              <!-- step 1: blue -->
-              <rect x="40" y="48" width="180" height="56" rx="14" fill="#006fff"/>
-              <circle cx="70" cy="76" r="13" fill="rgba(255,255,255,.18)"/><text x="70" y="81" fill="#fff" text-anchor="middle" font-size="12" font-weight="600">1</text>
-              <text x="94" y="81" fill="#fff">Call answered</text>
-              <!-- step 2 -->
-              <rect x="240" y="48" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
-              <circle cx="270" cy="76" r="13" fill="#eef2f7"/><text x="270" y="81" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">2</text>
-              <text x="294" y="81" fill="#001530">Lisa books it</text>
-              <!-- step 3 -->
-              <rect x="380" y="172" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
-              <circle cx="410" cy="200" r="13" fill="#eef2f7"/><text x="410" y="205" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">3</text>
-              <text x="434" y="205" fill="#001530">Estimate sent</text>
-              <!-- step 4 -->
-              <rect x="180" y="172" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
-              <circle cx="210" cy="200" r="13" fill="#eef2f7"/><text x="210" y="205" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">4</text>
-              <text x="234" y="205" fill="#001530">Contract signed</text>
-              <!-- step 5 -->
-              <rect x="40" y="296" width="180" height="56" rx="14" fill="#fff" stroke="#dce3ec"/>
-              <circle cx="70" cy="324" r="13" fill="#eef2f7"/><text x="70" y="329" fill="#001530" text-anchor="middle" font-size="12" font-weight="600">5</text>
-              <text x="94" y="329" fill="#001530">Invoice paid</text>
-              <!-- step 6: navy -->
-              <rect x="240" y="296" width="180" height="56" rx="14" fill="#001530"/>
-              <circle cx="270" cy="324" r="13" fill="rgba(255,255,255,.14)"/><text x="270" y="329" fill="#fff" text-anchor="middle" font-size="12" font-weight="600">6</text>
-              <text x="294" y="329" fill="#fff">Review requested</text>
-            </g>
-            <!-- the quiet steps that happen on their own -->
-            <g font-family="General Sans, Geist, Arial, sans-serif" font-size="11" font-weight="500" fill="#8a94a3">
-              <rect x="460" y="60" width="110" height="30" rx="9" fill="#e9edf3"/><text x="515" y="79" text-anchor="middle">Reminder sent</text>
-              <rect x="40" y="185" width="110" height="30" rx="9" fill="#e9edf3"/><text x="95" y="204" text-anchor="middle">Crew dispatched</text>
-              <rect x="460" y="309" width="110" height="30" rx="9" fill="#e9edf3"/><text x="515" y="328" text-anchor="middle">Profit logged</text>
-            </g>
-          </svg>
-          <!-- 2 and 3: the real product -->
-          <img class="sol_img sol_shot" data-sol="1" src="assets/site/portal-dashboard.png" alt="The BuilderPro dashboard: active projects, leads, jobs booked, profit and cash flow" loading="lazy">
-          <img class="sol_img sol_shot" data-sol="2" src="assets/site/portal-calendar.png" alt="The BuilderPro calendar with the week's appointments and jobs" loading="lazy">
-        </div>
-      </div>
-
-      <div class="sol_scroll">
-        <div class="sol_block" data-sol-block="0">
-          <div class="sol_block-top">
-            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg></span>
-            <h3 class="h-m" data-split="heading">From first call<br>to final invoice</h3>
-          </div>
-          <div class="sol_block-bot is-grid-texture">
-            <p class="b-m">Every step after the phone rings is wired together: the booking, the estimate, the contract, the schedule, the invoice and the review. You show up and do the work.</p>
-            <button class="btn js-open-drawer" type="button">Get started</button>
-          </div>
-        </div>
-
-        <div class="sol_block" data-sol-block="1">
-          <div class="sol_block-top">
-            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
-            <h3 class="h-m" data-split="heading">One calm<br>dashboard</h3>
-          </div>
-          <div class="sol_block-bot is-grid-texture">
-            <p class="b-m">Calls answered, jobs in motion, invoices out and profit in, in a single view. It is the same dashboard your portal opens to every morning.</p>
-            <a href="#" class="btn" onclick="bpOpenPortal();return false;">Client login</a>
-          </div>
-        </div>
-
-        <div class="sol_block" data-sol-block="2">
-          <div class="sol_block-top">
-            <span class="sol_chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v4M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></span>
-            <h3 class="h-m" data-split="heading">Scheduled while<br>you are on site</h3>
-          </div>
-          <div class="sol_block-bot is-grid-texture">
-            <p class="b-m">Appointments, jobs, closed days and your own to-dos on one calendar, with a public booking page your customers can use at midnight.</p>
-            <button class="btn js-open-drawer" type="button">Get started</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ===================== 5. LISA ========================================= -->
+<!-- ===================== 7. LISA ========================================= -->
 <section class="section" id="lisa" data-pill-parent>
   <div class="lisa">
     <div class="card lisa_text">
