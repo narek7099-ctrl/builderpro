@@ -611,6 +611,13 @@
   function ensureSP(cb) { if (window.SP && SP.load && !SP.loaded) SP.load().then(cb); }
   function done() { window.bpSpin && bpSpin(false); }
 
+  function vsBar(j) {
+    var p = ML.total(j), b = (j.expenses || []).filter(function (e) { return e && e.cat === 'Materials'; }).reduce(function (t, e) { return t + (+e.amt || 0); }, 0), d = b - p;
+    var pct = p > 0 ? Math.min(100, Math.round(b / p * 100)) : 0;
+    return '<div class="ml-vsbar"><div><small>Planned</small><b>' + money(p) + '</b></div><div><small>Spent</small><b>' + money(b) + '</b></div>'
+      + '<div><small>' + (d > 0.005 ? 'Over plan' : 'Left in plan') + '</small><b class="' + (d > 0.005 ? 'over' : 'ok') + '">' + money(Math.abs(d)) + '</b></div>'
+      + '<span class="pjk-pay"><i style="width:' + pct + '%' + (d > 0.005 ? ';background:#dc2626' : '') + '"></i></span></div>';
+  }
   window.bpMatLists = function () {
     var area = $('bpxViewArea'); if (!area) return;
     ensureSP(function () { if (window._bpCurView === 'matlists' && !document.activeElement.classList.contains('ml-q')) window.bpMatLists(); });
@@ -621,70 +628,44 @@
         area.innerHTML = tabs('matlists') + '<div class="bpx-panel ml-panel"><div class="ml-head"><button class="bpx-rowbtn" onclick="ML.open=null;bpMatLists()">&larr; All lists</button>'
           + '<div class="ml-head-t"><b>' + esc(j.name || 'Job') + '</b><span class="bpx-mut">' + esc(j.title || '') + (j.addr ? ' &middot; ' + esc(j.addr) : '') + '</span></div>'
           + '<button class="bpx-rowbtn" onclick="bpProjOpen(\'' + j.id + '\');setTimeout(function(){bpProjTab(\'materials\')},30)">Open project</button></div>'
-          + editor(T('job', j.id)) + '</div>';
+          + vsBar(j) + editor(T('job', j.id)) + (window.bpReceiptsFor ? '<div class="ml-rc"><div class="ml-sec"><b>What was actually bought</b><span class="bpx-mut">receipts on this job</span></div>' + bpReceiptsFor(j.id) + '</div>' : '') + '</div>';
         done(); ML.sync(); ML.seen(j.id); return;
       }
       ML.open = null;
     }
-    var rows = all.filter(function (j) { var m = j.materials; return j.status !== 'done' || (m && m.items && m.items.length); });
+    /* Lists are made on estimates now (Finances → New estimate). This page
+       shows them, and each one against what was actually spent on Receipts. */
     var has = function (j) { return !!(j.materials && j.materials.items && j.materials.items.length); };
-    var withList = rows.filter(has), without = rows.filter(function (j) { return !has(j) && j.status !== 'done'; });
     var bought = function (j) { return (j.expenses || []).filter(function (e) { return e && e.cat === 'Materials'; }).reduce(function (t, e) { return t + (+e.amt || 0); }, 0); };
-    var grand = withList.reduce(function (t, j) { return t + ML.total(j); }, 0);
-    var spent = rows.reduce(function (t, j) { return t + bought(j); }, 0);
-    var sent = withList.filter(function (j) { return j.materials.status === 'sent' || j.materials.status === 'received'; }).length;
-    var tl = tpls();
+    var lists = all.filter(has).sort(function (a, b) { return (a.status === 'done') - (b.status === 'done') || (b.wonAt || b.createdAt || 0) - (a.wonAt || a.createdAt || 0); });
+    var grand = lists.reduce(function (t, j) { return t + ML.total(j); }, 0);
+    var spent = lists.reduce(function (t, j) { return t + bought(j); }, 0);
+    var over = lists.filter(function (j) { return bought(j) > ML.total(j) + 0.005 && ML.total(j) > 0; }).length;
     var stat = function (l, v, n, cls) { return '<div class="pjk-stat' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><b>' + v + '</b>' + (n ? '<small>' + n + '</small>' : '') + '</div>'; };
+    var diff = spent - grand;
     var h = tabs('matlists')
       + '<div class="pjk-stats">'
-        + stat('Lists', withList.length, 'for ' + rows.length + ' open job' + (rows.length === 1 ? '' : 's'))
+        + stat('Lists', lists.length, lists.filter(function (j) { return j.status === 'quote'; }).length + ' still estimates')
         + stat('Planned', money(grand), 'what the lists add up to')
-        + stat('Sent to supplier', sent, withList.length - sent ? (withList.length - sent) + ' still a draft' : '')
-        + stat('Bought', money(spent), 'from receipts on these jobs', 'good')
+        + stat('Spent', money(spent), 'from receipts on these jobs')
+        + stat(diff > 0 ? 'Over plan' : 'Under plan', money(Math.abs(diff)), over ? over + ' job' + (over === 1 ? '' : 's') + ' over' : 'across all lists', diff > 0 ? 'owe' : 'good')
       + '</div>'
-      + '<div class="ml-how"><span class="ms">lightbulb</span><span><b>Plan here, record on Receipts.</b> A list is what you mean to buy: build it, then send it to your supply house. What you actually pay goes on <a onclick="bpNav(\'receipts\')">Receipts</a>, and that is what counts as cost.</span></div>';
-
-    var card = function (j) {
-      if (!has(j)) return '<div class="pjk ml-card ml-nolist" onclick="ML.startFor(\'' + j.id + '\')">'
-        + '<div class="pjk-top"><span class="pjk-av"><span class="ms">inventory_2</span></span><div class="pjk-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + '</span></div><span class="ml-pill no">No list</span></div>'
-        + '<div class="ml-nl">No materials planned for this job yet. Start from scratch or from one of your templates.</div>'
-        + '<div class="pjk-foot"><button class="pjk-open" onclick="event.stopPropagation();ML.startFor(\'' + j.id + '\')"><span class="ms">add</span>Start list</button></div></div>';
-      var m = j.materials, n = m.items.length, est = ML.total(j), got = bought(j), nw = ML.newCount(j);
-      var sups = [], seenS = {};
-      m.items.forEach(function (it) { var nm = String(it.supplierName || it.supplier || '').trim(); if (nm && !seenS[nm.toLowerCase()]) { seenS[nm.toLowerCase()] = 1; sups.push(nm); } });
-      var pct = est > 0 ? Math.min(100, Math.round(got / est * 100)) : 0;
-      return '<div class="pjk ml-card" onclick="ML.open=\'' + j.id + '\';bpMatLists()">'
-        + '<div class="pjk-top"><span class="pjk-av"><span class="ms">inventory_2</span></span><div class="pjk-id"><b>' + esc(j.name || 'Job') + '</b><span>' + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>' + statusPill(m.status) + '</div>'
-        + (nw ? '<div><span class="ml-newb">' + nw + ' new change' + (nw === 1 ? '' : 's') + ' from the crew</span></div>' : '')
-        + '<div class="ml-nums"><div><b>' + n + '</b><span>item' + (n === 1 ? '' : 's') + '</span></div><div><b>' + money(est) + '</b><span>planned</span></div><div><b>' + money(got) + '</b><span>bought</span></div></div>'
-        + '<div><span class="pjk-pay" title="' + pct + '% of the plan bought so far"><i style="width:' + pct + '%"></i></span>' + (got > est && est > 0 ? '<span class="ml-over">' + money(got - est) + ' over the plan</span>' : '') + '</div>'
-        + '<div class="pjk-meta"><span class="' + (sups.length ? '' : 'mut') + '"><span class="ms">storefront</span>' + (sups.length ? esc(sups.join(', ')) : 'No supplier picked yet') + '</span></div>'
-        + '<div class="pjk-foot"><button class="pjk-open" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open list</button>'
-          + '<button class="pjk-done" onclick="event.stopPropagation();SP.rcOpen&&SP.rcOpen(\'\',\'' + j.id + '\')"><span class="ms">photo_camera</span>Add receipt</button></div></div>';
-    };
-    /* the same four marked projects as on Projects, then every other job in a list */
-    var marked = rows.filter(function (j) { return j.starred && j.status !== 'done'; }).slice(0, 4), mk = {};
-    marked.forEach(function (j) { mk[j.id] = 1; });
-    h += '<div class="ml-sec"><b>Marked</b><span class="bpx-mut">' + (marked.length ? 'your marked projects' : 'star a project in Projects to pin it here') + '</span></div>'
-      + (marked.length ? '<div class="pjk-grid">' + marked.map(card).join('') + '</div>' : '');
-    var rest = rows.filter(function (j) { return !mk[j.id]; }).sort(function (a, b) { return (has(a) ? 0 : 1) - (has(b) ? 0 : 1); });
-    h += '<div class="ml-sec" style="margin-top:22px"><b>All jobs</b><span class="bpx-mut">' + withList.length + ' with a list · ' + without.length + ' without</span></div>';
-    if (!rest.length) h += '<div class="pjk-empty">' + (rows.length ? 'Every job is in Marked above.' : 'No jobs yet. Lists hang off a project, so add one in Projects first.') + '</div>';
+      + '<div class="ml-how"><span class="ms">info</span><span>Lists are made on the estimate: the materials you price for a job become its list here. What you actually pay is recorded on <a onclick="bpNav(\'receipts\')">Receipts</a>, and shows next to the plan.</span></div>';
+    if (!lists.length) h += '<div class="pjk-empty">No lists yet. <a onclick="bpQuoteNew()">Build an estimate</a> and the materials you price on it show up here.</div>';
     else {
-      var pages = Math.ceil(rest.length / 10); ML.pg = Math.min(Math.max(ML.pg || 1, 1), pages);
-      h += '<div class="pjl ml-rows">' + rest.slice((ML.pg - 1) * 10, ML.pg * 10).map(function (j) {
-        var on = has(j), m = j.materials;
-        return '<div class="pjl-r" onclick="' + (on ? 'ML.open=\'' + j.id + '\';bpMatLists()' : 'ML.startFor(\'' + j.id + '\')') + '">'
-          + '<span class="pjk-av"><span class="ms">inventory_2</span></span>'
-          + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + (j.status === 'quote' ? '<em class="ml-estag">Estimate</em> ' : '') + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + '</span></div>'
-          + '<div class="pjl-st">' + (on ? statusPill(m.status) : '<span class="ml-pill no">No list</span>') + '</div>'
-          + '<div class="pjl-m"><b>' + (on ? money(ML.total(j)) : '—') + '</b><small>' + (on ? m.items.length + ' item' + (m.items.length === 1 ? '' : 's') : 'nothing planned') + '</small></div>'
-          + '<div class="pjl-a">' + (on ? '<button class="pjl-b" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open list</button>'
-            : (tl.length ? '<select onclick="event.stopPropagation()" onchange="if(this.value){ML.startFor(\'' + j.id + '\',this.value)}" aria-label="Start from a template"><option value="">Template…</option>'
-              + tl.map(function (tp) { return '<option value="' + tp.id + '">' + esc(tp.name) + '</option>'; }).join('') + '</select>' : '')
-              + '<button class="pjl-b pri" onclick="event.stopPropagation();ML.startFor(\'' + j.id + '\')">Start list</button>') + '</div></div>';
-      }).join('') + '</div>'
-        + '<div class="pjl-ft"><span class="bpx-mut">' + ((ML.pg - 1) * 10 + 1) + '–' + Math.min(ML.pg * 10, rest.length) + ' of ' + rest.length + '</span>' + (window.bpPager10 ? bpPager10(pages, ML.pg, 'ML.page') : '') + '</div>';
+      var pages = Math.ceil(lists.length / 10); ML.pg = Math.min(Math.max(ML.pg || 1, 1), pages);
+      h += '<div class="pjl ml-vs"><div class="pjl-r ml-vh"><span></span><span>Job</span><span>Planned</span><span>Spent</span><span>Difference</span><span></span></div>'
+        + lists.slice((ML.pg - 1) * 10, ML.pg * 10).map(function (j) {
+          var p = ML.total(j), b = bought(j), d = b - p, pct = p > 0 ? Math.min(100, Math.round(b / p * 100)) : 0;
+          var tag = !b ? '<span class="ml-pill no">Nothing bought yet</span>' : d > 0.005 ? '<span class="ml-vs-over">' + money(d) + ' over</span>' : '<span class="ml-vs-ok">' + money(-d) + ' under</span>';
+          return '<div class="pjl-r" onclick="ML.open=\'' + j.id + '\';bpMatLists()"><span class="pjk-av"><span class="ms">inventory_2</span></span>'
+            + '<div class="pjl-id"><b>' + esc(j.name || 'Job') + '</b><span>' + (j.status === 'quote' ? '<em class="ml-estag">Estimate</em> ' : '') + esc(j.title || '') + (j.status === 'done' ? ' · done' : '') + ' · ' + j.materials.items.length + ' item' + (j.materials.items.length === 1 ? '' : 's') + '</span></div>'
+            + '<div class="pjl-m"><b>' + money(p) + '</b></div>'
+            + '<div class="pjl-m"><b>' + money(b) + '</b><span class="pjk-pay" title="' + pct + '% of the plan spent"><i style="width:' + pct + '%' + (d > 0.005 ? ';background:#dc2626' : '') + '"></i></span></div>'
+            + '<div class="pjl-st">' + tag + '</div>'
+            + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();ML.open=\'' + j.id + '\';bpMatLists()">Open</button></div></div>';
+        }).join('') + '</div>'
+        + '<div class="pjl-ft"><span class="bpx-mut">' + ((ML.pg - 1) * 10 + 1) + '–' + Math.min(ML.pg * 10, lists.length) + ' of ' + lists.length + '</span>' + (window.bpPager10 ? bpPager10(pages, ML.pg, 'ML.page') : '') + '</div>';
     }
     area.innerHTML = h; done(); ML.sync();
   };
@@ -722,16 +703,16 @@
       var tp = tplById(ML.tplOpen);
       area.innerHTML = h + '<div class="bpx-panel ml-panel"><div class="ml-head"><button class="bpx-rowbtn" onclick="ML.tplOpen=null;bpMatTemplates()">&larr; All templates</button>'
         + '<div class="ml-head-t"><b>' + esc(tp.name) + '</b><span class="bpx-mut">Template &middot; quantities and prices are a starting point</span></div>'
-        + '<button class="bpx-rowbtn ml-primary" onclick="ML.tplUse(\'' + tp.id + '\')">Use on a job</button><button class="bpx-rowbtn" onclick="ML.tplRename(\'' + tp.id + '\')">Rename</button></div>'
+        + '<button class="bpx-rowbtn" onclick="ML.tplRename(\'' + tp.id + '\')">Rename</button></div>'
         + (ML.tplUsing === tp.id ? useBox(tp) : '') + editor(T('tpl', tp.id)) + '</div>';
       done(); return;
     }
     ML.tplOpen = null;
-    h += '<div class="ml-top"><div class="bpx-mut">Lists you use again and again. Start a job&rsquo;s list from one in a tap.</div><button class="bpx-btn ml-new" onclick="ML.tplNew()">+ New template</button></div>'
+    h += '<div class="ml-top"><div class="bpx-mut">Lists you use again and again. On an estimate, open Materials and tap <b>Use template</b> to drop one in.</div><button class="bpx-btn ml-new" onclick="ML.tplNew()">+ New template</button></div>'
       + '<div class="bpx-panel ml-panel">' + (tl.length ? '<table class="bpx-table ml-jobs"><thead><tr><th>Template</th><th class="ml-n">Items</th><th class="ml-n">Estimated</th><th></th></tr></thead><tbody>'
         + tl.map(function (tp) {
           return '<tr class="ml-jrow" onclick="ML.tplOpen=\'' + tp.id + '\';bpMatTemplates()"><td data-l="Template"><b>' + esc(tp.name) + '</b></td><td data-l="Items" class="ml-n">' + tp.items.length + '</td><td data-l="Estimated" class="ml-n">' + money(total(tp.items)) + '</td>'
-            + '<td class="ml-x"><button class="bpx-rowbtn ml-primary" onclick="event.stopPropagation();ML.tplUse(\'' + tp.id + '\')">Use on a job</button> <button class="bpx-rowbtn">Open</button> <button class="bpx-rowbtn" onclick="event.stopPropagation();ML.tplDel(\'' + tp.id + '\')">Delete</button></td></tr>'
+            + '<td class="ml-x"><button class="bpx-rowbtn">Open</button> <button class="bpx-rowbtn" onclick="event.stopPropagation();ML.tplDel(\'' + tp.id + '\')">Delete</button></td></tr>'
             + (ML.tplUsing === tp.id ? '<tr class="ml-use"><td colspan="4">' + useBox(tp) + '</td></tr>' : '');
         }).join('') + '</tbody></table>' : '<div class="ml-empty bpx-mut">No templates yet. Open a material list and tap &ldquo;Save as template&rdquo;, or start one here.</div>') + '</div>';
     area.innerHTML = h; done();
@@ -795,7 +776,7 @@
     + '#bpx .ml-need{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-bottom:22px}'
     + '#bpx .ml-needc{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e9ecf2;border-left:4px solid #f59e0b;border-radius:14px;padding:13px 14px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(16,24,40,.04);transition:box-shadow .15s,transform .15s}'
     + '#bpx .ml-needc:hover{box-shadow:0 10px 24px -12px rgba(16,24,40,.18);transform:translateY(-1px)}#bpx .ml-needb select{border-radius:9px}'
-    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-estag{font-style:normal;font-size:10.5px;font-weight:700;color:#2457d6;background:#eef3ff;border-radius:6px;padding:1px 6px;margin-right:4px}#bpx .ml-bar-lite{justify-content:flex-end}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
+    + '#bpx .ml-nums{background:#f8f9fc;border:1px solid #f0f2f7;border-radius:13px;padding:11px 12px}#bpx .ml-card .pjk-av,#bpx .pjl-r .pjk-av{background:#eef3ff !important;color:#2457d6 !important}#bpx .ml-nl{font-size:13px;color:#6b7280;line-height:1.5}#bpx .ml-vs .pjl-r{grid-template-columns:40px minmax(0,2.2fr) minmax(0,.9fr) minmax(0,1.2fr) minmax(0,1fr) auto}#bpx .ml-vh{cursor:default !important;background:#f9fafb;font-size:11.5px;font-weight:600;color:#98a2b3;padding-top:9px !important;padding-bottom:9px !important}#bpx .ml-vh:hover{background:#f9fafb !important}#bpx .ml-vs-over{font-size:12px;font-weight:700;color:#b42318;background:#fef3f2;border-radius:999px;padding:4px 10px;white-space:nowrap}#bpx .ml-vs-ok{font-size:12px;font-weight:700;color:#027a48;background:#ecfdf3;border-radius:999px;padding:4px 10px;white-space:nowrap}#bpx .ml-vsbar{display:grid;grid-template-columns:repeat(3,auto) 1fr;gap:6px 28px;align-items:end;padding:12px 14px;margin:12px 0;border:1px solid var(--line);border-radius:12px}#bpx .ml-vsbar div{display:flex;flex-direction:column}#bpx .ml-vsbar small{font-size:11.5px;color:#667085}#bpx .ml-vsbar b{font-size:18px;font-variant-numeric:tabular-nums}#bpx .ml-vsbar b.over{color:#b42318}#bpx .ml-vsbar b.ok{color:#027a48}#bpx .ml-vsbar .pjk-pay{grid-column:1/-1}#bpx .ml-rc{margin-top:18px}@media (max-width:820px){#bpx .ml-vs .pjl-r{grid-template-columns:40px minmax(0,1fr) auto auto}#bpx .ml-vs .pjl-m{display:none}#bpx .ml-vs .pjl-st{display:block}#bpx .ml-vh{display:none !important}#bpx .ml-vsbar{grid-template-columns:repeat(3,1fr)}}#bpx .ml-estag{font-style:normal;font-size:10.5px;font-weight:700;color:#2457d6;background:#eef3ff;border-radius:6px;padding:1px 6px;margin-right:4px}#bpx .ml-bar-lite{justify-content:flex-end}#bpx .ml-pill.no{font-size:11.5px;font-weight:650;padding:4px 10px;border-radius:999px;background:#f1f3f7;color:#6b7280;white-space:nowrap}#bpx .pjl-a select{width:auto;padding:7px 8px;font-size:12.5px;border-radius:9px;margin:0}'
     + '#bpx .ml-needt{flex:1 1 140px;min-width:0;display:flex;flex-direction:column}#bpx .ml-needt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#bpx .ml-needt span{font-size:12px;color:#6b7280}'
     + '#bpx .ml-needb{display:flex;gap:6px;align-items:center}#bpx .ml-needb select{width:auto;max-width:160px;padding:7px 8px;font-size:12.5px}'
     + '#bpx .ml-card .pjk-av{background:#eef3ff;color:#2457d6}#bpx .ml-card .pjk-av .ms{font-size:21px}'
