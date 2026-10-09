@@ -496,8 +496,8 @@
     el.innerHTML = '<div class="qb-rows"><div class="qb-rh qb-il"><span>Item</span><span>Qty</span><span>Unit price</span><span>Amount</span><span></span></div>'
       + s.lines.map(function (l) {
         return '<div class="qb-r qb-il"><input value="' + esc(l.name) + '" placeholder="What it is" onchange="BPQ.invRow(\'' + l.id + '\',\'name\',this.value)">'
-          + '<input type="number" min="0" step="any" value="' + esc(l.qty) + '" oninput="BPQ.invRow(\'' + l.id + '\',\'qty\',this.value,1)" aria-label="Quantity">'
-          + '<input type="number" min="0" step="any" value="' + esc(l.price) + '" placeholder="0" oninput="BPQ.invRow(\'' + l.id + '\',\'price\',this.value,1)" aria-label="Unit price">'
+          + '<span class="qb-qty' + (l.unit && l.unit !== 'ea' ? ' has-u' : '') + '"><input type="number" min="0" step="any" value="' + esc(l.qty) + '" oninput="BPQ.invRow(\'' + l.id + '\',\'qty\',this.value,1)" aria-label="Quantity">' + (l.unit && l.unit !== 'ea' ? '<i>' + esc(l.unit) + '</i>' : '') + '</span>'
+          + '<input type="number" min="0" step="any" value="' + (l.price === '' || l.price == null ? '' : (+l.price).toFixed(2)) + '" placeholder="0.00" oninput="BPQ.invRow(\'' + l.id + '\',\'price\',this.value,1)" onblur="if(this.value!==\'\')this.value=(+this.value).toFixed(2)" aria-label="Unit price">'
           + '<b id="qb-il-' + l.id + '">' + m2((+l.qty || 0) * (+l.price || 0)) + '</b>'
           + '<button type="button" class="qb-x" aria-label="Remove" onclick="BPQ.invDel(\'' + l.id + '\')">&times;</button></div>';
       }).join('') + '</div><button type="button" class="bpx-rowbtn" onclick="BPQ.invAdd()">+ Add line</button>';

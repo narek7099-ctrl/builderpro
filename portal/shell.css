@@ -429,3 +429,5 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx .dash-week{grid-template-columns:repeat(7,minmax(0,1fr))}#bpx .dash-day{min-width:0;overflow:hidden}
 #bpx#bpx#bpx#bpx#bpx .bpc-donut{flex-wrap:wrap !important;min-width:0;max-width:100%}
 #bpx .bpc-donut svg{overflow:hidden;flex:0 0 auto}
+/* numbers never break across lines: amounts, percents and counts stay whole */
+#bpx td.bpx-num,#bpx td.bpx-r,#bpx .bpx-num,#bpx .ml-lt,#bpx .ml-sh-t td.t,#bpx .ml-sh-t td.p,#bpx .qx-st td:nth-child(2),#bpx .qx-st td:nth-child(3),#bpx .qb-doc .n,#bpx .pjk-stat b,#bpx .bpx-stat b{white-space:nowrap;font-variant-numeric:tabular-nums}
