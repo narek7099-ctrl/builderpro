@@ -670,7 +670,7 @@
     Q._dirty = false;
     var P = BPPx();
     /* estimate sheets, and any project with a payment plan */
-    var mine = jobs().filter(function (j) { return j && !j.sample && ((j.quote && j.status !== 'done' && (j.status === 'active' || hasWork(j))) || (j.pay && P)); });
+    var mine = jobs().filter(function (j) { return j && j.id !== 'jsample' && ((j.quote && j.status !== 'done' && (j.status === 'active' || hasWork(j))) || (j.pay && P)); });
     if (!sampleOff()) mine.unshift(sampleJob());
     var ready = [], waiting = [], track = [];
     mine.forEach(function (j) {
