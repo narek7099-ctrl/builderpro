@@ -418,3 +418,14 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx#bpx .ml-in-note,#bpx#bpx#bpx#bpx#bpx .ml-in-sup{border-color:transparent !important;background:transparent !important;min-height:28px !important;height:28px;padding:0 6px !important;font-size:12.5px !important;color:#475467 !important;margin-left:-6px;width:auto;max-width:260px}
 #bpx#bpx#bpx#bpx#bpx .ml-in-note:hover,#bpx#bpx#bpx#bpx#bpx .ml-in-sup:hover{border-color:#e4e7ec !important}
 #bpx#bpx#bpx#bpx#bpx .ml-in-note:focus,#bpx#bpx#bpx#bpx#bpx .ml-in-sup:focus{border-color:#2457d6 !important;background:#fff !important}
+
+/* nothing pokes out of its box: wide tables scroll inside it, chart hover areas stay in the chart */
+#bpx#bpx#bpx#bpx .bpx-cwrap{overflow-x:auto !important;overflow-y:hidden !important;-webkit-overflow-scrolling:touch}
+#bpx .bpc-plot svg{overflow:hidden}
+#bpx .sp-aisle{max-width:100%;min-width:0;white-space:normal}#bpx .sp-aisle-txt{min-width:0;flex:1 1 auto}#bpx .sp-aisle-txt *{white-space:normal;overflow-wrap:anywhere}
+/* donut legends keep a readable width: below it, the legend goes under the ring */
+#bpx#bpx#bpx#bpx#bpx .hl-w .bpc-dlist,#bpx#bpx#bpx#bpx#bpx .bpc-dlist{min-width:min(170px,100%);flex:1 1 170px}
+/* the week strip shrinks its days instead of pushing out of the card */
+#bpx .dash-week{grid-template-columns:repeat(7,minmax(0,1fr))}#bpx .dash-day{min-width:0;overflow:hidden}
+#bpx#bpx#bpx#bpx#bpx .bpc-donut{flex-wrap:wrap !important;min-width:0;max-width:100%}
+#bpx .bpc-donut svg{overflow:hidden;flex:0 0 auto}
