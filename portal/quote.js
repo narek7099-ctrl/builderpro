@@ -552,6 +552,7 @@
     var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } else if (!ok) toast(t, 'error'); };
     var ls = invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; });
     var sub = r2(sum(ls, function (l) { return r2((+l.qty || 0) * (+l.price || 0)); })), disc = s.type === 'full' ? Math.min(r2(s.disc || 0), sub) : 0, tot = r2(sub - disc);
+    if (j && j.sample) return say('This is the sample invoice, so nothing was sent. Remove it from Ready to invoice when you are done looking.', true);
     if (!s.contactId || !ct) return say('Pick the customer first.');
     if (!(tot > 0)) return say('The invoice is $0. Add a line or an amount.');
     if (s.via !== 'email' && !ct.phone) return say('This customer has no phone number. Send by email instead.');
@@ -576,7 +577,7 @@
      ================================================================ */
   window.bpQbSheets = function () {
     var el = $('bpxQbSheets'); if (!el) return;
-    var list = jobs().filter(function (j) { return j && j.status === 'quote' && hasWork(j); }).sort(function (a, b) { return ((b.quote || {}).sentAt || b.createdAt || 0) - ((a.quote || {}).sentAt || a.createdAt || 0); });
+    var list = jobs().filter(function (j) { return j && j.status === 'quote' && !j.sample && hasWork(j); }).sort(function (a, b) { return ((b.quote || {}).sentAt || b.createdAt || 0) - ((a.quote || {}).sentAt || a.createdAt || 0); });
     el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Estimate sheets<span class="lg2">materials, labor and markup worked out, waiting on a yes</span></div>'
       + '</div>'
       + (list.length ? '<div class="pjl">' + list.map(function (j) {
@@ -611,8 +612,32 @@
     var out = { s: s, lines: invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }), total: invTotalFor(s.type) };
     Q.inv = was; return out;
   }
+  /* a worked example so the flow can be seen before a real customer says yes */
+  Q.ivSample = function (quiet) {
+    if (window.BP_LIVE && !window._bpFinLoaded) { if (!quiet) toast('Still loading your projects. Try again in a moment.'); return; }
+    var all = jobs(); if (all.some(function (j) { return j && j.sample; })) { if (!quiet) bpQbInvs(); return; }
+    var mat = function (n, q, u, p, sup) { return { id: uid('m'), name: n, qty: q, unit: u, price: p, supplier: sup || '' }; };
+    var j = { id: 'j' + Date.now() + 'smp', sample: true, name: 'Sample customer', phone: '', email: '', contactId: null, title: 'Roof replacement (sample)', addr: '128 Maple Ave',
+      status: 'quote', estimate: 0, collected: null, expenses: [], createdAt: Date.now(),
+      materials: { status: 'draft', sentAt: null, changeOrders: [], items: [
+        mat('Architectural shingles (bundle)', 66, 'bdl', 38.5), mat('Synthetic underlayment (roll)', 8, 'roll', 92), mat('Ice and water shield (roll)', 4, 'roll', 118),
+        mat('Drip edge, 10 ft', 22, 'ea', 9.75), mat('Ridge cap (bundle)', 5, 'bdl', 64), mat('Coil roofing nails (box)', 6, 'box', 41) ] } };
+    quoteOf(j);
+    var q = j.quote; q.labor = [{ id: uid('l'), name: 'Tear-off and install crew', people: 4, hours: 18, rate: 38 }];
+    q.other = [{ id: uid('o'), name: 'Dumpster (20 yd)', cat: 'Dumpster', cost: 475 }, { id: uid('o'), name: 'Building permit', cat: 'Permits', cost: 260 }];
+    q.estId = 'sample'; q.sentAt = Date.now() - 3 * 864e5; q.status = 'accepted'; q.acceptedAt = Date.now();
+    all.unshift(j); save(true); Q.ivOpen = j.id;
+    try { var st = bpSettingsGet() || {}; st.ivSampleShown = 1; bpSettingsSet(st); if (window.bpSettingsPush) bpSettingsPush(st); } catch (e) {}
+    if (!quiet) bpQbInvs();
+  };
+  Q.ivSampleOff = function () {
+    var all = jobs(), left = all.filter(function (j) { return !(j && j.sample); });
+    all.length = 0; Array.prototype.push.apply(all, left); save(true); Q.ivOpen = null; Q.inv = null; bpQbInvs(); toast('Sample removed.', 'success');
+  };
   window.bpQbInvs = function () {
     var el = $('bpxQbInvs'); if (!el) return;
+    if (window.BP_LIVE && !window._bpFinLoaded) { clearTimeout(Q._ivT); Q._ivT = setTimeout(bpQbInvs, 1500); }
+    try { if ((!window.BP_LIVE || window._bpFinLoaded) && !(bpSettingsGet() || {}).ivSampleShown) Q.ivSample(1); } catch (e) {}
     Q._dirty = false;
     var mine = jobs().filter(function (j) { return j && j.quote && j.status !== 'done' && (j.status === 'active' || hasWork(j)); });
     var ready = [], waiting = [];
@@ -627,7 +652,7 @@
       var j = x.j, d = x.d, s = d.s, open = Q.ivOpen === j.id, ttl = j.title === 'New estimate' ? 'Estimate' : j.title;
       var h = '<div class="pjl-r qb-shr' + (open ? ' on' : '') + '" onclick="BPQ.ivToggle(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">receipt_long</span></span>'
         + '<div class="pjl-id"><b>' + esc(j.name || 'Customer') + '</b><span>' + esc(ttl) + '</span></div>'
-        + '<div class="pjl-st"><span class="pjk-tag on">' + (s.billed > 0 ? 'Balance due' : 'Agreed') + '</span></div>'
+        + '<div class="pjl-st"><span class="pjk-tag on">' + (j.sample ? 'Sample' : s.billed > 0 ? 'Balance due' : 'Agreed') + '</span></div>'
         + '<div class="pjl-m"><b>' + m0(d.total) + '</b><small>' + kind[s.type] + (s.billed > 0 ? ' · ' + m0(s.billed) + ' billed' : '') + '</small></div>'
         + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\',\'edit\')">Edit</button>'
           + '<button class="pjl-b pri" onclick="event.stopPropagation();BPQ.ivToggle(\'' + j.id + '\',1)">' + (open ? 'Hide' : 'Review') + '</button></div></div>';
@@ -641,7 +666,7 @@
         + '<div class="qb-ivx-t">' + (disc > 0.009 ? '<div><span>Subtotal</span><span>' + m2(sub) + '</span></div><div><span>Discount</span><span>-' + m2(disc) + '</span></div>' : '')
           + '<div class="t"><span>Amount due</span><span>' + m2(d.total) + '</span></div></div>'
         + '<div class="qb-msg" id="qb-qmsg-' + j.id + '"></div>'
-        + '<div class="qb-ivx-a"><button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\',\'edit\')">Edit invoice</button><button class="bpx-addbtn" id="qb-qsend-' + j.id + '" onclick="BPQ.ivConfirm(\'' + j.id + '\')">Confirm and send ' + m2(d.total) + '</button></div></div>';
+        + '<div class="qb-ivx-a">' + (j.sample ? '<button class="bpx-btn ghost qb-ivx-rm" onclick="BPQ.ivSampleOff()">Remove sample</button>' : '') + '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\',\'edit\')">Edit invoice</button><button class="bpx-addbtn" id="qb-qsend-' + j.id + '" onclick="BPQ.ivConfirm(\'' + j.id + '\')">Confirm and send ' + m2(d.total) + '</button></div></div>';
     };
     var wrow = function (j) {
       var c = calc(j), ttl = j.title === 'New estimate' ? 'Estimate' : j.title;
@@ -653,7 +678,7 @@
     };
     el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-ptitle">Ready to invoice<span class="lg2">estimates your customers agreed to, turned into invoices</span></div>'
       + (ready.length ? '<div class="pjl">' + ready.map(row).join('') + '</div>'
-        : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, its invoice shows up here ready to confirm.</div>')
+        : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, its invoice shows up here ready to confirm. <a onclick="BPQ.ivSample()">See an example</a></div>')
       + (waiting.length ? '<div class="qb-wh">Sent, waiting on a yes <span>' + waiting.length + '</span></div><div class="pjl">' + waiting.map(wrow).join('') + '</div>' : '')
       + '</div>';
   };

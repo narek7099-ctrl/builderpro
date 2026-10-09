@@ -678,7 +678,7 @@
     }
     /* Lists are made on estimates now (Finances → New estimate). This page
        shows them, and each one against what was actually spent on Receipts. */
-    var has = function (j) { return !!(j.materials && j.materials.items && j.materials.items.length); };
+    var has = function (j) { return !j.sample && !!(j.materials && j.materials.items && j.materials.items.length); };
     var bought = function (j) { return (j.expenses || []).filter(function (e) { return e && e.cat === 'Materials'; }).reduce(function (t, e) { return t + amtOf(e); }, 0); };
     var lists = all.filter(has).sort(function (a, b) { return (a.status === 'done') - (b.status === 'done') || (b.wonAt || b.createdAt || 0) - (a.wonAt || a.createdAt || 0); });
     var grand = lists.reduce(function (t, j) { return t + ML.total(j); }, 0);
