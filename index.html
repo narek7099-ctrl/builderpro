@@ -20194,7 +20194,7 @@ function bpFinances(){
       +'<div class="bpx-finrow-btns">'+bpCsvBtn('bpCsvLedger()')+'<button class="bpx-addbtn" onclick="bpFinAddOpen(\'income\')">+ Add income</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpFinAddOpen(\'expense\')">+ Add expense</button></div></div>'
       +'<div class="bpx-cwrap" style="border:0;border-radius:0"><table class="bpx-ctable"><thead><tr><th>Item</th><th>Type</th><th>Date</th><th class="bpx-r">Amount</th><th></th></tr></thead><tbody>'+ledHtml+'</tbody></table></div>'+ledPg.nav+'</div>')
     +vp('invoices',
-      '<div class="bpx-panel"><div class="bpx-ptitle">Invoices<span class="lg2">real invoices — payment updates your account automatically</span></div>'
+      '<div id="bpxQbInvs"></div><div class="bpx-panel"><div class="bpx-ptitle">Invoices<span class="lg2">real invoices — payment updates your account automatically</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxInvCount" style="font-size:12.5px"></span></div>'
       +'<div id="bpxInvList" class="bpx-mut" style="font-size:13px">Loading invoices…</div></div>')
     +vp('estimates',
@@ -20205,6 +20205,7 @@ function bpFinances(){
   bpInvLoad();
   bpEstLoad();
   if(window.bpQbSheets) bpQbSheets();
+  if(window.bpQbInvs) bpQbInvs();
 }
 /* Only entries added by hand can be deleted here. Money that came from a job
    belongs to that job — deleting the row would silently disagree with the
@@ -21515,6 +21516,7 @@ window.bpEstDraw=function(){
         +'<td><span class="bpx-badge" style="color:'+col+';border-color:currentColor;background:transparent">'+bpEsc(String(v.status||'draft'))+'</span></td>'
         +'<td class="bpx-r bpx-num">'+bpMoneyFmt(v.total)+'</td></tr>';
     }).join('')+'</tbody></table>'+pg.nav;
+  if(window.bpQbInvs) bpQbInvs();
 };
 window.bpEstOpen=async function(){
   bpModal('<h3>New estimate</h3><div class="bpx-sub">Loading your contacts…</div>');
@@ -25328,8 +25330,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261022apuvwxyzabfgno"></script>
-<script src="portal/quote.js?v=20261022abxmnpituvwfno"></script>
-<link rel="stylesheet" href="portal/quote.css?v=20261022axyzamnptvfno">
+<script src="portal/quote.js?v=20261022abxmnpituvwfnr"></script>
+<link rel="stylesheet" href="portal/quote.css?v=20261022axyzamnptvfnr">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261017a"></script>
 <script src="portal/archive.js?v=20261001b"></script>

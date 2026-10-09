@@ -419,12 +419,15 @@
     var ds = s.type === 'final' && s.billed ? 'Total ' + m2(full) + ' less ' + m2(s.billed) + ' already billed' : s.type === 'deposit' ? 'Of ' + m2(full) : '';
     return [{ name: nm, desc: ds, qty: 1, price: Math.max(0, amt) }];
   }
-  window.bpInvoiceFrom = function (jid) { var j = job(jid); bpInvOpen(j ? j.contactId : null, jid); };
-  window.bpInvOpen = async function (contactId, jobId) {
-    if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
+  window.bpInvoiceFrom = function (jid, mode) { var j = job(jid); bpInvOpen(j ? j.contactId : null, jid, mode); };
+  function invInit(contactId, jobId) {
     Q.inv = { contactId: contactId || null, jobId: jobId || null, type: 'full', pct: defs().depositPct, taxPct: defs().taxPct, amount: '', lines: [], base: 0, billed: 0, days: 7, via: 'sms', desc: '' };
-    invLoad();
-    Q.inv.mode = Q.inv.jobId && invTotalFor(Q.inv.type) > 0 ? 'view' : 'edit';
+    invLoad(); return Q.inv;
+  }
+  window.bpInvOpen = async function (contactId, jobId, mode) {
+    if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
+    invInit(contactId, jobId);
+    Q.inv.mode = mode || (Q.inv.jobId && invTotalFor(Q.inv.type) > 0 ? 'view' : 'edit');
     if (window.bpNav) bpNav('invoicebuilder'); else invRender();
   };
   Q.invEdit = function (on) { Q.inv.mode = on ? 'edit' : 'view'; invRender(); var m = document.querySelector('.bpx-main'); if (m) m.scrollTop = 0; };
@@ -543,9 +546,10 @@
       + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '760px'; mc.style.width = '95vw'; }
   };
-  Q.invSend = async function () {
-    var s = Q.inv, msg = $('qb-imsg'), btn = $('qb-isend'), ct = contactBy(s.contactId), j = s.jobId ? job(s.jobId) : null;
-    var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } };
+  Q.invSend = async function (quick) {
+    var s = Q.inv, msg = $(quick ? 'qb-qmsg-' + s.jobId : 'qb-imsg'), btn = $(quick ? 'qb-qsend-' + s.jobId : 'qb-isend'), ct = contactBy(s.contactId), j = s.jobId ? job(s.jobId) : null;
+    if (!btn) btn = { disabled: false };
+    var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } else if (!ok) toast(t, 'error'); };
     var ls = invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; });
     var sub = r2(sum(ls, function (l) { return r2((+l.qty || 0) * (+l.price || 0)); })), disc = s.type === 'full' ? Math.min(r2(s.disc || 0), sub) : 0, tot = r2(sub - disc);
     if (!s.contactId || !ct) return say('Pick the customer first.');
@@ -562,7 +566,7 @@
       if (d && d.ok) {
         if (j) { quoteOf(j).invoices.push({ id: d.id || uid('inv'), type: s.type, amount: tot, at: Date.now() }); save(true); }
         toast('Invoice sent to ' + (ct.name || 'the customer') + '.', 'success');
-        Q.inv = null; bpNav('invoices');
+        Q.inv = null; if (quick) { Q.ivOpen = null; if (window.bpQbInvs) bpQbInvs(); if (window.bpInvLoad) setTimeout(bpInvLoad, 1500); } else bpNav('invoices');
       } else { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); btn.disabled = false; }
     } catch (e) { say('Network error. Try again.'); btn.disabled = false; }
   };
@@ -585,6 +589,83 @@
             + (q.estId ? '<button class="pjl-b pri" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\')">Invoice</button>' : '<button class="pjl-b qx-del" onclick="event.stopPropagation();BPQ.removeId(\'' + j.id + '\')">Delete</button>') + '</div></div>';
       }).join('') + '</div>' : '<div class="pjk-empty">No estimate sheets yet. <a onclick="bpQuoteNew()">Build one</a>: materials, labor and other costs with your markup, and you see the profit before you send it.</div>')
       + '</div>';
+  };
+
+  /* ================================================================
+     Ready to invoice, on the Invoices page
+     An estimate the customer agreed to lands here as the invoice it
+     becomes: every line, the amount due. Confirm sends it as is; Edit
+     opens the full invoice builder.
+     ================================================================ */
+  var estStatus = function (q) { var it = q && q.estId ? (window._bpEstItems || []).filter(function (v) { return v.id === q.estId; })[0] : null; return it ? String(it.status || '').toLowerCase() : ''; };
+  function agreed(j) {
+    var q = j.quote || {};
+    if (j.status === 'active' || q.status === 'accepted') return true;
+    var st = estStatus(q);
+    if (st === 'accepted' || st === 'invoiced') { q.status = 'accepted'; q.acceptedAt = q.acceptedAt || Date.now(); Q._dirty = true; return true; }
+    return false;
+  }
+  /* work out the invoice a sheet turns into, without touching the one open in the builder */
+  function draftOf(jid) {
+    var was = Q.inv, j = job(jid), s = invInit(j ? j.contactId : null, jid);
+    var out = { s: s, lines: invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }), total: invTotalFor(s.type) };
+    Q.inv = was; return out;
+  }
+  window.bpQbInvs = function () {
+    var el = $('bpxQbInvs'); if (!el) return;
+    Q._dirty = false;
+    var mine = jobs().filter(function (j) { return j && j.quote && j.status !== 'done' && (j.status === 'active' || hasWork(j)); });
+    var ready = [], waiting = [];
+    mine.forEach(function (j) {
+      if (agreed(j)) { var d = draftOf(j.id); if (d.total > 0.009) ready.push({ j: j, d: d }); }
+      else if (j.status === 'quote' && j.quote.estId) waiting.push(j);
+    });
+    if (Q._dirty) save(true);
+    ready.sort(function (a, b) { return ((b.j.quote.acceptedAt || b.j.wonAt || 0) - (a.j.quote.acceptedAt || a.j.wonAt || 0)); });
+    var kind = { full: 'Itemized', deposit: 'Deposit', progress: 'Progress', final: 'Final balance' };
+    var row = function (x) {
+      var j = x.j, d = x.d, s = d.s, open = Q.ivOpen === j.id, ttl = j.title === 'New estimate' ? 'Estimate' : j.title;
+      var h = '<div class="pjl-r qb-shr' + (open ? ' on' : '') + '" onclick="BPQ.ivToggle(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">receipt_long</span></span>'
+        + '<div class="pjl-id"><b>' + esc(j.name || 'Customer') + '</b><span>' + esc(ttl) + '</span></div>'
+        + '<div class="pjl-st"><span class="pjk-tag on">' + (s.billed > 0 ? 'Balance due' : 'Agreed') + '</span></div>'
+        + '<div class="pjl-m"><b>' + m0(d.total) + '</b><small>' + kind[s.type] + (s.billed > 0 ? ' · ' + m0(s.billed) + ' billed' : '') + '</small></div>'
+        + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\',\'edit\')">Edit</button>'
+          + '<button class="pjl-b pri" onclick="event.stopPropagation();BPQ.ivToggle(\'' + j.id + '\',1)">' + (open ? 'Hide' : 'Review') + '</button></div></div>';
+      if (!open) return h;
+      var ct = contactBy(j.contactId), sub = r2(sum(d.lines, function (l) { return r2((+l.qty || 0) * (+l.price || 0)); })), disc = r2(sub - d.total);
+      return h + '<div class="qb-ivx">'
+        + '<div class="qb-ivx-h"><div><small>Invoice for</small><b>' + esc(ct ? ct.name : j.name) + '</b></div><div><small>Due</small><b>' + (+s.days ? 'In ' + s.days + ' days' : 'On receipt') + '</b></div><div><small>Sends by</small><b>' + ({ sms: 'Text', email: 'Email', both: 'Text and email' }[s.via] || 'Text') + '</b></div></div>'
+        + '<table class="qb-ivt"><colgroup><col><col class="q"><col class="p"><col class="a"></colgroup><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>'
+        + d.lines.map(function (l) { return '<tr><td><b>' + esc(l.name) + '</b>' + (l.desc ? '<small>' + esc(l.desc) + '</small>' : '') + '</td><td>' + (+l.qty % 1 ? r2(l.qty) : +l.qty) + (l.unit && l.unit !== 'ea' ? ' ' + esc(l.unit) : '') + '</td><td>' + m2(l.price) + '</td><td>' + m2((+l.qty || 0) * (+l.price || 0)) + '</td></tr>'; }).join('')
+        + '</tbody></table>'
+        + '<div class="qb-ivx-t">' + (disc > 0.009 ? '<div><span>Subtotal</span><span>' + m2(sub) + '</span></div><div><span>Discount</span><span>-' + m2(disc) + '</span></div>' : '')
+          + '<div class="t"><span>Amount due</span><span>' + m2(d.total) + '</span></div></div>'
+        + '<div class="qb-msg" id="qb-qmsg-' + j.id + '"></div>'
+        + '<div class="qb-ivx-a"><button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\',\'edit\')">Edit invoice</button><button class="bpx-addbtn" id="qb-qsend-' + j.id + '" onclick="BPQ.ivConfirm(\'' + j.id + '\')">Confirm and send ' + m2(d.total) + '</button></div></div>';
+    };
+    var wrow = function (j) {
+      var c = calc(j), ttl = j.title === 'New estimate' ? 'Estimate' : j.title;
+      return '<div class="pjl-r qb-shr qb-wait" onclick="bpQuoteOpen(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">hourglass_top</span></span>'
+        + '<div class="pjl-id"><b>' + esc(j.name || 'Customer') + '</b><span>' + esc(ttl) + '</span></div>'
+        + '<div class="pjl-st"><span class="pjk-tag">Waiting</span></div>'
+        + '<div class="pjl-m"><b>' + m0(c.total) + '</b><small>sent ' + (j.quote.sentAt ? new Date(j.quote.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '</small></div>'
+        + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();BPQ.ivAgree(\'' + j.id + '\')">Mark agreed</button></div></div>';
+    };
+    el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-ptitle">Ready to invoice<span class="lg2">estimates your customers agreed to, turned into invoices</span></div>'
+      + (ready.length ? '<div class="pjl">' + ready.map(row).join('') + '</div>'
+        : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, its invoice shows up here ready to confirm.</div>')
+      + (waiting.length ? '<div class="qb-wh">Sent, waiting on a yes <span>' + waiting.length + '</span></div><div class="pjl">' + waiting.map(wrow).join('') + '</div>' : '')
+      + '</div>';
+  };
+  Q.ivToggle = function (jid, btn) { Q.ivOpen = Q.ivOpen === jid ? null : jid; bpQbInvs(); };
+  Q.ivAgree = function (jid) { var j = job(jid); if (!j) return; var q = quoteOf(j); q.status = 'accepted'; q.acceptedAt = Date.now(); save(true); Q.ivOpen = jid; bpQbInvs(); toast('Marked agreed. The invoice is ready to review.', 'success'); };
+  Q.ivConfirm = async function (jid) {
+    if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
+    var keep = Q.inv, j = job(jid); invInit(j ? j.contactId : null, jid);
+    var ct = contactBy(Q.inv.contactId);
+    if (!confirm('Send this ' + m2(invTotalFor(Q.inv.type)) + ' invoice to ' + (ct ? ct.name : 'the customer') + '?')) { Q.inv = keep; return; }
+    await Q.invSend(1);
+    if (Q.inv && Q.inv.jobId === jid) Q.inv = keep;
   };
 
   /* ================================================================
