@@ -47,7 +47,10 @@ button.run{background:#2f6bff;color:#fff;border:0;border-radius:11px;padding:13p
 <script>
 var U='https://ttzwzouhiwdwamuimhpo.supabase.co';
 var A='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
-function hdr(){return {'Authorization':'Bearer '+A,'apikey':A,'Content-Type':'application/json'};}
+/* the checks run as you: sign in to the portal in this browser first (the
+   session is shared on this site), and the token from that sign-in is sent */
+function tok(){ try{ var raw=localStorage.getItem('sb-ttzwzouhiwdwamuimhpo-auth-token'); var s=raw?JSON.parse(raw):null; return (s&&(s.access_token||(s.currentSession&&s.currentSession.access_token)))||''; }catch(e){ return ''; } }
+function hdr(){ var t=tok(); if(!t){ alert('Sign in to the portal in this browser first, then reload this page.'); } return {'Authorization':'Bearer '+(t||A),'apikey':A,'Content-Type':'application/json'}; }
 function row(name,state,msg){
   var d=document.createElement('div');d.className='row';
   d.innerHTML='<span class="dot '+(state==='ok'?'ok':state==='warn'?'warn':'bad')+'">'+(state==='ok'?'✓':state==='warn'?'!':'✕')+'</span><div><b>'+name+'</b><span>'+msg+'</span></div>';

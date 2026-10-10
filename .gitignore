@@ -1,0 +1,9 @@
+# secrets and local files never belong in the repo
+.env
+.env.*
+*.pem
+*.key
+*.p12
+service-account*.json
+node_modules/
+.DS_Store

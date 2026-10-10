@@ -20,7 +20,8 @@
   'use strict';
   var live = function () { return !!(window.BP_LIVE && window.BP_SB && window.GHL_CAL_URL); };
   var post = function (url, body) {
-    return fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + window.BP_ANON, 'apikey': window.BP_ANON, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    /* the calendar function wants the signed-in user's token, not the public key */
+    return (window.bpFx ? bpFx(url, body) : fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + window.BP_ANON, 'apikey': window.BP_ANON, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }))
       .then(function (r) { return r.json(); });
   };
   var cal = function (b) { b.cal = 'jobs'; b.ignoreValidation = true; return post(window.GHL_CAL_URL, b); };

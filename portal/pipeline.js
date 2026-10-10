@@ -49,7 +49,7 @@
     /* unread texts */
     try {
       if (window.GHL_MSG_URL) {
-        var m = await fetch(GHL_MSG_URL, { method: 'POST', headers: { 'Authorization': 'Bearer ' + BP_ANON, 'apikey': BP_ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list' }) });
+        var m = await (window.bpFx ? bpFx(GHL_MSG_URL, { action: 'list' }) : fetch(GHL_MSG_URL, { method: 'POST', headers: { 'Authorization': 'Bearer ' + BP_ANON, 'apikey': BP_ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list' }) }));
         var d = await m.json();
         ((d && d.conversations) || []).forEach(function (c) {
           if (c.unread > 0 && c.dir !== 'outbound') out.push(['text_message', 'New message from ' + (c.name || 'a contact'), String(c.last || '').slice(0, 140), 'messaging', 'high', 'pl-msg:' + c.id + ':' + (c.lastDate || c.dateUpdated || c.last || '')]);

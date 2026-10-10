@@ -95,12 +95,23 @@ async function depositPct(loc: string, t: string): Promise<number> {
   return DEFAULT_PCT;
 }
 
+/* GHL_WEBHOOK_SECRET: once set in Supabase, every call must carry it
+   (?k=..., an x-webhook-secret header, or "secret" in the workflow's custom
+   data). Without it anyone who knows a client's login email could call this. */
+const HOOK_SECRET = Deno.env.get("GHL_WEBHOOK_SECRET") ?? "";
+function hookOk(req: Request, b: Record<string, unknown>, cd: Record<string, unknown>): boolean {
+  if (!HOOK_SECRET) return true;
+  let k = ""; try { k = new URL(req.url).searchParams.get("k") ?? ""; } catch { /* no url */ }
+  k = k || req.headers.get("x-webhook-secret") || String(cd.secret ?? b.secret ?? "");
+  return k === HOOK_SECRET;
+}
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   // GHL's standard Webhook action nests our keys under customData
   const cd = (b.customData ?? {}) as Record<string, unknown>;
+  if (!hookOk(req, b, cd)) return json({ ok: false, error: "unauthorized" }, 401);
   const loc = String(b.locationId ?? cd.locationId ?? (b.location as Record<string, unknown>)?.id ?? "").trim();
   const contactId = String(b.contactId ?? cd.contactId ?? b.contact_id ?? "").trim();
   if (!loc || !contactId) return json({ ok: false, error: "locationId and contactId required" }, 400);

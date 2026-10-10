@@ -22,6 +22,16 @@ const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? Deno.env.get("GHL_API_KEY") ?? ""
 const GHL_LOC_FALLBACK = Deno.env.get("GHL_LOCATION_ID") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
 
+/* GHL_WEBHOOK_SECRET: once set in Supabase, every call must carry it
+   (?k=..., an x-webhook-secret header, or "secret" in the workflow's custom
+   data). Without it anyone who knows a client's login email could call this. */
+const HOOK_SECRET = Deno.env.get("GHL_WEBHOOK_SECRET") ?? "";
+function hookOk(req: Request, b: Record<string, unknown>, cd: Record<string, unknown>): boolean {
+  if (!HOOK_SECRET) return true;
+  let k = ""; try { k = new URL(req.url).searchParams.get("k") ?? ""; } catch { /* no url */ }
+  k = k || req.headers.get("x-webhook-secret") || String(cd.secret ?? b.secret ?? "");
+  return k === HOOK_SECRET;
+}
 const sbH = { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 
@@ -56,6 +66,7 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   const cd = (b.customData ?? b.custom_data ?? {}) as Record<string, unknown>;
   const pick = (k: string) => String(cd[k] ?? b[k] ?? "").trim();
+  if (!hookOk(req, b, cd)) return json({ ok: false, error: "unauthorized" }, 401);
 
   const email = pick("owner_email") || FALLBACK_EMAIL;
   if (!email) return json({ ok: false, error: "owner_email required (or set PORTAL_OWNER_EMAIL secret)" }, 400);
