@@ -112,11 +112,14 @@
   var CREW = [['crewclock', 'Clock in', 'clock'], ['crewprojects', 'Projects', 'projects'], ['crewhome', 'My crew', 'crew'], ['crewid', 'My ID', 'badge'], ['crewmsgs', 'Messages', 'convos']];
   var SUBNAV = [['subjobs', 'Jobs', 'projects'], ['subinvoices', 'Invoices', 'finances'], ['subchanges', 'Change orders', 'page'], ['subcomply', 'Compliance', 'badge'], ['crewmsgs', 'Messages', 'convos'], ['subcompany', 'My company', 'crew']];
   function limitedNav() { return sub() ? SUBNAV : CREW; }
-  function kidsOf(g) { return (g.kids || []).filter(function (k) { return allows(k[0]); }); }
+  function lockedV(v) { return !!(window.bpLocked && bpLocked(v)); }
+  /* locked tabs go last, so everything the plan leaves out sits together */
+  function kidsOf(g) { var ks = (g.kids || []).filter(function (k) { return allows(k[0]); }); return ks.filter(function (k) { return !lockedV(k[0]); }).concat(ks.filter(function (k) { return lockedV(k[0]); })); }
   function firstOf(g) {
     var ks = kidsOf(g); if (!ks.length) return g.id;
     var last = LS.get('hlTab:' + g.id);
-    return ks.some(function (k) { return k[0] === last; }) ? last : ks[0][0];
+    if (ks.some(function (k) { return k[0] === last && !lockedV(last); })) return last;
+    return ks[0][0];
   }
   /* belt and braces for browsers without overflow:clip */
   function unshift() { var m = document.querySelector('#bpx .bpx-main'); if (m && m.scrollLeft) m.scrollLeft = 0; }
@@ -136,13 +139,20 @@
     if (crew()) {
       h = limitedNav().map(function (x) { return row('data-view="' + x[0] + '" data-sec="' + x[0] + '"', x[1], x[2], "bpNav('" + x[0] + "')"); }).join('');
     } else {
+      /* open sections first, then everything the plan leaves out, together under one divider */
+      var open = [], shut = [];
       (window.BP_NAV || []).forEach(function (g) {
         if (g.kids) { if (!kidsOf(g).length) return; }
         else if (!allows(g.id)) return;
-        var locked = g.kids ? kidsOf(g).every(function (k) { return window.bpLocked && bpLocked(k[0]); }) : (window.bpLocked && bpLocked(g.id));
-        if (g.g === 2) h += '<div class="hl-gap" role="separator"></div>';
-        h += row('data-sec="' + g.id + '"', g.l, g.ico || g.id, "bpShell.go('" + g.id + "')", locked);
+        var locked = g.kids ? kidsOf(g).every(function (k) { return lockedV(k[0]); }) : lockedV(g.id);
+        (locked ? shut : open).push(g);
       });
+      open.forEach(function (g) {
+        if (g.g === 2 && !shut.length) h += '<div class="hl-gap" role="separator"></div>';
+        h += row('data-sec="' + g.id + '"', g.l, g.ico || g.id, "bpShell.go('" + g.id + "')", false);
+      });
+      if (shut.length) h += '<div class="hl-gap" role="separator"></div><div class="hl-lockhd">Upgrade to unlock</div>';
+      shut.forEach(function (g) { h += row('data-sec="' + g.id + '" data-locked="1"', g.l, g.ico || g.id, "bpShell.go('" + g.id + "')", true); });
     }
     nav.innerHTML = h;
     var foot = $('hlSideFoot');
@@ -193,6 +203,32 @@
     S.badge();
     setTimeout(S.tables, 0);
   };
+
+  /* iPad Safari can leave the sticky top bar painted at an old width after the
+     viewport or the content column changes size. Whenever the column's width
+     changes, make the browser lay the two bars out again. */
+  (function () {
+    var lastW = 0, raf = 0;
+    function refit() {
+      raf = 0;
+      var m = document.querySelector('#bpx .bpx-main'); if (!m) return;
+      var w = m.clientWidth; if (w === lastW) return; lastW = w;
+      ['hlTop', 'hlTabs'].forEach(function (id) {
+        var el = document.getElementById(id); if (!el || el.hidden) return;
+        el.style.width = w + 'px'; void el.offsetWidth; el.style.width = '';
+      });
+    }
+    function soon() { if (!raf) raf = requestAnimationFrame(refit); }
+    function watch() {
+      var m = document.querySelector('#bpx .bpx-main'); if (!m) return setTimeout(watch, 500);
+      if (window.ResizeObserver) new ResizeObserver(soon).observe(m);
+    }
+    window.addEventListener('resize', soon, { passive: true });
+    window.addEventListener('orientationchange', function () { lastW = 0; setTimeout(soon, 250); });
+    window.addEventListener('pageshow', function () { lastW = 0; soon(); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) { lastW = 0; soon(); } });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+  })();
 
   /* ---------- collapse and drawer ---------- */
   function app() { return $('bpxApp'); }

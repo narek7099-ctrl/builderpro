@@ -101,6 +101,7 @@
 
   /* ---------- projects: the photos, big, right under the hero ---------- */
   function projects(crew) {
+    if (!crew && locked('activejobs')) return '';
     var jobs = ((window.bpJobsGet && bpJobsGet()) || []).filter(function (j) { return j.status === 'active'; });
     if (!jobs.length) {
       return '<div class="bpx-panel dash-projs-empty">'
@@ -409,8 +410,8 @@
     return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div>'
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
       + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + '<button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
-      + '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add project</button>'
-      + '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order materials</button></div></div>';
+      + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add project</button>')
+      + (locked('matlists') ? '' : '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order materials</button>') + '</div></div>';
   }
 
   /* ---------- four numbers, two by two, in one card ---------- */
@@ -537,7 +538,10 @@
   }
 
   /* ---------- the widget board: every card has a title, a kebab, one job ---------- */
+  /* a page the plan leaves out never shows on the dashboard: no figures from it, no link to it */
+  function locked(v) { return !!(window.bpLocked && bpLocked(v)); }
   function W(go, html, cls) {
+    if (locked(go)) return '';
     return '<div class="hl-w' + (cls ? ' ' + cls : '') + '"><button class="hl-keb" aria-label="Widget menu" onclick="event.stopPropagation();BP_DASH.kebab(this,\'' + go + '\')">'
       + '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>' + html + '</div>';
   }
@@ -682,7 +686,7 @@
     var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
     var inMotion = act.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
     var dl = function (k, up) { return bpChart.delta(M.prev[k], C[k], { upIsGood: up, vs: P.vs }); };
-    var g = function (list) { return '<div class="hl-grid">' + list.map(function (c) { return '<div class="hl-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; };
+    var g = function (list) { list = list.filter(function (c) { return c[1]; }); return '<div class="hl-grid">' + list.map(function (c) { return '<div class="hl-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; };
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
     var st = sparkTiles(M), gos = ['finances', 'finances', 'activejobs', 'finances'];
     var X = moreWidgets(M), m = X.mini;
@@ -727,19 +731,19 @@
       return '<button class="bpx-jt' + (l[0] === cur ? ' on' : '') + '" onclick="BP_DASH.layout(\'' + l[0] + '\')">' + l[1] + '</button>';
     }).join('') + '</div>';
   }
-  function cells(list) { return '<div class="db-grid">' + list.map(function (c) { return '<div class="db-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; }
+  function cells(list) { list = list.filter(function (c) { return c[1]; }); return '<div class="db-grid">' + list.map(function (c) { return '<div class="db-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; }
   function body(lay, crew) {
     P = periodOf(periodKey());
     var M = monthly(), st = sparkTiles(M), per = periodSwitch(P.k);
     if (lay === 'command') {
       return per + '<div class="db-split"><div class="db-main">'
-        + cells([[12, flow()], [6, pipeline()], [6, spendDonut(M)], [12, jobsChart()], [12, projects(crew)]])
+        + cells([[12, flow()], [6, locked('activejobs') ? '' : pipeline()], [6, spendDonut(M)], [12, jobsChart()], [12, projects(crew)]])
         + '</div><div class="db-rail">' + kpis() + attention() + week() + activity() + '</div></div>';
     }
     if (lay === 'projects') {
-      return cells([[12, projects(crew)], [5, collection(M)], [7, week()]])
-        + per + '<div class="db-row4">' + st.join('') + '</div>'
-        + cells([[6, flow()], [6, netLine(M)], [4, pipeline()], [4, spend()], [4, attention()], [12, activity()]]);
+      return cells([[12, projects(crew)], [5, locked('activejobs') ? '' : collection(M)], [7, week()]])
+        + per + '<div class="db-row4">' + st.filter(function (x, i) { return i !== 2 || !locked('activejobs'); }).join('') + '</div>'
+        + cells([[6, flow()], [6, netLine(M)], [4, locked('activejobs') ? '' : pipeline()], [4, spend()], [4, attention()], [12, activity()]]);
     }
     return widgets(M);
   }
@@ -800,7 +804,7 @@
         : live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
         + topline()
         + (crew || !window.bpStormDash ? '' : bpStormDash())   /* a storm near past customers, waiting for a yes (portal/storm.js) */
-        + (crew || !window.bpCeoDashCard ? '' : bpCeoDashCard(D.ceo))   /* the AI CEO's morning briefing (portal/aiceo.js) */
+        + (crew || !window.bpCeoDashCard || locked('aiteam') ? '' : bpCeoDashCard(D.ceo))   /* the AI CEO's morning briefing (portal/aiceo.js) */
         + cl
         + (crew
           ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
@@ -833,7 +837,7 @@
       D.events = ((d && (d.appointments || d.events)) || []).map(function (a) { var t = a.start || a.startTime; return { start: t ? new Date(t).toISOString() : '', time: t ? new Date(t).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '', name: a.contact || a.contactName || a.title || a.name || 'Appointment', what: a.title || a.calendar || 'Inspection' }; });
       D.appts = D.events;
     }).catch(function () { D.events = null; D.appts = null; }));
-    if (D.ceo === undefined && !(window.bpTeamIsCrew && bpTeamIsCrew()) && window.bpCeoDashCard) jobs.push(BP_SB.from('ceo_reports').select('id,day,kind,source,stats,created_at').order('created_at', { ascending: false }).limit(1).then(function (r) { D.ceo = (r && r.data && r.data[0]) || null; }).catch(function () { D.ceo = null; }));
+    if (D.ceo === undefined && !(window.bpTeamIsCrew && bpTeamIsCrew()) && window.bpCeoDashCard && !locked('aiteam')) jobs.push(BP_SB.from('ceo_reports').select('id,day,kind,source,stats,created_at').order('created_at', { ascending: false }).limit(1).then(function (r) { D.ceo = (r && r.data && r.data[0]) || null; }).catch(function () { D.ceo = null; }));
     if (D.contracts === undefined) jobs.push(BP_SB.from('contracts').select('id,title,customer_name,status,amount,sent_at,signed_at').order('created_at', { ascending: false }).limit(30).then(function (r) { D.contracts = (r && r.data) || []; }).catch(function () { D.contracts = []; }));
     if (D.unread === undefined) jobs.push(BP_SB.from('conversations').select('unread').gt('unread', 0).limit(200).then(function (r) { D.unread = ((r && r.data) || []).reduce(function (t, c) { return t + (+c.unread || 0); }, 0); }).catch(function () { D.unread = 0; }));
     if (D.deals === undefined && window.GHL_OPP_URL) jobs.push(window.bpApi(window.GHL_OPP_URL, { action: 'list' }).then(function (d) { var o = (d && d.opportunities) || []; D.deals = { n: o.length, v: o.reduce(function (t, x) { return t + (+x.value || 0); }, 0) }; }).catch(function () { D.deals = null; }));

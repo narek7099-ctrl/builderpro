@@ -29,6 +29,7 @@
     folderOpen: '<path d="M3 6h7l2 2h7v3H7l-4 8z M7 11h15l-4 8H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
     folder: '<path d="M3 6h7l2 2h9v11H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
   };
+  var LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   var svg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + '</svg>'; };
   var STEP = {
     sms: ['Send SMS', 'sms', 'msg'], email: ['Send email', 'email', 'msg'],
@@ -326,13 +327,15 @@
     var nNew = list.filter(function (w) { return status(w) === 'new'; }).length, nChg = list.filter(function (w) { return status(w) === 'chg'; }).length;
     var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations running on your ' + PLANS[S.plan].name + ' plan</span></div></div>';
     h += '<div class="wa-lay"><aside class="wa-list">';
+    var shut = [];
     [6, 7, 1, 2, 3, 4, 5].forEach(function (f) {
       var items = WF.filter(function (w) { return w.folder === f && avail(w); });
       var locked = WF.filter(function (w) { return w.folder === f && !avail(w) && !hidden(w); });
-      if (!items.length && locked.length) {   /* a whole folder above this plan: show it, locked */
+      if (!items.length && locked.length) {   /* a whole folder above this plan: kept for the locked section at the end */
         var need = Math.min.apply(null, locked.map(function (w) { return w.from; }));
-        h += '<div class="wa-fold wa-lock"><span class="wa-fi">' + svg('folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + locked.length + '</span></div>'
-          + '<div class="wa-lockn">Included in ' + PLANS[need].name + '. <a href="#" data-upg="' + PLANS[need].k + '">Upgrade</a></div>';
+        shut.push('<div class="wa-fold wa-lock" title="Not on your plan"><span class="wa-fi wa-padlock">' + LOCK + '</span><span class="wa-fn">' + FOLDERS[f] + '</span>'
+          + '<span class="wa-need">' + PLANS[need].name + '</span></div>'
+          + '<div class="wa-lockn">' + locked.length + ' automation' + (locked.length === 1 ? '' : 's') + ' · <a href="#" data-upg="' + PLANS[need].k + '">Upgrade to ' + PLANS[need].name + '</a></div>');
         return;
       }
       if (!items.length) return;
@@ -340,9 +343,10 @@
       var op = !!S.open[f];
       h += '<button class="wa-fold' + (op ? ' open' : '') + '" data-fold="' + f + '" aria-expanded="' + op + '"><span class="wa-fi">' + svg(op ? 'folderOpen' : 'folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + items.length + '</span><svg class="wa-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="wa-fbody' + (op ? ' open' : '') + '"><div class="wa-fin">';
       items.forEach(function (w) { var st = status(w), x = variant(w); h += '<button class="wa-wf' + (w.id === S.sel ? ' on' : '') + '" data-id="' + w.id + '"><span class="wa-num">' + w.id + '</span><span class="wa-nm">' + (x.name || w.name) + '</span>' + (st ? '<span class="wa-dot ' + st + '">' + (st === 'new' ? 'NEW' : 'UPGRADED') + '</span>' : '') + '</button>'; });
-      if (locked.length) { var nd = Math.min.apply(null, locked.map(function (w) { return w.from; })); h += '<div class="wa-lockn">+' + locked.length + ' more in ' + PLANS[nd].name + '. <a href="#" data-upg="' + PLANS[nd].k + '">Upgrade</a></div>'; }
+      if (locked.length) { var nd = Math.min.apply(null, locked.map(function (w) { return w.from; })); h += '<div class="wa-lockn wa-lockmore"><span class="wa-padlock">' + LOCK + '</span>' + locked.length + ' more locked · <a href="#" data-upg="' + PLANS[nd].k + '">' + PLANS[nd].name + '</a></div>'; }
       h += '</div></div>';
     });
+    if (shut.length) h += '<div class="wa-lockhd"><span class="wa-padlock">' + LOCK + '</span>Not on your plan</div>' + shut.join('');
     var w = WF.filter(function (x) { return x.id === S.sel; })[0], x = variant(w), st = status(w), note = '';
     if (st === 'new') note = '<div class="wa-note newn">Added in ' + PLANS[S.plan].name + '.</div>';
     else if (st === 'chg') note = '<div class="wa-note"><b>Upgraded in ' + PLANS[S.plan].name + ':</b> ' + x.change + '</div>';
@@ -407,7 +411,11 @@
   };
 
   var css = document.createElement('style');
-  css.textContent = '.wa-lock{cursor:default;opacity:.7}.wa-lock:hover{background:none;color:#788493}.wa-lockn{font-size:12px;color:#788493;padding:2px 14px 10px 37px}.wa-lockn a{color:#006fff;font-weight:600}'
+  css.textContent = '.wa-lock{cursor:default;color:#98a2b3 !important;background:#f8fafc !important;border:1px dashed #d0d5dd !important;border-radius:10px;margin:4px 0 0}.wa-lock:hover{background:#f8fafc !important;color:#98a2b3}.wa-lock .wa-fn{text-decoration:none;color:#667085}'
+    + '.wa-padlock{display:inline-grid;place-items:center;width:16px;height:16px;color:#98a2b3;flex:0 0 16px}.wa-padlock svg{width:14px;height:14px}'
+    + '.wa-need{margin-left:auto;font:600 10.5px/18px Inter,system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#155eef;background:#eff4ff;border-radius:999px;padding:0 8px}'
+    + '.wa-lockhd{display:flex;align-items:center;gap:6px;margin:14px 0 4px;padding:10px 6px 0;border-top:1px solid #eaecf0;font:600 11px/16px Inter,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#667085}'
+    + '.wa-lockn{font-size:12px;color:#788493;padding:4px 14px 8px 14px}.wa-lockn a{color:#006fff;font-weight:600}.wa-lockmore{display:flex;align-items:center;gap:6px;padding-left:14px}'
     + '.wa-storm{display:flex;flex-direction:column;gap:8px;background:#f5f8fb;border:1px solid #dce3ec;border-radius:12px;padding:12px 14px}.wa-storm b{font-size:14px}.wa-storm span{font-size:12.5px;color:#56657a}.wa-storm input{width:100%}.wa-storm .bpx-addbtn{align-self:flex-start}.wa-st-msg{font-size:12.5px;color:#34435a}'
     + '.wa{display:flex;flex-direction:column;gap:14px;--wl:#c3cbd6}'
     + '.wa-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}.wa-sum{display:flex;flex-wrap:wrap;gap:8px}'
