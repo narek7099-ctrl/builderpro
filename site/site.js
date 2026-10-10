@@ -38,7 +38,7 @@
     try {
       lenis = new Lenis({
         lerp: 0.1,
-        prevent: function (node) { return !!(node.closest && node.closest('#bpx, .atlas-inline, .legal-page, .modal, .est-shell, .drawer, .menu_body, [data-lenis-prevent]')); },
+        prevent: function (node) { return !!(node.closest && node.closest('#bpx, .atlas-inline, .legal-page, .modal, .est-shell, .drawer, .calc, .menu_body, [data-lenis-prevent]')); },
       });
       if (HAS_GSAP) {
         if (HAS_ST) lenis.on('scroll', ScrollTrigger.update);
@@ -50,16 +50,16 @@
     } catch (e) { lenis = null; }
   }
 
-  var lockState = { loader: false, menu: false, drawer: false };
+  var lockState = { loader: false, menu: false, drawer: false, calc: false };
   var extLocked = false;
   function updateLock() {
-    var locked = lockState.loader || lockState.menu || lockState.drawer || extLocked;
+    var locked = lockState.loader || lockState.menu || lockState.drawer || lockState.calc || extLocked;
     /* A stopped Lenis does not scroll, and nothing on screen says so — no
        greyed scrollbar, no overlay, just a page that ignores you. So the
        stop is only ever as long as something is actually covering the
        screen, and the flags are re-read rather than remembered. */
     if (lenis) { locked ? lenis.stop() : lenis.start(); }
-    document.body.classList.toggle('is-locked', lockState.loader || lockState.menu || lockState.drawer);
+    document.body.classList.toggle('is-locked', lockState.loader || lockState.menu || lockState.drawer || lockState.calc);
   }
   /* If every overlay is gone the scroll comes back, whatever any flag thinks.
      This is the one that stops a missed start() from freezing the page for
@@ -89,7 +89,7 @@
     var id = a.getAttribute('href'); if (!id || id === '#' || id.length < 2) return;
     var el = document.getElementById(id.slice(1)); if (!el) return;
     e.preventDefault();
-    closeMenu(); closeDrawer();
+    closeMenu(); closeDrawer(); closeCalc();
     if (lenis) lenis.scrollTo(el, { offset: -6, duration: 1.2 }); else el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
     if (history.pushState) history.pushState(null, '', id);
   });
@@ -165,28 +165,51 @@
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
     if (!right || !canvas || canvas._bpHero) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20260919-i').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+    import('./hero3d.js?v=20261009-calc').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
       .catch(function () { right.classList.add('nogl'); });
   }
   /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
-     If the clips are not there (or cannot play), the live cube stands in. */
+     The clips are the hero; the live cube only stands in when they cannot
+     play at all. iPad and iPhone Safari ignore preload, so a clip that is
+     only waited on never fires canplay and the cube took over after 8s. So
+     each clip is asked to play straight away (that is what makes Safari
+     fetch it), any sign of a decoded frame counts, and if the clips turn up
+     late (slow network, Low Power Mode until the first tap) they still win
+     over a cube that is already running. */
   function initHeroObject() {
     var right = $('.hero_right'), intro = $('#videoIntro'), loop = $('#videoLoop');
     if (!right || !intro || !loop) { mountCube(); return; }
-    var fell = false;
-    var fallback = function () { if (fell) return; fell = true; right.classList.remove('has-video'); intro.remove(); loop.remove(); mountCube(); };
-    /* a missing file may have errored before this ran */
-    if (intro.error || loop.error || intro.networkState === 3 || loop.networkState === 3) { fallback(); return; }
-    intro.addEventListener('error', fallback); loop.addEventListener('error', fallback);
-    intro.addEventListener('canplay', function () {
-      if (fell) return;
-      right.classList.add('has-video'); intro.classList.add('is-on');
-      intro.play().catch(function () { loop.classList.add('is-on'); loop.play().catch(function () {}); });
-    }, { once: true });
-    intro.addEventListener('ended', function () { loop.classList.add('is-on'); loop.play().catch(function () {}); intro.classList.remove('is-on'); });
-    if (REDUCED) { intro.addEventListener('canplay', function () { intro.pause(); intro.currentTime = intro.duration || 0; }, { once: true }); }
-    /* the browser gives up on a missing file with an error; a stalled network gets a cube after a while */
-    setTimeout(function () { if (!right.classList.contains('has-video')) fallback(); }, 8000);
+    [intro, loop].forEach(function (v) { v.muted = true; v.defaultMuted = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); });
+    var shown = false, cube = false, dead = 0, refused = false;
+    var show = function (v) {
+      if (shown && v.classList.contains('is-on')) return;
+      shown = true; right.classList.add('has-video');
+      [intro, loop].forEach(function (o) { o.classList.toggle('is-on', o === v); });
+    };
+    var standIn = function () { if (cube || shown) return; cube = true; mountCube(); };
+    var tryPlay = function (v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); return p; };
+    var startLoop = function () { show(loop); tryPlay(loop); };
+    /* a decoded frame is enough to show a clip, playing or not */
+    ['loadeddata', 'canplay', 'playing'].forEach(function (ev) {
+      intro.addEventListener(ev, function () { if (!refused && !loop.classList.contains('is-on')) show(intro); });
+      loop.addEventListener(ev, function () { if (!shown) show(loop); });
+    });
+    intro.addEventListener('ended', startLoop);
+    var onErr = function () { dead++; if (dead >= 2) { right.classList.remove('has-video'); intro.remove(); loop.remove(); if (!cube) { cube = true; mountCube(); } } else if (this === intro) startLoop(); };
+    intro.addEventListener('error', onErr); loop.addEventListener('error', onErr);
+    if (intro.error) onErr.call(intro); if (loop.error) onErr.call(loop);
+    if (REDUCED) { loop.removeAttribute('loop'); intro.addEventListener('loadeddata', function () { try { intro.currentTime = Math.max(0, (intro.duration || 0) - 0.05); } catch (e) {} }, { once: true }); intro.load(); return; }
+    /* ask now: on iOS this is what loads the file */
+    var p = tryPlay(intro);
+    if (p && p.catch) p.catch(function () { /* autoplay refused (Low Power Mode): rest on the loop's first frame, it plays on the first tap */ refused = true; intro.classList.remove('is-on'); try { loop.load(); } catch (e) {} startLoop(); });
+    /* first touch anywhere: Safari allows playback now */
+    var kick = function () {
+      if (refused || loop.classList.contains('is-on')) tryPlay(loop); else tryPlay(intro);
+      ['pointerdown', 'touchstart', 'keydown', 'scroll'].forEach(function (ev) { document.removeEventListener(ev, kick); });
+    };
+    ['pointerdown', 'touchstart', 'keydown', 'scroll'].forEach(function (ev) { document.addEventListener(ev, kick, { passive: true }); });
+    /* nothing at all after a while: let the cube hold the space until the clips arrive */
+    setTimeout(standIn, 12000);
   }
   /* The scroll-story clip: its currentTime is driven by scroll. Seeking a
      plain MP4 is slow, so the file is encoded with every frame a keyframe and
@@ -426,11 +449,84 @@
     if (drawer) {
       if (HAS_GSAP) { gsap.set(drawer, { xPercent: 100 }); drawerTl = gsap.timeline({ paused: true }).to(drawer, { xPercent: 0, duration: 0.6, ease: 'power1.out' }); }
       else drawer.style.transform = 'translateX(100%)';
-      $$('.js-open-drawer').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); closeMenu(); openDrawer(); }); });
+      $$('.js-open-drawer').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); closeMenu(); closeCalc(); openDrawer(); }); });
       $$('.js-close-drawer').forEach(function (b) { b.addEventListener('click', closeDrawer); });
     }
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeMenu(); closeDrawer(); } });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeMenu(); closeDrawer(); closeCalc(); } });
   }
+  /* CALCULATORS PANEL. Same open/close as the drawer, wider. One iframe per
+     trade + tool, made the first time it is asked for and kept, so a
+     half-finished estimate is still there when you come back to it. */
+  var calc = $('#calc'), calcOverlay = $('#calcOverlay'), calcTl = null;
+  var CALC_TRADES = { roofing: 'Roofing', hvac: 'HVAC', general: 'Remodeling' };
+  var CALC_TOOLS = { cost: 'cost calculator', damage: 'damage check', health: 'health check' };
+  /* every other trade id the portal knows, mapped to the one that stands in for it */
+  var CALC_ALIAS = { siding: 'roofing', gutters: 'roofing', concrete: 'roofing', pools: 'roofing', landscaping: 'roofing',
+    plumbing: 'hvac', electrical: 'hvac', painting: 'general', flooring: 'general', countertops: 'general', trim: 'general', remodel: 'general', remodeling: 'general' };
+  var calcState = { trade: 'roofing', tool: 'cost' };
+  function calcSrc(trade, tool) { return 'embed/' + (tool === 'cost' ? '' : tool + '-') + trade + '.html'; }
+  function calcRender() {
+    var frames = $('#calcFrames'); if (!frames) return;
+    var key = calcState.tool + ':' + calcState.trade, cur = null;
+    $$('.calc_frame', frames).forEach(function (f) { if (f.dataset.key === key) cur = f; });
+    if (!cur) {
+      cur = document.createElement('iframe');
+      cur.className = 'calc_frame'; cur.dataset.key = key;
+      cur.title = CALC_TRADES[calcState.trade] + ' ' + CALC_TOOLS[calcState.tool];
+      cur.src = calcSrc(calcState.trade, calcState.tool);
+      frames.appendChild(cur);
+    }
+    $$('.calc_frame', frames).forEach(function (f) { f.classList.toggle('is-on', f === cur); });
+    $$('.calc_trade', calc).forEach(function (b) { var on = b.dataset.trade === calcState.trade; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
+    $$('.calc_tool', calc).forEach(function (b) { var on = b.dataset.tool === calcState.tool; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
+    var lab = $('#calcLabel'); if (lab) lab.textContent = CALC_TRADES[calcState.trade] + ', ' + CALC_TOOLS[calcState.tool];
+  }
+  function openCalc(trade, tool) {
+    if (!calc) return;
+    if (trade) { trade = CALC_ALIAS[trade] || trade; if (CALC_TRADES[trade]) calcState.trade = trade; }
+    if (tool && CALC_TOOLS[tool]) calcState.tool = tool;
+    closeMenu(); closeDrawer();
+    calcRender();
+    calc.classList.add('is-open'); calcOverlay.classList.add('is-open');
+    if (calcTl) calcTl.timeScale(1).play(); else calc.style.transform = 'none';
+    lockState.calc = true; updateLock();
+    $$('.js-open-calc').forEach(function (b) { if (b.hasAttribute('aria-expanded')) b.setAttribute('aria-expanded', 'true'); });
+  }
+  function closeCalc() {
+    if (!calc || !calc.classList.contains('is-open')) return;
+    calcOverlay.classList.remove('is-open');
+    if (calcTl) { calcTl.timeScale(1.15).reverse(); calcTl.eventCallback('onReverseComplete', function () { calc.classList.remove('is-open'); }); }
+    else { calc.style.transform = 'translateX(100%)'; calc.classList.remove('is-open'); }
+    lockState.calc = false; updateLock();
+    $$('.js-open-calc').forEach(function (b) { if (b.hasAttribute('aria-expanded')) b.setAttribute('aria-expanded', 'false'); });
+  }
+  function initCalc() {
+    if (!calc) return;
+    if (HAS_GSAP) { gsap.set(calc, { xPercent: 100 }); calcTl = gsap.timeline({ paused: true }).to(calc, { xPercent: 0, duration: 0.6, ease: 'power2.out' }); }
+    else calc.style.transform = 'translateX(100%)';
+    $$('.js-open-calc').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); openCalc(); }); });
+    $$('.js-close-calc').forEach(function (b) { b.addEventListener('click', closeCalc); });
+    $$('.calc_trade', calc).forEach(function (b) { b.addEventListener('click', function () { calcState.trade = b.dataset.trade; calcRender(); }); });
+    $$('.calc_tool', calc).forEach(function (b) { b.addEventListener('click', function () { calcState.tool = b.dataset.tool; calcRender(); }); });
+    /* "Get started" inside the panel swaps it for the drawer */
+    $$('.js-open-drawer', calc).forEach(function (b) { b.addEventListener('click', closeCalc); });
+    /* arrow keys move along a row of tabs */
+    $$('[role="tablist"]', calc).forEach(function (list) {
+      list.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var tabs = $$('[role="tab"]', list), i = tabs.indexOf(document.activeElement); if (i < 0) return;
+        e.preventDefault();
+        var n = tabs[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        n.focus(); n.click();
+      });
+    });
+    /* a link to #calculators, or ?calc=hvac:health, opens it on load */
+    var m = (location.search.match(/[?&]calc=([a-z]+)(?::([a-z]+))?/) || []);
+    if (m[1] || location.hash === '#calculators') setTimeout(function () { openCalc(m[1], m[2]); }, 400);
+  }
+  window.bpCalcOpen = function (trade, tool) { openCalc(trade, tool); };
+  window.bpCalcClose = closeCalc;
+
   window.dlMenu = function (force) { (force === false ? closeMenu : openMenu)(); };
   window.dlDrawer = function (force) { (force === false ? closeDrawer : openDrawer)(); };
 
@@ -482,6 +578,7 @@
     initSolutions();
     initTimeline();
     initPanels();
+    initCalc();
     initLogoFlip();
     $$('.dl-yr').forEach(function (e) { e.textContent = new Date().getFullYear(); });
     /* fonts change line breaks, which moves every mask SplitText created */

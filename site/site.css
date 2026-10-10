@@ -673,3 +673,88 @@ body.dl .modal{border-radius:var(--radius);}
 .flow_dash{animation:flowDash 4s linear infinite;}
 @keyframes flowDash{from{stroke-dashoffset:922;}to{stroke-dashoffset:0;}}
 @media (prefers-reduced-motion:reduce){.flow_dash{animation:none;}}
+
+/* 11. CALCULATORS PANEL ------------------------------------------------------
+   Slides in from the right like the drawer, but wide: the page canvas grey
+   with white cards on the 6px gutter, the same mosaic as the page. Left is
+   the trade and the tool, right is the live embed. Under 900px it stacks
+   and the panel itself scrolls. The old on-page estimator is gone; its
+   markup stays hidden because the portal clones its frames for previews. */
+body.dl #estimator{display:none !important;}
+.navbar_ctas .btn.is-calc{gap:.5rem;justify-content:center;}
+.is-calc_ic{width:1rem;height:1rem;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.calc{
+  position:fixed;top:0;right:0;bottom:0;z-index:130;
+  width:76rem;max-width:100%;background:var(--gray-100);color:var(--dark);
+  padding:var(--gutter);display:flex;flex-direction:column;gap:var(--gutter);
+  font-family:var(--site-font);
+  visibility:hidden;                 /* off-screen position set by GSAP */
+}
+.calc.is-open{visibility:visible;}
+.calc .pill_icon{width:2rem;}.calc .pill_dash{width:1rem;}
+.calc_head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;
+  background:var(--white);border-radius:var(--radius);padding:1.5rem 1.5rem 1.75rem 2rem;}
+.calc_title{display:flex;flex-direction:column;gap:1.75rem;}
+.calc_title .h-s{margin:0;}
+.calc_body{flex:1;min-height:0;display:grid;grid-template-columns:22rem 1fr;gap:var(--gutter);}
+.calc_side{display:flex;flex-direction:column;gap:var(--gutter);min-height:0;overflow-y:auto;}
+.calc_card{background:var(--white);border-radius:var(--radius);padding:1.25rem;display:flex;flex-direction:column;gap:.875rem;}
+.calc_card.is-blue{background:var(--blue-500);}
+.calc_k{font-size:var(--caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gray-500);}
+.calc_trades,.calc_tools{display:flex;flex-direction:column;gap:.375rem;}
+:where(.calc) button{appearance:none;-webkit-appearance:none;font:inherit;color:inherit;cursor:pointer;}
+.calc_trade,.calc_tool{
+  display:flex;align-items:center;gap:.875rem;width:100%;text-align:left;
+  background:var(--white);border:1px solid var(--stroke-dark);border-radius:.75rem;padding:.75rem .875rem;
+  transition:background-color .2s,border-color .2s,color .2s;
+}
+.calc_trade:hover,.calc_tool:hover{background:var(--gray-100);border-color:var(--gray-200);}
+.calc_trade.is-active,.calc_tool.is-active{background:var(--dark);border-color:var(--dark);color:var(--white);}
+.calc_trade:focus-visible,.calc_tool:focus-visible{outline:3px solid var(--blue-500);outline-offset:2px;}
+.calc_ic{flex:none;width:2.5rem;height:2.5rem;border-radius:.625rem;background:#e6f0ff;color:var(--blue-500);display:grid;place-items:center;transition:background-color .2s,color .2s;}
+.calc_ic.is-sm{width:2.125rem;height:2.125rem;border-radius:.5rem;}
+.calc_ic svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.is-active .calc_ic{background:var(--blue-500);color:var(--white);}
+.calc_tt,.calc_tool>span:last-child{display:flex;flex-direction:column;gap:.2rem;min-width:0;}
+.calc_trade b,.calc_tool b{font-size:.9375rem;font-weight:600;letter-spacing:-.01em;line-height:1.2;}
+.calc_trade small,.calc_tool small{font-size:.78rem;line-height:1.35;color:var(--gray-500);transition:color .2s;}
+.is-active small{color:rgba(255,255,255,.7);}
+.calc_note{margin-top:auto;gap:1rem;}
+.calc_note p{margin:0;font-size:.9375rem;line-height:1.45;}
+.calc_note .btn{align-self:flex-start;}
+.calc_stage{background:var(--white);border-radius:var(--radius);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.calc_bar{display:flex;align-items:center;gap:.75rem;padding:.875rem 1.125rem;border-bottom:1px solid var(--stroke-dark);font-size:var(--b-s);}
+.calc_dots{display:flex;gap:.375rem;}
+.calc_dots i{width:.625rem;height:.625rem;border-radius:50%;background:var(--gray-200);}
+.calc_label{font-weight:500;color:var(--gray-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.calc_live{margin-left:auto;display:flex;align-items:center;gap:.4rem;font-size:var(--caption);font-weight:600;color:#15803d;white-space:nowrap;}
+.calc_live i{width:.4375rem;height:.4375rem;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+.calc_frames{flex:1;min-height:0;position:relative;background:#f4f6f9;}
+.calc_frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#f4f6f9;opacity:0;visibility:hidden;transition:opacity .35s var(--ease-settle),visibility 0s .35s;}
+.calc_frame.is-on{opacity:1;visibility:visible;transition:opacity .35s var(--ease-settle),visibility 0s;}
+@media (max-width:991px){
+  .calc_body{grid-template-columns:18rem 1fr;}
+  .calc_trade small{display:none;}
+}
+@media (max-width:767px){
+  .navbar_ctas .btn.is-ghost.is-calc{display:inline-flex;width:2.5rem;height:2.5rem;padding:0;border-radius:100%;}
+  .navbar_ctas .btn.is-calc span{display:none;}
+  .navbar_ctas{gap:.375rem;}
+  .navbar_ctas .btn.js-open-drawer{padding:.875rem 1rem;}
+  .is-calc_ic{width:1.125rem;height:1.125rem;}
+  .calc{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .calc_head{padding:1.25rem;}
+  .calc_title{gap:1.25rem;}
+  .calc_body{display:flex;flex-direction:column;flex:none;}
+  .calc_side{overflow:visible;}
+  .calc_trades,.calc_tools{flex-direction:row;overflow-x:auto;scrollbar-width:none;margin:0 -1.25rem;padding:0 1.25rem;}
+  .calc_trades::-webkit-scrollbar,.calc_tools::-webkit-scrollbar{display:none;}
+  .calc_trade,.calc_tool{flex:none;width:auto;max-width:15rem;}
+  .calc_trade small,.calc_tool small{display:none;}
+  .calc_note{display:none;}
+  .calc_stage{min-height:0;}
+  .calc_frames{flex:none;height:80vh;height:80svh;}
+}
+
+/* pricing: the one add-on left, labelled as such */
+.pl-add_tag{display:inline-block;vertical-align:middle;margin-left:.5rem;padding:.25rem .625rem;border-radius:999px;background:#e6f0ff;color:var(--blue-500);font-size:.6875rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;line-height:1.2;}
