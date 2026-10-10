@@ -696,7 +696,7 @@
       [3, kpiW('Appointments', D.leads ? D.leads.a : '&middot;', 'this month', 'calendar')],
       [3, kpiW('Active projects', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs')],
       [3, kpiW('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
-      [8, W('finances', flow())],
+      [locked('activejobs') ? 12 : 8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
       [3, m.avgJob], [3, m.revPer], [3, m.done], [3, m.cycle],
       [4, X.margin], [4, X.win], [4, X.billed],
@@ -810,8 +810,35 @@
           ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
           : body(layoutOf(), crew));   /* the layout is chosen under Settings > Appearance */
     } finally { if (undo) undo(); }
+    setTimeout(fillAll, 0);
     fetchState();
   };
+
+  /* No holes in the grid: when a plan leaves cards out, or a breakpoint changes
+     how wide a card is, the last card in a short row widens to fill it. */
+  function spanOf(el) { var m = /span\s+(\d+)/.exec(getComputedStyle(el).gridColumnEnd || '') || /span\s+(\d+)/.exec(getComputedStyle(el).gridColumnStart || ''); return m ? +m[1] : 12; }
+  function fillGrid(g) {
+    var kids = [].slice.call(g.children).filter(function (c) { return c.offsetParent !== null || c.getClientRects().length; });
+    kids.forEach(function (c) { c.style.gridColumn = ''; });
+    var row = [], used = 0;
+    var close = function () {
+      if (row.length && used < 12) {   /* share the spare columns out across the row, the remainder from the end */
+        var extra = 12 - used, each = Math.floor(extra / row.length), rem = extra - each * row.length;
+        row.forEach(function (r, i) { var add = each + (i >= row.length - rem ? 1 : 0); if (add) r.el.style.gridColumn = 'span ' + (r.span + add); });
+      }
+      row = []; used = 0;
+    };
+    kids.forEach(function (c) {
+      var sp = Math.min(spanOf(c), 12);
+      if (used + sp > 12) close();
+      row.push({ el: c, span: sp }); used += sp;
+      if (used === 12) { row = []; used = 0; }
+    });
+    close();
+  }
+  function fillAll() { var a = $('bpxViewArea'); if (!a || window._bpCurView !== 'dashboard') return; a.querySelectorAll('.hl-grid,.db-grid').forEach(fillGrid); }
+  var fillT = 0;
+  window.addEventListener('resize', function () { clearTimeout(fillT); fillT = setTimeout(fillAll, 120); });
 
   /* a rotation crosses the breakpoint: redraw so the chart is drawn for the
      size it is actually being shown at */
