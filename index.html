@@ -78,8 +78,8 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20260919-i">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20260919-i"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261009-calc">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261009-calc"}}</script>
 
 
 <style id="bpi-icons">
@@ -324,7 +324,7 @@ section{padding:0;}
 .pl.is-dark{background:#001530;color:#fff}
 .pl.is-dark .pl_tag{background:rgba(255,255,255,.1);color:#9ec5ff}
 .pl.is-dark li svg{background:rgba(0,111,255,.25);stroke:#6fb0ff}
-.pl-adds{display:grid;grid-template-columns:1fr 1fr;gap:var(--gutter,6px)}
+.pl-adds{display:grid;grid-template-columns:1fr;gap:var(--gutter,6px)}
 .pl-add{display:flex;align-items:center;gap:16px;padding:1.4rem 1.6rem}
 .pl-add_ic{flex:none;width:48px;height:48px;border-radius:14px;background:#e6f0ff;color:#006fff;display:grid;place-items:center}
 .pl-add b{font-size:17px;font-weight:600}.pl-add p{margin:3px 0 0;font-size:14px;color:#6b7888;line-height:1.45}
@@ -397,6 +397,7 @@ section{padding:0;}
 <nav class="navbar" aria-label="Primary">
   <div></div>
   <div class="navbar_ctas">
+    <button class="btn is-ghost is-calc js-open-calc" type="button" aria-controls="calc" aria-expanded="false" aria-label="Calculators"><svg class="is-calc_ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5"/></svg><span>Calculators</span></button>
     <a href="#" class="btn is-ghost" onclick="bpOpenPortal();return false;">Client login</a>
     <button class="btn js-open-drawer" type="button">Get started</button>
     <button class="icon-btn js-open-menu" type="button" aria-label="Open menu" aria-expanded="false">
@@ -421,7 +422,7 @@ section{padding:0;}
       <a href="#how" class="menu_link">How it works</a>
       <a href="#trades" class="menu_link">Every trade</a>
       <a href="#lisa" class="menu_link">Lisa AI</a>
-      <a href="#estimator" class="menu_link">Estimator</a>
+      <a href="#" class="menu_link js-open-calc">Calculators</a>
       <a href="#pricing" class="menu_link">Pricing</a>
       <a href="#faq" class="menu_link">FAQ</a>
     </nav>
@@ -464,6 +465,74 @@ section{padding:0;}
     <div class="b-s muted" style="margin-top:8px">14 days free. Plans from $99 a month.</div>
     <div class="drawer_msg" aria-live="polite"></div>
   </form>
+</aside>
+
+<!-- ===================== CALCULATORS PANEL ================================
+  Opened by every "Calculators" button. Slides in from x:100% like the
+  drawer. Three trades stand in for every other one; each has the same three
+  tools, the live embeds under embed/ (the ones clients put on their site). -->
+<div class="overlay js-close-calc" id="calcOverlay"></div>
+<aside class="calc" id="calc" aria-label="Calculators" data-lenis-prevent>
+  <div class="calc_head">
+    <div class="calc_title">
+      <div class="pill is-static"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Calculators</span></div>
+      <h3 class="h-s">Price it, check it, <span class="accent">book it.</span></h3>
+    </div>
+    <button class="icon-btn is-outline js-close-calc" type="button" aria-label="Close calculators">
+      <svg width="14" height="14" viewBox="0 0 16 16"><path d="M1 1l14 14M15 1L1 15" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+
+  <div class="calc_body">
+    <div class="calc_side">
+      <div class="calc_card">
+        <span class="calc_k">1. Pick a trade</span>
+        <div class="calc_trades" role="tablist" aria-label="Trade">
+          <button class="calc_trade is-active" type="button" role="tab" aria-selected="true" data-trade="roofing">
+            <span class="calc_ic"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></span>
+            <span class="calc_tt"><b>Roofing and exterior</b><small>Siding, gutters, windows, decks, concrete, pools and yards</small></span>
+          </button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="hvac">
+            <span class="calc_ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="1.6"/><path d="M12 10.4c-.6-2.6.3-4.6 2.4-5.2M13.6 12c2.6-.6 4.6.3 5.2 2.4M12 13.6c.6 2.6-.3 4.6-2.4 5.2M10.4 12c-2.6.6-4.6-.3-5.2-2.4"/></svg></span>
+            <span class="calc_tt"><b>HVAC and home systems</b><small>Heating, cooling, plumbing, electrical and water heaters</small></span>
+          </button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="general">
+            <span class="calc_ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="14" height="6" rx="1.5"/><path d="M17.5 6.5h2a1 1 0 0 1 1 1V11a1 1 0 0 1-1 1H11v3"/><rect x="9.5" y="15" width="3" height="5.5" rx="1"/></svg></span>
+            <span class="calc_tt"><b>Remodeling and interiors</b><small>Kitchens, baths, painting, flooring, countertops and trim</small></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="calc_card">
+        <span class="calc_k">2. Pick a tool</span>
+        <div class="calc_tools" role="tablist" aria-label="Tool">
+          <button class="calc_tool is-active" type="button" role="tab" aria-selected="true" data-tool="cost">
+            <span class="calc_ic is-sm"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5"/></svg></span><span><b>Cost calculator</b><small>A real price range in under a minute</small></span>
+          </button>
+          <button class="calc_tool" type="button" role="tab" aria-selected="false" data-tool="damage">
+            <span class="calc_ic is-sm"><svg viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="12.5" r="3.2"/></svg></span><span><b>Damage check</b><small>Snap a photo, get a damage report</small></span>
+          </button>
+          <button class="calc_tool" type="button" role="tab" aria-selected="false" data-tool="health">
+            <span class="calc_ic is-sm"><svg viewBox="0 0 24 24"><path d="M20.3 8.6c0 4.9-8.3 10.4-8.3 10.4S3.7 13.5 3.7 8.6A4.3 4.3 0 0 1 12 6.4a4.3 4.3 0 0 1 8.3 2.2z"/><path d="M6.5 12h3l1.3-2.4 2 4.6 1.4-2.2h3.3"/></svg></span><span><b>Health check</b><small>Six taps to a health score</small></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="calc_card is-blue on-blue calc_note">
+        <p>These run on your own website, in your colors. Every answer lands in your portal as a lead, and Lisa follows up.</p>
+        <button class="btn is-on-blue js-open-drawer" type="button">Get started</button>
+      </div>
+    </div>
+
+    <div class="calc_stage">
+      <div class="calc_bar">
+        <span class="calc_dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="calc_label" id="calcLabel">Roofing, cost calculator</span>
+        <span class="calc_live"><i></i>Live demo</span>
+      </div>
+      <div class="calc_frames" id="calcFrames"></div>
+    </div>
+  </div>
 </aside>
 
 <main id="main" class="dl-page">
@@ -652,7 +721,7 @@ section{padding:0;}
         <div class="gw-top"><span class="gw-stage">Stage 3</span><span class="gw-bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
         <b class="gw-t">A growing team</b>
         <p>More crews, more trucks, maybe a second location. An AI team follows up on quotes, runs your marketing and has your day ready at 7am.</p>
-        <ul class="gw-l"><li>AI Team included</li><li>Unlimited users and locations</li><li>Priority support</li></ul>
+        <ul class="gw-l"><li>The AI Team, only on Enterprise</li><li>Unlimited users and locations</li><li>Priority support</li></ul>
         <a class="gw-plan" href="#pricing"><span>Enterprise</span><b>$299<small>/mo</small></b></a>
       </div>
     </div>
@@ -756,7 +825,7 @@ section{padding:0;}
             </g>
           </svg>
           <!-- 2 and 3: the real product -->
-          <img class="sol_img sol_shot" data-sol="1" src="assets/site/portal-dashboard.png" alt="The BuilderPro dashboard: active projects, leads, jobs booked, profit and cash flow" loading="lazy">
+          <img class="sol_img sol_shot" data-sol="1" src="assets/site/portal-dashboard.png" alt="The BuilderPro dashboard: money in, money kept, projects won, leads, appointments and the pipeline" loading="lazy">
           <img class="sol_img sol_shot" data-sol="2" src="assets/site/portal-calendar.png" alt="The BuilderPro calendar with the week's appointments and jobs" loading="lazy">
         </div>
       </div>
@@ -13818,10 +13887,10 @@ function bpFrameLock(fr){try{var d=fr.contentDocument;if(!d||!d.body||fr._bpLock
         <div class="at-brief_btns"><span class="at-ok">Approve all</span><span>Review</span></div>
       </div>
       <div class="card at-side is-blue on-blue">
-        <span class="at-side_tag">Add-on</span>
-        <div class="at-side_p">$49<small>/ month</small></div>
-        <p>Add to any plan. Included free with Enterprise. Nothing goes out to a customer until you tap approve.</p>
-        <a class="btn is-on-blue" href="signup.html?plan=os">Start free trial</a>
+        <span class="at-side_tag">Enterprise only</span>
+        <div class="at-side_p">$299<small>/ month</small></div>
+        <p>The AI Team comes with the Enterprise plan, ready on day one. Nothing goes out to a customer until you tap approve.</p>
+        <a class="btn is-on-blue" href="signup.html?plan=enterprise">Start free trial</a>
       </div>
     </div>
   </div>
@@ -14001,12 +14070,11 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <p class="pl_desc">For more crews and locations, with an AI team doing the follow-ups and marketing.</p>
         <a class="btn is-on-blue" href="signup.html?plan=enterprise">Start free trial</a>
         <div class="pl_rule"><span>What's included</span></div>
-        <ul><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Everything in BuilderPro OS</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>AI Team included ($49 value)</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>500 call minutes</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Unlimited users and locations</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Lisa trained on your documents</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Priority support</span></li></ul>
+        <ul><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Everything in BuilderPro OS</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>AI Team, only on Enterprise</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>500 call minutes</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Unlimited users and locations</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Lisa trained on your documents</span></li><li><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>Priority support</span></li></ul>
       </div>
     </div>
     <div class="pl-adds">
-      <div class="card pl-add"><span class="pl-add_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><div><b>Website</b><p>We build and host your site, with your calculator, booking page and Lisa built in.</p></div><div class="pl-add_p">$49<small>/mo</small></div></div>
-      <div class="card pl-add"><span class="pl-add_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14.5 14.2c.8-.3 1.6-.4 2.5-.4 2.5 0 4 1.8 4 4.2"/></svg></span><div><b>AI Team</b><p>Sales, marketing and office assistants plus a 7am brief. Included with Enterprise.</p></div><div class="pl-add_p">$49<small>/mo</small></div></div>
+      <div class="card pl-add"><span class="pl-add_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><div><b>Website <span class="pl-add_tag">Add-on</span></b><p>We build and host your site, with your calculators, booking page and Lisa built in. Add it to any plan.</p></div><div class="pl-add_p">$49<small>/mo</small></div></div>
     </div>
     <div class="card pl-trust"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>14 days free</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>No contracts, cancel anytime</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Extra call minutes $0.25 each</span></div>
   </div>
@@ -14073,7 +14141,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
       <div class="qa"><button class="qa-q" type="button">How does the 14-day trial work?<span class="pm"></span></button><div class="qa-a"><p>You pay the one-time setup fee, we get everything built and live within 3 to 4 days, and then your 14-day trial begins on the full, live system with real calls and real jobs. At the end of 14 days you keep going or you walk away.</p></div></div>
       <div class="qa"><button class="qa-q" type="button">What is the setup fee and what does it cover?<span class="pm"></span></button><div class="qa-a"><p>It covers the real hard costs of switching you on: your business phone number, the carrier registration required to send texts, training Lisa on your business, and importing your customers and open jobs. It is a one-time charge.</p></div></div>
       <div class="qa"><button class="qa-q" type="button">Do I need to be tech-savvy to use this?<span class="pm"></span></button><div class="qa-a"><p>No. We set everything up and keep it running. You get one dashboard where you see your calls, jobs, invoices and profit, and the Lisa tab where you can change what she says. Nothing technical to touch.</p></div></div>
-      <div class="qa"><button class="qa-q" type="button">What is the instant estimator?<span class="pm"></span></button><div class="qa-a"><p>A calculator you embed on your website that lets a customer price a job in under a minute, whether that is a roof measured from satellite imagery, an HVAC tune-up or a pool build. Before showing the number it captures their name, phone and email, and the lead lands in your portal with Lisa following up.</p></div></div>
+      <div class="qa"><button class="qa-q" type="button">What are the calculators?<span class="pm"></span></button><div class="qa-a"><p>A calculator you embed on your website that lets a customer price a job in under a minute, whether that is a roof measured from satellite imagery, an HVAC tune-up or a pool build. Before showing the number it captures their name, phone and email, and the lead lands in your portal with Lisa following up.</p></div></div>
     </div>
   </div>
 </section>
@@ -14115,7 +14183,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
           <a href="#grow" class="u-link">Grow with us</a>
           <a href="#how" class="u-link">How it works</a>
           <a href="#lisa" class="u-link">Lisa AI</a>
-          <a href="#estimator" class="u-link">Estimator</a>
+          <a href="#" class="u-link js-open-calc">Calculators</a>
           <a href="#pricing" class="u-link">Pricing</a>
           <a href="#faq" class="u-link">FAQ</a>
         </div>
@@ -16056,6 +16124,8 @@ function bpCalcPreview(){
      order, so indexing it with the other list opened the wrong trade */
   var idx=(typeof EST_SLIDES!=='undefined')?EST_SLIDES.indexOf(cid):-1; if(idx<0)idx=0;
   bpClose();
+  /* the on-page estimator is now the Calculators panel off the top bar */
+  if(window.bpCalcOpen){var tl=window._bpCalcTool||'quote';setTimeout(function(){bpCalcOpen(cid,tl==='damage'||tl==='health'?tl:'cost');},260);return;}
   setTimeout(function(){if(typeof estCarouselGo==='function')estCarouselGo(idx);var s=document.getElementById('estimator');if(s)s.scrollIntoView({behavior:'smooth'});},260);
 }
 
@@ -23558,7 +23628,7 @@ function bpSettings(){
     enterprise:['Everything in BuilderPro OS','AI Team included','500 '+BP_AI_NAME+' call minutes','Unlimited users and locations','Priority support']})[_pk]||[];
   var planPick='<div class="st-plan-row">'+['foundation','os','enterprise'].map(function(k){var P=BP_PLANS[k],me=k===_pk;
       return '<div class="st-plan-card"><b>'+P.name+'</b><p>$'+P.price+' / month · '+P.min+' call minutes</p>'+(me?'<span class="bpx-badge ok">Your plan</span>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\''+k+'\')">'+(P.price>BP_PLANS[_pk].price?'Upgrade':'Switch')+'</button>')+'</div>';}).join('')+'</div>'
-    +'<div class="st-plan-row">'+[['ai','AI Team','Sales, marketing and office assistants, plus a 7am brief.'],['website','Website','We build and host your site, with your calculator, booking page and '+BP_AI_NAME+' built in.']].map(function(a){
+    +'<div class="st-plan-row">'+[['ai','AI Team','Sales, marketing and office assistants, plus a 7am brief. Only on Enterprise.'],['website','Website','We build and host your site, with your calculator, booking page and '+BP_AI_NAME+' built in.']].map(function(a){
       var inc=a[0]==='ai'&&_pk==='enterprise', on=inc||_ad[a[0]]||(a[0]==='ai'&&(window._bpAcct||{}).ai_addon==='active');
       if(a[0]==='ai'&&!inc) return '<div class="st-plan-card st-plan-lock"><b><span class="ms" style="font-size:16px;vertical-align:-3px;color:#98a2b3">lock</span> '+a[1]+'</b><p>'+a[2]+' Only on Enterprise.</p><button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\'enterprise\')">Upgrade to Enterprise</button></div>';
       return '<div class="st-plan-card"><b>'+a[1]+'</b><p>'+a[2]+'</p>'+(inc?'<span class="bpx-badge ok">Included</span>':on?'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':false})">Remove · $49/mo</button>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':true})">Add for $49/mo</button>')+'</div>';}).join('')+'</div>';
@@ -25606,11 +25676,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/tools-share.js?v=20261001a"></script>
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261002f"></script>
-<script src="site/vendor/lenis.min.js?v=20260921-a"></script>
-<script src="site/vendor/gsap.min.js?v=20260919-i"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20260919-i"></script>
-<script src="site/vendor/SplitText.min.js?v=20260919-i"></script>
-<script src="site/site.js?v=20260921-a"></script>
+<script src="site/vendor/lenis.min.js?v=20261009-calc"></script>
+<script src="site/vendor/gsap.min.js?v=20261009-calc"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261009-calc"></script>
+<script src="site/vendor/SplitText.min.js?v=20261009-calc"></script>
+<script src="site/site.js?v=20261009-calc"></script>
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261020a">
 <link rel="stylesheet" href="portal/inspect.css?v=20261019a">

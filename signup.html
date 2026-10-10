@@ -101,7 +101,7 @@ var PLANS=[
   {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa answers calls and texts','Calendar and booking page','Estimates, invoices, payments','150 call minutes']},
   {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','Projects, finances and crews','All instant-quote calculators','300 call minutes, 5 users']},
   {k:'enterprise',tag:'Built to grow',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','AI Team included','500 call minutes, unlimited users']}];
-var ADDONS=[{k:'ai',n:'AI Team',p:49,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator, booking page and Lisa built in.'}];
+var ADDONS=[{k:'ai',n:'AI Team',p:0,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief. Only on Enterprise.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator, booking page and Lisa built in.'}];
 var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete & Paving','Other'];
 var SERVICES={Roofing:['Roof replacement','Roof repair','Storm damage','Inspections','Gutters','Skylights'],Plumbing:['Leak repair','Drain cleaning','Water heaters','Repiping','Sewer lines','Fixtures'],HVAC:['AC install','Furnace install','Repairs','Maintenance plans','Ductwork','Heat pumps'],
   Electrical:['Panel upgrades','Rewiring','EV chargers','Lighting','Generators','Troubleshooting'],'General contracting':['Additions','New builds','Kitchens','Bathrooms','Decks','Permits'],Remodeling:['Kitchens','Bathrooms','Basements','Flooring','Whole-home'],
@@ -163,7 +163,7 @@ function render(){
     h='<h1>Check and start your trial</h1><p class="sub">Next you add a card with Stripe. You are not charged today.</p><dl class="rev">'
     +[['Plan',pl.n+', $'+pl.p+' / month'],['Name',S.name],['Email',S.email],['Phone',S.phone],['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea],['Services',P.services],['AI receptionist',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()]]
       .map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1]||'-')+'</dd>'}).join('')+'</dl>'
-    +'<h2 style="font-size:17px;margin:22px 0 10px">Add-ons</h2><div class="addons">'+ADDONS.map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
+    +'<h2 style="font-size:17px;margin:22px 0 10px">Add-ons</h2><div class="addons">'+ADDONS.filter(function(a){return a.k!=='ai'||S.plan==='enterprise';}).map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
       return '<label class="addon'+(inc?' inc':'')+'"><input type="checkbox" '+(inc||S.addons[a.k]?'checked ':'')+(inc?'disabled ':'')+'onchange="S.addons.'+a.k+'=this.checked;persist();render()"><span><b>'+a.n+'</b> <em>'+(inc?'Included':'+$'+a.p+' / month')+'</em><small>'+a.d+'</small></span></label>';}).join('')+'</div>'
     +'<p class="total">Total after the trial: <b>$'+total()+' / month</b></p>'
     +'<div class="note">As soon as you finish, we build your BuilderPro account, your GoHighLevel workspace, your booking calendar and your AI receptionist from these answers. It is ready when you log in.</div>'
@@ -172,7 +172,7 @@ function render(){
   var f=$('view').querySelector('input:not([type=checkbox]):not(.hp),select,textarea'); if(f&&STEP)f.focus({preventScroll:true});
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function total(){var pl=PLANS.filter(function(p){return p.k===S.plan})[0];return pl.p+(S.addons.ai&&S.plan!=='enterprise'?49:0)+(S.addons.website?49:0);}
+function total(){var pl=PLANS.filter(function(p){return p.k===S.plan})[0];return pl.p+(S.addons.website?49:0);}
 function chip(b){var t=$('iSvc'),cur=t.value.split(/\s*,\s*/).filter(Boolean),x=b.textContent,i=cur.indexOf(x);if(i>=0)cur.splice(i,1);else cur.push(x);t.value=cur.join(', ');b.classList.toggle('on',i<0);}
 function need(ids){var bad=null;ids.forEach(function(i){var e=$(i),f=e.closest('.f'),ok=!!e.value.trim();f.classList.toggle('err',!ok);if(!ok&&!bad)bad=e;});if(bad){bad.focus();$('msg').textContent='Please fill in the highlighted fields.';return false;}return true;}
 function collect(){
@@ -202,7 +202,7 @@ async function submit(){
   var b=$('nx');b.disabled=true;b.textContent='Creating your account...';$('msg').textContent='';
   try{
     var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+SB_ANON},
-      body:JSON.stringify({plan:S.plan,addons:{ai:!!S.addons.ai&&S.plan!=='enterprise',website:!!S.addons.website},name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
+      body:JSON.stringify({plan:S.plan,addons:{ai:false,website:!!S.addons.website},name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
     var j=await r.json();
     if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="index.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start 14-day free trial';return;}
     if(!j.ok)throw new Error(j.error||'Something went wrong.');
