@@ -15247,18 +15247,26 @@ var BP_PLANS={foundation:{name:'Foundation',price:99,min:150},os:{name:'BuilderP
 /* What each plan leaves out. Locked pages stay in the sidebar with a lock and
    open an upgrade card, so the contractor sees what the next plan gives them.
    No accounts row (demo, older clients) means nothing is locked. */
-var BP_LOCK={foundation:['activejobs','routing','installations','employees','supply','supplyorders','suppliers','receipts','matlists','prices','mattemplates','finances','ledger','finarchive','quickbooks','connections','leadsources','marketing','website','social','competitors']};
+var BP_LOCK={foundation:['activejobs','routing','installations','employees','subs','supply','supplyorders','suppliers','receipts','matlists','prices','mattemplates','finarchive','quickbooks','connections','leadsources','marketing','website','social','competitors','checks','calculator','customize','reputation','aiteam'],
+  /* the AI Team is an Enterprise feature, not an add-on */
+  os:['aiteam']};
+/* which plan opens a page: Enterprise for what even OS leaves out, OS otherwise */
+function bpLockPlan(v){ return BP_LOCK.os.indexOf(v)>=0?'enterprise':'os'; }
 var BP_WHY={quickbooks:'QuickBooks sync',activejobs:'Projects, contracts and e-signature',installations:'Installation tracking',employees:'Employees, hours and payroll',supply:'Supply and material orders',supplyorders:'Supply and material orders',suppliers:'Supply and material orders',matlists:'Material lists',receipts:'Material lists',prices:'Material lists',mattemplates:'Material lists',
-  finances:'Finances and profit per job',ledger:'Finances and profit per job',leadsources:'Lead Sources',marketing:'Ads and listings',website:'Website traffic',connections:'Website traffic',social:'Social Media',competitors:'Competitor Analysis'};
+  finances:'Finances and profit per job',ledger:'Finances and profit per job',leadsources:'Lead Sources',marketing:'Ads and listings',website:'Website traffic',connections:'Website traffic',social:'Social Media',competitors:'Competitor Analysis',subs:'Subcontractors',routing:'Routing',checks:'Calculator leads',calculator:'Instant-quote calculators',customize:'Instant-quote calculators',reputation:'Reputation and reviews',aiteam:'The AI Team'};
 function bpLocked(v){ var p=(window._bpAcct||{}).plan; return !!(BP_LOCK[p]&&BP_LOCK[p].indexOf(v)>=0); }
 function bpUpgradeCard(v){
+  var tp=bpLockPlan(v), P=BP_PLANS[tp], cur=(BP_PLANS[(window._bpAcct||{}).plan]||{}).name||'current';
+  var gives=tp==='enterprise'?'Enterprise adds the AI Team: an AI CEO that reads the whole business every morning, with sales, marketing, office and project assistants.'
+    :'BuilderPro OS adds projects, crews, supply, calculators, lead tracking, reputation and marketing.';
   return '<div style="max-width:560px;margin:40px auto;background:#fff;border:1px solid #dbe3ec;border-radius:22px;padding:34px;text-align:center">'
     +'<div style="width:52px;height:52px;border-radius:50%;background:#eaf2ff;color:#006fff;display:grid;place-items:center;margin:0 auto 16px"><span class="ms">lock</span></div>'
-    +'<h2 style="margin:0 0 8px;font-size:22px;color:#001530">'+(BP_WHY[v]||'This page')+' is on BuilderPro OS</h2>'
-    +'<p style="color:#5b6b7f;margin:0 0 20px;line-height:1.5">Your Foundation plan covers Lisa, your calendar, customers, estimates and invoices. BuilderPro OS adds projects, finances, crews, supply, lead sources and marketing for $199 a month.</p>'
-    +'<button class="bpx-btn" onclick="bpChangePlan(\'os\')">Upgrade to BuilderPro OS</button>'
+    +'<h2 style="margin:0 0 8px;font-size:22px;color:#001530">'+(BP_WHY[v]||'This page')+' is on '+P.name+'</h2>'
+    +'<p style="color:#5b6b7f;margin:0 0 20px;line-height:1.5">It is not part of your '+bpEsc(cur)+' plan. '+gives+' $'+P.price+' a month.</p>'
+    +'<button class="bpx-btn" onclick="bpChangePlan(\''+tp+'\')">Upgrade to '+P.name+'</button>'
     +'<div style="margin-top:12px"><a href="#" onclick="bpNav(\'settings\');return false" style="color:#006fff;font-size:14px">Compare plans in Settings</a></div></div>';
 }
+
 async function bpChangePlan(plan,addons){
   if(!confirm(plan?'Switch to '+BP_PLANS[plan].name+' for $'+BP_PLANS[plan].price+' a month? The difference is prorated on your next bill.':'Update your add-ons? The difference is prorated on your next bill.'))return;
   try{
@@ -23545,13 +23553,14 @@ function bpSettings(){
   var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
       return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o2[0]?' on':'')+'" onclick="bpApplyTheme(\''+o2[0]+'\');bpSettings()"><span class="ms">'+o2[2]+'</span> '+o2[1]+'</button>';}).join('')+'</div>';
   var _pk=(window._bpAcct||{}).plan||'os', _ad=((window._bpAcct||{}).profile||{}).addons||{};
-  var feats=({foundation:[BP_AI_NAME+' AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Review requests','1 instant-quote calculator'],
-    os:['Everything in Foundation','300 '+BP_AI_NAME+' call minutes, up to 5 users','Projects, contracts and e-signature','Finances, budgets and payroll','Supply and material orders','All calculators','Lead Sources and website traffic','Social, reputation and competitors'],
+  var feats=({foundation:[BP_AI_NAME+' AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Finance overview: income, costs and profit'],
+    os:['Everything in Foundation','300 '+BP_AI_NAME+' call minutes, up to 5 users','Projects, contracts and e-signature','Finances, budgets and payroll','Supply and material orders','Instant-quote calculators and calculator leads','Lead Sources and website traffic','Social, reputation and competitors','AI Team on Enterprise'],
     enterprise:['Everything in BuilderPro OS','AI Team included','500 '+BP_AI_NAME+' call minutes','Unlimited users and locations','Priority support']})[_pk]||[];
   var planPick='<div class="st-plan-row">'+['foundation','os','enterprise'].map(function(k){var P=BP_PLANS[k],me=k===_pk;
       return '<div class="st-plan-card"><b>'+P.name+'</b><p>$'+P.price+' / month · '+P.min+' call minutes</p>'+(me?'<span class="bpx-badge ok">Your plan</span>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\''+k+'\')">'+(P.price>BP_PLANS[_pk].price?'Upgrade':'Switch')+'</button>')+'</div>';}).join('')+'</div>'
     +'<div class="st-plan-row">'+[['ai','AI Team','Sales, marketing and office assistants, plus a 7am brief.'],['website','Website','We build and host your site, with your calculator, booking page and '+BP_AI_NAME+' built in.']].map(function(a){
       var inc=a[0]==='ai'&&_pk==='enterprise', on=inc||_ad[a[0]]||(a[0]==='ai'&&(window._bpAcct||{}).ai_addon==='active');
+      if(a[0]==='ai'&&!inc) return '<div class="st-plan-card st-plan-lock"><b><span class="ms" style="font-size:16px;vertical-align:-3px;color:#98a2b3">lock</span> '+a[1]+'</b><p>'+a[2]+' Only on Enterprise.</p><button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\'enterprise\')">Upgrade to Enterprise</button></div>';
       return '<div class="st-plan-card"><b>'+a[1]+'</b><p>'+a[2]+'</p>'+(inc?'<span class="bpx-badge ok">Included</span>':on?'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':false})">Remove · $49/mo</button>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':true})">Add for $49/mo</button>')+'</div>';}).join('')+'</div>';
 
   q('bpxViewArea').innerHTML=
@@ -25570,7 +25579,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261022abxmnpituvwfnw"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022axyzamnptvfnu">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261017a"></script>
+<script src="portal/dash.js?v=20261024a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
@@ -25591,7 +25600,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aiceo-map.js?v=20261011a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
 <script src="portal/reviews.js?v=20261004a"></script>
-<script src="portal/automations.js?v=20261017b"></script>
+<script src="portal/automations.js?v=20261024a"></script>
 <script src="portal/aibrain.js?v=20260930a"></script>
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261001a"></script>
@@ -25613,12 +25622,12 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
-<link rel="stylesheet" href="portal/shell.css?v=20261020arlmnobcxfghi">
+<link rel="stylesheet" href="portal/shell.css?v=20261024b">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
-<script src="portal/shell.js?v=20261020arlqbu"></script>
+<script src="portal/shell.js?v=20261024b"></script>
 <script src="portal/notify.js?v=20261022a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
-<script src="portal/tour.js?v=20261020ar"></script>
+<script src="portal/tour.js?v=20261024a"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261020ar">
 </html>

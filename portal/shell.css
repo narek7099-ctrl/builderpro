@@ -413,7 +413,9 @@ html.bp-appmode body{overflow:hidden}
    and flashed white in the corner), and keep the sticky bar on its own layer */
 html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;background:#f3f5f9}
 #bpx#bpx#bpx#bpx .bpx-main{overscroll-behavior:none;-webkit-overflow-scrolling:touch}
-#bpx#bpx#bpx#bpx .hl-top,#bpx#bpx#bpx#bpx .hl-tabs{transform:translateZ(0);backface-visibility:hidden}
+/* no forced layer on the sticky bars: iPad Safari kept that layer at a stale width after a resize,
+   which cut the bar short and left a white gap in the top-right corner */
+#bpx#bpx#bpx#bpx .hl-top,#bpx#bpx#bpx#bpx .hl-tabs{transform:none;backface-visibility:visible;left:0;right:0}
 /* order lists: the note and supplier on an item are quiet inline fields until used */
 #bpx#bpx#bpx#bpx#bpx .ml-in-note,#bpx#bpx#bpx#bpx#bpx .ml-in-sup{border-color:transparent !important;background:transparent !important;min-height:28px !important;height:28px;padding:0 6px !important;font-size:12.5px !important;color:#475467 !important;margin-left:-6px;width:auto;max-width:260px}
 #bpx#bpx#bpx#bpx#bpx .ml-in-note:hover,#bpx#bpx#bpx#bpx#bpx .ml-in-sup:hover{border-color:#e4e7ec !important}
@@ -431,3 +433,10 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx .bpc-donut svg{overflow:hidden;flex:0 0 auto}
 /* numbers never break across lines: amounts, percents and counts stay whole */
 #bpx td.bpx-num,#bpx td.bpx-r,#bpx .bpx-num,#bpx .ml-lt,#bpx .ml-sh-t td.t,#bpx .ml-sh-t td.p,#bpx .qx-st td:nth-child(2),#bpx .qx-st td:nth-child(3),#bpx .qb-doc .n,#bpx .pjk-stat b,#bpx .bpx-stat b{white-space:nowrap;font-variant-numeric:tabular-nums}
+/* sections the plan leaves out: grouped at the end of the sidebar, quieter, with a lock */
+#bpx#bpx#bpx#bpx .hl-lockhd{padding:4px 12px 4px;font:600 10.5px/16px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--hl-side-mu,#98a2b3);opacity:.75}
+#bpx#bpx#bpx#bpx .hl-min .hl-lockhd{display:none}
+#bpx#bpx#bpx#bpx .bpx-side .hl-ni[data-locked] .hl-nl{opacity:.62}
+#bpx#bpx#bpx#bpx .bpx-side .hl-ni[data-locked] .hl-lock{opacity:.85}
+#bpx#bpx#bpx#bpx .hl-tab .hl-lock{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;opacity:.7}
+#bpx#bpx#bpx#bpx .st-plan-lock{background:#f8fafc !important;border-style:dashed !important}

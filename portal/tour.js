@@ -15,7 +15,7 @@
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s); };
   var DONE = 'bp-tour-done';
   /* [page to open, sidebar item to light up, title, what to say, seconds] */
-  var STEPS = [
+  var ALL_STEPS = [
     ['dashboard', '', 'Welcome to BuilderPro', 'Everything a growing contracting business runs on, in one place: leads, jobs, crews, money and marketing. This tour takes about two and a half minutes. It plays by itself, or use the arrows.', 9],
     ['dashboard', 'dashboard', 'Your dashboard', 'Revenue, open jobs, what is owed to you and what needs attention today. The AI CEO bar at the top reads the whole business every morning and tells you the three things that matter most.', 11],
     ['contacts', 'leads', 'Every lead in one list', 'Calls, web forms, Angi, Thumbtack and your calculators all land here. Open anyone to see where they are in the pipeline, call or text them, and write inspection reports with photos.', 11],
@@ -32,12 +32,21 @@
     ['aiteam', 'aiteam', 'Your AI Team', 'An AI CEO watches the whole business, with assistants for sales, marketing, research, customers, projects, permits and workflows. They work every day, and nothing reaches a customer until you approve it.', 11],
     ['marketing', 'marketing', 'Marketing and reputation', 'Ads, your website, social posts and competitor tracking, plus review requests that build your rating. You are all set. Replay this tour any time from the Help button.', 11]
   ];
+  var STEPS = ALL_STEPS;
+  /* pages the plan leaves out are not part of the tour */
+  function planSteps() {
+    var lk = function (v) { return !!(window.bpLocked && bpLocked(v)); };
+    return ALL_STEPS.filter(function (s) { return !lk(s[0]); }).map(function (s) {
+      return s[2] === 'Your dashboard' && lk('aiteam') ? [s[0], s[1], s[2], 'Revenue, what is owed to you, new leads and what needs attention today, all on one page.', s[4]] : s;
+    });
+  }
   var T = { i: 0, el: null, timer: null, start: 0, left: 0, paused: false, keys: null };
 
   function total() { return STEPS.reduce(function (s, x) { return s + x[4]; }, 0); }
   function host() { return document.getElementById('bpx') || document.body; }
 
   function build() {
+    STEPS = planSteps();
     var w = document.createElement('div'); w.className = 'bpt'; w.setAttribute('role', 'dialog'); w.setAttribute('aria-modal', 'false'); w.setAttribute('aria-label', 'Product tour');
     w.innerHTML = '<div class="bpt-spot" aria-hidden="true"></div>'
       + '<div class="bpt-card" tabindex="-1"><div class="bpt-bar"><i></i></div>'
