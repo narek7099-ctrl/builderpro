@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<script>
+/* Never run inside someone else's frame (clickjacking). The calculators and
+   booking page are separate files and stay embeddable. */
+try{ if(window.top!==window.self) window.top.location=window.self.location; }catch(e){ document.documentElement.style.display='none'; }
+/* A password-reset or invitation link lands here with its tokens in the
+   hash. Keep a copy before the auth library reads and clears it. */
+try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery|invite|signup|magiclink)|error=/.test(h0)?h0:''; }catch(e){ window.__bpAuthHash=''; }
+</script>
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-QM37G969Z0"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-QM37G969Z0');</script>
@@ -14517,16 +14526,29 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <div class="bpx-wrap">
       <div class="bpx-brand2"><svg class="bpmark" width="46" height="46" aria-label="BuilderPro"><use href="#bpMark"/></svg><b class="wm">Builder<span>Pro</span></b></div>
       <div class="bpx-card">
+        <div id="bpxLoginForm">
         <h1>Welcome back</h1>
         <div class="bpx-sub2">Sign in to your BuilderPro dashboard.</div>
         <label>Email</label>
-        <input type="email" id="bpxEmail" placeholder="you@company.com">
+        <input type="email" id="bpxEmail" placeholder="you@company.com" autocomplete="username">
         <label>Password</label>
-        <input type="password" id="bpxPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')bpDoAuth()">
+        <input type="password" id="bpxPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')bpDoAuth()">
         <a class="bpx-forgot" onclick="bpForgot()">Forgot password?</a>
         <button class="bpx-btn" onclick="bpDoAuth()">Sign In</button>
         <div class="bpx-msg" id="bpxAuthMsg"></div>
         <div class="bpx-hint">Sign in with your BuilderPro account to see your live leads, messages, and jobs.</div>
+        </div>
+        <div id="bpxSetPw" style="display:none">
+        <h1 id="bpxSetPwTitle">Set your password</h1>
+        <div class="bpx-sub2" id="bpxSetPwSub">Choose a password for <b id="bpxSetPwEmail"></b>.</div>
+        <label>New password</label>
+        <input type="password" id="bpxNewPw" placeholder="At least 8 characters" autocomplete="new-password">
+        <label>Confirm password</label>
+        <input type="password" id="bpxNewPw2" placeholder="Type it again" autocomplete="new-password" onkeydown="if(event.key==='Enter')bpSetPassword()">
+        <button class="bpx-btn" id="bpxSetPwBtn" onclick="bpSetPassword()">Save password and continue</button>
+        <div class="bpx-msg" id="bpxSetPwMsg"></div>
+        <div class="bpx-hint">Use at least 8 characters. A mix of words and numbers is strongest.</div>
+        </div>
       </div>
       <div class="bpx-foot2">Powered by BuilderPro OS</div>
     </div>
@@ -14561,7 +14583,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <script>
 /* ---- basics ---- */
 document.getElementById('yr').textContent=new Date().getFullYear();
@@ -15105,7 +15127,11 @@ var GHL_CAL_URL=BP_URL+'/functions/v1/ghl-calendar';
 var GHL_MSG_URL=BP_URL+'/functions/v1/ghl-messaging';
 var GHL_OPP_URL=BP_URL+'/functions/v1/ghl-opportunities';
 var BP_HED={'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'};
-function bpApi(url,payload){return fetch(url,{method:'POST',headers:BP_HED,body:JSON.stringify(payload||{})}).then(function(r){return r.json();});}
+/* every call to a portal function carries the signed-in user's token: the
+   functions refuse the public key on its own */
+async function bpHed(){ var t=''; try{ t=window.bpJwt?await bpJwt():''; }catch(e){} return {'Authorization':'Bearer '+(t||BP_ANON),'apikey':BP_ANON,'Content-Type':'application/json'}; }
+function bpFx(url,payload){return bpHed().then(function(h){return fetch(url,{method:'POST',headers:h,body:JSON.stringify(payload||{})});});}
+function bpApi(url,payload){return bpFx(url,payload).then(function(r){return r.json();});}
 function bpStockImg(seed,small){return '';} /* portal shows no decorative stock photos */
 function bpNum(x){return x!=null?Number(x).toLocaleString():'—';}
 function bpSet(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
@@ -15114,7 +15140,48 @@ function bpFriendly(m){if(!m)return 'Something went wrong. Please try again.';if
 function bpOpenPortal(){
   document.getElementById('bpx').classList.add('open');bpSyncLock();
   if(window.bpShell)bpShell.appUrl(true);
-  if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){bpEnterPortal(r.data.session.user.email);}}).catch(function(){});}
+  if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){ if(window._bpNeedPw) bpShowSetPw(r.data.session.user.email); else bpEnterPortal(r.data.session.user.email); }}).catch(function(){});}
+}
+/* ---- password reset and invitations ----
+   The email link signs the person in with a one-time token and lands here.
+   Before they see anything, they choose a password; the invite from the
+   owner comes the same way, so a new team member sets theirs first. */
+window._bpNeedPw=/type=(recovery|invite|signup|magiclink)/.test(window.__bpAuthHash||'')&&/access_token=/.test(window.__bpAuthHash||'');
+window._bpAuthErr=(function(){ var m=/error_description=([^&]+)/.exec(window.__bpAuthHash||''); return m?decodeURIComponent(m[1].replace(/\+/g,' ')):''; })();
+function bpShowSetPw(email){
+  var f=document.getElementById('bpxLoginForm'),p=document.getElementById('bpxSetPw'); if(!f||!p)return;
+  f.style.display='none'; p.style.display='';
+  var inv=/type=invite/.test(window.__bpAuthHash||'');
+  document.getElementById('bpxSetPwTitle').textContent=inv?'Welcome to BuilderPro':'Set a new password';
+  document.getElementById('bpxSetPwEmail').textContent=email||'';
+  document.getElementById('bpxLogin').style.display='flex';
+  setTimeout(function(){ var i=document.getElementById('bpxNewPw'); if(i)i.focus(); },50);
+}
+function bpSetPassword(){
+  var p1=document.getElementById('bpxNewPw').value,p2=document.getElementById('bpxNewPw2').value,msg=document.getElementById('bpxSetPwMsg'),btn=document.getElementById('bpxSetPwBtn');
+  var bad=function(t){msg.className='bpx-msg err';msg.textContent=t;};
+  if(p1.length<8)return bad('Use at least 8 characters.');
+  if(p1!==p2)return bad('The two passwords do not match.');
+  if(!BP_LIVE)return bad('Not connected.');
+  btn.disabled=true;msg.className='bpx-msg';msg.textContent='Saving…';
+  BP_SB.auth.updateUser({password:p1}).then(function(r){
+    if(r.error)throw r.error;
+    window._bpNeedPw=false; window.__bpAuthHash='';
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+    document.getElementById('bpxSetPw').style.display='none'; document.getElementById('bpxLoginForm').style.display='';
+    document.getElementById('bpxNewPw').value='';document.getElementById('bpxNewPw2').value='';
+    if(window.bpToast)bpToast('Password saved. You are signed in.','success');
+    var em=(r.data&&r.data.user&&r.data.user.email)||'';
+    bpEnterPortal(em);
+  }).catch(function(e){ bad(bpFriendly(e&&e.message)); }).then(function(){btn.disabled=false;});
+}
+/* the auth library fires this when a reset link is opened in a tab that already has the page */
+if(BP_LIVE){ try{ BP_SB.auth.onAuthStateChange(function(ev,sess){ if(ev==='PASSWORD_RECOVERY'){ window._bpNeedPw=true; if(!document.getElementById('bpx').classList.contains('open'))bpOpenPortal(); else bpShowSetPw(sess&&sess.user&&sess.user.email); } }); }catch(e){} }
+/* a reset or invite link opens straight into the portal; an expired one says so */
+if(window.__bpAuthHash&&!/[#&](sign|home|pay)=/.test(location.hash||'')){
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(function(){ bpOpenPortal(); if(window._bpAuthErr){ var m=document.getElementById('bpxAuthMsg'); if(m){m.className='bpx-msg err';m.textContent=/expired|invalid/i.test(window._bpAuthErr)?'That link has expired. Enter your email and tap Forgot password to get a new one.':window._bpAuthErr;} } },80);
+  });
 }
 function bpClose(){document.getElementById('bpx').classList.remove('open');bpSyncLock();if(window.bpShell)bpShell.appUrl(false);}
 /* The page behind an overlay must not scroll, and the page behind NOTHING
@@ -16501,7 +16568,7 @@ var _bpContacts=[];
   window.bpCalToday=function(){ _bpCalDate=new Date(); bpDrawCalendar(); };
   async function bpLoadCalendar(){
     var kinds=_bpCalKind==='all'?['inspection','jobs']:[_bpCalKind];
-    var one=function(cal){ return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:cal})}).then(function(r){return r.json();}).then(function(d){ return (d.events||[]).map(function(e){ e.cal=cal; return e; }); },function(){ return null; }); };
+    var one=function(cal){ return bpFx(GHL_CAL_URL,{action:'list',cal:cal}).then(function(r){return r.json();}).then(function(d){ return (d.events||[]).map(function(e){ e.cal=cal; return e; }); },function(){ return null; }); };
     try{
       var parts=await Promise.all(kinds.map(one));
       if(parts.every(function(p){return p===null;})) throw new Error('down');
@@ -16548,7 +16615,7 @@ var _bpContacts=[];
   function bpLAParts(iso){ var f=bpFormatLA(new Date(iso)); return {date:f.slice(0,10), time:f.slice(11,16)}; }
   function bpMkISO(dateStr,timeStr){ return dateStr+'T'+timeStr+':00'+bpLAOffset(dateStr,timeStr); }
   function bpSlotMsg(res){ var m=''; try{ m=JSON.parse(res.detail||'{}').message||''; }catch(e){} if(/no longer available|not available/i.test(m)) return 'That time isn\'t available. Please pick another.'; return 'Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'; }
-  async function bpCalWrite(payload){ if(payload.cal===undefined) payload.cal=(_bpCalKind==='all'?(window._bpApptCal||'inspection'):_bpCalKind); return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}); }
+  async function bpCalWrite(payload){ if(payload.cal===undefined) payload.cal=(_bpCalKind==='all'?(window._bpApptCal||'inspection'):_bpCalKind); return bpFx(GHL_CAL_URL,payload).then(function(r){return r.json();}); }
   var _bpSlotSel=null;
   async function bpLoadSlots(containerId){
     var el=q(containerId); if(!el) return;
@@ -17246,7 +17313,7 @@ var _bpContacts=[];
 /* ==== bpLoadCalendar ==== */
   async function bpLoadCalendar(){
     var kinds=_bpCalKind==='all'?['inspection','jobs']:[_bpCalKind];
-    var one=function(cal){ return fetch(GHL_CAL_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list',cal:cal})}).then(function(r){return r.json();}).then(function(d){ return (d.events||[]).map(function(e){ e.cal=cal; return e; }); },function(){ return null; }); };
+    var one=function(cal){ return bpFx(GHL_CAL_URL,{action:'list',cal:cal}).then(function(r){return r.json();}).then(function(d){ return (d.events||[]).map(function(e){ e.cal=cal; return e; }); },function(){ return null; }); };
     try{
       var parts=await Promise.all(kinds.map(one));
       if(parts.every(function(p){return p===null;})) throw new Error('down');
@@ -17601,7 +17668,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
 /* ==== bpLoadConvos ==== */
   async function bpLoadConvos(){
     try{
-      var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
+      var r=await bpFx(GHL_MSG_URL,{action:'list'});
       var d=await r.json(); _bpConvos=d.conversations||[];
       var el=q('bpx-convlist');
       if(!_bpConvos.length){ el.innerHTML='<div class="bpx-slotempty" style="padding:1rem">No conversations yet.</div>'; return; }
@@ -17634,7 +17701,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
 /* ==== bpLoadThread ==== */
   async function bpLoadThread(id){
     try{
-      var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'thread',id:id})});
+      var r=await bpFx(GHL_MSG_URL,{action:'thread',id:id});
       var d=await r.json(); var msgs=d.messages||[]; var b=q('bpx-tbody'); if(!b) return;
       if(!msgs.length){ b.innerHTML='<div class="bpx-tempty">No messages yet. Send the first one below.</div>'; return; }
       var html='';
@@ -17658,7 +17725,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
     var text=inp.value.trim(); if(!text) return;
     inp.disabled=true;
     try{
-      var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your roofer'})}).then(function(r){return r.json();});
+      var res=await bpFx(GHL_MSG_URL,{action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your roofer'}).then(function(r){return r.json();});
       if(res.ok){ inp.value=''; setTimeout(function(){ bpLoadThread(_bpCurConv.id); },800); }
       else { alert('Could not send'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'); }
     }catch(e){ bpToast('Could not send. Please try again.','error'); }
@@ -17897,7 +17964,7 @@ function bpRenderMessaging(){
 }
 async function bpLoadConvos(){
   try{
-    var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'list'})});
+    var r=await bpFx(GHL_MSG_URL,{action:'list'});
     var d=await r.json(); _bpConvos=d.conversations||[];
     var el=q('bpx-convlist');
     if(!el) return; /* left the page while the request was in flight */
@@ -18034,7 +18101,7 @@ window.bpBulkSend=async function(){
   for(var i=0;i<recips.length;i++){
     msg.style.color='var(--grey)'; msg.textContent='Sending '+(i+1)+' of '+recips.length+'…';
     try{
-      var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpBulkChan,contactId:recips[i].id,message:text,subject:subject})}).then(function(r){return r.json();});
+      var res=await bpFx(GHL_MSG_URL,{action:'send',msgType:_bpBulkChan,contactId:recips[i].id,message:text,subject:subject}).then(function(r){return r.json();});
       if(res && res.ok) ok++; else fail++;
     }catch(e){ fail++; }
     await new Promise(function(r){ setTimeout(r,250); });
@@ -18415,8 +18482,7 @@ window.bpMailComposeSend=async function(){
       if(!cid){ _bpContacts=[]; await bpEnsureContacts(); c=find(); cid=c&&c.id; }
       if(!cid) return fail('Could not add '+to+' as a contact, so the email was not sent.');
     }
-    var res=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
-      body:JSON.stringify({action:'send',msgType:'Email',contactId:cid,message:text,text:text,html:html,attachments:_bpMcFiles.filter(function(f){return f.url;}).map(function(f){return f.url;}),subject:sub||'Message from your BuilderPro team'})}).then(function(r){return r.json();});
+    var res=await bpFx(GHL_MSG_URL,{action:'send',msgType:'Email',contactId:cid,message:text,text:text,html:html,attachments:_bpMcFiles.filter(function(f){return f.url;}).map(function(f){return f.url;}),subject:sub||'Message from your BuilderPro team'}).then(function(r){return r.json();});
     if(res&&res.ok===false) return fail('Could not send. '+(res.error||''));
     msg.style.color='#15803d'; msg.textContent='Sent.';
     setTimeout(function(){ bpMailComposeClose(); bpRenderInbox(); },700);
@@ -18509,7 +18575,7 @@ window.bpBulkSend=async function(){
   for(var i=0;i<recips.length;i++){
     msg.style.color='var(--grey)'; msg.textContent='Sending '+(i+1)+' of '+recips.length+'…';
     try{
-      var r=await fetch(GHL_MSG_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({action:'send',msgType:_bpBulkChan,contactId:recips[i].id,message:text,subject:subject})}).then(function(x){return x.json();});
+      var r=await bpFx(GHL_MSG_URL,{action:'send',msgType:_bpBulkChan,contactId:recips[i].id,message:text,subject:subject}).then(function(x){return x.json();});
       if(r && r.ok) ok++; else fail++;
     }catch(e){ fail++; }
     await new Promise(function(res){ setTimeout(res,250); });
@@ -20328,6 +20394,22 @@ function bpFinances(){
 /* Only entries added by hand can be deleted here. Money that came from a job
    belongs to that job — deleting the row would silently disagree with the
    project it came from, so we point at the project instead. */
+window.bpSecPw=function(){
+  var p1=(q('bpx-sec-p1')||{}).value||'',p2=(q('bpx-sec-p2')||{}).value||'',msg=q('bpx-sec-msg'),btn=q('bpx-sec-btn');
+  var bad=function(t){if(msg){msg.className='bpx-msg err';msg.textContent=t;}};
+  if(p1.length<8)return bad('Use at least 8 characters.');
+  if(p1!==p2)return bad('The two passwords do not match.');
+  if(!BP_LIVE)return bad('Not connected.');
+  if(btn)btn.disabled=true; if(msg){msg.className='bpx-msg';msg.textContent='Saving…';}
+  BP_SB.auth.updateUser({password:p1}).then(function(r){ if(r.error)throw r.error; q('bpx-sec-p1').value='';q('bpx-sec-p2').value=''; if(msg){msg.className='bpx-msg ok';msg.textContent='Password changed.';} if(window.bpToast)bpToast('Password changed.','success'); })
+  .catch(function(e){ bad(bpFriendly(e&&e.message)); }).then(function(){ if(btn)btn.disabled=false; });
+};
+window.bpSecOut=function(){
+  if(!confirm('Sign out of every device, including this one?'))return;
+  var done=function(){ bpLogout(); if(window.bpToast)bpToast('Signed out everywhere.','success'); };
+  if(!BP_LIVE)return done();
+  BP_SB.auth.signOut({scope:'global'}).then(done,done);
+};
 window.bpFinDel=function(i){
   var fin=bpFinGet(), f=fin[i]; if(!f)return;
   var what=(f.note||f.category||'this entry')+' ('+bpMoneyFmt(+f.amount||0)+(f.recur?' '+BP_RECUR[f.recur].toLowerCase():'')+')';
@@ -23454,6 +23536,7 @@ function bpSettings(){
     ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
     ['notify','Notifications','notifications','What lands in your bell, and how you hear about it.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
+    ['security','Security','lock','Your password, and the devices you are signed in on.'],
     ['team','Team','group','Who else can sign in, and what they can see.'],
     ['plan','Plan & billing','credit_card','Your BuilderPro membership.']].filter(function(t){ return !window.bpTeamIsOwner||bpTeamIsOwner()||(t[0]!=='team'&&t[0]!=='plan'); });
   var rail=SECS.map(function(t){return '<button class="st-nav'+(_bpSetSec===t[0]?' on':'')+'" data-set-tab="'+t[0]+'" onclick="bpSetTab(\''+t[0]+'\')"><span class="ms">'+t[2]+'</span><span>'+t[1]+'</span></button>';}).join('');
@@ -23521,6 +23604,15 @@ function bpSettings(){
       +sec('ridge','<div id="bpx-rg-host"></div>')
       +sec('brain','<div id="bpx-br-host"></div>')
       +sec('signature','<div id="bpx-us-host"></div>')
+      +sec('security',
+        '<div class="st-row"><div class="st-row-t"><b>Change password</b><p>Signed in as <span id="bpx-sec-who"></span>. Pick at least 8 characters.</p></div>'
+        +'<div class="st-row-c"><div style="display:flex;flex-direction:column;gap:6px;max-width:360px;width:100%"><label style="margin:0">New password</label><input type="password" id="bpx-sec-p1" autocomplete="new-password" placeholder="At least 8 characters">'
+        +'<label style="margin:8px 0 0">Confirm</label><input type="password" id="bpx-sec-p2" autocomplete="new-password" placeholder="Type it again" onkeydown="if(event.key===\'Enter\')bpSecPw()">'
+        +'<div class="bpx-msg" id="bpx-sec-msg" style="margin:8px 0 0"></div>'
+        +'<div><button class="bpx-btn" id="bpx-sec-btn" style="width:auto;margin-top:10px;padding:10px 18px" onclick="bpSecPw()">Change password</button></div></div></div></div>'
+        +'<div class="st-row"><div class="st-row-t"><b>Signed-in devices</b><p>Lost a phone, or signed in on a shared computer? This signs every device out, including this one. Sign back in with your password.</p></div>'
+        +'<div class="st-row-c"><button class="bpx-btn ghost" style="width:auto;padding:10px 18px" onclick="bpSecOut()">Sign out of all devices</button></div></div>'
+        +'<div class="st-row"><div class="st-row-t"><b>Forgot password</b><p>From the sign-in screen, enter your email and tap Forgot password. The link in the email opens a screen to set a new one.</p></div><div class="st-row-c"></div></div>')
       +sec('notify','<div id="bpx-nt-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
@@ -23540,13 +23632,14 @@ function bpSettings(){
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
           +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
         +'</div>'):'')
-      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature'||_bpSetSec==='notify')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
+      +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='security'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature'||_bpSetSec==='notify')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
     +'</div>';
   /* the trade box suggests every trade with a calculator (Concrete & Paving, Flooring, ...) */
   var _trIn=q('set-ctrade'); if(_trIn)_trIn.setAttribute('list','bpTradeList');
   bpSettingsPull();
   if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpAtlasView('bpx-rg-host'); }
+  var sw=q('bpx-sec-who'); if(sw)sw.textContent=window._bpEmail||'';
   if(_bpSetSec==='phone') bpPhoneRender();
   if(_bpSetSec==='brain'&&window.bpBrainRender) bpBrainRender();
   if(_bpSetSec==='signature') bpUsSettings();
@@ -23556,7 +23649,7 @@ var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
   _bpSetSec=t;
-  ['business','hours','owner','phone','ridge','brain','signature','notify','appearance','team','plan'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
+  ['business','hours','owner','phone','ridge','brain','signature','notify','appearance','team','plan','security'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
   var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature'||t==='notify');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
   if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
@@ -25469,7 +25562,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261020arcq"></script>
 <script src="portal/quickbooks.js?v=20261013b"></script>
-<script src="portal/ghlsync.js?v=20261013a"></script>
+<script src="portal/ghlsync.js?v=20261023a"></script>
 <script src="portal/autopause.js?v=20261016b"></script>
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
@@ -25525,7 +25618,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261020arlqbu"></script>
 <script src="portal/notify.js?v=20261022a"></script>
-<script src="portal/pipeline.js?v=20261022a"></script>
+<script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261020ar"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261020ar">
 </html>

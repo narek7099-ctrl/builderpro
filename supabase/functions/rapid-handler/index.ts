@@ -37,8 +37,21 @@ const r6 = (n: number) => Math.round(n * 1e6) / 1e6;   // ~10 cm, plenty for a s
 const MIN_PLANE_M2 = 2;
 const MAX_PLANES = 24;
 
+
+/* light per-address limit, per isolate: enough to stop a loop or a script
+   from burning the API quota, with no cookie and nothing stored */
+const hits = new Map<string, number[]>();
+function allow(key: string, max: number, windowMs = 10 * 60 * 1000): boolean {
+  const now = Date.now();
+  const a = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
+  a.push(now); hits.set(key, a);
+  if (hits.size > 5000) for (const [k, v] of hits) if (!v.length || now - v[v.length - 1] > windowMs) hits.delete(k);
+  return a.length <= max;
+}
+const ipOf = (req: Request) => (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || "anon";
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (!allow(ipOf(req), 40)) return json({ error: "Too many requests. Try again in a few minutes." }, 429);
   try {
     const body = await req.json();
 

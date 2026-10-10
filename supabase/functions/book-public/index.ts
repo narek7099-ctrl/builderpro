@@ -122,7 +122,9 @@ async function freeSlots(loc: string, cal: string, from: number, to: number): Pr
 // public page goes through those same two functions, so a homeowner books into
 // exactly the calendar the roofer sees inside the portal.
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-const portalHeaders = { Authorization: `Bearer ${SB_ANON}`, apikey: SB_ANON, "Content-Type": "application/json" };
+/* our own call into the portal functions: the anon key gets through the gateway, the service key in
+   x-internal-key says it is us (ghl-calendar refuses the anon key alone) */
+const portalHeaders = { Authorization: `Bearer ${SB_ANON}`, apikey: SB_ANON, "x-internal-key": SB_SERVICE, "Content-Type": "application/json" };
 async function portal(fn: "ghl-calendar" | "ghl-contacts", body: Record<string, unknown>): Promise<Record<string, any>> {
   try {
     const r = await fetch(`${SB_URL}/functions/v1/${fn}`, { method: "POST", headers: portalHeaders, body: JSON.stringify(body) });
@@ -171,12 +173,27 @@ function dropClosed(slots: Record<string, string[]>, closed: Set<string>): Recor
   return out;
 }
 
+
+/* light per-address limit, per isolate: enough to stop a loop or a script
+   from burning the API quota, with no cookie and nothing stored */
+const hits = new Map<string, number[]>();
+function allow(key: string, max: number, windowMs = 10 * 60 * 1000): boolean {
+  const now = Date.now();
+  const a = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
+  a.push(now); hits.set(key, a);
+  if (hits.size > 5000) for (const [k, v] of hits) if (!v.length || now - v[v.length - 1] > windowMs) hits.delete(k);
+  return a.length <= max;
+}
+const ipOf = (req: Request) => (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || "anon";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
   let b: Record<string, string>;
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   const op = String(b.op || "");
+  const ip = ipOf(req);
+  if (!allow("r:" + ip, 120)) return json({ ok: false, error: "Too many requests. Try again in a few minutes." }, 429);
+  if (op === "book" && !allow("b:" + ip, 6)) return json({ ok: false, error: "Too many bookings from here. Call us instead." }, 429);
   const u = String(b.u || "").replace(/[^0-9a-z_-]/gi, "").slice(0, 80);
   const row = await findBrain(u);
   const { loc, cal } = target(row);

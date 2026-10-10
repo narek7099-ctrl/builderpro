@@ -88,9 +88,24 @@ async function addTags(t: string, id: string, tags: string[]) {
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
+
+/* Admin only: the caller's BuilderPro login must be in ADMIN_EMAILS. This
+   page creates contacts and records payments in HighLevel, so it is never
+   open to the public. */
+const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+async function admin(req: Request): Promise<string> {
+  const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!token || token === SB_ANON || !ADMIN_EMAILS.length) return "";
+  const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: SB_ANON } });
+  if (!r.ok) return "";
+  const email = String((await r.json())?.email ?? "").toLowerCase();
+  return ADMIN_EMAILS.includes(email) ? email : "";
+}
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "POST only" }, 405);
+  if (!(await admin(req))) return json({ ok: false, error: "Sign in to the portal with an admin account first." }, 401);
   if (!LOC) return json({ ok: false, error: "GHL_LOCATION_ID not set" }, 500);
   const t = await token();
   if (!t) return json({ ok: false, error: "no GHL token" }, 500);
