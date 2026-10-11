@@ -174,6 +174,19 @@ function dropClosed(slots: Record<string, string[]>, closed: Set<string>): Recor
 }
 
 
+/* the BuilderPro house account's owner ids (ai_config), cached per isolate */
+let _house: { at: number; ids: string[] } | null = null;
+async function houseOwners(): Promise<string[]> {
+  if (_house && Date.now() - _house.at < 300000) return _house.ids;
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/ai_config?key=in.(ghl_events_owner,ghl_house_owners)&select=value`, { headers: sbHeaders });
+    const rows = r.ok ? await r.json() : [];
+    const ids = (Array.isArray(rows) ? rows : []).flatMap((x: Record<string, unknown>) => String(x.value ?? "").split(",")).map((x: string) => x.trim()).filter(Boolean);
+    _house = { at: Date.now(), ids };
+  } catch { _house = { at: Date.now(), ids: [] }; }
+  return _house.ids;
+}
+
 /* light per-address limit, per isolate: enough to stop a loop or a script
    from burning the API quota, with no cookie and nothing stored */
 const hits = new Map<string, number[]>();
@@ -200,6 +213,18 @@ Deno.serve(async (req) => {
   // "own": this account has its own calendar on file. "portal": the shared one the
   // portal's Inspections tab shows.
   const mode: "own" | "portal" = loc && cal ? "own" : "portal";
+  /* The shared calendar (portal mode, or the house sub-account) belongs to the
+     BuilderPro house account. Any other account's page stays closed until it
+     has a sub-account of its own, so no client's homeowners land in it. */
+  const houseIds = (await houseOwners()), mine = String(row?.owner ?? "");
+  const shared = mode === "portal" || loc === DEF_LOC;
+  /* the website's demo pages (is_demo rows, no owner) are the house's own showcase */
+  const allowed = !shared || !!row?.is_demo || (mine !== "" && houseIds.includes(mine));
+
+  if (!allowed) {
+    if (op === "info") return json({ ok: true, business: row?.business_name || "", phone: row?.phone || "", hours: row?.hours || "", area: row?.service_area || "", ready: false, reason: "not_connected", mode, demo: !!row?.is_demo });
+    return json({ ok: false, error: "Online booking isn't set up for this business yet. Please call us instead." }, 409);
+  }
 
   if (op === "info") {
     let ready = mode === "own", reason = "";
@@ -250,7 +275,7 @@ Deno.serve(async (req) => {
       if (p.ok && !Object.values(p.slots).flat().some((iso) => Date.parse(iso) === startMs)) return taken();
       // the contact, through the same function the portal's Contacts page uses
       const c = await portal("ghl-contacts", { action: "create", name, phone, email });
-      const cid = String(c.id || c.contactId || c.contact?.id || c.data?.id || c.meta?.contactId || "");
+      const cid = String(c.created || c.id || c.contactId || c.contact?.id || c.data?.id || c.meta?.contactId || "");
       if (!cid) return json({ ok: false, error: "Could not save your details. Call us instead.", status: c.status }, 502);
       const startP = fmtPacific(new Date(startMs)), endP = fmtPacific(new Date(startMs + 3600000));
       const r = await portal("ghl-calendar", { action: "create", cal: "inspection", contactId: cid, startTime: startP, endTime: endP, title: "Roof inspection — " + name + (notes ? " (" + notes.slice(0, 80) + ")" : ""), address });

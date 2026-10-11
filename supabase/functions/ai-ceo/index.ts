@@ -251,6 +251,15 @@ async function runBriefing(owner: string, kind: "daily" | "adhoc", day?: string)
   return { id: saved.id, day: d, kind, text, source, stats, created_at: saved.created_at };
 }
 
+/* The AI CEO is an Enterprise feature. Accounts with no accounts row (older
+   or hand-made) keep it, the same as the portal leaves them unlocked.
+   Returns the plan, or "" when there is no row. */
+async function planOf(owner: string): Promise<string> {
+  const a = await rows<{ plan: string }>(`accounts?user_id=eq.${owner}&select=plan&limit=1`).catch(() => []);
+  return a.length ? String(a[0].plan ?? "") : "";
+}
+const aiPlan = (plan: string) => plan === "" || plan === "enterprise";
+
 // cron: every account with projects whose morning has come and that has no daily report yet
 async function dailyAll(budgetMs = 50000) {
   const t0 = Date.now(), done: string[] = [], failed: string[] = [];
@@ -258,6 +267,7 @@ async function dailyAll(budgetMs = 50000) {
   for (const { owner } of owners) {
     if (Date.now() - t0 > budgetMs) break;
     try {
+      if (!aiPlan(await planOf(owner))) continue;   /* only Enterprise gets the morning briefing */
       const { day, hour } = await localNow(owner);
       if (hour < 6) continue;
       if ((await rows(`ceo_reports?owner=eq.${owner}&day=eq.${day}&kind=eq.daily&select=id&limit=1`)).length) continue;
@@ -303,7 +313,7 @@ export function explainRules(c: Cand, job: Snap, best: boolean): string {
   if (best && Number(job.weight) >= 1.3 && Number(job.estimate) > 0) s += `; this is a ${kMoney(Number(job.estimate))} job, so top-rated crew recommended`;
   return s + ".";
 }
-async function route(owner: string, jobId: string) {
+async function route(owner: string, jobId: string, useAi = true) {
   const r = await rpc<Snap>("bp_ceo_route", { p_owner: owner, p_job: jobId });
   if (!r?.ok) return { ok: false, error: r?.error === "job not found" ? "Project not found." : "Could not rank people for this project." };
   const job = r.job as Snap, cands = arr<Cand>(r.candidates);
@@ -311,7 +321,7 @@ async function route(owner: string, jobId: string) {
   // the best-matching crew (also in candidates, appended if it missed the top 5)
   const bestCrew = r.best_crew ? cands.find((c) => c.kind === "crew" && c.id === (r.best_crew as Snap).id) ?? null : null;
   let source: "rules" | "claude" = "rules";
-  if (aiKey() && cands.length) {
+  if (useAi && aiKey() && cands.length) {
     const t = await claude(
       `You explain staffing recommendations for a contractor. For each candidate write ONE short sentence (max 30 words) saying why they rank where they do. Use only facts in the JSON (trade, rating, reviews, years, jobs_done, free/conflicts, flags, reasons, the job's estimate and weight). Never invent numbers. A weight above 1.3 means a bigger-than-usual job where rating and experience matter more. Mention insurance problems for subs. Candidates with kind "crew" are whole crews (size, members, the crew's trade, average rating): say so and whether they are free. Reply with only a JSON array of strings, same order as the candidates.`,
       JSON.stringify({ job, candidates: cands.map(({ explain: _e, ...c }) => c) }), 800, 25000);
@@ -359,6 +369,10 @@ Deno.serve(async (req) => {
   const { owner, role } = await effectiveOwner(u.id);
   if (role !== "owner" && role !== "office") return json({ ok: false, error: "Only the owner and office can use the AI CEO." }, 403);
   const op = String(b.op ?? "status");
+  const plan = await planOf(owner);
+  /* crew suggestions on a project ("route") come with Projects, so BuilderPro OS keeps them,
+     ranked by the rules only; everything else here is the Enterprise AI CEO */
+  if (op === "route" ? plan === "foundation" : !aiPlan(plan)) return json({ ok: false, error: "The AI CEO comes with Enterprise.", plan }, 402);
 
   try {
     if (op === "status") {
@@ -378,7 +392,7 @@ Deno.serve(async (req) => {
     if (op === "route") {
       const job = String(b.job ?? "").slice(0, 80);
       if (!job) return json({ ok: false, error: "Which project?" }, 400);
-      const r = await route(owner, job);
+      const r = await route(owner, job, aiPlan(plan));
       return json(r, r.ok ? 200 : 404);
     }
     if (op === "ask") {
