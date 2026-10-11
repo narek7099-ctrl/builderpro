@@ -16554,7 +16554,7 @@ var _bpContacts=[];
 /* ==== bpLoadContacts ==== */
   async function bpLoadContacts(){
     try{
-      var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})});
+      var r=await bpFx(GHL_DASH_URL,{view:'contacts'});
       var d=await r.json();
       _bpContacts=d.contactsList||[];
       bpDrawContacts(_bpContacts);
@@ -16607,7 +16607,7 @@ var _bpContacts=[];
       +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn danger" id="bpx-savebtn" onclick="bpDeleteContact(\''+id+'\')">Delete</button></div>');
   };
   async function bpWrite(payload){
-    return fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();});
+    return bpFx(GHL_CONTACTS_URL,payload).then(function(r){return r.json();});
   }
   window.bpSaveContact=async function(id){
     var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
@@ -17713,7 +17713,7 @@ var _bpContacts=[];
 /* ==== bpMsg ==== */
   function bpMsg(id,t,x){ var el=q(id); el.className='bpx-msg '+t; el.textContent=x; }
 
-async function bpEnsureContacts(){ if(_bpContacts&&_bpContacts.length) return; try{ var r=await fetch(GHL_DASH_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},body:JSON.stringify({view:'contacts'})}); var d=await r.json(); _bpContacts=d.contactsList||[]; }catch(e){} }
+async function bpEnsureContacts(){ if(_bpContacts&&_bpContacts.length) return; try{ var r=await bpFx(GHL_DASH_URL,{view:'contacts'}); var d=await r.json(); _bpContacts=d.contactsList||[]; }catch(e){} }
 
 function bpContacts(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpContactsMock(); return; } bpRenderContacts(); }
 function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarMock(); return; } bpRenderCalendar(); }
@@ -18553,8 +18553,7 @@ window.bpMailComposeSend=async function(){
     var c=find(), cid=c&&c.id;
     if(!cid){
       /* not a contact yet: add them, so the email and any reply land in Customers */
-      var cr=await fetch(GHL_CONTACTS_URL,{method:'POST',headers:{'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'application/json'},
-        body:JSON.stringify({action:'create',name:name||to.split('@')[0],phone:'',email:to})}).then(function(r){return r.json();});
+      var cr=await bpFx(GHL_CONTACTS_URL,{action:'create',name:name||to.split('@')[0],phone:'',email:to}).then(function(r){return r.json();});
       cid=(cr&&((cr.contact&&cr.contact.id)||cr.id||(cr.data&&cr.data.contact&&cr.data.contact.id)))||'';
       if(!cid){ _bpContacts=[]; await bpEnsureContacts(); c=find(); cid=c&&c.id; }
       if(!cid) return fail('Could not add '+to+' as a contact, so the email was not sent.');
