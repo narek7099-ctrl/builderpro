@@ -1,29 +1,52 @@
 /* Product tour (portal/tour.js) */
-.bpt{position:fixed;inset:0;z-index:3500;pointer-events:none;animation:bptIn .2s ease}
+.bpt{position:fixed;inset:0;z-index:3500;animation:bptIn .2s ease;font-family:'Inter',-apple-system,'Segoe UI',sans-serif}
 .bpt.out{opacity:0;transition:opacity .2s}
 @keyframes bptIn{from{opacity:0}to{opacity:1}}
-.bpt-spot{position:fixed;border-radius:10px;opacity:0;pointer-events:none;
-  box-shadow:0 0 0 3px #2457d6,0 0 0 9999px rgba(10,16,30,.45);transition:left .35s cubic-bezier(.2,0,0,1),top .35s cubic-bezier(.2,0,0,1),width .35s,height .35s,opacity .2s}
+/* catches clicks so the page under the tour stays put; dims the page when nothing is spotlit */
+.bpt-shade{position:fixed;inset:0;background:transparent;transition:background .25s}
+.bpt.dim .bpt-shade{background:rgba(10,16,30,.5)}
+/* the hole around the button: everything else darkens */
+.bpt-spot{position:fixed;border-radius:12px;opacity:0;pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(10,16,30,.5);transition:left .35s cubic-bezier(.2,0,0,1),top .35s cubic-bezier(.2,0,0,1),width .35s,height .35s,opacity .2s}
 .bpt-spot.on{opacity:1}
-.bpt-card{position:fixed;pointer-events:auto;width:380px;max-width:calc(100vw - 32px);background:#fff;color:#101828;border-radius:14px;padding:16px 18px 14px;
-  box-shadow:0 24px 60px -12px rgba(10,16,30,.45),0 0 0 1px rgba(16,24,40,.06);outline:none;overflow:hidden;
-  transition:left .35s cubic-bezier(.2,0,0,1),top .35s cubic-bezier(.2,0,0,1);font-family:'Inter',-apple-system,'Segoe UI',sans-serif}
+/* a ring that pulses out from the button */
+.bpt-ring{position:fixed;border-radius:12px;pointer-events:none;opacity:0;border:3px solid #2e6bff}
+.bpt-ring.on{opacity:1;animation:bptRing 1.6s cubic-bezier(.2,0,0,1) infinite}
+@keyframes bptRing{0%{box-shadow:0 0 0 0 rgba(46,107,255,.55)}70%{box-shadow:0 0 0 14px rgba(46,107,255,0)}100%{box-shadow:0 0 0 0 rgba(46,107,255,0)}}
+/* the hand that slides in and taps it */
+.bpt-hand{position:fixed;width:40px;height:40px;margin:-6px 0 0 -12px;pointer-events:none;opacity:0;z-index:2;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+.bpt-hand svg{width:40px;height:40px;fill:#fff;stroke:#101828;stroke-width:1.3;stroke-linejoin:round}
+.bpt-hand i{position:absolute;left:12px;top:5px;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:rgba(46,107,255,.55);opacity:0}
+.bpt-hand.on{opacity:1;animation:bptHandIn .55s cubic-bezier(.2,0,0,1) both,bptTap 1.6s .6s ease-in-out infinite}
+.bpt-hand.on i{animation:bptTapDot 1.6s .6s ease-out infinite}
+@keyframes bptHandIn{from{opacity:0;transform:translate(46px,46px)}to{opacity:1;transform:none}}
+@keyframes bptTap{0%,100%{transform:none}35%{transform:translate(2px,4px) scale(.9)}55%{transform:none}}
+@keyframes bptTapDot{0%,30%{opacity:0;transform:scale(.4)}40%{opacity:1;transform:scale(1)}80%,100%{opacity:0;transform:scale(2.6)}}
+
+.bpt-card{position:fixed;z-index:3;width:380px;max-width:calc(100vw - 32px);background:#fff;color:#101828;border-radius:16px;padding:16px 18px 14px;
+  box-shadow:0 24px 60px -12px rgba(10,16,30,.5),0 0 0 1px rgba(16,24,40,.06);outline:none;overflow:hidden;
+  transition:left .35s cubic-bezier(.2,0,0,1),top .35s cubic-bezier(.2,0,0,1)}
 .bpt-card.mid{left:50%;top:50%;transform:translate(-50%,-50%)}
-.bpt:has(.bpt-card.mid) .bpt-spot{opacity:1;width:0;height:0;left:50%;top:50%;box-shadow:0 0 0 9999px rgba(10,16,30,.45)}
-.bpt-bar{position:absolute;left:0;right:0;top:0;height:3px;background:#eef2f7}
-.bpt-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2457d6,#7c3aed)}
+.bpt-card.welcome{width:440px;padding:26px 26px 20px;text-align:left}
+.bpt-hero{width:52px;height:52px;border-radius:14px;background:#eef3ff;color:#2457d6;display:grid;place-items:center;margin-bottom:14px}
+.bpt-hero img{width:34px;height:34px;object-fit:contain}
 .bpt-top{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
 .bpt-n{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2457d6}
 .bpt-x{all:unset;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#667085;cursor:pointer}
 .bpt-x:hover{background:#f2f4f7;color:#101828}
 .bpt-x .ms{font-size:19px}
 .bpt-h{margin:6px 0 6px;font-size:18px;line-height:1.25;font-weight:700;letter-spacing:-.01em}
+.welcome .bpt-h{font-size:22px;margin-top:0}
 .bpt-p{margin:0;font-size:14px;line-height:1.55;color:#475467}
+.bpt-do{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#eef3ff;color:#1b3a8a;font-size:13.5px;line-height:1.5}
+.bpt-do .ms{font-size:20px;color:#2457d6;flex:0 0 auto;margin-top:-1px}
+.bpt-do b{color:#101828}
 .bpt-dots{display:flex;gap:4px;margin:14px 0 12px}
 .bpt-dots i{flex:1;height:4px;border-radius:4px;background:#e4e7ec}
 .bpt-dots i.done{background:#a9bdf5}
 .bpt-dots i.on{background:#2457d6}
 .bpt-act{display:flex;gap:8px;align-items:center}
+.bpt-act-w{margin-top:20px}
 .bpt-b{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 14px;border-radius:9px;font-size:13.5px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap}
 .bpt-b .ms{font-size:18px}
 .bpt-b.ghost{border:1px solid #e4e7ec;color:#101828;background:#fff}
@@ -31,19 +54,26 @@
 .bpt-b.pri{margin-left:auto;background:#2457d6;color:#fff;padding:0 16px}
 .bpt-b.pri:hover{filter:brightness(1.08)}
 .bpt-b:disabled{opacity:.4;cursor:default}
+.bpt-b[hidden]{display:none}
 .bpt-b:focus-visible,.bpt-x:focus-visible{outline:2px solid #2457d6;outline-offset:2px}
+.bpt-skip{color:#667085 !important}
+.bpt-foot{display:flex;gap:8px;align-items:flex-start;margin:16px 0 0;padding-top:14px;border-top:1px solid #eaecf0;font-size:12.5px;line-height:1.5;color:#667085}
+.bpt-foot .ms{font-size:17px;color:#98a2b3}
 #bpx.bpx-dark .bpt-card{background:#161b26;color:#f2f4f7;box-shadow:0 24px 60px -12px rgba(0,0,0,.7),0 0 0 1px #262c38}
-#bpx.bpx-dark .bpt-p{color:#c0c7d2}
-#bpx.bpx-dark .bpt-bar{background:#262c38}
+#bpx.bpx-dark .bpt-p,#bpx.bpx-dark .bpt-foot{color:#c0c7d2}
+#bpx.bpx-dark .bpt-do{background:#1c2a4a;color:#c9d8ff}
+#bpx.bpx-dark .bpt-do b{color:#fff}
 #bpx.bpx-dark .bpt-dots i{background:#262c38}
 #bpx.bpx-dark .bpt-b.ghost{background:#1a202c;border-color:#262c38;color:#f2f4f7}
+#bpx.bpx-dark .bpt-hero{background:#1c2a4a}
+.bpt-hero{background:#0f1a33 !important}
 @media (max-width:640px){
   .bpt-card,.bpt-card.mid{left:12px !important;right:12px;top:auto !important;bottom:calc(12px + env(safe-area-inset-bottom));width:auto !important;transform:none}
-  .bpt-spot{display:none}
-  .bpt:before{content:"";position:fixed;inset:0;background:rgba(10,16,30,.35)}
+  .bpt-card.welcome{padding:22px 18px 16px}
 }
-@media (prefers-reduced-motion:reduce){.bpt,.bpt-card,.bpt-spot{animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.bpt,.bpt-card,.bpt-spot,.bpt-ring.on,.bpt-hand.on,.bpt-hand.on i{animation:none;transition:none}}
 /* the site's own button rules reach in here; keep the header on one line */
 #bpx .bpt .bpt-top{display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:space-between !important;gap:8px}
 #bpx .bpt .bpt-x{display:grid !important;width:30px !important;height:30px !important;min-height:0 !important;padding:0 !important;margin:0 !important;flex:0 0 30px;border:0 !important;background:transparent !important}
 #bpx .bpt .bpt-b{min-height:0 !important;margin:0 !important;width:auto !important}
+#bpx .bpt .bpt-b.pri{margin-left:auto !important}
