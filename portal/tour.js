@@ -30,7 +30,7 @@
     ['employees', 'projects', 'Crew and payroll', 'Add your employees and subcontractors. Crews get their own app to clock in, see their jobs and add photos. Hours roll up into each pay period for payroll.', 10],
     ['matlists', 'supply', 'Materials', 'Build order lists for each job, send them to your suppliers and track receipts, so materials are on site when the crew shows up.', 9],
     ['aiteam', 'aiteam', 'Your AI Team', 'An AI CEO watches the whole business, with assistants for sales, marketing, research, customers, projects, permits and workflows. They work every day, and nothing reaches a customer until you approve it.', 11],
-    ['marketing', 'marketing', 'Marketing and reputation', 'Ads, your website, social posts and competitor tracking, plus review requests that build your rating. You are all set. Replay this tour any time from the Help button.', 11]
+    ['marketing', 'marketing', 'Marketing and reputation', 'Ads, your website, your reviews from Google, Yelp and Facebook, social posts and competitor tracking, all in one place. You are all set. Replay this tour any time from the Help button.', 11]
   ];
   var STEPS = ALL_STEPS;
   /* pages the plan leaves out are not part of the tour */

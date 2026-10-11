@@ -15454,8 +15454,7 @@ var BP_NAV=[
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
   {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['receipts','Receipts'],['mattemplates','Templates']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
-  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['website','Website'],['social','Social Media'],['competitors','Competitors']]},
-  {id:'reputation',l:'Reputation',ico:'reputation'}
+  {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['reputation','Reputation'],['website','Website'],['social','Social Media'],['competitors','Competitors']]}
 ];
 var BP_NAV_FOOT=[['settings','Settings','settings']];
 function bpNavGroupOf(v){
@@ -23624,7 +23623,7 @@ function bpSettings(){
       return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o2[0]?' on':'')+'" onclick="bpApplyTheme(\''+o2[0]+'\');bpSettings()"><span class="ms">'+o2[2]+'</span> '+o2[1]+'</button>';}).join('')+'</div>';
   var _pk=(window._bpAcct||{}).plan||'os', _ad=((window._bpAcct||{}).profile||{}).addons||{};
   var feats=({foundation:[BP_AI_NAME+' AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Finance overview: income, costs and profit'],
-    os:['Everything in Foundation','300 '+BP_AI_NAME+' call minutes, up to 5 users','Projects, contracts and e-signature','Finances, budgets and payroll','Supply and material orders','Instant-quote calculators and calculator leads','Lead Sources and website traffic','Social, reputation and competitors','AI Team on Enterprise'],
+    os:['Everything in Foundation','300 '+BP_AI_NAME+' call minutes','You plus 5 crew logins','Projects, contracts and e-signature','Finances, budgets and payroll','Supply and material orders','Instant-quote calculators and calculator leads','Lead Sources and website traffic','Social, reputation and competitors','AI Team on Enterprise'],
     enterprise:['Everything in BuilderPro OS','AI Team included','500 '+BP_AI_NAME+' call minutes','Unlimited users and locations','Priority support']})[_pk]||[];
   var planPick='<div class="st-plan-row">'+['foundation','os','enterprise'].map(function(k){var P=BP_PLANS[k],me=k===_pk;
       return '<div class="st-plan-card"><b>'+P.name+'</b><p>$'+P.price+' / month · '+P.min+' call minutes</p>'+(me?'<span class="bpx-badge ok">Your plan</span>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\''+k+'\')">'+(P.price>BP_PLANS[_pk].price?'Upgrade':'Switch')+'</button>')+'</div>';}).join('')+'</div>'
@@ -24943,7 +24942,6 @@ function bpRepRender(){
   var all=bpRepAll(), month=all.filter(function(r){return r.at&&(Date.now()-new Date(r.at).getTime())<30*864e5;}).length;
   var s=(typeof bpSettingsGet==='function'?bpSettingsGet():{})||{}, co=s.company||{};
   var best=(d.google&&d.google.reviewUrl)||(d.facebook&&d.facebook.reviewUrl)||(d.yelp&&d.yelp.reviewUrl)||'';
-  var ask='Hi {first}, thanks again for choosing '+(co.name||'us')+'. If you have a minute, a quick review helps our small crew more than you’d think: '+(best||'[your review link]');
   var demo=_bpRep.demo?'<div class="rp-demo"><span class="ms">info</span>'+(_bpRep.err?bpEsc(_bpRep.err)+' Showing sample data. ':'Sample data. ')+'Connect Google and Yelp on <a onclick="bpNav(\'marketing\')">Ads &amp; Listings</a> and Facebook on <a onclick="bpNav(\'social\')">Social Media</a> to see your real reviews here.</div>':'';
   var tiles='<div class="bpx-stats" style="margin-bottom:16px">'
     +'<div class="bpx-stat"><div class="lbl">Average rating</div><div class="val">'+(avg?avg.toFixed(1):'—')+'</div><div class="note">'+(live.length?'across '+live.length+' platform'+(live.length===1?'':'s'):'nothing connected yet')+'</div></div>'
@@ -24971,15 +24969,7 @@ function bpRepRender(){
         +(r.manage?'<a class="bpx-rowbtn" style="text-decoration:none;flex:0 0 auto" href="'+bpEsc(r.manage)+'" target="_blank" rel="noopener">Reply</a>':'')+'</div>';
     }).join('')+pg.nav:'<div class="bpx-empty2">No reviews to show yet.</div>'+pg.nav)
     +'</div>';
-  var askBox='<div class="bpx-panel" id="rpAsk" style="margin-top:16px"><div class="bpx-ptitle">Ask for a review<span class="lg2">right after a job, while they’re still happy</span></div>'
-    +'<div class="rp-ask"><div><label class="st-lab" style="display:block;font-weight:600;font-size:13px;margin-bottom:6px">Message</label><textarea id="rpAskMsg">'+bpEsc(ask)+'</textarea>'
-      +'<div class="bpx-mut" style="font-size:12px;margin-top:6px">{first} becomes their first name when you paste it into a text or email. Google is the link that moves the needle most; use it unless a customer lives on Yelp.</div></div>'
-      +'<div class="rp-ask-a"><button class="bpx-btn" style="margin:0" onclick="bpRepCopy(document.getElementById(\'rpAskMsg\').value,this)"><span class=ms>content_copy</span> Copy message</button>'
-        +'<a class="bpx-btn ghost" style="margin:0;text-decoration:none;text-align:center" href="sms:?&body='+encodeURIComponent(ask.replace('{first}','there'))+'"><span class=ms>sms</span> Send as a text</a>'
-        +'<a class="bpx-btn ghost" style="margin:0;text-decoration:none;text-align:center" href="mailto:?subject='+encodeURIComponent('A quick favour')+'&body='+encodeURIComponent(ask.replace('{first}','there'))+'"><span class=ms>mail</span> Send as an email</a>'
-        +'<div class="bpx-mut" style="font-size:11.5px;line-height:1.5">Send this to people you’ve done work for. They’re your customers, so texting them is fine; buying a list and blasting it is not.</div></div></div>'
-    +'</div>';
-  area.innerHTML=demo+tiles+cards+bpRepCharts(all)+feed+askBox;
+  area.innerHTML=demo+tiles+cards+bpRepCharts(all)+feed;
 }
 window.bpRepCopy=function(text,btn){
   var done=function(){ if(!btn)return; var was=btn.innerHTML; btn.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){btn.innerHTML=was;},1600); };
@@ -25629,9 +25619,9 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
 <link rel="stylesheet" href="portal/dash.css?v=20261012crst">
-<link rel="stylesheet" href="portal/team.css?v=20260919c">
+<link rel="stylesheet" href="portal/team.css?v=20261025a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
-<script src="portal/team.js?v=20261004a"></script>
+<script src="portal/team.js?v=20261025a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261012a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
@@ -25698,6 +25688,6 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/shell.js?v=20261024b"></script>
 <script src="portal/notify.js?v=20261022a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
-<script src="portal/tour.js?v=20261024a"></script>
+<script src="portal/tour.js?v=20261025a"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261020ar">
 </html>
