@@ -59,27 +59,35 @@
     el.innerHTML = esc(el.textContent) + '<span class="tm-as">' + (T.role === 'office' ? 'Office' : T.role === 'sub' ? 'Subcontractor' : 'Crew') + (T.ownerEmail ? ' at ' + esc(T.ownerEmail) : '') + '</span>';
   };
 
+  /* what the plan allows: on BuilderPro OS the owner is the office, plus up to 5 crew logins
+     (team-invite enforces the same; subcontractor logins are not counted) */
+  var LIMITS = { os: { crew: 5, office: false } };
+  function lim() { return LIMITS[String((window._bpAcct || {}).plan || '')] || null; }
+  function crewCount() { return (T.members || []).filter(function (m) { return m.role === 'crew'; }).length; }
+
   /* ---------- the Team page, inside Settings ---------- */
   window.bpTeamPanel = function () {
     if (T.role !== 'owner') return '<div class="bpx-panel"><div class="tm-note">You are signed in as ' + (T.role === 'office' ? 'office staff' : T.role === 'sub' ? 'a subcontractor' : 'crew') + ' on this account. Only the owner can change the team.</div></div>';
     if (T.members === null && live() && !T.busy) load();
     var rows = T.members || [];
-    var roleSel = function (m) { if (m.role === 'sub') return '<span class="tm-role tm-subr">Subcontractor</span>'; return '<select class="tm-role" onchange="bpTeamRole(\'' + m.id + '\',this.value)"><option value="office"' + (m.role === 'office' ? ' selected' : '') + '>Office</option><option value="crew"' + (m.role === 'crew' ? ' selected' : '') + '>Crew</option></select>'; };
+    var L = lim(), full = !!(L && L.crew && crewCount() >= L.crew), noOffice = !!(L && L.office === false);
+    var roleSel = function (m) { if (m.role === 'sub') return '<span class="tm-role tm-subr">Subcontractor</span>'; if (noOffice && m.role !== 'office') return '<span class="tm-role tm-subr">Crew</span>'; return '<select class="tm-role" onchange="bpTeamRole(\'' + m.id + '\',this.value)"><option value="office"' + (m.role === 'office' ? ' selected' : '') + '>Office</option><option value="crew"' + (m.role === 'crew' ? ' selected' : '') + '>Crew</option></select>'; };
     var list = !live() ? '<div class="tm-note">Sign in to add people to your account.</div>'
       : T.members === null ? '<div class="bpx-skel" style="width:60%"></div>'
-      : !rows.length ? '<div class="tm-empty"><span class="ms">group_add</span><b>Just you so far.</b><span>Add your office and your crew leads below. Each one signs in with their own email and sees only what their role allows.</span></div>'
+      : !rows.length ? '<div class="tm-empty"><span class="ms">group_add</span><b>Just you so far.</b><span>' + (noOffice ? 'Add your crew below.' : 'Add your office and your crew leads below.') + ' Each one signs in with their own email and sees only what their role allows.</span></div>'
       : '<div class="tm-list">' + rows.map(function (m) {
         return '<div class="tm-row"><div class="tm-who"><b>' + esc(m.name || m.email) + '</b><span>' + esc(m.email) + ' &middot; ' + (m.joined ? 'signed in' : 'invited, not signed in yet') + '</span></div>'
           + roleSel(m)
           + '<div class="tm-acts">' + (m.joined ? '' : '<button class="bpx-linkbtn" onclick="bpTeamResend(\'' + m.id + '\')">Resend invite</button>') + '<button class="bpx-linkbtn tm-del" onclick="bpTeamRemove(\'' + m.id + '\',\'' + esc(m.name || m.email) + '\')">Remove</button></div></div>';
       }).join('') + '</div>';
     return '<div class="bpx-panel">'
-      + '<div class="tm-roles"><div><b>Office</b><span>Everything you see, except billing and this page.</span></div><div><b>Crew</b><span>Projects, calendar, materials and messages. No money, no settings.</span></div></div>'
+      + '<div class="tm-roles"><div><b>Office</b><span>' + (noOffice ? 'That is you on BuilderPro OS. Office staff logins come with Enterprise.' : 'Everything you see, except billing and this page.') + '</span></div><div><b>Crew</b><span>Projects, calendar, materials and messages. No money, no settings.</span></div></div>'
       + '<div class="tm-note" style="margin-bottom:12px">Subcontractors get their own login from <a href="#" onclick="bpNav(\'subs\');return false">Projects &rsaquo; Subcontractors</a>: they see only the jobs you put them on.</div>'
       + list + '</div>'
-      + '<div class="bpx-panel"><div class="bpx-ptitle">Add someone<span class="lg2">they get an email with a link to set their password</span></div>'
-      + '<div class="tm-form"><input id="tm-name" placeholder="Their name"><input id="tm-email" type="email" placeholder="their@email.com"><select id="tm-role"><option value="crew">Crew</option><option value="office">Office</option></select><button class="bpx-btn sp-inline" id="tm-add" onclick="bpTeamInvite()">Send invite</button></div>'
-      + '<div class="bpx-mmsg" id="tm-msg"></div></div>';
+      + (L ? '<div class="tm-limit' + (full ? ' full' : '') + '"><span class="ms">' + (full ? 'lock' : 'group') + '</span><div><b>Crew logins: ' + crewCount() + ' of ' + L.crew + '</b><span>On BuilderPro OS you are the office login, plus up to ' + L.crew + ' crew logins. ' + (full ? 'Remove someone to add another, or ' : 'Need more people or an office login? ') + '<a href="#" onclick="bpChangePlan(\'enterprise\');return false">Move to Enterprise</a>.</span></div></div>' : '')
+      + (full ? '' : '<div class="bpx-panel"><div class="bpx-ptitle">Add someone<span class="lg2">they get an email with a link to set their password</span></div>'
+      + '<div class="tm-form"><input id="tm-name" placeholder="Their name"><input id="tm-email" type="email" placeholder="their@email.com">' + (noOffice ? '<input type="hidden" id="tm-role" value="crew"><span class="tm-role tm-subr">Crew</span>' : '<select id="tm-role"><option value="crew">Crew</option><option value="office">Office</option></select>') + '<button class="bpx-btn sp-inline" id="tm-add" onclick="bpTeamInvite()">Send invite</button></div>'
+      + '<div class="bpx-mmsg" id="tm-msg"></div></div>');
   };
   function redraw() { var host = $('set-sec-team'); if (host) { var h = host.querySelector('.st-head'); host.innerHTML = (h ? h.outerHTML : '') + window.bpTeamPanel(); } }
   function msg(t, bad) { var e = $('tm-msg'); if (!e) return; e.textContent = t || ''; e.style.color = bad ? '#b3392f' : ''; }

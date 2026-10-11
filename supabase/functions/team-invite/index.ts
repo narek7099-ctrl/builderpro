@@ -62,6 +62,26 @@ async function sendInvite(email: string, name: string, byName: string): Promise<
   return { emailed: false, note: t.slice(0, 160) };
 }
 
+/* What each plan allows. On BuilderPro OS the owner is the office: no other
+   office logins, and up to five crew logins. Subcontractor logins are outside
+   the team count; they only see the jobs they are put on. Enterprise has no limit. */
+const CREW_MAX: Record<string, number> = { os: 5 };
+const NO_OFFICE = new Set(["os"]);
+async function planOf(owner: string): Promise<string> {
+  try { const r = await rest(`accounts?user_id=eq.${owner}&select=plan&limit=1`); return String(r?.[0]?.plan ?? ""); } catch { return ""; }
+}
+async function limitReason(owner: string, role: string, ignoreId = ""): Promise<string> {
+  const plan = await planOf(owner);
+  if (role === "office" && NO_OFFICE.has(plan)) return "On BuilderPro OS you are the office login. Extra office logins come with Enterprise.";
+  const max = CREW_MAX[plan];
+  if (role === "crew" && max) {
+    const rows: Member[] = await rest(`team_members?owner=eq.${owner}&role=eq.crew&select=id`);
+    const n = rows.filter((m) => m.id !== ignoreId).length;
+    if (n >= max) return `BuilderPro OS includes ${max} crew logins and you have ${n}. Remove one, or move to Enterprise for more.`;
+  }
+  return "";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (!SB_URL || !SB_SERVICE) return json({ ok: false, error: "not_configured" }, 500);
@@ -96,6 +116,7 @@ Deno.serve(async (req) => {
       if (!Array.isArray(subs) || !subs.length) return json({ ok: false, error: "no_sub", reason: "That subcontractor is not on your list." });
       if (subs[0].team_id) return json({ ok: false, error: "exists", reason: "That subcontractor already has a login." });
     }
+    if (role !== "sub") { const lim = await limitReason(user.id, role); if (lim) return json({ ok: false, error: "plan_limit", reason: lim }); }
     const existing: Member[] = await rest(`team_members?owner=eq.${user.id}&email=eq.${encodeURIComponent(email)}&select=*&limit=1`);
     if (existing.length) return json({ ok: false, error: "exists", reason: "They are already on your team." });
     const [row]: Member[] = await rest(`team_members`, {
@@ -114,6 +135,7 @@ Deno.serve(async (req) => {
     if (b.op === "role") {
       // a subcontractor login stays a subcontractor login, and nobody becomes one by a role switch
       if (row.role === "sub" || role === "sub") return json({ ok: false, error: "sub_role", reason: "Subcontractor logins can't change role. Remove and re-invite instead." });
+      if (role !== row.role) { const lim = await limitReason(user.id, role, row.id); if (lim) return json({ ok: false, error: "plan_limit", reason: lim }); }
       await rest(`team_members?id=eq.${row.id}`, { method: "PATCH", body: JSON.stringify({ role }) });
       return json({ ok: true });
     }

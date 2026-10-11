@@ -22,3 +22,10 @@
 #bpx .tm-form input,#bpx .tm-form select{font:inherit;font-size:13.5px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card,#fff);color:inherit;min-width:0}
 #bpx .tm-form .bpx-btn{margin:0;white-space:nowrap}
 @media(max-width:700px){#bpx .tm-form{grid-template-columns:1fr}#bpx .tm-row{grid-template-columns:1fr;gap:6px}}
+/* plan limit on BuilderPro OS: you plus 5 crew logins */
+#bpx .tm-limit{display:flex;gap:12px;align-items:flex-start;margin:0 0 16px;padding:12px 14px;border:1px solid #d1e0ff;background:#f5f8ff;border-radius:12px;font-size:13px;line-height:1.45;color:#344054}
+#bpx .tm-limit .ms{color:#155eef;font-size:20px}
+#bpx .tm-limit b{display:block;font-size:14px;color:#101828;margin-bottom:2px}
+#bpx .tm-limit a{color:#155eef;font-weight:600}
+#bpx .tm-limit.full{border-color:#fedf89;background:#fffcf5}
+#bpx .tm-limit.full .ms{color:#b54708}
