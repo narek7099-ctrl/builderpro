@@ -21195,6 +21195,10 @@ function bpHpRender(){
     +'</aside>'
     +'<div class="hp-main">'
       +'<header class="hp-bar">'
+        +'<div class="hp-mob">'+(b.logo?bpHpLogo(b,'sm'):bpHpAvatar(b))
+          +'<div class="hp-mob-t"><b>'+bpEsc(b.name||'Your contractor')+'</b><span>Your contractor</span></div>'
+          +(b.phone?'<a class="hp-mob-b" href="'+bpHpTel(b)+'" aria-label="Call '+bpHpEscA(b.name||'your contractor')+'"><span class=ms>call</span></a>':'')
+          +'<button type="button" class="hp-mob-b pri" onclick="bpHpTab(\'msgs\')" aria-label="Message '+bpHpEscA(b.name||'your contractor')+'"><span class=ms>chat</span></button></div>'
         +'<div class="hp-bar-m">'+(b.logo?bpHpLogo(b,'sm'):bpHpAvatar(b))+'</div>'
         +'<div class="hp-proj"><div class="hp-proj-t"><b>'+bpEsc(j.title||'Your project')+'</b><span class="hp-desk">'+stPill+'</span></div>'
           +'<span class="hp-proj-s">'+(j.addr?'<span class=ms>location_on</span>'+bpEsc(j.addr):bpEsc(b.name||''))+'</span></div>'
@@ -21259,39 +21263,56 @@ function bpHpPane(t){
   if(t==='overview'){
     var ph=(j.phases||[]),nextIx=-1; ph.forEach(function(p,i){if(nextIx<0&&!p.done)nextIx=i;});
     var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
-    var pct=j.progress;
-    var hero='<section class="hp-card hp-hero">'
-      +'<div class="hp-hi">'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s where things stand':'Here\'s where things stand')+'</div>'
-      +'<h1>'+bpEsc(j.title||'Your project')+'</h1>'
-      +(j.addr?'<div class="hp-addr"><span class=ms>location_on</span>'+bpEsc(j.addr)+'</div>':'')
-      +'<div class="hp-st">'+(j.status==='done'?'<span class="hp-pill done"><span class=ms>task_alt</span>Complete</span>':'<span class="hp-pill live"><i></i>In progress</span>')
-        +(j.next_visit&&j.status!=='done'?'<span class="hp-pill"><span class=ms>event</span>Next visit '+bpEsc(bpHpDay(j.next_visit))+(j.time?' · '+bpEsc(j.time):'')+'</span>':'')+'</div>'
-      +(pct!=null?'<div class="hp-prog" role="img" aria-label="'+pct+'% complete"><i style="width:'+pct+'%"></i></div><div class="hp-progl"><b>'+pct+'% complete</b>'+(j.finish&&j.status!=='done'?'<span>Planned finish '+bpEsc(bpHpDay(j.finish,{month:'short',day:'numeric'}))+'</span>':'')+'</div>':'')
-    +'</section>';
-    var stats='<div class="hp-stats">'
-      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'pay\')"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b><span>of '+bpHpMoney(m.contract)+'</span></button>'
-      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'changes\')"><small>Changes</small><b>'+(pend?pend+' to review':'None waiting')+'</b><span>'+(pend?'Needs your answer':'Request a change')+'</span></button>'
-      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'photos\')"><small>Photos</small><b>'+(d.photos||[]).length+'</b><span>shared with you</span></button>'
-      +'<button type="button" class="hp-stat" onclick="bpHpTab(\'docs\')"><small>Documents</small><b>'+((d.docs||[]).length+(d.contracts||[]).length)+'</b><span>contracts &amp; files</span></button>'
-    +'</div>';
-    var sched=bpHpCard('Schedule',(ph.length?'<ol class="hp-ph">'+ph.map(function(p,i){
-          return '<li class="'+(p.done?'done':i===nextIx?'now':'')+'"><i>'+(p.done?'<span class=ms>check</span>':'')+'</i><b>'+bpEsc(p.name||'Phase')+'</b><span>'+(p.done?'Done':i===nextIx?'Up next':'')+(p.due&&!p.done?(i===nextIx?' · ':'')+bpEsc(bpHpDay(p.due)):'')+'</span></li>';
-        }).join('')+'</ol>':'')
-        +((j.visits||[]).length?'<div class="hp-sub">Scheduled visits</div><div class="hp-days">'+j.visits.map(function(v){return '<span>'+bpEsc(bpHpDay(v))+'</span>';}).join('')+'</div>':'')
-        +(!ph.length&&!(j.visits||[]).length?bpHpEmpty('event','Your contractor hasn\'t set dates yet. They\'ll show here once they do.'):''),'','<button type="button" class="hp-link" id="hpSeeSched" onclick="bpHpTab(\'sched\')">See full schedule<span class=ms>chevron_right</span></button>');
-    var crew=(d.crew||[]).length?bpHpCard('Your crew','<div class="hp-crew">'+d.crew.map(function(c){
-          return '<div class="hp-mate">'+(c.photo?'<img src="'+bpHpEscA(c.photo)+'" alt="">':'<span class="hp-av">'+bpEsc((c.name||'?').charAt(0))+'</span>')+'<div><b>'+bpEsc(c.name||'Crew')+'</b>'+(c.trade?'<span>'+bpEsc(c.trade)+'</span>':'')+'</div></div>';
-        }).join('')+'</div>'):'';
-    var pay=bpHpCard('Payments','<div class="hp-money"><div><small>Contract</small><b>'+bpHpMoney(m.contract)+'</b></div><div><small>Paid</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance</small><b>'+bpHpMoney(m.due)+'</b></div></div>','','<button type="button" class="hp-link" onclick="bpHpTab(\'pay\')">View<span class=ms>chevron_right</span></button>');
-    var ms=d.messages||[],lastIn=ms.filter(function(x){return !x.mine;}).slice(-1)[0];
-    var talk=bpHpCard('Your contractor','<div class="hp-who">'+bpHpAvatar(b)+'<div><b>'+bpEsc(b.contact||b.name||'Your contractor')+'</b><span>'+(b.contact&&b.name?bpEsc(b.name):'Usually replies within a few hours')+'</span></div></div>'
-      +(lastIn?'<button type="button" class="hp-last" onclick="bpHpTab(\'msgs\')"><span>'+bpEsc(lastIn.body).slice(0,140)+'</span><small>'+bpEsc(bpHpDayLabel(lastIn.at))+'</small></button>':'')
-      +'<div class="hp-who-acts"><button type="button" class="hp-btn sm" onclick="bpHpTab(\'msgs\')"><span class=ms>chat</span>Message</button>'+(b.phone?'<a class="hp-btn ghost sm" href="'+bpHpTel(b)+'"><span class=ms>call</span>Call</a>':'')+'</div>');
+    var pct=j.progress, done=j.status==='done', cur=nextIx>=0?ph[nextIx]:null;
+    var fin=j.finish?bpHpDay(j.finish,{weekday:'short',month:'short',day:'numeric'}):'';
+    /* the progress card: a ring, what is happening now, and a strip with every phase */
+    var ring=pct!=null?'<div class="hx-ring" role="img" aria-label="'+pct+'% complete"><svg viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="31" class="tk"/><circle cx="37" cy="37" r="31" class="fg" stroke-dasharray="'+(1.948*pct).toFixed(1)+' 195" transform="rotate(-90 37 37)"/></svg><b>'+pct+'%</b></div>':'';
+    var later=!!(cur&&cur.start&&cur.start>bpHpToday());
+    var nowT=done?'Project complete':cur?bpEsc(cur.name||'Next phase'):'Getting started';
+    var nowS=done?'Thank you for choosing '+bpEsc(b.name||'us')
+      :(later?'Starts '+bpEsc(bpHpDay(cur.start,{weekday:'short',month:'short',day:'numeric'}))+(fin?' · ':''):'')+(fin?'Finish '+bpEsc(fin):later?'':'Dates are on the way');
+    var strip=ph.length?'<div class="hx-strip" style="grid-template-columns:repeat('+Math.min(ph.length,6)+',minmax(0,1fr))">'+ph.slice(0,6).map(function(p,i){
+        return '<div class="'+(p.done?'done':i===nextIx?'now':'')+'"><i></i><span>'+bpEsc(p.name||'Phase')+'</span></div>';}).join('')+'</div>':'';
+    var hero='<section class="hx-card hx-prog">'
+      +'<div class="hx-prog-top">'+ring+'<div class="hx-prog-t"><small>'+(done?'Done':later?'Up next':'Now')+'</small><b>'+nowT+'</b><span>'+nowS+'</span></div></div>'+strip+'</section>';
+    /* next visit */
+    var sch=(j.schedule||[]).filter(function(x){return x.date===j.next_visit;})[0]||{};
+    var tm=sch.time?bpHpClock(sch.time)+(sch.dur?' – '+bpHpClock(bpHpAddMin(sch.time,sch.dur)):''):(/^\d{1,2}:\d{2}$/.test(j.time||'')?bpHpClock(j.time):(j.time||''));
+    var dd=j.next_visit?bpHpDiff(bpHpToday(),j.next_visit):null;
+    var crew0=(d.crew||[])[0];
+    var visit=(!done&&j.next_visit)?'<section class="hx-card"><div class="hx-h"><small>Next visit</small><span class="hx-chip">'+(dd===0?'Today':dd===1?'Tomorrow':'In '+dd+' days')+'</span></div>'
+      +'<div class="hx-visit"><div class="hx-date"><small>'+bpHpD(j.next_visit).toLocaleDateString('en-US',{month:'short'}).toUpperCase()+'</small><b>'+bpHpD(j.next_visit).getDate()+'</b></div>'
+        +'<div><b>'+bpEsc(bpHpD(j.next_visit).toLocaleDateString('en-US',{weekday:'long'}))+(tm?', '+bpEsc(tm):'')+'</b><span>'+(crew0?bpEsc(crew0.name)+(crew0.trade?', '+bpEsc(crew0.trade):''):bpEsc(b.name||'Your contractor'))+(cur&&!done?' · '+bpEsc(cur.name||''):'')+'</span></div></div>'
+      +'<button type="button" class="hx-btn" onclick="bpHpIcsOne(\''+j.next_visit+'\')"><span class=ms>event_available</span>Add to my calendar</button></section>':'';
+    /* payments: how much is paid, and what comes next */
+    var steps=((d.plan||{}).steps||[]), due=steps.filter(function(x){return x.state==='due';})[0], nxt=steps.filter(function(x){return x.state==='upcoming';})[0];
+    var paidPct=m.contract>0?Math.min(100,Math.round((m.paid||0)/m.contract*100)):0;
+    var left=function(x){return Math.max(0,(+x.amount||0)-(+x.paid||0));};
+    var mny=function(n){return bpHpMoney(n).replace(/\.00$/,'');};
+    var payLine=m.due<=0.009?'<b>Paid in full.</b> Thank you!'
+      :due?'<b>'+mny(left(due))+' is due</b> for '+bpEsc(due.name)+'.'
+      :nxt?'<b>Nothing due right now.</b> Next is '+mny(left(nxt))+' for '+bpEsc(nxt.name)+'.'
+      :'<b>'+mny(m.due)+' left</b> on your project.';
+    var money='<section class="hx-card"><div class="hx-h"><small>Payments</small><button type="button" class="hx-link" onclick="bpHpTab(\'pay\')">See all</button></div>'
+      +'<div class="hx-big"><b>'+bpHpMoney(m.paid).replace(/\.00$/,'')+'</b><span>paid of '+bpHpMoney(m.contract).replace(/\.00$/,'')+'</span></div>'
+      +'<div class="hx-bar"><i style="width:'+paidPct+'%"></i></div>'
+      +'<div class="hx-next'+(due?' due':'')+'"><span class=ms>'+(due?'payments':'schedule')+'</span><div>'+payLine+'</div></div>'
+      +(due?'<button type="button" class="hx-btn pri" onclick="bpHpTab(\'pay\')"><span class=ms>credit_card</span>Pay '+bpHpMoney(left(due))+'</button>':'')+'</section>';
+    /* four shortcuts */
+    var docsN=(d.docs||[]).length+(d.contracts||[]).length, photoN=(d.photos||[]).length;
+    var tile=function(go,ico,label,n){return '<button type="button" class="hx-tile" onclick="bpHpTab(\''+go+'\')"><span class=ms>'+ico+'</span><b>'+label+'</b>'+(n?'<em>'+n+'</em>':'')+'</button>';};
+    var tiles='<div class="hx-tiles">'+tile('msgs','chat','Ask a question',bpHpUnread())+tile('changes','edit_note',pend?'Review changes':'Request a change',pend)
+      +tile('docs','description','Contract & files',(d.contracts||[]).filter(function(c){return c.status!=='signed';}).length)+tile('photos','photo_library','Progress photos'+(photoN?' · '+photoN:''),0)+'</div>';
+    /* latest: payments received and phases finished */
+    var feed=[];
+    steps.forEach(function(x){if(x.state==='paid')feed.push({at:'0',ico:'payments',k:'pay',t:bpEsc(x.name)+' paid · '+bpHpMoney(x.amount).replace(/\.00$/,''),s:''});});
+    ph.forEach(function(p){if(p.done)feed.push({at:p.due||'',ico:'check',k:'ok',t:bpEsc(p.name||'A phase')+' finished',s:p.due?bpHpDay(p.due):''});});
+    feed.sort(function(a,z){return String(z.at).localeCompare(String(a.at));});
+    var latest=feed.length?'<section class="hx-card"><div class="hx-h"><small>Latest</small></div>'+feed.slice(0,3).map(function(x){
+        return '<div class="hx-feed"><span class="hx-dot '+x.k+'"><span class=ms>'+x.ico+'</span></span><div><b>'+x.t+'</b>'+(x.s?'<span>'+bpEsc(x.s)+'</span>':'')+'</div></div>';}).join('')+'</section>':'';
     return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
-      +hero+stats
-      +'<div class="hp-grid"><div class="hp-col">'+sched+crew+'</div><div class="hp-col">'+pay+talk
-        +'<button type="button" class="hp-card hp-rowcard" onclick="bpHpTab(\'changes\')"><span class="ms hp-ic">edit_document</span><div><b>Changes</b><span>'+(pend?pend+' waiting for your approval':'Approve changes or request one')+'</span></div>'+(pend?'<em class="hp-badge">'+pend+'</em>':'')+'<span class="ms">chevron_right</span></button>'
-      +'</div></div>';
+      +'<div class="hx-hi"><span>'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Here\'s your project')+'</span><h1>'+bpEsc(j.title||'Your project')+'</h1>'+(j.addr?'<small>'+bpEsc(j.addr)+'</small>':'')+'</div>'
+      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+'</div><div class="hx-col">'+money+tiles+latest+'</div></div>';
   }
   if(t==='sched')return bpHpSched();
   if(t==='photos'){
@@ -21406,6 +21427,7 @@ function bpHpClock24(s){
   if(ap==='p'&&h<12)h+=12; if(ap==='a'&&h===12)h=0;
   return h>23||mi>59?'':('0'+h).slice(-2)+':'+('0'+mi).slice(-2);
 }
+function bpHpAddMin(hm,min){var p=hm.split(':'),t=(+p[0])*60+(+p[1])+(+min||0);t=Math.min(t,23*60+59);return Math.floor(t/60)+':'+('0'+t%60).slice(-2);}
 function bpHpClock(hm){var p=hm.split(':'),h=+p[0],m=+p[1];return (h%12||12)+(m?':'+('0'+m).slice(-2):'')+' '+(h<12?'AM':'PM');}
 function bpHpWin(v){
   if(!v.t)return '';
@@ -22355,6 +22377,85 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-tabbar button.on .hp-ico{background:var(--hp-bluesoft);}
 #bpSign .hp-tabbar button.on .ms{font-variation-settings:'FILL' 1;}
 #bpSign .hp-tabbar .hp-badge{position:absolute;top:-3px;right:6px;border:2px solid #fff;height:19px;}
+/* ---- Home, redesigned for phones (2026-10) ---- */
+#bpSign .hp-mob{display:none;}
+@media(max-width:899px){
+  #bpSign .hp-bar{padding:10px 14px;gap:0;}
+  #bpSign .hp-bar>.hp-bar-m,#bpSign .hp-bar>.hp-proj,#bpSign .hp-bar>.hp-bar-r{display:none;}
+  #bpSign .hp-mob{display:flex;align-items:center;gap:12px;width:100%;min-width:0;}
+}
+#bpSign .hp-mob .hp-logo,#bpSign .hp-mob .hp-avi{width:40px;height:40px;border-radius:12px;flex:0 0 40px;}
+#bpSign .hp-mob-t{flex:1;min-width:0;}
+#bpSign .hp-mob-t b{display:block;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hp-mob-t span{display:block;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hp-mob-b{width:44px;height:44px;flex:0 0 44px;border-radius:12px;border:1px solid var(--hp-line);background:var(--hp-card);color:var(--hp-ink);display:grid;place-items:center;text-decoration:none;cursor:pointer;padding:0;}
+#bpSign .hp-mob-b.pri{background:var(--hp-blue);border-color:var(--hp-blue);color:var(--hp-on,#fff);}
+#bpSign .hp-mob-b .ms{font-size:21px;}
+#bpSign .hx-hi{padding:2px 2px 4px;}
+#bpSign .hx-hi span{display:block;font-size:14px;font-weight:600;color:var(--hp-grey);}
+#bpSign .hx-hi h1{margin:2px 0 0;font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.02em;}
+#bpSign .hx-hi small{display:block;font-size:13.5px;color:var(--hp-grey);margin-top:4px;}
+#bpSign .hx-cols{display:flex;flex-direction:column;gap:14px;margin-top:14px;}
+#bpSign .hx-col{display:flex;flex-direction:column;gap:14px;min-width:0;}
+@media(min-width:900px){#bpSign .hx-cols{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start;gap:18px;}#bpSign .hx-col{gap:18px;}}
+#bpSign .hx-card{background:var(--hp-card);border:1px solid var(--hp-line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+#bpSign .hx-h{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#bpSign .hx-h small,#bpSign .hx-prog-t small{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hp-grey);}
+#bpSign .hx-chip{font-size:12px;font-weight:700;color:var(--hp-blue2);background:var(--hp-bluesoft);padding:4px 10px;border-radius:999px;}
+#bpSign .hx-link{border:0;background:none;padding:6px 0;font:inherit;font-size:13.5px;font-weight:700;color:var(--hp-blue2);cursor:pointer;}
+#bpSign .hx-prog{padding:18px;gap:16px;}
+#bpSign .hx-prog-top{display:flex;align-items:center;gap:16px;}
+#bpSign .hx-ring{position:relative;width:76px;height:76px;flex:0 0 76px;}
+#bpSign .hx-ring svg{width:76px;height:76px;display:block;}
+#bpSign .hx-ring circle{fill:none;stroke-width:8;}
+#bpSign .hx-ring .tk{stroke:var(--hp-bluesoft);}
+#bpSign .hx-ring .fg{stroke:var(--hp-blue);stroke-linecap:round;}
+#bpSign .hx-ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:18px;font-weight:800;}
+#bpSign .hx-prog-t{min-width:0;}
+#bpSign .hx-prog-t small{color:var(--hp-blue2);}
+#bpSign .hx-prog-t b{display:block;font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.01em;}
+#bpSign .hx-prog-t span{display:block;font-size:13.5px;color:var(--hp-grey);margin-top:2px;}
+#bpSign .hx-strip{display:grid;gap:6px;}
+#bpSign .hx-strip>div{display:flex;flex-direction:column;gap:6px;min-width:0;}
+#bpSign .hx-strip i{height:6px;border-radius:3px;background:var(--hp-soft);}
+#bpSign .hx-strip span{font-size:11.5px;color:var(--hp-grey2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hx-strip .done i{background:var(--hp-blue);}
+#bpSign .hx-strip .done span{color:var(--hp-grey);}
+#bpSign .hx-strip .now i{background:linear-gradient(90deg,var(--hp-blue) 45%,var(--hp-bluesoft) 45%);}
+#bpSign .hx-strip .now span{color:var(--hp-ink);font-weight:700;}
+#bpSign .hx-visit{display:flex;align-items:center;gap:14px;}
+#bpSign .hx-visit>div:last-child{min-width:0;}
+#bpSign .hx-visit b{display:block;font-size:16px;font-weight:700;}
+#bpSign .hx-visit span{display:block;font-size:13.5px;color:var(--hp-grey);margin-top:2px;}
+#bpSign .hx-date{width:54px;flex:0 0 54px;border:1px solid var(--hp-line);border-radius:12px;overflow:hidden;text-align:center;}
+#bpSign .hx-date small{display:block;background:var(--hp-blue);color:var(--hp-on,#fff);font-size:11px;font-weight:800;padding:3px 0;}
+#bpSign .hx-date b{font-size:22px;font-weight:800;padding:3px 0 5px;}
+#bpSign .hx-btn{height:46px;border-radius:12px;border:1px solid var(--hp-line);background:var(--hp-card);font:inherit;font-size:14px;font-weight:600;color:var(--hp-ink);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;}
+#bpSign .hx-btn .ms{font-size:19px;}
+#bpSign .hx-btn.pri{background:var(--hp-blue);border-color:var(--hp-blue);color:var(--hp-on,#fff);height:50px;font-size:15px;font-weight:700;}
+#bpSign .hx-big{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+#bpSign .hx-big b{font-size:27px;font-weight:800;letter-spacing:-.02em;}
+#bpSign .hx-big span{font-size:14px;color:var(--hp-grey);}
+#bpSign .hx-bar{height:8px;border-radius:4px;background:var(--hp-soft);overflow:hidden;}
+#bpSign .hx-bar i{display:block;height:100%;border-radius:4px;background:#16a34a;}
+#bpSign .hx-next{display:flex;gap:12px;align-items:flex-start;background:var(--hp-bg);border-radius:12px;padding:12px;font-size:13.5px;line-height:1.45;color:var(--hp-ink2);}
+#bpSign .hx-next .ms{font-size:20px;color:var(--hp-blue2);}
+#bpSign .hx-next b{color:var(--hp-ink);}
+#bpSign .hx-next.due{background:#fff7ed;}
+#bpSign .hx-next.due .ms{color:#c2410c;}
+#bpSign .hx-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+#bpSign .hx-tile{position:relative;min-height:80px;border-radius:16px;border:1px solid var(--hp-line);background:var(--hp-card);padding:14px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;font:inherit;font-size:14px;font-weight:700;color:var(--hp-ink);text-align:left;cursor:pointer;}
+#bpSign .hx-tile .ms{font-size:23px;color:var(--hp-blue2);}
+#bpSign .hx-tile em{position:absolute;top:10px;right:10px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#ef4444;color:#fff;font-style:normal;font-size:11.5px;font-weight:700;display:grid;place-items:center;}
+#bpSign .hx-tile:active,#bpSign .hx-btn:active{transform:scale(.98);}
+#bpSign .hx-feed{display:flex;gap:12px;align-items:center;padding:6px 0;}
+#bpSign .hx-feed+.hx-feed{border-top:1px solid var(--hp-line2);padding-top:12px;}
+#bpSign .hx-feed b{display:block;font-size:14px;font-weight:700;}
+#bpSign .hx-feed span:not(.ms):not(.hx-dot){display:block;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .hx-dot{width:32px;height:32px;flex:0 0 32px;border-radius:50%;display:grid;place-items:center;}
+#bpSign .hx-dot .ms{font-size:17px;}
+#bpSign .hx-dot.ok{background:#dcfce7;color:#15803d;}
+#bpSign .hx-dot.pay{background:var(--hp-bluesoft);color:var(--hp-blue2);}
 #bpSign .hp-tabbar .hp-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 /* cards */
 #bpSign .hp-card{display:block;width:100%;background:var(--hp-card);border:1px solid var(--hp-line);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);text-align:left;font:inherit;color:inherit;}
