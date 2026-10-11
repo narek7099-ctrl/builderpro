@@ -61,7 +61,7 @@
 
   /* what the plan allows: on BuilderPro OS the owner is the office, plus up to 5 crew logins
      (team-invite enforces the same; subcontractor logins are not counted) */
-  var LIMITS = { os: { crew: 5, office: false } };
+  var LIMITS = { foundation: { crew: 1, office: false, name: 'Foundation', next: 'os', nextName: 'BuilderPro OS' }, os: { crew: 5, office: false, name: 'BuilderPro OS', next: 'enterprise', nextName: 'Enterprise' } };
   function lim() { return LIMITS[String((window._bpAcct || {}).plan || '')] || null; }
   function crewCount() { return (T.members || []).filter(function (m) { return m.role === 'crew'; }).length; }
 
@@ -81,10 +81,10 @@
           + '<div class="tm-acts">' + (m.joined ? '' : '<button class="bpx-linkbtn" onclick="bpTeamResend(\'' + m.id + '\')">Resend invite</button>') + '<button class="bpx-linkbtn tm-del" onclick="bpTeamRemove(\'' + m.id + '\',\'' + esc(m.name || m.email) + '\')">Remove</button></div></div>';
       }).join('') + '</div>';
     return '<div class="bpx-panel">'
-      + '<div class="tm-roles"><div><b>Office</b><span>' + (noOffice ? 'That is you on BuilderPro OS. Office staff logins come with Enterprise.' : 'Everything you see, except billing and this page.') + '</span></div><div><b>Crew</b><span>Projects, calendar, materials and messages. No money, no settings.</span></div></div>'
-      + '<div class="tm-note" style="margin-bottom:12px">Subcontractors get their own login from <a href="#" onclick="bpNav(\'subs\');return false">Projects &rsaquo; Subcontractors</a>: they see only the jobs you put them on.</div>'
+      + '<div class="tm-roles"><div><b>Office</b><span>' + (noOffice ? 'That is you on ' + L.name + '. Office staff logins come with Enterprise.' : 'Everything you see, except billing and this page.') + '</span></div><div><b>Crew</b><span>Projects, calendar, materials and messages. No money, no settings.</span></div></div>'
+      + (window.bpLocked && bpLocked('subs') ? '' : '<div class="tm-note" style="margin-bottom:12px">Subcontractors get their own login from <a href="#" onclick="bpNav(\'subs\');return false">Projects &rsaquo; Subcontractors</a>: they see only the jobs you put them on.</div>')
       + list + '</div>'
-      + (L ? '<div class="tm-limit' + (full ? ' full' : '') + '"><span class="ms">' + (full ? 'lock' : 'group') + '</span><div><b>Crew logins: ' + crewCount() + ' of ' + L.crew + '</b><span>On BuilderPro OS you are the office login, plus up to ' + L.crew + ' crew logins. ' + (full ? 'Remove someone to add another, or ' : 'Need more people or an office login? ') + '<a href="#" onclick="bpChangePlan(\'enterprise\');return false">Move to Enterprise</a>.</span></div></div>' : '')
+      + (L ? '<div class="tm-limit' + (full ? ' full' : '') + '"><span class="ms">' + (full ? 'lock' : 'group') + '</span><div><b>Crew logins: ' + crewCount() + ' of ' + L.crew + '</b><span>On ' + L.name + ' you are the office login, plus ' + (L.crew === 1 ? '1 crew login' : 'up to ' + L.crew + ' crew logins') + '. ' + (full ? 'Remove someone to add another, or ' : 'Need more people? ') + '<a href="#" onclick="bpChangePlan(\'' + L.next + '\');return false">Move to ' + L.nextName + '</a>.</span></div></div>' : '')
       + (full ? '' : '<div class="bpx-panel"><div class="bpx-ptitle">Add someone<span class="lg2">they get an email with a link to set their password</span></div>'
       + '<div class="tm-form"><input id="tm-name" placeholder="Their name"><input id="tm-email" type="email" placeholder="their@email.com">' + (noOffice ? '<input type="hidden" id="tm-role" value="crew"><span class="tm-role tm-subr">Crew</span>' : '<select id="tm-role"><option value="crew">Crew</option><option value="office">Office</option></select>') + '<button class="bpx-btn sp-inline" id="tm-add" onclick="bpTeamInvite()">Send invite</button></div>'
       + '<div class="bpx-mmsg" id="tm-msg"></div></div>');

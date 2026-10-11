@@ -62,22 +62,25 @@ async function sendInvite(email: string, name: string, byName: string): Promise<
   return { emailed: false, note: t.slice(0, 160) };
 }
 
-/* What each plan allows. On BuilderPro OS the owner is the office: no other
-   office logins, and up to five crew logins. Subcontractor logins are outside
-   the team count; they only see the jobs they are put on. Enterprise has no limit. */
-const CREW_MAX: Record<string, number> = { os: 5 };
-const NO_OFFICE = new Set(["os"]);
+/* What each plan allows. On Foundation and BuilderPro OS the owner is the
+   office: no other office logins. Foundation adds 1 crew login, OS up to 5.
+   Subcontractor logins are outside the team count; they only see the jobs they
+   are put on. Enterprise has no limit. */
+const CREW_MAX: Record<string, number> = { foundation: 1, os: 5 };
+const NO_OFFICE = new Set(["foundation", "os"]);
+const PLAN_NAME: Record<string, string> = { foundation: "Foundation", os: "BuilderPro OS" };
+const NEXT_PLAN: Record<string, string> = { foundation: "BuilderPro OS", os: "Enterprise" };
 async function planOf(owner: string): Promise<string> {
   try { const r = await rest(`accounts?user_id=eq.${owner}&select=plan&limit=1`); return String(r?.[0]?.plan ?? ""); } catch { return ""; }
 }
 async function limitReason(owner: string, role: string, ignoreId = ""): Promise<string> {
   const plan = await planOf(owner);
-  if (role === "office" && NO_OFFICE.has(plan)) return "On BuilderPro OS you are the office login. Extra office logins come with Enterprise.";
+  if (role === "office" && NO_OFFICE.has(plan)) return `On ${PLAN_NAME[plan]} you are the office login. Extra office logins come with Enterprise.`;
   const max = CREW_MAX[plan];
   if (role === "crew" && max) {
     const rows: Member[] = await rest(`team_members?owner=eq.${owner}&role=eq.crew&select=id`);
     const n = rows.filter((m) => m.id !== ignoreId).length;
-    if (n >= max) return `BuilderPro OS includes ${max} crew logins and you have ${n}. Remove one, or move to Enterprise for more.`;
+    if (n >= max) return `${PLAN_NAME[plan]} includes ${max} crew login${max === 1 ? "" : "s"} and you have ${n}. Remove one, or move to ${NEXT_PLAN[plan]} for more.`;
   }
   return "";
 }

@@ -23622,7 +23622,7 @@ function bpSettings(){
   var themeSeg='<div class="bpx-jobtabs" id="bpx-theme-seg">'+[['light','Light','light_mode'],['dark','Dark','dark_mode'],['system','System','contrast']].map(function(o2){
       return '<button class="bpx-jt'+((localStorage.getItem('bpxTheme')||'light')===o2[0]?' on':'')+'" onclick="bpApplyTheme(\''+o2[0]+'\');bpSettings()"><span class="ms">'+o2[2]+'</span> '+o2[1]+'</button>';}).join('')+'</div>';
   var _pk=(window._bpAcct||{}).plan||'os', _ad=((window._bpAcct||{}).profile||{}).addons||{};
-  var feats=({foundation:[BP_AI_NAME+' AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Finance overview: income, costs and profit'],
+  var feats=({foundation:[BP_AI_NAME+' AI receptionist, 150 call minutes','Missed-call text-back','Calendar and booking page','Contacts, texts and email','Estimates, invoices and payments','Finance overview: income, costs and profit','You plus 1 crew login'],
     os:['Everything in Foundation','300 '+BP_AI_NAME+' call minutes','You plus 5 crew logins','Projects, contracts and e-signature','Finances, budgets and payroll','Supply and material orders','Instant-quote calculators and calculator leads','Lead Sources and website traffic','Social, reputation and competitors','AI Team on Enterprise'],
     enterprise:['Everything in BuilderPro OS','AI Team included','500 '+BP_AI_NAME+' call minutes','Unlimited users and locations','Priority support']})[_pk]||[];
   var planPick='<div class="st-plan-row">'+['foundation','os','enterprise'].map(function(k){var P=BP_PLANS[k],me=k===_pk;
@@ -25621,7 +25621,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/dash.css?v=20261012crst">
 <link rel="stylesheet" href="portal/team.css?v=20261025a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
-<script src="portal/team.js?v=20261025a"></script>
+<script src="portal/team.js?v=20261025c"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261012a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
