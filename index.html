@@ -24946,7 +24946,7 @@ function bpRepRender(){
     +'<div class="bpx-stat"><div class="lbl">Average rating</div><div class="val">'+(avg?avg.toFixed(1):'—')+'</div><div class="note">'+(live.length?'across '+live.length+' platform'+(live.length===1?'':'s'):'nothing connected yet')+'</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Total reviews</div><div class="val">'+(tot?tot.toLocaleString():'—')+'</div><div class="note">all time</div></div>'
     +'<div class="bpx-stat"><div class="lbl">New this month</div><div class="val">'+(all.length?month:'—')+'</div><div class="note">of the newest we can see</div></div>'
-    +'<div class="bpx-stat"><div class="lbl">Ask for one</div><div class="val" style="font-size:15px;font-weight:700;letter-spacing:0;margin-top:6px"><button class="bpx-btn" style="margin:0;padding:10px 16px;font-size:13.5px" onclick="document.getElementById(\'rpAsk\').scrollIntoView({behavior:\'smooth\'})"><span class=ms>rate_review</span> Ask for a review</button></div></div>'
+    +'<div class="bpx-stat"><div class="lbl">Need a reply</div><div class="val">'+(all.length?all.filter(function(r){return r.rating<=3&&!r.replied;}).length:'—')+'</div><div class="note">3 stars or fewer, not answered</div></div>'
     +'</div>';
   var cards='<div class="rp-plats">'+BP_REP_PLAT.map(function(p){
     var x=d[p[0]], on=!!x&&!x.error, err=x&&x.error;
@@ -25687,6 +25687,6 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/shell.js?v=20261024b"></script>
 <script src="portal/notify.js?v=20261022a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
-<script src="portal/tour.js?v=20261025a"></script>
-<link rel="stylesheet" href="portal/tour.css?v=20261020ar">
+<script src="portal/tour.js?v=20261026d"></script>
+<link rel="stylesheet" href="portal/tour.css?v=20261026c">
 </html>
