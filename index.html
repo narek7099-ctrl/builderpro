@@ -20,7 +20,7 @@ try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
-<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
+<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
@@ -21126,8 +21126,8 @@ function bpHpErr(msg){
 /* app shell: sidebar on desktop (>=900px), app bar + bottom tab bar on phones.
    Phones get Home, Schedule, Photos, Pay, Messages and More; More opens a
    sheet with Documents and Changes (and carries their combined badge). */
-var BP_HP_TABS=[['overview','Overview','space_dashboard','Home'],['sched','Schedule','calendar_month','Schedule'],['photos','Photos','photo_library','Photos'],['docs','Documents','folder_open','Docs'],['pay','Payments','account_balance_wallet','Pay'],['msgs','Messages','forum','Messages'],['changes','Changes','edit_document','Changes']];
-var BP_HP_PHONE=['overview','sched','photos','pay','msgs','more'],BP_HP_MORE=['docs','changes'];
+var BP_HP_TABS=[['overview','Overview','space_dashboard','Home'],['sched','Schedule','calendar_month','Schedule'],['photos','Photos','photo_library','Photos'],['docs','Documents','folder_open','Docs'],['pay','Payments','account_balance_wallet','Pay'],['msgs','Messages','forum','Messages'],['changes','Changes','edit_document','Changes'],['pros','Find a pro','person_search','Find a pro']];
+var BP_HP_PHONE=['overview','sched','photos','pay','msgs','more'],BP_HP_MORE=['docs','changes','pros'];
 var BP_HP_REQ=/^change request:\s*/i;
 function bpHpSkel(){
   return '<div class="hp-app hp-skel" aria-busy="true" aria-label="Loading your project">'
@@ -21260,6 +21260,7 @@ function bpHpDayLabel(at){
 function bpHpTime(at){var d=new Date(at);return isNaN(d)?'':d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
 function bpHpPane(t){
   var d=_bpHp.d,j=d.job||{},m=d.money||{},b=d.business||{};
+  if(t==='pros')return bpPrPane();
   if(t==='overview'){
     var ph=(j.phases||[]),nextIx=-1; ph.forEach(function(p,i){if(nextIx<0&&!p.done)nextIx=i;});
     var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
@@ -21310,9 +21311,10 @@ function bpHpPane(t){
     feed.sort(function(a,z){return String(z.at).localeCompare(String(a.at));});
     var latest=feed.length?'<section class="hx-card"><div class="hx-h"><small>Latest</small></div>'+feed.slice(0,3).map(function(x){
         return '<div class="hx-feed"><span class="hx-dot '+x.k+'"><span class=ms>'+x.ico+'</span></span><div><b>'+x.t+'</b>'+(x.s?'<span>'+bpEsc(x.s)+'</span>':'')+'</div></div>';}).join('')+'</section>':'';
+    var pros='<button type="button" class="hx-card hx-pros" onclick="bpHpTab(\'pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Need something else done?</b><span>Find trusted BuilderPro pros near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
     return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
       +'<div class="hx-hi"><span>'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Here\'s your project')+'</span><h1>'+bpEsc(j.title||'Your project')+'</h1>'+(j.addr?'<small>'+bpEsc(j.addr)+'</small>':'')+'</div>'
-      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+'</div><div class="hx-col">'+money+tiles+latest+'</div></div>';
+      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+'</div><div class="hx-col">'+money+tiles+latest+pros+'</div></div>';
   }
   if(t==='sched')return bpHpSched();
   if(t==='photos'){
@@ -21404,6 +21406,7 @@ function bpHpMoreSheet(){
       +'<div class="hp-sheet-grip" aria-hidden="true"></div><div class="hp-sheet-h"><b>More</b><button type="button" class="hp-iconbtn" aria-label="Close" onclick="bpHpMore(false)"><span class=ms>close</span></button></div>'
       +row('docs','folder_open','Documents',uns?uns+' waiting for your signature':nDocs?nDocs+' contracts &amp; files':'Contracts, permits and files',uns)
       +row('changes','edit_document','Changes',pend?pend+' waiting for your approval':'Approve changes or request one',pend)
+      +row('pros','person_search','Find a pro','Roofers, plumbers, electricians and more near you',0)
     +'</div>';
 }
 window.bpHpMore=function(open){
@@ -21411,6 +21414,143 @@ window.bpHpMore=function(open){
   if(open){var f=document.querySelector('#hpMore .hp-sheet-row');if(f)f.focus();}
 };
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_bpHp.more)bpHpMore(false);});
+
+/* ---- Find a Pro: homeowners search BuilderPro contractors (the `pros`
+   function) and send one a quote request, which lands in that contractor's
+   Contacts as a new lead. Shown inside the portal (tab "pros") and on its
+   own at builderpro-os.com/#pros. ---- */
+var PR_URL=BP_URL+'/functions/v1/pros';
+var BP_PR_CATS=[['Roofing','roofing'],['Plumbing','plumbing'],['Electrical','electrical_services'],['HVAC','mode_fan'],['Remodeling','construction'],['Painting','format_paint'],['Flooring','grid_view'],['Windows & doors','window'],['Landscaping','yard'],['Concrete','foundation']];
+var _bpPr={q:'',loc:'',res:null,busy:false,err:'',open:'',sent:{},msg:{},seeded:false,seq:0};
+function bpPrApi(body){
+  return fetch(PR_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify(body)})
+    .then(function(r){return r.json();});
+}
+/* where the homeowner is: the ZIP on their job address, else "City, ST" */
+function bpPrSeed(){
+  if(_bpPr.seeded)return; _bpPr.seeded=true;
+  var a=String((_bpHp.d&&_bpHp.d.job&&_bpHp.d.job.addr)||'');
+  var z=/\b(\d{5})(?:-\d{4})?\s*$/.exec(a), c=/([^,]+),\s*([A-Za-z]{2})\b/.exec(a);
+  _bpPr.loc=z?z[1]:c?c[1].trim()+', '+c[2].toUpperCase():'';
+}
+function bpPrPane(){
+  bpPrSeed();
+  if(!_bpPr.res&&!_bpPr.busy)setTimeout(function(){bpPrGo(true);},0);
+  var cats=BP_PR_CATS.map(function(c){var on=_bpPr.q.toLowerCase()===c[0].toLowerCase();
+    return '<button type="button" class="pr-cat'+(on?' on':'')+'"'+(on?' aria-pressed="true"':'')+' onclick="bpPrCat(\''+bpHpEscA(c[0])+'\')"><span class=ms>'+c[1]+'</span>'+bpEsc(c[0])+'</button>';}).join('');
+  return '<section class="pr-hero">'
+      +'<div class="pr-hero-t"><h1>Find a pro</h1><p>'+(_bpHp.d?'Contractors near you who run their business on BuilderPro, with the same project page and updates you get here.':'Local contractors who run their business on BuilderPro. Every job comes with a private project page: schedule, photos, payments and messages in one place.')+'</p></div>'
+      +'<form class="pr-search" role="search" onsubmit="event.preventDefault();bpPrGo()">'
+        +'<label class="pr-in"><span class=ms>search</span><input id="prQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="What do you need? e.g. roofing" value="'+bpHpEscA(_bpPr.q)+'" aria-label="What do you need done"></label>'
+        +'<label class="pr-in pr-loc"><span class=ms>location_on</span><input id="prL" type="text" inputmode="text" autocomplete="postal-code" placeholder="ZIP or city" value="'+bpHpEscA(_bpPr.loc)+'" aria-label="ZIP code or city"></label>'
+        +'<button type="submit" class="hx-btn pri pr-go"><span class=ms>search</span>Search</button>'
+      +'</form>'
+    +'</section>'
+    +'<div class="pr-cats" role="group" aria-label="Popular services">'+cats+'</div>'
+    +'<div id="prRes" aria-live="polite">'+bpPrResults()+'</div>';
+}
+window.bpPrCat=function(c){
+  _bpPr.q=_bpPr.q.toLowerCase()===c.toLowerCase()?'':c;
+  var q=document.getElementById('prQ'); if(q)q.value=_bpPr.q;
+  document.querySelectorAll('#bpSign .pr-cat').forEach(function(b){var on=b.textContent===c&&_bpPr.q!=='';b.classList.toggle('on',on);if(on)b.setAttribute('aria-pressed','true');else b.removeAttribute('aria-pressed');});
+  bpPrGo();
+};
+window.bpPrGo=function(quiet){
+  var q=document.getElementById('prQ'),l=document.getElementById('prL');
+  if(q)_bpPr.q=q.value.trim(); if(l)_bpPr.loc=l.value.trim();
+  if(!quiet&&document.activeElement&&document.activeElement.blur&&/^(INPUT)$/.test(document.activeElement.tagName))document.activeElement.blur();
+  var my=++_bpPr.seq; _bpPr.busy=true;_bpPr.err='';_bpPr.open=''; bpPrDraw();
+  bpPrApi({op:'search',q:_bpPr.q,loc:_bpPr.loc}).then(function(d){
+    if(my!==_bpPr.seq)return;
+    _bpPr.busy=false;
+    if(!d||!d.ok){_bpPr.err=(d&&d.error)||'Search isn\'t available right now.';_bpPr.res=_bpPr.res||[];}
+    else _bpPr.res=d.pros||[];
+    bpPrDraw();
+  }).catch(function(){if(my!==_bpPr.seq)return;_bpPr.busy=false;_bpPr.err='Couldn\'t reach the server. Check your connection and try again.';_bpPr.res=_bpPr.res||[];bpPrDraw();});
+};
+function bpPrDraw(){var r=document.getElementById('prRes');if(r)r.innerHTML=bpPrResults();}
+function bpPrInitials(s){return bpHpInitials(s);}
+function bpPrResults(){
+  if(_bpPr.busy)return '<div class="pr-count">Searching…</div>'+[0,1,2].map(function(){return '<div class="pr-card pr-skel"><i></i><i></i><i></i></div>';}).join('');
+  if(_bpPr.err)return '<div class="hp-note warn"><span class=ms>error</span><span>'+bpEsc(_bpPr.err)+'</span></div>';
+  var r=_bpPr.res; if(!r)return '';
+  var where=_bpPr.loc?' near '+bpEsc(_bpPr.loc):'';
+  if(!r.length)return '<div class="pr-empty"><span class="pr-empty-ic"><span class=ms>travel_explore</span></span><b>No BuilderPro pros'+(_bpPr.q?' for “'+bpEsc(_bpPr.q)+'”':'')+where+' yet</b>'
+    +'<p>Try a broader service, like “remodeling”, or a nearby ZIP code. New contractors join every week.</p>'
+    +(_bpPr.q?'<button type="button" class="hx-btn" onclick="bpPrCat(\'\')"><span class=ms>close</span>Clear the service</button>':'')+'</div>';
+  var area=r.filter(function(p){return p.match==='area';}).length;
+  var head='<div class="pr-count"><b>'+r.length+' '+(r.length===1?'pro':'pros')+'</b>'+(_bpPr.q?' for “'+bpEsc(_bpPr.q)+'”':'')+where+(area&&area<r.length?' · '+area+' serve your area':'')+'</div>';
+  return head+r.map(bpPrCard).join('');
+}
+function bpPrCard(p){
+  var id=p.id, open=_bpPr.open===id, sent=_bpPr.sent[id];
+  var col=/^#[0-9a-f]{6}$/i.test(p.color||'')?p.color:'';
+  var logo=p.logo?'<span class="pr-logo has"><img src="'+bpHpEscA(p.logo)+'" alt=""></span>'
+    :'<span class="pr-logo"'+(col?' style="background:'+col+'"':'')+' aria-hidden="true">'+bpEsc(bpPrInitials(p.name))+'</span>';
+  var loc=[p.city,p.state].filter(Boolean).join(', ');
+  var tag=p.match==='area'?'<span class="pr-tag ok"><span class=ms>check_circle</span>Serves your area</span>':'<span class="pr-tag"><span class=ms>near_me</span>Nearby</span>';
+  var svcs=(p.services||[]).slice(0,5).map(function(s){return '<span>'+bpEsc(s)+'</span>';}).join('');
+  var tel=p.phone?'tel:'+String(p.phone).replace(/[^\d+]/g,''):'';
+  var acts=sent?'<div class="hp-note ok pr-sent"><span class=ms>check_circle</span><span><b>Request sent.</b> '+bpEsc(p.name)+' will reach out to you soon.</span></div>'
+    :'<div class="pr-acts">'+(tel?'<a class="hx-btn" href="'+bpHpEscA(tel)+'"><span class=ms>call</span>Call</a>':'')
+      +(p.website?'<a class="hx-btn" href="'+bpHpEscA(p.website)+'" target="_blank" rel="noopener nofollow"><span class=ms>language</span>Website</a>':'')
+      +'<button type="button" class="hx-btn pri" onclick="bpPrOpen(\''+id+'\')" aria-expanded="'+(open?'true':'false')+'"><span class=ms>request_quote</span>Get a quote</button></div>';
+  return '<article class="pr-card" data-pro="'+bpHpEscA(id)+'">'
+    +'<div class="pr-top">'+logo+'<div class="pr-who"><b>'+bpEsc(p.name)+'</b><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
+    +tag
+    +(p.about?'<p class="pr-about">'+bpEsc(p.about)+'</p>':'')
+    +(svcs?'<div class="pr-svcs">'+svcs+'</div>':'')
+    +acts
+    +(open&&!sent?bpPrForm(p):'')
+  +'</article>';
+}
+function bpPrForm(p){
+  var me=(_bpHp.d&&_bpHp.d.job&&_bpHp.d.job.customer)||'', m=_bpPr.msg[p.id]||'';
+  var svc=_bpPr.q||p.trade||'';
+  return '<form class="pr-form" onsubmit="event.preventDefault();bpPrSend(\''+p.id+'\')" novalidate>'
+    +'<b class="pr-form-h">Ask '+bpEsc(p.name)+' for a quote</b>'
+    +'<label>Your name<input name="name" autocomplete="name" value="'+bpHpEscA(me)+'" required></label>'
+    +'<label>Phone<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555" required></label>'
+    +'<label><span>Email <small>optional</small></span><input name="email" type="email" autocomplete="email" inputmode="email"></label>'
+    +'<label>What do you need?<textarea name="details" rows="3" maxlength="1000" placeholder="A few words about the job, e.g. '+bpHpEscA(svc?svc.toLowerCase()+' at my house':'small leak over the garage')+'"></textarea></label>'
+    +'<input type="hidden" name="service" value="'+bpHpEscA(svc)+'">'
+    +(m?'<div class="pr-err" role="alert">'+bpEsc(m)+'</div>':'')
+    +'<button type="submit" class="hx-btn pri"><span class=ms>send</span>Send request</button>'
+    +'<p class="pr-fine"><span class=ms>lock</span>Goes only to '+bpEsc(p.name)+'. They\'ll call or text you back.</p>'
+  +'</form>';
+}
+window.bpPrOpen=function(id){
+  _bpPr.open=_bpPr.open===id?'':id; _bpPr.msg[id]=''; bpPrDraw();
+  if(_bpPr.open){var f=document.querySelector('#bpSign .pr-card[data-pro="'+id+'"] .pr-form');if(f){var i=f.querySelector('input[name=name]');if(i&&i.value)i=f.querySelector('input[name=phone]');try{f.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}if(i)i.focus({preventScroll:true});}}
+};
+window.bpPrSend=function(id){
+  var f=document.querySelector('#bpSign .pr-card[data-pro="'+id+'"] .pr-form'); if(!f)return;
+  var v=function(n){var e=f.elements[n];return e?String(e.value||'').trim():'';};
+  var err=function(t,n){_bpPr.msg[id]=t;var keep={};['name','phone','email','details'].forEach(function(k){keep[k]=v(k);});bpPrDraw();
+    var g=document.querySelector('#bpSign .pr-card[data-pro="'+id+'"] .pr-form');if(g){Object.keys(keep).forEach(function(k){if(g.elements[k])g.elements[k].value=keep[k];});if(n&&g.elements[n])g.elements[n].focus();}};
+  if(!v('name'))return err('Add your name.','name');
+  if(v('phone').replace(/\D/g,'').length<10)return err('Add a phone number with area code.','phone');
+  var b=f.querySelector('button[type=submit]'); if(b){b.disabled=true;b.innerHTML='<span class=ms>hourglass_top</span>Sending…';}
+  bpPrApi({op:'request',id:id,name:v('name'),phone:v('phone'),email:v('email'),details:v('details'),service:v('service'),loc:_bpPr.loc})
+    .then(function(d){
+      if(d&&d.ok){_bpPr.sent[id]=true;_bpPr.open='';_bpPr.msg[id]='';bpPrDraw();return;}
+      err((d&&d.error)||'We couldn\'t send that. Try again.');
+    }).catch(function(){err('Couldn\'t reach the server. Check your connection and try again.');});
+};
+/* builderpro-os.com/#pros: the same search, on its own page */
+function bpProsRoute(){
+  if(!/^#(pros|find-a-pro)\b/i.test(location.hash||''))return false;
+  var m=/[?&]q=([^&]*)/.exec(location.hash),l=/[?&](?:zip|loc)=([^&]*)/.exec(location.hash);
+  try{if(m)_bpPr.q=decodeURIComponent(m[1].replace(/\+/g,' '));if(l){_bpPr.loc=decodeURIComponent(l[1].replace(/\+/g,' '));}}catch(e){}
+  _bpPr.seeded=true;
+  document.body.classList.add('bp-signing','bp-home');
+  document.title='Find a pro · BuilderPro';
+  var host=document.createElement('div'); host.id='bpSign'; host.className='hp pr-solo'; document.body.appendChild(host);
+  host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span>Find a pro</span></header>'
+    +'<main class="hp-content pr-main">'+bpPrPane()+'</main>'
+    +'<footer class="hp-powm">'+bpPoweredBy()+'</footer></div>';
+  return true;
+}
 
 /* ---- Schedule: summary, phase stepper, visits by week, inspections,
    month calendar and .ics files made in the browser ---- */
@@ -21642,7 +21782,7 @@ window.bpHpPay=function(){
     b.disabled=false;if(e)e.textContent=(d&&d.error)||'The payment page couldn\'t be opened.';
   }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
 };
-try{ bpPayRoute()||bpHomeRoute(); }catch(e){}
+try{ bpPayRoute()||bpHomeRoute()||bpProsRoute(); }catch(e){}
 
 /* ===== Payouts — the contractor connects their OWN Stripe once, here in
    BuilderPro (stripe-connect, Stripe Connect Standard). Every invoice and
@@ -22456,6 +22596,84 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hx-dot .ms{font-size:17px;}
 #bpSign .hx-dot.ok{background:#dcfce7;color:#15803d;}
 #bpSign .hx-dot.pay{background:var(--hp-bluesoft);color:var(--hp-blue2);}
+#bpSign .hx-pros{flex-direction:row;align-items:center;gap:14px;width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer;background:linear-gradient(135deg,var(--hp-bluesoft),var(--hp-card) 70%);}
+#bpSign .hx-pros>div{flex:1;min-width:0;}
+#bpSign .hx-pros b{display:block;font-size:15px;font-weight:700;}
+#bpSign .hx-pros>div>span{display:block;font-size:13px;color:var(--hp-grey);margin-top:2px;}
+#bpSign .hx-pros-ic{width:44px;height:44px;flex:0 0 44px;border-radius:14px;background:var(--hp-blue);color:var(--hp-on,#fff);display:grid;place-items:center;}
+#bpSign .hx-pros-ic .ms{font-size:24px;}
+#bpSign .hx-pros-go{color:var(--hp-grey2);font-size:22px;}
+/* Find a Pro (#pros, and the portal's "pros" tab) */
+#bpSign .pr-hero{background:var(--hp-card);border:1px solid var(--hp-line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;}
+#bpSign .pr-hero h1{margin:0;font-size:26px;line-height:1.15;font-weight:800;letter-spacing:-.02em;}
+#bpSign .pr-hero p{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--hp-grey);}
+#bpSign .pr-search{display:flex;flex-direction:column;gap:8px;margin:0;}
+#bpSign .pr-in{display:flex;align-items:center;gap:8px;height:50px;padding:0 14px;border:1px solid var(--hp-line);border-radius:14px;background:var(--hp-bg);transition:border-color .15s,box-shadow .15s,background .15s;}
+#bpSign .pr-in:focus-within{border-color:var(--hp-blue);background:#fff;box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.12));}
+#bpSign .pr-in .ms{font-size:21px;color:var(--hp-grey);flex:0 0 auto;}
+#bpSign .pr-in input{flex:1;min-width:0;height:100%;border:0;background:transparent;font:inherit;font-size:16px;color:var(--hp-ink);outline:none;padding:0;-webkit-appearance:none;appearance:none;}
+#bpSign .pr-in input::-webkit-search-cancel-button{-webkit-appearance:none;}
+#bpSign .pr-go{width:100%;}
+@media(min-width:700px){#bpSign .pr-search{flex-direction:row;}#bpSign .pr-in{flex:1.4;}#bpSign .pr-in.pr-loc{flex:1;}#bpSign .pr-go{width:auto;padding:0 22px;}}
+#bpSign .pr-cats{display:flex;gap:8px;overflow-x:auto;padding:14px 2px 4px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+#bpSign .pr-cats::-webkit-scrollbar{display:none;}
+#bpSign .pr-cat{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px 0 11px;border-radius:999px;border:1px solid var(--hp-line);background:var(--hp-card);font:inherit;font-size:13.5px;font-weight:600;color:var(--hp-ink2);cursor:pointer;white-space:nowrap;}
+#bpSign .pr-cat .ms{font-size:18px;color:var(--hp-blue2);}
+#bpSign .pr-cat.on{background:var(--hp-blue);border-color:var(--hp-blue);color:var(--hp-on,#fff);}
+#bpSign .pr-cat.on .ms{color:inherit;}
+#bpSign .pr-count{margin:14px 2px 10px;font-size:13.5px;color:var(--hp-grey);}
+#bpSign .pr-count b{color:var(--hp-ink);}
+#bpSign #prRes{display:flex;flex-direction:column;gap:12px;}
+#bpSign #prRes>.pr-count{margin-bottom:-2px;}
+@media(min-width:900px){#bpSign #prRes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}#bpSign #prRes>.pr-count,#bpSign #prRes>.pr-empty,#bpSign #prRes>.hp-note{grid-column:1/-1;}}
+#bpSign .pr-card{background:var(--hp-card);border:1px solid var(--hp-line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;}
+#bpSign .pr-top{display:flex;align-items:center;gap:12px;min-width:0;}
+#bpSign .pr-logo{width:48px;height:48px;flex:0 0 48px;border-radius:14px;background:var(--hp-blue);color:#fff;display:grid;place-items:center;font-size:16px;font-weight:800;overflow:hidden;}
+#bpSign .pr-logo.has{background:#fff;border:1px solid var(--hp-line);}
+#bpSign .pr-logo img{max-width:80%;max-height:80%;object-fit:contain;display:block;}
+#bpSign .pr-who{min-width:0;}
+#bpSign .pr-who b{display:block;font-size:16px;font-weight:700;line-height:1.25;}
+#bpSign .pr-who span{display:block;font-size:13px;color:var(--hp-grey);margin-top:2px;}
+#bpSign .pr-tag{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px 0 8px;border-radius:999px;background:var(--hp-soft);color:var(--hp-ink2);font-size:12.5px;font-weight:600;}
+#bpSign .pr-tag .ms{font-size:15px;}
+#bpSign .pr-tag.ok{background:#dcfce7;color:#166534;}
+#bpSign .pr-about{margin:0;font-size:14px;line-height:1.5;color:var(--hp-ink2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+#bpSign .pr-svcs{display:flex;flex-wrap:wrap;gap:6px;}
+#bpSign .pr-svcs span{font-size:12.5px;font-weight:600;color:var(--hp-blue2);background:var(--hp-bluesoft);padding:5px 10px;border-radius:999px;}
+#bpSign .pr-acts{display:flex;gap:8px;}
+#bpSign .pr-acts .hx-btn{flex:1;padding:0 12px;text-decoration:none;}
+#bpSign .pr-acts .hx-btn.pri{flex:1.6;height:46px;font-size:14px;}
+#bpSign .pr-sent{margin:0;}
+#bpSign .pr-form{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--hp-line2);padding-top:14px;margin:0;}
+#bpSign .pr-form-h{font-size:15px;font-weight:700;}
+#bpSign .pr-form label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--hp-ink2);}
+#bpSign .pr-form label small{font-weight:500;color:var(--hp-grey2);}
+#bpSign .pr-form input,#bpSign .pr-form textarea{width:100%;border:1px solid var(--hp-line);border-radius:12px;padding:12px;font:inherit;font-size:16px;line-height:1.4;color:var(--hp-ink);background:#fff;resize:vertical;}
+#bpSign .pr-form input:focus,#bpSign .pr-form textarea:focus{outline:none;border-color:var(--hp-blue);box-shadow:0 0 0 3px var(--hp-ring,rgba(47,107,255,.12));}
+#bpSign .pr-err{font-size:13.5px;font-weight:600;color:#b91c1c;}
+#bpSign .pr-fine{display:flex;gap:6px;align-items:center;margin:0;font-size:12.5px;color:var(--hp-grey);}
+#bpSign .pr-fine .ms{font-size:15px;}
+#bpSign .pr-empty{background:var(--hp-card);border:1px dashed var(--hp-line);border-radius:20px;padding:26px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;}
+#bpSign .pr-empty b{font-size:16px;}
+#bpSign .pr-empty p{margin:0 0 6px;font-size:14px;line-height:1.5;color:var(--hp-grey);max-width:340px;}
+#bpSign .pr-empty .hx-btn{padding:0 16px;}
+#bpSign .pr-empty-ic{width:52px;height:52px;border-radius:16px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:grid;place-items:center;}
+#bpSign .pr-empty-ic .ms{font-size:26px;}
+#bpSign .pr-skel{gap:10px;}
+#bpSign .pr-skel i{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--hp-soft),var(--hp-line2),var(--hp-soft));background-size:200% 100%;animation:prSk 1.2s linear infinite;}
+#bpSign .pr-skel i:first-child{height:44px;width:60%;border-radius:12px;}
+#bpSign .pr-skel i:last-child{width:40%;}
+@keyframes prSk{to{background-position:-200% 0;}}
+@media(prefers-reduced-motion:reduce){#bpSign .pr-skel i{animation:none;}}
+/* the standalone page */
+#bpSign .pr-page{min-height:100vh;}
+#bpSign .pr-pbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px;padding:0 16px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hp-line);}
+#bpSign .pr-brand{display:flex;align-items:center;gap:9px;color:var(--hp-ink);text-decoration:none;}
+#bpSign .pr-brand img{width:28px;height:28px;border-radius:7px;display:block;}
+#bpSign .pr-brand b{font-size:16px;font-weight:800;letter-spacing:-.01em;}
+#bpSign .pr-pbar>span{font-size:13.5px;font-weight:600;color:var(--hp-grey);}
+#bpSign .pr-main{max-width:960px;padding-bottom:40px;}
+#bpSign.pr-solo .pr-page *{box-sizing:border-box;}
 #bpSign .hp-tabbar .hp-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 /* cards */
 #bpSign .hp-card{display:block;width:100%;background:var(--hp-card);border:1px solid var(--hp-line);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);text-align:left;font:inherit;color:inherit;}
@@ -22562,7 +22780,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-row b.hp-wb{white-space:normal;overflow-wrap:anywhere;font-weight:500;line-height:1.45;}
 #bpSign .hp-row span{font-size:12.5px;color:var(--hp-grey);}
 #bpSign .hp-row>.ms{color:var(--hp-grey2);font-size:19px;}
-#bpSign .hp-ic{width:36px;height:36px;border-radius:9px;background:var(--hp-soft);color:var(--hp-ink2) !important;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+#bpSign .ms.hp-ic{width:36px;height:36px;border-radius:9px;background:var(--hp-soft);color:var(--hp-ink2) !important;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
 #bpSign .hp-tag{flex-shrink:0;font-size:11.5px !important;font-weight:600;border-radius:99px;padding:3px 9px;background:var(--hp-soft);color:var(--hp-ink2) !important;white-space:nowrap;}
 #bpSign .hp-tag.ok{background:#ecfdf5;color:#15803d !important;}
 #bpSign .hp-tag.warn{background:#fff8eb;color:#92560a !important;}
@@ -22639,7 +22857,7 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hp-sheet-row b{display:block;font-size:15px;font-weight:600;}
 #bpSign .hp-sheet-row span:not(.ms){display:block;font-size:12.5px;color:var(--hp-grey);}
 #bpSign .hp-sheet-row .ms{color:var(--hp-grey2);}
-#bpSign .hp-sheet-row .hp-ic{width:38px;height:38px;border-radius:10px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+#bpSign .hp-sheet-row .ms.hp-ic{width:38px;height:38px;border-radius:10px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
 @media(min-width:900px){#bpSign .hp-sheet,#bpSign .hp-sheet-bg{display:none;}}
 @keyframes hpUp{from{transform:translateY(100%);}to{transform:none;}}
 @keyframes hpFade{from{opacity:0;}to{opacity:1;}}
@@ -23765,7 +23983,11 @@ function bpSettings(){
         +f('set-cemail','Email',c.email,'you@company.com','email')
         +f('set-cweb','Website',c.website,'yourcompany.com','url')
         +f('set-caddr','Address',c.address,'123 Main St, City, ST')
-        +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover, e.g. Austin, 78701, 78704','text',BP_AI_NAME+' uses this to tell callers whether you cover them.'))
+        +f('set-carea','Service area',c.serviceArea,'Cities or ZIPs you cover, e.g. Austin, 78701, 78704','text',BP_AI_NAME+' uses this to tell callers whether you cover them, and Find a Pro shows you to homeowners there.')
+        +grp('Find a Pro listing')
+        +row('Show my business in Find a Pro','Homeowners searching BuilderPro\'s Find a Pro (builderpro-os.com/#pros, and every client portal) can find you and ask for a quote. Requests land in Contacts.','<label class="st-tog"><input type="checkbox" id="set-clisted"'+(c.listed===false?'':' checked')+'><span>Listed</span></label>','set-clisted')
+        +f('set-csvc','Services you offer',c.services,'Roof repair, Gutters, Skylights','text','Separate with commas. This is what homeowners search for.')
+        +f('set-cabout','About your business',c.about,'Family-owned since 2009. Free estimates.','text','One or two sentences on your listing.'))
       +sec('hours',
         grp('Opening hours')
         +'<div class="st-row"><div class="st-lab"><label>Days and times</label><div class="st-hint">Sets your booking windows, and tells '+BP_AI_NAME+' when you\'re closed.</div>'
@@ -23962,7 +24184,7 @@ window.bpSettingsSave=function(){
   if(br0&&!bpBrandHex(br0)){var mb=q('bpx-setmsg');if(mb){mb.style.color='#dc2626';mb.textContent='Brand colour should look like #1f3a5f.';}var bi=q('set-cbrand');if(bi)bi.focus();return;}
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   /* keep what this form does not edit (licenses, crews, receptionist, phone…) */
-  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),logo:BPLOGO,brandColor:bpBrandHex(br0)},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
+  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),services:g('set-csvc'),about:g('set-cabout'),listed:!(q('set-clisted')&&!q('set-clisted').checked),logo:BPLOGO,brandColor:bpBrandHex(br0)},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
   bpSettingsSet(data);
   var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ';}
   bpSettingsPush(data).then(function(ok){
@@ -25409,6 +25631,8 @@ window.bpRepCopy=function(text,btn){
 #bpx .st-lab label{display:block;font-weight:600;color:var(--ink);font-size:13.5px;letter-spacing:-.005em}
 #bpx .st-hint{font-size:12px;color:var(--grey);margin-top:3px;line-height:1.5;max-width:34ch}
 #bpx .st-ctl input:not([type=checkbox]):not([type=time]),#bpx .st-ctl textarea{width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px}
+#bpx .st-tog{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;cursor:pointer;min-height:40px}
+#bpx .st-tog input{width:18px;height:18px;margin:0;accent-color:#2457d6;flex:0 0 auto}
 #bpx .st-ctl textarea{min-height:112px;resize:vertical;font-family:inherit;line-height:1.5}
 #bpx .st-hrs .bpx-hrs-row{grid-template-columns:64px 22px 1fr;padding:7px 0}
 #bpx .st-hrs .bpx-hrs-day{color:var(--ink);font-weight:600;font-size:13px}
