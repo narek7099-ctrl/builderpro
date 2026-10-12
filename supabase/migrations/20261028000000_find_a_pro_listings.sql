@@ -73,7 +73,8 @@ begin
   elsif coalesce(co->>'yelp', '') ~ '^[A-Za-z0-9_-]{3,120}$' then v_yelp := co->>'yelp'; end if;
   select coalesce(array_agg(u), '{}') into ph from (
     select u from jsonb_array_elements_text(case when jsonb_typeof(co->'photos') = 'array' then co->'photos' else '[]'::jsonb end) with ordinality t(u, i)
-     where u like 'https://ttzwzouhiwdwamuimhpo.supabase.co/storage/v1/object/public/client-logos/%' and length(u) < 400
+     where (u like 'https://ttzwzouhiwdwamuimhpo.supabase.co/storage/v1/object/public/client-logos/%'
+            or u like 'https://builderpro-os.com/assets/demo/%') and length(u) < 400
      order by i limit 10) q;
   v_name := left(trim(coalesce(nullif(co->>'name', ''), acc_name, '')), 120);
   v_listed := st in ('active', 'trial') and v_name <> '' and coalesce((co->>'listed')::boolean, true);
