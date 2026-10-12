@@ -1,0 +1,73 @@
+apply plugin: 'com.android.application'
+
+// Release signing: android/keystore.properties on your machine, or the
+// ANDROID_KEYSTORE_* environment variables in CI. Neither is ever committed.
+def ksProps = new Properties()
+def ksFile = rootProject.file('keystore.properties')
+if (ksFile.exists()) { ksFile.withInputStream { ksProps.load(it) } }
+def ks = { String k, String env -> ksProps.getProperty(k) ?: System.getenv(env) }
+
+android {
+    namespace = "com.builderpro.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.builderpro.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // CI sets these from the run number and the app version
+        versionCode((System.getenv('BP_VERSION_CODE') ?: '1') as int)
+        versionName System.getenv('BP_VERSION_NAME') ?: "1.0.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            if (ks('storeFile', 'ANDROID_KEYSTORE_FILE')) {
+                storeFile file(ks('storeFile', 'ANDROID_KEYSTORE_FILE'))
+                storePassword ks('storePassword', 'ANDROID_KEYSTORE_PASSWORD')
+                keyAlias ks('keyAlias', 'ANDROID_KEY_ALIAS')
+                keyPassword ks('keyPassword', 'ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (ks('storeFile', 'ANDROID_KEYSTORE_FILE')) signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

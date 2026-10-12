@@ -1,0 +1,121 @@
+# BuilderPro app builds (mobile/). Runs only when started by hand:
+# GitHub > Actions > "Mobile app" > Run workflow.
+#
+#   android  -> a signed .aab for Google Play (and a test .apk), as downloadable artifacts
+#   ios      -> archived and uploaded straight to App Store Connect / TestFlight
+#
+# Secrets (GitHub > Settings > Secrets and variables > Actions). A job skips the
+# parts whose secrets are missing and still checks that the app compiles.
+#   Android:  ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
+#             ANDROID_KEY_PASSWORD, GOOGLE_SERVICES_JSON (Firebase, for push)
+#   iOS:      APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (App Store Connect API key;
+#             Xcode signs with it, no certificates to manage)
+#
+# Cost note: on a private repo, macOS minutes count 10x against the free
+# Actions allowance. One iOS build is roughly 10-15 minutes.
+
+name: Mobile app
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which app to build
+        type: choice
+        options: [both, android, ios]
+        default: both
+      version:
+        description: Version people see in the store (e.g. 1.0.0)
+        default: 1.0.0
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    if: inputs.platform != 'ios'
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    env:
+      BP_VERSION_CODE: ${{ github.run_number }}
+      BP_VERSION_NAME: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npx cap sync android
+      - name: Firebase config (push)
+        env: { GOOGLE_SERVICES_JSON: "${{ secrets.GOOGLE_SERVICES_JSON }}" }
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          else echo "No GOOGLE_SERVICES_JSON, so push is off in this build"; fi
+      - name: Signing key
+        env: { KS: "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" }
+        run: |
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+            echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/upload.keystore" >> "$GITHUB_ENV"
+          else echo "No ANDROID_KEYSTORE_BASE64, so building unsigned"; fi
+      - name: Build
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: mobile/android
+        run: ./gradlew bundleRelease assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builderpro-android-${{ inputs.version }}-${{ github.run_number }}
+          path: |
+            mobile/android/app/build/outputs/bundle/release/*.aab
+            mobile/android/app/build/outputs/apk/debug/*.apk
+
+  ios:
+    if: inputs.platform != 'android'
+    runs-on: macos-15
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - run: npm ci
+      - run: npx cap sync ios
+      - name: App Store Connect key
+        env: { P8: "${{ secrets.ASC_KEY_P8 }}" }
+        run: |
+          if [ -n "$P8" ]; then
+            printf '%s' "$P8" > "$RUNNER_TEMP/asc.p8"
+            echo "ASC_KEY_PATH=$RUNNER_TEMP/asc.p8" >> "$GITHUB_ENV"
+          fi
+      - name: Check it compiles (no signing)
+        if: env.ASC_KEY_PATH == ''
+        working-directory: mobile/ios/App
+        run: xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -20
+      - name: Archive and upload to TestFlight
+        if: env.ASC_KEY_PATH != ''
+        working-directory: mobile/ios/App
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $ASC_KEY_PATH -authenticationKeyID $KEY_ID -authenticationKeyIssuerID $ISSUER"
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="${{ inputs.version }}" CURRENT_PROJECT_VERSION="${{ github.run_number }}" $AUTH archive | tail -20
+          cat > "$RUNNER_TEMP/export.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
+            -exportPath "$RUNNER_TEMP/export" $AUTH | tail -20

@@ -118,6 +118,16 @@ section{padding:0;}
 html.bp-standalone .my-inst{display:none !important}
 .bpx-hint.bpx-ho{margin-top:6px}
 .bpx-hint.bpx-ho a{font-weight:700;cursor:pointer;color:#2457d6;text-decoration:underline}
+
+.bp-del-card{text-align:left}
+.bp-del-card h2{margin:0 0 8px}
+.bp-del-card p{margin:0 0 14px;font-size:14.5px;line-height:1.5;color:#475467}
+.bp-del-card label{display:block;font-size:13.5px;font-weight:600;color:#344054;margin-bottom:6px}
+.bp-del-card input{width:100%;box-sizing:border-box;height:46px;border:1px solid #d0d5dd;border-radius:10px;padding:0 12px;font:inherit;font-size:16px;letter-spacing:.08em}
+.bp-del-msg{min-height:18px;margin:8px 0;font-size:13.5px;font-weight:600;color:#b42318}
+.bp-inst-card .bp-del-go{background:#d92d20}
+.bp-inst-card .bp-del-no{background:#f2f4f7;color:#101828;margin-top:8px}
+#bpSign .my-del{align-self:center;border:0;background:none;font:inherit;font-size:13px;color:var(--hp-grey);text-decoration:underline;cursor:pointer;padding:8px;margin-top:6px}
 </style>
 </head>
 <body class="dl">
@@ -22009,7 +22019,8 @@ function bpMyEnter(s){
     +'<button type="button" class="hx-card hx-pros my-find" onclick="bpGo(\'#pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Find a pro</b><span>Roofers, plumbers, electricians and more near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>'
     +'<div id="myReqs"></div>'
     +(bpCanInstall()||!bpIsStandalone()?'<button type="button" class="hx-card hx-pros my-inst" onclick="bpInstall()"><span class="hx-pros-ic"><span class=ms>install_mobile</span></span><div><b>Get the app</b><span>Add BuilderPro to your home screen for one-tap access.</span></div><span class="ms hx-pros-go">chevron_right</span></button>':'')
-    +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/?portal=1">Open the BuilderPro app</a></p>');
+    +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/?portal=1">Open the BuilderPro app</a></p>')
+    +'<button type="button" class="my-del" onclick="bpDeleteAccount()">Delete my account</button>';
   save.then(function(){
     return Promise.all([
       Promise.resolve(BP_SB.from('homeowner_projects').select('token,opened_at').order('opened_at',{ascending:false}).limit(50)).catch(function(){return {data:[]};}),
@@ -22091,6 +22102,32 @@ function bpInstallHelp(){
   /* the homeowner pages hide everything outside #bpSign, so it goes inside */
   (document.getElementById('bpSign')||document.body).appendChild(d);
 }
+/* ===== Delete my account (Settings > Security, My projects). Homeowners are
+   deleted at once; business and team logins file a request (account-delete). ===== */
+window.bpDeleteAccount=function(){
+  var old=document.getElementById('bpDel'); if(old)old.remove();
+  var d=document.createElement('div'); d.id='bpDel'; d.className='bp-inst'; d.setAttribute('role','dialog'); d.setAttribute('aria-modal','true'); d.setAttribute('aria-label','Delete account');
+  d.innerHTML='<div class="bp-inst-bg" onclick="this.parentNode.remove()"></div><div class="bp-inst-card bp-del-card"><h2>Delete your account?</h2>'
+    +'<p>This permanently deletes your BuilderPro login and the data that belongs to it. It can’t be undone.</p>'
+    +'<label for="bpDelIn">Type <b>DELETE</b> to confirm</label><input id="bpDelIn" autocomplete="off" autocapitalize="characters" spellcheck="false">'
+    +'<div class="bp-del-msg" id="bpDelMsg" role="alert"></div>'
+    +'<button type="button" class="bp-del-go" onclick="bpDeleteGo()">Delete my account</button><button type="button" class="bp-del-no" onclick="document.getElementById(\'bpDel\').remove()">Keep my account</button></div>';
+  (document.getElementById('bpSign')||document.body).appendChild(d);
+  var i=document.getElementById('bpDelIn'); if(i)i.focus();
+};
+window.bpDeleteGo=function(){
+  var i=document.getElementById('bpDelIn'),m=document.getElementById('bpDelMsg'),b=document.querySelector('#bpDel .bp-del-go');
+  if(!i||String(i.value).trim().toUpperCase()!=='DELETE'){if(m)m.textContent='Type DELETE in the box first.';return;}
+  b.disabled=true;b.textContent='Deleting…';
+  Promise.resolve(BP_SB.auth.getSession()).then(function(r){
+    var t=r&&r.data&&r.data.session&&r.data.session.access_token; if(!t)throw new Error('signin');
+    return fetch(BP_URL+'/functions/v1/account-delete',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+t},body:JSON.stringify({confirm:'DELETE'})}).then(function(x){return x.json();});
+  }).then(function(d){
+    if(d&&d.done){Promise.resolve(BP_SB.auth.signOut()).catch(function(){}).then(function(){var c=document.querySelector('#bpDel .bp-inst-card');if(c)c.innerHTML='<h2>Your account is deleted</h2><p>Your login, saved projects and quote requests are gone. Your contractor’s project links still work if you need them.</p><button type="button" class="bp-del-no" onclick="location.href=\'/\'">Done</button>';});return;}
+    if(d&&d.requested){var c=document.querySelector('#bpDel .bp-inst-card');if(c)c.innerHTML='<h2>Request received</h2><p>We’ll confirm by email within 2 business days, cancel any billing, and delete your account and data within 30 days.</p><button type="button" class="bp-del-no" onclick="document.getElementById(\'bpDel\').remove()">Close</button>';return;}
+    throw new Error((d&&d.error)||'fail');
+  }).catch(function(e){b.disabled=false;b.textContent='Delete my account';if(m)m.textContent=String(e&&e.message)==='signin'?'Sign in again, then try once more.':(e&&e.message&&e.message!=='fail'?e.message:'That didn’t work. Email privacy@builderpro-os.com with the subject Delete my data.');});
+};
 try{ bpPayRoute()||bpHomeRoute()||bpProsRoute()||bpMyRoute(); }catch(e){}
 
 /* ===== Payouts — the contractor connects their OWN Stripe once, here in
@@ -24512,7 +24549,9 @@ function bpSettings(){
         +'<div><button class="bpx-btn" id="bpx-sec-btn" style="width:auto;margin-top:10px;padding:10px 18px" onclick="bpSecPw()">Change password</button></div></div></div></div>'
         +'<div class="st-row"><div class="st-row-t"><b>Signed-in devices</b><p>Lost a phone, or signed in on a shared computer? This signs every device out, including this one. Sign back in with your password.</p></div>'
         +'<div class="st-row-c"><button class="bpx-btn ghost" style="width:auto;padding:10px 18px" onclick="bpSecOut()">Sign out of all devices</button></div></div>'
-        +'<div class="st-row"><div class="st-row-t"><b>Forgot password</b><p>From the sign-in screen, enter your email and tap Forgot password. The link in the email opens a screen to set a new one.</p></div><div class="st-row-c"></div></div>')
+        +'<div class="st-row"><div class="st-row-t"><b>Forgot password</b><p>From the sign-in screen, enter your email and tap Forgot password. The link in the email opens a screen to set a new one.</p></div><div class="st-row-c"></div></div>'
+        +'<div class="st-row"><div class="st-row-t"><b>Delete account</b><p>Close your BuilderPro account and delete your data. We confirm within 2 business days, cancel billing, and finish within 30 days.</p></div>'
+        +'<div class="st-row-c"><button class="bpx-btn ghost" style="width:auto;padding:10px 18px;color:#b42318;border-color:#fecdca" onclick="bpDeleteAccount()">Delete my account</button></div></div>')
       +sec('notify','<div id="bpx-nt-host"></div>')
       +sec('appearance',
         row('Theme','Light and dark are both designed, not one dimmed. System follows your device.',themeSeg)
@@ -26525,5 +26564,6 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/notify.js?v=20261022a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261031a"></script>
+<script src="portal/native.js?v=20261031a"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261026c">
 </html>
