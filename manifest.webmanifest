@@ -1,0 +1,30 @@
+{
+  "id": "/?source=pwa",
+  "name": "BuilderPro",
+  "short_name": "BuilderPro",
+  "description": "Run your contracting business, or follow your home project, in one app: leads, jobs, schedules, photos, payments and messages.",
+  "start_url": "/?portal=1&source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#1f3a5f",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "lifestyle"],
+  "icons": [
+    { "src": "/assets/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/app/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/assets/app/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "My projects", "short_name": "Projects", "description": "Your home projects", "url": "/#my", "icons": [{ "src": "/assets/app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Find a pro", "short_name": "Find a pro", "description": "Search BuilderPro contractors near you", "url": "/#pros", "icons": [{ "src": "/assets/app/icon-192.png", "sizes": "192x192" }] }
+  ],
+  "screenshots": [
+    { "src": "/assets/site/portal-dashboard.png", "sizes": "2560x1600", "type": "image/png", "form_factor": "wide", "label": "The BuilderPro dashboard" }
+  ],
+  "prefer_related_applications": false
+}

@@ -19,7 +19,13 @@ try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery
 <meta name="description" content="BuilderPro OS is the simple software for growing contractors. Lisa answers every call, estimates turn into invoices, payment plans collect themselves, and your numbers live in one login. Live in days, from $99 a month.">
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
-<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="assets/app/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#1f3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BuilderPro">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro|my)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -94,6 +100,25 @@ section{padding:0;}
 @media(max-width:640px){.bpx-stats.six{grid-template-columns:1fr 1fr;}}
 </style>
 <script>/* BuilderPro tracker: the public site only, not the portal */if(!/[?&]portal=/.test(location.search)){var s=document.createElement("script");s.async=1;s.src="https://builderpro-os.com/embed/track.js?u=0909842f-f8b2-4651-950a-a772aef42b1d";document.head.appendChild(s);}</script>
+<style>
+/* install help (iPhone and browsers without a prompt) */
+.bp-inst{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.bp-inst-bg{position:absolute;inset:0;background:rgba(10,16,30,.5)}
+.bp-inst-card{position:relative;width:100%;max-width:420px;margin:12px;margin-bottom:calc(12px + env(safe-area-inset-bottom));background:#fff;color:#0f1729;border-radius:20px;padding:22px 20px 18px;text-align:center;box-shadow:0 24px 60px -12px rgba(10,16,30,.5);animation:bpInstUp .22s cubic-bezier(.2,0,0,1)}
+@keyframes bpInstUp{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:600px){.bp-inst{align-items:center}}
+.bp-inst-card img{border-radius:14px;display:block;margin:0 auto}
+.bp-inst-card h2{margin:10px 0 14px;font-size:19px}
+.bp-inst-card ol{list-style:none;margin:0 0 16px;padding:0;text-align:left;display:flex;flex-direction:column;gap:10px}
+.bp-inst-card li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;line-height:1.45;color:#374151}
+.bp-inst-card li>span{flex:0 0 26px;height:26px;border-radius:50%;background:#eef3ff;color:#1b56ee;font-weight:800;font-size:13px;display:grid;place-items:center}
+.bp-inst-card b{color:#0f1729}
+.bp-inst-ic{display:inline-block;padding:0 5px;border:1px solid #d0d5dd;border-radius:5px;font-size:12px;line-height:18px}
+.bp-inst-card button{width:100%;height:48px;border:0;border-radius:12px;background:#2f6bff;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+html.bp-standalone .my-inst{display:none !important}
+.bpx-hint.bpx-ho{margin-top:6px}
+.bpx-hint.bpx-ho a{font-weight:700;cursor:pointer;color:#2457d6;text-decoration:underline}
+</style>
 </head>
 <body class="dl">
 
@@ -14605,6 +14630,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <button class="bpx-btn" onclick="bpDoAuth()">Sign In</button>
         <div class="bpx-msg" id="bpxAuthMsg"></div>
         <div class="bpx-hint">Sign in with your BuilderPro account to see your live leads, messages, and jobs.</div>
+        <div class="bpx-hint bpx-ho">Homeowner? <a href="/#my" onclick="location.href='/#my';location.reload();return false">Create a free account</a> to see your projects.</div>
         </div>
         <div id="bpxSetPw" style="display:none">
         <h1 id="bpxSetPwTitle">Set your password</h1>
@@ -21982,6 +22008,7 @@ function bpMyEnter(s){
   b.innerHTML='<div class="hx-hi"><span>'+(name?'Hi '+bpEsc(name)+', welcome back':'Welcome back')+'</span><h1>My projects</h1></div><div id="myList" class="my-list"><div class="pr-card pr-skel"><i></i><i></i></div></div>'
     +'<button type="button" class="hx-card hx-pros my-find" onclick="bpGo(\'#pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Find a pro</b><span>Roofers, plumbers, electricians and more near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>'
     +'<div id="myReqs"></div>'
+    +(bpCanInstall()||!bpIsStandalone()?'<button type="button" class="hx-card hx-pros my-inst" onclick="bpInstall()"><span class="hx-pros-ic"><span class=ms>install_mobile</span></span><div><b>Get the app</b><span>Add BuilderPro to your home screen for one-tap access.</span></div><span class="ms hx-pros-go">chevron_right</span></button>':'')
     +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/?portal=1">Open the BuilderPro app</a></p>');
   save.then(function(){
     return Promise.all([
@@ -22036,6 +22063,34 @@ window.bpPrFrame=function(url,title){
 };
 window.bpPrFrameClose=function(){var el=document.getElementById('prFrame');if(el)el.remove();};
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('prFrame')){e.stopImmediatePropagation();bpPrFrameClose();}},true);
+/* ===== Installable app (manifest.webmanifest + sw.js). Registers the service
+   worker, keeps the browser's install prompt for our own "Install the app"
+   buttons, and tells iPhone users how to add it (Safari has no prompt). ===== */
+var _bpInstallEvt=null;
+function bpIsStandalone(){try{return window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true;}catch(e){return false;}}
+function bpIsIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_bpInstallEvt=e;document.documentElement.classList.add('bp-can-install');});
+window.addEventListener('appinstalled',function(){_bpInstallEvt=null;document.documentElement.classList.remove('bp-can-install');try{if(window.bpToast)bpToast('BuilderPro is installed. Open it from your home screen or apps.');}catch(e){}});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname))){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}
+if(bpIsStandalone())document.documentElement.classList.add('bp-standalone');
+/* can we offer an install here at all? */
+function bpCanInstall(){return !bpIsStandalone()&&(!!_bpInstallEvt||bpIsIOS());}
+window.bpInstall=function(){
+  if(_bpInstallEvt){var e=_bpInstallEvt;_bpInstallEvt=null;e.prompt();(e.userChoice||Promise.resolve()).then(function(){});return;}
+  bpInstallHelp();
+};
+/* Safari (iPhone/iPad), and browsers without a prompt: show the steps */
+function bpInstallHelp(){
+  var ios=bpIsIOS(), old=document.getElementById('bpInstHelp'); if(old)old.remove();
+  var d=document.createElement('div'); d.id='bpInstHelp'; d.className='bp-inst'; d.setAttribute('role','dialog'); d.setAttribute('aria-modal','true'); d.setAttribute('aria-label','Install BuilderPro');
+  var step=function(n,t){return '<li><span>'+n+'</span><div>'+t+'</div></li>';};
+  d.innerHTML='<div class="bp-inst-bg" onclick="this.parentNode.remove()"></div><div class="bp-inst-card"><img src="/assets/app/icon-192.png" alt="" width="56" height="56"><h2>Install BuilderPro</h2>'
+    +(ios?'<ol>'+step(1,'Tap the <b>Share</b> button <span class="bp-inst-ic" aria-hidden="true">&#x2191;&#xFE0E;</span> at the bottom of Safari.')+step(2,'Scroll down and tap <b>Add to Home Screen</b>.')+step(3,'Tap <b>Add</b>. BuilderPro opens from your home screen like any other app.')+'</ol>'
+      :'<ol>'+step(1,'Open your browser menu (<b>&#8942;</b> or <b>&#8943;</b>).')+step(2,'Choose <b>Install BuilderPro</b> or <b>Add to Home screen</b>.')+step(3,'Open BuilderPro from your home screen, dock or Start menu.')+'</ol>')
+    +'<button type="button" onclick="document.getElementById(\'bpInstHelp\').remove()">Got it</button></div>';
+  /* the homeowner pages hide everything outside #bpSign, so it goes inside */
+  (document.getElementById('bpSign')||document.body).appendChild(d);
+}
 try{ bpPayRoute()||bpHomeRoute()||bpProsRoute()||bpMyRoute(); }catch(e){}
 
 /* ===== Payouts — the contractor connects their OWN Stripe once, here in
@@ -26469,6 +26524,6 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/shell.js?v=20261024b"></script>
 <script src="portal/notify.js?v=20261022a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
-<script src="portal/tour.js?v=20261026d"></script>
+<script src="portal/tour.js?v=20261031a"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261026c">
 </html>

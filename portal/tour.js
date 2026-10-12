@@ -331,6 +331,8 @@
       S.menu = function (b, items, o) {
         S.menu = menu;
         items.splice(0, 0, { t: 'Take the tour', ico: 'list', fn: function () { window.bpTour(); } });
+        /* not opened as an installed app yet: offer it (index.html bpInstall) */
+        if (window.bpCanInstall && bpCanInstall()) items.splice(1, 0, { t: 'Install the app', ico: 'phone', fn: function () { window.bpInstall(); } });
         return menu.call(S, b, items, o);
       };
       try { return help.apply(this, arguments); } finally { S.menu = menu; }
