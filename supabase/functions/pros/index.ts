@@ -10,11 +10,17 @@
 //                                                 builderpro:{rating,count,reviews[]} } }
 //        one listing in full. Yelp is read live when what we have is over a
 //        day old (Yelp's caching limit) and stored on bp_directory.yelp.
+//        Also calc (their instant-estimate calculator, on plans that have
+//        one) and book (their inspection booking page, when it can book).
 //   { op:"yelp_check", url }    -> { ok, name, rating, count, city } for Settings, so a contractor
 //                                  can see the Yelp page they pasted is theirs
 //   { op:"request", id, name, phone, email?, service?, details?, loc? }
 //        -> adds the homeowner to that contractor's Contacts (tag "Find a Pro"),
-//           which rings their bell as a new lead. { ok }
+//           which rings their bell as a new lead, and, when the contractor has
+//           their own HighLevel, creates the contact there tagged new-lead +
+//           find-a-pro so Speed to Lead and their other workflows fire and the
+//           conversation lands in their inbox. A signed-in homeowner's request
+//           is also kept in homeowner_requests for "My projects". { ok }
 //
 // Reads public.bp_directory (filled from Settings by bp_dir_sync) with the
 // service key and hands back only the public fields: never the owner's user
@@ -26,6 +32,13 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const YELP_KEY = Deno.env.get("YELP_API_KEY") ?? "";
 const YELP_TTL = 23 * 3600 * 1000; // Yelp lets us keep what it returns for 24 hours
+const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const SITE = "https://builderpro-os.com";
+const GHL_BASE = "https://services.leadconnectorhq.com";
+const HOUSE_LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
+const GHL_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
+const GHL_API_KEY = Deno.env.get("GHL_API_KEY") ?? "";
+const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -163,6 +176,70 @@ function summary(p: Pro) {
   };
 }
 
+/* ------------------------------------------- calculator, booking, HighLevel */
+// trade -> which of the 12 calculators (the same ids as BP_CALC_IDS in the app)
+const CALC = ["roofing", "hvac", "plumbing", "electrical", "landscaping", "pools", "trim", "painting", "countertops", "concrete", "flooring"];
+function calcId(trade: string): string {
+  const t = trade.toLowerCase();
+  if (/air|heat|furnace/.test(t)) return "hvac";
+  for (const c of CALC) if (t.includes(c.replace(/s$/, "").replace(/ing$/, ""))) return c;
+  if (/electric/.test(t)) return "electrical";
+  if (/pool/.test(t)) return "pools";
+  if (/paint/.test(t)) return "painting";
+  return "general";
+}
+let house: { at: number; ids: string[] } = { at: 0, ids: [] };
+async function houseOwners(): Promise<string[]> {
+  if (Date.now() - house.at < 300000) return house.ids;
+  const r = await rest("ai_config?key=in.(ghl_events_owner,ghl_house_owners)&select=value").catch(() => null);
+  const rows: Pro[] = r && r.ok ? await r.json() : [];
+  house = { at: Date.now(), ids: rows.flatMap((x) => String(x.value ?? "").split(",")).map((x) => x.trim()).filter((x) => UUID.test(x)) };
+  return house.ids;
+}
+// the owner's own HighLevel location, or "" (the house location only for house owners)
+async function ownerLoc(owner: string): Promise<string> {
+  const [a, br] = await Promise.all([
+    rest(`accounts?user_id=eq.${owner}&select=ghl_location_id,plan,status&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
+    rest(`ai_brain?owner=eq.${owner}&select=ghl_location_id,booking_calendar_id,is_demo&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
+  ]);
+  const loc = String(a[0]?.ghl_location_id || br[0]?.ghl_location_id || "");
+  if (!loc) return "";
+  if (HOUSE_LOC && loc === HOUSE_LOC && !(await houseOwners()).includes(owner)) return "";
+  return loc;
+}
+async function ghlTokenFor(loc: string): Promise<string> {
+  const k = await rest(`ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []);
+  if (k[0]?.token) return String(k[0].token);
+  const env = Deno.env.get(`GHL_TOKEN_${loc}`); if (env) return env;
+  if (loc === HOUSE_LOC && GHL_TOKEN) return GHL_TOKEN;
+  if (GHL_API_KEY && GHL_COMPANY_ID) {
+    try {
+      const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
+        method: "POST", headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: loc }).toString(), signal: AbortSignal.timeout(6000),
+      });
+      if (r.ok) { const d = await r.json(); if (d?.access_token) return String(d.access_token); }
+    } catch { /* no token */ }
+  }
+  return "";
+}
+// what the listing can offer beyond a quote request
+async function extras(owner: string): Promise<{ calc: string; book: string }> {
+  const [a, br, hs] = await Promise.all([
+    rest(`accounts?user_id=eq.${owner}&select=plan,status&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
+    rest(`ai_brain?owner=eq.${owner}&select=ghl_location_id,booking_calendar_id,is_demo&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
+    houseOwners(),
+  ]);
+  const acc = a[0] ?? {}, b = br[0] ?? {};
+  const live = ["active", "trial"].includes(String(acc.status));
+  // calculators are on every plan but Foundation
+  const calc = live && acc.plan !== "foundation" ? "yes" : "";
+  // booking: their own calendar on their own HighLevel, a demo brain, or the house account
+  const ownCal = !!(b.ghl_location_id && b.booking_calendar_id && b.ghl_location_id !== HOUSE_LOC);
+  const book = live && (ownCal || b.is_demo === true || hs.includes(owner)) ? `${SITE}/book/?u=${owner}` : "";
+  return { calc, book };
+}
+
 async function search(b: Pro, req: Request) {
   if (!(await take("pros-search", clientIp(req), 120, 600))) return json({ ok: false, error: "Too many searches. Try again in a few minutes." }, 429);
   const q = clean(b.q, 80), loc = clean(b.loc, 60);
@@ -191,14 +268,21 @@ async function one(b: Pro, req: Request) {
   const r = await rest(`bp_directory?id=eq.${id}&listed=eq.true&select=${COLS}&limit=1`);
   const p: Pro | undefined = r.ok ? (await r.json())[0] : undefined;
   if (!p) return json({ ok: false, error: "This listing isn't available." }, 404);
-  const y = await yelpFresh(p);
+  const [y, own] = await Promise.all([
+    yelpFresh(p),
+    rest(`bp_directory?id=eq.${id}&select=user_id,trade&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
+  ]);
   p.yelp = y; p.yelp_at = new Date().toISOString();
+  const owner = String(own[0]?.user_id ?? "");
+  const ex = owner ? await extras(owner) : { calc: "", book: "" };
+  // the calculator page already carries the owner id in its public link (u=)
+  const calc = ex.calc ? `${SITE}/embed/${calcId(String(p.trade || ""))}.html?u=${owner}&utm_source=find-a-pro` : "";
   const photos = [...(p.photos ?? []), ...(y.photos ?? [])];
   return json({
     ok: true,
     pro: {
       ...pub(p, ""), photos,
-      zips: p.zips ?? [],
+      zips: p.zips ?? [], calc, book: ex.book,
       builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count, reviews: Array.isArray(p.bp_reviews) ? p.bp_reviews : [] } : null,
       yelp: y.count > 0 ? { rating: half(y.rating), count: y.count, url: y.url, reviews: y.reviews ?? [] } : null,
     },
@@ -240,7 +324,56 @@ async function request(b: Pro, req: Request) {
     body: JSON.stringify({ owner: pro.user_id, name, phone, email, tags: ["Find a Pro", ...(service ? [service.slice(0, 40)] : [])], notes }),
   });
   if (!ins.ok) return json({ ok: false, error: "We couldn't send that. Try again in a minute." }, 502);
+  const user = await signedIn(req);
+  const after = Promise.all([
+    user ? rest("homeowner_requests", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ user_id: user, pro_id: id, pro_name: pro.name, service, details }) }).catch(() => {}) : null,
+    toGhl(pro.user_id, { name, phone, email, service, details, loc }),
+  ]);
+  // deno-lint-ignore no-explicit-any
+  const rt = (globalThis as any).EdgeRuntime;
+  if (rt?.waitUntil) rt.waitUntil(after); else await after;
   return json({ ok: true, name: pro.name });
+}
+
+// the homeowner's user id when the request carries their sign-in, else ""
+async function signedIn(req: Request): Promise<string> {
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!jwt || jwt === SB_ANON || jwt.split(".").length !== 3) return "";
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_ANON || SB_SERVICE, Authorization: `Bearer ${jwt}` } });
+    if (!r.ok) return "";
+    const u = await r.json();
+    return UUID.test(String(u?.id ?? "")) ? String(u.id) : "";
+  } catch { return ""; }
+}
+
+// into the contractor's own HighLevel: contact + tags (workflows) + a note with the job
+async function toGhl(owner: string, l: { name: string; phone: string; email: string; service: string; details: string; loc: string }) {
+  try {
+    const loc = await ownerLoc(owner);
+    if (!loc) { console.log("pros ghl: no HighLevel for this owner, BuilderPro Contacts only"); return; }
+    const tok = await ghlTokenFor(loc);
+    if (!tok) { console.log("pros ghl: no token for", loc); return; }
+    const h = { Authorization: `Bearer ${tok}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" };
+    const digits = l.phone.replace(/\D/g, "");
+    // 555-01xx numbers are reserved for fiction: treat them as tests so customer workflows skip them
+    const test = /^1?\d{3}55501\d{2}$/.test(digits);
+    const [first, ...rest_] = l.name.split(/\s+/);
+    const r = await fetch(`${GHL_BASE}/contacts/upsert`, {
+      method: "POST", headers: h, signal: AbortSignal.timeout(8000),
+      body: JSON.stringify({
+        locationId: loc, firstName: first, lastName: rest_.join(" ") || undefined, name: l.name,
+        phone: l.phone, email: l.email || undefined, source: "BuilderPro Find a Pro",
+        tags: ["new-lead", "find-a-pro", ...(test ? ["system-test"] : [])],
+      }),
+    });
+    const d = await r.json().catch(() => ({}));
+    const cid = d?.contact?.id || d?.id || "";
+    if (!r.ok || !cid) { console.error("pros ghl", r.status, JSON.stringify(d).slice(0, 200)); return; }
+    const note = ["Quote request from BuilderPro Find a Pro.", l.service && "Service: " + l.service, l.loc && "Location: " + l.loc, l.details && "Details: " + l.details].filter(Boolean).join("\n");
+    await fetch(`${GHL_BASE}/contacts/${cid}/notes`, { method: "POST", headers: h, body: JSON.stringify({ body: note }), signal: AbortSignal.timeout(6000) }).catch(() => {});
+    console.log("pros ghl: contact", cid, "in", loc, test ? "(test)" : "");
+  } catch (e) { console.error("pros ghl", String(e).slice(0, 160)); }
 }
 
 Deno.serve(async (req) => {
