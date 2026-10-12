@@ -21489,12 +21489,13 @@ function bpPrNum(n){return (+n||0).toLocaleString('en-US');}
 function bpPrCover(p,big){
   var col=/^#[0-9a-f]{6}$/i.test(p.color||'')?p.color:'#1b56ee';
   var tr=String(p.trade||'').toLowerCase(), cat=BP_PR_CATS.filter(function(c){return tr.indexOf(c[0].toLowerCase().split(' ')[0].replace(/ing$/,''))>=0;})[0];
-  if(p.cover)return '<div class="pr-cover"><img src="'+bpHpEscA(p.cover)+'" alt="" loading="lazy" decoding="async">'+(p.photoCount>1?'<span class="pr-pc"><span class=ms>photo_library</span>'+p.photoCount+'</span>':'')+'</div>';
-  return '<div class="pr-cover pr-blank" style="--c:'+col+'">'+(p.logo?'<span class="pr-cover-logo"><img src="'+bpHpEscA(p.logo)+'" alt=""></span>':'<span class="ms">'+(cat?cat[1]:'handyman')+'</span>')+'</div>';
+  var smp=p.sample?'<span class="pr-smp">Sample listing</span>':'';
+  if(p.cover)return '<div class="pr-cover"><img src="'+bpHpEscA(p.cover)+'" alt="" loading="lazy" decoding="async">'+smp+(p.photoCount>1?'<span class="pr-pc"><span class=ms>photo_library</span>'+p.photoCount+'</span>':'')+'</div>';
+  return '<div class="pr-cover pr-blank" style="--c:'+col+'">'+smp+(p.logo?'<span class="pr-cover-logo"><img src="'+bpHpEscA(p.logo)+'" alt=""></span>':'<span class="ms">'+(cat?cat[1]:'handyman')+'</span>')+'</div>';
 }
 function bpPrRates(p,full){
   var out='';
-  if(p.builderpro)out+='<span class="pr-rate bp">'+bpPrStars(p.builderpro.rating)+'<b>'+p.builderpro.rating.toFixed(1)+'</b><span>('+bpPrNum(p.builderpro.count)+')</span><em><span class=ms>verified</span>BuilderPro</em></span>';
+  if(p.builderpro)out+='<span class="pr-rate bp">'+bpPrStars(p.builderpro.rating)+'<b>'+p.builderpro.rating.toFixed(1)+'</b><span>('+bpPrNum(p.builderpro.count)+')</span>'+(p.sample?'<em class="smp">Sample</em>':'<em><span class=ms>verified</span>BuilderPro</em>')+'</span>';
   if(p.yelp)out+='<span class="pr-rate yelp">'+bpPrStars(p.yelp.rating,'y')+'<b>'+p.yelp.rating.toFixed(1)+'</b><span>('+bpPrNum(p.yelp.count)+')</span><em class="yelp-w">Yelp</em></span>';
   if(!out&&full)out='<span class="pr-rate none">No reviews yet</span>';
   return out?'<div class="pr-rates">'+out+'</div>':'';
@@ -21564,17 +21565,19 @@ function bpPrDetHtml(D){
   var bp=full?full.builderpro:p.builderpro, yp=full?full.yelp:p.yelp;
   /* ratings */
   var rate='';
-  if(bp)rate+='<div class="pr-score"><div class="pr-score-n">'+bp.rating.toFixed(1)+'</div><div>'+bpPrStars(bp.rating,'lg')+'<span>'+bpPrNum(bp.count)+' verified BuilderPro '+(bp.count===1?'job':'jobs')+'</span></div><em class="pr-badge"><span class=ms>verified</span>Verified</em></div>';
+  if(bp)rate+=p.sample?'<div class="pr-score"><div class="pr-score-n">'+bp.rating.toFixed(1)+'</div><div>'+bpPrStars(bp.rating,'lg')+'<span>'+bpPrNum(bp.count)+' sample '+(bp.count===1?'review':'reviews')+'</span></div><em class="pr-badge smp">Sample</em></div>'
+    :'<div class="pr-score"><div class="pr-score-n">'+bp.rating.toFixed(1)+'</div><div>'+bpPrStars(bp.rating,'lg')+'<span>'+bpPrNum(bp.count)+' verified BuilderPro '+(bp.count===1?'job':'jobs')+'</span></div><em class="pr-badge"><span class=ms>verified</span>Verified</em></div>';
   if(yp)rate+='<a class="pr-score yelp" href="'+bpHpEscA(yp.url)+'" target="_blank" rel="noopener"><div class="pr-score-n">'+yp.rating.toFixed(1)+'</div><div>'+bpPrStars(yp.rating,'lg y')+'<span>'+bpPrNum(yp.count)+' reviews on <b class="yelp-w">Yelp</b></span></div><span class="ms pr-out">open_in_new</span></a>';
   if(!rate)rate='<div class="pr-score none"><span class=ms>reviews</span><div><b>New on BuilderPro</b><span>No reviews here yet. Ratings from finished jobs show up as homeowners leave them.</span></div></div>';
   /* reviews */
   var rv='';
-  ((bp&&bp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating)+'<b>'+bpEsc(r.name||'Homeowner')+'</b><span>'+bpEsc([r.job,bpPrWhen(r.at)].filter(Boolean).join(' · '))+'</span></div><p>'+bpEsc(r.text)+'</p><em class="pr-badge sm"><span class=ms>verified</span>Verified BuilderPro job</em></div>';});
+  ((bp&&bp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating)+'<b>'+bpEsc(r.name||'Homeowner')+'</b><span>'+bpEsc([r.job,bpPrWhen(r.at)].filter(Boolean).join(' · '))+'</span></div><p>'+bpEsc(r.text)+'</p>'+(r.sample||p.sample?'<em class="pr-badge sm smp">Sample review</em>':'<em class="pr-badge sm"><span class=ms>verified</span>Verified BuilderPro job</em>')+'</div>';});
   ((yp&&yp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating,'y')+'<b>'+bpEsc(r.name||'Yelp user')+'</b><span>'+bpEsc(bpPrWhen(r.at))+'</span></div><p>'+bpEsc(r.text)+(r.url?' <a href="'+bpHpEscA(r.url)+'" target="_blank" rel="noopener">Read more on Yelp</a>':'')+'</p></div>';});
   var svcs=(p.services||[]).map(function(s){return '<span>'+bpEsc(s)+'</span>';}).join('');
   var sent=_bpPr.sent[D.id];
   return head+'<div class="pr-det-scroll"><div class="pr-det-gal">'+gal+'</div><div class="pr-det-in">'
     +'<div class="pr-top pr-det-top">'+logo+'<div class="pr-who"><h2>'+bpEsc(p.name)+'</h2><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
+    +(p.sample?'<div class="hp-note pr-smp-note"><span class=ms>info</span><span><b>Sample listing.</b> This is a BuilderPro test company. Its photos and reviews are examples to show how listings look.</span></div>':'')
     +'<div class="pr-scores">'+rate+'</div>'
     +(p.about?'<section class="pr-sec"><h3>About</h3><p>'+bpEsc(p.about)+'</p></section>':'')
     +(svcs?'<section class="pr-sec"><h3>Services</h3><div class="pr-svcs">'+svcs+'</div></section>':'')
@@ -22780,6 +22783,11 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .pr-pc .ms{font-size:15px;}
 #bpSign .pr-meta{display:flex;flex-direction:column;gap:8px;}
 #bpSign .pr-svcs span.more{background:var(--hp-soft);color:var(--hp-grey);}
+#bpSign .pr-smp{position:absolute;left:10px;top:10px;z-index:1;height:26px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.94);color:#92400e;font-size:12px;font-weight:700;display:inline-flex;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+#bpSign .pr-rate em.smp,#bpSign .pr-badge.smp{color:#92400e;}
+#bpSign .pr-badge.smp{background:#fef3c7;padding:0 9px;}
+#bpSign .pr-smp-note{margin:0;background:#fffbeb;color:#78350f;}
+#bpSign .pr-smp-note .ms{color:#b45309;}
 /* stars: five glyphs filled to the rating */
 #bpSign .pr-stars{--p:0%;display:inline-block;font-size:15px;line-height:1;letter-spacing:1px;background:linear-gradient(90deg,#f5a524 var(--p),#d6dae1 var(--p));-webkit-background-clip:text;background-clip:text;color:transparent;font-family:system-ui,-apple-system,sans-serif;}
 #bpSign .pr-stars.y{background:linear-gradient(90deg,#e00707 var(--p),#d6dae1 var(--p));-webkit-background-clip:text;background-clip:text;}
