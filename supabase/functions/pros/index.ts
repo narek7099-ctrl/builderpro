@@ -6,6 +6,12 @@
 //        loc  a 5-digit ZIP or a city. ZIP: same ZIP = "area", same first three
 //             digits = "nearby". City: matched against the pro's city and the
 //             service area they typed in Settings.
+//   { op:"pro", id }            -> { ok, pro:{ ...the search fields, photos[], yelp:{rating,count,url,reviews[]},
+//                                                 builderpro:{rating,count,reviews[]} } }
+//        one listing in full. Yelp is read live when what we have is over a
+//        day old (Yelp's caching limit) and stored on bp_directory.yelp.
+//   { op:"yelp_check", url }    -> { ok, name, rating, count, city } for Settings, so a contractor
+//                                  can see the Yelp page they pasted is theirs
 //   { op:"request", id, name, phone, email?, service?, details?, loc? }
 //        -> adds the homeowner to that contractor's Contacts (tag "Find a Pro"),
 //           which rings their bell as a new lead. { ok }
@@ -18,6 +24,8 @@
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const YELP_KEY = Deno.env.get("YELP_API_KEY") ?? "";
+const YELP_TTL = 23 * 3600 * 1000; // Yelp lets us keep what it returns for 24 hours
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -103,12 +111,61 @@ function place(p: Pro, loc: string): "area" | "nearby" | "" {
   if (String(p.city || "").toLowerCase().includes(l)) return "nearby";
   return "";
 }
+const COLS = "id,name,trade,services,about,city,state,zips,area,phone,website,logo,color,yelp_id,yelp,yelp_at,photos,bp_rating,bp_count,bp_reviews";
+const pub = (p: Pro, m: string) => ({
+  id: p.id, name: p.name, trade: p.trade, services: services(p.services), about: p.about,
+  city: p.city, state: p.state, area: p.area, phone: p.phone,
+  website: p.website ? (/^https?:\/\//i.test(p.website) ? p.website : "https://" + p.website) : "",
+  logo: p.logo, color: p.color, match: m, ...summary(p),
+});
 const services = (s: string) => String(s || "").split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean).slice(0, 8);
+
+/* ---------------------------------------------------------------- Yelp */
+const yelpGet = (path: string) =>
+  fetch(`https://api.yelp.com/v3/${path}`, { headers: { Authorization: `Bearer ${YELP_KEY}`, Accept: "application/json" }, signal: AbortSignal.timeout(6000) })
+    .then(async (r) => (r.ok ? r.json() : null)).catch(() => null);
+const yelpAlias = (u: string) => {
+  const m = /yelp\.[a-z.]+\/biz\/([A-Za-z0-9_%-]+)/i.exec(u);
+  return m ? decodeURIComponent(m[1]).slice(0, 120) : /^[A-Za-z0-9_-]{3,120}$/.test(u) ? u : "";
+};
+async function yelpRead(alias: string): Promise<Pro | null> {
+  if (!YELP_KEY || !alias) return null;
+  const [b, rv] = await Promise.all([yelpGet(`businesses/${encodeURIComponent(alias)}`), yelpGet(`businesses/${encodeURIComponent(alias)}/reviews?limit=3&sort_by=yelp_sort`)]);
+  if (!b?.id) return null;
+  return {
+    name: clean(b.name, 120), rating: Number(b.rating) || 0, count: Number(b.review_count) || 0,
+    url: String(b.url || "").split("?")[0], city: clean(b.location?.city, 80),
+    photos: (Array.isArray(b.photos) ? b.photos : []).filter((u: string) => /^https:\/\/[a-z0-9.-]+\.yelpcdn\.com\//i.test(u)).slice(0, 3),
+    reviews: (Array.isArray(rv?.reviews) ? rv.reviews : []).slice(0, 3).map((x: Pro) => ({
+      rating: Number(x.rating) || 0, text: clean(x.text, 400), name: clean(x.user?.name, 40), at: clean(x.time_created, 30), url: String(x.url || "").split("?")[0],
+    })),
+  };
+}
+// refresh one listing's Yelp data when it is stale; returns what to show
+async function yelpFresh(p: Pro): Promise<Pro> {
+  if (!p.yelp_id || !YELP_KEY) return {};
+  const at = p.yelp_at ? Date.parse(p.yelp_at) : 0;
+  if (at && Date.now() - at < YELP_TTL && p.yelp && Object.keys(p.yelp).length) return p.yelp;
+  const y = await yelpRead(p.yelp_id);
+  const keep = y ?? {};
+  await rest(`bp_directory?id=eq.${p.id}`, { method: "PATCH", body: JSON.stringify({ yelp: keep, yelp_at: new Date().toISOString() }) }).catch(() => {});
+  return keep;
+}
+const half = (n: unknown) => Math.round((Number(n) || 0) * 10) / 10;
+function summary(p: Pro) {
+  const y: Pro = p.yelp && Object.keys(p.yelp).length && p.yelp_at && Date.now() - Date.parse(p.yelp_at) < 24 * 3600 * 1000 ? p.yelp : {};
+  const photos: string[] = [...(Array.isArray(p.photos) ? p.photos : []), ...(Array.isArray(y.photos) ? y.photos : [])];
+  return {
+    cover: photos[0] || "", photoCount: photos.length,
+    builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count } : null,
+    yelp: y.count > 0 ? { rating: half(y.rating), count: y.count, url: y.url } : null,
+  };
+}
 
 async function search(b: Pro, req: Request) {
   if (!(await take("pros-search", clientIp(req), 120, 600))) return json({ ok: false, error: "Too many searches. Try again in a few minutes." }, 429);
   const q = clean(b.q, 80), loc = clean(b.loc, 60);
-  const r = await rest("bp_directory?listed=eq.true&select=id,name,trade,services,about,city,state,zips,area,phone,website,logo,color&order=updated_at.desc&limit=1000");
+  const r = await rest(`bp_directory?listed=eq.true&select=${COLS}&order=updated_at.desc&limit=1000`);
   if (!r.ok) return json({ ok: false, error: "Search isn't available right now." }, 502);
   const rows: Pro[] = await r.json();
   const groups = stems(q);
@@ -116,15 +173,45 @@ async function search(b: Pro, req: Request) {
     .filter((x) => x.s > 0 && x.m)
     .sort((a, b) => (a.m === b.m ? 0 : a.m === "area" ? -1 : 1) || b.s - a.s || String(a.p.name).localeCompare(String(b.p.name)))
     .slice(0, 40);
+  // listings whose Yelp numbers are over a day old: refresh a few after answering
+  const stale = hits.map((x) => x.p).filter((p) => p.yelp_id && (!p.yelp_at || Date.now() - Date.parse(p.yelp_at) > YELP_TTL)).slice(0, 4);
+  // deno-lint-ignore no-explicit-any
+  if (stale.length && YELP_KEY) (globalThis as any).EdgeRuntime?.waitUntil?.(Promise.all(stale.map(yelpFresh)));
+  // better-reviewed pros first within the same match level and relevance
+  const stars = (p: Pro) => { const s = summary(p); return (s.builderpro?.rating ?? 0) * 2 + (s.yelp?.rating ?? 0) + (s.cover ? 0.5 : 0); };
+  hits.sort((a, b) => (a.m === b.m ? 0 : a.m === "area" ? -1 : 1) || b.s - a.s || stars(b.p) - stars(a.p));
+  return json({ ok: true, pros: hits.map(({ p, m }) => pub(p, m)) });
+}
+
+async function one(b: Pro, req: Request) {
+  if (!(await take("pros-search", clientIp(req), 120, 600))) return json({ ok: false, error: "Too many requests. Try again in a few minutes." }, 429);
+  const id = clean(b.id, 40);
+  if (!UUID.test(id)) return json({ ok: false, error: "Not found" }, 404);
+  const r = await rest(`bp_directory?id=eq.${id}&listed=eq.true&select=${COLS}&limit=1`);
+  const p: Pro | undefined = r.ok ? (await r.json())[0] : undefined;
+  if (!p) return json({ ok: false, error: "This listing isn't available." }, 404);
+  const y = await yelpFresh(p);
+  p.yelp = y; p.yelp_at = new Date().toISOString();
+  const photos = [...(p.photos ?? []), ...(y.photos ?? [])];
   return json({
     ok: true,
-    pros: hits.map(({ p, m }) => ({
-      id: p.id, name: p.name, trade: p.trade, services: services(p.services), about: p.about,
-      city: p.city, state: p.state, area: p.area, phone: p.phone,
-      website: p.website ? (/^https?:\/\//i.test(p.website) ? p.website : "https://" + p.website) : "",
-      logo: p.logo, color: p.color, match: m,
-    })),
+    pro: {
+      ...pub(p, ""), photos,
+      zips: p.zips ?? [],
+      builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count, reviews: Array.isArray(p.bp_reviews) ? p.bp_reviews : [] } : null,
+      yelp: y.count > 0 ? { rating: half(y.rating), count: y.count, url: y.url, reviews: y.reviews ?? [] } : null,
+    },
   });
+}
+
+async function yelpCheck(b: Pro, req: Request) {
+  if (!(await take("pros-yelp-check", clientIp(req), 15, 3600))) return json({ ok: false, error: "Too many checks. Try again later." }, 429);
+  if (!YELP_KEY) return json({ ok: false, error: "Yelp isn't set up yet." });
+  const alias = yelpAlias(clean(b.url, 300));
+  if (!alias) return json({ ok: false, error: "Paste the link to your page on yelp.com (it has /biz/ in it)." });
+  const y = await yelpRead(alias);
+  if (!y) return json({ ok: false, error: "We couldn't find that page on Yelp." });
+  return json({ ok: true, name: y.name, rating: half(y.rating), count: y.count, city: y.city, url: y.url });
 }
 
 async function request(b: Pro, req: Request) {
@@ -163,6 +250,8 @@ Deno.serve(async (req) => {
   try {
     if (b.op === "search") return await search(b, req);
     if (b.op === "request") return await request(b, req);
+    if (b.op === "pro") return await one(b, req);
+    if (b.op === "yelp_check") return await yelpCheck(b, req);
     return json({ ok: false, error: "Unknown op" }, 400);
   } catch (e) {
     console.error("pros", e);

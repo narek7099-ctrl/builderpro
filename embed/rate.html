@@ -47,6 +47,8 @@ html,body{margin:0;padding:0;background:#edf2f6;}
 .rt-skel{height:120px;border-radius:16px;background:linear-gradient(90deg,var(--card),#f4f7fa,var(--card));background-size:200% 100%;animation:rtSk 1.2s linear infinite;margin-bottom:8px;}
 @keyframes rtSk{to{background-position:-200% 0}}
 .rt-foot{text-align:center;font-size:12px;color:var(--mu);margin-top:14px;}
+.rt-share{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:13.5px;line-height:1.45;color:var(--txt);cursor:pointer;}
+.rt-share input{width:20px;height:20px;margin:0;flex:0 0 auto;accent-color:var(--ac,#2457d6);}
 /* "Powered by BuilderPro": small, after the contractor's content */
 .bp-pow-wrap{display:flex;justify-content:center;margin-top:18px;}
 .bp-pow{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;font-size:12px;line-height:1;color:var(--mu);text-decoration:none;white-space:nowrap;}
@@ -95,14 +97,15 @@ function render(){
     +'<div class="rt-card"><p class="rt-kicker">Job complete</p><h1 class="rt-h">How did we do'+(D.customer?', '+esc(D.customer):'')+'?</h1>'
     +'<p class="rt-sub">'+(ws.length?'Rate the job overall and each person who worked on it. It takes 30 seconds.':'Rate the job. It takes 30 seconds.')+'</p></div>'
     +'<div class="rt-card"><div class="rt-who"><div><b>The job overall</b><span>'+esc(D.job&&D.job.title||'')+'</span></div></div>'+stars('overall','Overall rating')
-    +'<textarea class="rt-c" id="c-overall" rows="2" maxlength="1000" placeholder="Anything you’d like to tell the owner? (optional)"></textarea></div>';
+    +'<textarea class="rt-c" id="c-overall" rows="2" maxlength="1000" placeholder="How was it? (optional)"></textarea>'
+    +'<label class="rt-share"><input type="checkbox" id="c-share"><span>Show this review on '+esc((D.business&&D.business.name)||'their')+'’s BuilderPro listing, with my first name only</span></label></div>';
   ws.forEach(function(w){
     h+='<div class="rt-card"><div class="rt-who"><div class="rt-av"><span>'+esc(initials(w.name))+'</span>'+(w.photo?'<img alt="" src="'+esc(w.photo)+'" onerror="this.remove()">':'')+'</div>'
       +'<div><b>'+esc(w.name)+'</b><span>'+esc(w.trade||'Crew')+'</span></div></div>'+stars(w.id,'Rating for '+w.name)
       +'<textarea class="rt-c" data-c="'+esc(w.id)+'" rows="1" maxlength="1000" placeholder="A word about '+esc(first(w.name))+' (optional)"></textarea></div>';
   });
   h+='<button class="rt-main" id="rt-go" type="button">Send rating</button><div class="rt-err" id="rt-err" role="alert"></div>'
-    +'<div class="rt-foot">Your name isn’t shown publicly. Workers see your first name only.</div>';
+    +'<div class="rt-foot">Unless you tick the box above, your comments go to the owner only. Workers see your first name only.</div>';
   root.innerHTML=h;
   root.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('.rt-stars button'); if(!b) return;
@@ -119,7 +122,7 @@ function submit(){
   var ratings=(D.workers||[]).map(function(w){ var c=root.querySelector('[data-c="'+w.id+'"]'); return {employeeId:w.id,rating:(R.w[w.id]||{}).rating||0,comment:c?c.value.trim():''}; }).filter(function(r){return r.rating>0;});
   if(!R.overall&&!ratings.length){ err.textContent='Tap the stars to rate the job.'; return; }
   go.disabled=true; go.textContent='Sending…';
-  fetch(FN,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify({t:T,overall:R.overall||null,comment:(document.getElementById('c-overall')||{}).value||'',ratings:ratings})})
+  fetch(FN,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},H),body:JSON.stringify({t:T,overall:R.overall||null,comment:(document.getElementById('c-overall')||{}).value||'',share:!!(document.getElementById('c-share')||{}).checked,ratings:ratings})})
     .then(function(r){return r.json().catch(function(){return {ok:false};});})
     .then(function(d){
       if(d&&d.ok){ thanks(d.reviewUrl||''); try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){} return; }

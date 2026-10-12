@@ -21219,6 +21219,7 @@ function bpHpRender(){
   if(_bpHp.co)bpHpCoSign(_bpHp.co,true);
 }
 window.bpHpTab=function(t){
+  if(_bpPr.det)bpPrClose();
   var changed=_bpHp.tab!==t;
   _bpHp.tab=t;_bpHp.co=null;_bpHp.req=false;_bpHp.more=false;_bpHp.anim=changed;bpHpRender();
   if(changed)try{window.scrollTo(0,0);}catch(e){}
@@ -21482,33 +21483,123 @@ function bpPrResults(){
   var head='<div class="pr-count"><b>'+r.length+' '+(r.length===1?'pro':'pros')+'</b>'+(_bpPr.q?' for “'+bpEsc(_bpPr.q)+'”':'')+where+(area&&area<r.length?' · '+area+' serve your area':'')+'</div>';
   return head+r.map(bpPrCard).join('');
 }
+function bpPrStars(r,cls){r=Math.max(0,Math.min(5,+r||0));return '<span class="pr-stars'+(cls?' '+cls:'')+'" style="--p:'+(r/5*100).toFixed(0)+'%" role="img" aria-label="'+r.toFixed(1)+' out of 5 stars">★★★★★</span>';}
+function bpPrNum(n){return (+n||0).toLocaleString('en-US');}
+/* the picture at the top of a listing: their photo, else a tile in their colour */
+function bpPrCover(p,big){
+  var col=/^#[0-9a-f]{6}$/i.test(p.color||'')?p.color:'#1b56ee';
+  var tr=String(p.trade||'').toLowerCase(), cat=BP_PR_CATS.filter(function(c){return tr.indexOf(c[0].toLowerCase().split(' ')[0].replace(/ing$/,''))>=0;})[0];
+  if(p.cover)return '<div class="pr-cover"><img src="'+bpHpEscA(p.cover)+'" alt="" loading="lazy" decoding="async">'+(p.photoCount>1?'<span class="pr-pc"><span class=ms>photo_library</span>'+p.photoCount+'</span>':'')+'</div>';
+  return '<div class="pr-cover pr-blank" style="--c:'+col+'">'+(p.logo?'<span class="pr-cover-logo"><img src="'+bpHpEscA(p.logo)+'" alt=""></span>':'<span class="ms">'+(cat?cat[1]:'handyman')+'</span>')+'</div>';
+}
+function bpPrRates(p,full){
+  var out='';
+  if(p.builderpro)out+='<span class="pr-rate bp">'+bpPrStars(p.builderpro.rating)+'<b>'+p.builderpro.rating.toFixed(1)+'</b><span>('+bpPrNum(p.builderpro.count)+')</span><em><span class=ms>verified</span>BuilderPro</em></span>';
+  if(p.yelp)out+='<span class="pr-rate yelp">'+bpPrStars(p.yelp.rating,'y')+'<b>'+p.yelp.rating.toFixed(1)+'</b><span>('+bpPrNum(p.yelp.count)+')</span><em class="yelp-w">Yelp</em></span>';
+  if(!out&&full)out='<span class="pr-rate none">No reviews yet</span>';
+  return out?'<div class="pr-rates">'+out+'</div>':'';
+}
 function bpPrCard(p){
-  var id=p.id, open=_bpPr.open===id, sent=_bpPr.sent[id];
-  var col=/^#[0-9a-f]{6}$/i.test(p.color||'')?p.color:'';
+  var id=p.id, sent=_bpPr.sent[id];
   var logo=p.logo?'<span class="pr-logo has"><img src="'+bpHpEscA(p.logo)+'" alt=""></span>'
-    :'<span class="pr-logo"'+(col?' style="background:'+col+'"':'')+' aria-hidden="true">'+bpEsc(bpPrInitials(p.name))+'</span>';
+    :'<span class="pr-logo"'+(/^#[0-9a-f]{6}$/i.test(p.color||'')?' style="background:'+p.color+'"':'')+' aria-hidden="true">'+bpEsc(bpPrInitials(p.name))+'</span>';
   var loc=[p.city,p.state].filter(Boolean).join(', ');
-  var tag=p.match==='area'?'<span class="pr-tag ok"><span class=ms>check_circle</span>Serves your area</span>':'<span class="pr-tag"><span class=ms>near_me</span>Nearby</span>';
-  var svcs=(p.services||[]).slice(0,5).map(function(s){return '<span>'+bpEsc(s)+'</span>';}).join('');
+  var tag=p.match==='area'?'<span class="pr-tag ok"><span class=ms>check_circle</span>Serves your area</span>':p.match==='nearby'?'<span class="pr-tag"><span class=ms>near_me</span>Nearby</span>':'';
+  var svcs=(p.services||[]).slice(0,3).map(function(s){return '<span>'+bpEsc(s)+'</span>';}).join('')+((p.services||[]).length>3?'<span class="more">+'+((p.services||[]).length-3)+'</span>':'');
   var tel=p.phone?'tel:'+String(p.phone).replace(/[^\d+]/g,''):'';
-  var acts=sent?'<div class="hp-note ok pr-sent"><span class=ms>check_circle</span><span><b>Request sent.</b> '+bpEsc(p.name)+' will reach out to you soon.</span></div>'
-    :'<div class="pr-acts">'+(tel?'<a class="hx-btn" href="'+bpHpEscA(tel)+'"><span class=ms>call</span>Call</a>':'')
-      +(p.website?'<a class="hx-btn" href="'+bpHpEscA(p.website)+'" target="_blank" rel="noopener nofollow"><span class=ms>language</span>Website</a>':'')
-      +'<button type="button" class="hx-btn pri" onclick="bpPrOpen(\''+id+'\')" aria-expanded="'+(open?'true':'false')+'"><span class=ms>request_quote</span>Get a quote</button></div>';
-  return '<article class="pr-card" data-pro="'+bpHpEscA(id)+'">'
-    +'<div class="pr-top">'+logo+'<div class="pr-who"><b>'+bpEsc(p.name)+'</b><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
-    +tag
-    +(p.about?'<p class="pr-about">'+bpEsc(p.about)+'</p>':'')
-    +(svcs?'<div class="pr-svcs">'+svcs+'</div>':'')
-    +acts
-    +(open&&!sent?bpPrForm(p):'')
+  return '<article class="pr-card pr-list" data-pro="'+bpHpEscA(id)+'">'
+    +'<button type="button" class="pr-hit" onclick="bpPrShow(\''+id+'\')" aria-label="View '+bpHpEscA(p.name)+'">'
+      +bpPrCover(p)
+      +'<div class="pr-body"><div class="pr-top">'+logo+'<div class="pr-who"><b>'+bpEsc(p.name)+'</b><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
+      +bpPrRates(p)
+      +(tag||svcs?'<div class="pr-meta">'+tag+(svcs?'<div class="pr-svcs">'+svcs+'</div>':'')+'</div>':'')
+      +'</div></button>'
+    +(sent?'<div class="pr-body pr-body-b"><div class="hp-note ok pr-sent"><span class=ms>check_circle</span><span><b>Request sent.</b> '+bpEsc(p.name)+' will reach out soon.</span></div></div>'
+      :'<div class="pr-body pr-body-b"><div class="pr-acts">'+(tel?'<a class="hx-btn" href="'+bpHpEscA(tel)+'"><span class=ms>call</span>Call</a>':'')
+      +'<button type="button" class="hx-btn pri" onclick="bpPrShow(\''+id+'\',true)"><span class=ms>request_quote</span>Get a quote</button></div></div>')
   +'</article>';
 }
+/* ---- one listing, full screen: photos, ratings, reviews, about, quote ---- */
+function bpPrFind(id){return (_bpPr.res||[]).filter(function(x){return x.id===id;})[0]||null;}
+window.bpPrShow=function(id,quote){
+  var base=bpPrFind(id);
+  _bpPr.det={id:id,p:base,full:null,quote:!!quote,photo:0,err:''};
+  bpPrDetDraw();
+  if(_bpPr.solo)try{history.replaceState(null,'','#pros?pro='+id);}catch(e){}
+  bpPrApi({op:'pro',id:id}).then(function(d){
+    if(!_bpPr.det||_bpPr.det.id!==id)return;
+    if(d&&d.ok){_bpPr.det.full=d.pro;_bpPr.det.p=d.pro;}else if(!_bpPr.det.p)_bpPr.det.err=(d&&d.error)||'This listing isn\'t available.';
+    bpPrDetDraw(true);
+  }).catch(function(){if(_bpPr.det&&!_bpPr.det.p){_bpPr.det.err='Couldn\'t reach the server.';bpPrDetDraw();}});
+};
+window.bpPrClose=function(){
+  _bpPr.det=null; var el=document.getElementById('prDet'); if(el)el.remove();
+  document.documentElement.classList.remove('pr-lock');
+  if(_bpPr.solo)try{history.replaceState(null,'','#pros');}catch(e){}
+};
+function bpPrDetDraw(keepScroll){
+  var D=_bpPr.det; if(!D)return;
+  var host=document.getElementById('bpSign'); if(!host)return;
+  var el=document.getElementById('prDet'), sc=0;
+  if(el){var b0=el.querySelector('.pr-det-scroll');sc=b0?b0.scrollTop:0;}
+  else{el=document.createElement('div');el.id='prDet';el.className='pr-det';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');host.appendChild(el);document.documentElement.classList.add('pr-lock');}
+  el.innerHTML=bpPrDetHtml(D);
+  var b=el.querySelector('.pr-det-scroll'); if(b&&keepScroll)b.scrollTop=sc;
+  if(D.quote&&D.p&&!_bpPr.sent[D.id]){var f=el.querySelector('.pr-form');if(f){try{f.scrollIntoView({block:'start'});}catch(e){}var i=f.querySelector('input[name=name]');if(i&&i.value)i=f.querySelector('input[name=phone]');if(i&&!keepScroll)i.focus({preventScroll:true});}}
+  else if(!keepScroll){var x=el.querySelector('.pr-x');if(x)x.focus({preventScroll:true});}
+}
+function bpPrWhen(at){var d=new Date(at);return isNaN(d)?'':d.toLocaleDateString('en-US',{month:'short',year:'numeric'});}
+function bpPrDetHtml(D){
+  var p=D.p, full=D.full;
+  var head='<div class="pr-det-bar"><button type="button" class="pr-x" onclick="bpPrClose()" aria-label="Back to results"><span class=ms>arrow_back</span></button><b>'+bpEsc(p?p.name:'')+'</b>'
+    +'<button type="button" class="pr-x" onclick="bpPrShare()" aria-label="Share this pro"><span class=ms>ios_share</span></button></div>';
+  if(!p)return head+'<div class="pr-det-scroll"><div class="pr-det-in">'+(D.err?'<div class="pr-empty"><b>'+bpEsc(D.err)+'</b></div>':'<div class="pr-card pr-skel"><i></i><i></i><i></i></div>')+'</div></div>';
+  var photos=(full&&full.photos)||(p.cover?[p.cover]:[]);
+  var gal=photos.length?'<div class="pr-gal" onscroll="bpPrGalScroll(this)">'+photos.map(function(u,i){return '<img src="'+bpHpEscA(u)+'" alt="Photo '+(i+1)+' from '+bpHpEscA(p.name)+'" loading="'+(i?'lazy':'eager')+'" decoding="async">';}).join('')+'</div>'
+      +(photos.length>1?'<div class="pr-gal-n" id="prGalN">1 / '+photos.length+'</div>':'')
+    :bpPrCover(p,true);
+  var logo=p.logo?'<span class="pr-logo has"><img src="'+bpHpEscA(p.logo)+'" alt=""></span>':'<span class="pr-logo"'+(/^#[0-9a-f]{6}$/i.test(p.color||'')?' style="background:'+p.color+'"':'')+'>'+bpEsc(bpPrInitials(p.name))+'</span>';
+  var loc=[p.city,p.state].filter(Boolean).join(', ');
+  var tel=p.phone?'tel:'+String(p.phone).replace(/[^\d+]/g,''):'';
+  var bp=full?full.builderpro:p.builderpro, yp=full?full.yelp:p.yelp;
+  /* ratings */
+  var rate='';
+  if(bp)rate+='<div class="pr-score"><div class="pr-score-n">'+bp.rating.toFixed(1)+'</div><div>'+bpPrStars(bp.rating,'lg')+'<span>'+bpPrNum(bp.count)+' verified BuilderPro '+(bp.count===1?'job':'jobs')+'</span></div><em class="pr-badge"><span class=ms>verified</span>Verified</em></div>';
+  if(yp)rate+='<a class="pr-score yelp" href="'+bpHpEscA(yp.url)+'" target="_blank" rel="noopener"><div class="pr-score-n">'+yp.rating.toFixed(1)+'</div><div>'+bpPrStars(yp.rating,'lg y')+'<span>'+bpPrNum(yp.count)+' reviews on <b class="yelp-w">Yelp</b></span></div><span class="ms pr-out">open_in_new</span></a>';
+  if(!rate)rate='<div class="pr-score none"><span class=ms>reviews</span><div><b>New on BuilderPro</b><span>No reviews here yet. Ratings from finished jobs show up as homeowners leave them.</span></div></div>';
+  /* reviews */
+  var rv='';
+  ((bp&&bp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating)+'<b>'+bpEsc(r.name||'Homeowner')+'</b><span>'+bpEsc([r.job,bpPrWhen(r.at)].filter(Boolean).join(' · '))+'</span></div><p>'+bpEsc(r.text)+'</p><em class="pr-badge sm"><span class=ms>verified</span>Verified BuilderPro job</em></div>';});
+  ((yp&&yp.reviews)||[]).forEach(function(r){rv+='<div class="pr-rv"><div class="pr-rv-h">'+bpPrStars(r.rating,'y')+'<b>'+bpEsc(r.name||'Yelp user')+'</b><span>'+bpEsc(bpPrWhen(r.at))+'</span></div><p>'+bpEsc(r.text)+(r.url?' <a href="'+bpHpEscA(r.url)+'" target="_blank" rel="noopener">Read more on Yelp</a>':'')+'</p></div>';});
+  var svcs=(p.services||[]).map(function(s){return '<span>'+bpEsc(s)+'</span>';}).join('');
+  var sent=_bpPr.sent[D.id];
+  return head+'<div class="pr-det-scroll"><div class="pr-det-gal">'+gal+'</div><div class="pr-det-in">'
+    +'<div class="pr-top pr-det-top">'+logo+'<div class="pr-who"><h2>'+bpEsc(p.name)+'</h2><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
+    +'<div class="pr-scores">'+rate+'</div>'
+    +(p.about?'<section class="pr-sec"><h3>About</h3><p>'+bpEsc(p.about)+'</p></section>':'')
+    +(svcs?'<section class="pr-sec"><h3>Services</h3><div class="pr-svcs">'+svcs+'</div></section>':'')
+    +(p.area||loc?'<section class="pr-sec"><h3>Service area</h3><p class="pr-area"><span class=ms>location_on</span>'+bpEsc(p.area||loc)+'</p></section>':'')
+    +(rv?'<section class="pr-sec"><h3>Reviews</h3>'+rv+'</section>':'')
+    +'<section class="pr-sec pr-why"><span class=ms>dashboard</span><p><b>Every BuilderPro job comes with a project page</b> like the one you see here: schedule, photos, payments and messages in one place.</p></section>'
+    +(sent?'<div class="hp-note ok pr-sent"><span class=ms>check_circle</span><span><b>Request sent.</b> '+bpEsc(p.name)+' will reach out to you soon.</span></div>':bpPrForm(p))
+    +(p.website?'<a class="pr-web" href="'+bpHpEscA(p.website)+'" target="_blank" rel="noopener nofollow"><span class=ms>language</span>Visit website</a>':'')
+  +'</div></div>'
+  +(sent?'':'<div class="pr-det-foot">'+(tel?'<a class="hx-btn" href="'+bpHpEscA(tel)+'"><span class=ms>call</span>Call</a>':'')+'<button type="button" class="hx-btn pri" onclick="bpPrToForm()"><span class=ms>request_quote</span>Get a free quote</button></div>');
+}
+window.bpPrGalScroll=function(g){var n=document.getElementById('prGalN');if(!n)return;var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));n.textContent=(i+1)+' / '+g.children.length;};
+window.bpPrToForm=function(){var f=document.querySelector('#prDet .pr-form');if(!f)return;try{f.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}var i=f.querySelector('input[name=name]');if(i&&i.value)i=f.querySelector('input[name=phone]');if(i)setTimeout(function(){i.focus({preventScroll:true});},350);};
+window.bpPrShare=function(){
+  var D=_bpPr.det;if(!D||!D.p)return;var u=location.origin+'/#pros?pro='+D.id;
+  if(navigator.share){navigator.share({title:D.p.name,text:D.p.name+' on BuilderPro',url:u}).catch(function(){});return;}
+  try{navigator.clipboard.writeText(u);}catch(e){}
+  var b=document.querySelector('#prDet .pr-det-bar .pr-x:last-child');if(b){b.innerHTML='<span class=ms>check</span>';setTimeout(function(){if(b)b.innerHTML='<span class=ms>ios_share</span>';},1500);}
+};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_bpPr.det)bpPrClose();});
 function bpPrForm(p){
   var me=(_bpHp.d&&_bpHp.d.job&&_bpHp.d.job.customer)||'', m=_bpPr.msg[p.id]||'';
   var svc=_bpPr.q||p.trade||'';
   return '<form class="pr-form" onsubmit="event.preventDefault();bpPrSend(\''+p.id+'\')" novalidate>'
-    +'<b class="pr-form-h">Ask '+bpEsc(p.name)+' for a quote</b>'
+    +'<h3 class="pr-form-h" id="prFormH">Get a free quote from '+bpEsc(p.name)+'</h3>'
     +'<label>Your name<input name="name" autocomplete="name" value="'+bpHpEscA(me)+'" required></label>'
     +'<label>Phone<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555" required></label>'
     +'<label><span>Email <small>optional</small></span><input name="email" type="email" autocomplete="email" inputmode="email"></label>'
@@ -21519,21 +21610,18 @@ function bpPrForm(p){
     +'<p class="pr-fine"><span class=ms>lock</span>Goes only to '+bpEsc(p.name)+'. They\'ll call or text you back.</p>'
   +'</form>';
 }
-window.bpPrOpen=function(id){
-  _bpPr.open=_bpPr.open===id?'':id; _bpPr.msg[id]=''; bpPrDraw();
-  if(_bpPr.open){var f=document.querySelector('#bpSign .pr-card[data-pro="'+id+'"] .pr-form');if(f){var i=f.querySelector('input[name=name]');if(i&&i.value)i=f.querySelector('input[name=phone]');try{f.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}if(i)i.focus({preventScroll:true});}}
-};
+function bpPrFormEl(){return document.querySelector('#prDet .pr-form');}
 window.bpPrSend=function(id){
-  var f=document.querySelector('#bpSign .pr-card[data-pro="'+id+'"] .pr-form'); if(!f)return;
+  var f=bpPrFormEl(); if(!f)return;
   var v=function(n){var e=f.elements[n];return e?String(e.value||'').trim():'';};
-  var err=function(t,n){_bpPr.msg[id]=t;var keep={};['name','phone','email','details'].forEach(function(k){keep[k]=v(k);});bpPrDraw();
-    var g=document.querySelector('#bpSign .pr-card[data-pro="'+id+'"] .pr-form');if(g){Object.keys(keep).forEach(function(k){if(g.elements[k])g.elements[k].value=keep[k];});if(n&&g.elements[n])g.elements[n].focus();}};
+  var err=function(t,n){_bpPr.msg[id]=t;var keep={};['name','phone','email','details'].forEach(function(k){keep[k]=v(k);});bpPrDetDraw(true);
+    var g=bpPrFormEl();if(g){Object.keys(keep).forEach(function(k){if(g.elements[k])g.elements[k].value=keep[k];});if(n&&g.elements[n])g.elements[n].focus();}};
   if(!v('name'))return err('Add your name.','name');
   if(v('phone').replace(/\D/g,'').length<10)return err('Add a phone number with area code.','phone');
   var b=f.querySelector('button[type=submit]'); if(b){b.disabled=true;b.innerHTML='<span class=ms>hourglass_top</span>Sending…';}
   bpPrApi({op:'request',id:id,name:v('name'),phone:v('phone'),email:v('email'),details:v('details'),service:v('service'),loc:_bpPr.loc})
     .then(function(d){
-      if(d&&d.ok){_bpPr.sent[id]=true;_bpPr.open='';_bpPr.msg[id]='';bpPrDraw();return;}
+      if(d&&d.ok){_bpPr.sent[id]=true;_bpPr.msg[id]='';bpPrDetDraw(true);bpPrDraw();var n=document.querySelector('#prDet .pr-sent');if(n)try{n.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}return;}
       err((d&&d.error)||'We couldn\'t send that. Try again.');
     }).catch(function(){err('Couldn\'t reach the server. Check your connection and try again.');});
 };
@@ -21542,13 +21630,15 @@ function bpProsRoute(){
   if(!/^#(pros|find-a-pro)\b/i.test(location.hash||''))return false;
   var m=/[?&]q=([^&]*)/.exec(location.hash),l=/[?&](?:zip|loc)=([^&]*)/.exec(location.hash);
   try{if(m)_bpPr.q=decodeURIComponent(m[1].replace(/\+/g,' '));if(l){_bpPr.loc=decodeURIComponent(l[1].replace(/\+/g,' '));}}catch(e){}
-  _bpPr.seeded=true;
+  _bpPr.seeded=true; _bpPr.solo=true;
+  var pro=/[?&]pro=([0-9a-f-]{36})/i.exec(location.hash);
   document.body.classList.add('bp-signing','bp-home');
   document.title='Find a pro · BuilderPro';
   var host=document.createElement('div'); host.id='bpSign'; host.className='hp pr-solo'; document.body.appendChild(host);
   host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span>Find a pro</span></header>'
     +'<main class="hp-content pr-main">'+bpPrPane()+'</main>'
     +'<footer class="hp-powm">'+bpPoweredBy()+'</footer></div>';
+  if(pro)bpPrShow(pro[1].toLowerCase());
   return true;
 }
 
@@ -22674,6 +22764,92 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .pr-pbar>span{font-size:13.5px;font-weight:600;color:var(--hp-grey);}
 #bpSign .pr-main{max-width:960px;padding-bottom:40px;}
 #bpSign.pr-solo .pr-page *{box-sizing:border-box;}
+/* listing cards */
+#bpSign .pr-list{padding:0;gap:0;overflow:hidden;}
+#bpSign .pr-hit{display:block;width:100%;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;}
+#bpSign .pr-hit:focus-visible{outline:3px solid var(--hp-blue);outline-offset:-3px;border-radius:20px;}
+#bpSign .pr-body{padding:14px 16px 0;display:flex;flex-direction:column;gap:10px;}
+#bpSign .pr-body-b{padding:12px 16px 16px;}
+#bpSign .pr-cover{position:relative;aspect-ratio:16/9;background:var(--hp-soft);overflow:hidden;}
+#bpSign .pr-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+#bpSign .pr-blank{--c:#1b56ee;background:radial-gradient(120% 120% at 100% 0%,color-mix(in srgb,var(--c) 70%,#fff) 0%,var(--c) 55%,color-mix(in srgb,var(--c) 70%,#000) 100%);display:grid;place-items:center;aspect-ratio:16/7;}
+#bpSign .pr-blank>.ms{font-size:52px;color:rgba(255,255,255,.9);}
+#bpSign .pr-cover-logo{background:#fff;border-radius:16px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:grid;place-items:center;max-width:60%;}
+#bpSign .pr-cover-logo img{max-height:56px;max-width:100%;width:auto;height:auto;object-fit:contain;}
+#bpSign .pr-pc{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border-radius:999px;background:rgba(15,23,41,.7);color:#fff;font-size:12px;font-weight:700;}
+#bpSign .pr-pc .ms{font-size:15px;}
+#bpSign .pr-meta{display:flex;flex-direction:column;gap:8px;}
+#bpSign .pr-svcs span.more{background:var(--hp-soft);color:var(--hp-grey);}
+/* stars: five glyphs filled to the rating */
+#bpSign .pr-stars{--p:0%;display:inline-block;font-size:15px;line-height:1;letter-spacing:1px;background:linear-gradient(90deg,#f5a524 var(--p),#d6dae1 var(--p));-webkit-background-clip:text;background-clip:text;color:transparent;font-family:system-ui,-apple-system,sans-serif;}
+#bpSign .pr-stars.y{background:linear-gradient(90deg,#e00707 var(--p),#d6dae1 var(--p));-webkit-background-clip:text;background-clip:text;}
+#bpSign .pr-stars.lg,#bpSign .pr-score .pr-stars{font-size:19px;color:transparent;}
+#bpSign .pr-rates{display:flex;flex-wrap:wrap;gap:6px 14px;}
+#bpSign .pr-rate{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--hp-grey);}
+#bpSign .pr-rate b{color:var(--hp-ink);font-size:13.5px;}
+#bpSign .pr-rate em{font-style:normal;display:inline-flex;align-items:center;gap:3px;font-weight:700;font-size:12px;color:var(--hp-blue2);}
+#bpSign .pr-rate em .ms{font-size:15px;}
+#bpSign .yelp-w{color:#d32323 !important;font-weight:800;letter-spacing:-.01em;}
+#bpSign .pr-rate.none{font-weight:600;}
+/* the listing, full screen */
+html.pr-lock,html.pr-lock body{overflow:hidden;}
+#bpSign .pr-det{position:fixed;inset:0;z-index:60;background:var(--hp-bg);display:flex;flex-direction:column;animation:prIn .22s cubic-bezier(.2,0,0,1);}
+@keyframes prIn{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){#bpSign .pr-det{animation:none;}}
+#bpSign .pr-det *{box-sizing:border-box;}
+#bpSign .pr-det-bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:58px;padding:0 8px;padding-top:env(safe-area-inset-top);background:var(--hp-card);border-bottom:1px solid var(--hp-line);}
+#bpSign .pr-det-bar b{flex:1;min-width:0;text-align:center;font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .pr-x{width:44px;height:44px;flex:0 0 44px;border:0;background:none;border-radius:12px;display:grid;place-items:center;color:var(--hp-ink);cursor:pointer;padding:0;}
+#bpSign .pr-x:hover{background:var(--hp-soft);}
+#bpSign .pr-x .ms{font-size:23px;}
+#bpSign .pr-det-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+#bpSign .pr-det-gal{position:relative;max-width:820px;margin:0 auto;}
+#bpSign .pr-det-gal .pr-cover{aspect-ratio:16/9;}
+#bpSign .pr-gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;aspect-ratio:4/3;max-height:420px;background:#0f1729;}
+#bpSign .pr-gal::-webkit-scrollbar{display:none;}
+#bpSign .pr-gal img{flex:0 0 100%;width:100%;min-width:100%;max-width:100%;height:100%;object-fit:cover;scroll-snap-align:start;display:block;}
+#bpSign .pr-gal-n{position:absolute;right:12px;bottom:12px;height:26px;padding:0 10px;border-radius:999px;background:rgba(15,23,41,.7);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;}
+@media(min-width:900px){#bpSign .pr-det-gal{margin-top:20px;border-radius:20px;overflow:hidden;}#bpSign .pr-gal{aspect-ratio:16/9;max-height:460px;}}
+#bpSign .pr-det-in{max-width:820px;margin:0 auto;padding:18px 16px 110px;display:flex;flex-direction:column;gap:16px;}
+#bpSign .pr-det-top{align-items:flex-start;}
+#bpSign .pr-det-top .pr-logo{width:56px;height:56px;flex-basis:56px;}
+#bpSign .pr-det-top h2{margin:0;font-size:23px;line-height:1.2;font-weight:800;letter-spacing:-.02em;}
+#bpSign .pr-det-top .pr-who span{font-size:14px;}
+#bpSign .pr-scores{display:flex;flex-direction:column;gap:10px;}
+@media(min-width:700px){#bpSign .pr-scores{flex-direction:row;}#bpSign .pr-scores>*{flex:1;}}
+#bpSign .pr-score{display:flex;align-items:center;gap:12px;background:var(--hp-card);border:1px solid var(--hp-line);border-radius:16px;padding:14px;color:inherit;text-decoration:none;}
+#bpSign .pr-score-n{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+#bpSign .pr-score>div:not(.pr-score-n){flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
+#bpSign .pr-score>div>span{font-size:13px;color:var(--hp-grey);}
+#bpSign .pr-score.none{align-items:flex-start;}
+#bpSign .pr-score.none>.ms{font-size:24px;color:var(--hp-blue2);}
+#bpSign .pr-score.none b{font-size:15px;}
+#bpSign .pr-out{color:var(--hp-grey2);font-size:19px;}
+#bpSign .pr-badge{font-style:normal;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px 0 7px;border-radius:999px;background:var(--hp-bluesoft);color:var(--hp-blue2);font-size:12px;font-weight:700;flex:0 0 auto;}
+#bpSign .pr-badge .ms{font-size:16px;}
+#bpSign .pr-badge.sm{height:22px;font-size:11.5px;align-self:flex-start;}
+#bpSign .pr-sec{background:var(--hp-card);border:1px solid var(--hp-line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+#bpSign .pr-sec h3{margin:0;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hp-grey);}
+#bpSign .pr-sec p{margin:0;font-size:14.5px;line-height:1.55;color:var(--hp-ink2);}
+#bpSign .pr-area{display:flex;gap:6px;align-items:flex-start;}
+#bpSign .pr-area .ms{font-size:19px;color:var(--hp-blue2);}
+#bpSign .pr-rv{display:flex;flex-direction:column;gap:6px;padding:4px 0;}
+#bpSign .pr-rv+.pr-rv{border-top:1px solid var(--hp-line2);padding-top:12px;}
+#bpSign .pr-rv-h{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;}
+#bpSign .pr-rv-h b{font-size:14px;}
+#bpSign .pr-rv-h>span:last-child{font-size:12.5px;color:var(--hp-grey);}
+#bpSign .pr-rv p a{color:var(--hp-blue2);font-weight:600;}
+#bpSign .pr-why{flex-direction:row;align-items:flex-start;gap:12px;background:var(--hp-bluesoft);border-color:transparent;}
+#bpSign .pr-why>.ms{font-size:22px;color:var(--hp-blue2);}
+#bpSign .pr-why p{font-size:13.5px;}
+#bpSign .pr-det .pr-form{background:var(--hp-card);border:1px solid var(--hp-line);border-radius:16px;padding:16px;scroll-margin-top:12px;}
+#bpSign .pr-form-h{margin:0;font-size:17px;font-weight:800;letter-spacing:-.01em;}
+#bpSign .pr-form label>span{display:block;}
+#bpSign .pr-web{align-self:center;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--hp-blue2);text-decoration:none;padding:6px 10px;}
+#bpSign .pr-det-foot{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--hp-line);}
+#bpSign .pr-det-foot .hx-btn{flex:1;text-decoration:none;}
+#bpSign .pr-det-foot .hx-btn.pri{flex:1.8;height:50px;}
+@media(min-width:900px){#bpSign .pr-det-foot{left:50%;transform:translateX(-50%);width:min(820px,100%);bottom:16px;border:1px solid var(--hp-line);border-radius:18px;box-shadow:0 12px 32px rgba(16,24,40,.14);}}
 #bpSign .hp-tabbar .hp-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 /* cards */
 #bpSign .hp-card{display:block;width:100%;background:var(--hp-card);border:1px solid var(--hp-line);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(16,24,40,.04);text-align:left;font:inherit;color:inherit;}
@@ -23896,6 +24072,58 @@ async function bpSettingsPush(data){
     return !r.error;
   }catch(e){return false;}
 }
+/* Find a Pro listing photos: resized in the browser, uploaded straight to the
+   public client-logos bucket under the user's own folder, kept as URLs in
+   company.photos (saved with the rest of Settings) */
+function bpListPhotosHtml(){
+  var ph=window.BPPHOTOS||[];
+  return '<div class="st-photos" id="st-photos">'+ph.map(function(u,i){return '<div class="st-ph"><img src="'+bpEsc(u)+'" alt="">'+(i===0?'<em>Cover</em>':'')
+    +'<div class="st-ph-a">'+(i>0?'<button type="button" title="Make cover" aria-label="Make this the cover photo" onclick="bpListPhotoMove('+i+')"><span class=ms>star</span></button>':'')
+    +'<button type="button" title="Remove" aria-label="Remove photo" onclick="bpListPhotoDel('+i+')"><span class=ms>close</span></button></div></div>';}).join('')
+    +(ph.length<10?'<label class="st-ph-add"><input type="file" accept="image/*" multiple onchange="bpListPhotoAdd(this)" hidden><span class=ms>add_photo_alternate</span><span>Add photos</span></label>':'')
+    +'</div><div id="st-photos-m" class="st-hint" aria-live="polite"></div>';
+}
+function bpListPhotosDraw(){var el=document.getElementById('st-photos');if(!el)return;var w=document.createElement('div');w.innerHTML=bpListPhotosHtml();el.replaceWith(w.firstChild);}
+window.bpListPhotoDel=function(i){(window.BPPHOTOS||[]).splice(i,1);bpListPhotosDraw();bpListPhotoMsg('Removed. Save to update your listing.');};
+window.bpListPhotoMove=function(i){var a=window.BPPHOTOS||[];var x=a.splice(i,1)[0];a.unshift(x);bpListPhotosDraw();bpListPhotoMsg('Cover changed. Save to update your listing.');};
+function bpListPhotoMsg(t,bad){var m=document.getElementById('st-photos-m');if(m){m.textContent=t;m.style.color=bad?'#dc2626':'';}}
+function bpImgShrink(file,max){
+  return new Promise(function(res,rej){
+    var img=new Image(),u=URL.createObjectURL(file);
+    img.onload=function(){var w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,max/Math.max(w,h));var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?res(b):rej(new Error('resize'));},'image/jpeg',.85);};
+    img.onerror=function(){URL.revokeObjectURL(u);rej(new Error('read'));};
+    img.src=u;
+  });
+}
+window.bpListPhotoAdd=async function(inp){
+  var files=[].slice.call(inp.files||[]).filter(function(f){return /^image\//.test(f.type);}); inp.value='';
+  var room=10-(window.BPPHOTOS||[]).length; if(!files.length)return; files=files.slice(0,room);
+  var u=await bpSetUser(); if(!u){bpListPhotoMsg('Sign in again to add photos.',true);return;}
+  var done=0,bad=0;
+  for(var i=0;i<files.length;i++){
+    bpListPhotoMsg('Uploading '+(i+1)+' of '+files.length+'…');
+    try{
+      var blob=await bpImgShrink(files[i],1600);
+      var path=u.id+'/listing/'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)+'.jpg';
+      var up=await bpSetSB.storage.from('client-logos').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});
+      if(up.error)throw up.error;
+      var pub=bpSetSB.storage.from('client-logos').getPublicUrl(path);
+      if(pub.data&&pub.data.publicUrl){window.BPPHOTOS.push(pub.data.publicUrl);done++;bpListPhotosDraw();}
+    }catch(e){bad++;}
+  }
+  bpListPhotoMsg(done?(done+' photo'+(done>1?'s':'')+' added'+(bad?', '+bad+' couldn’t be uploaded':'')+'. Save to update your listing.'):'Those photos couldn’t be uploaded. Try a JPG or PNG.',!done);
+};
+window.bpYelpCheck=function(){
+  var i=document.getElementById('set-cyelp'),m=document.getElementById('set-cyelp-m'); if(!i||!m)return;
+  var v=i.value.trim(); if(!v){m.textContent='Paste your Yelp page link first.';return;}
+  m.style.color='';m.textContent='Checking Yelp…';
+  fetch(BP_URL+'/functions/v1/pros',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({op:'yelp_check',url:v})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok){m.style.color='#15803d';m.textContent='Found: '+d.name+(d.city?' in '+d.city:'')+' · '+d.rating.toFixed(1)+' stars from '+d.count.toLocaleString('en-US')+' reviews. Save to show it on your listing.';}
+      else{m.style.color='#dc2626';m.textContent=(d&&d.error)||'We couldn’t check that link.';}
+    }).catch(function(){m.style.color='#dc2626';m.textContent='Couldn’t reach the server. Try again.';});
+};
 var BPDAYS=[['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday'],['sat','Saturday'],['sun','Sunday']];
 var BPLOGO='';
 function bpHrsDefault(){var h={};BPDAYS.forEach(function(d){var wk=d[0]!=='sat'&&d[0]!=='sun';h[d[0]]={open:wk,from:'08:00',to:'17:00'};});return h;}
@@ -23906,6 +24134,7 @@ function bpSettings(){
      the previous layouts; only the shell is new. */
   var s=bpSettingsGet(),c=s.company||{},o=s.owner||{},h=s.hours||bpHrsDefault();
   BPLOGO=c.logo||c.logoUrl||'';
+  window.BPPHOTOS=Array.isArray(c.photos)?c.photos.filter(function(u){return /^https:\/\//.test(u);}).slice(0,10):[];
   var row=function(label,hint,control,forId){
     return '<div class="st-row"><div class="st-lab"><label'+(forId?' for="'+forId+'"':'')+'>'+label+'</label>'+(hint?'<div class="st-hint">'+hint+'</div>':'')+'</div><div class="st-ctl">'+control+'</div></div>';
   };
@@ -23987,7 +24216,9 @@ function bpSettings(){
         +grp('Find a Pro listing')
         +row('Show my business in Find a Pro','Homeowners searching BuilderPro\'s Find a Pro (builderpro-os.com/#pros, and every client portal) can find you and ask for a quote. Requests land in Contacts.','<label class="st-tog"><input type="checkbox" id="set-clisted"'+(c.listed===false?'':' checked')+'><span>Listed</span></label>','set-clisted')
         +f('set-csvc','Services you offer',c.services,'Roof repair, Gutters, Skylights','text','Separate with commas. This is what homeowners search for.')
-        +f('set-cabout','About your business',c.about,'Family-owned since 2009. Free estimates.','text','One or two sentences on your listing.'))
+        +f('set-cabout','About your business',c.about,'Family-owned since 2009. Free estimates.','text','One or two sentences on your listing.')
+        +row('Listing photos','Your best work, up to 10. The first one is the cover homeowners see in search. Photos of finished jobs work best.',bpListPhotosHtml(),'')
+        +row('Yelp page','Paste the link to your business on yelp.com. Your Yelp rating and review count show on your listing.','<div class="st-yelp"><input id="set-cyelp" type="url" value="'+bpEsc(c.yelp||'')+'" placeholder="https://www.yelp.com/biz/your-business"><button type="button" class="bpx-rowbtn" onclick="bpYelpCheck()">Check</button></div><div id="set-cyelp-m" class="st-hint" aria-live="polite"></div>','set-cyelp'))
       +sec('hours',
         grp('Opening hours')
         +'<div class="st-row"><div class="st-lab"><label>Days and times</label><div class="st-hint">Sets your booking windows, and tells '+BP_AI_NAME+' when you\'re closed.</div>'
@@ -24184,7 +24415,7 @@ window.bpSettingsSave=function(){
   if(br0&&!bpBrandHex(br0)){var mb=q('bpx-setmsg');if(mb){mb.style.color='#dc2626';mb.textContent='Brand colour should look like #1f3a5f.';}var bi=q('set-cbrand');if(bi)bi.focus();return;}
   var hours={};BPDAYS.forEach(function(d){var ck=q('hrs-'+d[0]+'-o');var open=ck&&ck.checked;hours[d[0]]={open:!!open,from:open?g('hrs-'+d[0]+'-from')||'08:00':'08:00',to:open?g('hrs-'+d[0]+'-to')||'17:00':'17:00'};});
   /* keep what this form does not edit (licenses, crews, receptionist, phone…) */
-  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),services:g('set-csvc'),about:g('set-cabout'),listed:!(q('set-clisted')&&!q('set-clisted').checked),logo:BPLOGO,brandColor:bpBrandHex(br0)},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
+  var data=Object.assign({},bpSettingsGet(),{company:{name:g('set-cname'),trade:g('set-ctrade'),phone:g('set-cphone'),email:g('set-cemail'),website:g('set-cweb'),address:g('set-caddr'),serviceArea:g('set-carea'),license:g('set-clic'),services:g('set-csvc'),about:g('set-cabout'),listed:!(q('set-clisted')&&!q('set-clisted').checked),yelp:g('set-cyelp'),photos:(window.BPPHOTOS||[]).slice(0,10),logo:BPLOGO,brandColor:bpBrandHex(br0)},hours:hours,autoReply:g('set-autoreply'),owner:{name:g('set-oname'),email:g('set-oemail'),phone:g('set-ophone')}});
   bpSettingsSet(data);
   var m=q('bpx-setmsg');if(m){m.style.color='#15803d';m.textContent='Saved ';}
   bpSettingsPush(data).then(function(ok){
@@ -25631,6 +25862,18 @@ window.bpRepCopy=function(text,btn){
 #bpx .st-lab label{display:block;font-weight:600;color:var(--ink);font-size:13.5px;letter-spacing:-.005em}
 #bpx .st-hint{font-size:12px;color:var(--grey);margin-top:3px;line-height:1.5;max-width:34ch}
 #bpx .st-ctl input:not([type=checkbox]):not([type=time]),#bpx .st-ctl textarea{width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px}
+#bpx .st-yelp{display:flex;gap:8px;align-items:center}
+#bpx .st-yelp input{flex:1;min-width:0}
+#bpx .st-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;width:100%}
+#bpx .st-ph,#bpx .st-ph-add{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--line-2,#f2f4f7)}
+#bpx .st-ph img{width:100%;height:100%;object-fit:cover;display:block}
+#bpx .st-ph em{position:absolute;left:6px;bottom:6px;font-style:normal;font-size:11px;font-weight:700;color:#fff;background:rgba(15,23,41,.72);padding:2px 7px;border-radius:999px}
+#bpx .st-ph-a{position:absolute;top:5px;right:5px;display:flex;gap:4px}
+#bpx .st-ph-a button{width:28px;height:28px;min-height:0;padding:0;margin:0;border:0;border-radius:8px;background:rgba(15,23,41,.72);color:#fff;display:grid;place-items:center;cursor:pointer}
+#bpx .st-ph-a button .ms{font-size:16px}
+#bpx .st-ph-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1.5px dashed var(--line,#d0d5dd);background:transparent;color:var(--grey,#667085);font-size:12.5px;font-weight:600;cursor:pointer}
+#bpx .st-ph-add .ms{font-size:24px}
+#bpx .st-ph-add:hover{border-color:#2457d6;color:#2457d6}
 #bpx .st-tog{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:600;cursor:pointer;min-height:40px}
 #bpx .st-tog input{width:18px;height:18px;margin:0;accent-color:#2457d6;flex:0 0 auto}
 #bpx .st-ctl textarea{min-height:112px;resize:vertical;font-family:inherit;line-height:1.5}

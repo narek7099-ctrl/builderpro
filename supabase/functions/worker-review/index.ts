@@ -13,7 +13,9 @@
 //        the workers leaves here. Subcontractors on the job come through the
 //        same list (workers entry {subId, name}; id = the sub's id, trade =
 //        their trade, name = their company) and are saved with sub_id.
-//   POST { t, overall?:1-5, comment?, ratings:[{employeeId, rating:1-5, comment?}] }
+//   POST { t, overall?:1-5, comment?, share?, ratings:[{employeeId, rating:1-5, comment?}] }
+//        share = true puts the overall rating and comment (first name only) on
+//        the business's Find a Pro listing; otherwise the comment stays private.
 //     -> { ok:true, reviewUrl? }
 //        One submit per token: the request is claimed with a conditional
 //        update (used_at is null) before anything is written, so two
@@ -151,7 +153,8 @@ Deno.serve(async (req) => {
     // claim the request first: only one submit can win
     const claim = await rest(`review_requests?token=eq.${t}&used_at=is.null`, {
       method: "PATCH", headers: { Prefer: "return=representation" },
-      body: JSON.stringify({ used_at: new Date().toISOString(), overall: hasOverall ? overall : null, overall_comment: clean(b?.comment, 1000) || null }),
+      // share: the homeowner ticked "show this review on their BuilderPro listing"
+      body: JSON.stringify({ used_at: new Date().toISOString(), overall: hasOverall ? overall : null, overall_comment: clean(b?.comment, 1000) || null, share: b?.share === true && hasOverall }),
     });
     if (!claim.ok || !Array.isArray(claim.data) || !claim.data.length) return json({ ok: false, error: "Thanks — this job has already been rated.", used: true }, 409);
 
@@ -164,7 +167,7 @@ Deno.serve(async (req) => {
       const ins = await rest("worker_reviews", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(rows) });
       if (!ins.ok) {
         // give the link back so they can try again
-        await rest(`review_requests?token=eq.${t}`, { method: "PATCH", body: JSON.stringify({ used_at: null, overall: null, overall_comment: null }) });
+        await rest(`review_requests?token=eq.${t}`, { method: "PATCH", body: JSON.stringify({ used_at: null, overall: null, overall_comment: null, share: false }) });
         return json({ ok: false, error: "Couldn't save that. Please try again." }, 500);
       }
     }
