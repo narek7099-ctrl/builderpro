@@ -111,12 +111,13 @@ function place(p: Pro, loc: string): "area" | "nearby" | "" {
   if (String(p.city || "").toLowerCase().includes(l)) return "nearby";
   return "";
 }
-const COLS = "id,name,trade,services,about,city,state,zips,area,phone,website,logo,color,yelp_id,yelp,yelp_at,photos,bp_rating,bp_count,bp_reviews";
+const COLS = "id,name,trade,services,about,city,state,zips,area,phone,website,logo,color,yelp_id,yelp,yelp_at,photos,bp_rating,bp_count,bp_reviews,sample";
 const pub = (p: Pro, m: string) => ({
   id: p.id, name: p.name, trade: p.trade, services: services(p.services), about: p.about,
   city: p.city, state: p.state, area: p.area, phone: p.phone,
   website: p.website ? (/^https?:\/\//i.test(p.website) ? p.website : "https://" + p.website) : "",
   logo: p.logo, color: p.color, match: m, ...summary(p),
+  sample: !!p.sample, // a test company with written-by-us reviews: the page labels it
 });
 const services = (s: string) => String(s || "").split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean).slice(0, 8);
 
