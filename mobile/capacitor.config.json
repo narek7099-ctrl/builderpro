@@ -1,0 +1,41 @@
+{
+  "appId": "com.builderpro.app",
+  "appName": "BuilderPro",
+  "webDir": "www",
+  "server": {
+    "url": "https://builderpro-os.com/?portal=1&source=app",
+    "hostname": "builderpro-os.com",
+    "androidScheme": "https",
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "builderpro-os.com",
+      "*.builderpro-os.com",
+      "ttzwzouhiwdwamuimhpo.supabase.co"
+    ]
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scheme": "BuilderPro",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#ffffff",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "StatusBar": {
+      "style": "DEFAULT",
+      "overlaysWebView": false
+    }
+  }
+}
