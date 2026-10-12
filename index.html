@@ -20,7 +20,7 @@ try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery
 <link rel="icon" type="image/png" sizes="64x64" href="assets/brand/logo-mark-64.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/logo-mark-32.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
-<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
+<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro|my)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
@@ -15366,6 +15366,17 @@ function bpBillBanner(){
   host.appendChild(d);
 }
 function bpEnterPortal(email){
+  /* a homeowner account (homeowner-signup) never sees the contractor app */
+  if(/^#(my|pros|find-a-pro)\b/i.test(location.hash||''))return; /* those pages run on their own */
+  if(!bpEnterPortal._ho){ bpEnterPortal._ho=1;
+    return Promise.resolve(BP_SB.auth.getSession()).then(function(r){var s=r&&r.data&&r.data.session;
+      if(s&&s.user&&s.user.user_metadata&&s.user.user_metadata.bp_role==='homeowner'){
+        /* the site root, never /app (which opens the app again) */
+        if(location.pathname==='/'&&!location.search){location.hash='#my';location.reload();}else location.replace(location.origin+'/#my');
+        return;}
+      bpEnterPortal(email);
+    },function(){bpEnterPortal(email);});
+  }
   /* whose account is this? decided before the sidebar or any data */
   var go=function(){ bpEnterPortal2(email); if(window.bpTeamStamp)bpTeamStamp(); };
   if(window.bpTeamResolve){ bpTeamResolve().then(go,go); } else go();
@@ -21116,7 +21127,7 @@ function bpHomeRoute(){
 function bpHpLoad(){
   return bpHpApi('get').then(function(d){
     if(!d||!d.ok){bpHpErr(d&&d.error==='not_found'?'This link isn\'t active. It may have been turned off or replaced. Ask your contractor for a new one.':(d&&d.error)||'We couldn\'t load your project.');return;}
-    _bpHp.d=d; bpHpRender();
+    _bpHp.d=d; bpHpRender(); bpHpAcct();
   }).catch(function(){bpHpErr('We couldn\'t load your project just now. Check your connection and reload the page.');});
 }
 function bpHpErr(msg){
@@ -21315,7 +21326,7 @@ function bpHpPane(t){
     var pros='<button type="button" class="hx-card hx-pros" onclick="bpHpTab(\'pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Need something else done?</b><span>Find trusted BuilderPro pros near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
     return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
       +'<div class="hx-hi"><span>'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Here\'s your project')+'</span><h1>'+bpEsc(j.title||'Your project')+'</h1>'+(j.addr?'<small>'+bpEsc(j.addr)+'</small>':'')+'</div>'
-      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+'</div><div class="hx-col">'+money+tiles+latest+pros+'</div></div>';
+      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+'</div><div class="hx-col">'+money+tiles+latest+bpHpAcctCard()+pros+'</div></div>';
   }
   if(t==='sched')return bpHpSched();
   if(t==='photos'){
@@ -21408,6 +21419,7 @@ function bpHpMoreSheet(){
       +row('docs','folder_open','Documents',uns?uns+' waiting for your signature':nDocs?nDocs+' contracts &amp; files':'Contracts, permits and files',uns)
       +row('changes','edit_document','Changes',pend?pend+' waiting for your approval':'Approve changes or request one',pend)
       +row('pros','person_search','Find a pro','Roofers, plumbers, electricians and more near you',0)
+      +'<button type="button" class="hp-sheet-row" onclick="bpGo(\'#my\')"><span class="ms hp-ic">home_work</span><div><b>My projects</b><span>'+(_bpHp.me?'All your projects in one place':'Sign in or create a free account')+'</span></div><span class="ms">chevron_right</span></button>'
     +'</div>';
 }
 window.bpHpMore=function(open){
@@ -21424,7 +21436,9 @@ var PR_URL=BP_URL+'/functions/v1/pros';
 var BP_PR_CATS=[['Roofing','roofing'],['Plumbing','plumbing'],['Electrical','electrical_services'],['HVAC','mode_fan'],['Remodeling','construction'],['Painting','format_paint'],['Flooring','grid_view'],['Windows & doors','window'],['Landscaping','yard'],['Concrete','foundation']];
 var _bpPr={q:'',loc:'',res:null,busy:false,err:'',open:'',sent:{},msg:{},seeded:false,seq:0};
 function bpPrApi(body){
-  return fetch(PR_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify(body)})
+  /* a signed-in homeowner's quote request is kept in their account */
+  var tok=body.op==='request'?bpMeLoad().then(function(se){return se?se.access_token:BP_ANON;}):Promise.resolve(BP_ANON);
+  return tok.then(function(t){return fetch(PR_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+t},body:JSON.stringify(body)});})
     .then(function(r){return r.json();});
 }
 /* where the homeowner is: the ZIP on their job address, else "City, ST" */
@@ -21523,6 +21537,7 @@ function bpPrCard(p){
 /* ---- one listing, full screen: photos, ratings, reviews, about, quote ---- */
 function bpPrFind(id){return (_bpPr.res||[]).filter(function(x){return x.id===id;})[0]||null;}
 window.bpPrShow=function(id,quote){
+  if(!_bpPr.acct)bpMeLoad().then(function(se){if(se){var m=se.user.user_metadata||{};_bpPr.acct={name:m.full_name||'',phone:m.phone||'',email:se.user.email||''};}});
   var base=bpPrFind(id);
   _bpPr.det={id:id,p:base,full:null,quote:!!quote,photo:0,err:''};
   bpPrDetDraw();
@@ -21579,6 +21594,10 @@ function bpPrDetHtml(D){
     +'<div class="pr-top pr-det-top">'+logo+'<div class="pr-who"><h2>'+bpEsc(p.name)+'</h2><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
     +(p.sample?'<div class="hp-note pr-smp-note"><span class=ms>info</span><span><b>Sample listing.</b> This is a BuilderPro test company. Its photos and reviews are examples to show how listings look.</span></div>':'')
     +'<div class="pr-scores">'+rate+'</div>'
+    +(full&&(full.calc||full.book)?'<div class="pr-start">'
+      +(full.calc?'<button type="button" class="pr-start-b" onclick="bpPrFrame(\''+bpHpEscA(full.calc)+'\',\'Instant estimate\')"><span class="pr-start-ic"><span class=ms>calculate</span></span><span><b>Instant estimate</b><small>Get a price range in about a minute</small></span><span class=ms>chevron_right</span></button>':'')
+      +(full.book?'<button type="button" class="pr-start-b" onclick="bpPrFrame(\''+bpHpEscA(full.book+'&embed=1')+'\',\'Book an inspection\')"><span class="pr-start-ic"><span class=ms>event_available</span></span><span><b>Book an inspection</b><small>Pick a time that suits you</small></span><span class=ms>chevron_right</span></button>':'')
+      +'</div>':'')
     +(p.about?'<section class="pr-sec"><h3>About</h3><p>'+bpEsc(p.about)+'</p></section>':'')
     +(svcs?'<section class="pr-sec"><h3>Services</h3><div class="pr-svcs">'+svcs+'</div></section>':'')
     +(p.area||loc?'<section class="pr-sec"><h3>Service area</h3><p class="pr-area"><span class=ms>location_on</span>'+bpEsc(p.area||loc)+'</p></section>':'')
@@ -21599,13 +21618,13 @@ window.bpPrShare=function(){
 };
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_bpPr.det)bpPrClose();});
 function bpPrForm(p){
-  var me=(_bpHp.d&&_bpHp.d.job&&_bpHp.d.job.customer)||'', m=_bpPr.msg[p.id]||'';
+  var acct=_bpPr.acct||{}, me=acct.name||(_bpHp.d&&_bpHp.d.job&&_bpHp.d.job.customer)||'', m=_bpPr.msg[p.id]||'';
   var svc=_bpPr.q||p.trade||'';
   return '<form class="pr-form" onsubmit="event.preventDefault();bpPrSend(\''+p.id+'\')" novalidate>'
     +'<h3 class="pr-form-h" id="prFormH">Get a free quote from '+bpEsc(p.name)+'</h3>'
     +'<label>Your name<input name="name" autocomplete="name" value="'+bpHpEscA(me)+'" required></label>'
-    +'<label>Phone<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555" required></label>'
-    +'<label><span>Email <small>optional</small></span><input name="email" type="email" autocomplete="email" inputmode="email"></label>'
+    +'<label>Phone<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555" value="'+bpHpEscA(acct.phone||'')+'" required></label>'
+    +'<label><span>Email <small>optional</small></span><input name="email" type="email" autocomplete="email" inputmode="email" value="'+bpHpEscA(acct.email||'')+'"></label>'
     +'<label>What do you need?<textarea name="details" rows="3" maxlength="1000" placeholder="A few words about the job, e.g. '+bpHpEscA(svc?svc.toLowerCase()+' at my house':'small leak over the garage')+'"></textarea></label>'
     +'<input type="hidden" name="service" value="'+bpHpEscA(svc)+'">'
     +(m?'<div class="pr-err" role="alert">'+bpEsc(m)+'</div>':'')
@@ -21638,10 +21657,11 @@ function bpProsRoute(){
   document.body.classList.add('bp-signing','bp-home');
   document.title='Find a pro · BuilderPro';
   var host=document.createElement('div'); host.id='bpSign'; host.className='hp pr-solo'; document.body.appendChild(host);
-  host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span>Find a pro</span></header>'
+  host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span id="prBarR"><a class="my-link" href="#my" onclick="bpGo(\'#my\');return false">Sign in</a></span></header>'
     +'<main class="hp-content pr-main">'+bpPrPane()+'</main>'
     +'<footer class="hp-powm">'+bpPoweredBy()+'</footer></div>';
   if(pro)bpPrShow(pro[1].toLowerCase());
+  bpMeLoad().then(function(se){var r=document.getElementById('prBarR');if(se&&r)r.innerHTML='<a class="my-link" href="#my" onclick="bpGo(\'#my\');return false"><span class=ms>home_work</span>My projects</a>';});
   return true;
 }
 
@@ -21875,7 +21895,148 @@ window.bpHpPay=function(){
     b.disabled=false;if(e)e.textContent=(d&&d.error)||'The payment page couldn\'t be opened.';
   }).catch(function(){b.disabled=false;if(e)e.textContent='Couldn\'t reach the server. Try again.';});
 };
-try{ bpPayRoute()||bpHomeRoute()||bpProsRoute(); }catch(e){}
+/* ===== Homeowner accounts (#my). A homeowner signs up free (homeowner-signup,
+   user_metadata.bp_role = homeowner). Every project link they open while
+   signed in is saved (bp_home_save), so My projects lists them all, from
+   every contractor. A homeowner who signs in through the main login is sent
+   here too; they never see the contractor app. ===== */
+var HO_SIGNUP_URL=BP_URL+'/functions/v1/homeowner-signup';
+var _bpMe=null;
+function bpMeLoad(){
+  if(_bpMe)return _bpMe;
+  _bpMe=Promise.resolve(BP_SB&&BP_SB.auth?BP_SB.auth.getSession():null).then(function(r){return (r&&r.data&&r.data.session)||null;}).catch(function(){return null;});
+  return _bpMe;
+}
+function bpMeName(s){var m=(s&&s.user&&s.user.user_metadata)||{};return String(m.full_name||'').trim();}
+function bpIsHomeowner(s){return !!(s&&s.user&&s.user.user_metadata&&s.user.user_metadata.bp_role==='homeowner');}
+function bpGo(hash){location.href=location.pathname+hash;location.reload();}
+var _bpMy={mode:'up',err:'',busy:false,add:'',list:null,reqs:null};
+function bpMyRoute(){
+  if(!/^#my\b/i.test(location.hash||''))return false;
+  var a=/[?&]add=([a-f0-9]{40,64})/i.exec(location.hash); _bpMy.add=a?a[1].toLowerCase():'';
+  if(_bpMy.add)_bpMy.mode='up';
+  document.body.classList.add('bp-signing','bp-home');
+  document.title='My projects · BuilderPro';
+  var host=document.createElement('div'); host.id='bpSign'; host.className='hp pr-solo'; document.body.appendChild(host);
+  host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span id="myBarR"></span></header>'
+    +'<main class="hp-content pr-main my-main" id="myBody"><div class="pr-card pr-skel"><i></i><i></i><i></i></div></main>'
+    +'<footer class="hp-powm">'+bpPoweredBy()+'</footer></div>';
+  bpMeLoad().then(function(s){ if(s)bpMyEnter(s); else bpMyAuthDraw(); });
+  return true;
+}
+function bpMyAuthDraw(){
+  var b=document.getElementById('myBody'); if(!b)return;
+  var up=_bpMy.mode==='up';
+  var r=document.getElementById('myBarR'); if(r)r.innerHTML='<a class="my-link" href="#pros" onclick="bpGo(\'#pros\');return false">Find a pro</a>';
+  b.innerHTML='<section class="my-auth">'
+    +'<div class="my-auth-h"><span class="my-auth-ic"><span class=ms>home_work</span></span><h1>'+(_bpMy.add?'Save this project':'Your home projects, in one place')+'</h1>'
+    +'<p>'+(_bpMy.add?'Create a free account and this project is saved. Every project link you open after that is added for you.':'A free BuilderPro account keeps every project from every contractor together: schedules, photos, payments and messages.')+'</p></div>'
+    +'<div class="my-tabs" role="tablist"><button type="button" role="tab" aria-selected="'+up+'" class="'+(up?'on':'')+'" onclick="bpMyMode(\'up\')">Create account</button><button type="button" role="tab" aria-selected="'+!up+'" class="'+(up?'':'on')+'" onclick="bpMyMode(\'in\')">Sign in</button></div>'
+    +'<form class="pr-form my-form" onsubmit="event.preventDefault();bpMySubmit()" novalidate>'
+      +(up?'<label>Your name<input name="name" autocomplete="name" required></label>':'')
+      +'<label>Email<input name="email" type="email" autocomplete="email" inputmode="email" required></label>'
+      +(up?'<label><span>Phone <small>optional</small></span><input name="phone" type="tel" autocomplete="tel" inputmode="tel"></label>':'')
+      +'<label>Password<input name="password" type="password" autocomplete="'+(up?'new-password':'current-password')+'" minlength="8" required>'+(up?'<small class="my-hint">At least 8 characters.</small>':'')+'</label>'
+      +(up?'<input name="website" tabindex="-1" autocomplete="off" class="my-hp" aria-hidden="true">':'')
+      +(_bpMy.err?'<div class="pr-err" role="alert">'+bpEsc(_bpMy.err)+'</div>':'')
+      +'<button type="submit" class="hx-btn pri"'+(_bpMy.busy?' disabled':'')+'>'+(_bpMy.busy?'<span class=ms>hourglass_top</span>One moment…':up?'Create free account':'Sign in')+'</button>'
+      +(up?'<p class="pr-fine"><span class=ms>lock</span>Free for homeowners. Your contractor still controls what your project page shows.</p>'
+        :'<button type="button" class="my-forgot" onclick="bpMyForgot()">Forgot password?</button>')
+    +'</form></section>';
+}
+window.bpMyMode=function(m){_bpMy.mode=m;_bpMy.err='';bpMyAuthDraw();};
+window.bpMyForgot=function(){
+  var f=document.querySelector('#myBody form'); var e=f&&f.elements.email?f.elements.email.value.trim():'';
+  if(!e){_bpMy.err='Type your email above first.';bpMyAuthDraw();return;}
+  BP_SB.auth.resetPasswordForEmail(e,{redirectTo:location.origin+location.pathname}).then(function(){_bpMy.err='';var b=document.querySelector('#myBody .my-forgot');if(b)b.textContent='Check your email for a link to set a new password.';});
+};
+window.bpMySubmit=function(){
+  var f=document.querySelector('#myBody form'); if(!f||_bpMy.busy)return;
+  var v=function(n){return f.elements[n]?String(f.elements[n].value||'').trim():'';};
+  var keep={name:v('name'),email:v('email'),phone:v('phone')};
+  var fail=function(t){_bpMy.busy=false;_bpMy.err=t;bpMyAuthDraw();var g=document.querySelector('#myBody form');if(g)Object.keys(keep).forEach(function(k){if(g.elements[k])g.elements[k].value=keep[k];});};
+  var up=_bpMy.mode==='up', email=v('email'), pw=f.elements.password.value;
+  if(up&&!keep.name)return fail('Add your name.');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return fail('That email doesn’t look right.');
+  if(pw.length<8)return fail(up?'Use at least 8 characters for your password.':'Check your password.');
+  _bpMy.busy=true;_bpMy.err='';bpMyAuthDraw();
+  var signIn=function(){return BP_SB.auth.signInWithPassword({email:email,password:pw}).then(function(r){
+    if(r.error)return fail(/invalid/i.test(r.error.message||'')?'That email and password don’t match.':(r.error.message||'Couldn’t sign in.'));
+    _bpMe=Promise.resolve(r.data.session);_bpMy.busy=false;bpMyEnter(r.data.session);
+  });};
+  if(!up){signIn().catch(function(){fail('Couldn’t reach the server. Try again.');});return;}
+  fetch(HO_SIGNUP_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({name:keep.name,email:email,phone:keep.phone,password:pw,website:v('website')})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.ok)return signIn();
+      if(d&&d.exists){_bpMy.mode='in';}
+      fail((d&&d.error)||'We couldn’t create your account.');
+    }).catch(function(){fail('Couldn’t reach the server. Try again.');});
+};
+function bpMyEnter(s){
+  var b=document.getElementById('myBody'); if(!b)return;
+  var save=_bpMy.add?Promise.resolve(BP_SB.rpc('bp_home_save',{p_token:_bpMy.add})).catch(function(){}):Promise.resolve();
+  if(_bpMy.add){try{history.replaceState(null,'','#my');}catch(e){}}
+  var r=document.getElementById('myBarR');
+  if(r)r.innerHTML='<button type="button" class="my-link" onclick="bpMySignOut()">Sign out</button>';
+  var name=bpMeName(s).split(/\s+/)[0];
+  b.innerHTML='<div class="hx-hi"><span>'+(name?'Hi '+bpEsc(name)+', welcome back':'Welcome back')+'</span><h1>My projects</h1></div><div id="myList" class="my-list"><div class="pr-card pr-skel"><i></i><i></i></div></div>'
+    +'<button type="button" class="hx-card hx-pros my-find" onclick="bpGo(\'#pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Find a pro</b><span>Roofers, plumbers, electricians and more near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>'
+    +'<div id="myReqs"></div>'
+    +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/?portal=1">Open the BuilderPro app</a></p>');
+  save.then(function(){
+    return Promise.all([
+      Promise.resolve(BP_SB.from('homeowner_projects').select('token,opened_at').order('opened_at',{ascending:false}).limit(50)).catch(function(){return {data:[]};}),
+      Promise.resolve(BP_SB.from('homeowner_requests').select('pro_name,service,created_at,pro_id').order('created_at',{ascending:false}).limit(20)).catch(function(){return {data:[]};})
+    ]);
+  }).then(function(res){
+    var rows=(res[0]&&res[0].data)||[], reqs=(res[1]&&res[1].data)||[];
+    bpMyReqs(reqs);
+    var L=document.getElementById('myList'); if(!L)return;
+    if(!rows.length){L.innerHTML='<div class="pr-empty"><span class="pr-empty-ic"><span class=ms>add_home_work</span></span><b>No projects yet</b><p>When your contractor sends you a project link, open it while you’re signed in and it’s saved here automatically.</p></div>';return;}
+    L.innerHTML=rows.map(function(x){return '<button type="button" class="my-proj" data-t="'+bpHpEscA(x.token)+'" onclick="bpGo(\'#home='+bpHpEscA(x.token)+'\')"><span class="pr-logo">…</span><div class="my-proj-t"><b>Loading…</b><span></span></div><span class="ms">chevron_right</span></button>';}).join('');
+    rows.forEach(function(x){
+      fetch(CP_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({op:'get',token:x.token})})
+        .then(function(r){return r.json();}).then(function(d){
+          var el=document.querySelector('#myList .my-proj[data-t="'+x.token+'"]'); if(!el)return;
+          if(!d||!d.ok){el.classList.add('off');el.querySelector('.my-proj-t').innerHTML='<b>This link was turned off</b><span>Ask your contractor for a new one.</span>';el.querySelector('.pr-logo').textContent='!';return;}
+          var b=d.business||{},j=d.job||{},pct=Math.max(0,Math.min(100,Math.round(+j.progress||0)));
+          var logo=b.logo?'<span class="pr-logo has"><img src="'+bpHpEscA(b.logo)+'" alt=""></span>':'<span class="pr-logo"'+(/^#[0-9a-f]{6}$/i.test(b.color||'')?' style="background:'+b.color+'"':'')+'>'+bpEsc(bpHpInitials(b.name||'?'))+'</span>';
+          var st=j.status==='done'?'Complete':j.next_visit?'Next visit '+bpHpDay(j.next_visit):'In progress';
+          el.innerHTML=logo+'<div class="my-proj-t"><b>'+bpEsc(j.title||'Your project')+'</b><span>'+bpEsc(b.name||'')+' · '+bpEsc(st)+'</span><i class="my-bar"><i style="width:'+pct+'%"></i></i></div><span class="my-pct">'+pct+'%</span>';
+        }).catch(function(){});
+    });
+  });
+}
+function bpMyReqs(reqs){
+  var el=document.getElementById('myReqs'); if(!el||!reqs.length)return;
+  el.innerHTML='<section class="hx-card my-reqs"><div class="hx-h"><small>Quote requests</small></div>'+reqs.map(function(r){
+    return '<div class="hx-feed"><span class="hx-dot pay"><span class=ms>request_quote</span></span><div><b>'+bpEsc(r.pro_name||'Contractor')+'</b><span>'+bpEsc([r.service,bpHpDay(String(r.created_at).slice(0,10),{month:'short',day:'numeric'})].filter(Boolean).join(' · '))+'</span></div></div>';}).join('')+'</section>';
+}
+window.bpMySignOut=function(){Promise.resolve(BP_SB.auth.signOut()).catch(function(){}).then(function(){_bpMe=null;bpGo('#my');});};
+/* the project page: save it for a signed-in homeowner, offer an account otherwise */
+function bpHpAcct(){
+  bpMeLoad().then(function(s){
+    _bpHp.me=s?{name:bpMeName(s)}:false;
+    if(s)Promise.resolve(BP_SB.rpc('bp_home_save',{p_token:_bpHp.token})).catch(function(){});
+    if(_bpHp.d&&_bpHp.tab==='overview')bpHpRender();
+  });
+}
+function bpHpAcctCard(){
+  if(_bpHp.me===undefined)return '';
+  if(_bpHp.me)return '<button type="button" class="hx-card hx-pros my-saved" onclick="bpGo(\'#my\')"><span class="hx-pros-ic ok"><span class=ms>bookmark_added</span></span><div><b>Saved to My projects</b><span>See all your projects in one place.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
+  return '<button type="button" class="hx-card hx-pros" onclick="bpGo(\'#my?add='+_bpHp.token+'\')"><span class="hx-pros-ic"><span class=ms>bookmark_add</span></span><div><b>Save this project</b><span>Free account: every project from every contractor, in one place.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
+}
+/* an embedded page (calculator, booking) over the listing */
+window.bpPrFrame=function(url,title){
+  var host=document.getElementById('bpSign'); if(!host)return;
+  var el=document.createElement('div'); el.id='prFrame'; el.className='pr-det pr-frame'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true');
+  el.innerHTML='<div class="pr-det-bar"><button type="button" class="pr-x" onclick="bpPrFrameClose()" aria-label="Back to the listing"><span class=ms>arrow_back</span></button><b>'+bpEsc(title)+'</b><a class="pr-x" href="'+bpHpEscA(url)+'" target="_blank" rel="noopener" aria-label="Open in a new tab"><span class=ms>open_in_new</span></a></div>'
+    +'<iframe src="'+bpHpEscA(url)+'" title="'+bpHpEscA(title)+'" loading="eager" allow="geolocation; camera"></iframe>';
+  host.appendChild(el);
+};
+window.bpPrFrameClose=function(){var el=document.getElementById('prFrame');if(el)el.remove();};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('prFrame')){e.stopImmediatePropagation();bpPrFrameClose();}},true);
+try{ bpPayRoute()||bpHomeRoute()||bpProsRoute()||bpMyRoute(); }catch(e){}
 
 /* ===== Payouts — the contractor connects their OWN Stripe once, here in
    BuilderPro (stripe-connect, Stripe Connect Standard). Every invoice and
@@ -22788,6 +22949,51 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .pr-badge.smp{background:#fef3c7;padding:0 9px;}
 #bpSign .pr-smp-note{margin:0;background:#fffbeb;color:#78350f;}
 #bpSign .pr-smp-note .ms{color:#b45309;}
+/* listing: calculator and booking */
+#bpSign .pr-start{display:flex;flex-direction:column;gap:8px;}
+@media(min-width:700px){#bpSign .pr-start{flex-direction:row;}#bpSign .pr-start>*{flex:1;}}
+#bpSign .pr-start-b{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:16px;border:1px solid var(--hp-line);background:var(--hp-card);font:inherit;color:inherit;text-align:left;cursor:pointer;}
+#bpSign .pr-start-b:hover{border-color:var(--hp-blue);}
+#bpSign .pr-start-b>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+#bpSign .pr-start-b b{font-size:15px;font-weight:700;}
+#bpSign .pr-start-b small{font-size:13px;color:var(--hp-grey);}
+#bpSign .pr-start-b>.ms{color:var(--hp-grey2);font-size:22px;}
+#bpSign .pr-start-ic{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:grid;place-items:center;}
+#bpSign .pr-start-ic .ms{font-size:24px;}
+#bpSign .pr-frame{z-index:70;}
+#bpSign .pr-frame iframe{flex:1;width:100%;border:0;background:#fff;}
+#bpSign a.pr-x{color:var(--hp-ink);text-decoration:none;}
+/* homeowner accounts (#my) */
+#bpSign .my-link{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--hp-line);background:var(--hp-card);font:inherit;font-size:13.5px;font-weight:600;color:var(--hp-ink);text-decoration:none;cursor:pointer;}
+#bpSign .my-link .ms{font-size:18px;color:var(--hp-blue2);}
+#bpSign .my-main{max-width:640px;display:flex;flex-direction:column;gap:14px;}
+#bpSign .my-auth{background:var(--hp-card);border:1px solid var(--hp-line);border-radius:20px;padding:20px 18px;display:flex;flex-direction:column;gap:16px;}
+#bpSign .my-auth-h{display:flex;flex-direction:column;gap:6px;}
+#bpSign .my-auth-h h1{margin:6px 0 0;font-size:24px;line-height:1.2;font-weight:800;letter-spacing:-.02em;}
+#bpSign .my-auth-h p{margin:0;font-size:14.5px;line-height:1.5;color:var(--hp-grey);}
+#bpSign .my-auth-ic{width:48px;height:48px;border-radius:14px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:grid;place-items:center;}
+#bpSign .my-auth-ic .ms{font-size:26px;}
+#bpSign .my-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:var(--hp-soft);}
+#bpSign .my-tabs button{height:40px;border:0;border-radius:9px;background:transparent;font:inherit;font-size:14px;font-weight:600;color:var(--hp-grey);cursor:pointer;}
+#bpSign .my-tabs button.on{background:#fff;color:var(--hp-ink);box-shadow:0 1px 3px rgba(16,24,40,.1);}
+#bpSign .my-form{border:0;padding:0;}
+#bpSign .my-hint{font-weight:500;color:var(--hp-grey2);}
+#bpSign .my-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;}
+#bpSign .my-forgot{align-self:center;border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--hp-blue2);cursor:pointer;padding:6px;}
+#bpSign .my-list{display:flex;flex-direction:column;gap:10px;}
+#bpSign .my-proj{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border-radius:16px;border:1px solid var(--hp-line);background:var(--hp-card);font:inherit;color:inherit;text-align:left;cursor:pointer;}
+#bpSign .my-proj:hover{border-color:var(--hp-blue);}
+#bpSign .my-proj.off{opacity:.7;}
+#bpSign .my-proj-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+#bpSign .my-proj-t b{font-size:15.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .my-proj-t>span{font-size:13px;color:var(--hp-grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .my-bar{display:block;height:6px;border-radius:3px;background:var(--hp-soft);margin-top:5px;overflow:hidden;}
+#bpSign .my-bar i{display:block;height:100%;border-radius:3px;background:var(--hp-blue);}
+#bpSign .my-pct{font-size:14px;font-weight:800;color:var(--hp-ink);}
+#bpSign .my-proj>.ms{color:var(--hp-grey2);}
+#bpSign .my-note{display:flex;gap:8px;align-items:center;margin:0;font-size:13.5px;color:var(--hp-grey);}
+#bpSign .my-note a{color:var(--hp-blue2);font-weight:600;}
+#bpSign .hx-pros-ic.ok{background:#16a34a;}
 /* stars: five glyphs filled to the rating */
 #bpSign .pr-stars{--p:0%;display:inline-block;font-size:15px;line-height:1;letter-spacing:1px;background:linear-gradient(90deg,#f5a524 var(--p),#d6dae1 var(--p));-webkit-background-clip:text;background-clip:text;color:transparent;font-family:system-ui,-apple-system,sans-serif;}
 #bpSign .pr-stars.y{background:linear-gradient(90deg,#e00707 var(--p),#d6dae1 var(--p));-webkit-background-clip:text;background-clip:text;}
