@@ -45,7 +45,8 @@ jobs:
         with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
-      - uses: android-actions/setup-android@v3
+      # the ubuntu runner already has the Android SDK (ANDROID_HOME); Gradle
+      # fetches any missing platform or build-tools itself
       - run: npm ci
       - run: npx cap sync android
       - name: Firebase config (push)
