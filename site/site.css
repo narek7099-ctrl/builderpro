@@ -758,3 +758,53 @@ body.dl #estimator{display:none !important;}
 
 /* pricing: the one add-on left, labelled as such */
 .pl-add_tag{display:inline-block;vertical-align:middle;margin-left:.5rem;padding:.25rem .625rem;border-radius:999px;background:#e6f0ff;color:var(--blue-500);font-size:.6875rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;line-height:1.2;}
+
+/* 11. TOP BAR (2026-10) ------------------------------------------------------
+   One white bar across the top replaces the floating logo and the loose
+   pills: logo, the sections, Calculators, Find a pro, Log in, Get started.
+   The hero starts under it, and on phones the first screen is the headline
+   and intro only (the empty card that sat under the old logo is gone). */
+:root{--nav-h:4.5rem;}
+.navbar{position:fixed;top:var(--gutter);left:var(--gutter);right:var(--gutter);padding:0;display:block;pointer-events:auto;z-index:99;} /* under the overlay (100), menu, drawer and calculators */
+.navbar_bar{height:var(--nav-h);display:flex;align-items:center;gap:1.25rem;padding:0 .75rem 0 1.5rem;
+  background:var(--white);
+  border-radius:var(--radius);box-shadow:0 1px 2px rgba(0,21,48,.04),0 10px 30px -18px rgba(0,21,48,.25);}
+.navbar_logo{position:static;flex:none;top:auto;left:auto;z-index:auto;}
+.navbar_logo.is-white{color:var(--dark);}
+.navbar_logo.is-white b{color:var(--blue-500);}
+.navbar_links{display:flex;align-items:center;gap:.125rem;margin:0 auto;}
+.navbar_links a,.navbar_link{display:inline-flex;align-items:center;gap:.3rem;padding:.625rem .875rem;border-radius:2.5rem;
+  font-family:var(--site-font);font-size:.9375rem;font-weight:500;line-height:1;color:var(--dark);text-decoration:none;
+  background:none;border:0;cursor:pointer;white-space:nowrap;transition:background-color .2s ease,color .2s ease;}
+.navbar_links a:hover,.navbar_link:hover,.navbar_link[aria-expanded="true"]{background:var(--gray-100);}
+.navbar_links a:focus-visible,.navbar_link:focus-visible,.navbar_login:focus-visible{outline:2px solid var(--blue-500);outline-offset:2px;}
+.navbar_link svg{width:.75rem;height:.75rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.navbar_ctas{margin-left:0;padding:0;gap:.375rem;flex:none;}
+.navbar_login{padding:.75rem 1rem;border-radius:2.5rem;font-family:var(--site-font);font-size:.9375rem;font-weight:600;line-height:1;
+  color:var(--dark);text-decoration:none;white-space:nowrap;transition:background-color .2s ease;}
+.navbar_login:hover{background:var(--gray-100);}
+.navbar_menu{display:none;}
+@media (max-width:1099px){
+  .navbar_links{display:none;}
+  .navbar_ctas{margin-left:auto;}
+  .navbar_menu{display:flex;}
+}
+.hero_stage{padding-top:calc(var(--nav-h) + var(--gutter) * 2);}
+/* tablets and small laptops: the headline fits its card */
+@media (min-width:768px) and (max-width:1199px){
+  .hero_left-mid .h-l{font-size:min(var(--h-l), 6.3vw);}
+}
+@media (max-width:767px){
+  :root{--nav-h:3.75rem;}
+  .navbar_bar{gap:.5rem;padding:0 .4375rem 0 1rem;}
+  .navbar_logo{font-size:1.25rem;}
+  .navbar_logo img{width:1.5rem;height:1.5rem;}
+  .navbar_login{display:none;}
+  .navbar_ctas .btn.js-open-drawer{padding:.8125rem 1rem;}
+  .hero_stage{padding-top:calc(var(--nav-h) + var(--gutter) * 2);}
+  /* the first screen is the headline and the intro; the cube starts below the fold */
+  .hero{padding-top:0;}
+  .hero_left{min-height:calc(100svh - var(--nav-h) - var(--gutter) * 3);}
+  .hero_left-mid{flex:1;align-items:center;}
+  .hero_left-bot{flex:none;gap:1.5rem;}
+}
