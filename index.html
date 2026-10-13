@@ -84,8 +84,8 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261009-calc">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261009-calc"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261013-nav4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261013-nav4"}}</script>
 
 
 <style id="bpi-icons">
@@ -422,22 +422,30 @@ html.bp-standalone .my-inst{display:none !important}
 <div class="dl-pre" aria-hidden="true"><b>BuilderPro</b></div>
 
 <!-- ===================== NAVBAR ===========================================
-  The logo is position:fixed with mix-blend-mode:difference so one white mark
-  stays legible over white cards, blue cards and the hero alike.           -->
-<a class="navbar_logo" id="logo" href="#home" aria-label="BuilderPro OS, home">
-  <img src="assets/brand/logo-mark-128.png" alt="" width="28" height="28">
-  <span>Builder<b>Pro</b></span>
-</a>
-
+  One white bar across the top: logo, the sections, Calculators (opens the
+  calculators panel), Find a pro, then Log in and Get started. Under 1100px
+  the section links fold into the menu (burger).                          -->
 <nav class="navbar" aria-label="Primary">
-  <div></div>
-  <div class="navbar_ctas">
-    <button class="btn is-ghost is-calc js-open-calc" type="button" aria-controls="calc" aria-expanded="false" aria-label="Calculators"><svg class="is-calc_ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5"/></svg><span>Calculators</span></button>
-    <a href="#" class="btn is-ghost" onclick="bpOpenPortal();return false;">Client login</a>
-    <button class="btn js-open-drawer" type="button">Get started</button>
-    <button class="icon-btn js-open-menu" type="button" aria-label="Open menu" aria-expanded="false">
-      <span class="navbar_burger"><span></span><span></span></span>
-    </button>
+  <div class="navbar_bar">
+    <a class="navbar_logo" id="logo" href="#home" aria-label="BuilderPro OS, home">
+      <img src="assets/brand/logo-mark-128.png" alt="" width="28" height="28">
+      <span>Builder<b>Pro</b></span>
+    </a>
+    <div class="navbar_links">
+      <a href="#simple">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#lisa">Lisa AI</a>
+      <button class="navbar_link js-open-calc" type="button" aria-controls="calc" aria-expanded="false">Calculators<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+      <a href="#pricing">Pricing</a>
+      <a href="/#pros" onclick="location.href='/#pros';location.reload();return false;">Find a pro</a>
+    </div>
+    <div class="navbar_ctas">
+      <a href="#" class="navbar_login" onclick="bpOpenPortal();return false;">Log in</a>
+      <button class="btn js-open-drawer" type="button">Get started</button>
+      <button class="icon-btn navbar_menu js-open-menu" type="button" aria-label="Open menu" aria-expanded="false">
+        <span class="navbar_burger"><span></span><span></span></span>
+      </button>
+    </div>
   </div>
 </nav>
 
@@ -458,6 +466,7 @@ html.bp-standalone .my-inst{display:none !important}
       <a href="#trades" class="menu_link">Every trade</a>
       <a href="#lisa" class="menu_link">Lisa AI</a>
       <a href="#" class="menu_link js-open-calc">Calculators</a>
+      <a href="/#pros" class="menu_link" onclick="location.href='/#pros';location.reload();return false;">Find a pro</a>
       <a href="#pricing" class="menu_link">Pricing</a>
       <a href="#faq" class="menu_link">FAQ</a>
     </nav>
@@ -582,8 +591,6 @@ html.bp-standalone .my-inst{display:none !important}
   <div class="hero_stage">
 
     <div class="hero_left">
-      <div class="hero_left-top"></div>
-
       <div class="hero_left-mid">
         <h1 class="h-l" data-split="heading" data-split-load>
           Simple software<br>for growing<br><span class="accent">contractors.</span>
@@ -26541,11 +26548,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/tools-share.js?v=20261001a"></script>
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261002f"></script>
-<script src="site/vendor/lenis.min.js?v=20261009-calc"></script>
-<script src="site/vendor/gsap.min.js?v=20261009-calc"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261009-calc"></script>
-<script src="site/vendor/SplitText.min.js?v=20261009-calc"></script>
-<script src="site/site.js?v=20261009-calc"></script>
+<script src="site/vendor/lenis.min.js?v=20261013-nav4"></script>
+<script src="site/vendor/gsap.min.js?v=20261013-nav4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261013-nav4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261013-nav4"></script>
+<script src="site/site.js?v=20261013-nav4"></script>
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261020a">
 <link rel="stylesheet" href="portal/inspect.css?v=20261019a">

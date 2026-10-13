@@ -90,7 +90,8 @@
     var el = document.getElementById(id.slice(1)); if (!el) return;
     e.preventDefault();
     closeMenu(); closeDrawer(); closeCalc();
-    if (lenis) lenis.scrollTo(el, { offset: -6, duration: 1.2 }); else el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
+    var nb = document.querySelector('.navbar_bar'), off = nb ? -(nb.getBoundingClientRect().bottom + 6) : -6;
+    if (lenis) lenis.scrollTo(el, { offset: off, duration: 1.2 }); else el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
     if (history.pushState) history.pushState(null, '', id);
   });
 
@@ -165,7 +166,7 @@
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
     if (!right || !canvas || canvas._bpHero) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20261009-calc').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+    import('./hero3d.js?v=20261013-nav4').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
       .catch(function () { right.classList.add('nogl'); });
   }
   /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
