@@ -143,8 +143,11 @@ For each template:
    - 03d: draft or delete per rule 6
    - 11 (OS and Enterprise only): add tag `review-feedback` in the 1–3 star branch
    - **Enterprise only:** clear the owner phone custom value if it's the user's real number (Phase 1)
-7. Optional, if time allows: the "Also worth adding" workflows in section 4.
+7. **"No lead left behind" S1 to S5** (section 4). These are required, not optional, on every plan. Build each as Draft, test it with "BP Agent Test", then publish.
+8. Optional, if time allows: the "Also worth adding" workflows in section 4.
    Each one as Draft. Report them; don't publish without the user's OK.
+
+If you run short of time, do them in this order: items 4, 7 (S1, S2, S3), 5, 2, 3, 6, then the rest.
 
 **Report per template:**
 - what changed

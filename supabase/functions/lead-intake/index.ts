@@ -86,19 +86,45 @@ async function readBody(req: Request, url: URL): Promise<Record<string, unknown>
   return q;
 }
 
-async function ghlToken(): Promise<string> {
-  if (GHL_TOKEN) return GHL_TOKEN;
-  if (GHL_API_KEY && GHL_COMPANY_ID && GHL_LOCATION_ID) {
+/* Which HighLevel account the lead belongs in: the contractor's own. The
+   house account only for its own owners (ai_config ghl_events_owner /
+   ghl_house_owners). A contractor with no HighLevel of their own gets the
+   lead in BuilderPro only; it used to land in the house account, where they
+   would never see it. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const first = async (path: string): Promise<Record<string, unknown> | null> => {
+  try { const r = await sb(path); return r.ok ? ((await r.json())[0] ?? null) : null; } catch { return null; }
+};
+async function houseOwners(): Promise<string[]> {
+  const r = await sb("ai_config?key=in.(ghl_events_owner,ghl_house_owners)&select=value").catch(() => null);
+  const rows: Array<{ value?: string }> = r && r.ok ? await r.json() : [];
+  return rows.flatMap((x) => String(x.value ?? "").split(",")).map((x) => x.trim()).filter((x) => UUID.test(x));
+}
+async function ownerLoc(owner: string): Promise<string> {
+  if ((await houseOwners()).includes(owner)) return GHL_LOCATION_ID;
+  const [a, b] = await Promise.all([
+    first(`accounts?user_id=eq.${owner}&select=ghl_location_id&limit=1`),
+    first(`ai_brain?owner=eq.${owner}&select=ghl_location_id&limit=1`),
+  ]);
+  const loc = String(a?.ghl_location_id || b?.ghl_location_id || "");
+  return loc && loc !== GHL_LOCATION_ID ? loc : "";
+}
+async function ghlToken(loc: string): Promise<string> {
+  const k = await first(`ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token&limit=1`);
+  if (k?.token) return String(k.token);
+  const env = Deno.env.get(`GHL_TOKEN_${loc}`); if (env) return env;
+  if (loc === GHL_LOCATION_ID && GHL_TOKEN) return GHL_TOKEN;
+  if (GHL_API_KEY && GHL_COMPANY_ID) {
     try {
       const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
         method: "POST",
         headers: { Authorization: `Bearer ${GHL_API_KEY}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: GHL_LOCATION_ID }).toString(),
+        body: new URLSearchParams({ companyId: GHL_COMPANY_ID, locationId: loc }).toString(),
       });
       if (r.ok) { const d = await r.json(); if (d?.access_token) return d.access_token; }
     } catch { /* fall through */ }
   }
-  return GHL_API_KEY;
+  return "";
 }
 
 /* The GHL contact. Tagged `new-lead` plus the vendor, which is what the
@@ -109,10 +135,12 @@ async function ghlToken(): Promise<string> {
    waits on GHL will time out and re-post, or mark the contractor as a slow
    endpoint and stop sending — and neither the contact row nor the lead is
    lost if the push fails, because the row is already written. */
-async function pushToGhl(lead: Lead, vendor: string, label: string, eventId: string) {
+async function pushToGhl(lead: Lead, vendor: string, label: string, eventId: string, owner: string) {
   try {
-    const token = await ghlToken();
-    if (!token) return;
+    const loc = await ownerLoc(owner);
+    if (!loc) { console.log("lead-intake: no HighLevel of their own, BuilderPro only"); return; }
+    const token = await ghlToken(loc);
+    if (!token) { console.log("lead-intake: no HighLevel key for", loc); return; }
     const body: Record<string, unknown> = {
       name: lead.name,
       phone: lead.phone || undefined,
@@ -121,8 +149,9 @@ async function pushToGhl(lead: Lead, vendor: string, label: string, eventId: str
       source: label || vendor,
       tags: ["new-lead", "lead-source", vendor],
     };
-    if (GHL_LOCATION_ID) body.locationId = GHL_LOCATION_ID;
-    const r = await fetch(`${GHL_BASE}/contacts/`, { method: "POST", headers: ghlHeaders(token), body: JSON.stringify(body) });
+    body.locationId = loc;
+    // upsert: a homeowner already in their HighLevel is updated, not refused as a duplicate
+    const r = await fetch(`${GHL_BASE}/contacts/upsert`, { method: "POST", headers: ghlHeaders(token), body: JSON.stringify(body) });
     const d = await r.json().catch(() => ({}));
     const cid = d?.contact?.id || d?.id || "";
     if (cid && lead.job) {
@@ -235,7 +264,7 @@ Deno.serve(async (req) => {
      endpoint as unreliable. EdgeRuntime.waitUntil keeps the worker alive for
      it after the response has gone out. */
   if (status === "accepted" && eventId) {
-    const work = pushToGhl(lead, src.vendor, src.label, eventId);
+    const work = pushToGhl(lead, src.vendor, src.label, eventId, String(src.owner));
     try {
       // deno-lint-ignore no-explicit-any
       (globalThis as any).EdgeRuntime?.waitUntil?.(work);
