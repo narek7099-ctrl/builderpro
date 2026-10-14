@@ -21700,11 +21700,21 @@ function bpProsRoute(){
   document.body.classList.add('bp-signing','bp-home');
   document.title='Find a pro · BuilderPro';
   var host=document.createElement('div'); host.id='bpSign'; host.className='hp pr-solo'; document.body.appendChild(host);
-  host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span id="prBarR"><a class="my-link" href="#my" onclick="bpGo(\'#my\');return false">Sign in</a></span></header>'
-    +'<main class="hp-content pr-main">'+bpPrPane()+'</main>'
+  host.innerHTML='<div class="pr-page"><header class="pr-pbar"><a class="pr-brand" href="/"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><b>BuilderPro</b></a><span id="prBarR"></span></header>'
+    +'<main class="hp-content pr-main" id="prMain"><div class="pr-card pr-skel"><i></i><i></i><i></i></div></main>'
     +'<footer class="hp-powm">'+bpPoweredBy()+'</footer></div>';
-  if(pro)bpPrShow(pro[1].toLowerCase());
-  bpMeLoad().then(function(se){var r=document.getElementById('prBarR');if(se&&r)r.innerHTML='<a class="my-link" href="#my" onclick="bpGo(\'#my\');return false"><span class=ms>home_work</span>My projects</a>';});
+  /* searching takes a free account: every quote request then comes from a
+     real, reachable homeowner. After signing up they land back here. */
+  bpMeLoad().then(function(se){
+    var m=document.getElementById('prMain'),r=document.getElementById('prBarR'); if(!m)return;
+    if(!se){
+      m.id='myBody'; m.classList.add('my-main'); if(r)r.id='myBarR';
+      _bpMy.next=location.hash.replace(/^#find-a-pro/i,'#pros'); _bpMy.mode='up'; bpMyAuthDraw(); return;
+    }
+    m.innerHTML=bpPrPane();
+    if(r)r.innerHTML='<a class="my-link" href="#my" onclick="bpGo(\'#my\');return false"><span class=ms>home_work</span>My projects</a>';
+    if(pro)bpPrShow(pro[1].toLowerCase());
+  });
   return true;
 }
 
@@ -21953,7 +21963,7 @@ function bpMeLoad(){
 function bpMeName(s){var m=(s&&s.user&&s.user.user_metadata)||{};return String(m.full_name||'').trim();}
 function bpIsHomeowner(s){return !!(s&&s.user&&s.user.user_metadata&&s.user.user_metadata.bp_role==='homeowner');}
 function bpGo(hash){location.href=location.pathname+hash;location.reload();}
-var _bpMy={mode:'up',err:'',busy:false,add:'',list:null,reqs:null};
+var _bpMy={mode:'up',err:'',busy:false,add:'',list:null,reqs:null,next:''};
 function bpMyRoute(){
   if(!/^#my\b/i.test(location.hash||''))return false;
   var a=/[?&]add=([a-f0-9]{40,64})/i.exec(location.hash); _bpMy.add=a?a[1].toLowerCase():'';
@@ -21970,20 +21980,21 @@ function bpMyRoute(){
 function bpMyAuthDraw(){
   var b=document.getElementById('myBody'); if(!b)return;
   var up=_bpMy.mode==='up';
-  var r=document.getElementById('myBarR'); if(r)r.innerHTML='<a class="my-link" href="#pros" onclick="bpGo(\'#pros\');return false">Find a pro</a>';
+  var pros=!!_bpMy.next;
+  var r=document.getElementById('myBarR'); if(r)r.innerHTML=pros?'':'<a class="my-link" href="#pros" onclick="bpGo(\'#pros\');return false">Find a pro</a>';
   b.innerHTML='<section class="my-auth">'
-    +'<div class="my-auth-h"><span class="my-auth-ic"><span class=ms>home_work</span></span><h1>'+(_bpMy.add?'Save this project':'Your home projects, in one place')+'</h1>'
-    +'<p>'+(_bpMy.add?'Create a free account and this project is saved. Every project link you open after that is added for you.':'A free BuilderPro account keeps every project from every contractor together: schedules, photos, payments and messages.')+'</p></div>'
+    +'<div class="my-auth-h"><span class="my-auth-ic"><span class=ms>'+(pros?'person_search':'home_work')+'</span></span><h1>'+(pros?'Sign up to find a pro':_bpMy.add?'Save this project':'Your home projects, in one place')+'</h1>'
+    +'<p>'+(pros?'Create a free account to search local BuilderPro contractors, see their photos and reviews, and get free quotes. It takes a minute.':_bpMy.add?'Create a free account and this project is saved. Every project link you open after that is added for you.':'A free BuilderPro account keeps every project from every contractor together: schedules, photos, payments and messages.')+'</p></div>'
     +'<div class="my-tabs" role="tablist"><button type="button" role="tab" aria-selected="'+up+'" class="'+(up?'on':'')+'" onclick="bpMyMode(\'up\')">Create account</button><button type="button" role="tab" aria-selected="'+!up+'" class="'+(up?'':'on')+'" onclick="bpMyMode(\'in\')">Sign in</button></div>'
     +'<form class="pr-form my-form" onsubmit="event.preventDefault();bpMySubmit()" novalidate>'
       +(up?'<label>Your name<input name="name" autocomplete="name" required></label>':'')
       +'<label>Email<input name="email" type="email" autocomplete="email" inputmode="email" required></label>'
-      +(up?'<label><span>Phone <small>optional</small></span><input name="phone" type="tel" autocomplete="tel" inputmode="tel"></label>':'')
+      +(up?'<label><span>Phone'+(_bpMy.next?'':' <small>optional</small>')+'</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel"'+(_bpMy.next?' required':'')+'></label>':'')
       +'<label>Password<input name="password" type="password" autocomplete="'+(up?'new-password':'current-password')+'" minlength="8" required>'+(up?'<small class="my-hint">At least 8 characters.</small>':'')+'</label>'
       +(up?'<input name="website" tabindex="-1" autocomplete="off" class="my-hp" aria-hidden="true">':'')
       +(_bpMy.err?'<div class="pr-err" role="alert">'+bpEsc(_bpMy.err)+'</div>':'')
       +'<button type="submit" class="hx-btn pri"'+(_bpMy.busy?' disabled':'')+'>'+(_bpMy.busy?'<span class=ms>hourglass_top</span>One moment…':up?'Create free account':'Sign in')+'</button>'
-      +(up?'<p class="pr-fine"><span class=ms>lock</span>Free for homeowners. Your contractor still controls what your project page shows.</p>'
+      +(up?'<p class="pr-fine"><span class=ms>lock</span>'+(_bpMy.next?'Free for homeowners. Your details only go to the pros you ask for a quote.':'Free for homeowners. Your contractor still controls what your project page shows.')+'</p>'
         :'<button type="button" class="my-forgot" onclick="bpMyForgot()">Forgot password?</button>')
     +'</form></section>';
 }
@@ -22000,12 +22011,13 @@ window.bpMySubmit=function(){
   var fail=function(t){_bpMy.busy=false;_bpMy.err=t;bpMyAuthDraw();var g=document.querySelector('#myBody form');if(g)Object.keys(keep).forEach(function(k){if(g.elements[k])g.elements[k].value=keep[k];});};
   var up=_bpMy.mode==='up', email=v('email'), pw=f.elements.password.value;
   if(up&&!keep.name)return fail('Add your name.');
+  if(up&&_bpMy.next&&keep.phone.replace(/\D/g,'').length<10)return fail('Add a phone number with area code, so pros can reach you about your quote.');
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return fail('That email doesn’t look right.');
   if(pw.length<8)return fail(up?'Use at least 8 characters for your password.':'Check your password.');
   _bpMy.busy=true;_bpMy.err='';bpMyAuthDraw();
   var signIn=function(){return BP_SB.auth.signInWithPassword({email:email,password:pw}).then(function(r){
     if(r.error)return fail(/invalid/i.test(r.error.message||'')?'That email and password don’t match.':(r.error.message||'Couldn’t sign in.'));
-    _bpMe=Promise.resolve(r.data.session);_bpMy.busy=false;bpMyEnter(r.data.session);
+    _bpMe=Promise.resolve(r.data.session);_bpMy.busy=false;if(_bpMy.next)return bpGo(_bpMy.next);bpMyEnter(r.data.session);
   });};
   if(!up){signIn().catch(function(){fail('Couldn’t reach the server. Try again.');});return;}
   fetch(HO_SIGNUP_URL,{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({name:keep.name,email:email,phone:keep.phone,password:pw,website:v('website')})})
