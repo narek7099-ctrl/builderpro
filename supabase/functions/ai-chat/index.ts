@@ -82,13 +82,23 @@ async function loadBrain(slug: string): Promise<Record<string, string> | null> {
 }
 
 // --- receptionist actions against the business's GHL account ---
-async function actLead(locId: string, a: Record<string, string>): Promise<string> {
-  const tok = await locationToken(locId);
-  const r = await fetch(`${GHL_BASE}/contacts/`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ locationId: locId, name: a.name || "Website visitor", phone: a.phone || undefined, email: a.email || undefined, source: "AI receptionist" }) });
+// where a chat came from decides the contact's source and tags, so the
+// contractor's workflows can tell a Find a Pro chat from a website chat
+type Origin = { source: string; tags: string[] };
+const WEB_ORIGIN: Origin = { source: "AI receptionist", tags: ["new-lead", "ai-chat"] };
+const FAP_ORIGIN: Origin = { source: "BuilderPro Find a Pro (chat)", tags: ["new-lead", "find-a-pro", "ai-chat"] };
+// create or update (an existing phone/email is updated, never duplicated)
+async function upsertContact(tok: string, locId: string, a: Record<string, string>, fallbackName: string, origin: Origin) {
+  const r = await fetch(`${GHL_BASE}/contacts/upsert`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ locationId: locId, name: a.name || fallbackName, phone: a.phone || undefined, email: a.email || undefined, source: origin.source, tags: origin.tags }) });
   const d = await r.json().catch(() => ({}));
-  const cid = d?.contact?.id || d?.id || "";
+  return { ok: r.ok, status: r.status, id: String(d?.contact?.id || d?.id || "") };
+}
+async function actLead(locId: string, a: Record<string, string>, origin: Origin): Promise<string> {
+  const tok = await locationToken(locId);
+  const c = await upsertContact(tok, locId, a, "Website visitor", origin);
+  const r = { ok: c.ok, status: c.status }, cid = c.id;
   if (r.ok && cid && a.note) {
-    await fetch(`${GHL_BASE}/contacts/${cid}/notes`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ body: "AI receptionist: " + a.note }) }).catch(() => {});
+    await fetch(`${GHL_BASE}/contacts/${cid}/notes`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ body: "From the chat (" + origin.source + "): " + a.note }) }).catch(() => {});
   }
   return r.ok ? `Lead saved (contact ${cid}).` : `Could not save the lead (HTTP ${r.status}).`;
 }
@@ -109,19 +119,18 @@ async function actSlots(locId: string, calId: string, a: Record<string, string>)
   }
   return out.length ? "Open slots (ISO times):\n" + out.join("\n") : "No open slots in the next 7 days.";
 }
-async function actBook(locId: string, calId: string, a: Record<string, string>): Promise<string> {
+async function actBook(locId: string, calId: string, a: Record<string, string>, origin: Origin): Promise<string> {
   if (!calId) return "No booking calendar is configured.";
   if (!a.startTime) return "Missing a start time.";
   const tok = await locationToken(locId);
   // 1) make sure the contact exists
-  const cr = await fetch(`${GHL_BASE}/contacts/`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ locationId: locId, name: a.name || "Booking", phone: a.phone || undefined, email: a.email || undefined, source: "AI receptionist" }) });
-  const cd = await cr.json().catch(() => ({}));
-  const cid = cd?.contact?.id || cd?.id || cd?.meta?.contactId || "";
-  if (!cid) return `Could not create the contact for the booking (HTTP ${cr.status}).`;
+  const c = await upsertContact(tok, locId, a, "Booking", origin);
+  const cid = c.id;
+  if (!cid) return `Could not create the contact for the booking (HTTP ${c.status}).`;
   // 2) book the appointment
   const startMs = Date.parse(a.startTime);
   const endTime = a.endTime || new Date(startMs + 30 * 60000).toISOString();
-  const r = await fetch(`${GHL_BASE}/calendars/events/appointments`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ locationId: locId, calendarId: calId, contactId: cid, startTime: a.startTime, endTime, title: (a.name || "Appointment") + " — booked by AI" }) });
+  const r = await fetch(`${GHL_BASE}/calendars/events/appointments`, { method: "POST", headers: ghlHeaders(tok), body: JSON.stringify({ locationId: locId, calendarId: calId, contactId: cid, startTime: a.startTime, endTime, title: "Inspection: " + (a.name || "new customer") + " (booked in chat)" }) });
   const d = await r.json().catch(() => ({}));
   return r.ok ? `BOOKED ✓ appointment at ${a.startTime} (id ${d?.id || "?"}).` : `Booking failed (HTTP ${r.status}): ${JSON.stringify(d).slice(0, 150)}`;
 }
@@ -220,19 +229,23 @@ async function handleOwner(req: Request, payload: { message?: string; history?: 
   const data = await r.json();
   const raw = (data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "").trim();
   let out: { reply?: string; navigate?: string | null };
-  try { out = JSON.parse(raw); } catch { out = { reply: raw || "I'm here — what would you like to check?", navigate: null }; }
+  out = parseOut(raw);
   const allowed = new Set(nav.map((n) => n.key));
-  return json({ reply: out.reply || "I'm here — what would you like to check?", navigate: out.navigate && allowed.has(out.navigate) ? out.navigate : null });
+  return json({ reply: out.reply || "Sure, what would you like to check?", navigate: out.navigate && allowed.has(out.navigate) ? out.navigate : null });
 }
 // =================== end OWNER MODE ===================
 
-function buildSystem(b: Record<string, string>, canAct: boolean, hasCal: boolean): string {
+function buildSystem(b: Record<string, string>, canAct: boolean, hasCal: boolean, visitor: Record<string, string> | null = null, fap = false): string {
   const name = b.business_name || b.name || "this business";
   const assistant = b.assistant_name || "Nova";
   const line = (label: string, v?: string) => (v && String(v).trim() ? `${label}: ${v}\n` : "");
   return (
-    `You are ${assistant}, the AI receptionist for ${name}` + (b.industry ? `, a ${b.industry} business.` : ".") +
-    `\n\nUse ONLY the knowledge below. If something isn't covered, say you'll have the team follow up — never invent prices, guarantees, or policies.\n\n` +
+    `You are ${assistant}, who answers messages for ${name}` + (b.industry ? `, a local ${b.industry} company.` : ".") +
+    (fap ? `\nThis person found ${name} on BuilderPro's Find a Pro and opened a chat from the listing.` : "") +
+    (visitor && (visitor.name || visitor.phone || visitor.email)
+      ? `\nThey're signed in, so you already have their details: name ${visitor.name || "(not given)"}, phone ${visitor.phone || "(not given)"}, email ${visitor.email || "(not given)"}. Don't ask for these again. Use them for any lead or booking, and only ask for what's missing.`
+      : "") +
+    `\n\nUse ONLY the knowledge below. If something isn't covered, say you'll have the team follow up. Never invent prices, guarantees, or policies.\n\n` +
     line("Business", name) + line("Industry", b.industry) + line("Services", b.services) + line("Pricing", b.pricing) +
     line("Hours", b.hours) + line("Service area", b.service_area) + line("Phone", b.phone) + line("Booking link", b.booking_url) +
     line("FAQs", b.faqs) + line("Extra instructions", b.custom_instructions) +
@@ -247,12 +260,40 @@ function buildSystem(b: Record<string, string>, canAct: boolean, hasCal: boolean
           : ``) +
         `Only one action per turn. Set action to null when just talking.\n`
       : `\n`) +
-    `Style: ${(b.tone || "friendly").toLowerCase()}. Reply in 2–4 short sentences, plain text (no markdown). Ask a helpful follow-up that moves toward booking or a quote. Speak as ${name}'s own assistant ("we", "our").\n` +
+    `How you write (tone: ${(b.tone || "friendly").toLowerCase()}):\n` +
+    `- Write like a friendly person at the front desk of a local company texting back. 1 or 2 short sentences, usually under 30 words. Plain text, no lists, no markdown.\n` +
+    `- Use contractions (I'm, we'll, that's) and everyday words.\n` +
+    `- Never use the characters "—" or "–". Use a comma or start a new sentence.\n` +
+    `- Never open with "Great question", "Absolutely", "Certainly", "I'd be happy to" or "Thank you for reaching out".\n` +
+    `- Ask one question at a time. Use their first name now and then, not every message.\n` +
+    `- Match their tone: short if they're short, calm and sorry first if they're upset.\n` +
+    `- Speak as part of the team ("we", "our"). Don't repeat the company name in every reply.\n` +
+    `- If they ask whether you're a real person, be honest: you're ${name}'s assistant, and someone from the team can call them.\n` +
+    `- Offer the free inspection or a quote once it makes sense, not in every message.\n` +
     `Respond ONLY as JSON: {"reply":"<what to say to the visitor>","action":null|{...}}`
   );
 }
 
+// replies are a sentence or two: no hidden "thinking" (it spends the output
+// budget and cut replies off mid-word), and a little more room to finish
+// deno-lint-ignore no-explicit-any
+function tune(body: any) {
+  const g = body.generationConfig ?? (body.generationConfig = {});
+  g.maxOutputTokens = Math.max(Number(g.maxOutputTokens) || 0, 1024);
+  if (/flash/i.test(AI_MODEL)) g.thinkingConfig = { thinkingBudget: 0 };
+  return body;
+}
+// the model is asked for JSON; if it comes back malformed or cut short, keep
+// the sentence it was writing rather than showing the visitor raw JSON
+// deno-lint-ignore no-explicit-any
+function parseOut(raw: string): any {
+  try { return JSON.parse(raw); } catch { /* below */ }
+  const m = /"reply"\s*:\s*"((?:[^"\\]|\\.)*)/.exec(raw);
+  if (m) { let t = m[1]; try { t = JSON.parse('"' + t + '"'); } catch { t = t.replace(/\\n/g, " ").replace(/\\"/g, '"'); } return { reply: t.trim(), action: null, navigate: null }; }
+  return /^\s*[{\[]/.test(raw) ? { reply: "", action: null, navigate: null } : { reply: raw, action: null, navigate: null };
+}
 async function gemini(body: unknown): Promise<Response> {
+  tune(body);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
   let r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   for (let i = 0; i < 2 && (r.status === 503 || r.status === 429); i++) {
@@ -279,7 +320,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
   if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY not set" }, 500);
 
-  let payload: { mode?: string; message?: string; slug?: string; business?: Record<string, string> | null; history?: Array<{ role: string; content: string }>; assistant?: string; brand?: string; nav?: Array<{ key: string; label: string; desc?: string }> };
+  let payload: { mode?: string; message?: string; slug?: string; business?: Record<string, string> | null; history?: Array<{ role: string; content: string }>; assistant?: string; brand?: string; visitor?: Record<string, string>; source?: string; nav?: Array<{ key: string; label: string; desc?: string }> };
   try { payload = await req.json(); } catch { return json({ error: "invalid JSON" }, 400); }
 
   // owner mode: the logged-in business owner chatting inside their dashboard
@@ -289,11 +330,18 @@ Deno.serve(async (req) => {
   if (!message) return json({ error: "message required" }, 400);
 
   const brain = payload.slug ? await loadBrain(payload.slug) : null;
-  const b = { ...(brain ?? {}), ...(payload.business ?? {}) } as Record<string, string>;
+  // the caller may preview wording (the owner's test chat) but never choose
+  // which HighLevel account or calendar the actions write to
+  const override: Record<string, string> = { ...(payload.business ?? {}) };
+  delete override.ghl_location_id; delete override.booking_calendar_id;
+  const b = { ...(brain ?? {}), ...override } as Record<string, string>;
   const locId = b.ghl_location_id || "";
   const calId = b.booking_calendar_id || "";
   const canAct = !!locId && !!(GHL_API_KEY || GHL_TOKEN || GHL_CLIENT_ID);
-  const system = buildSystem(b, canAct, !!calId);
+  const vis = payload.visitor && typeof payload.visitor === "object" ? payload.visitor : null;
+  const visitor = vis ? { name: String(vis.name || "").slice(0, 80), phone: String(vis.phone || "").slice(0, 30), email: String(vis.email || "").slice(0, 120) } : null;
+  const origin = payload.source === "find-a-pro" ? FAP_ORIGIN : WEB_ORIGIN;
+  const system = buildSystem(b, canAct, !!calId, visitor, payload.source === "find-a-pro");
 
   const history = (Array.isArray(payload.history) ? payload.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && m.content)
@@ -309,25 +357,25 @@ Deno.serve(async (req) => {
       const data = await r.json();
       const raw = (data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "").trim();
       let out: { reply?: string; action?: Record<string, string> | null };
-      try { out = JSON.parse(raw); } catch { out = { reply: raw || "I'm here to help — could you tell me a bit more?", action: null }; }
+      out = parseOut(raw);
       const act = out.action;
 
       if (!canAct || !act || !act.type || round === 2) {
-        return json({ reply: out.reply || "I'm here to help — could you tell me a bit more about what you need?" });
+        return json({ reply: out.reply || "Sorry, I missed that. Could you say a bit more about what you need?" });
       }
 
       // execute the action, feed the result back, and let the model finish its reply
       let result = "";
-      if (act.type === "lead") result = await actLead(locId, act);
+      if (act.type === "lead") result = await actLead(locId, act, origin);
       else if (act.type === "slots") result = await actSlots(locId, calId, act);
-      else if (act.type === "book") result = await actBook(locId, calId, act);
+      else if (act.type === "book") result = await actBook(locId, calId, act, origin);
       else result = "Unknown action.";
 
       contents.push({ role: "model", parts: [{ text: raw }] });
-      contents.push({ role: "user", parts: [{ text: `(system — action result, use it to reply to the visitor; do not repeat raw ISO times, phrase them naturally): ${result}` }] });
+      contents.push({ role: "user", parts: [{ text: `(system note: action result. Use it to reply to the visitor. Don't repeat raw ISO times, say them naturally, like Tuesday at 10): ${result}` }] });
       // for lead capture, one round is enough — the model's next reply confirms it
     }
-    return json({ reply: "I'm here to help — could you tell me a bit more about what you need?" });
+    return json({ reply: "Sorry, I missed that. Could you say a bit more about what you need?" });
   } catch (e) {
     return json({ error: "request failed", detail: String(e).slice(0, 200) }, 502);
   }
