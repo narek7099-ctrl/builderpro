@@ -266,6 +266,20 @@ Here's what each one sends into the contractor's HighLevel:
 opportunity. Otherwise someone who's already chatting with Lisa gets a second
 "Hi, this is Lisa" text.
 
+### No lead left behind (all plans, required)
+
+These catch a lead whenever the normal path misses it. Build them in all three templates.
+
+| # | Name | Trigger | What it does |
+|---|---|---|---|
+| S1 | **Unanswered message** | Customer replied (any channel) | Wait 15 min (business hours). If no outbound message since then: SMS + in-app alert to the owner, "{{contact.name}} is waiting for a reply". Wait 2 more hours; if still nothing, create a task due now. Today this exists only on Enterprise (44). |
+| S2 | **New lead not contacted** | Tag added `new-lead` or `quote-request` | Wait 30 min. If there's been no outbound message, no call and no appointment: SMS to the owner, "Nobody has reached {{contact.name}} yet. They came in from {{contact.source}}." Wait 24 h; if still nothing, task + one more alert. |
+| S3 | **Catch-all for new contacts** | Contact created | Wait 10 min. If the contact has none of these tags: `new-lead`, `quote-request`, `customer`, `bot-active`, `lead-source`, `calculator-lead`, `find-a-pro`, `system-test`, and the source isn't an import, then add `new-lead`. This catches forms, Facebook lead ads, the chat widget, or anything else that wasn't wired to a workflow. |
+| S4 | **Missed call after hours** | Edit 04 | Outside 8am to 8pm, send the missed-call text right away instead of waiting until morning: "Sorry we missed you! We'll call you first thing in the morning. Want to book a free inspection now? [the inspection booking link]" |
+| S5 | **Lisa handoff** | Tag added `needs-human` (add a Conversation AI action that adds it when someone asks for a person, complains, or says it's an emergency) | Immediate SMS to the owner with the conversation link. Turn `bot-active` off for that contact. |
+
+Every alert in S1, S2 and S5 goes to the owner's cell (the owner phone custom value), not the business number.
+
 ### Fixes the audit found in the existing workflows
 
 | Workflow | Problem | Fix |
