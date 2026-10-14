@@ -59,7 +59,7 @@ starts from one tag. Every workflow that sends texts needs:
 - **Hours:** texts only go out 8am–8pm in the contact's time zone.
 
 **W1. Demo request** (trigger: tag added `bp-demo-request`)
-1. Wait 1 minute. SMS: "Hi {{contact.first_name}}, it's Narek from BuilderPro. Saw you wanted a look. Want me to walk you through it this week? Here's my calendar: {{calendar.link}}"
+1. Wait 1 minute. SMS: "Hi {{contact.first_name}}, it's Narek from BuilderPro. Saw you wanted a look. Want me to walk you through it this week? Here's my calendar: {{custom_values.bp_demo_link}}"
 2. Email: subject "Your BuilderPro walkthrough", the same text plus 3 bullets: answers calls and texts for you, estimates to paid in one place, your crew on their phones.
 3. Wait 1 day; if no appointment booked: SMS "Still want that walkthrough? Takes 20 min."
 4. Opportunity → BuilderPro customers → Demo booked (when they book).
@@ -98,7 +98,7 @@ Also add a task for yourself on day 3: "Call {{contact.first_name}}, see how set
 - Day 60: the same idea, then stop.
 
 **W7. Not using it** (trigger: tag `bp-inactive-7d`)
-- SMS: "Haven't seen you in BuilderPro this week. Want 15 minutes on a call to get it set up the way you work?" + calendar link.
+- SMS: "Haven't seen you in BuilderPro this week. Want 15 minutes on a call to get it set up the way you work?" + {{custom_values.bp_demo_link}}.
 
 I'll add the code that sets these tags once you send me the new sub-account's
 ID and the pipeline and stage IDs.
@@ -228,7 +228,7 @@ cell". That's only true once this is set.
 Workflow 04 (missed-call text) waits until 8am for after-hours callers. If you
 want a text at night too, change its sending window or add an after-hours
 branch: "Sorry we missed you! We'll call you first thing in the morning. Want
-to book a free inspection now? {{calendar.link}}"
+to book a free inspection now? [the inspection booking link]"
 
 ---
 
