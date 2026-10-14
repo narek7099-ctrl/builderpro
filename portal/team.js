@@ -21,11 +21,11 @@
   window.bpOwnerId = function (u) { return T.owner || (u && u.id) || T.uid || null; };
 
   /* what each role may open */
-  /* crew get their own four pages (portal/crewapp.js), nothing else;
+  /* crew get their own pages (portal/crewapp.js), nothing else;
      a subcontractor gets theirs (portal/subapp.js), and Messages */
-  var CREW = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1 };
+  var CREW = { crewdash: 1, crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1 };
   var SUB = { subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, crewmsgs: 1, subcompany: 1 };
-  var CREW_ONLY = { crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1, subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, subcompany: 1 };
+  var CREW_ONLY = { crewdash: 1, crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1, subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, subcompany: 1 };
   window.bpTeamAllows = function (view) {
     if (T.role === 'crew') return !!CREW[view];
     if (T.role === 'sub') return !!SUB[view];
@@ -35,7 +35,7 @@
   window.bpTeamIsCrew = function () { return T.role === 'crew' || T.role === 'sub'; };
   window.bpTeamIsSub = function () { return T.role === 'sub'; };
   window.bpTeamIsOwner = function () { return T.role === 'owner'; };
-  window.bpTeamHome = function () { return T.role === 'sub' ? 'subjobs' : T.role === 'crew' ? 'crewclock' : 'dashboard'; };
+  window.bpTeamHome = function () { return T.role === 'sub' ? 'subjobs' : T.role === 'crew' ? 'crewdash' : 'dashboard'; };
 
   /* who am I working for? asked once per sign-in, before data loads */
   window.bpTeamResolve = function () {
