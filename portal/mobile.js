@@ -1,0 +1,249 @@
+/* ==================================================================
+   Phones: the app the way a phone app works (pairs with mobile.css).
+
+   Only below 760px wide. Computers and tablets keep the sidebar layout.
+
+     Bottom tab bar   the four places each role goes most, plus Apps/More
+                      owner/office: Home, Inbox, Projects, Calendar, Apps
+                      crew:         Home, Clock, Projects, Messages, More
+                      sub:          Jobs, Invoices, Changes, Messages, More
+     Apps sheet       everything else, as a grid, plus settings and sign out
+     Home (owner)     replaces the desktop dashboard on a phone: four
+                      numbers, what needs you, today, pinned apps and quick
+                      actions. The desktop dashboard is untouched.
+     Top bar          the business on Home, the page title elsewhere; the
+                      bell and a settings gear. The hamburger and the AI /
+                      help buttons go: Apps and Quick actions cover them.
+
+   Everything routes through bpNav(), so permissions and plan locks apply
+   exactly as on a computer.
+   ================================================================== */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s); };
+  var mq = window.matchMedia ? window.matchMedia('(max-width: 760px)') : { matches: false };
+  var M = window.bpMobile = {};
+  M.on = function () { return !!mq.matches; };
+
+  function S() { return window.bpShell || {}; }
+  function ico(k) { return S().ico ? S().ico(k) : ''; }
+  function role() { var t = window.BP_TEAM || {}; return t.role === 'sub' ? 'sub' : t.role === 'crew' ? 'crew' : 'owner'; }
+  function allows(v) { return !window.bpTeamAllows || bpTeamAllows(v); }
+  function locked(v) { return !!(window.bpLocked && bpLocked(v)); }
+  function sets() { try { return (window.bpSettingsGet && bpSettingsGet()) || {}; } catch (e) { return {}; } }
+  function bizName() { var c = sets().company || {}; return c.name || 'My business'; }
+  function ownerFirst() { var o = sets().owner || {}; return String(o.first || o.name || '').trim().split(/\s+/)[0] || ''; }
+  function initials(s) { var p = String(s || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
+  function money(n) { n = Math.round(+n || 0); return (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString(); }
+  function iso(d) { d = d || new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+
+  /* ------------------------------------------------------------ tabs --- */
+  var TABS = {
+    owner: [['home', 'Home', 'home', 'dashboard'], ['inbox', 'Inbox', 'convos', 'messaging'], ['projects', 'Projects', 'projects', 'activejobs'], ['calendar', 'Calendar', 'calendar', 'calendar'], ['apps', 'Apps', 'apps', null]],
+    crew: [['home', 'Home', 'home', 'crewdash'], ['clock', 'Clock', 'clock', 'crewclock'], ['projects', 'Projects', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]],
+    sub: [['jobs', 'Jobs', 'projects', 'subjobs'], ['inv', 'Invoices', 'inv', 'subinvoices'], ['chg', 'Changes', 'page', 'subchanges'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]]
+  };
+  /* which tab a view lights up */
+  function tabOf(v) {
+    var r = role();
+    if (r === 'owner') {
+      if (v === 'dashboard') return 'home';
+      var g = window.bpNavGroupOf ? bpNavGroupOf(v) : null;
+      if (g === 'convos') return 'inbox';
+      if (g === 'projects') return 'projects';
+      if (v === 'calendar') return 'calendar';
+      return 'apps';
+    }
+    var hit = TABS[r].filter(function (t) { return t[3] === v; })[0];
+    return hit ? hit[0] : 'apps';
+  }
+  var APPS_ICO = '<svg class="hl-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></svg>';
+  function tabbar() {
+    var app = document.querySelector('#bpx .bpx-app'); if (!app) return null;
+    var bar = $('bpTabbar');
+    if (!bar) { bar = document.createElement('nav'); bar.id = 'bpTabbar'; bar.className = 'bp-tabbar'; bar.setAttribute('aria-label', 'Main'); app.appendChild(bar); }
+    var r = role(), list = TABS[r].filter(function (t) { return !t[3] || allows(t[3]); });
+    var key = r + ':' + list.map(function (t) { return t[0]; }).join(',');
+    if (bar.getAttribute('data-k') !== key) {
+      bar.setAttribute('data-k', key);
+      bar.innerHTML = list.map(function (t) {
+        return '<button type="button" class="bp-tab" data-tab="' + t[0] + '" onclick="bpMobile.tab(\'' + t[0] + '\')">'
+          + '<span class="bp-tab-i">' + (t[2] === 'apps' ? APPS_ICO : ico(t[2])) + '</span><span class="bp-tab-l">' + esc(t[1]) + '</span></button>';
+      }).join('');
+    }
+    return bar;
+  }
+  M.tab = function (k) {
+    var t = TABS[role()].filter(function (x) { return x[0] === k; })[0]; if (!t) return;
+    if (!t[3]) return M.apps();
+    M.appsClose();
+    if (window._bpCurView === t[3]) { if (window.bpScrollTop) bpScrollTop(); return; }
+    bpNav(t[3]);
+  };
+  function paintTabs(v) {
+    var bar = tabbar(); if (!bar) return;
+    var on = $('bpApps') ? 'apps' : tabOf(v || window._bpCurView);
+    bar.querySelectorAll('.bp-tab').forEach(function (b) {
+      var a = b.getAttribute('data-tab') === on; b.classList.toggle('on', a);
+      if (a) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+  }
+
+  /* --------------------------------------------------------- top bar --- */
+  function homeView(v) { return (v === 'dashboard' && role() === 'owner'); }
+  function paintTop(v) {
+    var top = $('hlTop'); if (!top) return;
+    var chip = $('bpMAcct');
+    if (!chip) {
+      chip = document.createElement('button'); chip.type = 'button'; chip.id = 'bpMAcct'; chip.className = 'bp-macct';
+      chip.setAttribute('aria-haspopup', 'menu');
+      chip.onclick = function () { if (S().acctMenu) S().acctMenu(chip); };
+      var ttl = top.querySelector('.hl-ttl'); top.insertBefore(chip, ttl);
+    }
+    var logo = (sets().company || {}).logoUrl;
+    chip.innerHTML = '<span class="bp-macct-av">' + (logo ? '<img src="' + esc(logo) + '" alt="">' : esc(initials(bizName()))) + '</span>'
+      + '<span class="bp-macct-t"><b>' + esc(bizName()) + '</b><small>' + esc((sets().company || {}).city || (window.bpPlanInfo ? (bpPlanInfo().name || '') : '')) + '</small></span>'
+      + '<svg class="hl-i bp-macct-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView));
+    var acts = $('hlTacts');
+    if (acts && role() === 'owner' && allows('settings') && !$('bpMGear')) {
+      var g = document.createElement('button'); g.type = 'button'; g.id = 'bpMGear'; g.className = 'hl-rb bp-m-only'; g.title = 'Settings'; g.setAttribute('aria-label', 'Settings');
+      g.innerHTML = ico('settings'); g.onclick = function () { bpNav('settings'); };
+      var av = $('hlAv'); acts.insertBefore(g, av || null);
+    }
+  }
+
+  /* ------------------------------------------------------ apps sheet --- */
+  function tile(ic, label, fn, o) {
+    o = o || {};
+    return '<button type="button" class="bp-app' + (o.lock ? ' lock' : '') + '" onclick="' + fn + '"><span class="bp-app-c">' + ico(ic)
+      + (o.lock ? '<i class="bp-app-lock"><svg class="hl-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></i>' : '') + '</span><span class="bp-app-l">' + esc(label) + '</span></button>';
+  }
+  M.apps = function () {
+    if ($('bpApps')) return M.appsClose();
+    var r = role(), grid = '', more = '';
+    if (r === 'owner') {
+      (window.BP_NAV || []).forEach(function (g) {
+        var ks = g.kids ? g.kids.filter(function (k) { return allows(k[0]); }) : null;
+        if (g.id === 'dashboard' || (ks ? !ks.length : !allows(g.id))) return;
+        var lk = ks ? ks.every(function (k) { return locked(k[0]); }) : locked(g.id);
+        grid += tile(g.ico || g.id, g.l, "bpMobile.go('" + g.id + "')", { lock: lk });
+      });
+      if (allows('settings')) grid += tile('settings', 'Settings', "bpMobile.nav('settings')");
+      more = '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.ai()">' + ico('spark') + '<span>Ask ' + esc(window.BP_AI_NAME || 'Lisa') + ', your assistant</span></button>'
+        + '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.palette()">' + ico('search') + '<span>Search everything</span></button>';
+    } else if (r === 'crew') {
+      grid = tile('crew', 'My crew', "bpMobile.nav('crewhome')") + tile('badge', 'My ID', "bpMobile.nav('crewid')") + tile('clock', 'Time clock', "bpMobile.nav('crewclock')") + tile('projects', 'Projects', "bpMobile.nav('crewprojects')");
+    } else {
+      grid = tile('badge', 'Compliance', "bpMobile.nav('subcomply')") + tile('crew', 'My company', "bpMobile.nav('subcompany')") + tile('page', 'Change orders', "bpMobile.nav('subchanges')") + tile('inv', 'Invoices', "bpMobile.nav('subinvoices')");
+    }
+    var dark = !!($('bpx') && $('bpx').classList.contains('bpx-dark'));
+    var el = document.createElement('div'); el.id = 'bpApps'; el.className = 'bp-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', r === 'owner' ? 'Apps' : 'More');
+    el.innerHTML = '<div class="bp-sheet-bg" onclick="bpMobile.appsClose()"></div><div class="bp-sheet-card"><i class="bp-sheet-grab"></i>'
+      + '<div class="bp-sheet-h"><b>' + (r === 'owner' ? 'Apps' : 'More') + '</b><button type="button" class="bp-sheet-x" onclick="bpMobile.appsClose()" aria-label="Close">×</button></div>'
+      + '<div class="bp-apps">' + grid + '</div>'
+      + '<div class="bp-sheet-rows">' + more
+        + (window.bpTour ? '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpTour()">' + ico('help') + '<span>Take the tour</span></button>' : '')
+        + '<button type="button" class="bp-sheet-row" onclick="bpMobile.dark(this)">' + ico('moon') + '<span>Dark mode</span><span class="hl-sw' + (dark ? ' on' : '') + '" aria-hidden="true"><i></i></span></button>'
+        + '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.leave()">' + ico('globe') + '<span>Back to website</span></button>'
+        + '<button type="button" class="bp-sheet-row danger" onclick="bpMobile.appsClose();bpLogout()">' + ico('out') + '<span>Sign out</span></button></div></div>';
+    ($('bpx') || document.body).appendChild(el);
+    paintTabs();
+  };
+  M.appsClose = function () { var el = $('bpApps'); if (el) { el.remove(); paintTabs(); } };
+  M.go = function (gid) { M.appsClose(); if (S().go) S().go(gid); else bpNav(gid); };
+  M.nav = function (v) { M.appsClose(); bpNav(v); };
+  M.dark = function (b) { if (window.bpToggleTheme) bpToggleTheme(); var s = b.querySelector('.hl-sw'); if (s) s.classList.toggle('on', !!($('bpx') && $('bpx').classList.contains('bpx-dark'))); };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('bpApps')) M.appsClose(); });
+
+  /* ------------------------------------------------------ owner home --- */
+  function D() { return window.BPDASH || {}; }
+  function kpi(per, title, ic, tone, val, go, note) {
+    return '<button type="button" class="mh-k" onclick="bpNav(\'' + go + '\')"><span class="mh-k-per"><svg class="hl-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>' + per + '</span>'
+      + '<span class="mh-k-b"><span class="mh-k-t">' + title + '</span><span class="mh-k-ic ' + tone + '"><span class="ms">' + ic + '</span></span>'
+      + '<b class="mh-k-v">' + val + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</span></button>';
+  }
+  function circ(ic, label, fn, msIcon) {
+    return '<button type="button" class="mh-c" onclick="' + fn + '"><span class="mh-c-r">' + (msIcon ? '<span class="ms">' + ic + '</span>' : ico(ic)) + '</span><span>' + esc(label) + '</span></button>';
+  }
+  M.quick = function (v, fn, arg) {
+    bpNav(v);
+    if (locked(v)) return;
+    setTimeout(function () { var f = window[fn]; if (typeof f === 'function') { try { arg ? f(arg) : f(); } catch (e) {} } }, 90);
+  };
+  M.refresh = function () {
+    var d = D(); ['unread', 'deals', 'leads', 'events', 'appts', 'contracts'].forEach(function (k) { d[k] = undefined; });
+    if (window.bpDashboard) bpDashboard();
+  };
+  function home() {
+    var el = $('bpxViewArea'); if (!el) return;
+    var d = D(), dots = '<span class="mh-dots">•••</span>';
+    var jobs = (window.bpJobsGet && bpJobsGet()) || [], act = jobs.filter(function (j) { return j.status === 'active'; });
+    var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
+    var day = iso(), hiH = new Date().getHours();
+    var crews = act.filter(function (j) { return j.sched && (j.sched.dates || []).indexOf(day) >= 0; });
+    var appts = (d.appts || []).filter(function (a) { return !a.start || a.start.slice(0, 10) === day || iso(new Date(a.start)) === day; });
+    var todayRows = crews.map(function (j) { return { t: j.sched.time ? esc(j.sched.time) : 'All day', w: esc(j.name || 'Project') + (j.title ? ' · ' + esc(j.title) : ''), s: 'Crew on site', go: 'activejobs', ic: 'construction' }; })
+      .concat(appts.slice(0, 5).map(function (a) { return { t: esc(a.time || ''), w: esc(a.name || 'Appointment'), s: esc(a.what || 'Appointment'), go: 'calendar', ic: 'event' }; }));
+    var needs = [];
+    try { needs = (window.BP_DASH && BP_DASH.feed) ? (BP_DASH.feed().needs || []) : []; } catch (e) { needs = []; }
+    var name = ownerFirst();
+    var pins = [['contacts', 'Contacts', 'user'], ['closedeals', 'Pipeline', 'leads'], ['estimates', 'Estimates', 'est'], ['invoices', 'Invoices', 'inv']].filter(function (p) { return allows(p[0]); });
+    var quick = [['contacts', 'bpOpenAdd', '', 'person_add', 'New contact'], ['estimates', 'bpEstOpen', '', 'request_quote', 'Estimate'], ['invoices', 'bpInvOpen', '', 'receipt_long', 'Invoice'],
+      ['activejobs', 'bpAddJobOpen', '', 'add_business', 'Project'], ['ledger', 'bpFinAddOpen', 'expense', 'payments', 'Expense']].filter(function (q) { return allows(q[0]); });
+    el.innerHTML = '<div class="mh">'
+      + '<div class="mh-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
+        + '<button type="button" class="mh-ref" onclick="bpMobile.refresh()" aria-label="Refresh"><span class="ms">refresh</span></button></div>'
+      + '<div class="mh-kpis">'
+        + kpi('This month', 'New leads', 'person_search', 'blue', d.leads ? d.leads.n : (d.leads === null ? '—' : dots), 'contacts')
+        + kpi('Open', 'Pipeline value', 'attach_money', 'green', d.deals ? money(d.deals.v) : (d.deals === null ? '—' : dots), 'closedeals', d.deals ? d.deals.n + (d.deals.n === 1 ? ' estimate' : ' estimates') : '')
+        + kpi('Right now', 'Unread messages', 'chat_bubble', 'teal', d.unread != null ? String(d.unread) : dots, 'messaging')
+        + kpi('Active jobs', 'Owed to you', 'account_balance_wallet', 'amber', money(owed), 'invoices', act.length + (act.length === 1 ? ' project' : ' projects'))
+      + '</div>'
+      + (needs.length ? '<section class="mh-card"><div class="mh-h"><b>Needs you</b><span>' + needs.length + '</span></div>'
+          + needs.slice(0, 4).map(function (r) { return '<button type="button" class="mh-row" onclick="bpNav(\'' + esc(r.go) + '\')"><span class="mh-dot ' + esc(r.tone || '') + '"></span><span class="mh-row-t">' + r.t + '</span><span class="ms">chevron_right</span></button>'; }).join('')
+        + '</section>' : '')
+      + '<section class="mh-card"><div class="mh-h"><b>Today</b><span>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</span></div>'
+        + (todayRows.length ? todayRows.map(function (r) { return '<button type="button" class="mh-row" onclick="bpNav(\'' + r.go + '\')"><span class="mh-row-ic"><span class="ms">' + r.ic + '</span></span><span class="mh-row-t"><b>' + r.w + '</b><small>' + (r.t ? r.t + ' · ' : '') + r.s + '</small></span><span class="ms">chevron_right</span></button>'; }).join('')
+          : '<div class="mh-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + '</div>')
+      + '</section>'
+      + (pins.length ? '<section class="mh-card"><div class="mh-h"><b>Pinned apps</b></div><div class="mh-circs">' + pins.map(function (p) { return circ(p[2], p[1], "bpNav('" + p[0] + "')"); }).join('') + '</div></section>' : '')
+      + '<section class="mh-card"><div class="mh-h"><b>Quick actions</b></div><div class="mh-circs mh-scroll">'
+        + quick.map(function (q) { return circ(q[3], q[4], "bpMobile.quick('" + q[0] + "','" + q[1] + "'" + (q[2] ? ",'" + q[2] + "'" : '') + ")", true); }).join('')
+        + circ('auto_awesome', 'Ask ' + (window.BP_AI_NAME || 'Lisa'), 'bpShell.ai()', true)
+      + '</div></section>'
+      + '</div>';
+  }
+
+  /* ----------------------------------------------------------- hooks --- */
+  function apply() {
+    var x = $('bpx'); if (!x) return;
+    x.classList.toggle('bp-m', M.on());
+    if (!M.on()) { M.appsClose(); x.classList.remove('bp-m-home'); }
+    paintTabs(); paintTop();
+  }
+  function hook() {
+    var sh = window.bpShell; if (!sh || sh._mob) return !!(sh && sh._mob);
+    sh._mob = true;
+    var sync = sh.sync;
+    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); return r; };
+    var build = sh.buildNav;
+    sh.buildNav = function () { var r = build.apply(this, arguments); apply(); return r; };
+    var dash = window.bpDashboard;
+    if (dash) window.bpDashboard = function () {
+      var r = dash.apply(this, arguments);
+      if (M.on() && role() === 'owner') home();
+      return r;
+    };
+    return true;
+  }
+  if (!hook()) { var tries = 0, t = setInterval(function () { if (hook() || ++tries > 40) clearInterval(t); }, 250); }
+  var was = M.on();
+  var onChange = function () {
+    apply();
+    if (M.on() !== was) { was = M.on(); if (window._bpCurView === 'dashboard' && window.bpDashboard) bpDashboard(); }
+  };
+  if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
+})();
