@@ -1,12 +1,16 @@
 /* ==================================================================
    The crew's own BuilderPro: five pages and nothing else.
 
-     Clock in    live clock, status with a running timer, job picker,
+     Home        where they stand (off / on the clock / on lunch), today's
+                 jobs with directions, hours, and one button to the clock.
+     Time clock  live clock, status with a running timer, job picker,
                  optional on-site location check, today / this week hours,
                  recent shifts. Punches go to public.time_clock through
                  crew_clock(); clocking out also writes the shift to
                  time_entries, which is what the owner's Employees → Hours
-                 and Pay period read.
+                 and Pay period read. Lunch (unpaid) and short breaks (paid)
+                 go through crew_break() into time_breaks; the hours saved at
+                 clock-out are net of lunch.
      Projects    active jobs assigned to them or their crew. Tapping one
                  opens a read-only project sheet in the owner's style
                  (Overview, Schedule, Crew, Materials, Permits, Photos,
@@ -199,13 +203,38 @@
     out.forEach(function (s) { s.ms = (s.outAt ? Date.parse(s.outAt) : Date.now()) - Date.parse(s.inAt); });
     return out.reverse();
   }
+
+  /* ---- lunches and breaks (crew_break): lunch is unpaid and comes off the
+     shift's hours, a short break is paid. C.brk is the open shift's breaks. */
+  var BRK = { lunch: { t: 'Lunch', ic: 'restaurant', pay: 'Unpaid' }, break: { t: 'Break', ic: 'coffee', pay: 'Paid' } };
+  function loadBrk() {
+    return Promise.resolve(BP_SB.rpc('crew_break', { p_action: 'state', p_kind: 'break' }))
+      .then(function (r) { C.brk = (r && !r.error && r.data && r.data.on) ? r.data : null; })
+      .catch(function () { C.brk = null; });
+  }
+  function lunchMs() {
+    return ((C.brk && C.brk.breaks) || []).reduce(function (t, x) {
+      return x.kind === 'lunch' ? t + Math.max(0, (x.end ? Date.parse(x.end) : Date.now()) - Date.parse(x.at)) : t;
+    }, 0);
+  }
+  /* paid time on the open shift so far */
+  function workedMs() { var o = C.me && C.me.open; return o ? Math.max(0, Date.now() - Date.parse(o.at) - lunchMs()) : 0; }
+  /* off | on | lunch | break */
+  function state() { if (!(C.me && C.me.open)) return 'off'; var b = C.brk && C.brk.open; return b ? b.kind : 'on'; }
+  function brkMs() { var b = C.brk && C.brk.open; return b ? Date.now() - Date.parse(b.at) : 0; }
+  function mins(ms) { var m = Math.round(ms / 60000); return m < 60 ? m + ' min' : Math.floor(m / 60) + 'h ' + ('0' + (m % 60)).slice(-2) + 'm'; }
+
+  /* hours worked today / this week; closed shifts use their saved (net) hours */
   function totals(list) {
-    var t0 = new Date(); t0.setHours(0, 0, 0, 0); var w0 = weekStart(), now = Date.now(), day = 0, week = 0, n = 0;
+    var t0 = new Date(); t0.setHours(0, 0, 0, 0); t0 = t0.getTime();
+    var w0 = weekStart().getTime(), now = Date.now(), day = 0, week = 0, n = 0;
     list.forEach(function (s) {
       var a = Date.parse(s.inAt), b = s.outAt ? Date.parse(s.outAt) : now;
-      day += Math.max(0, b - Math.max(a, t0.getTime()));
-      week += Math.max(0, b - Math.max(a, w0.getTime()));
-      if (b > w0.getTime()) n++;
+      if (b <= w0) return;
+      var paid = s.outAt ? (s.hours != null ? +s.hours * 3600000 : b - a) : workedMs(), span = Math.max(1, b - a);
+      day += paid * Math.max(0, b - Math.max(a, t0)) / span;
+      week += paid * Math.max(0, b - Math.max(a, w0)) / span;
+      n++;
     });
     return { day: day, week: week, n: n };
   }
@@ -216,89 +245,177 @@
       C.lead = (r && !r.error && r.data && r.data.crews && r.data.crews.length) ? r.data : null;
     }).catch(function () { C.lead = null; });
   }
+  function loadLog() {
+    var since = new Date(weekStart().getTime() - 14 * 86400000).toISOString();
+    return Promise.resolve(BP_SB.from('time_clock').select('id,kind,at,job_name,on_site,hours,clocked_by_name,clocked_by,disputed_at').gte('at', since).order('at', { ascending: false }).limit(200))
+      .then(function (r) { if (r && r.error) throw r.error; C.log = shifts((r && r.data) || []); return C.log; });
+  }
+  function hello() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
+  var ST_LBL = { off: 'Off the clock', on: 'On the clock', lunch: 'On lunch', break: 'On a break' };
+  function sumHtml() {
+    return '<div class="bpx-panel ck-sum"><div><small>Today</small><b id="ck-day">—</b></div><div><small>This week</small><b id="ck-week">—</b></div><div><small>Shifts</small><b id="ck-n">—</b></div></div>';
+  }
+
+  /* ============================================================ home === */
+  /* the crew's first page: where they stand, today's jobs, one button to the clock */
+  function mapsUrl(a) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a); }
+  window.bpCrewOpen = function (id) { C.job = id; C.tab = 'details'; bpNav('crewprojects'); };
+  window.bpCrewDash = function () {
+    stopTick(); wait();
+    Promise.all([load(true), loadBrk()]).then(function () {
+      if (unlinked()) return;
+      var me = C.me, e = me.employee, o = me.open, st = state(), jobs = me.projects || [], day = iso(new Date());
+      var today = jobs.filter(onToday);
+      var next = jobs.map(function (j) { var d = ((j.sched && j.sched.dates) || []).filter(function (x) { return x > day; }).sort()[0]; return d ? { j: j, d: d } : null; })
+        .filter(Boolean).sort(function (a, b) { return a.d < b.d ? -1 : 1; })[0];
+      var oj = o ? jobOf(o.job_id) : null;
+      var line = st === 'off'
+        ? (today.length ? 'You’re booked on ' + jobWords(today[0]) + ' today.' : 'Clock in when you get to work.')
+        : (st === 'on' ? 'Since ' + clock(o.at) : BRK[st].t + ' since ' + clock(C.brk.open.at) + ' · ' + BRK[st].pay.toLowerCase())
+          + (o.job_name ? ' · ' + (oj ? jobWords(oj) : esc(o.job_name)) : '');
+      var status = '<div class="bpx-panel chm-status chm-' + st + '">'
+        + '<div class="chm-st"><span class="chm-dot"></span>' + ST_LBL[st] + '</div>'
+        + (st === 'off' ? '<b class="chm-big">Ready to start?</b>' : '<b class="chm-big chm-num" id="chm-run">' + hms(st === 'on' ? workedMs() : brkMs()) + '</b>')
+        + '<p>' + line + '</p>'
+        + '<button type="button" class="ck-btn chm-go' + (st === 'off' ? '' : ' alt') + '" id="chm-go" onclick="bpNav(\'crewclock\')"><span class="ms">' + (st === 'off' ? 'login' : 'schedule') + '</span><span>' + (st === 'off' ? 'Clock in' : 'Open time clock') + '</span></button></div>';
+      var jobRow = function (j) {
+        var slot = slotLbl(j, day);
+        return '<div class="chm-job"><button type="button" class="chm-job-main" onclick="bpCrewOpen(\'' + esc(j.id) + '\')"><span class="chm-job-ic"><span class="ms">construction</span></span>'
+          + '<div><b>' + esc(j.name || 'Project') + (j.title ? ' · ' + esc(j.title) : '') + '</b><span>' + (slot ? slot + (j.addr ? ' · ' : '') : '') + esc(j.addr || '') + '</span></div></button>'
+          + (j.addr ? '<a class="chm-dir" href="' + esc(mapsUrl(j.addr)) + '" target="_blank" rel="noopener" aria-label="Directions to ' + esc(j.name || 'the job') + '"><span class="ms">directions</span></a>' : '') + '</div>';
+      };
+      var tile = function (v, ic, t, s) { return '<button type="button" class="chm-tile" onclick="bpNav(\'' + v + '\')"><span class="ms">' + ic + '</span><b>' + t + '</b><small>' + s + '</small></button>'; };
+      area().innerHTML = '<div class="ca-wrap chm">'
+        + '<div class="chm-hero">' + AV.html(e.photo, e.name, 'chm-av') + '<div><small>' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) + '</small>'
+          + '<h2>' + hello() + ', ' + esc((e.name || '').split(' ')[0]) + '</h2><span>' + esc((me.business && me.business.name) || '') + (me.crew ? ' · ' + esc(me.crew.name) : '') + '</span></div></div>'
+        + '<div class="chm-grid"><div class="ck-col">' + status
+          + '<div class="bpx-panel"><div class="chm-h"><b>Today’s jobs</b><button type="button" onclick="bpNav(\'crewprojects\')">All projects</button></div>'
+            + (today.length ? today.map(jobRow).join('')
+              : '<div class="chm-none"><span class="ms">event_available</span><div><b>Nothing booked for you today</b>'
+                + (next ? '<span>Next: ' + jobWords(next.j) + ', ' + dayLbl(next.d) + (slotLbl(next.j, next.d) ? ' · ' + slotLbl(next.j, next.d) : '') + '</span>' : '<span>Your boss adds you to jobs on the schedule.</span>') + '</div></div>')
+          + '</div></div>'
+        + '<div class="ck-side">' + sumHtml()
+          + '<div class="chm-tiles">' + tile('crewprojects', 'construction', 'Projects', plural(jobs.length, 'active job', 'active jobs'))
+            + tile('crewmsgs', 'chat', 'Messages', 'Office and crew') + tile('crewhome', 'groups', 'My crew', me.crew ? esc(me.crew.name) : 'Who you work with')
+            + tile('crewid', 'badge', 'My ID', 'Photo and about me') + '</div></div></div></div>';
+      AV.fill(area());
+      loadLog().then(paintTotals).catch(function () {});
+      C.tick = setInterval(function () {
+        var r = $('chm-run'); if (!r) return stopTick();
+        r.textContent = hms(state() === 'on' ? workedMs() : brkMs());
+        if (new Date().getSeconds() === 0 && C.log) paintTotals();
+      }, 1000);
+    }).catch(fail);
+  };
+
+  /* ====================================================== time clock === */
   window.bpCrewClock = function () {
     stopTick(); wait();
-    Promise.all([load(true), roster()]).then(function () {
+    Promise.all([load(true), roster(), loadBrk()]).then(function () {
       if (unlinked()) return;
-      var me = C.me, open = me.open, jobs = me.projects || [], day = iso(new Date());
-      var today = jobs.filter(onToday), rest = jobs.filter(function (j) { return !onToday(j); });
-      var geoOn = LS.get('caGeo') !== '0';
-      var status, action, picker = '';
-      if (open) {
-        var openJob = jobs.filter(function (j) { return j.id === open.job_id; })[0];
-        status = '<div class="ck-status on"><div class="ck-pulse"><i></i></div><div class="ck-st">'
-          + '<small>On the clock</small><b>Clocked in at ' + clock(open.at) + '</b>'
-          + '<span>' + (open.job_name ? 'on ' + esc(openJob ? (openJob.name || '') + ' job' : open.job_name) : 'No job picked') + '</span>'
-          + (open.on_site === true ? '<em class="ok"><span class="ms">where_to_vote</span>Verified on site</em>' : open.on_site === false ? '<em class="warn"><span class="ms">wrong_location</span>Clocked in away from the job</em>' : '')
-          + '</div><div class="ck-timer"><small>Running</small><b id="ck-run">' + hms(Date.now() - Date.parse(open.at)) + '</b></div></div>'
-          + (open.by_other ? byLead(open.id, 'in', open.clocked_by_name, open.at, open.disputed_at) : '');
-        action = '<button class="ck-btn out" id="ca-go" onclick="bpCrewClockGo(\'out\')"><span class="ms">logout</span><span>Clock out</span></button>';
-      } else {
-        status = '<div class="ck-status"><div class="ck-pulse"><i></i></div><div class="ck-st"><small>Off the clock</small><b>Not clocked in</b>'
-          + '<span>Pick the job you’re at, then clock in.</span></div></div>';
+      var me = C.me, open = me.open, jobs = me.projects || [], day = iso(new Date()), st = state();
+      var geoOn = LS.get('caGeo') !== '0', body;
+      var geo = '<label class="ck-geo"><input type="checkbox" id="ck-geo"' + (geoOn ? ' checked' : '') + ' onchange="bpCrewGeo(this.checked)"><span class="ck-sw"></span>'
+        + '<div><b>Share my location</b><span>Confirms you’re on site. Saved only with the punch.</span></div></label>';
+      if (st === 'off') {
+        var today = jobs.filter(onToday), rest = jobs.filter(function (j) { return !onToday(j); });
         var opt = function (j, dflt) {
           return '<label class="ck-job"><input type="radio" name="ca-job" value="' + esc(j.id) + '"' + (dflt ? ' checked' : '') + '>'
             + '<span class="ck-jr"></span><div><b>' + esc(j.name || 'Project') + '</b><span>' + esc(j.title || '') + (j.addr ? ' · ' + esc(j.addr) : '') + '</span>'
             + (onToday(j) ? '<small>Booked today' + (slotLbl(j, day) ? ' · ' + slotLbl(j, day) : '') + '</small>' : '') + '</div></label>';
         };
-        picker = '<div class="ck-sec"><div class="ck-h">Which job?</div>'
-          + (jobs.length ? (today.length ? today.map(function (j, i) { return opt(j, i === 0); }).join('') : '')
-              + rest.map(function (j, i) { return opt(j, !today.length && i === 0); }).join('')
-              + '<label class="ck-job"><input type="radio" name="ca-job" value=""><span class="ck-jr"></span><div><b>No specific job</b><span>Shop time, pickup, travel</span></div></label>'
-            : '<div class="bpx-mut" style="margin:4px 0 8px">No projects assigned to you right now. You can still clock in.</div>')
-          + '</div>';
-        action = '<button class="ck-btn" id="ca-go" onclick="bpCrewClockGo(\'in\')"><span class="ms">login</span><span>Clock in</span></button>';
+        var noJob = function (dflt) { return '<label class="ck-job"><input type="radio" name="ca-job" value=""' + (dflt ? ' checked' : '') + '><span class="ck-jr"></span><div><b>No specific job</b><span>Shop time, pickup, travel</span></div></label>'; };
+        var others = rest.map(function (j, i) { return opt(j, !today.length && i === 0); }).join('') + noJob(!jobs.length);
+        body = '<div class="ck-status"><div class="ck-pulse"><i></i></div><div class="ck-st"><small>Off the clock</small><b>Not clocked in</b><span>Pick the job you’re at, then clock in.</span></div></div>'
+          + '<div class="ck-sec"><div class="ck-h">Job</div>'
+            + (today.length ? today.map(function (j, i) { return opt(j, i === 0); }).join('') + '<details class="ck-more"><summary>Other jobs<span class="ms">expand_more</span></summary>' + others + '</details>' : others)
+          + '</div>' + geo
+          + '<button class="ck-btn" id="ca-go" onclick="bpCrewClockGo(\'in\')"><span class="ms">login</span><span>Clock in</span></button>';
+      } else {
+        var oj = jobs.filter(function (j) { return j.id === open.job_id; })[0];
+        var onB = st !== 'on', B = onB ? BRK[st] : null;
+        var taken = ((C.brk && C.brk.breaks) || []).filter(function (x) { return x.end; });
+        body = '<div class="ck-status ' + (onB ? 'brk' : 'on') + '"><div class="ck-pulse"><i></i></div><div class="ck-st">'
+            + '<small>' + (onB ? B.t + ' · ' + B.pay.toLowerCase() : 'On the clock') + '</small>'
+            + '<b>' + (onB ? 'Started at ' + clock(C.brk.open.at) : 'Clocked in at ' + clock(open.at)) + '</b>'
+            + '<span>' + (open.job_name ? esc(oj ? jobLabel(oj) : open.job_name) : 'No specific job') + '</span>'
+            + (!onB && open.on_site === true ? '<em class="ok"><span class="ms">where_to_vote</span>Verified on site</em>' : !onB && open.on_site === false ? '<em class="warn"><span class="ms">wrong_location</span>Clocked in away from the job</em>' : '')
+          + '</div><div class="ck-timer"><small>' + (onB ? B.t : 'Worked') + '</small><b id="ck-run">' + hms(onB ? brkMs() : workedMs()) + '</b></div></div>'
+          + (open.by_other ? byLead(open.id, 'in', open.clocked_by_name, open.at, open.disputed_at) : '')
+          + (taken.length ? '<div class="ck-taken">' + taken.map(function (x) {
+              return '<span><span class="ms">' + BRK[x.kind].ic + '</span>' + BRK[x.kind].t + ' ' + clock(x.at) + ' – ' + clock(x.end) + ' · ' + mins(Date.parse(x.end) - Date.parse(x.at)) + '</span>';
+            }).join('') + '</div>' : '')
+          + (onB
+            ? '<button class="ck-btn brk" id="ca-go" onclick="bpCrewBreak(\'end\')"><span class="ms">play_arrow</span><span>End ' + B.t.toLowerCase() + '</span></button>'
+              + '<button type="button" class="ck-link" onclick="bpCrewClockGo(\'out\')">Clock out for the day instead</button>'
+            : '<div class="ck-brks"><button type="button" class="ck-sbtn" onclick="bpCrewBreak(\'start\',\'lunch\')"><span class="ms">restaurant</span><span><b>Start lunch</b><small>Unpaid</small></span></button>'
+              + '<button type="button" class="ck-sbtn" onclick="bpCrewBreak(\'start\',\'break\')"><span class="ms">coffee</span><span><b>Take a break</b><small>Paid · 10 min</small></span></button></div>'
+              + geo + '<button class="ck-btn out" id="ca-go" onclick="bpCrewClockGo(\'out\')"><span class="ms">logout</span><span>Clock out</span></button>');
       }
-      var hi = new Date().getHours(), hello = hi < 12 ? 'Good morning' : hi < 17 ? 'Good afternoon' : 'Good evening';
       area().innerHTML = '<div class="ca-wrap ck">'
-        + '<div class="ck-hero"><div><div class="ck-hello">' + hello + ', ' + esc((me.employee.name || '').split(' ')[0]) + '</div>'
-          + '<div class="ck-time" id="ck-time">' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '<small id="ck-sec">:' + ('0' + new Date().getSeconds()).slice(-2) + '</small></div>'
-          + '<div class="ck-date">' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</div></div>'
-          + '<div class="ck-biz">' + esc((me.business && me.business.name) || '') + '</div></div>'
-        + '<div class="ck-grid"><div class="ck-col"><div class="bpx-panel ck-main">' + status + picker
-          + '<label class="ck-geo"><input type="checkbox" id="ck-geo"' + (geoOn ? ' checked' : '') + ' onchange="bpCrewGeo(this.checked)"><span class="ck-sw"></span>'
-            + '<div><b>Share my location</b><span>Confirms you’re on site. Only saved with the punch.</span></div></label>'
-          + action + '<div class="ca-msg" id="ca-msg"></div>'
-          + '<div class="ck-sync"><span class="ms">cloud_done</span>Punches go straight to your timesheet in ' + esc((me.business && me.business.name) || 'BuilderPro') + '.</div></div>'
+        + '<div class="ck-hero"><div><div class="ck-hello">' + hello() + ', ' + esc((me.employee.name || '').split(' ')[0]) + '</div>'
+          + '<div class="ck-time" id="ck-time">' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '</div>'
+          + '<div class="ck-date">' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div></div>'
+        + '<div class="ck-grid"><div class="ck-col"><div class="bpx-panel ck-main">' + body
+          + '<div class="ca-msg" id="ca-msg" role="status"></div>'
+          + '<div class="ck-sync"><span class="ms">cloud_done</span>Punches go straight to your timesheet' + (me.business && me.business.name ? ' at ' + esc(me.business.name) : '') + '.</div></div>'
           + leadHtml() + '</div>'
-        + '<div class="ck-side"><div class="bpx-panel ck-sum"><div><small>Today</small><b id="ck-day">—</b></div><div><small>This week</small><b id="ck-week">—</b></div><div><small>Shifts this week</small><b id="ck-n">—</b></div></div>'
-          + '<div class="bpx-panel"><div class="bpx-ptitle">Recent punches</div><div id="ca-log" class="bpx-mut">Loading…</div></div></div></div></div>';
+        + '<div class="ck-side">' + sumHtml()
+          + '<div class="bpx-panel"><div class="bpx-ptitle">Recent shifts</div><div id="ca-log" class="bpx-mut">Loading…</div></div></div></div></div>';
       history(); AV.fill(area());
       C.tick = setInterval(function () {
         var t = $('ck-time'); if (!t) return stopTick();
         var n = new Date();
-        t.innerHTML = n.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '<small>:' + ('0' + n.getSeconds()).slice(-2) + '</small>';
-        var r = $('ck-run'); if (r && C.me.open) r.textContent = hms(Date.now() - Date.parse(C.me.open.at));
+        t.textContent = n.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        var r = $('ck-run'); if (r && C.me.open) r.textContent = hms(state() === 'on' ? workedMs() : brkMs());
         if (n.getSeconds() === 0 && C.log) paintTotals();
       }, 1000);
     }).catch(fail);
   };
   window.bpCrewGeo = function (on) { LS.set('caGeo', on ? '1' : '0'); };
+  window.bpCrewBreak = function (action, kind) {
+    var btns = document.querySelectorAll('#bpxViewArea .ck-sbtn, #ca-go'); Array.prototype.forEach.call(btns, function (b) { b.disabled = true; });
+    var was = C.brk && C.brk.open;
+    Promise.resolve(BP_SB.rpc('crew_break', { p_action: action, p_kind: kind || 'break' })).then(function (r) {
+      if (r && r.error) throw r.error;
+      var d = (r && r.data) || {};
+      bpCrewClock();
+      setTimeout(function () {
+        var m = $('ca-msg'); if (!m) return;
+        if (!d.ok) { m.className = 'ca-msg bad'; m.textContent = d.error === 'not clocked in' ? 'You’re not clocked in.' : d.error === 'already on a break' ? 'You’re already on a break.' : d.error === 'not on a break' ? 'You’re not on a break.' : 'That didn’t go through.'; return; }
+        m.className = 'ca-msg ok';
+        m.textContent = action === 'start'
+          ? (kind === 'lunch' ? 'Lunch started. Enjoy it. This time isn’t paid.' : 'Break started. Breaks are paid.')
+          : (was ? BRK[was.kind].t + ' over, ' + mins(Date.now() - Date.parse(was.at)) + '. You’re back on the clock.' : 'You’re back on the clock.');
+      }, 400);
+    }).catch(function () {
+      Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+      var m = $('ca-msg'); if (m) { m.className = 'ca-msg bad'; m.textContent = 'Couldn’t reach the server. Try again.'; }
+    });
+  };
   function paintTotals() {
     var t = totals(C.log || []);
     var s = function (id, v) { var e = $(id); if (e) e.textContent = v; };
     s('ck-day', hm(t.day)); s('ck-week', hm(t.week)); s('ck-n', String(t.n));
   }
   function history() {
-    var since = new Date(weekStart().getTime() - 14 * 86400000).toISOString();
-    Promise.resolve(BP_SB.from('time_clock').select('id,kind,at,job_name,on_site,hours,clocked_by_name,clocked_by,disputed_at').gte('at', since).order('at', { ascending: false }).limit(200)).then(function (r) {
+    loadLog().then(function () {
       var el = $('ca-log'); if (!el) return;
-      var rows = (r && r.data) || [];
-      C.log = shifts(rows); paintTotals();
+      paintTotals();
       if (!C.log.length) { el.textContent = 'No shifts yet. Your punches show up here.'; return; }
       el.className = '';
       el.innerHTML = '<div class="ck-log">' + C.log.slice(0, 10).map(function (s) {
         var d = iso(new Date(s.inAt));
         return '<div class="' + (s.outAt ? '' : 'live') + '"><div class="ck-ld"><b>' + new Date(s.inAt).getDate() + '</b><small>' + new Date(s.inAt).toLocaleDateString([], { weekday: 'short' }) + '</small></div>'
           + '<div class="ck-lt"><b>' + clock(s.inAt) + ' – ' + (s.outAt ? clock(s.outAt) : 'now') + '</b><span>' + (d === iso(new Date()) ? 'Today' : new Date(s.inAt).toLocaleDateString([], { month: 'short', day: 'numeric' })) + (s.job ? ' · ' + esc(s.job) : '') + '</span></div>'
-          + '<div class="ck-lh"><b>' + (s.outAt && s.hours != null ? (+s.hours).toFixed(2) + ' h' : hm(s.ms)) + '</b>'
+          + '<div class="ck-lh"><b>' + (s.outAt && s.hours != null ? (+s.hours).toFixed(2) + ' h' : hm(workedMs())) + '</b>'
             + (s.onSite === true ? '<em class="ok">on site</em>' : s.onSite === false ? '<em class="warn">off site</em>' : '') + '</div>'
           + (s.by && s.by.length ? '<div class="ck-lby">' + s.by.map(function (b) {
               return '<span><span class="ms">supervisor_account</span>' + (b.kind === 'in' ? 'In' : 'Out') + ' by ' + esc(first(b.name)) + '</span>'
                 + (b.disp ? '<em class="ck-rep">Reported</em>' : '<button type="button" class="ck-repbtn" onclick="bpCrewDispute(\'' + esc(b.id) + '\',\'' + b.kind + '\')">Not me? Report</button>');
             }).join('') + '</div>' : '') + '</div>';
       }).join('') + '</div>';
-    }).catch(function () { var el = $('ca-log'); if (el) el.textContent = 'Couldn’t load your punches.'; });
+    }).catch(function () { var el = $('ca-log'); if (el) el.textContent = 'Couldn’t load your shifts.'; });
   }
   function metres(a, b) { var R = 6371000, t = Math.PI / 180, dl = (b.lat - a.lat) * t, dn = (b.lng - a.lng) * t, x = Math.sin(dl / 2) * Math.sin(dl / 2) + Math.cos(a.lat * t) * Math.cos(b.lat * t) * Math.sin(dn / 2) * Math.sin(dn / 2); return 2 * R * Math.asin(Math.sqrt(x)); }
   function where() {
@@ -312,7 +429,7 @@
     var btn = $('ca-go'), msg = $('ca-msg');
     var jobId = kind === 'in' ? ((document.querySelector('input[name="ca-job"]:checked') || {}).value || '') : ((C.me.open || {}).job_id || '');
     var job = (C.me.projects || []).filter(function (j) { return j.id === jobId; })[0];
-    var geo = !!($('ck-geo') || {}).checked;
+    var geo = $('ck-geo') ? $('ck-geo').checked : LS.get('caGeo') !== '0';
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ms">' + (geo ? 'my_location' : 'hourglass_top') + '</span><span>' + (geo ? 'Checking your location…' : 'Saving…') + '</span>'; }
     (geo ? where() : Promise.resolve(null)).then(function (pos) {
       var dist = null, onSite = null;
@@ -330,7 +447,7 @@
           m.className = 'ca-msg ' + (onSite === false ? 'warn' : 'ok');
           m.textContent = kind === 'in'
             ? (onSite === true ? 'Clocked in on site.' : onSite === false ? 'Clocked in, ' + (dist > 1609 ? (dist / 1609).toFixed(1) + ' mi' : dist + ' m') + ' from the job. Your boss will see that.' : !geo ? 'Clocked in.' : pos ? 'Clocked in. This job has no map location, so your spot was saved without a check.' : 'Clocked in without your location (it was blocked or unavailable).')
-            : 'Clocked out. ' + (+d.hours || 0).toFixed(2) + ' hours added to your timesheet.';
+            : 'Clocked out. ' + (+d.hours || 0).toFixed(2) + ' hours added to your timesheet' + (+d.lunch_min ? ' (' + d.lunch_min + ' min lunch not counted).' : '.');
         }, 400);
       });
     }).catch(function () { if (msg) { msg.className = 'ca-msg bad'; msg.textContent = 'Couldn’t reach the server. Try again.'; } if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">' + (kind === 'in' ? 'login' : 'logout') + '</span><span>' + (kind === 'in' ? 'Clock in' : 'Clock out') + '</span>'; } });

@@ -34,6 +34,7 @@
     marketing: '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/>',
     reputation: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    home: '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     crew: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
     badge: '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/>',
@@ -109,7 +110,7 @@
   }
 
   /* ---------- sidebar ---------- */
-  var CREW = [['crewclock', 'Clock in', 'clock'], ['crewprojects', 'Projects', 'projects'], ['crewhome', 'My crew', 'crew'], ['crewid', 'My ID', 'badge'], ['crewmsgs', 'Messages', 'convos']];
+  var CREW = [['crewdash', 'Home', 'home'], ['crewclock', 'Time clock', 'clock'], ['crewprojects', 'Projects', 'projects'], ['crewhome', 'My crew', 'crew'], ['crewid', 'My ID', 'badge'], ['crewmsgs', 'Messages', 'convos']];
   var SUBNAV = [['subjobs', 'Jobs', 'projects'], ['subinvoices', 'Invoices', 'finances'], ['subchanges', 'Change orders', 'page'], ['subcomply', 'Compliance', 'badge'], ['crewmsgs', 'Messages', 'convos'], ['subcompany', 'My company', 'crew']];
   function limitedNav() { return sub() ? SUBNAV : CREW; }
   function lockedV(v) { return !!(window.bpLocked && bpLocked(v)); }

@@ -75,9 +75,12 @@
       act: 'Click Team and invite them by email.' }
   ];
   var CREW = [
-    { v: 'crewclock', at: '#ca-go', nav: 'crewclock', t: 'Clock in',
-      d: 'Your hours go straight to payroll, so clock in at every job.',
-      act: 'Pick today\'s job above, then tap Clock in when you get there. Tap it again to clock out.' },
+    { v: 'crewdash', at: '#chm-go', nav: 'crewdash', t: 'Your day',
+      d: 'Where you stand, today\'s jobs with directions, and your hours this week.',
+      act: 'Tap Clock in to open the time clock.' },
+    { v: 'crewclock', at: '#ca-go', nav: 'crewclock', t: 'Time clock',
+      d: 'Your hours go straight to payroll, so clock in at every job. Start lunch when you eat: lunch is unpaid, short breaks are paid.',
+      act: 'Pick today\'s job above, then tap Clock in when you get there.' },
     { v: 'crewprojects', at: '#bpxViewArea .ca-proj', nav: 'crewprojects', t: 'Your jobs',
       d: 'Only the jobs you are on: address, schedule, notes and materials.',
       act: 'Tap a job to open it. Add photos and receipts from inside it.' },
