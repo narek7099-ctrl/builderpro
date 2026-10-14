@@ -21637,10 +21637,7 @@ function bpPrDetHtml(D){
     +'<div class="pr-top pr-det-top">'+logo+'<div class="pr-who"><h2>'+bpEsc(p.name)+'</h2><span>'+bpEsc([p.trade,loc].filter(Boolean).join(' · '))+'</span></div></div>'
     +(p.sample?'<div class="hp-note pr-smp-note"><span class=ms>info</span><span><b>Sample listing.</b> This is a BuilderPro test company. Its photos and reviews are examples to show how listings look.</span></div>':'')
     +'<div class="pr-scores">'+rate+'</div>'
-    +(full&&(full.calc||full.book)?'<div class="pr-start">'
-      +(full.calc?'<button type="button" class="pr-start-b" onclick="bpPrFrame(\''+bpHpEscA(full.calc)+'\',\'Instant estimate\')"><span class="pr-start-ic"><span class=ms>calculate</span></span><span><b>Instant estimate</b><small>Get a price range in about a minute</small></span><span class=ms>chevron_right</span></button>':'')
-      +(full.book?'<button type="button" class="pr-start-b" onclick="bpPrFrame(\''+bpHpEscA(full.book+'&embed=1')+'\',\'Book an inspection\')"><span class="pr-start-ic"><span class=ms>event_available</span></span><span><b>Book an inspection</b><small>Pick a time that suits you</small></span><span class=ms>chevron_right</span></button>':'')
-      +'</div>':'')
+    +bpPrStart(p,full,tel,sent)
     +(p.about?'<section class="pr-sec"><h3>About</h3><p>'+bpEsc(p.about)+'</p></section>':'')
     +(svcs?'<section class="pr-sec"><h3>Services</h3><div class="pr-svcs">'+svcs+'</div></section>':'')
     +(p.area||loc?'<section class="pr-sec"><h3>Service area</h3><p class="pr-area"><span class=ms>location_on</span>'+bpEsc(p.area||loc)+'</p></section>':'')
@@ -21651,6 +21648,67 @@ function bpPrDetHtml(D){
   +'</div></div>'
   +(sent?'':'<div class="pr-det-foot">'+(tel?'<a class="hx-btn" href="'+bpHpEscA(tel)+'"><span class=ms>call</span>Call</a>':'')+'<button type="button" class="hx-btn pri" onclick="bpPrToForm()"><span class=ms>request_quote</span>Get a free quote</button></div>');
 }
+/* the four ways to start with a pro: book, price it, talk now, or ask for a quote */
+function bpPrStart(p,full,tel,sent){
+  var b=function(ic,t,sub,fn,cls){return '<button type="button" class="pr-start-b'+(cls?' '+cls:'')+'" onclick="'+fn+'"><span class="pr-start-ic"><span class=ms>'+ic+'</span></span><span><b>'+t+'</b><small>'+sub+'</small></span><span class=ms>chevron_right</span></button>';};
+  var talk=(full&&full.chat)||tel;
+  return '<section class="pr-sec pr-howto"><h3>How do you want to start?</h3><div class="pr-start">'
+    +(full&&full.book?b('event_available','Book an inspection','Pick a time for a free look at the job','bpPrFrame(\''+bpHpEscA(full.book+'&embed=1')+'\',\'Book an inspection\')'):'')
+    +(full&&full.calc?b('calculate','Instant estimate','A price range in about a minute','bpPrFrame(\''+bpHpEscA(full.calc)+'\',\'Instant estimate\')'):'')
+    +(talk?b('forum','Talk to them now',(full&&full.chat?'Chat, text or call. '+bpEsc(full.assistant||'Their assistant')+' answers right away':'Call or text '+bpEsc(p.name)),'bpPrTalk()'):'')
+    +(sent?'':b('request_quote','Ask for a quote','Goes straight to the owner, who gets back to you','bpPrToForm()'))
+    +'</div></section>';
+}
+/* talk now: chat in the app, text, or call */
+window.bpPrTalk=function(){
+  var D=_bpPr.det;if(!D||!D.p)return;var p=D.p,f=D.full||{},num=String(p.phone||'').replace(/[^\d+]/g,'');
+  var host=document.getElementById('bpSign');if(!host)return;
+  var old=document.getElementById('prTalk');if(old)old.remove();
+  var el=document.createElement('div');el.id='prTalk';el.className='pr-talk';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Talk to '+p.name);
+  var row=function(ic,t,sub,attr){return '<'+(attr.indexOf('href')===0?'a ':'button type="button" ')+attr+' class="pr-talk-r"><span class="pr-start-ic"><span class=ms>'+ic+'</span></span><span><b>'+t+'</b><small>'+sub+'</small></span><span class=ms>chevron_right</span></'+(attr.indexOf('href')===0?'a':'button')+'>';};
+  el.innerHTML='<div class="pr-talk-bg" onclick="this.parentNode.remove()"></div><div class="pr-talk-card"><i class="pr-talk-grab"></i><h3>Talk to '+bpEsc(p.name)+'</h3>'
+    +(f.chat?row('chat','Chat here','With '+bpEsc(f.assistant||'their assistant')+', any time. Answers in seconds','onclick="document.getElementById(\'prTalk\').remove();bpPrChat()"'):'')
+    +(num?row('sms','Send a text',bpEsc(p.phone),'href="sms:'+bpHpEscA(num)+'"'):'')
+    +(num?row('call','Call',bpEsc(p.phone),'href="tel:'+bpHpEscA(num)+'"'):'')
+    +'<button type="button" class="pr-talk-x" onclick="document.getElementById(\'prTalk\').remove()">Close</button></div>';
+  host.appendChild(el);
+};
+/* the chat: the contractor's assistant (ai-chat), with the signed-in homeowner's details */
+var _bpPrChat={id:'',msgs:[],busy:false,me:null};
+window.bpPrChat=function(){
+  var D=_bpPr.det;if(!D||!D.p||!D.full||!D.full.chat)return;var p=D.p,f=D.full;
+  if(_bpPrChat.id!==D.id)_bpPrChat={id:D.id,msgs:[{role:'assistant',content:'Hi, this is '+(f.assistant||'the team')+' with '+String(p.name).replace(/\.+$/,'')+'. What can we help you with?'}],busy:false,me:null};
+  bpMeLoad().then(function(se){
+    var u=se&&se.user,m=(u&&u.user_metadata)||{};
+    _bpPrChat.me=u?{name:String(m.full_name||'').trim(),phone:String(m.phone||'').trim(),email:String(u.email||'')}:null;
+  });
+  var host=document.getElementById('bpSign');if(!host)return;
+  var el=document.getElementById('prChat');if(el)el.remove();
+  el=document.createElement('div');el.id='prChat';el.className='pr-det pr-frame pr-chat';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+  el.innerHTML='<div class="pr-det-bar"><button type="button" class="pr-x" onclick="document.getElementById(\'prChat\').remove()" aria-label="Back to the listing"><span class=ms>arrow_back</span></button><b>'+bpEsc(f.assistant||'Chat')+' · '+bpEsc(p.name)+'</b><span></span></div>'
+    +'<div class="pr-chat-log" id="prChatLog" aria-live="polite"></div>'
+    +'<form class="pr-chat-in" onsubmit="event.preventDefault();bpPrChatSend()"><input id="prChatTxt" autocomplete="off" placeholder="Type a message" maxlength="600" aria-label="Message"><button type="submit" aria-label="Send"><span class=ms>send</span></button></form>'
+    +'<p class="pr-chat-fine">'+bpEsc(f.assistant||'This assistant')+' is '+bpEsc(p.name)+'’s AI assistant. Ask for a person any time.</p>';
+  host.appendChild(el);bpPrChatDraw();
+  setTimeout(function(){var i=document.getElementById('prChatTxt');if(i)i.focus();},200);
+};
+function bpPrChatDraw(){
+  var L=document.getElementById('prChatLog');if(!L)return;
+  L.innerHTML=_bpPrChat.msgs.map(function(m){return '<div class="pr-msg '+(m.role==='user'?'me':'them')+'">'+bpEsc(m.content)+'</div>';}).join('')
+    +(_bpPrChat.busy?'<div class="pr-msg them typing"><i></i><i></i><i></i></div>':'');
+  L.scrollTop=L.scrollHeight;
+}
+window.bpPrChatSend=function(){
+  var i=document.getElementById('prChatTxt'),t=i?i.value.trim():'';if(!t||_bpPrChat.busy)return;
+  var D=_bpPr.det;if(!D||!D.full)return;
+  var hist=_bpPrChat.msgs.slice(-10);
+  _bpPrChat.msgs.push({role:'user',content:t});i.value='';_bpPrChat.busy=true;bpPrChatDraw();
+  fetch(BP_URL+'/functions/v1/ai-chat',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},
+    body:JSON.stringify({slug:D.full.chat,message:t,history:hist,source:'find-a-pro',visitor:_bpPrChat.me||undefined})})
+    .then(function(r){return r.json();}).then(function(d){
+      _bpPrChat.busy=false;_bpPrChat.msgs.push({role:'assistant',content:(d&&d.reply)||'Sorry, I didn’t catch that. Could you try again?'});bpPrChatDraw();
+    }).catch(function(){_bpPrChat.busy=false;_bpPrChat.msgs.push({role:'assistant',content:'We lost the connection for a second. Try sending that again.'});bpPrChatDraw();});
+};
 window.bpPrGalScroll=function(g){var n=document.getElementById('prGalN');if(!n)return;var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));n.textContent=(i+1)+' / '+g.children.length;};
 window.bpPrToForm=function(){var f=document.querySelector('#prDet .pr-form');if(!f)return;try{f.scrollIntoView({block:'start',behavior:'smooth'});}catch(e){}var i=f.querySelector('input[name=name]');if(i&&i.value)i=f.querySelector('input[name=phone]');if(i)setTimeout(function(){i.focus({preventScroll:true});},350);};
 window.bpPrShare=function(){
@@ -23071,6 +23129,32 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .pr-start-b>.ms{color:var(--hp-grey2);font-size:22px;}
 #bpSign .pr-start-ic{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:var(--hp-bluesoft);color:var(--hp-blue2);display:grid;place-items:center;}
 #bpSign .pr-start-ic .ms{font-size:24px;}
+#bpSign .pr-howto .pr-start{display:grid;grid-template-columns:1fr;gap:8px;}
+@media(min-width:700px){#bpSign .pr-howto .pr-start{grid-template-columns:1fr 1fr;}}
+#bpSign .pr-talk{position:fixed;inset:0;z-index:75;display:flex;align-items:flex-end;justify-content:center;}
+#bpSign .pr-talk-bg{position:absolute;inset:0;background:rgba(16,24,40,.45);}
+#bpSign .pr-talk-card{position:relative;width:100%;max-width:520px;background:var(--hp-card);border-radius:22px 22px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom));box-sizing:border-box;animation:prIn .22s cubic-bezier(.2,0,0,1);}
+#bpSign .pr-talk-grab{display:block;width:40px;height:4px;border-radius:2px;background:var(--hp-line);margin:4px auto 10px;}
+#bpSign .pr-talk-card h3{margin:0 2px 10px;font-size:18px;}
+#bpSign .pr-talk-r{display:flex;align-items:center;gap:12px;width:100%;padding:12px 2px;border:0;border-top:1px solid var(--hp-line);background:none;font:inherit;color:inherit;text-align:left;text-decoration:none;cursor:pointer;}
+#bpSign .pr-talk-r>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+#bpSign .pr-talk-r b{font-size:15px;}
+#bpSign .pr-talk-r small{font-size:13px;color:var(--hp-grey);}
+#bpSign .pr-talk-r>.ms{color:var(--hp-grey2);}
+#bpSign .pr-talk-x{width:100%;margin-top:8px;padding:12px;border:1px solid var(--hp-line);border-radius:12px;background:var(--hp-card);font:inherit;font-weight:600;color:inherit;cursor:pointer;}
+#bpSign .pr-chat{z-index:72;}
+#bpSign .pr-chat-log{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:8px;max-width:720px;width:100%;margin:0 auto;box-sizing:border-box;}
+#bpSign .pr-msg{max-width:80%;padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;}
+#bpSign .pr-msg.them{align-self:flex-start;background:var(--hp-card);border:1px solid var(--hp-line);border-bottom-left-radius:6px;}
+#bpSign .pr-msg.me{align-self:flex-end;background:var(--hp-blue);color:#fff;border-bottom-right-radius:6px;}
+#bpSign .pr-msg.typing{display:flex;gap:4px;padding:14px;}
+#bpSign .pr-msg.typing i{width:7px;height:7px;border-radius:50%;background:var(--hp-grey2);animation:prDot 1s infinite;}
+#bpSign .pr-msg.typing i:nth-child(2){animation-delay:.15s}#bpSign .pr-msg.typing i:nth-child(3){animation-delay:.3s}
+@keyframes prDot{0%,80%,100%{opacity:.3}40%{opacity:1}}
+#bpSign .pr-chat-in{display:flex;gap:8px;padding:10px 12px;background:var(--hp-card);border-top:1px solid var(--hp-line);max-width:720px;width:100%;margin:0 auto;box-sizing:border-box;}
+#bpSign .pr-chat-in input{flex:1;min-width:0;height:46px;padding:0 16px;border:1px solid var(--hp-line);border-radius:23px;font:inherit;font-size:16px;background:var(--hp-bg);color:inherit;}
+#bpSign .pr-chat-in button{width:46px;height:46px;border:0;border-radius:50%;background:var(--hp-blue);color:#fff;display:grid;place-items:center;cursor:pointer;}
+#bpSign .pr-chat-fine{margin:0;padding:0 12px calc(10px + env(safe-area-inset-bottom));text-align:center;font-size:12px;color:var(--hp-grey);background:var(--hp-card);}
 #bpSign .pr-frame{z-index:70;}
 #bpSign .pr-frame iframe{flex:1;width:100%;border:0;background:#fff;}
 #bpSign a.pr-x{color:var(--hp-ink);text-decoration:none;}

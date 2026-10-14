@@ -11,15 +11,16 @@
 //        one listing in full. Yelp is read live when what we have is over a
 //        day old (Yelp's caching limit) and stored on bp_directory.yelp.
 //        Also calc (their instant-estimate calculator, on plans that have
-//        one) and book (their inspection booking page, when it can book).
+//        one), book (their inspection booking page, when it can book) and
+//        chat + assistant (their AI assistant's ai-chat slug and name).
 //   { op:"yelp_check", url }    -> { ok, name, rating, count, city } for Settings, so a contractor
 //                                  can see the Yelp page they pasted is theirs
 //   { op:"request", id, name, phone, email?, service?, details?, loc? }
 //        -> adds the homeowner to that contractor's Contacts (tag "Find a Pro"),
 //           which rings their bell as a new lead, and, when the contractor has
-//           their own HighLevel, creates the contact there tagged new-lead +
-//           find-a-pro so Speed to Lead and their other workflows fire and the
-//           conversation lands in their inbox. A signed-in homeowner's request
+//           their own HighLevel, creates the contact there tagged find-a-pro +
+//           quote-request: the owner answers it themselves (the AI stays out),
+//           and the conversation lands in their inbox. A signed-in homeowner's request
 //           is also kept in homeowner_requests for "My projects". { ok }
 //
 // Reads public.bp_directory (filled from Settings by bp_dir_sync) with the
@@ -224,10 +225,10 @@ async function ghlTokenFor(loc: string): Promise<string> {
   return "";
 }
 // what the listing can offer beyond a quote request
-async function extras(owner: string): Promise<{ calc: string; book: string }> {
+async function extras(owner: string): Promise<{ calc: string; book: string; chat: string; assistant: string }> {
   const [a, br, hs] = await Promise.all([
     rest(`accounts?user_id=eq.${owner}&select=plan,status&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
-    rest(`ai_brain?owner=eq.${owner}&select=ghl_location_id,booking_calendar_id,is_demo&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
+    rest(`ai_brain?owner=eq.${owner}&select=ghl_location_id,booking_calendar_id,is_demo,slug,assistant_name&limit=1`).then((r) => r.ok ? r.json() : []).catch(() => []),
     houseOwners(),
   ]);
   const acc = a[0] ?? {}, b = br[0] ?? {};
@@ -237,7 +238,11 @@ async function extras(owner: string): Promise<{ calc: string; book: string }> {
   // booking: their own calendar on their own HighLevel, a demo brain, or the house account
   const ownCal = !!(b.ghl_location_id && b.booking_calendar_id && b.ghl_location_id !== HOUSE_LOC);
   const book = live && (ownCal || b.is_demo === true || hs.includes(owner)) ? `${SITE}/book/?u=${owner}` : "";
-  return { calc, book };
+  // chat with their assistant (ai-chat, by the brain's slug): only on a live
+  // account whose assistant answers into their own HighLevel (or the house's)
+  const ownLoc = !!(b.ghl_location_id && (b.ghl_location_id !== HOUSE_LOC || hs.includes(owner) || b.is_demo === true));
+  const chat = live && b.slug && ownLoc ? String(b.slug) : "";
+  return { calc, book, chat, assistant: chat ? String(b.assistant_name || "Lisa").slice(0, 40) : "" };
 }
 
 async function search(b: Pro, req: Request) {
@@ -274,7 +279,7 @@ async function one(b: Pro, req: Request) {
   ]);
   p.yelp = y; p.yelp_at = new Date().toISOString();
   const owner = String(own[0]?.user_id ?? "");
-  const ex = owner ? await extras(owner) : { calc: "", book: "" };
+  const ex = owner ? await extras(owner) : { calc: "", book: "", chat: "", assistant: "" };
   // the calculator page already carries the owner id in its public link (u=)
   const calc = ex.calc ? `${SITE}/embed/${calcId(String(p.trade || ""))}.html?u=${owner}&utm_source=find-a-pro` : "";
   const photos = [...(p.photos ?? []), ...(y.photos ?? [])];
@@ -282,7 +287,7 @@ async function one(b: Pro, req: Request) {
     ok: true,
     pro: {
       ...pub(p, ""), photos,
-      zips: p.zips ?? [], calc, book: ex.book,
+      zips: p.zips ?? [], calc, book: ex.book, chat: ex.chat, assistant: ex.assistant,
       builderpro: p.bp_count > 0 ? { rating: half(p.bp_rating), count: p.bp_count, reviews: Array.isArray(p.bp_reviews) ? p.bp_reviews : [] } : null,
       yelp: y.count > 0 ? { rating: half(y.rating), count: y.count, url: y.url, reviews: y.reviews ?? [] } : null,
     },
@@ -364,7 +369,10 @@ async function toGhl(owner: string, l: { name: string; phone: string; email: str
       body: JSON.stringify({
         locationId: loc, firstName: first, lastName: rest_.join(" ") || undefined, name: l.name,
         phone: l.phone, email: l.email || undefined, source: "BuilderPro Find a Pro",
-        tags: ["new-lead", "find-a-pro", ...(test ? ["system-test"] : [])],
+        // a quote request goes to the owner, not to the AI: no new-lead tag,
+        // so Speed to Lead / the AI Qualifier stay out of it. The template's
+        // "Find a Pro quote request" workflow alerts the owner instead.
+        tags: ["find-a-pro", "quote-request", ...(test ? ["system-test"] : [])],
       }),
     });
     const d = await r.json().catch(() => ({}));
