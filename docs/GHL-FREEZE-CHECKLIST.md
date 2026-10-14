@@ -1,5 +1,7 @@
 # HighLevel: everything to finish before the freeze
 
+> **Superseded by [GHL-BUILD-GUIDE.md](GHL-BUILD-GUIDE.md)**, which has the step-by-step version. Items A3 and A4 below turned out to be built already (workflow 02 has the new-lead and calculator-lead tag triggers).
+
 The freeze only matters for work that has to happen **inside HighLevel**: the
 three templates (Foundation, OS, Enterprise), their snapshots, Lisa's prompts,
 and BuilderPro's own house account. Code fixes in the app don't need HighLevel
