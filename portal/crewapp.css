@@ -439,3 +439,11 @@
   #bpx .chm-num{font-size:34px}
   #bpx .ck-brks{grid-template-columns:1fr}
 }
+
+/* ---------- clock buttons: normal size, brand blue (2026-11) ---------- */
+#bpx .ck-btn{height:52px;border-radius:12px;font-size:16px;font-weight:600;gap:8px;background:var(--blue,#2f6bff);box-shadow:none}
+#bpx .ck-btn .ms{font-size:20px}
+#bpx .ck-btn:hover{filter:brightness(1.06)}
+#bpx .ck-btn.out{background:var(--card);color:#b42318;border:1px solid rgba(180,35,24,.35);box-shadow:none}
+#bpx .ck-btn.brk{background:var(--card);color:#b45309;border:1px solid rgba(217,119,6,.45);box-shadow:none}
+#bpx .ck-btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
