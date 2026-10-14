@@ -115,12 +115,18 @@
     d: 'That is the whole tour. Everything you saw is in the menu on the left.',
     act: 'Want to see it again? Click ? up here, then Take the tour.' };
 
+  function mob() { return !!(window.bpMobile && bpMobile.on()); }
+  /* on a phone the help button is gone: the tour ends on the Apps / More tab */
+  function finish() {
+    return mob() ? { v: '', at: '#bpTabbar [data-tab="apps"]', nav: '', t: 'You are all set',
+      d: 'That is the whole tour. The tabs at the bottom take you to what you use most.', act: 'Want to see it again? Tap ' + (role() === 'owner' ? 'Apps' : 'More') + ', then Take the tour.' } : FINISH;
+  }
   function role() { return window.bpTeamIsSub && bpTeamIsSub() ? 'sub' : window.bpTeamIsCrew && bpTeamIsCrew() ? 'crew' : 'owner'; }
   function stepsFor() {
     var r = role(), lk = function (v) { return !!(window.bpLocked && bpLocked(v)); };
     var ok = function (v) { return !v || !window.bpTeamAllows || bpTeamAllows(v); };
     var list = (r === 'sub' ? SUB : r === 'crew' ? CREW : OWNER).filter(function (s) { return !lk(s.v) && ok(s.v); });
-    return list.concat([FINISH]);
+    return list.concat([finish()]);
   }
 
   /* ---------- where to point ---------- */
@@ -161,14 +167,14 @@
       + '<p class="bpt-p">A quick tour shows you ' + what + '. It takes about two minutes, and you click through at your own pace.</p>'
       + '<div class="bpt-act bpt-act-w"><button type="button" class="bpt-b ghost" data-t="skip">Skip for now</button>'
       + '<button type="button" class="bpt-b pri" data-t="start"><span>Show me around</span><span class="ms">arrow_forward</span></button></div>'
-      + '<p class="bpt-foot"><span class="ms">help</span><span>You can replay it any time: click <b>?</b> at the top right, then <b>Take the tour</b>.</span></p>');
+      + '<p class="bpt-foot"><span class="ms">help</span><span>You can replay it any time: ' + (mob() ? 'tap <b>' + (who === 'owner' ? 'Apps' : 'More') + '</b> at the bottom' : 'click <b>?</b> at the top right') + ', then <b>Take the tour</b>.</span></p>');
     T.mode = 'welcome';
     var card = T.el.querySelector('.bpt-card'); card.classList.add('mid', 'welcome');
     T.el.classList.add('dim');
     T.el.addEventListener('click', function (e) {
       var b = e.target.closest('[data-t]'); if (!b) return;
       if (b.getAttribute('data-t') === 'start') { close(false); window.bpTour(); }
-      else { close(true); if (window.bpToast) bpToast('No problem. Click ? then Take the tour whenever you want it.'); }
+      else { close(true); if (window.bpToast) bpToast(mob() ? 'No problem. Tap ' + (who === 'owner' ? 'Apps' : 'More') + ', then Take the tour whenever you want it.' : 'No problem. Click ? then Take the tour whenever you want it.'); }
     });
     keys(function (e) { if (e.key === 'Escape') { e.preventDefault(); close(true); } });
     setTimeout(function () { var s = T.el && T.el.querySelector('[data-t="start"]'); if (s) s.focus({ preventScroll: true }); }, 60);
