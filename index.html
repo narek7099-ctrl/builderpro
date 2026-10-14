@@ -2875,6 +2875,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
   });
 }catch(e){} })();
 </script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
+}catch(e){} })();
+</script>
 <!--ST-END--></body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
@@ -4471,6 +4494,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
     var l=document.createElement('link'); l.id=f[0]; l.rel='stylesheet'; l.href=f[1];
     (document.head||document.documentElement).appendChild(l);
   });
+}catch(e){} })();
+</script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
 }catch(e){} })();
 </script>
 <!--ST-END--></body><style>
@@ -6341,6 +6387,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
   });
 }catch(e){} })();
 </script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
+}catch(e){} })();
+</script>
 <!--ST-END--></body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
@@ -8114,6 +8183,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
     var l=document.createElement('link'); l.id=f[0]; l.rel='stylesheet'; l.href=f[1];
     (document.head||document.documentElement).appendChild(l);
   });
+}catch(e){} })();
+</script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
 }catch(e){} })();
 </script>
 <!--ST-END--></body><style>
@@ -9969,6 +10061,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
     var l=document.createElement('link'); l.id=f[0]; l.rel='stylesheet'; l.href=f[1];
     (document.head||document.documentElement).appendChild(l);
   });
+}catch(e){} })();
+</script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
 }catch(e){} })();
 </script>
 <!--ST-END--></body><style>
@@ -11945,6 +12060,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
   });
 }catch(e){} })();
 </script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
+}catch(e){} })();
+</script>
 <!--ST-END--></body><style>
 #est-embed button,#est-embed [class*=btn]{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .2s,filter .2s;}
 #est-embed button:hover,#est-embed [class*=btn]:hover{transform:translateY(-2px);filter:brightness(1.06);}
@@ -13768,6 +13906,29 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stIn .7s var(--st
     var l=document.createElement('link'); l.id=f[0]; l.rel='stylesheet'; l.href=f[1];
     (document.head||document.documentElement).appendChild(l);
   });
+}catch(e){} })();
+</script>
+<script id=&quot;bp-lead-relay&quot;>
+/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
+   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
+   lands in their Contacts and their own HighLevel. The original send is left
+   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+(function(){ try{
+  if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
+  var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
+  if(!/^[0-9a-f-]{36}$/i.test(own))return;
+  var F=window.fetch;
+  window.fetch=function(u,o){
+    try{
+      var s=typeof u==='string'?u:(u&amp;&amp;u.url)||'';
+      if(/leadconnectorhq\.com\/hooks\/[^\/]+\/webhook-trigger\//i.test(s)&amp;&amp;o&amp;&amp;String(o.method||'').toUpperCase()==='POST'){
+        var d; try{d=JSON.parse(o.body);}catch(e){d={};}
+        F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+      }
+    }catch(e){}
+    return F.apply(this,arguments);
+  };
 }catch(e){} })();
 </script>
 <!--ST-END--></body><style>
