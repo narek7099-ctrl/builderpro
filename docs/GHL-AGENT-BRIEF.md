@@ -8,6 +8,19 @@ touch, and what to report back.** If the two disagree, this brief wins.
 Work **one phase at a time.** Stop at the end of each phase and give the user
 the report for that phase before you start the next.
 
+**Non-stop mode.** If the user says "run all phases without stopping", do
+Phases 1 to 4 back to back. Don't wait for approval between phases or
+between templates. Instead:
+- Write each phase's report to the chat as you finish it, then keep going.
+- Anything that would need the user (a charge, a missing fill-in, a rule you
+  can't follow) is **skipped and added to a "Needs the user" list**. Use the
+  fill-in defaults; where the default is "ask", leave that step out. Don't stop.
+- If a page errors or HighLevel logs you out, reload and retry up to 3 times.
+  Then skip that item and note it.
+- The hard rules below still apply, all of them.
+- End with the final report (format at the bottom), including the full
+  "Needs the user" list.
+
 ---
 
 ## Fill-ins (ask the user for any that are blank before Phase 2)
