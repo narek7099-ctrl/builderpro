@@ -257,3 +257,33 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
 - Earlier entries say Owner Phone is blank in both templates. That is only true for BP OS Template. BP Enterprise Template's Owner Phone custom value is +1 818-453-1111, the same number as the "Narek Test" contact (the owner's own number).
 - So the Enterprise test runs sent owner-alert texts to that number: 44, 47 and 48 at 7:27 PM, and 52 at 8:37 PM. All four are marked "Executed". No customer messages went out: the test contact has no phone or email.
 - Clients get their own Owner Phone, but this template value ships with the snapshot. Clear it, or replace it with a placeholder, if new client accounts should not inherit it.
+
+## Agent brief run, Phase 3 and 4 - Oct 14, 2026 (non-stop mode)
+
+### Phase 3, all three templates
+- Custom value `ridge_assistant_name` = Lisa added. Workflow 01's first text now uses `{{custom_values.ridge_assistant_name}}` instead of the typed "Lisa".
+- Built in Foundation, then copied with "Copy to sub-account" to OS and Enterprise (copies arrive as Draft; the Jobs/New Lead pipeline step in 23 had to be re-picked; error checker 0 in every copy). All published:
+  - 23 Find a Pro - Quote Request (tag quote-request)
+  - S1 Unanswered Message, S2 New Lead Not Contacted, S3 Catch-all New Contact
+  - S4 Missed Call After Hours: incoming call no-answer/busy/voicemail; If current hour is before 8:00 AM or after 7:00 PM (true from 8:00 PM), contact time zone, no send window, re-entry off, stop on response on. Text: "Sorry we missed you! We'll call you first thing in the morning. Want to book a free inspection now? {{custom_values.booking_link}}"
+  - S5 Lisa Handoff: triggers tag `stop bot` or tag `needs-human`; removes bot-active; SMS to {{custom_values.owner_phone}} with the inbox link.
+- 02 Speed to Lead: new "AI chat" branch (tag ai-chat): Create/update opportunity Jobs / New Lead / open, then add tag in-pipeline. No opener text.
+- 03a/03b/03c: added Create/update opportunity Jobs / New Lead / open, named "{{contact.name}} Repair / Replacement / Storm or Insurance".
+- 03d Question: was published, set to Draft (not deleted).
+- 11 Review Request (OS, Enterprise): Add tag review-feedback at the end of the 1-3 star branch.
+- Enterprise: Owner Phone custom value cleared. Owner Email is still support@builderpro-os.com.
+- Conversation AI "Lisa": name as custom value, "How you text (sound like a person)" rules appended, wait before responding 45 s. Stop Bot scenario "Needs a person" (asks for a person / angry / emergency) adds tag `stop bot`, final message "Got it. I'm getting someone from the team on this right now, they'll reach out to you shortly.", reactivates after 24 h. Goodbye Detection left off.
+- Voice AI "Lisa (calls)": name as custom value, "How you talk" rules appended, greeting "Hi, thanks for calling {{custom_values.business_name}}, this is {{custom_values.ridge_assistant_name}}. How can I help?", voice speed 0.95, dynamic voice speed on, dynamic response on, backchanneling on at 0.4. Post-call contact notes (summary) on.
+- Not possible / skipped:
+  - Conversation AI working hours: no such setting in this version.
+  - Voice AI transfer to the owner's cell: the Call transfer number field only takes a fixed +country number, not a custom value. Left unset; the prompt falls back to taking a message.
+  - Human Handover action: needs a user to assign to; the templates have none. Used Stop Bot + S5 instead.
+  - The Conversation AI tag picker can't find existing tags (search shows none), so the scenario uses the default `stop bot` tag and S5 listens for it.
+  - "Also worth adding" workflows: not built.
+- Conversation AI ids: Foundation qCvZkBAx3XZHw48hTW26, OS BDrsqT1rm8jO8x6vtSqZ, Enterprise 8IPa5ZGm3NWpvK3hET8F. Voice AI ids: Foundation 6aba0429fa48a90e33189a58, OS 6aba0cde4b104f62327b40c3, Enterprise 6aba992a1a6b909ae6f9d072.
+
+### Phase 4, snapshots refreshed in place (all assets, Oct 14, 2026, 8:02-8:04 PM)
+- BuilderPro Foundation m8xaXFkznoQZLjySnFlZ: v3 (137 assets)
+- BuilderPro OS cdRGIx2azgolhnDj257c: v4 (201 assets)
+- BuilderPro Enterprise cWoCOr2RJDfc3x3FxnQm: v5 (238 assets)
+- Not pushed to any existing sub-account.
