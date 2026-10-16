@@ -1,12 +1,12 @@
 /* ==================================================================
-   Installations: what was installed, when, and when it needs service.
+   Job sign-off: what was installed, when, and how often it needs service.
 
-   Finishing a job now ends with a sign-off: the install date, what was
-   put in, how often it needs maintenance (or that it needs none), and the
-   contractor's signature. That record lives on the job (j.install), so it
-   syncs with the rest of the job data. The Installations page lists every
-   signed-off job and tracks the next service date; logging a service moves
-   the clock forward.
+   Finishing a job ends with a sign-off: the install date, what was put in,
+   how often it needs maintenance (or that it needs none), and the
+   contractor's signature. It stays on the job (j.install, with the
+   signature) and makes an Equipment record tagged Installed
+   (portal/assets.js), which is where maintenance is tracked now. The old
+   Installations page opens Equipment on "Service due".
    ================================================================== */
 (function () {
   'use strict';
@@ -94,7 +94,13 @@
         sig: SG.drew ? $('bpi-sig').toDataURL('image/png') : prev.sig, at: SG.drew ? Date.now() : (prev.at || Date.now()),
         by: (window.BP_TEAM && BP_TEAM.name) || window._bpEmail || '', lastService: prev.lastService || null, services: prev.services || []
       };
-      return save.apply(this, arguments);
+      var out = save.apply(this, arguments);
+      /* the record on the Equipment page */
+      if (window.BPA && BPA.fromInstall) Promise.resolve(BPA.load()).then(function () { return BPA.fromInstall(j); }).then(function (a) {
+        if (!a) return; try { bpJobsSet(bpJobsGet()); } catch (e) {}
+        if (window.bpToast) bpToast('Added to Equipment. Open it there to scan the nameplate.', 'success');
+      });
+      return out;
     };
     return true;
   }
@@ -103,7 +109,9 @@
   /* ---------- the Installations page ---------- */
   var F = 'due';
   window.bpInstallFilter = function (f) { F = f; window.bpInstalls(); };
-  window.bpInstalls = function () {
+  /* Installations is now Equipment, filtered to what needs service */
+  window.bpInstalls = function () { if (window.BPA) { BPA.filter = 'due'; setTimeout(function () { bpNav('assets'); }, 0); return; } bpInstallsOld(); };
+  var bpInstallsOld = function () {
     var area = $('bpxViewArea'); if (!area) return;
     var list = jobs().filter(function (j) { return j.install; }).map(function (j) { return { j: j, s: state(j.install), n: bpInstallNext(j.install) }; });
     var unsigned = jobs().filter(function (j) { return j.status === 'done' && !j.install; });

@@ -157,13 +157,12 @@
   }
   var PER = { 3: 'every 3 months', 6: 'every 6 months', 12: 'once a year', 24: 'every 2 years', 36: 'every 3 years', 60: 'every 5 years' };
   function srcInstalls() {
-    var jobs = (window.bpJobsGet ? bpJobsGet() : []).filter(function (j) { return j.install && j.install.date; });
-    if (!jobs.length) return '';
-    var by = {};
-    jobs.forEach(function (j) {
-      var it = (j.install.item || kind(j) || 'Installed work').slice(0, 50), p = +j.install.period || 0;
-      var key = it.toLowerCase() + '|' + p; by[key] = by[key] || { it: it, p: p, n: 0 }; by[key].n++;
-    });
+    var by = {}, add = function (it, p) { it = String(it || 'Installed work').slice(0, 50); p = +p || 0; var key = it.toLowerCase() + '|' + p; by[key] = by[key] || { it: it, p: p, n: 0 }; by[key].n++; };
+    /* the Equipment records (kinds of unit, not anyone's details), else the job sign-offs */
+    var eq = window.BPA && BPA.loaded ? (BPA.list || []).filter(function (a) { return a.status !== 'removed' && +a.service_months; }) : [];
+    if (eq.length) eq.forEach(function (a) { add(BPA.catName ? BPA.catName(a.category) : a.category, a.service_months); });
+    else (window.bpJobsGet ? bpJobsGet() : []).filter(function (j) { return j.install && j.install.date; }).forEach(function (j) { add(j.install.item || kind(j), j.install.period); });
+    if (!Object.keys(by).length) return '';
     var rows = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.n - a.n; }).slice(0, 10);
     return 'Maintenance we recommend after install:\n' + rows.map(function (r) {
       return '- ' + r.it + ': ' + (r.p ? 'service ' + (PER[r.p] || 'every ' + r.p + ' months') : 'no routine maintenance needed');
