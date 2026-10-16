@@ -78,7 +78,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const clean = (s: unknown, n: number) => String(s ?? "").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, " ").trim().slice(0, n);
 const r2 = (n: unknown) => Math.round((Number(n) || 0) * 100) / 100;
 const money = (n: number) => "$" + r2(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
+/* a date HighLevel takes as "today" in any US location: UTC runs ahead in the
+   evening and HighLevel refuses an issue date in its own future */
+const day = (offset: number) => new Date(Date.now() + offset * 864e5).toLocaleDateString("en-CA", { timeZone: "Pacific/Honolulu" });
 const clientIp = (req: Request) => (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || "";
 // deno-lint-ignore no-explicit-any
 type Row = Record<string, any>;
@@ -389,21 +391,24 @@ async function toGhl(r: Row, tier: Row): Promise<Row> {
   const t = await ghlToken(loc);
   if (!t) return { skipped: "no_token" };
   const co = await company(r.owner);
-  const items = (tier.lines as Line[]).map((l) => ({ name: l.name.slice(0, 120), description: (l.desc || l.name).slice(0, 300), currency: "USD", amount: r2(l.price), qty: l.qty, taxes: [] }));
-  if (tier.tax > 0) items.push({ name: `Sales tax (${tier.taxPct}%)`, description: "Sales tax", currency: "USD", amount: r2(tier.tax), qty: 1, taxes: [] });
+  const items = (tier.lines as Line[]).map((l) => ({ name: l.name.slice(0, 120), description: (l.desc || l.name).slice(0, 300), currency: "USD", amount: r2(l.price), qty: l.qty, type: "one_time", taxes: [] }));
+  if (tier.tax > 0) items.push({ name: `Sales tax (${tier.taxPct}%)`, description: "Sales tax", currency: "USD", amount: r2(tier.tax), qty: 1, type: "one_time", taxes: [] });
   const payload: Row = {
-    altId: loc, altType: "location", name: ((r.tiers ?? []).length > 1 ? `${r.title} (${tier.name}: ${tier.title})` : String(r.title)).slice(0, 120),
+    altId: loc, altType: "location", title: "Estimate", name: ((r.tiers ?? []).length > 1 ? `${r.title} (${tier.name}: ${tier.title})` : String(r.title)).slice(0, 120),
     businessDetails: { name: co.name || "Your contractor" }, currency: "USD", items,
     discount: tier.disc > 0 ? { type: "fixed", value: tier.disc } : { type: "percentage", value: 0 },
     contactDetails: { id: r.ghl_contact, name: r.customer || "Customer", phoneNo: r.phone || undefined, email: r.email || undefined },
     issueDate: day(0), expiryDate: day(30), sentTo: { email: r.email ? [r.email] : [], phoneNo: r.phone ? [r.phone] : [] }, liveMode: true,
+    frequencySettings: { enabled: false },
   };
+  /* the estimate is the record; if HighLevel refuses it, the deposit and the
+     tags below still go, so the customer's yes is never lost */
   try {
     const c = await fetch(`${GHL_BASE}/invoices/estimate`, { method: "POST", headers: ghlH(t), body: JSON.stringify(payload) });
     const d = await c.json().catch(() => ({}));
     res.est_id = String(d?._id ?? d?.id ?? d?.estimate?._id ?? "");
-    if (!c.ok || !res.est_id) return { error: `estimate ${c.status}: ${String(d?.message ?? "").slice(0, 120)}` };
-  } catch (e) { return { error: String(e).slice(0, 120) }; }
+    if (!c.ok || !res.est_id) { res.est_id = ""; res.error = `estimate ${c.status}: ${String(Array.isArray(d?.message) ? d.message.join("; ") : d?.message ?? "").slice(0, 160)}`; }
+  } catch (e) { res.error = String(e).slice(0, 120); }
 
   // the deposit first (OS and Enterprise), so the 08 workflow's own call sees deposit-sent and skips
   const acct = await one(`accounts?user_id=eq.${r.owner}&select=plan&limit=1`);
@@ -418,14 +423,42 @@ async function toGhl(r: Row, tier: Row): Promise<Row> {
   } else res.deposit = { skipped: "plan" };
 
   // then mark it accepted, which runs the contractor's "Estimate accepted" workflow
+  if (res.est_id) {
+    try {
+      const u = await fetch(`${GHL_BASE}/invoices/estimate/${res.est_id}`, { method: "PUT", headers: ghlH(t),
+        body: JSON.stringify({ ...payload, estimateStatus: "accepted" }) });
+      res.accepted = u.ok;
+      if (!u.ok) { const m = ((await u.json().catch(() => ({}))) as Row)?.message; res.accept_error = `${u.status}: ${String(Array.isArray(m) ? m.join("; ") : m ?? "").slice(0, 160)}`; }
+    } catch (e) { res.accepted = false; res.accept_error = String(e).slice(0, 120); }
+  }
+  // the tag starts the same workflow when the status change doesn't
   try {
-    const u = await fetch(`${GHL_BASE}/invoices/estimate/${res.est_id}`, { method: "PUT", headers: ghlH(t),
-      body: JSON.stringify({ ...payload, frequencySettings: { enabled: false }, estimateStatus: "accepted" }) });
-    res.accepted = u.ok;
-    if (!u.ok) res.accept_error = `${u.status}: ${String(((await u.json().catch(() => ({}))) as Row)?.message ?? "").slice(0, 120)}`;
-  } catch (e) { res.accepted = false; res.accept_error = String(e).slice(0, 120); }
-  await fetch(`${GHL_BASE}/contacts/${r.ghl_contact}/tags`, { method: "POST", headers: ghlH(t), body: JSON.stringify({ tags: ["estimate-accepted", `chose-${tier.key}`] }) }).catch(() => {});
+    const g = await fetch(`${GHL_BASE}/contacts/${r.ghl_contact}/tags`, { method: "POST", headers: ghlH(t), body: JSON.stringify({ tags: ["estimate-accepted", `chose-${tier.key}`] }) });
+    res.tagged = g.ok;
+  } catch { res.tagged = false; }
+  res.stage = await moveDeal(t, loc, r.ghl_contact, tier.total);
   return res;
+}
+
+/* the customer's deal moves on by itself, whatever the account's workflows
+   do: to the deposit stage of its own pipeline (else "approved", else "won"),
+   at the approved price */
+async function moveDeal(t: string, loc: string, contact: string, total: number): Promise<string> {
+  try {
+    const o = await fetch(`${GHL_BASE}/opportunities/search?location_id=${loc}&contact_id=${contact}`, { headers: ghlH(t) });
+    const opps = ((await o.json().catch(() => ({}))) as Row)?.opportunities ?? [];
+    const deal = opps.filter((x: Row) => x.status === "open").sort((a: Row, z: Row) => String(z.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")))[0];
+    if (!deal) return "no open deal";
+    const p = await fetch(`${GHL_BASE}/opportunities/pipelines?locationId=${loc}`, { headers: ghlH(t) });
+    const pipe = (((await p.json().catch(() => ({}))) as Row)?.pipelines ?? []).find((x: Row) => x.id === deal.pipelineId);
+    const stages: Row[] = pipe?.stages ?? [];
+    const at = stages.findIndex((s) => s.id === deal.pipelineStageId);
+    const pick = [/deposit/i, /approved|accepted/i, /won|closed/i].map((re) => stages.findIndex((s) => re.test(String(s.name ?? "")))).find((i) => i > -1) ?? -1;
+    if (pick < 0) return "no deposit stage";
+    if (pick === at) return "already there";
+    const u = await fetch(`${GHL_BASE}/opportunities/${deal.id}`, { method: "PUT", headers: ghlH(t), body: JSON.stringify({ pipelineStageId: stages[pick].id, monetaryValue: total }) });
+    return u.ok ? `moved to ${stages[pick].name}` : `move failed ${u.status}`;
+  } catch (e) { return String(e).slice(0, 80); }
 }
 
 /* the estimate sheet in BuilderPro takes the chosen option's price */
@@ -469,6 +502,8 @@ async function choose(b: Row, req: Request) {
     `${[r.title, tier.title].filter(Boolean).join(" · ")}. Signed by ${name}.`, r.job_id ? `quote:${r.job_id}` : "estimates", "high", `opt-pick:${r.id}`);
   const work = (async () => {
     const g = await toGhl(row, tier);
+    if (g.error || g.accept_error || g.tagged === false) await notify(r.owner, "estimate_sync", "An approved estimate didn’t fully reach your CRM",
+      `${r.customer || "Your customer"} approved ${money(tier.total)}. ${g.error || g.accept_error || "The tag didn’t save."} Check the deposit and their stage.`, r.job_id ? `quote:${r.job_id}` : "estimates", "high", `opt-sync:${r.id}`);
     await rest(`estimate_options?id=eq.${r.id}`, { method: "PATCH", body: JSON.stringify({ est_id: String(g.est_id ?? ""), deposit: g, updated_at: new Date().toISOString() }) }).catch(() => {});
     await toSheet(row, tier, String(g.est_id ?? ""));
   })();

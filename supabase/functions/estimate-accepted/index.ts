@@ -21,7 +21,9 @@ const DEFAULT_PCT = 30;
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const ghlH = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" });
-const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
+/* a date HighLevel takes as "today" in any US location: UTC runs ahead in the
+   evening and HighLevel refuses an issue date in its own future */
+const day = (offset: number) => new Date(Date.now() + offset * 864e5).toLocaleDateString("en-CA", { timeZone: "Pacific/Honolulu" });
 
 
 /* ---------- BuilderPro payments bridge ----------
@@ -69,8 +71,10 @@ async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | 
   return ok ? { sent: true } : { sent: false, error: out.join("; ") };
 }
 
+const HOUSE_LOC = Deno.env.get("GHL_LOCATION_ID") ?? "", HOUSE_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
 async function locationToken(loc: string): Promise<string> {
   const own = await savedKey(loc); if (own) return own;
+  if (loc && loc === HOUSE_LOC && HOUSE_TOKEN) return HOUSE_TOKEN;   // BuilderPro's own account
   if (!GHL_API_KEY || !GHL_COMPANY_ID) return "";
   try {
     const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
@@ -157,10 +161,10 @@ Deno.serve(async (req) => {
   const ri = await fetch(`${GHL_BASE}/invoices/`, {
     method: "POST", headers: ghlH(t),
     body: JSON.stringify({
-      altId: loc, altType: "location", name: title,
+      altId: loc, altType: "location", title: "Invoice", name: title,
       businessDetails: { name: String(biz.name ?? "Your contractor"), ...(biz.phoneNo ? { phoneNo: biz.phoneNo } : {}), ...(biz.address ? { address: biz.address } : {}) },
       currency: String(est.currency ?? "USD"),
-      items: [{ name: title, description: `${pct}% deposit on your accepted estimate ${String(est.estimateNumber ?? "")}`.trim(), currency: String(est.currency ?? "USD"), amount, qty: 1, taxes: [] }],
+      items: [{ name: title, description: `${pct}% deposit on your accepted estimate ${String(est.estimateNumber ?? "")}`.trim(), currency: String(est.currency ?? "USD"), amount, qty: 1, type: "one_time", taxes: [] }],
       discount: { type: "percentage", value: 0 },
       contactDetails: { id: contactId, name, phoneNo: phone || undefined, email: email || undefined },
       issueDate: day(0), dueDate: day(7),
@@ -179,7 +183,7 @@ Deno.serve(async (req) => {
   const link = await payLink(loc, String(invId)), bname = String(biz.name ?? "Your contractor");
   const how = phone && email ? "both" : email ? "email" : "sms";
   const sr = await sendPayLink(t, contactId, how,
-    `${bname}: thanks for ${internal ? "choosing your option" : "accepting your estimate"}! Your ${pct}% deposit of $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is ready. Pay securely by card here: ${link}`,
+    `${bname}: thanks for ${internal ? "approving your estimate" : "accepting your estimate"}! Your ${pct}% deposit of $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is ready. Pay securely by card here: ${link}`,
     `${bname}: your deposit invoice`);
   return json({ ok: true, id: invId, amount, pct, sent: sr.sent, sendError: sr.error });
 });
