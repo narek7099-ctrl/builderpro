@@ -625,9 +625,16 @@
     var soon = open.filter(function (p) { if (!p.expires) return false; var t = Date.parse(p.expires + 'T12:00:00'); return !isNaN(t) && (t - now) / day <= 14; });
     S.permits = { n: open.length, soon: soon.length, all: permits.length };
     /* installed work due for service in the next 30 days, or late */
-    var ins = jobs.filter(function (j) { return j.install && j.install.date; }), due = 0, late = 0;
-    ins.forEach(function (j) { var n = window.bpInstallNext ? bpInstallNext(j.install) : null; if (!n) return; var left = (n - now) / day; if (left < 0) late++; else if (left <= 30) due++; });
-    S.installs = { n: due + late, late: late, all: ins.length };
+    var due = 0, late = 0, insAll = 0;
+    if (window.BPA && BPA.loaded) {
+      /* Equipment: every unit with a service plan */
+      (BPA.list || []).forEach(function (a) { if (a.status === 'removed') return; var f = BPA.facts(a); if (f.svc.k === 'none') return; insAll++; if (f.svc.k === 'over') late++; else if (f.svc.k === 'soon') due++; });
+    } else {
+      if (window.BPA && BPA.load && !BPA._dashAsked) { BPA._dashAsked = 1; Promise.resolve(BPA.load()).then(function () { if (window._bpCurView === 'dashboard' && window.bpDashboard) try { bpDashboard(); } catch (e) {} }); }
+      var ins = jobs.filter(function (j) { return j.install && j.install.date; }); insAll = ins.length;
+      ins.forEach(function (j) { var n = window.bpInstallNext ? bpInstallNext(j.install) : null; if (!n) return; var left = (n - now) / day; if (left < 0) late++; else if (left <= 30) due++; });
+    }
+    S.installs = { n: due + late, late: late, all: insAll };
     /* best stretch: the strongest bucket of the period by what was kept */
     var bi = -1; M.net.forEach(function (v, i) { if (bi < 0 || v > M.net[bi]) bi = i; });
     S.best = { label: bi >= 0 ? M.labels[bi] : '', v: bi >= 0 ? M.net[bi] : 0, any: M.net.some(function (v) { return v; }) };
@@ -652,7 +659,7 @@
       lab: miniW('Labor', share(S.lab), money(S.lab) + ' of revenue ' + P.word, 'finances', { chart: sp(S.labSpark) }),
       permits: miniW('Open permits', String(S.permits.n), S.permits.all ? (S.permits.soon ? S.permits.soon + ' expiring within 14 days' : 'none expiring soon') : 'no permits on projects yet', 'activejobs',
         { tone: S.permits.soon ? 'warn' : '' }),
-      installs: miniW('Maintenance due', String(S.installs.n), S.installs.all ? (S.installs.late ? S.installs.late + ' overdue, ' : '') + 'next 30 days' : 'no installations signed off yet', 'installations',
+      installs: miniW('Maintenance due', String(S.installs.n), S.installs.all ? (S.installs.late ? S.installs.late + ' overdue, ' : '') + 'next 30 days' : 'no equipment with a service plan yet', 'assets',
         { tone: S.installs.late ? 'warn' : '' }),
       appts: miniW('Next 7 days', String(S.appts.n), S.appts.next ? 'appointments · next: ' + esc(S.appts.next.name || '') : 'appointments booked', 'calendar'),
       best: miniW('Best ' + (P.k === 'month' ? 'week' : 'month'), S.best.any ? money(S.best.v) : '—', S.best.any ? esc(S.best.label) + ' · kept, ' + P.word : 'nothing kept ' + P.word, 'finances',

@@ -106,9 +106,53 @@
     if (!live()) { A.loaded = true; A.list = A.list || []; return Promise.resolve(A.list); }
     if (A.loaded && !force) return Promise.resolve(A.list);
     return Promise.resolve(BP_SB.from('assets').select(COLS).order('updated_at', { ascending: false }).limit(2000)).then(function (r) {
-      A.loaded = true; A.list = (r && !r.error && r.data) || []; return A.list;
+      A.loaded = true; A.list = (r && !r.error && r.data) || [];
+      return carryOver().then(function () { return A.list; });
     }, function () { A.loaded = true; return A.list; });
   };
+
+  /* ---------- Installations live here now ----------
+     Signing off a finished job (portal/installs.js) makes an Equipment record
+     tagged Installed. Sign-offs made before that are carried over once, the
+     first time the office opens this. The job keeps its sign-off (j.install,
+     with the signature) and points at the record it made (assetId). */
+  function guessCat(t) {
+    t = String(t || '').toLowerCase();
+    var R = [[/heat pump/, 'heat_pump'], [/mini.?split|ductless/, 'mini_split'], [/rooftop|rtu\b/, 'rooftop_unit'], [/package unit/, 'package_unit'], [/furnace/, 'furnace'], [/air handler/, 'air_handler'],
+      [/boiler/, 'boiler'], [/tankless/, 'water_heater_tankless'], [/water heater/, 'water_heater_tank'], [/softener/, 'water_softener'], [/well pump/, 'well_pump'], [/sump/, 'sump_pump'],
+      [/pool heater/, 'pool_heater'], [/pool filter/, 'pool_filter'], [/pool|spa/, 'pool_pump'], [/panel|breaker/, 'electrical_panel'], [/generator/, 'generator'], [/ev charger|charger/, 'ev_charger'],
+      [/solar|inverter/, 'solar_inverter'], [/battery/, 'battery'], [/roof|shingle/, 'roof'], [/garage door/, 'garage_door_opener'], [/\bac\b|a\/c|air cond|condenser|hvac/, 'ac_condenser']];
+    for (var i = 0; i < R.length; i++) if (R[i][0].test(t)) return R[i][1];
+    return 'other';
+  }
+  A.guessCat = guessCat;
+  /* the record a sign-off makes (or updates, when it already made one) */
+  A.fromInstall = function (j) {
+    var ins = j && j.install; if (!ins || !ins.date || !live()) return Promise.resolve(null);
+    var what = String(ins.item || '').trim(), cat = guessCat(what + ' ' + (j.title || ''));
+    var row = { name: what || j.title || 'Installed work', category: cat, tags: ['installed'], installed_on: ymd(ins.date), service_months: +ins.period || 0,
+      last_service: ins.lastService ? ymd(ins.lastService) : null, life_years: catLife(cat), contact_id: j.contactId || '', customer: j.name || '', addr: j.addr || '', job_id: j.id,
+      notes: what && j.title && what !== j.title ? 'From the sign-off on ' + j.title + '.' : 'From the job sign-off.' };
+    var have = ins.assetId ? byId(ins.assetId) : null;
+    var q = have ? BP_SB.from('assets').update({ installed_on: row.installed_on, service_months: row.service_months, last_service: row.last_service || have.last_service || null, name: have.name || row.name, updated_at: new Date().toISOString() }).eq('id', have.id).select()
+      : BP_SB.from('assets').insert(row).select();
+    return Promise.resolve(q).then(function (r) {
+      var a = r && !r.error && r.data && r.data[0]; if (!a) return null;
+      var i = A.list.findIndex(function (x) { return x.id === a.id; }); if (i > -1) A.list[i] = a; else A.list.unshift(a);
+      ins.assetId = a.id; remind(a); return a;
+    }, function () { return null; });
+  };
+  var carrying = null;
+  function carryOver() {
+    if (carrying) return carrying;
+    if (crew() || !window.bpJobsGet) return Promise.resolve();
+    var todo = jobsAll().filter(function (j) { return j.install && j.install.date && !j.install.assetId && !A.list.some(function (a) { return a.job_id === j.id && (a.tags || []).indexOf('installed') > -1; }); });
+    if (!todo.length) return Promise.resolve();
+    carrying = todo.reduce(function (p, j) { return p.then(function () { return A.fromInstall(j); }); }, Promise.resolve()).then(function () {
+      carrying = null; try { bpJobsSet(bpJobsGet()); } catch (e) {}
+    }, function () { carrying = null; });
+    return carrying;
+  }
   var byId = function (id) { return (A.list || []).filter(function (x) { return x.id === id; })[0] || null; };
   function history(id) {
     if (!live()) return Promise.resolve([]);
@@ -168,7 +212,7 @@
     var area = $('bpxViewArea'); if (!area) return;
     A.id = null;
     if (!A.loaded) area.innerHTML = '<div class="eq"><div class="eq-load">Loading equipment…</div></div>';
-    var go = function () { A.load().then(function () { if (window._bpCurView === 'assets' && !A.id) drawList(); }); };
+    var go = function () { A.load().then(carryOver).then(function () { if (window._bpCurView === 'assets' && !A.id) drawList(); }); };
     if (!crew() && window.bpEnsureContacts && !contacts().length) Promise.resolve(bpEnsureContacts()).then(go, go); else go();
   };
   A.setFilter = function (f) { A.filter = f; drawList(); };
@@ -196,7 +240,7 @@
         + '<div class="eq-bar"><label class="eq-search"><span class="ms">search</span><input placeholder="Search customer, make, model or serial" value="' + esc(A.q) + '" oninput="BPA.search(this.value)"></label>'
           + '<div class="eq-chips">' + chip('all', 'All') + TAGS.map(function (t) { return chip(t[0], t[1]); }).join('') + '</div></div>'
         + '<div class="eq-list" id="eq-rows"></div>'
-      : '<div class="bpx-panel eq-empty"><span class="ms">qr_code_scanner</span><b>No equipment yet</b><p>Point your phone at the nameplate of the next unit you install or service. BuilderPro reads the make, model and serial, works out how old it is, and tells you when it’s due for service and when it’ll need replacing.</p>'
+      : '<div class="bpx-panel eq-empty"><span class="ms">qr_code_scanner</span><b>No equipment yet</b><p>Point your phone at the nameplate of the next unit you install or service. BuilderPro reads the make, model and serial, works out how old it is, and tells you when it’s due for service and when it’ll need replacing. Jobs you sign off as done land here too.</p>'
         + '<button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button></div>')
       + '</div>';
     drawRows();
@@ -650,6 +694,7 @@
   A.openFrom = function (id) { if (window.bpNav) { A._pending = id; bpNav('assets'); } };
 
   /* ---------- the dashboard / AI brain can ask what's due ---------- */
+  A.catName = catName;
   A.due = function () { return (A.list || []).filter(function (a) { var k = facts(a).svc.k; return k === 'over' || k === 'soon'; }); };
   A.facts = facts;
 })();
