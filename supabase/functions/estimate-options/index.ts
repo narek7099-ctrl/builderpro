@@ -3,12 +3,14 @@
 // The contractor builds one estimate the normal way. That estimate is the
 // "Better" option. This function writes the other two around it (a budget
 // way to do the same job and a premium one), the contractor checks them, and
-// the customer gets ONE link (#est=<token>) showing all three side by side.
-// They pick one and sign on that page. The pick then becomes a normal
-// accepted estimate in the contractor's HighLevel, so everything that runs
-// after an accepted estimate today still runs: the deposit invoice and pay
-// link (OS and Enterprise), workflow 08, the pipeline stage, and the project
-// when the deposit is paid.
+// the customer gets ONE link (#est=<token>). The contractor sends either their
+// one pick (the page is then a plain estimate to approve) or two or three
+// options side by side to choose from. Either way they sign on that page.
+// A plain estimate (no options) goes the same way, as one option. The pick
+// then becomes a normal accepted estimate in the contractor's HighLevel, so
+// everything that runs after an accepted estimate today still runs: the
+// deposit invoice and pay link (OS and Enterprise), workflow 08, the pipeline
+// stage, and the project when the deposit is paid.
 //
 // Signed in (owner or office):
 //   { op:"build", trade, title, scope, lines:[{name,desc,qty,unit,price,sec}] }
@@ -306,7 +308,7 @@ async function send(b: Row, who: { owner: string; uid: string }) {
   if (!(await take("options-send", who.owner, 60, 3600))) return json({ ok: false, error: "too many" }, 429);
   const taxPct = Number(b.taxPct) || 0, taxOn = String(b.taxOn ?? "materials"), disc = Number(b.discount) || 0;
   const tiers = (Array.isArray(b.tiers) ? b.tiers : []).slice(0, 3).map((t: Row) => priced(t, taxPct, taxOn, disc)).filter((t: Row) => t.total > 0);
-  if (tiers.length < 2) return json({ ok: false, error: "Each option needs a price." }, 400);
+  if (!tiers.length) return json({ ok: false, error: "The estimate needs a price." }, 400);
   const jobId = clean(b.jobId, 60), contactId = clean(b.contactId, 60);
   if (!contactId) return json({ ok: false, error: "Pick the customer first." }, 400);
   const via = ["sms", "email", "both"].includes(String(b.via)) ? String(b.via) : "sms";
@@ -339,9 +341,11 @@ async function send(b: Row, who: { owner: string; uid: string }) {
     if (!t) reason = "no_token";
     else {
       const first = row.customer.split(/\s+/)[0] || "there";
+      const solo = tiers.length === 1;
       const r = await sendText(t, ghlContact, via,
-        `${biz}: Hi ${first}, your estimate for ${row.title} is ready. We put together ${tiers.length} options so you can pick what fits best: ${link}`,
-        `${biz}: your estimate options`);
+        solo ? `${biz}: Hi ${first}, your estimate for ${row.title} is ready (${money(tiers[0].total)}). See it and approve it here: ${link}`
+          : `${biz}: Hi ${first}, your estimate for ${row.title} is ready. We put together ${tiers.length} options so you can pick what fits best: ${link}`,
+        solo ? `${biz}: your estimate` : `${biz}: your estimate options`);
       sent = r.sent; reason = r.sent ? "" : (r.error || "send_failed");
     }
   }
@@ -356,7 +360,7 @@ async function byToken(token: unknown): Promise<Row | null> {
   return one(`estimate_options?token=eq.${t}&select=*&limit=1`);
 }
 const forCustomer = (r: Row, co: Row) => ({
-  title: r.title, scope: r.scope, addr: r.addr, customer: r.customer, status: r.status, chosen: r.chosen,
+  title: r.title, scope: r.scope, addr: r.addr, customer: r.customer, email: r.email, status: r.status, chosen: r.chosen,
   recommended: r.recommended, show: r.show, signer_name: r.signer_name, chosen_at: r.chosen_at, expires_at: r.expires_at, created_at: r.created_at,
   expired: r.status === "sent" && r.expires_at && Date.parse(r.expires_at) < Date.now(),
   tiers: (r.tiers ?? []).map((t: Row) => ({ key: t.key, name: t.name, title: t.title, summary: t.summary, bullets: t.bullets, warranty: t.warranty, lines: t.lines, sub: t.sub, tax: t.tax, taxPct: t.taxPct, disc: t.disc, total: t.total })),
@@ -368,7 +372,7 @@ async function get(b: Row, req: Request) {
   if (!r || r.status === "void") return json({ ok: false, error: r ? "void" : "not_found" }, 404);
   if (!r.viewed_at) {
     await rest(`estimate_options?id=eq.${r.id}`, { method: "PATCH", body: JSON.stringify({ viewed_at: new Date().toISOString() }) }).catch(() => {});
-    await notify(r.owner, "estimate_viewed", `${r.customer || "Your customer"} opened their estimate options`, r.title, r.job_id ? `quote:${r.job_id}` : "estimates", "normal", `opt-view:${r.id}`);
+    await notify(r.owner, "estimate_viewed", `${r.customer || "Your customer"} opened their ${(r.tiers ?? []).length > 1 ? "estimate options" : "estimate"}`, r.title, r.job_id ? `quote:${r.job_id}` : "estimates", "normal", `opt-view:${r.id}`);
   }
   return json({ ok: true, options: forCustomer(r, await company(r.owner)) });
 }
@@ -388,7 +392,7 @@ async function toGhl(r: Row, tier: Row): Promise<Row> {
   const items = (tier.lines as Line[]).map((l) => ({ name: l.name.slice(0, 120), description: (l.desc || l.name).slice(0, 300), currency: "USD", amount: r2(l.price), qty: l.qty, taxes: [] }));
   if (tier.tax > 0) items.push({ name: `Sales tax (${tier.taxPct}%)`, description: "Sales tax", currency: "USD", amount: r2(tier.tax), qty: 1, taxes: [] });
   const payload: Row = {
-    altId: loc, altType: "location", name: `${r.title} (${tier.name}: ${tier.title})`.slice(0, 120),
+    altId: loc, altType: "location", name: ((r.tiers ?? []).length > 1 ? `${r.title} (${tier.name}: ${tier.title})` : String(r.title)).slice(0, 120),
     businessDetails: { name: co.name || "Your contractor" }, currency: "USD", items,
     discount: tier.disc > 0 ? { type: "fixed", value: tier.disc } : { type: "percentage", value: 0 },
     contactDetails: { id: r.ghl_contact, name: r.customer || "Customer", phoneNo: r.phone || undefined, email: r.email || undefined },
@@ -461,8 +465,8 @@ async function choose(b: Row, req: Request) {
   const rows = up.ok ? await up.json() : [];
   if (!rows.length) { const again = await byToken(b.token); return json({ ok: true, options: forCustomer(again ?? r, await company(r.owner)) }); }
   const row = rows[0] as Row;
-  await notify(r.owner, "estimate_accepted", `${r.customer || "Your customer"} picked ${tier.name}: ${money(tier.total)}`,
-    `${r.title} · ${tier.title}. Signed by ${name}.`, r.job_id ? `quote:${r.job_id}` : "estimates", "high", `opt-pick:${r.id}`);
+  await notify(r.owner, "estimate_accepted", (r.tiers ?? []).length > 1 ? `${r.customer || "Your customer"} picked ${tier.name}: ${money(tier.total)}` : `${r.customer || "Your customer"} approved the estimate: ${money(tier.total)}`,
+    `${[r.title, tier.title].filter(Boolean).join(" · ")}. Signed by ${name}.`, r.job_id ? `quote:${r.job_id}` : "estimates", "high", `opt-pick:${r.id}`);
   const work = (async () => {
     const g = await toGhl(row, tier);
     await rest(`estimate_options?id=eq.${r.id}`, { method: "PATCH", body: JSON.stringify({ est_id: String(g.est_id ?? ""), deposit: g, updated_at: new Date().toISOString() }) }).catch(() => {});
@@ -479,7 +483,7 @@ async function decline(b: Row, req: Request) {
   if (!r || r.status !== "sent") return json({ ok: false, error: "not available" }, 404);
   const note = clean(b.note, 1000), now = new Date().toISOString();
   await rest(`estimate_options?id=eq.${r.id}&status=eq.sent`, { method: "PATCH", body: JSON.stringify({ status: "declined", note, updated_at: now, audit: [...(r.audit ?? []), { at: now, event: "declined", ip: clientIp(req) }].slice(-40) }) });
-  await notify(r.owner, "estimate_declined", `${r.customer || "Your customer"} passed on the estimate options`, note ? `"${note}"` : r.title, r.job_id ? `quote:${r.job_id}` : "estimates", "high", `opt-decl:${r.id}`);
+  await notify(r.owner, "estimate_declined", `${r.customer || "Your customer"} passed on the ${(r.tiers ?? []).length > 1 ? "estimate options" : "estimate"}`, note ? `"${note}"` : r.title, r.job_id ? `quote:${r.job_id}` : "estimates", "high", `opt-decl:${r.id}`);
   return json({ ok: true });
 }
 

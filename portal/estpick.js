@@ -34,14 +34,18 @@
     h.innerHTML = '<div class="sg-wrap"><div class="sg-card ep-card"><div class="sg-load">Loading your options…</div></div></div>';
     api({ op: 'get', token: TOKEN }).then(function (d) {
       if (!d || !d.ok) { fail(d && d.error === 'void' ? 'These options were replaced or withdrawn. Check your messages for a newer link, or ask your contractor to send it again.' : 'We couldn’t find these options. Check the link, or ask your contractor to send it again.'); return; }
-      S.o = d.options; brand(); draw();
+      S.o = d.options;
+      /* one option sent on its own is a plain estimate: nothing to pick */
+      if ((S.o.tiers || []).length === 1 && S.o.status !== 'chosen') S.pick = S.o.tiers[0].key;
+      brand(); draw();
+      if (window.bpCustLink) bpCustLink.seen('est', TOKEN, { title: S.o.title, biz: (S.o.company || {}).name, name: S.o.customer, email: S.o.email });
     }, function () { fail('We couldn’t load your options just now. Check your connection and reload the page.'); });
   }
   function brand() {
     var co = (S.o && S.o.company) || {}, h = host();
     var st = window.bpBrandVars ? bpBrandVars(co.color) : '';
     if (st) { h.setAttribute('style', st); h.classList.add('br'); }
-    document.title = (co.name ? co.name + ' · ' : '') + 'Your estimate options';
+    document.title = (co.name ? co.name + ' · ' : '') + ((S.o.tiers || []).length === 1 ? 'Your estimate' : 'Your estimate options');
   }
   function head() {
     var co = (S.o && S.o.company) || {};
@@ -52,7 +56,9 @@
   function fail(msg) {
     host().innerHTML = '<div class="sg-wrap"><div class="sg-card">' + (S.o ? head() : '') + '<h1 class="sg-h">Options unavailable</h1><p class="sg-p">' + esc(msg) + '</p></div>' + pow() + '</div>';
   }
+  var solo = function (o) { return (o.tiers || []).length === 1; };
   function card(t, o) {
+    if (solo(o)) return soloCard(t, o);
     var rec = o.recommended === t.key, on = S.pick === t.key, done = o.status === 'chosen', mine = done && o.chosen === t.key;
     return '<div class="ep-opt k-' + esc(t.key) + (rec ? ' rec' : '') + (on || mine ? ' on' : '') + (done && !mine ? ' dim' : '') + '"' + (done ? '' : ' role="button" tabindex="0" onclick="bpEpPick(\'' + esc(t.key) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bpEpPick(\'' + esc(t.key) + '\')}"') + '>'
       + (rec && !done ? '<span class="ep-badge">Most popular</span>' : '') + (mine ? '<span class="ep-badge ok">Your pick</span>' : '')
@@ -65,28 +71,43 @@
       + (done ? '' : '<span class="ep-choose">' + (on ? '<span class="ep-tick">✓</span>Selected' : 'Choose ' + esc(t.name)) + '</span>')
       + '</div>';
   }
+  /* the estimate itself, every line showing, when there is only the one */
+  function soloCard(t, o) {
+    var lines = (t.lines || []);
+    return '<div class="ep-opt ep-solo">'
+      + (t.title && t.title !== t.name ? '<span class="ep-k">' + esc(t.title) + '</span>' : '')
+      + (t.summary ? '<p class="ep-sum">' + esc(t.summary) + '</p>' : '')
+      + ((t.bullets || []).length ? '<ul>' + t.bullets.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '')
+      + (lines.length && o.show !== 'total' ? '<div class="ep-lines">' + lines.map(function (l) { return '<div class="ep-l"><span>' + esc(l.name) + ((+l.qty || 1) !== 1 ? ' <small>× ' + (+l.qty) + '</small>' : '') + (l.desc ? '<small class="ep-ld">' + esc(l.desc) + '</small>' : '') + '</span><b>' + money((+l.qty || 0) * (+l.price || 0)) + '</b></div>'; }).join('')
+        + (t.tax ? '<div class="ep-l"><span>Sales tax</span><b>' + money(t.tax) + '</b></div>' : '') + (t.disc ? '<div class="ep-l"><span>Discount</span><b>&minus;' + money(t.disc) + '</b></div>' : '') + '</div>' : '')
+      + '<div class="ep-tot"><span>Total' + (t.tax && o.show === 'total' ? ' <small>incl. ' + money(t.tax) + ' tax</small>' : '') + '</span><b>' + money(t.total) + '</b></div>'
+      + (t.warranty ? '<div class="ep-w"><b>Warranty</b>' + esc(t.warranty) + '</div>' : '')
+      + '</div>';
+  }
   function draw() {
     var o = S.o, h = host(); if (!o) return;
     var first = String(o.customer || '').split(/\s+/)[0];
     if (o.status === 'chosen') return doneView();
-    if (o.status === 'declined') { h.innerHTML = '<div class="sg-wrap"><div class="sg-card">' + head() + '<h1 class="sg-h">You passed on these options</h1><p class="sg-p">Your contractor has been told. If you change your mind or want something different, just reply to their message and they can send new options.</p></div>' + pow() + '</div>'; return; }
+    if (o.status === 'declined') { h.innerHTML = '<div class="sg-wrap"><div class="sg-card">' + head() + '<h1 class="sg-h">You passed on ' + (solo(o) ? 'this estimate' : 'these options') + '</h1><p class="sg-p">Your contractor has been told. If you change your mind or want something different, just reply to their message and they can send new options.</p></div>' + pow() + '</div>'; return; }
     if (o.expired) { var ph = (o.company || {}).phone; h.innerHTML = '<div class="sg-wrap"><div class="sg-card">' + head() + '<h1 class="sg-h">These prices have expired</h1><p class="sg-p">Prices were good until ' + esc(date(o.expires_at)) + '. Ask your contractor for an updated estimate' + (ph ? ': <a href="tel:' + esc(ph) + '">' + esc(ph) + '</a>' : '') + '.</p></div>' + pow() + '</div>'; return; }
     var t = (o.tiers || []).filter(function (x) { return x.key === S.pick; })[0];
     h.innerHTML = '<div class="sg-wrap"><div class="sg-card ep-card">' + head()
-      + '<h1 class="sg-h">' + (first ? esc(first) + ', pick the option that fits' : 'Pick the option that fits') + '</h1>'
-      + '<p class="sg-p">' + esc(o.title || 'Your estimate') + (o.addr ? ' at ' + esc(o.addr) : '') + '. Each option is a complete job; they differ in materials, extras and warranty. Prices are good until ' + esc(date(o.expires_at)) + '.</p>'
+      + (solo(o) ? '<h1 class="sg-h">' + esc(o.title || 'Your estimate') + '</h1>'
+          + '<p class="sg-p">' + (first ? 'Prepared for ' + esc(first) + (o.addr ? ' at ' + esc(o.addr) : '') + '. ' : o.addr ? esc(o.addr) + '. ' : '') + 'Good until ' + esc(date(o.expires_at)) + '. Look it over, then sign below to approve.</p>'
+        : '<h1 class="sg-h">' + (first ? esc(first) + ', pick the option that fits' : 'Pick the option that fits') + '</h1>'
+          + '<p class="sg-p">' + esc(o.title || 'Your estimate') + (o.addr ? ' at ' + esc(o.addr) : '') + '. Each option is a complete job; they differ in materials, extras and warranty. Prices are good until ' + esc(date(o.expires_at)) + '.</p>')
       + (o.scope ? '<div class="ep-scope"><b>Scope of work</b><p>' + esc(o.scope) + '</p></div>' : '')
       + '<div class="ep-grid n' + (o.tiers || []).length + '">' + (o.tiers || []).map(function (x) { return card(x, o); }).join('') + '</div>'
       + '<div class="ep-signbox" id="epSign"' + (t ? '' : ' hidden') + '>'
-        + (t ? '<div class="ep-sel"><span>You picked</span><b>' + esc(t.name) + ': ' + esc(t.title || '') + '</b><strong>' + money(t.total) + '</strong></div>' : '')
+        + (t && !solo(o) ? '<div class="ep-sel"><span>You picked</span><b>' + esc(t.name) + ': ' + esc(t.title || '') + '</b><strong>' + money(t.total) + '</strong></div>' : '')
         + '<div class="sg-lbl">Sign to approve</div>'
         + '<div class="sg-padwrap"><canvas id="epPad" class="sg-pad"></canvas><button class="sg-clear" onclick="bpEpClear()">Clear</button><span class="sg-hint" id="epHint">Draw your signature with your finger</span></div>'
         + '<label class="sg-f"><span>Your full name</span><input id="epName" autocomplete="name" placeholder="Type your name" oninput="bpEpCheck()"></label>'
-        + '<label class="sg-consent"><input type="checkbox" id="epOk" onchange="bpEpCheck()"><span>I approve this option at the price shown and agree to sign electronically. My electronic signature is as binding as one on paper.</span></label>'
+        + '<label class="sg-consent"><input type="checkbox" id="epOk" onchange="bpEpCheck()"><span>I approve ' + (solo(o) ? 'this estimate' : 'this option') + ' at the price shown and agree to sign electronically. My electronic signature is as binding as one on paper.</span></label>'
         + '<div class="sg-msg" id="epMsg"></div>'
-        + '<button class="sg-btn" id="epGo" disabled onclick="bpEpSubmit()">Approve ' + (t ? esc(t.name) + ' · ' + money(t.total) : '') + '</button>'
+        + '<button class="sg-btn" id="epGo" disabled onclick="bpEpSubmit()">Approve ' + (t ? (solo(o) ? '' : esc(t.name) + ' · ') + money(t.total) : '') + '</button>'
       + '</div>'
-      + '<button class="sg-decline" onclick="bpEpDecline()">None of these work for me</button>'
+      + '<button class="sg-decline" onclick="bpEpDecline()">' + (solo(o) ? 'This doesn’t work for me' : 'None of these work for me') + '</button>'
       + '<div class="sg-foot">Your name, the time you signed and your IP address are recorded with your approval, as required for electronic signatures in the US. Questions? Reply to the message this link came in.</div>'
       + '</div>' + pow() + '</div>';
     if (t) pad();
@@ -142,10 +163,11 @@
       if (!d || !d.ok) { b.disabled = false; b.textContent = 'Try again'; if (msg) msg.textContent = (d && d.error) || 'Something went wrong. Please try again.'; return; }
       S.o = d.options || S.o; if (S.o.status !== 'chosen') { S.o.status = 'chosen'; S.o.chosen = S.pick; S.o.signer_name = name; }
       doneView(); window.scrollTo(0, 0);
+      if (window.bpCustLink) bpCustLink.after('est');
     }, function () { S.busy = false; b.disabled = false; b.textContent = 'Try again'; if (msg) msg.textContent = 'Couldn’t reach the server. Check your connection and try again.'; });
   };
   window.bpEpDecline = function () {
-    var note = prompt('Sorry these don’t fit. What would work better? (Optional, your contractor will see this.)', '');
+    var note = prompt((solo(S.o) ? 'Sorry it doesn’t fit.' : 'Sorry these don’t fit.') + ' What would work better? (Optional, your contractor will see this.)', '');
     if (note === null) return;
     api({ op: 'decline', token: TOKEN, note: note }).then(function () { S.o.status = 'declined'; draw(); }, function () {});
   };
@@ -154,7 +176,7 @@
     var first = String(o.signer_name || o.customer || '').split(/\s+/)[0];
     host().innerHTML = '<div class="sg-wrap"><div class="sg-card ep-card ep-done">' + head()
       + '<div class="sg-tick">✓</div><h1 class="sg-h" style="text-align:center">You’re all set' + (first ? ', ' + esc(first) : '') + '</h1>'
-      + '<p class="sg-p" style="text-align:center">' + esc(co.name || 'Your contractor') + ' has your approval for the <b>' + esc(t.name || '') + '</b> option. They’ll text you the next step, usually a deposit to get you on the schedule.</p>'
+      + '<p class="sg-p" style="text-align:center">' + esc(co.name || 'Your contractor') + ' has your approval' + (solo(o) ? '' : ' for the <b>' + esc(t.name || '') + '</b> option') + '. They’ll text you the next step, usually a deposit to get you on the schedule.</p>'
       + '<div class="ep-grid one">' + card(t, o) + '</div>'
       + '<div class="sg-signed"><div class="sg-lbl">Approved by</div><span class="nm">' + esc(o.signer_name || '') + '</span>' + (o.chosen_at ? '<div class="sg-when">' + esc(new Date(o.chosen_at).toLocaleString('en-US')) + '</div>' : '') + '</div>'
       + '<button class="sg-btn" style="margin-top:18px" onclick="window.print()">Print / save a copy</button>'
@@ -181,6 +203,9 @@
     + '#bpSign .ep-sel{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:16px}#bpSign .ep-sel span{width:100%;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600}#bpSign .ep-sel b{font-size:16px;color:#0c0c0d}#bpSign .ep-sel strong{margin-left:auto;font-size:20px;color:#0c0c0d}'
     + '#bpSign .ep-grid.n2{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px;margin-left:auto;margin-right:auto}'
     + '@media(max-width:820px){#bpSign .ep-grid,#bpSign .ep-grid.n2{grid-template-columns:1fr;gap:20px}#bpSign .ep-opt{padding:22px 18px 16px}}'
+    + '#bpSign .ep-solo{cursor:default;padding:18px 20px}#bpSign .ep-solo:hover{transform:none;border-color:#e4e9f0}#bpSign .ep-lines{margin:4px 0 6px}#bpSign .ep-l span{min-width:0}#bpSign .ep-ld{display:block;color:#8b93a1;font-size:12px;margin-top:1px}'
+    + '#bpSign .ep-tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 0 6px;font-weight:700;color:#0c0c0d}#bpSign .ep-tot span{font-size:15px}#bpSign .ep-tot small{font-weight:500;color:#8b93a1;font-size:12px}#bpSign .ep-tot b{font-size:28px;letter-spacing:-.03em}'
+    + '#bpSign .ep-grid.n1{grid-template-columns:minmax(0,640px);justify-content:center}'
     + '@media print{#bpSign .ep-opt{break-inside:avoid}}';
   document.head.appendChild(css);
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);

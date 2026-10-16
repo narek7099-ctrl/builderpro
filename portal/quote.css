@@ -449,3 +449,24 @@
 #bpx .qs-solo .ms{font-size:18px;color:var(--blue,#2563eb)}
 #bpx .qs-solo a{color:var(--blue,#2563eb);font-weight:600;cursor:pointer;margin-left:4px}
 @media (max-width:820px){#bpx .qg-pv.n2,#bpx .qg-pv.n1{grid-template-columns:1fr}}
+
+/* how the options go out: Send my pick / Let them choose */
+#bpx .qg-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 6px}
+#bpx .qg-m{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:flex-start;padding:14px;border:1.5px solid var(--line,#e3e8ef);border-radius:14px;cursor:pointer;background:var(--card,#fff)}
+#bpx .qg-m b{display:block;font-size:14.5px;color:var(--ink,#101828)}
+#bpx .qg-m small{display:block;margin-top:2px;font-size:12.5px;line-height:1.35;color:var(--grey,#667085)}
+#bpx .qg-m.on{border-color:var(--blue,#2563eb);background:var(--blue-l,#eaf1ff)}
+#bpx .qg-m.on .qs-radio{border:6px solid var(--blue,#2563eb)}
+#bpx .qg-m:focus-visible{outline:2px solid var(--blue,#2563eb);outline-offset:2px}
+#bpx .qg-mhint{margin:0 0 12px;font-size:12.5px;color:var(--grey,#667085)}
+#bpx .qg-rd{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid #c3cad6;box-sizing:border-box;background:#fff}
+#bpx .qg-pick{background:var(--blue-l,#eaf1ff)}
+#bpx .qg-pick b{color:var(--blue,#1d4ed8)}#bpx .qg-pick small{color:#3b5b9a}
+#bpx .qg-card:not(.off) .qg-rd{border:7px solid var(--blue,#2563eb)}
+#bpx .qg-page.pickm .qg-card.off .qg-pick{background:var(--soft,#f1f4f8)}
+#bpx .qg-page.pickm .qg-card.off .qg-pick b{color:var(--ink,#344054)}
+#bpx .qg-page.pickm .qg-card.off{border-style:solid}
+#bpx .qg-page.pickm .qg-card.off>*:not(.qg-send){opacity:.7}
+#bpx .qg-page.pickm .qg-switch button.off b{text-decoration:none;color:var(--grey,#667085)}
+#bpx .qg-page.pickm .qg-card:not(.off){border-color:var(--blue,#2563eb)}
+@media (max-width:560px){#bpx .qg-mode{grid-template-columns:1fr;gap:8px}#bpx .qg-m{padding:12px}}

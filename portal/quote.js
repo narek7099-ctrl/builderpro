@@ -41,13 +41,13 @@
     var s = {}; try { s = (bpSettingsGet() || {}).quoteDefaults || {}; } catch (e) {}
     var d = function (k, v) { return s[k] == null || s[k] === '' ? v : s[k]; };
     return { mkMat: d('mkMat', 20), mkLab: d('mkLab', 25), mkOth: d('mkOth', 10), taxPct: d('taxPct', (Q.stateTax && Q.stateTax()) ? Q.stateTax().rate : 0), taxOn: d('taxOn', 'materials'),
-      show: d('show', 'items'), validDays: d('validDays', 14), depositPct: d('depositPct', 50) };
+      show: d('show', 'items'), validDays: d('validDays', 14), depositPct: d('depositPct', 50), gbbMode: s.gbbMode === 'pick' ? 'pick' : 'choose' };
   }
   Q.saveDefaults = function () {
     var j = job(Q.id); if (!j) return; var q = j.quote;
     try {
       var st = bpSettingsGet() || {};
-      st.quoteDefaults = { mkMat: q.mkMat, mkLab: q.mkLab, mkOth: q.mkOth, taxPct: q.taxPct, taxOn: q.taxOn, show: q.show, validDays: q.validDays, depositPct: (st.quoteDefaults || {}).depositPct || 50 };
+      st.quoteDefaults = { mkMat: q.mkMat, mkLab: q.mkLab, mkOth: q.mkOth, taxPct: q.taxPct, taxOn: q.taxOn, show: q.show, validDays: q.validDays, depositPct: (st.quoteDefaults || {}).depositPct || 50, gbbMode: (st.quoteDefaults || {}).gbbMode || 'choose' };
       bpSettingsSet(st); if (window.bpSettingsPush) bpSettingsPush(st);
       toast('Saved. New estimates start with these markups.', 'success');
     } catch (e) {}
@@ -134,7 +134,10 @@
      plan and the project; costs scale with it so profit stays honest */
   function picked(j) {
     var o = j.quote && j.quote.opt;
-    if (!o || o.status !== 'chosen' || !o.chosen || !Array.isArray(o.sent)) return null;
+    if (!o || !Array.isArray(o.sent)) return null;
+    /* one option sent on its own is the price from the moment it goes out */
+    if (o.sent.length === 1 && o.status !== 'void' && gb(j).on) return o.sent[0];
+    if (o.status !== 'chosen' || !o.chosen) return null;
     return o.sent.filter(function (t) { return t && t.key === o.chosen; })[0] || null;
   }
   function calc(j) {
@@ -175,6 +178,7 @@
     bpQuoteOpen(j.id);
   };
   window.bpQuoteOpen = function (id, mode) {
+    if (Q.id !== id) Q.step = null;   /* each sheet opens on its own step, not the last one's */
     Q.id = id; tidy(id);
     /* an estimate opens as the estimate; an empty one opens ready to fill in */
     var j0 = job(id); Q.mode = mode || (j0 && hasWork(j0) && calc(j0).total > 0 ? 'view' : 'edit');
@@ -193,12 +197,12 @@
   /* the estimate as the customer gets it, with what to do next */
   function renderView(area, j) {
     var q = quoteOf(j), c = calc(j), ct = contactBy(j.contactId);
-    var G = gb(j), o = q.opt, os = optState(j), multi = G.on && !(o && o.self) && (G.tiers || (o && o.sent)) && !(!o && G.tiers && tiersOut(j).length === 1);
+    var G = gb(j), o = q.opt, os = optState(j), multi = o && o.sent ? o.sent.length > 1 : G.on && G.tiers && tiersOut(j).length > 1;
     var badge = os ? '<span class="bpx-badge qg-st ' + os.cls + '">' + os.t + '</span>' : '<span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span>';
     var paper = multi ? '<div class="qx-paper qg-paper">' + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (q.desc ? '<p class="qg-pvd">' + esc(q.desc) + '</p>' : '')
         + optsHtml(j, o && o.sent && o.sent.length ? o.sent : tiersOut(j), (o && o.rec) || G.rec, o && o.status === 'chosen' ? o.chosen : '') + '</div>'
       : '<div class="qx-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>';
-    var optRows = o && !o.self ? '<tr><td>Options</td><td></td><td>' + esc(os ? os.t : '') + '</td></tr>'
+    var optRows = o && o.sent ? '<tr><td>' + (o.sent.length > 1 ? 'Options' : 'Status') + '</td><td></td><td>' + esc(os ? os.t : '') + '</td></tr>'
         + (o.status === 'chosen' ? '<tr><td>Signed by</td><td></td><td>' + esc(o.signer || '') + '</td></tr>' : '')
         + (o.status === 'declined' && o.note ? '<tr><td>They said</td><td></td><td>' + esc(o.note) + '</td></tr>' : '') : '';
     var tone = c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low';
@@ -207,10 +211,10 @@
       + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</h2>' + badge + '</div>'
         + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.edit(1)">Edit estimate</button>'
         + (o && o.link && o.status === 'sent' ? '<button class="bpx-btn ghost" onclick="BPQ.optLink()">Copy link</button>' : '')
-        + (q.estId && !(o && o.status === 'sent' && !o.self) ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
-        + (o && o.status === 'chosen' && !o.self ? '' : '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (multi ? (o && o.status === 'sent' ? 'Send options again' : sendLabel(j)) : q.estId ? 'Send again' : G.on && G.tiers ? sendLabel(j) : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button>') + '</div></div>'
+        + (q.estId && !(o && o.status === 'sent' && (o.sent || []).length > 1) ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
+        + (o && o.status === 'chosen' ? '' : '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (q.estId ? (multi ? 'Send options again' : 'Send again') : G.on && G.tiers ? sendLabel(j) : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button>') + '</div></div>'
       + '<div class="qb-msg" id="qb-msg"></div>'
-      + (o && o.status === 'chosen' && !o.self ? '<div class="qg-won"><span class="ms">task_alt</span><div><b>' + esc(j.name.split(' ')[0]) + ' picked ' + esc((TK.filter(function (t) { return t[0] === o.chosen; })[0] || [0, ''])[1]) + ': ' + m2(c.total) + '</b><small>Signed' + (o.signer ? ' by ' + esc(o.signer) : '') + (o.at ? ' on ' + new Date(o.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '. It’s now the accepted estimate, so the deposit and the rest of your follow-up run as usual.</small></div></div>' : '')
+      + (o && o.status === 'chosen' ? '<div class="qg-won"><span class="ms">task_alt</span><div><b>' + esc(j.name.split(' ')[0]) + ((o.sent || []).length > 1 ? ' picked ' + esc((TK.filter(function (t) { return t[0] === o.chosen; })[0] || [0, ''])[1]) : ' approved the estimate') + ': ' + m2(c.total) + '</b><small>Signed' + (o.signer ? ' by ' + esc(o.signer) : '') + (o.at ? ' on ' + new Date(o.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '. It’s now the accepted estimate, so the deposit and the rest of your follow-up run as usual.</small></div></div>' : '')
       + '<div class="qx-vgrid' + (multi ? ' qg-vgrid' : '') + '">' + paper
       + '<aside class="bpx-panel qx-priv"><div class="bpx-ptitle">Only you see this</div>'
         + '<table class="qx-st"><tbody><tr><td>Your cost</td><td></td><td>' + m2(c.cost) + '</td></tr><tr><td>Mark-up</td><td></td><td>' + m2(Math.max(0, c.total - c.tax - c.cost + c.disc)) + '</td></tr>'
@@ -274,10 +278,12 @@
   }
   function sendLabel(j) {
     var q = j.quote;
-    if (!gb(j).on) return q.estId ? 'Send updated estimate' : 'Send estimate';
-    var ts = gb(j).tiers ? tiersOut(j) : [];
-    if (ts.length === 1) return 'Send ' + ts[0].name;
-    return q.opt && q.opt.status === 'sent' && !q.opt.self ? 'Send updated options' : 'Send ' + (ts.length || 3) + ' options';
+    var again = q.opt && q.opt.status === 'sent';
+    if (!gb(j).on) return again || q.estId ? 'Send updated estimate' : 'Send estimate';
+    if (!gb(j).tiers) return 'Build the options first';
+    var ts = tiersOut(j);
+    if (gb(j).mode === 'pick') return ts.length ? (again ? 'Resend ' : 'Send ') + ts[0].name + ' · ' + m0(tierCalc(j, ts[0].lines).total) : 'Send your pick';
+    return (again ? 'Resend ' : 'Send ') + (ts.length || 3) + ' options to choose from';
   }
   /* one option going out alone: its lines, with tax, as a normal estimate */
   function tierAsSheet(j, t) {
@@ -332,7 +338,8 @@
     var to = ct ? (q.via === 'email' ? ct.email : q.via === 'both' ? [ct.phone, ct.email].filter(Boolean).join(' and ') : ct.phone) : '';
     return '<div class="qs-review"><div class="qs-to"><span class="ms">' + (q.via === 'email' ? 'mail' : 'sms') + '</span><div><b>' + (j.contactId ? 'Going to ' + esc(j.name) : 'Pick the customer first') + '</b><small>' + (j.contactId ? esc(to || 'No ' + (q.via === 'email' ? 'email' : 'phone') + ' on file') + ' · by ' + ({ sms: 'text', email: 'email', both: 'text and email' }[q.via] || 'text') + ' · valid ' + (+q.validDays || 14) + ' days' : '<a onclick="BPQ.go(\'job\')">Choose who it is for</a>') + '</small></div><a class="qs-chg" onclick="BPQ.go(\'price\')">Change</a></div>'
       + '<div class="qb-msg" id="qb-msg"></div>'
-      + (G2.on && G2.tiers && tiersOut(j).length === 1 ? (function () { var t1 = tierAsSheet(j, tiersOut(j)[0]); var ls = t1.lines.map(function (l) { return { name: l.name, desc: l.desc, qty: l.qty, price: l.price, unit: l.unit }; }); if (t1.tax) ls.push({ name: 'Sales tax (' + (+q.taxPct) + '%)', qty: 1, price: t1.tax }); return '<div class="qs-solo"><span class="ms">info</span>Only <b>' + esc(t1.name) + '</b> is switched on, so it goes as a normal estimate at ' + m2(t1.total) + '. <a onclick="BPQ.go(\'opts\')">Change</a></div><div class="qs-paper">' + doc('est', { lines: ls, disc: t1.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: (j.title === 'New estimate' ? '' : j.title) + (t1.title ? ' · ' + t1.title : ''), desc: q.desc }) + '</div>'; })()
+      + (G2.on && G2.tiers && G2.mode === 'pick' && tiersOut(j).length === 1 ? (function () { var t1 = tierAsSheet(j, tiersOut(j)[0]); var ls = t1.lines.map(function (l) { return { name: l.name, desc: l.desc, qty: l.qty, price: l.price, unit: l.unit }; }); if (t1.tax) ls.push({ name: 'Sales tax (' + (+q.taxPct) + '%)', qty: 1, price: t1.tax }); return '<div class="qs-solo"><span class="ms">info</span><span>You’re sending your pick, <b>' + esc(t1.name) + '</b>, at ' + m2(t1.total) + '. ' + esc(j.contactId ? j.name.split(' ')[0] : 'They') + ' gets one price to approve. <a onclick="BPQ.go(\'opts\')">Change</a></span></div><div class="qs-paper">' + doc('est', { lines: ls, disc: t1.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: (j.title === 'New estimate' ? '' : j.title) + (t1.title ? ' · ' + t1.title : ''), desc: q.desc }) + '</div>'; })()
+        : G2.on && !G2.tiers ? '<div class="qs-solo"><span class="ms">info</span><span>The Good and Best options aren’t built yet. <a onclick="BPQ.go(\'opts\')">Build them on the Options step</a></span></div>'
         : G2.on ? '<div class="qs-paper qg-paper">' + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (q.desc ? '<p class="qg-pvd">' + esc(q.desc) + '</p>' : '') + optsHtml(j, tiersOut(j), G2.rec, '') + '</div>'
         : '<div class="qs-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>')
       + '<div class="qs-foot"><button class="bpx-delbtn" onclick="BPQ.remove()">Delete ' + (q.estId ? 'estimate' : 'draft') + '</button></div></div>';
@@ -451,7 +458,6 @@
   function paint() {
     var j = job(Q.id); if (!j) return;
     var q = j.quote;
-    if (q.opt && q.opt.self && !q.estId) q.opt = null;   /* a one-option send that never went out */
     var c = calc(j), G = gb(j);
     j.estimate = c.total;
     if (G.on && !picked(j)) { var bt = tierCalc(j, baseLines(j)); j.estimate = bt.total; }
@@ -466,8 +472,8 @@
     if (tv) {
       if (G.on && G.tiers && (Q.step === 'opts' || Q.step === 'send')) {
         var out = tiersOut(j), ts = out.map(function (t) { return tierCalc(j, t.lines).total; });
-        tl.textContent = out.length === 1 ? 'Sending ' + out[0].name + ' only' : 'Sending ' + out.map(function (t) { return t.name; }).join(', ');
-        tv.textContent = out.length === 1 ? m2(ts[0]) : m0(Math.min.apply(null, ts)) + ' to ' + m0(Math.max.apply(null, ts)); tm.textContent = '';
+        tl.textContent = !out.length ? 'Nothing to send' : G.mode === 'pick' ? 'Your pick: ' + out[0].name : 'They choose: ' + out.map(function (t) { return t.name; }).join(', ');
+        tv.textContent = !out.length ? '—' : out.length === 1 ? m2(ts[0]) : m0(Math.min.apply(null, ts)) + ' to ' + m0(Math.max.apply(null, ts)); tm.textContent = '';
       }
       else { tl.textContent = G.on ? 'Better option' : 'Customer pays'; tv.textContent = m2(G.on ? tierCalc(j, baseLines(j)).total : c.total); tm.textContent = c.margin + '% margin'; tm.className = c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low'; }
     }
@@ -533,7 +539,14 @@
   function gb(j) {
     var q = quoteOf(j);
     if (!q.gbb) q.gbb = { on: false, tiers: null, rec: 'better' };
-    return q.gbb;
+    var g = q.gbb;
+    if (!g.mode) {
+      /* sheets from before the two modes: one option switched on was a pick */
+      var on = g.send ? TK.filter(function (k) { return g.send[k[0]] !== false; }) : TK;
+      if (g.send && on.length === 1) { g.mode = 'pick'; g.pick = on[0][0]; } else g.mode = lastMode();
+    }
+    if (!g.pick) g.pick = g.rec || 'better';
+    return g;
   }
   /* the sheet's own lines (one line per section when it's set to show one price) */
   function baseLines(j) {
@@ -594,11 +607,21 @@
   Q.tlineDel = function (key, id) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.lines = t.lines.filter(function (x) { return x.id !== id; }); t.edited = 1; save(); drawTiers(); };
   Q.tlineAdd = function (key) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.lines.push({ id: uid('tl'), name: '', desc: '', qty: 1, unit: 'ea', price: 0, sec: 'oth' }); t.edited = 1; save(); drawTiers(); setTimeout(function () { var r = document.querySelectorAll('#qg-lines-' + key + ' input[data-n]'); if (r.length) r[r.length - 1].focus(); }, 0); };
   Q.tlinesOpen = function (key, on) { Q._tlOpen = Q._tlOpen || {}; Q._tlOpen[key] = on; };
+  /* the contractor's last choice is where the next estimate starts */
+  function lastMode() { var m = ''; try { m = localStorage.getItem('bp.gbbMode') || ''; } catch (e) {} return m === 'pick' || m === 'choose' ? m : defs().gbbMode; }
+  Q.gbbMode = function (m) {
+    var j = job(Q.id); if (!j) return; var g = gb(j);
+    if (m !== 'pick' && m !== 'choose') return;
+    g.mode = m;
+    if (m === 'choose') { g.send = g.send || {}; if (TK.filter(function (k) { return g.send[k[0]] !== false; }).length < 2) g.send = { good: true, better: true, best: true }; }
+    try { localStorage.setItem('bp.gbbMode', m); } catch (e) {}
+    try { var st = bpSettingsGet() || {}; if ((st.quoteDefaults || {}).gbbMode !== m) { st.quoteDefaults = Object.assign({}, st.quoteDefaults || {}, { gbbMode: m }); bpSettingsSet(st); if (window.bpSettingsPush) bpSettingsPush(st); } } catch (e) {}
+    save(); drawTiers(); paint(); var b = $('qb-send'); if (b) b.textContent = sendLabel(j);
+  };
   Q.gbbOn = function (on) {
     var j = job(Q.id); if (!j) return; var g = gb(j);
     if (on && j.quote.opt && j.quote.opt.status === 'chosen') { toast('The customer already picked an option.', 'error'); return; }
     g.on = !!on;
-    if (!on && j.quote.opt && j.quote.opt.self && !j.quote.estId) j.quote.opt = null;
     save(true);
     if (Q.mode === 'view') { render(); return; }
     if (on) Q.go('opts'); else if (Q.step === 'opts') Q.go('price'); else render();
@@ -612,11 +635,13 @@
   /* the points wrap instead of being cut off */
   Q.grow = function (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
   function growAll() { Array.prototype.forEach.call(document.querySelectorAll('.qg-buls textarea, .qg-page .qg-sum'), function (t) { if (t.offsetParent) Q.grow(t); }); }
-  /* the contractor decides what goes out: one option, two, or all three */
+  /* Send my pick: the one option that goes. Let them choose: any two or all three */
   Q.tierSend = function (key) {
-    var j = job(Q.id); if (!j) return; var g = gb(j); g.send = g.send || { good: true, better: true, best: true };
+    var j = job(Q.id); if (!j) return; var g = gb(j);
+    if (g.mode === 'pick') { g.pick = key; save(); drawTiers(); paint(); var b0 = $('qb-send'); if (b0) b0.textContent = sendLabel(j); return; }
+    g.send = g.send || { good: true, better: true, best: true };
     var on = g.send[key] === false;
-    if (!on && TK.filter(function (k) { return g.send[k[0]] !== false; }).length <= 1) { toast('Send at least one option.', 'error'); return; }
+    if (!on && TK.filter(function (k) { return g.send[k[0]] !== false; }).length <= 2) { toast('Choosing needs two options at least. To send just one, switch to Send my pick.', 'error'); drawTiers(); return; }
     g.send[key] = on;
     if (!on && g.rec === key) { var first = TK.filter(function (k) { return g.send[k[0]] !== false; })[0]; if (first) g.rec = first[0]; }
     save(); drawTiers(); paint(); var b = $('qb-send'); if (b) b.textContent = sendLabel(j);
@@ -638,7 +663,7 @@
   function drawTiers() {
     var body = $('qg-body'), j = job(Q.id); if (!body || !j) return;
     var g = gb(j);
-    var hero = '<div class="qg-hero"><div><h3>Good · Better · Best</h3><p>Your estimate is the <b>Better</b> option. <b>Good</b> is the budget way to do the same job and <b>Best</b> adds premium materials and upgrades. Check each one and switch off any you don’t want to offer. Send one and it goes as a normal estimate; send two or three and they pick and sign.</p></div>'
+    var hero = '<div class="qg-hero"><div><h3>Good · Better · Best</h3><p>Your estimate is the <b>Better</b> option. <b>Good</b> is the budget way to do the same job and <b>Best</b> adds premium materials and upgrades. Check each one, then choose how it goes out.</p></div>'
       + (g.tiers && !g.busy ? '<div class="qg-hacts"><button type="button" class="bpx-btn ghost" onclick="BPQ.gbbBuild()"><span class="ms">auto_awesome</span>Rebuild</button><button type="button" class="bpx-btn ghost" onclick="BPQ.gbbPreview()"><span class="ms">visibility</span>Preview</button></div>' : '') + '</div>';
     if (g.busy) { body.innerHTML = '<div class="qg-page">' + hero + '<div class="qg-busy"><span class="qg-spin"></span><div><b>Writing Good and Best around your estimate…</b><small>Budget and premium versions of the same job, with what each includes. About 10 seconds.</small></div></div></div>'; return; }
     if (!g.tiers) { body.innerHTML = '<div class="qg-page">' + hero + '<div class="qg-empty">' + (calc(j).total > 0 ? '<button class="bpx-addbtn" onclick="BPQ.gbbBuild()"><span class="ms">auto_awesome</span>Build the 3 options</button>' : '<p>Price the job first (materials, labor or other costs). It becomes the Better option.</p><button class="bpx-btn ghost" onclick="BPQ.go(\'mat\')">Go to materials</button>') + '</div></div>'; return; }
@@ -648,13 +673,19 @@
       var tc = tierCalc(j, tierLines(j, k[0]));
       return '<button type="button" role="tab" data-k="' + k[0] + '" class="k-' + k[0] + (tab === k[0] ? ' on' : '') + (sending(j, k[0]) ? '' : ' off') + '" aria-selected="' + (tab === k[0]) + '" onclick="BPQ.tierTab(\'' + k[0] + '\')"><span>' + k[1] + (g.rec === k[0] ? ' <i class="ms">star</i>' : '') + '</span><b id="qg-sw-' + k[0] + '">' + m0(tc.total) + '</b></button>';
     }).join('') + '</div>';
-    body.innerHTML = '<div class="qg-page">' + hero
+    var pickMode = g.mode === 'pick';
+    var modes = '<div class="qg-mode" role="radiogroup" aria-label="How it goes out">'
+      + '<button type="button" role="radio" aria-checked="' + pickMode + '" class="qg-m' + (pickMode ? ' on' : '') + '" onclick="BPQ.gbbMode(\'pick\')"><span class="qs-radio"></span><span><b>Send my pick</b><small>You choose one. They get one price to approve.</small></span></button>'
+      + '<button type="button" role="radio" aria-checked="' + !pickMode + '" class="qg-m' + (!pickMode ? ' on' : '') + '" onclick="BPQ.gbbMode(\'choose\')"><span class="qs-radio"></span><span><b>Let them choose</b><small>They see the options side by side, pick one and sign.</small></span></button></div>'
+      + '<p class="qg-mhint">' + (pickMode ? 'Tap <b>Send this one</b> on the option you want to send.' : 'Untick any option you don’t want to offer. Two or three can go.') + ' We remember this for your next estimate.</p>';
+    body.innerHTML = '<div class="qg-page' + (pickMode ? ' pickm' : '') + '">' + hero + modes
       + (stale ? '<div class="qx-warn">Your estimate changed since these were built. Better follows it; Good and Best don’t. <a onclick="BPQ.gbbBuild()">Rebuild Good and Best</a></div>' : '')
       + sw + '<div class="qg-grid">' + TK.map(function (k) {
         var t = tierOf(j, k[0]) || { key: k[0], name: k[1], bullets: [] }, ls = tierLines(j, k[0]), tc = tierCalc(j, ls), rec = g.rec === k[0], ro = k[0] === 'better';
         var out = sending(j, k[0]);
         return '<div class="qg-card k-' + k[0] + (rec ? ' rec' : '') + (tab === k[0] ? ' on' : '') + (out ? '' : ' off') + '" data-k="' + k[0] + '">'
-          + '<label class="qg-send"><span><b>' + (out ? 'Sending this' : 'Not sending') + '</b><small>' + (out ? 'Goes to the customer' : 'Stays here, off the estimate') + '</small></span><input type="checkbox"' + (out ? ' checked' : '') + ' onchange="BPQ.tierSend(\'' + k[0] + '\')"><i class="qg-sw"></i></label>'
+          + (pickMode ? '<label class="qg-send qg-pick"><span><b>' + (out ? 'Your pick' : 'Send this one') + '</b><small>' + (out ? 'This is the one that goes' : 'Tap to send this instead') + '</small></span><input type="radio" name="qg-pick"' + (out ? ' checked' : '') + ' onchange="BPQ.tierSend(\'' + k[0] + '\')"><i class="qg-rd"></i></label>'
+            : '<label class="qg-send"><span><b>' + (out ? 'Offered' : 'Not offered') + '</b><small>' + (out ? 'They can pick this' : 'Stays here, off the estimate') + '</small></span><input type="checkbox"' + (out ? ' checked' : '') + ' onchange="BPQ.tierSend(\'' + k[0] + '\')"><i class="qg-sw"></i></label>')
           + '<div class="qg-top"><span class="qg-k">' + k[1] + '</span><button type="button" class="qg-star' + (rec ? ' on' : '') + '" onclick="BPQ.tierRec(\'' + k[0] + '\')" aria-pressed="' + rec + '"><span class="ms">' + (rec ? 'star' : 'star_outline') + '</span>' + (rec ? 'Most popular' : 'Mark most popular') + '</button></div>'
           + '<input class="qg-title" value="' + esc(t.title || '') + '" placeholder="Name this option" onchange="BPQ.tier(\'' + k[0] + '\',\'title\',this.value)" aria-label="' + k[1] + ' option name">'
           + '<div class="qg-price"><b id="qg-tot-' + k[0] + '">' + m2(tc.total) + '</b><small>' + (tc.tax ? 'incl. ' + m2(tc.tax) + ' tax' : 'total') + (bsub > 0 && !ro ? ' · ' + Math.round(tc.sub / bsub * 100) + '% of Better' : '') + '</small></div>'
@@ -678,7 +709,7 @@
     growAll();
   }
   /* what goes to the server: all three, each with its own lines */
-  var sending = function (j, k) { var g = gb(j); return !g.send || g.send[k] !== false; };
+  var sending = function (j, k) { var g = gb(j); return g.mode === 'pick' ? g.pick === k : !g.send || g.send[k] !== false; };
   function tiersOut(j) {
     var g = gb(j);
     return TK.filter(function (k) { return sending(j, k[0]); }).map(function (k) {
@@ -702,8 +733,8 @@
   }
   Q.gbbPreview = function () {
     var j = job(Q.id); if (!j) return; var g = gb(j), ts = tiersOut(j);
-    if (ts.length < 2) { toast('Build the options first.', 'error'); return; }
-    bpModal('<h3>What ' + esc(j.contactId ? j.name.split(' ')[0] : 'your customer') + ' sees</h3><div class="bpx-sub">One link with all three. They pick one and sign right there.</div>'
+    if (!ts.length) { toast('Build the options first.', 'error'); return; }
+    bpModal('<h3>What ' + esc(j.contactId ? j.name.split(' ')[0] : 'your customer') + ' sees</h3><div class="bpx-sub">' + (ts.length === 1 ? 'One price on one link. They approve and sign right there.' : 'One link with ' + (ts.length === 3 ? 'all three' : 'both') + '. They pick one and sign right there.') + '</div>'
       + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (j.quote.desc ? '<p class="qg-pvd">' + esc(j.quote.desc) + '</p>' : '')
       + optsHtml(j, ts, g.rec, '') + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '1040px'; mc.style.width = '96vw'; }
@@ -713,32 +744,36 @@
     var q = j.quote, g = gb(j), ct = contactBy(j.contactId);
     var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } };
     if (!j.contactId) return say('Pick the customer first.');
-    if (!g.tiers) return say('Build the 3 options first.');
-    var ts = tiersOut(j);
-    if (ts.length < 2 || ts.some(function (t) { return !(tierCalc(j, t.lines).total > 0); })) return say('Each option needs a price.');
+    var plain = !g.on;
+    if (!plain && !g.tiers) return say('Build the 3 options first.');
+    /* a plain estimate goes the same way, as one option: the sheet itself */
+    var ts = plain ? [{ key: 'better', name: 'Estimate', title: '', summary: '', bullets: [], warranty: '', lines: baseLines(j).filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }) }] : tiersOut(j);
+    if (!ts.length) return say(g.mode === 'pick' ? 'Pick the option to send.' : 'Choose the options to offer.');
+    if (!plain && g.mode === 'choose' && ts.length < 2) return say('Choosing needs two options. Offer another, or switch to Send my pick.');
+    if (ts.some(function (t) { return !t.lines.length || !(tierCalc(j, t.lines).total > 0); })) return say(plain ? 'Nothing is priced yet. Add materials, labor or other costs.' : 'Each option needs a price.');
     var phone = (ct && ct.phone) || j.phone || '', email = (ct && ct.email) || j.email || '';
     if (q.via !== 'email' && !phone) return say('This customer has no phone number. Send by email instead.');
     if (q.via !== 'sms' && !email) return say('This customer has no email. Send by text instead.');
-    if (q.opt && q.opt.status === 'sent' && !confirm('Send the options again with your changes? The link sent before stops working.')) return;
+    if (((q.opt && q.opt.status === 'sent') || q.estId) && !confirm('Send it again with your changes? The link sent before stops working.')) return;
     if (!window.BP_LIVE || !window.bpAuthApi) return say('Sign in to send estimates.');
     if (btn) btn.disabled = true; say('Sending…', true);
     try {
       var d = await bpAuthApi(OPT_URL(), { op: 'send', jobId: j.id, contactId: j.contactId, customer: j.name, phone: phone, email: email,
         title: j.title === 'New estimate' ? 'Your estimate' : j.title, scope: q.desc || '', addr: j.addr || '', tiers: ts, taxPct: +q.taxPct || 0, taxOn: q.taxOn, discount: +q.discount || 0,
-        recommended: g.rec || 'better', via: q.via, validDays: +q.validDays || 14, businessName: biz(), show: q.show });
+        recommended: ts.length === 1 ? ts[0].key : (g.rec || 'better'), via: q.via, validDays: +q.validDays || 14, businessName: biz(), show: q.show });
       if (!d || !d.ok) { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); if (btn) btn.disabled = false; return; }
-      var better = (d.tiers || []).filter(function (t) { return t.key === 'better'; })[0];
-      q.opt = { id: d.id, token: d.token, link: d.link, status: 'sent', sent: d.tiers || [], rec: g.rec, self: false, sentAt: Date.now(), messaged: !!d.sent, reason: d.reason || '' };
+      var sent = d.tiers || [], better = sent.filter(function (t) { return t.key === 'better'; })[0] || sent[0];
+      q.opt = { id: d.id, token: d.token, link: d.link, status: 'sent', sent: sent, rec: g.rec, chosen: sent.length === 1 ? sent[0].key : '', sentAt: Date.now(), messaged: !!d.sent, reason: d.reason || '' };
       q.estId = 'opt:' + d.id; q.sentAt = Date.now(); q.status = 'sent'; q.sentTotal = better ? better.total : calc(j).total; save(true);
       Q.mode = 'view'; render();
-      if (d.sent) toast('Sent ' + j.name + ' all three options.', 'success'); else Q.optLink(true);
+      if (d.sent) toast(sent.length > 1 ? 'Sent ' + j.name + ' ' + sent.length + ' options to choose from.' : 'Estimate sent to ' + j.name + '.', 'success'); else Q.optLink(true);
     } catch (e) { say('Network error. Try again.'); if (btn) btn.disabled = false; }
   };
   var WHY = { no_highlevel: 'Your texting number isn’t connected yet', no_contact: 'This customer isn’t in your texting inbox yet', no_token: 'Your texting number isn’t connected yet' };
   Q.optLink = function (failed) {
     var j = job(Q.id), o = j && j.quote.opt; if (!o || !o.link) return;
     bpModal('<h3>' + (failed ? 'Send them this link' : 'The options link') + '</h3>'
-      + (failed ? '<p class="bpx-sub">' + esc(WHY[o.reason] || 'We couldn’t text it automatically') + ', so send this link to ' + esc(j.name.split(' ')[0]) + ' yourself. When they pick an option it shows up here.</p>' : '<p class="bpx-sub">The link ' + esc(j.name.split(' ')[0]) + ' got. Anyone with it can see the three options.</p>')
+      + (failed ? '<p class="bpx-sub">' + esc(WHY[o.reason] || 'We couldn’t text it automatically') + ', so send this link to ' + esc(j.name.split(' ')[0]) + ' yourself. When they ' + ((o.sent || []).length > 1 ? 'pick an option' : 'approve it') + ' it shows up here.</p>' : '<p class="bpx-sub">The link ' + esc(j.name.split(' ')[0]) + ' got. Anyone with it can see the estimate.</p>')
       + '<div class="qg-link"><input readonly value="' + esc(o.link) + '" onclick="this.select()"><button class="bpx-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(o.link) + '\');this.textContent=\'Copied\'">Copy</button></div>'
       + '<div class="row"><a class="bpx-btn ghost" href="' + esc(o.link) + '" target="_blank" rel="noopener">Open it</a><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>');
   };
@@ -767,12 +802,12 @@
     }, function () { return false; });
   };
   function optState(j) {
-    var o = j.quote && j.quote.opt; if (!o || o.self) return null;
-    var nm = function (k) { return (TK.filter(function (t) { return t[0] === k; })[0] || [0, k])[1]; };
-    if (o.status === 'chosen') return { cls: 'ok', t: 'Picked ' + nm(o.chosen) };
+    var o = j.quote && j.quote.opt; if (!o || !o.id) return null;
+    var n = (o.sent || []).length, nm = function (k) { return (TK.filter(function (t) { return t[0] === k; })[0] || [0, k])[1]; };
+    if (o.status === 'chosen') return { cls: 'ok', t: n > 1 ? 'Picked ' + nm(o.chosen) : 'Approved' };
     if (o.status === 'declined') return { cls: 'bad', t: 'Declined' };
     if (o.viewedAt) return { cls: 'on', t: 'Opened' };
-    return { cls: 'on', t: ((o.sent || []).length || 3) + ' options sent' };
+    return { cls: 'on', t: n > 1 ? n + ' options sent' : 'Sent' };
   }
   Q.optState = optState;
 
@@ -785,35 +820,13 @@
     return r.json().catch(function () { return { ok: false, error: 'Bad reply' }; });
   }
   var biz = function () { try { return ((bpSettingsGet() || {}).company || {}).name || 'Your contractor'; } catch (e) { return 'Your contractor'; } };
-  Q.send = async function () {
-    var j = job(Q.id), msg = $('qb-msg'), btn = $('qb-send'); if (!j) return;
-    var q = j.quote;
-    if (gb(j).on) {
-      if (!gb(j).tiers) { var m0_ = $('qb-msg'); if (m0_) { m0_.className = 'qb-msg err'; m0_.textContent = 'Build the options first.'; } return; }
-      var ts = tiersOut(j);
-      if (ts.length > 1) return Q.sendOptions();
-      /* the sheet takes the option being sent, so the invoice and the project follow it */
-      q.opt = { self: true, status: 'chosen', chosen: ts[0].key, sent: [tierAsSheet(j, ts[0])], at: Date.now() };
-    } else if (q.opt && q.opt.self) q.opt = null;
-    var c = calc(j), ct = contactBy(j.contactId);
-    var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } };
-    if (!j.contactId) return say('Pick the customer first.');
-    if (!(c.total > 0)) return say('Nothing is priced yet. Add materials, labor or other costs.');
-    var phone = (ct && ct.phone) || j.phone || '', email = (ct && ct.email) || j.email || '';
-    if (q.via !== 'email' && !phone) return say('This customer has no phone number. Send by email instead.');
-    if (q.via !== 'sms' && !email) return say('This customer has no email. Send by text instead.');
-    if (q.estId && !confirm('This sends a new estimate with the changes. The one sent before stays in their messages. Send it?')) return;
-    btn.disabled = true; say('Sending…', true);
-    try {
-      var d = await post(GHL_EST_URL, { action: 'create', contactId: j.contactId, contactName: j.name, phone: phone, email: email,
-        title: j.title === 'New estimate' ? 'Estimate' : j.title, amount: c.total, items: gItems(c.lines), discount: c.disc,
-        description: q.desc || '', send: q.via, businessName: biz(), expiryDays: +q.validDays || 14 });
-      if (d && d.ok) {
-        q.estId = d.id; q.sentAt = Date.now(); q.status = 'sent'; q.sentTotal = c.total; save(true);
-        toast(d.sent ? 'Estimate sent to ' + j.name + '.' : 'Estimate saved, but sending failed. It is in your estimates as a draft.', d.sent ? 'success' : 'error');
-        Q.mode = 'view'; render();
-      } else { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); btn.disabled = false; }
-    } catch (e) { say('Network error. Try again.'); btn.disabled = false; }
+  /* every estimate goes out as a BuilderPro link (#est=): one price to approve,
+     or the options to choose from. The customer signs on that page and it
+     becomes the accepted estimate in HighLevel, deposit and all. */
+  Q.send = function () {
+    var j = job(Q.id);
+    if (j && gb(j).on && !gb(j).tiers) { Q.mode = 'edit'; return Q.go('opts'); }
+    return Q.sendOptions();
   };
 
   /* ================================================================
