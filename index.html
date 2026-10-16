@@ -16769,9 +16769,7 @@ var _bpContacts=[];
 /* ==== bpLoadContacts ==== */
   async function bpLoadContacts(){
     try{
-      var r=await bpFx(GHL_DASH_URL,{view:'contacts'});
-      var d=await r.json();
-      _bpContacts=d.contactsList||[];
+      _bpContacts=await bpFetchContacts();
       bpDrawContacts(_bpContacts);
     }catch(e){
       var b=q('bpx-cbody'); if(b) b.innerHTML='<tr><td colspan="5" class="bpx-cempty">Could not load contacts right now. Please try again shortly.</td></tr>';
@@ -17928,7 +17926,74 @@ var _bpContacts=[];
 /* ==== bpMsg ==== */
   function bpMsg(id,t,x){ var el=q(id); el.className='bpx-msg '+t; el.textContent=x; }
 
-async function bpEnsureContacts(){ if(_bpContacts&&_bpContacts.length) return; try{ var r=await bpFx(GHL_DASH_URL,{view:'contacts'}); var d=await r.json(); _bpContacts=d.contactsList||[]; }catch(e){} }
+async function bpEnsureContacts(){ if(_bpContacts&&_bpContacts.length) return; try{ _bpContacts=await bpFetchContacts(); }catch(e){} }
+/* ===== Contacts live in BuilderPro (2026-10) ==================================
+   Every contact is a row in public.contacts (owner-scoped): leads from Find a
+   Pro, calculators, vendors, and the ones the owner adds here. The house
+   account also lists its HighLevel contacts (ghl-dashboard), with BuilderPro
+   rows added that HighLevel doesn't have. Before this, the page read and wrote
+   only the house HighLevel account, so every other contractor saw an empty list
+   and "New contact" failed. A new contact can be handed to their own HighLevel
+   as a new lead (lead-in op push), which starts Lisa's follow-up. */
+async function bpFetchContacts(){
+  var mine=[],ghl=[];
+  if(window.BP_LIVE&&window.BP_SB){
+    try{
+      var r=await BP_SB.from('contacts').select('id,name,phone,email,tags,date_added,ghl_id').order('date_added',{ascending:false}).limit(2000);
+      if(r&&!r.error) mine=(r.data||[]).map(function(c){return {id:c.id,name:c.name||'',phone:c.phone||'',email:c.email||'',tags:c.tags||[],dateAdded:c.date_added,src:'bp',ghlId:c.ghl_id||''};});
+    }catch(e){}
+  }
+  try{ var g=await bpFx(GHL_DASH_URL,{view:'contacts'}); var d=await g.json(); ghl=((d&&d.contactsList)||[]).map(function(c){c.src='ghl';return c;}); }catch(e){}
+  /* one person, one row: HighLevel's copy wins (the inbox and calendar use its id) */
+  var key=function(c){var p=String(c.phone||'').replace(/\D/g,'').slice(-10);return p||String(c.email||'').toLowerCase();};
+  var seen={}; ghl.forEach(function(c){var k=key(c);if(k)seen[k]=1;});
+  return ghl.concat(mine.filter(function(c){var k=key(c);return !k||!seen[k];}));
+}
+window.bpOpenAdd=function(){
+  bpModal('<h3>New contact</h3>'+bpField('bpx-f-name','Name','','Full name')+bpField('bpx-f-phone','Phone','','Phone number')+bpField('bpx-f-email','Email','','Email address')
+    +'<label class="bpx-chk" style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;font-weight:500"><input type="checkbox" id="bpx-f-lisa" checked style="width:auto;margin-top:3px">'
+    +'<span>Text them now as a new lead<br><small style="color:var(--mu);font-weight:400">'+bpEsc(window.BP_AI_NAME||'Lisa')+' sends the first text and follows up, like any new lead. Untick to just save them.</small></span></label>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpSaveContact()">Create</button></div>');
+};
+window.bpSaveContact=async function(id){
+  var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
+  var name=q('bpx-f-name').value.trim(), phone=q('bpx-f-phone').value.trim(), email=q('bpx-f-email').value.trim();
+  if(!name && !phone && !email){ msg.style.color='#dc2626'; msg.textContent='Enter at least a name, phone, or email.'; return; }
+  var c=id?bpFind(id):null, live=!!(window.BP_LIVE&&window.BP_SB);
+  btn.disabled=true; btn.textContent='Saving…';
+  var fail=function(t){ msg.style.color='#dc2626'; msg.textContent=t||'Could not save. Please try again.'; btn.disabled=false; btn.textContent=id?'Save':'Create'; };
+  var done=function(t){ msg.style.color='#15803d'; msg.textContent=t||'Saved.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },900); };
+  try{
+    if(!id&&live){
+      var ins=await BP_SB.from('contacts').insert({owner:window.bpOwnerId?bpOwnerId():null,name:name||phone||email,phone:phone,email:email,tags:['Added by you'],notes:''}).select('id').single();
+      if(ins.error) return fail('Could not save: '+ins.error.message);
+      var lisa=q('bpx-f-lisa'); if(!(lisa&&lisa.checked)) return done('Saved.');
+      if(!phone&&!email) return done('Saved. Add a phone or email to have '+(window.BP_AI_NAME||'Lisa')+' reach out.');
+      var pr=await bpAuthApi(BP_URL+'/functions/v1/lead-in',{op:'push',contact_id:ins.data.id}).catch(function(){return null;});
+      return done(pr&&pr.ok&&pr.sent?'Saved. '+(window.BP_AI_NAME||'Lisa')+' is texting them now.':pr&&pr.ok&&pr.reason==='no_highlevel'?'Saved. Texting starts once your HighLevel account is connected.':'Saved. We couldn’t start the texts just now; they’re saved in Contacts.');
+    }
+    if(c&&c.src==='bp'&&live){
+      var up=await BP_SB.from('contacts').update({name:name,phone:phone,email:email,updated_at:new Date().toISOString()}).eq('id',id);
+      return up.error?fail('Could not save: '+up.error.message):done('Saved.');
+    }
+    var res=id? await bpWrite({action:'update',id:id,name:name,phone:phone,email:email}) : await bpWrite({action:'create',name:name,phone:phone,email:email});
+    return res.ok?done('Saved.'):fail('Could not save'+(res.status?(' ('+res.status+')'):'')+'. Please try again.');
+  }catch(e){ fail(); }
+};
+window.bpDeleteContact=async function(id){
+  var btn=q('bpx-savebtn'), msg=q('bpx-mmsg'), v=q('bpx-del-verify');
+  if(v&&String(v.value).trim().toUpperCase()!=='DELETE'){ msg.style.color='#dc2626'; msg.textContent='Type DELETE to confirm.'; return; }
+  var c=bpFind(id);
+  btn.disabled=true; btn.textContent='Deleting…';
+  var fail=function(t){ msg.style.color='#dc2626'; msg.textContent=t||'Could not delete. Please try again.'; btn.disabled=false; btn.textContent='Delete'; };
+  try{
+    var ok;
+    if(c&&c.src==='bp'&&window.BP_SB){ var d=await BP_SB.from('contacts').delete().eq('id',id); ok=!d.error; }
+    else { var res=await bpWrite({action:'delete',id:id}); ok=!!(res&&res.ok); }
+    if(!ok) return fail();
+    msg.style.color='#15803d'; msg.textContent='Deleted.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },600);
+  }catch(e){ fail(); }
+};
 
 function bpContacts(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpContactsMock(); return; } bpRenderContacts(); }
 function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarMock(); return; } bpRenderCalendar(); }

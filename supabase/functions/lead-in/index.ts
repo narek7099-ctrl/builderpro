@@ -82,6 +82,7 @@ async function ghlToken(loc: string): Promise<string> {
   const k = await one(`ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token&limit=1`);
   if (k?.token) return String(k.token);
   const env = Deno.env.get(`GHL_TOKEN_${loc}`); if (env) return env;
+  if (loc === HOUSE_LOC && GHL_TOKEN) return GHL_TOKEN;
   if (GHL_API_KEY && GHL_COMPANY_ID) {
     try {
       const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
@@ -112,10 +113,11 @@ function sourceOf(page: string, l: Row): string {
   return (p ? p.charAt(0).toUpperCase() + p.slice(1) : "Instant") + " estimate";
 }
 
-async function toGhl(logId: string, owner: string, c: { first: string; last: string; name: string; phone: string; email: string; address: string; src: string; note: string }) {
+async function toGhl(logId: string, owner: string, c: { first: string; last: string; name: string; phone: string; email: string; address: string; src: string; note: string },
+  opt: { tags?: string[]; loc?: string } = {}) {
   const done = (patch: Row) => rest(`lead_log?id=eq.${logId}`, { method: "PATCH", body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }) }).catch(() => {});
   try {
-    const loc = await ownerLoc(owner);
+    const loc = opt.loc || await ownerLoc(owner);
     if (loc === "house") return done({ ghl_status: "house" });
     if (!loc) return done({ ghl_status: "none" });
     const tok = await ghlToken(loc);
@@ -126,7 +128,7 @@ async function toGhl(logId: string, owner: string, c: { first: string; last: str
       body: JSON.stringify({
         locationId: loc, firstName: c.first || undefined, lastName: c.last || undefined, name: c.name || undefined,
         phone: c.phone || undefined, email: c.email || undefined, address1: c.address || undefined,
-        source: c.src, tags: ["new-lead", "calculator-lead"],
+        source: c.src, tags: opt.tags || ["new-lead", "calculator-lead"],
       }),
     });
     const d = await r.json().catch(() => ({}));
@@ -195,6 +197,41 @@ async function intake(b: Row, req: Request) {
   return json({ ok: true });
 }
 
+// A contact the owner (or office) added in BuilderPro, handed to their own
+// HighLevel as a new lead so Lisa's first text and follow-up run.
+//   POST { op:"push", contact_id }  (their sign-in)  -> { ok, sent, reason? }
+async function push(b: Row, req: Request) {
+  const jwt = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+  if (!jwt || jwt.split(".").length !== 3) return json({ ok: false, error: "sign in" }, 401);
+  let uid = "";
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${jwt}` } });
+    uid = r.ok ? String((await r.json())?.id ?? "") : "";
+  } catch { /* below */ }
+  if (!UUID.test(uid)) return json({ ok: false, error: "sign in" }, 401);
+  const tm = await one(`team_members?member=eq.${uid}&accepted_at=not.is.null&select=owner,role&limit=1`);
+  if (tm && tm.role !== "office") return json({ ok: false, error: "owner or office only" }, 403);
+  const owner = String(tm?.owner ?? uid);
+  const id = clean(b.contact_id, 40);
+  if (!UUID.test(id)) return json({ ok: false, error: "no contact" }, 400);
+  const c = await one(`contacts?id=eq.${id}&owner=eq.${owner}&select=id,name,phone,email&limit=1`);
+  if (!c) return json({ ok: false, error: "not found" }, 404);
+  if (!(await take("lead-push", owner, 60, 3600))) return json({ ok: false, error: "too many" }, 429);
+  const loc0 = await ownerLoc(owner);
+  if (!loc0) return json({ ok: true, sent: false, reason: "no_highlevel" });
+  const loc = loc0 === "house" ? HOUSE_LOC : loc0;
+  const name = clean(c.name, 120), phone = clean(c.phone, 30), email = clean(c.email, 120);
+  const src = "Added in BuilderPro", note = "Added by hand in BuilderPro and sent to you as a new lead.";
+  const lg = await rest("lead_log", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ owner, source: src, page: "contacts", name, phone, email, lead: {}, contact_id: id }) });
+  const logId = lg.ok ? String((await lg.json())[0]?.id ?? "") : "";
+  if (!logId) return json({ ok: false, error: "log" }, 500);
+  const [first, ...more] = name.split(/\s+/);
+  await toGhl(logId, owner, { first: first || "", last: more.join(" "), name, phone, email, address: "", src, note }, { tags: ["new-lead", "added-manually"], loc });
+  const st = await one(`lead_log?id=eq.${logId}&select=ghl_status,ghl_contact,ghl_error&limit=1`);
+  if (st?.ghl_contact) await rest(`contacts?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ ghl_id: st.ghl_contact }) }).catch(() => {});
+  return json({ ok: true, sent: st?.ghl_status === "sent", reason: st?.ghl_status === "sent" ? "" : (st?.ghl_error || st?.ghl_status || "") });
+}
+
 // leads that didn't reach HighLevel: try again (up to 5 times over a day)
 async function retry(req: Request) {
   const key = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
@@ -217,6 +254,7 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch { return json({ ok: false, error: "bad request" }, 400); }
   try {
     if (b.op === "retry") return await retry(req);
+    if (b.op === "push") return await push(b, req);
     return await intake(b, req);
   } catch (e) {
     console.error("lead-in", String(e).slice(0, 200));
