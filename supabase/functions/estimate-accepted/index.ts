@@ -111,7 +111,10 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   // GHL's standard Webhook action nests our keys under customData
   const cd = (b.customData ?? {}) as Record<string, unknown>;
-  if (!hookOk(req, b, cd)) return json({ ok: false, error: "unauthorized" }, 401);
+  /* estimate-options calls straight in when a customer picks one of the
+     Good / Better / Best options, with that option's total */
+  const internal = !!BR_KEY && req.headers.get("x-bp-internal") === BR_KEY;
+  if (!internal && !hookOk(req, b, cd)) return json({ ok: false, error: "unauthorized" }, 401);
   const loc = String(b.locationId ?? cd.locationId ?? (b.location as Record<string, unknown>)?.id ?? "").trim();
   const contactId = String(b.contactId ?? cd.contactId ?? b.contact_id ?? "").trim();
   if (!loc || !contactId) return json({ ok: false, error: "locationId and contactId required" }, 400);
@@ -126,14 +129,20 @@ Deno.serve(async (req) => {
   const tags: string[] = (c.tags ?? []).map((x: string) => String(x).toLowerCase());
   if (tags.includes("deposit-sent") || tags.includes("deposit-paid")) return json({ ok: true, skipped: "deposit already sent" });
 
-  // newest accepted estimate for this contact
+  // the option the customer just picked, else the newest accepted estimate for this contact
+  // deno-lint-ignore no-explicit-any
+  let est: any = null;
+  if (internal && Number(b.total) > 0) {
+    est = { total: Number(b.total), name: String(b.name ?? "your project"), currency: "USD", estimateNumber: "", businessDetails: { name: String(b.businessName || "Your contractor") } };
+  } else {
   const re = await fetch(`${GHL_BASE}/invoices/estimate/list?altId=${loc}&altType=location&limit=50&offset=0`, { headers: ghlH(t) });
   const de = await re.json().catch(() => ({}));
   if (!re.ok) return json({ ok: false, error: de?.message ?? "estimate list failed" }, 502);
-  const est = (de?.estimates ?? de?.data ?? [])
+  est = (de?.estimates ?? de?.data ?? [])
     .filter((v: Record<string, unknown>) => String(v.status ?? "").toLowerCase() === "accepted"
       && String((v.contactDetails as Record<string, unknown>)?.id ?? v.contactId ?? "") === contactId)
     .sort((a: Record<string, unknown>, z: Record<string, unknown>) => String(z.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")))[0];
+  }
   if (!est) return json({ ok: false, error: "no accepted estimate for this contact" }, 404);
   const total = Number(est.total ?? est.amountDue ?? 0);
   if (!(total > 0)) return json({ ok: false, error: "estimate total is 0" }, 422);
@@ -170,7 +179,7 @@ Deno.serve(async (req) => {
   const link = await payLink(loc, String(invId)), bname = String(biz.name ?? "Your contractor");
   const how = phone && email ? "both" : email ? "email" : "sms";
   const sr = await sendPayLink(t, contactId, how,
-    `${bname}: thanks for accepting your estimate! Your ${pct}% deposit of $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is ready. Pay securely by card here: ${link}`,
+    `${bname}: thanks for ${internal ? "choosing your option" : "accepting your estimate"}! Your ${pct}% deposit of $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is ready. Pay securely by card here: ${link}`,
     `${bname}: your deposit invoice`);
   return json({ ok: true, id: invId, amount, pct, sent: sr.sent, sendError: sr.error });
 });

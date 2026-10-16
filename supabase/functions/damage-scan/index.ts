@@ -17,10 +17,10 @@
 // Deploy: supabase functions deploy damage-scan --no-verify-jwt
 //   (or keep JWT verification on: the page sends the anon key as Bearer)
 // Secrets: GEMINI_API_KEY (already set for blueprint-ai / supply-scan)
-//          DAMAGE_MODEL optional, defaults to gemini-2.5-flash (fast enough for the 20 s budget)
+//          DAMAGE_MODEL optional, defaults to gemini-3.8-flash (fast enough for the 20 s budget)
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
-const MODEL = Deno.env.get("DAMAGE_MODEL") ?? "gemini-2.5-flash";
+const MODEL = Deno.env.get("DAMAGE_MODEL") ?? "gemini-3.8-flash";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",

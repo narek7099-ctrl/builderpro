@@ -117,7 +117,10 @@
     document.getElementById('bpxViewArea').innerHTML = '<div class="ctp" style="--st:' + col + '">'
       + '<button type="button" class="ctp-back" onclick="bpNav(\'contacts\')"><span class="ms">arrow_back</span>All contacts</button>'
       + hero + stats
-      + '<div class="bpx-set-grid ctp-grid">' + pipe + info + jobsCard + '</div></div>';
+      + '<div class="bpx-set-grid ctp-grid">' + pipe + info + jobsCard
+      + (window.BPA && !(window.bpLocked && bpLocked('assets')) ? '<section class="ctp-card"><div class="ctp-ch"><b>Equipment</b></div><div id="ctp-equip"></div></section>' : '') + '</div></div>';
+    /* the units at their place: age, service and when they'll need replacing (portal/assets.js) */
+    if (window.BPA && document.getElementById('ctp-equip')) BPA.mount(document.getElementById('ctp-equip'), { contactId: c.id, name: c.name || '', addr: c.address1 || c.address || '' });
 
     /* the report count, once inspect.js can answer */
     setTimeout(function () {

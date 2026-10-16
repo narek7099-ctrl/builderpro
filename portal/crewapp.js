@@ -624,11 +624,14 @@
       if (C.job && jobs.some(function (j) { return j.id === C.job; }) && !$('bpx-modal')) sheet();
     }).catch(fail);
   };
+  /* portal/assets.js asks for the crew's jobs and name (equipment records) */
+  window.bpCrewProjectsList = function () { return (C.me && C.me.projects) || []; };
+  window.bpCrewMe = function () { return C.me || {}; };
   window.bpCrewJob = function (id) { C.job = id; C.tab = 'details'; C.matForm = false; C.rcForm = false; C.rcFile = null; sheet(); };
 
   /* ---------------------------------------------- read-only project sheet --- */
   var TABS = [['details', 'Overview', 'dashboard'], ['schedule', 'Schedule', 'calendar_month'], ['crew', 'Crew', 'groups'], ['materials', 'Materials', 'inventory_2'],
-    ['permits', 'Permits', 'assignment'], ['inspect', 'Inspections', 'fact_check'], ['photos', 'Photos', 'photo_library'], ['docs', 'Documents', 'folder'], ['blueprints', 'Blueprints', 'architecture']];
+    ['permits', 'Permits', 'assignment'], ['inspect', 'Inspections', 'fact_check'], ['equip', 'Equipment', 'build'], ['photos', 'Photos', 'photo_library'], ['docs', 'Documents', 'folder'], ['blueprints', 'Blueprints', 'architecture']];
   function curJob() { return (C.me && C.me.projects || []).filter(function (x) { return x.id === C.job; })[0]; }
   function phasesOf(j) {
     if (j.plan && Array.isArray(j.plan.phases) && j.plan.phases.length) return j.plan.phases.map(function (p) { return { name: p.name, due: p.due, done: !!p.doneAt, days: +p.days || 1 }; });
@@ -671,6 +674,7 @@
   function pane(j, t) {
     var s = j.sched || {};
     if (t === 'inspect') return '<section class="pjs-sec" id="cs-insp"></section>';
+    if (t === 'equip') return '<section class="pjs-sec" id="cs-equip"></section>';
     if (t === 'details') {
       var ph = telOf(j.phone);
       return sec('Customer & site', kv([
@@ -866,6 +870,7 @@
     var j = curJob(), b = $('cs-body'); if (!j || !b) return;
     b.innerHTML = '<div data-pj-pane="' + C.tab + '" role="tabpanel">' + pane(j, C.tab) + '</div>';
     b.scrollTop = 0;
+    if (C.tab === 'equip' && window.BPA) BPA.mount(b.querySelector('#cs-equip'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
     if (C.tab === 'inspect' && window.bpInspMount) bpInspMount(b.querySelector('#cs-insp'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
     AV.fill(b);
     /* files in storage are private: fetch a short-lived link for each */

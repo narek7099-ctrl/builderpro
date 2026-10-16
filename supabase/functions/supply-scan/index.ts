@@ -14,7 +14,7 @@
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 // Document reading wants a stronger model than the chat default.
-const SCAN_MODEL = Deno.env.get("SUPPLY_SCAN_MODEL") ?? "gemini-2.5-flash";
+const SCAN_MODEL = Deno.env.get("SUPPLY_SCAN_MODEL") ?? "gemini-3.8-flash";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
