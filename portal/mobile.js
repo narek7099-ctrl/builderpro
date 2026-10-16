@@ -216,18 +216,60 @@
       + '</div>';
   }
 
+  /* ---------------------------------------------- tables, tabs, tidy --- */
+  /* A table on a phone becomes a stack of cards: the first cell is the
+     title, the rest read "Label  value" from the column headers. Only the
+     labels are added here; the layout is in mobile.css. */
+  var TBL = '#bpxViewArea table.bpx-ctable, #bpxViewArea table.bpx-table';
+  function labelTables() {
+    if (!M.on()) return;
+    Array.prototype.forEach.call(document.querySelectorAll(TBL), function (t) {
+      if (t.classList.contains('pr-tbl') || t.classList.contains('ml-jobs')) return;
+      var hr = t.tHead && t.tHead.rows[0]; if (!hr) return;
+      var heads = []; Array.prototype.forEach.call(hr.cells, function (c) { var n = +c.colSpan || 1; for (var i = 0; i < n; i++) heads.push(c.textContent.trim()); });
+      t.classList.add('bp-mcards');
+      Array.prototype.forEach.call(t.tBodies, function (tb) {
+        Array.prototype.forEach.call(tb.rows, function (r) {
+          if (r._bpml === r.cells.length) return; r._bpml = r.cells.length;
+          var k = 0;
+          Array.prototype.forEach.call(r.cells, function (c) {
+            if ((+c.colSpan || 1) > 1 && r.cells.length === 1) { c.classList.add('bp-mfull'); return; }
+            c.setAttribute('data-l', heads[k] || ''); if (!String(c.textContent).trim() && !c.querySelector('button,a,input,select,img,svg')) c.classList.add('bp-mempty');
+            else if (/^[—–-]$/.test(String(c.textContent).trim()) && !c.querySelector('button,input,select')) c.classList.add('bp-mdash');
+            k += +c.colSpan || 1;
+          });
+        });
+      });
+    });
+  }
+  /* the section tabs scroll sideways: show that there is more, and keep the open one in view */
+  function tabsFade() {
+    var t = document.querySelector('#bpx .hl-tabs'); if (!t) return;
+    var upd = function () { t.classList.toggle('bp-more', t.scrollWidth - t.clientWidth - t.scrollLeft > 6); t.classList.toggle('bp-less', t.scrollLeft > 6); };
+    if (!t._bpf) { t._bpf = 1; t.addEventListener('scroll', upd, { passive: true }); }
+    var on = t.querySelector('.hl-tab.on');
+    if (on && M.on()) { var l = on.offsetLeft - 16, r = on.offsetLeft + on.offsetWidth - t.clientWidth + 16; if (t.scrollLeft > l) t.scrollLeft = l; else if (t.scrollLeft < r) t.scrollLeft = r; }
+    upd();
+  }
+  var tidyT = null;
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); }, 80); }
+  function watch() {
+    var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
+    a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
+  }
+
   /* ----------------------------------------------------------- hooks --- */
   function apply() {
     var x = $('bpx'); if (!x) return;
     x.classList.toggle('bp-m', M.on());
     if (!M.on()) { M.appsClose(); x.classList.remove('bp-m-home'); }
-    paintTabs(); paintTop();
+    paintTabs(); paintTop(); watch(); tidy();
   }
   function hook() {
     var sh = window.bpShell; if (!sh || sh._mob) return !!(sh && sh._mob);
     sh._mob = true;
     var sync = sh.sync;
-    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); return r; };
+    sh.sync = function (v, quiet) { var r = sync.apply(this, arguments); if (!quiet) M.appsClose(); paintTabs(v); paintTop(v); watch(); tidy(); return r; };
     var build = sh.buildNav;
     sh.buildNav = function () { var r = build.apply(this, arguments); apply(); return r; };
     var dash = window.bpDashboard;

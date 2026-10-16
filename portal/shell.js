@@ -570,6 +570,8 @@
   function enhance(t) {
     if (t.closest(SKIP) || t.closest('.bpx-modal,.bpx-modalcard,#bpx-modal,.hl-w')) return;
     var tb = t.tBodies[0]; if (!tb) return;
+    /* the page brings its own search box (Contacts): one is enough */
+    if (t.closest('.bpx-cwrap') && document.querySelector('#bpxViewArea .bpx-csearch') && !t.closest('.bpx-modal')) return;
     var view = window._bpCurView || '';
     /* a paged list: the footer from bpPage() is next to it */
     var foot = null, up = t.parentNode, area = $('bpxViewArea');
