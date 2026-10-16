@@ -207,7 +207,7 @@
       + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</h2>' + badge + '</div>'
         + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.edit(1)">Edit estimate</button>'
         + (o && o.link && o.status === 'sent' ? '<button class="bpx-btn ghost" onclick="BPQ.optLink()">Copy link</button>' : '')
-        + (q.estId ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
+        + (q.estId && !(o && o.status === 'sent') ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
         + (o && o.status === 'chosen' ? '' : '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (multi ? (o && o.status === 'sent' ? 'Send options again' : 'Send 3 options') : q.estId ? 'Send again' : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button>') + '</div></div>'
       + '<div class="qb-msg" id="qb-msg"></div>'
       + (o && o.status === 'chosen' ? '<div class="qg-won"><span class="ms">task_alt</span><div><b>' + esc(j.name.split(' ')[0]) + ' picked ' + esc((TK.filter(function (t) { return t[0] === o.chosen; })[0] || [0, ''])[1]) + ': ' + m2(c.total) + '</b><small>Signed' + (o.signer ? ' by ' + esc(o.signer) : '') + (o.at ? ' on ' + new Date(o.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '. It’s now the accepted estimate, so the deposit and the rest of your follow-up run as usual.</small></div></div>' : '')
@@ -224,33 +224,125 @@
       + '</div>';
     if (window.bpSpin) bpSpin(false);
   }
+  /* ---------- the builder, one step at a time ----------
+     Job, Materials, Labor, Other costs, Price, then (when they get a choice)
+     Good / Better / Best, then Review and send. Each step is its own screen:
+     on a phone the bottom bar carries the running total and Back / Next; on
+     a computer the summary stays on the right. */
+  var STEPS = { job: 'Job', mat: 'Materials', lab: 'Labor', oth: 'Other costs', price: 'Price', opts: 'Good · Better · Best', send: 'Review & send' };
+  var SHORT = { job: 'Job', mat: 'Materials', lab: 'Labor', oth: 'Other', price: 'Price', opts: 'Options', send: 'Send' };
+  function stepsOf(j) { return ['job', 'mat', 'lab', 'oth', 'price'].concat(gb(j).on ? ['opts'] : []).concat(['send']); }
+  function curStep(j) { var s = stepsOf(j), st = Q.step || (j.quote && j.quote.step) || 'job'; return s.indexOf(st) > -1 ? st : s[0]; }
+  var focusMode = function (on) { var x = $('bpx'); if (x) x.classList.toggle('qs-focus', !!on); if (!on) undock(); };
+  /* on a phone the bar sits on the bottom of the screen; the page's slide-in
+     animation would pin a fixed bar to the page instead, so it moves out */
+  function undock() { var d = document.querySelectorAll('#bpx > .qs-bar'); for (var i = 0; i < d.length; i++) d[i].remove(); }
+  function dock() {
+    undock();
+    var b = document.querySelector('#bpxViewArea .qs-bar'), x = $('bpx');
+    if (b && x && window.matchMedia && matchMedia('(max-width: 820px)').matches) x.appendChild(b);
+    var on = document.querySelector('.qs-steps .qs-st.on'), nav = on && on.parentNode;
+    if (on && nav && nav.scrollTo) nav.scrollTo({ left: Math.max(0, on.offsetLeft - 40) });
+  }
+  /* leaving the builder gives the tab bar back */
+  var navWas = window.bpNav;
+  if (typeof navWas === 'function' && !navWas._qs) { window.bpNav = function (v) { if (v !== 'quote' && v !== 'invoicebuilder') focusMode(false); return navWas.apply(this, arguments); }; window.bpNav._qs = 1; }
+  Q.go = function (st) {
+    var j = job(Q.id); if (!j) return;
+    if (st === 'next' || st === 'back') { var s = stepsOf(j), i = s.indexOf(curStep(j)); st = s[Math.max(0, Math.min(s.length - 1, i + (st === 'next' ? 1 : -1)))]; }
+    Q.step = st; quoteOf(j).step = st; save();
+    var a = document.activeElement; if (a && a.blur) a.blur();
+    render(); scrollTop();
+  };
+  function scrollTop() { if (window.bpScrollTop) { try { bpScrollTop(); return; } catch (e) {} } var m = document.querySelector('.bpx-main'); if (m) m.scrollTop = 0; }
+  Q.close = function () { var j = job(Q.id); focusMode(false); if (j && hasWork(j) && calc(j).total > 0) { Q.mode = 'view'; render(); scrollTop(); } else bpNav('estimates'); };
+  function stepBar(j, cur) {
+    var s = stepsOf(j), i = s.indexOf(cur);
+    return '<nav class="qs-steps" aria-label="Steps">' + s.map(function (k, n) {
+      return '<button type="button" class="qs-st' + (k === cur ? ' on' : n < i ? ' done' : '') + '" onclick="BPQ.go(\'' + k + '\')"' + (k === cur ? ' aria-current="step"' : '') + '><i>' + (n < i ? '<span class="ms">check</span>' : n + 1) + '</i><span>' + SHORT[k] + '</span></button>';
+    }).join('') + '</nav>';
+  }
+  function head(j, q, cur) {
+    var s = stepsOf(j);
+    return '<div class="qs-head"><div class="qs-hrow"><a class="qx-back" onclick="BPQ.close()">&larr; ' + (hasWork(j) && calc(j).total > 0 ? 'Save and close' : 'Estimates') + '</a>'
+        + '<span class="qs-count">Step ' + (s.indexOf(cur) + 1) + ' of ' + s.length + '</span></div>'
+      + '<div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'New estimate' : j.title) + '</h2><span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span></div>'
+      + stepBar(j, cur) + '</div>';
+  }
+  function card(title, sub, right, body, cls) {
+    return '<section class="bpx-panel qs-card' + (cls ? ' ' + cls : '') + '"><div class="qs-ch"><div><h3>' + title + '</h3>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>' + (right || '') + '</div>' + body + '</section>';
+  }
+  function sendLabel(j) { var q = j.quote; return gb(j).on ? (q.opt && q.opt.status === 'sent' ? 'Send updated options' : 'Send 3 options') : q.estId ? 'Send updated estimate' : 'Send estimate'; }
+  function bar(j, cur) {
+    var s = stepsOf(j), i = s.indexOf(cur), last = i === s.length - 1;
+    return '<div class="qs-bar" id="qs-bar">'
+      + (i > 0 ? '<button type="button" class="qs-back" onclick="BPQ.go(\'back\')" aria-label="Back"><span class="ms">arrow_back</span></button>' : '')
+      + '<button type="button" class="qs-tot" onclick="BPQ.sumSheet()"><small id="qs-totl">Customer pays</small><b id="qs-totv">$0.00</b><em id="qs-totm"></em></button>'
+      + (last ? '<button type="button" class="qs-next" id="qb-send" onclick="BPQ.send()">' + sendLabel(j) + '</button>'
+        : '<button type="button" class="qs-next" onclick="BPQ.go(\'next\')">' + (s[i + 1] === 'send' ? 'Review' : 'Next: ' + SHORT[s[i + 1]]) + '<span class="ms">arrow_forward</span></button>')
+      + '</div>';
+  }
+  function stepBody(j, q, cur) {
+    if (cur === 'job') {
+      var cs = window._bpContacts || [];
+      var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === j.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('')
+        + (j.contactId && !contactBy(j.contactId) ? '<option value="' + esc(j.contactId) + '" selected>' + esc(j.name) + '</option>' : '');
+      return card('Who and where', 'The customer, the job and what you will do.', '',
+          '<label class="qs-f">Customer<select id="qb-c" onchange="BPQ.contact(this.value)">' + copts + '</select></label>'
+          + '<label class="qs-f">Job title<input value="' + esc(j.title === 'New estimate' ? '' : j.title) + '" placeholder="e.g. Roof replacement" onchange="BPQ.setJ(\'title\',this.value);var h=document.querySelector(\'.qs-head .qx-h h2\');if(h)h.textContent=this.value||\'New estimate\'"></label>'
+          + '<label class="qs-f">Job site address<input value="' + esc(j.addr || '') + '" placeholder="Where the work is" onchange="BPQ.setJ(\'addr\',this.value)"></label>'
+          + '<label class="qs-f">Scope of work <small>printed on the estimate</small><textarea rows="4" placeholder="What you will do, what is included, what is not" onchange="BPQ.set(\'desc\',this.value)">' + esc(q.desc || '') + '</textarea></label>');
+    }
+    if (cur === 'mat') return card('Materials', 'Quantity &times; your price for each item. This list is also the job&rsquo;s order list.', mk('mkMat', q.mkMat),
+          '<div class="qx-warn" id="qx-matwarn" hidden></div><div id="qb-mat">' + (window.ML && ML.editor ? ML.editor('job', j.id) : '') + '</div>', 'qs-mat');
+    if (cur === 'lab') return card('Labor', 'People &times; hours &times; cost an hour. Pick an employee to use their rate with payroll costs included.', mk('mkLab', q.mkLab), '<div id="qb-lab"></div>');
+    if (cur === 'oth') return card('Other costs', 'Permits, dumpster, equipment, subcontractors: anything else the job costs you.', mk('mkOth', q.mkOth), '<div id="qb-oth"></div>');
+    if (cur === 'price') {
+      var stx = Q.stateTax(), G = gb(j);
+      return card('The price', 'What it costs you, your mark-up, and what the customer pays.', '', '<div id="qs-price"></div>'
+          + '<div class="qs-f2"><label class="qs-f">Sales tax<span class="qx-in"><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(q.taxPct || '') + '" placeholder="0" oninput="BPQ.set(\'taxPct\',this.value,1)"><i>%</i></span></label>'
+            + '<label class="qs-f">Taxed<select onchange="BPQ.taxOn(this.value)"><option value="materials"' + (q.taxOn !== 'all' ? ' selected' : '') + '>Materials</option><option value="all"' + (q.taxOn === 'all' ? ' selected' : '') + '>Everything</option></select></label></div>'
+          + '<p class="qx-hint">' + (stx ? stx.st + ' state rate is ' + stx.rate + '%. Add your city and county rate on top. ' : 'Add your business address in Settings to start from your state&rsquo;s rate. ') + '<a onclick="BPQ.saveTax(' + (+q.taxPct || 0) + ')">Make ' + (+q.taxPct || 0) + '% my default</a></p>'
+          + '<label class="qs-f">Discount<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(q.discount || '') + '" placeholder="0" oninput="BPQ.set(\'discount\',this.value,1)"></span></label>'
+          + '<p class="qx-hint"><a onclick="BPQ.saveDefaults()">Save these mark-ups and tax as my defaults</a></p>')
+        + card('How they get it', '', '',
+          '<div class="qs-choice">'
+            + '<button type="button" class="qs-opt' + (G.on ? '' : ' on') + '" onclick="BPQ.sendAs(\'one\')"><span class="qs-radio"></span><span class="qs-ot"><b>One price</b><small>The estimate as you built it, with Accept and Decline buttons.</small></span></button>'
+            + '<button type="button" class="qs-opt' + (G.on ? ' on' : '') + '" onclick="BPQ.sendAs(\'gbb\')"><span class="qs-radio"></span><span class="qs-ot"><b>Good · Better · Best <i class="qs-new">More yeses</i></b><small>Three options on one link. Yours is Better; we write a budget and a premium version. They pick one and sign.</small></span></button>'
+          + '</div>'
+          + '<label class="qs-f" style="margin-top:14px">The customer sees</label>' + seg(q.show, [['items', 'Every line'], ['sections', 'By section'], ['total', 'One price']], 'BPQ.show')
+          + '<p class="qx-hint">' + (q.show === 'items' ? 'Each item with its quantity and unit price, the labor, every other cost and the tax.' : q.show === 'total' ? 'One price for the whole job, with the scope of work underneath.' : 'Three lines: Materials, Labor and Other costs, then the tax.') + '</p>'
+          + '<div class="qs-f2"><label class="qs-f">Valid for<select onchange="BPQ.set(\'validDays\',this.value,1)">' + [7, 14, 30, 60].map(function (d) { return '<option value="' + d + '"' + (+q.validDays === d ? ' selected' : '') + '>' + d + ' days</option>'; }).join('') + '</select></label>'
+          + '<label class="qs-f">Send by<select onchange="BPQ.via(this.value)"><option value="sms"' + (q.via === 'sms' ? ' selected' : '') + '>Text</option><option value="email"' + (q.via === 'email' ? ' selected' : '') + '>Email</option><option value="both"' + (q.via === 'both' ? ' selected' : '') + '>Both</option></select></label></div>');
+    }
+    if (cur === 'opts') return '<div id="qg-body"></div>';
+    /* send: exactly what goes out */
+    var G2 = gb(j), c = calc(j), ct = contactBy(j.contactId);
+    var to = ct ? (q.via === 'email' ? ct.email : q.via === 'both' ? [ct.phone, ct.email].filter(Boolean).join(' and ') : ct.phone) : '';
+    return '<div class="qs-review"><div class="qs-to"><span class="ms">' + (q.via === 'email' ? 'mail' : 'sms') + '</span><div><b>' + (j.contactId ? 'Going to ' + esc(j.name) : 'Pick the customer first') + '</b><small>' + (j.contactId ? esc(to || 'No ' + (q.via === 'email' ? 'email' : 'phone') + ' on file') + ' · by ' + ({ sms: 'text', email: 'email', both: 'text and email' }[q.via] || 'text') + ' · valid ' + (+q.validDays || 14) + ' days' : '<a onclick="BPQ.go(\'job\')">Choose who it is for</a>') + '</small></div><a class="qs-chg" onclick="BPQ.go(\'price\')">Change</a></div>'
+      + '<div class="qb-msg" id="qb-msg"></div>'
+      + (G2.on ? '<div class="qs-paper qg-paper">' + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (q.desc ? '<p class="qg-pvd">' + esc(q.desc) + '</p>' : '') + optsHtml(j, tiersOut(j), G2.rec, '') + '</div>'
+        : '<div class="qs-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>')
+      + '<div class="qs-foot"><button class="bpx-delbtn" onclick="BPQ.remove()">Delete ' + (q.estId ? 'estimate' : 'draft') + '</button></div></div>';
+  }
   function render() {
     var area = $('bpxViewArea'), j = job(Q.id);
     if (!area) return;
-    if (!j) { area.innerHTML = '<div class="pjk-empty">That estimate is gone. <a onclick="bpNav(\'estimates\')">Back to estimates</a></div>'; if (window.bpSpin) bpSpin(false); return; }
-    if (Q.mode === 'view') { renderView(area, j); return; }
-    var q = quoteOf(j), cs = window._bpContacts || [];
-    var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === j.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('')
-      + (j.contactId && !contactBy(j.contactId) ? '<option value="' + esc(j.contactId) + '" selected>' + esc(j.name) + '</option>' : '');
-    area.innerHTML = '<div class="qx">'
-      + '<a class="qx-back" onclick="bpNav(\'estimates\')">&larr; Estimates</a>'
-      + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'New estimate' : j.title) + '</h2><span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span></div>'
-        + (calc(j).total > 0 ? '<button class="bpx-addbtn qx-done" onclick="BPQ.edit(0)">Done</button>' : '') + '</div>'
-      + '<div class="qx-grid"><div class="qx-main">'
-      + sec(1, 'Customer and job', 'Who it is for, and where.', '',
-          '<div class="qx-f2"><label>Customer<select id="qb-c" onchange="BPQ.contact(this.value)">' + copts + '</select></label>'
-          + '<label>Job title<input value="' + esc(j.title === 'New estimate' ? '' : j.title) + '" placeholder="e.g. Roof replacement" onchange="BPQ.setJ(\'title\',this.value);var h=document.querySelector(\'.qx-h h2\');if(h)h.textContent=this.value||\'New estimate\'"></label></div>'
-          + '<label class="qx-lab">Job site address<input value="' + esc(j.addr || '') + '" placeholder="Where the work is" onchange="BPQ.setJ(\'addr\',this.value)"></label>'
-          + '<label class="qx-lab">Scope of work <small>printed on the estimate</small><textarea rows="3" placeholder="What you will do, what is included, what is not" onchange="BPQ.set(\'desc\',this.value)">' + esc(q.desc || '') + '</textarea></label>')
-      + sec(2, 'Materials', 'Quantity &times; your price for each item. This list is also the job&rsquo;s order list.', mk('mkMat', q.mkMat),
-          '<div class="qx-warn" id="qx-matwarn" hidden></div><div id="qb-mat">' + (window.ML && ML.editor ? ML.editor('job', j.id) : '') + '</div>', 'qx-s-mat')
-      + sec(3, 'Labor', 'People &times; hours &times; cost an hour. Pick an employee to use their rate with payroll costs included.', mk('mkLab', q.mkLab), '<div id="qb-lab"></div>')
-      + sec(4, 'Other costs', 'Permits, dumpster, equipment, subcontractors: anything else the job costs you.', mk('mkOth', q.mkOth), '<div id="qb-oth"></div>')
-      + '<section class="bpx-panel qx-sec qg-sec" id="qx-s-gbb"' + (gb(j).on ? '' : ' hidden') + '><div class="qx-ph"><span class="qx-n">5</span><div class="qx-pt"><div class="bpx-ptitle">Good, Better, Best</div><p>Three ways to do the job. The customer picks one and signs on the link you send.</p></div>'
-        + '<button type="button" class="qb-x" aria-label="Back to one estimate" title="Back to one estimate" onclick="BPQ.gbbOn(0)">&times;</button></div><div id="qg-body"></div></section>'
-      + '</div><aside class="qx-side"><div class="bpx-panel qx-sum" id="qx-sum"></div></aside></div></div>';
-    drawLabor(); drawOther(); paint(); drawTiers();
-    if (window.bpCrewLoad && !(window.bpEmpsActive && bpEmpsActive().length)) { try { Promise.resolve(bpCrewLoad()).then(function () { if ($('qb-lab')) drawLabor(); }); } catch (e) {} }
+    if (!j) { focusMode(false); area.innerHTML = '<div class="pjk-empty">That estimate is gone. <a onclick="bpNav(\'estimates\')">Back to estimates</a></div>'; if (window.bpSpin) bpSpin(false); return; }
+    if (Q.mode === 'view') { focusMode(false); renderView(area, j); return; }
+    var q = quoteOf(j), cur = curStep(j); Q.step = cur;
+    var wide = cur === 'opts' || cur === 'send' || cur === 'price';
+    focusMode(true);
+    area.innerHTML = '<div class="qx qs qs-' + cur + '">' + head(j, q, cur)
+      + '<div class="qs-body' + (wide ? ' wide' : '') + '"><div class="qs-main">' + stepBody(j, q, cur) + '</div>'
+      + (wide ? '' : '<aside class="qs-side"><div class="bpx-panel qx-sum" id="qx-sum"></div></aside>') + '</div>'
+      + bar(j, cur) + '</div>';
+    if (cur === 'lab') drawLabor();
+    if (cur === 'oth') drawOther();
+    if (cur === 'opts') drawTiers();
+    dock(); paint();
+    if (cur === 'opts' && gb(j).on && !gb(j).tiers && !gb(j).busy && calc(j).total > 0) Q.gbbBuild();
+    if (cur === 'lab' && window.bpCrewLoad && !(window.bpEmpsActive && bpEmpsActive().length)) { try { Promise.resolve(bpCrewLoad()).then(function () { if ($('qb-lab')) drawLabor(); }); } catch (e) {} }
     if (window.bpSpin) bpSpin(false);
   }
   window.bpQuotePage = function () {
@@ -330,20 +422,10 @@
   /* matlists.js calls this after every change to the list */
   window.bpQbMat = function (jid) { if (jid === Q.id && $('qx-sum')) paint(); };
 
-  /* ---------- the summary on the right ---------- */
-  function paint() {
-    var j = job(Q.id), el = $('qx-sum'); if (!j || !el) return;
-    var q = j.quote, c = calc(j);
-    j.estimate = c.total;
-    if (gb(j).on && !picked(j)) { var bt = tierCalc(j, baseLines(j)); j.estimate = bt.total; }
-    if ($('qg-body') && gb(j).on && !gb(j).busy && document.activeElement && !(document.activeElement.closest && document.activeElement.closest('#qx-s-gbb'))) { clearTimeout(Q._tdT); Q._tdT = setTimeout(drawTiers, 250); }
-    /* items on the list that add nothing because they have no price (or no quantity) */
-    var np = (j.materials.items || []).filter(function (it) { return !(+it.price > 0) || !(+it.qty > 0); });
-    var w = $('qx-matwarn'); if (w) { w.hidden = !np.length; w.innerHTML = np.length ? '<b>' + np.length + ' item' + (np.length === 1 ? ' has' : 's have') + ' no ' + (np.every(function (it) { return +it.price > 0; }) ? 'quantity' : 'price') + ' yet</b>, so ' + (np.length === 1 ? 'it adds' : 'they add') + ' nothing: ' + np.slice(0, 4).map(function (it) { return esc(it.name || 'unnamed line'); }).join(', ') + (np.length > 4 ? '…' : '') + '.' : ''; }
-    var mu = Math.max(0, r2(c.total - c.tax - c.cost + c.disc));
-    var tone = c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low';
-    var focusIn = document.activeElement && el.contains(document.activeElement) && document.activeElement.tagName === 'INPUT';
-    var rows = '<table class="qx-st"><thead><tr><th></th><th>Cost</th><th>Price</th></tr></thead><tbody>'
+  /* ---------- the running numbers: side summary, bottom bar, Price step ---------- */
+  function priceRows(j, c) {
+    var q = j.quote;
+    return '<table class="qx-st"><thead><tr><th></th><th>Cost</th><th>Price</th></tr></thead><tbody>'
       + '<tr><td>Materials <small>+' + (+q.mkMat || 0) + '%</small></td><td>' + m0(c.matCost) + '</td><td>' + m2(c.matPrice) + '</td></tr>'
       + '<tr><td>Labor <small>+' + (+q.mkLab || 0) + '%</small></td><td>' + m0(c.labCost) + '</td><td>' + m2(c.labPrice) + '</td></tr>'
       + '<tr><td>Other <small>+' + (+q.mkOth || 0) + '%</small></td><td>' + m0(c.othCost) + '</td><td>' + m2(c.othPrice) + '</td></tr>'
@@ -352,27 +434,33 @@
       + (c.disc ? '<tr><td>Discount</td><td></td><td>&minus;' + m2(c.disc) + '</td></tr>' : '')
       + '</tbody></table>'
       + '<div class="qx-total"><span>Customer pays</span><b>' + m2(c.total) + '</b></div>'
-      + '<div class="qx-profit ' + tone + '"><span>Profit <b>' + m0(c.profit) + '</b></span><span>Margin <b>' + c.margin + '%</b></span></div>';
-    if (focusIn) { var r = $('qx-sumrows'); if (r) r.innerHTML = rows; return; }
-    var stx = Q.stateTax();
-    el.innerHTML = '<div class="bpx-ptitle">Summary</div><div id="qx-sumrows">' + rows + '</div>'
-      + '<div class="qx-sb"><div class="qx-f2"><label>Sales tax<span class="qx-in"><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(q.taxPct || '') + '" placeholder="0" oninput="BPQ.set(\'taxPct\',this.value,1)"><i>%</i></span></label>'
-        + '<label>Taxed<select onchange="BPQ.taxOn(this.value)"><option value="materials"' + (q.taxOn !== 'all' ? ' selected' : '') + '>Materials</option><option value="all"' + (q.taxOn === 'all' ? ' selected' : '') + '>Everything</option></select></label></div>'
-        + '<p class="qx-hint">' + (stx ? stx.st + ' state rate is ' + stx.rate + '%. Add your city and county rate on top. ' : 'Add your business address in Settings to start from your state&rsquo;s rate. ') + '<a onclick="BPQ.saveTax(' + (+q.taxPct || 0) + ')">Make ' + (+q.taxPct || 0) + '% my default</a></p>'
-        + '<label class="qx-lab">Discount<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(q.discount || '') + '" placeholder="0" oninput="BPQ.set(\'discount\',this.value,1)"></span></label></div>'
-      + '<div class="qx-sb"><label class="qx-lab" style="margin-top:0">The customer sees</label>' + seg(q.show, [['items', 'Every line'], ['sections', 'By section'], ['total', 'One price']], 'BPQ.show')
-        + '<p class="qx-hint">' + (q.show === 'items' ? 'Each item with its quantity and unit price, the labor, every other cost and the tax.' : q.show === 'total' ? 'One line for the whole job, with the scope of work underneath.' : 'Three lines: Materials, Labor and Other costs, then the tax.') + '</p>'
-        + '<div class="qx-f2"><label>Valid for<select onchange="BPQ.set(\'validDays\',this.value,1)">' + [7, 14, 30, 60].map(function (d) { return '<option value="' + d + '"' + (+q.validDays === d ? ' selected' : '') + '>' + d + ' days</option>'; }).join('') + '</select></label>'
-        + '<label>Send by<select onchange="BPQ.via(this.value)"><option value="sms"' + (q.via === 'sms' ? ' selected' : '') + '>Text</option><option value="email"' + (q.via === 'email' ? ' selected' : '') + '>Email</option><option value="both"' + (q.via === 'both' ? ' selected' : '') + '>Both</option></select></label></div></div>'
-      + '<div class="qx-sb"><label class="qx-lab" style="margin-top:0">Send as</label>' + seg(gb(j).on ? 'gbb' : 'one', [['one', 'One estimate'], ['gbb', 'Good · Better · Best']], 'BPQ.sendAs')
-        + '<p class="qx-hint">' + (gb(j).on ? 'Three options on one link. Customers who get a choice say yes more often, and often pick the middle or the top.' : 'Or give them three options to choose from: we write a budget and a premium version around this one.') + '</p></div>'
-      + '<div class="qb-msg" id="qb-msg"></div>'
-      + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="' + (gb(j).on ? 'BPQ.gbbPreview()' : 'BPQ.preview()') + '">Preview</button><button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (gb(j).on ? (q.opt && q.opt.status === 'sent' ? 'Send updated options' : 'Send 3 options') : q.estId ? 'Send updated estimate' : 'Send estimate') + '</button></div>'
-      + (q.estId ? '<button class="bpx-btn ghost qx-wide" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make the invoice from this</button>' : '')
-      + '<div class="qx-foot"><a onclick="BPQ.saveDefaults()">Save these mark-ups as my defaults</a><button class="bpx-delbtn" onclick="BPQ.remove()">Delete ' + (q.estId ? 'estimate' : 'draft') + '</button></div>';
+      + '<div class="qx-profit ' + (c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low') + '"><span>Profit <b>' + m0(c.profit) + '</b></span><span>Margin <b>' + c.margin + '%</b></span></div>';
   }
+  function paint() {
+    var j = job(Q.id); if (!j) return;
+    var q = j.quote, c = calc(j), G = gb(j);
+    j.estimate = c.total;
+    if (G.on && !picked(j)) { var bt = tierCalc(j, baseLines(j)); j.estimate = bt.total; }
+    /* items on the list that add nothing because they have no price (or no quantity) */
+    var np = (j.materials.items || []).filter(function (it) { return !(+it.price > 0) || !(+it.qty > 0); });
+    var w = $('qx-matwarn'); if (w) { w.hidden = !np.length; w.innerHTML = np.length ? '<b>' + np.length + ' item' + (np.length === 1 ? ' has' : 's have') + ' no ' + (np.every(function (it) { return +it.price > 0; }) ? 'quantity' : 'price') + ' yet</b>, so ' + (np.length === 1 ? 'it adds' : 'they add') + ' nothing: ' + np.slice(0, 4).map(function (it) { return esc(it.name || 'unnamed line'); }).join(', ') + (np.length > 4 ? '…' : '') + '.' : ''; }
+    var rows = priceRows(j, c);
+    var el = $('qx-sum'); if (el) el.innerHTML = '<div class="bpx-ptitle">Summary</div>' + rows;
+    var pr = $('qs-price'); if (pr) pr.innerHTML = rows;
+    /* the bottom bar: Better's price while there are options, else the one price */
+    var tv = $('qs-totv'), tl = $('qs-totl'), tm = $('qs-totm');
+    if (tv) {
+      if (G.on && G.tiers && Q.step === 'opts') { var ts = TK.map(function (k) { return tierCalc(j, tierLines(j, k[0])).total; }); tl.textContent = '3 options'; tv.textContent = m0(ts[0]) + ' to ' + m0(ts[2]); tm.textContent = ''; }
+      else { tl.textContent = G.on ? 'Better option' : 'Customer pays'; tv.textContent = m2(G.on ? tierCalc(j, baseLines(j)).total : c.total); tm.textContent = c.margin + '% margin'; tm.className = c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low'; }
+    }
+  }
+  /* on a phone the summary opens from the bottom bar */
+  Q.sumSheet = function () {
+    var j = job(Q.id); if (!j) return;
+    bpModal('<h3>Summary</h3>' + priceRows(j, calc(j)) + '<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>');
+  };
   Q.sendAs = function (v) { Q.gbbOn(v === 'gbb'); };
-  Q.show = function (v) { var j = job(Q.id); if (!j) return; j.quote.show = v; save(); var a = document.activeElement; if (a && a.blur) a.blur(); paint(); };
+  Q.show = function (v) { var j = job(Q.id); if (!j) return; j.quote.show = v; save(); var a = document.activeElement; if (a && a.blur) a.blur(); render(); };
   Q.removeId = function (id) {
     var j = job(id); if (!j || !confirm('Delete the draft for ' + (j.contactId ? j.name : 'this estimate') + '? This can’t be undone.')) return;
     var all = jobs(), left = all.filter(function (x) { return x.id !== id; }); all.length = 0; Array.prototype.push.apply(all, left); save(true);
@@ -453,15 +541,6 @@
         lines: base.map(function (l) { return f(l, 1.25, 1.1, 1); }).concat([{ name: 'Extended workmanship warranty', desc: '5 years', qty: 1, unit: 'ea', price: r2(Math.max(150, sub * 0.06)), sec: 'oth' }]) }
     ];
   }
-  Q.gbbOn = function (on) {
-    var j = job(Q.id); if (!j) return; var g = gb(j);
-    if (on && j.quote.opt && j.quote.opt.status === 'chosen') { toast('The customer already picked an option.', 'error'); return; }
-    g.on = !!on; save(true);
-    var a = document.activeElement; if (a && a.blur) a.blur();
-    drawTiers(); paint();
-    if (on && !g.tiers && calc(j).total > 0) Q.gbbBuild();
-    if (on) setTimeout(function () { var el = $('qx-s-gbb'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
-  };
   Q.gbbBuild = async function () {
     var j = job(Q.id); if (!j) return; var g = gb(j), base = baseLines(j);
     if (!base.length) { toast('Price the estimate first. It becomes the Better option.', 'error'); return; }
@@ -491,32 +570,70 @@
     l[k] = k === 'name' ? String(v || '') : Math.max(0, num(v)); t.edited = 1; save();
     var el = $('qg-tot-' + key); if (el) el.textContent = m2(tierCalc(j, t.lines).total);
     var se = $('qg-sub-' + key); if (se) se.textContent = m2(tierCalc(j, t.lines).sub);
+    var sw = $('qg-sw-' + key); if (sw) sw.textContent = m0(tierCalc(j, t.lines).total);
+    paint();
   };
   Q.tlineDel = function (key, id) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.lines = t.lines.filter(function (x) { return x.id !== id; }); t.edited = 1; save(); drawTiers(); };
   Q.tlineAdd = function (key) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.lines.push({ id: uid('tl'), name: '', desc: '', qty: 1, unit: 'ea', price: 0, sec: 'oth' }); t.edited = 1; save(); drawTiers(); setTimeout(function () { var r = document.querySelectorAll('#qg-lines-' + key + ' input[data-n]'); if (r.length) r[r.length - 1].focus(); }, 0); };
   Q.tlinesOpen = function (key, on) { Q._tlOpen = Q._tlOpen || {}; Q._tlOpen[key] = on; };
+  Q.gbbOn = function (on) {
+    var j = job(Q.id); if (!j) return; var g = gb(j);
+    if (on && j.quote.opt && j.quote.opt.status === 'chosen') { toast('The customer already picked an option.', 'error'); return; }
+    g.on = !!on; save(true);
+    if (Q.mode === 'view') { render(); return; }
+    if (on) Q.go('opts'); else if (Q.step === 'opts') Q.go('price'); else render();
+  };
+  Q.tierTab = function (k) {
+    Q._tierTab = k;
+    Array.prototype.forEach.call(document.querySelectorAll('.qg-switch button'), function (b) { var on = b.getAttribute('data-k') === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    Array.prototype.forEach.call(document.querySelectorAll('.qg-grid .qg-card'), function (c) { c.classList.toggle('on', c.getAttribute('data-k') === k); });
+    growAll();
+  };
+  /* the points wrap instead of being cut off */
+  Q.grow = function (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
+  function growAll() { Array.prototype.forEach.call(document.querySelectorAll('.qg-buls textarea, .qg-page .qg-sum'), function (t) { if (t.offsetParent) Q.grow(t); }); }
+  Q.bul = function (key, i, v) {
+    var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.bullets = t.bullets || [];
+    v = String(v || '').replace(/^[-•*\s]+/, '').trim();
+    if (v) t.bullets[i] = v.slice(0, 120); else t.bullets.splice(i, 1);
+    t.edited = 1; save(); if (!v) drawTiers();
+  };
+  Q.bulDel = function (key, i) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; (t.bullets || []).splice(i, 1); t.edited = 1; save(); drawTiers(); };
+  Q.bulAdd = function (key) {
+    var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.bullets = t.bullets || [];
+    if (t.bullets.length >= 6) { toast('Six points is plenty. Keep the strongest ones.', 'error'); return; }
+    t.bullets.push(''); drawTiers(); t.bullets.pop();
+    setTimeout(function () { var r = document.querySelectorAll('.qg-card[data-k="' + key + '"] .qg-buls textarea'); if (r.length) r[r.length - 1].focus(); }, 0);
+  };
   function drawTiers() {
-    var el = $('qx-s-gbb'), j = job(Q.id); if (!el || !j) return;
+    var body = $('qg-body'), j = job(Q.id); if (!body || !j) return;
     var g = gb(j);
-    el.hidden = !g.on;
-    var body = $('qg-body'); if (!body) return;
-    if (!g.on) { body.innerHTML = ''; return; }
-    if (g.busy) { body.innerHTML = '<div class="qg-busy"><span class="qg-spin"></span><div><b>Writing Good and Best around your estimate…</b><small>Budget and premium versions of the same job, with what each includes.</small></div></div>'; return; }
-    if (!g.tiers) { body.innerHTML = '<div class="qg-empty"><p>Your estimate becomes the <b>Better</b> option. We write a <b>Good</b> option (the budget way to do the same job) and a <b>Best</b> option (premium materials and the upgrades that make sense), and you check them before anything is sent.</p><button class="bpx-addbtn" onclick="BPQ.gbbBuild()"><span class="ms">auto_awesome</span>Build the 3 options</button></div>'; return; }
+    var hero = '<div class="qg-hero"><div><h3>Good · Better · Best</h3><p>Your estimate is the <b>Better</b> option. <b>Good</b> is the budget way to do the same job and <b>Best</b> adds premium materials and upgrades. Check each one, then send.</p></div>'
+      + (g.tiers && !g.busy ? '<div class="qg-hacts"><button type="button" class="bpx-btn ghost" onclick="BPQ.gbbBuild()"><span class="ms">auto_awesome</span>Rebuild</button><button type="button" class="bpx-btn ghost" onclick="BPQ.gbbPreview()"><span class="ms">visibility</span>Preview</button></div>' : '') + '</div>';
+    if (g.busy) { body.innerHTML = '<div class="qg-page">' + hero + '<div class="qg-busy"><span class="qg-spin"></span><div><b>Writing Good and Best around your estimate…</b><small>Budget and premium versions of the same job, with what each includes. About 10 seconds.</small></div></div></div>'; return; }
+    if (!g.tiers) { body.innerHTML = '<div class="qg-page">' + hero + '<div class="qg-empty">' + (calc(j).total > 0 ? '<button class="bpx-addbtn" onclick="BPQ.gbbBuild()"><span class="ms">auto_awesome</span>Build the 3 options</button>' : '<p>Price the job first (materials, labor or other costs). It becomes the Better option.</p><button class="bpx-btn ghost" onclick="BPQ.go(\'mat\')">Go to materials</button>') + '</div></div>'; return; }
     var base = baseLines(j), bsub = r2(sum(base, function (l) { return l.qty * l.price; })), stale = g.baseSub != null && Math.abs(bsub - g.baseSub) > 0.5;
-    var open = Q._tlOpen || {};
-    body.innerHTML = (stale ? '<div class="qx-warn">Your estimate changed since these were built. Better follows it; Good and Best don’t. <a onclick="BPQ.gbbBuild()">Rebuild Good and Best</a></div>' : '')
-      + '<div class="qg-grid">' + TK.map(function (k) {
+    var open = Q._tlOpen || {}, tab = Q._tierTab || 'better';
+    var sw = '<div class="qg-switch" role="tablist">' + TK.map(function (k) {
+      var tc = tierCalc(j, tierLines(j, k[0]));
+      return '<button type="button" role="tab" data-k="' + k[0] + '" class="k-' + k[0] + (tab === k[0] ? ' on' : '') + '" aria-selected="' + (tab === k[0]) + '" onclick="BPQ.tierTab(\'' + k[0] + '\')"><span>' + k[1] + (g.rec === k[0] ? ' <i class="ms">star</i>' : '') + '</span><b id="qg-sw-' + k[0] + '">' + m0(tc.total) + '</b></button>';
+    }).join('') + '</div>';
+    body.innerHTML = '<div class="qg-page">' + hero
+      + (stale ? '<div class="qx-warn">Your estimate changed since these were built. Better follows it; Good and Best don’t. <a onclick="BPQ.gbbBuild()">Rebuild Good and Best</a></div>' : '')
+      + sw + '<div class="qg-grid">' + TK.map(function (k) {
         var t = tierOf(j, k[0]) || { key: k[0], name: k[1], bullets: [] }, ls = tierLines(j, k[0]), tc = tierCalc(j, ls), rec = g.rec === k[0], ro = k[0] === 'better';
-        return '<div class="qg-card k-' + k[0] + (rec ? ' rec' : '') + '">'
-          + '<div class="qg-top"><span class="qg-k">' + k[1] + '</span><label class="qg-rec"><input type="radio" name="qgrec"' + (rec ? ' checked' : '') + ' onchange="BPQ.tierRec(\'' + k[0] + '\')">Recommend</label></div>'
+        return '<div class="qg-card k-' + k[0] + (rec ? ' rec' : '') + (tab === k[0] ? ' on' : '') + '" data-k="' + k[0] + '">'
+          + '<div class="qg-top"><span class="qg-k">' + k[1] + '</span><button type="button" class="qg-star' + (rec ? ' on' : '') + '" onclick="BPQ.tierRec(\'' + k[0] + '\')" aria-pressed="' + rec + '"><span class="ms">' + (rec ? 'star' : 'star_outline') + '</span>' + (rec ? 'Most popular' : 'Mark most popular') + '</button></div>'
           + '<input class="qg-title" value="' + esc(t.title || '') + '" placeholder="Name this option" onchange="BPQ.tier(\'' + k[0] + '\',\'title\',this.value)" aria-label="' + k[1] + ' option name">'
-          + '<textarea class="qg-sum" rows="2" placeholder="Who this option suits" onchange="BPQ.tier(\'' + k[0] + '\',\'summary\',this.value)">' + esc(t.summary || '') + '</textarea>'
           + '<div class="qg-price"><b id="qg-tot-' + k[0] + '">' + m2(tc.total) + '</b><small>' + (tc.tax ? 'incl. ' + m2(tc.tax) + ' tax' : 'total') + (bsub > 0 && !ro ? ' · ' + Math.round(tc.sub / bsub * 100) + '% of Better' : '') + '</small></div>'
-          + '<label class="qg-lab">What’s included <small>one per line</small><textarea rows="4" onchange="BPQ.tier(\'' + k[0] + '\',\'bullets\',this.value)">' + esc((t.bullets || []).join('\n')) + '</textarea></label>'
-          + '<label class="qg-lab">Warranty<input value="' + esc(t.warranty || '') + '" placeholder="e.g. 10-yr parts, 2-yr labor" onchange="BPQ.tier(\'' + k[0] + '\',\'warranty\',this.value)"></label>'
-          + '<details class="qg-lines"' + (open[k[0]] ? ' open' : '') + ' ontoggle="BPQ.tlinesOpen(\'' + k[0] + '\',this.open)"><summary>' + ls.length + ' line' + (ls.length === 1 ? '' : 's') + ' · <span id="qg-sub-' + k[0] + '">' + m2(tc.sub) + '</span> before tax</summary>'
-            + (ro ? '<div class="qg-ro">' + ls.map(function (l) { return '<div><span>' + esc(l.name) + (l.qty !== 1 ? ' <small>× ' + l.qty + '</small>' : '') + '</span><b>' + m2(l.qty * l.price) + '</b></div>'; }).join('') + '<p class="qx-hint">These are your estimate’s lines. Change them in the sections above.</p></div>'
+          + '<textarea class="qg-sum" rows="2" placeholder="One line on who this suits" oninput="BPQ.grow(this)" onchange="BPQ.tier(\'' + k[0] + '\',\'summary\',this.value)">' + esc(t.summary || '') + '</textarea>'
+          + '<div class="qg-sect">What’s included</div><ul class="qg-buls">' + (t.bullets || []).map(function (b, i) {
+              return '<li><span class="ms">check</span><textarea rows="1" placeholder="What they get" oninput="BPQ.grow(this)" onchange="BPQ.bul(\'' + k[0] + '\',' + i + ',this.value)">' + esc(b) + '</textarea><button type="button" class="qb-x" aria-label="Remove" onclick="BPQ.bulDel(\'' + k[0] + '\',' + i + ')">&times;</button></li>';
+            }).join('') + '</ul>'
+          + '<button type="button" class="qg-addb" onclick="BPQ.bulAdd(\'' + k[0] + '\')">+ Add a point</button>'
+          + '<label class="qg-war"><span class="ms">verified_user</span><input value="' + esc(t.warranty || '') + '" placeholder="Warranty, e.g. 10-yr parts, 2-yr labor" onchange="BPQ.tier(\'' + k[0] + '\',\'warranty\',this.value)" aria-label="Warranty"></label>'
+          + '<details class="qg-lines"' + (open[k[0]] ? ' open' : '') + ' ontoggle="BPQ.tlinesOpen(\'' + k[0] + '\',this.open)"><summary><span>Price breakdown</span><small>' + ls.length + ' line' + (ls.length === 1 ? '' : 's') + ' · <span id="qg-sub-' + k[0] + '">' + m2(tc.sub) + '</span> before tax</small></summary>'
+            + (ro ? '<div class="qg-ro">' + ls.map(function (l) { return '<div><span>' + esc(l.name) + (l.qty !== 1 ? ' <small>× ' + l.qty + '</small>' : '') + '</span><b>' + m2(l.qty * l.price) + '</b></div>'; }).join('') + '<p class="qx-hint">These are your estimate’s own lines. <a onclick="BPQ.go(\'mat\')">Change them in Materials</a>.</p></div>'
               : '<div class="qg-ed" id="qg-lines-' + k[0] + '">' + (t.lines || []).map(function (l) {
                 return '<div class="qg-l"><input data-n value="' + esc(l.name) + '" placeholder="Line" onchange="BPQ.tline(\'' + k[0] + '\',\'' + l.id + '\',\'name\',this.value)">'
                   + '<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.qty) + '" oninput="BPQ.tline(\'' + k[0] + '\',\'' + l.id + '\',\'qty\',this.value)" aria-label="Quantity">'
@@ -525,7 +642,8 @@
               }).join('') + '<button type="button" class="bpx-rowbtn" onclick="BPQ.tlineAdd(\'' + k[0] + '\')">+ Add a line</button></div>')
           + '</details></div>';
       }).join('') + '</div>'
-      + '<div class="qg-foot"><span>' + (g.ai ? '<span class="ms">auto_awesome</span>Written by AI from your estimate. Check the prices before you send.' : 'Check the prices before you send.') + '</span><a onclick="BPQ.gbbBuild()">Rebuild Good and Best</a></div>';
+      + '<div class="qg-foot">' + (g.ai ? '<span class="ms">auto_awesome</span>Written by AI from your estimate. Check the prices before you send.' : 'Check the prices before you send.') + '</div></div>';
+    growAll();
   }
   /* what goes to the server: all three, each with its own lines */
   function tiersOut(j) {
@@ -691,6 +809,7 @@
     if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
     invInit(contactId, jobId, stepId);
     Q.inv.mode = mode || (Q.inv.jobId && invTotalFor(Q.inv.type) > 0 ? 'view' : 'edit');
+    Q.inv.step = Q.inv.contactId ? 'amt' : 'who';
     if (window.bpNav) bpNav('invoicebuilder'); else invRender();
   };
   Q.invEdit = function (on) { Q.inv.mode = on ? 'edit' : 'view'; invRender(); var m = document.querySelector('.bpx-main'); if (m) m.scrollTop = 0; };
@@ -749,31 +868,58 @@
     var disc = type === 'full' ? Math.min(r2(s.disc || 0), sub) : 0;
     s.type = was; return r2(sub - disc);
   }
+  /* the invoice builder, in three steps like the estimate: who, what, send */
+  var ISTEPS = [['who', 'Customer'], ['amt', 'Amount'], ['send', 'Send']];
+  Q.invGo = function (st) {
+    var s = Q.inv; if (!s) return;
+    var ks = ISTEPS.map(function (x) { return x[0]; }), i = ks.indexOf(s.step || 'who');
+    if (st === 'next' || st === 'back') st = ks[Math.max(0, Math.min(ks.length - 1, i + (st === 'next' ? 1 : -1)))];
+    s.step = st; var a = document.activeElement; if (a && a.blur) a.blur(); invRender(); scrollTop();
+  };
+  Q.invClose = function () { focusMode(false); if (Q.inv && invTotalFor(Q.inv.type) > 0) Q.invEdit(0); else bpNav('invoices'); };
   function invRender() {
     var area = $('bpxViewArea'), s = Q.inv; if (!area || !s) return;
-    if (s.mode === 'view') { invView(area); return; }
+    if (s.mode === 'view') { focusMode(false); invView(area); return; }
+    var cur = s.step || 'who', ks = ISTEPS.map(function (x) { return x[0]; }), i = ks.indexOf(cur);
     var cs = window._bpContacts || [], j = s.jobId ? job(s.jobId) : null, ct = contactBy(s.contactId);
-    var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('');
-    var opt = '';
-    if (s.fixType === s.type && s.fixed != null && s.type !== 'full') opt = '<div class="qx-f2"><label>' + esc(s.label || 'Amount') + '<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.fixed) + '" oninput="BPQ.invSet(\'fixed\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div><p class="qx-hint">From the payment plan' + (s.note ? ': ' + esc(s.note) : '') + '.</p>';
-    else if (s.type === 'deposit') opt = '<div class="qx-f2"><label>Deposit<span class="qx-in"><input type="number" min="1" max="100" step="any" value="' + esc(s.pct) + '" oninput="BPQ.invSet(\'pct\',this.value,1)"><i>%</i></span></label><label>Of the project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
-    else if (s.type === 'progress') opt = '<div class="qx-f2"><label>Bill now<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.amount) + '" placeholder="0" oninput="BPQ.invSet(\'amount\',this.value,1)"></span></label><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
-    else if (s.type === 'final') opt = '<div class="qx-f2"><label>Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label><label>Already billed<span class="qx-in"><i>$</i><input type="number" min="0" step="any" value="' + esc(s.billed || '') + '" placeholder="0" oninput="BPQ.invSet(\'billed\',this.value,1)"></span></label></div>';
-    var hint = { full: j ? 'Every line from the estimate, with quantities, unit prices and tax. Change any of them, or add more.' : 'Type each line with its quantity and unit price. Tax is added below.', deposit: 'A share of the total, up front. The title says Deposit, so your deposit workflow runs.', progress: 'An amount as the work moves along.', final: 'The total, less everything billed before. The title says Final balance.' }[s.type];
-    var tax = s.type === 'full' && !j ? '<div class="qx-f2 qx-taxrow"><label>Sales tax<span class="qx-in"><input type="number" min="0" step="any" value="' + esc(s.taxPct || '') + '" placeholder="0" oninput="BPQ.invSet(\'taxPct\',this.value,1)"><i>%</i></span></label><p class="qx-hint">' + (Q.stateTax() ? Q.stateTax().st + ' state rate is ' + Q.stateTax().rate + '%. Add your city and county rate on top.' : 'Applied to every line above.') + '</p></div>' : '';
-    area.innerHTML = '<div class="qx">'
-      + '<a class="qx-back" onclick="bpNav(\'invoices\')">&larr; Invoices</a>'
-      + '<div class="bpx-chead"><div class="qx-h"><h2>New invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2></div>' + (invTotalFor(s.type) > 0 ? '<button class="bpx-addbtn qx-done" onclick="BPQ.invEdit(0)">Done</button>' : '') + '</div>'
-      + '<div class="qx-grid"><div class="qx-main">'
-      + sec(1, 'Customer', j && j.sample ? 'Filled in from the sample estimate. Nothing here can be sent.' : j && !j.quote ? 'Filled in from the project ' + esc(j.title || '') + '.' : j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines below.' : 'Who you are billing.'), '',
-          '<div class="qx-f2"><label>Customer<select onchange="BPQ.invContact(this.value)">' + copts + '</select></label>'
-          + '<label>Due<select onchange="BPQ.invSet(\'days\',this.value,1)">' + [[0, 'On receipt'], [7, 'In 7 days'], [14, 'In 14 days'], [30, 'In 30 days']].map(function (d) { return '<option value="' + d[0] + '"' + (+s.days === d[0] ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></label></div>'
-          + '<label class="qx-lab">Note on the invoice <small>optional</small><textarea rows="2" onchange="BPQ.invSet(\'desc\',this.value)">' + esc(s.desc || '') + '</textarea></label>')
-      + sec(2, 'What you are billing', hint, '',
-          '<div class="bpx-jobtabs qx-tabs">' + INV_T.map(function (t) { return '<button class="bpx-jt' + (s.type === t[0] ? ' on' : '') + '" onclick="BPQ.invType(\'' + t[0] + '\')">' + t[1] + '<span class="qx-tc" id="qx-ta-' + t[0] + '"></span></button>'; }).join('') + '</div>'
-          + opt + '<div id="qb-ilines"></div>' + tax)
-      + '</div><aside class="qx-side"><div class="bpx-panel qx-sum" id="qx-isum"></div></aside></div></div>';
-    invLinesDraw(); invPaint();
+    focusMode(true);
+    var body = '';
+    if (cur === 'who') {
+      var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('');
+      body = card('Who you are billing', j && j.sample ? 'Filled in from the sample estimate. Nothing here can be sent.' : j && !j.quote ? 'Filled in from the project ' + esc(j.title || '') + '.' : j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines in the next step.' : ''), '',
+          '<label class="qs-f">Customer<select onchange="BPQ.invContact(this.value)">' + copts + '</select></label>'
+          + '<label class="qs-f">Due<select onchange="BPQ.invSet(\'days\',this.value,1)">' + [[0, 'On receipt'], [7, 'In 7 days'], [14, 'In 14 days'], [30, 'In 30 days']].map(function (d) { return '<option value="' + d[0] + '"' + (+s.days === d[0] ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></label>'
+          + '<label class="qs-f">Note on the invoice <small>optional</small><textarea rows="3" onchange="BPQ.invSet(\'desc\',this.value)">' + esc(s.desc || '') + '</textarea></label>');
+    } else if (cur === 'amt') {
+      var opt = '';
+      if (s.fixType === s.type && s.fixed != null && s.type !== 'full') opt = '<div class="qs-f2"><label class="qs-f">' + esc(s.label || 'Amount') + '<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(s.fixed) + '" oninput="BPQ.invSet(\'fixed\',this.value,1)"></span></label><label class="qs-f">Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div><p class="qx-hint">From the payment plan' + (s.note ? ': ' + esc(s.note) : '') + '.</p>';
+      else if (s.type === 'deposit') opt = '<div class="qs-f2"><label class="qs-f">Deposit<span class="qx-in"><input type="number" min="1" max="100" step="any" inputmode="decimal" value="' + esc(s.pct) + '" oninput="BPQ.invSet(\'pct\',this.value,1)"><i>%</i></span></label><label class="qs-f">Of the project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
+      else if (s.type === 'progress') opt = '<div class="qs-f2"><label class="qs-f">Bill now<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(s.amount) + '" placeholder="0" oninput="BPQ.invSet(\'amount\',this.value,1)"></span></label><label class="qs-f">Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label></div>';
+      else if (s.type === 'final') opt = '<div class="qs-f2"><label class="qs-f">Project total<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" data-qx-base value="' + esc(s.base || '') + '" placeholder="0" oninput="BPQ.invSet(\'base\',this.value,1)"></span></label><label class="qs-f">Already billed<span class="qx-in"><i>$</i><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(s.billed || '') + '" placeholder="0" oninput="BPQ.invSet(\'billed\',this.value,1)"></span></label></div>';
+      var hint = { full: j ? 'Every line from the estimate, with quantities, unit prices and tax. Change any of them, or add more.' : 'Type each line with its quantity and unit price. Tax is added below.', deposit: 'A share of the total, up front. The title says Deposit, so your deposit workflow runs.', progress: 'An amount as the work moves along.', final: 'The total, less everything billed before. The title says Final balance.' }[s.type];
+      var tax = s.type === 'full' && !j ? '<div class="qs-f2 qx-taxrow"><label class="qs-f">Sales tax<span class="qx-in"><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(s.taxPct || '') + '" placeholder="0" oninput="BPQ.invSet(\'taxPct\',this.value,1)"><i>%</i></span></label><p class="qx-hint">' + (Q.stateTax() ? Q.stateTax().st + ' state rate is ' + Q.stateTax().rate + '%. Add your city and county rate on top.' : 'Applied to every line above.') + '</p></div>' : '';
+      body = card('What you are billing', hint, '',
+          '<div class="qs-types">' + INV_T.map(function (t) { return '<button type="button" class="qs-type' + (s.type === t[0] ? ' on' : '') + '" onclick="BPQ.invType(\'' + t[0] + '\')"><b>' + t[1] + '</b><small id="qx-ta-' + t[0] + '"></small></button>'; }).join('') + '</div>'
+          + opt + '<div id="qb-ilines"></div>' + tax);
+    } else {
+      var ls = invLines().filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; });
+      var to = ct ? (s.via === 'email' ? ct.email : s.via === 'both' ? [ct.phone, ct.email].filter(Boolean).join(' and ') : ct.phone) : '';
+      body = '<div class="qs-review"><div class="qs-to"><span class="ms">' + (s.via === 'email' ? 'mail' : 'sms') + '</span><div><b>' + (ct ? 'Going to ' + esc(ct.name) : 'Pick the customer first') + '</b><small>' + (ct ? esc(to || 'No ' + (s.via === 'email' ? 'email' : 'phone') + ' on file') + ' · with a secure Pay button' : '<a onclick="BPQ.invGo(\'who\')">Choose who it is for</a>') + '</small></div></div>'
+        + '<label class="qs-f">Send by</label>' + seg(s.via, [['sms', 'Text'], ['email', 'Email'], ['both', 'Both']], 'BPQ.invVia')
+        + '<div class="qb-msg" id="qb-imsg"></div>'
+        + '<div class="qs-paper">' + doc('inv', { lines: ls, disc: s.type === 'full' ? r2(s.disc || 0) : 0, cust: ct ? ct.name : '', days: +s.days, desc: s.desc, title: j && j.title !== 'New estimate' ? j.title : '' }) + '</div></div>';
+    }
+    var wide = cur === 'send', last = i === ks.length - 1;
+    area.innerHTML = '<div class="qx qs qs-inv qs-' + cur + '">'
+      + '<div class="qs-head"><div class="qs-hrow"><a class="qx-back" onclick="BPQ.invClose()">&larr; ' + (invTotalFor(s.type) > 0 ? 'Save and close' : 'Invoices') + '</a><span class="qs-count">Step ' + (i + 1) + ' of ' + ks.length + '</span></div>'
+        + '<div class="qx-h"><h2>New invoice' + (ct ? ' for ' + esc(ct.name) : '') + '</h2></div>'
+        + '<nav class="qs-steps">' + ISTEPS.map(function (x, n) { return '<button type="button" class="qs-st' + (x[0] === cur ? ' on' : n < i ? ' done' : '') + '" onclick="BPQ.invGo(\'' + x[0] + '\')"><i>' + (n < i ? '<span class="ms">check</span>' : n + 1) + '</i><span>' + x[1] + '</span></button>'; }).join('') + '</nav></div>'
+      + '<div class="qs-body' + (wide ? ' wide' : '') + '"><div class="qs-main">' + body + '</div>' + (wide ? '' : '<aside class="qs-side"><div class="bpx-panel qx-sum" id="qx-isum"></div></aside>') + '</div>'
+      + '<div class="qs-bar">' + (i > 0 ? '<button type="button" class="qs-back" onclick="BPQ.invGo(\'back\')" aria-label="Back"><span class="ms">arrow_back</span></button>' : '')
+        + '<button type="button" class="qs-tot" onclick="BPQ.invSumSheet()"><small>Amount due</small><b id="qs-itot">$0.00</b></button>'
+        + (last ? '<button type="button" class="qs-next" id="qb-isend" onclick="BPQ.invSend()">Send invoice</button>' : '<button type="button" class="qs-next" onclick="BPQ.invGo(\'next\')">' + (ks[i + 1] === 'send' ? 'Review' : 'Next: ' + ISTEPS[i + 1][1]) + '<span class="ms">arrow_forward</span></button>') + '</div>'
+      + '</div>';
+    dock(); invLinesDraw(); invPaint();
     if (window.bpSpin) bpSpin(false);
   }
   function invLinesDraw() {
@@ -782,30 +928,29 @@
     el.innerHTML = '<div class="qb-rows"><div class="qb-rh qb-il"><span>Item</span><span>Qty</span><span>Unit price</span><span>Amount</span><span></span></div>'
       + s.lines.map(function (l) {
         return '<div class="qb-r qb-il"><input value="' + esc(l.name) + '" placeholder="What it is" onchange="BPQ.invRow(\'' + l.id + '\',\'name\',this.value)">'
-          + '<span class="qb-qty' + (l.unit && l.unit !== 'ea' ? ' has-u' : '') + '"><input type="number" min="0" step="any" value="' + esc(l.qty) + '" oninput="BPQ.invRow(\'' + l.id + '\',\'qty\',this.value,1)" aria-label="Quantity">' + (l.unit && l.unit !== 'ea' ? '<i>' + esc(l.unit) + '</i>' : '') + '</span>'
-          + '<input type="number" min="0" step="any" value="' + (l.price === '' || l.price == null ? '' : (+l.price).toFixed(2)) + '" placeholder="0.00" oninput="BPQ.invRow(\'' + l.id + '\',\'price\',this.value,1)" onblur="if(this.value!==\'\')this.value=(+this.value).toFixed(2)" aria-label="Unit price">'
+          + '<span class="qb-qty' + (l.unit && l.unit !== 'ea' ? ' has-u' : '') + '"><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.qty) + '" oninput="BPQ.invRow(\'' + l.id + '\',\'qty\',this.value,1)" aria-label="Quantity">' + (l.unit && l.unit !== 'ea' ? '<i>' + esc(l.unit) + '</i>' : '') + '</span>'
+          + '<input type="number" min="0" step="any" inputmode="decimal" value="' + (l.price === '' || l.price == null ? '' : (+l.price).toFixed(2)) + '" placeholder="0.00" oninput="BPQ.invRow(\'' + l.id + '\',\'price\',this.value,1)" onblur="if(this.value!==\'\')this.value=(+this.value).toFixed(2)" aria-label="Unit price">'
           + '<b id="qb-il-' + l.id + '">' + m2((+l.qty || 0) * (+l.price || 0)) + '</b>'
           + '<button type="button" class="qb-x" aria-label="Remove" onclick="BPQ.invDel(\'' + l.id + '\')">&times;</button></div>';
       }).join('') + '</div><button type="button" class="bpx-rowbtn" onclick="BPQ.invAdd()">+ Add line</button>';
   }
-  function invPaint() {
-    var s = Q.inv, el = $('qx-isum'); if (!el) return;
-    var tot = invTotalFor(s.type), ls = invLines();
-    INV_T.forEach(function (t) { var e = $('qx-ta-' + t[0]); if (e) { var v = invTotalFor(t[0]); e.textContent = v > 0 ? ' · ' + m0(v) : ''; } });
-    var focusIn = document.activeElement && el.contains(document.activeElement);
-    var rows = '<table class="qx-st"><tbody>' + ls.filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }).map(function (l) { return '<tr><td>' + esc(l.name || 'Line') + (+l.qty !== 1 ? ' <small>' + r2(l.qty) + ' &times; ' + m2(l.price) + '</small>' : '') + '</td><td></td><td>' + m2((+l.qty || 0) * (+l.price || 0)) + '</td></tr>'; }).join('')
+  function invSumRows() {
+    var s = Q.inv, tot = invTotalFor(s.type), ls = invLines();
+    return '<table class="qx-st"><tbody>' + ls.filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0; }).map(function (l) { return '<tr><td>' + esc(l.name || 'Line') + (+l.qty !== 1 ? ' <small>' + r2(l.qty) + ' &times; ' + m2(l.price) + '</small>' : '') + '</td><td></td><td>' + m2((+l.qty || 0) * (+l.price || 0)) + '</td></tr>'; }).join('')
       + '</tbody></table>'
       + '<div class="qx-total"><span>Amount due</span><b>' + m2(tot) + '</b></div>'
       + '<table class="qx-st qx-st2"><tbody><tr><td>Project total <small>' + (s.baseManual ? 'typed in' : s.jobId ? 'from the estimate' : 'from the lines') + '</small></td><td></td><td>' + (s.base ? m0(s.base) : '—') + '</td></tr>'
       + '<tr><td>Billed before</td><td></td><td>' + m0(s.billed) + '</td></tr>'
       + '<tr class="sub"><td>Left to bill after this</td><td></td><td>' + (s.base ? m0(Math.max(0, s.base - s.billed - tot)) : '—') + '</td></tr></tbody></table>';
-    if (focusIn) { var rr = $('qx-isumrows'); if (rr) rr.innerHTML = rows; return; }
-    el.innerHTML = '<div class="bpx-ptitle">Summary</div><div id="qx-isumrows">' + rows + '</div>'
-      + '<div class="qx-sb"><label class="qx-lab" style="margin-top:0">Send by</label>' + seg(s.via, [['sms', 'Text'], ['email', 'Email'], ['both', 'Both']], 'BPQ.invVia') + '</div>'
-      + '<div class="qb-msg" id="qb-imsg"></div>'
-      + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.invPreview()">Preview</button><button class="bpx-addbtn" id="qb-isend" onclick="BPQ.invSend()">Send invoice</button></div>';
   }
-  Q.invVia = function (v) { Q.inv.via = v; invPaint(); };
+  function invPaint() {
+    var s = Q.inv; if (!s) return;
+    INV_T.forEach(function (t) { var e = $('qx-ta-' + t[0]); if (e) { var v = invTotalFor(t[0]); e.textContent = v > 0 ? m0(v) : ''; } });
+    var el = $('qx-isum'); if (el) el.innerHTML = '<div class="bpx-ptitle">Summary</div>' + invSumRows();
+    var tv = $('qs-itot'); if (tv) tv.textContent = m2(invTotalFor(s.type));
+  }
+  Q.invSumSheet = function () { if (!Q.inv) return; bpModal('<h3>Summary</h3>' + invSumRows() + '<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>'); };
+  Q.invVia = function (v) { Q.inv.via = v; invRender(); };
   Q.invContact = function (cid) { Q.inv.contactId = cid || null; Q.inv.jobId = null; Q.inv.disc = null; invLoad(); invRender(); };
   Q.invType = function (t) {
     var s = Q.inv; s.type = t;
