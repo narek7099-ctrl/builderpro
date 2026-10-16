@@ -1,4 +1,4 @@
-﻿# Brief for the browser agent: build BuilderPro's HighLevel setup
+# Brief for the browser agent: build BuilderPro's HighLevel setup
 
 You're working in HighLevel (app.gohighlevel.com) in Chrome, signed in as
 the agency owner. The full instructions are in **docs/GHL-BUILD-GUIDE.md**
