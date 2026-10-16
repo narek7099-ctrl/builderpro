@@ -39,16 +39,17 @@
     alert: ['Internal notification', 'bell', 'alert'], wait: ['Wait', 'clock', 'wait'],
     hook: ['Webhook', 'bolt', 'sys'], rm: ['Remove from workflow', 'exit', 'sys']
   };
-  var TRIG = { bp: ['BuilderPro event', 'bolt'], tag: ['Contact tag', 'tag'], form: ['Form submitted', 'form'], hook: ['Inbound webhook', 'bolt'], ai: ['Conversation AI', 'spark'], call: ['Call status', 'phone'], reply: ['Customer replied', 'sms'], appt: ['Appointment status', 'cal'], est: ['Estimate status', 'doc'], inv: ['Invoice status', 'doc'], opp: ['Opportunity status', 'pipe'], date: ['Custom date reminder', 'cal'] };
+  var TRIG = { bp: ['BuilderPro event', 'bolt'], tag: ['Contact tag', 'tag'], form: ['Form submitted', 'form'], hook: ['Inbound webhook', 'bolt'], ai: ['Conversation AI', 'spark'], call: ['Call status', 'phone'], reply: ['Customer replied', 'sms'], appt: ['Appointment status', 'cal'], est: ['Estimate status', 'doc'], inv: ['Invoice status', 'doc'], opp: ['Opportunity status', 'pipe'], date: ['Custom date reminder', 'cal'], created: ['Contact created', 'person'] };
   var tg = function (t) { return '<span class="wa-tg">' + t + '</span>'; };
   var E = ['end'];
-  function intent(k, t) { return { triggers: [['tag', 'Tag added: ' + tg('intent-' + k)], ['ai', 'Lisa action: ' + t]], steps: [['tag', tg('ai-qualified')], ['alert', 'All users (in-app): new ' + t.toLowerCase() + ' lead, opens the contact'], E] }; }
+  function intent(k, t) { return { triggers: [['tag', 'Tag added: ' + tg('intent-' + k)], ['ai', 'Lisa action: ' + t]], steps: [['opp', 'Jobs → New Lead, named “{{contact.name}} ' + t + '”'], ['tag', tg('ai-qualified')], ['alert', 'All users (in-app): new ' + t.toLowerCase() + ' lead, opens the contact'], E] }; }
   function speed(extra) {
     return {
       triggers: [['tag', 'Tag added: ' + tg('new-lead')], ['tag', 'Tag added: ' + tg('calculator-lead')], ['form', 'Any form submitted']].concat(extra || []),
       settings: ['Re-entry off'],
       steps: [{ 'if': 'Lead type', paths: [
         { label: 'Excluded', when: 'system-test or do-not-contact', steps: [E] },
+        { label: 'AI chat', when: 'Has tag ai-chat (already talking to Lisa)', steps: [['opp', 'Jobs → New Lead, open'], ['tag', tg('in-pipeline') + ' (no opener text: Lisa is already in the chat)'], E] },
         { label: 'Calculator lead', when: 'Has tag calculator-lead', steps: [['field', 'BP Opener = “Thanks for getting an instant quote! Want us to come out and confirm the numbers with a free inspection?”'], ['tag', tg('bot-active') + ' → 01 AI Qualifier'], E] },
         { label: 'Everyone else', steps: [['field', 'BP Opener = “Thanks for reaching out! What kind of project can we help you with?”'], ['tag', tg('bot-active') + ' → 01 AI Qualifier'], E] }
       ] }]
@@ -87,7 +88,6 @@
     { id: '03a', name: 'Repair Lead', folder: 1, from: 0, v: [v(0, intent('repair', 'Repair'))] },
     { id: '03b', name: 'Replacement Lead', folder: 1, from: 0, v: [v(0, intent('replacement', 'Replacement'))] },
     { id: '03c', name: 'Storm or Insurance Lead', folder: 1, from: 0, v: [v(0, intent('storm', 'Storm or insurance'))] },
-    { id: '03d', name: 'Question', folder: 1, from: 0, v: [v(0, { triggers: [['tag', 'Tag added: ' + tg('intent-question')]], steps: [['tag', tg('ai-qualified')], E] })] },
     { id: '03e', name: 'Needs Time', folder: 1, from: 0, v: [v(0, { triggers: [['ai', 'Lisa action: Needs time']], steps: [['tag', tg('ai-qualified')], ['tagx', tg('bot-active') + ' (Lisa stops; 12 Reactivation follows up later)'], E] })] },
     { id: '04', name: 'Missed Call Text-Back', folder: 1, from: 0, v: [v(0, {
       triggers: [['call', 'Incoming call: busy, canceled, no answer or voicemail']],
@@ -98,6 +98,45 @@
           { label: 'Known contact', when: 'customer or in-pipeline', steps: [['sms', 'Direct text-back. No stage change.'], E] },
           { label: 'New caller', steps: [['field', 'BP Opener = “Sorry we missed your call! How can we help?”'], ['tag', tg('bot-active') + ' → 01 AI Qualifier'], E] }
         ] }] })] },
+    { id: 'S4', name: 'Missed Call After Hours', folder: 1, from: 0, v: [v(0, {
+      triggers: [['call', 'Incoming call: no answer, busy or voicemail']],
+      settings: ['Re-entry off', 'Stop on response on', 'No send window (it is the after-hours one)'],
+      steps: [{ 'if': 'After hours?', paths: [
+        { label: 'Before 8am or after 7pm', when: 'Contact time zone', steps: [['sms', 'Sorry we missed you! We’ll call you first thing in the morning. Want to book a free inspection now? {{custom_values.booking_link}}'], E] },
+        { label: 'Business hours', steps: [['goto', '04 Missed Call Text-Back handles it']] }
+      ] }] })] },
+    { id: '23', name: 'Find a Pro: Quote Request', folder: 1, from: 0, v: [v(0, {
+      triggers: [['tag', 'Tag added: ' + tg('quote-request') + ' (homeowner asked for a quote on BuilderPro Find a Pro)']],
+      settings: ['Re-entry off', 'Contact time zone, 8am–8pm'],
+      steps: [['opp', 'Jobs → New Lead, source Find a Pro'], ['alert', 'SMS + email to the owner: new quote request, reply from your inbox'], ['alert', 'Task: reply to the quote request, due in 2 hours'],
+        ['sms', 'Hi {{contact.first_name}}, this is {{custom_values.business_name}}. Got your quote request, we’ll text you shortly.'],
+        ['wait', '4 hours'], { 'if': 'Owner replied?', paths: [
+          { label: 'Replied', steps: [E] },
+          { label: 'Not yet', steps: [['alert', 'Owner: still waiting on a reply'], ['wait', '2 days'], ['tag', tg('new-lead') + ' → Lisa takes over so the lead doesn’t go cold'], E] }
+        ] }] })] },
+    { id: 'S1', name: 'Unanswered Message', folder: 1, from: 0, v: [v(0, {
+      triggers: [['reply', 'Customer replied (any channel)']],
+      settings: ['Re-entry on', 'Business hours'],
+      steps: [['wait', '15 minutes'], { 'if': 'Did anyone reply?', paths: [
+        { label: 'Replied', steps: [E] },
+        { label: 'No reply', steps: [['alert', 'SMS + in-app to the owner: “{{contact.name}} is waiting for a reply”'], ['wait', '2 hours'], ['alert', 'Still nothing: task due now'], E] }
+      ] }] })] },
+    { id: 'S2', name: 'New Lead Not Contacted', folder: 1, from: 0, v: [v(0, {
+      triggers: [['tag', 'Tag added: ' + tg('new-lead')], ['tag', 'Tag added: ' + tg('quote-request')]],
+      settings: ['Re-entry off'],
+      steps: [['wait', '30 minutes'], { 'if': 'Reached?', paths: [
+        { label: 'Texted, called or booked', steps: [E] },
+        { label: 'Nobody yet', steps: [['alert', 'SMS to the owner: “Nobody has reached {{contact.name}} yet”'], ['wait', '24 hours'], ['alert', 'Still nothing: task + one more alert'], E] }
+      ] }] })] },
+    { id: 'S3', name: 'Catch-all New Contact', folder: 1, from: 0, v: [v(0, {
+      triggers: [['created', 'Any new contact (not an import)']],
+      steps: [['wait', '10 minutes'], { 'if': 'Already handled?', paths: [
+        { label: 'Has a lead or customer tag', when: 'new-lead, quote-request, customer, bot-active, lead-source, calculator-lead, find-a-pro or system-test', steps: [E] },
+        { label: 'No tag', when: 'a form, ad or chat that wasn’t wired to a workflow', steps: [['tag', tg('new-lead') + ' → 02 Speed to Lead'], E] }
+      ] }] })] },
+    { id: 'S5', name: 'Lisa Handoff', folder: 1, from: 0, v: [v(0, {
+      triggers: [['ai', 'Lisa: asks for a person, angry or an emergency (tag ' + tg('stop bot') + ')'], ['tag', 'Tag added: ' + tg('needs-human')]],
+      steps: [['tagx', tg('bot-active')], ['alert', 'SMS to the owner right away, with the conversation link'], E] })] },
     { id: '09', name: 'Not Interested → Lost', folder: 1, from: 0, v: [v(0, { triggers: [['tag', 'Tag added: ' + tg('not-interested')], ['ai', 'Lisa action: Not interested']], steps: [['tagx', tg('bot-active')], ['opp', 'Jobs → Lost, status lost'], E] })] },
     { id: '13', name: 'New Contact Email Auto-Reply', folder: 1, from: 0, v: [v(0, {
       triggers: [['reply', 'Replied by email, not tagged customer']], settings: ['Re-entry off (first email only)'],
@@ -146,7 +185,7 @@
         steps: [['wait', '1 day'], ['sms', 'How did we do? Reply 1–5', null, 1], ['wait', 'For a reply, up to 3 days', 'Wait for reply', 1],
           { 'if': 'Rating', paths: [
             { label: '4 or 5', steps: [['sms', 'Thank you! Would you leave a review? {{custom_values.google_review_link}}'], ['tag', tg('review-positive')], E] },
-            { label: '1 to 3', steps: [['sms', 'Sorry to hear that. What went wrong?'], ['alert', 'Unhappy customer, no review link sent'], E] },
+            { label: '1 to 3', steps: [['sms', 'Sorry to hear that. What went wrong?'], ['alert', 'Unhappy customer, no review link sent'], ['tag', tg('review-feedback') + ' (Enterprise: 21 texts the owner)'], E] },
             { label: 'Other reply', steps: [['alert', 'Customer replied to the rating request'], E] },
             { label: 'No reply', steps: [E] }
           ] }] })] },
