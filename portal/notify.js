@@ -264,6 +264,8 @@
       return;
     }
     if (v === 'storm') { bpNav('dashboard'); if (id) later(function () { if (window.bpStormOpen && $('bpxViewArea')) { bpStormOpen(id); return true; } }); return; }
+    if (v === 'quote' && id && window.bpQuoteOpen) { bpQuoteOpen(id); return; }
+    if (v === 'assets' && id && window.bpAssetOpen) { bpAssetOpen(id); return; }
     if (v === 'contacts') { bpNav('contacts'); if (id) setTimeout(function () { if (window.bpContactPage) bpContactPage(id); }, 80); return; }
     if (allowed(v)) bpNav(v);
   };

@@ -102,18 +102,18 @@
   /* ---------- the maths ---------- */
   var f = function (pct) { return 1 + (+pct || 0) / 100; };
   var labHrs = function (l) { return (+l.hours || 0) * Math.max(1, +l.people || 1); };
-  function calc(j) {
-    var q = quoteOf(j), mats = j.materials.items;
+  function calcBase(j, showAs) {
+    var q = quoteOf(j), mats = j.materials.items, show = showAs || q.show;
     var matCost = r2(sum(mats, function (it) { return (+it.qty || 0) * (+it.price || 0); }));
     var labCost = r2(sum(q.labor, function (l) { return labHrs(l) * (+l.rate || 0); }));
     var othCost = r2(sum(q.other, function (o) { return +o.cost || 0; }));
     var matPrice = r2(matCost * f(q.mkMat)), labPrice = r2(labCost * f(q.mkLab)), othPrice = r2(othCost * f(q.mkOth));
     var lines = [];
-    if (q.show === 'items') {
+    if (show === 'items') {
       mats.forEach(function (it) { var qty = +it.qty || 0, u = r2((+it.price || 0) * f(q.mkMat)); if (qty > 0 && u > 0) lines.push({ name: it.name || 'Material', desc: it.note || '', qty: qty, price: u, unit: it.unit || 'ea', sec: 'mat' }); });
       q.labor.forEach(function (l) { var h = r2(labHrs(l)), u = r2((+l.rate || 0) * f(q.mkLab)); if (h > 0 && u > 0) lines.push({ name: 'Labor' + (l.name ? ': ' + l.name : ''), desc: (Math.max(1, +l.people || 1) > 1 ? (+l.people) + ' people × ' + (+l.hours || 0) + ' hrs' : ''), qty: h, price: u, unit: 'hr', sec: 'lab' }); });
       q.other.forEach(function (o) { var u = r2((+o.cost || 0) * f(q.mkOth)); if (u > 0) lines.push({ name: o.name || 'Other', desc: '', qty: 1, price: u, sec: 'oth' }); });
-    } else if (q.show === 'total') {
+    } else if (show === 'total') {
       var t = r2(matPrice + labPrice + othPrice); if (t > 0) lines.push({ name: j.title || 'Project', desc: q.desc || '', qty: 1, price: t, sec: 'all' });
     } else {
       if (matPrice > 0) lines.push({ name: 'Materials', desc: mats.length + ' item' + (mats.length === 1 ? '' : 's'), qty: 1, price: matPrice, sec: 'mat' });
@@ -121,13 +121,41 @@
       if (othPrice > 0) lines.push({ name: q.other.length === 1 ? (q.other[0].name || 'Other costs') : 'Other costs', desc: q.other.length > 1 ? q.other.map(function (o) { return o.name; }).filter(Boolean).join(', ') : '', qty: 1, price: othPrice, sec: 'oth' });
     }
     var sub = r2(sum(lines, function (l) { return r2(l.qty * l.price); }));
-    var base = q.taxOn === 'all' ? sub : Math.min(sub, q.show === 'items' ? r2(sum(lines.filter(function (l) { return l.sec === 'mat'; }), function (l) { return r2(l.qty * l.price); })) : matPrice);
+    var base = q.taxOn === 'all' ? sub : Math.min(sub, show === 'items' ? r2(sum(lines.filter(function (l) { return l.sec === 'mat'; }), function (l) { return r2(l.qty * l.price); })) : matPrice);
     var tax = r2(base * (+q.taxPct || 0) / 100);
     if (tax > 0) lines.push({ name: 'Sales tax (' + (+q.taxPct) + '%' + (q.taxOn === 'all' ? '' : ' on materials') + ')', desc: '', qty: 1, price: tax, sec: 'tax' });
     var disc = Math.max(0, Math.min(r2(q.discount), r2(sub + tax)));
     var total = r2(sub + tax - disc), cost = r2(matCost + labCost + othCost), profit = r2(total - tax - cost), net = r2(sub - disc);
     return { lines: lines, matCost: matCost, labCost: labCost, othCost: othCost, matPrice: matPrice, labPrice: labPrice, othPrice: othPrice,
       sub: sub, tax: tax, disc: disc, total: total, cost: cost, profit: profit, margin: net > 0 ? Math.round(profit / net * 1000) / 10 : 0 };
+  }
+  /* once the customer has picked one of the Good / Better / Best options, the
+     sheet IS that option: its lines and price go to the invoice, the payment
+     plan and the project; costs scale with it so profit stays honest */
+  function picked(j) {
+    var o = j.quote && j.quote.opt;
+    if (!o || o.status !== 'chosen' || !o.chosen || !Array.isArray(o.sent)) return null;
+    return o.sent.filter(function (t) { return t && t.key === o.chosen; })[0] || null;
+  }
+  function calc(j) {
+    var c = calcBase(j), t = picked(j); if (!t) return c;
+    var q = j.quote, tc = tierCalc(j, t.lines || []);
+    var lines = (t.lines || []).map(function (l) { return { name: l.name, desc: l.desc || '', qty: +l.qty || 1, price: +l.price || 0, unit: l.unit || 'ea', sec: l.sec || 'oth' }; });
+    if (tc.tax > 0) lines.push({ name: 'Sales tax (' + (+q.taxPct) + '%' + (q.taxOn === 'all' ? '' : ' on materials') + ')', desc: '', qty: 1, price: tc.tax, sec: 'tax' });
+    var k = c.sub > 0 ? tc.sub / c.sub : 1;
+    var out = Object.assign({}, c, { lines: lines, sub: tc.sub, tax: tc.tax, disc: tc.disc, total: tc.total,
+      matCost: r2(c.matCost * k), labCost: r2(c.labCost * k), othCost: r2(c.othCost * k), cost: r2(c.cost * k), tier: t.key });
+    var net = r2(tc.sub - tc.disc); out.profit = r2(tc.total - tc.tax - out.cost); out.margin = net > 0 ? Math.round(out.profit / net * 1000) / 10 : 0;
+    return out;
+  }
+  /* tax and discount on one option's lines, the same way the server works it out */
+  function tierCalc(j, lines) {
+    var q = quoteOf(j);
+    var sub = r2(sum(lines, function (l) { return r2((+l.qty || 0) * (+l.price || 0)); }));
+    var mat = r2(sum(lines.filter(function (l) { return l.sec === 'mat' || l.sec === 'all'; }), function (l) { return r2((+l.qty || 0) * (+l.price || 0)); }));
+    var tax = r2((q.taxOn === 'all' ? sub : mat) * Math.max(0, Math.min(20, +q.taxPct || 0)) / 100);
+    var disc = Math.max(0, Math.min(r2(q.discount), r2(sub + tax)));
+    return { sub: sub, tax: tax, disc: disc, total: r2(sub + tax - disc) };
   }
   Q.calc = function (id) { var j = job(id); return j ? calc(j) : null; };
 
@@ -165,20 +193,31 @@
   /* the estimate as the customer gets it, with what to do next */
   function renderView(area, j) {
     var q = quoteOf(j), c = calc(j), ct = contactBy(j.contactId);
+    var G = gb(j), o = q.opt, os = optState(j), multi = G.on && (G.tiers || (o && o.sent));
+    var badge = os ? '<span class="bpx-badge qg-st ' + os.cls + '">' + os.t + '</span>' : '<span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span>';
+    var paper = multi ? '<div class="qx-paper qg-paper">' + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (q.desc ? '<p class="qg-pvd">' + esc(q.desc) + '</p>' : '')
+        + optsHtml(j, o && o.sent && o.sent.length ? o.sent : tiersOut(j), (o && o.rec) || G.rec, o && o.status === 'chosen' ? o.chosen : '') + '</div>'
+      : '<div class="qx-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>';
+    var optRows = o ? '<tr><td>Options</td><td></td><td>' + esc(os ? os.t : '') + '</td></tr>'
+        + (o.status === 'chosen' ? '<tr><td>Signed by</td><td></td><td>' + esc(o.signer || '') + '</td></tr>' : '')
+        + (o.status === 'declined' && o.note ? '<tr><td>They said</td><td></td><td>' + esc(o.note) + '</td></tr>' : '') : '';
     var tone = c.margin >= 20 ? 'good' : c.margin >= 10 ? 'ok' : 'low';
     area.innerHTML = '<div class="qx qx-view">'
       + '<a class="qx-back" onclick="bpNav(\'estimates\')">&larr; Estimates</a>'
-      + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</h2><span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span></div>'
+      + '<div class="bpx-chead"><div class="qx-h"><h2>' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</h2>' + badge + '</div>'
         + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.edit(1)">Edit estimate</button>'
+        + (o && o.link && o.status === 'sent' ? '<button class="bpx-btn ghost" onclick="BPQ.optLink()">Copy link</button>' : '')
         + (q.estId ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
-        + '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (q.estId ? 'Send again' : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button></div></div>'
+        + (o && o.status === 'chosen' ? '' : '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (multi ? (o && o.status === 'sent' ? 'Send options again' : 'Send 3 options') : q.estId ? 'Send again' : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button>') + '</div></div>'
       + '<div class="qb-msg" id="qb-msg"></div>'
-      + '<div class="qx-vgrid"><div class="qx-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>'
+      + (o && o.status === 'chosen' ? '<div class="qg-won"><span class="ms">task_alt</span><div><b>' + esc(j.name.split(' ')[0]) + ' picked ' + esc((TK.filter(function (t) { return t[0] === o.chosen; })[0] || [0, ''])[1]) + ': ' + m2(c.total) + '</b><small>Signed' + (o.signer ? ' by ' + esc(o.signer) : '') + (o.at ? ' on ' + new Date(o.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '. It’s now the accepted estimate, so the deposit and the rest of your follow-up run as usual.</small></div></div>' : '')
+      + '<div class="qx-vgrid' + (multi ? ' qg-vgrid' : '') + '">' + paper
       + '<aside class="bpx-panel qx-priv"><div class="bpx-ptitle">Only you see this</div>'
         + '<table class="qx-st"><tbody><tr><td>Your cost</td><td></td><td>' + m2(c.cost) + '</td></tr><tr><td>Mark-up</td><td></td><td>' + m2(Math.max(0, c.total - c.tax - c.cost + c.disc)) + '</td></tr>'
         + (c.tax ? '<tr><td>Tax</td><td></td><td>' + m2(c.tax) + '</td></tr>' : '') + '</tbody></table>'
         + '<div class="qx-profit ' + tone + '"><span>Profit <b>' + m0(c.profit) + '</b></span><span>Margin <b>' + c.margin + '%</b></span></div>'
         + '<table class="qx-st qx-st2"><tbody><tr><td>Customer</td><td></td><td>' + esc(ct ? ct.name : j.contactId ? j.name : '—') + '</td></tr>'
+        + optRows
         + '<tr><td>Sends by</td><td></td><td>' + ({ sms: 'Text', email: 'Email', both: 'Text and email' }[q.via] || 'Text') + '</td></tr>'
         + '<tr><td>Valid for</td><td></td><td>' + (+q.validDays || 14) + ' days</td></tr></tbody></table>'
         + '<div class="qx-foot"><a onclick="BPQ.edit(1)">Change anything</a><button class="bpx-delbtn" onclick="BPQ.remove()">Delete ' + (q.estId ? 'estimate' : 'draft') + '</button></div></aside></div>'
@@ -207,12 +246,15 @@
           '<div class="qx-warn" id="qx-matwarn" hidden></div><div id="qb-mat">' + (window.ML && ML.editor ? ML.editor('job', j.id) : '') + '</div>', 'qx-s-mat')
       + sec(3, 'Labor', 'People &times; hours &times; cost an hour. Pick an employee to use their rate with payroll costs included.', mk('mkLab', q.mkLab), '<div id="qb-lab"></div>')
       + sec(4, 'Other costs', 'Permits, dumpster, equipment, subcontractors: anything else the job costs you.', mk('mkOth', q.mkOth), '<div id="qb-oth"></div>')
+      + '<section class="bpx-panel qx-sec qg-sec" id="qx-s-gbb"' + (gb(j).on ? '' : ' hidden') + '><div class="qx-ph"><span class="qx-n">5</span><div class="qx-pt"><div class="bpx-ptitle">Good, Better, Best</div><p>Three ways to do the job. The customer picks one and signs on the link you send.</p></div>'
+        + '<button type="button" class="qb-x" aria-label="Back to one estimate" title="Back to one estimate" onclick="BPQ.gbbOn(0)">&times;</button></div><div id="qg-body"></div></section>'
       + '</div><aside class="qx-side"><div class="bpx-panel qx-sum" id="qx-sum"></div></aside></div></div>';
-    drawLabor(); drawOther(); paint();
+    drawLabor(); drawOther(); paint(); drawTiers();
     if (window.bpCrewLoad && !(window.bpEmpsActive && bpEmpsActive().length)) { try { Promise.resolve(bpCrewLoad()).then(function () { if ($('qb-lab')) drawLabor(); }); } catch (e) {} }
     if (window.bpSpin) bpSpin(false);
   }
   window.bpQuotePage = function () {
+    Q.syncOpts();
     if (!Q.id || !job(Q.id)) { var open = jobs().filter(function (j) { return j.status === 'quote'; })[0]; if (open) Q.id = open.id; else { bpQuoteNew(); return; } }
     if (window.bpEnsureContacts && !(window._bpContacts || []).length) { Promise.resolve(bpEnsureContacts()).then(render, render); return; }
     render();
@@ -293,6 +335,8 @@
     var j = job(Q.id), el = $('qx-sum'); if (!j || !el) return;
     var q = j.quote, c = calc(j);
     j.estimate = c.total;
+    if (gb(j).on && !picked(j)) { var bt = tierCalc(j, baseLines(j)); j.estimate = bt.total; }
+    if ($('qg-body') && gb(j).on && !gb(j).busy && document.activeElement && !(document.activeElement.closest && document.activeElement.closest('#qx-s-gbb'))) { clearTimeout(Q._tdT); Q._tdT = setTimeout(drawTiers, 250); }
     /* items on the list that add nothing because they have no price (or no quantity) */
     var np = (j.materials.items || []).filter(function (it) { return !(+it.price > 0) || !(+it.qty > 0); });
     var w = $('qx-matwarn'); if (w) { w.hidden = !np.length; w.innerHTML = np.length ? '<b>' + np.length + ' item' + (np.length === 1 ? ' has' : 's have') + ' no ' + (np.every(function (it) { return +it.price > 0; }) ? 'quantity' : 'price') + ' yet</b>, so ' + (np.length === 1 ? 'it adds' : 'they add') + ' nothing: ' + np.slice(0, 4).map(function (it) { return esc(it.name || 'unnamed line'); }).join(', ') + (np.length > 4 ? '…' : '') + '.' : ''; }
@@ -320,11 +364,14 @@
         + '<p class="qx-hint">' + (q.show === 'items' ? 'Each item with its quantity and unit price, the labor, every other cost and the tax.' : q.show === 'total' ? 'One line for the whole job, with the scope of work underneath.' : 'Three lines: Materials, Labor and Other costs, then the tax.') + '</p>'
         + '<div class="qx-f2"><label>Valid for<select onchange="BPQ.set(\'validDays\',this.value,1)">' + [7, 14, 30, 60].map(function (d) { return '<option value="' + d + '"' + (+q.validDays === d ? ' selected' : '') + '>' + d + ' days</option>'; }).join('') + '</select></label>'
         + '<label>Send by<select onchange="BPQ.via(this.value)"><option value="sms"' + (q.via === 'sms' ? ' selected' : '') + '>Text</option><option value="email"' + (q.via === 'email' ? ' selected' : '') + '>Email</option><option value="both"' + (q.via === 'both' ? ' selected' : '') + '>Both</option></select></label></div></div>'
+      + '<div class="qx-sb"><label class="qx-lab" style="margin-top:0">Send as</label>' + seg(gb(j).on ? 'gbb' : 'one', [['one', 'One estimate'], ['gbb', 'Good · Better · Best']], 'BPQ.sendAs')
+        + '<p class="qx-hint">' + (gb(j).on ? 'Three options on one link. Customers who get a choice say yes more often, and often pick the middle or the top.' : 'Or give them three options to choose from: we write a budget and a premium version around this one.') + '</p></div>'
       + '<div class="qb-msg" id="qb-msg"></div>'
-      + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="BPQ.preview()">Preview</button><button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (q.estId ? 'Send updated estimate' : 'Send estimate') + '</button></div>'
+      + '<div class="qx-acts"><button class="bpx-btn ghost" onclick="' + (gb(j).on ? 'BPQ.gbbPreview()' : 'BPQ.preview()') + '">Preview</button><button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (gb(j).on ? (q.opt && q.opt.status === 'sent' ? 'Send updated options' : 'Send 3 options') : q.estId ? 'Send updated estimate' : 'Send estimate') + '</button></div>'
       + (q.estId ? '<button class="bpx-btn ghost qx-wide" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make the invoice from this</button>' : '')
       + '<div class="qx-foot"><a onclick="BPQ.saveDefaults()">Save these mark-ups as my defaults</a><button class="bpx-delbtn" onclick="BPQ.remove()">Delete ' + (q.estId ? 'estimate' : 'draft') + '</button></div>';
   }
+  Q.sendAs = function (v) { Q.gbbOn(v === 'gbb'); };
   Q.show = function (v) { var j = job(Q.id); if (!j) return; j.quote.show = v; save(); var a = document.activeElement; if (a && a.blur) a.blur(); paint(); };
   Q.removeId = function (id) {
     var j = job(id); if (!j || !confirm('Delete the draft for ' + (j.contactId ? j.name : 'this estimate') + '? This can’t be undone.')) return;
@@ -366,6 +413,218 @@
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '760px'; mc.style.width = '95vw'; }
   };
 
+  /* ================================================================
+     Good / Better / Best
+     The sheet as built is Better. "Build the 3 options" writes Good (the
+     budget way to do the same job) and Best (premium, with the upgrades
+     that make sense for the trade) around it, through estimate-options.
+     The contractor checks them, then sends ONE link with all three: the
+     customer picks one and signs, and that becomes the accepted estimate
+     in their HighLevel, so the deposit and everything after runs as usual.
+     ================================================================ */
+  var OPT_URL = function () { return (window.BP_URL || '') + '/functions/v1/estimate-options'; };
+  var TK = [['good', 'Good'], ['better', 'Better'], ['best', 'Best']];
+  function gb(j) {
+    var q = quoteOf(j);
+    if (!q.gbb) q.gbb = { on: false, tiers: null, rec: 'better' };
+    return q.gbb;
+  }
+  /* the sheet's own lines (one line per section when it's set to show one price) */
+  function baseLines(j) {
+    var q = quoteOf(j);
+    return calcBase(j, q.show === 'total' ? 'sections' : q.show).lines.filter(function (l) { return l.sec !== 'tax'; })
+      .map(function (l) { return { name: l.name, desc: l.desc || '', qty: r2(l.qty) || 1, unit: l.unit || 'ea', price: r2(l.price), sec: l.sec === 'all' ? 'mat' : l.sec }; });
+  }
+  function tierLines(j, key) {
+    if (key === 'better') return baseLines(j);
+    var t = (gb(j).tiers || []).filter(function (x) { return x.key === key; })[0];
+    return (t && t.lines) || [];
+  }
+  var tierOf = function (j, key) { return (gb(j).tiers || []).filter(function (x) { return x.key === key; })[0] || null; };
+  var trade = function () { try { var st = bpSettingsGet() || {}; return (st.company || {}).trade || (window._bpAcct || {}).trade || ''; } catch (e) { return ''; } };
+  /* without a connection: the same shape the server falls back to */
+  function localTiers(j) {
+    var base = baseLines(j), sub = r2(sum(base, function (l) { return l.qty * l.price; }));
+    var f = function (l, m, lb, o) { return Object.assign({}, l, { price: r2(l.price * (l.sec === 'mat' ? m : l.sec === 'lab' ? lb : o)) }); };
+    return [
+      { key: 'good', name: 'Good', title: 'Essential', summary: 'The job done right at the lowest price.', bullets: ['Standard-grade materials', 'Complete, code-compliant installation', 'Clean-up and haul-away'], warranty: '1-yr workmanship', lines: base.map(function (l) { return f(l, 0.8, 0.95, 1); }) },
+      { key: 'better', name: 'Better', title: 'Recommended', summary: 'The best value for most homes.', bullets: ['Quality materials we recommend', 'Complete, code-compliant installation', 'Clean-up and haul-away', 'Longer workmanship warranty'], warranty: '2-yr workmanship' },
+      { key: 'best', name: 'Best', title: 'Premium', summary: 'Top-grade materials and the longest protection.', bullets: ['Premium-grade materials', 'Upgrades that last longer', 'Longest workmanship warranty', 'Priority service for a year'], warranty: '5-yr workmanship',
+        lines: base.map(function (l) { return f(l, 1.25, 1.1, 1); }).concat([{ name: 'Extended workmanship warranty', desc: '5 years', qty: 1, unit: 'ea', price: r2(Math.max(150, sub * 0.06)), sec: 'oth' }]) }
+    ];
+  }
+  Q.gbbOn = function (on) {
+    var j = job(Q.id); if (!j) return; var g = gb(j);
+    if (on && j.quote.opt && j.quote.opt.status === 'chosen') { toast('The customer already picked an option.', 'error'); return; }
+    g.on = !!on; save(true);
+    var a = document.activeElement; if (a && a.blur) a.blur();
+    drawTiers(); paint();
+    if (on && !g.tiers && calc(j).total > 0) Q.gbbBuild();
+    if (on) setTimeout(function () { var el = $('qx-s-gbb'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+  };
+  Q.gbbBuild = async function () {
+    var j = job(Q.id); if (!j) return; var g = gb(j), base = baseLines(j);
+    if (!base.length) { toast('Price the estimate first. It becomes the Better option.', 'error'); return; }
+    if (g.tiers && g.tiers.some(function (t) { return t.edited; }) && !confirm('Rebuild Good and Best from the estimate as it is now? Your edits to them will be replaced.')) return;
+    g.busy = true; drawTiers();
+    var out = null;
+    try {
+      if (window.BP_LIVE && window.bpAuthApi) {
+        var d = await bpAuthApi(OPT_URL(), { op: 'build', trade: trade(), title: j.title === 'New estimate' ? '' : j.title, scope: j.quote.desc || '', lines: base });
+        if (d && d.ok && Array.isArray(d.tiers)) { out = d.tiers; g.ai = !!d.ai; }
+      }
+    } catch (e) {}
+    if (!out) { out = localTiers(j); g.ai = false; }
+    var keepRec = g.rec || 'better';
+    g.tiers = out.map(function (t) { var o = { key: t.key, name: t.name, title: t.title, summary: t.summary, bullets: t.bullets || [], warranty: t.warranty || '' }; if (t.key !== 'better') o.lines = (t.lines || []).map(function (l) { return { id: uid('tl'), name: l.name, desc: l.desc || '', qty: r2(l.qty) || 1, unit: l.unit || 'ea', price: r2(l.price), sec: l.sec || 'oth' }; }); return o; });
+    g.rec = keepRec; g.baseSub = r2(sum(base, function (l) { return l.qty * l.price; })); g.builtAt = Date.now(); g.busy = false;
+    save(true); drawTiers(); paint();
+  };
+  Q.tier = function (key, k, v) {
+    var j = job(Q.id), t = j && tierOf(j, key); if (!t) return;
+    t[k] = k === 'bullets' ? String(v || '').split(/\n+/).map(function (x) { return x.replace(/^[-•*\s]+/, '').trim(); }).filter(Boolean).slice(0, 6) : String(v || '').trim();
+    t.edited = 1; save();
+  };
+  Q.tierRec = function (key) { var j = job(Q.id); if (!j) return; gb(j).rec = key; save(); drawTiers(); };
+  Q.tline = function (key, id, k, v) {
+    var j = job(Q.id), t = j && tierOf(j, key), l = t && (t.lines || []).filter(function (x) { return x.id === id; })[0]; if (!l) return;
+    l[k] = k === 'name' ? String(v || '') : Math.max(0, num(v)); t.edited = 1; save();
+    var el = $('qg-tot-' + key); if (el) el.textContent = m2(tierCalc(j, t.lines).total);
+    var se = $('qg-sub-' + key); if (se) se.textContent = m2(tierCalc(j, t.lines).sub);
+  };
+  Q.tlineDel = function (key, id) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.lines = t.lines.filter(function (x) { return x.id !== id; }); t.edited = 1; save(); drawTiers(); };
+  Q.tlineAdd = function (key) { var j = job(Q.id), t = j && tierOf(j, key); if (!t) return; t.lines.push({ id: uid('tl'), name: '', desc: '', qty: 1, unit: 'ea', price: 0, sec: 'oth' }); t.edited = 1; save(); drawTiers(); setTimeout(function () { var r = document.querySelectorAll('#qg-lines-' + key + ' input[data-n]'); if (r.length) r[r.length - 1].focus(); }, 0); };
+  Q.tlinesOpen = function (key, on) { Q._tlOpen = Q._tlOpen || {}; Q._tlOpen[key] = on; };
+  function drawTiers() {
+    var el = $('qx-s-gbb'), j = job(Q.id); if (!el || !j) return;
+    var g = gb(j);
+    el.hidden = !g.on;
+    var body = $('qg-body'); if (!body) return;
+    if (!g.on) { body.innerHTML = ''; return; }
+    if (g.busy) { body.innerHTML = '<div class="qg-busy"><span class="qg-spin"></span><div><b>Writing Good and Best around your estimate…</b><small>Budget and premium versions of the same job, with what each includes.</small></div></div>'; return; }
+    if (!g.tiers) { body.innerHTML = '<div class="qg-empty"><p>Your estimate becomes the <b>Better</b> option. We write a <b>Good</b> option (the budget way to do the same job) and a <b>Best</b> option (premium materials and the upgrades that make sense), and you check them before anything is sent.</p><button class="bpx-addbtn" onclick="BPQ.gbbBuild()"><span class="ms">auto_awesome</span>Build the 3 options</button></div>'; return; }
+    var base = baseLines(j), bsub = r2(sum(base, function (l) { return l.qty * l.price; })), stale = g.baseSub != null && Math.abs(bsub - g.baseSub) > 0.5;
+    var open = Q._tlOpen || {};
+    body.innerHTML = (stale ? '<div class="qx-warn">Your estimate changed since these were built. Better follows it; Good and Best don’t. <a onclick="BPQ.gbbBuild()">Rebuild Good and Best</a></div>' : '')
+      + '<div class="qg-grid">' + TK.map(function (k) {
+        var t = tierOf(j, k[0]) || { key: k[0], name: k[1], bullets: [] }, ls = tierLines(j, k[0]), tc = tierCalc(j, ls), rec = g.rec === k[0], ro = k[0] === 'better';
+        return '<div class="qg-card k-' + k[0] + (rec ? ' rec' : '') + '">'
+          + '<div class="qg-top"><span class="qg-k">' + k[1] + '</span><label class="qg-rec"><input type="radio" name="qgrec"' + (rec ? ' checked' : '') + ' onchange="BPQ.tierRec(\'' + k[0] + '\')">Recommend</label></div>'
+          + '<input class="qg-title" value="' + esc(t.title || '') + '" placeholder="Name this option" onchange="BPQ.tier(\'' + k[0] + '\',\'title\',this.value)" aria-label="' + k[1] + ' option name">'
+          + '<textarea class="qg-sum" rows="2" placeholder="Who this option suits" onchange="BPQ.tier(\'' + k[0] + '\',\'summary\',this.value)">' + esc(t.summary || '') + '</textarea>'
+          + '<div class="qg-price"><b id="qg-tot-' + k[0] + '">' + m2(tc.total) + '</b><small>' + (tc.tax ? 'incl. ' + m2(tc.tax) + ' tax' : 'total') + (bsub > 0 && !ro ? ' · ' + Math.round(tc.sub / bsub * 100) + '% of Better' : '') + '</small></div>'
+          + '<label class="qg-lab">What’s included <small>one per line</small><textarea rows="4" onchange="BPQ.tier(\'' + k[0] + '\',\'bullets\',this.value)">' + esc((t.bullets || []).join('\n')) + '</textarea></label>'
+          + '<label class="qg-lab">Warranty<input value="' + esc(t.warranty || '') + '" placeholder="e.g. 10-yr parts, 2-yr labor" onchange="BPQ.tier(\'' + k[0] + '\',\'warranty\',this.value)"></label>'
+          + '<details class="qg-lines"' + (open[k[0]] ? ' open' : '') + ' ontoggle="BPQ.tlinesOpen(\'' + k[0] + '\',this.open)"><summary>' + ls.length + ' line' + (ls.length === 1 ? '' : 's') + ' · <span id="qg-sub-' + k[0] + '">' + m2(tc.sub) + '</span> before tax</summary>'
+            + (ro ? '<div class="qg-ro">' + ls.map(function (l) { return '<div><span>' + esc(l.name) + (l.qty !== 1 ? ' <small>× ' + l.qty + '</small>' : '') + '</span><b>' + m2(l.qty * l.price) + '</b></div>'; }).join('') + '<p class="qx-hint">These are your estimate’s lines. Change them in the sections above.</p></div>'
+              : '<div class="qg-ed" id="qg-lines-' + k[0] + '">' + (t.lines || []).map(function (l) {
+                return '<div class="qg-l"><input data-n value="' + esc(l.name) + '" placeholder="Line" onchange="BPQ.tline(\'' + k[0] + '\',\'' + l.id + '\',\'name\',this.value)">'
+                  + '<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.qty) + '" oninput="BPQ.tline(\'' + k[0] + '\',\'' + l.id + '\',\'qty\',this.value)" aria-label="Quantity">'
+                  + '<label class="qb-money">$<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.price) + '" oninput="BPQ.tline(\'' + k[0] + '\',\'' + l.id + '\',\'price\',this.value)" aria-label="Price each"></label>'
+                  + '<button type="button" class="qb-x" aria-label="Remove" onclick="BPQ.tlineDel(\'' + k[0] + '\',\'' + l.id + '\')">&times;</button></div>';
+              }).join('') + '<button type="button" class="bpx-rowbtn" onclick="BPQ.tlineAdd(\'' + k[0] + '\')">+ Add a line</button></div>')
+          + '</details></div>';
+      }).join('') + '</div>'
+      + '<div class="qg-foot"><span>' + (g.ai ? '<span class="ms">auto_awesome</span>Written by AI from your estimate. Check the prices before you send.' : 'Check the prices before you send.') + '</span><a onclick="BPQ.gbbBuild()">Rebuild Good and Best</a></div>';
+  }
+  /* what goes to the server: all three, each with its own lines */
+  function tiersOut(j) {
+    var g = gb(j);
+    return TK.map(function (k) {
+      var t = tierOf(j, k[0]) || {};
+      return { key: k[0], name: k[1], title: t.title || k[1], summary: t.summary || '', bullets: t.bullets || [], warranty: t.warranty || '', lines: tierLines(j, k[0]).filter(function (l) { return (+l.qty || 0) * (+l.price || 0) > 0 && String(l.name || '').trim(); }) };
+    }).filter(function (t) { return t.lines.length; });
+  }
+  /* the three cards, as the customer will see them (preview and the sheet's view) */
+  function optsHtml(j, tiers, rec, chosen) {
+    var q = quoteOf(j), showLines = q.show !== 'total';
+    return '<div class="qg-pv">' + tiers.map(function (t) {
+      var tc = t.total != null ? t : tierCalc(j, t.lines || []), on = chosen === t.key;
+      return '<div class="qg-pc k-' + t.key + (rec === t.key ? ' rec' : '') + (on ? ' picked' : '') + (chosen && !on ? ' dim' : '') + '">' + (rec === t.key ? '<span class="qg-badge">Most popular</span>' : '') + (on ? '<span class="qg-badge pk">Picked</span>' : '')
+        + '<span class="qg-k">' + esc(t.name) + '</span><b class="qg-pt">' + esc(t.title || t.name) + '</b>' + (t.summary ? '<p>' + esc(t.summary) + '</p>' : '')
+        + '<div class="qg-pp">' + m2(tc.total) + '</div>'
+        + ((t.bullets || []).length ? '<ul>' + t.bullets.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' : '')
+        + (t.warranty ? '<div class="qg-w"><span class="ms">verified_user</span>' + esc(t.warranty) + '</div>' : '')
+        + (showLines ? '<details><summary>What’s in the price</summary>' + (t.lines || []).map(function (l) { return '<div class="qg-pl"><span>' + esc(l.name) + '</span><b>' + m2((+l.qty || 0) * (+l.price || 0)) + '</b></div>'; }).join('') + (tc.tax ? '<div class="qg-pl"><span>Sales tax</span><b>' + m2(tc.tax) + '</b></div>' : '') + (tc.disc ? '<div class="qg-pl"><span>Discount</span><b>&minus;' + m2(tc.disc) + '</b></div>' : '') + '</details>' : '')
+        + '</div>';
+    }).join('') + '</div>';
+  }
+  Q.gbbPreview = function () {
+    var j = job(Q.id); if (!j) return; var g = gb(j), ts = tiersOut(j);
+    if (ts.length < 2) { toast('Build the options first.', 'error'); return; }
+    bpModal('<h3>What ' + esc(j.contactId ? j.name.split(' ')[0] : 'your customer') + ' sees</h3><div class="bpx-sub">One link with all three. They pick one and sign right there.</div>'
+      + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (j.quote.desc ? '<p class="qg-pvd">' + esc(j.quote.desc) + '</p>' : '')
+      + optsHtml(j, ts, g.rec, '') + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
+    var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '1040px'; mc.style.width = '96vw'; }
+  };
+  Q.sendOptions = async function () {
+    var j = job(Q.id), msg = $('qb-msg'), btn = $('qb-send'); if (!j) return;
+    var q = j.quote, g = gb(j), ct = contactBy(j.contactId);
+    var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } };
+    if (!j.contactId) return say('Pick the customer first.');
+    if (!g.tiers) return say('Build the 3 options first.');
+    var ts = tiersOut(j);
+    if (ts.length < 2 || ts.some(function (t) { return !(tierCalc(j, t.lines).total > 0); })) return say('Each option needs a price.');
+    var phone = (ct && ct.phone) || j.phone || '', email = (ct && ct.email) || j.email || '';
+    if (q.via !== 'email' && !phone) return say('This customer has no phone number. Send by email instead.');
+    if (q.via !== 'sms' && !email) return say('This customer has no email. Send by text instead.');
+    if (q.opt && q.opt.status === 'sent' && !confirm('Send the options again with your changes? The link sent before stops working.')) return;
+    if (!window.BP_LIVE || !window.bpAuthApi) return say('Sign in to send estimates.');
+    if (btn) btn.disabled = true; say('Sending…', true);
+    try {
+      var d = await bpAuthApi(OPT_URL(), { op: 'send', jobId: j.id, contactId: j.contactId, customer: j.name, phone: phone, email: email,
+        title: j.title === 'New estimate' ? 'Your estimate' : j.title, scope: q.desc || '', addr: j.addr || '', tiers: ts, taxPct: +q.taxPct || 0, taxOn: q.taxOn, discount: +q.discount || 0,
+        recommended: g.rec || 'better', via: q.via, validDays: +q.validDays || 14, businessName: biz(), show: q.show });
+      if (!d || !d.ok) { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); if (btn) btn.disabled = false; return; }
+      var better = (d.tiers || []).filter(function (t) { return t.key === 'better'; })[0];
+      q.opt = { id: d.id, token: d.token, link: d.link, status: 'sent', sent: d.tiers || [], rec: g.rec, sentAt: Date.now(), messaged: !!d.sent, reason: d.reason || '' };
+      q.estId = 'opt:' + d.id; q.sentAt = Date.now(); q.status = 'sent'; q.sentTotal = better ? better.total : calc(j).total; save(true);
+      Q.mode = 'view'; render();
+      if (d.sent) toast('Sent ' + j.name + ' all three options.', 'success'); else Q.optLink(true);
+    } catch (e) { say('Network error. Try again.'); if (btn) btn.disabled = false; }
+  };
+  var WHY = { no_highlevel: 'Your texting number isn’t connected yet', no_contact: 'This customer isn’t in your texting inbox yet', no_token: 'Your texting number isn’t connected yet' };
+  Q.optLink = function (failed) {
+    var j = job(Q.id), o = j && j.quote.opt; if (!o || !o.link) return;
+    bpModal('<h3>' + (failed ? 'Send them this link' : 'The options link') + '</h3>'
+      + (failed ? '<p class="bpx-sub">' + esc(WHY[o.reason] || 'We couldn’t text it automatically') + ', so send this link to ' + esc(j.name.split(' ')[0]) + ' yourself. When they pick an option it shows up here.</p>' : '<p class="bpx-sub">The link ' + esc(j.name.split(' ')[0]) + ' got. Anyone with it can see the three options.</p>')
+      + '<div class="qg-link"><input readonly value="' + esc(o.link) + '" onclick="this.select()"><button class="bpx-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(o.link) + '\');this.textContent=\'Copied\'">Copy</button></div>'
+      + '<div class="row"><a class="bpx-btn ghost" href="' + esc(o.link) + '" target="_blank" rel="noopener">Open it</a><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>');
+  };
+  /* picks and opens made on the customer's page, brought onto the sheets */
+  var lastSync = 0;
+  Q.syncOpts = function (force) {
+    if (!window.BP_LIVE || !window.BP_SB || (window.bpTeamIsCrew && bpTeamIsCrew())) return Promise.resolve(false);
+    if (!force && Date.now() - lastSync < 20000) return Promise.resolve(false);
+    lastSync = Date.now();
+    var mine = jobs().filter(function (j) { return j && j.quote && j.quote.opt && j.quote.opt.id && j.quote.opt.status === 'sent'; });
+    if (!mine.length) return Promise.resolve(false);
+    return Promise.resolve(BP_SB.from('estimate_options').select('id,status,chosen,viewed_at,chosen_at,signer_name,est_id,note').in('id', mine.map(function (j) { return j.quote.opt.id; }))).then(function (r) {
+      var rows = (r && !r.error && r.data) || [], changed = false;
+      rows.forEach(function (x) {
+        var j = mine.filter(function (y) { return y.quote.opt.id === x.id; })[0]; if (!j) return; var q = j.quote, o = q.opt;
+        if (x.viewed_at && !o.viewedAt) { o.viewedAt = Date.parse(x.viewed_at); changed = true; }
+        if (x.status === 'chosen' && o.status !== 'chosen') {
+          o.status = 'chosen'; o.chosen = x.chosen; o.signer = x.signer_name; o.at = Date.parse(x.chosen_at) || Date.now();
+          q.status = 'accepted'; q.acceptedAt = o.at; if (x.est_id) q.estId = x.est_id;
+          var c = calc(j); j.estimate = c.total; q.sentTotal = c.total; changed = true;
+        } else if (x.status === 'declined' && o.status !== 'declined') { o.status = 'declined'; o.note = x.note || ''; changed = true; }
+        else if (x.status === 'void' && o.status === 'sent') { o.status = 'void'; changed = true; }
+      });
+      if (changed) { save(true); if (window._bpCurView === 'quote' && $('bpxViewArea')) render(); if ($('bpxQbSheets')) bpQbSheets(); }
+      return changed;
+    }, function () { return false; });
+  };
+  function optState(j) {
+    var o = j.quote && j.quote.opt; if (!o) return null;
+    var nm = function (k) { return (TK.filter(function (t) { return t[0] === k; })[0] || [0, k])[1]; };
+    if (o.status === 'chosen') return { cls: 'ok', t: 'Picked ' + nm(o.chosen) };
+    if (o.status === 'declined') return { cls: 'bad', t: 'Declined' };
+    if (o.viewedAt) return { cls: 'on', t: 'Opened' };
+    return { cls: 'on', t: '3 options sent' };
+  }
+  Q.optState = optState;
+
   /* ---------- send ---------- */
   var gItems = function (lines) { return lines.map(function (l) { return { name: String(l.name).slice(0, 120), description: String(l.desc || l.name).slice(0, 300), qty: r2(l.qty) || 1, amount: r2(l.price) }; }); };
   async function post(url, body) {
@@ -377,6 +636,7 @@
   var biz = function () { try { return ((bpSettingsGet() || {}).company || {}).name || 'Your contractor'; } catch (e) { return 'Your contractor'; } };
   Q.send = async function () {
     var j = job(Q.id), msg = $('qb-msg'), btn = $('qb-send'); if (!j) return;
+    if (gb(j).on) return Q.sendOptions();
     var q = j.quote, c = calc(j), ct = contactBy(j.contactId);
     var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } };
     if (!j.contactId) return say('Pick the customer first.');
@@ -604,6 +864,7 @@
      ================================================================ */
   window.bpQbSheets = function () {
     var el = $('bpxQbSheets'); if (!el) return;
+    Q.syncOpts();
     var list = jobs().filter(function (j) { return j && j.status === 'quote' && !j.sample && hasWork(j); }).sort(function (a, b) { return ((b.quote || {}).sentAt || b.createdAt || 0) - ((a.quote || {}).sentAt || a.createdAt || 0); });
     el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Estimate sheets<span class="lg2">materials, labor and markup worked out, waiting on a yes</span></div>'
       + '</div>'
@@ -611,7 +872,7 @@
         var c = calc(j), q = j.quote;
         return '<div class="pjl-r qb-shr" onclick="bpQuoteOpen(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">request_quote</span></span>'
           + '<div class="pjl-id"><b>' + esc(j.contactId ? j.name : 'No customer yet') + '</b><span>' + esc(j.title === 'New estimate' ? 'Untitled' : j.title) + '</span></div>'
-          + '<div class="pjl-st"><span class="pjk-tag' + (q.estId ? ' on' : '') + '">' + (q.estId ? 'Sent' : 'Draft') + '</span></div>'
+          + '<div class="pjl-st">' + (optState(j) ? '<span class="pjk-tag qg-st ' + optState(j).cls + '">' + optState(j).t + '</span>' : '<span class="pjk-tag' + (q.estId ? ' on' : '') + '">' + (q.estId ? 'Sent' : 'Draft') + '</span>') + '</div>'
           + '<div class="pjl-m"><b>' + m0(c.total) + '</b><small>' + c.margin + '% margin</small></div>'
           + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpQuoteOpen(\'' + j.id + '\')">Open</button>'
             + (q.estId ? '<button class="pjl-b pri" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\')">Invoice</button>' : '<button class="pjl-b qx-del" onclick="event.stopPropagation();BPQ.removeId(\'' + j.id + '\')">Delete</button>') + '</div></div>';

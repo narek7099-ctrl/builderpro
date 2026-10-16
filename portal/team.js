@@ -23,7 +23,7 @@
   /* what each role may open */
   /* crew get their own pages (portal/crewapp.js), nothing else;
      a subcontractor gets theirs (portal/subapp.js), and Messages */
-  var CREW = { crewdash: 1, crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1 };
+  var CREW = { crewdash: 1, crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1, assets: 1 };
   var SUB = { subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, crewmsgs: 1, subcompany: 1 };
   var CREW_ONLY = { crewdash: 1, crewclock: 1, crewhome: 1, crewprojects: 1, crewid: 1, crewmsgs: 1, subjobs: 1, subinvoices: 1, subchanges: 1, subcomply: 1, subcompany: 1 };
   window.bpTeamAllows = function (view) {

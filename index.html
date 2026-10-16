@@ -26,7 +26,7 @@ try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="BuilderPro">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<script>try{if(/[#&](sign=[a-f0-9]{20,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro|my)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
+<script>try{if(/[#&](sign=[a-f0-9]{20,64}|est=[a-f0-9]{24,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro|my)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
@@ -15519,12 +15519,12 @@ var BP_PLANS={foundation:{name:'Foundation',price:99,min:150},os:{name:'BuilderP
 /* What each plan leaves out. Locked pages stay in the sidebar with a lock and
    open an upgrade card, so the contractor sees what the next plan gives them.
    No accounts row (demo, older clients) means nothing is locked. */
-var BP_LOCK={foundation:['activejobs','routing','installations','employees','subs','supply','supplyorders','suppliers','receipts','matlists','prices','mattemplates','finarchive','quickbooks','connections','leadsources','marketing','website','social','competitors','checks','calculator','customize','reputation','aiteam'],
+var BP_LOCK={foundation:['activejobs','routing','installations','assets','employees','subs','supply','supplyorders','suppliers','receipts','matlists','prices','mattemplates','finarchive','quickbooks','connections','leadsources','marketing','website','social','competitors','checks','calculator','customize','reputation','aiteam'],
   /* the AI Team is an Enterprise feature, not an add-on */
   os:['aiteam']};
 /* which plan opens a page: Enterprise for what even OS leaves out, OS otherwise */
 function bpLockPlan(v){ return BP_LOCK.os.indexOf(v)>=0?'enterprise':'os'; }
-var BP_WHY={quickbooks:'QuickBooks sync',activejobs:'Projects, contracts and e-signature',installations:'Installation tracking',employees:'Employees, hours and payroll',supply:'Supply and material orders',supplyorders:'Supply and material orders',suppliers:'Supply and material orders',matlists:'Material lists',receipts:'Material lists',prices:'Material lists',mattemplates:'Material lists',
+var BP_WHY={assets:'Equipment records and nameplate scanning',quickbooks:'QuickBooks sync',activejobs:'Projects, contracts and e-signature',installations:'Installation tracking',employees:'Employees, hours and payroll',supply:'Supply and material orders',supplyorders:'Supply and material orders',suppliers:'Supply and material orders',matlists:'Material lists',receipts:'Material lists',prices:'Material lists',mattemplates:'Material lists',
   finances:'Finances and profit per job',ledger:'Finances and profit per job',leadsources:'Lead Sources',marketing:'Ads and listings',website:'Website traffic',connections:'Website traffic',social:'Social Media',competitors:'Competitor Analysis',subs:'Subcontractors',routing:'Routing',checks:'Calculator leads',calculator:'Instant-quote calculators',customize:'Instant-quote calculators',reputation:'Reputation and reviews',aiteam:'The AI Team'};
 function bpLocked(v){ var p=(window._bpAcct||{}).plan; return !!(BP_LOCK[p]&&BP_LOCK[p].indexOf(v)>=0); }
 function bpUpgradeCard(v){
@@ -15646,7 +15646,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Routing',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Routing',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -15665,7 +15665,7 @@ var BP_NAV=[
   {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
   {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['automations','Automations'],['calculator','Calculators']] /* 'leadsources' still opens if called, just out of the menu */},
-  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['installations','Installations'],['employees','Employees'],['subs','Subcontractors'],['routing','Routing']]},
+  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['installations','Installations'],['employees','Employees'],['subs','Subcontractors'],['routing','Routing']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
   {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['receipts','Receipts'],['mattemplates','Templates']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
@@ -15712,7 +15712,7 @@ function bpNav(v){
   bpSpin(true);
   area.classList.remove('bpx-in');void area.offsetWidth;
   if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); bpScrollTop(); return; }
-  ({crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
+  ({assets:function(){window.bpAssetsPage?bpAssetsPage():bpSpin(false);},crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
   bpScrollTop();
 }
@@ -26825,7 +26825,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/dash.css?v=20261012crst">
 <link rel="stylesheet" href="portal/team.css?v=20261025a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
-<script src="portal/team.js?v=20261101a"></script>
+<script src="portal/team.js?v=20261103a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261012a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
@@ -26840,21 +26840,21 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261022apuvwxyzabfgnos"></script>
-<script src="portal/quote.js?v=20261022abxmnpituvwfnw"></script>
-<link rel="stylesheet" href="portal/quote.css?v=20261022axyzamnptvfnu">
+<script src="portal/quote.js?v=20261103a"></script>
+<link rel="stylesheet" href="portal/quote.css?v=20261103a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261024c"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
 <script src="portal/projsheet.js?v=20261019a"></script>
-<script src="portal/contact.js?v=20261019bq"></script>
+<script src="portal/contact.js?v=20261103a"></script>
 <script src="portal/inspect.js?v=20261019b"></script>
 <script src="portal/custportal.js?v=20261009b"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261009a">
 <script src="portal/bpedit.js?v=20261019a"></script>
-<script src="portal/crewapp.js?v=20261101a"></script>
+<script src="portal/crewapp.js?v=20261103a"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
 <script src="portal/subapp.js?v=20261004a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
@@ -26863,6 +26863,9 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/storm.js?v=20261017b"></script>
 <script src="portal/aiceo-map.js?v=20261011a"></script>
 <script src="portal/installs.js?v=20260928a"></script>
+<script src="portal/assets.js?v=20261103a"></script>
+<script src="portal/estpick.js?v=20261103a"></script>
+<link rel="stylesheet" href="portal/assets.css?v=20261103a">
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261016d"></script>
 <script src="portal/aibrain.js?v=20260930a"></script>
@@ -26890,9 +26893,9 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/mobile.css?v=20261102a">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
-<script src="portal/shell.js?v=20261101a"></script>
-<script src="portal/mobile.js?v=20261102a"></script>
-<script src="portal/notify.js?v=20261022a"></script>
+<script src="portal/shell.js?v=20261103a"></script>
+<script src="portal/mobile.js?v=20261103a"></script>
+<script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
 <script src="portal/native.js?v=20261031a"></script>
