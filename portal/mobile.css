@@ -105,3 +105,55 @@
 #bpx#bpx#bpx#bpx .mh-c-r{width:60px;height:60px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;background:var(--card)}
 #bpx#bpx#bpx#bpx .mh-c-r .hl-i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 #bpx#bpx#bpx#bpx .mh-c-r .ms{font-size:24px}
+
+/* ==================================================================
+   Phone tidy-up across every page
+   ================================================================== */
+/* section tabs: they scroll sideways, and a soft edge says there is more */
+#bpx#bpx#bpx#bpx.bp-m .hl-tabs{scroll-behavior:smooth}
+#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}
+#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more.bp-less{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 82%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 82%,transparent)}
+#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less:not(.bp-more){-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%);mask-image:linear-gradient(90deg,transparent,#000 14%)}
+
+/* panel titles: the explanation goes under the title, not squeezed beside it */
+#bpx#bpx.bp-m .bpx-ptitle{display:block}
+#bpx#bpx.bp-m .bpx-ptitle .lg2{display:block;margin:3px 0 0 !important;font-size:12.5px;line-height:1.45;white-space:normal}
+#bpx#bpx.bp-m .bpx-chead{flex-wrap:wrap;gap:10px}
+#bpx#bpx.bp-m .bpx-chead>.bpx-ptitle{flex:1 1 100%}
+
+/* tables become cards */
+#bpx#bpx.bp-m .bpx-cwrap:has(.bp-mcards){border:0 !important;background:transparent !important;box-shadow:none !important;overflow:visible !important;padding:0 !important}
+#bpx#bpx.bp-m .bpx-panel:has(> .bpx-cwrap .bp-mcards),#bpx#bpx.bp-m .bpx-panel[style*="padding:0"]:has(.bp-mcards){background:transparent !important;border:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards{display:block;width:100%;border:0;background:transparent;min-width:0 !important}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards thead{display:none}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tbody{display:flex;flex-direction:column;gap:8px}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tr[hidden]{display:none}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 !important;border:0 !important;background:transparent !important;font-size:13.5px;text-align:right;min-width:0;white-space:normal;overflow-wrap:anywhere}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td::before{content:attr(data-l);flex:0 0 auto;max-width:45%;text-align:left;font-size:12px;font-weight:500;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td:first-child{grid-column:1;justify-content:flex-start;text-align:left;font-size:15px;font-weight:600;color:var(--ink)}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td:first-child::before,#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td[data-l=""]::before{display:none}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td[data-l=""]{justify-content:flex-end}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td.bp-mempty{display:none}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td.bp-mfull{display:block;text-align:center;grid-column:1/-1}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td.bp-mfull::before{display:none}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tr:has(td.bp-mfull){display:block}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tfoot{display:block}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tfoot tr{display:flex;justify-content:space-between;background:transparent;border:0;padding:6px 4px}
+#bpx#bpx#bpx#bpx.bp-m table.bp-mcards tfoot td{grid-column:auto}
+
+/* conversations: the list first; the empty "pick one" pane only takes room on a computer */
+#bpx#bpx.bp-m .bpx-thread:has(> .bpx-tempty:only-child){display:none}
+#bpx#bpx.bp-m .bpx-inbox .bpx-convlist{max-height:none}
+
+/* calendar on a phone: the drag hint is for a mouse */
+#bpx#bpx.bp-m .cal-legend .bpx-mut{display:none}
+
+/* small stat rows: two to a line, never three and one alone */
+#bpx#bpx.bp-m .sb-kp{display:grid !important;grid-template-columns:1fr 1fr !important;gap:8px}
+#bpx#bpx.bp-m .sb-top{flex-direction:column;align-items:stretch;gap:10px}
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td{height:auto !important;min-height:0 !important;line-height:1.35 !important;padding:0 !important;vertical-align:middle}
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td.bp-mdash{display:none}
+#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.bpx-csearch) .hl-tbar{display:none !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.bpx-csearch) table.bp-mcards tr:has(.hl-tbar){display:none !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-searchwrap .bpx-csearch{padding:0 12px 0 40px !important}

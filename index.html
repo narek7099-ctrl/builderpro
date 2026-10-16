@@ -17010,7 +17010,7 @@ var _bpContacts=[];
    the working hours as rows, everything booked drawn across them at the
    time it happens, and how much of the day is already spoken for.
    Crew days, inspections and timed to-dos all land on the same grid. */
-  var _bpCalView='week';
+  var _bpCalView=(window.matchMedia&&matchMedia('(max-width: 760px)').matches)?'day':'week';   /* a week of seven columns doesn't fit a phone */
   var _bpDaySel=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
   var BP_DAYKEY=['sun','mon','tue','wed','thu','fri','sat'];
   function bpIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
@@ -18508,7 +18508,7 @@ var SCHED_URL=BP_URL+'/functions/v1/ghl-schedule';
 var _bpBulkWhen='now'; var _bpSchedOne=null;
 function bpDtLocal(d){var p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 function bpFmtSched(iso){try{return new Date(iso).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}catch(e){return iso;}}
-var BPSCHED_NOTE='<div class="bpx-when-note">Scheduling isn’t set up yet. Deploy the <b>ghl-schedule</b> worker (see <b>supabase/functions/ghl-schedule/SETUP.md</b>) to enable it. <b>Send now</b> works regardless.</div>';
+var BPSCHED_NOTE='<div class="bpx-when-note">Scheduled sending switches on once your business number is connected. <b>Send now</b> works today.</div>';
 
 /* Messaging header with Broadcast + Scheduled */
 /* ===== Texts and email, told apart ========================================
@@ -22537,7 +22537,7 @@ function bpFinEstimates(){_bpFinView='estimates';bpFinances();}
 function bpFinLedger(){_bpFinView='ledger';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
-var BPEST_NOTE='<div class="bpx-when-note">Estimates aren\'t set up yet. Deploy the <b>ghl-estimate</b> function to enable them.</div>';
+var BPEST_NOTE='<div class="bpx-when-note">Sent estimates show here once your business number is connected. Until then you can still build estimate sheets above.</div>';
 /* ===== Charts on the invoice and estimate lists ==========================
    Both lists answer "what did I send"; neither answers "what am I owed, and
    how late is it" — which is the question that actually costs a contractor
@@ -26891,11 +26891,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261024b">
-<link rel="stylesheet" href="portal/mobile.css?v=20261102a">
+<link rel="stylesheet" href="portal/mobile.css?v=20261103s">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
-<script src="portal/shell.js?v=20261103a"></script>
-<script src="portal/mobile.js?v=20261103a"></script>
+<script src="portal/shell.js?v=20261103p"></script>
+<script src="portal/mobile.js?v=20261103q"></script>
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
