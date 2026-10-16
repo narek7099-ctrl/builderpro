@@ -76,7 +76,7 @@
       + '<h1 class="sg-h">' + (first ? esc(first) + ', pick the option that fits' : 'Pick the option that fits') + '</h1>'
       + '<p class="sg-p">' + esc(o.title || 'Your estimate') + (o.addr ? ' at ' + esc(o.addr) : '') + '. Each option is a complete job; they differ in materials, extras and warranty. Prices are good until ' + esc(date(o.expires_at)) + '.</p>'
       + (o.scope ? '<div class="ep-scope"><b>Scope of work</b><p>' + esc(o.scope) + '</p></div>' : '')
-      + '<div class="ep-grid">' + (o.tiers || []).map(function (x) { return card(x, o); }).join('') + '</div>'
+      + '<div class="ep-grid n' + (o.tiers || []).length + '">' + (o.tiers || []).map(function (x) { return card(x, o); }).join('') + '</div>'
       + '<div class="ep-signbox" id="epSign"' + (t ? '' : ' hidden') + '>'
         + (t ? '<div class="ep-sel"><span>You picked</span><b>' + esc(t.name) + ': ' + esc(t.title || '') + '</b><strong>' + money(t.total) + '</strong></div>' : '')
         + '<div class="sg-lbl">Sign to approve</div>'
@@ -179,7 +179,8 @@
     + '#bpSign .ep-choose{display:block;text-align:center;margin-top:auto;padding:12px;border-radius:12px;font-weight:700;font-size:15px;border:1.5px solid var(--hp-blue,#2f6bff);color:var(--hp-blue2,#1d4ed8)}#bpSign .ep-opt.on .ep-choose{background:var(--hp-blue,#2f6bff);color:var(--hp-on,#fff)}#bpSign .ep-tick{margin-right:6px}'
     + '#bpSign .ep-signbox{margin-top:22px;padding:20px;border:1px solid #e4e9f0;border-radius:16px;background:#fcfdfe;max-width:560px;margin-left:auto;margin-right:auto}#bpSign .ep-signbox[hidden]{display:none}'
     + '#bpSign .ep-sel{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:16px}#bpSign .ep-sel span{width:100%;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600}#bpSign .ep-sel b{font-size:16px;color:#0c0c0d}#bpSign .ep-sel strong{margin-left:auto;font-size:20px;color:#0c0c0d}'
-    + '@media(max-width:820px){#bpSign .ep-grid{grid-template-columns:1fr;gap:20px}#bpSign .ep-opt{padding:22px 18px 16px}}'
+    + '#bpSign .ep-grid.n2{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px;margin-left:auto;margin-right:auto}'
+    + '@media(max-width:820px){#bpSign .ep-grid,#bpSign .ep-grid.n2{grid-template-columns:1fr;gap:20px}#bpSign .ep-opt{padding:22px 18px 16px}}'
     + '@media print{#bpSign .ep-opt{break-inside:avoid}}';
   document.head.appendChild(css);
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
