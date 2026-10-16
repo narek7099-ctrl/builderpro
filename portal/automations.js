@@ -65,6 +65,37 @@
     };
   }
   function v(from, o) { o.from = from; return o; }
+  /* The list is grouped by what the customer goes through, with plain names.
+     The HighLevel name and number stay visible (in grey) so the owner can
+     find the same workflow in their CRM. */
+  var GROUPS = [[1, 'New leads to booked'], [2, 'Missed calls and messages'], [3, 'Inspections and visits'], [4, 'Estimates and deposits'],
+    [5, 'Job updates to customers'], [6, 'Getting paid'], [7, 'Reviews and repeat work'], [8, 'Heads-ups to you']];
+  var GN = {}; GROUPS.forEach(function (g) { GN[g[0]] = g[1]; });
+  var MAP = {
+    '01': [1, 'Lisa texts every new lead'], '02': [1, 'New lead: first text in a minute'], '02a': [1, 'Calculator leads come in'],
+    '03a': [1, 'Repair lead from Lisa'], '03b': [1, 'Replacement lead from Lisa'], '03c': [1, 'Storm or insurance lead from Lisa'],
+    '03e': [1, 'Lead needs more time'], '09': [1, 'Not interested: close it out'], '13': [1, 'First email gets a reply'],
+    '23': [1, 'Find a Pro quote requests'], 'S3': [1, 'Catch any lead that slipped in'],
+    '04': [2, 'Text back a missed call'], 'S4': [2, 'Missed call after hours'], 'S1': [2, 'Customer waiting on a reply'],
+    'S2': [2, 'New lead nobody has reached'], 'S5': [2, 'Lisa hands a conversation to you'], '44': [2, 'Portal message unanswered'],
+    '05': [3, 'Inspection booked: confirm and remind'], '05b': [3, 'Inspection cancelled'], '14': [3, 'Inspection no-show: rebook'],
+    '20': [3, 'Job and maintenance visit reminders'],
+    '06': [4, 'Remind me to send the estimate'], '07': [4, 'Follow up on a sent estimate'], '08': [4, 'Estimate accepted'],
+    '37': [4, 'Contract signed: welcome'], '41': [4, 'Change order waiting on them'],
+    '30': [5, 'Job scheduled'], '31': [5, 'Crew coming tomorrow'], '32': [5, 'Crew arrived'], '38': [5, 'Phase done: progress update'],
+    '39': [5, 'Schedule pushed back'], '42': [5, 'Permit inspection date'], '43': [5, 'Warranty info'], '51': [5, 'Move a crew’s later jobs too'],
+    '10': [6, 'Invoice paid'], '15': [6, 'Job done: send the final invoice'], '16': [6, 'Chase the final invoice'],
+    '34': [6, 'Payment overdue'], '40': [6, 'Payment received: thank you'],
+    '11': [7, 'Ask for a review'], '12': [7, 'Check back in 90 days'], '19': [7, 'Maintenance due'], '19b': [7, 'Maintenance timer'],
+    '33': [7, 'Job done: review and referral'], '35': [7, 'One-year check-up'], '36': [7, 'Storm follow-up to past customers'],
+    '21': [8, 'Priority alerts to your phone'], '22': [8, 'Priority support request'], '45': [8, 'Job over budget'],
+    '46': [8, 'Sub’s insurance expiring'], '47': [8, 'Crew didn’t show up'], '48': [8, 'Weather risk tomorrow'],
+    '49': [8, 'Materials not ready'], '50': [8, 'Stuck job'], '52': [8, 'Storm near past customers']
+  };
+  var G = function (w) { return (MAP[w.id] || [1])[0]; };
+  var PN = function (w) { return (MAP[w.id] || [0, ''])[1] || w.name; };
+  /* these need the business number to text or take calls */
+  var PHONE = { '01': 1, '02': 1, '04': 1, 'S4': 1, 'S5': 1 };
   var WF = [
     { id: '01', name: 'AI Qualifier', folder: 1, from: 0, v: [v(0, {
       triggers: [['tag', 'Tag added: ' + tg('bot-active')]],
@@ -238,16 +269,16 @@
         { label: 'Invoice chase running', when: 'has tag final-sent (16 already reminds them)', steps: [E] },
         { label: '3 days', steps: [['sms', 'A quick reminder that {{contact.bp_balance_due}} is still open on your {{contact.bp_job_name}}.'], E] },
         { label: '7 days', steps: [['sms', 'Your balance of {{contact.bp_balance_due}} is a week past due. Anything holding it up?'], ['email', 'Same reminder by email'], E] },
-        { label: '14 days', steps: [['alert', '{{contact.name}} owes {{contact.bp_balance_due}}, 14 days. Call them.'], E] }
+        { label: '14 days', steps: [['alert', '{{contact.name}} owes {{contact.bp_balance_due}}, 14 days. Call them.'], ['alert', 'Task: call about the payment'], E] }
       ] }] })] },
     { id: '35', kind: 'job_anniversary', name: 'Yearly Check-up', folder: 6, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-job-anniversary') + ' (each year on the day a job was finished)']],
-      settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
+      settings: ['Re-entry on', 'Stop on response off (on purpose: a reply is the answer it waits for)', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'It’s been a year since we finished your {{contact.bp_job_name}}. Want a free check-up? Reply YES.'], ['wait', 'For a reply, up to 3 days', 'Wait for reply'], { 'if': 'Replied YES?', paths: [
         { label: 'Yes', steps: [['opp', 'Jobs → New Lead (check-up)'], ['alert', '“Book the check-up.”'], E] }, { label: 'No reply', steps: [E] } ] }] })] },
     { id: '36', kind: 'storm_followup', name: 'Storm Follow-up', folder: 6, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-storm-followup') + ' (sent from BuilderPro for an area after a storm)']],
-      settings: ['Re-entry on', 'Stop on response on', 'Contact time zone, 8am–8pm'],
+      settings: ['Re-entry on', 'Stop on response off (on purpose: a reply is the answer it waits for)', 'Contact time zone, 8am–8pm'],
       steps: [['sms', 'After the recent storm we’re offering free roof checks for past customers. Want us to swing by? Reply YES. {{contact.bp_event_note}}'], ['wait', 'For a reply, up to 2 days', 'Wait for reply'], { 'if': 'Replied YES?', paths: [
         { label: 'Yes', steps: [['opp', 'Jobs → New Lead (storm check)'], ['alert', '“Book the storm check.”'], E] }, { label: 'No reply', steps: [E] } ] }] })] },
     { id: '37', kind: 'contract_signed', name: 'Contract Signed → Welcome', folder: 6, from: 1, v: [v(1, {
@@ -290,7 +321,7 @@
     { id: '44', kind: 'message_unanswered', name: 'Customer Message Unanswered', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-message-unanswered') + ' (portal message, no reply in 4 hours)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
-      steps: [['alert', '{{contact.name}} messaged in the portal 4+ hours ago: “{{contact.bp_event_note}}”'], E] })] },
+      steps: [['alert', '{{contact.name}} messaged in the portal 4+ hours ago: “{{contact.bp_event_note}}”'], ['alert', 'Text to your phone with the same message'], E] })] },
     { id: '45', kind: 'over_budget', name: 'Job Over Budget', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-over-budget') + ' (job costs pass the budget)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
@@ -298,15 +329,15 @@
     { id: '46', kind: 'sub_insurance_expiring', name: 'Sub Insurance Expiring', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-sub-insurance-expiring') + ' (on the sub’s contact, 14 days before)']],
       settings: ['Re-entry on', 'Contact time zone, 8am–8pm'],
-      steps: [['sms', 'To the sub: {{contact.bp_event_note}}. Please upload a current copy in your sub portal.'], ['alert', '{{contact.name}}: {{contact.bp_event_note}}'], E] })] },
+      steps: [['sms', 'To the sub: {{contact.bp_event_note}}. Please upload a current copy in your sub portal.'], ['email', 'The same reminder to the sub by email'], ['alert', '{{contact.name}}: {{contact.bp_event_note}}'], E] })] },
     { id: '47', kind: 'crew_no_show', name: 'Crew No-Show', folder: 7, from: 1, v: [v(1, {
       triggers: [['bp', 'Tag added: ' + tg('bp-crew-no-show') + ' (booked today, nobody clocked in an hour after the start)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
-      steps: [['alert', 'Nobody has clocked in on {{contact.bp_job_name}} for {{contact.name}}. {{contact.bp_event_note}}.'], ['note', 'BuilderPro also alerts the crew lead in the crew app'], E] })] },
+      steps: [['alert', 'Nobody has clocked in on {{contact.bp_job_name}} for {{contact.name}}. {{contact.bp_event_note}}.'], ['alert', 'Text to your phone'], ['note', 'BuilderPro also alerts the crew lead in the crew app'], E] })] },
     { id: '48', kind: 'weather_risk', name: 'Weather Delay Warning', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-weather-risk') + ' (rain 60%+ or gusts 40 mph+ forecast for tomorrow’s job, checked 3–9 pm)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
-      steps: [['alert', 'Weather risk tomorrow on {{contact.bp_job_name}} ({{contact.bp_job_address}}): {{contact.bp_event_note}}. Reschedule? Moving the date texts the customer automatically.'], E] })] },
+      steps: [['alert', 'Weather risk tomorrow on {{contact.bp_job_name}} ({{contact.bp_job_address}}): {{contact.bp_event_note}}. Reschedule? Moving the date texts the customer automatically.'], ['alert', 'Text to your phone'], E] })] },
     { id: '49', kind: 'materials_not_ready', name: 'Materials Not Ready', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-materials-not-ready') + ' (work tomorrow, the order list is still a draft)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
@@ -331,11 +362,21 @@
     { id: '52', kind: 'storm_alert', name: 'Storm Alert to You', folder: 7, from: 2, v: [v(2, {
       triggers: [['bp', 'Tag added: ' + tg('bp-storm-alert') + ' (hail or damaging wind near past customers, from the National Weather Service reports)']],
       settings: ['Re-entry on', 'No time window (alerts go out right away)'],
-      steps: [['alert', '{{contact.bp_event_note}}'], ['note', 'You approve it in BuilderPro (dashboard card or the notice); then Storm Follow-up (36) texts the customers you picked', 'You decide'], E] })] }
+      steps: [['alert', '{{contact.bp_event_note}}'], ['alert', 'Text to your phone'], ['note', 'You approve it in BuilderPro (dashboard card or the notice); then Storm Follow-up (36) texts the customers you picked', 'You decide'], E] })] }
   ];
 
   var fmt = function (s) { return String(s).replace(/\{\{([^}]+)\}\}/g, function (m, k) { return '<span class="wa-chip">' + k.trim() + '</span>'; }); };
-  var S = { plan: null, sel: '01', mine: 1, open: null };
+  var S = { plan: null, sel: '01', mine: 1, open: null, linked: undefined };
+  function phoneLive() { try { var ph = (window.bpSettingsGet && bpSettingsGet().phone) || {}; return ph.status === 'live'; } catch (e) { return false; } }
+  /* [text, tone, hint] for one workflow on this account */
+  function chip(w) {
+    if (w.id === '51') return ['Runs in BuilderPro', 'ok', 'This one runs inside BuilderPro, not HighLevel.'];
+    if (S.linked === false) return ['Needs HighLevel connected', 'warn', ''];   // the banner above the list explains it
+    if (PHONE[w.id] && !phoneLive()) return ['Needs your business number', 'warn', 'Texts and calls go out once your business number is connected (Settings > Business number).'];
+    var fired = w.kind && S.fired ? S.fired[w.kind] : null;
+    if (w.kind && S.fired) return fired ? ['Ran ' + fired.n + (fired.n === 1 ? ' time' : ' times') + ' · last ' + ago(fired.last), 'ok', ''] : ['On · waiting for its first event', 'ok', ''];
+    return S.linked ? ['On', 'ok', ''] : ['Checking…', '', ''];
+  }
   /* storms only matter for some trades (portal/storm.js); for the rest the storm follow-up isn't shown at all */
   var hidden = function (w) { return (w.id === '36' || w.id === '52') && !!window.bpStormTrade && !bpStormTrade(); };
   var avail = function (w) { return w.from <= S.plan && !hidden(w); };
@@ -364,25 +405,28 @@
     var w0 = WF.filter(function (w) { return w.id === S.sel; })[0]; if (!w0 || !avail(w0)) S.sel = '01';
     var list = WF.filter(avail);
     var nNew = list.filter(function (w) { return status(w) === 'new'; }).length, nChg = list.filter(function (w) { return status(w) === 'chg'; }).length;
-    var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations running on your ' + PLANS[S.plan].name + ' plan</span></div></div>';
+    var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations ' + (S.linked === false ? 'on' : 'running on') + ' your ' + PLANS[S.plan].name + ' plan</span></div></div>'
+      + (S.linked === false ? '<div class="wa-note warn"><b>Not running yet.</b> Your HighLevel account isn’t connected, so these are switched off. Ask support to finish your setup and they all turn on.</div>' : '');
     h += '<div class="wa-lay"><aside class="wa-list">';
     var shut = [];
-    [6, 7, 1, 2, 3, 4, 5].forEach(function (f) {
-      var items = WF.filter(function (w) { return w.folder === f && avail(w); });
-      var locked = WF.filter(function (w) { return w.folder === f && !avail(w) && !hidden(w); });
+    GROUPS.forEach(function (gr) {
+      var f = gr[0];
+      var items = WF.filter(function (w) { return G(w) === f && avail(w); });
+      var locked = WF.filter(function (w) { return G(w) === f && !avail(w) && !hidden(w); });
+      var lockNames = function () { var n = locked.map(PN); return n.slice(0, 4).join(', ') + (n.length > 4 ? ' and ' + (n.length - 4) + ' more' : ''); };
       if (!items.length && locked.length) {   /* a whole folder above this plan: kept for the locked section at the end */
         var need = Math.min.apply(null, locked.map(function (w) { return w.from; }));
-        shut.push('<div class="wa-fold wa-lock" title="Not on your plan"><span class="wa-fi wa-padlock">' + LOCK + '</span><span class="wa-fn">' + FOLDERS[f] + '</span>'
+        shut.push('<div class="wa-fold wa-lock" title="Not on your plan"><span class="wa-fi wa-padlock">' + LOCK + '</span><span class="wa-fn">' + GN[f] + '</span>'
           + '<span class="wa-need">' + PLANS[need].name + '</span></div>'
-          + '<div class="wa-lockn">' + locked.length + ' automation' + (locked.length === 1 ? '' : 's') + ' · <a href="#" data-upg="' + PLANS[need].k + '">Upgrade to ' + PLANS[need].name + '</a></div>');
+          + '<div class="wa-lockn">' + lockNames() + ' · <a href="#" data-upg="' + PLANS[need].k + '">Upgrade to ' + PLANS[need].name + '</a></div>');
         return;
       }
       if (!items.length) return;
-      if (!S.open) { S.open = {}; var sw = WF.filter(function (w) { return w.id === S.sel; })[0]; S.open[sw ? sw.folder : 1] = 1; }
+      if (!S.open) { S.open = {}; var sw = WF.filter(function (w) { return w.id === S.sel; })[0]; S.open[sw ? G(sw) : 1] = 1; }
       var op = !!S.open[f];
-      h += '<button class="wa-fold' + (op ? ' open' : '') + '" data-fold="' + f + '" aria-expanded="' + op + '"><span class="wa-fi">' + svg(op ? 'folderOpen' : 'folder') + '</span><span class="wa-fn">' + FOLDERS[f] + '</span><span class="wa-fc">' + items.length + '</span><svg class="wa-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="wa-fbody' + (op ? ' open' : '') + '"><div class="wa-fin">';
-      items.forEach(function (w) { var st = status(w), x = variant(w); h += '<button class="wa-wf' + (w.id === S.sel ? ' on' : '') + '" data-id="' + w.id + '"><span class="wa-num">' + w.id + '</span><span class="wa-nm">' + (x.name || w.name) + '</span>' + (st ? '<span class="wa-dot ' + st + '">' + (st === 'new' ? 'NEW' : 'UPGRADED') + '</span>' : '') + '</button>'; });
-      if (locked.length) { var nd = Math.min.apply(null, locked.map(function (w) { return w.from; })); h += '<div class="wa-lockn wa-lockmore"><span class="wa-padlock">' + LOCK + '</span>' + locked.length + ' more locked · <a href="#" data-upg="' + PLANS[nd].k + '">' + PLANS[nd].name + '</a></div>'; }
+      h += '<button class="wa-fold' + (op ? ' open' : '') + '" data-fold="' + f + '" aria-expanded="' + op + '"><span class="wa-fi">' + svg(op ? 'folderOpen' : 'folder') + '</span><span class="wa-fn">' + GN[f] + '</span><span class="wa-fc">' + items.length + '</span><svg class="wa-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="wa-fbody' + (op ? ' open' : '') + '"><div class="wa-fin">';
+      items.forEach(function (w) { var c = chip(w); h += '<button class="wa-wf' + (w.id === S.sel ? ' on' : '') + '" data-id="' + w.id + '"><span class="wa-nm">' + PN(w) + '</span>' + (c[1] === 'warn' && S.linked !== false ? '<span class="wa-warn" title="' + c[0] + '">!</span>' : '') + '</button>'; });
+      if (locked.length) { var nd = Math.min.apply(null, locked.map(function (w) { return w.from; })); h += '<div class="wa-lockn wa-lockmore"><span class="wa-padlock">' + LOCK + '</span>' + PLANS[nd].name + ' adds: ' + lockNames() + ' · <a href="#" data-upg="' + PLANS[nd].k + '">Upgrade</a></div>'; }
       h += '</div></div>';
     });
     if (shut.length) h += '<div class="wa-lockhd"><span class="wa-padlock">' + LOCK + '</span>Not on your plan</div>' + shut.join('');
@@ -392,18 +436,19 @@
     
     var n = x.triggers.length, W = n * 232 - 12;
     var merge = n > 1 ? '<div class="wa-merge"><svg viewBox="0 0 ' + W + ' 28" preserveAspectRatio="none" style="width:' + W + 'px">' + x.triggers.map(function (_, i) { var X = i * 232 + 110, c = W / 2; return '<path d="M' + X + ' 0 C' + X + ' 14 ' + c + ' 14 ' + c + ' 28" fill="none" stroke="#c3cbd6" stroke-width="2"/>'; }).join('') + '</svg></div>' : '<div class="wa-ln" style="height:20px"></div>';
-    var fired = w.kind && S.fired ? S.fired[w.kind] : null;
-    var liveTxt = !w.kind || !S.fired ? 'Live' : fired ? 'Fired ' + fired.n + (fired.n === 1 ? ' time' : ' times') + ' · last ' + ago(fired.last) : 'Waiting for its first event';
+    var ch = chip(w);
+    if (ch[2]) note = '<div class="wa-note' + (ch[1] === 'warn' ? ' warn' : ' soft') + '">' + ch[2] + '</div>' + note;
     if (w.kind) note += '<div class="wa-note soft">BuilderPro sends this event to your CRM with the job’s details in the <b>BP</b> fields; the workflow there sends the messages. Edit the wording in your CRM’s workflow builder.</div>';
     if (w.id === '36') note += '<div class="wa-storm"><b>Send a storm follow-up</b><span>Past customers whose job address contains any of these ZIP codes or towns get the text.</span>'
       + '<input id="wa-st-area" placeholder="e.g. 91605, 91606, Van Nuys"><input id="wa-st-note" placeholder="Optional line added to the text (e.g. Hail on Oct 3)" maxlength="200">'
       + '<button class="bpx-addbtn" id="wa-st-go">Send to past customers</button><div class="wa-st-msg" id="wa-st-msg"></div></div>'
       + (window.bpStormSettingsHtml ? bpStormSettingsHtml() : '');
-    h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + FOLDERS[w.folder] + '</div><div class="wa-row"><span class="wa-num">' + w.id + '</span><h2>' + (x.name || w.name) + '</h2><span class="wa-live">' + liveTxt + '</span></div>' + note
+    h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + GN[G(w)] + '</div><div class="wa-row"><h2>' + PN(w) + '</h2><span class="wa-live ' + ch[1] + '">' + ch[0] + '</span></div>'
+      + '<div class="wa-crm">' + (w.id === '51' ? 'Built into BuilderPro' : 'In your HighLevel: <b>' + w.id + ' ' + (x.name || w.name) + '</b>') + '</div>' + note
       + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'
       + '<div class="wa-leg"><span><i class="wa-msg"></i>Customer message</span><span><i class="wa-contact"></i>Contact / tags</span><span><i class="wa-pipe"></i>Pipeline</span><span><i class="wa-alert"></i>Alert to you</span><span><i class="wa-wait"></i>Wait</span><span><i class="wa-sys"></i>System</span><span><i class="wa-logic"></i>If / else</span></div>'
-      + '<p class="wa-foot">Texts to customers only go out in quiet hours (8am–8pm in their time zone). These run inside your CRM automatically; nothing to set up.</p></main></div></div>';
+      + '<p class="wa-foot">Texts to customers go out between 8am and 8pm in their time zone, except the after-hours missed-call reply. These run in your HighLevel account once it’s connected and your business number is live; anything still needed shows at the top.</p></main></div></div>';
     area.innerHTML = h;
     area.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { S.plan = +b.getAttribute('data-p'); render(); }; });
     area.querySelectorAll('[data-fold]').forEach(function (b) { b.onclick = function () {
@@ -442,8 +487,17 @@
       }, function () {});
     } catch (e) {}
   }
+  /* is this account's own HighLevel connected? (the same answer Lisa's Publish uses) */
+  function loadLinked() {
+    if (S.linked !== undefined) return;
+    if (!(window.BP_LIVE && window.bpAuthApi && window.AI_BRAIN_URL)) { S.linked = null; return; }
+    Promise.resolve(bpAuthApi(AI_BRAIN_URL, { op: 'get' })).then(function (r) {
+      S.linked = !!(r && r.ok && r.ghl_linked);
+      if (window._bpCurView === 'automations') render();
+    }, function () { S.linked = null; });
+  }
   window.bpAutomations = function () {
-    loadFired();
+    loadFired(); loadLinked();
     var k = (window._bpAcct || {}).plan, i = PLANS.map(function (p) { return p.k; }).indexOf(k);
     S.mine = i < 0 ? 1 : i; S.plan = S.mine;
     render();
@@ -469,9 +523,12 @@
     + '.wa-chev{width:14px!important;height:14px!important;transition:transform .3s cubic-bezier(.2,.8,.2,1)}.wa-fold.open .wa-chev{transform:rotate(90deg)}'
     + '.wa-fbody{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1),opacity .25s}.wa-fbody.open{grid-template-rows:1fr;opacity:1}.wa-fin{overflow:hidden;min-height:0}'
     + '@media (prefers-reduced-motion:reduce){.wa-fbody,.wa-chev,.wa-fi{transition:none}}'
-    + '.wa-wf{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:34px 1fr auto;gap:6px;align-items:center;width:100%;padding:7px 14px;font-size:13.5px}.wa-wf:hover{background:#f5f8fb}.wa-wf.on{background:#e6f0ff}.wa-num{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#788493}'
+    + '.wa-wf{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;width:100%;padding:7px 14px;font-size:13.5px}.wa-wf:hover{background:#f5f8fb}.wa-wf.on{background:#e6f0ff}.wa-num{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#788493}'
     + '.wa-dot{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px}.wa-dot.new{background:#e3f5ea;color:#1e9e5a}.wa-dot.chg{background:#fcf1de;color:#b06f0c}'
     + '.wa-det{display:flex;flex-direction:column;gap:12px;min-width:0}.wa-dh{background:#fff;border:1px solid #dce3ec;border-radius:16px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}.wa-crumb{font-size:12px;color:#788493}.wa-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.wa-row h2{margin:0;font-size:18px;font-weight:600}'
+    + '.wa-warn{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#fcf1de;color:#b06f0c;font-size:11px;font-weight:700}'
+    + '.wa-crm{font-size:12.5px;color:#788493}.wa-crm b{font-weight:500;color:#56657a}.wa-note.warn{background:#fcf1de;border-left-color:#c27a0e}'
+    + '.wa-live.warn{color:#b06f0c;border-color:rgba(194,122,14,.45)}.wa-live:not(.ok):not(.warn){color:#788493;border-color:#dce3ec}'
     + '.wa-live{font-size:11px;font-weight:600;color:#1e9e5a;border:1px solid rgba(30,158,90,.4);border-radius:99px;padding:1px 8px}.wa-note{font-size:13px;background:#fcf1de;border-radius:8px;padding:8px 10px;border-left:3px solid #c27a0e}.wa-note.newn{background:#e3f5ea;border-left-color:#1e9e5a}.wa-note.soft{background:#f5f8fb;border-left-color:#c3cbd6}.wa-sets{display:flex;flex-wrap:wrap;gap:6px}'
     + '.wa-canvas{border:1px solid #dce3ec;border-radius:16px;overflow:auto;background:#eef1f5;background-image:radial-gradient(#cdd4de 1px,transparent 1px);background-size:18px 18px;min-height:420px}.wa-stage{width:max-content;min-width:100%;padding:26px 22px 34px;display:flex;flex-direction:column;align-items:center}'
     + '.wa-trigs{display:flex;gap:12px}.wa-tcard{width:220px;background:#fff;border:1px solid #c3cbd6;border-radius:8px;overflow:hidden}.wa-tcard.added{outline:2px solid #1e9e5a;outline-offset:1px}.wa-th{display:flex;gap:8px;align-items:center;padding:9px 10px 6px}.wa-ti{width:26px;height:26px;border-radius:6px;background:#e6f0ff;color:#006fff;display:grid;place-items:center}.wa-ti svg{width:15px;height:15px}.wa-tk{font-size:11.5px;color:#006fff;font-weight:600}.wa-tb{padding:0 10px 9px;font-size:12px;color:#5d6778}'
