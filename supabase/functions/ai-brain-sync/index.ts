@@ -25,6 +25,8 @@ const GHL_COMPANY_ID = Deno.env.get("GHL_COMPANY_ID") ?? "";
 const LOC = Deno.env.get("GHL_LOCATION_ID") ?? "";
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const AI_NAME = "Lisa";
+const SITE = "https://builderpro-os.com";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -68,6 +70,12 @@ const locTokCache: Record<string, string> = {};
 async function locationToken(locationId: string): Promise<string> {
   if (!locationId || locationId === LOC) return (await ghlToken()) || GHL_TOKEN;
   if (locTokCache[locationId]) return locTokCache[locationId];
+  // the client's own key (Command Center > Accounts > Add key), then a secret
+  try {
+    const k = await fetch(`${SB_URL}/rest/v1/ghl_keys?location_id=eq.${encodeURIComponent(locationId)}&select=token&limit=1`, { headers: sbH });
+    const tk = k.ok ? String((await k.json())[0]?.token ?? "") : "";
+    if (tk) { locTokCache[locationId] = tk; return tk; }
+  } catch { /* fall through */ }
   const perLoc = Deno.env.get("GHL_TOKEN_" + locationId);
   if (perLoc) { locTokCache[locationId] = perLoc; return perLoc; }
   if (GHL_API_KEY && GHL_COMPANY_ID) {
@@ -80,10 +88,38 @@ async function locationToken(locationId: string): Promise<string> {
       if (r.ok) { const d = await r.json(); if (d?.access_token) { locTokCache[locationId] = d.access_token; return d.access_token; } }
     } catch { /* fall through */ }
   }
-  return GHL_TOKEN;
+  return "";   // never the house token for someone else's account
 }
 
 type Row = Record<string, unknown>;
+
+/* Which HighLevel sub-account is this client's. Their own (accounts, or the
+   brain row onboarding made); the house location (LOC) only for the house's
+   own owners. Publish used to write every client's values into LOC and set
+   LOC on their brain row, which pointed their invoices and estimates at the
+   house account. */
+let house: { at: number; ids: string[] } = { at: 0, ids: [] };
+async function houseOwners(): Promise<string[]> {
+  if (Date.now() - house.at < 300000) return house.ids;
+  const r = await fetch(`${SB_URL}/rest/v1/ai_config?key=in.(ghl_events_owner,ghl_house_owners)&select=value`, { headers: sbH }).catch(() => null);
+  const rows: Row[] = r && r.ok ? await r.json() : [];
+  house = { at: Date.now(), ids: rows.flatMap((x) => String(x.value ?? "").split(",")).map((x) => x.trim()).filter((x) => UUID.test(x)) };
+  return house.ids;
+}
+async function ownLocation(uid: string, row: Row | null): Promise<string> {
+  const isHouse = (await houseOwners()).includes(uid);
+  let acc = "";
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/accounts?user_id=eq.${uid}&select=ghl_location_id&limit=1`, { headers: sbH });
+    acc = r.ok ? String((await r.json())[0]?.ghl_location_id ?? "") : "";
+  } catch { /* none */ }
+  for (const loc of [acc, String(row?.ghl_location_id ?? "")]) {
+    if (!loc) continue;
+    if (loc === LOC && !isHouse) continue;   // a stale pointer at the house account
+    return loc;
+  }
+  return isHouse ? LOC : "";
+}
 const SAFE = ["slug", "assistant_name", "business_name", "industry", "tone", "services", "pricing", "hours", "service_area", "phone", "booking_url", "faqs", "custom_instructions", "published_at", "ghl_synced_at", "updated_at", "ghl_location_id", "booking_calendar_id"];
 const pick = (r: Row) => Object.fromEntries(SAFE.map((k) => [k, r[k] ?? null]));
 
@@ -110,26 +146,27 @@ async function findBrain(uid: string, email?: string): Promise<Row | null> {
     const byEmail = await get(`owner_email=ilike.${encodeURIComponent(email)}&owner=is.null`);
     if (byEmail) return claim(byEmail);
   }
-  // single-tenant fallback: the one location named by the LOC secret
-  if (LOC) return claim(await get(`slug=eq.${encodeURIComponent(LOC)}&owner=is.null`));
+  // the house location's own row, unclaimed: only for the house's owners
+  if (LOC && (await houseOwners()).includes(uid)) return claim(await get(`slug=eq.${encodeURIComponent(LOC)}&owner=is.null`));
   return null;
 }
 
-async function syncCustomValues(vals: Record<string, string>): Promise<"synced" | "skipped" | "failed"> {
-  const t = await ghlToken();
-  if (!t || !LOC) return "skipped";
+async function syncCustomValues(loc: string, vals: Record<string, string>): Promise<"synced" | "skipped" | "failed"> {
+  if (!loc) return "skipped";
+  const t = await locationToken(loc);
+  if (!t) return "skipped";
   try {
-    const r = await fetch(`${GHL_BASE}/locations/${LOC}/customValues`, { headers: ghlH(t) });
+    const r = await fetch(`${GHL_BASE}/locations/${loc}/customValues`, { headers: ghlH(t) });
     const d = await r.json().catch(() => ({}));
     const existing: Row[] = d?.customValues ?? [];
     const byName = new Map(existing.map((c) => [String(c.name ?? "").toLowerCase(), c]));
     let ok = true;
     for (const [name, value] of Object.entries(vals)) {
       const cur = byName.get(name.toLowerCase());
-      const body = JSON.stringify({ name, value: value || "—" });
+      const body = JSON.stringify({ name, value: value || "-" });
       const res = cur
-        ? await fetch(`${GHL_BASE}/locations/${LOC}/customValues/${cur.id}`, { method: "PUT", headers: ghlH(t), body })
-        : await fetch(`${GHL_BASE}/locations/${LOC}/customValues`, { method: "POST", headers: ghlH(t), body });
+        ? await fetch(`${GHL_BASE}/locations/${loc}/customValues/${cur.id}`, { method: "PUT", headers: ghlH(t), body })
+        : await fetch(`${GHL_BASE}/locations/${loc}/customValues`, { method: "POST", headers: ghlH(t), body });
       if (!res.ok) ok = false;
     }
     return ok ? "synced" : "failed";
@@ -161,7 +198,7 @@ Deno.serve(async (req) => {
 
   if (b.op === "get") {
     const row = await findBrain(user.id, user.email);
-    return json({ ok: true, brain: row ? pick(row) : null, ghl_linked: !!(row?.ghl_location_id || LOC) });
+    return json({ ok: true, brain: row ? pick(row) : null, ghl_linked: !!(await ownLocation(user.id, row)) });
   }
 
   // ---- which calendar takes public inspection bookings ----
@@ -177,7 +214,7 @@ Deno.serve(async (req) => {
     // an explicit locationId lets them look up a sub-account before it is saved
     const asked = clean(b.locationId);
     if (asked && !idOk(asked)) return json({ ok: false, error: "That does not look like a location id." }, 400);
-    const loc = asked || String(row?.ghl_location_id ?? "") || LOC;
+    const loc = asked || (await ownLocation(user.id, row));
     if (!loc) return json({ ok: true, calendars: [], reason: row ? "no_location" : "no_row", selected: sel, has_row: !!row });
     const t = await locationToken(loc);
     if (!t) return json({ ok: true, calendars: [], reason: "no_token", selected: sel, location: loc, has_row: !!row });
@@ -208,7 +245,8 @@ Deno.serve(async (req) => {
     }
     const create: Row = { ...fields, owner: user.id, owner_email: user.email, is_demo: false, assistant_name: AI_NAME, slug: `u-${user.id.slice(0, 8)}` };
     for (const [k, v] of vals) if (v) create[k] = v;
-    if (LOC) create.ghl_location_id = LOC;
+    const own = await ownLocation(user.id, null);
+    if (own) create.ghl_location_id = own;
     const r = await fetch(`${SB_URL}/rest/v1/ai_brain`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(create) });
     if (!r.ok) return json({ ok: false, error: "Could not create your account record.", detail: (await r.text()).slice(0, 200) }, 502);
     const saved = (await r.json().catch(() => []))[0] ?? null;
@@ -235,7 +273,7 @@ Deno.serve(async (req) => {
       saved = (await r.json().catch(() => []))[0] ?? null;
     } else {
       // no record yet: create one owned by this login so the booking page can find it
-      const loc = locId || LOC;
+      const loc = locId || (await ownLocation(user.id, null));
       if (!loc) return json({ ok: false, error: "Add your GoHighLevel location id too — without it there is no account to book into." }, 400);
       const create: Row = {
         ...fields, owner: user.id, owner_email: user.email, is_demo: false,
@@ -260,23 +298,28 @@ Deno.serve(async (req) => {
       hours: s(co.hours), service_area: s(co.serviceArea), phone: s(co.phone),
       published_at: now,
     };
-    if (LOC) fields.ghl_location_id = LOC;
     // pass the email here too: a client who hits Publish before ever opening
     // Payouts would otherwise create a second brain row instead of claiming theirs
     const row = await findBrain(user.id, user.email);
+    const loc = await ownLocation(user.id, row);
+    if (loc) fields.ghl_location_id = loc;
     let saved: Row | null = null;
     if (row) {
       const r = await fetch(`${SB_URL}/rest/v1/ai_brain?id=eq.${row.id}`, { method: "PATCH", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify(fields) });
       const rows = r.ok ? await r.json() : [];
       saved = rows[0] ?? null;
     } else {
-      const r = await fetch(`${SB_URL}/rest/v1/ai_brain`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify({ ...fields, slug: LOC || `u-${user.id.slice(0, 8)}` }) });
+      const r = await fetch(`${SB_URL}/rest/v1/ai_brain`, { method: "POST", headers: { ...sbH, Prefer: "return=representation" }, body: JSON.stringify({ ...fields, slug: `u-${user.id.slice(0, 8)}` }) });
       const rows = r.ok ? await r.json() : [];
       saved = rows[0] ?? null;
     }
     if (!saved) return json({ ok: false, error: "could not save brain" }, 502);
 
-    const ghl = await syncCustomValues({
+    // the booking page books only with a calendar picked; until then the texts
+    // that offer it fall back to "call us"
+    const booking = saved.booking_calendar_id ? `${SITE}/book/?u=${user.id}` : (fields.phone ? `call us at ${fields.phone}` : "");
+    const ghl = await syncCustomValues(loc, {
+      ridge_assistant_name: String(fields.assistant_name), "Booking Link": booking,
       ridge_business_name: String(fields.business_name), ridge_tone: String(fields.tone),
       ridge_services: String(fields.services), ridge_pricing: String(fields.pricing),
       ridge_faq: String(fields.faqs), ridge_rules: String(fields.custom_instructions),
