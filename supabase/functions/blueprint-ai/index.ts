@@ -12,10 +12,10 @@
 //
 // Deploy: supabase functions deploy blueprint-ai
 // Secrets: GEMINI_API_KEY (already set for the receptionist and supply-scan)
-//          BLUEPRINT_MODEL optional, defaults to gemini-2.5-pro
+//          BLUEPRINT_MODEL optional, defaults to gemini-3.1-pro-preview
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
-const MODEL = Deno.env.get("BLUEPRINT_MODEL") ?? "gemini-2.5-pro";
+const MODEL = Deno.env.get("BLUEPRINT_MODEL") ?? "gemini-3.1-pro-preview";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 

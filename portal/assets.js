@@ -90,7 +90,7 @@
     var life = +a.life_years || catLife(a.category);
     var repl = start ? addMonths(start, Math.round(life * 12)) : null;
     var used = start ? (Date.now() - start.getTime()) / (life * 365.25 * DAY) : 0;
-    var per = +a.service_months || 0, last = pd(a.last_service) || pd(a.installed_on);
+    var per = +a.service_months || 0, last = pd(a.last_service) || pd(a.installed_on) || (a.created_at ? new Date(a.created_at) : null);
     var next = per && last ? addMonths(last, per) : null;
     var ndays = next ? Math.round((next.getTime() - Date.now()) / DAY) : null;
     var svc = !per ? { k: 'none', t: 'No plan', c: '#788493' } : ndays < 0 ? { k: 'over', t: 'Service overdue', c: '#b91c1c' } : ndays <= 30 ? { k: 'soon', t: 'Service due soon', c: '#b45309' } : { k: 'ok', t: 'On schedule', c: '#0f7a43' };
