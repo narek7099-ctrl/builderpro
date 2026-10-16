@@ -35,9 +35,10 @@ function lineItems(b: Record<string, unknown>, title: string, desc: string, amou
     currency: "USD",
     amount: Math.round(Math.max(0, Number(it?.amount ?? 0)) * 100) / 100,
     qty: Math.max(0.01, Math.round(Number(it?.qty ?? 1) * 100) / 100 || 1),
+    type: "one_time",
     taxes: [],
   })).filter((it) => it.amount > 0);
-  if (!items.length) return { items: [{ name: title, description: desc || title, currency: "USD", amount, qty: 1, taxes: [] }], total: amount };
+  if (!items.length) return { items: [{ name: title, description: desc || title, currency: "USD", amount, qty: 1, type: "one_time", taxes: [] }], total: amount };
   const total = Math.round(items.reduce((t, it) => t + Math.round(it.amount * it.qty * 100) / 100, 0) * 100) / 100;
   return { items, total };
 }
@@ -135,7 +136,9 @@ async function isHouse(id: string): Promise<boolean> {
   return !!v && String(v) === id;
 }
 
-const day = (offset: number) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
+/* a date HighLevel takes as "today" in any US location: UTC runs ahead in the
+   evening and HighLevel refuses an issue date in its own future */
+const day = (offset: number) => new Date(Date.now() + offset * 864e5).toLocaleDateString("en-CA", { timeZone: "Pacific/Honolulu" });
 
 
 /* A team member works on their owner's account. After auth, swap the caller
@@ -197,7 +200,7 @@ Deno.serve(async (req) => {
     const dueDays = Math.max(0, Number(b.dueDays ?? 7));
 
     const payload = {
-      altId: loc, altType: "location",
+      altId: loc, altType: "location", title: "Invoice",
       name: title,
       businessDetails: { name: String(b.businessName ?? "Your contractor") },
       currency: "USD",
