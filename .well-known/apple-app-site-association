@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_APPLE_TEAM_ID.com.builderpro.app"],
+        "components": [
+          { "/": "/", "#": "est=*", "comment": "estimates" },
+          { "/": "/", "#": "home=*", "comment": "project pages" },
+          { "/": "/", "#": "sign=*", "comment": "contracts" },
+          { "/": "/", "#": "pay=*", "comment": "invoices" },
+          { "/": "/", "#": "my*", "comment": "my projects" }
+        ]
+      }
+    ]
+  }
+}

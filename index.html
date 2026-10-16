@@ -21221,6 +21221,7 @@ function bpSignRoute(){
       if(hs&&st){hs.setAttribute('style',st);hs.classList.add('br');}
       if(_bpSg.co&&_bpSg.co.name)document.title=_bpSg.co.name+' · Agreement';
       bpSignRender();
+      if(window.bpCustLink)bpCustLink.seen('sign',_bpSg.token,{title:_bpSg.c&&_bpSg.c.title,biz:_bpSg.co&&_bpSg.co.name,name:_bpSg.c&&(_bpSg.c.customer_name||''),email:_bpSg.c&&(_bpSg.c.customer_email||'')});
     })
     .catch(function(){bpSignErr('We couldn\'t load the agreement just now. Check your connection and reload the page.');});
   return true;
@@ -21322,6 +21323,7 @@ window.bpSignSubmit=function(){
     .then(function(d){
       if(!d||!d.ok){b.disabled=false;b.textContent='Sign agreement';if(msg)msg.textContent=(d&&d.error)||'Something went wrong — please try again.';return;}
       _bpSg.c=d.contract||_bpSg.c; bpSignDone();
+      if(window.bpCustLink)bpCustLink.after('sign');
     })
     .catch(function(){b.disabled=false;b.textContent='Sign agreement';if(msg)msg.textContent='Couldn\'t reach the server — check your connection and try again.';});
 };
@@ -21371,15 +21373,25 @@ function bpPayRoute(){
   var host=document.createElement('div'); host.id='bpSign'; document.body.appendChild(host);
   var card=function(icon,title,body){ host.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#eef1f6;font-family:Geist,system-ui,sans-serif"><div style="background:#fff;border:1px solid #e3e8ef;border-radius:16px;padding:32px 28px;max-width:420px;width:100%;text-align:center;box-sizing:border-box">'
     +'<div style="font-size:40px;line-height:1;margin-bottom:12px">'+icon+'</div><h1 style="font-size:20px;margin:0 0 8px;color:#0f1729">'+title+'</h1><p style="margin:0;color:#56657a;font-size:14.5px;line-height:1.55">'+body+'</p></div></div>'; };
-  if(m[1]==='done'){ card('&#10003;','Payment received','Thank you! Your payment went through. A receipt is on its way to your email.'); return true; }
+  if(m[1]==='done'){ card('&#10003;','Payment received','Thank you! Your payment went through. A receipt is on its way to your email.');
+    /* the link they paid from, kept while they were at checkout, so they can save it and get updates */
+    var pt=''; try{pt=sessionStorage.getItem('bp.payTok')||'';sessionStorage.removeItem('bp.payTok');}catch(e){}
+    var go=function(){if(pt&&window.bpCustLink){bpCustLink.seen('pay',pt,{title:'Invoice'});bpCustLink.after('pay');}};
+    if(window.bpCustLink)go();else window.addEventListener('load',go);
+    return true; }
   var p=m[1].split('.'); if(p.length!==3){ card('!','This link isn\'t valid','Ask your contractor to send it again.'); return true; }
   card('&#128274;','Opening secure checkout&hellip;','One moment.');
-  fetch(BP_URL+'/functions/v1/stripe-pay',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({op:'invoice',l:p[0],i:p[1],s:p[2]})})
+  try{sessionStorage.setItem('bp.payTok',m[1]);}catch(e){}
+  /* signed in as a homeowner: the invoice goes to their account before checkout */
+  var saved=Promise.resolve(window.bpMeLoad?bpMeLoad():null).then(function(s){
+    if(s&&window.bpIsHomeowner&&bpIsHomeowner(s)&&window.BP_SB)return Promise.race([Promise.resolve(BP_SB.rpc('bp_ho_save',{p_kind:'pay',p_token:m[1],p_title:'Invoice'})).catch(function(){}),new Promise(function(r){setTimeout(r,1500);})]);
+  }).catch(function(){});
+  saved.then(function(){return fetch(BP_URL+'/functions/v1/stripe-pay',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+BP_ANON},body:JSON.stringify({op:'invoice',l:p[0],i:p[1],s:p[2]})})
     .then(function(r){return r.json();}).then(function(d){
       if(d&&d.ok&&d.url){ location.replace(d.url); return; }
       if(d&&d.paid){ card('&#10003;','Already paid','This invoice is already paid. Thank you!'); return; }
       card('!','Payment couldn\'t open',bpEsc((d&&d.error)||'Try again in a minute, or contact your contractor.'));
-    }).catch(function(){ card('!','Payment couldn\'t open','Check your connection and try again.'); });
+    }); }).catch(function(){ card('!','Payment couldn\'t open','Check your connection and try again.'); });
   return true;
 }
 function bpHomeRoute(){
@@ -21397,6 +21409,7 @@ function bpHpLoad(){
   return bpHpApi('get').then(function(d){
     if(!d||!d.ok){bpHpErr(d&&d.error==='not_found'?'This link isn\'t active. It may have been turned off or replaced. Ask your contractor for a new one.':(d&&d.error)||'We couldn\'t load your project.');return;}
     _bpHp.d=d; bpHpRender(); bpHpAcct();
+    if(window.bpCustLink)bpCustLink.seen('home',_bpHp.token,{title:(d.job||{}).title,biz:(d.business||{}).name,name:(d.customer||{}).name||''});
   }).catch(function(){bpHpErr('We couldn\'t load your project just now. Check your connection and reload the page.');});
 }
 function bpHpErr(msg){
@@ -22320,7 +22333,7 @@ function bpMyEnter(s){
   var name=bpMeName(s).split(/\s+/)[0];
   b.innerHTML='<div class="hx-hi"><span>'+(name?'Hi '+bpEsc(name)+', welcome back':'Welcome back')+'</span><h1>My projects</h1></div><div id="myList" class="my-list"><div class="pr-card pr-skel"><i></i><i></i></div></div>'
     +'<button type="button" class="hx-card hx-pros my-find" onclick="bpGo(\'#pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Find a pro</b><span>Roofers, plumbers, electricians and more near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>'
-    +'<div id="myReqs"></div>'
+    +'<div id="myUpd"></div><div id="myDocs"></div><div id="myReqs"></div>'
     +(bpCanInstall()||!bpIsStandalone()?'<button type="button" class="hx-card hx-pros my-inst" onclick="bpInstall()"><span class="hx-pros-ic"><span class=ms>install_mobile</span></span><div><b>Get the app</b><span>Add BuilderPro to your home screen for one-tap access.</span></div><span class="ms hx-pros-go">chevron_right</span></button>':'')
     +(bpIsHomeowner(s)?'':'<p class="my-note"><span class=ms>info</span>This is a contractor login. <a href="/?portal=1">Open the BuilderPro app</a></p>')
     +'<button type="button" class="my-del" onclick="bpDeleteAccount()">Delete my account</button>';
@@ -22331,7 +22344,7 @@ function bpMyEnter(s){
     ]);
   }).then(function(res){
     var rows=(res[0]&&res[0].data)||[], reqs=(res[1]&&res[1].data)||[];
-    bpMyReqs(reqs);
+    bpMyReqs(reqs); bpMyDocs();
     var L=document.getElementById('myList'); if(!L)return;
     if(!rows.length){L.innerHTML='<div class="pr-empty"><span class="pr-empty-ic"><span class=ms>add_home_work</span></span><b>No projects yet</b><p>When your contractor sends you a project link, open it while you’re signed in and it’s saved here automatically.</p></div>';return;}
     L.innerHTML=rows.map(function(x){return '<button type="button" class="my-proj" data-t="'+bpHpEscA(x.token)+'" onclick="bpGo(\'#home='+bpHpEscA(x.token)+'\')"><span class="pr-logo">…</span><div class="my-proj-t"><b>Loading…</b><span></span></div><span class="ms">chevron_right</span></button>';}).join('');
@@ -22353,6 +22366,26 @@ function bpMyReqs(reqs){
   el.innerHTML='<section class="hx-card my-reqs"><div class="hx-h"><small>Quote requests</small></div>'+reqs.map(function(r){
     return '<div class="hx-feed"><span class="hx-dot pay"><span class=ms>request_quote</span></span><div><b>'+bpEsc(r.pro_name||'Contractor')+'</b><span>'+bpEsc([r.service,bpHpDay(String(r.created_at).slice(0,10),{month:'short',day:'numeric'})].filter(Boolean).join(' · '))+'</span></div></div>';}).join('')+'</section>';
 }
+/* estimates, agreements and invoices they opened, and what changed since */
+var BP_MY_KIND={est:['request_quote','Estimate'],sign:['draw','Agreement to sign'],pay:['receipt_long','Invoice']};
+function bpMyDocs(){
+  Promise.all([
+    Promise.resolve(BP_SB.from('homeowner_links').select('kind,token,title,opened_at').order('opened_at',{ascending:false}).limit(30)).catch(function(){return {data:[]};}),
+    Promise.resolve(BP_SB.from('notifications').select('id,title,body,link,created_at,read_at').like('kind','ho_%').order('created_at',{ascending:false}).limit(8)).catch(function(){return {data:[]};})
+  ]).then(function(res){
+    var docs=(res[0]&&res[0].data)||[], ups=(res[1]&&res[1].data)||[];
+    var D=document.getElementById('myDocs'), U=document.getElementById('myUpd');
+    /* estimates but no project page yet: the empty "no projects" card would read wrong */
+    var E=document.querySelector('#myList .pr-empty'); if(E&&docs.length)E.parentNode.innerHTML='';
+    if(U&&ups.length)U.innerHTML='<section class="hx-card my-reqs"><div class="hx-h"><small>Updates</small></div>'+ups.map(function(n){
+      var go=/^#(home|est|sign|pay)=[A-Za-z0-9._-]+$/.test(n.link||'')?n.link:'';
+      return '<button type="button" class="hx-feed my-upd'+(n.read_at?'':' new')+'"'+(go?' onclick="bpMyOpen(\''+bpHpEscA(n.id)+'\',\''+bpHpEscA(go)+'\')"':'')+'><span class="hx-dot"><span class=ms>notifications</span></span><div><b>'+bpEsc(n.title)+'</b><span>'+bpEsc([n.body,bpHpDay(String(n.created_at).slice(0,10),{month:'short',day:'numeric'})].filter(Boolean).join(' · '))+'</span></div></button>';}).join('')+'</section>';
+    if(D&&docs.length)D.innerHTML='<section class="hx-card my-reqs"><div class="hx-h"><small>Estimates, agreements and invoices</small></div>'+docs.map(function(x){
+      var k=BP_MY_KIND[x.kind]||['description','Document'];
+      return '<button type="button" class="hx-feed my-doc" onclick="bpGo(\'#'+x.kind+'='+bpHpEscA(x.token)+'\')"><span class="hx-dot pay"><span class=ms>'+k[0]+'</span></span><div><b>'+bpEsc(x.title||k[1])+'</b><span>'+bpEsc(k[1]+' · opened '+bpHpDay(String(x.opened_at).slice(0,10),{month:'short',day:'numeric'}))+'</span></div><span class="ms hx-pros-go">chevron_right</span></button>';}).join('')+'</section>';
+  });
+}
+window.bpMyOpen=function(id,link){Promise.resolve(BP_SB.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id)).catch(function(){}).then(function(){bpGo(link);});};
 window.bpMySignOut=function(){Promise.resolve(BP_SB.auth.signOut()).catch(function(){}).then(function(){_bpMe=null;bpGo('#my');});};
 /* the project page: save it for a signed-in homeowner, offer an account otherwise */
 function bpHpAcct(){
@@ -23240,6 +23273,10 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hx-tile:active,#bpSign .hx-btn:active{transform:scale(.98);}
 #bpSign .hx-feed{display:flex;gap:12px;align-items:center;padding:6px 0;}
 #bpSign .hx-feed+.hx-feed{border-top:1px solid var(--hp-line2);padding-top:12px;}
+#bpSign button.hx-feed{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;width:100%;padding:6px 0;cursor:pointer;text-align:left;}
+#bpSign button.hx-feed+button.hx-feed{border-top:1px solid var(--hp-line2);padding-top:12px;margin-top:6px;}
+#bpSign button.hx-feed>div{flex:1;min-width:0;}
+#bpSign .my-upd.new b::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--hp-blue,#2f6bff);margin-left:7px;vertical-align:2px;}
 #bpSign .hx-feed b{display:block;font-size:14px;font-weight:700;}
 #bpSign .hx-feed span:not(.ms):not(.hx-dot){display:block;font-size:12.5px;color:var(--hp-grey);}
 #bpSign .hx-dot{width:32px;height:32px;flex:0 0 32px;border-radius:50%;display:grid;place-items:center;}
@@ -26841,8 +26878,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261022apuvwxyzabfgnos"></script>
-<script src="portal/quote.js?v=20261103k"></script>
-<link rel="stylesheet" href="portal/quote.css?v=20261103i">
+<script src="portal/quote.js?v=20261104c"></script>
+<link rel="stylesheet" href="portal/quote.css?v=20261104a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261103m"></script>
 <script src="portal/archive.js?v=20261001b"></script>
@@ -26865,7 +26902,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aiceo-map.js?v=20261011a"></script>
 <script src="portal/installs.js?v=20261103m"></script>
 <script src="portal/assets.js?v=20261103n"></script>
-<script src="portal/estpick.js?v=20261103i"></script>
+<script src="portal/custlink.js?v=20261104d"></script>
+<script src="portal/estpick.js?v=20261104a"></script>
 <link rel="stylesheet" href="portal/assets.css?v=20261103n">
 <script src="portal/reviews.js?v=20261004a"></script>
 <script src="portal/automations.js?v=20261016d"></script>
@@ -26899,6 +26937,6 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
-<script src="portal/native.js?v=20261031a"></script>
+<script src="portal/native.js?v=20261104a"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261026c">
 </html>

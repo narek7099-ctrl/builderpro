@@ -111,6 +111,7 @@
     // tapped a notification: open what the bell would open
     Push.addListener('pushNotificationActionPerformed', function (a) {
       var d = (a && a.notification && a.notification.data) || {};
+      if (custHash(d.link)) { openCust(d.link); return; }
       var go = function () { if (window.bpNotify && bpNotify.follow) { bpNotify.follow(d.link || '', d.job || ''); return true; } return false; };
       if (!go()) { pending = d; }
     });
@@ -182,6 +183,26 @@
   new MutationObserver(function () {
     if ((document.getElementById('bpx-sec-btn') || document.querySelector('#bpSign .my-del')) && !document.querySelector('[data-bp-lock]')) bpLockRows();
   }).observe(document.documentElement, { childList: true, subtree: true });
+
+  /* ------------------------------------------------- links open in the app
+     A link a contractor sent (builderpro-os.com/#est=…, #home=, #sign=, #pay=)
+     tapped on a phone with the app installed opens here, on the same page,
+     already signed in, so it's saved to the homeowner's account. Needs the
+     domain verified for the app (.well-known files, see docs/APP-STORES.md). */
+  function custHash(h) { return /^#(home|est|sign|pay)=[A-Za-z0-9._-]+$|^#my\b/.test(String(h || '')); }
+  function openCust(h) {
+    /* the customer pages build once on load, so a hash change alone must reload */
+    if (location.pathname === '/' && !location.search) { location.hash = h; location.reload(); }
+    else location.href = location.origin + '/' + h;
+  }
+  if (App) App.addListener('appUrlOpen', function (e) {
+    try {
+      var u = new URL(e && e.url || '');
+      if (!/(^|\.)builderpro-os\.com$/i.test(u.hostname)) return;
+      if (custHash(u.hash)) { openCust(u.hash); return; }
+      location.href = location.origin + u.pathname + u.search + u.hash;
+    } catch (x) {}
+  });
 
   /* ---------------------------------------------------------- Android back */
   if (App && PLATFORM === 'android') App.addListener('backButton', function (e) {

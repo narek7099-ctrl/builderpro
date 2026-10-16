@@ -106,6 +106,33 @@ a test contractor account and the homeowner test account, and say:
 location (crew clock-in, only while in use), identifiers (push token). Not sold, not used for ads.
 Data is encrypted in transit; users can delete their account in the app.
 
+## 4b. Links open in the app (after the first store upload)
+
+Estimates, project pages, contracts and invoices are links to builderpro-os.com (`/#est=…`,
+`/#home=…`, `/#sign=…`, `/#pay=…`). With the app installed, tapping one opens it in the app, signed
+in, so it's saved to the homeowner's account. Two files on the site tell the phones the app may
+open those links; both have a placeholder to fill in:
+
+1. **Android:** Play Console > the app > Setup > **App signing** > copy the *SHA-256 certificate
+   fingerprint* of the **app signing key**. Put it in `.well-known/assetlinks.json` in place of
+   `REPLACE_WITH_PLAY_APP_SIGNING_SHA256`. The intent filter is already in the Android manifest.
+2. **iPhone:** your **Team ID** (developer.apple.com > Membership). Put it in
+   `.well-known/apple-app-site-association` in place of `REPLACE_WITH_APPLE_TEAM_ID`. Then
+   developer.apple.com > Identifiers > com.builderpro.app > turn on **Associated Domains**, and add
+   this to `mobile/ios/App/App/App.entitlements` (not added yet, because signing fails until the
+   capability is turned on):
+
+   ```xml
+   <key>com.apple.developer.associated-domains</key>
+   <array><string>applinks:builderpro-os.com</string></array>
+   ```
+
+Until then the links open in the browser, which works the same; the page offers the app and a
+free account, and a signed-in homeowner gets the link saved either way.
+
+When the store listings are live, put their links in `STORE` at the top of `portal/custlink.js`, so
+"Get the app" goes to the store instead of adding the website to the home screen.
+
 ## 5. Mac
 
 In App Store Connect > the app > Pricing and Availability, leave **iPhone and iPad Apps on Apple
