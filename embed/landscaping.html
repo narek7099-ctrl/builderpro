@@ -1811,6 +1811,56 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stFade .45s var(-
 @keyframes stFade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){html body #est-embed#est-embed .e-sp.active .e-shdr,html body #est-embed#est-embed .e-sp.active .e-sbody{animation:none !important;}}
 @media (min-width:761px){html body #est-embed#est-embed > .e-app{padding:18px 22px 24px !important;} html body #est-embed#est-embed .e-stitle{font-size:32px !important;}}
+
+/* ===== Calm layout (v2): one thing per screen, more air, less on the page.
+   White page, no shadows or grey panels, the question big and alone, the
+   explanation tucked behind "Why we ask", answers as quiet rows whose detail
+   line shows only once picked. ===== */
+html body #est-embed#est-embed,html body #est-embed#est-embed > .e-app{background:#fff !important;}
+html body #est-embed#est-embed > .e-app{padding:8px 22px 24px !important;}
+html body #est-embed#est-embed .e-topbar{padding:14px 22px 10px !important;background:#fff !important;-webkit-backdrop-filter:none;backdrop-filter:none;}
+html body #est-embed#est-embed .e-tlogo{font-size:15px !important;font-weight:600 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-tlogo span{color:var(--st-muted) !important;font-weight:600 !important;}
+html body #est-embed#est-embed .e-ldot{display:none !important;}
+html body #est-embed#est-embed .e-tstep{background:transparent !important;padding:0 !important;font-size:13px !important;font-weight:500 !important;color:var(--st-faint) !important;}
+html body #est-embed#est-embed .e-tstep b{color:var(--st-muted) !important;font-weight:600 !important;}
+html body #est-embed#est-embed .e-prog{height:4px !important;background:#f0f2f6 !important;margin:0 22px !important;border-radius:4px !important;overflow:hidden !important;}
+html body #est-embed#est-embed .e-pfill{border-radius:4px !important;}
+html body #est-embed#est-embed .e-seye{display:none !important;}
+html body #est-embed#est-embed .e-shdr{padding:30px 0 22px !important;}
+html body #est-embed#est-embed .e-stitle{font-size:30px !important;line-height:1.15 !important;font-weight:600 !important;}
+html body #est-embed#est-embed .e-ssub{display:none !important;}
+html body #est-embed#est-embed .e-ssub.bp-open{display:block !important;-webkit-line-clamp:unset;margin-top:12px !important;padding:14px 16px !important;background:#f6f8fb !important;border-radius:14px !important;font-size:14.5px !important;}
+html body #est-embed#est-embed .bp-more{margin-top:12px;font-size:14px;font-weight:500;color:var(--st-muted);display:inline-flex;align-items:center;gap:6px;}
+html body #est-embed#est-embed .bp-more::before{content:"i";display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;font-size:11px;font-weight:700;font-style:normal;}
+html body #est-embed#est-embed .e-olist{gap:12px !important;}
+html body #est-embed#est-embed .e-oi{min-height:60px !important;padding:16px 18px !important;border:1.5px solid #e8ebf0 !important;box-shadow:none !important;border-radius:16px !important;column-gap:14px !important;}
+html body #est-embed#est-embed .e-oi:hover{border-color:#d5dae3 !important;}
+html body #est-embed#est-embed .e-oi.sel{background:#fff !important;border-color:var(--st-acc) !important;box-shadow:0 0 0 1px var(--st-acc) !important;}
+html body #est-embed#est-embed .e-oi > .e-oi-em,html body #est-embed#est-embed .e-oi > .e-oi-emchip{display:none !important;}
+html body #est-embed#est-embed .e-oi-lbl{font-size:16.5px !important;font-weight:500 !important;}
+html body #est-embed#est-embed .e-oi.sel .e-oi-lbl{font-weight:600 !important;}
+html body #est-embed#est-embed .e-oi-desc{display:none !important;}
+html body #est-embed#est-embed .e-oi.sel .e-oi-desc{display:block !important;margin-top:4px !important;}
+html body #est-embed#est-embed .e-oi-tag{background:transparent !important;padding:0 !important;color:var(--st-muted) !important;font-weight:500 !important;font-size:13.5px !important;}
+html body #est-embed#est-embed .e-oi.sel .e-oi-tag{background:transparent !important;color:var(--st-acc) !important;}
+html body #est-embed#est-embed .e-oi-radio{width:22px !important;height:22px !important;min-width:22px !important;border-width:1.5px !important;font-size:12px !important;}
+html body #est-embed#est-embed .e-zipwrap,html body #est-embed#est-embed .e-asearch,html body #est-embed#est-embed .e-vizphoto,html body #est-embed#est-embed .e-mapwrap,html body #est-embed#est-embed .e-addrpanel > .e-card,
+html body #est-embed#est-embed .e-sbody > .e-card:not(:has(.e-olist)),html body #est-embed#est-embed .e-rbox,html body #est-embed#est-embed .e-rcta,html body #est-embed#est-embed .e-ldpanel{box-shadow:none !important;padding-left:0 !important;padding-right:0 !important;background:transparent !important;}
+html body #est-embed#est-embed .e-asearch{padding:0 !important;}
+html body #est-embed#est-embed .e-asearch-input{background:#f4f6f9 !important;border-radius:14px !important;}
+html body #est-embed#est-embed .e-asearch-icon{left:14px !important;}
+html body #est-embed#est-embed .e-fi,html body #est-embed#est-embed .e-zipinput,html body #est-embed#est-embed select,html body #est-embed#est-embed textarea{background:#f4f6f9 !important;}
+html body #est-embed#est-embed .e-fl,html body #est-embed#est-embed .e-ziplabel{font-weight:500 !important;color:var(--st-muted) !important;}
+html body #est-embed#est-embed .e-rgrid{gap:0 !important;border-top:1px solid #eef0f4 !important;}
+html body #est-embed#est-embed .e-rbox{border-radius:0 !important;border-bottom:1px solid #eef0f4 !important;padding:14px 0 !important;}
+html body #est-embed#est-embed .e-rhero{border-radius:22px !important;}
+html body #est-embed#est-embed .e-consent{background:transparent !important;padding:0 !important;color:var(--st-faint) !important;}
+@media (max-width:760px){
+  html body #est-embed#est-embed .e-sp.active .e-btnrow,html body #est-embed#est-embed #e-zippanel .e-btnrow{margin:24px -22px -24px !important;padding:14px 22px calc(14px + env(safe-area-inset-bottom,0px)) !important;background:#fff !important;border-top:1px solid #eef0f4 !important;}
+}
+html body #est-embed#est-embed .e-btnmain{min-height:56px !important;}
+html body #est-embed#est-embed .e-btnmain:disabled{background:#e9ecf2 !important;color:#a4adbb !important;}
 </style>
 <script id="bp-site-theme-ui">
 /* Small app touches the stylesheet can't do alone: a "More" link when the
@@ -1826,8 +1876,8 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stFade .45s var(-
     r.querySelectorAll('.e-seye').forEach(function(e){ if(!e.classList.contains('bp-dup')&&/^\s*step\s+\d/i.test(e.textContent)) e.classList.add('bp-dup'); });
     r.querySelectorAll('.e-sp.active .e-ssub, #e-zippanel .e-ssub').forEach(function(p){
       if(p._bpm) return; p._bpm=1;
-      requestAnimationFrame(function(){ if(p.scrollHeight>p.clientHeight+4){ var b=document.createElement('button'); b.type='button'; b.className='bp-more'; b.textContent='More';
-        b.onclick=function(){ var o=p.classList.toggle('bp-open'); b.textContent=o?'Less':'More'; }; p.parentNode.insertBefore(b,p.nextSibling); } });
+      requestAnimationFrame(function(){ if(p.textContent.trim().length>2){ var b=document.createElement('button'); b.type='button'; b.className='bp-more'; b.textContent='Why we ask';
+        b.onclick=function(){ var o=p.classList.toggle('bp-open'); b.textContent=o?'Hide':'Why we ask'; }; p.parentNode.insertBefore(b,p.nextSibling); } });
     });
     var bar=r.querySelector('.e-topbar'), h=bar?Math.round(bar.getBoundingClientRect().height)+'px':''; if(h&&r.style.getPropertyValue('--st-barh')!==h) r.style.setProperty('--st-barh',h);
   }
