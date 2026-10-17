@@ -234,7 +234,9 @@
           var k = 0;
           Array.prototype.forEach.call(r.cells, function (c) {
             if ((+c.colSpan || 1) > 1 && r.cells.length === 1) { c.classList.add('bp-mfull'); return; }
-            c.setAttribute('data-l', heads[k] || ''); if (!String(c.textContent).trim() && !c.querySelector('button,a,input,select,img,svg')) c.classList.add('bp-mempty');
+            c.setAttribute('data-l', heads[k] || '');
+            /* the value stays one block beside its label, however many pieces it has */
+            if (k > 0 && !c._bpmv && c.childNodes.length && !c.querySelector(':scope > .bp-mv')) { var w = document.createElement('span'); w.className = 'bp-mv'; while (c.firstChild) w.appendChild(c.firstChild); c.appendChild(w); c._bpmv = 1; } if (!String(c.textContent).trim() && !c.querySelector('button,a,input,select,img,svg')) c.classList.add('bp-mempty');
             else if (/^[—–-]$/.test(String(c.textContent).trim()) && !c.querySelector('button,input,select')) c.classList.add('bp-mdash');
             k += +c.colSpan || 1;
           });

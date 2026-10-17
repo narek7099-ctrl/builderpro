@@ -229,3 +229,22 @@
   #bpx .eq-lead{flex-wrap:wrap}
 }
 #bpx#bpx#bpx#bpx#bpx .eq-search input{border:0 !important;background:transparent !important;box-shadow:none !important;min-height:0 !important}
+
+/* record header: the unit's picture top-left beside its name, details in a tidy grid */
+#bpx .eq-tagadd,#bpx .eq-tagdone{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:99px;border:1px dashed var(--line);color:var(--grey);font-size:12px;font-weight:600;cursor:pointer}
+#bpx .eq-tagadd .ms{font-size:15px}
+#bpx .eq-tagdone{border-style:solid;color:var(--blue)}
+@media (max-width:760px){
+  #bpx#bpx .eq-hero{grid-template-columns:60px minmax(0,1fr);align-items:start;gap:4px 14px;padding:16px}
+  #bpx#bpx .eq-ph{width:60px;height:60px;border-radius:16px;grid-row:1}
+  #bpx#bpx .eq-ph .ms{font-size:30px}
+  #bpx#bpx .eq-ht{display:contents}
+  #bpx#bpx .eq-cat{grid-column:2;grid-row:1;align-self:start;font-size:11px;line-height:1.35;margin-top:2px;display:block;text-transform:none;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #bpx#bpx .eq-cat .ms{display:none}
+  #bpx#bpx .eq-ht h2{grid-column:2;grid-row:1;align-self:end;margin:20px 0 0;font-size:19px;line-height:1.2}
+  #bpx#bpx .eq-ids{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:12px;padding:12px;border-radius:12px;background:var(--soft,#f4f6fa);font-size:13.5px}
+  #bpx#bpx .eq-ids span{min-width:0;overflow-wrap:anywhere}
+  #bpx#bpx .eq-tags{grid-column:1/-1;margin-top:10px}
+  #bpx#bpx .eq-hacts{grid-column:1/-1;margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #bpx#bpx .eq-hacts>.bpx-addbtn{grid-column:1/-1}
+}

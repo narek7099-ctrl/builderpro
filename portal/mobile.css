@@ -157,3 +157,9 @@
 #bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.bpx-csearch) .hl-tbar{display:none !important}
 #bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.bpx-csearch) table.bp-mcards tr:has(.hl-tbar){display:none !important}
 #bpx#bpx#bpx#bpx#bpx.bp-m .bpx-searchwrap .bpx-csearch{padding:0 12px 0 40px !important}
+/* labeled cards: one tidy value block per row, right side, wrapping inside itself */
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td>.bp-mv{display:block;min-width:0;flex:1 1 auto;text-align:right;line-height:1.35}
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td>.bp-mv>div,#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td>.bp-mv>small{display:block;margin-top:2px}
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td.bpx-r>.bp-mv{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td{align-items:flex-start}
+#bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td::before{padding-top:1px}
