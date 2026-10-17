@@ -287,6 +287,7 @@
   window.bpAssetOpen = function (id, tab) { A.open(id, tab); };
   A.back = function () { A.id = null; drawList(); var m = document.querySelector('.bpx-main'); if (m) m.scrollTop = 0; };
   A.setTab = function (t) { A.tab = t; drawRecord(); };
+  A.tagEdit = function (on) { A.tagOpen = !!on; drawRecord(); };
 
   function drawRecord() {
     var area = $('bpxViewArea'), a = byId(A.id); if (!area) return;
@@ -299,7 +300,11 @@
         + '<div class="eq-ht"><span class="eq-cat"><span class="ms">' + catIco(a.category) + '</span>' + esc(catName(a.category)) + (a.location ? ' · ' + esc(a.location) : '') + '</span>'
           + '<h2>' + esc(a.name || catName(a.category)) + '</h2>'
           + '<div class="eq-ids">' + (a.make || a.model ? '<span><em>Make · Model</em>' + esc([a.make, a.model].filter(Boolean).join(' · ')) + '</span>' : '') + (a.serial ? '<span><em>Serial</em><b class="eq-mono">' + esc(a.serial) + '</b></span>' : '') + '</div>'
-          + '<div class="eq-tags">' + TAGS.map(tagBtn).join('') + '</div></div>'
+          + (function () {   /* only the tags that apply; the rest open from Tag */
+              var on = TAGS.filter(function (t) { return (a.tags || []).indexOf(t[0]) > -1; });
+              if (A.tagOpen) return '<div class="eq-tags">' + TAGS.map(tagBtn).join('') + '<button class="eq-tagdone" onclick="BPA.tagEdit(0)">Done</button></div>';
+              return '<div class="eq-tags">' + on.map(function (t) { return '<span class="eq-tag t-' + t[0] + '">' + t[1] + '</span>'; }).join('') + '<button class="eq-tagadd" onclick="BPA.tagEdit(1)"><span class="ms">' + (on.length ? 'edit' : 'sell') + '</span>' + (on.length ? '' : 'Tag it') + '</button></div>';
+            })() + '</div>'
         + '<div class="eq-hacts"><button class="bpx-addbtn" onclick="BPA.service()"><span class="ms">build</span>Log a service visit</button>'
           + '<button class="bpx-btn ghost eq-ai" onclick="BPA.ask()"><span class="ms">auto_awesome</span>Ask AI</button>'
           + '<button class="bpx-btn ghost" onclick="BPA.edit()"><span class="ms">edit</span>Edit</button></div></section>'
