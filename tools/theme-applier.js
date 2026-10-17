@@ -27,7 +27,7 @@
     if(t.font&&FONTS[t.font]) ensureFont(t.font);
     if(KIND==="calc"){
       var sel="#est-embed";
-      if(p) css+=sel+"{--a:"+p+" !important;--al:"+lighten(p,.55)+" !important;--ag:"+rgba(p,.18)+" !important;--blue-l:"+lighten(p,.45)+" !important;--cyan:"+lighten(p,.45)+" !important}";
+      if(p) css+=sel+"{--bp-acc:"+p+" !important;--bp-acc-l:"+lighten(p,.88)+" !important;--a:"+p+" !important;--al:"+lighten(p,.55)+" !important;--ag:"+rgba(p,.18)+" !important;--blue-l:"+lighten(p,.45)+" !important;--cyan:"+lighten(p,.45)+" !important}";
       if(bg) css+="html,body,.est-stage{background:"+bg+" !important}";
       if(card) css+=sel+"{--card:"+card+" !important;--bg:"+card+" !important;background:"+card+" !important}";
       if(ink) css+=sel+"{--txt:"+ink+" !important;--text:"+ink+" !important;--w:"+ink+" !important;color:"+ink+" !important}";
