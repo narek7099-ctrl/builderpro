@@ -254,7 +254,17 @@
     upd();
   }
   var tidyT = null;
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); }, 80); }
+  /* a row of stat tiles that are all "—" (nothing connected yet) says nothing
+     on a phone; the connect card under it says it better */
+  function emptyStats() {
+    if (!M.on()) return;
+    Array.prototype.forEach.call(document.querySelectorAll('#bpxViewArea .bpx-stats'), function (g) {
+      var v = g.querySelectorAll('.val'); if (!v.length) return;
+      var empty = Array.prototype.every.call(v, function (x) { return /^[\s—–-]*$/.test(x.textContent); });
+      g.classList.toggle('bp-mhide', empty);
+    });
+  }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
