@@ -198,3 +198,23 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bpx-tbody{flex:1 1 auto !important;overflow-y:auto !important;min-height:0 !important}
 #bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bpx-mi-body{flex:1 1 auto !important;min-height:0 !important;width:100% !important}
 #bpx#bpx#bpx#bpx.bp-m .bpx-reply input{font-size:16px !important}
+
+/* ===== declutter pass: names get their own line, buttons sit under them ===== */
+@media (max-width:759px){
+  /* list rows with action buttons: name full width, buttons on their own row */
+  #bpx#bpx#bpx .pjl-r:has(.pjl-a .pjl-b){grid-template-columns:40px minmax(0,1fr) auto;row-gap:10px;padding:14px}
+  #bpx#bpx#bpx .pjl-r:has(.pjl-a .pjl-b) .pjl-a{grid-column:1/-1;display:flex;gap:8px;justify-content:stretch}
+  #bpx#bpx#bpx .pjl-r:has(.pjl-a .pjl-b) .pjl-a .pjl-b{flex:1 1 0;min-height:40px;justify-content:center}
+  /* names and their detail line wrap to two lines instead of being cut to "Sample Cus…" */
+  #bpx#bpx#bpx .pjl-id b,#bpx#bpx#bpx .pjl-id span{white-space:normal;overflow:visible;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  /* status pill + dash + chevron in material list rows: keep only the pill */
+  #bpx#bpx#bpx .ml-rows .pjl-m{display:none}
+  /* money and counts never break or overflow their box */
+  #bpx#bpx#bpx .bpx-in b,#bpx#bpx#bpx .bpx-in strong{overflow-wrap:anywhere}
+  #bpx#bpx#bpx [class*=kpi] b,#bpx#bpx#bpx [class*=stat] b{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:clamp(17px,5.6vw,26px)}
+  /* more breathing room between cards and sections */
+  #bpx#bpx#bpx .bpx-in>*+*{margin-top:14px}
+  #bpx#bpx#bpx .bpx-panel{padding:16px}
+}
+/* toasts float above the bottom tabs, never over them */
+#bpx.bp-m ~ #hlToasts,body:has(#bpx.bp-m.open) #hlToasts,#bpx.bp-m #hlToasts{bottom:calc(84px + env(safe-area-inset-bottom)) !important;left:12px !important;right:12px !important}
