@@ -12,7 +12,8 @@
 //      updated, not duplicated)
 //   3. creates it in the contractor's own HighLevel tagged new-lead +
 //      calculator-lead, so Speed to Lead and the rest of their workflows run.
-//      Skipped for the house account (its webhook already has the lead).
+//      The page no longer calls BuilderPro's own webhook for a contractor's
+//      lead, so this is the only place it goes.
 // A lead that couldn't reach HighLevel stays in lead_log as "failed" and is
 // tried again by { op:"retry" } (pg_cron, service key only).
 //
@@ -75,7 +76,9 @@ async function ownerLoc(owner: string): Promise<string> {
   ]);
   const loc = String(a?.ghl_location_id || b?.ghl_location_id || "");
   if (!loc) return "";
-  if (HOUSE_LOC && loc === HOUSE_LOC) return "house";   // the webhook already put it there (or it's a stale pointer to the house)
+  // BuilderPro's own account gets its leads here too now (the page no longer
+  // calls the house webhook); anyone else pointing at it is a stale pointer
+  if (HOUSE_LOC && loc === HOUSE_LOC) return (await houseOwners()).includes(owner) ? loc : "house";
   return loc;
 }
 async function ghlToken(loc: string): Promise<string> {
