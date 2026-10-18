@@ -21498,15 +21498,16 @@ function bpFinances(){
   }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a project done in Active Projects and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
   var vp=function(k,html){return '<div data-fin-pane="'+k+'"'+(_bpFinView===k?'':' hidden')+'>'+html+'</div>';};
+  q('bpxViewArea').setAttribute('data-fin',_bpFinView);
   q('bpxViewArea').innerHTML=
-    '<div class="bpx-stats">'
+    '<div class="bpx-stats fin-kpi">'
     +'<div class="bpx-stat"><div class="lbl">Income</div><div class="val">'+bpMoneyFmt(d.income)+'</div><div class="note">to date</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Expenses</div><div class="val">'+bpMoneyFmt(d.expense)+'</div><div class="note">to date</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Net profit</div><div class="val blue">'+bpMoneyFmt(d.net)+'</div><div class="note">income − expenses</div></div>'
     +'<div class="bpx-stat"><div class="lbl">Margin</div><div class="val">'+margin+'%</div><div class="note">of income</div></div>'
     +'</div>'
     +'<div class="bpx-chead" style="margin-bottom:16px"><div></div>'
-      +'<div class="bpx-finrow-btns"><button class="bpx-addbtn" onclick="bpInvOpen()">+ New invoice</button><button class="bpx-btn ghost" style="padding:9px 15px" onclick="bpEstOpen()">+ New estimate</button></div></div>'
+      +'<div class="bpx-finrow-btns"><button class="bpx-addbtn fin-new-inv" onclick="bpInvOpen()">+ New invoice</button><button class="bpx-btn ghost fin-new-est" style="padding:9px 15px" onclick="bpEstOpen()">+ New estimate</button></div></div>'
     +vp('overview',
       '<div class="bpx-panel" style="margin-bottom:16px">'+bpFinChart(d)+'</div>'
       +'<div class="bpx-row"><div class="bpx-panel">'+bpFinCatChart(d)+'</div>'
@@ -21584,7 +21585,7 @@ window.bpCsvProjects=function(){
 };
 var _bpFinView='overview';
 window.bpFinView=function(t){
-  _bpFinView=t;
+  _bpFinView=t; var va=document.getElementById('bpxViewArea'); if(va)va.setAttribute('data-fin',t);
   document.querySelectorAll('[data-fin-tab]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-fin-tab')===t);});
   document.querySelectorAll('[data-fin-pane]').forEach(function(p){p.hidden=p.getAttribute('data-fin-pane')!==t;});
 };
@@ -27685,7 +27686,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/bpedit.js?v=20261019a"></script>
 <script src="portal/crewapp.js?v=20261103a"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
-<script src="portal/subapp.js?v=20261004a"></script>
+<script src="portal/subapp.js?v=20261105a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
 <script src="portal/aiteam.js?v=20261020a"></script>
 <script src="portal/aiceo.js?v=20261020ar"></script>
@@ -27720,11 +27721,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261024b">
-<link rel="stylesheet" href="portal/mobile.css?v=20261104a">
+<link rel="stylesheet" href="portal/mobile.css?v=20261105c">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261103p"></script>
-<script src="portal/mobile.js?v=20261104a"></script>
+<script src="portal/mobile.js?v=20261105a"></script>
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>

@@ -163,3 +163,22 @@
 #bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td.bpx-r>.bp-mv{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
 #bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td{align-items:flex-start}
 #bpx#bpx#bpx#bpx#bpx.bp-m table.bp-mcards td::before{padding-top:1px}
+/* ---- less on each phone screen ---- */
+#bpx#bpx#bpx#bpx.bp-m .bpx-stats.bp-mhide{display:none !important}
+/* Finances: the money tiles belong to Overview; each other tab keeps only its own New button */
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea[data-fin]:not([data-fin="overview"]) .fin-kpi{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea[data-fin="invoices"] .fin-new-est,#bpx#bpx#bpx#bpx.bp-m #bpxViewArea[data-fin="estimates"] .fin-new-inv{display:none !important}
+/* Calendar: one row of actions you can swipe, no colour legend */
+#bpx#bpx#bpx#bpx.bp-m .cal-legend{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-acts{display:flex !important;flex-wrap:nowrap !important;overflow-x:auto !important;gap:8px !important;scrollbar-width:none;margin:8px -16px 0 !important;padding:0 16px 2px !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-acts::-webkit-scrollbar{display:none}
+#bpx#bpx#bpx#bpx.bp-m .cal-acts>*{flex:0 0 auto !important;white-space:nowrap !important}
+/* the sub's insurance reminder: one slim line, not a red block */
+#bpx#bpx#bpx#bpx.bp-m .sa-banner{padding:10px 12px !important;gap:10px !important;align-items:center !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-banner span:not(.ms){display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-banner b{font-size:13.5px !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-left{display:flex !important;flex-wrap:wrap !important;gap:8px !important;min-width:0 !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-tabs,#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view{max-width:100% !important;overflow-x:auto !important;flex-wrap:nowrap !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-top{display:block !important;margin-top:-6px !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view{flex:0 0 auto !important}
+#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-tabs{flex:1 1 100% !important}

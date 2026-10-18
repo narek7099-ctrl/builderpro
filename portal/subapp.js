@@ -303,7 +303,8 @@
       var all = []; jobs().forEach(function (j) { (j.invoices || []).forEach(function (i) { all.push([j, i]); }); });
       all.sort(function (a, b) { return (+b[1].at || 0) - (+a[1].at || 0); });
       var sum = function (st) { return all.filter(function (x) { return st.indexOf(x[1].status) >= 0; }).reduce(function (t, x) { return t + (+x[1].amount || 0); }, 0); };
-      area().innerHTML = '<div class="ca-wrap sa">' + compBanner()
+      /* the insurance reminder lives on Jobs and Compliance, not here too */
+      area().innerHTML = '<div class="ca-wrap sa">'
         + '<div class="sa-kpis wide"><div><small>Waiting on review</small><b>' + money0(sum(['submitted'])) + '</b></div><div><small>Approved, unpaid</small><b>' + money0(sum(['approved'])) + '</b></div><div><small>Paid</small><b>' + money0(sum(['paid'])) + '</b></div></div>'
         + '<div class="bpx-panel"><div class="sa-ph"><h4>Invoices</h4>' + (jobs().length ? '<button class="pm-btn" onclick="bpSubInvForm()"><span class="ms">add</span>Submit invoice</button>' : '') + '</div>'
         + '<div id="sa-invform"></div><div class="ca-msg" id="sa-imsg"></div>'
