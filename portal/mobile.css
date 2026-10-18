@@ -182,3 +182,19 @@
 #bpx#bpx#bpx#bpx.bp-m .cal-top{display:block !important;margin-top:-6px !important}
 #bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view{flex:0 0 auto !important}
 #bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-tabs{flex:1 1 100% !important}
+/* ---- app feel: one scroller, no page behind it moving, no tap zoom ---- */
+html:has(#bpx.open){overflow:hidden !important;height:100% !important;overscroll-behavior:none !important}
+body:has(> #bpx.open){position:fixed !important;inset:0 !important;width:100% !important;overflow:hidden !important;overscroll-behavior:none !important}
+#bpx.open{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+#bpx.open .bpx-main{overscroll-behavior:contain !important;-webkit-overflow-scrolling:touch}
+html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* an open conversation fills the screen on a phone */
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox .bp-tback{display:none}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open{display:flex !important;flex-direction:column !important;height:calc(100dvh - 190px) !important;min-height:420px}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bpx-convlist{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bp-tback{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;padding:8px 2px 10px;font-size:15px;font-weight:600;color:var(--blue,#2f6bff);cursor:pointer}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bp-tback .ms{font-size:20px}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bpx-thread{display:flex !important;flex-direction:column !important;flex:1 1 auto !important;min-height:0 !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bpx-tbody{flex:1 1 auto !important;overflow-y:auto !important;min-height:0 !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-inbox.bp-thread-open .bpx-mi-body{flex:1 1 auto !important;min-height:0 !important;width:100% !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-reply input{font-size:16px !important}

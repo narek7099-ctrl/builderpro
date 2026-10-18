@@ -67,6 +67,7 @@
     var added = c.dateAdded ? new Date(c.dateAdded).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     var first = String(c.name || '').trim().split(/\s+/)[0] || 'them';
 
+    window.bpCtpMail = function () { if (window.bpNav) bpNav('email'); setTimeout(function () { if (window.bpMailCompose) bpMailCompose({ to: c.email, name: c.name || '' }); }, 250); };
     var hero = '<section class="ctp-hero">'
       + '<div class="ctp-band"></div>'
       + '<div class="ctp-hbody">'
@@ -78,7 +79,7 @@
       + '<div class="ctp-acts">'
       + act('tel:' + c.phone, 'call', 'Call', !!c.phone)
       + act('sms:' + c.phone, 'sms', 'Text', !!c.phone)
-      + act('mailto:' + c.email, 'mail', 'Email', !!c.email)
+      + act('', 'mail', 'Email', !!c.email, false, 'bpCtpMail()')
       + act('', 'fact_check', 'New inspection', true, false, 'bpCtpInspect()')
       + act('', 'request_quote', 'Estimate', true, true, 'bpQuoteNew(\'' + c.id + '\')')
       + '</div></div></section>';
@@ -95,7 +96,7 @@
 
     var info = '<section class="ctp-card"><div class="ctp-ch"><b>Contact details</b><button type="button" class="ctp-link" onclick="bpOpenEdit(\'' + c.id + '\')"><span class="ms">edit</span>Edit</button></div>'
       + row('call', 'Phone', c.phone ? '<a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a>' : '<span class="ctp-none">Not on file</span>', c.phone)
-      + row('mail', 'Email', c.email ? '<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>' : '<span class="ctp-none">Not on file</span>', c.email)
+      + row('mail', 'Email', c.email ? '<a href="#" onclick="bpCtpMail();return false">' + esc(c.email) + '</a>' : '<span class="ctp-none">Not on file</span>', c.email)
       + row('flag', 'Stage', '<span>' + esc(stage[0]) + '</span>')
       + row('event', 'Added', '<span>' + (added || '—') + '</span>')
       + '<div class="ctp-foot"><button type="button" class="ctp-del" onclick="bpOpenDelete(\'' + c.id + '\')"><span class="ms">delete</span>Delete contact</button></div></section>';

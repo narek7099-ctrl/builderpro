@@ -264,7 +264,27 @@
       g.classList.toggle('bp-mhide', empty);
     });
   }
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); }, 80); }
+  /* Texts and email: on a phone an opened conversation takes the whole screen,
+     like a messaging app, with a back arrow to the list (it used to open under
+     the list, off screen, so tapping looked like it did nothing) */
+  function inboxHook() {
+    ['bpOpenConv', 'bpMyInboxOpen'].forEach(function (n) {
+      var o = window[n]; if (typeof o !== 'function' || o._m) return;
+      var w = function () {
+        var r = o.apply(this, arguments);
+        var ib = document.querySelector('#bpxViewArea .bpx-inbox');
+        if (ib && M.on()) {
+          if (!ib.querySelector(':scope > .bp-tback')) { var bk = document.createElement('button'); bk.type = 'button'; bk.className = 'bp-tback'; bk.innerHTML = '<span class="ms">arrow_back</span>All conversations'; bk.onclick = M.inboxBack; ib.insertBefore(bk, ib.firstChild); }
+          ib.classList.add('bp-thread-open');
+          var m = document.querySelector('#bpx .bpx-main'); if (m) m.scrollTop = 0;
+        }
+        return r;
+      };
+      w._m = 1; window[n] = w;
+    });
+  }
+  M.inboxBack = function () { var ib = document.querySelector('#bpxViewArea .bpx-inbox'); if (ib) ib.classList.remove('bp-thread-open'); };
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
