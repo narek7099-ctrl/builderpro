@@ -111,7 +111,9 @@
   #bpx .ctp-acts{margin-top:10px}
   #bpx .ctp-who h2{font-size:21px}
   #bpx .ctp-acts{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-  #bpx .ctp-act{padding:0 8px}
+  #bpx .ctp-acts{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #bpx .ctp-act{padding:6px 2px;height:58px;flex-direction:column;gap:4px;font-size:11.5px;white-space:normal;text-align:center;line-height:1.1}
+  #bpx .ctp-act.pri{height:42px;flex-direction:row;font-size:13.5px}
   #bpx .ctp-act.pri{grid-column:1/-1}
   #bpx .ctp-stats b{font-size:17px}
   #bpx .ctp-stats>div{padding:12px 14px}

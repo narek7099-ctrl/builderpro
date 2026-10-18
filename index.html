@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>/* inside the app (signed-in portal, installed to the home screen, the store app, or a
+   customer's project / estimate / contract page) the page doesn't pinch- or tap-zoom
+   and doesn't jump when a field is tapped, so it feels like an app, not a website */
+(function(){try{var app=/[?&](portal|source=app)\b/.test(location.search)||/^#(home|est|sign|pay|my|pros)\b/.test(location.hash)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true||!!window.Capacitor;
+if(app){var m=document.querySelector('meta[name=viewport]');if(m)m.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');document.documentElement.classList.add('bp-applock');}}catch(e){}})();</script>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script>
 /* Never run inside someone else's frame (clickjacking). The calculators and
@@ -17762,6 +17767,14 @@ var _bpContacts=[];
   };
   var _bpCalDate=new Date(); var _bpEvents=[]; var _bpCalKind='all';
 
+/* active projects with no work days can't be drawn on the calendar: say so,
+   so a project never just seems to be missing */
+function bpCalUnsched(){
+  var L=(typeof bpJobsGet==='function'?bpJobsGet():[]).filter(function(j){ return j&&j.status==='active'&&!(j.sched&&((j.sched.dates&&j.sched.dates.length)||j.sched.start)); });
+  if(!L.length) return '';
+  return '<button type="button" class="cal-unsched" onclick="bpProjOpen(\''+L[0].id+'\')"><span class=ms>event_upcoming</span><span><b>'+L.length+' project'+(L.length===1?' isn\u2019t':'s aren\u2019t')+' on the calendar</b>'
+    +bpEsc(L.slice(0,2).map(function(j){return j.name||j.title||'Project';}).join(', '))+(L.length>2?' and '+(L.length-2)+' more':'')+'. Set work days to put '+(L.length===1?'it':'them')+' here.</span><span class=ms>chevron_right</span></button>';
+}
 /* ==== bpRenderCalendar ==== */
   function bpRenderCalendar(){
     var k=_bpCalKind, all=k==='all', insp=k==='inspection', jobs=k==='jobs';
@@ -17777,6 +17790,7 @@ var _bpContacts=[];
       +'</div></div>'
       +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">'+(_bpCalView==='week'?'Drag a box to move it · click an empty slot to write a note or a to-do':'Tap any day to see it or add to it')+'</span></div>':'')
       +((all||jobs)?bpCalCrewBar():'')
+      +((all||jobs)?bpCalUnsched():'')
       +'<div class="cal-layout">'
       +(_bpCalView==='day'
         ? '<div class="bpx-panel cal-panel"><div id="bpx-dayview" class="cd-wrap"></div></div>'
@@ -27488,6 +27502,10 @@ window.bpRepCopy=function(text,btn){
 #bpx .cal-legend i,#bpx .cal-sheet-row>i{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
 #bpx .lg-insp{background:var(--blue)}
 #bpx .lg-job{background:#0d9488}
+#bpx .cal-unsched{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#fff7e6;color:#7a4b00;font-size:13px;line-height:1.35;cursor:pointer}
+#bpx .cal-unsched b{display:block;color:#5c3800}
+#bpx .cal-unsched>span:nth-child(2){flex:1;min-width:0}
+#bpx .cal-unsched .ms{font-size:20px}
 #bpx .lg-todo{background:var(--cal-todo,#7c3aed)}
 #bpx .lg-note{background:var(--cal-note,#6a6a70)}
 #bpx .lg-crew{background:var(--cal-crew,#b45309)}
@@ -27678,7 +27696,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
 <script src="portal/projsheet.js?v=20261019a"></script>
-<script src="portal/contact.js?v=20261103a"></script>
+<script src="portal/contact.js?v=20261018a"></script>
 <script src="portal/inspect.js?v=20261019b"></script>
 <script src="portal/custportal.js?v=20261009b"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
@@ -27712,7 +27730,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261020a">
 <link rel="stylesheet" href="portal/inspect.css?v=20261019a">
-<link rel="stylesheet" href="portal/contact.css?v=20261019b">
+<link rel="stylesheet" href="portal/contact.css?v=20261018a">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261102b">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
 <link rel="stylesheet" href="portal/custportal.css?v=20261009b">
@@ -27721,11 +27739,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261024b">
-<link rel="stylesheet" href="portal/mobile.css?v=20261105c">
+<link rel="stylesheet" href="portal/mobile.css?v=20261106a">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261103p"></script>
-<script src="portal/mobile.js?v=20261105a"></script>
+<script src="portal/mobile.js?v=20261106a"></script>
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
