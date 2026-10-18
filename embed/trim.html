@@ -1861,10 +1861,10 @@ html body #est-embed#est-embed .e-mresult{border:0 !important;border-radius:14px
 }catch(e){} })();
 </script>
 <script id="bp-lead-relay">
-/* Every lead this page sends to its HighLevel webhook also goes to BuilderPro
-   (functions/v1/lead-in) with the contractor from the share link (?u=), so it
-   lands in their Contacts and their own HighLevel. The original send is left
-   exactly as it was. No ?u= (a demo on builderpro-os.com): nothing extra. */
+/* A lead from a contractor's link (?u=) goes ONLY to that contractor:
+   BuilderPro (functions/v1/lead-in) puts it in their Contacts and their own
+   HighLevel, and the page's built-in BuilderPro webhook is never called.
+   No ?u= (the demo on builderpro-os.com): the webhook works as before. */
 (function(){ try{
   if(window.__bpLeadRelay||!window.fetch)return; window.__bpLeadRelay=1;
   var own=''; try{own=(new URLSearchParams(location.search).get('u')||'').replace(/[^0-9a-f-]/gi,'');}catch(e){}
@@ -1877,6 +1877,9 @@ html body #est-embed#est-embed .e-mresult{border:0 !important;border-radius:14px
         var d; try{d=JSON.parse(o.body);}catch(e){d={};}
         F.call(window,'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
           body:JSON.stringify({owner:own,page:(location.pathname.split('/').pop()||''),lead:d})}).catch(function(){});
+        /* the lead belongs to the contractor only: BuilderPro's own webhook
+           is not called, and the page carries on as if it had answered */
+        return Promise.resolve(new Response('{"status":"Success"}',{status:200,headers:{'Content-Type':'application/json'}}));
       }
     }catch(e){}
     return F.apply(this,arguments);
