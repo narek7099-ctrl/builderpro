@@ -156,7 +156,7 @@ const save = (thread: string, role: string, content: unknown, model = "") =>
 
 async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; effort?: string; count?: boolean } = {}) {
   const model = opts.heavy ? OPUS : SONNET;
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, "") });
   const messages = await history(thread);
   const lastM = messages[messages.length - 1];
   if (lastM && lastM.role === "user") (lastM.content as unknown[]).push({ type: "text", text }); else messages.push({ role: "user", content: text });

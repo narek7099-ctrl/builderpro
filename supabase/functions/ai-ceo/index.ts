@@ -25,14 +25,14 @@
 //
 // Deploy:  supabase functions deploy ai-ceo --no-verify-jwt
 // Secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY (injected),
-//          ANTHROPIC_API_KEY (optional), CEO_MODEL (default claude-sonnet-4-5)
+//          ANTHROPIC_API_KEY (optional), CEO_MODEL (default claude-sonnet-5-5)
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 // read on every call: a key added in the dashboard switches Claude on at once
-const aiKey = () => Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-const MODEL = () => Deno.env.get("CEO_MODEL") || "claude-sonnet-4-5";
+const aiKey = () => (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, "");
+const MODEL = () => Deno.env.get("CEO_MODEL") || "claude-sonnet-5-5";
 const ASK_PER_HOUR = 30, RUN_PER_HOUR = 6;
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-key", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -101,7 +101,7 @@ async function claude(system: string, user: string, maxTokens = 1200, ms = 45000
     if (d?.stop_reason === "refusal") return null;
     const t = (Array.isArray(d?.content) ? d.content : []).filter((b: { type: string }) => b.type === "text").map((b: { text: string }) => b.text).join("\n").trim();
     return t || null;
-  } catch (e) { console.error("claude", String(e).slice(0, 200)); return null; }
+  } catch (e) { console.error("claude", String(e).replace(/sk-ant-[\w-]+/g, "[key]").slice(0, 200)); return null; }
 }
 // the report is shown as plain text: strip any markdown Claude slipped in
 const plain = (t: string) => t.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/^#{1,6}\s*/gm, "").replace(/^\s*[*•]\s+/gm, "- ").replace(/`/g, "").trim();
@@ -403,7 +403,7 @@ Deno.serve(async (req) => {
       return json(await ask(owner, q, b.jobs !== false));
     }
   } catch (e) {
-    console.error("ai-ceo", op, String(e).slice(0, 300));
+    console.error("ai-ceo", op, String(e).replace(/sk-ant-[\w-]+/g, "[key]").slice(0, 300));
     return json({ ok: false, error: "Something went wrong. Try again." }, 500);
   }
   return json({ ok: false, error: "Unknown request." }, 400);

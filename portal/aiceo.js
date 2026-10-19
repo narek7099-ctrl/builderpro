@@ -24,6 +24,9 @@
     if ($('bpCeoCss')) return;
     var s = document.createElement('style'); s.id = 'bpCeoCss';
     s.textContent = [
+      '.ai-side .ceo-rh{display:flex;align-items:center;justify-content:space-between;margin-top:6px}',
+      '.ai-side .ceo-rh .ceo-runl{padding:2px 6px;font-size:12px;font-weight:600;color:var(--a,#006fff);flex:none}',
+      '.ai-side .ceo-more{color:var(--mu,#788493);font-size:12.5px}',
       '.ceo{display:grid;gap:14px;min-width:0}',
       '.ceo-card{background:var(--card,#fff);border:1px solid var(--line,#e3e8ef);border-radius:14px;padding:18px;min-width:0}',
       '.ceo-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-bottom:14px}',
@@ -217,8 +220,14 @@
     host.innerHTML = bpChatShell({ ph: ai ? 'Ask your AI CEO…' : 'Connect Claude to ask questions', off: !ai,
       fine: ai ? 'Your AI CEO reads your live numbers. Check anything important.' : 'Add ANTHROPIC_API_KEY under Supabase → Edge Functions → Secrets to turn on questions. Briefings already work.' });
     var side = host.querySelector('#aiSide');
-    side.innerHTML = '<button class="ai-new" data-run><span class="ms">refresh</span>Run briefing now</button>'
-      + (past.length ? '<small>Briefings</small>' + past.map(function (p) { return '<button data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '"><span class="ms" style="font-size:16px;vertical-align:-3px;margin-right:6px">description</span>' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' · by hand' : '') + '</button>'; }).join('') : '');
+    /* same rail as the other assistants: New chat on top, then a short list */
+    var shown = C.allReps ? past : past.slice(0, 5);
+    side.innerHTML = '<button class="ai-new" data-new><span class="ms">edit_square</span>New chat</button>'
+      + '<small class="ceo-rh">Briefings<button type="button" class="ceo-runl" data-run>Run now</button></small>'
+      + shown.map(function (p) { return '<button data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '">' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' · by hand' : '') + '</button>'; }).join('')
+      + (past.length > 5 ? '<button type="button" class="ceo-more" data-allreps>' + (C.allReps ? 'Show less' : 'Show all ' + past.length) + '</button>' : '');
+    host.querySelectorAll('[data-new]').forEach(function (b) { b.onclick = function () { if (C.busy) return; C.asks = []; draw(); var q = $('aiIn'); if (q && !q.disabled) q.focus(); }; });
+    host.querySelectorAll('[data-allreps]').forEach(function (b) { b.onclick = function () { C.allReps = !C.allReps; draw(); }; });
     var col = host.querySelector('#aiCol');
     col.innerHTML = introHtml(r) + C.asks.slice().reverse().map(qaHtml).join('')
       + (r && ai && !C.asks.length ? '<div class="ai-hint">' + ['Which projects are at risk this week?', 'Who is my best roofer right now?', 'Where is money stuck?'].map(function (q) { return '<button type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>' : '');
