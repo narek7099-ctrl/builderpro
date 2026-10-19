@@ -148,6 +148,7 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .warnbar b{color:#3d2a00}
 @media (max-width:760px){.grid2{grid-template-columns:1fr}main{padding:16px}.top{padding:0 16px}.top .sub,#who{display:none}.btn{white-space:nowrap}.nd.work .box:after{display:none}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}.pk{display:none}}
+.newacct summary{cursor:pointer;list-style:none;color:var(--blue,#006fff)}.newacct summary::-webkit-details-marker{display:none}.newacct[open] summary{margin-bottom:8px}.newacct .muted{margin-top:2px}
 </style>
 </head>
 <body>
@@ -367,8 +368,8 @@ async function decide(id,op,b){
 /* ---------- Accounts ---------- */
 async function viewAccounts(){
   el('view').innerHTML='<h2>Accounts</h2><div class="kpis" id="kp"></div>'
-    +'<div class="card" style="margin-bottom:14px"><b>Create an account</b><div class="muted" style="font-size:12px;margin-bottom:8px">Makes their BuilderPro login (they get an email to set a password), a GHL sub-account from your snapshot, and their AI receptionist.</div>'
-    +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></div>'
+    +'<details class="card newacct" style="margin-bottom:14px"><summary><b>+ New account</b></summary><div class="muted" style="font-size:12px;margin-bottom:8px">Makes their BuilderPro login (they get an email to set a password), a GHL sub-account from your snapshot, and their AI receptionist.</div>'
+    +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></details>'
     +'<div class="card tw" id="al">Loading…</div>';
   var s=await api({op:'stats'}); var st=s.data||{};
   el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['MRR','$'+(st.mrr_paying||0)],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');

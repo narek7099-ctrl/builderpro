@@ -372,7 +372,7 @@ const save = (thread: string, role: string, content: unknown) =>
    owner), feed results back, until it answers. Append-only, so earlier turns
    (and their thinking) are sent back unchanged. */
 async function runAgent(a: Agent, thread: string, userText: string, depth = 0, by = "owner") {
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, "") });
   const sys = await system(a);
   const messages = await history(thread);
   const conns = await mcpFor(a.key);
