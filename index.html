@@ -23389,7 +23389,7 @@ function bpFinEstimates(){_bpFinView='estimates';bpFinances();}
 function bpFinLedger(){_bpFinView='ledger';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
-var BPEST_NOTE='<div class="bpx-when-note">Sent estimates show here once your business number is connected. Until then you can still build estimate sheets above.</div>';
+var BPEST_NOTE='<div class="bpx-when-note">Sent estimates show here once your business number is connected. Until then you can still start drafts above.</div>';
 /* ===== Charts on the invoice and estimate lists ==========================
    Both lists answer "what did I send"; neither answers "what am I owed, and
    how late is it" — which is the question that actually costs a contractor
@@ -23445,7 +23445,7 @@ function bpEstCharts(){
     +'<div>'+(decided>0?bpChart.gauge({
       title:'Of the quotes that got an answer, what you won',
       value:won,target:decided,fmt:bpMoneyFmt,
-      note:open>0?bpMoneyFmt(open)+' still waiting on a yes':'nothing still waiting'
+      note:open>0?bpMoneyFmt(open)+' quoted, not approved yet':'nothing still waiting'
     }):bpChart.empty({title:'What you win',empty:'Nothing accepted or declined yet. Once customers start answering, your win rate shows here.'}))+'</div>'
     +'<div>'+bpChart.donut({
       title:'Where your quotes stand',lead:'across '+items.length+' estimate'+(items.length===1?'':'s'),
@@ -27704,10 +27704,10 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261022apuvwxyzabfgnos"></script>
-<script src="portal/quote.js?v=20261020a"></script>
+<script src="portal/quote.js?v=20261020b"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261104a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261020a"></script>
+<script src="portal/dash.js?v=20261020b"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
