@@ -218,3 +218,5 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 /* toasts float above the bottom tabs, never over them */
 #bpx.bp-m ~ #hlToasts,body:has(#bpx.bp-m.open) #hlToasts,#bpx.bp-m #hlToasts{bottom:calc(84px + env(safe-area-inset-bottom)) !important;left:12px !important;right:12px !important}
+/* calendar day header: "Nothing booked" on one line, the capacity note under it */
+@media (max-width:759px){#bpx#bpx#bpx .cd-cap-t{display:block;text-align:right}#bpx#bpx#bpx .cd-cap-t b{display:block;white-space:nowrap;font-size:14px}#bpx#bpx#bpx .cd-cap-t span{display:block;font-size:12px}}

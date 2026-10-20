@@ -491,7 +491,7 @@
     if (Q.id === id) Q.id = null; toast('Draft deleted.', 'success'); if (window.bpQbSheets) bpQbSheets();
   };
   Q.remove = function () {
-    var j = job(Q.id); if (!j || !confirm('Delete this estimate sheet? Anything already sent to the customer stays sent.')) return;
+    var j = job(Q.id); if (!j || !confirm('Delete this draft estimate? Anything already sent to the customer stays sent.')) return;
     var all = jobs(), left = all.filter(function (x) { return x.id !== j.id; }); all.length = 0; Array.prototype.push.apply(all, left); save(true);
     Q.id = null; bpNav('estimates');
   };
@@ -1064,7 +1064,7 @@
     var el = $('bpxQbSheets'); if (!el) return;
     Q.syncOpts();
     var list = jobs().filter(function (j) { return j && j.status === 'quote' && !j.sample && hasWork(j); }).sort(function (a, b) { return ((b.quote || {}).sentAt || b.createdAt || 0) - ((a.quote || {}).sentAt || a.createdAt || 0); });
-    el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Estimate sheets<span class="lg2">materials, labor and markup worked out, waiting on a yes</span></div>'
+    el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Drafts<span class="lg2">estimates you’re still working on — not sent yet</span></div>'
       + '</div>'
       + (list.length ? '<div class="pjl">' + list.map(function (j) {
         var c = calc(j), q = j.quote;
@@ -1074,7 +1074,7 @@
           + '<div class="pjl-m"><b>' + m0(c.total) + '</b><small>' + c.margin + '% margin</small></div>'
           + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpQuoteOpen(\'' + j.id + '\')">Open</button>'
             + (q.estId ? '<button class="pjl-b pri" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\')">Invoice</button>' : '<button class="pjl-b qx-del" onclick="event.stopPropagation();BPQ.removeId(\'' + j.id + '\')">Delete</button>') + '</div></div>';
-      }).join('') + '</div>' : '<div class="pjk-empty">No estimate sheets yet. <a onclick="bpQuoteNew()">Build one</a>: materials, labor and other costs with your markup, and you see the profit before you send it.</div>')
+      }).join('') + '</div>' : '<div class="pjk-empty">No drafts yet. <a onclick="bpQuoteNew()">Start an estimate</a>: materials, labor and other costs with your markup, and you see the profit before you send it.</div>')
       + '</div>';
   };
 

@@ -440,3 +440,11 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx .bpx-side .hl-ni[data-locked] .hl-lock{opacity:.85}
 #bpx#bpx#bpx#bpx .hl-tab .hl-lock{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;opacity:.7}
 #bpx#bpx#bpx#bpx .st-plan-lock{background:#f8fafc !important;border-style:dashed !important}
+
+/* calm header: plain icons instead of four bright circles; the AI button says what it is */
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.g,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.o,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.b{background:transparent !important;color:var(--ink,#344054) !important;width:36px;height:36px}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.g:hover,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.o:hover,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.b:hover{background:var(--soft,#f2f4f7) !important;filter:none}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb .hl-i{width:19px;height:19px;stroke-width:1.8}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p{width:auto;display:inline-flex;gap:6px;padding:0 14px 0 11px !important;border-radius:999px !important;height:34px;background:#f4f0ff !important;color:#5b3fd6 !important;font:600 13px/1 var(--sans);margin-right:4px}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p::after{content:"Ask Lisa"}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p .hl-i{width:16px;height:16px}

@@ -430,7 +430,7 @@
       + k('Kept ' + P.word, money(net), money(inM) + ' in · ' + money(outM) + ' out', 'finances', net < 0 ? 'neg' : 'blue')
       + k('Owed to you', money(owed), owed ? 'on active projects' : 'all collected', 'finances')
       + k('In motion', String(act.length), money(inMotion) + ' of work', 'activejobs')
-      + k('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')
+      + k('Quotes out', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')
       + '</div>';
   }
 
@@ -457,7 +457,7 @@
     var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
     var got = act.reduce(function (t, j) { return t + (+j.collected || 0); }, 0);
     var quoted = D.deals ? +D.deals.v || 0 : 0;
-    var rows = [{ label: 'Quoted, waiting', value: quoted }, { label: 'Won, still owed', value: owed }, { label: 'Won, collected', value: got }];
+    var rows = [{ label: 'Quoted', value: quoted }, { label: 'Owed', value: owed }, { label: 'Paid', value: got }];
     if (!rows.some(function (r) { return r.value > 0; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Your pipeline', empty: 'Send an estimate or win a project and it shows up here, quoted to collected.' }) + '</div>';
     return '<div class="bpx-panel">' + bpChart.donut({
       title: 'Your pipeline', lead: 'quoted to collected', rows: rows, fixed: true, ordinal: true, fmt: money,
@@ -507,7 +507,7 @@
     var C = M.cur;
     return [
       t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances'),
-      t('Kept', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : 'blue' }),
+      t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : 'blue' }),
       t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
       t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false }),
     ];
@@ -515,7 +515,7 @@
   function netLine(M) {
     if (!M.net.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'What you kept', empty: 'Income less costs ' + P.by + ', once the money starts moving ' + P.word + '.' }) + '</div>';
     return '<div class="bpx-panel">' + bpChart.area({ title: 'What you kept', lead: 'income less costs, ' + P.by + ' · ' + P.word, x: { label: P.axis, values: M.labels },
-      series: [{ name: 'Kept', values: M.net }], fmt: money, height: 190 }) + '</div>';
+      series: [{ name: 'Profit', values: M.net }], fmt: money, height: 190 }) + '</div>';
   }
   function wonCols(M) {
     if (!M.won.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'Projects won', empty: 'Nothing won ' + P.word + '. Win a deal and it counts up here.' }) + '</div>';
@@ -702,7 +702,7 @@
       [3, kpiW('New leads', D.leads ? D.leads.n : '&middot;', 'this month', D.leads ? 'contacts' : 'marketing')],
       [3, kpiW('Appointments', D.leads ? D.leads.a : '&middot;', 'this month', 'calendar')],
       [3, kpiW('Active projects', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs')],
-      [3, kpiW('Waiting on a yes', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
+      [3, kpiW('Quotes out', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
       [3, m.avgJob], [3, m.revPer], [3, m.done], [3, m.cycle],
