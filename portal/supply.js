@@ -155,7 +155,9 @@
     var ex = SP.samples().length, mine = SP.sup.length - ex;
     return '<div class="bpx-stats">' + t('Places you buy', mine + (ex ? ' <small class="sp-ex">+' + ex + ' example</small>' : '')) + t('Prices we know', SP.items.length.toLocaleString()) + t('Ordered, not picked up', open, true) + t('Bills to check', unrec) + '</div>';
   }
+  /* the top tab row already has Lists, Templates and Suppliers: no second row */
   function tabs(active) {
+    return '';
     var t = [['matlists', 'Lists'], ['mattemplates', 'Templates'], ['suppliers', 'Suppliers']];
     return '<div class="bpx-jobtabs" style="margin-bottom:14px">' + t.map(function (x) { return '<button class="bpx-jt' + (x[0] === active ? ' on' : '') + '" onclick="bpNav(\'' + x[0] + '\')">' + x[1] + '</button>'; }).join('') + '</div>';
   }

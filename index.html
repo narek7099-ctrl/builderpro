@@ -16463,7 +16463,7 @@ var BP_NAV=[
   {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['automations','Automations'],['calculator','Calculators']] /* 'leadsources' still opens if called, just out of the menu */},
   {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['employees','Employees'],['subs','Subcontractors'],['routing','Routing']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
-  {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['receipts','Receipts'],['mattemplates','Templates']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
+  {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['supply','Order materials'],['suppliers','Suppliers'],['receipts','Receipts'],['mattemplates','Templates']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['reputation','Reputation'],['website','Website'],['social','Social Media'],['competitors','Competitors']]}
 ];
@@ -17769,6 +17769,16 @@ var _bpContacts=[];
 
 /* active projects with no work days can't be drawn on the calendar: say so,
    so a project never just seems to be missing */
+/* the Add menu floats over the page (the toolbar clips anything absolute) */
+function bpCalAddClose(){ var p=document.getElementById('calAddPop'); if(p) p.remove(); document.querySelectorAll('#bpx .cal-add[open]').forEach(function(d){ d.open=false; }); }
+function bpCalAddPos(d){
+  var old=document.getElementById('calAddPop'); if(old) old.remove();
+  if(!d.open) return;
+  var m=d.querySelector('.cal-addm').cloneNode(true), r=d.querySelector('summary').getBoundingClientRect();
+  m.id='calAddPop'; var w=Math.min(280,innerWidth-16); m.style.cssText='display:grid;position:fixed;top:'+(r.bottom+6)+'px;left:'+Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px;width:'+w+'px;min-width:0;z-index:9000';
+  document.getElementById('bpx').appendChild(m);
+  setTimeout(function(){ document.addEventListener('click',function off(e){ if(!m.contains(e.target)&&!d.contains(e.target)){ bpCalAddClose(); document.removeEventListener('click',off); } }); },0);
+}
 function bpCalUnsched(){
   var L=(typeof bpJobsGet==='function'?bpJobsGet():[]).filter(function(j){ return j&&j.status==='active'&&!(j.sched&&((j.sched.dates&&j.sched.dates.length)||j.sched.start)); });
   if(!L.length) return '';
@@ -17784,8 +17794,11 @@ function bpCalUnsched(){
       +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='week'?' on':'')+'" onclick="bpCalView(\'week\')"><span class=ms>view_week</span> Week</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
       +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
-        +((all||jobs)?'<button class="bpx-btn ghost cal-today" onclick="bpCrewBookOpen()"><span class=ms>groups</span> Schedule a crew</button>':'')
-        +(all?'<button class="bpx-btn ghost cal-today" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>roofing</span> Book inspection</button><button class="bpx-btn" onclick="bpNoteOpen()"><span class=ms>add</span> Add note or to-do</button>'
+        +(jobs?'<button class="bpx-btn ghost cal-today" onclick="bpCrewBookOpen()"><span class=ms>groups</span> Schedule a crew</button>':'')
+        +(all?'<details class="cal-add" ontoggle="bpCalAddPos(this)"><summary class="bpx-btn"><span class=ms>add</span> Add</summary><div class="cal-addm">'
+             +'<button onclick="bpCalAddClose();window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>roofing</span><span><b>Inspection</b><small>Book a visit with a customer</small></span></button>'
+             +'<button onclick="bpCalAddClose();bpCrewBookOpen()"><span class=ms>groups</span><span><b>Crew day</b><small>Put a crew on a project</small></span></button>'
+             +'<button onclick="bpCalAddClose();bpNoteOpen()"><span class=ms>sticky_note_2</span><span><b>Note or to-do</b><small>A reminder for you or your team</small></span></button></div></details>'
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
       +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">'+(_bpCalView==='week'?'Drag a box to move it · click an empty slot to write a note or a to-do':'Tap any day to see it or add to it')+'</span></div>':'')
@@ -21544,7 +21557,7 @@ function bpFinances(){
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxInvCount" style="font-size:12.5px"></span></div>'
       +'<div id="bpxInvList" class="bpx-mut" style="font-size:13px">Loading invoices…</div></div>')
     +vp('estimates',
-      '<div id="bpxQbSheets"></div><div class="bpx-panel"><div class="bpx-ptitle">Estimates<span class="lg2">formal quotes your customer can accept with one tap</span></div>'
+      '<div id="bpxQbSheets"></div><div class="bpx-panel"><div class="bpx-ptitle">Sent to customers<span class="lg2">they can approve and sign from their phone</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxEstCount" style="font-size:12.5px"></span></div>'
       +'<div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>')
 
@@ -25679,7 +25692,7 @@ function bpSettings(){
         +row('Brand colour','Buttons, links and highlights on your customer portal and signing page. Text on it turns white or dark automatically.',
           '<div class="st-brand"><input type="color" id="set-cbrandpick" value="'+(brandHex||calcHex||'#2f6bff')+'" oninput="bpBrandPick(this.value)" aria-label="Pick brand colour">'
           +'<input type="text" id="set-cbrand" value="'+bpEsc(brandHex)+'" placeholder="#2f6bff" maxlength="7" oninput="bpBrandType(this.value)" aria-label="Brand colour hex">'
-          +'<span class="st-brand-pv" id="set-cbrandpv"'+(brandHex?' style="'+bpEsc(bpBrandVars(brandHex))+'background:var(--hp-blue);color:var(--hp-on)"':'')+'>Approve &amp; sign</span>'
+          +'<span class="st-brand-pv" id="set-cbrandpv"'+(brandHex?' style="'+bpEsc(bpBrandVars(brandHex))+'background:var(--hp-blue);color:var(--hp-on)"':'')+'>Your buttons look like this</span>'
           +(calcHex&&calcHex!==brandHex?'<button type="button" class="st-brand-use" onclick="bpBrandPick(\''+calcHex+'\')">Use my calculator colour ('+calcHex+')</button>':'')
           +'</div>','set-cbrand')
         +f('set-cname','Business name',c.name,'Acme Roofing')
@@ -27502,6 +27515,9 @@ window.bpRepCopy=function(text,btn){
 #bpx .cal-legend i,#bpx .cal-sheet-row>i{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
 #bpx .lg-insp{background:var(--blue)}
 #bpx .lg-job{background:#0d9488}
+#bpx .cal-add{position:relative}#bpx .cal-add>summary{list-style:none;cursor:pointer}#bpx .cal-add>summary::-webkit-details-marker{display:none}
+#bpx .cal-add .cal-addm{display:none}#bpx .cal-addm{position:absolute;right:0;top:calc(100% + 6px);z-index:40;background:var(--card,#fff);border:1px solid var(--line,#e4e7ec);border-radius:12px;box-shadow:0 12px 32px rgba(16,24,40,.14);padding:6px;min-width:260px;display:grid;gap:2px}
+#bpx .cal-addm button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:8px;cursor:pointer;width:100%}#bpx .cal-addm button:hover{background:var(--soft,#f2f4f7)}#bpx .cal-addm .ms{color:var(--blue,#2457d6);font-size:20px}#bpx .cal-addm b{display:block;font-size:14px}#bpx .cal-addm small{display:block;font-size:12.5px;color:var(--mu,#667085);margin-top:2px}
 #bpx .cal-unsched{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#fff7e6;color:#7a4b00;font-size:13px;line-height:1.35;cursor:pointer}
 #bpx .cal-unsched b{display:block;color:#5c3800}
 #bpx .cal-unsched>span:nth-child(2){flex:1;min-width:0}
@@ -27667,7 +27683,7 @@ window.bpRepCopy=function(text,btn){
 </style>
 
 </body>
-<link rel="stylesheet" href="portal/charts.css?v=20261001b">
+<link rel="stylesheet" href="portal/charts.css?v=20261020b">
 <link rel="stylesheet" href="portal/progress.css?v=20260927a">
 <link rel="stylesheet" href="portal/supply.css?v=20260925a">
 <link rel="stylesheet" href="portal/dash.css?v=20261012crst">
@@ -27678,7 +27694,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/crew.js?v=20261012a"></script>
 <script src="portal/charts.js?v=20261001b"></script>
 <script src="portal/progress.js?v=20260930a"></script>
-<script src="portal/supply.js?v=20261013aq"></script>
+<script src="portal/supply.js?v=20261020a"></script>
 <script src="portal/supply-catalog.js?v=20260921e"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261020arcq"></script>
@@ -27688,10 +27704,10 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261022apuvwxyzabfgnos"></script>
-<script src="portal/quote.js?v=20261104c"></script>
+<script src="portal/quote.js?v=20261020a"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261104a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261103m"></script>
+<script src="portal/dash.js?v=20261020a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
@@ -27738,8 +27754,8 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
-<link rel="stylesheet" href="portal/shell.css?v=20261024b">
-<link rel="stylesheet" href="portal/mobile.css?v=20261106b">
+<link rel="stylesheet" href="portal/shell.css?v=20261020a">
+<link rel="stylesheet" href="portal/mobile.css?v=20261020a">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261103p"></script>
