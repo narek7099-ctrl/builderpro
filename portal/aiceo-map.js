@@ -159,6 +159,7 @@
 
   window.bpCeoPinIcon = function (j, cr) {
     if (!window.L || !C.allowed()) return null;
+    css();
     var s = stOf(j.id), lvl = s.lvl === 'info' ? 'ok' : s.lvl;
     var fill = lvl === 'ok' && cr ? ' style="background:' + esc(cr.color) + '"' : '';
     return L.divIcon({ className: 'pjm-pin s-' + lvl + (s.nc ? ' nc' : '') + (M.sel === j.id ? ' sel' : ''), html: '<span' + fill + '>' + badge(s) + '</span>', iconSize: [22, 22], iconAnchor: [11, 11] });
