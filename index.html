@@ -16442,7 +16442,7 @@ function bpLogout(){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Routing',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Projects',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active Projects',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -16461,7 +16461,7 @@ var BP_NAV=[
   {id:'convos',l:'Conversations',ico:'convos',kids:[['messaging','Texts'],['email','Email'],['teamchat','Team chat']]},
   {id:'calendar',l:'Calendar',ico:'calendar'},
   {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['automations','Automations'],['calculator','Calculators']] /* 'leadsources' still opens if called, just out of the menu */},
-  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['employees','Employees'],['subs','Subcontractors'],['routing','Routing']]},
+  {id:'projects',l:'Projects',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['employees','Employees'],['subs','Subcontractors'],['routing','Driving routes']]},
   {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
   {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['supply','Order materials'],['suppliers','Suppliers'],['receipts','Receipts'],['mattemplates','Templates']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
@@ -25647,8 +25647,8 @@ function bpSettings(){
     ['hours','Hours & replies','schedule','When you\'re open, and what a missed call gets back.'],
     ['owner','Owner','person','Personalises your dashboard, messages and estimates.'],
     ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
-    ['ridge',''+BP_AI_NAME+' AI','smart_toy','Your 24/7 receptionist: what it knows and how it sounds.'],
-    ['brain','AI Brain','psychology','Teach '+BP_AI_NAME+' from your prices, jobs and reviews, and answer what she couldn\'t.'],
+    ['ridge',''+BP_AI_NAME+' (receptionist)','smart_toy','Answers your calls and texts 24/7. Set how she sounds and what she offers.'],
+    ['brain','What '+BP_AI_NAME+' knows','psychology','Your prices, services and answers she uses with customers. Fill in anything she couldn\'t answer.'],
     ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
     ['notify','Notifications','notifications','What lands in your bell, and how you hear about it.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
@@ -27707,7 +27707,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261020b"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261104a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261020b"></script>
+<script src="portal/dash.js?v=20261020d"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261001p"></script>
@@ -27725,7 +27725,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aiteam.js?v=20261019a"></script>
 <script src="portal/aiceo.js?v=20261019a"></script>
 <script src="portal/storm.js?v=20261017b"></script>
-<script src="portal/aiceo-map.js?v=20261011a"></script>
+<script src="portal/aiceo-map.js?v=20261020a"></script>
 <script src="portal/installs.js?v=20261103m"></script>
 <script src="portal/assets.js?v=20261104a"></script>
 <script src="portal/custlink.js?v=20261104d"></script>

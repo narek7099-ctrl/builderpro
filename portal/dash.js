@@ -394,8 +394,8 @@
     var avg = sized.length ? sized.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0) / sized.length : 0;
     var t = function (l, v, note, go) { return '<div class="bpx-stat dash-tile' + (go ? ' go' : '') + '"' + (go ? ' onclick="bpNav(\'' + go + '\')"' : '') + '><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="note">' + note + '</div></div>'; };
     return '<div class="bpx-stats dash-nums db-foot">'
-      + t('New leads this month', D.leads ? D.leads.n : '&middot;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', D.leads ? 'contacts' : 'marketing')
-      + t('Appointments this month', D.leads ? D.leads.a : '&middot;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page' : 'your booking page feeds this', 'calendar')
+      + t('New leads this month', D.leads ? D.leads.n : '&mdash;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', D.leads ? 'contacts' : 'marketing')
+      + t('Appointments this month', D.leads ? D.leads.a : '&mdash;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page' : 'your booking page feeds this', 'calendar')
       + t('Won this month', String(wonM.length), wonM.length ? money(wonVal) + ' of work' : 'nothing marked won yet', 'activejobs')
       + t('Average job', avg ? money(avg) : '&middot;', sized.length ? 'across ' + sized.length + (sized.length === 1 ? ' priced job' : ' priced jobs') : 'put a price on a job to see this', 'activejobs')
       + '</div>'
@@ -699,8 +699,8 @@
     var X = moreWidgets(M), m = X.mini;
     return g([
       [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
-      [3, kpiW('New leads', D.leads ? D.leads.n : '&middot;', 'this month', D.leads ? 'contacts' : 'marketing')],
-      [3, kpiW('Appointments', D.leads ? D.leads.a : '&middot;', 'this month', 'calendar')],
+      [3, kpiW('New leads', D.leads ? D.leads.n : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing')],
+      [3, kpiW('Appointments', D.leads ? D.leads.a : '&mdash;', D.leads ? 'this month' : 'not connected yet', 'calendar')],
       [3, kpiW('Active projects', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs')],
       [3, kpiW('Quotes out', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
@@ -783,6 +783,8 @@
     var fin = { inc: inc, exp: exp };
     fin.income = inc.reduce(function (t, x) { return t + x.amt; }, 0); fin.expense = exp.reduce(function (t, x) { return t + x.amt; }, 0);
     var keep = { jg: window.bpJobsGet, fd: window.bpFinData };
+    /* the sample fills only empty slots; remember which, so undo puts them back and they never leak into a real account */
+    var filled = ['deals', 'unread', 'leads', 'contracts', 'events', 'appts'].filter(function (k) { return D[k] === undefined; });
     window.bpJobsGet = function () { return jobs; };
     window.bpFinData = function () { return fin; };
     if (D.deals === undefined) D.deals = { n: 4, v: 38400 };
@@ -793,7 +795,7 @@
       { start: new Date(now).toISOString(), time: '10:00 AM', name: 'Priya Shah', what: 'Roof inspection' },
       { start: new Date(now + 2 * day).toISOString(), time: '2:00 PM', name: 'Tom Becker', what: 'Storm inspection' },
       { start: new Date(now + 4 * day).toISOString(), time: '9:30 AM', name: 'Lena Ortiz', what: 'Estimate walk-through' }]; D.appts = D.events; }
-    return function () { window.bpJobsGet = keep.jg; window.bpFinData = keep.fd; };
+    return function () { window.bpJobsGet = keep.jg; window.bpFinData = keep.fd; filled.forEach(function (k) { D[k] = undefined; }); };
   }
 
   /* ---------- the page ----------
