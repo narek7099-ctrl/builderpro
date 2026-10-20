@@ -1195,7 +1195,7 @@
       + (ready.length ? '<div class="pjl">' + ready.map(row).join('') + '</div>'
         : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, or a payment on a job comes due, its invoice shows up here ready to confirm. <a onclick="BPQ.ivSample()">See an example</a></div>')
       + (track.length ? '<div class="qb-wh">Financing and insurance <span>' + track.length + '</span></div><div class="pjl">' + track.map(trow).join('') + '</div>' : '')
-      + (waiting.length ? '<div class="qb-wh">Sent, waiting on a yes <span>' + waiting.length + '</span></div><div class="pjl">' + waiting.map(wrow).join('') + '</div>' : '')
+      + (waiting.length ? '<div class="qb-wh">Sent, not approved yet <span>' + waiting.length + '</span></div><div class="pjl">' + waiting.map(wrow).join('') + '</div>' : '')
       + '</div>';
   };
   /* the invoice exactly as the customer gets it, with the same three choices */

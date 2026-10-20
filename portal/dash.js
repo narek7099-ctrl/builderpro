@@ -325,7 +325,7 @@
     if (unsent) rows.push({ ico: 'outgoing_mail', n: unsent, t: unsent === 1 ? 'One materials order has not been sent to the supply house' : unsent + ' materials orders not sent to the supply house', go: 'supplyorders', tone: 'warn' });
     if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders' });
     if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging' });
-    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' waiting on a yes' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals' });
+    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' sent, not approved yet' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals' });
     return rows;
   }
 
