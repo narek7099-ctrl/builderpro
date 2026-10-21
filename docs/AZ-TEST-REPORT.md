@@ -75,6 +75,17 @@ Sign-ins are done by the owner; Claude tests from there.
 22. **Sub invoice form:** the file picker is the browser's plain "Choose file / No file chosen" control; looks unstyled next to the rest.
 23. **Sub screens still use the older look** (plain top bar, no navy header); they work but don't match the new owner/crew design.
 
+## Results (homeowner)
+
+| # | Area | Result | Notes |
+|---|---|---|---|
+| 16 | My projects | Pass | Kitchen remodel at 20%, Find a pro, Get the app; no console errors. |
+| 16 | Customer portal | Pass | Home (progress, payments, quick actions, latest, "Saved to My projects"), Schedule, Pay, Messages (box visible), More. |
+| 16 | Payments | Not testable | No pay button: the contractor has no online payments set up ("To pay, contact…"). Same blocker as the owner side. |
+
+Issue 11 update: not a bug. The customer side shows $2,800 paid and $9,400 next for Cabinets ($11,200 minus the extra $1,800 paid). The owner's Money tab just doesn't show that partial credit on the step the way the customer's Pay tab does ("$1,800 paid").
+Issue 5 (sign-up prompt after approving) not re-checked: it needs a signed-out browser. Auto-saving to a signed-in homeowner's account does work.
+
 18. **AI CEO chat on a phone:** the top strip crams "New chat", "Briefings / Run now" and the date into one sideways-scrolling row.
 19. **Equipment:** the search box is squeezed to a tiny box ("Se…") at the start of the filter row.
 
