@@ -17828,7 +17828,7 @@ function bpCalUnsched(){
    the working hours as rows, everything booked drawn across them at the
    time it happens, and how much of the day is already spoken for.
    Crew days, inspections and timed to-dos all land on the same grid. */
-  var _bpCalView=(window.matchMedia&&matchMedia('(max-width: 760px)').matches)?'day':'week';   /* a week of seven columns doesn't fit a phone */
+  var _bpCalView='month';   /* the month first; Week and Day are one tap away */
   var _bpDaySel=(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})();
   var BP_DAYKEY=['sun','mon','tue','wed','thu','fri','sat'];
   function bpIso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
@@ -27428,6 +27428,7 @@ window.bpRepCopy=function(text,btn){
 #bpx .cal-acts .bpx-btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 #bpx .cal-acts .bpx-btn .ms{font-size:18px}
 #bpx .cal-layout{display:flex;flex-direction:column;gap:14px}
+#bpx .cal-layout>.cal-side{order:-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start}#bpx .cal-layout>.cal-side>.bpx-panel{margin:0 !important}
 #bpx .cal-panel{padding:16px 18px 18px}
 #bpx .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 #bpx .cal-month{font-size:19px;font-weight:800;letter-spacing:-.024em;font-family:inherit;min-width:0}
@@ -27754,11 +27755,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261020a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261021p">
+<link rel="stylesheet" href="portal/mobile.css?v=20261021q">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261103p"></script>
-<script src="portal/mobile.js?v=20261021b"></script>
+<script src="portal/mobile.js?v=20261021c"></script>
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
