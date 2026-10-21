@@ -326,3 +326,15 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .bpx-hrs-times input{width:100% !important;min-width:0}
 /* any "Export CSV" left on a phone page */
 #bpx#bpx#bpx#bpx.bp-m .bpx-main button[onclick*="Csv"],#bpx#bpx#bpx#bpx.bp-m .bpx-main button[onclick*="csv"],#bpx#bpx#bpx#bpx.bp-m .bpx-main button[onclick*="CSV"]{display:none !important}
+
+/* Settings on a phone: list first, one section at a time */
+#bpx#bpx#bpx#bpx.bp-m .st-back{display:none}
+#bpx#bpx#bpx#bpx.bp-m .st:not(.st-menu) .st-rail{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .st:not(.st-menu) .st-back{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 4px;margin:0 0 6px;border:0;background:none;color:var(--blue,#2457d6);font:600 16px/1 var(--sans);cursor:pointer}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-body,#bpx#bpx#bpx#bpx.bp-m .st.st-menu ~ #bpx-setfoot,#bpx#bpx#bpx#bpx.bp-m .st.st-menu #bpx-setfoot{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-navs{flex-direction:column !important;overflow:visible !important;gap:0 !important;background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:4px 0;margin-top:12px}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav{min-height:60px;padding:0 18px !important;font-size:16px !important;color:var(--ink) !important;border-radius:0 !important;box-shadow:none !important;background:none !important;border-bottom:1px solid var(--line) !important;gap:14px}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav:last-child{border-bottom:0 !important}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav .ms{font-size:22px;width:24px;color:var(--blue,#2457d6);opacity:1}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav::after{content:"chevron_right";font-family:'Material Symbols Rounded';font-size:22px;margin-left:auto;color:var(--mu,#98a2b3)}
+#bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-plan{display:flex !important;margin-top:12px}
