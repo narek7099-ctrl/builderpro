@@ -294,3 +294,20 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .cd-cap{flex:1 1 100% !important;order:9;min-width:0 !important}
 #bpx#bpx#bpx#bpx.bp-m .cd-cap-t{display:flex !important;justify-content:center;gap:6px;align-items:baseline;text-align:center}
 #bpx#bpx#bpx#bpx.bp-m .cd-cap-t b,#bpx#bpx#bpx#bpx.bp-m .cd-cap-t span{display:inline !important}
+
+/* ---- round 4 tidy (phones) ---- */
+/* spreadsheet exports are a computer job: off the phone toolbars */
+#bpx#bpx#bpx#bpx.bp-m .bpx-csv{display:none !important}
+/* Finances: the two "new" buttons share the width evenly */
+#bpx#bpx#bpx#bpx.bp-m .bpx-finrow-btns{display:grid !important;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+#bpx#bpx#bpx#bpx.bp-m .bpx-finrow-btns>*{margin:0 !important;width:100%;justify-content:center}
+/* invoice rows: the main action full width on top, Preview / Edit side by side under it */
+#bpx#bpx#bpx#bpx.bp-m .qb-ivr .pjl-a{display:grid !important;grid-template-columns:1fr 1fr;gap:10px}
+#bpx#bpx#bpx#bpx.bp-m .qb-ivr .pjl-a .pjl-b{margin:0 !important;width:100%}
+#bpx#bpx#bpx#bpx.bp-m .qb-ivr .pjl-a .pjl-b.pri{grid-column:1/-1;order:-1;min-height:52px !important}
+/* toolbars: the main "new" button takes the free space */
+#bpx#bpx#bpx#bpx.bp-m .bpx-chead-r{display:flex;gap:10px;width:100%}
+#bpx#bpx#bpx#bpx.bp-m .bpx-chead-r>.bpx-addbtn{flex:1;justify-content:center}
+/* Settings: no empty band above each section */
+#bpx#bpx#bpx#bpx.bp-m .st-sec{padding-top:8px !important}
+#bpx#bpx#bpx#bpx.bp-m .st-head{margin-top:0 !important;padding-top:0 !important}
