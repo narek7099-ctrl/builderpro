@@ -90,9 +90,11 @@ Issue 5 (sign-up prompt after approving) not re-checked: it needs a signed-out b
 
 | # | Area | Result | Notes |
 |---|---|---|---|
-| 17 | AI Team board | **Was broken, fixed** | On a phone the team list was shrunk to 34% (the desktop "fit" ran on resize), and the page threw "Cannot read properties of null" when the board redrew after leaving the tab. Both fixed in command.html; shipped, re-check pending. |
+| 17 | AI Team board | **Was broken, fixed** | On a phone the team list was shrunk to 34% (the desktop "fit" ran on resize), and the page threw "Cannot read properties of null" when the board redrew after leaving the tab. Both fixed in command.html; **verified live**: full-size list with last shift and tools per team. |
 | 17 | Approvals, Accounts, Phone numbers, Memory, Connections | Pass | All load. Accounts: 5 accounts, $896 MRR. Tables scroll sideways on a phone (fine for an admin page). |
-| 17 | + New account form | Opens | Not submitted yet: creating one makes a real HighLevel sub-account, so it waits for the owner's OK. |
+| 17 | + New account (create) | **Fail (blocked)** | Owner approved one sample account. Try 1 (test.contractor@example.com): Supabase rejects example.com addresses ("email_address_invalid"). Try 2 (owner's +contractor alias): **"email rate limit exceeded"**. Nothing was created either time (the login step runs first, before HighLevel). |
+
+25. **Supabase's built-in email sender is rate-limited** (a few emails an hour). Every new account, sign-up and password reset sends an email, so real sign-ups will fail once a few happen in an hour. **Owner action:** set up custom SMTP (e.g. Resend) in Supabase → Authentication → Emails → SMTP Settings. Retry the Command Center account creation after that.
 
 24. **Connections: Stripe shows "Sign in again".** The Stripe connection for the AI teams has expired; the owner needs to reconnect it.
 
