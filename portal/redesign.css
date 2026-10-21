@@ -1,0 +1,72 @@
+/* ==================================================================
+   REDESIGN: one calm look across the whole portal.
+   Same theme (navy sidebar, blue accent, light page, white cards);
+   fewer lines, more room, one card style, one button style, one type
+   scale. Loaded after shell.css and before mobile.css, so the phone
+   layer still has the last word on small screens.
+   ================================================================== */
+#bpx#bpx#bpx#bpx:not(.bpx-dark){ --bg:#F4F5F8; --line:#E6E9EF; --line-2:#EEF0F4; --mu:#667085; --grey:#475467; }
+#bpx#bpx#bpx#bpx{ --rd-r:14px; --rd-sh:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.03); }
+
+/* ---------- page: centered, room around it ---------- */
+#bpx#bpx#bpx#bpx:not(.bp-m) #bpxViewArea{max-width:1240px;margin:0 auto;padding:28px 32px 48px !important;box-sizing:border-box}
+
+/* ---------- sidebar: roomier rows, softer active state ---------- */
+#bpx#bpx#bpx#bpx .bpx-side .hl-ni{height:40px;min-height:40px;border-radius:10px !important;font-size:14px !important;margin:1px 0 !important}
+#bpx#bpx#bpx#bpx .bpx-side .hl-ni .hl-i{width:19px;height:19px;flex-basis:19px}
+#bpx#bpx#bpx#bpx .bpx-side .hl-ni.on{background:rgba(82,139,255,.18) !important;color:#fff !important}
+#bpx#bpx#bpx#bpx .bpx-side .hl-ni.on .hl-i{color:#84ADFF}
+
+/* ---------- section tabs under the top bar ---------- */
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-tab{font-size:14.5px !important;padding:0 14px !important}
+
+/* ---------- one card style ---------- */
+#bpx#bpx#bpx#bpx .bpx-panel,#bpx#bpx#bpx#bpx .bpx-stat,#bpx#bpx#bpx#bpx .hl-w > .bpx-panel{
+  border:1px solid var(--line) !important;border-radius:var(--rd-r) !important;box-shadow:var(--rd-sh) !important;background:var(--card,#fff)}
+#bpx#bpx#bpx#bpx:not(.bp-m) .bpx-panel{padding:20px 22px !important}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-w > .bpx-panel{padding:18px 20px !important}
+#bpx#bpx#bpx#bpx .bpx-panel + .bpx-panel{margin-top:16px}
+#bpx#bpx#bpx#bpx .bpx-ptitle{font-size:16px !important;font-weight:650 !important;letter-spacing:-.01em;color:var(--ink)}
+#bpx#bpx#bpx#bpx .bpx-ptitle .lg2,#bpx#bpx#bpx#bpx .lg2{font-weight:400 !important;color:var(--mu) !important}
+
+/* numbers: bigger, calmer labels */
+#bpx#bpx#bpx#bpx .bpx-stat .lbl{font-size:13px;color:var(--mu);font-weight:500}
+#bpx#bpx#bpx#bpx .bpx-stat .val{font-size:26px;font-weight:650;letter-spacing:-.02em}
+
+/* ---------- one button style ---------- */
+#bpx#bpx#bpx#bpx:not(.bp-m) :is(.bpx-btn,.bpx-addbtn){min-height:40px;border-radius:10px !important;font-size:14px !important;font-weight:600 !important;padding:0 16px !important}
+#bpx#bpx#bpx#bpx:not(.bp-m) .bpx-rowbtn{min-height:36px;border-radius:9px !important;font-size:13.5px !important}
+#bpx#bpx#bpx#bpx .bpx-btn.ghost,#bpx#bpx#bpx#bpx .bpx-rowbtn:not(.primary){background:var(--card,#fff) !important;border:1px solid var(--line) !important;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+
+/* ---------- fields ---------- */
+#bpx#bpx#bpx#bpx:not(.bp-m) .bpx-main :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select){min-height:40px;border-radius:10px}
+#bpx#bpx#bpx#bpx .bpx-main :is(input,select,textarea):focus{outline:none;border-color:var(--blue,#2457d6) !important;box-shadow:0 0 0 3px rgba(36,87,214,.14) !important}
+
+/* ---------- tables: lighter headers, taller rows ---------- */
+#bpx#bpx#bpx#bpx:not(.bp-m) .bpx-main table th{font-size:12.5px !important;font-weight:600 !important;text-transform:none !important;letter-spacing:0 !important;color:var(--mu) !important;background:transparent !important}
+#bpx#bpx#bpx#bpx:not(.bp-m) .bpx-main table td{padding-top:14px !important;padding-bottom:14px !important}
+
+/* ---------- dashboard: the "more" fold ---------- */
+#bpx .db-more{margin-top:18px}
+#bpx .db-more>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 18px;border:1px dashed var(--line);border-radius:var(--rd-r);background:transparent;color:var(--grey);font-weight:600;font-size:14.5px}
+#bpx .db-more>summary::-webkit-details-marker{display:none}
+#bpx .db-more>summary:hover{background:var(--card,#fff);border-style:solid}
+#bpx .db-more>summary .ms{color:var(--blue,#2457d6)}
+#bpx .db-more-chev{margin-left:auto;transition:transform .15s}
+#bpx .db-more[open]>summary{margin-bottom:16px}
+#bpx .db-more[open] .db-more-chev{transform:rotate(180deg)}
+
+/* ---------- dark mode keeps its own surfaces ---------- */
+#bpx#bpx#bpx#bpx.bpx-dark .bpx-btn.ghost,#bpx#bpx#bpx#bpx.bpx-dark .bpx-rowbtn:not(.primary){background:var(--soft) !important}
+
+/* half-width cards on the dashboard (two side by side, full width on a phone) */
+#bpx#bpx#bpx#bpx .hl-c6{grid-column:span 6}
+@media (max-width:1000px){ #bpx#bpx#bpx#bpx .hl-c6{grid-column:span 12} }
+
+/* Finances: the four money tiles live on Overview; each other tab shows only its own button */
+#bpx #bpxViewArea[data-fin]:not([data-fin="overview"]) .fin-kpi{display:none !important}
+#bpx #bpxViewArea[data-fin="invoices"] .fin-new-est,#bpx #bpxViewArea[data-fin="estimates"] .fin-new-inv{display:none !important}
+#bpx #bpxViewArea[data-fin]:not([data-fin="overview"]):not([data-fin="invoices"]):not([data-fin="estimates"]) .bpx-finrow-btns{display:none !important}
+/* search boxes: room for the magnifier */
+#bpx#bpx#bpx#bpx .bpx-csearch{padding-left:38px !important}
+#bpx#bpx#bpx#bpx #bpxViewArea[data-fin="estimates"] .fin-new-est{background:var(--blue,#2457d6) !important;border-color:var(--blue,#2457d6) !important;color:#fff !important}
