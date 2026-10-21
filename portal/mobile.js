@@ -56,6 +56,7 @@
       if (v === 'calendar') return 'calendar';
       return '';
     }
+    if (r === 'crew' && v === 'crewclock') return 'home';   /* the Clock tab opens the crew home; the full time clock is still "Clock" */
     var hit = TABS[r].filter(function (t) { return t[3] === v; })[0];
     return hit ? hit[0] : 'apps';
   }
@@ -145,7 +146,7 @@
     var dark = !!($('bpx') && $('bpx').classList.contains('bpx-dark'));
     var el = document.createElement('div'); el.id = 'bpApps'; el.className = 'bp-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', r === 'owner' ? 'Apps' : 'More');
     el.innerHTML = '<div class="bp-sheet-bg" onclick="bpMobile.appsClose()"></div><div class="bp-sheet-card"><i class="bp-sheet-grab"></i>'
-      + '<div class="bp-sheet-h"><b>' + (r === 'owner' ? 'Apps' : 'More') + '</b><button type="button" class="bp-sheet-x" onclick="bpMobile.appsClose()" aria-label="Close">×</button></div>'
+      + '<div class="bp-sheet-h"><b>' + (r === 'owner' ? 'Apps' : r === 'crew' ? 'Me' : 'More') + '</b><button type="button" class="bp-sheet-x" onclick="bpMobile.appsClose()" aria-label="Close">×</button></div>'
       + '<div class="bp-apps">' + grid + '</div>'
       + '<div class="bp-sheet-rows">' + more
         + (window.bpTour ? '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpTour()">' + ico('help') + '<span>Take the tour</span></button>' : '')
