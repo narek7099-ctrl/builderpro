@@ -697,8 +697,18 @@
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
     var st = sparkTiles(M), gos = ['finances', 'finances', 'activejobs', 'finances'];
     var X = moreWidgets(M), m = X.mini;
-    return g([
+    /* What an owner checks every day comes first; everything else waits
+       one tap away so the page stays calm. */
+    var first = g([
       [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
+      [6, W('dashboard', attention())],
+      [6, W('calendar', week())],
+      [12, projects(false)]
+    ]);
+    var open = false; try { open = localStorage.getItem('bp.dashMore') === '1'; } catch (e) {}
+    return first + '<details class="db-more"' + (open ? ' open' : '') + ' ontoggle="try{localStorage.setItem(\'bp.dashMore\',this.open?\'1\':\'0\')}catch(e){};if(this.open&&window.BPDASH&&BPDASH.fill)BPDASH.fill()">'
+      + '<summary><span class="ms">insights</span>More numbers and charts<span class="ms db-more-chev">expand_more</span></summary>'
+      + g([
       [3, kpiW('New leads', D.leads ? D.leads.n : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing')],
       [3, kpiW('Appointments', D.leads ? D.leads.a : '&mdash;', D.leads ? 'this month' : 'not connected yet', 'calendar')],
       [3, kpiW('Active projects', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs')],
@@ -711,13 +721,10 @@
       [8, X.bal], [4, X.kinds],
       [4, X.owed], [4, W('finances', spendDonut(M))], [4, W('activejobs', wonCols(M))],
       [4, m.permits], [4, m.installs], [4, m.appts],
-      [12, projects(false)],
       [8, W('finances', jobsChart())],
       [4, W('activejobs', collection(M))],
-      [4, W('dashboard', attention())],
-      [4, W('calendar', week())],
-      [4, W('dashboard', activity())]
-    ]);
+      [12, W('dashboard', activity())]
+    ]) + '</details>';
   }
   D.kebab = function (btn, go) {
     if (!window.bpShell) { bpNav(go); return; }
@@ -845,6 +852,7 @@
     });
     close();
   }
+  D.fill = function () { setTimeout(fillAll, 0); };
   function fillAll() { var a = $('bpxViewArea'); if (!a || window._bpCurView !== 'dashboard') return; a.querySelectorAll('.hl-grid,.db-grid').forEach(fillGrid); }
   var fillT = 0;
   window.addEventListener('resize', function () { clearTimeout(fillT); fillT = setTimeout(fillAll, 120); });
