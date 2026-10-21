@@ -236,7 +236,7 @@
     if (A.tab === 'ceo') return window.bpCeoRender($('aiBody'));
     if (A.tab === 'pitch') return pitch($('aiBody'));
     if (A.tab === 'board') { $('aiBody').innerHTML = boardHtml(true); $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-open'); A.thread = null; draw(); }; });
-      var ce = $('aiBody').querySelector('[data-ceoopen]'); if (ce) ce.onclick = function () { if (ceoOn()) { A.tab = 'ceo'; draw(); } }; }
+      $('aiBody').querySelectorAll('[data-ceoopen]').forEach(function (ce) { ce.onclick = function () { if (ceoOn()) { A.tab = 'ceo'; draw(); } }; }); }
     else if (A.tab === 'wait') approvals(); else chat();
   }
 
