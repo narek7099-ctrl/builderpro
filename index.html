@@ -25684,7 +25684,7 @@ function bpSettings(){
         grp('Identity')
         +row('Logo','Shows on your customer portal, contracts, invoices, estimates and calculators. Until you add one, customers see your initials. A PNG with a clear background works best.',
           '<div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
-          +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
+          +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">'+(BPLOGO?'Replace':'Upload logo')+'</button><button class="bpx-logo-rm" id="set-logorm" onclick="bpLogoRemove()"'+(BPLOGO?'':' hidden')+'>Remove</button></div>'
           +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>')
         +row('Brand color','Buttons, links and highlights on your customer portal and signing page. Text on it turns white or dark automatically.',
           '<div class="st-brand"><input type="color" id="set-cbrandpick" value="'+(brandHex||calcHex||'#2f6bff')+'" oninput="bpBrandPick(this.value)" aria-label="Pick brand colour">'
@@ -25890,9 +25890,9 @@ window.bpHrsToggle=function(day){var ck=q('hrs-'+day+'-o');var t=q('hrs-'+day+'-
 };
 window.bpLogoPick=function(e){var file=e.target.files&&e.target.files[0];if(!file)return;
   if(file.size>1200000){alert('Please choose an image under ~1MB.');return;}
-  var r=new FileReader();r.onload=function(){BPLOGO=r.result;var pv=q('set-logopv');if(pv)pv.innerHTML='<img id="set-logoimg" src="'+BPLOGO+'">';var n=q('set-lognudge');if(n)n.hidden=true;};r.readAsDataURL(file);
+  var r=new FileReader();r.onload=function(){BPLOGO=r.result;var rm=q('set-logorm');if(rm)rm.hidden=false;var pv=q('set-logopv');if(pv)pv.innerHTML='<img id="set-logoimg" src="'+BPLOGO+'">';var n=q('set-lognudge');if(n)n.hidden=true;};r.readAsDataURL(file);
 };
-window.bpLogoRemove=function(){BPLOGO='';var pv=q('set-logopv');if(pv)pv.innerHTML='<span id="set-logoimg">Logo</span>';var fi=q('set-logofile');if(fi)fi.value='';var n=q('set-lognudge');if(n)n.hidden=false;};
+window.bpLogoRemove=function(){BPLOGO='';var rm=q('set-logorm');if(rm)rm.hidden=true;var pv=q('set-logopv');if(pv)pv.innerHTML='<span id="set-logoimg">Logo</span>';var fi=q('set-logofile');if(fi)fi.value='';var n=q('set-lognudge');if(n)n.hidden=false;};
 /* brand colour: the swatch and the hex box stay in step; the preview shows the readable text colour */
 function bpBrandPv(hex){var pv=q('set-cbrandpv');if(!pv)return;var st=bpBrandVars(hex);pv.setAttribute('style',st?st+'background:var(--hp-blue);color:var(--hp-on)':'');}
 window.bpBrandPick=function(v){var h=bpBrandHex(v);if(!h)return;var t=q('set-cbrand'),c=q('set-cbrandpick');if(t)t.value=h;if(c)c.value=h;bpBrandPv(h);};
@@ -27333,6 +27333,7 @@ window.bpRepCopy=function(text,btn){
 #bpx .st-logo{width:44px;height:44px;border-radius:12px;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--grey-l);flex:0 0 auto;box-shadow:inset 0 1px 0 var(--edge)}
 #bpx .st-logo img{width:100%;height:100%;object-fit:cover}
 #bpx .st-navs{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:100%}
+#bpx .st-back{display:none}#bpx #set-logorm[hidden]{display:none !important}
 #bpx .st,#bpx .st-rail{min-width:0}
 #bpx .st-nav{display:flex;align-items:center;gap:10px;padding:9px 11px 9px 13px;border:0;background:transparent;border-radius:10px;color:var(--grey);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;text-align:left;position:relative;
   transition:background .18s var(--ease),color .18s var(--ease),box-shadow .2s var(--ease),transform .18s var(--ease)}
@@ -27752,11 +27753,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261020a">
-<link rel="stylesheet" href="portal/mobile.css?v=20261021l">
+<link rel="stylesheet" href="portal/mobile.css?v=20261021m">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261103p"></script>
-<script src="portal/mobile.js?v=20261106a"></script>
+<script src="portal/mobile.js?v=20261021a"></script>
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>

@@ -283,8 +283,34 @@
       w._m = 1; window[n] = w;
     });
   }
+  /* Settings on a phone: a list of every section first; tapping one opens
+     it full screen with "All settings" to go back (computers keep the rail) */
+  function settingsHook() {
+    var st = document.querySelector('#bpxViewArea .st');
+    if (st && !st._m) {
+      st._m = 1;
+      if (M.on()) st.classList.add('st-menu');
+      var body = st.querySelector('.st-body');
+      if (body && !body.querySelector('.st-back')) {
+        var bk = document.createElement('button'); bk.type = 'button'; bk.className = 'st-back';
+        bk.innerHTML = '<span class="ms">arrow_back</span>All settings';
+        bk.onclick = function () { st.classList.add('st-menu'); var m = document.querySelector('#bpx .bpx-main'); if (m) m.scrollTop = 0; };
+        body.insertBefore(bk, body.firstChild);
+      }
+    }
+    var o = window.bpSetTab; if (typeof o !== 'function' || o._m) return;
+    var w = function () {
+      var r = o.apply(this, arguments);
+      var s = document.querySelector('#bpxViewArea .st');
+      if (s && s._m && w._user) { s.classList.remove('st-menu'); var m = document.querySelector('#bpx .bpx-main'); if (m) m.scrollTop = 0; }
+      return r;
+    };
+    w._m = 1; window.bpSetTab = w;
+    /* only a tap opens a section; the page's own first call leaves the list showing */
+    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-set-tab]')) { w._user = 1; setTimeout(function () { w._user = 0; }, 0); } }, true);
+  }
   M.inboxBack = function () { var ib = document.querySelector('#bpxViewArea .bpx-inbox'); if (ib) ib.classList.remove('bp-thread-open'); };
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
