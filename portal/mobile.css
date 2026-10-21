@@ -465,3 +465,8 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx .mj-ft b{color:var(--ink);font-weight:600}
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.pjk-bar) .ml-sec{display:none !important}
 #bpx#bpx#bpx#bpx.bp-m .pjk-chip{min-height:44px}
+
+/* A-Z fixes: job header subtitle readable on navy; Mark done on one line; no Cancel/Save while Overview is read-only */
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-job{color:var(--nv-mu) !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act{white-space:nowrap;padding:0 10px !important;gap:6px}
+#bpx#bpx#bpx#bpx .pjs-card:has([data-pj-pane="details"]:not([hidden]).pjs-ro) .pjs-foot button:not(.pjs-del){display:none !important}
