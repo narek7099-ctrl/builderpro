@@ -470,3 +470,10 @@
 #bpx .qg-page.pickm .qg-switch button.off b{text-decoration:none;color:var(--grey,#667085)}
 #bpx .qg-page.pickm .qg-card:not(.off){border-color:var(--blue,#2563eb)}
 @media (max-width:560px){#bpx .qg-mode{grid-template-columns:1fr;gap:8px}#bpx .qg-m{padding:12px}}
+/* labor boxes say what they are on a phone; on a computer the column header does */
+#bpx .qb-f{display:contents}#bpx .qb-f small{display:none}
+@media (max-width:759px){
+  #bpx .qb-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+  #bpx .qb-f small{display:block;font-size:12.5px;font-weight:600;color:var(--mu,#667085)}
+  #bpx .qb-f input{width:100%}
+}

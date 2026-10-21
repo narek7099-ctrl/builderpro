@@ -543,7 +543,7 @@
       }
     }
     /* add box */
-    h += '<div class="ml-add"><span class="ms">search</span><input id="ml-q-' + key + '" class="ml-q" placeholder="Add an item: search your suppliers and the catalog (e.g. shingles, pex 3/4)" autocomplete="off" value="' + esc(ML.q[key] || '') + '" oninput="ML.find(' + a + ',this.value)" onfocus="ML.find(' + a + ',this.value)" onblur="setTimeout(function(){var a=document.activeElement;if(a&&a.id===\'ml-q-' + key + '\')return;var r=document.getElementById(\'ml-res-' + key + '\');if(r)r.hidden=true;},150)">'
+    h += '<div class="ml-add"><span class="ms">search</span><input id="ml-q-' + key + '" class="ml-q" placeholder="Search materials, e.g. shingles, PEX" autocomplete="off" value="' + esc(ML.q[key] || '') + '" oninput="ML.find(' + a + ',this.value)" onfocus="ML.find(' + a + ',this.value)" onblur="setTimeout(function(){var a=document.activeElement;if(a&&a.id===\'ml-q-' + key + '\')return;var r=document.getElementById(\'ml-res-' + key + '\');if(r)r.hidden=true;},150)">'
       + '<button class="bpx-rowbtn" onclick="ML.custom(' + a + ')">+ Custom line</button>'
       + '<div class="ml-res" id="ml-res-' + key + '" hidden></div></div>';
     /* table */

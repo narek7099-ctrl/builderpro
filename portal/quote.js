@@ -383,9 +383,9 @@
           /* an employee picked: just their name; otherwise a box to type who or what */
           + '<span class="qb-who' + (l.empId ? ' emp' : '') + '">' + (es.length ? '<select onchange="BPQ.labEmp(\'' + l.id + '\',this.value)">' + opt + '</select>' : '')
             + (l.empId ? '' : '<input value="' + esc(l.name || '') + '" placeholder="e.g. Tear-off crew" onchange="BPQ.row(\'labor\',\'' + l.id + '\',\'name\',this.value)">') + '</span>'
-          + '<input type="number" min="1" step="1" inputmode="numeric" value="' + esc(l.people || 1) + '" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'people\',this.value,1)" aria-label="People">'
-          + '<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.hours || '') + '" placeholder="0" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'hours\',this.value,1)" aria-label="Hours each">'
-          + '<input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.rate || '') + '" placeholder="0" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'rate\',this.value,1)" aria-label="Cost per hour">'
+          + '<label class="qb-f"><small>People</small><input type="number" min="1" step="1" inputmode="numeric" value="' + esc(l.people || 1) + '" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'people\',this.value,1)" aria-label="People"></label>'
+          + '<label class="qb-f"><small>Hours each</small><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.hours || '') + '" placeholder="0" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'hours\',this.value,1)" aria-label="Hours each"></label>'
+          + '<label class="qb-f"><small>$ per hour</small><input type="number" min="0" step="any" inputmode="decimal" value="' + esc(l.rate || '') + '" placeholder="0" oninput="BPQ.row(\'labor\',\'' + l.id + '\',\'rate\',this.value,1)" aria-label="Cost per hour"></label>'
           + '<b class="qb-lc" id="qb-lc-' + l.id + '">' + m0(labHrs(l) * (+l.rate || 0)) + '</b>'
           + '<button type="button" class="qb-x" aria-label="Remove" onclick="BPQ.del(\'labor\',\'' + l.id + '\')">&times;</button></div>';
       }).join('') + '</div>' : '<p class="qb-hint">Add the crew time this job takes. Pick an employee to use their rate with payroll costs included, or type a rate.</p>')
