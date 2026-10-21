@@ -270,7 +270,7 @@ function fitBoard(){
   var bd=el('bd'); if(!bd)return; var box=bd.parentElement, w=box.clientWidth, sc=Math.min(1,w/1120);
   bd.style.transform='scale('+sc+')'; bd.style.transformOrigin='0 0'; box.style.height=Math.ceil(700*sc)+'px';
 }
-window.addEventListener('resize',function(){ if(TAB==='team'){ if((window.innerWidth<700)!==window._narrow){drawBoard();} else fitBoard(); } });
+window.addEventListener('resize',function(){ if(TAB==='team'&&el('bd')){ if((window.innerWidth<700)!==window._narrow){drawBoard();} else if(!window._narrow) fitBoard(); } });
 function drawList(){
   /* phones: the same team as a simple list, no canvas */
   el('bd').parentElement.style.height='auto'; el('bd').style.transform='none'; el('bd').style.width='auto'; el('bd').style.height='auto';
@@ -282,6 +282,7 @@ function drawList(){
 }
 function isLive(k){var l=(STATUS[k]||{}).last;return !!(l&&Date.now()-Date.parse(l.updated_at)<5*6e4);}
 function drawBoard(){
+  if(!el('bd'))return;   /* the AI Team tab isn't showing (status came back after a tab switch) */
   window._narrow=window.innerWidth<700; if(window._narrow)return drawList();
   el('bd').style.width=''; el('bd').style.height='';
   /* Motion is state: an idle link carries one slow packet (the wire is up);
