@@ -233,10 +233,11 @@
     });
     if (!due.length) return '';
     var one = due.length === 1;
-    return '<div class="bpp-ask">'
-      + '<div class="bpp-ask-h"><span class="ms">event_available</span>'
-      + '<div><b>' + (one ? 'One thing was due' : due.length + ' things were due') + '</b>'
-      + '<span>Tell us what got finished and the schedule keeps itself honest. Anything that did not happen moves on, and so does everything behind it.</span></div></div>'
+    /* on a phone it starts folded to one line, so the projects come first */
+    return '<details class="bpp-ask"' + (window.innerWidth >= 760 ? ' open' : '') + '>'
+      + '<summary class="bpp-ask-h"><span class="ms">event_available</span>'
+      + '<div><b>' + (one ? '1 job step to check off' : due.length + ' job steps to check off') + '</b>'
+      + '<span>Was it finished? Tap Finished or Not yet and the schedule updates itself.</span></div><span class="ms bpp-chev">expand_more</span></summary>'
       + '<div class="bpp-ask-rows">' + due.slice(0, 6).map(function (d) {
         return '<div class="bpp-ask-row"><div class="bpp-ask-w"><b>' + esc(d.ph.name) + '</b>'
           + '<span>' + esc(d.job.name) + (d.job.title ? ' · ' + esc(d.job.title) : '') + ' · due ' + P.pretty(d.ph.due) + '</span></div>'
@@ -244,7 +245,7 @@
           + '<button class="bpx-rowbtn" onclick="bpPlanNo(\'' + d.job.id + '\',\'' + d.ph.key + '\')">Not yet</button></div></div>';
       }).join('') + '</div>'
       + (due.length > 6 ? '<div class="bpx-mut" style="font-size:12px;margin-top:8px">+ ' + (due.length - 6) + ' more on the jobs below</div>' : '')
-      + '</div>';
+      + '</details>';
   };
 
   window.bpPlanYes = function (jid, key) {
