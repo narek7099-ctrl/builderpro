@@ -40,6 +40,16 @@ Run a full A–Z test of BuilderPro at https://builderpro-os.com in my Chrome, a
 
 **For every step:** take a screenshot, check the browser console for errors, and note anything broken, confusing, slow, cut off, or too small to tap with gloves.
 
+**Design check on every screen (phone and desktop), including pop-ups, sheets and menus:**
+- Overlapping: text over text, buttons on top of each other, pop-ups or menus hidden behind other things, the bottom bar or the + button covering content or the last item on a page, sticky headers covering what you scroll to.
+- Cut off or overflowing: words, numbers or buttons running out of their box or off the screen, sideways scrolling on a phone page, text cut mid-word or squeezed into a narrow column, long names breaking the layout.
+- Spacing and alignment: cramped or uneven gaps, things not lined up, cards with different styles on the same page, empty holes in a grid, double borders or double headers.
+- Consistency: buttons, cards, tab rows, fonts and colors that don't match the new design (navy header, blue main button, rounded white cards), leftover old-style screens, inconsistent wording (Jobs vs Projects), British spellings.
+- Readability: low-contrast text (gray on gray, white on light), tiny text, icons with no label where it's not obvious what they do.
+- States: empty states, loading states that never finish, error messages, dark mode (turn it on once and walk the main screens), and the phone rotated or the window resized between phone and desktop widths.
+
+For each design problem, screenshot it, note the screen and what's wrong, and fix it if it's a small CSS or wording change (same fixing rules as below).
+
 **Fixing:** when something is clearly broken and the fix is small and safe, fix it in the repo on branch `claude/web-os-dashboard-design-ijwlrd`, bump the `?v=` for any portal file you change, commit, push, ship to main the same way as before, then retest. Leave bigger or risky fixes in the report for me.
 
 **Report:** keep a running report in `docs/AZ-TEST-REPORT.md`. For each step: pass/fail, what broke, what you fixed (commit), what's left, plus screenshots of failures. Commit it as you go. At the end, give me a short summary: what works, what's broken, and what I need to do myself.
