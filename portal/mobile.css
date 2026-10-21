@@ -470,3 +470,6 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-job{color:var(--nv-mu) !important}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act{white-space:nowrap;padding:0 10px !important;gap:6px}
 #bpx#bpx#bpx#bpx .pjs-card:has([data-pj-pane="details"]:not([hidden]).pjs-ro) .pjs-foot button:not(.pjs-del){display:none !important}
+
+/* Team chat on a phone: end above the taller bottom bar so the message box can be reached */
+#bpx#bpx#bpx#bpx.bp-m .tc{height:calc(100dvh - 205px - env(safe-area-inset-bottom)) !important;min-height:360px !important}
