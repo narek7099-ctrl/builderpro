@@ -443,3 +443,25 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act{background:var(--nv-2) !important;border:0 !important;color:#fff !important;border-radius:16px !important;min-height:58px !important;box-shadow:none !important}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act *{color:#fff !important}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act.primary{background:var(--bl) !important}
+
+/* --- Home: All apps --- */
+#bpx .mh2-apps{padding-bottom:16px}
+#bpx .mh2-apps .bp-apps{padding:6px 0 0}
+
+/* --- Jobs on a phone: smooth job cards --- */
+#bpx#bpx#bpx#bpx.bp-m #pjkGrid .pjl{display:flex;flex-direction:column;gap:12px;border:0 !important;background:none !important;box-shadow:none !important}
+#bpx .mj{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;width:100%;background:var(--card,#fff);border-radius:22px;padding:18px;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.05);transition:transform .12s}
+#bpx .mj:active{transform:scale(.985)}
+#bpx .mj-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+#bpx .mj-who{display:flex;flex-direction:column;gap:3px;min-width:0}
+#bpx .mj-who b{font-size:18px;font-weight:700;color:var(--ink)}
+#bpx .mj-who small{font-size:14px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .mj-pill{flex:none;font-size:13px;font-weight:600;padding:5px 10px;border-radius:999px;white-space:nowrap}
+#bpx .mj-pill.red{color:#B42318;background:#FEF3F2}#bpx .mj-pill.green{color:#067647;background:#ECFDF3}
+#bpx .mj-pill.blue{color:#1A3FA3;background:#EEF3FF}#bpx .mj-pill.gray{color:#475467;background:#F2F4F7}
+#bpx .mj-bar{display:block;height:8px;border-radius:4px;background:#EEF0F4;overflow:hidden}
+#bpx .mj-bar i{display:block;height:100%;border-radius:4px;background:#2457D6}
+#bpx .mj-ft{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--mu)}
+#bpx .mj-ft b{color:var(--ink);font-weight:600}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.pjk-bar) .ml-sec{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .pjk-chip{min-height:44px}

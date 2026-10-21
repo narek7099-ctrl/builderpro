@@ -155,6 +155,29 @@
     ($('bpx') || document.body).appendChild(el);
     paintTabs();
   };
+  /* Jobs on a phone: one clean card per job — who, what, a status pill,
+     a progress bar, what's next and what's left to collect */
+  function jobCard(j) {
+    var pr = window.bpPlan && bpPlan.progress ? bpPlan.progress(j) : null;
+    var e = +j.estimate || 0, c = +j.collected || 0, owe = Math.max(e - c, 0);
+    var today = iso(), onSite = j.sched && (j.sched.dates || []).indexOf(today) >= 0;
+    var pill = !pr ? ['Not planned', 'gray'] : pr.late.length ? ['Behind', 'red'] : pr.complete ? ['Ready to close', 'green'] : onSite ? ['Crew there today', 'green'] : [pr.pct + '% built', 'blue'];
+    var pct = pr ? pr.pct : (e ? Math.round(c / e * 100) : 0);
+    var nxt = pr && pr.next ? 'Next: <b>' + esc(pr.next.name) + '</b>' : pr && pr.complete ? '<b>All steps done</b>' : 'No plan yet';
+    var addr = String(j.addr || '').split(',')[0];
+    return '<button type="button" class="mj" onclick="bpProjOpen(\'' + esc(j.id) + '\')">'
+      + '<span class="mj-top"><span class="mj-who"><b>' + esc(j.name || 'Job') + '</b><small>' + esc(j.title || 'Job') + (addr ? ' · ' + esc(addr) : '') + '</small></span>'
+      + '<span class="mj-pill ' + pill[1] + '">' + pill[0] + '</span></span>'
+      + '<span class="mj-bar"><i style="width:' + Math.max(pct, 3) + '%"></i></span>'
+      + '<span class="mj-ft"><span>' + nxt + '</span><span>' + (owe ? '<b>' + money(owe) + '</b> to collect' : '<b>Paid in full</b>') + '</span></span></button>';
+  }
+  function jobsHook() {
+    var o = window.bpPjRow; if (typeof o !== 'function' || o._m) return;
+    var w = function (j) { return M.on() ? jobCard(j) : o.apply(this, arguments); };
+    w._m = 1; window.bpPjRow = w;
+    if (M.on() && window.bpPjGrid && document.getElementById('pjkGrid')) bpPjGrid();
+  }
+
   /* the + sheet: every "new" thing in one place */
   M.create = function () {
     M.createClose(); M.appsClose();
@@ -237,7 +260,20 @@
           + (todayRows.length ? todayRows.map(function (r) { return '<button type="button" class="mh2-today" onclick="bpNav(\'' + r.go + '\')"><span class="mh2-tt">' + (r.t || '') + '</span><span class="mh2-rt"><b>' + r.w + '</b><small>' + r.s + '</small></span></button>'; }).join('')
             : '<div class="mh2-empty"><span class="ms">event_available</span>' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + '</div>')
         + '</section>'
+        + appsCard()
       + '</div></div>';
+  }
+  /* every section of the software, one tap from Home */
+  function appsCard() {
+    var grid = '';
+    (window.BP_NAV || []).forEach(function (g) {
+      var ks = g.kids ? g.kids.filter(function (k) { return allows(k[0]); }) : null;
+      if (g.id === 'dashboard' || (ks ? !ks.length : !allows(g.id))) return;
+      var lk = ks ? ks.every(function (k) { return locked(k[0]); }) : locked(g.id);
+      grid += tile(g.ico || g.id, g.l, "bpMobile.go('" + g.id + "')", { lock: lk });
+    });
+    if (allows('settings')) grid += tile('settings', 'Settings', "bpMobile.nav('settings')");
+    return grid ? '<section class="mh2-card mh2-apps"><div class="mh2-h"><b>All apps</b></div><div class="bp-apps">' + grid + '</div></section>' : '';
   }
 
   /* ---------------------------------------------- tables, tabs, tidy --- */
@@ -334,7 +370,7 @@
     document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-set-tab]')) { w._user = 1; setTimeout(function () { w._user = 0; }, 0); } }, true);
   }
   M.inboxBack = function () { var ib = document.querySelector('#bpxViewArea .bpx-inbox'); if (ib) ib.classList.remove('bp-thread-open'); };
-  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); }, 80); }
+  function tidy() { clearTimeout(tidyT); tidyT = setTimeout(function () { labelTables(); tabsFade(); emptyStats(); inboxHook(); settingsHook(); jobsHook(); }, 80); }
   function watch() {
     var a = $('bpxViewArea'); if (!a || a._bpmw || !window.MutationObserver) return;
     a._bpmw = 1; new MutationObserver(function () { if (M.on()) tidy(); }).observe(a, { childList: true, subtree: true });
