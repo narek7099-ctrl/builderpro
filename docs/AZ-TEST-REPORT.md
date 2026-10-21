@@ -43,6 +43,17 @@ Sign-ins are done by the owner; Claude tests from there.
 | 11 | Marketing | Pass | Ads & Listings and Connections load; nothing connected. |
 | 13 | Settings | Pass | Section list, open a section, All settings back. Issue 17 fixed. |
 
+## Results (plan299, Enterprise owner)
+
+| # | Area | Result | Notes |
+|---|---|---|---|
+| 12 | AI Team / CEO chat | **Fail (blocked)** | Board, CEO briefing, assistant chats load. Asking a question fails: "The CEO couldn't answer right now". Server logs show the Anthropic key in Supabase is still the broken one (`sk-ant-usr-…` with a line break). **Owner must create a new API key (sk-ant-api03-…) and replace the secret.** The old deployed code also writes the key into the logs on every failure; the redacting version is committed but not deployed yet. Treat the old key as exposed and delete it. |
+| 12b | AI CEO card | Fixed | Tapping "AI CEO" on the phone board did nothing (only the hidden desktop-diagram copy had a click handler). Fixed in aiteam.js (v=20261020a); shipped, waiting on deploy to re-check. |
+| — | Equipment (Enterprise) | Pass, with note | Loads with sample heat pump. Issue 19. |
+
+18. **AI CEO chat on a phone:** the top strip crams "New chat", "Briefings / Run now" and the date into one sideways-scrolling row.
+19. **Equipment:** the search box is squeezed to a tiny box ("Se…") at the start of the filter row.
+
 | 6 | Jobs list + one job (partial) | Pass, with design issues | New job cards, filters and the folded "job steps" strip work. Job opens read-only with Edit details. Issues 6–9 above. Did not tap Finished/Not yet, to keep the demo schedule unchanged. |
 
 ## Where the test stopped
