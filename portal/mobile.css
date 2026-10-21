@@ -338,3 +338,108 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav .ms{font-size:22px;width:24px;color:var(--blue,#2457d6);opacity:1}
 #bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-nav::after{content:"chevron_right";font-family:'Material Symbols Rounded';font-size:22px;margin-left:auto;color:var(--mu,#98a2b3)}
 #bpx#bpx#bpx#bpx.bp-m .st.st-menu .st-plan{display:flex !important;margin-top:12px}
+
+/* =====================================================================
+   PHONE REDESIGN (approved mockup): calm navy, one job per card,
+   a big + for anything new.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx.bp-m{--nv:#1B2536;--nv-2:rgba(255,255,255,.10);--nv-mu:#B9C3D3;--bl:#2457D6;--bl-l:#EEF3FF}
+
+/* --- bottom bar: Home · Jobs · (+) · Calendar · Inbox --- */
+#bpx#bpx#bpx#bpx.bp-m .bp-tab-new{position:relative;justify-content:flex-start}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab-plus{display:grid;place-items:center;width:62px;height:62px;margin-top:-26px;border-radius:31px;background:var(--bl);color:#fff;box-shadow:0 8px 20px rgba(36,87,214,.35),0 0 0 5px var(--card,#fff)}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab-plus .hl-i{width:30px;height:30px;stroke-width:2.4}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab.on .bp-tab-i{background:transparent;color:var(--bl)}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab.on{color:var(--bl) !important}
+
+/* --- owner home: navy top runs into the header --- */
+#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop{background:var(--nv) !important;border-bottom:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct,#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct b{color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct small,#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct-chev{color:var(--nv-mu) !important}
+#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .hl-rb{color:#fff !important;background:var(--nv-2) !important;border-radius:50% !important}
+#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .hl-av{background:#fff !important;color:var(--nv) !important}
+#bpx#bpx#bpx#bpx.bp-m.bp-m-home #bpxViewArea{padding-top:0 !important}
+#bpx .mh2{margin:0 -16px}
+#bpx .mh2-hero{background:var(--nv);color:#fff;padding:6px 20px 70px;display:flex;flex-direction:column;gap:2px}
+#bpx .mh2-hero small{color:var(--nv-mu);font-size:13px}
+#bpx .mh2-hero h2{margin:0 0 14px;font-size:24px;font-weight:700;letter-spacing:-.02em;color:#fff}
+#bpx .mh2-owed{all:unset;display:flex;flex-direction:column;gap:2px;cursor:pointer}
+#bpx .mh2-owed span,#bpx .mh2-owed small{color:var(--nv-mu);font-size:14px}
+#bpx .mh2-owed b{font-size:40px;font-weight:700;letter-spacing:-.03em;color:#fff;line-height:1.1}
+#bpx .mh2-body{margin-top:-48px;padding:0 16px;display:flex;flex-direction:column;gap:14px}
+#bpx .mh2-tiles{background:var(--card,#fff);border-radius:22px;box-shadow:0 6px 24px rgba(16,24,40,.08);padding:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#bpx .mh2-tile{all:unset;box-sizing:border-box;height:88px;border-radius:16px;background:var(--soft,#F4F5F8);color:var(--ink);display:flex;flex-direction:column;justify-content:space-between;padding:14px;cursor:pointer}
+#bpx .mh2-tile.pri{background:var(--bl-l);color:#1A3FA3}
+#bpx .mh2-tile .ms{font-size:26px}
+#bpx .mh2-tile b{font-size:15.5px;font-weight:600}
+#bpx .mh2-card{background:var(--card,#fff);border-radius:22px;padding:16px 18px 6px}
+#bpx .mh2-h{display:flex;align-items:center;justify-content:space-between;padding-bottom:6px}
+#bpx .mh2-h b{font-size:17px;font-weight:700}
+#bpx .mh2-n{font-size:13px;font-weight:600;color:#B42318;background:#FEF3F2;padding:3px 10px;border-radius:999px}
+#bpx .mh2-row,#bpx .mh2-today{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:62px;border-top:1px solid var(--line-2,#EEF0F4);cursor:pointer;padding:8px 0}
+#bpx .mh2-row>.ms{color:#98A2B3}
+#bpx .mh2-dot{flex:none;width:10px;height:10px;border-radius:5px;background:var(--bl)}
+#bpx .mh2-dot.red,#bpx .mh2-dot.bad{background:#F04438}#bpx .mh2-dot.amber,#bpx .mh2-dot.warn{background:#F79009}
+#bpx .mh2-rt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+#bpx .mh2-rt b{font-size:15px;font-weight:600;color:var(--ink)}
+#bpx .mh2-rt small{font-size:13px;color:var(--mu)}
+#bpx .mh2-tt{width:62px;flex:none;font-size:13px;font-weight:600;color:var(--mu)}
+#bpx .mh2-today .mh2-rt{border-left:3px solid #EA580C;padding-left:12px}
+#bpx .mh2-empty{display:flex;align-items:center;gap:10px;min-height:56px;border-top:1px solid var(--line-2,#EEF0F4);color:var(--mu);font-size:15px}
+#bpx .mh2-empty .ms{color:#12B76A}
+#bpx .mh2-more{all:unset;display:block;min-height:48px;line-height:48px;color:var(--bl);font-weight:600;font-size:15px;border-top:1px solid var(--line-2,#EEF0F4);cursor:pointer}
+#bpx#bpx#bpx#bpx.bpx-dark .mh2-tile{background:var(--soft)}
+
+/* --- the + sheet --- */
+#bpx .bp-create{position:fixed;inset:0;z-index:4000;display:flex;flex-direction:column;justify-content:flex-end}
+#bpx .bp-create-bg{position:absolute;inset:0;background:rgba(16,24,40,.55)}
+#bpx .bp-create-sh{position:relative;background:var(--card,#fff);border-radius:28px 28px 0 0;padding:10px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;animation:bpcUp .18s ease-out}
+@keyframes bpcUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+#bpx .bp-create-grab{display:block;width:44px;height:5px;border-radius:3px;background:#D0D5DD;align-self:center}
+#bpx .bp-create-h{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+#bpx .bp-create-h b{font-size:22px;font-weight:700;color:var(--ink)}
+#bpx .bp-create-x{all:unset;width:46px;height:46px;border-radius:23px;background:var(--soft,#F4F5F8);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+#bpx .bp-create-big{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#bpx .bp-create-big button{all:unset;box-sizing:border-box;height:104px;border-radius:20px;background:var(--soft,#F4F5F8);color:var(--ink);display:flex;flex-direction:column;justify-content:space-between;padding:16px;cursor:pointer}
+#bpx .bp-create-big button.pri{background:var(--bl-l);color:#1A3FA3}
+#bpx .bp-create-big .ms{font-size:28px}
+#bpx .bp-create-big b{font-size:16px;font-weight:600}
+#bpx .bp-create-list{display:flex;flex-direction:column;background:var(--soft,#F9FAFB);border-radius:20px;padding:4px 16px}
+#bpx .bp-create-list button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:14px;min-height:58px;font-size:16px;font-weight:500;color:var(--ink);border-bottom:1px solid var(--line);cursor:pointer}
+#bpx .bp-create-list button:last-child{border-bottom:0}
+#bpx .bp-create-list .ms{color:var(--bl);font-size:22px}
+
+/* --- employee home: one clean blue Clock in circle --- */
+#bpx#bpx#bpx#bpx.bp-m .chm-status{background:var(--card,#fff) !important;border:0 !important;box-shadow:none !important;display:flex !important;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:26px 20px 30px !important;border-radius:24px !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-status .chm-st{justify-content:center;text-transform:uppercase;letter-spacing:.08em;font-size:13px}
+#bpx#bpx#bpx#bpx.bp-m .chm-status .chm-big{font-size:22px !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-status p,#bpx#bpx#bpx#bpx.bp-m .chm-status .chm-sub{font-size:15px;color:var(--mu)}
+#bpx#bpx#bpx#bpx.bp-m .chm-go{width:200px !important;height:200px !important;min-height:0 !important;border-radius:50% !important;margin:14px auto 4px !important;padding:0 !important;background:var(--bl) !important;border:0 !important;color:#fff !important;
+  flex-direction:column !important;gap:8px !important;font-size:24px !important;font-weight:700 !important;box-shadow:0 0 0 12px rgba(36,87,214,.14) !important;display:flex !important;align-items:center;justify-content:center}
+#bpx#bpx#bpx#bpx.bp-m .chm-go .ms{font-size:40px !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-go.alt{background:#fff !important;color:var(--bl) !important;box-shadow:0 0 0 3px var(--bl) inset,0 0 0 12px rgba(36,87,214,.10) !important}
+
+/* --- Jobs on a phone: just the jobs (totals and the live map stay on a computer) --- */
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-stats,#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-live{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .pjk-bar{margin-top:6px}
+
+/* --- one job: navy header with Call / Text / Mark done as big buttons --- */
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero{background:var(--nv) !important;color:#fff !important;border:0 !important;padding-bottom:20px !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(h1,h2,h3,b,strong,.pjs-name,.pjs-t){color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(small,span,p,a,.pjs-sub,.pjs-addr,label){color:var(--nv-mu) !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero svg circle{stroke:rgba(255,255,255,.18)}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(.pjs-x,[aria-label=Close]){background:var(--nv-2) !important;border:0 !important;color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(button,a.pjl-b,.pjl-b){background:var(--nv-2) !important;border:0 !important;color:#fff !important;min-height:58px !important;border-radius:16px !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(button,.pjl-b) *{color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero :is(button,.pjl-b).pri{background:var(--bl) !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero [class*=pill],#bpx#bpx#bpx#bpx.bp-m .pjs-hero [class*=badge]{background:var(--nv-2) !important;color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero a{background:var(--nv-2) !important;border:0 !important;color:#fff !important;border-radius:16px !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero a *{color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-addr a,#bpx#bpx#bpx#bpx.bp-m .pjs-hero a[href*="maps"]{background:none !important;color:var(--nv-mu) !important}
+/* job cards: tap the card to open it; finishing a job happens inside it */
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-donebtn{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .ml-sec:has(+ .ml-sec){display:none !important}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea:has(.pjk-bar) .pjl-a .pjl-b{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act{background:var(--nv-2) !important;border:0 !important;color:#fff !important;border-radius:16px !important;min-height:58px !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act *{color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-act.primary{background:var(--bl) !important}

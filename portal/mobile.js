@@ -40,8 +40,9 @@
 
   /* ------------------------------------------------------------ tabs --- */
   var TABS = {
-    owner: [['home', 'Home', 'home', 'dashboard'], ['inbox', 'Inbox', 'convos', 'messaging'], ['projects', 'Projects', 'projects', 'activejobs'], ['calendar', 'Calendar', 'calendar', 'calendar'], ['apps', 'Apps', 'apps', null]],
-    crew: [['home', 'Home', 'home', 'crewdash'], ['clock', 'Clock', 'clock', 'crewclock'], ['projects', 'Projects', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]],
+    /* owner: the big + in the middle makes anything new; everything else is under the avatar (top right) */
+    owner: [['home', 'Home', 'home', 'dashboard'], ['projects', 'Jobs', 'projects', 'activejobs'], ['create', 'New', 'plus', null], ['calendar', 'Calendar', 'calendar', 'calendar'], ['inbox', 'Inbox', 'convos', 'messaging']],
+    crew: [['home', 'Clock', 'clock', 'crewdash'], ['projects', 'Jobs', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'Me', 'user', null]],
     sub: [['jobs', 'Jobs', 'projects', 'subjobs'], ['inv', 'Invoices', 'inv', 'subinvoices'], ['chg', 'Changes', 'page', 'subchanges'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]]
   };
   /* which tab a view lights up */
@@ -53,7 +54,7 @@
       if (g === 'convos') return 'inbox';
       if (g === 'projects') return 'projects';
       if (v === 'calendar') return 'calendar';
-      return 'apps';
+      return '';
     }
     var hit = TABS[r].filter(function (t) { return t[3] === v; })[0];
     return hit ? hit[0] : 'apps';
@@ -68,6 +69,7 @@
     if (bar.getAttribute('data-k') !== key) {
       bar.setAttribute('data-k', key);
       bar.innerHTML = list.map(function (t) {
+        if (t[0] === 'create') return '<button type="button" class="bp-tab bp-tab-new" data-tab="create" aria-label="Create something new" onclick="bpMobile.create()"><span class="bp-tab-plus"><svg class="hl-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></button>';
         return '<button type="button" class="bp-tab" data-tab="' + t[0] + '" onclick="bpMobile.tab(\'' + t[0] + '\')">'
           + '<span class="bp-tab-i">' + (t[2] === 'apps' ? APPS_ICO : ico(t[2])) + '</span><span class="bp-tab-l">' + esc(t[1]) + '</span></button>';
       }).join('');
@@ -106,6 +108,8 @@
       + '<span class="bp-macct-t"><b>' + esc(bizName()) + '</b><small>' + esc((sets().company || {}).city || (window.bpPlanInfo ? (bpPlanInfo().name || '') : '')) + '</small></span>'
       + '<svg class="hl-i bp-macct-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
     var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView));
+    var av0 = $('hlAv');
+    if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');
     if (acts && role() === 'owner' && allows('settings') && !$('bpMGear')) {
       var g = document.createElement('button'); g.type = 'button'; g.id = 'bpMGear'; g.className = 'hl-rb bp-m-only'; g.title = 'Settings'; g.setAttribute('aria-label', 'Settings');
@@ -151,6 +155,21 @@
     ($('bpx') || document.body).appendChild(el);
     paintTabs();
   };
+  /* the + sheet: every "new" thing in one place */
+  M.create = function () {
+    M.createClose(); M.appsClose();
+    var big = [['estimates', "bpMobile.quick('estimates','bpEstOpen')", 'request_quote', 'Estimate', 1], ['invoices', "bpMobile.quick('invoices','bpInvOpen')", 'receipt_long', 'Invoice'],
+      ['activejobs', "bpMobile.quick('activejobs','bpAddJobOpen')", 'add_business', 'Job'], ['contacts', "bpMobile.quick('contacts','bpOpenAdd')", 'person_add', 'Customer']].filter(function (q) { return allows(q[0]); });
+    var small = [['calendar', "window._bpApptCal='inspection';bpMobile.quick('calendar','bpOpenBook')", 'roofing', 'Book an inspection'], ['receipts', "bpMobile.createClose();bpNav('receipts')", 'photo_camera', 'Snap a receipt'],
+      ['calendar', "bpMobile.quick('calendar','bpNoteOpen')", 'sticky_note_2', 'Note or to-do']].filter(function (q) { return allows(q[0]); });
+    var el = document.createElement('div'); el.id = 'bpCreate'; el.className = 'bp-create';
+    el.innerHTML = '<div class="bp-create-bg" onclick="bpMobile.createClose()"></div><div class="bp-create-sh" role="dialog" aria-label="Create something new"><i class="bp-create-grab"></i>'
+      + '<div class="bp-create-h"><b>What do you need?</b><button type="button" class="bp-create-x" aria-label="Close" onclick="bpMobile.createClose()"><span class="ms">close</span></button></div>'
+      + '<div class="bp-create-big">' + big.map(function (q) { return '<button type="button" class="' + (q[4] ? 'pri' : '') + '" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span><b>' + q[3] + '</b></button>'; }).join('') + '</div>'
+      + '<div class="bp-create-list">' + small.map(function (q) { return '<button type="button" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span>' + q[3] + '</button>'; }).join('') + '</div></div>';
+    ($('bpx') || document.body).appendChild(el);
+  };
+  M.createClose = function () { var el = $('bpCreate'); if (el) el.remove(); };
   M.appsClose = function () { var el = $('bpApps'); if (el) { el.remove(); paintTabs(); } };
   M.go = function (gid) { M.appsClose(); if (S().go) S().go(gid); else bpNav(gid); };
   M.nav = function (v) { M.appsClose(); bpNav(v); };
@@ -192,28 +211,33 @@
     var pins = [['contacts', 'Contacts', 'user'], ['closedeals', 'Pipeline', 'leads'], ['estimates', 'Estimates', 'est'], ['invoices', 'Invoices', 'inv']].filter(function (p) { return allows(p[0]); });
     var quick = [['contacts', 'bpOpenAdd', '', 'person_add', 'New contact'], ['estimates', 'bpEstOpen', '', 'request_quote', 'Estimate'], ['invoices', 'bpInvOpen', '', 'receipt_long', 'Invoice'],
       ['activejobs', 'bpAddJobOpen', '', 'add_business', 'Project'], ['ledger', 'bpFinAddOpen', 'expense', 'payments', 'Expense']].filter(function (q) { return allows(q[0]); });
-    el.innerHTML = '<div class="mh">'
-      + '<div class="mh-hi"><h2>' + (hiH < 12 ? 'Good morning' : hiH < 17 ? 'Good afternoon' : 'Good evening') + (name ? ', ' + esc(name) : '') + '</h2>'
-        + '<button type="button" class="mh-ref" onclick="bpMobile.refresh()" aria-label="Refresh"><span class="ms">refresh</span></button></div>'
-      + '<div class="mh-kpis">'
-        + kpi('This month', 'New leads', 'person_search', 'blue', d.leads ? d.leads.n : (d.leads === null ? '—' : dots), 'contacts')
-        + kpi('Open', 'Pipeline value', 'attach_money', 'green', d.deals ? money(d.deals.v) : (d.deals === null ? '—' : dots), 'closedeals', d.deals ? d.deals.n + (d.deals.n === 1 ? ' estimate' : ' estimates') : '')
-        + kpi('Right now', 'Unread messages', 'chat_bubble', 'teal', d.unread != null ? String(d.unread) : dots, 'messaging')
-        + kpi('Active jobs', 'Owed to you', 'account_balance_wallet', 'amber', money(owed), 'invoices', act.length + (act.length === 1 ? ' project' : ' projects'))
-      + '</div>'
-      + (needs.length ? '<section class="mh-card"><div class="mh-h"><b>Needs you</b><span>' + needs.length + '</span></div>'
-          + needs.slice(0, 4).map(function (r) { return '<button type="button" class="mh-row" onclick="bpNav(\'' + esc(r.go) + '\')"><span class="mh-dot ' + esc(r.tone || '') + '"></span><span class="mh-row-t">' + r.t + '</span><span class="ms">chevron_right</span></button>'; }).join('')
-        + '</section>' : '')
-      + '<section class="mh-card"><div class="mh-h"><b>Today</b><span>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</span></div>'
-        + (todayRows.length ? todayRows.map(function (r) { return '<button type="button" class="mh-row" onclick="bpNav(\'' + r.go + '\')"><span class="mh-row-ic"><span class="ms">' + r.ic + '</span></span><span class="mh-row-t"><b>' + r.w + '</b><small>' + (r.t ? r.t + ' · ' : '') + r.s + '</small></span><span class="ms">chevron_right</span></button>'; }).join('')
-          : '<div class="mh-empty">' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + '</div>')
+    var got = jobs.reduce(function (t, j) { return t + (+j.collected || 0); }, 0);
+    var tileB = function (fnq, ic, label, pri) { return '<button type="button" class="mh2-tile' + (pri ? ' pri' : '') + '" onclick="' + fnq + '"><span class="ms">' + ic + '</span><b>' + label + '</b></button>'; };
+    var row = function (go, dot, t, sub) { return '<button type="button" class="mh2-row" onclick="bpNav(\'' + esc(go) + '\')"><i class="mh2-dot ' + dot + '"></i><span class="mh2-rt"><b>' + t + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><span class="ms">chevron_right</span></button>'; };
+    el.innerHTML = '<div class="mh2">'
+      + '<section class="mh2-hero">'
+        + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small>'
+        + '<h2>' + (hiH < 12 ? 'Morning' : hiH < 17 ? 'Afternoon' : 'Evening') + (name ? ', ' + esc(name) : '') + '</h2>'
+        + '<button type="button" class="mh2-owed" onclick="bpNav(\'invoices\')"><span>Customers owe you</span><b>' + money(owed) + '</b>'
+          + '<small>on ' + act.length + (act.length === 1 ? ' job' : ' jobs') + (got ? ' · ' + money(got) + ' collected so far' : '') + '</small></button>'
       + '</section>'
-      + (pins.length ? '<section class="mh-card"><div class="mh-h"><b>Pinned apps</b></div><div class="mh-circs">' + pins.map(function (p) { return circ(p[2], p[1], "bpNav('" + p[0] + "')"); }).join('') + '</div></section>' : '')
-      + '<section class="mh-card"><div class="mh-h"><b>Quick actions</b></div><div class="mh-circs mh-scroll">'
-        + quick.map(function (q) { return circ(q[3], q[4], "bpMobile.quick('" + q[0] + "','" + q[1] + "'" + (q[2] ? ",'" + q[2] + "'" : '') + ")", true); }).join('')
-        + circ('auto_awesome', 'Ask ' + (window.BP_AI_NAME || 'Lisa'), 'bpShell.ai()', true)
-      + '</div></section>'
-      + '</div>';
+      + '<div class="mh2-body">'
+        + '<section class="mh2-tiles">'
+          + (allows('estimates') ? tileB("bpMobile.quick('estimates','bpEstOpen')", 'request_quote', 'New estimate', 1) : '')
+          + (allows('activejobs') ? tileB("bpMobile.quick('activejobs','bpAddJobOpen')", 'add_business', 'Add job') : '')
+          + (allows('invoices') ? tileB("bpMobile.quick('invoices','bpInvOpen')", 'receipt_long', 'Send invoice') : '')
+          + (allows('calendar') ? tileB("bpMobile.quick('calendar','bpCrewBookOpen')", 'groups', 'Schedule crew') : '')
+        + '</section>'
+        + '<section class="mh2-card"><div class="mh2-h"><b>Needs you</b>' + (needs.length ? '<span class="mh2-n">' + needs.length + '</span>' : '') + '</div>'
+          + (needs.length ? needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
+            + (needs.length > 3 ? '<button type="button" class="mh2-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : '')
+            : '<div class="mh2-empty"><span class="ms">check_circle</span>You’re all caught up.</div>')
+        + '</section>'
+        + '<section class="mh2-card"><div class="mh2-h"><b>Today</b></div>'
+          + (todayRows.length ? todayRows.map(function (r) { return '<button type="button" class="mh2-today" onclick="bpNav(\'' + r.go + '\')"><span class="mh2-tt">' + (r.t || '') + '</span><span class="mh2-rt"><b>' + r.w + '</b><small>' + r.s + '</small></span></button>'; }).join('')
+            : '<div class="mh2-empty"><span class="ms">event_available</span>' + (d.appts === undefined ? 'Loading today…' : 'Nothing booked today.') + '</div>')
+        + '</section>'
+      + '</div></div>';
   }
 
   /* ---------------------------------------------- tables, tabs, tidy --- */
