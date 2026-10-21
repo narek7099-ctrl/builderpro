@@ -318,3 +318,11 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m td:has(> .ml-name){display:flex !important;flex-wrap:wrap;align-items:baseline;gap:4px 10px;width:100% !important;grid-column:1/-1}
 #bpx#bpx#bpx#bpx.bp-m .ml-name{flex:1 1 100%;font-size:16px;font-weight:600;white-space:normal}
 #bpx#bpx#bpx#bpx.bp-m .ml-add>.ms{top:25px !important}#bpx#bpx#bpx#bpx.bp-m .ml-add>input{padding-left:38px !important}
+/* Settings → Hours: the day and its switch on one line, from / to times under it, full width */
+#bpx#bpx#bpx#bpx.bp-m .bpx-hrs-row{display:grid !important;grid-template-columns:1fr auto;align-items:center;gap:8px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+#bpx#bpx#bpx#bpx.bp-m .bpx-hrs-day{font-size:16px;font-weight:600}
+#bpx#bpx#bpx#bpx.bp-m .bpx-hrs-ck{width:28px !important;height:28px !important;justify-self:end}
+#bpx#bpx#bpx#bpx.bp-m .bpx-hrs-times{grid-column:1/-1;display:grid !important;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+#bpx#bpx#bpx#bpx.bp-m .bpx-hrs-times input{width:100% !important;min-width:0}
+/* any "Export CSV" left on a phone page */
+#bpx#bpx#bpx#bpx.bp-m .bpx-main button[onclick*="Csv"],#bpx#bpx#bpx#bpx.bp-m .bpx-main button[onclick*="csv"],#bpx#bpx#bpx#bpx.bp-m .bpx-main button[onclick*="CSV"]{display:none !important}

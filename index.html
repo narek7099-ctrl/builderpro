@@ -25682,14 +25682,11 @@ function bpSettings(){
       +'<div class="st-body">'
       +sec('business',
         grp('Identity')
-        +'<div class="st-nudge" id="set-lognudge"'+(BPLOGO?' hidden':'')+'><span class="ms">add_photo_alternate</span><div><b>Add your logo</b>'
-          +'<p>Your customers see it on their portal, contracts, review page and calculators. Until then they see your initials.</p>'
-          +'<button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload logo</button></div></div>'
-        +row('Logo','A transparent PNG or SVG works best, wide or square. It appears on your customer portal, contracts, review page, invoices and estimates.',
+        +row('Logo','Shows on your customer portal, contracts, invoices, estimates and calculators. Until you add one, customers see your initials. A PNG with a clear background works best.',
           '<div class="bpx-logo-row"><div class="bpx-logo-pv" id="set-logopv">'+logoInner+'</div>'
           +'<div class="bpx-logo-btns"><button class="bpx-logo-up" onclick="q(\'set-logofile\').click()">Upload</button><button class="bpx-logo-rm" onclick="bpLogoRemove()">Remove</button></div>'
           +'<input type="file" id="set-logofile" accept="image/*" style="display:none" onchange="bpLogoPick(event)"></div>')
-        +row('Brand colour','Buttons, links and highlights on your customer portal and signing page. Text on it turns white or dark automatically.',
+        +row('Brand color','Buttons, links and highlights on your customer portal and signing page. Text on it turns white or dark automatically.',
           '<div class="st-brand"><input type="color" id="set-cbrandpick" value="'+(brandHex||calcHex||'#2f6bff')+'" oninput="bpBrandPick(this.value)" aria-label="Pick brand colour">'
           +'<input type="text" id="set-cbrand" value="'+bpEsc(brandHex)+'" placeholder="#2f6bff" maxlength="7" oninput="bpBrandType(this.value)" aria-label="Brand colour hex">'
           +'<span class="st-brand-pv" id="set-cbrandpv"'+(brandHex?' style="'+bpEsc(bpBrandVars(brandHex))+'background:var(--hp-blue);color:var(--hp-on)"':'')+'>Your buttons look like this</span>'
@@ -27002,7 +26999,7 @@ function bpRepRender(){
       +(on?'<div class="rp-big">'+(+x.rating||0).toFixed(1)+' '+bpRepStars(x.rating)+'</div><div class="bpx-mut" style="font-size:12.5px">'+(+x.count||0).toLocaleString()+' review'+(x.count===1?'':'s')+(x.name?' · '+bpEsc(x.name):'')+'</div>'
           +'<div class="rp-plat-a">'+(x.manageUrl?'<a class="bpx-rowbtn" style="text-decoration:none" href="'+bpEsc(x.manageUrl)+'" target="_blank" rel="noopener">Manage</a>':'')+(x.reviewUrl?'<button class="bpx-rowbtn" onclick="bpRepCopy(\''+bpEsc(x.reviewUrl)+'\',this)">Copy review link</button>':'')+'</div>'
         :'<div class="bpx-mut" style="font-size:12.5px;line-height:1.5;margin:6px 0 10px">'+(err?bpEsc(err):'Connect it and your rating, review count and newest reviews show here.')+'</div>'
-          +'<button class="bpx-rowbtn primary" onclick="bpNav(\''+p[4]+'\')">Connect on '+(p[4]==='social'?'Social Media':'Ads &amp; Listings')+'</button>')
+          +'<button class="bpx-rowbtn primary" onclick="bpNav(\''+p[4]+'\')">Connect '+p[1]+'</button>')
       +'</div>';}).join('')+'</div>';
   var list=all.filter(function(r){return _bpRep.tab==='all'||r.plat===_bpRep.tab;});
   var pg=bpPage('rep',list,10,'bpRepRender()');
@@ -27755,7 +27752,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261020a">
-<link rel="stylesheet" href="portal/mobile.css?v=20261021k">
+<link rel="stylesheet" href="portal/mobile.css?v=20261021l">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261002b"></script>
 <script src="portal/shell.js?v=20261103p"></script>
