@@ -23,9 +23,25 @@ Sign-ins are done by the owner; Claude tests from there.
 4. **Owner app doesn't refresh after the customer approves**; the estimate still says "sent" until the page is reloaded.
 5. The customer's "save to your account" prompt didn't show after approving, likely because the same browser is signed in as the owner. Re-check in the homeowner step.
 6. **Wording mismatch:** bottom tab says "Jobs", page title says "Projects".
-7. **Job screen header:** the job name under the customer ("Kitchen remodel") was dark gray on navy, nearly unreadable. **Fixed** (portal/mobile.css, v=20261021r; not yet re-tested or shipped to main).
-8. **Job screen header:** "Mark done" wrapped onto two lines. **Fixed** in the same change.
-9. **Job screen:** the Cancel / Save bar showed on the read-only Overview, where there is nothing to save. **Fixed** in the same change (hidden until "Edit details").
+7. **Job screen header:** the job name under the customer ("Kitchen remodel") was dark gray on navy, nearly unreadable. **Fixed and verified live** (mobile.css v=20261021r).
+8. **Job screen header:** "Mark done" wrapped onto two lines. **Fixed and verified live.**
+9. **Job screen:** the Cancel / Save bar showed on the read-only Overview. **Fixed and verified live**; it comes back after "Edit details".
+10. **Job screen:** on every tab the navy header plus the automatic-messages box take nearly half the phone screen, leaving little room for the tab's content. Suggest a smaller header once you're inside a tab.
+11. **Money tab numbers disagree:** Dana Meyers shows "Paid $2,800" but the payment plan only marks the $1,000 deposit as paid.
+12. **Calendar:** empty To-dos / Upcoming boxes show a stray gray dash (empty count badge) and take space when empty.
+13. **Deletes and invoice sends use the browser's plain grey confirm box.** Looks out of place on a phone, and it froze the test tools (the owner had to click OK). Suggest an in-app confirm.
+14. **Invoice "Confirm and send" on an account without invoicing set up** shows an error ("Your account isn't fully set up yet…") that disappears in 6 seconds. The button shouldn't be offered (or should say why) while invoicing is off.
+15. **Payouts:** the "Customer pays → Your Stripe → Your bank" row runs off the right edge.
+16. **Email tab toolbar:** Scheduled / Compose / Broadcast wrap unevenly (Broadcast alone on a second line).
+17. **Settings list rows** were 44px instead of 60px (a general rule was winning). **Fixed and verified live** (v=20261021s).
+
+| 6 | Job tabs | Pass | Money, Schedule, Crew, Materials, Permits, Contract, Photos all load with clear empty states; no console errors. Photo upload not tested (needs a file). |
+| 7 | Calendar | Pass, with notes | Month default, To-dos/Upcoming on top, + Add menu, added and deleted a sample to-do, Week and Day views. Issue 12, 13. |
+| 8 | Finances | Partial | Overview, Invoices, Payouts load. Sending the sample invoice is blocked on this account (invoicing not set up), so **no payment could be tested**. Issues 14, 15. |
+| 9 | Supply | Pass | Order lists (sample estimate's materials appear automatically), Order materials, Receipts. |
+| 10 | Inbox | Pass (empty) | Texts, Email, Team chat load; no conversations on this account, so thread open/back not tested. Issue 16. |
+| 11 | Marketing | Pass | Ads & Listings and Connections load; nothing connected. |
+| 13 | Settings | Pass | Section list, open a section, All settings back. Issue 17 fixed. |
 
 | 6 | Jobs list + one job (partial) | Pass, with design issues | New job cards, filters and the folded "job steps" strip work. Job opens read-only with Edit details. Issues 6–9 above. Did not tap Finished/Not yet, to keep the demo schedule unchanged. |
 
