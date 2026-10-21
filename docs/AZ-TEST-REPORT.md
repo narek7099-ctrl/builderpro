@@ -3,6 +3,21 @@
 Run: Oct 20, 2026, in the owner's Chrome at phone width (417px), live site builderpro-os.com.
 Sign-ins are done by the owner; Claude tests from there.
 
+## Summary
+
+**All 18 areas were run** (owner $199 and $299, crew, sub, homeowner, Command Center, desktop width).
+**Fixed and verified live during the test (8):** job header text and buttons, empty Save bar on read-only job Overview, Settings list row height, AI CEO card on phones, crew Clock tab highlight, crew "Me" sheet title, team chat message box hidden under the tab bar, Command Center AI Team list shrunk on phones (+ its console error).
+
+**Blocked — owner action needed:**
+1. **Anthropic API key** in Supabase is still the broken `sk-ant-usr-…` one (with a line break). All AI features fail. Delete it in the Anthropic console (it has been printed in the logs), make a new `sk-ant-api03-…` key, paste it on one line into the `ANTHROPIC_API_KEY` secret. Then deploy the updated ai-ceo / ai-team / command functions (they trim the key and keep it out of logs).
+2. **Supabase email rate limit** blocks account creation, sign-ups and password resets after a few emails an hour. Set up custom SMTP (e.g. Resend). Then retry Command Center account creation.
+3. **Payments could not be tested anywhere**: no test account has Stripe connected. Connect Stripe in **test mode** on one test account to test deposits and invoices.
+4. **Command Center → Connections: Stripe "Sign in again".**
+
+**Top open issues to fix next:** 13 (in-app confirm instead of browser confirm boxes), 1 (HighLevel calendar warning on every save), 14 (invoice send when invoicing is off), 2–4 (send step), 20 (one-tap Clock in), 10/18/19/23 (design).
+
+**Sample data left in plan199 (labeled sample):** contact "AZ Test Customer (sample)", estimate/job "Gutter replacement (sample)". Plus a $100 sample sub invoice and a sample team message on the BuilderPro Test Co account. Delete when convenient.
+
 ## Setup notes
 - Window resize from the Chrome tools was ignored while the window was maximized; the owner narrowed it by hand.
 - The app blocks being framed (clickjacking guard at index.html line 15), so a framed phone preview isn't possible. Kept on purpose.
@@ -103,7 +118,13 @@ Issue 5 (sign-up prompt after approving) not re-checked: it needs a signed-out b
 
 | 6 | Jobs list + one job (partial) | Pass, with design issues | New job cards, filters and the folded "job steps" strip work. Job opens read-only with Edit details. Issues 6–9 above. Did not tap Finished/Not yet, to keep the demo schedule unchanged. |
 
-## Where the test stopped
+## Desktop width (step 18)
+
+| # | Area | Result | Notes |
+|---|---|---|---|
+| 18 | Dashboard, Jobs, Invoices at 3440px | Pass | Content centered, new card style, no console errors. |
+
+## Where the test stopped (first session)
 
 Stopped by the owner during step 6 (to resume when there are more credits).
 
