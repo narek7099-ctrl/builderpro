@@ -86,6 +86,16 @@ Sign-ins are done by the owner; Claude tests from there.
 Issue 11 update: not a bug. The customer side shows $2,800 paid and $9,400 next for Cabinets ($11,200 minus the extra $1,800 paid). The owner's Money tab just doesn't show that partial credit on the step the way the customer's Pay tab does ("$1,800 paid").
 Issue 5 (sign-up prompt after approving) not re-checked: it needs a signed-out browser. Auto-saving to a signed-in homeowner's account does work.
 
+## Results (Command Center, owner's admin login)
+
+| # | Area | Result | Notes |
+|---|---|---|---|
+| 17 | AI Team board | **Was broken, fixed** | On a phone the team list was shrunk to 34% (the desktop "fit" ran on resize), and the page threw "Cannot read properties of null" when the board redrew after leaving the tab. Both fixed in command.html; shipped, re-check pending. |
+| 17 | Approvals, Accounts, Phone numbers, Memory, Connections | Pass | All load. Accounts: 5 accounts, $896 MRR. Tables scroll sideways on a phone (fine for an admin page). |
+| 17 | + New account form | Opens | Not submitted yet: creating one makes a real HighLevel sub-account, so it waits for the owner's OK. |
+
+24. **Connections: Stripe shows "Sign in again".** The Stripe connection for the AI teams has expired; the owner needs to reconnect it.
+
 18. **AI CEO chat on a phone:** the top strip crams "New chat", "Briefings / Run now" and the date into one sideways-scrolling row.
 19. **Equipment:** the search box is squeezed to a tiny box ("Se…") at the start of the filter row.
 
