@@ -51,6 +51,19 @@ Sign-ins are done by the owner; Claude tests from there.
 | 12b | AI CEO card | Fixed | Tapping "AI CEO" on the phone board did nothing (only the hidden desktop-diagram copy had a click handler). Fixed in aiteam.js (v=20261020a); shipped, waiting on deploy to re-check. |
 | — | Equipment (Enterprise) | Pass, with note | Loads with sample heat pump. Issue 19. |
 
+## Results (crew / employee)
+
+| # | Area | Result | Notes |
+|---|---|---|---|
+| 14 | Employee home | Pass | Blue Clock in circle, today's job, Clock · Jobs · Messages · Me bar; no console errors. |
+| 14 | Clock in / out | Pass, with note | Clocked in (location off) and out; shift recorded. Issue 20. |
+| 14 | Jobs | Pass | List and job screen: "View only", no money shown, Call / Text / Directions. |
+| 14 | Messages | **Was broken, fixed** | Team chat message box sat under the bottom tab bar, so nothing could be typed. Fixed (mobile.css v=20261021t), verified live, sample message sent to the owner. Likely affected the owner's Team chat too. |
+| 14 | Me sheet | Pass | My crew, My ID, Time clock, Projects, Equipment, tour, dark mode, sign out. Sheet title changed "More" → "Me" to match the tab. |
+
+20. **The big Clock in circle doesn't clock in.** It opens the Time clock page, where you tap Clock in again (two taps). Suggest clocking straight in when there's one job today.
+21. **Time clock page lit the "Me" tab** instead of "Clock". Fixed (mobile.js v=20261021d).
+
 18. **AI CEO chat on a phone:** the top strip crams "New chat", "Briefings / Run now" and the date into one sideways-scrolling row.
 19. **Equipment:** the search box is squeezed to a tiny box ("Se…") at the start of the filter row.
 
