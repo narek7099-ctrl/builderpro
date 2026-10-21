@@ -311,3 +311,10 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* Settings: no empty band above each section */
 #bpx#bpx#bpx#bpx.bp-m .st-sec{padding-top:8px !important}
 #bpx#bpx#bpx#bpx.bp-m .st-head{margin-top:0 !important;padding-top:0 !important}
+/* estimate materials: search on its own line, item name across the whole card */
+#bpx#bpx#bpx#bpx.bp-m .ml-add{display:flex;flex-wrap:wrap;gap:10px}
+#bpx#bpx#bpx#bpx.bp-m .ml-add>input{flex:1 1 0;min-width:0}
+#bpx#bpx#bpx#bpx.bp-m .ml-add>button{flex:1 1 100%;order:9}
+#bpx#bpx#bpx#bpx.bp-m td:has(> .ml-name){display:flex !important;flex-wrap:wrap;align-items:baseline;gap:4px 10px;width:100% !important;grid-column:1/-1}
+#bpx#bpx#bpx#bpx.bp-m .ml-name{flex:1 1 100%;font-size:16px;font-weight:600;white-space:normal}
+#bpx#bpx#bpx#bpx.bp-m .ml-add>.ms{top:25px !important}#bpx#bpx#bpx#bpx.bp-m .ml-add>input{padding-left:38px !important}
