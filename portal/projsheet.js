@@ -98,6 +98,34 @@
     secs.forEach(function (s) { pane.appendChild(s); });
   }
 
+  /* Overview opens as a calm read-only summary; the form is one tap away
+     behind "Edit details", so nobody changes a phone number by accident. */
+  function viewMode(body) {
+    var pane = body.querySelector('[data-pj-pane="details"]'); if (!pane || pane.querySelector('.pjs-view')) return;
+    var rows = [];
+    Array.prototype.forEach.call(pane.querySelectorAll('label'), function (l) {
+      var f = l.htmlFor ? document.getElementById(l.htmlFor) : null;
+      if (!f) { var n = l.nextElementSibling; f = n && /^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) ? n : l.querySelector('input,textarea,select'); }
+      if (!f || f.type === 'hidden' || f.type === 'file' || f.type === 'checkbox') return;
+      var v = f.tagName === 'SELECT' ? (f.options[f.selectedIndex] || {}).text : f.value;
+      var k = (l.textContent || '').replace(/\s+/g, ' ').trim(); if (!k || k.length > 40) return;
+      rows.push([k, String(v || '').trim(), f.type]);
+    });
+    if (!rows.length) return;
+    var link = function (r) {
+      var v = esc(r[1]); if (!r[1]) return '<span class="pjs-vnone">Not added</span>';
+      if (/phone/i.test(r[0]) || r[2] === 'tel') return '<a href="tel:' + esc(r[1].replace(/[^\d+]/g, '')) + '">' + v + '</a>';
+      if (/address/i.test(r[0])) return '<a href="https://maps.google.com/?q=' + encodeURIComponent(r[1]) + '" target="_blank" rel="noopener">' + v + '</a>';
+      return v;
+    };
+    var view = document.createElement('section'); view.className = 'pjs-sec pjs-view';
+    view.innerHTML = '<div class="pjs-vh"><b>Details</b><button type="button" class="pm-btn" data-pjs-edit><span class="ms">edit</span>Edit details</button></div>'
+      + rows.map(function (r) { return '<div class="pjs-vr"><small>' + esc(r[0]) + '</small><div>' + link(r) + '</div></div>'; }).join('');
+    pane.insertBefore(view, pane.firstChild);
+    pane.classList.add('pjs-ro');
+    view.querySelector('[data-pjs-edit]').onclick = function () { pane.classList.remove('pjs-ro'); var f = pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); };
+  }
+
   function emptyState(ico, title, text, btn, onclick) {
     return '<div class="pjs-empty"><span class="ms">' + ico + '</span><b>' + title + '</b><p>' + text + '</p>'
       + '<button type="button" class="pm-btn" onclick="' + onclick + '"><span class="ms">add</span>' + btn + '</button></div>';
@@ -199,6 +227,7 @@
       crewPane.insertBefore(rc, crewPane.firstChild);
       if (!crewPane.hidden) bpCeoReco(j);
     }
+    viewMode(body);
     if (window.bpPermitsReset) bpPermitsReset();
     if (window.bpPermitsRender) bpPermitsRender(j);
     if (!isCrew() && window.bpSubsTabOpen) bpSubsTabOpen(j);

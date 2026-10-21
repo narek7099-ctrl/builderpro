@@ -265,3 +265,32 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m :is(.bpx-modal,.bpx-sheet,.ap-row,.pjl-a) :is(.bpx-btn,.bpx-rowbtn,.pjl-b){min-height:48px !important;font-size:15px !important;white-space:nowrap}
 #bpx#bpx#bpx#bpx.bp-m .ap-row .bpx-rowbtn{min-height:44px !important;padding:0 16px !important}
 #bpx#bpx#bpx#bpx.bp-m .pjl-a .pjl-b{padding:0 8px !important;gap:6px}
+
+/* calendar: day picker as big, separate day buttons */
+#bpx#bpx#bpx#bpx.bp-m .cd-strip{gap:8px;padding:2px 2px 8px;scroll-snap-type:x proximity}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip{width:64px !important;min-height:78px !important;border:1.5px solid var(--line) !important;background:var(--card,#fff) !important;border-radius:16px !important;padding:10px 0 8px !important;gap:4px !important;scroll-snap-align:start}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip small{font-size:12.5px !important}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip b{font-size:22px !important;line-height:1.1}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip.on{background:var(--blue,#2457d6) !important;border-color:var(--blue,#2457d6) !important;color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip.on small,#bpx#bpx#bpx#bpx.bp-m .cd-chip.on b{color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip.on i{background:#fff;color:var(--blue,#2457d6)}
+#bpx#bpx#bpx#bpx.bp-m .cd-chip.today:not(.on){border-color:var(--blue,#2457d6) !important}
+#bpx#bpx#bpx#bpx.bp-m :is(.cd-nav,.cd-head) button{min-width:48px;min-height:48px}
+
+/* employee home on a phone: just Clock in and today's jobs (hours live on Clock, the rest under More) */
+#bpx#bpx#bpx#bpx.bp-m .chm .ck-side{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-hero{padding:4px 2px 2px}
+#bpx#bpx#bpx#bpx.bp-m .chm-hero .chm-av{display:none}
+#bpx#bpx#bpx#bpx.bp-m .chm-hero h2{font-size:24px}
+#bpx#bpx#bpx#bpx.bp-m .chm-status{padding:20px !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-big{font-size:26px !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-job{gap:10px;align-items:stretch}
+#bpx#bpx#bpx#bpx.bp-m .chm-job-main{min-height:72px;padding:12px 4px !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-job-main b{font-size:16px}
+#bpx#bpx#bpx#bpx.bp-m .chm-dir{width:60px !important;height:auto !important;min-height:60px;border-radius:14px !important;display:grid !important;place-items:center;background:var(--blue-l,#eaf1ff) !important}
+#bpx#bpx#bpx#bpx.bp-m .chm-dir .ms{font-size:28px}
+#bpx#bpx#bpx#bpx.bp-m .chm-h button{min-height:44px;padding:0 6px}
+/* day header: date and arrows on one line, "Nothing booked · of about 9h" on its own line under it */
+#bpx#bpx#bpx#bpx.bp-m .cd-cap{flex:1 1 100% !important;order:9;min-width:0 !important}
+#bpx#bpx#bpx#bpx.bp-m .cd-cap-t{display:flex !important;justify-content:center;gap:6px;align-items:baseline;text-align:center}
+#bpx#bpx#bpx#bpx.bp-m .cd-cap-t b,#bpx#bpx#bpx#bpx.bp-m .cd-cap-t span{display:inline !important}
