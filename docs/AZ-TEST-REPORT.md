@@ -64,6 +64,17 @@ Sign-ins are done by the owner; Claude tests from there.
 20. **The big Clock in circle doesn't clock in.** It opens the Time clock page, where you tap Clock in again (two taps). Suggest clocking straight in when there's one job today.
 21. **Time clock page lit the "Me" tab** instead of "Clock". Fixed (mobile.js v=20261021d).
 
+## Results (subcontractor)
+
+| # | Area | Result | Notes |
+|---|---|---|---|
+| 15 | Sub home (Jobs) | Pass | Insurance warning with Upload, contract value / paid / unpaid, their job; no console errors. |
+| 15 | Invoices | Pass | Submitted a $100 sample invoice; shows under "Waiting on review" with Sign waiver. |
+| 15 | Changes, Messages, More | Pass | All load; More has Compliance, My company, Change orders, Invoices. |
+
+22. **Sub invoice form:** the file picker is the browser's plain "Choose file / No file chosen" control; looks unstyled next to the rest.
+23. **Sub screens still use the older look** (plain top bar, no navy header); they work but don't match the new owner/crew design.
+
 18. **AI CEO chat on a phone:** the top strip crams "New chat", "Briefings / Run now" and the date into one sideways-scrolling row.
 19. **Equipment:** the search box is squeezed to a tiny box ("Se…") at the start of the filter row.
 
