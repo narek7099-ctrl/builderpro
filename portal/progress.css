@@ -92,3 +92,8 @@
 @media(max-width:640px){#bpx .bpp-er{grid-template-columns:22px 1fr 92px;}#bpx .bpp-er-dl{grid-column:2/4}#bpx .bpp-er-mv{grid-column:2/4}}
 #bpx label.bpp-ed-save{display:flex !important;flex-direction:row;justify-content:flex-start;gap:8px;width:auto}
 #bpx label.bpp-ed-save input{width:auto !important;margin:0 !important;flex:none}
+#bpx .bpp-ask>summary{list-style:none;cursor:pointer}#bpx .bpp-ask>summary::-webkit-details-marker{display:none}
+#bpx .bpp-ask-h>div{flex:1}#bpx .bpp-chev{margin-left:auto;transition:transform .15s;color:var(--mu,#667085)}#bpx .bpp-ask[open] .bpp-chev{transform:rotate(180deg)}
+#bpx .bpp-ask:not([open]) .bpp-ask-h span:not(.ms){display:none}
+#bpx .bpp-ask[open] .bpp-ask-rows{margin-top:12px}
+@media (max-width:759px){#bpx .bpp-ask-row{flex-direction:column;align-items:stretch;gap:10px}#bpx .bpp-ask-b{display:grid;grid-template-columns:1fr 1fr;gap:10px}#bpx .bpp-ask-b button{min-height:52px !important;font-size:15px !important}}

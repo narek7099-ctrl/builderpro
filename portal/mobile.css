@@ -220,3 +220,48 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx.bp-m ~ #hlToasts,body:has(#bpx.bp-m.open) #hlToasts,#bpx.bp-m #hlToasts{bottom:calc(84px + env(safe-area-inset-bottom)) !important;left:12px !important;right:12px !important}
 /* calendar day header: "Nothing booked" on one line, the capacity note under it */
 @media (max-width:759px){#bpx#bpx#bpx .cd-cap-t{display:block;text-align:right}#bpx#bpx#bpx .cd-cap-t b{display:block;white-space:nowrap;font-size:14px}#bpx#bpx#bpx .cd-cap-t span{display:block;font-size:12px}}
+
+/* ======================================================================
+   Glove mode (phones). Everything you tap is at least 48px tall and has
+   room around it, so it works with work gloves and dirty hands.
+   ====================================================================== */
+/* bottom tabs: taller, bigger icons and labels */
+#bpx#bpx#bpx#bpx.bp-m .bpx-app.on .bp-tabbar{padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab{gap:4px;padding:6px 2px 4px !important;font-size:12.5px;min-height:62px !important}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab-i{width:64px;height:36px;border-radius:18px}
+#bpx#bpx#bpx#bpx.bp-m .bp-tab .hl-i{width:26px;height:26px;stroke-width:1.9}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea{padding-bottom:calc(110px + env(safe-area-inset-bottom)) !important}
+
+/* every button and link-button: 48px tall, readable text, space between */
+#bpx#bpx#bpx#bpx.bp-m .bpx-main :is(.bpx-btn,.bpx-addbtn,.bpx-rowbtn,.pjl-b,.bpx-linkbtn.big,.qs-next,.ctp-act,.mc-send,button.btn){min-height:48px !important;font-size:15px !important;padding-left:16px;padding-right:16px;border-radius:12px !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-main button:not(.hl-rb):not(.bp-tab):not([class*=ms-]){min-height:44px}
+#bpx#bpx#bpx#bpx.bp-m .bpx-main :is(.bpx-btn,.bpx-addbtn,.pjl-b)+:is(.bpx-btn,.bpx-addbtn,.pjl-b){margin-left:8px}
+
+/* tab rows at the top of a page (Texts / Email, Active / Equipment …): finger-sized */
+#bpx#bpx#bpx#bpx.bp-m :is(.bp-tabs,.bpx-tabs,.hl-subnav,.bpx-jobtabs) :is(a,button){min-height:48px !important;padding:0 14px !important;font-size:15px !important;display:inline-flex;align-items:center}
+#bpx#bpx#bpx#bpx.bp-m .bpx-jobtabs{gap:6px}
+
+/* fields: tall, 16px text (no zoom on iPhone) */
+#bpx#bpx#bpx#bpx.bp-m .bpx-main :is(input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea){min-height:50px;font-size:16px !important;border-radius:12px}
+#bpx#bpx#bpx#bpx.bp-m .bpx-main :is(input[type=checkbox],input[type=radio]){width:24px;height:24px}
+
+/* list rows you tap: more room */
+#bpx#bpx#bpx#bpx.bp-m .bpx-main :is(.pjl-r,.ml-row,.hx-feed,.cl-row,.bpx-conv){min-height:60px}
+
+/* the "Finished / Not yet" check-ins on Projects */
+#bpx#bpx#bpx#bpx.bp-m .bpx-main :is(.pjd-due,.due-it) button{min-height:48px !important;font-size:15px !important}
+
+/* phone-only project sheet: Call / Text / Mark done as big blocks */
+#bpx#bpx#bpx#bpx.bp-m :is(.pjs-acts,.pj-acts) :is(a,button){min-height:52px !important;font-size:15px !important}
+
+/* crew: the clock button is the biggest thing on the screen */
+#bpx#bpx#bpx#bpx.bp-m .ck-btn{min-height:64px !important;font-size:19px !important;border-radius:16px !important}
+#bpx#bpx#bpx#bpx.bp-m .hl-tab{min-height:50px !important;padding:0 16px !important;font-size:15px !important}
+#bpx#bpx#bpx#bpx.bp-m :is(.hl-rb.o,.hl-rb.bp-m-only){width:46px !important;height:46px !important}
+#bpx#bpx#bpx#bpx.bp-m .hl-av{width:42px !important;height:42px !important;flex-basis:42px !important;line-height:42px !important}
+#bpx#bpx#bpx#bpx.bp-m .mh-ref{width:46px;height:46px}
+/* pop-ups and sheets (a project, a contact…) get the same finger sizes */
+#bpx#bpx#bpx#bpx.bp-m .bpx-jt{min-height:48px !important;padding:0 14px !important;font-size:15px !important;display:inline-flex;align-items:center;gap:6px}
+#bpx#bpx#bpx#bpx.bp-m :is(.bpx-modal,.bpx-sheet,.ap-row,.pjl-a) :is(.bpx-btn,.bpx-rowbtn,.pjl-b){min-height:48px !important;font-size:15px !important;white-space:nowrap}
+#bpx#bpx#bpx#bpx.bp-m .ap-row .bpx-rowbtn{min-height:44px !important;padding:0 16px !important}
+#bpx#bpx#bpx#bpx.bp-m .pjl-a .pjl-b{padding:0 8px !important;gap:6px}
