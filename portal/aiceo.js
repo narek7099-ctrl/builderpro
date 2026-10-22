@@ -226,6 +226,7 @@
       + '<small class="ceo-rh">Briefings<button type="button" class="ceo-runl" data-run>Run now</button></small>'
       + shown.map(function (p) { return '<button data-rep="' + esc(p.id) + '" class="' + (r && r.id === p.id ? 'on' : '') + '">' + fmtDay(p.day) + (p.kind === 'adhoc' ? ' · by hand' : '') + '</button>'; }).join('')
       + (past.length > 5 ? '<button type="button" class="ceo-more" data-allreps>' + (C.allReps ? 'Show less' : 'Show all ' + past.length) + '</button>' : '');
+    side.classList.toggle('ceo-all', !!C.allReps);
     host.querySelectorAll('[data-new]').forEach(function (b) { b.onclick = function () { if (C.busy) return; C.asks = []; draw(); var q = $('aiIn'); if (q && !q.disabled) q.focus(); }; });
     host.querySelectorAll('[data-allreps]').forEach(function (b) { b.onclick = function () { C.allReps = !C.allReps; draw(); }; });
     var col = host.querySelector('#aiCol');
