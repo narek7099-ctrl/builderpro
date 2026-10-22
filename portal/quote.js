@@ -336,7 +336,7 @@
     /* send: exactly what goes out */
     var G2 = gb(j), c = calc(j), ct = contactBy(j.contactId);
     var to = ct ? (q.via === 'email' ? ct.email : q.via === 'both' ? [ct.phone, ct.email].filter(Boolean).join(' and ') : ct.phone) : '';
-    return '<div class="qs-review"><div class="qs-to"><span class="ms">' + (q.via === 'email' ? 'mail' : 'sms') + '</span><div><b>' + (j.contactId ? 'Going to ' + esc(j.name) : 'Pick the customer first') + '</b><small>' + (j.contactId ? esc(to || 'No ' + (q.via === 'email' ? 'email' : 'phone') + ' on file') + ' · by ' + ({ sms: 'text', email: 'email', both: 'text and email' }[q.via] || 'text') + ' · valid ' + (+q.validDays || 14) + ' days' : '<a onclick="BPQ.go(\'job\')">Choose who it is for</a>') + '</small></div><a class="qs-chg" onclick="BPQ.go(\'price\')">Change</a></div>'
+    return '<div class="qs-review"><div class="qs-to"><span class="ms">' + (q.via === 'email' ? 'mail' : 'sms') + '</span><div><b>' + (j.contactId ? 'Going to ' + esc(j.name) : 'Pick the customer first') + '</b><small>' + (j.contactId ? esc(to || 'No ' + (q.via === 'email' ? 'email' : 'phone') + ' on file') + ' · by ' + ({ sms: 'text', email: 'email', both: 'text and email' }[q.via] || 'text') + ' · valid ' + (+q.validDays || 14) + ' days' : '<a onclick="BPQ.go(\'job\')">Choose who it is for</a>') + '</small></div><select class="qs-via" aria-label="Send by" onchange="BPQ.viaSend(this.value)"><option value="sms"' + (q.via !== 'email' && q.via !== 'both' ? ' selected' : '') + '>Text</option><option value="email"' + (q.via === 'email' ? ' selected' : '') + '>Email</option><option value="both"' + (q.via === 'both' ? ' selected' : '') + '>Both</option></select></div>'
       + '<div class="qb-msg" id="qb-msg"></div>'
       + (G2.on && G2.tiers && G2.mode === 'pick' && tiersOut(j).length === 1 ? (function () { var t1 = tierAsSheet(j, tiersOut(j)[0]); var ls = t1.lines.map(function (l) { return { name: l.name, desc: l.desc, qty: l.qty, price: l.price, unit: l.unit }; }); if (t1.tax) ls.push({ name: 'Sales tax (' + (+q.taxPct) + '%)', qty: 1, price: t1.tax }); return '<div class="qs-solo"><span class="ms">info</span><span>You’re sending your pick, <b>' + esc(t1.name) + '</b>, at ' + m2(t1.total) + '. ' + esc(j.contactId ? j.name.split(' ')[0] : 'They') + ' gets one price to approve. <a onclick="BPQ.go(\'opts\')">Change</a></span></div><div class="qs-paper">' + doc('est', { lines: ls, disc: t1.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: (j.title === 'New estimate' ? '' : j.title) + (t1.title ? ' · ' + t1.title : ''), desc: q.desc }) + '</div>'; })()
         : G2.on && !G2.tiers ? '<div class="qs-solo"><span class="ms">info</span><span>The Good and Best options aren’t built yet. <a onclick="BPQ.go(\'opts\')">Build them on the Options step</a></span></div>'
@@ -432,6 +432,8 @@
   Q.setJ = function (k, v) { var j = job(Q.id); if (!j) return; j[k] = String(v || '').trim() || (k === 'title' ? 'New estimate' : ''); save(); paint(); };
   Q.taxOn = function (v) { Q.set('taxOn', v); };
   Q.via = function (v) { Q.set('via', v); };
+  /* changed on the Send step itself: redraw it so the line above says the new way */
+  Q.viaSend = function (v) { var j = job(Q.id); if (!j) return; j.quote.via = v; save(); render(); };
   Q.contact = function (cid) {
     var j = job(Q.id), c = contactBy(cid); if (!j) return;
     j.contactId = cid || null;
@@ -770,13 +772,22 @@
     } catch (e) { say('Network error. Try again.'); if (btn) btn.disabled = false; }
   };
   var WHY = { no_highlevel: 'Your texting number isn’t connected yet', no_contact: 'This customer isn’t in your texting inbox yet', no_token: 'Your texting number isn’t connected yet' };
+  /* the same reasons, said for email when the estimate went by email */
+  var WHY_EMAIL = { no_highlevel: 'Your business email isn’t connected yet', no_contact: 'This customer isn’t in your inbox yet', no_token: 'Your business email isn’t connected yet', no_email: 'There’s no email on file for this customer' };
   Q.optLink = function (failed) {
     var j = job(Q.id), o = j && j.quote.opt; if (!o || !o.link) return;
     bpModal('<h3>' + (failed ? 'Send them this link' : 'The options link') + '</h3>'
-      + (failed ? '<p class="bpx-sub">' + esc(WHY[o.reason] || 'We couldn’t text it automatically') + ', so send this link to ' + esc(j.name.split(' ')[0]) + ' yourself. When they ' + ((o.sent || []).length > 1 ? 'pick an option' : 'approve it') + ' it shows up here.</p>' : '<p class="bpx-sub">The link ' + esc(j.name.split(' ')[0]) + ' got. Anyone with it can see the estimate.</p>')
+      + (failed ? '<p class="bpx-sub">' + esc((j.quote.via === 'email' ? WHY_EMAIL[o.reason] : WHY[o.reason]) || (j.quote.via === 'email' ? 'We couldn’t email it automatically' : 'We couldn’t text it automatically')) + ', so send this link to ' + esc(j.name.split(' ')[0]) + ' yourself. When they ' + ((o.sent || []).length > 1 ? 'pick an option' : 'approve it') + ' it shows up here.</p>' : '<p class="bpx-sub">The link ' + esc(j.name.split(' ')[0]) + ' got. Anyone with it can see the estimate.</p>')
       + '<div class="qg-link"><input readonly value="' + esc(o.link) + '" onclick="this.select()"><button class="bpx-btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(\'' + esc(o.link) + '\');this.textContent=\'Copied\'">Copy</button></div>'
       + '<div class="row"><a class="bpx-btn ghost" href="' + esc(o.link) + '" target="_blank" rel="noopener">Open it</a><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>');
   };
+  /* a customer approving on their phone shows up here without a reload:
+     when the app comes back to the front, and every 30 seconds while an
+     estimates page or one estimate is open */
+  var syncOn = function () { return document.visibilityState === 'visible' && /^(estimates|quote|invoices|closedeals|dashboard)$/.test(String(window._bpCurView || '')); };
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && Q.syncOpts) Q.syncOpts(true); });
+  window.addEventListener('focus', function () { if (Q.syncOpts) Q.syncOpts(); });
+  setInterval(function () { if (syncOn() && Q.syncOpts) Q.syncOpts(true); }, 30000);
   /* picks and opens made on the customer's page, brought onto the sheets */
   var lastSync = 0;
   Q.syncOpts = function (force) {
@@ -1216,6 +1227,12 @@
     if (BPPx() && !j.pay) BPPx().choose(jid); else toast('Marked agreed. The invoice is ready to send.', 'success');
   };
   Q.ivConfirm = async function (jid) {
+    /* invoicing isn't set up on this account: say so and point to the fix, instead of an error that vanishes */
+    if (window._bpInvOff && !((job(jid) || {}).sample)) {
+      bpModal('<h3>Invoicing isn’t set up yet</h3><p class="bpx-sub">Before you can send invoices, connect your Stripe so customers can pay by card. It takes about two minutes.</p>'
+        + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Not now</button><button class="bpx-btn" onclick="bpCloseModal();bpNav(\'payouts\')">Set up payments</button></div>');
+      return;
+    }
     if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
     var keep = Q.inv, j = job(jid); invInit(j ? j.contactId : null, jid);
     var ct = contactBy(Q.inv.contactId);

@@ -97,3 +97,58 @@
     btn._hlWas = btn.disabled; btn.classList.add('hl-busy'); btn.disabled = true; btn.setAttribute('aria-busy', 'true');
   };
 })();
+
+/* ==================================================================
+   In-app "Are you sure?" instead of the browser's grey box.
+   Every confirm() in the portal comes from a tap. The first call shows
+   this dialog and answers "no", so nothing happens yet; "Yes" taps the
+   same button again and that one call answers "yes". Anything not
+   started by a recent tap keeps the browser's own box.
+   ================================================================== */
+(function () {
+  'use strict';
+  var native = window.confirm.bind(window), last = null, pass = null;
+  document.addEventListener('click', function (e) { last = { el: e.target, t: Date.now() }; }, true);
+  function css() {
+    if (document.getElementById('bpCfCss')) return;
+    var s = document.createElement('style'); s.id = 'bpCfCss';
+    s.textContent = '.bp-cf{position:fixed;inset:0;z-index:99990;display:flex;align-items:flex-end;justify-content:center;font-family:Inter,system-ui,sans-serif}'
+      + '.bp-cf-bg{position:absolute;inset:0;background:rgba(16,24,40,.55)}'
+      + '.bp-cf-box{position:relative;width:100%;max-width:440px;margin:0 12px 16px;background:#fff;border-radius:22px;padding:22px 20px 18px;box-shadow:0 20px 50px rgba(16,24,40,.3);animation:bpCfIn .16s ease-out}'
+      + '@media(min-width:760px){.bp-cf{align-items:center}.bp-cf-box{margin:0 16px}}'
+      + '@keyframes bpCfIn{from{transform:translateY(16px);opacity:.5}to{transform:none;opacity:1}}'
+      + '.bp-cf-box p{margin:0 0 18px;font-size:16px;line-height:1.45;color:#101828;white-space:pre-line}'
+      + '.bp-cf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
+      + '.bp-cf-row button{min-height:52px;border-radius:14px;font:600 16px/1 Inter,system-ui,sans-serif;cursor:pointer}'
+      + '.bp-cf-no{background:#fff;border:1px solid #D0D5DD;color:#101828}'
+      + '.bp-cf-yes{background:#2457D6;border:0;color:#fff}.bp-cf-yes.bad{background:#D92D20}'
+      + '.bpx-dark .bp-cf-box{background:#161B26}.bpx-dark .bp-cf-box p{color:#F2F4F7}.bpx-dark .bp-cf-no{background:#1A202C;border-color:#344054;color:#F2F4F7}';
+    document.head.appendChild(s);
+  }
+  window.confirm = function (msg) {
+    msg = String(msg == null ? '' : msg);
+    if (pass && pass.msg === msg) { pass = null; return true; }
+    var src = last && Date.now() - last.t < 4000 && last.el && last.el.isConnected ? last.el : null;
+    if (!src) return native(msg);
+    var btn = src.closest ? (src.closest('button,a,[onclick],label,input') || src) : src;
+    css();
+    var old = document.getElementById('bpCf'); if (old) old.remove();
+    var bad = /delete|remove|cancel|void|disconnect|discard|clear|stop|archive/i.test(msg);
+    var el = document.createElement('div'); el.id = 'bpCf'; el.className = 'bp-cf'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-modal', 'true');
+    el.innerHTML = '<div class="bp-cf-bg"></div><div class="bp-cf-box"><p></p><div class="bp-cf-row"><button type="button" class="bp-cf-no">Cancel</button><button type="button" class="bp-cf-yes' + (bad ? ' bad' : '') + '">' + (bad ? 'Yes, do it' : 'Yes') + '</button></div></div>';
+    el.querySelector('p').textContent = msg;
+    var host = document.getElementById('bpx') && document.getElementById('bpx').classList.contains('bpx-dark') ? document.getElementById('bpx') : document.body;
+    host.appendChild(el);
+    var close = function () { el.remove(); };
+    el.querySelector('.bp-cf-bg').onclick = close;
+    el.querySelector('.bp-cf-no').onclick = close;
+    el.querySelector('.bp-cf-yes').onclick = function () {
+      close();
+      pass = { msg: msg };
+      try { btn.click(); } catch (e) {}
+      setTimeout(function () { if (pass && pass.msg === msg) pass = null; }, 3000);
+    };
+    setTimeout(function () { var y = el.querySelector('.bp-cf-yes'); if (y) y.focus(); }, 30);
+    return false;
+  };
+})();

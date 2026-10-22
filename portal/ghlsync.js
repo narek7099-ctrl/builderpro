@@ -24,7 +24,14 @@
     return (window.bpFx ? bpFx(url, body) : fetch(url, { method: 'POST', headers: { 'Authorization': 'Bearer ' + window.BP_ANON, 'apikey': window.BP_ANON, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }))
       .then(function (r) { return r.json(); });
   };
-  var cal = function (b) { b.cal = 'jobs'; b.ignoreValidation = true; return post(window.GHL_CAL_URL, b); };
+  /* HighLevel not connected for this account: stop trying for the session, quietly */
+  var off = false, warned = false;
+  var notConnected = function (r) { return !!(r && r.ok === false && /connect|not set up|no location|location id|403/i.test(String(r.error || r.message || '') + ' ' + (r.status || ''))); };
+  var cal = function (b) {
+    if (off) return Promise.resolve({ ok: false, off: true });
+    b.cal = 'jobs'; b.ignoreValidation = true;
+    return post(window.GHL_CAL_URL, b).then(function (r) { if (notConnected(r)) off = true; return r; });
+  };
   var pad = function (n) { return String(n).padStart(2, '0'); };
   var mins = function (t) { var p = String(t || '').split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
   var hhmm = function (m) { m = Math.max(0, Math.min(1439, m)); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
@@ -64,7 +71,7 @@
 
   var timer = null, running = false, again = false, seen = {};
   window.bpGhlSchedSync = function (now) {
-    if (!live() || (window.bpTeamIsCrew && bpTeamIsCrew())) return;
+    if (off || !live() || (window.bpTeamIsCrew && bpTeamIsCrew())) return;
     clearTimeout(timer); timer = setTimeout(run, now ? 0 : 2500);
   };
   /* appointments that are project days, so the Calendar can skip them */
@@ -114,7 +121,7 @@
           var rc = await cal({ action: 'create', contactId: cid, startTime: wa.start, endTime: wa.end, title: wa.title, address: wa.address }).catch(function () { return null; });
           if (rc && rc.ok && rc.id) next[add[c]] = { id: rc.id, sig: sigOf(wa) }; else fail++;
         }
-        if (add.length && !cid) fail += add.length;
+        if (add.length && !cid) off = true;   /* no HighLevel contact could be made: HighLevel isn't set up here */
         j.sched = Object.assign({}, s, { ghl: next }); changed = true;
         seen[j.id] = next;
       }
@@ -124,7 +131,7 @@
         fresh.forEach(function (f) { var o = byId[f.id]; if (!o) return; if (o.contactId && !f.contactId) f.contactId = o.contactId; if (o.sched && o.sched.ghl) { f.sched = f.sched || {}; f.sched.ghl = o.sched.ghl; } });
         _set(fresh);
       }
-      if (fail && window.bpToast) bpToast('Some project days could not be put on the HighLevel Jobs calendar. They will be tried again on the next save.', 'warning');
+      if (fail && !off && !warned && window.bpToast) warned = true, bpToast('Some project days could not be put on the HighLevel Jobs calendar. They will be tried again on the next save.', 'warning');
     } catch (e) { /* the next save tries again */ }
     running = false;
     if (again) { again = false; window.bpGhlSchedSync(); }

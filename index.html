@@ -23588,11 +23588,12 @@ function bpInvLoad(){
   .then(function(r){ if(r.status===404) throw 'nf'; return r.json(); })
   .then(function(d){
     el.classList.remove('bpx-mut');
+    window._bpInvOff=!(d&&d.ok);
     if(!(d&&d.ok)){ el.innerHTML=BPINV_NOTE+(d&&d.error?'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'+bpEsc(String(d.error))+'</div>':''); return; }
     window._bpInvItems=d.items||[];
     bpInvDraw();
   })
-  .catch(function(){ el.classList.remove('bpx-mut'); el.innerHTML=BPINV_NOTE; });
+  .catch(function(){ window._bpInvOff=true; el.classList.remove('bpx-mut'); el.innerHTML=BPINV_NOTE; });
 }
 window.bpInvDraw=function(){
   var el=q('bpxInvList'); if(!el)return;
@@ -27698,13 +27699,13 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261020arcq"></script>
 <script src="portal/quickbooks.js?v=20261013b"></script>
-<script src="portal/ghlsync.js?v=20261023a"></script>
+<script src="portal/ghlsync.js?v=20261022a"></script>
 <script src="portal/autopause.js?v=20261016b"></script>
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261021a"></script>
-<script src="portal/quote.js?v=20261021a"></script>
-<link rel="stylesheet" href="portal/quote.css?v=20261021a">
+<script src="portal/quote.js?v=20261022a"></script>
+<link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261021a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
@@ -27717,7 +27718,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261009a">
 <script src="portal/bpedit.js?v=20261019a"></script>
-<script src="portal/crewapp.js?v=20261103a"></script>
+<script src="portal/crewapp.js?v=20261022a"></script>
 <script src="portal/teamchat.js?v=20261004a"></script>
 <script src="portal/subapp.js?v=20261105a"></script>
 <script src="portal/subs.js?v=20261004a"></script>
@@ -27757,7 +27758,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
 <link rel="stylesheet" href="portal/mobile.css?v=20261021t">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
-<script src="portal/ui-kit.js?v=20261002b"></script>
+<script src="portal/ui-kit.js?v=20261022a"></script>
 <script src="portal/shell.js?v=20261103p"></script>
 <script src="portal/mobile.js?v=20261021d"></script>
 <script src="portal/notify.js?v=20261103a"></script>
