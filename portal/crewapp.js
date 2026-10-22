@@ -277,7 +277,7 @@
         + '<div class="chm-st"><span class="chm-dot"></span>' + ST_LBL[st] + '</div>'
         + (st === 'off' ? '<b class="chm-big">Ready to start?</b>' : '<b class="chm-big chm-num" id="chm-run">' + hms(st === 'on' ? workedMs() : brkMs()) + '</b>')
         + '<p>' + line + '</p>'
-        + '<button type="button" class="ck-btn chm-go' + (st === 'off' ? '' : ' alt') + '" id="chm-go" onclick="bpNav(\'crewclock\')"><span class="ms">' + (st === 'off' ? 'login' : 'schedule') + '</span><span>' + (st === 'off' ? 'Clock in' : 'Open time clock') + '</span></button></div>';
+        + '<button type="button" class="ck-btn chm-go' + (st === 'off' ? '' : ' alt') + '" id="chm-go" onclick="' + (st === 'off' && today.length === 1 ? 'bpCrewQuickIn(\'' + esc(today[0].id) + '\')' : 'bpNav(\'crewclock\')') + '"><span class="ms">' + (st === 'off' ? 'login' : 'schedule') + '</span><span>' + (st === 'off' ? 'Clock in' : 'Open time clock') + '</span></button></div>';
       var jobRow = function (j) {
         var slot = slotLbl(j, day);
         return '<div class="chm-job"><button type="button" class="chm-job-main" onclick="bpCrewOpen(\'' + esc(j.id) + '\')"><span class="chm-job-ic"><span class="ms">construction</span></span>'
@@ -425,6 +425,17 @@
         function () { res(null); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
     });
   }
+  /* one tap from Home: with a single job today, the big button clocks in on it
+     straight away and shows the time clock with the result */
+  window.bpCrewQuickIn = function (id) {
+    bpNav('crewclock');
+    var tries = 0;
+    (function go() {
+      var r = document.querySelector('input[name="ca-job"][value="' + id + '"]');
+      if (r && $('ca-go')) { r.checked = true; bpCrewClockGo('in'); }
+      else if (++tries < 40) setTimeout(go, 150);
+    })();
+  };
   window.bpCrewClockGo = function (kind) {
     var btn = $('ca-go'), msg = $('ca-msg');
     var jobId = kind === 'in' ? ((document.querySelector('input[name="ca-job"]:checked') || {}).value || '') : ((C.me.open || {}).job_id || '');
