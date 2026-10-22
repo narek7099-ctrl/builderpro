@@ -473,3 +473,39 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* Team chat on a phone: end above the taller bottom bar so the message box can be reached */
 #bpx#bpx#bpx#bpx.bp-m .tc{height:calc(100dvh - 205px - env(safe-area-inset-bottom)) !important;min-height:360px !important}
+/* ---- A-Z design fixes ---- */
+/* empty count badges (a grey dash) stay hidden until they have a number */
+#bpx .bpx-badge:empty{display:none !important}
+/* one job: inside any tab but Overview, the header shrinks to the name and the buttons */
+#bpx#bpx#bpx#bpx.bp-m .pjs-card:has(.pjs-tab.on:not([data-pj-tab="details"])) :is(.pjs-ring,.pjs-stats){display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-card:has(.pjs-tab.on:not([data-pj-tab="details"])) .ap-row{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-card:has(.pjs-tab.on:not([data-pj-tab="details"])) .pjs-hero-row{padding-top:4px !important;gap:0 !important}
+/* Payouts: the three steps stack instead of running off the edge */
+#bpx#bpx#bpx#bpx.bp-m .bpx-pay-flow{display:grid !important;grid-template-columns:1fr !important;gap:8px}
+#bpx#bpx#bpx#bpx.bp-m .bpx-pay-flow>i{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-pay-flow>div{width:auto !important;box-sizing:border-box}
+/* Email: Scheduled / Compose / Broadcast in one even row */
+#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns{display:grid !important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns>span:empty,#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns>#bpx-otherchan:empty{display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar-btns>button{margin:0 !important;padding:0 6px !important;justify-content:center;font-size:14px !important;white-space:nowrap}
+#bpx#bpx#bpx#bpx.bp-m .bpx-msgbar{flex-wrap:wrap;gap:10px}
+/* Equipment: the search box gets its own full line */
+#bpx#bpx#bpx#bpx.bp-m .eq-bar{flex-wrap:wrap !important;gap:8px}
+#bpx#bpx#bpx#bpx.bp-m .eq-search{flex:1 1 100% !important;min-width:0 !important;width:100% !important}
+#bpx#bpx#bpx#bpx.bp-m .eq-search input{width:100% !important}
+/* AI CEO chat on a phone: New chat and Run now; the dated briefings only when "Show all" is tapped */
+#bpx#bpx#bpx#bpx.bp-m .ai-side:not(.ceo-all)>button[data-rep]:not(.on){display:none !important}
+#bpx#bpx#bpx#bpx.bp-m .ai-side.ceo-all{flex-wrap:wrap !important}
+/* file pickers look like our buttons everywhere */
+#bpx input[type=file]:not([hidden]){font:inherit;font-size:14px;color:var(--mu,#667085);max-width:100%}
+#bpx input[type=file]::file-selector-button{min-height:44px;padding:0 16px;margin-right:12px;border:1px solid var(--line,#D0D5DD);border-radius:12px;background:var(--card,#fff);color:var(--ink,#101828);font:600 14px/1 inherit;cursor:pointer}
+/* subcontractor home: same navy header as the owner and crew */
+#bpx#bpx#bpx#bpx.bp-m .sa-hello{background:var(--nv);color:#fff;margin:0 -16px 6px;padding:20px 20px 22px;border-radius:0 0 24px 24px}
+#bpx#bpx#bpx#bpx.bp-m .sa-hello :is(h1,h2,h3,b,strong){color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-hello :is(small,span,p,label){color:var(--nv-mu) !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-hello :is(.bpx-stat,[class*=stat],[class*=tile]){background:var(--nv-2) !important;border:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-hello :is(.bpx-stat,[class*=stat],[class*=tile]) :is(b,strong,.val){color:#fff !important}
+#bpx#bpx#bpx#bpx.bp-m .sa :is(.bpx-panel,[class*=card]){border-radius:22px !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-banner{border-radius:16px !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-hello .sa-kpis>div{background:var(--nv-2) !important;border:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx.bp-m .sa-hello .sa-kpis b{color:#fff !important}
