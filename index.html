@@ -16365,9 +16365,27 @@ function bpBillBanner(){
   d.innerHTML=(a.status==='checkout'?'Add a card to keep your 14-day free trial.':'Your last payment did not go through.')+'<a href="signup.html?step=pay" style="background:#006fff;color:#fff;border-radius:999px;padding:7px 14px;text-decoration:none;font-weight:500">'+(a.status==='checkout'?'Add card':'Update card')+'</a>';
   host.appendChild(d);
 }
+function bpLeaveHomeowner(){
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  ['bpSign','bpclBar','bpclSheet'].forEach(function(id){var el=document.getElementById(id);if(el)el.remove();});
+  document.body.classList.remove('bp-signing','bp-home');
+  document.documentElement.classList.remove('bp-signing-boot');
+  document.title='BuilderPro';
+}
 function bpEnterPortal(email){
   /* a homeowner account (homeowner-signup) never sees the contractor app */
-  if(/^#(my|pros|find-a-pro)\b/i.test(location.hash||''))return; /* those pages run on their own */
+  /* My projects / Find a pro run on their own for a homeowner. A contractor
+     signing in from one of those pages gets the portal, with the homeowner
+     page and its hash cleared away so none of it shows behind the app. */
+  if(/^#(my|pros|find-a-pro)\b/i.test(location.hash||'')){
+    if(!BP_LIVE){ bpLeaveHomeowner(); }
+    else { if(bpEnterPortal._chk) return; bpEnterPortal._chk=1;
+      return Promise.resolve(BP_SB.auth.getSession()).then(function(r){var s=r&&r.data&&r.data.session; bpEnterPortal._chk=0;
+        if(s&&s.user&&s.user.user_metadata&&s.user.user_metadata.bp_role==='homeowner') return;
+        bpLeaveHomeowner(); bpEnterPortal(email);
+      },function(){ bpEnterPortal._chk=0; });
+    }
+  }
   if(!bpEnterPortal._ho){ bpEnterPortal._ho=1;
     return Promise.resolve(BP_SB.auth.getSession()).then(function(r){var s=r&&r.data&&r.data.session;
       if(s&&s.user&&s.user.user_metadata&&s.user.user_metadata.bp_role==='homeowner'){
