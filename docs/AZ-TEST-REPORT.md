@@ -14,9 +14,15 @@ Sign-ins are done by the owner; Claude tests from there.
 3. **Payments could not be tested anywhere**: no test account has Stripe connected. Connect Stripe in **test mode** on one test account to test deposits and invoices.
 4. **Command Center → Connections: Stripe "Sign in again".**
 
-**Top open issues to fix next:** 13 (in-app confirm instead of browser confirm boxes), 1 (HighLevel calendar warning on every save), 14 (invoice send when invoicing is off), 2–4 (send step), 20 (one-tap Clock in), 10/18/19/23 (design).
+**Fixed after the test (Oct 21–22), shipped to main:**
+- a21fb56: 1 (HighLevel calendar warning only shows when HighLevel is connected, once per session), 2–3 (Send by Text/Email choice right on the Send step; the link message matches Email vs Text), 4 (approvals show up without a reload: re-checks on focus and every 30s), 13 (in-app confirm dialog replaces the browser's grey box everywhere), 14 ("Invoicing isn't set up yet" pop-up with a link to Payouts instead of the vanishing error), 20 (the big Clock in circle clocks straight in when there's one job today).
+- 5024041: 6 (page title says "Jobs"), 10 (smaller job header inside tabs), 12 (no empty gray count dashes), 15 (Payouts steps stacked), 16 (Email toolbar even), 18 (AI CEO strip: New chat, Briefings + Run now, 5 newest, Show all), 19 (Equipment search full width), 22 (styled file pickers), 23 (navy header and tiles for subcontractors).
+- 490fe0c: a contractor who signs in from a homeowner page (My projects / Find a pro) now gets a clean contractor portal. This was the "homeowner stuff showing in my contractor portal" report.
+- ai-ceo edge function deployed (v8): trims the key and keeps it out of the logs. ai-team and command have the same fix committed; they will be deployed after the new key is in.
 
-**Sample data left in plan199 (labeled sample):** contact "AZ Test Customer (sample)", estimate/job "Gutter replacement (sample)". Plus a $100 sample sub invoice and a sample team message on the BuilderPro Test Co account. Delete when convenient.
+**Not bugs / left as is:** 11 (Money tab vs customer Pay tab: amounts are right, just shown differently). 5 (sign-up prompt after approving) still needs a re-check in a signed-out browser.
+
+**Sample data left (all labeled "(sample)"):** in plan199, contact "AZ Test Customer (sample)" and estimate/job "Gutter replacement (sample)". On BuilderPro Test Co, a $100 sample sub invoice and a sample team message. They live inside account data, so they were not removed from the database directly. Delete them in the app when convenient.
 
 ## Setup notes
 - Window resize from the Chrome tools was ignored while the window was maximized; the owner narrowed it by hand.
@@ -124,20 +130,6 @@ Issue 5 (sign-up prompt after approving) not re-checked: it needs a signed-out b
 |---|---|---|---|
 | 18 | Dashboard, Jobs, Invoices at 3440px | Pass | Content centered, new card style, no console errors. |
 
-## Where the test stopped (first session)
+## Where the test stopped
 
-Stopped by the owner during step 6 (to resume when there are more credits).
-
-**Test data left in the account (plan199), all labeled sample:**
-- Contact "AZ Test Customer (sample)", (555) 010-0142, az.sample@example.com
-- Job/estimate "Gutter replacement (sample)", $681.66, approved by the test customer
-
-**Still to do:**
-- Step 6 rest: Money, Schedule, Crew, Materials, Permits, Photos, Documents tabs; Mark done.
-- Steps 7–18: Calendar, Finances (invoice, payment plan, test-mode payment), Supply, Inbox, Marketing, AI Team, Settings, crew login, sub login, homeowner login (re-check issue 5), Command Center, then desktop width.
-- The design check on every remaining screen.
-- Re-test issues 7–9 on the live site after shipping, then ship to main.
-- Fix issues 1–4 and 6.
-- Clean up the sample contact and job.
-
-**To resume:** sign in as plan199 in a narrow Chrome window (resize from the tools doesn't work while maximized; drag it narrow by hand), and point Claude at this file.
+The test finished all 18 steps in a second session. Everything in the first-session "still to do" list has been done; open items are the owner actions in the Summary.
