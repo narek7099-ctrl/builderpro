@@ -174,6 +174,13 @@
     if (C.host !== host || !document.contains(host)) return;
     if (!C.st.ok) { host.innerHTML = '<div class="ceo"><div class="ceo-card"><div class="bpx-mut">' + esc(C.st.error || 'Could not load the AI CEO.') + '</div></div></div>'; return; }
     C.cur = C.st.latest || null;
+    /* saved questions and answers come back on the next visit (once per page load) */
+    if (!C.loaded && C.st.ai) {
+      C.loaded = true;
+      var h = await api({ op: 'asks' });
+      if (h.ok && h.asks && !C.asks.length) C.asks = h.asks.slice(0, 20).map(function (x) { return { q: x.question, a: x.answer }; });
+      if (C.host !== host || !document.contains(host)) return;
+    }
     draw();
   };
 

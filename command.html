@@ -318,16 +318,23 @@ function closeDr(){el('dr').classList.remove('open');el('scr').classList.remove(
 async function openAgent(k){
   AGENT=k; THREAD=null; el('dr').classList.add('open'); el('drT').innerHTML='<i class="ti '+ICON[k]+'"></i>'+NAMES[k]; if(el('scr'))el('scr').classList.add('open'); drawBoard();
   el('drTh').innerHTML='<option value="">New conversation</option>';
-  openThread(null);
-  var r=await api({op:'threads',agent:k});
+  el('msgs').innerHTML='<div class="m sys">Loading…</div>';
+  var r=await api({op:'threads',agent:k}); if(AGENT!==k)return;
   el('drTh').innerHTML='<option value="">+ New conversation</option>'+(r.data||[]).map(function(t){return '<option value="'+t.id+'">'+(t.created_by==='shift'?'Shift: ':t.created_by==='ceo'?'From CEO: ':'')+esc(t.title)+'</option>'}).join('');
+  /* come back to the conversation you had open last time with this team */
+  var keep=lastThread(k); openThread(keep&&(r.data||[]).some(function(t){return t.id===keep})?keep:null);
 }
+function lastThread(k,id){try{if(arguments.length>1)localStorage.setItem('cc_last_'+k,id||'');else return localStorage.getItem('cc_last_'+k)||null}catch(e){return null}}
 async function openThread(id){
-  THREAD=id; var box=el('msgs'); if(el('drTh'))el('drTh').value=id||'';
+  THREAD=id; lastThread(AGENT,id); var box=el('msgs'); if(el('drTh'))el('drTh').value=id||'';
   if(!id){ box.innerHTML='<div class="intro">'+esc(AG[AGENT].d)+'. Ask anything, or start with one of these.</div><div class="hint">'+AG[AGENT].h.map(function(x){return '<button onclick="el(\'inp\').value=this.textContent;send()">'+esc(x)+'</button>'}).join('')+'</div>'; return; }
   box.innerHTML='<div class="m sys">Loading…</div>';
   var r=await api({op:'thread',id:id}); box.innerHTML='';
-  (r.data||[]).forEach(function(m){ if(m.role==='user'&&/^Your scheduled shift/.test(m.text||''))m={role:'sys',text:'Scheduled shift'}; addMsg(m); }); box.scrollTop=box.scrollHeight;
+  var list=r.data||[];
+  list.forEach(function(m){ if(m.role==='user'&&/^Your scheduled shift/.test(m.text||''))m={role:'sys',text:'Scheduled shift'}; addMsg(m); });
+  /* a question whose answer never came back (the run failed) */
+  var end=list[list.length-1]; if(end&&end.role==='user'&&!/^\[The owner/.test(end.text||''))addMsg({role:'sys',text:'No answer was saved for this one. Send it again.'});
+  box.scrollTop=box.scrollHeight;
 }
 function addMsg(m){
   var box=el('msgs'),d=document.createElement('div');

@@ -18,7 +18,8 @@
 //     { op:"status" }                 ai on/off, today's report, the last 14
 //     { op:"daily" }                  run the briefing now (kind 'adhoc')
 //     { op:"route", job }             ranked people for one project + why
-//     { op:"ask", question, jobs? }   Claude only; 30 an hour per account
+//     { op:"ask", question, jobs? }   Claude only; 30 an hour per account; saved to ceo_asks
+//     { op:"asks" }                   the last 30 questions and answers
 //
 // Crew and subs are turned away. Every read is filtered to the caller's own
 // account (team members act for their owner, as in contract-sign).
@@ -414,7 +415,14 @@ Deno.serve(async (req) => {
       const q = String(b.question ?? "").trim().slice(0, 1000);
       if (!q) return json({ ok: false, error: "Ask a question." }, 400);
       if (!(await take("ceo_ask", owner, ASK_PER_HOUR, 3600))) return json({ ok: false, error: `You've asked ${ASK_PER_HOUR} questions this hour. Try again later.` }, 429);
-      return json(await ask(owner, q, b.jobs !== false));
+      const out = await ask(owner, q, b.jobs !== false);
+      // keep the chat: the question and its answer (or why it failed)
+      await sb("ceo_asks", { method: "POST", body: JSON.stringify({ owner, question: q, answer: out.ok ? out.answer : out.error, ok: out.ok }) }).catch(() => {});
+      return json(out);
+    }
+    if (op === "asks") {
+      const list = await rows(`ceo_asks?owner=eq.${owner}&select=id,question,answer,ok,created_at&order=created_at.desc&limit=30`);
+      return json({ ok: true, asks: list });
     }
   } catch (e) {
     console.error("ai-ceo", op, String(e).replace(/sk-ant-[\w-]+/g, "[key]").slice(0, 300));

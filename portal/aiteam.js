@@ -258,16 +258,22 @@
   async function chat() {
     $('aiBody').innerHTML = bpChatShell({ ph: 'Message ' + AG[A.agent].n + '…', fine: 'Anything for a customer waits for your OK first.' });
     bpChatWire(send);
-    open(A.thread);
+    var col0 = col(); if (col0) col0.innerHTML = '<div class="ai-m s">Loading…</div>';
     var r = await api({ op: 'threads', agent: A.agent });
+    /* come back to the conversation you had open last time with this assistant */
+    if (!A.thread) { var keep = lastThread(A.agent); if (keep && (r.data || []).some(function (t) { return t.id === keep; })) A.thread = keep; }
+    open(A.thread);
     var side = $('aiSide'); if (!side) return;
     side.innerHTML = '<button class="ai-new" data-t=""><span class="ms">edit_square</span>New chat</button>' + ((r.data || []).length ? '<small>Recent</small>' : '') + (r.data || []).map(function (t) { return '<button data-t="' + t.id + '" title="' + esc(t.title) + '">' + (t.kind === 'brief' ? 'Brief: ' : '') + esc(t.title) + '</button>'; }).join('');
     side.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', (b.getAttribute('data-t') || null) === A.thread); b.onclick = function () { open(b.getAttribute('data-t') || null); side.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
   }
   function col() { return $('aiCol'); }
+  function lastThread(ag, id) {
+    try { if (arguments.length > 1) localStorage.setItem('bp-ai-last-' + ag, id || ''); else return localStorage.getItem('bp-ai-last-' + ag) || null; } catch (e) { return null; }
+  }
   function bottom() { var m = $('aiMsgs'); if (m) m.scrollTop = m.scrollHeight; }
   async function open(id) {
-    A.thread = id; var box = col(); if (!box) return;
+    A.thread = id; lastThread(A.agent, id); var box = col(); if (!box) return;
     if (!id) {
       box.innerHTML = '<div class="ai-hello">' + AV + '<h2>How can ' + AG[A.agent].n + ' help?</h2><div class="bpx-mut">' + AG[A.agent].d + '</div></div><div class="ai-hint">' + AG[A.agent].h.map(function (x) { return '<button>' + esc(x) + '</button>'; }).join('') + '</div>';
       box.querySelectorAll('.ai-hint button').forEach(function (b) { b.onclick = function () { $('aiIn').value = b.textContent; send(); }; });
@@ -275,7 +281,12 @@
     }
     box.innerHTML = '<div class="ai-m s">Loading…</div>';
     var r = await api({ op: 'thread', id: id }); box.innerHTML = '';
-    (r.data || []).forEach(add); bottom();
+    var list = r.data || [];
+    list.forEach(add);
+    /* a question whose answer never came back (the run failed) */
+    var end = list[list.length - 1];
+    if (end && end.role === 'user' && !/^\[The owner/.test(end.text || '')) add({ role: 's', text: 'No answer was saved for this one. Send it again.' });
+    bottom();
   }
   function add(m) {
     var box = col(); if (!box) return; var d = document.createElement('div');
@@ -295,7 +306,7 @@
     var r = await api({ op: 'chat', agent: A.agent, thread_id: A.thread, message: t });
     A.busy = false; if ($('aiIn') && $('aiIn').bpFit) $('aiIn').bpFit();
     if (w) w.remove();
-    if (!r.ok) { add({ role: 's', text: r.error || 'Something went wrong.' }); return; }
+    if (!r.ok) { if (r.thread_id) { A.thread = r.thread_id; lastThread(A.agent, r.thread_id); } add({ role: 's', text: r.error || 'Something went wrong.' }); return; }
     A.thread = r.thread_id; A.st.used++;
     await open(A.thread);
     if (r.approvals && r.approvals.length) { A.st.pending += r.approvals.length; add({ role: 's', text: r.approvals.length + ' draft' + (r.approvals.length > 1 ? 's are' : ' is') + ' waiting for your OK under "Waiting for you".' }); }
