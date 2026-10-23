@@ -368,12 +368,25 @@ async function history(thread: string): Promise<Anthropic.Beta.Messages.BetaMess
 const save = (thread: string, role: string, content: unknown) =>
   sb("ai_messages", { method: "POST", body: JSON.stringify({ thread_id: thread, role, content }) });
 
+// Keys not scoped to a workspace (sk-ant-usr-...) must name one on every request:
+// ANTHROPIC_WORKSPACE_ID if set, else the org's "BuilderPro" (or first) workspace, looked up once.
+let WS: Promise<string> | null = null;
+const workspaceId = (key: string) => WS ??= (async () => {
+  const env = (Deno.env.get("ANTHROPIC_WORKSPACE_ID") ?? "").trim();
+  if (env || !key || key.startsWith("sk-ant-api")) return env;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/organizations/workspaces?limit=20", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01" }, signal: AbortSignal.timeout(8000) });
+    const d = ((await r.json())?.data ?? []) as { id: string; name: string }[];
+    return (d.find((x) => /builderpro/i.test(x.name)) ?? d[0])?.id ?? "";
+  } catch { WS = null; return ""; }
+})();
+
 /* The loop: call Claude, run the tools it asks for (or queue them for the
    owner), feed results back, until it answers. Append-only, so earlier turns
    (and their thinking) are sent back unchanged. */
 async function runAgent(a: Agent, thread: string, userText: string, depth = 0, by = "owner") {
-  const ws = (Deno.env.get("ANTHROPIC_WORKSPACE_ID") ?? "").trim(); // keys not scoped to a workspace must name one on every request
-  const client = new Anthropic({ apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
+  const apiKey = (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), ws = await workspaceId(apiKey);
+  const client = new Anthropic({ apiKey, defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
   const sys = await system(a);
   const messages = await history(thread);
   const conns = await mcpFor(a.key);
