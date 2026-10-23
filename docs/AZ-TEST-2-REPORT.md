@@ -27,5 +27,23 @@ Stopped early: Claude's usage limit was reached.
 | Page loads | Pass | Calendar, Projects, Supply (all tabs), Leads, Automations (55), Calculators, Payouts, QuickBooks, Reputation, Website, Social, Texts, Email, Team chat, Settings. |
 | AI Team | Pass | Sales answered one question using the business and project data; chat came back after leaving and returning. |
 
-## Not done (usage limit)
-Command Center and HighLevel checks (need the owner's sign-in), AI CEO and Lisa questions, + sheet on phone, photo upload, job steps, Mark done, suppliers/templates, dark mode, signed-out customer prompt, resize, password-reset email, cleanup of sample items (Roof replacement (sample) estimate, AZ Contact (sample)).
+## Second session
+4. **Anthropic credit ran out.** The AI CEO question failed; the server log says "Your credit balance is too low to access the Anthropic API." Add credits in the Anthropic Console → Plans & Billing. Note: the Command Center team shifts run every 30 minutes and use credit even when nobody is chatting (turn shifts off on the AI Team board if you want to save credit).
+
+| Step | Result | Notes |
+|---|---|---|
+| AI CEO tab | Blocked | Morning briefing ran (from the copied data). Question failed: Anthropic credit (blocker 4). |
+| Suppliers | Pass | Added ABC Supply and SRS Distribution from the chain list (the "Add" form opens and saves). |
+| Dark mode | Pass | Dashboard, Calendar, Finances readable; turned back off. |
+| Password reset email | Sent | To narek7099+az2@gmail.com; owner to confirm it arrived. |
+| Command Center, Accounts | Pass, shows the problem | New row: Enterprise, trial, 14 days left, Setup "Failed, sent to Support". Setup log: 3 retries, all "GHL_API_KEY / GHL_COMPANY_ID not set". |
+| Command Center, Approvals / Memory | Pass | Nothing waiting. Memory now saves notes (yesterday's fix); Marketing noted not to run paid ads until HighLevel provisioning is fixed. |
+| HighLevel check | Not possible | No sub-account exists (blocker 1). |
+
+## Still not done
+- HighLevel sub-account check, once blocker 1 is fixed.
+- Lisa, CEO chat answers and the CEO chat reopening, once blocker 4 is fixed.
+- Phone layout (+ sheet, glove sizes): the Chrome window is maximized on a 3440px screen and can't be resized by the tools.
+- Photo upload, job step Finished/Not yet, Mark done, templates.
+- Signed-out customer "save to your account" prompt: needs an incognito window, which the tools can't open.
+- Cleanup: AZ Contact (sample), Roof replacement (sample) estimate, ABC Supply and SRS Distribution suppliers on the new account. They're all on the test account; delete them in the app when convenient, or keep them for the next round.
