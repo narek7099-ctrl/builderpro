@@ -10,88 +10,169 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
 <style>
-:root{--bg:#edf2f6;--card:#fff;--line:#dce3ec;--line2:#cfd8e3;--ink:#001530;--mut:#788493;--dim:#9aa3b1;--blue:#006fff;--blue-d:#003db8;--blue-l:#e6f0ff;--pill:#0b1021;--ok:#1faa5a;--bad:#e0574e;
-  --sans:'General Sans','Geist',system-ui,sans-serif;--ease:cubic-bezier(.39,.575,.565,1)}
+:root{--bg:#eef2f7;--card:#fff;--line:#dce3ec;--line2:#cbd5e1;--ink:#001530;--mut:#5f6c7d;--dim:#9aa3b1;--blue:#006fff;--blue-d:#003db8;--blue-l:#e8f1ff;--navy:#001530;--navy2:#0b2547;--ok:#1faa5a;--bad:#d64541;
+  --sans:'General Sans','Geist',system-ui,sans-serif;--ease:cubic-bezier(.2,.7,.2,1)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100dvh}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased;min-height:100dvh}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--blue)}
-.top{display:flex;align-items:center;gap:10px;height:68px;padding:0 24px;max-width:1100px;margin:0 auto}
-.top a.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:600;font-size:18px;letter-spacing:-.02em}
+.top{display:flex;align-items:center;gap:10px;height:68px;padding:0 24px;max-width:1120px;margin:0 auto}
+.top a.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:600;font-size:19px;letter-spacing:-.02em}
 .top a.logo b{color:var(--blue);font-weight:600}
 .top .have{margin-left:auto;font-size:14px;color:var(--mut)}
-.wrap{max-width:760px;margin:0 auto;padding:8px 20px 60px}
-.prog{display:flex;gap:6px;margin:6px 0 22px}
-.prog i{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .4s var(--ease)}
+.top .have a{font-weight:600;text-decoration:none}
+.shell{max-width:1120px;margin:0 auto;padding:4px 24px 64px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.shell.wide{grid-template-columns:minmax(0,1fr)}
+.shell.wide .side{display:none}
+/* step header */
+.stepper{margin:2px 0 16px}
+.stepper .row{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.stepper .sn{font-size:13px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.06em}
+.stepper .sl{font-size:13px;color:var(--mut)}
+.prog{display:flex;gap:6px}
+.prog i{flex:1;height:5px;border-radius:5px;background:var(--line);transition:background .4s var(--ease)}
 .prog i.on{background:var(--blue)}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:32px;animation:in .45s var(--ease)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:32px;animation:in .4s var(--ease);box-shadow:0 1px 2px rgba(0,21,48,.04),0 8px 24px -12px rgba(0,21,48,.08)}
 @keyframes in{from{opacity:0;transform:translateY(8px)}}
 h1{font-size:30px;font-weight:600;letter-spacing:-.03em;line-height:1.15}
-.sub{color:var(--mut);margin:6px 0 24px;max-width:56ch}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.plan{border:1.5px solid var(--line);border-radius:16px;padding:18px;text-align:left;background:#fff;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s var(--ease);display:flex;flex-direction:column;gap:6px}
+h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--mut);margin:8px 0 26px;max-width:58ch}
+/* plans */
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.plan{position:relative;border:1.5px solid var(--line);border-radius:18px;padding:22px 20px 20px;text-align:left;background:#fff;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s var(--ease);display:flex;flex-direction:column;gap:4px;min-height:100%}
 .plan:hover{border-color:var(--line2);transform:translateY(-2px)}
 .plan.on{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,111,255,.12)}
-.plan .tag{font-size:12px;color:var(--mut);font-weight:500}
-.plan .nm{font-size:18px;font-weight:600;letter-spacing:-.02em}
-.plan .pr{font-size:30px;font-weight:600;letter-spacing:-.03em;margin:4px 0}
+.plan .chk{position:absolute;top:18px;right:18px;width:24px;height:24px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;transition:.2s}
+.plan.on .chk{background:var(--blue);border-color:var(--blue)}
+.plan.on .chk:after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+.plan .tag{font-size:12.5px;color:var(--mut);font-weight:500}
+.plan.pop .tag{color:var(--blue);font-weight:600}
+.plan .nm{font-size:19px;font-weight:600;letter-spacing:-.02em;padding-right:30px}
+.plan .pr{font-size:34px;font-weight:600;letter-spacing:-.03em;margin:6px 0 2px}
 .plan .pr small{font-size:14px;color:var(--mut);font-weight:500;letter-spacing:0}
-.plan ul{list-style:none;font-size:13.5px;color:#34435a;display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.plan li{position:relative;padding-left:16px;line-height:1.4}.plan li:before{content:"";position:absolute;left:0;top:.5em;width:6px;height:6px;border-radius:50%;background:var(--blue)}
-.plan.pop{background:linear-gradient(180deg,#f3f8ff,#fff)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+.plan .fr{font-size:13px;color:var(--ok);font-weight:600}
+.plan ul{list-style:none;font-size:14px;color:#34435a;display:flex;flex-direction:column;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.plan li{position:relative;padding-left:22px;line-height:1.4}
+.plan li:before{content:"";position:absolute;left:2px;top:.32em;width:5px;height:9px;border:solid var(--blue);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.plan.pop{background:linear-gradient(180deg,#f3f8ff,#fff 60%)}
+.trust{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:22px;font-size:14px;color:var(--mut)}
+.trust span{display:flex;align-items:center;gap:8px}
+.trust span:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+/* fields */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 16px}
 .grid .full{grid-column:1/-1}
-.f label{display:block;font-size:13.5px;font-weight:500;margin-bottom:6px}
-.f .h{font-size:12.5px;color:var(--mut);margin-top:5px}
-.f input,.f select,.f textarea{width:100%;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:11px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
-.f textarea{min-height:92px;resize:vertical}
+.sec{font-size:13px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 -4px}
+.f label{display:block;font-size:14px;font-weight:600;margin-bottom:7px}
+.f label .opt{font-weight:400;color:var(--dim);margin-left:4px}
+.f .h{font-size:13px;color:var(--mut);margin-top:6px}
+.f input,.f select,.f textarea{width:100%;min-height:50px;background:#fff;border:1px solid var(--line2);border-radius:12px;padding:12px 14px;outline:none;font-size:16px;transition:border-color .15s,box-shadow .15s}
+.f select{appearance:none;-webkit-appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%235f6c7d' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 16px center;padding-right:40px}
+.f textarea{min-height:100px;resize:vertical}
 .f input:focus,.f select:focus,.f textarea:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,111,255,.12)}
 .f input::placeholder,.f textarea::placeholder{color:var(--dim)}
-.f.err input,.f.err select,.f.err textarea{border-color:var(--bad)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chips button{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;transition:.15s}
+.f.err input,.f.err select,.f.err textarea{border-color:var(--bad);box-shadow:0 0 0 4px rgba(214,69,65,.1)}
+.pw{position:relative}.pw input{padding-right:76px}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:var(--blue-l);color:var(--blue-d);border-radius:9px;height:38px;padding:0 12px;font-size:14px;font-weight:600;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips button{border:1px solid var(--line2);background:#fff;border-radius:999px;min-height:40px;padding:6px 14px;font-size:14px;cursor:pointer;transition:.15s}
 .chips button:hover{border-color:var(--blue);color:var(--blue)}
-.chips button.on{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d)}
-.hrs{display:grid;gap:6px}
-.hr{display:grid;grid-template-columns:120px 90px 1fr 1fr;gap:10px;align-items:center;font-size:14px}
-.hr input[type=time]{padding:8px 10px}
-.hr label.sw{display:flex;align-items:center;gap:6px;font-weight:500;margin:0}
-.hr.off input[type=time]{opacity:.35}
-.nav{display:flex;align-items:center;gap:10px;margin-top:28px}
-.btn{border:0;border-radius:999px;padding:12px 22px;font-weight:500;cursor:pointer;transition:background .2s,transform .1s}
+.chips button.on{background:var(--blue-l);border-color:var(--blue);color:var(--blue-d);font-weight:500}
+.chips button.on:before{content:"✓ "}
+.hrs{display:grid;gap:8px}
+.hr{display:grid;grid-template-columns:110px 96px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center;font-size:15px;padding:6px 0;border-bottom:1px solid #eef1f5}
+.hr:last-child{border-bottom:0}
+.hr>span{font-weight:500}
+.hr input[type=time]{min-height:44px;padding:8px 10px;width:100%;border:1px solid var(--line2);border-radius:10px}
+.hr label.sw{display:flex;align-items:center;gap:8px;font-weight:500;margin:0;font-size:14px;cursor:pointer}
+.hr label.sw input{width:20px;height:20px;accent-color:var(--blue)}
+.hr.off input[type=time]{opacity:.3;pointer-events:none}
+/* nav */
+.nav{display:flex;align-items:center;gap:10px;margin-top:30px}
+.btn{border:0;border-radius:999px;min-height:52px;padding:0 26px;font-weight:600;font-size:16px;cursor:pointer;transition:background .2s,transform .1s;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
 .btn:active{transform:translateY(1px)}
-.btn.pri{background:var(--blue);color:#fff;margin-left:auto}
+.btn.pri{background:var(--blue);color:#fff;margin-left:auto;box-shadow:0 6px 16px -6px rgba(0,111,255,.55)}
 .btn.pri:hover{background:var(--blue-d)}
-.btn.ghost{background:none;color:var(--mut);padding-left:4px}
-.btn:disabled{opacity:.55;cursor:default}
-.msg{color:var(--bad);font-size:14px;margin-top:14px;min-height:1.2em}
-.rev{display:grid;grid-template-columns:150px 1fr;gap:8px 16px;font-size:14px}
+.btn.pri:after{content:"→";font-weight:500}
+.btn.ghost{background:none;color:var(--mut);padding:0 14px}
+.btn.ghost:hover{color:var(--ink)}
+.btn.soft{background:var(--blue-l);color:var(--blue-d)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn:disabled:after{content:none}
+.msg{color:var(--bad);font-size:14.5px;margin-top:16px;min-height:1.2em}
+.msg:empty{margin-top:0}
+/* review */
+.rv{border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:12px}
+.rv .hd{display:flex;align-items:center;margin-bottom:8px}
+.rv .hd button{margin-left:auto;border:0;background:none;color:var(--blue);font-weight:600;font-size:14px;cursor:pointer;min-height:36px;padding:0 6px}
+.rev{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 16px;font-size:15px}
 .rev dt{color:var(--mut)}
-.rev dd{white-space:pre-wrap}
-.note{background:var(--blue-l);color:var(--blue-d);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:18px}
-.steps{list-style:none;display:flex;flex-direction:column;gap:10px;margin:18px 0}
-.steps li{display:flex;gap:10px;align-items:center;font-size:15px;color:var(--mut)}
-.steps li i{width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);flex:none;position:relative}
+.rev dd{white-space:pre-wrap;overflow-wrap:anywhere}
+.note{background:var(--blue-l);color:var(--blue-d);border-radius:14px;padding:14px 16px;font-size:14.5px;margin-top:18px}
+.addons{display:grid;gap:10px;margin-top:10px}
+.addon{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;background:#fff}
+.addon input{margin-top:3px;width:20px;height:20px;accent-color:var(--blue);flex:none}
+.addon b{color:var(--ink)}.addon em{font-style:normal;color:var(--blue);font-weight:600;margin-left:6px}
+.addon small{display:block;color:var(--mut);margin-top:3px;font-size:13.5px}
+.addon.inc{background:#f3f8ff;border-color:#b9d6ff;cursor:default}
+.total{display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 0;padding-top:16px;border-top:1px solid var(--line);color:var(--mut)}
+.total b{color:var(--ink);font-size:20px;white-space:nowrap;margin-left:12px}
+/* done */
+.steps{list-style:none;display:flex;flex-direction:column;gap:12px;margin:20px 0}
+.steps li{display:flex;gap:12px;align-items:center;font-size:16px;color:var(--mut)}
+.steps li i{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);flex:none;position:relative}
 .steps li.done{color:var(--ink)}
 .steps li.done i{background:var(--ok);border-color:var(--ok)}
-.steps li.done i:after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.steps li.done i:after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .steps li.run i{border-color:var(--blue);border-top-color:transparent;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* summary rail */
+.side{position:sticky;top:20px;background:var(--navy);color:#fff;border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.side .k{font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#8fa6c4}
+.side .pn{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.side .pp{font-size:15px;color:#c9d6e8}
+.side .pp b{color:#fff;font-size:28px;font-weight:600;letter-spacing:-.02em;margin-right:4px}
+.side .free{display:inline-flex;align-self:flex-start;background:rgba(31,170,90,.18);color:#7ee2a6;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600}
+.side ul{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:14.5px;color:#dbe5f2;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.side li{position:relative;padding-left:22px}
+.side li:before{content:"";position:absolute;left:2px;top:.3em;width:5px;height:9px;border:solid #5ea2ff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.side .chg{border:0;background:rgba(255,255,255,.1);color:#fff;border-radius:999px;min-height:40px;padding:0 16px;font-weight:600;font-size:14px;cursor:pointer;align-self:flex-start}
+.side .help{font-size:13.5px;color:#8fa6c4;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.side .help a{color:#9cc5ff}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
-@media(max-width:720px){.plans,.grid{grid-template-columns:1fr}.panel{padding:22px}.hr{grid-template-columns:1fr 80px;}.hr input[type=time]{grid-column:span 1}h1{font-size:25px}.rev{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr);padding:0 16px 120px;gap:14px}
+  .side{position:static;order:-1;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:14px 18px;border-radius:18px}
+  .side .k,.side ul,.side .help{display:none}
+  .side .pn{font-size:16px}.side .pp{font-size:14px;margin-right:auto}.side .pp b{font-size:16px;margin-right:2px}
+  .side .pp{flex-basis:100%;order:2}.side .free{order:3}.side .pn{order:1}.side .chg{order:1;margin-left:auto;min-height:36px;padding:0 14px;font-size:13px}
+}
+@media(max-width:720px){
+  .top{padding:0 16px;height:60px}
+  .plans,.grid{grid-template-columns:minmax(0,1fr)}
+  .panel{padding:22px 18px;border-radius:20px}
+  h1{font-size:25px}.sub{margin-bottom:20px}
+  .hr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"d s" "f t";row-gap:8px}
+  .hr>span{grid-area:d}.hr label.sw{grid-area:s}.hr [data-f]{grid-area:f}.hr [data-t]{grid-area:t}
+  .hr{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .rev{grid-template-columns:minmax(0,1fr);gap:0}.rev dt{font-size:13px;margin-top:8px}
+  .nav{position:fixed;left:0;right:0;bottom:0;margin:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);z-index:5}
+  .nav .btn.pri{flex:1;margin-left:0}
+  .msg{margin-top:14px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-.addons{display:grid;gap:10px}.addon{display:flex;gap:12px;align-items:flex-start;border:1px solid #dbe3ec;border-radius:14px;padding:14px 16px;cursor:pointer;background:#fff}
-.addon input{margin-top:3px;width:18px;height:18px;accent-color:#006fff}.addon b{color:#001530}.addon em{font-style:normal;color:#006fff;font-weight:500;margin-left:6px}.addon small{display:block;color:#5b6b7f;margin-top:3px;font-size:13px}
-.addon.inc{background:#f3f8ff;border-color:#b9d6ff;cursor:default}.total{margin:16px 0 0;color:#5b6b7f}.total b{color:#001530}
 </style>
 <script async src="https://builderpro-os.com/embed/track.js?u=0909842f-f8b2-4651-950a-a772aef42b1d"></script>
 </head>
 <body>
 <div class="top"><a class="logo" href="index.html"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><span>Builder<b>Pro</b></span></a><span class="have">Have an account? <a href="index.html?portal=1">Log in</a></span></div>
-<div class="wrap">
-  <div class="prog" id="prog"></div>
-  <div id="view"></div>
-</div>
+<main class="shell" id="shell">
+  <section>
+    <div class="stepper" id="stepper"></div>
+    <div id="view"></div>
+  </section>
+  <aside class="side" id="side" aria-label="Your plan"></aside>
+</main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <script>
 var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
@@ -117,6 +198,7 @@ if(qs.get('website'))S.addons.website=true;
 if(qs.get('plan')&&PLANS.some(function(p){return p.k===qs.get('plan')}))S.plan=qs.get('plan');
 ['name','email','phone','business'].forEach(function(k){if(qs.get(k))S[k]=qs.get(k);});
 var STEP=0, STEPS=['plan','account','business','services','ai','review'];
+var LABELS={plan:'Plan',account:'Your login',business:'Your business',services:'Services and hours',ai:'AI receptionist',review:'Review'};
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function persist(){try{var c=JSON.parse(JSON.stringify(S));delete c.password;sessionStorage.setItem('bp_signup',JSON.stringify(c));}catch(e){}}
@@ -124,54 +206,66 @@ function fld(id,label,val,o){o=o||{};var t=o.type||'text';
   var ctl=t==='textarea'?'<textarea id="'+id+'" placeholder="'+esc(o.ph||'')+'">'+esc(val||'')+'</textarea>'
    :t==='select'?'<select id="'+id+'">'+o.opts.map(function(x){return '<option'+(x===val?' selected':'')+'>'+esc(x)+'</option>'}).join('')+'</select>'
    :'<input id="'+id+'" type="'+t+'" value="'+esc(val||'')+'" placeholder="'+esc(o.ph||'')+'"'+(o.ac?' autocomplete="'+o.ac+'"':'')+'>';
-  return '<div class="f'+(o.full?' full':'')+'"><label for="'+id+'">'+label+'</label>'+ctl+(o.h?'<div class="h">'+o.h+'</div>':'')+(o.extra||'')+'</div>';}
+  return '<div class="f'+(o.full?' full':'')+'"><label for="'+id+'">'+label+(o.opt?'<span class="opt">(optional)</span>':'')+'</label>'+ctl+(o.h?'<div class="h">'+o.h+'</div>':'')+(o.extra||'')+'</div>';}
 function v(id){var e=$(id);return e?e.value.trim():''}
-function prog(){$('prog').innerHTML=STEPS.map(function(_,i){return '<i class="'+(i<=STEP?'on':'')+'"></i>'}).join('');}
-function nav(nextLabel){return '<div class="msg" id="msg"></div><div class="nav">'+(STEP?'<button class="btn ghost" onclick="go(-1)">Back</button>':'')+'<button class="btn pri" id="nx" onclick="go(1)">'+(nextLabel||'Continue')+'</button></div>';}
+function prog(){$('stepper').innerHTML='<div class="row"><span class="sn">Step '+(STEP+1)+' of '+STEPS.length+'</span><span class="sl">'+LABELS[STEPS[STEP]]+(STEP<STEPS.length-1?' · next: '+LABELS[STEPS[STEP+1]]:'')+'</span></div><div class="prog">'+STEPS.map(function(_,i){return '<i class="'+(i<=STEP?'on':'')+'"></i>'}).join('')+'</div>';}
+function side(){var pl=PLANS.filter(function(p){return p.k===S.plan})[0];
+  $('side').innerHTML='<span class="k">Your plan</span><span class="pn">'+pl.n+'</span><span class="pp"><b>$'+total()+'</b>/ month after the trial</span><span class="free">14 days free · no charge today</span>'
+    +(STEP?'<button class="chg" onclick="STEP=0;render()">Change plan</button>':'')
+    +'<ul>'+pl.f.map(function(x){return '<li>'+x+'</li>'}).join('')+(S.addons.website?'<li>Website add-on</li>':'')+'</ul>'
+    +'<div class="help">We set up your account, workspace, booking calendar and AI receptionist from your answers. You can change everything later in Settings.<br><br>Questions? <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a></div>';}
+function pwToggle(b){var i=$('iPass');var show=i.type==='password';i.type=show?'text':'password';b.textContent=show?'Hide':'Show';b.setAttribute('aria-pressed',show);}
+function nav(nextLabel,extra){return '<div class="msg" id="msg" role="alert"></div><div class="nav">'+(STEP?'<button class="btn ghost" onclick="go(-1)">Back</button>':'')+(extra||'')+'<button class="btn pri" id="nx" onclick="go(1)">'+(nextLabel||'Continue')+'</button></div>';}
 function render(){
-  prog(); var h='', P=S.profile;
-  var st=STEPS[STEP];
+  prog(); side(); var h='', P=S.profile;
+  var st=STEPS[STEP]; $('shell').classList.toggle('wide',st==='plan');
   if(st==='plan') h='<h1>Pick your plan</h1><p class="sub">Every plan starts with 14 days free. Cancel any time before the trial ends and you pay nothing.</p><div class="plans">'
-    +PLANS.map(function(p){return '<button class="plan'+(p.k===S.plan?' on':'')+(p.pop?' pop':'')+'" onclick="S.plan=\''+p.k+'\';render()"><span class="tag">'+p.tag+'</span><span class="nm">'+p.n+'</span><span class="pr">$'+p.p+'<small> / month</small></span><ul>'+p.f.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></button>'}).join('')+'</div>'+nav();
-  if(st==='account') h='<h1>Create your account</h1><p class="sub">This is how you log in to BuilderPro.</p><div class="grid">'
+    +PLANS.map(function(p){return '<button class="plan'+(p.k===S.plan?' on':'')+(p.pop?' pop':'')+'" aria-pressed="'+(p.k===S.plan)+'" onclick="S.plan=\''+p.k+'\';persist();render()"><span class="chk"></span><span class="tag">'+p.tag+'</span><span class="nm">'+p.n+'</span><span class="pr">$'+p.p+'<small> / month</small></span><span class="fr">First 14 days free</span><ul>'+p.f.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></button>'}).join('')+'</div>'
+    +'<div class="trust"><span>No charge today</span><span>Cancel any time</span><span>Set up for you in about a minute</span></div>'+nav('Continue with '+PLANS.filter(function(p){return p.k===S.plan})[0].n);
+  if(st==='account') h='<h1>Create your login</h1><p class="sub">You use this email and password to sign in to BuilderPro on your phone and computer.</p><div class="grid">'
     +fld('iName','Your full name',S.name,{ac:'name'})+fld('iPhone','Mobile phone',S.phone,{type:'tel',ac:'tel',ph:'(512) 555-0148'})
-    +fld('iEmail','Email',S.email,{type:'email',ac:'email',full:1})+fld('iPass','Password',S.password||'',{type:'password',ac:'new-password',ph:'8 or more characters',full:1})
+    +fld('iEmail','Email',S.email,{type:'email',ac:'email',full:1,ph:'you@yourcompany.com'})+'<div class="f full"><label for="iPass">Password</label><div class="pw"><input id="iPass" type="password" value="'+esc(S.password||'')+'" placeholder="8 or more characters" autocomplete="new-password"><button type="button" onclick="pwToggle(this)" aria-pressed="false">Show</button></div></div>'
     +'</div><input class="hp" id="iWeb" tabindex="-1" autocomplete="off" aria-hidden="true">'+nav();
   if(st==='business') h='<h1>About your business</h1><p class="sub">We use this to build your account, your booking page and your AI receptionist.</p><div class="grid">'
     +fld('iBiz','Business name',S.business,{ac:'organization'})+fld('iTrade','Trade',S.trade||'Roofing',{type:'select',opts:TRADES})
-    +fld('iAddr','Street address',P.address,{ac:'address-line1',full:1})
-    +fld('iCity','City',P.city,{ac:'address-level2'})+'<div class="grid" style="gap:14px">'+fld('iState','State',P.state,{ac:'address-level1',ph:'TX'})+fld('iZip','ZIP',P.zip,{ac:'postal-code'})+'</div>'
+    +fld('iAddr','Street address',P.address,{ac:'address-line1',full:1,opt:1})
+    +fld('iCity','City',P.city,{ac:'address-level2'})+'<div class="grid" style="gap:14px">'+fld('iState','State',P.state,{ac:'address-level1',ph:'TX'})+fld('iZip','ZIP',P.zip,{ac:'postal-code',opt:1})+'</div>'
     +fld('iArea','Service area',P.serviceArea,{full:1,ph:'Austin, Round Rock, Georgetown, or ZIPs',h:'Your AI receptionist tells callers whether you cover them.'})
-    +fld('iSite','Website',P.website,{ph:'yourcompany.com'})+fld('iLic','License number',P.license,{ph:'Optional'})
+    +fld('iSite','Website',P.website,{ph:'yourcompany.com',opt:1})+fld('iLic','License number',P.license,{opt:1})
     +fld('iCrew','Crew size',P.crewSize||'2 to 5',{type:'select',opts:['Just me','2 to 5','6 to 15','16 to 50','More than 50']})+fld('iYears','Years in business',P.years||'1 to 5',{type:'select',opts:['Under 1','1 to 5','6 to 15','More than 15']})
     +'</div>'+nav();
   if(st==='services'){ var sug=SERVICES[S.trade]||[], cur=(P.services||'').split(/\s*,\s*/).filter(Boolean);
     h='<h1>Services and hours</h1><p class="sub">What you do, roughly what it costs, and when you are open.</p><div class="grid">'
-    +fld('iSvc','Services you offer',P.services,{type:'textarea',full:1,ph:'Separate with commas',extra:sug.length?'<div class="chips">'+sug.map(function(x){return '<button type="button" class="'+(cur.indexOf(x)>=0?'on':'')+'" onclick="chip(this)">'+esc(x)+'</button>'}).join('')+'</div>':''})
-    +fld('iPrice','Typical prices',P.pricing,{type:'textarea',full:1,ph:'e.g. Roof replacement usually $9,000 to $18,000. Repairs start at $350. Free inspections.',h:'Ranges are fine. Leave blank if you never quote by phone.'})
+    +fld('iSvc','Services you offer',P.services,{type:'textarea',full:1,ph:'Tap the suggestions below or type your own, separated by commas',extra:sug.length?'<div class="chips">'+sug.map(function(x){return '<button type="button" class="'+(cur.indexOf(x)>=0?'on':'')+'" onclick="chip(this)">'+esc(x)+'</button>'}).join('')+'</div>':''})
+    +fld('iPrice','Typical prices',P.pricing,{type:'textarea',full:1,opt:1,ph:'e.g. Roof replacement usually $9,000 to $18,000. Repairs start at $350. Free inspections.',h:'Ranges are fine. Leave blank if you never quote by phone.'})
     +fld('iEmerg','Emergency or after-hours service',P.emergency||'No',{type:'select',opts:['No','Yes, 24/7','Yes, evenings and weekends','Yes, for existing customers']})
     +'<div class="f full"><label>Opening hours</label><div class="hrs">'+DAYS.map(function(d){var x=P.hours[d[0]];return '<div class="hr'+(x.open?'':' off')+'"><span>'+d[1]+'</span><label class="sw"><input type="checkbox" data-d="'+d[0]+'" '+(x.open?'checked':'')+' onchange="this.closest(\'.hr\').classList.toggle(\'off\',!this.checked)"> Open</label><input type="time" data-f="'+d[0]+'" value="'+x.from+'"><input type="time" data-t="'+d[0]+'" value="'+x.to+'"></div>'}).join('')+'</div></div>'
     +'</div>'+nav(); }
-  if(st==='ai') h='<h1>Your AI receptionist</h1><p class="sub">She answers your calls and texts from day one. Tell her how to sound and what matters.</p><div class="grid">'
+  if(st==='ai') h='<h1>Your AI receptionist</h1><p class="sub">She answers your calls and texts from day one. The defaults work well; change anything you like now or later in Settings.</p><div class="grid">'
     +fld('iAi','Her name',P.assistantName||'Lisa')+fld('iTone','How she should sound',P.tone||'Friendly',{type:'select',opts:['Friendly','Professional','Warm and casual','Straight to the point']})
     +fld('iGoal','Main goal on every call',P.leadGoal||'Book a free inspection or estimate',{type:'select',full:1,opts:['Book a free inspection or estimate','Take a message and have me call back','Give a price range, then book','Send them to my booking page']})
-    +fld('iFaq','Questions customers always ask',P.faqs,{type:'textarea',full:1,ph:'Do you offer financing? Yes, through GreenSky.\nAre you insured? Yes, fully licensed and insured.\nHow soon can you come out? Usually within 48 hours.'})
-    +fld('iLang','Languages you speak',P.languages||'English',{})+fld('iRef','How did you hear about us?',P.referral,{ph:'Optional'})
-    +fld('iNotes','Anything else she should know',P.notes,{type:'textarea',full:1,ph:'Optional'})
+    +fld('iFaq','Questions customers always ask',P.faqs,{type:'textarea',full:1,opt:1,ph:'Do you offer financing? Yes, through GreenSky.\nAre you insured? Yes, fully licensed and insured.\nHow soon can you come out? Usually within 48 hours.'})
+    +fld('iLang','Languages you speak',P.languages||'English',{})+fld('iRef','How did you hear about us?',P.referral,{opt:1})
+    +fld('iNotes','Anything else she should know',P.notes,{type:'textarea',full:1,opt:1})
     +'</div>'+nav('Review');
   if(st==='review'){ var pl=PLANS.filter(function(p){return p.k===S.plan})[0];
-    h='<h1>Check and start your trial</h1><p class="sub">Next you add a card with Stripe. You are not charged today.</p><dl class="rev">'
-    +[['Plan',pl.n+', $'+pl.p+' / month'],['Name',S.name],['Email',S.email],['Phone',S.phone],['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea],['Services',P.services],['AI receptionist',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()]]
-      .map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1]||'-')+'</dd>'}).join('')+'</dl>'
-    +'<h2 style="font-size:17px;margin:22px 0 10px">Add-ons</h2><div class="addons">'+ADDONS.filter(function(a){return a.k!=='ai'||S.plan==='enterprise';}).map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
+    var box=function(t,at,rows){return '<div class="rv"><div class="hd"><h2>'+t+'</h2><button type="button" onclick="STEP='+at+';render()">Edit</button></div><dl class="rev">'+rows.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1]||'-')+'</dd>'}).join('')+'</dl></div>';};
+    h='<h1>Check and start your trial</h1><p class="sub">Next you add a card with Stripe. You are not charged today, and you can cancel any time in the first 14 days.</p>'
+    +box('Plan',0,[['Plan',pl.n+', $'+pl.p+' / month']])
+    +box('Your login',1,[['Name',S.name],['Email',S.email],['Phone',S.phone]])
+    +box('Your business',2,[['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea]])
+    +box('Services',3,[['Services',P.services]])
+    +box('AI receptionist',4,[['Name',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()],['Main goal',P.leadGoal]])
+    +'<h2 style="margin:22px 0 0">Add-ons</h2><div class="addons">'+ADDONS.filter(function(a){return a.k!=='ai'||S.plan==='enterprise';}).map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
       return '<label class="addon'+(inc?' inc':'')+'"><input type="checkbox" '+(inc||S.addons[a.k]?'checked ':'')+(inc?'disabled ':'')+'onchange="S.addons.'+a.k+'=this.checked;persist();render()"><span><b>'+a.n+'</b> <em>'+(inc?'Included':'+$'+a.p+' / month')+'</em><small>'+a.d+'</small></span></label>';}).join('')+'</div>'
-    +'<p class="total">Total after the trial: <b>$'+total()+' / month</b></p>'
+    +'<p class="total"><span>Total after the 14-day trial</span><b>$'+total()+' / month</b></p>'
     +'<div class="note">As soon as you finish, we build your BuilderPro account, your GoHighLevel workspace, your booking calendar and your AI receptionist from these answers. It is ready when you log in.</div>'
-    +nav('Start 14-day free trial'); }
+    +nav('Start my free trial'); }
   $('view').innerHTML='<div class="panel">'+h+'</div>';
   var f=$('view').querySelector('input:not([type=checkbox]):not(.hp),select,textarea'); if(f&&STEP)f.focus({preventScroll:true});
   window.scrollTo({top:0,behavior:'smooth'});
 }
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&e.target.tagName==='INPUT'&&e.target.type!=='checkbox'&&$('nx')&&!$('nx').disabled){e.preventDefault();go(1);}});
 function total(){var pl=PLANS.filter(function(p){return p.k===S.plan})[0];return pl.p+(S.addons.website?49:0);}
 function chip(b){var t=$('iSvc'),cur=t.value.split(/\s*,\s*/).filter(Boolean),x=b.textContent,i=cur.indexOf(x);if(i>=0)cur.splice(i,1);else cur.push(x);t.value=cur.join(', ');b.classList.toggle('on',i<0);}
 function need(ids){var bad=null;ids.forEach(function(i){var e=$(i),f=e.closest('.f'),ok=!!e.value.trim();f.classList.toggle('err',!ok);if(!ok&&!bad)bad=e;});if(bad){bad.focus();$('msg').textContent='Please fill in the highlighted fields.';return false;}return true;}
@@ -204,17 +298,17 @@ async function submit(){
     var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+SB_ANON},
       body:JSON.stringify({plan:S.plan,addons:{ai:false,website:!!S.addons.website},name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
     var j=await r.json();
-    if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="index.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start 14-day free trial';return;}
+    if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="index.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start my free trial';return;}
     if(!j.ok)throw new Error(j.error||'Something went wrong.');
     if(SB){await SB.auth.signInWithPassword({email:S.email,password:S.password}).catch(function(){});}
     sessionStorage.removeItem('bp_signup');
     if(j.checkout_url){b.textContent='Opening secure checkout...';location.href=j.checkout_url;return;}
     location.href='signup.html?done=1';
-  }catch(e){$('msg').textContent=e.message||'Something went wrong.';b.disabled=false;b.textContent='Start 14-day free trial';}
+  }catch(e){$('msg').textContent=e.message||'Something went wrong.';b.disabled=false;b.textContent='Start my free trial';}
 }
 /* after Stripe: show the build finishing, then send them into their portal */
 async function done(){
-  $('prog').innerHTML='';
+  $('stepper').innerHTML='';$('shell').classList.add('wide');
   $('view').innerHTML='<div class="panel"><h1>You are in. We are setting everything up.</h1><p class="sub">This takes about a minute. You can open BuilderPro now; anything still running finishes in the background.</p><ul class="steps" id="stp"></ul><div class="nav"><a class="btn pri" href="index.html?portal=1" style="text-decoration:none">Open my BuilderPro</a></div></div>';
   var tick=async function(){
     var a=null; try{ if(SB){ var r=await SB.from('accounts').select('status,ghl_location_id,onboard_state,setup_log,checkout_url').maybeSingle(); a=r.data; } }catch(e){}
@@ -226,7 +320,7 @@ async function done(){
   }; tick();
 }
 async function payAgain(){
-  $('prog').innerHTML='';
+  $('stepper').innerHTML='';$('shell').classList.add('wide');
   $('view').innerHTML='<div class="panel"><h1>Checkout was not finished</h1><p class="sub">Your account is saved and your setup is already running. Add a card to start your 14-day free trial. You are not charged today.</p><div class="msg" id="msg"></div><div class="nav"><button class="btn pri" id="nx" onclick="resume()">Add card and start trial</button></div></div>';
 }
 async function resume(){
