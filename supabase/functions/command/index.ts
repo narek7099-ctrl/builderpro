@@ -398,15 +398,30 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
   await save(thread, "user", first.content);
   const approvals: unknown[] = [];
   let reply = "";
+  const call = () => client.beta.messages.create({
+    model: MODEL, max_tokens: 16000, system: sys, messages, tools,
+    thinking: { type: "adaptive" }, output_config: { effort: depth ? "low" : "medium" },
+    betas: ["server-side-fallback-2026-07-01", ...(conns.length ? ["mcp-client-2025-11-20"] : [])], fallbacks: "default",
+    ...(conns.length ? { mcp_servers: conns.map((c) => ({ type: "url", name: c.name, url: c.url, ...(c.token ? { authorization_token: c.token } : {}) })) } : {}),
+  // deno-lint-ignore no-explicit-any
+  } as any);
   for (let i = 0; i < (depth ? 6 : 10); i++) {
     // deno-lint-ignore no-explicit-any
-    const res: any = await client.beta.messages.create({
-      model: MODEL, max_tokens: 16000, system: sys, messages, tools,
-      thinking: { type: "adaptive" }, output_config: { effort: depth ? "low" : "medium" },
-      betas: ["server-side-fallback-2026-07-01", ...(conns.length ? ["mcp-client-2025-11-20"] : [])], fallbacks: "default",
-      ...(conns.length ? { mcp_servers: conns.map((c) => ({ type: "url", name: c.name, url: c.url, ...(c.token ? { authorization_token: c.token } : {}) })) } : {}),
-    // deno-lint-ignore no-explicit-any
-    } as any);
+    let res: any;
+    for (;;) {
+      try { res = await call(); break; }
+      catch (e) {
+        /* one connected service turning its login down shouldn't stop the chat:
+           drop it for this run, mark it "sign in again" in Connections, and retry */
+        const m = String(e).match(/mcp_servers\[(\d+)\][^"]*?'?([\w-]+)'?:\s*(Authentication|Connection|Failed|Unable|Error)/i);
+        const bad = m ? conns[Number(m[1])] : undefined;
+        if (!bad) throw e;
+        conns.splice(conns.indexOf(bad), 1);
+        const ti = tools.findIndex((t) => (t as { mcp_server_name?: string }).mcp_server_name === bad.name);
+        if (ti >= 0) tools.splice(ti, 1);
+        if (/^auth/i.test(m![3])) await sb(`ai_mcp?id=eq.${bad.id}`, { method: "PATCH", body: JSON.stringify({ token: "", oauth: { ...bad.oauth, error: "Its login was turned down. Sign in again." } }) }).catch(() => {});
+      }
+    }
     messages.push({ role: "assistant", content: res.content }); await save(thread, "assistant", res.content);
     const text = (res.content as { type: string; text?: string }[]).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
     if (text) reply = text;
