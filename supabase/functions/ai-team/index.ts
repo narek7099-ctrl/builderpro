@@ -154,10 +154,23 @@ async function history(thread: string): Promise<Anthropic.MessageParam[]> {
 const save = (thread: string, role: string, content: unknown, model = "") =>
   sb("cai_messages", { method: "POST", body: JSON.stringify({ thread_id: thread, role, content, model }) });
 
+// Keys not scoped to a workspace (sk-ant-usr-...) must name one on every request:
+// ANTHROPIC_WORKSPACE_ID if set, else the org's "BuilderPro" (or first) workspace, looked up once.
+let WS: Promise<string> | null = null;
+const workspaceId = (key: string) => WS ??= (async () => {
+  const env = (Deno.env.get("ANTHROPIC_WORKSPACE_ID") ?? "").trim();
+  if (env || !key || key.startsWith("sk-ant-api")) return env;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/organizations/workspaces?limit=20", { headers: { "x-api-key": key, "anthropic-version": "2023-06-01" }, signal: AbortSignal.timeout(8000) });
+    const d = ((await r.json())?.data ?? []) as { id: string; name: string }[];
+    return (d.find((x) => /builderpro/i.test(x.name)) ?? d[0])?.id ?? "";
+  } catch { WS = null; return ""; }
+})();
+
 async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; effort?: string; count?: boolean } = {}) {
   const model = opts.heavy ? OPUS : SONNET;
-  const ws = (Deno.env.get("ANTHROPIC_WORKSPACE_ID") ?? "").trim(); // keys not scoped to a workspace must name one on every request
-  const client = new Anthropic({ apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
+  const apiKey = (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), ws = await workspaceId(apiKey);
+  const client = new Anthropic({ apiKey, defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
   const messages = await history(thread);
   const lastM = messages[messages.length - 1];
   if (lastM && lastM.role === "user") (lastM.content as unknown[]).push({ type: "text", text }); else messages.push({ role: "user", content: text });
