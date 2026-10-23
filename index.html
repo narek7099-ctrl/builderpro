@@ -16403,6 +16403,7 @@ function bpEnterPortal2(email){
   /* who is signed in, for the code that has to write it down — a claim is
      owned by an email, and row-level security checks it against the token */
   window._bpEmail=email||'';
+  if(window.bpOwnerId&&window.bpDeviceCacheFor) try{ bpDeviceCacheFor(bpOwnerId()); }catch(e){}
   document.getElementById('bpxUemail').textContent=email||'';
   document.getElementById('bpxLogin').style.display='none';
   document.getElementById('bpxApp').classList.add('on');
@@ -19974,6 +19975,24 @@ function bpFinCloudPush(){
   if(!BP_LIVE||(window.bpTeamIsCrew&&bpTeamIsCrew())) return;
   BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},window.bpOwnerId&&bpOwnerId()?{owner:bpOwnerId()}:{})).then(function(){}).catch(function(){});
 }
+/* The device cache belongs to one account. When a different account signs in
+   on the same browser, drop the last account's cached jobs, money, notes,
+   receipts and templates before anything is drawn or synced, so one
+   account's data can never show in (or be saved into) another. */
+var BP_DEVICE_KEYS=['bpJobs','bpFin','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
+var _bpCacheMine=false;
+function bpDeviceCacheFor(oid){
+  if(!oid) return;
+  var prev=null; try{prev=localStorage.getItem('bpDataOwner');}catch(e){}
+  _bpCacheMine=(prev===oid);
+  if(_bpCacheMine) return;
+  try{
+    BP_DEVICE_KEYS.forEach(function(k){localStorage.removeItem(k);});
+    Object.keys(localStorage).forEach(function(k){if(k.indexOf('bpPrice_')===0)localStorage.removeItem(k);});
+    localStorage.setItem('bpDataOwner',oid);
+  }catch(e){}
+  _bpJobs=null;_bpFin=null;_bpFinLoaded=false;
+}
 function bpFinCloudLoad(){
   if(!BP_LIVE||_bpFinLoaded||(window.bpTeamIsCrew&&bpTeamIsCrew())) return Promise.resolve();
   return BP_SB.from('portal_finance').select('jobs,fin').maybeSingle().then(function(r){
@@ -19981,8 +20000,8 @@ function bpFinCloudLoad(){
     if(r&&r.data){
       _bpJobs=Array.isArray(r.data.jobs)?r.data.jobs:[]; _bpFin=Array.isArray(r.data.fin)?r.data.fin:[];
       try{localStorage.setItem('bpJobs',JSON.stringify(_bpJobs));localStorage.setItem('bpFin',JSON.stringify(_bpFin));}catch(e){}
-    }else if(r&&!r.error){
-      /* first login on the cloud: migrate whatever this device already had */
+    }else if(r&&!r.error&&_bpCacheMine){
+      /* this account's own device data from before the cloud: send it up once */
       bpFinCloudPush();
     }
   }).catch(function(){});
