@@ -241,7 +241,7 @@ async function social(input: Record<string, unknown>): Promise<unknown> {
 }
 
 async function memoryText(): Promise<string> {
-  const r = await sb("ai_memory?select=note&order=id.desc&limit=40");
+  const r = await sb("ai_memory?select=note&order=created_at.desc&limit=40");
   const rows = r.ok ? await r.json() : [];
   return rows.map((m: { note: string }) => "- " + m.note).join("\n");
 }
@@ -305,7 +305,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
     }
     case "social": return await social(input);
     case "memory_save": { const r = await sb("ai_memory", { method: "POST", body: JSON.stringify({ note: String(input.note).slice(0, 2000) }) }); return { ok: r.ok }; }
-    case "memory_list": { const r = await sb("ai_memory?select=id,note,created_at&order=id.desc&limit=100"); return r.ok ? await r.json() : []; }
+    case "memory_list": { const r = await sb("ai_memory?select=id,note,created_at&order=created_at.desc&limit=100"); return r.ok ? await r.json() : []; }
     case "delegate": {
       if (depth > 0) return { error: "teams can't delegate further" };
       const a = AGENTS[String(input.team)]; if (!a) return { error: "no such team" };
@@ -651,8 +651,8 @@ Deno.serve(async (req) => {
     return json({ ok: true, name });
   }
   if (op === "stats") return json({ ok: true, data: await runTool("business_stats", {}, 0) });
-  if (op === "memory") { const r = await sb("ai_memory?select=id,note,created_at&order=id.desc&limit=200"); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
-  if (op === "memory_delete") { await sb(`ai_memory?id=eq.${Number(b.id)}`, { method: "DELETE" }); return json({ ok: true }); }
+  if (op === "memory") { const r = await sb("ai_memory?select=id,note,created_at&order=created_at.desc&limit=200"); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
+  if (op === "memory_delete") { await sb(`ai_memory?id=eq.${encodeURIComponent(String(b.id))}`, { method: "DELETE" }); return json({ ok: true }); }
   if (op === "account_create") { const r = await createAccount(b as Record<string, string>); return json(r); }
   return json({ ok: false, error: "unknown op" }, 400);
 });
