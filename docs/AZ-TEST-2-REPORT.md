@@ -40,6 +40,13 @@ Stopped early: Claude's usage limit was reached.
 | Command Center, Approvals / Memory | Pass | Nothing waiting. Memory now saves notes (yesterday's fix); Marketing noted not to run paid ads until HighLevel provisioning is fixed. |
 | HighLevel check | Not possible | No sub-account exists (blocker 1). |
 
+## Third session (HighLevel keys)
+- The owner added `GHL_API_KEY` and `GHL_COMPANY_ID` (agency id read from the existing token's "Demo Account" location; the temporary `ghl-companyid` helper is now retired and returns 410).
+- The test account was re-queued. The keys are now read, but HighLevel refuses to create the sub-account: `403 The company does not have access to this feature.`
+- Cause: creating sub-accounts through the API needs HighLevel's Agency Pro / SaaS plan (or a token with the locations write scope). It isn't a BuilderPro bug.
+- Options: upgrade HighLevel (fully automatic sign-ups), or create each sub-account by hand in HighLevel with the plan snapshot and paste its key in Command Center → Accounts → Add key.
+- After either fix, re-queue the test account: `update accounts set onboard_state='new', onboard_attempts=0 where email='narek7099+az2@gmail.com';`
+
 ## Still not done
 - HighLevel sub-account check, once blocker 1 is fixed.
 - Lisa, CEO chat answers and the CEO chat reopening, once blocker 4 is fixed.
