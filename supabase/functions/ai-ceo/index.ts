@@ -32,6 +32,8 @@ const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 // read on every call: a key added in the dashboard switches Claude on at once
 const aiKey = () => (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, "");
+// keys not scoped to a workspace must name one on every request
+const wsId = () => (Deno.env.get("ANTHROPIC_WORKSPACE_ID") ?? "").trim();
 const MODEL = () => Deno.env.get("CEO_MODEL") || "claude-sonnet-5-5";
 const ASK_PER_HOUR = 30, RUN_PER_HOUR = 6;
 
@@ -93,7 +95,7 @@ async function claude(system: string, user: string, maxTokens = 1200, ms = 45000
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", signal: AbortSignal.timeout(ms),
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json", ...(wsId() ? { "anthropic-workspace-id": wsId() } : {}) },
       body: JSON.stringify({ model: MODEL(), max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] }),
     });
     if (!r.ok) { console.error("claude", r.status, (await r.text()).slice(0, 300)); return null; }

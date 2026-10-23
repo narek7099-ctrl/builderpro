@@ -156,7 +156,8 @@ const save = (thread: string, role: string, content: unknown, model = "") =>
 
 async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; effort?: string; count?: boolean } = {}) {
   const model = opts.heavy ? OPUS : SONNET;
-  const client = new Anthropic({ apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, "") });
+  const ws = (Deno.env.get("ANTHROPIC_WORKSPACE_ID") ?? "").trim(); // keys not scoped to a workspace must name one on every request
+  const client = new Anthropic({ apiKey: (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
   const messages = await history(thread);
   const lastM = messages[messages.length - 1];
   if (lastM && lastM.role === "user") (lastM.content as unknown[]).push({ type: "text", text }); else messages.push({ role: "user", content: text });
