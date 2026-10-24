@@ -20829,8 +20829,8 @@ window.bpProjOpen=function(id){
       +'<label>Notes</label><textarea id="bpx-pj-notes" style="width:100%;min-height:90px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Crew, materials, gate code, anything…">'+bpEsc(j.sched.notes||'')+'</textarea>')
     +pane('money',
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
-        +'<div><label>Estimate</label><input id="bpx-pj-est" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.estimate?bpMoneyFmt(j.estimate):'')+'"></div>'
-        +'<div><label>Paid so far</label><input id="bpx-pj-paid" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.collected!=null?bpMoneyFmt(j.collected):'')+'"></div>'
+        +'<div><label>Estimate</label><input id="bpx-pj-est" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.estimate?bpMoneyIn(j.estimate):'')+'"></div>'
+        +'<div><label>Paid so far</label><input id="bpx-pj-paid" placeholder="$0" oninput="bpProjBal()" value="'+bpEsc(j.collected!=null?bpMoneyIn(j.collected):'')+'"></div>'
         +'<div><label>Balance due</label><div id="bpx-pj-bal" style="padding:.7rem .9rem;border:1px solid var(--line);border-radius:9px;background:var(--soft);font-weight:700;font-size:14.5px">$0</div></div></div>'
       +'<label style="margin-top:18px">Budget</label>'
       +'<div class="bpx-mut" style="font-size:12px;margin-bottom:8px">What this job is allowed to <b>cost</b> — not what the customer pays. '
@@ -21264,7 +21264,7 @@ function bpProjBudgetRender(){
     var lockLab=c==='Labor / crew'&&spend.labor>0;
     return '<div class="bg-row"><div class="bg-name">'+bpEsc(c)
       +(lockLab?' <span class="bpx-mut" style="font-weight:400;font-size:11px">incl. '+bpMoneyFmt(spend.labor)+' logged hours</span>':'')+'</div>'
-      +'<input class="bg-in" data-bcat="'+bpEsc(c)+'" placeholder="$0" value="'+(b?bpMoneyFmt(b):'')+'" oninput="bpProjBudgetEdit(this)">'
+      +'<input class="bg-in" data-bcat="'+bpEsc(c)+'" placeholder="$0" value="'+(b?bpMoneyIn(b):'')+'" oninput="bpProjBudgetEdit(this)">'
       +'<div class="bg-meter">'+bar+'<div class="bg-note">'+right+'</div></div></div>';
   };
 
@@ -21304,7 +21304,7 @@ function bpProjExpRender(){
   var el=document.getElementById('bpx-pj-exps'); if(!el)return;
   el.innerHTML=_bpProjExp.map(function(e,i){
     return '<div class="bpx-exprow"><select onchange="_bpProjExp['+i+'].cat=this.value;bpBudgetLater()">'+bpCatOpts(e.cat)+'</select>'
-      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpProjExp['+i+'].amt=this.value;bpBudgetLater()">'
+      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyIn(e.amt):'')+'" oninput="_bpProjExp['+i+'].amt=this.value;bpBudgetLater()">'
       +'<button class="bpx-exprm" onclick="bpProjExpDel('+i+')">×</button></div>'
       /* a supply bill carries where it came from; say so instead of showing a bare number */
       +(e.note?'<div class="bpx-expnote"><span class="ms">receipt_long</span>'+bpEsc(e.note)+'</div>':'');
@@ -21453,8 +21453,8 @@ window.bpJobDoneOpen=function(id){
   window._bpJobExpDraft0=(j.expenses||[]).map(function(e){return {key:e.key};});
   if(!_bpJobExpDraft.length) _bpJobExpDraft=[{cat:'Materials',amt:''}];
   bpModal('<h3>'+(j.status==='done'?'Edit job':'Mark job done')+' — '+bpEsc(j.name)+'</h3>'
-    +'<div class="bpx-sub">'+bpEsc(j.title||'Job')+' · everything below is optional.</div>'
-    +'<label>What did you collect?</label><input id="bpx-jd-col" placeholder="$0" value="'+(j.collected!=null?bpMoneyFmt(j.collected):'')+'" oninput="bpJobSum()">'
+    +'<div class="bpx-sub">'+bpEsc(j.title||'Job')+' · '+(window.bpInstallSigClear?'only the sign-off at the bottom is needed; the rest is optional.':'everything below is optional.')+'</div>'
+    +'<label>What did you collect?</label><input id="bpx-jd-col" placeholder="$0" value="'+(j.collected!=null?bpMoneyIn(j.collected):'')+'" oninput="bpJobSum()">'
     +'<div class="bpx-hint" onclick="bpJobUseEst()">↳ Use the estimate ('+bpMoneyFmt(j.estimate)+')</div>'
     +'<label>Expenses (optional)</label><div id="bpx-jd-exps"></div><div class="bpx-addexp" onclick="bpJobExpAdd()">+ Add expense</div>'
     +'<div class="bpx-jd-sum" id="bpx-jd-sum"></div>'
@@ -21467,7 +21467,7 @@ function bpJobExpRender(){
   var el=q('bpx-jd-exps'); if(!el) return;
   el.innerHTML=_bpJobExpDraft.map(function(e,i){
     return '<div class="bpx-exprow"><select onchange="_bpJobExpDraft['+i+'].cat=this.value">'+bpCatOpts(e.cat)+'</select>'
-      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyFmt(e.amt):'')+'" oninput="_bpJobExpDraft['+i+'].amt=this.value;bpJobSum()">'
+      +'<input class="bpx-expamt" placeholder="$0" value="'+(e.amt!=null&&e.amt!==''?bpMoneyIn(e.amt):'')+'" oninput="_bpJobExpDraft['+i+'].amt=this.value;bpJobSum()">'
       +'<button class="bpx-exprm" onclick="bpJobExpDel('+i+')">×</button></div>';
   }).join('');
   bpJobSum();
@@ -21480,7 +21480,9 @@ window.bpJobSum=function(){
   var p=col-exp, el=q('bpx-jd-sum'); if(!el) return;
   el.innerHTML='<span>Profit on this job</span><b class="'+(p>=0?'bpx-pos':'bpx-neg')+'">'+bpMoneyFmt(p)+(col>0?' · '+Math.round(p/col*100)+'% margin':'')+'</b>';
 };
-window.bpJobUseEst=function(){ var j=bpJobsGet().filter(function(x){return x.id===_bpJobDoneId;})[0]; if(j){ q('bpx-jd-col').value=bpMoneyFmt(j.estimate); bpJobSum(); } };
+window.bpJobUseEst=function(){ var j=bpJobsGet().filter(function(x){return x.id===_bpJobDoneId;})[0]; if(j){ q('bpx-jd-col').value=bpMoneyIn(j.estimate); bpJobSum(); } };
+/* money typed into a box keeps its cents (bpMoneyFmt rounds to dollars, and saving that lost them) */
+function bpMoneyIn(n){ n=+n||0; return '$'+n.toLocaleString('en-US',{minimumFractionDigits:(Math.abs(n%1)>0.004?2:0),maximumFractionDigits:2}); }
 window.bpJobDoneSave=function(id,skip){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j) return;
   var wasDone=(j.status==='done');
@@ -27796,7 +27798,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/dash.js?v=20261024q25"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
-<script src="portal/permits.js?v=20261001p"></script>
+<script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261024q02"></script>
 <script src="portal/contact.js?v=20261018a"></script>
 <script src="portal/inspect.js?v=20261019b"></script>

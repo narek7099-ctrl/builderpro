@@ -200,7 +200,7 @@
       + f('Permit number', '<input id="pm-number" value="' + v('number') + '" placeholder="e.g. BLD-2026-01234">')
       + f('Issuing office', '<input id="pm-office" value="' + v('office') + '" placeholder="City or county building dept.">', true)
       + f('Status', '<select id="pm-status">' + opts(STATUSES, d.status || 'Not applied') + '</select>')
-      + f('Fee', '<input id="pm-fee" inputmode="decimal" value="' + (d.fee ? esc(money(d.fee)) : '') + '" placeholder="$0">')
+      + f('Fee', '<input id="pm-fee" inputmode="decimal" value="' + (d.fee ? esc(window.bpMoneyIn ? bpMoneyIn(d.fee) : money(d.fee)) : '') + '" placeholder="$0">')
       + f('Applied', '<input type="date" id="pm-applied" value="' + v('applied') + '">')
       + f('Approved', '<input type="date" id="pm-approved" value="' + v('approved') + '">')
       + f('Expires', '<input type="date" id="pm-expires" value="' + v('expires') + '">')
