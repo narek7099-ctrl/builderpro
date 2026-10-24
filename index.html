@@ -19997,6 +19997,14 @@ function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localSt
 function bpJobsSet(a){ _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} return _bpFin; }
 function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+/* BuilderPro open in two tabs: when the other tab saves, take its copy, so this tab's
+   next save can't put back an older list over it (that lost payment plans and edits) */
+window.addEventListener('storage',function(e){
+  if((e.key!=='bpJobs'&&e.key!=='bpFin')||!e.newValue) return;
+  try{ var mine=window.bpOwnerId&&bpOwnerId(); if(mine&&localStorage.getItem('bpDataOwner')&&localStorage.getItem('bpDataOwner')!==mine) return;
+    var v=JSON.parse(e.newValue); if(!Array.isArray(v)) return;
+    if(e.key==='bpJobs') _bpJobs=v; else _bpFin=v; }catch(x){}
+});
 function bpFinCloudPush(){
   if(!BP_LIVE||(window.bpTeamIsCrew&&bpTeamIsCrew())) return;
   BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},window.bpOwnerId&&bpOwnerId()?{owner:bpOwnerId()}:{})).then(function(){}).catch(function(){});
