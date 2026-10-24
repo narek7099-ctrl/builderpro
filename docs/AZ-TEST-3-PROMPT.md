@@ -13,7 +13,7 @@ You're alone with BuilderPro (https://builderpro-os.com) in my Chrome while I'm 
 2. Only message test contacts: example.com emails, 555-01xx numbers, or my `narek7099+…@gmail.com` addresses. Never text, email or call anyone else.
 3. Name everything you create "… (sample)". Void or delete only what you made, at the end.
 4. Don't change billing, plans, API keys, Supabase secrets, connected accounts, or another account's settings without changing them back. Don't disconnect anything. Don't create new BuilderPro accounts or HighLevel sub-accounts (one test account already exists: AZ Test Roofing (sample)).
-5. AI costs money per message: at most ~20 AI questions in the whole run, short ones. Keep the Command Center team shifts as they are.
+5. **Spend no money at all.** Don't use anything that calls the AI (it bills per message), even if it seems to work: no CEO chat, AI Team or Lisa questions, no "Run now" briefing, no AI-written estimate tiers or descriptions, no AI receptionist test calls, no "Ask Lisa". Only check that those screens open and their buttons are there; note "AI not exercised (no-spend rule)". Don't use connected paid tools (Higgsfield, Canva and the like). Don't send texts or make calls (they cost in HighLevel). Emails to test addresses are fine (free). Stripe only in test mode. Don't turn the Command Center team shifts on if they're off.
 6. In HighLevel, look only: no workflow changes, no phone numbers, no sending.
 7. Don't change Supabase functions or the database. For server-side problems, write the exact fix in the report under "Server fixes for the cloud session".
 
@@ -38,7 +38,7 @@ You're alone with BuilderPro (https://builderpro-os.com) in my Chrome while I'm 
 
 ## 1. Quick re-checks (first 20 min)
 - Command Center → Accounts: does AZ Test Roofing (sample) show a HighLevel sub-account now? (I may have upgraded HighLevel.) If it shows "Failed", note the reason shown under it.
-- One CEO chat question in the Command Center and one AI Team question on the Enterprise test account: do they answer (credit may be added)? Close and reopen: the chat should come back.
+- Command Center CEO chat and the AI Team page open, show past conversations, and the input is there (don't send a message: rule 5). Close and reopen a past conversation: it should come back.
 - Stripe: on the AZ Test account, does it still say "Add a card"? (Means the billing webhook isn't set yet.)
 
 ## 2. Every feature, by role (phone width first, then desktop)
@@ -47,7 +47,7 @@ You're alone with BuilderPro (https://builderpro-os.com) in my Chrome while I'm 
 - + sheet: Estimate, Invoice, Job, Customer, Book an inspection, Snap a receipt, Note or to-do.
 - Leads/contacts: add, search, filter, profile (Call/Text/Email/Inspection/Estimate), notes, tags.
 - Calculators and booking page: open, copy link, QR, submit a test lead (example.com), check it lands in Leads.
-- Estimates: single price, Good/Better/Best, materials catalog, labor, markup/tax, templates, send by email to a test address, customer link: pick, sign, approve, decline.
+- Estimates: single price, Good/Better/Best (write the three options by hand, not with AI), materials catalog, labor, markup/tax, templates, send by email to a test address, customer link: pick, sign, approve, decline.
 - Invoices: deposit, progress, final, payment plan, send, mark paid by hand, receipts, archive.
 - Jobs: every tab (Overview, Money, Schedule, Crew, Materials, Permits, Contract, Photos, Documents), job steps Finished/Not yet, photo upload (any small image), change order, Mark done.
 - Calendar: Month/Week/Day, + Add (inspection, crew day, note), drag in Week view, to-dos, Upcoming.
@@ -55,7 +55,7 @@ You're alone with BuilderPro (https://builderpro-os.com) in my Chrome while I'm 
 - Supply: order lists, order materials, suppliers, receipts, templates.
 - Inbox: texts, email (compose to a test address), team chat; open a thread and go back.
 - Marketing, Reputation, Website, Social, Automations: pages load, buttons go to the right place (don't finish connecting).
-- AI: Lisa page, AI Team assistants, AI CEO tab (within the AI question budget).
+- AI: Lisa page, AI Team assistants, AI CEO tab open and look right; past chats show; no messages sent (rule 5).
 - Settings: every section opens, change something harmless, save, change back.
 - Dark mode on every main screen.
 
