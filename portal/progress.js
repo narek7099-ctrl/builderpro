@@ -234,7 +234,8 @@
     if (!due.length) return '';
     var one = due.length === 1;
     /* on a phone it starts folded to one line, so the projects come first */
-    return '<details class="bpp-ask"' + (window.innerWidth >= 760 ? ' open' : '') + '>'
+    /* folded on phones until opened; once opened it stays open while answering, step after step */
+    return '<details class="bpp-ask"' + (window.innerWidth >= 760 || window._bppAskOpen ? ' open' : '') + ' ontoggle="window._bppAskOpen=this.open">'
       + '<summary class="bpp-ask-h"><span class="ms">event_available</span>'
       + '<div><b>' + (one ? '1 job step to check off' : due.length + ' job steps to check off') + '</b>'
       + '<span>Was it finished? Tap Finished or Not yet and the schedule updates itself.</span></div><span class="ms bpp-chev">expand_more</span></summary>'
