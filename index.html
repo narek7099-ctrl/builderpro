@@ -12,7 +12,8 @@ if(app){var m=document.querySelector('meta[name=viewport]');if(m)m.setAttribute(
 <script>
 /* Never run inside someone else's frame (clickjacking). The calculators and
    booking page are separate files and stay embeddable. */
-try{ if(window.top!==window.self) window.top.location=window.self.location; }catch(e){ document.documentElement.style.display='none'; }
+/* clickjacking guard; a same-site phone preview (?bpframe) may frame it, any other site can't */
+try{ if(window.top!==window.self && !(/[?&]bpframe/.test(location.search) && window.top.location.host===location.host)) window.top.location=window.self.location; }catch(e){ document.documentElement.style.display='none'; }
 /* A password-reset or invitation link lands here with its tokens in the
    hash. Keep a copy before the auth library reads and clears it. */
 try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery|invite|signup|magiclink)|error=/.test(h0)?h0:''; }catch(e){ window.__bpAuthHash=''; }
