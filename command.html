@@ -386,7 +386,7 @@ async function viewAccounts(){
     var left=Math.ceil((Date.parse(x.trial_ends_at)-Date.now())/864e5);
     return '<tr><td><b>'+esc(x.business)+'</b></td><td>'+esc(x.full_name)+'<div class="muted" style="font-size:12px">'+esc(x.email)+(x.phone?' · '+esc(x.phone):'')+'</div></td><td>'+esc(({foundation:'Foundation',os:'BuilderPro OS',enterprise:'Enterprise'})[x.plan]||x.plan||'-')+(x.price_monthly?'<div class="muted" style="font-size:12px">$'+x.price_monthly+'/mo</div>':'')+'</td><td>'+esc(x.trade||'-')+'</td>'
       +'<td>'+esc(x.status)+(x.status==='trial'?'<div class="muted" style="font-size:12px">'+(left>0?left+' days left':'ended')+'</div>':'')+'</td>'
-      +'<td title="'+esc((x.setup_log||[]).join('\n'))+'">'+({onboarded:'<span class="st ok"><i class="ti ti-circle-check"></i>Set up by AI</span>',onboarding:'<span class="st warn"><i class="ti ti-loader-2"></i>Builder working</span>',failed:'<span class="st bad"><i class="ti ti-alert-triangle"></i>Failed, sent to Support</span>'}[x.onboard_state]||(x.ghl_location_id?'<span class="st ok"><i class="ti ti-check"></i>GHL built</span>':'<span class="st off">Building</span>'))+'</td>'
+      +'<td title="'+esc((x.setup_log||[]).join('\n'))+'">'+({onboarded:'<span class="st ok"><i class="ti ti-circle-check"></i>Set up by AI</span>',onboarding:'<span class="st warn"><i class="ti ti-loader-2"></i>Builder working</span>',failed:'<span class="st bad"><i class="ti ti-alert-triangle"></i>Failed, sent to Support</span>'+setupWhy(x)}[x.onboard_state]||(x.ghl_location_id?'<span class="st ok"><i class="ti ti-check"></i>GHL built</span>':x.onboard_state==='done'?'<span class="st off">No HighLevel yet</span>':'<span class="st off">Building</span>'))+'</td>'
       +'<td>'+(x.ghl_key?'<span class="st ok"><i class="ti ti-key"></i>Saved</span> <button class="btn" style="padding:2px 8px;font-size:12px" onclick="ghlKey(\''+esc(x.user_id)+'\',\''+esc(x.ghl_location_id||'')+'\',\''+esc(x.business)+'\')">Replace</button>':'<button class="btn" style="padding:4px 10px;font-size:12px" onclick="ghlKey(\''+esc(x.user_id)+'\',\''+esc(x.ghl_location_id||'')+'\',\''+esc(x.business)+'\')"><i class="ti ti-key"></i> Add key</button>')+'</td>'
       +'<td class="muted">'+esc(String(x.created_at).slice(0,10))+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">No accounts yet. They appear here when contractors start a free trial on the website.</span>';
 }
@@ -409,6 +409,10 @@ async function newAcct(b){
   if(!r.error)setTimeout(viewAccounts,2500);
 }
 
+/* the last setup error, in plain words, under "Failed" */
+function setupWhy(x){var e=String((x.setup_log||[]).filter(function(l){return /^Error/.test(l)}).slice(-1)[0]||'');if(!e)return '';
+  var t=/does not have access to this feature/i.test(e)?'HighLevel plan doesn\u2019t allow creating sub-accounts by API. Make it by hand and Add key.':/not set/i.test(e)?'HighLevel keys missing in Supabase.':e.replace(/^Error:\s*/,'').slice(0,90);
+  return '<div class="muted" style="font-size:12px;margin-top:3px;max-width:240px;white-space:normal">'+esc(t)+'</div>';}
 /* ---------- Phone numbers (phone-admin) ---------- */
 var PH_PATH={port:'Move number',text:'Text-enable',fwd:'Forward'};
 async function viewPhones(){
