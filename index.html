@@ -19702,7 +19702,7 @@ window.bpMailComposeSend=async function(){
       if(!cid) return fail('Could not add '+to+' as a contact, so the email was not sent.');
     }
     var res=await bpFx(GHL_MSG_URL,{action:'send',msgType:'Email',contactId:cid,message:text,text:text,html:html,attachments:_bpMcFiles.filter(function(f){return f.url;}).map(function(f){return f.url;}),subject:sub||'Message from your BuilderPro team'}).then(function(r){return r.json();});
-    if(res&&res.ok===false) return fail('Could not send. '+(res.error||''));
+    if(res&&res.ok===false) return fail(/HighLevel isn.t connected/i.test(res.error||'')?'Your business email isn’t set up yet, so this wasn’t sent. Connect your own Gmail or Outlook under My inbox to send from there, or ask us to finish your setup.':'Could not send. '+(res.error||''));
     msg.style.color='#15803d'; msg.textContent='Sent.';
     setTimeout(function(){ bpMailComposeClose(); bpRenderInbox(); },700);
   }catch(e){ fail('Could not send. Please try again.'); }
