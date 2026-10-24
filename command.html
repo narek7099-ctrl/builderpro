@@ -258,7 +258,7 @@ var STATUS={}, SHIFTS=true, CONNS=[];
 var CONN_ICON={facebook:'ti-brand-facebook',instagram:'ti-brand-instagram',higgsfield:'ti-movie',zapier:'ti-bolt',stripe:'ti-credit-card',supabase:'ti-server',clickup:'ti-checkbox',github:'ti-brand-github',airtable:'ti-table',linear:'ti-list-check'};
 function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
 async function viewTeam(){
-  el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. Each team works a shift every 3 hours.</p></div>'
+  el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. Each team works one shift a day.</p></div>'
     +'<label class="sw"><input type="checkbox" id="shOn" onchange="SHIFTS=this.checked;api({op:\'shifts\',on:this.checked});drawBoard()"> Round-the-clock shifts</label></div>'
     +'<div class="board"><div class="board-in" id="bd"></div></div>'
     +'<div class="scrim" id="scr" onclick="closeDr()"></div><div class="drawer" id="dr"><div class="hd"><b id="drT"></b><select id="drTh" onchange="openThread(this.value||null)"></select><button class="xbtn" aria-label="Close" onclick="closeDr()"><i class="ti ti-x"></i></button></div>'
@@ -311,7 +311,7 @@ function drawBoard(){
       +(live?'Working now':last?(last.created_by==='shift'?'Last shift ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div></span></div></button>';
   });
   var nlive=Object.keys(NAMES).filter(isLive).length;
-  el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of 6 working</span><span>shifts <b>'+(SHIFTS?'every 3h':'paused')+'</b></span><span>auto-onboarding <b>on</b></span></div>';
+  el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of 6 working</span><span>shifts <b>'+(SHIFTS?'once a day':'paused')+'</b></span><span>auto-onboarding <b>on</b></span></div>';
   fitBoard();
 }
 function closeDr(){el('dr').classList.remove('open');el('scr').classList.remove('open');drawBoard();}
