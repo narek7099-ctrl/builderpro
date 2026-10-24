@@ -379,7 +379,7 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx .mh2-row,#bpx .mh2-today{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;min-height:62px;border-top:1px solid var(--line-2,#EEF0F4);cursor:pointer;padding:8px 0}
 #bpx .mh2-row>.ms{color:#98A2B3}
 #bpx .mh2-dot{flex:none;width:10px;height:10px;border-radius:5px;background:var(--bl)}
-#bpx .mh2-dot.red,#bpx .mh2-dot.bad{background:#F04438}#bpx .mh2-dot.amber,#bpx .mh2-dot.warn{background:#F79009}
+#bpx .mh2-dot.red,#bpx .mh2-dot.bad{background:#F04438}#bpx .mh2-dot.amber,#bpx .mh2-dot.warn{background:#F79009}#bpx .mh2-dot.good{background:#12B76A}
 #bpx .mh2-rt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 #bpx .mh2-rt b{font-size:15px;font-weight:600;color:var(--ink)}
 #bpx .mh2-rt small{font-size:13px;color:var(--mu)}
