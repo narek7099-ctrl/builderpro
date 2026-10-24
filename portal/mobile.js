@@ -135,7 +135,7 @@
         var ks = g.kids ? g.kids.filter(function (k) { return allows(k[0]); }) : null;
         if (g.id === 'dashboard' || (ks ? !ks.length : !allows(g.id))) return;
         var lk = ks ? ks.every(function (k) { return locked(k[0]); }) : locked(g.id);
-        grid += tile(g.ico || g.id, g.l, "bpMobile.go('" + g.id + "')", { lock: lk });
+        grid += tile(g.ico || g.id, g.id === 'projects' ? 'Jobs' : g.l, "bpMobile.go('" + g.id + "')", { lock: lk });
       });
       if (allows('settings')) grid += tile('settings', 'Settings', "bpMobile.nav('settings')");
       more = '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.ai()">' + ico('spark') + '<span>Ask ' + esc(window.BP_AI_NAME || 'Lisa') + ', your assistant</span></button>'
@@ -273,7 +273,7 @@
       var ks = g.kids ? g.kids.filter(function (k) { return allows(k[0]); }) : null;
       if (g.id === 'dashboard' || (ks ? !ks.length : !allows(g.id))) return;
       var lk = ks ? ks.every(function (k) { return locked(k[0]); }) : locked(g.id);
-      grid += tile(g.ico || g.id, g.l, "bpMobile.go('" + g.id + "')", { lock: lk });
+      grid += tile(g.ico || g.id, g.id === 'projects' ? 'Jobs' : g.l, "bpMobile.go('" + g.id + "')", { lock: lk });
     });
     if (allows('settings')) grid += tile('settings', 'Settings', "bpMobile.nav('settings')");
     return grid ? '<section class="mh2-card mh2-apps"><div class="mh2-h"><b>All apps</b></div><div class="bp-apps">' + grid + '</div></section>' : '';
