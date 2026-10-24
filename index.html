@@ -20109,6 +20109,7 @@ function bpPjCardsView(active,done){
       +'<button class="bpx-jt" onclick="bpJobTab(\'done\')">Completed · '+done.length+'</button></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+bpCsvBtn('bpCsvProjects()')+'<button class="bpx-addbtn" onclick="bpAddJobOpen()">+ Add job</button></div></div>'
     +(window.bpPlanCheckin?bpPlanCheckin():'')
+    +bpPjApproved()
     +'<div class="pjk-stats">'
       +stat('Active projects',active.length,marked.length+' marked')
       +stat('Contract value',bpMoneyFmt(tot),'')
@@ -20128,6 +20129,16 @@ function bpPjCardsView(active,done){
   bpPjGrid();
   var withA=active.filter(function(j){return (j.addr||'').trim();});
   bpEnsureLeaflet(function(){ bpPjDraw(withA); });
+}
+/* customers who said yes but whose job hasn't started (no card deposit yet): one tap starts it */
+function bpPjApproved(){
+  var ap=window.bpJobsApproved?bpJobsApproved():[]; if(!ap.length) return '';
+  return '<section class="pjk-appr" style="margin:6px 0 18px"><div class="ml-sec" style="margin:0 0 8px"><b>Approved, not started yet</b><span class="bpx-mut">The customer said yes. Start the job when the deposit is in, or right away if you take cash or check.</span></div>'
+    +'<div class="pjl">'+ap.map(function(j){ return '<div class="pjl-r" onclick="bpQuoteOpen&&bpQuoteOpen(\''+j.id+'\')"><span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>'
+      +'<div class="pjl-id"><b>'+bpEsc(j.name||'Customer')+'</b><span>'+bpEsc(j.title||'Job')+(j.addr?' · '+bpEsc(j.addr):'')+'</span></div>'
+      +'<div class="pjl-st"><span class="pjk-tag ok">Approved</span></div>'
+      +'<div class="pjl-m"><b>'+bpMoneyFmt(+j.estimate||0)+'</b></div>'
+      +'<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpJobStart(\''+j.id+'\')">Start job</button></div></div>'; }).join('')+'</div></section>';
 }
 var _pjP=1;
 window.bpPjFilter=function(k){ _pjF=k; _pjP=1; document.querySelectorAll('.pjk-chip').forEach(function(b){ b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+k+"'")>0); }); bpPjGrid(); };
@@ -27744,7 +27755,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261024q02"></script>
-<script src="portal/quote.js?v=20261024q13"></script>
+<script src="portal/quote.js?v=20261024q14"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261024q04"></script>

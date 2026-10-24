@@ -1304,6 +1304,18 @@
       save(true);
     };
   }
+  /* an approved estimate becomes the project by hand (deposit paid in cash or check,
+     or no card payments yet): same promotion the deposit webhook does */
+  window.bpJobStart = function (jid) {
+    var j = job(jid); if (!j || j.status !== 'quote') return;
+    j.status = 'active'; j.wonAt = Date.now();
+    var c = calc(j); if (!(+j.estimate > 0)) j.estimate = c.total;
+    if (!j.budget || !Object.keys(j.budget).length) j.budget = budgetOf(j);
+    save(true);
+    if (window.bpToast) bpToast('Job started. It’s in Jobs now; plan its days and crew there.', 'success');
+    if (window.bpNav) bpNav('activejobs');
+  };
+  window.bpJobsApproved = function () { return jobs().filter(function (j) { return j.status === 'quote' && !j.sample && j.quote && j.quote.status === 'accepted'; }); };
   setTimeout(function () { try { bpQuoteAdopt(); } catch (e) {} }, 4000);
   setInterval(function () { try { bpQuoteAdopt(); } catch (e) {} }, 120000);
 })();
