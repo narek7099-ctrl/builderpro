@@ -343,6 +343,12 @@ function addMsg(m){
   else{d.className='m assistant';d.innerHTML=(m.tools&&m.tools.length?'<div class="tools">'+m.tools.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+'</div>':'')+md(m.text);}
   box.appendChild(d); box.scrollTop=box.scrollHeight;
 }
+/* the API's error, in plain words */
+function aiErr(e){ e=String(e||'');
+  if(/credit balance is too low/i.test(e)) return 'The AI is out of credit. Add credit in the Anthropic Console → Plans & Billing, then send it again.';
+  if(/overloaded|529|rate.?limit|429/i.test(e)) return 'The AI is busy right now. Wait a minute and send it again.';
+  if(/authentication|invalid x-api-key|401/i.test(e)) return 'The Anthropic key was turned down. Check ANTHROPIC_API_KEY in Supabase.';
+  return e?e.replace(/^Error:\s*/,'').slice(0,300):'Something went wrong.'; }
 async function send(){
   var t=el('inp').value.trim(); if(!t||BUSY)return; BUSY=true; el('inp').value=''; el('sendb').disabled=true;
   if(!THREAD)el('msgs').innerHTML='';
@@ -351,7 +357,8 @@ async function send(){
   var r=await api({op:'chat',agent:AGENT,thread_id:THREAD,message:t}).catch(function(e){return {ok:false,error:e.message}});
   BUSY=false; el('sendb').disabled=false;
   if(r.thread_id){ var fresh=!THREAD; THREAD=r.thread_id; if(fresh){var o=document.createElement('option');o.value=THREAD;o.textContent=t.slice(0,60);el('drTh').insertBefore(o,el('drTh').children[1]);} await openThread(THREAD); } else w.remove();
-  if(!r.ok) addMsg({role:'assistant',text:'**Could not finish.** '+(r.error||'Something went wrong.')});
+  if(!r.ok){ var nt=[].slice.call(el('msgs').querySelectorAll('.m.sys')).pop(); if(nt&&/^No answer was saved/.test(nt.textContent))nt.remove();
+    addMsg({role:'assistant',text:'**Could not finish.** '+aiErr(r.error)}); }
   if(r.approvals&&r.approvals.length){ addMsg({role:'sys',text:r.approvals.length+' action(s) waiting for your approval to Approvals tab'}); countPending(); }
 }
 setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;drawBoard();} }); },60000);
