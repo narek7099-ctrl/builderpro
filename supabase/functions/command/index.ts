@@ -19,7 +19,10 @@
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { SB_URL, sb, callGHL, provisionClient, finishClient, GHL_OPS, isRead } from "./ghl.ts";
 
-const MODEL = Deno.env.get("COMMAND_MODEL") ?? "claude-opus-5";
+// Sonnet keeps the always-on team affordable; set COMMAND_MODEL to change it
+const MODEL = Deno.env.get("COMMAND_MODEL") ?? "claude-sonnet-5-5";
+// one team's scheduled shift every SHIFT_EVERY_MIN minutes, so each of the six runs about once a day
+const SHIFT_EVERY_MIN = Number(Deno.env.get("SHIFT_EVERY_MIN") ?? "240");
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -81,7 +84,7 @@ const TOOLS: Anthropic.Tool[] = [
 ];
 function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
   const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)) && (x.name !== "social" || ["ceo", "marketing"].includes(a.key)));
-  if (a.web) t.push({ type: "web_search_20260209", name: "web_search", max_uses: 5 } as unknown as Anthropic.Messages.ToolUnion);
+  if (a.web) t.push({ type: "web_search_20260209", name: "web_search", max_uses: 3 } as unknown as Anthropic.Messages.ToolUnion);
   return t;
 }
 
@@ -241,7 +244,7 @@ async function social(input: Record<string, unknown>): Promise<unknown> {
 }
 
 async function memoryText(): Promise<string> {
-  const r = await sb("ai_memory?select=note&order=created_at.desc&limit=40");
+  const r = await sb("ai_memory?select=note&order=created_at.desc&limit=25");
   const rows = r.ok ? await r.json() : [];
   return rows.map((m: { note: string }) => "- " + m.note).join("\n");
 }
@@ -260,8 +263,10 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
   switch (name) {
     case "ghl": return await callGHL(String(input.op), (input.args ?? {}) as Record<string, string>);
     case "accounts_list": {
-      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,price_monthly,profile,created_at&order=created_at.desc&limit=200${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
-      return r.ok ? await r.json() : { error: r.status };
+      // the short version: sign-up answers and the full setup log only via db_read when needed
+      const r = await sb(`accounts?select=email,full_name,business,phone,trade,status,plan,trial_ends_at,ghl_location_id,setup_log,onboard_state,price_monthly,created_at&order=created_at.desc&limit=100${input.status ? "&status=eq." + encodeURIComponent(String(input.status)) : ""}`);
+      if (!r.ok) return { error: r.status };
+      return (await r.json()).map((x: { setup_log?: string[] }) => ({ ...x, setup_log: (x.setup_log ?? []).slice(-2) }));
     }
     case "account_create": return await createAccount(input as Record<string, string>);
     case "account_update": {
@@ -275,7 +280,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
       return p.ok ? await p.json() : { error: p.status };
     }
     case "support_requests": {
-      const r = await sb(`support_requests?select=*&order=created_at.desc&limit=50${input.kind ? "&kind=eq." + encodeURIComponent(String(input.kind)) : ""}`);
+      const r = await sb(`support_requests?select=*&order=created_at.desc&limit=20${input.kind ? "&kind=eq." + encodeURIComponent(String(input.kind)) : ""}`);
       return r.ok ? await r.json() : { error: r.status };
     }
     case "business_stats": {
@@ -300,7 +305,7 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
     case "db_read": {
       const t = String(input.table); if (!DB_TABLES.includes(t)) return { error: "table not allowed" };
       const f = String(input.filter ?? "").replace(/[^\w.,=()*:@%+\-&]/g, "");
-      const r = await sb(`${t}?select=${encodeURIComponent(String(input.select ?? "*"))}${f ? "&" + f : ""}&limit=${Math.min(Number(input.limit) || 50, 200)}`);
+      const r = await sb(`${t}?select=${encodeURIComponent(String(input.select ?? "*"))}${f ? "&" + f : ""}&limit=${Math.min(Number(input.limit) || 20, 50)}`);
       return r.ok ? await r.json() : { error: r.status, detail: (await r.text()).slice(0, 200) };
     }
     case "social": return await social(input);
@@ -405,7 +410,7 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
     ...(conns.length ? { mcp_servers: conns.map((c) => ({ type: "url", name: c.name, url: c.url, ...(c.token ? { authorization_token: c.token } : {}) })) } : {}),
   // deno-lint-ignore no-explicit-any
   } as any);
-  for (let i = 0; i < (depth ? 6 : 10); i++) {
+  for (let i = 0; i < (depth ? 4 : 8); i++) {
     // deno-lint-ignore no-explicit-any
     let res: any;
     for (;;) {
@@ -440,7 +445,8 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
       }
       try {
         const out = await runTool(u.name, input, depth);
-        return { type: "tool_result", tool_use_id: u.id, content: JSON.stringify(out).slice(0, 60000) };
+        const txt = JSON.stringify(out);
+        return { type: "tool_result", tool_use_id: u.id, content: txt.length > 15000 ? txt.slice(0, 15000) + " …[cut: ask for less, e.g. a filter or a smaller limit]" : txt };
       } catch (e) { return { type: "tool_result", tool_use_id: u.id, content: "Error: " + String(e).slice(0, 300), is_error: true }; }
     }));
     const tr = { role: "user" as const, content: results as unknown as Anthropic.Beta.Messages.BetaMessageParam["content"] };
@@ -466,7 +472,7 @@ function transcript(rows: { role: string; content: unknown }[]) {
 
 /* ------------------------------------------------------------ admin gate --- */
 // 24/7: pg_cron calls ?shift every 5 min. Each tick onboards new sign-ups; every
-// 30 min it also runs the team whose last shift is oldest (each team every 3h).
+// SHIFT_EVERY_MIN (4h) it also runs the team whose last shift is oldest (each team about once a day).
 async function shift(req: Request) {
   const cfg = await sb("ai_config?select=key,value"); const rows: { key: string; value: string }[] = cfg.ok ? await cfg.json() : [];
   const get = (k: string) => rows.find((r) => r.key === k)?.value ?? "";
@@ -477,9 +483,9 @@ async function shift(req: Request) {
   bg(autoOnboard().catch(() => {}));
   const onboard = "started";
   if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, onboard, skipped: true });
-  // the scheduler ticks every 5 min for onboarding; a team shift only every 30
+  // the scheduler ticks every 5 min for onboarding; a team shift only every SHIFT_EVERY_MIN
   const lastAny = Math.max(0, ...rows.filter((r) => r.key.startsWith("shift_")).map((r) => Date.parse(r.value) || 0));
-  if (Date.now() - lastAny < 29 * 6e4) return json({ ok: true, onboard });
+  if (Date.now() - lastAny < (SHIFT_EVERY_MIN - 1) * 6e4) return json({ ok: true, onboard });
   let pick = "", oldest = Infinity;
   for (const k of Object.keys(AGENTS)) { const t = Date.parse(get("shift_" + k) || "1970-01-01"); if (t < oldest) { oldest = t; pick = k; } }
   const now = new Date().toISOString();
