@@ -392,13 +392,36 @@ async function viewAccounts(){
 }
 /* a client's HighLevel key: made inside their sub-account under Settings > Private Integrations.
    The server checks it with HighLevel before saving; the key never comes back to this page. */
-async function ghlKey(uid,loc,biz){
-  if(!loc){ loc=(prompt('Location ID of '+biz+'\'s sub-account (Settings > Business Profile in HighLevel):')||'').trim(); if(!loc) return; }
-  var tok=(prompt('Paste the Private Integration key for '+biz+'.\n\nMake it inside their sub-account: Settings > Private Integrations > Create new integration, with these scopes: contacts, contacts/tags, conversations/message, invoices, invoices/estimate, opportunities, calendars/events, locations/customFields, locations/customValues, users (read).')||'').trim();
-  if(!tok) return;
-  var r=await api({op:'ghl_key_set',user_id:uid,location:loc,token:tok});
-  alert(r.ok?'Saved. BuilderPro now reaches '+(r.name||biz)+'\'s HighLevel sub-account.'+((r.steps||[]).length?'\n\nSet up: '+r.steps.join(' · ')+'\n\nThe Builder team finishes the rest within a few minutes.':''):(r.error||'Could not save the key.'));
-  if(r.ok) viewAccounts();
+/* Add key: one small form with both boxes (a sub-account made by hand in HighLevel) */
+function ghlKey(uid,loc,biz){
+  var old=el('gkM'); if(old) old.remove();
+  var m=document.createElement('div'); m.id='gkM';
+  m.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(0,21,48,.45);display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML='<div class="card" style="width:min(520px,100%);max-height:90vh;overflow:auto;padding:22px">'
+    +'<h3 style="margin:0 0 4px">HighLevel for '+esc(biz)+'</h3>'
+    +'<div class="muted" style="font-size:13px;margin-bottom:14px">Make the sub-account in HighLevel first (with the plan’s snapshot), then paste these two from inside it.</div>'
+    +'<label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px">1. Location ID</label>'
+    +'<input id="gkLoc" value="'+esc(loc||'')+'" placeholder="Settings → Business Profile → Location ID" style="width:100%;margin-bottom:4px">'
+    +'<div class="muted" style="font-size:12px;margin-bottom:12px">In the sub-account: Settings → Business Profile.</div>'
+    +'<label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px">2. Private Integration key</label>'
+    +'<input id="gkTok" type="password" placeholder="pit-…" autocomplete="off" style="width:100%;margin-bottom:4px">'
+    +'<div class="muted" style="font-size:12px;margin-bottom:12px">In the sub-account: Settings → Private Integrations → Create new integration. Scopes: contacts, contacts/tags, conversations/message, invoices, invoices/estimate, opportunities, calendars/events, locations/customFields, locations/customValues, users (read).</div>'
+    +'<div id="gkOut" style="font-size:13px;min-height:1em;margin-bottom:10px"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="gkNo">Cancel</button><button class="btn pri" id="gkGo">Save and set up</button></div></div>';
+  document.body.appendChild(m);
+  var close=function(){m.remove();};
+  m.onclick=function(e){if(e.target===m)close();}; el('gkNo').onclick=close;
+  (loc?el('gkTok'):el('gkLoc')).focus();
+  el('gkGo').onclick=async function(){
+    var l=el('gkLoc').value.trim(), t=el('gkTok').value.trim(), out=el('gkOut'), b=el('gkGo');
+    if(!l||!t){out.innerHTML='<span style="color:var(--danger)">Fill in both boxes.</span>';return;}
+    b.disabled=true;b.textContent='Checking with HighLevel…';out.textContent='';
+    var r=await api({op:'ghl_key_set',user_id:uid,location:l,token:t});
+    b.disabled=false;b.textContent='Save and set up';
+    if(!r.ok){out.innerHTML='<span style="color:var(--danger)">'+esc(r.error||'Could not save the key.')+'</span>';return;}
+    out.innerHTML='<span style="color:var(--ok)">Saved. BuilderPro now reaches '+esc(r.name||biz)+'’s HighLevel.</span>'+((r.steps||[]).length?'<div class="muted" style="margin-top:6px">Set up: '+esc(r.steps.join(' · '))+'. The Builder team finishes the rest within a few minutes.</div>':'');
+    b.textContent='Done';b.onclick=function(){close();viewAccounts();};
+  };
 }
 async function newAcct(b){
   var v={op:'account_create',name:el('naName').value.trim(),business:el('naBiz').value.trim(),email:el('naEmail').value.trim(),phone:el('naPhone').value.trim(),trade:el('naTrade').value.trim()};
