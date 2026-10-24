@@ -94,7 +94,7 @@
     customer_co_declined:    { g: 4, t: 'Change order declined',              ic: 'no',      r: 'o' },
     sub_invoice:             { g: 5, t: 'Sub sends an invoice',               ic: 'receipt',   r: 'o' },
     sub_change_order:        { g: 5, t: 'Sub asks for a change order',        ic: 'note',      r: 'o' },
-    sub_insurance:           { g: 5, t: 'Sub insurance or licence expiring',  ic: 'shield',   r: 'o' },
+    sub_insurance:           { g: 5, t: 'Sub insurance or license expiring',  ic: 'shield',   r: 'o' },
     sub_decision:            { g: 5, t: 'Your invoice or change order is decided', ic: 'check', r: 's' },
     due_soon:                { g: 6, t: 'Due in the next 2 days',             ic: 'cal',  r: 'ocs' },
     overdue:                 { g: 6, t: 'Overdue',                            ic: 'late',      r: 'ocs' },

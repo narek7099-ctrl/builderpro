@@ -263,7 +263,7 @@
     }) + '</div>';
   }
   /* Each finished job as a pair of thin columns, what came in beside what
-     it cost: the same marks and the same two colours as Money in and out,
+     it cost: the same marks and the same two colors as Money in and out,
      so the two charts read as one. The profit sits over each pair. */
   function jobsChart() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
@@ -496,8 +496,8 @@
       won: wonN.values, wonV: wonV.values, cur: tot(P.start, P.end), prev: tot(P.pStart, P.pEnd), fin: fin, jobs: jobs };
   }
   /* A headline figure with its trend: the total for the period, a delta
-     chip against the period before it (coloured by whether that direction
-     is good, arrowed so colour is never alone), and a sparkline of the
+     chip against the period before it (colored by whether that direction
+     is good, arrowed so color is never alone), and a sparkline of the
      period's weeks or months. */
   function sparkTiles(M) {
     var t = function (lbl, key, val, sub, vals, go, o) {

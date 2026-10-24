@@ -2,7 +2,7 @@
    Charts, as one system.
 
    Every chart in the portal is drawn here, so a number means the same
-   thing and wears the same colour wherever it appears. Plain inline SVG
+   thing and wears the same color wherever it appears. Plain inline SVG
    built as a string, because the portal renders views with innerHTML;
    the hover layer is delegated from the document, so a chart works the
    moment it lands in the DOM with nothing to mount or tear down.
@@ -29,10 +29,10 @@
    still clearing 2:1.
 
    Not negotiable, enforced here rather than remembered: one y-axis and
-   never two; categorical hues in a fixed order, never cycled; colour
+   never two; categorical hues in a fixed order, never cycled; color
    follows the series, not its rank; 2px lines, 4px rounded bar ends,
    2px gaps; hairline solid grid; a legend whenever there are two or more
-   series; text in text colours, never the series colour.
+   series; text in text colors, never the series color.
    ================================================================== */
 (function () {
   'use strict';
@@ -292,7 +292,7 @@
   /* ==================================================================
      LINE / AREA — change over time. Smooth, 2px, a dot on every point
      when there are few enough to count, and a soft gradient wash under a
-     lone series. Two washes overlapping read as a third colour, so a
+     lone series. Two washes overlapping read as a third color, so a
      multi-series chart is lines only.
      ================================================================== */
   function lineSvg(o, W) {
@@ -365,14 +365,14 @@
      at the data end, square on the baseline, 2px of surface between the
      bars of a group. A lone series with few enough columns carries its
      value on the cap; an ordered set of buckets (ages, score bands) can
-     take the ordinal ramp so the order is in the colour too.
+     take the ordinal ramp so the order is in the color too.
      ================================================================== */
   function colsSvg(o, W) {
     var x = o.x || { values: [] }, series = o.series || [], fmt = o.fmt || plain;
     var n = x.values.length, sc = yScale(series, o), af = axisFmt(fmt);
     var caps = series.length === 1 && n <= 8 && o.capLabels !== false;
     /* a grouped chart may carry one figure per group (a job's profit), set
-       above the taller bar in ink, never in a series colour */
+       above the taller bar in ink, never in a series color */
     var gcaps = series.length > 1 && o.groupCaps && n <= 10;
     var H = heightFor(o, W), P = { t: caps || gcaps ? 22 : 14, r: 14, b: 26, l: gutterFor(sc, af) };
     var iw = Math.max(24, W - P.l - P.r), ih = H - P.t - P.b;
@@ -418,7 +418,7 @@
 
   /* ==================================================================
      RANKED BARS — how magnitudes compare. Horizontal, because the labels
-     are words. Sorted, one hue (colour following rank would repaint a row
+     are words. Sorted, one hue (color following rank would repaint a row
      the day it overtakes another). A fixed scale (1 to 5 stars) keeps its
      own order and may carry its own ramp.
      ================================================================== */
@@ -611,7 +611,7 @@
     }
     if (!o.fixed) rows = rows.sort(function (a, b) { return b.value - a.value; });
     var total = rows.reduce(function (t, r) { return t + r.value; }, 0) || 1;
-    /* colour follows the name (alphabetical slot), not the size; a fixed,
+    /* color follows the name (alphabetical slot), not the size; a fixed,
        ordered set takes the ordinal ramp or its own */
     var ordNames = rows.map(function (r) { return r.label; }).sort();
     var nAll = (o.rows || []).length;
@@ -769,9 +769,9 @@
       + '<path class="bpc-sdot" d="M' + last[0].toFixed(1) + ' ' + last[1].toFixed(1) + 'h0" stroke="' + tone + '"/>'
       + hits + '</svg><div class="bpc-tip" hidden></div></div>';
   };
-  /* the delta chip: signed, against a named period, coloured by whether
+  /* the delta chip: signed, against a named period, colored by whether
      that direction is good — and it says which way with an arrow, so the
-     colour is never carrying it alone */
+     color is never carrying it alone */
   C.delta = function (prev, cur, o) {
     o = o || {};
     prev = +prev || 0; cur = +cur || 0;

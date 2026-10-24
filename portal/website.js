@@ -367,7 +367,7 @@
 
   /* came back from Google's consent screen */
   (function () {
-    var m = /[?&]google=(connected|cancelled|error)\b/.exec(location.search);
+    var m = /[?&]google=(connected|canceled|error)\b/.exec(location.search);
     if (!m) return;
     G.flash = m[1]; if (m[1] === 'connected') G.src = 'google';
     try { var u = new URL(location.href); u.searchParams.delete('google'); history.replaceState(null, '', u.toString()); } catch (e) {}
@@ -441,7 +441,7 @@
     if (!G.flash) return '';
     var f = G.flash; G.flash = '';
     if (f === 'connected') return '<div class="sp-note ok ws-gflash"><span class="ms">check_circle</span>Google is connected. Pick the website below.</div>';
-    if (f === 'cancelled') return '<div class="sp-note warn ws-gflash"><span class="ms">info</span>Google sign-in was cancelled. Nothing was connected.</div>';
+    if (f === 'cancelled') return '<div class="sp-note warn ws-gflash"><span class="ms">info</span>Google sign-in was canceled. Nothing was connected.</div>';
     return '<div class="sp-note bad ws-gflash"><span class="ms">error</span>Couldn’t connect Google. Please try again.</div>';
   }
 

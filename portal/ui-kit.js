@@ -7,7 +7,7 @@
    bpSkel(kind, n)                skeleton HTML: 'table' | 'list' | 'panel' | 'cards'
    bpBtnBusy(btn, on)             spinner inside a button, disabled while on
 
-   bpSpin() (the old centre spinner) now drives the progress bar, so every
+   bpSpin() (the old center spinner) now drives the progress bar, so every
    view that already calls it gets the new loading feedback for free.
    ================================================================== */
 (function () {
