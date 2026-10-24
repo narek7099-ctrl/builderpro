@@ -36,7 +36,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s); };
   var C = window.BP_CREWAPP = { me: null, busy: null, job: null, tab: 'details', log: null, tick: null };
-  var ONSITE_M = 250;   /* within this many metres of the job counts as on site */
+  var ONSITE_M = 250;   /* within this many meters of the job counts as on site */
   var LS = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 
   function area() { return $('bpxViewArea'); }

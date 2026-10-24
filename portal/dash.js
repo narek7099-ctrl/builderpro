@@ -119,7 +119,7 @@
       + (jobs.length > shown.length ? 'All ' + jobs.length + ' projects' : 'All projects') + '</button></div>' + projCards(shown, crew) + '</div>';
   }
   /* No photo yet: a soft tile that says what kind of job it is, rather
-     than a big grey box apologising for a missing picture. */
+     than a big gray box apologizing for a missing picture. */
   function jobIcon(j) {
     var t = String((j.title || '') + ' ' + (j.trade || '')).toLowerCase();
     var map = [[/gutter|downspout/, 'water_drop'], [/leak|water/, 'water_damage'], [/storm|hail|wind/, 'thunderstorm'],

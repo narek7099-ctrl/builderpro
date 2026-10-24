@@ -66,7 +66,7 @@
   }
   function v(from, o) { o.from = from; return o; }
   /* The list is grouped by what the customer goes through, with plain names.
-     The HighLevel name and number stay visible (in grey) so the owner can
+     The HighLevel name and number stay visible (in gray) so the owner can
      find the same workflow in their CRM. */
   var GROUPS = [[1, 'New leads to booked'], [2, 'Missed calls and messages'], [3, 'Inspections and visits'], [4, 'Estimates and deposits'],
     [5, 'Job updates to customers'], [6, 'Getting paid'], [7, 'Reviews and repeat work'], [8, 'Heads-ups to you']];

@@ -214,7 +214,7 @@
   /* Some brands only publish a square app-icon lockup — white mark on a
      solid brand color. Those already carry their own tile, so they fill
      the chip edge to edge instead of floating inset on ours, which would
-     read as a colored stamp stuck on a grey card. */
+     read as a colored stamp stuck on a gray card. */
   SP.LOGOS_FULL = 'cosentino ferguson homedepot_pro lowes_pro lw sherwin siteone'.split(' ').filter(Boolean);
 
   function matches(d, trade, q) {
