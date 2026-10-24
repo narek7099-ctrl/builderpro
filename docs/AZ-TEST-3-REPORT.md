@@ -32,6 +32,7 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 - a7d7ffd AI Team on phones: no visible scrollbar under the chats strip.
 - b30d782 $99 plan: + sheet and Home tiles show a lock on things not on the plan (Job, Add job).
 - fdb2c88 **Money boxes rounded away cents**: Edit details, Paid so far, budget, expenses, Mark done and permit fee boxes showed $19.13 as $19 and saved $19. They keep cents now. Mark done says only the sign-off is required.
+- 36db34c Customer estimate, contract and invoice links: the "Get updates" account sheet no longer pops over the page after 9 seconds (it covered the signature box); it shows right after they approve, sign or pay.
 
 ## Results
 | Area | Result | Notes |
@@ -52,6 +53,7 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 | Homeowner | Pass | My projects loads. |
 | Plan locks ($99) | Pass, fixed | Projects, Supply, AI Team, Marketing locked with a clear upgrade page; locks now shown on the + sheet and Home tiles. |
 | Desktop (1440px) | Pass | Dashboard, locked sections grouped under "Upgrade to unlock", first-run tour. |
+| Signed-out customer (round 1 issue 5) | Pass, fixed | The free-account sheet popped up 9 seconds after an estimate opened and covered the signature box. Now it waits for the approval; approved signed out, then the sheet offered the account (not created: no new accounts this run). |
 | Invoices | Pass | Payment plan (deposit 30% = $5.74 + final), Preview, Confirm and send shows "Invoicing isn't set up yet" with a Payouts link. |
 
 ## Needs the owner
