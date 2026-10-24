@@ -186,7 +186,7 @@
     M.createClose(); M.appsClose();
     var big = [['estimates', "bpMobile.quick('estimates','bpEstOpen')", 'request_quote', 'Estimate', 1], ['invoices', "bpMobile.quick('invoices','bpInvOpen')", 'receipt_long', 'Invoice'],
       ['activejobs', "bpMobile.quick('activejobs','bpAddJobOpen')", 'add_business', 'Job'], ['contacts', "bpMobile.quick('contacts','bpOpenAdd')", 'person_add', 'Customer']].filter(function (q) { return allows(q[0]); });
-    var small = [['calendar', "window._bpApptCal='inspection';bpMobile.quick('calendar','bpOpenBook')", 'roofing', 'Book an inspection'], ['receipts', "bpMobile.createClose();bpNav('receipts')", 'photo_camera', 'Snap a receipt'],
+    var small = [['calendar', "window._bpApptCal='inspection';bpMobile.quick('calendar','bpOpenBook')", 'roofing', 'Book an inspection'], ['receipts', "bpMobile.createClose();bpNav('receipts');setTimeout(function(){if(window.SP&&SP.rcOpen)SP.rcOpen()},250)", 'photo_camera', 'Snap a receipt'],
       ['calendar', "bpMobile.quick('calendar','bpNoteOpen')", 'sticky_note_2', 'Note or to-do']].filter(function (q) { return allows(q[0]); });
     var el = document.createElement('div'); el.id = 'bpCreate'; el.className = 'bp-create';
     el.innerHTML = '<div class="bp-create-bg" onclick="bpMobile.createClose()"></div><div class="bp-create-sh" role="dialog" aria-label="Create something new"><i class="bp-create-grab"></i>'
