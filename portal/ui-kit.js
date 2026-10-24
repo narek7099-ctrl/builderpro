@@ -99,7 +99,7 @@
 })();
 
 /* ==================================================================
-   In-app "Are you sure?" instead of the browser's grey box.
+   In-app "Are you sure?" instead of the browser's gray box.
    Every confirm() in the portal comes from a tap. The first call shows
    this dialog and answers "no", so nothing happens yet; "Yes" taps the
    same button again and that one call answers "yes". Anything not

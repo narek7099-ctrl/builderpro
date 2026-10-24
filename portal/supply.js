@@ -894,7 +894,7 @@
      Prices come in three tiers and the UI never blurs them:
        yours    a real negotiated price off their own price book. This is
                 the only kind that is ever ordered or costed with.
-       typical  a ballpark from the catalog, labelled as a ballpark, so a
+       typical  a ballpark from the catalog, labeled as a ballpark, so a
                 new account can size a job before adding a supplier.
        none     nobody has priced it; the supplier quotes it.
 
@@ -1422,7 +1422,7 @@
       var free = s.delivery && s.delivery_min > 0 && sub >= s.delivery_min;
       var del = s.delivery && (!s.will_call || (mode === 'cheapest' && (free || (+s.delivery_fee || 0) < C.stop + (s.drive_min == null ? 25 : s.drive_min) * 2 * C.min)));
       var fees = del ? (free ? 0 : +s.delivery_fee || 0) : 0;
-      return { supplier: s, lines: ls, subtotal: sub, fees: fees, fulfil: del ? 'delivery' : 'will_call', drive: s.drive_min == null ? 25 : s.drive_min };
+      return { supplier: s, lines: ls, subtotal: sub, fees: fees, fulfill: del ? 'delivery' : 'will_call', drive: s.drive_min == null ? 25 : s.drive_min };
     };
     var build = function (assign) {                       /* assign: lineIdx -> supplier id */
       var by = {}, missing = [];
@@ -1535,7 +1535,7 @@
       : '';
     var n = SP.pos.length + 1, seq = Promise.resolve(), made = [];
     P.stops.forEach(function (st) {
-      var row = { list_id: L.id, supplier_id: st.supplier.id, po_number: poNumber(n++), status: 'sent', fulfil: st.fulfil, eta_min: st.fulfil === 'delivery' ? null : st.drive,
+      var row = { list_id: L.id, supplier_id: st.supplier.id, po_number: poNumber(n++), status: 'sent', fulfill: st.fulfil, eta_min: st.fulfil === 'delivery' ? null : st.drive,
         lines: st.lines.map(function (x) { return x.tbc ? { sku: '', name: x.name, qty: x.qty, unit: x.unit, price: null, tbc: true } : { sku: x.sku, name: x.name, qty: x.qty, unit: x.unit, price: x.price }; }),
         subtotal: Math.round(st.subtotal * 100) / 100, fees: Math.round(st.fees * 100) / 100, total: Math.round((st.subtotal + st.fees) * 100) / 100, job_id: L.job_id || '', job_name: L.job_name || '', sent_at: new Date().toISOString() };
       seq = seq.then(function () { return db.insert('purchase_orders', row); }).then(function (r) { made.push(r); });

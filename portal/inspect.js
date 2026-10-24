@@ -121,7 +121,7 @@
       ['Checks', ['Water pressure', 'Visible leaks', 'Fixtures and faucets', 'Toilets', 'Drains (speed / clogs)', 'Water heater (anode, T&P valve, venting)', 'Sewer line / cleanouts', 'Shutoff valves', 'Hose bibs', 'Signs of corrosion']],
       [['Readings', ['Static pressure (psi):', 'Water heater temp:']]]) },
     electrical: { t: 'Electrical inspection', re: /electric/i, b: std(['Service overview', ['Service size (amps):', 'Panel make / age:', 'Main breaker:', 'Service entrance / meter condition:', 'Grounding and bonding:']],
-      ['Checks', ['Panel labelling', 'Breaker condition / double taps', 'Aluminum or knob-and-tube wiring', 'GFCI protection (kitchen, baths, exterior, garage)', 'AFCI protection', 'Outlets and switches', 'Smoke and CO detectors', 'Exterior and outbuilding wiring', 'Signs of overheating']],
+      ['Checks', ['Panel labeling', 'Breaker condition / double taps', 'Aluminum or knob-and-tube wiring', 'GFCI protection (kitchen, baths, exterior, garage)', 'AFCI protection', 'Outlets and switches', 'Smoke and CO detectors', 'Exterior and outbuilding wiring', 'Signs of overheating']],
       [['Readings', ['Voltage L1-L2:', 'Load notes:']]]) },
     general: { t: 'Remodel walkthrough', re: /general|remodel|contract/i, b: std(['Scope', ['Rooms / areas:', 'What the customer wants:', 'Budget range:', 'Timeline:']],
       ['Existing conditions', ['Structure / framing', 'Walls and ceilings', 'Floors', 'Plumbing in the area', 'Electrical in the area', 'HVAC in the area', 'Moisture / mold', 'Permits likely needed']],

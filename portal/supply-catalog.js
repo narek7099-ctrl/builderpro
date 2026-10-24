@@ -17,7 +17,7 @@
    not a live feed of Home Depot or Lowe's pricing. There is no public
    catalogue API for either, prices are per-store and move weekly, and
    scraping them would be both against their terms and wrong within a
-   month. So a price here is a TYPICAL price — a ballpark, labelled as
+   month. So a price here is a TYPICAL price — a ballpark, labeled as
    one, good enough to size a job. The moment a contractor adds their own
    supplier, their real negotiated price replaces it everywhere, and that
    is the number we order and cost the job with.
@@ -719,7 +719,7 @@
   /* One place that turns whatever the contractor typed into Settings into a
      shelf. "Interior design" is flooring and tile, "general contractor" is
      the site and safety kit, and a pool builder is not a plumber even
-     though half their list is pipe. A trade we do not recognise gets the
+     though half their list is pipe. A trade we do not recognize gets the
      whole catalog rather than an empty shop. */
   var TRADE_WORDS = [
     ['pools', ['pool', 'spa', 'hot tub']],

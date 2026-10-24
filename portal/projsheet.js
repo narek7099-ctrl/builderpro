@@ -130,7 +130,7 @@
     return '<div class="pjs-empty"><span class="ms">' + ico + '</span><b>' + title + '</b><p>' + text + '</p>'
       + '<button type="button" class="pm-btn" onclick="' + onclick + '"><span class="ms">add</span>' + btn + '</button></div>';
   }
-  /* empty tabs: one clear action instead of a line of grey text plus a button */
+  /* empty tabs: one clear action instead of a line of gray text plus a button */
   function decorate() {
     var j = job(); if (!j) return;
     var set = function (pane, empty, html) {
