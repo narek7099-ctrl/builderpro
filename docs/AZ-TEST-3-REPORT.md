@@ -33,6 +33,8 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 - b30d782 $99 plan: + sheet and Home tiles show a lock on things not on the plan (Job, Add job).
 - fdb2c88 **Money boxes rounded away cents**: Edit details, Paid so far, budget, expenses, Mark done and permit fee boxes showed $19.13 as $19 and saved $19. They keep cents now. Mark done says only the sign-off is required.
 - 36db34c Customer estimate, contract and invoice links: the "Get updates" account sheet no longer pops over the page after 9 seconds (it covered the signature box); it shows right after they approve, sign or pay.
+- 9f37ae3 Crew: Clock out asks for a second tap (one tap ended the day with no undo).
+- aae2098 Contract and project links cut short (a text message that wrapped) say "This link looks incomplete. Ask your contractor to send it again." instead of opening the BuilderPro home page.
 
 ## Results
 | Area | Result | Notes |
@@ -54,11 +56,25 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 | Plan locks ($99) | Pass, fixed | Projects, Supply, AI Team, Marketing locked with a clear upgrade page; locks now shown on the + sheet and Home tiles. |
 | Desktop (1440px) | Pass | Dashboard, locked sections grouped under "Upgrade to unlock", first-run tour. |
 | Signed-out customer (round 1 issue 5) | Pass, fixed | The free-account sheet popped up 9 seconds after an estimate opened and covered the signature box. Now it waits for the approval; approved signed out, then the sheet offered the account (not created: no new accounts this run). |
+| Bad customer links | Pass, fixed | Unknown estimate, contract, project and invoice links each show a plain "ask your contractor" page; cut-off links did not (fixed). |
+| Sign-up page (phone) | Pass | No sideways scroll, plan step, empty boxes highlighted, bad email caught. Not submitted (no new accounts this run). |
+| Money edge cases | Pass (code) | Money boxes take "1,000,000" and show $1,000,000; $0 shows $0. |
 | Invoices | Pass | Payment plan (deposit 30% = $5.74 + final), Preview, Confirm and send shows "Invoicing isn't set up yet" with a Payouts link. |
 
 ## Needs the owner
 1. Add Anthropic credit (at least $10; the first $5.50 pays the negative balance).
 2. HighLevel: upgrade to Agency Pro, or make the sub-account by hand and use Add key.
 3. Stripe billing webhook (see earlier instructions).
+4. **Signed-in testing stopped partway.** From here on Claude won't type passwords into the live site, so these were not tested this run. They can be done in a session where you sign in yourself (or on a staging copy of the site):
+   - Sub flow: add a sample sub to a job, the sub sends an invoice and a change order, you approve.
+   - Supply flow: estimate materials → order list → receipt.
+   - A change order approved by the customer.
+   - Desktop pass on Jobs, Estimates and Invoices at laptop width; Command Center tabs.
+5. **Sample records to delete** (made during testing; Claude couldn't sign in to remove them):
+   - Enterprise ($299) account: contact "Signout Tester (sample)" and its estimate "Fence repair (sample)" ($275, approved).
+   - AZ Test Roofing: contact "Round3 Customer (sample)", job "Gutter repair (sample)" (done), to-do "Order gutter hangers (sample)", the inspection note on Oct 25, and "Roof replacement (sample)" (approved).
+   - Crew login: a 0-hour clock punch from today.
 
 ## Server fixes for the cloud session
+1. **Jobs save as one big record, last save wins.** `portal_finance` stores all jobs plus finances in one row, and each device pushes the whole row. Two devices (or a phone and a laptop) editing at once can wipe each other's changes (a payment plan disappeared this way in testing). Two tabs on one computer are now handled in the app; across devices it needs a per-job merge on the server (or a jobs table).
+2. Features that need HighLevel (texting, business email, booking times, automations that say "On") should read as off while the HighLevel sub-account isn't connected, so nobody thinks texts are going out.
