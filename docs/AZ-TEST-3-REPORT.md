@@ -25,6 +25,12 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 - bad601a American spelling in what users see (color, labor, license, canceled, center); line endings put back to LF (an earlier Windows commit had switched index.html, quote.js and mobile.js to CRLF).
 - 26038f1 Job Photos count updates (said 0/24 with a photo showing).
 - e221110 Job step check-ins stay open on phones while answering them.
+- c1f7989 Email compose: plain-words reason when business email isn't set up (points to My inbox for Gmail/Outlook) instead of "HighLevel isn't connected".
+- 5ede30a More American spelling (personalizes, gray, labeled, fulfill, meters).
+- 305c7e6 Dark mode: New estimate tile readable on phone Home.
+- 6d83675 Crew: page title says Clock like its tab; Me sheet says Jobs.
+- a7d7ffd AI Team on phones: no visible scrollbar under the chats strip.
+- b30d782 $99 plan: + sheet and Home tiles show a lock on things not on the plan (Job, Add job).
 - fdb2c88 **Money boxes rounded away cents**: Edit details, Paid so far, budget, expenses, Mark done and permit fee boxes showed $19.13 as $19 and saved $19. They keep cents now. Mark done says only the sign-off is required.
 
 ## Results
@@ -37,6 +43,15 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 | Owner update | Pass | "Round3 approved the estimate" appeared without a reload (~30s). |
 | Jobs | Pass, fixed | Start job from an approved estimate, every tab loads (Overview, Money, Schedule, Crew, Subs, Materials, Permits, Contract, Customer, Inspections, Photos, Documents), photo upload saved to storage, Plan the phases, Finished / Not yet (moves the finish date and suggests calling the customer), Mark done with sign-off and review link. |
 | Calendar | Pass, fixed | Month default, + Add menu, to-do added, inspection booked by hand. |
+| Inbox | Pass, fixed | Texts explain the number isn't connected; Email compose explains business email isn't set up (fixed wording); My inbox offers Gmail/Outlook; Team chat loads. |
+| All pages | Pass | Order lists, Order materials, Suppliers, Receipts, Templates, Contacts, Calculator leads, Automations, Calculators, Finances, Estimates, Archive, Payouts, QuickBooks, Marketing, Reputation, Website, Social, Competitors, Equipment, Employees, Subcontractors, Driving routes, AI Team, Settings: all load, no console errors. |
+| Settings | Pass | Every section opens from the list and "All settings" goes back. |
+| Dark mode | Pass, fixed | Home, Jobs, Calendar, Finances, Settings readable (one tile fixed). |
+| Crew | Pass, fixed | Clock in (no job, location off) and out, Jobs (view only, no money), Messages, Me. |
+| Sub | Pass | Navy header, Jobs, Invoices ($100 sample), Changes, Messages. |
+| Homeowner | Pass | My projects loads. |
+| Plan locks ($99) | Pass, fixed | Projects, Supply, AI Team, Marketing locked with a clear upgrade page; locks now shown on the + sheet and Home tiles. |
+| Desktop (1440px) | Pass | Dashboard, locked sections grouped under "Upgrade to unlock", first-run tour. |
 | Invoices | Pass | Payment plan (deposit 30% = $5.74 + final), Preview, Confirm and send shows "Invoicing isn't set up yet" with a Payouts link. |
 
 ## Needs the owner
