@@ -18805,6 +18805,8 @@ window.bpSaveContact=async function(id){
     if(!id&&live){
       var ins=await BP_SB.from('contacts').insert({owner:window.bpOwnerId?bpOwnerId():null,name:name||phone||email,phone:phone,email:email,tags:['Added by you'],notes:''}).select('id').single();
       if(ins.error) return fail('Could not save: '+ins.error.message);
+      /* a builder that asked for a new customer (estimate, invoice) gets it picked straight away */
+      if(typeof window._bpAfterContact==='function'){ var cb=window._bpAfterContact; window._bpAfterContact=null; try{ cb({id:ins.data.id,name:name||phone||email,phone:phone,email:email}); }catch(e){} }
       var lisa=q('bpx-f-lisa'); if(!(lisa&&lisa.checked)) return done('Saved.');
       if(!phone&&!email) return done('Saved. Add a phone or email to have '+(window.BP_AI_NAME||'Lisa')+' reach out.');
       var pr=await bpAuthApi(BP_URL+'/functions/v1/lead-in',{op:'push',contact_id:ins.data.id}).catch(function(){return null;});
@@ -27742,7 +27744,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20260921e"></script>
 <script src="portal/matlists.js?v=20261024q02"></script>
-<script src="portal/quote.js?v=20261022a"></script>
+<script src="portal/quote.js?v=20261024q06"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261024q04"></script>
