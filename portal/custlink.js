@@ -8,7 +8,8 @@
       contractor sends for it lands there too, with a notification.
    2. Not signed in: a short sheet offers a free account to keep this and
       get updates, with their name and email already filled in. It comes
-      up after a few seconds, or right after they approve, sign or pay.
+      up right after they approve, sign or pay (a project page offers it
+      after a few seconds).
    3. On a phone, outside the app: a slim banner offers the app.
 
    A contractor previewing their own link is left alone: nothing is saved
@@ -52,7 +53,9 @@
         if (s) return;                                   /* a contractor login: leave it */
         banner();
         var key = 'bp.ho.later', last = +store.get(key) || 0;
-        if (Date.now() - last > 3 * 864e5) C.timer = setTimeout(function () { sheet(false); }, 9000);
+        /* estimates, contracts and invoices wait for the approve/sign/pay
+           (after() below), so the sheet never covers what they came to do */
+        if (C.kind === 'home' && Date.now() - last > 3 * 864e5) C.timer = setTimeout(function () { sheet(false); }, 9000);
       });
     },
     /* they just approved, signed or paid: the best moment to offer updates */
