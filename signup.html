@@ -265,6 +265,8 @@ function render(){
   var f=$('view').querySelector('input:not([type=checkbox]):not(.hp),select,textarea'); if(f&&STEP)f.focus({preventScroll:true});
   window.scrollTo({top:0,behavior:'smooth'});
 }
+/* a highlighted field clears as soon as it's filled in */
+document.addEventListener('input',function(e){var f=e.target.closest&&e.target.closest('.f.err');if(f&&String(e.target.value||'').trim()){f.classList.remove('err');if(!document.querySelector('.f.err')&&$('msg'))$('msg').textContent='';}});
 document.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey&&e.target.tagName==='INPUT'&&e.target.type!=='checkbox'&&$('nx')&&!$('nx').disabled){e.preventDefault();go(1);}});
 function total(){var pl=PLANS.filter(function(p){return p.k===S.plan})[0];return pl.p+(S.addons.website?49:0);}
 function chip(b){var t=$('iSvc'),cur=t.value.split(/\s*,\s*/).filter(Boolean),x=b.textContent,i=cur.indexOf(x);if(i>=0)cur.splice(i,1);else cur.push(x);t.value=cur.join(', ');b.classList.toggle('on',i<0);}

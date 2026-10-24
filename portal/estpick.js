@@ -19,7 +19,9 @@
   var date = function (s) { var d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
   var api = function (body) {
     var k = window.BP_ANON || '';
-    return fetch(URL_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: k, Authorization: 'Bearer ' + k }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+    var go = function () { return fetch(URL_FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: k, Authorization: 'Bearer ' + k }, body: JSON.stringify(body) }); };
+    /* a dropped connection (phone switching networks, a server waking up) gets one quiet retry */
+    return go().catch(function () { return new Promise(function (r) { setTimeout(r, 1500); }).then(go); }).then(function (r) { return r.json(); });
   };
 
   function host() {
@@ -176,7 +178,7 @@
     var first = String(o.signer_name || o.customer || '').split(/\s+/)[0];
     host().innerHTML = '<div class="sg-wrap"><div class="sg-card ep-card ep-done">' + head()
       + '<div class="sg-tick">✓</div><h1 class="sg-h" style="text-align:center">You’re all set' + (first ? ', ' + esc(first) : '') + '</h1>'
-      + '<p class="sg-p" style="text-align:center">' + esc(co.name || 'Your contractor') + ' has your approval' + (solo(o) ? '' : ' for the <b>' + esc(t.name || '') + '</b> option') + '. They’ll text you the next step, usually a deposit to get you on the schedule.</p>'
+      + '<p class="sg-p" style="text-align:center">' + esc(co.name || 'Your contractor') + ' has your approval' + (solo(o) ? '' : ' for the <b>' + esc(t.name || '') + '</b> option') + '. They’ll be in touch with the next step, usually a deposit to get you on the schedule.</p>'
       + '<div class="ep-grid one">' + card(t, o) + '</div>'
       + '<div class="sg-signed"><div class="sg-lbl">Approved by</div><span class="nm">' + esc(o.signer_name || '') + '</span>' + (o.chosen_at ? '<div class="sg-when">' + esc(new Date(o.chosen_at).toLocaleString('en-US')) + '</div>' : '') + '</div>'
       + '<button class="sg-btn" style="margin-top:18px" onclick="window.print()">Print / save a copy</button>'
