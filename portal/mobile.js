@@ -112,6 +112,8 @@
     /* the bottom tab says Jobs, so the page does too */
     /* (only the heading's text: replacing the whole box removed the h1 the shell retitles on every page) */
     var tt = top.querySelector('.hl-ttl h1') || top.querySelector('.hl-ttl'); if (tt && M.on() && role() === 'owner' && (v || window._bpCurView) === 'activejobs' && /^Projects$/.test(tt.textContent.trim())) tt.textContent = 'Jobs';
+    /* the crew's first tab is Clock, so its page says Clock too */
+    if (tt && M.on() && role() === 'crew' && (v || window._bpCurView) === 'crewdash' && /^Home$/.test(tt.textContent.trim())) tt.textContent = 'Clock';
     var av0 = $('hlAv');
     if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');
@@ -142,7 +144,7 @@
       more = '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.ai()">' + ico('spark') + '<span>Ask ' + esc(window.BP_AI_NAME || 'Lisa') + ', your assistant</span></button>'
         + '<button type="button" class="bp-sheet-row" onclick="bpMobile.appsClose();bpShell.palette()">' + ico('search') + '<span>Search everything</span></button>';
     } else if (r === 'crew') {
-      grid = tile('crew', 'My crew', "bpMobile.nav('crewhome')") + tile('badge', 'My ID', "bpMobile.nav('crewid')") + tile('clock', 'Time clock', "bpMobile.nav('crewclock')") + tile('projects', 'Projects', "bpMobile.nav('crewprojects')") + tile('tool', 'Equipment', "bpMobile.nav('assets')");
+      grid = tile('crew', 'My crew', "bpMobile.nav('crewhome')") + tile('badge', 'My ID', "bpMobile.nav('crewid')") + tile('clock', 'Time clock', "bpMobile.nav('crewclock')") + tile('projects', 'Jobs', "bpMobile.nav('crewprojects')") + tile('tool', 'Equipment', "bpMobile.nav('assets')");
     } else {
       grid = tile('badge', 'Compliance', "bpMobile.nav('subcomply')") + tile('crew', 'My company', "bpMobile.nav('subcompany')") + tile('page', 'Change orders', "bpMobile.nav('subchanges')") + tile('inv', 'Invoices', "bpMobile.nav('subinvoices')");
     }
