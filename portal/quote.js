@@ -440,7 +440,7 @@
     if (cid === '__new') {
       var was = (job(Q.id) || {}).contactId || '', sel = $('qb-c'); if (sel) sel.value = was;
       var eid = Q.id;
-      window._bpAfterContact = function (c) { if (Q.id !== eid || !$('qb-c')) return; var cs = window._bpContacts = window._bpContacts || []; if (!contactBy(c.id)) cs.unshift(c); Q.contact(c.id); };
+      window._bpAfterContact = function (c) { if (Q.id !== eid || !$('qb-c')) return; var cs = window._bpContacts = window._bpContacts || []; if (!contactBy(c.id)) cs.unshift(c); Q.contact(c.id); render(); };
       var lisa; window.bpOpenAdd(); lisa = document.getElementById('bpx-f-lisa'); if (lisa) lisa.checked = false;
       return;
     }
