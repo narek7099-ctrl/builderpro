@@ -194,8 +194,9 @@
     var el = document.createElement('div'); el.id = 'bpCreate'; el.className = 'bp-create';
     el.innerHTML = '<div class="bp-create-bg" onclick="bpMobile.createClose()"></div><div class="bp-create-sh" role="dialog" aria-label="Create something new"><i class="bp-create-grab"></i>'
       + '<div class="bp-create-h"><b>What do you need?</b><button type="button" class="bp-create-x" aria-label="Close" onclick="bpMobile.createClose()"><span class="ms">close</span></button></div>'
-      + '<div class="bp-create-big">' + big.map(function (q) { return '<button type="button" class="' + (q[4] ? 'pri' : '') + '" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span><b>' + q[3] + '</b></button>'; }).join('') + '</div>'
-      + '<div class="bp-create-list">' + small.map(function (q) { return '<button type="button" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span>' + q[3] + '</button>'; }).join('') + '</div></div>';
+      /* not on this plan: still shown (it leads to what the upgrade adds), with a lock */
+      + '<div class="bp-create-big">' + big.map(function (q) { return '<button type="button" class="' + (q[4] ? 'pri' : '') + '" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span><b>' + q[3] + '</b>' + (locked(q[0]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; }).join('') + '</div>'
+      + '<div class="bp-create-list">' + small.map(function (q) { return '<button type="button" onclick="bpMobile.createClose();' + q[1] + '"><span class="ms">' + q[2] + '</span>' + q[3] + (locked(q[0]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; }).join('') + '</div></div>';
     ($('bpx') || document.body).appendChild(el);
   };
   M.createClose = function () { var el = $('bpCreate'); if (el) el.remove(); };
@@ -241,7 +242,7 @@
     var quick = [['contacts', 'bpOpenAdd', '', 'person_add', 'New contact'], ['estimates', 'bpEstOpen', '', 'request_quote', 'Estimate'], ['invoices', 'bpInvOpen', '', 'receipt_long', 'Invoice'],
       ['activejobs', 'bpAddJobOpen', '', 'add_business', 'Project'], ['ledger', 'bpFinAddOpen', 'expense', 'payments', 'Expense']].filter(function (q) { return allows(q[0]); });
     var got = jobs.reduce(function (t, j) { return t + (+j.collected || 0); }, 0);
-    var tileB = function (fnq, ic, label, pri) { return '<button type="button" class="mh2-tile' + (pri ? ' pri' : '') + '" onclick="' + fnq + '"><span class="ms">' + ic + '</span><b>' + label + '</b></button>'; };
+    var tileB = function (fnq, ic, label, pri) { var lk = /quick\('(\w+)'/.exec(fnq); return '<button type="button" class="mh2-tile' + (pri ? ' pri' : '') + '" onclick="' + fnq + '"><span class="ms">' + ic + '</span><b>' + label + '</b>' + (lk && locked(lk[1]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
     var row = function (go, dot, t, sub) { return '<button type="button" class="mh2-row" onclick="bpNav(\'' + esc(go) + '\')"><i class="mh2-dot ' + dot + '"></i><span class="mh2-rt"><b>' + t + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><span class="ms">chevron_right</span></button>'; };
     el.innerHTML = '<div class="mh2">'
       + '<section class="mh2-hero">'

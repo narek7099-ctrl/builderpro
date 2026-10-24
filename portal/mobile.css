@@ -510,3 +510,6 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .sa-banner{border-radius:16px !important}
 #bpx#bpx#bpx#bpx.bp-m .sa-hello .sa-kpis>div{background:var(--nv-2) !important;border:0 !important;box-shadow:none !important}
 #bpx#bpx#bpx#bpx.bp-m .sa-hello .sa-kpis b{color:#fff !important}
+
+/* a lock on + sheet and Home tiles for things not on the plan */
+#bpx .bp-create-big button,#bpx .mh2-tile{position:relative}#bpx .bp-lk{position:absolute;top:10px;right:10px;font-size:17px !important;color:#98A2B3 !important}#bpx .bp-create-list button .bp-lk{position:static;margin-left:auto}
