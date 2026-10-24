@@ -296,7 +296,7 @@
     return (window.bpJobAssignees ? bpJobAssignees(j) : (j.assignees || [])).some(function (a) { return a.employeeId === c.id; });
   }
   function curJob(id) { return ((window.bpJobsGet && bpJobsGet()) || []).filter(function (x) { return x.id === id; })[0]; }
-  /* a crew candidate: colour dot avatar, member avatars, "Roofing crew · 3 people" */
+  /* a crew candidate: color dot avatar, member avatars, "Roofing crew · 3 people" */
   function crewAv(c) { return '<span class="rc-av" aria-hidden="true" style="--cc:' + esc(c.color || '#2563eb') + '"><span class="ms">groups</span></span>'; }
   function crewTrade(c) { var t = String(c.trade || ''); return (t ? t.charAt(0).toUpperCase() + t.slice(1) + ' crew' : 'Crew') + ' · ' + (+c.size || (c.members || []).length) + ' people'; }
   function crewMembers(c) {

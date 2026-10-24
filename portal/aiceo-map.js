@@ -2,7 +2,7 @@
    AI CEO on Projects → Map & route. Loads after portal/aiceo.js and reuses
    its API helper, ranking cache (BP_CEO.route), styles and Assign path.
 
-     pins        coloured by what the latest briefing says about each job:
+     pins        colored by what the latest briefing says about each job:
                  red = overdue / past its end date, amber = due soon,
                  inspection or permit (or another urgent item), purple
                  ring = nobody assigned. Legend chips filter them.

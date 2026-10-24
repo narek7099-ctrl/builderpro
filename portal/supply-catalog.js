@@ -604,7 +604,7 @@
     ['Cabinet knobs, 25 pk', 'Hardware', 'box', 38, 95, 'cab box'],
     ['Lazy susan, 28 in', 'Hardware', 'ea', 78, 170, 'cab box'],
     ['Pull-out trash, double bin', 'Hardware', 'ea', 95, 210, 'cab box'],
-    ['Drawer organiser insert', 'Hardware', 'ea', 34, 78, 'cab box'],
+    ['Drawer organizer insert', 'Hardware', 'ea', 34, 78, 'cab box'],
     ['Shelf pins, 100 ct', 'Hardware', 'box', 8, 18, 'cab box'],
     ['Cabinet screws 2-1/2 in, 100 ct', 'Fasteners', 'box', 14, 30, 'cab box'],
     ['Pocket screws, 500 ct', 'Fasteners', 'box', 22, 45, 'box tool'],

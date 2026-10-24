@@ -186,7 +186,7 @@
   /* ---------- a supplier's mark ----------
      Chain logos live in assets/suppliers/<id>.(svg|png) and are dropped in
      as files; nothing is fetched at runtime. Until one exists the tile
-     wears a lettermark in the chain's own colour, so the page is never
+     wears a lettermark in the chain's own color, so the page is never
      waiting on artwork and a supply house the contractor typed in by hand
      looks like it belongs next to the national ones. */
   var CHAIN_TINT = {
@@ -294,7 +294,7 @@
 
     /* A price difference has a side, and a ranked bar has no negative
        direction - 9% under and 9% over drew the same length, and the meaning
-       had to be bolted onto the label. Off a centre line it is one glance. */
+       had to be bolted onto the label. Off a center line it is one glance. */
     var right = vs.length ? bpChart.diverging({
       title: 'How their prices compare',
       lead: 'your own prices against the typical range for the same material',
@@ -744,7 +744,7 @@
     Other:       '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M12 7V4"/>',
   };
 
-  /* A quiet colour per family, so the eye groups the results before it reads
+  /* A quiet color per family, so the eye groups the results before it reads
      them. Chips only — never the sole carrier of meaning, the name is beside it. */
   var FAM = {
     roof:  ['Shingles', 'Underlayment', 'Metal', 'Fasteners', 'Ventilation', 'Flashing'],

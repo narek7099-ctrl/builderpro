@@ -119,7 +119,7 @@
     /* ---- pools and spas ---- */
     D({ id: 'poolcorp', name: 'POOLCORP / SCP Distributors', kind: 'custom', type: 'branch', trades: ['pools'],
       carries: 'Pumps, filters, heaters, chemicals, liners, white goods',
-      note: 'Trade only, and the default for anyone who builds or services pools. A licence gets you the counter price.',
+      note: 'Trade only, and the default for anyone who builds or services pools. A license gets you the counter price.',
       locator: 'https://www.poolcorp.com/locations/', delivery: true, drive: 24 }),
     D({ id: 'heritagepool', name: 'Heritage Pool Supply', kind: 'custom', type: 'branch', trades: ['pools'],
       carries: 'Equipment, plumbing, chemicals, finishes',
@@ -212,9 +212,9 @@
   SP.LOGOS = 'abc amazonbiz beacon benmoore bfs carter ced cosentino e84 fastenal fbm ferguson floordecor grainger graybar heritagepool homedepot_pro hvacdirect johnstone leslies lowes_pro lw menards metrie msi northerntool pexuniverse poolcorp richelieu sherwin siteone srs supplyhouse tileshop whitecap winsupply zoro'.split(' ').filter(Boolean);
 
   /* Some brands only publish a square app-icon lockup — white mark on a
-     solid brand colour. Those already carry their own tile, so they fill
+     solid brand color. Those already carry their own tile, so they fill
      the chip edge to edge instead of floating inset on ours, which would
-     read as a coloured stamp stuck on a grey card. */
+     read as a colored stamp stuck on a grey card. */
   SP.LOGOS_FULL = 'cosentino ferguson homedepot_pro lowes_pro lw sherwin siteone'.split(' ').filter(Boolean);
 
   function matches(d, trade, q) {
@@ -399,7 +399,7 @@
   }
   /* OSM shop tags that mean "sells building material to the trade" */
   var SHOP_KINDS = { hardware: 'Hardware', doityourself: 'Home improvement', trade: 'Trade supply', building_materials: 'Building supply', paint: 'Paint', electrical: 'Electrical supply', plumbing: 'Plumbing supply', hvac: 'HVAC supply', garden_centre: 'Landscape supply', lumber: 'Lumber yard', roofing: 'Roofing supply' };
-  /* a roofer does not want the garden centre; a landscaper does */
+  /* a roofer does not want the garden center; a landscaper does */
   var ALWAYS = ['hardware', 'doityourself', 'trade', 'building_materials', 'lumber'];
   var BY_TRADE = { roofing: ['roofing'], siding: ['roofing'], painting: ['paint'], electrical: ['electrical'], plumbing: ['plumbing', 'hvac'], hvac: ['hvac', 'plumbing'], landscaping: ['garden_centre'], concrete: [], drywall: [], framing: [], tools: [] };
   function shopKindsFor(trade) { return trade === 'all' ? Object.keys(SHOP_KINDS) : ALWAYS.concat(BY_TRADE[trade] || []); }
@@ -496,7 +496,7 @@
         if (la == null || ln == null) return;
         var key = t.name.toLowerCase().replace(/[^a-z0-9]/g, '') + '|' + la.toFixed(3) + '|' + ln.toFixed(3);
         if (seen[key]) return; seen[key] = 1;
-        /* a garden centre or a tile shop is real but not what a roofer drives to */
+        /* a garden center or a tile shop is real but not what a roofer drives to */
         var chain = chainFor(t.name), shop = t.shop || '';
         if (!chain && shopKindsFor(SP.dir.trade || myTrade()).indexOf(shop) < 0) return;
         var mi = miles(SP.near.at, { lat: la, lng: ln });

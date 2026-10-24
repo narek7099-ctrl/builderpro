@@ -1,5 +1,5 @@
 /* ==================================================================
-   Employees, their hours, and what labour actually cost each job.
+   Employees, their hours, and what labor actually cost each job.
 
    Explicitly NOT payroll. Running payroll means withholding tax, filing
    with the IRS and the state, and moving money — regulated work where a
@@ -8,9 +8,9 @@
    or a bookkeeper, and none of them is going to switch to a roofing CRM
    for it.
 
-   What they do lack is job costing on labour. Their payroll provider
+   What they do lack is job costing on labor. Their payroll provider
    knows Dave earned $1,240 last week; it has no idea that $780 of it
-   went into the Smith roof. So they guess at labour when they quote, and
+   went into the Smith roof. So they guess at labor when they quote, and
    find out whether they guessed right months later, if ever. This is the
    only place that knows both the hours and the job, so this is where
    that question gets answered.
@@ -47,7 +47,7 @@
      classification carries some of the highest comp rates there are, so a
      $25/hr roofer really costs $32-38 an hour.
 
-     A contractor who budgets labour at the wage is underwater before the
+     A contractor who budgets labor at the wage is underwater before the
      first bundle is opened, which is exactly the mistake this is here to
      stop. The percentage is theirs to set from their own policy — comp
      rates vary by state and carrier, and a number we invented would be
@@ -69,7 +69,7 @@
     return Math.round((r * (+hours || 0) + r * 1.5 * (+ot || 0)) * 100) / 100;
   }
 
-  /* The project budget's labour line. Reads from hours logged rather than
+  /* The project budget's labor line. Reads from hours logged rather than
      from what somebody remembered to type as an expense — a day of four
      people is not a line item anyone writes down. */
   window.bpProjLabour = function (jobId) {
@@ -175,7 +175,7 @@
     if (!S.emps.length) {
       el.innerHTML = head + '<div class="bpx-empty2"><b>Nobody added yet.</b>'
         + '<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Add your crew and you can put their hours against a job — '
-        + 'which is what turns the labour line on a project budget from a guess into a number.</div></div>';
+        + 'which is what turns the labor line on a project budget from a guess into a number.</div></div>';
       return;
     }
 
@@ -453,7 +453,7 @@
     if (!S.entries.length) {
       el.innerHTML = head + '<div class="bpx-empty2"><b>No hours logged yet.</b>'
         + '<div class="bpx-mut" style="font-size:13px;margin-top:5px;line-height:1.6">Every day you log goes onto that job’s budget as '
-        + 'real labour cost, burden included — so the margin you see mid-job is the one you will actually get.</div></div>';
+        + 'real labor cost, burden included — so the margin you see mid-job is the one you will actually get.</div></div>';
       return;
     }
 
@@ -532,7 +532,7 @@
     var h = +($('hr-h') || {}).value || 0, ot = +($('hr-ot') || {}).value || 0;
     var el = $('hr-hint'); if (!el || !e) return;
     var c = entryCost(e, h, ot);
-    el.innerHTML = 'That is <b>' + money(c) + '</b> of labour on the job'
+    el.innerHTML = 'That is <b>' + money(c) + '</b> of labor on the job'
       + (e.burden_pct > 0 ? ' — ' + money(burdenedOf(e)) + '/hr including the ' + e.burden_pct + '% on top'
         : ' at the bare wage, with no payroll tax or comp added')
       + (ot > 0 ? '. Overtime is counted at time and a half.' : '.');
@@ -558,7 +558,7 @@
       if (r && r.error) throw r.error;
       bpCloseModal(); bpCrewLoad(true).then(function () {
         if (window._bpCurView === 'employees') render();
-        /* the project budget's labour line has just moved */
+        /* the project budget's labor line has just moved */
         if (document.getElementById('bpx-pj-budget') && window.bpProjBudgetRender) bpProjBudgetRender();
         if (document.getElementById('bpx-pj-people') && window.bpProjCrewRender) bpProjCrewRender();
       });

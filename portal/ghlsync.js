@@ -97,7 +97,7 @@
       for (var i = 0; i < jobs.length; i++) {
         var j = jobs[i]; if (!j || j.sample) continue;
         var s = j.sched || {}, have = s.ghl || {}, days = j.status === 'active' ? (s.dates || []) : [];
-        /* a finished project keeps its past appointments; only days still ahead are cancelled */
+        /* a finished project keeps its past appointments; only days still ahead are canceled */
         var today = new Date().toISOString().slice(0, 10);
         var drop = Object.keys(have).filter(function (d) { return days.indexOf(d) < 0 && (j.status === 'active' || d >= today); });
         var add = days.filter(function (d) { return !have[d]; });

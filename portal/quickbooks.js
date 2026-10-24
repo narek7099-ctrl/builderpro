@@ -132,7 +132,7 @@
   }
   function step(n, t, d) { return '<div class="qb-step"><i>' + n + '</i><b>' + t + '</b><span>' + d + '</span></div>'; }
 
-  /* back from Intuit: builderpro-os.com/#qb=connected|cancelled|expired|error */
+  /* back from Intuit: builderpro-os.com/#qb=connected|canceled|expired|error */
   (function () {
     var m = /^#qb=(\w+)/.exec(location.hash || ''); if (!m) return;
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}

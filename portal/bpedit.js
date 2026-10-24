@@ -19,13 +19,13 @@
    With it, measure lines label themselves, and three takeoff tools work:
      area    {t,pts,c,w,pitch?}   polygon; sq ft, and roof squares with pitch
      run     {t,pts,c,w}          polyline; total linear feet
-     count   {t,x,y,c,r}          numbered markers, counted per colour
+     count   {t,x,y,c,r}          numbered markers, counted per color
    Points snap to existing corners and ends. The Takeoff panel totals it
    all, exports CSV, and the PDF export adds a takeoff page.
      blueprintMarks[id] = { v:2, w, h, objs, scale:{ppf,label}, units:'ft'|'m', at }
 
    Tools: select/move (drag empty space to pan), pen, line, arrow,
-   rectangle, circle, text, sticky note, measurement, eraser; colour, width,
+   rectangle, circle, text, sticky note, measurement, eraser; color, width,
    undo/redo, zoom (wheel, pinch, buttons), clear. Export flattens to PNG,
    to PDF (jsPDF from cdnjs; the button disables itself if that cannot
    load), or saves the flattened PNG back as a new blueprint through the
@@ -622,7 +622,7 @@
     var ck = Object.keys(it.C);
     h += '<div class="bpe-sec"><div class="bpe-sec-h">Counts<span>' + (ck.length ? ck.reduce(function (s2, c) { return s2 + it.C[c]; }, 0) : '') + '</span></div>'
       + (ck.length ? ck.map(function (c) { return '<div class="bpe-row">' + dot(c) + '<span class="bpe-rn">' + esc(cname(c)) + ' markers</span><b>' + it.C[c] + '</b></div>'; }).join('')
-        : '<p class="bpe-empty">Use <b>Count</b> to tally vents, outlets, fixtures or windows. Each colour is its own count.</p>') + '</div>';
+        : '<p class="bpe-empty">Use <b>Count</b> to tally vents, outlets, fixtures or windows. Each color is its own count.</p>') + '</div>';
     h += '<button type="button" class="bpe-btn ghost bpe-csv" data-act="csv"><span class="ms">table_view</span>Export takeoff (CSV)</button>';
     side.innerHTML = h;
     side.querySelectorAll('[data-pitch]').forEach(function (sel) {
@@ -631,7 +631,7 @@
     });
   }
   function rowsCsv() {
-    var it = items(), u = S.units === 'm', out = [['Type', 'Item', 'Colour', 'Pitch', 'Quantity', 'Unit']];
+    var it = items(), u = S.units === 'm', out = [['Type', 'Item', 'Color', 'Pitch', 'Quantity', 'Unit']];
     var num = function (n, d) { return (+n).toFixed(d); };
     it.A.forEach(function (a, k) { out.push(['Area', 'Area ' + (k + 1), cname(a.o.c), a.o.pitch ? a.o.pitch + '/12' : 'Flat', num(u ? a.sf * 0.09290304 : a.sf, 1), u ? 'm2' : 'sq ft']); });
     if (it.tot.sq && !u) out.push(['Area', 'Roof squares', '', '', num(it.tot.sq, 2), 'squares']);

@@ -207,7 +207,7 @@
     var off = false; try { off = localStorage.getItem(NUDGE_KEY) === '1'; } catch (e) {}
     if (off || hasLogo()) return '';
     return '<div class="cp-nudge" id="cp-lognudge" role="note"><span class="ms">add_photo_alternate</span>'
-      + '<div><b>Your logo isn’t set</b><span>The homeowner’s page, contracts and review page show your logo and brand colour. </span>'
+      + '<div><b>Your logo isn’t set</b><span>The homeowner’s page, contracts and review page show your logo and brand color. </span>'
       + '<button type="button" class="cp-nudge-go" onclick="bpCustLogoGo()">Add it in Settings</button></div>'
       + '<button type="button" class="cp-nudge-x" aria-label="Dismiss" onclick="bpCustLogoDismiss()"><span class="ms">close</span></button></div>';
   }
