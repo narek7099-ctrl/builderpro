@@ -18,7 +18,14 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 - 009505f + sheet "Snap a receipt" opens the receipt upload right away.
 - 3510942 Estimates/invoices default to the send method you last used; a customer with only email (or only phone) gets that.
 - 986d6f5 Ready-to-invoice cards keep cents on small amounts ($5.74, not $6); no duplicate "account isn't fully set up" line.
-- 8dabeb3 Jobs page: "Approved, not started yet" list with **Start job**, so an approved estimate becomes a job without a card deposit.
+- 8dabeb3 / 31b80d4 Jobs page: "Approved, not started yet" list with **Start job**, so an approved estimate becomes a job without a card deposit (cash, check, or before payments are set up). Phone layout with a full-width button.
+- e9c59a5 Phone page title stuck at "Jobs" on every page after visiting Jobs (an earlier fix replaced the heading element). Fixed.
+- c3ad1ef / 957dd7c **Book an inspection works without HighLevel**: it used to say "Could not load open times right now" with no way to book. Now you pick the day and time by hand and it goes on the BuilderPro calendar, and shows under Upcoming.
+- d5ae656 **Two tabs open could lose changes**: one tab's older copy of the jobs overwrote the other's newer save (a payment plan disappeared this way). Each tab now takes the other's saves.
+- bad601a American spelling in what users see (color, labor, license, canceled, center); line endings put back to LF (an earlier Windows commit had switched index.html, quote.js and mobile.js to CRLF).
+- 26038f1 Job Photos count updates (said 0/24 with a photo showing).
+- e221110 Job step check-ins stay open on phones while answering them.
+- fdb2c88 **Money boxes rounded away cents**: Edit details, Paid so far, budget, expenses, Mark done and permit fee boxes showed $19.13 as $19 and saved $19. They keep cents now. Mark done says only the sign-off is required.
 
 ## Results
 | Area | Result | Notes |
@@ -28,6 +35,8 @@ Run: Oct 24, 2026, in the owner's Chrome. Desktop window is 3440px and maximized
 | Estimate end to end | Pass | New customer from inside the builder, catalog search, mark-up, tax math ($15 → $19.13), send by email gives a link to share (email not connected). |
 | Customer approval | Pass | Signed and approved on the first press; new wording "They'll be in touch". |
 | Owner update | Pass | "Round3 approved the estimate" appeared without a reload (~30s). |
+| Jobs | Pass, fixed | Start job from an approved estimate, every tab loads (Overview, Money, Schedule, Crew, Subs, Materials, Permits, Contract, Customer, Inspections, Photos, Documents), photo upload saved to storage, Plan the phases, Finished / Not yet (moves the finish date and suggests calling the customer), Mark done with sign-off and review link. |
+| Calendar | Pass, fixed | Month default, + Add menu, to-do added, inspection booked by hand. |
 | Invoices | Pass | Payment plan (deposit 30% = $5.74 + final), Preview, Confirm and send shows "Invoicing isn't set up yet" with a Payouts link. |
 
 ## Needs the owner
