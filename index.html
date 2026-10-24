@@ -20857,7 +20857,7 @@ window.bpProjOpen=function(id){
         +'<label>End time</label><input type="time" id="bpx-pj-end" style="display:block;width:100%;box-sizing:border-box" value="'+bpEsc(j.sched.end||bpProjEndFromDur(j.sched.time||'09:00',j.sched.dur||'480'))+'">'
         +'<div class="bpx-mut" style="font-size:12px;margin-top:10px">Applies to every booked day.</div></div></div>')
     +pane('photos',
-      '<label style="margin-top:0">Photos ('+j.photos.length+'/24)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
+      '<label style="margin-top:0" id="bpx-pj-plbl">Photos ('+j.photos.length+'/24)</label><div id="bpx-pj-photos" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>'
       +'<button class="bpx-btn ghost" style="width:auto;margin-top:4px;padding:8px 14px;font-size:13px" onclick="document.getElementById(\'bpx-pj-file\').click()">+ Add photo</button>'
       +'<input type="file" id="bpx-pj-file" accept="image/*" style="display:none" onchange="bpProjPhoto(event)">')
     +pane('blueprints',window.bpPF?bpPF.bpPane(j):'')
@@ -21383,6 +21383,7 @@ window.bpProjDelete=function(){
 };
 function bpProjPhotosRender(j){
   var el=document.getElementById('bpx-pj-photos'); if(!el)return;
+  var lb=document.getElementById('bpx-pj-plbl'); if(lb) lb.textContent='Photos ('+(j.photos||[]).length+'/24)';
   el.innerHTML=(j.photos||[]).map(function(p,i){
     return '<div style="position:relative;cursor:zoom-in" onclick="if(event.target.tagName===\'IMG\'&&window.bpPF)bpPF.open((bpJobsGet().filter(function(x){return x.id===_bpProjId;})[0]||{photos:[]}).photos['+i+'])">'+(window.bpPF?bpPF.img(p,'style="width:74px;height:74px;object-fit:cover;border-radius:9px;border:1px solid var(--line)"'):'<img src="'+p+'" style="width:74px;height:74px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">')
       +'<button onclick="bpProjPhotoDel('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:#dc2626;color:#fff;font-size:12px;cursor:pointer;line-height:1">×</button></div>';
