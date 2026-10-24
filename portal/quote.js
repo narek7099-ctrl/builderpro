@@ -28,7 +28,8 @@
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s); };
   var r2 = function (n) { return Math.round((+n || 0) * 100) / 100; };
   var m2 = function (n) { var v = r2(n); return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); };
-  var m0 = function (n) { return window.bpMoneyFmt ? bpMoneyFmt(n) : m2(n); };
+  /* whole dollars, except small amounts with cents ($5.74 shouldn't read as $6) */
+  var m0 = function (n) { n = +n || 0; if (Math.abs(n) < 1000 && Math.abs(n % 1) > 0.004) return m2(n); return window.bpMoneyFmt ? bpMoneyFmt(n) : m2(n); };
   var num = function (v) { var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : 0; };
   var uid = function (p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); };
   var sum = function (a, f) { return (a || []).reduce(function (t, x) { return t + (+f(x) || 0); }, 0); };
