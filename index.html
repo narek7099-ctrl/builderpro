@@ -18549,18 +18549,27 @@ function bpCalUnsched(){
   function bpMdtLocal(iso){ var d=new Date(iso); var p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
   async function bpMdt(containerId){
     var el=q(containerId); if(!el) return;
-    _mdt.month=''; _mdt.date=''; _mdt.open='month';
+    _mdt.month=''; _mdt.date=''; _mdt.open='month'; _bpBookManual=false;
     el.innerHTML='<div class="bpx-slotempty">Finding open times\u2026</div>';
     try{
       var res=await bpCalWrite({action:'slots'});
-      if(!res.ok||!res.slots){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; return; }
+      if(!res.ok||!res.slots){ bpMdtManual(el); return; }
       var closed=bpClosedSet();
       var by={}; Object.keys(res.slots).forEach(function(k){ (res.slots[k]||[]).forEach(function(iso){ var ld=bpMdtLocal(iso); if(closed[ld]||closed[k]) return; (by[ld]=by[ld]||[]).push(iso); }); });
       Object.keys(by).forEach(function(k){ by[k].sort(); });
       _mdt.slots=by;
       if(!Object.keys(by).length){ el.innerHTML='<div class="bpx-slotempty">No open times in the next few weeks.</div>'; return; }
       bpMdtDraw(el);
-    }catch(e){ el.innerHTML='<div class="bpx-slotempty">Could not load open times right now.</div>'; }
+    }catch(e){ bpMdtManual(el); }
+  }
+  /* no booking calendar to read open times from (HighLevel not connected, or it is down):
+     pick the day and time by hand; the visit is kept on the BuilderPro calendar */
+  var _bpBookManual=false;
+  function bpMdtManual(el){
+    _bpBookManual=true; var d=new Date(Date.now()+86400000), p=function(n){return (n<10?'0':'')+n;};
+    el.innerHTML='<div class="bpx-slotempty" style="text-align:left;margin-bottom:8px">Your booking calendar isn’t connected, so pick the day and time yourself. It goes on your BuilderPro calendar.</div>'
+      +'<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px"><label style="margin:0">Day<input type="date" id="bpx-bk-mday" value="'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'"></label>'
+      +'<label style="margin:0">Time<input type="time" id="bpx-bk-mtime" value="09:00"></label></div>';
   }
   function bpMdtDraw(el){
     var MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -18645,6 +18654,15 @@ function bpCalUnsched(){
     var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
     var cid=q('bpx-bk-contact').value;
     if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a contact.'; return; }
+    if(_bpBookManual&&q('bpx-bk-mday')){
+      var md=q('bpx-bk-mday').value, mt=q('bpx-bk-mtime').value||'09:00';
+      if(!md){ msg.style.color='#dc2626'; msg.textContent='Pick a day.'; return; }
+      var ct=(window._bpContacts||[]).filter(function(c){return c.id===cid;})[0]||{}, addr=q('bpx-bk-addr').value.trim();
+      var h=+mt.split(':')[0], tl=((h%12)||12)+':'+(mt.split(':')[1]||'00')+(h<12?' AM':' PM');
+      btn.disabled=true; btn.textContent='Booking…';
+      await bpNoteAdd(md,'note',(q('bpx-bk-title').value.trim()||'Inspection')+' with '+(ct.name||'customer')+(addr?' at '+addr:'')+(ct.phone?' ('+ct.phone+')':''),tl);
+      msg.style.color='#15803d'; msg.textContent='Booked on your calendar.'; setTimeout(function(){ bpCloseModal(); if(window.bpDrawCalendar) bpDrawCalendar(); else if(window.bpLoadCalendar) bpLoadCalendar(); },800); return;
+    }
     if(!_bpSlotSel){ msg.style.color='#dc2626'; msg.textContent='Pick an open time above.'; return; }
     var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+3600000));
     btn.disabled=true; btn.textContent='Booking\u2026';
