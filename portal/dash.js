@@ -318,6 +318,9 @@
     var todayIso = new Date().toISOString().slice(0, 10);
     var late = jobs.filter(function (j) { return j.status === 'active' && j.sched && j.sched.target && String(j.sched.target) < todayIso && ((+j.estimate || 0) - (+j.collected || 0)) > 0; });
     if (late.length) rows.push({ ico: 'schedule', n: late.length, t: late.length === 1 ? money((+late[0].estimate || 0) - (+late[0].collected || 0)) + ' still owed on ' + esc(late[0].name) + ', past its target date' : late.length + ' projects past their target date with money owed', go: 'activejobs', tone: 'bad' });
+    /* the customer said yes, but no job or invoice has started from it yet */
+    var yes = jobs.filter(function (j) { return j.status === 'quote' && j.quote && j.quote.status === 'accepted'; });
+    if (yes.length) rows.push({ ico: 'task_alt', n: yes.length, t: yes.length === 1 ? esc(yes[0].name || 'A customer') + ' approved ' + esc(yes[0].title || 'an estimate') + '. Send the deposit invoice' : yes.length + ' approved estimates ready to invoice', go: 'invoices', tone: 'good' });
     var waiting = (D.contracts || []).filter(function (c) { return c.status === 'sent' || c.status === 'viewed'; });
     if (waiting.length) rows.push({ ico: 'draw', n: waiting.length, t: waiting.length === 1 ? (esc(waiting[0].customer_name || waiting[0].title) + ' has not signed yet' + (waiting[0].status === 'viewed' ? ' (opened it)' : '')) : waiting.length + ' contracts waiting for a signature', go: 'activejobs' });
     var pos = (window.SP && SP.pos) || [];
