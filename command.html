@@ -397,7 +397,7 @@ async function ghlKey(uid,loc,biz){
   var tok=(prompt('Paste the Private Integration key for '+biz+'.\n\nMake it inside their sub-account: Settings > Private Integrations > Create new integration, with these scopes: contacts, contacts/tags, conversations/message, invoices, invoices/estimate, opportunities, calendars/events, locations/customFields, locations/customValues, users (read).')||'').trim();
   if(!tok) return;
   var r=await api({op:'ghl_key_set',user_id:uid,location:loc,token:tok});
-  alert(r.ok?'Saved. BuilderPro now reaches '+(r.name||biz)+'\'s HighLevel sub-account.':(r.error||'Could not save the key.'));
+  alert(r.ok?'Saved. BuilderPro now reaches '+(r.name||biz)+'\'s HighLevel sub-account.'+((r.steps||[]).length?'\n\nSet up: '+r.steps.join(' · ')+'\n\nThe Builder team finishes the rest within a few minutes.':''):(r.error||'Could not save the key.'));
   if(r.ok) viewAccounts();
 }
 async function newAcct(b){

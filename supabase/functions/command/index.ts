@@ -17,7 +17,7 @@
 // Deploy: --no-verify-jwt (the admin check is below)
 // Secrets: ANTHROPIC_API_KEY, ADMIN_EMAILS, GHL_API_KEY, GHL_COMPANY_ID, GHL_SNAPSHOT_ID
 import Anthropic from "npm:@anthropic-ai/sdk";
-import { SB_URL, sb, callGHL, provisionClient, GHL_OPS, isRead } from "./ghl.ts";
+import { SB_URL, sb, callGHL, provisionClient, finishClient, GHL_OPS, isRead } from "./ghl.ts";
 
 const MODEL = Deno.env.get("COMMAND_MODEL") ?? "claude-opus-5";
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
@@ -647,8 +647,17 @@ Deno.serve(async (req) => {
     const w = await sb("ghl_keys?on_conflict=location_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({ location_id: loc, token: tok, label: name, checked_at: new Date().toISOString(), updated_at: new Date().toISOString() }) });
     if (!w.ok) return json({ ok: false, error: "Could not save the key." }, 500);
-    if (b.user_id) await sb(`accounts?user_id=eq.${encodeURIComponent(String(b.user_id))}&ghl_location_id=is.null`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: loc }) });
-    return json({ ok: true, name });
+    /* a sub-account made by hand: link it to the account (if it has none yet) and finish the setup */
+    let steps: string[] = [];
+    if (b.user_id) {
+      const g = await sb(`accounts?user_id=eq.${encodeURIComponent(String(b.user_id))}&select=*`); const a = (g.ok ? await g.json() : [])[0];
+      if (a && !a.ghl_location_id) {
+        steps = await finishClient(loc, { name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade, profile: a.profile });
+        const log: string[] = Array.isArray(a.setup_log) ? a.setup_log : [];
+        await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: loc, onboard_state: "provisioned", setup_log: [...log, "Sub-account made by hand and linked (" + loc + ")", ...steps] }) });
+      }
+    }
+    return json({ ok: true, name, steps });
   }
   if (op === "stats") return json({ ok: true, data: await runTool("business_stats", {}, 0) });
   if (op === "memory") { const r = await sb("ai_memory?select=id,note,created_at&order=created_at.desc&limit=200"); return json({ ok: true, data: r.ok ? await r.json() : [] }); }

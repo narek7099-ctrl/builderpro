@@ -155,6 +155,15 @@ export async function provisionClient(a: { name: string; business: string; email
   const locationId = cd?.id || cd?.location?.id || cd?._id || "";
   steps.push("GHL sub-account created" + (snap ? " from the " + (a.plan || "default") + " snapshot" : " (no snapshot set, so it's empty)"));
   if (!locationId) return { ok: true, locationId, steps };
+  await finishClient(locationId, a, steps);
+  return { ok: true, locationId, steps };
+}
+
+/* Everything after the sub-account exists: business custom values, the
+   booking calendar, the AI receptionist and a GHL login. Also run when a
+   sub-account was made by hand and its key added in the Command Center. */
+export async function finishClient(locationId: string, a: { name: string; business: string; email: string; phone?: string; trade?: string; profile?: Profile }, steps: string[] = []): Promise<string[]> {
+  const pf: Profile = a.profile ?? {};
   try {
     const lt = await locationToken(locationId);
     // the plan snapshot already has these custom values (placeholders), so update
@@ -194,5 +203,5 @@ export async function provisionClient(a: { name: string; business: string; email
     });
     steps.push(ur.ok ? "GHL login created for " + a.email : "GHL login not created (" + ur.status + ")");
   } catch { steps.push("GHL login not created"); }
-  return { ok: true, locationId, steps };
+  return steps;
 }
