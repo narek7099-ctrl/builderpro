@@ -85,7 +85,7 @@
   }
   function quoteOf(j) {
     if (!j.quote) { var d = defs(); j.quote = { labor: [], other: [], mkMat: d.mkMat, mkLab: d.mkLab, mkOth: d.mkOth, taxPct: d.taxPct, taxOn: d.taxOn,
-      show: d.show, validDays: d.validDays, discount: 0, desc: '', via: 'sms', status: 'draft', invoices: [], at: Date.now() }; }
+      show: d.show, validDays: d.validDays, discount: 0, desc: '', via: lastVia(), status: 'draft', invoices: [], at: Date.now() }; }
     var q = j.quote; q.labor = q.labor || []; q.other = q.other || []; q.invoices = q.invoices || [];
     if (!j.materials) j.materials = { status: 'draft', sentAt: null, items: [], changeOrders: [] };
     j.materials.items = j.materials.items || [];
@@ -432,9 +432,11 @@
   Q.set = function (k, v, isNum) { var j = job(Q.id); if (!j) return; j.quote[k] = isNum ? Math.max(0, num(v)) : v; save(); paint(); };
   Q.setJ = function (k, v) { var j = job(Q.id); if (!j) return; j[k] = String(v || '').trim() || (k === 'title' ? 'New estimate' : ''); save(); paint(); };
   Q.taxOn = function (v) { Q.set('taxOn', v); };
-  Q.via = function (v) { Q.set('via', v); };
+  /* the way the owner last sent something (text, email or both) is the next default */
+  function lastVia(v) { try { if (v) localStorage.setItem('bpSendVia', v); return localStorage.getItem('bpSendVia') || 'sms'; } catch (e) { return v || 'sms'; } }
+  Q.via = function (v) { lastVia(v); Q.set('via', v); };
   /* changed on the Send step itself: redraw it so the line above says the new way */
-  Q.viaSend = function (v) { var j = job(Q.id); if (!j) return; j.quote.via = v; save(); render(); };
+  Q.viaSend = function (v) { var j = job(Q.id); if (!j) return; lastVia(v); j.quote.via = v; save(); render(); };
   Q.contact = function (cid) {
     /* a new customer without leaving the estimate: the contact form opens, and the saved contact is picked here */
     if (cid === '__new') {
@@ -446,7 +448,9 @@
     }
     var j = job(Q.id), c = contactBy(cid); if (!j) return;
     j.contactId = cid || null;
-    if (c) { j.name = c.name || 'Customer'; j.phone = c.phone || ''; j.email = c.email || ''; if (!j.addr) j.addr = c.address1 || c.address || ''; }
+    if (c) { j.name = c.name || 'Customer'; j.phone = c.phone || ''; j.email = c.email || ''; if (!j.addr) j.addr = c.address1 || c.address || '';
+      /* only one way to reach them: send that way */
+      var qq = quoteOf(j); if (!c.phone && c.email) qq.via = 'email'; else if (c.phone && !c.email) qq.via = 'sms'; }
     save(true); paint();
   };
   /* matlists.js calls this after every change to the list */
@@ -875,7 +879,7 @@
   }
   window.bpInvoiceFrom = function (jid, mode, stepId) { var j = job(jid); bpInvOpen(j ? j.contactId : null, jid, mode, stepId); };
   function invInit(contactId, jobId, stepId) {
-    Q.inv = { contactId: contactId || null, jobId: jobId || null, stepId: stepId || null, type: 'full', pct: defs().depositPct, taxPct: defs().taxPct, amount: '', lines: [], base: 0, billed: 0, days: 7, via: 'sms', desc: '' };
+    Q.inv = { contactId: contactId || null, jobId: jobId || null, stepId: stepId || null, type: 'full', pct: defs().depositPct, taxPct: defs().taxPct, amount: '', lines: [], base: 0, billed: 0, days: 7, via: lastVia(), desc: '' };
     invLoad(); return Q.inv;
   }
   window.bpInvOpen = async function (contactId, jobId, mode, stepId) {
@@ -909,14 +913,14 @@
     if (j && j.quote) {
       var c = calc(j);
       s.lines = c.lines.map(function (l) { return { id: uid('il'), name: l.name, desc: l.desc || '', qty: l.qty, price: l.price, unit: l.unit || '' }; });
-      s.base = j.status === 'quote' ? (c.total || +j.estimate || 0) : (+j.estimate || c.total || 0); s.billed = billed(j); s.desc = j.quote.desc || ''; s.via = j.quote.via || 'sms';
+      s.base = j.status === 'quote' ? (c.total || +j.estimate || 0) : (+j.estimate || c.total || 0); s.billed = billed(j); s.desc = j.quote.desc || ''; s.via = j.quote.via || lastVia();
       if (s.disc == null) s.disc = c.disc;
       s.type = s.billed > 0 ? 'final' : 'full';
     } else if (j) {
       /* a project with no estimate sheet: one line for the job (never gives it a quote) */
       var t = +j.estimate || 0;
       s.lines = [{ id: uid('il'), name: j.title || 'Project', desc: '', qty: 1, price: t || '' }];
-      s.base = t; s.billed = 0; s.disc = 0; s.desc = ''; s.via = 'sms';
+      s.base = t; s.billed = 0; s.disc = 0; s.desc = ''; s.via = lastVia();
       s.type = 'full';
     } else { s.lines = [{ id: uid('il'), name: '', desc: '', qty: 1, price: '' }]; s.base = 0; s.billed = 0; s.disc = 0; }
     if (!s.contactId && j && j.contactId) s.contactId = j.contactId;
@@ -1024,7 +1028,7 @@
     var tv = $('qs-itot'); if (tv) tv.textContent = m2(invTotalFor(s.type));
   }
   Q.invSumSheet = function () { if (!Q.inv) return; bpModal('<h3>Summary</h3>' + invSumRows() + '<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>'); };
-  Q.invVia = function (v) { Q.inv.via = v; invRender(); };
+  Q.invVia = function (v) { lastVia(v); Q.inv.via = v; invRender(); };
   Q.invContact = function (cid) {
     if (cid === '__new') {
       invRender();
