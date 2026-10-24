@@ -110,7 +110,8 @@
       + '<svg class="hl-i bp-macct-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
     var x = $('bpx'); if (x) x.classList.toggle('bp-m-home', homeView(v || window._bpCurView));
     /* the bottom tab says Jobs, so the page does too */
-    var tt = top.querySelector('.hl-ttl'); if (tt && M.on() && role() === 'owner' && (v || window._bpCurView) === 'activejobs' && /^Projects$/.test(tt.textContent.trim())) tt.textContent = 'Jobs';
+    /* (only the heading's text: replacing the whole box removed the h1 the shell retitles on every page) */
+    var tt = top.querySelector('.hl-ttl h1') || top.querySelector('.hl-ttl'); if (tt && M.on() && role() === 'owner' && (v || window._bpCurView) === 'activejobs' && /^Projects$/.test(tt.textContent.trim())) tt.textContent = 'Jobs';
     var av0 = $('hlAv');
     if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');

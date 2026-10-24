@@ -17832,8 +17832,8 @@ function bpCalUnsched(){
         : '<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>')
       +'<div class="cal-side">'
       +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
-      +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge"></span></div><div id="bpx-todos"></div></div>':'')
-      +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge"></span></div><div id="bpx-upnext"></div></div>'
+      +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none"></span></div><div id="bpx-todos"></div></div>':'')
+      +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none"></span></div><div id="bpx-upnext"></div></div>'
       +'</div></div>';
     bpLoadCalendar();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
@@ -18292,7 +18292,7 @@ function bpCalUnsched(){
     var el=q('bpx-todos'); if(!el) return;
     var today=new Date(); var tk=today.getFullYear()+'-'+(today.getMonth()<9?'0':'')+(today.getMonth()+1)+'-'+(today.getDate()<10?'0':'')+today.getDate();
     var open=bpNotesGet().filter(function(n){ return n.kind==='todo'&&!n.done; }).sort(function(a,b){ return a.day<b.day?-1:a.day>b.day?1:0; });
-    var cnt=q('bpx-todocount'); if(cnt) cnt.textContent=open.length?String(open.length):'';
+    var cnt=q('bpx-todocount'); if(cnt){ cnt.textContent=open.length?String(open.length):''; cnt.style.display=open.length?'':'none'; }
     if(!open.length){ el.innerHTML='<div class="cal-empty">Nothing to do. Tap a day on the calendar, or <a onclick="bpNoteOpen()" style="color:var(--blue-d);font-weight:600;cursor:pointer">add a to-do for today</a>.</div>'; return; }
     el.innerHTML=open.slice(0,10).map(function(n){ var d=new Date(n.day+'T12:00:00'); var late=n.day<tk; return '<div class="cal-todo'+(late?' late':'')+'"><button class="cal-check" onclick="bpNoteToggle(\''+n.id+'\')" title="Mark done"><span class=ms></span></button><div class="cal-up-b" onclick="bpDaySheet(\''+n.day+'\')" style="cursor:pointer"><div class="cal-up-n">'+bpEsc(n.text)+'</div><div class="cal-up-t">'+(n.day===tk?'Today':late?'Overdue \u00b7 ':'')+(n.day===tk?'':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}))+(n.at?' \u00b7 '+bpEsc(n.at):'')+'</div></div></div>'; }).join('')
       +(open.length>10?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">'+(open.length-10)+' more on the calendar.</div>':'');
@@ -18491,7 +18491,7 @@ function bpCalUnsched(){
     q('bpx-calgrid').innerHTML=html;
     // upcoming list (future only)
     var now=Date.now(); var up=_bpEvents.filter(function(e){ return new Date(e.start).getTime()>=now-3600000; }).sort(function(a,b){ return new Date(a.start)-new Date(b.start); });
-    var cnt=q('bpx-upcount'); if(cnt) cnt.textContent=up.length?String(up.length):'';
+    var cnt=q('bpx-upcount'); if(cnt){ cnt.textContent=up.length?String(up.length):''; cnt.style.display=up.length?'':'none'; }
     up=up.slice(0,8);
     var uh='';
     if(!up.length){ uh='<div class="cal-empty">Nothing booked yet. '+(_bpCalKind==='jobs'?'Book a job above, or schedule dates on a project.':'Share your booking page, or book one above.')+'</div>'; }
@@ -27814,7 +27814,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261022a"></script>
 <script src="portal/shell.js?v=20261024q02"></script>
-<script src="portal/mobile.js?v=20261024q07"></script>
+<script src="portal/mobile.js?v=20261024q17"></script>
 <script src="portal/notify.js?v=20261103a"></script>
 <script src="portal/pipeline.js?v=20261023a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
