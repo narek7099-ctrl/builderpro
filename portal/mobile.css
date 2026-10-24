@@ -389,6 +389,7 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx .mh2-empty .ms{color:#12B76A}
 #bpx .mh2-more{all:unset;display:block;min-height:48px;line-height:48px;color:var(--bl);font-weight:600;font-size:15px;border-top:1px solid var(--line-2,#EEF0F4);cursor:pointer}
 #bpx#bpx#bpx#bpx.bpx-dark .mh2-tile{background:var(--soft)}
+#bpx#bpx#bpx#bpx.bpx-dark .mh2-tile.pri{background:rgba(59,130,246,.18);color:#bcd3ff}
 
 /* --- the + sheet --- */
 #bpx .bp-create{position:fixed;inset:0;z-index:4000;display:flex;flex-direction:column;justify-content:flex-end}
