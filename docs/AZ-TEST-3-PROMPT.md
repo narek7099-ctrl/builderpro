@@ -17,7 +17,7 @@ You have about 6 hours alone with BuilderPro (https://builderpro-os.com) in my C
 6. In HighLevel, look only: no workflow changes, no phone numbers, no sending.
 7. Don't change Supabase functions or the database. For server-side problems, write the exact fix in the report under "Server fixes for the cloud session".
 
-**Window sizes.** Test every screen at phone width (about 400×860) and at desktop width. If the tools can't resize the window, note it once and test at the size you have; I'll have dragged it narrow before leaving.
+**Window sizes.** Test every screen at phone width and at desktop width. I've left two Chrome windows open (same profile, so the same sign-ins): a **narrow one about phone width** and a **wide one**. Use the narrow window for the phone layout and the wide one for desktop. If you can resize a window yourself (works only when it isn't maximized), that's fine too.
 
 ## How to work
 - Work in this order and keep moving; don't spend more than ~20 minutes stuck on one thing.
