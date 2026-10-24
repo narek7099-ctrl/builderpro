@@ -28,7 +28,7 @@
   function toast(m) { if (window.bpToast) bpToast(m); }
 
   function initials(s) {
-    s = String(s || '').replace(/@.*/, '').replace(/[._-]+/g, ' ').trim();
+    s = String(s || '').replace(/@.*/, '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
     var w = s.split(/\s+/).filter(Boolean);
     return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : (w[0] || '')[1] || '')).toUpperCase();
   }

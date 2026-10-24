@@ -34,7 +34,7 @@
   function sets() { try { return (window.bpSettingsGet && bpSettingsGet()) || {}; } catch (e) { return {}; } }
   function bizName() { var c = sets().company || {}; return c.name || 'My business'; }
   function ownerFirst() { var o = sets().owner || {}; return String(o.first || o.name || '').trim().split(/\s+/)[0] || ''; }
-  function initials(s) { var p = String(s || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
+  function initials(s) { var p = String(s || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function money(n) { n = Math.round(+n || 0); return (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString(); }
   function iso(d) { d = d || new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
 

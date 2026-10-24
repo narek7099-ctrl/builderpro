@@ -131,7 +131,7 @@
     return 'construction';
   }
   function initials(n) {
-    var p = String(n || '').trim().split(/\s+/).filter(Boolean);
+    var p = String(n || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean);
     return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase();
   }
   function noPhoto(j) {
