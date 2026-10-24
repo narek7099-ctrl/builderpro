@@ -438,6 +438,16 @@
   };
   window.bpCrewClockGo = function (kind) {
     var btn = $('ca-go'), msg = $('ca-msg');
+    if (btn && kind === 'out' && !/'out'/.test(btn.getAttribute('onclick') || '')) btn = null;   /* on a break, ca-go is "End lunch" */
+    /* clocking out ends the day and can't be undone here: ask for a second tap */
+    if (kind === 'out' && !(Date.now() - (C.outAsk || 0) < 5000)) {
+      C.outAsk = Date.now();
+      if (btn) btn.innerHTML = '<span class="ms">logout</span><span>Tap again to clock out</span>';
+      if (msg) { msg.className = 'ca-msg warn'; msg.textContent = 'Done for the day? Tap Clock out again to finish.'; }
+      setTimeout(function () { if (Date.now() - C.outAsk >= 5000 && btn && !btn.disabled && btn.isConnected) { btn.innerHTML = '<span class="ms">logout</span><span>Clock out</span>'; if (msg) { msg.className = 'ca-msg'; msg.textContent = ''; } } }, 5100);
+      return;
+    }
+    C.outAsk = 0;
     var jobId = kind === 'in' ? ((document.querySelector('input[name="ca-job"]:checked') || {}).value || '') : ((C.me.open || {}).job_id || '');
     var job = (C.me.projects || []).filter(function (j) { return j.id === jobId; })[0];
     var geo = $('ck-geo') ? $('ck-geo').checked : LS.get('caGeo') !== '0';
