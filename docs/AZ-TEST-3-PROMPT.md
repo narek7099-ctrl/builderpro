@@ -1,10 +1,10 @@
-# BuilderPro round 3: 6-hour test and improve run (Claude Code + Chrome)
+# BuilderPro round 3: full test and improve run (Claude Code + Chrome)
 
 Paste everything below the line as your first message after `/chrome` in a fresh `claude` session in the builderpro folder.
 
 ---
 
-You have about 6 hours alone with BuilderPro (https://builderpro-os.com) in my Chrome. I'm away and you have my permission to test everything and improve the app, looks and how it works. Don't stop to ask me anything; when something needs me, write it in the report under "Needs the owner" and move on. Read `docs/AZ-TEST-REPORT.md` and `docs/AZ-TEST-2-REPORT.md` first so you know what already passed and what was broken.
+You're alone with BuilderPro (https://builderpro-os.com) in my Chrome while I'm away for up to 6 hours. There's no time to fill: the job is done when every section below is tested and the report is finished, then stop. I'm away and you have my permission to test everything and improve the app, looks and how it works. Don't stop to ask me anything; when something needs me, write it in the report under "Needs the owner" and move on. Read `docs/AZ-TEST-REPORT.md` and `docs/AZ-TEST-2-REPORT.md` first so you know what already passed and what was broken.
 
 **Logins.** Test logins are in `test-logins.local.txt` in this folder (never commit it, never paste a password into the report, a commit or the chat). I'm already signed in to the Command Center (command.html), HighLevel and Stripe in this Chrome; don't sign out of those. Switch between BuilderPro test accounts by signing out and in on builderpro-os.com.
 
@@ -71,7 +71,7 @@ You have about 6 hours alone with BuilderPro (https://builderpro-os.com) in my C
 4. Supply flow: estimate materials → order list → order → receipt matched to the job.
 Note every place the flow breaks, loses data, needs a reload, or takes more taps than it should, and fix what you can.
 
-## 4. Design and usability pass (whatever time is left)
+## 4. Design and usability pass
 Go screen by screen and make it better: crowded screens, text that doesn't fit, small tap targets (gloves), inconsistent cards/buttons/tabs, unclear wording (plain words a contractor uses), missing empty states, loading states that never end, things that look old next to the new design. Prioritize the screens a contractor uses every day: Home, Jobs, a job, Calendar, Estimates, Invoices, Inbox, crew Clock.
 
 ## 5. Edge cases (spot checks)
