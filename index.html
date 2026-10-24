@@ -20093,7 +20093,7 @@ function bpActiveJobs(){
    stands, who is on it. Starred jobs sort first (and stay first on the
    dashboard). Filters and search only redraw the grid, so typing keeps focus. */
 var _pjF='all', _pjQ='';
-function pjInit(n){ var p=String(n||'?').trim().split(/\s+/); return ((p[0]||'')[0]||'?').toUpperCase()+((p.length>1?p[p.length-1][0]:'')||'').toUpperCase(); }
+function pjInit(n){ var p=String(n||'?').replace(/\([^)]*\)/g,' ').replace(/[^\p{L}\p{N}\s]/gu,' ').trim().split(/\s+/); return ((p[0]||'')[0]||'?').toUpperCase()+((p.length>1?p[p.length-1][0]:'')||'').toUpperCase(); }
 function pjKState(j){
   var pr=window.bpPlan&&bpPlan.progress?bpPlan.progress(j):null;
   return {pr:pr, late:!!(pr&&pr.late.length), noplan:!pr, nocrew:!(window.bpJobWhoLbl&&bpJobWhoLbl(j))};
@@ -20133,12 +20133,15 @@ function bpPjCardsView(active,done){
 /* customers who said yes but whose job hasn't started (no card deposit yet): one tap starts it */
 function bpPjApproved(){
   var ap=window.bpJobsApproved?bpJobsApproved():[]; if(!ap.length) return '';
-  return '<section class="pjk-appr" style="margin:6px 0 18px"><div class="ml-sec" style="margin:0 0 8px"><b>Approved, not started yet</b><span class="bpx-mut">The customer said yes. Start the job when the deposit is in, or right away if you take cash or check.</span></div>'
-    +'<div class="pjl">'+ap.map(function(j){ return '<div class="pjl-r" onclick="bpQuoteOpen&&bpQuoteOpen(\''+j.id+'\')"><span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>'
-      +'<div class="pjl-id"><b>'+bpEsc(j.name||'Customer')+'</b><span>'+bpEsc(j.title||'Job')+(j.addr?' · '+bpEsc(j.addr):'')+'</span></div>'
-      +'<div class="pjl-st"><span class="pjk-tag ok">Approved</span></div>'
-      +'<div class="pjl-m"><b>'+bpMoneyFmt(+j.estimate||0)+'</b></div>'
-      +'<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpJobStart(\''+j.id+'\')">Start job</button></div></div>'; }).join('')+'</div></section>';
+  if(!document.getElementById('pja-css')){ var st=document.createElement('style'); st.id='pja-css';
+    st.textContent='#bpx .pja{margin:4px 0 18px;padding:16px;border-radius:14px;background:var(--card,#fff);border:1px solid var(--line)}#bpx .pja-h b{display:block;font-size:15px;color:var(--ink)}#bpx .pja-h span{display:block;font-size:12.5px;color:var(--mu);margin-top:2px}'
+      +'#bpx .pja-r{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line-2,var(--line));margin-top:10px}#bpx .pja-r>div{flex:1;min-width:0;cursor:pointer}#bpx .pja-r b{display:block;font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#bpx .pja-r small{display:block;font-size:12.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+      +'#bpx .pja-r em{font-style:normal;font-weight:700;color:var(--ink);white-space:nowrap}#bpx .pja-go{all:unset;box-sizing:border-box;flex:none;height:44px;padding:0 16px;border-radius:10px;background:#2457d6;color:#fff;font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center}'
+      +'@media(max-width:560px){#bpx .pja-r{flex-wrap:wrap}#bpx .pja-go{width:100%;justify-content:center}}';
+    document.head.appendChild(st); }
+  return '<section class="pja"><div class="pja-h"><b>Approved, not started yet</b><span>The customer said yes. Start the job when the deposit is in, or right away if you take cash or check.</span></div>'
+    +ap.map(function(j){ return '<div class="pja-r"><div onclick="bpQuoteOpen&&bpQuoteOpen(\''+j.id+'\')"><b>'+bpEsc(j.name||'Customer')+'</b><small>'+bpEsc(j.title||'Job')+(j.addr?' · '+bpEsc(j.addr):'')+'</small></div>'
+      +'<em>'+bpMoneyFmt(+j.estimate||0)+'</em><button class="pja-go" onclick="bpJobStart(\''+j.id+'\')">Start job</button></div>'; }).join('')+'</section>';
 }
 var _pjP=1;
 window.bpPjFilter=function(k){ _pjF=k; _pjP=1; document.querySelectorAll('.pjk-chip').forEach(function(b){ b.classList.toggle('on',b.getAttribute('onclick').indexOf("'"+k+"'")>0); }); bpPjGrid(); };
@@ -20164,7 +20167,7 @@ window.bpPjGrid=function(){
   });
   if(!list.length){ g.innerHTML=act.length>Object.keys(marked).length||t
       ? '<div class="pjk-empty">No projects match. <a onclick="_pjQ=\'\';bpPjFilter(\'all\');var i=q(\'pjkQ\');if(i)i.value=\'\'">Show all</a></div>'
-      : '<div class="pjk-empty">'+(act.length?'Every active project is in Marked above.':'<b>No active projects yet</b><br>When a deposit is paid the job lands here automatically, or add one with <b>+ Add job</b>.')+'</div>'; return; }
+      : '<div class="pjk-empty">'+(act.length?'Every active project is in Marked above.':((window.bpJobsApproved&&bpJobsApproved().length)?'<b>No active projects yet</b><br>Start one of the approved jobs above, or add one with <b>+ Add job</b>.':'<b>No active projects yet</b><br>When a deposit is paid the job lands here automatically, or add one with <b>+ Add job</b>.'))+'</div>'; return; }
   var n=Math.ceil(list.length/10); _pjP=Math.min(Math.max(_pjP,1),n);
   g.innerHTML='<div class="pjl">'+list.slice((_pjP-1)*10,_pjP*10).map(bpPjRow).join('')+'</div>'
     +'<div class="pjl-ft"><span class="bpx-mut">'+((_pjP-1)*10+1)+'–'+Math.min(_pjP*10,list.length)+' of '+list.length+'</span>'+bpPager10(n,_pjP,'bpPjPage')+'</div>';
