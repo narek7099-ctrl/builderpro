@@ -54,7 +54,7 @@
   }
   ML.log = function (j, e) { var m = listOf(j, true); logIt(m, e); };
   function tomb(m, id) { if (!m || !id) return; m.gone = Array.isArray(m.gone) ? m.gone : []; if (m.gone.indexOf(id) < 0) m.gone.push(id); if (m.gone.length > 1000) m.gone = m.gone.slice(-1000); }
-  var initials = function (n) { var p = String(n || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); };
+  var initials = function (n) { var p = String(n || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); };
   var qtyTxt = function (q, u) { return q === '' || q == null ? '' : (+q || 0) + (u ? ' ' + u : ''); };
 
   /* last time the office looked at a job's list: per device */

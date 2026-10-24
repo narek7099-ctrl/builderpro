@@ -27,7 +27,7 @@
   var lastFocus = null;
 
   function job(id) { return (window.bpJobsGet ? bpJobsGet() : []).filter(function (x) { return x.id === (id || window._bpProjId); })[0]; }
-  function initials(n) { var p = String(n || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
+  function initials(n) { var p = String(n || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function isCrew() { return !!(window.bpTeamIsCrew && bpTeamIsCrew()); }
 
   function ring(pct, label) {

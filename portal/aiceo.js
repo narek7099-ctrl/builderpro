@@ -288,7 +288,7 @@
   }
 
   /* ---------------------------------------- project sheet: Recommended --- */
-  function initials(n) { var p = String(n || '').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
+  function initials(n) { var p = String(n || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function onJob(j, c) {
     if (!j) return false;
     if (c.kind === 'sub') return (Array.isArray(j.subs) ? j.subs : []).some(function (x) { return x.subId === c.id; });
