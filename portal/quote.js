@@ -303,7 +303,8 @@
     if (cur === 'job') {
       var cs = window._bpContacts || [];
       var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === j.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('')
-        + (j.contactId && !contactBy(j.contactId) ? '<option value="' + esc(j.contactId) + '" selected>' + esc(j.name) + '</option>' : '');
+        + (j.contactId && !contactBy(j.contactId) ? '<option value="' + esc(j.contactId) + '" selected>' + esc(j.name) + '</option>' : '')
+        + (window.bpOpenAdd ? '<option value="__new">+ Add a new customer…</option>' : '');
       return card('Who and where', 'The customer, the job and what you will do.', '',
           '<label class="qs-f">Customer<select id="qb-c" onchange="BPQ.contact(this.value)">' + copts + '</select></label>'
           + '<label class="qs-f">Job title<input value="' + esc(j.title === 'New estimate' ? '' : j.title) + '" placeholder="e.g. Roof replacement" onchange="BPQ.setJ(\'title\',this.value);var h=document.querySelector(\'.qs-head .qx-h h2\');if(h)h.textContent=this.value||\'New estimate\'"></label>'
@@ -435,6 +436,14 @@
   /* changed on the Send step itself: redraw it so the line above says the new way */
   Q.viaSend = function (v) { var j = job(Q.id); if (!j) return; j.quote.via = v; save(); render(); };
   Q.contact = function (cid) {
+    /* a new customer without leaving the estimate: the contact form opens, and the saved contact is picked here */
+    if (cid === '__new') {
+      var was = (job(Q.id) || {}).contactId || '', sel = $('qb-c'); if (sel) sel.value = was;
+      var eid = Q.id;
+      window._bpAfterContact = function (c) { if (Q.id !== eid || !$('qb-c')) return; var cs = window._bpContacts = window._bpContacts || []; if (!contactBy(c.id)) cs.unshift(c); Q.contact(c.id); };
+      var lisa; window.bpOpenAdd(); lisa = document.getElementById('bpx-f-lisa'); if (lisa) lisa.checked = false;
+      return;
+    }
     var j = job(Q.id), c = contactBy(cid); if (!j) return;
     j.contactId = cid || null;
     if (c) { j.name = c.name || 'Customer'; j.phone = c.phone || ''; j.email = c.email || ''; if (!j.addr) j.addr = c.address1 || c.address || ''; }
@@ -949,7 +958,8 @@
     focusMode(true);
     var body = '';
     if (cur === 'who') {
-      var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('');
+      var copts = '<option value="">Pick a customer…</option>' + cs.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === s.contactId ? ' selected' : '') + '>' + esc(c.name || c.phone || c.email || 'Contact') + '</option>'; }).join('')
+        + (window.bpOpenAdd ? '<option value="__new">+ Add a new customer…</option>' : '');
       body = card('Who you are billing', j && j.sample ? 'Filled in from the sample estimate. Nothing here can be sent.' : j && !j.quote ? 'Filled in from the project ' + esc(j.title || '') + '.' : j ? 'Filled in from the estimate <a onclick="bpQuoteOpen(\'' + j.id + '\')">' + esc(j.title === 'New estimate' ? 'Estimate' : j.title) + '</a>.' : (s.contactId ? 'No estimate on file for this customer. <a onclick="bpQuoteNew(\'' + esc(s.contactId) + '\')">Build one first</a>, or type the lines in the next step.' : ''), '',
           '<label class="qs-f">Customer<select onchange="BPQ.invContact(this.value)">' + copts + '</select></label>'
           + '<label class="qs-f">Due<select onchange="BPQ.invSet(\'days\',this.value,1)">' + [[0, 'On receipt'], [7, 'In 7 days'], [14, 'In 14 days'], [30, 'In 30 days']].map(function (d) { return '<option value="' + d[0] + '"' + (+s.days === d[0] ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></label>'
@@ -1015,7 +1025,14 @@
   }
   Q.invSumSheet = function () { if (!Q.inv) return; bpModal('<h3>Summary</h3>' + invSumRows() + '<div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>'); };
   Q.invVia = function (v) { Q.inv.via = v; invRender(); };
-  Q.invContact = function (cid) { Q.inv.contactId = cid || null; Q.inv.jobId = null; Q.inv.disc = null; invLoad(); invRender(); };
+  Q.invContact = function (cid) {
+    if (cid === '__new') {
+      invRender();
+      window._bpAfterContact = function (c) { if (!Q.inv) return; var cs = window._bpContacts = window._bpContacts || []; if (!contactBy(c.id)) cs.unshift(c); Q.invContact(c.id); };
+      window.bpOpenAdd(); var lisa = document.getElementById('bpx-f-lisa'); if (lisa) lisa.checked = false;
+      return;
+    }
+    Q.inv.contactId = cid || null; Q.inv.jobId = null; Q.inv.disc = null; invLoad(); invRender(); };
   Q.invType = function (t) {
     var s = Q.inv; s.type = t;
     if (t === 'full' && s.lines.length === 1 && !s.lines[0].name && s.base) s.lines = [{ id: uid('il'), name: 'Project', desc: '', qty: 1, price: s.base }];
