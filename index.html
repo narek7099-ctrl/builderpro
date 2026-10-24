@@ -32,7 +32,7 @@ try{ var h0=location.hash||''; window.__bpAuthHash=/access_token=|type=(recovery
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="BuilderPro">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<script>try{if(/[#&](sign=[a-f0-9]{20,64}|est=[a-f0-9]{24,64}|home=[a-f0-9]{40,64}|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro|my)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
+<script>try{if(/[#&](sign=[^&]|est=[a-f0-9]{24,64}|home=[^&]|pay=[A-Za-z0-9._-]{8,140})/i.test(location.hash||'')||/^#(pros|find-a-pro|my)\b/i.test(location.hash||''))document.documentElement.classList.add('bp-signing-boot');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap">
@@ -22113,11 +22113,13 @@ function bpPoweredBy(cls){
 }
 var _bpSg={token:'',c:null,pad:null,drew:false,co:null};
 function bpSignRoute(){
-  var m=/[#&]sign=([a-f0-9]{20,64})/i.exec(location.hash||'');
+  var m=/[#&]sign=([^&]*)/i.exec(location.hash||'');
   if(!m)return false;
   _bpSg.token=m[1];
   document.body.classList.add('bp-signing');
   var host=document.createElement('div'); host.id='bpSign'; document.body.appendChild(host);
+  /* a link cut short (a wrapped text message) says so instead of opening the home page */
+  if(!/^[a-f0-9]{20,64}$/i.test(m[1])){bpSignErr('This link looks incomplete. Ask your contractor to send it again.');return true;}
   host.innerHTML='<div class="sg-wrap"><div class="sg-card"><div class="sg-load">Loading your agreement…</div></div></div>';
   fetch(CT_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':BP_ANON,'Authorization':'Bearer '+BP_ANON},body:JSON.stringify({op:'get',token:_bpSg.token})})
     .then(function(r){return r.json();})
@@ -22302,12 +22304,13 @@ function bpPayRoute(){
   return true;
 }
 function bpHomeRoute(){
-  var m=/[#&]home=([a-f0-9]{40,64})/i.exec(location.hash||'');
+  var m=/[#&]home=([^&]*)/i.exec(location.hash||'');
   if(!m)return false;
   _bpHp.token=m[1].toLowerCase();
   _bpHp.paid=/[#&]paid=1/.test(location.hash||'');
   document.body.classList.add('bp-signing','bp-home');
   var host=document.createElement('div'); host.id='bpSign'; host.className='hp'; document.body.appendChild(host);
+  if(!/^[a-f0-9]{40,64}$/.test(_bpHp.token)){bpHpErr('This link looks incomplete. Ask your contractor to send it again.');return true;}
   host.innerHTML=bpHpSkel();
   bpHpLoad();
   return true;
