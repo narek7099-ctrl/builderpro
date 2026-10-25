@@ -92,7 +92,7 @@
           j.estimate = Math.round(((+j.estimate || 0) + (+c.amount || 0)) * 100) / 100;
           j.custCoApplied.push(c.id); n++;
           /* the open sheet keeps its own copy of the estimate until Save */
-          if (window._bpProjId === j.id && $('bpx-pj-est')) { $('bpx-pj-est').value = window.bpMoneyFmt ? bpMoneyFmt(j.estimate) : j.estimate; if (window.bpProjBal) try { bpProjBal(); } catch (e) {} }
+          if (window._bpProjId === j.id && $('bpx-pj-est')) { $('bpx-pj-est').value = window.bpMoneyIn ? bpMoneyIn(j.estimate) : j.estimate; if (window.bpProjBal) try { bpProjBal(); } catch (e) {} }
           toast('“' + c.title + '” was approved by the homeowner. ' + money(c.amount) + ' added to the contract.');
         }
         if (!c.applied_at) mark.push(c.id);
