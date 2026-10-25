@@ -44,6 +44,8 @@ const item = (i: number, name: string, price: number, key: string) => ({
 });
 export async function checkoutFor(uid: string, email: string, business: string, plan: string, customer = "", addons: string[] = []) {
   const p = PLANS[plan];
+  // a customer saved under the other Stripe mode (test vs live) doesn't exist here: make a fresh one
+  if (customer) { try { await stripe(`/customers/${customer}`); } catch { customer = ""; } }
   if (!customer) customer = (await stripe("/customers", { email, name: business, "metadata[user_id]": uid })).id;
   let lines: Record<string, string> = item(0, `BuilderPro ${p.name}`, p.price, "plan");
   addons.forEach((k, i) => { lines = { ...lines, ...item(i + 1, `BuilderPro ${ADDONS[k].name}`, ADDONS[k].price, k) }; });
@@ -68,7 +70,9 @@ async function change(a: any, plan: string, want: Addons) {
   const merged: Addons = { ai: want.ai ?? cur.ai, website: want.website ?? cur.website };
   const addons = pickAddons(plan, merged);
   if (SK && a.stripe_subscription_id) {
-    const sub = await stripe(`/subscriptions/${a.stripe_subscription_id}`);
+    let sub;
+    try { sub = await stripe(`/subscriptions/${a.stripe_subscription_id}`); }
+    catch { return json({ ok: false, error: "We couldn't find your subscription in Stripe. Finish checkout first, or contact support." }, 400); }
     const items: { id: string; price: { product: string } }[] = sub.items?.data ?? [];
     const keyOf = async (it: { price: { product: string } }) => (await stripe(`/products/${it.price.product}`)).metadata?.key ?? "plan";
     const have: Record<string, string> = {};
@@ -115,7 +119,9 @@ Deno.serve(async (req) => {
     const a = (await (await sb(`accounts?user_id=eq.${u.id}&select=*`)).json())[0];
     if (b.op === "change") return await change(a, clean(b.plan, 20), (b.addons ?? {}) as Addons);
     if (!a || !SK || !PLANS[a.plan]) return json({ ok: false, error: "Nothing to pay for." }, 400);
-    const c = await checkoutFor(u.id, a.email, a.business, a.plan, a.stripe_customer_id, pickAddons(a.plan, a.profile?.addons ?? {}));
+    let c;
+    try { c = await checkoutFor(u.id, a.email, a.business, a.plan, a.stripe_customer_id, pickAddons(a.plan, a.profile?.addons ?? {})); }
+    catch (e) { console.error("stripe resume", e); return json({ ok: false, error: "The payment page couldn't be opened. Try again in a minute." }, 502); }
     await sb(`accounts?user_id=eq.${u.id}`, { method: "PATCH", body: JSON.stringify({ stripe_customer_id: c.customer, checkout_url: c.url }) });
     return json({ ok: true, checkout_url: c.url });
   }
