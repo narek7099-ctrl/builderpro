@@ -289,7 +289,7 @@
         + '<div class="chm-hero">' + AV.html(e.photo, e.name, 'chm-av') + '<div><small>' + new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) + '</small>'
           + '<h2>' + hello() + ', ' + esc((e.name || '').split(' ')[0]) + '</h2><span>' + esc((me.business && me.business.name) || '') + (me.crew ? ' · ' + esc(me.crew.name) : '') + '</span></div></div>'
         + '<div class="chm-grid"><div class="ck-col">' + status
-          + '<div class="bpx-panel"><div class="chm-h"><b>Today’s jobs</b><button type="button" onclick="bpNav(\'crewprojects\')">All projects</button></div>'
+          + '<div class="bpx-panel"><div class="chm-h"><b>Today’s jobs</b><button type="button" onclick="bpNav(\'crewprojects\')">All jobs</button></div>'
             + (today.length ? today.map(jobRow).join('')
               : '<div class="chm-none"><span class="ms">event_available</span><div><b>Nothing booked for you today</b>'
                 + (next ? '<span>Next: ' + jobWords(next.j) + ', ' + dayLbl(next.d) + (slotLbl(next.j, next.d) ? ' · ' + slotLbl(next.j, next.d) : '') + '</span>' : '<span>Your boss adds you to jobs on the schedule.</span>') + '</div></div>')
