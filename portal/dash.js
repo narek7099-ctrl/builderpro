@@ -115,8 +115,8 @@
        One or two get a wide layout with the photo beside the detail, three
        or four get photo cards. No empty columns either way. */
     var shown = jobs.slice(0, 4);
-    return '<div class="dash-projs"><div class="dash-sec"><h3>' + (shown.some(function (j) { return j.starred; }) ? 'Marked projects' : 'Projects in motion') + '</h3><button class="bpx-linkbtn" onclick="bpNav(\'activejobs\')">'
-      + (jobs.length > shown.length ? 'All ' + jobs.length + ' projects' : 'All projects') + '</button></div>' + projCards(shown, crew) + '</div>';
+    return '<div class="dash-projs"><div class="dash-sec"><h3>' + (shown.some(function (j) { return j.starred; }) ? 'Marked jobs' : 'Jobs in motion') + '</h3><button class="bpx-linkbtn" onclick="bpNav(\'activejobs\')">'
+      + (jobs.length > shown.length ? 'All ' + jobs.length + ' jobs' : 'All jobs') + '</button></div>' + projCards(shown, crew) + '</div>';
   }
   /* No photo yet: a soft tile that says what kind of job it is, rather
      than a big gray box apologizing for a missing picture. */
@@ -413,7 +413,7 @@
     return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div>'
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
       + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + '<button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
-      + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add project</button>')
+      + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add job</button>')
       + (locked('matlists') ? '' : '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order materials</button>') + '</div></div>';
   }
 
