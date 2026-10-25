@@ -571,6 +571,11 @@
        beside it. The picker used to share a half-width column with the
        list, which left room for one product at a time. */
     var open = SP.lists.filter(function (l) { return l.status === 'draft' || l.status === 'sourced'; });
+    /* coming back to Order materials reopens the list you were on, not a blank one */
+    try {
+      if (L) localStorage.setItem('bpSpList', L.id);
+      else { var lid = localStorage.getItem('bpSpList'); L = SP.list = open.filter(function (l) { return l.id === lid; })[0] || null; if (L) SP.priority = L.priority || 'fastest'; }
+    } catch (e) {}
     h += '<div class="bpx-panel sp-shop">'
       + '<div class="bpx-chead"><div class="bpx-ptitle" style="margin:0">What the job needs<span class="lg2">search any material, or pick the whole job</span></div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
