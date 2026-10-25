@@ -20040,7 +20040,8 @@ function bpFinCloudLoad(){
     }
   }).catch(function(){});
 }
-function bpMoneyFmt(n){var r=Math.round(+n||0);return (r<0?'\u2212$':'$')+Math.abs(r).toLocaleString();}
+/* whole dollars stay short ($3,200); cents show when there are any ($3,440.50) */
+function bpMoneyFmt(n){var r=Math.round((+n||0)*100)/100,c=Math.round(r*100)%100!==0;return (r<0?'\u2212$':'$')+Math.abs(r).toLocaleString('en-US',{minimumFractionDigits:c?2:0,maximumFractionDigits:c?2:0});}
 function bpParseMoney(s){return +String(s==null?'':s).replace(/[^0-9.]/g,'')||0;}
 function bpJobExp(j){return (j.expenses||[]).reduce(function(s,e){return s+(+e.amt||0);},0);}
 function bpAgo(ts){if(!ts)return '—';var d=Math.floor((Date.now()-ts)/86400000);return d<=0?'today':(d===1?'yesterday':d+'d ago');}
@@ -27806,7 +27807,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/projsheet.js?v=20261024q36"></script>
 <script src="portal/contact.js?v=20261018a"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
-<script src="portal/custportal.js?v=20261025c3"></script>
+<script src="portal/custportal.js?v=20261025c4"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261009a">
 <script src="portal/bpedit.js?v=20261024q25"></script>
