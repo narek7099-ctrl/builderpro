@@ -21,6 +21,8 @@
    ================================================================== */
 (function () {
   'use strict';
+  /* 2026-10-24 → Sat, Oct 24 (the worked_on day, no timezone shift) */
+  function dayLabel(d) { var m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(String(d || '')); if (!m) return String(d || ''); return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s); };
@@ -465,7 +467,7 @@
       + '<button type="button" onclick="' + (S.hoursOnly === 'disputed' ? 'bpHoursAll()">Show all' : 'bpHoursDisputed()">Review') + '</button></div>';
     var rows = shown.slice(0, 120).map(function (t) {
       var e = bpEmpById(t.employee_id);
-      return '<tr' + (t.disputed_at ? ' class="te-disp"' : '') + '><td>' + esc(t.worked_on) + '</td>'
+      return '<tr' + (t.disputed_at ? ' class="te-disp"' : '') + '><td>' + esc(dayLabel(t.worked_on)) + '</td>'
         + '<td><b>' + esc(e ? e.name : 'Removed') + '</b>' + bpByLeadTag(t.clocked_by_name, t.clocked_lat, t.clocked_lng) + dispTag(t, true) + '</td>'
         + '<td>' + esc(t.job_name || '—') + '</td>'
         + '<td>' + (+t.hours || 0) + (t.ot_hours > 0 ? ' <span style="color:#b45309">+' + t.ot_hours + ' OT</span>' : '') + '</td>'
