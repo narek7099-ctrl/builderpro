@@ -16371,7 +16371,7 @@ function bpPlanInfo(){
 }
 async function bpAcctLoad(){
   if(!BP_LIVE)return;
-  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
+  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,stripe_subscription_id,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ /* a trial that went to Stripe checkout but never got a subscription still needs its card */ if(r.data.status==='trial'&&r.data.checkout_url&&!r.data.stripe_subscription_id)r.data.status='checkout'; var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
 }
 function bpBillBanner(){
   var a=window._bpAcct||{}, old=document.getElementById('bpBill'); if(old)old.remove();
