@@ -303,4 +303,11 @@
 
   /* approved change orders land in the total soon after the portal opens */
   setTimeout(function () { if (live() && !isCrew()) window.bpCustApply(); }, 6000);
+  /* while the portal is open, pick up the homeowner's answers and messages without a reload */
+  setInterval(function () {
+    if (!live() || isCrew() || document.visibilityState !== 'visible') return;
+    var h = $('bpx-pj-cust'), a = document.activeElement;
+    if (h && h.offsetParent && C.job && window._bpProjId === C.job && !(a && h.contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) window.bpCustTabOpen(jobById(C.job));
+    else window.bpCustApply();
+  }, 30000);
 })();
