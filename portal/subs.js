@@ -36,7 +36,8 @@
   var KINDS = { coi: 'Certificate of insurance', license: 'License', w9: 'W-9', other: 'Other' };
 
   function money(n) { n = +n || 0; return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function money0(n) { return window.bpMoneyFmt ? bpMoneyFmt(n) : '$' + Math.round(+n || 0).toLocaleString(); }
+  // whole dollars stay short ($3,200); cents show when there are any ($3,440.50)
+  function money0(n) { n = +n || 0; var c = Math.round(n * 100) % 100 !== 0; return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: c ? 2 : 0, maximumFractionDigits: c ? 2 : 0 }); }
   function pretty(d) { if (!d) return ''; var x = typeof d === 'number' ? new Date(d) : new Date(String(d).length <= 10 ? d + 'T12:00:00' : d); return isNaN(x) ? esc(d) : x.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
   function todayIso() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function addDays(iso, n) { var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
