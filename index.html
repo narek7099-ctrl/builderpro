@@ -15251,7 +15251,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
 .bpx-card label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px;}
 .bpx-card input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:14px;outline:none;}
 .bpx-card input:focus{border-color:var(--blue);}
-.bpx-forgot{display:block;text-align:right;font-size:13px;color:var(--blue);margin-top:8px;margin-left:auto;}
+.bpx-forgot{display:block;text-align:right;font:inherit;font-size:13px;font-weight:600;color:var(--blue);margin:8px 0 0 auto;padding:6px 0;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent;}.bpx-forgot:disabled{opacity:.6;cursor:default}
 .bpx-btn{width:100%;margin-top:18px;padding:13px;background:var(--blue);color:#fff;border-radius:10px;font-size:15px;font-weight:600;}
 .bpx-btn:hover{background:var(--blue-d);}
 .bpx-hint{margin-top:16px;font-size:12px;color:var(--grey);text-align:center;background:var(--blue-l);border-radius:10px;padding:10px;}
@@ -15601,7 +15601,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
         <input type="email" id="bpxEmail" placeholder="you@company.com" autocomplete="username">
         <label>Password</label>
         <input type="password" id="bpxPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')bpDoAuth()">
-        <a class="bpx-forgot" onclick="bpForgot()">Forgot password?</a>
+        <button type="button" class="bpx-forgot" id="bpxForgot" onclick="bpForgot()">Forgot password?</button>
         <button class="bpx-btn" onclick="bpDoAuth()">Sign In</button>
         <div class="bpx-msg" id="bpxAuthMsg"></div>
         <div class="bpx-hint">Sign in with your BuilderPro account to see your live leads, messages, and jobs.</div>
@@ -16464,12 +16464,18 @@ function bpDoAuth(){
   .then(function(){if(btn){btn.disabled=false;btn.textContent='Sign In';}});
 }
 function bpForgot(){
-  var email=document.getElementById('bpxEmail').value.trim(),msg=document.getElementById('bpxAuthMsg');
-  if(!email){msg.className='bpx-msg err';msg.textContent='Enter your email above, then tap Forgot password.';return;}
-  if(!BP_LIVE){msg.className='bpx-msg';msg.textContent='If an account exists for that email, a reset link is on its way.';return;}
-  BP_SB.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname}).then(function(){
-    msg.className='bpx-msg';msg.textContent='If an account exists for that email, a reset link is on its way. Check your inbox.';
-  }).catch(function(e){msg.className='bpx-msg err';msg.textContent=bpFriendly(e&&e.message);});
+  var em=document.getElementById('bpxEmail'),email=em.value.trim(),msg=document.getElementById('bpxAuthMsg'),btn=document.getElementById('bpxForgot');
+  var say=function(t,bad){msg.className='bpx-msg'+(bad?' err':'');msg.textContent=t;if(msg.scrollIntoView)msg.scrollIntoView({block:'nearest',behavior:'smooth'});};
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){say('Type your email in the box above, then tap Forgot password again.',true);em.focus();return;}
+  if(!BP_LIVE){say('If an account exists for that email, a reset link is on its way.');return;}
+  if(btn){btn.disabled=true;btn.textContent='Sending\u2026';}
+  var done=function(){if(btn){btn.disabled=false;btn.textContent='Forgot password?';}};
+  /* supabase-js returns {error} rather than throwing, so check both */
+  Promise.resolve(BP_SB.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname})).then(function(r){
+    done();
+    if(r&&r.error)throw r.error;
+    say('Reset link sent to '+email+'. Open the email and tap the link to set a new password. Not there in a minute? Check spam.');
+  }).catch(function(e){done();var m=String((e&&e.message)||'');say(/after \d+ seconds|security purposes/i.test(m)?'A link was just sent. Wait a minute before asking for another one.':bpFriendly(m),true);});
 }
 function bpLogout(){
   if(BP_LIVE){BP_SB.auth.signOut().catch(function(){});}
@@ -27823,7 +27829,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/projsheet.js?v=20261024q36"></script>
 <script src="portal/contact.js?v=20261018a"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
-<script src="portal/custportal.js?v=20261025c4"></script>
+<script src="portal/custportal.js?v=20261025d2"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261009a">
 <script src="portal/bpedit.js?v=20261024q25"></script>
