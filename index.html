@@ -16199,7 +16199,23 @@ var BP_HED={'Authorization':'Bearer '+BP_ANON,'apikey':BP_ANON,'Content-Type':'a
 /* every call to a portal function carries the signed-in user's token: the
    functions refuse the public key on its own */
 async function bpHed(){ var t=''; try{ t=window.bpJwt?await bpJwt():''; }catch(e){} return {'Authorization':'Bearer '+(t||BP_ANON),'apikey':BP_ANON,'Content-Type':'application/json'}; }
-function bpFx(url,payload){return bpHed().then(function(h){return fetch(url,{method:'POST',headers:h,body:JSON.stringify(payload||{})});});}
+function bpFx0(url,payload){return bpHed().then(function(h){return fetch(url,{method:'POST',headers:h,body:JSON.stringify(payload||{})});});}
+/* HighLevel calls: once one answers "isn't connected", the rest of this page
+   visit gets that same answer locally instead of asking (and failing) again.
+   The first call goes alone so a dashboard's burst doesn't all fail at once. */
+var _bpGhlOff=null,_bpGhlFirst=null;
+function bpGhlOffResp(){return new Response(JSON.stringify(_bpGhlOff),{status:403,headers:{'Content-Type':'application/json'}});}
+function bpFx(url,payload){
+  if(!/\/functions\/v1\/ghl-/.test(String(url)))return bpFx0(url,payload);
+  if(_bpGhlOff)return Promise.resolve(bpGhlOffResp());
+  if(_bpGhlFirst)return _bpGhlFirst.then(function(){return _bpGhlOff?bpGhlOffResp():bpFx0(url,payload);});
+  var go=bpFx0(url,payload).then(function(r){
+    if(r.status!==403)return r;
+    return r.clone().json().then(function(j){if(j&&/isn.t connected/i.test(String(j.error||'')))_bpGhlOff=j;return r;},function(){return r;});
+  });
+  _bpGhlFirst=go.then(function(){},function(){});
+  return go;
+}
 function bpApi(url,payload){return bpFx(url,payload).then(function(r){return r.json();});}
 function bpStockImg(seed,small){return '';} /* portal shows no decorative stock photos */
 function bpNum(x){return x!=null?Number(x).toLocaleString():'—';}
@@ -27787,7 +27803,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/crew.js?v=20261025c8"></script>
 <script src="portal/charts.js?v=20261024q25"></script>
 <script src="portal/progress.js?v=20261024q28"></script>
-<script src="portal/supply.js?v=20261024q36"></script>
+<script src="portal/supply.js?v=20261025d1"></script>
 <script src="portal/supply-catalog.js?v=20261024q36"></script>
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261025c7"></script>
@@ -27800,7 +27816,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261024q14"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261025c5"></script>
+<script src="portal/dash.js?v=20261025d1"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261001p"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
