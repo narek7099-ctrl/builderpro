@@ -53,7 +53,5 @@ Claude ran the steps itself in a headless browser, signing in through the test-l
 **Left as is (noted, not fixed):**
 - The sub's "Add 2 extra outlets in the pantry (sample)" change order and $100 invoice stay on the owner test account's Kitchen remodel. Removing them would also change the sub's records.
 - Older "(sample)" estimates and jobs on the plan199 account and two other test owners come from earlier rounds; most are already void. Say if you want them removed.
-- Pages call the HighLevel functions even when HighLevel isn't connected, which returns 403 in the background (nothing visible).
-- The dashboard asks for a `conversations` table that doesn't exist (404). The unread-texts count just stays 0.
-- The Website page calls a `google-analytics` function that isn't deployed. The page falls back to the snippet view as designed.
-- Reopening Order materials starts a blank list. Your earlier list is under "Open a list you started".
+
+**Fixed afterwards (04b61c3):** after the first "HighLevel isn't connected" answer, the page stops asking HighLevel for that visit (checked: one call instead of many). The unread count now comes from the HighLevel inbox, not a missing table. Order materials reopens your last list. The `google-analytics` function and its table are now deployed and answer "not set up" cleanly until Google keys are added.
