@@ -20015,27 +20015,86 @@ window.bpToggleTheme=function(){var el=document.getElementById('bpx');var d=el&&
 /* Jobs + finances are cloud-backed per client (Supabase portal_finance row);
    localStorage is only the offline/instant cache. */
 var _bpJobs=null,_bpFin=null,_bpFinLoaded=false;
-function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} return _bpJobs; }
-function bpJobsSet(a){ _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
-function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} return _bpFin; }
-function bpFinSet(a){ _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+/* Saves merge job by job on the server (portal_finance_save): every job and
+   money entry this device changed gets _mt (when it changed), a delete is sent
+   as a tombstone, and the newer copy of each item wins. So the owner's phone
+   and the office desktop no longer wipe out each other's edits.
+   _bpSnap remembers each item as last saved/loaded, to tell what changed. */
+var _bpSnap={jobs:{},fin:{}};
+function bpSnapStr(x){ return JSON.stringify(x,function(k,v){ return k==='_mt'?undefined:v; }); }
+function bpSnapTake(kind,list){ var m={}; (list||[]).forEach(function(x){ if(x&&x.id!=null) m[x.id]={s:bpSnapStr(x),mt:+x._mt||0}; }); _bpSnap[kind]=m; }
+function bpGoneGet(){ try{ return JSON.parse(localStorage.getItem('bpGone')||'{}')||{}; }catch(e){ return {}; } }
+function bpGoneSave(g){ try{ localStorage.setItem('bpGone',JSON.stringify(g)); }catch(e){} }
+function bpStamp(kind,list){
+  var snap=_bpSnap[kind]||{}, now=Date.now(), seen={}, gone=null;
+  (list||[]).forEach(function(x){
+    if(!x||x.id==null) return; seen[x.id]=1;
+    var p=snap[x.id];
+    /* a copy older than the one last saved here is stale: leave its stamp so the newer one wins */
+    if(!p||(p.s!==bpSnapStr(x)&&(+x._mt||0)>=p.mt)) x._mt=now;
+  });
+  Object.keys(snap).forEach(function(id){ if(!seen[id]){ gone=gone||bpGoneGet(); gone[id]=now; } });
+  if(gone) bpGoneSave(gone);
+  bpSnapTake(kind,list);
+}
+function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} bpSnapTake('jobs',_bpJobs); return _bpJobs; }
+function bpJobsSet(a){ if(!_bpJobs) bpJobsGet(); bpStamp('jobs',a); _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} bpSnapTake('fin',_bpFin); return _bpFin; }
+function bpFinSet(a){ if(!_bpFin) bpFinGet(); bpStamp('fin',a); _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 /* BuilderPro open in two tabs: when the other tab saves, take its copy, so this tab's
    next save can't put back an older list over it (that lost payment plans and edits) */
 window.addEventListener('storage',function(e){
   if((e.key!=='bpJobs'&&e.key!=='bpFin')||!e.newValue) return;
   try{ var mine=window.bpOwnerId&&bpOwnerId(); if(mine&&localStorage.getItem('bpDataOwner')&&localStorage.getItem('bpDataOwner')!==mine) return;
     var v=JSON.parse(e.newValue); if(!Array.isArray(v)) return;
-    if(e.key==='bpJobs') _bpJobs=v; else _bpFin=v; }catch(x){}
+    if(e.key==='bpJobs'){ _bpJobs=v; bpSnapTake('jobs',v); } else { _bpFin=v; bpSnapTake('fin',v); } }catch(x){}
 });
+/* take the server's merged copy, keeping anything edited here while the save was in flight */
+function bpAdopt(kind,mine,srv,gone){
+  if(!Array.isArray(srv)) return null;
+  var byId={}, out=[], changed=false;
+  mine.forEach(function(x){ if(x&&x.id!=null) byId[x.id]=x; });
+  var inSrv={};
+  srv.forEach(function(s){
+    if(!s||s.id==null){ out.push(s); return; }
+    inSrv[s.id]=1;
+    var m=byId[s.id];
+    if(m&&(+m._mt||0)>=(+s._mt||0)) out.push(m); else { out.push(s); changed=true; }
+  });
+  /* added here after the save left, and not deleted since */
+  var extra=mine.filter(function(x){ return x&&x.id!=null&&!inSrv[x.id]&&!(gone&&gone[x.id]); });
+  if(extra.length) out=extra.concat(out);
+  if(out.length!==mine.length) changed=true;
+  return changed?out:null;
+}
+var _bpPushT=0,_bpPushing=null,_bpPushAgain=false;
 function bpFinCloudPush(){
   if(!BP_LIVE||(window.bpTeamIsCrew&&bpTeamIsCrew())) return;
-  BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},window.bpOwnerId&&bpOwnerId()?{owner:bpOwnerId()}:{})).then(function(){}).catch(function(){});
+  clearTimeout(_bpPushT); _bpPushT=setTimeout(bpFinCloudPushNow,350);
+}
+function bpFinCloudPushNow(){
+  if(_bpPushing){ _bpPushAgain=true; return; }
+  var gone=bpGoneGet(), owner=window.bpOwnerId&&bpOwnerId();
+  _bpPushing=Promise.resolve(BP_SB.rpc('portal_finance_save',Object.assign({p_jobs:bpJobsGet(),p_fin:bpFinGet(),p_gone:gone},owner?{p_owner:owner}:{}))).then(function(r){
+    if(r&&r.error){
+      /* the merge isn't on this server yet: save the old way */
+      if(/portal_finance_save|function/i.test(r.error.message||'')) return BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},owner?{owner:owner}:{}));
+      return;
+    }
+    var d=r&&r.data; if(!d) return;
+    /* tombstones the server now has can go */
+    var g=bpGoneGet(); Object.keys(gone).forEach(function(k){ if(g[k]===gone[k]) delete g[k]; }); bpGoneSave(g);
+    var j=bpAdopt('jobs',bpJobsGet(),d.jobs,g), f=bpAdopt('fin',bpFinGet(),d.fin,g);
+    if(j){ _bpJobs=j; bpSnapTake('jobs',j); try{localStorage.setItem('bpJobs',JSON.stringify(j));}catch(e){} }
+    if(f){ _bpFin=f; bpSnapTake('fin',f); try{localStorage.setItem('bpFin',JSON.stringify(f));}catch(e){} }
+    if(j||f){ try{ window.dispatchEvent(new CustomEvent('bp-data-merged',{detail:{jobs:!!j,fin:!!f}})); }catch(e){} }
+  }).catch(function(){}).then(function(){ _bpPushing=null; if(_bpPushAgain){ _bpPushAgain=false; bpFinCloudPushNow(); } });
 }
 /* The device cache belongs to one account. When a different account signs in
    on the same browser, drop the last account's cached jobs, money, notes,
    receipts and templates before anything is drawn or synced, so one
    account's data can never show in (or be saved into) another. */
-var BP_DEVICE_KEYS=['bpJobs','bpFin','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
+var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
 var _bpCacheMine=false;
 function bpDeviceCacheFor(oid){
   if(!oid) return;
@@ -20047,7 +20106,7 @@ function bpDeviceCacheFor(oid){
     Object.keys(localStorage).forEach(function(k){if(k.indexOf('bpPrice_')===0)localStorage.removeItem(k);});
     localStorage.setItem('bpDataOwner',oid);
   }catch(e){}
-  _bpJobs=null;_bpFin=null;_bpFinLoaded=false;
+  _bpJobs=null;_bpFin=null;_bpFinLoaded=false;_bpSnap={jobs:{},fin:{}};
 }
 function bpFinCloudLoad(){
   if(!BP_LIVE||_bpFinLoaded||(window.bpTeamIsCrew&&bpTeamIsCrew())) return Promise.resolve();
@@ -20055,6 +20114,7 @@ function bpFinCloudLoad(){
     _bpFinLoaded=true;
     if(r&&r.data){
       _bpJobs=Array.isArray(r.data.jobs)?r.data.jobs:[]; _bpFin=Array.isArray(r.data.fin)?r.data.fin:[];
+      bpSnapTake('jobs',_bpJobs); bpSnapTake('fin',_bpFin);
       try{localStorage.setItem('bpJobs',JSON.stringify(_bpJobs));localStorage.setItem('bpFin',JSON.stringify(_bpFin));}catch(e){}
     }else if(r&&!r.error&&_bpCacheMine){
       /* this account's own device data from before the cloud: send it up once */
