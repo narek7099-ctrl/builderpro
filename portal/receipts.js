@@ -422,6 +422,17 @@
   SP.rcLineDel = function (i) { R.lines.splice(i, 1); review(); };
 
   function slug(name) { return 'X-' + String(name).toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24); }
+  /* a receipt carrying an open order's PO number is that order's bill: close the
+     order against this expense, so reconciling it later can't count it twice */
+  function closeOrder(rec) {
+    var n = String(rec.number || '').trim().toUpperCase(); if (!n || !SP.db || !SP.pos) return;
+    var po = SP.pos.filter(function (p) { return String(p.po_number || '').toUpperCase() === n && p.status !== 'reconciled' && p.status !== 'draft'; })[0];
+    if (!po) return;
+    var patch = { status: 'reconciled', invoice_ref: n, invoice_total: rec.total, invoiced_at: new Date().toISOString(), reconciled_at: new Date().toISOString(), expense_key: rec.expKey || '' };
+    Object.assign(po, patch);
+    SP.db.update('purchase_orders', po.id, patch).catch(function () {});
+    window.bpToast && bpToast('Matched to ' + po.po_number + '. That order is closed.');
+  }
   SP.rcSave = function () {
     if (!R) return;
     var msg = function (t) { var e = $('rc-msg'); if (e) { e.textContent = t; e.style.color = '#b3392f'; } };
@@ -437,6 +448,7 @@
       tax: R.tax === '' ? 0 : r2(R.tax), total: tot, image: R.image || '', mime: R.mime || '', file: R.file || '', read: R.read || 'hand', at: Date.now() };
     try { rec.expKey = writeExpense(rec); } catch (e) { msg('Could not add the expense. ' + (e.message || '')); return; }
     var a = all(); a.unshift(rec); setAll(a);
+    closeOrder(rec);
     /* move the photo to storage when signed in; the data URL stands until then */
     if (rec.image && rec.image.indexOf('data:') === 0 && window.bpPF && bpPF.upload && window.BP_LIVE) {
       bpPF.upload(rec.jobId || 'overhead', 'receipts', rec.image, rec.file || 'receipt').then(function (ref) {
