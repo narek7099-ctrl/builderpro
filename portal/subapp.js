@@ -47,7 +47,8 @@
   function jobById(id) { return jobs().filter(function (j) { return j.id === id; })[0]; }
   function initials(n) { var p = String(n || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean); return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase(); }
   function money(n) { n = +n || 0; return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function money0(n) { n = +n || 0; return (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US'); }
+  // whole dollars stay short ($3,200); cents show when there are any ($3,440.50)
+  function money0(n) { n = +n || 0; var c = Math.round(n * 100) % 100 !== 0; return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: c ? 2 : 0, maximumFractionDigits: c ? 2 : 0 }); }
   function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function pretty(d) { if (!d) return ''; var x = typeof d === 'number' ? new Date(d) : new Date(String(d).length <= 10 ? d + 'T12:00:00' : d); return isNaN(x) ? esc(d) : x.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
   function telOf(p) { return String(p || '').replace(/[^\d+]/g, ''); }
