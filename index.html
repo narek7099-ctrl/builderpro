@@ -23130,6 +23130,7 @@ window.bpHpCoApprove=function(id){
     .then(function(d){
       if(!d||!d.ok){b.disabled=false;b.textContent='Approve change';if(msg)msg.textContent=(d&&d.error)||'Something went wrong. Please try again.';return;}
       _bpHp.d=d;_bpHp.co=null;bpHpRender();
+      if(window.bpCustLink)bpCustLink.after('home');
     }).catch(function(){b.disabled=false;b.textContent='Approve change';if(msg)msg.textContent='Couldn\'t reach the server. Check your connection and try again.';});
 };
 window.bpHpCoDecline=function(id){
@@ -27819,7 +27820,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aiceo-map.js?v=20261024q25"></script>
 <script src="portal/installs.js?v=20261103m"></script>
 <script src="portal/assets.js?v=20261104a"></script>
-<script src="portal/custlink.js?v=20261024q49"></script>
+<script src="portal/custlink.js?v=20261025c2"></script>
 <script src="portal/estpick.js?v=20261024a"></script>
 <link rel="stylesheet" href="portal/assets.css?v=20261104a">
 <script src="portal/reviews.js?v=20261004a"></script>
