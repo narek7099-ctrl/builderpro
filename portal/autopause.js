@@ -24,6 +24,10 @@
 
   /* ---------- 1. the pause switch on the project ---------- */
   function pauseRow(j) {
+    /* nothing goes out on its own until HighLevel is connected, so don't claim it does */
+    if (window.bpGhlLinkedNow && bpGhlLinkedNow() === false) return '<div class="ap-row" id="ap-row"><span class="ms">notifications_off</span>'
+      + '<div><b>Automatic messages: Not set up yet</b><span>Texts and emails to this customer start going out on their own once your HighLevel account is connected.</span></div></div>';
+    if (window.bpGhlLinked && !pauseRow.asked) { pauseRow.asked = true; bpGhlLinked().then(function (v) { var r = document.getElementById('ap-row'); if (v === false && r && window._bpProjId) { var jj = bpJobsGet().filter(function (x) { return x.id === window._bpProjId; })[0]; if (jj) r.outerHTML = pauseRow(jj); } }); }
     var on = !j.autoPause;
     return '<div class="ap-row" id="ap-row"><span class="ms">' + (on ? 'notifications_active' : 'notifications_paused') + '</span>'
       + '<div><b>Automatic messages: ' + (on ? 'On' : 'Paused') + '</b><span>' + (on ? 'Texts and emails to this customer go out as the job moves along.' : 'Nothing automatic goes to this customer. Alerts to you still come through.') + '</span></div>'

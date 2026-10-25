@@ -488,14 +488,20 @@
     } catch (e) {}
   }
   /* is this account's own HighLevel connected? (the same answer Lisa's Publish uses) */
+  var linkedP = null;
   function loadLinked() {
-    if (S.linked !== undefined) return;
-    if (!(window.BP_LIVE && window.bpAuthApi && window.AI_BRAIN_URL)) { S.linked = null; return; }
-    Promise.resolve(bpAuthApi(AI_BRAIN_URL, { op: 'get' })).then(function (r) {
+    if (S.linked !== undefined) return linkedP || Promise.resolve(S.linked);
+    if (!(window.BP_LIVE && window.bpAuthApi && window.AI_BRAIN_URL)) { S.linked = null; return Promise.resolve(null); }
+    S.linked = undefined;
+    return linkedP || (linkedP = Promise.resolve(bpAuthApi(AI_BRAIN_URL, { op: 'get' })).then(function (r) {
       S.linked = !!(r && r.ok && r.ghl_linked);
       if (window._bpCurView === 'automations') render();
-    }, function () { S.linked = null; });
+      return S.linked;
+    }, function () { S.linked = null; linkedP = null; return null; }));
   }
+  /* other screens ask the same question: true / false, or null when we can't tell */
+  window.bpGhlLinked = function () { return loadLinked(); };
+  window.bpGhlLinkedNow = function () { return S.linked; };
   window.bpAutomations = function () {
     loadFired(); loadLinked();
     var k = (window._bpAcct || {}).plan, i = PLANS.map(function (p) { return p.k; }).indexOf(k);
