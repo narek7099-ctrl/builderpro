@@ -33,3 +33,27 @@ The plan signs Claude in through the `test-login` link, which carries a secret k
 ## Server fixes for the cloud session
 1. **test-login**: the key travels in the address (`?key=`), so it ends up in browser history and request logs; compare it in constant time; and consider having it work only while a short expiry date is set, so it can't be left on by accident. Same goes for the session it returns in the redirect hash.
 2. From round 3, still open: jobs save as one `portal_finance` row (last save wins across devices; needs a per-job merge); features that depend on HighLevel should show as off while it isn't connected.
+
+## Cloud run (Oct 25): the signed-in steps, run by Claude
+Claude ran the steps itself in a headless browser, signing in through the test-login link with a temporary key that expires by itself. It tested at desktop width (1280–1366) and phone width (400). No money was spent: no AI calls, no texts or calls, nothing sent to a supplier, no payments. The temporary key was cleared at the end.
+
+| Step | Result | Notes |
+|---|---|---|
+| Sub flow (sub → owner) | Pass | Sub sent a $240.50 change order. The owner approved it and a $100 invoice. The Subs tab totals, the Money tab expense and the sub's contract value all updated. Cents fixed in 9946fb9. |
+| Start job from Approved | Pass | |
+| Homeowner link + change order | Pass after fix | **Bug:** the "Get updates on this project" sheet popped up over the change-order signing screen. It now waits until the signature pad is closed and shows after approving (ef72f80). Customer signed and approved. |
+| Owner sees the approval without reloading | Pass after fix | **Bug:** the owner's Customer tab only refreshed when reopened. It now checks every 30s (a858520). **Bug:** the new job estimate rounded off the cents ($465.25 showed as $465, and saving would have kept $465). Fixed so money shows cents when there are any (2271af7). |
+| Supply | Pass | Pick the job (kit) → order list → "Where do I buy this" with example suppliers ($600.75, one stop) → will-call ticket (not sent) → receipt entered by hand → $502.35 Materials cost on the job and in Finances. **Fixed:** the Job box ran past its card, and an alert pointed to the old tab name (330b599). **Improved:** a receipt with an open order's PO number now closes that order, so reconciling it later can't count the cost twice (3b07a12, verified). |
+| Desktop + phone walk (21 pages) | Pass | Dashboard, Jobs, Estimates, Invoices, Calendar, Contacts, all five Supply tabs, Finances, Settings, Automations, Reputation, Website, Social, AI Team, Employees, Subs. No sideways scrolling and no page errors at either width. **Fixed:** the desktop said "Projects" where the phone says "Jobs". Sidebar, page title, dashboard and crew screens now all say Jobs (166f520, 73202bb). |
+| Homeowner account | Pass | My projects → Kitchen remodel. Home, Schedule, Photos, Pay, Messages and More (Documents, Changes) all load. A message reached the owner's Customer tab, and the thread shows it after about 1.5s. |
+| Crew | Pass | Clock in on a job, add a photo (shows on the job), clock out with two taps. The 0.07h punch showed in the owner's Hours and Pay period ($2.24). **Polish:** Hours now shows "Sat, Oct 24" instead of "2026-10-24" (73202bb). Phases are view-only for crew, so job-step check-off is owner-side only. |
+| "Automatic messages: On" without HighLevel | Fixed | Job sheet now says "Not set up yet" until HighLevel is connected (deb501c, verified on plan299). |
+| Cleanup | Done | Removed: plan299 "Fence repair (sample)" job, contact, both receipts, order list, purchase order and example suppliers; its homeowner link was turned off and the change orders voided. AZ Test: "Round3 Customer (sample)", "AZ Contact (sample)", both sample jobs, the to-do and the inspection note. Owner account: the crew test punch, the test photo and the two homeowner test messages. |
+
+**Left as is (noted, not fixed):**
+- The sub's "Add 2 extra outlets in the pantry (sample)" change order and $100 invoice stay on the owner test account's Kitchen remodel. Removing them would also change the sub's records.
+- Older "(sample)" estimates and jobs on the plan199 account and two other test owners come from earlier rounds; most are already void. Say if you want them removed.
+- Pages call the HighLevel functions even when HighLevel isn't connected, which returns 403 in the background (nothing visible).
+- The dashboard asks for a `conversations` table that doesn't exist (404). The unread-texts count just stays 0.
+- The Website page calls a `google-analytics` function that isn't deployed. The page falls back to the snippet view as designed.
+- Reopening Order materials starts a blank list. Your earlier list is under "Open a list you started".
