@@ -75,9 +75,9 @@
   /* ---------- the account sheet ---------- */
   function sheet(force) {
     if (C.shown || C.me || document.getElementById('bpclSheet')) return;
-    /* never over someone typing or signing: try again a little later */
     var a = document.activeElement;
-    if (!force && ((a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) || Date.now() - (C.drawAt || 0) < 15000)) { C.timer = setTimeout(function () { sheet(false); }, 8000); return; }
+    /* never over someone typing, signing, or on a screen with a signature pad (a change order to approve) */
+    if (!force && ((a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) || Date.now() - (C.drawAt || 0) < 15000 || document.getElementById('sgPad'))) { C.timer = setTimeout(function () { sheet(false); }, 8000); return; }
     C.shown = true; C.mode = 'up'; C.err = '';
     var bar = document.getElementById('bpclBar'); if (bar) bar.hidden = true;
     var d = document.createElement('div'); d.id = 'bpclSheet'; d.className = 'bpcl-ov'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-labelledby', 'bpclH');
