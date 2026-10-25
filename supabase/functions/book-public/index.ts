@@ -66,6 +66,8 @@ const locTokenCache: Record<string, string> = {};
 async function locationToken(locationId: string): Promise<string> {
   if (!locationId) return GHL_TOKEN || GHL_API_KEY;
   if (locTokenCache[locationId]) return locTokenCache[locationId];
+  /* the client's own key, saved from the Command Center (ghl_keys) */
+  try { const k = (await (await fetch(`${SB_URL}/rest/v1/ghl_keys?location_id=eq.${encodeURIComponent(locationId)}&select=token`, { headers: sbHeaders })).json())?.[0]?.token; if (k) { locTokenCache[locationId] = k; return k; } } catch { /* none */ }
   const perLoc = Deno.env.get("GHL_TOKEN_" + locationId);
   if (perLoc) { locTokenCache[locationId] = perLoc; return perLoc; }
   try {
