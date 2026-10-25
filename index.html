@@ -20084,7 +20084,7 @@ function bpFinCloudPushNow(){
     var d=r&&r.data; if(!d) return;
     /* tombstones the server now has can go */
     var g=bpGoneGet(); Object.keys(gone).forEach(function(k){ if(g[k]===gone[k]) delete g[k]; }); bpGoneSave(g);
-    var j=bpAdopt('jobs',bpJobsGet(),d.jobs,g), f=bpAdopt('fin',bpFinGet(),d.fin,g);
+    var sg=Object.assign({},d.gone||{},g), j=bpAdopt('jobs',bpJobsGet(),d.jobs,sg), f=bpAdopt('fin',bpFinGet(),d.fin,sg);
     if(j){ _bpJobs=j; bpSnapTake('jobs',j); try{localStorage.setItem('bpJobs',JSON.stringify(j));}catch(e){} }
     if(f){ _bpFin=f; bpSnapTake('fin',f); try{localStorage.setItem('bpFin',JSON.stringify(f));}catch(e){} }
     if(j||f){ try{ window.dispatchEvent(new CustomEvent('bp-data-merged',{detail:{jobs:!!j,fin:!!f}})); }catch(e){} }
