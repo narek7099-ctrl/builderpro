@@ -1482,7 +1482,7 @@
     var L = SP.list; if (!L) return;
     var lines = (L.items || []).filter(function (i) { return String(i.name).trim() && +i.qty > 0; }).map(function (i) { return { key: i.key, name: i.name, qty: +i.qty, unit: i.unit }; });
     if (!lines.length) { alert('Add at least one item with a quantity.'); return; }
-    if (!SP.sup.length) { alert('Add a supply house first, on Where I buy. Then the order has somewhere to go.'); return; }
+    if (!SP.sup.length) { alert('Add a supply house first on the Suppliers tab. Then the order has somewhere to go.'); return; }
     SP.plans = { fastest: plan(lines, 'fastest'), cheapest: plan(lines, 'cheapest'), lines: lines };
     if (L.status === 'draft') { L.status = 'sourced'; db.update('parts_lists', L.id, { status: 'sourced' }).catch(function () {}); }
     window.bpSupply();
