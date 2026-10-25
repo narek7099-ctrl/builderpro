@@ -1103,3 +1103,25 @@
 #bpx.bpx-dark .pjl,#bpx.bpx-dark .pjl-b,#bpx.bpx-dark .pjl-pg button{background:#141b2b;border-color:#262f45;color:#e6e9f0}
 #bpx.bpx-dark .pjl-r{border-color:#262f45}#bpx.bpx-dark .pjl-r:hover{background:#18213a}
 @media (min-width:821px){#bpx .ml-rows .pjl-r{grid-template-columns:40px minmax(0,2.2fr) minmax(0,1fr) minmax(0,1.3fr) auto}}
+
+/* ---------- calendar, simpler (2026-10) ----------
+   Day and Week put the calendar first; the To-dos and Upcoming lists follow
+   it, and an empty list isn't drawn at all. The colour key sits under the
+   calendar instead of between the controls. */
+#bpx .cal-layout.cal-v-day>.cal-side,#bpx .cal-layout.cal-v-week>.cal-side{order:1}
+#bpx .cal-v-day .cal-side>.bpx-panel:has(.cal-empty),#bpx .cal-v-week .cal-side>.bpx-panel:has(.cal-empty),
+#bpx .cal-side>.bpx-panel:has(#bpx-todos:empty),#bpx .cal-side>.bpx-panel:has(#bpx-upnext:empty){display:none}
+#bpx .cal-key{margin:12px 2px 0;gap:14px}
+#bpx .cal-key .cal-hint{margin-left:auto}
+#bpx .cal-top{margin-bottom:10px}
+#bpx .cal-crews{margin:0 0 12px}
+/* day: the week as seven even tiles, no sideways scrolling */
+#bpx .cd-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;overflow:visible;padding-bottom:0}
+#bpx .cd-chip{width:auto;min-width:0;padding:8px 0 7px}
+#bpx .cd-head{margin-bottom:14px}
+#bpx .cd-date{text-align:left;min-width:0;padding:0 4px}
+#bpx .cd-free button{border:0;background:none;color:var(--blue);font:inherit;font-weight:600;cursor:pointer;padding:0 2px}
+#bpx .cd-foot{border-top:1px solid var(--line);padding-top:12px}
+/* week: one quiet header line */
+#bpx .cw-top{margin-bottom:10px}
+#bpx .cw-cap{font-weight:600;color:var(--grey)}
