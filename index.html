@@ -17843,10 +17843,9 @@ function bpCalUnsched(){
              +'<button onclick="bpCalAddClose();bpNoteOpen()"><span class=ms>sticky_note_2</span><span><b>Note or to-do</b><small>A reminder for you or your team</small></span></button></div></details>'
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
-      +(all?'<div class="cal-legend"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut" style="margin-left:auto">'+(_bpCalView==='week'?'Drag a box to move it · click an empty slot to write a note or a to-do':'Tap any day to see it or add to it')+'</span></div>':'')
       +((all||jobs)?bpCalCrewBar():'')
       +((all||jobs)?bpCalUnsched():'')
-      +'<div class="cal-layout">'
+      +'<div class="cal-layout cal-v-'+_bpCalView+'">'
       +(_bpCalView==='day'
         ? '<div class="bpx-panel cal-panel"><div id="bpx-dayview" class="cd-wrap"></div></div>'
         : _bpCalView==='week'
@@ -17856,7 +17855,8 @@ function bpCalUnsched(){
       +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
       +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-todos"></div></div>':'')
       +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-upnext"></div></div>'
-      +'</div></div>';
+      +'</div></div>'
+      +(all?'<div class="cal-legend cal-key"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut cal-hint">'+(_bpCalView==='week'?'Drag a box to move it. Click an empty slot to add a note or to-do.':_bpCalView==='day'?'Tap a block to open it.':'Tap any day to see it or add to it.')+'</span></div>':'');
     bpLoadCalendar();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
     if(all){ bpNotesLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
@@ -17956,9 +17956,9 @@ function bpCalUnsched(){
     var workable=Math.max(60,(hrs.to?bpMins(hrs.to):17*60)-(hrs.from?bpMins(hrs.from):8*60));
     var pct=Math.min(100,Math.round(booked/workable*100));
 
-    /* the strip: a fortnight to jump around in without leaving the day */
-    var strip=''; var s0=new Date(iso+'T12:00:00'); s0.setDate(s0.getDate()-3);
-    for(var i=0;i<14;i++){
+    /* the strip: the selected day's week, Sunday to Saturday, to jump around in */
+    var strip=''; var s0=new Date(iso+'T12:00:00'); s0.setDate(s0.getDate()-s0.getDay());
+    for(var i=0;i<7;i++){
       var dd2=new Date(s0); dd2.setDate(s0.getDate()+i); var k=bpIso(dd2);
       var n=bpDayItems(k).length;
       strip+='<button class="cd-chip'+(k===iso?' on':'')+(k===today?' today':'')+'" onclick="bpDayPick(\''+k+'\')">'
@@ -17988,7 +17988,7 @@ function bpCalUnsched(){
         +'<div class="cd-nav"><button onclick="bpDayMove(-1)" aria-label="Previous day"><span class=ms>chevron_left</span></button>'
         +'<div class="cd-date"><b>'+d.toLocaleDateString('en-US',{weekday:'long'})+'</b><span>'+d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+(iso===today?' · today':'')+'</span></div>'
         +'<button onclick="bpDayMove(1)" aria-label="Next day"><span class=ms>chevron_right</span></button></div>'
-        +'<div class="cd-cap"><div class="cd-cap-t"><b>'+(booked?Math.round(booked/60*10)/10+'h booked':'Nothing booked')+'</b><span>'+(hrs.open===false?'closed today':'of about '+Math.round(workable/60)+'h')+'</span></div>'
+        +'<div class="cd-cap"><div class="cd-cap-t"><b>'+(hrs.open===false?'Closed':booked?Math.round(booked/60*10)/10+'h booked':'Wide open')+'</b><span>'+(hrs.open===false?'not a work day':booked?'of '+Math.round(workable/60)+'h':Math.round(workable/60)+'h to fill')+'</span></div>'
         +'<div class="cd-cap-bar"><i style="width:'+pct+'%"></i></div></div>'
       +'</div>'
       +'<div class="cd-strip">'+strip+'</div>'
@@ -17996,7 +17996,7 @@ function bpCalUnsched(){
           return '<div class="cd-ev '+x.kind+(x.done?' done':'')+' flat" style="'+bpCrewCss(x)+'" onclick="'+x.act+'"><b>'+bpEsc(x.title)+'</b><span>'+bpEsc(x.sub)+'</span></div>';
         }).join('')+'</div>':'')
       +'<div class="cd-grid" style="height:'+H+'px">'+lines+nowLine+'<div class="cd-lane">'+blocks+'</div>'
-        +(timed.length?'':'<div class="cd-free">Nothing on the clock. Tap a day above, or add something to this one.</div>')+'</div>'
+        +(timed.length?'':'<div class="cd-free">'+(allDay.length?'No set times today.':'Nothing booked yet.')+' <button type="button" onclick="bpDaySheet(\''+iso+'\',true)">Add something</button></div>')+'</div>'
       +'<div class="cd-foot"><button class="bpx-rowbtn" onclick="bpDaySheet(\''+iso+'\',true)"><span class=ms>add</span> Add to this day</button>'
         +'<button class="bpx-rowbtn" onclick="window._bpApptCal=\'inspection\';bpOpenBook()"><span class=ms>event</span> Book an inspection</button>'
         +'<button class="bpx-rowbtn" onclick="bpCrewBookOpen(\''+iso+'\')"><span class=ms>groups</span> Schedule a crew</button></div>';
@@ -18112,7 +18112,7 @@ function bpCalUnsched(){
         +'<div class="cw-nav"><button onclick="bpWeekMove(-1)" aria-label="Previous week"><span class=ms>chevron_left</span></button>'
         +'<b>'+label+'</b>'
         +'<button onclick="bpWeekMove(1)" aria-label="Next week"><span class=ms>chevron_right</span></button>'
-        +'<button class="cw-tnow" onclick="bpWeekToday()">This week</button></div>'
++'</div>'
         +'<div class="cw-cap">'+(weekBooked?Math.round(weekBooked/60)+'h booked this week':'Nothing booked this week')+'</div>'
       +'</div>'
       +'<div class="cw-heads">'+heads+'</div>'
@@ -18458,7 +18458,7 @@ function bpCalUnsched(){
   window.bpCalMove=function(d){ _bpCalDate.setMonth(_bpCalDate.getMonth()+d); bpDrawCalendar(); };
 
 /* ==== bpCalToday ==== */
-  window.bpCalToday=function(){ _bpCalDate=new Date(); bpDrawCalendar(); };
+  window.bpCalToday=function(){ _bpCalDate=new Date(); if(typeof _bpDaySel!=='undefined') _bpDaySel=bpIso(new Date()); bpDrawCalendar(); };
 
 /* ==== bpLoadCalendar ==== */
   async function bpLoadCalendar(){
@@ -18477,8 +18477,8 @@ function bpCalUnsched(){
 
 /* ==== bpDrawCalendar ==== */
   function bpDrawCalendar(){
-    if(_bpCalView==='day'){ bpDrawDay(); return; }
-    if(_bpCalView==='week'){ bpDrawWeek(); return; }
+    if(_bpCalView==='day'){ bpDrawDay(); bpCalSide(); return; }
+    if(_bpCalView==='week'){ bpDrawWeek(); bpCalSide(); return; }
     var mn=['January','February','March','April','May','June','July','August','September','October','November','December'];
     var y=_bpCalDate.getFullYear(), m=_bpCalDate.getMonth();
     q('bpx-calmonth').textContent=mn[m]+' '+y;
@@ -18511,6 +18511,12 @@ function bpCalUnsched(){
     }
     html+='</div>';
     q('bpx-calgrid').innerHTML=html;
+    bpCalSide();
+  }
+  /* Upcoming and To-dos sit beside every view (month, week and day) */
+  function bpCalSide(){
+    var all=_bpCalKind==='all';
+    if(!q('bpx-upnext')) return;
     // upcoming list (future only)
     var now=Date.now(); var up=_bpEvents.filter(function(e){ return new Date(e.start).getTime()>=now-3600000; });
     /* visits booked by hand (a note with a time) count as upcoming too */
@@ -27861,7 +27867,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261020b">
 <link rel="stylesheet" href="portal/progress.css?v=20261021a">
 <link rel="stylesheet" href="portal/supply.css?v=20261025c6">
-<link rel="stylesheet" href="portal/dash.css?v=20261012crst">
+<link rel="stylesheet" href="portal/dash.css?v=20261025e1">
 <link rel="stylesheet" href="portal/team.css?v=20261025a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261103a"></script>
@@ -27931,7 +27937,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261020a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261024q43">
+<link rel="stylesheet" href="portal/mobile.css?v=20261025e1">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261024q36"></script>
 <script src="portal/shell.js?v=20261024q02"></script>

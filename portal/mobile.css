@@ -513,3 +513,38 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* a lock on + sheet and Home tiles for things not on the plan */
 #bpx .bp-create-big button,#bpx .mh2-tile{position:relative}#bpx .bp-lk{position:absolute;top:10px;right:10px;font-size:17px !important;color:#98A2B3 !important}#bpx .bp-create-list button .bp-lk{position:static;margin-left:auto}
+/* calendar on a phone: filters on one line, then Day/Week/Month with Today and Add beside it,
+   so the calendar starts near the top of the screen */
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-top{display:grid !important;grid-template-columns:minmax(0,1fr) auto !important;align-items:center !important;gap:8px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-tabs{grid-column:1/-1}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left{display:contents !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-tabs{flex:1 1 100% !important;order:0}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view{flex:1 1 0 !important;order:1;min-width:0}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view .bpx-jt .ms{display:none}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts{order:2;flex:0 0 auto !important;margin:0 !important;padding:0 !important;overflow:visible !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts .cal-today{padding:9px 11px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-crews{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 0 10px;padding:0}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-crews::-webkit-scrollbar{display:none}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-crews>*{flex:0 0 auto}
+/* week: seven columns that line up with their day headings (no sideways scroll under fixed headings) */
+#bpx#bpx#bpx#bpx#bpx.bp-m .cw-grid{min-width:0 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cw-ev{padding:3px 4px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cw-ev b{font-size:10.5px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cw-ev span{display:none}
+/* day: the strip tiles fit seven across */
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-strip{display:grid !important;grid-template-columns:repeat(7,minmax(0,1fr)) !important;gap:4px !important;overflow:visible !important;padding:0 0 4px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-chip{width:auto !important;min-width:0 !important;min-height:64px !important;padding:8px 0 6px !important;border-radius:12px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-chip b{font-size:18px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-chip small{font-size:11px !important}
+/* day header: arrows and the date on one line, how full the day is under it */
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-head{flex-wrap:wrap;gap:10px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-nav{flex:1 1 100%;min-width:0}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-date{flex:1 1 auto;min-width:0;text-align:center}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-date b{font-size:18px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-cap{flex:1 1 100%}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cd-cap-t{justify-content:flex-start}
+/* Day / Week / Month, Today and Add share one row, still glove-sized */
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view{display:flex !important;overflow:visible !important;width:auto !important;max-width:none !important;margin:0 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-left>.cal-view .bpx-jt{flex:1 1 0;min-width:0;justify-content:center;padding:0 6px !important;font-size:14.5px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts{gap:6px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts .bpx-btn,#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts summary.bpx-btn{padding:0 12px !important;min-height:48px}
