@@ -88,7 +88,8 @@
     (root || document).querySelectorAll('img[data-pf]:not([data-pf-done])').forEach(function (im) {
       var ref = im.getAttribute('data-pf'); im.setAttribute('data-pf-done', '1');
       if (!PF.isRef(ref)) { if (!im.getAttribute('src')) im.src = ref; return; }
-      PF.url(ref).then(function (u) { if (u) im.src = u; });
+      /* a file that's gone (deleted, or never finished uploading) shows as a plain tile, not a broken image */
+      PF.url(ref).then(function (u) { if (u) { im.onerror = function () { im.classList.add('pf-gone'); im.removeAttribute('src'); }; im.src = u; } else im.classList.add('pf-gone'); }, function () { im.classList.add('pf-gone'); });
     });
   }
   PF.hydrate = hydrate;
