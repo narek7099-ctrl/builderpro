@@ -10,6 +10,11 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 **Found and fixed:**
 - Run 1: the AZ account said "trial" with no Stripe subscription, so the "Add a card" banner never showed. The app now treats a trial with a checkout link but no subscription as "card needed" (fixed by the cloud session, 4f93533). Confirmed in run 2: the banner shows.
 
+**Needs the owner (Stripe setting):**
+- The second webhook, "Connected Accounts" (`.../functions/v1/stripe-webhook`), shows **Events from: Your account**. It has to be **Connected accounts**, or homeowners' card payments to a contractor's own Stripe never reach BuilderPro (the invoice wouldn't be marked paid). Fix: Stripe → Workbench → Webhooks → Add destination → Events from **Connected accounts**, same URL, events `checkout.session.completed`, `payment_intent.succeeded`, `account.updated`. Put its new `whsec_…` in Supabase as `STRIPE_WEBHOOK_SECRET`, then delete the old "Connected Accounts" destination. (Events from can't be changed on an existing destination.)
+
+**Checked while waiting (read-only):** Stripe has exactly one customer for narek7099+az2@gmail.com ("AZ Test Roofing (sample)"), total spend $0.00 USD. Both webhook destinations are Active with a 0% error rate.
+
 ## Part A: start the subscription (AZ Test Roofing)
 | Step | Result | Notes |
 |---|---|---|
