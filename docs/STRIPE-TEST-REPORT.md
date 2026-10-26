@@ -1,26 +1,48 @@
-# BuilderPro Stripe test
+# BuilderPro Stripe test: final report
 
-Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIPE-TEST-PROMPT.md`, pick-up notes: `docs/STRIPE-TEST-CONTINUE.md`. Claude never typed a card or pressed Pay / Start trial; the owner did those steps.
+Run: Oct 25–26, 2026, in the owner's Chrome, Stripe in **live mode**. Plan: `docs/STRIPE-TEST-PROMPT.md`, pick-up notes: `docs/STRIPE-TEST-CONTINUE.md`. Claude never typed a card, an ID or a secret, and never pressed Pay / Start trial or agreed to terms; the owner did those steps.
 
-## Summary
-(in progress)
+## Result: pass, $0.00 charged
 
-**Run 2 (Oct 25–26): Parts A, B and C pass. Total charged: $0.00.** The owner started the trial; Stripe had one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200 every time, the "Add a card" banner went away, and plan/add-on changes reached Stripe. The owner then cancelled immediately; the account shows `cancelled`. Part D passes after the owner activated Stripe Connect.
+| Part | What was tested | Result |
+|---|---|---|
+| A | "Add a card" banner → live checkout → 14-day trial starts | Pass |
+| B | Plan changes (Enterprise → OS → Enterprise) and Website add-on on/off during the trial | Pass |
+| C | Cancel in Stripe; app shows cancelled | Pass |
+| D | Contractor "Connect with Stripe" on Payouts (look only) | Pass, after Connect was turned on |
 
-**Done Oct 26:** new destination "Contractor payments (Connect)" (Events from: Connected accounts, same URL and 3 events) created; owner saved its secret as STRIPE_WEBHOOK_SECRET. Old "Connected Accounts" destination deleted by the owner; Stripe now has exactly two: "Contractor payments (Connect)" (Connected accounts) and "BuilderPro billing" (Your account). **Owner to-do:** check Stripe → Customer emails so $0 trial invoices don't email receipts.
+- **Money:** the only test customer (AZ Test Roofing (sample)) has total spend **$0.00**. 5 invoices, all $0.00. Subscription cancelled Oct 26, 2:24 AM UTC.
+- **Billing webhook:** 6 deliveries this run, all 200 OK (1 checkout, 4 updated, 1 deleted).
 
-**Found and fixed:**
-- Run 1: the AZ account said "trial" with no Stripe subscription, so the "Add a card" banner never showed. The app now treats a trial with a checkout link but no subscription as "card needed" (fixed by the cloud session, 4f93533). Confirmed in run 2: the banner shows.
-- Run 2: after checkout the account kept the trial end date from signup (Nov 6) while Stripe said Nov 9, so Plan & billing showed "12 days left" until the first plan change. `billing-webhook` now restarts the 14-day clock on `checkout.session.completed`. Deployed Oct 26 (billing-webhook v15, JWT check still off; an unsigned request still gets 400).
-- Run 2: Plan & billing showed $299 with the Website add-on on (the account had $348). The price now includes add-ons.
-- Run 2: the locked AI Team card said "Only on Enterprise." twice. Fixed.
+## Fixed during the test
+| Problem | Fix | Where |
+|---|---|---|
+| A trial with no Stripe subscription never showed the "Add a card" banner (run 1) | Treated as "card needed" | App, 4f93533 |
+| After checkout the app kept the trial end from signup (Nov 6) while Stripe said Nov 9 ("12 days left" instead of 14) | The 14 days now start at checkout | `billing-webhook`, **deployed** (v15; JWT check still off; an unsigned request gets 400) |
+| Plan & billing showed $299 with the $49 Website add-on on | Price includes add-ons | App |
+| Locked AI Team card said "Only on Enterprise." twice | Said once | App |
+| Payouts showed Stripe's raw "sign up for Connect" error to contractors | Plain message: "Card payments are being switched on for BuilderPro. Check back shortly." | App |
 
-**Note:** every plan or add-on change during the trial makes a $0.00 Stripe invoice (4 in this run). Harmless, but if Stripe emails receipts these could look like spam to customers. Worth checking Settings → Customer emails → "Successful payments".
+All app fixes are on `main` and the branch.
 
-**Needs the owner (Stripe setting):**
-- The second webhook, "Connected Accounts" (`.../functions/v1/stripe-webhook`), shows **Events from: Your account**. It has to be **Connected accounts**, or homeowners' card payments to a contractor's own Stripe never reach BuilderPro (the invoice wouldn't be marked paid). Fix: Stripe → Workbench → Webhooks → Add destination → Events from **Connected accounts**, same URL, events `checkout.session.completed`, `payment_intent.succeeded`, `account.updated`. Put its new `whsec_…` in Supabase as `STRIPE_WEBHOOK_SECRET`, then delete the old "Connected Accounts" destination. (Events from can't be changed on an existing destination.)
+## Stripe setup changed
+- **Connect turned on** (owner). Sellers collect payments directly; Stripe-hosted onboarding; sellers use their own Stripe Dashboard; **Stripe, not BuilderPro, is liable for negative balances** (the first answers had BuilderPro liable; corrected before the owner confirmed). Owner verified ID and accepted the Connect Platform Agreement.
+- **Webhooks**, now exactly two, both Active:
 
-**Checked while waiting (read-only):** Stripe has exactly one customer for narek7099+az2@gmail.com ("AZ Test Roofing (sample)"), total spend $0.00 USD. Both webhook destinations are Active with a 0% error rate.
+| Destination | Events from | URL | Events |
+|---|---|---|---|
+| Contractor payments (Connect) | Connected accounts | `.../functions/v1/stripe-webhook` | `checkout.session.completed`, `payment_intent.succeeded`, `account.updated` |
+| BuilderPro billing | Your account | `.../functions/v1/billing-webhook` | `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` |
+
+  The old "Connected Accounts" destination (wrongly set to Your account) was deleted. The owner put the new destination's secret in Supabase as `STRIPE_WEBHOOK_SECRET`.
+
+## Still open
+- **Receipt emails (owner's choice):** every plan change during a trial makes a $0.00 invoice. If Stripe → Settings → Customer emails → "Successful payments" is on, customers get a $0 receipt each time.
+- **First real contractor payment:** the Connect webhook has had no events yet. When a homeowner first pays an invoice by card, check that the invoice turns paid; if not, look at that destination's Event deliveries.
+- **Command Center** wasn't opened (needs the owner's sign-in). It reads the same account status the test checked (`trial`, then `cancelled`).
+- **Test leftovers (harmless):** AZ Test's cancelled subscription; an empty, unfinished connected account for plan299; a few extra "BuilderPro …" products in Stripe made by plan changes.
+
+---
 
 ## Part A: start the subscription (AZ Test Roofing)
 | Step | Result | Notes |
