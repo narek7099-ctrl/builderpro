@@ -7,11 +7,11 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 
 **Run 2 (Oct 25–26): Parts A, B and C pass. Total charged: $0.00.** The owner started the trial; Stripe had one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200 every time, the "Add a card" banner went away, and plan/add-on changes reached Stripe. The owner then cancelled immediately; the account shows `cancelled`. Part D failed on a Stripe setting: Connect isn't activated on the live account (see Part D).
 
-**Owner to-do:** (1) finish Stripe Connect signup, (2) redeploy `billing-webhook`, (3) re-create the Connected Accounts webhook with Events from = Connected accounts, (4) check Stripe → Customer emails so $0 trial invoices don't email receipts.
+**Owner to-do:** (1) finish Stripe Connect signup, (3) re-create the Connected Accounts webhook with Events from = Connected accounts, (4) check Stripe → Customer emails so $0 trial invoices don't email receipts.
 
 **Found and fixed:**
 - Run 1: the AZ account said "trial" with no Stripe subscription, so the "Add a card" banner never showed. The app now treats a trial with a checkout link but no subscription as "card needed" (fixed by the cloud session, 4f93533). Confirmed in run 2: the banner shows.
-- Run 2: after checkout the account kept the trial end date from signup (Nov 6) while Stripe said Nov 9, so Plan & billing showed "12 days left" until the first plan change. `billing-webhook` now restarts the 14-day clock on `checkout.session.completed`. **Needs a deploy of `billing-webhook`** (not deployed from the Chrome session).
+- Run 2: after checkout the account kept the trial end date from signup (Nov 6) while Stripe said Nov 9, so Plan & billing showed "12 days left" until the first plan change. `billing-webhook` now restarts the 14-day clock on `checkout.session.completed`. Deployed Oct 26 (billing-webhook v15, JWT check still off; an unsigned request still gets 400).
 - Run 2: Plan & billing showed $299 with the Website add-on on (the account had $348). The price now includes add-ons.
 - Run 2: the locked AI Team card said "Only on Enterprise." twice. Fixed.
 
