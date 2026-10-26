@@ -23500,6 +23500,8 @@ window.bpPayConnect=function(btn){
   Promise.resolve(bpAuthApi(STRIPE_CONNECT_URL,{op:'link'})).then(function(r){
     _bpPay.busy=false;
     if(r&&r.url){location.href=r.url;return;}
+    /* Stripe's "sign up for Connect" error is about BuilderPro's own Stripe, not the contractor's */
+    if(r&&/signed up for Connect/i.test(r.error||r.detail||''))r={reason:'not_configured'};
     _bpPay.flash=(r&&(r.error||(r.reason==='not_configured'?'Card payments are being switched on for BuilderPro. Check back shortly.':r.detail)))||'Stripe could not be opened. Try again.';_bpPay.flashOk=false;bpPayRender();
   },function(){_bpPay.busy=false;_bpPay.flash='Stripe could not be opened. Try again.';_bpPay.flashOk=false;bpPayRender();});
 };
