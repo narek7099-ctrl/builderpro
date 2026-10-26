@@ -550,3 +550,11 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts .bpx-btn,#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts summary.bpx-btn{padding:0 12px !important;min-height:48px}
 /* month on a phone: the month first, the lists under it */
 #bpx#bpx#bpx#bpx#bpx.bp-m .cal-layout>.cal-side{order:1}
+/* sticky tab rows: the edge fade used a mask, which also faded the bar's own background, so the page
+   showed through behind the tabs while scrolling. Keep the bar solid; a soft edge shadow says "more this way" */
+#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-more,#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs.bp-less{-webkit-mask-image:none !important;mask-image:none !important;
+  background:linear-gradient(90deg,var(--card,#fff) 30%,rgba(255,255,255,0)) left center/36px 100% no-repeat local,
+    linear-gradient(270deg,var(--card,#fff) 30%,rgba(255,255,255,0)) right center/36px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%,rgba(15,23,42,.16),transparent) left center/12px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%,rgba(15,23,42,.16),transparent) right center/12px 100% no-repeat scroll,
+    var(--card,#fff) !important}
