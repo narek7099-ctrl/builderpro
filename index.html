@@ -16367,7 +16367,8 @@ function bpPlanInfo(){
   var m={trial:['Free trial','ok','Free trial, '+days+' day'+(days===1?'':'s')+' left. Billed monthly after that, cancel any time.'],
     checkout:['Card needed','warn','Add a card to keep your free trial going.'],past_due:['Payment due','warn','Your last payment did not go through. Update your card to keep your account running.'],
     cancelled:['Cancelled','warn','Your plan is canceled.'],active:['Active','ok','Billed monthly, cancel any time.']}[st]||['Active','ok','Billed monthly, cancel any time.'];
-  return {name:pl.name,price:pl.price,label:m[0],badge:m[1],note:m[2],status:st};
+  var ad=(a.profile||{}).addons||{}, extra=(ad.website?49:0)+(ad.ai&&a.plan!=='enterprise'?49:0);
+  return {name:pl.name,price:pl.price+extra,label:m[0],badge:m[1],note:m[2],status:st};
 }
 async function bpAcctLoad(){
   if(!BP_LIVE)return;
@@ -25850,7 +25851,7 @@ function bpSettings(){
       return '<div class="st-plan-card"><b>'+P.name+'</b><p>$'+P.price+' / month · '+P.min+' call minutes</p>'+(me?'<span class="bpx-badge ok">Your plan</span>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\''+k+'\')">'+(P.price>BP_PLANS[_pk].price?'Upgrade':'Switch')+'</button>')+'</div>';}).join('')+'</div>'
     +'<div class="st-plan-row">'+[['ai','AI Team','Sales, marketing and office assistants, plus a 7am brief. Only on Enterprise.'],['website','Website','We build and host your site, with your calculator, booking page and '+BP_AI_NAME+' built in.']].map(function(a){
       var inc=a[0]==='ai'&&_pk==='enterprise', on=inc||_ad[a[0]]||(a[0]==='ai'&&(window._bpAcct||{}).ai_addon==='active');
-      if(a[0]==='ai'&&!inc) return '<div class="st-plan-card st-plan-lock"><b><span class="ms" style="font-size:16px;vertical-align:-3px;color:#98a2b3">lock</span> '+a[1]+'</b><p>'+a[2]+' Only on Enterprise.</p><button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\'enterprise\')">Upgrade to Enterprise</button></div>';
+      if(a[0]==='ai'&&!inc) return '<div class="st-plan-card st-plan-lock"><b><span class="ms" style="font-size:16px;vertical-align:-3px;color:#98a2b3">lock</span> '+a[1]+'</b><p>'+a[2]+'</p><button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\'enterprise\')">Upgrade to Enterprise</button></div>';
       return '<div class="st-plan-card"><b>'+a[1]+'</b><p>'+a[2]+'</p>'+(inc?'<span class="bpx-badge ok">Included</span>':on?'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':false})">Remove · $49/mo</button>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':true})">Add for $49/mo</button>')+'</div>';}).join('')+'</div>';
 
   q('bpxViewArea').innerHTML=

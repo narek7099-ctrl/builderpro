@@ -11,6 +11,7 @@
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const WH = Deno.env.get("STRIPE_BILLING_WEBHOOK_SECRET") ?? "";
+const TRIAL_DAYS = Number(Deno.env.get("TRIAL_DAYS") ?? "14");
 const sb = (path: string, init: RequestInit = {}) =>
   fetch(`${SB_URL}/rest/v1/${path}`, { ...init, headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", ...(init.headers ?? {}) } });
 
@@ -39,7 +40,8 @@ Deno.serve(async (req) => {
     const st = ev.type.endsWith("deleted") ? "cancelled" : ({ trialing: "active", active: "active", past_due: "past_due", unpaid: "past_due", canceled: "cancelled", incomplete_expired: "cancelled" } as Record<string, string>)[o.status] ?? o.status;
     await patch(o.metadata?.user_id, { ai_addon: st, ai_addon_sub_id: o.id });
   } else if (ev.type === "checkout.session.completed" && o.mode === "subscription") {
-    await patch(o.client_reference_id || o.metadata?.user_id, { status: "trial", stripe_subscription_id: o.subscription ?? "", stripe_customer_id: o.customer ?? "", checkout_url: "" });
+    // the trial clock starts at checkout, not at signup
+    await patch(o.client_reference_id || o.metadata?.user_id, { status: "trial", trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 864e5).toISOString(), stripe_subscription_id: o.subscription ?? "", stripe_customer_id: o.customer ?? "", checkout_url: "" });
   } else if (ev.type === "customer.subscription.updated" || ev.type === "customer.subscription.deleted") {
     const uid = o.metadata?.user_id;
     const body: Record<string, unknown> = { status: ev.type.endsWith("deleted") ? "cancelled" : (STATUS[o.status] ?? o.status), stripe_subscription_id: o.id };
