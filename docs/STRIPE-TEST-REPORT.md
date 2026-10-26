@@ -7,7 +7,7 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 
 **Run 2 (Oct 25–26): Parts A, B and C pass. Total charged: $0.00.** The owner started the trial; Stripe had one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200 every time, the "Add a card" banner went away, and plan/add-on changes reached Stripe. The owner then cancelled immediately; the account shows `cancelled`. Part D passes after the owner activated Stripe Connect.
 
-**Done Oct 26:** new destination "Contractor payments (Connect)" (Events from: Connected accounts, same URL and 3 events) created; owner saved its secret as STRIPE_WEBHOOK_SECRET. **Owner to-do:** delete the old "Connected Accounts" destination (Events from: Your account), and check Stripe → Customer emails so $0 trial invoices don't email receipts.
+**Done Oct 26:** new destination "Contractor payments (Connect)" (Events from: Connected accounts, same URL and 3 events) created; owner saved its secret as STRIPE_WEBHOOK_SECRET. Old "Connected Accounts" destination deleted by the owner; Stripe now has exactly two: "Contractor payments (Connect)" (Connected accounts) and "BuilderPro billing" (Your account). **Owner to-do:** check Stripe → Customer emails so $0 trial invoices don't email receipts.
 
 **Found and fixed:**
 - Run 1: the AZ account said "trial" with no Stripe subscription, so the "Add a card" banner never showed. The app now treats a trial with a checkout link but no subscription as "card needed" (fixed by the cloud session, 4f93533). Confirmed in run 2: the banner shows.
