@@ -5,9 +5,9 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 ## Summary
 (in progress)
 
-**Run 2 (Oct 25–26): Parts A, B and C pass. Total charged: $0.00.** The owner started the trial; Stripe had one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200 every time, the "Add a card" banner went away, and plan/add-on changes reached Stripe. The owner then cancelled immediately; the account shows `cancelled`. Part D failed on a Stripe setting: Connect isn't activated on the live account (see Part D).
+**Run 2 (Oct 25–26): Parts A, B and C pass. Total charged: $0.00.** The owner started the trial; Stripe had one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200 every time, the "Add a card" banner went away, and plan/add-on changes reached Stripe. The owner then cancelled immediately; the account shows `cancelled`. Part D passes after the owner activated Stripe Connect.
 
-**Owner to-do:** (1) finish Stripe Connect signup, (3) re-create the Connected Accounts webhook with Events from = Connected accounts, (4) check Stripe → Customer emails so $0 trial invoices don't email receipts.
+**Owner to-do:** (3) re-create the Connected Accounts webhook with Events from = Connected accounts, (4) check Stripe → Customer emails so $0 trial invoices don't email receipts.
 
 **Found and fixed:**
 - Run 1: the AZ account said "trial" with no Stripe subscription, so the "Add a card" banner never showed. The app now treats a trial with a checkout link but no subscription as "card needed" (fixed by the cloud session, 4f93533). Confirmed in run 2: the banner shows.
@@ -52,5 +52,7 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 | Step | Result | Notes |
 |---|---|---|
 | Finances → Payouts | Pass | "Not connected yet", 3-step explainer, "Connect with Stripe" button. |
-| Connect with Stripe | **Fail (Stripe setting)** | Stripe refused: "You can only create new accounts if you've signed up for Connect". Connect isn't activated on the live BuilderPro Stripe account, so no contractor can take card payments yet. Nothing was created. **Owner:** finish Connect signup at https://dashboard.stripe.com/connect (platform profile, business details), then re-run Part D. |
+| Connect with Stripe (first try) | Fail (Stripe setting) | Stripe refused: Connect was not activated on the live account. |
+| Owner activates Connect | Done | Funds flow: sellers collect payments directly. Onboarding hosted by Stripe; sellers use the Stripe Dashboard; **Stripe is liable for negative balances** (the first answers had the platform liable; corrected before confirming). Owner verified ID and confirmed. |
+| Connect with Stripe (re-run) | Pass | Opened Stripe "Onboard your account" (connect.stripe.com). Closed without filling anything in. Payouts now shows "Stripe needs a few more details" with "Finish on Stripe". An empty, unfinished connected account now exists for plan299 (test). |
 | Error shown to the contractor | Fixed | It showed Stripe's raw text telling the contractor to sign up for Connect. Now shows "Card payments are being switched on for BuilderPro. Check back shortly." |
