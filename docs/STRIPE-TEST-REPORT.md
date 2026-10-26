@@ -5,7 +5,7 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 ## Summary
 (in progress)
 
-**Run 2 (Oct 25–26): Parts A and B pass, waiting on Part C.** The owner started the trial; Stripe has one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200, the "Add a card" banner is gone, and plan/add-on changes reach Stripe. Five Stripe invoices, all $0.00. Part C (owner cancels in Stripe) is still required before the run ends.
+**Run 2 (Oct 25–26): Parts A, B and C pass. Total charged: $0.00.** The owner started the trial; Stripe had one trialing subscription (ends Nov 9, 2026), the billing webhook returned 200 every time, the "Add a card" banner went away, and plan/add-on changes reached Stripe. The owner then cancelled immediately; the account shows `cancelled`. Part D (look only) is next.
 
 **Found and fixed:**
 - Run 1: the AZ account said "trial" with no Stripe subscription, so the "Add a card" banner never showed. The app now treats a trial with a checkout link but no subscription as "card needed" (fixed by the cloud session, 4f93533). Confirmed in run 2: the banner shows.
@@ -39,4 +39,9 @@ Run: Oct 25, 2026, in the owner's Chrome, Stripe in live mode. Plan: `docs/STRIP
 | Money | Pass | 5 invoices, all $0.00 Paid. |
 
 ## Part C: cancel (required)
-Waiting for the owner.
+| Step | Result | Notes |
+|---|---|---|
+| Owner cancels immediately in Stripe | Pass | Subscription "Canceled" Oct 26, 2026, 2:24 AM UTC. |
+| Billing webhook | Pass | `customer.subscription.deleted` 200 OK. All 6 deliveries this run were 200 (1 checkout, 4 updated, 1 deleted). |
+| Account | Pass | status `cancelled`. Command Center reads this status. |
+| Money | Pass | Customer total spend **$0.00**. Nothing was ever charged. |
