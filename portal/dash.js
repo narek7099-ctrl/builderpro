@@ -32,7 +32,6 @@
       { k: 'ai', t: 'Publish what ' + (window.BP_AI_NAME || 'Lisa') + ' knows', s: 'Your services, prices and rules, so the receptionist answers like you would.', done: D.brain === undefined ? null : !!(D.brain && D.brain.published_at), go: 'ai' },
       { k: 'calc', t: 'Set your calculator prices', s: 'The estimator on your website quotes from these.', done: D.calc === undefined ? null : !!D.calc, go: 'calculator' },
       { k: 'job', t: 'Add your first project', s: 'Photos, schedule and costs live on the project.', done: jobs.length > 0, go: 'activejobs' },
-      { k: 'sup', t: 'Photograph a bill from your supply house', s: 'Then we can tell you where each job is cheapest to buy.', done: (window.SP && SP.loaded) ? priced : null, go: 'supply' },
     ];
   }
   function checklist() {
@@ -95,7 +94,7 @@
         + k('Materials', String(waiting), waiting ? 'waiting on you' : 'nothing waiting', 'supplyorders', waiting ? 'warn' : '');
     return '<div class="dash-hero">'
       + '<div class="hero-top"><div><div class="hero-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div><div class="hero-line">' + esc(line) + '</div></div>'
-      + '<button class="hero-cta" onclick="bpNav(\'matlists\')"><span class="ms">add</span>Order materials</button></div>'
+      + '<button class="hero-cta" onclick="bpNav(\'matlists\')"><span class="ms">add</span>Order lists</button></div>'
       + '<div class="hero-ks">' + nums + '</div></div>';
   }
 
@@ -414,7 +413,7 @@
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
       + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + '<button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
       + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add job</button>')
-      + (locked('matlists') ? '' : '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order materials</button>') + '</div></div>';
+      + (locked('matlists') ? '' : '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order lists</button>') + '</div></div>';
   }
 
   /* ---------- four numbers, two by two, in one card ---------- */

@@ -198,7 +198,12 @@
   PF.bpToList = function (i) {
     var j = job(), b = j && (j.blueprints || [])[i]; if (!b || !b.a) return;
     var lines = (b.a.takeoff || []).map(function (t) { return (t.qty || 1) + ' ' + (t.unit || '') + ' ' + t.item; }).join('\n');
-    if (window.SP && SP.pasteList) { window.bpCloseModal && bpCloseModal(); bpNav('supply'); setTimeout(function () { SP.pasteList(lines, j.id); }, 120); return; }
-    try { navigator.clipboard.writeText(lines); (window.bpToast?bpToast('Takeoff copied. Paste it into Order materials to price it.','success'):0); } catch (e) { prompt('Copy the takeoff:', lines); }
+    /* straight onto this job's order list (Supply > Order lists) */
+    if (window.bpMatAddItem) {
+      var n = 0;
+      (b.a.takeoff || []).forEach(function (t) { if (t && t.item && bpMatAddItem(j.id, { name: String(t.item), qty: +t.qty || 1, unit: t.unit || 'ea', price: '', sku: '', supplierId: '', supplierName: '', custom: true })) n++; });
+      if (n) { window.bpToast && bpToast(n + (n === 1 ? ' item' : ' items') + ' added to this job\u2019s order list.', 'success'); return; }
+    }
+    try { navigator.clipboard.writeText(lines); (window.bpToast?bpToast('Takeoff copied. Paste it into the job\u2019s order list.','success'):0); } catch (e) { prompt('Copy the takeoff:', lines); }
   };
 })();

@@ -520,8 +520,6 @@
           return '<button class="' + (i < si ? 'done' : i === si ? 'on' : '') + '" onclick="ML.status(\'' + jid + '\',\'' + x[0] + '\')" title="' + (i === si ? 'Where this list is' : 'Mark it ' + x[1].toLowerCase()) + '"><i>' + (i < si ? '&#10003;' : i + 1) + '</i>' + x[1] + '</button>';
         }).join('<span class="ml-stl"></span>') + (m.sentAt && si > 0 ? '<span class="ml-sent">sent ' + new Date(m.sentAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + '</span>' : '') + '</div>'
         + '<div class="ml-tools"><button class="bpx-rowbtn" onclick="ML.shareToggle(\'' + jid + '\')">Send / share</button>'
-        + '<button class="bpx-rowbtn" onclick="ML.useTpl(\'' + jid + '\')">Add a template</button>'
-        + '<button class="bpx-rowbtn" onclick="ML.saveTpl(\'' + jid + '\')">Save as template</button>'
         + '<label class="ml-lock" title="Locked: the crew can see the list but can\'t add to it or take things off. Sending the order locks it."><input type="checkbox" data-ml-lock="' + esc(jid) + '"' + (m.locked ? ' checked' : '') + ' onchange="ML.lock(\'' + jid + '\',this.checked)">' + (m.locked ? 'Locked for crew' : 'Crew can add') + '</label>'
         + '</div></div>';
       if (ML.tplPick === jid) {
@@ -547,7 +545,7 @@
       + '<button class="bpx-rowbtn" onclick="ML.custom(' + a + ')">+ Custom line</button>'
       + '<div class="ml-res" id="ml-res-' + key + '" hidden></div></div>';
     /* table */
-    if (!items.length) h += '<div class="ml-empty bpx-mut">No items yet. Search above to add products from your suppliers and the catalog, or add a custom line and write whatever you need.</div>';
+    if (!items.length) h += '<div class="ml-empty bpx-mut">No items yet. They come over from the estimate, or search above to add one, or add a custom line and write whatever you need.</div>';
     else {
       var row = function (it) {
           var ed = function (k, v, cls, type, ph) { return '<input class="ml-in ' + cls + '" ' + (type ? 'type="number" min="0" step="any" inputmode="decimal"' : '') + (ph ? ' placeholder="' + ph + '"' : '') + ' value="' + esc(v) + '"' + (k === 'qty' || k === 'price' ? ' oninput="ML.live(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)"' : '') + ' onchange="ML.edit(' + a + ',\'' + it.id + '\',\'' + k + '\',this.value)">'; };
