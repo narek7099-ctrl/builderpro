@@ -17,7 +17,7 @@
 // Deploy: --no-verify-jwt (the admin check is below)
 // Secrets: ANTHROPIC_API_KEY, ADMIN_EMAILS, GHL_API_KEY, GHL_COMPANY_ID, GHL_SNAPSHOT_ID
 import Anthropic from "npm:@anthropic-ai/sdk";
-import { SB_URL, sb, callGHL, provisionClient, finishClient, GHL_OPS, isRead } from "./ghl.ts";
+import { SB_URL, sb, callGHL, provisionClient, finishClient, GHL_OPS, isRead, createPoolAccount, houseSync, locationToken, GHL_BASE, ghlHeaders } from "./ghl.ts";
 
 // Sonnet keeps the always-on team affordable; set COMMAND_MODEL to change it
 const MODEL = Deno.env.get("COMMAND_MODEL") ?? "claude-sonnet-5-5";
@@ -481,6 +481,9 @@ async function shift(req: Request) {
   // deno-lint-ignore no-explicit-any
   const bg = (p: Promise<unknown>) => (globalThis as any).EdgeRuntime?.waitUntil?.(p);
   bg(autoOnboard().catch(() => {}));
+  bg(poolTick(get("pool_fill")).catch(() => {}));
+  if (get("house_location_id")) bg(houseSync(get("house_location_id")).then((l) => l.length && logCfg("house_log", l)).catch((e) => logCfg("house_log", ["Error: " + String(e).slice(0, 200)])));
+  if (get("ghl_diag_req")) bg(ghlDiag().catch(() => {}));
   const onboard = "started";
   if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, onboard, skipped: true });
   // the scheduler ticks every 5 min for onboarding; a team shift only every SHIFT_EVERY_MIN
@@ -500,6 +503,51 @@ async function shift(req: Request) {
   return json({ ok: true, agent: pick });
 }
 
+const setCfg = (key: string, value: string) => sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key, value }) });
+/* a short rolling log in ai_config (newest last, 40 lines), shown in the Command Center */
+async function logCfg(key: string, lines: string[]) {
+  const r = await sb(`ai_config?key=eq.${key}&select=value`); const old = String((r.ok ? await r.json() : [])[0]?.value ?? "");
+  const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+  await setCfg(key, [...old.split("\n").filter(Boolean), ...lines.map((l) => stamp + "  " + l)].slice(-40).join("\n"));
+}
+/* Fill the ready pool a few at a time: ai_config pool_fill holds what's left to
+   make, e.g. "foundation:5,os:5,enterprise:5" (set by the Fill pool button). */
+async function poolTick(want: string) {
+  const left: Record<string, number> = {};
+  for (const p of String(want || "").split(",")) { const [k, v] = p.split(":"); if (["foundation", "os", "enterprise"].includes(k?.trim()) && Number(v) > 0) left[k.trim()] = Math.min(25, Number(v)); }
+  if (!Object.keys(left).length) return;
+  const lines: string[] = [];
+  for (let i = 0; i < 5; i++) {
+    const plan = Object.keys(left).find((k) => left[k] > 0); if (!plan) break;
+    const c = await sb(`ghl_pool?plan=eq.${plan}&select=location_id`); const n = (c.ok ? (await c.json()).length : 0) + 1;
+    const r = await createPoolAccount(plan, n);
+    if (!r.ok) { lines.push(`${plan} ${n}: ${r.error}`); left[plan] = 0; continue; }   // stop that plan on an error
+    left[plan]--; lines.push(`${plan} ${n}: made ${r.locationId}`);
+  }
+  await setCfg("pool_fill", Object.entries(left).filter(([, v]) => v > 0).map(([k, v]) => k + ":" + v).join(","));
+  if (lines.length) await logCfg("pool_log", lines);
+}
+/* What the agency key can reach (sub-account names and IDs, never keys), for setup checks. */
+async function ghlDiag() {
+  await setCfg("ghl_diag_req", "");
+  const out: string[] = [];
+  const l = await callGHL("locations.list", {});
+  // deno-lint-ignore no-explicit-any
+  const locs: any[] = (l.data as any)?.locations ?? [];
+  out.push(`locations.list: ${l.status}, ${locs.length} sub-accounts`);
+  for (const x of locs) out.push(`${x.id}  ${x.name}`);
+  const env = Deno.env.get("GHL_LOCATION_ID") ?? "";
+  out.push("GHL_LOCATION_ID (house) = " + (env || "not set"));
+  const probe = env || locs[0]?.id;
+  if (probe) {
+    const t = await locationToken(probe);
+    const pr = await fetch(`${GHL_BASE}/opportunities/pipelines?locationId=${probe}`, { headers: ghlHeaders(t) });
+    const pd = await pr.json().catch(() => ({}));
+    out.push(`pipelines in ${probe}: ${pr.status} ` + ((pd?.pipelines ?? []) as { id: string; name: string; stages: { id: string; name: string }[] }[]).map((p) => `${p.name} [${p.id}] (${p.stages.map((s) => s.name).join(", ")})`).join("; "));
+  }
+  await setCfg("ghl_diag", out.join("\n"));
+}
+
 // New sign-ups, without the owner: retry a GHL build that failed (3 tries,
 // then Support is told), then the Builder team checks and finishes the setup.
 async function autoOnboard() {
@@ -514,7 +562,7 @@ async function autoOnboard() {
         await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: "setup_failed", subject: "GHL setup failed for " + a.business, body: "Automatic GHL setup failed 3 times. Last: " + log.slice(-1)[0] }) }).catch(() => {});
         done.push(a.email + ": failed, sent to Support"); continue;
       }
-      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade, profile: a.profile, plan: a.plan });
+      const p = await provisionClient({ name: a.full_name, business: a.business, email: a.email, phone: a.phone, trade: a.trade, profile: a.profile, plan: a.plan, userId: a.user_id });
       await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ ghl_location_id: p.locationId, onboard_attempts: a.onboard_attempts + 1,
         onboard_state: p.locationId ? "provisioned" : "new", setup_log: [...log, `Retry ${a.onboard_attempts + 1}:`, ...p.steps, ...(p.error ? ["Error: " + p.error] : [])] }) });
       done.push(a.email + (p.locationId ? ": GHL built" : ": retry failed"));
@@ -524,14 +572,20 @@ async function autoOnboard() {
     // one Builder check per tick keeps each run short
     await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "onboarding" }) });
     const th = await newThread("builder", "Onboard: " + a.business, "shift");
-    const out = await runAgent(AGENTS.builder, th, `A new client just signed up and their GHL sub-account was built automatically. Finish their setup without the owner.
+    let out: { reply: string };
+    try { out = await runAgent(AGENTS.builder, th, `A new client just signed up and their GHL sub-account was built automatically. Finish their setup without the owner.
 Client: ${a.full_name}, ${a.business}, ${a.email}, ${a.phone || "no phone"}, trade: ${a.trade || "unknown"}, plan: ${a.plan}. GHL locationId: ${a.ghl_location_id}.
 Their sign-up answers (use these, don't invent): ${JSON.stringify(a.profile ?? {})}
 Setup log so far: ${log.join(" | ")}
 1) Check the sub-account: custom values (Business Name/Phone/Email), calendars, tags, users. Add what's missing (a booking calendar, trade tags).
 2) Check their AI receptionist knowledge (brain_get). It was filled from their answers; complete any gap (services list, FAQs a caller of a ${a.trade || "contractor"} business would ask) with brain_save, keeping their own words.
    Add a product for each main service they listed, and a tag for their trade and for their plan.
-3) Report in 3-5 lines what you set up and anything the owner must do.`);
+3) Report in 3-5 lines what you set up and anything the owner must do.`); }
+    catch (e) {
+      // the AI check is extra: without it the HighLevel build is still complete
+      await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "built", setup_log: [...log, "AI check skipped (AI unavailable: " + String(e).slice(0, 120) + "). The HighLevel setup above is complete."] }) });
+      done.push(a.email + ": built, AI check skipped"); break;
+    }
     await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ onboard_state: "onboarded", setup_log: [...log, "Builder team finished setup: " + out.reply.slice(0, 300)] }) });
     done.push(a.email + ": onboarded by Builder");
     break;
@@ -664,6 +718,27 @@ Deno.serve(async (req) => {
       }
     }
     return json({ ok: true, name, steps });
+  }
+  /* the ready pool of sub-accounts, the house sync log and the setup check */
+  if (op === "pool") {
+    const p = await sb("ghl_pool?select=location_id,plan,name,created_at,taken_by,taken_at&order=created_at.asc"), rows = p.ok ? await p.json() : [];
+    const c = await sb("ai_config?key=in.(pool_fill,pool_log,house_location_id,house_log,ghl_diag)&select=key,value"), cfg = Object.fromEntries((c.ok ? await c.json() : []).map((x: { key: string; value: string }) => [x.key, x.value]));
+    return json({ ok: true, data: rows, cfg });
+  }
+  if (op === "pool_fill") {
+    const n = (k: string) => Math.max(0, Math.min(25, Number(b[k] ?? 0) | 0));
+    await setCfg("pool_fill", ["foundation", "os", "enterprise"].filter((k) => n(k)).map((k) => k + ":" + n(k)).join(","));
+    return json({ ok: true });
+  }
+  if (op === "house_set") {
+    const loc = String(b.location ?? "").trim();
+    if (loc && !/^[A-Za-z0-9]{10,40}$/.test(loc)) return json({ ok: false, error: "That location ID doesn't look right." }, 400);
+    await setCfg("house_location_id", loc); return json({ ok: true });
+  }
+  if (op === "onboard_retry") {
+    const uid = String(b.user_id ?? "");
+    await sb(`accounts?user_id=eq.${encodeURIComponent(uid)}&or=(ghl_location_id.is.null,ghl_location_id.eq.)`, { method: "PATCH", body: JSON.stringify({ onboard_state: "new", onboard_attempts: 0 }) });
+    return json({ ok: true });
   }
   if (op === "stats") return json({ ok: true, data: await runTool("business_stats", {}, 0) });
   if (op === "memory") { const r = await sb("ai_memory?select=id,note,created_at&order=created_at.desc&limit=200"); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
