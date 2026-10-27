@@ -337,3 +337,42 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
 - **S1-S5 missed call: NOT RUN.** There's no phone number in the sub-account, so they can't fire (expected; see Part 5).
 - Every SMS step skipped only because there's no phone. Every non-text step ran.
 - Cleanup **not done on purpose**: the test contact, its opportunity and the Oct 27 8 am appointment stay in AZ Test (a test sub-account; deleting is permanent, so it's left to the owner). Its later texts will skip; nothing reaches a real person.
+
+### Part 5: phone numbers (nothing bought or changed)
+Prices from the agency's own **Billing > Wallet & Transactions > Pricing** page (United States, Oct 2026, LC Phone):
+- **Local number: $1.03 per month** (list $1.15, now discounted). Mobile $1.15. Toll-free $1.94 per month.
+- **Texts:** outbound SMS **$0.0083 per segment**, inbound $0.0083, plus "SMS carrier fees (variable)". MMS is variable.
+- **Calls:** inbound and outbound voice minutes are **"Variable"** (charged per minute by destination); call recording $0.0025/min; voicemail drop variable.
+- **A2P 10DLC (US texting registration):** "A2P Registration: variable". The agency wallet history shows one A2P registration at **$2.00**. "A2P Fast track" is $2.85. The Phone page says "A2P and carrier fees are passed through without markup". Approval usually takes days to 2 weeks, so start it the day a client signs up.
+- Wallet balance today: $14.13. This month's total spend: $3.26 (BuilderPro OS $2.01, Demo $1.25).
+- **Rebilling:** Settings > Phone Integration > Sub Account Settings already says "You are rebilling telephone usage (Calls, SMS, Phone No, etc) to your clients", **but it needs Stripe connected in HighLevel** ("Connect Stripe" button there). Rebilling is set per sub-account (all show Disabled). This is part of HighLevel's SaaS features. Check that the $297 Unlimited plan keeps rebilling before relying on it.
+- **Owner's decision (recorded):** each client gets **a new local number in their sub-account (option A)**. **Forwarding** their existing number to it is offered (option B). **Porting** only if a client asks (option C). Costs are **rebilled to the client**.
+- Rough cost per client: number $1.03/mo + texts about $0.01 each with carrier fees + call minutes + one-time A2P registration (a few dollars). A normal contractor sending about 500 texts a month comes to roughly $6-10 a month, all rebilled.
+
+## Pro day summary (2026-10-26, evening PDT)
+| Part | Result |
+|---|---|
+| 0 Agency key permission | **Not possible.** Agency integrations have no location-token scope. No change made. |
+| 1 Automatic build (AZ Test) | **Pass**, except custom values are blank (because of Part 0) |
+| 2 Ready pool | **Pass: 15 ready** (Foundation 5, OS 5, Enterprise 5), spot checks pass |
+| 3 House workflows W1-W7 | **Pass**: already built and published; all 7 tested; app-to-W6 end-to-end works |
+| 4 Contractor workflows | **Pass**: 01, 02, 05, 33. Estimate follow-up and S1-S5 not run (no portal login / no phone) |
+| 5 Phone numbers | Prices logged; decision recorded |
+
+### Needs the owner
+1. **Billing: "Your next invoice is scheduled on Oct 27, 2026" ($497 Agency Pro).** Downgrade to the $297 Unlimited plan **before that invoice** (Settings > Billing > "Want to modify / cancel your subscription?"). **Downgrade, don't pause**: pausing can stop every sub-account.
+2. **Custom values in new sub-accounts stay blank** (Business Name, Phone, Trade, Owner Name...), because the agency key can't open a sub-account's insides. Options:
+   - per client, make a Private Integration key inside their sub-account and use Command Center > Add key (the app then fills everything in), or
+   - type them in by hand in Settings > Custom Values, or
+   - later: a HighLevel Marketplace app (OAuth), which would fix it for all accounts.
+   Everything else in the automatic build works.
+3. To rebill phone costs, connect Stripe in HighLevel (Settings > Phone Integration > Sub Account Settings > Connect Stripe), and turn rebilling on per client sub-account.
+4. House custom values `bp_demo_link` and `review_link` weren't checked; W1 and W4 use them. Check they're filled in BuilderPro OS > Settings > Custom Values.
+5. Test leftovers you may delete (deleting is permanent, so they were left for you):
+   - in AZ Test Roofing (sample): the "Narek Test" contact, its Jobs opportunity and the Oct 27 8 am Inspection.
+   - in BuilderPro OS: the AZ Two Owner contact has the test tags and is waiting in W1-W6; its texts skip, and its emails only go to narek7099+az2@gmail.com.
+6. Anthropic credit is empty: the AI check after setup is skipped (the build still finishes).
+
+### Notes for the cloud session
+- `finishClient` logs "Business details filled in" even when HighLevel answers 401. It should check the response and log "custom values not filled: no sub-account key".
+- The watcher (`ghl-diag`, cron `ghl-setup-watch`) will keep reporting "no (401)" every 5 minutes, which is harmless. Unschedule it, or point it at keys added with Add key.
