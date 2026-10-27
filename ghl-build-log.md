@@ -441,3 +441,9 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Owner's call: **clients are not charged for phone use** (numbers, texts, calls, A2P). BuilderPro pays from the agency wallet.
 - Checked: rebilling is Disabled on every sub-account and Stripe isn't connected under Phone Integration, so nothing can be rebilled today. BuilderPro's code has no rebilling step. No setting was changed.
 - Cost to plan for: about $6-10 per client per month (see Part 5).
+
+## App login used everywhere (2026-10-26)
+- 13 functions that open a client's sub-account now try the BuilderPro Connect app's login (ghl_oauth) before the agency key, which can't: lead-intake, lead-in, pros, asset-scan, estimate-options, estimate-accepted, ghl-invoice, ghl-estimate, customer-portal, ai-brain-sync, stripe-pay, stripe-webhook, ghl-events.
+- ghl-invoice, ghl-estimate and customer-portal no longer hand BuilderPro's own key to other clients' accounts.
+- Order stays: the client's own saved key first, then BuilderPro's key for BuilderPro's own account, then the app.
+- **Not deployed yet**: the deploy from this session was blocked by a permission check. Code is on main.
