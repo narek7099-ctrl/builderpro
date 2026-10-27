@@ -287,3 +287,157 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
 - BuilderPro OS cdRGIx2azgolhnDj257c: v4 (201 assets)
 - BuilderPro Enterprise cWoCOr2RJDfc3x3FxnQm: v5 (238 assets)
 - Not pushed to any existing sub-account.
+
+## Pro day 2026-10-27 (Agency Pro, run from the owner's PC)
+
+### Part 0: agency key permission: NOT POSSIBLE (no change made)
+- Opened agency Settings > Private Integrations > "ADMIN Command API" (the key BuilderPro uses; its "last used" matches the cloud watcher) > Edit > Scopes. Cancelled without saving.
+- An agency-level Private Integration only offers agency scopes (companies, locations, SaaS, snapshots, users, custom menu links, phone numbers, number pools, documents, ad publishing). There is **no OAuth / location-token scope**, so it can never open a sub-account's insides (custom values, calendars list, contacts). The cloud check said the same: "The token is not authorized for this scope".
+- What still works with this key: creating sub-accounts from a snapshot, setting the business profile (name, email, address), and creating the HighLevel login user.
+- What doesn't: filling custom values (Business Name, Trade, Owner Name...) in a new sub-account. That needs either a Private Integration key made **inside** each sub-account (Command Center > Add key), or a HighLevel Marketplace app (OAuth). See "Needs the owner".
+- The house account (BuilderPro OS) works already: it has its own key, and the automatic tag test passed (narek7099+az2 got bp-cancelled and a card in Cancelled at 02:00 UTC).
+
+### Part 1: automatic build of AZ Test Roofing (sample) `ls5NV2b0IftrM7QDShJ6`
+- Created by BuilderPro at 02:00 UTC from the Enterprise snapshot: **PASS**
+- Business profile: name "AZ Test Roofing (sample)", Austin, TX: **PASS**
+- Custom values: all 26 present but **empty**: **FAIL** (cause: Part 0; fill by hand or add the sub-account's key)
+- Calendars: Inspection, Job, Maintenance Visit (+ the owner's personal calendar): **PASS**
+- Workflows: the 7 template folders, workflows published as in the template (01 AI Qualifier, 02 Speed to Lead, 02a, 03a–03c published, 03d draft...): **PASS**
+- Login user: "AZ Two Owner" exists (has a personal calendar): **PASS**
+- AI receptionist row saved; the Builder AI check was skipped because the Anthropic credit is empty; the account is marked "built": **PASS** (fallback works)
+- Note: the setup log says "Business details filled in" even though HighLevel refused the custom values. Logged for the cloud session to fix (the step should check the response).
+
+### Part 2: ready pool (Agency Pro)
+- Made by the cloud pool filler, a few every 5 minutes: Foundation 5/5, OS 5/5, Enterprise 1 + 4 more at the 02:15 UTC tick (final count below in the summary).
+- Spot checks (Automation > Workflows): Foundation 1 `KZBRN30oM8OSEnDFfGmO` has the 4 Foundation folders + 23 Find a Pro + S1/S2, published: **PASS**. OS 1 `CrSNJ9vzI91dIyr0FpxB` has folders 1-4, 6, 7 (no Enterprise folder): **PASS**. Enterprise 1 `B3wHKZG2ikxqAPGlp65G` has all 7 folders: **PASS**.
+
+### Part 3: BuilderPro's own customer workflows (BuilderPro OS `edV5mRAXJyhzTp6PthaS`)
+- W1-W7 were **already built and published on 2026-10-14**, so nothing was rebuilt.
+- Pipeline "BuilderPro customers": stages exactly Demo booked, Trial, Paid, Past due, Cancelled: **PASS** (the app finds it by name).
+- Test contact: creating "Narek Test" failed in the HighLevel UI (Save did nothing, no error, nothing created). Used the existing **AZ Two Owner** contact instead: it's the owner's own address narek7099+az2@gmail.com with **no phone**.
+- **End-to-end test, app to workflow: PASS.** The app's own `bp-cancelled` tag (from the cloud house sync at 02:00 UTC) started **W6 Cancelled** by itself: Add to workflow > Create/update cancelled opportunity **Executed** > cancellation feedback email **Executed** > Wait 30 days (waiting).
+- Tags added by hand at 7:21 pm PDT, results from the execution logs:
+  - **W1 Demo request: PASS.** Wait 1 min finished > Initial demo SMS **Skipped** (no phone) > walkthrough email **Executed** > waiting 1 day.
+  - **W2 Trial started: PASS.** The "Welcome to BuilderPro" email arrived in the conversation; it's enrolled and waiting for the day-1 step.
+  - **W3 Trial ending: PASS.** "Trial ends in 3 days" SMS **Skipped** (no phone) > waiting 2 days.
+  - **W4 Paid: PASS.** The "Thanks for joining BuilderPro" email arrived; enrolled (30-day wait).
+  - **W5 Payment failed: PASS.** The "Your BuilderPro payment didn't go through" email arrived; enrolled (day 3/7 steps waiting).
+  - **W6 Cancelled: PASS** (above).
+  - **W7 Not using BuilderPro: PASS.** Re-engagement SMS **Skipped** (no phone) > removed bp-inactive-7d tag **Executed** > finished.
+- Left as is: the test contact stays enrolled in the waits. Its later texts will skip (no phone), and the only emails go to narek7099+az2@gmail.com. W5 day 7 will create a "Call about payment" task on it; ignore that.
+- `review_link` / `bp_demo_link` custom values were not checked/changed (W1 and W4 use them; see "Needs the owner").
+
+### Part 4: contractor workflows in AZ Test Roofing (sample)
+- Contact "Narek Test" (narek7099@gmail.com, **no phone**) created at 7:25 pm PDT. Note: HighLevel's Save does nothing unless you click or tab out of the email box first. That's why the house-account attempt failed.
+- **02 Speed to Lead (tag new-lead): PASS.** None branch > Set opener (general) **Executed** > Add tag bot-active **Executed** > finished.
+- **01 AI Qualifier (started by 02's bot-active): PASS.** Create opportunity (Jobs / New Lead) **Executed** > tag **Executed** > Opener SMS **Skipped** (no phone) > waiting for a reply.
+- **05 Appointment (Inspection booked for Tue Oct 27, 8:00 am): PASS.** Tag booked **Executed** > stage Inspection Scheduled **Executed** (the card moved New Lead > Inspection Scheduled) > Booking confirmation SMS **Skipped** (no phone) > owner alert **Executed** > wait until 24h before finished (less than 24h away) > Reminder 24h **Skipped** (no phone) > waiting until 2h before.
+- **33 Job Completed > Review > Referral (tag bp-job-completed): PASS.** Send branch **Executed** > Job complete SMS **Skipped** (no phone) > waiting 2 days.
+- **Estimate follow-up (07): NOT RUN.** It needs an estimate sent from the AZ Test portal, which needs that login's password (not typed, by the rules).
+- **S1-S5 missed call: NOT RUN.** There's no phone number in the sub-account, so they can't fire (expected; see Part 5).
+- Every SMS step skipped only because there's no phone. Every non-text step ran.
+- Cleanup **not done on purpose**: the test contact, its opportunity and the Oct 27 8 am appointment stay in AZ Test (a test sub-account; deleting is permanent, so it's left to the owner). Its later texts will skip; nothing reaches a real person.
+
+### Part 5: phone numbers (nothing bought or changed)
+Prices from the agency's own **Billing > Wallet & Transactions > Pricing** page (United States, Oct 2026, LC Phone):
+- **Local number: $1.03 per month** (list $1.15, now discounted). Mobile $1.15. Toll-free $1.94 per month.
+- **Texts:** outbound SMS **$0.0083 per segment**, inbound $0.0083, plus "SMS carrier fees (variable)". MMS is variable.
+- **Calls:** inbound and outbound voice minutes are **"Variable"** (charged per minute by destination); call recording $0.0025/min; voicemail drop variable.
+- **A2P 10DLC (US texting registration):** "A2P Registration: variable". The agency wallet history shows one A2P registration at **$2.00**. "A2P Fast track" is $2.85. The Phone page says "A2P and carrier fees are passed through without markup". Approval usually takes days to 2 weeks, so start it the day a client signs up.
+- Wallet balance today: $14.13. This month's total spend: $3.26 (BuilderPro OS $2.01, Demo $1.25).
+- **Rebilling:** Settings > Phone Integration > Sub Account Settings already says "You are rebilling telephone usage (Calls, SMS, Phone No, etc) to your clients", **but it needs Stripe connected in HighLevel** ("Connect Stripe" button there). Rebilling is set per sub-account (all show Disabled). This is part of HighLevel's SaaS features. Check that the $297 Unlimited plan keeps rebilling before relying on it.
+- **Owner's decision (recorded):** each client gets **a new local number in their sub-account (option A)**. **Forwarding** their existing number to it is offered (option B). **Porting** only if a client asks (option C). ~~Costs are rebilled to the client.~~ **Changed 2026-10-26: the owner does not want phone costs charged to clients. BuilderPro pays them from the agency wallet; rebilling stays off.**
+- Rough cost per client: number $1.03/mo + texts about $0.01 each with carrier fees + call minutes + one-time A2P registration (a few dollars). A normal contractor sending about 500 texts a month comes to roughly $6-10 a month, paid by BuilderPro (not rebilled).
+
+## Pro day summary (2026-10-26, evening PDT)
+| Part | Result |
+|---|---|
+| 0 Agency key permission | **Not possible.** Agency integrations have no location-token scope. No change made. |
+| 1 Automatic build (AZ Test) | **Pass**, except custom values are blank (because of Part 0) |
+| 2 Ready pool | **Pass: 15 ready** (Foundation 5, OS 5, Enterprise 5), spot checks pass |
+| 3 House workflows W1-W7 | **Pass**: already built and published; all 7 tested; app-to-W6 end-to-end works |
+| 4 Contractor workflows | **Pass**: 01, 02, 05, 33. Estimate follow-up and S1-S5 not run (no portal login / no phone) |
+| 5 Phone numbers | Prices logged; decision recorded |
+
+### Needs the owner
+1. **Billing: "Your next invoice is scheduled on Oct 27, 2026" ($497 Agency Pro).** Downgrade to the $297 Unlimited plan **before that invoice** (Settings > Billing > "Want to modify / cancel your subscription?"). **Downgrade, don't pause**: pausing can stop every sub-account.
+2. **Custom values in new sub-accounts stay blank** (Business Name, Phone, Trade, Owner Name...), because the agency key can't open a sub-account's insides. Options:
+   - per client, make a Private Integration key inside their sub-account and use Command Center > Add key (the app then fills everything in), or
+   - type them in by hand in Settings > Custom Values, or
+   - later: a HighLevel Marketplace app (OAuth), which would fix it for all accounts.
+   Everything else in the automatic build works.
+3. ~~Rebill phone costs~~ Not wanted: the owner pays phone costs. Leave Stripe unconnected under Phone Integration and leave rebilling Disabled on every sub-account (it is today). Keep the agency wallet topped up (auto-recharge) so clients' texts and calls never stop.
+4. In BuilderPro OS, `bp_demo_link` is set (a booking widget link), but **`review_link` doesn't exist**, so W4's 30-day text would have a blank review link. Add a custom value named review_link with your Google review link (Settings > Custom Values > Add).
+5. Test leftovers you may delete (deleting is permanent, so they were left for you):
+   - in AZ Test Roofing (sample): the "Narek Test" contact, its Jobs opportunity and the Oct 27 8 am Inspection.
+   - in BuilderPro OS: the AZ Two Owner contact has the test tags and is waiting in W1-W6; its texts skip, and its emails only go to narek7099+az2@gmail.com.
+6. Anthropic credit is empty: the AI check after setup is skipped (the build still finishes).
+
+### Notes for the cloud session
+- `finishClient` logs "Business details filled in" even when HighLevel answers 401. It should check the response and log "custom values not filled: no sub-account key".
+- The watcher (`ghl-diag`, cron `ghl-setup-watch`) will keep reporting "no (401)" every 5 minutes, which is harmless. Unschedule it, or point it at keys added with Add key.
+
+## Marketplace app (2026-10-26, Claude Code on the owner's PC)
+
+Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), the `ghl_oauth` table exists and is empty, and `ghl-diag` is at v3 (uses the app login when there is one).
+
+### Step 1: create the app - PASS
+- marketplace.gohighlevel.com > My apps > Create app. Already signed in with the agency login; no developer sign-up and nothing to pay.
+- Options offered and picked:
+  - App name: **BuilderPro Connect**
+  - App type: Private / Public. Picked **Private**. HighLevel's note: private is for small pilots; installs are blocked if it's active in more than 5 *external* agencies (we only use our own).
+  - Target user: Sub-Account (recommended) / Agency. Picked **Sub-Account**. This can't be changed after creation.
+  - Who can install: Everyone / Agency only. Picked **Agency only**.
+  - Listing type: White-label (recommended) / Standard. Started on White-label, then switched to **Standard (non white-label)**: white-label refuses any redirect URL with a HighLevel reference ("The redirect url contains a HighLevel reference. Please remove any Highlevel references to save."), and `ghl-oauth` contains "ghl". Standard only changes how a public listing looks; the app is private.
+  - There was no "install on all / future sub-accounts" toggle on the create form. The install screen in Step 3 may offer it.
+- App id: `6ae0328f3e7307a1a02a17f0` (status: vdraft / DRAFT).
+- Advanced Settings > Auth:
+  - Redirect URL: `https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ghl-oauth`, saved.
+  - Scopes: all **33** in the plan exist and are selected and saved (checked after a reload: "33 Scopes selected"). That's oauth.readonly/write, locations.readonly/write, locations/customValues, customFields and tags (read+write), contacts, opportunities, calendars, calendars/events, conversations, conversations/message, users (read+write), workflows.readonly, snapshots.readonly, companies.readonly, invoices, invoices/estimate and products (read+write). **None missing.** HighLevel flagged `users.write` as a sensitive scope (it asks to confirm); confirmed.
+- Manage > Secrets > Client keys > Add: created one key named **BuilderPro Supabase**.
+  - **Client ID:** `6ae0328f3e7307a1a02a17f0-mvq8h58r`.
+  - The Client Secret was not copied, read or logged. The pop-up showing it was left open for the owner.
+
+### Step 2: owner adds GHL_CLIENT_ID and GHL_CLIENT_SECRET in Supabase - waiting
+- The owner accidentally deleted that first key, so a new one was made with the same name, **BuilderPro Supabase**. **New Client ID:** `6ae0328f3e7307a1a02a17f0-mvq8kkxg`. The old ID (`...-mvq8h58r`) no longer works. The secret pop-up was left open again, unread.
+- Owner said "done" (both secrets saved in Supabase). Afterwards the Client keys table on the Secrets page showed "No Data" even after reloads, but the install link still carried the `...mvq8kkxg` client id and the install worked, so the key is live and the empty table is a HighLevel display glitch.
+
+### Step 3: install it on the agency - PASS
+- Opened the install link (Install link > Standard). HighLevel asked to sign in to the Marketplace again (Chrome had filled in the saved login); the **owner clicked Sign in** themselves.
+- App page: Agency View, "Who can install: Agency", Pricing **Free**. Install > "Install Private App" warning > Proceed to Install. **No payment asked.**
+- "Select Sub-Account" listed the agency plus 21 sub-accounts: 3 templates, 15 pool accounts, AZ Test Roofing (sample), BuilderPro OS and Demo Account. There are no real clients yet. Picked **Select all, then unticked Demo Account** (owner rule: don't touch it), so 20 sub-accounts.
+- **"Auto-install on future sub-accounts" was offered and is ON**, so new sign-ups get the app automatically.
+- Confirmation screen: 33 scopes > **Allow & Install**.
+- HighLevel redirected to `ghl-oauth`, which showed **"Connected! ✅"**. (The page appears as raw HTML text because Supabase serves function responses as plain text. It's only cosmetic.)
+- `ghl_oauth` row 1 saved at 05:29 UTC with an access and refresh token for company `9BrXBR8SmvrLflxbCgDa`, valid until 2026-10-28 05:28 UTC; `ghl-diag` renews it.
+
+### Step 4: check it worked - PASS
+- The watcher ran at 05:30 UTC, one minute after the install: `ghl_mint` = "ok at 2026-10-27 05:30" (before the install it was "no (401 The token is not authorized for this scope.)").
+- It worked through the `refinish` queue (now empty) and wrote to AZ Test's setup log: "Business details filled in (10 custom values)" and "AI receptionist books into the Inspection calendar".
+- Checked in HighLevel, AZ Test Roofing (sample) > Settings > Custom Values:
+
+  | Custom value | Expected | Found |
+  |---|---|---|
+  | Business Name | AZ Test Roofing (sample) | AZ Test Roofing (sample) - pass |
+  | Business Phone | (512) 555-0177 | (512) 555-0177 - pass |
+  | Trade | Roofing | Roofing - pass |
+  | Owner Name | AZ Two Owner | AZ Two Owner - pass |
+  | Service Area | Austin, Round Rock | Austin, Round Rock - pass |
+  | Business Hours | Mon 08:00-17:00 ... Sun closed | Mon-Fri 08:00-17:00, Sat 08:00-13:00, Sun closed - pass |
+
+  Also filled: Business Address (Austin, TX), Business Email, Owner Email, Owner Phone.
+- Still blank, because the watcher doesn't set them (AZ Test has no data for them): Booking Link, Business Website, Deposit Percent, Google Review Link, License Number, and the four Location* values.
+
+### Result
+- **Installed: yes.** BuilderPro Connect is on the agency, on 20 sub-accounts, and auto-installs on future ones. Demo Account is left out.
+- **AZ Test custom values: filled in.**
+- No payment was asked at any step. The Client Secret was never read, copied or logged.
+- Notes for the cloud session:
+  - `ghl-oauth`'s result page shows as raw HTML text (Supabase serves it as text/plain). Cosmetic only.
+  - The Marketplace Secrets page lists no client keys even though the key works. It's a HighLevel display issue; nothing to do.
+  - The earlier "Needs the owner" item about blank custom values (Pro day, item 2) is now solved for new sign-ups.
+
+## Phone costs: who pays (2026-10-26)
+- Owner's call: **clients are not charged for phone use** (numbers, texts, calls, A2P). BuilderPro pays from the agency wallet.
+- Checked: rebilling is Disabled on every sub-account and Stripe isn't connected under Phone Integration, so nothing can be rebilled today. BuilderPro's code has no rebilling step. No setting was changed.
+- Cost to plan for: about $6-10 per client per month (see Part 5).
