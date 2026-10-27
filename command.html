@@ -386,7 +386,9 @@ async function viewAccounts(){
   el('view').innerHTML='<h2>Accounts</h2><div class="kpis" id="kp"></div>'
     +'<details class="card newacct" style="margin-bottom:14px"><summary><b>+ New account</b></summary><div class="muted" style="font-size:12px;margin-bottom:8px">Makes their BuilderPro login (they get an email to set a password), a GHL sub-account from your snapshot, and their AI receptionist.</div>'
     +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></details>'
+    +'<div class="card" id="poolC" style="margin-bottom:14px">Loading the ready pool…</div>'
     +'<div class="card tw" id="al">Loading…</div>';
+  viewPool();
   var s=await api({op:'stats'}); var st=s.data||{};
   el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['MRR','$'+(st.mrr_paying||0)],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');
   var r=await api({op:'accounts'}); var rows=r.data||[];
@@ -394,9 +396,39 @@ async function viewAccounts(){
     var left=Math.ceil((Date.parse(x.trial_ends_at)-Date.now())/864e5);
     return '<tr><td><b>'+esc(x.business)+'</b></td><td>'+esc(x.full_name)+'<div class="muted" style="font-size:12px">'+esc(x.email)+(x.phone?' · '+esc(x.phone):'')+'</div></td><td>'+esc(({foundation:'Foundation',os:'BuilderPro OS',enterprise:'Enterprise'})[x.plan]||x.plan||'-')+(x.price_monthly?'<div class="muted" style="font-size:12px">$'+x.price_monthly+'/mo</div>':'')+'</td><td>'+esc(x.trade||'-')+'</td>'
       +'<td>'+esc(x.status)+(x.status==='trial'?'<div class="muted" style="font-size:12px">'+(left>0?left+' days left':'ended')+'</div>':'')+'</td>'
-      +'<td title="'+esc((x.setup_log||[]).join('\n'))+'">'+({onboarded:'<span class="st ok"><i class="ti ti-circle-check"></i>Set up by AI</span>',onboarding:'<span class="st warn"><i class="ti ti-loader-2"></i>Builder working</span>',failed:'<span class="st bad"><i class="ti ti-alert-triangle"></i>Failed, sent to Support</span>'+setupWhy(x)}[x.onboard_state]||(x.ghl_location_id?'<span class="st ok"><i class="ti ti-check"></i>GHL built</span>':x.onboard_state==='done'?'<span class="st off">No HighLevel yet</span>':'<span class="st off">Building</span>'))+'</td>'
+      +'<td title="'+esc((x.setup_log||[]).join('\n'))+'">'+({onboarded:'<span class="st ok"><i class="ti ti-circle-check"></i>Set up by AI</span>',onboarding:'<span class="st warn"><i class="ti ti-loader-2"></i>Builder working</span>',failed:'<span class="st bad"><i class="ti ti-alert-triangle"></i>Failed, sent to Support</span>'+setupWhy(x)+' <button class="btn" style="padding:2px 8px;font-size:12px" onclick="retrySetup(\''+esc(x.user_id)+'\',this)">Retry setup</button>',built:'<span class="st ok"><i class="ti ti-check"></i>GHL built</span>'}[x.onboard_state]||(x.ghl_location_id?'<span class="st ok"><i class="ti ti-check"></i>GHL built</span>':x.onboard_state==='done'?'<span class="st off">No HighLevel yet</span>':'<span class="st off">Building</span>'))+'</td>'
       +'<td>'+(x.ghl_key?'<span class="st ok"><i class="ti ti-key"></i>Saved</span> <button class="btn" style="padding:2px 8px;font-size:12px" onclick="ghlKey(\''+esc(x.user_id)+'\',\''+esc(x.ghl_location_id||'')+'\',\''+esc(x.business)+'\')">Replace</button>':'<button class="btn" style="padding:4px 10px;font-size:12px" onclick="ghlKey(\''+esc(x.user_id)+'\',\''+esc(x.ghl_location_id||'')+'\',\''+esc(x.business)+'\')"><i class="ti ti-key"></i> Add key</button>')+'</td>'
       +'<td class="muted">'+esc(String(x.created_at).slice(0,10))+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">No accounts yet. They appear here when contractors start a free trial on the website.</span>';
+}
+/* The ready pool: sub-accounts made ahead of time while the agency is on Agency Pro
+   (HighLevel only lets the API create them on that plan). Sign-ups take one when
+   HighLevel won't make a new one. */
+async function viewPool(){
+  var r=await api({op:'pool'}); var rows=r.data||[], cfg=r.cfg||{};
+  var PL={foundation:'Foundation',os:'BuilderPro OS',enterprise:'Enterprise'};
+  var free=function(k){return rows.filter(function(x){return x.plan===k&&!x.taken_by}).length};
+  var low=['foundation','os','enterprise'].some(function(k){return free(k)<2});
+  el('poolC').innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><b>Ready pool</b>'
+    +'<button class="btn" style="padding:4px 10px;font-size:12px" onclick="fillPool(this)"><i class="ti ti-plus"></i> Fill pool</button></div>'
+    +'<div class="muted" style="font-size:12px;margin:4px 0 10px">Ready HighLevel sub-accounts for new sign-ups. Filling only works while your agency is on Agency Pro.</div>'
+    +'<div class="kpis" style="margin:0">'+['foundation','os','enterprise'].map(function(k){return '<div class="card kpi"><div class="l">'+PL[k]+'</div><div class="v">'+free(k)+'</div></div>'}).join('')+'</div>'
+    +(low&&rows.length?'<div style="margin-top:8px;font-size:13px;color:var(--danger)">Running low: refill on an Agency Pro day, or make sub-accounts by hand and use Add key.</div>':'')
+    +(cfg.pool_fill?'<div class="muted" style="margin-top:8px;font-size:12px">Still to make: '+esc(cfg.pool_fill)+' (a few every 5 minutes)</div>':'')
+    +(cfg.pool_log?'<details style="margin-top:8px"><summary class="muted" style="font-size:12px">Pool log</summary><pre style="white-space:pre-wrap;font-size:12px">'+esc(cfg.pool_log)+'</pre></details>':'')
+    +'<details style="margin-top:6px"><summary class="muted" style="font-size:12px">Your own customers in HighLevel</summary><div style="font-size:12px;margin-top:6px">House sub-account: <b>'+esc(cfg.house_location_id||'not set')+'</b>. Trials, payments and cancellations add the bp-* tags there.</div>'
+    +(cfg.house_log?'<pre style="white-space:pre-wrap;font-size:12px">'+esc(cfg.house_log)+'</pre>':'')+'</details>';
+}
+async function fillPool(b){
+  var n=prompt('How many of each plan? (Foundation, OS, Enterprise)','5,5,5'); if(n==null)return;
+  var p=String(n).split(',').map(function(x){return Math.max(0,Math.min(25,parseInt(x,10)||0))});
+  b.disabled=true; var r=await api({op:'pool_fill',foundation:p[0]||0,os:p[1]||0,enterprise:p[2]||0}); b.disabled=false;
+  if(r.ok===false){alert(r.error||'Failed');return}
+  viewPool();
+}
+async function retrySetup(uid,b){
+  b.disabled=true; var r=await api({op:'onboard_retry',user_id:uid});
+  if(r.ok===false){b.disabled=false;alert(r.error||'Failed');return}
+  b.textContent='Retrying in a few minutes';
 }
 /* a client's HighLevel key: made inside their sub-account under Settings > Private Integrations.
    The server checks it with HighLevel before saving; the key never comes back to this page. */

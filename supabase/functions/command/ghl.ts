@@ -139,19 +139,53 @@ export function hoursText(h: Profile | undefined): string {
   if (!h) return "";
   return DAYS.map(([k, n]) => { const d = h[k]; return d && d.open ? `${n} ${d.from}-${d.to}` : `${n} closed`; }).join(", ");
 }
-export async function provisionClient(a: { name: string; business: string; email: string; phone?: string; trade?: string; profile?: Profile; plan?: string }): Promise<{ ok: boolean; locationId: string; steps: string[]; error?: string }> {
+// each plan has its own template snapshot; the generic one is the fallback
+const PLAN_SNAP: Record<string, string> = { foundation: "m8xaXFkznoQZLjySnFlZ", os: "cdRGIx2azgolhnDj257c", enterprise: "cWoCOr2RJDfc3x3FxnQm" };
+const planSnap = (plan?: string) => (plan && (Deno.env.get("GHL_SNAPSHOT_" + plan.toUpperCase()) || PLAN_SNAP[plan])) || GHL_SNAPSHOT_ID;
+export const PLAN_NAME: Record<string, string> = { foundation: "Foundation", os: "OS", enterprise: "Enterprise" };
+
+/* The ready pool: blank sub-accounts made while the agency is on Agency Pro
+   (the only plan whose API can create them). A sign-up takes one when
+   HighLevel won't create a new sub-account. */
+export async function createPoolAccount(plan: string, n: number): Promise<{ ok: boolean; locationId?: string; error?: string }> {
+  if (!GHL_API_KEY || !GHL_COMPANY_ID) return { ok: false, error: "GHL_API_KEY / GHL_COMPANY_ID not set" };
+  const name = `BuilderPro pool · ${PLAN_NAME[plan] ?? plan} ${n}`, snap = planSnap(plan);
+  const cr = await fetch(`${GHL_BASE}/locations/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify({ companyId: GHL_COMPANY_ID, name, country: "US", ...(snap ? { snapshotId: snap } : {}) }) });
+  const cd = await cr.json().catch(() => ({}));
+  const locationId = cd?.id || cd?.location?.id || cd?._id || "";
+  if (!cr.ok || !locationId) return { ok: false, error: `GHL said ${cr.status}: ${JSON.stringify(cd).slice(0, 200)}` };
+  await sb("ghl_pool", { method: "POST", body: JSON.stringify({ location_id: locationId, plan, name }) });
+  return { ok: true, locationId };
+}
+async function takePooled(a: { name: string; business: string; email: string; phone?: string; profile?: Profile; plan?: string; userId?: string }, steps: string[]): Promise<string> {
+  const r = await sb("rpc/ghl_pool_take", { method: "POST", body: JSON.stringify({ p_plan: a.plan || "enterprise", p_user: a.userId || null }) });
+  const loc = r.ok ? String((await r.json().catch(() => "")) ?? "") : "";
+  if (!loc) return "";
+  const pf: Profile = a.profile ?? {};
+  steps.push(`Took a ready ${PLAN_NAME[a.plan || "enterprise"] ?? a.plan} sub-account from the pool (${loc})`);
+  // the pool account still has its pool name: give it the client's business details
+  const body: Record<string, string> = { companyId: GHL_COMPANY_ID, name: a.business || a.name, email: a.email };
+  for (const [k, v] of [["phone", a.phone], ["address", pf.address], ["city", pf.city], ["state", pf.state], ["postalCode", pf.zip], ["website", pf.website], ["timezone", pf.timezone]]) if (v) body[k as string] = String(v);
+  const u = await fetch(`${GHL_BASE}/locations/${loc}`, { method: "PUT", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify(body) }).catch(() => null);
+  steps.push(u?.ok ? "Renamed to " + (a.business || a.name) : `Couldn't rename it in HighLevel (${u?.status ?? "no answer"}): rename it to ${a.business || a.name} by hand`);
+  return loc;
+}
+
+export async function provisionClient(a: { name: string; business: string; email: string; phone?: string; trade?: string; profile?: Profile; plan?: string; userId?: string }): Promise<{ ok: boolean; locationId: string; steps: string[]; error?: string }> {
   const pf: Profile = a.profile ?? {};
   const steps: string[] = [];
   if (!GHL_API_KEY || !GHL_COMPANY_ID) return { ok: false, locationId: "", steps, error: "GHL_API_KEY / GHL_COMPANY_ID not set" };
   const body: Record<string, unknown> = { companyId: GHL_COMPANY_ID, name: a.business || a.name, phone: a.phone || undefined, email: a.email, country: "US",
     address: pf.address || undefined, city: pf.city || undefined, state: pf.state || undefined, postalCode: pf.zip || undefined, website: pf.website || undefined, timezone: pf.timezone || undefined };
-  // each plan has its own template snapshot; the generic one is the fallback
-  const PLAN_SNAP: Record<string, string> = { foundation: "m8xaXFkznoQZLjySnFlZ", os: "cdRGIx2azgolhnDj257c", enterprise: "cWoCOr2RJDfc3x3FxnQm" };
-  const snap = (a.plan && (Deno.env.get("GHL_SNAPSHOT_" + a.plan.toUpperCase()) || PLAN_SNAP[a.plan])) || GHL_SNAPSHOT_ID;
+  const snap = planSnap(a.plan);
   if (snap) body.snapshotId = snap;
   const cr = await fetch(`${GHL_BASE}/locations/`, { method: "POST", headers: ghlHeaders(GHL_API_KEY), body: JSON.stringify(body) });
   const cd = await cr.json().catch(() => ({}));
-  if (!cr.ok) return { ok: false, locationId: "", steps, error: `GHL said ${cr.status}: ${JSON.stringify(cd).slice(0, 200)}` };
+  if (!cr.ok) {
+    const pooled = await takePooled(a, steps).catch(() => "");
+    if (pooled) { await finishClient(pooled, a, steps); return { ok: true, locationId: pooled, steps }; }
+    return { ok: false, locationId: "", steps, error: `GHL said ${cr.status}: ${JSON.stringify(cd).slice(0, 200)}` + (cr.status === 403 ? " (and the ready pool is empty)" : "") };
+  }
   const locationId = cd?.id || cd?.location?.id || cd?._id || "";
   steps.push("GHL sub-account created" + (snap ? " from the " + (a.plan || "default") + " snapshot" : " (no snapshot set, so it's empty)"));
   if (!locationId) return { ok: true, locationId, steps };
@@ -204,4 +238,59 @@ export async function finishClient(locationId: string, a: { name: string; busine
     steps.push(ur.ok ? "GHL login created for " + a.email : "GHL login not created (" + ur.status + ")");
   } catch { steps.push("GHL login not created"); }
   return steps;
+}
+
+/* BuilderPro's own customers in the house HighLevel account: each status change
+   (trial, trial ending, paid, payment failed, cancelled) adds the tag that starts
+   that workflow (GHL-BUILD-GUIDE section 1) and moves their card in the
+   "BuilderPro customers" pipeline. Runs only once ai_config house_location_id is set. */
+const HOUSE_TAG: Record<string, [string, string]> = {
+  trial: ["bp-trial-started", "Trial"], trial_ending: ["bp-trial-ending", "Trial"], active: ["bp-paid", "Paid"],
+  past_due: ["bp-payment-failed", "Past due"], cancelled: ["bp-cancelled", "Cancelled"],
+};
+export const houseKey = (a: { status?: string; trial_ends_at?: string }) =>
+  a.status === "trial" && a.trial_ends_at && Date.parse(a.trial_ends_at) < Date.now() + 3 * 864e5 ? "trial_ending" : String(a.status ?? "");
+export async function houseSync(house: string): Promise<string[]> {
+  const out: string[] = [];
+  if (!house) return out;
+  const r = await sb("accounts?select=user_id,email,full_name,business,phone,plan,status,trial_ends_at,house_synced&order=created_at.desc&limit=200");
+  // deno-lint-ignore no-explicit-any
+  const todo = (r.ok ? await r.json() : []).filter((a: any) => houseKey(a) !== String(a.house_synced ?? "")).slice(0, 10);
+  if (!todo.length) return out;
+  const tok = await locationToken(house), H = ghlHeaders(tok);
+  let pipe: { id: string; stages: { id: string; name: string }[] } | undefined;
+  try {
+    const pd = await (await fetch(`${GHL_BASE}/opportunities/pipelines?locationId=${house}`, { headers: H })).json();
+    pipe = (pd?.pipelines ?? []).find((p: { name?: string }) => /builderpro customers/i.test(p.name ?? ""));
+  } catch { /* no pipeline yet: tags still go on */ }
+  for (const a of todo) {
+    const key = houseKey(a), hit = HOUSE_TAG[key];
+    const done = () => sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ house_synced: key }) });
+    if (!hit || !a.email) { await done(); continue; }
+    // the owner's own test logins (name+tag@) get no phone, so the workflows only email
+    const phone = /\+[^@]*@/.test(a.email) ? undefined : (a.phone || undefined);
+    const [first, ...rest] = String(a.full_name || a.business || "").trim().split(/\s+/);
+    const ur = await fetch(`${GHL_BASE}/contacts/upsert`, { method: "POST", headers: H,
+      body: JSON.stringify({ locationId: house, email: a.email, phone, firstName: first || undefined, lastName: rest.join(" ") || undefined, companyName: a.business || undefined, source: "BuilderPro app" }) });
+    const ud = await ur.json().catch(() => ({}));
+    const cid = ud?.contact?.id || ud?.id || "";
+    if (!ur.ok || !cid) { out.push(`${a.email}: contact not saved (${ur.status} ${JSON.stringify(ud).slice(0, 120)})`); continue; }
+    const tr = await fetch(`${GHL_BASE}/contacts/${cid}/tags`, { method: "POST", headers: H, body: JSON.stringify({ tags: [hit[0], "bp-customer", "bp-plan-" + (a.plan || "unknown")] }) });
+    if (!tr.ok) { out.push(`${a.email}: tag ${hit[0]} not added (${tr.status})`); continue; }
+    let opp = "";
+    const stage = pipe?.stages?.find((s) => s.name.toLowerCase() === hit[1].toLowerCase());
+    if (pipe && stage) {
+      try {
+        const sd = await (await fetch(`${GHL_BASE}/opportunities/search?location_id=${house}&pipeline_id=${pipe.id}&contact_id=${cid}`, { headers: H })).json();
+        const ex = sd?.opportunities?.[0]?.id;
+        const or = await fetch(`${GHL_BASE}/opportunities/${ex ?? ""}`, { method: ex ? "PUT" : "POST", headers: H,
+          body: JSON.stringify(ex ? { pipelineId: pipe.id, pipelineStageId: stage.id, status: key === "cancelled" ? "lost" : "open" }
+            : { locationId: house, pipelineId: pipe.id, pipelineStageId: stage.id, contactId: cid, name: a.business || a.email, status: key === "cancelled" ? "lost" : "open" }) });
+        opp = or.ok ? ", card in " + hit[1] : `, card not moved (${or.status})`;
+      } catch { opp = ", card not moved"; }
+    }
+    await done();
+    out.push(`${a.email}: ${hit[0]}${opp}`);
+  }
+  return out;
 }
