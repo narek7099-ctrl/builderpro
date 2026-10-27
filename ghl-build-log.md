@@ -400,3 +400,13 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 
 ### Step 2: owner adds GHL_CLIENT_ID and GHL_CLIENT_SECRET in Supabase - waiting
 - The owner accidentally deleted that first key, so a new one was made with the same name, **BuilderPro Supabase**. **New Client ID:** `6ae0328f3e7307a1a02a17f0-mvq8kkxg`. The old ID (`...-mvq8h58r`) no longer works. The secret pop-up was left open again, unread.
+- Owner said "done" (both secrets saved in Supabase). Afterwards the Client keys table on the Secrets page showed "No Data" even after reloads, but the install link still carried the `...mvq8kkxg` client id and the install worked, so the key is live and the empty table is a HighLevel display glitch.
+
+### Step 3: install it on the agency - PASS
+- Opened the install link (Install link > Standard). HighLevel asked to sign in to the Marketplace again (Chrome had filled in the saved login); the **owner clicked Sign in** themselves.
+- App page: Agency View, "Who can install: Agency", Pricing **Free**. Install > "Install Private App" warning > Proceed to Install. **No payment asked.**
+- "Select Sub-Account" listed the agency plus 21 sub-accounts: 3 templates, 15 pool accounts, AZ Test Roofing (sample), BuilderPro OS and Demo Account. There are no real clients yet. Picked **Select all, then unticked Demo Account** (owner rule: don't touch it), so 20 sub-accounts.
+- **"Auto-install on future sub-accounts" was offered and is ON**, so new sign-ups get the app automatically.
+- Confirmation screen: 33 scopes > **Allow & Install**.
+- HighLevel redirected to `ghl-oauth`, which showed **"Connected! ✅"**. (The page appears as raw HTML text because Supabase serves function responses as plain text. It's only cosmetic.)
+- `ghl_oauth` row 1 saved at 05:29 UTC with an access and refresh token for company `9BrXBR8SmvrLflxbCgDa`, valid until 2026-10-28 05:28 UTC; `ghl-diag` renews it.
