@@ -97,6 +97,48 @@ async function feeFor(paymentIntent: string, accountId: string): Promise<{ fee: 
 const BR_SB = Deno.env.get("SUPABASE_URL") ?? "", BR_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const BR_SITE = Deno.env.get("PORTAL_URL") || "https://builderpro-os.com/";
 /* the client's own HighLevel key, saved from the Command Center */
+/* the BuilderPro Connect app's agency login (ghl_oauth, saved when it was installed),
+   renewed when it's about to run out. It can open any sub-account; the agency key can't. */
+const APP_SB = Deno.env.get("SUPABASE_URL") ?? "", APP_SK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const APP_ID = Deno.env.get("GHL_CLIENT_ID") ?? "", APP_SECRET = Deno.env.get("GHL_CLIENT_SECRET") ?? "", APP_CO = Deno.env.get("GHL_COMPANY_ID") ?? "";
+let appTok: { t: string; exp: number } | null = null;
+async function appToken(): Promise<string> {
+  if (appTok && appTok.exp > Date.now() + 60e3) return appTok.t;
+  try {
+    const h = { apikey: APP_SK, Authorization: `Bearer ${APP_SK}`, "Content-Type": "application/json" };
+    const row = (await (await fetch(`${APP_SB}/rest/v1/ghl_oauth?id=eq.1&select=*`, { headers: h })).json())?.[0];
+    if (!row?.refresh_token) return "";
+    const exp = Date.parse(row.expires_at ?? "") || 0;
+    if (row.access_token && exp > Date.now() + 60e3) { appTok = { t: row.access_token, exp }; return row.access_token; }
+    if (!APP_ID || !APP_SECRET) return "";
+    const r = await fetch("https://services.leadconnectorhq.com/oauth/token", {
+      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: new URLSearchParams({ client_id: APP_ID, client_secret: APP_SECRET, grant_type: "refresh_token", refresh_token: row.refresh_token, user_type: "Company" }).toString(),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.access_token) return "";
+    const nexp = Date.now() + (Number(d.expires_in || 86400) - 60) * 1000;
+    appTok = { t: d.access_token, exp: nexp };
+    await fetch(`${APP_SB}/rest/v1/ghl_oauth?id=eq.1`, { method: "PATCH", headers: h, body: JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token ?? row.refresh_token, expires_at: new Date(nexp).toISOString(), updated_at: new Date().toISOString() }) });
+    return d.access_token;
+  } catch { return ""; }
+}
+/* a token for one sub-account, opened with the app's login */
+const appLocTok: Record<string, string> = {};
+async function appMint(loc: string): Promise<string> {
+  if (!loc || !APP_CO) return "";
+  if (appLocTok[loc]) return appLocTok[loc];
+  const t = await appToken();
+  if (!t) return "";
+  try {
+    const r = await fetch("https://services.leadconnectorhq.com/oauth/locationToken", {
+      method: "POST", headers: { Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ companyId: APP_CO, locationId: loc }).toString(), signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) { const d = await r.json(); if (d?.access_token) return (appLocTok[loc] = String(d.access_token)); }
+  } catch { /* none */ }
+  return "";
+}
 async function savedKey(loc: string): Promise<string> {
   if (!loc || !BR_SB) return "";
   try {
@@ -107,7 +149,7 @@ async function savedKey(loc: string): Promise<string> {
 
 /* mark the HighLevel invoice paid (HighLevel API: record a payment on an invoice) */
 async function markGhlPaid(loc: string, inv: string, dollars: number, intent: string): Promise<string> {
-  const t = await savedKey(loc) || Deno.env.get("GHL_TOKEN_" + loc) || Deno.env.get("GHL_TOKEN") || "";
+  const t = await savedKey(loc) || Deno.env.get("GHL_TOKEN_" + loc) || await appMint(loc) || Deno.env.get("GHL_TOKEN") || "";
   if (!t) return "no HighLevel key for " + loc;
   const r = await fetch(`https://services.leadconnectorhq.com/invoices/${inv}/record-payment`, {
     method: "POST", headers: { Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/json" },

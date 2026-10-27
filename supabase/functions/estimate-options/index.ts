@@ -128,11 +128,54 @@ async function ownerLoc(owner: string): Promise<string> {
   if (HOUSE_LOC && loc === HOUSE_LOC && !(await houseOwners()).includes(owner)) return "";   // a stale pointer to the house account
   return loc;
 }
+/* the BuilderPro Connect app's agency login (ghl_oauth, saved when it was installed),
+   renewed when it's about to run out. It can open any sub-account; the agency key can't. */
+const APP_SB = Deno.env.get("SUPABASE_URL") ?? "", APP_SK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const APP_ID = Deno.env.get("GHL_CLIENT_ID") ?? "", APP_SECRET = Deno.env.get("GHL_CLIENT_SECRET") ?? "", APP_CO = Deno.env.get("GHL_COMPANY_ID") ?? "";
+let appTok: { t: string; exp: number } | null = null;
+async function appToken(): Promise<string> {
+  if (appTok && appTok.exp > Date.now() + 60e3) return appTok.t;
+  try {
+    const h = { apikey: APP_SK, Authorization: `Bearer ${APP_SK}`, "Content-Type": "application/json" };
+    const row = (await (await fetch(`${APP_SB}/rest/v1/ghl_oauth?id=eq.1&select=*`, { headers: h })).json())?.[0];
+    if (!row?.refresh_token) return "";
+    const exp = Date.parse(row.expires_at ?? "") || 0;
+    if (row.access_token && exp > Date.now() + 60e3) { appTok = { t: row.access_token, exp }; return row.access_token; }
+    if (!APP_ID || !APP_SECRET) return "";
+    const r = await fetch("https://services.leadconnectorhq.com/oauth/token", {
+      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+      body: new URLSearchParams({ client_id: APP_ID, client_secret: APP_SECRET, grant_type: "refresh_token", refresh_token: row.refresh_token, user_type: "Company" }).toString(),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.access_token) return "";
+    const nexp = Date.now() + (Number(d.expires_in || 86400) - 60) * 1000;
+    appTok = { t: d.access_token, exp: nexp };
+    await fetch(`${APP_SB}/rest/v1/ghl_oauth?id=eq.1`, { method: "PATCH", headers: h, body: JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token ?? row.refresh_token, expires_at: new Date(nexp).toISOString(), updated_at: new Date().toISOString() }) });
+    return d.access_token;
+  } catch { return ""; }
+}
+/* a token for one sub-account, opened with the app's login */
+const appLocTok: Record<string, string> = {};
+async function appMint(loc: string): Promise<string> {
+  if (!loc || !APP_CO) return "";
+  if (appLocTok[loc]) return appLocTok[loc];
+  const t = await appToken();
+  if (!t) return "";
+  try {
+    const r = await fetch("https://services.leadconnectorhq.com/oauth/locationToken", {
+      method: "POST", headers: { Authorization: `Bearer ${t}`, Version: "2021-07-28", Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ companyId: APP_CO, locationId: loc }).toString(), signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) { const d = await r.json(); if (d?.access_token) return (appLocTok[loc] = String(d.access_token)); }
+  } catch { /* none */ }
+  return "";
+}
 async function ghlToken(loc: string): Promise<string> {
   const k = await one(`ghl_keys?location_id=eq.${encodeURIComponent(loc)}&select=token&limit=1`);
   if (k?.token) return String(k.token);
   const env = Deno.env.get(`GHL_TOKEN_${loc}`); if (env) return env;
   if (loc === HOUSE_LOC && GHL_TOKEN) return GHL_TOKEN;
+  const app = await appMint(loc); if (app) return app;
   if (GHL_API_KEY && GHL_COMPANY_ID) {
     try {
       const r = await fetch(`${GHL_BASE}/oauth/locationToken`, {
