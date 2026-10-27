@@ -306,3 +306,23 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
 - Login user: "AZ Two Owner" exists (has a personal calendar): **PASS**
 - AI receptionist row saved; the Builder AI check was skipped because the Anthropic credit is empty; the account is marked "built": **PASS** (fallback works)
 - Note: the setup log says "Business details filled in" even though HighLevel refused the custom values. Logged for the cloud session to fix (the step should check the response).
+
+### Part 2: ready pool (Agency Pro)
+- Made by the cloud pool filler, a few every 5 minutes: Foundation 5/5, OS 5/5, Enterprise 1 + 4 more at the 02:15 UTC tick (final count below in the summary).
+- Spot checks (Automation > Workflows): Foundation 1 `KZBRN30oM8OSEnDFfGmO` has the 4 Foundation folders + 23 Find a Pro + S1/S2, published: **PASS**. OS 1 `CrSNJ9vzI91dIyr0FpxB` has folders 1-4, 6, 7 (no Enterprise folder): **PASS**. Enterprise 1 `B3wHKZG2ikxqAPGlp65G` has all 7 folders: **PASS**.
+
+### Part 3: BuilderPro's own customer workflows (BuilderPro OS `edV5mRAXJyhzTp6PthaS`)
+- W1-W7 were **already built and published on 2026-10-14**, so nothing was rebuilt.
+- Pipeline "BuilderPro customers": stages exactly Demo booked, Trial, Paid, Past due, Cancelled: **PASS** (the app finds it by name).
+- Test contact: creating "Narek Test" failed in the HighLevel UI (Save did nothing, no error, nothing created). Used the existing **AZ Two Owner** contact instead: it's the owner's own address narek7099+az2@gmail.com with **no phone**.
+- **End-to-end test, app to workflow: PASS.** The app's own `bp-cancelled` tag (from the cloud house sync at 02:00 UTC) started **W6 Cancelled** by itself: Add to workflow > Create/update cancelled opportunity **Executed** > cancellation feedback email **Executed** > Wait 30 days (waiting).
+- Tags added by hand at 7:21 pm PDT, results from the execution logs:
+  - **W1 Demo request: PASS.** Wait 1 min finished > Initial demo SMS **Skipped** (no phone) > walkthrough email **Executed** > waiting 1 day.
+  - **W2 Trial started: PASS.** The "Welcome to BuilderPro" email arrived in the conversation; it's enrolled and waiting for the day-1 step.
+  - **W3 Trial ending: PASS.** "Trial ends in 3 days" SMS **Skipped** (no phone) > waiting 2 days.
+  - **W4 Paid: PASS.** The "Thanks for joining BuilderPro" email arrived; enrolled (30-day wait).
+  - **W5 Payment failed: PASS.** The "Your BuilderPro payment didn't go through" email arrived; enrolled (day 3/7 steps waiting).
+  - **W6 Cancelled: PASS** (above).
+  - **W7 Not using BuilderPro: PASS.** Re-engagement SMS **Skipped** (no phone) > removed bp-inactive-7d tag **Executed** > finished.
+- Left as is: the test contact stays enrolled in the waits. Its later texts will skip (no phone), and the only emails go to narek7099+az2@gmail.com. W5 day 7 will create a "Call about payment" task on it; ignore that.
+- `review_link` / `bp_demo_link` custom values were not checked/changed (W1 and W4 use them; see "Needs the owner").
