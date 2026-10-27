@@ -376,3 +376,26 @@ Prices from the agency's own **Billing > Wallet & Transactions > Pricing** page 
 ### Notes for the cloud session
 - `finishClient` logs "Business details filled in" even when HighLevel answers 401. It should check the response and log "custom values not filled: no sub-account key".
 - The watcher (`ghl-diag`, cron `ghl-setup-watch`) will keep reporting "no (401)" every 5 minutes, which is harmless. Unschedule it, or point it at keys added with Add key.
+
+## Marketplace app (2026-10-26, Claude Code on the owner's PC)
+
+Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), the `ghl_oauth` table exists and is empty, and `ghl-diag` is at v3 (uses the app login when there is one).
+
+### Step 1: create the app - PASS
+- marketplace.gohighlevel.com > My apps > Create app. Already signed in with the agency login; no developer sign-up and nothing to pay.
+- Options offered and picked:
+  - App name: **BuilderPro Connect**
+  - App type: Private / Public. Picked **Private**. HighLevel's note: private is for small pilots; installs are blocked if it's active in more than 5 *external* agencies (we only use our own).
+  - Target user: Sub-Account (recommended) / Agency. Picked **Sub-Account**. This can't be changed after creation.
+  - Who can install: Everyone / Agency only. Picked **Agency only**.
+  - Listing type: White-label (recommended) / Standard. Started on White-label, then switched to **Standard (non white-label)**: white-label refuses any redirect URL with a HighLevel reference ("The redirect url contains a HighLevel reference. Please remove any Highlevel references to save."), and `ghl-oauth` contains "ghl". Standard only changes how a public listing looks; the app is private.
+  - There was no "install on all / future sub-accounts" toggle on the create form. The install screen in Step 3 may offer it.
+- App id: `6ae0328f3e7307a1a02a17f0` (status: vdraft / DRAFT).
+- Advanced Settings > Auth:
+  - Redirect URL: `https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/ghl-oauth`, saved.
+  - Scopes: all **33** in the plan exist and are selected and saved (checked after a reload: "33 Scopes selected"). That's oauth.readonly/write, locations.readonly/write, locations/customValues, customFields and tags (read+write), contacts, opportunities, calendars, calendars/events, conversations, conversations/message, users (read+write), workflows.readonly, snapshots.readonly, companies.readonly, invoices, invoices/estimate and products (read+write). **None missing.** HighLevel flagged `users.write` as a sensitive scope (it asks to confirm); confirmed.
+- Manage > Secrets > Client keys > Add: created one key named **BuilderPro Supabase**.
+  - **Client ID:** `6ae0328f3e7307a1a02a17f0-mvq8h58r`.
+  - The Client Secret was not copied, read or logged. The pop-up showing it was left open for the owner.
+
+### Step 2: owner adds GHL_CLIENT_ID and GHL_CLIENT_SECRET in Supabase - waiting
