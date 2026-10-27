@@ -5,8 +5,8 @@ The owner moved HighLevel to the **Agency Pro ($497)** plan for one day, because
 Read these first: `docs/GHL-BUILD-GUIDE.md` (section 1), `ghl-build-log.md` (what's already built) and `GHL-BUILD-SPEC.md` (ground rules). Log everything you do in `ghl-build-log.md` under a new heading "Pro day 2026-10-27", and commit and push to `claude/web-os-dashboard-design-ijwlrd` after each part.
 
 ## What the cloud session already did (you don't need to do it)
-- **Automatic creation is on.** Command Center onboarding retries the AZ Test account (narek7099+az2@gmail.com) by itself: it builds a sub-account from the Enterprise snapshot.
-- **The ready pool is filling by itself.** These are blank sub-accounts named "BuilderPro pool · Enterprise 1", "BuilderPro pool · OS 1" and so on, about 5 at a time every 5 minutes, up to 5 for each plan. After the downgrade, new sign-ups take one from the pool.
+- **Automatic creation works.** At 02:00 UTC BuilderPro built **AZ Test Roofing (sample)** (`ls5NV2b0IftrM7QDShJ6`) from the Enterprise snapshot and made its HighLevel login. The test account is narek7099+az2@gmail.com. Its custom values are still blank until Part 0 is done.
+- **The ready pool is filling by itself.** These are blank sub-accounts named "BuilderPro pool · Enterprise 1", "BuilderPro pool · OS 1" and so on, about 5 at a time every 5 minutes, up to 5 for each plan. Enterprise 1 already exists (`B3wHKZG2ikxqAPGlp65G`). After the downgrade, new sign-ups take one from the pool.
 - **Your own customers get tagged automatically.** The house sub-account is **BuilderPro OS** (`edV5mRAXJyhzTp6PthaS`). When an account's status changes, BuilderPro adds the tag there and moves the contact's card in the **"BuilderPro customers"** pipeline:
 
   | Status change | Tag | Pipeline stage |
@@ -17,7 +17,7 @@ Read these first: `docs/GHL-BUILD-GUIDE.md` (section 1), `ghl-build-log.md` (wha
   | payment failed | `bp-payment-failed` | Past due |
   | cancelled | `bp-cancelled` | Cancelled |
 
-  The pipeline is found by name, so **no IDs need to be sent to anyone**.
+  The pipeline is found by name, so **no IDs need to be sent to anyone**. This already works: the AZ Test contact (narek7099+az2@gmail.com) got `bp-cancelled` and its card is in Cancelled. The tag went on before W6 existed, so no workflow ran for it.
 - **A watcher finishes the setup.** It runs every 5 minutes and completes anything that was blocked, as soon as Part 0 is done.
 
 ## Ground rules
@@ -45,10 +45,10 @@ Right now BuilderPro can create sub-accounts, but HighLevel won't let it work in
    
    Save.
 4. If editing would show a new key or warn that the key will change, **cancel**, and log "Part 0 needs the owner: the agency key needs the OAuth scopes".
-5. Within 10 minutes the watcher confirms it. You can see this in the BuilderPro OS sub-account under Contacts: a contact for narek7099+az2@gmail.com shows up with the tags `bp-cancelled`, `bp-customer` and `bp-plan-enterprise`. That's the automatic tagging test. Log whether it appeared and when.
+5. Within 10 minutes the watcher finishes AZ Test. In **AZ Test Roofing (sample)** → Settings → Custom Values, Business Name, Business Phone, Trade and Owner Name should now be filled in. If they're still blank 15 minutes after saving, log "Part 0 didn't take: custom values still blank" under "Needs the owner".
 
 ## Part 1: check the automatic build (Agency Pro)
-1. In HighLevel's agency view → Sub-Accounts, find **AZ Test Roofing (sample)**. It should appear within about 10 minutes of starting; log the time you see it.
+1. In HighLevel's agency view → Sub-Accounts, find **AZ Test Roofing (sample)** (`ls5NV2b0IftrM7QDShJ6`).
 2. Open it and check (look, don't change):
    - **Business profile:** the name, email and address match the sign-up.
    - **Custom values:** Business Name, Business Phone, Service Area, Business Hours, Trade and Owner Name are filled in, not placeholders. Before Part 0 is done they'll be blank; the watcher fills them within 10 minutes after.
@@ -65,7 +65,7 @@ Right now BuilderPro can create sub-accounts, but HighLevel won't let it work in
 ## Part 3: workflows for BuilderPro's own customers (in BuilderPro OS `edV5mRAXJyhzTp6PthaS`)
 Build these in **BuilderPro OS**, exactly as written in `docs/GHL-BUILD-GUIDE.md` section 1. Skip the Private Integration step in that section; it isn't needed anymore.
 1. Calendar **"BuilderPro demo"**: 20 minutes, Mon–Fri 9–5.
-2. Pipeline **"BuilderPro customers"** with exactly these stage names: Demo booked, Trial, Paid, Past due, Cancelled. The app looks for these names, so spell them exactly.
+2. Pipeline **"BuilderPro customers"**: it already exists. Check its stages are named exactly Demo booked, Trial, Paid, Past due and Cancelled, because the app looks for these names. Add or rename stages if needed, but don't delete any stage that has cards in it.
 3. Custom values:
    - `bp_demo_link`: the BuilderPro demo calendar's booking link
    - `review_link`: leave it empty if there's no Google review link, and log it
