@@ -367,7 +367,7 @@ Prices from the agency's own **Billing > Wallet & Transactions > Pricing** page 
    - later: a HighLevel Marketplace app (OAuth), which would fix it for all accounts.
    Everything else in the automatic build works.
 3. To rebill phone costs, connect Stripe in HighLevel (Settings > Phone Integration > Sub Account Settings > Connect Stripe), and turn rebilling on per client sub-account.
-4. House custom values `bp_demo_link` and `review_link` weren't checked; W1 and W4 use them. Check they're filled in BuilderPro OS > Settings > Custom Values.
+4. In BuilderPro OS, `bp_demo_link` is set (a booking widget link), but **`review_link` doesn't exist**, so W4's 30-day text would have a blank review link. Add a custom value named review_link with your Google review link (Settings > Custom Values > Add).
 5. Test leftovers you may delete (deleting is permanent, so they were left for you):
    - in AZ Test Roofing (sample): the "Narek Test" contact, its Jobs opportunity and the Oct 27 8 am Inspection.
    - in BuilderPro OS: the AZ Two Owner contact has the test tags and is waiting in W1-W6; its texts skip, and its emails only go to narek7099+az2@gmail.com.
