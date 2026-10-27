@@ -71,7 +71,6 @@ async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | 
   return ok ? { sent: true } : { sent: false, error: out.join("; ") };
 }
 
-const HOUSE_LOC = Deno.env.get("GHL_LOCATION_ID") ?? "", HOUSE_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
 /* the BuilderPro Connect app's agency login (ghl_oauth, saved when it was installed),
    renewed when it's about to run out. It can open any sub-account; the agency key can't. */
 const APP_SB = Deno.env.get("SUPABASE_URL") ?? "", APP_SK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -114,6 +113,7 @@ async function appMint(loc: string): Promise<string> {
   } catch { /* none */ }
   return "";
 }
+const HOUSE_LOC = Deno.env.get("GHL_LOCATION_ID") ?? "", HOUSE_TOKEN = Deno.env.get("GHL_TOKEN") ?? "";
 async function locationToken(loc: string): Promise<string> {
   const own = await savedKey(loc); if (own) return own;
   if (loc && loc === HOUSE_LOC && HOUSE_TOKEN) return HOUSE_TOKEN;   // BuilderPro's own account

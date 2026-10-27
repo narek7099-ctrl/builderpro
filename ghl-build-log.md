@@ -446,4 +446,6 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - 13 functions that open a client's sub-account now try the BuilderPro Connect app's login (ghl_oauth) before the agency key, which can't: lead-intake, lead-in, pros, asset-scan, estimate-options, estimate-accepted, ghl-invoice, ghl-estimate, customer-portal, ai-brain-sync, stripe-pay, stripe-webhook, ghl-events.
 - ghl-invoice, ghl-estimate and customer-portal no longer hand BuilderPro's own key to other clients' accounts.
 - Order stays: the client's own saved key first, then BuilderPro's key for BuilderPro's own account, then the app.
-- **Not deployed yet**: the deploy from this session was blocked by a permission check. Code is on main.
+- **Deployed 2026-10-27** (owner said "deploy"): all 13 functions, verify JWT off as before.
+- **Live test: PASS.** A test lead (narek7099@gmail.com, no phone) sent to lead-in for AZ Test Roofing (sample) reached AZ Test's HighLevel: lead_log ghl_status "sent" with a contact id. AZ Test has no saved key, so only the app login could have opened it.
+- Seen while checking, **not caused by this change**: since Oct 25, ghl-events can't write custom fields in location aUs7E5m1gmLXoeIV3WM9 (the GHL_LOCATION_ID secret; it holds the Summit Roofing Co. / Foundation Roofing demo rows). That location keeps using GHL_TOKEN, which lacks the custom-fields scope ("401 The token is not authorized for this scope"). Two events failed (crew_no_show Oct 25, job_stalled Oct 27).
