@@ -326,3 +326,14 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
   - **W7 Not using BuilderPro: PASS.** Re-engagement SMS **Skipped** (no phone) > removed bp-inactive-7d tag **Executed** > finished.
 - Left as is: the test contact stays enrolled in the waits. Its later texts will skip (no phone), and the only emails go to narek7099+az2@gmail.com. W5 day 7 will create a "Call about payment" task on it; ignore that.
 - `review_link` / `bp_demo_link` custom values were not checked/changed (W1 and W4 use them; see "Needs the owner").
+
+### Part 4: contractor workflows in AZ Test Roofing (sample)
+- Contact "Narek Test" (narek7099@gmail.com, **no phone**) created at 7:25 pm PDT. Note: HighLevel's Save does nothing unless you click or tab out of the email box first. That's why the house-account attempt failed.
+- **02 Speed to Lead (tag new-lead): PASS.** None branch > Set opener (general) **Executed** > Add tag bot-active **Executed** > finished.
+- **01 AI Qualifier (started by 02's bot-active): PASS.** Create opportunity (Jobs / New Lead) **Executed** > tag **Executed** > Opener SMS **Skipped** (no phone) > waiting for a reply.
+- **05 Appointment (Inspection booked for Tue Oct 27, 8:00 am): PASS.** Tag booked **Executed** > stage Inspection Scheduled **Executed** (the card moved New Lead > Inspection Scheduled) > Booking confirmation SMS **Skipped** (no phone) > owner alert **Executed** > wait until 24h before finished (less than 24h away) > Reminder 24h **Skipped** (no phone) > waiting until 2h before.
+- **33 Job Completed > Review > Referral (tag bp-job-completed): PASS.** Send branch **Executed** > Job complete SMS **Skipped** (no phone) > waiting 2 days.
+- **Estimate follow-up (07): NOT RUN.** It needs an estimate sent from the AZ Test portal, which needs that login's password (not typed, by the rules).
+- **S1-S5 missed call: NOT RUN.** There's no phone number in the sub-account, so they can't fire (expected; see Part 5).
+- Every SMS step skipped only because there's no phone. Every non-text step ran.
+- Cleanup **not done on purpose**: the test contact, its opportunity and the Oct 27 8 am appointment stay in AZ Test (a test sub-account; deleting is permanent, so it's left to the owner). Its later texts will skip; nothing reaches a real person.
