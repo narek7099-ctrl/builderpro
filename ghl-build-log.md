@@ -399,3 +399,4 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
   - The Client Secret was not copied, read or logged. The pop-up showing it was left open for the owner.
 
 ### Step 2: owner adds GHL_CLIENT_ID and GHL_CLIENT_SECRET in Supabase - waiting
+- The owner accidentally deleted that first key, so a new one was made with the same name, **BuilderPro Supabase**. **New Client ID:** `6ae0328f3e7307a1a02a17f0-mvq8kkxg`. The old ID (`...-mvq8h58r`) no longer works. The secret pop-up was left open again, unread.
