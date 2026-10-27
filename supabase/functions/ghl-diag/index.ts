@@ -14,8 +14,25 @@ const H = (t: string) => ({ Authorization: `Bearer ${t}`, Version: "2021-07-28",
 const msg = async (r: Response) => { const t = await r.text(); try { const d = JSON.parse(t); return String(d.message ?? d.error ?? d.msg ?? "").slice(0, 160); } catch { return t.slice(0, 160); } };
 const cfg = async (k: string) => String((await (await sb(`ai_config?key=eq.${k}&select=value`)).json())?.[0]?.value ?? "");
 const setCfg = (k: string, v: string) => sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: k, value: v }) });
+/* the Marketplace app's agency login (ghl_oauth, saved by ghl-oauth on install), renewed
+   when it's about to run out; the agency key is the fallback (it can't mint, but says why) */
+const CID = Deno.env.get("GHL_CLIENT_ID") ?? "", CSEC = Deno.env.get("GHL_CLIENT_SECRET") ?? "";
+let appTok = "";
+async function agencyToken(): Promise<string> {
+  if (appTok) return appTok;
+  const row = (await (await sb("ghl_oauth?id=eq.1&select=*")).json())?.[0];
+  if (!row?.refresh_token) return KEY;
+  if (row.access_token && Date.parse(row.expires_at ?? "") > Date.now() + 120e3) return (appTok = row.access_token);
+  if (!CID || !CSEC) return KEY;
+  const r = await fetch(`${B}/oauth/token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+    body: new URLSearchParams({ client_id: CID, client_secret: CSEC, grant_type: "refresh_token", refresh_token: row.refresh_token, user_type: "Company" }).toString() });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.access_token) return KEY;
+  await sb("ghl_oauth?id=eq.1", { method: "PATCH", body: JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token ?? row.refresh_token, expires_at: new Date(Date.now() + (Number(d.expires_in || 86400) - 60) * 1000).toISOString(), updated_at: new Date().toISOString() }) });
+  return (appTok = d.access_token);
+}
 async function mint(loc: string): Promise<{ token: string; status: number; why: string }> {
-  const m = await fetch(`${B}/oauth/locationToken`, { method: "POST", headers: { ...H(KEY), "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ companyId: CO, locationId: loc }).toString() });
+  const m = await fetch(`${B}/oauth/locationToken`, { method: "POST", headers: { ...H(await agencyToken()), "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ companyId: CO, locationId: loc }).toString() });
   if (!m.ok) return { token: "", status: m.status, why: await msg(m) };
   return { token: (await m.json())?.access_token ?? "", status: m.status, why: "" };
 }
