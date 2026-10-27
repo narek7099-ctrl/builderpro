@@ -346,8 +346,8 @@ Prices from the agency's own **Billing > Wallet & Transactions > Pricing** page 
 - **A2P 10DLC (US texting registration):** "A2P Registration: variable". The agency wallet history shows one A2P registration at **$2.00**. "A2P Fast track" is $2.85. The Phone page says "A2P and carrier fees are passed through without markup". Approval usually takes days to 2 weeks, so start it the day a client signs up.
 - Wallet balance today: $14.13. This month's total spend: $3.26 (BuilderPro OS $2.01, Demo $1.25).
 - **Rebilling:** Settings > Phone Integration > Sub Account Settings already says "You are rebilling telephone usage (Calls, SMS, Phone No, etc) to your clients", **but it needs Stripe connected in HighLevel** ("Connect Stripe" button there). Rebilling is set per sub-account (all show Disabled). This is part of HighLevel's SaaS features. Check that the $297 Unlimited plan keeps rebilling before relying on it.
-- **Owner's decision (recorded):** each client gets **a new local number in their sub-account (option A)**. **Forwarding** their existing number to it is offered (option B). **Porting** only if a client asks (option C). Costs are **rebilled to the client**.
-- Rough cost per client: number $1.03/mo + texts about $0.01 each with carrier fees + call minutes + one-time A2P registration (a few dollars). A normal contractor sending about 500 texts a month comes to roughly $6-10 a month, all rebilled.
+- **Owner's decision (recorded):** each client gets **a new local number in their sub-account (option A)**. **Forwarding** their existing number to it is offered (option B). **Porting** only if a client asks (option C). ~~Costs are rebilled to the client.~~ **Changed 2026-10-26: the owner does not want phone costs charged to clients. BuilderPro pays them from the agency wallet; rebilling stays off.**
+- Rough cost per client: number $1.03/mo + texts about $0.01 each with carrier fees + call minutes + one-time A2P registration (a few dollars). A normal contractor sending about 500 texts a month comes to roughly $6-10 a month, paid by BuilderPro (not rebilled).
 
 ## Pro day summary (2026-10-26, evening PDT)
 | Part | Result |
@@ -366,7 +366,7 @@ Prices from the agency's own **Billing > Wallet & Transactions > Pricing** page 
    - type them in by hand in Settings > Custom Values, or
    - later: a HighLevel Marketplace app (OAuth), which would fix it for all accounts.
    Everything else in the automatic build works.
-3. To rebill phone costs, connect Stripe in HighLevel (Settings > Phone Integration > Sub Account Settings > Connect Stripe), and turn rebilling on per client sub-account.
+3. ~~Rebill phone costs~~ Not wanted: the owner pays phone costs. Leave Stripe unconnected under Phone Integration and leave rebilling Disabled on every sub-account (it is today). Keep the agency wallet topped up (auto-recharge) so clients' texts and calls never stop.
 4. In BuilderPro OS, `bp_demo_link` is set (a booking widget link), but **`review_link` doesn't exist**, so W4's 30-day text would have a blank review link. Add a custom value named review_link with your Google review link (Settings > Custom Values > Add).
 5. Test leftovers you may delete (deleting is permanent, so they were left for you):
    - in AZ Test Roofing (sample): the "Narek Test" contact, its Jobs opportunity and the Oct 27 8 am Inspection.
@@ -436,3 +436,8 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
   - `ghl-oauth`'s result page shows as raw HTML text (Supabase serves it as text/plain). Cosmetic only.
   - The Marketplace Secrets page lists no client keys even though the key works. It's a HighLevel display issue; nothing to do.
   - The earlier "Needs the owner" item about blank custom values (Pro day, item 2) is now solved for new sign-ups.
+
+## Phone costs: who pays (2026-10-26)
+- Owner's call: **clients are not charged for phone use** (numbers, texts, calls, A2P). BuilderPro pays from the agency wallet.
+- Checked: rebilling is Disabled on every sub-account and Stripe isn't connected under Phone Integration, so nothing can be rebilled today. BuilderPro's code has no rebilling step. No setting was changed.
+- Cost to plan for: about $6-10 per client per month (see Part 5).
