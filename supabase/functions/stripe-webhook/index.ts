@@ -96,7 +96,6 @@ async function feeFor(paymentIntent: string, accountId: string): Promise<{ fee: 
    "Invoice Paid" workflows fire as before. Contractors never see HighLevel. */
 const BR_SB = Deno.env.get("SUPABASE_URL") ?? "", BR_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const BR_SITE = Deno.env.get("PORTAL_URL") || "https://builderpro-os.com/";
-/* the client's own HighLevel key, saved from the Command Center */
 /* the BuilderPro Connect app's agency login (ghl_oauth, saved when it was installed),
    renewed when it's about to run out. It can open any sub-account; the agency key can't. */
 const APP_SB = Deno.env.get("SUPABASE_URL") ?? "", APP_SK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -139,6 +138,7 @@ async function appMint(loc: string): Promise<string> {
   } catch { /* none */ }
   return "";
 }
+/* the client's own HighLevel key, saved from the Command Center */
 async function savedKey(loc: string): Promise<string> {
   if (!loc || !BR_SB) return "";
   try {
