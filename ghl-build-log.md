@@ -287,3 +287,22 @@ Left on Enterprise "Claude Test": the bp-* tags, warranty-sent and the sample BP
 - BuilderPro OS cdRGIx2azgolhnDj257c: v4 (201 assets)
 - BuilderPro Enterprise cWoCOr2RJDfc3x3FxnQm: v5 (238 assets)
 - Not pushed to any existing sub-account.
+
+## Pro day 2026-10-27 (Agency Pro, run from the owner's PC)
+
+### Part 0: agency key permission: NOT POSSIBLE (no change made)
+- Opened agency Settings > Private Integrations > "ADMIN Command API" (the key BuilderPro uses; its "last used" matches the cloud watcher) > Edit > Scopes. Cancelled without saving.
+- An agency-level Private Integration only offers agency scopes (companies, locations, SaaS, snapshots, users, custom menu links, phone numbers, number pools, documents, ad publishing). There is **no OAuth / location-token scope**, so it can never open a sub-account's insides (custom values, calendars list, contacts). The cloud check said the same: "The token is not authorized for this scope".
+- What still works with this key: creating sub-accounts from a snapshot, setting the business profile (name, email, address), and creating the HighLevel login user.
+- What doesn't: filling custom values (Business Name, Trade, Owner Name...) in a new sub-account. That needs either a Private Integration key made **inside** each sub-account (Command Center > Add key), or a HighLevel Marketplace app (OAuth). See "Needs the owner".
+- The house account (BuilderPro OS) works already: it has its own key, and the automatic tag test passed (narek7099+az2 got bp-cancelled and a card in Cancelled at 02:00 UTC).
+
+### Part 1: automatic build of AZ Test Roofing (sample) `ls5NV2b0IftrM7QDShJ6`
+- Created by BuilderPro at 02:00 UTC from the Enterprise snapshot: **PASS**
+- Business profile: name "AZ Test Roofing (sample)", Austin, TX: **PASS**
+- Custom values: all 26 present but **empty**: **FAIL** (cause: Part 0; fill by hand or add the sub-account's key)
+- Calendars: Inspection, Job, Maintenance Visit (+ the owner's personal calendar): **PASS**
+- Workflows: the 7 template folders, workflows published as in the template (01 AI Qualifier, 02 Speed to Lead, 02a, 03a–03c published, 03d draft...): **PASS**
+- Login user: "AZ Two Owner" exists (has a personal calendar): **PASS**
+- AI receptionist row saved; the Builder AI check was skipped because the Anthropic credit is empty; the account is marked "built": **PASS** (fallback works)
+- Note: the setup log says "Business details filled in" even though HighLevel refused the custom values. Logged for the cloud session to fix (the step should check the response).
