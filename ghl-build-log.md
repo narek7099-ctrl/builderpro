@@ -455,3 +455,9 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Removed that step from account-signup, command and ai-team (ghl.ts) and from the ghl-diag retry. Contractors work in BuilderPro only; nothing else used that login.
 - Only AZ Test (narek7099+az2) ever got one. Its HighLevel user is left in place (removing it is the owner's call).
 - **Deployed 2026-10-27** (owner said "deploy and ship to main"): ghl-diag, account-signup, command. ai-team has the same code but never calls it, so it wasn't redeployed.
+
+## AI name check (2026-10-27)
+- Owner saw "my name is Atlas" in a report: it was the old Demo Roofing demo (Atlas was renamed Ridge, then Lisa). No real account says Atlas: the live site, ai-chat, the database and BuilderPro OS's AI agents were all checked (house voice agent is "BuilderPro Support", no number; no house Conversation AI live).
+- **Found, not fixed live:** AZ Test's custom value ridge_assistant_name is blank, so the client AI greeting "this is {{custom_values.ridge_assistant_name}}" has no name. Setup filled business details but never this value (only Publish on the AI page sets it).
+- Fix written, **not deployed** (owner: test more tomorrow): finishClient (account-signup, command, ai-team) and the ghl-diag watcher now set ridge_assistant_name to the name picked at sign-up, else Lisa. To ship: deploy ghl-diag, account-signup and command, then queue AZ Test in ai_config refinish so the watcher fills it.
+- Open for tomorrow: test texts with a real phone; missed-call (S1-S5) and estimate follow-up workflows; review_link in BuilderPro OS; the GHL_LOCATION_ID custom-fields 401 in ghl-events; confirm a new sign-up gets no HighLevel invite email.

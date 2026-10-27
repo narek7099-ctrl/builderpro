@@ -46,7 +46,7 @@ async function refinish(a: any, tok: string): Promise<string[]> {
   let n = 0;
   for (const [k, v] of [["Business Name", a.business], ["Business Phone", a.phone], ["Business Email", a.email], ["Business Address", [pf.address, pf.city, pf.state, pf.zip].filter(Boolean).join(", ")],
     ["Business Website", pf.website], ["Service Area", pf.serviceArea], ["Business Hours", hours], ["Trade", a.trade], ["Owner Name", a.full_name], ["License Number", pf.license],
-    ["Owner Email", a.email], ["Owner Phone", a.phone]]) {
+    ["Owner Email", a.email], ["Owner Phone", a.phone], ["ridge_assistant_name", pf.assistantName || "Lisa"]]) {
     if (!v) continue;
     const cur = have.find((x) => String(x.name).toLowerCase() === String(k).toLowerCase());
     const r = await fetch(`${B}/locations/${loc}/customValues${cur ? "/" + cur.id : ""}`, { method: cur ? "PUT" : "POST", headers: H(tok), body: JSON.stringify({ name: k, value: v }) });

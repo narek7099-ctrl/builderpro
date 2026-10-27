@@ -160,7 +160,9 @@ export async function provisionClient(a: { name: string; business: string; email
       .then((r) => r.json()).then((d) => d?.customValues ?? []).catch(() => []);
     for (const [n, v] of [["Business Name", a.business], ["Business Phone", a.phone], ["Business Email", a.email], ["Business Address", [pf.address, pf.city, pf.state, pf.zip].filter(Boolean).join(", ")],
       ["Business Website", pf.website], ["Service Area", pf.serviceArea], ["Business Hours", hoursText(pf.hours)], ["Trade", a.trade], ["Owner Name", a.name], ["License Number", pf.license],
-      ["Owner Email", a.email], ["Owner Phone", a.phone]]) {
+      ["Owner Email", a.email], ["Owner Phone", a.phone],
+      // the AI receptionist's name: its greeting and prompt read this, and a blank one makes it invent a name
+      ["ridge_assistant_name", pf.assistantName || "Lisa"]]) {
       if (!v) continue;
       const cur = have.find((x) => String(x.name).toLowerCase() === String(n).toLowerCase());
       await fetch(`${GHL_BASE}/locations/${locationId}/customValues${cur ? "/" + cur.id : ""}`, { method: cur ? "PUT" : "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name: n, value: v }) }).catch(() => {});
