@@ -410,3 +410,29 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Confirmation screen: 33 scopes > **Allow & Install**.
 - HighLevel redirected to `ghl-oauth`, which showed **"Connected! ✅"**. (The page appears as raw HTML text because Supabase serves function responses as plain text. It's only cosmetic.)
 - `ghl_oauth` row 1 saved at 05:29 UTC with an access and refresh token for company `9BrXBR8SmvrLflxbCgDa`, valid until 2026-10-28 05:28 UTC; `ghl-diag` renews it.
+
+### Step 4: check it worked - PASS
+- The watcher ran at 05:30 UTC, one minute after the install: `ghl_mint` = "ok at 2026-10-27 05:30" (before the install it was "no (401 The token is not authorized for this scope.)").
+- It worked through the `refinish` queue (now empty) and wrote to AZ Test's setup log: "Business details filled in (10 custom values)" and "AI receptionist books into the Inspection calendar".
+- Checked in HighLevel, AZ Test Roofing (sample) > Settings > Custom Values:
+
+  | Custom value | Expected | Found |
+  |---|---|---|
+  | Business Name | AZ Test Roofing (sample) | AZ Test Roofing (sample) - pass |
+  | Business Phone | (512) 555-0177 | (512) 555-0177 - pass |
+  | Trade | Roofing | Roofing - pass |
+  | Owner Name | AZ Two Owner | AZ Two Owner - pass |
+  | Service Area | Austin, Round Rock | Austin, Round Rock - pass |
+  | Business Hours | Mon 08:00-17:00 ... Sun closed | Mon-Fri 08:00-17:00, Sat 08:00-13:00, Sun closed - pass |
+
+  Also filled: Business Address (Austin, TX), Business Email, Owner Email, Owner Phone.
+- Still blank, because the watcher doesn't set them (AZ Test has no data for them): Booking Link, Business Website, Deposit Percent, Google Review Link, License Number, and the four Location* values.
+
+### Result
+- **Installed: yes.** BuilderPro Connect is on the agency, on 20 sub-accounts, and auto-installs on future ones. Demo Account is left out.
+- **AZ Test custom values: filled in.**
+- No payment was asked at any step. The Client Secret was never read, copied or logged.
+- Notes for the cloud session:
+  - `ghl-oauth`'s result page shows as raw HTML text (Supabase serves it as text/plain). Cosmetic only.
+  - The Marketplace Secrets page lists no client keys even though the key works. It's a HighLevel display issue; nothing to do.
+  - The earlier "Needs the owner" item about blank custom values (Pro day, item 2) is now solved for new sign-ups.
