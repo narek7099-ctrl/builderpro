@@ -58,13 +58,6 @@ async function refinish(a: any, tok: string): Promise<string[]> {
   const cal = (cals.find((c) => /inspection/i.test(c.name ?? "")) ?? cals[0])?.id ?? "";
   if (cal) { await sb(`ai_brain?slug=eq.${loc}`, { method: "PATCH", body: JSON.stringify({ booking_calendar_id: cal }) }); steps.push("AI receptionist books into the " + ((cals.find((c) => c.id === cal)?.name) ?? "first") + " calendar"); }
   else steps.push(cr.ok ? "No calendar found" : `Calendars still blocked (${cr.status})`);
-  // their HighLevel login, if the first try was turned down
-  if ((a.setup_log ?? []).some((l: string) => /GHL login not created/.test(l)) && !(a.setup_log ?? []).some((l: string) => /GHL login created/.test(l))) {
-    const [first, ...rest] = String(a.full_name || "").trim().split(/\s+/);
-    const ur = await fetch(`${B}/users/`, { method: "POST", headers: H(KEY), body: JSON.stringify({ companyId: CO, locationIds: [loc], firstName: first || a.business, lastName: rest.join(" "), email: a.email, phone: a.phone || "", type: "account", role: "admin",
-      permissions: { paymentsEnabled: true, settingsEnabled: true, invoiceEnabled: true, contactsEnabled: true, conversationsEnabled: true, appointmentsEnabled: true, opportunitiesEnabled: true, dashboardStatsEnabled: true, reviewsEnabled: true, marketingEnabled: true, workflowsEnabled: true, phoneCallEnabled: true } }) });
-    steps.push(ur.ok ? "GHL login created for " + a.email : `GHL login still not created (${ur.status} ${await msg(ur)})`);
-  }
   return steps;
 }
 Deno.serve(async (req) => {

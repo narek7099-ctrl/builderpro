@@ -131,7 +131,7 @@ export async function callGHL(op: string, args: A): Promise<{ ok: boolean; statu
 }
 
 /* A new client, end to end: GHL sub-account from the snapshot, business
-   custom values, their AI receptionist brain, and a GHL login. */
+   custom values and their AI receptionist brain. */
 // deno-lint-ignore no-explicit-any
 type Profile = Record<string, any>;
 const DAYS = [["mon", "Mon"], ["tue", "Tue"], ["wed", "Wed"], ["thu", "Thu"], ["fri", "Fri"], ["sat", "Sat"], ["sun", "Sun"]];
@@ -182,14 +182,7 @@ export async function provisionClient(a: { name: string; business: string; email
       custom_instructions: [pf.emergency ? "We offer emergency service: " + pf.emergency : "", pf.leadGoal ? "Main goal on every call: " + pf.leadGoal : "", pf.languages ? "Languages spoken: " + pf.languages : "", pf.notes || ""].filter(Boolean).join("\n") }),
   });
   if (rb.ok) steps.push("AI receptionist set up" + (pf.services ? " with their services, hours and FAQs" : ""));
-  try {
-    const [first, ...rest] = (a.name || "").trim().split(/\s+/);
-    const ur = await fetch(`${GHL_BASE}/users/`, {
-      method: "POST", headers: ghlHeaders(GHL_API_KEY),
-      body: JSON.stringify({ companyId: GHL_COMPANY_ID, locationIds: [locationId], firstName: first || a.business, lastName: rest.join(" "), email: a.email, phone: a.phone || "", type: "account", role: "admin",
-        permissions: { paymentsEnabled: true, settingsEnabled: true, invoiceEnabled: true, contactsEnabled: true, conversationsEnabled: true, appointmentsEnabled: true, opportunitiesEnabled: true, dashboardStatsEnabled: true, reviewsEnabled: true, marketingEnabled: true, workflowsEnabled: true, phoneCallEnabled: true } }),
-    });
-    steps.push(ur.ok ? "GHL login created for " + a.email : "GHL login not created (" + ur.status + ")");
-  } catch { steps.push("GHL login not created"); }
+  /* no HighLevel login for the client: HighLevel would email them an invite to
+     sign in there, and contractors work in BuilderPro only */
   return { ok: true, locationId, steps };
 }

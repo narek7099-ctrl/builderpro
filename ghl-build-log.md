@@ -449,3 +449,9 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - **Deployed 2026-10-27** (owner said "deploy"): all 13 functions, verify JWT off as before.
 - **Live test: PASS.** A test lead (narek7099@gmail.com, no phone) sent to lead-in for AZ Test Roofing (sample) reached AZ Test's HighLevel: lead_log ghl_status "sent" with a contact id. AZ Test has no saved key, so only the app login could have opened it.
 - Seen while checking, **not caused by this change**: since Oct 25, ghl-events can't write custom fields in location aUs7E5m1gmLXoeIV3WM9 (the GHL_LOCATION_ID secret; it holds the Summit Roofing Co. / Foundation Roofing demo rows). That location keeps using GHL_TOKEN, which lacks the custom-fields scope ("401 The token is not authorized for this scope"). Two events failed (crew_no_show Oct 25, job_stalled Oct 27).
+
+## No HighLevel login for clients (2026-10-27)
+- Owner got HighLevel's "sign in" invite (from noreply@donotreply.acct-mgmt.com) when AZ Test was built. Cause: finishClient created a HighLevel user for the client (POST /users/), and HighLevel emails every new user.
+- Removed that step from account-signup, command and ai-team (ghl.ts) and from the ghl-diag retry. Contractors work in BuilderPro only; nothing else used that login.
+- Only AZ Test (narek7099+az2) ever got one. Its HighLevel user is left in place (removing it is the owner's call).
+- **Not deployed yet**: needs the owner's OK (ghl-diag, account-signup, command).
