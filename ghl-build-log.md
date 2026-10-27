@@ -454,4 +454,4 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Owner got HighLevel's "sign in" invite (from noreply@donotreply.acct-mgmt.com) when AZ Test was built. Cause: finishClient created a HighLevel user for the client (POST /users/), and HighLevel emails every new user.
 - Removed that step from account-signup, command and ai-team (ghl.ts) and from the ghl-diag retry. Contractors work in BuilderPro only; nothing else used that login.
 - Only AZ Test (narek7099+az2) ever got one. Its HighLevel user is left in place (removing it is the owner's call).
-- **Not deployed yet**: needs the owner's OK (ghl-diag, account-signup, command).
+- **Deployed 2026-10-27** (owner said "deploy and ship to main"): ghl-diag, account-signup, command. ai-team has the same code but never calls it, so it wasn't redeployed.
