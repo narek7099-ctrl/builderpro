@@ -225,7 +225,8 @@ function render(){
   if(st==='account') h='<h1>Create your login</h1><p class="sub">You use this email and password to sign in to BuilderPro on your phone and computer.</p><div class="grid">'
     +fld('iName','Your full name',S.name,{ac:'name'})+fld('iPhone','Mobile phone',S.phone,{type:'tel',ac:'tel',ph:'(512) 555-0148'})
     +fld('iEmail','Email',S.email,{type:'email',ac:'email',full:1,ph:'you@yourcompany.com'})+'<div class="f full"><label for="iPass">Password</label><div class="pw"><input id="iPass" type="password" value="'+esc(S.password||'')+'" placeholder="8 or more characters" autocomplete="new-password"><button type="button" onclick="pwToggle(this)" aria-pressed="false">Show</button></div></div>'
-    +'</div><input class="hp" id="iWeb" tabindex="-1" autocomplete="off" aria-hidden="true">'+nav();
+    +'</div><p class="sub" style="font-size:12px;margin-top:10px">By continuing, you agree that BuilderPro may text and email you about your trial and account. Message and data rates may apply. Reply STOP to opt out.</p>'
+    +'<input class="hp" id="iWeb" tabindex="-1" autocomplete="off" aria-hidden="true">'+nav();
   if(st==='business') h='<h1>About your business</h1><p class="sub">We use this to build your account, your booking page and your AI receptionist.</p><div class="grid">'
     +fld('iBiz','Business name',S.business,{ac:'organization'})+fld('iTrade','Trade',S.trade||'Roofing',{type:'select',opts:TRADES})
     +fld('iAddr','Street address',P.address,{ac:'address-line1',full:1,opt:1})
@@ -276,7 +277,9 @@ function collect(){
   if(st==='account'){ if(!need(['iName','iPhone','iEmail','iPass']))return false;
     if(!/^\S+@\S+\.\S+$/.test(v('iEmail'))){$('msg').textContent='That email does not look right.';return false;}
     if($('iPass').value.length<8){$('msg').textContent='Use a password of at least 8 characters.';return false;}
-    S.name=v('iName');S.phone=v('iPhone');S.email=v('iEmail').toLowerCase();S.password=$('iPass').value;S.hp=v('iWeb'); }
+    S.name=v('iName');S.phone=v('iPhone');S.email=v('iEmail').toLowerCase();S.password=$('iPass').value;S.hp=v('iWeb');
+    /* if they stop partway, BuilderPro can follow up (no password is sent) */
+    try{fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+SB_ANON},body:JSON.stringify({op:'interest',name:S.name,email:S.email,phone:S.phone,plan:S.plan,website:S.hp})}).catch(function(){});}catch(e){} }
   if(st==='business'){ if(!need(['iBiz','iCity','iState','iArea']))return false;
     S.business=v('iBiz');S.trade=v('iTrade');P.address=v('iAddr');P.city=v('iCity');P.state=v('iState');P.zip=v('iZip');P.serviceArea=v('iArea');P.website=v('iSite');P.license=v('iLic');P.crewSize=v('iCrew');P.years=v('iYears'); }
   if(st==='services'){ if(!need(['iSvc']))return false;
