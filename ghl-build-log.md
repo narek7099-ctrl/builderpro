@@ -498,3 +498,8 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Supabase lets one function call about 30 others per run ("Rate limit exceeded for trace"), so the check pings 24; it reports a hit limit as a note, never a false alarm.
 - It can't tell whether the Claude credit is empty without paying for a test call, so it doesn't try.
 - Health alerts: a morning run that finds problems also puts a "BuilderPro: N problems found this morning" notification in the bell of each Command Center admin who has a BuilderPro login (kind system_health, once a day, tapping it opens the Command Center). It becomes a phone push once the app has its Apple/Firebase keys. Pressing Check now doesn't notify. A test alert was sent on 2026-10-28.
+
+## LLC prep (2026-10-28, cloud session)
+- docs/LLC-DAY.md: the ordered list for when the LLC exists (EIN, bank, D-U-N-S, Stripe business details, legal pages, HighLevel profile and A2P, Apple/Google as an organization, bills, sales tax, lawyer review).
+- terms.html rewritten around the old text: free trial, billing, add-ons, call minutes, price changes, failed payments, cancelling and refunds (no refunds for partial months), texting consent (TCPA, A2P), AI features, contractor-customer payments, availability, disclaimer, liability cap (fees in the last 12 months), indemnity, changes.
+- Every spot that needs the LLC's name, state or address has an `<!-- LLC: ... -->` marker (terms 4, privacy 3, data deletion 1); the "© 2026 BuilderPro OS" footer on the other pages is updated the same day.
