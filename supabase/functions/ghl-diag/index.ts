@@ -60,6 +60,40 @@ async function refinish(a: any, tok: string): Promise<string[]> {
   else steps.push(cr.ok ? "No calendar found" : `Calendars still blocked (${cr.status})`);
   return steps;
 }
+/* BuilderPro's own follow-ups in the house account (GHL-BUILD-GUIDE section 1):
+   a sign-up started but not finished within 45 minutes gets bp-demo-request (W1), and an
+   owner who hasn't opened BuilderPro for 7 days gets bp-inactive-7d (W7; one nudge per absence). */
+async function houseTag(house: string, tok: string, email: string, name: string, phone: string, tags: string[]): Promise<string> {
+  // the owner's own test logins (name+tag@) get no phone, so nothing texts them
+  const ph = /\+[^@]*@/.test(email) ? undefined : (phone || undefined);
+  const [first, ...rest] = String(name || "").trim().split(/\s+/);
+  const ur = await fetch(`${B}/contacts/upsert`, { method: "POST", headers: H(tok), body: JSON.stringify({ locationId: house, email, phone: ph, firstName: first || undefined, lastName: rest.join(" ") || undefined, source: "BuilderPro app" }) });
+  const ud = await ur.json().catch(() => ({}));
+  const cid = ud?.contact?.id || ud?.id;
+  if (!ur.ok || !cid) return `contact not saved (${ur.status} ${String(ud?.message ?? "").slice(0, 80)})`;
+  const tr = await fetch(`${B}/contacts/${cid}/tags`, { method: "POST", headers: H(tok), body: JSON.stringify({ tags }) });
+  return tr.ok ? "" : `tag not added (${tr.status})`;
+}
+async function houseFollowups(house: string, tok: string): Promise<string[]> {
+  const out: string[] = [], now = new Date().toISOString();
+  const pend = await (await sb(`signup_interest?tagged_at=is.null&created_at=lt.${new Date(Date.now() - 45 * 6e4).toISOString()}&select=*&order=created_at.asc&limit=10`)).json();
+  for (const p of Array.isArray(pend) ? pend : []) {
+    const acct = (await (await sb(`accounts?email=eq.${encodeURIComponent(p.email)}&select=user_id`)).json())?.[0];
+    const err = acct ? "" : await houseTag(house, tok, p.email, p.name, p.phone, ["bp-demo-request", "bp-signup-unfinished"]);
+    await sb(`signup_interest?email=eq.${encodeURIComponent(p.email)}`, { method: "PATCH", body: JSON.stringify(err ? { note: err } : { tagged_at: now, note: acct ? "signed up, no follow-up needed" : "bp-demo-request" }) });
+    out.push(`${p.email}: ${acct ? "finished signing up" : err || "bp-demo-request"}`);
+  }
+  const accts = await (await sb("accounts?status=in.(trial,active)&select=user_id,email,full_name,phone,last_seen_at,created_at,inactive_tagged_at")).json();
+  for (const a of Array.isArray(accts) ? accts : []) {
+    const seen = Date.parse(a.last_seen_at || a.created_at);
+    if (!(Date.now() - seen > 7 * 864e5) || (a.inactive_tagged_at && Date.parse(a.inactive_tagged_at) > seen)) continue;
+    const err = await houseTag(house, tok, a.email, a.full_name, a.phone, ["bp-inactive-7d"]);
+    if (!err) await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ inactive_tagged_at: now }) });
+    out.push(`${a.email}: ${err || "bp-inactive-7d"}`);
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   const c = await cfg("cron_key");
   if (!c || req.headers.get("x-cron-key") !== c) return new Response("no", { status: 403 });
@@ -90,5 +124,11 @@ Deno.serve(async (req) => {
     await sb(`accounts?user_id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ setup_log: [...(Array.isArray(a.setup_log) ? a.setup_log : []), "Finished once the agency key could open the sub-account:", ...steps] }) });
   }
   await setCfg("refinish", left.join(","));
+  const f = await houseFollowups(house, m.token).catch((e) => ["Error: " + String(e).slice(0, 160)]);
+  if (f.length) {
+    const old = (await cfg("house_followups_log")).split("\n").filter(Boolean);
+    const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+    await setCfg("house_followups_log", [...old, ...f.map((l) => stamp + "  " + l)].slice(-40).join("\n"));
+  }
   return new Response("ok");
 });

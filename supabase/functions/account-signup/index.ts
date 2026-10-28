@@ -126,6 +126,19 @@ Deno.serve(async (req) => {
     return json({ ok: true, checkout_url: c.url });
   }
 
+  // the login step of signup.html, before the rest: kept so the house account can follow up
+  // (workflow W1) if they don't finish. Only name, email, phone and plan.
+  if (b.op === "interest") {
+    const em = clean(b.email, 200).toLowerCase();
+    if (clean(b.website) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return json({ ok: true });
+    const since = new Date(Date.now() - 3600_000).toISOString();
+    const n = await sb(`signup_interest?ip=eq.${encodeURIComponent(ip)}&created_at=gt.${since}&select=email`, { headers: { Prefer: "count=exact" } });
+    if (ip && Number((n.headers.get("content-range") ?? "*/0").split("/")[1] || 0) >= 20) return json({ ok: true });
+    await sb("signup_interest?on_conflict=email", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ email: em, name: clean(b.name), phone: clean(b.phone, 40), plan: clean(b.plan, 20), ip }) });
+    return json({ ok: true });
+  }
+
   const plan = clean(b.plan, 20);
   const name = clean(b.name), business = clean(b.business), email = clean(b.email, 200).toLowerCase(), phone = clean(b.phone, 40), trade = clean(b.trade, 80);
   const password = String(b.password ?? "");

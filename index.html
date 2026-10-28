@@ -16372,7 +16372,13 @@ function bpPlanInfo(){
 }
 async function bpAcctLoad(){
   if(!BP_LIVE)return;
-  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,stripe_subscription_id,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ /* a trial that went to Stripe checkout but never got a subscription still needs its card */ if(r.data.status==='trial'&&r.data.checkout_url&&!r.data.stripe_subscription_id)r.data.status='checkout'; var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
+  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,stripe_subscription_id,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ /* a trial that went to Stripe checkout but never got a subscription still needs its card */ if(r.data.status==='trial'&&r.data.checkout_url&&!r.data.stripe_subscription_id)r.data.status='checkout'; var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); bpTouch(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
+}
+/* the owner opened BuilderPro: at most once an hour, so 7 days without a visit can start
+   the house account's "not using it" follow-up (W7) */
+function bpTouch(){
+  try{ var t=+localStorage.getItem('bpTouch')||0; if(Date.now()-t<36e5)return; localStorage.setItem('bpTouch',String(Date.now())); }catch(e){}
+  try{ BP_SB.rpc('bp_touch').then(function(){},function(){}); }catch(e){}
 }
 /* Lisa's call minutes this month against the plan (usage_month, filled hourly by usage-sync) */
 async function bpUsageMeter(){

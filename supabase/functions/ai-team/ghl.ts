@@ -156,8 +156,9 @@ export async function provisionClient(a: { name: string; business: string; email
     const lt = await locationToken(locationId);
     // the plan snapshot already has these custom values (placeholders), so update
     // the existing one by name; create it only when the snapshot doesn't have it
-    const have: { id: string; name: string }[] = await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { headers: ghlHeaders(lt) })
-      .then((r) => r.json()).then((d) => d?.customValues ?? []).catch(() => []);
+    const cvr = await fetch(`${GHL_BASE}/locations/${locationId}/customValues`, { headers: ghlHeaders(lt) }).catch(() => null);
+    const have: { id: string; name: string }[] = cvr?.ok ? await cvr.json().then((d) => d?.customValues ?? []).catch(() => []) : [];
+    let filled = 0;
     for (const [n, v] of [["Business Name", a.business], ["Business Phone", a.phone], ["Business Email", a.email], ["Business Address", [pf.address, pf.city, pf.state, pf.zip].filter(Boolean).join(", ")],
       ["Business Website", pf.website], ["Service Area", pf.serviceArea], ["Business Hours", hoursText(pf.hours)], ["Trade", a.trade], ["Owner Name", a.name], ["License Number", pf.license],
       ["Owner Email", a.email], ["Owner Phone", a.phone],
@@ -165,9 +166,11 @@ export async function provisionClient(a: { name: string; business: string; email
       ["ridge_assistant_name", pf.assistantName || "Lisa"]]) {
       if (!v) continue;
       const cur = have.find((x) => String(x.name).toLowerCase() === String(n).toLowerCase());
-      await fetch(`${GHL_BASE}/locations/${locationId}/customValues${cur ? "/" + cur.id : ""}`, { method: cur ? "PUT" : "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name: n, value: v }) }).catch(() => {});
+      const w = await fetch(`${GHL_BASE}/locations/${locationId}/customValues${cur ? "/" + cur.id : ""}`, { method: cur ? "PUT" : "POST", headers: ghlHeaders(lt), body: JSON.stringify({ name: n, value: v }) }).catch(() => null);
+      if (w?.ok) filled++;
     }
-    steps.push("Business details filled in");
+    // only say it worked when HighLevel took them (the watcher retries if not)
+    steps.push(filled ? `Business details filled in (${filled} custom values)` : `Business details not filled in: HighLevel said ${cvr?.status ?? "nothing"}`);
   } catch { /* optional */ }
   let calId = "";
   try {
