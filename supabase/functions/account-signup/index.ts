@@ -168,8 +168,15 @@ Deno.serve(async (req) => {
     const since = new Date(Date.now() - 3600_000).toISOString();
     const n = await sb(`signup_interest?ip=eq.${encodeURIComponent(ip)}&created_at=gt.${since}&select=email`, { headers: { Prefer: "count=exact" } });
     if (ip && Number((n.headers.get("content-range") ?? "*/0").split("/")[1] || 0) >= 20) return json({ ok: true });
+    // "Book a walkthrough" on the homepage: tagged right away (not after 45 minutes) and shown in the Command Center
+    const walk = b.source === "walkthrough";
+    if (walk && !clean(b.phone, 40)) return json({ ok: false, error: "Add a phone number so we can reach you." }, 400);
     await sb("signup_interest?on_conflict=email", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify({ email: em, name: clean(b.name), phone: clean(b.phone, 40), plan: clean(b.plan, 20), ip }) });
+      body: JSON.stringify({ email: em, name: clean(b.name), phone: clean(b.phone, 40), plan: clean(b.plan, 20), ip,
+        ...(walk ? { source: "walkthrough", business: clean(b.business), tagged_at: null, created_at: new Date().toISOString() } : {}) }) });
+    if (walk) await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: null, email: em, kind: "walkthrough",
+      subject: "Walkthrough: " + (clean(b.business) || clean(b.name) || em),
+      body: `${clean(b.name)}${clean(b.business) ? ", " + clean(b.business) : ""}\nPhone: ${clean(b.phone, 40)}\nEmail: ${em}\nThey asked for a 20-minute walkthrough on the homepage. W1 follows up too; call them to book a time.` }) }).catch(() => {});
     return json({ ok: true });
   }
 

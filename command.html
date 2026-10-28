@@ -423,7 +423,7 @@ async function viewPool(){
 }
 /* Client requests that need a person: cancellations (already done in Stripe), website
    add-ons to build, phone numbers, failed setups. Enterprise first (priority support). */
-var REQKIND={cancel:['Cancelled','ti-door-exit'],cancel_undone:['Kept their plan','ti-arrow-back-up'],website_addon:['Build a website','ti-world'],phone:['Phone number','ti-phone'],setup_failed:['Setup failed','ti-alert-triangle'],billing:['Billing','ti-receipt'],'account-delete':['Delete account','ti-trash']};
+var REQKIND={walkthrough:['Wants a walkthrough','ti-calendar-event'],cancel:['Cancelled','ti-door-exit'],cancel_undone:['Kept their plan','ti-arrow-back-up'],website_addon:['Build a website','ti-world'],phone:['Phone number','ti-phone'],setup_failed:['Setup failed','ti-alert-triangle'],billing:['Billing','ti-receipt'],'account-delete':['Delete account','ti-trash']};
 async function viewReqs(){
   var r=await call('cc-requests',{op:'list'}); var d=(r&&r.data)||[];
   el('reqC').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><b>Requests</b><span class="muted" style="font-size:12px">'+(d.length?d.length+' open':'all handled')+'</span></div>'

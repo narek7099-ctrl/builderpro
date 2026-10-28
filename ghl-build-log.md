@@ -479,3 +479,9 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - **Requests card** (Command Center → Accounts, function cc-requests): open support requests, Enterprise first with a Priority label, Done button. New kinds: cancel, cancel_undone, website_addon (the $49 Website add-on, from sign-up or the Plan page).
 - Tested: cancel on the Foundation test login (no card) end to end, then restored; AZ Test (subscription already ended in Stripe) shows Stripe's refusal clearly. No live subscription was touched.
 - Deployed: account-signup, billing-webhook, cc-requests.
+
+## Book a walkthrough (2026-10-28, cloud session)
+- Homepage, under the plans: a "Book a walkthrough" form (name, business, phone, email). It saves to signup_interest (source walkthrough), files a Requests card ("Wants a walkthrough", phone and email in it), and the watcher adds the visitor to BuilderPro OS with tags `bp-demo-request` and `bp-walkthrough` right away (no 45-minute wait). A hidden field catches bots.
+- support_requests.owner can now be empty, for visitors with no account. Clients only ever see rows they own, so these stay private.
+- Fixed: portal/pipeline.js ran its HighLevel sync for signed-out homepage visitors and got 401s; it now waits for a signed-in session.
+- Deployed: account-signup, ghl-diag. Migration 20261112000000_walkthrough applied.
