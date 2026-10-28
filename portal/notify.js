@@ -99,7 +99,9 @@
     due_soon:                { g: 6, t: 'Due in the next 2 days',             ic: 'cal',  r: 'ocs' },
     overdue:                 { g: 6, t: 'Overdue',                            ic: 'late',      r: 'ocs' },
     permit_expiring:         { g: 6, t: 'Permit expiring (14 days)',          ic: 'permit',           r: 'o' },
-    inspection_soon:         { g: 6, t: 'Inspection in the next 2 days',      ic: 'check',      r: 'ocs' }
+    inspection_soon:         { g: 6, t: 'Inspection in the next 2 days',      ic: 'check',      r: 'ocs' },
+    // only the Command Center admin gets this (the morning health check); not in Settings
+    system_health:           { g: -1, t: 'BuilderPro system health',          ic: 'flag',       r: 'o' }
   };
   function kind(k) { return KINDS[k] || { g: -1, t: k, ic: 'bell', r: 'ocs' }; }
 
@@ -247,6 +249,7 @@
     var v = i >= 0 ? link.slice(0, i) : link, id = i >= 0 ? link.slice(i + 1) : '';
     if (!v && jobId) { v = 'activejobs'; id = jobId; }
     if (!v) return;
+    if (v === 'command') { location.href = '/command.html'; return; }
     if (v === 'activejobs') {
       if (sub()) { bpNav('subjobs'); if (id) later(function () { if (window.bpSubJob && $('bpxViewArea')) { bpSubJob(id); return true; } }); return; }
       if (crew()) { bpNav('crewprojects'); if (id) later(function () { if (window.bpCrewJob && $('bpxViewArea')) { bpCrewJob(id); return true; } }); return; }

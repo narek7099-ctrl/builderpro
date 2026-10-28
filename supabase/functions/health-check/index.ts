@@ -5,6 +5,8 @@
 //   cron POST (x-cron-key)       run the checks, save a row in health_checks
 //   { op: "status" }  (admin)    the latest saved result and the last 7 days
 //   { op: "run" }     (admin)    run now, save and return it
+//   cron key + { op: "test_alert" }  send a test bell notification to the admins
+// A morning run with problems puts a notification in each admin's BuilderPro bell.
 // Deploy: --no-verify-jwt (cron key or the admin check below)
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "", SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ADMINS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean);
@@ -90,9 +92,28 @@ async function check() {
   if (!Deno.env.get("APNS_KEY_P8") || !Deno.env.get("FCM_SERVICE_ACCOUNT")) notes.push({ area: "Settings", text: "Phone notifications are off until the Apple and Firebase keys are added (docs/APP-STORES.md, step 2)" });
   return { ok: problems.length === 0, problems, notes, checked: Object.keys(FUNCS).length };
 }
+// a bell notification (and a phone push, once the app has its keys) for each Command
+// Center admin who has a BuilderPro login; at most one per day per kind (dedupe)
+async function alertAdmins(title: string, body: string, dedupe: string) {
+  const u = await (await fetch(`${SB_URL}/auth/v1/admin/users?per_page=1000`, { headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}` } })).json().catch(() => ({}));
+  const ids = (u?.users ?? []).filter((x: { email?: string }) => ADMINS.includes(String(x.email ?? "").toLowerCase())).map((x: { id: string }) => x.id);
+  let sent = 0;
+  for (const id of ids) {
+    const had = await (await sb(`notifications?user_id=eq.${id}&dedupe=eq.${encodeURIComponent(dedupe)}&select=id`)).json().catch(() => []);
+    if (Array.isArray(had) && had.length) continue;
+    const r = await sb("notifications", { method: "POST", body: JSON.stringify({ owner: id, user_id: id, kind: "system_health", title, body, link: "command", priority: "high", dedupe }) });
+    if (r.ok) sent++;
+  }
+  return sent;
+}
 async function runAndSave(source: string) {
   const r = await check();
   await sb("health_checks", { method: "POST", body: JSON.stringify({ ok: r.ok, problems: r.problems, notes: r.notes, source }) });
+  // the morning run tells you; pressing Check now doesn't (you're already looking)
+  if (!r.ok && source === "daily") {
+    const n = r.problems.length, list = r.problems.slice(0, 2).map((p) => p.text).join(" · ");
+    await alertAdmins(`BuilderPro: ${n} problem${n > 1 ? "s" : ""} found this morning`, list + (n > 2 ? ` · and ${n - 2} more` : "") + ". Open the Command Center to see them.", `health-${new Date().toISOString().slice(0, 10)}`);
+  }
   return { ...r, at: new Date().toISOString() };
 }
 
@@ -102,6 +123,8 @@ Deno.serve(async (req) => {
   if (key) {
     const c = await cfg("cron_key");
     if (!c || key !== c) return new Response("no", { status: 403 });
+    const t = await req.json().catch(() => ({}));
+    if (t.op === "test_alert") return json({ ok: true, sent: await alertAdmins("BuilderPro: test alert", "This is how the morning health check tells you about a problem. Nothing is wrong.", `health-test-${new Date().toISOString().slice(0, 10)}`) });
     return json({ ok: true, result: await runAndSave("daily") });
   }
   if (!(await admin(req))) return json({ ok: false, error: "not authorized" }, 403);
