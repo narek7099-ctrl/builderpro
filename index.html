@@ -16367,12 +16367,14 @@ function bpPlanInfo(){
   var m={trial:['Free trial','ok','Free trial, '+days+' day'+(days===1?'':'s')+' left. Billed monthly after that, cancel any time.'],
     checkout:['Card needed','warn','Add a card to keep your free trial going.'],past_due:['Payment due','warn','Your last payment did not go through. Update your card to keep your account running.'],
     cancelled:['Cancelled','warn','Your plan is canceled.'],active:['Active','ok','Billed monthly, cancel any time.']}[st]||['Active','ok','Billed monthly, cancel any time.'];
+  // set to end (Cancel pressed): Stripe stops it then, with no further charges
+  if(a.cancel_at&&st!=='cancelled'){ m=['Ends '+new Date(a.cancel_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}),'warn','Your plan ends on '+new Date(a.cancel_at).toLocaleDateString(undefined,{month:'long',day:'numeric'})+'. You won\'t be charged again.']; }
   var ad=(a.profile||{}).addons||{}, extra=(ad.website?49:0)+(ad.ai&&a.plan!=='enterprise'?49:0);
   return {name:pl.name,price:pl.price+extra,label:m[0],badge:m[1],note:m[2],status:st};
 }
 async function bpAcctLoad(){
   if(!BP_LIVE)return;
-  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,stripe_subscription_id,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ /* a trial that went to Stripe checkout but never got a subscription still needs its card */ if(r.data.status==='trial'&&r.data.checkout_url&&!r.data.stripe_subscription_id)r.data.status='checkout'; var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); bpTouch(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
+  try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,stripe_subscription_id,ai_addon,profile,trade,cancel_at').maybeSingle(); if(r&&r.data){ /* a trial that went to Stripe checkout but never got a subscription still needs its card */ if(r.data.status==='trial'&&r.data.checkout_url&&!r.data.stripe_subscription_id)r.data.status='checkout'; var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); bpTouch(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
 }
 /* the owner opened BuilderPro: at most once an hour, so 7 days without a visit can start
    the house account's "not using it" follow-up (W7) */
@@ -25961,7 +25963,9 @@ function bpSettings(){
         +((window._bpAcct||{}).plan?planPick:'')
         +'<div class="st-plan-row">'
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'
-          +'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>'
+          +((window._bpAcct||{}).cancel_at&&(window._bpAcct||{}).status!=='cancelled'
+            ?'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>event_busy</span></div><b>Your plan is set to end</b><p>'+bpEsc(bpPlanInfo().note)+' Changed your mind? Keep it and nothing changes.</p><button class="bpx-rowbtn" style="margin:0" onclick="bpCancelUndo()">Keep my plan</button></div>'
+            :'<div class="st-plan-card"><div class="st-plan-ic warn"><span class=ms>logout</span></div><b>Cancel</b><p>Ends the membership at the end of the current period. On a free trial you\'re never charged. Your data stays for 30 days.</p><button class="bpx-rowbtn st-danger" style="margin:0" onclick="bpCancelOpen()">Cancel my plan</button></div>')
         +'</div>'):'')
       +'<div class="bpx-set-foot st-foot" id="bpx-setfoot"'+((_bpSetSec==='plan'||_bpSetSec==='team'||_bpSetSec==='security'||_bpSetSec==='ridge'||_bpSetSec==='brain'||_bpSetSec==='appearance'||_bpSetSec==='phone'||_bpSetSec==='signature'||_bpSetSec==='notify')?' hidden style="display:none"':'')+'><span class="bpx-mmsg" id="bpx-setmsg"></span><button class="bpx-btn" onclick="bpSettingsSave()">Save changes</button></div>'
       +'</div>'
@@ -26072,26 +26076,39 @@ window.bpHrsCopy=function(){
 };
 window.bpCancelOpen=function(){
   bpModal('<h3>Cancel your plan?</h3>'
-    +'<div class="bpx-sub">We\'d hate to see you go. Tell us why you\'re thinking of canceling — your request goes straight to our team and we\'ll confirm within 1 business day. Your service stays on until the end of your billing period.</div>'
+    +'<div class="bpx-sub">We\'d hate to see you go. Your plan stays on until the end of this '+((window._bpAcct||{}).status==='trial'?'free trial, and you won\'t be charged':'billing period, and you won\'t be charged again')+'. You can keep it any time before then.</div>'
     +'<label>Reason for canceling</label><select id="bpx-cx-why" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px">'
     +['Too expensive','Not getting enough leads','Not using it enough','Switching to another service','Closing / pausing my business','Something else'].map(function(x){return '<option>'+x+'</option>';}).join('')
     +'</select>'
     +'<label>Anything we could have done better?</label><textarea id="bpx-cx-notes" style="width:100%;min-height:70px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:14px" placeholder="Optional — but it really helps us improve."></textarea>'
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
-    +'<div class="row" style="margin-top:14px"><button class="bpx-btn" onclick="bpCloseModal()">Keep my plan</button><button class="bpx-btn ghost" id="bpx-cx-go" style="color:var(--err-t,#dc2626);border-color:#f3c4c4" onclick="bpCancelSend()">Request cancellation</button></div>');
+    +'<div class="row" style="margin-top:14px"><button class="bpx-btn" onclick="bpCloseModal()">Keep my plan</button><button class="bpx-btn ghost" id="bpx-cx-go" style="color:var(--err-t,#dc2626);border-color:#f3c4c4" onclick="bpCancelSend()">Cancel my plan</button></div>');
 };
+/* Cancel goes straight to Stripe (account-signup op cancel): the plan ends at the end of the
+   period, so a trial is never charged. No owner login (team member, or no account row):
+   email support instead. */
+async function bpCancelCall(op,body){
+  var ses=(await BP_SB.auth.getSession()).data.session;
+  var r=await fetch(BP_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:BP_ANON,Authorization:'Bearer '+(ses&&ses.access_token)},body:JSON.stringify(Object.assign({op:op},body||{}))});
+  var d=await r.json().catch(function(){return {ok:false,error:'Something went wrong. Try again.'};}); if(!d.ok)throw new Error(String(d.error||'Something went wrong. Try again.').replace(/\.\./g,'.')); return d;
+}
 window.bpCancelSend=async function(){
   var g=function(id){var e=q(id);return e?e.value:'';}, m=q('bpx-mmsg'), btn=q('bpx-cx-go');
-  var s=bpSettingsGet(),c=s.company||{},o=s.owner||{};
-  var who=(c.name||'')+(o.name?(' — '+o.name):'');
-  var u=await bpSetUser();
-  if(!u){ window.location.href='mailto:support@builderpro-os.com?subject='+encodeURIComponent('Cancellation request — BuilderPro OS')+'&body='+encodeURIComponent('Business: '+(who||'(not set)')+'\nReason: '+g('bpx-cx-why')+'\n'+g('bpx-cx-notes')); bpCloseModal(); return; }
-  if(btn)btn.disabled=true; if(m){m.style.color='var(--blue)';m.textContent='Sending…';}
-  var r=await bpSetSB.from('support_requests').insert({owner:bpOwnerId(u),email:u.email,kind:'cancel',subject:'Cancellation request — '+(who||u.email),body:'Reason: '+g('bpx-cx-why')+(g('bpx-cx-notes')?'\n'+g('bpx-cx-notes'):'')});
-  if(btn)btn.disabled=false;
-  if(r.error){ if(m){m.style.color='#dc2626';m.textContent='Could not send — '+bpEsc(r.error.message||'try again');} return; }
-  bpCloseModal();
-  bpModal('<h3>Request received</h3><div class="bpx-sub">Our team will confirm within 1 business day. Your service stays on until the end of your billing period.</div><div class="row"><button class="bpx-btn" onclick="bpCloseModal()">Done</button></div>');
+  if(!(window._bpAcct||{}).plan){
+    var s=bpSettingsGet(),c=s.company||{},o=s.owner||{}, who=(c.name||'')+(o.name?(' — '+o.name):'');
+    window.location.href='mailto:support@builderpro-os.com?subject='+encodeURIComponent('Cancellation request — BuilderPro OS')+'&body='+encodeURIComponent('Business: '+(who||'(not set)')+'\nReason: '+g('bpx-cx-why')+'\n'+g('bpx-cx-notes')); bpCloseModal(); return; }
+  if(btn)btn.disabled=true; if(m){m.style.color='var(--blue)';m.textContent='Canceling…';}
+  try{
+    var d=await bpCancelCall('cancel',{reason:g('bpx-cx-why'),notes:g('bpx-cx-notes')});
+    await bpAcctLoad(); bpCloseModal();
+    // no card on file ends right away; otherwise it runs to the end of the trial or paid month
+    var when=d.cancel_at&&Date.parse(d.cancel_at)>Date.now()+36e5?new Date(d.cancel_at).toLocaleDateString(undefined,{month:'long',day:'numeric'}):'';
+    bpModal('<h3>Your plan is canceled</h3><div class="bpx-sub">'+(when?'Everything keeps working until '+bpEsc(when)+'. ':'')+'You won\'t be charged again. Changed your mind? Settings → Plan & billing → Keep my plan.</div><div class="row"><button class="bpx-btn" onclick="bpCloseModal();bpSettings&&bpSettings()">Done</button></div>');
+  }catch(e){ if(btn)btn.disabled=false; if(m){m.style.color='#dc2626';m.textContent=e.message||'Could not cancel. Try again.';} }
+};
+window.bpCancelUndo=async function(){
+  try{ await bpCancelCall('uncancel'); await bpAcctLoad(); if(window.bpSettings)bpSettings(); if(window.bpToast)bpToast('Your plan continues as normal.'); }
+  catch(e){ alert(e.message||e); }
 };
 window.bpHrsToggle=function(day){var ck=q('hrs-'+day+'-o');var t=q('hrs-'+day+'-t');if(!ck||!t)return;
   if(ck.checked){t.innerHTML='<input type="time" id="hrs-'+day+'-from" value="08:00"><span class="sep">to</span><input type="time" id="hrs-'+day+'-to" value="17:00">';}

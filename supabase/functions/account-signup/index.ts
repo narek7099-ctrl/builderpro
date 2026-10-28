@@ -98,11 +98,44 @@ async function change(a: any, plan: string, want: Addons) {
     catch (e) { return json({ ok: false, error: String(e).replace(/^Error: /, "") }, 400); }
   }
   const price = PLANS[plan].price + addons.reduce((t, k) => t + ADDONS[k].price, 0);
+  if (addons.includes("website") && !cur.website) await websiteRequest(a);
   await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ plan, price_monthly: price,
     profile: { ...(a.profile ?? {}), addons: { ai: addons.includes("ai"), website: addons.includes("website") } },
     ...(addons.includes("ai") ? { ai_addon: "active" } : a.ai_addon === "active" && !a.ai_addon_sub_id ? { ai_addon: "off" } : {}) }) });
   return json({ ok: true, plan, price, addons });
 }
+
+/* Cancel from the portal: Stripe ends the plan at the end of the period, so a trial is
+   never charged and a paid month runs out. "Keep my plan" undoes it before then.
+   Either way a request lands in the Command Center so the owner sees it. */
+// deno-lint-ignore no-explicit-any
+async function cancelPlan(a: any, on: boolean, reason: string, notes: string) {
+  if (!a) return json({ ok: false, error: "Only the account owner can change the plan." }, 403);
+  let end: string | null = null;
+  if (SK && a.stripe_subscription_id) {
+    // deno-lint-ignore no-explicit-any
+    let sub: any;
+    try { sub = await stripe(`/subscriptions/${a.stripe_subscription_id}`, { cancel_at_period_end: on ? "true" : "false", ...(on ? { "metadata[cancel_reason]": reason.slice(0, 450) } : {}) }); }
+    catch (e) { return json({ ok: false, error: "Your plan couldn't be changed: " + String(e).replace(/^Error: /, "") + ". Email support@builderpro-os.com and we'll do it." }, 400); }
+    const t = sub.cancel_at ?? (sub.status === "trialing" ? sub.trial_end : sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end);
+    end = on && t ? new Date(t * 1000).toISOString() : null;
+    if (a.ai_addon_sub_id) await stripe(`/subscriptions/${a.ai_addon_sub_id}`, { cancel_at_period_end: on ? "true" : "false" }).catch(() => {});
+    await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ cancel_at: end }) });
+  } else if (on) {
+    // no subscription (never added a card): nothing will be charged, the plan just stops
+    end = new Date().toISOString();
+    await sb(`accounts?user_id=eq.${a.user_id}`, { method: "PATCH", body: JSON.stringify({ status: "cancelled", cancel_at: end }) });
+  }
+  await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: on ? "cancel" : "cancel_undone",
+    subject: (on ? "Cancelled: " : "Kept their plan: ") + (a.business || a.email),
+    body: on ? `Reason: ${reason || "(none)"}${notes ? "\n" + notes : ""}\nStripe: the plan ends ${end ? end.slice(0, 10) : "now"} with no further charges. Nothing to do unless you want to reach out.`
+      : "They pressed Keep my plan, so the cancellation is undone in Stripe and billing continues as normal." }) }).catch(() => {});
+  return json({ ok: true, cancel_at: end });
+}
+/* the Website add-on is built by hand: tell the owner in the Command Center */
+// deno-lint-ignore no-explicit-any
+const websiteRequest = (a: any) => sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: "website_addon",
+  subject: "Build a website: " + (a.business || a.email), body: "They added the $49 Website add-on. Build and host their site with their calculator, booking page and Lisa." }) }).catch(() => {});
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -112,12 +145,13 @@ Deno.serve(async (req) => {
   const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
 
   // a signed-in account that left checkout: hand them a fresh link
-  if (b.op === "resume" || b.op === "change") {
+  if (b.op === "resume" || b.op === "change" || b.op === "cancel" || b.op === "uncancel") {
     const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
     const u = await (await fetch(`${SB_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "" } })).json().catch(() => ({}));
     if (!u?.id) return json({ ok: false, error: "Sign in first." }, 401);
     const a = (await (await sb(`accounts?user_id=eq.${u.id}&select=*`)).json())[0];
     if (b.op === "change") return await change(a, clean(b.plan, 20), (b.addons ?? {}) as Addons);
+    if (b.op === "cancel" || b.op === "uncancel") return await cancelPlan(a, b.op === "cancel", clean(b.reason, 200), clean(b.notes, 2000));
     if (!a || !SK || !PLANS[a.plan]) return json({ ok: false, error: "Nothing to pay for." }, 400);
     let c;
     try { c = await checkoutFor(u.id, a.email, a.business, a.plan, a.stripe_customer_id, pickAddons(a.plan, a.profile?.addons ?? {})); }
@@ -182,6 +216,8 @@ Deno.serve(async (req) => {
     ai_addon: addons.includes("ai") ? "active" : "off",
     status: checkout.url ? "checkout" : "trial", trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 864e5).toISOString(),
     stripe_customer_id: checkout.customer, checkout_url: checkout.url }) });
+
+  if (addons.includes("website")) await websiteRequest({ user_id: uid, email, business });
 
   // the portal's own settings, so Settings, the calendar and the AI page are filled in on first login
   await sb("client_settings?on_conflict=user_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" },

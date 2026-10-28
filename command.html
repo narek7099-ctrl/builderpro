@@ -386,11 +386,12 @@ async function viewAccounts(){
   el('view').innerHTML='<h2>Accounts</h2><div class="kpis" id="kp"></div>'
     +'<details class="card newacct" style="margin-bottom:14px"><summary><b>+ New account</b></summary><div class="muted" style="font-size:12px;margin-bottom:8px">Makes their BuilderPro login (they get an email to set a password), a GHL sub-account from your snapshot, and their AI receptionist.</div>'
     +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></details>'
+    +'<div class="card" id="reqC" style="margin-bottom:14px">Loading requests…</div>'
     +'<div class="card" id="backC" style="margin-bottom:14px"></div>'
     +'<div class="card" id="poolC" style="margin-bottom:14px">Loading the ready pool…</div>'
     +'<div class="card" id="useC" style="margin-bottom:14px">Loading call minutes…</div>'
     +'<div class="card tw" id="al">Loading…</div>';
-  viewPool(); viewBack(); viewUsage();
+  viewReqs(); viewPool(); viewBack(); viewUsage();
   var s=await api({op:'stats'}); var st=s.data||{};
   el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['MRR','$'+(st.mrr_paying||0)],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');
   var r=await api({op:'accounts'}); var rows=r.data||[];
@@ -420,6 +421,22 @@ async function viewPool(){
     +'<details style="margin-top:6px"><summary class="muted" style="font-size:12px">Your own customers in HighLevel</summary><div style="font-size:12px;margin-top:6px">House sub-account: <b>'+esc(cfg.house_location_id||'not set')+'</b>. Trials, payments and cancellations add the bp-* tags there.</div>'
     +(cfg.house_log?'<pre style="white-space:pre-wrap;font-size:12px">'+esc(cfg.house_log)+'</pre>':'')+'</details>';
 }
+/* Client requests that need a person: cancellations (already done in Stripe), website
+   add-ons to build, phone numbers, failed setups. Enterprise first (priority support). */
+var REQKIND={cancel:['Cancelled','ti-door-exit'],cancel_undone:['Kept their plan','ti-arrow-back-up'],website_addon:['Build a website','ti-world'],phone:['Phone number','ti-phone'],setup_failed:['Setup failed','ti-alert-triangle'],billing:['Billing','ti-receipt'],'account-delete':['Delete account','ti-trash']};
+async function viewReqs(){
+  var r=await call('cc-requests',{op:'list'}); var d=(r&&r.data)||[];
+  el('reqC').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><b>Requests</b><span class="muted" style="font-size:12px">'+(d.length?d.length+' open':'all handled')+'</span></div>'
+    +(r&&r.ok===false?'<div class="muted" style="font-size:13px;margin-top:6px">'+esc(r.error||'Could not load requests.')+'</div>':'')
+    +(d.length?'<div style="margin-top:8px">'+d.map(function(x){var k=REQKIND[x.kind]||[x.kind,'ti-message'];
+      return '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)"><i class="ti '+k[1]+'" style="font-size:18px;margin-top:2px"></i>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:13px"><b>'+esc(k[0])+'</b>'+(x.priority?' <span class="st warn" style="font-size:11px">Priority</span>':'')+' · '+esc(x.business||x.email||'')+'</div>'
+        +'<div class="muted" style="font-size:12px;white-space:pre-wrap;margin-top:2px">'+esc(String(x.body||x.subject||'').slice(0,300))+'</div>'
+        +'<div class="muted" style="font-size:11px;margin-top:2px">'+esc(String(x.created_at).slice(0,16).replace('T',' '))+(x.email?' · '+esc(x.email):'')+'</div></div>'
+        +'<button class="btn" style="padding:4px 10px;font-size:12px;flex:0 0 auto" onclick="reqDone(\''+esc(x.id)+'\',this)">Done</button></div>'}).join('')+'</div>'
+      :'<div class="muted" style="font-size:13px;margin-top:6px">Nothing waiting on you.</div>');
+}
+async function reqDone(id,b){b.disabled=true;var r=await call('cc-requests',{op:'done',id:id});if(!r||r.ok===false){b.disabled=false;alert((r&&r.error)||'Failed');return}viewReqs();}
 /* Things that need HighLevel itself, saved for when the agency is unfrozen.
    Ticks are kept in this browser only. */
 var BACK=[['wallet','Wallet: turn on auto-recharge with a monthly cap (Agency Settings → Billing → Wallet), so phone costs can never run past an amount you pick.'],

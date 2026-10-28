@@ -472,3 +472,10 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - AI spending: Command Center shifts turned off (ai_config shifts_on=false), daily briefs off for the 6 test accounts (ai_brief_at set to 2099-01-01; set it back to null to turn one on).
 - Deployed: account-signup, command, ghl-diag, ghl-oauth. ai-team has the same ghl.ts change but never runs setup, so it wasn't redeployed.
 - While HighLevel is frozen all of this waits: the watcher logs "Company is not active" and retries every 5 minutes.
+
+## Cancel in Stripe, Requests in the Command Center (2026-10-28, cloud session)
+- **Cancel now ends the plan in Stripe** (account-signup op cancel): `cancel_at_period_end`, so a trial is never charged and a paid month runs out. "Keep my plan" undoes it before then (op uncancel). The AI Team add-on subscription follows. An account with no card on file is set to cancelled right away. `accounts.cancel_at` holds the end date; billing-webhook keeps it in step with Stripe, including cancels made in the Stripe dashboard.
+- Plan page: "Ends Nov 9" badge, "Your plan is set to end" card with Keep my plan. Team members (no account row) still get the email fallback.
+- **Requests card** (Command Center → Accounts, function cc-requests): open support requests, Enterprise first with a Priority label, Done button. New kinds: cancel, cancel_undone, website_addon (the $49 Website add-on, from sign-up or the Plan page).
+- Tested: cancel on the Foundation test login (no card) end to end, then restored; AZ Test (subscription already ended in Stripe) shows Stripe's refusal clearly. No live subscription was touched.
+- Deployed: account-signup, billing-webhook, cc-requests.
