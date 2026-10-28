@@ -1,6 +1,7 @@
 // billing-webhook: Stripe tells us where each BuilderPro subscription stands.
 //   checkout.session.completed      -> trial (card on file, 14 days free)
-//   customer.subscription.updated   -> trial | active | past_due | cancelled
+//   customer.subscription.updated   -> trial | active | past_due | cancelled, and cancel_at
+//                                      (when a plan set to end will end)
 //   customer.subscription.deleted   -> cancelled
 //
 // Stripe dashboard -> Developers -> Webhooks -> Add endpoint:
@@ -47,6 +48,8 @@ Deno.serve(async (req) => {
     const body: Record<string, unknown> = { status: ev.type.endsWith("deleted") ? "cancelled" : (STATUS[o.status] ?? o.status), stripe_subscription_id: o.id };
     if (o.trial_end) body.trial_ends_at = new Date(o.trial_end * 1000).toISOString();
     if (o.metadata?.plan) body.plan = o.metadata.plan;
+    // set to end (Cancel in the portal, or in the Stripe dashboard): when; cleared if they keep it
+    if (ev.type.endsWith("updated")) { const end = o.cancel_at ?? (o.cancel_at_period_end ? o.current_period_end ?? o.items?.data?.[0]?.current_period_end : null); body.cancel_at = end ? new Date(end * 1000).toISOString() : null; }
     // an AI Team bought with the plan lives and dies with the plan's subscription
     if (String(o.metadata?.addons ?? "").split(",").includes("ai")) body.ai_addon = body.status === "trial" ? "active" : body.status;
     await patch(uid, body);
