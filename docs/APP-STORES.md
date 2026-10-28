@@ -89,7 +89,7 @@ For homeowners:
 
 **Keywords (Apple):** contractor,crm,roofing,construction,estimates,invoices,crew,schedule,leads,home improvement
 **Privacy policy URL:** https://builderpro-os.com/privacy.html
-**Support URL:** https://builderpro-os.com
+**Support URL:** https://builderpro-os.com/help.html
 **Account deletion:** in the app, Settings > Security > Delete account (contractors) or My projects > Delete my account (homeowners). Web: https://builderpro-os.com/data-deletion.html
 
 **Screenshots:** ready in `docs/store-screenshots/`, six of each, upload in number order:
