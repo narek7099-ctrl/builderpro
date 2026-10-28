@@ -76,10 +76,11 @@ async function houseTag(house: string, tok: string, email: string, name: string,
 }
 async function houseFollowups(house: string, tok: string): Promise<string[]> {
   const out: string[] = [], now = new Date().toISOString();
-  const pend = await (await sb(`signup_interest?tagged_at=is.null&created_at=lt.${new Date(Date.now() - 45 * 6e4).toISOString()}&select=*&order=created_at.asc&limit=10`)).json();
+  // unfinished sign-ups after 45 minutes; walkthrough requests from the homepage right away
+  const pend = await (await sb(`signup_interest?tagged_at=is.null&or=(created_at.lt."${new Date(Date.now() - 45 * 6e4).toISOString()}",source.eq.walkthrough)&select=*&order=created_at.asc&limit=10`)).json();
   for (const p of Array.isArray(pend) ? pend : []) {
-    const acct = (await (await sb(`accounts?email=eq.${encodeURIComponent(p.email)}&select=user_id`)).json())?.[0];
-    const err = acct ? "" : await houseTag(house, tok, p.email, p.name, p.phone, ["bp-demo-request", "bp-signup-unfinished"]);
+    const acct = p.source === "walkthrough" ? null : (await (await sb(`accounts?email=eq.${encodeURIComponent(p.email)}&select=user_id`)).json())?.[0];
+    const err = acct ? "" : await houseTag(house, tok, p.email, p.name, p.phone, ["bp-demo-request", p.source === "walkthrough" ? "bp-walkthrough" : "bp-signup-unfinished"]);
     await sb(`signup_interest?email=eq.${encodeURIComponent(p.email)}`, { method: "PATCH", body: JSON.stringify(err ? { note: err } : { tagged_at: now, note: acct ? "signed up, no follow-up needed" : "bp-demo-request" }) });
     out.push(`${p.email}: ${acct ? "finished signing up" : err || "bp-demo-request"}`);
   }

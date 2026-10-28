@@ -30,6 +30,8 @@
   }
   async function run() {
     if (!on()) return;
+    // only for a signed-in owner or office login: a visitor on the public homepage has no session
+    try { var ses = await BP_SB.auth.getSession(); if (!(ses && ses.data && ses.data.session)) return; } catch (e) { return; }
     var made = 0, out = [];
     try { if (window.bpEnsureContacts) await bpEnsureContacts(); } catch (e) {}
     var contacts = window._bpContacts || [];

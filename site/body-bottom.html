@@ -39,6 +39,38 @@
       <div class="card pl-add"><span class="pl-add_ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><div><b>Website <span class="pl-add_tag">Add-on</span></b><p>We build and host your site, with your calculators, booking page and Lisa built in. Add it to any plan.</p></div><div class="pl-add_p">$49<small>/mo</small></div></div>
     </div>
     <div class="card pl-trust"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>14 days free</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>No contracts, cancel anytime</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Extra call minutes $0.25 each</span></div>
+    <div class="card pl-walk" id="walkthrough">
+      <div class="pl-walk_t"><b>Not ready to start a trial?</b><p>Get a free 20-minute walkthrough of BuilderPro. Leave your number and we'll text you to set up a time that works.</p></div>
+      <form class="pl-walk_f" id="walkForm" onsubmit="return bpWalk(event)" novalidate>
+        <input id="wkName" autocomplete="name" placeholder="Your name" aria-label="Your name" required>
+        <input id="wkBiz" autocomplete="organization" placeholder="Business name" aria-label="Business name">
+        <input id="wkPhone" type="tel" autocomplete="tel" placeholder="Mobile phone" aria-label="Mobile phone" required>
+        <input id="wkEmail" type="email" autocomplete="email" placeholder="Email" aria-label="Email" required>
+        <input class="pl-walk_hp" id="wkWeb" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button type="submit" class="btn" id="wkGo">Book my walkthrough</button>
+        <p class="pl-walk_c">By sending this, you agree that BuilderPro may text and email you about a walkthrough. Message and data rates may apply. Reply STOP to opt out.</p>
+        <p class="pl-walk_m" id="wkMsg" role="status"></p>
+      </form>
+    </div>
+    <script>
+    /* "Book a walkthrough": saved like an unfinished sign-up (account-signup op interest,
+       source walkthrough), tagged bp-demo-request in the house account right away, and
+       shown in the Command Center's Requests card */
+    function bpWalk(e){
+      e.preventDefault();
+      var v=function(id){var x=document.getElementById(id);return x?x.value.trim():'';}, m=document.getElementById('wkMsg'), b=document.getElementById('wkGo');
+      if(!v('wkName')||!v('wkPhone')||!/^\S+@\S+\.\S+$/.test(v('wkEmail'))){m.textContent='Add your name, phone and a valid email.';return false;}
+      b.disabled=true;m.textContent='Sending…';
+      var U='https://ttzwzouhiwdwamuimhpo.supabase.co', K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso';
+      fetch(U+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:K,Authorization:'Bearer '+K},
+        body:JSON.stringify({op:'interest',source:'walkthrough',name:v('wkName'),business:v('wkBiz'),phone:v('wkPhone'),email:v('wkEmail').toLowerCase(),website:v('wkWeb')})})
+        .then(function(r){return r.json();}).then(function(d){
+          if(!d.ok)throw new Error(d.error||'Something went wrong.');
+          document.getElementById('walkForm').innerHTML='<p class="pl-walk_ok"><b>Thanks! We\'ll text you shortly to set up a time.</b><br>Want to look around now? <a href="signup.html">Start your free trial</a>, it\'s 14 days free.</p>';
+        }).catch(function(x){b.disabled=false;m.textContent=(x&&x.message)||'Could not send. Try again or call (350) 333-1230.';});
+      return false;
+    }
+    </script>
   </div>
 </section>
 
