@@ -48,6 +48,7 @@ Use this the day your first real contractor is ready to sign up. Allow about an 
 12. Your W3 workflow texts and emails them by itself. **(you)** Give them a call too. The first clients are worth the personal touch.
 
 ## If something goes wrong
+- **Start with Command Center → Accounts → System health.** It checks everything every morning; press **Check now** for a fresh look. Red lines are problems, the notes underneath are not errors.
 - **Setup failed or details blank:** Command Center → Accounts → Retry setup, or wait for the watcher, which runs every 5 minutes.
 - **HighLevel errors everywhere:** check that HighLevel isn't frozen or downgraded below Unlimited.
 - **The pool runs low:** the Command Center warns you. Refill it on an Agency Pro day, or make a sub-account by hand and use **Add key**.

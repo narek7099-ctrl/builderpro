@@ -491,3 +491,9 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Store screenshots in `docs/store-screenshots/`: 6 iPhone, 6 iPad, 6 Android and the Google banner. Business name swapped to "Summit Roofing Co" in the picture only.
 - Fixed: inside the native app, My projects offered "Get the app / Add to home screen"; bpIsStandalone() now counts the app as installed.
 - privacy.html: new sections for the app's permissions and for AI features (HighLevel, Anthropic, Google), providers named. data-deletion.html: the in-app Delete account steps.
+
+## Site check and System health (2026-10-28, cloud session)
+- Site check: all 44 public pages load without errors, sideways scrolling or broken images at phone width; the homepage shows content in about 1.2 s on 4G, other pages about 0.6 s. Fixed: homepage search description (was too long) and canonical link; the old System Check page is kept out of Google. Long page titles (70-90 characters) are cut off in Google results but not broken; left as they are.
+- **System health** (function health-check, cron health-check-daily at 14:41 UTC, table health_checks): pings 24 key functions with OPTIONS (no work, no cost), checks each scheduled job ran on time and didn't fail, background call failures, the HighLevel watcher's heartbeat (ghl_mint) and whether HighLevel is frozen, recent client setups, failed card payments, old open requests, and that the needed secrets exist (names only). Card at the top of Command Center → Accounts with Check now and the last 7 days.
+- Supabase lets one function call about 30 others per run ("Rate limit exceeded for trace"), so the check pings 24; it reports a hit limit as a note, never a false alarm.
+- It can't tell whether the Claude credit is empty without paying for a test call, so it doesn't try.
