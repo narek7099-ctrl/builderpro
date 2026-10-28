@@ -16374,6 +16374,22 @@ async function bpAcctLoad(){
   if(!BP_LIVE)return;
   try{ var r=await BP_SB.from('accounts').select('plan,status,trial_ends_at,checkout_url,stripe_subscription_id,ai_addon,profile,trade').maybeSingle(); if(r&&r.data){ /* a trial that went to Stripe checkout but never got a subscription still needs its card */ if(r.data.status==='trial'&&r.data.checkout_url&&!r.data.stripe_subscription_id)r.data.status='checkout'; var had=(window._bpAcct||{}).plan; window._bpAcct=r.data; bpBillBanner(); if(had!==r.data.plan){ bpBuildNav(); if(bpLocked(window._bpCurView))bpNav(window._bpCurView); } } }catch(e){}
 }
+/* Lisa's call minutes this month against the plan (usage_month, filled hourly by usage-sync) */
+async function bpUsageMeter(){
+  var el=document.getElementById('bpUsageMeter'); if(!el||!window.BP_SB)return;
+  try{
+    var r=await BP_SB.from('usage_month').select('minutes,included,updated_at').eq('month',new Date().toISOString().slice(0,7)).maybeSingle();
+    var u=r&&r.data, inc=(u&&u.included)||(BP_PLANS[(window._bpAcct||{}).plan||'os']||{}).min||0;
+    if(!u||!inc){el.innerHTML='';return;}
+    var used=Number(u.minutes)||0, pct=Math.min(100,Math.round(used/inc*100)), over=Math.max(0,used-inc);
+    var col=used>=inc?'#d92d20':pct>=80?'#dc6803':'#1f6feb';
+    el.innerHTML='<div class="st-plan-card" style="margin:12px 0"><b>'+bpEsc(BP_AI_NAME)+' call minutes this month</b>'
+      +'<p style="margin:6px 0 8px">'+used+' of '+inc+' used'+(over?' · '+over+' extra at $0.25 each':'')+'</p>'
+      +'<div style="height:8px;border-radius:4px;background:#eaecf0;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+'"></div></div>'
+      +(used>=inc?'<p class="bpx-mut" style="font-size:12px;margin-top:8px">You\'re past your plan\'s minutes. Extra minutes are $0.25 each, or upgrade for more.</p>':pct>=80?'<p class="bpx-mut" style="font-size:12px;margin-top:8px">You\'ve used '+pct+'% of this month\'s minutes.</p>':'')
+      +'</div>';
+  }catch(e){}
+}
 function bpBillBanner(){
   var a=window._bpAcct||{}, old=document.getElementById('bpBill'); if(old)old.remove();
   if(a.status!=='checkout'&&a.status!=='past_due')return;
@@ -25856,6 +25872,7 @@ function bpSettings(){
       if(a[0]==='ai'&&!inc) return '<div class="st-plan-card st-plan-lock"><b><span class="ms" style="font-size:16px;vertical-align:-3px;color:#98a2b3">lock</span> '+a[1]+'</b><p>'+a[2]+'</p><button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(\'enterprise\')">Upgrade to Enterprise</button></div>';
       return '<div class="st-plan-card"><b>'+a[1]+'</b><p>'+a[2]+'</p>'+(inc?'<span class="bpx-badge ok">Included</span>':on?'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':false})">Remove · $49/mo</button>':'<button class="bpx-rowbtn" style="margin:0" onclick="bpChangePlan(null,{'+a[0]+':true})">Add for $49/mo</button>')+'</div>';}).join('')+'</div>';
 
+  setTimeout(bpUsageMeter,0);
   q('bpxViewArea').innerHTML=
     '<div class="st">'
       +'<aside class="st-rail">'
@@ -25934,6 +25951,7 @@ function bpSettings(){
             +'<div class="st-price">$'+bpPlanInfo().price+'<span> / month</span></div></div>'
           +'<div class="st-feats">'+feats.map(function(x){return '<div><span class="ms">check_circle</span><span>'+x+'</span></div>';}).join('')+'</div>'
         +'</div>'
+        +'<div id="bpUsageMeter"></div>'
         +((window._bpAcct||{}).plan?planPick:'')
         +'<div class="st-plan-row">'
           +'<div class="st-plan-card"><div class="st-plan-ic"><span class=ms>receipt_long</span></div><b>Billing</b><p>Questions about an invoice, a card on file, or a change of plan.</p><a class="bpx-rowbtn" style="text-decoration:none;display:inline-block;margin:0" href="mailto:support@builderpro-os.com?subject='+encodeURIComponent('Question about my BuilderPro plan')+'">Contact us about billing</a></div>'

@@ -386,9 +386,11 @@ async function viewAccounts(){
   el('view').innerHTML='<h2>Accounts</h2><div class="kpis" id="kp"></div>'
     +'<details class="card newacct" style="margin-bottom:14px"><summary><b>+ New account</b></summary><div class="muted" style="font-size:12px;margin-bottom:8px">Makes their BuilderPro login (they get an email to set a password), a GHL sub-account from your snapshot, and their AI receptionist.</div>'
     +'<div class="grid2"><input id="naName" placeholder="Owner name"><input id="naBiz" placeholder="Business name"><input id="naEmail" type="email" placeholder="Email"><input id="naPhone" placeholder="Phone"><input id="naTrade" placeholder="Trade (roofing, HVAC…)"><button class="btn pri" onclick="newAcct(this)">Create account</button></div><div id="naOut" style="margin-top:8px;font-size:13px"></div></details>'
+    +'<div class="card" id="backC" style="margin-bottom:14px"></div>'
     +'<div class="card" id="poolC" style="margin-bottom:14px">Loading the ready pool…</div>'
+    +'<div class="card" id="useC" style="margin-bottom:14px">Loading call minutes…</div>'
     +'<div class="card tw" id="al">Loading…</div>';
-  viewPool();
+  viewPool(); viewBack(); viewUsage();
   var s=await api({op:'stats'}); var st=s.data||{};
   el('kp').innerHTML=[['Accounts',st.total||0],['On trial',(st.by_status||{}).trial||0],['Paying',(st.by_status||{}).active||0],['MRR','$'+(st.mrr_paying||0)],['Sign-ups 7d',st.signups_7d||0],['Trials ending ≤3d',(st.trials_ending_3d||[]).length]].map(function(k){return '<div class="card kpi"><div class="l">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>'}).join('');
   var r=await api({op:'accounts'}); var rows=r.data||[];
@@ -417,6 +419,40 @@ async function viewPool(){
     +(cfg.pool_log?'<details style="margin-top:8px"><summary class="muted" style="font-size:12px">Pool log</summary><pre style="white-space:pre-wrap;font-size:12px">'+esc(cfg.pool_log)+'</pre></details>':'')
     +'<details style="margin-top:6px"><summary class="muted" style="font-size:12px">Your own customers in HighLevel</summary><div style="font-size:12px;margin-top:6px">House sub-account: <b>'+esc(cfg.house_location_id||'not set')+'</b>. Trials, payments and cancellations add the bp-* tags there.</div>'
     +(cfg.house_log?'<pre style="white-space:pre-wrap;font-size:12px">'+esc(cfg.house_log)+'</pre>':'')+'</details>';
+}
+/* Things that need HighLevel itself, saved for when the agency is unfrozen.
+   Ticks are kept in this browser only. */
+var BACK=[['wallet','Wallet: turn on auto-recharge with a monthly cap (Agency Settings → Billing → Wallet), so phone costs can never run past an amount you pick.'],
+  ['limits','Check whether HighLevel offers per-sub-account limits for texts and call minutes, and set them if it does.'],
+  ['voice','Add the Voice AI call-log permission (voice-ai-dashboard.readonly) to the BuilderPro Connect app, so Lisa\'s minutes can be counted. The Call minutes card shows whether it\'s needed.'],
+  ['lisa','Deploy the Lisa name fix (ridge_assistant_name) and let the watcher fill AZ Test.'],
+  ['phone','Test texts and calls with a real phone: missed-call text-back (S1–S5) and the estimate follow-up.'],
+  ['review','Add the review_link custom value (your Google review link) in BuilderPro OS.'],
+  ['demo','Give the Demo Account key the custom-fields permission (2 demo events failed).']];
+function viewBack(){
+  var done={}; try{done=JSON.parse(localStorage.getItem('bpBack')||'{}')}catch(e){}
+  var left=BACK.filter(function(x){return !done[x[0]]}).length;
+  el('backC').innerHTML='<details'+(left?' open':'')+'><summary><b>When HighLevel is back</b> <span class="muted" style="font-size:12px">'+(left?left+' to do':'all done')+'</span></summary>'
+    +'<div class="muted" style="font-size:12px;margin:6px 0 8px">HighLevel is frozen, so these wait. Tick them off as they\'re done.</div>'
+    +BACK.map(function(x){return '<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:6px 0"><input type="checkbox" '+(done[x[0]]?'checked ':'')+'onchange="backTick(\''+x[0]+'\',this.checked)"><span'+(done[x[0]]?' style="text-decoration:line-through;opacity:.6"':'')+'>'+esc(x[1])+'</span></label>'}).join('')+'</details>';
+}
+function backTick(k,on){var d={};try{d=JSON.parse(localStorage.getItem('bpBack')||'{}')}catch(e){} if(on)d[k]=1;else delete d[k]; try{localStorage.setItem('bpBack',JSON.stringify(d))}catch(e){} viewBack();}
+/* Lisa's call minutes per account this month (usage-sync, hourly), and the switch that
+   puts minutes over the plan on the client's next Stripe invoice at $0.25 each */
+async function viewUsage(){
+  var r=await call('usage-sync',{op:'usage'}); var rows=(r&&r.data)||[];
+  var a=await api({op:'accounts'}); var acc={}; (a.data||[]).forEach(function(x){acc[x.user_id]=x});
+  el('useC').innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><b>Lisa call minutes this month</b>'
+    +'<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" '+(r&&r.bill_extra?'checked ':'')+'onchange="billExtra(this)"> Bill extra minutes ($0.25 each, on their next invoice)</label></div>'
+    +'<div class="muted" style="font-size:12px;margin:4px 0 10px">Counted every hour from HighLevel. Off means nobody is charged for going over; they still see the meter on their Plan page.</div>'
+    +(rows.length?'<table><thead><tr><th>Business</th><th>Used</th><th>Plan</th><th>Note</th></tr></thead><tbody>'+rows.map(function(u){var x=acc[u.user_id]||{}, over=Number(u.minutes)>=Number(u.included);
+      return '<tr><td>'+esc(x.business||u.user_id)+'</td><td'+(over?' style="color:var(--danger);font-weight:600"':'')+'>'+u.minutes+' min ('+u.calls+' calls)</td><td>'+u.included+'</td><td class="muted" style="font-size:12px">'+esc(u.last_error||u.source||'')+'</td></tr>'}).join('')+'</tbody></table>'
+      :'<span class="muted" style="font-size:13px">Nothing counted yet. It starts once HighLevel is unfrozen.</span>')
+    +(r&&r.log?'<details style="margin-top:8px"><summary class="muted" style="font-size:12px">Last count</summary><pre style="white-space:pre-wrap;font-size:12px">'+esc(r.log)+'</pre></details>':'');
+}
+async function billExtra(cb){
+  if(cb.checked&&!confirm('Turn on billing for extra minutes? At the start of each month, last month\'s minutes over a client\'s plan go on their next Stripe invoice at $0.25 each.')){cb.checked=false;return}
+  var r=await call('usage-sync',{op:'bill_extra',on:cb.checked}); if(!r||r.ok===false){alert((r&&r.error)||'Failed');cb.checked=!cb.checked}
 }
 async function fillPool(b){
   var n=prompt('How many of each plan? (Foundation, OS, Enterprise)','5,5,5'); if(n==null)return;
