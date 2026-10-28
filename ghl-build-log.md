@@ -503,3 +503,8 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - docs/LLC-DAY.md: the ordered list for when the LLC exists (EIN, bank, D-U-N-S, Stripe business details, legal pages, HighLevel profile and A2P, Apple/Google as an organization, bills, sales tax, lawyer review).
 - terms.html rewritten around the old text: free trial, billing, add-ons, call minutes, price changes, failed payments, cancelling and refunds (no refunds for partial months), texting consent (TCPA, A2P), AI features, contractor-customer payments, availability, disclaimer, liability cap (fees in the last 12 months), indemnity, changes.
 - Every spot that needs the LLC's name, state or address has an `<!-- LLC: ... -->` marker (terms 4, privacy 3, data deletion 1); the "© 2026 BuilderPro OS" footer on the other pages is updated the same day.
+
+## Help Center, page titles, sales one-pager (2026-10-28, cloud session)
+- help.html: setup (Lisa, business number, team logins), jobs and crew, estimates, invoices, card payments, leads, plan, cancelling, passwords, deleting an account, with search. Button names checked against the live app. Linked from the homepage footer, the legal pages and the sitemap; it is the app-store support URL.
+- 39 marketing page titles now fit Google's ~60 characters, search keyword first (social-share titles unchanged).
+- docs/sales/BuilderPro-one-pager.pdf (source one-pager.html): one Letter page for contractors after a walkthrough, using only the live pricing page's claims. Rebuild it after any price change.

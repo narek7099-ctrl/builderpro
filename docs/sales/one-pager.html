@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>BuilderPro: one-pager</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* One Letter page for contractors after a walkthrough. Source of BuilderPro-one-pager.pdf:
+   only claims from the live pricing page. Make the PDF again after a price change. */
+@page{size:Letter;margin:0}
+*{box-sizing:border-box}
+body{margin:0;width:8.5in;height:11in;font-family:'Geist',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#0f172a;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.top{background:#0c111d;color:#fff;padding:.5in .55in .42in;position:relative;overflow:hidden}
+.top:after{content:"";position:absolute;right:-1.2in;top:-1.4in;width:4.2in;height:4.2in;border-radius:50%;background:radial-gradient(circle,rgba(0,111,255,.45),rgba(0,111,255,0) 70%)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+.brand img{width:34px;height:34px;border-radius:8px;background:#fff}
+.brand span{color:#5aa2ff}
+h1{font-size:34px;line-height:1.08;letter-spacing:-.03em;margin:.28in 0 .12in;max-width:6.4in}
+h1 em{font-style:normal;color:#5aa2ff}
+.lead{font-size:14px;line-height:1.5;color:#c3cde0;max-width:5.9in;margin:0}
+.wrap{padding:.32in .55in 0}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}
+.f{display:flex;gap:10px}
+.f i{flex:0 0 26px;height:26px;border-radius:8px;background:#e6f0ff;color:#006fff;font-style:normal;font-weight:800;display:grid;place-items:center;font-size:13px}
+.f b{display:block;font-size:13.5px;margin-bottom:2px}
+.f p{margin:0;font-size:11.5px;line-height:1.45;color:#475266}
+h2{font-size:15px;letter-spacing:-.01em;margin:.3in 0 .12in;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font-size:11px;font-weight:600;color:#006fff}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.p{border:1px solid #dfe4ec;border-radius:12px;padding:12px 13px}
+.p.hot{border:2px solid #006fff;padding:11px 12px}
+.p .k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7a90}
+.p.hot .k{color:#006fff}
+.p .n{font-weight:800;font-size:15px;margin-top:2px}
+.p .pr{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:3px 0 6px}
+.p .pr span{font-size:11px;font-weight:500;color:#6b7a90}
+.p ul{margin:0;padding:0;list-style:none}
+.p li{font-size:11px;line-height:1.35;color:#28303f;padding:3px 0 3px 15px;position:relative}
+.p li:before{content:"";position:absolute;left:2px;top:7px;width:7px;height:4px;border-left:2px solid #1faa5a;border-bottom:2px solid #1faa5a;transform:rotate(-45deg)}
+.terms{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:#475266;margin-top:9px}
+.terms b{color:#0f172a}
+.cta{margin:.28in .55in 0;background:#f4f6fa;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.cta b{font-size:16px;display:block;letter-spacing:-.01em}
+.cta p{margin:3px 0 0;font-size:11.5px;color:#475266}
+.cta .go{background:#006fff;color:#fff;border-radius:10px;padding:10px 16px;font-weight:700;font-size:13px;white-space:nowrap}
+.foot{position:absolute;bottom:.32in;left:.55in;right:.55in;display:flex;justify-content:space-between;font-size:10.5px;color:#6b7a90}
+</style></head><body>
+<div class="top">
+  <div class="brand"><img src="../../assets/brand/logo-mark-256.png" alt=""><b>Builder<span>Pro</span></b></div>
+  <h1>Never miss a call. Send estimates from your phone. <em>Get paid faster.</em></h1>
+  <p class="lead">BuilderPro is simple software for growing contractors. Lisa answers every call and text, estimates turn into invoices, and your jobs, crew and numbers live in one login, on your phone or computer.</p>
+</div>
+<div class="wrap">
+  <div class="feats">
+    <div class="f"><i>1</i><div><b>Lisa answers 24/7</b><p>An AI receptionist answers calls and texts, books inspections and sends a text back on every missed call, so leads don't go to the next contractor.</p></div></div>
+    <div class="f"><i>2</i><div><b>Estimates to payments</b><p>Build an estimate in six steps. Customers approve, sign and pay from a link on their phone, and the money goes straight to your Stripe account.</p></div></div>
+    <div class="f"><i>3</i><div><b>Jobs and crew</b><p>Every job's schedule, budget and photos in one place. Crew get their own login and clock in on the job, so labor costs are real numbers.</p></div></div>
+    <div class="f"><i>4</i><div><b>Customers stay in the loop</b><p>Homeowners follow their project, payments and messages on a simple page, and review requests go out when the job is done.</p></div></div>
+  </div>
+
+  <h2>Plans <small>14 days free on every plan</small></h2>
+  <div class="plans">
+    <div class="p"><div class="k">Just you</div><div class="n">Foundation</div><div class="pr">$99<span> / month</span></div><ul>
+      <li>Lisa AI receptionist, 150 call minutes</li><li>Missed-call text-back</li><li>Calendar and booking page</li><li>Estimates, invoices and payments</li><li>Review requests</li><li>You plus 1 crew login</li></ul></div>
+    <div class="p hot"><div class="k">Most popular</div><div class="n">BuilderPro OS</div><div class="pr">$199<span> / month</span></div><ul>
+      <li>Everything in Foundation</li><li>300 call minutes, you plus 5 crew logins</li><li>Projects, contracts and e-signature</li><li>Payment plans, financing and insurance claims</li><li>Finances, budgets and payroll</li><li>Supply and material orders</li></ul></div>
+    <div class="p"><div class="k">Growing team</div><div class="n">Enterprise</div><div class="pr">$299<span> / month</span></div><ul>
+      <li>Everything in BuilderPro OS</li><li>AI Team for follow-ups and marketing</li><li>500 call minutes</li><li>Unlimited crew and office logins</li><li>Priority support</li></ul></div>
+  </div>
+  <div class="terms"><span><b>No contracts</b>, cancel anytime</span><span><b>Website add-on</b> $49/mo: we build and host it</span><span>Extra call minutes $0.25 each</span></div>
+</div>
+<div class="cta"><div><b>Start your 14-day free trial</b><p>Sign up in a few minutes at builderpro-os.com. Nothing is charged until the trial ends.</p></div><span class="go">builderpro-os.com</span></div>
+<p style="margin:.2in .55in 0;font-size:12px;color:#475266;text-align:center">Want to see it first? Book a free 20-minute walkthrough on builderpro-os.com and we'll text you to set a time.</p>
+<div class="foot"><span>Questions? support@builderpro-os.com</span><span>builderpro-os.com/help.html</span></div>
+</body></html>
