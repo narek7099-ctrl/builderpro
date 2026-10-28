@@ -23478,7 +23478,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.ge
    worker, keeps the browser's install prompt for our own "Install the app"
    buttons, and tells iPhone users how to add it (Safari has no prompt). ===== */
 var _bpInstallEvt=null;
-function bpIsStandalone(){try{return window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true;}catch(e){return false;}}
+function bpIsStandalone(){try{return (window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())||window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true;}catch(e){return false;}}
 function bpIsIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();_bpInstallEvt=e;document.documentElement.classList.add('bp-can-install');});
 window.addEventListener('appinstalled',function(){_bpInstallEvt=null;document.documentElement.classList.remove('bp-can-install');try{if(window.bpToast)bpToast('BuilderPro is installed. Open it from your home screen or apps.');}catch(e){}});

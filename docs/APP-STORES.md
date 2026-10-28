@@ -92,8 +92,10 @@ For homeowners:
 **Support URL:** https://builderpro-os.com
 **Account deletion:** in the app, Settings > Security > Delete account (contractors) or My projects > Delete my account (homeowners). Web: https://builderpro-os.com/data-deletion.html
 
-**Screenshots:** iPhone 6.9" (1320 x 2868) and iPad 13" (2064 x 2752); Android phone (1080 x 1920 or larger)
-and a 1024 x 500 feature graphic. Take them from the app on a phone, or ask for a set to be made.
+**Screenshots:** ready in `docs/store-screenshots/`, six of each, upload in number order:
+`iphone-*.png` (6.9", 1320 x 2868), `ipad-*.png` (13", 2064 x 2752), `android-*.png` (1080 x 1920) and
+`android-feature-graphic.png` (1024 x 500, Google's banner). Made from the demo account with the business
+shown as "Summit Roofing Co"; to remake them after a redesign, ask for "new store screenshots".
 
 **App Review notes (Apple) / App access (Google)** — give the reviewer a demo login, for example
 a test contractor account and the homeowner test account, and say:
@@ -105,6 +107,8 @@ a test contractor account and the homeowner test account, and say:
 **Data safety / privacy labels:** contact info (name, email, phone), user content (photos, messages),
 location (crew clock-in, only while in use), identifiers (push token). Not sold, not used for ads.
 Data is encrypted in transit; users can delete their account in the app.
+Shared with service providers (not sold): AI features send messages, transcripts and photos to Anthropic and
+Google (Apple asks you to disclose this: it's in the privacy policy, "AI features"); payments go through Stripe.
 
 ## 4b. Links open in the app (after the first store upload)
 

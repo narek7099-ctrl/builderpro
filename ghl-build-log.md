@@ -485,3 +485,9 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - support_requests.owner can now be empty, for visitors with no account. Clients only ever see rows they own, so these stay private.
 - Fixed: portal/pipeline.js ran its HighLevel sync for signed-out homepage visitors and got 401s; it now waits for a signed-in session.
 - Deployed: account-signup, ghl-diag. Migration 20261112000000_walkthrough applied.
+
+## App store prep (2026-10-28, cloud session)
+- Builds: Android built for the first time (run 2, test .apk + unsigned .aab as artifacts); iPhone compiles with the new privacy manifest (`mobile/ios/App/App/PrivacyInfo.xcprivacy`, UserDefaults reason CA92.1), which Apple requires before an upload is accepted.
+- Store screenshots in `docs/store-screenshots/`: 6 iPhone, 6 iPad, 6 Android and the Google banner. Business name swapped to "Summit Roofing Co" in the picture only.
+- Fixed: inside the native app, My projects offered "Get the app / Add to home screen"; bpIsStandalone() now counts the app as installed.
+- privacy.html: new sections for the app's permissions and for AI features (HighLevel, Anthropic, Google), providers named. data-deletion.html: the in-app Delete account steps.
