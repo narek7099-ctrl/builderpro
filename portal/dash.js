@@ -57,6 +57,7 @@
       }).join('') + '</div></div>';
   }
   window.BP_DASH = D;
+  D.steps = steps;   /* the phone home (portal/mobile.js) shows the same setup steps */
   D.hide = function () { try { localStorage.setItem('bpSetupHidden', '1'); } catch (e) {} window.bpDashboard(); };
 
   /* ---------- hero: one band, so the page opens with a statement ---------- */
