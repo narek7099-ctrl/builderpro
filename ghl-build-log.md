@@ -508,3 +508,8 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - help.html: setup (Lisa, business number, team logins), jobs and crew, estimates, invoices, card payments, leads, plan, cancelling, passwords, deleting an account, with search. Button names checked against the live app. Linked from the homepage footer, the legal pages and the sitemap; it is the app-store support URL.
 - 39 marketing page titles now fit Google's ~60 characters, search keyword first (social-share titles unchanged).
 - docs/sales/BuilderPro-one-pager.pdf (source one-pager.html): one Letter page for contractors after a walkthrough, using only the live pricing page's claims. Rebuild it after any price change.
+
+## How BuilderPro is different (2026-10-29, cloud session)
+- Homepage section #simple is now "Why BuilderPro: Built to win the job, then run it": AI receptionist included, built for project jobs, brings the work in, flat price with no contract; links to the comparison page. Menu and footer say "Why BuilderPro", footer adds "Compare".
+- compare.html, jobber-alternative.html, housecall-pro-alternative.html, servicetitan-alternative.html: built by tools/compare-pages.py from one table of facts, so they always agree. Only claims backed by competitor pricing pages or independent reviews (October 2026) are in the table; each page has a "when they may be the better fit" section and a trademark note. Re-check the facts in the script before changing a number.
+- The switching steps promise "send us your customer list and we bring it in": that's done by hand with HighLevel's contact import (contacts then sync to BuilderPro).
