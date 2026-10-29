@@ -558,3 +558,18 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     radial-gradient(farthest-side at 0 50%,rgba(15,23,42,.16),transparent) left center/12px 100% no-repeat scroll,
     radial-gradient(farthest-side at 100% 50%,rgba(15,23,42,.16),transparent) right center/12px 100% no-repeat scroll,
     var(--card,#fff) !important}
+
+/* "more tabs" arrow at the right edge of a tab row that runs off the screen (mobile.js tabsFade) */
+#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore{position:sticky;right:-14px;margin:auto -14px auto auto;flex:0 0 auto;align-self:center;width:44px;height:40px;border:0;padding:0 6px 0 14px;
+  background:linear-gradient(90deg,rgba(255,255,255,0),var(--card,#fff) 40%);display:flex;align-items:center;justify-content:flex-end;cursor:pointer;z-index:2}
+#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore[hidden]{display:none}
+#bpx#bpx#bpx#bpx#bpx.bp-m .hl-tabs .bp-tabmore svg{width:22px;height:22px;fill:none;stroke:var(--blue,#006fff);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+  background:var(--blue-l,#e6f0ff);border-radius:999px;padding:2px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts{flex-wrap:wrap}
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-acts .cal-crewsel{order:9;height:44px;width:100% !important;max-width:none;flex:1 1 100%;margin:0}
+/* phone home: "Finish setting up" card (mobile.js setupCard) */
+#bpx .mh2-setup .mh2-n{color:var(--bl,#006fff);background:var(--blue-l,#e6f0ff)}
+#bpx .mh2-bar{height:6px;border-radius:99px;background:var(--line-2,#EEF0F4);overflow:hidden;margin:2px 0 6px}
+#bpx .mh2-bar i{display:block;height:100%;background:var(--bl,#006fff);border-radius:99px}
+#bpx .mh2-sk{font-size:22px;color:#98a2b3;flex:0 0 auto}
+#bpx .mh2-sk.ok{color:#16a34a}

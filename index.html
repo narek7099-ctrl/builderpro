@@ -17902,7 +17902,7 @@ function bpCalUnsched(){
     q('bpxViewArea').innerHTML=
       '<div class="cal-top"><div class="cal-left"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
       +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='week'?' on':'')+'" onclick="bpCalView(\'week\')"><span class=ms>view_week</span> Week</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
-      +'<div class="cal-acts"><button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
+      +'<div class="cal-acts">'+((all||jobs)?bpCalCrewPick():'')+'<button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
         +(jobs?'<button class="bpx-btn ghost cal-today" onclick="bpCrewBookOpen()"><span class=ms>groups</span> Schedule a crew</button>':'')
         +(all?'<details class="cal-add" ontoggle="bpCalAddPos(this)"><summary class="bpx-btn"><span class=ms>add</span> Add</summary><div class="cal-addm">'
@@ -17911,7 +17911,6 @@ function bpCalUnsched(){
              +'<button onclick="bpCalAddClose();bpNoteOpen()"><span class=ms>sticky_note_2</span><span><b>Note or to-do</b><small>A reminder for you or your team</small></span></button></div></details>'
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
-      +((all||jobs)?bpCalCrewBar():'')
       +((all||jobs)?bpCalUnsched():'')
       +'<div class="cal-layout cal-v-'+_bpCalView+'">'
       +(_bpCalView==='day'
@@ -17953,6 +17952,12 @@ function bpCalUnsched(){
     var cs=window.pjCrews?pjCrews():[]; if(!cs.length) return '';
     var b=function(id,label,col){ return '<button class="cal-crewb'+(_bpCalCrew===id?' on':'')+'" onclick="bpCalCrew(\''+id+'\')">'+(col?'<i style="background:'+col+'"></i>':'')+bpEsc(label)+'</button>'; };
     return '<div class="cal-crews"><span class="bpx-mut">Crews</span>'+b('','All')+cs.map(function(c){ return b(c.id,c.name,c.color); }).join('')+b('none','No crew','#94a3b8')+'</div>';
+  }
+  /* the crew filter as one small dropdown in the Today / Add row, instead of a row of its own */
+  function bpCalCrewPick(){
+    var cs=window.pjCrews?pjCrews():[]; if(cs.length<2&&!_bpCalCrew) return '';   /* one crew: nothing to filter */
+    var o=function(id,label){ return '<option value="'+bpEsc(id)+'"'+(_bpCalCrew===id?' selected':'')+'>'+bpEsc(label)+'</option>'; };
+    return '<select class="cal-crewsel'+(_bpCalCrew?' on':'')+'" aria-label="Show crew" onchange="bpCalCrew(this.value)">'+o('','All crews')+cs.map(function(c){ return o(c.id,c.name); }).join('')+o('none','No crew')+'</select>';
   }
   window.bpCalCrewBar=bpCalCrewBar;
   window.bpDayPick=function(iso){ _bpDaySel=iso; _bpCalDate=new Date(iso+'T12:00:00'); bpDrawDay(); };
@@ -19072,6 +19077,19 @@ function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagin
 .bpx-ctable tbody tr{transition:background .12s;}
 .bpx-ctable tbody tr:hover{background:var(--soft);}
 .bpx-ctable tr:last-child td{border-bottom:0;}
+.bpx-cstage{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+/* contacts on a phone: one line per person (bpDrawContacts) */
+#bpx table.bpx-ct-m thead{display:none}
+#bpx table.bpx-ct-m,#bpx table.bpx-ct-m tbody,#bpx table.bpx-ct-m tr.bpx-crow-m,#bpx table.bpx-ct-m tr.bpx-crow-m>td{display:block !important;width:100%;border:0 !important;padding:0 !important;background:none !important;box-shadow:none !important}
+#bpx table.bpx-ct-m tr.bpx-crow-m>td::before{display:none !important;content:none !important}
+#bpx table.bpx-ct-m tr.bpx-crow-m .bp-mv{display:block !important;width:100%}
+.bpx-cm{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line,#e5e8ef);cursor:pointer;text-align:left}
+.bpx-cm-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.bpx-cm-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bpx-cm-t span{display:flex;align-items:center;gap:8px;min-width:0}
+.bpx-cm-t i{font-style:normal;font-size:12px;color:var(--mut,#6b7a90);white-space:nowrap}
+.bpx-cm-b{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--blue-l,#e6f0ff);color:var(--blue,#006fff);text-decoration:none}
+.bpx-cm-b .ms{font-size:21px}
 .bpx-cnamecell{display:flex;align-items:center;gap:11px;}
 .bpx-cname{font-weight:600;color:var(--ink);letter-spacing:-.01em;}
 .bpx-cmuted{color:var(--grey);}
@@ -19159,7 +19177,7 @@ function bpRenderContacts(){
     '<div class="bpx-chead">'
       +'<div class="bpx-searchwrap"><svg class="bpx-si" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'
         +'<input class="bpx-csearch" id="bpx-csearch" type="text" placeholder="Search name, phone, email, or tag" oninput="bpFilterContacts(this.value)"></div>'
-      +'<div class="bpx-chead-r"><span class="bpx-count" id="bpx-ccount"></span>'+bpCsvBtn('bpCsvContacts()')+'<button class="bpx-addbtn" onclick="bpOpenAdd()">+ New contact</button></div>'
+      +'<div class="bpx-chead-r"><span class="bpx-count" id="bpx-ccount"></span>'+bpCsvBtn('bpCsvContacts()')+'<button class="bpx-btn ghost bpx-csv" onclick="bpImport.open()" title="Import contacts from a spreadsheet"><span class=ms style="font-size:17px;vertical-align:-3px">upload</span> Import</button><button class="bpx-addbtn" onclick="bpOpenAdd()">+ New contact</button></div>'
     +'</div>'
     +'<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Added</th><th></th></tr></thead>'
       +'<tbody id="bpx-cbody"><tr><td colspan="5" class="bpx-cempty">Loading your contacts…</td></tr></tbody></table></div>';
@@ -19179,18 +19197,29 @@ function bpDrawContacts(list){
   if(!list.length){ b.innerHTML='<tr><td colspan="5" class="bpx-cempty">No contacts found.</td></tr>'; return; }
   var pg=bpPage('contacts2',list,10,'bpDrawContacts(window._bpCtDrawList)');
   var EDIT='<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>';
-  var TRASH='<svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+  /* a phone gets one plain line per person (who, where they are, call or text); edit and delete
+     live on the contact's own page, so nobody deletes a customer with a stray tap */
+  var bx=document.getElementById('bpx'), mob=!!(bx&&bx.classList.contains('bp-m'));
+  var tb=b.closest('table'); if(tb) tb.classList.toggle('bpx-ct-m',mob);
   var html='';
   for(var i=0;i<pg.items.length;i++){
-    var c=pg.items[i];
-    var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+    var c=pg.items[i], st=bpStageOf(c);
+    var added=c.dateAdded?new Date(c.dateAdded).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    var chip='<span class="bpx-cstage" style="color:'+st[1]+';background:'+st[1]+'14">'+bpEsc(st[0])+'</span>';
+    if(mob){
+      html+='<tr class="bpx-crow-m"><td colspan="5"><div class="bpx-cm" onclick="bpContactPage(\''+c.id+'\')">'+bpAvatar(c.name||'?',38)
+        +'<div class="bpx-cm-t"><b>'+bpEsc(c.name||'No name')+'</b><span>'+chip+(added?'<i>'+added+'</i>':'')+'</span></div>'
+        +(c.phone?'<a class="bpx-cm-b" href="tel:'+bpEsc(c.phone)+'" onclick="event.stopPropagation()" aria-label="Call '+bpEsc(c.name||'')+'"><span class=ms>call</span></a>'
+          +'<a class="bpx-cm-b" href="sms:'+bpEsc(c.phone)+'" onclick="event.stopPropagation()" aria-label="Text '+bpEsc(c.name||'')+'"><span class=ms>sms</span></a>':'')
+        +'</div></td></tr>';
+      continue;
+    }
     html+='<tr style="cursor:pointer" onclick="bpContactPage(\''+c.id+'\')">'
-      +'<td><div class="bpx-cnamecell">'+bpAvatar(c.name||'?',34)+'<span class="bpx-cname">'+bpEsc(c.name||'—')+'</span></div></td>'
+      +'<td><div class="bpx-cnamecell">'+bpAvatar(c.name||'?',34)+'<span class="bpx-cname">'+bpEsc(c.name||'—')+'</span></div><div style="margin:4px 0 0 45px">'+chip+'</div></td>'
       +'<td class="bpx-cmuted">'+(c.phone?bpEsc(c.phone):'<span class="bpx-dash">—</span>')+'</td>'
       +'<td class="bpx-cmuted">'+(c.email?bpEsc(c.email):'<span class="bpx-dash">—</span>')+'</td>'
       +'<td class="bpx-cmuted">'+(added||'<span class="bpx-dash">—</span>')+'</td>'
-      +'<td class="bpx-cact"><button class="bpx-iconbtn" title="Edit" onclick="event.stopPropagation();bpOpenEdit(\''+c.id+'\')">'+EDIT+'</button>'
-        +'<button class="bpx-iconbtn del" title="Delete" onclick="event.stopPropagation();bpOpenDelete(\''+c.id+'\')">'+TRASH+'</button></td>'
+      +'<td class="bpx-cact"><button class="bpx-iconbtn" title="Edit" onclick="event.stopPropagation();bpOpenEdit(\''+c.id+'\')">'+EDIT+'</button></td>'
     +'</tr>';
   }
   if(pg.nav)html+='<tr><td colspan="5" style="border:0">'+pg.nav+'</td></tr>';
@@ -23640,7 +23669,7 @@ function bpFinEstimates(){_bpFinView='estimates';bpFinances();}
 function bpFinLedger(){_bpFinView='ledger';bpFinances();}
 var GHL_INV_URL=BP_URL+'/functions/v1/ghl-invoice';
 var GHL_EST_URL=BP_URL+'/functions/v1/ghl-estimate';
-var BPEST_NOTE='<div class="bpx-when-note">Sent estimates show here once your business number is connected. Until then you can still start drafts above.</div>';
+var BPEST_NOTE='<div class="bpx-when-note">Your account setup is still finishing, usually within 3 to 4 days of signing up. Once it\'s done, the estimates you send show here. You can build drafts now.</div>';
 /* ===== Charts on the invoice and estimate lists ==========================
    Both lists answer "what did I send"; neither answers "what am I owed, and
    how late is it" — which is the question that actually costs a contractor
@@ -23711,7 +23740,7 @@ function bpEstLoad(){
   .then(function(r){ if(r.status===404) throw 'nf'; return r.json(); })
   .then(function(d){
     el.classList.remove('bpx-mut');
-    if(!(d&&d.ok)){ el.innerHTML=BPEST_NOTE+(d&&d.error?'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'+bpEsc(String(d.error))+'</div>':''); return; }
+    if(!(d&&d.ok)){ el.innerHTML=BPEST_NOTE+(d&&d.error&&!/fully set up/.test(d.error)?'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">'+bpEsc(String(d.error))+'</div>':''); return; }
     window._bpEstItems=d.items||[];
     bpEstDraw();
   })
@@ -25900,7 +25929,6 @@ function bpSettings(){
     ['owner','Owner','person','Personalizes your dashboard, messages and estimates.'],
     ['phone','Business number','call','Get the number your customers already text into BuilderPro, so every text shows up here and '+BP_AI_NAME+' can answer it.'],
     ['ridge',''+BP_AI_NAME+' (receptionist)','smart_toy','Answers your calls and texts 24/7. Set how she sounds and what she offers.'],
-    ['brain','What '+BP_AI_NAME+' knows','psychology','Your prices, services and answers she uses with customers. Fill in anything she couldn\'t answer.'],
     ['signature','Your signature','draw','Signed on every contract you send, so it goes out already signed by you.'],
     ['notify','Notifications','notifications','What lands in your bell, and how you hear about it.'],
     ['appearance','Appearance','palette','How the software looks to you.'],
@@ -25974,8 +26002,9 @@ function bpSettings(){
         +f('set-ophone','Owner phone',o.phone,'(555) 555-5555','tel')
         +f('set-oemail','Owner email',o.email,'owner@company.com','email','Saved to your account.'))
       +sec('phone','<div id="bpx-ph-host"></div>')
-      +sec('ridge','<div id="bpx-rg-host"></div>')
-      +sec('brain','<div id="bpx-br-host"></div>')
+      +sec('ridge','<div id="bpx-rg-host"></div>'
+        /* what she knows lives on the same page now, under her setup (it used to be its own Settings item) */
+        +'<div class="st-head" id="set-brain" style="margin-top:28px"><h2>What '+BP_AI_NAME+' knows</h2><p>Your prices, services and answers she uses with customers. Fill in anything she couldn\'t answer.</p></div><div id="bpx-br-host"></div>')
       +sec('signature','<div id="bpx-us-host"></div>')
       +sec('security',
         '<div class="st-row"><div class="st-row-t"><b>Change password</b><p>Signed in as <span id="bpx-sec-who"></span>. Pick at least 8 characters.</p></div>'
@@ -26016,7 +26045,7 @@ function bpSettings(){
   /* the trade box suggests every trade with a calculator (Concrete & Paving, Flooring, ...) */
   var _trIn=q('set-ctrade'); if(_trIn)_trIn.setAttribute('list','bpTradeList');
   bpSettingsPull();
-  if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpAtlasView('bpx-rg-host'); }
+  if(_bpSetSec==='ridge'){ var rh=q('bpx-rg-host'); if(rh)bpAtlasView('bpx-rg-host'); if(window.bpBrainRender) bpBrainRender(); }
   var sw=q('bpx-sec-who'); if(sw)sw.textContent=window._bpEmail||'';
   if(_bpSetSec==='phone') bpPhoneRender();
   if(_bpSetSec==='brain'&&window.bpBrainRender) bpBrainRender();
@@ -26026,11 +26055,12 @@ function bpSettings(){
 var _bpSetSec='business';
 window.bpAiView=function(){ _bpSetSec='ridge'; bpSettings(); };
 window.bpSetTab=function(t){
+  var toBrain=t==='brain'; if(toBrain) t='ridge';   /* "What Lisa knows" is part of Lisa's page */
   _bpSetSec=t;
   ['business','hours','owner','phone','ridge','brain','signature','notify','appearance','team','plan','security'].forEach(function(k){ var el=q('set-sec-'+k); if(el)el.style.display=(k===t?'':'none'); });
   document.querySelectorAll('[data-set-tab]').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-set-tab')===t); });
   var foot=q('bpx-setfoot'); if(foot){var hide=(t==='plan'||t==='team'||t==='ridge'||t==='brain'||t==='appearance'||t==='phone'||t==='signature'||t==='notify');foot.hidden=hide;foot.style.display=hide?'none':'';}   /* those tabs save themselves */
-  if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); }
+  if(t==='ridge'){ var h=q('bpx-rg-host'); if(h&&!h.firstChild)bpAtlasView('bpx-rg-host'); if(window.bpBrainRender) bpBrainRender(); if(toBrain) setTimeout(function(){ var b=q('set-brain'); if(b&&b.scrollIntoView) b.scrollIntoView({block:'start'}); },150); }
   if(t==='phone') bpPhoneRender();
   if(t==='brain'&&window.bpBrainRender) bpBrainRender();
   if(t==='signature') bpUsSettings();
@@ -27955,7 +27985,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261020b">
 <link rel="stylesheet" href="portal/progress.css?v=20261021a">
 <link rel="stylesheet" href="portal/supply.css?v=20261025c6">
-<link rel="stylesheet" href="portal/dash.css?v=20261025e4">
+<link rel="stylesheet" href="portal/dash.css?v=20261029a">
 <link rel="stylesheet" href="portal/team.css?v=20261025a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
 <script src="portal/team.js?v=20261103a"></script>
@@ -27976,7 +28006,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261024q14"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261026a"></script>
+<script src="portal/dash.js?v=20261029a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261026a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
@@ -28025,12 +28055,13 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
 <link rel="stylesheet" href="portal/shell.css?v=20261020a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261025e4">
+<link rel="stylesheet" href="portal/mobile.css?v=20261029b">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261024q36"></script>
 <script src="portal/shell.js?v=20261024q02"></script>
-<script src="portal/mobile.js?v=20261024q43"></script>
-<script src="portal/notify.js?v=20261028a"></script>
+<script src="portal/mobile.js?v=20261029a"></script>
+<script src="portal/notify.js?v=20261029b"></script>
+<script src="portal/contacts-import.js?v=20261029a"></script>
 <script src="portal/pipeline.js?v=20261028a"></script>
 <script src="portal/tour.js?v=20261102a"></script>
 <script src="portal/native.js?v=20261104a"></script>

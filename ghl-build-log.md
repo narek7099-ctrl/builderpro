@@ -513,3 +513,14 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Homepage section #simple is now "Why BuilderPro: Built to win the job, then run it": AI receptionist included, built for project jobs, brings the work in, flat price with no contract; links to the comparison page. Menu and footer say "Why BuilderPro", footer adds "Compare".
 - compare.html, jobber-alternative.html, housecall-pro-alternative.html, servicetitan-alternative.html: built by tools/compare-pages.py from one table of facts, so they always agree. Only claims backed by competitor pricing pages or independent reviews (October 2026) are in the table; each page has a "when they may be the better fit" section and a trademark note. Re-check the facts in the script before changing a number.
 - The switching steps promise "send us your customer list and we bring it in": that's done by hand with HighLevel's contact import (contacts then sync to BuilderPro).
+
+## App cleanups and contact import (2026-10-29, cloud session)
+- Phone tab rows (Leads, Jobs, Finances, Calendar): a blue arrow at the right edge while more tabs are hidden; tapping it slides them in (mobile.js tabsFade).
+- Bell number counts news only (new leads, messages, approvals, payments, assignments; crew no-shows for one day). Standing reminders (due soon, overdue, needs inspection/estimate/invoice), briefings and job_new stay in the list without adding to the number (notify.js QUIET).
+- Estimates: the "business number" note now says what's true: account setup is still finishing; drafts work now.
+- Contacts on a phone: one line per person (name, stage, date, call and text buttons); edit and delete moved to the contact's page. Computer table gains a stage chip and loses the trash can.
+- Calendar crew filter is one dropdown in the Today/Add row (hidden with fewer than two crews).
+- Settings: "What Lisa knows" is part of Lisa's page; old links scroll to it.
+- Phone home: "Finish setting up" card with the same steps as the computer dashboard (BPDASH.steps).
+- Phone bottom bar: Home, Leads, New, Jobs, Inbox (Calendar is in Apps and Home's Today card).
+- Contact import: Leads > Contacts > Import (portal/contacts-import.js). CSV from any software, columns matched by heading and changeable, duplicates (phone or email) and empty rows skipped, saved to public.contacts tagged "Imported". Imports never text anyone. Up to 5,000 rows per file.

@@ -126,9 +126,17 @@
 
   /* ---------- bell ---------- */
   function feed() { try { return (!crew() && window.BP_DASH && BP_DASH.feed) ? BP_DASH.feed() : { needs: [], recent: [] }; } catch (e) { return { needs: [], recent: [] }; } }
+  /* the red number counts news: something happened that you'd want to know now. Standing
+     reminders (due soon, overdue, waiting on an inspection or estimate) repeat every scan and
+     already sit on the dashboard's Needs you card, and briefings are a daily read; they stay
+     in the list, bold while unread, but don't add to the number */
+  var QUIET = { due_soon: 1, overdue: 1, needs_inspection: 1, needs_estimate: 1, needs_invoice: 1, start_job: 1, inspection_soon: 1, permit_expiring: 1, ceo_report: 1, job_new: 1, estimate_viewed: 1, estimate_sync: 1, sub_invoice_unpaid: 1 };
+  /* a no-show is news the day it happens, not a week later */
+  var TODAY_ONLY = { crew_no_show: 1 };
+  function news() { var day = Date.now() - 864e5; return N.items.filter(function (n) { return !n.read_at && !QUIET[n.kind] && !(TODAY_ONLY[n.kind] && Date.parse(n.created_at) < day); }).length; }
   function badge() {
     var n = $('hlBellN'); if (!n) return;
-    var c = unread();
+    var c = news();
     n.textContent = c > 9 ? '9+' : String(c); n.hidden = !c;
     var b = $('hlBell'); if (b) b.setAttribute('aria-label', c ? 'Notifications, ' + c + ' unread' : 'Notifications');
   }

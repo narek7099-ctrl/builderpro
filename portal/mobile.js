@@ -4,7 +4,7 @@
    Only below 760px wide. Computers and tablets keep the sidebar layout.
 
      Bottom tab bar   the four places each role goes most, plus Apps/More
-                      owner/office: Home, Inbox, Projects, Calendar, Apps
+                      owner/office: Home, Leads, New, Jobs, Inbox
                       crew:         Home, Clock, Projects, Messages, More
                       sub:          Jobs, Invoices, Changes, Messages, More
      Apps sheet       everything else, as a grid, plus settings and sign out
@@ -41,7 +41,8 @@
   /* ------------------------------------------------------------ tabs --- */
   var TABS = {
     /* owner: the big + in the middle makes anything new; everything else is under the avatar (top right) */
-    owner: [['home', 'Home', 'home', 'dashboard'], ['projects', 'Jobs', 'projects', 'activejobs'], ['create', 'New', 'plus', null], ['calendar', 'Calendar', 'calendar', 'calendar'], ['inbox', 'Inbox', 'convos', 'messaging']],
+    /* Leads is a tab because new customers are the money; Calendar is one tap from Home (Today card, Apps) */
+    owner: [['home', 'Home', 'home', 'dashboard'], ['leads', 'Leads', 'leads', 'contacts'], ['create', 'New', 'plus', null], ['projects', 'Jobs', 'projects', 'activejobs'], ['inbox', 'Inbox', 'convos', 'messaging']],
     crew: [['home', 'Clock', 'clock', 'crewdash'], ['projects', 'Jobs', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'Me', 'user', null]],
     sub: [['jobs', 'Jobs', 'projects', 'subjobs'], ['inv', 'Invoices', 'inv', 'subinvoices'], ['chg', 'Changes', 'page', 'subchanges'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]]
   };
@@ -53,7 +54,7 @@
       var g = window.bpNavGroupOf ? bpNavGroupOf(v) : null;
       if (g === 'convos') return 'inbox';
       if (g === 'projects') return 'projects';
-      if (v === 'calendar') return 'calendar';
+      if (g === 'leads' || v === 'closedeals') return 'leads';
       return '';
     }
     if (r === 'crew' && v === 'crewclock') return 'home';   /* the Clock tab opens the crew home; the full time clock is still "Clock" */
@@ -258,6 +259,7 @@
           + (allows('invoices') ? tileB("bpMobile.quick('invoices','bpInvOpen')", 'receipt_long', 'Send invoice') : '')
           + (allows('calendar') ? tileB("bpMobile.quick('calendar','bpCrewBookOpen')", 'groups', 'Schedule crew') : '')
         + '</section>'
+        + setupCard()
         + '<section class="mh2-card"><div class="mh2-h"><b>Needs you</b>' + (needs.length ? '<span class="mh2-n">' + needs.length + '</span>' : '') + '</div>'
           + (needs.length ? needs.slice(0, 3).map(function (r) { return row(r.go, r.tone || '', r.t, ''); }).join('')
             + (needs.length > 3 ? '<button type="button" class="mh2-more" onclick="bpShell.notes&&bpShell.notes(document.getElementById(\'hlBell\'))">See all ' + needs.length + '</button>' : '')
@@ -269,6 +271,24 @@
         + '</section>'
         + appsCard()
       + '</div></div>';
+  }
+  /* the first week decides whether a new account sticks: the same setup steps as the computer
+     dashboard (portal/dash.js), so a phone-only owner sees what is left and can tap straight to it */
+  var setupOpen = false;
+  M.setupToggle = function () { setupOpen = !setupOpen; if (window.bpDashboard) bpDashboard(); };
+  function setupCard() {
+    if ((window.bpTeamIsCrew && bpTeamIsCrew()) || (window.bpTeamIsSub && bpTeamIsSub()) || !window.BPDASH || !BPDASH.steps) return '';
+    var list = []; try { list = BPDASH.steps(); } catch (e) { return ''; }
+    if (!list.length) return '';
+    var done = list.filter(function (x) { return x.done; }).length, pct = Math.round(done / list.length * 100);
+    if (pct === 100) return '';
+    try { if (localStorage.getItem('bpSetupHidden') === '1') return ''; } catch (e) {}
+    var next = list.filter(function (x) { return x.done === false; })[0];
+    var step = function (x) { return '<button type="button" class="mh2-row" onclick="bpNav(\'' + esc(x.go) + '\')"><span class="ms mh2-sk' + (x.done ? ' ok' : '') + '">' + (x.done ? 'check_circle' : 'radio_button_unchecked') + '</span><span class="mh2-rt"><b>' + esc(x.t) + '</b>' + (x.done ? '' : '<small>' + esc(x.s) + '</small>') + '</span></button>'; };
+    return '<section class="mh2-card mh2-setup"><div class="mh2-h"><b>Finish setting up</b><span class="mh2-n">' + done + ' of ' + list.length + '</span></div>'
+      + '<div class="mh2-bar"><i style="width:' + pct + '%"></i></div>'
+      + (setupOpen ? list.map(step).join('') : (next ? step(next) : ''))
+      + '<button type="button" class="mh2-more" onclick="bpMobile.setupToggle()">' + (setupOpen ? 'Show less' : 'All ' + list.length + ' steps') + '</button></section>';
   }
   /* every section of the software, one tap from Home */
   function appsCard() {
@@ -314,7 +334,11 @@
   /* the section tabs scroll sideways: show that there is more, and keep the open one in view */
   function tabsFade() {
     var t = document.querySelector('#bpx .hl-tabs'); if (!t) return;
-    var upd = function () { t.classList.toggle('bp-more', t.scrollWidth - t.clientWidth - t.scrollLeft > 6); t.classList.toggle('bp-less', t.scrollLeft > 6); };
+    /* the shadow alone was easy to miss: an arrow sits at the right edge while more tabs are hidden, and a tap slides them in */
+    var mb = t.querySelector('.bp-tabmore');
+    if (!mb) { mb = document.createElement('button'); mb.type = 'button'; mb.className = 'bp-tabmore'; mb.setAttribute('aria-label', 'More tabs'); mb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+      mb.onclick = function (e) { e.stopPropagation(); t.scrollBy({ left: Math.max(120, t.clientWidth * 0.6), behavior: 'smooth' }); }; t.appendChild(mb); }
+    var upd = function () { var more = t.scrollWidth - t.clientWidth - t.scrollLeft > 6; t.classList.toggle('bp-more', more); t.classList.toggle('bp-less', t.scrollLeft > 6); mb.hidden = !more || !M.on(); };
     if (!t._bpf) { t._bpf = 1; t.addEventListener('scroll', upd, { passive: true }); }
     var on = t.querySelector('.hl-tab.on');
     if (on && M.on()) { var l = on.offsetLeft - 16, r = on.offsetLeft + on.offsetWidth - t.clientWidth + 16; if (t.scrollLeft > l) t.scrollLeft = l; else if (t.scrollLeft < r) t.scrollLeft = r; }
