@@ -3,7 +3,7 @@
   "name": "BuilderPro",
   "short_name": "BuilderPro",
   "description": "Run your contracting business, or follow your home project, in one app: leads, jobs, schedules, photos, payments and messages.",
-  "start_url": "/?portal=1&source=pwa",
+  "start_url": "/app.html?portal=1&source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],

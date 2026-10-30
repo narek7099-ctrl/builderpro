@@ -11,7 +11,7 @@ const {chromium}=require('playwright');
  const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
  p.on('console',m=>{if(m.type()==='error'&&!/supabase|unpkg|jsdelivr|net::|Failed to load|favicon/i.test(m.text()))errs.push('console: '+m.text())});
  await p.route('**://**',r=>r.request().url().startsWith('http://localhost:8771')?r.continue():r.abort());
- await p.goto('http://localhost:8771/index.html',{waitUntil:'domcontentloaded'});
+ await p.goto('http://localhost:8771/app.html',{waitUntil:'domcontentloaded'});
  const r=await p.evaluate(()=>{
    const round=n=>Math.round(n*100)/100;
    const hourly={id:'e1',name:'Dave',kind:'w2',pay_type:'hourly',rate:25,burden_pct:38,active:true};

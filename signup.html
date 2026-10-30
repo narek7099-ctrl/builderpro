@@ -178,7 +178,7 @@ h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
 <!--/seo-->
 </head>
 <body>
-<div class="top"><a class="logo" href="index.html"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><span>Builder<b>Pro</b></span></a><span class="have">Have an account? <a href="index.html?portal=1">Log in</a></span></div>
+<div class="top"><a class="logo" href="index.html"><img src="assets/brand/logo-mark-64.png" alt="" width="28" height="28"><span>Builder<b>Pro</b></span></a><span class="have">Have an account? <a href="app.html?portal=1">Log in</a></span></div>
 <main class="shell" id="shell">
   <section>
     <div class="stepper" id="stepper"></div>
@@ -316,7 +316,7 @@ async function submit(){
     var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+SB_ANON},
       body:JSON.stringify({plan:S.plan,addons:{ai:false,website:!!S.addons.website},name:S.name,email:S.email,phone:S.phone,password:S.password,business:S.business,trade:S.trade,profile:S.profile,website:S.hp||''})});
     var j=await r.json();
-    if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="index.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start my free trial';return;}
+    if(j.exists){$('msg').innerHTML='You already have an account with that email. <a href="app.html?portal=1">Log in</a>.';b.disabled=false;b.textContent='Start my free trial';return;}
     if(!j.ok)throw new Error(j.error||'Something went wrong.');
     if(SB){await SB.auth.signInWithPassword({email:S.email,password:S.password}).catch(function(){});}
     sessionStorage.removeItem('bp_signup');
@@ -327,7 +327,7 @@ async function submit(){
 /* after Stripe: show the build finishing, then send them into their portal */
 async function done(){
   $('stepper').innerHTML='';$('shell').classList.add('wide');
-  $('view').innerHTML='<div class="panel"><h1>You are in. We are setting everything up.</h1><p class="sub">This takes about a minute. You can open BuilderPro now; anything still running finishes in the background.</p><ul class="steps" id="stp"></ul><div class="nav"><a class="btn pri" href="index.html?portal=1" style="text-decoration:none">Open my BuilderPro</a></div></div>';
+  $('view').innerHTML='<div class="panel"><h1>You are in. We are setting everything up.</h1><p class="sub">This takes about a minute. You can open BuilderPro now; anything still running finishes in the background.</p><ul class="steps" id="stp"></ul><div class="nav"><a class="btn pri" href="app.html?portal=1" style="text-decoration:none">Open my BuilderPro</a></div></div>';
   var tick=async function(){
     var a=null; try{ if(SB){ var r=await SB.from('accounts').select('status,ghl_location_id,onboard_state,setup_log,checkout_url').maybeSingle(); a=r.data; } }catch(e){}
     var log=(a&&a.setup_log||[]).join(' ');
@@ -343,7 +343,7 @@ async function payAgain(){
 }
 async function resume(){
   var b=$('nx');b.disabled=true;b.textContent='Opening checkout...';
-  try{ var ses=SB&&(await SB.auth.getSession()).data.session; if(!ses){location.href='index.html?portal=1';return;}
+  try{ var ses=SB&&(await SB.auth.getSession()).data.session; if(!ses){location.href='app.html?portal=1';return;}
     var r=await fetch(SB_URL+'/functions/v1/account-signup',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_ANON,Authorization:'Bearer '+ses.access_token},body:JSON.stringify({op:'resume'})});
     var j=await r.json(); if(!j.ok||!j.checkout_url)throw new Error(j.error||'Could not open checkout.'); location.href=j.checkout_url;
   }catch(e){$('msg').textContent=e.message;b.disabled=false;b.textContent='Add card and start trial';}

@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261030-p5').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261030-p6').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -548,8 +548,9 @@
   window.dlCalc = function (trade, tool) { openCalc(trade, tool); };
   window.dlDrawer = function (force) { (force === false ? closeDrawer : openDrawer)(); };
 
-  /* the drawer form: nothing fake. It opens a ready-to-send email to the
-     support desk with everything typed in, and says so. */
+  /* the drawer form is the first step of sign-up (signup.html picks up the
+     name, business, phone and email). index.html's old inline version said
+     the same but ran first, so this one, loaded later, decided. */
   window.dlContactSend = function (btn) {
     var form = btn.closest('form'), msg = $('.drawer_msg', form);
     var get = function (id) { var el = $('#' + id, form); return el ? el.value.trim() : ''; };
@@ -558,10 +559,13 @@
     var bad = [];
     if (!name) bad.push($('#dfName', form));
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) bad.push($('#dfEmail', form));
-    if (bad.length) { bad.forEach(function (i) { i.classList.add('is-bad'); }); msg.textContent = 'Add your name and a valid email so we can reply.'; bad[0].focus(); return; }
-    var body = 'Name: ' + name + '\nBusiness: ' + biz + '\nPhone: ' + phone + '\nEmail: ' + email + '\n\n' + text;
-    location.href = 'mailto:support@builderpro-os.com?subject=' + encodeURIComponent('Getting started' + (biz ? ': ' + biz : '')) + '&body=' + encodeURIComponent(body);
-    msg.textContent = 'Your mail app is opening with this filled in. We reply within one business day.';
+    if (bad.length) { bad.forEach(function (i) { i.classList.add('is-bad'); }); msg.textContent = 'Add your name and a valid email to start your trial.'; bad[0].focus(); return; }
+    /* the drawer is the first step of sign-up: carry what they typed across */
+    if (get('dfWeb')) return;   /* the hidden field only robots fill in */
+    var q = new URLSearchParams({ plan: 'os' });
+    [['name', name], ['business', biz], ['phone', phone], ['email', email]].forEach(function (x) { if (x[1]) q.set(x[0], x[1]); });
+    msg.textContent = 'Opening sign-up\u2026';
+    location.href = 'signup.html?' + q.toString();
   };
 
 

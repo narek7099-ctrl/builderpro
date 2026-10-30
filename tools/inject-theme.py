@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """Dress every estimator in the marketing site's design system.
 
-embed-src/site-theme.html goes into all twelve calculators, between markers, so
-re-running replaces it rather than stacking a second copy:
-
-  * the seven whose source is an <iframe srcdoc> on the marketing carousel
-    in index.html (escaped for the attribute), and
-  * the five whose source is a whole file in embed-src/.
+embed-src/site-theme.html goes into all twelve calculators (embed-src/<trade>.html),
+between markers, so re-running replaces it rather than stacking a second copy.
 
 Then rebuild the public pages:
 
@@ -15,9 +11,8 @@ Then rebuild the public pages:
 import io, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'index.html')
-INLINE = ['roofing', 'hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping']
-STANDALONE = ['plumbing', 'electrical', 'general', 'concrete', 'flooring']
+TRADES = ['roofing', 'hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping',
+          'plumbing', 'electrical', 'general', 'concrete', 'flooring']
 BEGIN, END = '<!--ST-BEGIN-->', '<!--ST-END-->'
 
 theme = io.open(os.path.join(ROOT, 'embed-src', 'site-theme.html'), encoding='utf-8').read()
@@ -34,22 +29,7 @@ def place(doc, blk):
     return doc + blk, 'appended'
 
 
-s = io.open(SRC, encoding='utf-8').read()
-# inside a double-quoted attribute only & and " need escaping
-esc = block.replace('&', '&amp;').replace('"', '&quot;')
-for t in INLINE:
-    key = '(function(){try{var CID=&quot;' + t + '&quot;'
-    if key not in s:
-        print('no estimator for', t, 'in index.html'); sys.exit(1)
-    k = s.index(key)
-    a = s.rfind('srcdoc="', 0, k) + len('srcdoc="')
-    b = s.index('"></iframe>', k)
-    doc, how = place(s[a:b], esc)
-    s = s[:a] + doc + s[b:]
-    print('%-12s %s (carousel source)' % (t, how))
-io.open(SRC, 'w', encoding='utf-8').write(s)
-
-for t in STANDALONE:
+for t in TRADES:
     p = os.path.join(ROOT, 'embed-src', t + '.html')
     doc, how = place(io.open(p, encoding='utf-8').read(), block)
     io.open(p, 'w', encoding='utf-8').write(doc)
