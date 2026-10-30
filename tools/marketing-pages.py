@@ -86,7 +86,8 @@ def fix(path):
     if '\0NAV' not in s: raise SystemExit('no nav found in ' + name)
     s = s.replace('\0NAV', '<!--mk-nav-->\n' + mkt_nav.nav(trade, True) + '\n<!--/mk-nav-->')
     s = re.sub(r'<!--mk-head-->.*?<!--/mk-head-->\n', '', s)
-    s = s.replace('</head>', '<!--mk-head-->' + mkt_nav.head() + '<!--/mk-head-->\n</head>', 1)
+    at = '<!--seo-->' if '<!--seo-->' in s else '</head>'   # tools/seo.py's block stays last
+    s = s.replace(at, '<!--mk-head-->' + mkt_nav.head() + '<!--/mk-head-->\n' + at, 1)
 
     for a, b in TEXT:
         s = a.sub(b, s) if hasattr(a, 'sub') else s.replace(a, b)
