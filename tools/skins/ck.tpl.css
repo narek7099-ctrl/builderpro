@@ -13,7 +13,7 @@ Q .ck-bar{height:6px !important;background:#eef1f6 !important}
 Q .ck-bar i{background:linear-gradient(90deg,var(--a),color-mix(in srgb,var(--a) 60%,#7dd3fc)) !important;transition:width .7s cubic-bezier(.22,1,.36,1) !important}
 Q .ck-cnt{font-size:12.5px !important;font-weight:600 !important;color:color-mix(in srgb,var(--a) 85%,#0f172a) !important;background:color-mix(in srgb,var(--a) 10%,#fff);padding:7px 12px;border-radius:999px;min-width:0 !important}
 Q .ck-card{background:none !important;padding:0 !important;border-radius:0 !important;animation-duration:.55s !important;animation-timing-function:cubic-bezier(.22,1,.36,1) !important}
-Q .ck-kicker{font-size:12px !important;font-weight:700 !important;letter-spacing:.08em !important;margin-bottom:10px !important}
+Q .ck-kicker{font-size:12px !important;font-weight:700 !important;letter-spacing:.08em !important;margin-bottom:10px !important;color:color-mix(in srgb,var(--a) 86%,#000) !important}   /* small text: darker than the accent for 4.5:1 */
 Q .ck-h{font-size:clamp(28px,4.2vw,40px) !important;font-weight:800 !important;line-height:1.08 !important;letter-spacing:-.035em !important;color:#0f172a !important;margin-bottom:10px !important}
 Q .ck-sub{font-size:15.5px !important;line-height:1.55 !important;color:#5b6678 !important;margin-bottom:24px !important;max-width:560px}
 Q .ck-opts{grid-template-columns:repeat(auto-fill,minmax(230px,1fr)) !important;gap:12px !important}

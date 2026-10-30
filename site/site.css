@@ -453,7 +453,7 @@ main.dl-page p{margin:0;}
 .lisa_stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:30rem;padding:2rem 1.5rem;}
 body.dl .atlas-stage{width:100%;}
 body.dl .blob-hint{color:var(--gray-500);font-family:var(--site-font);}
-body.dl .blob-cta{color:var(--blue-500);font-weight:600;}
+body.dl .blob-cta{color:#0062e0;font-weight:600;}   /* a shade darker than --blue-500 for 4.5:1 at 14px */
 body.dl .atlas-inline{border-radius:var(--radius);box-shadow:none;border:1px solid var(--stroke-dark);}
 body.dl .ai-ask-call,body.dl .ai-ask-text{border-radius:2.5rem;font:600 .75rem/.89 var(--site-font);letter-spacing:0;text-transform:uppercase;padding:.9375rem 1rem;box-shadow:none;}
 body.dl .ai-ask-call{background:var(--dark);}
@@ -533,7 +533,7 @@ body.dl .rv,body.dl .pop{opacity:1;transform:none;}
 .hww_icon svg{width:1.75rem;height:1.75rem;}
 .hww_steps{display:flex;justify-content:space-between;gap:1rem;margin-top:1.5rem;padding:0 10%;}
 .hww_steps div{display:flex;flex-direction:column;gap:.25rem;}
-.hww_steps span{color:var(--gray-500);}
+.hww_steps span{color:#5b6676;}   /* --gray-500 is too faint on the pale card (3.5:1) */
 .hww_steps b{font-weight:600;}
 
 /* 8.9 FAQ ------------------------------------------------------------------- */

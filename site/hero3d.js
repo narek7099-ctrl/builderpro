@@ -129,7 +129,10 @@ export function mount(canvas) {
   const GROUP_Y = [0.72, 1.05, 1.95, 3.1];   /* how far the whole cube has turned in each state: a three-quarter view to start */
   const A = { pos: new THREE.Vector3(), rot: new THREE.Euler() }, B = { pos: new THREE.Vector3(), rot: new THREE.Euler() };
 
-  let want = 0, prog = 0, intro = 0, t0 = performance.now(), tPrev = t0, running = false;
+  let want = 0, prog = 0, intro = 0, tPrev = performance.now(), running = false;
+  /* the animation's own clock: it only moves while frames are drawn, so a cube
+     that rests (phones, below) picks up where it left off without a jump */
+  let clock = 0, asleep = false;
   let mx = 0, my = 0, tmx = 0, tmy = 0;
 
   function apply(p, time) {
@@ -174,17 +177,21 @@ export function mount(canvas) {
     if (!running) return;
     if (covered()) { tPrev = performance.now(); if (!reduce) requestAnimationFrame(frame); return; }
     const now = performance.now(), dt = Math.min(0.1, (now - tPrev) / 1000); tPrev = now;
-    const time = (now - t0) / 1000;
+    clock += dt; const time = clock;
     intro = reduce ? 1 : Math.min(1.6, intro + dt);
     prog += (want - prog) * (1 - Math.exp(-dt * 5.5));
     mx += (tmx - mx) * (1 - Math.exp(-dt * 3.5)); my += (tmy - my) * (1 - Math.exp(-dt * 3.5));
     apply(prog, time);
     renderer.render(scene, camera);
+    /* on a phone the cube rests once it has assembled and caught up with the
+       scroll: no idle drift, no frames, no battery. Scrolling wakes it. */
+    if (!fine && intro >= 1.6 && Math.abs(want - prog) < 0.0005) { asleep = true; return; }
     if (!reduce) requestAnimationFrame(frame);
   }
+  function wake() { if (running && asleep) { asleep = false; tPrev = performance.now(); requestAnimationFrame(frame); } }
 
-  function start() { if (running) return; running = true; tPrev = performance.now(); size(); requestAnimationFrame(frame); }
-  function stop() { running = false; }
+  function start() { if (running) return; running = true; asleep = false; tPrev = performance.now(); size(); requestAnimationFrame(frame); }
+  function stop() { running = false; asleep = false; }
 
   const io = new IntersectionObserver((es) => { es.some((e) => e.isIntersecting) ? start() : stop(); }, { threshold: 0 });
   io.observe(canvas);
@@ -203,6 +210,7 @@ export function mount(canvas) {
   return {
     setProgress(p) {
       want = clamp(p, 0, 1);
+      wake();
       if (reduce) { prog = want; apply(prog, 0); renderer.render(scene, camera); }
     },
   };
