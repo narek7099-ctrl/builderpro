@@ -529,6 +529,7 @@
   window.bpCalcClose = closeCalc;
 
   window.dlMenu = function (force) { (force === false ? closeMenu : openMenu)(); };
+  window.dlCalc = function (trade, tool) { openCalc(trade, tool); };
   window.dlDrawer = function (force) { (force === false ? closeDrawer : openDrawer)(); };
 
   /* the drawer form: nothing fake. It opens a ready-to-send email to the

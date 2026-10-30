@@ -1,0 +1,116 @@
+/* ==== BuilderPro tool skin: cost calculators (preview).
+   Only the look changes: same questions, answers, wording, prices and math.
+   Built from tools/tool-skin.py; edit the template there, not this file.
+   Colors follow the contractor's theme (--a), so it stays on-brand on their site. ==== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+html,body{background:color-mix(in srgb,var(--a,#2563eb) 5%,#f5f7fb) !important}
+.est-stage{max-width:820px !important;margin:0 auto !important;padding:28px 18px 40px !important}
+P{font-family:'Inter',system-ui,-apple-system,sans-serif !important;background:#fff !important;border:0 !important;border-radius:28px !important;
+  box-shadow:0 1px 0 rgba(15,23,42,.04),0 24px 70px rgba(15,23,42,.10) !important;overflow:hidden !important;min-height:min(720px,calc(100vh - 68px))}
+P *{font-family:inherit}
+
+/* top: tool name and a step pill, then a thick progress bar */
+P .e-topbar{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px;padding:22px 34px 0 !important;background:none !important;border:0 !important;backdrop-filter:none !important}
+P .e-tlogo{font-size:15px !important;font-weight:700 !important;letter-spacing:-.01em !important;color:#0f172a !important;gap:10px !important;text-transform:none !important}
+P .e-tlogo span{color:var(--a) !important;margin-left:4px}
+P .e-ldot{width:28px !important;height:28px !important;border-radius:9px !important;box-shadow:none !important;background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 55%,#fff)) !important}
+P .e-tstep{font-size:12.5px !important;font-weight:600 !important;letter-spacing:0 !important;text-transform:none !important;color:color-mix(in srgb,var(--a) 85%,#0f172a) !important;
+  background:color-mix(in srgb,var(--a) 10%,#fff) !important;padding:7px 13px !important;border-radius:999px !important;flex-basis:auto !important;white-space:nowrap}
+P .e-tstep b{color:inherit !important}
+P .e-prog{height:6px !important;margin:18px 34px 0 !important;border-radius:99px !important;background:#eef1f6 !important;overflow:hidden}
+P .e-pfill{height:100% !important;border-radius:99px !important;background:linear-gradient(90deg,var(--a),color-mix(in srgb,var(--a) 60%,#7dd3fc)) !important;transition:width .7s cubic-bezier(.22,1,.36,1) !important}
+P > .e-app{padding:30px 34px 34px !important;background:none !important}
+
+/* each step slides in */
+P .e-sp.active{animation:bpsIn .55s cubic-bezier(.22,1,.36,1) both !important}
+P .e-sp.active.back{animation:bpsBack .55s cubic-bezier(.22,1,.36,1) both !important}
+@keyframes bpsIn{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+@keyframes bpsBack{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:none}}
+
+/* the question */
+P .e-shdr{margin-bottom:22px !important;padding:0 !important;border:0 !important;background:none !important}
+P .e-seye{display:inline-block !important;font-size:12px !important;font-weight:700 !important;letter-spacing:.08em !important;text-transform:uppercase !important;color:var(--a) !important;margin-bottom:10px !important}
+P .e-stitle{font-size:clamp(28px,4.2vw,40px) !important;font-weight:800 !important;line-height:1.08 !important;letter-spacing:-.035em !important;color:#0f172a !important}
+P .e-stitle br{display:none}
+P .e-stitle em{font-style:normal !important;color:var(--a) !important}
+P .e-ssub{display:block !important;max-height:none !important;opacity:1 !important;margin-top:10px !important;font-size:15.5px !important;line-height:1.55 !important;color:#5b6678 !important;max-width:560px}
+P .bp-more{display:none !important}
+
+/* answers: big tiles, two across where they fit */
+P .e-olist{display:grid !important;grid-template-columns:repeat(auto-fill,minmax(230px,1fr)) !important;gap:12px !important}
+P .e-oi{position:relative !important;display:flex !important;align-items:center !important;gap:14px !important;min-height:74px !important;padding:16px 46px 16px 18px !important;border-radius:18px !important;
+  border:1.5px solid #e3e8f0 !important;background:#fff !important;box-shadow:0 1px 2px rgba(15,23,42,.04) !important;text-align:left !important;cursor:pointer;
+  transition:border-color .18s,box-shadow .18s,transform .18s,background .18s !important}
+P .e-oi::before{display:none !important}
+P .e-oi:hover{border-color:color-mix(in srgb,var(--a) 45%,#e3e8f0) !important;transform:translateY(-2px) !important;box-shadow:0 10px 24px rgba(15,23,42,.08) !important}
+P .e-oi.sel{border:2px solid var(--a) !important;background:color-mix(in srgb,var(--a) 7%,#fff) !important;box-shadow:0 0 0 4px color-mix(in srgb,var(--a) 14%,transparent) !important;padding:15.5px 45.5px 15.5px 17.5px !important}
+P .e-oi-lbl{font-size:16px !important;font-weight:650 !important;color:#0f172a !important;line-height:1.25 !important;letter-spacing:-.01em}
+P .e-oi-desc{display:block !important;max-height:none !important;opacity:1 !important;margin-top:3px !important;font-size:13px !important;color:#6b7a90 !important;line-height:1.35 !important}
+P .e-oi-tag{display:inline-block !important;margin-top:6px !important;font-size:11px !important;font-weight:700 !important;padding:3px 8px !important;border-radius:99px !important;
+  background:color-mix(in srgb,var(--a) 10%,#fff) !important;color:var(--a) !important;border:0 !important}
+P .e-oi-em,P .e-oi-emchip,P .e-oi-sw{flex:none !important;width:46px !important;height:46px !important;border-radius:13px !important;font-size:24px !important;display:grid !important;place-items:center !important;
+  background:#f3f6fa !important;overflow:hidden}
+P .e-oi-radio{position:absolute !important;right:16px !important;top:50% !important;transform:translateY(-50%) !important;width:22px !important;height:22px !important;border-radius:99px !important;
+  border:2px solid #cfd7e3 !important;background:#fff !important;margin:0 !important;transition:all .18s !important}
+P .e-oi.sel .e-oi-radio{border-color:var(--a) !important;background:var(--a) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/13px no-repeat !important}
+P .e-oi.sel .e-oi-radio::after,P .e-oi-radio::after{display:none !important}
+
+/* inputs */
+P input[type=text],P input[type=tel],P input[type=email],P input:not([type]),P textarea,P select{font-size:16px !important;border-radius:14px !important;border:1.5px solid #e3e8f0 !important;
+  background:#fff !important;padding:15px 16px !important;color:#0f172a !important;box-shadow:none !important;transition:border-color .15s,box-shadow .15s}
+P input:focus,P textarea:focus,P select:focus{outline:none !important;border-color:var(--a) !important;box-shadow:0 0 0 4px color-mix(in srgb,var(--a) 16%,transparent) !important}
+P .e-zipinput{font-size:28px !important;font-weight:700 !important;letter-spacing:.06em !important;padding:18px 20px !important;max-width:320px}
+P .e-ziplabel,P .e-fl{font-size:13px !important;font-weight:600 !important;color:#334155 !important;text-transform:none !important;letter-spacing:0 !important}
+
+/* buttons: a bar at the bottom that clearly lights up when you can go on */
+P .e-btnrow{display:flex !important;gap:12px !important;align-items:center !important;margin-top:28px !important;padding-top:20px !important;border-top:1px solid #eef1f6 !important}
+P .e-btnmain{flex:1 !important;height:58px !important;border-radius:16px !important;border:0 !important;font-size:16.5px !important;font-weight:700 !important;letter-spacing:-.01em !important;
+  color:#fff !important;background:var(--a) !important;box-shadow:0 10px 24px color-mix(in srgb,var(--a) 32%,transparent) !important;transition:transform .15s,box-shadow .15s,opacity .2s,background .2s !important}
+P .e-btnmain:hover:not(:disabled){transform:translateY(-1px) !important;box-shadow:0 14px 30px color-mix(in srgb,var(--a) 40%,transparent) !important}
+P .e-btnmain:disabled{background:color-mix(in srgb,var(--a) 30%,#fff) !important;color:#fff !important;box-shadow:none !important;opacity:1 !important;cursor:not-allowed}
+P .e-btnback{flex:none !important;width:58px !important;height:58px !important;border-radius:16px !important;border:1.5px solid #e3e8f0 !important;background:#fff !important;display:grid !important;place-items:center !important}
+P .e-btnback:hover{border-color:#c7d0dd !important}
+
+/* the photo preview box sits beside the answers: answers in one wide column */
+P .e-vizsplit{display:grid !important;grid-template-columns:minmax(0,1fr) minmax(0,230px) !important;gap:16px !important;align-items:start;width:100% !important;max-width:100% !important;margin:0 !important}
+P .e-vizsplit>*,P .e-vizphoto,P .e-vizcol{min-width:0 !important;width:auto !important;max-width:100% !important;margin:0 !important}
+P .e-vizsplit .e-olist,P .e-vizcol .e-olist{grid-template-columns:1fr !important}
+@media (max-width:720px){ P .e-vizsplit{grid-template-columns:1fr !important} }
+/* a tag (+8%, Full estimate) sits under the label, moved there by tool-skin-est.js */
+P .e-oi-info{flex:1 !important;min-width:0 !important}
+P .e-oi-info .e-oi-tag{margin-top:7px !important}
+P .bps-hide{display:none !important}
+P .e-vizupload{border:1.5px dashed color-mix(in srgb,var(--a) 35%,#dbe3ee) !important;border-radius:18px !important;background:color-mix(in srgb,var(--a) 4%,#fff) !important}
+
+/* calculating */
+P .e-ldring{width:58px !important;height:58px !important;border-width:4px !important;border-color:#e9eef5 !important;border-top-color:var(--a) !important}
+P .e-ldstp{border-radius:12px !important;background:#f6f8fb !important;border:0 !important;font-size:14px !important;padding:12px 14px !important}
+
+/* the result: one big number, the details in tiles, then the booking button */
+P .e-rpage{padding:0 !important}
+P .e-rhero{text-align:left !important;padding:30px 30px 28px !important;border:0 !important;border-radius:24px !important;color:#fff !important;
+  background:radial-gradient(120% 140% at 100% 0%,color-mix(in srgb,var(--a) 70%,#fff) 0%,var(--a) 40%,color-mix(in srgb,var(--a) 55%,#0b1021) 100%) !important;
+  box-shadow:0 24px 50px color-mix(in srgb,var(--a) 30%,transparent) !important}
+P .e-rhero *{color:#fff !important}
+P .e-rrange{font-size:clamp(38px,7vw,60px) !important;font-weight:800 !important;letter-spacing:-.04em !important;line-height:1 !important;margin:10px 0 12px !important}
+P .e-rrange em{color:rgba(255,255,255,.72) !important}
+P .e-rgrid{gap:10px !important;margin:16px 0 !important}
+P .e-rbox{border-radius:16px !important;background:#f6f8fb !important;border:0 !important;padding:16px !important;text-align:left !important}
+P .e-rbv{font-size:18px !important;font-weight:750 !important;color:#0f172a !important}
+P .e-rbl{font-size:12.5px !important;color:#6b7a90 !important;text-transform:none !important;letter-spacing:0 !important}
+P .e-rcta .e-btnmain{max-width:none !important;width:100% !important;height:62px !important;font-size:17.5px !important}
+P .e-rnote{font-size:12.5px !important}
+
+/* phones: the card fills the screen and the buttons stay in reach */
+@media (max-width:640px){
+  .est-stage{padding:0 !important}
+  P{border-radius:0 !important;box-shadow:none !important;min-height:100vh}
+  P .e-topbar{padding:16px 18px 0 !important}
+  P .e-prog{margin:14px 18px 0 !important}
+  P > .e-app{padding:24px 18px 0 !important}
+  P .e-olist{grid-template-columns:1fr !important;gap:10px !important}
+  P .e-oi{min-height:66px !important}
+  P .e-btnrow{position:sticky !important;bottom:0;z-index:50;margin:24px -18px 0 !important;padding:12px 18px calc(12px + env(safe-area-inset-bottom)) !important;
+    background:rgba(255,255,255,.94) !important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid #eef1f6 !important}
+  P .e-rhero{padding:24px 22px !important}
+}
