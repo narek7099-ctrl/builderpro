@@ -151,6 +151,7 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
 .fit ul{margin:10px 0 0 18px;color:var(--grey);font-size:15px;line-height:1.7}
 </style>
 <script async src="https://builderpro-os.com/embed/track.js?u=0909842f-f8b2-4651-950a-a772aef42b1d"></script>
+<link rel="stylesheet" href="/site/mkt-nav.css?v=2a9038d9"><script src="/site/mkt-nav.js?v=5de21d6a" defer></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -166,20 +167,70 @@ table.cmp{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
     <line x1="20" y1="22.5" x2="20" y2="37.5" stroke="#0c2a8a" stroke-width="0.6" opacity=".25"/>
   </symbol>
 </svg>
-<nav>
-  <div class="nav-i">
-    <a href="https://builderpro-os.com" class="brand">
-      <svg class="bpmark" width="26" height="26" aria-label="BuilderPro"><use href="#bpMark"/></svg>
-      <b style="font-weight:inherit">Builder<span>Pro</span></b>
-    </a>
-    <div class="nav-r">
-      <a class="lk" href="https://builderpro-os.com/#lisa">Lisa AI</a>
-      <a class="lk" href="https://builderpro-os.com/#pricing">Pricing</a>
-      <a class="lk" href="https://builderpro-os.com/compare.html">Compare</a>
-      <a href="https://builderpro-os.com/signup.html" class="btn btn-dark">Start free trial</a>
+<div class="pnav" role="navigation" aria-label="Primary">
+  <div class="pnav_bar">
+    <a class="pnav_logo" href="/" aria-label="BuilderPro, home"><img src="/assets/brand/logo-mark-128.png" alt="" width="26" height="26"><span>Builder<b>Pro</b></span></a>
+    <div class="pnav_links">
+      <div class="pnav_dd">
+        <button type="button" class="pnav_link" aria-expanded="false" aria-haspopup="true">Product<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="pnav_panel" role="menu">
+          <a href="/#simple" role="menuitem"><b>Why BuilderPro</b><small>Built to win the job, then run it</small></a>
+          <a href="/#how" role="menuitem"><b>How it works</b><small>From first call to final payment</small></a>
+          <a href="/#lisa" role="menuitem"><b>Lisa AI</b><small>Answers every call and text, 24/7</small></a>
+          <a href="/#trades" role="menuitem"><b>Every trade</b><small>Roofing, HVAC, remodeling and more</small></a>
+          <a href="/compare.html" role="menuitem"><b>Compare</b><small>vs Jobber, Housecall Pro, ServiceTitan</small></a>
+        </div>
+      </div>
+      <div class="pnav_dd">
+        <button type="button" class="pnav_link" aria-expanded="false" aria-haspopup="true">Tools<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="pnav_panel" role="menu">
+          <a href="/?calc=roofing:cost" role="menuitem"><b>Cost calculator</b><small>A real price range in under a minute</small></a>
+          <a href="/?calc=roofing:damage" role="menuitem"><b>Damage check</b><small>Snap a photo, get a damage report</small></a>
+          <a href="/?calc=roofing:health" role="menuitem"><b>Health check</b><small>Six taps to a health score</small></a>
+        </div>
+      </div>
+      <a href="/#pricing" class="pnav_link">Pricing</a>
+      <a href="/#pros" class="pnav_link">Find a pro</a>
+    </div>
+    <div class="pnav_ctas">
+      <a href="/?portal=1" class="pnav_login">Log in</a>
+      <a href="/signup.html" class="pnav_cta">Start free trial</a>
+      <button class="pnav_burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="pnavSheet"><span></span><span></span></button>
     </div>
   </div>
-</nav>
+  <div class="pnav_progress" aria-hidden="true"><i></i></div>
+</div>
+<div class="pnav_sheet" id="pnavSheet" aria-label="Site menu" hidden>
+  <div class="pnav_sheet_top">
+    <span class="pnav_logo"><img src="/assets/brand/logo-mark-128.png" alt="" width="26" height="26"><span>Builder<b>Pro</b></span></span>
+    <button type="button" class="pnav_close" aria-label="Close menu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg></button>
+  </div>
+  <div class="pnav_sheet_body">
+    <span class="pnav_k">Product</span>
+    <a href="/#simple">Why BuilderPro</a>
+    <a href="/#how">How it works</a>
+    <a href="/#lisa">Lisa AI</a>
+    <a href="/#trades">Every trade</a>
+    <a href="/#pricing">Pricing</a>
+    <a href="/#faq">FAQ</a>
+    <span class="pnav_k">Tools</span>
+    <div class="pnav_tools">
+      <a href="/?calc=roofing:cost"><b>Cost calculator</b><small>Price range in a minute</small></a>
+      <a href="/?calc=roofing:damage"><b>Damage check</b><small>Photo to damage report</small></a>
+      <a href="/?calc=roofing:health"><b>Health check</b><small>Six taps to a score</small></a>
+    </div>
+    <a href="/#pros">Find a pro</a>
+    <a href="/compare.html">Compare</a>
+  </div>
+  <div class="pnav_sheet_foot">
+    <a href="tel:+13503331230" class="pnav_call">Call Lisa, the live demo<small>(350) 333-1230</small></a>
+    <div class="pnav_sheet_row">
+      <a href="/?portal=1" class="pnav_login">Log in</a>
+      <a href="/signup.html" class="pnav_cta">Start free trial</a>
+    </div>
+  </div>
+</div>
+<div class="pnav_sp"></div>
 
 <header class="hero">
   <div class="wrap">
