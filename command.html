@@ -536,8 +536,11 @@ function ghlKey(uid,loc,biz){
 async function newAcct(b){
   var v={op:'account_create',name:el('naName').value.trim(),business:el('naBiz').value.trim(),email:el('naEmail').value.trim(),phone:el('naPhone').value.trim(),trade:el('naTrade').value.trim()};
   if(!v.name||!v.business||!v.email){el('naOut').textContent='Name, business and email are needed.';return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)){el('naOut').textContent='That email doesn\'t look right.';return}
   b.disabled=true;el('naOut').textContent='Creating… (up to a minute)';
   var r=await api(v); b.disabled=false;
+  /* Supabase's raw reply when the email already has a login */
+  if(r.error&&/already been registered|email_exists/i.test(r.error))r={error:'That email already has a BuilderPro login. Find them in the list below instead.'};
   el('naOut').innerHTML=r.error&&!r.steps?'<span style="color:var(--danger)">'+esc(r.error)+'</span>':'<span style="color:var(--ok)">Created.</span> '+esc((r.steps||[]).join(' · '))+(r.error?' <span style="color:var(--danger)">'+esc(r.error)+'</span>':'');
   if(!r.error)setTimeout(viewAccounts,2500);
 }
