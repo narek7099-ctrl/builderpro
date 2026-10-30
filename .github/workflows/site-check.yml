@@ -1,0 +1,48 @@
+# Daily website check: opens builderpro-os.com like a visitor (every page in the
+# sitemap, the homepage and trade pages on a computer and a phone, all 36 tools,
+# the app's log-in screen) and checks that they work. Never sends a form, so it
+# costs nothing and texts no one. Runs 13:47 UTC, before the 14:41 health check,
+# which lists any problems in the Command Center and the bell.
+# GitHub also emails you when this run fails.
+#
+# Secret (GitHub > Settings > Secrets and variables > Actions):
+#   SITE_CHECK_KEY  the value of ai_config site_check_key in Supabase. Without it
+#                   the check still runs; it just doesn't report to the Command Center.
+# Run it by hand: Actions > "Website check" > Run workflow.
+
+name: Website check
+
+on:
+  schedule:
+    - cron: "47 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install the browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check the website
+        env:
+          SITE_CHECK_KEY: ${{ secrets.SITE_CHECK_KEY }}
+        run: node tools/site-check.js
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-check
+          path: site-check.json
+          retention-days: 14

@@ -11,3 +11,4 @@ __pycache__/
 
 # test logins kept on your own computer only
 *.local.txt
+site-check.json
