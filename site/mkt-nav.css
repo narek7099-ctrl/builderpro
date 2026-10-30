@@ -85,3 +85,6 @@
 @media (max-width:480px){.mk-tabs{width:100%;flex-wrap:nowrap}.mk-tabs button{flex:1;padding:11px 6px;font-size:13px}}
 @media (max-width:640px){.mk-frame{border-radius:16px;margin:0 -8px}.mk-frame iframe{height:700px}}
 .mk-try{scroll-margin-top:84px}
+
+/* links inside running text need more than color to stand out */
+.fcopy a,p a:not(.btn):not(.pnav_cta):not(.pnav_login){text-decoration:underline;text-underline-offset:2px}

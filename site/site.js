@@ -137,6 +137,9 @@
         linesClass: 'line',
         wordsClass: 'word',
         charsClass: 'letter',
+        /* SplitText labels the element for screen readers, which is only
+           allowed on headings; a split paragraph reads fine line by line */
+        aria: /^H[1-6]$/.test(heading.tagName) ? 'auto' : 'none',
         onSplit: function (self) {
           var cfg = splitConfig[type];
           var anim = { yPercent: 110, duration: cfg.duration, stagger: cfg.stagger, delay: delay, ease: 'expo.out' };
@@ -164,10 +167,17 @@
   var heroApi = null;
   function mountCube() {
     var right = $('.hero_right'), canvas = $('.hero_right canvas');
-    if (!right || !canvas || canvas._bpHero) return;
+    if (!right || !canvas || canvas._bpHero || canvas._bpQueued) return;
     if (!('WebGLRenderingContext' in window)) { right.classList.add('nogl'); return; }
-    import('./hero3d.js?v=20261030-p3').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
-      .catch(function () { right.classList.add('nogl'); });
+    canvas._bpQueued = 1;
+    /* after the page has shown (and the browser is idle), so the 3D code never
+       holds up the first paint */
+    var go = function () {
+      import('./hero3d.js?v=20261030-p5').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+        .catch(function () { right.classList.add('nogl'); });
+    };
+    var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
+    if (document.readyState === 'complete') later(); else window.addEventListener('load', later, { once: true });
   }
   /* The resting hero: clip 1 plays once, then clip 2 takes over as a loop.
      The clips are the hero; the live cube only stands in when they cannot
@@ -232,6 +242,12 @@
       if (want && scrub.paused) { var p = scrub.play(); if (p && p.catch) p.catch(function () {}); }
       else if (!want && !scrub.paused) scrub.pause();
     }
+    /* the clip is 2.7 MB and sits below the first screen: fetch it only
+       when the story is a couple of screens away, not with the page */
+    ScrollTrigger.create({
+      trigger: triggers, start: 'top 300%', once: true,
+      onEnter: function () { if (scrub.readyState === 0) { scrub.preload = 'auto'; try { scrub.load(); } catch (e) {} } },
+    });
     ScrollTrigger.create({
       trigger: triggers, start: 'top bottom', end: 'bottom bottom',
       onToggle: function (self) { want = self.isActive; sync(); },

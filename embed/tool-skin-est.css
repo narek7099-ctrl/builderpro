@@ -29,7 +29,7 @@ html body #est-embed#est-embed#est-embed .e-sp.active.back{animation:bpsBack .55
 
 /* the question */
 html body #est-embed#est-embed#est-embed .e-shdr{margin-bottom:22px !important;padding:0 !important;border:0 !important;background:none !important}
-html body #est-embed#est-embed#est-embed .e-seye{display:inline-block !important;font-size:12px !important;font-weight:700 !important;letter-spacing:.08em !important;text-transform:uppercase !important;color:var(--a) !important;margin-bottom:10px !important}
+html body #est-embed#est-embed#est-embed .e-seye{display:inline-block !important;font-size:12px !important;font-weight:700 !important;letter-spacing:.08em !important;text-transform:uppercase !important;color:color-mix(in srgb,var(--a) 86%,#000) !important;margin-bottom:10px !important}   /* small text: a shade darker than the accent for 4.5:1 */
 html body #est-embed#est-embed#est-embed .e-stitle{font-size:clamp(28px,4.2vw,40px) !important;font-weight:800 !important;line-height:1.08 !important;letter-spacing:-.035em !important;color:#0f172a !important}
 html body #est-embed#est-embed#est-embed .e-stitle br{display:none}
 html body #est-embed#est-embed#est-embed .e-stitle em{font-style:normal !important;color:var(--a) !important}

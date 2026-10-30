@@ -552,3 +552,11 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 
 ## Sales kit (2026-10-30, cloud session)
 - docs/sales/sales-kit.md: the facts and prices to know, the one-line answer to "how are you different from Jobber / Housecall Pro / ServiceTitan" (from compare.html), who to target and the missed-call test, cold call and voicemail scripts, answers to pushback, a 3-email sequence with trade first lines (CAN-SPAM footer), follow-up texts (only to people who agreed; no cold texting, TCPA), links by trade, the 20-minute walkthrough. Claims come from the live site; update it when prices change.
+
+## Speed and accessibility (2026-10-30, cloud session)
+- Lighthouse (mobile) before: homepage performance 32, accessibility 91; trade pages 69 / 96. Most of the homepage's blocking time was the 3D cube, which only runs where the hero videos can't play (Lighthouse's Chromium has no H.264). Real visitors see the videos.
+- site/hero3d.js: on touch devices the cube rests once it has assembled and caught up with the scroll (no idle drift, no frames); scrolling wakes it. Its clock only moves while drawing, so it never jumps. Computers unchanged. site/site.js loads hero3d.js after the load event, when the browser is idle.
+- #videoScrub (2.7 MB) is preload="none" and starts loading when the story is about 3 screens away, so it no longer downloads with the page.
+- Contrast: marketing/compare pages --blue #2f6bff → #2a62f0, --grey-l → #6e6e74, step numbers opacity .8; homepage .hww_steps labels #5b6676 and .blob-cta #0062e0; tool skins' small kickers use the accent mixed 14% toward black (still follows each contractor's color); signup.html --blue #0062e0, --ok #15803d. Links inside text on marketing pages are underlined. SplitText no longer puts aria-label on paragraphs (aria:'none' for non-headings).
+- favicon.ico added (pages without an icon link were getting a 404).
+- After: accessibility and best-practices 100 on the homepage, a trade page, compare, sign-up, a calculator and a damage check.
