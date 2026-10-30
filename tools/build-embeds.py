@@ -61,6 +61,11 @@ def source_for(t):
     return html.unescape(s[a:b])
 
 
+import hashlib
+_v = lambda f: hashlib.md5(io.open(os.path.join(OUT, f), 'rb').read()).hexdigest()[:8]
+SKIN = ('<link rel="stylesheet" href="tool-skin-est.css?v=%s"><script src="tool-skin-est.js?v=%s" defer></script>'
+        % (_v('tool-skin-est.css'), _v('tool-skin-est.js')))
+
 built = []
 for t in TRADES:
     doc = source_for(t)
@@ -83,6 +88,8 @@ for t in TRADES:
         doc = doc.replace('</body>', '<script id="bp-theme-applier">' + applier + '</script></body>', 1)
     else:
         doc += '<script id="bp-theme-applier">' + applier + '</script>'
+    # the BuilderPro tool look (tools/tool-skin.py): last in the head so it wins over the page's own styles
+    doc = doc.replace('</head>', SKIN + '</head>', 1)
     io.open(os.path.join(OUT, t + '.html'), 'w', encoding='utf-8').write(doc)
     built.append((t, len(doc)))
 

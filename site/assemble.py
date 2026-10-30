@@ -12,8 +12,10 @@ On a file that has never been spliced, the legacy anchors are used instead
 (the skip link .. <section id="estimator">, and the pricing section .. </main>).
 The plan modal inside the bottom region is carried forward unchanged.
 
-The head gets the fonts and the vendored GSAP + Lenis; the version query on
-site assets is bumped every run so browsers fetch the new files.
+The head gets the fonts, site.css and present.css; the scripts are the vendored
+GSAP, site.js and present.js (the presentation-style scrolling and new nav; no
+Lenis). The version query on site assets is bumped every run so browsers fetch
+the new files.
 """
 import re, sys, pathlib, datetime
 
@@ -55,14 +57,17 @@ fontshare = '<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=g
 if 'api.fontshare.com' not in html:
     k = html.index('<link href="https://fonts.googleapis.com/css2?family=Geist')
     html = html[:k] + fontshare + '\n' + html[k:]
-html = re.sub(r'<link rel="stylesheet" href="site/site\.css(\?v=[^"]*)?">', '<link rel="stylesheet" href="site/site.css?v=%s">' % VER, html, count=1)
+html = re.sub(r'<link rel="stylesheet" href="site/site\.css(\?v=[^"]*)?">(\n<link rel="stylesheet" href="site/present\.css[^"]*">)?',
+              '<link rel="stylesheet" href="site/site.css?v=%s">\n<link rel="stylesheet" href="site/present.css?v=%s">' % (VER, VER), html, count=1)
 html = re.sub(r'\{"imports":\{"three":"\./site/vendor/three\.module\.min\.js(\?v=[^"]*)?"\}\}',
               '{"imports":{"three":"./site/vendor/three.module.min.js?v=%s"}}' % VER, html, count=1)
 
 # ---------- scripts ----------
-scripts = ''.join('<script src="site/vendor/%s?v=%s"></script>\n' % (f, VER) for f in ('lenis.min.js', 'gsap.min.js', 'ScrollTrigger.min.js', 'SplitText.min.js'))
+# no Lenis: site/present.js moves the page one slide at a time itself
+scripts = ''.join('<script src="site/vendor/%s?v=%s"></script>\n' % (f, VER) for f in ('gsap.min.js', 'ScrollTrigger.min.js', 'SplitText.min.js'))
 scripts += '<script src="site/site.js?v=%s"></script>\n' % VER
-html = re.sub(r'(<script src="site/vendor/(lenis|gsap|ScrollTrigger|SplitText)\.min\.js[^"]*"></script>\n)+<script src="site/site\.js[^"]*"></script>\n', scripts, html, count=1)
+scripts += '<script src="site/present.js?v=%s"></script>\n' % VER
+html = re.sub(r'(<script src="site/vendor/(lenis|gsap|ScrollTrigger|SplitText)\.min\.js[^"]*"></script>\n)+<script src="site/site\.js[^"]*"></script>\n(<script src="site/present\.js[^"]*"></script>\n)?', scripts, html, count=1)
 assert 'site/site.js?v=' + VER in html, 'script block not found'
 
 # the hero module import in site.js carries its own version query
