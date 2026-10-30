@@ -593,3 +593,9 @@ After: no blank areas at any stop; a trackpad flick moves exactly one slide; a 3
 - The homepage "Calculators" panel (site/body-top.html, opened by every Calculators/Tools button and ?calc=trade:tool) now offers all 12 trades, each opening its own embed (embed/<trade>.html, damage-<trade>, health-<trade>). Before, three groups stood in for everything ("Roofing and exterior" promised pools and yards but opened the roof estimator).
 - Layout: 2-column trade grid with icons (a swipeable row on phones); the three tools are one switch above the live tool; the tool gets the room. Styles in site/site.css "CALCULATORS v2"; site.js CALC_TRADES lists the 12, CALC_ALIAS keeps siding/gutters → roofing, remodel(ing) → general, pool → pools, countertop → countertops.
 - Tested: ?calc=pools:health, switching trade and tool, computer and phone, no errors, no sideways scroll.
+
+## New dashboard screenshots, email logo, email plan (2026-10-30, cloud session)
+- assets/site/portal-dashboard.png and portal-calendar.png (homepage "How it works" slides 2 and 3) replaced with fresh 2560x1600 shots of the current app (plan299 test account: dashboard with the AI CEO card; calendar month view). Only the bell count and the new-account setup bar were hidden for the shot. Image URLs carry ?v=20261030. The old in-app demo mode (BP_LIVE false) is broken: bpEnterPortal needs BP_SB.
+- assets/email/builderpro-logo-animated.gif (23 KB, 440x112, shown at 176x45): first frame is the complete logo (Outlook desktop shows only frame 1), a light sweep, then a 2.6s rest. Static copy: assets/email/builderpro-logo.png.
+- docs/sales/email-signature.html (paste into Outlook) and docs/sales/email-outreach.md (deliverability, volume, trial offer, CAN-SPAM, week-one checklist).
+- Email DNS (checked): MX Microsoft 365 via GoDaddy, SPF include:secureserver.net, DMARC p=quarantine, Resend DKIM present, Microsoft 365 DKIM (selector1/selector2) NOT set: turning it on is the owner's step.
