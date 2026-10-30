@@ -3,8 +3,8 @@
 <meta name="robots" content="noindex"><title>BuilderPro</title>
 <style>html,body{margin:0;height:100%;background:#F2F4F7}@media(prefers-color-scheme:dark){html,body{background:#0C111D}}</style>
 <script>
-/* /app is the portal's own address. GitHub Pages serves this file for /app/;
-   it hands over to the portal in index.html, which then shows /app in the
-   address bar again (portal/shell.js bpShell.appUrl). */
-(function(){var q=location.search.replace(/^\?/,'');location.replace('../index.html?app=1'+(q?'&'+q:'')+location.hash);})();
+/* /app is the app's short address (the app shows it in the address bar,
+   portal/shell.js bpShell.appUrl). GitHub Pages serves this file for /app/;
+   it hands over to app.html, keeping the rest of the address. */
+(function(){location.replace('/app.html'+location.search+location.hash);})();
 </script></head><body></body></html>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Splice the marketing site into index.html. Re-runnable.
+"""Splice the marketing site into app.html, then make the homepage. Re-runnable.
 
-index.html also carries the estimator, the model sites, the plan modal, the
+app.html also carries the estimator, the model sites, the plan modal, the
 Lisa chat and the whole portal. Those are left byte-for-byte. Only two
 regions are replaced, each bracketed by markers once this has run once:
 
@@ -20,7 +20,7 @@ the new files.
 import re, sys, pathlib, datetime
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SRC = ROOT / 'index.html'
+SRC = ROOT / 'app.html'   # the app; the homepage (index.html) is made from it below
 SITE = ROOT / 'site'
 VER = datetime.date.today().strftime('%Y%m%d') + ('-' + sys.argv[1] if len(sys.argv) > 1 else '')
 
@@ -76,3 +76,8 @@ js.write_text(re.sub(r"'\./hero3d\.js(\?v=[^']*)?'", "'./hero3d.js?v=%s'" % VER,
 
 SRC.write_text(html, encoding='utf-8')
 print('assembled:', len(html), 'bytes, version', VER)
+
+# the homepage is app.html without the app, then the search and sharing tags
+import runpy
+runpy.run_path(str(ROOT / 'tools' / 'build-home.py'), run_name='__main__')
+runpy.run_path(str(ROOT / 'tools' / 'seo.py'), run_name='__main__')

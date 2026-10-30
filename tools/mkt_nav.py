@@ -48,10 +48,10 @@ def nav(trade='roofing', local=False):
         </div>
       </div>
       <a href="/#pricing" class="pnav_link">Pricing</a>
-      <a href="/#pros" class="pnav_link">Find a pro</a>
+      <a href="/app.html#pros" class="pnav_link">Find a pro</a>
     </div>
     <div class="pnav_ctas">
-      <a href="/?portal=1" class="pnav_login">Log in</a>
+      <a href="/app.html?portal=1" class="pnav_login">Log in</a>
       <a href="/signup.html" class="pnav_cta">Start free trial</a>
       <button class="pnav_burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="pnavSheet"><span></span><span></span></button>
     </div>
@@ -77,13 +77,13 @@ def nav(trade='roofing', local=False):
       <a {t("damage")}><b>Damage check</b><small>Photo to damage report</small></a>
       <a {t("health")}><b>Health check</b><small>Six taps to a score</small></a>
     </div>
-    <a href="/#pros">Find a pro</a>
+    <a href="/app.html#pros">Find a pro</a>
     <a href="/compare.html">Compare</a>
   </div>
   <div class="pnav_sheet_foot">
     <a href="tel:+13503331230" class="pnav_call">Call Lisa, the live demo<small>(350) 333-1230</small></a>
     <div class="pnav_sheet_row">
-      <a href="/?portal=1" class="pnav_login">Log in</a>
+      <a href="/app.html?portal=1" class="pnav_login">Log in</a>
       <a href="/signup.html" class="pnav_cta">Start free trial</a>
     </div>
   </div>

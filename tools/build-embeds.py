@@ -7,16 +7,10 @@ roof checks under THEIR account. Whatever the source, the output is the same
 shape, and this script is the only thing that writes embed/ — nothing in
 there should ever be hand-edited.
 
-There are two kinds of source, for a reason:
-
-  * The first seven live in index.html as <iframe srcdoc="..."> on the
-    marketing carousel, so those slides render with no extra request. The
-    srcdoc IS the source; embed/ is generated from it.
-
-  * The five newest live as whole files in embed-src/ and are loaded by URL
-    on the carousel instead. Inlining a 120 KB document twice to save one
-    lazy-loaded request is a poor trade, and an escaped copy is miserable to
-    edit. New trades should go here.
+Every estimator's source is a whole file in embed-src/<trade>.html. (The
+first seven used to live inside index.html as <iframe srcdoc> copies on a
+hidden homepage carousel; they moved out when the homepage and the app were
+split, so the homepage no longer carries 1.1 MB of calculators.)
 
 Either way this patches the pricing loader to honour ?u=<owner uuid> and
 appends the theme applier, so a contractor's saved colours, font and logo
@@ -27,14 +21,10 @@ reach all twelve. Re-run it whenever an estimator changes.
 import html, io, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, 'index.html')
 OUT = os.path.join(ROOT, 'embed')
-INLINE = ['roofing', 'hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping']
-STANDALONE = ['plumbing', 'electrical', 'general', 'concrete', 'flooring']
-TRADES = INLINE + STANDALONE
+TRADES = ['roofing', 'hvac', 'countertops', 'trim', 'painting', 'pools', 'landscaping',
+          'plumbing', 'electrical', 'general', 'concrete', 'flooring']
 SRC_DIR = os.path.join(ROOT, 'embed-src')
-
-s = io.open(SRC, encoding='utf-8').read()
 os.makedirs(OUT, exist_ok=True)
 
 # the loader inside every document fetches pricing with no owner filter; on a
@@ -46,19 +36,11 @@ LOADER_NEW = ('var OWN="";try{OWN=(new URLSearchParams(location.search).get("u")
               'fetch(U+"/rest/v1/calculator_pricing?calc_id=eq."+CID+(OWN?"&owner=eq."+OWN:"")+"&select=\\1",')
 
 def source_for(t):
-    """The document for a trade, from index.html or from embed-src/."""
-    if t in STANDALONE:
-        p = os.path.join(SRC_DIR, t + '.html')
-        if not os.path.exists(p):
-            print('no source file for', t, '-- expected', p); sys.exit(1)
-        return io.open(p, encoding='utf-8').read()
-    key = '(function(){try{var CID=&quot;' + t + '&quot;'
-    if key not in s:
-        print('no loader for', t); sys.exit(1)
-    k = s.index(key)
-    a = s.rfind('srcdoc="', 0, k) + len('srcdoc="')
-    b = s.index('"></iframe>', k)
-    return html.unescape(s[a:b])
+    """The document for a trade, from embed-src/."""
+    p = os.path.join(SRC_DIR, t + '.html')
+    if not os.path.exists(p):
+        print('no source file for', t, '-- expected', p); sys.exit(1)
+    return io.open(p, encoding='utf-8').read()
 
 
 import hashlib
@@ -79,7 +61,7 @@ for t in TRADES:
     elif 'E_CONFIG.ownerId=OWN' not in doc:
         print('loader shape changed for', t); sys.exit(1)
     # a viewport meta and a title, since this is now a whole page rather than a frame
-    doc = doc.replace('<!doctype html>', '<!doctype html><!-- built by tools/build-embeds.py from index.html; edit the source, not this file -->', 1)
+    doc = doc.replace('<!doctype html>', '<!doctype html><!-- built by tools/build-embeds.py from embed-src/; edit the source, not this file -->', 1)
     if '<meta name="viewport"' not in doc:
         doc = re.sub(r'(<head[^>]*>)', r'\1<meta name="viewport" content="width=device-width,initial-scale=1">', doc, count=1)
     # the owner's saved look (colours, font, logo) and live preview from the portal

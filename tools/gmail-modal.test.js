@@ -11,7 +11,7 @@ const {chromium}=require('playwright');
  const p=await b.newPage({viewport:{width:1280,height:1100}});
  const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
  await p.route('**://**',r=>r.request().url().startsWith('http://localhost:8771')?r.continue():r.abort());
- await p.goto('http://localhost:8771/index.html',{waitUntil:'domcontentloaded'});
+ await p.goto('http://localhost:8771/app.html',{waitUntil:'domcontentloaded'});
  const r=await p.evaluate(()=>{
    document.getElementById('bpx').style.display='block';
    window.BP_URL='https://proj.supabase.co';

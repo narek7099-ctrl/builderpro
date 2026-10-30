@@ -3,7 +3,7 @@
   "appName": "BuilderPro",
   "webDir": "www",
   "server": {
-    "url": "https://builderpro-os.com/?portal=1&source=app",
+    "url": "https://builderpro-os.com/app.html?portal=1&source=app",
     "hostname": "builderpro-os.com",
     "androidScheme": "https",
     "errorPath": "offline.html",
