@@ -91,3 +91,5 @@ html.bp-present .pr-sec.pr-out:not(#home)>.stack{opacity:0;transform:translateY(
 @keyframes prHint{0%{transform:translateY(0);opacity:1}70%{transform:translateY(9px);opacity:0}100%{opacity:0}}
 .pr-hint.gone{opacity:0}
 @media (max-width:1000px){ .pr-hint{display:none} }
+/* the app (portal) opens over the homepage: none of this belongs on top of it */
+body:has(#bpx.open) .pnav,body:has(#bpx.open) .pr-dots,body:has(#bpx.open) .pr-hint,body:has(#bpx.open) .pnav_sheet{display:none !important}

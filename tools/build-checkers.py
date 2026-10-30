@@ -51,7 +51,7 @@ def webhook(t):
 PAGE = '''<!doctype html><!-- built by tools/build-checkers.py from embed-src/checkers/; edit the source, not this file -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>%(title)s</title>%(og)s<meta name="robots" content="noindex">
-<style>%(css)s</style></head>
+<style>%(css)s</style>%(skin)s</head>
 <body><div id="est-embed" class="ck" data-tool="%(tool)s" data-trade="%(trade)s">
 <div class="ck-top"><button class="ck-back" id="ck-back" onclick="ckBack()" aria-label="Back" hidden>&#8249;</button><div class="ck-bar"><i id="ck-bar"></i></div><span class="ck-cnt" id="ck-cnt"></span></div>
 <div id="ck-stage" aria-live="polite"></div></div>
@@ -62,13 +62,16 @@ PAGE = '''<!doctype html><!-- built by tools/build-checkers.py from embed-src/ch
 <script id="bp-theme-applier">%(applier)s</script></body></html>
 '''
 
+import hashlib
+SKIN = '<link rel="stylesheet" href="tool-skin-ck.css?v=%s">' % hashlib.md5(io.open(os.path.join(OUT, 'tool-skin-ck.css'), 'rb').read()).hexdigest()[:8]
+
 n = 0
 for t in TRADES:
     hook = webhook(t)
     for tool in ('health', 'damage'):
         title = '%s %s Check' % (names[t], 'Health' if tool == 'health' else 'Damage')
         doc = PAGE % dict(title=title, css=css, tool=tool, trade=t, tool_js=json.dumps(tool), trade_js=json.dumps(t),
-                          hook_js=json.dumps(hook), og=og_meta.head(tool, t, names[t], '%s-%s.html' % (tool, t)), trades=trades, engine=engine, theme=theme, applier=applier)
+                          hook_js=json.dumps(hook), skin=SKIN, og=og_meta.head(tool, t, names[t], '%s-%s.html' % (tool, t)), trades=trades, engine=engine, theme=theme, applier=applier)
         io.open(os.path.join(OUT, '%s-%s.html' % (tool, t)), 'w', encoding='utf-8').write(doc)
         n += 1
     print('%-12s health + damage  (webhook %s)' % (t, 'yes' if hook else 'none'))

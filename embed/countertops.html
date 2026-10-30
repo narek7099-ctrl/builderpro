@@ -522,7 +522,7 @@ html,body{margin:0;background:#f6f8fb;font-family:'Inter','Space Grotesk',system
 #est-embed .e-fl{color:#6a6a70 !important;font-weight:600 !important;letter-spacing:1.5px !important;}
 #est-embed .e-consent{background:var(--soft) !important;border:1px solid var(--line) !important;color:#6a6a70 !important;border-radius:9px !important;}
 #est-embed .e-consent b{color:var(--ink) !important;}
-</style></head>
+</style><link rel="stylesheet" href="tool-skin-est.css?v=97ceda91"><script src="tool-skin-est.js?v=5341bc3a" defer></script></head>
 <body><div class="est-stage"><div id="est-embed-shell"></div></div>
 <script>
 /* ═══════════════════════════════════════════════════
@@ -546,7 +546,7 @@ const E_CONFIG = {
      Material is the biggest driver; edge/removal/layout fine-tune it.
      `prompt` is the instruction sent to the image model for the visualizer. */
   /* Each material has color options. `hex` tints the color chip; `desc` is the
-     phrase fed to the AI prompt (e.g. "white quartz with subtle grey veining"). */
+     phrase fed to the AI prompt (e.g. "white quartz with subtle gray veining"). */
   pricing: {
     "laminate":     { label:"Laminate",            low:20,  high:40,  note:"Budget-friendly · many looks",
       colors:[{name:"White",hex:"#eae6dd",desc:"clean white laminate"},{name:"Warm Grey",hex:"#b9b3a8",desc:"warm grey laminate"},{name:"Wood-Look",hex:"#b07d4c",desc:"wood-look laminate"},{name:"Black",hex:"#2c2c2e",desc:"matte black laminate"},{name:"Stone-Look",hex:"#cfc7b8",desc:"stone-look speckled laminate"}] },
@@ -557,11 +557,11 @@ const E_CONFIG = {
     "granite":      { label:"Granite",             low:45,  high:100, note:"Natural stone · very popular",
       colors:[{name:"Black Pearl",hex:"#2b2b2e",desc:"black pearl granite with subtle silver speckle"},{name:"White / Grey",hex:"#cfccc6",desc:"white and grey speckled granite"},{name:"Brown / Tan",hex:"#8a6b4a",desc:"brown and tan speckled granite"},{name:"Blue-Grey",hex:"#6f7a82",desc:"blue-grey granite with movement"}] },
     "quartz":       { label:"Quartz (Engineered)", low:55,  high:120, note:"Durable, low-maintenance · #1 pick",
-      colors:[{name:"Pure White",hex:"#f4f3f0",desc:"pure white quartz"},{name:"Calacatta",hex:"#efeae0",desc:"white Calacatta quartz with soft grey-gold veining"},{name:"Grey",hex:"#b7b4ae",desc:"warm grey quartz"},{name:"Charcoal",hex:"#3a3a3c",desc:"charcoal black quartz with fine sparkle"},{name:"Concrete",hex:"#a8a6a1",desc:"matte concrete-look grey quartz"}] },
+      colors:[{name:"Pure White",hex:"#f4f3f0",desc:"pure white quartz"},{name:"Calacatta",hex:"#efeae0",desc:"white Calacatta quartz with soft grey-gold veining"},{name:"Grey",hex:"#b7b4ae",desc:"warm grey quartz"},{name:"Charcoal",hex:"#3a3a3c",desc:"charcoal black quartz with fine sparkle"},{name:"Concrete",hex:"#a8a6a1",desc:"matte concrete-look gray quartz"}] },
     "marble":       { label:"Marble",              low:60,  high:150, note:"Luxury look · softer stone",
-      colors:[{name:"Carrara White",hex:"#f0efeb",desc:"Carrara white marble with soft grey veining"},{name:"Calacatta Gold",hex:"#efe8d8",desc:"Calacatta marble with bold grey and gold veining"},{name:"Black / Grey",hex:"#3b3b3d",desc:"dramatic black marble with white veining"}] },
+      colors:[{name:"Carrara White",hex:"#f0efeb",desc:"Carrara white marble with soft gray veining"},{name:"Calacatta Gold",hex:"#efe8d8",desc:"Calacatta marble with bold gray and gold veining"},{name:"Black / Grey",hex:"#3b3b3d",desc:"dramatic black marble with white veining"}] },
     "porcelain":    { label:"Porcelain Slab",      low:60,  high:120, note:"Ultra-durable · heat/scratch proof",
-      colors:[{name:"Marble-Look",hex:"#eeece7",desc:"marble-look porcelain slab with grey veining"},{name:"Concrete",hex:"#a9aaa6",desc:"matte concrete-grey porcelain slab"},{name:"Black",hex:"#2d2d2f",desc:"matte black porcelain slab"}] },
+      colors:[{name:"Marble-Look",hex:"#eeece7",desc:"marble-look porcelain slab with gray veining"},{name:"Concrete",hex:"#a9aaa6",desc:"matte concrete-grey porcelain slab"},{name:"Black",hex:"#2d2d2f",desc:"matte black porcelain slab"}] },
     "quartzite":    { label:"Quartzite",           low:70,  high:140, note:"Natural · harder than granite",
       colors:[{name:"White",hex:"#eef0f2",desc:"white quartzite with dramatic veining"},{name:"Grey",hex:"#9ea6ac",desc:"grey quartzite with natural movement"},{name:"Blue",hex:"#6d818f",desc:"blue quartzite with striking veins"}] },
   },
@@ -582,8 +582,8 @@ const E_CONFIG = {
     {name:"Keep current", hex:"", desc:""},
     {name:"Crisp White", hex:"#f3f1ec", desc:"painted crisp white"},
     {name:"Off-White / Cream", hex:"#e8e1d1", desc:"painted warm off-white cream"},
-    {name:"Light Grey", hex:"#c3c4c2", desc:"painted light grey"},
-    {name:"Charcoal", hex:"#3c3f43", desc:"painted charcoal grey"},
+    {name:"Light Grey", hex:"#c3c4c2", desc:"painted light gray"},
+    {name:"Charcoal", hex:"#3c3f43", desc:"painted charcoal gray"},
     {name:"Navy Blue", hex:"#2e3d55", desc:"painted deep navy blue"},
     {name:"Sage Green", hex:"#8b9a80", desc:"painted soft sage green"},
     {name:"Black", hex:"#26262a", desc:"painted matte black"},
@@ -1672,7 +1672,7 @@ document.addEventListener('click', function(e) {
      The look: a white app bar with the step count and a thin progress line,
      a short bold question, big tappable answer cards with a round check,
      and Back / Continue pinned to the bottom of the screen on phones. The
-     accent is the contractor's own colour when they set one (--bp-acc from
+     accent is the contractor's own color when they set one (--bp-acc from
      the theme applier), else BuilderPro blue.
 
      It sits after every other stylesheet and carries !important on purpose:
@@ -1750,7 +1750,7 @@ html body #est-embed#est-embed .e-oi-radio{grid-area:radio !important;width:26px
   color:transparent !important;font-size:14px !important;font-weight:700 !important;display:flex !important;align-items:center !important;justify-content:center !important;box-shadow:none !important;transition:all .2s ease !important;}
 html body #est-embed#est-embed .e-oi.sel .e-oi-radio{background:var(--st-acc) !important;border-color:var(--st-acc) !important;color:#fff !important;}
 
-/* colour swatches, presets, sliders --------------------------------------- */
+/* color swatches, presets, sliders --------------------------------------- */
 html body #est-embed#est-embed .e-colorrow{gap:10px !important;}
 html body #est-embed#est-embed .e-colorchip{border-radius:14px !important;border:1.5px solid var(--st-line) !important;background:#fff !important;box-shadow:none !important;}
 html body #est-embed#est-embed .e-colorchip.sel,html body #est-embed#est-embed .e-colorchip.on{border-color:var(--st-acc) !important;background:var(--st-acc-l) !important;}
@@ -1856,7 +1856,7 @@ html body #est-embed#est-embed .e-sp.active .e-sbody{animation:stFade .45s var(-
 @media (min-width:761px){html body #est-embed#est-embed > .e-app{padding:18px 22px 24px !important;} html body #est-embed#est-embed .e-stitle{font-size:32px !important;}}
 
 /* ===== Calm layout (v2): one thing per screen, more air, less on the page.
-   White page, no shadows or grey panels, the question big and alone, the
+   White page, no shadows or gray panels, the question big and alone, the
    explanation tucked behind "Why we ask", answers as quiet rows whose detail
    line shows only once picked. ===== */
 html body #est-embed#est-embed,html body #est-embed#est-embed > .e-app{background:#fff !important;}
