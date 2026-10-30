@@ -2,7 +2,9 @@
 # template, so the facts stay the same everywhere. Run: python3 tools/compare-pages.py
 # Competitor facts: their public pricing pages and independent reviews, October 2026.
 # Re-check them before changing a price or a claim here.
-import html, pathlib
+import html, pathlib, sys
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import mkt_nav   # the homepage's nav
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ASOF = "October 2026"
 e = lambda s: html.escape(s, quote=True)
@@ -90,22 +92,10 @@ def page(slug, title, desc, h1, lead, cols, intro, fit):
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>{CSS}{EXTRA}</style>
 <script async src="https://builderpro-os.com/embed/track.js?u=0909842f-f8b2-4651-950a-a772aef42b1d"></script>
+{mkt_nav.head()}
 </head>
 <body>{MARK}
-<nav>
-  <div class="nav-i">
-    <a href="https://builderpro-os.com" class="brand">
-      <svg class="bpmark" width="26" height="26" aria-label="BuilderPro"><use href="#bpMark"/></svg>
-      <b style="font-weight:inherit">Builder<span>Pro</span></b>
-    </a>
-    <div class="nav-r">
-      <a class="lk" href="https://builderpro-os.com/#lisa">Lisa AI</a>
-      <a class="lk" href="https://builderpro-os.com/#pricing">Pricing</a>
-      <a class="lk" href="https://builderpro-os.com/compare.html">Compare</a>
-      <a href="https://builderpro-os.com/signup.html" class="btn btn-dark">Start free trial</a>
-    </div>
-  </div>
-</nav>
+{mkt_nav.nav()}
 
 <header class="hero">
   <div class="wrap">
