@@ -6,12 +6,15 @@
 //   { op: "status" }  (admin)    the latest saved result and the last 7 days
 //   { op: "run" }     (admin)    run now, save and return it
 //   cron key + { op: "test_alert" }  send a test bell notification to the admins
+//   x-site-check-key + { op: "site_report" }  the daily website check (GitHub,
+//        tools/site-check.js) saves its result in ai_config site_check; the morning
+//        run lists its problems with the rest
 // A morning run with problems puts a notification in each admin's BuilderPro bell.
 // Deploy: --no-verify-jwt (cron key or the admin check below)
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "", SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ADMINS = (Deno.env.get("ADMIN_EMAILS") ?? "").toLowerCase().split(",").map((x) => x.trim()).filter(Boolean);
 const sb = (p: string, i: RequestInit = {}) => fetch(`${SB_URL}/rest/v1/${p}`, { ...i, headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", ...(i.headers ?? {}) } });
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-site-check-key", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const cfg = async (k: string) => String((await (await sb(`ai_config?key=eq.${k}&select=value`)).json())?.[0]?.value ?? "");
 async function admin(req: Request) {
@@ -90,6 +93,12 @@ async function check() {
   // 5. secrets exist (names only)
   for (const [k, why] of Object.entries(SECRETS)) if (!Deno.env.get(k)) problems.push({ area: "Settings", text: `The secret ${k} is missing (${why})` });
   if (!Deno.env.get("APNS_KEY_P8") || !Deno.env.get("FCM_SERVICE_ACCOUNT")) notes.push({ area: "Settings", text: "Phone notifications are off until the Apple and Firebase keys are added (docs/APP-STORES.md, step 2)" });
+  // 6. the website: the daily GitHub check (tools/site-check.js) reports here before this runs
+  const cfgSite = await cfg("site_check");
+  const site = (() => { try { return JSON.parse(cfgSite); } catch { return null; } })();
+  if (!site) notes.push({ area: "Website", text: "The daily website check hasn't reported yet (it needs the SITE_CHECK_KEY secret in GitHub)" });
+  else if (Date.now() - Date.parse(site.at) > 50 * 36e5) problems.push({ area: "Website", text: `The daily website check last reported ${ago(Date.parse(site.at))} (it runs every morning in GitHub Actions)` });
+  else for (const p of site.problems ?? []) problems.push({ area: "Website", text: String(p.text ?? p).slice(0, 200) });
   return { ok: problems.length === 0, problems, notes, checked: Object.keys(FUNCS).length };
 }
 // a bell notification (and a phone push, once the app has its keys) for each Command
@@ -126,6 +135,17 @@ Deno.serve(async (req) => {
     const t = await req.json().catch(() => ({}));
     if (t.op === "test_alert") return json({ ok: true, sent: await alertAdmins("BuilderPro: test alert", "This is how the morning health check tells you about a problem. Nothing is wrong.", `health-test-${new Date().toISOString().slice(0, 10)}`) });
     return json({ ok: true, result: await runAndSave("daily") });
+  }
+  const siteKey = req.headers.get("x-site-check-key");
+  if (siteKey) {
+    const k = await cfg("site_check_key");
+    if (!k || siteKey !== k) return new Response("no", { status: 403 });
+    const t = await req.json().catch(() => ({}));
+    if (t.op !== "site_report") return json({ ok: false, error: "unknown op" }, 400);
+    const keep = { ok: !!t.ok, problems: (Array.isArray(t.problems) ? t.problems : []).slice(0, 20).map((p: { text?: string }) => ({ text: String(p?.text ?? "").slice(0, 200) })),
+      pages: Number(t.pages) || 0, tools: Number(t.tools) || 0, at: new Date().toISOString() };
+    const r = await sb("ai_config", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "site_check", value: JSON.stringify(keep) }) });
+    return json({ ok: r.ok });
   }
   if (!(await admin(req))) return json({ ok: false, error: "not authorized" }, 403);
   const b = await req.json().catch(() => ({}));
