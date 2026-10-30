@@ -524,3 +524,11 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Phone home: "Finish setting up" card with the same steps as the computer dashboard (BPDASH.steps).
 - Phone bottom bar: Home, Leads, New, Jobs, Inbox (Calendar is in Apps and Home's Today card).
 - Contact import: Leads > Contacts > Import (portal/contacts-import.js). CSV from any software, columns matched by heading and changeable, duplicates (phone or email) and empty rows skipped, saved to public.contacts tagged "Imported". Imports never text anyone. Up to 5,000 rows per file.
+
+## Website redesign previews (2026-10-30, cloud session)
+- builderpro-os.com/new.html: the homepage with a new nav and presentation-style scrolling. Built by tools/make-preview.py from index.html (+ site/present-nav.html, site/present.css, site/present.js), so it always shows today's real content. noindex.
+  - Nav: floating bar with Product and Tools menus, Pricing, Find a pro, Log in, Start free trial; the current section lights up and a progress line runs under it. Phones: full-screen menu sheet.
+  - Slides: one flick, swipe or arrow key glides to the next stop and locks there. Stops are section tops, one per hero step and per How-it-works feature, and screen-sized pages through long sections, each starting at the top of a card. Dots on the right (computers). Overlays, forms and anything that scrolls by itself keep normal scrolling; "reduce motion" turns it off. Lenis is not loaded on the preview.
+  - site.js: window.dlCalc(trade, tool) opens the tools panel on a tool (used by the new menus); index.html's site.js version bumped.
+- Tool redesign previews: embed/roofing-new.html, embed/damage-roofing-new.html, embed/health-roofing-new.html. Built by tools/tool-skin.py: embed/tool-skin-est.css (+ tool-skin-est.js) for the cost calculators and embed/tool-skin-ck.css for the checks, from tools/skins/*.tpl.css. Look only: same questions, answers, prices, scoring and wording; colors follow the contractor's theme (--a).
+- Not live yet: once approved, the skin gets linked into all 36 tool pages and the nav + slides go into index.html via site/assemble.py.

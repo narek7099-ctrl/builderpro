@@ -1,0 +1,71 @@
+<!-- ===================== NAV (presentation preview) ========================
+  A slim floating bar: logo, Product and Tools menus, Pricing, Find a pro,
+  Log in and Start free trial. The section you are on lights up, and a thin
+  line under the bar shows how far through the page you are. On a phone:
+  logo, Start free trial and a menu button that opens a full-screen sheet. -->
+<nav class="pnav" aria-label="Primary">
+  <div class="pnav_bar">
+    <a class="pnav_logo" href="#home" aria-label="BuilderPro, home">
+      <img src="assets/brand/logo-mark-128.png" alt="" width="26" height="26"><span>Builder<b>Pro</b></span>
+    </a>
+    <div class="pnav_links">
+      <div class="pnav_dd" data-group="product">
+        <button type="button" class="pnav_link" aria-expanded="false" aria-haspopup="true">Product<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="pnav_panel" role="menu">
+          <a href="#simple" role="menuitem" data-sec="simple"><b>Why BuilderPro</b><small>Built to win the job, then run it</small></a>
+          <a href="#how" role="menuitem" data-sec="how"><b>How it works</b><small>From first call to final payment</small></a>
+          <a href="#lisa" role="menuitem" data-sec="lisa"><b>Lisa AI</b><small>Answers every call and text, 24/7</small></a>
+          <a href="#trades" role="menuitem" data-sec="trades"><b>Every trade</b><small>Roofing, HVAC, remodeling and more</small></a>
+          <a href="/compare.html" role="menuitem"><b>Compare</b><small>vs Jobber, Housecall Pro, ServiceTitan</small></a>
+        </div>
+      </div>
+      <div class="pnav_dd" data-group="tools">
+        <button type="button" class="pnav_link" aria-expanded="false" aria-haspopup="true">Tools<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+        <div class="pnav_panel" role="menu">
+          <a href="#" role="menuitem" onclick="dlCalc&&dlCalc(null,'cost');return false;"><b>Cost calculator</b><small>A real price range in under a minute</small></a>
+          <a href="#" role="menuitem" onclick="dlCalc&&dlCalc(null,'damage');return false;"><b>Damage check</b><small>Snap a photo, get a damage report</small></a>
+          <a href="#" role="menuitem" onclick="dlCalc&&dlCalc(null,'health');return false;"><b>Health check</b><small>Six taps to a health score</small></a>
+        </div>
+      </div>
+      <a href="#pricing" class="pnav_link" data-sec="pricing">Pricing</a>
+      <a href="/#pros" class="pnav_link" onclick="location.href='/#pros';location.reload();return false;">Find a pro</a>
+    </div>
+    <div class="pnav_ctas">
+      <a href="#" class="pnav_login" onclick="bpOpenPortal();return false;">Log in</a>
+      <button class="pnav_cta js-open-drawer" type="button">Start free trial</button>
+      <button class="pnav_burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="pnavSheet"><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="pnav_progress" aria-hidden="true"><i></i></div>
+</nav>
+
+<div class="pnav_sheet" id="pnavSheet" aria-label="Site menu" hidden>
+  <div class="pnav_sheet_top">
+    <span class="pnav_logo"><img src="assets/brand/logo-mark-128.png" alt="" width="26" height="26"><span>Builder<b>Pro</b></span></span>
+    <button type="button" class="pnav_close" aria-label="Close menu"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg></button>
+  </div>
+  <div class="pnav_sheet_body">
+    <span class="pnav_k">Product</span>
+    <a href="#simple" data-sec="simple">Why BuilderPro</a>
+    <a href="#how" data-sec="how">How it works</a>
+    <a href="#lisa" data-sec="lisa">Lisa AI</a>
+    <a href="#trades" data-sec="trades">Every trade</a>
+    <a href="#pricing" data-sec="pricing">Pricing</a>
+    <a href="#faq" data-sec="faq">FAQ</a>
+    <span class="pnav_k">Tools</span>
+    <div class="pnav_tools">
+      <button type="button" onclick="dlCalc&&dlCalc(null,'cost')"><b>Cost calculator</b><small>Price range in a minute</small></button>
+      <button type="button" onclick="dlCalc&&dlCalc(null,'damage')"><b>Damage check</b><small>Photo to damage report</small></button>
+      <button type="button" onclick="dlCalc&&dlCalc(null,'health')"><b>Health check</b><small>Six taps to a score</small></button>
+    </div>
+    <a href="/#pros" onclick="location.href='/#pros';location.reload();return false;">Find a pro</a>
+    <a href="/compare.html">Compare</a>
+  </div>
+  <div class="pnav_sheet_foot">
+    <a href="tel:+13503331230" class="pnav_call">Call Lisa, the live demo<small>(350) 333-1230</small></a>
+    <div class="pnav_sheet_row">
+      <a href="#" class="pnav_login" onclick="bpOpenPortal();return false;">Log in</a>
+      <button class="pnav_cta js-open-drawer" type="button">Start free trial</button>
+    </div>
+  </div>
+</div>

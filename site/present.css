@@ -1,0 +1,93 @@
+/* ==== Presentation preview: the new nav and the slide engine (present.js).
+   Everything is scoped to html.bp-present, which present.js sets, so the page
+   reads as a normal website if the script never runs. ==== */
+
+/* ---------- nav ---------- */
+.navbar,.menu,#menuOverlay{display:none !important}   /* the old bar and menu step aside */
+.pnav{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99;width:min(1120px,calc(100% - 24px));font-family:var(--site-font)}
+.pnav_bar{display:flex;align-items:center;gap:18px;height:58px;padding:0 10px 0 18px;border-radius:999px;
+  background:rgba(255,255,255,.78);-webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);
+  border:1px solid rgba(0,21,48,.08);box-shadow:0 10px 40px rgba(0,21,48,.08)}
+.pnav_logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:19px;letter-spacing:-.03em;color:var(--ink,#001530);flex:none}
+.pnav_logo b{color:var(--blue,#006fff);font-weight:700}
+.pnav_links{display:flex;align-items:center;gap:2px;margin:0 auto}
+.pnav_link{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:999px;font-size:14.5px;font-weight:500;color:#2a3a52;transition:background .2s,color .2s}
+.pnav_link svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6;transition:transform .25s}
+.pnav_link:hover,.pnav_dd.open>.pnav_link{background:rgba(0,21,48,.06);color:var(--ink,#001530)}
+.pnav_dd.open>.pnav_link svg{transform:rotate(180deg)}
+.pnav_link.on,.pnav_dd.on>.pnav_link{color:var(--blue,#006fff);background:var(--blue-l,#e6f0ff)}
+.pnav_dd{position:relative}
+.pnav_panel{position:absolute;top:calc(100% + 12px);left:50%;width:330px;padding:8px;border-radius:20px;background:#fff;border:1px solid rgba(0,21,48,.08);
+  box-shadow:0 24px 60px rgba(0,21,48,.16);opacity:0;visibility:hidden;transform:translate(-50%,-6px);transition:opacity .2s,transform .2s,visibility .2s}
+.pnav_dd.open .pnav_panel{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.pnav_panel a{display:block;padding:11px 14px;border-radius:13px;transition:background .15s}
+.pnav_panel a:hover,.pnav_panel a:focus-visible,.pnav_panel a.on{background:var(--blue-l,#e6f0ff)}
+.pnav_panel b{display:block;font-size:14.5px;font-weight:600;color:var(--ink,#001530)}
+.pnav_panel small{display:block;font-size:12.5px;color:#6b7a90;margin-top:2px}
+.pnav_ctas{display:flex;align-items:center;gap:8px;flex:none}
+.pnav_login{font-size:14.5px;font-weight:500;color:#2a3a52;padding:0 12px;height:40px;display:inline-flex;align-items:center;border-radius:999px}
+.pnav_login:hover{background:rgba(0,21,48,.06)}
+.pnav_cta{height:42px;padding:0 20px;border-radius:999px;background:var(--ink,#001530);color:#fff;font-size:14.5px;font-weight:600;transition:background .2s,transform .2s}
+.pnav_cta:hover{background:var(--blue,#006fff);transform:translateY(-1px)}
+.pnav_burger{display:none;width:42px;height:42px;border-radius:999px;background:rgba(0,21,48,.06);flex-direction:column;justify-content:center;align-items:center;gap:5px}
+.pnav_burger span{display:block;width:16px;height:1.6px;background:var(--ink,#001530);border-radius:2px}
+.pnav_progress{position:absolute;left:28px;right:28px;bottom:-1px;height:2px;border-radius:2px;overflow:hidden;opacity:.9}
+.pnav_progress i{display:block;height:100%;width:0;background:var(--blue,#006fff);border-radius:2px;transition:width .6s cubic-bezier(.65,0,.35,1)}
+
+/* phone sheet */
+.pnav_sheet{position:fixed;inset:0;z-index:120;background:#fff;display:flex;flex-direction:column;font-family:var(--site-font);
+  opacity:0;transform:translateY(-12px);transition:opacity .25s,transform .25s}
+.pnav_sheet.open{opacity:1;transform:none}
+.pnav_sheet[hidden]{display:none}
+.pnav_sheet_top{display:flex;align-items:center;justify-content:space-between;padding:18px 20px}
+.pnav_close{width:42px;height:42px;border-radius:999px;background:rgba(0,21,48,.06);display:grid;place-items:center}
+.pnav_close svg{width:15px;height:15px;stroke:var(--ink,#001530);stroke-width:1.8}
+.pnav_sheet_body{flex:1;overflow:auto;padding:4px 20px 12px;display:flex;flex-direction:column}
+.pnav_sheet_body>a{font-size:26px;font-weight:600;letter-spacing:-.02em;color:var(--ink,#001530);padding:9px 0}
+.pnav_sheet_body>a.on{color:var(--blue,#006fff)}
+.pnav_k{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8a96a8;margin:16px 0 4px}
+.pnav_tools{display:grid;grid-template-columns:1fr;gap:8px;margin:4px 0 10px}
+.pnav_tools button{text-align:left;padding:14px 16px;border-radius:16px;background:var(--blue-l,#e6f0ff);color:var(--ink,#001530)}
+.pnav_tools b{display:block;font-size:16px;font-weight:600}
+.pnav_tools small{display:block;font-size:13px;color:#4c5b70;margin-top:2px}
+.pnav_sheet_foot{padding:14px 20px calc(18px + env(safe-area-inset-bottom));border-top:1px solid #eef1f6;display:flex;flex-direction:column;gap:12px}
+.pnav_call{display:block;font-size:16px;font-weight:600;color:var(--ink,#001530)}
+.pnav_call small{display:block;font-size:13px;font-weight:500;color:#6b7a90}
+.pnav_sheet_row{display:flex;gap:10px}
+.pnav_sheet_row .pnav_login{flex:1;justify-content:center;background:rgba(0,21,48,.06);height:48px}
+.pnav_sheet_row .pnav_cta{flex:2;height:48px}
+
+@media (max-width:1000px){
+  .pnav_links,.pnav_ctas>.pnav_login{display:none}
+  .pnav_burger{display:flex}
+  .pnav{top:10px;width:calc(100% - 20px)}
+  .pnav_bar{height:56px;gap:10px;padding:0 7px 0 16px}
+  .pnav_ctas{margin-left:auto}
+  .pnav_cta{padding:0 16px;font-size:14px}
+}
+@media (max-width:380px){ .pnav_cta{padding:0 12px;font-size:13px} .pnav_logo{font-size:17px} }
+
+/* ---------- slide engine ---------- */
+html.bp-present,html.bp-present body{scroll-behavior:auto !important}
+/* a slide that is arriving rises in; the hero is left to its own animation */
+html.bp-present .pr-sec:not(#home)>.stack{transition:opacity .75s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}
+html.bp-present .pr-sec.pr-out:not(#home)>.stack{opacity:0;transform:translateY(56px) scale(.985)}
+
+/* slide dots, right edge (computers) */
+.pr-dots{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;gap:10px;font-family:var(--site-font)}
+.pr-dots button{position:relative;width:12px;height:12px;border-radius:999px;display:grid;place-items:center}
+.pr-dots button i{width:7px;height:7px;border-radius:999px;background:rgba(0,21,48,.22);transition:all .3s}
+.pr-dots button.on i{width:9px;height:9px;background:var(--blue,#006fff);box-shadow:0 0 0 4px rgba(0,111,255,.15)}
+.pr-dots button span{position:absolute;right:22px;top:50%;transform:translate(6px,-50%);white-space:nowrap;font-size:12.5px;font-weight:600;color:#fff;
+  background:var(--ink,#001530);padding:5px 10px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.pr-dots button:hover span,.pr-dots button:focus-visible span{opacity:1;transform:translate(0,-50%)}
+@media (max-width:1000px){ .pr-dots{display:none} }
+
+/* "more below" hint on the first slide */
+.pr-hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-family:var(--site-font);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b7a90;transition:opacity .4s;pointer-events:none}
+.pr-hint i{width:22px;height:34px;border:2px solid #9aa6b6;border-radius:12px;position:relative}
+.pr-hint i::after{content:"";position:absolute;left:50%;top:7px;width:3px;height:7px;margin-left:-1.5px;border-radius:2px;background:#6b7a90;animation:prHint 1.6s infinite}
+@keyframes prHint{0%{transform:translateY(0);opacity:1}70%{transform:translateY(9px);opacity:0}100%{opacity:0}}
+.pr-hint.gone{opacity:0}
+@media (max-width:1000px){ .pr-hint{display:none} }
