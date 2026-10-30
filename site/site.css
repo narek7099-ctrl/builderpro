@@ -756,6 +756,38 @@ body.dl #estimator{display:none !important;}
   .calc_frames{flex:none;height:80vh;height:80svh;}
 }
 
+/* CALCULATORS v2 (2026-10-30): twelve trades in a grid, the three tools as
+   one switch over the live tool, and the tool itself gets the room. */
+.calc_body{grid-template-columns:19rem 1fr;}
+.calc_trades{display:grid;grid-template-columns:1fr 1fr;gap:.375rem;}
+.calc_trade{flex-direction:column;align-items:flex-start;gap:.5rem;padding:.75rem;border-radius:.75rem;}
+.calc_trade b{font-size:.875rem;line-height:1.2;}
+.calc_trade .calc_ic{width:2rem;height:2rem;border-radius:.5rem;}
+.calc_trade .calc_ic svg{width:1.125rem;height:1.125rem;}
+.calc_bar{gap:.75rem;padding:.625rem .75rem;}
+.calc_tools{flex-direction:row;gap:.25rem;padding:.25rem;border-radius:999px;background:var(--gray-100);min-width:0;}
+.calc_tool{width:auto;flex:0 1 auto;gap:.5rem;padding:.4375rem .875rem .4375rem .4375rem;border:0;border-radius:999px;background:transparent;white-space:nowrap;}
+.calc_tool:hover{background:var(--white);}
+.calc_tool .calc_ic.is-sm{width:1.75rem;height:1.75rem;border-radius:999px;}
+.calc_tool small{display:none;}
+.calc_tool b{font-size:.875rem;}
+.calc_label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+@media (max-width:991px){
+  .calc_body{grid-template-columns:15rem 1fr;}
+  .calc_tool b{font-size:.8125rem;}
+}
+@media (max-width:767px){
+  .calc_trades{display:flex;grid-template-columns:none;}
+  .calc_trade{flex-direction:row;align-items:center;gap:.5rem;padding:.5rem .75rem .5rem .5rem;max-width:none;}
+  .calc_trade b{white-space:nowrap;}
+  .calc_bar{padding:.5rem;}
+  .calc_tools{flex:1;margin:0;padding:.25rem;overflow:visible;}
+  .calc_tool{flex:1 1 0;justify-content:center;padding:.5rem .25rem;gap:.375rem;}
+  .calc_tool .calc_ic.is-sm{display:none;}
+  .calc_tool b{font-size:.8125rem;}
+  .calc_live{display:none;}
+}
+
 /* pricing: the one add-on left, labelled as such */
 .pl-add_tag{display:inline-block;vertical-align:middle;margin-left:.5rem;padding:.25rem .625rem;border-radius:999px;background:#e6f0ff;color:var(--blue-500);font-size:.6875rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;line-height:1.2;}
 
