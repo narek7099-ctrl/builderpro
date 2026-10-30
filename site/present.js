@@ -10,7 +10,10 @@
                Tiny sections (the logo wall) ride along with the one before.
      input     wheel / trackpad, swipe, arrow keys, Page Up/Down, Space,
                Home/End, and same-page links (#pricing). One gesture = one
-               slide; a trackpad's long glide after a flick is ignored.
+               slide: a trackpad's long glide after a flick is ignored, but a
+               fresh flick (the deltas jump back up) counts straight away.
+     reveal    each section rises in once, the first time it comes into view,
+               and is never hidden again, however the page got there.
      standby   any overlay (menu, drawer, calculators, plan modal, portal),
                anything that scrolls on its own, and form fields keep their
                normal behaviour. "Reduce motion" turns the whole thing off.
@@ -27,11 +30,14 @@
   var main = $('#main'); if (!main) return;
 
   var NAMES = { home: 'Home', simple: 'Why BuilderPro', grow: 'Grow with us', how: 'How it works', trades: 'Every trade', lisa: 'Lisa AI', aiteam: 'AI Team', pricing: 'Pricing', faq: 'FAQ' };
-  var DUR = 900, NAV = 76;
-  var groups = [], stops = [], cur = 0, busy = false, quietUntil = 0, lastWheel = 0, acc = 0;
+  var DUR = 700, NAV = 76;
+  var groups = [], stops = [], cur = 0, busy = false, lastWheel = 0, lastAbs = 0, used = false, acc = 0, landed = 0;
 
   /* ---------- slides ---------- */
   function build() {
+    /* measure where things really sit: a section still waiting to rise in is
+       drawn 56px low, and its cards would put the stops 56px off */
+    root.classList.add('pr-measure');
     var vh = window.innerHeight, y0 = window.scrollY;
     var secs = [].slice.call(main.children).filter(function (el) { return /^(SECTION|FOOTER)$/.test(el.tagName) && el.offsetHeight > 8; });
     groups = [];
@@ -74,6 +80,8 @@
     /* two stops at the same spot would make a flick do nothing: keep the later one */
     stops = stops.filter(function (s, i) { var n = stops[i + 1]; return !n || n.y - s.y > 40; });
     groups.forEach(function (g, gi) { g.from = -1; stops.forEach(function (s, i) { if (s.g === gi) { if (g.from < 0) g.from = i; g.to = i; } }); });
+    root.classList.remove('pr-measure');
+    watch();
     dots();
   }
   function nearest(y) {
@@ -87,18 +95,17 @@
   function go(i, instant) {
     if (!stops.length) build();
     i = Math.max(0, Math.min(stops.length - 1, i));
-    var from = window.scrollY, to = stops[i].y, gi = stops[i].g, enterNew = stops[cur] && stops[cur].g !== gi;
+    var from = window.scrollY, to = stops[i].y;
     cur = i;
-    reveal(gi, enterNew);
     paint();
     if (instant || Math.abs(to - from) < 2) { window.scrollTo(0, to); return; }
     busy = true;
-    var t0 = performance.now(), d = Math.min(1300, DUR + Math.abs(to - from) / window.innerHeight * 60);
+    var t0 = performance.now(), d = Math.min(1000, DUR + Math.abs(to - from) / window.innerHeight * 50);
     (function step(now) {
       var p = Math.min(1, (now - t0) / d);
       window.scrollTo(0, from + (to - from) * ease(p));
       if (p < 1) requestAnimationFrame(step);
-      else { busy = false; quietUntil = performance.now() + 120; }
+      else { busy = false; landed = performance.now(); }
     })(t0);
   }
   function next() { go(cur + 1); }
@@ -112,15 +119,21 @@
   }
   window.bpPresent = { next: next, prev: prev, go: go, section: goSection, rebuild: build };
 
-  /* slides that are not on screen wait just below, and rise in when they arrive */
-  function reveal(gi, animate) {
-    groups.forEach(function (g, k) {
-      var on = k === gi;
-      g.els.forEach(function (el) {
-        if (on) { if (animate) { el.classList.add('pr-out'); void el.offsetWidth; } requestAnimationFrame(function () { el.classList.remove('pr-out'); }); }
-        else if (Math.abs(k - gi) > 0) el.classList.add('pr-out');
-      });
-    });
+  /* a section waits just below until it first comes into view, then rises in
+     and stays. Sections already on screen at load never wait. */
+  var seen = typeof WeakSet === 'function' ? new WeakSet() : null, io = null;
+  function watch() {
+    if (!('IntersectionObserver' in window)) return;
+    if (!io) io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.remove('pr-out'); if (seen) seen.add(e.target); io.unobserve(e.target); } });
+    }, { rootMargin: '0px' });
+    var vh = window.innerHeight;
+    groups.forEach(function (g) { g.els.forEach(function (el) {
+      if (el.id === 'home' || (seen && seen.has(el)) || el._prWatched) return;
+      el._prWatched = 1;
+      if (el.getBoundingClientRect().top > vh * 0.9) el.classList.add('pr-out');
+      io.observe(el);
+    }); });
   }
 
   /* ---------- when to stand aside ---------- */
@@ -141,10 +154,18 @@
     if (e.ctrlKey || standby(e.target)) return;
     e.preventDefault();
     var now = performance.now(), gap = now - lastWheel; lastWheel = now;
-    if (busy || now < quietUntil) { quietUntil = Math.max(quietUntil, now + 140); return; }   /* the tail of a trackpad flick */
-    if (gap > 220) acc = 0;
-    acc += e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY;
+    var d = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY, abs = Math.abs(d);
+    /* a new gesture: the wheel went quiet; or a trackpad's fading glide was
+       interrupted by a fresh flick (the deltas jump back up); or, once the
+       last slide has landed, a mouse wheel's next notch (notches stay the
+       same size, a glide only ever fades) */
+    var fresh = gap > 300 || (abs > 14 && abs > lastAbs * 1.8) || (abs >= 40 && abs >= lastAbs && !busy && now - landed > 150);
+    lastAbs = abs;
+    if (fresh) { used = false; acc = 0; }
+    if (used || busy) return;        /* this gesture already moved one slide */
+    acc += d;
     if (Math.abs(acc) < 24) return;
+    used = true;
     acc > 0 ? next() : prev(); acc = 0;
   }, { passive: false, capture: true });
 
@@ -190,10 +211,20 @@
   window.addEventListener('scroll', function () {
     if (busy) return;
     clearTimeout(idle);
-    idle = setTimeout(function () { var i = nearest(window.scrollY); if (i !== cur) { var g = stops[i].g; cur = i; reveal(g, false); paint(); } }, 120);
+    idle = setTimeout(function () { var i = nearest(window.scrollY); if (i !== cur) { cur = i; paint(); } }, 120);
   }, { passive: true });
-  var rt = 0;
-  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { var g = stops[cur] ? stops[cur].g : 0; build(); go(groups[g] ? groups[g].from : 0, true); }, 200); });
+  /* a resize re-measures but never moves the page: on a phone the address bar
+     sliding in and out changes the height on every scroll */
+  var rt = 0, lastW = window.innerWidth;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var wide = window.innerWidth !== lastW; lastW = window.innerWidth;
+      if (busy) return;
+      build(); cur = nearest(window.scrollY); paint();
+      if (wide && stops[cur] && Math.abs(stops[cur].y - window.scrollY) > 2) go(cur, true);
+    }, 200);
+  });
 
   /* ---------- chrome: dots, nav highlight, progress, hint ---------- */
   var dotsEl = null;
@@ -243,7 +274,7 @@
   function start() {
     build();
     var h = location.hash.slice(1);
-    if (h && document.getElementById(h)) goSection(h); else { cur = nearest(window.scrollY); reveal(stops[cur] ? stops[cur].g : 0, false); paint(); }
+    if (h && document.getElementById(h)) goSection(h); else { cur = nearest(window.scrollY); paint(); }
   }
   if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
   /* fonts, images and the FAQ change heights: keep the stops honest */

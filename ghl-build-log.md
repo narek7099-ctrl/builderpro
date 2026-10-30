@@ -576,3 +576,15 @@ Plan: `docs/GHL-APP-PROMPT.md`. Before starting: `ghl-oauth` is deployed (v1), t
 - Fixed: the homepage "Start my free trial" drawer opened an email (site.js's dlContactSend overrode index.html's). It now goes to signup.html with name, business, phone and email filled in.
 - Password-reset links now return to /app.html: Supabase Auth > URL Configuration > Redirect URLs must allow https://builderpro-os.com/app.html (or https://builderpro-os.com/**).
 - Tested: 21 forwarding cases; homepage on computer and phone (nav, prices, FAQ, Lisa chat, tools panel, drawer to sign-up, Log in) with no errors and no app files loaded; signed in as plan299 (computer and phone, 12 pages incl. calculator preview), crew and homeowner; a real customer project link and an estimate link through the homepage address; site-check (49 pages, 36 tools) and tools/calc-models + crew-cost tests.
+
+## Slide scrolling fixes (2026-10-30, cloud session)
+Measured on the live homepage first (computer, with the 3D cube off as on a real visitor's machine; phone emulation):
+- 11 of 21 stops showed blank areas (up to 65% of the screen): every section except the current one was hidden (pr-out) until you "arrived" at it.
+- A trackpad flick could skip several slides; the phone address bar showing or hiding snapped the page back to the section's top (~280px); stops were measured while sections were drawn 56px low, so cards could be cut.
+site/present.js now:
+- reveal: a section rises in once, the first time any of it comes into view (IntersectionObserver), and is never hidden again, however the page got there.
+- build() measures with html.pr-measure on (present.css turns the rise-in transform off), so stops sit exactly on the cards.
+- wheel: one gesture = one slide. A new gesture is a 300ms pause, a fresh trackpad flick (deltas jump up 1.8x), or, after the last slide has landed, a mouse wheel's next notch (same-size deltas; a glide only fades).
+- resize re-measures but never moves the page (height-only changes are the phone address bar); a width change re-aligns to the current stop.
+- glides are 700 to 1000ms (were 900 to 1300).
+After: no blank areas at any stop; a trackpad flick moves exactly one slide; a 3-notch mouse spin moves one slide, slow notches keep moving, one notch up goes back one; the phone address bar no longer snaps the page back.
