@@ -103,9 +103,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261030-p7">
-<link rel="stylesheet" href="site/present.css?v=20261030-p7">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261030-p7"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261030-p8">
+<link rel="stylesheet" href="site/present.css?v=20261030-p8">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261030-p8"}}</script>
 
 
 <style id="bpi-icons">
@@ -623,9 +623,9 @@ html.bp-standalone .my-inst{display:none !important}
 </aside>
 
 <!-- ===================== CALCULATORS PANEL ================================
-  Opened by every "Calculators" button. Slides in from x:100% like the
-  drawer. Three trades stand in for every other one; each has the same three
-  tools, the live embeds under embed/ (the ones clients put on their site). -->
+  Opened by every "Calculators" / Tools button. Slides in from x:100% like the
+  drawer. Twelve trades, each with its own three tools: the live embeds under
+  embed/ (the same pages clients put on their own site). -->
 <div class="overlay js-close-calc" id="calcOverlay"></div>
 <aside class="calc" id="calc" aria-label="Calculators" data-lenis-prevent>
   <div class="calc_head">
@@ -641,25 +641,30 @@ html.bp-standalone .my-inst{display:none !important}
   <div class="calc_body">
     <div class="calc_side">
       <div class="calc_card">
-        <span class="calc_k">1. Pick a trade</span>
+        <span class="calc_k">Pick a trade</span>
         <div class="calc_trades" role="tablist" aria-label="Trade">
-          <button class="calc_trade is-active" type="button" role="tab" aria-selected="true" data-trade="roofing">
-            <span class="calc_ic"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></span>
-            <span class="calc_tt"><b>Roofing and exterior</b><small>Siding, gutters, windows, decks, concrete, pools and yards</small></span>
-          </button>
-          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="hvac">
-            <span class="calc_ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="1.6"/><path d="M12 10.4c-.6-2.6.3-4.6 2.4-5.2M13.6 12c2.6-.6 4.6.3 5.2 2.4M12 13.6c.6 2.6-.3 4.6-2.4 5.2M10.4 12c-2.6.6-4.6-.3-5.2-2.4"/></svg></span>
-            <span class="calc_tt"><b>HVAC and home systems</b><small>Heating, cooling, plumbing, electrical and water heaters</small></span>
-          </button>
-          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="general">
-            <span class="calc_ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="14" height="6" rx="1.5"/><path d="M17.5 6.5h2a1 1 0 0 1 1 1V11a1 1 0 0 1-1 1H11v3"/><rect x="9.5" y="15" width="3" height="5.5" rx="1"/></svg></span>
-            <span class="calc_tt"><b>Remodeling and interiors</b><small>Kitchens, baths, painting, flooring, countertops and trim</small></span>
-          </button>
+          <button class="calc_trade is-active" type="button" role="tab" aria-selected="true" data-trade="roofing"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/></svg></span><b>Roofing</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="hvac"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="1.6"/><path d="M12 10.4c-.6-2.6.3-4.6 2.4-5.2M13.6 12c2.6-.6 4.6.3 5.2 2.4M12 13.6c.6 2.6-.3 4.6-2.4 5.2M10.4 12c-2.6.6-4.6-.3-5.2-2.4"/></svg></span><b>HVAC</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="plumbing"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5s-5.5 6.2-5.5 10a5.5 5.5 0 0 0 11 0c0-3.8-5.5-10-5.5-10z"/><path d="M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5"/></svg></span><b>Plumbing</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="electrical"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 5.5 13.5H12L11 21l7.5-10.5H12z"/></svg></span><b>Electrical</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="painting"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="13" height="5.5" rx="1.5"/><path d="M17 6.2h2.2a.8.8 0 0 1 .8.8v3.5a.8.8 0 0 1-.8.8H11v3"/><rect x="9.5" y="14.5" width="3" height="6" rx="1"/></svg></span><b>Painting</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="landscaping"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5V11"/><path d="M12 11c0-4 2.8-6.8 7-7 0 4.2-2.8 7-7 7z"/><path d="M12 14c0-3-2.2-5.2-5.5-5.3 0 3.2 2.2 5.3 5.5 5.3z"/><path d="M6 20.5h12"/></svg></span><b>Landscaping</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="concrete"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="13" width="7.5" height="6" rx="1"/><rect x="13" y="13" width="7.5" height="6" rx="1"/><rect x="8.25" y="5" width="7.5" height="6" rx="1"/></svg></span><b>Concrete</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="general"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4.5 5 5-3 3-5-5z"/><path d="M11.5 7.5 4 15a1.8 1.8 0 0 0 2.5 2.5L14 10"/><path d="m6 19 1.5-1.5"/></svg></span><b>Remodeling</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="countertops"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5h18v2.5H3z"/><path d="M5 12v8.5M19 12v8.5M5 16h14"/><path d="M14.5 9.5V6a2 2 0 0 1 4 0"/></svg></span><b>Countertops</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="pools"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16c1.5 0 1.5 1.2 3 1.2S7.5 16 9 16s1.5 1.2 3 1.2S13.5 16 15 16s1.5 1.2 3 1.2S19.5 16 21 16"/><path d="M3 20c1.5 0 1.5 1.2 3 1.2S7.5 20 9 20s1.5 1.2 3 1.2S13.5 20 15 20s1.5 1.2 3 1.2S19.5 20 21 20"/><path d="M8 13V5.5a2 2 0 0 1 4 0M14 13V5.5a2 2 0 0 1 4 0M8 9h6"/></svg></span><b>Pools</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="trim"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4h5v11h11v5z"/><path d="M4 8h2M4 12h2M8 17v-2M12 17v-2M16 17v-2"/></svg></span><b>Trim carpentry</b></button>
+          <button class="calc_trade" type="button" role="tab" aria-selected="false" data-trade="flooring"><span class="calc_ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9.2h17M3.5 14.8h17M9 3.5v5.7M15 9.2v5.6M9 14.8v5.7"/></svg></span><b>Flooring</b></button>
         </div>
       </div>
+      <div class="calc_card is-blue on-blue calc_note">
+        <p>These run on your own website, in your colors. Every answer lands in your portal as a lead, and Lisa follows up.</p>
+        <button class="btn is-on-blue js-open-drawer" type="button">Get started</button>
+      </div>
+    </div>
 
-      <div class="calc_card">
-        <span class="calc_k">2. Pick a tool</span>
+    <div class="calc_stage">
+      <div class="calc_bar">
         <div class="calc_tools" role="tablist" aria-label="Tool">
           <button class="calc_tool is-active" type="button" role="tab" aria-selected="true" data-tool="cost">
             <span class="calc_ic is-sm"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5"/></svg></span><span><b>Cost calculator</b><small>A real price range in under a minute</small></span>
@@ -671,20 +676,9 @@ html.bp-standalone .my-inst{display:none !important}
             <span class="calc_ic is-sm"><svg viewBox="0 0 24 24"><path d="M20.3 8.6c0 4.9-8.3 10.4-8.3 10.4S3.7 13.5 3.7 8.6A4.3 4.3 0 0 1 12 6.4a4.3 4.3 0 0 1 8.3 2.2z"/><path d="M6.5 12h3l1.3-2.4 2 4.6 1.4-2.2h3.3"/></svg></span><span><b>Health check</b><small>Six taps to a health score</small></span>
           </button>
         </div>
-      </div>
-
-      <div class="calc_card is-blue on-blue calc_note">
-        <p>These run on your own website, in your colors. Every answer lands in your portal as a lead, and Lisa follows up.</p>
-        <button class="btn is-on-blue js-open-drawer" type="button">Get started</button>
-      </div>
-    </div>
-
-    <div class="calc_stage">
-      <div class="calc_bar">
-        <span class="calc_dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="calc_label" id="calcLabel">Roofing, cost calculator</span>
         <span class="calc_live"><i></i>Live demo</span>
       </div>
+      <div class="calc_label" id="calcLabel" aria-live="polite">Roofing, cost calculator</div>
       <div class="calc_frames" id="calcFrames"></div>
     </div>
   </div>
@@ -2574,9 +2568,9 @@ function ccSubmit(e){
 }
 </style>
 </body>
-<script src="site/vendor/gsap.min.js?v=20261030-p7"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261030-p7"></script>
-<script src="site/vendor/SplitText.min.js?v=20261030-p7"></script>
-<script src="site/site.js?v=20261030-p7"></script>
-<script src="site/present.js?v=20261030-p7"></script>
+<script src="site/vendor/gsap.min.js?v=20261030-p8"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261030-p8"></script>
+<script src="site/vendor/SplitText.min.js?v=20261030-p8"></script>
+<script src="site/site.js?v=20261030-p8"></script>
+<script src="site/present.js?v=20261030-p8"></script>
 </html>

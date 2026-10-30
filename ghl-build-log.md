@@ -588,3 +588,8 @@ site/present.js now:
 - resize re-measures but never moves the page (height-only changes are the phone address bar); a width change re-aligns to the current stop.
 - glides are 700 to 1000ms (were 900 to 1300).
 After: no blank areas at any stop; a trackpad flick moves exactly one slide; a 3-notch mouse spin moves one slide, slow notches keep moving, one notch up goes back one; the phone address bar no longer snaps the page back.
+
+## Calculators panel v2 (2026-10-30, cloud session)
+- The homepage "Calculators" panel (site/body-top.html, opened by every Calculators/Tools button and ?calc=trade:tool) now offers all 12 trades, each opening its own embed (embed/<trade>.html, damage-<trade>, health-<trade>). Before, three groups stood in for everything ("Roofing and exterior" promised pools and yards but opened the roof estimator).
+- Layout: 2-column trade grid with icons (a swipeable row on phones); the three tools are one switch above the live tool; the tool gets the room. Styles in site/site.css "CALCULATORS v2"; site.js CALC_TRADES lists the 12, CALC_ALIAS keeps siding/gutters → roofing, remodel(ing) → general, pool → pools, countertop → countertops.
+- Tested: ?calc=pools:health, switching trade and tool, computer and phone, no errors, no sideways scroll.

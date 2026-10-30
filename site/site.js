@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261030-p7').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261030-p8').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -475,11 +475,12 @@
      trade + tool, made the first time it is asked for and kept, so a
      half-finished estimate is still there when you come back to it. */
   var calc = $('#calc'), calcOverlay = $('#calcOverlay'), calcTl = null;
-  var CALC_TRADES = { roofing: 'Roofing', hvac: 'HVAC', general: 'Remodeling' };
+  var CALC_TRADES = { roofing: 'Roofing', hvac: 'HVAC', plumbing: 'Plumbing', electrical: 'Electrical', painting: 'Painting',
+    landscaping: 'Landscaping', concrete: 'Concrete', general: 'Remodeling', countertops: 'Countertops', pools: 'Pools',
+    trim: 'Trim carpentry', flooring: 'Flooring' };
   var CALC_TOOLS = { cost: 'cost calculator', damage: 'damage check', health: 'health check' };
-  /* every other trade id the portal knows, mapped to the one that stands in for it */
-  var CALC_ALIAS = { siding: 'roofing', gutters: 'roofing', concrete: 'roofing', pools: 'roofing', landscaping: 'roofing',
-    plumbing: 'hvac', electrical: 'hvac', painting: 'general', flooring: 'general', countertops: 'general', trim: 'general', remodel: 'general', remodeling: 'general' };
+  /* the other trade ids the portal knows, mapped to the calculator that covers them */
+  var CALC_ALIAS = { siding: 'roofing', gutters: 'roofing', remodel: 'general', remodeling: 'general', pool: 'pools', countertop: 'countertops' };
   var calcState = { trade: 'roofing', tool: 'cost' };
   function calcSrc(trade, tool) { return 'embed/' + (tool === 'cost' ? '' : tool + '-') + trade + '.html'; }
   function calcRender() {
@@ -494,7 +495,8 @@
       frames.appendChild(cur);
     }
     $$('.calc_frame', frames).forEach(function (f) { f.classList.toggle('is-on', f === cur); });
-    $$('.calc_trade', calc).forEach(function (b) { var on = b.dataset.trade === calcState.trade; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
+    $$('.calc_trade', calc).forEach(function (b) { var on = b.dataset.trade === calcState.trade; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on);
+      if (on && b.parentNode.scrollWidth > b.parentNode.clientWidth) b.parentNode.scrollLeft = b.offsetLeft - b.parentNode.offsetLeft - 16; });
     $$('.calc_tool', calc).forEach(function (b) { var on = b.dataset.tool === calcState.tool; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on); });
     var lab = $('#calcLabel'); if (lab) lab.textContent = CALC_TRADES[calcState.trade] + ', ' + CALC_TOOLS[calcState.tool];
   }
