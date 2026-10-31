@@ -6,7 +6,12 @@ How to email contractors so the emails land in the inbox, get opened, and turn i
 
 ## 1. About the animated logo
 
-The GIF is ready: `assets/email/builderpro-logo-animated.gif` (23 KB). It shows the full logo, a light sweep crosses it, then it rests. Use it in your signature (`docs/sales/email-signature.html`).
+The GIF is ready: `assets/email/builderpro-mark-animated.gif` (75 KB). It's the BuilderPro mark alone, no name, in a round white badge: a light sweeps across it, it lifts slightly, then it rests. The signature (`docs/sales/email-signature.html`) shows it at 64×64 with your name beside it. A still version for profile pictures is `assets/email/builderpro-mark.png`.
+
+**About the round picture next to the sender name in the inbox** (like TikTok's): that picture can't be animated in any inbox. Here's how to get the still mark there:
+
+- **Outlook and Microsoft 365 people:** set `builderpro-mark.png` as your profile photo in Microsoft 365 (click your initials at the top right of Outlook on the web > Change photo). Other Microsoft users see it next to your emails.
+- **Gmail people:** Gmail shows a company logo there only through BIMI, which needs a paid yearly logo certificate (a CMC, or a VMC if the logo is a registered trademark). It's worth doing after the LLC, and I can set up the DNS side. Until then, Gmail shows your initial.
 
 To be straight about what it does and doesn't do:
 
