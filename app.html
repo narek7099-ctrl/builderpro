@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261031-p9">
-<link rel="stylesheet" href="site/present.css?v=20261031-p9">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261031-p9"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261031-p10">
+<link rel="stylesheet" href="site/present.css?v=20261031-p10">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261031-p10"}}</script>
 
 
 <style id="bpi-icons">
@@ -8987,10 +8987,9 @@ function bpHpPane(t){
     feed.sort(function(a,z){return String(z.at).localeCompare(String(a.at));});
     var latest=feed.length?'<section class="hx-card"><div class="hx-h"><small>Latest</small></div>'+feed.slice(0,3).map(function(x){
         return '<div class="hx-feed"><span class="hx-dot '+x.k+'"><span class=ms>'+x.ico+'</span></span><div><b>'+x.t+'</b>'+(x.s?'<span>'+bpEsc(x.s)+'</span>':'')+'</div></div>';}).join('')+'</section>':'';
-    var pros='<button type="button" class="hx-card hx-pros" onclick="bpHpTab(\'pros\')"><span class="hx-pros-ic"><span class=ms>person_search</span></span><div><b>Need something else done?</b><span>Find trusted BuilderPro pros near you.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
     return (pend?'<button type="button" class="hp-note warn" onclick="bpHpTab(\'changes\')"><span class=ms>edit_document</span><span>Your contractor sent '+(pend===1?'a change':pend+' changes')+' for you to review</span><span class="ms hp-go">chevron_right</span></button>':'')
       +'<div class="hx-hi"><span>'+(j.customer?'Hi '+bpEsc(j.customer)+', here\'s your project':'Here\'s your project')+'</span><h1>'+bpEsc(j.title||'Your project')+'</h1>'+(j.addr?'<small>'+bpEsc(j.addr)+'</small>':'')+'</div>'
-      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+'</div><div class="hx-col">'+money+tiles+latest+bpHpAcctCard()+pros+'</div></div>';
+      +'<div class="hx-cols"><div class="hx-col">'+hero+visit+tiles+'</div><div class="hx-col">'+money+latest+bpHpAcctCard()+'</div></div>';
   }
   if(t==='sched')return bpHpSched();
   if(t==='photos'){
@@ -9000,12 +8999,13 @@ function bpHpPane(t){
   }
   if(t==='docs'){
     var ct=d.contracts||[],dc=d.docs||[],pm=d.permits||[];
+    if(!ct.length&&!dc.length&&!pm.length)return bpHpCard('Documents',bpHpEmpty('folder_open','<b>Nothing shared yet.</b> Your contract, permits, warranties and other paperwork show up here when '+bpEsc(b.name||'your contractor')+' shares them.'));
     return bpHpCard('Contracts',ct.length?ct.map(function(c){
         return '<a class="hp-row" href="'+bpHpEscA(c.link)+'" target="_blank" rel="noopener"><span class="ms hp-ic">contract</span><div><b>'+bpEsc(c.title||'Agreement')+'</b><span>'+(c.status==='signed'?'Signed '+bpEsc(bpHpDay(c.signed_at,{month:'short',day:'numeric',year:'numeric'})):'Ready for your signature')+'</span></div>'+(c.status==='signed'?'<span class="hp-tag ok">Signed</span>':'<span class="hp-tag warn">Sign</span>')+'</a>';
-      }).join(''):bpHpEmpty('contract','No contracts yet.'))
+      }).join(''):'<p class="hp-fine hp-none">No contracts yet.</p>')
       +bpHpCard('Documents',dc.length?dc.map(function(x){
         return '<a class="hp-row" href="'+bpHpEscA(x.url)+'" target="_blank" rel="noopener"><span class="ms hp-ic">'+(x.type==='pdf'?'picture_as_pdf':'image')+'</span><div><b>'+bpEsc(x.name)+'</b><span>'+(x.type==='pdf'?'PDF':'Image')+'</span></div><span class="ms">open_in_new</span></a>';
-      }).join(''):bpHpEmpty('folder_open','Nothing shared yet. Permits, warranties and other paperwork show here when your contractor shares them.'))
+      }).join(''):'<p class="hp-fine hp-none">No other documents yet.</p>')
       +(pm.length?bpHpCard('Permits',pm.map(function(p){
         return '<div class="hp-row"><span class="ms hp-ic">assignment</span><div><b>'+bpEsc(p.type||'Permit')+(p.number?' · #'+bpEsc(p.number):'')+'</b><span>'+bpEsc(p.status||'')+(p.expires?' · expires '+bpEsc(bpHpDay(p.expires,{month:'short',day:'numeric',year:'numeric'})):'')+'</span></div></div>';
       }).join('')):'');
@@ -9013,12 +9013,12 @@ function bpHpPane(t){
   if(t==='pay'){
     var pays=m.payments||[];
     return bpHpCard('Balance',''
-        +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract)+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders)+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid)+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due)+'</b></div></div>'
+        +'<div class="hp-money big"><div><small>Contract total</small><b>'+bpHpMoney(m.contract).replace(/\.00$/,'')+'</b>'+(m.changeOrders?'<span>includes '+bpHpMoney(m.changeOrders).replace(/\.00$/,'')+' in approved changes</span>':'')+'</div><div><small>Paid so far</small><b>'+bpHpMoney(m.paid).replace(/\.00$/,'')+'</b></div><div class="due"><small>Balance due</small><b>'+bpHpMoney(m.due).replace(/\.00$/,'')+'</b></div></div>'
         +(m.due>0?(d.canPay?'<div class="sg-msg" id="hpPayMsg"></div><button class="hp-btn lg" id="hpPay" onclick="bpHpPay()"><span class=ms>credit_card</span>Pay my invoice</button><div class="hp-fine"><span class=ms>lock</span>Opens your invoice from '+bpEsc(b.name||'your contractor')+' on a secure payment page. Your card details never reach this site.</div>'
           :'<div class="hp-fine">To pay, contact '+bpEsc(b.name||'your contractor')+'.</div>'):'<div class="hp-note ok"><span class=ms>check_circle</span>You\'re all paid up.</div>'))
       +bpHpPlan(d)
-      +bpHpCard('Online payments',pays.length?pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
-        :bpHpEmpty('receipt_long','No card payments yet. Payments made another way are included in Paid so far.'));
+      +(!pays.length?'':bpHpCard('Card payments',pays.map(function(p){return '<div class="hp-row"><span class="ms hp-ic">receipt_long</span><div><b>'+bpHpMoney(p.amount)+'</b><span>'+bpEsc(bpHpDay(p.at,{month:'short',day:'numeric',year:'numeric'}))+'</span></div><span class="hp-tag ok">Paid</span></div>';}).join('')
+        ));
   }
   if(t==='msgs'){
     var ms2=d.messages||[],who=b.contact||b.name||'Your contractor',lastDay='',lastMine=-1;
@@ -9048,7 +9048,7 @@ function bpHpPane(t){
   }
   if(t==='changes'){
     var cs=d.changes||[],reqs=bpHpReqs();
-    var head='<section class="hp-card hp-chg-h"><div><h1>Changes</h1><p>Your contractor sends changes here for you to approve. Want something different? Request a change.</p></div>'
+    var head='<section class="hp-card hp-chg-h"><div><h1>Changes</h1><p>Changes to your price or schedule need your OK. Want something different? Ask here.</p></div>'
       +(_bpHp.req?'':'<button type="button" class="hp-btn" id="hpReqOpen" onclick="bpHpReqForm()"><span class=ms>add</span>Request a change</button>')+'</section>'
       +(_bpHp.req?'<section class="hp-card hp-reqf" id="hpReqForm"><div class="hp-card-h"><h2>Request a change</h2></div>'
         +'<label class="hp-fl" for="hpReq">What would you like changed?</label>'
@@ -9064,7 +9064,7 @@ function bpHpPane(t){
         +'<div class="hp-co-amt"><span class=ms>'+(c.amount>=0?'add_circle':'remove_circle')+'</span><span>'+(c.amount>=0?'Adds ':'Takes off ')+'<b>'+bpHpMoney(Math.abs(c.amount))+'</b> '+(c.amount>=0?'to':'from')+' your contract</span></div>'
         +(c.status==='approved'&&c.signature?'<div class="sg-sigs"><div class="sg-sigs-blk"><div class="lbl">Approved by</div><img src="'+bpHpEscA(c.signature)+'" alt="signature"><div class="nm">'+bpEsc(c.signer_name||'')+'</div><div class="dt">'+bpEsc(bpHpDay(c.signed_at,{month:'short',day:'numeric',year:'numeric'}))+'</div></div></div>':'')
         +(c.status==='pending'?'<div id="hpCo-'+c.id+'"><div class="hp-co-acts"><button class="sg-btn" onclick="bpHpCoSign(\''+c.id+'\')">Review and approve</button><button class="sg-decline" onclick="bpHpCoDecline(\''+c.id+'\')">Decline this change</button></div></div>':''),'hp-co'+(c.status==='pending'?' pend':''));
-    }).join(''):bpHpCard('',bpHpEmpty('edit_document','<b>No change orders yet.</b> Your contractor sends changes here for you to approve. Want something different? <button type="button" class="hp-inl" onclick="bpHpReqForm()">Request a change</button>.'));
+    }).join(''):bpHpCard('',bpHpEmpty('edit_document','<b>No changes yet.</b> Anything that changes your price or schedule shows up here for your OK.'));
     var mine=reqs.length?bpHpCard('Your requests',reqs.slice().reverse().map(function(r){
         return '<div class="hp-row"><span class="ms hp-ic">edit_note</span><div><b class="hp-wb">'+bpEsc(String(r.body).replace(BP_HP_REQ,''))+'</b><span>Sent '+bpEsc(bpHpDay(r.at,{month:'short',day:'numeric'}))+'</span></div><span class="hp-tag">Sent</span></div>';
       }).join('')):'';
@@ -9438,7 +9438,7 @@ function bpHpSchedData(){
     start:j.start||(phases[0]&&phases[0].start)||(visits[0]&&visits[0].date)||'',
     finish:j.finish||(visits.length?visits[visits.length-1].date:'')};
 }
-var BP_HP_ST={done:['Done','ok','check'],now:['In progress','now',''],up:['Upcoming','',''],late:['Late','bad','priority_high']};
+var BP_HP_ST={done:['Done','ok','check'],now:['In progress','now',''],up:['Upcoming','',''],late:['Behind','warn','schedule']};
 function bpHpRange(a,b){
   var o={month:'short',day:'numeric'};
   if(a&&b&&a!==b)return bpHpDay(a,o)+' – '+bpHpDay(b,o);
@@ -9463,7 +9463,7 @@ function bpHpSched(){
     +'<dl class="hp-sc-kv">'
       +'<div><dt>Start</dt><dd>'+(S.start?bpEsc(bpHpDay(S.start,{month:'short',day:'numeric',year:'numeric'})):'Not set')+'</dd></div>'
       +'<div><dt>Planned finish</dt><dd>'+(S.finish?bpEsc(bpHpDay(S.finish,{month:'short',day:'numeric',year:'numeric'})):'Not set')+'</dd></div>'
-      +'<div><dt>Days remaining</dt><dd>'+(j.status==='done'?'Done':left==null?'—':left>0?left+(left===1?' day':' days'):left===0?'Finishes today':'<span class="hp-bad">'+(-left)+' days over</span>')+'</dd></div>'
+      +'<div><dt>Days remaining</dt><dd>'+(j.status==='done'?'Done':left==null?'—':left>0?left+(left===1?' day':' days'):left===0?'Finishes today':'<span class="hp-warn-t">'+(-left)+(left===-1?' day':' days')+' behind</span>')+'</dd></div>'
       +'<div><dt>Next visit</dt><dd>'+(up[0]?bpEsc(bpHpDay(up[0].date,{weekday:'short',month:'short',day:'numeric'})):'None scheduled')+'</dd></div>'
     +'</dl>'
     +(lateN?'<div class="hp-note warn hp-sc-late"><span class=ms>schedule</span><span>'+(lateN===1?'One phase is':lateN+' phases are')+' running past the planned date. '+bpEsc(b.contact||b.name||'Your contractor')+' can tell you the new timing.</span></div>':'')
@@ -9896,7 +9896,7 @@ function bpHpAcct(){
 }
 function bpHpAcctCard(){
   if(_bpHp.me===undefined)return '';
-  if(_bpHp.me)return '<button type="button" class="hx-card hx-pros my-saved" onclick="bpGo(\'#my\')"><span class="hx-pros-ic ok"><span class=ms>bookmark_added</span></span><div><b>Saved to My projects</b><span>See all your projects in one place.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
+  if(_bpHp.me)return '';
   return '<button type="button" class="hx-card hx-pros" onclick="bpGo(\'#my?add='+_bpHp.token+'\')"><span class="hx-pros-ic"><span class=ms>bookmark_add</span></span><div><b>Save this project</b><span>Free account: every project from every contractor, in one place.</span></div><span class="ms hx-pros-go">chevron_right</span></button>';
 }
 /* an embedded page (calculator, booking) over the listing */
@@ -11263,6 +11263,7 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 #bpSign .hp-money .due{background:var(--hp-bluesoft);}
 #bpSign .hp-money .due b{color:var(--hp-blue2);}
 #bpSign .hp-money.big b{font-size:21px;}#bpSign .hp-money.big>div{min-width:150px;}#bpSign .hp-money b{overflow-wrap:anywhere;}
+#bpSign .hp-none{margin:0;padding:4px 0 2px;font-size:13.5px;}
 #bpSign .hp-fine{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--hp-grey);margin:10px 0 0;line-height:1.5;}
 #bpSign .hp-fine .ms{font-size:15px;}
 #bpSign .hp-ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;}
@@ -11366,6 +11367,7 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 #bpSign .hp-chip.ok{background:#ecfdf5;color:#15803d;}
 #bpSign .hp-chip.now{background:var(--hp-bluesoft);color:var(--hp-blue2);}
 #bpSign .hp-chip.bad{background:#fef2f2;color:#b91c1c;}
+#bpSign .hp-chip.warn{background:#fff4e0;color:#a15c00;}
 #bpSign .hp-bad{color:#b91c1c;font-weight:600;}
 #bpSign .hp-sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
 #bpSign .hp-sc-top>div:first-child{min-width:0;}
@@ -11395,7 +11397,9 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 #bpSign .hp-step li.done>i{background:#22c55e;border-color:#22c55e;color:#fff;}
 #bpSign .hp-step li.now>i{border-color:var(--hp-blue);box-shadow:0 0 0 4px var(--hp-ring,rgba(47,107,255,.14));}
 #bpSign .hp-step li.now>i::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--hp-blue);}
-#bpSign .hp-step li.late>i{background:#ef4444;border-color:#ef4444;color:#fff;}
+#bpSign .hp-step li.late>i{background:#f59e0b;border-color:#f59e0b;color:#fff;}
+#bpSign .hp-step li.late>i .ms{font-size:14px;}
+#bpSign .hp-warn-t{color:#b45309;}
 #bpSign .hp-step-b{flex:1;min-width:0;}
 #bpSign .hp-step-t{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 #bpSign .hp-step-t b{font-size:14.5px;font-weight:600;min-width:0;overflow-wrap:anywhere;}
@@ -14588,11 +14592,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261024q25"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261031-p9"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261031-p9"></script>
-<script src="site/vendor/SplitText.min.js?v=20261031-p9"></script>
-<script src="site/site.js?v=20261031-p9"></script>
-<script src="site/present.js?v=20261031-p9"></script>
+<script src="site/vendor/gsap.min.js?v=20261031-p10"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261031-p10"></script>
+<script src="site/vendor/SplitText.min.js?v=20261031-p10"></script>
+<script src="site/site.js?v=20261031-p10"></script>
+<script src="site/present.js?v=20261031-p10"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261021a">
