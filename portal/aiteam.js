@@ -31,6 +31,24 @@
     projects: { n: 'Projects', ic: 'construction', d: 'Watches jobs for overdue phases, overruns and missing crew.',
       h: ['Which projects are behind schedule?', 'Are any jobs over budget?', 'Which jobs have nobody assigned?'] }
   };
+  /* the app pages each assistant can read (supabase/functions/ai-team ACCESS), on top of the CRM and projects */
+  var PG = { leads: 'Leads', lead_sources: 'Lead sources', calculator_leads: 'Calculator leads', estimates: 'Estimates', contracts: 'Contracts', payments: 'Payments', money: 'Income & expenses',
+    customer_messages: 'Customer messages', change_orders: 'Change orders', reviews: 'Reviews', calendar_notes: 'Calendar', team: 'Employees', hours: 'Timesheets',
+    subcontractors: 'Subcontractors', materials: 'Material orders', inspections: 'Inspections', website: 'Website visits', social: 'Social posts', competitors: 'Competitors', storms: 'Storm alerts' };
+  var SEE = {
+    sales: ['leads', 'calculator_leads', 'estimates', 'contracts', 'lead_sources', 'website', 'storms'],
+    marketing: ['website', 'social', 'reviews', 'competitors', 'lead_sources', 'leads', 'storms'],
+    research: ['competitors', 'website', 'lead_sources', 'leads', 'reviews'],
+    clients: ['customer_messages', 'change_orders', 'reviews', 'estimates', 'contracts', 'payments', 'storms'],
+    office: ['calendar_notes', 'payments', 'money', 'estimates', 'contracts', 'hours', 'materials', 'customer_messages'],
+    projects: ['team', 'hours', 'subcontractors', 'materials', 'change_orders', 'payments', 'money', 'inspections'],
+    permits: ['inspections', 'calendar_notes', 'subcontractors', 'storms'],
+    workflows: ['leads', 'calculator_leads', 'estimates', 'contracts', 'lead_sources', 'customer_messages', 'change_orders'] };
+  function seeLine(k) {
+    var st = A.st && A.st.agents ? A.st.agents.filter(function (a) { return a.key === k; })[0] : null;
+    var keys = (st && st.pages) || SEE[k] || [];
+    return keys.length ? '<div class="ai-see"><span class="ms">visibility</span><span>Can see: CRM, Projects, ' + keys.map(function (x) { return esc(PG[x] || x); }).join(', ') + '</span></div>' : '';
+  }
   /* how the chart groups them */
   
 
@@ -49,6 +67,7 @@
       '.ai-tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line,#dce3ec);background:#fff;border-radius:999px;padding:7px 13px;font-weight:500;cursor:pointer;flex:none;white-space:nowrap}',
       '.ai-tab.on{border-color:var(--a,#006fff);background:#e6f0ff;color:#003db8}',
       '@media(max-width:700px){.ai-top{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-4px;padding:2px 4px}.ai-top::-webkit-scrollbar{display:none}.ai-tab{flex:none}.ai-use{flex:none;margin-left:8px}}',
+      '.ai-see{display:flex;gap:6px;align-items:flex-start;justify-content:center;max-width:520px;margin:10px auto 0;font-size:12.5px;line-height:1.45;color:var(--mu,#788493);text-align:left}.ai-see .ms{font-size:16px;margin-top:1px}',
       '.ai-tab .n{background:#e0574e;color:#fff;border-radius:9px;font-size:11px;padding:0 6px}',
       '.ai-use{margin-left:auto;flex:none;padding-right:24px;font-size:13px;color:var(--mu,#788493);display:flex;align-items:center;gap:8px}',
       '.ai-use i{display:block;width:90px;height:6px;border-radius:6px;background:#e7ecf2;overflow:hidden}.ai-use i b{display:block;height:100%;background:var(--a,#006fff)}',
@@ -275,7 +294,7 @@
   async function open(id) {
     A.thread = id; lastThread(A.agent, id); var box = col(); if (!box) return;
     if (!id) {
-      box.innerHTML = '<div class="ai-hello">' + AV + '<h2>How can ' + AG[A.agent].n + ' help?</h2><div class="bpx-mut">' + AG[A.agent].d + '</div></div><div class="ai-hint">' + AG[A.agent].h.map(function (x) { return '<button>' + esc(x) + '</button>'; }).join('') + '</div>';
+      box.innerHTML = '<div class="ai-hello">' + AV + '<h2>How can ' + AG[A.agent].n + ' help?</h2><div class="bpx-mut">' + AG[A.agent].d + '</div>' + seeLine(A.agent) + '</div><div class="ai-hint">' + AG[A.agent].h.map(function (x) { return '<button>' + esc(x) + '</button>'; }).join('') + '</div>';
       box.querySelectorAll('.ai-hint button').forEach(function (b) { b.onclick = function () { $('aiIn').value = b.textContent; send(); }; });
       return;
     }
