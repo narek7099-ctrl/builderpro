@@ -1,5 +1,9 @@
 # BuilderPro sales kit
 
+> **Right now (HighLevel paused):** Lisa's demo line (350) 333-1230 is OFF. Don't give the
+> number out or use the "call Lisa" lines below. Offer a free 20-minute walkthrough instead.
+> Bring the Lisa lines back when HighLevel is turned on again.
+
 Scripts, emails and texts for finding the first clients. Every price and claim here
 comes from the live site (pricing on builderpro-os.com and compare.html, October 2026).
 If a price changes, change it here too.

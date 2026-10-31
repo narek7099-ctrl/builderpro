@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261031-p18">
-<link rel="stylesheet" href="site/present.css?v=20261031-p18">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261031-p18"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261031-p19">
+<link rel="stylesheet" href="site/present.css?v=20261031-p19">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261031-p19"}}</script>
 
 
 <style id="bpi-icons">
@@ -5466,7 +5466,7 @@ function bpDrawContacts(list){
 }
 /* translate GHL machinery tags into one friendly pipeline stage */
 function bpStageOf(c){
-  var tags=(c.tags||[]).map(function(t){return String(t).toLowerCase();});
+  var tags=(c.tags||[]).map(function(t){return String(t).toLowerCase().trim().replace(/\s+/g,'-');});
   var has=function(t){return tags.indexOf(t)>-1;};
   if(has('job-complete'))return ['Job completed','#15803d'];
   if(has('paid-in-full'))return ['Paid in full','#15803d'];
@@ -5476,7 +5476,9 @@ function bpStageOf(c){
   if(has('estimate-sent')||has('estimate'))return ['Estimate sent — deciding','#2457d6'];
   if(has('contacted'))return ['Contacted — in follow-up','#2457d6'];
   if(has('missed-call-no-response'))return ['Missed call — '+BP_AI_NAME+' following up','#b45309'];
-  if(has('customer'))return ['Customer','#15803d'];
+  if(has('customer')||has('won'))return ['Customer','#15803d'];
+  if(has('inspection-booked')||has('booked'))return ['Inspection booked','#2457d6'];
+  if(has('missed-call'))return ['Missed call','#b45309'];
   return ['New lead','#64748b'];
 }
 /* full-page contact profile */
@@ -14560,7 +14562,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pfiles.js?v=20261026a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261024q36"></script>
-<script src="portal/contact.js?v=20261018a"></script>
+<script src="portal/contact.js?v=20261031a"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
 <script src="portal/custportal.js?v=20261025d2"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
@@ -14587,11 +14589,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261024q25"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261031-p18"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261031-p18"></script>
-<script src="site/vendor/SplitText.min.js?v=20261031-p18"></script>
-<script src="site/site.js?v=20261031-p18"></script>
-<script src="site/present.js?v=20261031-p18"></script>
+<script src="site/vendor/gsap.min.js?v=20261031-p19"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261031-p19"></script>
+<script src="site/vendor/SplitText.min.js?v=20261031-p19"></script>
+<script src="site/site.js?v=20261031-p19"></script>
+<script src="site/present.js?v=20261031-p19"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261021a">
@@ -14604,7 +14606,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
-<link rel="stylesheet" href="portal/shell.css?v=20261020a">
+<link rel="stylesheet" href="portal/shell.css?v=20261031a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
 <link rel="stylesheet" href="portal/mobile.css?v=20261031d">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
