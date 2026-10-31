@@ -436,7 +436,7 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero [class*=pill],#bpx#bpx#bpx#bpx.bp-m .pjs-hero [class*=badge]{background:var(--nv-2) !important;color:#fff !important}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero a{background:var(--nv-2) !important;border:0 !important;color:#fff !important;border-radius:16px !important}
 #bpx#bpx#bpx#bpx.bp-m .pjs-hero a *{color:#fff !important}
-#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-addr a,#bpx#bpx#bpx#bpx.bp-m .pjs-hero a[href*="maps"]{background:none !important;color:var(--nv-mu) !important}
+#bpx#bpx#bpx#bpx.bp-m .pjs-hero .pjs-addr a,#bpx#bpx#bpx#bpx.bp-m .pjs-hero a[href*="maps"]:not(.pjs-act){background:none !important;color:var(--nv-mu) !important}
 /* job cards: tap the card to open it; finishing a job happens inside it */
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea .bpx-donebtn{display:none !important}
 #bpx#bpx#bpx#bpx.bp-m #bpxViewArea .ml-sec:has(+ .ml-sec){display:none !important}

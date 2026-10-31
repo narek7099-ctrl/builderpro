@@ -447,3 +447,26 @@
 #bpx .ck-btn.out{background:var(--card);color:#b42318;border:1px solid rgba(180,35,24,.35);box-shadow:none}
 #bpx .ck-btn.brk{background:var(--card);color:#b45309;border:1px solid rgba(217,119,6,.45);box-shadow:none}
 #bpx .ck-btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+/* crew job sheet: 5 even tabs (Job, Photos, Materials, Files, More), More list */
+#bpx#bpx#bpx .cs-sheet .pjs-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:6px 8px;overflow:visible}
+#bpx#bpx#bpx#bpx .cs-sheet .pjs-tabs .pjs-tab{flex-direction:column;justify-content:center;gap:2px;height:56px !important;padding:0 2px !important;border-radius:12px;font-size:12px !important;min-width:0 !important;position:relative;border-bottom:0 !important}
+#bpx#bpx#bpx .cs-sheet .pjs-tabs .pjs-tab .ms{font-size:22px}
+#bpx#bpx#bpx .cs-sheet .pjs-tabs .pjs-tab .pjs-tl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#bpx#bpx#bpx .cs-sheet .pjs-tabs .pjs-tab .pjs-n{position:absolute;top:4px;right:calc(50% - 22px);font-size:10px;min-width:16px;height:16px;line-height:16px;border-radius:8px;padding:0 4px;background:var(--soft);color:var(--mut)}
+#bpx#bpx#bpx .cs-sheet .pjs-tabs .pjs-tab .pjs-n:empty{display:none}
+#bpx#bpx#bpx .cs-sheet .pjs-tabs .pjs-tab.on{background:var(--soft);color:var(--blue)}
+#bpx .cs-more{display:flex;flex-direction:column}
+#bpx .cs-more-row{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 4px;border:0;border-top:1px solid var(--line-2,var(--line));background:none;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+#bpx .cs-more-row:first-child{border-top:0}
+#bpx .cs-more-row:active{background:var(--soft)}
+#bpx .cs-more-ic{width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:var(--soft);display:grid;place-items:center}
+#bpx .cs-more-ic .ms{font-size:21px;color:var(--ink)}
+#bpx .cs-more-row>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx .cs-more-row b{font-size:15.5px}
+#bpx .cs-more-row>div span{font-size:13px;color:var(--mut)}
+#bpx .cs-more-row em{font-style:normal;font-size:12px;font-weight:700;min-width:22px;height:22px;border-radius:11px;background:var(--soft);display:grid;place-items:center;padding:0 6px;color:var(--mut)}
+#bpx .cs-chev{color:var(--mut)}
+#bpx .cs-back{display:inline-flex;align-items:center;gap:2px;height:40px;padding:0 10px 0 2px;margin:0 0 6px;border:0;border-radius:10px;background:none;font:inherit;font-size:14.5px;font-weight:600;color:var(--blue);cursor:pointer}
+#bpx .cs-back .ms{font-size:22px}
+#bpx .cs-more-link{display:inline-flex;align-items:center;gap:2px;margin-top:10px;height:40px;padding:0;border:0;background:none;font:inherit;font-size:14.5px;font-weight:600;color:var(--blue);cursor:pointer}
+#bpx .cs-more-link .ms{font-size:20px}

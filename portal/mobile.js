@@ -43,7 +43,7 @@
     /* owner: the big + in the middle makes anything new; everything else is under the avatar (top right) */
     /* Leads is a tab because new customers are the money; Calendar is one tap from Home (Today card, Apps) */
     owner: [['home', 'Home', 'home', 'dashboard'], ['leads', 'Leads', 'leads', 'contacts'], ['create', 'New', 'plus', null], ['projects', 'Jobs', 'projects', 'activejobs'], ['inbox', 'Inbox', 'convos', 'messaging']],
-    crew: [['home', 'Clock', 'clock', 'crewdash'], ['projects', 'Jobs', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'Me', 'user', null]],
+    crew: [['home', 'Today', 'home', 'crewdash'], ['projects', 'Jobs', 'projects', 'crewprojects'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'Me', 'user', null]],
     sub: [['jobs', 'Jobs', 'projects', 'subjobs'], ['inv', 'Invoices', 'inv', 'subinvoices'], ['chg', 'Changes', 'page', 'subchanges'], ['msgs', 'Messages', 'convos', 'crewmsgs'], ['apps', 'More', 'dots', null]]
   };
   /* which tab a view lights up */
@@ -57,7 +57,7 @@
       if (g === 'leads' || v === 'closedeals') return 'leads';
       return '';
     }
-    if (r === 'crew' && v === 'crewclock') return 'home';   /* the Clock tab opens the crew home; the full time clock is still "Clock" */
+    if (r === 'crew' && v === 'crewclock') return 'home';   /* the time clock belongs to the Today tab */
     var hit = TABS[r].filter(function (t) { return t[3] === v; })[0];
     return hit ? hit[0] : 'apps';
   }
@@ -113,8 +113,8 @@
     /* the bottom tab says Jobs, so the page does too */
     /* (only the heading's text: replacing the whole box removed the h1 the shell retitles on every page) */
     var tt = top.querySelector('.hl-ttl h1') || top.querySelector('.hl-ttl'); if (tt && M.on() && role() === 'owner' && (v || window._bpCurView) === 'activejobs' && /^Projects$/.test(tt.textContent.trim())) tt.textContent = 'Jobs';
-    /* the crew's first tab is Clock, so its page says Clock too */
-    if (tt && M.on() && role() === 'crew' && (v || window._bpCurView) === 'crewdash' && /^Home$/.test(tt.textContent.trim())) tt.textContent = 'Clock';
+    /* the crew's first tab is Today, so its page says Today too */
+    if (tt && M.on() && role() === 'crew' && (v || window._bpCurView) === 'crewdash' && /^Home$/.test(tt.textContent.trim())) tt.textContent = 'Today';
     var av0 = $('hlAv');
     if (av0 && role() === 'owner' && !av0._m) { av0._m = 1; var po = av0.onclick; av0.onclick = function (e) { if (M.on()) { e.preventDefault(); M.apps(); } else if (po) po.call(av0, e); }; }
     var acts = $('hlTacts');
