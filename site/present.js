@@ -22,9 +22,13 @@
    ========================================================================== */
 (function () {
   'use strict';
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* Slides are off: the page scrolls normally. This file still runs the nav
+     (dropdowns, phone sheet, section highlight, progress line) and same-page
+     links. Set SLIDES to true to bring the one-slide-at-a-time scrolling back. */
+  var SLIDES = false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) SLIDES = false;
   var root = document.documentElement;
-  root.classList.add('bp-present');
+  if (SLIDES) root.classList.add('bp-present');
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
   var main = $('#main'); if (!main) return;
@@ -111,6 +115,7 @@
   function next() { go(cur + 1); }
   function prev() { go(cur - 1); }
   function goSection(id) {
+    if (!SLIDES) { var t = document.getElementById(id); if (t) window.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - NAV), behavior: 'smooth' }); return; }
     build();
     var gi = -1;
     groups.forEach(function (g, k) { if (g.id === id || g.els.some(function (e) { return e.id === id; })) gi = k; });
@@ -123,6 +128,7 @@
      and stays. Sections already on screen at load never wait. */
   var seen = typeof WeakSet === 'function' ? new WeakSet() : null, io = null;
   function watch() {
+    if (!SLIDES) return;
     if (!('IntersectionObserver' in window)) return;
     if (!io) io = new IntersectionObserver(function (es) {
       es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.remove('pr-out'); if (seen) seen.add(e.target); io.unobserve(e.target); } });
@@ -151,7 +157,7 @@
 
   /* ---------- input ---------- */
   window.addEventListener('wheel', function (e) {
-    if (e.ctrlKey || standby(e.target)) return;
+    if (!SLIDES || e.ctrlKey || standby(e.target)) return;
     e.preventDefault();
     var now = performance.now(), gap = now - lastWheel; lastWheel = now;
     var d = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY, abs = Math.abs(d);
@@ -171,7 +177,7 @@
 
   var tY = null, tX = 0, tT = 0;
   window.addEventListener('touchstart', function (e) {
-    if (e.touches.length !== 1 || standby(e.target)) { tY = null; return; }
+    if (!SLIDES || e.touches.length !== 1 || standby(e.target)) { tY = null; return; }
     tY = e.touches[0].clientY; tX = e.touches[0].clientX; tT = performance.now();
   }, { passive: true, capture: true });
   window.addEventListener('touchmove', function (e) {
@@ -187,7 +193,7 @@
   }, { capture: true });
 
   document.addEventListener('keydown', function (e) {
-    if (e.altKey || e.ctrlKey || e.metaKey || standby(e.target)) return;
+    if (!SLIDES || e.altKey || e.ctrlKey || e.metaKey || standby(e.target)) return;
     var k = e.key;
     if (k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) { e.preventDefault(); if (!busy) next(); }
     else if (k === 'ArrowUp' || k === 'PageUp' || (k === ' ' && e.shiftKey)) { e.preventDefault(); if (!busy) prev(); }
@@ -222,13 +228,14 @@
       var wide = window.innerWidth !== lastW; lastW = window.innerWidth;
       if (busy) return;
       build(); cur = nearest(window.scrollY); paint();
-      if (wide && stops[cur] && Math.abs(stops[cur].y - window.scrollY) > 2) go(cur, true);
+      if (SLIDES && wide && stops[cur] && Math.abs(stops[cur].y - window.scrollY) > 2) go(cur, true);
     }, 200);
   });
 
   /* ---------- chrome: dots, nav highlight, progress, hint ---------- */
   var dotsEl = null;
   function dots() {
+    if (!SLIDES) return;
     if (!dotsEl) { dotsEl = document.createElement('nav'); dotsEl.className = 'pr-dots'; dotsEl.setAttribute('aria-label', 'Slides'); document.body.appendChild(dotsEl); }
     dotsEl.innerHTML = groups.map(function (g, k) {
       var name = NAMES[g.id] || (g.id === 'footer' ? 'Get started' : g.el.getAttribute('aria-label') || 'Section');
@@ -245,8 +252,7 @@
     var bar = $('.pnav_progress i'); if (bar) bar.style.width = (stops.length > 1 ? cur / (stops.length - 1) * 100 : 0) + '%';
     var hint = $('.pr-hint'); if (hint) hint.classList.toggle('gone', cur > 0);
   }
-  var hint = document.createElement('div'); hint.className = 'pr-hint'; hint.setAttribute('aria-hidden', 'true'); hint.innerHTML = '<i></i>Scroll';
-  document.body.appendChild(hint);
+  if (SLIDES) { var hint = document.createElement('div'); hint.className = 'pr-hint'; hint.setAttribute('aria-hidden', 'true'); hint.innerHTML = '<i></i>Scroll'; document.body.appendChild(hint); }
 
   /* ---------- nav: dropdowns and the phone sheet ---------- */
   function closeDd() { $$('.pnav_dd.open').forEach(function (d) { d.classList.remove('open'); $('.pnav_link', d).setAttribute('aria-expanded', 'false'); }); }
