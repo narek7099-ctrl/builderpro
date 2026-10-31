@@ -7,6 +7,18 @@ A screen recording plus your voice. Use it on the homepage, in email 1 of the sa
 - **Computer:** a free recorder (QuickTime on a Mac; on Windows, press Win + Alt + R to record with the Xbox Game Bar).
 - Record each scene as its own clip. Then join the clips in CapCut or iMovie (both free) and add captions. Most people watch with the sound off.
 
+**Filming mode (do this first):** sign in with the filming account and open `builderpro-os.com/app.html?portal=1&film=1`. It stays on in that browser until you open `...&film=0`. While it's on:
+- no red counts on the bell, no "Finish setting up" bar or card, no "Connect your business number" banner
+- the Texts inbox shows sample conversations, including Kevin O'Brien's missed call and Lisa's text-back (Scene 3), even though texting isn't connected
+- nothing is sent anywhere; a message typed into a sample conversation only shows on your screen
+
+**The filming account** (the $299 test account) has 4 active jobs with photos and crews, 10 sample leads, 3 crew members, and a Good/Better/Best estimate for Priya Shah (sample) that is ready for the customer to pick: `builderpro-os.com/app.html#est=e5952b7558a5bd34fd0dcca2599c4f9574e5`. Everything is labeled "(sample)".
+
+**While HighLevel is frozen:**
+- Scene 2 (calling Lisa) can't be filmed. Lisa's line doesn't answer. Film it once HighLevel is back, or leave the scene out for now.
+- Scene 4 stops at the signature: after the customer picks and signs, no payment screen appears, because deposits are created in HighLevel. End the scene on "Signed".
+- The end card and the homepage's "Talk to Lisa, live" section both point to Lisa's number. Don't put the number on the end card until she answers again.
+
 **Before you record:**
 - Use a demo account with sample customers and jobs labeled "(sample)". Never show a real customer's name, phone number or address.
 - Turn on Do Not Disturb so no notifications pop up.
