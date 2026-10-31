@@ -50,7 +50,7 @@
     });
     return C.busy;
   }
-  function wait(msg) { var a = area(); if (a) a.innerHTML = '<div class="bpx-panel"><div class="bpx-mut" style="font-size:14px">' + (msg || 'Loading…') + '</div></div>'; }
+  function wait(msg) { var a = area(); if (a) a.innerHTML = msg ? '<div class="bpx-panel"><div class="bpx-mut" style="font-size:14px">' + msg + '</div></div>' : '<div class="bp-skel" role="status" aria-label="Loading"><i></i><i></i><i></i></div>'; }
   function fail() { var a = area(); if (a) a.innerHTML = '<div class="bpx-panel"><div class="bpx-empty2">Couldn’t load this just now. Check your signal and try again.</div></div>'; }
   function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function t12(hhmm) { var p = String(hhmm || '').split(':'), h = +p[0]; if (isNaN(h)) return ''; return (h % 12 || 12) + (p[1] && p[1] !== '00' ? ':' + p[1] : '') + (h >= 12 ? ' PM' : ' AM'); }
@@ -462,7 +462,7 @@
         if (r && r.error) throw r.error;
         var d = r.data || {};
         if (!d.ok) { bpCrewClock(); setTimeout(function () { var m = $('ca-msg'); if (m) { m.className = 'ca-msg bad'; m.textContent = d.error === 'already clocked in' ? 'You’re already clocked in.' : d.error === 'not clocked in' ? 'You’re not clocked in.' : 'That didn’t go through.'; } }, 400); return; }
-        bpCrewClock();
+        bpCrewClock(); if (window.bpHaptic) bpHaptic(onSite === false ? 'warning' : 'success');
         setTimeout(function () {
           var m = $('ca-msg'); if (!m) return;
           m.className = 'ca-msg ' + (onSite === false ? 'warn' : 'ok');

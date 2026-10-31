@@ -39,7 +39,7 @@
     }, function (e) { S.busy = null; throw e; });
     return S.busy;
   }
-  function wait() { var a = area(); if (a) a.innerHTML = '<div class="bpx-panel"><div class="bpx-mut" style="font-size:14px">Loading…</div></div>'; }
+  function wait() { var a = area(); if (a) a.innerHTML = '<div class="bp-skel" role="status" aria-label="Loading"><i></i><i></i><i></i></div>'; }
   function fail() { var a = area(); if (a) a.innerHTML = '<div class="bpx-panel"><div class="bpx-empty2">Couldn’t load this just now. Check your signal and try again.</div></div>'; }
   function done() { if (window.bpSpin) bpSpin(false); }
   function jobs() { return (S.me && S.me.jobs) || []; }
