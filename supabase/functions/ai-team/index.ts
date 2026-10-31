@@ -58,6 +58,77 @@ const TOOLS: Anthropic.Tool[] = [
   { name: "business_info", description: "This contractor's business details from BuilderPro: services, prices, hours, service area, plan.", input_schema: { type: "object", properties: {} } },
 ];
 
+// Pages of BuilderPro each assistant may read (read-only, this account only),
+// on top of the CRM, projects and business info every assistant has.
+type Page = { d: string; q: (uid: string) => string; shape?: (rows: Record<string, any>[]) => unknown };
+const since = (days: number) => new Date(Date.now() - days * 864e5).toISOString();
+const PAGES: Record<string, Page> = {
+  leads: { d: "Leads that came in from the website, calculators and lead sources in the last 60 days (name, contact, what they want, source, status)",
+    q: (u) => `lead_log?owner=eq.${u}&created_at=gte.${since(60)}&select=created_at,source,page,name,phone,email,lead,ghl_status&order=created_at.desc&limit=80` },
+  lead_sources: { d: "Lead sources (Angi, Thumbtack, etc.): leads received, cost per lead, last lead",
+    q: (u) => `lead_sources?owner=eq.${u}&select=vendor,label,trade,active,cost_per_lead,total_leads,last_lead_at&limit=40` },
+  calculator_leads: { d: "Health, damage and roof checks homeowners ran on the website: score, issues, contact, status",
+    q: (u) => `roof_checks?owner=eq.${u}&created_at=gte.${since(90)}&select=created_at,address,score,band,label,age,material,issues,storm,name,phone,email,status&order=created_at.desc&limit=60` },
+  estimates: { d: "Good/better/best estimates sent to customers: customer, title, options, status (sent, viewed, chosen), chosen tier",
+    q: (u) => `estimate_options?owner=eq.${u}&select=created_at,customer,title,addr,status,chosen,recommended,viewed_at,chosen_at,expires_at,tiers&order=created_at.desc&limit=40`,
+    shape: (r) => r.map((x) => ({ ...x, tiers: Array.isArray(x.tiers) ? x.tiers.map((t: Record<string, any>) => ({ name: t?.name, total: t?.total ?? t?.price })) : [] })) },
+  contracts: { d: "Contracts sent for signature: customer, amount, status (sent, viewed, signed, declined)",
+    q: (u) => `contracts?owner=eq.${u}&select=created_at,title,customer_name,amount,deposit,status,sent_at,viewed_at,signed_at,declined_at&order=created_at.desc&limit=40` },
+  payments: { d: "Card payments customers made online in the last 120 days: amount, customer, what for",
+    q: (u) => `stripe_payments?owner=eq.${u}&status=eq.succeeded&paid_at=gte.${since(120)}&select=paid_at,amount,net,customer_name,description&order=paid_at.desc&limit=60`,
+    shape: (r) => r.map((x) => ({ ...x, amount: (+x.amount || 0) / 100, net: (+x.net || 0) / 100 })) },
+  money: { d: "Income and expense entries from Finances (most recent 120)",
+    q: (u) => `portal_finance?owner=eq.${u}&select=fin&limit=1`,
+    shape: (r) => { const f = r[0]?.fin; return Array.isArray(f) ? f.slice(-120) : []; } },
+  customer_messages: { d: "Messages from homeowners on their project pages in the last 30 days, and whether they were answered",
+    q: (u) => `customer_messages?owner=eq.${u}&created_at=gte.${since(30)}&select=job_id,from_customer,author,body,created_at,read_at&order=created_at.desc&limit=80` },
+  change_orders: { d: "Change orders sent to homeowners: title, amount, status (pending, approved, declined)",
+    q: (u) => `customer_change_orders?owner=eq.${u}&status=neq.void&select=job_id,title,amount,status,created_at,signed_at&order=created_at.desc&limit=40` },
+  reviews: { d: "Customer ratings of finished jobs and crews (rating, comment, who), and review requests sent",
+    q: (u) => `worker_reviews?owner=eq.${u}&select=created_at,job_id,rating,comment,customer_name,source&order=created_at.desc&limit=60` },
+  calendar_notes: { d: "To-dos and notes on the calendar for the last week and the next 30 days",
+    q: (u) => `calendar_notes?owner=eq.${u}&day=gte.${since(7).slice(0, 10)}&day=lte.${new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)}&select=day,kind,text,at,done&order=day.asc&limit=80` },
+  team: { d: "Employees: name, trade, kind, pay type and rate, active",
+    q: (u) => `employees?owner=eq.${u}&select=name,trade,kind,pay_type,rate,active,hired_on,skills,certifications&order=name.asc&limit=80` },
+  hours: { d: "Hours worked by the crew in the last 14 days, by person and job (from the time clock)",
+    q: (u) => `time_entries?owner=eq.${u}&worked_on=gte.${since(14).slice(0, 10)}&select=employee_id,job_name,worked_on,hours,ot_hours,cost&order=worked_on.desc&limit=200` },
+  subcontractors: { d: "Subcontractors and their compliance documents (insurance, license, W-9 with expiry dates)",
+    q: (u) => `subcontractors?owner=eq.${u}&select=company,contact_name,trade,active,lien_waiver_required,sub_documents(kind,number,expires)&limit=60` },
+  materials: { d: "Material orders and order lists: supplier order status, totals, job, when sent and picked up",
+    q: (u) => `purchase_orders?owner=eq.${u}&created_at=gte.${since(60)}&select=po_number,status,job_name,total,fulfil,sent_at,picked_up_at,invoice_total,created_at&order=created_at.desc&limit=60` },
+  inspections: { d: "Inspection reports written in the app: address, kind, status, date",
+    q: (u) => `inspection_reports?owner=eq.${u}&select=contact_name,address,job_id,title,kind,status,inspected_on,created_at&order=created_at.desc&limit=40` },
+  website: { d: "Website visits in the last 30 days: visits, top pages, where visitors came from, leads",
+    q: (u) => `site_events?owner=eq.${u}&ts=gte.${since(30)}&select=type,path,referrer,utm_source,device&limit=3000`,
+    shape: (r) => {
+      const n = (k: (x: Record<string, any>) => string) => Object.entries(r.reduce((m: Record<string, number>, x) => { const v = k(x) || "(none)"; m[v] = (m[v] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      return { events: r.length, byType: n((x) => x.type), topPages: n((x) => x.path), sources: n((x) => x.utm_source || (x.referrer ? new URL(x.referrer, "https://x").hostname : "")), devices: n((x) => x.device) };
+    } },
+  social: { d: "Social posts: text, channels, scheduled or published, results",
+    q: (u) => `social_posts?owner=eq.${u}&select=text,channels,status,scheduled_at,published_at,results&order=created_at.desc&limit=30` },
+  competitors: { d: "Competitors being tracked: name and their latest Yelp snapshot (rating, reviews, photos)",
+    q: (u) => `competitors?owner=eq.${u}&select=name,snapshot,updated_at&limit=20` },
+  storms: { d: "Storm alerts near the business's jobs: day, reports, jobs affected, status",
+    q: (u) => `storm_alerts?owner=eq.${u}&select=day,summary,jobs,status,sent_count&order=day.desc&limit=15` },
+};
+// which pages each assistant can open, by what it does
+const ACCESS: Record<string, string[]> = {
+  sales: ["leads", "calculator_leads", "estimates", "contracts", "lead_sources", "website", "storms"],
+  marketing: ["website", "social", "reviews", "competitors", "lead_sources", "leads", "storms"],
+  research: ["competitors", "website", "lead_sources", "leads", "reviews"],
+  clients: ["customer_messages", "change_orders", "reviews", "estimates", "contracts", "payments", "storms"],
+  office: ["calendar_notes", "payments", "money", "estimates", "contracts", "hours", "materials", "customer_messages"],
+  projects: ["team", "hours", "subcontractors", "materials", "change_orders", "payments", "money", "inspections"],
+  permits: ["inspections", "calendar_notes", "subcontractors", "storms"],
+  workflows: ["leads", "calculator_leads", "estimates", "contracts", "lead_sources", "customer_messages", "change_orders"],
+};
+function toolsFor(a: Agent): Anthropic.Tool[] {
+  const pages = ACCESS[a.key] ?? [];
+  if (!pages.length) return [...TOOLS];
+  return [...TOOLS, { name: "app", description: "Read a page of this contractor's BuilderPro app (read-only). Pages you can open:\n" + pages.map((k) => `- ${k}: ${PAGES[k].d}`).join("\n"),
+    input_schema: { type: "object", properties: { page: { type: "string", enum: pages } }, required: ["page"] } }];
+}
+
 async function userOf(req: Request) {
   const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!token) return null;
@@ -93,7 +164,16 @@ Their services: ${p.services || "see business_info"}. Service area: ${p.serviceA
 How to work: look things up with your tools rather than guessing. Anything that messages a customer or changes their records is queued for the owner to approve; when that happens, say what you drafted and why, and don't retry it. Write the way a good office manager talks to the owner: plain, short, concrete. Customer-facing drafts should sound like ${acct.full_name.split(" ")[0] || "the owner"}, not like marketing copy. Today is ${new Date().toISOString().slice(0, 10)}.`;
 }
 
-async function runTool(acct: Acct, name: string, input: Record<string, unknown>) {
+async function runTool(acct: Acct, name: string, input: Record<string, unknown>, agent = "") {
+  if (name === "app") {
+    const page = String(input.page || "");
+    if (!(ACCESS[agent] ?? []).includes(page) || !PAGES[page]) return { error: "This assistant can't open that page." };
+    const r = await sb(PAGES[page].q(acct.user_id));
+    if (!r.ok) return { error: "Couldn't read that page right now." };
+    const rows = (await r.json()) as Record<string, any>[];
+    const data = PAGES[page].shape ? PAGES[page].shape!(rows) : rows;
+    return { page, today: new Date().toISOString().slice(0, 10), data };
+  }
   if (name === "business_info") {
     const s = await sb(`client_settings?user_id=eq.${acct.user_id}&select=data`);
     return { plan: acct.plan, trade: acct.trade, answers: acct.profile, settings: s.ok ? ((await s.json())[0]?.data ?? {}) : {} };
@@ -175,7 +255,7 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
   const lastM = messages[messages.length - 1];
   if (lastM && lastM.role === "user") (lastM.content as unknown[]).push({ type: "text", text }); else messages.push({ role: "user", content: text });
   await save(thread, "user", text);
-  const tools: Anthropic.Messages.ToolUnion[] = [...TOOLS];
+  const tools: Anthropic.Messages.ToolUnion[] = toolsFor(a);
   if (a.web) tools.push({ type: "web_search_20260209", name: "web_search", max_uses: 4 } as unknown as Anthropic.Messages.ToolUnion);
   const approvals: unknown[] = [];
   let reply = "", counted = false;
@@ -203,7 +283,7 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
         const row = (await q.json())[0]; approvals.push(row);
         return { type: "tool_result", tool_use_id: u.id, content: `Queued for the owner's approval (${row.id}). Not sent yet. Tell them what you drafted.` };
       }
-      try { return { type: "tool_result", tool_use_id: u.id, content: JSON.stringify(await runTool(acct, u.name, input)).slice(0, 40000) }; }
+      try { return { type: "tool_result", tool_use_id: u.id, content: JSON.stringify(await runTool(acct, u.name, input, a.key)).slice(0, 40000) }; }
       catch (e) { return { type: "tool_result", tool_use_id: u.id, content: "Error: " + String(e).slice(0, 200), is_error: true }; }
     }));
     const tr = { role: "user" as const, content: results as unknown as Anthropic.MessageParam["content"] };
@@ -220,7 +300,7 @@ function transcript(rows: { role: string; content: unknown; model: string }[]) {
     const b = (m.content as { type: string; text?: string; name?: string; input?: Record<string, unknown> }[]) ?? [];
     if (m.role === "user" && b.every((x) => x.type === "tool_result")) continue;
     const text = b.filter((x) => x.type === "text").map((x) => x.text).join("\n").trim();
-    const tools = b.filter((x) => x.type === "tool_use" || x.type === "server_tool_use").map((x) => x.name === "web_search" ? "Searched: " + (x.input?.query ?? "") : x.name === "ghl" ? "CRM: " + String(x.input?.op ?? "").replace(".", " ") : x.name === "projects" ? "Checked projects" : "Checked business info");
+    const tools = b.filter((x) => x.type === "tool_use" || x.type === "server_tool_use").map((x) => x.name === "web_search" ? "Searched: " + (x.input?.query ?? "") : x.name === "ghl" ? "CRM: " + String(x.input?.op ?? "").replace(".", " ") : x.name === "projects" ? "Checked projects" : x.name === "app" ? "Opened " + String(x.input?.page ?? "a page").replace(/_/g, " ") : "Checked business info");
     if (text || tools.length) out.push({ role: m.role, text, tools, deep: m.model === OPUS });
   }
   return out;
@@ -283,7 +363,7 @@ Deno.serve(async (req) => {
     const us = await usage(u.id);
     const p = await sb(`cai_approvals?owner=eq.${u.id}&status=eq.pending&select=id`);
     return json({ ok: true, addon: on ? "active" : acct.ai_addon, included: acct.plan === "enterprise", price: PRICE, cap: CAP, used: us.messages ?? 0, pending: p.ok ? (await p.json()).length : 0,
-      crm: !!acct.ghl_location_id, agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name })) });
+      crm: !!acct.ghl_location_id, agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name, pages: ACCESS[a.key] ?? [] })) });
   }
   if (op === "subscribe") {
     if (on) return json({ ok: true, already: true });
