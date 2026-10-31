@@ -8,14 +8,17 @@ How to email contractors so the emails land in the inbox, get opened, and turn i
 
 The GIF is ready: `assets/email/builderpro-mark-animated.gif` (75 KB). It's the BuilderPro mark alone, no name, in a round white badge: a light sweeps across it, it lifts slightly, then it rests. The signature (`docs/sales/email-signature.html`) shows it at 64×64 with your name beside it. A still version for profile pictures is `assets/email/builderpro-mark.png`.
 
-**About the round picture next to the sender name in the inbox** (like TikTok's): that picture can't be animated in any inbox. Here's how to get the still mark there:
+**The moving picture next to your name in the inbox** (like TikTok's): Gmail shows the sender's **Google account profile photo** there, and a GIF profile photo can play. Your email runs on Microsoft 365, not Google, so you make a free Google account *for your existing work address*:
 
-- **Outlook and Microsoft 365 people:** set `builderpro-mark.png` as your profile photo in Microsoft 365 (click your initials at the top right of Outlook on the web > Change photo). Other Microsoft users see it next to your emails.
-- **Gmail people:** Gmail shows a company logo there only through BIMI, which needs a paid yearly logo certificate (a CMC, or a VMC if the logo is a registered trademark). It's worth doing after the LLC, and I can set up the DNS side. Until then, Gmail shows your initial.
+1. Go to accounts.google.com/signup, enter your name, then pick **Use your existing email** and type your @builderpro-os.com address (not a new Gmail address). Google emails that address a code to confirm it.
+2. Open myaccount.google.com > **Personal info** > **Profile picture**, and upload `assets/email/builderpro-profile-animated.gif` (500×500, made for this).
+3. Send a test email from Outlook to a Gmail address and look at it on a computer and in the Gmail phone app.
+
+What to expect: Gmail users see your mark next to your name. On a computer it usually moves; the Gmail phone app often shows only the first frame, which is the complete mark, so it still looks right. Outlook, Apple Mail and Yahoo users don't see Google photos; for Outlook users, also set `assets/email/builderpro-mark.png` as your Microsoft 365 photo (Outlook on the web > your initials > Change photo). Google doesn't promise the animation, so treat the moving part as a bonus.
 
 To be straight about what it does and doesn't do:
 
-- **It won't raise opens.** People decide to open from three things they see before any image loads: the sender's name, the subject line and the first line of the email (the preview). A GIF only appears after the email is opened.
+- **Inside the email, it won't raise opens.** People decide to open from what they see in the inbox: the sender's name and picture, the subject line and the first line. A GIF in the signature only appears after the email is opened. The inbox profile picture (below) is the part that can help someone notice you.
 - **What it does help:** looking like a real company, people recognizing you on the second and third email, and clicks on your site.
 - **Keep it out of the very first cold email.** A first email that's plain text from a real person lands in the inbox more often, while images in a first email from an unknown sender push it toward Promotions or spam. Use the signature with the logo in replies and follow-ups, and in every email to people who already talked to you.
 
