@@ -18,13 +18,13 @@
   var money = function (n) { return window.bpMoneyFmt ? bpMoneyFmt(n) : '$' + Math.round(+n || 0); };
   var STEPS = [['New lead', 'person_add'], ['Contacted', 'chat'], ['Estimate sent', 'request_quote'], ['Accepted', 'handshake'], ['Invoiced', 'receipt_long'], ['Paid', 'paid'], ['Completed', 'task_alt']];
   function stepOf(tags) {
-    var t = (tags || []).map(function (x) { return String(x).toLowerCase(); }), has = function (k) { return t.indexOf(k) > -1; };
+    var t = (tags || []).map(function (x) { return String(x).toLowerCase().trim().replace(/\s+/g, '-'); }), has = function (k) { return t.indexOf(k) > -1; };
     if (has('job-complete')) return 6;
     if (has('paid-in-full')) return 5;
     if (has('final-sent') || has('deposit-sent')) return 4;
-    if (has('estimate-accepted') || has('customer')) return 3;
+    if (has('estimate-accepted') || has('customer') || has('won')) return 3;
     if (has('estimate-sent') || has('estimate')) return 2;
-    if (has('contacted') || has('missed-call-no-response')) return 1;
+    if (has('contacted') || has('missed-call-no-response') || has('inspection-booked') || has('booked')) return 1;
     return 0;
   }
   /* the workflow's machinery tags stay out of the chips */

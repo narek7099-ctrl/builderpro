@@ -446,5 +446,5 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.g:hover,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.o:hover,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.b:hover{background:var(--soft,#f2f4f7) !important;filter:none}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb .hl-i{width:19px;height:19px;stroke-width:1.8}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p{width:auto;display:inline-flex;gap:6px;padding:0 14px 0 11px !important;border-radius:999px !important;height:34px;background:#f4f0ff !important;color:#5b3fd6 !important;font:600 13px/1 var(--sans);margin-right:4px}
-#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p::after{content:"Ask Lisa"}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p::after{content:"Ask AI"}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p .hl-i{width:16px;height:16px}
