@@ -1,0 +1,39 @@
+<!-- The "Talk to Lisa, live" homepage section, taken off while HighLevel is paused (Lisa's demo line does not answer).
+     To bring it back: paste everything below into site/body-top.html where the "Lisa live-demo section" note is, put back the Lisa AI menu links
+     and call lines listed in ghl-build-log.md (Oct 31), then run python3 site/assemble.py. -->
+<section class="section" id="lisa" data-pill-parent>
+  <div class="lisa">
+    <div class="card lisa_text">
+      <div class="pill"><span class="pill_icon"><span class="pill_dash"></span></span><span class="b-s">Meet your receptionist</span></div>
+      <div>
+        <h2 class="h-m" data-split="heading">Talk to <span class="accent">Lisa,</span> live.</h2>
+        <p class="b-m">This is the real receptionist that answers your calls, texts and bookings, not a recording. Call or text now and ask what a customer would ask.</p>
+      </div>
+    </div>
+    <div class="card lisa_stage">
+      <div class="atlas-stage">
+        <button class="net-wrap" id="atlasBlobBtn" type="button" onclick="openAtlasInline()" aria-label="Chat with Lisa AI">
+          <canvas id="atlasNet" aria-hidden="true"></canvas>
+        </button>
+        <div class="blob-hint" id="atlasHint" onclick="openAtlasInline()"><span class="bdot"></span> <span class="blob-cta">Tap to talk to Lisa</span></div>
+        <div class="atlas-inline" id="atlasInline">
+          <div class="ai-head">
+            <span class="ai-orb-sm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 L14.1 9.9 L21.5 12 L14.1 14.1 L12 21.5 L9.9 14.1 L2.5 12 L9.9 9.9 Z"/><path d="M18.4 3 L19.05 5.05 L21.1 5.7 L19.05 6.35 L18.4 8.4 L17.75 6.35 L15.7 5.7 L17.75 5.05 Z"/></svg></span>
+            <div><div class="ai-name" id="aiName">Lisa, live demo</div><div class="ai-status"><span class="bdot"></span> <span id="aiStatus">Online 24/7. Call or text.</span></div></div>
+            <button class="ai-x" type="button" onclick="closeAtlasInline()" aria-label="Close">&times;</button>
+          </div>
+          <div class="ai-ask" id="aiAsk">
+            <div class="ai-ask-h">Try asking Lisa</div>
+            <div class="ai-ask-item">"How much does a full replacement cost?"</div>
+            <div class="ai-ask-item">"Can you book me an appointment this week?"</div>
+            <div class="ai-ask-item">"Do you handle insurance claims?"</div>
+            <div class="ai-ask-item">"What areas do you service?"</div>
+            <div class="ai-ask-note">This is the real AI. It answers, quotes ballparks and books appointments live, 24/7.</div>
+            <a class="ai-ask-call" href="tel:+13503331230">Call Lisa, (350) 333-1230</a>
+            <a class="ai-ask-text" href="sms:+13503331230">Text Lisa instead</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

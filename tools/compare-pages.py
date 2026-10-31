@@ -145,7 +145,7 @@ def page(slug, title, desc, h1, lead, cols, intro, fit):
 <section class="blk">
   <div class="ctaband">
     <h2>See it on <em>your</em> business.</h2>
-    <p class="sub center">Call Lisa, our live demo, at (350) 333-1230 and ask what your customers ask. Or start your free trial; no contract, cancel anytime.</p>
+    <p class="sub center">Book a free 20-minute walkthrough, or start your free trial; no contract, cancel anytime.</p>
     <div class="hero-cta">
       <a href="https://builderpro-os.com/signup.html" class="btn btn-blue btn-lg">Start free trial</a>
       <a href="https://builderpro-os.com/#walkthrough" class="btn btn-light btn-lg">Book a free walkthrough</a>
