@@ -48,6 +48,9 @@ def webhook(t):
     m = re.search(r'webhookUrl:\s*"([^"]*)"', rd(p))
     return m.group(1) if m else ''
 
+# a small, quiet credit under every check (same as the calculators, tools/build-embeds.py)
+POWERED = '<a class="bp-pw" href="https://builderpro-os.com/?ref=calculator" target="_blank" rel="noopener">Powered by BuilderPro OS</a><style>.bp-pw{display:block;width:max-content;margin:12px auto 8px;font:500 11px/1.4 -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#98a2b3;text-decoration:none;letter-spacing:.01em}.bp-pw:hover,.bp-pw:focus-visible{color:#667085;text-decoration:underline}</style>'
+
 PAGE = '''<!doctype html><!-- built by tools/build-checkers.py from embed-src/checkers/; edit the source, not this file -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>%(title)s</title>%(og)s<meta name="robots" content="noindex">
@@ -55,6 +58,7 @@ PAGE = '''<!doctype html><!-- built by tools/build-checkers.py from embed-src/ch
 <body><div id="est-embed" class="ck" data-tool="%(tool)s" data-trade="%(trade)s">
 <div class="ck-top"><button class="ck-back" id="ck-back" onclick="ckBack()" aria-label="Back" hidden>&#8249;</button><div class="ck-bar"><i id="ck-bar"></i></div><span class="ck-cnt" id="ck-cnt"></span></div>
 <div id="ck-stage" aria-live="polite"></div></div>
+%(powered)s
 <script>var CK_TOOL=%(tool_js)s,CK_TRADE=%(trade_js)s,CK_WEBHOOK=%(hook_js)s;
 %(trades)s</script>
 <script>%(engine)s</script>
@@ -70,7 +74,7 @@ for t in TRADES:
     hook = webhook(t)
     for tool in ('health', 'damage'):
         title = '%s %s Check' % (names[t], 'Health' if tool == 'health' else 'Damage')
-        doc = PAGE % dict(title=title, css=css, tool=tool, trade=t, tool_js=json.dumps(tool), trade_js=json.dumps(t),
+        doc = PAGE % dict(powered=POWERED, title=title, css=css, tool=tool, trade=t, tool_js=json.dumps(tool), trade_js=json.dumps(t),
                           hook_js=json.dumps(hook), skin=SKIN, og=og_meta.head(tool, t, names[t], '%s-%s.html' % (tool, t)), trades=trades, engine=engine, theme=theme, applier=applier)
         io.open(os.path.join(OUT, '%s-%s.html' % (tool, t)), 'w', encoding='utf-8').write(doc)
         n += 1

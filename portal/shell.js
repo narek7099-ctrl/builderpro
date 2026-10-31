@@ -119,7 +119,8 @@
   function kidsOf(g) { var ks = (g.kids || []).filter(function (k) { return allows(k[0]); }); return ks.filter(function (k) { return !lockedV(k[0]); }).concat(ks.filter(function (k) { return lockedV(k[0]); })); }
   function firstOf(g) {
     var ks = kidsOf(g); if (!ks.length) return g.id;
-    var last = LS.get('hlTab:' + g.id);
+    /* Leads always opens on Contacts; the other groups reopen their last tab */
+    var last = g.id === 'leads' ? '' : LS.get('hlTab:' + g.id);
     if (ks.some(function (k) { return k[0] === last && !lockedV(last); })) return last;
     return ks[0][0];
   }

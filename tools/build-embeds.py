@@ -48,6 +48,8 @@ _v = lambda f: hashlib.md5(io.open(os.path.join(OUT, f), 'rb').read()).hexdigest
 SKIN = ('<link rel="stylesheet" href="tool-skin-est.css?v=%s"><script src="tool-skin-est.js?v=%s" defer></script>'
         % (_v('tool-skin-est.css'), _v('tool-skin-est.js')))
 
+POWERED = '<a class="bp-pw" href="https://builderpro-os.com/?ref=calculator" target="_blank" rel="noopener">Powered by BuilderPro OS</a><style>.bp-pw{display:block;width:max-content;margin:12px auto 8px;font:500 11px/1.4 -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#98a2b3;text-decoration:none;letter-spacing:.01em}.bp-pw:hover,.bp-pw:focus-visible{color:#667085;text-decoration:underline}</style>'
+
 built = []
 for t in TRADES:
     doc = source_for(t)
@@ -66,10 +68,11 @@ for t in TRADES:
         doc = re.sub(r'(<head[^>]*>)', r'\1<meta name="viewport" content="width=device-width,initial-scale=1">', doc, count=1)
     # the owner's saved look (colours, font, logo) and live preview from the portal
     applier = io.open(os.path.join(ROOT, 'tools', 'theme-applier.js'), encoding='utf-8').read().replace('__KIND__', 'calc')
+    # a small, quiet credit under the tool (outside #est-embed, so it stays when a contractor hides their own brand line)
     if '</body>' in doc:
-        doc = doc.replace('</body>', '<script id="bp-theme-applier">' + applier + '</script></body>', 1)
+        doc = doc.replace('</body>', POWERED + '<script id="bp-theme-applier">' + applier + '</script></body>', 1)
     else:
-        doc += '<script id="bp-theme-applier">' + applier + '</script>'
+        doc += POWERED + '<script id="bp-theme-applier">' + applier + '</script>'
     # the BuilderPro tool look (tools/tool-skin.py): last in the head so it wins over the page's own styles
     doc = doc.replace('</head>', SKIN + '</head>', 1)
     io.open(os.path.join(OUT, t + '.html'), 'w', encoding='utf-8').write(doc)
