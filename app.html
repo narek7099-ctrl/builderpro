@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261031-p17">
-<link rel="stylesheet" href="site/present.css?v=20261031-p17">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261031-p17"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261031-p18">
+<link rel="stylesheet" href="site/present.css?v=20261031-p18">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261031-p18"}}</script>
 
 
 <style id="bpi-icons">
@@ -8897,16 +8897,27 @@ function bpHpPane(t){
     var pend=(d.changes||[]).filter(function(c){return c.status==='pending';}).length;
     var pct=j.progress, done=j.status==='done', cur=nextIx>=0?ph[nextIx]:null;
     var fin=j.finish?bpHpDay(j.finish,{weekday:'short',month:'short',day:'numeric'}):'';
-    /* the progress card: a ring, what is happening now, and a strip with every phase */
-    var ring=pct!=null?'<div class="hx-ring" role="img" aria-label="'+pct+'% complete"><svg viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="31" class="tk"/><circle cx="37" cy="37" r="31" class="fg" stroke-dasharray="'+(1.948*pct).toFixed(1)+' 195" transform="rotate(-90 37 37)"/></svg><b>'+pct+'%</b></div>':'';
+    /* the progress card: a timeline, one row per phase, with where the job is now */
     var later=!!(cur&&cur.start&&cur.start>bpHpToday());
     var nowT=done?'Project complete':cur?bpEsc(cur.name||'Next phase'):'Getting started';
     var nowS=done?'Thank you for choosing '+bpEsc(b.name||'us')
       :(later?'Starts '+bpEsc(bpHpDay(cur.start,{weekday:'short',month:'short',day:'numeric'}))+(fin?' · ':''):'')+(fin?'Finish '+bpEsc(fin):later?'':'Dates are on the way');
-    var strip=ph.length?'<div class="hx-strip" style="grid-template-columns:repeat('+Math.min(ph.length,6)+',minmax(0,1fr))">'+ph.slice(0,6).map(function(p,i){
-        return '<div class="'+(p.done?'done':i===nextIx?'now':'')+'"><i></i><span>'+bpEsc(p.name||'Phase')+'</span></div>';}).join('')+'</div>':'';
+    var td=bpHpToday(), md=function(x){return x?bpHpDay(x,{month:'short',day:'numeric'}):'';};
+    var tl=ph.length?'<ol class="hx-tl">'+ph.map(function(p,i){
+        var st=p.done?'done':i===nextIx?(p.due&&p.due<td?'late':later?'next':'now'):'up';
+        var when=p.start&&p.due&&p.start!==p.due?md(p.start)+' – '+md(p.due):md(p.due||p.start);
+        var tag=st==='done'?'<span class="hx-tl-tag ok">Done</span>':st==='now'?'<span class="hx-tl-tag now">In progress</span>':st==='late'?'<span class="hx-tl-tag late">Behind</span>':st==='next'?'<span class="hx-tl-tag">Up next</span>':'';
+        return '<li class="'+st+'"><span class="hx-tl-dot" aria-hidden="true">'+(st==='done'?'<span class=ms>check</span>':'')+'</span>'
+          +'<div class="hx-tl-b"><div class="hx-tl-r"><b>'+bpEsc(p.name||'Phase')+'</b>'+tag+'</div>'
+          +'<span>'+(when?bpEsc(when):'Dates to be set')+(p.days?' · '+p.days+(p.days===1?' day':' days'):'')+'</span></div></li>';
+      }).join('')+'</ol>':'';
+    var bar=pct!=null?'<div class="hx-tl-pct"><b>'+pct+'%</b><span>complete</span></div>':'';
     var hero='<section class="hx-card hx-prog">'
-      +'<div class="hx-prog-top">'+ring+'<div class="hx-prog-t"><small>'+(done?'Done':later?'Up next':'Now')+'</small><b>'+nowT+'</b><span>'+nowS+'</span></div></div>'+strip+'</section>';
+      +'<div class="hx-tl-h"><div class="hx-prog-t"><small>'+(done?'Done':later?'Up next':'Now')+'</small><b>'+nowT+'</b><span>'+nowS+'</span></div>'+bar+'</div>'
+      +(pct!=null?'<div class="hx-tl-bar" role="img" aria-label="'+pct+'% complete"><i style="width:'+pct+'%"></i></div>':'')
+      +tl
+      +(ph.length?'<button type="button" class="hx-tl-more" onclick="bpHpTab(\'sched\')"><span class=ms>calendar_month</span>Full schedule<span class="ms">chevron_right</span></button>':'')
+    +'</section>';
     /* next visit */
     var sch=(j.schedule||[]).filter(function(x){return x.date===j.next_visit;})[0]||{};
     var tm=sch.time?bpHpClock(sch.time)+(sch.dur?' – '+bpHpClock(bpHpAddMin(sch.time,sch.dur)):''):(/^\d{1,2}:\d{2}$/.test(j.time||'')?bpHpClock(j.time):(j.time||''));
@@ -10700,6 +10711,35 @@ body.bp-home{background:#f6f7f9;}
 #bpSign .hx-prog-t small{color:var(--hp-blue2);}
 #bpSign .hx-prog-t b{display:block;font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.01em;}
 #bpSign .hx-prog-t span{display:block;font-size:13.5px;color:var(--hp-grey);margin-top:2px;}
+#bpSign .hx-tl-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+#bpSign .hx-tl-pct{text-align:right;flex:0 0 auto;}
+#bpSign .hx-tl-pct b{display:block;font-size:26px;line-height:1;font-weight:800;letter-spacing:-.02em;color:var(--hp-ink);}
+#bpSign .hx-tl-pct span{font-size:12px;color:var(--hp-grey);}
+#bpSign .hx-tl-bar{height:6px;border-radius:3px;background:var(--hp-soft);overflow:hidden;}
+#bpSign .hx-tl-bar i{display:block;height:100%;border-radius:3px;background:var(--hp-blue);}
+#bpSign .hx-tl{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;}
+#bpSign .hx-tl li{position:relative;display:flex;gap:12px;padding:8px 10px 8px 0;}
+#bpSign .hx-tl li::before{content:'';position:absolute;left:11px;top:30px;bottom:-8px;width:2px;background:var(--hp-line);}
+#bpSign .hx-tl li:last-child::before{display:none;}
+#bpSign .hx-tl li.done::before{background:#16a34a;}
+#bpSign .hx-tl-dot{position:relative;z-index:1;width:24px;height:24px;flex:0 0 24px;border-radius:50%;border:2px solid var(--hp-line);background:var(--hp-card);display:grid;place-items:center;margin-top:1px;}
+#bpSign .hx-tl-dot .ms{font-size:15px;color:#fff;font-variation-settings:'wght' 700;}
+#bpSign .hx-tl li.done .hx-tl-dot{background:#16a34a;border-color:#16a34a;}
+#bpSign .hx-tl li.now .hx-tl-dot,#bpSign .hx-tl li.next .hx-tl-dot{border-color:var(--hp-blue);box-shadow:0 0 0 4px var(--hp-bluesoft);}
+#bpSign .hx-tl li.now .hx-tl-dot::after,#bpSign .hx-tl li.next .hx-tl-dot::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--hp-blue);}
+#bpSign .hx-tl li.late .hx-tl-dot{border-color:#f59e0b;box-shadow:0 0 0 4px #fff4e0;}
+#bpSign .hx-tl li.late .hx-tl-dot::after{content:'';width:10px;height:10px;border-radius:50%;background:#f59e0b;}
+#bpSign .hx-tl-b{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+#bpSign .hx-tl-r{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+#bpSign .hx-tl-r b{font-size:15px;font-weight:700;color:var(--hp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#bpSign .hx-tl li.up .hx-tl-r b{color:var(--hp-ink2);font-weight:600;}
+#bpSign .hx-tl-b>span{font-size:13px;color:var(--hp-grey);}
+#bpSign .hx-tl-tag{flex:0 0 auto;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--hp-soft);color:var(--hp-grey);}
+#bpSign .hx-tl-tag.ok{background:#e8f6ee;color:#15803d;}
+#bpSign .hx-tl-tag.now{background:var(--hp-bluesoft);color:var(--hp-blue2);}
+#bpSign .hx-tl-tag.late{background:#fff4e0;color:#a15c00;}
+#bpSign .hx-tl-more{display:flex;align-items:center;gap:6px;align-self:flex-start;border:0;background:none;padding:4px 0 0;font:inherit;font-size:14px;font-weight:600;color:var(--hp-blue2);cursor:pointer;}
+#bpSign .hx-tl-more .ms{font-size:18px;}
 #bpSign .hx-strip{display:grid;gap:6px;}
 #bpSign .hx-strip>div{display:flex;flex-direction:column;gap:6px;min-width:0;}
 #bpSign .hx-strip i{height:6px;border-radius:3px;background:var(--hp-soft);}
@@ -14547,11 +14587,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261024q25"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261031-p17"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261031-p17"></script>
-<script src="site/vendor/SplitText.min.js?v=20261031-p17"></script>
-<script src="site/site.js?v=20261031-p17"></script>
-<script src="site/present.js?v=20261031-p17"></script>
+<script src="site/vendor/gsap.min.js?v=20261031-p18"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261031-p18"></script>
+<script src="site/vendor/SplitText.min.js?v=20261031-p18"></script>
+<script src="site/site.js?v=20261031-p18"></script>
+<script src="site/present.js?v=20261031-p18"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261021a">
