@@ -67,7 +67,7 @@
         .then(function(r){return r.json();}).then(function(d){
           if(!d.ok)throw new Error(d.error||'Something went wrong.');
           document.getElementById('walkForm').innerHTML='<p class="pl-walk_ok"><b>Thanks! We\'ll text you shortly to set up a time.</b><br>Want to look around now? <a href="signup.html">Start your free trial</a>, it\'s 14 days free.</p>';
-        }).catch(function(x){b.disabled=false;m.textContent=(x&&x.message)||'Could not send. Try again or call (350) 333-1230.';});
+        }).catch(function(x){b.disabled=false;m.textContent=(x&&x.message)||'Could not send. Try again or email support@builderpro-os.com.';});
       return false;
     }
     </script>
@@ -172,7 +172,6 @@ __PLAN_MODAL__
           <a href="/compare.html" class="u-link">Compare</a>
           <a href="#grow" class="u-link">Grow with us</a>
           <a href="#how" class="u-link">How it works</a>
-          <a href="#lisa" class="u-link">Lisa AI</a>
           <a href="#" class="u-link js-open-calc">Calculators</a>
           <a href="#pricing" class="u-link">Pricing</a>
           <a href="#faq" class="u-link">FAQ</a>
