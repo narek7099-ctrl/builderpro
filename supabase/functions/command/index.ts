@@ -18,6 +18,7 @@
 // Secrets: ANTHROPIC_API_KEY, ADMIN_EMAILS, GHL_API_KEY, GHL_COMPANY_ID, GHL_SNAPSHOT_ID
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { SB_URL, sb, callGHL, provisionClient, finishClient, GHL_OPS, isRead, createPoolAccount, houseSync, locationToken, GHL_BASE, ghlHeaders } from "./ghl.ts";
+import { SPECS, SPEC_BY_KEY, SPEC_TABLES, OWNER_COL, type Spec } from "./specialists.ts";
 
 // Sonnet keeps the always-on team affordable; set COMMAND_MODEL to change it
 const MODEL = Deno.env.get("COMMAND_MODEL") ?? "claude-sonnet-5-5";
@@ -31,7 +32,7 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 /* ------------------------------------------------------------ the team --- */
 type Agent = { key: string; name: string; role: string; web: boolean; routine?: string; auto: (tool: string, input: Record<string, unknown>) => boolean };
 const readOnly = (tool: string, input: Record<string, unknown>) =>
-  ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats", "db_read"].includes(tool) ||
+  ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats", "db_read", "feature_data"].includes(tool) ||
   (tool === "ghl" && isRead(String(input.op ?? ""))) || tool === "memory_save" ||
   (tool === "social" && ["accounts", "recent"].includes(String(input.op ?? "")));
 const AGENTS: Record<string, Agent> = {
@@ -44,9 +45,9 @@ const AGENTS: Record<string, Agent> = {
   marketing: { routine: "Research what's working in contractor marketing right now and draft one concrete piece: an ad, a post, or an email. If Facebook & Instagram are connected, check how recent posts did and queue one post for the owner's approval (social fb_post / ig_post); otherwise leave drafts in your report.", key: "marketing", name: "Marketing Team", web: true, role:
     "You bring contractors in: positioning, ad copy, landing-page copy, email and text campaigns, social posts, and SEO pages for each trade. Research competitors on the web. Drafts are free; anything published or sent to customers waits for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
-  support: { routine: "Check support and cancellation requests, business-number requests, and new accounts whose setup log shows a failure or no GHL sub-account. Diagnose each and propose the fix.", key: "support", name: "Support Team", web: false, role:
-    "You keep clients happy and set up correctly. Check a client's GHL setup, their AI receptionist, support and cancellation requests, and business-number requests, and work out what's wrong and how to fix it. Replies to clients and account changes wait for the owner.",
-    auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
+  support: { routine: "Check support and cancellation requests, business-number requests, and new accounts whose setup log shows a failure or no GHL sub-account. For each problem, ask the specialist for that feature to diagnose it. Then pick one feature and have its specialist check it across all clients for anything broken or stuck (leads not reaching HighLevel, estimates never viewed, unanswered customer messages, expiring sub documents...). Report what you found and the fix for each.", key: "support", name: "Software Team", web: false, role:
+    "You keep BuilderPro OS working for every client. You lead eleven specialists, one per feature: " + SPECS.map((x) => `${x.key} (${x.name}: ${x.short})`).join("; ") + ". When a client has a problem or the owner asks about a feature, hand it to the right specialist with ask_specialist (several at once if it touches more than one feature), then pull their answers into one clear diagnosis and fix. You also check support and cancellation requests, business-number requests and failed setups. Replies to clients and account changes wait for the owner.",
+    auto: (t, i) => readOnly(t, i) || t === "ask_specialist" || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
   builder: { routine: "Audit the newest client sub-accounts: custom values, calendars, tags, and the AI receptionist knowledge. Fill in anything missing that you're allowed to, and list what still needs the owner.", key: "builder", name: "Builder Team", web: false, role:
     "You build and configure: clients' GHL sub-accounts (custom fields, custom values, calendars, tags, products), and their AI receptionist knowledge. You may make those setup changes yourself. Deleting anything, contacting customers, or creating/changing accounts waits for the owner.",
     auto: (t, i) => readOnly(t, i) || t === "brain_save" ||
@@ -55,6 +56,12 @@ const AGENTS: Record<string, Agent> = {
     "You find things out: markets, competitors, pricing, lead sources, tools, regulations, and anything the others need. Search the web, read our own data, and report clearly with sources. Save findings worth keeping to memory. You don't change anything.",
     auto: (t, i) => readOnly(t, i) },
 };
+
+// a feature specialist inside the Software Team (agent key "sw_<feature>")
+const specAgent = (x: Spec): Agent => ({ key: "sw_" + x.key, name: x.name + " specialist", web: false,
+  role: `You are the Software Team's specialist for ${x.name} (${x.short}). What you know about this feature:\n${x.knows}\nYour data: feature_data reads these tables for one client (by their email) or across all clients: ${x.tables.join(", ")}. Look at the real data before answering. Explain what's going on in plain words, say whether it's a bug, a setup problem, a plan lock, or the client using it wrong, and give the exact fix (what the owner or the client should click, or what needs changing in the code). If you find a pattern worth remembering, save it to memory. You don't change client data yourself.`,
+  auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) });
+const agentFor = (k: string): Agent | undefined => AGENTS[k] ?? (k.startsWith("sw_") && SPEC_BY_KEY[k.slice(3)] ? specAgent(SPEC_BY_KEY[k.slice(3)]) : undefined);
 
 /* ------------------------------------------------------------ tools --- */
 const DB_TABLES = ["accounts", "support_requests", "client_settings", "ai_brain", "time_clock", "audit_log", "ai_approvals"];
@@ -79,11 +86,16 @@ const TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object", properties: { op: { type: "string", enum: ["accounts", "recent", "fb_post", "ig_post"] }, page_id: { type: "string" }, ig_id: { type: "string" }, message: { type: "string" }, caption: { type: "string" }, link: { type: "string" }, image_url: { type: "string" } }, required: ["op"] } },
   { name: "memory_save", description: "Remember something for the whole team (a decision, a preference of the owner, a finding).", input_schema: { type: "object", properties: { note: { type: "string" } }, required: ["note"] } },
   { name: "memory_list", description: "What the team has saved to memory.", input_schema: { type: "object", properties: {} } },
+  { name: "feature_data", description: "(Software specialists) Read a BuilderPro feature's own table, for one client (client_email) or across all clients. filter is PostgREST syntax like 'status=eq.sent' (optional); select picks columns (optional).",
+    input_schema: { type: "object", properties: { table: { type: "string", enum: SPEC_TABLES }, client_email: { type: "string" }, select: { type: "string" }, filter: { type: "string" }, limit: { type: "number" } }, required: ["table"] } },
+  { name: "ask_specialist", description: "(Software Team only) Hand a question or problem to the specialist for one feature and get their answer back. Give the client's email when it's about one client.",
+    input_schema: { type: "object", properties: { feature: { type: "string", enum: SPECS.map((x) => x.key) }, task: { type: "string" } }, required: ["feature", "task"] } },
   { name: "delegate", description: "(CEO only) Hand a task to one of the teams and get their answer back.",
     input_schema: { type: "object", properties: { team: { type: "string", enum: ["sales", "marketing", "support", "builder", "research"] }, task: { type: "string" } }, required: ["team", "task"] } },
 ];
 function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
-  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)) && (x.name !== "social" || ["ceo", "marketing"].includes(a.key)));
+  if (a.key.startsWith("sw_")) return TOOLS.filter((x) => ["ghl", "accounts_list", "support_requests", "feature_data", "memory_save", "memory_list"].includes(x.name));
+  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "ask_specialist" || a.key === "support") && (x.name !== "feature_data" || ["ceo", "support"].includes(a.key)) && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)) && (x.name !== "social" || ["ceo", "marketing"].includes(a.key)));
   if (a.web) t.push({ type: "web_search_20260209", name: "web_search", max_uses: 3 } as unknown as Anthropic.Messages.ToolUnion);
   return t;
 }
@@ -252,7 +264,7 @@ async function system(a: Agent): Promise<string> {
   const mem = await memoryText();
   return `You are the ${a.name} at BuilderPro, an AI employee in the owner's Command Center.
 BuilderPro sells "BuilderPro OS" to contractors (roofers, plumbers, HVAC, electricians, remodelers...): a portal plus a GoHighLevel sub-account per client, an AI receptionist that answers calls and texts, lead tools, estimates, invoices, crews and scheduling. Plans: Foundation $99/mo, BuilderPro OS $199/mo, Enterprise $299/mo, each with a 14-day free trial (card taken at sign-up by Stripe). New contractors sign up on the website and answer onboarding questions; each gets a GHL sub-account built from the owner's snapshot.
-The team: CEO, Sales, Marketing, Support, Builder, Research. You are the ${a.name}.
+The team: CEO, Sales, Marketing, Software (with a specialist for each feature), Builder, Research. You are the ${a.name}.
 Your job: ${a.role}
 How to work: use your tools to look things up rather than guessing. Tools from connected services (e.g. Higgsfield for images and video) run immediately and may cost credits, so use them when the task calls for it, not speculatively. When a change needs the owner's approval, the tool call is queued for them and you are told so; don't retry it, just say what you proposed and why. Be direct and concrete, like a sharp employee reporting to the owner. Use short headings and lists when they help. Today is ${new Date().toISOString().slice(0, 10)}.
 ${mem ? "\nThe team's memory (things the owner told you, decisions, findings):\n" + mem : ""}`;
@@ -311,6 +323,26 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
     case "social": return await social(input);
     case "memory_save": { const r = await sb("ai_memory", { method: "POST", body: JSON.stringify({ note: String(input.note).slice(0, 2000) }) }); return { ok: r.ok }; }
     case "memory_list": { const r = await sb("ai_memory?select=id,note,created_at&order=created_at.desc&limit=100"); return r.ok ? await r.json() : []; }
+    case "feature_data": {
+      const t = String(input.table); if (!SPEC_TABLES.includes(t)) return { error: "table not allowed" };
+      let own = "";
+      if (input.client_email) {
+        const g = await sb(`accounts?email=eq.${encodeURIComponent(String(input.client_email).toLowerCase().trim())}&select=user_id`);
+        const row = (g.ok ? await g.json() : [])[0]; if (!row) return { error: "no account with that email" };
+        own = `&${OWNER_COL[t] ?? "owner"}=eq.${row.user_id}`;
+      }
+      const f = String(input.filter ?? "").replace(/[^\w.,=()*:@%+\-&]/g, "");
+      const r = await sb(`${t}?select=${encodeURIComponent(String(input.select ?? "*"))}${own}${f ? "&" + f : ""}&limit=${Math.min(Number(input.limit) || 20, 50)}`);
+      return r.ok ? await r.json() : { error: r.status, detail: (await r.text()).slice(0, 200) };
+    }
+    case "ask_specialist": {
+      if (depth > 1) return { error: "specialists can't be asked from this deep" };
+      const x = SPEC_BY_KEY[String(input.feature)]; if (!x) return { error: "no such specialist" };
+      const sa = specAgent(x);
+      const t = await newThread(sa.key, "From the Software Team: " + String(input.task).slice(0, 50), "support");
+      const out = await runAgent(sa, t, String(input.task), depth + 1, "support");
+      return { specialist: x.name, answer: out.reply, approvals_queued: out.approvals.length };
+    }
     case "delegate": {
       if (depth > 0) return { error: "teams can't delegate further" };
       const a = AGENTS[String(input.team)]; if (!a) return { error: "no such team" };
@@ -437,6 +469,7 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
     const results = await Promise.all(uses.map(async (u) => {
       const input = u.input ?? {};
       if (u.name === "delegate" && a.key !== "ceo") return { type: "tool_result", tool_use_id: u.id, content: "Only the CEO can delegate.", is_error: true };
+      if (u.name === "ask_specialist" && a.key !== "support") return { type: "tool_result", tool_use_id: u.id, content: "Only the Software Team can ask a specialist.", is_error: true };
       if (!a.auto(u.name, input)) {
         const summary = u.name === "ghl" ? `${input.op} ${JSON.stringify(input.args ?? {})}${input.why ? " — " + input.why : ""}` : `${u.name} ${JSON.stringify(input)}`;
         const q = await sb("ai_approvals", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ thread_id: thread, agent: a.key, tool: u.name, input, summary: summary.slice(0, 500) }) });
@@ -616,7 +649,7 @@ Deno.serve(async (req) => {
   if (op === "me") return json({ ok: true, email: who, ai: !!Deno.env.get("ANTHROPIC_API_KEY"), snapshot: !!Deno.env.get("GHL_SNAPSHOT_ID"), stripe: !!Deno.env.get("STRIPE_SECRET_KEY"),
     agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name })) });
   if (op === "chat") {
-    const a = AGENTS[String(b.agent)]; if (!a) return json({ ok: false, error: "no such agent" }, 400);
+    const a = agentFor(String(b.agent)); if (!a) return json({ ok: false, error: "no such agent" }, 400);
     if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: false, error: "Add ANTHROPIC_API_KEY in Supabase → Edge Functions → Secrets first." }, 400);
     const msg = String(b.message ?? "").slice(0, 8000); if (!msg) return json({ ok: false, error: "empty" }, 400);
     const thread = b.thread_id ? String(b.thread_id) : await newThread(a.key, msg, who);
@@ -630,12 +663,15 @@ Deno.serve(async (req) => {
       const p = await sb(`ai_approvals?agent=eq.${k}&status=eq.pending&select=id`);
       out[k] = { last: (t.ok ? await t.json() : [])[0] ?? null, pending: (p.ok ? await p.json() : []).length };
     }
+    const sw = await sb("ai_threads?agent=like.sw_*&select=agent,id,title,updated_at,created_by&order=updated_at.desc&limit=100");
+    const specs: Record<string, unknown> = {};
+    for (const t of (sw.ok ? await sw.json() : []) as { agent: string }[]) if (!specs[t.agent]) specs[t.agent] = t;
     const c = await sb("ai_config?key=eq.shifts_on&select=value"); const on = ((c.ok ? await c.json() : [])[0]?.value ?? "true") === "true";
     const m = await sb("ai_mcp?enabled=eq.true&select=name,label,agents"); 
     const mm = await metaGet();
     const conns = m.ok ? await m.json() : [];
     if (mm?.pages?.length) conns.push({ name: "facebook", label: "Facebook", agents: ["marketing", "ceo"] }, ...(mm.pages.some((p) => p.ig) ? [{ name: "instagram", label: "Instagram", agents: ["marketing", "ceo"] }] : []));
-    return json({ ok: true, data: out, shifts_on: on, connections: conns });
+    return json({ ok: true, data: out, specs, specialists: SPECS.map((x) => ({ key: "sw_" + x.key, name: x.name, short: x.short })), shifts_on: on, connections: conns });
   }
   if (op === "shifts") {
     await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shifts_on", value: b.on ? "true" : "false" }) });

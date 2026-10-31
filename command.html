@@ -116,6 +116,10 @@ html,body{overflow-x:clip}/* the closed chat drawer sits off the right edge; pho
 .drawer .hd{display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border-bottom:1px solid var(--line)}
 .drawer .hd b{display:flex;align-items:center;gap:9px;font-weight:600}
 .drawer .hd b i{font-size:18px;color:var(--pri)}
+.sps{display:flex;gap:6px;overflow-x:auto;padding:8px 14px;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.sps button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font:500 12.5px/1.2 inherit;color:inherit;cursor:pointer;white-space:nowrap}
+.sps button.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.sps button i{font-size:11px;color:#1f9d60}.sps button.on i{color:#fff}
 .drawer .hd select{width:auto;max-width:200px;padding:5px 8px;font-size:12.5px;margin-left:auto}
 .xbtn{background:none;border:0;color:var(--mut);font-size:18px;width:30px;height:30px;border-radius:var(--r1);display:grid;place-items:center}
 .xbtn:hover{background:var(--card2);color:var(--ink)}
@@ -179,11 +183,11 @@ var ME=null, TAB='team', AGENT='ceo', THREAD=null, BUSY=false, PENDING=0;
 var AG={ceo:{c:'#e8612c',d:'Runs the company, delegates to the teams',h:['What should we focus on this week?','Get every team to report on where we stand','Which trials should we save before they end?']},
   sales:{c:'#1f9d60',d:'Trials into customers',h:['Which trials end in the next 3 days?','Write a follow-up for trials that went quiet','Draft a call script for a roofer on day 10 of the trial']},
   marketing:{c:'#7c5cff',d:'Ads, copy and SEO',h:['Write 3 Facebook ads for plumbers','Plan a 30-day content calendar','How do competitors position themselves?']},
-  support:{c:'#2f80ed',d:'Client setup and fixes',h:['Any open support or cancellation requests?','Check which clients have no AI receptionist','Who is waiting on a business number?']},
+  support:{c:'#2f80ed',d:'Keeps the software working, with a specialist for each feature',h:['Is any client having trouble with the software?','Have every specialist check their feature for problems','Any open support or cancellation requests?']},
   builder:{c:'#c98a0b',d:'Builds GHL accounts',h:['Audit the newest client sub-account setup','Add standard roofing tags to a client','Fill in a client\'s AI receptionist knowledge']},
   research:{c:'#8a8f98',d:'Markets and competitors',h:['Top 5 lead sources for HVAC contractors in 2026','Compare our pricing with Jobber and ServiceTitan','Which trades grow fastest in Texas?']}};
-var ICON={ceo:'ti-briefcase',sales:'ti-trending-up',marketing:'ti-speakerphone',support:'ti-headset',builder:'ti-hammer',research:'ti-telescope'};
-var NAMES={ceo:'CEO',sales:'Sales Team',marketing:'Marketing Team',support:'Support Team',builder:'Builder Team',research:'Research Team'};
+var ICON={ceo:'ti-briefcase',sales:'ti-trending-up',marketing:'ti-speakerphone',support:'ti-apps',builder:'ti-hammer',research:'ti-telescope'};
+var NAMES={ceo:'CEO',sales:'Sales Team',marketing:'Marketing Team',support:'Software Team',builder:'Builder Team',research:'Research Team'};
 
 function el(i){return document.getElementById(i)}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -252,10 +256,17 @@ var POS={ceo:[50,13],sales:[10.5,47],marketing:[30.3,47],support:[50,47],builder
 var TOOLSET={ceo:[['ti-sparkles','Claude','model'],['ti-database','Memory','shared']],
   sales:[['ti-plug-connected','GHL','contacts, notes'],['ti-layout-dashboard','BuilderPro','accounts'],['ti-world-search','Web','search']],
   marketing:[['ti-brand-instagram','Instagram','soon',1],['ti-brand-facebook','Facebook','soon',1],['ti-world-search','Web','search']],
-  support:[['ti-layout-dashboard','BuilderPro','requests'],['ti-plug-connected','GHL','sub-accounts'],['ti-server','Supabase','read']],
+  support:[['ti-users-group','11 specialists','one per feature'],['ti-layout-dashboard','BuilderPro','requests'],['ti-plug-connected','GHL','sub-accounts']],
   builder:[['ti-plug-connected','GHL','build'],['ti-layout-dashboard','BuilderPro','receptionist']],
   research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']]};
-var STATUS={}, SHIFTS=true, CONNS=[];
+var STATUS={}, SHIFTS=true, CONNS=[], SPECS=[], SPECST={};
+/* the Software Team's specialists (agent keys sw_<feature>) live outside NAMES so the board stays six teams */
+function spec(k){return SPECS.filter(function(x){return x.key===k})[0];}
+function nm(k){var x=spec(k);return x?x.name+' specialist':(NAMES[k]||k);}
+function ic(k){return spec(k)?'ti-tool':ICON[k];}
+function ag(k){var x=spec(k);return x?{c:AG.support.c,d:x.short,h:['Check '+x.name+' for problems across all clients','How does '+x.name+' work, step by step?','What do clients most often get stuck on here?']}:AG[k];}
+function drawSpecs(){var b=el('sps');if(!b)return;var on=SPECS.length&&(AGENT==='support'||!!spec(AGENT));b.hidden=!on;if(!on)return;
+  b.innerHTML=[['support','Whole team']].concat(SPECS.map(function(x){return [x.key,x.name];})).map(function(o){var st=SPECST[o[0]];return '<button type="button" class="'+(o[0]===AGENT?'on':'')+'" title="'+esc(o[0]==='support'?'The Software Team routes to the right specialist':(spec(o[0])||{}).short)+'" onclick="openAgent(\''+o[0]+'\')">'+esc(o[1])+(st&&Date.now()-Date.parse(st.updated_at)<5*6e4?' <i class="ti ti-point-filled"></i>':'')+'</button>';}).join('');}
 var CONN_ICON={facebook:'ti-brand-facebook',instagram:'ti-brand-instagram',higgsfield:'ti-movie',zapier:'ti-bolt',stripe:'ti-credit-card',supabase:'ti-server',clickup:'ti-checkbox',github:'ti-brand-github',airtable:'ti-table',linear:'ti-list-check'};
 function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
 async function viewTeam(){
@@ -263,9 +274,9 @@ async function viewTeam(){
     +'<label class="sw"><input type="checkbox" id="shOn" onchange="SHIFTS=this.checked;api({op:\'shifts\',on:this.checked});drawBoard()"> Round-the-clock shifts</label></div>'
     +'<div class="board"><div class="board-in" id="bd"></div></div>'
     +'<div class="scrim" id="scr" onclick="closeDr()"></div><div class="drawer" id="dr"><div class="hd"><b id="drT"></b><select id="drTh" onchange="openThread(this.value||null)"></select><button class="xbtn" aria-label="Close" onclick="closeDr()"><i class="ti ti-x"></i></button></div>'
-    +'<div class="msgs" id="msgs"></div><div class="compose"><textarea id="inp" placeholder="Message…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div>';
+    +'<div class="sps" id="sps" hidden></div><div class="msgs" id="msgs"></div><div class="compose"><textarea id="inp" placeholder="Message…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div>';
   drawBoard();
-  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
+  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SPECS=r.specialists||[]; SPECST=r.specs||{}; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
 }
 function fitBoard(){
   var bd=el('bd'); if(!bd)return; var box=bd.parentElement, w=box.clientWidth, sc=Math.min(1,w/1120);
@@ -307,7 +318,7 @@ function drawBoard(){
       svg+='<path class="ln tool" d="'+td+'"/>';
       nodes+='<div class="tl'+(t[3]?' soon':'')+'" style="--dl:'+(dl+0.25)+'s;left:'+(tx/W*100)+'%;top:'+(ty/H*100)+'%"><i class="ti '+t[0]+'"></i>'+esc(t[1])+'<small>'+esc(t[2])+'</small></div>';
     });
-    nodes+='<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+(k===AGENT&&el('dr')&&el('dr').classList.contains('open')?' on':'')+'" style="--dl:'+dl+'s;left:'+POS[k][0]+'%;top:'+POS[k][1]+'%" onclick="openAgent(\''+k+'\')" aria-label="Open '+NAMES[k]+'"><div class="box">'
+    nodes+='<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+((k===AGENT||(k==='support'&&spec(AGENT)))&&el('dr')&&el('dr').classList.contains('open')?' on':'')+'" style="--dl:'+dl+'s;left:'+POS[k][0]+'%;top:'+POS[k][1]+'%" onclick="openAgent(\''+k+'\')" aria-label="Open '+NAMES[k]+'"><div class="box">'
       +(st.pending?'<span class="badge" title="Waiting for your approval">'+st.pending+'</span>':'')+'<span class="ico"><i class="ti '+ICON[k]+'"></i></span><span><div class="t">'+NAMES[k]+'</div><div class="s">'
       +(live?'Working now':last?(last.created_by==='shift'?'Last shift ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div></span></div></button>';
   });
@@ -317,18 +328,18 @@ function drawBoard(){
 }
 function closeDr(){el('dr').classList.remove('open');el('scr').classList.remove('open');drawBoard();}
 async function openAgent(k){
-  AGENT=k; THREAD=null; el('dr').classList.add('open'); el('drT').innerHTML='<i class="ti '+ICON[k]+'"></i>'+NAMES[k]; if(el('scr'))el('scr').classList.add('open'); drawBoard();
+  AGENT=k; THREAD=null; el('dr').classList.add('open'); el('drT').innerHTML='<i class="ti '+ic(k)+'"></i>'+esc(nm(k)); drawSpecs(); if(el('scr'))el('scr').classList.add('open'); drawBoard();
   el('drTh').innerHTML='<option value="">New conversation</option>';
   el('msgs').innerHTML='<div class="m sys">Loading…</div>';
   var r=await api({op:'threads',agent:k}); if(AGENT!==k)return;
-  el('drTh').innerHTML='<option value="">+ New conversation</option>'+(r.data||[]).map(function(t){return '<option value="'+t.id+'">'+(t.created_by==='shift'?'Shift: ':t.created_by==='ceo'?'From CEO: ':'')+esc(t.title)+'</option>'}).join('');
+  el('drTh').innerHTML='<option value="">+ New conversation</option>'+(r.data||[]).map(function(t){return '<option value="'+t.id+'">'+(t.created_by==='shift'?'Shift: ':t.created_by==='ceo'?'From CEO: ':t.created_by==='support'&&spec(k)?'From Software Team: ':'')+esc(t.title)+'</option>'}).join('');
   /* come back to the conversation you had open last time with this team */
   var keep=lastThread(k); openThread(keep&&(r.data||[]).some(function(t){return t.id===keep})?keep:null);
 }
 function lastThread(k,id){try{if(arguments.length>1)localStorage.setItem('cc_last_'+k,id||'');else return localStorage.getItem('cc_last_'+k)||null}catch(e){return null}}
 async function openThread(id){
   THREAD=id; lastThread(AGENT,id); var box=el('msgs'); if(el('drTh'))el('drTh').value=id||'';
-  if(!id){ box.innerHTML='<div class="intro">'+esc(AG[AGENT].d)+'. Ask anything, or start with one of these.</div><div class="hint">'+AG[AGENT].h.map(function(x){return '<button onclick="el(\'inp\').value=this.textContent;send()">'+esc(x)+'</button>'}).join('')+'</div>'; return; }
+  if(!id){ var A=ag(AGENT); box.innerHTML='<div class="intro">'+esc(A.d)+'. Ask anything, or start with one of these.</div><div class="hint">'+A.h.map(function(x){return '<button onclick="el(\'inp\').value=this.textContent;send()">'+esc(x)+'</button>'}).join('')+'</div>'; return; }
   box.innerHTML='<div class="m sys">Loading…</div>';
   var r=await api({op:'thread',id:id}); box.innerHTML='';
   var list=r.data||[];
@@ -354,7 +365,7 @@ async function send(){
   var t=el('inp').value.trim(); if(!t||BUSY)return; BUSY=true; el('inp').value=''; el('sendb').disabled=true;
   if(!THREAD)el('msgs').innerHTML='';
   addMsg({role:'user',text:t});
-  var w=document.createElement('div');w.className='m sys busy';w.textContent=NAMES[AGENT]+' is working';el('msgs').appendChild(w);
+  var w=document.createElement('div');w.className='m sys busy';w.textContent=nm(AGENT)+(AGENT==='support'?' is working (it may ask its specialists)':' is working');el('msgs').appendChild(w);
   var r=await api({op:'chat',agent:AGENT,thread_id:THREAD,message:t}).catch(function(e){return {ok:false,error:e.message}});
   BUSY=false; el('sendb').disabled=false;
   if(r.thread_id){ var fresh=!THREAD; THREAD=r.thread_id; if(fresh){var o=document.createElement('option');o.value=THREAD;o.textContent=t.slice(0,60);el('drTh').insertBefore(o,el('drTh').children[1]);} await openThread(THREAD); } else w.remove();
@@ -362,17 +373,17 @@ async function send(){
     addMsg({role:'assistant',text:'**Could not finish.** '+aiErr(r.error)}); }
   if(r.approvals&&r.approvals.length){ addMsg({role:'sys',text:r.approvals.length+' action(s) waiting for your approval to Approvals tab'}); countPending(); }
 }
-setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;drawBoard();} }); },60000);
+setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;SPECST=r.specs||SPECST;drawBoard();drawSpecs();} }); },60000);
 
 /* ---------- Approvals ---------- */
 async function viewApprovals(){
   el('view').innerHTML='<h2>Approvals</h2><div class="muted" style="margin:-6px 0 12px">Actions your team wants to take that need your OK. Setup and notes run on their own; anything that contacts customers, deletes, or changes accounts waits here.</div><div id="ap" class="appr muted">Loading…</div><h2 style="margin-top:22px;font-size:15px">Recent decisions</h2><div id="apd" class="tw muted"></div>';
   var r=await api({op:'approvals'}); var rows=r.data||[];
   var p=rows.filter(function(x){return x.status==='pending'}), d=rows.filter(function(x){return x.status!=='pending'});
-  el('ap').innerHTML=p.length?p.map(function(x){return '<div class="card"><div style="flex:1;min-width:240px"><span class="pill" style="border-color:'+(AG[x.agent]||{}).c+'">'+esc(NAMES[x.agent]||x.agent)+'</span> <b>'+esc(x.tool==='ghl'?'GHL '+(x.input||{}).op:x.tool.replace(/_/g,' '))+'</b><div class="muted" style="font-size:12px">'+esc(String(x.created_at).replace('T',' ').slice(0,16))+'</div><div style="margin-top:6px">'+esc(x.summary)+'</div></div>'
+  el('ap').innerHTML=p.length?p.map(function(x){return '<div class="card"><div style="flex:1;min-width:240px"><span class="pill" style="border-color:'+(AG[x.agent]||{}).c+'">'+esc(nm(x.agent))+'</span> <b>'+esc(x.tool==='ghl'?'GHL '+(x.input||{}).op:x.tool.replace(/_/g,' '))+'</b><div class="muted" style="font-size:12px">'+esc(String(x.created_at).replace('T',' ').slice(0,16))+'</div><div style="margin-top:6px">'+esc(x.summary)+'</div></div>'
     +'<div style="display:flex;gap:6px"><button class="btn ok sm" onclick="decide(\''+x.id+'\',\'approve\',this)">Approve</button><button class="btn sm" onclick="decide(\''+x.id+'\',\'reject\',this)">Reject</button></div><pre>'+esc(JSON.stringify(x.input,null,2))+'</pre></div>'}).join(''):'<div class="card muted">Nothing waiting.</div>';
   el('ap').classList.remove('muted');
-  el('apd').innerHTML=d.length?'<table><thead><tr><th>When</th><th>Team</th><th>Action</th><th>Result</th></tr></thead><tbody>'+d.slice(0,40).map(function(x){return '<tr><td class="muted" style="white-space:nowrap">'+esc(String(x.decided_at||x.created_at).replace('T',' ').slice(0,16))+'</td><td>'+esc(NAMES[x.agent]||x.agent)+'</td><td>'+esc(x.summary).slice(0,160)+'</td><td>'+(x.status==='approved'?'<span style="color:var(--ok)">Done</span>':x.status==='failed'?'<span style="color:var(--danger)" title="'+esc(JSON.stringify(x.result).slice(0,300))+'">Failed</span>':'<span class="muted">Rejected</span>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">None yet.</span>';
+  el('apd').innerHTML=d.length?'<table><thead><tr><th>When</th><th>Team</th><th>Action</th><th>Result</th></tr></thead><tbody>'+d.slice(0,40).map(function(x){return '<tr><td class="muted" style="white-space:nowrap">'+esc(String(x.decided_at||x.created_at).replace('T',' ').slice(0,16))+'</td><td>'+esc(nm(x.agent))+'</td><td>'+esc(x.summary).slice(0,160)+'</td><td>'+(x.status==='approved'?'<span style="color:var(--ok)">Done</span>':x.status==='failed'?'<span style="color:var(--danger)" title="'+esc(JSON.stringify(x.result).slice(0,300))+'">Failed</span>':'<span class="muted">Rejected</span>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">None yet.</span>';
 }
 async function decide(id,op,b){
   var note=''; if(op==='reject'){note=prompt('Tell the team why (optional):')||'';}
