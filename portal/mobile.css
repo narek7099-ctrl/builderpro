@@ -573,3 +573,43 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx .mh2-bar i{display:block;height:100%;background:var(--bl,#006fff);border-radius:99px}
 #bpx .mh2-sk{font-size:22px;color:#98a2b3;flex:0 0 auto}
 #bpx .mh2-sk.ok{color:#16a34a}
+/* app feel (portal/appfeel.js): new-screen fade-up, pull to refresh, offline notice, loading skeleton */
+@keyframes bpEnter{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea.bp-enter{animation:bpEnter .24s cubic-bezier(.2,0,0,1)}
+#bpPtr{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top));z-index:9998;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(16,24,40,.18);display:grid;place-items:center;transform:translate(-50%,-60px);opacity:0;transition:opacity .15s;pointer-events:none}
+#bpPtr svg{color:#667085;transition:color .15s}
+#bpPtr.show{opacity:1}
+#bpPtr.ready svg{color:#1d5fe0}
+#bpPtr.spin{transition:transform .2s,opacity .15s}
+#bpPtr.spin svg{color:#1d5fe0;animation:bpPtrSpin .8s linear infinite}
+@keyframes bpPtrSpin{to{transform:rotate(360deg)}}
+#bpNet{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:14px;font:600 14px/1.35 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;box-shadow:0 8px 24px rgba(16,24,40,.22);transform:translateY(140%);opacity:0;transition:transform .25s cubic-bezier(.2,0,0,1),opacity .25s;pointer-events:none}
+#bpNet.show{transform:none;opacity:1}
+#bpNet.off{background:#1f2937;color:#fff}
+#bpNet.on{background:#15803d;color:#fff}
+#bpNet svg{flex:0 0 auto}
+@media(min-width:900px){#bpNet{left:auto;right:24px;bottom:24px;max-width:420px}}
+#bpx .bp-skel{display:flex;flex-direction:column;gap:12px}
+#bpx .bp-skel i{display:block;border-radius:16px;background:linear-gradient(90deg,var(--soft,#f2f4f7) 0%,#fafbfc 50%,var(--soft,#f2f4f7) 100%);background-size:200% 100%;animation:bpSk 1.2s ease-in-out infinite}
+#bpx .bp-skel i:nth-child(1){height:120px}#bpx .bp-skel i:nth-child(2){height:76px}#bpx .bp-skel i:nth-child(3){height:76px;opacity:.7}
+@keyframes bpSk{from{background-position:200% 0}to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){#bpx .bp-skel i,#bpPtr.spin svg{animation:none}}
+/* phones: small pop-ups (forms, confirms) become bottom sheets with a grab handle;
+   the full-screen job sheets (.pjs) keep their own layout */
+@keyframes bpSheetUp{from{transform:translateY(100%)}to{transform:none}}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs){align-items:flex-end !important;justify-content:stretch !important;padding:0 !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard{width:100% !important;max-width:none !important;max-height:92vh !important;max-height:92dvh !important;overflow-y:auto !important;margin:0 !important;border-radius:22px 22px 0 0 !important;padding-top:26px !important;padding-bottom:calc(18px + env(safe-area-inset-bottom)) !important;position:relative;animation:bpSheetUp .26s cubic-bezier(.2,0,0,1);overscroll-behavior:contain}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard::before{content:'';position:absolute;top:9px;left:50%;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:#d0d5dd}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea){min-height:48px !important;font-size:16px !important;border-radius:12px !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard textarea{min-height:96px !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard input[type=checkbox]{width:22px !important;height:22px !important}
+#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard button{min-height:48px}
+@media(prefers-reduced-motion:reduce){#bpx#bpx#bpx#bpx.bp-m .bpx-modal:not(.pjs)>.bpx-modalcard{animation:none}}
+/* press feedback on touch: things dim a little while a finger is on them */
+@media(hover:none){
+  #bpx#bpx.bp-m :is(button,a[href],[role="button"],[onclick]):not(:disabled):active,
+  #bpSign :is(button,a[href],[role="button"]):not(:disabled):active{opacity:.7;transition:opacity 0s}
+  #bpx#bpx.bp-m :is(button,a[href],[role="button"],[onclick]),#bpSign :is(button,a[href],[role="button"]){transition:opacity .18s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+}
+#bpx#bpx#bpx#bpx.bp-m .cal-nav button{min-width:44px !important;min-height:44px !important}
+#bpx#bpx#bpx#bpx.bp-m .bpt-shgrid .bpt-chip{min-height:42px !important;display:inline-flex !important;align-items:center}
