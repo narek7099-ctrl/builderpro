@@ -651,8 +651,11 @@
   window.bpCrewJob = function (id) { C.job = id; C.tab = 'details'; C.matForm = false; C.rcForm = false; C.rcFile = null; sheet(); };
 
   /* ---------------------------------------------- read-only project sheet --- */
-  var TABS = [['details', 'Overview', 'dashboard'], ['schedule', 'Schedule', 'calendar_month'], ['crew', 'Crew', 'groups'], ['materials', 'Materials', 'inventory_2'],
-    ['permits', 'Permits', 'assignment'], ['inspect', 'Inspections', 'fact_check'], ['equip', 'Equipment', 'build'], ['photos', 'Photos', 'photo_library'], ['docs', 'Documents', 'folder'], ['blueprints', 'Blueprints', 'architecture']];
+  /* four tabs a crew member uses every day; the rest sit under More */
+  var TABS = [['details', 'Job', 'assignment_ind'], ['photos', 'Photos', 'photo_library'], ['materials', 'Materials', 'inventory_2'], ['docs', 'Files', 'folder'], ['more', 'More', 'more_horiz']];
+  var MORE = [['schedule', 'Schedule', 'calendar_month', 'Work days and phases'], ['crew', 'Crew', 'groups', 'Who’s on this job'], ['blueprints', 'Blueprints', 'architecture', 'Plans and drawings'],
+    ['permits', 'Permits', 'assignment', 'Permit numbers and status'], ['inspect', 'Inspections', 'fact_check', 'Inspection dates and results'], ['equip', 'Equipment', 'build', 'Equipment at this site']];
+  function inMore(t) { return MORE.some(function (m) { return m[0] === t; }); }
   function curJob() { return (C.me && C.me.projects || []).filter(function (x) { return x.id === C.job; })[0]; }
   function phasesOf(j) {
     if (j.plan && Array.isArray(j.plan.phases) && j.plan.phases.length) return j.plan.phases.map(function (p) { return { name: p.name, due: p.due, done: !!p.doneAt, days: +p.days || 1 }; });
@@ -704,7 +707,19 @@
           ['Email', j.email ? '<a href="mailto:' + esc(j.email) + '">' + esc(j.email) + '</a>' : ''],
           ['Address', j.addr ? '<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(j.addr) + '">' + esc(j.addr) + '</a>' : ''],
           ['Job', esc(j.title || '')]]) || '<div class="bpx-mut">No customer details on this job.</div>')
-        + sec('Notes', (s.notes || j.notes) ? '<p class="cs-notes">' + esc(s.notes || j.notes) + '</p>' : '<div class="bpx-mut">No notes. Gate codes, parking and anything else the office adds shows up here.</div>');
+        + sec('Notes', (s.notes || j.notes) ? '<p class="cs-notes">' + esc(s.notes || j.notes) + '</p>' : '<div class="bpx-mut">No notes. Gate codes, parking and anything else the office adds shows up here.</div>')
+        + (function () {
+          var td = iso(new Date()), up = (s.dates || []).filter(function (d) { return d >= td; }).sort().slice(0, 3);
+          return up.length ? sec('Coming up', '<div class="cs-days">' + up.map(function (d) { return '<div class="' + (d === td ? 'today' : '') + '"><b>' + dayLbl(d) + '</b><span>' + (slotLbl(j, d) || 'Time not set') + '</span></div>'; }).join('') + '</div>'
+            + '<button type="button" class="cs-more-link" onclick="bpCrewJobTab(\'schedule\')">Full schedule<span class="ms">chevron_right</span></button>') : '';
+        })();
+    }
+    if (t === 'more') {
+      var n = counts(j);
+      return sec('', '<div class="cs-more">' + MORE.map(function (m) {
+        return '<button type="button" class="cs-more-row" onclick="bpCrewJobTab(\'' + m[0] + '\')"><span class="cs-more-ic"><span class="ms">' + m[2] + '</span></span><div><b>' + m[1] + '</b><span>' + m[3] + '</span></div>'
+          + (n[m[0]] ? '<em>' + n[m[0]] + '</em>' : '') + '<span class="ms cs-chev">chevron_right</span></button>';
+      }).join('') + '</div>');
     }
     if (t === 'schedule') {
       var dates = (s.dates || []).slice().sort(), td = iso(new Date());
@@ -878,7 +893,8 @@
     var n = counts(j);
     bpModal(hero(j)
       + '<nav class="pjs-tabs" role="tablist" aria-label="Project sections">' + TABS.map(function (t) {
-          return '<button type="button" class="bpx-jt pjs-tab' + (C.tab === t[0] ? ' on' : '') + '" role="tab" aria-selected="' + (C.tab === t[0]) + '" data-cs-tab="' + t[0] + '" onclick="bpCrewJobTab(\'' + t[0] + '\')">'
+          var on = C.tab === t[0] || (t[0] === 'more' && inMore(C.tab));
+          return '<button type="button" class="bpx-jt pjs-tab' + (on ? ' on' : '') + '" role="tab" aria-selected="' + on + '" data-cs-tab="' + t[0] + '" onclick="bpCrewJobTab(\'' + t[0] + '\')">'
             + '<span class="ms">' + t[2] + '</span><span class="pjs-tl">' + t[1] + '</span><span class="pjs-n">' + (n[t[0]] || '') + '</span></button>';
         }).join('') + '</nav>'
       + '<div class="pjs-body" id="cs-body"></div>');
@@ -889,7 +905,7 @@
   }
   function body() {
     var j = curJob(), b = $('cs-body'); if (!j || !b) return;
-    b.innerHTML = '<div data-pj-pane="' + C.tab + '" role="tabpanel">' + pane(j, C.tab) + '</div>';
+    b.innerHTML = '<div data-pj-pane="' + C.tab + '" role="tabpanel">' + (inMore(C.tab) ? '<button type="button" class="cs-back" onclick="bpCrewJobTab(\'more\')"><span class="ms">chevron_left</span>More</button>' : '') + pane(j, C.tab) + '</div>';
     b.scrollTop = 0;
     if (C.tab === 'equip' && window.BPA) BPA.mount(b.querySelector('#cs-equip'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
     if (C.tab === 'inspect' && window.bpInspMount) bpInspMount(b.querySelector('#cs-insp'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
@@ -903,7 +919,7 @@
   }
   window.bpCrewJobTab = function (t) {
     C.tab = t;
-    document.querySelectorAll('.cs-sheet [data-cs-tab]').forEach(function (x) { var on = x.getAttribute('data-cs-tab') === t; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); if (on && x.scrollIntoView) x.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+    document.querySelectorAll('.cs-sheet [data-cs-tab]').forEach(function (x) { var k = x.getAttribute('data-cs-tab'), on = k === t || (k === 'more' && inMore(t)); x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); if (on && x.scrollIntoView) x.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
     body();
   };
   function shrink(file) {

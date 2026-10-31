@@ -152,8 +152,10 @@
   };
 
   /* --------------------------------------------------- read-only sheet --- */
-  var TABS = [['details', 'Overview', 'dashboard'], ['schedule', 'Schedule', 'calendar_month'], ['money', 'Money', 'payments'], ['photos', 'Photos', 'photo_library'],
-    ['docs', 'Documents', 'folder'], ['blueprints', 'Blueprints', 'architecture'], ['permits', 'Permits', 'assignment']];
+  /* five even tabs; schedule, blueprints and permits sit under More */
+  var TABS = [['details', 'Job', 'assignment_ind'], ['money', 'Money', 'payments'], ['photos', 'Photos', 'photo_library'], ['docs', 'Files', 'folder'], ['more', 'More', 'more_horiz']];
+  var MORE = [['schedule', 'Schedule', 'calendar_month', 'Work days and phases'], ['blueprints', 'Blueprints', 'architecture', 'Plans and drawings'], ['permits', 'Permits', 'assignment', 'Permit numbers and status']];
+  function inMore(t) { return MORE.some(function (m) { return m[0] === t; }); }
   function counts(j) { return { photos: (j.photos || []).length, docs: (j.docs || []).length, blueprints: (j.blueprints || []).length, permits: (j.permits || []).length, money: (j.invoices || []).length + (j.changeOrders || []).length }; }
   window.bpSubJob = function (id) { S.job = id; S.tab = 'details'; sheet(); };
   function sec(t, b) { return '<section class="pjs-sec">' + (t ? '<div class="pjs-h">' + t + '</div>' : '') + b + '</section>'; }
@@ -205,6 +207,13 @@
   }
   function pane(j, t) {
     var sc = j.siteContact || {};
+    if (t === 'more') {
+      var n = counts(j);
+      return sec('', '<div class="cs-more">' + MORE.map(function (m) {
+        return '<button type="button" class="cs-more-row" onclick="bpSubJobTab(\'' + m[0] + '\')"><span class="cs-more-ic"><span class="ms">' + m[2] + '</span></span><div><b>' + m[1] + '</b><span>' + m[3] + '</span></div>'
+          + (n[m[0]] ? '<em>' + n[m[0]] + '</em>' : '') + '<span class="ms cs-chev">chevron_right</span></button>';
+      }).join('') + '</div>');
+    }
     if (t === 'details') {
       return sec('Site', kv([['Address', j.addr ? esc(j.addr) : ''], ['Start', pretty(j.startDate)], ['Finish', pretty(j.endDate)]]) + mapHtml(j))
         + sec('My scope', j.scope ? '<p class="cs-notes">' + esc(j.scope) + '</p>' : '<div class="bpx-mut">The contractor hasn’t written the scope yet. Message them to confirm.</div>')
@@ -245,7 +254,8 @@
     var j = jobById(S.job); if (!j) { S.job = null; return; }
     var n = counts(j);
     bpModal(hero(j) + '<nav class="pjs-tabs" role="tablist" aria-label="Job sections">' + TABS.map(function (t) {
-        return '<button type="button" class="bpx-jt pjs-tab' + (S.tab === t[0] ? ' on' : '') + '" role="tab" aria-selected="' + (S.tab === t[0]) + '" data-sa-tab="' + t[0] + '" onclick="bpSubJobTab(\'' + t[0] + '\')">'
+        var on = S.tab === t[0] || (t[0] === 'more' && inMore(S.tab));
+        return '<button type="button" class="bpx-jt pjs-tab' + (on ? ' on' : '') + '" role="tab" aria-selected="' + on + '" data-sa-tab="' + t[0] + '" onclick="bpSubJobTab(\'' + t[0] + '\')">'
           + '<span class="ms">' + t[2] + '</span><span class="pjs-tl">' + t[1] + '</span><span class="pjs-n">' + (n[t[0]] || '') + '</span></button>';
       }).join('') + '</nav><div class="pjs-body" id="sa-body"></div>');
     var m = $('bpx-modal'); if (!m) return;
@@ -255,12 +265,12 @@
   }
   function body() {
     var j = jobById(S.job), b = $('sa-body'); if (!j || !b) return;
-    b.innerHTML = '<div data-pj-pane="' + S.tab + '" role="tabpanel">' + pane(j, S.tab) + '</div>';
+    b.innerHTML = '<div data-pj-pane="' + S.tab + '" role="tabpanel">' + (inMore(S.tab) ? '<button type="button" class="cs-back" onclick="bpSubJobTab(\'more\')"><span class="ms">chevron_left</span>More</button>' : '') + pane(j, S.tab) + '</div>';
     b.scrollTop = 0; fillRefs(b);
   }
   window.bpSubJobTab = function (t) {
     S.tab = t;
-    document.querySelectorAll('.sa-sheet [data-sa-tab]').forEach(function (x) { var on = x.getAttribute('data-sa-tab') === t; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
+    document.querySelectorAll('.sa-sheet [data-sa-tab]').forEach(function (x) { var k = x.getAttribute('data-sa-tab'), on = k === t || (k === 'more' && inMore(t)); x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
     body();
   };
   window.bpSubAddFiles = function (inp) {
