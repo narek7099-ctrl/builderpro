@@ -1,5 +1,8 @@
-// command — the backend for the BuilderPro Command Center: six AI employees
+// command — the backend for the BuilderPro Command Center: eight AI teams
 // (Claude) who run the agency with you, plus the admin data behind the page.
+//   The CEO manages the others: it assigns tasks on a shared task board (ai_tasks),
+//   which a runner works through every few minutes (within the monthly AI limit),
+//   and any team can ask a teammate a question mid-task (ask_teammate).
 //
 //   Every call: the caller's Supabase login must be in ADMIN_EMAILS.
 //   POST { op: "chat", agent, thread_id?, message }   talk to an AI employee
@@ -32,13 +35,13 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 /* ------------------------------------------------------------ the team --- */
 type Agent = { key: string; name: string; role: string; web: boolean; routine?: string; auto: (tool: string, input: Record<string, unknown>) => boolean };
 const readOnly = (tool: string, input: Record<string, unknown>) =>
-  ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats", "db_read", "feature_data"].includes(tool) ||
+  ["accounts_list", "support_requests", "brain_get", "memory_list", "business_stats", "db_read", "feature_data", "tasks_list", "money_report"].includes(tool) ||
   (tool === "ghl" && isRead(String(input.op ?? ""))) || tool === "memory_save" ||
   (tool === "social" && ["accounts", "recent"].includes(String(input.op ?? "")));
 const AGENTS: Record<string, Agent> = {
-  ceo: { routine: "Review the business: stats, accounts, pending approvals, and what the teams logged since your last shift. Pick the one or two things that matter most right now and delegate them. Finish with a short brief for the owner.", key: "ceo", name: "CEO", web: true, role:
-    "You run the company day to day with the owner. You set priorities, keep the other five on track, and turn the owner's goals into concrete work. Delegate real work to the right team with the delegate tool, then pull their answers together into a clear recommendation. You read everything; changes you want made go to the owner for approval.",
-    auto: (t, i) => readOnly(t, i) || t === "delegate" },
+  ceo: { routine: "Run the team. 1) Read the task board (tasks_list): check the results of finished tasks, and unblock or reassign blocked ones. 2) Look at the business: stats, accounts, money_report, pending approvals. 3) Assign up to 3 new tasks with assign_task where they matter most right now, each to the one team that owns it, with a clear outcome. 4) Finish with a short brief for the owner: what got done, what's assigned, what needs them.", key: "ceo", name: "CEO", web: true, role:
+    "You run the company day to day with the owner and manage the seven teams: Sales, Marketing, Software (with a specialist per feature), Builder, Research, Finance and Success. You set priorities and turn the owner's goals into work. Two ways to use the team: ask_teammate (or delegate) when you need an answer now; assign_task to put work on the task board, which the team works through on its own and reports back on. Give each task one owner, a clear outcome and enough detail to act on. Check finished tasks and hold the teams to good work. You read everything; changes to client accounts or anything sent to customers go to the owner for approval.",
+    auto: (t, i) => readOnly(t, i) || t === "delegate" || t === "assign_task" || t === "ask_teammate" || t === "task_update" },
   sales: { routine: "Check trials ending soon and new sign-ups. For each, decide the next step and add a note or task on their GHL contact. Draft follow-ups (don't send). Report who needs the owner's attention.", key: "sales", name: "Sales Team", web: true, role:
     "You turn trials and leads into paying contractors. You watch trials that are about to end, find who is engaged and who went quiet, write follow-ups and call scripts, and suggest offers. You may add notes and tasks on contacts yourself; sending anything to a customer waits for the owner.",
     auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
@@ -55,12 +58,21 @@ const AGENTS: Record<string, Agent> = {
   research: { routine: "Pick one open question that would help the business (lead sources, competitors, pricing, a trade's market) and research it with sources. Save the key finding to memory.", key: "research", name: "Research Team", web: true, role:
     "You find things out: markets, competitors, pricing, lead sources, tools, regulations, and anything the others need. Search the web, read our own data, and report clearly with sources. Save findings worth keeping to memory. You don't change anything.",
     auto: (t, i) => readOnly(t, i) },
+  finance: { routine: "Check this month's money with money_report: paying accounts and MRR, trials about to convert, failed payments and chargebacks, and what AI, phone minutes and add-ons are costing against the limits. Flag anything losing money, any client costing more than they pay, and what to do about it.", key: "finance", name: "Finance Team", web: false, role:
+    "You keep BuilderPro profitable: revenue, MRR, trials converting to paid, failed payments, chargebacks and refunds, and costs (the Command Center's own AI spend, each client's Lisa minutes and AI Team usage against their plan limits). Use money_report first, then db_read for detail. Be exact with numbers and say where each one came from. You don't change anything; billing changes go to the owner.",
+    auto: (t, i) => readOnly(t, i) },
+  success: { routine: "Go through every client in their first 30 days and every paying client. Are they set up (AI receptionist knowledge, booking calendar, first lead, first estimate)? Are they using it? Who is stuck, quiet, or likely to cancel? Ask the Software Team when something looks broken. Add a note on their GHL contact and draft a check-in for each one who needs it (don't send).", key: "success", name: "Success Team", web: false, role:
+    "You make sure every contractor who signs up gets value and stays: onboarding in the first 14 days, getting their first lead and first estimate out, adoption of the features on their plan, and catching clients who go quiet or ask to cancel. Read their accounts and feature data, ask the Software Team when something looks broken, and draft friendly, specific check-ins. You may add notes and tasks on contacts; anything sent to a client waits for the owner.",
+    auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) },
 };
+const TEAM_KEYS = Object.keys(AGENTS);
 
 // a feature specialist inside the Software Team (agent key "sw_<feature>")
 const specAgent = (x: Spec): Agent => ({ key: "sw_" + x.key, name: x.name + " specialist", web: false,
   role: `You are the Software Team's specialist for ${x.name} (${x.short}). What you know about this feature:\n${x.knows}\nYour data: feature_data reads these tables for one client (by their email) or across all clients: ${x.tables.join(", ")}. Look at the real data before answering. Explain what's going on in plain words, say whether it's a bug, a setup problem, a plan lock, or the client using it wrong, and give the exact fix (what the owner or the client should click, or what needs changing in the code). If you find a pattern worth remembering, save it to memory. You don't change client data yourself.`,
-  auto: (t, i) => readOnly(t, i) || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) });
+  auto: (t, i) => readOnly(t, i) || t === "task_update" || (t === "ghl" && ["notes.create", "tasks.create"].includes(String(i.op))) });
+// every team may ask a teammate and report on its own tasks without asking the owner
+for (const a of Object.values(AGENTS)) { const base = a.auto; a.auto = (t, i) => base(t, i) || t === "ask_teammate" || t === "task_update"; }
 const agentFor = (k: string): Agent | undefined => AGENTS[k] ?? (k.startsWith("sw_") && SPEC_BY_KEY[k.slice(3)] ? specAgent(SPEC_BY_KEY[k.slice(3)]) : undefined);
 
 /* ------------------------------------------------------------ tools --- */
@@ -90,12 +102,22 @@ const TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object", properties: { table: { type: "string", enum: SPEC_TABLES }, client_email: { type: "string" }, select: { type: "string" }, filter: { type: "string" }, limit: { type: "number" } }, required: ["table"] } },
   { name: "ask_specialist", description: "(Software Team only) Hand a question or problem to the specialist for one feature and get their answer back. Give the client's email when it's about one client.",
     input_schema: { type: "object", properties: { feature: { type: "string", enum: SPECS.map((x) => x.key) }, task: { type: "string" } }, required: ["feature", "task"] } },
-  { name: "delegate", description: "(CEO only) Hand a task to one of the teams and get their answer back.",
-    input_schema: { type: "object", properties: { team: { type: "string", enum: ["sales", "marketing", "support", "builder", "research"] }, task: { type: "string" } }, required: ["team", "task"] } },
+  { name: "delegate", description: "(CEO only) Hand a task to one of the teams and get their answer back now.",
+    input_schema: { type: "object", properties: { team: { type: "string", enum: ["sales", "marketing", "support", "builder", "research", "finance", "success"] }, task: { type: "string" } }, required: ["team", "task"] } },
+  { name: "ask_teammate", description: "Ask another team a question and get their answer back now (they use their own tools and knowledge). Use it when the answer belongs to their area. Teams: ceo, sales, marketing, support (Software Team), builder, research, finance, success.",
+    input_schema: { type: "object", properties: { team: { type: "string", enum: ["ceo", "sales", "marketing", "support", "builder", "research", "finance", "success"] }, question: { type: "string" } }, required: ["team", "question"] } },
+  { name: "assign_task", description: "(CEO) Put a task on the task board for one team. The team works on it on its own within minutes and reports the result back on the board. Give a clear outcome and the details needed to act.",
+    input_schema: { type: "object", properties: { team: { type: "string", enum: ["sales", "marketing", "support", "builder", "research", "finance", "success"] }, title: { type: "string" }, detail: { type: "string" }, priority: { type: "string", enum: ["low", "normal", "high"] } }, required: ["team", "title"] } },
+  { name: "tasks_list", description: "The task board: tasks the CEO or the owner assigned, who has them, status (open, doing, done, blocked) and results. Filter by status and/or team.",
+    input_schema: { type: "object", properties: { status: { type: "string", enum: ["open", "doing", "done", "blocked", "cancelled", "all"] }, team: { type: "string" } } } },
+  { name: "task_update", description: "Report on a task you were given: status done (with a short result for the CEO), blocked (say what's needed), or doing.",
+    input_schema: { type: "object", properties: { id: { type: "string" }, status: { type: "string", enum: ["doing", "done", "blocked"] }, result: { type: "string" } }, required: ["id", "status"] } },
+  { name: "money_report", description: "This month's money in one place: accounts by status and plan, MRR from paying accounts, trials ending soon, failed payments and chargebacks in the last 30 days, the Command Center's AI spend against its limit, each client's Lisa minutes against their plan, AI Team usage and cost.",
+    input_schema: { type: "object", properties: {} } },
 ];
 function toolsFor(a: Agent): Anthropic.Messages.ToolUnion[] {
-  if (a.key.startsWith("sw_")) return TOOLS.filter((x) => ["ghl", "accounts_list", "support_requests", "feature_data", "memory_save", "memory_list"].includes(x.name));
-  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "ask_specialist" || a.key === "support") && (x.name !== "feature_data" || ["ceo", "support"].includes(a.key)) && (x.name !== "db_read" || ["ceo", "support", "builder", "sales"].includes(a.key)) && (x.name !== "social" || ["ceo", "marketing"].includes(a.key)));
+  if (a.key.startsWith("sw_")) return TOOLS.filter((x) => ["ghl", "accounts_list", "support_requests", "feature_data", "memory_save", "memory_list", "task_update"].includes(x.name));
+  const t: Anthropic.Messages.ToolUnion[] = TOOLS.filter((x) => (x.name !== "delegate" || a.key === "ceo") && (x.name !== "ask_specialist" || a.key === "support") && (x.name !== "assign_task" || a.key === "ceo") && (x.name !== "money_report" || ["ceo", "finance"].includes(a.key)) && (x.name !== "feature_data" || ["ceo", "support", "success"].includes(a.key)) && (x.name !== "db_read" || ["ceo", "support", "builder", "sales", "finance", "success"].includes(a.key)) && (x.name !== "social" || ["ceo", "marketing"].includes(a.key)));
   if (a.web) t.push({ type: "web_search_20260209", name: "web_search", max_uses: 3 } as unknown as Anthropic.Messages.ToolUnion);
   return t;
 }
@@ -264,14 +286,14 @@ async function system(a: Agent): Promise<string> {
   const mem = await memoryText();
   return `You are the ${a.name} at BuilderPro, an AI employee in the owner's Command Center.
 BuilderPro sells "BuilderPro OS" to contractors (roofers, plumbers, HVAC, electricians, remodelers...): a portal plus a GoHighLevel sub-account per client, an AI receptionist that answers calls and texts, lead tools, estimates, invoices, crews and scheduling. Plans: Foundation $99/mo, BuilderPro OS $199/mo, Enterprise $299/mo, each with a 14-day free trial (card taken at sign-up by Stripe). New contractors sign up on the website and answer onboarding questions; each gets a GHL sub-account built from the owner's snapshot.
-The team: CEO, Sales, Marketing, Software (with a specialist for each feature), Builder, Research. You are the ${a.name}.
+The team: CEO, Sales, Marketing, Software (with a specialist for each feature), Builder, Research, Finance, Success. You are the ${a.name}. The CEO manages the team and assigns tasks on a shared task board; any team can ask a teammate with ask_teammate when the answer belongs to their area. When you were given a task, report on it with task_update.
 Your job: ${a.role}
 How to work: use your tools to look things up rather than guessing. Tools from connected services (e.g. Higgsfield for images and video) run immediately and may cost credits, so use them when the task calls for it, not speculatively. When a change needs the owner's approval, the tool call is queued for them and you are told so; don't retry it, just say what you proposed and why. Be direct and concrete, like a sharp employee reporting to the owner. Use short headings and lists when they help. Today is ${new Date().toISOString().slice(0, 10)}.
 ${mem ? "\nThe team's memory (things the owner told you, decisions, findings):\n" + mem : ""}`;
 }
 
 /* ------------------------------------------------------------ running tools --- */
-async function runTool(name: string, input: Record<string, unknown>, depth: number): Promise<unknown> {
+async function runTool(name: string, input: Record<string, unknown>, depth: number, who = "owner"): Promise<unknown> {
   switch (name) {
     case "ghl": return await callGHL(String(input.op), (input.args ?? {}) as Record<string, string>);
     case "accounts_list": {
@@ -343,6 +365,42 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
       const out = await runAgent(sa, t, String(input.task), depth + 1, "support");
       return { specialist: x.name, answer: out.reply, approvals_queued: out.approvals.length };
     }
+    case "ask_teammate": {
+      // one level only: a teammate answering can't pass the question on (keeps cost in check)
+      if (depth > 0) return { error: "You were asked by a teammate, so you can't pass this on. Answer with what you have." };
+      const t = AGENTS[String(input.team)]; if (!t) return { error: "no such team" };
+      if (t.key === who) return { error: "that's you" };
+      const asker = (agentFor(who)?.name ?? who);
+      const th = await newThread(t.key, `From ${asker}: ` + String(input.question).slice(0, 60), who);
+      const out = await runAgent(t, th, `${asker} asks you: ${String(input.question)}\nAnswer them directly and briefly, using your tools if needed.`, depth + 1, who);
+      return { team: t.name, answer: out.reply, approvals_queued: out.approvals.length };
+    }
+    case "assign_task": {
+      const team = String(input.team); if (!AGENTS[team] || team === "ceo") return { error: "no such team" };
+      const open = await sb(`ai_tasks?status=in.(open,doing)&select=id`); const n = (open.ok ? await open.json() : []).length;
+      if (n >= 25) return { error: "The board already has 25 open tasks. Finish or cancel some first." };
+      const r = await sb("ai_tasks", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ assigned_by: who, assignee: team, title: String(input.title).slice(0, 200), detail: String(input.detail ?? "").slice(0, 4000), priority: ["low", "normal", "high"].includes(String(input.priority)) ? input.priority : "normal" }) });
+      const row = r.ok ? (await r.json())[0] : null;
+      return row ? { ok: true, id: row.id, note: `On the board for the ${AGENTS[team].name}. They'll work on it within minutes and report back.` } : { error: r.status };
+    }
+    case "tasks_list": {
+      const st = String(input.status ?? "");
+      const f = (st && st !== "all" ? `&status=eq.${encodeURIComponent(st)}` : "") + (input.team ? `&assignee=eq.${encodeURIComponent(String(input.team))}` : "");
+      const r = await sb(`ai_tasks?select=id,assigned_by,assignee,title,detail,priority,status,result,created_at,done_at${f}&order=created_at.desc&limit=40`);
+      return r.ok ? await r.json() : { error: r.status };
+    }
+    case "task_update": {
+      const g = await sb(`ai_tasks?id=eq.${encodeURIComponent(String(input.id))}&select=assignee,status`); const row = (g.ok ? await g.json() : [])[0];
+      if (!row) return { error: "no such task" };
+      if (row.assignee !== who && who !== "ceo" && who !== "owner") return { error: "That task belongs to another team." };
+      const st = String(input.status);
+      const patch: Record<string, unknown> = { status: st, updated_at: new Date().toISOString() };
+      if (input.result) patch.result = String(input.result).slice(0, 4000);
+      if (st === "done") patch.done_at = new Date().toISOString();
+      await sb(`ai_tasks?id=eq.${encodeURIComponent(String(input.id))}`, { method: "PATCH", body: JSON.stringify(patch) });
+      return { ok: true };
+    }
+    case "money_report": return await moneyReport();
     case "delegate": {
       if (depth > 0) return { error: "teams can't delegate further" };
       const a = AGENTS[String(input.team)]; if (!a) return { error: "no such team" };
@@ -353,6 +411,64 @@ async function runTool(name: string, input: Record<string, unknown>, depth: numb
   }
   return { error: "unknown tool" };
 }
+/* Finance's one-call view of the month */
+async function moneyReport() {
+  const month = new Date().toISOString().slice(0, 7), since30 = new Date(Date.now() - 30 * 864e5).toISOString();
+  const j = async (path: string) => { const r = await sb(path); return r.ok ? await r.json() : []; };
+  const [accts, um, cai, reqs, sp, lims] = await Promise.all([
+    j("accounts?select=email,business,plan,status,price_monthly,trial_ends_at,ai_addon,created_at"),
+    j(`usage_month?month=eq.${month}&select=user_id,minutes,included,chat_replies,capped_at,extra_billed`),
+    j(`cai_usage?month=eq.${month}&select=owner,messages,cost_cents`),
+    j(`support_requests?created_at=gte.${since30}&kind=in.(payment_failed,dispute,cancel,minutes_capped)&select=kind,subject,created_at,status`),
+    spend(), j("plan_limits?select=*")]);
+  type A = { status: string; plan: string; price_monthly: number; trial_ends_at: string; email: string; business: string };
+  const list = accts as A[];
+  const by = (k: keyof A) => list.reduce((m: Record<string, number>, a) => { const v = String(a[k] ?? "-"); m[v] = (m[v] || 0) + 1; return m; }, {});
+  return {
+    accounts: { total: list.length, by_status: by("status"), by_plan: by("plan") },
+    mrr: list.filter((a) => a.status === "active").reduce((s, a) => s + (Number(a.price_monthly) || 0), 0),
+    trials_ending_7d: list.filter((a) => a.status === "trial" && Date.parse(a.trial_ends_at) - Date.now() < 7 * 864e5).map((a) => ({ business: a.business, email: a.email, ends: a.trial_ends_at, plan: a.plan })),
+    money_problems_30d: reqs,
+    command_center_ai: { spent_usd: sp.cents / 100, limit_usd: sp.limit },
+    lisa_minutes_this_month: um,
+    ai_team_this_month: (cai as { owner: string; messages: number; cost_cents: number }[]).map((x) => ({ ...x, cost_usd: Math.round(Number(x.cost_cents)) / 100 })),
+    plan_limits: lims,
+    note: "Lisa's phone and text costs are billed by HighLevel and aren't in this report; minutes come from usage_month.",
+  };
+}
+
+/* The task board runner: called on the 5-minute scheduler tick, at most one task
+   every TASK_EVERY_MIN, never past the monthly AI limit. The assigned team works
+   the task in its own thread and reports with task_update; if it doesn't, its
+   reply becomes the result. Three tries, then the task is marked blocked. */
+const TASK_EVERY_MIN = Number(Deno.env.get("TASK_EVERY_MIN") ?? "10");
+async function taskTick(last: string) {
+  if (last && Date.now() - Date.parse(last) < (TASK_EVERY_MIN - 1) * 6e4) return;
+  const r = await sb("ai_tasks?status=eq.open&tries=lt.3&select=*&order=created_at.asc&limit=20");
+  const rows: { id: string; assignee: string; assigned_by: string; title: string; detail: string; priority: string; tries: number }[] = r.ok ? await r.json() : [];
+  const t = rows.find((x) => x.priority === "high") ?? rows[0];
+  if (!t) return;
+  await setCfg("task_tick_at", new Date().toISOString());
+  const a = agentFor(t.assignee);
+  if (!a) { await sb(`ai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: "blocked", result: "No such team." }) }); return; }
+  const from = t.assigned_by === "owner" ? "the owner" : (agentFor(t.assigned_by)?.name ?? t.assigned_by);
+  const th = await newThread(a.key, "Task: " + t.title, t.assigned_by === "owner" ? "owner" : "task");
+  await sb(`ai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: "doing", tries: t.tries + 1, thread_id: th, updated_at: new Date().toISOString() }) });
+  try {
+    const out = await runAgent(a, th, `Task ${t.id} from ${from} (priority ${t.priority}): ${t.title}${t.detail ? "\n\n" + t.detail : ""}\n\nDo it now with your tools. When you're finished, call task_update with id ${t.id}, status done, and a short result for ${from}. If you can't finish, call task_update with status blocked and say exactly what's needed.`);
+    const g = await sb(`ai_tasks?id=eq.${t.id}&select=status`); const now = (g.ok ? await g.json() : [])[0];
+    if (now?.status === "doing") await sb(`ai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: "done", result: (out.reply || "Done.").slice(0, 4000), done_at: new Date().toISOString(), updated_at: new Date().toISOString() }) });
+  } catch (e) {
+    await sb(`ai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: t.tries + 1 >= 3 ? "blocked" : "open", result: "Run failed: " + String(e).slice(0, 300), updated_at: new Date().toISOString() }) });
+  }
+}
+/* what a team has on the board, for its shift */
+async function tasksFor(key: string): Promise<string> {
+  const r = await sb(`ai_tasks?assignee=eq.${key}&status=in.(open,blocked)&select=id,title,status,priority&order=created_at.asc&limit=10`);
+  const rows: { id: string; title: string; status: string; priority: string }[] = r.ok ? await r.json() : [];
+  return rows.length ? " On the task board for you: " + rows.map((x) => `[${x.id}] ${x.title} (${x.status}${x.priority === "high" ? ", high" : ""})`).join("; ") + ". The runner works open tasks on its own; update any you can finish now." : "";
+}
+
 async function createAccount(a: Record<string, string>) {
   const email = String(a.email ?? "").toLowerCase();
   const inv = await fetch(`${SB_URL}/auth/v1/invite`, { method: "POST", headers: { apikey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`, "Content-Type": "application/json" },
@@ -492,6 +608,7 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
     const results = await Promise.all(uses.map(async (u) => {
       const input = u.input ?? {};
       if (u.name === "delegate" && a.key !== "ceo") return { type: "tool_result", tool_use_id: u.id, content: "Only the CEO can delegate.", is_error: true };
+      if (u.name === "assign_task" && a.key !== "ceo") return { type: "tool_result", tool_use_id: u.id, content: "Only the CEO assigns tasks. Ask the CEO with ask_teammate if you think something needs doing.", is_error: true };
       if (u.name === "ask_specialist" && a.key !== "support") return { type: "tool_result", tool_use_id: u.id, content: "Only the Software Team can ask a specialist.", is_error: true };
       if (!a.auto(u.name, input)) {
         const summary = u.name === "ghl" ? `${input.op} ${JSON.stringify(input.args ?? {})}${input.why ? " — " + input.why : ""}` : `${u.name} ${JSON.stringify(input)}`;
@@ -500,7 +617,7 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
         return { type: "tool_result", tool_use_id: u.id, content: `Queued for the owner's approval (request ${row.id}). It has not run yet. Don't retry it; tell the owner what you proposed and why.` };
       }
       try {
-        const out = await runTool(u.name, input, depth);
+        const out = await runTool(u.name, input, depth, a.key);
         const txt = JSON.stringify(out);
         return { type: "tool_result", tool_use_id: u.id, content: txt.length > 15000 ? txt.slice(0, 15000) + " …[cut: ask for less, e.g. a filter or a smaller limit]" : txt };
       } catch (e) { return { type: "tool_result", tool_use_id: u.id, content: "Error: " + String(e).slice(0, 300), is_error: true }; }
@@ -545,6 +662,7 @@ async function shift(req: Request) {
   const onboard = "started";
   if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, onboard, skipped: true });
   if ((await spend()).over) return json({ ok: true, onboard, skipped: "monthly AI limit reached" });
+  bg(taskTick(get("task_tick_at")).catch(() => {}));
   // the scheduler ticks every 5 min for onboarding; a team shift only every SHIFT_EVERY_MIN
   const lastAny = Math.max(0, ...rows.filter((r) => r.key.startsWith("shift_")).map((r) => Date.parse(r.value) || 0));
   if (Date.now() - lastAny < (SHIFT_EVERY_MIN - 1) * 6e4) return json({ ok: true, onboard });
@@ -555,7 +673,7 @@ async function shift(req: Request) {
   const a = AGENTS[pick];
   const run = (async () => {
     const th = await newThread(a.key, "Shift " + now.slice(0, 16).replace("T", " "), "shift");
-    await runAgent(a, th, "Your scheduled shift. " + a.routine + " Work on your own; the owner will read your report later. Keep the report short: what you did, what you found, what needs the owner.");
+    await runAgent(a, th, "Your scheduled shift. " + a.routine + (await tasksFor(a.key)) + " Work on your own; the owner will read your report later. Keep the report short: what you did, what you found, what needs the owner.");
   })().catch(() => {});
   // deno-lint-ignore no-explicit-any
   (globalThis as any).EdgeRuntime?.waitUntil?.(run);
@@ -682,6 +800,21 @@ Deno.serve(async (req) => {
     try { const out = await runAgent(a, thread, msg); return json({ ok: true, thread_id: thread, ...out }); }
     catch (e) { return json({ ok: false, thread_id: thread, error: String(e).slice(0, 400) }, 500); }
   }
+  /* the task board, from the page: the owner can assign a task, cancel one or re-open one */
+  if (op === "tasks") {
+    const r = await sb("ai_tasks?select=*&order=created_at.desc&limit=80");
+    return json({ ok: true, data: r.ok ? await r.json() : [] });
+  }
+  if (op === "task_create") {
+    if (!String(b.title ?? "").trim()) return json({ ok: false, error: "Give the task a title." }, 400);
+    const out = await runTool("assign_task", { team: b.team, title: String(b.title ?? "").trim(), detail: b.detail, priority: b.priority }, 0, "owner") as { ok?: boolean; error?: string };
+    return json(out.ok ? { ok: true, ...out } : { ok: false, error: out.error ?? "Could not add it." }, out.ok ? 200 : 400);
+  }
+  if (op === "task_set") {
+    const st = String(b.status); if (!["open", "cancelled"].includes(st)) return json({ ok: false, error: "bad status" }, 400);
+    await sb(`ai_tasks?id=eq.${encodeURIComponent(String(b.id))}`, { method: "PATCH", body: JSON.stringify({ status: st, ...(st === "open" ? { tries: 0 } : {}), updated_at: new Date().toISOString() }) });
+    return json({ ok: true });
+  }
   if (op === "cc_limit") {
     const v = Math.round(Number(b.usd));
     if (!(v >= 1 && v <= 1000)) return json({ ok: false, error: "Pick a limit between $1 and $1,000." }, 400);
@@ -703,7 +836,10 @@ Deno.serve(async (req) => {
     const mm = await metaGet();
     const conns = m.ok ? await m.json() : [];
     if (mm?.pages?.length) conns.push({ name: "facebook", label: "Facebook", agents: ["marketing", "ceo"] }, ...(mm.pages.some((p) => p.ig) ? [{ name: "instagram", label: "Instagram", agents: ["marketing", "ceo"] }] : []));
-    return json({ ok: true, data: out, spend: await spend(), specs, specialists: SPECS.map((x) => ({ key: "sw_" + x.key, name: x.name, short: x.short })), shifts_on: on, connections: conns });
+    const tk = await sb("ai_tasks?status=in.(open,doing,blocked)&select=assignee,status");
+    const tasks: Record<string, { open: number; doing: number; blocked: number }> = {};
+    for (const t of (tk.ok ? await tk.json() : []) as { assignee: string; status: "open" | "doing" | "blocked" }[]) { const x = tasks[t.assignee] ??= { open: 0, doing: 0, blocked: 0 }; x[t.status]++; }
+    return json({ ok: true, data: out, tasks, spend: await spend(), specs, specialists: SPECS.map((x) => ({ key: "sw_" + x.key, name: x.name, short: x.short })), shifts_on: on, connections: conns });
   }
   if (op === "shifts") {
     await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shifts_on", value: b.on ? "true" : "false" }) });
@@ -749,7 +885,7 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
     let result: unknown, status = "approved";
-    try { result = await runTool(row.tool, row.input, 0); if ((result as { ok?: boolean; error?: string })?.error || (result as { ok?: boolean })?.ok === false) status = "failed"; }
+    try { result = await runTool(row.tool, row.input, 0, row.agent || "owner"); if ((result as { ok?: boolean; error?: string })?.error || (result as { ok?: boolean })?.ok === false) status = "failed"; }
     catch (e) { result = { error: String(e) }; status = "failed"; }
     await sb(`ai_approvals?id=eq.${row.id}`, { method: "PATCH", body: JSON.stringify({ status, result, decided_by: who, decided_at: new Date().toISOString() }) });
     await sb("audit_log", { method: "POST", body: JSON.stringify({ actor: who, op: "ai." + row.tool, args: row.input, ok: status === "approved", status: 200 }) }).catch(() => {});

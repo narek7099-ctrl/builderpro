@@ -91,7 +91,11 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .nd .ico{width:36px;height:36px;border-radius:var(--r1);display:grid;place-items:center;flex:none;background:#e6f0ff;border:0;color:var(--pri);color:var(--ink);font-size:18px}
 .nd.lead .ico{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
 .nd .t{font-weight:600;font-size:13.5px;white-space:nowrap;letter-spacing:-.01em}
-.nd .s{font-size:12px;color:var(--mut);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd .s{font-size:12px;color:var(--mut);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd .box{width:214px}.nd .tx{min-width:0}
+.nd .chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}.nd .chips span{font:500 10.5px/1.5 var(--sans);border:1px solid var(--line2);border-radius:999px;padding:0 6px;color:var(--mut);white-space:nowrap}
+.nd .tks{display:flex;gap:4px;margin-top:5px}.nd .tk{font:600 10.5px/1.6 var(--sans);background:#eef4ff;color:var(--pri);border-radius:999px;padding:0 7px}.nd .tk.on{background:var(--pri);color:#fff}.nd .tk.bl{background:#fdecea;color:#c0392b}
+.ln.talk{stroke:#7a5af8;stroke-width:1.6;stroke-dasharray:5 6;animation:flow 1s linear infinite}
 .nd.work .box{border-color:rgba(0,111,255,.5)}
 .nd.work .box:after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:1px solid var(--pri);animation:ring 1.6s var(--ease) infinite;pointer-events:none}
 @keyframes ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(1.06,1.18)}}
@@ -187,9 +191,11 @@ var AG={ceo:{c:'#e8612c',d:'Runs the company, delegates to the teams',h:['What s
   marketing:{c:'#7c5cff',d:'Ads, copy and SEO',h:['Write 3 Facebook ads for plumbers','Plan a 30-day content calendar','How do competitors position themselves?']},
   support:{c:'#2f80ed',d:'Keeps the software working, with a specialist for each feature',h:['Is any client having trouble with the software?','Have every specialist check their feature for problems','Any open support or cancellation requests?']},
   builder:{c:'#c98a0b',d:'Builds GHL accounts',h:['Audit the newest client sub-account setup','Add standard roofing tags to a client','Fill in a client\'s AI receptionist knowledge']},
-  research:{c:'#8a8f98',d:'Markets and competitors',h:['Top 5 lead sources for HVAC contractors in 2026','Compare our pricing with Jobber and ServiceTitan','Which trades grow fastest in Texas?']}};
-var ICON={ceo:'ti-briefcase',sales:'ti-trending-up',marketing:'ti-speakerphone',support:'ti-apps',builder:'ti-hammer',research:'ti-telescope'};
-var NAMES={ceo:'CEO',sales:'Sales Team',marketing:'Marketing Team',support:'Software Team',builder:'Builder Team',research:'Research Team'};
+  research:{c:'#8a8f98',d:'Markets and competitors',h:['Top 5 lead sources for HVAC contractors in 2026','Compare our pricing with Jobber and ServiceTitan','Which trades grow fastest in Texas?']},
+  finance:{c:'#0e9384',d:'Revenue, costs and payments',h:['What is our MRR and what did AI cost this month?','Is any client costing more than they pay?','Any failed payments or chargebacks?']},
+  success:{c:'#dd2590',d:'Keeps every client set up and staying',h:['Which new clients are stuck in setup?','Who looks likely to cancel, and why?','Draft check-ins for clients who went quiet']}};
+var ICON={ceo:'ti-briefcase',sales:'ti-trending-up',marketing:'ti-speakerphone',support:'ti-apps',builder:'ti-hammer',research:'ti-telescope',finance:'ti-coin',success:'ti-heart-handshake'};
+var NAMES={ceo:'CEO',sales:'Sales Team',marketing:'Marketing Team',support:'Software Team',builder:'Builder Team',research:'Research Team',finance:'Finance Team',success:'Success Team'};
 
 function el(i){return document.getElementById(i)}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -248,19 +254,56 @@ async function start(){
 }
 async function countPending(){ var r=await api({op:'approvals',status:'pending'}); PENDING=(r.data||[]).length; drawTabs(); }
 function drawTabs(){
-  var T=[['team','AI Team'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['memory','Memory'],['conn','Connections']];
+  var T=[['team','AI Team'],['tasks','Tasks'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['memory','Memory'],['conn','Connections']];
   el('tabs').innerHTML=T.map(function(t){return '<button class="'+(t[0]===TAB?'on':'')+'" onclick="tab(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
 }
-function tab(t){TAB=t;drawTabs();({team:viewTeam,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory,conn:viewConn})[t]()}
+function tab(t){TAB=t;drawTabs();({team:viewTeam,tasks:viewTasks,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory,conn:viewConn})[t]()}
+
+/* ---------- the task board: what the CEO (or you) assigned, and what came back ---------- */
+var TSTAT={open:['Waiting','#475467'],doing:['Working','#006fff'],done:['Done','#15803d'],blocked:['Blocked','#c0392b'],cancelled:['Cancelled','#98a2b3']};
+async function viewTasks(){
+  el('view').innerHTML='<div class="bhead"><div><h2>Task board</h2><p>The CEO assigns work here and checks the results. Teams pick up open tasks within minutes, within your monthly AI limit.</p></div></div>'
+    +'<div class="card tw" style="display:block;margin-bottom:14px"><b style="display:block;margin-bottom:8px">Give a team a task</b><div style="display:grid;grid-template-columns:180px 1fr 120px;gap:8px">'
+    +'<select id="tkTeam">'+RING.map(function(k){return '<option value="'+k+'">'+NAMES[k]+'</option>';}).join('')+'</select><input id="tkTitle" placeholder="What should they do? e.g. Find which trials haven\'t sent an estimate yet">'
+    +'<select id="tkPri"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select></div>'
+    +'<textarea id="tkDet" placeholder="Details (optional)" style="width:100%;margin-top:8px;min-height:54px"></textarea><div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button class="btn pri" onclick="tkAdd()">Add to the board</button><span class="muted" id="tkMsg"></span></div></div>'
+    +'<div id="tkList"><div class="muted">Loading…</div></div>';
+  tkLoad();
+}
+async function tkLoad(){
+  var r=await api({op:'tasks'}), rows=r.data||[], box=el('tkList'); if(!box)return;
+  if(!rows.length){box.innerHTML='<div class="card tw muted" style="display:block">Nothing on the board yet. The CEO adds tasks on its shift, or add one above.</div>';return;}
+  var order=['doing','open','blocked','done','cancelled'];
+  box.innerHTML=order.map(function(st){var g=rows.filter(function(x){return x.status===st;}); if(!g.length)return '';
+    return '<h3 style="margin:18px 0 8px;font-size:14px">'+TSTAT[st][0]+' <span class="muted" style="font-weight:400">'+g.length+'</span></h3>'+g.slice(0,st==='done'||st==='cancelled'?15:50).map(function(t){
+      return '<div class="card tw" style="display:block;margin-bottom:8px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pill" style="border-color:'+TSTAT[t.status][1]+';color:'+TSTAT[t.status][1]+'">'+TSTAT[t.status][0]+'</span>'
+        +'<b style="flex:1;min-width:200px">'+esc(t.title)+'</b>'+(t.priority==='high'?'<span class="pill" style="border-color:#c0392b;color:#c0392b">High</span>':'')
+        +'<span class="muted" style="font-size:12.5px">'+esc(nm(t.assigned_by))+' → <b>'+esc(nm(t.assignee))+'</b> · '+ago(t.created_at)+'</span></div>'
+        +(t.detail?'<div class="muted" style="font-size:13px;margin-top:6px;white-space:pre-wrap">'+esc(t.detail)+'</div>':'')
+        +(t.result?'<div style="margin-top:8px;padding:10px 12px;background:var(--soft);border-radius:10px;font-size:13.5px">'+md(t.result)+'</div>':'')
+        +'<div style="display:flex;gap:8px;margin-top:8px">'+(t.thread_id?'<button class="btn" onclick="tkOpen(\''+t.assignee+'\',\''+t.thread_id+'\')">Open the conversation</button>':'')
+        +(t.status==='open'||t.status==='blocked'?'<button class="btn" onclick="tkSet(\''+t.id+'\',\'cancelled\')">Cancel</button>':'')
+        +(t.status==='blocked'||t.status==='cancelled'?'<button class="btn" onclick="tkSet(\''+t.id+'\',\'open\')">Try again</button>':'')+'</div></div>';}).join('');}).join('');
+}
+async function tkAdd(){var t=el('tkTitle').value.trim(); if(!t){el('tkMsg').textContent='Write what they should do.';return;}
+  el('tkMsg').textContent='Adding…'; var r=await api({op:'task_create',team:el('tkTeam').value,title:t,detail:el('tkDet').value.trim(),priority:el('tkPri').value});
+  if(!r.ok){el('tkMsg').textContent=r.error||'Could not add it.';return;} el('tkMsg').textContent='Added. They will pick it up within a few minutes.'; el('tkTitle').value=''; el('tkDet').value=''; tkLoad();}
+async function tkSet(id,st){await api({op:'task_set',id:id,status:st}); tkLoad();}
+async function tkOpen(k,tid){TAB='team';drawTabs();await viewTeam();await openAgent(k);openThread(tid);}
 
 /* ---------- AI team: the org board ---------- */
-var POS={ceo:[50,13],sales:[10.5,47],marketing:[30.3,47],support:[50,47],builder:[69.7,47],research:[89.5,47]};
+/* the CEO in the middle, the seven teams around it (board-in is 1120 x 700) */
+var RING=['sales','marketing','research','support','builder','finance','success'];
 var TOOLSET={ceo:[['ti-sparkles','Claude','model'],['ti-database','Memory','shared']],
   sales:[['ti-plug-connected','GHL','contacts, notes'],['ti-layout-dashboard','BuilderPro','accounts'],['ti-world-search','Web','search']],
   marketing:[['ti-brand-instagram','Instagram','soon',1],['ti-brand-facebook','Facebook','soon',1],['ti-world-search','Web','search']],
   support:[['ti-users-group','11 specialists','one per feature'],['ti-layout-dashboard','BuilderPro','requests'],['ti-plug-connected','GHL','sub-accounts']],
   builder:[['ti-plug-connected','GHL','build'],['ti-layout-dashboard','BuilderPro','receptionist']],
-  research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']]};
+  research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']],
+  finance:[['ti-report-money','Money report','MRR, costs'],['ti-credit-card','Stripe alerts','failed, disputes'],['ti-database','BuilderPro','usage']],
+  success:[['ti-layout-dashboard','BuilderPro','accounts, usage'],['ti-plug-connected','GHL','notes'],['ti-users-group','Specialists','ask']]};
+TOOLSET.ceo=[['ti-sparkles','Claude','model'],['ti-list-check','Task board','assigns'],['ti-database','Memory','shared']];
+var TASKS={};
 var STATUS={}, SHIFTS=true, CONNS=[], SPECS=[], SPECST={}, SPEND=null;
 /* the monthly AI spending limit: what's spent so far, and a button to change it */
 function spendHtml(){ if(!SPEND)return ''; var d=SPEND.cents/100, pct=Math.min(100,Math.round(d/SPEND.limit*100));
@@ -269,7 +312,7 @@ async function ccLimit(){ var v=prompt('Monthly limit for the AI team, in dollar
   var r=await api({op:'cc_limit',usd:Number(v)}); if(!r.ok){alert(r.error||'Could not change it.');return;} SPEND=r.spend; drawBoard(); }
 /* the Software Team's specialists (agent keys sw_<feature>) live outside NAMES so the board stays six teams */
 function spec(k){return SPECS.filter(function(x){return x.key===k})[0];}
-function nm(k){var x=spec(k);return x?x.name+' specialist':(NAMES[k]||k);}
+function nm(k){var x=spec(k);return x?x.name+' specialist':k==='owner'?'You':(NAMES[k]||k);}
 function ic(k){return spec(k)?'ti-tool':ICON[k];}
 function ag(k){var x=spec(k);return x?{c:AG.support.c,d:x.short,h:['Check '+x.name+' for problems across all clients','How does '+x.name+' work, step by step?','What do clients most often get stuck on here?']}:AG[k];}
 function drawSpecs(){var b=el('sps');if(!b)return;var on=SPECS.length&&(AGENT==='support'||!!spec(AGENT));b.hidden=!on;if(!on)return;
@@ -277,60 +320,65 @@ function drawSpecs(){var b=el('sps');if(!b)return;var on=SPECS.length&&(AGENT===
 var CONN_ICON={facebook:'ti-brand-facebook',instagram:'ti-brand-instagram',higgsfield:'ti-movie',zapier:'ti-bolt',stripe:'ti-credit-card',supabase:'ti-server',clickup:'ti-checkbox',github:'ti-brand-github',airtable:'ti-table',linear:'ti-list-check'};
 function ago(t){var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago';}
 async function viewTeam(){
-  el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. Each team works one shift a day.</p></div>'
+  el('view').innerHTML='<div class="bhead"><div><h2>Your AI team</h2><p>Click anyone to talk to them. The CEO assigns work on the task board, and teams ask each other when they need to.</p></div>'
     +'<label class="sw"><input type="checkbox" id="shOn" onchange="SHIFTS=this.checked;api({op:\'shifts\',on:this.checked});drawBoard()"> Round-the-clock shifts</label></div>'
     +'<div class="board"><div class="board-in" id="bd"></div></div>'
     +'<div class="scrim" id="scr" onclick="closeDr()"></div><div class="drawer" id="dr"><div class="hd"><b id="drT"></b><select id="drTh" onchange="openThread(this.value||null)"></select><button class="xbtn" aria-label="Close" onclick="closeDr()"><i class="ti ti-x"></i></button></div>'
     +'<div class="sps" id="sps" hidden></div><div class="msgs" id="msgs"></div><div class="compose"><textarea id="inp" placeholder="Message…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div>';
   drawBoard();
-  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SPECS=r.specialists||[]; SPECST=r.specs||{}; SPEND=r.spend||null; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
+  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SPECS=r.specialists||[]; SPECST=r.specs||{}; SPEND=r.spend||null; TASKS=r.tasks||{}; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
 }
 function fitBoard(){
   var bd=el('bd'); if(!bd)return; var box=bd.parentElement, w=box.clientWidth, sc=Math.min(1,w/1120);
   bd.style.transform='scale('+sc+')'; bd.style.transformOrigin='0 0'; box.style.height=Math.ceil(700*sc)+'px';
 }
 window.addEventListener('resize',function(){ if(TAB==='team'&&el('bd')){ if((window.innerWidth<700)!==window._narrow){drawBoard();} else if(!window._narrow) fitBoard(); } });
+function toolsOf(k){
+  var mine=CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;});
+  return (TOOLSET[k]||[]).filter(function(t){return !t[3];}).map(function(t){return t[1];}).concat(mine.map(function(c){return c.label||c.name;})).filter(function(v,i,a){return a.indexOf(v)===i;});
+}
+function tasksPill(k){var t=TASKS[k];if(!t)return '';var n=t.open+t.doing;return (n?'<span class="tk'+(t.doing?' on':'')+'">'+n+' task'+(n>1?'s':'')+(t.doing?' · working':'')+'</span>':'')+(t.blocked?'<span class="tk bl">'+t.blocked+' blocked</span>':'');}
+function nodeBox(k,live,st){
+  var last=st.last, tools=toolsOf(k), shown=tools.slice(0,4);
+  return '<span class="ico"><i class="ti '+ICON[k]+'"></i></span><span class="tx"><div class="t">'+NAMES[k]+'</div><div class="s">'
+    +(live?'Working now':last?(last.created_by==='shift'?'Last shift ':last.created_by==='task'?'Last task ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div>'
+    +'<div class="chips">'+shown.map(function(t){return '<span>'+esc(t)+'</span>';}).join('')+(tools.length>4?'<span>+'+(tools.length-4)+'</span>':'')+'</div>'
+    +(tasksPill(k)?'<div class="tks">'+tasksPill(k)+'</div>':'')+'</span>';
+}
 function drawList(){
   /* phones: the same team as a simple list, no canvas */
   el('bd').parentElement.style.height='auto'; el('bd').style.transform='none'; el('bd').style.width='auto'; el('bd').style.height='auto';
-  el('bd').innerHTML='<div style="display:grid;gap:10px;padding:14px">'+(SPEND?'<div class="bstat" style="position:static;flex-wrap:wrap">'+spendHtml()+'</div>':'')+Object.keys(NAMES).map(function(k){
-    var st=STATUS[k]||{},last=st.last,live=isLive(k),mine=CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;});
-    var tools=(TOOLSET[k]||[]).filter(function(t){return !t[3];}).map(function(t){return t[1];}).concat(mine.map(function(c){return c.label||c.name;})).filter(function(v,i,a){return a.indexOf(v)===i;});
-    return '<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+'" style="position:static;transform:none;opacity:1;animation:none;width:100%" onclick="openAgent(\''+k+'\')"><div class="box" style="width:100%">'+(st.pending?'<span class="badge">'+st.pending+'</span>':'')
-      +'<span class="ico"><i class="ti '+ICON[k]+'"></i></span><span style="flex:1;min-width:0"><div class="t">'+NAMES[k]+'</div><div class="s" style="max-width:none">'+(live?'Working now':last?(last.created_by==='shift'?'Last shift ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div><div class="s" style="max-width:none;margin-top:2px">'+esc(tools.join(' \u00b7 '))+'</div></span></div></button>';}).join('')+'</div>';
+  el('bd').innerHTML='<div style="display:grid;gap:10px;padding:14px">'+(SPEND?'<div class="bstat" style="position:static;flex-wrap:wrap">'+spendHtml()+'</div>':'')+['ceo'].concat(RING).map(function(k){
+    var st=STATUS[k]||{},live=isLive(k);
+    return '<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+'" style="position:static;transform:none;opacity:1;animation:none;width:100%" onclick="openAgent(\''+k+'\')"><div class="box" style="width:100%">'+(st.pending?'<span class="badge">'+st.pending+'</span>':'')+nodeBox(k,live,st)+'</div></button>';}).join('')+'</div>';
 }
 function isLive(k){var l=(STATUS[k]||{}).last;return !!(l&&Date.now()-Date.parse(l.updated_at)<5*6e4);}
 function drawBoard(){
   if(!el('bd'))return;   /* the AI Team tab isn't showing (status came back after a tab switch) */
   window._narrow=window.innerWidth<700; if(window._narrow)return drawList();
   el('bd').style.width=''; el('bd').style.height='';
-  /* Motion is state: an idle link carries one slow packet (the wire is up);
-     a team that is working gets an orange flowing link and a ring. */
-  var W=1000,H=640,px=function(p){return [p[0]*W/100,p[1]*H/100]};
-  var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">', nodes='', c=px(POS.ceo), idx=0, anyLive=false;
-  Object.keys(NAMES).forEach(function(k){
-    var p=px(POS[k]), st=STATUS[k]||{}, last=st.last, live=isLive(k); if(live)anyLive=true;
-    var dl=(k==='ceo'?0:0.12+idx++*0.07);
-    if(k!=='ceo'){ var y0=c[1]+30,y1=p[1]-30, d='M'+c[0]+','+y0+' C'+c[0]+','+(y0+100)+' '+p[0]+','+(y1-100)+' '+p[0]+','+y1, pid='pp'+k;
-      svg+='<path id="'+pid+'" class="ln" d="'+d+'"/>'+(live?'<path class="ln hot" d="'+d+'"/>':'')
-        +'<circle r="'+(live?2.6:2)+'" class="pk'+(live?' hot':'')+'"><animateMotion dur="'+(live?1.6:5.5+idx*0.6)+'s" begin="'+(idx*0.9)+'s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .25 1"><mpath href="#'+pid+'"/></animateMotion></circle>'; }
-    var mine=CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;}), used={};
-    var tools=(TOOLSET[k]||[]).map(function(t){var c=mine.filter(function(c){return (c.label||c.name).toLowerCase()===t[1].toLowerCase();})[0]; if(c){used[c.name]=1;return [t[0],t[1],'connected'];} return t;})
-      .concat(mine.filter(function(c){return !used[c.name];}).map(function(c){return [CONN_ICON[c.name]||'ti-plug-connected',c.label||c.name,'connected'];})), n=tools.length;
-    tools.forEach(function(t,i){
-      var tx,ty,td;
-      if(k==='ceo'){ var sd=i%2?1:-1, j=Math.floor(i/2), cc=j%3, rw=Math.floor(j/3); tx=c[0]+sd*(230+cc*88); ty=c[1]+rw*92;
-        td=rw?'M'+(c[0]+sd*(230+cc*88))+','+(c[1]+22)+' L'+tx+','+(ty-22):'M'+(c[0]+sd*(cc?230+(cc-1)*88+22:108))+','+c[1]+' L'+(tx-sd*22)+','+ty; }
-      else { var row=Math.floor(i/3), inRow=Math.min(3,n-row*3), col=i%3; tx=p[0]+(col-(inRow-1)/2)*62+(row&&inRow%2?31:0); ty=p[1]+140+row*84; td='M'+p[0]+','+(p[1]+30)+' C'+p[0]+','+(p[1]+90)+' '+tx+','+(ty-80)+' '+tx+','+(ty-22); }
-      svg+='<path class="ln tool" d="'+td+'"/>';
-      nodes+='<div class="tl'+(t[3]?' soon':'')+'" style="--dl:'+(dl+0.25)+'s;left:'+(tx/W*100)+'%;top:'+(ty/H*100)+'%"><i class="ti '+t[0]+'"></i>'+esc(t[1])+'<small>'+esc(t[2])+'</small></div>';
-    });
-    nodes+='<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+((k===AGENT||(k==='support'&&spec(AGENT)))&&el('dr')&&el('dr').classList.contains('open')?' on':'')+'" style="--dl:'+dl+'s;left:'+POS[k][0]+'%;top:'+POS[k][1]+'%" onclick="openAgent(\''+k+'\')" aria-label="Open '+NAMES[k]+'"><div class="box">'
-      +(st.pending?'<span class="badge" title="Waiting for your approval">'+st.pending+'</span>':'')+'<span class="ico"><i class="ti '+ICON[k]+'"></i></span><span><div class="t">'+NAMES[k]+'</div><div class="s">'
-      +(live?'Working now':last?(last.created_by==='shift'?'Last shift ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div></span></div></button>';
+  /* Motion is state: an idle link carries one slow packet (the wire is up); a team
+     that is working gets a flowing link and a ring; two teams talking get a link
+     between them (the latest thread of one was started by the other). */
+  var W=1120,H=700,cx=560,cy=350,rx=430,ry=262,P={ceo:[cx,cy]},svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">',nodes='';
+  RING.forEach(function(k,i){var an=(-90+i*360/RING.length)*Math.PI/180;P[k]=[cx+rx*Math.cos(an),cy+ry*Math.sin(an)];});
+  RING.forEach(function(k,i){
+    var p=P[k],live=isLive(k),pid='pp'+k,d='M'+cx+','+cy+' L'+p[0]+','+p[1];
+    svg+='<path id="'+pid+'" class="ln" d="'+d+'"/>'+(live?'<path class="ln hot" d="'+d+'"/>':'')
+      +'<circle r="'+(live?2.8:2)+'" class="pk'+(live?' hot':'')+'"><animateMotion dur="'+(live?1.6:5.5+i*0.5)+'s" begin="'+(i*0.7)+'s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .25 1"><mpath href="#'+pid+'"/></animateMotion></circle>';
+    /* a teammate asked this team something just now: draw them talking */
+    var by=((STATUS[k]||{}).last||{}).created_by;
+    if(live&&P[by]&&by!==k&&by!=='ceo'){var q=P[by],mx=(p[0]+q[0])/2+(cy-(p[1]+q[1])/2)*0.25,my=(p[1]+q[1])/2+((p[0]+q[0])/2-cx)*0.25;
+      svg+='<path class="ln talk" d="M'+q[0]+','+q[1]+' Q'+mx+','+my+' '+p[0]+','+p[1]+'"/>';}
   });
-  var nlive=Object.keys(NAMES).filter(isLive).length;
-  el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of 6 working</span><span>shifts <b>'+(SHIFTS?'once a day':'paused')+'</b></span><span>auto-onboarding <b>on</b></span>'+spendHtml()+'</div>';
+  var anyLive=false;
+  ['ceo'].concat(RING).forEach(function(k,i){
+    var st=STATUS[k]||{},live=isLive(k),p=P[k]; if(live)anyLive=true;
+    nodes+='<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+((k===AGENT||(k==='support'&&spec(AGENT)))&&el('dr')&&el('dr').classList.contains('open')?' on':'')+'" style="--dl:'+(k==='ceo'?0:0.1+i*0.06)+'s;left:'+(p[0]/W*100)+'%;top:'+(p[1]/H*100)+'%" onclick="openAgent(\''+k+'\')" aria-label="Open '+NAMES[k]+'"><div class="box">'
+      +(st.pending?'<span class="badge" title="Waiting for your approval">'+st.pending+'</span>':'')+nodeBox(k,live,st)+'</div></button>';
+  });
+  var nlive=['ceo'].concat(RING).filter(isLive).length, nt=Object.keys(TASKS).reduce(function(s,k){return s+TASKS[k].open+TASKS[k].doing;},0);
+  el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of '+(RING.length+1)+' working</span><span><b>'+nt+'</b> on the task board</span><span>shifts <b>'+(SHIFTS?'on':'paused')+'</b></span>'+spendHtml()+'</div>';
   fitBoard();
 }
 function closeDr(){el('dr').classList.remove('open');el('scr').classList.remove('open');drawBoard();}
@@ -380,7 +428,7 @@ async function send(){
     addMsg({role:'assistant',text:'**Could not finish.** '+aiErr(r.error)}); }
   if(r.approvals&&r.approvals.length){ addMsg({role:'sys',text:r.approvals.length+' action(s) waiting for your approval to Approvals tab'}); countPending(); }
 }
-setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;SPECST=r.specs||SPECST;SPEND=r.spend||SPEND;drawBoard();drawSpecs();} }); },60000);
+setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;SPECST=r.specs||SPECST;SPEND=r.spend||SPEND;TASKS=r.tasks||TASKS;drawBoard();drawSpecs();} }); },60000);
 
 /* ---------- Approvals ---------- */
 async function viewApprovals(){
@@ -590,7 +638,7 @@ async function forget(id){ await api({op:'memory_delete',id:id}); viewMemory(); 
 
 
 /* ---------- Connections: outside tools the teams can use (MCP) ---------- */
-var TEAMKEYS=['ceo','sales','marketing','support','builder','research'];
+var TEAMKEYS=['ceo','sales','marketing','support','builder','research','finance','success'];
 var PRESETS=[['higgsfield','Higgsfield','https://mcp.higgsfield.ai/mcp','marketing'],['canva','Canva','https://mcp.canva.com/mcp','marketing'],['github','GitHub','https://api.githubcopilot.com/mcp/','builder'],['supabase','Supabase','https://mcp.supabase.com/mcp','support']];
 var SERVICES=[
   {k:'higgsfield',n:'Higgsfield',u:'https://mcp.higgsfield.ai/mcp',t:['marketing'],i:'ti-movie',d:'AI images and video for ads and posts.'},
