@@ -131,7 +131,7 @@
         fresh.forEach(function (f) { var o = byId[f.id]; if (!o) return; if (o.contactId && !f.contactId) f.contactId = o.contactId; if (o.sched && o.sched.ghl) { f.sched = f.sched || {}; f.sched.ghl = o.sched.ghl; } });
         _set(fresh);
       }
-      if (fail && !off && !warned && window.bpToast) warned = true, bpToast('Some project days could not be put on the HighLevel Jobs calendar. They will be tried again on the next save.', 'warning');
+      if (fail && !off && !warned && window.bpToast) warned = true, bpToast('Some project days could not be added to your Jobs calendar. They will be tried again on the next save.', 'warning');
     } catch (e) { /* the next save tries again */ }
     running = false;
     if (again) { again = false; window.bpGhlSchedSync(); }
