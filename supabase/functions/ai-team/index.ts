@@ -42,6 +42,7 @@ const month = () => new Date().toISOString().slice(0, 7);
 type Acct = { user_id: string; email: string; business: string; full_name: string; trade: string; phone: string; plan: string; ghl_location_id: string; profile: Record<string, unknown>; ai_addon: string; stripe_customer_id: string };
 type Agent = { key: string; name: string; role: string; web: boolean };
 const AGENTS: Record<string, Agent> = {
+  ceo: { key: "ceo", name: "AI CEO", web: true, role: "You manage the whole AI Team for the owner: Sales, Marketing, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch and Estimator. Turn what the owner wants into work: ask a teammate with ask_teammate when you need an answer now, or put longer work on the task board with assign_task (one owner per task, a clear outcome, the details needed). Check finished tasks with tasks_list, and pull the team's answers into one clear recommendation for the owner. Start from the business snapshot (ceo_snapshot) when you need the big picture." },
   sales: { key: "sales", name: "Sales", web: true, role: "You help win jobs: follow up on new leads and open quotes, write texts and emails that get replies, suggest who to call today, draft call scripts, and spot quotes going cold." },
   marketing: { key: "marketing", name: "Marketing", web: true, role: "You bring in customers: write Facebook and Google ads, social posts, promotions, review requests and replies, and ideas that fit a local contractor. Look at what nearby competitors do when it helps." },
   office: { key: "office", name: "Office", web: false, role: "You keep the business running: today's schedule, appointments, reminders, overdue invoices and quotes, tasks, and the daily brief. Be brief and practical." },
@@ -49,6 +50,8 @@ const AGENTS: Record<string, Agent> = {
   research: { key: "research", name: "Market Research", web: true, role: "You research how to grow: marketing tactics that work for local contractors, what competitors nearby charge and promote, seasonal demand, ad channels and budgets, and new services worth offering. Back claims with what you find on the web and turn findings into a short plan the owner can act on this month." },
   workflows: { key: "workflows", name: "Workflow Tracker", web: false, role: "You watch the sales pipeline and automations: find leads stuck in a stage, quotes with no follow-up, contacts missing tags or next steps, appointments without an outcome, and anything the automations should have caught. List what is stuck, how long, and the one action that unsticks each." },
   permits: { key: "permits", name: "Permits", web: true, role: "You track permits on every active project: what is pending, approved, expired or missing, upcoming inspections and their results, and what each city or county permit office requires (forms, fees, turnaround, inspection booking). Use the projects tool for the job list and the web for office rules. Warn early about anything that could hold up a job." },
+  dispatch: { key: "dispatch", name: "Dispatch & Routing", web: true, role: "You put the right crew on the right job and plan the day: who goes where and in what order, which jobs have nobody assigned, who is free, who is closest and has the right skills (crew_match ranks people for a job), and what the weather or a storm changes. Check the weather on the web for outdoor work like roofing. Give a plain day plan per person with stops in a sensible driving order. You suggest assignments; the owner makes them." },
+  estimator: { key: "estimator", name: "Estimator", web: false, role: "You help price jobs right: build good/better/best options from the contractor's price list and past estimates, spot estimates priced below their usual margins or missing items (tear-off, permits, disposal, materials), and say which open estimates are worth following up and why. Show your numbers line by line. You draft prices; the owner sends them." },
   projects: { key: "projects", name: "Project Issues", web: false, role: "You watch active projects for trouble: phases past their due date, jobs over budget, jobs with no crew assigned, unpaid balances on finished work, missing materials or contracts, and work scheduled with nobody on it. Rank issues by what costs the most money or time and say who should do what." },
 };
 // what the assistants may do without asking; everything else waits for the contractor
@@ -63,6 +66,24 @@ const TOOLS: Anthropic.Tool[] = [
   { name: "projects", description: "This contractor's projects in BuilderPro: status, customer, address, estimate, collected, budget and spend, phases with due dates, crew assigned, schedule, permits with inspections, materials and contract state. args.status 'active' (default), 'done' or 'all'.",
     input_schema: { type: "object", properties: { status: { type: "string", enum: ["active", "done", "all"] } } } },
   { name: "business_info", description: "This contractor's business details from BuilderPro: services, prices, hours, service area, plan.", input_schema: { type: "object", properties: {} } },
+  { name: "ask_teammate", description: "Ask another assistant on the team a question and get their answer now (they use their own tools). Use it when the answer belongs to their area. Assistants: ceo, sales, marketing, office, clients, research, workflows, permits, projects, dispatch, estimator.",
+    input_schema: { type: "object", properties: { assistant: { type: "string", enum: ["ceo", "sales", "marketing", "office", "clients", "research", "workflows", "permits", "projects", "dispatch", "estimator"] }, question: { type: "string" } }, required: ["assistant", "question"] } },
+  { name: "tasks_list", description: "The team's task board: what the AI CEO or the owner assigned, to whom, status (open, doing, done, blocked) and results.",
+    input_schema: { type: "object", properties: { status: { type: "string", enum: ["open", "doing", "done", "blocked", "all"] } } } },
+  { name: "task_update", description: "Report on a task you were given: done (with a short result), blocked (say what's needed), or doing.",
+    input_schema: { type: "object", properties: { id: { type: "string" }, status: { type: "string", enum: ["doing", "done", "blocked"] }, result: { type: "string" } }, required: ["id", "status"] } },
+];
+const CEO_TOOLS: Anthropic.Tool[] = [
+  { name: "assign_task", description: "Put a task on the team's task board for one assistant. They work on it next (the owner can start it right away) and report back on the board. Give one clear outcome and the details needed.",
+    input_schema: { type: "object", properties: { assistant: { type: "string", enum: ["sales", "marketing", "office", "clients", "research", "workflows", "permits", "projects", "dispatch", "estimator"] }, title: { type: "string" }, detail: { type: "string" }, priority: { type: "string", enum: ["low", "normal", "high"] } }, required: ["assistant", "title"] } },
+  { name: "ceo_snapshot", description: "The business at a glance (from BuilderPro's AI CEO): money this month and last, jobs and what needs attention, unassigned work, the latest morning briefing.", input_schema: { type: "object", properties: {} } },
+];
+const DISPATCH_TOOLS: Anthropic.Tool[] = [
+  { name: "crew_match", description: "Rank the people best suited to one job (by trade, skills, distance, workload, reviews, insurance), with the reasons. Give the job id from the projects tool.",
+    input_schema: { type: "object", properties: { job_id: { type: "string" } }, required: ["job_id"] } },
+];
+const ESTIMATOR_TOOLS: Anthropic.Tool[] = [
+  { name: "price_list", description: "This contractor's own prices: the calculator pricing they set up (per trade: unit prices, materials, labor, minimums), for building estimates.", input_schema: { type: "object", properties: {} } },
 ];
 
 // Pages of BuilderPro each assistant may read (read-only, this account only),
@@ -128,11 +149,15 @@ const ACCESS: Record<string, string[]> = {
   projects: ["team", "hours", "subcontractors", "materials", "change_orders", "payments", "money", "inspections"],
   permits: ["inspections", "calendar_notes", "subcontractors", "storms"],
   workflows: ["leads", "calculator_leads", "estimates", "contracts", "lead_sources", "customer_messages", "change_orders"],
+  ceo: ["leads", "estimates", "contracts", "payments", "money", "customer_messages", "team", "reviews", "storms"],
+  dispatch: ["team", "hours", "calendar_notes", "subcontractors", "inspections", "storms"],
+  estimator: ["estimates", "contracts", "change_orders", "calculator_leads", "materials", "money"],
 };
 function toolsFor(a: Agent): Anthropic.Tool[] {
   const pages = ACCESS[a.key] ?? [];
-  if (!pages.length) return [...TOOLS];
-  return [...TOOLS, { name: "app", description: "Read a page of this contractor's BuilderPro app (read-only). Pages you can open:\n" + pages.map((k) => `- ${k}: ${PAGES[k].d}`).join("\n"),
+  const own = a.key === "ceo" ? CEO_TOOLS : a.key === "dispatch" ? DISPATCH_TOOLS : a.key === "estimator" ? ESTIMATOR_TOOLS : [];
+  if (!pages.length) return [...TOOLS, ...own];
+  return [...TOOLS, ...own, { name: "app", description: "Read a page of this contractor's BuilderPro app (read-only). Pages you can open:\n" + pages.map((k) => `- ${k}: ${PAGES[k].d}`).join("\n"),
     input_schema: { type: "object", properties: { page: { type: "string", enum: pages } }, required: ["page"] } }];
 }
 
@@ -167,6 +192,7 @@ function system(a: Agent, acct: Acct) {
   const p = acct.profile ?? {};
   return `You are the ${a.name} assistant on ${acct.business}'s BuilderPro AI Team. ${acct.business} is a ${acct.trade || "contracting"} business${p.city ? " in " + p.city + (p.state ? ", " + p.state : "") : ""}, owned by ${acct.full_name}. You work only for this business.
 Your job: ${a.role}
+Your team: AI CEO (manages the team and the task board), Sales, Marketing, Office, Client Care, Research, Workflows, Permits, Projects, Dispatch & Routing, Estimator. Ask a teammate with ask_teammate when the answer belongs to their area. When you were given a task, report on it with task_update.
 Their services: ${p.services || "see business_info"}. Service area: ${p.serviceArea || "see business_info"}.
 How to work: look things up with your tools rather than guessing. Anything that messages a customer or changes their records is queued for the owner to approve; when that happens, say what you drafted and why, and don't retry it. Write the way a good office manager talks to the owner: plain, short, concrete. Customer-facing drafts should sound like ${acct.full_name.split(" ")[0] || "the owner"}, not like marketing copy. Today is ${new Date().toISOString().slice(0, 10)}.`;
 }
@@ -180,6 +206,45 @@ async function runTool(acct: Acct, name: string, input: Record<string, unknown>,
     const rows = (await r.json()) as Record<string, any>[];
     const data = PAGES[page].shape ? PAGES[page].shape!(rows) : rows;
     return { page, today: new Date().toISOString().slice(0, 10), data };
+  }
+  if (name === "tasks_list") {
+    const st = String(input.status ?? "");
+    const r = await sb(`cai_tasks?owner=eq.${acct.user_id}${st && st !== "all" ? "&status=eq." + encodeURIComponent(st) : ""}&select=id,assigned_by,assignee,title,detail,priority,status,result,created_at,done_at&order=created_at.desc&limit=30`);
+    return r.ok ? await r.json() : { error: "Couldn't read the board." };
+  }
+  if (name === "task_update") {
+    const g = await sb(`cai_tasks?id=eq.${encodeURIComponent(String(input.id))}&owner=eq.${acct.user_id}&select=assignee`); const row = (g.ok ? await g.json() : [])[0];
+    if (!row) return { error: "No such task." };
+    if (row.assignee !== agent && agent !== "ceo") return { error: "That task belongs to another assistant." };
+    const st = String(input.status), patch: Record<string, unknown> = { status: st, updated_at: new Date().toISOString() };
+    if (input.result) patch.result = String(input.result).slice(0, 4000);
+    if (st === "done") patch.done_at = new Date().toISOString();
+    await sb(`cai_tasks?id=eq.${encodeURIComponent(String(input.id))}&owner=eq.${acct.user_id}`, { method: "PATCH", body: JSON.stringify(patch) });
+    return { ok: true };
+  }
+  if (name === "assign_task") {
+    if (agent !== "ceo" && agent !== "owner") return { error: "Only the AI CEO assigns tasks." };
+    const who = String(input.assistant); if (!AGENTS[who] || who === "ceo") return { error: "No such assistant." };
+    const open = await sb(`cai_tasks?owner=eq.${acct.user_id}&status=in.(open,doing)&select=id`);
+    if ((open.ok ? await open.json() : []).length >= 15) return { error: "The board already has 15 open tasks. Finish or cancel some first." };
+    const r = await sb("cai_tasks", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ owner: acct.user_id, assigned_by: agent, assignee: who, title: String(input.title).slice(0, 200), detail: String(input.detail ?? "").slice(0, 4000), priority: ["low", "normal", "high"].includes(String(input.priority)) ? input.priority : "normal" }) });
+    const row = r.ok ? (await r.json())[0] : null;
+    return row ? { ok: true, id: row.id, note: `On the board for ${AGENTS[who].name}. The owner can start it now from the Tasks tab, or it runs with the morning brief.` } : { error: "Couldn't add it." };
+  }
+  if (name === "ceo_snapshot") {
+    const [snap, rep] = await Promise.all([
+      sb("rpc/bp_ceo_snapshot", { method: "POST", body: JSON.stringify({ p_owner: acct.user_id }) }),
+      sb(`ceo_reports?owner=eq.${acct.user_id}&select=day,kind,text&order=created_at.desc&limit=1`)]);
+    return { snapshot: snap.ok ? await snap.json() : null, latest_briefing: rep.ok ? ((await rep.json())[0] ?? null) : null };
+  }
+  if (name === "crew_match") {
+    const r = await sb("rpc/bp_ceo_route", { method: "POST", body: JSON.stringify({ p_owner: acct.user_id, p_job: String(input.job_id ?? "") }) });
+    return r.ok ? await r.json() : { error: "Couldn't rank people for that job." };
+  }
+  if (name === "price_list") {
+    const r = await sb(`calculator_pricing?owner=eq.${acct.user_id}&select=calc_id,pricing,updated_at`);
+    const rows = r.ok ? await r.json() : [];
+    return rows.length ? rows : { note: "No price list set up yet in Calculators. Use business_info pricing and past estimates." };
   }
   if (name === "business_info") {
     const s = await sb(`client_settings?user_id=eq.${acct.user_id}&select=data`);
@@ -254,7 +319,7 @@ const workspaceId = (key: string) => WS ??= (async () => {
   } catch { WS = null; return ""; }
 })();
 
-async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; effort?: string; count?: boolean } = {}) {
+async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { heavy?: boolean; effort?: string; count?: boolean; depth?: number } = {}) {
   const model = opts.heavy ? OPUS : SONNET;
   const apiKey = (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), ws = await workspaceId(apiKey);
   const client = new Anthropic({ apiKey, defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
@@ -290,6 +355,18 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
         const row = (await q.json())[0]; approvals.push(row);
         return { type: "tool_result", tool_use_id: u.id, content: `Queued for the owner's approval (${row.id}). Not sent yet. Tell them what you drafted.` };
       }
+      if (u.name === "ask_teammate") {
+        // one level only: an assistant answering a teammate can't pass it on (keeps cost in check)
+        if (opts.depth) return { type: "tool_result", tool_use_id: u.id, content: "You were asked by a teammate, so you can't pass this on. Answer with what you have.", is_error: true };
+        const t = AGENTS[String(input.assistant)];
+        if (!t || t.key === a.key) return { type: "tool_result", tool_use_id: u.id, content: "No such assistant.", is_error: true };
+        try {
+          const th = await newThread(acct.user_id, t.key, `From ${a.name}: ` + String(input.question).slice(0, 60), "team");
+          const out = await run(acct, t, th, `${a.name} asks you: ${String(input.question)}\nAnswer them directly and briefly, using your tools if needed.`, { depth: 1, effort: "low" });
+          approvals.push(...out.approvals);
+          return { type: "tool_result", tool_use_id: u.id, content: JSON.stringify({ assistant: t.name, answer: out.reply }).slice(0, 20000) };
+        } catch (e) { return { type: "tool_result", tool_use_id: u.id, content: "Couldn't reach them: " + String(e).slice(0, 200), is_error: true }; }
+      }
       try { return { type: "tool_result", tool_use_id: u.id, content: JSON.stringify(await runTool(acct, u.name, input, a.key)).slice(0, 40000) }; }
       catch (e) { return { type: "tool_result", tool_use_id: u.id, content: "Error: " + String(e).slice(0, 200), is_error: true }; }
     }));
@@ -307,7 +384,7 @@ function transcript(rows: { role: string; content: unknown; model: string }[]) {
     const b = (m.content as { type: string; text?: string; name?: string; input?: Record<string, unknown> }[]) ?? [];
     if (m.role === "user" && b.every((x) => x.type === "tool_result")) continue;
     const text = b.filter((x) => x.type === "text").map((x) => x.text).join("\n").trim();
-    const tools = b.filter((x) => x.type === "tool_use" || x.type === "server_tool_use").map((x) => x.name === "web_search" ? "Searched: " + (x.input?.query ?? "") : x.name === "ghl" ? "CRM: " + String(x.input?.op ?? "").replace(".", " ") : x.name === "projects" ? "Checked projects" : x.name === "app" ? "Opened " + String(x.input?.page ?? "a page").replace(/_/g, " ") : "Checked business info");
+    const tools = b.filter((x) => x.type === "tool_use" || x.type === "server_tool_use").map((x) => x.name === "web_search" ? "Searched: " + (x.input?.query ?? "") : x.name === "ghl" ? "CRM: " + String(x.input?.op ?? "").replace(".", " ") : x.name === "projects" ? "Checked projects" : x.name === "app" ? "Opened " + String(x.input?.page ?? "a page").replace(/_/g, " ") : x.name === "ask_teammate" ? "Asked " + (AGENTS[String(x.input?.assistant)]?.name ?? "a teammate") : x.name === "assign_task" ? "Assigned " + (AGENTS[String(x.input?.assistant)]?.name ?? "") + ": " + String(x.input?.title ?? "") : x.name === "tasks_list" ? "Checked the task board" : x.name === "task_update" ? "Updated a task" : x.name === "ceo_snapshot" ? "Checked the business snapshot" : x.name === "crew_match" ? "Ranked the crew for a job" : x.name === "price_list" ? "Checked the price list" : "Checked business info");
     if (text || tools.length) out.push({ role: m.role, text, tools, deep: m.model === OPUS });
   }
   return out;
@@ -321,6 +398,26 @@ async function newThread(owner: string, agent: string, title: string, kind = "ch
 async function stripe(path: string, body: Record<string, string>) {
   const r = await fetch(`https://api.stripe.com/v1${path}`, { method: "POST", headers: { Authorization: `Bearer ${SK}`, "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() });
   const d = await r.json(); if (!r.ok) throw new Error(d?.error?.message ?? "Stripe error"); return d;
+}
+
+/* Work one task from the board: the assistant works it in its own thread and
+   reports with task_update; if it doesn't, its reply becomes the result.
+   Each task run counts as one message toward the plan's monthly limit. */
+type Task = { id: string; assignee: string; assigned_by: string; title: string; detail: string; priority: string; tries: number };
+async function runTask(acct: Acct, t: Task) {
+  const a = AGENTS[t.assignee]; if (!a) return { ok: false, error: "No such assistant." };
+  const from = t.assigned_by === "owner" ? "the owner" : (AGENTS[t.assigned_by]?.name ?? t.assigned_by);
+  const th = await newThread(acct.user_id, a.key, "Task: " + t.title, "task");
+  await sb(`cai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: "doing", tries: (t.tries || 0) + 1, thread_id: th, updated_at: new Date().toISOString() }) });
+  try {
+    const out = await run(acct, a, th, `Task ${t.id} from ${from} (priority ${t.priority}): ${t.title}${t.detail ? "\n\n" + t.detail : ""}\n\nDo it now with your tools. When you're finished, call task_update with id ${t.id}, status done and a short result. If you can't finish, call task_update with status blocked and say exactly what's needed.`, { count: true, heavy: HEAVY.test(t.title + " " + (t.detail || "")) });
+    const g = await sb(`cai_tasks?id=eq.${t.id}&select=status,result`); const now = (g.ok ? await g.json() : [])[0];
+    if (now?.status === "doing") await sb(`cai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: "done", result: (out.reply || "Done.").slice(0, 4000), done_at: new Date().toISOString(), updated_at: new Date().toISOString() }) });
+    return { ok: true, thread_id: th, approvals: out.approvals.length };
+  } catch (e) {
+    await sb(`cai_tasks?id=eq.${t.id}`, { method: "PATCH", body: JSON.stringify({ status: (t.tries || 0) + 1 >= 3 ? "blocked" : "open", result: "Run failed: " + String(e).slice(0, 300), updated_at: new Date().toISOString() }) });
+    return { ok: false, error: "Something went wrong. Try again." };
+  }
 }
 
 // 7am in the contractor's time zone: the Office assistant writes the day's brief
@@ -342,6 +439,11 @@ async function briefs() {
       const th = await newThread(a.user_id, "office", "Daily brief " + day, "brief");
       await run(a, AGENTS.office, th, `Write today's brief for ${a.full_name}. Check today's appointments, new contacts and conversations from the last day, and open opportunities that have gone quiet for 3+ days. Then give: 1) today at a glance, 2) who to call or text first and why, 3) up to 3 follow-up messages ready to send (queue them with conversations.send so the owner can approve with one tap). Keep it under 200 words plus the drafts.`, { effort: "low" });
       done.push(a.email);
+      // then the morning stand-up: up to 2 open tasks, while under the plan's message limit
+      const tk = await sb(`cai_tasks?owner=eq.${a.user_id}&status=eq.open&tries=lt.3&select=*&order=created_at.asc&limit=10`);
+      const open: Task[] = tk.ok ? await tk.json() : [];
+      open.sort((x, y) => (y.priority === "high" ? 1 : 0) - (x.priority === "high" ? 1 : 0));
+      for (const t of open.slice(0, 2)) { if (((await usage(a.user_id)).messages ?? 0) >= (await capFor(a.user_id))) break; await runTask(a, t); }
     } catch (e) { console.error("brief", a.email, e); }
   }
   return done;
@@ -370,7 +472,9 @@ Deno.serve(async (req) => {
     const us = await usage(u.id);
     const p = await sb(`cai_approvals?owner=eq.${u.id}&status=eq.pending&select=id`);
     return json({ ok: true, addon: on ? "active" : acct.ai_addon, included: acct.plan === "enterprise", price: PRICE, cap: await capFor(u.id), used: us.messages ?? 0, pending: p.ok ? (await p.json()).length : 0,
-      crm: !!acct.ghl_location_id, agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name, pages: ACCESS[a.key] ?? [] })) });
+      crm: !!acct.ghl_location_id, agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name, pages: ACCESS[a.key] ?? [], web: a.web, tools: toolsFor(a).map((t) => t.name) })),
+      tasks: await (async () => { const r = await sb(`cai_tasks?owner=eq.${u.id}&status=in.(open,doing,blocked)&select=assignee,status`); const m: Record<string, { open: number; doing: number; blocked: number }> = {};
+        for (const t of (r.ok ? await r.json() : []) as { assignee: string; status: "open" | "doing" | "blocked" }[]) { const x = m[t.assignee] ??= { open: 0, doing: 0, blocked: 0 }; x[t.status]++; } return m; })() });
   }
   if (op === "subscribe") {
     if (on) return json({ ok: true, already: true });
@@ -401,6 +505,29 @@ Deno.serve(async (req) => {
     const heavy = b.deep === true || HEAVY.test(msg) || msg.length > 900;
     try { const out = await run(acct, a, thread, msg, { heavy, count: true }); return json({ ok: true, thread_id: thread, ...out, deep: out.model === OPUS }); }
     catch (e) { return json({ ok: false, thread_id: thread, error: "Something went wrong. Try again." + (String(e).includes("rate") ? " (busy right now)" : "") }, 500); }
+  }
+  /* the task board */
+  if (op === "tasks") {
+    const r = await sb(`cai_tasks?owner=eq.${u.id}&select=*&order=created_at.desc&limit=60`);
+    return json({ ok: true, data: r.ok ? await r.json() : [] });
+  }
+  if (op === "task_create") {
+    if (!String(b.title ?? "").trim()) return json({ ok: false, error: "Write what they should do." }, 400);
+    const out = await runTool(acct, "assign_task", { assistant: b.assistant, title: String(b.title).trim(), detail: b.detail, priority: b.priority }, "owner") as { ok?: boolean; error?: string; id?: string };
+    return json(out.ok ? { ok: true, id: out.id } : { ok: false, error: out.error ?? "Couldn't add it." }, out.ok ? 200 : 400);
+  }
+  if (op === "task_set") {
+    const st = String(b.status); if (!["open", "cancelled"].includes(st)) return json({ ok: false, error: "bad status" }, 400);
+    await sb(`cai_tasks?id=eq.${encodeURIComponent(String(b.id))}&owner=eq.${u.id}`, { method: "PATCH", body: JSON.stringify({ status: st, ...(st === "open" ? { tries: 0 } : {}), updated_at: new Date().toISOString() }) });
+    return json({ ok: true });
+  }
+  if (op === "task_run") {
+    if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: false, error: "The AI Team is being set up. Try again shortly." }, 503);
+    const us = await usage(u.id), cap = await capFor(u.id);
+    if ((us.messages ?? 0) >= cap) return json({ ok: false, error: `You've used all ${cap} messages this month. They reset on the 1st.`, capped: true }, 429);
+    const g = await sb(`cai_tasks?id=eq.${encodeURIComponent(String(b.id))}&owner=eq.${u.id}&status=in.(open,blocked)&select=*`); const t = (g.ok ? await g.json() : [])[0];
+    if (!t) return json({ ok: false, error: "That task isn't waiting to run." }, 404);
+    return json(await runTask(acct, t));
   }
   if (op === "threads") { const r = await sb(`cai_threads?owner=eq.${u.id}${b.agent ? "&agent=eq." + encodeURIComponent(String(b.agent)) : ""}&select=id,agent,title,kind,updated_at&order=updated_at.desc&limit=40`); return json({ ok: true, data: r.ok ? await r.json() : [] }); }
   if (op === "thread") {

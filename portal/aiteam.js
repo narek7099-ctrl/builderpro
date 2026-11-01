@@ -14,6 +14,8 @@
   /* the AI CEO tab (portal/aiceo.js): owner and office, whether or not the add-on is on */
   var ceoOn = function () { return !!window.bpCeoRender && !(window.bpTeamIsCrew && bpTeamIsCrew()); };
   var AG = {
+    ceo: { n: 'AI CEO', ic: 'monitoring', d: 'Manages your team: hands out tasks, asks the others and pulls it together.',
+      h: ['What should my team focus on this week?', 'Get Sales and Estimator to review my open quotes', 'Plan tomorrow: crews, jobs and follow-ups'] },
     sales: { n: 'Sales', ic: 'trending_up', d: 'Follows up on leads and quotes so jobs don’t slip away.',
       h: ['Who should I follow up with today?', 'Write a text for a quote that went quiet', 'Give me a call script for a new lead'] },
     marketing: { n: 'Marketing', ic: 'campaign', d: 'Writes your ads, posts and promotions.',
@@ -29,7 +31,11 @@
     permits: { n: 'Permits', ic: 'assignment', d: 'Tracks permits, inspections and what each permit office needs.',
       h: ['Which permits are pending or expiring?', 'What inspections are coming up?', 'What does my city need for a roofing permit?'] },
     projects: { n: 'Projects', ic: 'construction', d: 'Watches jobs for overdue phases, overruns and missing crew.',
-      h: ['Which projects are behind schedule?', 'Are any jobs over budget?', 'Which jobs have nobody assigned?'] }
+      h: ['Which projects are behind schedule?', 'Are any jobs over budget?', 'Which jobs have nobody assigned?'] },
+    dispatch: { n: 'Dispatch', ic: 'route', d: 'Puts the right crew on each job and plans the day’s routes and weather.',
+      h: ['Plan tomorrow: who goes where, in what order?', 'Which jobs have nobody on them?', 'Will the weather stop any roof jobs this week?'] },
+    estimator: { n: 'Estimator', ic: 'request_quote', d: 'Prices jobs from your price list and catches estimates priced too low.',
+      h: ['Build a good/better/best for a 28-square roof replacement', 'Which of my open estimates are priced too low?', 'Which estimates are worth following up today?'] }
   };
   /* the app pages each assistant can read (supabase/functions/ai-team ACCESS), on top of the CRM and projects */
   var PG = { leads: 'Leads', lead_sources: 'Lead sources', calculator_leads: 'Calculator leads', estimates: 'Estimates', contracts: 'Contracts', payments: 'Payments', money: 'Income & expenses',
@@ -43,11 +49,23 @@
     office: ['calendar_notes', 'payments', 'money', 'estimates', 'contracts', 'hours', 'materials', 'customer_messages'],
     projects: ['team', 'hours', 'subcontractors', 'materials', 'change_orders', 'payments', 'money', 'inspections'],
     permits: ['inspections', 'calendar_notes', 'subcontractors', 'storms'],
-    workflows: ['leads', 'calculator_leads', 'estimates', 'contracts', 'lead_sources', 'customer_messages', 'change_orders'] };
+    workflows: ['leads', 'calculator_leads', 'estimates', 'contracts', 'lead_sources', 'customer_messages', 'change_orders'],
+    ceo: ['leads', 'estimates', 'contracts', 'payments', 'money', 'customer_messages', 'team', 'reviews', 'storms'],
+    dispatch: ['team', 'hours', 'calendar_notes', 'subcontractors', 'inspections', 'storms'],
+    estimator: ['estimates', 'contracts', 'change_orders', 'calculator_leads', 'materials', 'money'] };
+  /* everything an assistant is connected to: the CRM, projects, its own tools, the web and the pages it can read */
+  var TL = { ghl: 'CRM', projects: 'Projects', assign_task: 'Task board', ceo_snapshot: 'Business snapshot', crew_match: 'Crew match', price_list: 'Price list' };
+  function conns(k) {
+    var st = A.st && A.st.agents ? A.st.agents.filter(function (a) { return a.key === k; })[0] : null;
+    var tools = (st && st.tools) || ['ghl', 'projects'], pages = (st && st.pages) || SEE[k] || [];
+    var out = tools.filter(function (t) { return TL[t]; }).map(function (t) { return TL[t]; });
+    if (st ? st.web : ['sales', 'marketing', 'research', 'permits', 'ceo', 'dispatch'].indexOf(k) >= 0) out.push('Web');
+    return out.concat(pages.map(function (x) { return PG[x] || x; }));
+  }
   function seeLine(k) {
     var st = A.st && A.st.agents ? A.st.agents.filter(function (a) { return a.key === k; })[0] : null;
-    var keys = (st && st.pages) || SEE[k] || [];
-    return keys.length ? '<div class="ai-see"><span class="ms">visibility</span><span>Can see: CRM, Projects, ' + keys.map(function (x) { return esc(PG[x] || x); }).join(', ') + '</span></div>' : '';
+    var c = conns(k);
+    return c.length ? '<div class="ai-see"><span class="ms">hub</span><span>Connected to: ' + c.map(esc).join(', ') + '</span></div>' : '';
   }
   /* how the chart groups them */
   
@@ -57,6 +75,12 @@
     var s = document.createElement('style'); s.id = 'bpAiCss';
     s.textContent = [
       '.ai-hero{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:stretch}',
+      '.ai-tkf{display:grid;grid-template-columns:170px minmax(0,1fr) 110px;gap:8px}.ai-tkf select,.ai-tkf input{min-width:0}',
+      '@media(max-width:700px){.ai-tkf{grid-template-columns:1fr}}',
+      '.ai-tk{background:var(--card,#fff);border:1px solid var(--line,#e3e8ef);border-radius:14px;padding:12px 14px;margin-bottom:8px}',
+      '.ai-tk-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ai-tk-h b{font-size:14px}',
+      '.ai-tk-s{font-size:11.5px;font-weight:600;border:1px solid;border-radius:99px;padding:1px 8px}',
+      '.ai-tk-r{margin-top:8px;padding:10px 12px;background:var(--soft,#f4f6fa);border-radius:10px;font-size:13.5px;white-space:pre-wrap;line-height:1.5}',
       '.ai-hero .pitch h2{font-size:26px;letter-spacing:-.03em;margin:0 0 6px}',
       '.ai-hero .price{font-size:34px;font-weight:600;letter-spacing:-.03em;margin:14px 0 4px}.ai-hero .price small{font-size:14px;color:var(--mu,#788493);font-weight:500}',
       '.ai-cards{display:grid;gap:10px}',
@@ -138,47 +162,33 @@
   };
 
 
-  /* the team as a live board, like the owner's Command Center: the AI CEO
-     in the middle, the eight assistants around it, each wired to the CEO
-     with a link a packet travels along, and the tools each one uses */
-  var KIT = { sales: [['contacts', 'CRM'], ['sms', 'Texts'], ['travel_explore', 'Web']], marketing: [['campaign', 'Ads'], ['star', 'Reviews'], ['travel_explore', 'Web']],
-    research: [['travel_explore', 'Web'], ['query_stats', 'Prices']], clients: [['construction', 'Projects'], ['sms', 'Texts']], office: [['calendar_month', 'Calendar'], ['receipt_long', 'Invoices']],
-    projects: [['construction', 'Projects'], ['payments', 'Budgets']], permits: [['assignment', 'Permits'], ['travel_explore', 'Web']], workflows: [['account_tree', 'Pipeline'], ['label', 'Tags']] };
-  var RING = ['sales', 'marketing', 'research', 'clients', 'projects', 'permits', 'workflows', 'office'];
+  /* the team as a live board, like the owner's Command Center: the AI CEO in the
+     middle managing ten assistants, each wired to it with a link a packet travels
+     along, showing what it's connected to and the tasks it has on the board */
+  var RING = ['sales', 'marketing', 'research', 'clients', 'estimator', 'projects', 'dispatch', 'permits', 'workflows', 'office'];
+  function chipsOf(k) { var c = conns(k), sh = c.slice(0, 4); return '<span class="aib-ch">' + sh.map(function (x) { return '<i>' + esc(x) + '</i>'; }).join('') + (c.length > 4 ? '<i>+' + (c.length - 4) + '</i>' : '') + '</span>'; }
+  function taskPill(k) { var t = A.st && A.st.tasks && A.st.tasks[k]; if (!t) return ''; var n = t.open + t.doing; return (n ? '<span class="aib-tk' + (t.doing ? ' on' : '') + '">' + n + ' task' + (n > 1 ? 's' : '') + '</span>' : '') + (t.blocked ? '<span class="aib-tk bl">' + t.blocked + ' blocked</span>' : ''); }
+  function nodeHtml(k, cls, style) {
+    return '<button type="button" class="aib-n' + cls + '" data-open="' + k + '"' + style + '><span class="aib-box"><span class="aib-i"><span class="ms">' + AG[k].ic + '</span></span><span class="aib-tx"><b>' + esc(AG[k].n) + '</b><em>' + esc(AG[k].d) + '</em>' + chipsOf(k) + (taskPill(k) ? '<span class="aib-tks">' + taskPill(k) + '</span>' : '') + '</span></span></button>';
+  }
   function boardHtml(live) {
-    var W = 1000, H = 800, cx = 500, cy = 400, rx = 375, ry = 265, svg = '', nodes = '';
+    var W = 1000, H = 860, cx = 500, cy = 430, rx = 380, ry = 345, svg = '', nodes = '';
     RING.forEach(function (k, i) {
-      var ang = (-90 + 22.5 + i * 45) * Math.PI / 180, x = cx + rx * Math.cos(ang), y = cy + ry * Math.sin(ang);
-      var mx = (cx + x) / 2, d = 'M' + cx + ',' + cy + ' C' + mx + ',' + cy + ' ' + mx + ',' + y + ' ' + x + ',' + y, id = 'aibl' + k;
-      svg += '<path id="' + id + '" class="aib-ln" d="' + d + '"/><circle r="2.4" class="aib-pk"><animateMotion dur="' + (4.8 + (i % 4) * 0.7) + 's" begin="' + (i * 0.55) + 's" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .25 1"><mpath href="#' + id + '"/></animateMotion></circle>';
-      /* its tools, fanned out on the far side from the CEO */
-      var kit = KIT[k] || [], out = x < cx ? -1 : 1, below = y > cy;
-      kit.forEach(function (t, j) {
-        var tx = x + out * (0) + (j - (kit.length - 1) / 2) * 66, ty = y + (below ? 92 : -92);
-        svg += '<path class="aib-ln aib-t" d="M' + x + ',' + (y + (below ? 30 : -30)) + ' L' + tx + ',' + (ty + (below ? -20 : 20)) + '"/>';
-        nodes += '<div class="aib-tl" style="--dl:' + (0.35 + i * 0.06) + 's;left:' + (tx / W * 100) + '%;top:' + (ty / H * 100) + '%"><i><span class="ms">' + t[0] + '</span></i>' + t[1] + '</div>';
-      });
-      nodes += '<button type="button" class="aib-n" data-open="' + k + '" style="--dl:' + (0.12 + i * 0.06) + 's;left:' + (x / W * 100) + '%;top:' + (y / H * 100) + '%"><span class="aib-box"><span class="aib-i"><span class="ms">' + AG[k].ic + '</span></span><span class="aib-tx"><b>' + esc(AG[k].n) + '</b><em>' + esc(AG[k].d) + '</em></span></span></button>';
+      var ang = (-90 + i * 360 / RING.length) * Math.PI / 180, x = cx + rx * Math.cos(ang), y = cy + ry * Math.sin(ang), id = 'aibl' + k;
+      svg += '<path id="' + id + '" class="aib-ln" d="M' + cx + ',' + cy + ' L' + x + ',' + y + '"/><circle r="2.4" class="aib-pk"><animateMotion dur="' + (4.8 + (i % 4) * 0.7) + 's" begin="' + (i * 0.55) + 's" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .25 1"><mpath href="#' + id + '"/></animateMotion></circle>';
+      nodes += nodeHtml(k, '', ' style="--dl:' + (0.12 + i * 0.05) + 's;left:' + (x / W * 100) + '%;top:' + (y / H * 100) + '%"');
     });
-    /* the CEO's own wiring: the model it thinks with, and you, who approve */
-    [[-1, 'spark', 'Claude', 'AI model'], [1, 'task_alt', 'Approvals', 'you say yes']].forEach(function (t) {
-      var tx = cx + t[0] * 205;
-      svg += '<path class="aib-ln aib-t" d="M' + (cx + t[0] * 112) + ',' + cy + ' L' + (tx - t[0] * 24) + ',' + cy + '"/>';
-      nodes += '<div class="aib-tl" style="--dl:.3s;left:' + (tx / W * 100) + '%;top:' + (cy / H * 100) + '%"><i><span class="ms">' + (t[1] === 'spark' ? 'auto_awesome' : t[1]) + '</span></i>' + t[2] + '<small>' + t[3] + '</small></div>';
-    });
-    nodes += '<button type="button" class="aib-n aib-ceo" data-ceoopen="1" style="--dl:0s;left:50%;top:50%"><span class="aib-box"><span class="aib-i"><span class="ms">monitoring</span></span><span class="aib-tx"><b>AI CEO</b><em>Watches the whole business and routes work</em></span></span></button>';
-    var list = '<div class="aib-list">' + ['ceo'].concat(RING).map(function (k) {
-      var c = k === 'ceo';
-      return '<button type="button" class="aib-n' + (c ? ' aib-ceo' : '') + '" ' + (c ? 'data-ceoopen="1"' : 'data-open="' + k + '"') + '><span class="aib-box"><span class="aib-i"><span class="ms">' + (c ? 'monitoring' : AG[k].ic) + '</span></span><span class="aib-tx"><b>' + (c ? 'AI CEO' : esc(AG[k].n)) + '</b><em>' + (c ? 'Watches the whole business and routes work' : esc(AG[k].d)) + '</em></span></span></button>';
-    }).join('') + '</div>';
+    nodes += nodeHtml('ceo', ' aib-ceo', ' style="--dl:0s;left:50%;top:50%"');
+    var list = '<div class="aib-list">' + ['ceo'].concat(RING).map(function (k) { return nodeHtml(k, k === 'ceo' ? ' aib-ceo' : '', ''); }).join('') + '</div>';
+    var nt = A.st && A.st.tasks ? Object.keys(A.st.tasks).reduce(function (s, k) { return s + A.st.tasks[k].open + A.st.tasks[k].doing; }, 0) : 0;
     return '<div class="aib"><div class="aib-wrap"><div class="aib-in"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + svg + '</svg>' + nodes + '</div></div>' + list
-      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + RING.length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
+      + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + nt + ' on the task board</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + RING.length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
   }
   function boardCss() {
     if (document.getElementById('aib-css')) return; var c = document.createElement('style'); c.id = 'aib-css';
     c.textContent = '.aib{position:relative;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:16px;overflow:hidden}'
       + '.aib:before{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--line,#dce3ec) 1px,transparent 1px);background-size:20px 20px;pointer-events:none;-webkit-mask-image:radial-gradient(80% 70% at 50% 45%,#000,transparent);mask-image:radial-gradient(80% 70% at 50% 45%,#000,transparent)}'
-      + '.aib-wrap{position:relative;width:100%}.aib-in{position:relative;width:100%;aspect-ratio:1000/800}'
+      + '.aib-wrap{position:relative;width:100%}.aib-in{position:relative;width:100%;aspect-ratio:1000/860}'
       + '.aib-in>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}'
       + '.aib-ln{fill:none;stroke:var(--line,#c9d3df);stroke-width:1.3}.aib-t{stroke-dasharray:3 4;stroke:#cfd8e3}.aib-pk{fill:#2457d6;opacity:.7}'
       + '.aib-n{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;opacity:0;animation:aibPop .6s cubic-bezier(.2,0,0,1) forwards;animation-delay:var(--dl,0s)}'
@@ -191,6 +201,9 @@
       + '.aib-tx{min-width:0}.aib-n b{display:block;font-size:13.5px;color:var(--ink,#101828);white-space:nowrap}'
       + '.aib-n em{display:block;font-style:normal;font-size:11.5px;line-height:1.3;color:var(--mu,#667085);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '.aib-ceo em{max-width:160px}'
+      + '.aib-ch{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;max-width:150px}.aib-ch i{font-style:normal;font-size:10px;line-height:1.5;border:1px solid var(--line,#dce3ec);border-radius:99px;padding:0 6px;color:var(--mu,#667085);white-space:nowrap}'
+      + '.aib-tks{display:flex;gap:4px;margin-top:4px}.aib-tk{font-size:10px;font-weight:700;line-height:1.6;background:#eef4ff;color:#2457d6;border-radius:99px;padding:0 7px}.aib-tk.on{background:#2457d6;color:#fff}.aib-tk.bl{background:#fdecea;color:#b42318}'
+      + '.aib-list .aib-ch{max-width:none}'
       + '.aib-tl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink,#344054);width:72px;text-align:center;opacity:0;animation:aibFade .6s ease forwards;animation-delay:var(--dl,0s)}'
       + '@keyframes aibFade{to{opacity:1}}'
       + '.aib-tl i{width:34px;height:34px;border-radius:50%;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);display:grid;place-items:center;color:var(--mu,#667085);font-style:normal}.aib-tl i .ms{font-size:16px}'
@@ -207,7 +220,7 @@
     var st = A.st; boardCss(); host = host || area();
     if (!st || !st.ok) { host.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc((st && st.error) || 'Could not load.') + '</div></div>'; return; }
     host.innerHTML = '<div class="bpx-panel"><div class="ai-hero"><div class="pitch">'
-      + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">An AI CEO and eight assistants who know your business: they work your leads, customers, marketing, projects and permits. You approve anything before it goes to a customer.</div>'
+      + '<h2>Your AI Team</h2><div class="bpx-mut" style="max-width:52ch">An AI CEO who manages ten assistants that know your business: leads, customers, marketing, estimates, crews and routes, projects and permits. The CEO hands out tasks and the assistants ask each other. You approve anything before it goes to a customer.</div>'
       + '<div class="price">$' + st.price + '<small> / month</small></div><div class="bpx-mut" style="font-size:13px">Up to ' + st.cap + ' messages a month, plus a daily brief every morning. Cancel any time.</div>'
       + '<div style="margin-top:18px;display:flex;gap:10px;align-items:center"><button class="bpx-btn" id="aiAdd">' + (st.addon === 'checkout' ? 'Finish checkout' : st.addon === 'past_due' ? 'Update payment' : 'Add AI Team') + '</button><span class="bpx-mmsg" id="aiMsg"></span></div>'
       + (st.crm ? '' : '<div class="bpx-mut" style="font-size:12.5px;margin-top:10px">Your CRM is still being set up. Your assistants connect to it as soon as it is ready.</div>')
@@ -226,11 +239,13 @@
   /* the tab row: AI CEO first, then the add-on's own tabs (or its pitch) */
   function tabsHtml() {
     var st = A.st || {}, on = st.ok && st.addon === 'active', pct = on ? Math.min(100, Math.round(100 * st.used / Math.max(1, st.cap))) : 0;
-    var ceo = ceoOn() ? '<button class="ai-tab' + (A.tab === 'ceo' ? ' on' : '') + '" data-ceo="1"><span class="ms">monitoring</span>AI CEO</button>' : '';
+    var ceo = ceoOn() ? '<button class="ai-tab' + (A.tab === 'ceo' ? ' on' : '') + '" data-ceo="1"><span class="ms">insights</span>Briefing &amp; map</button>' : '';
     if (!A.st) return ceo;
     /* Your team first, then the AI CEO, then each assistant */
     if (!on) return '<button class="ai-tab' + (A.tab !== 'ceo' ? ' on' : '') + '" data-pitch="1"><span class="ms">diversity_3</span>AI Team</button>' + ceo;
-    return '<button class="ai-tab' + (A.tab === 'board' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>' + ceo
+    var ntk = st.tasks ? Object.keys(st.tasks).reduce(function (s, k) { return s + st.tasks[k].open + st.tasks[k].doing + st.tasks[k].blocked; }, 0) : 0;
+    return '<button class="ai-tab' + (A.tab === 'board' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>'
+      + '<button class="ai-tab' + (A.tab === 'tasks' ? ' on' : '') + '" data-tasks="1"><span class="ms">checklist</span>Tasks' + (ntk ? '<span class="n">' + ntk + '</span>' : '') + '</button>' + ceo
       + Object.keys(AG).map(function (k) { return '<button class="ai-tab' + (A.tab === 'chat' && A.agent === k ? ' on' : '') + '" data-ag="' + k + '"><span class="ms">' + AG[k].ic + '</span>' + AG[k].n + '</button>'; }).join('')
       + '<button class="ai-tab' + (A.tab === 'wait' ? ' on' : '') + '" data-wait="1"><span class="ms">task_alt</span>Waiting for you' + (st.pending ? '<span class="n">' + st.pending + '</span>' : '') + '</button>'
       + '<span class="ai-use" title="Messages you sent this month">' + st.used + ' of ' + st.cap + ' messages<i><b style="width:' + pct + '%"></b></i></span>';
@@ -242,6 +257,7 @@
     a.querySelectorAll('[data-ag]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-ag'); A.thread = null; draw(); }; });
     var w = a.querySelector('[data-wait]'); if (w) w.onclick = function () { A.tab = 'wait'; draw(); };
     var bd = a.querySelector('[data-board]'); if (bd) bd.onclick = function () { A.tab = 'board'; draw(); };
+    var tk = a.querySelector('[data-tasks]'); if (tk) tk.onclick = function () { A.tab = 'tasks'; draw(); };
   }
   /* refresh just the tab row (the CEO body is already on screen) */
   function topBar() { var t = area().querySelector('.ai-top'); if (!t) return draw(); t.innerHTML = tabsHtml(); wire(); }
@@ -256,7 +272,7 @@
     if (A.tab === 'pitch') return pitch($('aiBody'));
     if (A.tab === 'board') { $('aiBody').innerHTML = boardHtml(true); $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-open'); A.thread = null; draw(); }; });
       $('aiBody').querySelectorAll('[data-ceoopen]').forEach(function (ce) { ce.onclick = function () { if (ceoOn()) { A.tab = 'ceo'; draw(); } }; }); }
-    else if (A.tab === 'wait') approvals(); else chat();
+    else if (A.tab === 'wait') approvals(); else if (A.tab === 'tasks') tasks(); else chat();
   }
 
   var AV = '<span class="ai-av"><span class="ms">auto_awesome</span></span>';
@@ -274,6 +290,50 @@
     b.onclick = function () { if (i.value.trim()) send(); };
     i.bpFit = fit; fit();
   };
+  /* the task board: what the AI CEO (or you) assigned, who has it, and what came back */
+  var TS = { open: ['Waiting', '#475467'], doing: ['Working', '#2457d6'], done: ['Done', '#15803d'], blocked: ['Blocked', '#b42318'], cancelled: ['Cancelled', '#98a2b3'] };
+  async function tasks() {
+    var who = Object.keys(AG).filter(function (k) { return k !== 'ceo'; });
+    $('aiBody').innerHTML = '<div class="bpx-panel" style="margin-bottom:12px"><b style="display:block;margin-bottom:4px">Give an assistant a task</b><div class="bpx-mut" style="font-size:13px;margin-bottom:10px">Or ask your AI CEO to plan the work and hand out tasks. Each task run counts as one message.</div>'
+      + '<div class="ai-tkf"><select id="tkWho">' + who.map(function (k) { return '<option value="' + k + '">' + esc(AG[k].n) + '</option>'; }).join('') + '</select><input id="tkT" placeholder="What should they do? e.g. Follow up on every quote older than 5 days"><select id="tkP"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select></div>'
+      + '<textarea id="tkD" class="bpx-input" placeholder="Details (optional)" style="width:100%;margin-top:8px;min-height:50px"></textarea><div style="display:flex;gap:10px;align-items:center;margin-top:8px"><button class="bpx-btn" id="tkAdd">Add to the board</button><span class="bpx-mmsg" id="tkMsg"></span></div></div><div id="tkList"><div class="bpx-mut">Loading…</div></div>';
+    $('tkAdd').onclick = async function () {
+      var t = $('tkT').value.trim(); if (!t) { $('tkMsg').textContent = 'Write what they should do.'; return; }
+      this.disabled = true; var r = await api({ op: 'task_create', assistant: $('tkWho').value, title: t, detail: $('tkD').value.trim(), priority: $('tkP').value }); this.disabled = false;
+      if (!r.ok) { $('tkMsg').textContent = r.error || 'Could not add it.'; return; }
+      $('tkT').value = ''; $('tkD').value = ''; $('tkMsg').textContent = 'Added. Start it now, or it runs with your 7am brief.'; tkLoad();
+    };
+    tkLoad();
+  }
+  async function tkLoad() {
+    var r = await api({ op: 'tasks' }), rows = r.data || [], box = $('tkList'); if (!box) return;
+    if (!rows.length) { box.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">Nothing on the board yet. Ask your AI CEO to plan the week, or add a task above.</div></div>'; return; }
+    box.innerHTML = ['doing', 'open', 'blocked', 'done', 'cancelled'].map(function (st) {
+      var g = rows.filter(function (x) { return x.status === st; }); if (!g.length) return '';
+      return '<div class="bpx-mut" style="margin:16px 0 8px;font-size:13px;font-weight:600">' + TS[st][0] + ' · ' + g.length + '</div>' + g.slice(0, st === 'done' || st === 'cancelled' ? 12 : 40).map(function (t) {
+        var by = t.assigned_by === 'owner' ? 'You' : ((AG[t.assigned_by] || {}).n || t.assigned_by);
+        return '<div class="ai-tk" data-id="' + t.id + '"><div class="ai-tk-h"><span class="ai-tk-s" style="color:' + TS[t.status][1] + ';border-color:' + TS[t.status][1] + '">' + TS[t.status][0] + '</span><b>' + esc(t.title) + '</b>'
+          + (t.priority === 'high' ? '<span class="ai-tk-s" style="color:#b42318;border-color:#b42318">High</span>' : '') + '<span class="bpx-mut" style="font-size:12.5px;margin-left:auto">' + esc(by) + ' → <b>' + esc((AG[t.assignee] || {}).n || t.assignee) + '</b></span></div>'
+          + (t.detail ? '<div class="bpx-mut" style="font-size:13px;margin-top:6px;white-space:pre-wrap">' + esc(t.detail) + '</div>' : '')
+          + (t.result ? '<div class="ai-tk-r">' + esc(t.result) + '</div>' : '')
+          + '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">'
+          + (t.status === 'open' || t.status === 'blocked' ? '<button class="bpx-btn" data-run>Start now</button><button class="bpx-rowbtn" data-cancel style="margin:0">Cancel</button>' : '')
+          + (t.status === 'cancelled' ? '<button class="bpx-rowbtn" data-reopen style="margin:0">Put back on the board</button>' : '')
+          + (t.thread_id ? '<button class="bpx-rowbtn" data-th="' + t.thread_id + '" style="margin:0">Open the conversation</button>' : '') + '<span class="bpx-mmsg"></span></div></div>';
+      }).join('');
+    }).join('');
+    box.querySelectorAll('.ai-tk').forEach(function (c) {
+      var id = c.getAttribute('data-id'), row = rows.filter(function (x) { return x.id === id; })[0], msg = c.querySelector('.bpx-mmsg');
+      var run = c.querySelector('[data-run]'); if (run) run.onclick = async function () {
+        run.disabled = true; msg.textContent = ((AG[row.assignee] || {}).n || 'They') + ' is working on it…';
+        var r = await api({ op: 'task_run', id: id }); if (!r.ok) { msg.textContent = r.error || 'Could not run it.'; run.disabled = false; return; }
+        A.st.used++; if (r.approvals) A.st.pending += r.approvals; topBar(); tkLoad(); };
+      var cn = c.querySelector('[data-cancel]'); if (cn) cn.onclick = async function () { await api({ op: 'task_set', id: id, status: 'cancelled' }); tkLoad(); };
+      var ro = c.querySelector('[data-reopen]'); if (ro) ro.onclick = async function () { await api({ op: 'task_set', id: id, status: 'open' }); tkLoad(); };
+      var th = c.querySelector('[data-th]'); if (th) th.onclick = function () { A.tab = 'chat'; A.agent = row.assignee; A.thread = th.getAttribute('data-th'); lastThread(row.assignee, A.thread); draw(); };
+    });
+  }
+
   async function chat() {
     $('aiBody').innerHTML = bpChatShell({ ph: 'Message ' + AG[A.agent].n + '…', fine: 'Anything for a customer waits for your OK first.' });
     bpChatWire(send);
