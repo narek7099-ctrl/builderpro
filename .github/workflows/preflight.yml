@@ -1,0 +1,30 @@
+# Preflight: runs on every change to main (that is, every change that goes live)
+# and on the working branch. It checks that every script compiles, the main pages
+# open with no JavaScript errors and show what they should, and the unit tests
+# pass (tools/preflight.js). It never logs in or sends anything, so it costs
+# nothing. GitHub emails you when it fails.
+name: Preflight
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run the checks
+        run: node tools/preflight.js
