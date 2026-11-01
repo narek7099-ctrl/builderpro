@@ -4,7 +4,10 @@
    While on:
      - no red counts on the bell, no "Finish setting up" bar or card, no
        "Upgrade to unlock" list, no "Connect your business number" banner
-     - the Texts inbox shows sample conversations (labeled "(sample)") instead
+     - "(sample)" is hidden wherever it shows on screen (names, jobs, contacts).
+       Only text on screen changes: form fields are left alone, so saving a
+       form never drops the label from the data.
+     - the Texts inbox shows sample conversations instead
        of asking HighLevel, so the missed-call text-back can be filmed while
        texting isn't connected. Nothing is sent anywhere: a message typed in a
        sample conversation only appears on this screen.
@@ -71,6 +74,32 @@
     return true;
   }
   if (!hook()) { var n = 0, t = setInterval(function () { if (hook() || ++n > 40) clearInterval(t); }, 250); }
+
+  /* ---------- hide "(sample)" on screen ---------- */
+  // "Mike Johnson (sample)" -> "Mike Johnson", "mike.sample@example.com" -> "mike@example.com"
+  var SAMPLE = /\s*\(sample\)|\.sample(?=@)/gi;
+  function clean(root) {
+    if (!root) return;
+    if (root.nodeType === 3) { if (SAMPLE.test(root.nodeValue)) { SAMPLE.lastIndex = 0; root.nodeValue = root.nodeValue.replace(SAMPLE, ''); } SAMPLE.lastIndex = 0; return; }
+    if (root.nodeType !== 1 || /^(SCRIPT|STYLE|TEXTAREA)$/.test(root.nodeName)) return;
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n, hits = [];
+    while ((n = w.nextNode())) if (/\(sample\)|\.sample@/i.test(n.nodeValue)) hits.push(n);
+    hits.forEach(function (t) { var pn = t.parentNode; if (pn && /^(SCRIPT|STYLE|TEXTAREA)$/.test(pn.nodeName)) return; t.nodeValue = t.nodeValue.replace(SAMPLE, ''); });
+    var els = root.querySelectorAll ? root.querySelectorAll('[title*="sample" i],[aria-label*="sample" i],[alt*="sample" i]') : [];
+    Array.prototype.forEach.call(els, function (e) {
+      ['title', 'aria-label', 'alt'].forEach(function (a) { var v = e.getAttribute(a); if (v && /\(sample\)|\.sample@/i.test(v)) e.setAttribute(a, v.replace(SAMPLE, '')); });
+    });
+  }
+  function watch() {
+    clean(document.body);
+    new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        if (m.type === 'characterData') clean(m.target);
+        else for (var i = 0; i < m.addedNodes.length; i++) clean(m.addedNodes[i]);
+      });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  if (document.body) watch(); else document.addEventListener('DOMContentLoaded', watch);
 
   /* ---------- quiet chrome ---------- */
   var st = document.createElement('style');
