@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261101-p21">
-<link rel="stylesheet" href="site/present.css?v=20261101-p21">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261101-p21"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261101-p22">
+<link rel="stylesheet" href="site/present.css?v=20261101-p22">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261101-p22"}}</script>
 
 
 <style id="bpi-icons">
@@ -4689,7 +4689,7 @@ function bpCalUnsched(){
   window.bpCalConnOpen=function(){ _bpCalLink.show=true; if(_bpCalLink.cals===null) bpCalLoadCals(); else bpCalLinkDraw(); };
   window.bpCalConnFind=function(){
     var el=q('bpx-cl-loc'); var loc=((el&&el.value)||'').trim();
-    if(!loc){ _bpCalLink.msg='Paste your GoHighLevel location id first.'; bpCalLinkDraw(); return; }
+    if(!loc){ _bpCalLink.msg='Paste your workspace ID first.'; bpCalLinkDraw(); return; }
     _bpCalLink.msg=''; _bpCalLink.loc=loc; bpCalLoadCals(loc);
   };
   window.bpCalConnSave=function(){
@@ -4720,10 +4720,10 @@ function bpCalUnsched(){
     var needLoc=(s.reason==='no_row'||s.reason==='no_location')&&!(s.cals&&s.cals.length);
     if(needLoc){
       return h+'<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">'
-        +(s.reason==='no_row'?'No account record is linked to this login yet. ':'No GoHighLevel sub-account is linked to this login yet. ')
-        +'Paste your GoHighLevel location id and BuilderPro will pull in your calendars.</div>'
-        +'<div class="cal-conn-r"><input id="bpx-cl-loc" placeholder="GoHighLevel location id" value="'+bpEsc(s.loc||'')+'"><button class="bpx-btn" onclick="bpCalConnFind()">Find calendars</button></div>'
-        +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">In GoHighLevel, open the sub-account and look at Settings \u203a Business Info \u2014 the Location ID is there, and it is also the long code in the address bar after /location/.</div>'
+        +(s.reason==='no_row'?'No account record is linked to this login yet. ':'Your BuilderPro workspace is not linked to this login yet. ')
+        +'Paste your workspace ID and BuilderPro will pull in your calendars.</div>'
+        +'<div class="cal-conn-r"><input id="bpx-cl-loc" placeholder="Workspace ID" value="'+bpEsc(s.loc||'')+'"><button class="bpx-btn" onclick="bpCalConnFind()">Find calendars</button></div>'
+        +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Don\u2019t have it? Email <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a> and we\u2019ll send it or connect your calendar for you.</div>'
         +err+'</div>';
     }
     if(s.cals&&s.cals.length){
@@ -4733,12 +4733,12 @@ function bpCalUnsched(){
         +'</select><button class="bpx-btn" id="bpx-cl-save" onclick="bpCalConnSave()"'+(s.busy?' disabled':'')+'>'+(s.busy?'Saving\u2026':'Connect')+'</button></div>';
       if(s.loc) h+='<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">From sub-account '+bpEsc(s.loc)+'.</div>';
     } else {
-      var why={no_token:'BuilderPro can\u2019t reach GoHighLevel right now, so the list is empty.',
-               unreachable:'GoHighLevel didn\u2019t answer, so the list is empty.'}[s.reason]
-              ||(/^ghl_/.test(s.reason||'')?'GoHighLevel refused the list ('+bpEsc(s.reason.slice(4))+').':'No calendars came back for this sub-account.');
+      var why={no_token:'BuilderPro can\u2019t reach your calendars right now, so the list is empty.',
+               unreachable:'Your calendars didn\u2019t load, so the list is empty. Try again in a minute.'}[s.reason]
+              ||(/^ghl_/.test(s.reason||'')?'Your calendars couldn\u2019t be loaded ('+bpEsc(s.reason.slice(4))+').':'No calendars came back for this workspace.');
       h+='<div class="bpx-mut" style="font-size:12.5px;margin-bottom:8px">'+why+' You can still paste the calendar id.</div>'
         +'<div class="cal-conn-r"><input id="bpx-cl-man" placeholder="Paste the calendar id" value="'+bpEsc(s.sel)+'"><button class="bpx-btn" id="bpx-cl-save" onclick="bpCalConnSave()"'+(s.busy?' disabled':'')+'>'+(s.busy?'Saving\u2026':'Connect')+'</button></div>'
-        +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">In GoHighLevel: Settings \u203a Calendars \u203a open the inspection calendar. The id is the long code in the address bar.</div>';
+        +'<div class="bpx-mut" style="font-size:11.5px;margin-top:6px">Don\u2019t have it? Email <a href="mailto:support@builderpro-os.com">support@builderpro-os.com</a> and we\u2019ll connect your calendar for you.</div>';
     }
     return h+err+'</div>';
   }
@@ -5173,7 +5173,7 @@ window.bpSaveContact=async function(id){
       var lisa=q('bpx-f-lisa'); if(!(lisa&&lisa.checked)) return done('Saved.');
       if(!phone&&!email) return done('Saved. Add a phone or email to have '+(window.BP_AI_NAME||'Lisa')+' reach out.');
       var pr=await bpAuthApi(BP_URL+'/functions/v1/lead-in',{op:'push',contact_id:ins.data.id}).catch(function(){return null;});
-      return done(pr&&pr.ok&&pr.sent?'Saved. '+(window.BP_AI_NAME||'Lisa')+' is texting them now.':pr&&pr.ok&&pr.reason==='no_highlevel'?'Saved. Texting starts once your HighLevel account is connected.':'Saved. We couldn’t start the texts just now; they’re saved in Contacts.');
+      return done(pr&&pr.ok&&pr.sent?'Saved. '+(window.BP_AI_NAME||'Lisa')+' is texting them now.':pr&&pr.ok&&pr.reason==='no_highlevel'?'Saved. Texting starts once your business number is set up.':'Saved. We couldn’t start the texts just now; they’re saved in Contacts.');
     }
     if(c&&c.src==='bp'&&live){
       var up=await BP_SB.from('contacts').update({name:name,phone:phone,email:email,updated_at:new Date().toISOString()}).eq('id',id);
@@ -14549,8 +14549,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-scan.js?v=20260930c"></script>
 <script src="portal/receipts.js?v=20261025c7"></script>
 <script src="portal/quickbooks.js?v=20261024q25"></script>
-<script src="portal/ghlsync.js?v=20261024q25"></script>
-<script src="portal/autopause.js?v=20261025c9"></script>
+<script src="portal/ghlsync.js?v=20261101a"></script>
+<script src="portal/autopause.js?v=20261101a"></script>
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20261024q36"></script>
 <script src="portal/matlists.js?v=20261026a"></script>
@@ -14582,18 +14582,18 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/estpick.js?v=20261024a"></script>
 <link rel="stylesheet" href="portal/assets.css?v=20261104a">
 <script src="portal/reviews.js?v=20261004a"></script>
-<script src="portal/automations.js?v=20261025c9"></script>
+<script src="portal/automations.js?v=20261101a"></script>
 <script src="portal/aibrain.js?v=20261103m"></script>
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261001a"></script>
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261024q25"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261101-p21"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261101-p21"></script>
-<script src="site/vendor/SplitText.min.js?v=20261101-p21"></script>
-<script src="site/site.js?v=20261101-p21"></script>
-<script src="site/present.js?v=20261101-p21"></script>
+<script src="site/vendor/gsap.min.js?v=20261101-p22"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261101-p22"></script>
+<script src="site/vendor/SplitText.min.js?v=20261101-p22"></script>
+<script src="site/site.js?v=20261101-p22"></script>
+<script src="site/present.js?v=20261101-p22"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261021a">

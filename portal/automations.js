@@ -370,8 +370,8 @@
   function phoneLive() { try { var ph = (window.bpSettingsGet && bpSettingsGet().phone) || {}; return ph.status === 'live'; } catch (e) { return false; } }
   /* [text, tone, hint] for one workflow on this account */
   function chip(w) {
-    if (w.id === '51') return ['Runs in BuilderPro', 'ok', 'This one runs inside BuilderPro, not HighLevel.'];
-    if (S.linked === false) return ['Needs HighLevel connected', 'warn', ''];   // the banner above the list explains it
+    if (w.id === '51') return ['Runs in BuilderPro', 'ok', 'This one runs inside BuilderPro itself.'];
+    if (S.linked === false) return ['Needs setup to finish', 'warn', ''];   // the banner above the list explains it
     if (PHONE[w.id] && !phoneLive()) return ['Needs your business number', 'warn', 'Texts and calls go out once your business number is connected (Settings > Business number).'];
     var fired = w.kind && S.fired ? S.fired[w.kind] : null;
     if (w.kind && S.fired) return fired ? ['Ran ' + fired.n + (fired.n === 1 ? ' time' : ' times') + ' · last ' + ago(fired.last), 'ok', ''] : ['On · waiting for its first event', 'ok', ''];
@@ -406,7 +406,7 @@
     var list = WF.filter(avail);
     var nNew = list.filter(function (w) { return status(w) === 'new'; }).length, nChg = list.filter(function (w) { return status(w) === 'chg'; }).length;
     var h = '<div class="wa"><div class="wa-top"><div class="wa-sum"><span class="wa-pill"><b>' + list.length + '</b>&nbsp;automations ' + (S.linked === false ? 'on' : 'running on') + ' your ' + PLANS[S.plan].name + ' plan</span></div></div>'
-      + (S.linked === false ? '<div class="wa-note warn"><b>Not running yet.</b> Your HighLevel account isn’t connected, so these are switched off. Ask support to finish your setup and they all turn on.</div>' : '');
+      + (S.linked === false ? '<div class="wa-note warn"><b>Not running yet.</b> Your workspace isn’t fully set up yet, so these are switched off. Ask support to finish your setup and they all turn on.</div>' : '');
     h += '<div class="wa-lay"><aside class="wa-list">';
     var shut = [];
     GROUPS.forEach(function (gr) {
@@ -444,11 +444,11 @@
       + '<button class="bpx-addbtn" id="wa-st-go">Send to past customers</button><div class="wa-st-msg" id="wa-st-msg"></div></div>'
       + (window.bpStormSettingsHtml ? bpStormSettingsHtml() : '');
     h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + GN[G(w)] + '</div><div class="wa-row"><h2>' + PN(w) + '</h2><span class="wa-live ' + ch[1] + '">' + ch[0] + '</span></div>'
-      + '<div class="wa-crm">' + (w.id === '51' ? 'Built into BuilderPro' : 'In your HighLevel: <b>' + w.id + ' ' + (x.name || w.name) + '</b>') + '</div>' + note
+      + '<div class="wa-crm">' + (w.id === '51' ? 'Built into BuilderPro' : 'Automation <b>' + w.id + ' ' + (x.name || w.name) + '</b>') + '</div>' + note
       + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'
       + '<div class="wa-leg"><span><i class="wa-msg"></i>Customer message</span><span><i class="wa-contact"></i>Contact / tags</span><span><i class="wa-pipe"></i>Pipeline</span><span><i class="wa-alert"></i>Alert to you</span><span><i class="wa-wait"></i>Wait</span><span><i class="wa-sys"></i>System</span><span><i class="wa-logic"></i>If / else</span></div>'
-      + '<p class="wa-foot">Texts to customers go out between 8am and 8pm in their time zone, except the after-hours missed-call reply. These run in your HighLevel account once it’s connected and your business number is live; anything still needed shows at the top.</p></main></div></div>';
+      + '<p class="wa-foot">Texts to customers go out between 8am and 8pm in their time zone, except the after-hours missed-call reply. These run once your workspace setup is finished and your business number is live; anything still needed shows at the top.</p></main></div></div>';
     area.innerHTML = h;
     area.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { S.plan = +b.getAttribute('data-p'); render(); }; });
     area.querySelectorAll('[data-fold]').forEach(function (b) { b.onclick = function () {
