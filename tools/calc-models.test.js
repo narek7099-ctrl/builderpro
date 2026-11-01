@@ -5,7 +5,7 @@
    does not throw — it renders an empty input and quietly prices at zero. */
 const {chromium}=require('playwright');
 (async()=>{
- const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+ const b=await chromium.launch(require('fs').existsSync('/opt/pw-browsers/chromium')?{executablePath:'/opt/pw-browsers/chromium'}:{});
  const p=await b.newPage();
  const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
  await p.route('**://**',r=>r.request().url().startsWith('http://localhost:8771')?r.continue():r.abort());

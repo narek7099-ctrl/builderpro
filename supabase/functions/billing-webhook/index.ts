@@ -3,10 +3,14 @@
 //   customer.subscription.updated   -> trial | active | past_due | cancelled, and cancel_at
 //                                      (when a plan set to end will end)
 //   customer.subscription.deleted   -> cancelled
+//   invoice.payment_failed          -> a "payment_failed" request in the Command Center
+//   charge.dispute.created          -> a "dispute" request (answer it in Stripe within the deadline)
+//   customer.subscription.trial_will_end -> a "trial_ending" note (Stripe sends this 3 days before)
 //
 // Stripe dashboard -> Developers -> Webhooks -> Add endpoint:
 //   https://<project>.supabase.co/functions/v1/billing-webhook
-//   events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted
+//   events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted,
+//           invoice.payment_failed, charge.dispute.created, customer.subscription.trial_will_end
 // Deploy: --no-verify-jwt (Stripe signs the request instead).
 // Secrets: STRIPE_BILLING_WEBHOOK_SECRET (whsec_...)
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -27,6 +31,34 @@ async function verified(raw: string, header: string): Promise<boolean> {
   return sigs.includes(hex);
 }
 const STATUS: Record<string, string> = { trialing: "trial", active: "active", past_due: "past_due", unpaid: "past_due", incomplete: "checkout", incomplete_expired: "cancelled", canceled: "cancelled", paused: "past_due" };
+
+/* Money problems the owner should see: they land in support_requests, which the
+   Command Center's Support/Software Team checks. Matched to the client by their
+   Stripe customer id (or the subscription's user_id). Stripe resends events, so
+   one request per event id. */
+const usd = (c: number) => "$" + ((Number(c) || 0) / 100).toFixed(2);
+// deno-lint-ignore no-explicit-any
+async function flag(ev: any, o: any) {
+  const cust = String(o.customer ?? "");
+  let acct: { user_id?: string; email?: string; business?: string } = {};
+  if (o.metadata?.user_id) { const r = await sb(`accounts?user_id=eq.${encodeURIComponent(o.metadata.user_id)}&select=user_id,email,business`); acct = (r.ok ? await r.json() : [])[0] ?? {}; }
+  if (!acct.user_id && cust) { const r = await sb(`accounts?stripe_customer_id=eq.${encodeURIComponent(cust)}&select=user_id,email,business`); acct = (r.ok ? await r.json() : [])[0] ?? {}; }
+  const who = acct.business || acct.email || o.customer_email || cust || "a client";
+  const dup = await sb(`support_requests?body=like.*${encodeURIComponent(ev.id)}*&select=id`);
+  if (dup.ok && (await dup.json()).length) return;
+  let kind = "", subject = "", body = "";
+  if (ev.type === "invoice.payment_failed") {
+    kind = "payment_failed"; subject = `Card declined: ${who} (${usd(o.amount_due)})`;
+    body = `Their payment of ${usd(o.amount_due)} didn't go through (attempt ${o.attempt_count ?? 1}). Stripe retries it automatically and emails them if card emails are on. The app shows them an "update your card" bar. If it keeps failing, reach out before the subscription is cancelled.`;
+  } else if (ev.type === "charge.dispute.created") {
+    kind = "dispute"; subject = `Chargeback: ${who} disputed ${usd(o.amount)}`;
+    body = `Reason: ${o.reason ?? "not given"}. Answer it in the Stripe dashboard (Payments > Disputes) before ${o.evidence_details?.due_by ? new Date(o.evidence_details.due_by * 1000).toISOString().slice(0, 10) : "the deadline"}: send the sign-up date, the trial and billing terms they agreed to, and their usage. Stripe also charges a dispute fee.`;
+  } else {
+    kind = "trial_ending"; subject = `Trial ends in 3 days: ${who}`;
+    body = `Their 14-day trial ends ${o.trial_end ? new Date(o.trial_end * 1000).toISOString().slice(0, 10) : "soon"} and the card on file will be charged. A short check-in now prevents surprise charges and chargebacks.`;
+  }
+  await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: acct.user_id ?? null, email: acct.email ?? o.customer_email ?? null, kind, subject, body: body + `\n(Stripe event ${ev.id})` }) });
+}
 
 Deno.serve(async (req) => {
   const raw = await req.text();
@@ -53,6 +85,8 @@ Deno.serve(async (req) => {
     // an AI Team bought with the plan lives and dies with the plan's subscription
     if (String(o.metadata?.addons ?? "").split(",").includes("ai")) body.ai_addon = body.status === "trial" ? "active" : body.status;
     await patch(uid, body);
+  } else if (["invoice.payment_failed", "charge.dispute.created", "customer.subscription.trial_will_end"].includes(ev.type)) {
+    await flag(ev, o);
   }
   return new Response("ok");
 });

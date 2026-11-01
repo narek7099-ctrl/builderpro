@@ -7,7 +7,7 @@
    direction it guessed. */
 const {chromium}=require('playwright');
 (async()=>{
- const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+ const b=await chromium.launch(require('fs').existsSync('/opt/pw-browsers/chromium')?{executablePath:'/opt/pw-browsers/chromium'}:{});
  const p=await b.newPage({viewport:{width:1280,height:1000}});
  const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
  p.on('console',m=>{if(m.type()==='error'&&!/supabase|unpkg|jsdelivr|net::|Failed to load|favicon/i.test(m.text()))errs.push('console: '+m.text())});
