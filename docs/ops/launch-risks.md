@@ -22,10 +22,19 @@ Each plan already includes Lisa minutes: Foundation 150, OS 300, Enterprise 500 
 | Lisa text replies (Conversation AI, ~$0.02 to $0.04 each) | ~$8 | ~$16 | ~$40 |
 | Number + texting registration (A2P) | ~$5 | ~$5 | ~$5 |
 | Stripe fee (2.9% + 30¢) | $3.17 | $6.07 | $8.97 |
-| **Total** | **~$49** | **~$91** | **~$161**, plus the AI Team's own AI cost |
-| **Left over** | **~$50** | **~$108** | **~$138** |
+| AI Team (included on Enterprise; $49 add-on on the others) | – | – | ~$5 typical, ~$15 worst, ~$40 extreme |
+| **Total** | **~$49** | **~$91** | **~$176** |
+| **Left over** | **~$50** | **~$108** | **~$123** |
 
 A typical client uses about half the minutes, so they cost less than this.
+
+**What the AI Team costs** (supabase/functions/ai-team):
+- **Measured:** one real test message cost 3.4¢ (Sonnet, about 31,000 tokens read and 550 written).
+- **Normal question:** about 3–8¢. **"Think harder" question** (Opus, used for research and long plans): about 10–25¢.
+- **Built-in limit:** 150 messages a month per client, then it stops until the 1st. Every message's cost is recorded in `cai_usage`.
+- **Automatic runs:** the 7am daily brief and the AI CEO's daily report cost about $1.50–3 a month per client.
+- **Per client per month:** typical ~$5; all 150 messages used ~$12–15; all 150 as "think harder" questions ~$40, which is the most it can cost.
+- **On the $49 add-on** (Foundation and OS) you keep at least ~$9 even in that extreme case, and ~$40 usually.
 
 **Fixed costs, whatever the number of clients:**
 - HighLevel agency plan: $297 or $497/mo
@@ -67,6 +76,10 @@ Database check (Nov 1):
 ## 4. Payments going wrong
 
 **Done:**
+- **Refund and cancel rules are set:**
+  - Terms: cancel any time; the plan runs to the end of the paid month; months already paid aren't refunded; no charge if you cancel during the trial.
+  - The app's **Cancel my plan** button does exactly that, and it creates a "cancel" request in the Command Center so you can reach out first.
+  - **Refunds you choose to give** (goodwill, or a mistake) are done by hand in Stripe: Payments → the payment → Refund.
 - The billing webhook now creates an item in the Command Center (support requests, which the Software Team checks) for:
   - a declined card
   - a chargeback, with its answer-by date
@@ -82,3 +95,23 @@ Database check (Nov 1):
    - turn on the **trial-ending reminder email** (card networks expect this for free trials, and it prevents most chargebacks)
    - after all retries fail, **cancel the subscription**
 3. **Answer every chargeback.** Send the sign-up date, the terms they agreed to, and that they used the product. Stripe gives about a week.
+
+## Your to-do list
+
+**Before the first paying client:**
+1. Upgrade Supabase to Pro ($25/mo) for daily backups.
+2. Turn on two-step login: Supabase, Stripe, HighLevel, GitHub, Google, Anthropic.
+3. Turn on leaked-password protection: Supabase → Authentication → Passwords.
+4. Add your mom as a second admin on Supabase and GitHub.
+5. Write the "if I lose access" page (which email owns what, no passwords).
+6. **Stripe (your mom's login):**
+   - **Webhooks:** add `invoice.payment_failed`, `charge.dispute.created` and `customer.subscription.trial_will_end` to the billing webhook.
+   - **Billing settings:**
+     - turn on Smart Retries
+     - turn on the failed-payment and expiring-card emails
+     - turn on the trial-ending reminder email
+     - after all retries fail, cancel the subscription
+
+**When HighLevel is turned back on:**
+7. Turn on extra-minute billing ($0.25/min) in the Command Center.
+8. Check the real Lisa cost per minute in HighLevel's billing after the first week, and update this sheet.
