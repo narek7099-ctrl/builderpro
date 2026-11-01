@@ -2,6 +2,11 @@
 // sub-account through the BuilderPro Connect app, saved in usage_month. pg_cron runs it
 // hourly with the cron key.
 //   - 80% of the plan's minutes: a notice in their portal (warned80)
+//   - the plan's limit (plan_limits: trial 50, then 150/300/500; with extra-minute billing
+//     on, the plan's minutes plus extra_minutes_max): capped_at is set once, the
+//     contractor gets a bell notice and the owner a "minutes_capped" request in the
+//     Command Center. Lisa's calls run in HighLevel, so turning her voice off at the cap
+//     is still a manual step there.
 //   - a month that has ended: minutes over the plan at $0.25 each go on their next
 //     Stripe invoice, only while ai_config bill_extra_minutes = 'on' (off by default)
 // HighLevel status codes and messages are kept in last_error; no tokens are stored.
@@ -10,7 +15,9 @@ const KEY = Deno.env.get("GHL_API_KEY") ?? "", CO = Deno.env.get("GHL_COMPANY_ID
 const CID = Deno.env.get("GHL_CLIENT_ID") ?? "", CSEC = Deno.env.get("GHL_CLIENT_SECRET") ?? "";
 const SK = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const B = "https://services.leadconnectorhq.com";
+// fallback if plan_limits can't be read
 const INCLUDED: Record<string, number> = { foundation: 150, os: 300, enterprise: 500 };
+type Lim = { plan: string; call_minutes: number; extra_minutes_max: number };
 const EXTRA_PER_MIN = 0.25;
 const sb = (p: string, i: RequestInit = {}) => fetch(`${SB_URL}/rest/v1/${p}`, { ...i, headers: { apikey: SB_SERVICE, Authorization: `Bearer ${SB_SERVICE}`, "Content-Type": "application/json", ...(i.headers ?? {}) } });
 const H = (t: string, v = "2021-07-28") => ({ Authorization: `Bearer ${t}`, Version: v, Accept: "application/json" });
@@ -108,19 +115,35 @@ Deno.serve(async (req) => {
   const prevStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const billOn = (await cfg("bill_extra_minutes")) === "on";
   const accts = await (await sb("accounts?select=user_id,email,plan,status,ghl_location_id,stripe_customer_id&ghl_location_id=neq.&status=in.(trial,active,past_due)")).json();
+  const lr = await sb("plan_limits?select=plan,call_minutes,extra_minutes_max");
+  const LIMITS: Record<string, Lim> = Object.fromEntries(((lr.ok ? await lr.json() : []) as Lim[]).map((l) => [l.plan, l]));
   const out: string[] = [];
   for (const a of Array.isArray(accts) ? accts : []) {
-    const included = INCLUDED[a.plan] ?? 0;
+    const lim = LIMITS[a.status === "trial" || a.status === "checkout" ? "trial" : a.plan];
+    const included = lim ? Number(lim.call_minutes) : (INCLUDED[a.plan] ?? 0);
     const t = await locToken(a.ghl_location_id);
     const save = (month: string, row: Record<string, unknown>) => sb("usage_month?on_conflict=user_id,month", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
       body: JSON.stringify({ user_id: a.user_id, month, included, updated_at: new Date().toISOString(), ...row }) });
     if (!t.token) { await save(ym(now), { last_error: t.why }); out.push(`${a.email}: ${t.why}`); continue; }
     const u = await callMinutes(a.ghl_location_id, t.token, start, now);
-    const old = (await (await sb(`usage_month?user_id=eq.${a.user_id}&month=eq.${ym(now)}&select=warned80`)).json())?.[0];
+    const old = (await (await sb(`usage_month?user_id=eq.${a.user_id}&month=eq.${ym(now)}&select=warned80,capped_at`)).json())?.[0];
     // a count that failed keeps the last good number
     if (!u.source) await save(ym(now), { last_error: u.error });
     else await save(ym(now), { minutes: u.minutes, calls: u.calls, source: u.source, last_error: u.error || null, warned80: !!old?.warned80 || (included > 0 && u.minutes >= included * 0.8) });
     out.push(`${a.email}: ${u.minutes} of ${included} min${u.error ? " (" + u.error + ")" : ""}`);
+    // the hard limit: the plan's minutes, plus the extra-minute ceiling only while extra minutes are billed (never in a trial)
+    const hard = included + (billOn && a.status === "active" && lim ? Number(lim.extra_minutes_max) : 0);
+    if (u.source && included > 0 && u.minutes >= hard && !old?.capped_at) {
+      await save(ym(now), { capped_at: new Date().toISOString() });
+      const rpc = (fn: string, body: unknown) => sb(`rpc/${fn}`, { method: "POST", body: JSON.stringify(body) }).catch(() => null);
+      await rpc("bp_notify", { p_owner: a.user_id, p_kind: "plan_limit", p_title: "Lisa's call minutes are used up for this month",
+        p_body: `Lisa has answered ${u.minutes} minutes of calls, your plan's limit of ${hard}. Calls will ring through to you instead. It resets on the 1st, or upgrade your plan for more minutes.`,
+        p_link: "settings:plan", p_priority: "high", p_dedupe: "mincap:" + ym(now), p_audience: "office" });
+      await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: a.user_id, email: a.email, kind: "minutes_capped",
+        subject: `Call-minute limit reached: ${a.email} (${u.minutes}/${hard} min)`,
+        body: `They reached their plan's Lisa call-minute limit for ${ym(now)}. Turn Lisa's voice agent off in their HighLevel sub-account (${a.ghl_location_id}) until the 1st, or offer an upgrade.` }) }).catch(() => {});
+      out.push(`${a.email}: LIMIT REACHED (${hard} min)`);
+    }
     // last month: settle it once (final count, then extra minutes onto their next invoice)
     const pm = ym(prevStart);
     const prev = (await (await sb(`usage_month?user_id=eq.${a.user_id}&month=eq.${pm}&select=*`)).json())?.[0];

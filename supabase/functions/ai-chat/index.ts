@@ -317,6 +317,29 @@ async function effectiveOwner(id: string, email?: string): Promise<{ id: string;
   } catch { /* fall through */ }
   return { id, email: email ?? "" };
 }
+/* One website-chat reply counted against the business's plan; at the limit the
+   chat hands visitors the business's phone number and the contractor is told once. */
+async function chatLimit(brain: Record<string, string>): Promise<{ ok: boolean } | null> {
+  try {
+    let owner = brain.owner || "";
+    if (!owner && (brain.owner_email || brain.ghl_location_id)) {
+      const q = brain.owner_email ? `email=eq.${encodeURIComponent(brain.owner_email)}` : `ghl_location_id=eq.${encodeURIComponent(brain.ghl_location_id)}`;
+      const r = await fetch(`${SB_URL}/rest/v1/accounts?${q}&select=user_id&limit=1`, { headers: sbHeaders });
+      owner = (r.ok ? await r.json() : [])[0]?.user_id ?? "";
+    }
+    if (!owner) return null;
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/bp_chat_count`, { method: "POST", headers: { ...sbHeaders, "Content-Type": "application/json" }, body: JSON.stringify({ p_owner: owner }) });
+    const d = r.ok ? await r.json() : null;
+    if (d && d.ok === false && d.first) {
+      await fetch(`${SB_URL}/rest/v1/rpc/bp_notify`, { method: "POST", headers: { ...sbHeaders, "Content-Type": "application/json" }, body: JSON.stringify({
+        p_owner: owner, p_kind: "plan_limit", p_title: "Website chat paused for this month",
+        p_body: `${brain.assistant_name || "Lisa"} answered all ${d.limit} website chats your plan includes this month. Visitors now see your phone number instead. It resets on the 1st, or upgrade your plan for more.`,
+        p_link: "settings:plan", p_priority: "high", p_dedupe: "chatcap:" + new Date().toISOString().slice(0, 7), p_audience: "office" }) }).catch(() => {});
+    }
+    return d;
+  } catch { return null; }   // never block a visitor because the counter failed
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -332,6 +355,11 @@ Deno.serve(async (req) => {
   if (!message) return json({ error: "message required" }, 400);
 
   const brain = payload.slug ? await loadBrain(payload.slug) : null;
+  // the plan's monthly limit on Lisa's website-chat replies (plan_limits.chat_replies)
+  if (brain && String(brain.is_demo) !== "true") {
+    const lim = await chatLimit(brain);
+    if (lim && !lim.ok) return json({ reply: `Thanks for reaching out! Our chat assistant is offline right now. Please call or text ${brain.phone || "us"} and we'll get right back to you.`, limited: true });
+  }
   // the caller may preview wording (the owner's test chat) but never choose
   // which HighLevel account or calendar the actions write to
   const override: Record<string, string> = { ...(payload.business ?? {}) };

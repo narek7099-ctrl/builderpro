@@ -11,7 +11,8 @@
 // The projects tool reads the contractor's jobs from portal_finance.
 // Models: Sonnet by default; heavy jobs (research, strategy, long plans) go
 // to Opus. Anything that contacts a customer or changes their data waits for
-// the contractor's approval. 150 messages a month per account.
+// the contractor's approval. Messages a month come from plan_limits
+// (ai_team_msgs: trial 50, Foundation/OS add-on 150, Enterprise 250).
 //
 //   POST (signed-in contractor) { op: status | subscribe | chat | threads | thread | approvals | approve | reject }
 //   POST ?brief  (pg_cron, x-cron-key) runs each account's 7am daily brief
@@ -19,15 +20,21 @@
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { SB_URL, sb, callGHL } from "./ghl.ts";
 
-const SONNET = Deno.env.get("AITEAM_MODEL") ?? "claude-sonnet-5";
-const OPUS = Deno.env.get("AITEAM_HEAVY_MODEL") ?? "claude-opus-5";
+const SONNET = Deno.env.get("AITEAM_MODEL") ?? "claude-sonnet-5-5";
+const OPUS = Deno.env.get("AITEAM_HEAVY_MODEL") ?? "claude-opus-5-5";
+// fallback when plan_limits can't be read
 const CAP = Number(Deno.env.get("AITEAM_MONTHLY_MESSAGES") ?? "150");
+async function capFor(uid: string): Promise<number> {
+  const r = await sb("rpc/bp_limits_for", { method: "POST", body: JSON.stringify({ p_owner: uid }) });
+  const row = (r.ok ? await r.json() : [])[0];
+  return Number(row?.ai_team_msgs) || CAP;
+}
 const PRICE = Number(Deno.env.get("AITEAM_PRICE") ?? "49");
 const SK = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const SITE = (Deno.env.get("SITE_URL") ?? "https://builderpro-os.com").replace(/\/$/, "");
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 // $ per million tokens, for the usage log (input, output, cache read)
-const RATES: Record<string, [number, number, number]> = { "claude-sonnet-5": [2, 10, 0.2], "claude-opus-5": [5, 25, 0.5], "claude-haiku-4-5": [1, 5, 0.1] };
+const RATES: Record<string, [number, number, number]> = { "claude-sonnet-5-5": [2, 10, 0.2], "claude-opus-5-5": [4, 20, 0.2], "claude-sonnet-5": [2, 10, 0.2], "claude-opus-5": [5, 25, 0.5], "claude-haiku-5-5": [0.1, 0.5, 0.01], "claude-haiku-4-5": [1, 5, 0.1] };
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 const month = () => new Date().toISOString().slice(0, 7);
@@ -146,7 +153,7 @@ async function usage(uid: string) {
   return (r.ok ? (await r.json())[0] : null) ?? { messages: 0, cost_cents: 0 };
 }
 async function addUsage(uid: string, model: string, u: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number; cache_creation_input_tokens?: number }, msgs = 0) {
-  const [ri, ro, rc] = RATES[model] ?? RATES["claude-sonnet-5"];
+  const [ri, ro, rc] = RATES[model] ?? RATES[SONNET] ?? RATES["claude-sonnet-5-5"];
   const inp = (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) * 1.25;
   const cents = (inp * ri + (u.cache_read_input_tokens ?? 0) * rc + (u.output_tokens ?? 0) * ro) / 1e6 * 100;
   const cur = await usage(uid);
@@ -264,10 +271,10 @@ async function run(acct: Acct, a: Agent, thread: string, text: string, opts: { h
       model, max_tokens: 12000, system: [{ type: "text", text: system(a, acct), cache_control: { type: "ephemeral" } }], messages, tools,
       thinking: { type: "adaptive" }, output_config: { effort: opts.effort ?? (opts.heavy ? "high" : "medium") },
     };
-    if (model === OPUS) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
+    params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default";
     // deno-lint-ignore no-explicit-any
     const res: any = await client.beta.messages.create(params as any);
-    await addUsage(acct.user_id, model, res.usage ?? {}, opts.count && !counted ? 1 : 0); counted = true;
+    await addUsage(acct.user_id, String(res.model ?? model), res.usage ?? {}, opts.count && !counted ? 1 : 0); counted = true;
     messages.push({ role: "assistant", content: res.content }); await save(thread, "assistant", res.content, model);
     const t = (res.content as { type: string; text?: string }[]).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
     if (t) reply = t;
@@ -362,7 +369,7 @@ Deno.serve(async (req) => {
   if (op === "status") {
     const us = await usage(u.id);
     const p = await sb(`cai_approvals?owner=eq.${u.id}&status=eq.pending&select=id`);
-    return json({ ok: true, addon: on ? "active" : acct.ai_addon, included: acct.plan === "enterprise", price: PRICE, cap: CAP, used: us.messages ?? 0, pending: p.ok ? (await p.json()).length : 0,
+    return json({ ok: true, addon: on ? "active" : acct.ai_addon, included: acct.plan === "enterprise", price: PRICE, cap: await capFor(u.id), used: us.messages ?? 0, pending: p.ok ? (await p.json()).length : 0,
       crm: !!acct.ghl_location_id, agents: Object.values(AGENTS).map((a) => ({ key: a.key, name: a.name, pages: ACCESS[a.key] ?? [] })) });
   }
   if (op === "subscribe") {
@@ -386,8 +393,8 @@ Deno.serve(async (req) => {
     const a = AGENTS[String(b.agent)]; if (!a) return json({ ok: false, error: "No such assistant." }, 400);
     if (!Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: false, error: "The AI Team is being set up. Try again shortly." }, 503);
     const msg = String(b.message ?? "").trim().slice(0, 6000); if (!msg) return json({ ok: false, error: "Type a message." }, 400);
-    const us = await usage(u.id);
-    if ((us.messages ?? 0) >= CAP) return json({ ok: false, error: `You've used all ${CAP} messages this month. They reset on the 1st.`, capped: true }, 429);
+    const us = await usage(u.id), cap = await capFor(u.id);
+    if ((us.messages ?? 0) >= cap) return json({ ok: false, error: `You've used all ${cap} messages this month. They reset on the 1st.`, capped: true }, 429);
     let thread = b.thread_id ? String(b.thread_id) : "";
     if (thread) { const t = await sb(`cai_threads?id=eq.${encodeURIComponent(thread)}&owner=eq.${u.id}&select=id`); if (!(t.ok && (await t.json()).length)) thread = ""; }
     if (!thread) thread = await newThread(u.id, a.key, msg);
