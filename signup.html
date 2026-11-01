@@ -273,7 +273,7 @@ function render(){
     +'<h2 style="margin:22px 0 0">Add-ons</h2><div class="addons">'+ADDONS.filter(function(a){return a.k!=='ai'||S.plan==='enterprise';}).map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
       return '<label class="addon'+(inc?' inc':'')+'"><input type="checkbox" '+(inc||S.addons[a.k]?'checked ':'')+(inc?'disabled ':'')+'onchange="S.addons.'+a.k+'=this.checked;persist();render()"><span><b>'+a.n+'</b> <em>'+(inc?'Included':'+$'+a.p+' / month')+'</em><small>'+a.d+'</small></span></label>';}).join('')+'</div>'
     +'<p class="total"><span>Total after the 14-day trial</span><b>$'+total()+' / month</b></p>'
-    +'<div class="note">As soon as you finish, we build your BuilderPro account, your GoHighLevel workspace, your booking calendar and your AI receptionist from these answers. It is ready when you log in.</div>'
+    +'<div class="note">As soon as you finish, we build your BuilderPro workspace, your booking calendar and your AI receptionist from these answers. It is ready when you log in.</div>'
     +nav('Start my free trial'); }
   $('view').innerHTML='<div class="panel">'+h+'</div>';
   var f=$('view').querySelector('input:not([type=checkbox]):not(.hp),select,textarea'); if(f&&STEP)f.focus({preventScroll:true});
@@ -331,7 +331,7 @@ async function done(){
   var tick=async function(){
     var a=null; try{ if(SB){ var r=await SB.from('accounts').select('status,ghl_location_id,onboard_state,setup_log,checkout_url').maybeSingle(); a=r.data; } }catch(e){}
     var log=(a&&a.setup_log||[]).join(' ');
-    var items=[['Your BuilderPro login and settings',!!a],['Your GoHighLevel workspace',!!(a&&a.ghl_location_id)],['Business details and booking calendar',/details filled/i.test(log)],['Your AI receptionist',/receptionist/i.test(log)],['Final check by our Builder team',a&&a.onboard_state==='onboarded']];
+    var items=[['Your BuilderPro login and settings',!!a],['Your BuilderPro workspace',!!(a&&a.ghl_location_id)],['Business details and booking calendar',/details filled/i.test(log)],['Your AI receptionist',/receptionist/i.test(log)],['Final check by our Builder team',a&&a.onboard_state==='onboarded']];
     var first=true; $('stp').innerHTML=items.map(function(x){var c=x[1]?'done':(first?(first=false,'run'):'');return '<li class="'+c+'"><i></i>'+x[0]+'</li>'}).join('');
     if(a&&a.status==='checkout'&&a.checkout_url&&!$('payag')){ $('stp').insertAdjacentHTML('afterend','<div class="note" id="payag">Your card is not on file yet. <a href="'+esc(a.checkout_url)+'">Finish checkout</a> to keep your trial.</div>'); }
     if(!(a&&a.onboard_state==='onboarded'))setTimeout(tick,4000);
