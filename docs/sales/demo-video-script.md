@@ -1,5 +1,7 @@
 # BuilderPro demo video (about 75 seconds)
 
+> The launch video with the company story and an AI spokesperson is planned in [launch-video-script.md](launch-video-script.md). This file is the shorter screen-recording demo.
+
 A screen recording plus your voice. Use it on the homepage, in email 1 of the sales kit, and on social media.
 
 **What to record with:**
