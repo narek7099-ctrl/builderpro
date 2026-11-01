@@ -105,6 +105,8 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 @keyframes fadeSoon{to{opacity:.4}}
 .tl.soon i{border-style:dashed}
 .bstat{position:absolute;left:18px;bottom:14px;font:500 12.5px var(--sans);color:var(--dim);display:flex;gap:18px}
+.bstat .spend button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:1px 8px;font:500 11.5px inherit;color:inherit;cursor:pointer;margin-left:4px}
+.bstat .spend.warn b{color:#b45309}.bstat .spend.over b{color:#c0392b}
 .bstat b{color:var(--mut);font-weight:500}
 .bstat .on{color:var(--ok)}
 /* ---- chat drawer ---- */
@@ -259,7 +261,12 @@ var TOOLSET={ceo:[['ti-sparkles','Claude','model'],['ti-database','Memory','shar
   support:[['ti-users-group','11 specialists','one per feature'],['ti-layout-dashboard','BuilderPro','requests'],['ti-plug-connected','GHL','sub-accounts']],
   builder:[['ti-plug-connected','GHL','build'],['ti-layout-dashboard','BuilderPro','receptionist']],
   research:[['ti-world-search','Web','search'],['ti-database','Memory','findings']]};
-var STATUS={}, SHIFTS=true, CONNS=[], SPECS=[], SPECST={};
+var STATUS={}, SHIFTS=true, CONNS=[], SPECS=[], SPECST={}, SPEND=null;
+/* the monthly AI spending limit: what's spent so far, and a button to change it */
+function spendHtml(){ if(!SPEND)return ''; var d=SPEND.cents/100, pct=Math.min(100,Math.round(d/SPEND.limit*100));
+  return '<span class="spend'+(SPEND.over?' over':pct>=80?' warn':'')+'" title="What the AI team has cost this month. It stops at the limit until the 1st.">AI spend <b>$'+d.toFixed(2)+'</b> of $'+SPEND.limit+(SPEND.over?' (paused)':'')+' <button type="button" onclick="ccLimit()">Change</button></span>'; }
+async function ccLimit(){ var v=prompt('Monthly limit for the AI team, in dollars. The team stops when it reaches this, until the 1st.',SPEND?SPEND.limit:30); if(v==null)return;
+  var r=await api({op:'cc_limit',usd:Number(v)}); if(!r.ok){alert(r.error||'Could not change it.');return;} SPEND=r.spend; drawBoard(); }
 /* the Software Team's specialists (agent keys sw_<feature>) live outside NAMES so the board stays six teams */
 function spec(k){return SPECS.filter(function(x){return x.key===k})[0];}
 function nm(k){var x=spec(k);return x?x.name+' specialist':(NAMES[k]||k);}
@@ -276,7 +283,7 @@ async function viewTeam(){
     +'<div class="scrim" id="scr" onclick="closeDr()"></div><div class="drawer" id="dr"><div class="hd"><b id="drT"></b><select id="drTh" onchange="openThread(this.value||null)"></select><button class="xbtn" aria-label="Close" onclick="closeDr()"><i class="ti ti-x"></i></button></div>'
     +'<div class="sps" id="sps" hidden></div><div class="msgs" id="msgs"></div><div class="compose"><textarea id="inp" placeholder="Message…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();send()}"></textarea><button class="btn pri" id="sendb" onclick="send()">Send</button></div></div>';
   drawBoard();
-  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SPECS=r.specialists||[]; SPECST=r.specs||{}; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
+  var r=await api({op:'status'}); STATUS=r.data||{}; CONNS=r.connections||[]; SPECS=r.specialists||[]; SPECST=r.specs||{}; SPEND=r.spend||null; SHIFTS=r.shifts_on!==false; el('shOn').checked=SHIFTS; drawBoard();
 }
 function fitBoard(){
   var bd=el('bd'); if(!bd)return; var box=bd.parentElement, w=box.clientWidth, sc=Math.min(1,w/1120);
@@ -286,7 +293,7 @@ window.addEventListener('resize',function(){ if(TAB==='team'&&el('bd')){ if((win
 function drawList(){
   /* phones: the same team as a simple list, no canvas */
   el('bd').parentElement.style.height='auto'; el('bd').style.transform='none'; el('bd').style.width='auto'; el('bd').style.height='auto';
-  el('bd').innerHTML='<div style="display:grid;gap:10px;padding:14px">'+Object.keys(NAMES).map(function(k){
+  el('bd').innerHTML='<div style="display:grid;gap:10px;padding:14px">'+(SPEND?'<div class="bstat" style="position:static;flex-wrap:wrap">'+spendHtml()+'</div>':'')+Object.keys(NAMES).map(function(k){
     var st=STATUS[k]||{},last=st.last,live=isLive(k),mine=CONNS.filter(function(c){return (c.agents||[]).indexOf(k)>=0;});
     var tools=(TOOLSET[k]||[]).filter(function(t){return !t[3];}).map(function(t){return t[1];}).concat(mine.map(function(c){return c.label||c.name;})).filter(function(v,i,a){return a.indexOf(v)===i;});
     return '<button class="nd'+(k==='ceo'?' lead':'')+(live?' work':'')+'" style="position:static;transform:none;opacity:1;animation:none;width:100%" onclick="openAgent(\''+k+'\')"><div class="box" style="width:100%">'+(st.pending?'<span class="badge">'+st.pending+'</span>':'')
@@ -323,7 +330,7 @@ function drawBoard(){
       +(live?'Working now':last?(last.created_by==='shift'?'Last shift ':'Last chat ')+ago(last.updated_at):esc(AG[k].d))+'</div></span></div></button>';
   });
   var nlive=Object.keys(NAMES).filter(isLive).length;
-  el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of 6 working</span><span>shifts <b>'+(SHIFTS?'once a day':'paused')+'</b></span><span>auto-onboarding <b>on</b></span></div>';
+  el('bd').innerHTML=svg+'</svg>'+nodes+'<div class="bstat"><span class="on">online</span><span><b>'+nlive+'</b> of 6 working</span><span>shifts <b>'+(SHIFTS?'once a day':'paused')+'</b></span><span>auto-onboarding <b>on</b></span>'+spendHtml()+'</div>';
   fitBoard();
 }
 function closeDr(){el('dr').classList.remove('open');el('scr').classList.remove('open');drawBoard();}
@@ -373,7 +380,7 @@ async function send(){
     addMsg({role:'assistant',text:'**Could not finish.** '+aiErr(r.error)}); }
   if(r.approvals&&r.approvals.length){ addMsg({role:'sys',text:r.approvals.length+' action(s) waiting for your approval to Approvals tab'}); countPending(); }
 }
-setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;SPECST=r.specs||SPECST;drawBoard();drawSpecs();} }); },60000);
+setInterval(function(){ if(TAB==='team'&&el('bd')) api({op:'status'}).then(function(r){ if(r.ok){STATUS=r.data;SPECST=r.specs||SPECST;SPEND=r.spend||SPEND;drawBoard();drawSpecs();} }); },60000);
 
 /* ---------- Approvals ---------- */
 async function viewApprovals(){

@@ -418,10 +418,32 @@ const workspaceId = (key: string) => WS ??= (async () => {
   } catch { WS = null; return ""; }
 })();
 
+/* The monthly spending limit: every call's cost (from its token usage) is added to
+   cc_usage for the month; once it reaches ai_config cc_monthly_limit_usd, chats and
+   shifts stop until the 1st or until the owner raises the limit. Prices are per
+   million tokens (input, output, cache read); cache writes cost 1.25x input; web
+   searches are $10 per 1,000. */
+const PRICES: Record<string, [number, number, number]> = { "claude-sonnet-5-5": [2, 10, 0.2], "claude-sonnet-5": [2, 10, 0.2], "claude-opus-5-5": [4, 20, 0.2], "claude-opus-5": [5, 25, 0.5], "claude-haiku-5-5": [0.1, 0.5, 0.01] };
+// deno-lint-ignore no-explicit-any
+const costCents = (model: string, u: any) => {
+  const [pi, po, pc] = PRICES[model] ?? PRICES[MODEL] ?? [5, 25, 0.5];
+  const tok = ((u?.input_tokens ?? 0) * pi + (u?.cache_creation_input_tokens ?? 0) * pi * 1.25 + (u?.cache_read_input_tokens ?? 0) * pc + (u?.output_tokens ?? 0) * po) / 1e6;
+  return (tok + (u?.server_tool_use?.web_search_requests ?? 0) * 0.01) * 100;
+};
+async function spend(): Promise<{ month: string; cents: number; limit: number; over: boolean }> {
+  const month = new Date().toISOString().slice(0, 7);
+  const [u, l] = await Promise.all([sb(`cc_usage?month=eq.${month}&select=cost_cents`), sb("ai_config?key=eq.cc_monthly_limit_usd&select=value")]);
+  const cents = Number((u.ok ? await u.json() : [])[0]?.cost_cents ?? 0);
+  const limit = Number((l.ok ? await l.json() : [])[0]?.value ?? 30) || 30;
+  return { month, cents: Math.round(cents), limit, over: cents >= limit * 100 };
+}
+const overMsg = (s: { cents: number; limit: number }) => `Monthly AI limit reached: $${(s.cents / 100).toFixed(2)} of $${s.limit} spent this month. The team is paused until the 1st, or raise the limit on the AI Team tab.`;
+
 /* The loop: call Claude, run the tools it asks for (or queue them for the
    owner), feed results back, until it answers. Append-only, so earlier turns
    (and their thinking) are sent back unchanged. */
 async function runAgent(a: Agent, thread: string, userText: string, depth = 0, by = "owner") {
+  { const s0 = await spend(); if (s0.over) throw new Error(overMsg(s0)); }
   const apiKey = (Deno.env.get("ANTHROPIC_API_KEY") ?? "").replace(/\s+/g, ""), ws = await workspaceId(apiKey);
   const client = new Anthropic({ apiKey, defaultHeaders: ws ? { "anthropic-workspace-id": ws } : undefined });
   const sys = await system(a);
@@ -460,6 +482,7 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
       }
     }
     messages.push({ role: "assistant", content: res.content }); await save(thread, "assistant", res.content);
+    await sb("rpc/cc_usage_add", { method: "POST", body: JSON.stringify({ p_cents: costCents(String(res.model ?? MODEL), res.usage) }) }).catch(() => {});
     const text = (res.content as { type: string; text?: string }[]).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
     if (text) reply = text;
     if (res.stop_reason === "refusal") { reply = reply || "I can't help with that one."; break; }
@@ -484,6 +507,8 @@ async function runAgent(a: Agent, thread: string, userText: string, depth = 0, b
     }));
     const tr = { role: "user" as const, content: results as unknown as Anthropic.Beta.Messages.BetaMessageParam["content"] };
     messages.push(tr); await save(thread, "user", tr.content);
+    // the limit was reached during this run: stop here instead of another call
+    const s1 = await spend(); if (s1.over) { reply = (reply ? reply + "\n\n" : "") + "_" + overMsg(s1) + "_"; break; }
   }
   await sb(`ai_threads?id=eq.${thread}`, { method: "PATCH", body: JSON.stringify({ updated_at: new Date().toISOString() }) });
   return { reply, approvals };
@@ -519,6 +544,7 @@ async function shift(req: Request) {
   if (get("ghl_diag_req")) bg(ghlDiag().catch(() => {}));
   const onboard = "started";
   if (get("shifts_on") === "false" || !Deno.env.get("ANTHROPIC_API_KEY")) return json({ ok: true, onboard, skipped: true });
+  if ((await spend()).over) return json({ ok: true, onboard, skipped: "monthly AI limit reached" });
   // the scheduler ticks every 5 min for onboarding; a team shift only every SHIFT_EVERY_MIN
   const lastAny = Math.max(0, ...rows.filter((r) => r.key.startsWith("shift_")).map((r) => Date.parse(r.value) || 0));
   if (Date.now() - lastAny < (SHIFT_EVERY_MIN - 1) * 6e4) return json({ ok: true, onboard });
@@ -656,6 +682,12 @@ Deno.serve(async (req) => {
     try { const out = await runAgent(a, thread, msg); return json({ ok: true, thread_id: thread, ...out }); }
     catch (e) { return json({ ok: false, thread_id: thread, error: String(e).slice(0, 400) }, 500); }
   }
+  if (op === "cc_limit") {
+    const v = Math.round(Number(b.usd));
+    if (!(v >= 1 && v <= 1000)) return json({ ok: false, error: "Pick a limit between $1 and $1,000." }, 400);
+    await setCfg("cc_monthly_limit_usd", String(v));
+    return json({ ok: true, spend: await spend() });
+  }
   if (op === "status") {
     const out: Record<string, unknown> = {};
     for (const k of Object.keys(AGENTS)) {
@@ -671,7 +703,7 @@ Deno.serve(async (req) => {
     const mm = await metaGet();
     const conns = m.ok ? await m.json() : [];
     if (mm?.pages?.length) conns.push({ name: "facebook", label: "Facebook", agents: ["marketing", "ceo"] }, ...(mm.pages.some((p) => p.ig) ? [{ name: "instagram", label: "Instagram", agents: ["marketing", "ceo"] }] : []));
-    return json({ ok: true, data: out, specs, specialists: SPECS.map((x) => ({ key: "sw_" + x.key, name: x.name, short: x.short })), shifts_on: on, connections: conns });
+    return json({ ok: true, data: out, spend: await spend(), specs, specialists: SPECS.map((x) => ({ key: "sw_" + x.key, name: x.name, short: x.short })), shifts_on: on, connections: conns });
   }
   if (op === "shifts") {
     await sb("ai_config?on_conflict=key", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "shifts_on", value: b.on ? "true" : "false" }) });
