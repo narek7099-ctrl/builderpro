@@ -192,10 +192,10 @@ var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
 var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
 var SB=window.supabase?window.supabase.createClient(SB_URL,SB_ANON):null;
 var PLANS=[
-  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa answers calls and texts','Calendar and booking page','Estimates, invoices, payments','150 call minutes']},
+  {k:'foundation',tag:'Starter',n:'Foundation',p:99,f:['Lisa answers calls and texts','Calendar and scheduling','Estimates, invoices, payments','150 call minutes']},
   {k:'os',tag:'Most popular',n:'BuilderPro OS',p:199,pop:1,f:['Everything in Foundation','Projects, finances and crews','All instant-quote calculators','300 call minutes, you + 5 crew logins']},
   {k:'enterprise',tag:'Built to grow',n:'Enterprise',p:299,f:['Everything in BuilderPro OS','AI Team included','500 call minutes, unlimited users']}];
-var ADDONS=[{k:'ai',n:'AI Team',p:0,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief. Only on Enterprise.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator, booking page and Lisa built in.'}];
+var ADDONS=[{k:'ai',n:'AI Team',p:0,d:'Sales, marketing and an office manager that work for you, plus a 7am daily brief. Only on Enterprise.'},{k:'website',n:'Website',p:49,d:'We build and host your website, with your calculator and Lisa built in.'}];
 var TRADES=['Roofing','Plumbing','HVAC','Electrical','General contracting','Remodeling','Painting','Landscaping','Pools','Countertops','Flooring','Siding and gutters','Concrete & Paving','Other'];
 var SERVICES={Roofing:['Roof replacement','Roof repair','Storm damage','Inspections','Gutters','Skylights'],Plumbing:['Leak repair','Drain cleaning','Water heaters','Repiping','Sewer lines','Fixtures'],HVAC:['AC install','Furnace install','Repairs','Maintenance plans','Ductwork','Heat pumps'],
   Electrical:['Panel upgrades','Rewiring','EV chargers','Lighting','Generators','Troubleshooting'],'General contracting':['Additions','New builds','Kitchens','Bathrooms','Decks','Permits'],Remodeling:['Kitchens','Bathrooms','Basements','Flooring','Whole-home'],
@@ -240,7 +240,7 @@ function render(){
     +fld('iEmail','Email',S.email,{type:'email',ac:'email',full:1,ph:'you@yourcompany.com'})+'<div class="f full"><label for="iPass">Password</label><div class="pw"><input id="iPass" type="password" value="'+esc(S.password||'')+'" placeholder="8 or more characters" autocomplete="new-password"><button type="button" onclick="pwToggle(this)" aria-pressed="false">Show</button></div></div>'
     +'</div><p class="sub" style="font-size:12px;margin-top:10px">By continuing, you agree that BuilderPro may text and email you about your trial and account. Message and data rates may apply. Reply STOP to opt out.</p>'
     +'<input class="hp" id="iWeb" tabindex="-1" autocomplete="off" aria-hidden="true">'+nav();
-  if(st==='business') h='<h1>About your business</h1><p class="sub">We use this to build your account, your booking page and your AI receptionist.</p><div class="grid">'
+  if(st==='business') h='<h1>About your business</h1><p class="sub">We use this to build your account, your calculator and your AI receptionist.</p><div class="grid">'
     +fld('iBiz','Business name',S.business,{ac:'organization'})+fld('iTrade','Trade',S.trade||'Roofing',{type:'select',opts:TRADES})
     +fld('iAddr','Street address',P.address,{ac:'address-line1',full:1,opt:1})
     +fld('iCity','City',P.city,{ac:'address-level2'})+'<div class="grid" style="gap:14px">'+fld('iState','State',P.state,{ac:'address-level1',ph:'TX'})+fld('iZip','ZIP',P.zip,{ac:'postal-code',opt:1})+'</div>'
@@ -257,7 +257,7 @@ function render(){
     +'</div>'+nav(); }
   if(st==='ai') h='<h1>Your AI receptionist</h1><p class="sub">She answers your calls and texts from day one. The defaults work well; change anything you like now or later in Settings.</p><div class="grid">'
     +fld('iAi','Her name',P.assistantName||'Lisa')+fld('iTone','How she should sound',P.tone||'Friendly',{type:'select',opts:['Friendly','Professional','Warm and casual','Straight to the point']})
-    +fld('iGoal','Main goal on every call',P.leadGoal||'Book a free inspection or estimate',{type:'select',full:1,opts:['Book a free inspection or estimate','Take a message and have me call back','Give a price range, then book','Send them to my booking page']})
+    +fld('iGoal','Main goal on every call',P.leadGoal||'Book a free inspection or estimate',{type:'select',full:1,opts:['Book a free inspection or estimate','Take a message and have me call back','Give a price range, then book']})
     +fld('iFaq','Questions customers always ask',P.faqs,{type:'textarea',full:1,opt:1,ph:'Do you offer financing? Yes, through GreenSky.\nAre you insured? Yes, fully licensed and insured.\nHow soon can you come out? Usually within 48 hours.'})
     +fld('iLang','Languages you speak',P.languages||'English',{})+fld('iRef','How did you hear about us?',P.referral,{opt:1})
     +fld('iNotes','Anything else she should know',P.notes,{type:'textarea',full:1,opt:1})

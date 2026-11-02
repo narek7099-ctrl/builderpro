@@ -50,6 +50,14 @@ SKIN = ('<link rel="stylesheet" href="tool-skin-est.css?v=%s"><script src="tool-
 
 POWERED = '<a class="bp-pw" href="https://builderpro-os.com/?ref=calculator" target="_blank" rel="noopener">Powered by BuilderPro OS</a><style>.bp-pw{display:block;width:max-content;margin:12px auto 8px;font:500 11px/1.4 -apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#98a2b3;text-decoration:none;letter-spacing:.01em}.bp-pw:hover,.bp-pw:focus-visible{color:#667085;text-decoration:underline}</style>'
 
+# the result-screen extras (Good / Better / Best, monthly payment, request sent):
+# one shared file, copied next to the pages and versioned so a change reaches visitors
+import shutil
+shutil.copyfile(os.path.join(SRC_DIR, 'result-plus.js'), os.path.join(OUT, 'result-plus.js'))
+RESULT = '<script src="result-plus.js?v=%s" data-trade="%%s" defer></script>' % _v('result-plus.js')
+# the contractor's saved pricing row, kept whole for result-plus.js (financing lives in it)
+KEEP_PRICING = ('var p=rows[0].pricing||{};', 'var p=rows[0].pricing||{};window.__bpPricing=p;')
+
 built = []
 for t in TRADES:
     doc = source_for(t)
@@ -66,13 +74,16 @@ for t in TRADES:
     doc = doc.replace('<!doctype html>', '<!doctype html><!-- built by tools/build-embeds.py from embed-src/; edit the source, not this file -->', 1)
     if '<meta name="viewport"' not in doc:
         doc = re.sub(r'(<head[^>]*>)', r'\1<meta name="viewport" content="width=device-width,initial-scale=1">', doc, count=1)
+    if KEEP_PRICING[0] not in doc:
+        print('pricing loader shape changed for', t); sys.exit(1)
+    doc = doc.replace(KEEP_PRICING[0], KEEP_PRICING[1], 1)
     # the owner's saved look (colours, font, logo) and live preview from the portal
     applier = io.open(os.path.join(ROOT, 'tools', 'theme-applier.js'), encoding='utf-8').read().replace('__KIND__', 'calc')
     # a small, quiet credit under the tool (outside #est-embed, so it stays when a contractor hides their own brand line)
     if '</body>' in doc:
-        doc = doc.replace('</body>', POWERED + '<script id="bp-theme-applier">' + applier + '</script></body>', 1)
+        doc = doc.replace('</body>', POWERED + '<script id="bp-theme-applier">' + applier + '</script>' + RESULT % t + '</body>', 1)
     else:
-        doc += POWERED + '<script id="bp-theme-applier">' + applier + '</script>'
+        doc += POWERED + '<script id="bp-theme-applier">' + applier + '</script>' + RESULT % t
     # the BuilderPro tool look (tools/tool-skin.py): last in the head so it wins over the page's own styles
     doc = doc.replace('</head>', SKIN + '</head>', 1)
     io.open(os.path.join(OUT, t + '.html'), 'w', encoding='utf-8').write(doc)
