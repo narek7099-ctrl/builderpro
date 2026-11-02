@@ -32,7 +32,8 @@
       { k: 'ai', t: 'Publish what ' + (window.BP_AI_NAME || 'Lisa') + ' knows', s: 'Your services, prices and rules, so the receptionist answers like you would.', done: D.brain === undefined ? null : !!(D.brain && D.brain.published_at), go: 'ai' },
       { k: 'calc', t: 'Set your calculator prices', s: 'The estimator on your website quotes from these.', done: D.calc === undefined ? null : !!D.calc, go: 'calculator' },
       { k: 'job', t: 'Add your first project', s: 'Photos, schedule and costs live on the project.', done: jobs.length > 0, go: 'activejobs' },
-    ];
+    ].concat(window.bpGcal && bpGcal.st && bpGcal.st.configured
+      ? [{ k: 'gcal', t: 'Connect Google Calendar', s: 'Your personal events block time so ' + (window.BP_AI_NAME || 'Lisa') + ' never books over them, and your jobs show on your phone.', done: !!bpGcal.st.connected, go: 'calendar' }] : []);
   }
   function checklist() {
     var list = steps(), known = list.filter(function (x) { return x.done !== null; });

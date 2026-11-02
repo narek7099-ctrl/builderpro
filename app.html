@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261102-p26">
-<link rel="stylesheet" href="site/present.css?v=20261102-p26">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261102-p26"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261102-p27">
+<link rel="stylesheet" href="site/present.css?v=20261102-p27">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261102-p27"}}</script>
 
 
 <style id="bpi-icons">
@@ -4188,11 +4188,13 @@ function bpCalUnsched(){
         : '<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>')
       +'<div class="cal-side">'
       +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
+      +((all||insp)?'<div class="bpx-panel cal-gcal" id="bpx-gcal" hidden></div>':'')
       +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-todos"></div></div>':'')
       +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-upnext"></div></div>'
       +'</div></div>'
       +(all?'<div class="cal-legend cal-key"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut cal-hint">'+(_bpCalView==='week'?'Drag a box to move it. Click an empty slot to add a note or to-do.':_bpCalView==='day'?'Tap a block to open it.':'Tap any day to see it or add to it.')+'</span></div>':'');
     bpLoadCalendar();
+    if((all||insp)&&window.bpGcalPanel) bpGcalPanel();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
     if(all){ bpNotesLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
   }
@@ -4254,6 +4256,8 @@ function bpCalUnsched(){
       if(_bpCalCrew&&(_bpCalCrew==='none'?cr:(!cr||cr.id!==_bpCalCrew))) return;
       out.push({from:from,to:to,kind:'crew',allDay:!t,color:cr?cr.color:'',title:j.name||'Project',sub:(j.title||'Project')+' · '+(cr?cr.name:'no crew'),act:"bpPjSlotOpen('"+j.id+"','"+iso+"')",ref:'crew:'+j.id});
     });
+    /* their Google Calendar (portal/gcal.js): busy time, and appointments made from it */
+    if(_bpCalKind!=='jobs'&&window.bpGcalItems) bpGcalItems(iso).forEach(function(x){ out.push(x); });
     (typeof bpNotesFor==='function'?bpNotesFor(iso):[]).forEach(function(n){
       var from=n.at?bpMins(n.at):null;
       out.push({from:from,to:from==null?null:from+30,kind:n.kind==='note'?'note':'todo',allDay:!n.at,done:n.done,title:n.text,sub:n.kind==='note'?'Note':'To-do',act:"bpDaySheet('"+iso+"')",ref:'note:'+n.id});
@@ -4786,6 +4790,7 @@ function bpCalUnsched(){
   }
   function bpCopyText(txt,btn,label){ var done=function(){ btn.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){ btn.innerHTML=label; },1800); }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,function(){ window.prompt('Copy this:',txt); }); } else window.prompt('Copy this:',txt); }
 
+  window.bpCalRedraw=function(){ if(q('bpx-calgrid')||q('bpx-dayview')||q('bpx-weekview')) bpDrawCalendar(); };
 /* ==== bpCalKind ==== */
   window.bpCalKind=function(k){ _bpCalKind=k; _bpCalDate=new Date(); bpRenderCalendar(); };
 
@@ -4833,14 +4838,16 @@ function bpCalUnsched(){
       var isPast=new Date(y,m,dnum,23,59).getTime()<Date.now();
       var key=y+'-'+(m<9?'0':'')+(m+1)+'-'+(dnum<10?'0':'')+dnum;
       var notes=all?bpNotesFor(key):[];
+      var gevs=(_bpCalKind!=='jobs'&&window.bpGcalDay)?bpGcalDay(key):[];
       var isClosed=_bpCalKind==='inspection'&&!!closedMap[key];
-      var count=pevs.length+evs.length+notes.length;
+      var count=pevs.length+evs.length+notes.length+gevs.length;
       var cls='bpx-day'+((isThisMonth&&today.getDate()===dnum)?' today':'')+(isPast?' past':'')+(count?' has':'')+(isClosed?' closed':'')+(all?' tap':'');
       var tap=all?' onclick="bpDaySheet(\''+key+'\')" title="Open this day"':((_bpCalKind==='inspection'&&!isPast)?' onclick="bpCalDayTap(\''+key+'\')" title="'+(isClosed?'Closed \u2014 tap to manage':'Tap to close this day')+'"':'');
       html+='<div class="'+cls+'"'+(all?tap:'')+'><div class="bpx-daynum"'+(all?'':tap)+'><span>'+dnum+'</span>'+(isClosed?'<em class="cal-closed-tag">Closed</em>':(count>0?'<i class="cal-dot"></i>':''))+'</div>';
       var stop=all?'event.stopPropagation();':'';
       for(var j=0;j<pevs.length;j++){ html+='<div class="bpx-appt job" onclick="'+stop+'bpProjOpen(\''+pevs[j].id+'\')"><b>'+bpEsc(pevs[j].label)+'</b></div>'; }
       for(var j=0;j<evs.length;j++){ html+='<div class="bpx-appt'+(evs[j].cal==='jobs'?' job':'')+'" onclick="'+stop+'bpApptClick(\''+evs[j].id+'\')"><span class="t">'+bpFmtTime(evs[j].start)+'</span><b>'+bpEsc(evs[j].title)+'</b></div>'; }
+      for(var j=0;j<gevs.length;j++){ var ge=gevs[j]; html+='<div class="bpx-appt '+(ge.kind==='appt'?'':'gcal '+ge.kind)+'" title="From Google Calendar" onclick="'+stop+'bpGcalOpen(\''+ge.id+'\')">'+(ge.all_day?'':'<span class="t">'+bpFmtTime(ge.starts_at)+'</span>')+'<b>'+bpEsc(ge.kind==='appt'?(ge.contact_name||ge.title):ge.title)+'</b></div>'; }
       for(var j=0;j<notes.length;j++){ var n=notes[j]; html+='<div class="bpx-appt '+n.kind+(n.done?' done':'')+'"'+(n.kind==='todo'?' onclick="'+stop+'bpNoteToggle(\''+n.id+'\')" title="Tap to mark '+(n.done?'not done':'done')+'"':'')+'><span class=ms>'+(n.kind==='todo'?(n.done?'check_circle':'radio_button_unchecked'):'sticky_note_2')+'</span><b>'+bpEsc(n.text)+'</b></div>'; }
       html+='</div>';
     }
@@ -14580,12 +14587,13 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261102c"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261102b"></script>
+<script src="portal/dash.js?v=20261102d"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261026a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261024q36"></script>
 <script src="portal/contact.js?v=20261102c"></script>
+<script src="portal/gcal.js?v=20261102a"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
 <script src="portal/custportal.js?v=20261025d2"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
@@ -14612,11 +14620,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261020a"></script>
 <script src="portal/website.js?v=20261024q25"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261102-p26"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261102-p26"></script>
-<script src="site/vendor/SplitText.min.js?v=20261102-p26"></script>
-<script src="site/site.js?v=20261102-p26"></script>
-<script src="site/present.js?v=20261102-p26"></script>
+<script src="site/vendor/gsap.min.js?v=20261102-p27"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261102-p27"></script>
+<script src="site/vendor/SplitText.min.js?v=20261102-p27"></script>
+<script src="site/site.js?v=20261102-p27"></script>
+<script src="site/present.js?v=20261102-p27"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261021a">
