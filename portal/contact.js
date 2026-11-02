@@ -54,6 +54,53 @@
     setTimeout(function () { if (window.bpInspNew) bpInspNew(); }, 60);
   };
 
+  /* ---------- the estimate they ran on the contractor's calculator ----------
+     lead_log keeps what the calculator sent (and, from the result screen, the
+     option they picked and the three prices). One tap starts a draft estimate
+     from it (portal/quote.js bpQuoteFromCalc). */
+  var TRADE_JOB = { roofing: 'Roof replacement', hvac: 'HVAC system', countertops: 'Countertops', trim: 'Trim carpentry', painting: 'Painting', pools: 'Pool',
+    landscaping: 'Landscaping', plumbing: 'Plumbing', electrical: 'Electrical', general: 'Remodel', concrete: 'Concrete', flooring: 'Flooring' };
+  var UUIDRE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  function pretty(v) { v = String(v || '').replace(/[-_]+/g, ' ').trim(); return v ? v.charAt(0).toUpperCase() + v.slice(1) : ''; }
+  function calcData(row) {
+    var l = row.lead || {}, trade = String(row.page || '').replace(/\.html$/, '').replace(/^.*\//, '');
+    var low = +(l.result_low || l.estimateLow) || 0, high = +(l.result_high || l.estimateHigh) || 0;
+    if (!(low > 0 && high >= low) || !TRADE_JOB[trade]) return null;
+    var pick = String(l.pick || '') || pretty(l.material || l.system || '');
+    var area = +(l.sqft || l.projectAreaSqft || l.conditionedSqft || 0) || 0;
+    var base = TRADE_JOB[trade];
+    return {
+      logId: row.id, trade: trade, low: low, high: high, pick: pick, at: row.created_at, tiers: Array.isArray(l.tiers) ? l.tiers : [],
+      addr: String(l.address || ''), area: area,
+      title: pick ? base + ' · ' + pick : base, line: pick ? base + ': ' + pick : base,
+      desc: base + (pick ? ' with ' + pick : '') + (l.address ? ' at ' + l.address : '') + '. Priced from the online estimate (' + money(low) + ' to ' + money(high) + '); the final price is confirmed after the inspection.'
+    };
+  }
+  function calcCard(c) {
+    var box = document.getElementById('ctp-calc');
+    if (!box || !(window.BP_LIVE && window.BP_SB)) return;
+    var qy = BP_SB.from('lead_log').select('id,page,source,lead,created_at').order('created_at', { ascending: false }).limit(5);
+    if (UUIDRE.test(String(c.id))) qy = qy.eq('contact_id', c.id);
+    else if (c.email) qy = qy.eq('email', String(c.email).toLowerCase());
+    else return;
+    Promise.resolve(qy).then(function (r) {
+      var d = null; ((r && r.data) || []).some(function (row) { d = calcData(row); return !!d; });
+      if (!d || !document.getElementById('ctp-calc')) return;
+      window._bpCtpCalc = d;
+      var when = d.at ? new Date(d.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      box.innerHTML = '<div class="ctp-ch"><b>Calculator estimate</b><span>' + esc(when) + '</span></div>'
+        + '<div class="ctp-calc-p">' + money(d.low) + ' – ' + money(d.high) + '</div>'
+        + '<div class="ctp-calc-s">' + esc([TRADE_JOB[d.trade], d.pick, d.area ? Math.round(d.area).toLocaleString() + ' sq ft' : ''].filter(Boolean).join(' · ')) + '</div>'
+        + (d.tiers.length === 3 ? '<div class="ctp-calc-t">' + d.tiers.map(function (t) {
+          return '<div class="' + (t.mine ? 'mine' : '') + '"><small>' + esc(t.tier) + (t.mine ? ' · their pick' : '') + '</small><b>' + esc(t.name) + '</b><span>' + money(t.low) + ' – ' + money(t.high) + '</span></div>';
+        }).join('') + '</div>' : '')
+        + '<button type="button" class="bpx-addbtn ctp-calc-go" onclick="bpCtpCalcEstimate(\'' + esc(c.id) + '\')"><span class="ms">request_quote</span> Start an estimate from this</button>'
+        + '<div class="ctp-calc-n">Fills in the job, the address and a starting price in the middle of their range. Swap in your real costs after the inspection.</div>';
+      box.hidden = false;
+    }, function () {});
+  }
+  window.bpCtpCalcEstimate = function (cid) { var d = window._bpCtpCalc; if (d && window.bpQuoteFromCalc) bpQuoteFromCalc(cid, d); };
+
   window.bpContactPage = function (id) {
     var c = (window._bpContacts || []).filter(function (x) { return x.id === id; })[0];
     if (!c) { bpNav('contacts'); return; }
@@ -118,10 +165,12 @@
     document.getElementById('bpxViewArea').innerHTML = '<div class="ctp" style="--st:' + col + '">'
       + '<button type="button" class="ctp-back" onclick="bpNav(\'contacts\')"><span class="ms">arrow_back</span>All contacts</button>'
       + hero + stats
-      + '<div class="bpx-set-grid ctp-grid">' + pipe + info + jobsCard
+      + '<div class="bpx-set-grid ctp-grid">' + pipe + '<section class="ctp-card ctp-calc" id="ctp-calc" hidden></section>' + info + jobsCard
       + (window.BPA && !(window.bpLocked && bpLocked('assets')) ? '<section class="ctp-card"><div class="ctp-ch"><b>Equipment</b></div><div id="ctp-equip"></div></section>' : '') + '</div></div>';
     /* the units at their place: age, service and when they'll need replacing (portal/assets.js) */
     if (window.BPA && document.getElementById('ctp-equip')) BPA.mount(document.getElementById('ctp-equip'), { contactId: c.id, name: c.name || '', addr: c.address1 || c.address || '' });
+
+    calcCard(c);
 
     /* the report count, once inspect.js can answer */
     setTimeout(function () {

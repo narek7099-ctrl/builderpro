@@ -178,6 +178,25 @@
     var j = open || newSheet(c);
     bpQuoteOpen(j.id);
   };
+  /* A calculator lead turned into a draft estimate (the contact page's
+     "Calculator estimate" card): the job, address and a starting price at the
+     middle of the range the homeowner saw. The price goes in as one line under
+     Other costs, priced so the customer total matches with your usual mark-up;
+     swap it for your real materials and labor after the inspection. */
+  window.bpQuoteFromCalc = async function (contactId, d) {
+    if (window.bpEnsureContacts) { try { await bpEnsureContacts(); } catch (e) {} }
+    var c = contactId ? contactBy(contactId) : null;
+    var j = newSheet(c), q = quoteOf(j);
+    var mid = Math.round(((+d.low || 0) + (+d.high || 0)) / 2);
+    j.title = String(d.title || 'Estimate').slice(0, 80);
+    if (d.addr) j.addr = String(d.addr).slice(0, 200);
+    q.desc = String(d.desc || '').slice(0, 1000);
+    if (mid > 0) q.other.push({ name: String(d.line || j.title).slice(0, 120), cost: r2(mid / f(q.mkOth)) });
+    q.fromCalc = { logId: d.logId || '', low: +d.low || 0, high: +d.high || 0, at: Date.now() };
+    save(true);
+    bpQuoteOpen(j.id, 'edit');
+    return j.id;
+  };
   window.bpQuoteOpen = function (id, mode) {
     if (Q.id !== id) Q.step = null;   /* each sheet opens on its own step, not the last one's */
     Q.id = id; tidy(id);

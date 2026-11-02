@@ -127,3 +127,15 @@
 @media (max-width:640px){ #bpx #bpxViewArea .ctp-card{padding:14px !important} }
 /* the Overview / Inspections tabs hide the grid; its forced display:grid must not win */
 #bpx #bpxViewArea .ctp-grid[hidden],#bpx #bpxViewArea [data-ct-pane][hidden]{display:none !important}
+
+/* the estimate they ran on the calculator, with a one-tap draft estimate */
+#bpx .ctp-calc-p{font-size:22px;font-weight:700;color:var(--ink);margin:2px 0 2px}
+#bpx .ctp-calc-s{font-size:13px;color:var(--mu,#5a6b82);margin-bottom:10px}
+#bpx .ctp-calc-t{display:grid;gap:6px;margin:0 0 12px}
+#bpx .ctp-calc-t>div{display:grid;grid-template-columns:1fr auto;gap:0 10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#bpx .ctp-calc-t>div.mine{border-color:var(--blue,#2b63e6);background:var(--blue-soft,#e8effd)}
+#bpx .ctp-calc-t small{grid-column:1/-1;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu,#5a6b82)}
+#bpx .ctp-calc-t b{font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx .ctp-calc-t span{font-size:13px;white-space:nowrap}
+#bpx .ctp-calc-go{width:100%;justify-content:center;margin:0}
+#bpx .ctp-calc-n{font-size:12px;color:var(--mu,#5a6b82);margin-top:8px;line-height:1.45}
