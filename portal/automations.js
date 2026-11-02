@@ -176,7 +176,7 @@
         { label: 'New contact', steps: [['email', 'Thanks, we got your message. {{custom_values.business_name}}, {{custom_values.business_phone}}'], ['tag', tg('new-lead') + ' → 02 Speed to Lead'], E] }
       ] }] })] },
     { id: '05', name: 'Appointment (confirm, reminders, post-visit check)', folder: 2, from: 0, v: [v(0, {
-      triggers: [['appt', 'Confirmed or new, calendar Inspection (Lisa, widget, booking page)']], settings: ['Contact time zone, 8am–8pm'],
+      triggers: [['appt', 'Confirmed or new, calendar Inspection (Lisa or website chat)']], settings: ['Contact time zone, 8am–8pm'],
       steps: [['tag', tg('appointment-booked') + ' ' + tg('in-pipeline')], ['opp', 'Jobs → Inspection Scheduled'],
         ['sms', 'You’re booked for your free inspection with {{custom_values.business_name}} on the date and time'], ['alert', 'New inspection booked'],
         ['wait', 'Until 24 hours before'], ['sms', 'Reminder'], ['wait', 'Until 2 hours before'], ['sms', 'Reminder'], ['wait', 'Until 2 hours after'],

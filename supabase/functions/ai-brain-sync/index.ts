@@ -358,9 +358,8 @@ Deno.serve(async (req) => {
     }
     if (!saved) return json({ ok: false, error: "could not save brain" }, 502);
 
-    // the booking page books only with a calendar picked; until then the texts
-    // that offer it fall back to "call us"
-    const booking = saved.booking_calendar_id ? `${SITE}/book/?u=${user.id}` : (fields.phone ? `call us at ${fields.phone}` : "");
+    // texts that offer a way to book point to the phone (there is no public booking page)
+    const booking = fields.phone ? `call us at ${fields.phone}` : "";
     const ghl = await syncCustomValues(loc, {
       ridge_assistant_name: String(fields.assistant_name), "Booking Link": booking,
       ridge_business_name: String(fields.business_name), ridge_tone: String(fields.tone),

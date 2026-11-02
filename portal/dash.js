@@ -28,7 +28,7 @@
     var priced = sup.some(function (x) { return !isSample(x) && items.some(function (i) { return i.supplier_id === x.id; }); });
     return [
       { k: 'biz', t: 'Your business details', s: 'Name, trade, phone and address. Everything else is built from these.', done: !!(c.name && c.phone && c.address), go: 'settings' },
-      { k: 'logo', t: 'Your logo', s: 'On your estimates, contracts and booking page.', done: !!c.logo, go: 'settings' },
+      { k: 'logo', t: 'Your logo', s: 'On your estimates, contracts and calculator.', done: !!c.logo, go: 'settings' },
       { k: 'ai', t: 'Publish what ' + (window.BP_AI_NAME || 'Lisa') + ' knows', s: 'Your services, prices and rules, so the receptionist answers like you would.', done: D.brain === undefined ? null : !!(D.brain && D.brain.published_at), go: 'ai' },
       { k: 'calc', t: 'Set your calculator prices', s: 'The estimator on your website quotes from these.', done: D.calc === undefined ? null : !!D.calc, go: 'calculator' },
       { k: 'job', t: 'Add your first project', s: 'Photos, schedule and costs live on the project.', done: jobs.length > 0, go: 'activejobs' },
@@ -350,7 +350,7 @@
     today.appts.slice(0, 4).forEach(function (a) { rows.push({ t: esc(a.time || ''), w: esc(a.name || 'Appointment'), s: esc(a.what || 'Inspection'), go: 'calendar' }); });
     return '<div class="bpx-panel"><div class="bpx-ptitle">This week<span class="lg2"><i class="dash-key c"></i>crews <i class="dash-key a"></i>appointments</span></div>' + strip
       + (rows.length ? '<div class="dash-today">' + rows.map(function (r) { return '<div class="dash-ev" onclick="bpNav(\'' + r.go + '\')"><b>' + r.t + '</b><div><span>' + r.w + '</span><small>' + r.s + '</small></div></div>'; }).join('') + '</div>'
-        : '<div class="dash-empty" style="padding-top:10px">' + (busy ? 'Nothing on today.' : 'Nothing booked this week. Schedule days on a project, or share your booking link.') + '</div>') + '</div>';
+        : '<div class="dash-empty" style="padding-top:10px">' + (busy ? 'Nothing on today.' : 'Nothing booked this week. Schedule days on a project.') + '</div>') + '</div>';
   }
 
   /* ---------- recent: what happened, newest first, from timestamps we already keep ---------- */
@@ -398,7 +398,7 @@
     var t = function (l, v, note, go) { return '<div class="bpx-stat dash-tile' + (go ? ' go' : '') + '"' + (go ? ' onclick="bpNav(\'' + go + '\')"' : '') + '><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="note">' + note + '</div></div>'; };
     return '<div class="bpx-stats dash-nums db-foot">'
       + t('New leads this month', D.leads ? D.leads.n : '&mdash;', D.leads ? 'from your website and phone line' : 'connect your phone line to count these', D.leads ? 'contacts' : 'marketing')
-      + t('Appointments this month', D.leads ? D.leads.a : '&mdash;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') + ' and your booking page' : 'your booking page feeds this', 'calendar')
+      + t('Appointments this month', D.leads ? D.leads.a : '&mdash;', D.leads ? 'booked through ' + (window.BP_AI_NAME || 'Lisa') : (window.BP_AI_NAME || 'Lisa') + '\'s bookings land here', 'calendar')
       + t('Won this month', String(wonM.length), wonM.length ? money(wonVal) + ' of work' : 'nothing marked won yet', 'activejobs')
       + t('Average job', avg ? money(avg) : '&middot;', sized.length ? 'across ' + sized.length + (sized.length === 1 ? ' priced job' : ' priced jobs') : 'put a price on a job to see this', 'activejobs')
       + '</div>'

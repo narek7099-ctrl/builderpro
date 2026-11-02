@@ -11,8 +11,8 @@
 //        one listing in full. Yelp is read live when what we have is over a
 //        day old (Yelp's caching limit) and stored on bp_directory.yelp.
 //        Also calc (their instant-estimate calculator, on plans that have
-//        one), book (their inspection booking page, when it can book) and
-//        chat + assistant (their AI assistant's ai-chat slug and name).
+//        one), book (always "": the public booking page was retired, homeowners
+//        book through the assistant) and chat + assistant (their AI assistant's ai-chat slug and name).
 //   { op:"yelp_check", url }    -> { ok, name, rating, count, city } for Settings, so a contractor
 //                                  can see the Yelp page they pasted is theirs
 //   { op:"request", id, name, phone, email?, service?, details?, loc? }
@@ -278,9 +278,8 @@ async function extras(owner: string): Promise<{ calc: string; book: string; chat
   const live = ["active", "trial"].includes(String(acc.status));
   // calculators are on every plan but Foundation
   const calc = live && acc.plan !== "foundation" ? "yes" : "";
-  // booking: their own calendar on their own HighLevel, a demo brain, or the house account
-  const ownCal = !!(b.ghl_location_id && b.booking_calendar_id && b.ghl_location_id !== HOUSE_LOC);
-  const book = live && (ownCal || b.is_demo === true || hs.includes(owner)) ? `${SITE}/book/?u=${owner}` : "";
+  // no public booking page any more: homeowners book by chatting with the assistant below
+  const book = "";
   // chat with their assistant (ai-chat, by the brain's slug): only on a live
   // account whose assistant answers into their own HighLevel (or the house's)
   const ownLoc = !!(b.ghl_location_id && (b.ghl_location_id !== HOUSE_LOC || hs.includes(owner) || b.is_demo === true));
