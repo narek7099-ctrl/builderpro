@@ -77,6 +77,31 @@ async function markSent(t: string, loc: string, inv: string): Promise<boolean> {
   return r.ok;
 }
 /* text and/or email the customer the pay link from the contractor's own number and address */
+/* The email copy of a customer message: the contractor's name on top, the
+   message, its link as a button, and a small BuilderPro logo underneath.
+   Tables and inline styles only, so Gmail, Outlook and phones show it alike. */
+function brandEmail(text: string, button: string): string {
+  const e = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const link = (text.match(/https:\/\/\S+/) ?? [""])[0];
+  // every message starts "<business>: ..."
+  const cut = text.indexOf(": "), biz = cut > 0 && cut < 80 ? text.slice(0, cut) : "Your contractor";
+  let body = cut > 0 && cut < 80 ? text.slice(cut + 2) : text;
+  if (link) body = body.replace(link, "").replace(/\s*(here)?\s*:?\s*$/i, ".").replace(/\.\.$/, ".");
+  body = body.trim(); body = body.charAt(0).toUpperCase() + body.slice(1);
+  const F = "font-family:Arial,Helvetica,sans-serif;";
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f6f9">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6f9"><tr><td align="center" style="padding:24px 12px">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e1e6ee;border-radius:12px">`
+    + `<tr><td style="padding:24px 28px 6px;${F}font-size:18px;font-weight:bold;color:#001530">${e(biz)}</td></tr>`
+    + `<tr><td style="padding:6px 28px 8px;${F}font-size:15px;line-height:1.55;color:#1f2937">${e(body).replace(/\n/g, "<br>")}</td></tr>`
+    + (link ? `<tr><td style="padding:12px 28px 8px"><a href="${e(link)}" style="display:inline-block;background:#006fff;color:#ffffff;${F}font-size:15px;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:8px">${e(button)}</a></td></tr>`
+      + `<tr><td style="padding:4px 28px 24px;${F}font-size:12px;line-height:1.5;color:#6b7280">Button not working? Open this link:<br><a href="${e(link)}" style="color:#006fff;word-break:break-all">${e(link)}</a></td></tr>` : `<tr><td style="padding:0 0 12px"></td></tr>`)
+    + `<tr><td style="padding:16px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">`
+    + `<a href="https://builderpro-os.com/?utm_source=email&amp;utm_medium=customer" style="text-decoration:none"><img src="https://builderpro-os.com/assets/email/builderpro-logo.png" width="110" height="28" alt="BuilderPro" style="display:block;margin:0 0 4px;border:0;width:110px;height:28px"></a>Sent with BuilderPro</td></tr>`
+    + `</table>`
+    + `</td></tr></table></body></html>`;
+}
+
 async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | "both", text: string, subject: string): Promise<{ sent: boolean; error?: string }> {
   const h = { Authorization: `Bearer ${t}`, Version: "2021-04-15", Accept: "application/json", "Content-Type": "application/json" };
   const out: string[] = []; let ok = false;
@@ -85,7 +110,7 @@ async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | 
     if (r.ok) ok = true; else out.push(`${body.type} ${r.status}: ${((await r.json().catch(() => ({}))) as Record<string, string>)?.message ?? ""}`);
   };
   if (how !== "email") await go({ type: "SMS", message: text });
-  if (how !== "sms") await go({ type: "Email", subject, html: text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\n/g, "<br>").replace(/(https:\/\/\S+)/g, '<a href="$1">$1</a>') });
+  if (how !== "sms") await go({ type: "Email", subject, html: brandEmail(text, "Pay your invoice") });
   return ok ? { sent: true } : { sent: false, error: out.join("; ") };
 }
 

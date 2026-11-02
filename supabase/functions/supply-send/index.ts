@@ -104,7 +104,7 @@ ${tbc.length ? `<div style="margin-top:8px;padding:10px 12px;background:#fff7ed;
 <div style="margin-top:14px;font-size:13px">${esc(where)}</div>
 <div style="margin-top:14px;padding:10px 12px;background:#eef2ff;border-radius:8px;font-size:13px">Please put <b>PO ${esc(po.po_number)}</b> on the invoice.</div>
 ${po.notes ? `<div style="margin-top:12px;font-size:13px;white-space:pre-wrap">${esc(po.notes)}</div>` : ""}
-<div style="margin-top:22px;font-size:11px;color:#888">Sent from BuilderPro OS on behalf of ${esc(co.name || "the contractor")}. Reply to this email to reach them.</div>
+<div style="margin-top:22px;font-size:11px;color:#888"><a href="https://builderpro-os.com/?utm_source=email&amp;utm_medium=po" style="text-decoration:none"><img src="https://builderpro-os.com/assets/email/builderpro-logo.png" width="110" height="28" alt="BuilderPro" style="display:block;border:0;width:110px;height:28px;margin-bottom:4px"></a>Sent with BuilderPro on behalf of ${esc(co.name || "the contractor")}. Reply to this email to reach them.</div>
 </body>`;
   return { text, html };
 }
