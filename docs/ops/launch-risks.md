@@ -111,7 +111,10 @@ Database check (Nov 1):
      - turn on the failed-payment and expiring-card emails
      - turn on the trial-ending reminder email
      - after all retries fail, cancel the subscription
+7. **Login emails:** paste the 5 branded templates into Supabase and set up your own email sender (SMTP through Resend). Steps: `supabase/templates/README.md`. Without your own sender, crew invites and password resets may not reach clients.
+8. **Stripe receipts and reminders:** Stripe → Settings → Branding: upload the BuilderPro logo (`assets/email/builderpro-logo.png`) and set the brand color to #006fff (your mom's login).
 
 **When HighLevel is turned back on:**
-7. Turn on extra-minute billing ($0.25/min) in the Command Center.
-8. Check the real Lisa cost per minute in HighLevel's billing after the first week, and update this sheet.
+9. Turn on extra-minute billing ($0.25/min) in the Command Center.
+10. Check the real Lisa cost per minute in HighLevel's billing after the first week, and update this sheet.
+11. Add the BuilderPro logo to HighLevel's email templates (appointment reminders, review requests, missed-call follow-ups): Marketing → Emails → Templates.
