@@ -114,9 +114,11 @@ Database check (Nov 1):
 7. **Email sending (Resend):** make a Resend account, verify builderpro-os.com in it (it gives you DNS records to add), and create an API key. Then:
    - add it to Supabase as the secret `RESEND_API_KEY` (Edge Functions → Secrets). Until then, homeowners don't get the emailed copy of their calculator estimate, and supplier orders open in the contractor's own mail app instead of sending.
    - use the same key for Supabase's own email sender, and paste the 5 branded login templates. Steps: `supabase/templates/README.md`. Without it, crew invites and password resets may not reach clients.
-8. **Stripe receipts and reminders:** Stripe → Settings → Branding: upload the BuilderPro logo (`assets/email/builderpro-logo.png`) and set the brand color to #006fff (your mom's login).
+8. **Google Calendar:** in Google Cloud, enable the Calendar API, add the calendar scope and the new redirect address, and add test users. Steps: `GOOGLE-SETUP.md` (bottom section). About 10 minutes.
+9. **Stripe receipts and reminders:** Stripe → Settings → Branding: upload the BuilderPro logo (`assets/email/builderpro-logo.png`) and set the brand color to #006fff (your mom's login).
 
 **When HighLevel is turned back on:**
-9. Turn on extra-minute billing ($0.25/min) in the Command Center.
-10. Check the real Lisa cost per minute in HighLevel's billing after the first week, and update this sheet.
-11. Add the BuilderPro logo to HighLevel's email templates (appointment reminders, review requests, missed-call follow-ups): Marketing → Emails → Templates.
+10. Turn on extra-minute billing ($0.25/min) in the Command Center.
+11. Check the real Lisa cost per minute in HighLevel's billing after the first week, and update this sheet.
+12. Add the BuilderPro logo to HighLevel's email templates (appointment reminders, review requests, missed-call follow-ups): Marketing → Emails → Templates.
+13. Google Calendar's HighLevel part starts on its own: busy blocks and "customer appointment" bookings go into HighLevel at the next 5-minute sync. Check one of each.
