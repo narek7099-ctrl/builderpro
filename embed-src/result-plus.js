@@ -15,6 +15,9 @@
    3. The "Book a Free Inspection" button is gone (there is no booking page):
       the request was already sent when they pressed Generate, so the screen
       says that instead.
+   4. On a contractor's own link (?u=), the homeowner is emailed a copy of the
+      estimate with the three options (lead-in op "copy": only to the address
+      that just came in as this contractor's lead, once).
 
    Nothing here changes what was already sent to the contractor. */
 (function () {
@@ -172,11 +175,35 @@
     }
   }
 
+  /* 4. the homeowner's copy by email */
+  var WHAT = { roofing: 'roof', hvac: 'HVAC', countertops: 'countertop', trim: 'trim', painting: 'painting', pools: 'pool', landscaping: 'landscaping',
+    plumbing: 'plumbing', electrical: 'electrical', general: 'remodel', concrete: 'concrete', flooring: 'flooring' };
+  var copied = {};
+  function sendCopy() {
+    var own = ''; try { own = (new URLSearchParams(location.search).get('u') || '').replace(/[^0-9a-f-]/gi, ''); } catch (e) {}
+    var em = document.getElementById('e-em'), email = em ? String(em.value || '').trim().toLowerCase() : '';
+    if (!/^[0-9a-f-]{36}$/i.test(own) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || copied[email]) return;
+    var p; try { p = window.eCalcPrice(); } catch (e) { return; }
+    if (!p || !(p.high > 0)) return;
+    var T = tiers(), mine = T && T.filter(function (t) { return t.mine; })[0];
+    var L = LADDERS[TRADE], pick = mine ? mine.name : (L ? '' : (function () { var C = CFG() || {}, x = C.pricing && window.eS && C.pricing[window.eS.material]; return (x && x.label) || ''; })());
+    copied[email] = 1;
+    var body = JSON.stringify({ op: 'copy', owner: own, email: email, what: WHAT[TRADE] || 'project', pick: pick, low: p.low, high: p.high,
+      tiers: T ? T.map(function (t) { return { tier: t.tier, name: t.name, low: t.low, high: t.high, mine: t.mine }; }) : [] });
+    var go = function (again) {
+      fetch('https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.reason === 'no_lead' && again) setTimeout(function () { go(false); }, 5000); })
+        .catch(function () {});
+    };
+    go(true);
+  }
+
   /* run after the calculator draws its own result */
   function hook() {
     var orig = window.eShowResult;
     if (typeof orig !== 'function' || orig.__bpRp) return false;
-    var wrapped = function () { var r = orig.apply(this, arguments); try { render(); } catch (e) { /* the result still shows */ } return r; };
+    var wrapped = function () { var r = orig.apply(this, arguments); try { render(); } catch (e) { /* the result still shows */ } try { sendCopy(); } catch (e) {} return r; };
     wrapped.__bpRp = true;
     window.eShowResult = wrapped;
     return true;

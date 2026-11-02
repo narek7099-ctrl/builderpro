@@ -17,6 +17,13 @@
 // A lead that couldn't reach HighLevel stays in lead_log as "failed" and is
 // tried again by { op:"retry" } (pg_cron, service key only).
 //
+// { op:"copy", owner, email, ... } emails the homeowner a copy of the estimate
+// they just ran (the calculator's result screen sends it, embed/result-plus.js).
+// Only to an address that came in as this owner's lead in the last 15 minutes,
+// once. Sent with Resend when RESEND_API_KEY is set; otherwise skipped. Either
+// way the option they picked and the three prices are kept on the lead_log row.
+// { op:"mailer" } -> { ready } says whether that email can go out.
+//
 // owner is the ?u= in the calculator's share link: a contractor's user id, or
 // a team member's (resolved to the owner they work for).
 //
@@ -293,6 +300,62 @@ async function retry(req: Request) {
   return json({ ok: true, tried: rows.length });
 }
 
+/* ---------- the homeowner's copy of their estimate ---------- */
+const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const COPY_FROM = Deno.env.get("ESTIMATE_FROM") || "estimates@builderpro-os.com";
+const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const usd = (n: unknown) => { const v = Number(n); return isFinite(v) && v > 0 ? "$" + Math.round(v).toLocaleString("en-US") : ""; };
+async function copy(b: Row, req: Request) {
+  const owner0 = clean(b.owner, 40), email = clean(b.email, 120).toLowerCase();
+  if (!UUID.test(owner0) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: "bad request" }, 400);
+  if (!(await take("lead-copy-ip", clientIp(req), 10, 3600))) return json({ ok: false, error: "too many" }, 429);
+  const owner = await ownerOf(owner0);
+  if (!owner) return json({ ok: false, error: "unknown owner" }, 404);
+  // only someone who just sent this contractor their details, and only once
+  const since = new Date(Date.now() - 15 * 60e3).toISOString();
+  const lg = await one(`lead_log?owner=eq.${owner}&email=eq.${encodeURIComponent(email)}&created_at=gte.${since}&select=id,name,lead&order=created_at.desc&limit=1`);
+  if (!lg) return json({ ok: true, sent: false, reason: "no_lead" });
+  if (lg.lead?.copy_sent || lg.lead?.result_at) return json({ ok: true, sent: false, reason: "already" });
+  const st = await one(`client_settings?user_id=eq.${owner}&select=data&limit=1`);
+  const co = (st?.data?.company ?? {}) as Row;
+  const biz = clean(co.name, 80) || "Your contractor", phone = clean(co.phone, 30), reply = clean(co.email, 120);
+  const what = clean(b.what, 60) || "project", first = clean(String(lg.name || "").split(/\s+/)[0], 40);
+  const low = usd(b.low), high = usd(b.high);
+  if (!low || !high) return json({ ok: false, error: "no price" }, 400);
+  const raw = (Array.isArray(b.tiers) ? b.tiers : []).slice(0, 3).map((t: Row) => ({ tier: clean(t.tier, 10), name: clean(t.name, 60), low: Math.round(Number(t.low) || 0), high: Math.round(Number(t.high) || 0), mine: t.mine === true }))
+    .filter((t: Row) => t.name && t.low > 0 && t.high >= t.low);
+  const tiers = raw.map((t: Row) => ({ ...t, low: usd(t.low), high: usd(t.high) }));
+  const pick = clean(b.pick, 80);
+  const F = "font-family:Arial,Helvetica,sans-serif;";
+  const html = `<!doctype html><html><body style="margin:0;padding:0;background:#f4f6f9">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6f9"><tr><td align="center" style="padding:24px 12px">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e1e6ee;border-radius:12px">`
+    + `<tr><td style="padding:24px 28px 4px;${F}font-size:18px;font-weight:bold;color:#001530">${esc(biz)}</td></tr>`
+    + `<tr><td style="padding:8px 28px 4px;${F}font-size:15px;line-height:1.55;color:#1f2937">${first ? "Hi " + esc(first) + ", here" : "Here"}'s a copy of the ${esc(what)} estimate you just ran${pick ? " for <b>" + esc(pick) + "</b>" : ""}:</td></tr>`
+    + `<tr><td style="padding:10px 28px 6px;${F}font-size:26px;font-weight:bold;color:#001530">${low} &ndash; ${high}</td></tr>`
+    + (tiers.length === 3 ? `<tr><td style="padding:10px 28px 4px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;${F}font-size:14px;color:#1f2937">`
+      + tiers.map((t: Row) => `<tr><td style="padding:8px 0;border-top:1px solid #eef1f5;width:64px;color:#6b7280;font-size:12px;font-weight:bold;text-transform:uppercase">${esc(t.tier)}</td><td style="padding:8px 8px;border-top:1px solid #eef1f5">${esc(t.name)}${t.mine ? ' <span style="color:#006fff;font-size:12px;font-weight:bold">(your pick)</span>' : ""}</td><td style="padding:8px 0;border-top:1px solid #eef1f5;text-align:right;white-space:nowrap">${t.low} &ndash; ${t.high}</td></tr>`).join("")
+      + `</table></td></tr>` : "")
+    + `<tr><td style="padding:12px 28px 6px;${F}font-size:14px;line-height:1.55;color:#1f2937">This is a ballpark from your answers. We confirm the exact price after a free, no-obligation inspection, and we'll reach out shortly to set one up.${phone ? ` Questions before then? Call or text <a href="tel:${esc(phone.replace(/[^0-9+]/g, ""))}" style="color:#006fff">${esc(phone)}</a>.` : ""}</td></tr>`
+    + `<tr><td style="padding:16px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">`
+    + `<a href="https://builderpro-os.com/?utm_source=email&amp;utm_medium=estimate-copy" style="text-decoration:none"><img src="https://builderpro-os.com/assets/email/builderpro-logo.png" width="110" height="28" alt="BuilderPro" style="display:block;margin:0 0 4px;border:0;width:110px;height:28px"></a>Sent with BuilderPro. You got this because you asked ${esc(biz)} for an estimate.</td></tr>`
+    + `</table></td></tr></table></body></html>`;
+  const text = `${first ? "Hi " + first + ", here" : "Here"}'s a copy of the ${what} estimate you just ran${pick ? " for " + pick : ""}: ${low} - ${high}.\n`
+    + tiers.map((t: Row) => `${t.tier}: ${t.name} ${t.low} - ${t.high}${t.mine ? " (your pick)" : ""}`).join("\n")
+    + `\n\nThis is a ballpark from your answers. We confirm the exact price after a free, no-obligation inspection, and we'll reach out shortly.${phone ? " Questions? " + phone : ""}\n\n${biz}`;
+  // what the result screen showed goes on the lead (the app turns it into a draft
+  // estimate), and marks it, so a second press can't send a second email
+  const now = new Date().toISOString();
+  const shown = { result_at: now, pick, tiers: raw, result_low: Math.round(Number(b.low) || 0), result_high: Math.round(Number(b.high) || 0) };
+  await rest(`lead_log?id=eq.${lg.id}`, { method: "PATCH", body: JSON.stringify({ lead: { ...(lg.lead ?? {}), ...shown, ...(RESEND_KEY ? { copy_sent: now } : {}) } }) }).catch(() => {});
+  if (!RESEND_KEY) return json({ ok: true, sent: false, reason: "no_mailer" });
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST", headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: `${biz.replace(/[<>"]/g, "")} <${COPY_FROM}>`, to: [email], reply_to: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reply) ? reply : undefined, subject: `Your ${what} estimate from ${biz}`, html, text }),
+  }).catch(() => null);
+  return json({ ok: true, sent: !!(r && r.ok) });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ ok: false }, 405);
@@ -301,6 +364,8 @@ Deno.serve(async (req) => {
   try {
     if (b.op === "retry") return await retry(req);
     if (b.op === "push") return await push(b, req);
+    if (b.op === "copy") return await copy(b, req);
+    if (b.op === "mailer") return json({ ok: true, ready: !!RESEND_KEY });
     return await intake(b, req);
   } catch (e) {
     console.error("lead-in", String(e).slice(0, 200));

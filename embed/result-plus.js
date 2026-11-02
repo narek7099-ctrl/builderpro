@@ -12,9 +12,12 @@
       Customize and entered their lender's APR and term. The payment is always
       shown with the APR, term and down payment next to it, because quoting a
       payment amount in an ad legally requires those terms.
-   3. The "Book a Free Inspection" button is gone: the request was already sent
-      when they pressed Generate, so the screen says that instead. A contractor
-      who saved their own booking link (older roofing setting) keeps the button.
+   3. The "Book a Free Inspection" button is gone (there is no booking page):
+      the request was already sent when they pressed Generate, so the screen
+      says that instead.
+   4. On a contractor's own link (?u=), the homeowner is emailed a copy of the
+      estimate with the three options (lead-in op "copy": only to the address
+      that just came in as this contractor's lead, once).
 
    Nothing here changes what was already sent to the contractor. */
 (function () {
@@ -100,7 +103,7 @@
     if (document.getElementById('bp-rp-css')) return;
     var s = document.createElement('style'); s.id = 'bp-rp-css';
     s.textContent =
-      '#bp-gbb{margin:18px 0 6px}' +
+      '#bp-gbb{margin:18px 0 16px}' +
       '#bp-gbb .rp-h{font-weight:700;font-size:15px;margin:0 0 4px}' +
       '#bp-gbb .rp-s{font-size:12.5px;opacity:.7;margin:0 0 12px}' +
       '#bp-gbb .rp-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}' +
@@ -161,8 +164,7 @@
 
     /* 3. no booking page: say the request is in */
     var btn = document.getElementById('e-rctabtn');
-    var own = typeof CFG().bookingUrl === 'string' && /^https:\/\//i.test(CFG().bookingUrl);
-    if (btn && !own) {
+    if (btn) {
       btn.classList.add('bp-rp-hide'); btn.style.setProperty('display', 'none', 'important');
       var sub = btn.parentNode.querySelector('.e-rctasub'); if (sub) sub.style.display = 'none';
       if (!document.getElementById('bp-rp-done')) {
@@ -173,11 +175,35 @@
     }
   }
 
+  /* 4. the homeowner's copy by email */
+  var WHAT = { roofing: 'roof', hvac: 'HVAC', countertops: 'countertop', trim: 'trim', painting: 'painting', pools: 'pool', landscaping: 'landscaping',
+    plumbing: 'plumbing', electrical: 'electrical', general: 'remodel', concrete: 'concrete', flooring: 'flooring' };
+  var copied = {};
+  function sendCopy() {
+    var own = ''; try { own = (new URLSearchParams(location.search).get('u') || '').replace(/[^0-9a-f-]/gi, ''); } catch (e) {}
+    var em = document.getElementById('e-em'), email = em ? String(em.value || '').trim().toLowerCase() : '';
+    if (!/^[0-9a-f-]{36}$/i.test(own) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || copied[email]) return;
+    var p; try { p = window.eCalcPrice(); } catch (e) { return; }
+    if (!p || !(p.high > 0)) return;
+    var T = tiers(), mine = T && T.filter(function (t) { return t.mine; })[0];
+    var L = LADDERS[TRADE], pick = mine ? mine.name : (L ? '' : (function () { var C = CFG() || {}, x = C.pricing && window.eS && C.pricing[window.eS.material]; return (x && x.label) || ''; })());
+    copied[email] = 1;
+    var body = JSON.stringify({ op: 'copy', owner: own, email: email, what: WHAT[TRADE] || 'project', pick: pick, low: p.low, high: p.high,
+      tiers: T ? T.map(function (t) { return { tier: t.tier, name: t.name, low: t.low, high: t.high, mine: t.mine }; }) : [] });
+    var go = function (again) {
+      fetch('https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/lead-in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.reason === 'no_lead' && again) setTimeout(function () { go(false); }, 5000); })
+        .catch(function () {});
+    };
+    go(true);
+  }
+
   /* run after the calculator draws its own result */
   function hook() {
     var orig = window.eShowResult;
     if (typeof orig !== 'function' || orig.__bpRp) return false;
-    var wrapped = function () { var r = orig.apply(this, arguments); try { render(); } catch (e) { /* the result still shows */ } return r; };
+    var wrapped = function () { var r = orig.apply(this, arguments); try { render(); } catch (e) { /* the result still shows */ } try { sendCopy(); } catch (e) {} return r; };
     wrapped.__bpRp = true;
     window.eShowResult = wrapped;
     return true;
