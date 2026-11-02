@@ -148,3 +148,31 @@ Then publish the site so the new `portal/website.js` is live.
 - **"Access blocked: app has not completed verification"**: add that Gmail as a test user (step 3.7), or finish step 7.
 - **Connected but no properties listed**: that Google account has no GA4 property or verified Search Console site. They need to sign in with the account that owns them, or have the owner add them as a user.
 - **Asked to reconnect**: they removed access in their Google account, or the 7-day testing limit ran out. Disconnect and connect again.
+
+---
+
+# Google Calendar (Calendar page → Google Calendar)
+
+Lets each contractor connect their own Google Calendar. BuilderPro shows their
+Google events as busy time (and blocks that time in HighLevel, so Lisa won't book
+over it), writes their project work days and Lisa's bookings into their Google
+Calendar, and asks "customer appointment?" about new events in work hours.
+It uses the **same Google Cloud project and sign-in keys** as the Gmail
+connection; nothing new to paste into Supabase.
+
+About 10 minutes:
+
+1. **APIs & Services → Library →** search **Google Calendar API** → **Enable**.
+2. **OAuth consent screen → Data access (Scopes) → Add or remove scopes →** tick
+   `https://www.googleapis.com/auth/calendar.events` → **Update** → **Save**.
+3. **Credentials →** open the OAuth client BuilderPro already uses → **Authorized
+   redirect URIs → Add URI:**
+   `https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/gcal` → **Save**.
+4. While the app is unverified, only **test users** can connect: **Audience → Test
+   users → Add users**, and add the Google accounts of the contractors you're
+   setting up (up to 100).
+5. Before the public can use it: **Publish app → Verification**. Calendar access
+   is a "sensitive" scope: Google asks for the privacy policy link, a short video
+   of the connect flow, and why BuilderPro needs it ("show the contractor's busy
+   time so our scheduling doesn't double-book them, and add their jobs to their
+   calendar"). It usually takes a few weeks; there's no fee.
