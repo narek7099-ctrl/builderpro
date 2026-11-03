@@ -336,10 +336,11 @@ function priced(t: Row, taxPct: number, taxOn: string, discount: number): Row {
   };
 }
 
-/* The email copy of a customer message: the contractor's name on top, the
-   message, its link as a button, and a small BuilderPro logo underneath.
+/* The email copy of a customer message, in the contractor's own brand: their
+   logo on top (or their name when they haven't uploaded one), the message, and
+   its link as a button. No BuilderPro branding: it's their email to their customer.
    Tables and inline styles only, so Gmail, Outlook and phones show it alike. */
-function brandEmail(text: string, button: string): string {
+function brandEmail(text: string, button: string, logo = ""): string {
   const e = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const link = (text.match(/https:\/\/\S+/) ?? [""])[0];
   // every message starts "<business>: ..."
@@ -348,20 +349,21 @@ function brandEmail(text: string, button: string): string {
   if (link) body = body.replace(link, "").replace(/\s*(here)?\s*:?\s*$/i, ".").replace(/\.\.$/, ".");
   body = body.trim(); body = body.charAt(0).toUpperCase() + body.slice(1);
   const F = "font-family:Arial,Helvetica,sans-serif;";
+  const top = /^https:\/\//i.test(logo)
+    ? `<img src="${e(logo)}" alt="${e(biz)}" height="48" style="display:block;height:auto;max-height:48px;max-width:220px;border:0">`
+    : `<span style="${F}font-size:18px;font-weight:bold;color:#001530">${e(biz)}</span>`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f6f9">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6f9"><tr><td align="center" style="padding:24px 12px">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e1e6ee;border-radius:12px">`
-    + `<tr><td style="padding:24px 28px 6px;${F}font-size:18px;font-weight:bold;color:#001530">${e(biz)}</td></tr>`
-    + `<tr><td style="padding:6px 28px 8px;${F}font-size:15px;line-height:1.55;color:#1f2937">${e(body).replace(/\n/g, "<br>")}</td></tr>`
+    + `<tr><td style="padding:24px 28px 6px">${top}</td></tr>`
+    + `<tr><td style="padding:10px 28px 8px;${F}font-size:15px;line-height:1.55;color:#1f2937">${e(body).replace(/\n/g, "<br>")}</td></tr>`
     + (link ? `<tr><td style="padding:12px 28px 8px"><a href="${e(link)}" style="display:inline-block;background:#006fff;color:#ffffff;${F}font-size:15px;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:8px">${e(button)}</a></td></tr>`
-      + `<tr><td style="padding:4px 28px 24px;${F}font-size:12px;line-height:1.5;color:#6b7280">Button not working? Open this link:<br><a href="${e(link)}" style="color:#006fff;word-break:break-all">${e(link)}</a></td></tr>` : `<tr><td style="padding:0 0 12px"></td></tr>`)
-    + `<tr><td style="padding:16px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">`
-    + `<a href="https://builderpro-os.com/?utm_source=email&amp;utm_medium=customer" style="text-decoration:none"><img src="https://builderpro-os.com/assets/email/builderpro-logo.png" width="110" height="28" alt="BuilderPro" style="display:block;margin:0 0 4px;border:0;width:110px;height:28px"></a>Sent with BuilderPro</td></tr>`
+      + `<tr><td style="padding:4px 28px 24px;${F}font-size:12px;line-height:1.5;color:#6b7280">Button not working? Open this link:<br><a href="${e(link)}" style="color:#006fff;word-break:break-all">${e(link)}</a></td></tr>` : `<tr><td style="padding:0 0 16px"></td></tr>`)
     + `</table>`
     + `</td></tr></table></body></html>`;
 }
 
-async function sendText(t: string, contactId: string, how: string, text: string, subject: string): Promise<{ sent: boolean; error: string }> {
+async function sendText(t: string, contactId: string, how: string, text: string, subject: string, logo = ""): Promise<{ sent: boolean; error: string }> {
   const out: string[] = []; let ok = false;
   const go = async (body: Row) => {
     try {
@@ -370,7 +372,7 @@ async function sendText(t: string, contactId: string, how: string, text: string,
     } catch (e) { out.push(String(e).slice(0, 80)); }
   };
   if (how !== "email") await go({ type: "SMS", message: text });
-  if (how !== "sms") await go({ type: "Email", subject, html: brandEmail(text, "See your estimate") });
+  if (how !== "sms") await go({ type: "Email", subject, html: brandEmail(text, "See your estimate", logo) });
   return { sent: ok, error: out.join("; ") };
 }
 
@@ -415,7 +417,7 @@ async function send(b: Row, who: { owner: string; uid: string }) {
       const r = await sendText(t, ghlContact, via,
         solo ? `${biz}: Hi ${first}, your estimate for ${row.title} is ready (${money(tiers[0].total)}). See it and approve it here: ${link}`
           : `${biz}: Hi ${first}, your estimate for ${row.title} is ready. We put together ${tiers.length} options so you can pick what fits best: ${link}`,
-        solo ? `${biz}: your estimate` : `${biz}: your estimate options`);
+        solo ? `${biz}: your estimate` : `${biz}: your estimate options`, co.logo);
       sent = r.sent; reason = r.sent ? "" : (r.error || "send_failed");
     }
   }

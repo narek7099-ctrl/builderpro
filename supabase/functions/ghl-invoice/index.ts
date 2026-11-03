@@ -77,10 +77,11 @@ async function markSent(t: string, loc: string, inv: string): Promise<boolean> {
   return r.ok;
 }
 /* text and/or email the customer the pay link from the contractor's own number and address */
-/* The email copy of a customer message: the contractor's name on top, the
-   message, its link as a button, and a small BuilderPro logo underneath.
+/* The email copy of a customer message, in the contractor's own brand: their
+   logo on top (or their name when they haven't uploaded one), the message, and
+   its link as a button. No BuilderPro branding: it's their email to their customer.
    Tables and inline styles only, so Gmail, Outlook and phones show it alike. */
-function brandEmail(text: string, button: string): string {
+function brandEmail(text: string, button: string, logo = ""): string {
   const e = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const link = (text.match(/https:\/\/\S+/) ?? [""])[0];
   // every message starts "<business>: ..."
@@ -89,20 +90,34 @@ function brandEmail(text: string, button: string): string {
   if (link) body = body.replace(link, "").replace(/\s*(here)?\s*:?\s*$/i, ".").replace(/\.\.$/, ".");
   body = body.trim(); body = body.charAt(0).toUpperCase() + body.slice(1);
   const F = "font-family:Arial,Helvetica,sans-serif;";
+  const top = /^https:\/\//i.test(logo)
+    ? `<img src="${e(logo)}" alt="${e(biz)}" height="48" style="display:block;height:auto;max-height:48px;max-width:220px;border:0">`
+    : `<span style="${F}font-size:18px;font-weight:bold;color:#001530">${e(biz)}</span>`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f4f6f9">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6f9"><tr><td align="center" style="padding:24px 12px">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e1e6ee;border-radius:12px">`
-    + `<tr><td style="padding:24px 28px 6px;${F}font-size:18px;font-weight:bold;color:#001530">${e(biz)}</td></tr>`
-    + `<tr><td style="padding:6px 28px 8px;${F}font-size:15px;line-height:1.55;color:#1f2937">${e(body).replace(/\n/g, "<br>")}</td></tr>`
+    + `<tr><td style="padding:24px 28px 6px">${top}</td></tr>`
+    + `<tr><td style="padding:10px 28px 8px;${F}font-size:15px;line-height:1.55;color:#1f2937">${e(body).replace(/\n/g, "<br>")}</td></tr>`
     + (link ? `<tr><td style="padding:12px 28px 8px"><a href="${e(link)}" style="display:inline-block;background:#006fff;color:#ffffff;${F}font-size:15px;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:8px">${e(button)}</a></td></tr>`
-      + `<tr><td style="padding:4px 28px 24px;${F}font-size:12px;line-height:1.5;color:#6b7280">Button not working? Open this link:<br><a href="${e(link)}" style="color:#006fff;word-break:break-all">${e(link)}</a></td></tr>` : `<tr><td style="padding:0 0 12px"></td></tr>`)
-    + `<tr><td style="padding:16px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">`
-    + `<a href="https://builderpro-os.com/?utm_source=email&amp;utm_medium=customer" style="text-decoration:none"><img src="https://builderpro-os.com/assets/email/builderpro-logo.png" width="110" height="28" alt="BuilderPro" style="display:block;margin:0 0 4px;border:0;width:110px;height:28px"></a>Sent with BuilderPro</td></tr>`
+      + `<tr><td style="padding:4px 28px 24px;${F}font-size:12px;line-height:1.5;color:#6b7280">Button not working? Open this link:<br><a href="${e(link)}" style="color:#006fff;word-break:break-all">${e(link)}</a></td></tr>` : `<tr><td style="padding:0 0 16px"></td></tr>`)
     + `</table>`
     + `</td></tr></table></body></html>`;
 }
 
-async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | "both", text: string, subject: string): Promise<{ sent: boolean; error?: string }> {
+/* the contractor's uploaded logo (Settings, public storage), found by their HighLevel location */
+async function logoFor(loc: string): Promise<string> {
+  try {
+    const h = { apikey: BR_KEY, Authorization: `Bearer ${BR_KEY}` };
+    const get = async (p: string) => { const r = await fetch(`${BR_SB}/rest/v1/${p}`, { headers: h }); return r.ok ? ((await r.json())[0] ?? null) : null; };
+    const a = (await get(`accounts?ghl_location_id=eq.${encodeURIComponent(loc)}&select=user_id&limit=1`)) || (await get(`ai_brain?ghl_location_id=eq.${encodeURIComponent(loc)}&select=user_id:owner&limit=1`));
+    if (!a?.user_id) return "";
+    const s = await get(`client_settings?user_id=eq.${a.user_id}&select=data&limit=1`);
+    const u = String(s?.data?.company?.logoUrl ?? "");
+    return /^https:\/\//i.test(u) && u.length < 2000 ? u : "";
+  } catch { return ""; }
+}
+
+async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | "both", text: string, subject: string, logo = ""): Promise<{ sent: boolean; error?: string }> {
   const h = { Authorization: `Bearer ${t}`, Version: "2021-04-15", Accept: "application/json", "Content-Type": "application/json" };
   const out: string[] = []; let ok = false;
   const go = async (body: Record<string, unknown>) => {
@@ -110,7 +125,7 @@ async function sendPayLink(t: string, contactId: string, how: "sms" | "email" | 
     if (r.ok) ok = true; else out.push(`${body.type} ${r.status}: ${((await r.json().catch(() => ({}))) as Record<string, string>)?.message ?? ""}`);
   };
   if (how !== "email") await go({ type: "SMS", message: text });
-  if (how !== "sms") await go({ type: "Email", subject, html: brandEmail(text, "Pay your invoice") });
+  if (how !== "sms") await go({ type: "Email", subject, html: brandEmail(text, "Pay your invoice", logo) });
   return ok ? { sent: true } : { sent: false, error: out.join("; ") };
 }
 
@@ -303,7 +318,7 @@ Deno.serve(async (req) => {
     await markSent(t, loc, String(invId));
     const link = await payLink(loc, String(invId));
     const msg = `${biz}: your invoice "${title}" for $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is ready. Pay securely by card here: ${link}`;
-    const sr = await sendPayLink(t, contactId, how, msg, `${biz}: ${title}`);
+    const sr = await sendPayLink(t, contactId, how, msg, `${biz}: ${title}`, await logoFor(loc));
     const sent = sr.sent, sendErr = sr.error ?? "";
     return json({ ok: true, id: invId, sent, payLink: link, sendError: sendErr || undefined });
   }

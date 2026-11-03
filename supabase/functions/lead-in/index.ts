@@ -319,6 +319,7 @@ async function copy(b: Row, req: Request) {
   const st = await one(`client_settings?user_id=eq.${owner}&select=data&limit=1`);
   const co = (st?.data?.company ?? {}) as Row;
   const biz = clean(co.name, 80) || "Your contractor", phone = clean(co.phone, 30), reply = clean(co.email, 120);
+  const lu = String(co.logoUrl ?? ""), logo = /^https:\/\//i.test(lu) && lu.length < 2000 ? lu : "";
   const what = clean(b.what, 60) || "project", first = clean(String(lg.name || "").split(/\s+/)[0], 40);
   const low = usd(b.low), high = usd(b.high);
   if (!low || !high) return json({ ok: false, error: "no price" }, 400);
@@ -330,15 +331,14 @@ async function copy(b: Row, req: Request) {
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:#f4f6f9">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f6f9"><tr><td align="center" style="padding:24px 12px">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e1e6ee;border-radius:12px">`
-    + `<tr><td style="padding:24px 28px 4px;${F}font-size:18px;font-weight:bold;color:#001530">${esc(biz)}</td></tr>`
+    + `<tr><td style="padding:24px 28px 4px">${logo ? `<img src="${esc(logo)}" alt="${esc(biz)}" height="48" style="display:block;height:auto;max-height:48px;max-width:220px;border:0">` : `<span style="${F}font-size:18px;font-weight:bold;color:#001530">${esc(biz)}</span>`}</td></tr>`
     + `<tr><td style="padding:8px 28px 4px;${F}font-size:15px;line-height:1.55;color:#1f2937">${first ? "Hi " + esc(first) + ", here" : "Here"}'s a copy of the ${esc(what)} estimate you just ran${pick ? " for <b>" + esc(pick) + "</b>" : ""}:</td></tr>`
     + `<tr><td style="padding:10px 28px 6px;${F}font-size:26px;font-weight:bold;color:#001530">${low} &ndash; ${high}</td></tr>`
     + (tiers.length === 3 ? `<tr><td style="padding:10px 28px 4px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;${F}font-size:14px;color:#1f2937">`
       + tiers.map((t: Row) => `<tr><td style="padding:8px 0;border-top:1px solid #eef1f5;width:64px;color:#6b7280;font-size:12px;font-weight:bold;text-transform:uppercase">${esc(t.tier)}</td><td style="padding:8px 8px;border-top:1px solid #eef1f5">${esc(t.name)}${t.mine ? ' <span style="color:#006fff;font-size:12px;font-weight:bold">(your pick)</span>' : ""}</td><td style="padding:8px 0;border-top:1px solid #eef1f5;text-align:right;white-space:nowrap">${t.low} &ndash; ${t.high}</td></tr>`).join("")
       + `</table></td></tr>` : "")
     + `<tr><td style="padding:12px 28px 6px;${F}font-size:14px;line-height:1.55;color:#1f2937">This is a ballpark from your answers. We confirm the exact price after a free, no-obligation inspection, and we'll reach out shortly to set one up.${phone ? ` Questions before then? Call or text <a href="tel:${esc(phone.replace(/[^0-9+]/g, ""))}" style="color:#006fff">${esc(phone)}</a>.` : ""}</td></tr>`
-    + `<tr><td style="padding:16px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">`
-    + `<a href="https://builderpro-os.com/?utm_source=email&amp;utm_medium=estimate-copy" style="text-decoration:none"><img src="https://builderpro-os.com/assets/email/builderpro-logo.png" width="110" height="28" alt="BuilderPro" style="display:block;margin:0 0 4px;border:0;width:110px;height:28px"></a>Sent with BuilderPro. You got this because you asked ${esc(biz)} for an estimate.</td></tr>`
+    + `<tr><td style="padding:14px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">You got this because you asked ${esc(biz)} for an estimate.</td></tr>`
     + `</table></td></tr></table></body></html>`;
   const text = `${first ? "Hi " + first + ", here" : "Here"}'s a copy of the ${what} estimate you just ran${pick ? " for " + pick : ""}: ${low} - ${high}.\n`
     + tiers.map((t: Row) => `${t.tier}: ${t.name} ${t.low} - ${t.high}${t.mine ? " (your pick)" : ""}`).join("\n")
