@@ -112,7 +112,7 @@ Database check (Nov 1):
      - turn on the trial-ending reminder email
      - after all retries fail, cancel the subscription
 7. **Email sending (Resend):** make a Resend account, verify builderpro-os.com in it (it gives you DNS records to add), and create an API key. Then:
-   - add it to Supabase as the secret `RESEND_API_KEY` (Edge Functions → Secrets). Until then, homeowners don't get the emailed copy of their calculator estimate, and supplier orders open in the contractor's own mail app instead of sending.
+   - add it to Supabase as the secret `RESEND_API_KEY` (Edge Functions → Secrets). Until then, homeowners don't get the emailed copy of their calculator estimate.
    - use the same key for Supabase's own email sender, and paste the 5 branded login templates. Steps: `supabase/templates/README.md`. Without it, crew invites and password resets may not reach clients.
 8. ~~**Google Calendar:** Google Cloud setup.~~ Done, and connected on the house account.
 9. **Stripe receipts and reminders:** Stripe → Settings → Branding: upload the BuilderPro logo (`assets/email/builderpro-logo.png`) and set the brand color to #006fff (your mom's login).
