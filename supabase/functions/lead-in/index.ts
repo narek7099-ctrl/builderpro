@@ -20,8 +20,9 @@
 // { op:"copy", owner, email, ... } emails the homeowner a copy of the estimate
 // they just ran (the calculator's result screen sends it, embed/result-plus.js).
 // Only to an address that came in as this owner's lead in the last 15 minutes,
-// once. Sent with Resend when RESEND_API_KEY is set; otherwise skipped. Either
-// way the option they picked and the three prices are kept on the lead_log row.
+// once. Sent from the contractor's own HighLevel (their sending address, and it
+// shows in that lead's conversation); without HighLevel, with Resend in their
+// name when RESEND_API_KEY is set; otherwise skipped. Either way the option they picked and the three prices are kept on the lead_log row.
 // { op:"mailer" } -> { ready } says whether that email can go out.
 //
 // owner is the ?u= in the calculator's share link: a contractor's user id, or
@@ -313,7 +314,7 @@ async function copy(b: Row, req: Request) {
   if (!owner) return json({ ok: false, error: "unknown owner" }, 404);
   // only someone who just sent this contractor their details, and only once
   const since = new Date(Date.now() - 15 * 60e3).toISOString();
-  const lg = await one(`lead_log?owner=eq.${owner}&email=eq.${encodeURIComponent(email)}&created_at=gte.${since}&select=id,name,lead&order=created_at.desc&limit=1`);
+  const lg = await one(`lead_log?owner=eq.${owner}&email=eq.${encodeURIComponent(email)}&created_at=gte.${since}&select=id,name,lead,ghl_contact&order=created_at.desc&limit=1`);
   if (!lg) return json({ ok: true, sent: false, reason: "no_lead" });
   if (lg.lead?.copy_sent || lg.lead?.result_at) return json({ ok: true, sent: false, reason: "already" });
   const st = await one(`client_settings?user_id=eq.${owner}&select=data&limit=1`);
@@ -347,13 +348,43 @@ async function copy(b: Row, req: Request) {
   // estimate), and marks it, so a second press can't send a second email
   const now = new Date().toISOString();
   const shown = { result_at: now, pick, tiers: raw, result_low: Math.round(Number(b.low) || 0), result_high: Math.round(Number(b.high) || 0) };
-  await rest(`lead_log?id=eq.${lg.id}`, { method: "PATCH", body: JSON.stringify({ lead: { ...(lg.lead ?? {}), ...shown, ...(RESEND_KEY ? { copy_sent: now } : {}) } }) }).catch(() => {});
-  if (!RESEND_KEY) return json({ ok: true, sent: false, reason: "no_mailer" });
-  const r = await fetch("https://api.resend.com/emails", {
-    method: "POST", headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: `${biz.replace(/[<>"]/g, "")} <${COPY_FROM}>`, to: [email], reply_to: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reply) ? reply : undefined, subject: `Your ${what} estimate from ${biz}`, html, text }),
-  }).catch(() => null);
-  return json({ ok: true, sent: !!(r && r.ok) });
+  await rest(`lead_log?id=eq.${lg.id}`, { method: "PATCH", body: JSON.stringify({ lead: { ...(lg.lead ?? {}), ...shown } }) }).catch(() => {});
+  const subject = `Your ${what} estimate from ${biz}`;
+  // 1. from the contractor's own HighLevel: their own sending address, and it
+  //    lands in that lead's conversation in their HighLevel inbox
+  let via = await copyViaGhl(owner, String(lg.ghl_contact || ""), { email, name: String(lg.name || "") }, subject, html) ? "highlevel" : "";
+  // 2. otherwise our mail service, in their name, replies going to them
+  if (!via && RESEND_KEY) {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST", headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: `${biz.replace(/[<>"]/g, "")} <${COPY_FROM}>`, to: [email], reply_to: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reply) ? reply : undefined, subject, html, text }),
+    }).catch(() => null);
+    if (r && r.ok) via = "resend";
+  }
+  if (via) await rest(`lead_log?id=eq.${lg.id}`, { method: "PATCH", body: JSON.stringify({ lead: { ...(lg.lead ?? {}), ...shown, copy_sent: new Date().toISOString(), copy_via: via } }) }).catch(() => {});
+  return json({ ok: true, sent: !!via, ...(via ? { via } : { reason: "no_mailer" }) });
+}
+// the copy as an email from the contractor's HighLevel sub-account (false when
+// they have no HighLevel, it's BuilderPro's own house account, or it refuses)
+async function copyViaGhl(owner: string, cid: string, who: { email: string; name: string }, subject: string, html: string): Promise<boolean> {
+  try {
+    const loc = await ownerLoc(owner);
+    if (!loc || loc === "house") return false;
+    const tok = await ghlToken(loc);
+    if (!tok) return false;
+    const h = { Authorization: `Bearer ${tok}`, Accept: "application/json", "Content-Type": "application/json" };
+    if (!cid) {
+      const u = await fetch(`${GHL_BASE}/contacts/upsert`, { method: "POST", headers: { ...h, Version: "2021-07-28" }, signal: AbortSignal.timeout(8000),
+        body: JSON.stringify({ locationId: loc, email: who.email, name: who.name || undefined }) });
+      const d = await u.json().catch(() => ({}));
+      cid = u.ok ? String(d?.contact?.id || d?.id || "") : "";
+      if (!cid) return false;
+    }
+    const r = await fetch(`${GHL_BASE}/conversations/messages`, { method: "POST", headers: { ...h, Version: "2021-04-15" }, signal: AbortSignal.timeout(10000),
+      body: JSON.stringify({ type: "Email", contactId: cid, subject, html }) });
+    if (!r.ok) console.error("lead-in copy ghl", r.status, (await r.text().catch(() => "")).slice(0, 160));
+    return r.ok;
+  } catch (e) { console.error("lead-in copy ghl", String(e).slice(0, 160)); return false; }
 }
 
 Deno.serve(async (req) => {
@@ -365,7 +396,7 @@ Deno.serve(async (req) => {
     if (b.op === "retry") return await retry(req);
     if (b.op === "push") return await push(b, req);
     if (b.op === "copy") return await copy(b, req);
-    if (b.op === "mailer") return json({ ok: true, ready: !!RESEND_KEY });
+    if (b.op === "mailer") return json({ ok: true, ready: !!RESEND_KEY });  // Resend only; HighLevel is per contractor
     return await intake(b, req);
   } catch (e) {
     console.error("lead-in", String(e).slice(0, 200));
