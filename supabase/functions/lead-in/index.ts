@@ -20,10 +20,9 @@
 // { op:"copy", owner, email, ... } emails the homeowner a copy of the estimate
 // they just ran (the calculator's result screen sends it, embed/result-plus.js).
 // Only to an address that came in as this owner's lead in the last 15 minutes,
-// once. Sent from the contractor's own HighLevel (their sending address, and it
-// shows in that lead's conversation); without HighLevel, with Resend in their
-// name when RESEND_API_KEY is set; otherwise skipped. Either way the option they picked and the three prices are kept on the lead_log row.
-// { op:"mailer" } -> { ready } says whether that email can go out.
+// once. Sent only from the contractor's own HighLevel (their sending address,
+// and it shows in that lead's conversation), never from a BuilderPro address:
+// without HighLevel it's skipped. Either way the option they picked and the three prices are kept on the lead_log row.
 //
 // owner is the ?u= in the calculator's share link: a contractor's user id, or
 // a team member's (resolved to the owner they work for).
@@ -302,8 +301,6 @@ async function retry(req: Request) {
 }
 
 /* ---------- the homeowner's copy of their estimate ---------- */
-const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const COPY_FROM = Deno.env.get("ESTIMATE_FROM") || "estimates@builderpro-os.com";
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const usd = (n: unknown) => { const v = Number(n); return isFinite(v) && v > 0 ? "$" + Math.round(v).toLocaleString("en-US") : ""; };
 async function copy(b: Row, req: Request) {
@@ -319,7 +316,7 @@ async function copy(b: Row, req: Request) {
   if (lg.lead?.copy_sent || lg.lead?.result_at) return json({ ok: true, sent: false, reason: "already" });
   const st = await one(`client_settings?user_id=eq.${owner}&select=data&limit=1`);
   const co = (st?.data?.company ?? {}) as Row;
-  const biz = clean(co.name, 80) || "Your contractor", phone = clean(co.phone, 30), reply = clean(co.email, 120);
+  const biz = clean(co.name, 80) || "Your contractor", phone = clean(co.phone, 30);
   const lu = String(co.logoUrl ?? ""), logo = /^https:\/\//i.test(lu) && lu.length < 2000 ? lu : "";
   const what = clean(b.what, 60) || "project", first = clean(String(lg.name || "").split(/\s+/)[0], 40);
   const low = usd(b.low), high = usd(b.high);
@@ -341,28 +338,17 @@ async function copy(b: Row, req: Request) {
     + `<tr><td style="padding:12px 28px 6px;${F}font-size:14px;line-height:1.55;color:#1f2937">This is a ballpark from your answers. We confirm the exact price after a free, no-obligation inspection, and we'll reach out shortly to set one up.${phone ? ` Questions before then? Call or text <a href="tel:${esc(phone.replace(/[^0-9+]/g, ""))}" style="color:#006fff">${esc(phone)}</a>.` : ""}</td></tr>`
     + `<tr><td style="padding:14px 28px 20px;border-top:1px solid #eef1f5;${F}font-size:12px;color:#8a94a6">You got this because you asked ${esc(biz)} for an estimate.</td></tr>`
     + `</table></td></tr></table></body></html>`;
-  const text = `${first ? "Hi " + first + ", here" : "Here"}'s a copy of the ${what} estimate you just ran${pick ? " for " + pick : ""}: ${low} - ${high}.\n`
-    + tiers.map((t: Row) => `${t.tier}: ${t.name} ${t.low} - ${t.high}${t.mine ? " (your pick)" : ""}`).join("\n")
-    + `\n\nThis is a ballpark from your answers. We confirm the exact price after a free, no-obligation inspection, and we'll reach out shortly.${phone ? " Questions? " + phone : ""}\n\n${biz}`;
   // what the result screen showed goes on the lead (the app turns it into a draft
   // estimate), and marks it, so a second press can't send a second email
   const now = new Date().toISOString();
   const shown = { result_at: now, pick, tiers: raw, result_low: Math.round(Number(b.low) || 0), result_high: Math.round(Number(b.high) || 0) };
   await rest(`lead_log?id=eq.${lg.id}`, { method: "PATCH", body: JSON.stringify({ lead: { ...(lg.lead ?? {}), ...shown } }) }).catch(() => {});
   const subject = `Your ${what} estimate from ${biz}`;
-  // 1. from the contractor's own HighLevel: their own sending address, and it
-  //    lands in that lead's conversation in their HighLevel inbox
-  let via = await copyViaGhl(owner, String(lg.ghl_contact || ""), { email, name: String(lg.name || "") }, subject, html) ? "highlevel" : "";
-  // 2. otherwise our mail service, in their name, replies going to them
-  if (!via && RESEND_KEY) {
-    const r = await fetch("https://api.resend.com/emails", {
-      method: "POST", headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: `${biz.replace(/[<>"]/g, "")} <${COPY_FROM}>`, to: [email], reply_to: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reply) ? reply : undefined, subject, html, text }),
-    }).catch(() => null);
-    if (r && r.ok) via = "resend";
-  }
+  // from the contractor's own HighLevel: their own sending address, and it
+  // lands in that lead's conversation in their HighLevel inbox
+  const via = await copyViaGhl(owner, String(lg.ghl_contact || ""), { email, name: String(lg.name || "") }, subject, html) ? "highlevel" : "";
   if (via) await rest(`lead_log?id=eq.${lg.id}`, { method: "PATCH", body: JSON.stringify({ lead: { ...(lg.lead ?? {}), ...shown, copy_sent: new Date().toISOString(), copy_via: via } }) }).catch(() => {});
-  return json({ ok: true, sent: !!via, ...(via ? { via } : { reason: "no_mailer" }) });
+  return json({ ok: true, sent: !!via, ...(via ? { via } : { reason: "no_highlevel" }) });
 }
 // the copy as an email from the contractor's HighLevel sub-account (false when
 // they have no HighLevel, it's BuilderPro's own house account, or it refuses)
@@ -396,7 +382,6 @@ Deno.serve(async (req) => {
     if (b.op === "retry") return await retry(req);
     if (b.op === "push") return await push(b, req);
     if (b.op === "copy") return await copy(b, req);
-    if (b.op === "mailer") return json({ ok: true, ready: !!RESEND_KEY });  // Resend only; HighLevel is per contractor
     return await intake(b, req);
   } catch (e) {
     console.error("lead-in", String(e).slice(0, 200));
