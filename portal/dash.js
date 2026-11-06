@@ -413,9 +413,9 @@
     var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
     return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div>'
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
-      + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + '<button class="bpx-btn ghost" onclick="bpNav(\'estimates\')">New estimate</button>'
+      + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + (locked('matlists') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'matlists\')">Order lists</button>')
       + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add job</button>')
-      + (locked('matlists') ? '' : '<button class="bpx-btn" onclick="bpNav(\'matlists\')">Order lists</button>') + '</div></div>';
+      + '<button class="bpx-btn" onclick="bpNav(\'estimates\')">New estimate</button></div></div>';
   }
 
   /* ---------- four numbers, two by two, in one card ---------- */

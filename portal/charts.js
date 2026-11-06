@@ -775,7 +775,8 @@
   C.delta = function (prev, cur, o) {
     o = o || {};
     prev = +prev || 0; cur = +cur || 0;
-    if (!prev) return '';
+    // nothing yet this period (early in the month): a red "down 100%" would only alarm
+    if (!prev || !cur) return '';
     var p = Math.round((cur - prev) / Math.abs(prev) * 100);
     var up = p >= 0, good = o.upIsGood === false ? !up : up;
     return '<span class="bpc-delta ' + (p === 0 ? 'flat' : good ? 'good' : 'bad') + '" title="against ' + esc(o.vs || 'last month') + '">'
