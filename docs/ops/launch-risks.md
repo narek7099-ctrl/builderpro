@@ -99,7 +99,7 @@ Database check (Nov 1):
 ## Your to-do list
 
 **Before the first paying client:**
-1. Upgrade Supabase to Pro ($25/mo) for daily backups.
+1. Upgrade Supabase to Pro ($25/mo) for daily backups. **Waiting for the first client:** the Command Center gets a "First client signed up: upgrade Supabase to Pro" request when the first checkout comes in.
 2. Turn on two-step login: Supabase, Stripe, HighLevel, GitHub, Google, Anthropic.
 3. Turn on leaked-password protection: Supabase → Authentication → Passwords.
 4. Add your mom as a second admin on Supabase and GitHub.

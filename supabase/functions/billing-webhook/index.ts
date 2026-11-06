@@ -60,6 +60,20 @@ async function flag(ev: any, o: any) {
   await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: acct.user_id ?? null, email: acct.email ?? o.customer_email ?? null, kind, subject, body: body + `\n(Stripe event ${ev.id})` }) });
 }
 
+/* The first client to check out: remind the owner to move Supabase to Pro (the
+   free plan has no restorable backups). Once, ever: ai_config reminder_supabase_pro. */
+// deno-lint-ignore no-explicit-any
+async function firstClientReminder(o: any) {
+  try {
+    const r = await sb("ai_config?key=eq.reminder_supabase_pro&select=value");
+    if (r.ok && ((await r.json())[0]?.value ?? "") !== "") return;
+    await sb("ai_config", { method: "POST", headers: { Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ key: "reminder_supabase_pro", value: new Date().toISOString() }) });
+    await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: null, email: o.customer_details?.email ?? o.customer_email ?? null, kind: "reminder",
+      subject: "First client signed up: upgrade Supabase to Pro",
+      body: "You asked to be reminded when the first client signs up. Upgrade Supabase to Pro ($25/mo) now: the free plan has no backups you can restore, so a mistake or outage could lose client data. Supabase > Organization settings > Billing > Change plan. Then turn on leaked-password protection (Authentication > Passwords)." }) });
+  } catch { /* a reminder never blocks billing */ }
+}
+
 Deno.serve(async (req) => {
   const raw = await req.text();
   if (!(await verified(raw, req.headers.get("stripe-signature") ?? ""))) return new Response("bad signature", { status: 400 });
@@ -75,6 +89,7 @@ Deno.serve(async (req) => {
   } else if (ev.type === "checkout.session.completed" && o.mode === "subscription") {
     // the trial clock starts at checkout, not at signup
     await patch(o.client_reference_id || o.metadata?.user_id, { status: "trial", trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 864e5).toISOString(), stripe_subscription_id: o.subscription ?? "", stripe_customer_id: o.customer ?? "", checkout_url: "" });
+    await firstClientReminder(o);
   } else if (ev.type === "customer.subscription.updated" || ev.type === "customer.subscription.deleted") {
     const uid = o.metadata?.user_id;
     const body: Record<string, unknown> = { status: ev.type.endsWith("deleted") ? "cancelled" : (STATUS[o.status] ?? o.status), stripe_subscription_id: o.id };
