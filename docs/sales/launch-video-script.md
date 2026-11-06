@@ -78,25 +78,66 @@ Then five quick screen beats, each with one short spoken line:
 
 ---
 
-## Shot list
+## Recording plan: what you film, and what each clip becomes
 
-**You perform (each its own take, 4–30 seconds, because Higgsfield edits clips of 4–30 seconds):**
-| Clip | Scene | Line | How to film |
-|---|---|---|---|
-| A1 | 2 | "If you run a growing contracting company…" | Phone horizontal at eye level, window light in front of you, plain wall behind (easier to replace) |
-| A2 | 3 | "Big software wants thousands up front…" | Same setup; a little slower, sincere |
-| A3 | 4 | "The same things kept coming up…" | Count the three on your fingers |
-| A4 | 5 | "So we built one app that fixes all three." | Small nod, confident |
-| A5 | 6 | "No big setup fee. No contract…" | Smile on "fourteen days free" |
-| V1 | 1, 5, 7 | All the voice-only lines | Read them one after another in a quiet room; they'll be voice-changed to match the spokesperson |
+Everything you record is a stand-in. Higgsfield swaps the person, the place and the
+voice; the app screens stay real. Film on your phone, horizontal, 4K or 1080p, 30 fps.
+Each clip 4 to 30 seconds (Higgsfield's limit), 2 to 3 takes each, a second of stillness
+before and after.
 
-Tips: record each clip 2–3 times; leave a second of silence before and after; wear a plain
-solid shirt (it gets swapped anyway); keep your hands in frame steady.
+### A. You as the spokesperson (one spot, one afternoon)
+Set-up for all of them: phone on a stack of books at eye level, a window in front of you,
+a plain wall behind you, a plain solid T-shirt, hands visible.
 
-**I record (free, filming mode on the $299 account, 1080p):** 5a–5e, plus a short scroll of the homepage for the end card.
+| Clip | You do and say | It becomes |
+|---|---|---|
+| A1 | Look at the lens: "If you run a growing contracting company, you know this…" | The AI spokesperson standing at a job site (truck, ladder, house in the background) |
+| A2 | Slower, sincere: "Big software wants thousands up front…" | Same spokesperson, slow push-in, warm light |
+| A3 | Count three on your fingers: "The same things kept coming up…" | Spokesperson in a truck cab, the three problems popping up as big text beside them |
+| A4 | Small nod: "So we built one app that fixes all three." | Spokesperson, cut straight into the app shots |
+| A5 | Smile on "fourteen days free": "No big setup fee. No contract…" | Spokesperson at golden hour, end card slides in |
+| V1 | Quiet room, phone near your mouth: read every voice-only line in a row | Their voice (voice change), laid under the cold open, the app shots and the end card |
 
-**Higgsfield generates:** the cold open (Scene 1), job-site cut-ins (Scene 2, Scene 4 background), the spokesperson swap on A1–A5, the voice change on V1, music, captions and the final assembly.
-Before any credits are spent, each step gets a price quote. Start with one 10-second test of A4.
+### B. You as the "contractor" in background shots (B-roll, no talking)
+These are acting shots with no face focus. They become a contractor on the job. The person
+stays anonymous, never speaks and never gives an opinion about BuilderPro (that would be a
+fake testimonial).
+
+| Clip | You do | It becomes |
+|---|---|---|
+| B1 | Sit in a parked car, phone buzzing on the seat, you glance at it and keep going | A roofer in his truck cab ignoring a call (the "missed call" problem) |
+| B2 | Stand outside holding a phone, thumb scrolling, then a small smile | A contractor in the driveway seeing "Signed" on an estimate |
+| B3 | Hand on a table writing in a paper notebook, then pushing it away | A messy paper estimate on a truck dashboard, replaced by the phone |
+| B4 | Over-the-shoulder: you tapping your phone (screen blank or black) | Hands of a contractor in work gloves tapping BuilderPro (the real screen is placed in afterwards) |
+| B5 | Walk up to a front door and knock (any door, nobody's face) | A contractor arriving at a homeowner's house for the inspection |
+
+### C. The app screens (I record these, free)
+Filming mode on the $299 test account, 1080p, real taps. No customer names, phones or
+addresses on screen.
+
+| Clip | What it shows | It becomes |
+|---|---|---|
+| C1 | Missed-call text-back conversation (or Lisa answering, ✱3) | Placed onto the phone in B4 / B1, "Every call answered" |
+| C2 | Building a Good/Better/Best estimate in a few taps | Phone in gloved hands, "Estimates in minutes" |
+| C3 | The homeowner page: pick an option and sign | A homeowner's phone on a kitchen table, "Signed from their phone" |
+| C4 | The homeowner's project timeline | Same homeowner phone, "Customers stay in the loop" |
+| C5 | Phone home screen: today's jobs, crew, money | Contractor's phone on the truck dashboard, "One app for the whole company" |
+| C6 | The website scroll + the "Start free trial" button | End card background |
+
+### D. Made entirely by Higgsfield (nothing to film)
+| Shot | Prompt idea |
+|---|---|
+| D1 Cold open | Roofer on a pitched roof at golden hour, nail gun in hand, phone vibrating in his chest pocket; he glances at it and keeps working. Handheld documentary look. |
+| D2 Problem cut-ins | A voicemail list on a phone, an estimate stuck in "Drafts", five different apps on a home screen |
+| D3 Trade versions | Plumber under a sink, HVAC tech in a hot attic, remodeler in a gutted kitchen (only the cold open changes) |
+| D4 Music + captions | Upbeat, light, under the voice; captions on every line |
+
+### Order to do it in
+1. Film A1 to A5 and V1 in one sitting (about an hour).
+2. Film B1 to B5 (about 30 minutes, any afternoon).
+3. Upload the clips to me in this chat; I record C1 to C6 the same day.
+4. Higgsfield test first: one 10-second spokesperson swap of A4, with a price quote before
+   any credits are spent. If it looks right, the rest follows the same settings.
 
 ## Versions from the same footage
 - **30 seconds:** Scene 1 → Scene 3 (one sentence) → 5a → 5b → Scene 7.
