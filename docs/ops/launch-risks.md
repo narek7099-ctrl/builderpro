@@ -99,7 +99,7 @@ Database check (Nov 1):
 ## Your to-do list
 
 **Before the first paying client:**
-1. Upgrade Supabase to Pro ($25/mo) for daily backups. Until then a free weekly backup runs on GitHub (`.github/workflows/db-backup.yml`, needs the secrets SUPABASE_DB_URL and BACKUP_PASSPHRASE). **Waiting for the first client:** the Command Center gets a "First client signed up: upgrade Supabase to Pro" request when the first checkout comes in.
+1. Upgrade Supabase to Pro ($25/mo) for daily backups. Until then Supabase snapshots itself every Sunday (`bp_backup.snapshots`, last 4 weeks; restore steps in `docs/ops/restore-backup.md`). Optional off-site copy: `.github/workflows/db-backup.yml` once the secrets SUPABASE_DB_URL and BACKUP_PASSPHRASE are added. **Waiting for the first client:** the Command Center gets a "First client signed up: upgrade Supabase to Pro" request when the first checkout comes in.
 2. Turn on two-step login: Supabase, Stripe, HighLevel, GitHub, Google, Anthropic.
 3. Turn on leaked-password protection: Supabase → Authentication → Passwords.
 4. Add your mom as a second admin on Supabase and GitHub.
