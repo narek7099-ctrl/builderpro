@@ -104,13 +104,7 @@ Database check (Nov 1):
 3. Turn on leaked-password protection: Supabase → Authentication → Passwords.
 4. Add your mom as a second admin on Supabase and GitHub.
 5. Write the "if I lose access" page (which email owns what, no passwords).
-6. **Stripe (your mom's login):**
-   - **Webhooks:** add `invoice.payment_failed`, `charge.dispute.created` and `customer.subscription.trial_will_end` to the billing webhook.
-   - **Billing settings:**
-     - turn on Smart Retries
-     - turn on the failed-payment and expiring-card emails
-     - turn on the trial-ending reminder email
-     - after all retries fail, cancel the subscription
+6. ~~**Stripe:** billing webhook events, Smart Retries, cancel after the last retry, failed-payment / expiring-card / trial-ending emails.~~ Done.
 7. ~~**Login emails (Resend):** domain verified, Supabase sends through Resend.~~ Done and tested (a password reset reached support@). Still to do: paste the 5 branded login templates (`supabase/templates/README.md`); until then they use Supabase's plain look.
 8. ~~**Google Calendar:** Google Cloud setup.~~ Done, and connected on the house account.
 9. **Stripe receipts and reminders:** Stripe → Settings → Branding: upload the BuilderPro logo (`assets/email/builderpro-logo.png`) and set the brand color to #006fff (your mom's login).
