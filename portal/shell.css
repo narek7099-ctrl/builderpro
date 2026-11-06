@@ -310,6 +310,34 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .bpx-auth input{width:100%;box-sizing:border-box;min-height:38px !important}
 #bpx#bpx#bpx#bpx .bpx-auth .bpx-btn{width:100% !important;min-height:38px !important;margin-top:14px}
 #bpx#bpx#bpx#bpx .bpx-auth .bpx-hint,#bpx#bpx#bpx#bpx .bpx-auth .bpx-foot2{font-size:12px !important;color:var(--mu) !important}
+/* the sign-in screen wears the website's look: its font, navy wordmark, roomier card */
+#bpx#bpx#bpx#bpx#bpx .bpx-auth{background:radial-gradient(1200px 600px at 50% -10%,#dbe8fb 0%,rgba(219,232,251,0) 60%),#edf2f6 !important;padding:24px 16px !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-wrap{max-width:420px}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-brand2 .wm{font-family:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;font-size:24px !important;font-weight:700 !important;letter-spacing:-.03em !important;color:#001530 !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-brand2 .wm span{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-card{border-radius:18px !important;border:1px solid #dce3ec !important;box-shadow:0 24px 48px -24px rgba(0,21,48,.25),0 1px 2px rgba(0,21,48,.06) !important;padding:32px 28px 26px !important;background:#fff !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth h1{font-family:'General Sans','Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;font-size:28px !important;font-weight:700 !important;letter-spacing:-.025em !important;color:#001530 !important;margin:0 0 6px !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-sub2{font-size:14px !important;color:#5a6b82 !important;margin-bottom:22px !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth label{font-size:13px !important;font-weight:600 !important;color:#001530 !important;margin:14px 0 6px !important;display:block}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth input{min-height:46px !important;border-radius:10px !important;border:1px solid #c9d3e0 !important;font-size:16px !important;padding:0 14px !important;background:#fff !important;transition:border-color .15s,box-shadow .15s}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth input:focus{border-color:#006fff !important;box-shadow:0 0 0 4px rgba(0,111,255,.14) !important;outline:none !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-pwrow{position:relative}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-pwrow input{padding-right:68px !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#2457d6;font:600 13px/1 inherit;cursor:pointer}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-eye:hover{background:#eef4ff}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-forgot{display:block;margin:10px 0 0 auto}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-btn{min-height:48px !important;border-radius:999px !important;background:#006fff !important;font-size:15px !important;font-weight:700 !important;margin-top:18px !important;box-shadow:0 10px 24px -12px rgba(0,111,255,.7) !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-btn:hover{background:#001530 !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-new{margin-top:22px;padding-top:18px;border-top:1px solid #eef1f5;text-align:center;font-size:14px;color:#5a6b82}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-new a{color:#006fff;font-weight:700;text-decoration:none}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-new a:hover{text-decoration:underline}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-hint.bpx-ho{background:none !important;padding:0 !important;margin-top:10px !important;font-size:13px !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-foot2{margin-top:20px !important;font-size:13px !important}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-foot2 a{color:#5a6b82;text-decoration:none}
+#bpx#bpx#bpx#bpx#bpx .bpx-auth .bpx-foot2 a:hover{color:#001530;text-decoration:underline}
+@media (prefers-color-scheme:dark){
+  #bpx#bpx#bpx#bpx .bpx-auth{background:radial-gradient(1200px 600px at 50% -10%,#10284f 0%,rgba(16,40,79,0) 60%),#0b0f16 !important}
+}
 
 /* ---------- phones: the sidebar is a drawer ---------- */
 @media (max-width:820px){
