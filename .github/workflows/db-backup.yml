@@ -1,4 +1,7 @@
-# Weekly database backup, until Supabase Pro's daily backups take over.
+# OPTIONAL off-site weekly database backup. Supabase already keeps a weekly
+# snapshot of its own (bp_backup.snapshots, migration 20261106120000); this one
+# also covers losing the whole project. Until both secrets below are added it
+# skips quietly (no failure emails).
 # Every Sunday it saves the whole database (logins, contacts, jobs, estimates,
 # settings: roles, schema and data, via `supabase db dump`) and keeps each copy
 # for 90 days under Actions > "Database backup" > the run > Artifacts.
@@ -33,20 +36,25 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check the secrets are set
+        id: ready
         env:
           DB: ${{ secrets.SUPABASE_DB_URL }}
           PASS: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           if [ -z "$DB" ] || [ -z "$PASS" ]; then
-            echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE under Settings > Secrets and variables > Actions."
-            exit 1
+            echo "::notice::Skipped: add SUPABASE_DB_URL and BACKUP_PASSPHRASE under Settings > Secrets and variables > Actions to turn this on."
+            echo "on=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "on=yes" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: supabase/setup-cli@v1
+        if: steps.ready.outputs.on == 'yes'
         with:
           version: latest
 
       - name: Dump roles, schema and data
+        if: steps.ready.outputs.on == 'yes'
         env:
           DB: ${{ secrets.SUPABASE_DB_URL }}
         run: |
@@ -59,6 +67,7 @@ jobs:
           test "$(wc -c < backup/data.sql)" -gt 10000
 
       - name: Lock it with the passphrase
+        if: steps.ready.outputs.on == 'yes'
         env:
           PASS: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
@@ -69,6 +78,7 @@ jobs:
           ls -l backup.tar.gz.gpg
 
       - uses: actions/upload-artifact@v4
+        if: steps.ready.outputs.on == 'yes'
         with:
           name: db-backup-${{ github.run_number }}
           path: backup.tar.gz.gpg

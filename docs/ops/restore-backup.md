@@ -1,4 +1,22 @@
-# Restoring the weekly database backup
+# Restoring a backup
+
+## The weekly snapshot inside Supabase (always on)
+
+Every Sunday `bp_backup.take()` copies every public table plus logins into
+`bp_backup.snapshots` (4 rotating weekly slots). See what's there:
+`select slot, taken_at, tables, row_count from bp_backup.snapshots order by taken_at desc;`
+
+Put back rows of one table that were deleted by mistake (example: contacts,
+from the newest snapshot; only rows that are missing now):
+```sql
+insert into public.contacts
+select * from jsonb_populate_recordset(null::public.contacts,
+  (select data->'public.contacts' from bp_backup.snapshots order by taken_at desc limit 1))
+on conflict do nothing;
+```
+Ask for help before restoring more than one table; tables depend on each other.
+
+## The optional off-site backup on GitHub
 
 Only for a real emergency (data deleted or the project lost). Do it with help;
 a restore overwrites what's there. Once Supabase is on Pro, use its daily
