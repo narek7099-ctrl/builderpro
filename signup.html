@@ -267,7 +267,7 @@ function render(){
     h='<h1>Check and start your trial</h1><p class="sub">Next you add a card with Stripe. You are not charged today, and you can cancel any time in the first 14 days.</p>'
     +box('Plan',0,[['Plan',pl.n+', $'+pl.p+' / month']])
     +box('Your login',1,[['Name',S.name],['Email',S.email],['Phone',S.phone]])
-    +box('Your business',2,[['Business',S.business+' ('+S.trade+')'],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea]])
+    +box('Your business',2,[['Business',S.business?S.business+(S.trade?' ('+S.trade+')':''):''],['Address',[P.address,P.city,P.state,P.zip].filter(Boolean).join(', ')],['Service area',P.serviceArea]])
     +box('Services',3,[['Services',P.services]])
     +box('AI receptionist',4,[['Name',(P.assistantName||'Lisa')+', '+(P.tone||'Friendly').toLowerCase()],['Main goal',P.leadGoal]])
     +'<h2 style="margin:22px 0 0">Add-ons</h2><div class="addons">'+ADDONS.filter(function(a){return a.k!=='ai'||S.plan==='enterprise';}).map(function(a){var inc=a.k==='ai'&&S.plan==='enterprise';
