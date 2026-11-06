@@ -1,0 +1,76 @@
+# Weekly database backup, until Supabase Pro's daily backups take over.
+# Every Sunday it saves the whole database (logins, contacts, jobs, estimates,
+# settings: roles, schema and data, via `supabase db dump`) and keeps each copy
+# for 90 days under Actions > "Database backup" > the run > Artifacts.
+# This repository is public, so the copy is locked with a passphrase before it
+# is uploaded: without the passphrase the file is unreadable.
+# Uploaded files (photos, logos in Storage) are not in it.
+#
+# Secrets (GitHub > Settings > Secrets and variables > Actions):
+#   SUPABASE_DB_URL     Supabase > Connect > "Session pooler" connection string,
+#                       with [YOUR-PASSWORD] replaced by the database password
+#   BACKUP_PASSPHRASE   a long passphrase you also keep in your password manager.
+#                       Lose it and the backups can't be opened.
+# Run it by hand: Actions > "Database backup" > Run workflow.
+#
+# Restore (only if you ever need it): download the artifact, unzip it, then
+#   gpg -d backup.tar.gz.gpg | tar xz
+# and follow docs/ops/restore-backup.md.
+
+name: Database backup
+
+on:
+  schedule:
+    - cron: "23 9 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check the secrets are set
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB" ] || [ -z "$PASS" ]; then
+            echo "::error::Add SUPABASE_DB_URL and BACKUP_PASSPHRASE under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump roles, schema and data
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup
+          supabase db dump --db-url "$DB" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$DB" -f backup/schema.sql
+          supabase db dump --db-url "$DB" -f backup/data.sql --use-copy --data-only
+          ls -l backup
+          # an empty data file means the dump didn't really work
+          test "$(wc -c < backup/data.sql)" -gt 10000
+
+      - name: Lock it with the passphrase
+        env:
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          tar czf backup.tar.gz backup
+          echo "$PASS" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 -o backup.tar.gz.gpg backup.tar.gz
+          rm -rf backup backup.tar.gz
+          ls -l backup.tar.gz.gpg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backup.tar.gz.gpg
+          retention-days: 90
+          if-no-files-found: error
