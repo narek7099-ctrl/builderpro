@@ -321,6 +321,12 @@ main.dl-page p{margin:0;}
 .hero_left{display:flex;flex-direction:column;gap:var(--gutter);width:42%;max-width:37.5rem;}
 .hero_left-top{background:var(--white);border-radius:var(--radius);height:4.5rem;flex:none;}
 .hero_left-mid{background:var(--white);border-radius:var(--radius);flex:1;padding:2rem 2rem 4rem;display:flex;align-items:flex-start;}
+/* the hero's own call to action, under the headline */
+.hero_left-mid{flex-direction:column;justify-content:space-between;gap:2rem;}
+.hero_cta{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;}
+.hero_cta .btn{font-size:.8125rem;padding:1rem 1.5rem;}
+.hero_cta-main{box-shadow:0 8px 24px -10px rgba(0,111,255,.55);}
+.hero_note{width:100%;margin:.25rem 0 0;font-family:var(--site-font);font-size:.875rem;color:var(--gray-500);}
 .hero_left-bot{
   background:var(--white);border-radius:var(--radius);
   flex:1;max-height:16.875rem;padding:1.875rem 2rem 2rem;
@@ -607,7 +613,8 @@ body.dl .modal{border-radius:var(--radius);}
   .hero_stage{position:relative;height:auto;flex-direction:column;padding-top:5.25rem;}
   .hero_left{order:1;width:100%;}
   .hero_left-top{position:absolute;top:var(--gutter);left:var(--gutter);right:var(--gutter);}
-  .hero_left-mid{padding:1.5rem 1.25rem 2.5rem;}
+  .hero_left-mid{padding:1.5rem 1.25rem 1.5rem;flex:none;gap:1.75rem;}
+  .hero_cta .btn{flex:1 1 auto;justify-content:center;}
   .hero_left-bot{width:100%;max-height:none;gap:2.5rem;padding:1.25rem;}
   .hero_right{position:relative;left:auto;right:auto;bottom:auto;width:100%;height:auto;aspect-ratio:1;order:2;}
   .hero_story,.hero_dark,.hero_scrub{display:none;}
@@ -837,6 +844,6 @@ body.dl #estimator{display:none !important;}
   /* the first screen is the headline and the intro; the cube starts below the fold */
   .hero{padding-top:0;}
   .hero_left{min-height:calc(100svh - var(--nav-h) - var(--gutter) * 3);}
-  .hero_left-mid{flex:1;align-items:center;}
+  .hero_left-mid{flex:1;align-items:stretch;justify-content:center;gap:2rem;}
   .hero_left-bot{flex:none;gap:1.5rem;}
 }
