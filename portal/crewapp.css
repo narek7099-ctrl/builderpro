@@ -470,3 +470,50 @@
 #bpx .cs-back .ms{font-size:22px}
 #bpx .cs-more-link{display:inline-flex;align-items:center;gap:2px;margin-top:10px;height:40px;padding:0;border:0;background:none;font:inherit;font-size:14.5px;font-weight:600;color:var(--blue);cursor:pointer}
 #bpx .cs-more-link .ms{font-size:20px}
+
+/* ---------- today's checklist: segmented ring + big tick rows + Finish job ---------- */
+#bpx-modal .ck{padding-bottom:6px}
+#bpx-modal .ck-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+#bpx-modal .ck-count{font-size:13px;font-weight:700;color:#5a6b82;background:#eef2f8;border-radius:999px;padding:4px 10px;font-variant-numeric:tabular-nums}
+#bpx-modal .ck-top{display:flex;gap:18px;align-items:center}
+#bpx-modal .ck-ring{position:relative;flex:0 0 132px;width:132px;height:132px}
+#bpx-modal .ck-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+#bpx-modal .ck-trk,#bpx-modal .ck-arc{fill:none;stroke-width:13;stroke-linecap:round}
+#bpx-modal .ck-trk{stroke:#e7ecf3}
+#bpx-modal .ck-arc{filter:drop-shadow(0 2px 3px rgba(16,24,40,.15))}
+#bpx-modal .ck-arc.pop{animation:ckDraw .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ckDraw{from{stroke-dasharray:0 var(--c)}}
+#bpx-modal .ck-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#bpx-modal .ck-mid b{font-size:40px;line-height:1;font-weight:800;letter-spacing:-.03em;color:#0f1a2b;font-variant-numeric:tabular-nums}
+#bpx-modal .ck-mid small{font-size:12px;font-weight:600;color:#6b7a90;margin-top:3px}
+#bpx-modal .ck-ring.all .ck-mid .ms{font-size:40px;color:#22a06b;animation:ckPop .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes ckPop{from{transform:scale(.3);opacity:0}}
+#bpx-modal .ck-steps{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#bpx-modal .ck-step{display:flex;align-items:center;gap:12px;min-height:52px;width:100%;padding:8px 12px;border:1px solid #e3e8ef;border-radius:14px;background:#fff;
+  text-align:left;font:inherit;color:#0f1a2b;cursor:pointer;transition:background-color .2s,border-color .2s,transform .12s}
+#bpx-modal .ck-step:active{transform:scale(.98)}
+#bpx-modal .ck-box{flex:0 0 30px;width:30px;height:30px;border-radius:9px;border:2px solid #c9d3e0;display:grid;place-items:center;background:#fff;transition:all .25s}
+#bpx-modal .ck-box svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .3s .05s}
+#bpx-modal .ck-step.on{background:#f6faf8;border-color:#d5ebe0}
+#bpx-modal .ck-step.on .ck-box{background:var(--col);border-color:var(--col);box-shadow:0 4px 10px -4px var(--col)}
+#bpx-modal .ck-step.on .ck-box svg{stroke-dashoffset:0}
+#bpx-modal .ck-t{min-width:0;display:flex;flex-direction:column}
+#bpx-modal .ck-t b{font-size:15px;font-weight:600}
+#bpx-modal .ck-step.on .ck-t b{color:#5a6b82;text-decoration:line-through;text-decoration-color:#b6c2d1}
+#bpx-modal .ck-t small{font-size:12px;color:#7a8aa0}
+#bpx-modal .ck-finish{margin-top:14px;width:100%;min-height:56px;border:0;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;
+  font:700 16px/1 inherit;color:#fff;background:linear-gradient(180deg,#27b277,#1f9a63);box-shadow:0 12px 24px -12px rgba(31,154,99,.8),inset 0 1px 0 rgba(255,255,255,.25);cursor:pointer;transition:transform .12s,filter .2s}
+#bpx-modal .ck-finish:active{transform:scale(.98)}
+#bpx-modal .ck-finish:disabled{background:#eef2f6;color:#7a8aa0;box-shadow:none;cursor:default}
+#bpx-modal .ck-done{display:flex;align-items:center;gap:14px;padding:16px;border-radius:16px;background:linear-gradient(180deg,#effaf4,#e6f6ed);border:1px solid #cbebd9}
+#bpx-modal .ck-done b{display:block;font-size:17px;color:#0f1a2b}
+#bpx-modal .ck-done span{font-size:13px;color:#4b6b5c}
+#bpx-modal .ck-done>div{flex:1;min-width:0}
+#bpx-modal .ck-tick svg{width:52px;height:52px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#bpx-modal .ck-tick circle{stroke:#22a06b;stroke-width:3;fill:#22a06b;animation:ckPop .45s cubic-bezier(.2,1.4,.4,1) both}
+#bpx-modal .ck-tick path{stroke:#fff;stroke-width:4.5;stroke-dasharray:40;stroke-dashoffset:40;animation:ckTick .4s .3s ease-out forwards}
+@keyframes ckTick{to{stroke-dashoffset:0}}
+#bpx-modal .ck-undo{border:0;background:none;color:#2457d6;font:600 13px inherit;padding:8px;cursor:pointer}
+@media (max-width:420px){#bpx-modal .ck-top{flex-direction:column;align-items:stretch}#bpx-modal .ck-ring{margin:0 auto 6px}}
+@media (prefers-reduced-motion:reduce){#bpx-modal .ck-arc.pop,#bpx-modal .ck-ring.all .ck-mid .ms,#bpx-modal .ck-tick circle,#bpx-modal .ck-tick path{animation:none;stroke-dashoffset:0}#bpx-modal .ck-box svg{transition:none}}
+.bpx-dark #bpx-modal .ck-step{background:#121826;border-color:#233043;color:#e9eef6}
