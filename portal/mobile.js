@@ -92,6 +92,7 @@
       var a = b.getAttribute('data-tab') === on; b.classList.toggle('on', a);
       if (a) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
+    if (window.bpSlideTabs) bpSlideTabs();
   }
 
   /* --------------------------------------------------------- top bar --- */

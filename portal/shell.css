@@ -476,3 +476,18 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p{width:auto;display:inline-flex;gap:6px;padding:0 14px 0 11px !important;border-radius:999px !important;height:34px;background:#f4f0ff !important;color:#5b3fd6 !important;font:600 13px/1 var(--sans);margin-right:4px}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p::after{content:"Ask AI"}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p .hl-i{width:16px;height:16px}
+
+/* ---------- sliding tab highlight (portal/slidetabs.js) ---------- */
+#bpx#bpx#bpx#bpx .has-slide{position:relative}
+#bpx#bpx#bpx#bpx .hl-tabs.has-slide{position:sticky}
+#bpx#bpx#bpx#bpx .bp-slide{position:absolute;left:0;z-index:0;pointer-events:none;opacity:0;border-radius:10px;
+  background:linear-gradient(180deg,rgba(0,111,255,.13),rgba(0,111,255,.07));
+  box-shadow:inset 0 0 0 1px rgba(0,111,255,.2),inset 0 1px 0 rgba(255,255,255,.7),0 6px 16px -10px rgba(0,111,255,.55);
+  -webkit-backdrop-filter:blur(8px) saturate(1.4);backdrop-filter:blur(8px) saturate(1.4);
+  transition:transform .42s cubic-bezier(.33,1,.68,1),width .42s cubic-bezier(.33,1,.68,1),opacity .2s}
+#bpx#bpx#bpx#bpx .has-slide>.hl-tab,#bpx#bpx#bpx#bpx .has-slide>.bp-tab{position:relative;z-index:1}
+#bpx#bpx#bpx#bpx .hl-tabs.has-slide .hl-tab.on{border-bottom-color:transparent !important}
+#bpx#bpx#bpx#bpx .bp-tabbar .bp-slide{border-radius:16px}
+#bpx#bpx#bpx#bpx .bp-tabbar.has-slide .bp-tab.on .bp-tab-i{background:transparent !important}
+#bpx#bpx#bpx#bpx.bpx-dark .bp-slide{background:linear-gradient(180deg,rgba(82,139,255,.24),rgba(82,139,255,.12));box-shadow:inset 0 0 0 1px rgba(132,173,255,.28),0 6px 16px -10px rgba(82,139,255,.7)}
+@media (prefers-reduced-motion:reduce){#bpx#bpx#bpx#bpx .bp-slide{transition:none}}

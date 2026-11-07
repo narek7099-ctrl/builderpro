@@ -198,6 +198,7 @@
         }).join('');
         tabs.hidden = false;
         var on = tabs.querySelector('.on'); if (on && on.scrollIntoView && tabs.scrollWidth > tabs.clientWidth) { try { on.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {} }
+        if (window.bpSlideTabs) bpSlideTabs();
       } else { tabs.innerHTML = ''; tabs.hidden = true; }
       if (g && g.kids && g.kids.some(function (k) { return k[0] === v; })) LS.set('hlTab:' + g.id, v);
     }
