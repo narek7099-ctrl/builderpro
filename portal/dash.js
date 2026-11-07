@@ -334,6 +334,44 @@
   }
 
   /* ---------- this week: crews and appointments, day by day ---------- */
+
+  /* ---------- this week's pace: a segmented ring, one colored segment per
+     thing that moves a contractor forward, each filling toward an ordinary
+     week's worth. The centre is the average, counted up. ---------- */
+  var WK_SEG = [
+    { k: 'leads', t: 'New leads', c: '#2f80ff', goal: 5, go: 'contacts' },
+    { k: 'est', t: 'Estimates sent', c: '#f5a524', goal: 3, go: 'estimates' },
+    { k: 'signed', t: 'Signed', c: '#22a06b', goal: 1, go: 'closedeals' },
+    { k: 'paid', t: 'Collected', c: '#ef6c4a', goal: 0, go: 'finances', money: true }
+  ];
+  function weekPace() {
+    var fin = (window.bpFinData && bpFinData()) || { inc: [] }, now = Date.now(), wk = 7 * 864e5;
+    var tsOf = function (x) { var t = x.when; return typeof t === 'number' ? t : Date.parse(t) || 0; };
+    var paid = (fin.inc || []).filter(function (x) { return now - tsOf(x) < wk; }).reduce(function (t, x) { return t + (+x.amt || 0); }, 0);
+    /* an ordinary week's takings: the last 8 weeks averaged, so the ring is against your own pace */
+    var past = (fin.inc || []).filter(function (x) { var a = now - tsOf(x); return a >= wk && a < 9 * wk; }).reduce(function (t, x) { return t + (+x.amt || 0); }, 0) / 8;
+    var W = D.wk || {}, vals = { leads: +W.leads || 0, est: +W.est || 0, signed: +W.signed || 0, paid: paid };
+    var goals = { leads: 5, est: 3, signed: 1, paid: Math.max(past, 1500) };
+    var fill = WK_SEG.map(function (g) { return Math.min(1, vals[g.k] / goals[g.k]); });
+    var score = Math.round(fill.reduce(function (t, v) { return t + v; }, 0) / fill.length * 100);
+    /* four arcs with gaps, drawn clockwise from the top */
+    var R = 52, C = 2 * Math.PI * R, gap = 7, seg = C / 4 - gap;
+    var arcs = WK_SEG.map(function (g, i) {
+      var off = -(i * C / 4) - gap / 2;
+      return '<circle class="wk-trk" r="' + R + '" cx="64" cy="64" stroke-dasharray="' + seg.toFixed(2) + ' ' + (C - seg).toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"/>'
+        + (fill[i] < .02 ? '' : '<circle class="wk-arc" r="' + R + '" cx="64" cy="64" style="stroke:' + g.c + ';stroke-dasharray:' + (seg * fill[i]).toFixed(2) + ' ' + C.toFixed(2) + ';--c:' + C.toFixed(2) + ';animation-delay:' + (i * 120) + 'ms" stroke-dashoffset="' + off.toFixed(2) + '"/>');
+    }).join('');
+    var word = score >= 80 ? 'Strong week' : score >= 50 ? 'On pace' : score > 0 ? 'Getting going' : 'Quiet so far';
+    var rows = WK_SEG.map(function (g, i) {
+      var v = g.money ? money(vals[g.k]) : String(vals[g.k]);
+      return '<button type="button" class="wk-row" onclick="bpNav(\'' + g.go + '\')"><i style="background:' + g.c + '"></i><span>' + g.t + '</span><b>' + v + '</b>'
+        + '<span class="wk-bar"><em style="background:' + g.c + ';--w:' + Math.round(fill[i] * 100) + '%"></em></span></button>';
+    }).join('');
+    return '<div class="bpx-panel wk"><div class="bpx-ptitle">Week pace<span class="lg2">last 7 days</span></div>'
+      + '<div class="wk-body"><div class="wk-ring"><svg viewBox="0 0 128 128" aria-hidden="true">' + arcs + '</svg>'
+      + '<div class="wk-mid"><b class="wk-num" data-cu>' + score + '</b><small>' + word + '</small></div></div>'
+      + '<div class="wk-rows" role="list" aria-label="This week: ' + score + ' out of 100">' + rows + '</div></div></div>';
+  }
   function week() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
     var days = [], now = new Date();
@@ -705,8 +743,9 @@
        one tap away so the page stays calm. */
     var first = g([
       [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
-      [6, W('dashboard', attention())],
-      [6, W('calendar', week())],
+      [4, W('dashboard', weekPace())],
+      [4, W('dashboard', attention())],
+      [4, W('calendar', week())],
       [12, projects(false)]
     ]);
     var open = false; try { open = localStorage.getItem('bp.dashMore') === '1'; } catch (e) {}
@@ -795,10 +834,11 @@
     fin.income = inc.reduce(function (t, x) { return t + x.amt; }, 0); fin.expense = exp.reduce(function (t, x) { return t + x.amt; }, 0);
     var keep = { jg: window.bpJobsGet, fd: window.bpFinData };
     /* the sample fills only empty slots; remember which, so undo puts them back and they never leak into a real account */
-    var filled = ['deals', 'unread', 'leads', 'contracts', 'events', 'appts'].filter(function (k) { return D[k] === undefined; });
+    var filled = ['deals', 'unread', 'leads', 'contracts', 'events', 'appts', 'wk'].filter(function (k) { return D[k] === undefined; });
     window.bpJobsGet = function () { return jobs; };
     window.bpFinData = function () { return fin; };
     if (D.deals === undefined) D.deals = { n: 4, v: 38400 };
+    if (D.wk === undefined) D.wk = { leads: 4, est: 2, signed: 1 };
     if (D.unread === undefined) D.unread = 2;
     if (D.leads === undefined) D.leads = { n: '23', a: '9' };
     if (D.contracts === undefined) D.contracts = [{ customer_name: 'Sarah Malik', status: 'viewed', sent_at: new Date(now - 2 * day).toISOString() }];
@@ -831,8 +871,31 @@
           : body(layoutOf(), crew));   /* the layout is chosen under Settings > Appearance */
     } finally { if (undo) undo(); }
     setTimeout(fillAll, 0);
+    countUp(el);
     fetchState();
   };
+
+
+  /* Numbers count up into place the first time each one is shown (a re-render
+     with the same figure leaves it still). Reduced motion: shown as is. */
+  var cuSeen = {};
+  function countUp(root) {
+    if (!root || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var els = root.querySelectorAll('.db-kv,.hl-kv,.hl-mv,.wk-num,[data-cu]');
+    [].forEach.call(els, function (el) {
+      var txt = el.textContent.trim(), m = /^([^\d-]*)(-?[\d,]+(?:\.\d+)?)(.*)$/.exec(txt);
+      if (!m || el.children.length) return;
+      var key = (el.closest('.bpx-panel') && (el.closest('.bpx-panel').querySelector('.db-kl,.hl-wh,.bpx-ptitle') || {}).textContent || '') + '|' + txt;
+      if (cuSeen[key]) return; cuSeen[key] = 1;
+      var end = parseFloat(m[2].replace(/,/g, '')), dec = (m[2].split('.')[1] || '').length, t0 = 0, dur = 900;
+      if (!isFinite(end) || Math.abs(end) < 1) return;
+      var fmt = function (v) { return m[1] + Number(dec ? v.toFixed(dec) : Math.round(v)).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[3]; };
+      el.textContent = fmt(0);
+      var step = function (t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = k < 1 ? fmt(end * e) : txt; if (k < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+  }
+  window.bpCountUp = countUp;
 
   /* No holes in the grid: when a plan leaves cards out, or a breakpoint changes
      how wide a card is, the last card in a short row widens to fill it. */
@@ -886,6 +949,15 @@
       D.appts = D.events;
     }).catch(function () { D.events = null; D.appts = null; }));
     if (D.ceo === undefined && !(window.bpTeamIsCrew && bpTeamIsCrew()) && window.bpCeoDashCard && !locked('aiteam')) jobs.push(BP_SB.from('ceo_reports').select('id,day,kind,source,stats,created_at').order('created_at', { ascending: false }).limit(1).then(function (r) { D.ceo = (r && r.data && r.data[0]) || null; }).catch(function () { D.ceo = null; }));
+    if (D.wk === undefined) {
+      var since = new Date(Date.now() - 7 * 864e5).toISOString(), cnt = function (q) { return q.then(function (r) { return (r && r.count) || 0; }).catch(function () { return 0; }); };
+      jobs.push(Promise.all([
+        cnt(BP_SB.from('contacts').select('id', { count: 'exact', head: true }).gte('date_added', since)),
+        cnt(BP_SB.from('estimate_options').select('id', { count: 'exact', head: true }).gte('created_at', since)),
+        cnt(BP_SB.from('estimate_options').select('id', { count: 'exact', head: true }).gte('chosen_at', since)),
+        cnt(BP_SB.from('contracts').select('id', { count: 'exact', head: true }).gte('signed_at', since))
+      ]).then(function (n) { D.wk = { leads: n[0], est: n[1], signed: n[2] + n[3] }; }));
+    }
     if (D.contracts === undefined) jobs.push(BP_SB.from('contracts').select('id,title,customer_name,status,amount,sent_at,signed_at').order('created_at', { ascending: false }).limit(30).then(function (r) { D.contracts = (r && r.data) || []; }).catch(function () { D.contracts = []; }));
     /* unread texts and emails come from the HighLevel inbox (there is no local conversations table) */
     if (D.unread === undefined) jobs.push((window.GHL_MSG_URL && window.bpApi ? bpApi(GHL_MSG_URL, { action: 'list' }) : Promise.resolve(null)).then(function (d) { var c = (d && (d.conversations || d.items)) || []; D.unread = c.reduce(function (t, x) { return t + (+x.unread || 0); }, 0); }).catch(function () { D.unread = 0; }));

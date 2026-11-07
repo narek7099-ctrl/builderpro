@@ -245,11 +245,12 @@
     var got = jobs.reduce(function (t, j) { return t + (+j.collected || 0); }, 0);
     var tileB = function (fnq, ic, label, pri) { var lk = /quick\('(\w+)'/.exec(fnq); return '<button type="button" class="mh2-tile' + (pri ? ' pri' : '') + '" onclick="' + fnq + '"><span class="ms">' + ic + '</span><b>' + label + '</b>' + (lk && locked(lk[1]) ? '<span class="ms bp-lk" aria-label="Not on your plan">lock</span>' : '') + '</button>'; };
     var row = function (go, dot, t, sub) { return '<button type="button" class="mh2-row" onclick="bpNav(\'' + esc(go) + '\')"><i class="mh2-dot ' + dot + '"></i><span class="mh2-rt"><b>' + t + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><span class="ms">chevron_right</span></button>'; };
+    setTimeout(function () { if (window.bpCountUp) bpCountUp(el); }, 0);
     el.innerHTML = '<div class="mh2">'
       + '<section class="mh2-hero">'
         + '<small>' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) + '</small>'
         + '<h2>' + (hiH < 12 ? 'Morning' : hiH < 17 ? 'Afternoon' : 'Evening') + (name ? ', ' + esc(name) : '') + '</h2>'
-        + '<button type="button" class="mh2-owed" onclick="bpNav(\'invoices\')"><span>Customers owe you</span><b>' + money(owed) + '</b>'
+        + '<button type="button" class="mh2-owed" onclick="bpNav(\'invoices\')"><span>Customers owe you</span><b data-cu>' + money(owed) + '</b>'
           + '<small>on ' + act.length + (act.length === 1 ? ' job' : ' jobs') + (got ? ' · ' + money(got) + ' collected so far' : '') + '</small></button>'
       + '</section>'
       + '<div class="mh2-body">'
