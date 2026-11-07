@@ -701,7 +701,7 @@
     if (t === 'equip') return '<section class="pjs-sec" id="cs-equip"></section>';
     if (t === 'details') {
       var ph = telOf(j.phone);
-      return sec('Customer & site', kv([
+      return '<section class="pjs-sec ck" id="cs-ck" aria-live="polite"></section>' + sec('Customer & site', kv([
           ['Customer', esc(j.name || '')],
           ['Phone', j.phone ? '<a href="tel:' + esc(ph) + '">' + esc(j.phone) + '</a>' : ''],
           ['Email', j.email ? '<a href="mailto:' + esc(j.email) + '">' + esc(j.email) + '</a>' : ''],
@@ -888,6 +888,99 @@
   function counts(j) {
     return { photos: (j.photos || []).length, docs: (j.docs || []).length, blueprints: (j.blueprints || []).length, permits: (j.permits || []).length, materials: (j.materials || []).length };
   }
+
+  /* ------------------------------------------- the day's checklist --- */
+  /* A segmented ring, one colored piece per step, fills as the crew ticks
+     the steps off; "Finish job" lights up when they are all done and rings
+     the office (crew_check / crew_finish / crew_checklist). A job with no
+     list yet starts from sensible steps for its trade. */
+  var CK_COL = ['#2f80ff', '#f5a524', '#22a06b', '#ef6c4a', '#8b5cf6', '#14b8a6', '#e0559a', '#64748b'];
+  C.ck = {};
+  function ckDefaults(j) {
+    var t = String((j.title || '') + ' ' + (j.trade || '')).toLowerCase();
+    if (/roof|shingle|re-roof|reroof/.test(t)) return ['Set up and safety', 'Tear-off', 'Underlayment', 'Shingles and flashing', 'Clean-up and magnet sweep', 'Final photos'];
+    if (/gutter/.test(t)) return ['Set up and safety', 'Remove old gutters', 'Hang new gutters', 'Test the flow', 'Clean-up', 'Final photos'];
+    if (/hvac|furnace|a\/c|air/.test(t)) return ['Set up and safety', 'Remove old unit', 'Install and connect', 'Test and balance', 'Clean-up', 'Final photos'];
+    if (/plumb|water heater|pipe/.test(t)) return ['Set up and safety', 'Shut off and drain', 'Install', 'Leak test', 'Clean-up', 'Final photos'];
+    if (/kitchen|bath|remodel|cabinet/.test(t)) return ['Set up and protect floors', 'Demo', 'Install', 'Fit and finish', 'Clean-up', 'Final photos'];
+    return ['Set up and safety', 'Main work', 'Check your work', 'Clean-up', 'Final photos'];
+  }
+  function ckList(j) {
+    var st = C.ck[j.id] || {};
+    if (st.list && st.list.length) return st.list;
+    return ckDefaults(j).map(function (t) { return { id: '', t: t, doneAt: null, by: null }; });
+  }
+  function ckRing(list, fresh) {
+    var n = list.length, R = 46, Cc = 2 * Math.PI * R, gap = n > 1 ? 9 : 0, seg = Cc / n - gap;
+    var done = list.filter(function (x) { return x.doneAt; }).length, left = n - done;
+    var arcs = list.map(function (x, i) {
+      var off = -(i * Cc / n) - gap / 2, col = CK_COL[i % CK_COL.length];
+      return '<circle class="ck-trk" r="' + R + '" cx="60" cy="60" stroke-dasharray="' + seg.toFixed(2) + ' ' + (Cc - seg).toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"/>'
+        + (x.doneAt ? '<circle class="ck-arc' + (fresh === i ? ' pop' : '') + '" r="' + R + '" cx="60" cy="60" style="stroke:' + col + ';--c:' + Cc.toFixed(2) + '" stroke-dasharray="' + seg.toFixed(2) + ' ' + (Cc - seg).toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"/>' : '');
+    }).join('');
+    return '<div class="ck-ring' + (left ? '' : ' all') + '"><svg viewBox="0 0 120 120" aria-hidden="true">' + arcs + '</svg><div class="ck-mid">'
+      + (left ? '<b>' + left + '</b><small>' + (left === 1 ? 'step left' : 'steps left') + '</small>' : '<span class="ms">check</span><small>All done</small>') + '</div></div>';
+  }
+  function ckPaint(j, fresh) {
+    var box = $('cs-ck'); if (!box) return;
+    var st = C.ck[j.id] || {}, list = ckList(j), n = list.length, done = list.filter(function (x) { return x.doneAt; }).length, left = n - done;
+    var tm = function (ms) { try { return new Date(+ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+    if (st.doneAt) {
+      box.innerHTML = '<div class="ck-done"><span class="ck-tick"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></span>'
+        + '<div><b>Job finished</b><span>' + esc(st.doneBy || 'The crew') + ' &middot; ' + tm(st.doneAt) + '. The office has been told.</span></div>'
+        + '<button type="button" class="ck-undo" onclick="bpCrewCk(\'' + esc(j.id) + '\',\'' + encodeURIComponent(list[n - 1].id || list[n - 1].t).replace(/'/g, '%27') + '\',false)">Reopen</button></div>';
+      return;
+    }
+    box.innerHTML = '<div class="ck-head"><div class="pjs-h">Today&rsquo;s checklist</div><span class="ck-count">' + done + ' of ' + n + '</span></div>'
+      + '<div class="ck-top">' + ckRing(list, fresh) + '<div class="ck-steps">' + list.map(function (x, i) {
+        var key = x.id || x.t;
+        return '<button type="button" class="ck-step' + (x.doneAt ? ' on' : '') + '" aria-pressed="' + !!x.doneAt + '" onclick="bpCrewCk(\'' + esc(j.id) + '\',\'' + encodeURIComponent(key).replace(/'/g, '%27') + '\',' + !x.doneAt + ')">'
+          + '<span class="ck-box" style="--col:' + CK_COL[i % CK_COL.length] + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>'
+          + '<span class="ck-t"><b>' + esc(x.t) + '</b>' + (x.doneAt ? '<small>' + esc(x.by || '') + (x.by ? ' &middot; ' : '') + tm(x.doneAt) + '</small>' : '') + '</span></button>';
+      }).join('') + '</div></div>'
+      + '<button type="button" class="ck-finish"' + (left ? ' disabled' : '') + ' onclick="bpCrewFinish(\'' + esc(j.id) + '\')"><span class="ms">' + (left ? 'lock' : 'check_circle') + '</span>'
+      + (left ? 'Finish job &middot; ' + left + (left === 1 ? ' step' : ' steps') + ' to go' : 'Finish job') + '</button>'
+      + (st.msg ? '<div class="ca-msg err">' + esc(st.msg) + '</div>' : '');
+  }
+  function ckMount(j) {
+    var st = C.ck[j.id];
+    ckPaint(j);
+    if (st && st.loaded) return;
+    Promise.resolve(BP_SB.rpc('crew_checklist', { p_job: j.id })).then(function (r) {
+      var d = r && r.data; if (!d || !d.ok) return;
+      C.ck[j.id] = { loaded: true, list: d.checklist || [], doneAt: d.doneAt || null, doneBy: d.doneBy || '' };
+      if (C.job === j.id && C.tab === 'details') ckPaint(j);
+    }).catch(function () {});
+  }
+  window.bpCrewCk = function (jid, key, done) {
+    try { key = decodeURIComponent(key); } catch (e) {}
+    var j = curJob(); if (!j || j.id !== jid) return;
+    var st = C.ck[jid] = C.ck[jid] || {}, list = ckList(j).map(function (x) { return Object.assign({}, x); });
+    var idx = -1; list.forEach(function (x, i) { if (idx < 0 && (x.id === key || (!x.id && x.t === key) || x.t === key)) idx = i; });
+    if (idx < 0) return;
+    var who = ((C.me || {}).employee || {}).name || '';
+    list[idx].doneAt = done ? Date.now() : null; list[idx].by = done ? who : null;
+    var steps = st.list && st.list.length ? null : ckDefaults(j);
+    st.list = list; st.doneAt = null; st.msg = '';
+    if (navigator.vibrate && done) { try { navigator.vibrate(12); } catch (e) {} }
+    ckPaint(j, done ? idx : undefined);
+    Promise.resolve(BP_SB.rpc('crew_check', { p_job: jid, p_step: key, p_done: !!done, p_steps: steps })).then(function (r) {
+      var d = r && r.data;
+      if (d && d.ok) { st.list = d.checklist; st.loaded = true; if (C.job === jid && C.tab === 'details') ckPaint(j); }
+      else { st.msg = 'Not saved. Check your signal and tap it again.'; ckPaint(j); }
+    }).catch(function () { st.msg = 'Not saved. Check your signal and tap it again.'; ckPaint(j); });
+  };
+  window.bpCrewFinish = function (jid) {
+    var j = curJob(); if (!j || j.id !== jid) return;
+    var st = C.ck[jid] = C.ck[jid] || {}, b = document.querySelector('#cs-ck .ck-finish'); if (b) { b.disabled = true; b.innerHTML = '<span class="ms">hourglass_top</span>Sending&hellip;'; }
+    Promise.resolve(BP_SB.rpc('crew_finish', { p_job: jid })).then(function (r) {
+      var d = r && r.data;
+      if (d && d.ok) { st.doneAt = d.at; st.doneBy = ((C.me || {}).employee || {}).name || ''; if (navigator.vibrate) { try { navigator.vibrate([16, 60, 24]); } catch (e) {} } }
+      else st.msg = d && d.error === 'steps left' ? 'A step is still open.' : 'Not sent. Check your signal and try again.';
+      ckPaint(j);
+    }).catch(function () { st.msg = 'Not sent. Check your signal and try again.'; ckPaint(j); });
+  };
+
   function sheet() {
     var j = curJob(); if (!j) { C.job = null; return; }
     var n = counts(j);
@@ -907,6 +1000,7 @@
     var j = curJob(), b = $('cs-body'); if (!j || !b) return;
     b.innerHTML = '<div data-pj-pane="' + C.tab + '" role="tabpanel">' + (inMore(C.tab) ? '<button type="button" class="cs-back" onclick="bpCrewJobTab(\'more\')"><span class="ms">chevron_left</span>More</button>' : '') + pane(j, C.tab) + '</div>';
     b.scrollTop = 0;
+    if (C.tab === 'details') ckMount(j);
     if (C.tab === 'equip' && window.BPA) BPA.mount(b.querySelector('#cs-equip'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
     if (C.tab === 'inspect' && window.bpInspMount) bpInspMount(b.querySelector('#cs-insp'), { jobId: j.id, contactId: j.contactId || '', name: j.name || '', addr: j.addr || '' });
     AV.fill(b);
