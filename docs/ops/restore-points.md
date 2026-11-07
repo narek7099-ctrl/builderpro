@@ -14,3 +14,9 @@ Includes the new hero buttons, the new login screen and the dashboard fixes.
 To go back: ask Claude "restore the before-animations version", or run
 `git checkout 9ddc604f46962398b26fdd009fa68cba7ddef738 -- <files>` for just the files you want and ship them.
 To compare: `git diff 9ddc604f46962398b26fdd009fa68cba7ddef738 main`.
+
+## With the three app animations (2026-11-07)
+Crew checklist ring + Finish job, sliding tab pill, dashboard Week pace ring and
+count-up numbers. Website unchanged from the version above.
+
+- live site (main): `e6da842`
