@@ -11,7 +11,7 @@
 /* 2. a soft lift under the mouse on cards you can open */
 @media (hover:hover) and (pointer:fine){
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel,#bpx#bpx#bpx#bpx .db-st,#bpx#bpx#bpx#bpx .pj-card{transition:transform .35s var(--sp-out),box-shadow .35s var(--sp-out),border-color .35s}
-  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover,#bpx#bpx#bpx#bpx .pj-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px -22px rgba(16,24,40,.35),0 2px 6px -2px rgba(16,24,40,.08) !important}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover,#bpx#bpx#bpx#bpx .pj-card:hover{transform:translateY(-5px);box-shadow:0 18px 36px -22px rgba(16,24,40,.35),0 2px 6px -2px rgba(16,24,40,.08) !important}
 }
 
 /* 3. presses: buttons sink and spring back instead of snapping */
@@ -50,3 +50,18 @@
   #bpx#bpx#bpx#bpx .wk-num,#bpx-modal .ck-mid b,#bpx-modal .ck-step.on.fresh .ck-box,#bpx-modal .ck-finish,#bpx-modal .mo-burst{animation:none !important}
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover,#bpx#bpx#bpx#bpx .pj-card:hover{transform:none}
 }
+
+/* the theme switch's circle (motion.js): no cross-fade, just the circle */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+
+/* the first money card is the dark hero card, like the sales-dashboard reel */
+#bpx#bpx#bpx#bpx .db-st.ink{background:linear-gradient(160deg,#151a22,#0b0e13) !important;border-color:#0b0e13 !important;color:#fff;
+  box-shadow:0 18px 36px -20px rgba(11,14,19,.75),inset 0 1px 0 rgba(255,255,255,.06) !important}
+#bpx#bpx#bpx#bpx .db-st.ink .db-kl,#bpx#bpx#bpx#bpx .db-st.ink .db-ks{color:rgba(255,255,255,.62) !important}
+#bpx#bpx#bpx#bpx .db-st.ink .db-kv{color:#fff !important}
+#bpx#bpx#bpx#bpx .db-st.ink svg path,#bpx#bpx#bpx#bpx .db-st.ink svg polyline,#bpx#bpx#bpx#bpx .db-st.ink svg line{stroke:#7fb2ff}
+#bpx#bpx#bpx#bpx .db-st.ink svg circle{fill:#7fb2ff;stroke:#0b0e13}
+#bpx#bpx#bpx#bpx .hl-w:has(> .db-st.ink) .hl-keb{color:rgba(255,255,255,.6)}
+/* change chips as small pills, arrow included */
+#bpx#bpx#bpx#bpx .bpc-delta{border-radius:999px !important;padding:2px 8px !important;font-weight:700 !important}
+#bpx#bpx#bpx#bpx .db-st.ink .bpc-delta.good{background:rgba(61,220,151,.16) !important;color:#7fe3b5 !important}

@@ -6,6 +6,28 @@
    Reduced motion: none of it runs. */
 (function () {
   var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* Dark mode switch: the new theme spreads out in a circle from where you
+     tapped (the sales-dashboard reel's View Transition, circle clip-path).
+     Browsers without View Transitions, and reduced motion, just switch. */
+  var tapX = innerWidth / 2, tapY = 40;
+  document.addEventListener('pointerdown', function (e) { tapX = e.clientX; tapY = e.clientY; }, true);
+  function wrapTheme() {
+    var orig = window.bpToggleTheme;
+    if (!orig || orig._mo) return;
+    var w = function () {
+      var args = arguments, self = this;
+      if (RM || !document.startViewTransition) return orig.apply(self, args);
+      var x = tapX, y = tapY, end = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      var vt = document.startViewTransition(function () { orig.apply(self, args); });
+      vt.ready.then(function () {
+        document.documentElement.animate({ clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + end + 'px at ' + x + 'px ' + y + 'px)'] },
+          { duration: 620, easing: 'cubic-bezier(.4,0,.2,1)', pseudoElement: '::view-transition-new(root)' });
+      }).catch(function () {});
+    };
+    w._mo = true; window.bpToggleTheme = w;
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wrapTheme); else wrapTheme();
+  window.addEventListener('load', wrapTheme);
   if (RM) { window.bpBurst = function () {}; return; }
   var last = '', lastT = 0;
   var PICK = '.hl-grid > *, .db-grid > *, .mh2-body > section, .mh2-tiles > *, .pj-grid > *, .bpx-ceo, .dash-mini';

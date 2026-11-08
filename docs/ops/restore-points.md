@@ -26,3 +26,9 @@ The three app animations, without the motion polish (cards rising in, springy
 presses, tab bounce, ring glow, Finish job burst).
 
 - live site (main): `47c3657`
+
+## Before matching the reel videos (2026-11-08)
+Motion polish and the 6-month dashboard fix, before the stretchy tab pill, glass
+capsule tab bars, circle theme switch and dark hero card.
+
+- live site (main): `1f49347`
