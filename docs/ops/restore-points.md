@@ -20,3 +20,9 @@ Crew checklist ring + Finish job, sliding tab pill, dashboard Week pace ring and
 count-up numbers. Website unchanged from the version above.
 
 - live site (main): `e6da842`
+
+## Before the motion polish (2026-11-08)
+The three app animations, without the motion polish (cards rising in, springy
+presses, tab bounce, ring glow, Finish job burst).
+
+- live site (main): `47c3657`
