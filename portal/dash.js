@@ -169,7 +169,19 @@
 
   /* ---------- the period the money figures cover; the owner picks ---------- */
   var PERIODS = [['month', 'This month'], ['6m', '6 months'], ['1y', '1 year']];
-  function periodKey() { var v = null; try { v = localStorage.getItem('bpDashPeriod'); } catch (e) {} return PERIODS.some(function (p) { return p[0] === v; }) ? v : 'month'; }
+  function periodKey() { var v = null; try { v = localStorage.getItem('bpDashPeriod'); } catch (e) {} return PERIODS.some(function (p) { return p[0] === v; }) ? v : autoPeriod(); }
+  /* No choice made yet: open on this month, unless nothing has moved this month
+     yet (early in the month every card would read $0); then the shortest
+     period that has money or a won job in it. */
+  function autoPeriod() {
+    var fin = (window.bpFinData && bpFinData()) || {}, jobs = (window.bpJobsGet && bpJobsGet()) || [];
+    var ts = function (t) { return typeof t === 'number' ? t : Date.parse(t) || 0; };
+    var times = [].concat((fin.inc || []).map(function (x) { return ts(x.when); }), (fin.exp || []).map(function (x) { return ts(x.when); }),
+      jobs.map(function (j) { return ts(j.wonAt); })).filter(function (t) { return t > 0; });
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth();
+    var since = function (n) { var a = new Date(y, m - n + 1, 1).getTime(); return times.some(function (t) { return t >= a; }); };
+    return since(1) ? 'month' : since(6) ? '6m' : since(12) ? '1y' : 'month';
+  }
   D.period = function (v) { try { localStorage.setItem('bpDashPeriod', v); } catch (e) {} window.bpDashboard(); };
   function periodOf(k) {
     var now = new Date(), y = now.getFullYear(), m = now.getMonth(), b = [];
