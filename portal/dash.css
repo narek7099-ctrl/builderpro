@@ -1236,3 +1236,29 @@
 #bpx .cb-tip b{display:block;font-size:13px}#bpx .cb-tip span{color:rgba(255,255,255,.65)}
 #bpx .cb-viz.hov .cb-tip{opacity:1;translate:0 0}
 #bpx .cb-hdot{fill:#fff;stroke:#006fff;stroke-width:2.4}
+
+/* ---------- calendar as one card (2026-11) ----------
+   The grid and its rail (to-dos, upcoming, anything that needs a look) share
+   one card: nothing above or below the calendar. Connected calendars stay out
+   of sight; the link button in the controls opens them. */
+#bpx#bpx#bpx#bpx#bpx .cal-one{display:grid;grid-template-columns:minmax(0,1fr) 300px;padding:0 !important;align-items:stretch}
+#bpx .cal-one>.cal-main{padding:20px 22px;min-width:0}
+#bpx .cal-one>.cal-rail{border-left:1px solid #e6eaf1;background:#f8fafd;border-radius:0 18px 18px 0;padding:18px 18px 20px;display:flex;flex-direction:column;gap:0;min-width:0}
+#bpx .cal-rail>.cal-sec{padding:0 0 16px;margin:0 0 16px;border-bottom:1px solid #e6eaf1;min-width:0}
+#bpx .cal-rail>.cal-sec:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+#bpx .cal-rail>.cal-sec[hidden],#bpx .cal-rail>.cal-sec:has(#bpx-todos:empty){display:none}
+#bpx .cal-rail>.cal-unsched{margin:0 0 16px}
+#bpx .cal-rail .cal-up-d{background:#fff}
+#bpx .cal-main>.cal-key{margin:14px 0 0;padding-top:12px;border-top:1px solid #eef1f6}
+#bpx#bpx#bpx#bpx#bpx .cal-connbtn{width:40px;padding:0 !important;justify-content:center}
+#bpx#bpx#bpx#bpx#bpx .cal-connbtn[hidden]{display:none !important}
+#bpx .cal-connbtn .ms{font-size:19px}
+#bpx#bpx#bpx#bpx#bpx .cal-connbtn.on{background:#eaf2ff !important;color:#0050c8 !important;border-color:#cfe0ff !important}
+@media (max-width:1180px){
+  #bpx#bpx#bpx#bpx#bpx .cal-one{grid-template-columns:minmax(0,1fr)}
+  #bpx .cal-one>.cal-rail{border-left:0;border-top:1px solid #e6eaf1;border-radius:0 0 18px 18px}
+}
+@media (max-width:700px){#bpx .cal-one>.cal-main{padding:12px}#bpx .cal-one>.cal-rail{padding:14px 12px 16px}}
+#bpx.bpx-dark .cal-one>.cal-rail{background:#0f1522;border-color:#233043}
+#bpx.bpx-dark .cal-rail>.cal-sec{border-color:#233043}
+#bpx.bpx-dark .cal-rail .cal-up-d{background:#121826}
