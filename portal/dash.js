@@ -553,14 +553,14 @@
   function sparkTiles(M) {
     var t = function (lbl, key, val, sub, vals, go, o) {
       o = o || {};
-      return '<div class="bpx-panel db-st" onclick="bpNav(\'' + go + '\')"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>'
+      return '<div class="bpx-panel db-st' + (o.ink ? ' ink' : '') + '" onclick="bpNav(\'' + go + '\')"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>'
         + bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs }) + '</div>'
         + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="db-ks">' + sub + '</div>'
         + bpChart.spark(vals, { tone: o.tone === 'neg' ? 'neg' : '', fmt: o.fmt || money, labels: M.labels }) + '</div>';
     };
     var C = M.cur;
     return [
-      t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances'),
+      t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances', { ink: true }),
       t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : 'blue' }),
       t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
       t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false }),
