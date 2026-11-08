@@ -558,37 +558,43 @@
      dotted rule. All four cards wear the same white. */
   function miniViz(vals, kind, o) {
     o = o || {};
+    var labels = o.labels || [], fmt = o.fmt || money, pts = [];
     vals = (vals || []).map(function (v) { return +v || 0; });
     if (!vals.length || !vals.some(function (v) { return v; })) return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true"><path class="cb-flat" d="M4 40H92"/></svg>';
     var mx = Math.max.apply(null, vals) || 1, n = vals.length, out = '';
     if (kind === 'fat') {
       var v3 = vals.slice(-3), m3 = Math.max.apply(null, v3) || 1;
-      v3.forEach(function (v, i) { var h = Math.max(6, v / m3 * 40), x = 30 + i * 20; out += '<rect class="cb-bar' + (i === v3.length - 1 ? ' on' : '') + '" style="--d:' + (i * 90) + 'ms" x="' + x + '" y="' + (44 - h) + '" width="14" height="' + h + '" rx="5"/>'; });
+      var l3 = labels.slice(-3);
+      v3.forEach(function (v, i) { var h = Math.max(6, v / m3 * 40), x = 30 + i * 20; pts.push([x + 7, 44 - h, l3[i] || '', fmt(v)]); out += '<rect class="cb-bar' + (i === v3.length - 1 ? ' on' : '') + '" data-i="' + i + '" style="--d:' + (i * 90) + 'ms" x="' + x + '" y="' + (44 - h) + '" width="14" height="' + h + '" rx="5"/>'; });
     } else if (kind === 'thin') {
       var w = 88 / n;
-      vals.forEach(function (v, i) { var h = Math.max(4, v / mx * 40); out += '<rect class="cb-bar' + (i === n - 1 ? ' on' : '') + '" style="--d:' + (i * 40) + 'ms" x="' + (6 + i * w + w * .2).toFixed(1) + '" y="' + (44 - h).toFixed(1) + '" width="' + (w * .6).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1.6"/>'; });
+      vals.forEach(function (v, i) { var h = Math.max(4, v / mx * 40); pts.push([6 + i * w + w / 2, 44 - h, labels[i] || '', fmt(v)]); out += '<rect class="cb-bar' + (i === n - 1 ? ' on' : '') + '" data-i="' + i + '" style="--d:' + (i * 40) + 'ms" x="' + (6 + i * w + w * .2).toFixed(1) + '" y="' + (44 - h).toFixed(1) + '" width="' + (w * .6).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1.6"/>'; });
     } else {
-      var mn = Math.min.apply(null, vals.concat([0])), pts = vals.map(function (v, i) { return [6 + i * 84 / Math.max(1, n - 1), 42 - (v - mn) / ((mx - mn) || 1) * 32]; });
+      var mn = Math.min.apply(null, vals.concat([0]));
+      pts = vals.map(function (v, i) { return [6 + i * 84 / Math.max(1, n - 1), 42 - (v - mn) / ((mx - mn) || 1) * 32]; });
+      pts.forEach(function (p, i) { p.push(labels[i] || '', fmt(vals[i])); });
       var d = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L'), last = pts[pts.length - 1];
       out = '<path class="cb-area" d="' + d + ' L90 46 L6 46Z"/><path class="cb-line' + (o.neg ? ' neg' : '') + '" pathLength="100" d="' + d + '"/><circle class="cb-dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3.6"/>';
     }
-    return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true">' + out + '</svg>';
+    var data = (JSON.stringify(pts.map(function (p) { return [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, String(p[2]), String(p[3])]; }))).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true" data-pts="' + data + '" data-kind="' + (kind || 'line') + '">' + out + '<line class="cb-guide" x1="0" x2="0" y1="2" y2="46"/></svg><div class="cb-tip" hidden></div>';
   }
   function sparkTiles(M) {
     var t = function (lbl, key, val, sub, vals, go, o) {
       o = o || {};
       var dlt = bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs });
-      return '<div class="bpx-panel db-st cb" onclick="bpNav(\'' + go + '\')"><div class="cb-top"><div class="cb-l"><span class="db-kl">' + lbl + '</span>'
+      var vs = String(P.vs || '').replace('the 6 months before', 'prior 6 months').replace('the 12 months before', 'prior year');
+      return '<div class="bpx-panel db-st cb" onclick="bpNav(\'' + go + '\')"><div class="cb-top"><span class="db-kl">' + lbl + '</span>'
+        + '<div class="cb-viz" onclick="event.stopPropagation()">' + miniViz(vals, o.viz, { neg: o.tone === 'neg', labels: M.labels, fmt: o.fmt }) + '</div></div>'
         + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div>'
-        + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(P.vs) + '</span>' : '<span>' + sub + '</span>') + '</div></div>'
-        + '<div class="cb-viz">' + miniViz(vals, o.viz, { neg: o.tone === 'neg' }) + '</div></div>'
+        + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(vs) + '</span>' : '<span>' + sub + '</span>') + '</div>'
         + '<div class="cb-foot"><span>' + o.see + '</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
     };
     var C = M.cur;
     return [
       t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances', { viz: 'fat', see: 'See payments' }),
       t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : '', viz: 'line', see: 'See finances' }),
-      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'thin', see: 'See projects' }),
+      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'thin', see: 'See projects', fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
       t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'line', see: 'See costs' }),
     ];
   }

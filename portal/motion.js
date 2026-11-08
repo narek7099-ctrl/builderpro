@@ -55,6 +55,33 @@
     t.classList.remove('mo-pop'); void t.offsetWidth; t.classList.add('mo-pop');
     setTimeout(function () { t.classList.remove('mo-pop'); }, 600);
   }, true);
+  /* cursor spotlight: cards light up where the mouse is */
+  document.addEventListener('pointermove', function (e) {
+    if (e.pointerType !== 'mouse') return;
+    var c = e.target.closest && e.target.closest('.hl-w > .bpx-panel, .ceo-dash'); if (!c) return;
+    var r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }, { passive: true });
+  /* small charts on the money cards: hover (or touch) reads out the value under the finger */
+  function vizAt(viz, clientX) {
+    var svg = viz.querySelector('.cb-svg'), tip = viz.querySelector('.cb-tip'); if (!svg || !tip) return;
+    var pts; try { pts = JSON.parse(svg.getAttribute('data-pts') || '[]'); } catch (e) { pts = []; }
+    if (!pts.length) return;
+    var r = svg.getBoundingClientRect(), x = (clientX - r.left) / r.width * 96, k = 0, best = 1e9;
+    pts.forEach(function (p, i) { var d = Math.abs(p[0] - x); if (d < best) { best = d; k = i; } });
+    var p = pts[k], kind = svg.getAttribute('data-kind');
+    viz.classList.add('hov');
+    var g = svg.querySelector('.cb-guide'); g.setAttribute('x1', p[0]); g.setAttribute('x2', p[0]);
+    [].forEach.call(svg.querySelectorAll('.cb-bar'), function (b) { b.classList.toggle('hot', +b.getAttribute('data-i') === k); });
+    var dot = svg.querySelector('.cb-hdot');
+    if (kind === 'line') { if (!dot) { dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); dot.setAttribute('class', 'cb-hdot'); dot.setAttribute('r', '4'); svg.appendChild(dot); } dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]); }
+    tip.hidden = false; tip.innerHTML = '<b>' + p[3] + '</b><span>' + (p[2] || '') + '</span>';
+    tip.style.left = (p[0] / 96 * r.width) + 'px';
+  }
+  function vizOut(viz) { viz.classList.remove('hov'); var d = viz.querySelector('.cb-hdot'); if (d) d.remove(); }
+  document.addEventListener('pointermove', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v) vizAt(v, e.clientX); }, { passive: true });
+  document.addEventListener('pointerout', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v && !v.contains(e.relatedTarget)) vizOut(v); }, true);
+  document.addEventListener('pointerdown', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v) vizAt(v, e.clientX); }, true);
   var COL = ['#2f80ff', '#f5a524', '#22a06b', '#ef6c4a', '#8b5cf6', '#14b8a6'];
   window.bpBurst = function (el) {
     if (!el) return;

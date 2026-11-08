@@ -56,3 +56,29 @@
 
 /* change chips as small pills, arrow included */
 #bpx#bpx#bpx#bpx .bpc-delta{border-radius:999px !important;padding:2px 8px !important;font-weight:700 !important}
+
+/* ---------- cursor spotlight + smoother lift on cards (motion.js sets --mx/--my) ---------- */
+@media (hover:hover) and (pointer:fine){
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel,#bpx#bpx#bpx#bpx .ceo-dash{position:relative;isolation:isolate}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel::before,#bpx#bpx#bpx#bpx .ceo-dash::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:0;
+    background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(0,111,255,.075),transparent 60%);transition:opacity .35s}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;opacity:0;padding:1px;
+    background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(0,111,255,.45),transparent 65%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;transition:opacity .35s}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover::before,#bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover::after,#bpx#bpx#bpx#bpx .ceo-dash:hover::before{opacity:1}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel{transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1) !important;will-change:transform}
+}
+/* smoother page entrance: opacity and movement only (no blur filter, which stutters on iPads) */
+@keyframes moRise{from{opacity:0;transform:translate3d(0,16px,0) scale(.99)}}
+#bpx#bpx#bpx#bpx .mo-in{animation-duration:.7s !important;animation-timing-function:cubic-bezier(.16,1,.3,1) !important}
+
+/* ---------- AI in our colors, not purple ---------- */
+#bpx#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p{background:#eaf2ff !important;color:#0050c8 !important}
+#bpx#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p:hover{background:#dbe9ff !important}
+#bpx .cd-av,#bpx .ai-av,#bpx .aib-ceo .aib-i{background:linear-gradient(135deg,#006fff,#001530) !important;box-shadow:0 6px 14px -6px rgba(0,111,255,.7)}
+#bpx#bpx#bpx#bpx .ceo-dash{border:1px solid #e6eaf1 !important;border-radius:18px !important;background:linear-gradient(180deg,#fff,#f8fbff) !important;
+  box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 24px -18px rgba(16,24,40,.25) !important}
+#bpx.bpx-dark#bpx#bpx#bpx .ceo-dash{background:#121826 !important;border-color:#233043 !important}
+
+#bpx#bpx#bpx#bpx#bpx .db-st.cb{overflow:visible !important}
+#bpx#bpx#bpx#bpx#bpx .hl-w:has(> .db-st.cb) > .hl-keb{display:none !important}
