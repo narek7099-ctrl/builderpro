@@ -4170,12 +4170,13 @@ function bpCalUnsched(){
 }
 /* ==== bpRenderCalendar ==== */
   function bpRenderCalendar(){
+    window._bpCalConnOpen=false; if(typeof _bpCalLink!=='undefined') _bpCalLink.open=0; if(window.bpGcal) bpGcal.open=false;
     var k=_bpCalKind, all=k==='all', insp=k==='inspection', jobs=k==='jobs';
     var tab=function(id,ico,label){ return '<button class="bpx-jt'+(k===id?' on':'')+'" onclick="bpCalKind(\''+id+'\')"><span class=ms>'+ico+'</span> '+label+'</button>'; };
     q('bpxViewArea').innerHTML=
       '<div class="cal-top"><div class="cal-left"><div class="bpx-jobtabs cal-tabs">'+tab('all','calendar_month','Everything')+tab('inspection','roofing','Inspections')+tab('jobs','construction','Jobs')+'</div>'
       +'<div class="bpx-jobtabs cal-view"><button class="bpx-jt'+(_bpCalView==='day'?' on':'')+'" onclick="bpCalView(\'day\')"><span class=ms>view_day</span> Day</button><button class="bpx-jt'+(_bpCalView==='week'?' on':'')+'" onclick="bpCalView(\'week\')"><span class=ms>view_week</span> Week</button><button class="bpx-jt'+(_bpCalView==='month'?' on':'')+'" onclick="bpCalView(\'month\')"><span class=ms>calendar_month</span> Month</button></div></div>'
-      +'<div class="cal-acts">'+((all||jobs)?bpCalCrewPick():'')+'<button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
+      +'<div class="cal-acts">'+((all||insp)?'<button class="bpx-btn ghost cal-connbtn" id="bpx-calconn" hidden onclick="bpCalConnToggle()" title="Connected calendars" aria-label="Connected calendars"><span class=ms>link</span></button>':'')+((all||jobs)?bpCalCrewPick():'')+'<button class="bpx-btn ghost cal-today" onclick="bpCalToday()">Today</button>'
         +(insp?'<button class="bpx-btn ghost cal-today" onclick="bpClosedOpen()"><span class=ms>event_busy</span> Closed days</button>':'')
         +(jobs?'<button class="bpx-btn ghost cal-today" onclick="bpCrewBookOpen()"><span class=ms>groups</span> Schedule a crew</button>':'')
         +(all?'<details class="cal-add" ontoggle="bpCalAddPos(this)"><summary class="bpx-btn"><span class=ms>add</span> Add</summary><div class="cal-addm">'
@@ -4184,20 +4185,20 @@ function bpCalUnsched(){
              +'<button onclick="bpCalAddClose();bpNoteOpen()"><span class=ms>sticky_note_2</span><span><b>Note or to-do</b><small>A reminder for you or your team</small></span></button></div></details>'
              :'<button class="bpx-btn" onclick="bpOpenBook()"><span class=ms>add</span> '+(jobs?'Book job':'Book inspection')+'</button>')
       +'</div></div>'
-      +((all||jobs)?bpCalUnsched():'')
-      +'<div class="cal-layout cal-v-'+_bpCalView+'">'
+      +'<div class="bpx-panel cal-panel cal-one cal-v-'+_bpCalView+(_bpCalView==='week'?' cw-panel':'')+'"><div class="cal-main">'
       +(_bpCalView==='day'
-        ? '<div class="bpx-panel cal-panel"><div id="bpx-dayview" class="cd-wrap"></div></div>'
+        ? '<div id="bpx-dayview" class="cd-wrap"></div>'
         : _bpCalView==='week'
-        ? '<div class="bpx-panel cal-panel cw-panel"><div id="bpx-weekview" class="cw-wrap"></div></div>'
-        : '<div class="bpx-panel cal-panel"><div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div></div>')
-      +'<div class="cal-side">'
-      +(insp?'<div class="bpx-panel cal-link" id="bpx-callink"></div>':'')
-      +((all||insp)?'<div class="bpx-panel cal-gcal" id="bpx-gcal" hidden></div>':'')
-      +(all?'<div class="bpx-panel"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-todos"></div></div>':'')
-      +'<div class="bpx-panel"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-upnext"></div></div>'
-      +'</div></div>'
-      +(all?'<div class="cal-legend cal-key"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut cal-hint">'+(_bpCalView==='week'?'Drag a box to move it. Click an empty slot to add a note or to-do.':_bpCalView==='day'?'Tap a block to open it.':'Tap any day to see it or add to it.')+'</span></div>':'');
+        ? '<div id="bpx-weekview" class="cw-wrap"></div>'
+        : '<div class="cal-head"><div class="cal-month" id="bpx-calmonth"></div><div class="cal-nav"><button onclick="bpCalMove(-1)" aria-label="Previous month"><span class=ms>chevron_left</span></button><button onclick="bpCalMove(1)" aria-label="Next month"><span class=ms>chevron_right</span></button></div></div><div id="bpx-calgrid"><div class="bpx-cempty">Loading your calendar\u2026</div></div>')
+      +(all?'<div class="cal-legend cal-key"><span><i class="lg-insp"></i>Inspections</span><span><i class="lg-job"></i>Jobs</span><span><i class="lg-crew"></i>Crew days</span><span><i class="lg-todo"></i>To-dos</span><span><i class="lg-note"></i>Notes</span><span class="bpx-mut cal-hint">'+(_bpCalView==='week'?'Drag a box to move it. Click an empty slot to add a note or to-do.':_bpCalView==='day'?'Tap a block to open it.':'Tap any day to see it or add to it.')+'</span></div>':'')
+      +'</div><aside class="cal-rail">'
+      +((all||jobs)?bpCalUnsched():'')
+      +(insp?'<div class="cal-sec cal-link" id="bpx-callink" hidden></div>':'')
+      +((all||insp)?'<div class="cal-sec cal-gcal" id="bpx-gcal" hidden></div>':'')
+      +(all?'<div class="cal-sec cal-sec-todo"><div class="cal-side-h"><b>To-dos</b><span id="bpx-todocount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-todos"></div></div>':'')
+      +'<div class="cal-sec"><div class="cal-side-h"><b>Upcoming '+(all?'':(insp?'inspections':'jobs'))+'</b><span id="bpx-upcount" class="bpx-badge" style="display:none !important"></span></div><div id="bpx-upnext"></div></div>'
+      +'</aside></div>';
     bpLoadCalendar();
     if((all||insp)&&window.bpGcalPanel) bpGcalPanel();
     if(insp){ bpCalLinkRender(); bpClosedLoad().then(function(){ if(q('bpx-calgrid')) bpDrawCalendar(); }); }
@@ -4677,9 +4678,9 @@ function bpCalUnsched(){
   function bpCalLinkRender(){
     var el=q('bpx-callink'); if(!el) return;
     var my=++_bpCalLink.seq;
-    var shell=function(body){ if(my!==_bpCalLink.seq)return; el.innerHTML='<div class="cal-side-h"><b>Inspection calendar</b></div><div class="bpx-mut" style="font-size:13px">'+body+'</div>'; };
+    var shell=function(body,quiet){ if(my!==_bpCalLink.seq)return; el.hidden=!!quiet; el.innerHTML='<div class="cal-side-h"><b>Inspection calendar</b></div><div class="bpx-mut" style="font-size:13px">'+body+'</div>'; };
     if(!(window.BP_LIVE&&window.BP_SB)){ shell('Sign in to set your inspection calendar.'); return; }
-    shell('Reading your account\u2026');
+    shell('Reading your account\u2026',1);
     Promise.resolve(bpSetUser()).then(function(u){
       if(my!==_bpCalLink.seq) return;
       if(!u||!u.id){ shell('Sign in to set your inspection calendar.'); return; }
@@ -4787,15 +4788,26 @@ function bpCalUnsched(){
     var el=q('bpx-callink'); if(!el||!_bpCalLink.url) return;
     var s=_bpCalLink;
     /* connected and nothing to fix: just a slim "connected" chip; Manage opens the full box */
-    el.classList.toggle('conn-min',s.ready===true&&!s.show&&!s.open);
-    if(s.ready===true&&!s.show&&!s.open){ el.innerHTML=bpConnChip('Inspection calendar','Connected · '+bpEsc(window.BP_AI_NAME||'Lisa')+' books into it','_bpCalLink.open=1;bpCalLinkDraw()'); return; }
+    if(s.ready===true) bpCalConnSeen();
+    el.hidden=(s.ready===null)||(s.ready===true&&!s.show&&!s.open);
+    if(el.hidden) return;
     el.innerHTML='<div class="cal-side-h"><b>Inspection calendar</b><span class="bpx-badge">'+(s.ready===false?'Not set':'Connected')+'</span></div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">The calendar '+bpEsc(window.BP_AI_NAME||'Lisa')+' books inspections into when a homeowner chats on your website.</div>'
       +(s.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>'+bpEsc(window.BP_AI_NAME||'Lisa')+' can\u2019t book inspections until you pick which calendar takes them. Until then homeowners are asked to call you.</span></div>':'')
       +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
       +bpCalConnHtml()
-      +(s.ready===true?'<div class="cal-link-acts"><button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button><button class="bpx-linkbtn conn-hide" onclick="_bpCalLink.open=0;bpCalLinkDraw()">Hide</button></div>':'');
+      +(s.ready===true?'<div class="cal-link-acts"><button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button><button class="bpx-linkbtn conn-hide" onclick="bpCalConnToggle(false)">Hide</button></div>':'');
   }
+  /* connected calendar boxes stay out of sight; the link button in the calendar's
+     controls (shown once something is connected) brings them back */
+  window.bpCalConnSeen=function(){ var b=q('bpx-calconn'); if(b) b.hidden=false; };
+  window.bpCalConnToggle=function(on){
+    if(on===undefined) on=!window._bpCalConnOpen;
+    window._bpCalConnOpen=!!on;
+    var b=q('bpx-calconn'); if(b) b.classList.toggle('on',!!on);
+    if(window.bpGcalOpenBox) bpGcalOpenBox(!!on);
+    if(q('bpx-callink')){ _bpCalLink.open=on?1:0; bpCalLinkDraw(); }
+  };
   /* the slim chip a connected box shrinks to (calendar, Google, inboxes, social accounts) */
   /* a connected box folded into its chip; Manage unfolds it in place */
   window.bpConnWrap=function(name,sub,full){
@@ -14585,7 +14597,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261020b">
 <link rel="stylesheet" href="portal/progress.css?v=20261021a">
 <link rel="stylesheet" href="portal/supply.css?v=20261025c6">
-<link rel="stylesheet" href="portal/dash.css?v=20261108d">
+<link rel="stylesheet" href="portal/dash.css?v=20261108f">
 <link rel="stylesheet" href="portal/team.css?v=20261025a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261108a">
 <script src="portal/team.js?v=20261103a"></script>
@@ -14612,7 +14624,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261024q36"></script>
 <script src="portal/contact.js?v=20261102c"></script>
-<script src="portal/gcal.js?v=20261108a"></script>
+<script src="portal/gcal.js?v=20261108b"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
 <script src="portal/custportal.js?v=20261025d2"></script>
 <script src="portal/payplan.js?v=20261009a"></script>

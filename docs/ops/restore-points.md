@@ -52,3 +52,9 @@ team chat grew the page, and connected calendars/inbox/social still showed
 their full setup boxes.
 
 - live site (main): `a47c9ac`
+
+## Before the one-card calendar (2026-11-08)
+Calendar with Google/inspection boxes, To-dos and Upcoming as separate cards
+above the grid and the colour key under it; connected boxes showed as chips.
+
+- live site (main): `26ff21c`
