@@ -39,3 +39,9 @@ card; before the all-white sales-style cards, the tick gauge, the sidebar pill,
 glass-while-moving and the icon-only phone bar.
 
 - live site (main): `e8595ab`
+
+## Before the card polish (2026-11-08)
+Sales-style cards with the number beside the chart, purple Ask AI; before the
+roomier cards, cursor spotlight, chart hover readout and blue AI.
+
+- live site (main): `b196961`
