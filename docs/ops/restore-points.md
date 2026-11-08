@@ -32,3 +32,10 @@ Motion polish and the 6-month dashboard fix, before the stretchy tab pill, glass
 capsule tab bars, circle theme switch and dark hero card.
 
 - live site (main): `1f49347`
+
+## Before the closer copy of the reels (2026-11-08)
+Stretchy tab pill, capsule tabs, circle theme switch and the dark first money
+card; before the all-white sales-style cards, the tick gauge, the sidebar pill,
+glass-while-moving and the icon-only phone bar.
+
+- live site (main): `e8595ab`
