@@ -360,19 +360,19 @@
     var fin = (window.bpFinData && bpFinData()) || { inc: [] }, now = Date.now(), wk = 7 * 864e5;
     var tsOf = function (x) { var t = x.when; return typeof t === 'number' ? t : Date.parse(t) || 0; };
     var paid = (fin.inc || []).filter(function (x) { return now - tsOf(x) < wk; }).reduce(function (t, x) { return t + (+x.amt || 0); }, 0);
-    /* an ordinary week's takings: the last 8 weeks averaged, so the ring is against your own pace */
     var past = (fin.inc || []).filter(function (x) { var a = now - tsOf(x); return a >= wk && a < 9 * wk; }).reduce(function (t, x) { return t + (+x.amt || 0); }, 0) / 8;
     var W = D.wk || {}, vals = { leads: +W.leads || 0, est: +W.est || 0, signed: +W.signed || 0, paid: paid };
     var goals = { leads: 5, est: 3, signed: 1, paid: Math.max(past, 1500) };
     var fill = WK_SEG.map(function (g) { return Math.min(1, vals[g.k] / goals[g.k]); });
     var score = Math.round(fill.reduce(function (t, v) { return t + v; }, 0) / fill.length * 100);
-    /* four arcs with gaps, drawn clockwise from the top */
-    var R = 52, C = 2 * Math.PI * R, gap = 7, seg = C / 4 - gap;
-    var arcs = WK_SEG.map(function (g, i) {
-      var off = -(i * C / 4) - gap / 2;
-      return '<circle class="wk-trk" r="' + R + '" cx="64" cy="64" stroke-dasharray="' + seg.toFixed(2) + ' ' + (C - seg).toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '"/>'
-        + (fill[i] < .02 ? '' : '<circle class="wk-arc" r="' + R + '" cx="64" cy="64" style="stroke:' + g.c + ';stroke-dasharray:' + (seg * fill[i]).toFixed(2) + ' ' + C.toFixed(2) + ';--c:' + C.toFixed(2) + ';animation-delay:' + (i * 120) + 'ms" stroke-dashoffset="' + off.toFixed(2) + '"/>');
-    }).join('');
+    /* the sales-dashboard reel's gauge: a half circle of tick marks, the lit
+       arc sweeps up to the score and a knob rides its tip */
+    var cx = 110, cy = 104, R = 78, ticks = '';
+    for (var i = 0; i <= 40; i++) {
+      var a = Math.PI - i * Math.PI / 40, long = i % 5 === 0, r1 = R + 13, r2 = R + (long ? 23 : 19);
+      ticks += '<line class="wg-t' + (i / 40 <= score / 100 && score ? ' on' : '') + '" style="--d:' + (i * 18) + 'ms" x1="' + (cx + r1 * Math.cos(a)).toFixed(1) + '" y1="' + (cy - r1 * Math.sin(a)).toFixed(1) + '" x2="' + (cx + r2 * Math.cos(a)).toFixed(1) + '" y2="' + (cy - r2 * Math.sin(a)).toFixed(1) + '"/>';
+    }
+    var arc = 'M' + (cx - R) + ' ' + cy + ' A' + R + ' ' + R + ' 0 0 1 ' + (cx + R) + ' ' + cy;
     var word = score >= 80 ? 'Strong week' : score >= 50 ? 'On pace' : score > 0 ? 'Getting going' : 'Quiet so far';
     var rows = WK_SEG.map(function (g, i) {
       var v = g.money ? money(vals[g.k]) : String(vals[g.k]);
@@ -380,8 +380,10 @@
         + '<span class="wk-bar"><em style="background:' + g.c + ';--w:' + Math.round(fill[i] * 100) + '%"></em></span></button>';
     }).join('');
     return '<div class="bpx-panel wk"><div class="bpx-ptitle">Week pace<span class="lg2">last 7 days</span></div>'
-      + '<div class="wk-body"><div class="wk-ring"><svg viewBox="0 0 128 128" aria-hidden="true">' + arcs + '</svg>'
-      + '<div class="wk-mid"><b class="wk-num" data-cu>' + score + '</b><small>' + word + '</small></div></div>'
+      + '<div class="wk-body"><div class="wg"><svg viewBox="0 0 220 120" aria-hidden="true"><defs><linearGradient id="wgGrad" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#b9d4ff"/><stop offset="1" stop-color="#006fff"/></linearGradient></defs>'
+      + ticks + '<path class="wg-trk" d="' + arc + '"/><path class="wg-arc" pathLength="100" d="' + arc + '" style="--s:' + score + '"/>'
+      + '<g class="wg-knob" style="--deg:' + (score * 1.8) + 'deg;transform-origin:' + cx + 'px ' + cy + 'px"><circle cx="' + (cx - R) + '" cy="' + cy + '" r="10"/><circle class="in" cx="' + (cx - R) + '" cy="' + cy + '" r="4.5"/></g></svg>'
+      + '<div class="wg-mid"><b class="wk-num" data-cu>' + score + '</b><small>' + word + ' &middot; of 100</small></div></div>'
       + '<div class="wk-rows" role="list" aria-label="This week: ' + score + ' out of 100">' + rows + '</div></div></div>';
   }
   function week() {
@@ -550,20 +552,44 @@
      chip against the period before it (colored by whether that direction
      is good, arrowed so color is never alone), and a sparkline of the
      period's weeks or months. */
+  /* The four money cards, laid out like the sales-dashboard reel: the label,
+     the big number, a change pill "vs last month", a small chart on the right
+     (bars that rise, or a line that draws), and a "See ..." link under a
+     dotted rule. All four cards wear the same white. */
+  function miniViz(vals, kind, o) {
+    o = o || {};
+    vals = (vals || []).map(function (v) { return +v || 0; });
+    if (!vals.length || !vals.some(function (v) { return v; })) return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true"><path class="cb-flat" d="M4 40H92"/></svg>';
+    var mx = Math.max.apply(null, vals) || 1, n = vals.length, out = '';
+    if (kind === 'fat') {
+      var v3 = vals.slice(-3), m3 = Math.max.apply(null, v3) || 1;
+      v3.forEach(function (v, i) { var h = Math.max(6, v / m3 * 40), x = 30 + i * 20; out += '<rect class="cb-bar' + (i === v3.length - 1 ? ' on' : '') + '" style="--d:' + (i * 90) + 'ms" x="' + x + '" y="' + (44 - h) + '" width="14" height="' + h + '" rx="5"/>'; });
+    } else if (kind === 'thin') {
+      var w = 88 / n;
+      vals.forEach(function (v, i) { var h = Math.max(4, v / mx * 40); out += '<rect class="cb-bar' + (i === n - 1 ? ' on' : '') + '" style="--d:' + (i * 40) + 'ms" x="' + (6 + i * w + w * .2).toFixed(1) + '" y="' + (44 - h).toFixed(1) + '" width="' + (w * .6).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1.6"/>'; });
+    } else {
+      var mn = Math.min.apply(null, vals.concat([0])), pts = vals.map(function (v, i) { return [6 + i * 84 / Math.max(1, n - 1), 42 - (v - mn) / ((mx - mn) || 1) * 32]; });
+      var d = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L'), last = pts[pts.length - 1];
+      out = '<path class="cb-area" d="' + d + ' L90 46 L6 46Z"/><path class="cb-line' + (o.neg ? ' neg' : '') + '" pathLength="100" d="' + d + '"/><circle class="cb-dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3.6"/>';
+    }
+    return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true">' + out + '</svg>';
+  }
   function sparkTiles(M) {
     var t = function (lbl, key, val, sub, vals, go, o) {
       o = o || {};
-      return '<div class="bpx-panel db-st' + (o.ink ? ' ink' : '') + '" onclick="bpNav(\'' + go + '\')"><div class="db-st-h"><span class="db-kl">' + lbl + '</span>'
-        + bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs }) + '</div>'
-        + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div><div class="db-ks">' + sub + '</div>'
-        + bpChart.spark(vals, { tone: o.tone === 'neg' ? 'neg' : '', fmt: o.fmt || money, labels: M.labels }) + '</div>';
+      var dlt = bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs });
+      return '<div class="bpx-panel db-st cb" onclick="bpNav(\'' + go + '\')"><div class="cb-top"><div class="cb-l"><span class="db-kl">' + lbl + '</span>'
+        + '<div class="db-kv' + (o.tone ? ' ' + o.tone : '') + '">' + val + '</div>'
+        + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(P.vs) + '</span>' : '<span>' + sub + '</span>') + '</div></div>'
+        + '<div class="cb-viz">' + miniViz(vals, o.viz, { neg: o.tone === 'neg' }) + '</div></div>'
+        + '<div class="cb-foot"><span>' + o.see + '</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
     };
     var C = M.cur;
     return [
-      t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances', { ink: true }),
-      t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : 'blue' }),
-      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
-      t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false }),
+      t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances', { viz: 'fat', see: 'See payments' }),
+      t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : '', viz: 'line', see: 'See finances' }),
+      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'thin', see: 'See projects' }),
+      t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'line', see: 'See costs' }),
     ];
   }
   function netLine(M) {

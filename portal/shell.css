@@ -510,3 +510,27 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea{padding-bottom:calc(122px + env(safe-area-inset-bottom)) !important}
 #bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.on{color:var(--ink) !important}
 @media (prefers-reduced-motion:reduce){#bpx#bpx#bpx#bpx .bp-slide{transition:none}}
+
+/* the pill turns to glass while it travels, solid when it lands (glassy-tabs reel) */
+#bpx#bpx#bpx#bpx .bp-slide{transition:opacity .2s,background .22s,box-shadow .22s}
+#bpx#bpx#bpx#bpx .bp-slide.moving{background:rgba(255,255,255,.38);-webkit-backdrop-filter:blur(6px) saturate(1.8);backdrop-filter:blur(6px) saturate(1.8);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.85),inset 0 1px 0 #fff,0 8px 20px -10px rgba(16,24,40,.35)}
+/* sidebar: the same stretchy pill, up and down */
+#bpx#bpx#bpx#bpx #bpxNav.has-slide{position:relative}
+#bpx#bpx#bpx#bpx #bpxNav .bp-slide{border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.08));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.12),0 8px 18px -10px rgba(0,0,0,.6)}
+#bpx#bpx#bpx#bpx #bpxNav .bp-slide.moving{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+#bpx#bpx#bpx#bpx #bpxNav.has-slide .hl-ni{position:relative;z-index:1}
+#bpx#bpx#bpx#bpx #bpxNav.has-slide .hl-ni.on{background:transparent !important}
+/* phone bar: only the selected tab shows its name, and its pill widens to fit (glassy-tabs reel) */
+#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-app.on .bp-tabbar{display:flex !important;align-items:center;gap:2px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab{flex:1 1 0;min-width:0;flex-direction:row;justify-content:center;gap:6px;height:52px;min-height:52px !important;padding:0 10px !important;
+  transition:flex-grow .38s cubic-bezier(.22,1,.36,1),color .2s !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.on{flex-grow:2.1}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .bp-tab-i{width:auto;height:auto;background:transparent !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .bp-tab-l{max-width:0;opacity:0;overflow:hidden;white-space:nowrap;font-size:14px;font-weight:650;transition:max-width .38s cubic-bezier(.22,1,.36,1),opacity .25s}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.on .bp-tab-l{max-width:90px;opacity:1}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab.bp-tab-new{flex:0 0 auto;padding:0 4px !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .hl-i{width:23px;height:23px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-app.on .bp-tabbar{background:linear-gradient(180deg,rgba(226,231,239,.86),rgba(214,221,231,.84))}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tabbar .bp-slide:not(.moving){background:linear-gradient(180deg,#fff,#f4f7fb);box-shadow:0 2px 3px rgba(16,24,40,.08),0 8px 18px -6px rgba(16,24,40,.28),inset 0 1px 0 #fff}

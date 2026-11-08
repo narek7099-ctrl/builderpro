@@ -180,6 +180,7 @@
     document.querySelectorAll('#bpxSide .hl-ni[data-sec]').forEach(function (a) {
       var on = a.getAttribute('data-sec') === gid; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
+    if (window.bpSlideTabs) bpSlideTabs();
     var g = (window.BP_NAV || []).filter(function (x) { return x.id === gid; })[0];
     var title = (g && g.kids) ? g.l : ((window.BPVIEWS && BPVIEWS[v] && BPVIEWS[v].t) || 'BuilderPro');
     var t = $('bpxVtitle'); if (t) t.textContent = title;

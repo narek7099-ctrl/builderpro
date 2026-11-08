@@ -92,7 +92,7 @@
       var a = b.getAttribute('data-tab') === on; b.classList.toggle('on', a);
       if (a) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
-    if (window.bpSlideTabs) bpSlideTabs();
+    if (window.bpSlideTabs) { bpSlideTabs(); setTimeout(bpSlideTabs, 420); }   /* again once the label has opened */
   }
 
   /* --------------------------------------------------------- top bar --- */
