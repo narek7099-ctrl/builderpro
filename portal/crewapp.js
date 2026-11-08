@@ -934,7 +934,7 @@
     box.innerHTML = '<div class="ck-head"><div class="pjs-h">Today&rsquo;s checklist</div><span class="ck-count">' + done + ' of ' + n + '</span></div>'
       + '<div class="ck-top">' + ckRing(list, fresh) + '<div class="ck-steps">' + list.map(function (x, i) {
         var key = x.id || x.t;
-        return '<button type="button" class="ck-step' + (x.doneAt ? ' on' : '') + '" aria-pressed="' + !!x.doneAt + '" onclick="bpCrewCk(\'' + esc(j.id) + '\',\'' + encodeURIComponent(key).replace(/'/g, '%27') + '\',' + !x.doneAt + ')">'
+        return '<button type="button" class="ck-step' + (x.doneAt ? ' on' : '') + (fresh === i ? ' fresh' : '') + '" aria-pressed="' + !!x.doneAt + '" onclick="bpCrewCk(\'' + esc(j.id) + '\',\'' + encodeURIComponent(key).replace(/'/g, '%27') + '\',' + !x.doneAt + ')">'
           + '<span class="ck-box" style="--col:' + CK_COL[i % CK_COL.length] + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>'
           + '<span class="ck-t"><b>' + esc(x.t) + '</b>' + (x.doneAt ? '<small>' + esc(x.by || '') + (x.by ? ' &middot; ' : '') + tm(x.doneAt) + '</small>' : '') + '</span></button>';
       }).join('') + '</div></div>'
@@ -978,6 +978,7 @@
       if (d && d.ok) { st.doneAt = d.at; st.doneBy = ((C.me || {}).employee || {}).name || ''; if (navigator.vibrate) { try { navigator.vibrate([16, 60, 24]); } catch (e) {} } }
       else st.msg = d && d.error === 'steps left' ? 'A step is still open.' : 'Not sent. Check your signal and try again.';
       ckPaint(j);
+      if (d && d.ok && window.bpBurst) setTimeout(function () { bpBurst(document.querySelector('#cs-ck .ck-tick')); }, 120);
     }).catch(function () { st.msg = 'Not sent. Check your signal and try again.'; ckPaint(j); });
   };
 

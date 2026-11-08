@@ -1,0 +1,52 @@
+/* App motion polish (portal/motion.js): springy presses, cards that rise in one
+   after another when a page opens, a gentle lift under the mouse, soft glows
+   on the rings and the main buttons, and a bounce on the tab you tap.
+   App only; the website is untouched. Everything stops for reduced motion. */
+#bpx{--sp-out:cubic-bezier(.22,1,.36,1);--sp-bounce:cubic-bezier(.34,1.56,.64,1);--sp-press:cubic-bezier(.2,.8,.3,1.2)}
+
+/* 1. cards rise in, staggered (motion.js sets .mo-in and --i on each one) */
+#bpx#bpx#bpx#bpx .mo-in{animation:moRise .55s var(--sp-out) backwards;animation-delay:calc(var(--i,0) * 35ms)}
+@keyframes moRise{from{opacity:0;transform:translateY(14px) scale(.985)}}
+
+/* 2. a soft lift under the mouse on cards you can open */
+@media (hover:hover) and (pointer:fine){
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel,#bpx#bpx#bpx#bpx .db-st,#bpx#bpx#bpx#bpx .pj-card{transition:transform .35s var(--sp-out),box-shadow .35s var(--sp-out),border-color .35s}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover,#bpx#bpx#bpx#bpx .pj-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px -22px rgba(16,24,40,.35),0 2px 6px -2px rgba(16,24,40,.08) !important}
+}
+
+/* 3. presses: buttons sink and spring back instead of snapping */
+#bpx#bpx#bpx#bpx :is(.bpx-btn,.bpx-addbtn,.hero-cta,.mh2-tile,.mh2-row,.wk-row,.ck-step,.ck-finish,.bp-tab,.hl-tab,.pjs-act,.dash-att-r){
+  transition:transform .28s var(--sp-press),background-color .2s,box-shadow .25s,color .2s}
+#bpx#bpx#bpx#bpx :is(.mh2-tile,.mh2-row,.wk-row,.dash-att-r):active{transform:scale(.97)}
+#bpx#bpx#bpx#bpx .bpx-btn:not(.ghost):not(:disabled){box-shadow:0 6px 16px -10px rgba(0,111,255,.85)}
+#bpx#bpx#bpx#bpx .bpx-btn:not(.ghost):not(:disabled):hover{box-shadow:0 10px 22px -10px rgba(0,111,255,.9)}
+
+/* 4. the tab you tap bounces once */
+#bpx#bpx#bpx#bpx .bp-tab.mo-pop .bp-tab-i{animation:moTab .5s var(--sp-bounce)}
+@keyframes moTab{0%{transform:scale(.8)}60%{transform:scale(1.14) translateY(-2px)}100%{transform:none}}
+
+/* 5. glows: the week ring and the crew ring look lit, not flat */
+#bpx#bpx#bpx#bpx .wk-ring::after,#bpx-modal .ck-ring::after{content:"";position:absolute;inset:18%;border-radius:50%;z-index:-1;
+  background:radial-gradient(closest-side,rgba(47,128,255,.16),transparent);animation:moBreath 3.2s ease-in-out infinite}
+#bpx#bpx#bpx#bpx .wk-ring,#bpx-modal .ck-ring{isolation:isolate}
+@keyframes moBreath{50%{transform:scale(1.12);opacity:.6}}
+#bpx#bpx#bpx#bpx .wk-num,#bpx-modal .ck-mid b{animation:moNum .7s var(--sp-bounce) backwards .25s}
+@keyframes moNum{from{transform:scale(.6);opacity:0}}
+
+/* 6. crew checklist: the box pops when ticked, the finished button glows */
+#bpx-modal .ck-step.on.fresh .ck-box{animation:moTick .45s var(--sp-bounce)}
+@keyframes moTick{0%{transform:scale(.7)}60%{transform:scale(1.18)}100%{transform:none}}
+#bpx-modal .ck-finish:not(:disabled){animation:moReady 2.4s ease-in-out infinite}
+@keyframes moReady{50%{box-shadow:0 14px 30px -10px rgba(31,154,99,.95),0 0 0 6px rgba(34,160,107,.12),inset 0 1px 0 rgba(255,255,255,.25)}}
+#bpx-modal .mo-burst{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;border-radius:2px;pointer-events:none;
+  animation:moBurst .9s var(--sp-out) forwards}
+@keyframes moBurst{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.6);opacity:0}}
+
+/* 7. page tabs: the active label settles in */
+#bpx#bpx#bpx#bpx .hl-tab.on{transition:color .25s}
+
+@media (prefers-reduced-motion:reduce){
+  #bpx#bpx#bpx#bpx .mo-in,#bpx#bpx#bpx#bpx .bp-tab.mo-pop .bp-tab-i,#bpx#bpx#bpx#bpx .wk-ring::after,#bpx-modal .ck-ring::after,
+  #bpx#bpx#bpx#bpx .wk-num,#bpx-modal .ck-mid b,#bpx-modal .ck-step.on.fresh .ck-box,#bpx-modal .ck-finish,#bpx-modal .mo-burst{animation:none !important}
+  #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover,#bpx#bpx#bpx#bpx .pj-card:hover{transform:none}
+}
