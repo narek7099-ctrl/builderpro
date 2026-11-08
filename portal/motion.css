@@ -9,7 +9,7 @@
 @keyframes moRise{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(6px)}}
 
 /* 2. a soft lift under the mouse on cards you can open */
-@media (hover:hover) and (pointer:fine){
+@media (any-hover:hover){
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel,#bpx#bpx#bpx#bpx .db-st,#bpx#bpx#bpx#bpx .pj-card{transition:transform .35s var(--sp-out),box-shadow .35s var(--sp-out),border-color .35s}
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel:hover,#bpx#bpx#bpx#bpx .pj-card:hover{transform:translateY(-5px);box-shadow:0 18px 36px -22px rgba(16,24,40,.35),0 2px 6px -2px rgba(16,24,40,.08) !important}
 }
@@ -58,7 +58,7 @@
 #bpx#bpx#bpx#bpx .bpc-delta{border-radius:999px !important;padding:2px 8px !important;font-weight:700 !important}
 
 /* ---------- cursor spotlight + smoother lift on cards (motion.js sets --mx/--my) ---------- */
-@media (hover:hover) and (pointer:fine){
+@media (any-hover:hover){
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel,#bpx#bpx#bpx#bpx .ceo-dash{position:relative;isolation:isolate}
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel::before,#bpx#bpx#bpx#bpx .ceo-dash::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:0;
     background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(0,111,255,.075),transparent 60%);transition:opacity .35s}
@@ -88,10 +88,10 @@
   border:1px solid #e6eaf1 !important;border-radius:18px !important;background:#fff !important;
   box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 24px -18px rgba(16,24,40,.25) !important}
 /* and they lift under the mouse: every card except big work areas (the calendar grid, chat, forms being typed in) */
-@media (hover:hover) and (pointer:fine){
-  #bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pj-card,.cd-it,.conn-chip){
+@media (any-hover:hover){
+  #bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pj-card,.cd-it,.conn-chip,.pjk-stat,.st-plan,.sp-pk-box){
     transition:translate .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1),border-color .3s !important}
-  #bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pj-card,.conn-chip):not(.cal-panel):not(.tc):not(:has(input:focus,textarea:focus,select:focus)):hover{
+  #bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pj-card,.conn-chip,.pjk-stat,.st-plan,.sp-pk-box):not(.cal-panel):not(.tc):not(:has(input:focus,textarea:focus,select:focus)):hover{
     translate:0 -5px;box-shadow:0 2px 4px rgba(16,24,40,.05),0 22px 40px -22px rgba(16,24,40,.38) !important;border-color:#d6deea !important}
   #bpx#bpx#bpx#bpx#bpx #bpxViewArea .cd-it:hover{translate:0 -2px}
   /* the cursor spotlight on every card */

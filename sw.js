@@ -1,7 +1,8 @@
 /* BuilderPro service worker: makes the site installable as an app and shows
    a friendly page when there's no connection.
 
-   Deliberately small. Pages are always fetched fresh from the network (the app
+   Deliberately small. Pages are always fetched fresh from the network, re-checked with the server
+   even inside the browser's 10-minute cache (the app
    changes often, and a stale app is worse than an offline notice); only when
    the network fails do we show offline.html. Versioned scripts and styles
    (?v=...), icons and fonts are cached because a new version gets a new URL.
@@ -25,7 +26,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const u = new URL(req.url);
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).catch(() => caches.match('/offline.html')));
+    e.respondWith(fetch(req, { cache: 'no-cache' }).catch(() => caches.match('/offline.html')));
     return;
   }
   if (!cacheable(u)) return; // the browser handles it as if there were no service worker
