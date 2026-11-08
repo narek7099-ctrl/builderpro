@@ -121,3 +121,11 @@
   #bpx#bpx#bpx#bpx .tc-comp{padding:10px}
   #bpx#bpx#bpx#bpx .tc-in textarea{font-size:16px}
 }
+/* desktop: height is set by teamchat.js fit(); the page never scrolls, the message list does */
+@media (min-width:761px){
+  #bpx#bpx#bpx#bpx .tc{height:calc(100dvh - 150px)}
+  #bpx#bpx#bpx#bpx .tc-pane{overflow:hidden}
+  #bpx#bpx#bpx#bpx .tc-msgs{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  #bpx#bpx#bpx#bpx .tc-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  #bpx#bpx#bpx#bpx .tc-comp{flex:none}
+}

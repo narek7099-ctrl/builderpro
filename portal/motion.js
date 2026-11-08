@@ -58,7 +58,7 @@
   /* cursor spotlight: cards light up where the mouse is */
   document.addEventListener('pointermove', function (e) {
     if (e.pointerType !== 'mouse') return;
-    var c = e.target.closest && e.target.closest('.hl-w > .bpx-panel, .ceo-dash'); if (!c) return;
+    var c = e.target.closest && e.target.closest('#bpxViewArea .bpx-panel, .ceo-dash'); if (!c) return;
     var r = c.getBoundingClientRect();
     c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px');
   }, { passive: true });
