@@ -50,6 +50,7 @@
   };
 
   /* ---------- the side panel ---------- */
+  window.bpGcalOpenBox = function (on) { G.open = !!on; draw(); };
   window.bpGcalPanel = function () {
     var el = document.getElementById('bpx-gcal'); if (!el) return;
     if (!live()) { el.hidden = true; return; }
@@ -73,6 +74,10 @@
     var now = Date.now();
     var ask = G.ev.filter(function (e) { return e.kind === 'ask' && Date.parse(e.ends_at) > now; }).slice(0, 6);
     var ago = s.last_sync ? Math.max(0, Math.round((now - Date.parse(s.last_sync)) / 60000)) : null;
+    /* connected, nothing waiting, no error: shrink to a slim chip; Manage opens it */
+    var quiet = !ask.length && !s.error && !G.open;
+    el.classList.toggle('conn-min', quiet);
+    if (quiet && window.bpConnChip) { el.innerHTML = bpConnChip('Google Calendar', 'Connected' + (ago == null ? '' : ' · synced ' + (ago < 1 ? 'just now' : ago + ' min ago')), 'bpGcalOpenBox(true)'); return; }
     el.innerHTML = head
       + '<div class="bpx-mut gc-p">' + esc(s.email || 'Your Google account') + (ago == null ? '' : ' · synced ' + (ago < 1 ? 'just now' : ago + ' min ago')) + '</div>'
       + (s.error ? '<div class="gc-err">' + esc(s.error) + '</div>' : '')
@@ -81,7 +86,7 @@
           + '<div class="gc-ask-b"><button class="bpx-rowbtn gc-yes" onclick="bpGcalYes(\'' + e.id + '\')"><span class="ms">person</span> Customer</button>'
           + '<button class="bpx-rowbtn" onclick="bpGcalNo(\'' + e.id + '\')">Just busy</button></div></div>';
       }).join('') : '<div class="bpx-mut gc-p gc-none">Nothing to sort. Your Google events show in grey on the calendar.</div>')
-      + '<div class="gc-foot"><button class="bpx-linkbtn" onclick="bpGcalSync()">Sync now</button><button class="bpx-linkbtn gc-off" onclick="bpGcalOff()">Disconnect</button></div>';
+      + '<div class="gc-foot"><button class="bpx-linkbtn" onclick="bpGcalSync()">Sync now</button><button class="bpx-linkbtn gc-off" onclick="bpGcalOff()">Disconnect</button>' + (G.open ? '<button class="bpx-linkbtn conn-hide" onclick="bpGcalOpenBox(false)">Hide</button>' : '') + '</div>';
   }
 
   window.bpGcalConnect = function () {

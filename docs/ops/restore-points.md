@@ -45,3 +45,10 @@ Sales-style cards with the number beside the chart, purple Ask AI; before the
 roomier cards, cursor spotlight, chart hover readout and blue AI.
 
 - live site (main): `b196961`
+
+## Before the app-wide cards and connected chips (2026-11-08)
+Dashboard-only card style; other pages kept their old panels, no hover lift,
+team chat grew the page, and connected calendars/inbox/social still showed
+their full setup boxes.
+
+- live site (main): `a47c9ac`

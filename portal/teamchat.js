@@ -147,6 +147,7 @@
       + '</div><div class="tc-list" id="tcList"><div class="tc-load">Loading…</div></div></aside>'
       + '<section class="tc-pane" id="tcPane"><div class="tc-zero"><b>Pick a conversation</b><p>' + (isOwner() ? 'Or start a group for a job crew.' : 'Messages from your team show up here.') + '</p></div></section></div>';
     if (window.bpSpin) bpSpin(false);
+    fit(); setTimeout(fit, 120); setTimeout(fit, 800);
     var first = !phone();
     loadThreads().then(function () {
       paintList();
@@ -196,7 +197,8 @@
     if (C.msgs[id]) paintMsgs(true);
     loadMsgs(id).then(function () { if (C.cur === id) paintMsgs(true); }).catch(function () { var m = $('tcMsgs'); if (m) m.innerHTML = '<div class="tc-load">Could not load messages.</div>'; });
     markRead(id);
-    if (!phone()) { var ta = $('tcText'); if (ta) ta.focus(); }
+    if (!phone()) { var ta = $('tcText'); if (ta) { try { ta.focus({ preventScroll: true }); } catch (e) { ta.focus(); } } }
+    fit();
   }
   window.bpTcOpen = open;
   window.bpTcBack = function () { var r = $('tcRoot'); if (r) r.classList.remove('tc-open'); C.cur = null; paintList(); };
@@ -236,6 +238,14 @@
   window.bpTcKey = function (e) {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); window.bpTcSend(); }
   };
+  /* the chat fills exactly the space left below the tabs on a computer, so
+     the page itself never scrolls; only the message list does */
+  function fit() {
+    var r = $('tcRoot'); if (!r || phone()) { if (r) r.style.height = ''; return; }
+    var top = r.getBoundingClientRect().top;
+    r.style.height = Math.max(420, Math.floor(window.innerHeight - top - 16)) + 'px';
+  }
+  window.addEventListener('resize', function () { if ($('tcRoot')) fit(); });
   window.bpTcGrow = function (ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px'; };
   window.bpTcAttach = function (inp) {
     var f = inp.files && inp.files[0]; C.file = f || null;

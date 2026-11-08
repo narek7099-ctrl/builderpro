@@ -4786,13 +4786,26 @@ function bpCalUnsched(){
   function bpCalLinkDraw(){
     var el=q('bpx-callink'); if(!el||!_bpCalLink.url) return;
     var s=_bpCalLink;
+    /* connected and nothing to fix: just a slim "connected" chip; Manage opens the full box */
+    el.classList.toggle('conn-min',s.ready===true&&!s.show&&!s.open);
+    if(s.ready===true&&!s.show&&!s.open){ el.innerHTML=bpConnChip('Inspection calendar','Connected · '+bpEsc(window.BP_AI_NAME||'Lisa')+' books into it','_bpCalLink.open=1;bpCalLinkDraw()'); return; }
     el.innerHTML='<div class="cal-side-h"><b>Inspection calendar</b><span class="bpx-badge">'+(s.ready===false?'Not set':'Connected')+'</span></div>'
       +'<div class="bpx-mut" style="font-size:13px;margin-bottom:12px">The calendar '+bpEsc(window.BP_AI_NAME||'Lisa')+' books inspections into when a homeowner chats on your website.</div>'
       +(s.ready===false?'<div class="cal-warn"><span class=ms>warning</span><span>'+bpEsc(window.BP_AI_NAME||'Lisa')+' can\u2019t book inspections until you pick which calendar takes them. Until then homeowners are asked to call you.</span></div>':'')
       +(s.ready===false&&!s.show?'<div class="cal-link-acts" style="margin:0 0 10px"><button class="bpx-btn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> Connect calendar</button></div>':'')
       +bpCalConnHtml()
-      +(s.ready===true?'<div class="cal-link-acts"><button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button></div>':'');
+      +(s.ready===true?'<div class="cal-link-acts"><button class="bpx-rowbtn" onclick="bpCalConnOpen()"><span class=ms>event_available</span> '+(s.mode==='portal'?'Use a different calendar':'Change calendar')+'</button><button class="bpx-linkbtn conn-hide" onclick="_bpCalLink.open=0;bpCalLinkDraw()">Hide</button></div>':'');
   }
+  /* the slim chip a connected box shrinks to (calendar, Google, inboxes, social accounts) */
+  /* a connected box folded into its chip; Manage unfolds it in place */
+  window.bpConnWrap=function(name,sub,full){
+    return '<div class="conn-wrap">'+bpConnChip(name,sub,'bpConnShow(this)')+'<div class="conn-full" hidden>'+full+'</div></div>';
+  };
+  window.bpConnShow=function(btn){ var w=btn.parentNode, f=w&&w.querySelector('.conn-full'); if(f){ f.hidden=false; btn.remove(); } };
+  window.bpConnChip=function(name,sub,onclick){
+    return '<button type="button" class="conn-chip" onclick="'+onclick+'"><span class="conn-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>'
+      +'<span class="conn-t"><b>'+name+'</b><small>'+sub+'</small></span><span class="conn-m">Manage</span></button>';
+  };
   function bpCopyText(txt,btn,label){ var done=function(){ btn.innerHTML='<span class=ms>check</span> Copied'; setTimeout(function(){ btn.innerHTML=label; },1800); }; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,function(){ window.prompt('Copy this:',txt); }); } else window.prompt('Copy this:',txt); }
 
   window.bpCalRedraw=function(){ if(q('bpx-calgrid')||q('bpx-dayview')||q('bpx-weekview')) bpDrawCalendar(); };
@@ -11778,7 +11791,8 @@ function bpSoCalendar(){
 }
 function bpSoAccountsPane(){
   var pg=_bpSo.page||{}, cfg=_bpSo.cfg||{};
-  var card=function(img,bleed,name,desc,connected,sub,acts){return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(bleed?' bleed':'')+'"><img src="'+img+'" alt="" loading="lazy"></div><div style="min-width:0"><div class="bpx-mk-name">'+name+'</div><div class="bpx-mk-desc">'+desc+'</div></div></div><div style="margin:12px 0 10px">'+(connected?'<span class="bpx-mk-st on">Connected</span>':(connected===null?'<span class="bpx-mk-st soon">Coming soon</span>':'<span class="bpx-mk-st off">Not connected</span>'))+(sub?' <span class="bpx-mut" style="font-size:12px">'+sub+'</span>':'')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+acts+'</div></div>';};
+  var card=function(img,bleed,name,desc,connected,sub,acts){ var h=card0(img,bleed,name,desc,connected,sub,acts); return connected===true&&window.bpConnWrap?bpConnWrap(name,'Connected'+(sub?' · '+sub:''),h):h; };
+  var card0=function(img,bleed,name,desc,connected,sub,acts){return '<div class="bpx-mk-card"><div class="bpx-mk-top"><div class="bpx-mk-logo'+(bleed?' bleed':'')+'"><img src="'+img+'" alt="" loading="lazy"></div><div style="min-width:0"><div class="bpx-mk-name">'+name+'</div><div class="bpx-mk-desc">'+desc+'</div></div></div><div style="margin:12px 0 10px">'+(connected?'<span class="bpx-mk-st on">Connected</span>':(connected===null?'<span class="bpx-mk-st soon">Coming soon</span>':'<span class="bpx-mk-st off">Not connected</span>'))+(sub?' <span class="bpx-mut" style="font-size:12px">'+sub+'</span>':'')+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+acts+'</div></div>';};
   var fbSub=_bpSo.conn.facebook?bpEsc(pg.name||'')+(pg.ig?' · @'+bpEsc(pg.ig):' · no Instagram linked'):(cfg.meta===false?'setup in progress':'');
   var fbActs=_bpSo.conn.facebook
     ?((pg.pages||[]).length>1?'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoPickPage()">Switch Page</button>':'')+'<button class="bpx-rowbtn" style="margin:0" onclick="bpSoDisconnect()">Disconnect</button>'
@@ -13263,11 +13277,11 @@ function lsInboxPanel(){
     var m=(_lsMail||[]).filter(function(x){return x.provider===p;})[0];
     var mark=p==='gmail'?GG:OL;
     var head='<div class="ls-pv-h"><span class="ls-pv-mark">'+mark+'</span><div><b>'+label+'</b>';
-    if(m&&m.status==='connected') return '<div class="ls-pv on">'+head
+    if(m&&m.status==='connected') return bpConnWrap(label,'Connected · '+bpEsc(m.email||''),'<div class="ls-pv on">'+head
         +'<span class="ls-pv-st"><i></i>Connected</span></div></div>'
       +'<div class="ls-pv-mail">'+bpEsc(m.email||'')+'</div>'
       +'<div class="ls-pv-meta">Checked '+(m.last_checked?bpEsc(bpAgoText(Date.parse(m.last_checked))):'not yet')+(m.found_total?' · '+m.found_total+' lead'+(m.found_total===1?'':'s')+' filed':'')+'</div>'
-      +'<div class="ls-pv-acts"><button class="ls-pv-ghost" onclick="lsOutlookCheck()">Check now</button><button class="ls-pv-ghost ls-pv-off" onclick="lsMailOff(\''+p+'\')">Disconnect</button></div></div>';
+      +'<div class="ls-pv-acts"><button class="ls-pv-ghost" onclick="lsOutlookCheck()">Check now</button><button class="ls-pv-ghost ls-pv-off" onclick="lsMailOff(\''+p+'\')">Disconnect</button></div></div>');
     if(m&&m.status==='error') return '<div class="ls-pv err">'+head+'<span class="ls-pv-st warn"><i></i>Needs reconnecting</span></div></div>'
       +'<div class="ls-pv-meta">'+bpEsc(m.error||'')+'</div>'
       +'<a class="ls-pv-btn '+p+'" href="'+location.pathname+'?mailstart='+p+'" target="_blank" onclick="lsMailPending()">'+mark+'<span>Reconnect '+label+'</span></a></div>';
@@ -14573,7 +14587,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/supply.css?v=20261025c6">
 <link rel="stylesheet" href="portal/dash.css?v=20261108d">
 <link rel="stylesheet" href="portal/team.css?v=20261025a">
-<link rel="stylesheet" href="portal/teamchat.css?v=20261003a">
+<link rel="stylesheet" href="portal/teamchat.css?v=20261108a">
 <script src="portal/team.js?v=20261103a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261025c8"></script>
@@ -14598,14 +14612,14 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261024q36"></script>
 <script src="portal/contact.js?v=20261102c"></script>
-<script src="portal/gcal.js?v=20261102b"></script>
+<script src="portal/gcal.js?v=20261108a"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
 <script src="portal/custportal.js?v=20261025d2"></script>
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261009a">
 <script src="portal/bpedit.js?v=20261024q25"></script>
 <script src="portal/crewapp.js?v=20261108a"></script>
-<script src="portal/teamchat.js?v=20261024q02"></script>
+<script src="portal/teamchat.js?v=20261108a"></script>
 <script src="portal/subapp.js?v=20261031b"></script>
 <script src="portal/subs.js?v=20261025c1"></script>
 <script src="portal/aiteam.js?v=20261101a"></script>
@@ -14636,7 +14650,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/inspect.css?v=20261019a">
 <link rel="stylesheet" href="portal/contact.css?v=20261102c">
 <link rel="stylesheet" href="portal/crewapp.css?v=20261107a">
-<link rel="stylesheet" href="portal/motion.css?v=20261108g">
+<link rel="stylesheet" href="portal/motion.css?v=20261108h">
 <link rel="stylesheet" href="portal/subapp.css?v=20261004a">
 <link rel="stylesheet" href="portal/custportal.css?v=20261009b">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261019a">
@@ -14649,7 +14663,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261024q36"></script>
 <script src="portal/slidetabs.js?v=20261108c"></script>
-<script src="portal/motion.js?v=20261108e"></script>
+<script src="portal/motion.js?v=20261108f"></script>
 <script src="portal/shell.js?v=20261108a"></script>
 <script src="portal/mobile.js?v=20261108a"></script>
 <script src="portal/appfeel.js?v=20261031c"></script>
