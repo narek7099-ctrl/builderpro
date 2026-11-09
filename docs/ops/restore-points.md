@@ -94,3 +94,8 @@ Only the dashboard's numbers counted up.
 Plain white team map with grey lines, purple AI avatars, flat chat.
 
 - live site (main): `2e01f76`
+
+## Before the smoother AI Team animation (2026-11-09)
+Glass AI Team map with SVG-animated dots, flowing dashed lines and pulsing glows (laggy).
+
+- live site (main): `826e942`
