@@ -5,34 +5,51 @@
    Loaded last, so it wins; everything here is looks only.
    ===================================================================== */
 
-/* ---- the light behind everything ---- */
+/* ---- the light behind everything: strong enough that the glass has
+   something to show through ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx .bpx-app{background:
-  radial-gradient(1000px 680px at 92% -10%,rgba(0,111,255,.30),transparent 62%),
-  radial-gradient(760px 560px at 22% 12%,rgba(110,175,255,.24),transparent 62%),
-  radial-gradient(820px 640px at 70% 108%,rgba(0,70,190,.18),transparent 62%),
-  radial-gradient(600px 500px at 4% 92%,rgba(120,190,255,.18),transparent 62%),
-  linear-gradient(180deg,#eef3fb,#e6eef9) fixed}
+  radial-gradient(900px 640px at 94% -8%,rgba(0,111,255,.42),transparent 62%),
+  radial-gradient(720px 560px at 24% 6%,rgba(120,185,255,.40),transparent 62%),
+  radial-gradient(760px 620px at 72% 104%,rgba(0,84,214,.30),transparent 62%),
+  radial-gradient(640px 540px at 2% 88%,rgba(70,190,255,.30),transparent 62%),
+  radial-gradient(520px 420px at 50% 52%,rgba(190,220,255,.35),transparent 70%),
+  linear-gradient(180deg,#e7effb,#dfe9f8) fixed}
 #bpx#bpx#bpx#bpx#bpx#bpx .bpx-main{background:transparent !important}
 
-/* ---- frosted cards with a glossy top edge ---- */
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.mh2-owed,.mh2-tiles,.mh2-card){
+/* ---- glass cards: see-through, frosted, a bright rim and a sheen ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.bpx-cwrap,.mh2-owed,.mh2-tiles,.mh2-card){
   background:
-    linear-gradient(135deg,rgba(255,255,255,.7) 0%,rgba(255,255,255,0) 42%),
-    linear-gradient(180deg,rgba(255,255,255,.66) 0%,rgba(255,255,255,.5) 100%) !important;
-  -webkit-backdrop-filter:blur(24px) saturate(185%);backdrop-filter:blur(24px) saturate(185%);
-  border:1px solid rgba(255,255,255,.85) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 0 0 1px rgba(16,40,80,.06),0 1px 2px rgba(16,24,40,.04),0 14px 34px -20px rgba(0,30,80,.32) !important}
+    linear-gradient(140deg,rgba(255,255,255,.62) 0%,rgba(255,255,255,.08) 38%,rgba(255,255,255,0) 60%),
+    linear-gradient(180deg,rgba(255,255,255,.46) 0%,rgba(255,255,255,.30) 100%) !important;
+  -webkit-backdrop-filter:blur(28px) saturate(200%);backdrop-filter:blur(28px) saturate(200%);
+  border:1px solid rgba(255,255,255,.7) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 1px 0 0 rgba(255,255,255,.4),
+    inset 0 -1px 0 rgba(255,255,255,.25),
+    0 0 0 .5px rgba(10,40,100,.10),
+    0 2px 6px -2px rgba(0,30,90,.08),
+    0 22px 44px -26px rgba(0,30,100,.42) !important}
 @media (any-hover:hover){
-  #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat):not(.cal-panel):not(.tc):not(:has(input:focus,textarea:focus,select:focus)):hover{
-    background:linear-gradient(135deg,rgba(255,255,255,.85) 0%,rgba(255,255,255,0) 45%),linear-gradient(180deg,rgba(255,255,255,.8) 0%,rgba(255,255,255,.62) 100%) !important;
-    box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.14),0 2px 4px rgba(16,24,40,.05),0 26px 46px -24px rgba(0,40,110,.42) !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card):not(.cal-panel):not(.tc):not(:has(input:focus,textarea:focus,select:focus)):hover{
+    background:
+      linear-gradient(140deg,rgba(255,255,255,.78) 0%,rgba(255,255,255,.12) 40%,rgba(255,255,255,0) 60%),
+      linear-gradient(180deg,rgba(255,255,255,.58) 0%,rgba(255,255,255,.4) 100%) !important;
+    box-shadow:inset 0 1px 0 #fff,inset 1px 0 0 rgba(255,255,255,.5),0 0 0 1px rgba(0,111,255,.18),0 4px 10px -4px rgba(0,30,90,.12),0 30px 54px -26px rgba(0,50,140,.5) !important}
 }
-/* inner boxes in a card stay quiet so the card reads as one piece of glass */
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-panel .bpx-panel{background:rgba(255,255,255,.55) !important;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 0 0 1px rgba(16,40,80,.06) !important}
-/* the calendar's side rail and its day cells */
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-one>.cal-rail{background:rgba(240,245,252,.55)}
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-grid .bpx-day{background:rgba(246,248,252,.7)}
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-grid .bpx-day.has{background:rgba(255,255,255,.9)}
+/* boxes inside a card: a lighter pane of the same glass */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-panel .bpx-panel,
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-panel :is(.cd-it,.bpx-stat,.db-k){background:rgba(255,255,255,.34) !important;-webkit-backdrop-filter:none;backdrop-filter:none;
+  border:1px solid rgba(255,255,255,.6) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.7) !important}
+/* fields stay solid white so typing is easy to read */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-panel :is(input:not([type=checkbox]):not([type=radio]),select,textarea){background:rgba(255,255,255,.92) !important}
+/* the calendar: glass rail, frosted day cells */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-one>.cal-rail{background:rgba(255,255,255,.22);border-left-color:rgba(255,255,255,.6)}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-grid .bpx-day{background:rgba(255,255,255,.32);border-color:rgba(255,255,255,.55)}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-grid .bpx-day.has{background:rgba(255,255,255,.6)}
+/* table rows inside glass: no white slabs */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-cwrap :is(table,thead,tbody,tr,th,td){background:transparent !important}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-cwrap tbody tr:hover td{background:rgba(255,255,255,.4) !important}
 
 /* ---- frosted top bar ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #hlTop{background:rgba(255,255,255,.62) !important;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
@@ -53,15 +70,17 @@
   background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.72)) !important;border:1px solid rgba(16,40,80,.1) !important;
   box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(16,24,40,.05) !important}
 
-/* ---- phone: the same glass, lighter on the blur so scrolling stays smooth ---- */
-#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.pjk-stat,.mh2-owed,.mh2-tiles,.mh2-card){
-  background:linear-gradient(135deg,rgba(255,255,255,.8) 0%,rgba(255,255,255,0) 45%),linear-gradient(180deg,rgba(255,255,255,.86) 0%,rgba(255,255,255,.7) 100%) !important;-webkit-backdrop-filter:none;backdrop-filter:none}
+/* ---- phone: the same see-through glass; no blur, so scrolling stays smooth ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.pjk-stat,.pj-card,.mh2-owed,.mh2-tiles,.mh2-card){
+  background:linear-gradient(140deg,rgba(255,255,255,.7) 0%,rgba(255,255,255,.12) 40%,rgba(255,255,255,0) 60%),linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.4) 100%) !important;
+  -webkit-backdrop-filter:none;backdrop-filter:none}
 #bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-app{background:
-  radial-gradient(520px 420px at 100% -6%,rgba(0,111,255,.26),transparent 62%),
-  radial-gradient(420px 380px at 0% 30%,rgba(110,175,255,.2),transparent 60%),
-  radial-gradient(460px 400px at 80% 95%,rgba(0,70,190,.14),transparent 62%),
-  linear-gradient(180deg,#f1f5fb,#eaf0f8)}
-#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .mh2-tile:not(.pri){background:rgba(240,245,252,.8)}
+  radial-gradient(520px 420px at 100% -6%,rgba(0,111,255,.38),transparent 62%),
+  radial-gradient(440px 400px at 0% 28%,rgba(120,185,255,.36),transparent 60%),
+  radial-gradient(480px 420px at 80% 96%,rgba(0,84,214,.26),transparent 62%),
+  radial-gradient(380px 360px at 10% 100%,rgba(70,190,255,.26),transparent 62%),
+  linear-gradient(180deg,#e7effb,#dfe9f8)}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .mh2-tile:not(.pri){background:rgba(255,255,255,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
 
 /* ---- dark: navy glass ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .bpx-app{background:
@@ -79,3 +98,8 @@
 @media (prefers-reduced-transparency:reduce){
   #bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.pjk-stat){-webkit-backdrop-filter:none;backdrop-filter:none}
 }
+
+/* things drawn in pale grey need a little more weight on glass */
+#bpx#bpx:not(.bpx-dark) .wg-t{stroke:rgba(40,70,120,.22)}
+#bpx#bpx:not(.bpx-dark) .wg-trk{stroke:rgba(255,255,255,.55)}
+#bpx#bpx:not(.bpx-dark) #bpxViewArea .cb-bar:not(.on),#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpc-track{opacity:1}
