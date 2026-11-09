@@ -109,27 +109,37 @@
 (function () {
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var NUM = /^([$€£]?\s?-?\$?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(\s?[%kKmM]?)$/;
-  var SKIP = '.db-kv,.hl-kv,.hl-mv,.wk-num,[data-cu],input,textarea,select,table,svg,[contenteditable],.cal-grid,.cw-wrap,.cd-wrap,.leaflet-container';
+  var SKIP = '[data-cu],input,textarea,select,table,svg,[contenteditable],.cal-grid,.cw-wrap,.cd-wrap,.leaflet-container';
+  /* the dashboard counts its own numbers (portal/dash.js countUp); everywhere else the same styles are fair game */
+  var DASH_OWN = '.db-kv,.hl-kv,.hl-mv,.wk-num';
+  /* inside a stat card a number counts even in slightly smaller type */
+  var STATBOX = '.bpx-stat,.db-st,.db-k,.pjk-stat,.rcp-stat,.cl-tile,.ws-st,.bpx-mk-card,.st-plan,.mh2-owed,[class*="stat"],[class*="kpi"],[class*="tile"]';
   var seen = {}, rising = new WeakSet();
   function view() { return window._bpCurView || ''; }
   function run(el) {
     if (rising.has(el) || el.children.length) return;
     var txt = el.textContent.trim(); if (!txt || txt.length > 16) return;
+    var tm = /^(?:(\d+)m\s?)?(\d+)s$|^(\d+)m\s?$/.exec(txt);   /* a time like 1m 42s, 45s or 3m */
+    if (tm) return runTime(el, txt, (+(tm[1] || tm[3] || 0)) * 60 + (+(tm[2] || 0)));
     var m = NUM.exec(txt); if (!m) return;
     var end = parseFloat((m[2] + (m[3] || '')).replace(/,/g, ''));
     if (!isFinite(end) || Math.abs(end) < 1) return;
     if (!m[1] && !m[4] && !m[3] && end >= 1900 && end <= 2100) return;   /* a year, not an amount */
-    var fs = parseFloat(getComputedStyle(el).fontSize) || 0; if (fs < 20) return;
+    var fs = parseFloat(getComputedStyle(el).fontSize) || 0;
+    if (fs < 15 || (fs < 20 && !el.closest(STATBOX))) return;
     if (el.closest(SKIP)) return;
+    if (view() === 'dashboard' && el.closest(DASH_OWN)) return;
     var key = view() + '|' + txt + '|' + ((el.parentElement && el.parentElement.textContent.trim().slice(0, 40)) || '');
-    if (seen[key]) return; seen[key] = 1;
+    var now = performance.now(), was = seen[key];
+    if (was && now - was > 900) return;          /* already counted on this visit */
+    if (!was) seen[key] = now;                    /* a redraw mid-count carries on from the same start */
     rising.add(el);
     var dec = m[3] ? m[3].length - 1 : 0, pre = m[1], post = m[4] || '', comma = m[2].indexOf(',') >= 0 || end >= 1000;
     var fmt = function (v) { var n = dec ? v.toFixed(dec) : String(Math.round(v)); if (comma) n = Number(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }); return pre + n + post; };
     if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block';
-    if (el.animate) el.animate([{ transform: 'translateY(10px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
-    var t0 = 0, dur = 900;
-    el.textContent = fmt(0);
+    if (!was && el.animate) el.animate([{ transform: 'translateY(10px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
+    var t0 = was || 0, dur = 900;
+    el.textContent = fmt(was ? end * (1 - Math.pow(1 - Math.min(1, (now - was) / dur), 3)) : 0);
     var step = function (t) {
       if (!t0) t0 = t;
       var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
@@ -137,6 +147,20 @@
       el.textContent = k < 1 ? fmt(end * e) : txt;
       if (k < 1) requestAnimationFrame(step); else rising.delete(el);
     };
+    requestAnimationFrame(step);
+  }
+  function runTime(el, txt, end) {
+    if (end < 2) return;
+    var fs = parseFloat(getComputedStyle(el).fontSize) || 0;
+    if (fs < 15 || (fs < 20 && !el.closest(STATBOX)) || el.closest(SKIP) || (view() === 'dashboard' && el.closest(DASH_OWN))) return;
+    var key = view() + '|' + txt + '|' + ((el.parentElement && el.parentElement.textContent.trim().slice(0, 40)) || '');
+    var now = performance.now(), was = seen[key];
+    if (was && now - was > 900) return; if (!was) seen[key] = now; rising.add(el);
+    var fmt = function (v) { v = Math.round(v); return v < 60 ? v + 's' : Math.floor(v / 60) + 'm ' + (v % 60 ? (v % 60) + 's' : ''); };
+    if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block';
+    if (!was && el.animate) el.animate([{ transform: 'translateY(10px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
+    var t0 = was || 0; el.textContent = fmt(was ? end * Math.min(1, (now - was) / 900) : 0);
+    var step = function (t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - k, 3); if (!el.isConnected) { rising.delete(el); return; } el.textContent = k < 1 ? fmt(end * e) : txt; if (k < 1) requestAnimationFrame(step); else rising.delete(el); };
     requestAnimationFrame(step);
   }
   function scan(root) {
