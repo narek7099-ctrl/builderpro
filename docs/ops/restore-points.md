@@ -109,3 +109,8 @@ Website stats and other dashboard-style tiles outside the dashboard did not coun
 Website connection was 3 manual steps: copy code, pick a platform from a list, press Check now.
 
 - live site (main): `d8cc571`
+
+## Before the cleaner Needs you / This week cards (2026-11-09)
+Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quiet week.
+
+- live site (main): `3eac1db`

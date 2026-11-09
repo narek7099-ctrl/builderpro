@@ -322,26 +322,41 @@
   /* ---------- needs attention: what is waiting on them, only when non-zero ---------- */
   function attention() {
     var rows = attRows();
-    return '<div class="bpx-panel"><div class="bpx-ptitle">Needs you<span class="lg2">' + (rows.length ? rows.length + (rows.length === 1 ? ' thing' : ' things') + ' waiting' : 'nothing waiting') + '</span></div>'
-      + (rows.length ? '<div class="dash-att">' + rows.map(function (r) { return '<div class="dash-att-r' + (r.tone ? ' ' + r.tone : '') + '" onclick="bpNav(\'' + r.go + '\')"><span class="ms">' + r.ico + '</span><span>' + r.t + '</span><span class="ms go">chevron_right</span></div>'; }).join('') + '</div>'
-        : '<div class="dash-empty">Nothing is waiting on you. Bills matched, orders sent, contracts signed.</div>') + '</div>';
+    var head = '<div class="bpx-ptitle">Needs you' + (rows.length ? '<span class="nyc-n">' + rows.length + '</span>' : '') + '</div>';
+    if (!rows.length) return '<div class="bpx-panel nyc">' + head
+      + '<div class="nyc-clear"><span class="nyc-ok"><span class="ms">check</span></span><b>You’re all caught up</b><small>Bills matched, orders sent, contracts signed.</small></div></div>';
+    return '<div class="bpx-panel nyc">' + head + '<div class="nyc-list">'
+      + rows.slice(0, 5).map(function (r) {
+        return '<button type="button" class="nyc-r ' + (r.tone || 'info') + '" onclick="bpNav(\'' + r.go + '\')"><span class="nyc-ic"><span class="ms">' + r.ico + '</span></span>'
+          + '<span class="nyc-tx"><small>' + (r.cat || 'Waiting') + '</small><b>' + r.t + '</b></span><span class="nyc-cta">' + (r.cta || 'Open') + '<span class="ms">arrow_forward</span></span></button>';
+      }).join('')
+      + (rows.length > 5 ? '<div class="nyc-more">+ ' + (rows.length - 5) + ' more in the bell</div>' : '')
+      + '</div>' + clearList(rows) + '</div>';
+  }
+  /* with only a thing or two waiting, show what was checked and is fine, so the card reads as a checklist */
+  function clearList(rows) {
+    if (rows.length > 2) return '';
+    var has = function (cat) { return rows.some(function (r) { return r.cat === cat; }); };
+    var ok = [['Overdue payment', 'Payments on time'], ['Waiting on a signature', 'Contracts signed'], ['Materials order', 'Orders sent'], ['Supply bill', 'Bills matched'], ['Messages', 'Messages answered'], ['Ready to invoice', 'Invoices sent']]
+      .filter(function (x) { return !has(x[0]); }).slice(0, 4);
+    return '<div class="nyc-okl"><small>All clear</small>' + ok.map(function (x) { return '<span><span class="ms">check_circle</span>' + x[1] + '</span>'; }).join('') + '</div>';
   }
   function attRows() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [], rows = [];
     var todayIso = new Date().toISOString().slice(0, 10);
     var late = jobs.filter(function (j) { return j.status === 'active' && j.sched && j.sched.target && String(j.sched.target) < todayIso && ((+j.estimate || 0) - (+j.collected || 0)) > 0; });
-    if (late.length) rows.push({ ico: 'schedule', n: late.length, t: late.length === 1 ? money((+late[0].estimate || 0) - (+late[0].collected || 0)) + ' still owed on ' + esc(late[0].name) + ', past its target date' : late.length + ' projects past their target date with money owed', go: 'activejobs', tone: 'bad' });
+    if (late.length) rows.push({ ico: 'schedule', n: late.length, t: late.length === 1 ? money((+late[0].estimate || 0) - (+late[0].collected || 0)) + ' still owed on ' + esc(late[0].name) + ', past its target date' : late.length + ' projects past their target date with money owed', go: 'activejobs', tone: 'bad', cat: 'Overdue payment', cta: 'Collect' });
     /* the customer said yes, but no job or invoice has started from it yet */
     var yes = jobs.filter(function (j) { return j.status === 'quote' && j.quote && j.quote.status === 'accepted'; });
-    if (yes.length) rows.push({ ico: 'task_alt', n: yes.length, t: yes.length === 1 ? esc(yes[0].name || 'A customer') + ' approved ' + esc(yes[0].title || 'an estimate') + '. Send the deposit invoice' : yes.length + ' approved estimates ready to invoice', go: 'invoices', tone: 'good' });
+    if (yes.length) rows.push({ ico: 'task_alt', n: yes.length, t: yes.length === 1 ? esc(yes[0].name || 'A customer') + ' approved ' + esc(yes[0].title || 'an estimate') + '. Send the deposit invoice' : yes.length + ' approved estimates ready to invoice', go: 'invoices', tone: 'good', cat: 'Ready to invoice', cta: 'Invoice' });
     var waiting = (D.contracts || []).filter(function (c) { return c.status === 'sent' || c.status === 'viewed'; });
-    if (waiting.length) rows.push({ ico: 'draw', n: waiting.length, t: waiting.length === 1 ? (esc(waiting[0].customer_name || waiting[0].title) + ' has not signed yet' + (waiting[0].status === 'viewed' ? ' (opened it)' : '')) : waiting.length + ' contracts waiting for a signature', go: 'activejobs' });
+    if (waiting.length) rows.push({ ico: 'draw', n: waiting.length, t: waiting.length === 1 ? (esc(waiting[0].customer_name || waiting[0].title) + ' has not signed yet' + (waiting[0].status === 'viewed' ? ' (opened it)' : '')) : waiting.length + ' contracts waiting for a signature', go: 'activejobs', cat: 'Waiting on a signature', cta: 'View' });
     var pos = (window.SP && SP.pos) || [];
     var unsent = pos.filter(function (p) { return p.status === 'sent' && !p.sent_to_supplier; }).length, bills = pos.filter(function (p) { return p.status === 'invoiced'; }).length;
-    if (unsent) rows.push({ ico: 'outgoing_mail', n: unsent, t: unsent === 1 ? 'One materials order has not been sent to the supply house' : unsent + ' materials orders not sent to the supply house', go: 'supplyorders', tone: 'warn' });
-    if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders' });
-    if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging' });
-    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' sent, not approved yet' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals' });
+    if (unsent) rows.push({ ico: 'outgoing_mail', n: unsent, t: unsent === 1 ? 'One materials order has not been sent to the supply house' : unsent + ' materials orders not sent to the supply house', go: 'supplyorders', tone: 'warn', cat: 'Materials order', cta: 'Send' });
+    if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders', cat: 'Supply bill', cta: 'Check' });
+    if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging', cat: 'Messages', cta: 'Reply' });
+    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' sent, not approved yet' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals', cat: 'Estimates out', cta: 'Follow up' });
     return rows;
   }
 
@@ -363,6 +378,9 @@
     var past = (fin.inc || []).filter(function (x) { var a = now - tsOf(x); return a >= wk && a < 9 * wk; }).reduce(function (t, x) { return t + (+x.amt || 0); }, 0) / 8;
     var W = D.wk || {}, vals = { leads: +W.leads || 0, est: +W.est || 0, signed: +W.signed || 0, paid: paid };
     var goals = { leads: 5, est: 3, signed: 1, paid: Math.max(past, 1500) };
+    /* an empty week shows a clearly-labelled example, so the gauge never sits at zero looking broken */
+    var sample = !vals.leads && !vals.est && !vals.signed && !vals.paid;
+    if (sample) { vals = { leads: 4, est: 2, signed: 1, paid: 6200 }; goals.paid = Math.max(goals.paid, 9000); }
     var fill = WK_SEG.map(function (g) { return Math.min(1, vals[g.k] / goals[g.k]); });
     var score = Math.round(fill.reduce(function (t, v) { return t + v; }, 0) / fill.length * 100);
     /* the sales-dashboard reel's gauge: a half circle of tick marks, the lit
@@ -379,32 +397,47 @@
       return '<button type="button" class="wk-row" onclick="bpNav(\'' + g.go + '\')"><i style="background:' + g.c + '"></i><span>' + g.t + '</span><b>' + v + '</b>'
         + '<span class="wk-bar"><em style="background:' + g.c + ';--w:' + Math.round(fill[i] * 100) + '%"></em></span></button>';
     }).join('');
-    return '<div class="bpx-panel wk"><div class="bpx-ptitle">Week pace<span class="lg2">last 7 days</span></div>'
+    return '<div class="bpx-panel wk' + (sample ? ' wk-sample' : '') + '"><div class="bpx-ptitle">Week pace<span class="lg2">' + (sample ? '<span class="wk-tag">Sample</span>' : 'last 7 days') + '</span></div>'
       + '<div class="wk-body"><div class="wg"><svg viewBox="0 0 220 120" aria-hidden="true"><defs><linearGradient id="wgGrad" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#b9d4ff"/><stop offset="1" stop-color="#006fff"/></linearGradient></defs>'
       + ticks + '<path class="wg-trk" d="' + arc + '"/><path class="wg-arc" pathLength="100" d="' + arc + '" style="--s:' + score + '"/>'
       + '<g class="wg-knob" style="--deg:' + (score * 1.8) + 'deg;transform-origin:' + cx + 'px ' + cy + 'px"><circle cx="' + (cx - R) + '" cy="' + cy + '" r="10"/><circle class="in" cx="' + (cx - R) + '" cy="' + cy + '" r="4.5"/></g></svg>'
       + '<div class="wg-mid"><b class="wk-num" data-cu>' + score + '</b><small>' + word + ' &middot; of 100</small></div></div>'
-      + '<div class="wk-rows" role="list" aria-label="This week: ' + score + ' out of 100">' + rows + '</div></div></div>';
+      + '<div class="wk-rows" role="list" aria-label="This week: ' + score + ' out of 100">' + rows + '</div></div>'
+      + (sample ? '<div class="wk-note"><span class="ms">info</span>Example week (sample). Your own numbers show here as leads, estimates and payments come in.</div>' : '') + '</div>';
   }
   function week() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
     var days = [], now = new Date();
-    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), lbl: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' }), num: d.getDate(), crews: [], appts: [] }); }
+    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), lbl: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' }), full: d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }), num: d.getDate(), crews: [], appts: [] }); }
     jobs.forEach(function (j) { if (j.status !== 'active' || !j.sched) return; (j.sched.dates || []).forEach(function (iso) { var day = days.filter(function (x) { return x.iso === iso; })[0]; if (day) day.crews.push(j); }); });
     (D.events || []).forEach(function (a) { var iso = String(a.start || '').slice(0, 10); var day = days.filter(function (x) { return x.iso === iso; })[0]; if (day) day.appts.push(a); });
     var busy = days.some(function (d) { return d.crews.length || d.appts.length; });
-    var strip = '<div class="dash-week">' + days.map(function (d) {
-      var n = d.crews.length + d.appts.length;
-      return '<div class="dash-day' + (n ? ' on' : '') + (d.lbl === 'Today' ? ' today' : '') + '" title="' + esc(d.crews.map(function (j) { return j.name; }).concat(d.appts.map(function (a) { return a.name; })).join(', ')) + '"><small>' + d.lbl + '</small><b>' + d.num + '</b>'
-        + '<span>' + (d.crews.length ? '<i class="c">' + d.crews.length + '</i>' : '') + (d.appts.length ? '<i class="a">' + d.appts.length + '</i>' : '') + '</span></div>';
-    }).join('') + '</div>';
-    var today = days[0], rows = [];
-    today.crews.forEach(function (j) { rows.push({ t: j.sched.time ? esc(j.sched.time) : 'All day', w: esc(j.name) + (j.title ? ', ' + esc(j.title) : ''), s: 'Crew on site', go: 'activejobs' }); });
-    today.appts.slice(0, 4).forEach(function (a) { rows.push({ t: esc(a.time || ''), w: esc(a.name || 'Appointment'), s: esc(a.what || 'Inspection'), go: 'calendar' }); });
-    return '<div class="bpx-panel"><div class="bpx-ptitle">This week<span class="lg2"><i class="dash-key c"></i>crews <i class="dash-key a"></i>appointments</span></div>' + strip
-      + (rows.length ? '<div class="dash-today">' + rows.map(function (r) { return '<div class="dash-ev" onclick="bpNav(\'' + r.go + '\')"><b>' + r.t + '</b><div><span>' + r.w + '</span><small>' + r.s + '</small></div></div>'; }).join('') + '</div>'
-        : '<div class="dash-empty" style="padding-top:10px">' + (busy ? 'Nothing on today.' : 'Nothing booked this week. Schedule days on a project.') + '</div>') + '</div>';
+    var head = '<div class="bpx-ptitle">This week<span class="lg2"><i class="dash-key c"></i>crews <i class="dash-key a"></i>appointments</span></div>';
+    if (!busy) return '<div class="bpx-panel twk">' + head + strip(days, -1)
+      + '<div class="twk-empty"><span class="twk-eic"><span class="ms">event_available</span></span><b>Nothing booked this week</b><small>Put a crew on a project and its days show up here.</small>'
+      + '<button type="button" class="bpx-btn ghost" onclick="bpNav(\'calendar\')"><span class="ms">add</span> Schedule a crew</button></div></div>';
+    var first = 0; for (var k = 0; k < days.length; k++) { if (days[k].crews.length || days[k].appts.length) { first = k; break; } }
+    var lists = days.map(function (d, i) {
+      var rows = [];
+      d.crews.forEach(function (j) { rows.push({ t: j.sched.time ? esc(j.sched.time) : 'All day', w: esc(j.name) + (j.title ? ' · ' + esc(j.title) : ''), s: 'Crew on site', k: 'c', go: 'activejobs' }); });
+      d.appts.slice(0, 4).forEach(function (a) { rows.push({ t: esc(a.time || ''), w: esc(a.name || 'Appointment'), s: esc(a.what || 'Inspection'), k: 'a', go: 'calendar' }); });
+      return '<div class="twk-day" data-i="' + i + '"' + (i === first ? '' : ' hidden') + '><div class="twk-dh">' + d.full + '</div>'
+        + (rows.length ? rows.map(function (r) { return '<button type="button" class="twk-ev ' + r.k + '" onclick="bpNav(\'' + r.go + '\')"><span class="twk-t">' + r.t + '</span><span class="twk-w"><b>' + r.w + '</b><small>' + r.s + '</small></span><span class="ms">chevron_right</span></button>'; }).join('')
+          : '<div class="twk-none">Nothing on this day.</div>') + '</div>';
+    }).join('');
+    return '<div class="bpx-panel twk">' + head + strip(days, first) + '<div class="twk-lists">' + lists + '</div></div>';
   }
+  function strip(days, sel) {
+    return '<div class="twk-strip" role="tablist">' + days.map(function (d, i) {
+      var dots = (d.crews.length ? '<i class="c"></i>' : '') + (d.appts.length ? '<i class="a"></i>' : '');
+      return '<button type="button" role="tab" class="twk-d' + (i === 0 ? ' today' : '') + (i === sel ? ' on' : '') + '" aria-selected="' + (i === sel) + '"' + (sel < 0 ? ' disabled' : ' onclick="bpDashDay(this,' + i + ')"') + '><small>' + d.lbl + '</small><b>' + d.num + '</b><span class="twk-dots">' + dots + '</span></button>';
+    }).join('') + '</div>';
+  }
+  window.bpDashDay = function (btn, i) {
+    var card = btn.closest('.twk'); if (!card) return;
+    card.querySelectorAll('.twk-d').forEach(function (b) { var on = b === btn; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    card.querySelectorAll('.twk-day').forEach(function (d) { d.hidden = +d.getAttribute('data-i') !== i; });
+  };
 
   /* ---------- recent: what happened, newest first, from timestamps we already keep ---------- */
   function activity() {
