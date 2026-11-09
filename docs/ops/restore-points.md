@@ -63,3 +63,8 @@ above the grid and the colour key under it; connected boxes showed as chips.
 Plain AI chat box (no phone header button), navy phone home, 15-step tour.
 
 - live site (main): `620ec75`
+
+## Before the glass look and removing the AI CEO bar (2026-11-09)
+Solid white cards, slate sidebar, AI CEO briefing bar at the top of the dashboard.
+
+- live site (main): `3104e25`

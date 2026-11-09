@@ -908,7 +908,7 @@
         : live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
         + topline()
         + (crew || !window.bpStormDash ? '' : bpStormDash())   /* a storm near past customers, waiting for a yes (portal/storm.js) */
-        + (crew || !window.bpCeoDashCard || locked('aiteam') ? '' : bpCeoDashCard(D.ceo))   /* the AI CEO's morning briefing (portal/aiceo.js) */
+        /* the AI CEO's briefing no longer sits on the dashboard: it already posts what it flags to the bell (portal/notify.js) */
         + cl
         + (crew
           ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
