@@ -99,3 +99,8 @@ Plain white team map with grey lines, purple AI avatars, flat chat.
 Glass AI Team map with SVG-animated dots, flowing dashed lines and pulsing glows (laggy).
 
 - live site (main): `826e942`
+
+## Before stats on every page count up (Website tiles, times) (2026-11-09)
+Website stats and other dashboard-style tiles outside the dashboard did not count up.
+
+- live site (main): `36ee7fe`
