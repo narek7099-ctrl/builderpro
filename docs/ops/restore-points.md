@@ -84,3 +84,8 @@ Blue-shine glass on the main cards only; other pages kept flat white boxes
 and underlined tabs.
 
 - live site (main): `33ee363`
+
+## Before numbers count up on every page (2026-11-09)
+Only the dashboard's numbers counted up.
+
+- live site (main): `daa91e5`
