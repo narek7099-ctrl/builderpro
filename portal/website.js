@@ -18,7 +18,26 @@
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var $ = function (id) { return document.getElementById(id); };
 
-  var W = { period: '30d', uid: null, uidAsked: false, rows: null, loading: false, loaded: false, missing: false, err: '', platform: 'wordpress', check: null };
+  var W = { period: '30d', uid: null, uidAsked: false, rows: null, loading: false, loaded: false, missing: false, err: '', platform: 'wordpress', check: null,
+    domain: '', det: null, detBusy: false, detErr: '', watch: 0, opened: false };
+  try { W.domain = localStorage.getItem('bpWebDomain') || ''; } catch (e) {}
+  var DETECT_URL = 'https://ttzwzouhiwdwamuimhpo.supabase.co/functions/v1/site-detect';
+  /* where each builder's sign-in lands, as close to the paste spot as that company allows */
+  var OPEN = {
+    wix: function () { return 'https://manage.wix.com/account/site-selector?actionUrl=' + encodeURIComponent('https://manage.wix.com/dashboard/{{metaSiteId}}/settings/custom-code') + '&title=' + encodeURIComponent('Pick the site to connect to BuilderPro'); },
+    squarespace: function (d) { return d.sqsp && d.sqsp !== 'www' ? 'https://' + d.sqsp + '.squarespace.com/config/settings' : 'https://account.squarespace.com/'; },
+    godaddy: function () { return 'https://account.godaddy.com/products'; },
+    wordpress: function (d) { return 'https://' + d.domain + '/wp-admin/plugin-install.php?s=WPCode&tab=search&type=term'; },
+    webflow: function () { return 'https://webflow.com/dashboard'; },
+    shopify: function () { return 'https://admin.shopify.com/'; },
+    duda: function () { return 'https://my.duda.co/'; },
+    weebly: function () { return 'https://squareup.com/dashboard/'; },
+    hostinger: function () { return 'https://hpanel.hostinger.com/'; },
+    hubspot: function () { return 'https://app.hubspot.com/'; },
+    framer: function () { return 'https://framer.com/projects/'; },
+    carrd: function () { return 'https://carrd.co/dashboard'; },
+    netlify: function () { return 'https://app.netlify.com/'; }
+  };
   try { var sp = localStorage.getItem('bpWebPeriod'); if (sp === '7d' || sp === '30d' || sp === '90d') W.period = sp; } catch (e) {}
   var live = function () { return !!(window.BP_LIVE && window.BP_SB); };
 
@@ -31,6 +50,13 @@
     ['shopify', 'Shopify', 'Online Store → Themes → … → Edit code → layout/theme.liquid → paste just before </head> → Save.'],
     ['netlify', 'Netlify', 'Site configuration → Build & deploy → Post processing → Snippet injection → Add snippet → Insert before </head> → paste → Save.'],
     ['github', 'GitHub / code', 'Open your site’s main HTML file (index.html or your layout template), paste just before </head>, commit and deploy.'],
+    ['duda', 'Duda', 'Site settings → Head HTML → paste → Save, then Republish.'],
+    ['weebly', 'Square Online / Weebly', 'Website → Settings → Tracking tools → Header code → paste → Save, then Publish.'],
+    ['hostinger', 'Hostinger', 'Website Builder → Settings → Integrations → Custom code → paste → Save, then Publish.'],
+    ['hubspot', 'HubSpot', 'Settings → Website → Pages → Site header HTML → paste → Save.'],
+    ['framer', 'Framer', 'Site settings → General → Custom code → Start of <head> → paste → Save, then Publish.'],
+    ['carrd', 'Carrd', 'Add element → Embed → Type: Code, Style: Hidden, Placement: Head → paste → Publish (needs Carrd Pro).'],
+    ['googlesites', 'Google Sites', 'Google Sites doesn’t allow tracking code. Connect Google Analytics instead, or move the site to another builder.'],
     ['other', 'Other / custom', 'Paste it just before </head> on every page (or in your template’s header), then publish.']
   ];
 
@@ -178,15 +204,38 @@
     if (hasData && !ck) {
       return '<div class="bpx-panel ws-inst ws-compact"><div class="ws-inst-h"><span class="ms ws-ok">check_circle</span><div><b>Tracking is on</b><div class="bpx-mut">Your site is sending visits. No cookies, no personal data.</div></div></div>' + acts + '</div>';
     }
+    var step = function (n, t, body, on) { return '<li class="ws-step' + (on ? '' : ' ws-dim') + '"><span class="ws-sn">' + n + '</span><div class="ws-sb"><b>' + t + '</b>' + body + '</div></li>'; };
+    var d = W.det, bk = d && d.builder ? d.builder.key : '', known = bk && PLATFORMS.some(function (p) { return p[0] === bk; });
+    if (known && W.platform !== bk && !W.platPicked) W.platform = bk;
+    pl = PLATFORMS.filter(function (p) { return p[0] === W.platform; })[0] || PLATFORMS[0];
     var opts = PLATFORMS.map(function (p) { return '<option value="' + p[0] + '"' + (p[0] === W.platform ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('');
-    var step = function (n, t, body) { return '<li class="ws-step"><span class="ws-sn">' + n + '</span><div class="ws-sb"><b>' + t + '</b>' + body + '</div></li>'; };
+    /* 1. their website */
+    var s1 = d
+      ? '<div class="ws-found"><span class="ms">language</span><div><b>' + esc(d.domain) + '</b><small>'
+        + (d.builder ? 'Built on <b>' + esc(d.builder.name) + '</b>' : d.reachable ? 'We couldn’t tell what it’s built on' : 'We couldn’t open this site')
+        + (d.registrar ? ' · domain at <b>' + esc(d.registrar.name) + '</b>' : '') + '</small></div><button class="bpx-linkbtn" onclick="bpWebDomainEdit()">Change</button></div>'
+      : '<form class="ws-dom" onsubmit="bpWebFind();return false"><input id="ws-dom" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yourbusiness.com" value="' + esc(W.domain) + '" aria-label="Your website address">'
+        + '<button class="bpx-btn" type="submit"' + (W.detBusy ? ' disabled' : '') + '>' + (W.detBusy ? '<span class="ms ws-spin">progress_activity</span> Looking…' : '<span class="ms">search</span> Find my site') + '</button></form>'
+        + (W.detErr ? '<div class="ws-check no"><span class="ms">error</span><span>' + esc(W.detErr) + '</span></div>' : '');
+    /* 2. one button: copies the code and opens the right sign-in */
+    var name = d && d.builder ? d.builder.name : pl[1], go = d && OPEN[W.platform] ? OPEN[W.platform](d) : (d && !d.builder && d.registrar && d.registrar.login) || '';
+    var s2 = !d ? '<div class="bpx-mut" style="font-size:12.5px">We’ll find where your site is built and take you straight there.</div>'
+      : W.platform === 'googlesites' ? '<div class="ws-tip">' + esc(pl[2]) + '</div>'
+      : '<div class="ws-sx">' + (go ? '<button class="bpx-btn ws-go" onclick="bpWebOpen()"><span class="ms">open_in_new</span> Copy code &amp; open ' + esc(d.builder || known ? name : d.registrar ? d.registrar.name : name) + '</button>' : '<button class="bpx-btn ws-copy" id="ws-copy" data-copy="' + esc(snippet()) + '" onclick="bpWebCopy(this)"><span class="ms">content_copy</span> Copy code</button>')
+        + '<button class="bpx-btn ghost ws-btn" onclick="bpWebMail()"><span class="ms">forward_to_inbox</span> Send to my web person</button></div>'
+        + '<div class="ws-tip"><b>Then:</b> ' + esc(pl[2]) + '</div>'
+        + '<div class="ws-other">' + (d.builder ? 'Not built on ' + esc(name) + '? ' : 'Where is it built? ') + '<select id="ws-plat" aria-label="Where is your site built?" onchange="bpWebPlatform(this.value)">' + opts + '</select></div>';
+    /* 3. it turns green by itself */
+    var s3 = ck && ck.ok ? status
+      : W.watch ? '<div class="ws-check"><span class="ms ws-spin">progress_activity</span><span>Watching your site. This turns green by itself once the code is published.</span></div>' + (ck && !ck.ok && !ck.wait ? status : '')
+      : '<div class="bpx-mut" style="font-size:12.5px">No button to press: once it’s pasted and published, this turns green on its own.</div>' + status;
     return '<div class="bpx-panel ws-inst">'
-      + '<div class="ws-inst-h"><div><b>Connect your website in 3 steps</b>'
-      + '<div class="bpx-mut">Takes about a minute. No cookies, no personal data.</div></div></div>'
+      + '<div class="ws-inst-h"><div><b>Connect your website</b>'
+      + '<div class="bpx-mut">Type your website and we’ll take you to the right place. No cookies, no personal data.</div></div></div>'
       + '<ol class="ws-steps">'
-      + step(1, 'Copy your code', '<div class="ws-sx"><button class="bpx-btn ws-copy" id="ws-copy" data-copy="' + esc(snippet()) + '" onclick="bpWebCopy(this)"><span class="ms">content_copy</span> Copy code</button></div>')
-      + step(2, 'Paste it into your site', '<div class="ws-sx"><select id="ws-plat" aria-label="Where is your site built?" onchange="bpWebPlatform(this.value)">' + opts + '</select></div><div class="ws-tip">' + esc(pl[2]) + '</div>')
-      + step(3, 'Check it worked', '<div class="ws-sx"><button class="bpx-btn ghost ws-btn" onclick="bpWebCheck()"><span class="ms">wifi_tethering</span> Check now</button></div><div class="bpx-mut" style="font-size:12.5px">Open your website once first, then press Check now.</div>' + status)
+      + step(1, 'Your website', s1, true)
+      + step(2, d ? 'Sign in and paste' : 'Sign in and paste', s2, !!d)
+      + step(3, 'Done', s3, !!(d && (W.watch || (ck && ck.ok))))
       + '</ol>'
       + (W.uid ? '' : '<div class="bpx-mut" style="font-size:12px;margin-top:8px">Sign in so the code carries your account and visits land in your portal.</div>')
       + '</div>';
@@ -273,6 +322,7 @@
     W.conn = true; bpNav('website');
   };
   window.bpWebsite = function () {
+    if (!W.domain) { try { var cw = ((window.bpSettingsGet && bpSettingsGet().company) || {}).website; if (cw) W.domain = String(cw); } catch (e) {} }
     css();
     if (window.BP_WEB_G) BP_WEB_G.start();
     withUid(function () {
@@ -286,7 +336,65 @@
     if (!W.uidAsked) render();
   };
   window.bpWebPeriod = function (k) { W.period = k; try { localStorage.setItem('bpWebPeriod', k); } catch (e) {} render(); };
-  window.bpWebPlatform = function (k) { W.platform = k; render(); };
+  window.bpWebPlatform = function (k) { W.platform = k; W.platPicked = true; render(); };
+  /* ---- type your website → where it's built and registered (site-detect) ---- */
+  function tok() {
+    try { return Promise.resolve(BP_SB.auth.getSession()).then(function (r) { return (r && r.data && r.data.session && r.data.session.access_token) || window.BP_ANON || ''; }, function () { return window.BP_ANON || ''; }); }
+    catch (e) { return Promise.resolve(window.BP_ANON || ''); }
+  }
+  function detect(dom) {
+    return tok().then(function (t) {
+      return fetch(DETECT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t, apikey: window.BP_ANON || t }, body: JSON.stringify({ domain: dom }) })
+        .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j && j.error || 'lookup'); return j; }); });
+    });
+  }
+  window.bpWebFind = function () {
+    var inp = $('ws-dom'), v = String((inp && inp.value) || '').trim();
+    if (!v) { W.detErr = 'Type your website address, like smithroofing.com.'; render(); return; }
+    W.domain = v; W.detBusy = true; W.detErr = ''; W.platPicked = false; render();
+    try { localStorage.setItem('bpWebDomain', v); } catch (e) {}
+    detect(v).then(function (d) {
+      W.detBusy = false; W.det = d;
+      if (d.installed) { W.check = { ok: true, msg: 'Connected. Your code is on ' + d.domain + '.' }; }
+      render(); if (d.installed && window.bpBurst) bpBurst(document.querySelector('.ws-check.ok'));
+    }, function (e) {
+      W.detBusy = false;
+      W.detErr = /bad_domain/.test(String(e && e.message)) ? 'That doesn’t look like a website address. Try something like smithroofing.com.' : 'Couldn’t look that up just now. Try again in a moment.';
+      render();
+    });
+  };
+  window.bpWebDomainEdit = function () { W.det = null; W.watch = 0; render(); var i = $('ws-dom'); if (i) { i.focus(); i.select(); } };
+  /* one tap: the code goes on the clipboard and the right sign-in opens in a new tab */
+  window.bpWebOpen = function () {
+    var d = W.det; if (!d) return;
+    var url = OPEN[W.platform] ? OPEN[W.platform](d) : (d.registrar && d.registrar.login) || '';
+    try { navigator.clipboard.writeText(snippet()); } catch (e) {}
+    if (url) window.open(url, '_blank', 'noopener');
+    if (window.bpToast) bpToast('Code copied. Paste it where it says, then publish.', 'success');
+    startWatch();
+  };
+  window.bpWebMail = function () {
+    var d = W.det || { domain: W.domain };
+    var body = 'Hi,\n\nCould you add this one line to the <head> of every page on ' + (d.domain || 'our website') + ' and publish it? It lets us see our website visits in BuilderPro.\n\n' + snippet() + '\n\nThanks!';
+    location.href = 'mailto:?subject=' + encodeURIComponent('Please add our BuilderPro code to the website') + '&body=' + encodeURIComponent(body);
+    startWatch();
+  };
+  /* watch for it: the page itself (is the code there?) and the visits table, every 8s for 15 min */
+  function startWatch() {
+    if (W.watch) return; W.watch = Date.now(); render();
+    var tick = function () {
+      if (!W.watch || !document.querySelector('.ws-inst')) { W.watch = 0; return; }
+      if (Date.now() - W.watch > 15 * 60000) { W.watch = 0; render(); return; }
+      var done = function (msg) { W.watch = 0; W.check = { ok: true, msg: msg }; W.loaded = false; load(); render(); if (window.bpBurst) bpBurst(document.querySelector('.ws-check.ok')); };
+      var next = function () { setTimeout(tick, 8000); };
+      var seen = function () {
+        if (!(live() && W.uid)) return next();
+        try { Promise.resolve(BP_SB.from('site_events').select('ts').order('ts', { ascending: false }).limit(1)).then(function (r) { if (r && r.data && r.data[0]) done('Connected. Visits are coming in.'); else next(); }, next); } catch (e) { next(); }
+      };
+      if (W.det && W.det.domain) detect(W.det.domain).then(function (d) { if (d && d.installed) done('Connected. Your code is on ' + d.domain + '.'); else seen(); }, seen); else seen();
+    };
+    setTimeout(tick, 6000);
+  }
   window.bpWebCopy = function (btn) {
     if (!W.uid && live()) { withUid(function () { btn.setAttribute('data-copy', snippet()); if (window.bpToolCopyStr) bpToolCopyStr(btn); }); return; }
     if (!W.uid) { alert('Sign in to get your own snippet. The one shown here is only an example.'); return; }
@@ -320,6 +428,14 @@
     var st = document.createElement('style'); st.id = 'ws-css';
     st.textContent = ''
       + '#bpx .ws-inst{padding:20px 22px;margin-bottom:14px}'
+      + '#bpx .ws-dom{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}#bpx .ws-dom input{flex:1;min-width:200px;height:44px;border-radius:12px;font-size:15px}'
+      + '#bpx .ws-found{display:flex;align-items:center;gap:12px;margin-top:8px;padding:10px 12px;border-radius:14px;background:rgba(0,111,255,.06);border:1px solid rgba(0,111,255,.14)}'
+      + '#bpx .ws-found>.ms{color:#006fff;font-size:22px}#bpx .ws-found>div{flex:1;min-width:0}#bpx .ws-found small{display:block;color:var(--mu);font-size:13px;margin-top:2px}#bpx .ws-found small b{color:var(--ink)}'
+      + '#bpx .ws-go{height:44px;padding:0 18px !important;font-size:14.5px}'
+      + '#bpx .ws-other{margin-top:10px;font-size:12.5px;color:var(--mu);display:flex;align-items:center;gap:8px;flex-wrap:wrap}#bpx .ws-other select{height:32px;font-size:13px}'
+      + '#bpx .ws-step.ws-dim{opacity:.55}'
+      + '#bpx .ws-inst .ws-tip{display:block;line-height:1.5}#bpx .ws-inst .ws-tip b{display:inline}'
+      + '@keyframes wsSpin{to{transform:rotate(360deg)}}#bpx .ws-spin{animation:wsSpin 1s linear infinite;display:inline-block}'
       + '#bpx .ws-inst-h{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}'
       + '#bpx .ws-inst-h b{font-size:16px;color:var(--ink)}#bpx .ws-inst-h .bpx-mut{font-size:13px;margin-top:3px;line-height:1.5;max-width:640px}'
       + '#bpx .ws-ic{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;background:var(--blue-soft,#eaf2ff);color:var(--blue)}'
