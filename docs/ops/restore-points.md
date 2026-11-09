@@ -104,3 +104,8 @@ Glass AI Team map with SVG-animated dots, flowing dashed lines and pulsing glows
 Website stats and other dashboard-style tiles outside the dashboard did not count up.
 
 - live site (main): `36ee7fe`
+
+## Before "type your website" connection (2026-11-09)
+Website connection was 3 manual steps: copy code, pick a platform from a list, press Check now.
+
+- live site (main): `d8cc571`
