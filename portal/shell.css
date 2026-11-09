@@ -534,3 +534,68 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab .hl-i{width:23px;height:23px}
 #bpx#bpx#bpx#bpx#bpx.bp-m .bpx-app.on .bp-tabbar{background:linear-gradient(180deg,rgba(226,231,239,.86),rgba(214,221,231,.84))}
 #bpx#bpx#bpx#bpx#bpx.bp-m .bp-tabbar .bp-slide:not(.moving){background:linear-gradient(180deg,#fff,#f4f7fb);box-shadow:0 2px 3px rgba(16,24,40,.08),0 8px 18px -6px rgba(16,24,40,.28),inset 0 1px 0 #fff}
+
+/* ---------- the assistant pop-up (2026-11) ----------
+   Glass header with an orb and a live dot, a welcome with tap-to-ask ideas,
+   bubbles that rise in, a typing pulse, a round send button. Desktop: a
+   floating card under the top bar. Phone: a sheet from the bottom. */
+@keyframes oawIn{from{opacity:0;transform:translate3d(0,-10px,0) scale(.97)}}
+@keyframes oawSheet{from{transform:translate3d(0,100%,0)}}
+@keyframes oawMsg{from{opacity:0;transform:translate3d(0,8px,0)}}
+@keyframes oawDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@keyframes oawLive{0%{box-shadow:0 0 0 0 rgba(18,183,106,.45)}70%{box-shadow:0 0 0 6px rgba(18,183,106,0)}100%{box-shadow:0 0 0 0 rgba(18,183,106,0)}}
+#bpx#bpx#bpx#bpx#bpx .oaw-panel{width:400px !important;max-height:min(620px,calc(100vh - 84px)) !important;border-radius:20px !important;border:1px solid #e6eaf1;background:#fff;
+  box-shadow:0 2px 6px rgba(16,24,40,.06),0 28px 60px -20px rgba(0,21,48,.35) !important;transform-origin:top right;animation:oawIn .42s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx#bpx#bpx .oaw-head{display:flex;align-items:center;gap:11px;padding:14px 14px 14px 16px;background:linear-gradient(180deg,#f5f9ff,#fff);border-bottom:1px solid #eef1f6;color:#0b1a33}
+#bpx .oaw-orb{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;
+  background:radial-gradient(circle at 30% 25%,#5aa2ff 0,#006fff 45%,#001530 100%);box-shadow:0 6px 16px -6px rgba(0,111,255,.7),inset 0 1px 0 rgba(255,255,255,.35)}
+#bpx .oaw-orb svg{width:18px;height:18px;fill:currentColor}
+#bpx .oaw-orb.lg{width:54px;height:54px;margin-bottom:12px}
+#bpx .oaw-orb.lg svg{width:26px;height:26px}
+#bpx .oaw-ht{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+#bpx .oaw-ht b{font-size:15px;font-weight:700;color:#0b1a33}
+#bpx .oaw-ht small{display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7a90;font-weight:500;margin-top:2px}
+#bpx .oaw-dot{width:7px;height:7px;border-radius:50%;background:#12b76a;animation:oawLive 2.4s infinite}
+#bpx#bpx#bpx#bpx#bpx .hl-oaw-x{width:32px;height:32px;border-radius:10px !important;font-size:20px}
+#bpx#bpx#bpx#bpx#bpx .oaw-log{padding:16px;gap:10px;background:#fff;scroll-behavior:smooth}
+#bpx .oaw-hi{display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 8px 6px;animation:oawMsg .5s cubic-bezier(.22,1,.36,1)}
+#bpx .oaw-hi b{font-size:18px;font-weight:700;letter-spacing:-.01em;color:#0b1a33}
+#bpx .oaw-hi p{margin:6px 0 16px;font-size:13.5px;line-height:1.5;color:#5b6b82;max-width:290px}
+#bpx .oaw-sugs{display:flex;flex-direction:column;gap:8px;width:100%}
+#bpx#bpx#bpx#bpx#bpx .oaw-sug{all:unset;box-sizing:border-box;cursor:pointer;width:100%;padding:11px 14px;border:1px solid #e6eaf1;border-radius:14px;background:#fff;font-size:13.5px;font-weight:500;color:#0b1a33;text-align:left;
+  display:flex;align-items:center;justify-content:space-between;transition:border-color .2s,background .2s,translate .35s cubic-bezier(.22,1,.36,1)}
+#bpx .oaw-sug::after{content:"\2192";color:#006fff;font-weight:600;opacity:.6;transition:opacity .2s,translate .3s cubic-bezier(.22,1,.36,1)}
+#bpx .oaw-sug:hover{border-color:#bcd6ff;background:#f5f9ff;translate:0 -1px}
+#bpx .oaw-sug:hover::after{opacity:1;translate:3px 0}
+#bpx#bpx#bpx#bpx#bpx .oaw-m{max-width:84%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;animation:oawMsg .38s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx#bpx#bpx .oaw-m.u{background:linear-gradient(180deg,#1a7dff,#006fff);color:#fff;border:0;border-bottom-right-radius:6px;box-shadow:0 6px 14px -8px rgba(0,111,255,.8)}
+#bpx#bpx#bpx#bpx#bpx .oaw-m.b{background:#f3f6fb;border:0;color:#0b1a33;border-bottom-left-radius:6px}
+#bpx .oaw-typing{display:inline-flex;gap:4px;align-items:center;padding:13px 15px !important}
+#bpx .oaw-typing i{width:7px;height:7px;border-radius:50%;background:#7d8ca3;animation:oawDot 1.2s infinite}
+#bpx .oaw-typing i:nth-child(2){animation-delay:.15s}#bpx .oaw-typing i:nth-child(3){animation-delay:.3s}
+#bpx#bpx#bpx#bpx#bpx .oaw-in{gap:8px;padding:12px;border-top:1px solid #eef1f6;background:#fff;align-items:center}
+#bpx#bpx#bpx#bpx#bpx .oaw-in input{height:44px;border-radius:999px !important;padding:0 18px !important;background:#f3f6fb !important;border:1px solid transparent !important;font-size:14px;transition:border-color .2s,background .2s,box-shadow .2s}
+#bpx#bpx#bpx#bpx#bpx .oaw-in input:focus{background:#fff !important;border-color:#9cc3ff !important;box-shadow:0 0 0 4px rgba(0,111,255,.12)}
+#bpx#bpx#bpx#bpx#bpx .oaw-in button{flex:none;width:44px;height:44px;padding:0;border-radius:50% !important;display:grid;place-items:center;background:linear-gradient(180deg,#1a7dff,#006fff);box-shadow:0 8px 18px -8px rgba(0,111,255,.9);transition:transform .25s cubic-bezier(.22,1,.36,1)}
+#bpx .oaw-in button svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#bpx .oaw-in button:hover{transform:translateY(-1px) scale(1.04)}
+#bpx .oaw-in button:active{transform:scale(.94)}
+/* dark */
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-panel{background:#0f1522;border-color:#233043}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-head{background:linear-gradient(180deg,#121b2d,#0f1522);border-color:#233043}
+#bpx.bpx-dark .oaw-ht b,#bpx.bpx-dark .oaw-hi b{color:#eef3fb}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-log,#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-in{background:#0f1522;border-color:#233043}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-m.b{background:#18213a;color:#e3eaf5}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-sug{background:#121a2b;border-color:#233043;color:#e3eaf5}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .oaw-in input{background:#18213a !important;color:#eef3fb !important}
+/* phone: a sheet from the bottom, over the tab bar */
+#bpx#bpx#bpx#bpx#bpx.bp-m .oaw-panel{left:0 !important;right:0 !important;top:auto !important;bottom:0 !important;width:auto !important;height:min(82dvh,680px);max-height:none !important;
+  border-radius:24px 24px 0 0 !important;border-bottom:0;z-index:4000 !important;padding-bottom:env(safe-area-inset-bottom);animation:oawSheet .45s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 -12px 40px -10px rgba(0,21,48,.35),0 0 0 100vmax rgba(0,21,48,.28) !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .oaw-head{padding-top:22px;position:relative}
+#bpx#bpx#bpx#bpx#bpx.bp-m .oaw-head::before{content:"";position:absolute;top:8px;left:50%;width:38px;height:5px;margin-left:-19px;border-radius:3px;background:#d5dce8}
+#bpx#bpx#bpx#bpx#bpx.bp-m .oaw-in input{font-size:16px}
+/* phone header: the Ask AI button comes back as a blue orb icon */
+#bpx#bpx#bpx#bpx#bpx.bp-m .hl-rb.p{display:grid !important;width:40px;height:40px;border-radius:50% !important;background:radial-gradient(circle at 30% 25%,#5aa2ff 0,#006fff 50%,#0040a8 100%) !important;color:#fff !important;margin-right:2px;box-shadow:0 6px 14px -8px rgba(0,111,255,.9)}
+#bpx#bpx#bpx#bpx#bpx.bp-m .hl-rb.p .hl-i{width:19px;height:19px}
+@media (prefers-reduced-motion:reduce){#bpx .oaw-panel,#bpx .oaw-m,#bpx .oaw-hi,#bpx .oaw-dot,#bpx .oaw-typing i{animation:none !important}}

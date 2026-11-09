@@ -613,3 +613,46 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 #bpx#bpx#bpx#bpx.bp-m .cal-nav button{min-width:44px !important;min-height:44px !important}
 #bpx#bpx#bpx#bpx.bp-m .bpt-shgrid .bpt-chip{min-height:42px !important;display:inline-flex !important;align-items:center}
+
+/* =====================================================================
+   PHONE, same look as the computer (2026-11): our blue, white cards with
+   the soft edge, no navy block, a press-in on every tap, cards rising in.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx#bpx.bp-m{--bl:#006fff;--bl-l:#eaf2ff;--nv:#001530}
+#bpx#bpx#bpx#bpx#bpx.bp-m .bp-tab-plus{background:radial-gradient(circle at 30% 25%,#4a9bff 0,#006fff 55%,#0050c8 100%);box-shadow:0 10px 22px -6px rgba(0,111,255,.6),0 0 0 5px var(--card,#fff)}
+/* home: the header stays light like every other page */
+#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop{background:var(--card,#fff) !important;border-bottom:1px solid #eef1f6 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct,#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct b{color:var(--ink) !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct small,#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .bp-macct-chev{color:var(--mu) !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .hl-rb:not(.p){color:var(--ink) !important;background:transparent !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .hl-av{background:#475467 !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-hero{background:transparent;color:var(--ink);padding:16px 16px 0}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-hero>small{color:var(--mu);font-size:13px;padding:0 4px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-hero h2{color:var(--ink);font-size:26px;margin:0 0 14px;padding:0 4px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-owed{box-sizing:border-box;width:100%;background:var(--card,#fff);border:1px solid #e6eaf1;border-radius:22px;padding:18px 18px 0;
+  box-shadow:0 1px 2px rgba(16,24,40,.04),0 14px 30px -20px rgba(16,24,40,.3);gap:4px;transition:transform .3s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-owed span{color:#6b7a90;font-size:14px;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-owed b{color:var(--ink);font-size:40px;letter-spacing:-.03em}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-owed small{color:#6b7a90;font-size:13.5px}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-owed::after{content:"See invoices \2192";display:block;margin-top:14px;padding:13px 0 14px;border-top:1px solid #eef1f6;color:var(--bl);font-size:14px;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body{margin-top:14px}
+#bpx#bpx#bpx#bpx#bpx.bp-m :is(.mh2-tiles,.mh2-card){border:1px solid #e6eaf1;border-radius:22px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 14px 30px -22px rgba(16,24,40,.28)}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-tile{transition:transform .25s cubic-bezier(.22,1,.36,1),background .2s}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-tile.pri{background:linear-gradient(180deg,#1a7dff,#006fff);color:#fff;box-shadow:0 10px 20px -12px rgba(0,111,255,.9)}
+/* press-in on every tap target */
+#bpx#bpx#bpx#bpx#bpx.bp-m :is(.mh2-owed,.mh2-tile,.mh2-row,.mh2-today,.bpx-panel,.bpx-stat,.pj-card,.pjk-stat,.bp-create-big button,.bp-create-list button,.oaw-sug):active{transform:scale(.975);transition-duration:.12s}
+#bpx#bpx#bpx#bpx#bpx.bp-m :is(.bpx-btn,.bpx-rowbtn,.hl-rb,.bp-tab):active{transform:scale(.95)}
+/* home cards rise in one after another */
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-hero,#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>*{animation:moRise .55s cubic-bezier(.22,1,.36,1) backwards}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>:nth-child(1){animation-delay:.05s}#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>:nth-child(2){animation-delay:.1s}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>:nth-child(3){animation-delay:.15s}#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>:nth-child(4){animation-delay:.2s}
+#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>:nth-child(n+5){animation-delay:.25s}
+/* every other page's cards wear the same edge as on the computer */
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.pjk-stat){border:1px solid #e6eaf1 !important;border-radius:18px !important;background:#fff !important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 10px 24px -18px rgba(16,24,40,.25) !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-one{padding:0 !important}
+/* dark */
+#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh2-owed,#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark :is(.mh2-tiles,.mh2-card){background:var(--card);border-color:#233043}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark.bp-m-home #hlTop{border-bottom-color:#233043 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bpx-dark .mh2-owed::after{border-top-color:#233043}
+@media (prefers-reduced-motion:reduce){#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-hero,#bpx#bpx#bpx#bpx#bpx.bp-m .mh2-body>*{animation:none}}
+#bpx#bpx#bpx#bpx#bpx.bp-m.bp-m-home #hlTop .hl-rb.p{background:radial-gradient(circle at 30% 25%,#5aa2ff 0,#006fff 50%,#0040a8 100%) !important;color:#fff !important}
