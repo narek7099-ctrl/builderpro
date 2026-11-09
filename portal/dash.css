@@ -1262,3 +1262,92 @@
 #bpx.bpx-dark .cal-one>.cal-rail{background:#0f1522;border-color:#233043}
 #bpx.bpx-dark .cal-rail>.cal-sec{border-color:#233043}
 #bpx.bpx-dark .cal-rail .cal-up-d{background:#121826}
+
+/* ---------- Needs you (2026-11): each thing as a row with a coloured icon,
+   a small label, the thing itself and an action; a real all-clear ---------- */
+#bpx .nyc{display:flex;flex-direction:column}
+#bpx .nyc .bpx-ptitle{display:flex;align-items:center;gap:8px}
+#bpx .nyc-n{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#fdecec;color:#c0262d;font-size:12px;font-weight:700;margin-left:2px}
+#bpx .nyc-list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+#bpx#bpx#bpx .nyc-r{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:14px;cursor:pointer;
+  background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.1);box-shadow:inset 0 1px 0 #fff;transition:translate .35s cubic-bezier(.22,1,.36,1),border-color .25s,box-shadow .3s}
+#bpx#bpx#bpx .nyc-r:hover{translate:0 -2px;border-color:rgba(0,111,255,.28);box-shadow:inset 0 1px 0 #fff,0 12px 24px -16px rgba(0,60,160,.45)}
+#bpx .nyc-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#eaf2ff;color:#006fff}
+#bpx .nyc-ic .ms{font-size:21px}
+#bpx .nyc-r.bad .nyc-ic{background:#fdecec;color:#d12f36}
+#bpx .nyc-r.warn .nyc-ic{background:#fff4e0;color:#c46a00}
+#bpx .nyc-r.good .nyc-ic{background:#e6f7ef;color:#12875a}
+#bpx .nyc-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx .nyc-tx small{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:#6b7a90;text-transform:uppercase}
+#bpx .nyc-r.bad .nyc-tx small{color:#c0262d}#bpx .nyc-r.warn .nyc-tx small{color:#b25f00}#bpx .nyc-r.good .nyc-tx small{color:#12875a}
+#bpx .nyc-tx b{font-size:14px;font-weight:600;line-height:1.35;color:var(--ink,#0b1a33)}
+#bpx .nyc-cta{flex:none;display:inline-flex;align-items:center;gap:4px;padding:7px 11px;border-radius:999px;background:#fff;border:1px solid rgba(0,111,255,.16);color:#0050c8;font-size:12.5px;font-weight:600;transition:background .2s,color .2s}
+#bpx .nyc-cta .ms{font-size:16px;transition:translate .3s cubic-bezier(.22,1,.36,1)}
+#bpx .nyc-r:hover .nyc-cta{background:#006fff;color:#fff;border-color:transparent}
+#bpx .nyc-r:hover .nyc-cta .ms{translate:2px 0}
+#bpx .nyc-more{font-size:12.5px;color:var(--mu);padding:2px 4px}
+#bpx .nyc-clear{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:18px 8px 8px}
+#bpx .nyc-ok{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;margin-bottom:8px;color:#fff;background:radial-gradient(circle at 30% 25%,#5fe0a8 0,#12b76a 55%,#0a7d4a 100%);box-shadow:0 10px 22px -10px rgba(18,183,106,.8),0 0 0 8px rgba(18,183,106,.1)}
+#bpx .nyc-ok .ms{font-size:28px}
+#bpx .nyc-clear b{font-size:15.5px}#bpx .nyc-clear small{font-size:13px;color:var(--mu)}
+@media (max-width:760px){#bpx .nyc-cta{padding:7px 9px}#bpx .nyc-cta{font-size:0}#bpx .nyc-cta .ms{font-size:18px}}
+
+/* ---------- This week (2026-11): day pills you can tap, dots for what's on,
+   that day's list underneath; a real empty state ---------- */
+#bpx .twk{display:flex;flex-direction:column}
+#bpx .twk-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:6px 0 12px}
+#bpx#bpx#bpx .twk-d{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0 7px;border-radius:14px;cursor:pointer;
+  background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.1);box-shadow:inset 0 1px 0 #fff;transition:background .25s,border-color .25s,translate .3s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx .twk-d:disabled{cursor:default}
+#bpx#bpx#bpx .twk-d:not(:disabled):hover{translate:0 -2px;border-color:rgba(0,111,255,.28)}
+#bpx .twk-d small{font-size:11px;font-weight:600;color:#6b7a90}
+#bpx .twk-d b{font-size:17px;font-weight:700;color:var(--ink,#0b1a33);font-variant-numeric:tabular-nums}
+#bpx .twk-dots{display:flex;gap:3px;height:6px;margin-top:2px}
+#bpx .twk-dots i{width:6px;height:6px;border-radius:50%}
+#bpx .twk-dots i.c{background:#2f80ff}#bpx .twk-dots i.a{background:#22a06b}
+#bpx#bpx#bpx .twk-d.today{border-color:rgba(0,111,255,.35)}
+#bpx#bpx#bpx .twk-d.today small{color:#006fff}
+#bpx#bpx#bpx .twk-d.on{background:linear-gradient(180deg,#3593ff,#006fff 55%,#0062e6);border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 20px -10px rgba(0,111,255,.85)}
+#bpx#bpx#bpx .twk-d.on small,#bpx#bpx#bpx .twk-d.on b{color:#fff}
+#bpx .twk-d.on .twk-dots i{background:#fff}
+#bpx .twk-dh{font-size:12px;font-weight:600;color:#6b7a90;margin:0 2px 6px}
+#bpx .twk-day{display:flex;flex-direction:column;gap:6px;animation:moRise .4s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx .twk-ev{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.1);border-left:3px solid #2f80ff}
+#bpx#bpx#bpx .twk-ev.a{border-left-color:#22a06b}
+#bpx#bpx#bpx .twk-ev:hover{background:#fff;border-color:rgba(0,111,255,.25)}
+#bpx .twk-t{flex:none;width:56px;font-size:12.5px;font-weight:700;color:#3c4c63;font-variant-numeric:tabular-nums}
+#bpx .twk-w{flex:1;min-width:0;display:flex;flex-direction:column}
+#bpx .twk-w b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .twk-w small{font-size:12px;color:var(--mu)}
+#bpx .twk-ev>.ms{color:#98a2b3;font-size:20px}
+#bpx .twk-none{font-size:13px;color:var(--mu);padding:8px 2px}
+#bpx .twk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:6px 8px 4px}
+#bpx .twk-eic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;margin-bottom:8px;color:#006fff;background:linear-gradient(180deg,#f2f7ff,#e2edff);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.12)}
+#bpx .twk-eic .ms{font-size:24px}
+#bpx .twk-empty b{font-size:15px}#bpx .twk-empty small{font-size:13px;color:var(--mu);max-width:260px}
+#bpx .twk-empty .bpx-btn{margin-top:10px}
+
+/* ---------- Week pace: the sample label ---------- */
+#bpx .wk-tag{display:inline-block;padding:2px 9px;border-radius:999px;background:#fff4e0;color:#b25f00;font-size:11.5px;font-weight:700;letter-spacing:.02em}
+#bpx .wk-note{display:flex;gap:6px;align-items:flex-start;margin-top:10px;font-size:12px;line-height:1.45;color:#6b7a90}
+#bpx .wk-note .ms{font-size:15px;margin-top:1px;color:#b25f00}
+
+/* dark */
+#bpx.bpx-dark .nyc-r,#bpx.bpx-dark .twk-d,#bpx.bpx-dark .twk-ev{background:rgba(255,255,255,.04)!important;border-color:rgba(255,255,255,.08)!important;box-shadow:none!important}
+#bpx.bpx-dark .nyc-cta{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#9cc3ff}
+#bpx.bpx-dark .twk-d.on{background:linear-gradient(180deg,#3593ff,#006fff)!important}
+#bpx .twk-day[hidden]{display:none}
+#bpx .nyc-okl{margin-top:auto;padding-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;border-top:1px dashed rgba(0,111,255,.14);margin-top:14px}
+#bpx .nyc-okl small{grid-column:1/-1;font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#6b7a90}
+#bpx .nyc-okl span{display:flex;align-items:center;gap:6px;font-size:13px;color:#3c4c63}
+#bpx .nyc-okl .ms{font-size:17px;color:#12b76a}
+/* narrow cards (iPad, collapsed rails): the action becomes just an arrow, lists go one column */
+#bpx .nyc,#bpx .wk{container-type:inline-size}
+@container (max-width:360px){
+  #bpx .nyc-cta{font-size:0;padding:8px}#bpx .nyc-cta .ms{font-size:18px}
+  #bpx .nyc-okl{grid-template-columns:1fr}
+  #bpx .nyc-tx b{font-size:13.5px}
+}
+@container (max-width:330px){
+  #bpx .wk-rows{grid-template-columns:1fr !important}
+}
