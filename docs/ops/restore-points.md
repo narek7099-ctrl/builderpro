@@ -73,3 +73,8 @@ Solid white cards, slate sidebar, AI CEO briefing bar at the top of the dashboar
 Frosted but mostly white cards over a light blue background.
 
 - live site (main): `a093bf3`
+
+## Before the white background with blue-shine glass (2026-11-09)
+See-through glass cards over a strong blue-tinted background.
+
+- live site (main): `2238ce8`
