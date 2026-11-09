@@ -89,3 +89,8 @@ and underlined tabs.
 Only the dashboard's numbers counted up.
 
 - live site (main): `daa91e5`
+
+## Before the AI Team redesign (2026-11-09)
+Plain white team map with grey lines, purple AI avatars, flat chat.
+
+- live site (main): `2e01f76`
