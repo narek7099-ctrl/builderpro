@@ -98,3 +98,72 @@
     }
   };
 })();
+
+/* ---- every big number in the software counts up and rises in (2026-11) ----
+   The dashboard already does this for its own numbers (portal/dash.js
+   countUp); this does the same for the rest: any large figure on a page,
+   money, a count or a percent, runs up from zero in 0.9s with a small rise
+   the first time it appears after a page opens. It looks for numbers set in
+   big type (20px and up) so labels, dates, phone numbers and table cells are
+   left alone. Reduced motion: no animation. */
+(function () {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var NUM = /^([$€£]?\s?-?\$?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(\s?[%kKmM]?)$/;
+  var SKIP = '.db-kv,.hl-kv,.hl-mv,.wk-num,[data-cu],input,textarea,select,table,svg,[contenteditable],.cal-grid,.cw-wrap,.cd-wrap,.leaflet-container';
+  var seen = {}, rising = new WeakSet();
+  function view() { return window._bpCurView || ''; }
+  function run(el) {
+    if (rising.has(el) || el.children.length) return;
+    var txt = el.textContent.trim(); if (!txt || txt.length > 16) return;
+    var m = NUM.exec(txt); if (!m) return;
+    var end = parseFloat((m[2] + (m[3] || '')).replace(/,/g, ''));
+    if (!isFinite(end) || Math.abs(end) < 1) return;
+    if (!m[1] && !m[4] && !m[3] && end >= 1900 && end <= 2100) return;   /* a year, not an amount */
+    var fs = parseFloat(getComputedStyle(el).fontSize) || 0; if (fs < 20) return;
+    if (el.closest(SKIP)) return;
+    var key = view() + '|' + txt + '|' + ((el.parentElement && el.parentElement.textContent.trim().slice(0, 40)) || '');
+    if (seen[key]) return; seen[key] = 1;
+    rising.add(el);
+    var dec = m[3] ? m[3].length - 1 : 0, pre = m[1], post = m[4] || '', comma = m[2].indexOf(',') >= 0 || end >= 1000;
+    var fmt = function (v) { var n = dec ? v.toFixed(dec) : String(Math.round(v)); if (comma) n = Number(n).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }); return pre + n + post; };
+    if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block';
+    if (el.animate) el.animate([{ transform: 'translateY(10px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
+    var t0 = 0, dur = 900;
+    el.textContent = fmt(0);
+    var step = function (t) {
+      if (!t0) t0 = t;
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      if (!el.isConnected) { rising.delete(el); return; }
+      el.textContent = k < 1 ? fmt(end * e) : txt;
+      if (k < 1) requestAnimationFrame(step); else rising.delete(el);
+    };
+    requestAnimationFrame(step);
+  }
+  function scan(root) {
+    if (!root || root.nodeType !== 1) return;
+    var list = root.matches && !root.children.length ? [root] : root.querySelectorAll('b,strong,span,div,p,h1,h2,h3,h4,em');
+    for (var i = 0; i < list.length && i < 400; i++) { if (!list[i].children.length) run(list[i]); }
+  }
+  var pend = [], tmr = 0;
+  function flush() { tmr = 0; var a = pend; pend = []; a.forEach(function (n) { if (n.isConnected) scan(n); }); }
+  function watch() {
+    var area = document.getElementById('bpxViewArea'); if (!area) return setTimeout(watch, 600);
+    new MutationObserver(function (ms) {
+      ms.forEach(function (mu) {
+        if (mu.type !== 'childList') return;
+        var t = mu.target; if (t.nodeType === 3) t = t.parentElement;
+        /* our own count-up writes text too: ignore those */
+        if (t && rising.has(t)) return;
+        if (mu.addedNodes.length) pend.push(t && t.nodeType === 1 && mu.addedNodes.length === 1 && mu.addedNodes[0].nodeType === 3 ? t : mu.addedNodes[0].nodeType === 1 ? mu.addedNodes[0] : t);
+        for (var i = 1; i < mu.addedNodes.length; i++) if (mu.addedNodes[i].nodeType === 1) pend.push(mu.addedNodes[i]);
+      });
+      if (pend.length) flush();   /* before the browser paints, so the final number never flashes first */
+    }).observe(area, { childList: true, subtree: true });
+  }
+  /* opening a page again plays its numbers again */
+  function hookNav() {
+    if (typeof window.bpNav !== 'function' || window.bpNav._cu) return setTimeout(hookNav, 500);
+    var f = window.bpNav; window.bpNav = function (v) { seen = {}; return f.apply(this, arguments); }; window.bpNav._cu = 1;
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { watch(); hookNav(); }); else { watch(); hookNav(); }
+})();
