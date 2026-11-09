@@ -172,16 +172,21 @@
     return '<button type="button" class="aib-n' + cls + '" data-open="' + k + '"' + style + '><span class="aib-box"><span class="aib-i"><span class="ms">' + AG[k].ic + '</span></span><span class="aib-tx"><b>' + esc(AG[k].n) + '</b><em>' + esc(AG[k].d) + '</em>' + chipsOf(k) + (taskPill(k) ? '<span class="aib-tks">' + taskPill(k) + '</span>' : '') + '</span></span></button>';
   }
   function boardHtml(live) {
-    var W = 1000, H = 860, cx = 500, cy = 430, rx = 380, ry = 345, svg = '', nodes = '';
+    var W = 1000, H = 860, cx = 500, cy = 430, rx = 380, ry = 345, svg = '', nodes = '', rails = '';
     RING.forEach(function (k, i) {
       var ang = (-90 + i * 360 / RING.length) * Math.PI / 180, x = cx + rx * Math.cos(ang), y = cy + ry * Math.sin(ang), id = 'aibl' + k;
-      svg += '<path id="' + id + '" class="aib-ln" d="M' + cx + ',' + cy + ' L' + x + ',' + y + '"/><circle r="2.4" class="aib-pk"><animateMotion dur="' + (4.8 + (i % 4) * 0.7) + 's" begin="' + (i * 0.55) + 's" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .25 1"><mpath href="#' + id + '"/></animateMotion></circle>';
+      svg += '<path id="' + id + '" class="aib-ln" d="M' + cx + ',' + cy + ' L' + x + ',' + y + '"/>';
+      /* the dot that runs out along the line: an HTML rail turned toward the assistant, and a dot slid along it
+         with transform only, so the graphics card moves it and nothing gets repainted (the box keeps the
+         1000:860 shape, so lengths and angles in that space hold at any size) */
+      var len = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)), deg = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
+      rails += '<i class="aib-rail" style="width:' + (len / W * 100).toFixed(2) + '%;transform:rotate(' + deg.toFixed(2) + 'deg)"><b style="animation-duration:' + (4.8 + (i % 4) * 0.7) + 's;animation-delay:' + (i * 0.55) + 's"></b></i>';
       nodes += nodeHtml(k, '', ' style="--dl:' + (0.12 + i * 0.05) + 's;left:' + (x / W * 100) + '%;top:' + (y / H * 100) + '%"');
     });
     nodes += nodeHtml('ceo', ' aib-ceo', ' style="--dl:0s;left:50%;top:50%"');
     var list = '<div class="aib-list">' + ['ceo'].concat(RING).map(function (k) { return nodeHtml(k, k === 'ceo' ? ' aib-ceo' : '', ''); }).join('') + '</div>';
     var nt = A.st && A.st.tasks ? Object.keys(A.st.tasks).reduce(function (s, k) { return s + A.st.tasks[k].open + A.st.tasks[k].doing; }, 0) : 0;
-    return '<div class="aib"><div class="aib-wrap"><div class="aib-in"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + svg + '</svg>' + nodes + '</div></div>' + list
+    return '<div class="aib"><div class="aib-wrap"><div class="aib-in"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' + svg + '</svg>' + rails + nodes + '</div></div>' + list
       + '<div class="aib-foot"><span class="aib-on">' + (live ? 'online' : 'preview') + '</span>' + (live ? '<span>' + A.st.used + ' of ' + A.st.cap + ' messages this month</span><span>' + nt + ' on the task board</span><span>' + (A.st.pending || 0) + ' waiting for you</span><span>daily brief 7am</span>' : '<span>AI CEO + ' + RING.length + ' assistants</span><span>you approve before anything sends</span>') + '</div></div>';
   }
   function boardCss() {
@@ -191,6 +196,11 @@
       + '.aib-wrap{position:relative;width:100%}.aib-in{position:relative;width:100%;aspect-ratio:1000/860}'
       + '.aib-in>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}'
       + '.aib-ln{fill:none;stroke:var(--line,#c9d3df);stroke-width:1.3}.aib-t{stroke-dasharray:3 4;stroke:#cfd8e3}.aib-pk{fill:#2457d6;opacity:.7}'
+      + '.aib-rail{position:absolute;left:50%;top:50%;height:0;transform-origin:0 0;pointer-events:none}'
+      + '.aib-rail b{position:absolute;left:0;top:0;width:100%;height:0;will-change:transform,opacity;animation:aibRun 5s cubic-bezier(.45,0,.25,1) infinite backwards}'
+      + '.aib-rail b::after{content:"";position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#006fff;box-shadow:0 0 0 4px rgba(0,111,255,.18)}'
+      + '@keyframes aibRun{0%{transform:translateX(0);opacity:0}12%{opacity:1}85%{opacity:1}100%{transform:translateX(100%);opacity:0}}'
+      + '@media (prefers-reduced-motion:reduce){.aib-rail{display:none}}'
       + '.aib-n{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;opacity:0;animation:aibPop .6s cubic-bezier(.2,0,0,1) forwards;animation-delay:var(--dl,0s)}'
       + '@keyframes aibPop{from{opacity:0;transform:translate(-50%,-44%)}to{opacity:1;transform:translate(-50%,-50%)}}'
       + '.aib-box{display:flex;align-items:center;gap:10px;width:200px;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);border-radius:12px;padding:10px 12px;text-align:left;box-shadow:0 4px 14px -10px rgba(0,21,48,.3);transition:border-color .2s,transform .2s,box-shadow .2s}'
