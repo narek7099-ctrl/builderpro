@@ -77,3 +77,56 @@
 #bpx .bpt .bpt-x{display:grid !important;width:30px !important;height:30px !important;min-height:0 !important;padding:0 !important;margin:0 !important;flex:0 0 30px;border:0 !important;background:transparent !important}
 #bpx .bpt .bpt-b{min-height:0 !important;margin:0 !important;width:auto !important}
 #bpx .bpt .bpt-b.pri{margin-left:auto !important}
+
+/* ---------- cleaner, smoother (2026-11) ----------
+   Our blue, a thin progress bar along the top edge, one Skip, the words fade
+   while the card and the spotlight glide to the next stop. Phone: a sheet. */
+#bpx .bpt-card{width:360px;border-radius:20px;padding:20px 20px 16px;border:1px solid #e6eaf1;
+  box-shadow:0 2px 6px rgba(16,24,40,.06),0 30px 60px -20px rgba(0,21,48,.45);
+  transition:left .5s cubic-bezier(.22,1,.36,1),top .5s cubic-bezier(.22,1,.36,1);animation:bptCard .45s cubic-bezier(.22,1,.36,1)}
+@keyframes bptCard{from{opacity:0;transform:translate3d(0,10px,0) scale(.98)}}
+#bpx .bpt-card.mid{animation:bptCardMid .45s cubic-bezier(.22,1,.36,1)}
+@keyframes bptCardMid{from{opacity:0;transform:translate(-50%,-46%) scale(.98)}}
+#bpx .bpt-bar{position:absolute;left:0;right:0;top:0;height:4px;background:#eef1f6}
+#bpx .bpt-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4a9bff,#006fff);border-radius:0 4px 4px 0;transition:width .5s cubic-bezier(.22,1,.36,1)}
+#bpx .bpt .bpt-top{margin:2px 0 4px}
+#bpx .bpt-n{font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#0050c8;background:#eaf2ff;padding:4px 10px;border-radius:999px}
+#bpx .bpt .bpt-skip{all:unset;cursor:pointer;font-size:13px;font-weight:600;color:#6b7a90 !important;padding:6px 4px}
+#bpx .bpt .bpt-skip:hover{color:#0b1a33 !important}
+#bpx .bpt .bpt-skip[hidden]{display:none}
+#bpx .bpt-body{transition:opacity .16s ease,transform .16s ease}
+#bpx .bpt-body.out{opacity:0;transform:translateY(4px)}
+#bpx .bpt-h{font-size:19px;margin:10px 0 6px;color:#0b1a33}
+#bpx .bpt-p{font-size:14px;color:#5b6b82}
+#bpx .bpt-do{background:transparent;padding:0;margin:12px 0 0;color:#0050c8;font-weight:600;font-size:13.5px;align-items:center}
+#bpx .bpt-do .ms{color:#006fff;font-size:19px}
+#bpx .bpt .bpt-act{margin-top:18px}
+#bpx .bpt-b{height:42px;border-radius:12px;transition:transform .2s cubic-bezier(.22,1,.36,1),filter .2s}
+#bpx .bpt-b.pri{background:linear-gradient(180deg,#1a7dff,#006fff);box-shadow:0 8px 18px -10px rgba(0,111,255,.9);padding:0 20px}
+#bpx .bpt-b:active{transform:scale(.96)}
+#bpx .bpt-back{width:42px;padding:0}
+#bpx .bpt-ring{border-color:#006fff;border-radius:14px}
+#bpx .bpt-spot{border-radius:14px;box-shadow:0 0 0 9999px rgba(0,21,48,.5);transition:left .5s cubic-bezier(.22,1,.36,1),top .5s cubic-bezier(.22,1,.36,1),width .5s cubic-bezier(.22,1,.36,1),height .5s cubic-bezier(.22,1,.36,1),opacity .25s}
+#bpx .bpt.dim .bpt-shade{background:rgba(0,21,48,.5)}
+#bpx .bpt-hero{background:radial-gradient(circle at 30% 25%,#4a9bff 0,#006fff 50%,#001530 100%) !important;border-radius:16px;box-shadow:0 10px 24px -10px rgba(0,111,255,.7)}
+#bpx .bpt-hero img{filter:brightness(0) invert(1)}
+#bpx .bpt-card.welcome{width:400px;padding:26px 24px 18px}
+#bpx .welcome .bpt-h{font-size:24px}
+#bpx .bpt-foot{border-top:1px solid #eef1f6;color:#6b7a90}
+#bpx.bpx-dark .bpt-card{border-color:#233043}
+#bpx.bpx-dark .bpt-h{color:#eef3fb}
+#bpx.bpx-dark .bpt-bar{background:#1c2536}
+#bpx.bpx-dark .bpt-n{background:#18264a;color:#bcd3ff}
+@media (max-width:640px){
+  #bpx .bpt-card,#bpx .bpt-card.mid{left:0 !important;right:0 !important;bottom:0 !important;top:auto !important;width:auto !important;transform:none;border-radius:24px 24px 0 0;
+    padding:20px 18px calc(16px + env(safe-area-inset-bottom));border-bottom:0;animation:bptSheet .45s cubic-bezier(.22,1,.36,1)}
+  @keyframes bptSheet{from{transform:translate3d(0,100%,0)}}
+  #bpx .bpt-bar{left:18px;right:18px;top:8px;height:4px;border-radius:4px;overflow:hidden}
+  #bpx .bpt .bpt-top{margin-top:8px}
+  #bpx .bpt-b{height:48px}
+  #bpx .bpt-back{width:48px}
+  #bpx .bpt-card.welcome{padding:24px 18px calc(18px + env(safe-area-inset-bottom))}
+}
+@media (prefers-reduced-motion:reduce){#bpx .bpt-card,#bpx .bpt-spot,#bpx .bpt-bar i,#bpx .bpt-body{animation:none;transition:none}}
+#bpx .bpt .bpt-b.bpt-back{width:42px !important;padding:0 !important;flex:none}
+@media (max-width:640px){#bpx .bpt-card,#bpx .bpt-card.mid{max-width:none}#bpx .bpt .bpt-b.bpt-back{width:48px !important}}

@@ -58,3 +58,8 @@ Calendar with Google/inspection boxes, To-dos and Upcoming as separate cards
 above the grid and the colour key under it; connected boxes showed as chips.
 
 - live site (main): `26ff21c`
+
+## Before the AI pop-up, phone home and tutorial redesign (2026-11-09)
+Plain AI chat box (no phone header button), navy phone home, 15-step tour.
+
+- live site (main): `620ec75`

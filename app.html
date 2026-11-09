@@ -12961,13 +12961,24 @@ function bpEnsureLeaflet(cb){
   document.head.appendChild(css);
   var btn=document.createElement('button');btn.className='oaw-btn';btn.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 14.5a2 2 0 0 1-2 2H8l-4.5 4V5a2 2 0 0 1 2-2H19a2 2 0 0 1 2 2z"/><path d="M12.2 6.2l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4-2.4-1.1 2.4-1.1z" fill="#fff" stroke="none"/></svg>';btn.title='Ask '+A_NAME;
   var pan=document.createElement('div');pan.className='oaw-panel';
-  pan.innerHTML='<div class="oaw-head">'+A_NAME+' <span>&mdash; your '+A_BRAND+' assistant</span></div><div class="oaw-log" id="oawLog"></div><div class="oaw-in"><input id="oawIn" placeholder="Ask anything, or &ldquo;how do I&hellip;&rdquo;"><button id="oawGo">&#8594;</button></div>';
+  /* the look: an orb, the name and a live dot up top; a welcome with tap-to-ask
+     ideas until the first question; a typing pulse while the answer comes */
+  var ORB='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path d="M18.5 15l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z" opacity=".75"/></svg>';
+  var SUGS=['What needs me today?','How do I send an invoice?','Book an inspection','Change what '+A_NAME+' says on calls'];
+  pan.innerHTML='<div class="oaw-head"><span class="oaw-orb">'+ORB+'</span><span class="oaw-ht"><b>'+A_NAME+'</b><small><i class="oaw-dot"></i>Your '+A_BRAND+' assistant</small></span></div>'
+    +'<div class="oaw-log" id="oawLog"></div>'
+    +'<div class="oaw-in"><input id="oawIn" placeholder="Ask '+A_NAME+' anything" autocomplete="off" enterkeyhint="send"><button id="oawGo" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg></button></div>';
   document.body.appendChild(btn);document.body.appendChild(pan);
   var HIST=[],open=false;
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function add(role,text){var l=document.getElementById('oawLog');var d=document.createElement('div');d.className='oaw-m '+(role==='user'?'u':'b');d.innerHTML=esc(text);l.appendChild(d);l.scrollTop=l.scrollHeight;return d;}
+  function add(role,text){var l=document.getElementById('oawLog');var w=l.querySelector('.oaw-hi');if(w)w.remove();var d=document.createElement('div');d.className='oaw-m '+(role==='user'?'u':'b');d.innerHTML=esc(text);l.appendChild(d);l.scrollTop=l.scrollHeight;return d;}
+  function typing(){var d=add('bot','');d.classList.add('oaw-typing');d.innerHTML='<i></i><i></i><i></i>';return d;}
+  function hello(){var l=document.getElementById('oawLog');if(!l||l.children.length)return;
+    l.innerHTML='<div class="oaw-hi"><span class="oaw-orb lg">'+ORB+'</span><b>Hi, I\'m '+esc(A_NAME)+'</b><p>Ask about your bookings, customers or money, or how anything here works. I\'ll take you straight there.</p>'
+      +'<div class="oaw-sugs">'+SUGS.map(function(t){return '<button type="button" class="oaw-sug">'+esc(t)+'</button>';}).join('')+'</div></div>';
+    l.querySelectorAll('.oaw-sug').forEach(function(b){b.onclick=function(){var i=document.getElementById('oawIn');i.value=b.textContent;send();};});}
   btn.onclick=function(){open=!open;pan.style.display=open?'flex':'none';
-    if(open&&!HIST.length){add('bot','Hi! I\'m '+A_NAME+'. Ask me about your bookings, contacts or messages — or how anything here works: "how do I send an invoice?", "where do I scan a contract?", "how do I change what '+BP_AI_NAME+' says on the phone?" I\'ll take you straight there.');}
+    if(open&&!HIST.length){hello();}
     if(open)setTimeout(function(){var i=document.getElementById('oawIn');if(i)i.focus();},50);};
   /* show ONLY while the portal overlay is open AND signed in — never on the homepage */
   setInterval(function(){
@@ -12995,16 +13006,16 @@ function bpEnsureLeaflet(cb){
   async function send(){
     var inp=document.getElementById('oawIn');var t=(inp.value||'').trim();if(!t)return;inp.value='';
     add('user',t);HIST.push({role:'user',content:t});
-    var node=add('bot','…');
+    var node=typing();var done=function(t){node.classList.remove('oaw-typing');node.textContent=t;};
     try{
       var tok='';
       if(window.BP_SB&&BP_SB.auth){var s=await BP_SB.auth.getSession();tok=(s&&s.data&&s.data.session&&s.data.session.access_token)||'';}
-      if(!tok){node.textContent='Please sign in to your dashboard first.';return;}
+      if(!tok){done('Please sign in to your dashboard first.');return;}
       var d=await callAi({mode:'owner',message:t,history:HIST.slice(-10),assistant:A_NAME,brand:A_BRAND,nav:A_NAV},tok);
       var reply=d.reply||d.error||'Sorry, something went wrong.';
-      node.textContent=reply;HIST.push({role:'assistant',content:reply});
+      done(reply);HIST.push({role:'assistant',content:reply});
       if(d.navigate&&typeof window.bpNav==='function'){try{bpNav(d.navigate);}catch(e){}}
-    }catch(e){node.textContent='Connection issue — please try again.';}
+    }catch(e){done('Connection issue — please try again.');}
   }
   document.getElementById('oawGo').onclick=send;
   document.getElementById('oawIn').addEventListener('keydown',function(e){if(e.key==='Enter')send();});
@@ -14669,22 +14680,22 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/tools-share.css?v=20261001a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261002b">
-<link rel="stylesheet" href="portal/shell.css?v=20261108c">
+<link rel="stylesheet" href="portal/shell.css?v=20261109a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261031d">
+<link rel="stylesheet" href="portal/mobile.css?v=20261109b">
 <link rel="stylesheet" href="portal/notify.css?v=20261008a">
 <script src="portal/ui-kit.js?v=20261024q36"></script>
 <script src="portal/slidetabs.js?v=20261108c"></script>
 <script src="portal/motion.js?v=20261108f"></script>
-<script src="portal/shell.js?v=20261108a"></script>
+<script src="portal/shell.js?v=20261109a"></script>
 <script src="portal/mobile.js?v=20261108a"></script>
 <script src="portal/appfeel.js?v=20261031c"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261101a"></script>
 <script src="portal/contacts-import.js?v=20261029a"></script>
 <script src="portal/pipeline.js?v=20261028a"></script>
-<script src="portal/tour.js?v=20261102b"></script>
+<script src="portal/tour.js?v=20261109b"></script>
 <script src="portal/native.js?v=20261104a"></script>
-<link rel="stylesheet" href="portal/tour.css?v=20261026c">
+<link rel="stylesheet" href="portal/tour.css?v=20261109b">
 <!--/app-only-->
 </html>

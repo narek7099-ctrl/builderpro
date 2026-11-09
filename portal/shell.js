@@ -167,7 +167,7 @@
   };
 
   /* views that are not in the sidebar still belong to a section */
-  var EXTRA = { quote: 'finances', invoicebuilder: 'finances', closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
+  var EXTRA = { quote: 'finances', invoicebuilder: 'finances', ledger: 'finances', leadsources: 'leads', mattemplates: 'supply', suppliers: 'supply', closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
   function secOf(v) {
     if (crew()) return v;
     if (v === 'settings') return 'settings';
@@ -403,6 +403,12 @@
       if ($('bpx') && p.parentNode !== $('bpx')) $('bpx').appendChild(p);
       var h = p.querySelector('.oaw-head');
       if (h) { var x = document.createElement('button'); x.type = 'button'; x.className = 'hl-oaw-x'; x.setAttribute('aria-label', 'Close assistant'); x.textContent = '\u00d7'; x.onclick = S.aiClose; h.appendChild(x); }
+      /* on a phone the sheet dims the page; a tap on the dimmed part closes it */
+      document.addEventListener('pointerdown', function (e) {
+        var bx = $('bpx'); if (!aiOpen() || !bx || !bx.classList.contains('bp-m')) return;
+        if (e.target.closest && (e.target.closest('.oaw-panel') || e.target.closest('.hl-rb.p'))) return;
+        S.aiClose();
+      }, true);
     }
     if (!aiOpen()) { var b = document.querySelector('.oaw-btn'); if (b) b.click(); }
   };

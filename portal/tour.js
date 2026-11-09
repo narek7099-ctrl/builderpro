@@ -27,52 +27,30 @@
 
   /* { v: page, at: what to point at (selector, list of selectors, or function),
        nav: sidebar item to fall back to, t: title, d: what it is, act: what to do } */
+  /* seven stops, the things an owner uses every week; everything else is
+     one click from these and Lisa (the last stop) answers the rest */
   var OWNER = [
-    { v: 'dashboard', at: ['#bpxViewArea .bpx-rowbtn.primary[onclick*="settings"]', '#bpxViewArea .db-acts .bpx-btn'], nav: 'dashboard', t: 'Your dashboard',
-      d: 'Money in, what you kept, new leads and what needs you today. Open it first thing each morning.',
-      act: 'Click Do it to finish setting up: your logo, business details and hours.' },
+    { v: 'dashboard', at: ['#bpxViewArea .bpx-rowbtn.primary[onclick*="settings"]', '#bpxViewArea .db-acts .bpx-btn', '#bpxViewArea .mh2-tile.pri'], nav: 'dashboard', t: 'Your day at a glance',
+      d: 'Money in, what you kept, new leads and what needs you today.',
+      act: 'Finish setting up here: logo, business details and hours.' },
     { v: 'contacts', at: 'button[onclick="bpOpenAdd()"]', nav: 'leads', t: 'Every customer in one list',
       d: 'Calls, web forms, calculators, Angi and Thumbtack all land here.',
-      act: 'Click + New contact to add a customer. Click any name to open their file.' },
+      act: 'Tap + New contact, or any name to open their file.' },
     { v: 'messaging', at: ['#bpxViewArea .bpx-rowbtn[onclick*="settings"]', 'button[onclick="bpBulkOpen()"]'], nav: 'convos', t: 'Texts and email',
-      d: 'Every conversation with every customer in one inbox. Lisa answers the calls you miss and texts them back.',
-      act: 'Connect your business number with Set it up. Then pick a conversation on the left to reply.' },
-    { v: 'calendar', at: 'button[onclick*="bpOpenBoo"]', nav: 'calendar', t: 'Calendar and booking',
-      d: 'Inspections, estimates and jobs on one calendar. Lisa books inspections straight onto it.',
-      act: 'Click Book inspection to put an appointment on the calendar.' },
-    { v: 'estimates', at: 'button[onclick="bpEstOpen()"]', nav: 'finances', t: 'Estimates',
-      d: 'Professional estimates with your materials, labor and markup. Customers accept online with one tap.',
-      act: 'Click + New estimate to quote your first job.' },
-    { v: 'invoices', at: ['#bpxViewArea .pjl-b.pri', 'button[onclick="bpInvOpen()"]'], nav: 'finances', t: 'Invoices',
-      d: 'An accepted estimate turns into an invoice here, ready to send. Reminders go out until you are paid.',
-      act: 'Click Confirm and send on a ready invoice, or + New invoice to start one.' },
-    { v: 'payouts', at: 'button[onclick^="bpPayConnect"]', nav: 'finances', t: 'Get paid by card',
-      d: 'Customers pay by card or bank right from the invoice, and the money goes to your bank account.',
-      act: 'Click Connect with Stripe. You only do this once.' },
-    { v: 'finances', at: ['button[onclick="bpFinAddOpen(\'expense\')"]', 'button[onclick="bpFinAddOpen(\'income\')"]'], nav: 'finances', t: 'Know your numbers',
-      d: 'Income, costs and profit, by job and by month.',
-      act: 'Click + Add expense to log a cost. Your profit updates by itself.' },
-    { v: 'activejobs', at: 'button[onclick="bpAddJobOpen()"]', nav: 'projects', t: 'Projects',
-      d: 'Each job has its own sheet: schedule, phases, crew, materials, permits, contract, photos and budget.',
-      act: 'Click + Add job, or click a project to open its sheet.' },
-    { v: 'employees', at: 'button[onclick="bpEmpOpen()"]', nav: 'projects', t: 'Crew and payroll',
-      d: 'Your people, their pay rates, hours and pay periods. Crews get their own app to clock in and see their jobs.',
-      act: 'Click + Add someone for each person on your crew.' },
-    { v: 'matlists', at: null, nav: 'supply', t: 'Materials',
-      d: 'Order lists for each job go to your suppliers, and receipts are matched back to the job.',
-      act: 'Open a project and build its order list, or start from an estimate.' },
-    { v: 'calculator', at: null, nav: 'leads', t: 'Instant-quote calculators',
-      d: 'A price calculator for your trade on your website and social pages. Homeowners get a ballpark; you get the lead.',
-      act: 'Pick a calculator, set your prices, then copy its link or embed code.' },
-    { v: 'marketing', at: 'button[onclick="bpMkLaunch()"]', nav: 'marketing', t: 'Marketing and reviews',
-      d: 'Ads, your website, social posts, competitors and your Google, Yelp and Facebook reviews.',
-      act: 'Connect your accounts under Connections, then click Launch a campaign.' },
-    { v: 'aiteam', at: nth('#bpxViewArea .ai-tab', 1), nav: 'aiteam', t: 'Your AI Team',
-      d: 'An AI CEO reads the whole business every morning, with assistants for sales, marketing and the office. Nothing reaches a customer until you approve it.',
-      act: 'Click AI CEO to read today\'s briefing or ask it a question.' },
-    { v: 'settings', at: 'button[onclick="bpSetTab(\'team\')"]', nav: '', t: 'Bring in your team',
-      d: 'Your office and crew each sign in with their own email and see only what their role allows.',
-      act: 'Click Team and invite them by email.' }
+      d: 'Every conversation in one inbox. ' + (window.BP_AI_NAME || 'Lisa') + ' answers the calls you miss.',
+      act: 'Connect your business number to start texting.' },
+    { v: 'calendar', at: ['button[onclick*="bpOpenBoo"]', '#bpxViewArea .cal-add summary'], nav: 'calendar', t: 'Calendar',
+      d: 'Inspections, crew days and to-dos on one calendar. ' + (window.BP_AI_NAME || 'Lisa') + ' books straight onto it.',
+      act: 'Tap Add to book an inspection or a crew day.' },
+    { v: 'estimates', at: 'button[onclick="bpEstOpen()"]', nav: 'finances', t: 'Estimates that turn into payments',
+      d: 'Quote with your prices and markup. Once the customer says yes it becomes an invoice they pay by card.',
+      act: 'Tap + New estimate to quote your first job.' },
+    { v: 'activejobs', at: 'button[onclick="bpAddJobOpen()"]', nav: 'projects', t: 'Jobs',
+      d: 'Each job keeps its schedule, crew, materials, photos, contract and budget together.',
+      act: 'Tap + Add job, or open one to see its sheet.' },
+    { v: '', at: '#hlTacts .hl-rb.p', nav: '', t: 'Stuck? Ask ' + (window.BP_AI_NAME || 'Lisa'),
+      d: 'Ask how anything works, or what needs you, and ' + (window.BP_AI_NAME || 'Lisa') + ' takes you straight there.',
+      act: 'Tap the blue spark any time.' }
   ];
   var CREW = [
     { v: 'crewdash', at: '#chm-go', nav: 'crewdash', t: 'Your day',
@@ -111,15 +89,16 @@
       d: 'Talk to the contractor who hired you.',
       act: 'Type here and tap Send.' }
   ];
-  var FINISH = { v: '', at: '#hlTacts .hl-rb.b', nav: '', t: 'You are all set',
-    d: 'That is the whole tour. Everything you saw is in the menu on the left.',
-    act: 'Want to see it again? Click ? up here, then Take the tour.' };
+  var FINISH = { v: 'dashboard', at: '#hlTacts .hl-rb.b', nav: '', t: 'You\u2019re all set',
+    d: 'Everything else is in the menu on the left.',
+    act: 'To see this again, click ? then Take the tour.' };
 
   function mob() { return !!(window.bpMobile && bpMobile.on()); }
   /* on a phone the help button is gone: the tour ends on the Apps / More tab */
   function finish() {
-    return mob() ? { v: '', at: '#bpTabbar [data-tab="apps"]', nav: '', t: 'You are all set',
-      d: 'That is the whole tour. The tabs at the bottom take you to what you use most.', act: 'Want to see it again? Tap ' + (role() === 'owner' ? 'Apps' : 'More') + ', then Take the tour.' } : FINISH;
+    var own = role() === 'owner';
+    return mob() ? { v: '', at: own ? '#hlAv' : '#bpTabbar [data-tab="apps"]', nav: '', t: 'You\u2019re all set',
+      d: 'The tabs at the bottom take you to what you use most.', act: 'To see this again, tap ' + (own ? 'your initials up top' : 'More') + ', then Take the tour.' } : FINISH;
   }
   function role() { return window.bpTeamIsSub && bpTeamIsSub() ? 'sub' : window.bpTeamIsCrew && bpTeamIsCrew() ? 'crew' : 'owner'; }
   function stepsFor() {
@@ -159,22 +138,23 @@
     if (T.el) close(false);
     var who = role(), name = '';
     try { name = String((window.bpSettingsGet && (bpSettingsGet().owner || {}).name) || '').split(' ')[0]; } catch (e) {}
-    var what = who === 'crew' ? 'where to clock in, find your jobs and add photos'
-      : who === 'sub' ? 'where your jobs, invoices and paperwork live'
-      : 'where everything is and what to click first';
+    var what = who === 'crew' ? 'clocking in, your jobs and photos'
+      : who === 'sub' ? 'your jobs, invoices and paperwork'
+      : 'what you\u2019ll use most';
+    var n = stepsFor().length - 1;
     T.el = shell('<div class="bpt-hero"><img src="assets/brand/logo-mark-128.png" alt="" width="34" height="34"></div>'
-      + '<h3 class="bpt-h">Welcome to BuilderPro' + (name ? ', ' + esc(name) : '') + '</h3>'
-      + '<p class="bpt-p">A quick tour shows you ' + what + '. It takes about two minutes, and you click through at your own pace.</p>'
-      + '<div class="bpt-act bpt-act-w"><button type="button" class="bpt-b ghost" data-t="skip">Skip for now</button>'
+      + '<h3 class="bpt-h">Welcome' + (name ? ', ' + esc(name) : ' to BuilderPro') + '</h3>'
+      + '<p class="bpt-p">A one-minute tour of ' + what + ': ' + n + ' quick stops.</p>'
+      + '<div class="bpt-act bpt-act-w"><button type="button" class="bpt-b ghost" data-t="skip">Not now</button>'
       + '<button type="button" class="bpt-b pri" data-t="start"><span>Show me around</span><span class="ms">arrow_forward</span></button></div>'
-      + '<p class="bpt-foot"><span class="ms">help</span><span>You can replay it any time: ' + (mob() ? 'tap <b>' + (who === 'owner' ? 'Apps' : 'More') + '</b> at the bottom' : 'click <b>?</b> at the top right') + ', then <b>Take the tour</b>.</span></p>');
+      + '<p class="bpt-foot"><span>Replay it any time: ' + (mob() ? (who === 'owner' ? 'tap <b>your initials</b> up top' : 'tap <b>More</b>') : 'click <b>?</b> at the top right') + ', then <b>Take the tour</b>.</span></p>');
     T.mode = 'welcome';
     var card = T.el.querySelector('.bpt-card'); card.classList.add('mid', 'welcome');
     T.el.classList.add('dim');
     T.el.addEventListener('click', function (e) {
       var b = e.target.closest('[data-t]'); if (!b) return;
       if (b.getAttribute('data-t') === 'start') { close(false); window.bpTour(); }
-      else { close(true); if (window.bpToast) bpToast(mob() ? 'No problem. Tap ' + (who === 'owner' ? 'Apps' : 'More') + ', then Take the tour whenever you want it.' : 'No problem. Click ? then Take the tour whenever you want it.'); }
+      else { close(true); if (window.bpToast) bpToast(mob() ? 'No problem. Tap ' + (who === 'owner' ? 'your initials up top' : 'More') + ', then Take the tour whenever you want it.' : 'No problem. Click ? then Take the tour whenever you want it.'); }
     });
     keys(function (e) { if (e.key === 'Escape') { e.preventDefault(); close(true); } });
     setTimeout(function () { var s = T.el && T.el.querySelector('[data-t="start"]'); if (s) s.focus({ preventScroll: true }); }, 60);
@@ -184,12 +164,11 @@
   window.bpTour = function () {
     if (T.el) close(false);
     T.steps = stepsFor(); T.i = 0; T.mode = 'tour';
-    T.el = shell('<div class="bpt-top"><span class="bpt-n"></span><button type="button" class="bpt-x" data-t="close" aria-label="Close the tour"><span class="ms">close</span></button></div>'
-      + '<h3 class="bpt-h"></h3><p class="bpt-p"></p>'
-      + '<div class="bpt-do"><span class="ms">touch_app</span><span><b>Do this:</b> <span class="bpt-do-t"></span></span></div>'
-      + '<div class="bpt-dots" aria-hidden="true">' + T.steps.map(function () { return '<i></i>'; }).join('') + '</div>'
-      + '<div class="bpt-act"><button type="button" class="bpt-b ghost" data-t="back" aria-label="Back"><span class="ms">arrow_back</span></button>'
-      + '<button type="button" class="bpt-b ghost bpt-skip" data-t="close">Skip tour</button>'
+    T.el = shell('<div class="bpt-bar" aria-hidden="true"><i></i></div>'
+      + '<div class="bpt-top"><span class="bpt-n"></span><button type="button" class="bpt-skip" data-t="close">Skip</button></div>'
+      + '<div class="bpt-body"><h3 class="bpt-h"></h3><p class="bpt-p"></p>'
+      + '<div class="bpt-do"><span class="ms">touch_app</span><span class="bpt-do-t"></span></div></div>'
+      + '<div class="bpt-act"><button type="button" class="bpt-b ghost bpt-back" data-t="back" aria-label="Back"><span class="ms">arrow_back</span></button>'
       + '<button type="button" class="bpt-b pri" data-t="next"><span>Next</span><span class="ms">arrow_forward</span></button></div>');
     T.el.addEventListener('click', function (e) {
       var b = e.target.closest('[data-t]'); if (!b) return;
@@ -222,7 +201,8 @@
     var s = T.steps[T.i];
     if (s.v) { try { if (window._bpCurView !== s.v) bpNav(s.v); } catch (e) {} }
     if (window.bpShell && bpShell.closeAll) try { bpShell.closeAll(); } catch (e) {}
-    paint(); hide();
+    swap(); var hd = T.el.querySelector('.bpt-hand'); if (hd) hd.classList.remove('on');
+    if (!T.target) hide();
     /* the page may still be drawing: look for the button for a few seconds */
     clearInterval(T.poll);
     var tries = 0, at = T.i;
@@ -239,13 +219,19 @@
       }
     }, 180);
   }
+  /* the words fade across while the card glides to its next spot */
+  function swap() {
+    var b = T.el && T.el.querySelector('.bpt-body'); if (!b) return paint();
+    if (!b.textContent.trim()) return paint();
+    b.classList.add('out'); setTimeout(function () { if (!T.el) return; paint(); b.classList.remove('out'); }, 160);
+  }
   function paint() {
-    var s = T.steps[T.i], c = T.el, last = T.i === T.steps.length - 1;
-    c.querySelector('.bpt-n').textContent = last ? 'Done' : 'Step ' + (T.i + 1) + ' of ' + (T.steps.length - 1);
+    var s = T.steps[T.i], c = T.el, last = T.i === T.steps.length - 1, n = T.steps.length - 1;
+    c.querySelector('.bpt-n').textContent = last ? 'Done' : (T.i + 1) + ' of ' + n;
     c.querySelector('.bpt-h').textContent = s.t;
     c.querySelector('.bpt-p').textContent = s.d;
     c.querySelector('.bpt-do-t').textContent = s.act;
-    c.querySelectorAll('.bpt-dots i').forEach(function (d, k) { d.className = k < T.i ? 'done' : k === T.i ? 'on' : ''; });
+    c.querySelector('.bpt-bar i').style.width = Math.round((last ? 1 : (T.i + 1) / n) * 100) + '%';
     c.querySelector('[data-t="back"]').disabled = T.i === 0;
     c.querySelector('.bpt-skip').hidden = last;
     c.querySelector('[data-t="next"]').innerHTML = last ? '<span>Finish</span><span class="ms">check</span>' : '<span>Next</span><span class="ms">arrow_forward</span>';
@@ -254,14 +240,14 @@
     if (!T.el) return;
     ['.bpt-spot', '.bpt-ring', '.bpt-hand'].forEach(function (k) { var e = T.el.querySelector(k); if (e) e.classList.remove('on'); });
     T.el.classList.add('dim');
-    var card = T.el.querySelector('.bpt-card'); card.style.cssText = ''; card.classList.add('mid');
+    var card = T.el.querySelector('.bpt-card'); if (!card.style.left) card.classList.add('mid');
   }
   /* ring the button, bring the hand in to tap it, and sit the card beside it */
   function place() {
     if (!T.el || T.mode !== 'tour') return;
     var el = T.target, card = T.el.querySelector('.bpt-card');
     var spot = T.el.querySelector('.bpt-spot'), ring = T.el.querySelector('.bpt-ring'), hand = T.el.querySelector('.bpt-hand');
-    if (!el || !visible(el)) { hide(); return; }
+    if (!el || !visible(el)) { card.style.cssText = ''; card.classList.add('mid'); hide(); return; }
     var W = window.innerWidth, H = window.innerHeight, r = el.getBoundingClientRect(), pad = 6;
     var box = { l: r.left - pad, t: r.top - pad, w: r.width + pad * 2, h: r.height + pad * 2 };
     spot.style.cssText = 'left:' + box.l + 'px;top:' + box.t + 'px;width:' + box.w + 'px;height:' + box.h + 'px';
