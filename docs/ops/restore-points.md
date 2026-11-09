@@ -78,3 +78,9 @@ Frosted but mostly white cards over a light blue background.
 See-through glass cards over a strong blue-tinted background.
 
 - live site (main): `2238ce8`
+
+## Before the glass look on every page (2026-11-09)
+Blue-shine glass on the main cards only; other pages kept flat white boxes
+and underlined tabs.
+
+- live site (main): `33ee363`
