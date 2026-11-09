@@ -11,7 +11,7 @@
 #bpx#bpx#bpx#bpx#bpx#bpx .bpx-main{background:transparent !important}
 
 /* ---- clear glass cards with a blue shine ---- */
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.bpx-cwrap,.mh2-owed,.mh2-tiles,.mh2-card){
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.bpx-cwrap,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs,.bpx-cd-card,.bpp-ask-row,.pjk-live,.pjl,.qb-step,.cl-tile,.cl-card,.wa-list,.wa-dh,.wa-tcard,.wa-node,.rcp-hero,.rcp-stat,.rcp-card,.bpt-get,.cz-sec,.cz-prev,.sp-pk-box,.tc,.sp-aisle,.sp-chain,.bpx-pay-flow>div){
   background-color:transparent !important;
   background-image:
     linear-gradient(112deg,rgba(255,255,255,0) 38%,rgba(255,255,255,.85) 46%,rgba(170,210,255,.35) 50%,rgba(255,255,255,0) 58%),
@@ -63,15 +63,16 @@
 
 /* ---- glossy buttons ---- */
 #bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-btn:not(.ghost):not(.bpx-delbtn):not(:disabled),
-#bpx#bpx#bpx#bpx#bpx#bpx .db-acts .bpx-btn:not(.ghost){
+#bpx#bpx#bpx#bpx#bpx#bpx .db-acts .bpx-btn:not(.ghost),
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea[data-fin="estimates"] .fin-new-est{
   background:linear-gradient(180deg,#3593ff 0%,#0a77ff 48%,#006fff 52%,#0062e6 100%) !important;color:#fff !important;border:0 !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(0,40,120,.25),0 8px 18px -10px rgba(0,111,255,.9) !important}
-#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-btn.ghost{
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-btn.ghost:not(.fin-new-est){color:#0b1a33 !important;
   background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(240,246,255,.8)) !important;border:1px solid rgba(0,111,255,.14) !important;
   box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(16,24,40,.05) !important}
 
 /* ---- phone: the same glass; no blur so scrolling stays smooth ---- */
-#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.pjk-stat,.pj-card,.mh2-owed,.mh2-tiles,.mh2-card){-webkit-backdrop-filter:none;backdrop-filter:none}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.pjk-stat,.pj-card,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs,.bpx-cd-card,.bpp-ask-row,.pjk-live,.pjl,.qb-step,.cl-tile,.cl-card,.wa-list,.wa-dh,.wa-tcard,.wa-node,.rcp-hero,.rcp-stat,.rcp-card,.bpt-get,.cz-sec,.cz-prev,.sp-pk-box,.tc,.sp-aisle,.sp-chain,.bpx-pay-flow>div){-webkit-backdrop-filter:none;backdrop-filter:none}
 #bpx#bpx#bpx#bpx#bpx#bpx.bp-m .bpx-app{background:linear-gradient(180deg,#ffffff,#f7f9fc)}
 #bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .mh2-tile:not(.pri){background:rgba(240,246,255,.7);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.08)}
 
@@ -96,3 +97,48 @@
 #bpx#bpx:not(.bpx-dark) .wg-t{stroke:rgba(40,70,120,.22)}
 #bpx#bpx:not(.bpx-dark) .wg-trk{stroke:rgba(0,111,255,.07)}
 #bpx#bpx:not(.bpx-dark) #bpxViewArea .cb-bar:not(.on),#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpc-track{opacity:1}
+
+/* =====================================================================
+   The rest of the software in the same look (2026-11): every other kind of
+   card gets the blue-shine glass above; small ones lift and shine on hover;
+   bars that stick to the bottom of a builder are frosted; and every row of
+   tabs inside a page is a glass capsule with a raised white pill, like the
+   tabs at the top.
+   ===================================================================== */
+@media (any-hover:hover){
+  #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.ws-step,.st-plan,.brn-card,.bpx-cd-card,.qb-step,.cl-tile,.rcp-stat,.wa-tcard,.sp-pk-box,.bpp-ask-row){cursor:default}
+  #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.ws-step,.st-plan,.brn-card,.bpx-cd-card,.qb-step,.cl-tile,.rcp-stat,.wa-tcard,.sp-pk-box,.sp-aisle,.sp-chain):not(:has(input:focus,textarea:focus,select:focus)):hover{
+    translate:0 -4px;background-position:-40% 0,0 0,0 0,0 0,0 0 !important;border-color:rgba(0,111,255,.28) !important;
+    box-shadow:inset 0 1px 0 #fff,inset 0 0 30px -12px rgba(0,111,255,.28),0 0 0 3px rgba(0,111,255,.06),0 4px 10px -4px rgba(0,40,110,.1),0 30px 54px -28px rgba(0,80,200,.5) !important}
+}
+/* bars stuck to the bottom of a builder or the Lisa page: frosted white */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.qs-bar,.bpx-rg-pubbar){background:rgba(255,255,255,.8) !important;background-image:none !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(0,111,255,.12) !important;
+  box-shadow:inset 0 1px 0 #fff,0 -10px 30px -18px rgba(0,60,160,.3) !important}
+/* panes inside the inbox and chat stay clear so the frame reads as one glass */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .tc :is(.tc-list,.tc-pane,.tc-side){background:transparent !important}
+
+/* ---- tabs inside a page: glass capsule, raised white pill ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs){display:flex !important;flex-wrap:nowrap !important;width:-moz-fit-content;width:fit-content;max-width:100%;gap:2px !important;padding:4px !important;
+  border-radius:999px !important;border:1px solid rgba(0,111,255,.1) !important;background:linear-gradient(180deg,rgba(234,241,252,.9),rgba(244,248,255,.75)) !important;
+  box-shadow:inset 0 1px 2px rgba(0,40,110,.07),0 1px 0 #fff !important;overflow-x:auto;scrollbar-width:none;box-sizing:border-box}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)::-webkit-scrollbar{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a){flex:0 0 auto;border:0 !important;border-radius:999px !important;margin:0 !important;padding:7px 15px !important;min-height:0;
+  background:transparent !important;color:#5b6b82 !important;box-shadow:none !important;white-space:nowrap;font-weight:500 !important;transition:background .25s,color .2s,box-shadow .25s !important}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):hover{color:#0b1a33 !important;background:rgba(255,255,255,.55) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):is(.on,.active,[aria-selected=true]){
+  background:linear-gradient(180deg,#ffffff,#f2f7ff) !important;color:#0050c8 !important;font-weight:600 !important;
+  box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.13),0 4px 10px -4px rgba(0,111,255,.38) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a) .ms{color:inherit !important}
+/* phone: the calendar's Day / Week / Month fills the row; tabs keep a thumb-sized height */
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea .cal-left>.cal-view{width:100%}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a){min-height:42px !important;padding:0 15px !important;display:inline-flex;align-items:center}
+/* settings menu: the open section is a raised glass pill */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .st-nav.on{background:linear-gradient(180deg,#fff,#f2f7ff) !important;color:#0050c8 !important;border-radius:12px !important;
+  box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.12),0 6px 14px -8px rgba(0,111,255,.4) !important}
+/* dark */
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs){background:rgba(255,255,255,.05) !important;border-color:rgba(255,255,255,.07) !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a){color:#9fb0c8 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):is(.on,.active,[aria-selected=true]){background:rgba(255,255,255,.13) !important;color:#fff !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.12) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs,.bpx-cd-card,.bpp-ask-row,.pjk-live,.pjl,.qb-step,.cl-tile,.cl-card,.wa-list,.wa-dh,.wa-tcard,.wa-node,.rcp-hero,.rcp-stat,.rcp-card,.bpt-get,.cz-sec,.cz-prev,.sp-pk-box,.tc,.sp-aisle,.sp-chain,.bpx-pay-flow>div){
+  background:linear-gradient(180deg,rgba(28,36,54,.82) 0%,rgba(18,24,38,.7) 100%) !important;border:1px solid rgba(255,255,255,.07) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px -22px rgba(0,0,0,.7) !important}
