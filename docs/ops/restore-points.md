@@ -68,3 +68,8 @@ Plain AI chat box (no phone header button), navy phone home, 15-step tour.
 Solid white cards, slate sidebar, AI CEO briefing bar at the top of the dashboard.
 
 - live site (main): `3104e25`
+
+## Before see-through glass cards (2026-11-09)
+Frosted but mostly white cards over a light blue background.
+
+- live site (main): `a093bf3`
