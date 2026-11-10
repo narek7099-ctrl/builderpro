@@ -6536,7 +6536,7 @@ function bpCatOpts(sel){return bpCatList().map(function(c){return '<option'+(c==
 function bpJobCell(j){
   var av=(j.photos&&j.photos[0])
     ? (window.bpPF?bpPF.img(j.photos[0],'style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto"'):'<img src="'+j.photos[0]+'" style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto">')
-    : '<div style="width:42px;height:42px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--bg2,#eef1f5);color:#8a93a3"><span class=ms style="font-size:20px">home_repair_service</span></div>';
+    : (window.bpCover?'<img src="'+bpCover(j)+'" alt="" loading="lazy" style="width:42px;height:42px;border-radius:9px;object-fit:cover;flex:0 0 auto">':'<div style="width:42px;height:42px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--bg2,#eef1f5);color:#8a93a3"><span class=ms style="font-size:20px">home_repair_service</span></div>');
   return '<div class="bpx-cnamecell">'+av+'<div><div class="bpx-cname">'+bpEsc(j.name||'Job')+'</div><div class="bpx-js">'+bpEsc(j.title||'Job')+'</div></div></div>';
 }
 /* "Sep 10 – Sep 24" from booked dates (or legacy start/target) */
@@ -6708,7 +6708,7 @@ function bpPjCard(j){
   var k=pjKState(j), pr=k.pr, e=+j.estimate||0, c=+j.collected||0, paidPct=e>0?Math.min(100,Math.round(c/e*100)):0;
   var av=(j.photos&&j.photos[0])
     ? (window.bpPF?bpPF.img(j.photos[0],'class="pjk-av"'):'<img class="pjk-av" src="'+j.photos[0]+'">')
-    : '<span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>';
+    : (window.bpCover?'<img class="pjk-av" src="'+bpCover(j)+'" alt="" loading="lazy">':'<span class="pjk-av">'+bpEsc(pjInit(j.name))+'</span>');
   var who=window.bpJobWhoLbl?bpJobWhoLbl(j):'', dates=bpJobDates(j);
   var stage=!pr?'<span class="pjk-tag">Not planned</span>':k.late?'<span class="pjk-tag late">Behind</span>':pr.complete?'<span class="pjk-tag ok">Ready to close</span>':'<span class="pjk-tag on">'+pr.pct+'% done</span>';
   var work=pr
@@ -14629,7 +14629,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261102c"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261022a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261110c"></script>
+<script src="portal/dash.js?v=20261110d"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261026a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
@@ -14697,6 +14697,6 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/tour.js?v=20261109b"></script>
 <script src="portal/native.js?v=20261104a"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261109b">
-<link rel="stylesheet" href="portal/glass.css?v=20261110c">
+<link rel="stylesheet" href="portal/glass.css?v=20261110d">
 <!--/app-only-->
 </html>

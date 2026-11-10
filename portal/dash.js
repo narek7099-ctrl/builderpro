@@ -135,6 +135,19 @@
     var p = String(n || '').replace(/\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean);
     return ((p[0] || '?').charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : '')).toUpperCase();
   }
+  /* No photo yet: show one of the four trade photos from our website, picked by
+     the kind of job (roof, HVAC, paint, pool/yard), so every card looks finished.
+     It is only a stand-in: the first real photo replaces it. */
+  var COVERS = [[/roof|shingle|gutter|downspout|storm|hail|wind|sid(ing|e)|solar|chimney|attic|insul|skylight/, 'roofing'],
+    [/hvac|furnace|\bair\b|air.?con|a\/c|\bac\b|heat|cool|duct|condenser|mini.?split|electric|wiring|panel|plumb|pipe|water heater/, 'hvac'],
+    [/pool|paver|patio|landscap|yard|lawn|deck|fence|porch|concrete|driveway|hardscape|outdoor|garden/, 'pool'],
+    [/paint|drywall|interior|kitchen|bath|remodel|cabinet|floor|trim|window|door|tile|addition|basement/, 'painting']];
+  window.bpCover = function (j) {
+    var t = String(((j && j.title) || '') + ' ' + ((j && j.trade) || '')).toLowerCase(), k = '';
+    for (var i = 0; i < COVERS.length && !k; i++) if (COVERS[i][0].test(t)) k = COVERS[i][1];
+    if (!k) { var h = 0, s = String((j && (j.id || j.name)) || ''); for (var q = 0; q < s.length; q++) h = (h * 31 + s.charCodeAt(q)) >>> 0; k = ['roofing', 'hvac', 'painting', 'pool'][h % 4]; }
+    return 'assets/covers/' + k + '.jpg?v=1';
+  };
   function noPhoto(j) {
     return '<div class="pj-np"><span class="pj-np-ico"><span class="ms">' + jobIcon(j) + '</span></span>'
       + '<span class="pj-np-t"><b>' + esc(j.title || 'Project') + '</b><small>' + esc(initials(j.name)) + ' &middot; ' + esc(j.name || '') + '</small></span>'
@@ -144,7 +157,7 @@
   function projCards(shown, crew) {
     var iso = new Date().toISOString().slice(0, 10), split = shown.length <= 2;
     var cards = shown.map(function (j) {
-      var img = (j.photos && j.photos[0]) || '';
+      var img = (j.photos && j.photos[0]) || '', def = !img;
       var est = +j.estimate || 0, paid = +j.collected || 0;
       var pct = est > 0 ? Math.min(100, Math.round(paid / est * 100)) : 0;
       var today = j.sched && (j.sched.dates || []).indexOf(iso) >= 0;
@@ -158,7 +171,7 @@
       if (j.photos && j.photos.length) meta.push(j.photos.length + (j.photos.length === 1 ? ' photo' : ' photos'));
       return '<article class="pj-card" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
 
-        + '<div class="pj-img' + (img ? '' : ' pj-noimg') + '">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (!img ? noPhoto(j) : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + tag + '</div>'
+        + '<div class="pj-img' + (def ? ' pj-def' : '') + '">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (def ? '<img src="' + bpCover(j) + '" alt="" loading="lazy"><button class="pj-addp" title="Add this project\'s own photo" onclick="event.stopPropagation();bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\');if(window.bpProjTab)bpProjTab(\'photos\')},60)"><span class="ms">add_a_photo</span>Add photo</button>' : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + tag + '</div>'
         + '<div class="pj-body"><div class="pj-h"><b>' + esc(j.name) + '</b>' + (crew ? '' : '<span class="pj-amt">' + money(est) + '</span>') + '</div>'
         + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
         + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'

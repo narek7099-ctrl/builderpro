@@ -424,3 +424,11 @@ html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !
 #bpx.bp-m .ap-sw{width:52px;height:30px}
 #bpx.bp-m .ap-sw i{width:24px;height:24px}
 #bpx.bp-m .ap-sw[aria-checked=true] i{transform:translateX(22px)}
+
+/* default trade photo on a project with no photos yet: a small "Add photo" to swap in the real one */
+#bpx .pj-addp{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:5px;border:0;cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;color:#0b1b33;
+  padding:6px 11px 6px 9px;border-radius:999px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 6px 16px -10px rgba(0,0,0,.6);opacity:.92;transition:opacity .2s,background .2s,color .2s}
+#bpx .pj-addp .ms{font-size:15px;color:#006fff}
+#bpx .pj-addp:hover{background:#006fff;color:#fff;opacity:1}
+#bpx .pj-addp:hover .ms{color:#fff}
+#bpx.bp-m .pj-addp{font-size:13px;padding:9px 14px 9px 11px}
