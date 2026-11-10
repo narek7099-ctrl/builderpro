@@ -114,3 +114,8 @@ Website connection was 3 manual steps: copy code, pick a platform from a list, p
 Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quiet week.
 
 - live site (main): `3eac1db`
+
+## Before the mini week board on the dashboard (2026-11-10)
+"This week" was day pills with dots and the chosen day's list underneath.
+
+- live site (main): `0d4bb48`

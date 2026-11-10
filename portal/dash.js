@@ -408,30 +408,39 @@
   function week() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
     var days = [], now = new Date();
-    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), lbl: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' }), full: d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }), num: d.getDate(), crews: [], appts: [] }); }
-    jobs.forEach(function (j) { if (j.status !== 'active' || !j.sched) return; (j.sched.dates || []).forEach(function (iso) { var day = days.filter(function (x) { return x.iso === iso; })[0]; if (day) day.crews.push(j); }); });
-    (D.events || []).forEach(function (a) { var iso = String(a.start || '').slice(0, 10); var day = days.filter(function (x) { return x.iso === iso; })[0]; if (day) day.appts.push(a); });
-    var busy = days.some(function (d) { return d.crews.length || d.appts.length; });
-    var head = '<div class="bpx-ptitle">This week<span class="lg2"><i class="dash-key c"></i>crews <i class="dash-key a"></i>appointments</span></div>';
-    if (!busy) return '<div class="bpx-panel twk">' + head + strip(days, -1)
-      + '<div class="twk-empty"><span class="twk-eic"><span class="ms">event_available</span></span><b>Nothing booked this week</b><small>Put a crew on a project and its days show up here.</small>'
-      + '<button type="button" class="bpx-btn ghost" onclick="bpNav(\'calendar\')"><span class="ms">add</span> Schedule a crew</button></div></div>';
-    var first = 0; for (var k = 0; k < days.length; k++) { if (days[k].crews.length || days[k].appts.length) { first = k; break; } }
-    var lists = days.map(function (d, i) {
-      var rows = [];
-      d.crews.forEach(function (j) { rows.push({ t: j.sched.time ? esc(j.sched.time) : 'All day', w: esc(j.name) + (j.title ? ' · ' + esc(j.title) : ''), s: 'Crew on site', k: 'c', go: 'activejobs' }); });
-      d.appts.slice(0, 4).forEach(function (a) { rows.push({ t: esc(a.time || ''), w: esc(a.name || 'Appointment'), s: esc(a.what || 'Inspection'), k: 'a', go: 'calendar' }); });
-      return '<div class="twk-day" data-i="' + i + '"' + (i === first ? '' : ' hidden') + '><div class="twk-dh">' + d.full + '</div>'
-        + (rows.length ? rows.map(function (r) { return '<button type="button" class="twk-ev ' + r.k + '" onclick="bpNav(\'' + r.go + '\')"><span class="twk-t">' + r.t + '</span><span class="twk-w"><b>' + r.w + '</b><small>' + r.s + '</small></span><span class="ms">chevron_right</span></button>'; }).join('')
-          : '<div class="twk-none">Nothing on this day.</div>') + '</div>';
+    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), wd: d.toLocaleDateString('en-US', { weekday: 'short' }), num: d.getDate(), d: d }); }
+    var idx = {}; days.forEach(function (d, i) { idx[d.iso] = i; });
+    /* a mini week board: one row per job, its crew days drawn as continuous bars; appointments as chips */
+    var rows = [], crewDays = 0, apptN = 0;
+    jobs.forEach(function (j) {
+      if (j.status !== 'active' || !j.sched) return;
+      var on = (j.sched.dates || []).map(function (x) { return idx[x]; }).filter(function (x) { return x !== undefined; }).sort(function (a, b) { return a - b; });
+      if (!on.length) return; crewDays += on.length;
+      var runs = [], st = on[0], pv = on[0];
+      for (var k = 1; k <= on.length; k++) { if (k < on.length && on[k] === pv + 1) { pv = on[k]; continue; } runs.push([st, pv]); if (k < on.length) { st = pv = on[k]; } }
+      rows.push({ name: j.name || 'Project', sub: (j.title || '') + (j.sched.time ? ' · ' + j.sched.time : ''), runs: runs, kind: 'c', id: j.id });
+    });
+    (D.events || []).forEach(function (a) {
+      var k = idx[String(a.start || '').slice(0, 10)]; if (k === undefined) return; apptN++;
+      rows.push({ name: a.name || 'Appointment', sub: (a.time || '') + (a.what ? ' · ' + a.what : ''), runs: [[k, k]], kind: 'a' });
+    });
+    var range = days[0].d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + days[6].d.toLocaleDateString('en-US', { month: days[6].d.getMonth() === days[0].d.getMonth() ? undefined : 'short', day: 'numeric' });
+    var head = '<div class="bpx-ptitle">This week<span class="lg2">' + range + '</span></div>';
+    var cols = '<div class="wkc-cols" aria-hidden="true">' + days.map(function (d, i) { return '<span class="' + (i === 0 ? 'today' : '') + (d.d.getDay() % 6 === 0 ? ' wkend' : '') + '"></span>'; }).join('') + '</div>';
+    var hdr = '<div class="wkc-hdr">' + days.map(function (d, i) { return '<span class="' + (i === 0 ? 'today' : '') + '"><small>' + (i === 0 ? 'Today' : d.wd) + '</small><b>' + d.num + '</b></span>'; }).join('') + '</div>';
+    if (!rows.length) return '<div class="bpx-panel wkc">' + head + '<div class="wkc-board">' + cols + hdr
+      + '<div class="wkc-empty"><span class="ms">event_available</span><b>Nothing booked this week</b><button type="button" class="bpx-linkbtn" onclick="bpNav(\'calendar\')">Schedule a crew →</button></div></div></div>';
+    var MAX = 4, shown = rows.slice(0, MAX);
+    var bars = shown.map(function (r) {
+      return '<div class="wkc-row">' + r.runs.map(function (u) {
+        var one = u[0] === u[1];
+        return '<button type="button" class="wkc-bar ' + r.kind + (one ? ' one' : '') + '" style="grid-column:' + (u[0] + 1) + ' / ' + (u[1] + 2) + '" onclick="' + (r.id ? 'window.bpProjOpen?bpProjOpen(\'' + esc(r.id) + '\'):bpNav(\'activejobs\')' : 'bpNav(\'calendar\')') + '" title="' + esc(r.name + (r.sub ? ' — ' + r.sub : '')) + '">'
+          + '<b>' + esc(r.name) + '</b>' + (r.sub && !one ? '<small>' + esc(r.sub) + '</small>' : '') + '</button>';
+      }).join('') + '</div>';
     }).join('');
-    return '<div class="bpx-panel twk">' + head + strip(days, first) + '<div class="twk-lists">' + lists + '</div></div>';
-  }
-  function strip(days, sel) {
-    return '<div class="twk-strip" role="tablist">' + days.map(function (d, i) {
-      var dots = (d.crews.length ? '<i class="c"></i>' : '') + (d.appts.length ? '<i class="a"></i>' : '');
-      return '<button type="button" role="tab" class="twk-d' + (i === 0 ? ' today' : '') + (i === sel ? ' on' : '') + '" aria-selected="' + (i === sel) + '"' + (sel < 0 ? ' disabled' : ' onclick="bpDashDay(this,' + i + ')"') + '><small>' + d.lbl + '</small><b>' + d.num + '</b><span class="twk-dots">' + dots + '</span></button>';
-    }).join('') + '</div>';
+    return '<div class="bpx-panel wkc">' + head + '<div class="wkc-board">' + cols + hdr + '<div class="wkc-rows">' + bars + '</div></div>'
+      + '<div class="wkc-foot"><span><i class="c"></i>' + crewDays + ' crew day' + (crewDays === 1 ? '' : 's') + '</span><span><i class="a"></i>' + apptN + ' appointment' + (apptN === 1 ? '' : 's') + '</span>'
+      + (rows.length > MAX ? '<span class="wkc-more">+' + (rows.length - MAX) + ' more</span>' : '') + '<button type="button" class="bpx-linkbtn" onclick="bpNav(\'calendar\')">Open calendar →</button></div></div>';
   }
   window.bpDashDay = function (btn, i) {
     var card = btn.closest('.twk'); if (!card) return;
