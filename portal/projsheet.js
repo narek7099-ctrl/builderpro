@@ -121,20 +121,35 @@
       return v;
     };
     var view = document.createElement('section'); view.className = 'pjs-sec pjs-view';
-    /* tidy tiles: a phone gets Call and Text, an email gets Email, an address gets Map */
-    var acts = function (r) {
-      var v = r[1]; if (!v) return '';
-      if (/phone/i.test(r[0]) || r[2] === 'tel') { var n = esc(v.replace(/[^\d+]/g, '')); return '<span class="pjs-va"><a href="tel:' + n + '" aria-label="Call"><span class="ms">call</span></a><a href="sms:' + n + '" aria-label="Text"><span class="ms">sms</span></a></span>'; }
-      if (/e-?mail/i.test(r[0]) || r[2] === 'email') return '<span class="pjs-va"><a href="mailto:' + esc(v) + '" aria-label="Email"><span class="ms">mail</span></a></span>';
-      if (/address/i.test(r[0])) return '<span class="pjs-va"><a href="https://maps.google.com/?q=' + encodeURIComponent(v) + '" target="_blank" rel="noopener" aria-label="Open in Maps"><span class="ms">map</span></a></span>';
-      return '';
-    };
-    var wide = function (r) { return /note|job/i.test(r[0]) || String(r[1]).length > 40; };
-    view.innerHTML = '<div class="pjs-vh"><b>Details</b><button type="button" class="pm-btn" data-pjs-edit><span class="ms">edit</span>Edit details</button></div>'
-      + '<div class="pjs-vg">' + rows.map(function (r) { return '<div class="pjs-vr' + (wide(r) ? ' wide' : '') + '"><div class="pjs-vt"><small>' + esc(r[0]) + '</small><div>' + link(r) + '</div></div>' + acts(r) + '</div>'; }).join('') + '</div>';
+    /* Overview: who the customer is (with ways to reach them) next to the job's facts.
+       Anything missing shows a small "Add" that opens the form. */
+    var find = function (re) { for (var q = 0; q < rows.length; q++) if (re.test(rows[q][0])) return rows.splice(q, 1)[0]; return null; };
+    var nm = find(/name/i), ph = find(/phone|mobile|cell/i), em = find(/e-?mail/i);
+    var who = (nm && nm[1]) || '';
+    var ini = who.split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() || '?';
+    var add = function (what) { return '<button type="button" class="pjs-add" data-pjs-edit><span class="ms">add</span>Add ' + what + '</button>'; };
+    var num = ph && ph[1] ? esc(ph[1].replace(/[^\d+]/g, '')) : '';
+    var line = function (ico, html) { return '<div class="pjs-cl"><span class="ms">' + ico + '</span>' + html + '</div>'; };
+    var cust = '<div class="pjs-cust"><div class="pjs-cu"><span class="pjs-cu-av">' + esc(ini) + '</span><div class="pjs-cu-t"><small>Customer</small><b>' + (who ? esc(who) : 'No name yet') + '</b></div></div>'
+      + '<div class="pjs-cls">'
+      + line('call', num ? '<a href="tel:' + num + '">' + esc(ph[1]) + '</a><a class="pjs-mini" href="sms:' + num + '">Text</a>' : add('phone'))
+      + line('mail', em && em[1] ? '<a href="mailto:' + esc(em[1]) + '">' + esc(em[1]) + '</a>' : add('email'))
+      + '</div><div class="pjs-cust-ap"></div></div>';
+    var ICO = [[/address|site|location/i, 'location_on'], [/crew|team/i, 'groups'], [/^job|type|scope|work/i, 'construction'], [/note/i, 'sticky_note_2'], [/date|start|end/i, 'event'], [/price|amount|value|budget/i, 'payments']];
+    var ico = function (k) { for (var q = 0; q < ICO.length; q++) if (ICO[q][0].test(k)) return ICO[q][1]; return 'info'; };
+    var lab = function (k) { return /^job\s*&\s*notes$/i.test(k) ? 'Job' : k; };
+    var info = '<div class="pjs-info"><div class="pjs-info-h"><b>Job info</b><button type="button" class="pjs-edit" data-pjs-edit><span class="ms">edit</span>Edit</button></div>'
+      + rows.map(function (r) {
+        var v = r[1], extra = '';
+        if (v && /address/i.test(r[0])) extra = '<a class="pjs-mini" href="https://maps.google.com/?q=' + encodeURIComponent(v) + '" target="_blank" rel="noopener"><span class="ms">near_me</span>Directions</a>';
+        return '<div class="pjs-ir"><span class="pjs-ir-i ms">' + ico(r[0]) + '</span><div class="pjs-ir-t"><small>' + esc(lab(r[0])) + '</small>'
+          + (v ? '<div>' + esc(v) + '</div>' : '<div>' + add(lab(r[0]).toLowerCase()) + '</div>') + '</div>' + extra + '</div>';
+      }).join('') + '</div>';
+    view.innerHTML = '<div class="pjs-ov">' + cust + info + '</div>';
+    var ap = document.getElementById('ap-row'); if (ap) view.querySelector('.pjs-cust-ap').appendChild(ap);
     pane.insertBefore(view, pane.firstChild);
     pane.classList.add('pjs-ro');
-    view.querySelector('[data-pjs-edit]').onclick = function () { pane.classList.remove('pjs-ro'); var f = pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); };
+    Array.prototype.forEach.call(view.querySelectorAll('[data-pjs-edit]'), function (b) { b.onclick = function () { pane.classList.remove('pjs-ro'); var f = pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); }; });
   }
 
   function emptyState(ico, title, text, btn, onclick) {
@@ -180,8 +195,8 @@
     var main = keys.filter(function (k) { return MAIN.indexOf(k) >= 0; }), rest = keys.filter(function (k) { return MAIN.indexOf(k) < 0; });
     if (rest.length < 2) { main = keys; rest = []; }
     bar.innerHTML = main.map(btn).join('')
-      + (rest.length ? '<div class="pjs-more"><button type="button" class="bpx-jt pjs-tab pjs-more-b" aria-haspopup="true" aria-expanded="false" onclick="bpPjsMore(event)"><span class="ms">more_horiz</span><span class="pjs-tl">More</span></button>'
-        + '<div class="pjs-menu" hidden>' + rest.map(function (k) { return btn(k, -1); }).join('') + '</div></div>' : '');
+      + (rest.length ? '<div class="pjs-more"><button type="button" class="bpx-jt pjs-tab pjs-more-b" aria-haspopup="true" aria-expanded="false" onclick="bpPjsMore(event)"><span class="pjs-tl">More</span><span class="ms pjs-chev">expand_more</span></button>'
+        + '<div class="pjs-menu" hidden><small class="pjs-menu-h">More sections</small>' + rest.map(function (k) { return btn(k, -1); }).join('') + '</div></div>' : '');
   }
 
   function enhance(id) {

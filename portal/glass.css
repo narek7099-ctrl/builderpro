@@ -326,3 +326,101 @@ html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !
 #bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(.pjs-x,[aria-label=Close]){background:rgba(0,111,255,.08) !important;border:0 !important;box-shadow:none !important;width:40px !important;height:40px !important;min-height:0 !important}
 /* the Mark pin sits top-left, so the status tag goes top-right */
 #bpx .pj-img .pj-st{left:auto;right:10px}
+
+/* ===== Open project v2: capsule tabs, clean More menu, Overview cards, slim auto-texts switch ===== */
+/* tabs: the same glass capsule as every other page */
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs{display:flex !important;flex-wrap:nowrap !important;width:-moz-fit-content;width:fit-content;max-width:calc(100% - 56px);margin:14px 28px 4px !important;padding:4px !important;gap:2px !important;
+  border-radius:999px !important;border:1px solid rgba(0,111,255,.1) !important;background:linear-gradient(180deg,rgba(234,241,252,.9),rgba(244,248,255,.75)) !important;
+  box-shadow:inset 0 1px 2px rgba(0,40,110,.07),0 1px 0 #fff !important;overflow-x:auto;scrollbar-width:none;box-sizing:border-box;flex:0 0 auto}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs::after{content:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){flex:0 0 auto;height:36px !important;padding:0 14px !important;gap:6px !important;border:0 !important;border-radius:999px !important;margin:0 !important;
+  background:transparent !important;color:#5b6b82 !important;box-shadow:none !important;font-weight:500 !important;font-size:13.5px !important;white-space:nowrap;transition:background .25s,color .2s,box-shadow .25s !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab) .ms{font-size:18px !important;color:inherit !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab):hover{color:#0b1a33 !important;background:rgba(255,255,255,.6) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-tab.on:not(.pjs-menu .pjs-tab),#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-more-b[aria-expanded=true]{
+  background:linear-gradient(180deg,#fff,#f2f7ff) !important;color:#0050c8 !important;font-weight:600 !important;
+  box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.13),0 4px 10px -4px rgba(0,111,255,.38) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-n:not(:empty){background:rgba(0,111,255,.1) !important;color:#0050c8 !important;font-size:11px;min-width:18px;height:18px;line-height:18px;border-radius:9px;padding:0 5px;text-align:center}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-tabs .pjs-more-b{padding:0 10px 0 14px !important}
+#bpx .pjs-chev{transition:transform .2s}
+#bpx .pjs-more-b[aria-expanded=true] .pjs-chev{transform:rotate(180deg)}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs{background:rgba(255,255,255,.05) !important;border-color:rgba(255,255,255,.07) !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){color:#9fb0c8 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .pjs-tabs .pjs-tab.on:not(.pjs-menu .pjs-tab){background:rgba(255,255,255,.13) !important;color:#fff !important;box-shadow:none !important}
+
+/* the More menu: a tidy popover */
+#bpx#bpx#bpx .pjs-menu{min-width:232px;padding:8px;border-radius:18px;gap:1px;background:rgba(255,255,255,.97);border:1px solid rgba(0,111,255,.12);box-shadow:0 1px 0 #fff inset,0 28px 56px -24px rgba(0,30,80,.45),0 8px 18px -12px rgba(0,30,80,.25)}
+#bpx .pjs-menu-h{display:block;padding:6px 10px 8px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a94a6}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab{height:44px !important;gap:11px !important;padding:0 10px 0 6px !important;font-size:14px !important;font-weight:500 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab .ms{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:18px !important;background:rgba(0,111,255,.08);color:#006fff !important;flex:none}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab.on .ms{background:#006fff;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab .pjs-n:not(:empty){background:rgba(0,111,255,.1);color:#0050c8;font-size:11px;min-width:20px;height:20px;line-height:20px;border-radius:10px;padding:0 6px;text-align:center}
+#bpx.bpx-dark .pjs-menu-h{color:#7d8aa0}
+
+/* Overview */
+#bpx .pjs-ro .pjs-view{display:block;border:0 !important;background:none !important;box-shadow:none !important;padding:0 !important}
+#bpx .pjs-ov{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px;align-items:start;container-type:inline-size}
+#bpx .pjs-view{container-type:inline-size}
+@container (max-width:680px){#bpx .pjs-ov{grid-template-columns:1fr}}
+#bpx :is(.pjs-cust,.pjs-info){border-radius:18px;border:1px solid rgba(0,111,255,.12);padding:16px;
+  background:radial-gradient(120% 90% at 100% 0,rgba(0,111,255,.07),transparent 60%),linear-gradient(170deg,rgba(255,255,255,.95),rgba(244,248,255,.85));box-shadow:inset 0 1px 0 #fff,0 12px 28px -22px rgba(0,50,140,.5)}
+#bpx .pjs-cu{display:flex;align-items:center;gap:12px}
+#bpx .pjs-cu-av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(160deg,#4da3ff,#006fff);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 18px -10px rgba(0,111,255,.8)}
+#bpx .pjs-cu-t{min-width:0}
+#bpx .pjs-cu-t small,#bpx .pjs-ir-t small{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#8a94a6}
+#bpx .pjs-cu-t b{display:block;font-size:17px;font-weight:650;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pjs-cls{display:flex;flex-direction:column;gap:2px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(0,111,255,.08)}
+#bpx .pjs-cl{display:flex;align-items:center;gap:10px;min-height:38px;font-size:14px}
+#bpx .pjs-cl>.ms{font-size:18px;color:#7b8aa3;flex:none}
+#bpx .pjs-cl>a:not(.pjs-mini){color:var(--ink);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#bpx .pjs-cl>a:not(.pjs-mini):hover{color:#006fff}
+#bpx .pjs-mini{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:#006fff;background:rgba(0,111,255,.08);border-radius:999px;padding:5px 11px;text-decoration:none}
+#bpx .pjs-mini .ms{font-size:15px}
+#bpx .pjs-mini:hover{background:#006fff;color:#fff}
+#bpx .pjs-add{display:inline-flex;align-items:center;gap:3px;border:1px dashed rgba(0,111,255,.35);background:transparent;color:#006fff;font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:4px 11px 4px 7px;cursor:pointer}
+#bpx .pjs-add .ms{font-size:16px}
+#bpx .pjs-add:hover{background:rgba(0,111,255,.06)}
+#bpx .pjs-info-h{display:flex;align-items:center;justify-content:space-between;margin:-2px 0 6px}
+#bpx .pjs-info-h b{font-size:15px}
+#bpx .pjs-edit{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(0,111,255,.18);background:#fff;color:#0050c8;font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:6px 13px 6px 10px;cursor:pointer;box-shadow:0 4px 12px -8px rgba(0,60,160,.5)}
+#bpx .pjs-edit .ms{font-size:16px}
+#bpx .pjs-edit:hover{background:#006fff;color:#fff;border-color:#006fff}
+#bpx .pjs-ir{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(0,111,255,.08)}
+#bpx .pjs-info-h+.pjs-ir{border-top:0}
+#bpx .pjs-ir-i{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:none;font-size:18px;color:#006fff;background:rgba(0,111,255,.08)}
+#bpx .pjs-ir-t{flex:1;min-width:0}
+#bpx .pjs-ir-t>div{font-size:14px;margin-top:1px;color:var(--ink);overflow-wrap:anywhere;line-height:1.4}
+
+/* automatic texts: one slim line with a switch, inside the customer card */
+#bpx#bpx#bpx#bpx .ap-row{display:flex;align-items:center;gap:10px;margin:0;padding:10px 12px;border-radius:14px;border:1px solid rgba(0,111,255,.1);background:rgba(255,255,255,.7);box-shadow:none}
+#bpx .pjs-cust-ap:not(:empty){margin-top:10px}
+#bpx#bpx#bpx#bpx .ap-row>.ms{font-size:19px;color:#006fff;flex:none}
+#bpx#bpx#bpx#bpx .ap-row.paused>.ms,#bpx#bpx#bpx#bpx .ap-row.off>.ms{color:#8a94a6}
+#bpx#bpx#bpx#bpx .ap-t{flex:1;min-width:0}
+#bpx#bpx#bpx#bpx .ap-t b{display:block;font-size:13.5px;font-weight:600}
+#bpx#bpx#bpx#bpx .ap-t span{display:block;font-size:12px;color:#7b8aa3;margin-top:1px}
+#bpx .ap-sw{flex:none;width:44px;height:26px;border-radius:999px;border:0;padding:0;cursor:pointer;position:relative;background:#cfd8e6;transition:background .2s}
+#bpx .ap-sw i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,20,60,.3);transition:transform .2s}
+#bpx .ap-sw[aria-checked=true]{background:linear-gradient(160deg,#3d93ff,#006fff)}
+#bpx .ap-sw[aria-checked=true] i{transform:translateX(18px)}
+#bpx .ap-sw:focus-visible{outline:2px solid #006fff;outline-offset:2px}
+/* if the switch ever lands outside the Overview (older layout), keep it slim there too */
+#bpx#bpx#bpx#bpx .pjs-card>.ap-row{margin:12px 28px 0}
+
+/* dark */
+#bpx.bpx-dark :is(.pjs-cust,.pjs-info){background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);box-shadow:none}
+#bpx#bpx#bpx#bpx.bpx-dark .ap-row{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+#bpx.bpx-dark .pjs-edit{background:rgba(255,255,255,.06);color:#9cc5ff;border-color:rgba(255,255,255,.12)}
+#bpx.bpx-dark :is(.pjs-cls,.pjs-ir){border-color:rgba(255,255,255,.07)}
+
+/* phone: same look, thumb-sized */
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-tabs{max-width:calc(100% - 32px);margin:12px 16px 4px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-tabs .pjs-tab:not(.pjs-menu .pjs-tab){height:40px !important;padding:0 14px !important;font-size:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m .pjs-menu .pjs-tab{height:50px !important;font-size:15px !important}
+#bpx.bp-m .pjs-cl{min-height:46px;font-size:15px}
+#bpx.bp-m .pjs-mini{padding:8px 14px;font-size:14px}
+#bpx.bp-m .pjs-add{padding:8px 14px 8px 10px;font-size:14px}
+#bpx.bp-m .pjs-edit{padding:9px 15px 9px 12px;font-size:14px}
+#bpx.bp-m .ap-sw{width:52px;height:30px}
+#bpx.bp-m .ap-sw i{width:24px;height:24px}
+#bpx.bp-m .ap-sw[aria-checked=true] i{transform:translateX(22px)}

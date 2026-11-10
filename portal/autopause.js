@@ -25,13 +25,14 @@
   /* ---------- 1. the pause switch on the project ---------- */
   function pauseRow(j) {
     /* nothing goes out on its own until HighLevel is connected, so don't claim it does */
-    if (window.bpGhlLinkedNow && bpGhlLinkedNow() === false) return '<div class="ap-row" id="ap-row"><span class="ms">notifications_off</span>'
-      + '<div><b>Automatic messages: Not set up yet</b><span>Texts and emails to this customer start going out on their own once your workspace setup is finished.</span></div></div>';
+    if (window.bpGhlLinkedNow && bpGhlLinkedNow() === false) return '<div class="ap-row off" id="ap-row"><span class="ms">notifications_off</span>'
+      + '<div class="ap-t"><b>Automatic texts</b><span>Start once your setup is finished</span></div></div>';
     if (window.bpGhlLinked && !pauseRow.asked) { pauseRow.asked = true; bpGhlLinked().then(function (v) { var r = document.getElementById('ap-row'); if (v === false && r && window._bpProjId) { var jj = bpJobsGet().filter(function (x) { return x.id === window._bpProjId; })[0]; if (jj) r.outerHTML = pauseRow(jj); } }); }
     var on = !j.autoPause;
-    return '<div class="ap-row" id="ap-row"><span class="ms">' + (on ? 'notifications_active' : 'notifications_paused') + '</span>'
-      + '<div><b>Automatic messages: ' + (on ? 'On' : 'Paused') + '</b><span>' + (on ? 'Texts and emails to this customer go out as the job moves along.' : 'Nothing automatic goes to this customer. Alerts to you still come through.') + '</span></div>'
-      + '<button class="bpx-rowbtn" onclick="bpAutoPause(\'' + j.id + '\')">' + (on ? 'Pause' : 'Turn back on') + '</button></div>';
+    /* one slim line with a switch: on = texts and emails go out as the job moves along */
+    return '<div class="ap-row' + (on ? ' on' : ' paused') + '" id="ap-row"><span class="ms">' + (on ? 'notifications_active' : 'notifications_paused') + '</span>'
+      + '<div class="ap-t"><b>Automatic texts</b><span>' + (on ? 'On · sent as the job moves along' : 'Paused · alerts to you still come through') + '</span></div>'
+      + '<button type="button" class="ap-sw" role="switch" aria-checked="' + on + '" aria-label="Automatic texts for this customer" onclick="bpAutoPause(\'' + j.id + '\')"><i></i></button></div>';
   }
   window.bpAutoPause = function (id) {
     var jobs = bpJobsGet(), j = jobs.filter(function (x) { return x.id === id; })[0]; if (!j) return;
@@ -47,7 +48,10 @@
       try {
         if (isCrew()) return r;
         var j = bpJobsGet().filter(function (x) { return x.id === id; })[0], tab = document.querySelector('.bpx-modalcard [data-pj-tab]');
-        if (j && tab && !document.getElementById('ap-row')) tab.parentNode.insertAdjacentHTML('beforebegin', pauseRow(j));
+        if (j && tab && !document.getElementById('ap-row')) {
+          var slot = document.querySelector('.pjs-cust-ap');   /* the Overview's customer card, when it is there */
+          if (slot) slot.innerHTML = pauseRow(j); else tab.parentNode.insertAdjacentHTML('beforebegin', pauseRow(j));
+        }
       } catch (e) {}
       return r;
     };
