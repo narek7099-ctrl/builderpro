@@ -119,3 +119,8 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 "This week" was day pills with dots and the chosen day's list underneath.
 
 - live site (main): `0d4bb48`
+
+## Before the today-banner week card (2026-11-10)
+"This week" was a 7-column board with job bars.
+
+- live site (main): `57f7329`

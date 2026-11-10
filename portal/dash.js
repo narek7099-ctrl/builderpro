@@ -408,39 +408,50 @@
   function week() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [];
     var days = [], now = new Date();
-    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), wd: d.toLocaleDateString('en-US', { weekday: 'short' }), num: d.getDate(), d: d }); }
+    for (var i = 0; i < 7; i++) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 12); days.push({ iso: d.toISOString().slice(0, 10), d: d }); }
     var idx = {}; days.forEach(function (d, i) { idx[d.iso] = i; });
-    /* a mini week board: one row per job, its crew days drawn as continuous bars; appointments as chips */
-    var rows = [], crewDays = 0, apptN = 0;
+    var wd = function (i) { return i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : days[i].d.toLocaleDateString('en-US', { weekday: 'short' }); };
+    var short = function (i) { return days[i].d.toLocaleDateString('en-US', { weekday: 'short' }); };
+    /* each job once, at its next booked day this week, with the span of its days */
+    var items = [], todayN = 0, booked = {};
     jobs.forEach(function (j) {
       if (j.status !== 'active' || !j.sched) return;
       var on = (j.sched.dates || []).map(function (x) { return idx[x]; }).filter(function (x) { return x !== undefined; }).sort(function (a, b) { return a - b; });
-      if (!on.length) return; crewDays += on.length;
-      var runs = [], st = on[0], pv = on[0];
-      for (var k = 1; k <= on.length; k++) { if (k < on.length && on[k] === pv + 1) { pv = on[k]; continue; } runs.push([st, pv]); if (k < on.length) { st = pv = on[k]; } }
-      rows.push({ name: j.name || 'Project', sub: (j.title || '') + (j.sched.time ? ' · ' + j.sched.time : ''), runs: runs, kind: 'c', id: j.id });
+      if (!on.length) return;
+      if (on[0] === 0) todayN++;
+      on.forEach(function (x) { booked[x] = (booked[x] || '') + 'c'; });
+      var all = (j.sched.dates || []).slice().sort(), pos = all.indexOf(days[on[0]].iso) + 1;
+      items.push({ k: 'c', at: on[0], t: j.sched.time || 'All day', name: j.name || 'Project', sub: j.title || 'Crew on site',
+        span: on.length > 1 ? short(on[0]) + '–' + short(on[on.length - 1]) : '', tag: all.length > 1 ? 'Day ' + pos + ' of ' + all.length : '', id: j.id });
     });
     (D.events || []).forEach(function (a) {
-      var k = idx[String(a.start || '').slice(0, 10)]; if (k === undefined) return; apptN++;
-      rows.push({ name: a.name || 'Appointment', sub: (a.time || '') + (a.what ? ' · ' + a.what : ''), runs: [[k, k]], kind: 'a' });
+      var k = idx[String(a.start || '').slice(0, 10)]; if (k === undefined) return;
+      if (k === 0) todayN++;
+      booked[k] = (booked[k] || '') + 'a';
+      items.push({ k: 'a', at: k, t: a.time || '', name: a.name || 'Appointment', sub: a.what || 'Inspection', span: '', tag: '' });
     });
-    var range = days[0].d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + days[6].d.toLocaleDateString('en-US', { month: days[6].d.getMonth() === days[0].d.getMonth() ? undefined : 'short', day: 'numeric' });
-    var head = '<div class="bpx-ptitle">This week<span class="lg2">' + range + '</span></div>';
-    var cols = '<div class="wkc-cols" aria-hidden="true">' + days.map(function (d, i) { return '<span class="' + (i === 0 ? 'today' : '') + (d.d.getDay() % 6 === 0 ? ' wkend' : '') + '"></span>'; }).join('') + '</div>';
-    var hdr = '<div class="wkc-hdr">' + days.map(function (d, i) { return '<span class="' + (i === 0 ? 'today' : '') + '"><small>' + (i === 0 ? 'Today' : d.wd) + '</small><b>' + d.num + '</b></span>'; }).join('') + '</div>';
-    if (!rows.length) return '<div class="bpx-panel wkc">' + head + '<div class="wkc-board">' + cols + hdr
-      + '<div class="wkc-empty"><span class="ms">event_available</span><b>Nothing booked this week</b><button type="button" class="bpx-linkbtn" onclick="bpNav(\'calendar\')">Schedule a crew →</button></div></div></div>';
-    var MAX = 4, shown = rows.slice(0, MAX);
-    var bars = shown.map(function (r) {
-      return '<div class="wkc-row">' + r.runs.map(function (u) {
-        var one = u[0] === u[1];
-        return '<button type="button" class="wkc-bar ' + r.kind + (one ? ' one' : '') + '" style="grid-column:' + (u[0] + 1) + ' / ' + (u[1] + 2) + '" onclick="' + (r.id ? 'window.bpProjOpen?bpProjOpen(\'' + esc(r.id) + '\'):bpNav(\'activejobs\')' : 'bpNav(\'calendar\')') + '" title="' + esc(r.name + (r.sub ? ' — ' + r.sub : '')) + '">'
-          + '<b>' + esc(r.name) + '</b>' + (r.sub && !one ? '<small>' + esc(r.sub) + '</small>' : '') + '</button>';
-      }).join('') + '</div>';
-    }).join('');
-    return '<div class="bpx-panel wkc">' + head + '<div class="wkc-board">' + cols + hdr + '<div class="wkc-rows">' + bars + '</div></div>'
-      + '<div class="wkc-foot"><span><i class="c"></i>' + crewDays + ' crew day' + (crewDays === 1 ? '' : 's') + '</span><span><i class="a"></i>' + apptN + ' appointment' + (apptN === 1 ? '' : 's') + '</span>'
-      + (rows.length > MAX ? '<span class="wkc-more">+' + (rows.length - MAX) + ' more</span>' : '') + '<button type="button" class="bpx-linkbtn" onclick="bpNav(\'calendar\')">Open calendar →</button></div></div>';
+    items.sort(function (a, b) { return a.at - b.at || String(a.t).localeCompare(String(b.t)); });
+    var t0 = days[0].d;
+    var tile = '<button type="button" class="wka-day" onclick="bpNav(\'calendar\')"><b>' + t0.getDate() + '</b><span class="wka-dl"><small>' + t0.toLocaleDateString('en-US', { weekday: 'long' }) + '</small>'
+      + '<span>' + t0.toLocaleDateString('en-US', { month: 'long' }) + '</span></span>'
+      + '<em>' + (todayN ? todayN + (todayN === 1 ? ' thing' : ' things') + ' today' : 'Nothing today') + '</em></button>';
+    /* the whole week at a glance: a letter, the date, a dot for each kind of thing booked */
+    var strip = '<div class="wka-strip">' + days.map(function (d, i) {
+      var b = booked[i] || '';
+      return '<span class="' + (i === 0 ? 'today' : '') + (b ? ' on' : '') + '"><small>' + d.d.toLocaleDateString('en-US', { weekday: 'narrow' }) + '</small><b>' + d.d.getDate() + '</b><i>'
+        + (b.indexOf('c') >= 0 ? '<u class="c"></u>' : '') + (b.indexOf('a') >= 0 ? '<u class="a"></u>' : '') + '</i></span>';
+    }).join('') + '</div>';
+    var list = items.length
+      ? items.slice(0, 4).map(function (it) {
+          return '<button type="button" class="wka-it ' + it.k + '" onclick="' + (it.id ? 'window.bpProjOpen?bpProjOpen(\'' + esc(it.id) + '\'):bpNav(\'activejobs\')' : 'bpNav(\'calendar\')') + '">'
+            + '<span class="wka-when"><b>' + esc(wd(it.at)) + '</b><small>' + esc(it.t) + '</small></span>'
+            + '<span class="wka-what"><b>' + esc(it.name) + '</b><small>' + esc(it.sub) + (it.span ? ' · ' + esc(it.span) : '') + '</small></span>'
+            + (it.tag ? '<span class="wka-tag">' + esc(it.tag) + '</span>' : '') + '</button>';
+        }).join('') + (items.length > 4 ? '<div class="wka-more">+' + (items.length - 4) + ' more this week</div>' : '')
+      : '<div class="wka-none"><span class="ms">event_available</span><b>Nothing booked this week</b><button type="button" class="bpx-linkbtn" onclick="bpNav(\'calendar\')">Schedule a crew →</button></div>';
+    var range = t0.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' – ' + days[6].d.toLocaleDateString('en-US', { month: days[6].d.getMonth() === t0.getMonth() ? undefined : 'short', day: 'numeric' });
+    return '<div class="bpx-panel wka"><div class="bpx-ptitle">This week<span class="lg2">' + range + '</span></div>'
+      + '<div class="wka-body"><div class="wka-left">' + tile + strip + '</div><div class="wka-list"><div class="wka-h">Coming up</div>' + list + '</div></div></div>';
   }
   window.bpDashDay = function (btn, i) {
     var card = btn.closest('.twk'); if (!card) return;

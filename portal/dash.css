@@ -1392,3 +1392,74 @@
 #bpx.bpx-dark .wkc-cols span{background:rgba(255,255,255,.03)}
 #bpx.bpx-dark .wkc-cols span.today{background:rgba(0,111,255,.16)}
 @media (prefers-reduced-motion:reduce){#bpx .wkc-bar{animation:none}}
+
+/* ---------- This week, phone-widget style (2026-11-10): a big glossy
+   today tile on the left, "Coming up" on the right ---------- */
+#bpx .wka{display:flex;flex-direction:column;container-type:inline-size}
+#bpx .wka-body{flex:1;display:grid;grid-template-columns:132px minmax(0,1fr);gap:14px;margin-top:6px}
+#bpx#bpx#bpx .wka-day{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;justify-content:center;padding:16px 14px;border-radius:20px;color:#fff;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(255,255,255,.35),rgba(255,255,255,0) 50%),linear-gradient(160deg,#3d98ff 0%,#006fff 45%,#0040a8 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 14px 28px -14px rgba(0,80,200,.75);transition:translate .35s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx .wka-day:hover{translate:0 -3px}
+#bpx .wka-day small{font-size:13px;font-weight:600;opacity:.9}
+#bpx .wka-day b{font-size:52px;font-weight:700;line-height:1;letter-spacing:-.04em;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+#bpx .wka-day span{font-size:13px;opacity:.85}
+#bpx .wka-day em{font-style:normal;margin-top:12px;font-size:12px;font-weight:600;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.18);align-self:flex-start;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+#bpx .wka-list{min-width:0;display:flex;flex-direction:column;gap:6px}
+#bpx .wka-h{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7a90;margin:2px 2px 2px}
+#bpx#bpx#bpx .wka-it{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;position:relative;
+  background:rgba(255,255,255,.75);border:1px solid rgba(0,111,255,.1);box-shadow:inset 0 1px 0 #fff;transition:translate .3s cubic-bezier(.22,1,.36,1),border-color .25s,box-shadow .3s}
+#bpx#bpx#bpx .wka-it::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:#006fff}
+#bpx#bpx#bpx .wka-it.a::before{background:#16a86c}
+#bpx#bpx#bpx .wka-it:hover{translate:0 -2px;border-color:rgba(0,111,255,.26);box-shadow:inset 0 1px 0 #fff,0 12px 22px -16px rgba(0,60,160,.5)}
+#bpx .wka-when{flex:none;width:74px;display:flex;flex-direction:column;padding-left:4px}
+#bpx .wka-when b{font-size:13px;font-weight:700;color:#0b1a33}
+#bpx .wka-when small{font-size:12px;color:#6b7a90;font-variant-numeric:tabular-nums}
+#bpx .wka-what{flex:1;min-width:0;display:flex;flex-direction:column}
+#bpx .wka-what b{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .wka-what small{font-size:12px;color:#6b7a90;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .wka-tag{flex:none;font-size:11px;font-weight:700;color:#0050c8;background:#eaf2ff;border-radius:999px;padding:3px 8px}
+#bpx .wka-it.a .wka-tag{color:#12875a;background:#e6f7ef}
+#bpx .wka-more{font-size:12.5px;color:#6b7a90;padding:2px 4px}
+#bpx .wka-none{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;padding:10px;border-radius:14px;border:1px dashed rgba(0,111,255,.2)}
+#bpx .wka-none .ms{font-size:24px;color:#006fff}
+#bpx .wka-none b{font-size:14px}
+@container (max-width:380px){
+  #bpx .wka-body{grid-template-columns:1fr}
+  #bpx#bpx#bpx .wka-day{flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap;padding:12px 14px}
+  #bpx .wka-day b{font-size:30px;margin:0}
+  #bpx .wka-day em{margin:0 0 0 auto}
+  #bpx .wka-tag{display:none}
+}
+#bpx.bpx-dark .wka-it{background:rgba(255,255,255,.04)!important;border-color:rgba(255,255,255,.08)!important;box-shadow:none!important}
+#bpx.bpx-dark .wka-when b{color:#e6edf7}
+/* today as a slim banner + the week strip (2026-11-10) */
+#bpx .wka-body{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+#bpx .wka-left{display:flex;flex-direction:column;gap:10px;min-width:0}
+#bpx#bpx#bpx .wka-day{flex-direction:row;align-items:center;gap:12px;padding:14px 16px;flex:none}
+#bpx .wka-day b{font-size:44px;margin:0}
+#bpx .wka-dl{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+#bpx .wka-dl small{font-size:14px;font-weight:700;opacity:1}
+#bpx .wka-dl span{font-size:12.5px;opacity:.85}
+#bpx .wka-day em{margin:0 0 0 auto;white-space:nowrap}
+#bpx .wka-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+#bpx .wka-strip>span{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 0 6px;border-radius:12px;background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.08)}
+#bpx .wka-strip small{font-size:10.5px;font-weight:700;color:#8a97ab}
+#bpx .wka-strip b{font-size:14px;font-weight:700;color:#0b1a33;font-variant-numeric:tabular-nums}
+#bpx .wka-strip i{display:flex;gap:3px;height:6px;margin-top:1px}
+#bpx .wka-strip u{display:block;width:6px;height:6px;border-radius:50%;background:#006fff}
+#bpx .wka-strip u.a{background:#16a86c}
+#bpx .wka-strip .today{border-color:rgba(0,111,255,.35);background:#eaf2ff}
+#bpx .wka-strip .today small,#bpx .wka-strip .today b{color:#0050c8}
+@container (max-width:520px){
+  #bpx .wka-body{grid-template-columns:1fr}
+  #bpx .wka-day b{font-size:38px}
+  #bpx .wka-tag{display:none}
+}
+@container (max-width:380px){
+  #bpx#bpx#bpx .wka-day{flex-wrap:nowrap;padding:12px 14px}
+  #bpx .wka-day em{font-size:11px;padding:4px 8px}
+}
+#bpx.bpx-dark .wka-strip>span{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+#bpx.bpx-dark .wka-strip b{color:#e6edf7}
+#bpx .wka-body{align-content:start}
