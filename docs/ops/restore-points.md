@@ -124,3 +124,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 "This week" was a 7-column board with job bars.
 
 - live site (main): `57f7329`
+
+## Before the Jobs pages polish (2026-11-10)
+- Live site (main): `69d7a71`
+- Changes: job steps fold into a slim banner, status tag + "Next" line on project cards, open project shows 6 main tabs + More, details as tiles with call/text/map, light glass project header on phone.

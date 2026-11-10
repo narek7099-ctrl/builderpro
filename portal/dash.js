@@ -149,18 +149,21 @@
       var pct = est > 0 ? Math.min(100, Math.round(paid / est * 100)) : 0;
       var today = j.sched && (j.sched.dates || []).indexOf(iso) >= 0;
       var nDays = (j.sched && (j.sched.dates || []).length) || 0;
+      var pr = window.bpPlan && bpPlan.progress ? bpPlan.progress(j) : null;
+      var tag = !pr ? '' : pr.late && pr.late.length ? '<span class="pj-st late"><i></i>Behind</span>' : pr.complete ? '<span class="pj-st ok"><i></i>Ready to close</span>' : '<span class="pj-st on"><i></i>' + pr.pct + '% built</span>';
+      var next = pr && pr.next ? '<div class="pj-next"><span class="ms">flag</span>Next: <b>' + esc(pr.next.name || pr.next.label || '') + '</b>' + (pr.next.due && bpPlan.pretty ? ' · ' + esc(bpPlan.pretty(pr.next.due)) : '') + '</div>' : '';
       var meta = [];
       if (today) meta.push('<b class="pj-live"><i></i>Crew on site today</b>');
       else if (nDays) meta.push(nDays + (nDays === 1 ? ' day booked' : ' days booked'));
       if (j.photos && j.photos.length) meta.push(j.photos.length + (j.photos.length === 1 ? ' photo' : ' photos'));
       return '<article class="pj-card" onclick="bpNav(\'activejobs\');setTimeout(function(){bpProjOpen(\'' + j.id + '\')},60)">'
 
-        + '<div class="pj-img' + (img ? '' : ' pj-noimg') + '">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (!img ? noPhoto(j) : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + '</div>'
+        + '<div class="pj-img' + (img ? '' : ' pj-noimg') + '">' + '<button class="pj-mark' + (j.starred ? ' on' : '') + '" title="' + (j.starred ? 'Unmark' : 'Mark this project') + '" onclick="event.stopPropagation();bpProjStar(\'' + j.id + '\')">' + (j.starred ? 'Marked' : 'Mark') + '</button>' + (!img ? noPhoto(j) : (window.bpPF ? bpPF.img(img, 'alt="" loading="lazy"') : '<img src="' + esc(img) + '" alt="" loading="lazy">')) + (today ? '<span class="pj-flag">Today</span>' : '') + tag + '</div>'
         + '<div class="pj-body"><div class="pj-h"><b>' + esc(j.name) + '</b>' + (crew ? '' : '<span class="pj-amt">' + money(est) + '</span>') + '</div>'
         + '<div class="pj-sub">' + esc(j.title || 'Project') + '</div>'
         + (crew ? '' : '<div class="pj-bar" title="' + money(paid) + ' of ' + money(est) + ' collected"><i style="width:' + pct + '%"></i></div>'
           + '<div class="pj-pay">' + (est > 0 ? pct + '% paid · ' + money(Math.max(est - paid, 0)) + ' due' : 'no amount set') + '</div>')
-        + '<div class="pj-meta">' + meta.join(' · ') + '</div>' + (window.bpPermitChip && (j.permits || []).length ? '<div class="pj-meta">' + bpPermitChip(j) + '</div>' : '') + '</div></article>';
+        + next + '<div class="pj-meta">' + meta.join(' · ') + '</div>' + (window.bpPermitChip && (j.permits || []).length ? '<div class="pj-meta">' + bpPermitChip(j) + '</div>' : '') + '</div></article>';
     }).join('');
     return '<div class="pj-row' + (split ? ' split' : '') + '" style="grid-template-columns:repeat(' + shown.length + ',minmax(0,1fr))">' + cards + '</div>';
   }

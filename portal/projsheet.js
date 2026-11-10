@@ -24,6 +24,8 @@
     blueprints: ['Blueprints', 'architecture']
   };
   var ORDER = ['details', 'money', 'schedule', 'crew', 'subs', 'materials', 'permits', 'contract', 'cust', 'inspect', 'photos', 'docs', 'blueprints'];
+  /* the six used every day stay in the row; the rest sit under More */
+  var MAIN = ['details', 'money', 'schedule', 'crew', 'materials', 'photos'];
   var lastFocus = null;
 
   function job(id) { return (window.bpJobsGet ? bpJobsGet() : []).filter(function (x) { return x.id === (id || window._bpProjId); })[0]; }
@@ -119,8 +121,17 @@
       return v;
     };
     var view = document.createElement('section'); view.className = 'pjs-sec pjs-view';
+    /* tidy tiles: a phone gets Call and Text, an email gets Email, an address gets Map */
+    var acts = function (r) {
+      var v = r[1]; if (!v) return '';
+      if (/phone/i.test(r[0]) || r[2] === 'tel') { var n = esc(v.replace(/[^\d+]/g, '')); return '<span class="pjs-va"><a href="tel:' + n + '" aria-label="Call"><span class="ms">call</span></a><a href="sms:' + n + '" aria-label="Text"><span class="ms">sms</span></a></span>'; }
+      if (/e-?mail/i.test(r[0]) || r[2] === 'email') return '<span class="pjs-va"><a href="mailto:' + esc(v) + '" aria-label="Email"><span class="ms">mail</span></a></span>';
+      if (/address/i.test(r[0])) return '<span class="pjs-va"><a href="https://maps.google.com/?q=' + encodeURIComponent(v) + '" target="_blank" rel="noopener" aria-label="Open in Maps"><span class="ms">map</span></a></span>';
+      return '';
+    };
+    var wide = function (r) { return /note|job/i.test(r[0]) || String(r[1]).length > 40; };
     view.innerHTML = '<div class="pjs-vh"><b>Details</b><button type="button" class="pm-btn" data-pjs-edit><span class="ms">edit</span>Edit details</button></div>'
-      + rows.map(function (r) { return '<div class="pjs-vr"><small>' + esc(r[0]) + '</small><div>' + link(r) + '</div></div>'; }).join('');
+      + '<div class="pjs-vg">' + rows.map(function (r) { return '<div class="pjs-vr' + (wide(r) ? ' wide' : '') + '"><div class="pjs-vt"><small>' + esc(r[0]) + '</small><div>' + link(r) + '</div></div>' + acts(r) + '</div>'; }).join('') + '</div>';
     pane.insertBefore(view, pane.firstChild);
     pane.classList.add('pjs-ro');
     view.querySelector('[data-pjs-edit]').onclick = function () { pane.classList.remove('pjs-ro'); var f = pane.querySelector('.pjs-sec:not(.pjs-view) input'); if (f) f.focus(); };
@@ -161,11 +172,16 @@
     if (window.bpInspMount && have.indexOf('inspect') < 0) have.push('inspect');
     var keys = ORDER.filter(function (k) { return have.indexOf(k) >= 0; }).concat(have.filter(function (k) { return ORDER.indexOf(k) < 0; }));
     bar.className = 'pjs-tabs'; bar.setAttribute('role', 'tablist'); bar.setAttribute('aria-label', 'Project sections');
-    bar.innerHTML = keys.map(function (k, i) {
+    var btn = function (k, i) {
       var t = TABS[k] || [k, 'tab'];
       return '<button type="button" class="bpx-jt pjs-tab' + (i === 0 ? ' on' : '') + '" role="tab" aria-selected="' + (i === 0) + '" data-pj-tab="' + k + '" onclick="bpProjTab(\'' + k + '\')">'
         + '<span class="ms">' + t[1] + '</span><span class="pjs-tl">' + t[0] + '</span><span class="pjs-n"></span></button>';
-    }).join('');
+    };
+    var main = keys.filter(function (k) { return MAIN.indexOf(k) >= 0; }), rest = keys.filter(function (k) { return MAIN.indexOf(k) < 0; });
+    if (rest.length < 2) { main = keys; rest = []; }
+    bar.innerHTML = main.map(btn).join('')
+      + (rest.length ? '<div class="pjs-more"><button type="button" class="bpx-jt pjs-tab pjs-more-b" aria-haspopup="true" aria-expanded="false" onclick="bpPjsMore(event)"><span class="ms">more_horiz</span><span class="pjs-tl">More</span></button>'
+        + '<div class="pjs-menu" hidden>' + rest.map(function (k) { return btn(k, -1); }).join('') + '</div></div>' : '');
   }
 
   function enhance(id) {
@@ -251,6 +267,13 @@
     window.bpProjTab = function (t) {
       var r = tab.apply(this, arguments);
       var on = document.querySelector('.pjs [data-pj-tab].on');
+      var mb = document.querySelector('.pjs .pjs-more-b'), mm = document.querySelector('.pjs .pjs-menu');
+      if (mb && mm) {
+        var inMore = on && mm.contains(on); mb.classList.toggle('on', !!inMore);
+        mb.querySelector('.pjs-tl').textContent = inMore ? on.querySelector('.pjs-tl').textContent : 'More';
+        mm.hidden = true; mb.setAttribute('aria-expanded', 'false');
+        if (inMore) on = mb;
+      }
       document.querySelectorAll('.pjs [data-pj-tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.classList.contains('on'))); });
       if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       var body = document.querySelector('.pjs .pjs-body'); if (body) body.scrollTop = 0;
@@ -288,6 +311,18 @@
       bpPF.bpRender._pjs = true;
     }
   }
+  window.bpPjsMore = function (e) {
+    e.stopPropagation();
+    var b = e.currentTarget, m = b.parentNode.querySelector('.pjs-menu'); if (!m) return;
+    m.hidden = !m.hidden; b.setAttribute('aria-expanded', String(!m.hidden));
+    if (!m.hidden) {
+      var r = b.getBoundingClientRect();
+      /* the sheet is animated, so 'fixed' is measured from the sheet, not the window: find that origin first */
+      m.style.top = '0px'; m.style.left = '0px'; var o = m.getBoundingClientRect(), mw = m.offsetWidth || 220;
+      m.style.maxHeight = Math.max(180, window.innerHeight - r.bottom - 96) + 'px'; m.style.top = (r.bottom + 6 - o.top) + 'px'; m.style.left = (Math.max(8, Math.min(r.left, window.innerWidth - mw - 12)) - o.left) + 'px';
+      setTimeout(function () { document.addEventListener('click', function off(ev) { if (!m.contains(ev.target)) { m.hidden = true; b.setAttribute('aria-expanded', 'false'); } document.removeEventListener('click', off, true); }, true); }, 0);
+    }
+  };
   hook();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook);
 
