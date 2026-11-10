@@ -253,3 +253,76 @@
 /* the homepage sits under the app on the same page: while the app is open its
    moving parts (the logo strip, the flowing line) stop, so they cost nothing */
 html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !important}
+
+/* ===== Projects polish (2026-11-10) ===== */
+/* job steps: a slim banner that opens on tap */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .bpp-ask{background:linear-gradient(120deg,rgba(255,255,255,.82),rgba(234,243,255,.7));border:1px solid rgba(0,111,255,.16);border-radius:16px;padding:10px 14px;box-shadow:inset 0 1px 0 #fff,0 10px 24px -20px rgba(0,60,160,.5)}
+#bpx#bpx#bpx#bpx#bpx#bpx .bpp-ask-h{align-items:center}
+#bpx#bpx#bpx#bpx#bpx#bpx .bpp-ask-h>.ms:first-child{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:19px;color:#fff;background:linear-gradient(160deg,#3d93ff,#006fff);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 14px -8px rgba(0,111,255,.8)}
+#bpx#bpx#bpx#bpx#bpx#bpx .bpp-ask-h b{font-size:14px;margin:0}
+#bpx .bpp-rev{flex:none;font-size:12.5px;font-weight:700;color:#006fff;background:rgba(0,111,255,.09);border-radius:999px;padding:6px 12px}
+#bpx .bpp-ask[open] .bpp-rev{display:none}
+#bpx.bpx-dark .bpp-rev{color:#7db4ff;background:rgba(0,111,255,.18)}
+
+/* project cards: status tag on the photo + what's next */
+#bpx .pj-img{overflow:hidden}
+#bpx .pj-img img{transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+@media (any-hover:hover){#bpx .pj-card:hover .pj-img img{transform:scale(1.05)}}
+#bpx .pj-st{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 10px 5px 8px;border-radius:999px;background:rgba(255,255,255,.88);color:#0b1b33;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 6px 16px -10px rgba(0,0,0,.6)}
+#bpx .pj-st i{width:7px;height:7px;border-radius:50%;background:#006fff;box-shadow:0 0 0 3px rgba(0,111,255,.18)}
+#bpx .pj-st.late i{background:#e5484d;box-shadow:0 0 0 3px rgba(229,72,77,.2)}
+#bpx .pj-st.ok i{background:#12a150;box-shadow:0 0 0 3px rgba(18,161,80,.2)}
+#bpx .pj-noimg .pj-st{position:static;display:inline-flex;margin:0 0 0 8px;background:rgba(0,111,255,.08)}
+#bpx .pj-next{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--grey);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .pj-next .ms{font-size:15px;color:#006fff}
+#bpx .pj-next b{color:var(--ink);font-weight:650}
+#bpx#bpx .pj-bar i{background:linear-gradient(90deg,#4da3ff,#006fff)}
+
+/* open project: glass header */
+#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .pjs-hero{background:radial-gradient(120% 140% at 100% 0,rgba(0,111,255,.10),transparent 55%),linear-gradient(180deg,#fff,#f6f9ff) !important;border-bottom:1px solid rgba(0,111,255,.12) !important}
+#bpx#bpx#bpx .pjs-ring .fg{stroke:#006fff}
+#bpx#bpx#bpx .pjs-ring .tr{stroke:rgba(0,111,255,.12)}
+
+/* six main tabs + More */
+#bpx .pjs-more{flex:0 0 auto;display:flex}
+#bpx#bpx#bpx .pjs-tabs .pjs-more-b .ms{font-size:19px}
+#bpx .pjs-menu{position:fixed;z-index:9999;min-width:210px;max-height:60vh;overflow:auto;display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:16px;background:rgba(255,255,255,.96);border:1px solid rgba(0,111,255,.14);box-shadow:0 24px 48px -20px rgba(0,30,80,.45);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#bpx .pjs-menu[hidden]{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab{width:100%;justify-content:flex-start;height:42px !important;border-radius:11px !important;background:none !important;color:var(--ink) !important;box-shadow:none !important;border:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab:hover{background:rgba(0,111,255,.07) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab.on{background:rgba(0,111,255,.1) !important;color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .pjs-menu .pjs-tab .pjs-n{margin-left:auto}
+#bpx.bpx-dark .pjs-menu{background:rgba(16,24,40,.96);border-color:rgba(255,255,255,.1)}
+
+/* details as tidy tiles */
+#bpx .pjs-vg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+#bpx#bpx#bpx .pjs-vg .pjs-vr{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid rgba(0,111,255,.12);border-radius:14px;background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(240,246,255,.75));box-shadow:inset 0 1px 0 #fff}
+#bpx .pjs-vg .pjs-vr.wide{grid-column:1/-1}
+#bpx .pjs-vt{flex:1;min-width:0}
+#bpx .pjs-vt small{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--grey-l,#8a94a6)}
+#bpx .pjs-vt>div{font-size:14px;margin-top:2px;overflow-wrap:anywhere}
+#bpx .pjs-va{display:flex;gap:6px;flex:none}
+#bpx .pjs-va a{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(0,111,255,.09);color:#006fff;text-decoration:none}
+#bpx .pjs-va a:hover{background:#006fff;color:#fff}
+#bpx .pjs-va .ms{font-size:19px}
+#bpx.bpx-dark .pjs-vg .pjs-vr{background:rgba(255,255,255,.04) !important;border-color:rgba(255,255,255,.08) !important;box-shadow:none !important}
+@media (max-width:640px){#bpx .pjs-vg{grid-template-columns:1fr}#bpx .pjs-va a{width:42px;height:42px}}
+
+/* phone: light glass header instead of navy */
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero{background:radial-gradient(120% 120% at 100% 0,rgba(0,111,255,.12),transparent 60%),linear-gradient(180deg,#fff,#f4f8ff) !important;color:var(--ink) !important;border-bottom:1px solid rgba(0,111,255,.12) !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(h1,h2,h3,b,strong,.pjs-name,.pjs-t){color:#0b1b33 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(small,span:not(.ms),p,label,.pjs-sub,.pjs-addr,.pjs-job){color:#5b6b82 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero svg circle.tr{stroke:rgba(0,111,255,.12)}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(.pjs-x,[aria-label=Close]){background:rgba(0,111,255,.08) !important;color:#0b1b33 !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(button,a.pjl-b,.pjl-b,.pjs-act,a):not(.pjs-x):not([aria-label=Close]){background:#fff !important;border:1px solid rgba(0,111,255,.16) !important;color:#0b1b33 !important;box-shadow:0 6px 16px -12px rgba(0,60,160,.5) !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(button,a,.pjl-b,.pjs-act) *{color:inherit !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(button,.pjl-b,.pjs-act).pri,#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero .pjs-act.primary{background:linear-gradient(160deg,#3d93ff,#006fff) !important;border-color:transparent !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero .pjs-act .ms{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero .pjs-act.primary .ms{color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is([class*=pill],[class*=badge]){background:rgba(0,111,255,.09) !important;color:#0058cc !important}
+#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero .pjs-addr a{background:none !important;border:0 !important;box-shadow:none !important;color:#5b6b82 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero .pjs-act.primary{background:linear-gradient(160deg,#3d93ff,#006fff) !important;border-color:transparent !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero .pjs-act.primary *{color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bp-m:not(.bpx-dark) .pjs-hero :is(.pjs-x,[aria-label=Close]){background:rgba(0,111,255,.08) !important;border:0 !important;box-shadow:none !important;width:40px !important;height:40px !important;min-height:0 !important}
+/* the Mark pin sits top-left, so the status tag goes top-right */
+#bpx .pj-img .pj-st{left:auto;right:10px}

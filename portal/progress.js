@@ -235,10 +235,10 @@
     var one = due.length === 1;
     /* on a phone it starts folded to one line, so the projects come first */
     /* folded on phones until opened; once opened it stays open while answering, step after step */
-    return '<details class="bpp-ask"' + (window.innerWidth >= 760 || window._bppAskOpen ? ' open' : '') + ' ontoggle="window._bppAskOpen=this.open">'
+    return '<details class="bpp-ask"' + (window._bppAskOpen ? ' open' : '') + ' ontoggle="window._bppAskOpen=this.open">'
       + '<summary class="bpp-ask-h"><span class="ms">event_available</span>'
       + '<div><b>' + (one ? '1 job step to check off' : due.length + ' job steps to check off') + '</b>'
-      + '<span>Was it finished? Tap Finished or Not yet and the schedule updates itself.</span></div><span class="ms bpp-chev">expand_more</span></summary>'
+      + '<span>Was it finished? Tap Finished or Not yet and the schedule updates itself.</span></div><span class="bpp-rev">Review</span><span class="ms bpp-chev">expand_more</span></summary>'
       + '<div class="bpp-ask-rows">' + due.slice(0, 6).map(function (d) {
         return '<div class="bpp-ask-row"><div class="bpp-ask-w"><b>' + esc(d.ph.name) + '</b>'
           + '<span>' + esc(d.job.name) + (d.job.title ? ' · ' + esc(d.job.title) : '') + ' · due ' + P.pretty(d.ph.due) + '</span></div>'
