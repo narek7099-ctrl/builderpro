@@ -6587,7 +6587,7 @@ function bpActiveJobs(){
     head='<tr><th>Job</th><th class="bpx-r">Collected</th><th class="bpx-r">Costs</th><th class="bpx-r">Profit</th><th class="bpx-r">Margin</th><th></th></tr>';
     var pgD=bpPage('jobsD',done,10,'bpActiveJobs()'); pgNav=pgD.nav;
     rows=done.length?pgD.items.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
-      return '<tr><td>'+bpJobCell(j)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'<span class="bpx-mut">—</span>')+'</td>'
+      return '<tr class="jr-open" style="cursor:pointer" title="Open the job record" onclick="bpProjOpen(\''+j.id+'\')"><td>'+bpJobCell(j)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'<span class="bpx-mut">—</span>')+'</td>'
         +'<td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(e)+'</td>'
         +'<td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td>'
         +'<td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td>'
@@ -14633,7 +14633,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261026a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
-<script src="portal/projsheet.js?v=20261110d"></script>
+<script src="portal/projsheet.js?v=20261110e"></script>
 <script src="portal/contact.js?v=20261102c"></script>
 <script src="portal/gcal.js?v=20261108b"></script>
 <script src="portal/inspect.js?v=20261024q36"></script>
@@ -14696,7 +14696,8 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/pipeline.js?v=20261028a"></script>
 <script src="portal/tour.js?v=20261109b"></script>
 <script src="portal/native.js?v=20261104a"></script>
+<script src="portal/jobrecord.js?v=20261110b"></script>
 <link rel="stylesheet" href="portal/tour.css?v=20261109b">
-<link rel="stylesheet" href="portal/glass.css?v=20261110d">
+<link rel="stylesheet" href="portal/glass.css?v=20261110f">
 <!--/app-only-->
 </html>
