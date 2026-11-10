@@ -130,7 +130,9 @@
     var add = function (what) { return '<button type="button" class="pjs-add" data-pjs-edit><span class="ms">add</span>Add ' + what + '</button>'; };
     var num = ph && ph[1] ? esc(ph[1].replace(/[^\d+]/g, '')) : '';
     var line = function (ico, html) { return '<div class="pjs-cl"><span class="ms">' + ico + '</span>' + html + '</div>'; };
-    var cust = '<div class="pjs-cust"><div class="pjs-cu"><span class="pjs-cu-av">' + esc(ini) + '</span><div class="pjs-cu-t"><small>Customer</small><b>' + (who ? esc(who) : 'No name yet') + '</b></div></div>'
+    /* the whole card goes to this person's profile in Leads; its own buttons and links still do their own thing */
+    var cust = '<div class="pjs-cust" role="button" tabindex="0" title="Open ' + esc(who || 'the customer') + '\u2019s profile in Leads" onclick="if(!event.target.closest(\'a,button,.pjs-cust-ap\')&&window.bpOpenPerson)bpOpenPerson(window._bpProjId||\'\')" onkeydown="if(event.key===\'Enter\'&&event.target===this&&window.bpOpenPerson)bpOpenPerson(window._bpProjId||\'\')">'
+      + '<div class="pjs-cu"><span class="pjs-cu-av">' + esc(ini) + '</span><div class="pjs-cu-t"><small>Customer</small><b>' + (who ? esc(who) : 'No name yet') + '</b></div><span class="pjs-cu-go">Profile<span class="ms">chevron_right</span></span></div>'
       + '<div class="pjs-cls">'
       + line('call', num ? '<a href="tel:' + num + '">' + esc(ph[1]) + '</a><a class="pjs-mini" href="sms:' + num + '">Text</a>' : add('phone'))
       + line('mail', em && em[1] ? '<a href="mailto:' + esc(em[1]) + '">' + esc(em[1]) + '</a>' : add('email'))

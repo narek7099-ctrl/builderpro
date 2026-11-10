@@ -140,3 +140,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before default photos take turns 1-4 (2026-11-10)
 - Live site (main): `5ac0d53`
 - Changes: default card photos cycle roofers, HVAC, painter, pool in order instead of matching the job type.
+
+## Before the completed-job record (2026-11-10)
+- Live site (main): `113b17e`
+- Changes: Overview customer card same height as Job info and opens the Leads profile; completed jobs open a read-only record (money, won/finished, stages, who worked + hours + clock-ins, expenses, materials, payments, photos, documents, notes). New file portal/jobrecord.js.
