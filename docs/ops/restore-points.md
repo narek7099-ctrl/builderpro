@@ -136,3 +136,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before default trade photos on project cards (2026-11-10)
 - Live site (main): `64d308c`
 - Changes: projects with no photos show one of the 4 website trade photos (roofing, HVAC, painting, pool), matched to the job, with an "Add photo" button; list rows use the same photo as a thumbnail.
+
+## Before default photos take turns 1-4 (2026-11-10)
+- Live site (main): `5ac0d53`
+- Changes: default card photos cycle roofers, HVAC, painter, pool in order instead of matching the job type.
