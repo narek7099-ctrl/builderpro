@@ -132,3 +132,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the open-project redesign v2 (2026-11-10)
 - Live site (main): `f3848b5`
 - Changes: capsule tabs + cleaner More menu, Overview as a Customer card + Job info list, automatic texts as a slim switch inside the customer card.
+
+## Before default trade photos on project cards (2026-11-10)
+- Live site (main): `64d308c`
+- Changes: projects with no photos show one of the 4 website trade photos (roofing, HVAC, painting, pool), matched to the job, with an "Add photo" button; list rows use the same photo as a thumbnail.
