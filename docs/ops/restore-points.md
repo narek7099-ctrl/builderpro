@@ -128,3 +128,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the Jobs pages polish (2026-11-10)
 - Live site (main): `69d7a71`
 - Changes: job steps fold into a slim banner, status tag + "Next" line on project cards, open project shows 6 main tabs + More, details as tiles with call/text/map, light glass project header on phone.
+
+## Before the open-project redesign v2 (2026-11-10)
+- Live site (main): `f3848b5`
+- Changes: capsule tabs + cleaner More menu, Overview as a Customer card + Job info list, automatic texts as a slim switch inside the customer card.
