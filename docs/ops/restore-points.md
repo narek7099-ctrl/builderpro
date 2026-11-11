@@ -156,3 +156,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the glass look on every website page (2026-11-11)
 - Live site (main): `d70f077`
 - Changes: all marketing, calculator and compare pages, sign-up, help and legal pages get the light ribbons, frosted-glass sections, General Sans headlines and mint main buttons. New shared file site/ribbons.js.
+
+## Before the popular plan card fix (2026-11-11)
+- Live site (main): `d97c4a4`
+- Changes: the $199 card gets an even blue edge, a solid blue price and no lift.
