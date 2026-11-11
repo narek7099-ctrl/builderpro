@@ -59,7 +59,7 @@ function serve() {
 }
 // what each page must show (signed out, no backend)
 const CHECKS = [
-  { page: 'index.html', w: 1366, want: async (p) => { const t = await p.evaluate(() => document.body.innerText); return [['shows $99/$199/$299', /\$99/.test(t) && /\$199/.test(t) && /\$299/.test(t)], ['says 14 days free', /14[- ]day|14 days/i.test(t)]]; } },
+  { page: 'index.html', w: 1366, want: async (p) => { const t = await p.evaluate(() => document.body.innerText); return [['shows $99/$199/$299', /\$99/.test(t) && /\$199/.test(t) && /\$299/.test(t)], ['says the free trial (pilot month or 14 days)', /14[- ]day|14 days|first month free/i.test(t)]]; } },
   { page: 'index.html', w: 390, want: async (p) => [['fits a phone (no sideways scroll)', await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)]] },
   { page: 'app.html', w: 1366, want: async (p) => [['log-in form is there', await p.evaluate(() => !!document.getElementById('bpxLoginForm') && !!document.getElementById('bpxPassword'))]] },
   { page: 'app.html', w: 390, want: async (p) => [['log-in form fits a phone', await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)]] },
