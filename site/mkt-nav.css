@@ -164,3 +164,19 @@ html body .pnav .pnav_cta:hover{background:linear-gradient(180deg,#5cebc4,var(--
 html body section.blk:has(.ctaband)>.wrap{max-width:none;padding:0}
 html body .ctaband{margin:0 auto}
 html body .ctaband .sub{margin-left:auto;margin-right:auto}
+
+/* the pilot program (site/pilot.js sets <html data-pilot="on|off">) */
+.pilot-off{display:none}
+html[data-pilot="off"] .pilot-on{display:none!important}
+html[data-pilot="off"] .pilot-off{display:inline}
+.pilot-pill{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 10px;width:-moz-fit-content;width:fit-content;max-width:100%;padding:7px 14px 7px 11px;margin:0 0 1.25rem;border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.7));box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(22,199,154,.4),0 10px 24px -14px rgba(22,199,154,.8);
+  font-size:13.5px;line-height:1.3;color:#001530;text-decoration:none;transition:box-shadow .2s,transform .2s}
+.pilot-pill:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(22,199,154,.7),0 14px 28px -14px rgba(22,199,154,.9)}
+.pilot-pill i{width:9px;height:9px;border-radius:50%;background:#16c79a;box-shadow:0 0 0 4px rgba(22,199,154,.2);animation:pilotPulse 2s ease-in-out infinite;flex:none}
+.pilot-pill b{font-weight:600}
+.pilot-pill span{color:#4a5869}
+.pilot-pill em{font-style:normal;font-weight:700;color:#0a8f6f}
+@keyframes pilotPulse{50%{opacity:.4}}
+@media (prefers-reduced-motion:reduce){.pilot-pill i{animation:none}}
+html body header.hero .pilot-pill{display:flex;margin:0 auto 14px}

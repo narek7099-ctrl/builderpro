@@ -160,3 +160,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the popular plan card fix (2026-11-11)
 - Live site (main): `d97c4a4`
 - Changes: the $199 card gets an even blue edge, a solid blue price and no lift.
+
+## Before the pilot program (2026-11-11)
+- Live site (main): `d191350`
+- Changes: 20-seat pilot. The first 20 sign-ups get a 30-day trial (account-signup v26, billing-webhook v22, accounts.pilot, pilot_seats()); the site shows a live seats-left badge and "first month free", going back to 14 days when the seats are gone. To end the pilot early: set ai_config pilot_seats to 0.
