@@ -16,7 +16,8 @@ def _v(p):
 
 def head():
     return ('<link rel="stylesheet" href="/site/mkt-nav.css?v=%s">'
-            '<script src="/site/mkt-nav.js?v=%s" defer></script>') % (_v('site/mkt-nav.css'), _v('site/mkt-nav.js'))
+            '<script src="/site/mkt-nav.js?v=%s" defer></script>'
+            '<script src="/site/ribbons.js?v=%s" defer></script>') % (_v('site/mkt-nav.css'), _v('site/mkt-nav.js'), _v('site/ribbons.js'))
 
 
 CHEV = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>'

@@ -152,3 +152,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before white plan cards and new app screenshots (2026-11-11)
 - Live site (main): `622e24c`
 - Changes: all three plan cards white glass (popular one with a blue-to-mint edge), buttons on blue cards stay white, the website app screenshots retaken from the current app (WebP).
+
+## Before the glass look on every website page (2026-11-11)
+- Live site (main): `d70f077`
+- Changes: all marketing, calculator and compare pages, sign-up, help and legal pages get the light ribbons, frosted-glass sections, General Sans headlines and mint main buttons. New shared file site/ribbons.js.
