@@ -144,3 +144,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the completed-job record (2026-11-10)
 - Live site (main): `113b17e`
 - Changes: Overview customer card same height as Job info and opens the Leads profile; completed jobs open a read-only record (money, won/finished, stages, who worked + hours + clock-ins, expenses, materials, payments, photos, documents, notes). New file portal/jobrecord.js.
+
+## Before the glass website with light ribbons and mint buttons (2026-11-11)
+- Live site (main): `f1c5d04`
+- Changes: homepage background of drifting blue and mint light ribbons, frosted-glass cards with a blue shine, mint (#16C79A) for the Start free trial buttons. Cube animation unchanged.

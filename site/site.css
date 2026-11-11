@@ -847,3 +847,76 @@ body.dl #estimator{display:none !important;}
   .hero_left-mid{flex:1;align-items:stretch;justify-content:center;gap:2rem;}
   .hero_left-bot{flex:none;gap:1.5rem;}
 }
+
+
+/* 11. GLASS + LIGHT RIBBONS (Nov 2026) -------------------------------------
+   The page behind the cards is a slow drift of blue and mint light ribbons
+   (drawn by site.js on a fixed canvas, #dlRibbons). Every card is a pane of
+   frosted glass over it: white, see-through, with a soft blue shine. Mint is
+   the third colour, kept for the buttons that start a trial (the 10%).     */
+:root{
+  --mint:#16c79a; --mint-hi:#3fe0b6; --mint-lo:#0fa880;
+  --glass:linear-gradient(155deg,rgba(255,255,255,.84) 0%,rgba(255,255,255,.6) 48%,rgba(246,250,255,.7) 100%);
+  --glass-shine:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.10),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(22,199,154,.07),transparent 60%);
+  --glass-edge:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.35),0 24px 60px -42px rgba(0,40,120,.45);
+}
+body.dl{background:#e8f0fa radial-gradient(70% 55% at 85% 10%,rgba(0,111,255,.10),transparent 60%) fixed;}
+#dlRibbons{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block;will-change:transform;transform:translateZ(0)}
+
+/* the panes */
+body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush):not(.is-pop):not(.is-dark),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
+  background:var(--glass-shine),var(--glass);
+  border:1px solid rgba(255,255,255,.78);
+  box-shadow:var(--glass-edge);
+  -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);
+}
+body.dl .card.is-outline{background:linear-gradient(155deg,rgba(255,255,255,.5),rgba(255,255,255,.28));border:1px solid rgba(255,255,255,.7);}
+/* the blue cards: glossy, with a highlight across the top */
+body.dl .card.is-blue{
+  background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.22),transparent 50%),radial-gradient(80% 60% at 0% 100%,rgba(22,199,154,.28),transparent 60%),linear-gradient(160deg,#2b8cff 0%,#006fff 45%,#0056d8 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.12),0 28px 60px -34px rgba(0,80,220,.75);
+}
+/* the dark plan card: glossy navy glass */
+body.dl .pl.is-dark{background:radial-gradient(120% 80% at 100% 0%,rgba(0,111,255,.35),transparent 55%),radial-gradient(80% 60% at 0% 100%,rgba(22,199,154,.22),transparent 60%),linear-gradient(160deg,#0a2547,#001530 60%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.06),0 30px 60px -34px rgba(0,21,48,.8)}
+body.dl .pl.is-pop{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 40px 80px -30px rgba(0,111,255,.6)}
+/* the cube's card keeps the clip's own grey (so its edges never show) and is
+   glazed on top: a gloss across the top, a soft blue shine and a bright edge */
+body.dl .hero_right,body.dl .hero_right.has-video{background:var(--gray-100);border:1px solid rgba(255,255,255,.75);box-shadow:var(--glass-edge)}
+body.dl .hero_right::after{content:"";position:absolute;inset:0;z-index:12;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(170deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 22%),radial-gradient(70% 50% at 100% 0%,rgba(0,111,255,.10),transparent 60%),radial-gradient(60% 45% at 0% 100%,rgba(22,199,154,.10),transparent 65%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.4)}
+/* the nav bar is glass too */
+body.dl .navbar_bar,body.dl .pnav_bar{background:linear-gradient(155deg,rgba(255,255,255,.82),rgba(255,255,255,.6))!important;border:1px solid rgba(255,255,255,.8);
+  -webkit-backdrop-filter:blur(20px) saturate(1.7);backdrop-filter:blur(20px) saturate(1.7);box-shadow:inset 0 1px 0 #fff,0 14px 34px -22px rgba(0,30,90,.4)!important;}
+
+/* buttons: glossy navy and blue; mint for "start a trial" */
+body.dl .btn{background-image:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,0) 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 8px 20px -12px rgba(0,21,48,.6);transition:background-color .3s,color .3s,border-color .3s,box-shadow .3s,transform .25s}
+body.dl .btn:hover{transform:translateY(-1px)}
+body.dl .btn.is-outline{background-color:rgba(255,255,255,.45);background-image:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+body.dl :is(.hero_cta-main,.pnav_cta,.btn.js-open-drawer,.drawer .btn[type=submit],a.btn[href^="signup.html"]),
+body.dl .card.is-blue a.btn[href^="signup.html"]{
+  background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.45),transparent 55%),linear-gradient(180deg,var(--mint-hi),var(--mint) 55%,var(--mint-lo));
+  color:var(--dark)!important;border-color:rgba(255,255,255,.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,90,60,.18),0 10px 26px -12px rgba(22,199,154,.85);
+}
+body.dl :is(.hero_cta-main,.pnav_cta,.btn.js-open-drawer,.drawer .btn[type=submit],a.btn[href^="signup.html"]):hover{
+  background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.55),transparent 55%),linear-gradient(180deg,#5cebc4,var(--mint-hi) 50%,var(--mint));
+  color:var(--dark)!important;border-color:rgba(255,255,255,.7);transform:translateY(-1px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 14px 30px -12px rgba(22,199,154,.95);
+}
+body.dl .pnav_cta{border:1px solid rgba(255,255,255,.55)}
+/* small mint touches: the live dots and ticks */
+body.dl .pill_icon{box-shadow:0 4px 12px -6px rgba(0,111,255,.8)}
+
+/* phones and touch screens: the same look without the live blur (it costs
+   battery while the ribbons move); the panes are a little more solid instead */
+@media (hover:none),(max-width:767px){
+  body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush):not(.is-pop):not(.is-dark),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+    background:var(--glass-shine),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.74) 50%,rgba(246,250,255,.82));
+  }
+}
+@media (prefers-reduced-transparency:reduce){
+  body.dl :is(.card:not(.is-blue):not(.is-slate),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa){background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+}
