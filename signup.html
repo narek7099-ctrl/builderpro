@@ -161,6 +161,17 @@ h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
   .msg{margin-top:14px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* the website's look (Nov 2026): light ribbons behind (site/ribbons.js), the
+   panels frosted glass, mint for the button that moves you forward */
+body{background:#e8f0fa radial-gradient(70% 55% at 85% 10%,rgba(0,111,255,.10),transparent 60%) fixed}
+#dlRibbons{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block;will-change:transform;transform:translateZ(0)}
+.panel,.side,aside{background:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.08),transparent 55%),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.72) 50%,rgba(246,250,255,.8));
+  border:1px solid rgba(255,255,255,.8)!important;box-shadow:inset 0 1px 0 #fff,0 24px 60px -42px rgba(0,40,120,.45)!important;-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6)}
+.plan{background:linear-gradient(160deg,rgba(255,255,255,.95),rgba(255,255,255,.8))}
+.btn.pri{background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.45),transparent 55%),linear-gradient(180deg,#3fe0b6,#16c79a 55%,#0fa880);color:#001530;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,90,60,.18),0 10px 26px -12px rgba(22,199,154,.85)}
+.btn.pri:hover{background:linear-gradient(180deg,#5cebc4,#3fe0b6 50%,#16c79a);color:#001530}
+@media (hover:none),(max-width:767px){.panel,.side,aside{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(155deg,rgba(255,255,255,.94),rgba(255,255,255,.84))}}
 </style>
 <script async src="https://builderpro-os.com/embed/track.js?u=0909842f-f8b2-4651-950a-a772aef42b1d"></script>
 <!--seo-->
@@ -186,6 +197,7 @@ h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
   </section>
   <aside class="side" id="side" aria-label="Your plan"></aside>
 </main>
+<script src="/site/ribbons.js?v=20261111" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <script>
 var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";

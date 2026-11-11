@@ -1,3 +1,4 @@
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
 /* ==== The homepage's nav (site/present-nav.html), for the marketing and
    compare pages. Same look; links point back to the homepage. Built into
    each page by tools/mkt_nav.py. ==== */
@@ -65,8 +66,7 @@
 }
 @media (max-width:380px){ .pnav_cta{padding:0 12px;font-size:13px} .pnav_logo{font-size:17px} }
 .pnav a,.pnav button,.pnav_sheet a,.pnav_sheet button{font-family:inherit;text-decoration:none;border:0;background-color:transparent;cursor:pointer;color:inherit}
-.pnav_cta{display:inline-flex;align-items:center;justify-content:center;background:#001530 !important;color:#fff !important}
-.pnav_cta:hover{background:#006fff !important}
+.pnav_cta{display:inline-flex;align-items:center;justify-content:center}
 .pnav_burger{background:rgba(0,21,48,.06) !important}
 .pnav_tools a{display:block;text-align:left;padding:14px 16px;border-radius:16px;background:#e6f0ff;color:#001530}
 .pnav_tools a b{display:block;font-size:16px;font-weight:600}
@@ -88,3 +88,79 @@
 
 /* links inside running text need more than color to stand out */
 .fcopy a,p a:not(.btn):not(.pnav_cta):not(.pnav_login){text-decoration:underline;text-underline-offset:2px}
+
+
+/* ==== The homepage look on every marketing, calculator and compare page
+   (Nov 2026): light ribbons drifting behind (mkt-nav.js draws them on
+   #dlRibbons), each section a pane of frosted glass with a blue shine,
+   General Sans headlines with one blue phrase, mint for the main buttons.
+   "html body" in front so these win over each page's own <style>. ==== */
+:root{--mint:#16c79a;--mint-hi:#3fe0b6;--mint-lo:#0fa880;--gs:'General Sans','Inter',system-ui,sans-serif;
+  --glass:linear-gradient(155deg,rgba(255,255,255,.84) 0%,rgba(255,255,255,.6) 48%,rgba(246,250,255,.7) 100%);
+  --glass-shine:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.10),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(22,199,154,.07),transparent 60%);
+  --glass-edge:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.35),0 24px 60px -42px rgba(0,40,120,.45)}
+html body{background:#e8f0fa radial-gradient(70% 55% at 85% 10%,rgba(0,111,255,.10),transparent 60%) fixed;color:#001530}
+#dlRibbons{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block;will-change:transform;transform:translateZ(0)}
+html body .bar{display:none}
+
+/* headlines: the homepage's bold sans, one phrase in blue */
+html body :is(h1,h2,h3){font-family:var(--gs);font-weight:600;letter-spacing:-.035em;color:#001530}
+html body h1{line-height:.98;font-size:clamp(40px,6vw,76px)}
+html body h2{line-height:1.02}
+html body :is(h1,h2,h3) em{font-style:normal;color:#006fff}
+html body :is(.stepn,.tn,.estbig){font-family:var(--gs);font-weight:600;letter-spacing:-.03em}
+html body .estbig em{font-style:normal;color:#006fff}
+html body :is(.kicker,.ey){display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;background:rgba(255,255,255,.7);
+  box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.1);color:#001530;font-family:var(--gs);font-weight:500;letter-spacing:.02em;text-transform:none;font-size:13px}
+html body .ey::before{content:"";width:18px;height:18px;border-radius:6px;background:#006fff linear-gradient(#fff,#fff) center/9px 3px no-repeat;flex:none}
+html body .kicker .dot{width:18px;height:18px;border-radius:6px;background:#006fff linear-gradient(#fff,#fff) center/9px 3px no-repeat}
+
+/* every section is a pane of glass, 6px apart, like the homepage mosaic */
+html body :is(header.hero,section.blk,footer){max-width:min(1240px,calc(100% - 12px));margin:6px auto;border-radius:20px;
+  background:var(--glass-shine),var(--glass);border:1px solid rgba(255,255,255,.78);box-shadow:var(--glass-edge);
+  -webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6)}
+html body header.hero{padding:84px 0 70px;margin-top:0}
+html body section.blk{padding:60px 0}
+html body footer{margin-bottom:12px}
+html body section.blk:has(.ctaband){background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0}
+/* tiles inside a pane */
+html body :is(.card,.trust,.estbox,.mk-frame,.cmp,.tw,table){background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(255,255,255,.72));border:1px solid rgba(255,255,255,.85);
+  box-shadow:inset 0 1px 0 #fff,0 16px 36px -28px rgba(0,40,120,.45)}
+html body .card:hover{border-color:rgba(0,111,255,.3);box-shadow:inset 0 1px 0 #fff,0 22px 44px -26px rgba(0,60,170,.5)}
+html body .ci{background:rgba(0,111,255,.09)}
+html body .step{border-bottom-color:rgba(0,111,255,.1)}
+html body .stepn{color:#006fff;opacity:1}
+/* the closing band: a glossy blue card, white buttons on it */
+html body .ctaband{max-width:min(1240px,calc(100% - 12px));border-radius:20px;color:#fff;
+  background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.22),transparent 50%),radial-gradient(80% 60% at 0% 100%,rgba(22,199,154,.28),transparent 60%),linear-gradient(160deg,#2b8cff 0%,#006fff 45%,#0056d8 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 28px 60px -34px rgba(0,80,220,.75)}
+html body .ctaband :is(h2,h2 em){color:#fff}
+html body .ctaband .sub{color:rgba(255,255,255,.85)}
+html body .ctaband .btn.btn{background:linear-gradient(180deg,#fff,#eef5ff);color:#001530;border-color:#fff;box-shadow:inset 0 1px 0 #fff,0 10px 24px -12px rgba(0,30,90,.6)}
+html body .ctaband .btn.btn:hover{color:#0050c8;background:#fff}
+
+/* buttons: mint for the main action, glass for the other */
+html body .btn{font-family:var(--gs);font-weight:600}
+html body :is(.btn-blue,.pnav_cta){background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.45),transparent 55%),linear-gradient(180deg,var(--mint-hi),var(--mint) 55%,var(--mint-lo));
+  color:#001530;border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,90,60,.18),0 10px 26px -12px rgba(22,199,154,.85)}
+html body :is(.btn-blue,.pnav_cta):hover{background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.55),transparent 55%),linear-gradient(180deg,#5cebc4,var(--mint-hi) 50%,var(--mint));color:#001530;transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 14px 30px -12px rgba(22,199,154,.95)}
+html body .btn-light{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 0 #fff,0 6px 16px -10px rgba(0,30,90,.35);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html body .pnav_bar{background:linear-gradient(155deg,rgba(255,255,255,.82),rgba(255,255,255,.6));border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1px 0 #fff,0 14px 34px -22px rgba(0,30,90,.4)}
+html body .pnav_cta{border-radius:999px}
+/* the calculator tabs: the homepage's glass capsule */
+html body .mk-tabs{background:linear-gradient(180deg,rgba(234,241,252,.9),rgba(244,248,255,.75));box-shadow:inset 0 1px 2px rgba(0,40,110,.07),0 1px 0 #fff;border:1px solid rgba(0,111,255,.1)}
+html body .mk-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#fff,#f2f7ff);color:#0050c8;box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(0,111,255,.13),0 4px 10px -4px rgba(0,111,255,.38)}
+html body .xlink{background:rgba(255,255,255,.7);border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 0 #fff}
+
+/* phones: same look, no live blur (saves battery while the ribbons move) */
+@media (hover:none),(max-width:767px){
+  html body :is(header.hero,section.blk,footer){-webkit-backdrop-filter:none;backdrop-filter:none;
+    background:var(--glass-shine),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.74) 50%,rgba(246,250,255,.82))}
+  html body header.hero{padding:56px 0 44px}
+  html body section.blk{padding:42px 0}
+}
+html body .pnav .pnav_cta,html body .pnav_sheet .pnav_cta{background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.45),transparent 55%),linear-gradient(180deg,var(--mint-hi),var(--mint) 55%,var(--mint-lo));color:#001530;border:1px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 8px 20px -10px rgba(22,199,154,.85)}
+html body .pnav .pnav_cta:hover{background:linear-gradient(180deg,#5cebc4,var(--mint-hi) 50%,var(--mint));color:#001530}
+html body section.blk:has(.ctaband)>.wrap{max-width:none;padding:0}
+html body .ctaband{margin:0 auto}
+html body .ctaband .sub{margin-left:auto;margin-right:auto}
