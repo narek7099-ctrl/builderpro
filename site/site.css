@@ -864,7 +864,7 @@ body.dl{background:#e8f0fa radial-gradient(70% 55% at 85% 10%,rgba(0,111,255,.10
 #dlRibbons{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block;will-change:transform;transform:translateZ(0)}
 
 /* the panes */
-body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush):not(.is-pop):not(.is-dark),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
+body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
   background:var(--glass-shine),var(--glass);
   border:1px solid rgba(255,255,255,.78);
   box-shadow:var(--glass-edge);
@@ -876,10 +876,22 @@ body.dl .card.is-blue{
   background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.22),transparent 50%),radial-gradient(80% 60% at 0% 100%,rgba(22,199,154,.28),transparent 60%),linear-gradient(160deg,#2b8cff 0%,#006fff 45%,#0056d8 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.12),0 28px 60px -34px rgba(0,80,220,.75);
 }
-/* the dark plan card: glossy navy glass */
-body.dl .pl.is-dark{background:radial-gradient(120% 80% at 100% 0%,rgba(0,111,255,.35),transparent 55%),radial-gradient(80% 60% at 0% 100%,rgba(22,199,154,.22),transparent 60%),linear-gradient(160deg,#0a2547,#001530 60%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.06),0 30px 60px -34px rgba(0,21,48,.8)}
-body.dl .pl.is-pop{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 40px 80px -30px rgba(0,111,255,.6)}
+/* plans: all three are white glass, so the mint buttons sit on white. The
+   popular one is lifted, with a glowing blue-to-mint edge and a blue price;
+   Enterprise gets a navy tag. */
+body.dl .pl.is-pop,body.dl .pl.is-dark{color:var(--dark)}
+body.dl .card.pl.is-pop{border:1.5px solid transparent!important;
+  background:radial-gradient(90% 60% at 100% 0%,rgba(0,111,255,.07),transparent 60%) padding-box,linear-gradient(160deg,rgba(255,255,255,.97),rgba(255,255,255,.9)) padding-box,linear-gradient(140deg,#4da3ff,#006fff 40%,#16c79a) border-box!important;
+  box-shadow:inset 0 1px 0 #fff,0 34px 70px -34px rgba(0,111,255,.55),0 0 0 6px rgba(0,111,255,.05)!important;transform:translateY(-10px)}
+body.dl .pl.is-pop::before{background:radial-gradient(circle,rgba(0,111,255,.12),rgba(0,111,255,0) 65%)}
+body.dl .pl.is-pop .pl_tag{background:linear-gradient(180deg,#2b8cff,#006fff);color:#fff;box-shadow:0 6px 16px -8px rgba(0,111,255,.8)}
+body.dl .pl.is-pop .pl_price b{background:linear-gradient(120deg,#006fff,#0a8f8a 120%);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.dl .pl.is-dark .pl_tag{background:#001530;color:#fff}
+body.dl :is(.pl.is-pop,.pl.is-dark) .pl_desc{color:#6b7888}
+body.dl :is(.pl.is-pop,.pl.is-dark) .pl_rule{color:#8a96a4}
+body.dl :is(.pl.is-pop,.pl.is-dark) .pl_rule:after{background:rgba(0,21,48,.1)}
+body.dl :is(.pl.is-pop,.pl.is-dark) li svg{background:#e6f0ff;stroke:#006fff}
+@media (max-width:767px){body.dl .card.pl.is-pop{transform:none}}
 /* the cube's card keeps the clip's own grey (so its edges never show) and is
    glazed on top: a gloss across the top, a soft blue shine and a bright edge */
 body.dl .hero_right,body.dl .hero_right.has-video{background:var(--gray-100);border:1px solid rgba(255,255,255,.75);box-shadow:var(--glass-edge)}
@@ -912,7 +924,7 @@ body.dl .pill_icon{box-shadow:0 4px 12px -6px rgba(0,111,255,.8)}
 /* phones and touch screens: the same look without the live blur (it costs
    battery while the ribbons move); the panes are a little more solid instead */
 @media (hover:none),(max-width:767px){
-  body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush):not(.is-pop):not(.is-dark),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
+  body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
     -webkit-backdrop-filter:none;backdrop-filter:none;
     background:var(--glass-shine),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.74) 50%,rgba(246,250,255,.82));
   }
@@ -920,3 +932,6 @@ body.dl .pill_icon{box-shadow:0 4px 12px -6px rgba(0,111,255,.8)}
 @media (prefers-reduced-transparency:reduce){
   body.dl :is(.card:not(.is-blue):not(.is-slate),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa){background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
 }
+/* on a blue card the buttons stay white: mint is for white surfaces only */
+body.dl .card.is-blue .btn.btn.btn{background:linear-gradient(180deg,#fff,#eef5ff);color:var(--dark)!important;border-color:#fff;box-shadow:inset 0 1px 0 #fff,0 10px 24px -12px rgba(0,30,90,.6)}
+body.dl .card.is-blue .btn.btn.btn:hover{background:linear-gradient(180deg,#fff,#fff);color:#0050c8!important}

@@ -148,3 +148,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the glass website with light ribbons and mint buttons (2026-11-11)
 - Live site (main): `f1c5d04`
 - Changes: homepage background of drifting blue and mint light ribbons, frosted-glass cards with a blue shine, mint (#16C79A) for the Start free trial buttons. Cube animation unchanged.
+
+## Before white plan cards and new app screenshots (2026-11-11)
+- Live site (main): `622e24c`
+- Changes: all three plan cards white glass (popular one with a blue-to-mint edge), buttons on blue cards stay white, the website app screenshots retaken from the current app (WebP).
