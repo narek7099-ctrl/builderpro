@@ -880,12 +880,13 @@ body.dl .card.is-blue{
    popular one is lifted, with a glowing blue-to-mint edge and a blue price;
    Enterprise gets a navy tag. */
 body.dl .pl.is-pop,body.dl .pl.is-dark{color:var(--dark)}
-body.dl .card.pl.is-pop{border:1.5px solid transparent!important;
-  background:radial-gradient(90% 60% at 100% 0%,rgba(0,111,255,.07),transparent 60%) padding-box,linear-gradient(160deg,rgba(255,255,255,.97),rgba(255,255,255,.9)) padding-box,linear-gradient(140deg,#4da3ff,#006fff 40%,#16c79a) border-box!important;
-  box-shadow:inset 0 1px 0 #fff,0 34px 70px -34px rgba(0,111,255,.55),0 0 0 6px rgba(0,111,255,.05)!important;transform:translateY(-10px)}
+body.dl .card.pl.is-pop{border:2px solid rgba(0,111,255,.55)!important;
+  background:radial-gradient(90% 60% at 100% 0%,rgba(0,111,255,.07),transparent 60%),linear-gradient(160deg,rgba(255,255,255,.97),rgba(255,255,255,.9))!important;
+  box-shadow:inset 0 1px 0 #fff,0 30px 60px -36px rgba(0,111,255,.6)!important;transform:none}
 body.dl .pl.is-pop::before{background:radial-gradient(circle,rgba(0,111,255,.12),rgba(0,111,255,0) 65%)}
 body.dl .pl.is-pop .pl_tag{background:linear-gradient(180deg,#2b8cff,#006fff);color:#fff;box-shadow:0 6px 16px -8px rgba(0,111,255,.8)}
-body.dl .pl.is-pop .pl_price b{background:linear-gradient(120deg,#006fff,#0a8f8a 120%);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.dl .pl.is-pop .pl_price b{color:#006fff}
+body.dl .pl .pl_desc{margin-top:.6rem}
 body.dl .pl.is-dark .pl_tag{background:#001530;color:#fff}
 body.dl :is(.pl.is-pop,.pl.is-dark) .pl_desc{color:#6b7888}
 body.dl :is(.pl.is-pop,.pl.is-dark) .pl_rule{color:#8a96a4}
