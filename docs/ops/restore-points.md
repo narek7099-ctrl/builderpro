@@ -164,3 +164,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the pilot program (2026-11-11)
 - Live site (main): `d191350`
 - Changes: 20-seat pilot. The first 20 sign-ups get a 30-day trial (account-signup v26, billing-webhook v22, accounts.pilot, pilot_seats()); the site shows a live seats-left badge and "first month free", going back to 14 days when the seats are gone. To end the pilot early: set ai_config pilot_seats to 0.
+
+## Before removing the pilot from the website (2026-11-11)
+- Live site (main): `d212eb1`
+- Changes: pilot badge and "first month free" wording taken off the site until the launch video is ready; ai_config pilot_seats set to 0 so sign-ups get the normal 14 days. The pilot code stays (site/pilot.js, pilot_seats(), account-signup): to turn it back on, set pilot_seats to 20 and put the page wording back from main `d212eb1`.
