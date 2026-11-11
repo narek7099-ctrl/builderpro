@@ -3,7 +3,8 @@
 //   2) saves the account (plan, price, every onboarding answer) and fills the
 //      portal's settings (company, owner, hours) so the software is set up
 //   3) starts the GHL build + AI receptionist in the background
-//   4) returns a Stripe Checkout link: card now, 14-day trial, then monthly
+//   4) returns a Stripe Checkout link: card now, 14-day trial (30 days for the
+//      first pilot seats, ai_config.pilot_seats / pilot_seats()), then monthly
 //
 //   POST { plan, name, email, phone, password, business, trade, profile{...}, website? (honeypot) }
 //   -> { ok, checkout_url? }   (no checkout_url when STRIPE_SECRET_KEY isn't set: plain trial)
@@ -25,6 +26,12 @@ export const ADDONS: Record<string, { name: string; price: number }> = {
 type Addons = { ai?: boolean; website?: boolean };
 const pickAddons = (plan: string, a: Addons = {}): string[] => Object.keys(ADDONS).filter((k) => a[k as keyof Addons] && !(k === "ai" && plan === "enterprise"));
 const TRIAL_DAYS = Number(Deno.env.get("TRIAL_DAYS") ?? "14");
+const PILOT_DAYS = Number(Deno.env.get("PILOT_TRIAL_DAYS") ?? "30");
+/* a pilot seat still open? (the first sign-ups get a month free) */
+async function pilotOpen(): Promise<boolean> {
+  try { const r = await sb("rpc/pilot_seats", { method: "POST", body: "{}" }); const d = await r.json(); return Number(d?.left ?? 0) > 0; }
+  catch { return false; }
+}
 const SK = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const SITE = (Deno.env.get("SITE_URL") ?? "https://builderpro-os.com").replace(/\/$/, "");
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
@@ -42,7 +49,7 @@ const item = (i: number, name: string, price: number, key: string) => ({
   [`line_items[${i}][price_data][unit_amount]`]: String(price * 100), [`line_items[${i}][price_data][recurring][interval]`]: "month",
   [`line_items[${i}][price_data][product_data][name]`]: name, [`line_items[${i}][price_data][product_data][metadata][key]`]: key,
 });
-export async function checkoutFor(uid: string, email: string, business: string, plan: string, customer = "", addons: string[] = []) {
+export async function checkoutFor(uid: string, email: string, business: string, plan: string, customer = "", addons: string[] = [], days = TRIAL_DAYS) {
   const p = PLANS[plan];
   // a customer saved under the other Stripe mode (test vs live) doesn't exist here: make a fresh one
   if (customer) { try { await stripe(`/customers/${customer}`); } catch { customer = ""; } }
@@ -51,7 +58,8 @@ export async function checkoutFor(uid: string, email: string, business: string, 
   addons.forEach((k, i) => { lines = { ...lines, ...item(i + 1, `BuilderPro ${ADDONS[k].name}`, ADDONS[k].price, k) }; });
   const s = await stripe("/checkout/sessions", {
     mode: "subscription", customer, client_reference_id: uid, ...lines,
-    "subscription_data[trial_period_days]": String(TRIAL_DAYS),
+    "subscription_data[trial_period_days]": String(days),
+    "subscription_data[metadata][trial_days]": String(days), "metadata[trial_days]": String(days),
     "subscription_data[metadata][user_id]": uid, "subscription_data[metadata][plan]": plan, "subscription_data[metadata][addons]": addons.join(","),
     "metadata[user_id]": uid, "metadata[plan]": plan, "metadata[addons]": addons.join(","),
     payment_method_collection: "always",
@@ -154,7 +162,7 @@ Deno.serve(async (req) => {
     if (b.op === "cancel" || b.op === "uncancel") return await cancelPlan(a, b.op === "cancel", clean(b.reason, 200), clean(b.notes, 2000));
     if (!a || !SK || !PLANS[a.plan]) return json({ ok: false, error: "Nothing to pay for." }, 400);
     let c;
-    try { c = await checkoutFor(u.id, a.email, a.business, a.plan, a.stripe_customer_id, pickAddons(a.plan, a.profile?.addons ?? {})); }
+    try { c = await checkoutFor(u.id, a.email, a.business, a.plan, a.stripe_customer_id, pickAddons(a.plan, a.profile?.addons ?? {}), a.pilot ? PILOT_DAYS : TRIAL_DAYS); }
     catch (e) { console.error("stripe resume", e); return json({ ok: false, error: "The payment page couldn't be opened. Try again in a minute." }, 502); }
     await sb(`accounts?user_id=eq.${u.id}`, { method: "PATCH", body: JSON.stringify({ stripe_customer_id: c.customer, checkout_url: c.url }) });
     return json({ ok: true, checkout_url: c.url });
@@ -215,13 +223,16 @@ Deno.serve(async (req) => {
   const uid = ud.id as string;
   await log(true);
 
+  // a pilot seat if one is open: a month free instead of 14 days
+  const pilot = await pilotOpen();
+  const days = pilot ? PILOT_DAYS : TRIAL_DAYS;
   // Stripe first, so the account row knows where billing stands
   let checkout = { customer: "", url: "" };
-  if (SK) { try { checkout = await checkoutFor(uid, email, business, plan, "", addons); } catch (e) { console.error("stripe", e); } }
+  if (SK) { try { checkout = await checkoutFor(uid, email, business, plan, "", addons, days); } catch (e) { console.error("stripe", e); } }
   await sb("accounts", { method: "POST", body: JSON.stringify({
     user_id: uid, email, full_name: name, business, phone, trade, plan, price_monthly: PLANS[plan].price + addons.reduce((t, k) => t + ADDONS[k].price, 0), profile,
     ai_addon: addons.includes("ai") ? "active" : "off",
-    status: checkout.url ? "checkout" : "trial", trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 864e5).toISOString(),
+    status: checkout.url ? "checkout" : "trial", trial_ends_at: new Date(Date.now() + days * 864e5).toISOString(), pilot,
     stripe_customer_id: checkout.customer, checkout_url: checkout.url }) });
 
   if (addons.includes("website")) await websiteRequest({ user_id: uid, email, business });
@@ -244,5 +255,5 @@ Deno.serve(async (req) => {
   })().catch(async (e) => { await sb(`accounts?user_id=eq.${uid}`, { method: "PATCH", body: JSON.stringify({ setup_log: ["Error: " + String(e).slice(0, 200)] }) }); });
   try { (globalThis as unknown as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime?.waitUntil(work); } catch { await work; }
 
-  return json({ ok: true, trial_days: TRIAL_DAYS, checkout_url: checkout.url || undefined });
+  return json({ ok: true, trial_days: days, pilot, checkout_url: checkout.url || undefined });
 });

@@ -1,5 +1,5 @@
 // billing-webhook: Stripe tells us where each BuilderPro subscription stands.
-//   checkout.session.completed      -> trial (card on file, 14 days free)
+//   checkout.session.completed      -> trial (card on file, 14 days free; 30 for a pilot seat)
 //   customer.subscription.updated   -> trial | active | past_due | cancelled, and cancel_at
 //                                      (when a plan set to end will end)
 //   customer.subscription.deleted   -> cancelled
@@ -55,7 +55,7 @@ async function flag(ev: any, o: any) {
     body = `Reason: ${o.reason ?? "not given"}. Answer it in the Stripe dashboard (Payments > Disputes) before ${o.evidence_details?.due_by ? new Date(o.evidence_details.due_by * 1000).toISOString().slice(0, 10) : "the deadline"}: send the sign-up date, the trial and billing terms they agreed to, and their usage. Stripe also charges a dispute fee.`;
   } else {
     kind = "trial_ending"; subject = `Trial ends in 3 days: ${who}`;
-    body = `Their 14-day trial ends ${o.trial_end ? new Date(o.trial_end * 1000).toISOString().slice(0, 10) : "soon"} and the card on file will be charged. A short check-in now prevents surprise charges and chargebacks.`;
+    body = `Their ${o.metadata?.trial_days || TRIAL_DAYS}-day trial ends ${o.trial_end ? new Date(o.trial_end * 1000).toISOString().slice(0, 10) : "soon"} and the card on file will be charged. A short check-in now prevents surprise charges and chargebacks.`;
   }
   await sb("support_requests", { method: "POST", body: JSON.stringify({ owner: acct.user_id ?? null, email: acct.email ?? o.customer_email ?? null, kind, subject, body: body + `\n(Stripe event ${ev.id})` }) });
 }
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     await patch(o.metadata?.user_id, { ai_addon: st, ai_addon_sub_id: o.id });
   } else if (ev.type === "checkout.session.completed" && o.mode === "subscription") {
     // the trial clock starts at checkout, not at signup
-    await patch(o.client_reference_id || o.metadata?.user_id, { status: "trial", trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 864e5).toISOString(), stripe_subscription_id: o.subscription ?? "", stripe_customer_id: o.customer ?? "", checkout_url: "" });
+    await patch(o.client_reference_id || o.metadata?.user_id, { status: "trial", trial_ends_at: new Date(Date.now() + (Number(o.metadata?.trial_days) || TRIAL_DAYS) * 864e5).toISOString(), stripe_subscription_id: o.subscription ?? "", stripe_customer_id: o.customer ?? "", checkout_url: "" });
     await firstClientReminder(o);
   } else if (ev.type === "customer.subscription.updated" || ev.type === "customer.subscription.deleted") {
     const uid = o.metadata?.user_id;
