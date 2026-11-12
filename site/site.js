@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261112-cl1').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261112-mt2').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -209,8 +209,10 @@
     };
     /* a decoded frame is enough to show a clip, playing or not */
     ['loadeddata', 'canplay', 'playing'].forEach(function (ev) {
-      intro.addEventListener(ev, function () { if (!refused && !loop.classList.contains('is-on')) show(intro); });
-      loop.addEventListener(ev, function () { if (!shown) show(loop); });
+      /* the intro always goes first, even if the loop file arrives sooner: a loop that
+         is on but still parked on its first frame gives way to an intro that can play */
+      intro.addEventListener(ev, function () { if (!refused && !intro.ended && (!loop.classList.contains('is-on') || (loop.paused && loop.currentTime < 0.05))) show(intro); });
+      loop.addEventListener(ev, function () { if (!shown && (refused || dead)) show(loop); });
     });
     intro.addEventListener('ended', startLoop);
     var onErr = function () { dead++; if (dead >= 2) { right.classList.remove('has-video'); intro.remove(); loop.remove(); if (!cube) { cube = true; mountCube(); } } else if (this === intro) startLoop(); };
