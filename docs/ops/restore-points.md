@@ -180,3 +180,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the mint-glow cube (2026-11-12)
 - Live site (main): `00a8276`
 - Changes: homepage loop is a new Higgsfield clip (Kling 3.0 Turbo, 16 credits) where the document tile fills with a mint glow, played forward then back (assets/site/hero-loop-mint.mp4); the intro now always plays before the loop (before, a faster-loading loop could freeze on its first frame for 8s).
+
+## Before zooming the cube out (2026-11-12)
+- Live site (main): `c19b03f`
+- Changes: hero cube video scale 1.32 -> 1.1; the cube card background matched to the clip edges so no line shows where the video ends.
