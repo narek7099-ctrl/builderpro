@@ -172,3 +172,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the glitch-free cube loop (2026-11-12)
 - Live site (main): `563345f`
 - Changes: the hero loop clip (icons swapping at 4.4s, cube snapping at 7.0s) replaced by assets/site/hero-loop.mp4, the clean first 4.4s played forward then back; the intro holds its last frame until the loop is playing.
+
+## Before mint in the app (2026-11-12)
+- Live site (main): `96e4688`
+- Changes: mint (#16C79A) on the one main action per screen (New estimate, + Add job, Mark done, a dialog's confirm button) and on done/paid/ready states; blue stays for everything else. All in portal/glass.css ("Mint, the 10%").

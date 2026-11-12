@@ -532,7 +532,7 @@
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
       + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + (locked('matlists') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'matlists\')">Order lists</button>')
       + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add job</button>')
-      + '<button class="bpx-btn" onclick="bpNav(\'estimates\')">New estimate</button></div></div>';
+      + '<button class="bpx-btn bp-cta" onclick="bpNav(\'estimates\')">New estimate</button></div></div>';
   }
 
   /* ---------- four numbers, two by two, in one card ---------- */
