@@ -168,3 +168,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before removing the pilot from the website (2026-11-11)
 - Live site (main): `d212eb1`
 - Changes: pilot badge and "first month free" wording taken off the site until the launch video is ready; ai_config pilot_seats set to 0 so sign-ups get the normal 14 days. The pilot code stays (site/pilot.js, pilot_seats(), account-signup): to turn it back on, set pilot_seats to 20 and put the page wording back from main `d212eb1`.
+
+## Before the glitch-free cube loop (2026-11-12)
+- Live site (main): `563345f`
+- Changes: the hero loop clip (icons swapping at 4.4s, cube snapping at 7.0s) replaced by assets/site/hero-loop.mp4, the clean first 4.4s played forward then back; the intro holds its last frame until the loop is playing.
