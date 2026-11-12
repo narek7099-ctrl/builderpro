@@ -547,3 +547,26 @@ html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !
 #bpx.bpx-dark .jr-modal .bpx-modalcard{background:var(--card) !important}
 #bpx.bpx-dark :is(.jr-sec,.jr-kpis>div,.jr-person){background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);box-shadow:none}
 #bpx.bpx-dark .jr-tl li>i{box-shadow:0 0 0 4px var(--card)}
+
+/* ===== Mint, the 10% (Nov 2026) =====
+   Same rule as the website: mint marks the one thing to press on a screen
+   (the page's main "add / new" button, Mark done, and the confirm button of a
+   dialog) and the "done / paid / all good" states. Blue stays the brand:
+   navigation, tabs, links, charts, every other button. Never mint on blue or
+   navy surfaces (the sidebar, blue cards, the today banner). */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark){--ok:#16c79a;--ok-t:#08775d;--ok-l:#e6f9f3}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,.pjs-act.primary,[data-fin="estimates"] .fin-new-est,
+  .bpx-modal .row>.bpx-btn:last-child:not(.ghost):not(.danger):not(.tc-danger),.bpx-modal .row>span>.bpx-btn:last-child:not(.ghost):not(.danger)){
+  background:radial-gradient(120% 120% at 30% 0%,rgba(255,255,255,.45),transparent 55%),linear-gradient(180deg,#3fe0b6,#16c79a 55%,#0fa880)!important;
+  color:#001530!important;border:1px solid rgba(255,255,255,.55)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,90,60,.18),0 8px 20px -10px rgba(22,199,154,.85)!important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,.pjs-act.primary,[data-fin="estimates"] .fin-new-est,
+  .bpx-modal .row>.bpx-btn:last-child:not(.ghost):not(.danger):not(.tc-danger),.bpx-modal .row>span>.bpx-btn:last-child:not(.ghost):not(.danger)):hover{
+  background:linear-gradient(180deg,#5cebc4,#3fe0b6 50%,#16c79a)!important;color:#001530!important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx :is(.bp-cta,.bpx-addbtn,.bpx-donebtn,.pjs-act.primary,.fin-new-est) :is(.ms,svg){color:#001530!important}
+/* done / paid / ready, in the mint family */
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .pj-st.ok i{background:#16c79a;box-shadow:0 0 0 3px rgba(22,199,154,.22)}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .jr-done{background:linear-gradient(180deg,#3fe0b6,#16c79a);color:#001530}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.jr-tl li.ok>i){background:#16c79a}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.jr-tl em:not(.late),.jr-tag.ok){background:rgba(22,199,154,.13);color:#08775d}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .ap-sw[aria-checked=true]{background:linear-gradient(160deg,#3fe0b6,#16c79a)}
