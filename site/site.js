@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261111-np1').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261112-cl1').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -199,7 +199,14 @@
     };
     var standIn = function () { if (cube || shown) return; cube = true; mountCube(); };
     var tryPlay = function (v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); return p; };
-    var startLoop = function () { show(loop); tryPlay(loop); };
+    /* the intro ends on the loop's first frame: keep it on screen until the loop is
+       really playing, then swap (swapping first froze the cube for a moment) */
+    var startLoop = function () {
+      if (intro.ended && !loop.classList.contains('is-on')) {
+        var go = function () { loop.removeEventListener('playing', go); show(loop); };
+        loop.addEventListener('playing', go); tryPlay(loop); setTimeout(go, 700);
+      } else { show(loop); tryPlay(loop); }
+    };
     /* a decoded frame is enough to show a clip, playing or not */
     ['loadeddata', 'canplay', 'playing'].forEach(function (ev) {
       intro.addEventListener(ev, function () { if (!refused && !loop.classList.contains('is-on')) show(intro); });
