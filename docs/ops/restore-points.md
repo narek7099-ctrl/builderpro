@@ -176,3 +176,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before mint in the app (2026-11-12)
 - Live site (main): `96e4688`
 - Changes: mint (#16C79A) on the one main action per screen (New estimate, + Add job, Mark done, a dialog's confirm button) and on done/paid/ready states; blue stays for everything else. All in portal/glass.css ("Mint, the 10%").
+
+## Before the mint-glow cube (2026-11-12)
+- Live site (main): `00a8276`
+- Changes: homepage loop is a new Higgsfield clip (Kling 3.0 Turbo, 16 credits) where the document tile fills with a mint glow, played forward then back (assets/site/hero-loop-mint.mp4); the intro now always plays before the loop (before, a faster-loading loop could freeze on its first frame for 8s).
