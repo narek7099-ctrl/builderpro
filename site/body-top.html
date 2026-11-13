@@ -219,11 +219,7 @@
 <main id="main" class="dl-page">
 
 <!-- ===================== 1. HERO =========================================
-  ONE sticky stage holds every visual layer. Invisible trigger blocks below it
-  give the scroll story its length.
-    .hero_left / .hero_right   the resting state (the right card is the cube)
-    .hero_dark                 dark wash, fades in with scroll
-    .hero_story                the glass caption cards                      -->
+  One stage: the headline on the left, the cube clip on the right.      -->
 <section class="section hero" id="home">
   <div class="hero_stage">
 
@@ -247,10 +243,9 @@
       </div>
     </div>
 
-    <!-- RIGHT: the object stage. Three clips: an intro that plays once, a
-         loop that takes over when it ends, and (full-bleed over the stage,
-         below) the story clip, which runs by itself while the story is on
-         screen. If the clips are missing, the live cube stands in. -->
+    <!-- RIGHT: the object stage. Two clips: an intro that plays once and a
+         loop that takes over when it ends. If the clips are missing, the
+         live cube stands in. -->
     <div class="hero_right">
       <video class="hero_video is-intro" id="videoIntro" muted playsinline preload="auto" src="assets/site/hero-intro.mp4?v=20261113c"></video>
       <video class="hero_video is-loop" id="videoLoop" muted playsinline loop preload="auto" src="assets/site/hero-loop.mp4?v=20261113d"></video>
@@ -258,35 +253,8 @@
       <div class="hero_fallback" aria-hidden="true"><i></i></div>
     </div>
 
-    <video class="hero_scrub" id="videoScrub" muted playsinline loop preload="none" src="https://d2ol7oe51mr4n9.cloudfront.net/user_3HA0qLqxUhnO8yWK4c1UchjDT3T/2b66f6a0-83f8-4d58-88ac-0d4151510d73.mp4"></video>
-    <div class="hero_dark" id="heroDark"></div>
-
-    <div class="hero_story" id="heroStory">
-      <div class="hero_story-top">
-        <div class="hero_counter">
-          <svg viewBox="0 0 48 48">
-            <circle class="ring-bg" cx="24" cy="24" r="22"/>
-            <circle class="ring-fg" cx="24" cy="24" r="22" id="heroRing"/>
-          </svg>
-          <span id="heroNum">1</span>
-        </div>
-        <div class="hero_step-title" data-step="1">Never miss a job</div>
-        <div class="hero_step-title" data-step="2">Run it from one screen</div>
-        <div class="hero_step-title" data-step="3">Grow on real numbers</div>
-      </div>
-      <div class="hero_story-bot">
-        <p class="b-l hero_step-body" data-step="1" data-highlight-text>A customer calls while you are on a roof. Lisa picks up, answers their questions and books the visit before the next ring.</p>
-        <p class="b-l hero_step-body" data-step="2" data-highlight-text>The estimate, the signed contract, the schedule, the photos and the invoice live on one project card, from first call to final payment.</p>
-        <p class="b-l hero_step-body" data-step="3" data-highlight-text>Income, expenses and profit on every job, updated as the money moves. You see what is working, so you know when to hire the next crew.</p>
-      </div>
-    </div>
   </div>
 
-  <div class="hero_triggers">
-    <div class="hero_trigger is-1" data-hero-step="1"></div>
-    <div class="hero_trigger is-2" data-hero-step="2"></div>
-    <div class="hero_trigger is-3" data-hero-step="3"></div>
-  </div>
 </section>
 
 

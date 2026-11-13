@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261113-cube4').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261113-nostory').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -230,83 +230,6 @@
     ['pointerdown', 'touchstart', 'keydown', 'scroll'].forEach(function (ev) { document.addEventListener(ev, kick, { passive: true }); });
     /* nothing at all after a while: let the cube hold the space until the clips arrive */
     setTimeout(standIn, 12000);
-  }
-  /* The scroll-story clip: its currentTime is driven by scroll. Seeking a
-     plain MP4 is slow, so the file is encoded with every frame a keyframe and
-     re-fetched as a blob so seeks are local. iOS will not seek until the
-     video has been played once from a user gesture.                        */
-  function initHeroScrub(triggers) {
-    var scrub = $('#videoScrub'); if (!scrub) return;
-    scrub.removeAttribute('controls');
-    scrub.addEventListener('error', function () { scrub.remove(); }, { once: true });
-
-    /* The clip runs by itself while the story is on screen, rather than
-       being seeked a frame at a time. A seek per scroll frame means a
-       decode from the nearest keyframe every frame, which stutters and
-       forces a fat all-keyframe encode; plain playback is one smooth
-       decode. The captions, the ring and the step swaps still follow the
-       scroll, so the story is still yours to pace. */
-    var want = false;
-    function sync() {
-      if (want && scrub.paused) { var p = scrub.play(); if (p && p.catch) p.catch(function () {}); }
-      else if (!want && !scrub.paused) scrub.pause();
-    }
-    /* the clip is 2.7 MB and sits below the first screen: fetch it only
-       when the story is a couple of screens away, not with the page */
-    ScrollTrigger.create({
-      trigger: triggers, start: 'top 300%', once: true,
-      onEnter: function () { if (scrub.readyState === 0) { scrub.preload = 'auto'; try { scrub.load(); } catch (e) {} } },
-    });
-    ScrollTrigger.create({
-      trigger: triggers, start: 'top bottom', end: 'bottom bottom',
-      onToggle: function (self) { want = self.isActive; sync(); },
-    });
-    /* a browser that will not autoplay muted video starts it on the first
-       gesture instead, whichever kind arrives */
-    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(function (ev) {
-      document.addEventListener(ev, sync, { passive: true });
-    });
-    document.addEventListener('visibilitychange', function () { if (document.hidden) scrub.pause(); else sync(); });
-
-    gsap.fromTo(scrub, { opacity: 0 }, {
-      opacity: 1, ease: 'none',
-      scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'top 40%', scrub: true },
-    });
-  }
-  function initHeroStory() {
-    var stage = $('.hero_stage');
-    if (!stage || window.innerWidth <= 767 || REDUCED || !HAS_ST) return;
-    var dark = $('#heroDark'), story = $('#heroStory'), ring = $('#heroRing'), num = $('#heroNum');
-    var triggers = $('.hero_triggers');
-    var blocks = $$('[data-hero-step]');
-    if (!blocks.length) return;
-
-    gsap.fromTo([dark, story], { opacity: 0 }, {
-      opacity: 1, ease: 'none',
-      scrollTrigger: { trigger: blocks[0], start: 'top bottom', end: 'top 40%', scrub: true },
-    });
-
-    if (ring) {
-      var r = ring.r.baseVal.value, c = 2 * Math.PI * r;
-      ring.style.strokeDasharray = c; ring.style.strokeDashoffset = c;
-      gsap.to(ring, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true } });
-    }
-
-    var setStep = function (i) {
-      $$('.hero_step-title, .hero_step-body').forEach(function (el) { el.classList.toggle('is-active', +el.dataset.step === i + 1); });
-      if (num) num.textContent = i + 1;
-    };
-    setStep(0);
-    blocks.forEach(function (block, i) {
-      ScrollTrigger.create({ trigger: block, start: 'top bottom', end: 'bottom bottom', onToggle: function (self) { if (self.isActive) setStep(i); } });
-    });
-
-    initHeroScrub(triggers);
-    /* the cube, when it is standing in for the clips, follows the same progress */
-    ScrollTrigger.create({
-      trigger: triggers, start: 'top bottom', end: 'bottom bottom', scrub: true,
-      onUpdate: function (self) { if (heroApi) heroApi.setProgress(self.progress); },
-    });
   }
 
 
@@ -605,7 +528,6 @@
   function boot() {
     initHeadingReveal();
     initHeroObject();
-    initHeroStory();
     initHighlightText();
     initCaseStudies();
     initSolutions();

@@ -352,47 +352,11 @@ main.dl-page p{margin:0;}
     mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(90deg,transparent 0,#000 9%,#000 91%,transparent 100%);
     -webkit-mask-composite:source-in;mask-composite:intersect;}
 }
-/* the scroll-story clip covers the whole stage, above the dark wash: the wash
-   dims the resting hero, the story stays bright */
-.hero_scrub{position:absolute;inset:var(--gutter);width:calc(100% - var(--gutter)*2);height:calc(100% - var(--gutter)*2);border-radius:var(--radius);object-fit:cover;pointer-events:none;z-index:13;opacity:0;will-change:opacity;}
 .hero_right.has-video canvas,.hero_right.has-video .hero_fallback{display:none;}
 .hero_fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;}
 .hero_right.nogl .hero_fallback{display:flex;}
 .hero_fallback i{width:34%;aspect-ratio:1;border-radius:12%;background:var(--blue-500);transform:rotate(12deg);}
 
-/* the dark wash that comes over the whole stage as the story begins */
-.hero_dark{position:absolute;inset:0;z-index:12;opacity:0;pointer-events:none;
-  background:var(--overlay);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);}
-
-/* the floating glass cards that carry the story copy */
-.hero_story{position:absolute;left:calc(var(--gutter)*2);bottom:calc(var(--gutter)*2);z-index:20;
-  width:30.25rem;display:flex;flex-direction:column;gap:var(--gutter);opacity:0;}
-.hero_story-top{
-  position:relative;height:6rem;border-radius:var(--radius);overflow:hidden;
-  background:rgba(255,255,255,.72);backdrop-filter:blur(50px);-webkit-backdrop-filter:blur(50px);
-  box-shadow:0 0 5px rgba(0,0,0,.10);
-}
-.hero_story-bot{
-  position:relative;height:8.75rem;border-radius:var(--radius);overflow:hidden;padding:1.75rem;
-  background:rgba(255,255,255,.72);backdrop-filter:blur(50px);-webkit-backdrop-filter:blur(50px);
-  box-shadow:0 0 5px rgba(0,0,0,.10);
-}
-.hero_counter{position:absolute;top:1.5rem;left:1.25rem;z-index:2;
-  width:3rem;height:3rem;display:flex;align-items:center;justify-content:center;
-  font-size:.875rem;font-weight:600;line-height:.9;}
-.hero_counter svg{position:absolute;inset:0;width:100%;height:100%;}
-.hero_counter circle{fill:none;stroke-width:1.5;}
-.hero_counter .ring-bg{stroke:rgba(0,21,48,.15);}
-.hero_counter .ring-fg{stroke:var(--blue-500);transform:rotate(-90deg);transform-origin:50% 50%;}
-.hero_step-title{position:absolute;inset:0 2rem 0 5.5rem;display:flex;align-items:center;
-  font-size:2rem;line-height:1;letter-spacing:-.06rem;font-weight:600;
-  opacity:0;transform:translateY(-2rem);transition:transform .4s,opacity .3s;}
-.hero_step-body{position:absolute;inset:1.75rem;
-  opacity:0;transform:translateY(-2rem);transition:transform .4s,opacity .3s;}
-.hero_step-title.is-active,.hero_step-body.is-active{opacity:1;transform:translateY(0);}
-.hero_triggers{position:relative;z-index:-1;opacity:0;pointer-events:none;}
-.hero_trigger{height:150vh;}
-.hero_trigger.is-2,.hero_trigger.is-3{height:110vh;}
 
 /* 8.2 LOGO MARQUEE ---------------------------------------------------------- */
 .marquee{overflow:hidden;}
@@ -629,8 +593,6 @@ body.dl .modal{border-radius:var(--radius);}
   .hero_cta .btn{flex:1 1 auto;justify-content:center;}
   .hero_left-bot{width:100%;max-height:none;gap:2.5rem;padding:1.25rem;}
   .hero_right{position:relative;left:auto;right:auto;bottom:auto;width:100%;height:auto;aspect-ratio:1;order:2;}
-  .hero_story,.hero_dark,.hero_scrub{display:none;}
-  .hero_triggers{display:none;}
   /* trades: single column, media above the open item */
   .cs_body{display:flex;flex-direction:column;min-height:0;gap:var(--gutter);}
   .cs_media{position:relative;width:100%;height:60vw;padding:0;}
@@ -683,7 +645,7 @@ body.dl .modal{border-radius:var(--radius);}
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
     transition-duration:.01ms !important;scroll-behavior:auto !important;}
   .marquee_track{animation:none;}
-  .sol_img,.cs_photo,.cs_stat,.hero_step-title,.hero_step-body{opacity:1;transform:none;}
+  .sol_img,.cs_photo,.cs_stat{opacity:1;transform:none;}
   .pill_icon{width:2rem;}.pill_dash{width:1rem;}
   .dl-pre{display:none;}
 }
@@ -964,5 +926,3 @@ html[data-pilot="off"] .pilot-off{display:inline}
 @media (prefers-reduced-motion:reduce){.pilot-pill i{animation:none}}
 /* the scroll-story layers sit invisible over the playing cube until you scroll; their live
    blur re-ran on every video frame, so they use a solid wash instead */
-body.dl .hero_dark{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(0,21,48,.62)}
-body.dl :is(.hero_story-top,.hero_story-bot){-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.93)}

@@ -208,3 +208,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the cube turn smoothing (2026-11-13)
 - Live site (main): `60940ff`
 - Changes: the cube's left turn near the end of the loop plays at its natural speed with light motion blur instead of the slowed version (which held then jumped), and the last half-second eases into the first frame so the loop repeats without a hitch.
+
+## Before removing the homepage scroll story (2026-11-13)
+- Live site (main): `5e55adb`
+- Changes: removed the full-screen scroll story under the hero (the zoomed cube clip with the "Never miss a job / Run it from one screen / Grow on real numbers" cards), along with its script and styles. The hero now leads straight into "Why BuilderPro".
