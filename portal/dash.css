@@ -1428,53 +1428,48 @@
 #bpx.bpx-dark .wka-strip b{color:#e6edf7}
 #bpx .wka-body{align-content:start}
 
-/* ---------- Needs you (2026-11-13): one navy tile for the most urgent thing,
-   its number big and a mint action; slim rows for anything else; the checks
-   that came back fine as small chips. Sits beside This week's blue tile. ---------- */
-#bpx .nyc{display:flex;flex-direction:column;gap:10px}
-#bpx .nyc .bpx-ptitle{display:flex;align-items:center;gap:8px;margin-bottom:0}
+/* ---------- Needs you (2026-11-13): built like This week beside it. The
+   lead tile is the same blue tile as today's date, the extra rows and the
+   all-clear checks are the same white glass as the day pills. ---------- */
+#bpx .nyc{display:flex;flex-direction:column}
+#bpx .nyc .bpx-ptitle{display:flex;align-items:center;gap:8px}
 #bpx .nyc-n{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#eaf2ff;color:#0050c8;font-size:12px;font-weight:700;margin-left:2px}
-#bpx#bpx#bpx .nyc-hero{all:unset;box-sizing:border-box;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:14px 16px 14px;border-radius:20px;color:#fff;
-  background:radial-gradient(120% 90% at 0% 0%,rgba(255,255,255,.16),rgba(255,255,255,0) 52%),linear-gradient(160deg,#10305e 0%,#001f45 50%,#001530 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 14px 28px -14px rgba(0,21,48,.7);transition:translate .35s cubic-bezier(.22,1,.36,1),box-shadow .35s}
-#bpx#bpx#bpx .nyc-hero::after{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;pointer-events:none;
-  background:radial-gradient(closest-side,rgba(0,111,255,.45),rgba(0,111,255,0))}
-#bpx#bpx#bpx button.nyc-hero:hover{translate:0 -3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 32px -14px rgba(0,21,48,.75)}
-#bpx .nyc-tag{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);position:relative;z-index:1}
-#bpx .nyc-tag i{width:7px;height:7px;border-radius:50%;background:#8fc2ff;box-shadow:0 0 0 3px rgba(143,194,255,.2)}
-#bpx .nyc-hero.bad .nyc-tag i{background:#ff7a7a;box-shadow:0 0 0 3px rgba(255,122,122,.22)}
-#bpx .nyc-hero.warn .nyc-tag i{background:#ffc15c;box-shadow:0 0 0 3px rgba(255,193,92,.22)}
-#bpx .nyc-hero.good .nyc-tag i,#bpx .nyc-hero.calm .nyc-tag i{background:#3fe0b6;box-shadow:0 0 0 3px rgba(63,224,182,.22)}
-#bpx .nyc-big{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:36px;font-weight:700;line-height:1.05;letter-spacing:-.035em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
-#bpx .nyc-big .ms{font-size:32px;color:#3fe0b6}
-#bpx .nyc-sub{font-size:13px;line-height:1.4;color:rgba(255,255,255,.78);position:relative;z-index:1;padding-right:4px}
-#bpx .nyc-go{align-self:flex-end;margin-top:4px;display:inline-flex;align-items:center;gap:4px;padding:7px 12px 7px 14px;border-radius:999px;font-size:12.5px;font-weight:700;color:#00281d;position:relative;z-index:1;
-  background:linear-gradient(180deg,#3fe0b6,#16C79A);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 8px 18px -8px rgba(22,199,154,.8)}
-#bpx .nyc-go .ms{font-size:16px;transition:translate .3s cubic-bezier(.22,1,.36,1)}
-#bpx .nyc-hero:hover .nyc-go .ms{translate:3px 0}
-#bpx .nyc-rows{display:flex;flex-direction:column;border-radius:16px;background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.1);box-shadow:inset 0 1px 0 #fff;overflow:hidden}
-#bpx#bpx#bpx .nyc-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 10px;transition:background .2s}
-#bpx#bpx#bpx .nyc-row+.nyc-row{border-top:1px solid rgba(0,111,255,.08)}
-#bpx#bpx#bpx .nyc-row:hover{background:rgba(0,111,255,.05)}
-#bpx .nyc-ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:#eaf2ff;color:#006fff}
-#bpx .nyc-ic .ms{font-size:17px}
+#bpx#bpx#bpx .nyc-hero{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;padding:14px 16px;border-radius:20px;color:#fff;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(255,255,255,.35),rgba(255,255,255,0) 50%),linear-gradient(160deg,#3d98ff 0%,#006fff 45%,#0040a8 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 14px 28px -14px rgba(0,80,200,.75);transition:translate .35s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx button.nyc-hero:hover{translate:0 -3px}
+#bpx .nyc-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#bpx .nyc-tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+#bpx .nyc-tag i{width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+#bpx .nyc-hero.bad .nyc-tag i{background:#ffb3b3;box-shadow:0 0 0 3px rgba(255,140,140,.3)}
+#bpx .nyc-hero.warn .nyc-tag i{background:#ffd27a;box-shadow:0 0 0 3px rgba(255,200,100,.3)}
+#bpx .nyc-hero.good .nyc-tag i,#bpx .nyc-hero.calm .nyc-tag i{background:#3fe0b6;box-shadow:0 0 0 3px rgba(63,224,182,.3)}
+#bpx .nyc-top em{font-style:normal;display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;padding:5px 8px 5px 10px;border-radius:999px;background:rgba(255,255,255,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);white-space:nowrap;transition:background .25s}
+#bpx .nyc-top em .ms{font-size:15px;transition:translate .3s cubic-bezier(.22,1,.36,1)}
+#bpx .nyc-hero:hover .nyc-top em{background:rgba(255,255,255,.28)}
+#bpx .nyc-hero:hover .nyc-top em .ms{translate:2px 0}
+#bpx .nyc-big{margin-top:8px;font-size:40px;font-weight:700;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#bpx .nyc-sub{margin-top:5px;font-size:12.5px;line-height:1.4;opacity:.88}
+#bpx#bpx#bpx .nyc-row{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:6px;padding:8px 10px 8px 8px;border-radius:14px;
+  background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.1);box-shadow:inset 0 1px 0 #fff;transition:border-color .25s,translate .3s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx .nyc-row:hover{translate:0 -2px;border-color:rgba(0,111,255,.28)}
+#bpx .nyc-ic{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#eaf2ff;color:#006fff}
+#bpx .nyc-ic .ms{font-size:16px}
 #bpx .nyc-row.bad .nyc-ic{background:#fdecec;color:#d12f36}
 #bpx .nyc-row.warn .nyc-ic{background:#fff4e0;color:#c46a00}
 #bpx .nyc-row.good .nyc-ic{background:#e3f8f1;color:#0e9f7b}
-#bpx .nyc-tx{flex:1;min-width:0;font-size:13px;line-height:1.35;color:#3c4c63;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#bpx .nyc-tx b{font-weight:700;color:var(--ink,#0b1a33);font-variant-numeric:tabular-nums}
-#bpx .nyc-ch{flex:none;font-size:18px;color:#9aa8bb;transition:translate .25s,color .25s}
-#bpx .nyc-row:hover .nyc-ch{translate:2px 0;color:#006fff}
-#bpx .nyc-more{font-size:12px;color:var(--mu);padding:7px 12px;border-top:1px solid rgba(0,111,255,.08)}
-#bpx .nyc-chips{margin-top:auto;display:flex;flex-wrap:wrap;gap:6px}
-#bpx .nyc-chips>span{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:999px;font-size:12px;font-weight:600;color:#3c4c63;white-space:nowrap;
-  background:rgba(255,255,255,.75);border:1px solid rgba(0,111,255,.09);box-shadow:inset 0 1px 0 #fff}
-#bpx .nyc-chips .ms{flex:none;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#3fe0b6,#16C79A)}
-@container (max-width:300px){
-  #bpx .nyc-big{font-size:30px}
-}
-#bpx.bpx-dark .nyc-rows,#bpx.bpx-dark .nyc-chips>span{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);box-shadow:none}
-#bpx.bpx-dark .nyc-row+.nyc-row,#bpx.bpx-dark .nyc-more{border-color:rgba(255,255,255,.07)}
+#bpx .nyc-tx{flex:1;min-width:0;font-size:12.5px;line-height:1.35;color:#4a5a70;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bpx .nyc-tx b{font-weight:700;color:#0b1a33;font-variant-numeric:tabular-nums}
+#bpx .nyc-ch{flex:none;font-size:18px;color:#9aa8bb}
+#bpx#bpx#bpx .nyc-more{all:unset;cursor:pointer;margin-top:6px;font-size:12px;font-weight:600;color:#0050c8;padding:2px 4px}
+#bpx .nyc-lab{margin:14px 0 8px;font-size:13px;font-weight:600;color:#6b7a90}
+#bpx .nyc-chips{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);gap:6px;min-height:0}
+#bpx .nyc-chips>span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 6px;border-radius:14px;text-align:center;font-size:12px;font-weight:600;color:#3c4c63;line-height:1.2;
+  background:rgba(255,255,255,.7);border:1px solid rgba(0,111,255,.1);box-shadow:inset 0 1px 0 #fff}
+#bpx .nyc-chips .ms{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(180deg,#3fe0b6,#16C79A);box-shadow:0 4px 10px -4px rgba(22,199,154,.7)}
+@container (max-width:300px){ #bpx .nyc-big{font-size:32px} }
+#bpx.bpx-dark .nyc-row,#bpx.bpx-dark .nyc-chips>span{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);box-shadow:none}
 #bpx.bpx-dark .nyc-tx,#bpx.bpx-dark .nyc-chips>span{color:#b7c3d6}
+#bpx.bpx-dark .nyc-tx b{color:#e8eef8}
+#bpx.bpx-dark .nyc-lab{color:#8a97ab}
 #bpx.bpx-dark .nyc-n{background:rgba(143,194,255,.14);color:#9cc3ff}
-#bpx.bpx-dark .nyc-hero{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 14px 28px -14px rgba(0,0,0,.6)}

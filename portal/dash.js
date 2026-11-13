@@ -331,26 +331,26 @@
         : '<div class="dash-empty">Nothing booked today.</div>') + '</div>';
   }
 
-  /* ---------- needs attention (2026-11-13): the most urgent thing as a navy
-     tile with its number big and a mint action, anything else as slim rows
-     under it, and the checks that came back fine as small chips ---------- */
-  var NYC_TONE = { bad: 'bad', warn: 'warn', good: 'good' };
+  /* ---------- needs attention (2026-11-13): built like This week beside it.
+     The most urgent thing is a blue tile (its number big, a white pill to act
+     on it), anything else is a row of the same white glass as the day pills,
+     and the checks that came back fine fill the rest as small tiles. ---------- */
   function attention() {
     var rows = attRows();
     var head = '<div class="bpx-ptitle">Needs you' + (rows.length ? '<span class="nyc-n">' + rows.length + '</span>' : '') + '</div>';
     if (!rows.length) return '<div class="bpx-panel nyc">' + head
-      + '<div class="nyc-hero calm"><span class="nyc-tag"><i></i>All clear</span><span class="nyc-big"><span class="ms">check_circle</span>Caught up</span>'
-      + '<span class="nyc-sub">Nothing is waiting on you right now.</span></div>' + chips([], 4) + '</div>';
-    var r0 = rows[0], more = rows.slice(1, 4);
-    var hero = '<button type="button" class="nyc-hero ' + (NYC_TONE[r0.tone] || 'info') + '" onclick="bpNav(\'' + r0.go + '\')">'
-      + '<span class="nyc-tag"><i></i>' + (r0.cat || 'Waiting') + '</span>'
+      + '<div class="nyc-hero calm"><span class="nyc-top"><span class="nyc-tag"><i></i>All clear</span></span>'
+      + '<span class="nyc-big">Caught up</span><span class="nyc-sub">Nothing is waiting on you right now.</span></div>'
+      + chips([], 4) + '</div>';
+    var r0 = rows[0], more = rows.slice(1, 3);
+    var hero = '<button type="button" class="nyc-hero ' + (r0.tone || 'info') + '" onclick="bpNav(\'' + r0.go + '\')">'
+      + '<span class="nyc-top"><span class="nyc-tag"><i></i>' + (r0.cat || 'Waiting') + '</span><em>' + (r0.cta || 'Open') + '<span class="ms">arrow_forward</span></em></span>'
       + '<span class="nyc-big">' + (r0.big || r0.n) + '</span>'
-      + '<span class="nyc-sub">' + (r0.sub || r0.t) + '</span>'
-      + '<span class="nyc-go">' + (r0.cta || 'Open') + '<span class="ms">arrow_forward</span></span></button>';
-    var list = more.length ? '<div class="nyc-rows">' + more.map(function (r) {
-      return '<button type="button" class="nyc-row ' + (NYC_TONE[r.tone] || 'info') + '" onclick="bpNav(\'' + r.go + '\')"><span class="nyc-ic"><span class="ms">' + r.ico + '</span></span>'
+      + '<span class="nyc-sub">' + (r0.sub || r0.t) + '</span></button>';
+    var list = more.map(function (r) {
+      return '<button type="button" class="nyc-row ' + (r.tone || 'info') + '" onclick="bpNav(\'' + r.go + '\')"><span class="nyc-ic"><span class="ms">' + r.ico + '</span></span>'
         + '<span class="nyc-tx"><b>' + (r.big || r.n) + '</b> ' + (r.sub || r.t) + '</span><span class="ms nyc-ch">chevron_right</span></button>';
-    }).join('') + (rows.length > 4 ? '<div class="nyc-more">+ ' + (rows.length - 4) + ' more in the bell</div>' : '') + '</div>' : '';
+    }).join('') + (rows.length > 3 ? '<button type="button" class="nyc-more" onclick="bpNav(\'' + rows[3].go + '\')">+ ' + (rows.length - 3) + ' more waiting</button>' : '');
     return '<div class="bpx-panel nyc">' + head + hero + list + chips(rows, rows.length === 1 ? 4 : rows.length === 2 ? 2 : 0) + '</div>';
   }
   /* what was checked and came back fine, so a quiet day still reads as a checklist */
@@ -359,7 +359,7 @@
     var has = function (cat) { return rows.some(function (r) { return r.cat === cat; }); };
     var ok = [['Overdue payment', 'Paid on time'], ['Waiting on a signature', 'Contracts signed'], ['Materials order', 'Orders sent'], ['Supply bill', 'Bills matched'], ['Messages', 'Messages answered'], ['Ready to invoice', 'Invoices sent']]
       .filter(function (x) { return !has(x[0]); }).slice(0, max);
-    return '<div class="nyc-chips">' + ok.map(function (x) { return '<span><span class="ms">check</span>' + x[1] + '</span>'; }).join('') + '</div>';
+    return '<div class="nyc-lab">All clear</div><div class="nyc-chips">' + ok.map(function (x) { return '<span><span class="ms">check</span>' + x[1] + '</span>'; }).join('') + '</div>';
   }
   function attRows() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [], rows = [];
