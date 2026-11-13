@@ -331,44 +331,52 @@
         : '<div class="dash-empty">Nothing booked today.</div>') + '</div>';
   }
 
-  /* ---------- needs attention: what is waiting on them, only when non-zero ---------- */
+  /* ---------- needs attention (2026-11-13): the most urgent thing as a navy
+     tile with its number big and a mint action, anything else as slim rows
+     under it, and the checks that came back fine as small chips ---------- */
+  var NYC_TONE = { bad: 'bad', warn: 'warn', good: 'good' };
   function attention() {
     var rows = attRows();
     var head = '<div class="bpx-ptitle">Needs you' + (rows.length ? '<span class="nyc-n">' + rows.length + '</span>' : '') + '</div>';
     if (!rows.length) return '<div class="bpx-panel nyc">' + head
-      + '<div class="nyc-clear"><span class="nyc-ok"><span class="ms">check</span></span><b>You’re all caught up</b><small>Bills matched, orders sent, contracts signed.</small></div></div>';
-    return '<div class="bpx-panel nyc">' + head + '<div class="nyc-list">'
-      + rows.slice(0, 5).map(function (r) {
-        return '<button type="button" class="nyc-r ' + (r.tone || 'info') + '" onclick="bpNav(\'' + r.go + '\')"><span class="nyc-ic"><span class="ms">' + r.ico + '</span></span>'
-          + '<span class="nyc-tx"><small>' + (r.cat || 'Waiting') + '</small><b>' + r.t + '</b></span><span class="nyc-cta">' + (r.cta || 'Open') + '<span class="ms">arrow_forward</span></span></button>';
-      }).join('')
-      + (rows.length > 5 ? '<div class="nyc-more">+ ' + (rows.length - 5) + ' more in the bell</div>' : '')
-      + '</div>' + clearList(rows) + '</div>';
+      + '<div class="nyc-hero calm"><span class="nyc-tag"><i></i>All clear</span><span class="nyc-big"><span class="ms">check_circle</span>Caught up</span>'
+      + '<span class="nyc-sub">Nothing is waiting on you right now.</span></div>' + chips([], 4) + '</div>';
+    var r0 = rows[0], more = rows.slice(1, 4);
+    var hero = '<button type="button" class="nyc-hero ' + (NYC_TONE[r0.tone] || 'info') + '" onclick="bpNav(\'' + r0.go + '\')">'
+      + '<span class="nyc-tag"><i></i>' + (r0.cat || 'Waiting') + '</span>'
+      + '<span class="nyc-big">' + (r0.big || r0.n) + '</span>'
+      + '<span class="nyc-sub">' + (r0.sub || r0.t) + '</span>'
+      + '<span class="nyc-go">' + (r0.cta || 'Open') + '<span class="ms">arrow_forward</span></span></button>';
+    var list = more.length ? '<div class="nyc-rows">' + more.map(function (r) {
+      return '<button type="button" class="nyc-row ' + (NYC_TONE[r.tone] || 'info') + '" onclick="bpNav(\'' + r.go + '\')"><span class="nyc-ic"><span class="ms">' + r.ico + '</span></span>'
+        + '<span class="nyc-tx"><b>' + (r.big || r.n) + '</b> ' + (r.sub || r.t) + '</span><span class="ms nyc-ch">chevron_right</span></button>';
+    }).join('') + (rows.length > 4 ? '<div class="nyc-more">+ ' + (rows.length - 4) + ' more in the bell</div>' : '') + '</div>' : '';
+    return '<div class="bpx-panel nyc">' + head + hero + list + chips(rows, rows.length === 1 ? 4 : rows.length === 2 ? 2 : 0) + '</div>';
   }
-  /* with only a thing or two waiting, show what was checked and is fine, so the card reads as a checklist */
-  function clearList(rows) {
-    if (rows.length > 2) return '';
+  /* what was checked and came back fine, so a quiet day still reads as a checklist */
+  function chips(rows, max) {
+    if (!max) return '';
     var has = function (cat) { return rows.some(function (r) { return r.cat === cat; }); };
-    var ok = [['Overdue payment', 'Payments on time'], ['Waiting on a signature', 'Contracts signed'], ['Materials order', 'Orders sent'], ['Supply bill', 'Bills matched'], ['Messages', 'Messages answered'], ['Ready to invoice', 'Invoices sent']]
-      .filter(function (x) { return !has(x[0]); }).slice(0, 4);
-    return '<div class="nyc-okl"><small>All clear</small>' + ok.map(function (x) { return '<span><span class="ms">check_circle</span>' + x[1] + '</span>'; }).join('') + '</div>';
+    var ok = [['Overdue payment', 'Paid on time'], ['Waiting on a signature', 'Contracts signed'], ['Materials order', 'Orders sent'], ['Supply bill', 'Bills matched'], ['Messages', 'Messages answered'], ['Ready to invoice', 'Invoices sent']]
+      .filter(function (x) { return !has(x[0]); }).slice(0, max);
+    return '<div class="nyc-chips">' + ok.map(function (x) { return '<span><span class="ms">check</span>' + x[1] + '</span>'; }).join('') + '</div>';
   }
   function attRows() {
     var jobs = (window.bpJobsGet && bpJobsGet()) || [], rows = [];
     var todayIso = new Date().toISOString().slice(0, 10);
     var late = jobs.filter(function (j) { return j.status === 'active' && j.sched && j.sched.target && String(j.sched.target) < todayIso && ((+j.estimate || 0) - (+j.collected || 0)) > 0; });
-    if (late.length) rows.push({ ico: 'schedule', n: late.length, t: late.length === 1 ? money((+late[0].estimate || 0) - (+late[0].collected || 0)) + ' still owed on ' + esc(late[0].name) + ', past its target date' : late.length + ' projects past their target date with money owed', go: 'activejobs', tone: 'bad', cat: 'Overdue payment', cta: 'Collect' });
+    if (late.length) rows.push({ ico: 'schedule', n: late.length, t: late.length === 1 ? money((+late[0].estimate || 0) - (+late[0].collected || 0)) + ' still owed on ' + esc(late[0].name) + ', past its target date' : late.length + ' projects past their target date with money owed', go: 'activejobs', tone: 'bad', cat: 'Overdue payment', cta: 'Collect', big: money(late.reduce(function (t, j) { return t + (+j.estimate || 0) - (+j.collected || 0); }, 0)), sub: late.length === 1 ? 'still owed by ' + esc(late[0].name) + ', past its target date' : 'owed on ' + late.length + ' projects past their target date' });
     /* the customer said yes, but no job or invoice has started from it yet */
     var yes = jobs.filter(function (j) { return j.status === 'quote' && j.quote && j.quote.status === 'accepted'; });
-    if (yes.length) rows.push({ ico: 'task_alt', n: yes.length, t: yes.length === 1 ? esc(yes[0].name || 'A customer') + ' approved ' + esc(yes[0].title || 'an estimate') + '. Send the deposit invoice' : yes.length + ' approved estimates ready to invoice', go: 'invoices', tone: 'good', cat: 'Ready to invoice', cta: 'Invoice' });
+    if (yes.length) rows.push({ ico: 'task_alt', n: yes.length, t: yes.length === 1 ? esc(yes[0].name || 'A customer') + ' approved ' + esc(yes[0].title || 'an estimate') + '. Send the deposit invoice' : yes.length + ' approved estimates ready to invoice', go: 'invoices', tone: 'good', cat: 'Ready to invoice', cta: 'Invoice', sub: yes.length === 1 ? 'approved estimate, ' + esc(yes[0].name || 'a customer') + '. Send the deposit invoice' : 'approved estimates ready to invoice' });
     var waiting = (D.contracts || []).filter(function (c) { return c.status === 'sent' || c.status === 'viewed'; });
-    if (waiting.length) rows.push({ ico: 'draw', n: waiting.length, t: waiting.length === 1 ? (esc(waiting[0].customer_name || waiting[0].title) + ' has not signed yet' + (waiting[0].status === 'viewed' ? ' (opened it)' : '')) : waiting.length + ' contracts waiting for a signature', go: 'activejobs', cat: 'Waiting on a signature', cta: 'View' });
+    if (waiting.length) rows.push({ ico: 'draw', n: waiting.length, t: waiting.length === 1 ? (esc(waiting[0].customer_name || waiting[0].title) + ' has not signed yet' + (waiting[0].status === 'viewed' ? ' (opened it)' : '')) : waiting.length + ' contracts waiting for a signature', go: 'activejobs', cat: 'Waiting on a signature', cta: 'View', sub: waiting.length === 1 ? 'contract waiting on ' + esc(waiting[0].customer_name || waiting[0].title) + (waiting[0].status === 'viewed' ? ' (opened it)' : '') : 'contracts waiting for a signature' });
     var pos = (window.SP && SP.pos) || [];
     var unsent = pos.filter(function (p) { return p.status === 'sent' && !p.sent_to_supplier; }).length, bills = pos.filter(function (p) { return p.status === 'invoiced'; }).length;
-    if (unsent) rows.push({ ico: 'outgoing_mail', n: unsent, t: unsent === 1 ? 'One materials order has not been sent to the supply house' : unsent + ' materials orders not sent to the supply house', go: 'supplyorders', tone: 'warn', cat: 'Materials order', cta: 'Send' });
-    if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders', cat: 'Supply bill', cta: 'Check' });
-    if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging', cat: 'Messages', cta: 'Reply' });
-    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' sent, not approved yet' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals', cat: 'Estimates out', cta: 'Follow up' });
+    if (unsent) rows.push({ ico: 'outgoing_mail', n: unsent, t: unsent === 1 ? 'One materials order has not been sent to the supply house' : unsent + ' materials orders not sent to the supply house', go: 'supplyorders', tone: 'warn', cat: 'Materials order', cta: 'Send', sub: unsent === 1 ? 'materials order not sent to the supply house' : 'materials orders not sent to the supply house' });
+    if (bills) rows.push({ ico: 'receipt_long', n: bills, t: bills === 1 ? 'One supply bill to check against its order' : bills + ' supply bills to check', go: 'supplyorders', cat: 'Supply bill', cta: 'Check', sub: bills === 1 ? 'supply bill to check against its order' : 'supply bills to check against their orders' });
+    if (D.unread) rows.push({ ico: 'chat', n: D.unread, t: D.unread === 1 ? 'One message waiting for a reply' : D.unread + ' messages waiting for a reply', go: 'messaging', cat: 'Messages', cta: 'Reply', sub: D.unread === 1 ? 'message waiting for a reply' : 'messages waiting for a reply' });
+    if (D.deals && D.deals.n) rows.push({ ico: 'handshake', n: D.deals.n, t: D.deals.n + (D.deals.n === 1 ? ' estimate' : ' estimates') + ' sent, not approved yet' + (D.deals.v ? ', ' + money(D.deals.v) : ''), go: 'closedeals', cat: 'Estimates out', cta: 'Follow up', sub: (D.deals.n === 1 ? 'estimate' : 'estimates') + ' out, not approved yet' + (D.deals.v ? ', ' + money(D.deals.v) : '') });
     return rows;
   }
 
