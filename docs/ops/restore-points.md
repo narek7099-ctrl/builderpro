@@ -212,3 +212,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before removing the homepage scroll story (2026-11-13)
 - Live site (main): `5e55adb`
 - Changes: removed the full-screen scroll story under the hero (the zoomed cube clip with the "Never miss a job / Run it from one screen / Grow on real numbers" cards), along with its script and styles. The hero now leads straight into "Why BuilderPro".
+
+## Before the Needs you redesign and the page rise-in (2026-11-13)
+- Live site (main): `2b2e28e`
+- Changes: the dashboard's Needs you card leads with a navy tile (the most urgent thing, its number big, a mint action button), other items as slim rows, and the checks that came back fine as mint pills (portal/dash.js, portal/dash.css). Every page switch in the app now lifts its cards in one after another (portal/motion.js, portal/motion.css).

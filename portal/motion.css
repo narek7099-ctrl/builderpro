@@ -5,8 +5,8 @@
 #bpx{--sp-out:cubic-bezier(.22,1,.36,1);--sp-bounce:cubic-bezier(.34,1.56,.64,1);--sp-press:cubic-bezier(.2,.8,.3,1.2)}
 
 /* 1. cards rise in, staggered (motion.js sets .mo-in and --i on each one) */
-#bpx#bpx#bpx#bpx .mo-in{animation:moRise .55s var(--sp-out) backwards;animation-delay:calc(var(--i,0) * 35ms)}
-@keyframes moRise{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(6px)}}
+#bpx#bpx#bpx#bpx .mo-in{animation:moRise .65s var(--sp-out) backwards;animation-delay:calc(var(--i,0) * 45ms)}
+
 
 /* 2. a soft lift under the mouse on cards you can open */
 @media (any-hover:hover){
@@ -69,7 +69,7 @@
   #bpx#bpx#bpx#bpx .hl-w>.bpx-panel{transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1) !important;will-change:transform}
 }
 /* smoother page entrance: opacity and movement only (no blur filter, which stutters on iPads) */
-@keyframes moRise{from{opacity:0;transform:translate3d(0,16px,0) scale(.99)}}
+@keyframes moRise{from{opacity:0;transform:translate3d(0,24px,0) scale(.98)}}
 #bpx#bpx#bpx#bpx .mo-in{animation-duration:.7s !important;animation-timing-function:cubic-bezier(.16,1,.3,1) !important}
 
 /* ---------- AI in our colors, not purple ---------- */

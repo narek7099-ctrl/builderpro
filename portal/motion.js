@@ -29,24 +29,40 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wrapTheme); else wrapTheme();
   window.addEventListener('load', wrapTheme);
   if (RM) { window.bpBurst = function () {}; return; }
-  var last = '', lastT = 0;
-  var PICK = '.hl-grid > *, .db-grid > *, .mh2-body > section, .mh2-tiles > *, .pj-grid > *, .bpx-ceo, .dash-mini';
+  /* Every page switch: the page's cards rise in one after another, top to
+     bottom. Each top-level block of the page either rises itself or, if it
+     holds cards, lets its cards rise one by one. A page that redraws itself
+     later (fresh numbers arriving) is left still: it only runs once per switch. */
+  var CARD = '.hl-w, .bpx-panel, .bpx-stats > *, .pjk-stats > *, .fin-kpi > *, .pj-card, .db-st, .bpx-ceo, .dash-mini, '
+    + '.mh2-body > section, .mh2-tiles > *, .bpx-inbox, .bpx-cwrap, .pjk-live, .st > *, [class*="-card"]';
+  var pending = true, pendT = Date.now();
+  function topmost(list) { return list.filter(function (el) { return !list.some(function (o) { return o !== el && o.contains(el); }); }); }
   function stagger(area) {
-    var v = window._bpCurView || '', now = Date.now();
-    if (v === last && now - lastT < 4000) return;
-    last = v; lastT = now;
-    var els = [].slice.call(area.querySelectorAll(PICK)).filter(function (el) { return el.offsetParent !== null; }).slice(0, 16);
-    if (!els.length) els = [].slice.call(area.children).slice(0, 8);
-    els.forEach(function (el, i) {
+    if (!pending || Date.now() - pendT > 2500) return;
+    pending = false;
+    var els = [], lim = innerHeight * 1.15;
+    [].slice.call(area.children).forEach(function (blk) {
+      if (blk.offsetParent === null) return;
+      var cards = topmost([].slice.call(blk.querySelectorAll(CARD)).filter(function (el) { return el.offsetParent !== null; }));
+      (cards.length > 1 ? cards : [blk]).forEach(function (el) { if (el.getBoundingClientRect().top < lim) els.push(el); });
+    });
+    els.slice(0, 18).forEach(function (el, i) {
       el.style.setProperty('--i', i);
       el.classList.remove('mo-in'); void el.offsetWidth; el.classList.add('mo-in');
-      setTimeout(function () { el.classList.remove('mo-in'); }, 700 + i * 35 + 200);
+      setTimeout(function () { el.classList.remove('mo-in'); }, 650 + i * 45 + 150);
     });
   }
   function watch() {
     var area = document.getElementById('bpxViewArea');
     if (!area) return setTimeout(watch, 400);
     new MutationObserver(function () { requestAnimationFrame(function () { stagger(area); }); }).observe(area, { childList: true });
+    var hook = function () {
+      var f = window.bpNav; if (typeof f !== 'function') return setTimeout(hook, 300); if (f._rise) return;
+      var w = function () { pending = true; pendT = Date.now(); var r = f.apply(this, arguments); requestAnimationFrame(function () { stagger(area); }); return r; };
+      for (var k in f) if (Object.prototype.hasOwnProperty.call(f, k)) w[k] = f[k];
+      w._rise = 1; window.bpNav = w;
+    };
+    hook();
   }
   watch();
   document.addEventListener('click', function (e) {
