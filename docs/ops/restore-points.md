@@ -188,3 +188,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the twisting mint cube (2026-11-13)
 - Live site (main): `9d0104c`
 - Changes: homepage loop is a new Higgsfield clip (MiniMax H3 2K, 16 credits) where the cube twists like a Rubik's cube with the mint tile glowing (assets/site/hero-loop-rubik.mp4); the intro is now hosted here with the first 4.5s of the mint clip crossfaded on as a bridge (assets/site/hero-intro.mp4).
+
+## Before the service worker skips videos (2026-11-13)
+- Live site (main): `da5ef02`
+- Changes: sw.js (bp-sw-2) no longer handles video/audio or range requests, so Safari plays the homepage cube clips (now hosted on our site with ?v=) for anyone who has opened the app.

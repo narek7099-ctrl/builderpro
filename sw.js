@@ -7,7 +7,7 @@
    the network fails do we show offline.html. Versioned scripts and styles
    (?v=...), icons and fonts are cached because a new version gets a new URL.
    Nothing from Supabase, HighLevel, Stripe or any other API is ever cached. */
-const VERSION = 'bp-sw-1';
+const VERSION = 'bp-sw-2';
 const SHELL = ['/offline.html', '/assets/app/logo-256.png', '/assets/app/icon-192.png', '/assets/app/icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -29,6 +29,9 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(fetch(req, { cache: 'no-cache' }).catch(() => caches.match('/offline.html')));
     return;
   }
+  /* videos and audio are fetched in byte ranges, which a cache can't hold, and Safari won't
+     play a video handed over by a service worker: leave them to the browser */
+  if (req.headers.has('range') || req.destination === 'video' || req.destination === 'audio' || /\.(mp4|webm|mov|m4v|mp3|m4a)$/i.test(u.pathname)) return;
   if (!cacheable(u)) return; // the browser handles it as if there were no service worker
   e.respondWith(caches.open(VERSION).then((c) => c.match(req).then((hit) => {
     if (hit) return hit;
