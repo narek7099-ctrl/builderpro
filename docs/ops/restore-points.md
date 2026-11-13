@@ -204,3 +204,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the cube zoom-out for wide screens (2026-11-13)
 - Live site (main): `b4581c7`
 - Changes: the homepage cube clip now fits the tighter side of its card (it used to size by width only, so on wide, short screens the cube filled the card), is about 10% smaller overall, and fades on all four edges.
+
+## Before the cube turn smoothing (2026-11-13)
+- Live site (main): `60940ff`
+- Changes: the cube's left turn near the end of the loop plays at its natural speed with light motion blur instead of the slowed version (which held then jumped), and the last half-second eases into the first frame so the loop repeats without a hitch.
