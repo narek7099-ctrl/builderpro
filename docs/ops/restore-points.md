@@ -184,3 +184,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before zooming the cube out (2026-11-12)
 - Live site (main): `c19b03f`
 - Changes: hero cube video scale 1.32 -> 1.1; the cube card background matched to the clip edges so no line shows where the video ends.
+
+## Before the twisting mint cube (2026-11-13)
+- Live site (main): `9d0104c`
+- Changes: homepage loop is a new Higgsfield clip (MiniMax H3 2K, 16 credits) where the cube twists like a Rubik's cube with the mint tile glowing (assets/site/hero-loop-rubik.mp4); the intro is now hosted here with the first 4.5s of the mint clip crossfaded on as a bridge (assets/site/hero-intro.mp4).
