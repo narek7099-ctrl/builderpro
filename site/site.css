@@ -924,13 +924,12 @@ body.dl .pnav_cta{border:1px solid rgba(255,255,255,.55)}
 /* small mint touches: the live dots and ticks */
 body.dl .pill_icon{box-shadow:0 4px 12px -6px rgba(0,111,255,.8)}
 
-/* phones and touch screens: the same look without the live blur (it costs
-   battery while the ribbons move); the panes are a little more solid instead */
-@media (hover:none),(max-width:767px){
-  body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
-    -webkit-backdrop-filter:none;backdrop-filter:none;
-    background:var(--glass-shine),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.74) 50%,rgba(246,250,255,.82));
-  }
+/* No live blur on the panes, on any screen: re-blurring the moving ribbons behind
+   every card each frame dropped the page to about 20 frames a second (61 without).
+   The panes are a little more solid instead, which looks the same. */
+body.dl :is(.card:not(.is-blue):not(.is-slate):not(.is-flush),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa,.calc_head,.calc_card,.calc_stage,#models .mw-card,#models>.wrap>p,#estimator .sec-head,#models .sec-head,#estimator .est-carousel,#estimator .est-cdots){
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  background:var(--glass-shine),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.74) 50%,rgba(246,250,255,.82));
 }
 @media (prefers-reduced-transparency:reduce){
   body.dl :is(.card:not(.is-blue):not(.is-slate),.hero_left-top,.hero_left-mid,.hero_left-bot,.cs_item,.qa){background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -953,3 +952,7 @@ html[data-pilot="off"] .pilot-off{display:inline}
 .pilot-pill em{font-style:normal;font-weight:700;color:#0a8f6f}
 @keyframes pilotPulse{50%{opacity:.4}}
 @media (prefers-reduced-motion:reduce){.pilot-pill i{animation:none}}
+/* the scroll-story layers sit invisible over the playing cube until you scroll; their live
+   blur re-ran on every video frame, so they use a solid wash instead */
+body.dl .hero_dark{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(0,21,48,.62)}
+body.dl :is(.hero_story-top,.hero_story-bot){-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.93)}

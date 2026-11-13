@@ -192,3 +192,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the service worker skips videos (2026-11-13)
 - Live site (main): `da5ef02`
 - Changes: sw.js (bp-sw-2) no longer handles video/audio or range requests, so Safari plays the homepage cube clips (now hosted on our site with ?v=) for anyone who has opened the app.
+
+## Before the website lag fix (2026-11-13)
+- Live site (main): `28fb87c`
+- Changes: no live backdrop blur on the website panes (site.css, mkt-nav.css, legal.css, signup.html), the hidden scroll-story layers use a solid wash, and the light ribbons hold still while the homepage hero covers them. Hero went from about 20 to 56 frames a second.
