@@ -570,3 +570,20 @@ html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !
 #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.jr-tl li.ok>i){background:#16c79a}
 #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.jr-tl em:not(.late),.jr-tag.ok){background:rgba(22,199,154,.13);color:#08775d}
 #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .ap-sw[aria-checked=true]{background:linear-gradient(160deg,#3fe0b6,#16c79a)}
+
+/* ---- the website's light ribbons behind the app (portal/appbg.js, 2026-11-13) ----
+   The wash moves from .bpx-app onto #bpx so the canvas (#bpxRib, z-index -1)
+   sits between them. No live blur on the glass while the ribbons move (it
+   would re-blur them every frame); a touch more white keeps text crisp. */
+#bpxRib{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block;transform:translateZ(0)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib{background:linear-gradient(180deg,#ffffff 0%,#f4f7fc 100%)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib .bpx-app{background:transparent !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib.bpx-dark{background:
+  radial-gradient(1100px 700px at 88% -12%,rgba(0,111,255,.22),transparent 62%),
+  radial-gradient(800px 600px at 15% 25%,rgba(40,90,200,.14),transparent 60%),
+  linear-gradient(180deg,#081120,#050b16)}
+#bpx.bp-rib.bpx-dark #bpxRib{opacity:.55}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib :is(#bpxViewArea *,#hlTop){-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.bpx-cwrap,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs){background-color:rgba(255,255,255,.5) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib:not(.bpx-dark) #hlTop{background:rgba(255,255,255,.9) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib.bpx-dark #hlTop{background:rgba(8,14,26,.9) !important}

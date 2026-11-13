@@ -35,18 +35,27 @@
      later (fresh numbers arriving) is left still: it only runs once per switch. */
   var CARD = '.hl-w, .bpx-panel, .bpx-stats > *, .pjk-stats > *, .fin-kpi > *, .pj-card, .db-st, .bpx-ceo, .dash-mini, '
     + '.mh2-body > section, .mh2-tiles > *, .bpx-inbox, .bpx-cwrap, .pjk-live, .st > *, [class*="-card"]';
-  var pending = true, pendT = Date.now();
+  /* cards inside a card (the job photo cards, the stat boxes) rise one by one after it */
+  var INNER = '.pj-card, .bpx-stat, .pjk-stat, .db-st, .wka-day, .nyc-hero, [class*="-card"]';
+  var pending = true, pendT = Date.now(), curV = null, riseT = 0;
   function topmost(list) { return list.filter(function (el) { return !list.some(function (o) { return o !== el && o.contains(el); }); }); }
+  function vis(el) { return el.offsetParent !== null; }
   function stagger(area) {
     if (!pending || Date.now() - pendT > 2500) return;
-    pending = false;
-    var els = [], lim = innerHeight * 1.15;
+    var lim = innerHeight * 1.15, els = [];
     [].slice.call(area.children).forEach(function (blk) {
-      if (blk.offsetParent === null) return;
-      var cards = topmost([].slice.call(blk.querySelectorAll(CARD)).filter(function (el) { return el.offsetParent !== null; }));
-      (cards.length > 1 ? cards : [blk]).forEach(function (el) { if (el.getBoundingClientRect().top < lim) els.push(el); });
+      if (!vis(blk)) return;
+      var cards = topmost([].slice.call(blk.querySelectorAll(CARD)).filter(vis));
+      (cards.length > 1 ? cards : [blk]).forEach(function (el) {
+        if (el.getBoundingClientRect().top >= lim) return;
+        els.push(el);
+        topmost([].slice.call(el.querySelectorAll(INNER)).filter(function (x) { return x !== el && vis(x) && x.getBoundingClientRect().top < lim; }))
+          .slice(0, 8).forEach(function (x) { els.push(x); });
+      });
     });
-    els.slice(0, 18).forEach(function (el, i) {
+    if (!els.length) return;            /* nothing drawn yet (still loading): wait for the page to arrive */
+    pending = false; riseT = Date.now();
+    els.slice(0, 28).forEach(function (el, i) {
       el.style.setProperty('--i', i);
       el.classList.remove('mo-in'); void el.offsetWidth; el.classList.add('mo-in');
       setTimeout(function () { el.classList.remove('mo-in'); }, 650 + i * 45 + 150);
@@ -58,7 +67,11 @@
     new MutationObserver(function () { requestAnimationFrame(function () { stagger(area); }); }).observe(area, { childList: true });
     var hook = function () {
       var f = window.bpNav; if (typeof f !== 'function') return setTimeout(hook, 300); if (f._rise) return;
-      var w = function () { pending = true; pendT = Date.now(); var r = f.apply(this, arguments); requestAnimationFrame(function () { stagger(area); }); return r; };
+      var w = function (v) {
+        /* the app re-opens the same page while its data loads: only a real switch (or a
+           return after a few seconds) plays the rise again, so it never repeats on load */
+        if (v !== curV || Date.now() - riseT > 4000) { pending = true; pendT = Date.now(); }
+        curV = v; var r = f.apply(this, arguments); requestAnimationFrame(function () { stagger(area); }); return r; };
       for (var k in f) if (Object.prototype.hasOwnProperty.call(f, k)) w[k] = f[k];
       w._rise = 1; window.bpNav = w;
     };
