@@ -42,7 +42,7 @@
   function vis(el) { return el.offsetParent !== null; }
   function stagger(area) {
     if (!pending || Date.now() - pendT > 2500) return;
-    var lim = innerHeight * 1.15, els = [];
+    var lim = innerHeight * 1.0, els = [];
     [].slice.call(area.children).forEach(function (blk) {
       if (!vis(blk)) return;
       var cards = topmost([].slice.call(blk.querySelectorAll(CARD)).filter(vis));
@@ -50,16 +50,17 @@
         if (el.getBoundingClientRect().top >= lim) return;
         els.push(el);
         topmost([].slice.call(el.querySelectorAll(INNER)).filter(function (x) { return x !== el && vis(x) && x.getBoundingClientRect().top < lim; }))
-          .slice(0, 8).forEach(function (x) { els.push(x); });
+          .slice(0, 4).forEach(function (x) { els.push(x); });
       });
     });
     if (!els.length) return;            /* nothing drawn yet (still loading): wait for the page to arrive */
     pending = false; riseT = Date.now();
-    els.slice(0, 28).forEach(function (el, i) {
-      el.style.setProperty('--i', i);
-      el.classList.remove('mo-in'); void el.offsetWidth; el.classList.add('mo-in');
-      setTimeout(function () { el.classList.remove('mo-in'); }, 650 + i * 45 + 150);
-    });
+    /* all the reading is done above; now write in one go (one layout, not one per card) */
+    els = els.slice(0, 16);
+    els.forEach(function (el, i) { el.classList.remove('mo-in'); el.style.setProperty('--i', i); });
+    void area.offsetWidth;
+    els.forEach(function (el) { el.classList.add('mo-in'); });
+    setTimeout(function () { els.forEach(function (el) { el.classList.remove('mo-in'); }); }, 600 + els.length * 40 + 120);
   }
   function watch() {
     var area = document.getElementById('bpxViewArea');

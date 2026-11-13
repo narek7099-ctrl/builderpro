@@ -216,3 +216,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the Needs you redesign, the page rise-in and the app ribbons (2026-11-13)
 - Live site (main): `2b2e28e`
 - Changes: the dashboard's Needs you card is built like This week (the most urgent thing as the same blue tile, its number big, a white action pill; the all-clear checks as white glass tiles with mint ticks) (portal/dash.js, portal/dash.css). Every page switch and the first load lift each card in one after another, once (portal/motion.js, portal/motion.css). The website's blue and mint light ribbons now drift behind the app, with no live blur on the cards (portal/appbg.js, portal/glass.css).
+
+## Before the app lag fix (2026-11-13)
+- Live site (main): `b90b91e`
+- Changes: the app's light ribbons are painted once and held still instead of redrawn every frame (14 to 60 frames a second on a normal laptop), and the card rise-in starts with one layout pass and moves cards on the graphics card (portal/appbg.js, portal/glass.css, portal/motion.js, portal/motion.css).

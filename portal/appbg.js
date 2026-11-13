@@ -3,14 +3,18 @@
    product. Drawn on a fixed canvas at the very back of the app (#bpxRib,
    z-index -1 inside #bpx); the app's white (or dark) wash moves onto #bpx
    behind it (portal/glass.css, .bp-rib). The cards keep their glass but drop
-   the live blur, because re-blurring moving lines every frame is what made
-   the website lag. 20 frames a second at most (15 on phones), paused while
-   the tab is hidden, the app is closed or a popup is open, and one still
-   frame for people who ask for less motion. */
+   the live blur. Painted once and held still: redrawing them every frame
+   made the app lag (see MODE below). */
 (function () {
   'use strict';
   var host = document.getElementById('bpx');
   if (!host || document.getElementById('bpxRib')) return;
+  /* 'still' (the default) paints the ribbons once, on load and on resize.
+     'live' redraws them every frame like the website, but behind the app's
+     glass cards that cost a normal laptop most of its frames (14 a second
+     against 60 still, measured 2026-11-13), so it stays off. */
+  var MODE = window.BP_RIB_MODE || 'still';
+  if (MODE === 'off') return;
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var SMALL = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
   var cv = document.createElement('canvas'); cv.id = 'bpxRib'; cv.setAttribute('aria-hidden', 'true');
@@ -94,6 +98,6 @@
   }
   size(); frame(performance.now());
   window.addEventListener('resize', function () { size(); frame(performance.now()); }, { passive: true });
-  if (!REDUCED) raf = requestAnimationFrame(loop);
+  if (!REDUCED && MODE === 'live') raf = requestAnimationFrame(loop);
   
 })();

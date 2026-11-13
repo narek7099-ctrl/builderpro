@@ -5,7 +5,7 @@
 #bpx{--sp-out:cubic-bezier(.22,1,.36,1);--sp-bounce:cubic-bezier(.34,1.56,.64,1);--sp-press:cubic-bezier(.2,.8,.3,1.2)}
 
 /* 1. cards rise in, staggered (motion.js sets .mo-in and --i on each one) */
-#bpx#bpx#bpx#bpx .mo-in{animation:moRise .65s var(--sp-out) backwards;animation-delay:calc(var(--i,0) * 45ms)}
+#bpx#bpx#bpx#bpx .mo-in{animation:moRise .6s var(--sp-out) backwards;animation-delay:calc(var(--i,0) * 40ms);will-change:transform,opacity;backface-visibility:hidden}
 
 
 /* 2. a soft lift under the mouse on cards you can open */
