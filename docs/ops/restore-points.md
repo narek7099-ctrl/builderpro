@@ -200,3 +200,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the cube clip swap back to the original motion (2026-11-13)
 - Live site (main): `ae789c5`
 - Changes: the homepage cube uses the user's original-motion clip again, with the icon-swap flicker at 4.4s crossfaded, the snap-turn at 6.9s slowed into a smooth turn, and a soft mint glow inside the cube (the intro fades the glow in over its last 2.5s). The MiniMax rubik loop is removed. Card background re-matched to the clip's edge colour.
+
+## Before the cube zoom-out for wide screens (2026-11-13)
+- Live site (main): `b4581c7`
+- Changes: the homepage cube clip now fits the tighter side of its card (it used to size by width only, so on wide, short screens the cube filled the card), is about 10% smaller overall, and fades on all four edges.
