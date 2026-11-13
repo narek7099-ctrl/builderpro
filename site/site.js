@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261113-rb2').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261113-lg1').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -707,9 +707,12 @@
   }
   var last = 0, raf = 0;
   function appOpen() { var a = document.getElementById('bpx'); return !!(a && a.classList.contains('open')); }
+  /* at the top of the homepage the hero cards cover almost all of the ribbons, and the
+     cube video needs the frames: hold the ribbons still until the visitor scrolls */
+  function heroCovers() { var h = document.querySelector('.hero_stage'); return !!h && (window.scrollY || 0) < window.innerHeight * 0.35; }
   function loop(now) {
     raf = requestAnimationFrame(loop);
-    if (now - last < (SMALL ? 66 : 50) || document.hidden || appOpen()) return;   /* 20 a second (15 on phones) is plenty for a slow drift */
+    if (now - last < (SMALL ? 66 : 50) || document.hidden || appOpen() || heroCovers()) return;   /* 20 a second (15 on phones) is plenty for a slow drift */
     last = now; frame(now);
   }
   size(); frame(performance.now());

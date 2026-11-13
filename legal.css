@@ -61,8 +61,8 @@ body{background:#e8f0fa radial-gradient(70% 55% at 85% 10%,rgba(0,111,255,.10),t
 #dlRibbons{position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;display:block;will-change:transform;transform:translateZ(0)}
 h1,h2,h3{font-family:'General Sans','Geist',sans-serif;letter-spacing:-.03em}
 .nav{background:linear-gradient(155deg,rgba(255,255,255,.82),rgba(255,255,255,.6))!important;-webkit-backdrop-filter:blur(20px) saturate(1.7);backdrop-filter:blur(20px) saturate(1.7);border-bottom:1px solid rgba(255,255,255,.8)!important;box-shadow:0 10px 30px -22px rgba(0,30,90,.4)}
-.card{background:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.08),transparent 55%),linear-gradient(155deg,rgba(255,255,255,.9),rgba(255,255,255,.72) 50%,rgba(246,250,255,.8))!important;
-  border:1px solid rgba(255,255,255,.8)!important;box-shadow:inset 0 1px 0 #fff,0 24px 60px -42px rgba(0,40,120,.45)!important;-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6)}
+.card{background:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.08),transparent 55%),linear-gradient(155deg,rgba(255,255,255,.95),rgba(255,255,255,.86))!important;
+  border:1px solid rgba(255,255,255,.8)!important;box-shadow:inset 0 1px 0 #fff,0 24px 60px -42px rgba(0,40,120,.45)!important}
 @media (hover:none),(max-width:767px){.card{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(155deg,rgba(255,255,255,.95),rgba(255,255,255,.86))!important}}
 /* the real logo mark in place of the plain blue square */
 .mark{background:url(/assets/brand/logo-mark-64.png) center/contain no-repeat;color:transparent;border-radius:0}
