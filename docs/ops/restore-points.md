@@ -220,3 +220,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the app lag fix (2026-11-13)
 - Live site (main): `b90b91e`
 - Changes: the app's light ribbons are painted once and held still instead of redrawn every frame (14 to 60 frames a second on a normal laptop), and the card rise-in starts with one layout pass and moves cards on the graphics card (portal/appbg.js, portal/glass.css, portal/motion.js, portal/motion.css).
+
+## Before the silk-light background (2026-11-13)
+- Live site (main): `4ca1243`
+- Changes: one shared background, site/silk.js, after the reference reel the user sent (one ribbon of fine threads pinched to a glowing waist, fanning wide and rolling slowly), drawn in a background thread (OffscreenCanvas in a Worker) so it moves without taking frames from the page. Used by the app (portal/appbg.js), the homepage (site/site.js) and the other pages (site/ribbons.js, version stamps updated on 48 pages).
