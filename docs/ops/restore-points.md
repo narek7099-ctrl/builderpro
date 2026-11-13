@@ -196,3 +196,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the website lag fix (2026-11-13)
 - Live site (main): `28fb87c`
 - Changes: no live backdrop blur on the website panes (site.css, mkt-nav.css, legal.css, signup.html), the hidden scroll-story layers use a solid wash, and the light ribbons hold still while the homepage hero covers them. Hero went from about 20 to 56 frames a second.
+
+## Before the cube clip swap back to the original motion (2026-11-13)
+- Live site (main): `ae789c5`
+- Changes: the homepage cube uses the user's original-motion clip again, with the icon-swap flicker at 4.4s crossfaded, the snap-turn at 6.9s slowed into a smooth turn, and a soft mint glow inside the cube (the intro fades the glow in over its last 2.5s). The MiniMax rubik loop is removed. Card background re-matched to the clip's edge colour.
