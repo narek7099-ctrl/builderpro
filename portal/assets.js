@@ -93,8 +93,8 @@
     var per = +a.service_months || 0, last = pd(a.last_service) || pd(a.installed_on) || (a.created_at ? new Date(a.created_at) : null);
     var next = per && last ? addMonths(last, per) : null;
     var ndays = next ? Math.round((next.getTime() - Date.now()) / DAY) : null;
-    var svc = !per ? { k: 'none', t: 'No plan', c: '#788493' } : ndays < 0 ? { k: 'over', t: 'Service overdue', c: '#b91c1c' } : ndays <= 30 ? { k: 'soon', t: 'Service due soon', c: '#b45309' } : { k: 'ok', t: 'On schedule', c: '#0f7a43' };
-    var eol = used >= 1 ? { k: 'past', t: 'Past expected life', c: '#b91c1c' } : used >= 0.8 ? { k: 'near', t: 'Nearing end of life', c: '#b45309' } : null;
+    var svc = !per ? { k: 'none', t: 'No plan', c: '#788493' } : ndays < 0 ? { k: 'over', t: 'Service overdue', c: '#b91c1c' } : ndays <= 30 ? { k: 'soon', t: 'Service due soon', c: '#0953b4' } : { k: 'ok', t: 'On schedule', c: '#0f7a43' };
+    var eol = used >= 1 ? { k: 'past', t: 'Past expected life', c: '#b91c1c' } : used >= 0.8 ? { k: 'near', t: 'Nearing end of life', c: '#0953b4' } : null;
     var wp = pd(a.warranty_until), wl = pd(a.labor_warranty_until);
     return { start: start, life: life, repl: repl, used: Math.max(0, used), next: next, svc: svc, eol: eol, wp: wp, wl: wl,
       warr: (wp && wp.getTime() > Date.now()) || (wl && wl.getTime() > Date.now()) };
@@ -235,7 +235,7 @@
       + '<div class="bpx-chead eq-head"><div><h2>Equipment</h2><p class="eq-sub">Every unit you install or service, with its age, warranty and when it will need replacing.</p></div>'
         + '<div class="eq-acts"><button class="bpx-btn ghost" onclick="BPA.add()"><span class="ms">edit_note</span>Add by hand</button>'
         + '<button class="bpx-addbtn" onclick="BPA.add({scan:1})"><span class="ms">photo_camera</span>Scan a nameplate</button></div></div>'
-      + (L.length ? '<div class="eq-tiles">' + tile('all', L.length, 'All equipment', 'var(--blue)', 'inventory_2') + tile('due', n('due'), 'Service due', '#b45309', 'build_circle')
+      + (L.length ? '<div class="eq-tiles">' + tile('all', L.length, 'All equipment', 'var(--blue)', 'inventory_2') + tile('due', n('due'), 'Service due', '#0953b4', 'build_circle')
           + tile('eol', n('eol'), 'Near end of life', '#b91c1c', 'hourglass_bottom') + tile('warr', n('warr'), 'Under warranty', '#0f7a43', 'verified_user') + '</div>'
         + '<div class="eq-bar"><label class="eq-search"><span class="ms">search</span><input placeholder="Search customer, make, model or serial" value="' + esc(A.q) + '" oninput="BPA.search(this.value)"></label>'
           + '<div class="eq-chips">' + chip('all', 'All') + TAGS.map(function (t) { return chip(t[0], t[1]); }).join('') + '</div></div>'
@@ -343,7 +343,7 @@
           ['Parts warranty', warr(x.wp)], ['Labor warranty', warr(x.wl)]])
         + (a.notes ? '<p class="eq-notes">' + esc(a.notes).replace(/\n/g, '<br>') + '</p>' : '') + '</section></div>';
   }
-  var CONDS = { good: ['Good', '#0f7a43'], fair: ['Fair', '#b45309'], poor: ['Poor', '#b91c1c'] };
+  var CONDS = { good: ['Good', '#0f7a43'], fair: ['Fair', '#0953b4'], poor: ['Poor', '#b91c1c'] };
   var KINDS = { maintenance: 'Maintenance', repair: 'Repair', inspection: 'Inspection', install: 'Install' };
   function paneHistory(a) {
     var H = A.svc[a.id];
@@ -530,7 +530,7 @@
       D._read = true;
       var keep = { scan: D._plateUrl };
       dialog(false); D._plateUrl = keep.scan; $('eq-scan').innerHTML = scanBox();
-      if (p.note) { var m2 = $('eq-msg'); if (m2) { m2.style.color = '#b45309'; m2.textContent = p.note; } }
+      if (p.note) { var m2 = $('eq-msg'); if (m2) { m2.style.color = '#0953b4'; m2.textContent = p.note; } }
     }, function () { D._reading = false; $('eq-scan').innerHTML = scanBox(); var m = $('eq-msg'); if (m) { m.style.color = '#b91c1c'; m.textContent = 'No connection. Fill it in by hand, or try again.'; } });
   };
   A.save = function () {

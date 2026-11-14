@@ -31,6 +31,17 @@
       o[0] = b0 * q[0] + b1 * q[2] + b2 * q[4] + b3 * q[6]; o[1] = b0 * q[1] + b1 * q[3] + b2 * q[5] + b3 * q[7];
     }
     function size(w, h, dpr) { W = w; H = h; D = dpr; ctx.canvas.width = Math.round(w * dpr); ctx.canvas.height = Math.round(h * dpr); }
+    var HC = null;
+    function mk(w, h) {
+      if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+      if (typeof document !== 'undefined') { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+      return null;
+    }
+    function hazeCanvas() {
+      var w = Math.max(8, Math.round(W * D / 6)), h = Math.max(8, Math.round(H * D / 6));
+      if (!HC || HC.width !== w || HC.height !== h) HC = mk(w, h);
+      return HC;
+    }
     /* the centre line: from off the top-right, in to the waist on the left, back out to the bottom-right */
     function spine(t) {
       var b = function (f, ph, amp) { return Math.sin(t * f + ph) * amp; };
@@ -54,15 +65,32 @@
       else { g.addColorStop(0, 'rgba(22,199,154,1)'); g.addColorStop(0.2, 'rgba(18,180,150,1)'); g.addColorStop(0.55, 'rgba(0,111,255,1)'); g.addColorStop(1, 'rgba(0,90,220,1)'); }
       ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      /* 1. the haze: a few wide, faint strokes along the same path (the out-of-focus aurora) */
-      ctx.strokeStyle = g;
-      for (var hz = 0; hz < 7; hz++) {
-        ctx.globalAlpha = (dark ? 0.016 : 0.013) * (hz < 2 ? 1.6 : 1);
-        ctx.lineWidth = M * (0.05 + hz * 0.075);
-        ctx.beginPath();
-        for (var s0 = 0; s0 <= 40; s0++) { bz(q, s0 / 40, P); s0 ? ctx.lineTo(P[0], P[1]) : ctx.moveTo(P[0], P[1]); }
-        ctx.stroke();
+      /* 1. the haze (the out-of-focus aurora): drawn small, blurred and scaled up, so
+         it falls off smoothly with no visible steps or rings, on light or dark */
+      var hc = hazeCanvas(), hx = hc && hc.getContext('2d');
+      if (hx) {
+        var f = 1 / 6, hw = hc.width, hh = hc.height;
+        hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, hw, hh);
+        hx.setTransform(f * D, 0, 0, f * D, 0, 0);
+        if ('filter' in hx) hx.filter = 'blur(' + Math.round(M * f * 0.05) + 'px)';
+        var hg = hx.createRadialGradient(wx, wy, 0, wx, wy, Math.max(W, H) * 0.75);
+        hg.addColorStop(0, dark ? 'rgba(63,224,182,1)' : 'rgba(22,199,154,1)'); hg.addColorStop(0.5, dark ? 'rgba(77,163,255,1)' : 'rgba(0,111,255,1)'); hg.addColorStop(1, 'rgba(0,90,220,1)');
+        hx.strokeStyle = hg; hx.lineCap = 'round';
+        for (var hz = 0; hz < 3; hz++) {
+          hx.globalAlpha = dark ? [0.05, 0.035, 0.025][hz] : [0.045, 0.03, 0.02][hz];
+          hx.lineWidth = M * [0.1, 0.24, 0.45][hz];
+          hx.beginPath();
+          for (var s0 = 0; s0 <= 30; s0++) { bz(q, s0 / 30, P); s0 ? hx.lineTo(P[0], P[1]) : hx.moveTo(P[0], P[1]); }
+          hx.stroke();
+        }
+        if ('filter' in hx) hx.filter = 'none';
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = true;
+        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(hc, 0, 0, hw, hh, 0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore();
+        ctx.setTransform(D, 0, 0, D, 0, 0);
+        ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
       }
+      ctx.strokeStyle = g;   /* the threads use the mint-to-blue ramp */
       /* 2. the threads: each is an offset of the centre line by the band's width
          times the cosine of its angle; the angle turns along the ribbon and with
          time, so the band twists and the threads roll over each other. Threads
@@ -100,6 +128,7 @@
       else { gl.addColorStop(0, 'rgba(22,199,154,.32)'); gl.addColorStop(0.25, 'rgba(22,199,154,.13)'); gl.addColorStop(1, 'rgba(22,199,154,0)'); }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
       ctx.fillStyle = gl; ctx.fillRect(wx - M * 0.22, wy - M * 0.22, M * 0.44, M * 0.44);
+
       /* 4. a little floating dust */
       ctx.globalCompositeOperation = 'source-over';
       for (var e = 0; e < dust.length; e++) {

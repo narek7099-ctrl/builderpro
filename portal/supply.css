@@ -11,7 +11,7 @@
 #bpx .sp-check{display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0 2px;text-transform:none;letter-spacing:0}
 #bpx .sp-check input{width:auto;margin:0}
 #bpx .sp-note{display:block;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:500;line-height:1.55;margin-bottom:16px;background:var(--tint,#f4f6fa);border:1px solid var(--line);color:inherit}
-#bpx .sp-note.warn{background:#fff7ed;border-color:#f59e0b;color:#92400e}
+#bpx .sp-note.warn{background:#edf5ff;border-color:#0b70f5;color:#0e4792}
 #bpx .sp-note.bad{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
 #bpx .sp-note .ms{font-size:18px;vertical-align:-4px;margin-right:7px}
 
@@ -28,7 +28,7 @@
 /* stock marks */
 #bpx .sp-stk{display:inline-block;font-size:11.5px;font-weight:650;border-radius:999px;padding:3px 9px;white-space:nowrap}
 #bpx .sp-stk.ok{background:#e7f7ee;color:#137a3f}
-#bpx .sp-stk.low{background:#fff3df;color:#9a5b00}
+#bpx .sp-stk.low{background:#dfedff;color:#00439a}
 #bpx .sp-stk.out{background:#fdecec;color:#b3392f}
 #bpx .sp-stk.unk{background:var(--tint,#f4f6fa);color:var(--grey)}
 
@@ -173,7 +173,7 @@
 #bpx .sp-dir-miss{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin:12px 0 2px}
 
 /* ---------- the cold start: one instruction, one button ---------- */
-#bpx .sp-note.good{background:#f0fdf4;border-color:#86efac;color:#14532d}
+#bpx .sp-note.good{background:#f0fdfa;border-color:#86efac;color:#14532d}
 #bpx .sp-start{padding:0;overflow:hidden}
 #bpx .sp-start-top{text-align:center;padding:38px 26px 30px;max-width:520px;margin:0 auto}
 #bpx .sp-start-top .ms{font-size:44px;color:var(--blue);display:block;margin-bottom:12px}
@@ -198,7 +198,7 @@
 #bpx .sp-win{background:#0f7a3d;color:#fff;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800;letter-spacing:.01em}
 #bpx.bpx-dark .sp-win{background:#16a34a}
 #bpx .sp-two .bpx-ptitle .lg2{margin-left:9px}
-#bpx .bpx-stat .sp-ex{display:block;font-size:11.5px;font-weight:700;color:#92400e;letter-spacing:0}
+#bpx .bpx-stat .sp-ex{display:block;font-size:11.5px;font-weight:700;color:#0e4792;letter-spacing:0}
 
 /* the ticket: a delivery is not a counter visit */
 #bpx .sp-ticket-del{display:flex;gap:12px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;margin:16px 0}
@@ -206,7 +206,7 @@
 #bpx .sp-ticket-del b{display:block;font-size:14.5px}
 #bpx .sp-ticket-del .bpx-mut{font-size:12.5px}
 #bpx .sp-ticket-ask{display:block;margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);font-size:12.5px;line-height:1.6;color:var(--grey)}
-#bpx .sp-ticket-ask .ms{font-size:17px;color:#b45309;vertical-align:-4px;margin-right:5px}
+#bpx .sp-ticket-ask .ms{font-size:17px;color:#0953b4;vertical-align:-4px;margin-right:5px}
 #bpx .sp-skip{text-align:center;font-size:12.5px;color:var(--grey);margin-top:-4px;padding-bottom:2px}
 
 /* near me + quote request */
@@ -229,8 +229,8 @@
 #bpx .bpx-jt.on i{background:var(--ink)}
 
 /* an item the branch prices, on the plan and on the ticket */
-#bpx .sp-tbc{display:inline-block;font-size:11px;font-weight:700;color:#b45309;background:rgba(180,83,9,.1);border-radius:999px;padding:2px 8px;white-space:nowrap}
-#bpx.bpx-dark .sp-tbc{color:#e5a45a;background:rgba(229,164,90,.14)}
+#bpx .sp-tbc{display:inline-block;font-size:11px;font-weight:700;color:#0953b4;background:rgba(9,83,180,.1);border-radius:999px;padding:2px 8px;white-space:nowrap}
+#bpx.bpx-dark .sp-tbc{color:#5a96e5;background:rgba(90,150,229,.14)}
 
 /* asking for the branch email, inside the ticket */
 #bpx .sp-ask{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0 4px;background:var(--soft)}
@@ -246,7 +246,7 @@
 /* the Materials tab on a project */
 #bpx .sp-mat-sum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:2px 0 12px;font-size:13.5px;color:var(--grey)}
 #bpx .sp-mat-sum b{font-size:20px;letter-spacing:-.02em;color:var(--ink)}
-#bpx .sp-mat-sum em{font-style:normal;color:#b45309;font-weight:600}
+#bpx .sp-mat-sum em{font-style:normal;color:#0953b4;font-weight:600}
 #bpx .sp-mat-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto 20px;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);cursor:pointer}
 #bpx .sp-mat-row:hover .sp-mat-who b{color:var(--blue)}
 #bpx .sp-mat-row .ms{color:var(--grey-l);font-size:20px}
@@ -255,7 +255,7 @@
 #bpx .sp-mat-who span{display:block;font-size:12px;color:var(--grey)}
 #bpx .sp-mat-st{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--grey);white-space:nowrap}
 #bpx .sp-mat-st.good{color:#0f7a3d;background:rgba(15,122,61,.1)}
-#bpx .sp-mat-st.warn{color:#b45309;background:rgba(180,83,9,.1)}
+#bpx .sp-mat-st.warn{color:#0953b4;background:rgba(9,83,180,.1)}
 #bpx .sp-mat-row.draft{grid-template-columns:minmax(0,1fr) auto 20px}
 #bpx .sp-mat-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 #bpx .sp-mat-acts .bpx-btn{margin:0}
@@ -269,21 +269,21 @@
 #bpx .sp-chip .sp-ic{width:22px;height:22px}
 #bpx .sp-chip.sm{width:30px;height:30px;border-radius:8px}
 #bpx .sp-chip.sm .sp-ic{width:18px;height:18px}
-#bpx .sp-chip[data-fam=roof] {color:#a2542c;background:rgba(162,84,44,.1)}
+#bpx .sp-chip[data-fam=roof] {color:#2c5fa2;background:rgba(44,95,162,.1)}
 #bpx .sp-chip[data-fam=hvac] {color:#1f7a8c;background:rgba(31,122,140,.1)}
 #bpx .sp-chip[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.1)}
-#bpx .sp-chip[data-fam=elec] {color:#a4711a;background:rgba(164,113,26,.11)}
-#bpx .sp-chip[data-fam=paint]{color:#7a4fa3;background:rgba(122,79,163,.1)}
+#bpx .sp-chip[data-fam=elec] {color:#1a56a4;background:rgba(26,86,164,.11)}
+#bpx .sp-chip[data-fam=paint]{color:#4f6ba3;background:rgba(79,107,163,.1)}
 #bpx .sp-chip[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.1)}
 #bpx .sp-chip[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.12)}
 /* the tints are mixed for a white card, so on the dark card they are lifted
    rather than re-picked, which keeps the same hue reading */
 #bpx.bpx-dark .sp-chip{background:rgba(255,255,255,.06)}
-#bpx.bpx-dark .sp-chip[data-fam=roof] {color:#d99366;background:rgba(217,147,102,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=roof] {color:#6698d9;background:rgba(102,152,217,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=hvac] {color:#5fb6c6;background:rgba(95,182,198,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=plumb]{color:#7ba6e8;background:rgba(123,166,232,.13)}
-#bpx.bpx-dark .sp-chip[data-fam=elec] {color:#e0b055;background:rgba(224,176,85,.13)}
-#bpx.bpx-dark .sp-chip[data-fam=paint]{color:#b28cd6;background:rgba(178,140,214,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=elec] {color:#5591e0;background:rgba(85,145,224,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=paint]{color:#8ca5d6;background:rgba(140,165,214,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=land] {color:#6cbd8a;background:rgba(108,189,138,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=conc] {color:#a3adbb;background:rgba(163,173,187,.13)}
 
@@ -309,7 +309,7 @@
 #bpx .sp-pk-sup{white-space:nowrap}
 #bpx .sp-pk-stk{font-size:11.5px;font-weight:600}
 #bpx .sp-pk-stk.ok{color:#0f7a3d}
-#bpx .sp-pk-stk.out{color:#b45309}
+#bpx .sp-pk-stk.out{color:#0953b4}
 #bpx .sp-pk-more,#bpx .sp-pk-none{font-size:11.5px;color:var(--grey-l,var(--grey))}
 #bpx .sp-pk-add{flex:none;min-width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;color:var(--grey);background:var(--card,#fff);padding:0 9px}
 #bpx .sp-pk-row:hover .sp-pk-add{border-color:var(--blue);color:var(--blue)}
@@ -518,20 +518,20 @@
 #bpx .sp-card-art .sp-ic.big{width:46px;height:46px;stroke-width:1.5}
 /* the same family tints the category chips use, so one material reads the
    same colour wherever it appears */
-#bpx .sp-card-art[data-fam=roof] {color:#a2542c;background:rgba(162,84,44,.09)}
+#bpx .sp-card-art[data-fam=roof] {color:#2c5fa2;background:rgba(44,95,162,.09)}
 #bpx .sp-card-art[data-fam=hvac] {color:#1f7a8c;background:rgba(31,122,140,.09)}
 #bpx .sp-card-art[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.09)}
-#bpx .sp-card-art[data-fam=elec] {color:#a4711a;background:rgba(164,113,26,.1)}
-#bpx .sp-card-art[data-fam=paint]{color:#7a4fa3;background:rgba(122,79,163,.09)}
+#bpx .sp-card-art[data-fam=elec] {color:#1a56a4;background:rgba(26,86,164,.1)}
+#bpx .sp-card-art[data-fam=paint]{color:#4f6ba3;background:rgba(79,107,163,.09)}
 #bpx .sp-card-art[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.09)}
 #bpx .sp-card-art[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.1)}
 #bpx .sp-card-art[data-fam=pool] {color:#0277bd;background:rgba(2,119,189,.09)}
 #bpx .sp-card-art[data-fam=surf] {color:#8d6e63;background:rgba(141,110,99,.1)}
 #bpx .sp-card-art[data-fam=wood] {color:#6d4c41;background:rgba(109,76,65,.1)}
 #bpx.bpx-dark .sp-card-art{background:rgba(255,255,255,.05)}
-#bpx.bpx-dark .sp-card-art[data-fam=roof] {color:#d99366} #bpx.bpx-dark .sp-card-art[data-fam=hvac]{color:#5fb6c6}
-#bpx.bpx-dark .sp-card-art[data-fam=plumb]{color:#7ba6e8} #bpx.bpx-dark .sp-card-art[data-fam=elec]{color:#e0b055}
-#bpx.bpx-dark .sp-card-art[data-fam=paint]{color:#b28cd6} #bpx.bpx-dark .sp-card-art[data-fam=land]{color:#6cbd8a}
+#bpx.bpx-dark .sp-card-art[data-fam=roof] {color:#6698d9} #bpx.bpx-dark .sp-card-art[data-fam=hvac]{color:#5fb6c6}
+#bpx.bpx-dark .sp-card-art[data-fam=plumb]{color:#7ba6e8} #bpx.bpx-dark .sp-card-art[data-fam=elec]{color:#5591e0}
+#bpx.bpx-dark .sp-card-art[data-fam=paint]{color:#8ca5d6} #bpx.bpx-dark .sp-card-art[data-fam=land]{color:#6cbd8a}
 #bpx.bpx-dark .sp-card-art[data-fam=conc] {color:#a3adbb} #bpx.bpx-dark .sp-card-art[data-fam=pool]{color:#63b8e8}
 #bpx.bpx-dark .sp-card-art[data-fam=surf] {color:#c8a89c} #bpx.bpx-dark .sp-card-art[data-fam=wood]{color:#c2a094}
 /* the aisle this thing came from, bottom-left of the picture */
@@ -580,11 +580,11 @@
 #bpx .sp-md-art{flex:none;width:116px;height:116px;border-radius:14px;display:flex;
   align-items:center;justify-content:center;background:var(--soft);color:var(--grey)}
 #bpx .sp-md-art .sp-ic.huge{width:62px;height:62px;stroke-width:1.4}
-#bpx .sp-md-art[data-fam=roof] {color:#a2542c;background:rgba(162,84,44,.09)}
+#bpx .sp-md-art[data-fam=roof] {color:#2c5fa2;background:rgba(44,95,162,.09)}
 #bpx .sp-md-art[data-fam=hvac] {color:#1f7a8c;background:rgba(31,122,140,.09)}
 #bpx .sp-md-art[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.09)}
-#bpx .sp-md-art[data-fam=elec] {color:#a4711a;background:rgba(164,113,26,.1)}
-#bpx .sp-md-art[data-fam=paint]{color:#7a4fa3;background:rgba(122,79,163,.09)}
+#bpx .sp-md-art[data-fam=elec] {color:#1a56a4;background:rgba(26,86,164,.1)}
+#bpx .sp-md-art[data-fam=paint]{color:#4f6ba3;background:rgba(79,107,163,.09)}
 #bpx .sp-md-art[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.09)}
 #bpx .sp-md-art[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.1)}
 #bpx .sp-md-art[data-fam=pool] {color:#0277bd;background:rgba(2,119,189,.09)}

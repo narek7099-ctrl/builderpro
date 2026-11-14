@@ -43,11 +43,11 @@ function bpChkRender(rows,demo){
   var count=function(fn){var o={};rows.forEach(function(c){var k=fn(c);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});};
   var list=function(arr,empty){if(!arr.length)return '<div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>';var top=arr[0][1];return arr.slice(0,6).map(function(r){return '<div class="cl-row"><span>'+bpEsc(r[0])+'</span><i><b style="width:'+Math.round(r[1]/top*100)+'%"></b></i><em>'+r[1]+'</em></div>';}).join('');};
   var tools=count(function(c){return bpChkKind(c).label;}), zips=count(function(c){return c.zip||'';});
-  var bands=[['bad','Needs attention now','#dc2626'],['warn','Needs attention soon','#ea580c'],['mid','Keep an eye on it','#d97706'],['good','Healthy','#16a34a']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
+  var bands=[['bad','Needs attention now','#dc2626'],['warn','Needs attention soon','#0c6cea'],['mid','Keep an eye on it','#0661d9'],['good','Healthy','#16a34a']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
   var bandBar=rows.length?'<div class="cl-stack">'+bands.filter(function(x){return x[1];}).map(function(x){return '<i style="flex:'+x[1]+';background:'+x[0][2]+'" title="'+x[0][1]+': '+x[1]+'"></i>';}).join('')+'</div><div class="cl-legend">'+bands.map(function(x){return '<span><i style="background:'+x[0][2]+'"></i>'+x[0][1]+' <b>'+x[1]+'</b></span>';}).join('')+'</div>':'<div class="bpx-mut" style="font-size:12.5px">No results yet.</div>';
   var recent=rows.slice(0,8).map(function(c){
     var ck=bpChkKind(c), when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    var col=c.band==='good'?'#16a34a':c.band==='mid'?'#d97706':c.band==='warn'?'#ea580c':'#dc2626';
+    var col=c.band==='good'?'#16a34a':c.band==='mid'?'#0661d9':c.band==='warn'?'#0c6cea':'#dc2626';
     return '<div class="cl-lead"><span class="cl-score" style="background:'+col+'">'+(c.score!=null?c.score:'–')+'</span><div><b>'+bpEsc(c.name||(c.phone?c.phone:'Anonymous'))+'</b><small>'+bpEsc(ck.label)+(c.zip?' · '+bpEsc(c.zip):'')+(c.label?' · '+bpEsc(c.label):'')+'</small></div><em>'+when+'</em></div>';
   }).join('');
   el.innerHTML=(demo?'<div class="cl-demo"><span class=ms>info</span> Sample numbers. Sign in to see your real calculator leads.</div>':'')
@@ -97,7 +97,7 @@ function bpChkCss(){
   if(document.getElementById('cl-css'))return;var c=document.createElement('style');c.id='cl-css';
   c.textContent='#bpx .cl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:16px}#bpx .cl-top h2{margin:0;font-size:20px;color:var(--ink)}#bpx .cl-top p{margin:4px 0 0;font-size:13px;color:var(--mu);max-width:620px}'
    +'#bpx .cl-acts{display:flex;gap:8px;flex-wrap:wrap}#bpx .cl-acts .bpx-btn{width:auto;margin:0;gap:6px}#bpx .cl-acts .ms{font-size:17px}'
-   +'#bpx .cl-demo{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#92400e;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:8px 12px;margin-bottom:12px}#bpx .cl-demo .ms{font-size:18px}'
+   +'#bpx .cl-demo{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#0e4792;background:#edf5ff;border:1px solid #aacefe;border-radius:10px;padding:8px 12px;margin-bottom:12px}#bpx .cl-demo .ms{font-size:18px}'
    +'#bpx .cl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}'
    +'#bpx .cl-tile{background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;min-width:0}#bpx .cl-tile .ms{position:absolute;right:14px;top:14px;font-size:20px;color:#2457d6;background:#eef3ff;border-radius:8px;padding:5px}'
    +'#bpx .cl-tile small{display:block;font-size:12px;color:var(--mu);font-weight:600}#bpx .cl-tile b{display:block;font-size:24px;margin-top:6px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:30px}#bpx .cl-tile em{display:block;font-style:normal;font-size:12px;color:var(--mu);margin-top:2px}'

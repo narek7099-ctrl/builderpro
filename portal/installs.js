@@ -37,7 +37,7 @@
     var n = bpInstallNext(ins); if (!n) return { k: 'none', t: 'No maintenance', c: '#788493' };
     var left = Math.ceil((n - Date.now()) / DAY);
     if (left < 0) return { k: 'over', t: 'Overdue ' + (-left) + 'd', c: '#b91c1c', left: left };
-    if (left <= 30) return { k: 'soon', t: 'Due in ' + left + 'd', c: '#b45309', left: left };
+    if (left <= 30) return { k: 'soon', t: 'Due in ' + left + 'd', c: '#0953b4', left: left };
     return { k: 'ok', t: 'On schedule', c: '#15803d', left: left };
   }
 
@@ -119,7 +119,7 @@
     var show = list.filter(function (x) { return F === 'all' || (F === 'due' ? (x.s.k === 'over' || x.s.k === 'soon' || x.s.k === 'ok') : x.s.k === F); })
       .sort(function (a, b) { return (a.n || 9e15) - (b.n || 9e15); });
     var tile = function (k, n, t, c) { return '<button class="bpi-tile' + (F === k ? ' on' : '') + '" onclick="bpInstallFilter(\'' + k + '\')"><b style="color:' + c + '">' + n + '</b><span>' + t + '</span></button>'; };
-    var h = '<div class="bpi-tiles">' + tile('over', cnt.over, 'Overdue', '#b91c1c') + tile('soon', cnt.soon, 'Due in 30 days', '#b45309') + tile('due', cnt.over + cnt.soon + cnt.ok, 'Need maintenance', '#006fff') + tile('all', list.length, 'All installations', '#001530') + '</div>';
+    var h = '<div class="bpi-tiles">' + tile('over', cnt.over, 'Overdue', '#b91c1c') + tile('soon', cnt.soon, 'Due in 30 days', '#0953b4') + tile('due', cnt.over + cnt.soon + cnt.ok, 'Need maintenance', '#006fff') + tile('all', list.length, 'All installations', '#001530') + '</div>';
     if (!list.length) h += '<div class="bpx-card bpi-empty"><span class="ms">construction</span><b>No installations yet</b><p>When you mark a job done you sign it off with the install date and how often it needs service. Signed-off jobs show up here with their next maintenance date.</p></div>';
     else h += '<div class="bpi-list">' + (show.length ? show.map(function (x) {
       var j = x.j, i = j.install;

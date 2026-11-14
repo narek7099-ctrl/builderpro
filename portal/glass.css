@@ -473,7 +473,7 @@ html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !
 #bpx .jr-kpis small,#bpx .jr-when small{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a94a6}
 #bpx .jr-kpis b{display:block;font-size:22px;font-weight:650;letter-spacing:-.02em;margin-top:3px;font-feature-settings:'tnum'}
 #bpx .jr-kpis .pos b{color:#0f7a3d}
-#bpx .jr-kpis .neg b{color:#c2410c}
+#bpx .jr-kpis .neg b{color:#0c5bc2}
 #bpx .jr-kpis em{font-style:normal;font-size:12px;color:#5b6b82}
 #bpx .jr-when{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 4px;padding:12px 15px;border-radius:16px;background:rgba(0,111,255,.05)}
 #bpx .jr-when b{font-size:14.5px}
@@ -587,3 +587,46 @@ html:has(#bpx.open) :is(.marquee_track,.flow_dash){animation-play-state:paused !
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.bpx-cwrap,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs){background-color:rgba(255,255,255,.5) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib:not(.bpx-dark) #hlTop{background:rgba(255,255,255,.9) !important}
 #bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-rib.bpx-dark #hlTop{background:rgba(8,14,26,.9) !important}
+
+/* ---- the AI Team board, alive (portal/aiboard.js, 2026-11-14) ---- */
+#bpx .aib-live>.aib-cv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#bpx#bpx#bpx#bpx#bpx .aib-live>svg,#bpx#bpx#bpx#bpx#bpx .aib-live .aib-rail,#bpx#bpx#bpx#bpx#bpx .aib-live::before,#bpx#bpx#bpx#bpx#bpx .aib-live::after{display:none}
+#bpx .aib-live .aib-n{z-index:1}
+/* the cards float, each on its own beat, and lean a little toward the mouse */
+#bpx#bpx#bpx#bpx#bpx .aib-live .aib-n{translate:var(--lx,0px) var(--ly,0px);transition:translate .9s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx#bpx#bpx .aib-live .aib-n .aib-box{animation:aibFloat 6.5s ease-in-out infinite var(--fd,0s);will-change:transform}
+#bpx#bpx#bpx#bpx#bpx .aib-live .aib-ceo{animation:aibPop .6s cubic-bezier(.2,0,0,1) forwards;translate:calc(var(--lx,0px) * -.4) calc(var(--ly,0px) * -.4)}
+@keyframes aibFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-6px,0)}}
+/* a task lands: the assistant lights up mint for a moment */
+#bpx#bpx#bpx#bpx#bpx .aib-n.aib-ping .aib-box{border-color:rgba(22,199,154,.6);box-shadow:inset 0 1px 0 #fff,0 0 0 5px rgba(22,199,154,.13),0 18px 34px -20px rgba(14,143,115,.55)}
+#bpx#bpx#bpx#bpx#bpx .aib-n.aib-ping .aib-i{background:radial-gradient(circle at 30% 25%,#5ff0c8 0,#16C79A 55%,#0e8f73 100%);color:#fff;box-shadow:0 8px 16px -8px rgba(22,199,154,.9)}
+#bpx#bpx#bpx#bpx#bpx .aib-n .aib-box,#bpx#bpx#bpx#bpx#bpx .aib-n .aib-i{transition:border-color .35s,box-shadow .45s,background .35s,color .35s,translate .4s cubic-bezier(.22,1,.36,1)}
+#bpx#bpx#bpx#bpx#bpx .aib-ceo.aib-ping .aib-box{box-shadow:inset 0 1px 0 #fff,0 0 0 7px rgba(22,199,154,.12),0 22px 44px -20px rgba(0,80,200,.5)}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx .aib-n.aib-ping .aib-box{border-color:rgba(63,224,182,.55);box-shadow:0 0 0 5px rgba(63,224,182,.12)}
+@media (prefers-reduced-motion:reduce){#bpx#bpx#bpx#bpx#bpx .aib-live .aib-n{translate:none}#bpx#bpx#bpx#bpx#bpx .aib-live .aib-n .aib-box{animation:none}}
+/* the CEO's light behind the board: CSS, breathing on the graphics card */
+#bpx .aib-live{isolation:isolate}
+#bpx .aib-live>.aib-glow{position:absolute;left:50%;top:50%;width:84%;height:84%;margin:-42% 0 0 -42%;border-radius:50%;pointer-events:none;z-index:0;
+  background:radial-gradient(closest-side,rgba(0,111,255,.12),rgba(22,199,154,.05) 55%,rgba(0,111,255,0));will-change:transform,opacity;animation:aibGlow 4s ease-in-out infinite}
+@keyframes aibGlow{50%{transform:scale(1.07);opacity:.75}}
+#bpx.bpx-dark .aib-live>.aib-glow{background:radial-gradient(closest-side,rgba(61,139,255,.24),rgba(63,224,182,.07) 55%,rgba(0,111,255,0))}
+@media (prefers-reduced-motion:reduce){#bpx .aib-live>.aib-glow{animation:none}}
+
+/* dark mode: a black sidebar, not navy (2026-11-14) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxSide{background:linear-gradient(180deg,#0b0e13 0%,#07090d 55%,#040507 100%) !important;box-shadow:inset -1px 0 0 rgba(255,255,255,.06) !important}
+
+/* sidebar on short windows (2026-11-14): it needs about 620px; below that it
+   scrolled, and on Windows the scrollbar ate into the menu and cut the last
+   items off. Tighter spacing when the window is short, and never a visible
+   scrollbar taking room from the items. */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide{scrollbar-width:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide::-webkit-scrollbar{display:none;width:0;height:0}
+@media (min-width:768px) and (max-height:760px){
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide .hl-ni{height:33px !important;min-height:33px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide .hl-gap{margin:6px 6px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide #hlAcct{min-height:40px !important;padding-top:3px !important;padding-bottom:3px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide .hl-srow{margin-top:6px !important;margin-bottom:6px !important}
+}
+@media (min-width:768px) and (max-height:600px){
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxSide .hl-ni{height:30px !important;min-height:30px !important;font-size:13px !important}
+}

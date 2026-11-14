@@ -102,9 +102,9 @@
     var p = pts[k], kind = svg.getAttribute('data-kind');
     viz.classList.add('hov');
     var g = svg.querySelector('.cb-guide'); g.setAttribute('x1', p[0]); g.setAttribute('x2', p[0]);
-    [].forEach.call(svg.querySelectorAll('.cb-bar'), function (b) { b.classList.toggle('hot', +b.getAttribute('data-i') === k); });
+    [].forEach.call(svg.querySelectorAll('.cb-bar,.cb-stem,.cb-pop'), function (b) { b.classList.toggle('hot', +b.getAttribute('data-i') === k); });
     var dot = svg.querySelector('.cb-hdot');
-    if (kind === 'line') { if (!dot) { dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); dot.setAttribute('class', 'cb-hdot'); dot.setAttribute('r', '4'); svg.appendChild(dot); } dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]); }
+    if (kind === 'line' || kind === 'step') { if (!dot) { dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); dot.setAttribute('class', 'cb-hdot'); dot.setAttribute('r', '4'); svg.appendChild(dot); } dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]); }
     tip.hidden = false; tip.innerHTML = '<b>' + p[3] + '</b><span>' + (p[2] || '') + '</span>';
     tip.style.left = (p[0] / 96 * r.width) + 'px';
   }
@@ -112,7 +112,7 @@
   document.addEventListener('pointermove', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v) vizAt(v, e.clientX); }, { passive: true });
   document.addEventListener('pointerout', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v && !v.contains(e.relatedTarget)) vizOut(v); }, true);
   document.addEventListener('pointerdown', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v) vizAt(v, e.clientX); }, true);
-  var COL = ['#2f80ff', '#f5a524', '#22a06b', '#ef6c4a', '#8b5cf6', '#14b8a6'];
+  var COL = ['#2f80ff', '#247ff5', '#22a06b', '#ef6c4a', '#5c8ff6', '#14b8a6'];
   window.bpBurst = function (el) {
     if (!el) return;
     var host = el.parentNode; if (getComputedStyle(host).position === 'static') host.style.position = 'relative';

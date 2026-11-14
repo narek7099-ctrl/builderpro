@@ -20,7 +20,7 @@
   var TOOLS=[
     {id:'quote',l:'Instant quote calculator',s:'A real price range in about a minute',ico:'calculate',color:'#2563eb'},
     {id:'health',l:'Health check',s:'Six questions, a score and next steps',ico:'monitor_heart',color:'#10a37f'},
-    {id:'damage',l:'Damage check',s:'Photo in, damage report out',ico:'photo_camera',color:'#ea580c'}
+    {id:'damage',l:'Damage check',s:'Photo in, damage report out',ico:'photo_camera',color:'#0c6cea'}
   ];
   window.BP_CALC_TOOLS=TOOLS;
   function tool(id){for(var i=0;i<TOOLS.length;i++)if(TOOLS[i].id===id)return TOOLS[i];return TOOLS[0];}

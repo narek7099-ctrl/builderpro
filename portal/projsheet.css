@@ -47,7 +47,7 @@
 #bpx .pjs-pill.live{background:var(--bpc-track,#e6eafd);color:var(--bpc-o5,#3445b0)}
 #bpx .pjs-pill.live i{width:7px;height:7px;border-radius:50%;background:var(--bpc-s1,#4e6ef2);box-shadow:0 0 0 3px rgba(78,110,242,.18)}
 #bpx .pjs-pill.done{background:var(--bpc-good-b,#e3f5ea);color:var(--bpc-good-t,#0f7a3d)}
-#bpx .pjs-pill.today{background:#fff4e0;color:#94520a}
+#bpx .pjs-pill.today{background:#e0edff;color:#0a4694}
 
 #bpx .pjs-hero-row{display:flex;align-items:center;gap:22px;margin-top:18px;flex-wrap:wrap}
 #bpx .pjs-ring{position:relative;width:68px;height:68px;flex:0 0 auto}
@@ -201,7 +201,7 @@
 #bpx .pm-lic .pm-bs,#bpx .lic-t .pm-bs{margin-top:6px}
 #bpx .pm-b{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 9px;border-radius:40px;font-size:11.5px;font-weight:600}
 #bpx .pm-b .ms{font-size:15px}
-#bpx .pm-b.warn{background:#fff4e0;color:#94520a}
+#bpx .pm-b.warn{background:#e0edff;color:#0a4694}
 #bpx .pm-b.bad{background:var(--bpc-bad-b,#fdecea);color:var(--bpc-bad-t,#b3392f)}
 #bpx .pm-b.info{background:var(--bpc-track,#e6eafd);color:var(--bpc-o5,#3445b0)}
 #bpx .pm-dates{display:flex;gap:22px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -238,7 +238,7 @@
 #bpx .pm-chip .ms{font-size:14px}
 #bpx .pm-chip.ok{background:var(--bpc-good-b,#e3f5ea);color:var(--bpc-good-t,#0f7a3d)}
 #bpx .pm-chip.info{background:var(--bpc-track,#e6eafd);color:var(--bpc-o5,#3445b0)}
-#bpx .pm-chip.warn{background:#fff4e0;color:#94520a}
+#bpx .pm-chip.warn{background:#e0edff;color:#0a4694}
 #bpx .pm-chip.bad{background:var(--bpc-bad-b,#fdecea);color:var(--bpc-bad-t,#b3392f)}
 #bpx .pj-meta .pm-chip,#bpx .pjrow-chip .pm-chip{margin-top:6px}
 
@@ -260,7 +260,7 @@
   #bpx .pm-lic{flex-wrap:wrap}
   #bpx .pm-dates{gap:14px}
 }
-#bpx#bpx.bpx-dark .pjs-pill.today,#bpx#bpx.bpx-dark .pm-b.warn,#bpx#bpx.bpx-dark .pm-chip.warn{background:#3a2a0e;color:#f5c26b}
+#bpx#bpx.bpx-dark .pjs-pill.today,#bpx#bpx.bpx-dark .pm-b.warn,#bpx#bpx.bpx-dark .pm-chip.warn{background:#0e213a;color:#6ba7f5}
 #bpx#bpx.bpx-dark .pjs-pill.live,#bpx#bpx.bpx-dark .pm-st.info,#bpx#bpx.bpx-dark .pm-b.info,#bpx#bpx.bpx-dark .pm-chip.info,#bpx#bpx.bpx-dark .pjs-n,
 #bpx#bpx.bpx-dark .pm-ico,#bpx#bpx.bpx-dark .lic-ico,#bpx#bpx.bpx-dark .pjs-av,#bpx#bpx.bpx-dark .pjs-empty > .ms{background:#1a2550;color:#b8c3fb}
 #bpx#bpx.bpx-dark .pjs-ring .tr{stroke:#1a2550}

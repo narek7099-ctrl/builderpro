@@ -386,10 +386,10 @@
      thing that moves a contractor forward, each filling toward an ordinary
      week's worth. The centre is the average, counted up. ---------- */
   var WK_SEG = [
-    { k: 'leads', t: 'New leads', c: '#2f80ff', goal: 5, go: 'contacts' },
-    { k: 'est', t: 'Estimates sent', c: '#f5a524', goal: 3, go: 'estimates' },
-    { k: 'signed', t: 'Signed', c: '#22a06b', goal: 1, go: 'closedeals' },
-    { k: 'paid', t: 'Collected', c: '#ef6c4a', goal: 0, go: 'finances', money: true }
+    { k: 'leads', t: 'New leads', c: '#006fff', goal: 5, go: 'contacts' },
+    { k: 'est', t: 'Estimates sent', c: '#6aaeff', goal: 3, go: 'estimates' },
+    { k: 'signed', t: 'Signed', c: '#16C79A', goal: 1, go: 'closedeals' },
+    { k: 'paid', t: 'Collected', c: '#0b2a55', goal: 0, go: 'finances', money: true }
   ];
   function weekPace() {
     var fin = (window.bpFinData && bpFinData()) || { inc: [] }, now = Date.now(), wk = 7 * 864e5;
@@ -642,11 +642,35 @@
     } else if (kind === 'thin') {
       var w = 88 / n;
       vals.forEach(function (v, i) { var h = Math.max(4, v / mx * 40); pts.push([6 + i * w + w / 2, 44 - h, labels[i] || '', fmt(v)]); out += '<rect class="cb-bar' + (i === n - 1 ? ' on' : '') + '" data-i="' + i + '" style="--d:' + (i * 40) + 'ms" x="' + (6 + i * w + w * .2).toFixed(1) + '" y="' + (44 - h).toFixed(1) + '" width="' + (w * .6).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="1.6"/>'; });
+    } else if (kind === 'lolli') {
+      /* lollipops: a thin stem and a dot per month, the latest dot in mint */
+      var wl = 84 / n;
+      vals.forEach(function (v, i) {
+        var h = Math.max(3, v / mx * 34), x = 8 + i * wl + wl / 2, y = 44 - h;
+        pts.push([x, y, labels[i] || '', fmt(v)]);
+        out += '<rect class="cb-stem" data-i="' + i + '" style="--d:' + (i * 40) + 'ms" x="' + (x - 0.7).toFixed(1) + '" y="' + y.toFixed(1) + '" width="1.4" height="' + h.toFixed(1) + '" rx=".7"/>'
+          + '<circle class="cb-pop' + (i === n - 1 ? ' on' : '') + '" data-i="' + i + '" style="--d:' + (i * 40 + 250) + 'ms" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (i === n - 1 ? 3.6 : 2.6) + '"/>';
+      });
+    } else if (kind === 'step') {
+      /* a staircase: each month's spend held flat, then a step to the next */
+      var ms = Math.min.apply(null, vals.concat([0])), sw = 84 / n, dd = '';
+      vals.forEach(function (v, i) {
+        var y = 42 - (v - ms) / ((mx - ms) || 1) * 32, x0 = 6 + i * sw, x1 = x0 + sw;
+        dd += (i ? ' L' : 'M') + x0.toFixed(1) + ' ' + y.toFixed(1) + ' L' + x1.toFixed(1) + ' ' + y.toFixed(1);
+        pts.push([x0 + sw / 2, y, labels[i] || '', fmt(v)]);
+      });
+      var ls = pts[pts.length - 1];
+      out = '<path class="cb-sarea" d="' + dd + ' L90 46 L6 46Z"/><path class="cb-sline" pathLength="100" d="' + dd + '"/><circle class="cb-sdot" cx="' + (90).toFixed(1) + '" cy="' + ls[1].toFixed(1) + '" r="3.2"/>';
     } else {
       var mn = Math.min.apply(null, vals.concat([0]));
       pts = vals.map(function (v, i) { return [6 + i * 84 / Math.max(1, n - 1), 42 - (v - mn) / ((mx - mn) || 1) * 32]; });
       pts.forEach(function (p, i) { p.push(labels[i] || '', fmt(vals[i])); });
-      var d = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L'), last = pts[pts.length - 1];
+      /* a smooth curve through the months (Catmull-Rom as cubic Beziers), not straight segments */
+      var f1 = function (v) { return v.toFixed(1); }, d = 'M' + f1(pts[0][0]) + ' ' + f1(pts[0][1]), last = pts[pts.length - 1];
+      for (var ci = 0; ci < pts.length - 1; ci++) {
+        var p0 = pts[ci - 1] || pts[ci], p1 = pts[ci], p2 = pts[ci + 1], p3 = pts[ci + 2] || p2;
+        d += ' C' + f1(p1[0] + (p2[0] - p0[0]) / 6) + ' ' + f1(p1[1] + (p2[1] - p0[1]) / 6) + ' ' + f1(p2[0] - (p3[0] - p1[0]) / 6) + ' ' + f1(p2[1] - (p3[1] - p1[1]) / 6) + ' ' + f1(p2[0]) + ' ' + f1(p2[1]);
+      }
       out = '<path class="cb-area" d="' + d + ' L90 46 L6 46Z"/><path class="cb-line' + (o.neg ? ' neg' : '') + '" pathLength="100" d="' + d + '"/><circle class="cb-dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3.6"/>';
     }
     var data = (JSON.stringify(pts.map(function (p) { return [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, String(p[2]), String(p[3])]; }))).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -667,8 +691,8 @@
     return [
       t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances', { viz: 'fat', see: 'See payments' }),
       t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : '', viz: 'line', see: 'See finances' }),
-      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'thin', see: 'See projects', fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
-      t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'line', see: 'See costs' }),
+      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'lolli', see: 'See projects', fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
+      t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'step', see: 'See costs' }),
     ];
   }
   function netLine(M) {

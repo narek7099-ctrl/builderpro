@@ -173,7 +173,7 @@
     /* after the page has shown (and the browser is idle), so the 3D code never
        holds up the first paint */
     var go = function () {
-      import('./hero3d.js?v=20261113-silk').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
+      import('./hero3d.js?v=20261114-ui14').then(function (m) { heroApi = m.mount(canvas); if (!heroApi) right.classList.add('nogl'); })
         .catch(function () { right.classList.add('nogl'); });
     };
     var later = function () { window.requestIdleCallback ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300); };
@@ -567,5 +567,5 @@
     setInterval(sync, 1000); sync();
   }
   if (window.bpSilk) go();
-  else { var sc = document.createElement('script'); sc.src = '/site/silk.js?v=20261113b'; sc.onload = go; document.head.appendChild(sc); }
+  else { var sc = document.createElement('script'); sc.src = '/site/silk.js?v=20261114a'; sc.onload = go; document.head.appendChild(sc); }
 })();

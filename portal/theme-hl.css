@@ -38,7 +38,7 @@
   --blue:#155EEF; --blue-d:#004EEB; --blue-l:#EFF4FF; --blue-t:#004EEB; --blue-glow:transparent;
   --hl-ring-c:#D1E0FF; --hl-hover:#F9FAFB; --hl-press:#F2F4F7;
   --ok:#12B76A; --ok-l:#ECFDF3; --ok-t:#027A48;
-  --warn:#F79009; --warn-l:#FFFAEB; --warn-t:#B54708;
+  --warn:#0970f7; --warn-l:#ebf4ff; --warn-t:#0853b5;
   --err:#F04438; --err-l:#FEF3F2; --err-t:#B42318;
   --edge:transparent; --side-a:#FFFFFF; --side-b:#FFFFFF;
   --bpc-grid:#EAECF0;
@@ -52,7 +52,7 @@
   --blue:#2E70F5; --blue-d:#528BFF; --blue-l:#172748; --blue-t:#84ADFF; --blue-glow:transparent;
   --hl-ring-c:rgba(46,112,245,.35); --hl-hover:#1F242F; --hl-press:#262B36;
   --ok:#17B26A; --ok-l:#053321; --ok-t:#75E0A7;
-  --warn:#F79009; --warn-l:#4E1D09; --warn-t:#FEC84B;
+  --warn:#0970f7; --warn-l:#09274e; --warn-t:#4b99fe;
   --err:#F04438; --err-l:#55160C; --err-t:#FDA29B;
   --edge:transparent; --side-a:#161B26; --side-b:#161B26;
   --bpc-grid:#2A303C;
@@ -309,8 +309,8 @@
 
 /* ---------- notes, empty states ---------- */
 #bpx#bpx#bpx .bpx-when-note,#bpx#bpx#bpx .bpx-ga-note,#bpx#bpx#bpx .bg-note,#bpx#bpx#bpx .sp-note,#bpx#bpx#bpx .bpx-mmsg{border-radius:8px !important;box-shadow:none !important;font-size:13px}
-#bpx#bpx#bpx .bg-warn{border-radius:8px !important;box-shadow:none !important;background:var(--warn-l) !important;border:1px solid #FEDF89 !important;color:var(--warn-t) !important}
-#bpx#bpx#bpx.bpx-dark .bg-warn{border-color:#93370D !important}
+#bpx#bpx#bpx .bg-warn{border-radius:8px !important;box-shadow:none !important;background:var(--warn-l) !important;border:1px solid #89bcfe !important;color:var(--warn-t) !important}
+#bpx#bpx#bpx.bpx-dark .bg-warn{border-color:#0d4793 !important}
 #bpx#bpx#bpx .bpx-empty,#bpx#bpx#bpx .bpx-tempty,#bpx#bpx#bpx .bpx-cempty{color:var(--mu) !important;font-size:14px}
 
 /* ---------- skeletons (ui-kit.js: bpSkel) ---------- */
@@ -348,7 +348,7 @@
   font:500 14px/20px 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:hlToastIn 180ms cubic-bezier(.2,0,0,1) both}
 .hl-toast.out{animation:hlToastOut 150ms ease-in both}
 .hl-toast i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;background:#155EEF}
-.hl-toast.success i{background:#12B76A}.hl-toast.error i{background:#F04438}.hl-toast.warning i{background:#F79009}
+.hl-toast.success i{background:#12B76A}.hl-toast.error i{background:#F04438}.hl-toast.warning i{background:#0970f7}
 .hl-toast span{flex:1;min-width:0;overflow-wrap:anywhere}
 .hl-toast button{flex:0 0 auto;background:none;border:0;color:#98A2B3;font-size:18px;line-height:20px;cursor:pointer;padding:0 0 0 4px}
 .hl-toast button:hover{color:#475467}
@@ -430,10 +430,10 @@
 
 /* ---------- notes: soft alert boxes on tokens, so dark mode follows ---------- */
 #bpx#bpx#bpx .sp-note{background:var(--soft) !important;border:1px solid var(--line) !important;color:var(--ink-2) !important}
-#bpx#bpx#bpx .sp-note.warn{background:var(--warn-l) !important;border-color:#FEC84B !important;color:var(--warn-t) !important}
+#bpx#bpx#bpx .sp-note.warn{background:var(--warn-l) !important;border-color:#4b99fe !important;color:var(--warn-t) !important}
 #bpx#bpx#bpx .sp-note.bad{background:var(--err-l) !important;border-color:#FDA29B !important;color:var(--err-t) !important}
 #bpx#bpx#bpx .sp-note.good{background:var(--ok-l) !important;border-color:#75E0A7 !important;color:var(--ok-t) !important}
-#bpx#bpx#bpx.bpx-dark .sp-note.warn{border-color:#93370D !important}
+#bpx#bpx#bpx.bpx-dark .sp-note.warn{border-color:#0d4793 !important}
 #bpx#bpx#bpx.bpx-dark .sp-note.bad{border-color:#912018 !important}
 #bpx#bpx#bpx.bpx-dark .sp-note.good{border-color:#085D3A !important}
 
@@ -451,4 +451,4 @@ body:has(#bpx-modal) .oaw-btn,body:has(#bpx-mc) .oaw-btn{display:none !important
 #bpx .wa-lay{color:#101828}
 /* "of 589" / "+3 example" notes in the Suppliers stats: amber-900 on the dark
    stat card was 2.4:1 */
-#bpx.bpx-dark .sp-ex{color:#fbbf24}
+#bpx.bpx-dark .sp-ex{color:#2481fb}
