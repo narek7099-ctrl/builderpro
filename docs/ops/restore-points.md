@@ -228,3 +228,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the theme pass, the live AI board and the dark-mode fixes (2026-11-14)
 - Live site (main): `e67425d`
 - Changes: the four money cards each draw their own chart (bars, smooth line, lollipops, staircase); Needs you lead tile in white; Week pace and the chart palette in blue, sky, mint and navy; about 590 off-theme oranges, yellows, purples and pinks across 42 app files moved onto the palette (reds and brand logos kept); the AI Team board alive (portal/aiboard.js: curved swaying links, task pulses, hover); black sidebar in dark mode; the background haze blurred so it never bands; the sidebar fits short windows.
+
+## Before the slimmer dashboard (2026-11-14)
+- Live site (main): `106abae`
+- Changes: the dashboard's main view is four stat cards (Projects won, New leads, Active projects, Quotes out) and then Marked jobs; the money cards, Week pace, Needs you and This week moved into More numbers and charts (portal/dash.js, portal/dash.css).
