@@ -613,13 +613,17 @@
     var inM = bpChart.byBuckets(fin.inc, P.buckets, W, A), outM = bpChart.byBuckets(fin.exp, P.buckets, W, A);
     var wonN = bpChart.byBuckets(won, P.buckets, Jw, function () { return 1; });
     var wonV = bpChart.byBuckets(won, P.buckets, Jw, function (j) { return +j.estimate || 0; });
+    /* projects running at some point in each period: won before it ended, not finished before it began */
+    var runs = jobs.filter(function (j) { return j.wonAt && j.status !== 'lost' && j.status !== 'quote'; });
+    var actIn = function (a, b) { return runs.filter(function (j) { return +j.wonAt < b && (!j.doneAt || +j.doneAt >= a); }).length; };
+    var act = P.buckets.map(function (bk) { return actIn(bk.start, bk.end); });
     var sum = function (rows, a, b, get, val) { return rows.reduce(function (t, r) { return t + (inP(get(r), a, b) ? val(r) : 0); }, 0); };
     var tot = function (a, b) {
       var i = sum(fin.inc, a, b, W, A), o = sum(fin.exp, a, b, W, A);
-      return { inc: i, out: o, net: i - o, won: sum(won, a, b, Jw, function () { return 1; }), wonV: sum(won, a, b, Jw, function (j) { return +j.estimate || 0; }) };
+      return { inc: i, out: o, net: i - o, won: sum(won, a, b, Jw, function () { return 1; }), wonV: sum(won, a, b, Jw, function (j) { return +j.estimate || 0; }), act: actIn(a, b) };
     };
     return { labels: inM.labels, inc: inM.values, out: outM.values, net: inM.values.map(function (v, i) { return v - outM.values[i]; }),
-      won: wonN.values, wonV: wonV.values, cur: tot(P.start, P.end), prev: tot(P.pStart, P.pEnd), fin: fin, jobs: jobs };
+      won: wonN.values, wonV: wonV.values, act: act, cur: tot(P.start, P.end), prev: tot(P.pStart, P.pEnd), fin: fin, jobs: jobs };
   }
   /* A headline figure with its trend: the total for the period, a delta
      chip against the period before it (colored by whether that direction
@@ -676,7 +680,8 @@
     var data = (JSON.stringify(pts.map(function (p) { return [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, String(p[2]), String(p[3])]; }))).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true" data-pts="' + data + '" data-kind="' + (kind || 'line') + '">' + out + '<line class="cb-guide" x1="0" x2="0" y1="2" y2="46"/></svg><div class="cb-tip" hidden></div>';
   }
-  function sparkTiles(M) {
+  function sparkTiles(M, o5) {
+    o5 = o5 || { n: 0, v: 0 };
     var t = function (lbl, key, val, sub, vals, go, o) {
       o = o || {};
       var dlt = bpChart.delta(M.prev[key], M.cur[key], { upIsGood: o.upIsGood, vs: P.vs });
@@ -693,6 +698,7 @@
       t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : '', viz: 'line', see: 'See finances' }),
       t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'lolli', see: 'See projects', fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
       t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'step', see: 'See costs' }),
+      t('Active projects', 'act', String(o5.n), money(o5.v) + ' in progress', M.act, 'activejobs', { viz: 'line', see: 'See jobs', fmt: function (v) { return v + (v === 1 ? ' project running' : ' projects running'); } }),
     ];
   }
   /* the same card as the money cards, with an icon where their chart sits:
@@ -886,8 +892,8 @@
     var dl = function (k, up) { return bpChart.delta(M.prev[k], C[k], { upIsGood: up, vs: P.vs }); };
     var g = function (list) { list = list.filter(function (c) { return c[1]; }); return '<div class="hl-grid">' + list.map(function (c) { return '<div class="hl-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; };
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
-    var st = sparkTiles(M), gos = ['finances', 'finances', 'activejobs', 'finances'];
     var X = moreWidgets(M), m = X.mini;
+    var st = sparkTiles(M, X.active), gos = ['finances', 'finances', 'activejobs', 'finances', 'activejobs'];
     /* The owner's layout (2026-11-14): the quick figures, then money in and out
        beside the pipeline, then the marked jobs, then every other figure and
        chart right on the page (no fold). The Money in / Profit / Money out
@@ -895,7 +901,7 @@
     return g([
       [3, W(gos[2], st[2], 'hl-spk')],
       [3, W(D.leads ? 'contacts' : 'marketing', statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads'), 'hl-spk')],
-      [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
+      [3, W(gos[4], st[4], 'hl-spk')],
       [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
