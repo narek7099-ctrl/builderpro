@@ -232,3 +232,4 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the slimmer dashboard (2026-11-14)
 - Live site (main): `106abae`
 - Changes: the dashboard's main view is four stat cards (Projects won, New leads, Active projects, Quotes out) and then Marked jobs; the money cards, Week pace, Needs you and This week moved into More numbers and charts (portal/dash.js, portal/dash.css).
+- Reverted the same day at the owner's ask: the dashboard is back to the money cards, Week pace, Needs you and This week on top.
