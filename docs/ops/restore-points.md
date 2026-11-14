@@ -233,3 +233,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 - Live site (main): `106abae`
 - Changes: the dashboard's main view is four stat cards (Projects won, New leads, Active projects, Quotes out) and then Marked jobs; the money cards, Week pace, Needs you and This week moved into More numbers and charts (portal/dash.js, portal/dash.css).
 - Reverted the same day at the owner's ask: the dashboard is back to the money cards, Week pace, Needs you and This week on top.
+
+## Before the owner's dashboard layout (2026-11-14)
+- Live site (main): `b1035a5`
+- Changes: dashboard is Projects won, New leads, Active projects and Quotes out on top; then Money in and out beside Your pipeline; then Marked jobs; then every other figure and chart on the page with no fold. The Money in / Profit / Money out cards, Week pace, Needs you and This week are left out (portal/dash.js, portal/dash.css).
