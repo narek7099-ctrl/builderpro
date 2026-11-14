@@ -696,7 +696,7 @@
     return [
       t('Money in', 'inc', money(C.inc), P.word, M.inc, 'finances', { viz: 'fat', see: 'See payments' }),
       t('Profit', 'net', money(C.net), P.word + ', after costs', M.net, 'finances', { tone: C.net < 0 ? 'neg' : '', viz: 'line', see: 'See finances' }),
-      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'lolli', see: 'See projects', fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
+      t('Projects won', 'won', String(C.won), money(C.wonV) + ' of work ' + P.word, M.won, 'activejobs', { viz: 'line', see: 'See projects', fmt: function (v) { return v + (v === 1 ? ' project' : ' projects'); } }),
       t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'step', see: 'See costs' }),
       t('Active projects', 'act', String(o5.n), money(o5.v) + ' in progress', M.act, 'activejobs', { viz: 'line', see: 'See jobs', fmt: function (v) { return v + (v === 1 ? ' project running' : ' projects running'); } }),
     ];
@@ -901,7 +901,7 @@
     return g([
       [3, W(gos[2], st[2], 'hl-spk')],
       [3, W(D.leads ? 'contacts' : 'marketing', statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads'), 'hl-spk')],
-      [3, W(gos[4], st[4], 'hl-spk')],
+      [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
       [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
