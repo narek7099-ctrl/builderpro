@@ -22,7 +22,7 @@
 #bpx .cp-doc input{width:17px;height:17px;flex-shrink:0;margin:0;accent-color:var(--bpc-s1,#2f6bff)}
 #bpx .cp-doc span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #bpx .cp-doc em{font-style:normal;font-size:11.5px;color:var(--grey)}
-#bpx .cp-new,#bpx .pjs-n.cp-hot{background:#f59e0b !important;color:#fff !important;border-radius:99px;font-size:11px;padding:1px 7px;text-transform:none;letter-spacing:0}
+#bpx .cp-new,#bpx .pjs-n.cp-hot{background:#0b70f5 !important;color:#fff !important;border-radius:99px;font-size:11px;padding:1px 7px;text-transform:none;letter-spacing:0}
 #bpx .cp-thread{max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px}
 #bpx .cp-msg{max-width:84%;align-self:flex-start}
 #bpx .cp-msg>div{background:var(--soft,#f1f4f9);border-radius:12px 12px 12px 4px;padding:8px 11px;font-size:13.5px;line-height:1.5;overflow-wrap:anywhere}
@@ -37,7 +37,7 @@
 #bpx .cp-co-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 #bpx .cp-co-h b{display:block;font-size:14px}#bpx .cp-co-h span{font-size:12px;color:var(--grey)}
 #bpx .cp-st{font-style:normal;font-size:11.5px;font-weight:700;border-radius:99px;padding:3px 9px;background:var(--soft,#f1f4f9);color:var(--grey);white-space:nowrap}
-#bpx .cp-st.ok{background:#ecfdf5;color:#15803d}#bpx .cp-st.warn{background:#fff7e6;color:#9a5b00}#bpx .cp-st.bad{background:#fef2f2;color:#b42318}
+#bpx .cp-st.ok{background:#ecfdf5;color:#15803d}#bpx .cp-st.warn{background:#e6f1ff;color:#00439a}#bpx .cp-st.bad{background:#fef2f2;color:#b42318}
 #bpx .cp-sig{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2,#eef1f6)}
 #bpx .cp-sig img{height:46px;max-width:180px;background:#fff;border-radius:6px;border:1px solid var(--line)}
 #bpx .cp-sig b{display:block;font-size:13px}#bpx .cp-sig span{display:block;font-size:11.5px;color:var(--grey)}
@@ -46,22 +46,22 @@
 #bpx#bpx .cp-coh .pjs-h{margin:0 !important}
 #bpx .cp-coh .bpx-btn{width:auto;margin:0;padding:8px 13px;display:inline-flex;align-items:center;gap:5px;font-size:13px}
 #bpx .cp-coh .bpx-btn .ms{font-size:17px}
-#bpx .cp-req{border:1px solid #fbe3b4;background:#fff8eb;border-radius:12px;padding:11px 13px;margin-bottom:8px;max-width:100%;box-sizing:border-box;align-self:stretch}
+#bpx .cp-req{border:1px solid #b4d3fb;background:#ebf4ff;border-radius:12px;padding:11px 13px;margin-bottom:8px;max-width:100%;box-sizing:border-box;align-self:stretch}
 #bpx .cp-req-h{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-#bpx .cp-req-h .ms{font-size:18px;color:#b45309}
-#bpx .cp-req-h b{font-size:13px;color:#92400e}
+#bpx .cp-req-h .ms{font-size:18px;color:#0953b4}
+#bpx .cp-req-h b{font-size:13px;color:#0e4792}
 #bpx .cp-req-h small{font-size:11.5px;color:var(--grey);margin-left:auto}
 #bpx .cp-req p{font-size:13.5px;line-height:1.5;margin:6px 0 10px;color:var(--ink);overflow-wrap:anywhere}
 #bpx .cp-req .bpx-btn{width:auto;margin:0;padding:8px 13px;display:inline-flex;align-items:center;gap:5px;font-size:13px}
 #bpx .cp-req .bpx-btn .ms{font-size:17px}
 
 /* no-logo nudge at the top of the Customer tab */
-#bpx .cp-nudge{display:flex;align-items:flex-start;gap:10px;background:#fff8eb;border:1px solid #f6d79b;border-radius:12px;padding:10px 10px 10px 12px;margin:0 0 12px}
-#bpx .cp-nudge>.ms{color:#b45309;font-size:20px;flex-shrink:0;margin-top:1px}
-#bpx .cp-nudge>div{flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:#92400e}
-#bpx .cp-nudge b{display:block;color:#7c2d12;font-size:13px}
-#bpx .cp-nudge-go{background:none;border:0;padding:0;font:inherit;font-weight:600;color:#b45309;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
-#bpx .cp-nudge-x{background:none;border:0;padding:2px;border-radius:6px;color:#b45309;cursor:pointer;display:flex;flex-shrink:0}
+#bpx .cp-nudge{display:flex;align-items:flex-start;gap:10px;background:#ebf4ff;border:1px solid #9bc2f6;border-radius:12px;padding:10px 10px 10px 12px;margin:0 0 12px}
+#bpx .cp-nudge>.ms{color:#0953b4;font-size:20px;flex-shrink:0;margin-top:1px}
+#bpx .cp-nudge>div{flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:#0e4792}
+#bpx .cp-nudge b{display:block;color:#12407c;font-size:13px}
+#bpx .cp-nudge-go{background:none;border:0;padding:0;font:inherit;font-weight:600;color:#0953b4;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+#bpx .cp-nudge-x{background:none;border:0;padding:2px;border-radius:6px;color:#0953b4;cursor:pointer;display:flex;flex-shrink:0}
 #bpx .cp-nudge-x .ms{font-size:18px}
-#bpx .cp-nudge-x:hover{background:rgba(180,83,9,.1)}
-#bpx.bpx-dark .cp-nudge{background:#2a2113;border-color:#5b4520}#bpx.bpx-dark .cp-nudge>div{color:#e9c48c}#bpx.bpx-dark .cp-nudge b{color:#fcd9a5}
+#bpx .cp-nudge-x:hover{background:rgba(9,83,180,.1)}
+#bpx.bpx-dark .cp-nudge{background:#131d2a;border-color:#203a5b}#bpx.bpx-dark .cp-nudge>div{color:#8cb4e9}#bpx.bpx-dark .cp-nudge b{color:#a5cbfc}

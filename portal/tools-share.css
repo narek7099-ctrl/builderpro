@@ -20,7 +20,7 @@
 #bpx .bpt-chip{display:inline-flex;align-items:center;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:600;line-height:1;text-decoration:none;cursor:pointer}
 #bpx .bpt-chip:hover{border-color:var(--blue)}
 #bpx .bpt-lic{margin:0;font-size:11.5px;line-height:1.45;color:var(--grey)}
-#bpx .bpt-warn{font-size:12px;line-height:1.45;padding:8px 10px;border-radius:8px;background:#fff8eb;border:1px solid #f5deb3;color:#7a4a06}
+#bpx .bpt-warn{font-size:12px;line-height:1.45;padding:8px 10px;border-radius:8px;background:#ebf4ff;border:1px solid #b3d0f5;color:#06387a}
 #bpx .bpt-layout .bpx-calc-frame{border-radius:12px}
 @media(max-width:980px){
   #bpx .bpt-layout{grid-template-columns:1fr}

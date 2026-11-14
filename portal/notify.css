@@ -26,18 +26,18 @@
 #bpx#bpx#bpx#bpx .nt-ic{flex:0 0 32px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--grey)}
 #bpx#bpx#bpx#bpx .nt-ic .nt-svg{width:17px;height:17px}
 #bpx#bpx#bpx#bpx .nt-ic.k0{background:#EFF8FF;color:#175CD3}   /* leads & sales */
-#bpx#bpx#bpx#bpx .nt-ic.k1{background:#F4F3FF;color:#5925DC}   /* projects */
+#bpx#bpx#bpx#bpx .nt-ic.k1{background:#f3f7ff;color:#2562dc}   /* projects */
 #bpx#bpx#bpx#bpx .nt-ic.k2{background:#ECFDF3;color:#027A48}   /* money */
-#bpx#bpx#bpx#bpx .nt-ic.k3{background:#FDF2FA;color:#C11574}   /* team */
-#bpx#bpx#bpx#bpx .nt-ic.k4{background:#FFF6ED;color:#C4320A}   /* customers */
+#bpx#bpx#bpx#bpx .nt-ic.k3{background:#f2f7fd;color:#1560c1}   /* team */
+#bpx#bpx#bpx#bpx .nt-ic.k4{background:#edf5ff;color:#C4320A}   /* customers */
 #bpx#bpx#bpx#bpx .nt-ic.k5{background:#F0F9FF;color:#026AA2}   /* subs */
 #bpx#bpx#bpx#bpx .nt-ic.k6{background:#FEF3F2;color:#B42318}   /* deadlines */
 #bpx#bpx#bpx#bpx .nt-ic.kn{background:var(--warn-l);color:var(--warn-t)}
 #bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k0{background:#102A56;color:#84CAFF}
-#bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k1{background:#27115F;color:#BDB4FE}
+#bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k1{background:#112b5f;color:#b4cdfe}
 #bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k2{background:#053321;color:#75E0A7}
-#bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k3{background:#4E0D30;color:#FAA7E0}
-#bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k4{background:#511C10;color:#FDB022}
+#bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k3{background:#0d294e;color:#a7cbfa}
+#bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k4{background:#511C10;color:#2281fd}
 #bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k5{background:#0B4A6F;color:#7CD4FD}
 #bpx#bpx#bpx#bpx.bpx-dark .nt-ic.k6{background:#55160C;color:#FDA29B}
 #bpx#bpx#bpx#bpx .nt-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}

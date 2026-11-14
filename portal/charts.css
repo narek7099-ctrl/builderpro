@@ -17,23 +17,23 @@
   /* the soft blue a chart panel sits on */
   --bpc-surface:#f6f9ff;
 
-  --bpc-s1:#4e6ef2;   /* blue — the portal's own, slot 1 */
-  --bpc-s2:#e0789a;   /* orange */
-  --bpc-s3:#5a46b8;   /* aqua */
-  --bpc-s4:#1f9e8f;   /* yellow */
-  --bpc-s5:#b8324f;   /* violet */
+  --bpc-s1:#006fff;   /* blue (2026-11-14: the BuilderPro palette, checked for colour-blind separation) */
+  --bpc-s2:#16C79A;   /* mint */
+  --bpc-s3:#0b2a55;   /* navy */
+  --bpc-s4:#6aaeff;   /* sky */
+  --bpc-s5:#0e8f73;   /* deep mint */
 
   /* ordinal: one blue, pale to deep, for things in an order */
-  --bpc-o1:#b8c3fb; --bpc-o2:#8d9df6; --bpc-o3:#6680f0; --bpc-o4:#4a62dc; --bpc-o5:#3445b0;
-  --bpc-track:#e6eafd;  /* a meter's unfilled track: a paler step of the same blue */
+  --bpc-o1:#b9d6ff; --bpc-o2:#85b8ff; --bpc-o3:#4d97ff; --bpc-o4:#006fff; --bpc-o5:#0050c8;
+  --bpc-track:#e6effd;  /* a meter's unfilled track: a paler step of the same blue */
 
   /* diverging: blue against orange either side of a gray */
-  --bpc-pos2:#3445b0; --bpc-pos1:#8d9df6;
+  --bpc-pos2:#0050c8; --bpc-pos1:#85b8ff;
   --bpc-mid:#9aa6b6;
   --bpc-neg1:#eba3b8; --bpc-neg2:#b8324f;
 
   --bpc-other:#9aa6b6;
-  --bpc-warn:#b45309;
+  --bpc-warn:#0050c8;
   --bpc-grid:#e4eaf4;
   --bpc-axis:#c9d3e3;
   --bpc-good-t:#0f7a3d; --bpc-good-b:#e3f5ea;
@@ -41,15 +41,15 @@
 }
 #bpx.bpx-dark{
   --bpc-surface:#121826;
-  --bpc-s1:#5577f0; --bpc-s2:#d9668c; --bpc-s3:#7d6ae0; --bpc-s4:#1f9e8f; --bpc-s5:#d44a64;
+  --bpc-s1:#3d8bff; --bpc-s2:#3fe0b6; --bpc-s3:#a9c8f2; --bpc-s4:#1d4f9e; --bpc-s5:#118f70;
   /* the ramp flips its anchor on dark: more is lighter */
-  --bpc-o1:#3445b0; --bpc-o2:#4a62dc; --bpc-o3:#6f87f2; --bpc-o4:#9dabf7; --bpc-o5:#cbd3fc;
-  --bpc-track:#1c2a47;
-  --bpc-pos2:#9dabf7; --bpc-pos1:#4a62dc;
+  --bpc-o1:#0b3d8f; --bpc-o2:#1756c4; --bpc-o3:#2f78f0; --bpc-o4:#6fa6ff; --bpc-o5:#b3d1ff;
+  --bpc-track:#1a2a45;
+  --bpc-pos2:#6fa6ff; --bpc-pos1:#1756c4;
   --bpc-mid:#6d7887;
   --bpc-neg1:#b8324f; --bpc-neg2:#eba3b8;
   --bpc-other:#6d7887;
-  --bpc-warn:#e0a555;
+  --bpc-warn:#6fa6ff;
   --bpc-grid:#222c3d;
   --bpc-axis:#34415a;
   --bpc-good-t:#5fe39a; --bpc-good-b:#12301f;

@@ -95,7 +95,7 @@ html.bp-appmode body{overflow:hidden}
   color:#fff !important;cursor:pointer;box-shadow:none !important;transition:filter 120ms ease,transform 80ms ease}
 #bpx#bpx#bpx#bpx .hl-rb:hover{filter:brightness(1.08)}
 #bpx#bpx#bpx#bpx .hl-rb .hl-i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#bpx#bpx#bpx#bpx .hl-rb.g{background:#12B76A !important} #bpx#bpx#bpx#bpx .hl-rb.p{background:#7A5AF8 !important} #bpx#bpx#bpx#bpx .hl-rb.o{background:#F79009 !important} #bpx#bpx#bpx#bpx .hl-rb.b{background:#2E90FA !important}
+#bpx#bpx#bpx#bpx .hl-rb.g{background:#12B76A !important} #bpx#bpx#bpx#bpx .hl-rb.p{background:#5a8ff8 !important} #bpx#bpx#bpx#bpx .hl-rb.o{background:#0970f7 !important} #bpx#bpx#bpx#bpx .hl-rb.b{background:#2E90FA !important}
 #bpx#bpx#bpx#bpx .hl-badge{position:absolute;top:-4px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#F04438;color:#fff;
   font:600 10px/16px var(--sans);text-align:center;box-shadow:0 0 0 2px var(--card)}
 #bpx#bpx#bpx#bpx .hl-badge[hidden]{display:none}
@@ -143,7 +143,7 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-notes .hl-mi > span{white-space:normal}
 #bpx#bpx#bpx#bpx .hl-notes .hl-mi .hl-i{margin-top:1px}
 #bpx#bpx#bpx#bpx .hl-dot{width:8px;height:8px;flex:0 0 8px;margin-top:5px;border-radius:50%;background:var(--blue)}
-#bpx#bpx#bpx#bpx .hl-dot.bad{background:#F04438} #bpx#bpx#bpx#bpx .hl-dot.warn{background:#F79009}
+#bpx#bpx#bpx#bpx .hl-dot.bad{background:#F04438} #bpx#bpx#bpx#bpx .hl-dot.warn{background:#0970f7}
 #bpx#bpx#bpx#bpx .hl-mempty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 10px;color:var(--mu);font-size:13px}
 #bpx#bpx#bpx#bpx .hl-mempty .hl-i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
 #bpx#bpx#bpx#bpx .hl-sw{position:relative;width:28px;height:16px;flex:0 0 28px;border-radius:8px;background:var(--line-in);transition:background-color 120ms ease}
@@ -383,7 +383,7 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-mini{display:flex;flex-direction:column;min-height:128px;cursor:pointer;overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-mv{margin-top:8px;font:600 26px/1.15 var(--sans) !important;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bpx#bpx#bpx#bpx .hl-mv small{font-size:14px;font-weight:500;color:var(--mu);margin-left:2px}
-#bpx#bpx#bpx#bpx .hl-mv.warn{color:var(--warn-t,#b45309)} #bpx#bpx#bpx#bpx .hl-mv.neg{color:var(--err-t)}
+#bpx#bpx#bpx#bpx .hl-mv.warn{color:var(--warn-t,#0953b4)} #bpx#bpx#bpx#bpx .hl-mv.neg{color:var(--err-t)}
 #bpx#bpx#bpx#bpx .hl-ms{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--mu)}
 #bpx#bpx#bpx#bpx .hl-mini .bpc-sparkwrap{margin:auto -14px -14px;padding-top:8px}
 #bpx#bpx#bpx#bpx .hl-mini .bpc-spark{height:40px}
@@ -473,7 +473,7 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.g,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.o,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.b{background:transparent !important;color:var(--ink,#344054) !important;width:36px;height:36px}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.g:hover,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.o:hover,#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.b:hover{background:var(--soft,#f2f4f7) !important;filter:none}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb .hl-i{width:19px;height:19px;stroke-width:1.8}
-#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p{width:auto;display:inline-flex;gap:6px;padding:0 14px 0 11px !important;border-radius:999px !important;height:34px;background:#f4f0ff !important;color:#5b3fd6 !important;font:600 13px/1 var(--sans);margin-right:4px}
+#bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p{width:auto;display:inline-flex;gap:6px;padding:0 14px 0 11px !important;border-radius:999px !important;height:34px;background:#f0f5ff !important;color:#3f71d6 !important;font:600 13px/1 var(--sans);margin-right:4px}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p::after{content:"Ask AI"}
 #bpx#bpx#bpx#bpx:not(.bp-m) .hl-rb.p .hl-i{width:16px;height:16px}
 

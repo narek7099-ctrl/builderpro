@@ -32,7 +32,7 @@
     var w = s.split(/\s+/).filter(Boolean);
     return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : (w[0] || '')[1] || '')).toUpperCase();
   }
-  var HUES = ['#155EEF', '#7A5AF8', '#12B76A', '#F79009', '#EE46BC', '#0BA5EC', '#F04438', '#475467'];
+  var HUES = ['#155EEF', '#5a8ff8', '#12B76A', '#0970f7', '#468fee', '#0BA5EC', '#F04438', '#475467'];
   function hue(s) { s = String(s || ''); var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return HUES[Math.abs(h) % HUES.length]; }
   function when(t) {
     if (!t) return '';

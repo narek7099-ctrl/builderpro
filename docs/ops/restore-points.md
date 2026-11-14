@@ -224,3 +224,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the silk-light background (2026-11-13)
 - Live site (main): `4ca1243`
 - Changes: one shared background, site/silk.js, after the reference reel the user sent (one ribbon of fine threads pinched to a glowing waist, fanning wide and rolling slowly), drawn in a background thread (OffscreenCanvas in a Worker) so it moves without taking frames from the page. Used by the app (portal/appbg.js), the homepage (site/site.js) and the other pages (site/ribbons.js, version stamps updated on 48 pages).
+
+## Before the theme pass, the live AI board and the dark-mode fixes (2026-11-14)
+- Live site (main): `e67425d`
+- Changes: the four money cards each draw their own chart (bars, smooth line, lollipops, staircase); Needs you lead tile in white; Week pace and the chart palette in blue, sky, mint and navy; about 590 off-theme oranges, yellows, purples and pinks across 42 app files moved onto the palette (reds and brand logos kept); the AI Team board alive (portal/aiboard.js: curved swaying links, task pulses, hover); black sidebar in dark mode; the background haze blurred so it never bands; the sidebar fits short windows.

@@ -16,7 +16,7 @@
 #bpx .insp-t b{font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 #bpx .insp-ct small{display:block;color:var(--mu);font-size:12px;margin-top:2px}
 #bpx .insp-ct p{margin:4px 0 0;font-size:12.5px;color:var(--grey,#475467);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#bpx .insp-st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#fef3c7;color:#92400e}
+#bpx .insp-st{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:#c7dffe;color:#0e4792}
 #bpx .insp-st.fin{background:#dcfce7;color:#166534}
 #bpx .insp-from{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--soft,#f2f4f7);color:var(--mu);border:1px solid var(--line)}
 #bpx .insp-go{color:var(--mu)}

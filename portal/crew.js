@@ -206,7 +206,7 @@
         + '<td>' + rateTxt + '</td>'
         + '<td>' + (b > 0 ? '<b>' + money(b) + '</b>/hr' : '—')
           + (e.burden_pct > 0 ? '<div class="bpx-mut" style="font-size:11.5px">+' + e.burden_pct + '% burden</div>'
-            : (e.kind === 'w2' ? '<div class="bpx-mut" style="font-size:11.5px;color:#b45309">no burden set</div>' : '')) + '</td>'
+            : (e.kind === 'w2' ? '<div class="bpx-mut" style="font-size:11.5px;color:#0953b4">no burden set</div>' : '')) + '</td>'
         + '<td class="bpx-r" style="white-space:nowrap">'
           + (window.bpEmpProfile ? '<button class="bpx-rowbtn" onclick="bpEmpProfile(\'' + e.id + '\')">Profile</button>' : '')
           + '<button class="bpx-rowbtn" onclick="bpEmpOpen(\'' + e.id + '\')">Edit</button>'
@@ -328,7 +328,7 @@
     hint.innerHTML = bur > 0
       ? 'An hour of this person costs you <b>' + rate(real) + '</b>, not ' + rate(per) + '. That is the number jobs are costed at.'
         + (pt === 'salary' ? ' (Salary is spread over a nominal 2,080-hour year.)' : '')
-      : '<span style="color:#b45309">Payroll tax and workers’ comp usually add 25–50% on top of the wage, and roofing comp rates '
+      : '<span style="color:#0953b4">Payroll tax and workers’ comp usually add 25–50% on top of the wage, and roofing comp rates '
         + 'are among the highest of any trade. At 0% this person is costed at ' + rate(per) + '/hr and every job using them will look '
         + 'more profitable than it is. Your comp policy or accountant has the real number.</span>';
   };
@@ -470,7 +470,7 @@
       return '<tr' + (t.disputed_at ? ' class="te-disp"' : '') + '><td>' + esc(dayLabel(t.worked_on)) + '</td>'
         + '<td><b>' + esc(e ? e.name : 'Removed') + '</b>' + bpByLeadTag(t.clocked_by_name, t.clocked_lat, t.clocked_lng) + dispTag(t, true) + '</td>'
         + '<td>' + esc(t.job_name || '—') + '</td>'
-        + '<td>' + (+t.hours || 0) + (t.ot_hours > 0 ? ' <span style="color:#b45309">+' + t.ot_hours + ' OT</span>' : '') + '</td>'
+        + '<td>' + (+t.hours || 0) + (t.ot_hours > 0 ? ' <span style="color:#0953b4">+' + t.ot_hours + ' OT</span>' : '') + '</td>'
         + '<td>' + money(t.cost) + '</td>'
         + '<td class="bpx-r">' + (t.disputed_at ? '<button class="bpx-rowbtn" onclick="bpHoursClear(\'' + t.id + '\')">Clear flag</button> ' : '')
         + '<button class="bpx-rowbtn" onclick="bpHoursDel(\'' + t.id + '\')">Remove</button></td></tr>';

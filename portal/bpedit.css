@@ -103,7 +103,7 @@
 
 /* ---------- measuring: scale, takeoff, area / run drawing ---------- */
 .bpe-scbtn .bpe-sc-t{max-width:150px;overflow:hidden;text-overflow:ellipsis}
-.bpe-scbtn.warn,.bpe-scalechip.warn{border-color:#f5c26b;background:#fff8e6;color:#8a5a00}
+.bpe-scbtn.warn,.bpe-scalechip.warn{border-color:#6ba7f5;background:#e6f1ff;color:#003c8a}
 .bpe-top .bpe-btn.ghost.on{background:var(--soft,#f4f7fa);border-color:var(--ink,#001530)}
 .bpe-polybar{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:4;display:flex;align-items:center;gap:6px;padding:6px 6px 6px 14px;background:var(--card,#fff);
   border:1px solid var(--line,rgba(0,0,0,.1));border-radius:40px;box-shadow:0 10px 30px rgba(0,21,48,.16);max-width:calc(100% - 20px)}
@@ -137,7 +137,7 @@
 .bpe-scalechip{display:flex;align-items:center;gap:8px;width:100%;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line,rgba(0,0,0,.12));background:var(--soft,#f4f7fa);
   font:inherit;font-size:13px;font-weight:600;color:inherit;cursor:pointer;text-align:left}
 .bpe-scalechip .ms{font-size:18px}
-.bpe-side-note{margin:0;font-size:12px;color:#8a5a00;line-height:1.45}
+.bpe-side-note{margin:0;font-size:12px;color:#003c8a;line-height:1.45}
 .bpe-sec{border-top:1px solid var(--line,rgba(0,0,0,.08));padding-top:10px}
 .bpe-sec-h{display:flex;justify-content:space-between;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grey,#788493);margin-bottom:6px}
 .bpe-sec-h span{color:var(--ink,#001530);text-transform:none;letter-spacing:0;font-size:13px}

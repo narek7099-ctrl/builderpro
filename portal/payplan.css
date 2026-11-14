@@ -17,7 +17,7 @@
 #bpx .pp-f small{font-weight:400;color:#6b7280;font-size:11.5px;line-height:1.4}
 #bpx .pp-f input,#bpx .pp-f select{width:100%}
 #bpx .pp-calc{align-self:center;font-size:14px;color:#344054;padding-top:18px;white-space:nowrap}
-#bpx .pp-calc small{margin-left:8px;font-size:11px;background:#fff7ed;color:#b45309;border-radius:999px;padding:2px 8px}
+#bpx .pp-calc small{margin-left:8px;font-size:11px;background:#edf5ff;color:#0953b4;border-radius:999px;padding:2px 8px}
 #bpx .pp-sub{font-size:12.5px;font-weight:600;color:#344054;margin:16px 0 8px}
 #bpx .pp-sub small{font-weight:400;color:#6b7280;margin-left:4px}
 #bpx .pp-prog{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
@@ -58,7 +58,7 @@
 #bpx .pp-st-t{min-width:0}#bpx .pp-st-t b{display:block;font-size:13.5px}#bpx .pp-st-t small{display:block;font-size:12px;color:#6b7280}
 #bpx .pp-st-a{display:flex;align-items:center;gap:8px;white-space:nowrap}#bpx .pp-st-a b{font-variant-numeric:tabular-nums;font-size:14px}
 #bpx .pp-st-b{grid-column:2/-1;display:flex;gap:6px;flex-wrap:wrap}
-#bpx .pjk-tag.warn{background:#fff7ed;color:#b45309}
+#bpx .pjk-tag.warn{background:#edf5ff;color:#0953b4}
 #bpx#bpx .bpx-addbtn.sm{padding:6px 12px;font-size:12.5px;min-height:0;height:auto}
 #bpx .pp-fin{display:flex;list-style:none;margin:4px 0 12px;padding:0;gap:6px;flex-wrap:wrap}
 #bpx .pp-fin li{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#6b7280;flex:1;min-width:110px;background:#f8f9fc;border-radius:999px;padding:5px 10px 5px 5px}
@@ -75,7 +75,7 @@
 #bpx .pp-row .bpx-mut{font-size:12.5px}
 #bpx .pp-inl .qx-in{flex:1;min-width:140px;max-width:220px}
 #bpx .pp-inl>input{flex:2;min-width:180px}
-#bpx .pp-warn{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:10px}
+#bpx .pp-warn{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#edf5ff;border:1px solid #aacefe;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:10px}
 #bpx .pp-it{width:100%;border-collapse:collapse;font-size:13px}
 #bpx .pp-it td{padding:9px 6px;border-top:1px solid #f0f2f6;vertical-align:middle}
 #bpx .pp-it tr:first-child td{border-top:0}

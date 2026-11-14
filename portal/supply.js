@@ -190,17 +190,17 @@
      waiting on artwork and a supply house the contractor typed in by hand
      looks like it belongs next to the national ones. */
   var CHAIN_TINT = {
-    abc: '#0a4d8c', srs: '#0d5c3f', beacon: '#b03a2e', carter: '#8a5a2b',
+    abc: '#0a4d8c', srs: '#0d5c3f', beacon: '#b03a2e', carter: '#2b548a',
     ferguson: '#0b3d91', winsupply: '#1f5f8b', johnstone: '#0f6e4f',
     ced: '#c0392b', graybar: '#1a5276', sherwin: '#0b5394', benmoore: '#1b4f72',
-    siteone: '#2e7d32', whitecap: '#c62828', lw: '#5d4037', fbm: '#37474f',
-    bfs: '#1565c0', e84: '#2e7d32', fastenal: '#1b5e20',
-    homedepot_pro: '#d2691e', lowes_pro: '#00518f', menards: '#2e5c1f',
+    siteone: '#2e7d68', whitecap: '#c62828', lw: '#5d4037', fbm: '#37474f',
+    bfs: '#1565c0', e84: '#2e7d68', fastenal: '#1b5e4c',
+    homedepot_pro: '#1e6cd2', lowes_pro: '#00518f', menards: '#1f5c4c',
     supplyhouse: '#00695c', pexuniverse: '#1565c0', hvacdirect: '#0277bd',
-    grainger: '#b71c1c', zoro: '#c62828', amazonbiz: '#7b5800', northerntool: '#b71c1c',
+    grainger: '#b71c1c', zoro: '#c62828', amazonbiz: '#00357b', northerntool: '#b71c1c',
     poolcorp: '#01579b', heritagepool: '#0277bd', leslies: '#1565c0',
-    floordecor: '#c05621', msi: '#37474f', tileshop: '#5d4037',
-    cosentino: '#212121', richelieu: '#1a237e', metrie: '#4e342e',
+    floordecor: '#2166c0', msi: '#37474f', tileshop: '#5d4037',
+    cosentino: '#212121', richelieu: '#1a3b7e', metrie: '#4e342e',
   };
   function initials(name) {
     var w = String(name || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean);

@@ -35,8 +35,8 @@
 (function () {
   'use strict';
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
-  var COLORS = [['#e5484d', 'Red'], ['#f08c00', 'Orange'], ['#1f9e5a', 'Green'], ['#4e6ef2', 'Blue'], ['#8b5cf6', 'Violet'], ['#111827', 'Black']];
-  var NOTE_BG = { '#e5484d': '#ffe1e1', '#f08c00': '#fff1c2', '#1f9e5a': '#d9f5e4', '#4e6ef2': '#e1e7fe', '#8b5cf6': '#ece3ff', '#111827': '#eef0f3' };
+  var COLORS = [['#e5484d', 'Red'], ['#0068f0', 'Orange'], ['#1f9e5a', 'Green'], ['#4e6ef2', 'Blue'], ['#5c8ff6', 'Violet'], ['#111827', 'Black']];
+  var NOTE_BG = { '#e5484d': '#ffe1e1', '#0068f0': '#c2dcff', '#1f9e5a': '#d9f5e4', '#4e6ef2': '#e1e7fe', '#5c8ff6': '#e3ecff', '#111827': '#eef0f3' };
   var WIDTHS = [['S', 1], ['M', 2.2], ['L', 4.5]];
   var TOOLS = [
     ['select', 'arrow_selector_tool', 'Select & move', 'V'], ['pen', 'draw', 'Pen', 'P'], ['line', 'horizontal_rule', 'Line', 'L'],
@@ -241,7 +241,7 @@
     } else if (t === 'note') {
       var r = Math.min(o.w, o.h) * 0.06;
       ctx.shadowColor = 'rgba(15,23,42,.18)'; ctx.shadowBlur = o.w * 0.05; ctx.shadowOffsetY = o.w * 0.015;
-      ctx.fillStyle = NOTE_BG[o.c] || '#fff1c2'; rr(ctx, o.x, o.y, o.w, o.h, r); ctx.fill();
+      ctx.fillStyle = NOTE_BG[o.c] || '#c2dcff'; rr(ctx, o.x, o.y, o.w, o.h, r); ctx.fill();
       ctx.shadowColor = 'transparent';
       ctx.fillStyle = o.c; rr(ctx, o.x, o.y, o.w, Math.max(4, o.h * 0.06), r); ctx.fill();
       ctx.fillRect(o.x, o.y + Math.max(4, o.h * 0.06) - r, o.w, r);
@@ -367,7 +367,7 @@
     if (o.t === 'note') {
       var nfs = Math.max(10, o.w * 0.085) * v.s, pad = o.w * 0.07 * v.s;
       st.left = (v.tx + o.x * v.s) + 'px'; st.top = (v.ty + o.y * v.s) + 'px'; st.width = o.w * v.s + 'px'; st.height = o.h * v.s + 'px';
-      st.fontSize = nfs + 'px'; st.padding = (pad + o.h * 0.06 * v.s) + 'px ' + pad + 'px ' + pad + 'px'; st.background = NOTE_BG[o.c] || '#fff1c2'; st.color = '#1f2937';
+      st.fontSize = nfs + 'px'; st.padding = (pad + o.h * 0.06 * v.s) + 'px ' + pad + 'px ' + pad + 'px'; st.background = NOTE_BG[o.c] || '#c2dcff'; st.color = '#1f2937';
     } else if (o.t === 'text') {
       var fs = o.fs * v.s; st.left = (v.tx + o.x * v.s - 4) + 'px'; st.top = (v.ty + o.y * v.s - 4) + 'px';
       st.width = Math.max(160, (bbox(o).w + o.fs * 4) * v.s) + 'px'; st.height = Math.max(fs * 1.6, (String(ta.value).split('\n').length) * fs * 1.25 + 12) + 'px';

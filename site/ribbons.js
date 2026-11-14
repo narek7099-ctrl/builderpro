@@ -11,5 +11,5 @@
     window.addEventListener('scroll', function () { s.scroll(window.scrollY || 0); }, { passive: true });
   }
   if (window.bpSilk) go();
-  else { var sc = document.createElement('script'); sc.src = '/site/silk.js?v=20261113b'; sc.onload = go; document.head.appendChild(sc); }
+  else { var sc = document.createElement('script'); sc.src = '/site/silk.js?v=20261114a'; sc.onload = go; document.head.appendChild(sc); }
 })();
