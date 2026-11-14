@@ -695,6 +695,14 @@
       t('Money out', 'out', money(C.out), P.word + ', all costs', M.out, 'finances', { upIsGood: false, viz: 'step', see: 'See costs' }),
     ];
   }
+  /* the same card as the money cards, with an icon where their chart sits:
+     for figures that have no month-by-month history (2026-11-14) */
+  function statCard(lbl, ico, val, sub, go, see) {
+    return '<div class="bpx-panel db-st cb cb-ico" onclick="bpNav(\'' + go + '\')"><div class="cb-top"><span class="db-kl">' + lbl + '</span>'
+      + '<span class="cb-ic"><span class="ms">' + ico + '</span></span></div>'
+      + '<div class="db-kv">' + val + '</div><div class="cb-d"><span>' + sub + '</span></div>'
+      + '<div class="cb-foot"><span>' + see + '</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
+  }
   function netLine(M) {
     if (!M.net.some(function (v) { return v; })) return '<div class="bpx-panel">' + bpChart.empty({ title: 'What you kept', empty: 'Income less costs ' + P.by + ', once the money starts moving ' + P.word + '.' }) + '</div>';
     return '<div class="bpx-panel">' + bpChart.area({ title: 'What you kept', lead: 'income less costs, ' + P.by + ' · ' + P.word, x: { label: P.axis, values: M.labels },
@@ -880,23 +888,25 @@
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
     var st = sparkTiles(M), gos = ['finances', 'finances', 'activejobs', 'finances'];
     var X = moreWidgets(M), m = X.mini;
-    /* What an owner checks every day comes first; everything else waits
-       one tap away so the page stays calm. */
+    /* What an owner checks every day comes first (2026-11-14, on the owner's
+       ask): four quick figures, then the jobs themselves in the middle of the
+       page. The money cards, Week pace, Needs you and This week wait one tap
+       away under More numbers and charts, with everything else. */
     var first = g([
-      [3, W(gos[0], st[0], 'hl-spk')], [3, W(gos[1], st[1], 'hl-spk')], [3, W(gos[2], st[2], 'hl-spk')], [3, W(gos[3], st[3], 'hl-spk')],
-      [4, W('dashboard', weekPace())],
-      [4, W('dashboard', attention())],
-      [4, W('calendar', week())],
+      [3, W(gos[2], st[2], 'hl-spk')],
+      [3, W(D.leads ? 'contacts' : 'marketing', statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads'), 'hl-spk')],
+      [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
+      [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')],
       [12, projects(false)]
     ]);
     var open = false; try { open = localStorage.getItem('bp.dashMore') === '1'; } catch (e) {}
     return first + '<details class="db-more"' + (open ? ' open' : '') + ' ontoggle="try{localStorage.setItem(\'bp.dashMore\',this.open?\'1\':\'0\')}catch(e){};if(this.open&&window.BPDASH&&BPDASH.fill)BPDASH.fill()">'
       + '<summary><span class="ms">insights</span>More numbers and charts<span class="ms db-more-chev">expand_more</span></summary>'
       + g([
-      [3, kpiW('New leads', D.leads ? D.leads.n : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing')],
-      [3, kpiW('Appointments', D.leads ? D.leads.a : '&mdash;', D.leads ? 'this month' : 'not connected yet', 'calendar')],
-      [3, kpiW('Active projects', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs')],
-      [3, kpiW('Quotes out', D.deals ? String(D.deals.n) : '&middot;', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals')],
+      [4, W(gos[0], st[0], 'hl-spk')], [4, W(gos[1], st[1], 'hl-spk')], [4, W(gos[3], st[3], 'hl-spk')],
+      [4, W('dashboard', weekPace())],
+      [4, W('dashboard', attention())],
+      [4, W('calendar', week())],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
       [3, m.avgJob], [3, m.revPer], [3, m.done], [3, m.cycle],
@@ -904,7 +914,7 @@
       [3, m.mat], [3, m.lab], [3, m.best], [3, m.repeat],
       [8, X.bal], [4, X.kinds],
       [4, X.owed], [4, W('finances', spendDonut(M))], [4, W('activejobs', wonCols(M))],
-      [4, m.permits], [4, m.installs], [4, m.appts],
+      [3, kpiW('Appointments', D.leads ? D.leads.a : '&mdash;', D.leads ? 'this month' : 'not connected yet', 'calendar')], [3, m.permits], [3, m.installs], [3, m.appts],
       [8, W('finances', jobsChart())],
       [4, W('activejobs', collection(M))],
       [12, W('dashboard', activity())]
