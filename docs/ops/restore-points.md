@@ -241,3 +241,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the Active projects line graph (2026-11-14)
 - Live site (main): `89fb251`
 - Changes: the dashboard's Active projects card draws a line of how many projects were running in each period (won before it ended, not finished before it began), like Profit's, instead of an icon (portal/dash.js).
+
+## Before moving the line graph to Projects won (2026-11-14)
+- Live site (main): `f164fb4`
+- Changes: Projects won draws a line graph (was lollipops); Active projects is back to its icon card (portal/dash.js).
