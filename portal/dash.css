@@ -1505,11 +1505,3 @@
 #bpx.bpx-dark .nyc-hero{color:#e8eef8;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.09);box-shadow:none}
 #bpx.bpx-dark .nyc-hero .nyc-big{color:#f1f5fb}#bpx.bpx-dark .nyc-hero .nyc-sub,#bpx.bpx-dark .nyc-hero .nyc-tag{color:#aab7cb}
 #bpx.bpx-dark .nyc-hero .nyc-top em{background:rgba(77,163,255,.14);color:#9cc3ff;box-shadow:none}
-
-/* the stat cards without a chart carry a soft icon in its place (2026-11-14) */
-#bpx .cb-ico .cb-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#006fff;
-  background:linear-gradient(160deg,#f2f7ff,#e3eeff);box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(0,111,255,.12)}
-#bpx .cb-ico .cb-ic .ms{font-size:21px}
-#bpx .cb-ico:hover .cb-ic{background:radial-gradient(circle at 30% 25%,#5aa2ff 0,#006fff 55%,#0050c8 100%);color:#fff;box-shadow:0 8px 16px -8px rgba(0,111,255,.9)}
-#bpx .cb-ico .cb-ic{transition:background .3s,color .3s,box-shadow .3s}
-#bpx.bpx-dark .cb-ico .cb-ic{background:rgba(77,163,255,.12);color:#9cc3ff;box-shadow:none}
