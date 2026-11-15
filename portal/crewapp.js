@@ -46,9 +46,20 @@
     C.busy = Promise.resolve(BP_SB.rpc('crew_me')).then(function (r) {
       C.busy = null;
       if (r && r.error) throw r.error;
-      C.me = r.data || {}; paintMe(); return C.me;
+      C.me = r.data || {}; paintMe(); keepAhead(C.me); return C.me;
     });
     return C.busy;
+  }
+  /* offline mode (portal/offline.js keeps every answer): while there's signal, quietly ask
+     for today's and tomorrow's job checklists and the break state, so they open with none */
+  var aheadAt = 0;
+  function keepAhead(me) {
+    if (!window.bpOffline || !bpOffline.online() || Date.now() - aheadAt < 10 * 60000) return;
+    aheadAt = Date.now();
+    var d0 = iso(new Date()), d1 = iso(new Date(Date.now() + 864e5));
+    (me.projects || []).filter(function (j) { var ds = (j.sched && j.sched.dates) || []; return ds.indexOf(d0) > -1 || ds.indexOf(d1) > -1; }).slice(0, 12)
+      .forEach(function (j, i) { setTimeout(function () { Promise.resolve(BP_SB.rpc('crew_checklist', { p_job: j.id })).catch(function () {}); }, 800 + i * 400); });
+    setTimeout(function () { loadBrk(); }, 600);
   }
   function wait(msg) { var a = area(); if (a) a.innerHTML = msg ? '<div class="bpx-panel"><div class="bpx-mut" style="font-size:14px">' + msg + '</div></div>' : '<div class="bp-skel" role="status" aria-label="Loading"><i></i><i></i><i></i></div>'; }
   function fail() { var a = area(); if (a) a.innerHTML = '<div class="bpx-panel"><div class="bpx-empty2">Couldn’t load this just now. Check your signal and try again.</div></div>'; }
@@ -209,7 +220,7 @@
   var BRK = { lunch: { t: 'Lunch', ic: 'restaurant', pay: 'Unpaid' }, break: { t: 'Break', ic: 'coffee', pay: 'Paid' } };
   function loadBrk() {
     return Promise.resolve(BP_SB.rpc('crew_break', { p_action: 'state', p_kind: 'break' }))
-      .then(function (r) { C.brk = (r && !r.error && r.data && r.data.on) ? r.data : null; })
+      .then(function (r) { C.brk = (r && !r.error && r.data && r.data.on) ? r.data : null; if (window.bpOffline && r && r.data) bpOffline.noteBreak(r.data); })
       .catch(function () { C.brk = null; });
   }
   function lunchMs() {
@@ -372,6 +383,11 @@
       }, 1000);
     }).catch(fail);
   };
+  window.addEventListener('bp-offline-synced', function () {
+    var v = window._bpCurView || '';
+    C.ck = {};
+    if (/^crew/.test(v) && document.getElementById('bpxViewArea')) { C.me = null; try { bpNav(v); } catch (e) {} }
+  });
   window.bpCrewGeo = function (on) { LS.set('caGeo', on ? '1' : '0'); };
   window.bpCrewBreak = function (action, kind) {
     var btns = document.querySelectorAll('#bpxViewArea .ck-sbtn, #ca-go'); Array.prototype.forEach.call(btns, function (b) { b.disabled = true; });
@@ -465,6 +481,7 @@
         bpCrewClock(); if (window.bpHaptic) bpHaptic(onSite === false ? 'warning' : 'success');
         setTimeout(function () {
           var m = $('ca-msg'); if (!m) return;
+          if (d.queued) { m.className = 'ca-msg ok'; m.textContent = (kind === 'in' ? 'Clocked in at ' : 'Clocked out at ') + clock(d.at) + '. No signal, so it’s saved on this phone and syncs with that time when you’re back online.'; return; }
           m.className = 'ca-msg ' + (onSite === false ? 'warn' : 'ok');
           m.textContent = kind === 'in'
             ? (onSite === true ? 'Clocked in on site.' : onSite === false ? 'Clocked in, ' + (dist > 1609 ? (dist / 1609).toFixed(1) + ' mi' : dist + ' m') + ' from the job. Your boss will see that.' : !geo ? 'Clocked in.' : pos ? 'Clocked in. This job has no map location, so your spot was saved without a check.' : 'Clocked in without your location (it was blocked or unavailable).')
@@ -966,7 +983,8 @@
     ckPaint(j, done ? idx : undefined);
     Promise.resolve(BP_SB.rpc('crew_check', { p_job: jid, p_step: key, p_done: !!done, p_steps: steps })).then(function (r) {
       var d = r && r.data;
-      if (d && d.ok) { st.list = d.checklist; st.loaded = true; if (C.job === jid && C.tab === 'details') ckPaint(j); }
+      if (d && d.ok && d.queued) { if (window.bpOffline) bpOffline.patchChecklist(jid, st.list); }
+      else if (d && d.ok) { st.list = d.checklist; st.loaded = true; if (C.job === jid && C.tab === 'details') ckPaint(j); }
       else { st.msg = 'Not saved. Check your signal and tap it again.'; ckPaint(j); }
     }).catch(function () { st.msg = 'Not saved. Check your signal and tap it again.'; ckPaint(j); });
   };
