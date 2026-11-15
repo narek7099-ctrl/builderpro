@@ -38,19 +38,33 @@
   window.bpTeamHome = function () { return T.role === 'sub' ? 'subjobs' : T.role === 'crew' ? 'crewdash' : 'dashboard'; };
 
   /* who am I working for? asked once per sign-in, before data loads */
+  /* Offline mode (2026-11-15): the last confirmed answer is kept on this device for
+     the person signed in, and used when the server can't be reached. Without it, a
+     crew phone with no signal fell back to "owner": owner screens, and the saved
+     job data wiped as if a different business had signed in. */
+  var TKEY = 'bpTeamLast';
+  function storedUid() { try { var s = JSON.parse(localStorage.getItem('sb-ttzwzouhiwdwamuimhpo-auth-token') || 'null'); return (s && s.user && s.user.id) || ''; } catch (e) { return ''; } }
+  function remember() { try { localStorage.setItem(TKEY, JSON.stringify({ uid: T.uid, email: T.email, owner: T.owner, role: T.role, name: T.name, ownerEmail: T.ownerEmail, at: Date.now() })); } catch (e) {} }
+  function recall(uid) {
+    try { var k = JSON.parse(localStorage.getItem(TKEY) || 'null'); if (k && k.uid && k.uid === uid) { T.uid = k.uid; T.email = k.email || ''; T.owner = k.owner || null; T.role = k.role || 'owner'; T.name = k.name || ''; T.ownerEmail = k.ownerEmail || ''; return true; } } catch (e) {}
+    return false;
+  }
   window.bpTeamResolve = function () {
     T.owner = null; T.role = 'owner'; T.name = ''; T.ownerEmail = '';
     if (!live()) return Promise.resolve(T);
+    var fallback = function () { recall(T.uid || storedUid()); return T; };
     return window.bpSetUser().then(function (u) {
-      if (!u) return T;
+      if (!u) return fallback();
       T.uid = u.id;
       return BP_SB.rpc('bp_team_claim').then(function (r) {
-        var row = r && r.data && r.data[0];
+        if (!r || r.error) return fallback();
+        var row = r.data && r.data[0];
         T.email = u.email || '';
         if (row) { T.owner = row.owner; T.role = row.role === 'office' ? 'office' : row.role === 'sub' ? 'sub' : 'crew'; T.name = row.name || ''; T.ownerEmail = row.owner_email || ''; }
+        remember();
         return T;
-      }).catch(function () { return T; });
-    }).catch(function () { return T; });
+      }).catch(fallback);
+    }).catch(fallback);
   };
 
   /* the sidebar footer says who you are working as */

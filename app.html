@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261115-lag">
-<link rel="stylesheet" href="site/present.css?v=20261115-lag">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261115-lag"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261115-offline">
+<link rel="stylesheet" href="site/present.css?v=20261115-offline">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261115-offline"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,6 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
+<script src="portal/offline.js?v=20261115b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -2480,7 +2481,13 @@ function bpFriendly(m){if(!m)return 'Something went wrong. Please try again.';if
 function bpOpenPortal(){
   document.getElementById('bpx').classList.add('open');bpSyncLock();
   if(window.bpShell)bpShell.appUrl(true);
-  if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){ if(window._bpNeedPw) bpShowSetPw(r.data.session.user.email); else bpEnterPortal(r.data.session.user.email); }}).catch(function(){});}
+  if(BP_LIVE){BP_SB.auth.getSession().then(function(r){if(r&&r.data&&r.data.session){ if(window._bpNeedPw) bpShowSetPw(r.data.session.user.email); else bpEnterPortal(r.data.session.user.email); }
+    /* offline mode: no signal to renew an expired sign-in, but the person is still signed in on
+       this device. Open the app with what's saved; the sign-in renews when the signal returns. */
+    else if(navigator.onLine===false||(r&&r.error&&/fetch|network|retry/i.test((r.error.name||'')+' '+(r.error.message||'')))){
+      var su=null; try{ var st=JSON.parse(localStorage.getItem('sb-ttzwzouhiwdwamuimhpo-auth-token')||'null'); su=st&&st.user; }catch(e){}
+      if(su&&su.email) bpEnterPortal(su.email);
+    }}).catch(function(){});}
 }
 /* ---- password reset and invitations ----
    The email link signs the person in with a one-time token and lands here.
@@ -6410,9 +6417,9 @@ function bpStamp(kind,list){
   bpSnapTake(kind,list);
 }
 function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} bpSnapTake('jobs',_bpJobs); return _bpJobs; }
-function bpJobsSet(a){ if(!_bpJobs) bpJobsGet(); bpStamp('jobs',a); _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpJobsSet(a){ if(!_bpJobs) bpJobsGet(); bpStamp('jobs',a); bpUnsentMark(); _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} bpSnapTake('fin',_bpFin); return _bpFin; }
-function bpFinSet(a){ if(!_bpFin) bpFinGet(); bpStamp('fin',a); _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpFinSet(a){ if(!_bpFin) bpFinGet(); bpStamp('fin',a); bpUnsentMark(); _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 /* BuilderPro open in two tabs: when the other tab saves, take its copy, so this tab's
    next save can't put back an older list over it (that lost payment plans and edits) */
 window.addEventListener('storage',function(e){
@@ -6440,13 +6447,20 @@ function bpAdopt(kind,mine,srv,gone){
   return changed?out:null;
 }
 var _bpPushT=0,_bpPushing=null,_bpPushAgain=false;
+/* Offline mode (2026-11-15): a change made here that hasn't reached the server yet is
+   marked on the device, so the next load sends it before taking the server's copy
+   (which used to overwrite it), and it goes up by itself when the signal returns. */
+function bpUnsentMark(){ try{localStorage.setItem('bpUnsent',String(Date.now()));}catch(e){} }
+function bpUnsent(){ try{return localStorage.getItem('bpUnsent')||'';}catch(e){return '';} }
+window.addEventListener('online',function(){ if(bpUnsent()) setTimeout(bpFinCloudPush,1200); });
+document.addEventListener('visibilitychange',function(){ if(!document.hidden&&navigator.onLine!==false&&bpUnsent()) bpFinCloudPush(); });
 function bpFinCloudPush(){
   if(!BP_LIVE||(window.bpTeamIsCrew&&bpTeamIsCrew())) return;
   clearTimeout(_bpPushT); _bpPushT=setTimeout(bpFinCloudPushNow,350);
 }
 function bpFinCloudPushNow(){
   if(_bpPushing){ _bpPushAgain=true; return; }
-  var gone=bpGoneGet(), owner=window.bpOwnerId&&bpOwnerId();
+  var gone=bpGoneGet(), owner=window.bpOwnerId&&bpOwnerId(), mark=bpUnsent();
   _bpPushing=Promise.resolve(BP_SB.rpc('portal_finance_save',Object.assign({p_jobs:bpJobsGet(),p_fin:bpFinGet(),p_gone:gone},owner?{p_owner:owner}:{}))).then(function(r){
     if(r&&r.error){
       /* the merge isn't on this server yet: save the old way */
@@ -6454,6 +6468,7 @@ function bpFinCloudPushNow(){
       return;
     }
     var d=r&&r.data; if(!d) return;
+    try{ if(mark&&localStorage.getItem('bpUnsent')===mark) localStorage.removeItem('bpUnsent'); }catch(e){}
     /* tombstones the server now has can go */
     var g=bpGoneGet(); Object.keys(gone).forEach(function(k){ if(g[k]===gone[k]) delete g[k]; }); bpGoneSave(g);
     var sg=Object.assign({},d.gone||{},g), j=bpAdopt('jobs',bpJobsGet(),d.jobs,sg), f=bpAdopt('fin',bpFinGet(),d.fin,sg);
@@ -6466,7 +6481,7 @@ function bpFinCloudPushNow(){
    on the same browser, drop the last account's cached jobs, money, notes,
    receipts and templates before anything is drawn or synced, so one
    account's data can never show in (or be saved into) another. */
-var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
+var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpUnsent','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
 var _bpCacheMine=false;
 function bpDeviceCacheFor(oid){
   if(!oid) return;
@@ -6482,6 +6497,7 @@ function bpDeviceCacheFor(oid){
 }
 function bpFinCloudLoad(){
   if(!BP_LIVE||_bpFinLoaded||(window.bpTeamIsCrew&&bpTeamIsCrew())) return Promise.resolve();
+  if(_bpCacheMine&&bpUnsent()){ _bpFinLoaded=true; bpFinCloudPushNow(); return Promise.resolve(_bpPushing); }
   return BP_SB.from('portal_finance').select('jobs,fin').maybeSingle().then(function(r){
     _bpFinLoaded=true;
     if(r&&r.data){
@@ -14579,7 +14595,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/dash.css?v=20261114e">
 <link rel="stylesheet" href="portal/team.css?v=20261114a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261108a">
-<script src="portal/team.js?v=20261103a"></script>
+<script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
 <script src="portal/crew.js?v=20261114a"></script>
 <script src="portal/charts.js?v=20261106a"></script>
@@ -14609,7 +14625,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261114a">
 <script src="portal/bpedit.js?v=20261114a"></script>
-<script src="portal/crewapp.js?v=20261114a"></script>
+<script src="portal/crewapp.js?v=20261115a"></script>
 <script src="portal/teamchat.js?v=20261114a"></script>
 <script src="portal/subapp.js?v=20261031b"></script>
 <script src="portal/subs.js?v=20261025c1"></script>
@@ -14631,11 +14647,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261115-lag"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261115-lag"></script>
-<script src="site/vendor/SplitText.min.js?v=20261115-lag"></script>
-<script src="site/site.js?v=20261115-lag"></script>
-<script src="site/present.js?v=20261115-lag"></script>
+<script src="site/vendor/gsap.min.js?v=20261115-offline"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261115-offline"></script>
+<script src="site/vendor/SplitText.min.js?v=20261115-offline"></script>
+<script src="site/site.js?v=20261115-offline"></script>
+<script src="site/present.js?v=20261115-offline"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">
@@ -14658,7 +14674,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/motion.js?v=20261114a"></script>
 <script src="portal/shell.js?v=20261109a"></script>
 <script src="portal/mobile.js?v=20261108a"></script>
-<script src="portal/appfeel.js?v=20261031c"></script>
+<script src="portal/appfeel.js?v=20261115a"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261101a"></script>
 <script src="portal/contacts-import.js?v=20261029a"></script>
