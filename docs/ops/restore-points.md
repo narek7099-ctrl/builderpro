@@ -245,3 +245,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before moving the line graph to Projects won (2026-11-14)
 - Live site (main): `f164fb4`
 - Changes: Projects won draws a line graph (was lollipops); Active projects is back to its icon card (portal/dash.js).
+
+## Before the silk background lag fix (2026-11-15)
+- Live site (main): `5b1d982`
+- Changes: site/silk.js draws about a tenth of what it did (one frame 110 ms down to 11 ms at 1920x1080 without a graphics card): 80 threads in 3 pieces each with solid colours, a smaller canvas, the blurred haze redrawn every 6th frame and laid in with plain smoothing, 24 frames a second. It measures its own cost and keeps to about 15% of one core (a still picture on a machine too slow for 6 a second), and rests while the person scrolls, clicks or types.

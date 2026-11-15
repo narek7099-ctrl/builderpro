@@ -22,7 +22,7 @@
   /* the drawing, shared by the worker and the fallback: it only needs a 2D context */
   function SILK(ctx, small, wx0) {
     var W = 0, H = 0, D = 1, dark = false, scr = 0, WX = wx0 || 0.36;
-    var N = small ? 70 : 160, S = small ? 50 : 70, CH = small ? 10 : 14;   /* threads, steps along each, depth chunks */
+    var N = small ? 40 : 80, S = small ? 34 : 46, CH = 3;   /* threads, steps along each, depth pieces (2026-11-15: about a tenth of the old drawing, which kept two or three CPU cores busy) */
     var seed = []; for (var i = 0; i < N; i++) seed.push({ a: (i / N) * Math.PI * 2 + Math.sin(i * 12.9898) * 0.35, r: 0.55 + 0.45 * Math.abs(Math.sin(i * 78.233)), w: 0.6 + Math.abs(Math.sin(i * 3.7)) * 0.7 });
     var dust = []; for (var d = 0; d < (small ? 22 : 46); d++) dust.push({ x: Math.abs(Math.sin(d * 91.7)), y: Math.abs(Math.sin(d * 47.3)), r: 0.6 + Math.abs(Math.sin(d * 13.1)) * 1.3, s: 0.3 + Math.abs(Math.sin(d * 5.3)) * 0.7 });
     var P = [0, 0], T = [0, 0];
@@ -31,7 +31,7 @@
       o[0] = b0 * q[0] + b1 * q[2] + b2 * q[4] + b3 * q[6]; o[1] = b0 * q[1] + b1 * q[3] + b2 * q[5] + b3 * q[7];
     }
     function size(w, h, dpr) { W = w; H = h; D = dpr; ctx.canvas.width = Math.round(w * dpr); ctx.canvas.height = Math.round(h * dpr); }
-    var HC = null;
+    var HC = null, HN = 0;
     function mk(w, h) {
       if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
       if (typeof document !== 'undefined') { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
@@ -68,7 +68,8 @@
       /* 1. the haze (the out-of-focus aurora): drawn small, blurred and scaled up, so
          it falls off smoothly with no visible steps or rings, on light or dark */
       var hc = hazeCanvas(), hx = hc && hc.getContext('2d');
-      if (hx) {
+      HN = (HN + 1) % 6;
+      if (hx && (HN === 1 || hc._d !== dark)) { hc._d = dark;
         var f = 1 / 6, hw = hc.width, hh = hc.height;
         hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, hw, hh);
         hx.setTransform(f * D, 0, 0, f * D, 0, 0);
@@ -84,9 +85,11 @@
           hx.stroke();
         }
         if ('filter' in hx) hx.filter = 'none';
+      }
+      if (hc) {   /* the haze picture (redrawn every 6th frame, it drifts slowly) is laid in every frame */
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = true;
-        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(hc, 0, 0, hw, hh, 0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore();
+        if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'low';   /* it is already blurred: plain smoothing looks the same and costs far less */
+        ctx.drawImage(hc, 0, 0, hc.width, hc.height, 0, 0, ctx.canvas.width, ctx.canvas.height); ctx.restore();
         ctx.setTransform(D, 0, 0, D, 0, 0);
         ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
       }
@@ -106,7 +109,7 @@
           var off = w * Math.cos(ang);
           pts[s * 3] = P[0] - dy / L * off; pts[s * 3 + 1] = P[1] + dx / L * off; pts[s * 3 + 2] = Math.sin(ang);
         }
-        ctx.lineWidth = (small ? 0.75 : 0.85) * sd.w;
+        ctx.lineWidth = (small ? 1 : 1.15) * sd.w;
         var per = S / CH;
         var o = (n * 0.618 % 1) * per;   /* each thread changes shade at its own points, so no seam lines up across the ribbon */
         for (var c = -1; c < CH; c++) {
@@ -117,6 +120,11 @@
           var kk = (s1 + s2) / 2 / S, fade = Math.min(1, Math.min(kk, 1 - kk) * 7);   /* threads thin out off the ends */
           var lit = (dep + 1) / 2; lit = lit * lit;
           ctx.globalAlpha = (dark ? 0.07 + 0.5 * lit : 0.05 + 0.42 * lit) * fade;
+          /* a solid colour per piece, mint near the waist to blue out at the fans
+             (a gradient stroke had to be worked out pixel by pixel: most of the cost) */
+          var mix = Math.min(1, Math.abs(kk - 0.5) * 2.4);
+          ctx.strokeStyle = dark ? 'rgb(' + Math.round(63 + (77 - 63) * mix) + ',' + Math.round(224 + (163 - 224) * mix) + ',' + Math.round(182 + (255 - 182) * mix) + ')'
+                                 : 'rgb(' + Math.round(22 + (0 - 22) * mix) + ',' + Math.round(199 + (111 - 199) * mix) + ',' + Math.round(154 + (255 - 154) * mix) + ')';
           ctx.beginPath(); ctx.moveTo(pts[s1 * 3], pts[s1 * 3 + 1]);   /* chunks overlap by one step, so there is no seam */
           for (var j2 = s1 + 1; j2 <= s2; j2++) ctx.lineTo(pts[j2 * 3], pts[j2 * 3 + 1]);
           ctx.stroke();
@@ -143,19 +151,33 @@
 
   /* the worker: owns the canvas, runs its own clock */
   var WORKER = 'var SILK=' + SILK.toString() + ';\n' + '(' + function () {
-    var s = null, on = true, still = false, last = 0, fps = 30, need = true;
+    /* It watches what a frame costs on this machine and keeps itself to about
+       15% of one core: slower machines get fewer frames, and a machine too slow
+       for even 6 a second gets a still picture. It also rests while the person
+       is scrolling, clicking or typing, so the app has the machine then. */
+    var s = null, on = true, still = false, last = 0, fps = 24, need = true, busy = false, cost = 0, slow = false, clock = 0;
     var tick = function () {
       var now = performance.now();
-      if (s && on && (need || (!still && now - last >= 1000 / fps - 2))) { last = now; need = false; s.frame(still ? 0 : now); }
+      var rate = Math.min(fps, 150 / Math.max(cost, 1));
+      if (cost && rate < 6) slow = true;
+      var moving = !still && !slow && !busy;
+      if (s && on && (need || (moving && now - last >= 1000 / rate - 2))) {
+        last = now; need = false;
+        if (moving) clock += Math.min(80, now - (tick.prev || now));   /* time only runs while it moves, so it never jumps */
+        var a = performance.now(); s.frame(still ? 0 : clock + 1000); var d = performance.now() - a;
+        cost = cost ? cost * 0.85 + d * 0.15 : d;
+      }
+      tick.prev = now;
       (self.requestAnimationFrame || function (f) { return setTimeout(function () { f(performance.now()); }, 16); })(tick);
     };
     self.onmessage = function (e) {
       var m = e.data;
-      if (m.canvas) { s = SILK(m.canvas.getContext('2d'), m.small, m.waist); still = !!m.still; fps = m.small ? 24 : 30; tick(); }
+      if (m.canvas) { s = SILK(m.canvas.getContext('2d'), m.small, m.waist); still = !!m.still; fps = m.small ? 20 : 24; tick(); }
       if (!s) return;
       if (m.w) s.size(m.w, m.h, m.dpr);
       if ('dark' in m || 'scroll' in m) s.set(m);
       if ('on' in m) on = !!m.on;
+      if ('busy' in m) { busy = !!m.busy; if (busy) return; }
       need = true;
     };
   }.toString() + ')();';
@@ -166,7 +188,7 @@
     var small = mm('(max-width: 767px)'), still = mm('(prefers-reduced-motion: reduce)');
     var cv = document.createElement('canvas'); cv.className = 'bp-silk'; cv.setAttribute('aria-hidden', 'true');
     host.insertBefore(cv, host.firstChild);
-    var dpr = function () { return Math.min(window.devicePixelRatio || 1, small ? 1.5 : 1.25); };
+    var dpr = function () { return small ? Math.min(window.devicePixelRatio || 1, 1) : 0.8; };   /* soft light: a smaller canvas looks the same and costs far less */
     var state = { dark: !!opt.dark, scroll: 0, on: true }, worker = null, local = null, raf = 0;
     try {
       if (cv.transferControlToOffscreen && window.Worker && window.Blob && window.URL) {
@@ -190,6 +212,14 @@
     sz(); send({ dark: state.dark, scroll: 0 });
     var rt = 0; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(sz, 120); }, { passive: true });
     document.addEventListener('visibilitychange', function () { send({ on: state.on && !document.hidden }); });
+    /* scrolling, clicking or typing: the ribbon rests until 0.7 s after the last one */
+    var bz = false, bt = 0;
+    var poke = function () {
+      if (!bz) { bz = true; if (worker) worker.postMessage({ busy: true }); }
+      clearTimeout(bt); bt = setTimeout(function () { bz = false; if (worker) worker.postMessage({ busy: false }); }, 700);
+    };
+    ['wheel', 'pointerdown', 'keydown', 'touchstart'].forEach(function (ev) { window.addEventListener(ev, poke, { passive: true, capture: true }); });
+    document.addEventListener('scroll', poke, { passive: true, capture: true });
     var sp = 0, sv = 0;
     return {
       canvas: cv,
