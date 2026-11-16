@@ -58,7 +58,9 @@ self.addEventListener('fetch', (e) => {
   if (req.mode === 'navigate') {
     if (isApp(u)) {
       /* the app: fresh when online (and kept), the kept copy when not */
-      e.respondWith(fetch(new Request(self.location.origin + PAGE + u.search, { cache: 'no-cache', credentials: 'same-origin' }))
+      /* asked for as a web page (Accept: text/html): inside the Android app, Capacitor only adds
+         its native bridge (camera, push, Face ID) to pages fetched that way */
+      e.respondWith(fetch(new Request(self.location.origin + PAGE + u.search, { cache: 'no-cache', credentials: 'same-origin', headers: { Accept: req.headers.get('accept') || 'text/html,application/xhtml+xml,*/*;q=0.8' } }))
         .then((res) => {
           if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(PAGE, copy)); }
           return res;

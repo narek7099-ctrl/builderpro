@@ -16,7 +16,7 @@
   "ios": {
     "contentInset": "automatic",
     "scheme": "BuilderPro",
-    "limitsNavigationsToAppBoundDomains": false
+    "limitsNavigationsToAppBoundDomains": true
   },
   "android": {
     "allowMixedContent": false,

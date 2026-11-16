@@ -11,6 +11,19 @@ the native part changes (new permissions, plugins, icons).
 | Google Play (Android phones, tablets, Chromebooks) | `mobile/android` | GitHub Actions, or Android Studio |
 | Microsoft Store (Windows) | the installable website (PWA) | PWABuilder, no code |
 
+**Working with no signal (2026-11-16).** The website's offline mode (sw.js, portal/offline.js)
+also runs inside the apps:
+- iPhone and iPad need the app-bound domains in `ios/App/App/Info.plist` (`WKAppBoundDomains`:
+  builderpro-os.com, www.builderpro-os.com, the Supabase project) together with
+  `ios.limitsNavigationsToAppBoundDomains: true` in `capacitor.config.json`. Without both, iOS
+  doesn't run the website's service worker in the app, so the app can't open offline. Apple
+  allows up to 10 such domains. Other sites still open in the in-app browser as before.
+  **This needs a new iOS build.**
+- Android needs nothing native: the service worker asks for the app page as a web page, so
+  Capacitor still adds its bridge (push, camera, Face ID) and the copy kept for offline has it too.
+- `www/offline.html` is what either app shows when it can't load the site at all; its button
+  opens the copy kept on the phone.
+
 What the apps add on top of the website: push notifications for the bell,
 Face ID / fingerprint lock, camera and photo access for job photos, location
 for crew clock-in, in-app browser for outside links, and in-app account

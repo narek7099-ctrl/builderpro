@@ -84,5 +84,11 @@
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>builderpro-os.com</string>
+		<string>www.builderpro-os.com</string>
+		<string>ttzwzouhiwdwamuimhpo.supabase.co</string>
+	</array>
 </dict>
 </plist>
