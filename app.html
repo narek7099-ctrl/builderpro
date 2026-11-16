@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261116-offline4">
-<link rel="stylesheet" href="site/present.css?v=20261116-offline4">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline4"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261116-offline6">
+<link rel="stylesheet" href="site/present.css?v=20261116-offline6">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline6"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,7 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261116b"></script>
+<script src="portal/offline.js?v=20261116c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -2764,7 +2764,14 @@ function bpForgot(){
     say('Reset link sent to '+email+'. Open the email and tap the link to set a new password. Not there in a minute? Check spam.');
   }).catch(function(e){done();var m=String((e&&e.message)||'');say(/after \d+ seconds|security purposes/i.test(m)?'A link was just sent. Wait a minute before asking for another one.':bpFriendly(m),true);});
 }
-function bpLogout(){
+function bpLogout(force){
+  /* offline: signing out can't be undone until there's a signal, and unsent changes wait for this person */
+  if(force!==true&&BP_LIVE){
+    var n=window.bpOffline&&bpOffline.count?bpOffline.count():0, off=navigator.onLine===false, why=[];
+    if(off) why.push('You’re offline. After signing out you can’t sign back in until you have a signal.');
+    if(n) why.push(n+(n===1?' change hasn’t':' changes haven’t')+' synced yet. '+(n===1?'It stays':'They stay')+' on this phone and '+(n===1?'sends':'send')+' the next time you sign in here.');
+    if(why.length&&!confirm(why.join('\n\n')+'\n\nSign out anyway?')) return;
+  }
   if(BP_LIVE){BP_SB.auth.signOut().catch(function(){});}
   if(window.bpShell)bpShell.closeAll();
   document.getElementById('bpxApp').classList.remove('on');
@@ -8145,7 +8152,7 @@ window.bpSecPw=function(){
 };
 window.bpSecOut=function(){
   if(!confirm('Sign out of every device, including this one?'))return;
-  var done=function(){ bpLogout(); if(window.bpToast)bpToast('Signed out everywhere.','success'); };
+  var done=function(){ bpLogout(true); if(window.bpToast)bpToast('Signed out everywhere.','success'); };
   if(!BP_LIVE)return done();
   BP_SB.auth.signOut({scope:'global'}).then(done,done);
 };
@@ -14651,11 +14658,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261116-offline4"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline4"></script>
-<script src="site/vendor/SplitText.min.js?v=20261116-offline4"></script>
-<script src="site/site.js?v=20261116-offline4"></script>
-<script src="site/present.js?v=20261116-offline4"></script>
+<script src="site/vendor/gsap.min.js?v=20261116-offline6"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline6"></script>
+<script src="site/vendor/SplitText.min.js?v=20261116-offline6"></script>
+<script src="site/site.js?v=20261116-offline6"></script>
+<script src="site/present.js?v=20261116-offline6"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">
@@ -14671,14 +14678,14 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261114a">
 <link rel="stylesheet" href="portal/shell.css?v=20261114a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261114a">
+<link rel="stylesheet" href="portal/mobile.css?v=20261116a">
 <link rel="stylesheet" href="portal/notify.css?v=20261114a">
 <script src="portal/ui-kit.js?v=20261024q36"></script>
 <script src="portal/slidetabs.js?v=20261108c"></script>
 <script src="portal/motion.js?v=20261114a"></script>
 <script src="portal/shell.js?v=20261109a"></script>
 <script src="portal/mobile.js?v=20261108a"></script>
-<script src="portal/appfeel.js?v=20261115a"></script>
+<script src="portal/appfeel.js?v=20261116a"></script>
 <script src="portal/filming.js?v=20261101a"></script>
 <script src="portal/notify.js?v=20261101a"></script>
 <script src="portal/contacts-import.js?v=20261029a"></script>
