@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261116-offline3">
-<link rel="stylesheet" href="site/present.css?v=20261116-offline3">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline3"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261116-offline4">
+<link rel="stylesheet" href="site/present.css?v=20261116-offline4">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline4"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,7 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261116a"></script>
+<script src="portal/offline.js?v=20261116b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -3023,7 +3023,7 @@ function bpSendLive(){
   var inp=document.getElementById('bpxReplyIn');if(!inp||!_bpCurConv)return;
   var text=inp.value.trim();if(!text)return;inp.disabled=true;
   bpApi(GHL_MSG_URL,{action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your BuilderPro team'}).then(function(res){
-    if(res&&res.ok){inp.value='';setTimeout(function(){bpLoadThread(_bpCurConv.id);},800);}
+    if(res&&res.ok){inp.value='';if(res.queued)bpToast('Saved on this phone. It sends when you’re back online.');setTimeout(function(){bpLoadThread(_bpCurConv.id);},res.queued?300:800);}
     else{alert('Could not send'+(res&&res.status?(' ('+res.status+')'):'')+'. Please try again.');}
   }).catch(function(){bpToast('Could not send. Please try again.','error');}).then(function(){inp.disabled=false;inp.focus();});
 }
@@ -5307,7 +5307,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
         if(!m.body) continue;
         var cls='bpx-bub '+(m.dir==='outbound'?'out':'in')+(m.status==='failed'?' fail':'');
         var t=m.date?new Date(m.date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
-        html+='<div class="'+cls+'">'+bpEsc(m.body)+'<div class="bt">'+t+(m.status==='failed'?' \u00b7 failed':'')+'</div></div>';
+        html+='<div class="'+cls+'">'+bpEsc(m.body)+'<div class="bt">'+t+(m.status==='failed'?' \u00b7 failed':m.status==='queued'?' \u00b7 sends when you\u2019re back online':'')+'</div></div>';
       }
       b.innerHTML=html; b.scrollTop=b.scrollHeight;
     }catch(e){ var b=q('bpx-tbody'); if(b) b.innerHTML='<div class="bpx-tempty">Could not load messages.</div>'; }
@@ -5323,7 +5323,7 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
     inp.disabled=true;
     try{
       var res=await bpFx(GHL_MSG_URL,{action:'send',msgType:_bpMsgType,contactId:_bpCurConv.contactId,message:text,subject:'Message from your roofer'}).then(function(r){return r.json();});
-      if(res.ok){ inp.value=''; setTimeout(function(){ bpLoadThread(_bpCurConv.id); },800); }
+      if(res.ok){ inp.value=''; if(res.queued) bpToast('Saved on this phone. It sends when you’re back online.'); setTimeout(function(){ bpLoadThread(_bpCurConv.id); },res.queued?300:800); }
       else { alert('Could not send'+(res.status?(' ('+res.status+')'):'')+'. Please try again.'); }
     }catch(e){ bpToast('Could not send. Please try again.','error'); }
     inp.disabled=false; inp.focus();
@@ -5720,6 +5720,7 @@ window.bpBulkSend=async function(){
   if(_bpBulkChan==='Email' && !subject){ msg.style.color='#dc2626'; msg.textContent='Add a subject line for the email.'; return; }
   var recips=bpBulkRecipients();
   if(!recips.length){ msg.style.color='#dc2626'; msg.textContent='No contacts match that audience for this channel.'; return; }
+  if(navigator.onLine===false){ msg.style.color='#dc2626'; msg.textContent='Sending to a group needs a signal. Try again when you’re back online.'; return; }
   btn.disabled=true; var ok=0, fail=0;
   for(var i=0;i<recips.length;i++){
     msg.style.color='var(--grey)'; msg.textContent='Sending '+(i+1)+' of '+recips.length+'…';
@@ -6193,6 +6194,7 @@ window.bpBulkSend=async function(){
     return;
   }
   // send now
+  if(navigator.onLine===false){ msg.style.color='#dc2626'; msg.textContent='Sending to a group needs a signal. Try again when you’re back online.'; return; }
   btn.disabled=true; var ok=0, fail=0;
   for(var i=0;i<recips.length;i++){
     msg.style.color='var(--grey)'; msg.textContent='Sending '+(i+1)+' of '+recips.length+'…';
@@ -14617,7 +14619,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261114g"></script>
 <script src="portal/archive.js?v=20261001b"></script>
-<script src="portal/pfiles.js?v=20261026a"></script>
+<script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
 <script src="portal/projsheet.js?v=20261110e"></script>
 <script src="portal/contact.js?v=20261102c"></script>
@@ -14649,11 +14651,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261116-offline3"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline3"></script>
-<script src="site/vendor/SplitText.min.js?v=20261116-offline3"></script>
-<script src="site/site.js?v=20261116-offline3"></script>
-<script src="site/present.js?v=20261116-offline3"></script>
+<script src="site/vendor/gsap.min.js?v=20261116-offline4"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline4"></script>
+<script src="site/vendor/SplitText.min.js?v=20261116-offline4"></script>
+<script src="site/site.js?v=20261116-offline4"></script>
+<script src="site/present.js?v=20261116-offline4"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">

@@ -71,14 +71,18 @@
   var WRITE_RPC = { crew_clock: 1, crew_clock_at: 1, crew_break: 1, crew_break_at: 1, crew_clock_for: 1, crew_clock_dispute: 1, crew_check: 1, crew_finish: 1,
     crew_add_file: 1, crew_material_add: 1, crew_material_remove: 1, crew_receipt_add: 1, crew_set_photo: 1, team_chat_mark_read: 1 };
   /* tables whose new rows may wait for a signal */
-  var WRITE_TABLE = { team_messages: 1, calendar_notes: 1, contacts: 1 };
+  var WRITE_TABLE = { team_messages: 1, calendar_notes: 1, contacts: 1, inspection_reports: 1, time_entries: 1, assets: 1 };
   /* rows that may be edited offline (round three) */
-  var PATCH_TABLE = { contacts: 1 };
+  var PATCH_TABLE = { contacts: 1, inspection_reports: 1, calendar_notes: 1, roof_checks: 1, notifications: 1, assets: 1 };
+  /* rows that may be removed offline (round four) */
+  var DELETE_TABLE = { calendar_notes: 1, inspection_reports: 1, time_entries: 1 };
   /* server functions whose changes may wait (round three): calendar bookings, and starting
      the AI's first text to a new lead (it sends when the signal returns, as if tapped then) */
   function fnWrite(name, b) {
     if (name === 'ghl-calendar') return /^(create|update|delete|cancel)$/.test(String(b.action || ''));
     if (name === 'lead-in') return b.op === 'push';
+    /* round four: a reply to a customer waits in the outbox (bulk sends stay online-only, see app.html) */
+    if (name === 'ghl-messaging') return b.action === 'send';
     return false;
   }
   /* functions that must never be answered from the device (sign-ins, money, live checks) */
@@ -110,9 +114,11 @@
          server copy handed back offline would overwrite newer edits made here */
       if (m[1] === 'portal_finance') return 'pass';
       if (method === 'GET' || method === 'HEAD') return 'read';
-      return (WRITE_TABLE[m[1]] && method === 'POST') || (PATCH_TABLE[m[1]] && method === 'PATCH') ? 'write' : 'pass';
+      return (WRITE_TABLE[m[1]] && method === 'POST') || (PATCH_TABLE[m[1]] && method === 'PATCH') || (DELETE_TABLE[m[1]] && method === 'DELETE') ? 'write' : 'pass';
     }
     if (/^\/storage\/v1\/object\/project-files\//.test(p) && (method === 'POST' || method === 'PUT')) return 'write';
+    /* a photo's viewing link: the kept one still works offline, because sw.js keeps the photo itself */
+    if (/^\/storage\/v1\/object\/sign\/project-files\//.test(p) && method === 'POST') return 'read';
     return 'pass';
   }
   function rpcName(url) { var m = /\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url); return m ? m[1] : ''; }
@@ -219,6 +225,16 @@
       var cb = {}; try { cb = JSON.parse(txt || '{}') || {}; } catch (e) {}
       if (cb.action !== 'create' && /^q-/.test(String(cb.id || ''))) return editQueued(cb, u, method, txt, user, at);
     }
+    var tm = /^\/rest\/v1\/([a-z0-9_]+)/.exec(u.pathname), table = tm && !fn ? tm[1] : '';
+    if (table && method === 'POST') {
+      /* a new row gets its permanent id here, so later edits and links to it work before it is sent */
+      try { var rows = JSON.parse(txt || 'null'), one = !Array.isArray(rows); if (rows) { (one ? [rows] : rows).forEach(function (r) { if (r && !r.id) r.id = uuid(); }); txt = JSON.stringify(rows); body = txt; } } catch (e) {}
+    }
+    if (table && (method === 'PATCH' || method === 'DELETE')) {
+      return foldInto(table, u, method, txt, user, at, headers).then(function (r) { return r || addToQueue(); });
+    }
+    return addToQueue();
+    function addToQueue() {
     var h = Object.assign({}, headers); delete h['content-length'];
     if (typeof FormData !== 'undefined' && body instanceof FormData) delete h['content-type'];
     return keepBody(body).then(function (kb) {
@@ -229,6 +245,37 @@
       refresh(); kick(4000);
       return answerFor(fn, u, method, txt, args, at, h);
     });
+    }
+  }
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+  }
+  function idOf(u) { var m = /[?&]id=eq\.([^&]+)/.exec(u.search); return m ? decodeURIComponent(m[1]) : ''; }
+  /* an edit or removal of a row that is still waiting to be sent changes the waiting item instead
+     (an inspection report typed with no signal autosaves often: one item, not hundreds) */
+  function foldInto(table, u, method, txt, user, at, headers) {
+    var id = idOf(u), patch = {}; try { patch = JSON.parse(txt || '{}') || {}; } catch (e) { return null; }
+    var path = SB + '/rest/v1/' + table;
+    return all('queue').then(function (items) {
+      items = items.filter(function (x) { return x.user === user && x.url.indexOf(path) === 0 && /^\/rest\/v1\/[a-z0-9_]+$/.test(new URL(x.url).pathname) && new URL(x.url).pathname === '/rest/v1/' + table; });
+      var ins = id && items.filter(function (x) { if (x.method !== 'POST') return false; try { var b = JSON.parse(x.body.v); return (Array.isArray(b) ? b[0] : b).id === id; } catch (e) { return false; } })[0];
+      var same = items.filter(function (x) { return x.method === 'PATCH' && x.url === u.href; })[0];
+      var step;
+      if (method === 'DELETE') {
+        if (!ins) return null;
+        /* never sent: drop it and any edits to it */
+        step = Promise.all(items.filter(function (x) { return x === ins || (x.method === 'PATCH' && idOf(new URL(x.url)) === id); }).map(function (x) { return del('queue', x.id); }));
+      } else if (ins) {
+        var b = JSON.parse(ins.body.v), row = Array.isArray(b) ? b[0] : b; Object.assign(row, patch);
+        ins.body = { t: 'text', v: JSON.stringify(b) }; step = put('queue', ins);
+      } else if (same) {
+        var ob = {}; try { ob = JSON.parse(same.body.v) || {}; } catch (e) {}
+        same.body = { t: 'text', v: JSON.stringify(Object.assign(ob, patch)) }; step = put('queue', same);
+      } else return null;
+      return step.then(function () { return Promise.resolve(patchWrite(u, method, txt, user, at)).catch(function () {}); })
+        .then(function () { refresh(); return answerFor('', u, method, txt, null, at, hdrs(headers)); });
+    }).then(function (r) { return r || null; });
   }
   function editQueued(cb, u, method, txt, user, at) {
     return all('queue').then(function (items) {
@@ -260,6 +307,12 @@
     if (/team_messages/.test(u.pathname)) return 'Chat message';
     if (/calendar_notes/.test(u.pathname)) return 'Calendar note';
     if (/\/rest\/v1\/contacts/.test(u.pathname)) return 'Contact';
+    if (/inspection_reports/.test(u.pathname)) return 'Inspection report';
+    if (/time_entries/.test(u.pathname)) return 'Hours';
+    if (/roof_checks/.test(u.pathname)) return 'Roof check';
+    if (/notifications/.test(u.pathname)) return 'Notification read';
+    if (/\/rest\/v1\/assets/.test(u.pathname)) return 'Equipment';
+    if (/ghl-messaging/.test(u.pathname)) return 'Message to a customer';
     if (/ghl-calendar/.test(u.pathname)) return 'Calendar booking';
     if (/lead-in/.test(u.pathname)) return 'First text to a new lead';
     return 'Change';
@@ -276,7 +329,15 @@
     }
     if (fn) return reply(200, { ok: true, queued: true });
     if (/\/functions\/v1\//.test(u.pathname)) return reply(200, { ok: true, queued: true, sent: false, id: lastQ });
-    if (method === 'PATCH') return new Response(null, { status: 204, headers: { 'x-bp-offline': 'queued' } });
+    if (method === 'PATCH' || method === 'DELETE') {
+      /* an edit asked to hand back the row (.select()): the row as it is now on this phone */
+      if (method === 'PATCH' && /return=representation/.test((h && h.prefer) || '')) {
+        var ch = {}; try { ch = JSON.parse(txt || '{}') || {}; } catch (e) {}
+        var r1 = Object.assign({}, ch, { updated_at: ch.updated_at || at }); var id1 = idOf(u); if (id1) r1.id = id1;
+        return reply(200, /vnd\.pgrst\.object/.test((h && h.accept) || '') ? r1 : [r1]);
+      }
+      return new Response(null, { status: 204, headers: { 'x-bp-offline': 'queued' } });
+    }
     if (/\/storage\/v1\/object\//.test(u.href)) {
       var path = u.pathname.replace(/^\/storage\/v1\/object\//, '');
       return reply(200, { Key: path, Id: 'queued', path: path.replace(/^project-files\//, '') });
@@ -284,7 +345,7 @@
     /* a new row: hand back what was sent, as a row */
     var row; try { row = JSON.parse(txt || '{}'); } catch (e) { row = {}; }
     if (!Array.isArray(row)) row = [row];
-    row.forEach(function (r) { if (!r.id) r.id = 'q-' + Date.now(); if (!r.created_at) r.created_at = at; });
+    row.forEach(function (r) { if (!r.id) r.id = 'q-' + Date.now(); if (!r.created_at) r.created_at = at; if (!r.updated_at) r.updated_at = at; });
     /* .single() asks for one object back, not a list */
     return reply(201, /vnd\.pgrst\.object/.test((h && h.accept) || '') ? row[0] : row);
   }
@@ -337,6 +398,28 @@
       return patchRpc('crew_checklist', user, function (d, args) { if (!d || args.p_job !== a.p_job) return; d.doneAt = at; return d; });
     }
   }
+  /* does a row match the filters in an address (id=eq.x, status=is.null, or=(a.eq.1,b.eq.2), ...)?
+     Filters it can't read count as a match. */
+  function fits(row, url) {
+    var q; try { q = new URL(url).searchParams; } catch (e) { return true; }
+    var ok = true;
+    q.forEach(function (v, k) {
+      if (!ok || /^(select|order|limit|offset|on_conflict|columns)$/.test(k)) return;
+      if (k === 'or') {
+        var parts = v.replace(/^\(|\)$/g, '').split(','), any = false, known = false;
+        parts.forEach(function (pt) { var m = /^([a-z0-9_]+)\.eq\.(.*)$/.exec(pt); if (m) { known = true; if (String(row[m[1]]) === m[2]) any = true; } });
+        if (known && !any) ok = false; return;
+      }
+      if (!(k in row)) return;
+      var m = /^(eq|neq|is|in)\.(.*)$/.exec(v); if (!m) return;
+      var val = row[k];
+      if (m[1] === 'eq') ok = String(val) === m[2];
+      else if (m[1] === 'neq') ok = String(val) !== m[2];
+      else if (m[1] === 'is') ok = m[2] === 'null' ? val == null : String(val) === m[2];
+      else if (m[1] === 'in') ok = m[2].replace(/^\(|\)$/g, '').split(',').map(function (x) { return x.replace(/^"|"$/g, ''); }).indexOf(String(val)) >= 0;
+    });
+    return ok;
+  }
   /* change every kept answer for one address (for this person): fn(data, sentBody) */
   function patchKept(method, urlStart, user, fn) {
     var pre = user + '|' + method + '|' + urlStart;
@@ -354,17 +437,36 @@
   /* round three: new and edited contacts, and calendar bookings, show at once */
   function patchWrite(u, method, txt, user, at) {
     var b = {}; try { b = JSON.parse(txt || '{}') || {}; } catch (e) {}
-    if (/^\/rest\/v1\/contacts/.test(u.pathname)) {
+    var tm = /^\/rest\/v1\/([a-z0-9_]+)$/.exec(u.pathname);
+    if (tm) {
+      var t = tm[1], base = SB + '/rest/v1/' + t + '?';
       if (method === 'POST') {
-        var row = Array.isArray(b) ? b[0] : b; if (!row) return;
-        row = Object.assign({ date_added: at, tags: [], ghl_id: '' }, row);
-        return patchKept('GET', SB + '/rest/v1/contacts?', user, function (d) { if (!Array.isArray(d)) return; if (d.some(function (x) { return x.id === row.id; })) return; d.unshift(row); return d; });
+        var rows = (Array.isArray(b) ? b : [b]).map(function (r) { return Object.assign({ created_at: at, updated_at: at }, t === 'contacts' ? { date_added: at, tags: [], ghl_id: '' } : {}, r); });
+        return patchKept('GET', base, user, function (d, sent, url) {
+          if (!Array.isArray(d)) return;
+          var add = rows.filter(function (r) { return fits(r, url) && !d.some(function (x) { return x.id === r.id; }); });
+          if (!add.length) return; return add.concat(d);
+        });
       }
-      if (method === 'PATCH') {
-        var idm = /[?&]id=eq\.([^&]+)/.exec(u.search); if (!idm) return;
-        var id = decodeURIComponent(idm[1]);
-        return patchKept('GET', SB + '/rest/v1/contacts?', user, function (d) { if (!Array.isArray(d)) return; d.forEach(function (x) { if (x.id === id) Object.assign(x, b); }); return d; });
-      }
+      return patchKept('GET', base, user, function (d) {
+        if (!Array.isArray(d)) return;
+        if (method === 'DELETE') return d.filter(function (x) { return !fits(x, u.href); });
+        d.forEach(function (x) { if (fits(x, u.href)) Object.assign(x, b); }); return d;
+      });
+    }
+    if (/\/functions\/v1\/ghl-messaging/.test(u.pathname) && b.action === 'send') {
+      var mid = lastQ, conv = '';
+      return patchKept('POST', SB + '/functions/v1/ghl-messaging', user, function (d, sent) {
+        if (!d || sent.action !== 'list' || !Array.isArray(d.conversations)) return;
+        d.conversations.forEach(function (c) { if (c.contactId === b.contactId) { conv = c.id; c.last = b.message || ''; c.lastDate = at; c.dir = 'outbound'; } });
+        return d;
+      }).then(function () {
+        return patchKept('POST', SB + '/functions/v1/ghl-messaging', user, function (d, sent) {
+          if (!d || sent.action !== 'thread' || !conv || sent.id !== conv || !Array.isArray(d.messages)) return;
+          d.messages.push({ id: mid, dir: 'outbound', body: b.message || '', date: at, type: b.msgType === 'Email' ? 'TYPE_EMAIL' : 'TYPE_SMS', status: 'queued', activity: null });
+          return d;
+        });
+      });
     }
     if (/\/functions\/v1\/ghl-calendar/.test(u.pathname)) {
       var qid = lastQ;
@@ -504,6 +606,15 @@
     patchChecklist: patchChecklist, noteBreak: noteBreak,
     addCounter: function (f) { extra.push(f); refresh(); }, refresh: function () { return refresh(); },
     /* the signed-in person's last confirmed role, for starting up with no signal */
-    who: who, problems: function () { return state.problems.slice(); }
+    who: who, problems: function () { return state.problems.slice(); },
+    /* a link to a file still waiting to upload (path inside project-files), or '' */
+    localFile: function (path) {
+      return all('queue').then(function (items) {
+        var it = items.filter(function (x) { return x.url.indexOf('/storage/v1/object/project-files/' + path) > 0 || decodeURIComponent(x.url).indexOf('/storage/v1/object/project-files/' + path) > 0; })[0];
+        if (!it || !it.body) return '';
+        var f = it.body.t === 'blob' ? it.body.v : it.body.t === 'form' ? (it.body.v.filter(function (p) { return p.f; })[0] || {}).f : null;
+        return f ? URL.createObjectURL(f) : '';
+      }).catch(function () { return ''; });
+    }
   };
 })();

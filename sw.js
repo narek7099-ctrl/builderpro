@@ -12,12 +12,18 @@
      ('warm'), and anything not yet kept is fetched in the background, so the
      offline copy is complete without anyone opening things ahead of time.
    - Other pages: fresh from the network, offline.html when there is none.
-   - Nothing from Supabase, HighLevel, Stripe or any other API is ever kept
-     here: the app keeps its own data and queues its own changes
+   - Job and inspection photos (Supabase storage, project-files) are kept as
+     they are viewed, filed by the photo's path rather than its short-lived
+     link, so a photo seen once still shows with no signal (2026-11-16). The
+     newest 400 are kept.
+   - Nothing else from Supabase, HighLevel, Stripe or any other API is ever
+     kept here: the app keeps its own data and queues its own changes
      (portal/offline.js). */
 const VERSION = 'bp-sw-3';
 const PAGE = '/app.html';
 const SHELL = ['/offline.html', '/assets/app/logo-256.png', '/assets/app/icon-192.png', '/assets/app/icon-512.png'];
+const PHOTOS = 'bp-photos';
+const SB = 'https://ttzwzouhiwdwamuimhpo.supabase.co';
 const CDN = ['https://cdn.jsdelivr.net', 'https://unpkg.com', 'https://cdnjs.cloudflare.com'];
 
 self.addEventListener('install', (e) => {
@@ -25,7 +31,7 @@ self.addEventListener('install', (e) => {
 });
 self.addEventListener('activate', (e) => {
   /* carry the kept app page over from the last version, then drop old caches */
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) =>
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSION && k !== PHOTOS).map((k) =>
     caches.open(k).then((old) => old.match(PAGE)).then((hit) => hit && caches.open(VERSION).then((c) => c.match(PAGE).then((have) => have || c.put(PAGE, hit))))
       .then(() => caches.delete(k))))).then(() => self.clients.claim()));
 });
@@ -66,12 +72,27 @@ self.addEventListener('fetch', (e) => {
   /* videos and audio are fetched in byte ranges, which a cache can't hold, and Safari won't
      play a video handed over by a service worker: leave them to the browser */
   if (req.headers.has('range') || req.destination === 'video' || req.destination === 'audio' || /\.(mp4|webm|mov|m4v|mp3|m4a)$/i.test(u.pathname)) return;
+  if (u.origin === SB && /^\/storage\/v1\/object\/(sign|public)\/project-files\//.test(u.pathname)) {
+    /* fresh when there's a signal (kept by path), the kept copy when there isn't */
+    const key = SB + u.pathname.replace('/object/sign/', '/object/public/');
+    e.respondWith(fetch(u.href, { mode: 'cors', credentials: 'omit' }).then((res) => {
+      if (res.ok) { const copy = res.clone(); caches.open(PHOTOS).then((c) => c.put(key, copy).then(() => trim(c))); }
+      return res;
+    }).catch(() => caches.open(PHOTOS).then((c) => c.match(key)).then((hit) => hit || Response.error())));
+    return;
+  }
   if (!cacheable(u)) return; // the browser handles it as if there were no service worker
   e.respondWith(caches.open(VERSION).then((c) => c.match(req).then((hit) => {
     if (hit) return hit;
     return fetch(req).then((res) => { if (res.ok || res.type === 'opaque') keep(c, req, res.clone()); return res; });
   })));
 });
+
+let trimming = false;
+function trim(c) {
+  if (trimming) return; trimming = true;
+  c.keys().then((ks) => Promise.all(ks.slice(0, Math.max(0, ks.length - 400)).map((k) => c.delete(k)))).then(() => { trimming = false; }, () => { trimming = false; });
+}
 
 /* the app's list of what it loaded: keep anything not kept yet, quietly */
 self.addEventListener('message', (e) => {
