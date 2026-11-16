@@ -161,13 +161,28 @@
 
   /* ---------------------------------------------------- kept answers --- */
   function readKey(user, method, url, body) { return user + '|' + method + '|' + url + '|' + (body || ''); }
-  function keepRead(key, res) {
+  function keepRead(key, res, req) {
     return res.clone().text().then(function (txt) {
       if (txt.length > 1500000) return;   /* a huge answer isn't worth keeping */
       var h = {}; ['content-type', 'content-range'].forEach(function (n) { var v = res.headers.get(n); if (v) h[n] = v; });
-      return put('reads', { at: Date.now(), status: res.status, h: h, body: txt }, key);
+      return get('reads', key).then(function (old) {
+        /* req: how it was asked for (no sign-in token), so it can be refreshed in the background (round nine) */
+        return put('reads', { at: Date.now(), status: res.status, h: h, body: txt, req: req || (old && old.req) || null, n: ((old && old.n) || 0) + (req ? 1 : 0) }, key);
+      });
     }).catch(function () {});
   }
+  function reqOf(u, method, headers, body) {
+    var h = Object.assign({}, headers); delete h.authorization; delete h['content-length'];
+    return { url: u.href, method: method, h: h, body: textOf(body) };
+  }
+  /* ------------------------------------------------------- weak signal --- */
+  /* The phone says it's online but answers are slow or don't come (round nine). After one slow or
+     failed answer, for a minute: screens get the kept answer at once and it's refreshed quietly
+     behind them, and changes go straight to the queue. The first quick answer ends it. */
+  function weak() { return !!state.weak && Date.now() - state.weak < 60000 && online(); }
+  /* t0: when the slow request started; one that began before the last quick answer says nothing new */
+  function markWeak(t0) { if (!online() || (t0 && t0 < state.goodAt)) return; var was = weak(); state.weak = Date.now(); if (!was) paint(); }
+  function markGood(ms) { if (ms >= 2500) return; state.goodAt = Date.now(); if (state.weak) { state.weak = 0; paint(); kick(500); } }
   function fromKept(key) {
     return get('reads', key).then(function (r) {
       if (!r) return null;
@@ -202,21 +217,36 @@
     var user = who();
     if (k === 'read') {
       var key = readKey(user, method, u.href, textOf(body));
+      var req = reqOf(u, method, headers, body);
       if (!online()) return fromKept(key).then(function (r) { return r || (tableRead ? offAnswer() : raw(input, init)); });
-      return withTimeout(raw(input, init), 9000).then(function (res) {
-        if (res.ok) { keepRead(key, res); state.lastOk = Date.now(); }
-        /* a server function's "not set up / not connected" answer is kept too, so the screen says the same thing offline (round eight) */
-        else if ((res.status === 403 || res.status === 404) && /\/functions\/v1\//.test(u.pathname)) keepRead(key, res);
-        return res;
-      }, function (err) {
-        return fromKept(key).then(function (r) { if (r) return r; throw err; });
+      var live = function () {
+        var t0 = Date.now();
+        return withTimeout(raw(input, init), 9000).then(function (res) {
+          if (res.ok) { keepRead(key, res, req); state.lastOk = Date.now(); markGood(Date.now() - t0); }
+          /* a server function's "not set up / not connected" answer (403, 404, 409) is kept too, so the screen says the same thing offline (round eight) */
+          else if ((res.status === 403 || res.status === 404 || res.status === 409) && /\/functions\/v1\//.test(u.pathname)) keepRead(key, res, req);
+          return res;
+        }, function (err) {
+          if (!(err && err.name === 'AbortError')) markWeak(t0);
+          return fromKept(key).then(function (r) { if (r) return r; throw err; });
+        });
+      };
+      if (weak()) return fromKept(key).then(function (r) {
+        if (!r) return live();
+        /* the kept answer now; a fresh one is fetched behind it for next time */
+        var t0 = Date.now();
+        withTimeout(raw(input, init), 15000).then(function (res) { if (res.ok) { keepRead(key, res, req); markGood(Date.now() - t0); } }, function () { markWeak(t0); });
+        return r;
       });
+      return live();
     }
     /* a change: straight through when the signal is good, queued when it isn't */
     var queueIt = function () { return enqueue(u, method, headers, body, user); };
-    if (!online()) return queueIt();
-    return withTimeout(raw(input, init), 15000).then(function (res) { state.lastOk = Date.now(); return res; }, function (err) {
+    if (!online() || weak()) return queueIt();
+    var t1 = Date.now();
+    return withTimeout(raw(input, init), 15000).then(function (res) { state.lastOk = Date.now(); markGood(Date.now() - t1); return res; }, function (err) {
       if (err && err.name === 'AbortError') throw err;
+      markWeak(t1);
       return queueIt();
     });
   };
@@ -623,7 +653,7 @@
   function noteBreak(d) { if (d && d.on) brk.cur = { open: d.open || null, breaks: d.breaks || [], lunch_sec: d.lunch_sec || 0, break_sec: d.break_sec || 0 }; }
 
   /* ------------------------------------------------------- send it all --- */
-  var state = { count: 0, failed: 0, sending: false, lastOk: 0, needSignIn: false, problems: [], keptUsed: false, keptAt: 0, justSynced: 0 };
+  var state = { count: 0, failed: 0, weak: 0, goodAt: 0, sending: false, lastOk: 0, needSignIn: false, problems: [], keptUsed: false, keptAt: 0, justSynced: 0 };
   var timer = 0;
   function kick(ms) { clearTimeout(timer); timer = setTimeout(flush, ms || 0); }
   function token() {
@@ -651,7 +681,9 @@
             return send();
           });
           function send() {
+          var t2 = Date.now();
           return raw(it.url, { method: it.method, headers: h, body: giveBody(it.body) }).then(function (res) {
+            if (res.status < 500) markGood(Date.now() - t2);
             if (res.status === 401 || res.status === 403 && /jwt/i.test(res.statusText || '')) { state.needSignIn = true; throw 'stop'; }
             if (res.status >= 500 || res.status === 408 || res.status === 429) throw 'stop';
             return res.text().then(function (txt) {
@@ -727,6 +759,7 @@
     var banner = document.getElementById('bpNet');   /* portal/appfeel.js already says "You're offline": no second notice */
     if (!online() && banner && /show/.test(banner.className)) { cls = 'off'; txt = ''; }
     else if (!online()) { cls = 'off'; txt = 'Offline' + (n ? ' <small>&middot; ' + n + (n === 1 ? ' change' : ' changes') + ' saved on this phone</small>' : ' <small>&middot; showing what was saved' + (state.keptAt ? ' ' + ago(state.keptAt) : '') + '</small>'); }
+    else if (weak()) { cls = 'off'; txt = 'Weak signal <small>&middot; ' + (n ? n + (n === 1 ? ' change' : ' changes') + ' waiting to send' : 'showing what was saved') + '</small>'; }
     else if (state.needSignIn && n) { cls = 'bad'; txt = 'Sign in again to send ' + n + (n === 1 ? ' change' : ' changes'); }
     else if (n) { cls = 'wait'; txt = (state.sending ? 'Syncing ' : '') + n + (n === 1 ? ' change' : ' changes') + ' waiting to sync'; }
     else if (state.clash && !state.failed) { cls = 'wait'; txt = state.clash + (state.clash === 1 ? ' change was' : ' changes were') + ' also made elsewhere <small>&middot; review</small>'; }
@@ -735,6 +768,42 @@
     pill.className = cls + (txt && appOpen ? ' show' : '');
     pill.innerHTML = txt ? '<i></i><span>' + txt + '</span>' : '';
   }
+
+  /* ------------------------------------------- keep the kept copies fresh --- */
+  /* While the signal is good (not on data saver or 2G), at most every 30 minutes, the answers this
+     person uses most that are over 20 minutes old are fetched again quietly, one at a time (up to
+     40), so what shows offline on a job site is recent. Table and server-function reads only;
+     never anything that sends, charges or asks the AI (those are never kept in the first place). */
+  var warming = false;
+  function warmKept(force) {
+    if (warming || !online() || weak() || document.hidden) return Promise.resolve(0);
+    var c = navigator.connection; if (c && (c.saveData || /2g/.test(c.effectiveType || ''))) return Promise.resolve(0);
+    var me = who(); if (me === 'anon') return Promise.resolve(0);
+    var lk = 'bpWarmAt:' + me, last = 0; try { last = +(localStorage.getItem(lk) || 0); } catch (e) {}
+    if (!force && Date.now() - last < 30 * 60000) return Promise.resolve(0);
+    try { localStorage.setItem(lk, String(Date.now())); } catch (e) {}
+    warming = true;
+    return keys('reads').then(function (ks) {
+      return Promise.all(ks.filter(function (k) { return String(k).indexOf(me + '|') === 0; }).map(function (k) { return get('reads', k).then(function (r) { return r && r.req ? { k: k, r: r } : null; }); }));
+    }).then(function (list) {
+      list = list.filter(function (x) { return x && x.r.status === 200 && Date.now() - x.r.at > 20 * 60000 && !/\/rest\/v1\/rpc\//.test(x.r.req.url); })
+        .sort(function (a, b) { return (b.r.n || 1) - (a.r.n || 1) || b.r.at - a.r.at; }).slice(0, 40);
+      return token().then(function (tk) {
+        if (!tk || tk.id !== me) return 0;
+        var done = 0, i = 0;
+        var next = function () {
+          var x = list[i++]; if (!x || !online() || weak() || document.hidden) return done;
+          var q = x.r.req, h = Object.assign({}, q.h, { authorization: 'Bearer ' + tk.t }), t0 = Date.now();
+          return withTimeout(raw(q.url, { method: q.method, headers: h, body: q.method === 'GET' || q.method === 'HEAD' ? undefined : (q.body || undefined) }), 15000)
+            .then(function (res) { if (res.ok) { done++; markGood(Date.now() - t0); return keepRead(x.k, res, null); } }, function () { markWeak(t0); })
+            .then(function () { return new Promise(function (r) { setTimeout(r, 250); }); }).then(next);
+        };
+        return next();
+      });
+    }).catch(function () { return 0; }).then(function (n) { warming = false; return n; });
+  }
+  setTimeout(function () { warmKept(); }, 25000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(function () { warmKept(); }, 5000); });
 
   /* ----------------------------------------------------------- the sheet --- */
   /* everything waiting to send, and anything the server refused (with Try again / Dismiss) */
@@ -815,6 +884,7 @@
       var f = all1.filter(function (x) { return !x.kind; }), c = all1.filter(function (x) { return x.kind; });
       var more = extraCount();
       var st = !online() ? 'You’re offline.' + (state.keptAt ? ' Showing what was saved ' + ago(state.keptAt) + '.' : '') + ' Changes are kept on this phone and sent when you’re back.'
+        : weak() ? 'Weak signal. Showing what was saved; changes are kept and sent as soon as the signal is good.'
         : state.needSignIn && q.length ? 'Sign in again to send these.'
         : state.sending ? 'Sending now…'
         : q.length || more ? 'These send by themselves in a moment.' : f.length || c.length ? 'Nothing is waiting to send.' : 'Everything is synced.';
@@ -884,6 +954,7 @@
     /* the signed-in person's last confirmed role, for starting up with no signal */
     who: who, problems: function () { return state.problems.slice(); },
     open: openSheet, failedCount: function () { return state.failed; },
+    weak: weak, warmNow: function () { return warmKept(true); },
     /* app.html: a job or money entry changed here and elsewhere ({ store, itemId, label, fields: [{ path, mine, theirs }] }) */
     clash: function (c) { var r = Object.assign({ kind: 'clash-job', at: Date.now(), user: who() }, c); delete r.id; return put('failed', r).then(refresh).catch(function () {}); },
     onTheirs: function (store, fn) { theirsFns[store] = fn; },
