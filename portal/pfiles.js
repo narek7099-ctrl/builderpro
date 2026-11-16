@@ -64,11 +64,13 @@
     var c = cache[ref];
     if (c && c.until > Date.now()) return Promise.resolve(c.url);
     if (!live()) return Promise.resolve('');
+    /* a photo taken with no signal shows from the copy waiting to upload (portal/offline.js) */
+    var local = function () { return window.bpOffline && bpOffline.localFile ? bpOffline.localFile(ref.slice(3)) : Promise.resolve(''); };
     return BP_SB.storage.from(BUCKET).createSignedUrl(ref.slice(3), 3600).then(function (r) {
       var u = (r && r.data && r.data.signedUrl) || '';
-      if (u) cache[ref] = { url: u, until: Date.now() + 50 * 60 * 1000 };
-      return u;
-    });
+      if (u && !(r.data && r.data.offline)) cache[ref] = { url: u, until: Date.now() + 50 * 60 * 1000 };
+      return u || local();
+    }, local);
   };
   PF.remove = function (ref) { if (PF.isRef(ref) && live()) BP_SB.storage.from(BUCKET).remove([ref.slice(3)]).catch(function () {}); };
   PF.open = function (ref, mime) {
