@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261116-offline9">
-<link rel="stylesheet" href="site/present.css?v=20261116-offline9">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline9"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261116-offline10">
+<link rel="stylesheet" href="site/present.css?v=20261116-offline10">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline10"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,7 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261117a"></script>
+<script src="portal/offline.js?v=20261117b"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -2772,7 +2772,12 @@ function bpLogout(force){
     if(n) why.push(n+(n===1?' change hasn’t':' changes haven’t')+' synced yet. '+(n===1?'It stays':'They stay')+' on this phone and '+(n===1?'sends':'send')+' the next time you sign in here.');
     if(why.length&&!confirm(why.join('\n\n')+'\n\nSign out anyway?')) return;
   }
+  /* round ten: what was saved on this device for this person leaves with them (customers, jobs,
+     messages, photos); changes that haven't been sent yet stay and go out at the next sign-in here */
+  var uid=window.bpOffline&&bpOffline.who?bpOffline.who():'';
   if(BP_LIVE){BP_SB.auth.signOut().catch(function(){});}
+  if(window.bpOffline&&bpOffline.forget) bpOffline.forget(uid);
+  if(window.bpDeviceForget) bpDeviceForget();
   if(window.bpShell)bpShell.closeAll();
   document.getElementById('bpxApp').classList.remove('on');
   document.getElementById('bpxLogin').style.display='flex';
@@ -6553,6 +6558,20 @@ function bpFinCloudPushNow(){
    account's data can never show in (or be saved into) another. */
 var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpUnsent','bpBase','bpOutbox','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
 var _bpCacheMine=false;
+/* signing out: drop this account's jobs, money and other device data, unless something on it
+   hasn't been sent yet (job edits, the invoice outbox, an estimate waiting to go) */
+function bpDeviceForget(){
+  var out=[]; try{ out=JSON.parse(localStorage.getItem('bpOutbox')||'[]'); }catch(e){}
+  var waitingEst=false; try{ waitingEst=(JSON.parse(localStorage.getItem('bpJobs')||'[]')||[]).some(function(j){ return j&&j.quote&&j.quote.pendingSend; }); }catch(e){}
+  if(bpUnsent()||(Array.isArray(out)&&out.length)||waitingEst) return false;
+  try{
+    BP_DEVICE_KEYS.forEach(function(k){localStorage.removeItem(k);});
+    Object.keys(localStorage).forEach(function(k){if(k.indexOf('bpPrice_')===0)localStorage.removeItem(k);});
+    localStorage.removeItem('bpDataOwner');
+  }catch(e){}
+  _bpJobs=null;_bpFin=null;_bpFinLoaded=false;_bpSnap={jobs:{},fin:{}};
+  return true;
+}
 function bpDeviceCacheFor(oid){
   if(!oid) return;
   var prev=null; try{prev=localStorage.getItem('bpDataOwner');}catch(e){}
@@ -14717,11 +14736,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261116-offline9"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline9"></script>
-<script src="site/vendor/SplitText.min.js?v=20261116-offline9"></script>
-<script src="site/site.js?v=20261116-offline9"></script>
-<script src="site/present.js?v=20261116-offline9"></script>
+<script src="site/vendor/gsap.min.js?v=20261116-offline10"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline10"></script>
+<script src="site/vendor/SplitText.min.js?v=20261116-offline10"></script>
+<script src="site/site.js?v=20261116-offline10"></script>
+<script src="site/present.js?v=20261116-offline10"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">
