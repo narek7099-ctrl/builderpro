@@ -114,9 +114,13 @@
   /* --------------------------------------------------------------- offline --- */
   function net(online) {
     var b = $('bpNet');
-    if (!b) { b = document.createElement('div'); b.id = 'bpNet'; b.setAttribute('role', 'status'); document.body.appendChild(b); }
+    if (!b) {
+      b = document.createElement('div'); b.id = 'bpNet'; b.setAttribute('role', 'status'); document.body.appendChild(b);
+      /* tap it to see what's waiting to send (portal/offline.js) */
+      b.addEventListener('click', function () { if (b.classList.contains('off') && window.bpOffline && bpOffline.open) bpOffline.open(); });
+    }
     clearTimeout(b._t);
-    if (!online) { b.className = 'off show'; b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M8.5 8.6A5 5 0 0 0 6 13a4 4 0 0 0 1 7.9h10.3M20.6 18.1A4 4 0 0 0 18 11h-.2A6 6 0 0 0 11 6.1"/></svg><span>You’re offline. What you do is saved on this phone and syncs when you’re back online.</span>'; }
+    if (!online) { b.className = 'off show'; b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3l18 18"/><path d="M8.5 8.6A5 5 0 0 0 6 13a4 4 0 0 0 1 7.9h10.3M20.6 18.1A4 4 0 0 0 18 11h-.2A6 6 0 0 0 11 6.1"/></svg><span>You’re offline. What you do is saved on this phone and syncs when you’re back online. <u>See what’s waiting</u></span>'; b.style.cursor = window.bpOffline ? 'pointer' : ''; }
     else if (b.classList.contains('off')) {
       b.className = 'on show'; b.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Back online</span>';
       b._t = setTimeout(function () { b.className = 'on'; }, 2200);

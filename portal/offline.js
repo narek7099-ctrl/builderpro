@@ -169,7 +169,7 @@
     return get('reads', key).then(function (r) {
       if (!r) return null;
       var h = Object.assign({}, r.h, { 'x-bp-offline': 'kept' });
-      state.keptUsed = true; paint();
+      state.keptUsed = true; state.keptAt = r.at || state.keptAt; paint();
       return new Response(r.body, { status: r.status, headers: h });
     }).catch(function () { return null; });
   }
@@ -238,7 +238,7 @@
     var h = Object.assign({}, headers); delete h['content-length'];
     if (typeof FormData !== 'undefined' && body instanceof FormData) delete h['content-type'];
     return keepBody(body).then(function (kb) {
-      return put('queue', { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, label: label(fn, u, args) });
+      return put('queue', { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, label: label(fn, u, args) + detail(txt) });
     }).then(function () {
       return Promise.resolve(fn ? patchFor(fn, args, user, at) : patchWrite(u, method, txt, user, at)).catch(function () {});
     }).then(function () {
@@ -287,6 +287,15 @@
       } else if (it) step = del('queue', it.id);
       return step.then(function () { return patchWrite(u, method, txt, user, at); }).catch(function () {});
     }).then(function () { refresh(); return reply(200, { ok: true, queued: true }); });
+  }
+  /* which one: a name, a title or the start of a message, shown in the sync sheet */
+  function detail(txt) {
+    var b; try { b = JSON.parse(txt || 'null'); } catch (e) { return ''; }
+    if (Array.isArray(b)) b = b[0];
+    if (!b || typeof b !== 'object') return '';
+    var d = b.name || b.title || b.contact_name || b.message || b.body || b.text || '';
+    d = String(d).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return d ? ': ' + (d.length > 48 ? d.slice(0, 46) + '…' : d) : '';
   }
   function label(fn, u, a) {
     a = a || {};
@@ -490,7 +499,7 @@
   function noteBreak(d) { if (d && d.on) brk.cur = { open: d.open || null, breaks: d.breaks || [], lunch_sec: d.lunch_sec || 0, break_sec: d.break_sec || 0 }; }
 
   /* ------------------------------------------------------- send it all --- */
-  var state = { count: 0, sending: false, lastOk: 0, needSignIn: false, problems: [], keptUsed: false, justSynced: 0 };
+  var state = { count: 0, failed: 0, sending: false, lastOk: 0, needSignIn: false, problems: [], keptUsed: false, keptAt: 0, justSynced: 0 };
   var timer = 0;
   function kick(ms) { clearTimeout(timer); timer = setTimeout(flush, ms || 0); }
   function token() {
@@ -521,7 +530,7 @@
               if (res.ok) { try { var d = JSON.parse(txt); if (d && d.ok === false && d.error && !/already clocked in|not clocked in|already on a break|not on a break/.test(d.error)) { bad = true; why = d.error; } } catch (e) {} }
               else { why = 'HTTP ' + res.status; }
               /* "already clocked in" and the like: the server already has it, nothing to do */
-              var done = bad ? put('failed', { at: Date.now(), label: it.label, why: why, url: it.url }) : Promise.resolve();
+              var done = bad ? put('failed', { at: Date.now(), queuedAt: it.at, label: it.label, why: friendlyWhy(why, txt), url: it.url, method: it.method, h: it.h, body: it.body, user: it.user, fn: it.fn, args: it.args }) : Promise.resolve();
               if (bad && window.bpToast) { try { bpToast(it.label + ' couldn’t be saved: ' + why, 'error'); } catch (e) {} }
               return done.then(function () { return del('queue', it.id); }).then(function () { sentAny = true; if (bad) state.problems.push(it.label + ': ' + why); return next(); });
             });
@@ -538,9 +547,26 @@
       });
     });
   }
+  /* the server's reason, in words a person can use */
+  function friendlyWhy(why, txt) {
+    var m = ''; try { var d = JSON.parse(txt || '{}'); m = d.message || d.error || d.msg || ''; } catch (e) {}
+    m = String(m || why || '');
+    if (/duplicate key|already exists/i.test(m)) return 'it was already saved';
+    if (/violates row-level security|permission|not allowed|403/i.test(m)) return 'your account isn’t allowed to make this change';
+    if (/violates foreign key|not found|404/i.test(m)) return 'what it belongs to was removed';
+    if (/invalid input syntax|violates check|violates not-null|400|422/i.test(m)) return 'something in it wasn’t filled in the way the server expects';
+    return m.slice(0, 120) || 'the server didn’t accept it';
+  }
   var extra = [];   /* other waiting things (portal/quote.js outbox): functions that return a count */
   function extraCount() { return extra.reduce(function (t, f) { try { return t + (+f() || 0); } catch (e) { return t; } }, 0); }
-  function refresh() { return keys('queue').then(function (ks) { state.count = ks.length + extraCount(); paint(); }).catch(function () {}); }
+  function refresh() {
+    var me = who();
+    return Promise.all([all('queue'), all('failed')]).then(function (r) {
+      state.count = r[0].filter(function (x) { return x.user === me || x.user === 'anon'; }).length + extraCount();
+      state.failed = r[1].filter(function (x) { return !x.user || x.user === me; }).length;
+      paint(); if (sheet) drawSheet();
+    }).catch(function () {});
+  }
 
   /* ------------------------------------------------------------ the pill --- */
   var pill = null;
@@ -548,7 +574,7 @@
     if (!document.body) return;
     if (!pill) {
       pill = document.createElement('button'); pill.type = 'button'; pill.id = 'bpSync'; pill.setAttribute('aria-live', 'polite');
-      pill.onclick = function () { if (online()) kick(0); };
+      pill.onclick = function () { if (online()) kick(0); openSheet(); };
       document.body.appendChild(pill);
       var css = document.createElement('style'); css.textContent =
         '#bpSync{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:2600;display:none;align-items:center;gap:8px;' +
@@ -568,12 +594,102 @@
     var n = state.count, txt = '', cls = '';
     var banner = document.getElementById('bpNet');   /* portal/appfeel.js already says "You're offline": no second notice */
     if (!online() && banner && /show/.test(banner.className)) { cls = 'off'; txt = ''; }
-    else if (!online()) { cls = 'off'; txt = 'Offline' + (n ? ' <small>&middot; ' + n + (n === 1 ? ' change' : ' changes') + ' saved on this phone</small>' : ' <small>&middot; showing what was saved</small>'); }
+    else if (!online()) { cls = 'off'; txt = 'Offline' + (n ? ' <small>&middot; ' + n + (n === 1 ? ' change' : ' changes') + ' saved on this phone</small>' : ' <small>&middot; showing what was saved' + (state.keptAt ? ' ' + ago(state.keptAt) : '') + '</small>'); }
     else if (state.needSignIn && n) { cls = 'bad'; txt = 'Sign in again to send ' + n + (n === 1 ? ' change' : ' changes'); }
     else if (n) { cls = 'wait'; txt = (state.sending ? 'Syncing ' : '') + n + (n === 1 ? ' change' : ' changes') + ' waiting to sync'; }
+    else if (state.failed) { cls = 'bad'; txt = state.failed + (state.failed === 1 ? ' change' : ' changes') + ' couldn’t be saved <small>&middot; see why</small>'; }
     else if (state.justSynced && Date.now() - state.justSynced < 4000) { cls = 'ok'; txt = 'All synced'; setTimeout(paint, 4100); }
     pill.className = cls + (txt && appOpen ? ' show' : '');
     pill.innerHTML = txt ? '<i></i><span>' + txt + '</span>' : '';
+  }
+
+  /* ----------------------------------------------------------- the sheet --- */
+  /* everything waiting to send, and anything the server refused (with Try again / Dismiss) */
+  function ago(t) {
+    var s = (Date.now() - t) / 1000, n;
+    if (s < 90) return 'just now';
+    if (s < 3600) return Math.round(s / 60) + ' min ago';
+    if (s < 86400) { n = Math.round(s / 3600); return n + (n === 1 ? ' hour ago' : ' hours ago'); }
+    n = Math.round(s / 86400); return n + (n === 1 ? ' day ago' : ' days ago');
+  }
+  function when(t) {
+    var d = new Date(t), today = new Date().toDateString() === d.toDateString();
+    return (today ? '' : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ') + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+  function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var sheet = null;
+  function openSheet() {
+    if (sheet) return;
+    if (!document.getElementById('bpSyncCss')) {
+      var css = document.createElement('style'); css.id = 'bpSyncCss'; css.textContent =
+        '#bpSyncSh{position:fixed;inset:0;z-index:2700;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,21,48,.32);animation:bpShF .2s ease}' +
+        '#bpSyncSh .c{width:100%;max-width:480px;max-height:82vh;overflow:auto;background:#fff;color:#0b1a33;border-radius:20px 20px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px -16px rgba(0,30,80,.4);font:14px/1.45 Inter,system-ui,sans-serif;animation:bpShU .3s cubic-bezier(.22,1,.36,1)}' +
+        '@media (min-width:700px){#bpSyncSh{align-items:center}#bpSyncSh .c{border-radius:20px}}' +
+        '#bpSyncSh h3{margin:0 0 4px;font-size:18px;letter-spacing:-.01em}#bpSyncSh .st{margin:0 0 14px;color:#5b6b82}' +
+        '#bpSyncSh h4{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#5b6b82}' +
+        '#bpSyncSh ul{list-style:none;margin:0;padding:0}#bpSyncSh li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #e8edf4}' +
+        '#bpSyncSh li i{width:8px;height:8px;border-radius:50%;background:#006fff;margin-top:6px;flex:none}#bpSyncSh li.bad i{background:#e5484d}' +
+        '#bpSyncSh li div{flex:1;min-width:0}#bpSyncSh li b{font-weight:600}#bpSyncSh li small{display:block;color:#5b6b82}' +
+        '#bpSyncSh .acts{display:flex;gap:6px;margin-top:6px}#bpSyncSh .acts button,#bpSyncSh .foot button{border:1px solid #d9e2ee;background:#fff;color:#0b1a33;border-radius:9px;padding:6px 11px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer}' +
+        '#bpSyncSh .foot{display:flex;gap:8px;margin-top:18px}#bpSyncSh .foot button{flex:1;padding:11px}#bpSyncSh .foot .pri{background:#006fff;border-color:#006fff;color:#fff}' +
+        '#bpSyncSh .none{color:#5b6b82;padding:8px 0}' +
+        'body:has(#bpx.bpx-dark) #bpSyncSh .c{background:#101622;color:#e8eef8}body:has(#bpx.bpx-dark) #bpSyncSh li{border-color:#222b3a}' +
+        'body:has(#bpx.bpx-dark) #bpSyncSh .st,body:has(#bpx.bpx-dark) #bpSyncSh h4,body:has(#bpx.bpx-dark) #bpSyncSh li small,body:has(#bpx.bpx-dark) #bpSyncSh .none{color:#9fb0c6}' +
+        'body:has(#bpx.bpx-dark) #bpSyncSh .acts button,body:has(#bpx.bpx-dark) #bpSyncSh .foot button:not(.pri){background:#161d2b;border-color:#2a3446;color:#e8eef8}' +
+        '@keyframes bpShF{from{opacity:0}}@keyframes bpShU{from{transform:translateY(24px);opacity:.6}}' +
+        '@media (prefers-reduced-motion:reduce){#bpSyncSh,#bpSyncSh .c{animation:none}}';
+      document.head.appendChild(css);
+    }
+    sheet = document.createElement('div'); sheet.id = 'bpSyncSh'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', 'Sync');
+    sheet.innerHTML = '<div class="c"></div>';
+    sheet.addEventListener('click', function (e) {
+      if (e.target === sheet) return closeSheet();
+      var b = e.target.closest && e.target.closest('button[data-a]'); if (!b) return;
+      var a = b.getAttribute('data-a'), id = +b.getAttribute('data-id');
+      if (a === 'close') closeSheet();
+      else if (a === 'send') { kick(0); setTimeout(refresh, 400); }
+      else if (a === 'retry') get('failed', id).then(function (f) {
+        if (!f || !f.method) return;
+        var it = { qid: '', at: Date.now(), user: f.user || who(), url: f.url, method: f.method, h: f.h, body: f.body, fn: f.fn, args: f.args, label: f.label };
+        return put('queue', it).then(function () { return del('failed', id); }).then(function () { state.problems = []; refresh(); if (online()) kick(300); });
+      });
+      else if (a === 'dismiss') del('failed', id).then(refresh);
+    });
+    document.addEventListener('keydown', escClose);
+    document.body.appendChild(sheet);
+    drawSheet();
+  }
+  function escClose(e) { if (e.key === 'Escape') closeSheet(); }
+  function closeSheet() { if (sheet) { sheet.remove(); sheet = null; document.removeEventListener('keydown', escClose); } }
+  function drawSheet() {
+    if (!sheet) return;
+    var me = who();
+    Promise.all([all('queue'), all('failed')]).then(function (r) {
+      if (!sheet) return;
+      var q = r[0].filter(function (x) { return x.user === me || x.user === 'anon'; }).sort(function (a, b) { return a.id - b.id; });
+      var f = r[1].filter(function (x) { return !x.user || x.user === me; }).sort(function (a, b) { return b.at - a.at; });
+      var more = extraCount();
+      var st = !online() ? 'You’re offline.' + (state.keptAt ? ' Showing what was saved ' + ago(state.keptAt) + '.' : '') + ' Changes are kept on this phone and sent when you’re back.'
+        : state.needSignIn && q.length ? 'Sign in again to send these.'
+        : state.sending ? 'Sending now…'
+        : q.length || more ? 'These send by themselves in a moment.' : f.length ? 'Nothing is waiting to send.' : 'Everything is synced.';
+      var h = '<h3>Sync</h3><p class="st">' + esc(st) + '</p>';
+      if (q.length || more || !f.length) h += '<h4>Waiting to send' + (q.length + more ? ' (' + (q.length + more) + ')' : '') + '</h4>';
+      if (!q.length && !more) { if (!f.length) h += '<div class="none">Nothing waiting.</div>'; }
+      else {
+        h += '<ul>' + q.map(function (x) { return '<li><i></i><div><b>' + esc(x.label || 'Change') + '</b><small>Made ' + esc(when(x.at)) + '</small></div></li>'; }).join('');
+        if (more) h += '<li><i></i><div><b>' + more + (more === 1 ? ' estimate or invoice' : ' estimates and invoices') + ' in the outbox</b><small>Sent with the normal Send when the signal is back</small></div></li>';
+        h += '</ul>';
+      }
+      if (f.length) {
+        h += '<h4>Couldn’t be saved (' + f.length + ')</h4><ul>' + f.map(function (x) {
+          return '<li class="bad"><i></i><div><b>' + esc(x.label || 'Change') + '</b><small>' + (x.queuedAt ? 'Made ' + esc(when(x.queuedAt)) + ' · ' : '') + 'refused ' + esc(ago(x.at)) + ': ' + esc(x.why || 'the server didn’t accept it') + '</small>' +
+            '<div class="acts">' + (x.method ? '<button type="button" data-a="retry" data-id="' + x.id + '">Try again</button>' : '') + '<button type="button" data-a="dismiss" data-id="' + x.id + '">Dismiss</button></div></div></li>';
+        }).join('') + '</ul>';
+      }
+      h += '<div class="foot">' + (online() && q.length ? '<button type="button" class="pri" data-a="send">Send now</button>' : '') + '<button type="button" data-a="close">Close</button></div>';
+      sheet.firstChild.innerHTML = h;
+    }).catch(function () {});
   }
 
   /* --------------------------------------------------------- the clock --- */
@@ -581,7 +697,13 @@
   window.addEventListener('offline', paint);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && online()) kick(800); });
   setInterval(function () { if (state.count && online()) kick(0); }, 60000);
-  function boot() { refresh().then(function () { paint(); if (online()) kick(3000); }); setInterval(paint, 5000); }
+  function boot() {
+    refresh().then(function () { paint(); if (online()) kick(3000); }); setInterval(paint, 5000);
+    try {
+      if (who() !== 'anon' && navigator.storage && navigator.storage.persist && !/firefox/i.test(navigator.userAgent))
+        navigator.storage.persisted().then(function (p) { if (!p) return navigator.storage.persist(); }).catch(function () {});
+    } catch (e) {}
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   /* keep the kept answers from growing forever: drop what's older than three weeks */
   setTimeout(function () {
@@ -607,6 +729,7 @@
     addCounter: function (f) { extra.push(f); refresh(); }, refresh: function () { return refresh(); },
     /* the signed-in person's last confirmed role, for starting up with no signal */
     who: who, problems: function () { return state.problems.slice(); },
+    open: openSheet, failedCount: function () { return state.failed; },
     /* a link to a file still waiting to upload (path inside project-files), or '' */
     localFile: function (path) {
       return all('queue').then(function (items) {
