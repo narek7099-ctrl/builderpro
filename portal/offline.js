@@ -237,8 +237,9 @@
     function addToQueue() {
     var h = Object.assign({}, headers); delete h['content-length'];
     if (typeof FormData !== 'undefined' && body instanceof FormData) delete h['content-type'];
-    return keepBody(body).then(function (kb) {
-      return put('queue', { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, label: label(fn, u, args) + detail(txt) });
+    var base = null;
+    return (table && method === 'PATCH' ? baseFor(table, idOf(u), txt, user) : Promise.resolve(null)).then(function (b) { base = b; return keepBody(body); }).then(function (kb) {
+      return put('queue', { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, base: base, label: label(fn, u, args) + detail(txt) });
     }).then(function () {
       return Promise.resolve(fn ? patchFor(fn, args, user, at) : patchWrite(u, method, txt, user, at)).catch(function () {});
     }).then(function () {
@@ -246,6 +247,48 @@
       return answerFor(fn, u, method, txt, args, at, h);
     });
     }
+  }
+  /* three-way merge: what this phone saw (base), what it has now (mine), what the server has (theirs).
+     A change on one side only is taken; lists of items with ids merge item by item; where both sides
+     changed the same thing differently, this phone's version is kept and the clash is noted. */
+  function merge3(base, mine, theirs, path, clash) {
+    path = path || []; clash = clash || [];
+    if (same(mine, theirs)) return mine;
+    if (same(base, mine)) return theirs;
+    if (same(base, theirs)) return mine;
+    var obj = function (v) { return v && typeof v === 'object' && !Array.isArray(v); };
+    var idList = function (v) { return Array.isArray(v) && v.every(function (x) { return x && typeof x === 'object' && x.id != null; }); };
+    if (obj(mine) && obj(theirs) && (base == null || obj(base))) {
+      var out = {}, b = base || {};
+      Object.keys(Object.assign({}, b, mine, theirs)).forEach(function (k) {
+        if (SKIP_KEYS[k]) { out[k] = mine[k] !== undefined ? mine[k] : theirs[k]; return; }
+        var v = merge3(b[k], mine[k], theirs[k], path.concat(k), clash);
+        if (v !== undefined) out[k] = v;
+      });
+      return out;
+    }
+    if (idList(mine) && idList(theirs) && (base == null || idList(base))) {
+      var by = function (l) { var m = {}; (l || []).forEach(function (x) { m[x.id] = x; }); return m; };
+      var B = by(base), M = by(mine), T = by(theirs), res = [], seen = {};
+      theirs.concat(mine).forEach(function (x) {
+        if (seen[x.id]) return; seen[x.id] = 1;
+        var bb = B[x.id], mm = M[x.id], tt = T[x.id];
+        if (mm && tt) res.push(merge3(bb, mm, tt, path.concat(x.id), clash));
+        else if (mm) { if (!(bb && same(bb, mm))) res.push(mm); }          /* removed there and untouched here: removed */
+        else if (tt) { if (!(bb && same(bb, tt))) res.push(tt); }          /* removed here and untouched there: removed */
+      });
+      return res;
+    }
+    /* plain lists (photo links, tags): keep what either side added, drop what either side removed */
+    var plain = function (v) { return Array.isArray(v) && v.every(function (x) { return x == null || typeof x !== 'object'; }); };
+    if (plain(mine) && plain(theirs) && (base == null || plain(base))) {
+      var bl = base || [], gone = {}, outl = [];
+      bl.forEach(function (x) { if (mine.indexOf(x) < 0 || theirs.indexOf(x) < 0) gone[x] = 1; });
+      theirs.concat(mine).forEach(function (x) { if (!gone[x] && outl.indexOf(x) < 0) outl.push(x); });
+      return outl;
+    }
+    clash.push({ path: path, mine: mine, theirs: theirs });
+    return mine;
   }
   function uuid() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -271,12 +314,83 @@
         ins.body = { t: 'text', v: JSON.stringify(b) }; step = put('queue', ins);
       } else if (same) {
         var ob = {}; try { ob = JSON.parse(same.body.v) || {}; } catch (e) {}
-        same.body = { t: 'text', v: JSON.stringify(Object.assign(ob, patch)) }; step = put('queue', same);
+        same.body = { t: 'text', v: JSON.stringify(Object.assign(ob, patch)) };
+        /* fields this edit adds: what the phone saw before is still in the kept copy */
+        step = baseFor(table, id, txt, user).then(function (b) {
+          if (b && same.base) Object.keys(b).forEach(function (k) { if (!(k in same.base)) same.base[k] = b[k]; });
+          return put('queue', same);
+        });
       } else return null;
       return step.then(function () { return Promise.resolve(patchWrite(u, method, txt, user, at)).catch(function () {}); })
         .then(function () { refresh(); return answerFor('', u, method, txt, null, at, hdrs(headers)); });
     }).then(function (r) { return r || null; });
   }
+  /* ------------------------------------------------- edits made in two places --- */
+  /* records whose offline edits are checked against the server before they're sent (round seven) */
+  var CHECK = { contacts: 1, inspection_reports: 1, calendar_notes: 1, roof_checks: 1, assets: 1 };
+  var SKIP_KEYS = { updated_at: 1, created_at: 1, _mt: 1 };
+  /* the row as this phone last saw it (newest kept copy), for the fields being changed */
+  function baseFor(table, id, txt, user) {
+    if (!CHECK[table] || !id) return Promise.resolve(null);
+    var patch = {}; try { patch = JSON.parse(txt || '{}') || {}; } catch (e) { return Promise.resolve(null); }
+    var pre = user + '|GET|' + SB + '/rest/v1/' + table + '?';
+    return keys('reads').then(function (ks) {
+      return Promise.all(ks.filter(function (k) { return String(k).indexOf(pre) === 0; }).map(function (k) { return get('reads', k); }));
+    }).then(function (rs) {
+      var best = null, at = -1;
+      rs.forEach(function (r) {
+        if (!r || r.at <= at) return; var d; try { d = JSON.parse(r.body); } catch (e) { return; }
+        var row = (Array.isArray(d) ? d : [d]).filter(function (x) { return x && x.id === id; })[0];
+        if (row) { best = row; at = r.at; }
+      });
+      if (!best) return null;
+      var b = {}; Object.keys(patch).forEach(function (k) { if (!SKIP_KEYS[k] && k in best) b[k] = best[k]; });
+      return Object.keys(b).length ? b : null;
+    }).catch(function () { return null; });
+  }
+  /* compare values the way a person would: key order and empty/missing don't matter */
+  function canon(v) {
+    if (v === undefined || v === '') v = null;
+    if (Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
+    if (v && typeof v === 'object') return '{' + Object.keys(v).filter(function (k) { return !SKIP_KEYS[k]; }).sort().map(function (k) { return JSON.stringify(k) + ':' + canon(v[k]); }).join(',') + '}';
+    return JSON.stringify(v);
+  }
+  function same(a, b) { return canon(a) === canon(b); }
+  /* before an offline edit is sent: was the record changed or removed by someone else meanwhile? */
+  function precheck(it, tk) {
+    if (it.method !== 'PATCH' || !it.base) return Promise.resolve('send');
+    var u = new URL(it.url), id = idOf(u), t = u.pathname.split('/').pop(), ks = Object.keys(it.base);
+    if (!id || !ks.length) return Promise.resolve('send');
+    var mine = {}; try { mine = JSON.parse(it.body.v) || {}; } catch (e) { return Promise.resolve('send'); }
+    var h = { apikey: it.h.apikey || '', authorization: 'Bearer ' + tk.t, accept: 'application/json' };
+    return raw(SB + '/rest/v1/' + t + '?id=eq.' + encodeURIComponent(id) + '&select=' + ['id'].concat(ks).join(','), { headers: h }).then(function (res) {
+      if (!res.ok) return 'send';   /* can't tell: send it as before */
+      return res.json().then(function (rows) {
+        if (!Array.isArray(rows)) return 'send';
+        if (!rows.length) return put('failed', { kind: 'gone', at: Date.now(), queuedAt: it.at, label: it.label, user: it.user }).then(function () { return 'skip'; });
+        var cur = rows[0], clash = [];
+        ks.forEach(function (k) { if (!same(cur[k], it.base[k]) && !same(cur[k], mine[k])) clash.push({ k: k, mine: mine[k], theirs: cur[k] }); });
+        if (!clash.length) return 'send';
+        /* both changed the same thing: this phone's version is sent, the other one is offered back */
+        return put('failed', { kind: 'clash', at: Date.now(), queuedAt: it.at, label: it.label, user: it.user, url: it.url, h: it.h, fields: clash }).then(function () { return 'send'; });
+      });
+    }, function () { throw 'stop'; });
+  }
+  var NAMES = { name: 'Name', phone: 'Phone', email: 'Email', address: 'Address', addr: 'Address', title: 'Title', body: 'Report text', status: 'Status', notes: 'Notes', note: 'Note',
+    tags: 'Tags', text: 'Text', day: 'Day', at: 'Time', done: 'Done', photos: 'Photos', price: 'Price', amount: 'Amount', date: 'Date', start: 'Start', end: 'End', steps: 'Steps', crew: 'Crew' };
+  function fieldName(path) {
+    var k = String([].concat(path).filter(function (x) { return !/^\d+$/.test(String(x)); }).pop() || '');
+    return NAMES[k] || (k.charAt(0).toUpperCase() + k.slice(1)).replace(/_/g, ' ');
+  }
+  function show(v) {
+    if (v == null || v === '') return '(empty)';
+    if (typeof v === 'boolean') return v ? 'yes' : 'no';
+    if (Array.isArray(v)) return v.length + (v.length === 1 ? ' item' : ' items');
+    if (typeof v === 'object') return (v.name || v.title || v.label || '(changed)') + '';
+    var t = String(v).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return t.length > 70 ? t.slice(0, 68) + '…' : t;
+  }
+  var theirsFns = {};   /* app.html: what "Use theirs" does for jobs and money (they live on the device) */
   function editQueued(cb, u, method, txt, user, at) {
     return all('queue').then(function (items) {
       var it = items.filter(function (x) { return x.qid === cb.id; })[0], step = Promise.resolve();
@@ -522,6 +636,11 @@
           var it = items[i++]; if (!it) return;
           if (it.user !== 'anon' && it.user !== tk.id) return next();   /* someone else's change: waits for them */
           var h = Object.assign({}, it.h, { authorization: 'Bearer ' + tk.t });
+          return precheck(it, tk).then(function (go) {
+            if (go === 'skip') return del('queue', it.id).then(function () { sentAny = true; return next(); });
+            return send();
+          });
+          function send() {
           return raw(it.url, { method: it.method, headers: h, body: giveBody(it.body) }).then(function (res) {
             if (res.status === 401 || res.status === 403 && /jwt/i.test(res.statusText || '')) { state.needSignIn = true; throw 'stop'; }
             if (res.status >= 500 || res.status === 408 || res.status === 429) throw 'stop';
@@ -535,6 +654,7 @@
               return done.then(function () { return del('queue', it.id); }).then(function () { sentAny = true; if (bad) state.problems.push(it.label + ': ' + why); return next(); });
             });
           }, function () { throw 'stop'; });
+          }
         };
         return next();
       });
@@ -563,7 +683,9 @@
     var me = who();
     return Promise.all([all('queue'), all('failed')]).then(function (r) {
       state.count = r[0].filter(function (x) { return x.user === me || x.user === 'anon'; }).length + extraCount();
-      state.failed = r[1].filter(function (x) { return !x.user || x.user === me; }).length;
+      var mineF = r[1].filter(function (x) { return !x.user || x.user === me; });
+      state.failed = mineF.filter(function (x) { return !x.kind; }).length;
+      state.clash = mineF.filter(function (x) { return x.kind; }).length;
       paint(); if (sheet) drawSheet();
     }).catch(function () {});
   }
@@ -597,6 +719,7 @@
     else if (!online()) { cls = 'off'; txt = 'Offline' + (n ? ' <small>&middot; ' + n + (n === 1 ? ' change' : ' changes') + ' saved on this phone</small>' : ' <small>&middot; showing what was saved' + (state.keptAt ? ' ' + ago(state.keptAt) : '') + '</small>'); }
     else if (state.needSignIn && n) { cls = 'bad'; txt = 'Sign in again to send ' + n + (n === 1 ? ' change' : ' changes'); }
     else if (n) { cls = 'wait'; txt = (state.sending ? 'Syncing ' : '') + n + (n === 1 ? ' change' : ' changes') + ' waiting to sync'; }
+    else if (state.clash && !state.failed) { cls = 'wait'; txt = state.clash + (state.clash === 1 ? ' change was' : ' changes were') + ' also made elsewhere <small>&middot; review</small>'; }
     else if (state.failed) { cls = 'bad'; txt = state.failed + (state.failed === 1 ? ' change' : ' changes') + ' couldn’t be saved <small>&middot; see why</small>'; }
     else if (state.justSynced && Date.now() - state.justSynced < 4000) { cls = 'ok'; txt = 'All synced'; setTimeout(paint, 4100); }
     pill.className = cls + (txt && appOpen ? ' show' : '');
@@ -654,6 +777,17 @@
         return put('queue', it).then(function () { return del('failed', id); }).then(function () { state.problems = []; refresh(); if (online()) kick(300); });
       });
       else if (a === 'dismiss') del('failed', id).then(refresh);
+      else if (a === 'theirs') get('failed', id).then(function (f) {
+        if (!f) return;
+        var done = function () { return del('failed', id).then(function () { refresh(); if (online()) kick(300); }); };
+        if (f.kind === 'clash-job') { var fn = theirsFns[f.store]; return Promise.resolve(fn ? fn(f) : null).then(done); }
+        /* a record: send the other person's values back */
+        var back = {}; (f.fields || []).forEach(function (fl) { back[fl.k] = fl.theirs === undefined ? null : fl.theirs; });
+        var hh = Object.assign({}, f.h); delete hh.prefer;
+        return put('queue', { qid: '', at: Date.now(), user: f.user || who(), url: f.url, method: 'PATCH', h: hh, body: { t: 'text', v: JSON.stringify(back) }, label: f.label }).then(function () {
+          return patchWrite(new URL(f.url), 'PATCH', JSON.stringify(back), f.user || who(), new Date().toISOString());
+        }).then(done);
+      });
     });
     document.addEventListener('keydown', escClose);
     document.body.appendChild(sheet);
@@ -667,15 +801,25 @@
     Promise.all([all('queue'), all('failed')]).then(function (r) {
       if (!sheet) return;
       var q = r[0].filter(function (x) { return x.user === me || x.user === 'anon'; }).sort(function (a, b) { return a.id - b.id; });
-      var f = r[1].filter(function (x) { return !x.user || x.user === me; }).sort(function (a, b) { return b.at - a.at; });
+      var all1 = r[1].filter(function (x) { return !x.user || x.user === me; }).sort(function (a, b) { return b.at - a.at; });
+      var f = all1.filter(function (x) { return !x.kind; }), c = all1.filter(function (x) { return x.kind; });
       var more = extraCount();
       var st = !online() ? 'You’re offline.' + (state.keptAt ? ' Showing what was saved ' + ago(state.keptAt) + '.' : '') + ' Changes are kept on this phone and sent when you’re back.'
         : state.needSignIn && q.length ? 'Sign in again to send these.'
         : state.sending ? 'Sending now…'
-        : q.length || more ? 'These send by themselves in a moment.' : f.length ? 'Nothing is waiting to send.' : 'Everything is synced.';
+        : q.length || more ? 'These send by themselves in a moment.' : f.length || c.length ? 'Nothing is waiting to send.' : 'Everything is synced.';
       var h = '<h3>Sync</h3><p class="st">' + esc(st) + '</p>';
-      if (q.length || more || !f.length) h += '<h4>Waiting to send' + (q.length + more ? ' (' + (q.length + more) + ')' : '') + '</h4>';
-      if (!q.length && !more) { if (!f.length) h += '<div class="none">Nothing waiting.</div>'; }
+      if (c.length) {
+        h += '<h4>Changed in two places (' + c.length + ')</h4><ul>' + c.map(function (x) {
+          var what = x.kind === 'gone'
+            ? 'Someone else removed it while you were offline, so your change wasn’t saved.'
+            : 'Also changed by someone else while you were offline. Yours was kept. ' + (x.fields || []).map(function (fl) { return esc(fieldName(fl.path || fl.k)) + ': yours “' + esc(show(fl.mine)) + '”, theirs “' + esc(show(fl.theirs)) + '”'; }).join('; ') + '.';
+          return '<li><i></i><div><b>' + esc(x.label || 'Change') + '</b><small>' + (x.queuedAt ? 'Made ' + esc(when(x.queuedAt)) + ' · ' : '') + what + '</small>' +
+            '<div class="acts">' + (x.kind !== 'gone' ? '<button type="button" data-a="theirs" data-id="' + x.id + '">Use theirs</button>' : '') + '<button type="button" data-a="dismiss" data-id="' + x.id + '">' + (x.kind === 'gone' ? 'OK' : 'Keep mine') + '</button></div></div></li>';
+        }).join('') + '</ul>';
+      }
+      if (q.length || more || (!f.length && !c.length)) h += '<h4>Waiting to send' + (q.length + more ? ' (' + (q.length + more) + ')' : '') + '</h4>';
+      if (!q.length && !more) { if (!f.length && !c.length) h += '<div class="none">Nothing waiting.</div>'; }
       else {
         h += '<ul>' + q.map(function (x) { return '<li><i></i><div><b>' + esc(x.label || 'Change') + '</b><small>Made ' + esc(when(x.at)) + '</small></div></li>'; }).join('');
         if (more) h += '<li><i></i><div><b>' + more + (more === 1 ? ' estimate or invoice' : ' estimates and invoices') + ' in the outbox</b><small>Sent with the normal Send when the signal is back</small></div></li>';
@@ -730,6 +874,10 @@
     /* the signed-in person's last confirmed role, for starting up with no signal */
     who: who, problems: function () { return state.problems.slice(); },
     open: openSheet, failedCount: function () { return state.failed; },
+    /* app.html: a job or money entry changed here and elsewhere ({ store, itemId, label, fields: [{ path, mine, theirs }] }) */
+    clash: function (c) { var r = Object.assign({ kind: 'clash-job', at: Date.now(), user: who() }, c); delete r.id; return put('failed', r).then(refresh).catch(function () {}); },
+    onTheirs: function (store, fn) { theirsFns[store] = fn; },
+    merge3: merge3,
     /* a link to a file still waiting to upload (path inside project-files), or '' */
     localFile: function (path) {
       return all('queue').then(function (items) {

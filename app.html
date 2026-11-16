@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261116-offline6">
-<link rel="stylesheet" href="site/present.css?v=20261116-offline6">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline6"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261116-offline7">
+<link rel="stylesheet" href="site/present.css?v=20261116-offline7">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline7"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,7 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261116c"></script>
+<script src="portal/offline.js?v=20261116d"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -6413,16 +6413,69 @@ var _bpJobs=null,_bpFin=null,_bpFinLoaded=false;
 var _bpSnap={jobs:{},fin:{}};
 function bpSnapStr(x){ return JSON.stringify(x,function(k,v){ return k==='_mt'?undefined:v; }); }
 function bpSnapTake(kind,list){ var m={}; (list||[]).forEach(function(x){ if(x&&x.id!=null) m[x.id]={s:bpSnapStr(x),mt:+x._mt||0}; }); _bpSnap[kind]=m; }
+/* Offline mode round seven (2026-11-16): bpBase keeps each job / money entry as it was before this
+   device changed it, until the change is saved. A change that sat unsent (no signal) is merged
+   field by field with what was changed elsewhere meanwhile (bpReconcile), instead of the newer
+   copy of the whole job winning. Where both changed the same thing, this device's version is kept
+   and the other one is offered in the Sync sheet ("Use theirs"). */
+function bpBaseGet(){ try{ return JSON.parse(localStorage.getItem('bpBase')||'{}')||{}; }catch(e){ return {}; } }
+function bpBaseSave(b){ try{ localStorage.setItem('bpBase',JSON.stringify(b)); }catch(e){} }
+function bpItemName(kind,x){ x=x||{}; var n=x.name||x.title||x.client||x.customer||x.desc||x.vendor||x.note||''; return (kind==='jobs'?'Job':'Money')+(n?': '+String(n).slice(0,48):''); }
+function bpReconcile(){
+  var base=bpBaseGet(), mark=+bpUnsent()||0;
+  var any=Object.keys(base.jobs||{}).length||Object.keys(base.fin||{}).length;
+  if(!any||!mark||Date.now()-mark<30000||!window.bpOffline||!bpOffline.merge3) return Promise.resolve();
+  return Promise.resolve(BP_SB.from('portal_finance').select('jobs,fin').maybeSingle()).then(function(r){
+    var d=r&&r.data; if(!d) return;
+    [['jobs',d.jobs],['fin',d.fin]].forEach(function(t){
+      var kind=t[0], srv=Array.isArray(t[1])?t[1]:[], list=kind==='jobs'?bpJobsGet():bpFinGet(), bk=base[kind]||{}, changed=false, byId={};
+      srv.forEach(function(x){ if(x&&x.id!=null) byId[x.id]=x; });
+      list.forEach(function(x,i){
+        if(!x||x.id==null||!bk[x.id]) return;
+        var theirs=byId[x.id]; if(!theirs||bpSnapStr(theirs)===bk[x.id]) return;   /* not changed elsewhere */
+        var b; try{ b=JSON.parse(bk[x.id]); }catch(e){ return; }
+        var clash=[], merged=bpOffline.merge3(b,x,theirs,[],clash);
+        merged._mt=Math.max(Date.now(),(+theirs._mt||0)+1);
+        list[i]=merged; changed=true;
+        if(clash.length) bpOffline.clash({store:kind,itemId:x.id,label:bpItemName(kind,merged),fields:clash.slice(0,6).map(function(c){
+          var big=JSON.stringify(c.theirs===undefined?null:c.theirs).length>100000; return {path:c.path,mine:big?null:c.mine,theirs:big?null:c.theirs,big:big}; })});
+      });
+      if(changed){ if(kind==='jobs') _bpJobs=list; else _bpFin=list; try{localStorage.setItem(kind==='jobs'?'bpJobs':'bpFin',JSON.stringify(list));}catch(e){} }
+    });
+  }).catch(function(){});
+}
+/* "Use theirs" from the Sync sheet: put the other device's values back into this job / entry */
+function bpSetPath(obj,path,val){
+  var cur=obj;
+  for(var i=0;i<path.length-1;i++){ var st=path[i]; cur=Array.isArray(cur)?cur.filter(function(e){return e&&String(e.id)===String(st);})[0]:cur&&cur[st]; if(!cur) return; }
+  var last=path[path.length-1];
+  if(Array.isArray(cur)){ var ix=cur.findIndex(function(e){return e&&String(e.id)===String(last);}); if(ix<0){ if(val!==undefined) cur.push(val); } else if(val===undefined) cur.splice(ix,1); else cur[ix]=val; }
+  else if(val===undefined) delete cur[last]; else cur[last]=val;
+}
+if(window.bpOffline&&bpOffline.onTheirs) ['jobs','fin'].forEach(function(kind){
+  bpOffline.onTheirs(kind,function(c){
+    var list=(kind==='jobs'?bpJobsGet():bpFinGet()).slice(), i=list.findIndex(function(x){return x&&String(x.id)===String(c.itemId);}); if(i<0) return;
+    var x=JSON.parse(JSON.stringify(list[i]));
+    (c.fields||[]).forEach(function(f){ if(!f.big&&f.path&&f.path.length) bpSetPath(x,f.path,f.theirs===null?undefined:f.theirs); });
+    list[i]=x; if(kind==='jobs') bpJobsSet(list); else bpFinSet(list);
+    try{ window.dispatchEvent(new CustomEvent('bp-data-merged',{detail:{jobs:kind==='jobs',fin:kind==='fin'}})); }catch(e){}
+  });
+});
 function bpGoneGet(){ try{ return JSON.parse(localStorage.getItem('bpGone')||'{}')||{}; }catch(e){ return {}; } }
 function bpGoneSave(g){ try{ localStorage.setItem('bpGone',JSON.stringify(g)); }catch(e){} }
 function bpStamp(kind,list){
-  var snap=_bpSnap[kind]||{}, now=Date.now(), seen={}, gone=null;
+  var snap=_bpSnap[kind]||{}, now=Date.now(), seen={}, gone=null, base=null, baseCh=false;
   (list||[]).forEach(function(x){
     if(!x||x.id==null) return; seen[x.id]=1;
     var p=snap[x.id];
     /* a copy older than the one last saved here is stale: leave its stamp so the newer one wins */
-    if(!p||(p.s!==bpSnapStr(x)&&(+x._mt||0)>=p.mt)) x._mt=now;
+    if(!p||(p.s!==bpSnapStr(x)&&(+x._mt||0)>=p.mt)){
+      x._mt=now;
+      /* remember how it looked before this phone changed it, for merging with edits made elsewhere */
+      if(p&&p.s!==bpSnapStr(x)){ base=base||bpBaseGet(); base[kind]=base[kind]||{}; if(!base[kind][x.id]){ base[kind][x.id]=p.s; baseCh=true; } }
+    }
   });
+  if(baseCh) bpBaseSave(base);
   Object.keys(snap).forEach(function(id){ if(!seen[id]){ gone=gone||bpGoneGet(); gone[id]=now; } });
   if(gone) bpGoneSave(gone);
   bpSnapTake(kind,list);
@@ -6471,8 +6524,12 @@ function bpFinCloudPush(){
 }
 function bpFinCloudPushNow(){
   if(_bpPushing){ _bpPushAgain=true; return; }
-  var gone=bpGoneGet(), owner=window.bpOwnerId&&bpOwnerId(), mark=bpUnsent();
-  _bpPushing=Promise.resolve(BP_SB.rpc('portal_finance_save',Object.assign({p_jobs:bpJobsGet(),p_fin:bpFinGet(),p_gone:gone},owner?{p_owner:owner}:{}))).then(function(r){
+  var gone=bpGoneGet(), owner=window.bpOwnerId&&bpOwnerId(), mark=bpUnsent(), base0=null;
+  /* a change that waited for a signal is merged with edits made elsewhere first (round seven) */
+  _bpPushing=bpReconcile().then(function(){
+    base0=bpBaseGet();
+    return BP_SB.rpc('portal_finance_save',Object.assign({p_jobs:bpJobsGet(),p_fin:bpFinGet(),p_gone:gone},owner?{p_owner:owner}:{}));
+  }).then(function(r){
     if(r&&r.error){
       /* the merge isn't on this server yet: save the old way */
       if(/portal_finance_save|function/i.test(r.error.message||'')) return BP_SB.from('portal_finance').upsert(Object.assign({jobs:bpJobsGet(),fin:bpFinGet()},owner?{owner:owner}:{}));
@@ -6480,6 +6537,8 @@ function bpFinCloudPushNow(){
     }
     var d=r&&r.data; if(!d) return;
     try{ if(mark&&localStorage.getItem('bpUnsent')===mark) localStorage.removeItem('bpUnsent'); }catch(e){}
+    /* saved: what it looked like before no longer matters (unless it changed again meanwhile) */
+    var bn=bpBaseGet(), bch=false; ['jobs','fin'].forEach(function(k){ Object.keys((base0&&base0[k])||{}).forEach(function(id){ if(bn[k]&&bn[k][id]===base0[k][id]){ delete bn[k][id]; bch=true; } }); }); if(bch) bpBaseSave(bn);
     /* tombstones the server now has can go */
     var g=bpGoneGet(); Object.keys(gone).forEach(function(k){ if(g[k]===gone[k]) delete g[k]; }); bpGoneSave(g);
     var sg=Object.assign({},d.gone||{},g), j=bpAdopt('jobs',bpJobsGet(),d.jobs,sg), f=bpAdopt('fin',bpFinGet(),d.fin,sg);
@@ -6492,7 +6551,7 @@ function bpFinCloudPushNow(){
    on the same browser, drop the last account's cached jobs, money, notes,
    receipts and templates before anything is drawn or synced, so one
    account's data can never show in (or be saved into) another. */
-var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpUnsent','bpOutbox','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
+var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpUnsent','bpBase','bpOutbox','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
 var _bpCacheMine=false;
 function bpDeviceCacheFor(oid){
   if(!oid) return;
@@ -14658,11 +14717,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261116-offline6"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline6"></script>
-<script src="site/vendor/SplitText.min.js?v=20261116-offline6"></script>
-<script src="site/site.js?v=20261116-offline6"></script>
-<script src="site/present.js?v=20261116-offline6"></script>
+<script src="site/vendor/gsap.min.js?v=20261116-offline7"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline7"></script>
+<script src="site/vendor/SplitText.min.js?v=20261116-offline7"></script>
+<script src="site/site.js?v=20261116-offline7"></script>
+<script src="site/present.js?v=20261116-offline7"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">
