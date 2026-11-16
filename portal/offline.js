@@ -279,7 +279,15 @@
     if (typeof FormData !== 'undefined' && body instanceof FormData) delete h['content-type'];
     var base = null;
     return (table && method === 'PATCH' ? baseFor(table, idOf(u), txt, user) : Promise.resolve(null)).then(function (b) { base = b; return keepBody(body); }).then(function (kb) {
-      return put('queue', { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, base: base, label: label(fn, u, args) + detail(txt) });
+      var item = { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, base: base, label: label(fn, u, args) + detail(txt) };
+      return put('queue', item).catch(function (e) {
+        if (!full(e)) throw e;
+        /* the phone is out of space: drop old kept copies (not changes) and try once more */
+        return prune(0, 2e6).then(function () { return put('queue', item); }).catch(function (e2) {
+          if (window.bpToast) { try { bpToast('This phone is out of space, so that change couldn’t be saved. Free up some space and try again.', 'error'); } catch (x) {} }
+          throw e2;
+        });
+      });
     }).then(function () {
       return Promise.resolve(fn ? patchFor(fn, args, user, at) : patchWrite(u, method, txt, user, at)).catch(function () {});
     }).then(function () {
@@ -929,12 +937,36 @@
     } catch (e) {}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
-  /* keep the kept answers from growing forever: drop what's older than three weeks */
+  /* keep the kept answers from growing forever: drop what's older than three weeks, keep them
+     under about 40 MB (oldest go first), and make more room if the phone is nearly full (round ten).
+     Changes waiting to send are never dropped. */
+  function full(e) { return !!e && (e.name === 'QuotaExceededError' || /quota|storage.*full|no space/i.test(String(e.message || e))); }
+  function prune(maxBytes, keepBytes) {
+    return db().then(function (d) {
+      return new Promise(function (res) {
+        var rows = [], t = d.transaction('reads', 'readonly');
+        t.objectStore('reads').openCursor().onsuccess = function (e) {
+          var c = e.target.result; if (!c) return;
+          rows.push({ k: c.key, at: (c.value && c.value.at) || 0, n: ((c.value && c.value.body) || '').length * 2 + 200 }); c.continue();
+        };
+        t.oncomplete = function () { res(rows); }; t.onerror = function () { res([]); };
+      });
+    }).then(function (rows) {
+      var total = rows.reduce(function (a, r) { return a + r.n; }, 0), cut = Date.now() - 21 * 864e5;
+      var drop = rows.filter(function (r) { return r.at < cut; });
+      total -= drop.reduce(function (a, r) { return a + r.n; }, 0);
+      if (total > maxBytes) {
+        rows.filter(function (r) { return r.at >= cut; }).sort(function (a, b) { return a.at - b.at; }).some(function (r) {
+          if (total <= keepBytes) return true; drop.push(r); total -= r.n; return false;
+        });
+      }
+      return Promise.all(drop.map(function (r) { return del('reads', r.k).catch(function () {}); })).then(function () { return { dropped: drop.length, left: total }; });
+    }).catch(function () { return { dropped: 0, left: -1 }; });
+  }
   setTimeout(function () {
-    all('reads').then(function () {}).catch(function () {});
-    db().then(function (d) {
-      var t = d.transaction('reads', 'readwrite'), s = t.objectStore('reads'), cut = Date.now() - 21 * 864e5;
-      s.openCursor().onsuccess = function (e) { var c = e.target.result; if (!c) return; if (!c.value || c.value.at < cut) c.delete(); c.continue(); };
+    prune(40e6, 30e6).then(function () {
+      if (!navigator.storage || !navigator.storage.estimate) return;
+      return navigator.storage.estimate().then(function (est) { if (est && est.quota && est.usage / est.quota > 0.85) return prune(0, 10e6); });
     }).catch(function () {});
   }, 20000);
 
@@ -954,7 +986,17 @@
     /* the signed-in person's last confirmed role, for starting up with no signal */
     who: who, problems: function () { return state.problems.slice(); },
     open: openSheet, failedCount: function () { return state.failed; },
-    weak: weak, warmNow: function () { return warmKept(true); },
+    weak: weak, warmNow: function () { return warmKept(true); }, prune: prune,
+    forget: function (user) {
+      user = user || who(); if (!user || user === 'anon') return Promise.resolve();
+      try { localStorage.removeItem('bpWarmAt:' + user); } catch (e) {}
+      state.keptAt = 0; state.weak = 0;
+      return keys('reads').then(function (ks) {
+        return Promise.all(ks.filter(function (k) { return String(k).indexOf(user + '|') === 0; }).map(function (k) { return del('reads', k); }));
+      }).then(function () { return all('failed'); }).then(function (fs) {
+        return Promise.all(fs.filter(function (f) { return f.user === user; }).map(function (f) { return del('failed', f.id); }));
+      }).then(function () { return window.caches ? caches.delete('bp-photos') : null; }).catch(function () {}).then(function () { closeSheet(); refresh(); });
+    },
     /* app.html: a job or money entry changed here and elsewhere ({ store, itemId, label, fields: [{ path, mine, theirs }] }) */
     clash: function (c) { var r = Object.assign({ kind: 'clash-job', at: Date.now(), user: who() }, c); delete r.id; return put('failed', r).then(refresh).catch(function () {}); },
     onTheirs: function (store, fn) { theirsFns[store] = fn; },
