@@ -97,11 +97,14 @@
        are kept, so Contacts, the estimate and invoice lists, the calendar and the inbox open
        offline. Anything that creates, sends, charges or asks the AI goes straight through. */
     if ((m = /^\/functions\/v1\/([a-z0-9-]+)/.exec(p))) {
-      if (method !== 'POST' || NEVER_FN.test(m[1])) return 'pass';
+      if (method !== 'POST') return 'pass';
       var b0 = {}; try { b0 = JSON.parse(body || '{}') || {}; } catch (e) { return 'pass'; }
+      /* the AI team's own lists (status, tasks, conversations, approvals) are just reads; anything that asks the AI still needs a signal */
+      if (m[1] === 'ai-team') return /^(status|tasks|threads|thread|approvals)$/.test(String(b0.op || '')) ? 'read' : 'pass';
+      if (NEVER_FN.test(m[1])) return 'pass';
       var verb = String(b0.action || b0.op || (b0.view ? 'view' : '') || '').toLowerCase();
       if (fnWrite(m[1], b0)) return 'write';
-      return /^(list|get|search|view|load|status|state|history|thread|threads|messages|events|summary|stats|contacts|calendar|slots)$/.test(verb) ? 'read' : 'pass';
+      return /^(list|get|search|view|load|status|state|history|thread|threads|messages|events|summary|stats|contacts|calendar|slots)$|_list$/.test(verb) ? 'read' : 'pass';
     }
     if ((m = /^\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(p))) {
       var fn = m[1];
@@ -190,13 +193,20 @@
     } catch (e) { return raw(input, init); }
     var u; try { u = new URL(url, location.href); } catch (e) { return raw(input, init); }
     var k = kindOf(u, method, textOf(body));
-    if (k === 'pass') return raw(input, init);
+    /* the Supabase library retries a table read that fails, so with no signal each one waited about
+       7 seconds: answer "offline" at once and the screen shows its own "couldn't load" (round eight) */
+    var tableRead = u.origin === SB && /^\/rest\/v1\//.test(u.pathname) && (method === 'GET' || method === 'HEAD');
+    /* 504, not 503: the library retries 503 (and network errors) three times, about 7 seconds */
+    var offAnswer = function () { return reply(504, { code: 'offline', message: 'You’re offline', details: '', hint: '' }, 'offline'); };
+    if (k === 'pass') return tableRead && !online() ? Promise.resolve(offAnswer()) : raw(input, init);
     var user = who();
     if (k === 'read') {
       var key = readKey(user, method, u.href, textOf(body));
-      if (!online()) return fromKept(key).then(function (r) { return r || raw(input, init); });
+      if (!online()) return fromKept(key).then(function (r) { return r || (tableRead ? offAnswer() : raw(input, init)); });
       return withTimeout(raw(input, init), 9000).then(function (res) {
         if (res.ok) { keepRead(key, res); state.lastOk = Date.now(); }
+        /* a server function's "not set up / not connected" answer is kept too, so the screen says the same thing offline (round eight) */
+        else if ((res.status === 403 || res.status === 404) && /\/functions\/v1\//.test(u.pathname)) keepRead(key, res);
         return res;
       }, function (err) {
         return fromKept(key).then(function (r) { if (r) return r; throw err; });

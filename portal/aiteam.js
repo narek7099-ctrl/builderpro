@@ -144,7 +144,9 @@
   async function api(body) {
     var tok = '';
     try { var s = await BP_SB.auth.getSession(); tok = s.data.session ? s.data.session.access_token : ''; } catch (e) {}
-    var r = await fetch(BP_URL + '/functions/v1/ai-team', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: BP_ANON, Authorization: 'Bearer ' + (tok || BP_ANON) }, body: JSON.stringify(body) });
+    var r;
+    try { r = await fetch(BP_URL + '/functions/v1/ai-team', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: BP_ANON, Authorization: 'Bearer ' + (tok || BP_ANON) }, body: JSON.stringify(body) }); }
+    catch (e) { return { ok: false, error: navigator.onLine === false ? 'Your AI team needs a signal. What they’ve done so far shows here once you’re back online.' : 'Network error.' }; }
     return r.json().catch(function () { return { ok: false, error: 'Network error.' }; });
   }
   function area() { return $('bpxViewArea'); }
