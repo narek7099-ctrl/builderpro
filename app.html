@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261116-offline2">
-<link rel="stylesheet" href="site/present.css?v=20261116-offline2">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline2"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261116-offline3">
+<link rel="stylesheet" href="site/present.css?v=20261116-offline3">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline3"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,7 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261115c"></script>
+<script src="portal/offline.js?v=20261116a"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -5047,7 +5047,7 @@ function bpCalUnsched(){
     var startISO=_bpSlotSel; var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+3600000));
     btn.disabled=true; btn.textContent='Booking\u2026';
     var res=await bpCalWrite({action:'create',cal:'inspection',contactId:cid,startTime:startISO,endTime:endISO,title:q('bpx-bk-title').value.trim()||'Roof Inspection',address:q('bpx-bk-addr').value.trim()});
-    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent=res.queued?'Booked on this phone. It goes on your calendar when you’re back online.':'Booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
     else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Book'; }
   };
 
@@ -5060,7 +5060,7 @@ function bpCalUnsched(){
     var startISO=bpMkISO(date,time); var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+dur*60000));
     btn.disabled=true; btn.textContent='Booking\u2026';
     var res=await bpCalWrite({action:'create',cal:'jobs',contactId:cid,startTime:startISO,endTime:endISO,title:q('bpx-bk-title').value.trim()||'Roofing Job',address:q('bpx-bk-addr').value.trim(),ignoreValidation:true});
-    if(res.ok){ msg.style.color='#15803d'; msg.textContent='Job booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
+    if(res.ok){ msg.style.color='#15803d'; msg.textContent=res.queued?'Job booked on this phone. It goes on your calendar when you’re back online.':'Job booked.'; setTimeout(function(){ bpCloseModal(); bpLoadCalendar(); },700); }
     else { msg.style.color='#dc2626'; msg.textContent=bpSlotMsg(res); btn.disabled=false; btn.textContent='Book Job'; }
   };
 
@@ -5201,14 +5201,16 @@ window.bpSaveContact=async function(id){
   var done=function(t){ msg.style.color='#15803d'; msg.textContent=t||'Saved.'; setTimeout(function(){ bpCloseModal(); bpLoadContacts(); },900); };
   try{
     if(!id&&live){
-      var ins=await BP_SB.from('contacts').insert({owner:window.bpOwnerId?bpOwnerId():null,name:name||phone||email,phone:phone,email:email,tags:['Added by you'],notes:''}).select('id').single();
+      /* the id is made here, so a contact added with no signal keeps the same id once it reaches the server */
+      var nid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(ch){var r=Math.random()*16|0;return (ch==='x'?r:(r&3|8)).toString(16);});
+      var ins=await BP_SB.from('contacts').insert({id:nid,owner:window.bpOwnerId?bpOwnerId():null,name:name||phone||email,phone:phone,email:email,tags:['Added by you'],notes:''}).select('id').single();
       if(ins.error) return fail('Could not save: '+ins.error.message);
       /* a builder that asked for a new customer (estimate, invoice) gets it picked straight away */
       if(typeof window._bpAfterContact==='function'){ var cb=window._bpAfterContact; window._bpAfterContact=null; try{ cb({id:ins.data.id,name:name||phone||email,phone:phone,email:email}); }catch(e){} }
       var lisa=q('bpx-f-lisa'); if(!(lisa&&lisa.checked)) return done('Saved.');
       if(!phone&&!email) return done('Saved. Add a phone or email to have '+(window.BP_AI_NAME||'Lisa')+' reach out.');
       var pr=await bpAuthApi(BP_URL+'/functions/v1/lead-in',{op:'push',contact_id:ins.data.id}).catch(function(){return null;});
-      return done(pr&&pr.ok&&pr.sent?'Saved. '+(window.BP_AI_NAME||'Lisa')+' is texting them now.':pr&&pr.ok&&pr.reason==='no_highlevel'?'Saved. Texting starts once your business number is set up.':'Saved. We couldn’t start the texts just now; they’re saved in Contacts.');
+      return done(pr&&pr.queued?'Saved on this phone. '+(window.BP_AI_NAME||'Lisa')+' starts texting them when you’re back online.':pr&&pr.ok&&pr.sent?'Saved. '+(window.BP_AI_NAME||'Lisa')+' is texting them now.':pr&&pr.ok&&pr.reason==='no_highlevel'?'Saved. Texting starts once your business number is set up.':'Saved. We couldn’t start the texts just now; they’re saved in Contacts.');
     }
     if(c&&c.src==='bp'&&live){
       var up=await BP_SB.from('contacts').update({name:name,phone:phone,email:email,updated_at:new Date().toISOString()}).eq('id',id);
@@ -14647,11 +14649,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261116-offline2"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline2"></script>
-<script src="site/vendor/SplitText.min.js?v=20261116-offline2"></script>
-<script src="site/site.js?v=20261116-offline2"></script>
-<script src="site/present.js?v=20261116-offline2"></script>
+<script src="site/vendor/gsap.min.js?v=20261116-offline3"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline3"></script>
+<script src="site/vendor/SplitText.min.js?v=20261116-offline3"></script>
+<script src="site/site.js?v=20261116-offline3"></script>
+<script src="site/present.js?v=20261116-offline3"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">

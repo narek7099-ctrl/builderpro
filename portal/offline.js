@@ -71,7 +71,16 @@
   var WRITE_RPC = { crew_clock: 1, crew_clock_at: 1, crew_break: 1, crew_break_at: 1, crew_clock_for: 1, crew_clock_dispute: 1, crew_check: 1, crew_finish: 1,
     crew_add_file: 1, crew_material_add: 1, crew_material_remove: 1, crew_receipt_add: 1, crew_set_photo: 1, team_chat_mark_read: 1 };
   /* tables whose new rows may wait for a signal */
-  var WRITE_TABLE = { team_messages: 1, calendar_notes: 1 };
+  var WRITE_TABLE = { team_messages: 1, calendar_notes: 1, contacts: 1 };
+  /* rows that may be edited offline (round three) */
+  var PATCH_TABLE = { contacts: 1 };
+  /* server functions whose changes may wait (round three): calendar bookings, and starting
+     the AI's first text to a new lead (it sends when the signal returns, as if tapped then) */
+  function fnWrite(name, b) {
+    if (name === 'ghl-calendar') return /^(create|update|delete|cancel)$/.test(String(b.action || ''));
+    if (name === 'lead-in') return b.op === 'push';
+    return false;
+  }
   /* functions that must never be answered from the device (sign-ins, money, live checks) */
   var NEVER = { portal_finance_save: 1, bp_touch: 1 };
   /* server functions never answered from the device */
@@ -87,7 +96,8 @@
       if (method !== 'POST' || NEVER_FN.test(m[1])) return 'pass';
       var b0 = {}; try { b0 = JSON.parse(body || '{}') || {}; } catch (e) { return 'pass'; }
       var verb = String(b0.action || b0.op || (b0.view ? 'view' : '') || '').toLowerCase();
-      return /^(list|get|search|view|load|status|state|history|thread|threads|messages|events|summary|stats|contacts|calendar)$/.test(verb) ? 'read' : 'pass';
+      if (fnWrite(m[1], b0)) return 'write';
+      return /^(list|get|search|view|load|status|state|history|thread|threads|messages|events|summary|stats|contacts|calendar|slots)$/.test(verb) ? 'read' : 'pass';
     }
     if ((m = /^\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(p))) {
       var fn = m[1];
@@ -100,7 +110,7 @@
          server copy handed back offline would overwrite newer edits made here */
       if (m[1] === 'portal_finance') return 'pass';
       if (method === 'GET' || method === 'HEAD') return 'read';
-      return WRITE_TABLE[m[1]] && method === 'POST' ? 'write' : 'pass';
+      return (WRITE_TABLE[m[1]] && method === 'POST') || (PATCH_TABLE[m[1]] && method === 'PATCH') ? 'write' : 'pass';
     }
     if (/^\/storage\/v1\/object\/project-files\//.test(p) && (method === 'POST' || method === 'PUT')) return 'write';
     return 'pass';
@@ -196,22 +206,40 @@
   };
 
   /* ---------------------------------------------------------- the queue --- */
+  var lastQ = '';
   function enqueue(u, method, headers, body, user) {
+    lastQ = 'q-' + Date.now();
     var at = new Date().toISOString(), url = u.href, fn = rpcName(url), txt = textOf(body), args = null;
     if (fn) { try { args = JSON.parse(txt || '{}'); } catch (e) { args = {}; } }
     /* clock and break taps keep the moment they were tapped */
     if (fn === 'crew_clock') { url = url.replace('/rpc/crew_clock', '/rpc/crew_clock_at'); args.p_at = at; txt = JSON.stringify(args); body = txt; fn = 'crew_clock_at'; }
     if (fn === 'crew_break') { url = url.replace('/rpc/crew_break', '/rpc/crew_break_at'); args.p_at = at; if (!('p_kind' in args)) args.p_kind = 'break'; txt = JSON.stringify(args); body = txt; fn = 'crew_break_at'; }
+    /* a booking made with no signal, then moved or cancelled before it was sent: change the waiting one */
+    if (/\/functions\/v1\/ghl-calendar/.test(u.pathname)) {
+      var cb = {}; try { cb = JSON.parse(txt || '{}') || {}; } catch (e) {}
+      if (cb.action !== 'create' && /^q-/.test(String(cb.id || ''))) return editQueued(cb, u, method, txt, user, at);
+    }
     var h = Object.assign({}, headers); delete h['content-length'];
     if (typeof FormData !== 'undefined' && body instanceof FormData) delete h['content-type'];
     return keepBody(body).then(function (kb) {
-      return put('queue', { at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, label: label(fn, u, args) });
+      return put('queue', { qid: lastQ, at: Date.now(), user: user, url: url, method: method, h: h, body: kb, fn: fn, args: args, label: label(fn, u, args) });
     }).then(function () {
-      return Promise.resolve(patchFor(fn, args, user, at)).catch(function () {});
+      return Promise.resolve(fn ? patchFor(fn, args, user, at) : patchWrite(u, method, txt, user, at)).catch(function () {});
     }).then(function () {
       refresh(); kick(4000);
       return answerFor(fn, u, method, txt, args, at, h);
     });
+  }
+  function editQueued(cb, u, method, txt, user, at) {
+    return all('queue').then(function (items) {
+      var it = items.filter(function (x) { return x.qid === cb.id; })[0], step = Promise.resolve();
+      if (it && cb.action === 'update') {
+        var ob = {}; try { ob = JSON.parse((it.body && it.body.v) || '{}') || {}; } catch (e) {}
+        ['title', 'address', 'startTime', 'endTime'].forEach(function (k) { if (cb[k] != null) ob[k] = cb[k]; });
+        it.body = { t: 'text', v: JSON.stringify(ob) }; step = put('queue', it);
+      } else if (it) step = del('queue', it.id);
+      return step.then(function () { return patchWrite(u, method, txt, user, at); }).catch(function () {});
+    }).then(function () { refresh(); return reply(200, { ok: true, queued: true }); });
   }
   function label(fn, u, a) {
     a = a || {};
@@ -231,6 +259,9 @@
     if (/\/storage\/v1\/object\//.test(u.href)) return 'Photo upload';
     if (/team_messages/.test(u.pathname)) return 'Chat message';
     if (/calendar_notes/.test(u.pathname)) return 'Calendar note';
+    if (/\/rest\/v1\/contacts/.test(u.pathname)) return 'Contact';
+    if (/ghl-calendar/.test(u.pathname)) return 'Calendar booking';
+    if (/lead-in/.test(u.pathname)) return 'First text to a new lead';
     return 'Change';
   }
   /* what the app is told when a change is queued: shaped like the server's answer */
@@ -244,6 +275,8 @@
       case 'team_chat_mark_read': return reply(200, null);
     }
     if (fn) return reply(200, { ok: true, queued: true });
+    if (/\/functions\/v1\//.test(u.pathname)) return reply(200, { ok: true, queued: true, sent: false, id: lastQ });
+    if (method === 'PATCH') return new Response(null, { status: 204, headers: { 'x-bp-offline': 'queued' } });
     if (/\/storage\/v1\/object\//.test(u.href)) {
       var path = u.pathname.replace(/^\/storage\/v1\/object\//, '');
       return reply(200, { Key: path, Id: 'queued', path: path.replace(/^project-files\//, '') });
@@ -304,6 +337,49 @@
       return patchRpc('crew_checklist', user, function (d, args) { if (!d || args.p_job !== a.p_job) return; d.doneAt = at; return d; });
     }
   }
+  /* change every kept answer for one address (for this person): fn(data, sentBody) */
+  function patchKept(method, urlStart, user, fn) {
+    var pre = user + '|' + method + '|' + urlStart;
+    return keys('reads').then(function (ks) {
+      return Promise.all(ks.filter(function (k) { return String(k).indexOf(pre) === 0; }).map(function (k) {
+        return get('reads', k).then(function (r) {
+          if (!r) return; var rest = String(k).slice((user + '|' + method + '|').length), bar = rest.indexOf('|'), url = rest.slice(0, bar), sent = rest.slice(bar + 1);
+          var d, b; try { d = JSON.parse(r.body); b = sent ? JSON.parse(sent) : {}; } catch (e) { return; }
+          var nd = fn(d, b, url); if (nd === undefined) return;
+          r.body = JSON.stringify(nd); return put('reads', r, k);
+        });
+      }));
+    });
+  }
+  /* round three: new and edited contacts, and calendar bookings, show at once */
+  function patchWrite(u, method, txt, user, at) {
+    var b = {}; try { b = JSON.parse(txt || '{}') || {}; } catch (e) {}
+    if (/^\/rest\/v1\/contacts/.test(u.pathname)) {
+      if (method === 'POST') {
+        var row = Array.isArray(b) ? b[0] : b; if (!row) return;
+        row = Object.assign({ date_added: at, tags: [], ghl_id: '' }, row);
+        return patchKept('GET', SB + '/rest/v1/contacts?', user, function (d) { if (!Array.isArray(d)) return; if (d.some(function (x) { return x.id === row.id; })) return; d.unshift(row); return d; });
+      }
+      if (method === 'PATCH') {
+        var idm = /[?&]id=eq\.([^&]+)/.exec(u.search); if (!idm) return;
+        var id = decodeURIComponent(idm[1]);
+        return patchKept('GET', SB + '/rest/v1/contacts?', user, function (d) { if (!Array.isArray(d)) return; d.forEach(function (x) { if (x.id === id) Object.assign(x, b); }); return d; });
+      }
+    }
+    if (/\/functions\/v1\/ghl-calendar/.test(u.pathname)) {
+      var qid = lastQ;
+      return patchKept('POST', SB + '/functions/v1/ghl-calendar', user, function (d, sent) {
+        if (!d || sent.action !== 'list' || !Array.isArray(d.events)) return;
+        if (b.action === 'create') {
+          if (b.cal && sent.cal && b.cal !== sent.cal) return;
+          d.events.push({ id: qid, title: b.title || 'Appointment', contactId: b.contactId || null, start: b.startTime, end: b.endTime, status: 'confirmed', address: b.address || '', queued: true });
+        } else if (b.action === 'update') {
+          d.events.forEach(function (e) { if (e.id !== b.id) return; if (b.title != null) e.title = b.title; if (b.address != null) e.address = b.address; if (b.startTime) e.start = b.startTime; if (b.endTime) e.end = b.endTime; });
+        } else { d.events = d.events.filter(function (e) { return e.id !== b.id; }); }
+        return d;
+      });
+    }
+  }
   /* the crew app tells us its checklist after a queued tick, so the kept copy matches */
   function patchChecklist(job, list) {
     return patchRpc('crew_checklist', who(), function (d, args) { if (!d || args.p_job !== job) return; d.checklist = list; return d; });
@@ -344,6 +420,7 @@
               else { why = 'HTTP ' + res.status; }
               /* "already clocked in" and the like: the server already has it, nothing to do */
               var done = bad ? put('failed', { at: Date.now(), label: it.label, why: why, url: it.url }) : Promise.resolve();
+              if (bad && window.bpToast) { try { bpToast(it.label + ' couldn’t be saved: ' + why, 'error'); } catch (e) {} }
               return done.then(function () { return del('queue', it.id); }).then(function () { sentAny = true; if (bad) state.problems.push(it.label + ': ' + why); return next(); });
             });
           }, function () { throw 'stop'; });
