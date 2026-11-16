@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261115-offline">
-<link rel="stylesheet" href="site/present.css?v=20261115-offline">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261115-offline"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261116-offline2">
+<link rel="stylesheet" href="site/present.css?v=20261116-offline2">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261116-offline2"}}</script>
 
 
 <style id="bpi-icons">
@@ -1903,7 +1903,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261115b"></script>
+<script src="portal/offline.js?v=20261115c"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -6481,7 +6481,7 @@ function bpFinCloudPushNow(){
    on the same browser, drop the last account's cached jobs, money, notes,
    receipts and templates before anything is drawn or synced, so one
    account's data can never show in (or be saved into) another. */
-var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpUnsent','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
+var BP_DEVICE_KEYS=['bpJobs','bpFin','bpGone','bpUnsent','bpOutbox','bpCalNotes','bpClosedDays','bpReceipts','bpMatTemplates','bpMatSeen','bpSupplyCost','bpCalcId'];
 var _bpCacheMine=false;
 function bpDeviceCacheFor(oid){
   if(!oid) return;
@@ -14610,7 +14610,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20261024q36"></script>
 <script src="portal/matlists.js?v=20261114a"></script>
-<script src="portal/quote.js?v=20261102c"></script>
+<script src="portal/quote.js?v=20261116a"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261114a">
 <script src="portal/prices.js?v=20260930b"></script>
 <script src="portal/dash.js?v=20261114g"></script>
@@ -14647,11 +14647,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261115-offline"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261115-offline"></script>
-<script src="site/vendor/SplitText.min.js?v=20261115-offline"></script>
-<script src="site/site.js?v=20261115-offline"></script>
-<script src="site/present.js?v=20261115-offline"></script>
+<script src="site/vendor/gsap.min.js?v=20261116-offline2"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261116-offline2"></script>
+<script src="site/vendor/SplitText.min.js?v=20261116-offline2"></script>
+<script src="site/site.js?v=20261116-offline2"></script>
+<script src="site/present.js?v=20261116-offline2"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">

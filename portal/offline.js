@@ -74,10 +74,21 @@
   var WRITE_TABLE = { team_messages: 1, calendar_notes: 1 };
   /* functions that must never be answered from the device (sign-ins, money, live checks) */
   var NEVER = { portal_finance_save: 1, bp_touch: 1 };
+  /* server functions never answered from the device */
+  var NEVER_FN = /^(test-login|system-test|stripe|billing|account|team-invite|ai-|aiceo|blueprint|supply-scan|lisa|voice|twilio|job-done|contract-sign|homeowner)/;
   function kindOf(u, method, body) {
     if (u.origin !== SB) return 'pass';
     var p = u.pathname, m;
-    if (/^\/auth\//.test(p) || /^\/realtime\//.test(p) || /^\/functions\//.test(p)) return 'pass';
+    if (/^\/auth\//.test(p) || /^\/realtime\//.test(p)) return 'pass';
+    /* server functions (round two): only calls that just read (list, get, view, search...)
+       are kept, so Contacts, the estimate and invoice lists, the calendar and the inbox open
+       offline. Anything that creates, sends, charges or asks the AI goes straight through. */
+    if ((m = /^\/functions\/v1\/([a-z0-9-]+)/.exec(p))) {
+      if (method !== 'POST' || NEVER_FN.test(m[1])) return 'pass';
+      var b0 = {}; try { b0 = JSON.parse(body || '{}') || {}; } catch (e) { return 'pass'; }
+      var verb = String(b0.action || b0.op || (b0.view ? 'view' : '') || '').toLowerCase();
+      return /^(list|get|search|view|load|status|state|history|thread|threads|messages|events|summary|stats|contacts|calendar)$/.test(verb) ? 'read' : 'pass';
+    }
     if ((m = /^\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(p))) {
       var fn = m[1];
       if (NEVER[fn]) return 'pass';
@@ -348,7 +359,9 @@
       });
     });
   }
-  function refresh() { return keys('queue').then(function (ks) { state.count = ks.length; paint(); }).catch(function () {}); }
+  var extra = [];   /* other waiting things (portal/quote.js outbox): functions that return a count */
+  function extraCount() { return extra.reduce(function (t, f) { try { return t + (+f() || 0); } catch (e) { return t; } }, 0); }
+  function refresh() { return keys('queue').then(function (ks) { state.count = ks.length + extraCount(); paint(); }).catch(function () {}); }
 
   /* ------------------------------------------------------------ the pill --- */
   var pill = null;
@@ -412,6 +425,7 @@
   window.bpOffline = {
     online: online, count: function () { return state.count; }, flush: function () { return flush(); },
     patchChecklist: patchChecklist, noteBreak: noteBreak,
+    addCounter: function (f) { extra.push(f); refresh(); }, refresh: function () { return refresh(); },
     /* the signed-in person's last confirmed role, for starting up with no signal */
     who: who, problems: function () { return state.problems.slice(); }
   };

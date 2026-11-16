@@ -218,7 +218,7 @@
   function renderView(area, j) {
     var q = quoteOf(j), c = calc(j), ct = contactBy(j.contactId);
     var G = gb(j), o = q.opt, os = optState(j), multi = o && o.sent ? o.sent.length > 1 : G.on && G.tiers && tiersOut(j).length > 1;
-    var badge = os ? '<span class="bpx-badge qg-st ' + os.cls + '">' + os.t + '</span>' : '<span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span>';
+    var badge = q.pendingSend ? '<span class="bpx-badge qx-sent"><span class="ms" style="font-size:14px;vertical-align:-2px">outbox</span> In outbox</span>' : os ? '<span class="bpx-badge qg-st ' + os.cls + '">' + os.t + '</span>' : '<span class="bpx-badge' + (q.estId ? ' qx-sent' : '') + '">' + (q.estId ? 'Sent ' + new Date(q.sentAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Draft') + '</span>';
     var paper = multi ? '<div class="qx-paper qg-paper">' + (j.title && j.title !== 'New estimate' ? '<div class="qg-pvt">' + esc(j.title) + '</div>' : '') + (q.desc ? '<p class="qg-pvd">' + esc(q.desc) + '</p>' : '')
         + optsHtml(j, o && o.sent && o.sent.length ? o.sent : tiersOut(j), (o && o.rec) || G.rec, o && o.status === 'chosen' ? o.chosen : '') + '</div>'
       : '<div class="qx-paper">' + doc('est', { lines: c.lines, disc: c.disc, cust: j.contactId ? j.name : '', days: +q.validDays, title: j.title === 'New estimate' ? '' : j.title, desc: q.desc }) + '</div>';
@@ -233,7 +233,7 @@
         + (o && o.link && o.status === 'sent' ? '<button class="bpx-btn ghost" onclick="BPQ.optLink()">Copy link</button>' : '')
         + (q.estId && !(o && o.status === 'sent' && (o.sent || []).length > 1) ? '<button class="bpx-btn ghost" onclick="bpInvoiceFrom(\'' + j.id + '\')">Make invoice</button>' : '')
         + (o && o.status === 'chosen' ? '' : '<button class="bpx-addbtn" id="qb-send" onclick="BPQ.send()">' + (q.estId ? (multi ? 'Send options again' : 'Send again') : G.on && G.tiers ? sendLabel(j) : 'Send to ' + esc(String(j.contactId ? j.name : 'customer').split(' ')[0])) + '</button>') + '</div></div>'
-      + '<div class="qb-msg" id="qb-msg"></div>'
+      + (q.pendingSend ? '<div class="qb-msg ok" id="qb-msg"><span class="ms" style="font-size:16px;vertical-align:-3px">outbox</span> In your outbox. It sends to ' + esc(j.name || 'the customer') + ' by itself when you’re back online.</div>' : q.pendingErr ? '<div class="qb-msg err" id="qb-msg">Couldn’t send from your outbox: ' + esc(q.pendingErr) + '. Check it and send again.</div>' : '<div class="qb-msg" id="qb-msg"></div>')
       + (o && o.status === 'chosen' ? '<div class="qg-won"><span class="ms">task_alt</span><div><b>' + esc(j.name.split(' ')[0]) + ((o.sent || []).length > 1 ? ' picked ' + esc((TK.filter(function (t) { return t[0] === o.chosen; })[0] || [0, ''])[1]) : ' approved the estimate') + ': ' + m2(c.total) + '</b><small>Signed' + (o.signer ? ' by ' + esc(o.signer) : '') + (o.at ? ' on ' + new Date(o.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '') + '. It’s now the accepted estimate, so the deposit and the rest of your follow-up run as usual.</small></div></div>' : '')
       + '<div class="qx-vgrid' + (multi ? ' qg-vgrid' : '') + '">' + paper
       + '<aside class="bpx-panel qx-priv"><div class="bpx-ptitle">Only you see this</div>'
@@ -774,10 +774,10 @@
       + optsHtml(j, ts, g.rec, '') + '<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Close</button></div>');
     var cards = document.querySelectorAll('.bpx-modalcard'), mc = cards[cards.length - 1]; if (mc) { mc.style.maxWidth = '1040px'; mc.style.width = '96vw'; }
   };
-  Q.sendOptions = async function () {
-    var j = job(Q.id), msg = $('qb-msg'), btn = $('qb-send'); if (!j) return;
+  Q.sendOptions = async function (auto) {
+    var j = job(auto ? auto.jid : Q.id), msg = auto ? null : $('qb-msg'), btn = auto ? null : $('qb-send'); if (!j) return;
     var q = j.quote, g = gb(j), ct = contactBy(j.contactId);
-    var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } };
+    var say = function (t, ok) { if (msg) { msg.className = 'qb-msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; } else if (auto && !ok) toast(j.name + ': ' + t, 'error'); };
     if (!j.contactId) return say('Pick the customer first.');
     var plain = !g.on;
     if (!plain && !g.tiers) return say('Build the 3 options first.');
@@ -789,21 +789,83 @@
     var phone = (ct && ct.phone) || j.phone || '', email = (ct && ct.email) || j.email || '';
     if (q.via !== 'email' && !phone) return say('This customer has no phone number. Send by email instead.');
     if (q.via !== 'sms' && !email) return say('This customer has no email. Send by text instead.');
-    if (((q.opt && q.opt.status === 'sent') || q.estId) && !confirm('Send it again with your changes? The link sent before stops working.')) return;
+    if (!auto && ((q.opt && q.opt.status === 'sent') || q.estId) && !q.pendingSend && !confirm('Send it again with your changes? The link sent before stops working.')) return;
     if (!window.BP_LIVE || !window.bpAuthApi) return say('Sign in to send estimates.');
+    /* no signal: into the outbox, sent by itself when the signal comes back */
+    if (!auto && navigator.onLine === false) return outEst(j, say);
     if (btn) btn.disabled = true; say('Sending…', true);
     try {
       var d = await bpAuthApi(OPT_URL(), { op: 'send', jobId: j.id, contactId: j.contactId, customer: j.name, phone: phone, email: email,
         title: j.title === 'New estimate' ? 'Your estimate' : j.title, scope: q.desc || '', addr: j.addr || '', tiers: ts, taxPct: +q.taxPct || 0, taxOn: q.taxOn, discount: +q.discount || 0,
         recommended: ts.length === 1 ? ts[0].key : (g.rec || 'better'), via: q.via, validDays: +q.validDays || 14, businessName: biz(), show: q.show });
-      if (!d || !d.ok) { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); if (btn) btn.disabled = false; return; }
+      if (!d || !d.ok) { if (auto) { delete q.pendingSend; q.pendingErr = String((d && d.error) || 'unknown error'); save(true); outCount(); } say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); if (btn) btn.disabled = false; return; }
+      delete q.pendingSend; delete q.pendingErr;
       var sent = d.tiers || [], better = sent.filter(function (t) { return t.key === 'better'; })[0] || sent[0];
       q.opt = { id: d.id, token: d.token, link: d.link, status: 'sent', sent: sent, rec: g.rec, chosen: sent.length === 1 ? sent[0].key : '', sentAt: Date.now(), messaged: !!d.sent, reason: d.reason || '' };
       q.estId = 'opt:' + d.id; q.sentAt = Date.now(); q.status = 'sent'; q.sentTotal = better ? better.total : calc(j).total; save(true);
+      outCount();
+      if (auto) { toast((sent.length > 1 ? 'Sent ' + j.name + ' ' + sent.length + ' options' : 'Estimate sent to ' + j.name) + ' from your outbox.', 'success'); if (Q.id === j.id && Q.mode === 'view') render(); return true; }
       Q.mode = 'view'; render();
       if (d.sent) toast(sent.length > 1 ? 'Sent ' + j.name + ' ' + sent.length + ' options to choose from.' : 'Estimate sent to ' + j.name + '.', 'success'); else Q.optLink(true);
-    } catch (e) { say('Network error. Try again.'); if (btn) btn.disabled = false; }
+    } catch (e) {
+      if (auto) return false;   /* still no signal: it stays in the outbox */
+      if (offlineErr(e)) return outEst(j, say);
+      say('Network error. Try again.'); if (btn) btn.disabled = false;
+    }
   };
+  /* ---------- the outbox (offline mode, round two) ----------
+     With no signal, Send puts the estimate or invoice here instead of failing.
+     When the signal comes back each one is sent with the same code as the Send
+     button: the server makes the customer's link, the text or email goes out,
+     and the job updates as if Send was pressed then. Estimates go out from the
+     job as it is at that moment, so edits made while waiting are included.
+     Invoices keep exactly what was on them when Send was pressed. */
+  var OUT = 'bpOutbox';
+  function outInv() { try { return JSON.parse(localStorage.getItem(OUT) || '[]'); } catch (e) { return []; } }
+  function outInvSave(a) { try { localStorage.setItem(OUT, JSON.stringify(a)); } catch (e) {} outCount(); }
+  function outCount() { if (window.bpOffline && bpOffline.refresh) bpOffline.refresh(); }
+  function offlineErr(e) { return navigator.onLine === false || (e && (e.name === 'TypeError' || /fetch|network|load failed/i.test(String(e.message || e)))); }
+  function outEst(j, say) {
+    var q = quoteOf(j); q.pendingSend = Date.now(); delete q.pendingErr; save(true); outCount();
+    say('No signal. It’s in your outbox and sends to ' + (j.name || 'the customer') + ' by itself when you’re back online.', true);
+    var btn = $('qb-send'); if (btn) btn.disabled = false;
+    return 'queued';
+  }
+  Q.outbox = function () {
+    var est = jobs().filter(function (j) { return j && j.quote && j.quote.pendingSend; }).map(function (j) { return { kind: 'est', id: j.id, name: j.name, title: j.title, at: j.quote.pendingSend }; });
+    return est.concat(outInv().map(function (x) { return { kind: 'inv', id: x.id, name: x.ctName, title: x.payload.title, at: x.at, amount: x.payload.amount }; }));
+  };
+  var flushing = false;
+  Q.outFlush = async function () {
+    if (flushing || navigator.onLine === false || !window.BP_LIVE) return;
+    flushing = true;
+    try {
+      var est = jobs().filter(function (j) { return j && j.quote && j.quote.pendingSend; });
+      for (var i = 0; i < est.length; i++) { var r = await Q.sendOptions({ jid: est[i].id }); if (r === false) return; }
+      var list = outInv();
+      while (list.length) {
+        var x = list[0], d;
+        try { d = await post(GHL_INV_URL, x.payload); } catch (e) { return; }   /* still no signal */
+        var j = x.jobId ? job(x.jobId) : null;
+        if (d && d.ok) {
+          if (j && j.quote) quoteOf(j).invoices.forEach(function (v) { if (v.id === x.id) { v.id = d.id || v.id; delete v.queued; } });
+          if (j && x.stepId && BPPx()) BPPx().markSent(j, x.stepId, x.payload.amount, d.id || '');
+          if (j) save(true);
+          toast('Invoice sent to ' + (x.ctName || 'the customer') + ' from your outbox.', 'success');
+        } else {
+          /* the server said no: take it back off the job, and say why */
+          if (j && j.quote) { var qq = quoteOf(j); qq.invoices = qq.invoices.filter(function (v) { return v.id !== x.id; }); save(true); }
+          toast('An invoice to ' + (x.ctName || 'a customer') + ' couldn’t send: ' + String((d && d.error) || 'unknown error'), 'error');
+        }
+        list = outInv().filter(function (y) { return y.id !== x.id; }); outInvSave(list);
+      }
+      if (window.bpInvLoad && document.getElementById('bpxInvList')) setTimeout(bpInvLoad, 1500);
+    } finally { flushing = false; outCount(); }
+  };
+  if (window.bpOffline && bpOffline.addCounter) bpOffline.addCounter(function () { return Q.outbox().length; });
+  window.addEventListener('online', function () { setTimeout(Q.outFlush, 2500); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) setTimeout(Q.outFlush, 1500); });
+  setTimeout(function () { Q.outFlush(); }, 6000);
   var WHY = { no_highlevel: 'Your texting number isn’t connected yet', no_contact: 'This customer isn’t in your texting inbox yet', no_token: 'Your texting number isn’t connected yet' };
   /* the same reasons, said for email when the estimate went by email */
   var WHY_EMAIL = { no_highlevel: 'Your business email isn’t connected yet', no_contact: 'This customer isn’t in your inbox yet', no_token: 'Your business email isn’t connected yet', no_email: 'There’s no email on file for this customer' };
@@ -1093,10 +1155,20 @@
     var jt = j && j.title !== 'New estimate' ? j.title : '';
     /* the words Deposit / Final in the title drive the contact tags and workflows */
     var title = s.label && s.fixType === s.type && s.type !== 'full' ? s.label + (jt ? ': ' + jt : '') : s.type === 'deposit' ? 'Deposit' + (jt ? ': ' + jt : '') : s.type === 'final' ? 'Final balance' + (jt ? ': ' + jt : '') : s.type === 'progress' ? 'Progress payment' + (jt ? ': ' + jt : '') : (jt || 'Invoice');
+    var payload = { action: 'create', contactId: s.contactId, contactName: ct.name || 'Customer', phone: ct.phone || '', email: ct.email || '',
+        title: title, amount: tot, items: gItems(ls), discount: disc, description: s.desc || '', send: s.via, businessName: biz(), dueDays: +s.days };
+    /* no signal: into the outbox. The job counts it as billed right away, so it isn't invoiced twice. */
+    var queueInv = function () {
+      var oid = 'outinv-' + Date.now();
+      outInvSave(outInv().concat([{ id: oid, at: Date.now(), payload: payload, jobId: j ? j.id : null, stepId: s.stepId || null, type: s.type, ctName: ct.name || '' }]));
+      if (j) { if (j.quote) quoteOf(j).invoices.push({ id: oid, type: s.type, amount: tot, at: Date.now(), queued: true }); if (s.stepId && BPPx()) BPPx().markSent(j, s.stepId, tot, ''); save(true); }
+      toast('No signal. The invoice to ' + (ct.name || 'the customer') + ' is in your outbox and sends by itself when you’re back online.', 'success');
+      Q.inv = null; if (quick) { if ($('qb-qsend') && window.bpCloseModal) bpCloseModal(); if (window.bpQbInvs) bpQbInvs(); } else bpNav('invoices');
+    };
+    if (navigator.onLine === false) return queueInv();
     btn.disabled = true; say('Sending…', true);
     try {
-      var d = await post(GHL_INV_URL, { action: 'create', contactId: s.contactId, contactName: ct.name || 'Customer', phone: ct.phone || '', email: ct.email || '',
-        title: title, amount: tot, items: gItems(ls), discount: disc, description: s.desc || '', send: s.via, businessName: biz(), dueDays: +s.days });
+      var d = await post(GHL_INV_URL, payload);
       if (d && d.ok) {
         if (j) {
           if (j.quote) quoteOf(j).invoices.push({ id: d.id || uid('inv'), type: s.type, amount: tot, at: Date.now() });
@@ -1106,7 +1178,7 @@
         toast('Invoice sent to ' + (ct.name || 'the customer') + '.', 'success');
         Q.inv = null; if (quick) { if ($('qb-qsend') && window.bpCloseModal) bpCloseModal(); if (window.bpQbInvs) bpQbInvs(); if (window.bpInvLoad) setTimeout(bpInvLoad, 1500); } else bpNav('invoices');
       } else { say('Couldn’t send: ' + String((d && d.error) || 'unknown error')); btn.disabled = false; }
-    } catch (e) { say('Network error. Try again.'); btn.disabled = false; }
+    } catch (e) { if (offlineErr(e)) return queueInv(); say('Network error. Try again.'); btn.disabled = false; }
   };
 
   /* ================================================================
@@ -1337,4 +1409,26 @@
   window.bpJobsApproved = function () { return jobs().filter(function (j) { return j.status === 'quote' && !j.sample && j.quote && j.quote.status === 'accepted'; }); };
   setTimeout(function () { try { bpQuoteAdopt(); } catch (e) {} }, 4000);
   setInterval(function () { try { bpQuoteAdopt(); } catch (e) {} }, 120000);
+  /* the outbox on the Estimates and Invoices pages (offline mode, round two) */
+  function outboxPanel(kind) {
+    var items = Q.outbox().filter(function (x) { return x.kind === kind; });
+    if (!items.length) return '';
+    var off = navigator.onLine === false;
+    return '<div class="bpx-panel qb-outbox"><div class="bpx-ptitle"><span class="ms">outbox</span>Outbox<span class="lg2">' + (off ? 'no signal: these send by themselves when you’re back online' : 'sending now…') + '</span></div>'
+      + items.map(function (x) {
+        return '<div class="qb-ob"><span class="ms">' + (kind === 'est' ? 'request_quote' : 'receipt_long') + '</span><div><b>' + esc(x.name || 'Customer') + '</b><small>' + esc(x.title || (kind === 'est' ? 'Estimate' : 'Invoice'))
+          + (x.amount ? ' · ' + m2(x.amount) : '') + ' · waiting since ' + new Date(x.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '</small></div></div>';
+      }).join('') + '</div>';
+  }
+  [['bpQbSheets', 'bpxQbSheets', 'est'], ['bpQbInvs', 'bpxQbInvs', 'inv']].forEach(function (w) {
+    var f = window[w[0]]; if (typeof f !== 'function') return;
+    window[w[0]] = function () { var r = f.apply(this, arguments); var el = $(w[1]); if (el) { var old = el.querySelector('.qb-outbox'); if (old) old.remove(); el.insertAdjacentHTML('afterbegin', outboxPanel(w[2])); } return r; };
+  });
+  if (!document.getElementById('qb-outbox-css')) {
+    var oc = document.createElement('style'); oc.id = 'qb-outbox-css';
+    oc.textContent = '#bpx .qb-outbox{margin-bottom:14px;border-color:rgba(0,111,255,.22)!important}#bpx .qb-outbox .bpx-ptitle{display:flex;align-items:center;gap:8px}#bpx .qb-outbox .bpx-ptitle .ms{font-size:19px;color:#006fff}'
+      + '#bpx .qb-ob{display:flex;align-items:center;gap:10px;padding:9px 4px;border-top:1px solid rgba(0,111,255,.08)}#bpx .qb-ob:first-of-type{border-top:0}#bpx .qb-ob .ms{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#eaf2ff;color:#006fff;font-size:18px;flex:none}'
+      + '#bpx .qb-ob b{display:block;font-size:13.5px}#bpx .qb-ob small{font-size:12px;color:var(--mu,#6b7a90)}#bpx.bpx-dark .qb-ob .ms{background:rgba(77,163,255,.14);color:#9cc3ff}';
+    document.head.appendChild(oc);
+  }
 })();
