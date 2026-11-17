@@ -293,3 +293,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before offline mode round eleven: the morning after (2026-11-17)
 - Live site (main): `abc0758`
 - Changes: opening the app offline after the sign-in expired (it lasts about an hour) showed the sign-in page and every read waited about 25 s, because the Supabase library kept retrying the renewal. Both Supabase clients in app.html (BP_SB, bpSetSB) now read the stored sign-in through portal/offline.js (bpOffline.authStorage): with no signal an expired sign-in reads as current, so the app opens at once with what's saved (0.3-0.5 s in tests); the stored expiry is never written over (clamped to the token's own), and with a signal it renews as before. To undo: remove BP_SB_OPTS from the two createClient calls.
+
+## Before centring date and time boxes on iPhone/iPad (2026-11-17)
+- Live site (main): `514ef81`
+- Changes: portal/shell.css. On iPhone/iPad Safari the value in date and time boxes (e.g. a job's Schedule start and end time) sat at the top of the box. Inside @supports (-webkit-touch-callout: none) (iOS Safari only), those boxes are laid out as inline-flex with align-items:center and the value stretched to the full width (left-aligned as before); select boxes get align-items:center there too. Chrome and desktop Safari are unchanged. A measured sweep of every owner and crew screen, the job sheet's tabs and the common pop-ups, at phone, iPad and desktop sizes, found nothing else off-centre.
