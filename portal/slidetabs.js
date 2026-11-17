@@ -6,6 +6,7 @@
      #hlTabs    page tabs        sideways
      #bpTabbar  phone bottom bar sideways
      #bpxNav    sidebar          up and down (the kitchen-fitter reel)
+     .db-per    the dashboard's This month / 6 months / 1 year switch
    Rows are redrawn on page changes; each row keeps its pill's live edges on
    the element, so a redraw mid-move carries on. Reduced motion: no glide. */
 (function () {
@@ -16,8 +17,15 @@
     if (v) { ind.style.transform = 'translateY(' + st.a + 'px)'; ind.style.height = Math.max(0, st.b - st.a) + 'px'; }
     else { ind.style.transform = 'translateX(' + st.a + 'px)'; ind.style.width = Math.max(0, st.b - st.a) + 'px'; }
   }
-  function slide(box, sel, ix, iy, v) {
+  /* a row redrawn from scratch (the dashboard's period switch) carries its pill over by name */
+  var KEPT = {};
+  function slide(box, sel, ix, iy, v, key) {
     if (!box || box.hidden || !box.getClientRects().length) return;
+    if (key && !box._bpSl && KEPT[key]) {
+      var old = KEPT[key]; if (old.raf) cancelAnimationFrame(old.raf);
+      box._bpSl = { cur: { a: old.cur.a, b: old.cur.b }, to: { a: old.to.a, b: old.to.b } };
+      if (old.raf) box._bpSl.to = { a: NaN, b: NaN };   /* it was mid-glide: glide on from where it is */
+    }
     var on = box.querySelector(sel), ind = box.querySelector(':scope > .bp-slide');
     if (!on || !on.offsetWidth) { if (ind) ind.style.opacity = '0'; return; }
     if (!ind) { ind = document.createElement('span'); ind.className = 'bp-slide'; ind.setAttribute('aria-hidden', 'true'); box.insertBefore(ind, box.firstChild); }
@@ -27,7 +35,8 @@
     var to = v ? { a: on.offsetTop + iy, b: on.offsetTop + on.offsetHeight - iy } : { a: on.offsetLeft + ix, b: on.offsetLeft + on.offsetWidth - ix };
     var sl = box._bpSl;
     ind.style.opacity = '1';
-    if (!sl || RM) { box._bpSl = { cur: { a: to.a, b: to.b }, to: to }; paint(ind, box._bpSl.cur, v); return; }
+    if (!sl || RM) { box._bpSl = { cur: { a: to.a, b: to.b }, to: to }; if (key) KEPT[key] = box._bpSl; paint(ind, box._bpSl.cur, v); return; }
+    if (key) KEPT[key] = sl;
     if (sl.to.a === to.a && sl.to.b === to.b) { paint(ind, sl.cur, v); if (!sl.raf) ind.classList.remove('moving'); return; }
     if (sl.raf) cancelAnimationFrame(sl.raf);
     var from = { a: sl.cur.a, b: sl.cur.b }, fwd = to.a > from.a, t0 = performance.now();
@@ -48,10 +57,13 @@
       slide(document.getElementById('hlTabs'), '.hl-tab.on', 0, 4);
       slide(document.getElementById('bpTabbar'), '.bp-tab.on:not(.bp-tab-new)', 0, 4);
       slide(document.getElementById('bpxNav'), '.hl-ni.on', 0, 0, true);
+      /* the dashboard's This month / 6 months / 1 year switch */
+      var per = document.querySelector('#bpxViewArea .db-per'); if (per) slide(per, 'button.on', 0, 0, false, 'db-per');
     });
   };
   window.addEventListener('resize', function () {
     ['hlTabs', 'bpTabbar', 'bpxNav'].forEach(function (id) { var b = document.getElementById(id); if (b) b._bpSl = null; });
+    var per = document.querySelector('#bpxViewArea .db-per'); if (per) per._bpSl = null; KEPT = {};
     window.bpSlideTabs();
   });
 })();
