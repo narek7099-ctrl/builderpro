@@ -66,6 +66,34 @@
   }
   function online() { return navigator.onLine !== false; }
 
+  /* -------------------------------------------- the sign-in, with no signal --- */
+  /* Round eleven. A sign-in lasts about an hour. Opened offline the next morning, the Supabase
+     library tried to renew it, retried for about 25 seconds, and every screen (and the start-up
+     check, which showed the sign-in page) waited behind it. With no signal the stored sign-in is
+     read as still current, so nothing waits on a renewal that can't happen; the real expiry is
+     never written over, and with a signal it renews as usual. */
+  function jwtExp(t) {
+    try { var p = String(t || '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(atob(p + '==='.slice((p.length + 3) % 4))).exp || 0; } catch (e) { return 0; }
+  }
+  var authStorage = {
+    getItem: function (k) {
+      var v = null; try { v = localStorage.getItem(k); } catch (e) { return null; }
+      if (v && k === AUTH_KEY && !online()) {
+        try {
+          var s = JSON.parse(v), now = Math.floor(Date.now() / 1000);
+          if (s && s.refresh_token && s.expires_at && s.expires_at < now + 300) { s.expires_at = now + 3600; return JSON.stringify(s); }
+        } catch (e) {}
+      }
+      return v;
+    },
+    setItem: function (k, v) {
+      /* never store the stretched expiry: it always matches the token's own */
+      if (k === AUTH_KEY) { try { var s = JSON.parse(v), e = jwtExp(s && s.access_token); if (s && e && s.expires_at > e) { s.expires_at = e; v = JSON.stringify(s); } } catch (x) {} }
+      try { localStorage.setItem(k, v); } catch (e) {}
+    },
+    removeItem: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+
   /* ------------------------------------------------- what kind of call --- */
   /* functions that change something: queued when there's no signal */
   var WRITE_RPC = { crew_clock: 1, crew_clock_at: 1, crew_break: 1, crew_break_at: 1, crew_clock_for: 1, crew_clock_dispute: 1, crew_check: 1, crew_finish: 1,
@@ -986,7 +1014,7 @@
     /* the signed-in person's last confirmed role, for starting up with no signal */
     who: who, problems: function () { return state.problems.slice(); },
     open: openSheet, failedCount: function () { return state.failed; },
-    weak: weak, warmNow: function () { return warmKept(true); }, prune: prune,
+    weak: weak, warmNow: function () { return warmKept(true); }, prune: prune, authStorage: authStorage,
     forget: function (user) {
       user = user || who(); if (!user || user === 'anon') return Promise.resolve();
       try { localStorage.removeItem('bpWarmAt:' + user); } catch (e) {}
