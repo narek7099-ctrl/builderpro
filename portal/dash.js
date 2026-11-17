@@ -1021,6 +1021,7 @@
     setTimeout(fillAll, 0);
     countUp(el);
     fetchState();
+    if (window.bpSlideTabs) bpSlideTabs();   /* the period switch's pill glides to the new choice (portal/slidetabs.js) */
   };
 
 

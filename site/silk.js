@@ -48,15 +48,15 @@
       var sy = -Math.min(0.16, scr / Math.max(1, H) * 0.1);       /* scrolling lifts it a little */
       var c = (WX - 0.28) / 0.75;                                  /* puts the waist (the middle of the curve) at WX */
       return [
-        (1.12 + b(0.00007, 0, 0.04)) * W, (-0.18 + sy + b(0.00006, 1, 0.05)) * H,
-        (c + b(0.00009, 2, 0.04)) * W, (0.26 + sy + b(0.00008, 3, 0.05)) * H,
-        (c + b(0.00008, 4, 0.04)) * W, (1.06 + sy + b(0.00007, 5, 0.04)) * H,
-        (1.12 + b(0.00006, 6, 0.04)) * W, (1.18 + sy + b(0.00009, 7, 0.04)) * H];
+        (1.12 + b(0.000095, 0, 0.04)) * W, (-0.18 + sy + b(0.00008, 1, 0.05)) * H,
+        (c + b(0.00012, 2, 0.04)) * W, (0.26 + sy + b(0.00011, 3, 0.05)) * H,
+        (c + b(0.00011, 4, 0.04)) * W, (1.06 + sy + b(0.000095, 5, 0.04)) * H,
+        (1.12 + b(0.00008, 6, 0.04)) * W, (1.18 + sy + b(0.00012, 7, 0.04)) * H];
     }
     function frame(t) {
       ctx.setTransform(D, 0, 0, D, 0, 0);
       ctx.clearRect(0, 0, W, H);
-      var q = spine(t), M = Math.min(W, H), roll = t * 0.00022 + scr * 0.0012;
+      var q = spine(t), M = Math.min(W, H), roll = t * 0.0003 + scr * 0.0012;   /* 2026-11-17: a little livelier (was 0.00022) */
       bz(q, 0.5, P);
       var wx = P[0], wy = P[1];
       /* colour runs from mint at the waist to blue out at the fans */
@@ -105,7 +105,7 @@
           var k = s / S; bz(q, k, P); bz(q, Math.min(1, k + 0.004), T);
           var dx = T[0] - P[0], dy = T[1] - P[1], L = Math.sqrt(dx * dx + dy * dy) || 1;
           var u = Math.abs(k - 0.5) * 2, w = wid * (0.015 + 0.985 * Math.pow(u, 1.15)) * sd.r * (k < 0.5 ? 1.2 : 0.85);   /* pinched at the waist, the upper fan wider */
-          var ang = sd.a + roll + k * 7.5 + Math.sin(k * 3 + t * 0.00015) * 0.7;
+          var ang = sd.a + roll + k * 7.5 + Math.sin(k * 3 + t * 0.0002) * 0.7;
           var off = w * Math.cos(ang);
           pts[s * 3] = P[0] - dy / L * off; pts[s * 3 + 1] = P[1] + dx / L * off; pts[s * 3 + 2] = Math.sin(ang);
         }
@@ -152,13 +152,13 @@
   /* the worker: owns the canvas, runs its own clock */
   var WORKER = 'var SILK=' + SILK.toString() + ';\n' + '(' + function () {
     /* It watches what a frame costs on this machine and keeps itself to about
-       15% of one core: slower machines get fewer frames, and a machine too slow
+       22% of one core: slower machines get fewer frames, and a machine too slow
        for even 6 a second gets a still picture. It also rests while the person
        is scrolling, clicking or typing, so the app has the machine then. */
-    var s = null, on = true, still = false, last = 0, fps = 24, need = true, busy = false, cost = 0, slow = false, clock = 0;
+    var s = null, on = true, still = false, last = 0, fps = 30, need = true, busy = false, cost = 0, slow = false, clock = 0;
     var tick = function () {
       var now = performance.now();
-      var rate = Math.min(fps, 150 / Math.max(cost, 1));
+      var rate = Math.min(fps, 220 / Math.max(cost, 1));   /* 2026-11-17: about 22% of one core (was 15%), for a smoother glide */
       if (cost && rate < 6) slow = true;
       var moving = !still && !slow && !busy;
       if (s && on && (need || (moving && now - last >= 1000 / rate - 2))) {
@@ -172,7 +172,7 @@
     };
     self.onmessage = function (e) {
       var m = e.data;
-      if (m.canvas) { s = SILK(m.canvas.getContext('2d'), m.small, m.waist); still = !!m.still; fps = m.small ? 20 : 24; tick(); }
+      if (m.canvas) { s = SILK(m.canvas.getContext('2d'), m.small, m.waist); still = !!m.still; fps = m.small ? 24 : 30; tick(); }
       if (!s) return;
       if (m.w) s.size(m.w, m.h, m.dpr);
       if ('dark' in m || 'scroll' in m) s.set(m);
@@ -212,11 +212,11 @@
     sz(); send({ dark: state.dark, scroll: 0 });
     var rt = 0; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(sz, 120); }, { passive: true });
     document.addEventListener('visibilitychange', function () { send({ on: state.on && !document.hidden }); });
-    /* scrolling, clicking or typing: the ribbon rests until 0.7 s after the last one */
+    /* scrolling, clicking or typing: the ribbon rests until 0.45 s after the last one */
     var bz = false, bt = 0;
     var poke = function () {
       if (!bz) { bz = true; if (worker) worker.postMessage({ busy: true }); }
-      clearTimeout(bt); bt = setTimeout(function () { bz = false; if (worker) worker.postMessage({ busy: false }); }, 700);
+      clearTimeout(bt); bt = setTimeout(function () { bz = false; if (worker) worker.postMessage({ busy: false }); }, 450);
     };
     ['wheel', 'pointerdown', 'keydown', 'touchstart'].forEach(function (ev) { window.addEventListener(ev, poke, { passive: true, capture: true }); });
     document.addEventListener('scroll', poke, { passive: true, capture: true });

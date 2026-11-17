@@ -904,6 +904,10 @@
 #bpx.bpx-dark .pj-np-add{background:rgba(255,255,255,.1);color:#c3cfff}
 #bpx.bpx-dark .pj-np-add:hover{background:rgba(255,255,255,.18)}
 #bpx.bpx-dark .db-per button.on{background:var(--card)}
+/* with the gliding pill (portal/slidetabs.js) the pill is the background: the buttons sit on top of it */
+#bpx .db-per.has-slide{position:relative}
+#bpx .db-per.has-slide>button{position:relative;z-index:1}
+#bpx .db-per.has-slide>button.on{background:transparent;box-shadow:none}
 
 /* ---------- Finances > Archive ---------- */
 #bpx .arc-set{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
