@@ -1519,3 +1519,7 @@
 #bpx .cb-ico .cb-ic .ms{font-size:21px}
 #bpx .cb-ico:hover .cb-ic{background:radial-gradient(circle at 30% 25%,#5aa2ff 0,#006fff 55%,#0050c8 100%);color:#fff;box-shadow:0 8px 16px -8px rgba(0,111,255,.9)}
 #bpx.bpx-dark .cb-ico .cb-ic{background:rgba(77,163,255,.12);color:#9cc3ff;box-shadow:none}
+
+/* the dashboard drawn again while showing (fresh data, a live update): charts and cards
+   appear finished instead of growing in a second time (portal/dash.js sets it for 2.5 s) */
+#bpx#bpx#bpx #bpxViewArea.bp-still *,#bpx#bpx#bpx #bpxViewArea.bp-still *::before,#bpx#bpx#bpx #bpxViewArea.bp-still *::after{animation-duration:0s!important;animation-delay:0s!important}
