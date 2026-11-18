@@ -228,6 +228,279 @@
     document.head.appendChild(c);
   }
 
+  /* ================================================================
+     The team console (2026-11-18): the AI team laid out like an operations console.
+     Left: the team by group, and this month's messages. Middle: the counts, a search and
+     every assistant in a table (what it's connected to, its tasks, how it's doing).
+     Right: the one picked, with a map of what it's wired to (the AI CEO over it, the
+     tools, pages and the web it works from), what's on its board, and a way in to chat.
+     Deep navy like the app's sidebar; blue for work, mint for ready. The old team map
+     is one tap away (Team map).
+     ================================================================ */
+  var TLI = { ghl: ['CRM', 'contacts', 'tool'], projects: ['Projects', 'construction', 'tool'], assign_task: ['Task board', 'checklist', 'tool'], ceo_snapshot: ['Business snapshot', 'monitoring', 'tool'],
+    crew_match: ['Crew match', 'groups', 'tool'], price_list: ['Price list', 'sell', 'tool'] };
+  var PGI = { leads: 'person_add', lead_sources: 'call_split', calculator_leads: 'calculate', estimates: 'request_quote', contracts: 'draw', payments: 'payments', money: 'account_balance_wallet',
+    customer_messages: 'forum', change_orders: 'swap_horiz', reviews: 'star', calendar_notes: 'calendar_month', team: 'badge', hours: 'schedule', subcontractors: 'engineering', materials: 'inventory_2',
+    inspections: 'fact_check', website: 'language', social: 'share', competitors: 'storefront', storms: 'thunderstorm' };
+  var GRP = [['all', 'Everyone', 'diversity_3', null], ['lead', 'Manager', 'monitoring', ['ceo']], ['grow', 'Sales & growth', 'trending_up', ['sales', 'marketing', 'research', 'clients']],
+    ['jobs', 'Jobs & crews', 'construction', ['estimator', 'projects', 'dispatch', 'permits']], ['office', 'Office', 'event_note', ['office', 'workflows']]];
+  var ORDER = ['ceo'].concat(RING);
+  function groupOf(k) { for (var i = 1; i < GRP.length; i++) if (GRP[i][3].indexOf(k) >= 0) return GRP[i]; return GRP[0]; }
+  function connList(k) {
+    var st = A.st && A.st.agents ? A.st.agents.filter(function (a) { return a.key === k; })[0] : null;
+    var tools = (st && st.tools) || ['ghl', 'projects'], pages = (st && st.pages) || SEE[k] || [], out = [];
+    tools.forEach(function (t) { if (TLI[t]) out.push({ n: TLI[t][0], ic: TLI[t][1], kind: 'tool' }); });
+    if (st ? st.web : ['sales', 'marketing', 'research', 'permits', 'ceo', 'dispatch'].indexOf(k) >= 0) out.push({ n: 'The web', ic: 'public', kind: 'web' });
+    pages.forEach(function (p) { out.push({ n: PG[p] || p, ic: PGI[p] || 'description', kind: 'page' }); });
+    return out;
+  }
+  function stateOf(k) {
+    var t = (A.st && A.st.tasks && A.st.tasks[k]) || { open: 0, doing: 0, blocked: 0 };
+    if (t.doing) return ['work', 'Working', t];
+    if (t.blocked) return ['need', 'Needs you', t];
+    if (t.open) return ['queue', 'Queued', t];
+    return ['ready', 'Ready', t];
+  }
+  function ago(t) { var m = Math.round((Date.now() - Date.parse(t)) / 6e4); return !isFinite(m) ? '' : m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; }
+  function aicCss() {
+    if ($('aic-css')) return; var c = document.createElement('style'); c.id = 'aic-css';
+    c.textContent = [
+      '.aic{--n0:#04101f;--n1:#071a33;--n2:#0b2343;--n3:#10305a;--ln:rgba(148,178,220,.13);--ln2:rgba(148,178,220,.22);--tx:#e8eef7;--mu:#8ea3c0;--mu2:#62789a;--bl:#3d8bff;--bl2:#006fff;--mi:#16C79A;--mi2:#3FE0B6;',
+      '  display:grid;grid-template-columns:200px minmax(0,1fr) minmax(360px,420px);height:calc(100vh - 176px);min-height:600px;border-radius:20px;overflow:hidden;color:var(--tx);',
+      '  background:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.16),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(22,199,154,.08),transparent 60%),linear-gradient(180deg,var(--n1),var(--n0));',
+      '  border:1px solid rgba(0,21,48,.5);box-shadow:0 24px 60px -30px rgba(0,21,48,.55),inset 0 1px 0 rgba(255,255,255,.05);font-size:13.5px}',
+      '.aic .ms{font-size:18px}.aic{scroll-margin-top:84px}',
+      '.aic button{font:inherit;color:inherit}',
+      /* left rail */
+      '.aic-rail{display:flex;flex-direction:column;gap:2px;padding:14px 10px;border-right:1px solid var(--ln);min-height:0;overflow:auto}',
+      '.aic-org{display:flex;align-items:center;gap:10px;padding:4px 6px 14px}',
+      '.aic-logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#006fff,#16C79A);box-shadow:0 6px 16px -6px rgba(0,111,255,.6);flex:none}.aic-logo .ms{color:#fff;font-size:19px}',
+      '.aic-org b{display:block;font-size:13.5px;line-height:1.2}.aic-org small{display:block;color:var(--mu);font-size:11.5px}',
+      '.aic-cap{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu2);padding:12px 8px 6px}',
+      '.aic-g{display:flex;align-items:center;gap:9px;width:100%;padding:8px 9px;border:0;border-radius:10px;background:none;text-align:left;cursor:pointer;color:#c4d2e6;transition:background .15s,color .15s}',
+      '.aic-g:hover{background:rgba(255,255,255,.05);color:var(--tx)}',
+      '.aic-g.on{background:linear-gradient(90deg,rgba(0,111,255,.28),rgba(0,111,255,.1));color:#fff;box-shadow:inset 0 0 0 1px rgba(61,139,255,.35)}',
+      '.aic-g .ms{color:var(--mu)}.aic-g.on .ms{color:#8fb8ff}',
+      '.aic-g em{margin-left:auto;font-style:normal;font-size:11px;color:var(--mu);background:rgba(255,255,255,.06);border-radius:99px;padding:0 7px;line-height:18px}',
+      '.aic-g.on em{background:rgba(255,255,255,.14);color:#fff}',
+      '.aic-use{margin-top:auto;padding:12px 10px;border:1px solid var(--ln);border-radius:14px;background:rgba(255,255,255,.03)}',
+      '.aic-use b{font-size:13px}.aic-use small{display:block;color:var(--mu);font-size:11.5px;margin-top:2px}',
+      '.aic-bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:9px;overflow:hidden}.aic-bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#006fff,#16C79A)}',
+      /* middle */
+      '.aic-mid{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--ln)}',
+      '.aic-head{display:flex;align-items:flex-end;gap:12px;padding:18px 20px 12px}',
+      '.aic-head h2{margin:0;font-size:20px;letter-spacing:-.02em;color:#fff}.aic-head p{margin:3px 0 0;color:var(--mu);font-size:12.5px}',
+      '.aic-mapb{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln2);background:rgba(255,255,255,.04);border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12.5px;flex:none}.aic-mapb:hover{background:rgba(255,255,255,.08)}',
+      '.aic-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 20px 14px}',
+      '.aic-tile{border:1px solid var(--ln);border-radius:14px;padding:11px 12px;background:rgba(255,255,255,.03);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}',
+      '.aic-tile:hover{background:rgba(255,255,255,.06)}.aic-tile.on{border-color:rgba(61,139,255,.75);background:rgba(0,111,255,.12);box-shadow:0 0 0 3px rgba(0,111,255,.12)}',
+      '.aic-tile .ms{font-size:16px;color:#8fb8ff}.aic-tile span{display:block;color:var(--mu);font-size:12px;margin-top:5px}.aic-tile b{display:block;font-size:20px;letter-spacing:-.02em;color:#fff;margin-top:1px;font-variant-numeric:tabular-nums}',
+      '.aic-bar2{display:flex;gap:8px;padding:0 20px 10px}',
+      '.aic-q{flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--ln);background:rgba(255,255,255,.04);border-radius:10px;padding:0 10px}.aic-q .ms{color:var(--mu);font-size:17px}',
+      '#bpx#bpx#bpx#bpx#bpx#bpx .aic .aic-q input,#bpx#bpx#bpx#bpx#bpx#bpx .aic .aic-q input:focus{flex:1;min-width:0;width:auto;height:auto;border:0!important;border-radius:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;color:var(--tx)!important;-webkit-text-fill-color:var(--tx);padding:8px 0!important;margin:0!important;font-size:13px!important;outline:0!important}',
+      '.aic-q:focus-within{border-color:rgba(61,139,255,.6);box-shadow:0 0 0 3px rgba(0,111,255,.18)}',
+      '.aic-q input::placeholder{color:var(--mu2)}',
+      '.aic-tbl{flex:1;min-height:0;overflow:auto;padding:0 8px 10px}',
+      '.aic-tr{display:grid;grid-template-columns:minmax(130px,1.3fr) minmax(90px,.8fr) minmax(110px,1fr) 44px 92px;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent}',
+      '.aic-th{cursor:default;color:var(--mu2);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;position:sticky;top:0;background:linear-gradient(180deg,var(--n1) 70%,transparent);z-index:1}',
+      '.aic-tr:not(.aic-th):hover{background:rgba(255,255,255,.04)}',
+      '.aic-tr.on{background:rgba(0,111,255,.13);border-color:rgba(61,139,255,.35)}',
+      '.aic-tr+.aic-tr:not(.on){box-shadow:inset 0 1px 0 var(--ln)}',
+      '.aic-nm{display:flex;align-items:center;gap:10px;min-width:0}.aic-nm b{font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.aic-av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(61,139,255,.16);color:#8fb8ff;flex:none;box-shadow:inset 0 0 0 1px rgba(61,139,255,.25)}.aic-av .ms{font-size:17px}',
+      '.aic-av.ceo{background:linear-gradient(135deg,#006fff,#16C79A);color:#fff;box-shadow:0 6px 14px -6px rgba(0,111,255,.6)}',
+      '.aic-role{color:var(--mu);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.aic-icons{display:flex;align-items:center;gap:4px;min-width:0}.aic-icons i{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-style:normal;flex:none}.aic-icons i .ms{font-size:13px;color:#b9cbe4}.aic-icons i.web .ms{color:var(--mi2)}.aic-icons i.tool .ms{color:#8fb8ff}',
+      '.aic-icons small{color:var(--mu);font-size:11.5px;margin-left:2px;white-space:nowrap}',
+      '.aic-n{font-variant-numeric:tabular-nums;color:#c4d2e6;text-align:center}.aic-n.z{color:var(--mu2)}',
+      '.aic-st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:99px;padding:3px 9px;white-space:nowrap;justify-self:start}',
+      '.aic-st i{width:6px;height:6px;border-radius:50%;background:currentColor}',
+      '.aic-st.ready{color:var(--mi2);background:rgba(22,199,154,.12)}.aic-st.work{color:#9cc4ff;background:rgba(0,111,255,.2)}.aic-st.work i{animation:aicPulse 1.4s ease-in-out infinite}',
+      '.aic-st.queue{color:#c4d2e6;background:rgba(255,255,255,.08)}.aic-st.need{color:#fff;background:#0970F7}',
+      '@keyframes aicPulse{50%{opacity:.35}}',
+      '.aic-empty{padding:30px 16px;text-align:center;color:var(--mu)}',
+      /* right */
+      '.aic-det{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto}',
+      '.aic-dh{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}',
+      '.aic-nav{display:flex;gap:2px}.aic-nav button{width:28px;height:28px;border-radius:8px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--mu)}.aic-nav button:hover{background:rgba(255,255,255,.07);color:#fff}.aic-nav .ms{font-size:18px}',
+      '.aic-dh h3{margin:0;font-size:16px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.aic-dsub{display:flex;align-items:center;gap:8px;padding:0 18px 12px;color:var(--mu);font-size:12.5px}.aic-dsub .ms{font-size:15px;color:#8fb8ff}',
+      '.aic-tabs{display:flex;gap:4px;padding:0 14px;border-bottom:1px solid var(--ln)}',
+      '.aic-tabs button{border:0;background:none;padding:10px 8px;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:12.5px}',
+      '.aic-tabs button.on{color:#fff;border-bottom-color:var(--bl)}',
+      '.aic-pane{padding:14px 16px 18px;display:flex;flex-direction:column;gap:12px}',
+      '.aic-graph{position:relative;border:1px solid var(--ln);border-radius:16px;background:radial-gradient(70% 60% at 50% 50%,rgba(0,111,255,.12),transparent 70%),rgba(255,255,255,.02);overflow:hidden}',
+      '.aic-graph:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(148,178,220,.16) 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:radial-gradient(75% 70% at 50% 50%,#000,transparent);mask-image:radial-gradient(75% 70% at 50% 50%,#000,transparent);pointer-events:none}',
+      '.aic-graph svg{position:relative;display:block;width:100%;height:auto}',
+      '.aic-graph text{font-family:inherit;font-size:10.5px;fill:#b9cbe4}.aic-graph text.c{font-size:12px;fill:#fff;font-weight:600}.aic-graph text.s{font-size:9.5px;fill:#62789a}',
+      '.aic-lnk{fill:none;stroke-width:1.4;opacity:.85}',
+      '.aic-node circle.r{fill:#0b2343;stroke-width:1.4}',
+      '.aic-node:hover circle.r{fill:#10305a}',
+      '.aic-gfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;border-top:1px solid var(--ln);color:var(--mu);font-size:11.5px}.aic-gfoot i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}',
+      '.aic-more{margin-left:auto;color:#e8eef7;border:1px solid var(--ln2);background:rgba(4,16,31,.6);border-radius:9px;padding:5px 9px;font-size:11.5px;cursor:pointer;display:inline-flex;gap:5px;align-items:center}.aic-more .ms{font-size:14px}',
+      '.aic-item{display:flex;align-items:center;gap:10px;border:1px solid var(--ln);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;width:100%}',
+      '.aic-item:hover{background:rgba(255,255,255,.06)}.aic-item>div{flex:1;min-width:0}.aic-item b{display:block;font-weight:600;color:#fff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '.aic-item small{display:block;color:var(--mu);font-size:11.5px;margin-top:2px}.aic-item>.ms{color:var(--mu);font-size:18px}',
+      '.aic-pr{font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px}.aic-pr.high{background:#0970F7;color:#fff}.aic-pr.low{background:rgba(255,255,255,.08);color:var(--mu)}',
+      '.aic-sec{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu2);margin-top:4px}',
+      '.aic-hint{display:grid;gap:6px}.aic-hint button{border:1px solid var(--ln);background:rgba(255,255,255,.03);border-radius:10px;padding:9px 11px;text-align:left;cursor:pointer;color:#c4d2e6;font-size:12.5px}.aic-hint button:hover{background:rgba(255,255,255,.07);color:#fff}',
+      '.aic-cta{display:flex;gap:8px;padding:12px 16px 16px;margin-top:auto;border-top:1px solid var(--ln);position:sticky;bottom:0;background:linear-gradient(180deg,rgba(7,26,51,.6),var(--n1) 40%)}',
+      '.aic-go{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:12px;padding:11px 14px;background:linear-gradient(180deg,#1a7dff,#006fff);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 10px 24px -12px rgba(0,111,255,.9)}',
+      '.aic-go2{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln2);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.04);cursor:pointer;color:#e8eef7}',
+      '.aic-cn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.aic-cn div{display:flex;align-items:center;gap:8px;border:1px solid var(--ln);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.03);font-size:12.5px;min-width:0}',
+      '.aic-cn div span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.aic-cn .ms{font-size:16px;color:#b9cbe4}.aic-cn .web .ms{color:var(--mi2)}.aic-cn .tool .ms{color:#8fb8ff}',
+      '.aic-back{display:none}',
+      /* iPad landscape and laptops: the rail becomes chips over the table */
+      '@media(max-width:1280px){.aic{grid-template-columns:minmax(0,1fr) minmax(360px,400px)}.aic-rail{display:none}.aic-chips{display:flex!important}}',
+      '.aic-chips{display:none;gap:6px;padding:0 20px 10px;overflow-x:auto;scrollbar-width:none}.aic-chips::-webkit-scrollbar{display:none}',
+      '.aic-chips button{flex:none;border:1px solid var(--ln);background:rgba(255,255,255,.04);border-radius:99px;padding:6px 11px;cursor:pointer;font-size:12.5px;color:#c4d2e6}.aic-chips button.on{background:rgba(0,111,255,.28);border-color:rgba(61,139,255,.5);color:#fff}',
+      '@media(max-width:1600px){.aic-tr{grid-template-columns:minmax(120px,1.3fr) minmax(100px,1fr) 40px 92px}.aic-role{display:none}}',
+      /* phones and iPad portrait: one column; the picked assistant opens over the list */
+      '@media(max-width:900px){.aic{grid-template-columns:minmax(0,1fr);height:auto;min-height:0;border-radius:18px}.aic-mid{border-right:0}.aic-tbl{max-height:none;overflow:visible}.aic-det{display:none;border-top:1px solid var(--ln)}',
+      '  .aic.det .aic-mid{display:none}.aic.det .aic-det{display:flex}.aic-back{display:inline-flex}.aic-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.aic-head{padding:16px 16px 12px}.aic-tiles,.aic-bar2,.aic-chips{padding-left:16px;padding-right:16px}',
+      '  .aic-tr{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px}.aic-th{display:none}.aic-tr .aic-icons{grid-column:1;padding-left:40px}.aic-tr .aic-n{display:none}.aic-tr .aic-st{grid-row:1;grid-column:2;justify-self:end}.aic-cta{position:static}}',
+      /* the phone layout pads page sections; the console's columns keep their own spacing */
+      '#bpx#bpx#bpx#bpx#bpx .aic>section,#bpx#bpx#bpx#bpx#bpx .aic>aside{padding:0!important;margin:0!important}#bpx#bpx#bpx#bpx#bpx .aic>.aic-rail{padding:14px 10px!important}',
+      '.aic-tile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '@media(max-width:900px){.aic-tile{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:0 9px;padding:10px 12px}.aic-tile .ms{grid-row:1/3;font-size:20px}.aic-tile span{margin:0;font-size:11.5px}.aic-tile b{font-size:18px;margin:0}.aic-head h2{font-size:18px}.aic-mapb{padding:6px 9px}}',
+      '@media (prefers-reduced-motion:reduce){.aic-st.work i{animation:none}}'
+    ].join('\n');
+    document.head.appendChild(c);
+  }
+  function aicIcons(k) {
+    var c = connList(k), sh = c.slice(0, 5);
+    return '<div class="aic-icons">' + sh.map(function (x) { return '<i class="' + x.kind + '" title="' + esc(x.n) + '"><span class="ms">' + x.ic + '</span></i>'; }).join('') + (c.length > 5 ? '<small>+' + (c.length - 5) + '</small>' : '') + '</div>';
+  }
+  function aicRows() {
+    var g = A.grp || 'all', q = String(A.q || '').toLowerCase().trim(), f = A.flt || 'all';
+    var list = ORDER.filter(function (k) {
+      if (g !== 'all' && groupOf(k)[0] !== g) return false;
+      var s = stateOf(k)[0];
+      if (f === 'work' && s !== 'work') return false;
+      if (f === 'tasks' && !(stateOf(k)[2].open + stateOf(k)[2].doing + stateOf(k)[2].blocked)) return false;
+      if (q && (AG[k].n + ' ' + AG[k].d + ' ' + connList(k).map(function (x) { return x.n; }).join(' ')).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    if (!list.length) return '<div class="aic-empty">No one on your team matches that.</div>';
+    return '<div class="aic-tr aic-th"><span>Assistant</span><span class="aic-role">Group</span><span>Connected to</span><span style="text-align:center">Tasks</span><span>Status</span></div>'
+      + list.map(function (k) {
+        var s = stateOf(k), t = s[2], n = t.open + t.doing + t.blocked;
+        return '<div class="aic-tr' + (A.sel === k ? ' on' : '') + '" data-k="' + k + '" role="button" tabindex="0"><span class="aic-nm"><span class="aic-av' + (k === 'ceo' ? ' ceo' : '') + '"><span class="ms">' + AG[k].ic + '</span></span><b>' + esc(AG[k].n) + '</b></span>'
+          + '<span class="aic-role">' + esc(k === 'ceo' ? 'Manager' : groupOf(k)[1]) + '</span>' + aicIcons(k)
+          + '<span class="aic-n' + (n ? '' : ' z') + '">' + (n || '·') + '</span><span class="aic-st ' + s[0] + '"><i></i>' + s[1] + '</span></div>';
+      }).join('');
+  }
+  /* the picked assistant, wired to what it works from: the CEO (or you) on the left, its tools,
+     pages and the web on the right, each joined by a curve with a dot running along it */
+  function aicGraph(k) {
+    var W = 420, H = 332, cx = 190, cy = 160, c = connList(k), more = Math.max(0, c.length - 8); c = c.slice(0, 8);
+    var col = { tool: '#3d8bff', page: '#8fb8ff', web: '#16C79A', mgr: '#a9b8cc', you: '#3FE0B6' };
+    var left = k === 'ceo' ? [{ n: 'You', ic: 'person', kind: 'you', s: 'approves' }] : [{ n: 'AI CEO', ic: 'monitoring', kind: 'mgr', s: 'manages' }, { n: 'You', ic: 'person', kind: 'you', s: 'approves' }];
+    var nodes = [], motion = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    left.forEach(function (x, i) { nodes.push({ x: 52, y: left.length === 1 ? cy : 78 + i * 144, d: x }); });
+    var colA = c.slice(0, Math.ceil(c.length / 2)), colB = c.slice(Math.ceil(c.length / 2));
+    /* two columns, the second set half a step lower, so no two labels sit side by side */
+    var place = function (arr, x, off) { arr.forEach(function (d, i) { nodes.push({ x: x, y: arr.length === 1 ? cy + off : 36 + off + i * 72, d: d }); }); };
+    place(colA, 300, 0); place(colB, 382, colB.length > 1 ? 36 : 0);
+    var paths = '', dots = '', circles = '';
+    nodes.forEach(function (n, i) {
+      var cl = col[n.d.kind] || '#8fb8ff', mx = (cx + n.x) / 2, id = 'aicp' + i;
+      paths += '<path id="' + id + '" class="aic-lnk" stroke="' + cl + '" stroke-opacity=".55" d="M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + n.y + ' ' + n.x + ' ' + n.y + '"/>';
+      if (motion) dots += '<circle r="2.6" fill="' + cl + '"><animateMotion dur="' + (2.6 + (i % 4) * 0.5) + 's" begin="' + (i * 0.35) + 's" repeatCount="indefinite" keyPoints="' + (n.x < cx ? '1;0' : '0;1') + '" keyTimes="0;1" calcMode="linear"><mpath href="#' + id + '"/></animateMotion></circle>';
+      circles += '<g class="aic-node"><circle class="r" cx="' + n.x + '" cy="' + n.y + '" r="15" stroke="' + cl + '"/>'
+        + '<foreignObject x="' + (n.x - 9) + '" y="' + (n.y - 9) + '" width="18" height="18"><span class="ms" style="font-size:15px;color:' + cl + ';display:block;line-height:18px;text-align:center">' + n.d.ic + '</span></foreignObject>'
+        + '<text x="' + n.x + '" y="' + (n.y + 27) + '" text-anchor="middle">' + esc(n.d.n.length > 15 ? n.d.n.slice(0, 13) + '…' : n.d.n) + '</text>' + (n.d.s ? '<text class="s" x="' + n.x + '" y="' + (n.y + 39) + '" text-anchor="middle">' + n.d.s + '</text>' : '') + '</g>';
+    });
+    var center = '<g><circle cx="' + cx + '" cy="' + cy + '" r="30" fill="rgba(0,111,255,.16)"/><circle cx="' + cx + '" cy="' + cy + '" r="21" fill="url(#aicG)" stroke="rgba(255,255,255,.35)"/>'
+      + '<foreignObject x="' + (cx - 11) + '" y="' + (cy - 11) + '" width="22" height="22"><span class="ms" style="font-size:19px;color:#fff;display:block;line-height:22px;text-align:center">' + AG[k].ic + '</span></foreignObject>'
+      + '<text class="c" x="' + cx + '" y="' + (cy + 46) + '" text-anchor="middle">' + esc(AG[k].n) + '</text></g>';
+    return '<div class="aic-graph">'
+      + '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-label="What ' + esc(AG[k].n) + ' is connected to"><defs><linearGradient id="aicG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#006fff"/><stop offset="1" stop-color="#16C79A"/></linearGradient></defs>' + paths + dots + circles + center + '</svg>'
+      + '<div class="aic-gfoot"><span><i style="background:#3d8bff"></i>Tools</span><span><i style="background:#8fb8ff"></i>Pages it reads</span><span><i style="background:#16C79A"></i>The web</span>' + (more ? '<span>+' + more + ' more under Connections</span>' : '') + '<button type="button" class="aic-more" data-map="1"><span class="ms">open_in_full</span>Team map</button></div></div>';
+  }
+  function aicTaskItem(t) {
+    var s = TS[t.status] || TS.open;
+    return '<button type="button" class="aic-item" data-task="' + t.id + '"><span class="aic-st ' + ({ doing: 'work', blocked: 'need', open: 'queue', done: 'ready', cancelled: 'queue' }[t.status] || 'queue') + '"><i></i>' + s[0] + '</span><div><b>' + esc(t.title) + (t.priority === 'high' ? '<span class="aic-pr high">High</span>' : t.priority === 'low' ? '<span class="aic-pr low">Low</span>' : '') + '</b>'
+      + '<small>' + esc(t.assigned_by === 'owner' ? 'From you' : 'From ' + ((AG[t.assigned_by] || {}).n || t.assigned_by)) + ' · ' + ago(t.updated_at || t.created_at) + '</small></div><span class="ms">chevron_right</span></button>';
+  }
+  function aicDetail(k) {
+    var s = stateOf(k), c = connList(k), mine = (A.tk || []).filter(function (t) { return t.assignee === k; });
+    var live = mine.filter(function (t) { return t.status === 'doing' || t.status === 'open' || t.status === 'blocked'; });
+    var tab = A.dtab || 'ov', body = '';
+    if (tab === 'ov') {
+      body = aicGraph(k)
+        + '<div class="aic-sec">On the board</div>' + (live.length ? live.slice(0, 3).map(aicTaskItem).join('') : '<div class="aic-item" style="cursor:default"><span class="ms" style="color:#3FE0B6">check_circle</span><div><b>Nothing waiting</b><small>' + (A.tk ? 'Give ' + esc(AG[k].n) + ' a task, or ask the AI CEO to plan the week.' : 'Loading the board…') + '</small></div></div>')
+        + '<div class="aic-sec">Ask ' + esc(AG[k].n) + '</div><div class="aic-hint">' + AG[k].h.map(function (h) { return '<button type="button" data-ask="' + esc(h) + '">' + esc(h) + '</button>'; }).join('') + '</div>';
+    } else if (tab === 'cn') {
+      body = '<div class="bpx-mut" style="color:var(--mu);font-size:12.5px">' + esc(AG[k].n) + ' reads these, works with these tools' + (c.some(function (x) { return x.kind === 'web'; }) ? ' and searches the web' : '') + '. Anything for a customer waits for your OK.</div>'
+        + '<div class="aic-cn">' + c.map(function (x) { return '<div class="' + x.kind + '"><span class="ms">' + x.ic + '</span><span>' + esc(x.n) + '</span></div>'; }).join('') + '</div>';
+    } else {
+      body = (mine.length ? mine.slice(0, 20).map(aicTaskItem).join('') : '<div class="aic-empty">No tasks for ' + esc(AG[k].n) + ' yet.</div>')
+        + '<button type="button" class="aic-go2" data-give="1" style="justify-content:center"><span class="ms">add_task</span>Give ' + esc(AG[k].n) + ' a task</button>';
+    }
+    return '<div class="aic-dh"><button type="button" class="aic-nav aic-back" data-back="1" style="border:0;background:none;cursor:pointer;color:var(--mu)"><span class="ms">arrow_back</span></button>'
+      + '<div class="aic-nav"><button type="button" data-step="-1" aria-label="Previous"><span class="ms">keyboard_arrow_up</span></button><button type="button" data-step="1" aria-label="Next"><span class="ms">keyboard_arrow_down</span></button></div>'
+      + '<span class="aic-av' + (k === 'ceo' ? ' ceo' : '') + '"><span class="ms">' + AG[k].ic + '</span></span><h3>' + esc(AG[k].n) + '</h3><span class="aic-st ' + s[0] + '" style="margin-left:auto"><i></i>' + s[1] + '</span></div>'
+      + '<div class="aic-dsub"><span class="ms">' + groupOf(k)[2] + '</span>' + esc(AG[k].d) + '</div>'
+      + '<div class="aic-tabs"><button type="button" data-dt="ov" class="' + (tab === 'ov' ? 'on' : '') + '">Overview</button><button type="button" data-dt="cn" class="' + (tab === 'cn' ? 'on' : '') + '">Connections (' + c.length + ')</button><button type="button" data-dt="tk" class="' + (tab === 'tk' ? 'on' : '') + '">Tasks (' + mine.length + ')</button></div>'
+      + '<div class="aic-pane">' + body + '</div>'
+      + '<div class="aic-cta"><button type="button" class="aic-go" data-chat="1"><span class="ms">chat</span>Chat with ' + esc(AG[k].n) + '</button><button type="button" class="aic-go2" data-give="1" aria-label="Give a task"><span class="ms">add_task</span></button></div>';
+  }
+  function aicHtml() {
+    var st = A.st || {}, pct = Math.min(100, Math.round(100 * (st.used || 0) / Math.max(1, st.cap || 1)));
+    var tot = ORDER.reduce(function (s, k) { var t = stateOf(k)[2]; s.t += t.open + t.doing + t.blocked; s.w += t.doing ? 1 : 0; return s; }, { t: 0, w: 0 });
+    var cnt = function (g) { return g[3] ? g[3].length : ORDER.length; };
+    var rail = '<aside class="aic-rail"><div class="aic-org"><span class="aic-logo"><span class="ms">auto_awesome</span></span><div><b>AI Team</b><small>' + (st.included ? 'Included in your plan' : '$' + (st.price || 49) + ' / month add-on') + '</small></div></div>'
+      + '<div class="aic-cap">Your team</div>' + GRP.map(function (g) { return '<button type="button" class="aic-g' + ((A.grp || 'all') === g[0] ? ' on' : '') + '" data-g="' + g[0] + '"><span class="ms">' + g[2] + '</span>' + g[1] + '<em>' + cnt(g) + '</em></button>'; }).join('')
+      + '<div class="aic-cap">Work</div><button type="button" class="aic-g" data-go="tasks"><span class="ms">checklist</span>Task board<em>' + tot.t + '</em></button>'
+      + '<button type="button" class="aic-g" data-go="wait"><span class="ms">task_alt</span>Waiting for you<em>' + (st.pending || 0) + '</em></button>'
+      + (ceoOn() ? '<button type="button" class="aic-g" data-go="ceo"><span class="ms">insights</span>Briefing &amp; map</button>' : '')
+      + '<div class="aic-use"><b>' + (st.used || 0) + ' of ' + (st.cap || 0) + '</b><small>messages this month · brief at 7am</small><div class="aic-bar"><i style="width:' + pct + '%"></i></div></div></aside>';
+    var tile = function (id, ic, lbl, v) { return '<button type="button" class="aic-tile' + ((A.flt || 'all') === id ? ' on' : '') + '" data-f="' + id + '"><span class="ms">' + ic + '</span><span>' + lbl + '</span><b>' + v + '</b></button>'; };
+    var mid = '<section class="aic-mid"><div class="aic-head"><div><h2>Your team</h2><p>Your AI CEO and ' + RING.length + ' assistants, what each is wired to and what they’re working on.</p></div><button type="button" class="aic-mapb" data-map="1"><span class="ms">hub</span>Team map</button></div>'
+      + '<div class="aic-tiles">' + tile('all', 'diversity_3', 'Everyone', ORDER.length) + tile('work', 'bolt', 'Working now', tot.w) + tile('tasks', 'checklist', 'With tasks', ORDER.filter(function (k) { var t = stateOf(k)[2]; return t.open + t.doing + t.blocked; }).length)
+      + '<button type="button" class="aic-tile" data-go="wait"><span class="ms">task_alt</span><span>Waiting for you</span><b>' + (st.pending || 0) + '</b></button></div>'
+      + '<div class="aic-chips">' + GRP.map(function (g) { return '<button type="button" class="' + ((A.grp || 'all') === g[0] ? 'on' : '') + '" data-g="' + g[0] + '">' + g[1] + '</button>'; }).join('') + '</div>'
+      + '<div class="aic-bar2"><label class="aic-q"><span class="ms">search</span><input id="aicQ" placeholder="Search your team or what they’re connected to" value="' + esc(A.q || '') + '" autocomplete="off"></label></div>'
+      + '<div class="aic-tbl" id="aicTbl">' + aicRows() + '</div></section>';
+    return '<div class="aic' + (A.mdet ? ' det' : '') + '" id="aic">' + rail + mid + '<section class="aic-det" id="aicDet">' + aicDetail(A.sel) + '</section></div>';
+  }
+  function aicWire() {
+    var root = $('aic'); if (!root) return;
+    var redrawDet = function () { var d = $('aicDet'); if (d) { d.innerHTML = aicDetail(A.sel); wireDet(); } };
+    var redrawTbl = function () { var t = $('aicTbl'); if (t) { t.innerHTML = aicRows(); wireRows(); } };
+    function pick(k) { A.sel = k; A.dtab = A.dtab || 'ov'; root.querySelectorAll('.aic-tr[data-k]').forEach(function (r) { r.classList.toggle('on', r.getAttribute('data-k') === k); }); redrawDet(); if (window.innerWidth <= 900) { A.mdet = true; root.classList.add('det'); root.scrollIntoView({ block: 'start' }); } }
+    function wireRows() { root.querySelectorAll('.aic-tr[data-k]').forEach(function (r) { r.onclick = function () { pick(r.getAttribute('data-k')); }; r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(r.getAttribute('data-k')); } }; }); }
+    function chatWith(k, text) { A.tab = 'chat'; A.agent = k; A.thread = null; A.mdet = false; draw(); if (text) setTimeout(function () { var i = $('aiIn'); if (i) { i.value = text; if (i.bpFit) i.bpFit(); i.focus(); } }, 400); }
+    function wireDet() {
+      var d = $('aicDet'); if (!d) return;
+      d.querySelectorAll('[data-dt]').forEach(function (b) { b.onclick = function () { A.dtab = b.getAttribute('data-dt'); redrawDet(); }; });
+      d.querySelectorAll('[data-step]').forEach(function (b) { b.onclick = function () { var i = ORDER.indexOf(A.sel) + (+b.getAttribute('data-step')); pick(ORDER[(i + ORDER.length) % ORDER.length]); }; });
+      d.querySelectorAll('[data-ask]').forEach(function (b) { b.onclick = function () { chatWith(A.sel, b.getAttribute('data-ask')); }; });
+      d.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () { chatWith(A.sel); }; });
+      d.querySelectorAll('[data-give]').forEach(function (b) { b.onclick = function () { var k = A.sel; A.tab = 'tasks'; A.mdet = false; draw(); setTimeout(function () { var w = $('tkWho'); if (w && k !== 'ceo') w.value = k; var t = $('tkT'); if (t) t.focus(); }, 60); }; });
+      d.querySelectorAll('[data-task]').forEach(function (b) { b.onclick = function () { var t = (A.tk || []).filter(function (x) { return x.id === b.getAttribute('data-task'); })[0]; if (t && t.thread_id) { A.tab = 'chat'; A.agent = t.assignee; A.thread = t.thread_id; lastThread(t.assignee, t.thread_id); A.mdet = false; draw(); } else { A.tab = 'tasks'; A.mdet = false; draw(); } }; });
+      d.querySelectorAll('[data-back]').forEach(function (b) { b.onclick = function () { A.mdet = false; root.classList.remove('det'); }; });
+      d.querySelectorAll('[data-map]').forEach(function (b) { b.onclick = function () { A.tab = 'map'; draw(); }; });
+    }
+    root.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { A.grp = b.getAttribute('data-g'); root.querySelectorAll('[data-g]').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-g') === A.grp); }); redrawTbl(); }; });
+    root.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { A.flt = b.getAttribute('data-f'); root.querySelectorAll('[data-f]').forEach(function (x) { x.classList.toggle('on', x === b); }); redrawTbl(); }; });
+    root.querySelectorAll('.aic-rail [data-go],.aic-tiles [data-go]').forEach(function (b) { b.onclick = function () { A.tab = b.getAttribute('data-go'); A.mdet = false; draw(); }; });
+    root.querySelectorAll('.aic-mid [data-map]').forEach(function (b) { b.onclick = function () { A.tab = 'map'; draw(); }; });
+    var q = $('aicQ'); if (q) q.oninput = function () { A.q = q.value; redrawTbl(); };
+    wireRows(); wireDet();
+  }
+  function consoleView() {
+    aicCss();
+    if (!A.sel || !AG[A.sel]) A.sel = 'ceo';
+    $('aiBody').innerHTML = aicHtml(); aicWire();
+    /* the board's tasks, for the picked assistant's list */
+    api({ op: 'tasks' }).then(function (r) {
+      if (!r || !r.ok || A.tab !== 'board' || !$('aicDet')) return;
+      A.tk = r.data || []; var d = $('aicDet'), y = d.scrollTop; d.innerHTML = aicDetail(A.sel); d.scrollTop = y; aicWire();
+    });
+  }
+
   function pitch(host) {
     var st = A.st; boardCss(); host = host || area();
     if (!st || !st.ok) { host.innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc((st && st.error) || 'Could not load.') + '</div></div>'; return; }
@@ -256,7 +529,7 @@
     /* Your team first, then the AI CEO, then each assistant */
     if (!on) return '<button class="ai-tab' + (A.tab !== 'ceo' ? ' on' : '') + '" data-pitch="1"><span class="ms">diversity_3</span>AI Team</button>' + ceo;
     var ntk = st.tasks ? Object.keys(st.tasks).reduce(function (s, k) { return s + st.tasks[k].open + st.tasks[k].doing + st.tasks[k].blocked; }, 0) : 0;
-    return '<button class="ai-tab' + (A.tab === 'board' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>'
+    return '<button class="ai-tab' + (A.tab === 'board' || A.tab === 'map' ? ' on' : '') + '" data-board="1"><span class="ms">account_tree</span>Your team</button>'
       + '<button class="ai-tab' + (A.tab === 'tasks' ? ' on' : '') + '" data-tasks="1"><span class="ms">checklist</span>Tasks' + (ntk ? '<span class="n">' + ntk + '</span>' : '') + '</button>' + ceo
       + Object.keys(AG).map(function (k) { return '<button class="ai-tab' + (A.tab === 'chat' && A.agent === k ? ' on' : '') + '" data-ag="' + k + '"><span class="ms">' + AG[k].ic + '</span>' + AG[k].n + '</button>'; }).join('')
       + '<button class="ai-tab' + (A.tab === 'wait' ? ' on' : '') + '" data-wait="1"><span class="ms">task_alt</span>Waiting for you' + (st.pending ? '<span class="n">' + st.pending + '</span>' : '') + '</button>'
@@ -282,7 +555,8 @@
     wire();
     if (A.tab === 'ceo') return window.bpCeoRender($('aiBody'));
     if (A.tab === 'pitch') return pitch($('aiBody'));
-    if (A.tab === 'board') { $('aiBody').innerHTML = boardHtml(true); $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'chat'; A.agent = b.getAttribute('data-open'); A.thread = null; draw(); }; });
+    if (A.tab === 'board') return consoleView();
+    if (A.tab === 'map') { $('aiBody').innerHTML = '<div style="margin-bottom:10px"><button type="button" class="ai-tab" id="aiBackC"><span class="ms">arrow_back</span>Back to the console</button></div>' + boardHtml(true); $('aiBackC').onclick = function () { A.tab = 'board'; draw(); }; $('aiBody').querySelectorAll('[data-open]').forEach(function (b) { b.onclick = function () { A.tab = 'board'; A.sel = b.getAttribute('data-open'); A.dtab = 'ov'; draw(); }; });
       $('aiBody').querySelectorAll('[data-ceoopen]').forEach(function (ce) { ce.onclick = function () { if (ceoOn()) { A.tab = 'ceo'; draw(); } }; }); }
     else if (A.tab === 'wait') approvals(); else if (A.tab === 'tasks') tasks(); else chat();
   }
