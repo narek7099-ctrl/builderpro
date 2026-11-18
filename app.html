@@ -93,9 +93,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261118-20261118d">
-<link rel="stylesheet" href="site/present.css?v=20261118-20261118d">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-20261118d"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261118-20261118e">
+<link rel="stylesheet" href="site/present.css?v=20261118-20261118e">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-20261118e"}}</script>
 
 
 <style id="bpi-icons">
@@ -1904,7 +1904,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 40px;margin-top:20px;}
     <span id="bpxUemail" hidden></span>
   </div>
 </div>
-<script src="portal/offline.js?v=20261118a"></script>
+<script src="portal/offline.js?v=20261118e"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js"></script>
 <!--/app-only-->
 <script>
@@ -2859,6 +2859,9 @@ function bpNav(v){
   area.classList.add('bpx-in');
   if(!again)bpScrollTop();
 }
+/* after a save: draw the page that's open again, whichever it is (it used to draw the Jobs
+   list into Finances, Equipment or wherever the project was edited from) */
+function bpRedrawView(){ var v=window._bpCurView; if(!v||typeof BPVIEWS!=='undefined'&&!BPVIEWS[v]){ bpActiveJobs(); return; } bpNav(v); }
 /* Opening a page puts you at the top of it. Which element actually scrolls
    depends on the width — the main column inside the shell on a desktop, the
    whole overlay on a phone — so this resets whichever one it really is
@@ -7321,7 +7324,7 @@ window.bpProjStar=function(id){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===id;})[0]; if(!j)return;
   if(!j.starred&&jobs.filter(function(x){return x.starred&&x.status==='active';}).length>=4){bpToast('Four projects can be starred at a time. Unstar one first.','warning');return;}
   j.starred=!j.starred; bpJobsSet(jobs);
-  if(window._bpCurView==='dashboard'&&window.bpDashboard)bpDashboard(); else bpActiveJobs();
+  bpRedrawView();
 };
 window.bpAddJobOpen=function(){
   bpModal('<h3>Add a job</h3><div class="bpx-sub">For a job that didn’t come through the pipeline.</div>'
@@ -7975,7 +7978,7 @@ window.bpProjDelete=function(){
   if(String(t).trim().toUpperCase()!=='DELETE'){alert('Not deleted — you must type DELETE exactly.');return;}
   bpJobsSet(jobs.filter(function(x){return x.id!==_bpProjId;}));
   bpCloseModal();
-  if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
+  bpRedrawView();
 };
 function bpProjPhotosRender(j){
   var el=document.getElementById('bpx-pj-photos'); if(!el)return;
@@ -8040,7 +8043,7 @@ window.bpProjSave=function(){
   j.sched={notes:g('bpx-pj-notes'),dates:dates,time:t0,end:t1,dur:String(dur),start:dates[0]||'',target:dates.length>1?dates[dates.length-1]:'',slots:slots};
   var crSel=q('bpx-pj-crew'); if(crSel&&crSel.tagName==='SELECT'){ if(Array.isArray(j.crew)){ j.assignees=bpJobAssignees(j); } j.crew=crSel.value||undefined; }
   bpJobsSet(jobs); bpCloseModal();
-  if(window._bpCurView==='dashboard'){bpDashboard();}else if(window._bpCurView==='calendar'){bpCalendar();}else{bpActiveJobs();}
+  bpRedrawView();
 };
 window.bpJobDoneOpen=function(id){
   var j=bpJobsGet().filter(function(x){return x.id===id;})[0]; if(!j) return;
@@ -8102,7 +8105,7 @@ window.bpJobDoneSave=function(id,skip){
         body:JSON.stringify({contactId:j.contactId})});
     }).catch(function(){});
   }
-  if(window._bpCurView==='finances') bpFinances(); else bpActiveJobs();
+  bpRedrawView();
 };
 
 /* ---------- Finances ---------- */
@@ -14750,7 +14753,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/payplan.css?v=20261114a">
 <script src="portal/bpedit.js?v=20261114a"></script>
 <script src="portal/crewapp.js?v=20261118b"></script>
-<script src="portal/live.js?v=20261118a"></script>
+<script src="portal/live.js?v=20261118e"></script>
 <script src="portal/teamchat.js?v=20261114a"></script>
 <script src="portal/subapp.js?v=20261031b"></script>
 <script src="portal/subs.js?v=20261025c1"></script>
@@ -14772,11 +14775,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261118-20261118d"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261118-20261118d"></script>
-<script src="site/vendor/SplitText.min.js?v=20261118-20261118d"></script>
-<script src="site/site.js?v=20261118-20261118d"></script>
-<script src="site/present.js?v=20261118-20261118d"></script>
+<script src="site/vendor/gsap.min.js?v=20261118-20261118e"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261118-20261118e"></script>
+<script src="site/vendor/SplitText.min.js?v=20261118-20261118e"></script>
+<script src="site/site.js?v=20261118-20261118e"></script>
+<script src="site/present.js?v=20261118-20261118e"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">

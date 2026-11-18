@@ -152,6 +152,33 @@
     if (/^\/storage\/v1\/object\/sign\/project-files\//.test(p) && method === 'POST') return 'read';
     return 'pass';
   }
+  /* a save the person made: something changed in the database (not a read, not a message
+     sent, not a question to the AI). The open screen reloads itself after one (portal/live.js) */
+  var SAVE_FN_VERB = /^(create|update|edit|save|set|delete|remove|archive|restore|add|upsert|move|book|reschedule|cancel|assign|status|mark|toggle|rename|reorder)/;
+  function isSave(u, method, k, body) {
+    if (u.origin !== SB || method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return false;
+    var p = u.pathname;
+    if (/^\/(auth|realtime)\//.test(p) || /\/rpc\/bp_report_error$/.test(p)) return false;
+    if (k === 'write') return true;
+    if (k === 'read') return false;
+    if (/^\/rest\/v1\/rpc\//.test(p)) return false;
+    if (/^\/rest\/v1\//.test(p)) return true;          /* a table: insert, update, delete */
+    var m = /^\/functions\/v1\/([a-z0-9-]+)/.exec(p);
+    if (m) {
+      var b0 = {}; try { b0 = JSON.parse(textOf(body) || '{}') || {}; } catch (e) { return false; }
+      return SAVE_FN_VERB.test(String(b0.action || b0.op || '').toLowerCase());
+    }
+    return false;
+  }
+  var savedT = 0, savedQ = false;
+  function saved(u, queued) {
+    savedQ = savedQ || queued;
+    if (savedT) return;
+    savedT = setTimeout(function () {
+      var q = savedQ; savedT = 0; savedQ = false;
+      try { window.dispatchEvent(new CustomEvent('bp-saved', { detail: { queued: q } })); } catch (e) {}
+    }, 50);
+  }
   function rpcName(url) { var m = /\/rest\/v1\/rpc\/([a-z0-9_]+)/.exec(url); return m ? m[1] : ''; }
 
   /* ------------------------------------------------------- the request --- */
@@ -243,7 +270,11 @@
     var tableRead = u.origin === SB && /^\/rest\/v1\//.test(u.pathname) && (method === 'GET' || method === 'HEAD');
     /* 504, not 503: the library retries 503 (and network errors) three times, about 7 seconds */
     var offAnswer = function () { return reply(504, { code: 'offline', message: 'You’re offline', details: '', hint: '' }, 'offline'); };
-    if (k === 'pass') return tableRead && !online() ? Promise.resolve(offAnswer()) : raw(input, init);
+    var sv = isSave(u, method, k, body);
+    if (k === 'pass') {
+      if (tableRead && !online()) return Promise.resolve(offAnswer());
+      return sv ? raw(input, init).then(function (res) { if (res && res.ok) saved(u, false); return res; }) : raw(input, init);
+    }
     var user = who();
     if (k === 'read') {
       var key = readKey(user, method, u.href, textOf(body));
@@ -271,10 +302,10 @@
       return live();
     }
     /* a change: straight through when the signal is good, queued when it isn't */
-    var queueIt = function () { return enqueue(u, method, headers, body, user); };
+    var queueIt = function () { return enqueue(u, method, headers, body, user).then(function (r) { saved(u, true); return r; }); };
     if (!online() || weak()) return queueIt();
     var t1 = Date.now();
-    return withTimeout(raw(input, init), 15000).then(function (res) { state.lastOk = Date.now(); markGood(Date.now() - t1); return res; }, function (err) {
+    return withTimeout(raw(input, init), 15000).then(function (res) { state.lastOk = Date.now(); markGood(Date.now() - t1); if (res && res.ok) saved(u, false); return res; }, function (err) {
       if (err && err.name === 'AbortError') throw err;
       markWeak(t1);
       return queueIt();
