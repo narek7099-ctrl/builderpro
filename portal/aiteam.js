@@ -156,7 +156,13 @@
     if (!window.BP_LIVE) { area().innerHTML = '<div class="bpx-panel"><div class="bpx-mut">Sign in to use your AI Team.</div></div>'; if (window.bpSpin) bpSpin(false); return; }
     if (!ceoOn() && A.tab === 'ceo') A.tab = 'board';
     if (ceoOn() && A.tab === 'ceo') { draw(); }   /* the CEO shows at once; the add-on status fills the tabs in */
-    A.st = await api({ op: 'status' });
+    /* never leave the page you came from on screen while the team's status loads: the map
+       from last time at once (then brought up to date), or a short note the first time */
+    else if (A.tab === 'board' && A.st && A.st.ok && A.st.addon === 'active') draw();
+    else area().innerHTML = '<div class="bpx-panel"><div class="bpx-mut">Loading your AI team…</div></div>';
+    var st = await api({ op: 'status' });
+    if (window._bpCurView !== 'aiteam') return;   /* moved on to another page meanwhile */
+    A.st = st;
     if (window.bpSpin) bpSpin(false);
     if (!A.st.ok && !ceoOn()) { area().innerHTML = '<div class="bpx-panel"><div class="bpx-mut">' + esc(A.st.error || 'Could not load.') + '</div></div>'; return; }
     if (A.st.addon !== 'active' && !ceoOn()) return pitch();
@@ -229,13 +235,13 @@
   }
 
   /* ================================================================
-     The team console (2026-11-18): the AI team laid out like an operations console.
-     Left: the team by group, and this month's messages. Middle: the counts, a search and
-     every assistant in a table (what it's connected to, its tasks, how it's doing).
-     Right: the one picked, with a map of what it's wired to (the AI CEO over it, the
-     tools, pages and the web it works from), what's on its board, and a way in to chat.
-     Deep navy like the app's sidebar; blue for work, mint for ready. The old team map
-     is one tap away (Team map).
+     Your team (2026-11-18, second take): the map is the page. The whole team on a white
+     card in the app's own look: the AI CEO in the middle, the ten assistants around it,
+     their status on the ring and their open tasks on a badge. Tap one and the map closes
+     in on it: the AI CEO and you on one side, its tools, the pages it reads and the web on
+     the other, a dot running along each link. Beside the map: that assistant's board,
+     questions to ask it, Chat and Task. Under it: everyone as a list. Counts, groups and a
+     search sit in one row above and dim whoever doesn't match.
      ================================================================ */
   var TLI = { ghl: ['CRM', 'contacts', 'tool'], projects: ['Projects', 'construction', 'tool'], assign_task: ['Task board', 'checklist', 'tool'], ceo_snapshot: ['Business snapshot', 'monitoring', 'tool'],
     crew_match: ['Crew match', 'groups', 'tool'], price_list: ['Price list', 'sell', 'tool'] };
@@ -265,239 +271,279 @@
   function aicCss() {
     if ($('aic-css')) return; var c = document.createElement('style'); c.id = 'aic-css';
     c.textContent = [
-      '.aic{--n0:#04101f;--n1:#071a33;--n2:#0b2343;--n3:#10305a;--ln:rgba(148,178,220,.13);--ln2:rgba(148,178,220,.22);--tx:#e8eef7;--mu:#8ea3c0;--mu2:#62789a;--bl:#3d8bff;--bl2:#006fff;--mi:#16C79A;--mi2:#3FE0B6;',
-      '  display:grid;grid-template-columns:200px minmax(0,1fr) minmax(360px,420px);height:calc(100vh - 176px);min-height:600px;border-radius:20px;overflow:hidden;color:var(--tx);',
-      '  background:radial-gradient(120% 90% at 100% 0%,rgba(0,111,255,.16),transparent 55%),radial-gradient(90% 70% at 0% 100%,rgba(22,199,154,.08),transparent 60%),linear-gradient(180deg,var(--n1),var(--n0));',
-      '  border:1px solid rgba(0,21,48,.5);box-shadow:0 24px 60px -30px rgba(0,21,48,.55),inset 0 1px 0 rgba(255,255,255,.05);font-size:13.5px}',
-      '.aic .ms{font-size:18px}.aic{scroll-margin-top:84px}',
-      '.aic button{font:inherit;color:inherit}',
-      /* left rail */
-      '.aic-rail{display:flex;flex-direction:column;gap:2px;padding:14px 10px;border-right:1px solid var(--ln);min-height:0;overflow:auto}',
-      '.aic-org{display:flex;align-items:center;gap:10px;padding:4px 6px 14px}',
-      '.aic-logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,#006fff,#16C79A);box-shadow:0 6px 16px -6px rgba(0,111,255,.6);flex:none}.aic-logo .ms{color:#fff;font-size:19px}',
-      '.aic-org b{display:block;font-size:13.5px;line-height:1.2}.aic-org small{display:block;color:var(--mu);font-size:11.5px}',
-      '.aic-cap{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu2);padding:12px 8px 6px}',
-      '.aic-g{display:flex;align-items:center;gap:9px;width:100%;padding:8px 9px;border:0;border-radius:10px;background:none;text-align:left;cursor:pointer;color:#c4d2e6;transition:background .15s,color .15s}',
-      '.aic-g:hover{background:rgba(255,255,255,.05);color:var(--tx)}',
-      '.aic-g.on{background:linear-gradient(90deg,rgba(0,111,255,.28),rgba(0,111,255,.1));color:#fff;box-shadow:inset 0 0 0 1px rgba(61,139,255,.35)}',
-      '.aic-g .ms{color:var(--mu)}.aic-g.on .ms{color:#8fb8ff}',
-      '.aic-g em{margin-left:auto;font-style:normal;font-size:11px;color:var(--mu);background:rgba(255,255,255,.06);border-radius:99px;padding:0 7px;line-height:18px}',
-      '.aic-g.on em{background:rgba(255,255,255,.14);color:#fff}',
-      '.aic-use{margin-top:auto;padding:12px 10px;border:1px solid var(--ln);border-radius:14px;background:rgba(255,255,255,.03)}',
-      '.aic-use b{font-size:13px}.aic-use small{display:block;color:var(--mu);font-size:11.5px;margin-top:2px}',
-      '.aic-bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:9px;overflow:hidden}.aic-bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#006fff,#16C79A)}',
-      /* middle */
-      '.aic-mid{display:flex;flex-direction:column;min-width:0;min-height:0;border-right:1px solid var(--ln)}',
-      '.aic-head{display:flex;align-items:flex-end;gap:12px;padding:18px 20px 12px}',
-      '.aic-head h2{margin:0;font-size:20px;letter-spacing:-.02em;color:#fff}.aic-head p{margin:3px 0 0;color:var(--mu);font-size:12.5px}',
-      '.aic-mapb{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln2);background:rgba(255,255,255,.04);border-radius:10px;padding:7px 11px;cursor:pointer;font-size:12.5px;flex:none}.aic-mapb:hover{background:rgba(255,255,255,.08)}',
-      '.aic-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 20px 14px}',
-      '.aic-tile{border:1px solid var(--ln);border-radius:14px;padding:11px 12px;background:rgba(255,255,255,.03);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}',
-      '.aic-tile:hover{background:rgba(255,255,255,.06)}.aic-tile.on{border-color:rgba(61,139,255,.75);background:rgba(0,111,255,.12);box-shadow:0 0 0 3px rgba(0,111,255,.12)}',
-      '.aic-tile .ms{font-size:16px;color:#8fb8ff}.aic-tile span{display:block;color:var(--mu);font-size:12px;margin-top:5px}.aic-tile b{display:block;font-size:20px;letter-spacing:-.02em;color:#fff;margin-top:1px;font-variant-numeric:tabular-nums}',
-      '.aic-bar2{display:flex;gap:8px;padding:0 20px 10px}',
-      '.aic-q{flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--ln);background:rgba(255,255,255,.04);border-radius:10px;padding:0 10px}.aic-q .ms{color:var(--mu);font-size:17px}',
-      '#bpx#bpx#bpx#bpx#bpx#bpx .aic .aic-q input,#bpx#bpx#bpx#bpx#bpx#bpx .aic .aic-q input:focus{flex:1;min-width:0;width:auto;height:auto;border:0!important;border-radius:0!important;background:transparent!important;background-color:transparent!important;box-shadow:none!important;color:var(--tx)!important;-webkit-text-fill-color:var(--tx);padding:8px 0!important;margin:0!important;font-size:13px!important;outline:0!important}',
-      '.aic-q:focus-within{border-color:rgba(61,139,255,.6);box-shadow:0 0 0 3px rgba(0,111,255,.18)}',
-      '.aic-q input::placeholder{color:var(--mu2)}',
-      '.aic-tbl{flex:1;min-height:0;overflow:auto;padding:0 8px 10px}',
-      '.aic-tr{display:grid;grid-template-columns:minmax(130px,1.3fr) minmax(90px,.8fr) minmax(110px,1fr) 44px 92px;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;border:1px solid transparent}',
-      '.aic-th{cursor:default;color:var(--mu2);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;position:sticky;top:0;background:linear-gradient(180deg,var(--n1) 70%,transparent);z-index:1}',
-      '.aic-tr:not(.aic-th):hover{background:rgba(255,255,255,.04)}',
-      '.aic-tr.on{background:rgba(0,111,255,.13);border-color:rgba(61,139,255,.35)}',
-      '.aic-tr+.aic-tr:not(.on){box-shadow:inset 0 1px 0 var(--ln)}',
-      '.aic-nm{display:flex;align-items:center;gap:10px;min-width:0}.aic-nm b{font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.aic-av{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(61,139,255,.16);color:#8fb8ff;flex:none;box-shadow:inset 0 0 0 1px rgba(61,139,255,.25)}.aic-av .ms{font-size:17px}',
-      '.aic-av.ceo{background:linear-gradient(135deg,#006fff,#16C79A);color:#fff;box-shadow:0 6px 14px -6px rgba(0,111,255,.6)}',
-      '.aic-role{color:var(--mu);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.aic-icons{display:flex;align-items:center;gap:4px;min-width:0}.aic-icons i{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-style:normal;flex:none}.aic-icons i .ms{font-size:13px;color:#b9cbe4}.aic-icons i.web .ms{color:var(--mi2)}.aic-icons i.tool .ms{color:#8fb8ff}',
-      '.aic-icons small{color:var(--mu);font-size:11.5px;margin-left:2px;white-space:nowrap}',
-      '.aic-n{font-variant-numeric:tabular-nums;color:#c4d2e6;text-align:center}.aic-n.z{color:var(--mu2)}',
-      '.aic-st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:99px;padding:3px 9px;white-space:nowrap;justify-self:start}',
-      '.aic-st i{width:6px;height:6px;border-radius:50%;background:currentColor}',
-      '.aic-st.ready{color:var(--mi2);background:rgba(22,199,154,.12)}.aic-st.work{color:#9cc4ff;background:rgba(0,111,255,.2)}.aic-st.work i{animation:aicPulse 1.4s ease-in-out infinite}',
-      '.aic-st.queue{color:#c4d2e6;background:rgba(255,255,255,.08)}.aic-st.need{color:#fff;background:#0970F7}',
-      '@keyframes aicPulse{50%{opacity:.35}}',
-      '.aic-empty{padding:30px 16px;text-align:center;color:var(--mu)}',
-      /* right */
-      '.aic-det{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto}',
-      '.aic-dh{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}',
-      '.aic-nav{display:flex;gap:2px}.aic-nav button{width:28px;height:28px;border-radius:8px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--mu)}.aic-nav button:hover{background:rgba(255,255,255,.07);color:#fff}.aic-nav .ms{font-size:18px}',
-      '.aic-dh h3{margin:0;font-size:16px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.aic-dsub{display:flex;align-items:center;gap:8px;padding:0 18px 12px;color:var(--mu);font-size:12.5px}.aic-dsub .ms{font-size:15px;color:#8fb8ff}',
-      '.aic-tabs{display:flex;gap:4px;padding:0 14px;border-bottom:1px solid var(--ln)}',
-      '.aic-tabs button{border:0;background:none;padding:10px 8px;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:12.5px}',
-      '.aic-tabs button.on{color:#fff;border-bottom-color:var(--bl)}',
-      '.aic-pane{padding:14px 16px 18px;display:flex;flex-direction:column;gap:12px}',
-      '.aic-graph{position:relative;border:1px solid var(--ln);border-radius:16px;background:radial-gradient(70% 60% at 50% 50%,rgba(0,111,255,.12),transparent 70%),rgba(255,255,255,.02);overflow:hidden}',
-      '.aic-graph:before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(148,178,220,.16) 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:radial-gradient(75% 70% at 50% 50%,#000,transparent);mask-image:radial-gradient(75% 70% at 50% 50%,#000,transparent);pointer-events:none}',
-      '.aic-graph svg{position:relative;display:block;width:100%;height:auto}',
-      '.aic-graph text{font-family:inherit;font-size:10.5px;fill:#b9cbe4}.aic-graph text.c{font-size:12px;fill:#fff;font-weight:600}.aic-graph text.s{font-size:9.5px;fill:#62789a}',
-      '.aic-lnk{fill:none;stroke-width:1.4;opacity:.85}',
-      '.aic-node circle.r{fill:#0b2343;stroke-width:1.4}',
-      '.aic-node:hover circle.r{fill:#10305a}',
-      '.aic-gfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 12px;border-top:1px solid var(--ln);color:var(--mu);font-size:11.5px}.aic-gfoot i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}',
-      '.aic-more{margin-left:auto;color:#e8eef7;border:1px solid var(--ln2);background:rgba(4,16,31,.6);border-radius:9px;padding:5px 9px;font-size:11.5px;cursor:pointer;display:inline-flex;gap:5px;align-items:center}.aic-more .ms{font-size:14px}',
-      '.aic-item{display:flex;align-items:center;gap:10px;border:1px solid var(--ln);background:rgba(255,255,255,.03);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;width:100%}',
-      '.aic-item:hover{background:rgba(255,255,255,.06)}.aic-item>div{flex:1;min-width:0}.aic-item b{display:block;font-weight:600;color:#fff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '.aic-item small{display:block;color:var(--mu);font-size:11.5px;margin-top:2px}.aic-item>.ms{color:var(--mu);font-size:18px}',
-      '.aic-pr{font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:1px}.aic-pr.high{background:#0970F7;color:#fff}.aic-pr.low{background:rgba(255,255,255,.08);color:var(--mu)}',
-      '.aic-sec{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu2);margin-top:4px}',
-      '.aic-hint{display:grid;gap:6px}.aic-hint button{border:1px solid var(--ln);background:rgba(255,255,255,.03);border-radius:10px;padding:9px 11px;text-align:left;cursor:pointer;color:#c4d2e6;font-size:12.5px}.aic-hint button:hover{background:rgba(255,255,255,.07);color:#fff}',
-      '.aic-cta{display:flex;gap:8px;padding:12px 16px 16px;margin-top:auto;border-top:1px solid var(--ln);position:sticky;bottom:0;background:linear-gradient(180deg,rgba(7,26,51,.6),var(--n1) 40%)}',
-      '.aic-go{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:12px;padding:11px 14px;background:linear-gradient(180deg,#1a7dff,#006fff);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 10px 24px -12px rgba(0,111,255,.9)}',
-      '.aic-go2{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln2);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.04);cursor:pointer;color:#e8eef7}',
-      '.aic-cn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.aic-cn div{display:flex;align-items:center;gap:8px;border:1px solid var(--ln);border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.03);font-size:12.5px;min-width:0}',
-      '.aic-cn div span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.aic-cn .ms{font-size:16px;color:#b9cbe4}.aic-cn .web .ms{color:var(--mi2)}.aic-cn .tool .ms{color:#8fb8ff}',
-      '.aic-back{display:none}',
-      /* iPad landscape and laptops: the rail becomes chips over the table */
-      '@media(max-width:1280px){.aic{grid-template-columns:minmax(0,1fr) minmax(360px,400px)}.aic-rail{display:none}.aic-chips{display:flex!important}}',
-      '.aic-chips{display:none;gap:6px;padding:0 20px 10px;overflow-x:auto;scrollbar-width:none}.aic-chips::-webkit-scrollbar{display:none}',
-      '.aic-chips button{flex:none;border:1px solid var(--ln);background:rgba(255,255,255,.04);border-radius:99px;padding:6px 11px;cursor:pointer;font-size:12.5px;color:#c4d2e6}.aic-chips button.on{background:rgba(0,111,255,.28);border-color:rgba(61,139,255,.5);color:#fff}',
-      '@media(max-width:1600px){.aic-tr{grid-template-columns:minmax(120px,1.3fr) minmax(100px,1fr) 40px 92px}.aic-role{display:none}}',
-      /* phones and iPad portrait: one column; the picked assistant opens over the list */
-      '@media(max-width:900px){.aic{grid-template-columns:minmax(0,1fr);height:auto;min-height:0;border-radius:18px}.aic-mid{border-right:0}.aic-tbl{max-height:none;overflow:visible}.aic-det{display:none;border-top:1px solid var(--ln)}',
-      '  .aic.det .aic-mid{display:none}.aic.det .aic-det{display:flex}.aic-back{display:inline-flex}.aic-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.aic-head{padding:16px 16px 12px}.aic-tiles,.aic-bar2,.aic-chips{padding-left:16px;padding-right:16px}',
-      '  .aic-tr{grid-template-columns:minmax(0,1fr) auto;gap:6px 10px}.aic-th{display:none}.aic-tr .aic-icons{grid-column:1;padding-left:40px}.aic-tr .aic-n{display:none}.aic-tr .aic-st{grid-row:1;grid-column:2;justify-self:end}.aic-cta{position:static}}',
-      /* the phone layout pads page sections; the console's columns keep their own spacing */
-      '#bpx#bpx#bpx#bpx#bpx .aic>section,#bpx#bpx#bpx#bpx#bpx .aic>aside{padding:0!important;margin:0!important}#bpx#bpx#bpx#bpx#bpx .aic>.aic-rail{padding:14px 10px!important}',
-      '.aic-tile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-      '@media(max-width:900px){.aic-tile{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:0 9px;padding:10px 12px}.aic-tile .ms{grid-row:1/3;font-size:20px}.aic-tile span{margin:0;font-size:11.5px}.aic-tile b{font-size:18px;margin:0}.aic-head h2{font-size:18px}.aic-mapb{padding:6px 9px}}',
-      '@media (prefers-reduced-motion:reduce){.aic-st.work i{animation:none}}'
+      '.aim{--ink:var(--txt,#001530);--mu:#788493;--mu2:#9aa6b6;--ln:#dce3ec;--ln2:#e8edf3;--card:#fff;--soft:#f5f8fc;--bl:#006fff;--mi:#16C79A;--mit:#087F61;--nv:#001530}',
+      '#bpx.bpx-dark .aim{--ink:#e8eef7;--mu:#8ea3c0;--mu2:#62789a;--ln:#243049;--ln2:#1c263a;--card:#111827;--soft:#0d1422;--mit:#3FE0B6;--nv:#c9d6ea}',
+      '.aim .ms{font-size:18px}.aim{scroll-margin-top:84px}',
+      /* top: counts and filters, in one quiet row */
+      '.aim-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-bottom:12px}',
+      '.aim-k{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--ln);background:var(--card);border-radius:12px;padding:7px 11px;font-size:12.5px;color:var(--mu);cursor:pointer}',
+      '.aim-k b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}.aim-k .ms{font-size:16px;color:var(--bl)}',
+      '.aim-k.on{border-color:var(--bl);box-shadow:0 0 0 3px rgba(0,111,255,.12)}',
+      '.aim-sp{flex:1}',
+      '.aim-q{display:flex;align-items:center;gap:6px;border:1px solid var(--ln);background:var(--card);border-radius:12px;padding:0 10px;min-width:220px}.aim-q .ms{font-size:17px;color:var(--mu)}',
+      '#bpx#bpx#bpx#bpx#bpx#bpx .aim .aim-q input{flex:1;min-width:0;border:0!important;background:transparent!important;box-shadow:none!important;padding:8px 0!important;margin:0!important;font-size:13px!important;color:var(--ink)!important;outline:0!important;height:auto}',
+      '.aim-q:focus-within{border-color:var(--bl);box-shadow:0 0 0 3px rgba(0,111,255,.12)}',
+      '.aim-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:12px}.aim-chips::-webkit-scrollbar{display:none}',
+      '.aim-chips button{flex:none;border:1px solid var(--ln);background:var(--card);border-radius:99px;padding:6px 12px;font:inherit;font-size:12.5px;color:var(--ink);cursor:pointer}',
+      '.aim-chips button.on{background:var(--bl);border-color:var(--bl);color:#fff}',
+      /* the map, the main part, and the picked assistant beside it */
+      '.aim-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}',
+      '#bpx#bpx#bpx#bpx .aim-grid>.bpx-panel,#bpx#bpx#bpx#bpx .aim>.bpx-panel{margin:0!important}#bpx#bpx#bpx#bpx .aim>.aim-list{margin-top:14px!important}',
+      '.aim-map{position:relative;padding:0!important;overflow:hidden;height:clamp(440px,calc(100vh - 270px),660px)}',
+      '.aim-map:before{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--ln) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent);mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent);pointer-events:none;opacity:.8}',
+      '.aim-map svg{position:absolute;inset:0;width:100%;height:100%}',
+      '.aim-bar{position:absolute;left:14px;right:14px;top:12px;display:flex;align-items:center;gap:8px;z-index:2;pointer-events:none}',
+      '.aim-bar>*{pointer-events:auto}',
+      '.aim-crumb{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mu)}.aim-crumb b{color:var(--ink)}',
+      '.aim-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln);background:var(--card);border-radius:10px;padding:6px 10px;font:inherit;font-size:12.5px;color:var(--ink);cursor:pointer;box-shadow:0 2px 8px -6px rgba(0,21,48,.3)}.aim-btn:hover{border-color:var(--bl)}.aim-btn .ms{font-size:16px}',
+      '.aim-leg{position:absolute;left:14px;bottom:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--mu);z-index:2}.aim-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}',
+      /* nodes */
+      '.aim-n{cursor:pointer}.aim-n circle.b{fill:var(--card);stroke-width:2;transition:stroke-width .15s}',
+      '.aim-n:hover circle.b,.aim-n:focus circle.b{stroke-width:3.2}.aim-n:focus{outline:none}',
+      '.aim-n text{font-family:inherit;fill:var(--ink);font-size:12.5px;font-weight:600}.aim-n text.s{fill:var(--mu);font-size:10.5px;font-weight:500}',
+      '.aim-n.dim{opacity:.22}.aim-n,.aim-l{transition:opacity .2s}.aim-l.dim{opacity:.12}',
+      '.aim-l{fill:none;stroke-width:1.6}',
+      '.aim-in{animation:aimIn .45s cubic-bezier(.2,0,0,1) both}@keyframes aimIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}',
+      '.aim-in{transform-origin:50% 50%;transform-box:fill-box}',
+      /* the picked assistant */
+      '.aim-det{padding:0!important;overflow:hidden}',
+      '.aim-dh{display:flex;align-items:center;gap:10px;padding:16px 16px 6px}',
+      '.aim-av{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:#eaf2ff;color:var(--bl);flex:none}#bpx.bpx-dark .aim-av{background:rgba(0,111,255,.18);color:#8fb8ff}',
+      '.aim-av.ceo{background:linear-gradient(135deg,#006fff,#16C79A);color:#fff}',
+      '.aim-dh h3{margin:0;font-size:16px;color:var(--ink)}.aim-dh small{display:block;color:var(--mu);font-size:12px}',
+      '.aim-nav{margin-left:auto;display:flex;gap:2px}.aim-nav button{width:28px;height:28px;border:0;border-radius:8px;background:none;display:grid;place-items:center;color:var(--mu);cursor:pointer}.aim-nav button:hover{background:var(--soft);color:var(--ink)}',
+      '.aim-d{padding:0 16px 10px;color:var(--mu);font-size:13px;line-height:1.45}',
+      '.aim-tabs{display:flex;gap:2px;padding:0 10px;border-bottom:1px solid var(--ln)}',
+      '.aim-tabs button{border:0;background:none;padding:9px 8px;font:inherit;font-size:12.5px;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}.aim-tabs button.on{color:var(--ink);border-bottom-color:var(--bl);font-weight:600}',
+      '.aim-pane{padding:12px 16px;display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 430px);min-height:120px;overflow:auto}',
+      '.aim-sec{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu2);margin-top:4px}',
+      '.aim-it{display:flex;align-items:center;gap:10px;border:1px solid var(--ln);background:var(--card);border-radius:12px;padding:9px 11px;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer}',
+      '.aim-it:hover{border-color:#b9d6ff}.aim-it>div{flex:1;min-width:0}.aim-it b{display:block;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.aim-it small{display:block;font-size:11.5px;color:var(--mu)}',
+      '.aim-hint{border:1px solid var(--ln);background:var(--soft);border-radius:10px;padding:8px 11px;text-align:left;font:inherit;font-size:12.5px;color:var(--ink);cursor:pointer}.aim-hint:hover{border-color:#b9d6ff}',
+      '.aim-cn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.aim-cn div{display:flex;align-items:center;gap:7px;border:1px solid var(--ln);border-radius:10px;padding:7px 9px;font-size:12.5px;color:var(--ink);min-width:0}',
+      '.aim-cn div span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.aim-cn .ms{font-size:16px}',
+      '.aim-cta{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--ln)}.aim-cta .bpx-btn{flex:1;margin:0;display:inline-flex;align-items:center;justify-content:center;gap:6px}',
+      '.aim-st{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 9px;white-space:nowrap}.aim-st i{width:6px;height:6px;border-radius:50%;background:currentColor}',
+      '.aim-st.ready{color:var(--mit);background:#E8F9F4}.aim-st.work{color:#0853B5;background:#EBF4FF}.aim-st.queue{color:#475467;background:#f2f4f7}.aim-st.need{color:#fff;background:#0970F7}',
+      '#bpx.bpx-dark .aim-st.ready{background:rgba(22,199,154,.14)}#bpx.bpx-dark .aim-st.work{background:rgba(0,111,255,.2);color:#9cc4ff}#bpx.bpx-dark .aim-st.queue{background:rgba(255,255,255,.08);color:#c4d2e6}',
+      '.aim-pr{font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:6px;background:#0970F7;color:#fff;vertical-align:1px}',
+      /* everyone, as a list under the map */
+      '.aim-list{margin-top:14px;padding:6px!important}',
+      '.aim-r{display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(110px,.8fr) minmax(120px,1fr) 50px 96px;gap:10px;align-items:center;padding:9px 10px;border-radius:12px;cursor:pointer}',
+      '.aim-r:hover{background:var(--soft)}.aim-r.on{background:#eef5ff}#bpx.bpx-dark .aim-r.on{background:rgba(0,111,255,.12)}',
+      '.aim-r+.aim-r{box-shadow:inset 0 1px 0 var(--ln2)}',
+      '.aim-rh{cursor:default;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu2)}.aim-rh:hover{background:none}',
+      '.aim-nm{display:flex;align-items:center;gap:10px;min-width:0}.aim-nm b{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.aim-nm .aim-av{width:30px;height:30px;border-radius:9px}.aim-nm .aim-av .ms{font-size:17px}',
+      '.aim-g{color:var(--mu);font-size:12.5px}',
+      '.aim-ic{display:flex;gap:4px;align-items:center}.aim-ic i{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:var(--soft);font-style:normal}.aim-ic i .ms{font-size:13px}.aim-ic small{color:var(--mu);font-size:11.5px}',
+      '.aim-tn{text-align:center;color:var(--ink);font-variant-numeric:tabular-nums}.aim-tn.z{color:var(--mu2)}',
+      '.aim-empty{padding:18px;text-align:center;color:var(--mu)}',
+      '@media(max-width:1200px){.aim-grid{grid-template-columns:minmax(0,1fr)}.aim-det{position:static}.aim-pane{max-height:none}.aim-r{grid-template-columns:minmax(140px,1.3fr) minmax(120px,1fr) 44px 96px}.aim-g{display:none}}',
+      '@media(max-width:700px){.aim-map{height:660px}.aim-crumb span.t{display:none}.aim-q{min-width:0;flex:1 1 100%}.aim-sp{display:none}.aim-r{grid-template-columns:minmax(0,1fr) auto}.aim-rh{display:none}.aim-r .aim-ic{grid-column:1;padding-left:40px}.aim-tn{display:none}.aim-r .aim-st{grid-row:1;grid-column:2}.aim-leg{display:none}}',
+      '@media (prefers-reduced-motion:reduce){.aim-in{animation:none}}'
     ].join('\n');
     document.head.appendChild(c);
   }
-  function aicIcons(k) {
-    var c = connList(k), sh = c.slice(0, 5);
-    return '<div class="aic-icons">' + sh.map(function (x) { return '<i class="' + x.kind + '" title="' + esc(x.n) + '"><span class="ms">' + x.ic + '</span></i>'; }).join('') + (c.length > 5 ? '<small>+' + (c.length - 5) + '</small>' : '') + '</div>';
+  var KC = { tool: '#006fff', page: '#7fb0ff', web: '#16C79A', mgr: 'var(--nv)', you: '#16C79A' };
+  var SC = { ready: '#16C79A', work: '#006fff', queue: '#9aa6b6', need: '#0970F7' };
+  function matches(k) {
+    var g = A.grp || 'all', q = String(A.q || '').toLowerCase().trim(), f = A.flt || 'all', t = stateOf(k)[2];
+    if (g !== 'all' && groupOf(k)[0] !== g) return false;
+    if (f === 'work' && !t.doing) return false;
+    if (f === 'tasks' && !(t.open + t.doing + t.blocked)) return false;
+    if (q && (AG[k].n + ' ' + AG[k].d + ' ' + connList(k).map(function (x) { return x.n; }).join(' ')).toLowerCase().indexOf(q) < 0) return false;
+    return true;
   }
-  function aicRows() {
-    var g = A.grp || 'all', q = String(A.q || '').toLowerCase().trim(), f = A.flt || 'all';
-    var list = ORDER.filter(function (k) {
-      if (g !== 'all' && groupOf(k)[0] !== g) return false;
-      var s = stateOf(k)[0];
-      if (f === 'work' && s !== 'work') return false;
-      if (f === 'tasks' && !(stateOf(k)[2].open + stateOf(k)[2].doing + stateOf(k)[2].blocked)) return false;
-      if (q && (AG[k].n + ' ' + AG[k].d + ' ' + connList(k).map(function (x) { return x.n; }).join(' ')).toLowerCase().indexOf(q) < 0) return false;
-      return true;
-    });
-    if (!list.length) return '<div class="aic-empty">No one on your team matches that.</div>';
-    return '<div class="aic-tr aic-th"><span>Assistant</span><span class="aic-role">Group</span><span>Connected to</span><span style="text-align:center">Tasks</span><span>Status</span></div>'
-      + list.map(function (k) {
-        var s = stateOf(k), t = s[2], n = t.open + t.doing + t.blocked;
-        return '<div class="aic-tr' + (A.sel === k ? ' on' : '') + '" data-k="' + k + '" role="button" tabindex="0"><span class="aic-nm"><span class="aic-av' + (k === 'ceo' ? ' ceo' : '') + '"><span class="ms">' + AG[k].ic + '</span></span><b>' + esc(AG[k].n) + '</b></span>'
-          + '<span class="aic-role">' + esc(k === 'ceo' ? 'Manager' : groupOf(k)[1]) + '</span>' + aicIcons(k)
-          + '<span class="aic-n' + (n ? '' : ' z') + '">' + (n || '·') + '</span><span class="aic-st ' + s[0] + '"><i></i>' + s[1] + '</span></div>';
-      }).join('');
+  function icon(x, y, ic, size, color) {
+    return '<foreignObject x="' + (x - size / 2) + '" y="' + (y - size / 2) + '" width="' + size + '" height="' + size + '" style="pointer-events:none"><span class="ms" style="display:block;font-size:' + Math.round(size * 0.82) + 'px;line-height:' + size + 'px;text-align:center;color:' + color + '">' + ic + '</span></foreignObject>';
   }
-  /* the picked assistant, wired to what it works from: the CEO (or you) on the left, its tools,
-     pages and the web on the right, each joined by a curve with a dot running along it */
-  function aicGraph(k) {
-    var W = 420, H = 332, cx = 190, cy = 160, c = connList(k), more = Math.max(0, c.length - 8); c = c.slice(0, 8);
-    var col = { tool: '#3d8bff', page: '#8fb8ff', web: '#16C79A', mgr: '#a9b8cc', you: '#3FE0B6' };
-    var left = k === 'ceo' ? [{ n: 'You', ic: 'person', kind: 'you', s: 'approves' }] : [{ n: 'AI CEO', ic: 'monitoring', kind: 'mgr', s: 'manages' }, { n: 'You', ic: 'person', kind: 'you', s: 'approves' }];
-    var nodes = [], motion = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-    left.forEach(function (x, i) { nodes.push({ x: 52, y: left.length === 1 ? cy : 78 + i * 144, d: x }); });
-    var colA = c.slice(0, Math.ceil(c.length / 2)), colB = c.slice(Math.ceil(c.length / 2));
-    /* two columns, the second set half a step lower, so no two labels sit side by side */
-    var place = function (arr, x, off) { arr.forEach(function (d, i) { nodes.push({ x: x, y: arr.length === 1 ? cy + off : 36 + off + i * 72, d: d }); }); };
-    place(colA, 300, 0); place(colB, 382, colB.length > 1 ? 36 : 0);
-    var paths = '', dots = '', circles = '';
-    nodes.forEach(function (n, i) {
-      var cl = col[n.d.kind] || '#8fb8ff', mx = (cx + n.x) / 2, id = 'aicp' + i;
-      paths += '<path id="' + id + '" class="aic-lnk" stroke="' + cl + '" stroke-opacity=".55" d="M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + n.y + ' ' + n.x + ' ' + n.y + '"/>';
-      if (motion) dots += '<circle r="2.6" fill="' + cl + '"><animateMotion dur="' + (2.6 + (i % 4) * 0.5) + 's" begin="' + (i * 0.35) + 's" repeatCount="indefinite" keyPoints="' + (n.x < cx ? '1;0' : '0;1') + '" keyTimes="0;1" calcMode="linear"><mpath href="#' + id + '"/></animateMotion></circle>';
-      circles += '<g class="aic-node"><circle class="r" cx="' + n.x + '" cy="' + n.y + '" r="15" stroke="' + cl + '"/>'
-        + '<foreignObject x="' + (n.x - 9) + '" y="' + (n.y - 9) + '" width="18" height="18"><span class="ms" style="font-size:15px;color:' + cl + ';display:block;line-height:18px;text-align:center">' + n.d.ic + '</span></foreignObject>'
-        + '<text x="' + n.x + '" y="' + (n.y + 27) + '" text-anchor="middle">' + esc(n.d.n.length > 15 ? n.d.n.slice(0, 13) + '…' : n.d.n) + '</text>' + (n.d.s ? '<text class="s" x="' + n.x + '" y="' + (n.y + 39) + '" text-anchor="middle">' + n.d.s + '</text>' : '') + '</g>';
-    });
-    var center = '<g><circle cx="' + cx + '" cy="' + cy + '" r="30" fill="rgba(0,111,255,.16)"/><circle cx="' + cx + '" cy="' + cy + '" r="21" fill="url(#aicG)" stroke="rgba(255,255,255,.35)"/>'
-      + '<foreignObject x="' + (cx - 11) + '" y="' + (cy - 11) + '" width="22" height="22"><span class="ms" style="font-size:19px;color:#fff;display:block;line-height:22px;text-align:center">' + AG[k].ic + '</span></foreignObject>'
-      + '<text class="c" x="' + cx + '" y="' + (cy + 46) + '" text-anchor="middle">' + esc(AG[k].n) + '</text></g>';
-    return '<div class="aic-graph">'
-      + '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-label="What ' + esc(AG[k].n) + ' is connected to"><defs><linearGradient id="aicG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#006fff"/><stop offset="1" stop-color="#16C79A"/></linearGradient></defs>' + paths + dots + circles + center + '</svg>'
-      + '<div class="aic-gfoot"><span><i style="background:#3d8bff"></i>Tools</span><span><i style="background:#8fb8ff"></i>Pages it reads</span><span><i style="background:#16C79A"></i>The web</span>' + (more ? '<span>+' + more + ' more under Connections</span>' : '') + '<button type="button" class="aic-more" data-map="1"><span class="ms">open_in_full</span>Team map</button></div></div>';
+  var MOTION = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function dot(id, i, color, back) {
+    return MOTION ? '<circle r="3" style="fill:' + color + '"><animateMotion dur="' + (2.8 + (i % 4) * 0.45) + 's" begin="' + (i * 0.3) + 's" repeatCount="indefinite" keyPoints="' + (back ? '1;0' : '0;1') + '" keyTimes="0;1" calcMode="linear"><mpath href="#' + id + '"/></animateMotion></circle>' : '';
   }
-  function aicTaskItem(t) {
-    var s = TS[t.status] || TS.open;
-    return '<button type="button" class="aic-item" data-task="' + t.id + '"><span class="aic-st ' + ({ doing: 'work', blocked: 'need', open: 'queue', done: 'ready', cancelled: 'queue' }[t.status] || 'queue') + '"><i></i>' + s[0] + '</span><div><b>' + esc(t.title) + (t.priority === 'high' ? '<span class="aic-pr high">High</span>' : t.priority === 'low' ? '<span class="aic-pr low">Low</span>' : '') + '</b>'
-      + '<small>' + esc(t.assigned_by === 'owner' ? 'From you' : 'From ' + ((AG[t.assigned_by] || {}).n || t.assigned_by)) + ' · ' + ago(t.updated_at || t.created_at) + '</small></div><span class="ms">chevron_right</span></button>';
-  }
-  function aicDetail(k) {
-    var s = stateOf(k), c = connList(k), mine = (A.tk || []).filter(function (t) { return t.assignee === k; });
-    var live = mine.filter(function (t) { return t.status === 'doing' || t.status === 'open' || t.status === 'blocked'; });
-    var tab = A.dtab || 'ov', body = '';
-    if (tab === 'ov') {
-      body = aicGraph(k)
-        + '<div class="aic-sec">On the board</div>' + (live.length ? live.slice(0, 3).map(aicTaskItem).join('') : '<div class="aic-item" style="cursor:default"><span class="ms" style="color:#3FE0B6">check_circle</span><div><b>Nothing waiting</b><small>' + (A.tk ? 'Give ' + esc(AG[k].n) + ' a task, or ask the AI CEO to plan the week.' : 'Loading the board…') + '</small></div></div>')
-        + '<div class="aic-sec">Ask ' + esc(AG[k].n) + '</div><div class="aic-hint">' + AG[k].h.map(function (h) { return '<button type="button" data-ask="' + esc(h) + '">' + esc(h) + '</button>'; }).join('') + '</div>';
-    } else if (tab === 'cn') {
-      body = '<div class="bpx-mut" style="color:var(--mu);font-size:12.5px">' + esc(AG[k].n) + ' reads these, works with these tools' + (c.some(function (x) { return x.kind === 'web'; }) ? ' and searches the web' : '') + '. Anything for a customer waits for your OK.</div>'
-        + '<div class="aic-cn">' + c.map(function (x) { return '<div class="' + x.kind + '"><span class="ms">' + x.ic + '</span><span>' + esc(x.n) + '</span></div>'; }).join('') + '</div>';
+  function cut(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  /* the whole team, as the same flow as one assistant up close: you on the left (you approve
+     what goes out), the AI CEO in the middle, the ten assistants on the right, each on a curve
+     with a dot running out along it (the CEO handing out work). The ring is the assistant's
+     status, the badge its open tasks; tap one to close in on it. */
+  function teamMap(W, H) {
+    var small = W < 600, links = '', nodes = '', dots = '', i = 0;
+    var cx = small ? W / 2 : W * 0.36, cy = small ? 176 : H / 2 + 8;
+    var you = { x: small ? W / 2 : W * 0.08, y: small ? 74 : cy };
+    var pts = [];
+    if (small) {
+      var cols = 3, top = 300, step = Math.min(86, (H - top - 34) / Math.ceil(RING.length / cols));
+      RING.forEach(function (k, j) { pts.push({ x: W * (0.18 + 0.32 * (j % cols)), y: top + Math.floor(j / cols) * step, k: k }); });
     } else {
-      body = (mine.length ? mine.slice(0, 20).map(aicTaskItem).join('') : '<div class="aic-empty">No tasks for ' + esc(AG[k].n) + ' yet.</div>')
-        + '<button type="button" class="aic-go2" data-give="1" style="justify-content:center"><span class="ms">add_task</span>Give ' + esc(AG[k].n) + ' a task</button>';
+      var half = Math.ceil(RING.length / 2), stp = Math.min(92, (H - 120) / Math.max(1, half - 1 + 0.5)), y0 = cy - ((half - 1) * stp + stp / 2) / 2;
+      RING.forEach(function (k, j) { var b = j >= half, jj = b ? j - half : j; pts.push({ x: W * (b ? 0.87 : 0.66), y: y0 + jj * stp + (b ? stp / 2 : 0), k: k }); });
     }
-    return '<div class="aic-dh"><button type="button" class="aic-nav aic-back" data-back="1" style="border:0;background:none;cursor:pointer;color:var(--mu)"><span class="ms">arrow_back</span></button>'
-      + '<div class="aic-nav"><button type="button" data-step="-1" aria-label="Previous"><span class="ms">keyboard_arrow_up</span></button><button type="button" data-step="1" aria-label="Next"><span class="ms">keyboard_arrow_down</span></button></div>'
-      + '<span class="aic-av' + (k === 'ceo' ? ' ceo' : '') + '"><span class="ms">' + AG[k].ic + '</span></span><h3>' + esc(AG[k].n) + '</h3><span class="aic-st ' + s[0] + '" style="margin-left:auto"><i></i>' + s[1] + '</span></div>'
-      + '<div class="aic-dsub"><span class="ms">' + groupOf(k)[2] + '</span>' + esc(AG[k].d) + '</div>'
-      + '<div class="aic-tabs"><button type="button" data-dt="ov" class="' + (tab === 'ov' ? 'on' : '') + '">Overview</button><button type="button" data-dt="cn" class="' + (tab === 'cn' ? 'on' : '') + '">Connections (' + c.length + ')</button><button type="button" data-dt="tk" class="' + (tab === 'tk' ? 'on' : '') + '">Tasks (' + mine.length + ')</button></div>'
-      + '<div class="aic-pane">' + body + '</div>'
-      + '<div class="aic-cta"><button type="button" class="aic-go" data-chat="1"><span class="ms">chat</span>Chat with ' + esc(AG[k].n) + '</button><button type="button" class="aic-go2" data-give="1" aria-label="Give a task"><span class="ms">add_task</span></button></div>';
+    /* you */
+    var yd = small ? 'M' + cx + ' ' + cy + ' C' + cx + ' ' + (cy + you.y) / 2 + ' ' + you.x + ' ' + (cy + you.y) / 2 + ' ' + you.x + ' ' + you.y
+      : 'M' + cx + ' ' + cy + ' C' + (cx + you.x) / 2 + ' ' + cy + ' ' + (cx + you.x) / 2 + ' ' + you.y + ' ' + you.x + ' ' + you.y;
+    links += '<path id="aimty" class="aim-l" stroke="#16C79A" stroke-opacity=".55" d="' + yd + '"/>';
+    dots += dot('aimty', 0, '#16C79A', true);
+    var pend = (A.st && A.st.pending) || 0, ry = small ? 17 : 21;
+    nodes += '<g class="aim-n" data-go="wait" tabindex="0" role="button" aria-label="Waiting for you"><circle class="b" cx="' + you.x + '" cy="' + you.y + '" r="' + ry + '" stroke="#16C79A"/>' + icon(you.x, you.y, 'person', small ? 15 : 18, '#16C79A')
+      + (pend ? '<circle cx="' + (you.x + ry * .72) + '" cy="' + (you.y - ry * .72) + '" r="9" fill="#0970F7"/><text x="' + (you.x + ry * .72) + '" y="' + (you.y - ry * .72 + 3.5) + '" text-anchor="middle" style="fill:#fff;font-size:10px">' + pend + '</text>' : '')
+      + '<text x="' + you.x + '" y="' + (you.y + ry + 15) + '" text-anchor="middle" style="font-size:12px">You</text>'
+      + (small ? '' : '<text class="s" x="' + you.x + '" y="' + (you.y + ry + 28) + '" text-anchor="middle">' + (pend ? pend + ' waiting for your OK' : 'approve what goes out') + '</text>') + '</g>';
+    /* the assistants */
+    pts.forEach(function (p) {
+      var k = p.k, s = stateOf(k), on = matches(k), id = 'aimt' + (i++), t = s[2], n = t.open + t.doing + t.blocked, col = s[0] === 'work' ? '#006fff' : '#7fb0ff';
+      var mx = (cx + p.x) / 2, my = (cy + p.y) / 2;
+      var d = small ? 'M' + cx + ' ' + cy + ' C' + cx + ' ' + my + ' ' + p.x + ' ' + my + ' ' + p.x + ' ' + p.y : 'M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + p.y + ' ' + p.x + ' ' + p.y;
+      links += '<path id="' + id + '" class="aim-l' + (on ? '' : ' dim') + '" stroke="' + col + '" stroke-opacity="' + (s[0] === 'work' ? '.85' : '.5') + '" d="' + d + '"/>';
+      if (on) dots += dot(id, i, col);
+      var r = small ? 18 : 22;
+      nodes += '<g class="aim-n' + (on ? '' : ' dim') + '" data-k="' + k + '" tabindex="0" role="button" aria-label="' + esc(AG[k].n) + '"><circle class="b" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" stroke="' + SC[s[0]] + '"/>'
+        + icon(p.x, p.y, AG[k].ic, small ? 15 : 18, '#006fff')
+        + (n ? '<circle cx="' + (p.x + r * .72).toFixed(1) + '" cy="' + (p.y - r * .72).toFixed(1) + '" r="9" fill="#006fff"/><text x="' + (p.x + r * .72).toFixed(1) + '" y="' + (p.y - r * .72 + 3.5).toFixed(1) + '" text-anchor="middle" style="fill:#fff;font-size:10px">' + n + '</text>' : '')
+        + '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 15).toFixed(1) + '" text-anchor="middle" style="font-size:' + (small ? 11 : 12) + 'px">' + esc(AG[k].n) + '</text>'
+        + (small ? '' : '<text class="s" x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 28).toFixed(1) + '" text-anchor="middle">' + s[1] + '</text>') + '</g>';
+    });
+    /* the AI CEO */
+    var R = small ? 32 : 42, con = matches('ceo');
+    var ceo = '<g class="aim-n' + (con ? '' : ' dim') + '" data-k="ceo" tabindex="0" role="button" aria-label="AI CEO"><circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 12) + '" fill="rgba(0,111,255,.08)"/><circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="url(#aimG)"/>'
+      + icon(cx, cy, AG.ceo.ic, small ? 24 : 28, '#fff') + '<text x="' + cx + '" y="' + (cy + R + 18) + '" text-anchor="middle" style="font-size:14px;font-weight:700">AI CEO</text>'
+      + (small ? '' : '<text class="s" x="' + cx + '" y="' + (cy + R + 32) + '" text-anchor="middle">manages ' + RING.length + ' assistants</text>') + '</g>';
+    return '<g class="aim-in">' + links + dots + nodes + '</g>' + ceo;
   }
-  function aicHtml() {
-    var st = A.st || {}, pct = Math.min(100, Math.round(100 * (st.used || 0) / Math.max(1, st.cap || 1)));
-    var tot = ORDER.reduce(function (s, k) { var t = stateOf(k)[2]; s.t += t.open + t.doing + t.blocked; s.w += t.doing ? 1 : 0; return s; }, { t: 0, w: 0 });
-    var cnt = function (g) { return g[3] ? g[3].length : ORDER.length; };
-    var rail = '<aside class="aic-rail"><div class="aic-org"><span class="aic-logo"><span class="ms">auto_awesome</span></span><div><b>AI Team</b><small>' + (st.included ? 'Included in your plan' : '$' + (st.price || 49) + ' / month add-on') + '</small></div></div>'
-      + '<div class="aic-cap">Your team</div>' + GRP.map(function (g) { return '<button type="button" class="aic-g' + ((A.grp || 'all') === g[0] ? ' on' : '') + '" data-g="' + g[0] + '"><span class="ms">' + g[2] + '</span>' + g[1] + '<em>' + cnt(g) + '</em></button>'; }).join('')
-      + '<div class="aic-cap">Work</div><button type="button" class="aic-g" data-go="tasks"><span class="ms">checklist</span>Task board<em>' + tot.t + '</em></button>'
-      + '<button type="button" class="aic-g" data-go="wait"><span class="ms">task_alt</span>Waiting for you<em>' + (st.pending || 0) + '</em></button>'
-      + (ceoOn() ? '<button type="button" class="aic-g" data-go="ceo"><span class="ms">insights</span>Briefing &amp; map</button>' : '')
-      + '<div class="aic-use"><b>' + (st.used || 0) + ' of ' + (st.cap || 0) + '</b><small>messages this month · brief at 7am</small><div class="aic-bar"><i style="width:' + pct + '%"></i></div></div></aside>';
-    var tile = function (id, ic, lbl, v) { return '<button type="button" class="aic-tile' + ((A.flt || 'all') === id ? ' on' : '') + '" data-f="' + id + '"><span class="ms">' + ic + '</span><span>' + lbl + '</span><b>' + v + '</b></button>'; };
-    var mid = '<section class="aic-mid"><div class="aic-head"><div><h2>Your team</h2><p>Your AI CEO and ' + RING.length + ' assistants, what each is wired to and what they’re working on.</p></div><button type="button" class="aic-mapb" data-map="1"><span class="ms">hub</span>Team map</button></div>'
-      + '<div class="aic-tiles">' + tile('all', 'diversity_3', 'Everyone', ORDER.length) + tile('work', 'bolt', 'Working now', tot.w) + tile('tasks', 'checklist', 'With tasks', ORDER.filter(function (k) { var t = stateOf(k)[2]; return t.open + t.doing + t.blocked; }).length)
-      + '<button type="button" class="aic-tile" data-go="wait"><span class="ms">task_alt</span><span>Waiting for you</span><b>' + (st.pending || 0) + '</b></button></div>'
-      + '<div class="aic-chips">' + GRP.map(function (g) { return '<button type="button" class="' + ((A.grp || 'all') === g[0] ? 'on' : '') + '" data-g="' + g[0] + '">' + g[1] + '</button>'; }).join('') + '</div>'
-      + '<div class="aic-bar2"><label class="aic-q"><span class="ms">search</span><input id="aicQ" placeholder="Search your team or what they’re connected to" value="' + esc(A.q || '') + '" autocomplete="off"></label></div>'
-      + '<div class="aic-tbl" id="aicTbl">' + aicRows() + '</div></section>';
-    return '<div class="aic' + (A.mdet ? ' det' : '') + '" id="aic">' + rail + mid + '<section class="aic-det" id="aicDet">' + aicDetail(A.sel) + '</section></div>';
-  }
-  function aicWire() {
-    var root = $('aic'); if (!root) return;
-    var redrawDet = function () { var d = $('aicDet'); if (d) { d.innerHTML = aicDetail(A.sel); wireDet(); } };
-    var redrawTbl = function () { var t = $('aicTbl'); if (t) { t.innerHTML = aicRows(); wireRows(); } };
-    function pick(k) { A.sel = k; A.dtab = A.dtab || 'ov'; root.querySelectorAll('.aic-tr[data-k]').forEach(function (r) { r.classList.toggle('on', r.getAttribute('data-k') === k); }); redrawDet(); if (window.innerWidth <= 900) { A.mdet = true; root.classList.add('det'); root.scrollIntoView({ block: 'start' }); } }
-    function wireRows() { root.querySelectorAll('.aic-tr[data-k]').forEach(function (r) { r.onclick = function () { pick(r.getAttribute('data-k')); }; r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(r.getAttribute('data-k')); } }; }); }
-    function chatWith(k, text) { A.tab = 'chat'; A.agent = k; A.thread = null; A.mdet = false; draw(); if (text) setTimeout(function () { var i = $('aiIn'); if (i) { i.value = text; if (i.bpFit) i.bpFit(); i.focus(); } }, 400); }
-    function wireDet() {
-      var d = $('aicDet'); if (!d) return;
-      d.querySelectorAll('[data-dt]').forEach(function (b) { b.onclick = function () { A.dtab = b.getAttribute('data-dt'); redrawDet(); }; });
-      d.querySelectorAll('[data-step]').forEach(function (b) { b.onclick = function () { var i = ORDER.indexOf(A.sel) + (+b.getAttribute('data-step')); pick(ORDER[(i + ORDER.length) % ORDER.length]); }; });
-      d.querySelectorAll('[data-ask]').forEach(function (b) { b.onclick = function () { chatWith(A.sel, b.getAttribute('data-ask')); }; });
-      d.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () { chatWith(A.sel); }; });
-      d.querySelectorAll('[data-give]').forEach(function (b) { b.onclick = function () { var k = A.sel; A.tab = 'tasks'; A.mdet = false; draw(); setTimeout(function () { var w = $('tkWho'); if (w && k !== 'ceo') w.value = k; var t = $('tkT'); if (t) t.focus(); }, 60); }; });
-      d.querySelectorAll('[data-task]').forEach(function (b) { b.onclick = function () { var t = (A.tk || []).filter(function (x) { return x.id === b.getAttribute('data-task'); })[0]; if (t && t.thread_id) { A.tab = 'chat'; A.agent = t.assignee; A.thread = t.thread_id; lastThread(t.assignee, t.thread_id); A.mdet = false; draw(); } else { A.tab = 'tasks'; A.mdet = false; draw(); } }; });
-      d.querySelectorAll('[data-back]').forEach(function (b) { b.onclick = function () { A.mdet = false; root.classList.remove('det'); }; });
-      d.querySelectorAll('[data-map]').forEach(function (b) { b.onclick = function () { A.tab = 'map'; draw(); }; });
+  /* one assistant up close: the AI CEO and you on one side, everything it works from on the other */
+  function focusMap(k, W, H) {
+    var small = W < 600, c = connList(k), links = '', nodes = '', dots = '', i = 0;
+    var cx = small ? W / 2 : W * 0.4, cy = small ? 170 : H / 2;
+    var left = k === 'ceo' ? [{ n: 'You', ic: 'person', kind: 'you', s: 'approve what goes out' }] : [{ n: 'AI CEO', ic: 'monitoring', kind: 'mgr', s: 'hands out tasks', k: 'ceo' }, { n: 'You', ic: 'person', kind: 'you', s: 'approve what goes out' }];
+    var pts = [];
+    if (small) {
+      left.forEach(function (d, j) { pts.push({ x: left.length === 1 ? W / 2 : (j ? W * 0.82 : W * 0.18), y: 78, d: d }); });
+      var cols = 3, top = 292, step = Math.min(84, (H - top - 30) / Math.ceil(c.length / cols));
+      c.forEach(function (d, j) { pts.push({ x: W * (0.18 + 0.32 * (j % cols)), y: top + Math.floor(j / cols) * step, d: d }); });
+    } else {
+      left.forEach(function (d, j) { pts.push({ x: W * 0.1, y: left.length === 1 ? cy : H * (0.3 + 0.4 * j), d: d }); });
+      var half = Math.ceil(c.length / 2), stp = Math.min(78, (H - 110) / Math.max(1, half - 1 + 0.5));
+      var y0 = cy - ((half - 1) * stp + stp / 2) / 2;
+      c.forEach(function (d, j) { var b = j >= half, jj = b ? j - half : j; pts.push({ x: W * (b ? 0.88 : 0.7), y: y0 + jj * stp + (b ? stp / 2 : 0), d: d }); });
     }
-    root.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { A.grp = b.getAttribute('data-g'); root.querySelectorAll('[data-g]').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-g') === A.grp); }); redrawTbl(); }; });
-    root.querySelectorAll('[data-f]').forEach(function (b) { b.onclick = function () { A.flt = b.getAttribute('data-f'); root.querySelectorAll('[data-f]').forEach(function (x) { x.classList.toggle('on', x === b); }); redrawTbl(); }; });
-    root.querySelectorAll('.aic-rail [data-go],.aic-tiles [data-go]').forEach(function (b) { b.onclick = function () { A.tab = b.getAttribute('data-go'); A.mdet = false; draw(); }; });
-    root.querySelectorAll('.aic-mid [data-map]').forEach(function (b) { b.onclick = function () { A.tab = 'map'; draw(); }; });
-    var q = $('aicQ'); if (q) q.oninput = function () { A.q = q.value; redrawTbl(); };
-    wireRows(); wireDet();
+    pts.forEach(function (p) {
+      var col = KC[p.d.kind] || '#7fb0ff', id = 'aimf' + (i++), mx = (cx + p.x) / 2, my = (cy + p.y) / 2;
+      var d = small ? 'M' + cx + ' ' + cy + ' C' + cx + ' ' + my + ' ' + p.x + ' ' + my + ' ' + p.x + ' ' + p.y : 'M' + cx + ' ' + cy + ' C' + mx + ' ' + cy + ' ' + mx + ' ' + p.y + ' ' + p.x + ' ' + p.y;
+      links += '<path id="' + id + '" class="aim-l" style="stroke:' + col + '" stroke-opacity=".5" d="' + d + '"/>';
+      dots += dot(id, i, col, p.x < cx || (small && p.y < cy));
+      var r = small ? 17 : 20;
+      nodes += '<g class="aim-n"' + (p.d.k ? ' data-k="' + p.d.k + '" tabindex="0" role="button"' : ' style="cursor:default"') + '><circle class="b" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r + '" style="stroke:' + col + '"/>' + icon(p.x, p.y, p.d.ic, small ? 15 : 17, col)
+        + '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 14).toFixed(1) + '" text-anchor="middle" style="font-size:' + (small ? 10.5 : 11.5) + 'px;font-weight:500">' + esc(cut(p.d.n, small ? 13 : 18)) + '</text>'
+        + (p.d.s && !small ? '<text class="s" x="' + p.x.toFixed(1) + '" y="' + (p.y + r + 27).toFixed(1) + '" text-anchor="middle">' + p.d.s + '</text>' : '') + '</g>';
+    });
+    var R = small ? 32 : 40;
+    var me = '<g class="aim-in"><circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 12) + '" fill="rgba(0,111,255,.08)"/><circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="url(#aimG)"/>' + icon(cx, cy, AG[k].ic, small ? 24 : 28, '#fff')
+      + '<text x="' + cx + '" y="' + (cy + R + 18) + '" text-anchor="middle" style="font-family:inherit;font-size:14px;font-weight:700;fill:var(--ink)">' + esc(AG[k].n) + '</text></g>';
+    return '<g class="aim-in">' + links + dots + nodes + '</g>' + me;
   }
+  function mapHtml() {
+    var f = !!A.focus, k = A.sel;
+    return '<div class="aim-bar">' + (f ? '<button type="button" class="aim-btn" data-team="1"><span class="ms">arrow_back</span>Whole team</button><span class="aim-crumb">Team <span class="ms" style="font-size:15px">chevron_right</span><b>' + esc(AG[k].n) + '</b></span>'
+      + '<span class="aim-sp" style="flex:1"></span><button type="button" class="aim-btn" data-step="-1" aria-label="Previous"><span class="ms">chevron_left</span></button><button type="button" class="aim-btn" data-step="1" aria-label="Next"><span class="ms">chevron_right</span></button>'
+      : '<span class="aim-crumb"><b>Your team</b><span class="t">&nbsp;· tap anyone to see what they work from</span></span>') + '</div>'
+      + '<svg id="aimSvg" aria-label="' + (f ? 'What ' + esc(AG[k].n) + ' is connected to' : 'Your AI team') + '"></svg>'
+      + '<div class="aim-leg">' + (f ? '<span><i style="background:#006fff"></i>Tools</span><span><i style="background:#7fb0ff"></i>Pages it reads</span><span><i style="background:#16C79A"></i>The web</span>'
+        : '<span><i style="background:#16C79A"></i>Ready</span><span><i style="background:#006fff"></i>Working</span><span><i style="background:#9aa6b6"></i>Queued</span><span><i style="background:#0970F7"></i>Needs you</span>') + '</div>';
+  }
+  function drawSvg() {
+    var host = $('aimMap'), svg = $('aimSvg'); if (!host || !svg) return;
+    var W = Math.max(300, host.clientWidth), H = Math.max(360, host.clientHeight);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = '<defs><linearGradient id="aimG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#006fff"/><stop offset="1" stop-color="#16C79A"/></linearGradient></defs>'
+      + (A.focus ? focusMap(A.sel, W, H) : teamMap(W, H));
+    svg.querySelectorAll('.aim-n[data-go]').forEach(function (g) { g.onclick = function () { A.tab = g.getAttribute('data-go'); draw(); }; g.onkeydown = function (e) { if (e.key === 'Enter') g.onclick(); }; });
+    svg.querySelectorAll('.aim-n[data-k]').forEach(function (g) {
+      var go = function () { pick(g.getAttribute('data-k'), true); };
+      g.onclick = go; g.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+    });
+    host._w = W;
+  }
+  function aimItem(t) {
+    var s = { doing: 'work', blocked: 'need', open: 'queue', done: 'ready', cancelled: 'queue' }[t.status] || 'queue';
+    return '<button type="button" class="aim-it" data-task="' + t.id + '"><span class="aim-st ' + s + '"><i></i>' + (TS[t.status] || TS.open)[0] + '</span><div><b>' + esc(t.title) + (t.priority === 'high' ? '<span class="aim-pr">High</span>' : '') + '</b><small>'
+      + esc(t.assigned_by === 'owner' ? 'From you' : 'From ' + ((AG[t.assigned_by] || {}).n || t.assigned_by)) + ' · ' + ago(t.updated_at || t.created_at) + '</small></div><span class="ms" style="color:var(--mu)">chevron_right</span></button>';
+  }
+  function detHtml() {
+    var k = A.sel, s = stateOf(k), c = connList(k), mine = (A.tk || []).filter(function (t) { return t.assignee === k; }), tab = A.dtab || 'ov', body = '';
+    var live = mine.filter(function (t) { return t.status === 'doing' || t.status === 'open' || t.status === 'blocked'; });
+    if (tab === 'ov') body = '<div class="aim-sec">On the board</div>' + (live.length ? live.slice(0, 4).map(aimItem).join('') : '<div class="aim-it" style="cursor:default"><span class="ms" style="color:#16C79A">check_circle</span><div><b>Nothing waiting</b><small>' + (A.tk ? 'Give ' + esc(AG[k].n) + ' a task, or ask the AI CEO to plan the week.' : 'Loading the board…') + '</small></div></div>')
+      + '<div class="aim-sec">Ask ' + esc(AG[k].n) + '</div>' + AG[k].h.map(function (h) { return '<button type="button" class="aim-hint" data-ask="' + esc(h) + '">' + esc(h) + '</button>'; }).join('');
+    else if (tab === 'cn') body = '<div style="color:var(--mu);font-size:12.5px">What ' + esc(AG[k].n) + ' reads and works with. Anything for a customer waits for your OK.</div><div class="aim-cn">' + c.map(function (x) { return '<div><span class="ms" style="color:' + KC[x.kind] + '">' + x.ic + '</span><span>' + esc(x.n) + '</span></div>'; }).join('') + '</div>';
+    else body = (mine.length ? mine.slice(0, 20).map(aimItem).join('') : '<div class="aim-empty">No tasks for ' + esc(AG[k].n) + ' yet.</div>');
+    return '<div class="aim-dh"><span class="aim-av' + (k === 'ceo' ? ' ceo' : '') + '"><span class="ms">' + AG[k].ic + '</span></span><div><h3>' + esc(AG[k].n) + '</h3><small>' + esc(k === 'ceo' ? 'Manager' : groupOf(k)[1]) + '</small></div>'
+      + '<span class="aim-st ' + s[0] + '" style="margin-left:auto"><i></i>' + s[1] + '</span></div>'
+      + '<div class="aim-d">' + esc(AG[k].d) + '</div>'
+      + '<div class="aim-tabs"><button type="button" data-dt="ov" class="' + (tab === 'ov' ? 'on' : '') + '">Overview</button><button type="button" data-dt="cn" class="' + (tab === 'cn' ? 'on' : '') + '">Connections (' + c.length + ')</button><button type="button" data-dt="tk" class="' + (tab === 'tk' ? 'on' : '') + '">Tasks (' + mine.length + ')</button></div>'
+      + '<div class="aim-pane">' + body + '</div>'
+      + '<div class="aim-cta"><button type="button" class="bpx-btn" data-chat="1"><span class="ms">chat</span>Chat with ' + esc(AG[k].n) + '</button><button type="button" class="bpx-btn ghost" data-give="1" style="flex:0 0 auto"><span class="ms">add_task</span>Task</button></div>';
+  }
+  function listHtml() {
+    var rows = ORDER.filter(matches);
+    if (!rows.length) return '<div class="aim-empty">No one on your team matches that.</div>';
+    return '<div class="aim-r aim-rh"><span>Assistant</span><span class="aim-g">Group</span><span>Connected to</span><span style="text-align:center">Tasks</span><span>Status</span></div>' + rows.map(function (k) {
+      var s = stateOf(k), t = s[2], n = t.open + t.doing + t.blocked, c = connList(k);
+      return '<div class="aim-r' + (A.sel === k && A.focus ? ' on' : '') + '" data-k="' + k + '" role="button" tabindex="0"><span class="aim-nm"><span class="aim-av' + (k === 'ceo' ? ' ceo' : '') + '"><span class="ms">' + AG[k].ic + '</span></span><b>' + esc(AG[k].n) + '</b></span>'
+        + '<span class="aim-g">' + esc(k === 'ceo' ? 'Manager' : groupOf(k)[1]) + '</span>'
+        + '<span class="aim-ic">' + c.slice(0, 5).map(function (x) { return '<i title="' + esc(x.n) + '"><span class="ms" style="color:' + KC[x.kind] + '">' + x.ic + '</span></i>'; }).join('') + (c.length > 5 ? '<small>+' + (c.length - 5) + '</small>' : '') + '</span>'
+        + '<span class="aim-tn' + (n ? '' : ' z') + '">' + (n || '·') + '</span><span class="aim-st ' + s[0] + '"><i></i>' + s[1] + '</span></div>';
+    }).join('');
+  }
+  function topHtml() {
+    var st = A.st || {}, w = ORDER.filter(function (k) { return stateOf(k)[2].doing; }).length, wt = ORDER.filter(function (k) { var t = stateOf(k)[2]; return t.open + t.doing + t.blocked; }).length;
+    var k = function (id, ic, lbl, v, go) { return '<button type="button" class="aim-k' + (!go && (A.flt || 'all') === id ? ' on' : '') + '" ' + (go ? 'data-go="' + go + '"' : 'data-f="' + id + '"') + '><span class="ms">' + ic + '</span>' + lbl + ' <b>' + v + '</b></button>'; };
+    return '<div class="aim-top">' + k('all', 'diversity_3', 'Everyone', ORDER.length) + k('work', 'bolt', 'Working now', w) + k('tasks', 'checklist', 'With tasks', wt) + k('', 'task_alt', 'Waiting for you', st.pending || 0, 'wait')
+      + '<span class="aim-sp"></span><label class="aim-q"><span class="ms">search</span><input id="aimQ" placeholder="Search your team or what they’re connected to" value="' + esc(A.q || '') + '" autocomplete="off"></label></div>'
+      + '<div class="aim-chips">' + GRP.map(function (g) { return '<button type="button" class="' + ((A.grp || 'all') === g[0] ? 'on' : '') + '" data-g="' + g[0] + '">' + g[1] + '</button>'; }).join('') + '</div>';
+  }
+  function pick(k, focus) {
+    A.sel = k; if (focus) A.focus = true;
+    var m = $('aimMap'); if (m) { m.innerHTML = mapHtml(); drawSvg(); wireMap(); }
+    var d = $('aimDet'); if (d) { d.innerHTML = detHtml(); wireDet(); }
+    var l = $('aimList'); if (l) { l.innerHTML = listHtml(); wireList(); }
+  }
+  function chatWith(k, text) { A.tab = 'chat'; A.agent = k; A.thread = null; draw(); if (text) setTimeout(function () { var i = $('aiIn'); if (i) { i.value = text; if (i.bpFit) i.bpFit(); i.focus(); } }, 400); }
+  function wireMap() {
+    var m = $('aimMap'); if (!m) return;
+    m.querySelectorAll('[data-team]').forEach(function (b) { b.onclick = function () { A.focus = false; pick(A.sel, false); }; });
+    m.querySelectorAll('[data-step]').forEach(function (b) { b.onclick = function () { var i = ORDER.indexOf(A.sel) + (+b.getAttribute('data-step')); pick(ORDER[(i + ORDER.length) % ORDER.length], true); }; });
+  }
+  function wireDet() {
+    var d = $('aimDet'); if (!d) return;
+    d.querySelectorAll('[data-dt]').forEach(function (b) { b.onclick = function () { A.dtab = b.getAttribute('data-dt'); d.innerHTML = detHtml(); wireDet(); }; });
+    d.querySelectorAll('[data-ask]').forEach(function (b) { b.onclick = function () { chatWith(A.sel, b.getAttribute('data-ask')); }; });
+    d.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () { chatWith(A.sel); }; });
+    d.querySelectorAll('[data-give]').forEach(function (b) { b.onclick = function () { var k = A.sel; A.tab = 'tasks'; draw(); setTimeout(function () { var w = $('tkWho'); if (w && k !== 'ceo') w.value = k; var t = $('tkT'); if (t) t.focus(); }, 60); }; });
+    d.querySelectorAll('[data-task]').forEach(function (b) { b.onclick = function () { var t = (A.tk || []).filter(function (x) { return x.id === b.getAttribute('data-task'); })[0]; if (t && t.thread_id) { A.tab = 'chat'; A.agent = t.assignee; A.thread = t.thread_id; lastThread(t.assignee, t.thread_id); draw(); } else { A.tab = 'tasks'; draw(); } }; });
+  }
+  function wireList() {
+    var l = $('aimList'); if (!l) return;
+    l.querySelectorAll('.aim-r[data-k]').forEach(function (r) {
+      var go = function () { pick(r.getAttribute('data-k'), true); var m = $('aimMap'); if (m && m.getBoundingClientRect().top < 60) m.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+      r.onclick = go; r.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+    });
+  }
+  function refilter() { drawSvg(); var l = $('aimList'); if (l) { l.innerHTML = listHtml(); wireList(); } }
   function consoleView() {
-    aicCss();
+    aicCss(); boardCss();
     if (!A.sel || !AG[A.sel]) A.sel = 'ceo';
-    $('aiBody').innerHTML = aicHtml(); aicWire();
-    /* the board's tasks, for the picked assistant's list */
+    var b = $('aiBody');
+    b.innerHTML = '<div class="aim" id="aim"><div id="aimTop">' + topHtml() + '</div><div class="aim-grid"><div class="bpx-panel aim-map" id="aimMap">' + mapHtml() + '</div><div class="bpx-panel aim-det" id="aimDet">' + detHtml() + '</div></div>'
+      + '<div class="bpx-panel aim-list" id="aimList">' + listHtml() + '</div></div>';
+    drawSvg(); wireMap(); wireDet(); wireList();
+    var top = $('aimTop');
+    top.querySelectorAll('[data-f]').forEach(function (x) { x.onclick = function () { A.flt = x.getAttribute('data-f'); top.querySelectorAll('[data-f]').forEach(function (y) { y.classList.toggle('on', y === x); }); refilter(); }; });
+    top.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { A.tab = x.getAttribute('data-go'); draw(); }; });
+    top.querySelectorAll('[data-g]').forEach(function (x) { x.onclick = function () { A.grp = x.getAttribute('data-g'); top.querySelectorAll('[data-g]').forEach(function (y) { y.classList.toggle('on', y === x); }); refilter(); }; });
+    var q = $('aimQ'); if (q) q.oninput = function () { A.q = q.value; refilter(); };
+    /* the map is drawn to its box: draw it again when the box changes size (rotation, sidebar) */
+    if (!window.__aimRs) { window.__aimRs = 1; var t = 0; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { var m = $('aimMap'); if (m && Math.abs((m._w || 0) - m.clientWidth) > 8) drawSvg(); }, 150); }); }
     api({ op: 'tasks' }).then(function (r) {
-      if (!r || !r.ok || A.tab !== 'board' || !$('aicDet')) return;
-      A.tk = r.data || []; var d = $('aicDet'), y = d.scrollTop; d.innerHTML = aicDetail(A.sel); d.scrollTop = y; aicWire();
+      if (!r || !r.ok || A.tab !== 'board' || !$('aimDet')) return;
+      A.tk = r.data || []; var d = $('aimDet'); d.innerHTML = detHtml(); wireDet();
     });
   }
 
