@@ -166,6 +166,45 @@
     if (window._bpCurView) S.sync(window._bpCurView, true);
   };
 
+  /* what each page is for, in a contractor's words (2026-11-18): shown beside the page title
+     on iPad and computers, and as the hover tip on the tabs */
+  var DESC = window.BP_DESC = {
+    dashboard: 'Your business at a glance: money, jobs, leads and what needs you today',
+    messaging: 'Text your customers and leads, every conversation in one place',
+    email: 'Email customers from your business address',
+    teamchat: 'Chat with your crew and office',
+    calendar: 'Inspections, jobs and crew days on one calendar',
+    contacts: 'Everyone you’ve worked with or quoted: leads and customers',
+    checks: 'Homeowners who priced a job with the calculators on your website',
+    automations: 'Texts and emails that go out on their own after a lead, a quote or a finished job',
+    calculator: 'The price calculators on your website and what they quote',
+    activejobs: 'Jobs you’ve won: schedule, crew, money and photos',
+    assets: 'Equipment you installed for customers, with warranty and service dates',
+    employees: 'Your crew: hours, pay and who’s clocked in',
+    subs: 'Subcontractors you hire, their paperwork and what you owe them',
+    routing: 'The best driving order for the day’s jobs',
+    finances: 'Money in and out, profit, and what customers still owe',
+    invoices: 'Bills you’ve sent and whether they’re paid',
+    estimates: 'Quotes you’ve sent and whether the customer said yes',
+    quote: 'Build a quote with good, better and best options',
+    invoicebuilder: 'Build a bill to send your customer',
+    ledger: 'Every payment in and expense out',
+    finarchive: 'Finished years, closed and ready for taxes',
+    payouts: 'Let customers pay by card, straight to your bank',
+    quickbooks: 'Send your invoices and payments to QuickBooks',
+    matlists: 'Material lists for each job, ready to order',
+    receipts: 'Receipts from the job, matched to the project they’re for',
+    supplyorders: 'Material orders and where they are',
+    prices: 'What your suppliers charge for materials',
+    aiteam: 'Your AI CEO and assistants, and what each one works from',
+    marketing: 'Your Google, Facebook and Yelp listings and ads',
+    reputation: 'Your reviews, and asking happy customers for one',
+    website: 'Your website, its visitors and the leads it brings in',
+    social: 'Post to Facebook and Instagram',
+    competitors: 'What other contractors near you charge and offer',
+    settings: 'Your company, team, phone number and how the app works for you'
+  };
+
   /* views that are not in the sidebar still belong to a section */
   var EXTRA = { quote: 'finances', invoicebuilder: 'finances', ledger: 'finances', leadsources: 'leads', mattemplates: 'supply', suppliers: 'supply', closedeals: 'leads', connections: 'marketing', supply: 'supply', supplyorders: 'supply', prices: 'supply', customize: 'leads' };
   function secOf(v) {
@@ -184,6 +223,7 @@
     var g = (window.BP_NAV || []).filter(function (x) { return x.id === gid; })[0];
     var title = (g && g.kids) ? g.l : ((window.BPVIEWS && BPVIEWS[v] && BPVIEWS[v].t) || 'BuilderPro');
     var t = $('bpxVtitle'); if (t) t.textContent = title;
+    var sub = $('bpxVsub'); if (sub) { var dsc = crew() ? '' : (DESC[v] || ''); sub.textContent = dsc; sub.hidden = !dsc; sub.title = dsc; }
     document.title = title + ' · BuilderPro';
     var tabs = $('hlTabs');
     if (tabs) {
@@ -194,7 +234,7 @@
       if (ks.length > 1) {
         tabs.innerHTML = ks.map(function (k) {
           var on = k[0] === tv;
-          return '<button type="button" role="tab" aria-selected="' + on + '" class="hl-tab' + (on ? ' on' : '') + '" onclick="bpNav(\'' + k[0] + '\')">' + esc(k[1])
+          return '<button type="button" role="tab" aria-selected="' + on + '" class="hl-tab' + (on ? ' on' : '') + '"' + (DESC[k[0]] ? ' title="' + esc(DESC[k[0]]) + '"' : '') + ' onclick="bpNav(\'' + k[0] + '\')">' + esc(k[1])
             + (window.bpLocked && bpLocked(k[0]) ? ' <svg class="hl-i hl-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' : '') + '</button>';
         }).join('');
         tabs.hidden = false;

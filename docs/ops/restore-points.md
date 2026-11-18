@@ -346,3 +346,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the full-width AI Team map and the mint New leads line (2026-11-18)
 - Live site (main): `f54c354`
 - Changes: (1) Dashboard New leads card: a mint line of leads adding up through the period (was thin bars) — portal/dash.js (leadsCard, miniViz mint option), portal/dash.css (.cb-line.mint). (2) AI Team, as the owner marked it: no counts row, no group buttons, no side card; the map takes the full width with the search in its top bar; zoomed in, the bar has Chat with … and Task; the list stays under it — portal/aiteam.js. To undo: revert those files to the SHA above.
+
+## Before page descriptions (2026-11-18)
+- Live site (main): `1bfc8c3`
+- Changes: portal/shell.js DESC (window.BP_DESC): one plain line per page on what it's for, shown beside the page title on iPad and computers (#bpxVsub, hidden on phones) and as the hover tip on each tab; portal/shell.css shows it. To undo: revert those two files.

@@ -88,7 +88,13 @@ html.bp-appmode body{overflow:hidden}
   background:var(--card);border-bottom:1px solid var(--line)}
 #bpx#bpx#bpx#bpx .hl-ttl{min-width:0;flex:1}
 #bpx#bpx#bpx#bpx .hl-ttl h1{margin:0 !important;font:600 16px/22px var(--sans) !important;letter-spacing:-.005em !important;color:var(--ink) !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#bpx#bpx#bpx#bpx .hl-ttl p{display:none !important}
+/* the page title and, beside it, one line on what the page is for (portal/shell.js DESC) */
+#bpx#bpx#bpx#bpx .hl-ttl{display:flex;align-items:baseline;gap:12px}
+#bpx#bpx#bpx#bpx .hl-ttl h1{flex:none;max-width:60%}
+#bpx#bpx#bpx#bpx .hl-ttl p{display:block !important;margin:0 !important;min-width:0;font:400 13px/20px var(--sans) !important;color:var(--mu,#788493) !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx .hl-ttl p[hidden]{display:none !important}
+@media (max-width:820px){#bpx#bpx#bpx#bpx .hl-ttl p{display:none !important}}
+#bpx#bpx#bpx#bpx.bp-m .hl-ttl p{display:none !important}
 #bpx#bpx#bpx#bpx .hl-burger{display:none;width:32px;height:32px;margin-left:-6px;border:0;border-radius:6px;background:transparent;color:var(--ink-2);cursor:pointer;place-items:center}
 #bpx#bpx#bpx#bpx .hl-burger svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 #bpx#bpx#bpx#bpx .hl-burger:hover{background:var(--hl-hover)}
