@@ -1,3 +1,6 @@
+/* PARKED (2026-11-18): not loaded by the app. The crew map was taken out for now, to come back in a
+   later update: to turn it on again, add the Map tab back in portal/crew.js (tabs list and pane())
+   and load this file and its partner (crewmap.js / crewmap.css) in app.html. */
 /* Crew map (2026-11-18): where the crew are, Google Maps style.
    Employees → Map. A full map with a search-and-list panel (floating on the
    left on a computer, a sheet under the map on a phone):

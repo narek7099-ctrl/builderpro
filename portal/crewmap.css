@@ -1,3 +1,6 @@
+/* PARKED (2026-11-18): not loaded by the app. The crew map was taken out for now, to come back in a
+   later update: to turn it on again, add the Map tab back in portal/crew.js (tabs list and pane())
+   and load this file and its partner (crewmap.js / crewmap.css) in app.html. */
 /* Crew map (portal/crewmap.js): a full map, Google Maps style, with a floating
    search-and-list panel on a computer and a sheet under the map on a phone.
    Theme: blue #006fff, navy #001530, mint #16C79A for "on site". */

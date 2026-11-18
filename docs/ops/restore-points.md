@@ -309,3 +309,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before a job's map point follows its address (2026-11-18)
 - Live site (main): `ecdfe1e`
 - Changes: app.html bpJobsSet now calls bpGeoFreshSoon: 2.5 s after a job save, active jobs whose address has no map point or changed since its point was found are looked up again (pjPoint, OpenStreetMap, up to 5, owner only, with a signal). Before, the point only updated when someone opened a map, so crew clock-ins could be checked against an old spot. portal/crewapp.js ignores a point found for a different address (no on-site check rather than a wrong one). Data (not code): a worker login narek7099+worker@ (Test Worker (sample), crew, in the plan299 company) and a job "GPS test (sample)" at 410 Olive Ave, Burbank assigned to it, Nov 18-25.
+
+## Before taking the crew map out for now (2026-11-18)
+- Live site (main): `d275820` (crew map live; to bring it back, restore portal/crew.js and the two crewmap tags in app.html from this commit)
+- Changes: Employees → Map tab removed (portal/crew.js) and portal/crewmap.js / crewmap.css no longer loaded (app.html); both files stay in the repo marked PARKED for a later update. The clock-in location check and the job map-point fix stay. Data: the "GPS test (sample)" job removed with a tombstone in portal_finance.gone; Test Worker (sample) set inactive and its login (narek7099+worker@) banned (no DELETE used; it can be removed fully from Settings → Team).
