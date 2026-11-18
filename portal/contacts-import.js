@@ -161,7 +161,7 @@
       }
       done += chunk.length;
     }
-    msg.style.color = '#15803d';
+    msg.style.color = '#087F61';
     msg.textContent = done + (done === 1 ? ' contact' : ' contacts') + ' imported.';
     b.textContent = 'Done';
     setTimeout(function () { if (window.bpCloseModal) bpCloseModal(); if (window.bpLoadContacts) bpLoadContacts(); }, 1200);

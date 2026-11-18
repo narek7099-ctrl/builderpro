@@ -13,7 +13,7 @@
 /* Same theme as builderpro-os.com: light, #edf2f6 canvas, white 16px panels,
    navy ink, one blue accent, pill buttons, General Sans + Geist. */
 :root{--bg:#edf2f6;--bg2:#f6f8fb;--card:#ffffff;--card2:#f4f7fa;--line:#dce3ec;--line2:#cfd8e3;--ink:#001530;--mut:#788493;--dim:#9aa3b1;
-  --pri:#006fff;--pri-d:#003db8;--pri-ink:#ffffff;--pri-soft:rgba(0,111,255,.14);--ok:#1faa5a;--warn:#c98a0b;--danger:#e0574e;--pill:#0b1021;
+  --pri:#006fff;--pri-d:#003db8;--pri-ink:#ffffff;--pri-soft:rgba(0,111,255,.14);--ok:#16C79A;--ok-t:#087F61;--warn:#c98a0b;--danger:#e0574e;--pill:#0b1021;
   --r1:10px;--r2:16px;--sans:'General Sans','Geist',system-ui,sans-serif;--mono:'Geist',ui-sans-serif,system-ui,sans-serif;--ease:cubic-bezier(.39,.575,.565,1)}
 *{margin:0;padding:0;box-sizing:border-box}
 html{color-scheme:light}
@@ -64,7 +64,7 @@ tbody tr:hover td{background:var(--bg2)}
 th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(--line2)}
 .tw{overflow-x:auto}
 .st{font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:5px}
-.st.ok{color:var(--ok)}.st.warn{color:var(--warn)}.st.bad{color:var(--danger)}.st.off{color:var(--mut)}
+.st.ok{color:var(--ok-t)}.st.warn{color:var(--warn)}.st.bad{color:var(--danger)}.st.off{color:var(--mut)}
 /* ---- the org board ---- */
 .bhead{display:flex;align-items:flex-end;gap:16px;margin-bottom:14px;flex-wrap:wrap}
 .bhead h2{margin:0}
@@ -113,7 +113,7 @@ th{font-size:12px;color:var(--mut);font-weight:500;border-bottom:1px solid var(-
 .bstat .spend button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:1px 8px;font:500 11.5px inherit;color:inherit;cursor:pointer;margin-left:4px}
 .bstat .spend.warn b{color:#b45309}.bstat .spend.over b{color:#c0392b}
 .bstat b{color:var(--mut);font-weight:500}
-.bstat .on{color:var(--ok)}
+.bstat .on{color:var(--ok-t)}
 /* ---- chat drawer ---- */
 .scrim{position:fixed;inset:0;background:rgba(0,21,48,.25);opacity:0;pointer-events:none;transition:opacity .3s;z-index:19}
 .scrim.open{opacity:1;pointer-events:auto}
@@ -126,7 +126,7 @@ html,body{overflow-x:clip}/* the closed chat drawer sits off the right edge; pho
 .sps{display:flex;gap:6px;overflow-x:auto;padding:8px 14px;border-bottom:1px solid var(--line);scrollbar-width:thin}
 .sps button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font:500 12.5px/1.2 inherit;color:inherit;cursor:pointer;white-space:nowrap}
 .sps button.on{background:var(--pri);border-color:var(--pri);color:#fff}
-.sps button i{font-size:11px;color:#1f9d60}.sps button.on i{color:#fff}
+.sps button i{font-size:11px;color:#087F61}.sps button.on i{color:#fff}
 .drawer .hd select{width:auto;max-width:200px;padding:5px 8px;font-size:12.5px;margin-left:auto}
 .xbtn{background:none;border:0;color:var(--mut);font-size:18px;width:30px;height:30px;border-radius:var(--r1);display:grid;place-items:center}
 .xbtn:hover{background:var(--card2);color:var(--ink)}
@@ -204,12 +204,12 @@ var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 var TOKEN=localStorage.getItem('cc_tok')||'', RTOK=localStorage.getItem('cc_rtok')||'';
 var ME=null, TAB='team', AGENT='ceo', THREAD=null, BUSY=false, PENDING=0, ERRS=0;
 var AG={ceo:{c:'#e8612c',d:'Runs the company, delegates to the teams',h:['What should we focus on this week?','Get every team to report on where we stand','Which trials should we save before they end?']},
-  sales:{c:'#1f9d60',d:'Trials into customers',h:['Which trials end in the next 3 days?','Write a follow-up for trials that went quiet','Draft a call script for a roofer on day 10 of the trial']},
+  sales:{c:'#16C79A',d:'Trials into customers',h:['Which trials end in the next 3 days?','Write a follow-up for trials that went quiet','Draft a call script for a roofer on day 10 of the trial']},
   marketing:{c:'#7c5cff',d:'Ads, copy and SEO',h:['Write 3 Facebook ads for plumbers','Plan a 30-day content calendar','How do competitors position themselves?']},
   support:{c:'#2f80ed',d:'Keeps the software working, with a specialist for each feature',h:['Is any client having trouble with the software?','Have every specialist check their feature for problems','Any open support or cancellation requests?']},
   builder:{c:'#c98a0b',d:'Builds GHL accounts',h:['Audit the newest client sub-account setup','Add standard roofing tags to a client','Fill in a client\'s AI receptionist knowledge']},
   research:{c:'#8a8f98',d:'Markets and competitors',h:['Top 5 lead sources for HVAC contractors in 2026','Compare our pricing with Jobber and ServiceTitan','Which trades grow fastest in Texas?']},
-  finance:{c:'#0e9384',d:'Revenue, costs and payments',h:['What is our MRR and what did AI cost this month?','Is any client costing more than they pay?','Any failed payments or chargebacks?']},
+  finance:{c:'#087F61',d:'Revenue, costs and payments',h:['What is our MRR and what did AI cost this month?','Is any client costing more than they pay?','Any failed payments or chargebacks?']},
   success:{c:'#dd2590',d:'Keeps every client set up and staying',h:['Which new clients are stuck in setup?','Who looks likely to cancel, and why?','Draft check-ins for clients who went quiet']}};
 var ICON={ceo:'ti-briefcase',sales:'ti-trending-up',marketing:'ti-speakerphone',support:'ti-apps',builder:'ti-hammer',research:'ti-telescope',finance:'ti-coin',success:'ti-heart-handshake'};
 var NAMES={ceo:'CEO',sales:'Sales Team',marketing:'Marketing Team',support:'Software Team',builder:'Builder Team',research:'Research Team',finance:'Finance Team',success:'Success Team'};
@@ -277,7 +277,7 @@ function drawTabs(){
 function tab(t){TAB=t;drawTabs();({team:viewTeam,tasks:viewTasks,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,errors:viewErrors,memory:viewMemory,conn:viewConn})[t]()}
 
 /* ---------- the task board: what the CEO (or you) assigned, and what came back ---------- */
-var TSTAT={open:['Waiting','#475467'],doing:['Working','#006fff'],done:['Done','#15803d'],blocked:['Blocked','#c0392b'],cancelled:['Cancelled','#98a2b3']};
+var TSTAT={open:['Waiting','#475467'],doing:['Working','#006fff'],done:['Done','#087F61'],blocked:['Blocked','#c0392b'],cancelled:['Cancelled','#98a2b3']};
 async function viewTasks(){
   el('view').innerHTML='<div class="bhead"><div><h2>Task board</h2><p>The CEO assigns work here and checks the results. Teams pick up open tasks within minutes, within your monthly AI limit.</p></div></div>'
     +'<div class="card tw" style="display:block;margin-bottom:14px"><b style="display:block;margin-bottom:8px">Give a team a task</b><div style="display:grid;grid-template-columns:180px 1fr 120px;gap:8px">'
@@ -455,7 +455,7 @@ async function viewApprovals(){
   el('ap').innerHTML=p.length?p.map(function(x){return '<div class="card"><div style="flex:1;min-width:240px"><span class="pill" style="border-color:'+(AG[x.agent]||{}).c+'">'+esc(nm(x.agent))+'</span> <b>'+esc(x.tool==='ghl'?'GHL '+(x.input||{}).op:x.tool.replace(/_/g,' '))+'</b><div class="muted" style="font-size:12px">'+esc(String(x.created_at).replace('T',' ').slice(0,16))+'</div><div style="margin-top:6px">'+esc(x.summary)+'</div></div>'
     +'<div style="display:flex;gap:6px"><button class="btn ok sm" onclick="decide(\''+x.id+'\',\'approve\',this)">Approve</button><button class="btn sm" onclick="decide(\''+x.id+'\',\'reject\',this)">Reject</button></div><pre>'+esc(JSON.stringify(x.input,null,2))+'</pre></div>'}).join(''):'<div class="card muted">Nothing waiting.</div>';
   el('ap').classList.remove('muted');
-  el('apd').innerHTML=d.length?'<table><thead><tr><th>When</th><th>Team</th><th>Action</th><th>Result</th></tr></thead><tbody>'+d.slice(0,40).map(function(x){return '<tr><td class="muted" style="white-space:nowrap">'+esc(String(x.decided_at||x.created_at).replace('T',' ').slice(0,16))+'</td><td>'+esc(nm(x.agent))+'</td><td>'+esc(x.summary).slice(0,160)+'</td><td>'+(x.status==='approved'?'<span style="color:var(--ok)">Done</span>':x.status==='failed'?'<span style="color:var(--danger)" title="'+esc(JSON.stringify(x.result).slice(0,300))+'">Failed</span>':'<span class="muted">Rejected</span>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">None yet.</span>';
+  el('apd').innerHTML=d.length?'<table><thead><tr><th>When</th><th>Team</th><th>Action</th><th>Result</th></tr></thead><tbody>'+d.slice(0,40).map(function(x){return '<tr><td class="muted" style="white-space:nowrap">'+esc(String(x.decided_at||x.created_at).replace('T',' ').slice(0,16))+'</td><td>'+esc(nm(x.agent))+'</td><td>'+esc(x.summary).slice(0,160)+'</td><td>'+(x.status==='approved'?'<span style="color:var(--ok-t)">Done</span>':x.status==='failed'?'<span style="color:var(--danger)" title="'+esc(JSON.stringify(x.result).slice(0,300))+'">Failed</span>':'<span class="muted">Rejected</span>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">None yet.</span>';
 }
 async function decide(id,op,b){
   var note=''; if(op==='reject'){note=prompt('Tell the team why (optional):')||'';}
@@ -515,7 +515,7 @@ function hcDraw(d,week,err){
     +'<span style="display:flex;gap:8px;align-items:center">'+(d?(d.ok?'<span class="st ok"><i class="ti ti-circle-check"></i>All working</span>':'<span class="st bad"><i class="ti ti-alert-triangle"></i>'+p.length+' problem'+(p.length>1?'s':'')+'</span>'):'')
     +'<button class="btn" style="padding:4px 10px;font-size:12px" onclick="hcRun(this)"><i class="ti ti-refresh"></i> Check now</button></span></div>'
     +'<div class="muted" style="font-size:12px;margin:4px 0 6px">'+(err?esc(err):d?'Checked '+esc(when)+'. Runs by itself every morning; nothing it checks costs money.':'No check yet. The first one runs tomorrow morning, or press Check now.')+'</div>'
-    +(week&&week.length?'<div style="display:flex;gap:4px;margin-bottom:6px" title="The last 7 days, newest first">'+week.slice(0,14).map(function(w){return '<span title="'+esc(String(w.at).slice(0,16).replace('T',' '))+'" style="width:10px;height:10px;border-radius:3px;background:'+(w.ok?'var(--ok,#16a34a)':'var(--danger)')+'"></span>'}).join('')+'</div>':'')
+    +(week&&week.length?'<div style="display:flex;gap:4px;margin-bottom:6px" title="The last 7 days, newest first">'+week.slice(0,14).map(function(w){return '<span title="'+esc(String(w.at).slice(0,16).replace('T',' '))+'" style="width:10px;height:10px;border-radius:3px;background:'+(w.ok?'var(--ok,#16C79A)':'var(--danger)')+'"></span>'}).join('')+'</div>':'')
     +p.map(function(x){return row(x,true)}).join('')
     +(n.length?'<details style="margin-top:4px"'+(p.length?'':' open')+'><summary class="muted" style="font-size:12px">'+n.length+' note'+(n.length>1?'s':'')+' (not errors)</summary>'+n.map(function(x){return row(x,false)}).join('')+'</details>':'');
 }
@@ -612,7 +612,7 @@ function ghlKey(uid,loc,biz){
     var r=await api({op:'ghl_key_set',user_id:uid,location:l,token:t});
     b.disabled=false;b.textContent='Save and set up';
     if(!r.ok){out.innerHTML='<span style="color:var(--danger)">'+esc(r.error||'Could not save the key.')+'</span>';return;}
-    out.innerHTML='<span style="color:var(--ok)">Saved. BuilderPro now reaches '+esc(r.name||biz)+'’s HighLevel.</span>'+((r.steps||[]).length?'<div class="muted" style="margin-top:6px">Set up: '+esc(r.steps.join(' · '))+'. The Builder team finishes the rest within a few minutes.</div>':'');
+    out.innerHTML='<span style="color:var(--ok-t)">Saved. BuilderPro now reaches '+esc(r.name||biz)+'’s HighLevel.</span>'+((r.steps||[]).length?'<div class="muted" style="margin-top:6px">Set up: '+esc(r.steps.join(' · '))+'. The Builder team finishes the rest within a few minutes.</div>':'');
     b.textContent='Done';b.onclick=function(){close();viewAccounts();};
   };
 }
@@ -624,7 +624,7 @@ async function newAcct(b){
   var r=await api(v); b.disabled=false;
   /* Supabase's raw reply when the email already has a login */
   if(r.error&&/already been registered|email_exists/i.test(r.error))r={error:'That email already has a BuilderPro login. Find them in the list below instead.'};
-  el('naOut').innerHTML=r.error&&!r.steps?'<span style="color:var(--danger)">'+esc(r.error)+'</span>':'<span style="color:var(--ok)">Created.</span> '+esc((r.steps||[]).join(' · '))+(r.error?' <span style="color:var(--danger)">'+esc(r.error)+'</span>':'');
+  el('naOut').innerHTML=r.error&&!r.steps?'<span style="color:var(--danger)">'+esc(r.error)+'</span>':'<span style="color:var(--ok-t)">Created.</span> '+esc((r.steps||[]).join(' · '))+(r.error?' <span style="color:var(--danger)">'+esc(r.error)+'</span>':'');
   if(!r.error)setTimeout(viewAccounts,2500);
 }
 
@@ -773,7 +773,7 @@ async function connToggle(i){var x=window._conns[i]; await api({op:'mcp_save',id
 async function connDel(id){ if(!confirm('Remove this connection? Teams lose access right away.'))return; await api({op:'mcp_delete',id:id}); viewConn(); }
 
 (function(){var q=new URLSearchParams(location.search);var ok=q.get('connected'),er=q.get('conn_error');
-  if(ok||er){TAB='conn';history.replaceState(null,'',location.pathname);window._connNote=ok?'<div class="warnbar" style="background:#e9f8ef;color:#0f5132;border-color:#b9e6c9">'+esc(ok)+' is connected. Your teams can use it now, and it stays connected.</div>':'<div class="warnbar" style="background:#fdecec;color:#7a1f1f;border-color:#f3c2c2">Sign-in didn\u2019t finish: '+esc(er)+'</div>';}})();
+  if(ok||er){TAB='conn';history.replaceState(null,'',location.pathname);window._connNote=ok?'<div class="warnbar" style="background:#E8F9F4;color:#065C47;border-color:#C5F1E4">'+esc(ok)+' is connected. Your teams can use it now, and it stays connected.</div>':'<div class="warnbar" style="background:#fdecec;color:#7a1f1f;border-color:#f3c2c2">Sign-in didn\u2019t finish: '+esc(er)+'</div>';}})();
 if(TOKEN)start();
 </script>
 </body>

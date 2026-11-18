@@ -166,7 +166,7 @@
     var stars = function (r) { return r.n ? (window.bpStars ? bpStars(r.avg, 12) : '★') + ' <span class="bpx-mut" style="font-size:12px">' + r.avg.toFixed(1) + ' (' + r.n + ')</span>' : '<span class="bpx-mut">—</span>'; };
     var lbl = { valid: 'Insured', expiring: 'Expiring', expired: 'Expired', missing: 'No COI' };
     a.innerHTML = '<div class="sb-top"><div class="sb-kp"><div><small>Subcontractors</small><b>' + rows.length + '</b></div><div><small>Approved, unpaid</small><b>' + money0(owed) + '</b></div>'
-        + '<div><small>Waiting on you</small><b>' + pend + '</b></div><div><small>Compliance issues</small><b style="color:' + (bad ? '#b42318' : 'inherit') + '">' + bad + '</b></div></div>'
+        + '<div><small>Waiting on you</small><b>' + pend + '</b></div><div><small>Compliance issues</small><b style="color:' + (bad ? '#0853B5' : 'inherit') + '">' + bad + '</b></div></div>'
         + '<button class="bpx-btn" style="width:auto;margin:0" onclick="bpSubEdit()"><span class="ms" style="font-size:18px;vertical-align:-4px">person_add</span> Add subcontractor</button></div>'
       + (rows.length ? '<div class="bpx-panel" style="padding:6px 8px"><table class="sb-tbl"><thead><tr><th>Company</th><th>Trade</th><th>Compliance</th><th>Rating</th><th class="n">Active jobs</th><th class="n">Owed</th></tr></thead><tbody>'
           + rows.map(function (x) {
@@ -271,7 +271,7 @@
         }).join('') + '</div>' : '<div class="bpx-mut" style="font-size:13px">Nothing on file. They can upload from their portal, or add one here.</div>')
         + '<div id="sbp-dform"><button class="bpx-rowbtn" style="margin-top:6px" onclick="bpSubsDocForm(\'' + id + '\')"><span class="ms" style="font-size:15px;vertical-align:-3px">upload</span> Add document</button></div></div>'
       + '<div class="sb-sec"><h5>Jobs</h5>' + (js.length ? '<div class="sa-list">' + js.map(function (j) { var m = moneyOf(j, id);
-          return '<div class="sa-row"><div class="sa-rm"><b>' + esc(j.title || j.name || 'Project') + '</b><span>' + esc(j.addr || '') + ' · ' + (j.status === 'done' ? 'Done' : 'Active') + '</span><span>Agreed ' + money0(m.contract) + ' · paid ' + money0(m.paid) + ' · owed ' + money0(m.approved) + (m.pending ? ' · <b style="color:#b42318">' + m.pending + ' waiting</b>' : '') + '</span></div>'
+          return '<div class="sa-row"><div class="sa-rm"><b>' + esc(j.title || j.name || 'Project') + '</b><span>' + esc(j.addr || '') + ' · ' + (j.status === 'done' ? 'Done' : 'Active') + '</span><span>Agreed ' + money0(m.contract) + ' · paid ' + money0(m.paid) + ' · owed ' + money0(m.approved) + (m.pending ? ' · <b style="color:#0853B5">' + m.pending + ' waiting</b>' : '') + '</span></div>'
             + '<div class="sa-ra"><button class="bpx-rowbtn" onclick="bpSubOpenJob(\'' + esc(j.id) + '\')">Open</button></div></div>'; }).join('') + '</div>'
         : '<div class="bpx-mut" style="font-size:13px">Not on any job yet. Open a project › Subs to put them on one.</div>') + '</div>'
       + '<div class="sb-sec"><h5>Invoices</h5>' + (invs.length ? '<div class="sa-list">' + invs.slice(0, 12).map(function (x) { return itemRow(x[0], x[1], 'inv', true); }).join('') + '</div>' : '<div class="bpx-mut" style="font-size:13px">No invoices yet.</div>') + '</div>'

@@ -132,7 +132,7 @@
       }
       /* 3. the bright waist where the threads meet */
       var gl = ctx.createRadialGradient(wx, wy, 0, wx, wy, M * 0.22);
-      if (dark) { gl.addColorStop(0, 'rgba(225,255,242,.7)'); gl.addColorStop(0.25, 'rgba(63,224,182,.26)'); gl.addColorStop(1, 'rgba(63,224,182,0)'); }
+      if (dark) { gl.addColorStop(0, 'rgba(232,249,244,.7)'); gl.addColorStop(0.25, 'rgba(63,224,182,.26)'); gl.addColorStop(1, 'rgba(63,224,182,0)'); }
       else { gl.addColorStop(0, 'rgba(22,199,154,.32)'); gl.addColorStop(0.25, 'rgba(22,199,154,.13)'); gl.addColorStop(1, 'rgba(22,199,154,0)'); }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
       ctx.fillStyle = gl; ctx.fillRect(wx - M * 0.22, wy - M * 0.22, M * 0.44, M * 0.44);

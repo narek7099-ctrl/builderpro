@@ -10,7 +10,7 @@
 #bpx .bpp-track{flex:1;min-width:52px;height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
 #bpx .bpp-track i{display:block;height:100%;border-radius:99px;background:var(--bpc-s1,#2f6bff);transition:width .35s ease}
 #bpx .bpp-bar b{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);min-width:32px;text-align:right}
-#bpx .bpp-bar.done .bpp-track i{background:#0f7a3d}
+#bpx .bpp-bar.done .bpp-track i{background:#087F61}
 /* late is striped as well as amber, so the state survives a colourblind
    reader and a black-and-white print */
 #bpx .bpp-bar.late .bpp-track i{background:repeating-linear-gradient(135deg,#0953b4 0 6px,#3f7ed0 6px 12px)}
@@ -40,7 +40,7 @@
 #bpx .bpp-phases{display:flex;flex-direction:column;gap:6px}
 #bpx .bpp-ph{display:flex;align-items:center;gap:11px;border:1px solid var(--line);
   border-radius:11px;padding:9px 12px;background:var(--card,#fff)}
-#bpx .bpp-ph.done{background:linear-gradient(0deg,rgba(15,122,61,.05),rgba(15,122,61,.05)),var(--card,#fff);border-color:#9fd9b8}
+#bpx .bpp-ph.done{background:linear-gradient(0deg,rgba(8,127,97,.05),rgba(8,127,97,.05)),var(--card,#fff);border-color:#8EE5CC}
 #bpx .bpp-ph.late{border-color:#8ab6f0;background:linear-gradient(0deg,rgba(9,83,180,.05),rgba(9,83,180,.05)),var(--card,#fff)}
 #bpx .bpp-ph-t{flex:1;min-width:0}
 #bpx .bpp-ph-t b{display:block;font-size:13.5px}
@@ -49,7 +49,7 @@
 #bpx .bpp-tick{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);
   background:var(--card,#fff);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 #bpx .bpp-tick .ms{font-size:16px;color:#fff}
-#bpx .bpp-ph.done .bpp-tick{background:#0f7a3d;border-color:#0f7a3d}
+#bpx .bpp-ph.done .bpp-tick{background:#087F61;border-color:#087F61}
 #bpx .bpp-tick:hover{border-color:var(--blue)}
 #bpx .bpp-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   border-top:1px solid var(--line);padding-top:10px}

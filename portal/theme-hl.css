@@ -37,7 +37,7 @@
   --ink:#101828; --ink-2:#344054; --grey:#475467; --mu:#667085; --grey-l:#98A2B3;
   --blue:#155EEF; --blue-d:#004EEB; --blue-l:#EFF4FF; --blue-t:#004EEB; --blue-glow:transparent;
   --hl-ring-c:#D1E0FF; --hl-hover:#F9FAFB; --hl-press:#F2F4F7;
-  --ok:#12B76A; --ok-l:#ECFDF3; --ok-t:#027A48;
+  --ok:#16C79A; --ok-l:#E8F9F4; --ok-t:#087F61;
   --warn:#0970f7; --warn-l:#ebf4ff; --warn-t:#0853b5;
   --err:#F04438; --err-l:#FEF3F2; --err-t:#B42318;
   --edge:transparent; --side-a:#FFFFFF; --side-b:#FFFFFF;
@@ -51,7 +51,7 @@
   --ink:#F5F5F6; --ink-2:#CECFD2; --grey:#94969C; --mu:#85888E; --grey-l:#61646C;
   --blue:#2E70F5; --blue-d:#528BFF; --blue-l:#172748; --blue-t:#84ADFF; --blue-glow:transparent;
   --hl-ring-c:rgba(46,112,245,.35); --hl-hover:#1F242F; --hl-press:#262B36;
-  --ok:#17B26A; --ok-l:#053321; --ok-t:#75E0A7;
+  --ok:#16C79A; --ok-l:#0B2E26; --ok-t:#8EE5CC;
   --warn:#0970f7; --warn-l:#09274e; --warn-t:#4b99fe;
   --err:#F04438; --err-l:#55160C; --err-t:#FDA29B;
   --edge:transparent; --side-a:#161B26; --side-b:#161B26;
@@ -348,7 +348,7 @@
   font:500 14px/20px 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:hlToastIn 180ms cubic-bezier(.2,0,0,1) both}
 .hl-toast.out{animation:hlToastOut 150ms ease-in both}
 .hl-toast i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;margin-top:6px;background:#155EEF}
-.hl-toast.success i{background:#12B76A}.hl-toast.error i{background:#F04438}.hl-toast.warning i{background:#0970f7}
+.hl-toast.success i{background:#16C79A}.hl-toast.error i{background:#F04438}.hl-toast.warning i{background:#0970f7}
 .hl-toast span{flex:1;min-width:0;overflow-wrap:anywhere}
 .hl-toast button{flex:0 0 auto;background:none;border:0;color:#98A2B3;font-size:18px;line-height:20px;cursor:pointer;padding:0 0 0 4px}
 .hl-toast button:hover{color:#475467}
@@ -432,10 +432,10 @@
 #bpx#bpx#bpx .sp-note{background:var(--soft) !important;border:1px solid var(--line) !important;color:var(--ink-2) !important}
 #bpx#bpx#bpx .sp-note.warn{background:var(--warn-l) !important;border-color:#4b99fe !important;color:var(--warn-t) !important}
 #bpx#bpx#bpx .sp-note.bad{background:var(--err-l) !important;border-color:#FDA29B !important;color:var(--err-t) !important}
-#bpx#bpx#bpx .sp-note.good{background:var(--ok-l) !important;border-color:#75E0A7 !important;color:var(--ok-t) !important}
+#bpx#bpx#bpx .sp-note.good{background:var(--ok-l) !important;border-color:#8EE5CC !important;color:var(--ok-t) !important}
 #bpx#bpx#bpx.bpx-dark .sp-note.warn{border-color:#0d4793 !important}
 #bpx#bpx#bpx.bpx-dark .sp-note.bad{border-color:#912018 !important}
-#bpx#bpx#bpx.bpx-dark .sp-note.good{border-color:#085D3A !important}
+#bpx#bpx#bpx.bpx-dark .sp-note.good{border-color:#065C47 !important}
 
 /* ---- audit fixes (2026-10-02) ------------------------------------------
    The floating "Ask Lisa" button (.oaw-btn, z-index 99999, 58px at 18px from

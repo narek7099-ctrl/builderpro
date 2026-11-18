@@ -815,7 +815,7 @@
         'box-shadow:0 10px 28px -12px rgba(0,30,80,.35);cursor:pointer;opacity:0;transition:opacity .25s,transform .35s cubic-bezier(.22,1,.36,1)}' +
         '#bpSync.show{display:inline-flex;opacity:1;transform:translate(-50%,0)}' +
         '#bpSync i{width:9px;height:9px;border-radius:50%;background:#006fff;flex:none}' +
-        '#bpSync.off i{background:#8a97ab}#bpSync.wait i{background:#006fff;animation:bpSyncP 1.2s ease-in-out infinite}#bpSync.ok i{background:#16C79A}#bpSync.bad i{background:#e5484d}' +
+        '#bpSync.off i{background:#8a97ab}#bpSync.wait i{background:#006fff;animation:bpSyncP 1.2s ease-in-out infinite}#bpSync.ok i{background:#16C79A}#bpSync.bad i{background:#0970F7}' +
         '#bpSync small{font-weight:500;color:#5b6b82}' +
         '@keyframes bpSyncP{50%{opacity:.35}}' +
         '#bpx.bp-m ~ #bpSync,body:has(#bpx.bp-m.open) #bpSync{bottom:calc(84px + env(safe-area-inset-bottom))}' +
@@ -899,7 +899,7 @@
         '#bpSyncSh h3{margin:0 0 4px;font-size:18px;letter-spacing:-.01em}#bpSyncSh .st{margin:0 0 14px;color:#5b6b82}' +
         '#bpSyncSh h4{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#5b6b82}' +
         '#bpSyncSh ul{list-style:none;margin:0;padding:0}#bpSyncSh li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #e8edf4}' +
-        '#bpSyncSh li i{width:8px;height:8px;border-radius:50%;background:#006fff;margin-top:6px;flex:none}#bpSyncSh li.bad i{background:#e5484d}' +
+        '#bpSyncSh li i{width:8px;height:8px;border-radius:50%;background:#006fff;margin-top:6px;flex:none}#bpSyncSh li.bad i{background:#0970F7}' +
         '#bpSyncSh li div{flex:1;min-width:0}#bpSyncSh li b{font-weight:600}#bpSyncSh li small{display:block;color:#5b6b82}' +
         '#bpSyncSh .acts{display:flex;gap:6px;margin-top:6px}#bpSyncSh .acts button,#bpSyncSh .foot button{border:1px solid #d9e2ee;background:#fff;color:#0b1a33;border-radius:9px;padding:6px 11px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer}' +
         '#bpSyncSh .foot{display:flex;gap:8px;margin-top:18px}#bpSyncSh .foot button{flex:1;padding:11px}#bpSyncSh .foot .pri{background:#006fff;border-color:#006fff;color:#fff}' +

@@ -27,17 +27,17 @@
   --bpc-o1:#b9d6ff; --bpc-o2:#85b8ff; --bpc-o3:#4d97ff; --bpc-o4:#006fff; --bpc-o5:#0050c8;
   --bpc-track:#e6effd;  /* a meter's unfilled track: a paler step of the same blue */
 
-  /* diverging: blue against orange either side of a gray */
+  /* diverging: blue against navy either side of a gray (no red: the theme's colors only) */
   --bpc-pos2:#0050c8; --bpc-pos1:#85b8ff;
   --bpc-mid:#9aa6b6;
-  --bpc-neg1:#eba3b8; --bpc-neg2:#b8324f;
+  --bpc-neg1:#a9b6c8; --bpc-neg2:#1f3550;
 
   --bpc-other:#9aa6b6;
   --bpc-warn:#0050c8;
   --bpc-grid:#e4eaf4;
   --bpc-axis:#c9d3e3;
-  --bpc-good-t:#0f7a3d; --bpc-good-b:#e3f5ea;
-  --bpc-bad-t:#b3392f;  --bpc-bad-b:#fdecea;
+  --bpc-good-t:#087F61; --bpc-good-b:#E8F9F4;
+  --bpc-bad-t:#0853B5;  --bpc-bad-b:#EBF4FF;
 }
 #bpx.bpx-dark{
   --bpc-surface:#121826;
@@ -47,13 +47,13 @@
   --bpc-track:#1a2a45;
   --bpc-pos2:#6fa6ff; --bpc-pos1:#1756c4;
   --bpc-mid:#6d7887;
-  --bpc-neg1:#b8324f; --bpc-neg2:#eba3b8;
+  --bpc-neg1:#3a4d68; --bpc-neg2:#a9b8cc;
   --bpc-other:#6d7887;
   --bpc-warn:#6fa6ff;
   --bpc-grid:#222c3d;
   --bpc-axis:#34415a;
-  --bpc-good-t:#5fe39a; --bpc-good-b:#12301f;
-  --bpc-bad-t:#ff8a80;  --bpc-bad-b:#3a1717;
+  --bpc-good-t:#3FE0B6; --bpc-good-b:#0B2E26;
+  --bpc-bad-t:#4B99FE;  --bpc-bad-b:#09274E;
 }
 
 /* soft light-blue panels wherever a chart lives */
