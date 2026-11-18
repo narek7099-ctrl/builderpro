@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<script src="portal/errors.js?v=20261118c"></script>
 <title>Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap"><link rel="icon" href="assets/brand/logo-mark-64.png">
@@ -160,6 +161,22 @@ html,body{overflow-x:clip}/* the closed chat drawer sits off the right edge; pho
 @media (max-width:760px){.grid2{grid-template-columns:1fr}main{padding:16px}.top{padding:0 16px}.top .sub,#who{display:none}.btn{white-space:nowrap}.nd.work .box:after{display:none}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}.pk{display:none}}
 .newacct summary{cursor:pointer;list-style:none;color:var(--blue,#006fff)}.newacct summary::-webkit-details-marker{display:none}.newacct[open] summary{margin-bottom:8px}.newacct .muted{margin-top:2px}
+/* ---- App errors ---- */
+.ef{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-4px 0 12px}
+.ef .seg{display:inline-flex;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.ef .seg button{background:none;border:0;border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--mut);font-weight:500}
+.ef .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,21,48,.08)}
+.em{font-weight:600;word-break:break-word}
+.em small{display:block;font-weight:400;color:var(--mut);font-size:12px;margin-top:2px;word-break:break-all}
+.ek{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:1px 7px;margin-right:6px;background:var(--card2);color:var(--mut);border:1px solid var(--line)}
+.ek.back{background:rgba(224,87,78,.1);color:var(--danger);border-color:rgba(224,87,78,.3)}
+.estack{margin-top:8px}
+.estack summary{cursor:pointer;font-size:12px;color:var(--pri);list-style:none}
+.estack summary::-webkit-details-marker{display:none}
+.estack pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:6px;max-height:260px;overflow:auto}
+.en{font:600 18px/1 var(--sans);font-variant-numeric:tabular-nums}
+.eacts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+@media (max-width:720px){.etab thead{display:none}.etab tr{display:block;padding:10px 0}.etab td{display:block;padding:4px 10px;border:0!important}.etab .eacts{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -185,7 +202,7 @@ html,body{overflow-x:clip}/* the closed chat drawer sits off the right edge; pho
 var SB_URL="https://ttzwzouhiwdwamuimhpo.supabase.co";
 var SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0end6b3VoaXdkd2FtdWltaHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMTc2NjgsImV4cCI6MjA5ODY5MzY2OH0.oVqdHZlZLWJd_8nkgPRA9VgAqY4ytg51N1mT3Hqekso";
 var TOKEN=localStorage.getItem('cc_tok')||'', RTOK=localStorage.getItem('cc_rtok')||'';
-var ME=null, TAB='team', AGENT='ceo', THREAD=null, BUSY=false, PENDING=0;
+var ME=null, TAB='team', AGENT='ceo', THREAD=null, BUSY=false, PENDING=0, ERRS=0;
 var AG={ceo:{c:'#e8612c',d:'Runs the company, delegates to the teams',h:['What should we focus on this week?','Get every team to report on where we stand','Which trials should we save before they end?']},
   sales:{c:'#1f9d60',d:'Trials into customers',h:['Which trials end in the next 3 days?','Write a follow-up for trials that went quiet','Draft a call script for a roofer on day 10 of the trial']},
   marketing:{c:'#7c5cff',d:'Ads, copy and SEO',h:['Write 3 Facebook ads for plumbers','Plan a 30-day content calendar','How do competitors position themselves?']},
@@ -250,14 +267,14 @@ async function start(){
   /* each plan builds from its own template snapshot (Foundation, OS, Enterprise), set in sign-up */
   if(me.stripe===false)w.push('Add <b>STRIPE_SECRET_KEY</b> so sign-ups add a card for their trial.');
   el('warn').innerHTML=w.length?'<div class="warnbar">'+w.join(' ')+'</div>':'';
-  countPending(); tab(TAB);
+  countPending(); countErrors(); tab(TAB);
 }
 async function countPending(){ var r=await api({op:'approvals',status:'pending'}); PENDING=(r.data||[]).length; drawTabs(); }
 function drawTabs(){
-  var T=[['team','AI Team'],['tasks','Tasks'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['memory','Memory'],['conn','Connections']];
+  var T=[['team','AI Team'],['tasks','Tasks'],['approvals','Approvals'+(PENDING?'<span class="n">'+PENDING+'</span>':'')],['accounts','Accounts'],['phones','Phone numbers'],['errors','App errors'+(ERRS?'<span class="n">'+ERRS+'</span>':'')],['memory','Memory'],['conn','Connections']];
   el('tabs').innerHTML=T.map(function(t){return '<button class="'+(t[0]===TAB?'on':'')+'" onclick="tab(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
 }
-function tab(t){TAB=t;drawTabs();({team:viewTeam,tasks:viewTasks,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,memory:viewMemory,conn:viewConn})[t]()}
+function tab(t){TAB=t;drawTabs();({team:viewTeam,tasks:viewTasks,approvals:viewApprovals,accounts:viewAccounts,phones:viewPhones,errors:viewErrors,memory:viewMemory,conn:viewConn})[t]()}
 
 /* ---------- the task board: what the CEO (or you) assigned, and what came back ---------- */
 var TSTAT={open:['Waiting','#475467'],doing:['Working','#006fff'],done:['Done','#15803d'],blocked:['Blocked','#c0392b'],cancelled:['Cancelled','#98a2b3']};
@@ -627,6 +644,36 @@ async function viewPhones(){
       +'<td style="text-align:right">'+(x.status!=='live'?'<button class="btn ok sm" onclick="phoneSet(\''+esc(x.user_id)+'\',\'live\')">Mark live</button>':'<button class="btn sm" onclick="phoneSet(\''+esc(x.user_id)+'\',\'pending\')">Back to pending</button>')+'</td></tr>'}).join('')+'</tbody></table>':'<span class="muted">No clients have started the Business number step yet.</span>';
 }
 async function phoneSet(uid,st){ if(!confirm(st==='live'?'Mark live? Their texting switches on.':'Put back to Pending A2P?'))return; var r=await call('phone-admin',{op:'set',user_id:uid,status:st}); if(r.ok===false)alert(r.error||'Failed'); viewPhones(); }
+
+/* ---------- App errors: crashes people's devices reported (portal/errors.js -> app-errors) ---------- */
+var ERRF={status:'open',area:''};
+async function countErrors(){ var r=await call('app-errors',{op:'count'}); if(r&&r.ok){ERRS=r.open||0;drawTabs();} }
+function errDev(ua){ ua=String(ua||''); var d=/iPad/.test(ua)?'iPad':/iPhone/.test(ua)?'iPhone':/Android/.test(ua)?'Android':/Mac OS X/.test(ua)?'Mac':/Windows/.test(ua)?'Windows':/Linux/.test(ua)?'Linux':'';
+  var b=/Edg\//.test(ua)?'Edge':/CriOS|Chrome\//.test(ua)?'Chrome':/FxiOS|Firefox\//.test(ua)?'Firefox':/Version\/[\d.]+.*Safari/.test(ua)?'Safari':/AppleWebKit/.test(ua)&&/iPhone|iPad/.test(ua)?'app':''; return [d,b].filter(Boolean).join(' · ')||'-'; }
+function errSeg(key,opts){ return '<span class="seg">'+opts.map(function(o){return '<button class="'+(ERRF[key]===o[0]?'on':'')+'" onclick="ERRF.'+key+'=\''+o[0]+'\';viewErrors()">'+o[1]+'</button>'}).join('')+'</span>'; }
+async function viewErrors(){
+  el('view').innerHTML='<h2>App errors</h2><div class="muted" style="margin:-6px 0 12px">Crashes people\'s phones and computers reported, the same error merged into one row. Emails, phone numbers, tokens and ids are removed before a report leaves the device. Mark one Fixed once the fix is live: if it shows up again from a newer version it opens again by itself.</div>'
+    +'<div class="ef">'+errSeg('status',[['open','Open'],['fixed','Fixed'],['ignored','Ignored'],['all','All']])+errSeg('area',[['','App and site'],['app','App'],['site','Website']])+'<button class="btn sm" onclick="viewErrors()"><i class="ti ti-refresh"></i> Refresh</button></div>'
+    +'<div class="card tw" id="er">Loading…</div>';
+  var r=await call('app-errors',{op:'list',status:ERRF.status,area:ERRF.area}); var rows=r.data||[];
+  if(r.ok===false){el('er').textContent='Could not load: '+(r.error||'');return}
+  if(ERRF.status==='open'){ERRS=rows.length;drawTabs();}
+  el('er').innerHTML=rows.length?'<table class="etab"><thead><tr><th>Error</th><th>Times</th><th>People</th><th>Last seen</th><th>Where</th><th></th></tr></thead><tbody>'+rows.map(function(x){
+    var kind=x.kind==='promise'?'Promise':x.kind==='resource'?'Missing file':'Crash';
+    var who=x.users?(x.users+(x.users===1?' person':' people')+(x.anon?'<div class="muted" style="font-size:12px">+'+x.anon+' signed out</div>':'')):'<span class="muted">'+(x.anon||0)+' signed out</span>';
+    var acts=x.status==='open'?'<button class="btn ok sm" onclick="errSet('+x.id+',\'fixed\')">Fixed</button><button class="btn sm" onclick="errSet('+x.id+',\'ignored\')">Ignore</button>'
+      :'<button class="btn sm" onclick="errSet('+x.id+',\'open\')">Reopen</button>';
+    return '<tr><td style="max-width:460px"><div class="em"><span class="ek'+(x.back_at?' back':'')+'">'+(x.back_at?'Back again':kind)+'</span>'+esc(x.message)+'<small>'+esc(x.source||'')+'</small></div>'
+      +(x.stack?'<details class="estack"><summary>Stack</summary><pre>'+esc(x.stack)+'</pre></details>':'')
+      +(x.status!=='open'?'<div class="muted" style="font-size:12px;margin-top:4px">'+(x.status==='fixed'?'Fixed':'Ignored')+(x.status_at?' '+ago(x.status_at):'')+(x.fixed_ver?' · in '+esc(x.fixed_ver):'')+'</div>':'')+'</td>'
+      +'<td><span class="en">'+Number(x.count||0).toLocaleString()+'</span></td>'
+      +'<td>'+who+'</td>'
+      +'<td style="white-space:nowrap">'+ago(x.last_at)+'<div class="muted" style="font-size:12px">first '+ago(x.first_at)+'</div></td>'
+      +'<td style="font-size:12.5px">'+(x.area==='site'?'Website':'App')+(x.view?' · '+esc(x.view):'')+'<div class="muted" style="font-size:12px">'+esc(errDev(x.ua))+(x.online===false?' · offline':'')+(x.app_ver?' · v'+esc(x.app_ver):'')+'</div></td>'
+      +'<td><div class="eacts">'+acts+'</div></td></tr>';
+  }).join('')+'</tbody></table>':'<div class="muted">'+(ERRF.status==='open'?'No open errors. Nothing has broken on anyone\'s device that hasn\'t been dealt with.':'Nothing here.')+'</div>';
+}
+async function errSet(id,st){ var r=await call('app-errors',{op:'set',id:id,status:st}); if(r.ok===false)alert(r.error||'Failed'); countErrors(); viewErrors(); }
 
 /* ---------- Memory ---------- */
 async function viewMemory(){
