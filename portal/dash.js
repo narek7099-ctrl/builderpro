@@ -538,7 +538,7 @@
     var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
     return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div>'
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
-      + '<div class="db-acts">' + (layoutOf() === 'overview' ? periodSwitch(periodKey()) : '') + (locked('matlists') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'matlists\')">Order lists</button>')
+      + '<div class="db-acts">' + periodSwitch(periodKey()) + (locked('matlists') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'matlists\')">Order lists</button>')
       + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add job</button>')
       + '<button class="bpx-btn bp-cta" onclick="bpNav(\'estimates\')">New estimate</button></div></div>';
   }
@@ -885,7 +885,7 @@
       : bpChart.empty({ title: 'Running balance', empty: 'Once money moves ' + P.word + ', the running total shows here.' })) + '</div>');
     return { mini: mini, margin: margin, win: win, billed: billed, owed: owed, kinds: kinds, bal: bal, active: S.active };
   }
-  function widgets(M) {
+  function widgets(M, lay) {
     var jobs = M.jobs, act = jobs.filter(function (j) { return j.status === 'active'; }), C = M.cur;
     var owed = act.reduce(function (t, j) { return t + Math.max((+j.estimate || 0) - (+j.collected || 0), 0); }, 0);
     var inMotion = act.reduce(function (t, j) { return t + (+j.estimate || 0); }, 0);
@@ -894,6 +894,30 @@
     var stack = function (a, b) { return '<div class="hl-stack">' + a + b + '</div>'; };
     var X = moreWidgets(M), m = X.mini;
     var st = sparkTiles(M, X.active), gos = ['finances', 'finances', 'activejobs', 'finances', 'activejobs'];
+    var top = [
+      [3, W(gos[2], st[2], 'hl-spk')],
+      [3, W(D.leads ? 'contacts' : 'marketing', statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads'), 'hl-spk')],
+      [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
+      [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')]
+    ];
+    var noJobs = locked('activejobs');
+    /* Command center (2026-11-18, on Overview's cards): the same four figures, then the money
+       with what needs you beside it, the pipeline, spending and this week in a row, what each job
+       cost beside the latest activity, and the marked jobs. */
+    if (lay === 'command') return g(top.concat([
+      [8, W('finances', flow())], [4, W('dashboard', attention())],
+      [4, noJobs ? '' : W('activejobs', pipeline())], [noJobs ? 6 : 4, W('finances', spendDonut(M))], [noJobs ? 6 : 4, W('calendar', week())],
+      [8, W('finances', jobsChart())], [4, W('dashboard', activity())],
+      [12, projects(false)]
+    ]));
+    /* Projects first (2026-11-18): the marked jobs, the same four figures, what's been collected
+       beside this week, then the money, the pipeline and the rest. */
+    if (lay === 'projects') return g([[12, projects(false)]].concat(top, [
+      [6, noJobs ? '' : W('activejobs', collection(M))], [noJobs ? 12 : 6, W('calendar', week())],
+      [noJobs ? 12 : 8, W('finances', flow())], [4, noJobs ? '' : W('activejobs', pipeline())],
+      [6, W('finances', netLine(M))], [6, W('finances', spend())],
+      [4, W('dashboard', attention())], [8, W('dashboard', activity())]
+    ]));
     /* The owner's layout (2026-11-14): the quick figures, then money in and out
        beside the pipeline, then the marked jobs, then every other figure and
        chart right on the page (no fold). The Money in / Profit / Money out
@@ -939,18 +963,9 @@
   function cells(list) { list = list.filter(function (c) { return c[1]; }); return '<div class="db-grid">' + list.map(function (c) { return '<div class="db-c' + c[0] + '">' + c[1] + '</div>'; }).join('') + '</div>'; }
   function body(lay, crew) {
     P = periodOf(periodKey());
-    var M = monthly(), st = sparkTiles(M), per = periodSwitch(P.k);
-    if (lay === 'command') {
-      return per + '<div class="db-split"><div class="db-main">'
-        + cells([[12, flow()], [6, locked('activejobs') ? '' : pipeline()], [6, spendDonut(M)], [12, jobsChart()], [12, projects(crew)]])
-        + '</div><div class="db-rail">' + kpis() + attention() + week() + activity() + '</div></div>';
-    }
-    if (lay === 'projects') {
-      return cells([[12, projects(crew)], [5, locked('activejobs') ? '' : collection(M)], [7, week()]])
-        + per + '<div class="db-row4">' + st.filter(function (x, i) { return i !== 2 || !locked('activejobs'); }).join('') + '</div>'
-        + cells([[6, flow()], [6, netLine(M)], [4, locked('activejobs') ? '' : pipeline()], [4, spend()], [4, attention()], [12, activity()]]);
-    }
-    return widgets(M);
+    var M = monthly();
+    /* all three layouts are built from the same cards (2026-11-18); they differ in what comes first */
+    return widgets(M, lay);
   }
 
   /* ---------- example data, so the page can be seen before anyone signs in ---------- */

@@ -383,11 +383,14 @@
       }, 1000);
     }).catch(fail);
   };
-  window.addEventListener('bp-offline-synced', function () {
+  var crewReload = function () {
     var v = window._bpCurView || '';
     C.ck = {};
     if (/^crew/.test(v) && document.getElementById('bpxViewArea')) { C.me = null; try { bpNav(v); } catch (e) {} }
-  });
+  };
+  window.addEventListener('bp-offline-synced', crewReload);
+  /* live updates (portal/live.js): the owner changed a job, a crewmate clocked in... */
+  window.bpCrewLiveReload = crewReload;
   window.bpCrewGeo = function (on) { LS.set('caGeo', on ? '1' : '0'); };
   window.bpCrewBreak = function (action, kind) {
     var btns = document.querySelectorAll('#bpxViewArea .ck-sbtn, #ca-go'); Array.prototype.forEach.call(btns, function (b) { b.disabled = true; });
