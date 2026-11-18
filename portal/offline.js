@@ -236,6 +236,8 @@
     } catch (e) { return raw(input, init); }
     var u; try { u = new URL(url, location.href); } catch (e) { return raw(input, init); }
     var k = kindOf(u, method, textOf(body));
+    /* live updates (portal/live.js): when this device last saved something, so it can tell its own changes coming back */
+    if (u.origin === SB && method !== 'GET' && method !== 'HEAD' && (k === 'write' || (k === 'pass' && /^\/rest\/v1\//.test(u.pathname)))) window.__bpLastWrite = Date.now();
     /* the Supabase library retries a table read that fails, so with no signal each one waited about
        7 seconds: answer "offline" at once and the screen shows its own "couldn't load" (round eight) */
     var tableRead = u.origin === SB && /^\/rest\/v1\//.test(u.pathname) && (method === 'GET' || method === 'HEAD');

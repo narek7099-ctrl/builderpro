@@ -71,7 +71,8 @@
       var w = function (v) {
         /* the app re-opens the same page while its data loads: only a real switch (or a
            return after a few seconds) plays the rise again, so it never repeats on load */
-        if (v !== curV || Date.now() - riseT > 4000) { pending = true; pendT = Date.now(); }
+        /* a live update redrawing the page (portal/live.js sets __bpQuiet) keeps it still */
+        if (!window.__bpQuiet && (v !== curV || Date.now() - riseT > 4000)) { pending = true; pendT = Date.now(); }
         curV = v; var r = f.apply(this, arguments); requestAnimationFrame(function () { stagger(area); }); return r; };
       for (var k in f) if (Object.prototype.hasOwnProperty.call(f, k)) w[k] = f[k];
       w._rise = 1; window.bpNav = w;
@@ -217,7 +218,7 @@
   /* opening a page again plays its numbers again */
   function hookNav() {
     if (typeof window.bpNav !== 'function' || window.bpNav._cu) return setTimeout(hookNav, 500);
-    var f = window.bpNav; window.bpNav = function (v) { seen = {}; return f.apply(this, arguments); }; window.bpNav._cu = 1;
+    var f = window.bpNav; window.bpNav = function (v) { if (!window.__bpQuiet) seen = {}; return f.apply(this, arguments); }; window.bpNav._cu = 1;
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { watch(); hookNav(); }); else { watch(); hookNav(); }
 })();
