@@ -121,7 +121,7 @@
       + '.bp-cf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
       + '.bp-cf-row button{min-height:52px;border-radius:14px;font:600 16px/1 Inter,system-ui,sans-serif;cursor:pointer}'
       + '.bp-cf-no{background:#fff;border:1px solid #D0D5DD;color:#101828}'
-      + '.bp-cf-yes{background:#2457D6;border:0;color:#fff}.bp-cf-yes.bad{background:#D92D20}'
+      + '.bp-cf-yes{background:#2457D6;border:0;color:#fff}.bp-cf-yes.bad{background:#0970F7}'
       + '.bpx-dark .bp-cf-box{background:#161B26}.bpx-dark .bp-cf-box p{color:#F2F4F7}.bpx-dark .bp-cf-no{background:#1A202C;border-color:#344054;color:#F2F4F7}';
     document.head.appendChild(s);
   }

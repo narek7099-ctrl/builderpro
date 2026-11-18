@@ -92,7 +92,7 @@
       '.ai-tab.on{border-color:var(--a,#006fff);background:#e6f0ff;color:#003db8}',
       '@media(max-width:700px){.ai-top{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:-4px;padding:2px 4px}.ai-top::-webkit-scrollbar{display:none}.ai-tab{flex:none}.ai-use{flex:none;margin-left:8px}}',
       '.ai-see{display:flex;gap:6px;align-items:flex-start;justify-content:center;max-width:520px;margin:10px auto 0;font-size:12.5px;line-height:1.45;color:var(--mu,#788493);text-align:left}.ai-see .ms{font-size:16px;margin-top:1px}',
-      '.ai-tab .n{background:#e0574e;color:#fff;border-radius:9px;font-size:11px;padding:0 6px}',
+      '.ai-tab .n{background:#0970F7;color:#fff;border-radius:9px;font-size:11px;padding:0 6px}',
       '.ai-use{margin-left:auto;flex:none;padding-right:24px;font-size:13px;color:var(--mu,#788493);display:flex;align-items:center;gap:8px}',
       '.ai-use i{display:block;width:90px;height:6px;border-radius:6px;background:#e7ecf2;overflow:hidden}.ai-use i b{display:block;height:100%;background:var(--a,#006fff)}',
       '.ai-wrap{display:grid;grid-template-columns:240px minmax(0,1fr);gap:0;border:1px solid var(--line,#dce3ec);border-radius:16px;background:#fff;overflow:hidden;height:calc(100vh - 190px);min-height:480px}',
@@ -214,14 +214,14 @@
       + '.aib-n em{display:block;font-style:normal;font-size:11.5px;line-height:1.3;color:var(--mu,#667085);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '.aib-ceo em{max-width:160px}'
       + '.aib-ch{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;max-width:150px}.aib-ch i{font-style:normal;font-size:10px;line-height:1.5;border:1px solid var(--line,#dce3ec);border-radius:99px;padding:0 6px;color:var(--mu,#667085);white-space:nowrap}'
-      + '.aib-tks{display:flex;gap:4px;margin-top:4px}.aib-tk{font-size:10px;font-weight:700;line-height:1.6;background:#eef4ff;color:#2457d6;border-radius:99px;padding:0 7px}.aib-tk.on{background:#2457d6;color:#fff}.aib-tk.bl{background:#fdecea;color:#b42318}'
+      + '.aib-tks{display:flex;gap:4px;margin-top:4px}.aib-tk{font-size:10px;font-weight:700;line-height:1.6;background:#eef4ff;color:#2457d6;border-radius:99px;padding:0 7px}.aib-tk.on{background:#2457d6;color:#fff}.aib-tk.bl{background:#EBF4FF;color:#0853B5}'
       + '.aib-list .aib-ch{max-width:none}'
       + '.aib-tl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ink,#344054);width:72px;text-align:center;opacity:0;animation:aibFade .6s ease forwards;animation-delay:var(--dl,0s)}'
       + '@keyframes aibFade{to{opacity:1}}'
       + '.aib-tl i{width:34px;height:34px;border-radius:50%;background:var(--card,#fff);border:1px solid var(--line,#dce3ec);display:grid;place-items:center;color:var(--mu,#667085);font-style:normal}.aib-tl i .ms{font-size:16px}'
       + '.aib-tl small{color:var(--mu,#98a2b3);font-size:10px;margin-top:-2px}'
       + '.aib-list{display:none;position:relative;padding:12px;gap:8px;flex-direction:column}.aib-list .aib-n{position:static;transform:none;opacity:1;animation:none;width:100%}.aib-list .aib-box{width:100%}.aib-list .aib-n em{max-width:none;white-space:normal}'
-      + '.aib-foot{position:relative;display:flex;flex-wrap:wrap;gap:18px;padding:12px 16px;font-size:13px;color:var(--mu,#788493);border-top:1px solid var(--line,#eef1f6)}.aib-on{color:#15803d;font-weight:600}'
+      + '.aib-foot{position:relative;display:flex;flex-wrap:wrap;gap:18px;padding:12px 16px;font-size:13px;color:var(--mu,#788493);border-top:1px solid var(--line,#eef1f6)}.aib-on{color:#087F61;font-weight:600}'
       /* the portal presses every button with transform:scale; these are placed by their transform, so keep it while pressed */
       + '#bpx#bpx#bpx .aib-wrap .aib-n:active{transform:translate(-50%,-50%) scale(.98) !important}#bpx#bpx#bpx .aib-list .aib-n:active{transform:scale(.99) !important}'
       + '@media(max-width:820px){.aib-wrap{display:none}.aib-list{display:flex}}';
@@ -303,7 +303,7 @@
     i.bpFit = fit; fit();
   };
   /* the task board: what the AI CEO (or you) assigned, who has it, and what came back */
-  var TS = { open: ['Waiting', '#475467'], doing: ['Working', '#2457d6'], done: ['Done', '#15803d'], blocked: ['Blocked', '#b42318'], cancelled: ['Cancelled', '#98a2b3'] };
+  var TS = { open: ['Waiting', '#475467'], doing: ['Working', '#2457d6'], done: ['Done', '#087F61'], blocked: ['Blocked', '#0853B5'], cancelled: ['Cancelled', '#98a2b3'] };
   async function tasks() {
     var who = Object.keys(AG).filter(function (k) { return k !== 'ceo'; });
     $('aiBody').innerHTML = '<div class="bpx-panel" style="margin-bottom:12px"><b style="display:block;margin-bottom:4px">Give an assistant a task</b><div class="bpx-mut" style="font-size:13px;margin-bottom:10px">Or ask your AI CEO to plan the work and hand out tasks. Each task run counts as one message.</div>'
@@ -325,7 +325,7 @@
       return '<div class="bpx-mut" style="margin:16px 0 8px;font-size:13px;font-weight:600">' + TS[st][0] + ' · ' + g.length + '</div>' + g.slice(0, st === 'done' || st === 'cancelled' ? 12 : 40).map(function (t) {
         var by = t.assigned_by === 'owner' ? 'You' : ((AG[t.assigned_by] || {}).n || t.assigned_by);
         return '<div class="ai-tk" data-id="' + t.id + '"><div class="ai-tk-h"><span class="ai-tk-s" style="color:' + TS[t.status][1] + ';border-color:' + TS[t.status][1] + '">' + TS[t.status][0] + '</span><b>' + esc(t.title) + '</b>'
-          + (t.priority === 'high' ? '<span class="ai-tk-s" style="color:#b42318;border-color:#b42318">High</span>' : '') + '<span class="bpx-mut" style="font-size:12.5px;margin-left:auto">' + esc(by) + ' → <b>' + esc((AG[t.assignee] || {}).n || t.assignee) + '</b></span></div>'
+          + (t.priority === 'high' ? '<span class="ai-tk-s" style="color:#001530;border-color:#001530">High</span>' : '') + '<span class="bpx-mut" style="font-size:12.5px;margin-left:auto">' + esc(by) + ' → <b>' + esc((AG[t.assignee] || {}).n || t.assignee) + '</b></span></div>'
           + (t.detail ? '<div class="bpx-mut" style="font-size:13px;margin-top:6px;white-space:pre-wrap">' + esc(t.detail) + '</div>' : '')
           + (t.result ? '<div class="ai-tk-r">' + esc(t.result) + '</div>' : '')
           + '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">'

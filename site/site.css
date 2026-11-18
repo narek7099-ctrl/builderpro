@@ -708,8 +708,8 @@ body.dl #estimator{display:none !important;}
 .calc_dots{display:flex;gap:.375rem;}
 .calc_dots i{width:.625rem;height:.625rem;border-radius:50%;background:var(--gray-200);}
 .calc_label{font-weight:500;color:var(--gray-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.calc_live{margin-left:auto;display:flex;align-items:center;gap:.4rem;font-size:var(--caption);font-weight:600;color:#15803d;white-space:nowrap;}
-.calc_live i{width:.4375rem;height:.4375rem;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+.calc_live{margin-left:auto;display:flex;align-items:center;gap:.4rem;font-size:var(--caption);font-weight:600;color:#087F61;white-space:nowrap;}
+.calc_live i{width:.4375rem;height:.4375rem;border-radius:50%;background:#16C79A;box-shadow:0 0 0 3px rgba(22,199,154,.18);}
 .calc_frames{flex:1;min-height:0;position:relative;background:#f4f6f9;}
 .calc_frame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#f4f6f9;opacity:0;visibility:hidden;transition:opacity .35s var(--ease-settle),visibility 0s .35s;}
 .calc_frame.is-on{opacity:1;visibility:visible;transition:opacity .35s var(--ease-settle),visibility 0s;}

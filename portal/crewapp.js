@@ -916,7 +916,7 @@
      the steps off; "Finish job" lights up when they are all done and rings
      the office (crew_check / crew_finish / crew_checklist). A job with no
      list yet starts from sensible steps for its trade. */
-  var CK_COL = ['#2f80ff', '#247ff5', '#22a06b', '#ef6c4a', '#5c8ff6', '#14b8a6', '#5591e0', '#64748b'];
+  var CK_COL = ['#2f80ff', '#247ff5', '#16C79A', '#001530', '#5c8ff6', '#087F61', '#5591e0', '#64748b'];
   C.ck = {};
   function ckDefaults(j) {
     var t = String((j.title || '') + ' ' + (j.trade || '')).toLowerCase();

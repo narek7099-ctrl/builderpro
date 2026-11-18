@@ -113,7 +113,7 @@
   document.addEventListener('pointermove', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v) vizAt(v, e.clientX); }, { passive: true });
   document.addEventListener('pointerout', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v && !v.contains(e.relatedTarget)) vizOut(v); }, true);
   document.addEventListener('pointerdown', function (e) { var v = e.target.closest && e.target.closest('.cb-viz'); if (v) vizAt(v, e.clientX); }, true);
-  var COL = ['#2f80ff', '#247ff5', '#22a06b', '#ef6c4a', '#5c8ff6', '#14b8a6'];
+  var COL = ['#2f80ff', '#247ff5', '#16C79A', '#001530', '#5c8ff6', '#087F61'];
   window.bpBurst = function (el) {
     if (!el) return;
     var host = el.parentNode; if (getComputedStyle(host).position === 'static') host.style.position = 'relative';

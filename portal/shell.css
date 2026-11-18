@@ -64,7 +64,9 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .bpx-side .hl-ni.on{background:var(--hl-side-on) !important;color:#fff !important;font-weight:600 !important}
 #bpx#bpx#bpx#bpx .bpx-side .hl-ni.on .hl-i{color:#fff}
 #bpx#bpx#bpx#bpx .bpx-side .hl-ni:focus-visible,#bpx#bpx#bpx#bpx .hl-acct:focus-visible,#bpx#bpx#bpx#bpx .hl-search:focus-visible,#bpx#bpx#bpx#bpx .hl-quick:focus-visible{outline:2px solid #84ADFF !important;outline-offset:-2px;box-shadow:none !important}
-#bpx#bpx#bpx#bpx .bpx-side .hl-nl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* the label clips long names with an ellipsis; its box is taller than the 14px line so the
+   tails of g, p and y (Marketing, Settings, Supply) aren't cut off with it */
+#bpx#bpx#bpx#bpx .bpx-side .hl-nl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;line-height:20px;margin:-3px 0}
 #bpx#bpx#bpx#bpx .bpx-side .hl-lock{width:13px;height:13px;flex:0 0 13px;opacity:.6}
 #bpx#bpx#bpx#bpx .hl-gap{height:1px;margin:10px 6px;background:var(--hl-side-line)}
 #bpx#bpx#bpx#bpx .hl-sfoot{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:1px}
@@ -95,8 +97,8 @@ html.bp-appmode body{overflow:hidden}
   color:#fff !important;cursor:pointer;box-shadow:none !important;transition:filter 120ms ease,transform 80ms ease}
 #bpx#bpx#bpx#bpx .hl-rb:hover{filter:brightness(1.08)}
 #bpx#bpx#bpx#bpx .hl-rb .hl-i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#bpx#bpx#bpx#bpx .hl-rb.g{background:#12B76A !important} #bpx#bpx#bpx#bpx .hl-rb.p{background:#5a8ff8 !important} #bpx#bpx#bpx#bpx .hl-rb.o{background:#0970f7 !important} #bpx#bpx#bpx#bpx .hl-rb.b{background:#2E90FA !important}
-#bpx#bpx#bpx#bpx .hl-badge{position:absolute;top:-4px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#F04438;color:#fff;
+#bpx#bpx#bpx#bpx .hl-rb.g{background:#16C79A !important} #bpx#bpx#bpx#bpx .hl-rb.p{background:#5a8ff8 !important} #bpx#bpx#bpx#bpx .hl-rb.o{background:#0970f7 !important} #bpx#bpx#bpx#bpx .hl-rb.b{background:#2E90FA !important}
+#bpx#bpx#bpx#bpx .hl-badge{position:absolute;top:-4px;right:-5px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#0970F7;color:#fff;
   font:600 10px/16px var(--sans);text-align:center;box-shadow:0 0 0 2px var(--card)}
 #bpx#bpx#bpx#bpx .hl-badge[hidden]{display:none}
 #bpx#bpx#bpx#bpx .hl-av{width:32px;height:32px;min-height:0 !important;padding:0 !important;margin-left:4px;border-radius:50% !important;border:0 !important;background:#475467 !important;color:#fff !important;
@@ -143,7 +145,7 @@ html.bp-appmode body{overflow:hidden}
 #bpx#bpx#bpx#bpx .hl-notes .hl-mi > span{white-space:normal}
 #bpx#bpx#bpx#bpx .hl-notes .hl-mi .hl-i{margin-top:1px}
 #bpx#bpx#bpx#bpx .hl-dot{width:8px;height:8px;flex:0 0 8px;margin-top:5px;border-radius:50%;background:var(--blue)}
-#bpx#bpx#bpx#bpx .hl-dot.bad{background:#F04438} #bpx#bpx#bpx#bpx .hl-dot.warn{background:#0970f7}
+#bpx#bpx#bpx#bpx .hl-dot.bad{background:#0970F7} #bpx#bpx#bpx#bpx .hl-dot.warn{background:#0970f7}
 #bpx#bpx#bpx#bpx .hl-mempty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 10px;color:var(--mu);font-size:13px}
 #bpx#bpx#bpx#bpx .hl-mempty .hl-i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
 #bpx#bpx#bpx#bpx .hl-sw{position:relative;width:28px;height:16px;flex:0 0 28px;border-radius:8px;background:var(--line-in);transition:background-color 120ms ease}
@@ -552,7 +554,7 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 @keyframes oawSheet{from{transform:translate3d(0,100%,0)}}
 @keyframes oawMsg{from{opacity:0;transform:translate3d(0,8px,0)}}
 @keyframes oawDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
-@keyframes oawLive{0%{box-shadow:0 0 0 0 rgba(18,183,106,.45)}70%{box-shadow:0 0 0 6px rgba(18,183,106,0)}100%{box-shadow:0 0 0 0 rgba(18,183,106,0)}}
+@keyframes oawLive{0%{box-shadow:0 0 0 0 rgba(22,199,154,.45)}70%{box-shadow:0 0 0 6px rgba(22,199,154,0)}100%{box-shadow:0 0 0 0 rgba(22,199,154,0)}}
 #bpx#bpx#bpx#bpx#bpx .oaw-panel{width:400px !important;max-height:min(620px,calc(100vh - 84px)) !important;border-radius:20px !important;border:1px solid #e6eaf1;background:#fff;
   box-shadow:0 2px 6px rgba(16,24,40,.06),0 28px 60px -20px rgba(0,21,48,.35) !important;transform-origin:top right;animation:oawIn .42s cubic-bezier(.22,1,.36,1)}
 #bpx#bpx#bpx#bpx#bpx .oaw-head{display:flex;align-items:center;gap:11px;padding:14px 14px 14px 16px;background:linear-gradient(180deg,#f5f9ff,#fff);border-bottom:1px solid #eef1f6;color:#0b1a33}
@@ -564,7 +566,7 @@ html:has(#bpx .bpx-app),body:has(#bpx .bpx-app){overscroll-behavior:none;backgro
 #bpx .oaw-ht{display:flex;flex-direction:column;line-height:1.2;min-width:0}
 #bpx .oaw-ht b{font-size:15px;font-weight:700;color:#0b1a33}
 #bpx .oaw-ht small{display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7a90;font-weight:500;margin-top:2px}
-#bpx .oaw-dot{width:7px;height:7px;border-radius:50%;background:#12b76a;animation:oawLive 2.4s infinite}
+#bpx .oaw-dot{width:7px;height:7px;border-radius:50%;background:#16C79A;animation:oawLive 2.4s infinite}
 #bpx#bpx#bpx#bpx#bpx .hl-oaw-x{width:32px;height:32px;border-radius:10px !important;font-size:20px}
 #bpx#bpx#bpx#bpx#bpx .oaw-log{padding:16px;gap:10px;background:#fff;scroll-behavior:smooth}
 #bpx .oaw-hi{display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 8px 6px;animation:oawMsg .5s cubic-bezier(.22,1,.36,1)}

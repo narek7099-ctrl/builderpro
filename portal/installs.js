@@ -36,9 +36,9 @@
   function state(ins) {
     var n = bpInstallNext(ins); if (!n) return { k: 'none', t: 'No maintenance', c: '#788493' };
     var left = Math.ceil((n - Date.now()) / DAY);
-    if (left < 0) return { k: 'over', t: 'Overdue ' + (-left) + 'd', c: '#b91c1c', left: left };
+    if (left < 0) return { k: 'over', t: 'Overdue ' + (-left) + 'd', c: '#0853B5', left: left };
     if (left <= 30) return { k: 'soon', t: 'Due in ' + left + 'd', c: '#0953b4', left: left };
-    return { k: 'ok', t: 'On schedule', c: '#15803d', left: left };
+    return { k: 'ok', t: 'On schedule', c: '#087F61', left: left };
   }
 
   /* ---------- the signature pad ---------- */
@@ -119,7 +119,7 @@
     var show = list.filter(function (x) { return F === 'all' || (F === 'due' ? (x.s.k === 'over' || x.s.k === 'soon' || x.s.k === 'ok') : x.s.k === F); })
       .sort(function (a, b) { return (a.n || 9e15) - (b.n || 9e15); });
     var tile = function (k, n, t, c) { return '<button class="bpi-tile' + (F === k ? ' on' : '') + '" onclick="bpInstallFilter(\'' + k + '\')"><b style="color:' + c + '">' + n + '</b><span>' + t + '</span></button>'; };
-    var h = '<div class="bpi-tiles">' + tile('over', cnt.over, 'Overdue', '#b91c1c') + tile('soon', cnt.soon, 'Due in 30 days', '#0953b4') + tile('due', cnt.over + cnt.soon + cnt.ok, 'Need maintenance', '#006fff') + tile('all', list.length, 'All installations', '#001530') + '</div>';
+    var h = '<div class="bpi-tiles">' + tile('over', cnt.over, 'Overdue', '#0853B5') + tile('soon', cnt.soon, 'Due in 30 days', '#0953b4') + tile('due', cnt.over + cnt.soon + cnt.ok, 'Need maintenance', '#006fff') + tile('all', list.length, 'All installations', '#001530') + '</div>';
     if (!list.length) h += '<div class="bpx-card bpi-empty"><span class="ms">construction</span><b>No installations yet</b><p>When you mark a job done you sign it off with the install date and how often it needs service. Signed-off jobs show up here with their next maintenance date.</p></div>';
     else h += '<div class="bpi-list">' + (show.length ? show.map(function (x) {
       var j = x.j, i = j.install;
@@ -154,7 +154,7 @@
   var css = document.createElement('style');
   css.textContent = '.bpi-sign{margin:18px 0 6px;padding:16px;border:1px solid #dce3ec;border-radius:14px;background:#f8fafc}'
     + '.bpi-sign_h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.bpi-sign_h .ms{color:#006fff}.bpi-sign_h b{font-size:15px}.bpi-sign_h em{margin-left:auto;font-style:normal;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#006fff;background:#e6f0ff;padding:3px 8px;border-radius:99px}'
-    + '.bpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bpi-sigwrap{position:relative;height:130px;border:1.5px dashed #c8d3df;border-radius:12px;background:#fff;touch-action:none}.bpi-sigwrap.bpi-need{border-color:#b91c1c}'
+    + '.bpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.bpi-sigwrap{position:relative;height:130px;border:1.5px dashed #c8d3df;border-radius:12px;background:#fff;touch-action:none}.bpi-sigwrap.bpi-need{border-color:#0970F7}'
     + '.bpi-sigwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}#bpi-sighint{position:absolute;inset:0;display:grid;place-items:center;color:#9aa6b4;font-size:13px;pointer-events:none;transition:opacity .2s}'
     + '.bpi-sigclr{position:absolute;right:8px;top:8px;border:0;background:#eef3f8;border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer}.bpi-err{color:#b91c1c;font-size:13px;margin-top:6px;min-height:1em}'
     + '.bpi-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.bpi-tile{background:#fff;border:1px solid #dce3ec;border-radius:16px;padding:16px 18px;text-align:left;cursor:pointer;font:inherit}.bpi-tile.on{border-color:#006fff;box-shadow:0 0 0 3px #e6f0ff}.bpi-tile b{display:block;font-size:28px;font-weight:600;letter-spacing:-.03em}.bpi-tile span{font-size:13px;color:#788493}'

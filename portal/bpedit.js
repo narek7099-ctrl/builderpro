@@ -35,8 +35,8 @@
 (function () {
   'use strict';
   var esc = function (s) { return window.bpEsc ? bpEsc(s) : String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
-  var COLORS = [['#e5484d', 'Red'], ['#0068f0', 'Orange'], ['#1f9e5a', 'Green'], ['#4e6ef2', 'Blue'], ['#5c8ff6', 'Violet'], ['#111827', 'Black']];
-  var NOTE_BG = { '#e5484d': '#ffe1e1', '#0068f0': '#c2dcff', '#1f9e5a': '#d9f5e4', '#4e6ef2': '#e1e7fe', '#5c8ff6': '#e3ecff', '#111827': '#eef0f3' };
+  var COLORS = [['#e5484d', 'Red'], ['#0068f0', 'Orange'], ['#16C79A', 'Green'], ['#4e6ef2', 'Blue'], ['#5c8ff6', 'Violet'], ['#111827', 'Black']];
+  var NOTE_BG = { '#e5484d': '#ffe1e1', '#0068f0': '#c2dcff', '#16C79A': '#E8F9F4', '#4e6ef2': '#e1e7fe', '#5c8ff6': '#e3ecff', '#111827': '#eef0f3' };
   var WIDTHS = [['S', 1], ['M', 2.2], ['L', 4.5]];
   var TOOLS = [
     ['select', 'arrow_selector_tool', 'Select & move', 'V'], ['pen', 'draw', 'Pen', 'P'], ['line', 'horizontal_rule', 'Line', 'L'],

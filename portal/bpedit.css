@@ -14,8 +14,8 @@
 .bpe-name{flex:1;min-width:0}
 .bpe-name b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
 .bpe-name small{display:block;font-size:12px;color:var(--grey,#788493);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bpe-status{color:var(--bpc-good-t,#0f7a3d);font-weight:600}
-.bpe-status.bad{color:var(--bpc-bad-t,#b3392f)}
+.bpe-status{color:var(--bpc-good-t,#087F61);font-weight:600}
+.bpe-status.bad{color:var(--bpc-bad-t,#0853B5)}
 .bpe-grp{display:flex;align-items:center;gap:2px;background:var(--soft,#f4f7fa);border-radius:40px;padding:3px}
 .bpe-ib,.bpe-zoomv{height:36px;min-width:36px;border:0;border-radius:40px;background:transparent;color:inherit;display:inline-flex;align-items:center;justify-content:center;
   cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;transition:background-color .2s ease}

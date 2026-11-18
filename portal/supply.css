@@ -27,9 +27,9 @@
 
 /* stock marks */
 #bpx .sp-stk{display:inline-block;font-size:11.5px;font-weight:650;border-radius:999px;padding:3px 9px;white-space:nowrap}
-#bpx .sp-stk.ok{background:#e7f7ee;color:#137a3f}
+#bpx .sp-stk.ok{background:#E8F9F4;color:#087F61}
 #bpx .sp-stk.low{background:#dfedff;color:#00439a}
-#bpx .sp-stk.out{background:#fdecec;color:#b3392f}
+#bpx .sp-stk.out{background:#EBF4FF;color:#0853B5}
 #bpx .sp-stk.unk{background:var(--tint,#f4f6fa);color:var(--grey)}
 
 /* parts list builder */
@@ -100,8 +100,8 @@
 #bpx .sp-scan-tot .bpx-mut{display:block;font-size:11.5px}
 #bpx .sp-scan-tot b{font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 #bpx .sp-var{font-weight:650}
-#bpx .sp-var.bad{color:#b3392f}
-#bpx .sp-var.good{color:#137a3f}
+#bpx .sp-var.bad{color:#0853B5}
+#bpx .sp-var.good{color:#087F61}
 #bpx .sp-var small,#bpx .bpx-ctable td small{display:block;font-weight:500;font-size:11px;color:var(--grey)}
 #bpx .sp-stk em{font-style:normal;opacity:.7;font-weight:500}
 #bpx .sp-stk.stale{opacity:.75}
@@ -173,7 +173,7 @@
 #bpx .sp-dir-miss{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin:12px 0 2px}
 
 /* ---------- the cold start: one instruction, one button ---------- */
-#bpx .sp-note.good{background:#f0fdfa;border-color:#86efac;color:#14532d}
+#bpx .sp-note.good{background:#f0fdfa;border-color:#8EE5CC;color:#065C47}
 #bpx .sp-start{padding:0;overflow:hidden}
 #bpx .sp-start-top{text-align:center;padding:38px 26px 30px;max-width:520px;margin:0 auto}
 #bpx .sp-start-top .ms{font-size:44px;color:var(--blue);display:block;margin-bottom:12px}
@@ -195,8 +195,8 @@
 #bpx .sp-where-a{display:flex;gap:14px;margin-left:auto}
 
 /* what each option is actually worth */
-#bpx .sp-win{background:#0f7a3d;color:#fff;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800;letter-spacing:.01em}
-#bpx.bpx-dark .sp-win{background:#16a34a}
+#bpx .sp-win{background:#087F61;color:#001530;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:800;letter-spacing:.01em}
+#bpx.bpx-dark .sp-win{background:#16C79A}
 #bpx .sp-two .bpx-ptitle .lg2{margin-left:9px}
 #bpx .bpx-stat .sp-ex{display:block;font-size:11.5px;font-weight:700;color:#0e4792;letter-spacing:0}
 
@@ -254,7 +254,7 @@
 #bpx .sp-mat-who b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bpx .sp-mat-who span{display:block;font-size:12px;color:var(--grey)}
 #bpx .sp-mat-st{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--grey);white-space:nowrap}
-#bpx .sp-mat-st.good{color:#0f7a3d;background:rgba(15,122,61,.1)}
+#bpx .sp-mat-st.good{color:#087F61;background:rgba(8,127,97,.1)}
 #bpx .sp-mat-st.warn{color:#0953b4;background:rgba(9,83,180,.1)}
 #bpx .sp-mat-row.draft{grid-template-columns:minmax(0,1fr) auto 20px}
 #bpx .sp-mat-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
@@ -274,7 +274,7 @@
 #bpx .sp-chip[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.1)}
 #bpx .sp-chip[data-fam=elec] {color:#1a56a4;background:rgba(26,86,164,.11)}
 #bpx .sp-chip[data-fam=paint]{color:#4f6ba3;background:rgba(79,107,163,.1)}
-#bpx .sp-chip[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.1)}
+#bpx .sp-chip[data-fam=land] {color:#087F61;background:rgba(8,127,97,.1)}
 #bpx .sp-chip[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.12)}
 /* the tints are mixed for a white card, so on the dark card they are lifted
    rather than re-picked, which keeps the same hue reading */
@@ -284,7 +284,7 @@
 #bpx.bpx-dark .sp-chip[data-fam=plumb]{color:#7ba6e8;background:rgba(123,166,232,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=elec] {color:#5591e0;background:rgba(85,145,224,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=paint]{color:#8ca5d6;background:rgba(140,165,214,.13)}
-#bpx.bpx-dark .sp-chip[data-fam=land] {color:#6cbd8a;background:rgba(108,189,138,.13)}
+#bpx.bpx-dark .sp-chip[data-fam=land] {color:#3FE0B6;background:rgba(63,224,182,.13)}
 #bpx.bpx-dark .sp-chip[data-fam=conc] {color:#a3adbb;background:rgba(163,173,187,.13)}
 
 /* ---------- the search-first picker ---------- */
@@ -308,7 +308,7 @@
 #bpx .sp-pk-meta>b{font-size:13px;font-weight:650;color:var(--ink)}
 #bpx .sp-pk-sup{white-space:nowrap}
 #bpx .sp-pk-stk{font-size:11.5px;font-weight:600}
-#bpx .sp-pk-stk.ok{color:#0f7a3d}
+#bpx .sp-pk-stk.ok{color:#087F61}
 #bpx .sp-pk-stk.out{color:#0953b4}
 #bpx .sp-pk-more,#bpx .sp-pk-none{font-size:11.5px;color:var(--grey-l,var(--grey))}
 #bpx .sp-pk-add{flex:none;min-width:30px;height:30px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;color:var(--grey);background:var(--card,#fff);padding:0 9px}
@@ -317,7 +317,7 @@
 #bpx .sp-pk-empty b{display:block;font-size:14px}
 #bpx .sp-pk-empty span{display:block;font-size:12.5px;line-height:1.55;color:var(--grey);margin-top:4px}
 #bpx .sp-pk-empty-b{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:11px}
-#bpx .sp-pk-flash{height:0;overflow:hidden;opacity:0;font-size:12.5px;font-weight:600;color:#0f7a3d;transition:opacity .18s}
+#bpx .sp-pk-flash{height:0;overflow:hidden;opacity:0;font-size:12.5px;font-weight:600;color:#087F61;transition:opacity .18s}
 #bpx .sp-pk-flash.on{height:auto;opacity:1;margin-top:9px}
 /* the list being built, now with the category chip in front */
 #bpx .sp-item{grid-template-columns:30px minmax(0,1fr) 72px 84px 34px}
@@ -340,18 +340,18 @@
 #bpx .sp-store{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:999px;background:var(--card,#fff);color:var(--grey);font:inherit;font-size:11.5px;font-weight:600;padding:3px 9px;cursor:pointer;white-space:nowrap}
 #bpx .sp-store:hover{border-color:var(--blue);color:var(--blue)}
 #bpx .sp-store .ms{font-size:13px;line-height:1}
-#bpx .sp-store.mine{background:#e7f7ee;border-color:#9fd9b8;color:#0f7a3d}
-#bpx .sp-store.mine:hover{border-color:#0f7a3d;color:#0f7a3d}
+#bpx .sp-store.mine{background:#E8F9F4;border-color:#8EE5CC;color:#087F61}
+#bpx .sp-store.mine:hover{border-color:#087F61;color:#087F61}
 #bpx .sp-store-more{align-self:center;font-size:11.5px;color:var(--grey-l,var(--grey))}
-#bpx.bpx-dark .sp-store.mine{background:rgba(52,168,110,.16);border-color:rgba(52,168,110,.4);color:#6cbd8a}
+#bpx.bpx-dark .sp-store.mine{background:rgba(22,199,154,.16);border-color:rgba(22,199,154,.4);color:#3FE0B6}
 /* a typical price is never mistaken for a quote */
 #bpx .sp-pk-meta>b.typ{font-weight:600;color:var(--grey)}
 #bpx .sp-pk-yours,#bpx .sp-pk-typ{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:4px;padding:2px 5px}
-#bpx .sp-pk-yours{background:#e7f7ee;color:#0f7a3d}
+#bpx .sp-pk-yours{background:#E8F9F4;color:#087F61}
 #bpx .sp-pk-typ{background:var(--soft);color:var(--grey);cursor:help}
-#bpx.bpx-dark .sp-pk-yours{background:rgba(52,168,110,.16);color:#6cbd8a}
+#bpx.bpx-dark .sp-pk-yours{background:rgba(22,199,154,.16);color:#3FE0B6}
 #bpx .sp-pk-cue{font-size:12px;color:var(--grey);margin:8px 2px 0;line-height:1.5}
-#bpx .sp-pk-cue em{font-style:normal;font-weight:650;color:#0f7a3d}
+#bpx .sp-pk-cue em{font-style:normal;font-weight:650;color:#087F61}
 #bpx .sp-pk-cue .bpx-linkbtn{font-size:12px}
 #bpx .sp-pk-row{align-items:flex-start}
 #bpx .sp-pk-row .sp-chip{margin-top:1px}
@@ -379,12 +379,12 @@
 
 #bpx .sp-card{display:flex;flex-direction:column;gap:7px;border:1px solid var(--line);border-radius:14px;background:var(--card,#fff);padding:11px;cursor:pointer;text-align:left;position:relative;transition:border-color .15s,box-shadow .15s,transform .15s}
 #bpx .sp-card:hover,#bpx .sp-card:focus-visible{border-color:var(--blue);box-shadow:0 6px 18px rgba(0,111,255,.1);transform:translateY(-2px);outline:none}
-#bpx .sp-card.on{border-color:#9fd9b8;background:linear-gradient(0deg,rgba(15,122,61,.04),rgba(15,122,61,.04)),var(--card,#fff)}
+#bpx .sp-card.on{border-color:#8EE5CC;background:linear-gradient(0deg,rgba(8,127,97,.04),rgba(8,127,97,.04)),var(--card,#fff)}
 @media(prefers-reduced-motion:reduce){#bpx .sp-card{transition:none}#bpx .sp-card:hover{transform:none}}
 /* the picture well: a big category icon, since there are no photographs */
 #bpx .sp-card-art{position:relative;display:flex;align-items:center;justify-content:center;height:86px;border-radius:10px;background:var(--soft);color:var(--grey)}
 #bpx .sp-card-art .sp-ic.big{width:40px;height:40px}
-#bpx .sp-card-n{position:absolute;top:6px;right:6px;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#0f7a3d;color:#fff;font-size:11.5px;font-weight:700;padding:0 6px}
+#bpx .sp-card-n{position:absolute;top:6px;right:6px;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#087F61;color:#001530;font-size:11.5px;font-weight:700;padding:0 6px}
 #bpx .sp-card-nm{font-size:13px;font-weight:650;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px}
 #bpx .sp-card-price{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);min-height:20px}
 #bpx .sp-card-price>b{font-size:14px;font-weight:700;color:var(--ink)}
@@ -396,10 +396,10 @@
 #bpx .sp-card .sp-store{font-size:10.5px;padding:2px 7px}
 #bpx .sp-card-add{display:block;text-align:center;border:1px solid var(--line);border-radius:9px;padding:7px 0;font-size:12.5px;font-weight:650;color:var(--grey);background:var(--tint,#f4f6fa)}
 #bpx .sp-card:hover .sp-card-add{border-color:var(--blue);color:#fff;background:var(--blue)}
-#bpx .sp-card.on .sp-card-add{color:#0f7a3d;border-color:#9fd9b8;background:#e7f7ee}
+#bpx .sp-card.on .sp-card-add{color:#087F61;border-color:#8EE5CC;background:#E8F9F4}
 #bpx.bpx-dark .sp-card-art{background:rgba(255,255,255,.05)}
-#bpx.bpx-dark .sp-card.on{border-color:rgba(52,168,110,.45)}
-#bpx.bpx-dark .sp-card.on .sp-card-add{color:#6cbd8a;background:rgba(52,168,110,.14);border-color:rgba(52,168,110,.35)}
+#bpx.bpx-dark .sp-card.on{border-color:rgba(22,199,154,.45)}
+#bpx.bpx-dark .sp-card.on .sp-card-add{color:#3FE0B6;background:rgba(22,199,154,.14);border-color:rgba(22,199,154,.35)}
 
 /* departments, the way a store has aisles */
 #bpx .sp-depts{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
@@ -469,26 +469,26 @@
 #bpx .sp-sup-vs{display:flex;flex-direction:column;gap:3px}
 #bpx .sp-sup-vs .bpx-mut{font-size:11.5px;line-height:1.4}
 #bpx .sp-vs{align-self:flex-start;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px}
-#bpx .sp-vs.good{background:#e7f7ee;color:#0f7a3d}
-#bpx .sp-vs.bad{background:#fdecec;color:#b3392f}
+#bpx .sp-vs.good{background:#E8F9F4;color:#087F61}
+#bpx .sp-vs.bad{background:#EBF4FF;color:#0853B5}
 #bpx .sp-vs.even{background:var(--soft);color:var(--grey)}
-#bpx.bpx-dark .sp-vs.good{background:rgba(52,168,110,.16);color:#6cbd8a}
-#bpx.bpx-dark .sp-vs.bad{background:rgba(214,92,80,.16);color:#e08a80}
+#bpx.bpx-dark .sp-vs.good{background:rgba(22,199,154,.16);color:#3FE0B6}
+#bpx.bpx-dark .sp-vs.bad{background:rgba(9,112,247,.16);color:#4B99FE}
 
 /* the chains we already know: a directory you can see, not a modal */
 #bpx .sp-chains{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
 @media(max-width:560px){#bpx .sp-chains{grid-template-columns:1fr}}
 #bpx .sp-chain{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--card,#fff);padding:10px 12px;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s,box-shadow .15s}
 #bpx .sp-chain:hover{border-color:var(--blue);box-shadow:0 4px 14px rgba(0,111,255,.08)}
-#bpx .sp-chain.on{border-color:#9fd9b8;background:linear-gradient(0deg,rgba(15,122,61,.04),rgba(15,122,61,.04)),var(--card,#fff)}
+#bpx .sp-chain.on{border-color:#8EE5CC;background:linear-gradient(0deg,rgba(8,127,97,.04),rgba(8,127,97,.04)),var(--card,#fff)}
 #bpx .sp-chain-t{flex:1;min-width:0}
 #bpx .sp-chain-t b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bpx .sp-chain-t span{display:block;font-size:11.5px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 #bpx .sp-chain-a{flex:none;display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--grey);border:1px solid var(--line);border-radius:8px;padding:5px 10px;background:var(--tint,#f4f6fa)}
 #bpx .sp-chain-a .ms{font-size:14px}
 #bpx .sp-chain:hover .sp-chain-a{border-color:var(--blue);color:#fff;background:var(--blue)}
-#bpx .sp-chain.on .sp-chain-a{color:#0f7a3d;border-color:#9fd9b8;background:#e7f7ee}
-#bpx.bpx-dark .sp-chain.on .sp-chain-a{color:#6cbd8a;background:rgba(52,168,110,.14);border-color:rgba(52,168,110,.35)}
+#bpx .sp-chain.on .sp-chain-a{color:#087F61;border-color:#8EE5CC;background:#E8F9F4}
+#bpx.bpx-dark .sp-chain.on .sp-chain-a{color:#3FE0B6;background:rgba(22,199,154,.14);border-color:rgba(22,199,154,.35)}
 
 /* On a wide panel the subtitle sits beside the title instead of wrapping
    under it, so it needs the gap the wrap used to give it. Applies to every
@@ -523,7 +523,7 @@
 #bpx .sp-card-art[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.09)}
 #bpx .sp-card-art[data-fam=elec] {color:#1a56a4;background:rgba(26,86,164,.1)}
 #bpx .sp-card-art[data-fam=paint]{color:#4f6ba3;background:rgba(79,107,163,.09)}
-#bpx .sp-card-art[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.09)}
+#bpx .sp-card-art[data-fam=land] {color:#087F61;background:rgba(8,127,97,.09)}
 #bpx .sp-card-art[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.1)}
 #bpx .sp-card-art[data-fam=pool] {color:#0277bd;background:rgba(2,119,189,.09)}
 #bpx .sp-card-art[data-fam=surf] {color:#8d6e63;background:rgba(141,110,99,.1)}
@@ -531,7 +531,7 @@
 #bpx.bpx-dark .sp-card-art{background:rgba(255,255,255,.05)}
 #bpx.bpx-dark .sp-card-art[data-fam=roof] {color:#6698d9} #bpx.bpx-dark .sp-card-art[data-fam=hvac]{color:#5fb6c6}
 #bpx.bpx-dark .sp-card-art[data-fam=plumb]{color:#7ba6e8} #bpx.bpx-dark .sp-card-art[data-fam=elec]{color:#5591e0}
-#bpx.bpx-dark .sp-card-art[data-fam=paint]{color:#8ca5d6} #bpx.bpx-dark .sp-card-art[data-fam=land]{color:#6cbd8a}
+#bpx.bpx-dark .sp-card-art[data-fam=paint]{color:#8ca5d6} #bpx.bpx-dark .sp-card-art[data-fam=land]{color:#3FE0B6}
 #bpx.bpx-dark .sp-card-art[data-fam=conc] {color:#a3adbb} #bpx.bpx-dark .sp-card-art[data-fam=pool]{color:#63b8e8}
 #bpx.bpx-dark .sp-card-art[data-fam=surf] {color:#c8a89c} #bpx.bpx-dark .sp-card-art[data-fam=wood]{color:#c2a094}
 /* the aisle this thing came from, bottom-left of the picture */
@@ -566,7 +566,7 @@
 #bpx .sp-at .sp-mark img{inset:3px;width:calc(100% - 6px);height:calc(100% - 6px)}
 #bpx .sp-at .sp-mark.full img{inset:0;width:100%;height:100%}
 #bpx .sp-at:hover .sp-mark{border-color:var(--blue)}
-#bpx .sp-at.mine .sp-mark{border-color:#7fc9a3;box-shadow:0 0 0 1px #7fc9a3}
+#bpx .sp-at.mine .sp-mark{border-color:#3FE0B6;box-shadow:0 0 0 1px #3FE0B6}
 #bpx .sp-at-more{font-size:11px;color:var(--grey-l,var(--grey));margin-left:2px}
 
 #bpx .sp-card-add{margin-top:auto;padding:8px 0;font-size:12.5px}
@@ -585,7 +585,7 @@
 #bpx .sp-md-art[data-fam=plumb]{color:#2b5fad;background:rgba(43,95,173,.09)}
 #bpx .sp-md-art[data-fam=elec] {color:#1a56a4;background:rgba(26,86,164,.1)}
 #bpx .sp-md-art[data-fam=paint]{color:#4f6ba3;background:rgba(79,107,163,.09)}
-#bpx .sp-md-art[data-fam=land] {color:#2f7d4f;background:rgba(47,125,79,.09)}
+#bpx .sp-md-art[data-fam=land] {color:#087F61;background:rgba(8,127,97,.09)}
 #bpx .sp-md-art[data-fam=conc] {color:#5b6472;background:rgba(91,100,114,.1)}
 #bpx .sp-md-art[data-fam=pool] {color:#0277bd;background:rgba(2,119,189,.09)}
 #bpx .sp-md-art[data-fam=surf] {color:#8d6e63;background:rgba(141,110,99,.1)}
@@ -620,13 +620,13 @@
 #bpx .sp-md-chain{display:flex;align-items:center;gap:10px;text-align:left;width:100%;font:inherit;color:inherit;
   border:1px solid var(--line);border-radius:11px;background:var(--card,#fff);padding:9px 11px;cursor:pointer}
 #bpx .sp-md-chain:hover{border-color:var(--blue)}
-#bpx .sp-md-chain.on{border-color:#9fd9b8;background:linear-gradient(0deg,rgba(15,122,61,.04),rgba(15,122,61,.04)),var(--card,#fff)}
+#bpx .sp-md-chain.on{border-color:#8EE5CC;background:linear-gradient(0deg,rgba(8,127,97,.04),rgba(8,127,97,.04)),var(--card,#fff)}
 #bpx .sp-md-chain>span{flex:1;min-width:0}
 #bpx .sp-md-chain b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bpx .sp-md-chain small{display:block;font-size:11px;color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bpx .sp-md-tag{flex:none;font-size:11.5px;font-weight:650;color:var(--grey);
   border:1px solid var(--line);border-radius:7px;padding:4px 9px;background:var(--tint,#f4f6fa)}
-#bpx .sp-md-chain.on .sp-md-tag{color:#0f7a3d;border-color:#9fd9b8;background:#e7f7ee}
+#bpx .sp-md-chain.on .sp-md-tag{color:#087F61;border-color:#8EE5CC;background:#E8F9F4}
 #bpx .sp-md-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   border-top:1px solid var(--line);padding-top:14px}
 #bpx .sp-md-qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}

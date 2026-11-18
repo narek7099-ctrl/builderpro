@@ -43,11 +43,11 @@ function bpChkRender(rows,demo){
   var count=function(fn){var o={};rows.forEach(function(c){var k=fn(c);if(k)o[k]=(o[k]||0)+1;});return Object.keys(o).map(function(k){return [k,o[k]];}).sort(function(a,b){return b[1]-a[1];});};
   var list=function(arr,empty){if(!arr.length)return '<div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>';var top=arr[0][1];return arr.slice(0,6).map(function(r){return '<div class="cl-row"><span>'+bpEsc(r[0])+'</span><i><b style="width:'+Math.round(r[1]/top*100)+'%"></b></i><em>'+r[1]+'</em></div>';}).join('');};
   var tools=count(function(c){return bpChkKind(c).label;}), zips=count(function(c){return c.zip||'';});
-  var bands=[['bad','Needs attention now','#dc2626'],['warn','Needs attention soon','#0c6cea'],['mid','Keep an eye on it','#0661d9'],['good','Healthy','#16a34a']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
+  var bands=[['bad','Needs attention now','#001530'],['warn','Needs attention soon','#0c6cea'],['mid','Keep an eye on it','#0661d9'],['good','Healthy','#16C79A']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
   var bandBar=rows.length?'<div class="cl-stack">'+bands.filter(function(x){return x[1];}).map(function(x){return '<i style="flex:'+x[1]+';background:'+x[0][2]+'" title="'+x[0][1]+': '+x[1]+'"></i>';}).join('')+'</div><div class="cl-legend">'+bands.map(function(x){return '<span><i style="background:'+x[0][2]+'"></i>'+x[0][1]+' <b>'+x[1]+'</b></span>';}).join('')+'</div>':'<div class="bpx-mut" style="font-size:12.5px">No results yet.</div>';
   var recent=rows.slice(0,8).map(function(c){
     var ck=bpChkKind(c), when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-    var col=c.band==='good'?'#16a34a':c.band==='mid'?'#0661d9':c.band==='warn'?'#0c6cea':'#dc2626';
+    var col=c.band==='good'?'#16C79A':c.band==='mid'?'#0661d9':c.band==='warn'?'#0c6cea':'#001530';
     return '<div class="cl-lead"><span class="cl-score" style="background:'+col+'">'+(c.score!=null?c.score:'–')+'</span><div><b>'+bpEsc(c.name||(c.phone?c.phone:'Anonymous'))+'</b><small>'+bpEsc(ck.label)+(c.zip?' · '+bpEsc(c.zip):'')+(c.label?' · '+bpEsc(c.label):'')+'</small></div><em>'+when+'</em></div>';
   }).join('');
   el.innerHTML=(demo?'<div class="cl-demo"><span class=ms>info</span> Sample numbers. Sign in to see your real calculator leads.</div>':'')

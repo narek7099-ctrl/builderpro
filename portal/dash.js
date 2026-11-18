@@ -701,6 +701,22 @@
       t('Active projects', 'act', String(o5.n), money(o5.v) + ' in progress', M.act, 'activejobs', { viz: 'line', see: 'See jobs', fmt: function (v) { return v + (v === 1 ? ' project running' : ' projects running'); } }),
     ];
   }
+  /* New leads (2026-11-18): contacts that came in, per week or month, as thin bars, with the
+     change against the period before. Until the contacts have loaded (or if they can't be
+     read) it is the icon card with HighLevel's count for the month, as before. */
+  function leadsCard(M) {
+    if (!Array.isArray(D.leadRows)) return statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads');
+    var rows = D.leadRows, one = function () { return 1; }, at = function (t) { return t; };
+    var vals = bpChart.byBuckets(rows, P.buckets, at, one).values;
+    var cur = rows.filter(function (t) { return inP(t, P.start, P.end); }).length, prev = rows.filter(function (t) { return inP(t, P.pStart, P.pEnd); }).length;
+    var dlt = bpChart.delta(prev, cur, { vs: P.vs });
+    var vs = String(P.vs || '').replace('the 6 months before', 'prior 6 months').replace('the 12 months before', 'prior year');
+    return '<div class="bpx-panel db-st cb" onclick="bpNav(\'contacts\')"><div class="cb-top"><span class="db-kl">New leads</span>'
+      + '<div class="cb-viz" onclick="event.stopPropagation()">' + miniViz(vals, 'thin', { labels: M.labels, fmt: function (v) { return v + (v === 1 ? ' lead' : ' leads'); } }) + '</div></div>'
+      + '<div class="db-kv">' + cur.toLocaleString() + '</div>'
+      + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(vs) + '</span>' : '<span>' + P.word + '</span>') + '</div>'
+      + '<div class="cb-foot"><span>See leads</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
+  }
   /* the same card as the money cards, with an icon where their chart sits:
      for figures that have no month-by-month history (2026-11-14) */
   function statCard(lbl, ico, val, sub, go, see) {
@@ -896,7 +912,7 @@
     var st = sparkTiles(M, X.active), gos = ['finances', 'finances', 'activejobs', 'finances', 'activejobs'];
     var top = [
       [3, W(gos[2], st[2], 'hl-spk')],
-      [3, W(D.leads ? 'contacts' : 'marketing', statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads'), 'hl-spk')],
+      [3, W(Array.isArray(D.leadRows) || D.leads ? 'contacts' : 'marketing', leadsCard(M), 'hl-spk')],
       [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
       [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')]
     ];
@@ -924,7 +940,7 @@
        cards, Week pace, Needs you and This week are left out. */
     return g([
       [3, W(gos[2], st[2], 'hl-spk')],
-      [3, W(D.leads ? 'contacts' : 'marketing', statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads'), 'hl-spk')],
+      [3, W(Array.isArray(D.leadRows) || D.leads ? 'contacts' : 'marketing', leadsCard(M), 'hl-spk')],
       [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
       [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
@@ -997,13 +1013,14 @@
     fin.income = inc.reduce(function (t, x) { return t + x.amt; }, 0); fin.expense = exp.reduce(function (t, x) { return t + x.amt; }, 0);
     var keep = { jg: window.bpJobsGet, fd: window.bpFinData };
     /* the sample fills only empty slots; remember which, so undo puts them back and they never leak into a real account */
-    var filled = ['deals', 'unread', 'leads', 'contracts', 'events', 'appts', 'wk'].filter(function (k) { return D[k] === undefined; });
+    var filled = ['deals', 'unread', 'leads', 'leadRows', 'contracts', 'events', 'appts', 'wk'].filter(function (k) { return D[k] === undefined; });
     window.bpJobsGet = function () { return jobs; };
     window.bpFinData = function () { return fin; };
     if (D.deals === undefined) D.deals = { n: 4, v: 38400 };
     if (D.wk === undefined) D.wk = { leads: 4, est: 2, signed: 1 };
     if (D.unread === undefined) D.unread = 2;
     if (D.leads === undefined) D.leads = { n: '23', a: '9' };
+    if (D.leadRows === undefined) { D.leadRows = []; for (var li = 0; li < 140; li++) D.leadRows.push(now - Math.floor(Math.pow(Math.random(), 1.3) * 720) * day); }
     if (D.contracts === undefined) D.contracts = [{ customer_name: 'Sarah Malik', status: 'viewed', sent_at: new Date(now - 2 * day).toISOString() }];
     if (D.events === undefined) { D.events = [
       { start: new Date(now).toISOString(), time: '10:00 AM', name: 'Priya Shah', what: 'Roof inspection' },
@@ -1108,6 +1125,12 @@
     if (window._bpCurView === 'dashboard') window.bpDashboard();
   });
 
+  /* a contact added on another device or by the website: count it on the New leads card */
+  window.addEventListener('bp-live', function (e) {
+    var k = (e && e.detail && e.detail.kinds) || [];
+    if (k.indexOf('contacts') < 0 && k.indexOf('*') < 0) return;
+    D.leadRows = undefined; if (window._bpCurView === 'dashboard') fetchState();
+  });
   /* what needs the network: fetched once per visit, page re-rendered when it lands */
   var fetching = false;
   function fetchState() {
@@ -1136,6 +1159,11 @@
     /* unread texts and emails come from the HighLevel inbox (there is no local conversations table) */
     if (D.unread === undefined) jobs.push((window.GHL_MSG_URL && window.bpApi ? bpApi(GHL_MSG_URL, { action: 'list' }) : Promise.resolve(null)).then(function (d) { var c = (d && (d.conversations || d.items)) || []; D.unread = c.reduce(function (t, x) { return t + (+x.unread || 0); }, 0); }).catch(function () { D.unread = 0; }));
     if (D.deals === undefined && window.GHL_OPP_URL) jobs.push(window.bpApi(window.GHL_OPP_URL, { action: 'list' }).then(function (d) { var o = (d && d.opportunities) || []; D.deals = { n: o.length, v: o.reduce(function (t, x) { return t + (+x.value || 0); }, 0) }; }).catch(function () { D.deals = null; }));
+    /* when each contact came in, for the New leads card's graph: the last two years, so the
+       year view can compare with the year before */
+    if (D.leadRows === undefined && window.BP_SB) jobs.push(BP_SB.from('contacts').select('date_added').gte('date_added', new Date(Date.now() - 800 * 864e5).toISOString()).limit(20000).then(function (r) {
+      D.leadRows = r && !r.error ? (r.data || []).map(function (x) { return Date.parse(x.date_added); }).filter(function (t) { return isFinite(t); }) : null;
+    }, function () { D.leadRows = null; }));
     if (D.leads === undefined && window.GHL_DASH_URL) jobs.push(window.bpApi(window.GHL_DASH_URL, {}).then(function (d) {
       D.leads = (d && d.newLeadsMonth != null) ? { n: Number(d.newLeadsMonth).toLocaleString(), a: d.appointmentsBookedMonth != null ? Number(d.appointmentsBookedMonth).toLocaleString() : '&middot;' } : null;
     }).catch(function () { D.leads = null; }));

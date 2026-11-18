@@ -88,7 +88,7 @@
 #bpx#bpx#bpx#bpx .tc-load small{display:block;margin-top:6px;color:var(--grey-l)}
 
 /* sidebar / tab count */
-#bpx#bpx#bpx#bpx .tc-nb{margin-left:auto;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#F04438;color:#fff;
+#bpx#bpx#bpx#bpx .tc-nb{margin-left:auto;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#0970F7;color:#fff;
   font:600 11px/18px var(--sans);text-align:center;font-style:normal}
 #bpx#bpx#bpx#bpx .hl-tab .tc-nb{margin-left:6px;display:inline-block;vertical-align:1px}
 #bpx#bpx#bpx#bpx .hl-min .hl-ni .tc-nb{position:absolute;top:2px;right:2px;min-width:8px;width:8px;height:8px;padding:0;font-size:0}
