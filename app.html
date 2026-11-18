@@ -92,9 +92,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261118-crewmap">
-<link rel="stylesheet" href="site/present.css?v=20261118-crewmap">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-crewmap"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261118-geofresh">
+<link rel="stylesheet" href="site/present.css?v=20261118-geofresh">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-geofresh"}}</script>
 
 
 <style id="bpi-icons">
@@ -6488,7 +6488,7 @@ function bpStamp(kind,list){
   bpSnapTake(kind,list);
 }
 function bpJobsGet(){ if(_bpJobs) return _bpJobs; try{_bpJobs=JSON.parse(localStorage.getItem('bpJobs')||'[]');}catch(e){_bpJobs=[];} bpSnapTake('jobs',_bpJobs); return _bpJobs; }
-function bpJobsSet(a){ if(!_bpJobs) bpJobsGet(); bpStamp('jobs',a); bpUnsentMark(); _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
+function bpJobsSet(a){ if(!_bpJobs) bpJobsGet(); bpStamp('jobs',a); bpUnsentMark(); _bpJobs=a; try{localStorage.setItem('bpJobs',JSON.stringify(a));}catch(e){} bpFinCloudPush(); if(window.bpGeoFreshSoon) bpGeoFreshSoon(); }
 function bpFinGet(){ if(_bpFin) return _bpFin; try{_bpFin=JSON.parse(localStorage.getItem('bpFin')||'[]');}catch(e){_bpFin=[];} bpSnapTake('fin',_bpFin); return _bpFin; }
 function bpFinSet(a){ if(!_bpFin) bpFinGet(); bpStamp('fin',a); bpUnsentMark(); _bpFin=a; try{localStorage.setItem('bpFin',JSON.stringify(a));}catch(e){} bpFinCloudPush(); }
 /* BuilderPro open in two tabs: when the other tab saves, take its copy, so this tab's
@@ -7169,6 +7169,20 @@ async function pjPoint(j){
   var jobs=bpJobsGet(), x=jobs.filter(function(y){return y.id===j.id;})[0];
   if(x){ x.geo={lat:g.lat,lng:g.lng,addr:j.addr}; bpJobsSet(jobs); }
   return {lat:g.lat,lng:g.lng,addr:j.addr};
+}
+/* a job's map point follows its address (2026-11-18): a few seconds after a save, any active job
+   whose address has no point yet, or changed since its point was found, is looked up again, so the
+   crew's on-site check (portal/crewapp.js) and the maps use the right spot without anyone having to
+   open a map first. Owner only, with a signal, a few at a time. */
+var _bpGeoT=0,_bpGeoBusy=false;
+window.bpGeoFreshSoon=function(){ clearTimeout(_bpGeoT); _bpGeoT=setTimeout(bpGeoFresh,2500); };
+async function bpGeoFresh(){
+  if(_bpGeoBusy||!window.BP_LIVE||navigator.onLine===false||(window.bpTeamIsCrew&&bpTeamIsCrew())) return;
+  var stale=bpJobsGet().filter(function(j){ return j&&j.status==='active'&&String(j.addr||'').trim()&&!(j.geo&&j.geo.addr===j.addr&&isFinite(j.geo.lat)); }).slice(0,5);
+  if(!stale.length) return;
+  _bpGeoBusy=true;
+  try{ for(var i=0;i<stale.length;i++){ await pjPoint(stale[i]); } }catch(e){}
+  _bpGeoBusy=false;
 }
 async function bpPjDraw(jobs){
   var el=q('pjMap'); if(!el||!window.L)return;
@@ -14718,7 +14732,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/payplan.js?v=20261009a"></script>
 <link rel="stylesheet" href="portal/payplan.css?v=20261114a">
 <script src="portal/bpedit.js?v=20261114a"></script>
-<script src="portal/crewapp.js?v=20261115a"></script>
+<script src="portal/crewapp.js?v=20261118a"></script>
 <script src="portal/teamchat.js?v=20261114a"></script>
 <script src="portal/subapp.js?v=20261031b"></script>
 <script src="portal/subs.js?v=20261025c1"></script>
@@ -14740,11 +14754,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261118-crewmap"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261118-crewmap"></script>
-<script src="site/vendor/SplitText.min.js?v=20261118-crewmap"></script>
-<script src="site/site.js?v=20261118-crewmap"></script>
-<script src="site/present.js?v=20261118-crewmap"></script>
+<script src="site/vendor/gsap.min.js?v=20261118-geofresh"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261118-geofresh"></script>
+<script src="site/vendor/SplitText.min.js?v=20261118-geofresh"></script>
+<script src="site/site.js?v=20261118-geofresh"></script>
+<script src="site/present.js?v=20261118-geofresh"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">
