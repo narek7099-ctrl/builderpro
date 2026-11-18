@@ -194,7 +194,7 @@
     var since = function (n) { var a = new Date(y, m - n + 1, 1).getTime(); return times.some(function (t) { return t >= a; }); };
     return since(1) ? 'month' : since(6) ? '6m' : since(12) ? '1y' : 'month';
   }
-  D.period = function (v) { try { localStorage.setItem('bpDashPeriod', v); } catch (e) {} window.bpDashboard(); };
+  D.period = function (v) { try { localStorage.setItem('bpDashPeriod', v); } catch (e) {} D.anim = 1; window.bpDashboard(); };
   function periodOf(k) {
     var now = new Date(), y = now.getFullYear(), m = now.getMonth(), b = [];
     var mon = function (yy, mm) { return new Date(yy, mm, 1).getTime(); };
@@ -954,7 +954,7 @@
   /* ---------- three ways to lay the page out; the owner picks ---------- */
   var LAYOUTS = [['overview', 'Overview'], ['command', 'Command center'], ['projects', 'Projects first']];
   function layoutOf() { var v = null; try { v = localStorage.getItem('bpDashLayout'); } catch (e) {} return LAYOUTS.some(function (l) { return l[0] === v; }) ? v : 'overview'; }
-  D.layout = function (v) { try { localStorage.setItem('bpDashLayout', v); } catch (e) {} window.bpDashboard(); };
+  D.layout = function (v) { try { localStorage.setItem('bpDashLayout', v); } catch (e) {} D.anim = 1; window.bpDashboard(); };
   function switcher(cur) {
     return '<div class="db-lay"><span>Layout</span>' + LAYOUTS.map(function (l) {
       return '<button class="bpx-jt' + (l[0] === cur ? ' on' : '') + '" onclick="BP_DASH.layout(\'' + l[0] + '\')">' + l[1] + '</button>';
@@ -1018,6 +1018,13 @@
      a row, the projects across the full width, and the lists last. */
   window.bpDashboard = function () {
     var el = $('bpxViewArea'); if (!el) return;
+    /* drawn again while it's already showing (its data arrived, a live update, a setting):
+       the charts and numbers stay where they are instead of growing in from nothing again,
+       so opening the app doesn't look like it loads twice. dash.css: .bp-still */
+    /* (picking another period or layout is a new picture: that one plays) */
+    var again = !D.anim && !!el.querySelector('.db-per, .mh2');   /* .mh2: the phone's home (portal/mobile.js) */ D.anim = 0;
+    if (again) { el.classList.add('bp-still'); clearTimeout(el._stillT); el._stillT = setTimeout(function () { el.classList.remove('bp-still'); }, 2500); }
+    else { cuSeen = {}; el.classList.remove('bp-still'); }
     var crew = !!(window.bpTeamIsCrew && bpTeamIsCrew());
     var sample = live() && !hasOwnData();
     var cl = crew ? '' : checklist();   /* the setup steps always read the account's real state */
@@ -1040,8 +1047,8 @@
   };
 
 
-  /* Numbers count up into place the first time each one is shown (a re-render
-     with the same figure leaves it still). Reduced motion: shown as is. */
+  /* Numbers count up into place the first time each one is shown on a visit to the page
+     (a re-render leaves it still). Reduced motion: shown as is. */
   var cuSeen = {};
   function countUp(root) {
     if (!root || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
@@ -1049,8 +1056,11 @@
     [].forEach.call(els, function (el) {
       var txt = el.textContent.trim(), m = /^([^\d-]*)(-?[\d,]+(?:\.\d+)?)(.*)$/.exec(txt);
       if (!m || el.children.length) return;
-      var key = (el.closest('.bpx-panel') && (el.closest('.bpx-panel').querySelector('.db-kl,.hl-wh,.bpx-ptitle') || {}).textContent || '') + '|' + txt;
+      /* once per visit to the page, by the card's title: a figure that changes while the page is
+         open (fresh data, a live update) just shows its new value */
+      var key = (el.closest('.bpx-panel') && (el.closest('.bpx-panel').querySelector('.db-kl,.hl-wh,.bpx-ptitle') || {}).textContent || '') + '|' + (el.className || '') + '|' + [].indexOf.call(root.querySelectorAll('.db-kv,.hl-kv,.hl-mv,.wk-num,[data-cu]'), el);
       if (cuSeen[key]) return; cuSeen[key] = 1;
+      if (root.classList && root.classList.contains('bp-still')) return;
       var end = parseFloat(m[2].replace(/,/g, '')), dec = (m[2].split('.')[1] || '').length, t0 = 0, dur = 900;
       if (!isFinite(end) || Math.abs(end) < 1) return;
       var fmt = function (v) { return m[1] + Number(dec ? v.toFixed(dec) : Math.round(v)).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[3]; };

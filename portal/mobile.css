@@ -575,7 +575,10 @@ html.bp-applock body{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #bpx .mh2-sk.ok{color:#16a34a}
 /* app feel (portal/appfeel.js): new-screen fade-up, pull to refresh, offline notice, loading skeleton */
 @keyframes bpEnter{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}
-#bpx#bpx#bpx#bpx.bp-m #bpxViewArea.bp-enter{animation:bpEnter .24s cubic-bezier(.2,0,0,1)}
+/* one fade per page on a phone: the page's own fade-in (.bpx-in) and the app feel's (.bp-enter)
+   use the same animation here, so when one class comes off the other doesn't start over from
+   blank (that made every page on a phone fade in twice) */
+#bpx#bpx#bpx#bpx.bp-m #bpxViewArea.bp-enter,#bpx#bpx#bpx#bpx.bp-m #bpxViewArea.bpx-in{animation:bpEnter .24s cubic-bezier(.2,0,0,1)}
 #bpPtr{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top));z-index:9998;width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(16,24,40,.18);display:grid;place-items:center;transform:translate(-50%,-60px);opacity:0;transition:opacity .15s;pointer-events:none}
 #bpPtr svg{color:#667085;transition:color .15s}
 #bpPtr.show{opacity:1}

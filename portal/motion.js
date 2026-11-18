@@ -69,10 +69,10 @@
     var hook = function () {
       var f = window.bpNav; if (typeof f !== 'function') return setTimeout(hook, 300); if (f._rise) return;
       var w = function (v) {
-        /* the app re-opens the same page while its data loads: only a real switch (or a
-           return after a few seconds) plays the rise again, so it never repeats on load */
+        /* the app re-opens the same page while its data loads: only a real switch of page
+           plays the rise, so it never repeats on load, however slow the data is */
         /* a live update redrawing the page (portal/live.js sets __bpQuiet) keeps it still */
-        if (!window.__bpQuiet && (v !== curV || Date.now() - riseT > 4000)) { pending = true; pendT = Date.now(); }
+        if (!window.__bpQuiet && v !== curV) { pending = true; pendT = Date.now(); }
         curV = v; var r = f.apply(this, arguments); requestAnimationFrame(function () { stagger(area); }); return r; };
       for (var k in f) if (Object.prototype.hasOwnProperty.call(f, k)) w[k] = f[k];
       w._rise = 1; window.bpNav = w;
@@ -160,6 +160,8 @@
     if (fs < 15 || (fs < 20 && !el.closest(STATBOX))) return;
     if (el.closest(SKIP)) return;
     if (view() === 'dashboard' && el.closest(DASH_OWN)) return;
+    /* a quiet redraw (live update, the dashboard's data arriving): the number just shows */
+    if (window.__bpQuiet || el.closest('.bp-still')) return;
     var key = view() + '|' + txt + '|' + ((el.parentElement && el.parentElement.textContent.trim().slice(0, 40)) || '');
     var now = performance.now(), was = seen[key];
     if (was && now - was > 900) return;          /* already counted on this visit */
@@ -218,7 +220,7 @@
   /* opening a page again plays its numbers again */
   function hookNav() {
     if (typeof window.bpNav !== 'function' || window.bpNav._cu) return setTimeout(hookNav, 500);
-    var f = window.bpNav; window.bpNav = function (v) { if (!window.__bpQuiet) seen = {}; return f.apply(this, arguments); }; window.bpNav._cu = 1;
+    var f = window.bpNav, lastV = null; window.bpNav = function (v) { if (!window.__bpQuiet && v !== lastV) seen = {}; lastV = v; return f.apply(this, arguments); }; window.bpNav._cu = 1;
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { watch(); hookNav(); }); else { watch(); hookNav(); }
 })();

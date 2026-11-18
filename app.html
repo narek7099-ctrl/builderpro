@@ -93,9 +93,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261118-20261118c">
-<link rel="stylesheet" href="site/present.css?v=20261118-20261118c">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-20261118c"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261118-20261118d">
+<link rel="stylesheet" href="site/present.css?v=20261118-20261118d">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-20261118d"}}</script>
 
 
 <style id="bpi-icons">
@@ -2845,16 +2845,19 @@ function bpSpin(on){
 }
 function bpNav(v){
   if(window.bpTeamAllows&&!bpTeamAllows(v))v=window.bpTeamHome?bpTeamHome():'dashboard';
+  /* the same page drawn again (its data arrived, a live update, a save): update it where it
+     is. Only a real switch of page shows the spinner and plays the fade, so opening the app
+     no longer fades the dashboard in two or three times as each piece of data lands. */
+  var area=document.getElementById('bpxViewArea');
+  var again=window._bpCurView===v&&!!area.firstChild;
   window._bpCurView=v;
   if(window.bpShell)bpShell.sync(v);
   else document.getElementById('bpxVtitle').textContent=BPVIEWS[v].t;
-  var area=document.getElementById('bpxViewArea');
-  bpSpin(true);
-  area.classList.remove('bpx-in');void area.offsetWidth;
-  if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); bpScrollTop(); return; }
+  if(!again){ bpSpin(true); area.classList.remove('bpx-in');void area.offsetWidth; }
+  if(bpLocked(v)){ area.innerHTML=bpUpgradeCard(v); bpSpin(false); area.classList.add('bpx-in'); if(!again)bpScrollTop(); return; }
   ({assets:function(){window.bpAssetsPage?bpAssetsPage():bpSpin(false);},crewdash:function(){window.bpCrewDash?bpCrewDash():bpSpin(false);},crewclock:window.bpCrewClock,crewhome:window.bpCrewHome,crewprojects:window.bpCrewProjects,crewid:window.bpCrewId,crewmsgs:function(){window.bpCrewMsgs?bpCrewMsgs():bpSpin(false);},subjobs:function(){window.bpSubJobs?bpSubJobs():bpSpin(false);},subinvoices:function(){window.bpSubInvoices?bpSubInvoices():bpSpin(false);},subchanges:function(){window.bpSubChanges?bpSubChanges():bpSpin(false);},subcomply:function(){window.bpSubComply?bpSubComply():bpSpin(false);},subcompany:function(){window.bpSubCompany?bpSubCompany():bpSpin(false);},subs:function(){window.bpSubsPage?bpSubsPage():bpSpin(false);},quote:function(){window.bpQuotePage?bpQuotePage():bpSpin(false);},invoicebuilder:function(){window.bpInvoicePage?bpInvoicePage():bpSpin(false);},routing:function(){var j=bpJobsGet();bpJobMapView(j.filter(function(x){return x.status==='active';}),j.filter(function(x){return x.status==='done';}));},teamchat:function(){window.bpTeamChat?bpTeamChat():bpSpin(false);},dashboard:bpDashboard,messaging:bpMessaging,email:bpEmailPage,contacts:bpContacts,calendar:bpCalendar,closedeals:bpCloseDeals,activejobs:bpActiveJobs,employees:bpEmployees,installations:function(){window.bpInstalls?bpInstalls():bpSpin(false);},finances:bpFinOverview,invoices:bpFinInvoices,estimates:bpFinEstimates,ledger:bpFinLedger,finarchive:function(){window.bpFinArchive?bpFinArchive():bpSpin(false);},payouts:bpPayouts,quickbooks:function(){window.bpQuickBooks?bpQuickBooks():bpSpin(false);},checks:function(){window.bpChecks?bpChecks():bpSpin(false);},website:function(){window.bpWebsite?bpWebsite():bpSpin(false);},connections:function(){window.bpWebConnections?bpWebConnections():bpSpin(false);},leadsources:bpLeadSources,automations:function(){window.bpAutomations?bpAutomations():bpSpin(false);},marketing:bpMarketing,social:bpSocial,competitors:bpCompetitors,supply:bpSupply,supplyorders:bpSupplyOrders,suppliers:bpSuppliers,matlists:function(){window.bpMatLists?bpMatLists():bpSpin(false);},receipts:function(){window.bpReceiptsPage?bpReceiptsPage():bpSpin(false);},prices:function(){window.bpPrices?bpPrices():bpSpin(false);},mattemplates:function(){window.bpMatTemplates?bpMatTemplates():bpSpin(false);},reputation:bpReputation,calculator:bpCalculator,customize:bpCustomizeView,ai:bpAiView,settings:bpSettings,aiteam:function(){window.bpAiTeam?bpAiTeam():bpSpin(false);}}[v])();
   area.classList.add('bpx-in');
-  bpScrollTop();
+  if(!again)bpScrollTop();
 }
 /* Opening a page puts you at the top of it. Which element actually scrolls
    depends on the width — the main column inside the shell on a desktop, the
@@ -14713,7 +14716,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261114a">
 <link rel="stylesheet" href="portal/progress.css?v=20261114b">
 <link rel="stylesheet" href="portal/supply.css?v=20261114a">
-<link rel="stylesheet" href="portal/dash.css?v=20261118a">
+<link rel="stylesheet" href="portal/dash.css?v=20261118d">
 <link rel="stylesheet" href="portal/team.css?v=20261114a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261108a">
 <script src="portal/team.js?v=20261115a"></script>
@@ -14734,7 +14737,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261116a"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261114a">
 <script src="portal/prices.js?v=20260930b"></script>
-<script src="portal/dash.js?v=20261118a"></script>
+<script src="portal/dash.js?v=20261118d"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
@@ -14769,11 +14772,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261114a"></script>
 <script src="portal/website.js?v=20261114a"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261118-20261118c"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261118-20261118c"></script>
-<script src="site/vendor/SplitText.min.js?v=20261118-20261118c"></script>
-<script src="site/site.js?v=20261118-20261118c"></script>
-<script src="site/present.js?v=20261118-20261118c"></script>
+<script src="site/vendor/gsap.min.js?v=20261118-20261118d"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261118-20261118d"></script>
+<script src="site/vendor/SplitText.min.js?v=20261118-20261118d"></script>
+<script src="site/site.js?v=20261118-20261118d"></script>
+<script src="site/present.js?v=20261118-20261118d"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261001a">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261114a">
@@ -14789,11 +14792,11 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261114a">
 <link rel="stylesheet" href="portal/shell.css?v=20261117a">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261116a">
+<link rel="stylesheet" href="portal/mobile.css?v=20261118d">
 <link rel="stylesheet" href="portal/notify.css?v=20261114a">
 <script src="portal/ui-kit.js?v=20261024q36"></script>
 <script src="portal/slidetabs.js?v=20261117a"></script>
-<script src="portal/motion.js?v=20261118a"></script>
+<script src="portal/motion.js?v=20261118d"></script>
 <script src="portal/shell.js?v=20261109a"></script>
 <script src="portal/mobile.js?v=20261108a"></script>
 <script src="portal/appfeel.js?v=20261116a"></script>
