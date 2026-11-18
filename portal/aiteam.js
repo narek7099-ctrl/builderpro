@@ -289,7 +289,9 @@
       /* the map, the main part, and the picked assistant beside it */
       '.aim-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}',
       '#bpx#bpx#bpx#bpx .aim-grid>.bpx-panel,#bpx#bpx#bpx#bpx .aim>.bpx-panel{margin:0!important}#bpx#bpx#bpx#bpx .aim>.aim-list{margin-top:14px!important}',
-      '.aim-map{position:relative;padding:0!important;overflow:hidden;height:clamp(440px,calc(100vh - 270px),660px)}',
+      '.aim-map{scroll-margin-top:84px;position:relative;padding:0!important;overflow:hidden;height:clamp(460px,calc(100vh - 200px),720px)}',
+      '.aim-bar .aim-q{min-width:200px;padding:0 9px;border-radius:10px;box-shadow:0 2px 8px -6px rgba(0,21,48,.3)}',
+      '.aim-pri{background:var(--bl);border-color:var(--bl);color:#fff}.aim-pri:hover{background:#0050c8;border-color:#0050c8}',
       '.aim-map:before{content:"";position:absolute;inset:0;background-image:radial-gradient(var(--ln) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent);mask-image:radial-gradient(70% 70% at 50% 50%,#000,transparent);pointer-events:none;opacity:.8}',
       '.aim-map svg{position:absolute;inset:0;width:100%;height:100%}',
       '.aim-bar{position:absolute;left:14px;right:14px;top:12px;display:flex;align-items:center;gap:8px;z-index:2;pointer-events:none}',
@@ -339,7 +341,7 @@
       '.aim-tn{text-align:center;color:var(--ink);font-variant-numeric:tabular-nums}.aim-tn.z{color:var(--mu2)}',
       '.aim-empty{padding:18px;text-align:center;color:var(--mu)}',
       '@media(max-width:1200px){.aim-grid{grid-template-columns:minmax(0,1fr)}.aim-det{position:static}.aim-pane{max-height:none}.aim-r{grid-template-columns:minmax(140px,1.3fr) minmax(120px,1fr) 44px 96px}.aim-g{display:none}}',
-      '@media(max-width:700px){.aim-map{height:660px}.aim-crumb span.t{display:none}.aim-q{min-width:0;flex:1 1 100%}.aim-sp{display:none}.aim-r{grid-template-columns:minmax(0,1fr) auto}.aim-rh{display:none}.aim-r .aim-ic{grid-column:1;padding-left:40px}.aim-tn{display:none}.aim-r .aim-st{grid-row:1;grid-column:2}.aim-leg{display:none}}',
+      '@media(max-width:700px){.aim-map{height:660px}.aim-crumb span.t,.aim-btn .t2{display:none}.aim-bar .aim-q{min-width:0;flex:1}.aim-bar .aim-crumb{display:none}.aim-q{min-width:0;flex:1 1 100%}.aim-sp{display:none}.aim-r{grid-template-columns:minmax(0,1fr) auto}.aim-rh{display:none}.aim-r .aim-ic{grid-column:1;padding-left:40px}.aim-tn{display:none}.aim-r .aim-st{grid-row:1;grid-column:2}.aim-leg{display:none}}',
       '@media (prefers-reduced-motion:reduce){.aim-in{animation:none}}'
     ].join('\n');
     document.head.appendChild(c);
@@ -443,8 +445,10 @@
   function mapHtml() {
     var f = !!A.focus, k = A.sel;
     return '<div class="aim-bar">' + (f ? '<button type="button" class="aim-btn" data-team="1"><span class="ms">arrow_back</span>Whole team</button><span class="aim-crumb">Team <span class="ms" style="font-size:15px">chevron_right</span><b>' + esc(AG[k].n) + '</b></span>'
-      + '<span class="aim-sp" style="flex:1"></span><button type="button" class="aim-btn" data-step="-1" aria-label="Previous"><span class="ms">chevron_left</span></button><button type="button" class="aim-btn" data-step="1" aria-label="Next"><span class="ms">chevron_right</span></button>'
-      : '<span class="aim-crumb"><b>Your team</b><span class="t">&nbsp;· tap anyone to see what they work from</span></span>') + '</div>'
+      + '<span style="flex:1"></span><button type="button" class="aim-btn aim-pri" data-chat="1"><span class="ms">chat</span><span class="t2">Chat with ' + esc(AG[k].n) + '</span></button><button type="button" class="aim-btn" data-give="1"><span class="ms">add_task</span><span class="t2">Task</span></button>'
+      + '<button type="button" class="aim-btn" data-step="-1" aria-label="Previous"><span class="ms">chevron_left</span></button><button type="button" class="aim-btn" data-step="1" aria-label="Next"><span class="ms">chevron_right</span></button>'
+      : '<span class="aim-crumb"><b>Your team</b><span class="t">&nbsp;· tap anyone to see what they work from</span></span><span style="flex:1"></span>'
+        + '<label class="aim-q"><span class="ms">search</span><input id="aimQ" placeholder="Search your team" value="' + esc(A.q || '') + '" autocomplete="off"></label>') + '</div>'
       + '<svg id="aimSvg" aria-label="' + (f ? 'What ' + esc(AG[k].n) + ' is connected to' : 'Your AI team') + '"></svg>'
       + '<div class="aim-leg">' + (f ? '<span><i style="background:#006fff"></i>Tools</span><span><i style="background:#7fb0ff"></i>Pages it reads</span><span><i style="background:#16C79A"></i>The web</span>'
         : '<span><i style="background:#16C79A"></i>Ready</span><span><i style="background:#006fff"></i>Working</span><span><i style="background:#9aa6b6"></i>Queued</span><span><i style="background:#0970F7"></i>Needs you</span>') + '</div>';
@@ -501,13 +505,16 @@
   }
   function pick(k, focus) {
     A.sel = k; if (focus) A.focus = true;
-    var m = $('aimMap'); if (m) { m.innerHTML = mapHtml(); drawSvg(); wireMap(); }
+    var m = $('aimMap'); if (m) { m.innerHTML = mapHtml(); drawSvg(); wireMap(); if (focus && m.getBoundingClientRect().top < 0) m.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     var d = $('aimDet'); if (d) { d.innerHTML = detHtml(); wireDet(); }
     var l = $('aimList'); if (l) { l.innerHTML = listHtml(); wireList(); }
   }
   function chatWith(k, text) { A.tab = 'chat'; A.agent = k; A.thread = null; draw(); if (text) setTimeout(function () { var i = $('aiIn'); if (i) { i.value = text; if (i.bpFit) i.bpFit(); i.focus(); } }, 400); }
   function wireMap() {
     var m = $('aimMap'); if (!m) return;
+    m.querySelectorAll('[data-chat]').forEach(function (b) { b.onclick = function () { chatWith(A.sel); }; });
+    m.querySelectorAll('[data-give]').forEach(function (b) { b.onclick = function () { var k = A.sel; A.tab = 'tasks'; draw(); setTimeout(function () { var w = $('tkWho'); if (w && k !== 'ceo') w.value = k; var t = $('tkT'); if (t) t.focus(); }, 60); }; });
+    var q = $('aimQ'); if (q) q.oninput = function () { A.q = q.value; refilter(); };
     m.querySelectorAll('[data-team]').forEach(function (b) { b.onclick = function () { A.focus = false; pick(A.sel, false); }; });
     m.querySelectorAll('[data-step]').forEach(function (b) { b.onclick = function () { var i = ORDER.indexOf(A.sel) + (+b.getAttribute('data-step')); pick(ORDER[(i + ORDER.length) % ORDER.length], true); }; });
   }
@@ -531,20 +538,14 @@
     aicCss(); boardCss();
     if (!A.sel || !AG[A.sel]) A.sel = 'ceo';
     var b = $('aiBody');
-    b.innerHTML = '<div class="aim" id="aim"><div id="aimTop">' + topHtml() + '</div><div class="aim-grid"><div class="bpx-panel aim-map" id="aimMap">' + mapHtml() + '</div><div class="bpx-panel aim-det" id="aimDet">' + detHtml() + '</div></div>'
+    /* the map is the page (2026-11-18): no counts row, no group buttons, no side card */
+    A.flt = 'all'; A.grp = 'all';
+    b.innerHTML = '<div class="aim" id="aim"><div class="bpx-panel aim-map" id="aimMap">' + mapHtml() + '</div>'
       + '<div class="bpx-panel aim-list" id="aimList">' + listHtml() + '</div></div>';
-    drawSvg(); wireMap(); wireDet(); wireList();
-    var top = $('aimTop');
-    top.querySelectorAll('[data-f]').forEach(function (x) { x.onclick = function () { A.flt = x.getAttribute('data-f'); top.querySelectorAll('[data-f]').forEach(function (y) { y.classList.toggle('on', y === x); }); refilter(); }; });
-    top.querySelectorAll('[data-go]').forEach(function (x) { x.onclick = function () { A.tab = x.getAttribute('data-go'); draw(); }; });
-    top.querySelectorAll('[data-g]').forEach(function (x) { x.onclick = function () { A.grp = x.getAttribute('data-g'); top.querySelectorAll('[data-g]').forEach(function (y) { y.classList.toggle('on', y === x); }); refilter(); }; });
-    var q = $('aimQ'); if (q) q.oninput = function () { A.q = q.value; refilter(); };
+    drawSvg(); wireMap(); wireList();
     /* the map is drawn to its box: draw it again when the box changes size (rotation, sidebar) */
     if (!window.__aimRs) { window.__aimRs = 1; var t = 0; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { var m = $('aimMap'); if (m && Math.abs((m._w || 0) - m.clientWidth) > 8) drawSvg(); }, 150); }); }
-    api({ op: 'tasks' }).then(function (r) {
-      if (!r || !r.ok || A.tab !== 'board' || !$('aimDet')) return;
-      A.tk = r.data || []; var d = $('aimDet'); d.innerHTML = detHtml(); wireDet();
-    });
+    api({ op: 'tasks' }).then(function (r) { if (r && r.ok) A.tk = r.data || []; });
   }
 
   function pitch(host) {

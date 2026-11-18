@@ -675,7 +675,7 @@
         var p0 = pts[ci - 1] || pts[ci], p1 = pts[ci], p2 = pts[ci + 1], p3 = pts[ci + 2] || p2;
         d += ' C' + f1(p1[0] + (p2[0] - p0[0]) / 6) + ' ' + f1(p1[1] + (p2[1] - p0[1]) / 6) + ' ' + f1(p2[0] - (p3[0] - p1[0]) / 6) + ' ' + f1(p2[1] - (p3[1] - p1[1]) / 6) + ' ' + f1(p2[0]) + ' ' + f1(p2[1]);
       }
-      out = '<path class="cb-area" d="' + d + ' L90 46 L6 46Z"/><path class="cb-line' + (o.neg ? ' neg' : '') + '" pathLength="100" d="' + d + '"/><circle class="cb-dot" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3.6"/>';
+      out = '<path class="cb-area' + (o.mint ? ' mint' : '') + '" d="' + d + ' L90 46 L6 46Z"/><path class="cb-line' + (o.neg ? ' neg' : '') + (o.mint ? ' mint' : '') + '" pathLength="100" d="' + d + '"/><circle class="cb-dot' + (o.mint ? ' mint' : '') + '" cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3.6"/>';
     }
     var data = (JSON.stringify(pts.map(function (p) { return [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, String(p[2]), String(p[3])]; }))).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     return '<svg class="cb-svg" viewBox="0 0 96 48" aria-hidden="true" data-pts="' + data + '" data-kind="' + (kind || 'line') + '">' + out + '<line class="cb-guide" x1="0" x2="0" y1="2" y2="46"/></svg><div class="cb-tip" hidden></div>';
@@ -708,11 +708,14 @@
     if (!Array.isArray(D.leadRows)) return statCard('New leads', 'person_add', D.leads ? String(D.leads.n) : '&mdash;', D.leads ? 'this month' : 'not connected yet', D.leads ? 'contacts' : 'marketing', 'See leads');
     var rows = D.leadRows, one = function () { return 1; }, at = function (t) { return t; };
     var vals = bpChart.byBuckets(rows, P.buckets, at, one).values;
+    /* the leads adding up through the period, as a mint line that climbs to the total (2026-11-18:
+       the thin bars read as dashes when most months were quiet) */
+    var run = 0, cum = vals.map(function (v) { run += v; return run; });
     var cur = rows.filter(function (t) { return inP(t, P.start, P.end); }).length, prev = rows.filter(function (t) { return inP(t, P.pStart, P.pEnd); }).length;
     var dlt = bpChart.delta(prev, cur, { vs: P.vs });
     var vs = String(P.vs || '').replace('the 6 months before', 'prior 6 months').replace('the 12 months before', 'prior year');
     return '<div class="bpx-panel db-st cb" onclick="bpNav(\'contacts\')"><div class="cb-top"><span class="db-kl">New leads</span>'
-      + '<div class="cb-viz" onclick="event.stopPropagation()">' + miniViz(vals, 'thin', { labels: M.labels, fmt: function (v) { return v + (v === 1 ? ' lead' : ' leads'); } }) + '</div></div>'
+      + '<div class="cb-viz" onclick="event.stopPropagation()">' + miniViz(cum, 'line', { mint: true, labels: M.labels, fmt: function (v) { return v + (v === 1 ? ' lead' : ' leads') + ' so far'; } }) + '</div></div>'
       + '<div class="db-kv">' + cur.toLocaleString() + '</div>'
       + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(vs) + '</span>' : '<span>' + P.word + '</span>') + '</div>'
       + '<div class="cb-foot"><span>See leads</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
