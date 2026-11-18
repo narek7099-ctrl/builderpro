@@ -470,7 +470,9 @@
     if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ms">' + (geo ? 'my_location' : 'hourglass_top') + '</span><span>' + (geo ? 'Checking your location…' : 'Saving…') + '</span>'; }
     (geo ? where() : Promise.resolve(null)).then(function (pos) {
       var dist = null, onSite = null;
-      if (pos && job && job.geo && isFinite(job.geo.lat)) { dist = Math.round(metres(pos, job.geo)); onSite = dist <= Math.max(ONSITE_M, pos.acc || 0); }
+      /* a point found for an older address is not this job's spot: no on-site check rather than a wrong one */
+      var gOk = job && job.geo && isFinite(job.geo.lat) && (!job.geo.addr || !job.addr || job.geo.addr === job.addr);
+      if (pos && gOk) { dist = Math.round(metres(pos, job.geo)); onSite = dist <= Math.max(ONSITE_M, pos.acc || 0); }
       return Promise.resolve(BP_SB.rpc('crew_clock', {
         p_kind: kind, p_job: jobId, p_job_name: job ? jobLabel(job) : '',
         p_lat: pos ? pos.lat : null, p_lng: pos ? pos.lng : null, p_acc: pos ? pos.acc : null, p_dist: dist, p_on_site: onSite
