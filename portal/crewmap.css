@@ -1,0 +1,120 @@
+/* Crew map (portal/crewmap.js): a full map, Google Maps style, with a floating
+   search-and-list panel on a computer and a sheet under the map on a phone.
+   Theme: blue #006fff, navy #001530, mint #16C79A for "on site". */
+#bpx .cmx{position:relative;margin:4px 0 0;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#eef2f6;
+  height:calc(100vh - 230px);min-height:540px;box-shadow:0 10px 30px -18px rgba(0,21,48,.35)}
+#bpx .cmx-map{position:absolute;inset:0;z-index:0;background:#eef2f6}
+#bpx .cmx-map .leaflet-container,#bpx .cmx-map.leaflet-container{font-family:inherit;background:#eef2f6}
+#bpx .cmx-loading{display:grid;place-items:center;height:100%;color:var(--grey,#667085);font-size:14px}
+
+/* the floating panel */
+#bpx .cmx-side{position:absolute;z-index:500;top:14px;left:14px;bottom:14px;width:340px;display:flex;flex-direction:column;gap:10px;padding:12px;
+  border-radius:16px;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.8);box-shadow:0 12px 32px -14px rgba(0,21,48,.4),0 2px 6px rgba(0,21,48,.06)}
+#bpx .cmx-search{display:flex;align-items:center;gap:8px;margin:0;padding:0 12px;height:44px;border-radius:999px;background:#fff;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,24,40,.05)}
+#bpx .cmx-search .ms{font-size:20px;color:var(--grey,#667085)}
+/* beats the app's general field styling (portal/shell.css, #bpx×4) */
+#bpx#bpx#bpx#bpx#bpx .cmx-search input{flex:1;min-width:0;border:0 !important;box-shadow:none !important;background:transparent !important;min-height:0 !important;height:40px;padding:0 !important;font-size:14px !important;outline:none;border-radius:0 !important}
+#bpx .cmx-chips{display:flex;gap:6px;flex-wrap:wrap}
+#bpx .cmx-chips button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;font:600 12.5px/1 inherit;cursor:pointer;min-height:0 !important}
+#bpx .cmx-chips button.on{background:#001530;border-color:#001530;color:#fff}
+#bpx .cmx-list{flex:1;min-height:0;overflow:auto;margin:0 -4px;padding:0 4px;display:flex;flex-direction:column;gap:2px}
+#bpx .cmx-row{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px !important;border:0 !important;border-radius:12px !important;background:transparent !important;text-align:left;cursor:pointer;min-height:0 !important;color:var(--ink) !important;box-shadow:none !important}
+#bpx .cmx-row:hover{background:rgba(0,111,255,.06) !important}
+#bpx .cmx-row.noloc{opacity:.75}
+#bpx .cmx-rt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#bpx .cmx-rt b{font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cmx-rt small{font-size:12px;color:var(--grey,#667085);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .cmx-tag{flex:none;font:700 11px/1 inherit;padding:5px 8px;border-radius:999px;background:#eef2f6;color:#475467}
+#bpx .cmx-tag.s-on{background:rgba(22,199,154,.14);color:#0b8a69}
+#bpx .cmx-tag.s-away,#bpx .cmx-tag.s-in{background:rgba(0,111,255,.1);color:#0057cc}
+#bpx .cmx-empty{font-size:13px;line-height:1.5;color:var(--grey,#667085);padding:10px 8px}
+#bpx .cmx-link{display:inline-block;margin-top:8px;border:0 !important;background:none !important;color:#006fff !important;font:600 13px inherit;padding:0 !important;min-height:0 !important;cursor:pointer;box-shadow:none !important}
+#bpx .cmx-sample{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.45;padding:9px 10px;border-radius:12px;background:rgba(0,111,255,.08);color:#00347a}
+#bpx .cmx-sample .ms{font-size:18px}
+#bpx .cmx-note{display:flex;gap:6px;align-items:flex-start;font-size:11.5px;line-height:1.4;color:var(--grey,#667085);padding-top:8px;border-top:1px solid var(--line)}
+#bpx .cmx-note .ms{font-size:16px}
+
+/* avatars: in the list, the cards and on the map */
+#bpx .cmx-av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:700 13px/1 inherit;color:#fff;background:#8a97ab;box-shadow:0 0 0 2px #fff,0 0 0 4px #c9d2de}
+#bpx .cmx-av.s-on{background:#16C79A;box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(22,199,154,.45)}
+#bpx .cmx-av.s-away,#bpx .cmx-av.s-in{background:#006fff;box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(0,111,255,.35)}
+#bpx .cmx-av.job{background:#001530;box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(0,21,48,.2)}
+#bpx .cmx-av .ms{font-size:18px}
+
+/* map pins */
+#bpx .cmx-pini,#bpx .cmx-jobi{background:none;border:0}
+#bpx .cmx-pin{position:relative;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#8a97ab;color:#fff;font:700 13px/1 Inter,system-ui,sans-serif;
+  border:3px solid #fff;box-shadow:0 6px 14px -4px rgba(0,21,48,.5);transition:transform .15s}
+#bpx .cmx-pin span{position:relative;z-index:1}
+#bpx .cmx-pin.s-off{background:#98a2b3;opacity:.85}
+#bpx .cmx-pin.s-on{background:#16C79A}
+#bpx .cmx-pin.s-away,#bpx .cmx-pin.s-in{background:#006fff}
+#bpx .cmx-pin.approx{border-style:dashed}
+/* a soft ring that breathes around anyone on the clock */
+#bpx .cmx-pin.s-on::after,#bpx .cmx-pin.s-away::after,#bpx .cmx-pin.s-in::after{content:"";position:absolute;inset:-9px;border-radius:50%;background:currentColor;opacity:0;animation:cmPulse 2.4s ease-out infinite}
+#bpx .cmx-pin.s-on::after{color:#16C79A}#bpx .cmx-pin.s-away::after,#bpx .cmx-pin.s-in::after{color:#006fff}
+@keyframes cmPulse{0%{transform:scale(.6);opacity:.35}100%{transform:scale(1.35);opacity:0}}
+#bpx .leaflet-marker-icon:hover .cmx-pin{transform:scale(1.08)}
+#bpx .cmx-job{position:relative;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#001530;border:3px solid #fff;box-shadow:0 6px 14px -4px rgba(0,21,48,.55);display:grid;place-items:center}
+#bpx .cmx-job .ms{transform:rotate(45deg);color:#fff;font-size:17px}
+#bpx .cmx-job.busy{background:#006fff}
+#bpx .cmx-job b{position:absolute;top:-10px;right:-10px;transform:rotate(45deg);min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#16C79A;color:#fff;font:700 11px/20px Inter,system-ui,sans-serif;text-align:center;border:2px solid #fff}
+
+/* map controls, top right */
+#bpx .cmx-ctrl{position:absolute;z-index:500;top:14px;right:14px;display:flex;gap:8px;align-items:center}
+#bpx .cmx-seg{display:inline-flex;padding:3px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 6px 18px -8px rgba(0,21,48,.4);border:1px solid rgba(255,255,255,.8)}
+#bpx .cmx-seg button{border:0 !important;background:transparent !important;color:#475467 !important;font:600 13px/1 inherit;padding:8px 14px !important;border-radius:999px !important;cursor:pointer;min-height:0 !important;box-shadow:none !important}
+#bpx .cmx-seg button.on{background:#001530 !important;color:#fff !important}
+#bpx .cmx-btn{width:40px;height:40px;min-height:0 !important;padding:0 !important;border-radius:50% !important;border:1px solid rgba(255,255,255,.8) !important;background:rgba(255,255,255,.94) !important;color:#001530 !important;display:grid !important;place-items:center;cursor:pointer;box-shadow:0 6px 18px -8px rgba(0,21,48,.4) !important}
+#bpx .cmx .leaflet-bottom.leaflet-right{margin:0 6px 6px 0}
+#bpx .cmx .leaflet-control-zoom{border:0;box-shadow:0 6px 18px -8px rgba(0,21,48,.4);border-radius:12px;overflow:hidden}
+#bpx .cmx .leaflet-control-zoom a{width:40px;height:40px;line-height:40px;color:#001530;font-size:20px}
+
+/* the card that opens from a pin */
+#bpx .cmx-pop .leaflet-popup-content-wrapper{border-radius:16px;box-shadow:0 16px 36px -14px rgba(0,21,48,.45);padding:0}
+#bpx .cmx-pop .leaflet-popup-content{margin:14px 16px;min-width:220px;font:13px/1.45 Inter,system-ui,sans-serif;color:#0b1a33}
+#bpx .cmx-card .cmx-ch{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+#bpx .cmx-card .cmx-ch b{display:block;font-size:15px;font-weight:700}
+#bpx .cmx-card .cmx-ch small{display:block;color:#667085;font-size:12px}
+#bpx .cmx-cl{display:flex;gap:6px;align-items:center;margin-top:4px}
+#bpx .cmx-cl .ms{font-size:16px;color:#667085}
+#bpx .cmx-cl.mu,#bpx .cmx-card .mu{color:#667085;font-size:12px}
+#bpx .cmx-card .ok{color:#0b8a69;font-weight:600}
+#bpx .cmx-card .warn{color:#0057cc;font-weight:600}
+#bpx .cmx-acts{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+#bpx .cmx-acts a{display:inline-flex;align-items:center;gap:5px;padding:7px 11px;border-radius:999px;background:#eef4ff;color:#0057cc;font-weight:600;font-size:12.5px;text-decoration:none}
+#bpx .cmx-acts a:hover{background:#dde9ff}
+#bpx .cmx-acts .ms{font-size:16px}
+
+/* phone and small tablet: the map on top, the list as a sheet underneath */
+@media (max-width:820px){
+  #bpx .cmx{height:auto;min-height:0;border-radius:16px;overflow:visible;background:transparent;border:0;box-shadow:none}
+  #bpx .cmx-map{position:relative;inset:auto;height:58vh;min-height:340px;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+  #bpx .cmx-side{position:relative;top:auto;left:auto;bottom:auto;width:auto;margin-top:10px;border-radius:16px;max-height:none}
+  #bpx .cmx-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}
+  #bpx .cmx-chips::-webkit-scrollbar{display:none}
+  #bpx .cmx-chips button{flex:none;white-space:nowrap}
+  #bpx .cmx-list{overflow:visible}
+  #bpx .cmx-ctrl{top:12px;right:12px}
+}
+
+/* dark mode */
+#bpx.bpx-dark .cmx,#bpx.bpx-dark .cmx-map{background:#0b1220}
+#bpx.bpx-dark .cmx-map .leaflet-tile-pane{filter:invert(1) hue-rotate(185deg) brightness(.82) contrast(.88) saturate(.55)}
+#bpx.bpx-dark .cmx.sat .cmx-map .leaflet-tile-pane{filter:brightness(.92) saturate(.9)}
+#bpx.bpx-dark .cmx-side,#bpx.bpx-dark .cmx-seg,#bpx.bpx-dark .cmx-btn{background:rgba(16,22,34,.94) !important;border-color:rgba(255,255,255,.08) !important}
+#bpx.bpx-dark .cmx-search,#bpx.bpx-dark .cmx-chips button{background:#161d2b;border-color:#2a3446;color:#e8eef8}
+#bpx.bpx-dark .cmx-chips button.on,#bpx.bpx-dark .cmx-seg button.on{background:#006fff !important;border-color:#006fff;color:#fff !important}
+#bpx.bpx-dark .cmx-seg button{color:#c3cfdf !important}
+#bpx.bpx-dark .cmx-btn{color:#e8eef8 !important}
+#bpx.bpx-dark .cmx-rt b,#bpx.bpx-dark .cmx-row{color:#e8eef8 !important}
+#bpx.bpx-dark .cmx-tag{background:#222b3c;color:#c3cfdf}
+#bpx.bpx-dark .cmx-pop .leaflet-popup-content-wrapper,#bpx.bpx-dark .cmx-pop .leaflet-popup-tip{background:#101622}
+#bpx.bpx-dark .cmx-pop .leaflet-popup-content{color:#e8eef8}
+#bpx.bpx-dark .cmx-acts a{background:#162544;color:#8fb8ff}
+#bpx.bpx-dark .cmx-sample{background:rgba(0,111,255,.16);color:#cfe0ff}
+#bpx.bpx-dark .cmx-sample a{color:#8fb8ff}
+#bpx.bpx-dark .cmx .leaflet-control-zoom a{background:#101622;color:#e8eef8;border-color:#222b3a}
+#bpx.bpx-dark .cmx-note{border-color:#222b3a}
+@media (prefers-reduced-motion:reduce){#bpx .cmx-pin::after{animation:none}}

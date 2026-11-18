@@ -139,7 +139,7 @@
       area.innerHTML = '<div class="bpx-panel"><div class="bpx-empty2">Couldn’t load your crew just now.</div></div>'; return;
     }
 
-    var tabs = [['people', 'People'], ['crews', 'Crews'], ['hours', 'Hours'], ['pay', 'Pay period']];
+    var tabs = [['people', 'People'], ['crews', 'Crews'], ['map', 'Map'], ['hours', 'Hours'], ['pay', 'Pay period']];
     area.innerHTML = '<div class="bpx-panel">'
       + '<div class="bpx-jobtabs bpx-mtabs">'
       + tabs.map(function (t) {
@@ -156,6 +156,7 @@
     var el = $('bpCrewPane'); if (!el) return;
     if (S.tab === 'people') return people(el);
     if (S.tab === 'crews') { el.innerHTML = window.bpCrewsHtml ? bpCrewsHtml(true) : ''; return; }
+    if (S.tab === 'map') { if (window.bpCrewMap) bpCrewMap(el); return; }   /* where the crew are (portal/crewmap.js) */
     if (S.tab === 'hours') return hours(el);
     return payPeriod(el);
   }
