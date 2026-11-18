@@ -54,7 +54,7 @@
     var v = window._bpCurView || ''; if (!v || typeof window.bpNav !== 'function') return;
     if (/^crew/.test(v)) { if (window.bpCrewLiveReload) bpCrewLiveReload(); return; }
     var sc = scroller(), y = sc ? sc.scrollTop : 0;
-    window.__bpQuiet = true;
+    window.__bpQuiet = true; L.redrawAt = Date.now();
     try { bpNav(v); } catch (e) {}
     /* the page may fill in over the next moment: put the scroll back after it has */
     var put = function () { if (sc) sc.scrollTop = y; };
@@ -119,5 +119,53 @@
     if (L.ch && L.hiddenAt && Date.now() - L.hiddenAt > 30000) due('*');
   });
   window.addEventListener('online', function () { if (L.ch) due('*'); });
+
+  /* ---- after a save, the open screen reloads itself (2026-11-18) ----
+     Some saves said "Saved" while the page behind them still showed the old version (the
+     page wasn't drawn again, or the server answered the reload with its copy from a moment
+     before). So after anything the person saves (portal/offline.js 'bp-saved'):
+       1. once the pop-up is closed and they aren't typing, the open page is drawn again,
+          unless the app already redrew it after the save;
+       2. pages whose data lives on the server (contacts, calendar, estimates...) are drawn
+          again a few seconds later as well, for a server that is slow to show the change.
+     Quiet like the live updates: no fade, same scroll position. Only saves that follow a tap
+     or a key press count, so the app's own background syncing never sets this off. */
+  var S = { touched: 0, savedAt: 0, drawnAt: 0, t1: 0, t2: 0, tries: 0 };
+  var LOCAL = { dashboard: 1, activejobs: 1, installations: 1, finances: 1, ledger: 1, finarchive: 1, payouts: 1, routing: 1, supplyorders: 1, matlists: 1, receipts: 1, quickbooks: 1 };
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { S.touched = Date.now(); }, true); });
+  (function watchArea() {
+    var a = document.getElementById('bpxViewArea'); if (!a) return setTimeout(watchArea, 500);
+    new MutationObserver(function (ms) { for (var i = 0; i < ms.length; i++) if (ms[i].target === a && ms[i].addedNodes.length) { S.drawnAt = Date.now(); return; } }).observe(a, { childList: true });
+  })();
+  function idle() { return !busy() && Date.now() - S.touched > 700; }
+  function afterSave() {
+    clearTimeout(S.t1);
+    if (!idle()) { if (++S.tries < 150) S.t1 = setTimeout(afterSave, 400); return; }   /* up to a minute for the pop-up to close */
+    S.tries = 0;
+    var v = window._bpCurView || ''; if (!v) return;
+    if (S.drawnAt <= S.savedAt || busyClosedRecently()) redraw();
+    clearTimeout(S.t2);
+    if (!LOCAL[v] && !/^crew/.test(v)) S.t2 = setTimeout(function later(n) {
+      n = n || 0;
+      if (window._bpCurView !== v) return;
+      if (!idle()) { if (n < 40) S.t2 = setTimeout(function () { later(n + 1); }, 500); return; }
+      redraw();
+    }, 4000);
+  }
+  /* the pop-up was open when the app redrew the page: what's behind it may be from before the save */
+  var modalShut = 0, modalWas = false;
+  (function watchModal() {
+    var bx = document.getElementById('bpx'); if (!bx) return setTimeout(watchModal, 500);
+    new MutationObserver(function () { var on = !!document.getElementById('bpx-modal'); if (modalWas && !on) modalShut = Date.now(); modalWas = on; })
+      .observe(bx, { childList: true });
+  })();
+  function busyClosedRecently() { return modalShut >= S.savedAt && S.drawnAt < modalShut; }
+  window.addEventListener('bp-saved', function () {
+    /* a save made by a redraw itself (no tap since it started) never starts another: no loops */
+    if (!document.querySelector('#bpx.open') || (window.__bpQuiet && S.touched < (L.redrawAt || 0))) return;
+    if (Date.now() - S.touched > 15000) return;   /* not something the person just did */
+    S.savedAt = Date.now(); S.tries = 0;
+    clearTimeout(S.t1); S.t1 = setTimeout(afterSave, 600);
+  });
   window.bpLive = { state: function () { return { on: !!L.ch, owner: L.owner, lost: L.lost }; }, now: function (k) { due(k || '*'); } };
 })();
