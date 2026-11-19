@@ -761,6 +761,53 @@
       + '</div>';
   }
 
+  /* ---------- the clean board (2026-11-19, after a dashboard the owner liked): flat white
+     cards, the figure big, the change against the period before in the footer, one wide
+     money chart with its own range picker, and a list of shortcuts ---------- */
+  function vsWord() { return String(P.vs || '').replace('the 6 months before', 'prior 6 months').replace('the 12 months before', 'prior year'); }
+  function rangePick() {
+    return '<select class="d4-sel" aria-label="Time range" onclick="event.stopPropagation()" onchange="BP_DASH.period(this.value)">' + PERIODS.map(function (p) {
+      return '<option value="' + p[0] + '"' + (p[0] === P.k ? ' selected' : '') + '>' + (p[0] === 'month' ? 'This month' : p[0] === '6m' ? 'Last 6 months' : 'Last 12 months') + '</option>';
+    }).join('') + '</select>';
+  }
+  function d4Foot(dlt, hint, go, link) {
+    return '<div class="d4-foot"><div class="d4-dl">' + (dlt ? dlt + '<span>vs ' + esc(vsWord()) + '</span>' : '<span>' + hint + '</span>') + '</div>'
+      + (go ? '<button class="d4-ghost" onclick="event.stopPropagation();bpNav(\'' + go + '\')">' + link + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>' : '') + '</div>';
+  }
+  /* money in, wide, with a soft wash under the line (one series, so the wash reads clean) */
+  function moneyInCard(M) {
+    var C = M.cur, any = M.inc.some(function (v) { return v; });
+    var head = '<div class="d4-h"><div><div class="d4-t">Money in</div><div class="d4-s">' + (any ? money(C.out) + ' went out, ' + (C.net >= 0 ? money(C.net) + ' kept' : money(-C.net) + ' down') : 'payments you collected') + '</div></div>'
+      + '<div class="d4-hr"><div class="d4-big">' + money(C.inc) + '</div>' + rangePick() + '</div></div>';
+    var chart = any ? bpChart.area({ x: { label: P.axis, values: M.labels }, series: [{ name: 'Money in', values: M.inc }], fmt: money, height: 200 })
+      : '<div class="d4-empty">Nothing collected ' + P.word + '. Take a payment on a job and it charts here.</div>';
+    return '<div class="bpx-panel d4-card d4-wide">' + head + chart + d4Foot(bpChart.delta(M.prev.inc, C.inc, { vs: P.vs }), P.word, 'finances', 'Finances') + '</div>';
+  }
+  /* the value of the work won, period by period, with the total at the top right */
+  function wonCard(M) {
+    var C = M.cur, any = M.wonV.some(function (v) { return v; });
+    var head = '<div class="d4-h"><div><div class="d4-t">Work won</div><div class="d4-s">what the projects you won are worth, ' + P.by + '</div></div>'
+      + '<div class="d4-hr col"><div class="d4-big">' + money(C.wonV) + '</div><div class="d4-s">' + C.won + (C.won === 1 ? ' project ' : ' projects ') + P.word + '</div></div></div>';
+    var chart = any ? bpChart.line({ x: { label: P.axis, values: M.labels }, series: [{ name: 'Work won', values: M.wonV }], fmt: money, height: 230, area: false })
+      : '<div class="d4-empty">Nothing won ' + P.word + '. Mark a project won and its price lands here.</div>';
+    return '<div class="bpx-panel d4-card">' + head + chart + d4Foot(bpChart.delta(M.prev.wonV, C.wonV, { vs: P.vs }), P.word, 'activejobs', 'Jobs') + '</div>';
+  }
+  /* the things people start from the dashboard most, one tap each */
+  function quickActions() {
+    var acts = [
+      ['request_quote', 'New estimate', 'Price a job and send it', "bpNav('estimates')", 'estimates'],
+      ['add_business', 'Add a job', 'Start a project you won', "bpNav('activejobs')", 'activejobs'],
+      ['receipt_long', 'Send an invoice', 'Bill a customer for work', 'window.bpInvOpen&&bpInvOpen()', 'finances'],
+      ['event', 'Book a visit', 'An inspection on the calendar', "window._bpApptCal='inspection';window.bpOpenBook&&bpOpenBook()", 'calendar'],
+      ['sms', 'Send a text', 'Message a customer', "bpNav('messaging');setTimeout(function(){window.bpNewTextOpen&&bpNewTextOpen()},400)", 'messaging']
+    ].filter(function (a) { return !locked(a[4]); });
+    return '<div class="bpx-panel d4-card d4-qa"><div class="d4-h"><div><div class="d4-t">Quick actions</div><div class="d4-s">Start the everyday jobs</div></div></div>'
+      + '<div class="d4-items">' + acts.map(function (a) {
+        return '<button class="d4-it" onclick="' + a[3].replace(/"/g, '&quot;') + '"><span class="d4-ic"><span class="ms">' + a[0] + '</span></span>'
+          + '<span class="d4-itx"><b>' + a[1] + '</b><small>' + a[2] + '</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>';
+      }).join('') + '</div></div>';
+  }
+
   /* ---------- the widget board: every card has a title, a kebab, one job ---------- */
   /* a page the plan leaves out never shows on the dashboard: no figures from it, no link to it */
   function locked(v) { return !!(window.bpLocked && bpLocked(v)); }
@@ -949,24 +996,23 @@
        beside the pipeline, then the marked jobs, then every other figure and
        chart right on the page (no fold). The Money in / Profit / Money out
        cards, Week pace, Needs you and This week are left out. */
-    return g([
-      [3, W(gos[2], st[2], 'hl-spk')],
-      [3, W(Array.isArray(D.leadRows) || D.leads ? 'contacts' : 'marketing', leadsCard(M), 'hl-spk')],
-      [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
-      [3, W('estimates', statCard('Quotes out', 'request_quote', String(quotesOut().n), quotesOut().v ? money(quotesOut().v) + ' quoted' : 'estimates out', 'estimates', 'See estimates'), 'hl-spk')],
-      [locked('activejobs') ? 12 : 8, W('finances', flow())],
-      [4, W('activejobs', pipeline())],
+    var noJ = locked('activejobs'), noF = locked('finances');
+    return g(top.concat([
+      [12, noF ? '' : W('finances', moneyInCard(M), 'd4-w')],
+      [6, noJ ? '' : W('activejobs', wonCard(M), 'd4-w')],
+      [noJ ? 6 : 3, noJ ? '' : W('activejobs', pipeline())],
+      [noJ ? 6 : 3, W('dashboard', quickActions(), 'd4-w')],
       [12, projects(false)],
       [3, m.avgJob], [3, m.revPer], [3, m.done], [3, m.cycle],
       [4, X.margin], [4, X.win], [4, X.billed],
       [3, m.mat], [3, m.lab], [3, m.best], [3, m.repeat],
       [8, X.bal], [4, X.kinds],
-      [4, X.owed], [4, W('finances', spendDonut(M))], [4, W('activejobs', wonCols(M))],
+      [4, X.owed], [4, W('finances', spendDonut(M))], [4, W('finances', flow())],
       [3, kpiW('Appointments', D.leads ? D.leads.a : '&mdash;', D.leads ? 'this month' : 'not connected yet', 'calendar')], [3, m.permits], [3, m.installs], [3, m.appts],
       [8, W('finances', jobsChart())],
       [4, W('activejobs', collection(M))],
       [12, W('dashboard', activity())]
-    ]);
+    ]));
   }
   D.kebab = function (btn, go) {
     if (!window.bpShell) { bpNav(go); return; }
@@ -1060,13 +1106,13 @@
     try {
       el.innerHTML = (sample ? '<div class="sp-note warn"><span class="ms">science</span>Example numbers, so you can see how it looks. Add a project or log money and this switches to your own.</div>'
         : live() ? '' : '<div class="sp-note warn"><span class="ms">science</span>Example numbers. Sign in and this shows your own.</div>')
-        + topline()
+        + '<div class="db4">' + topline()
         + (crew || !window.bpStormDash ? '' : bpStormDash())   /* a storm near past customers, waiting for a yes (portal/storm.js) */
         /* the AI CEO's briefing no longer sits on the dashboard: it already posts what it flags to the bell (portal/notify.js) */
         + cl
         + (crew
           ? projects(crew) + '<div style="margin-top:16px">' + week() + '</div>'
-          : body(layoutOf(), crew));   /* the layout is chosen under Settings > Appearance */
+          : body(layoutOf(), crew)) + '</div>';   /* the layout is chosen under Settings > Appearance */
     } finally { if (undo) undo(); }
     setTimeout(fillAll, 0);
     countUp(el);

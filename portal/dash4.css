@@ -1,0 +1,109 @@
+/* =====================================================================
+   The clean dashboard (2026-11-19). The owner picked a dashboard they
+   liked (flat white cards, a quiet label over a big figure, the change
+   against the period before in the footer, one wide chart with its own
+   range picker, a list of shortcuts). It is rebuilt here in our own
+   colours: blue #006fff, navy #001530, mint #16C79A.
+   Only the dashboard wears it (.db4, portal/dash.js). Loaded after
+   glass.css, so the ids are stacked to beat its glass cards.
+   ===================================================================== */
+
+/* every layout's half-width cards */
+#bpx#bpx#bpx#bpx .hl-c6{grid-column:span 6}
+@media (max-width:1000px){ #bpx#bpx#bpx#bpx .hl-c6{grid-column:span 12} }
+
+/* ---- flat cards: white, a hairline border, a whisper of shadow ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 :is(.bpx-panel,.dash-projs,.bpx-stat){
+  background:#fff !important;background-image:none !important;
+  border:1px solid #e3e8ef !important;border-radius:14px !important;
+  box-shadow:0 1px 2px rgba(16,24,40,.05) !important;
+  -webkit-backdrop-filter:none !important;backdrop-filter:none !important;
+  transition:border-color .2s,box-shadow .2s !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .bpx-panel .bpx-panel{box-shadow:none !important}
+@media (any-hover:hover){
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 :is(.bpx-panel,.dash-projs,.bpx-stat):hover{
+    background-position:0 0 !important;border-color:#c9d6e6 !important;box-shadow:0 1px 2px rgba(16,24,40,.05),0 6px 16px -10px rgba(0,21,48,.18) !important}
+}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .pj-card{background-image:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;
+  border:1px solid #e3e8ef !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .hl-grid{gap:14px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .hl-w > .bpx-panel{padding:18px 20px !important}
+
+/* the card menu only shows when you point at the card (it is always there on touch) */
+@media (any-hover:hover){
+  #bpx#bpx#bpx#bpx#bpx .db4 .hl-keb{opacity:0;transition:opacity .15s}
+  #bpx#bpx#bpx#bpx#bpx .db4 .hl-w:hover .hl-keb,#bpx#bpx#bpx#bpx#bpx .db4 .hl-keb:focus-visible,#bpx#bpx#bpx#bpx#bpx .db4 .hl-keb[aria-expanded="true"]{opacity:1}
+}
+
+/* ---- the four figures across the top ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .hl-w.hl-spk > .db-st.cb{padding:18px 20px 16px !important;border-radius:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kl{font-size:12.5px !important;font-weight:450 !important;color:#64748b !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kv{font-size:clamp(22px,1.7vw,27px) !important;font-weight:620 !important;letter-spacing:-.03em;color:#0b1526 !important;margin-top:10px}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-d{margin-top:12px;font-size:12px;color:#64748b}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-foot{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-top{min-height:40px}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb .cb-viz{width:84px}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb-ic{width:34px;height:34px;border-radius:9px;background:#f1f6ff;border:1px solid #e3ecfb}
+#bpx#bpx#bpx#bpx#bpx#bpx .db4 .cb-ic .ms{font-size:18px;color:#006fff}
+
+/* the change against the period before: a coloured arrow and figure, no pill */
+#bpx#bpx#bpx#bpx#bpx .db4 .bpc-delta{background:none !important;padding:0;font-size:12px;font-weight:600;gap:3px;font-variant-numeric:tabular-nums}
+
+/* ---- the wide cards: a title and a line under it on the left, the figure on the right ---- */
+#bpx .d4-card{display:flex;flex-direction:column;gap:14px;cursor:default}
+#bpx .d4-h{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-right:22px}
+#bpx .d4-t{font-size:14.5px;font-weight:600;line-height:20px;color:#0b1526}
+#bpx .d4-s{font-size:12.5px;line-height:18px;color:#64748b;margin-top:2px}
+#bpx .d4-hr{display:flex;align-items:center;gap:12px;flex-shrink:0}
+#bpx .d4-hr.col{flex-direction:column;align-items:flex-end;gap:0}
+#bpx .d4-hr.col .d4-s{text-align:right}
+#bpx .d4-big{font-size:24px;font-weight:620;letter-spacing:-.03em;line-height:1.1;color:#0b1526;font-variant-numeric:tabular-nums;white-space:nowrap}
+#bpx#bpx#bpx#bpx .d4-sel{height:32px;padding:0 30px 0 11px !important;border:1px solid #e3e8ef !important;border-radius:8px !important;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center/14px !important;
+  -webkit-appearance:none;appearance:none;font:500 12.5px/1 var(--sans) !important;color:#0b1526 !important;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.04) !important;min-height:0 !important;width:auto !important}
+#bpx#bpx#bpx#bpx .d4-sel:focus-visible{outline:2px solid #006fff;outline-offset:1px}
+#bpx .d4-empty{display:grid;place-items:center;min-height:180px;padding:20px;text-align:center;font-size:13px;color:#64748b;border:1px dashed #e3e8ef;border-radius:10px}
+#bpx .d4-card .bpc{margin:0 -4px}
+#bpx .d4-card .bpc-cap{display:none}
+#bpx .d4-card .bpc-legend{display:none}
+#bpx .d4-card .bpc-grid{stroke-dasharray:3 4}
+#bpx .d4-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:2px}
+#bpx .d4-dl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#64748b;min-width:0}
+#bpx#bpx#bpx#bpx .d4-ghost{display:inline-flex;align-items:center;gap:3px;height:28px;padding:0 6px 0 10px !important;border:0 !important;border-radius:7px !important;background:transparent !important;
+  font:500 12.5px/1 var(--sans) !important;color:#64748b !important;cursor:pointer;min-height:0 !important;box-shadow:none !important}
+#bpx#bpx#bpx#bpx .d4-ghost:hover{background:#f1f5f9 !important;color:#006fff !important}
+#bpx .d4-ghost svg,#bpx .d4-it>svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- quick actions: a list, icon, what it does, a chevron ---- */
+#bpx .d4-items{display:flex;flex-direction:column;margin:-4px -8px -6px}
+#bpx#bpx#bpx#bpx .d4-it{display:flex;align-items:center;gap:11px;width:100%;padding:8px !important;border:0 !important;border-radius:10px !important;background:transparent !important;
+  text-align:left;cursor:pointer;min-height:0 !important;box-shadow:none !important;color:#0b1526 !important;font:inherit !important}
+#bpx#bpx#bpx#bpx .d4-it:hover{background:#f4f8ff !important}
+#bpx#bpx#bpx#bpx .d4-it:focus-visible{outline:2px solid #006fff;outline-offset:-2px}
+#bpx .d4-ic{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border-radius:9px;background:#f1f6ff;border:1px solid #e3ecfb}
+#bpx .d4-ic .ms{font-size:18px;color:#006fff}
+#bpx .d4-itx{display:flex;flex-direction:column;min-width:0;flex:1}
+#bpx .d4-itx b{font-size:13px;font-weight:600;line-height:18px}
+#bpx .d4-itx small{font-size:12px;line-height:16px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx .d4-it>svg{color:#94a3b8;flex-shrink:0}
+#bpx .d4-it:hover>svg{color:#006fff}
+
+/* the pipeline in a narrow card: the ring over its list */
+#bpx#bpx#bpx#bpx#bpx .db4 .hl-c3 .bpc-donut{flex-direction:column;flex-wrap:nowrap !important;align-items:center}
+#bpx#bpx#bpx#bpx#bpx .db4 .hl-c3 .bpc-dlist{width:100%}
+
+/* the top bar of the page: quieter buttons */
+#bpx#bpx#bpx#bpx#bpx .db4 .db-greet{font-size:17px !important;letter-spacing:-.01em !important}
+
+/* ---- dark ---- */
+#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 :is(.bpx-panel,.dash-projs,.bpx-stat),
+#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .hl-w.hl-spk > .db-st.cb{background:#111824 !important;border-color:#222d3d !important;box-shadow:none !important}
+#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .db4 .pj-card{border-color:#222d3d !important}
+#bpx.bpx-dark .d4-t,#bpx.bpx-dark .d4-big,#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kv,#bpx.bpx-dark#bpx#bpx#bpx .d4-it{color:#e9eef6 !important}
+#bpx.bpx-dark .d4-s,#bpx.bpx-dark .d4-dl,#bpx.bpx-dark .d4-itx small,#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx .db4 .cb .db-kl{color:#8b9ab0 !important}
+#bpx.bpx-dark .d4-ic,#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx .db4 .cb-ic{background:#0f2340;border-color:#1c355a}
+#bpx.bpx-dark .d4-ic .ms,#bpx.bpx-dark#bpx#bpx#bpx#bpx#bpx .db4 .cb-ic .ms{color:#4b99fe}
+#bpx.bpx-dark#bpx#bpx#bpx .d4-it:hover,#bpx.bpx-dark#bpx#bpx#bpx .d4-ghost:hover{background:#17212f !important}
+#bpx.bpx-dark#bpx#bpx#bpx .d4-sel{background-color:#111824 !important;border-color:#222d3d !important;color:#e9eef6 !important}
+#bpx.bpx-dark .d4-empty{border-color:#222d3d;color:#8b9ab0}
+#bpx .d4-card .bpc-endlab{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .d4-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;background-repeat:no-repeat !important;background-position:right 9px center !important;background-size:14px !important}
