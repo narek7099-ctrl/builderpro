@@ -93,9 +93,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261119-20261119a">
-<link rel="stylesheet" href="site/present.css?v=20261119-20261119a">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261119-20261119a"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261119-20261119b">
+<link rel="stylesheet" href="site/present.css?v=20261119-20261119b">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261119-20261119b"}}</script>
 
 
 <style id="bpi-icons">
@@ -4917,17 +4917,44 @@ function bpCalUnsched(){
   };
 
 /* ==== bpOpenBook ==== */
+  /* the words a booking starts with, from the trade in Settings (it said "Roof Inspection" for everyone) */
+  window.bpTradeWords=function(){
+    var t=String(((bpSettingsGet()||{}).company||{}).trade||'').toLowerCase();
+    if(/roof/.test(t)) return {visit:'Roof inspection',job:'Roofing job'};
+    if(/hvac|heat|air|furnace/.test(t)) return {visit:'HVAC visit',job:'HVAC job'};
+    if(/plumb/.test(t)) return {visit:'Plumbing visit',job:'Plumbing job'};
+    if(/electric/.test(t)) return {visit:'Electrical visit',job:'Electrical job'};
+    if(/solar/.test(t)) return {visit:'Solar site visit',job:'Solar install'};
+    if(/paint/.test(t)) return {visit:'Painting estimate visit',job:'Painting job'};
+    if(/gutter/.test(t)) return {visit:'Gutter inspection',job:'Gutter job'};
+    if(/sid(ing|e)/.test(t)) return {visit:'Siding inspection',job:'Siding job'};
+    if(/window|door/.test(t)) return {visit:'Window & door visit',job:'Window & door job'};
+    if(/floor/.test(t)) return {visit:'Flooring estimate visit',job:'Flooring job'};
+    if(/landscap|lawn|tree/.test(t)) return {visit:'Yard visit',job:'Landscaping job'};
+    if(/pool/.test(t)) return {visit:'Pool visit',job:'Pool job'};
+    return {visit:'Site visit',job:'Job'};
+  };
+  window.bpBookFillAddr=function(id){
+    var c=null; for(var i=0;i<(_bpContacts||[]).length;i++){ if(_bpContacts[i].id===id){ c=_bpContacts[i]; break; } }
+    var a=q('bpx-bk-addr'); if(!a||!c) return;
+    var addr=[c.address1||c.address||'',c.city||''].filter(Boolean).join(', ');
+    if(addr&&(!a.value||a.dataset.auto==='1')){ a.value=addr; a.dataset.auto='1'; }
+  };
   window.bpOpenBook=async function(){
     bpModal('<h3>Book\u2026</h3><div class="bpx-sub">Loading your contacts\u2026</div>');
     var _bpLd=q('bpx-modal');
     await bpEnsureContacts();
     if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
-    var opts=''; for(var i=0;i<_bpContacts.length;i++){ opts+='<option value="'+_bpContacts[i].id+'">'+bpEsc(_bpContacts[i].name)+'</option>'; }
-    var contactSel='<label>Contact</label><select id="bpx-bk-contact" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'+(opts||'<option value="">No contacts found</option>')+'</select>';
+    /* pick who it's for (nobody picked until you do), by name; their address fills in (2026-11-19) */
+    var srt=(_bpContacts||[]).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+    var opts=''; for(var i=0;i<srt.length;i++){ opts+='<option value="'+srt[i].id+'">'+bpEsc(srt[i].name||'No name')+'</option>'; }
+    if(opts) opts='<option value="">Pick a customer…</option>'+opts;
+    var tw=bpTradeWords();
+    var contactSel='<label>Customer</label><select id="bpx-bk-contact" onchange="bpBookFillAddr(this.value)" style="width:100%;padding:.7rem .9rem;background:var(--soft);border:1px solid var(--line);border-radius:9px;color:var(--ink);font-family:inherit">'+(opts||'<option value="">No contacts found</option>')+'</select>';
     if(_bpCalKind==='jobs'){
       var d=new Date(Date.now()+86400000); var dd=bpFormatLA(d).slice(0,10);
       bpModal('<h3>Book Job</h3>'+contactSel
-        +'<label>Job Title</label><input id="bpx-bk-title" value="Roofing Job">'
+        +'<label>Job title</label><input id="bpx-bk-title" value="'+bpEsc(tw.job)+'">'
         +'<label>Address</label><input id="bpx-bk-addr" placeholder="Job site location">'
         +'<label>Date</label><input type="date" id="bpx-bk-date" value="'+dd+'">'
         +'<label>Start Time</label><input type="time" id="bpx-bk-time" value="09:00">'
@@ -4935,7 +4962,7 @@ function bpCalUnsched(){
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBookJob()">Book Job</button></div>');
     } else {
       bpModal('<h3>Book inspection</h3>'+contactSel
-        +'<label>Title</label><input id="bpx-bk-title" value="Roof Inspection">'
+        +'<label>Title</label><input id="bpx-bk-title" value="'+bpEsc(tw.visit)+'">'
         +'<label>Address</label><input id="bpx-bk-addr" placeholder="On-site location">'
         +'<div class="mdt" id="bpx-bk-slots"></div>'
         +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpDoBook()">Book</button></div>');
@@ -5054,7 +5081,7 @@ function bpCalUnsched(){
   window.bpDoBook=async function(){
     var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
     var cid=q('bpx-bk-contact').value;
-    if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a contact.'; return; }
+    if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a customer.'; return; }
     if(_bpBookManual&&q('bpx-bk-mday')){
       var md=q('bpx-bk-mday').value, mt=q('bpx-bk-mtime').value||'09:00';
       if(!md){ msg.style.color='#dc2626'; msg.textContent='Pick a day.'; return; }
@@ -5076,7 +5103,7 @@ function bpCalUnsched(){
   window.bpDoBookJob=async function(){
     var btn=q('bpx-savebtn'), msg=q('bpx-mmsg');
     var cid=q('bpx-bk-contact').value, date=q('bpx-bk-date').value, time=q('bpx-bk-time').value, dur=parseInt(q('bpx-bk-dur').value,10)||60;
-    if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a contact.'; return; }
+    if(!cid){ msg.style.color='#dc2626'; msg.textContent='Pick a customer.'; return; }
     if(!date||!time){ msg.style.color='#dc2626'; msg.textContent='Pick a date and start time.'; return; }
     var startISO=bpMkISO(date,time); var endISO=bpFormatLA(new Date(new Date(startISO).getTime()+dur*60000));
     btn.disabled=true; btn.textContent='Booking\u2026';
@@ -6763,27 +6790,37 @@ function bpPjCardsView(active,done){
     +(window.bpPlanCheckin?bpPlanCheckin():'')
     +bpPjApproved()
     +'<div class="pjk-stats">'
-      +stat('Active projects',active.length,marked.length+' marked')
+      +stat('Active projects',active.length,late?late+' behind schedule':'all on schedule')
       +stat('Contract value',bpMoneyFmt(tot),'')
       +stat('Collected',bpMoneyFmt(col),tot>0?Math.round(col/tot*100)+'% of value':'','good')
       +stat('Still owed',bpMoneyFmt(due),'','owe')
     +'</div>'
-    +'<section class="pjk-live" style="margin:16px 0 0"><div class="pjk-lh"><div><b>Crew live</b><span>Where your projects are and who is clocked in right now. Updates every minute.</span></div>'
-      +'<button class="pjk-lgo" onclick="bpNav(\'routing\')"><span class="ms">route</span>Plan routes</button></div>'
-      +'<div class="pj-map pjk-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
-      +'<div class="pjr-legend"><span><i style="background:#2457d6"></i>Project</span><span><i style="background:#16C79A"></i>Crew on site</span><span><i style="background:#0661d9"></i>Clocked in off site</span></div></section>'
-    +'<div class="ml-sec" style="margin-top:22px"><b>Marked</b><span class="bpx-mut">'+(marked.length?marked.length+' of 4 · tap Mark on a project to pin it here':'Tap Mark on up to four projects to keep them here, and first on your dashboard')+'</span></div>'
-    /* the same cards as the dashboard's Jobs in motion: photo, money, progress */
-    +(marked.length?(window.bpProjCards?'<div class="dash-projs pj-starred">'+bpProjCards(marked,!!(window.bpTeamIsCrew&&bpTeamIsCrew()))+'</div>':'<div class="pjk-grid pjk-four">'+marked.map(bpPjCard).join('')+'</div>'):'')
-    +'<div class="ml-sec" style="margin-top:22px"><b>All projects</b></div>'
+    /* the jobs first (2026-11-19): search, filters and every active job, marked ones on top;
+       the map folds away underneath (it pushed the list off the first screen) */
+    +'<div class="ml-sec" style="margin-top:22px"><b>Your jobs</b></div>'
     +'<div class="pjk-bar"><div class="pjk-search"><span class="ms">search</span><input id="pjkQ" placeholder="Search customer, job or address" value="'+bpEsc(_pjQ)+'" oninput="_pjQ=this.value;_pjP=1;bpPjGrid()"></div>'
       +'<div class="pjk-chips">'+chip('all','All',active.length)+(late?chip('late','Behind',late):'')+chip('noplan','No plan',noplan)+chip('nocrew','Nobody assigned',nocrew)+'</div></div>'
-    +'<div id="pjkGrid"></div>';
+    +'<div id="pjkGrid"></div>'
+    +'<details class="pjk-live pjk-fold" id="pjMapBox" style="margin:22px 0 0"'+(bpPjMapOpen()?' open':'')+'><summary><span class="ms">map</span><b>Map of your jobs and crew</b><span class="bpx-mut">where each job is and who’s clocked in, every minute</span><span class="ms pjk-chev">expand_more</span></summary><div class="pjk-lh"><div></div>'
+      +'<button class="pjk-lgo" onclick="bpNav(\'routing\')"><span class="ms">route</span>Plan routes</button></div>'
+      +'<div class="pj-map pjk-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div>'
+      +'<div class="pjr-legend"><span><i style="background:#2457d6"></i>Project</span><span><i style="background:#16C79A"></i>Crew on site</span><span><i style="background:#0661d9"></i>Clocked in off site</span></div></details>';
   bpPjGrid();
   var withA=active.filter(function(j){return (j.addr||'').trim();});
-  bpEnsureLeaflet(function(){ bpPjDraw(withA); });
+  window._bpPjWithA=withA;
+  var box=q('pjMapBox');
+  if(box){ box.addEventListener('toggle',function(){ try{localStorage.setItem('bpPjMap',box.open?'1':'0');}catch(e){} if(box.open) bpEnsureLeaflet(function(){ bpPjDraw(window._bpPjWithA||[]); }); }); }
+  if(bpPjMapOpen()) bpEnsureLeaflet(function(){ bpPjDraw(withA); });
 }
+function bpPjMapOpen(){ try{ return localStorage.getItem('bpPjMap')==='1'; }catch(e){ return false; } }
 /* customers who said yes but whose job hasn't started (no card deposit yet): one tap starts it */
+(function(){ if(document.getElementById('pjkFoldCss')) return; var c=document.createElement('style'); c.id='pjkFoldCss';
+  c.textContent='#bpx details.pjk-fold>summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;border:1px solid var(--line,#dce3ec);border-radius:14px;background:var(--card,#fff)}'
+    +'#bpx details.pjk-fold>summary::-webkit-details-marker{display:none}#bpx details.pjk-fold>summary .ms{color:var(--blue,#006fff)}#bpx details.pjk-fold>summary .bpx-mut{font-size:12.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    +'#bpx details.pjk-fold .pjk-chev{transition:transform .2s;color:var(--mu,#788493)!important}#bpx details.pjk-fold[open] .pjk-chev{transform:rotate(180deg)}#bpx details.pjk-fold[open]>summary{margin-bottom:10px}'
+    +'#bpx#bpx#bpx#bpx details.pjk-fold:not([open]){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}'
+    +'@media(max-width:700px){#bpx details.pjk-fold>summary .bpx-mut{display:none}}';
+  document.head.appendChild(c); })();
 function bpPjApproved(){
   var ap=window.bpJobsApproved?bpJobsApproved():[]; if(!ap.length) return '';
   if(!document.getElementById('pja-css')){ var st=document.createElement('style'); st.id='pja-css';
@@ -6811,9 +6848,9 @@ window.bpPjGrid=function(){
   var g=q('pjkGrid'); if(!g) return;
   var t=_pjQ.trim().toLowerCase();
   var act=bpJobsGet().filter(function(j){ return j.status==='active'; });
-  var marked={}; act.filter(function(j){return j.starred;}).slice(0,4).forEach(function(j){marked[j.id]=1;});
+  var marked={};
+  act=act.slice().sort(function(a,b){ return (b.starred?1:0)-(a.starred?1:0); });
   var list=act.filter(function(j){
-    if(marked[j.id]) return false;
     if(t&&(String(j.name||'')+' '+(j.title||'')+' '+(j.addr||'')).toLowerCase().indexOf(t)<0) return false;
     var k=pjKState(j);
     return _pjF==='all'||_pjF==='starred'||(_pjF==='late'&&k.late)||(_pjF==='noplan'&&k.noplan)||(_pjF==='nocrew'&&k.nocrew);
@@ -8283,7 +8320,7 @@ function bpFinances(){
     +vp('estimates',
       '<div id="bpxQbSheets"></div><div class="bpx-panel"><div class="bpx-ptitle">Sent to customers<span class="lg2">they can approve and sign from their phone</span></div>'
       +'<div class="bpx-chead" style="margin-bottom:10px"><span class="bpx-mut" id="bpxEstCount" style="font-size:12.5px"></span></div>'
-      +'<div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>')
+      +'<div id="bpxQbSent"></div><div id="bpxEstList" class="bpx-mut" style="font-size:13px">Loading estimates…</div></div>')
 
   bpInvLoad();
   bpEstLoad();
@@ -10326,8 +10363,8 @@ function bpEstLoad(){
 window.bpEstDraw=function(){
   var el=q('bpxEstList'); if(!el)return;
   var items=window._bpEstItems||[];
-  var cnt=q('bpxEstCount'); if(cnt)cnt.textContent=items.length?(items.length+' recent'):'';
-  if(!items.length){ el.innerHTML='<span class="bpx-mut">No estimates yet. Send your first with + New estimate.</span>'; return; }
+  var nSent=window._bpQbSentN||0, cnt=q('bpxEstCount'); if(cnt)cnt.textContent=(items.length+nSent)?((items.length+nSent)+' sent'):'';
+  if(!items.length){ el.innerHTML=nSent?'':'<span class="bpx-mut">No estimates sent yet. Send your first with + New estimate.</span>'; return; }
   var pg=bpPage('estimates',items,5,'bpEstDraw()');
   var stc={accepted:'#087F61',sent:'#2457d6',draft:'#6a6a70',declined:'#0853B5',invoiced:'#3a76ed',expired:'#9a9aa0'};
   el.innerHTML=bpEstCharts()+'<table class="bpx-ctable"><thead><tr><th>Estimate</th><th>Customer</th><th>Expires</th><th>Status</th><th class="bpx-r">Amount</th></tr></thead><tbody>'
@@ -11570,7 +11607,7 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 #bpSign .hp-chip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;border-radius:99px;padding:2px 8px;background:var(--hp-soft);color:var(--hp-ink2);white-space:nowrap;flex-shrink:0;}
 #bpSign .hp-chip.ok{background:#E8F9F4;color:#087F61;}
 #bpSign .hp-chip.now{background:var(--hp-bluesoft);color:var(--hp-blue2);}
-#bpSign .hp-chip.bad{background:#fef2f2;color:#0853B5;}
+#bpSign .hp-chip.bad{background:#EBF4FF;color:#0853B5;}
 #bpSign .hp-chip.warn{background:#e0edff;color:#0046a1;}
 #bpSign .hp-bad{color:#0853B5;font-weight:600;}
 #bpSign .hp-sc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
@@ -11728,18 +11765,18 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 .bpx-cp-ins{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
 .bpx-cp-card{display:flex;gap:13px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
 .bpx-cp-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
-.bpx-cp-card.gap .bpx-cp-ico{background:#fff1f2;color:#0853B5;}
+.bpx-cp-card.gap .bpx-cp-ico{background:#EBF4FF;color:#0853B5;}
 .bpx-cp-card.win .bpx-cp-ico{background:#E8F9F4;color:#047857;}
 .bpx-cp-card.warn .bpx-cp-ico{background:#edf5ff;color:#0c5bc2;}
 .bpx-cp-card.info .bpx-cp-ico{background:#eef3ff;color:#1b56ee;}
 #bpx.bpx-dark .bpx-cp-card,#bpx.bpx-dark .bpx-inp{background:#151b26;border-color:#232c3a;color:#e6e9ef;}
 /* social media */
 .bpx-badge.ok{background:#E8F9F4;color:#047857;}
-.bpx-badge.bad{background:#fff1f2;color:#0853B5;}
+.bpx-badge.bad{background:#EBF4FF;color:#0853B5;}
 .bpx-so-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--c,#64748b) 12%,#fff);color:var(--c,#64748b);white-space:nowrap;}
 .bpx-so-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c,#64748b);}
 .bpx-so-chip.ok{background:#E8F9F4;color:#047857;}.bpx-so-chip.ok::before{background:#10b981;}
-.bpx-so-chip.bad{background:#fff1f2;color:#0853B5;}.bpx-so-chip.bad::before{background:#0970F7;}
+.bpx-so-chip.bad{background:#EBF4FF;color:#0853B5;}.bpx-so-chip.bad::before{background:#0970F7;}
 .bpx-so-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
 .bpx-so-acct-h{display:flex;align-items:center;margin-bottom:12px;}
 .bpx-so-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -14756,7 +14793,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/charts.css?v=20261118f">
 <link rel="stylesheet" href="portal/progress.css?v=20261118f">
 <link rel="stylesheet" href="portal/supply.css?v=20261118f">
-<link rel="stylesheet" href="portal/dash.css?v=20261118i">
+<link rel="stylesheet" href="portal/dash.css?v=20261119b">
 <link rel="stylesheet" href="portal/team.css?v=20261114a">
 <link rel="stylesheet" href="portal/teamchat.css?v=20261118f">
 <script src="portal/team.js?v=20261115a"></script>
@@ -14773,11 +14810,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/autopause.js?v=20261114a"></script>
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20261024q36"></script>
-<script src="portal/matlists.js?v=20261118f"></script>
-<script src="portal/quote.js?v=20261116a"></script>
+<script src="portal/matlists.js?v=20261119b"></script>
+<script src="portal/quote.js?v=20261119b"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261118f">
 <script src="portal/prices.js?v=20261118f"></script>
-<script src="portal/dash.js?v=20261119a"></script>
+<script src="portal/dash.js?v=20261119b"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
@@ -14812,11 +14849,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/checks.js?v=20261119a"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261119-20261119a"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261119-20261119a"></script>
-<script src="site/vendor/SplitText.min.js?v=20261119-20261119a"></script>
-<script src="site/site.js?v=20261119-20261119a"></script>
-<script src="site/present.js?v=20261119-20261119a"></script>
+<script src="site/vendor/gsap.min.js?v=20261119-20261119b"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261119-20261119b"></script>
+<script src="site/vendor/SplitText.min.js?v=20261119-20261119b"></script>
+<script src="site/site.js?v=20261119-20261119b"></script>
+<script src="site/present.js?v=20261119-20261119b"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261118f">
@@ -14825,15 +14862,15 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/crewapp.css?v=20261118f">
 <link rel="stylesheet" href="portal/motion.css?v=20261118f">
 <link rel="stylesheet" href="portal/subapp.css?v=20261118f">
-<link rel="stylesheet" href="portal/custportal.css?v=20261118f">
+<link rel="stylesheet" href="portal/custportal.css?v=20261119b">
 <link rel="stylesheet" href="portal/bpedit.css?v=20261118f">
 <link rel="stylesheet" href="portal/tools-share.css?v=20261114a">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="portal/theme-hl.css?v=20261118f">
 <link rel="stylesheet" href="portal/shell.css?v=20261118j">
 <link rel="stylesheet" href="portal/redesign.css?v=20261021d">
-<link rel="stylesheet" href="portal/mobile.css?v=20261118f">
-<link rel="stylesheet" href="portal/notify.css?v=20261118f">
+<link rel="stylesheet" href="portal/mobile.css?v=20261119b">
+<link rel="stylesheet" href="portal/notify.css?v=20261119b">
 <script src="portal/ui-kit.js?v=20261118f"></script>
 <script src="portal/slidetabs.js?v=20261117a"></script>
 <script src="portal/motion.js?v=20261118f"></script>
