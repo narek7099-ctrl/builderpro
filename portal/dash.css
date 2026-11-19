@@ -1027,7 +1027,7 @@
 .pjk-star.on{color:#016bf5}.pjk-star.on .ms{font-variation-settings:'FILL' 1}
 .pjk-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:22px}
 .pjk-tag{font-size:11px;font-weight:650;padding:3px 9px;border-radius:999px;background:#f1f3f7;color:#4b5563}
-.pjk-tag.on{background:#eef3ff;color:#1b56ee}.pjk-tag.late{background:#fff1f2;color:#0853B5}.pjk-tag.ok{background:#E8F9F4;color:#047857}
+.pjk-tag.on{background:#eef3ff;color:#1b56ee}.pjk-tag.late{background:#0970F7;color:#fff}.pjk-tag.ok{background:#E8F9F4;color:#047857}
 .pjk-money{display:flex;flex-direction:column;gap:7px}
 .pjk-money b{font-size:19px;font-weight:700;color:#0b1220;font-variant-numeric:tabular-nums;margin-right:8px}
 .pjk-money span{font-size:12px;color:#6b7280}

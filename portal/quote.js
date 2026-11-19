@@ -1187,10 +1187,19 @@
   window.bpQbSheets = function () {
     var el = $('bpxQbSheets'); if (!el) return;
     Q.syncOpts();
-    var list = jobs().filter(function (j) { return j && j.status === 'quote' && !j.sample && hasWork(j); }).sort(function (a, b) { return ((b.quote || {}).sentAt || b.createdAt || 0) - ((a.quote || {}).sentAt || a.createdAt || 0); });
+    var all = jobs().filter(function (j) { return j && j.status === 'quote' && !j.sample && hasWork(j); }).sort(function (a, b) { return ((b.quote || {}).sentAt || b.createdAt || 0) - ((a.quote || {}).sentAt || a.createdAt || 0); });
+    /* one estimate, one place (2026-11-19): not sent yet under Drafts, sent under "Sent to customers"
+       (it used to sit under Drafts with a Sent badge while Sent to customers said there were none) */
+    var list = all.filter(function (j) { return !(j.quote || {}).estId; }), sent = all.filter(function (j) { return !!(j.quote || {}).estId; });
+    var sentHost = document.getElementById('bpxQbSent');
+    if (sentHost) sentHost.innerHTML = sent.length ? '<div class="pjl" style="margin-bottom:10px">' + sent.map(row).join('') + '</div>' : '';
+    window._bpQbSentN = sent.length;
+    if (window.bpEstDraw) try { bpEstDraw(); } catch (e) {}
     el.innerHTML = '<div class="bpx-panel qb-sheets"><div class="bpx-chead" style="margin-bottom:10px"><div class="bpx-ptitle" style="margin:0">Drafts<span class="lg2">estimates you’re still working on — not sent yet</span></div>'
       + '</div>'
-      + (list.length ? '<div class="pjl">' + list.map(function (j) {
+      + (list.length ? '<div class="pjl">' + list.map(row).join('') + '</div>' : '<div class="pjk-empty">No drafts. <a onclick="bpQuoteNew()">Start an estimate</a>: materials, labor and other costs with your markup, and you see the profit before you send it.</div>')
+      + '</div>';
+    function row(j) {
         var c = calc(j), q = j.quote;
         return '<div class="pjl-r qb-shr" onclick="bpQuoteOpen(\'' + j.id + '\')"><span class="pjk-av"><span class="ms">request_quote</span></span>'
           + '<div class="pjl-id"><b>' + esc(j.contactId ? j.name : 'No customer yet') + '</b><span>' + esc(j.title === 'New estimate' ? 'Untitled' : j.title) + '</span></div>'
@@ -1198,8 +1207,7 @@
           + '<div class="pjl-m"><b>' + m0(c.total) + '</b><small>' + c.margin + '% margin</small></div>'
           + '<div class="pjl-a"><button class="pjl-b" onclick="event.stopPropagation();bpQuoteOpen(\'' + j.id + '\')">Open</button>'
             + (q.estId ? '<button class="pjl-b pri" onclick="event.stopPropagation();bpInvoiceFrom(\'' + j.id + '\')">Invoice</button>' : '<button class="pjl-b qx-del" onclick="event.stopPropagation();BPQ.removeId(\'' + j.id + '\')">Delete</button>') + '</div></div>';
-      }).join('') + '</div>' : '<div class="pjk-empty">No drafts yet. <a onclick="bpQuoteNew()">Start an estimate</a>: materials, labor and other costs with your markup, and you see the profit before you send it.</div>')
-      + '</div>';
+    }
   };
 
   /* ================================================================
@@ -1319,7 +1327,8 @@
       + (ready.length ? '<div class="pjl">' + ready.map(row).join('') + '</div>'
         : '<div class="pjk-empty">Nothing to send right now. When a customer accepts an estimate, or a payment on a job comes due, its invoice shows up here ready to confirm. <a onclick="BPQ.ivSample()">See an example</a></div>')
       + (track.length ? '<div class="qb-wh">Financing and insurance <span>' + track.length + '</span></div><div class="pjl">' + track.map(trow).join('') + '</div>' : '')
-      + (waiting.length ? '<div class="qb-wh">Sent, not approved yet <span>' + waiting.length + '</span></div><div class="pjl">' + waiting.map(wrow).join('') + '</div>' : '')
+      /* estimates still waiting for a yes live on the Estimates page only (2026-11-19): listing them
+         here too made one estimate look like it was in two places */
       + '</div>';
   };
   /* the invoice exactly as the customer gets it, with the same three choices */

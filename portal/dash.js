@@ -720,6 +720,14 @@
       + '<div class="cb-d">' + (dlt ? dlt + '<span>vs ' + esc(vs) + '</span>' : '<span>' + P.word + '</span>') + '</div>'
       + '<div class="cb-foot"><span>See leads</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></div>';
   }
+  /* estimates out (2026-11-19): the ones sent from BuilderPro and waiting for a yes; the CRM's open
+     deals when nothing was sent from here (it said 0 while estimates sat sent) */
+  function quotesOut() {
+    var jl = (window.bpJobsGet && bpJobsGet()) || [], n = 0, v = 0;
+    jl.forEach(function (j) { var q = j && j.quote; if (j && !j.sample && j.status === 'quote' && q && q.estId && q.status !== 'accepted') { n++; v += +(q.sentTotal || j.estimate || 0); } });
+    if (!n && D.deals) return { n: +D.deals.n || 0, v: +D.deals.v || 0 };
+    return { n: n, v: v };
+  }
   /* the same card as the money cards, with an icon where their chart sits:
      for figures that have no month-by-month history (2026-11-14) */
   function statCard(lbl, ico, val, sub, go, see) {
@@ -917,7 +925,7 @@
       [3, W(gos[2], st[2], 'hl-spk')],
       [3, W(Array.isArray(D.leadRows) || D.leads ? 'contacts' : 'marketing', leadsCard(M), 'hl-spk')],
       [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
-      [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')]
+      [3, W('estimates', statCard('Quotes out', 'request_quote', String(quotesOut().n), quotesOut().v ? money(quotesOut().v) + ' quoted' : 'estimates out', 'estimates', 'See estimates'), 'hl-spk')]
     ];
     var noJobs = locked('activejobs');
     /* Command center (2026-11-18, on Overview's cards): the same four figures, then the money
@@ -945,7 +953,7 @@
       [3, W(gos[2], st[2], 'hl-spk')],
       [3, W(Array.isArray(D.leadRows) || D.leads ? 'contacts' : 'marketing', leadsCard(M), 'hl-spk')],
       [3, W('activejobs', statCard('Active projects', 'construction', String(X.active.n), money(X.active.v) + ' in progress', 'activejobs', 'See jobs'), 'hl-spk')],
-      [3, W('closedeals', statCard('Quotes out', 'request_quote', D.deals ? String(D.deals.n) : '0', D.deals && D.deals.v ? money(D.deals.v) + ' quoted' : 'estimates out', 'closedeals', 'See estimates'), 'hl-spk')],
+      [3, W('estimates', statCard('Quotes out', 'request_quote', String(quotesOut().n), quotesOut().v ? money(quotesOut().v) + ' quoted' : 'estimates out', 'estimates', 'See estimates'), 'hl-spk')],
       [locked('activejobs') ? 12 : 8, W('finances', flow())],
       [4, W('activejobs', pipeline())],
       [12, projects(false)],
