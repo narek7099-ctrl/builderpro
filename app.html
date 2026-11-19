@@ -93,9 +93,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261119-20261119b">
-<link rel="stylesheet" href="site/present.css?v=20261119-20261119b">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261119-20261119b"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261119-20261119c">
+<link rel="stylesheet" href="site/present.css?v=20261119-20261119c">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261119-20261119c"}}</script>
 
 
 <style id="bpi-icons">
@@ -7065,7 +7065,7 @@ window.bpCrewBookOpen=function(iso){
   bpModal('<h3>Schedule a crew</h3><div class="bpx-sub">Books the job on the calendar, on that crew’s day.</div>'
     +'<label>Job</label><select id="cb-job">'+jobs.map(function(j){return '<option value="'+j.id+'">'+bpEsc((j.name||'Project')+' — '+(j.title||''))+'</option>';}).join('')+'</select>'
     +(crews.length?'<label>Crew</label><select id="cb-crew">'+crews.map(function(c){return '<option value="'+c.id+'">'+bpEsc(c.name)+'</option>';}).join('')+'<option value="">No crew</option></select>'
-      :'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">No crews yet. Make them under <a style="color:var(--blue,#2f6bff);cursor:pointer" onclick="bpCloseModal();bpNav(\'employees\')">Employees</a>.</div>')
+      :'<div class="bpx-mut" style="font-size:12.5px;margin-top:8px">No crews yet. A crew is a team of your employees you send out together, like “Roof crew A”. Make one under <a style="color:var(--blue,#2f6bff);cursor:pointer" onclick="bpCloseModal();bpNav(\'employees\');setTimeout(function(){window.bpCrewTab&&bpCrewTab(\'crews\')},60)">Employees → Crews</a>.</div>')
     +'<label>Day</label><input type="date" id="cb-day" value="'+iso+'">'
     +'<div style="display:flex;gap:10px"><div style="flex:1"><label>Start</label><input type="time" id="cb-t" value="08:00" step="900"></div>'
     +'<div style="flex:1"><label>How long</label><select id="cb-d">'+durs.map(function(d){return '<option value="'+d[0]+'"'+(d[0]===480?' selected':'')+'>'+d[1]+'</option>';}).join('')+'</select></div></div>'
@@ -7221,7 +7221,7 @@ function bpJobMapView(active,done){
   var today=pjIso(new Date()); if(!_pjRoute.date) _pjRoute.date=today;
   var withA=active.filter(function(j){return (j.addr||'').trim();}), noA=active.filter(function(j){return !(j.addr||'').trim();});
   q('bpxViewArea').innerHTML=
-    '<div class="pjr-head"><div><h2>Smart routing</h2><p>Pick a day and a crew. BuilderPro orders the stops by the shortest drive from your shop, then hands it to Google Maps for turn-by-turn.</p></div>'
+    '<div class="pjr-head"><div><h2>Driving routes</h2><p>Pick a day and a crew. BuilderPro orders the stops by the shortest drive from your shop, then hands it to Google Maps for turn-by-turn.</p></div>'
       +'<div class="pjr-legend"><span><i style="background:#16C79A"></i>Crew on site</span><span><i style="background:#0661d9"></i>Clocked in off site</span></div></div>'
     +'<div id="pjCeoBar" class="pjm-bar"></div>'
     +'<div class="pj-mapwrap"><div class="pjm-col"><div class="pj-map" id="pjMap"><div class="bpx-tempty" style="padding:40px">Loading map…</div></div><div id="pjCeoPanel" class="pjm-panel" hidden></div></div>'
@@ -14798,7 +14798,7 @@ window.bpRepCopy=function(text,btn){
 <link rel="stylesheet" href="portal/teamchat.css?v=20261118f">
 <script src="portal/team.js?v=20261115a"></script>
 <script src="portal/lead-senders.js?v=20260925a"></script>
-<script src="portal/crew.js?v=20261118b"></script>
+<script src="portal/crew.js?v=20261119c"></script>
 <script src="portal/charts.js?v=20261106a"></script>
 <script src="portal/progress.js?v=20261110a"></script>
 <script src="portal/supply.js?v=20261114a"></script>
@@ -14810,7 +14810,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/autopause.js?v=20261114a"></script>
 <script src="portal/supply-kits.js?v=20260919cq"></script>
 <script src="portal/supply-dir.js?v=20261024q36"></script>
-<script src="portal/matlists.js?v=20261119b"></script>
+<script src="portal/matlists.js?v=20261119c"></script>
 <script src="portal/quote.js?v=20261119b"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261118f">
 <script src="portal/prices.js?v=20261118f"></script>
@@ -14835,25 +14835,25 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aiboard.js?v=20261114a"></script>
 <script src="portal/aiceo.js?v=20261118f"></script>
 <script src="portal/storm.js?v=20261114a"></script>
-<script src="portal/aiceo-map.js?v=20261119a"></script>
+<script src="portal/aiceo-map.js?v=20261119c"></script>
 <script src="portal/installs.js?v=20261118f"></script>
 <script src="portal/assets.js?v=20261118f"></script>
 <script src="portal/custlink.js?v=20261118f"></script>
 <script src="portal/estpick.js?v=20261118f"></script>
 <link rel="stylesheet" href="portal/assets.css?v=20261118f">
 <script src="portal/reviews.js?v=20261004a"></script>
-<script src="portal/automations.js?v=20261118f"></script>
+<script src="portal/automations.js?v=20261119c"></script>
 <script src="portal/aibrain.js?v=20261118f"></script>
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261114a"></script>
 <script src="portal/checks.js?v=20261119a"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261119-20261119b"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261119-20261119b"></script>
-<script src="site/vendor/SplitText.min.js?v=20261119-20261119b"></script>
-<script src="site/site.js?v=20261119-20261119b"></script>
-<script src="site/present.js?v=20261119-20261119b"></script>
+<script src="site/vendor/gsap.min.js?v=20261119-20261119c"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261119-20261119c"></script>
+<script src="site/vendor/SplitText.min.js?v=20261119-20261119c"></script>
+<script src="site/site.js?v=20261119-20261119c"></script>
+<script src="site/present.js?v=20261119-20261119c"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261118f">

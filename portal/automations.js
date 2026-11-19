@@ -94,6 +94,65 @@
   };
   var G = function (w) { return (MAP[w.id] || [1])[0]; };
   var PN = function (w) { return (MAP[w.id] || [0, ''])[1] || w.name; };
+  /* what each one does, in one plain sentence (2026-11-19): shown on top; the steps, settings
+     and CRM name fold away under "Show the steps" */
+  var SAY = {
+    '01': 'Lisa texts every new lead within a minute (8am–8pm), keeps the conversation going, and follows up twice if they don’t answer.',
+    '02': 'The moment a new lead comes in from your website, a form or a calculator, they get a text and the lead lands in your jobs.',
+    '02a': 'When someone prices a job with your website calculator, they’re saved as a lead with their price attached.',
+    '03a': 'When Lisa learns a lead needs a repair, it’s added to your jobs as a repair lead.',
+    '03b': 'When Lisa learns a lead wants a replacement, it’s added to your jobs as a replacement lead.',
+    '03c': 'When Lisa learns it’s storm or insurance damage, the lead is marked that way so you can handle the claim.',
+    '03e': 'When a lead says they need more time, Lisa stops texting and a check-in goes out later.',
+    '09': 'When a lead says they’re not interested, they stop getting messages and the lead is closed out.',
+    '13': 'When a lead replies to your first email, the conversation is handed to you.',
+    '23': 'Quote requests from Find a Pro come in as new leads and get a text right away.',
+    'S3': 'A safety net: any new contact that didn’t get a first text gets one.',
+    '04': 'When you miss a call, the caller gets a text back right away and you get a heads-up.',
+    'S4': 'When you miss a call after hours, the caller gets a text that you’ll get back to them.',
+    'S1': 'When a customer has been waiting on a reply, you get a reminder.',
+    'S2': 'When a new lead hasn’t been reached yet, you get a reminder to call them.',
+    'S5': 'When Lisa needs you to take over a conversation, you get a heads-up.',
+    '44': 'When a customer messages from their project page and nobody answers, you get a reminder.',
+    '05': 'When an inspection is booked, the customer gets a confirmation and reminders before the visit.',
+    '05b': 'When an inspection is cancelled, the customer gets a note and a way to rebook.',
+    '14': 'When a customer misses an inspection, they get a text to rebook.',
+    '20': 'Customers get reminders before job and maintenance visits.',
+    '06': 'After an inspection, you get reminded until the estimate is sent.',
+    '07': 'After you send an estimate, the customer gets two follow-ups, then you get a nudge to call them.',
+    '08': 'When a customer accepts an estimate, they get a thank-you and the job moves to won.',
+    '37': 'When a contract is signed, the customer gets a welcome with what happens next.',
+    '41': 'When a change order is waiting on the customer, they get reminders to approve it.',
+    '30': 'When a job is scheduled, the customer gets the dates.',
+    '31': 'The day before, the customer gets a text that the crew is coming.',
+    '32': 'When the crew arrives on site, the customer gets a text.',
+    '38': 'When a phase of the job is done, the customer gets a progress update.',
+    '39': 'When a job’s dates move, the customer is told the new schedule.',
+    '42': 'When a permit inspection is set, the customer gets the date.',
+    '43': 'When the job is done, the customer gets their warranty details.',
+    '51': 'When you move a crew’s job, their later jobs move with it.',
+    '10': 'When an invoice is paid, it’s marked paid and the customer gets a receipt.',
+    '15': 'When a job is marked done, the final invoice goes out.',
+    '16': 'If the final invoice isn’t paid, the customer gets reminders.',
+    '34': 'When a payment is overdue, the customer gets a reminder and you get a heads-up.',
+    '40': 'When a payment comes in, the customer gets a thank-you.',
+    '11': 'After a job, happy customers are asked for a review.',
+    '12': 'Leads that went quiet get a friendly check-in after 90 days.',
+    '19': 'When maintenance is due, the customer gets a reminder to book it.',
+    '19b': 'Starts the clock for the next maintenance reminder after each service.',
+    '33': 'When a job is done, the customer is asked for a review and a referral.',
+    '35': 'A year after the job, the customer gets a check-up offer.',
+    '36': 'After a storm, past customers in the area get a text offering an inspection.',
+    '21': 'Urgent things, like a hot lead or an upset customer, send an alert to your phone.',
+    '22': 'When a customer asks for urgent help, you get an alert.',
+    '45': 'When a job’s costs go over budget, you get a heads-up.',
+    '46': 'When a subcontractor’s insurance is about to expire, you get a heads-up.',
+    '47': 'When a crew doesn’t show up for a scheduled job, you get a heads-up.',
+    '48': 'When tomorrow’s weather could stop a job, you get a heads-up.',
+    '49': 'When materials for tomorrow’s job aren’t ready, you get a heads-up.',
+    '50': 'When a job hasn’t moved in a while, you get a heads-up.',
+    '52': 'When a storm hits near past customers, you get a heads-up so you can reach out.'
+  };
   /* these need the business number to text or take calls */
   var PHONE = { '01': 1, '02': 1, '04': 1, 'S4': 1, 'S5': 1 };
   var WF = [
@@ -444,12 +503,16 @@
       + '<button class="bpx-addbtn" id="wa-st-go">Send to past customers</button><div class="wa-st-msg" id="wa-st-msg"></div></div>'
       + (window.bpStormSettingsHtml ? bpStormSettingsHtml() : '');
     h += '</aside><main class="wa-det"><div class="wa-dh"><div class="wa-crumb">' + GN[G(w)] + '</div><div class="wa-row"><h2>' + PN(w) + '</h2><span class="wa-live ' + ch[1] + '">' + ch[0] + '</span></div>'
-      + '<div class="wa-crm">' + (w.id === '51' ? 'Built into BuilderPro' : 'Automation <b>' + w.id + ' ' + (x.name || w.name) + '</b>') + '</div>' + note
-      + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div></div>'
+      + (SAY[w.id] ? '<p class="wa-say">' + SAY[w.id] + '</p>' : '') + note + '</div>'
+      + '<details class="wa-more"' + (S.steps ? ' open' : '') + '><summary>Show the steps</summary>'
+      + '<div class="wa-crm">' + (w.id === '51' ? 'Built into BuilderPro' : 'In your CRM: <b>' + w.id + ' ' + (x.name || w.name) + '</b>') + '</div>'
+      + '<div class="wa-sets">' + (x.settings || ['Default settings']).map(function (s) { return '<span class="wa-pill">' + s + '</span>'; }).join('') + '</div>'
       + '<div class="wa-canvas"><div class="wa-stage"><div class="wa-trigs">' + x.triggers.map(trigHTML).join('') + '</div>' + merge + seq(x.steps) + '</div></div>'
       + '<div class="wa-leg"><span><i class="wa-msg"></i>Customer message</span><span><i class="wa-contact"></i>Contact / tags</span><span><i class="wa-pipe"></i>Pipeline</span><span><i class="wa-alert"></i>Alert to you</span><span><i class="wa-wait"></i>Wait</span><span><i class="wa-sys"></i>System</span><span><i class="wa-logic"></i>If / else</span></div>'
+      + '</details>'
       + '<p class="wa-foot">Texts to customers go out between 8am and 8pm in their time zone, except the after-hours missed-call reply. These run once your workspace setup is finished and your business number is live; anything still needed shows at the top.</p></main></div></div>';
     area.innerHTML = h;
+    var more = area.querySelector('.wa-more'); if (more) more.addEventListener('toggle', function () { S.steps = more.open; });
     area.querySelectorAll('[data-p]').forEach(function (b) { b.onclick = function () { S.plan = +b.getAttribute('data-p'); render(); }; });
     area.querySelectorAll('[data-fold]').forEach(function (b) { b.onclick = function () {
       var f = +b.getAttribute('data-fold'), op = !S.open[f]; S.open[f] = op ? 1 : 0;
@@ -533,6 +596,10 @@
     + '.wa-dot{font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px}.wa-dot.new{background:#E8F9F4;color:#087F61}.wa-dot.chg{background:#deebfc;color:#0c53b0}'
     + '.wa-det{display:flex;flex-direction:column;gap:12px;min-width:0}.wa-dh{background:#fff;border:1px solid #dce3ec;border-radius:16px;padding:14px 18px;display:flex;flex-direction:column;gap:8px}.wa-crumb{font-size:12px;color:#788493}.wa-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.wa-row h2{margin:0;font-size:18px;font-weight:600}'
     + '.wa-warn{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#deebfc;color:#0c53b0;font-size:11px;font-weight:700}'
+    + '.wa-say{margin:8px 0 2px;font-size:15px;line-height:1.5;color:var(--ink,#001530);max-width:62ch}'
+    + '.wa-more{margin-top:14px}.wa-more>summary{cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#006fff;list-style:none;padding:6px 0}.wa-more>summary::-webkit-details-marker{display:none}'
+    + '.wa-more>summary:after{content:"expand_more";font-family:"Material Symbols Outlined","Material Symbols Rounded";font-size:18px;transition:transform .2s}.wa-more[open]>summary:after{transform:rotate(180deg)}'
+    + '.wa-more>.wa-crm{margin:6px 0}'
     + '.wa-crm{font-size:12.5px;color:#788493}.wa-crm b{font-weight:500;color:#56657a}.wa-note.warn{background:#deebfc;border-left-color:#0e5cc2}'
     + '.wa-live.warn{color:#0c53b0;border-color:rgba(14,92,194,.45)}.wa-live:not(.ok):not(.warn){color:#788493;border-color:#dce3ec}'
     + '.wa-live{font-size:11px;font-weight:600;color:#087F61;border:1px solid rgba(22,199,154,.4);border-radius:99px;padding:1px 8px}.wa-note{font-size:13px;background:#deebfc;border-radius:8px;padding:8px 10px;border-left:3px solid #0e5cc2}.wa-note.newn{background:#E8F9F4;border-left-color:#16C79A}.wa-note.soft{background:#f5f8fb;border-left-color:#c3cbd6}.wa-sets{display:flex;flex-wrap:wrap;gap:6px}'

@@ -192,7 +192,7 @@
     var rep = C.st && C.st.ok && C.st.latest;
     el.innerHTML = '<div class="pjm-chips" role="group" aria-label="Show on the map">' + chip('att', 'priority_high', 'Needs attention') + chip('nc', 'group_off', 'No crew') + chip('all', 'location_on', 'All') + '</div>'
       + '<div class="pjm-key" aria-hidden="true"><span><i class="pjm-dot-red"></i>Overdue</span><span><i class="pjm-dot-amber"></i>Due soon</span><span><i class="pjm-dot-nc"></i>No crew</span><span><i class="pjm-dot-ok"></i>On track</span></div>'
-      + '<span class="pjm-src"><span class="ms">monitoring</span>' + (M.src === 'report' ? 'From the AI CEO briefing · ' + fmtShort(rep.day) : (M.err ? 'AI CEO unavailable, showing a basic check of dates and crews' : 'No AI CEO briefing yet, showing a basic check of dates and crews')) + '</span>';
+      + '<span class="pjm-src"><span class="ms">monitoring</span>' + (M.src === 'report' ? 'From the AI CEO briefing · ' + fmtShort(rep.day) : 'Checked against each job’s dates and crew') + '</span>';
     el.querySelectorAll('[data-pjf]').forEach(function (b) { b.onclick = function () { M.f = b.getAttribute('data-pjf'); barDraw(); window.bpCeoMapPins(); }; });
   }
   function refreshAll() { compute(); barDraw(); window.bpCeoMapPins(); if (window.bpPjStopsRedraw) bpPjStopsRedraw(); }
