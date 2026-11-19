@@ -686,7 +686,7 @@
     var diff = spent - grand;
     var h = tabs('matlists')
       + '<div class="pjk-stats">'
-        + stat('Lists', lists.length, lists.filter(function (j) { return j.status === 'quote'; }).length + ' still estimates')
+        + stat('Lists', lists.length, lists.filter(function (j) { return j.status === 'quote'; }).length + ' for jobs not won yet')
         + stat('Planned', money(grand), 'what the lists add up to')
         + stat('Spent', money(spent), 'from receipts on these jobs')
         + stat(diff > 0 ? 'Over plan' : 'Under plan', money(Math.abs(diff)), over ? over + ' job' + (over === 1 ? '' : 's') + ' over' : 'across all lists', diff > 0 ? 'owe' : 'good')

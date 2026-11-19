@@ -205,8 +205,8 @@
         + '<td><span class="bpx-badge' + (e.kind === '1099' ? '' : ' ok') + '">' + (e.kind === '1099' ? '1099' : 'W-2') + '</span></td>'
         + '<td>' + rateTxt + '</td>'
         + '<td>' + (b > 0 ? '<b>' + money(b) + '</b>/hr' : '—')
-          + (e.burden_pct > 0 ? '<div class="bpx-mut" style="font-size:11.5px">+' + e.burden_pct + '% burden</div>'
-            : (e.kind === 'w2' ? '<div class="bpx-mut" style="font-size:11.5px;color:#0953b4">no burden set</div>' : '')) + '</td>'
+          + (e.burden_pct > 0 ? '<div class="bpx-mut" style="font-size:11.5px">+' + e.burden_pct + '% payroll tax &amp; insurance</div>'
+            : (e.kind === 'w2' ? '<div class="bpx-mut" style="font-size:11.5px;color:#0953b4">payroll tax &amp; insurance not set</div>' : '')) + '</td>'
         + '<td class="bpx-r" style="white-space:nowrap">'
           + (window.bpEmpProfile ? '<button class="bpx-rowbtn" onclick="bpEmpProfile(\'' + e.id + '\')">Profile</button>' : '')
           + '<button class="bpx-rowbtn" onclick="bpEmpOpen(\'' + e.id + '\')">Edit</button>'
@@ -221,14 +221,14 @@
     var warn = noBurden
       ? '<div class="bg-warn" style="margin-top:12px"><span class="ms">warning</span>'
         + '<span>' + noBurden + ' ' + (noBurden === 1 ? 'person has' : 'people have')
-        + ' no burden set, so their hours are costed at the bare wage. Payroll tax and workers’ comp typically add '
+        + ' no payroll tax or workers’ comp added, so their hours are costed at the bare wage. Those typically add '
         + '25–50% on top, and roofing comp rates are among the highest there are — jobs will look more profitable than they are. '
         + 'Your accountant or comp policy has the real figure.</span></div>'
       : '';
 
     el.innerHTML = head
       + '<div class="bpx-cwrap"><table class="bpx-ctable"><thead><tr>'
-      + '<th>Name</th><th>Contact</th><th>Record</th><th>Type</th><th>Rate</th><th>Real cost</th><th></th>'
+      + '<th>Name</th><th>Contact</th><th>Reviews</th><th>Type</th><th>Rate</th><th>Cost to you</th><th></th>'
       + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + warn;
     if (window.bpAvatar) bpAvatar.fill(el);
   }
@@ -264,7 +264,7 @@
           + '<option value="salary"' + (f.pay_type === 'salary' ? ' selected' : '') + '>Salary</option></select></div></div>'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
         + '<div><label id="emp-ratelab">Rate</label>' + inp('rate', '$0', f.rate || '') + '</div>'
-        + '<div><label>Costs you extra</label>'
+        + '<div><label>Payroll tax &amp; insurance</label>'
           + '<div style="display:flex;align-items:center;gap:6px"><input id="emp-burden" type="number" min="0" max="200" step="1" '
           + 'value="' + (+f.burden_pct || '') + '" placeholder="0" oninput="bpEmpKind()" style="flex:1"><span class="bpx-mut">%</span></div></div></div>'
       + '<div class="bpx-mut" id="emp-hint" style="font-size:12px;margin-top:8px;line-height:1.6"></div>'
