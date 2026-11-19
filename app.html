@@ -93,9 +93,9 @@ section{padding:0;}
 .pj-nophoto{width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--bg2,#eef1f5);color:#8a93a3;font-size:12.5px;font-weight:600}.pj-nophoto .ms{font-size:28px}
 .pj-mark{font:600 11px/1 inherit;padding:5px 9px;border-radius:999px;border:1px solid var(--line,#d9dee6);background:var(--card,#fff);color:#5f6470;cursor:pointer;flex:0 0 auto}.pj-mark.on{background:#0b1a33;border-color:#0b1a33;color:#fff}.pj-img .pj-mark{position:absolute;top:10px;left:10px;z-index:2}
 </style>
-<link rel="stylesheet" href="site/site.css?v=20261118-20261118j">
-<link rel="stylesheet" href="site/present.css?v=20261118-20261118j">
-<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261118-20261118j"}}</script>
+<link rel="stylesheet" href="site/site.css?v=20261119-20261119a">
+<link rel="stylesheet" href="site/present.css?v=20261119-20261119a">
+<script type="importmap">{"imports":{"three":"./site/vendor/three.module.min.js?v=20261119-20261119a"}}</script>
 
 
 <style id="bpi-icons">
@@ -2786,7 +2786,7 @@ function bpLogout(force){
   document.getElementById('bpxLogin').style.display='flex';
   document.getElementById('bpxPassword').value='';
 }
-var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Archive',s:''},payouts:{t:'Payouts',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
+var BPVIEWS={assets:{t:'Equipment',s:''},connections:{t:'Connections',s:''},aiteam:{t:'AI Team',s:''},crewdash:{t:'Home',s:''},crewclock:{t:'Time clock',s:''},crewhome:{t:'My crew',s:''},crewprojects:{t:'Jobs',s:''},crewid:{t:'My ID',s:''},crewmsgs:{t:'Messages',s:''},subjobs:{t:'Jobs',s:''},subinvoices:{t:'Invoices',s:''},subchanges:{t:'Change orders',s:''},subcomply:{t:'Compliance',s:''},subcompany:{t:'My company',s:''},subs:{t:'Subcontractors',s:''},routing:{t:'Driving routes',s:''},quote:{t:'Estimate',s:''},invoicebuilder:{t:'Invoice',s:''},teamchat:{t:'Team chat',s:''},dashboard:{t:'Dashboard',s:''},messaging:{t:'Texts',s:''},email:{t:'Email',s:''},contacts:{t:'Contacts',s:''},calendar:{t:'Calendar',s:''},closedeals:{t:'Close Deals',s:''},activejobs:{t:'Active jobs',s:''},installations:{t:'Installations',s:''},employees:{t:'Employees',s:''},finances:{t:'Finances',s:''},invoices:{t:'Invoices',s:''},estimates:{t:'Estimates',s:''},ledger:{t:'Income & expenses',s:''},finarchive:{t:'Tax years',s:''},payouts:{t:'Card payments',s:''},quickbooks:{t:'QuickBooks',s:''},checks:{t:'Calculator leads',s:''},website:{t:'Website',s:''},automations:{t:'Automations',s:''},leadsources:{t:'Lead Sources',s:''},marketing:{t:'Ads & Listings',s:''},social:{t:'Social Media',s:''},competitors:{t:'Competitors',s:''},reputation:{t:'Reputation',s:''},supply:{t:'Order materials',s:''},supplyorders:{t:'Orders',s:''},matlists:{t:'Order lists',s:''},receipts:{t:'Receipts',s:''},prices:{t:'Prices',s:''},mattemplates:{t:'Templates',s:''},suppliers:{t:'Suppliers',s:''},calculator:{t:'My Calculators',s:''},customize:{t:'Customize',s:''},ai:{t:''+BP_AI_NAME+' AI',s:''},settings:{t:'Settings',s:''}};
 /* ---- sidebar: five branches, each a page or a group of pages ---- */
 var BP_ICO={
   dashboard:'<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
@@ -2806,7 +2806,7 @@ var BP_NAV=[
   {id:'calendar',l:'Calendar',ico:'calendar'},
   {id:'leads',l:'Leads',ico:'leads',kids:[['contacts','Contacts'],['checks','Calculator leads'],['automations','Automations'],['calculator','Calculators']] /* 'leadsources' still opens if called, just out of the menu */},
   {id:'projects',l:'Jobs',ico:'projects',kids:[['activejobs','Active'],['assets','Equipment'],['employees','Employees'],['subs','Subcontractors'],['routing','Driving routes']]},
-  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Archive'],['payouts','Payouts'],['quickbooks','QuickBooks']]},
+  {id:'finances',l:'Finances',ico:'finances',kids:[['finances','Overview'],['invoices','Invoices'],['estimates','Estimates'],['finarchive','Tax years'],['payouts','Card payments'],['quickbooks','QuickBooks']]},
   {id:'supply',l:'Supply',ico:'supply',g:2,kids:[['matlists','Order lists'],['receipts','Receipts']]} /* 'prices', 'supply' and 'supplyorders' still work if called (portal/supply.js), just out of the sidebar */,
   {id:'aiteam',l:'AI Team',ico:'aiteam'},
   {id:'marketing',l:'Marketing',ico:'marketing',kids:[['marketing','Ads & Listings'],['reputation','Reputation'],['website','Website'],['social','Social Media'],['competitors','Competitors']]}
@@ -2945,7 +2945,7 @@ function bpFinDue(d){
           +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px"><b>'+bpEsc(r.n)+'</b><span class="bpx-num" style="color:var(--warn-t,#0953b4);font-weight:700">'+bpMoneyFmt(r.due)+' due</span></div>'
           +'<div style="display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--mu,#8a97a0);margin:2px 0 5px">'+bpEsc(r.t||'Job')+'<span>'+bpMoneyFmt(r.paid)+' of '+bpMoneyFmt(r.est)+' paid</span></div>'
           +'<div style="height:5px;border-radius:99px;background:#eef0f4;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:#2f6bff;border-radius:99px"></i></div></div>';
-      }).join('')+(rows.length>8?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">+ '+(rows.length-8)+' more in Active Projects</div>':'')
+      }).join('')+(rows.length>8?'<div class="bpx-mut" style="font-size:12px;margin-top:8px">+ '+(rows.length-8)+' more under Jobs</div>':'')
     : '<div class="bpx-mut" style="font-size:13px;padding:22px 0;text-align:center">Nothing outstanding — every active job is fully collected. <span class=ms>celebration</span></div>';
   return {outst:outst,count:rows.length,html:html};
 }
@@ -4550,7 +4550,7 @@ function bpCalUnsched(){
       ds[at]=day; j.sched.dates=ds.sort();
       if(j.sched.slots&&j.sched.slots[wasDay]){ j.sched.slots[day]=j.sched.slots[wasDay]; delete j.sched.slots[wasDay]; }
       bpJobsSet(jobs); bpDrawWeek();
-      bpWkSay('Crew day moved to '+lbl+'. To change its hours, open Active Projects \u2192 Schedule & map.');
+      bpWkSay('Crew day moved to '+lbl+'. To change its hours, open the job under Jobs \u2192 Schedule & map.');
       return;
     }
     if(t==='appt'){
@@ -5208,8 +5208,8 @@ async function bpFetchContacts(){
 }
 window.bpOpenAdd=function(){
   bpModal('<h3>New contact</h3>'+bpField('bpx-f-name','Name','','Full name')+bpField('bpx-f-phone','Phone','','Phone number')+bpField('bpx-f-email','Email','','Email address')
-    +'<label class="bpx-chk" style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;font-weight:500"><input type="checkbox" id="bpx-f-lisa" checked style="width:auto;margin-top:3px">'
-    +'<span>Text them now as a new lead<br><small style="color:var(--mu);font-weight:400">'+bpEsc(window.BP_AI_NAME||'Lisa')+' sends the first text and follows up, like any new lead. Untick to just save them.</small></span></label>'
+    +'<label class="bpx-chk" style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;font-weight:500"><input type="checkbox" id="bpx-f-lisa" style="width:auto;margin-top:3px">'
+    +'<span>Text them now as a new lead<br><small style="color:var(--mu);font-weight:400">'+bpEsc(window.BP_AI_NAME||'Lisa')+' sends the first text and follows up, like any new lead. Leave it off to just save them.</small></span></label>'
     +'<div class="bpx-mmsg" id="bpx-mmsg"></div><div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="bpx-savebtn" onclick="bpSaveContact()">Create</button></div>');
 };
 window.bpSaveContact=async function(id){
@@ -5353,6 +5353,43 @@ function bpCalendar(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpCalendarM
 
 
 function bpMessaging(){ if(typeof BP_LIVE!=='undefined' && !BP_LIVE){ bpMessagingMock(); return; } bpRenderMessaging(); }
+/* New text (2026-11-18): text one customer without hunting for an old conversation. Pick who,
+   type, send; the conversation then opens like any other. Customers who aren't in the texting
+   inbox yet (saved only in BuilderPro) can't be texted from here, and say so. */
+window.bpNewTextOpen=async function(){
+  bpModal('<h3>New text</h3><div class="bpx-sub">Loading your contacts…</div>');
+  await bpEnsureContacts();
+  var list=(_bpContacts||[]).filter(function(c){return c.phone;});
+  var gid=function(c){return c.src==='ghl'?c.id:(c.ghlId||'');};
+  var opt=function(c){var ok=!!gid(c);return '<option value="'+bpEsc(gid(c))+'"'+(ok?'':' disabled')+'>'+bpEsc((c.name||'No name')+' · '+c.phone)+(ok?'':' (can’t text yet)')+'</option>';};
+  bpModal('<h3>New text</h3><div class="bpx-sub">Text one customer. It shows up in your Texts like any conversation.</div>'
+    +'<label>To</label><input id="nt-find" placeholder="Search by name or phone" autocomplete="off" oninput="bpNewTextFind(this.value)">'
+    +'<select id="nt-to" size="6" style="margin-top:6px;height:auto">'+(list.length?list.map(opt).join(''):'<option disabled>No contacts with a phone number yet</option>')+'</select>'
+    +'<label>Message</label><textarea id="nt-msg" placeholder="Type your message…" maxlength="1500"></textarea>'
+    +'<div class="bpx-mmsg" id="bpx-mmsg"></div>'
+    +'<div class="row"><button class="bpx-btn ghost" onclick="bpCloseModal()">Cancel</button><button class="bpx-btn" id="nt-send" onclick="bpNewTextSend()">Send text</button></div>');
+  window._bpNtList=list; window._bpNtOpt=opt;
+  var f=q('nt-find'); if(f) f.focus();
+};
+window.bpNewTextFind=function(v){
+  var s=q('nt-to'); if(!s) return; v=String(v||'').toLowerCase().replace(/[^a-z0-9 ]/g,'');
+  var d=v.replace(/\D/g,'');
+  var hit=(window._bpNtList||[]).filter(function(c){return !v||String(c.name||'').toLowerCase().indexOf(v)>=0||(d&&String(c.phone||'').replace(/\D/g,'').indexOf(d)>=0);});
+  s.innerHTML=hit.length?hit.slice(0,200).map(window._bpNtOpt).join(''):'<option disabled>No one matches that</option>';
+  var first=s.querySelector('option:not([disabled])'); if(first) s.value=first.value;
+};
+window.bpNewTextSend=async function(){
+  var to=(q('nt-to')||{}).value||'', text=((q('nt-msg')||{}).value||'').trim(), msg=q('bpx-mmsg'), btn=q('nt-send');
+  if(!to){ msg.style.color='var(--err-t,#dc2626)'; msg.textContent='Pick who to text.'; return; }
+  if(!text){ msg.style.color='var(--err-t,#dc2626)'; msg.textContent='Type a message first.'; return; }
+  btn.disabled=true; btn.textContent='Sending…';
+  try{
+    var res=await bpFx(GHL_MSG_URL,{action:'send',msgType:'SMS',contactId:to,message:text,subject:'Message from your contractor'}).then(function(r){return r.json();});
+    if(res.ok){ msg.style.color='#087F61'; msg.textContent=res.queued?'Saved on this phone. It sends when you’re back online.':'Sent.'; setTimeout(function(){ bpCloseModal(); if(window._bpCurView==='messaging') bpNav('messaging'); },800); return; }
+    msg.style.color='var(--err-t,#dc2626)'; msg.textContent='Could not send'+(res.status?(' ('+res.status+')'):'')+'. Please try again.';
+  }catch(e){ msg.style.color='var(--err-t,#dc2626)'; msg.textContent='Could not send. Please try again.'; }
+  btn.disabled=false; btn.textContent='Send text';
+};
 
 </script>
 <style>
@@ -5691,7 +5728,7 @@ var _bpBulkChan='SMS';
 function bpRenderMessaging(){
   q('bpxViewArea').innerHTML=
     '<div class="bpx-msgbar"><div class="bpx-msgbar-t">Conversations</div>'
-      +'<button class="bpx-addbtn" onclick="bpBulkOpen()"><span class=ms>mail</span> Broadcast</button></div>'
+      +'<button class="bpx-addbtn" onclick="bpBulkOpen()"><span class=ms>campaign</span> Send to many</button></div>'
     +'<div class="bpx-inbox">'
       +'<div class="bpx-convlist" id="bpx-convlist">'+(window.bpSkel?bpSkel('list'):'')+'</div>'
       +'<div class="bpx-thread" id="bpx-thread"><div class="bpx-tempty"><div class="big"><span class=ms>chat</span></div>Select a conversation to view messages.</div></div>'
@@ -5699,14 +5736,14 @@ function bpRenderMessaging(){
   bpLoadConvos();
 }
 window.bpBulkOpen=async function(){
-  bpModal('<h3>Broadcast</h3><div class="bpx-sub">Loading your contacts…</div>');
+  bpModal('<h3>Send to many</h3><div class="bpx-sub">Loading your contacts…</div>');
   var _bpLd=q('bpx-modal');
   await bpEnsureContacts();
   if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
   var tags={}; _bpContacts.forEach(function(c){(c.tags||[]).forEach(function(t){tags[t]=(tags[t]||0)+1;});});
   var tagOpts=Object.keys(tags).sort().map(function(t){return '<option value="tag:'+bpEsc(t)+'">Tag: '+bpEsc(t)+' ('+tags[t]+')</option>';}).join('');
   _bpBulkChan='SMS';
-  bpModal('<h3>Broadcast</h3><div class="bpx-sub">Send a text or email to many contacts at once.</div>'
+  bpModal('<h3>Send to many</h3><div class="bpx-sub">Send a text or email to many contacts at once.</div>'
     +'<label>Channel</label><div class="bpx-bulk-tabs"><button id="bk-ch-SMS" class="on" onclick="bpBulkChan(\'SMS\')">Text (SMS)</button><button id="bk-ch-Email" onclick="bpBulkChan(\'Email\')">Email</button></div>'
     +'<div id="bk-subwrap" style="display:none"><label>Subject</label><input id="bk-subject" placeholder="Subject line"></div>'
     +'<label>Send to</label><select id="bk-aud" onchange="bpBulkCount()"><option value="__all">All contacts</option>'+tagOpts+'</select>'
@@ -6150,8 +6187,8 @@ function bpRenderInbox(){
     '<div class="bpx-msgbar"><div class="bpx-msgbar-t">'+(isMail?'Email':'Texts')+'</div>'
       +'<div class="bpx-msgbar-btns"><span id="bpx-otherchan"></span>'
       +'<button class="bpx-ghostbtn" onclick="bpSchedListOpen()"><span class=ms>schedule</span> Scheduled</button>'
-      +(isMail?'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> Compose</button>':'')
-      +'<button class="bpx-addbtn" onclick="bpBulkOpen('+(isMail?"'Email'":'')+')"><span class=ms>'+(isMail?'mail':'sms')+'</span> Broadcast</button></div></div>'
+      +'<button class="bpx-ghostbtn" onclick="bpBulkOpen('+(isMail?"'Email'":'')+')" title="Send one message to many contacts at once"><span class=ms>campaign</span> Send to many</button>'
+      +(isMail?'<button class="bpx-addbtn" onclick="bpMailCompose({})"><span class=ms>edit</span> New email</button>':'<button class="bpx-addbtn" onclick="bpNewTextOpen()"><span class=ms>sms</span> New text</button>')+'</div></div>'
     +(isMail?bpMailTabs():'')
     +(!isMail?bpTextsPendingBanner():'')
     +'<div class="bpx-inbox">'
@@ -6164,7 +6201,7 @@ function bpRenderInbox(){
 
 /* Broadcast composer + When */
 window.bpBulkOpen=async function(chan){
-  bpModal('<h3>Broadcast</h3><div class="bpx-sub">Loading your contacts…</div>');
+  bpModal('<h3>Send to many</h3><div class="bpx-sub">Loading your contacts…</div>');
   var _bpLd=q('bpx-modal');
   await bpEnsureContacts();
   if(q('bpx-modal')!==_bpLd) return; /* closed while contacts loaded */
@@ -6172,7 +6209,7 @@ window.bpBulkOpen=async function(chan){
   var tagOpts=Object.keys(tags).sort().map(function(t){return '<option value="tag:'+bpEsc(t)+'">Tag: '+bpEsc(t)+' ('+tags[t]+')</option>';}).join('');
   /* opened from the Email page, the broadcast starts on email */
   _bpBulkChan=(chan==='Email')?'Email':'SMS'; _bpBulkWhen='now';
-  bpModal('<h3>Broadcast</h3><div class="bpx-sub">Send a text or email to many contacts — now or scheduled.</div>'
+  bpModal('<h3>Send to many</h3><div class="bpx-sub">Send a text or email to many contacts — now or scheduled.</div>'
     +'<label>Channel</label><div class="bpx-bulk-tabs"><button id="bk-ch-SMS" class="'+(_bpBulkChan==='SMS'?'on':'')+'" onclick="bpBulkChan(\'SMS\')">Text (SMS)</button><button id="bk-ch-Email" class="'+(_bpBulkChan==='Email'?'on':'')+'" onclick="bpBulkChan(\'Email\')">Email</button></div>'
     +'<div id="bk-subwrap" style="display:none"><label>Subject</label><input id="bk-subject" placeholder="Subject line"></div>'
     +'<label>Send to</label><select id="bk-aud" onchange="bpBulkCount()"><option value="__all">All contacts</option>'+tagOpts+'</select>'
@@ -7327,7 +7364,7 @@ window.bpProjStar=function(id){
   bpRedrawView();
 };
 window.bpAddJobOpen=function(){
-  bpModal('<h3>Add a job</h3><div class="bpx-sub">For a job that didn’t come through the pipeline.</div>'
+  bpModal('<h3>Add a job</h3><div class="bpx-sub">For work you won without sending an estimate here.</div>'
     +'<label>Customer name</label><input id="bpx-nj-name" placeholder="Full name">'
     +'<label>Job</label><input id="bpx-nj-title" placeholder="e.g. Roof replacement">'
     +'<label>Estimate (optional)</label><input id="bpx-nj-est" placeholder="$0">'
@@ -7973,7 +8010,7 @@ window.bpProjCalNav=function(d){ _bpProjCal.m+=d; if(_bpProjCal.m<0){_bpProjCal.
 window.bpProjCalTog=function(iso){ var i=_bpProjDates.indexOf(iso); if(i>-1)_bpProjDates.splice(i,1); else _bpProjDates.push(iso); bpProjCalDraw(); };
 window.bpProjDelete=function(){
   var jobs=bpJobsGet(), j=jobs.filter(function(x){return x.id===_bpProjId;})[0]; if(!j)return;
-  var t=prompt('This permanently removes "'+(j.name||'this project')+'" from Active Projects and Finances.\n\nType DELETE to confirm:');
+  var t=prompt('This permanently removes "'+(j.name||'this project')+'" from Jobs and Finances.\n\nType DELETE to confirm:');
   if(t===null)return;
   if(String(t).trim().toUpperCase()!=='DELETE'){alert('Not deleted — you must type DELETE exactly.');return;}
   bpJobsSet(jobs.filter(function(x){return x.id!==_bpProjId;}));
@@ -8209,7 +8246,7 @@ function bpFinances(){
   var pjPg=bpPage('finjobs',pj,10,'bpFinances()');
   var pjHtml=pj.length?pjPg.items.map(function(j){var c=+j.collected||0,e=bpJobExp(j),p=c-e;
     return '<tr style="cursor:pointer" onclick="bpJobDoneOpen(\''+j.id+'\')" title="Tap to add income & expenses"><td>'+bpEsc(j.name)+' — '+bpEsc(j.title||'Job')+'</td><td class="bpx-r bpx-num bpx-mut">'+bpMoneyFmt(j.estimate)+'</td><td class="bpx-r bpx-num">'+(j.collected!=null?bpMoneyFmt(c):'—')+'</td><td class="bpx-r bpx-num">'+bpMoneyFmt(e)+'</td><td class="bpx-r bpx-num '+(p>=0?'bpx-pos':'bpx-neg')+'">'+(j.collected!=null?bpMoneyFmt(p):'—')+'</td><td class="bpx-r '+(p>=0?'bpx-mgood':'bpx-mok')+'">'+(c>0?Math.round(p/c*100)+'%':'—')+'</td></tr>';
-  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a project done in Active Projects and it shows up here — tap it to add what you collected and your costs.</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="bpx-empty2">Mark a job done under Jobs and it shows up here — tap it to add what you collected and your costs.</td></tr>';
 
   var vp=function(k,html){return '<div data-fin-pane="'+k+'"'+(_bpFinView===k?'':' hidden')+'>'+html+'</div>';};
   q('bpxViewArea').setAttribute('data-fin',_bpFinView);
@@ -10198,7 +10235,7 @@ function bpPayFaq(){
     +'<div class="bpx-pay-q"><b>Does BuilderPro take a cut of my jobs?</b><span>No. You pay us a flat monthly subscription and nothing per job. The only fee on a payment is Stripe’s own.</span></div>'
     +'<div class="bpx-pay-q"><b>Whose name is on the payment?</b><span>Yours. Your customer’s statement shows your business, and the Stripe account and bank details are yours.</span></div>'
     +'<div class="bpx-pay-q"><b>What if a customer disputes a charge?</b><span>It goes to you through Stripe, the same as any card payment you take today. We don’t sit in the middle of it.</span></div>'
-    +'<div class="bpx-pay-q"><b>Can I still take cash or check?</b><span>Yes. Mark the job done in Active Projects with what you collected and it flows into Finances the same way.</span></div>'
+    +'<div class="bpx-pay-q"><b>Can I still take cash or check?</b><span>Yes. Mark the job done under Jobs with what you collected and it flows into Finances the same way.</span></div>'
     +'<div class="bpx-pay-q"><b>Do I have to connect it more than once?</b><span>No. One Stripe account covers every invoice, and you only do this the once. Changing your bank later is done in your Stripe dashboard.</span></div></div>';
 }
 
@@ -10398,7 +10435,7 @@ window.bpEstSend=async function(){
     else { msg.style.color='#dc2626'; msg.textContent='Could not create: '+bpEsc(String((d&&d.error)||'unknown error')); btn.disabled=false; }
   }catch(e){ msg.style.color='#dc2626'; msg.textContent='Network error — try again.'; btn.disabled=false; }
 };
-var BPINV_NOTE='<div class="bpx-when-note">Card invoicing isn\'t switched on for your account yet — open <b>Finances → Payouts</b> to connect your Stripe, or ask us to finish setting it up.</div>';
+var BPINV_NOTE='<div class="bpx-when-note">Card invoicing isn\'t switched on for your account yet — open <b>Finances → Card payments</b> to connect your Stripe, or ask us to finish setting it up.</div>';
 function bpInvLoad(){
   var el=q('bpxInvList'); if(!el) return;
   if(!window.BP_LIVE){ el.innerHTML='<span class="bpx-mut">Invoices are available on live accounts.</span>'; return; }
@@ -11638,7 +11675,7 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 .bpx-pay-q span{font-size:13px;color:var(--grey);line-height:1.55;}
 /* Stripe connection: the mark, the state, and the money that came in */
 .bpx-stripe-mark{width:1.05em;height:1.05em;flex:none;vertical-align:-.15em;}
-.bpx-stripe-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#635BFF;}
+.bpx-stripe-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#006fff;}
 .bpx-stripe-head>div{flex:1;min-width:0;color:var(--ink);}
 .bpx-stripe-head .bpx-stripe-mark{width:26px;height:26px;}
 .bpx-stripe-head b{display:block;font-size:15px;letter-spacing:-.01em;}
@@ -11646,9 +11683,9 @@ html.pr-lock,html.pr-lock body{overflow:hidden;}
 .bpx-stripe-dot{width:9px;height:9px;border-radius:50%;background:var(--grey-l);flex:none;}
 .bpx-stripe-dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(22,199,154,.16);}
 .bpx-stripe-dot.warn{background:#b45309;box-shadow:0 0 0 3px rgba(180,83,9,.15);}
-.bpx-stripe-btn{display:inline-flex;align-items:center;gap:9px;background:#635BFF;color:#fff;border:0;border-radius:11px;
+.bpx-stripe-btn{display:inline-flex;align-items:center;gap:9px;background:#006fff;color:#fff;border:0;border-radius:11px;
   padding:13px 20px;font:600 14.5px/1 var(--sans);cursor:pointer;transition:.18s;}
-.bpx-stripe-btn:hover:not(:disabled){background:#544DE0;}
+.bpx-stripe-btn:hover:not(:disabled){background:#0050c8;}
 .bpx-stripe-btn:disabled{opacity:.6;cursor:default;}
 .bpx-stripe-btn .bpx-stripe-mark{width:17px;height:17px;}
 .bpx-pay-band{border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px;line-height:1.55;}
@@ -12221,14 +12258,14 @@ function bpCpInsights(){
     out.push({k:'gap',t:bpEsc(top.name)+' has '+bpNum(gap)+' more reviews than you',d:'Review count is the biggest factor in who shows first. '+(pace?bpEsc(top.name)+' is adding about '+pace+' a month, so they\'re asking after every job. ':'')+''+BP_AI_NAME+' can text every finished job a review link automatically — most contractors who ask after each job add 3–6 reviews a month.',a:go('ai','Set up review requests in '+BP_AI_NAME+'')});
   }
   var fast=rivals.filter(function(x){return (x.vel||0)>=3;}).sort(function(a,b){return b.vel-a.vel;})[0];
-  if(fast&&(!you||fast.vel>(you.vel||0)))out.push({k:'gap',t:bpEsc(fast.name)+' is gaining reviews fastest (+'+fast.vel+' in 30 days)',d:'That pace means a review request is built into how they close jobs. Match it: ask on the final walkthrough, then let '+BP_AI_NAME+' follow up by text the next morning.',a:go('activejobs','Open Active Projects')});
+  if(fast&&(!you||fast.vel>(you.vel||0)))out.push({k:'gap',t:bpEsc(fast.name)+' is gaining reviews fastest (+'+fast.vel+' in 30 days)',d:'That pace means a review request is built into how they close jobs. Match it: ask on the final walkthrough, then let '+BP_AI_NAME+' follow up by text the next morning.',a:go('activejobs','Open Jobs')});
   var avg=rivals.filter(function(x){return x.rating;}); avg=avg.length?avg.reduce(function(s,x){return s+x.rating;},0)/avg.length:0;
   if(you&&avg&&you.rating<avg-0.15)out.push({k:'gap',t:'Your rating ('+you.rating.toFixed(1)+'★) trails the local average ('+avg.toFixed(1)+'★)',d:'Reply to every review — especially the bad ones — within a day. A calm, specific reply is read by the next 50 homeowners, and Yelp shows response rate on the listing.',a:go('marketing','Open Ads & Listings')});
   else if(you&&avg&&you.rating>=avg+0.15)out.push({k:'win',t:'Your rating beats the local average ('+you.rating.toFixed(1)+'★ vs '+avg.toFixed(1)+'★)',d:'Put that number on your estimate and website. Homeowners comparing three bids pick the one with the best reviews far more often than the cheapest.',a:go('calculator','Open My Calculators')});
   var un=rivals.filter(function(x){return x.claimed===false;});
   if(un.length)out.push({k:'win',t:un.length+' rival'+(un.length>1?'s haven\'t':' hasn\'t')+' claimed their listing',d:bpEsc(un.map(function(x){return x.name;}).join(', '))+' — unclaimed means nobody there answers reviews or posts photos. A claimed, active listing with fresh photos outranks a stale one with more reviews over time.',a:go('marketing','Check your listings')});
   var photoy=rivals.filter(function(x){return x.photos>=20;}).sort(function(a,b){return b.photos-a.photos;})[0];
-  if(photoy)out.push({k:'gap',t:bpEsc(photoy.name)+' shows '+photoy.photos+' photos on their listing',d:'Before-and-after shots are the thing homeowners actually scroll. You already take job photos in Active Projects — post the best three from every finished roof.',a:go('activejobs','Grab photos from Active Projects')});
+  if(photoy)out.push({k:'gap',t:bpEsc(photoy.name)+' shows '+photoy.photos+' photos on their listing',d:'Before-and-after shots are the thing homeowners actually scroll. You already take job photos on each job — post the best three from every finished roof.',a:go('activejobs','Grab photos from Jobs')});
   var cats={}; rivals.forEach(function(x){(x.cats||[]).forEach(function(c){cats[c]=(cats[c]||0)+1;});});
   var extra=Object.keys(cats).filter(function(c){return !/roof/i.test(c);}).sort(function(a,b){return cats[b]-cats[a];}).slice(0,4);
   if(extra.length)out.push({k:'info',t:'Services rivals list that you may not: '+bpEsc(extra.join(', ')),d:'Each extra category is another search you can show up in. If you do any of these, add them to your Yelp and Google listings and to '+BP_AI_NAME+'\'s knowledge so it can quote them.',a:go('ai','Update '+BP_AI_NAME+'\'s services')});
@@ -13046,7 +13083,7 @@ function bpEnsureLeaflet(cb){
     {key:"messaging",label:"Messaging",desc:"every text and email with leads in one inbox; tapping the contact icon in a conversation opens that person's full profile"},
     {key:"contacts",label:"Contacts",desc:"every lead and customer with their pipeline stage; search, add, edit, and Export CSV. Tapping a name opens their profile and the jobs linked to them"},
     {key:"calendar",label:"Calendar",desc:"opens on a Day view: one day laid out against the clock, with the working hours as rows and everything booked drawn where it falls. Inspections, job appointments, crew days on a project and timed to-dos all sit on the same grid, side by side when they overlap, with a red line at the current time. A strip of fourteen days above it jumps to any day and shows how many things are on each. It says how much of the day is booked against the business hours in Settings. A Month switch returns to the month grid with the to-do and upcoming lists beside it. Both views have Add to this day and Book an inspection"},
-    {key:"activejobs",label:"Active Projects",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
+    {key:"activejobs",label:"Jobs",desc:"jobs in progress. Opening one gives tabs: Details (customer, address, notes), Money (estimate, paid so far, balance due, expenses), Schedule (tap days to book them, start and end time), Photos, and Documents (add a file, or Scan paper with the camera — multi-page scans become one PDF). 'Mark done' moves it into Finances. The Contract tab builds an agreement from a roofing template with the customer, price and schedule already filled in, sends it as a link the homeowner signs on their phone, and shows Draft/Sent/Opened/Signed with the signature and audit trail; signed contracts can be printed"},
     {key:"finances",label:"Finances",desc:"a branch in the sidebar. Overview shows where the money goes by category and per-job profit; Invoices and Estimates send real bills and quotes the customer can pay or accept; Income & expenses is the full ledger; Payouts is where they connect their own Stripe. Every list has Export CSV"},
     {key:"payouts",label:"Payouts",desc:"under Finances. Explains that invoice money goes straight from the homeowner to the contractor's OWN Stripe account and bank — BuilderPro never holds it and takes no cut of a job. Walks them through connecting Stripe inside their own payments account in three steps. If their payments account isn't created yet it says so and offers to have us set it up"},
     {key:"reputation",label:"Reputation",desc:"under Marketing. Their own ratings and newest reviews from Google Business Profile, Yelp and Facebook side by side, with a reply link into each platform, plus an Ask for a review composer that copies or texts a short message with their Google review link. Platforms connect on Ads & Listings (Google, Yelp) and Social Media (Facebook). Shows clearly-labelled sample data until something is connected."},
@@ -14740,7 +14777,7 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/quote.js?v=20261116a"></script>
 <link rel="stylesheet" href="portal/quote.css?v=20261118f">
 <script src="portal/prices.js?v=20261118f"></script>
-<script src="portal/dash.js?v=20261118i"></script>
+<script src="portal/dash.js?v=20261119a"></script>
 <script src="portal/archive.js?v=20261001b"></script>
 <script src="portal/pfiles.js?v=20261116a"></script>
 <script src="portal/permits.js?v=20261024q30"></script>
@@ -14757,11 +14794,11 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/teamchat.js?v=20261118f"></script>
 <script src="portal/subapp.js?v=20261031b"></script>
 <script src="portal/subs.js?v=20261118f"></script>
-<script src="portal/aiteam.js?v=20261118i"></script>
+<script src="portal/aiteam.js?v=20261119a"></script>
 <script src="portal/aiboard.js?v=20261114a"></script>
 <script src="portal/aiceo.js?v=20261118f"></script>
 <script src="portal/storm.js?v=20261114a"></script>
-<script src="portal/aiceo-map.js?v=20261118f"></script>
+<script src="portal/aiceo-map.js?v=20261119a"></script>
 <script src="portal/installs.js?v=20261118f"></script>
 <script src="portal/assets.js?v=20261118f"></script>
 <script src="portal/custlink.js?v=20261118f"></script>
@@ -14772,14 +14809,14 @@ window.bpRepCopy=function(text,btn){
 <script src="portal/aibrain.js?v=20261118f"></script>
 <script src="portal/qr.js?v=20261001a"></script>
 <script src="portal/tools-share.js?v=20261114a"></script>
-<script src="portal/checks.js?v=20261118f"></script>
+<script src="portal/checks.js?v=20261119a"></script>
 <script src="portal/website.js?v=20261118f"></script>
 <!--/app-only-->
-<script src="site/vendor/gsap.min.js?v=20261118-20261118j"></script>
-<script src="site/vendor/ScrollTrigger.min.js?v=20261118-20261118j"></script>
-<script src="site/vendor/SplitText.min.js?v=20261118-20261118j"></script>
-<script src="site/site.js?v=20261118-20261118j"></script>
-<script src="site/present.js?v=20261118-20261118j"></script>
+<script src="site/vendor/gsap.min.js?v=20261119-20261119a"></script>
+<script src="site/vendor/ScrollTrigger.min.js?v=20261119-20261119a"></script>
+<script src="site/vendor/SplitText.min.js?v=20261119-20261119a"></script>
+<script src="site/site.js?v=20261119-20261119a"></script>
+<script src="site/present.js?v=20261119-20261119a"></script>
 <!--app-only-->
 <link rel="stylesheet" href="portal/site-theme.css?v=20261118f">
 <link rel="stylesheet" href="portal/projsheet.css?v=20261118f">

@@ -538,7 +538,7 @@
     var greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
     return '<div class="db-top"><div><div class="db-greet">' + esc(greet) + (co.name ? ', ' + esc(String(co.name).split(' ')[0]) : '') + '</div>'
       + '<div class="db-date">' + new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + '</div></div>'
-      + '<div class="db-acts">' + periodSwitch(periodKey()) + (locked('matlists') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'matlists\')">Order lists</button>')
+      + '<div class="db-acts">' + periodSwitch(periodKey()) + '<button class="bpx-btn ghost" onclick="window.bpInvOpen&&bpInvOpen()">Send invoice</button>'
       + (locked('activejobs') ? '' : '<button class="bpx-btn ghost" onclick="bpNav(\'activejobs\')">Add job</button>')
       + '<button class="bpx-btn bp-cta" onclick="bpNav(\'estimates\')">New estimate</button></div></div>';
   }

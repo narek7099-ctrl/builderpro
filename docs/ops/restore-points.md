@@ -350,3 +350,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before page descriptions (2026-11-18)
 - Live site (main): `1bfc8c3`
 - Changes: portal/shell.js DESC (window.BP_DESC): one plain line per page on what it's for, shown beside the page title on iPad and computers (#bpxVsub, hidden on phones) and as the hover tip on each tab; portal/shell.css shows it. To undo: revert those two files.
+
+## Before simplify batch 1 (2026-11-19)
+- Live site (main): `24f75a0`
+- Changes (from the clarity audit): Texts gets a New text button (pick a customer, type, send; app.html bpNewTextOpen/bpNewTextSend, sends through ghl-messaging like a reply) and Broadcast becomes "Send to many" (a plain button); New contact no longer texts the person unless the box is ticked; dashboard top buttons "Send invoice" in place of "Order lists" (portal/dash.js); Add job says "For work you won without sending an estimate here"; Finances tabs "Tax years" (was Archive) and "Card payments" (was Payouts); help text says Jobs (was Active Projects); the Stripe button is the app's blue; Driving routes key and pins: Overdue navy, Due soon blue, No crew white ring, On track mint (were all blue; portal/aiceo-map.js); Calculator leads wording (portal/checks.js); AI Team price falls back to 49 (portal/aiteam.js). To undo: revert these files to the SHA above.

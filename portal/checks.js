@@ -86,7 +86,7 @@ window.bpChecks=function(){
   var area=q('bpxViewArea'); if(!area)return;
   bpChkCss();
   area.innerHTML='<div class="cl">'
-    +'<div class="cl-top"><div><h2>Calculator leads</h2><p>Homeowners who used your calculators and checkers. They go straight into your automations, so follow-up happens on its own; this page shows how they are doing.</p></div>'
+    +'<div class="cl-top"><div><h2>Calculator leads</h2><p>Homeowners who used the price calculators on your website. They go straight into your automations, so follow-up happens on its own; this page shows how they are doing.</p></div>'
     +'<div class="cl-acts">'+bpCsvBtn('bpCsvRoofChecks()','Export CSV')
     +'<button class="bpx-btn ghost" onclick="bpNav(\'calculator\')"><span class=ms>calculate</span>My Calculators</button></div></div>'
     +'<div id="bpChkList" class="bpx-mut" style="font-size:13px">Loading…</div></div>';
