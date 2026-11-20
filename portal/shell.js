@@ -128,6 +128,62 @@
   /* belt and braces for browsers without overflow:clip */
   function unshift() { var m = document.querySelector('#bpx .bpx-main'); if (m && m.scrollLeft) m.scrollLeft = 0; }
   document.addEventListener('scroll', function (e) { if (e.target && e.target.classList && e.target.classList.contains('bpx-main') && e.target.scrollLeft) e.target.scrollLeft = 0; }, true);
+  /* ---------- the new layout, to compare (2026-11-20) ----------
+     After a layout the owner picked (efferd app-shell-4): a light sidebar card floating off the
+     edge, each section's pages listed under it (no tab row across the top), a big New button,
+     the page as a breadcrumb in the header. Phones keep their own layout. Switched in the
+     account menu or with ?layout=new / ?layout=classic; the classic layout stays the default. */
+  (function () {
+    try { var m = /[?&]layout=(new|classic)\b/.exec(location.search); if (m) LS.set('bpLayout', m[1]); } catch (e) {}
+  })();
+  function s4() { return LS.get('bpLayout') === 'new' && !phone(); }
+  S.s4 = s4;
+  S.layout = function (v) {
+    LS.set('bpLayout', v);
+    var x = $('bpx'); if (x) x.classList.toggle('bp-s4', s4());
+    S.buildNav(); if (window._bpCurView && window.bpNav) bpNav(window._bpCurView);
+    if (window.bpToast) bpToast(v === 'new' ? 'New layout on. Switch back any time from the account menu.' : 'Back to the classic layout.');
+  };
+  S.s4Toggle = function (gid) {
+    var g = document.querySelector('#bpxNav .hl-g4[data-grp="' + gid + '"]'); if (!g) return;
+    var open = !g.classList.contains('open'); g.classList.toggle('open', open);
+    var o = {}; try { o = JSON.parse(LS.get('bpS4Open') || '{}'); } catch (e) {} o[gid] = open ? 1 : 0; LS.set('bpS4Open', JSON.stringify(o));
+  };
+  S.s4Note = function (off) { if (off) { LS.set('bpS4Note', 'seen-1'); var n = $('hlS4Note'); if (n) n.remove(); } };
+  function s4Nav() {
+    var row = function (attr, label, ic, go, lock) {
+      return '<a class="hl-ni" ' + attr + ' href="#" title="' + esc(label) + '" onclick="' + go + ';return false">' + ico(ic) + '<span class="hl-nl">' + esc(label) + '</span>'
+        + (lock ? '<svg class="hl-i hl-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' : '') + '</a>';
+    };
+    var opened = {}; try { opened = JSON.parse(LS.get('bpS4Open') || '{}'); } catch (e) {}
+    var cur = window._bpCurView ? secOf(window._bpCurView) : 'dashboard';
+    var h = '', lastG = 0;
+    (window.BP_NAV || []).forEach(function (g) {
+      if (g.kids) { if (!kidsOf(g).length) return; } else if (!allows(g.id)) return;
+      var gg = g.g === 2 || lastG === 2 ? 2 : 1;   /* everything from the first g:2 on is a tool */
+      if (gg !== lastG) { h += '<div class="hl-glabel">' + (gg === 1 ? 'Run the business' : 'Tools') + '</div>'; lastG = gg; }
+      var ks = g.kids ? kidsOf(g) : [];
+      if (ks.length > 1) {
+        var open = opened[g.id] != null ? !!opened[g.id] : g.id === cur;
+        h += '<div class="hl-g4' + (open || g.id === cur ? ' open' : '') + '" data-grp="' + g.id + '">'
+          + '<a class="hl-ni hl-par" data-sec="' + g.id + '" href="#" title="' + esc(g.l) + '" onclick="bpShell.s4Toggle(\'' + g.id + '\');return false">' + ico(g.ico || g.id) + '<span class="hl-nl">' + esc(g.l) + '</span>'
+          + '<svg class="hl-i hl-chev4" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>'
+          + '<div class="hl-subs">' + ks.map(function (k) {
+            return '<a class="hl-si" data-view="' + k[0] + '" href="#" onclick="bpNav(\'' + k[0] + '\');return false">' + esc(k[1]) + (lockedV(k[0]) ? ' <svg class="hl-i hl-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' : '') + '</a>';
+          }).join('') + '</div></div>';
+      } else {
+        h += row('data-sec="' + g.id + '"', g.l, g.ico || g.id, "bpShell.go('" + g.id + "')", g.kids ? ks.every(function (k) { return lockedV(k[0]); }) : lockedV(g.id));
+      }
+    });
+    return h;
+  }
+  function s4Foot() {
+    var note = LS.get('bpS4Note') === 'seen-1' ? '' : '<div class="hl-s4note" id="hlS4Note"><small>NEW</small><b>Income &amp; Expenses tabs</b><span>Every dollar in and out, by month.</span>'
+      + '<a href="#" onclick="bpNav(\'finincome\');return false">Take a look</a><button type="button" aria-label="Hide" onclick="bpShell.s4Note(1)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+    return note + (crew() || !allows('settings') ? '' : '<a class="hl-ni hl-sm" data-sec="settings" data-view="settings" href="#" onclick="bpNav(\'settings\');return false">' + ico('settings') + '<span class="hl-nl">Settings</span></a>')
+      + '<a class="hl-ni hl-sm" href="#" onclick="bpShell.help(this);return false">' + ico('help') + '<span class="hl-nl">Help</span></a>';
+  }
+
   S.go = function (gid) {
     unshift();
     var g = (window.BP_NAV || []).filter(function (x) { return x.id === gid; })[0];
@@ -140,6 +196,16 @@
         + (lock ? '<svg class="hl-i hl-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' : '') + '</a>';
     };
     var h = '';
+    var x4 = $('bpx'); if (x4) x4.classList.toggle('bp-s4', s4() && !crew());
+    if (s4() && !crew()) {
+      nav.innerHTML = s4Nav();
+      var f4 = $('hlSideFoot'); if (f4) f4.innerHTML = s4Foot();
+      var q4 = document.querySelector('#bpxSide .hl-quick'); if (q4) { q4.hidden = false; if (!q4.querySelector('.hl-qt')) q4.insertAdjacentHTML('beforeend', '<span class="hl-qt">New</span>'); }
+      if (!$('hlS4Trig')) { var tt = document.querySelector('#hlTop .hl-ttl'); if (tt) tt.insertAdjacentHTML('beforebegin', '<button type="button" class="hl-s4trig" id="hlS4Trig" onclick="bpShell.collapse()" aria-label="Show or hide the sidebar" title="Show or hide the sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>'); }
+      paintAcct();
+      if (window._bpCurView) S.sync(window._bpCurView, true);
+      return;
+    }
     if (crew()) {
       h = limitedNav().map(function (x) { return row('data-view="' + x[0] + '" data-sec="' + x[0] + '"', x[1], x[2], "bpNav('" + x[0] + "')"); }).join('');
     } else {
@@ -226,6 +292,13 @@
     var g = (window.BP_NAV || []).filter(function (x) { return x.id === gid; })[0];
     var title = (g && g.kids) ? g.l : ((window.BPVIEWS && BPVIEWS[v] && BPVIEWS[v].t) || 'BuilderPro');
     var t = $('bpxVtitle'); if (t) t.textContent = title;
+    if (s4() && !crew()) {
+      var TAB4 = { quote: 'estimates', invoicebuilder: 'invoices' }, v4 = TAB4[v] || v;
+      document.querySelectorAll('#bpxNav .hl-si').forEach(function (a) { var on = a.getAttribute('data-view') === v4; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+      var gEl = document.querySelector('#bpxNav .hl-g4[data-grp="' + gid + '"]'); if (gEl) gEl.classList.add('open');
+      var kid = g && g.kids ? (g.kids.filter(function (k) { return k[0] === v4; })[0] || [0, (window.BPVIEWS && BPVIEWS[v] && BPVIEWS[v].t) || '']) : null;
+      if (t) t.innerHTML = kid && g.kids.length > 1 && kid[1] ? '<span class="hl-bc">' + esc(g.l) + '</span><svg class="hl-bcs" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' + esc(kid[1]) : esc(title);
+    }
     var sub = $('bpxVsub'); if (sub) { var dsc = crew() ? '' : (DESC[v] || ''); sub.textContent = dsc; sub.hidden = !dsc; sub.title = dsc; }
     document.title = title + ' · BuilderPro';
     var tabs = $('hlTabs');
@@ -378,6 +451,7 @@
     if (!c && allows('settings')) items.push({ t: 'Business settings', ico: 'settings', fn: function () { bpNav('settings'); } });
     if (!c && allows('settings')) items.push({ t: 'Plan & billing', ico: 'card', fn: S.plan });
     items.push({ t: 'Switch theme', ico: 'moon', keep: true, right: sw(), fn: function (b) { if (window.bpToggleTheme) bpToggleTheme(); var s = b.querySelector('.hl-sw'); if (s) s.classList.toggle('on', dark()); b.setAttribute('aria-checked', String(dark())); } });
+    if (!c && !phone()) items.push({ t: s4() ? 'Use the classic layout' : 'Try the new layout', ico: 'dashboard', fn: function () { S.layout(s4() ? 'classic' : 'new'); } });
     items.push({ t: 'Back to website', ico: 'globe', fn: S.leave });
     items.push({ sep: 1 });
     items.push({ t: 'Sign out', ico: 'out', fn: function () { bpLogout(); } });
@@ -475,6 +549,7 @@
     if (!c && allows('settings')) items.push({ t: 'Settings', ico: 'settings', fn: function () { bpNav('settings'); } });
     if (!c && allows('settings')) items.push({ t: 'Plan & billing', ico: 'card', fn: S.plan });
     items.push({ t: 'Dark mode', ico: 'moon', keep: true, right: sw(), fn: function (b) { if (window.bpToggleTheme) bpToggleTheme(); var s = b.querySelector('.hl-sw'); if (s) s.classList.toggle('on', dark()); b.setAttribute('aria-checked', String(dark())); } });
+    if (!c && !phone()) items.push({ t: s4() ? 'Use the classic layout' : 'Try the new layout', ico: 'dashboard', fn: function () { S.layout(s4() ? 'classic' : 'new'); } });
     items.push({ t: 'Back to website', ico: 'globe', fn: S.leave });
     items.push({ sep: 1 });
     items.push({ t: 'Sign out', ico: 'out', fn: function () { bpLogout(); } });

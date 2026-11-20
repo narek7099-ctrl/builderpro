@@ -1,0 +1,112 @@
+/* =====================================================================
+   The new layout, to compare with the classic one (2026-11-20).
+   After a layout the owner picked (efferd app-shell-4), in our colours:
+   a light sidebar card floating off the edge of the screen, a big New
+   button with search beside it, the sections in two labelled groups with
+   each section's pages listed under it (so there is no tab row across the
+   top), a small "new" card and quiet links at the bottom, and a plain
+   header: a button to tuck the sidebar away, then the page as a
+   breadcrumb. Only on when #bpx has .bp-s4 (portal/shell.js; account
+   menu, or ?layout=new). Phones keep their own layout.
+   ===================================================================== */
+#bpx .hl-s4trig{display:none}
+
+/* ---- the page behind: plain, no ribbons ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4{background:#f5f7fa !important}
+#bpx.bp-s4 #bpxRib{display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .bpx-app{background:#f5f7fa !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .bpx-app.on{--hl-sw:264px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .bpx-app.on.hl-min{--hl-sw:76px}
+
+/* ---- the sidebar: a floating white card ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide{margin:10px 0 10px 10px !important;height:calc(100vh - 20px);height:calc(100dvh - 20px);border-radius:14px !important;
+  background:#fff !important;border:1px solid #e3e8ef !important;box-shadow:0 1px 3px rgba(16,24,40,.06) !important;color:#0b1526;padding:12px 10px 10px !important;
+  scrollbar-color:#d6dde6 transparent}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-i{stroke-width:1.9}
+/* the account at the top */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-acct{background:transparent !important;border:0 !important;color:#0b1526;min-height:44px;padding:6px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-acct:hover{background:#f1f4f8 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-acct-t b{color:#0b1526}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-acct-t small{color:#64748b}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-acct-t small .hl-plan{background:#f1f4f8 !important;color:#475569 !important;border-color:#e3e8ef !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-acct-chev{stroke:#94a3b8}
+/* New (wide, blue) and search (square) */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-srow{margin:10px 0 14px;gap:8px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-quick{order:1;flex:1 1 auto;width:auto;height:36px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:9px;
+  background:#006fff !important;color:#fff !important;font:600 13.5px/1 var(--sans);box-shadow:0 1px 2px rgba(0,40,120,.25)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-quick:hover{background:#0062e6 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-search{order:2;flex:0 0 36px;width:36px;height:36px;padding:0;justify-content:center;border-radius:9px;
+  background:#fff !important;border:1px solid #e3e8ef !important;color:#475569 !important;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-search:hover{background:#f7f9fc !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-search span,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-search kbd{display:none}
+#bpx .hl-quick .hl-qt{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-quick .hl-qt{display:inline}
+/* groups and pages */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-glabel{padding:12px 10px 6px;font-size:11.5px;font-weight:600;color:#94a3b8;letter-spacing:.02em}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-glabel:first-child{padding-top:2px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .bpx-nav{gap:2px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-ni{height:36px;min-height:36px;border-radius:9px !important;color:#334155 !important;font-weight:500 !important;font-size:14px !important;background:transparent !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-ni .hl-i{color:#64748b !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-ni:hover{background:#f1f4f8 !important;color:#0b1526 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-ni.on:not(.hl-par){background:#eef4ff !important;color:#0b1526 !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-ni.on .hl-i{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-par.on{color:#0b1526 !important;font-weight:600 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-chev4{width:15px;height:15px;flex:0 0 15px;margin-left:auto;color:#94a3b8 !important;transition:transform .2s}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-g4.open .hl-chev4{transform:rotate(90deg)}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-subs{display:none;margin:2px 0 6px 19px;padding-left:10px;border-left:1px solid #e3e8ef}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-g4.open .hl-subs{display:flex;flex-direction:column;gap:1px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-si{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:8px;font-size:13.5px;color:#475569;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-si:hover{background:#f1f4f8;color:#0b1526}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-si.on{background:#eef4ff;color:#0b1526;font-weight:600}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-si .hl-lock{width:12px;height:12px;opacity:.6}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-si:focus-visible{outline:2px solid #006fff;outline-offset:-2px}
+/* the bottom: a small "new" card, then quiet links */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-sfoot{margin-top:auto;padding-top:12px;display:flex;flex-direction:column;gap:2px;border-top:0 !important}
+#bpx .hl-s4note{position:relative;display:flex;flex-direction:column;gap:2px;margin:0 0 8px;padding:11px 12px 9px;border:1px solid #e3e8ef;border-radius:10px;background:#fbfcfe}
+#bpx .hl-s4note small{font:500 10px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;color:#006fff}
+#bpx .hl-s4note b{font-size:12.5px;font-weight:600;color:#0b1526}
+#bpx .hl-s4note span{font-size:11.5px;color:#64748b}
+#bpx .hl-s4note a{margin-top:4px;font-size:12px;font-weight:600;color:#006fff;text-decoration:none}
+#bpx .hl-s4note button{position:absolute;top:6px;right:6px;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:transparent;color:#94a3b8;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .15s}
+#bpx .hl-s4note:hover button,#bpx .hl-s4note button:focus-visible{opacity:1}
+#bpx .hl-s4note button svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+@media (any-hover:none){ #bpx .hl-s4note button{opacity:1} }
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .hl-ni.hl-sm{height:32px;min-height:32px;font-size:13px !important;color:#64748b !important}
+
+/* ---- tucked away: icons only ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-min #bpxSide :is(.hl-glabel,.hl-subs,.hl-chev4,.hl-s4note,.hl-qt){display:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-min .hl-quick{flex:0 0 36px;width:36px}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-min .hl-srow{flex-direction:column;align-items:center}
+
+/* ---- the header: tuck button, a line, then the page as a breadcrumb ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #hlTop{background:transparent !important;border:0 !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-s4trig{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;margin-right:12px;padding:0;border:0;border-radius:8px;background:transparent;color:#475569;cursor:pointer;position:relative}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-s4trig:hover{background:#eceff4;color:#0b1526}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 .hl-s4trig::after{content:"";position:absolute;right:-7px;top:9px;bottom:9px;width:1px;background:#d9e0e8}
+#bpx .hl-s4trig svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxVtitle{display:flex;align-items:center;gap:6px;font-size:15px !important;font-weight:600 !important;color:#0b1526}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxVtitle .hl-bc{font-weight:500;color:#64748b}
+#bpx .hl-bcs{width:14px;height:14px;fill:none;stroke:#94a3b8;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxVsub{display:none !important}
+/* no tab row across the top: the pages are in the sidebar */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #hlTabs{display:none !important}
+
+/* ---- dark ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .bpx-app{background:#0a0f17 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide{background:#0f1520 !important;border-color:#1c2533 !important;box-shadow:none !important;color:#e9eef6}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark :is(.hl-acct-t b,#bpxVtitle){color:#e9eef6 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-acct:hover{background:#17202d !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-search{background:#111824 !important;border-color:#222d3d !important;color:#cbd5e1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide .hl-ni{color:#cbd5e1 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide .hl-ni:hover,#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide .hl-si:hover{background:#17202d !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide :is(.hl-ni.on:not(.hl-par),.hl-si.on){background:#0f2340 !important;color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide .hl-par.on{color:#fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide .hl-si{color:#9fb0c8}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark #bpxSide .hl-subs{border-left-color:#222d3d}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-s4note{background:#111824;border-color:#222d3d}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-s4note b{color:#e9eef6}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-s4trig{color:#cbd5e1}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-s4trig:hover{background:#17202d;color:#fff}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4.bpx-dark .hl-s4trig::after{background:#222d3d}
+/* the classic sidebar's sliding highlight has no place here */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-s4 #bpxSide .bp-slide{display:none !important}
