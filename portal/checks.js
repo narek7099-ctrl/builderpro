@@ -86,9 +86,9 @@ window.bpChecks=function(){
   var area=q('bpxViewArea'); if(!area)return;
   bpChkCss();
   area.innerHTML='<div class="cl">'
-    +'<div class="cl-top"><div><h2>Calculator leads</h2><p>Homeowners who used the price calculators on your website. They go straight into your automations, so follow-up happens on its own; this page shows how they are doing.</p></div>'
-    +'<div class="cl-acts">'+bpCsvBtn('bpCsvRoofChecks()','Export CSV')
-    +'<button class="bpx-btn ghost" onclick="bpNav(\'calculator\')"><span class=ms>calculate</span>My Calculators</button></div></div>'
+    /* 2026-11-20: the title and blurb repeated the page's own line, and the Calculators tab sits right beside this one */
+    +'<div class="cl-top"><div><p>Follow-up on these happens on its own, through your automations.</p></div>'
+    +'<div class="cl-acts">'+bpCsvBtn('bpCsvRoofChecks()','Export CSV')+'</div></div>'
     +'<div id="bpChkList" class="bpx-mut" style="font-size:13px">Loading…</div></div>';
   if(window.bpSpin)bpSpin(false);
   bpChkLoad();

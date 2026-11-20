@@ -1,0 +1,168 @@
+/* =====================================================================
+   The clean look, everywhere (2026-11-20). The dashboard went flat first
+   (portal/dash4.css, after a dashboard the owner picked); this carries the
+   same feel to every page: white cards with a hairline border and a whisper
+   of shadow instead of blue glass, quiet grey labels over a big figure,
+   flat tab rows, solid buttons. Colours stay ours: blue #006fff, navy
+   #001530, mint #16C79A.
+   Loaded after glass.css and dash4.css, so the ids are stacked to win.
+   The website ribbons behind the app stay.
+   ===================================================================== */
+
+/* ---- cards ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.bpx-cwrap,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs,.bpx-cd-card,.bpp-ask-row,.pjk-live,.pjl,.qb-step,.cl-tile,.cl-card,.wa-list,.wa-dh,.wa-tcard,.wa-node,.rcp-hero,.rcp-stat,.rcp-card,.bpt-get,.cz-sec,.cz-prev,.sp-pk-box,.tc,.sp-aisle,.sp-chain,.bpx-pay-flow>div){
+  background:#fff !important;background-image:none !important;
+  border:1px solid #e3e8ef !important;
+  box-shadow:0 1px 2px rgba(16,24,40,.05) !important;
+  -webkit-backdrop-filter:none !important;backdrop-filter:none !important;
+  transition:border-color .2s,box-shadow .2s !important}
+@media (any-hover:hover){
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.ws-step,.st-plan,.brn-card,.bpx-cd-card,.qb-step,.cl-tile,.rcp-stat,.wa-tcard,.sp-pk-box,.sp-aisle,.sp-chain,.bpp-ask-row):hover{
+    translate:none !important;background-position:0 0 !important;border-color:#cdd8e6 !important;box-shadow:0 1px 2px rgba(16,24,40,.05),0 6px 16px -10px rgba(0,21,48,.18) !important}
+}
+/* a box inside a card: no shadow, a softer edge */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-panel :is(.bpx-panel,.cd-it,.bpx-stat,.db-k,.bpx-cwrap){box-shadow:none !important;border-color:#e9edf3 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-cwrap tbody tr:hover td{background:#f7f9fc !important}
+
+/* ---- the number tiles on every page: a quiet label over a big figure (like the dashboard) ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-stat{padding:18px 20px !important;border-radius:14px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-stat .lbl{font-size:13.5px !important;font-weight:500 !important;text-transform:none !important;letter-spacing:0 !important;color:#64748b !important;margin-bottom:8px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-stat .val{font-size:clamp(24px,2.2vw,32px) !important;font-weight:650 !important;line-height:1.1 !important;letter-spacing:-.03em !important;color:#0b1526 !important;font-variant-numeric:tabular-nums}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-stat .val.blue{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-stat .note{font-size:13px !important;color:#64748b !important;margin-top:8px !important}
+
+/* ---- tab rows inside a page: a flat grey track, the chosen one on white ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs){border-radius:10px !important;border:1px solid #e3e8ef !important;background:#f1f4f8 !important;box-shadow:none !important;padding:3px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a){border-radius:7px !important;padding:6px 13px !important;color:#5b6b82 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):hover{background:rgba(255,255,255,.6) !important;color:#0b1526 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):is(.on,.active,[aria-selected=true]){background:#fff !important;color:#0b1526 !important;font-weight:600 !important;box-shadow:0 1px 2px rgba(16,24,40,.1),0 0 0 1px rgba(16,24,40,.04) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):is(.on,.active,[aria-selected=true]) .ms{color:#006fff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bp-m #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a){padding:0 14px !important}
+
+/* the page tabs under the title: the same flat track */
+@media (min-width:821px){
+  #bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .hl-tabs{background:#f1f4f8 !important;border:1px solid #e3e8ef !important;border-radius:12px !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .hl-tab{border-radius:9px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .hl-tabs .bp-slide{border-radius:9px}
+}
+#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.hl-tabs,#bpxViewArea) .bp-slide{background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.1),0 0 0 1px rgba(16,24,40,.04)}
+
+/* ---- buttons: solid, no gloss ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-btn:not(.ghost):not(.bpx-delbtn):not(:disabled):not(.bp-cta),
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea[data-fin="estimates"] .fin-new-est{
+  background:#006fff !important;background-image:none !important;color:#fff !important;border:0 !important;box-shadow:0 1px 2px rgba(0,40,120,.25) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx #bpxViewArea .bpx-btn:not(.ghost):not(.bpx-delbtn):not(:disabled):not(.bp-cta):hover{background:#0062e6 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-btn.ghost:not(.fin-new-est){background:#fff !important;background-image:none !important;color:#0b1526 !important;border:1px solid #e3e8ef !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .bpx-btn.ghost:not(.fin-new-est):hover{background:#f7f9fc !important;border-color:#cdd8e6 !important}
+
+/* ---- the top bar: plain white with a hairline ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #hlTop{background:rgba(255,255,255,.96) !important;border-bottom:1px solid #e9edf3 !important}
+
+/* ---- the open project: flat cards too ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) :is(.pjs-sec,.pjs-cust,.pjs-info,.pjs-tile){background:#fff !important;background-image:none !important;border:1px solid #e3e8ef !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx [data-pj-pane="details"] .pjs-view{border:0 !important;background:none !important;box-shadow:none !important;padding:0 !important}
+
+/* ---- dark: the same flat cards, in navy-black ---- */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-panel,.bpx-stat,.bpx-mk-card,.rp-plat,.ls-pv,.pjk-stat,.pj-card,.mh2-owed,.mh2-tiles,.mh2-card,.ws-step,.bpx-convlist,.bpx-thread,.st-plan,.bpx-rg-hero,.brn-card,.pj-route,.dash-projs,.bpx-cd-card,.bpp-ask-row,.pjk-live,.pjl,.qb-step,.cl-tile,.cl-card,.wa-list,.wa-dh,.wa-tcard,.wa-node,.rcp-hero,.rcp-stat,.rcp-card,.bpt-get,.cz-sec,.cz-prev,.sp-pk-box,.tc,.sp-aisle,.sp-chain,.bpx-pay-flow>div){
+  background:#111824 !important;background-image:none !important;border:1px solid #222d3d !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bpx-stat .lbl,#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bpx-stat .note{color:#8b9ab0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bpx-stat .val{color:#e9eef6 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea .bpx-stat .val.blue{color:#4b99fe !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs){background:#0c121c !important;border-color:#222d3d !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark #bpxViewArea :is(.bpx-jobtabs,.bpt-seg,.bpx-mailtabs)>:is(button,a):is(.on,.active,[aria-selected=true]){background:#1b2433 !important;color:#fff !important;box-shadow:none !important}
+@media (min-width:821px){ #bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .hl-tabs{background:#0c121c !important;border:1px solid #222d3d !important;box-shadow:none !important;-webkit-backdrop-filter:none !important;backdrop-filter:none !important} }
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark :is(.hl-tabs,#bpxViewArea) .bp-slide{background:#1b2433;box-shadow:none}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark:is(*) :is(.pjs-sec,.pjs-cust,.pjs-info){background:#111824 !important;background-image:none !important;border-color:#222d3d !important;box-shadow:none !important}
+
+/* =====================================================================
+   The calendar (2026-11-20): four numbers on top, then one clean grid:
+   hairline lines between the days instead of a box per day, today's date
+   in a blue circle, events as small tinted chips with a coloured dot,
+   past days quiet but their events still readable.
+   ===================================================================== */
+#bpx#bpx#bpx#bpx .cal-stats{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 14px !important}
+@media (max-width:900px){ #bpx#bpx#bpx#bpx .cal-stats{grid-template-columns:repeat(2,minmax(0,1fr))} }
+#bpx#bpx#bpx#bpx .cal-stats:empty{display:none !important}
+
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) #bpxViewArea .cal-panel{border-radius:14px !important;overflow:hidden}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx:not(.bpx-dark) .cal-one>.cal-rail{background:#fbfcfe !important;border-left:1px solid #e9edf3 !important}
+#bpx#bpx#bpx#bpx .cal-head .cal-month{font-size:20px !important;font-weight:650 !important;letter-spacing:-.02em}
+#bpx#bpx#bpx#bpx .cal-nav button{border:1px solid #e3e8ef !important;background:#fff !important;box-shadow:0 1px 2px rgba(16,24,40,.05) !important;border-radius:8px !important}
+
+/* the month: one grid with lines between the days */
+#bpx#bpx#bpx#bpx#bpx .cal-grid{gap:0 !important;border:1px solid #e9edf3;border-radius:12px;overflow:hidden;background:#fff}
+#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-dow{padding:10px 10px 8px !important;font-size:11.5px !important;font-weight:600 !important;color:#64748b !important;text-align:left;text-transform:uppercase;letter-spacing:.04em;background:#fbfcfe;border-bottom:1px solid #e9edf3}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day{border:0 !important;border-radius:0 !important;border-right:1px solid #eef1f5 !important;border-bottom:1px solid #eef1f5 !important;background:#fff !important;box-shadow:none !important;min-height:112px;padding:8px 8px 6px !important;opacity:1 !important;transition:background .15s}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day:nth-child(7n){border-right:0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day.empty{background:#fbfcfe !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day.past{background:#fcfdfe !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day.tap:hover{background:#f6f9fd !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day.today{background:#f5f9ff !important;box-shadow:inset 0 2px 0 #006fff !important}
+#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-daynum{font-size:13px !important;font-weight:600 !important;color:#0b1526 !important;margin-bottom:6px !important}
+#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day.past .bpx-daynum{color:#94a3b8 !important}
+#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day.today .bpx-daynum span{background:#006fff !important;color:#fff !important;border-radius:999px;min-width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;box-shadow:none !important}
+#bpx#bpx#bpx#bpx#bpx .cal-grid .cal-dot{display:none}
+
+/* events: a small tinted chip with a dot in the event's colour */
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt{position:relative;display:block !important;padding:3px 7px 3px 17px !important;margin:0 0 3px !important;border:0 !important;border-radius:6px !important;
+  background:#ebf4ff !important;color:#0b3a7a !important;font-size:11.5px !important;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:none !important;opacity:1 !important;transform:none !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt::before{content:"";position:absolute;left:7px;top:8px;width:6px;height:6px;border-radius:50%;background:#006fff}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt .t{display:inline !important;font-size:11px !important;font-weight:500 !important;color:#4b6385 !important;opacity:1 !important;margin-right:4px}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt b{display:inline !important;font-weight:550 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.job{background:#e8f9f4 !important;color:#065f49 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.job::before{background:#16C79A}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.crew{background:#e9edf3 !important;color:#001530 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.crew::before{background:#001530}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt:is(.todo,.note){background:#f3f5f8 !important;color:#334155 !important;padding-left:7px !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt:is(.todo,.note)::before{display:none}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt:is(.todo,.note) .ms{font-size:13px !important;vertical-align:-2px;margin-right:3px}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.done{text-decoration:line-through;color:#94a3b8 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.gcal{background:#f3f5f8 !important;color:#475569 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt.gcal::before{background:#94a3b8}
+#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt:hover{filter:brightness(.97)}
+#bpx#bpx#bpx#bpx .cal-legend i.lg-job{background:#16C79A !important}
+#bpx#bpx#bpx#bpx .cal-legend i.lg-insp{background:#006fff !important}
+#bpx#bpx#bpx#bpx .cal-legend i.lg-crew{background:#001530 !important}
+#bpx#bpx#bpx#bpx .cal-legend i.lg-note{background:#94a3b8 !important}
+#bpx#bpx#bpx#bpx .cal-legend i.lg-todo{background:#4b99fe !important}
+#bpx#bpx#bpx#bpx .cal-legend i{border-radius:50% !important;width:8px !important;height:8px !important}
+
+/* the side: headings like the dashboard's card titles */
+#bpx#bpx#bpx#bpx .cal-rail .cal-side-h b{font-size:14.5px !important;font-weight:600 !important;color:#0b1526}
+#bpx#bpx#bpx#bpx .cal-rail .cal-sec{border-color:#e9edf3 !important}
+#bpx#bpx#bpx#bpx .cal-rail .cal-empty{font-size:13px;color:#64748b}
+
+/* phone: smaller days, still readable */
+@media (max-width:760px){
+  #bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-day{min-height:64px;padding:5px 4px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt{font-size:9.5px !important;padding:1px 4px 1px 11px !important}
+  #bpx#bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-appt::before{left:4px;top:6px;width:5px;height:5px}
+  #bpx#bpx#bpx#bpx#bpx .cal-grid .bpx-dow{padding:6px 4px !important;font-size:10px !important}
+}
+
+/* dark */
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-one>.cal-rail{background:#0e141f !important;border-left-color:#222d3d !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid{background:#111824;border-color:#222d3d}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-dow{background:#0e141f;border-bottom-color:#222d3d;color:#8b9ab0 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-day{background:#111824 !important;border-color:#1c2533 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-day:is(.empty,.past){background:#0f1520 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-day.today{background:#0f2340 !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-daynum{color:#e9eef6 !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-appt{background:#0f2340 !important;color:#cfe1ff !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-appt.job{background:#0b2e26 !important;color:#a6f0db !important}
+#bpx#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-grid .bpx-appt:is(.todo,.note,.gcal,.crew){background:#1b2433 !important;color:#cbd5e1 !important}
+#bpx#bpx#bpx#bpx.bpx-dark .cal-nav button{background:#111824 !important;border-color:#222d3d !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-rail .cal-side-h b{color:#e9eef6 !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-rail .cal-sec{border-color:#222d3d !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-legend{border-color:#222d3d !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-legend i.lg-crew{background:#8b9ab0 !important}
+#bpx#bpx#bpx#bpx#bpx.bpx-dark .cal-head .cal-month{color:#e9eef6}
+
+/* Leads: the stage buttons over the contact list (2026-11-20) */
+#bpx#bpx#bpx#bpx .ct-stages{margin:0 0 12px !important}
+#bpx#bpx#bpx#bpx .ct-stages .ct-n{display:inline-block;min-width:18px;margin-left:4px;padding:0 6px;border-radius:999px;background:#e3e8ef;color:#475569;font-size:11.5px;font-weight:600;line-height:18px;text-align:center}
+#bpx#bpx#bpx#bpx .ct-stages .on .ct-n{background:#ebf4ff;color:#006fff}
+#bpx#bpx#bpx#bpx.bpx-dark .ct-stages .ct-n{background:#222d3d;color:#cbd5e1}
+#bpx#bpx#bpx#bpx .bpx-ctable .bpx-cstage{white-space:nowrap}
+/* phones: the calendar comes first, the four numbers stay on bigger screens */
+#bpx#bpx#bpx#bpx#bpx.bp-m .cal-stats{display:none !important}
