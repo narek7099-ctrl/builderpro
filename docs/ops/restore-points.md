@@ -402,3 +402,7 @@ Plain Needs you rows, number-badge week strip, Week pace showing zeros on a quie
 ## Before the full-width lead page (2026-11-20)
 - Live site (main): `b62f745`
 - Changes: The contact (lead) page fills the whole width of the page instead of stopping at 820px (portal/flat.css .ctp3). To undo: revert portal/flat.css and app.html to the SHA above.
+
+## Before Calculator leads line and circle charts (2026-11-20)
+- Live site (main): `9164424`
+- Changes: Calculator leads: the four number tiles lose their icons and use the number-first style (a long top tool wraps). Leads per day is a line chart with a soft fill (whole-number ticks); Which tools bring leads, How urgent and Top ZIP codes are circle charts (top three plus "Other" past four), side by side on wide screens (portal/checks.js, portal/flat.css). To undo: revert portal/checks.js, portal/flat.css and app.html to the SHA above.

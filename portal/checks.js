@@ -34,7 +34,8 @@ function bpChkRender(rows,demo){
   var m30=rows.filter(function(c){return now-t(c)<30*DAY;}), prev=rows.filter(function(c){var a=now-t(c);return a>=30*DAY&&a<60*DAY;});
   var withC=rows.filter(function(c){return c.phone||c.email;}).length, urgent=m30.filter(function(c){return c.band==='bad'||c.band==='warn';}).length;
   var pct=function(a,b){return b?Math.round(a/b*100):0;}, delta=prev.length?Math.round((m30.length-prev.length)/prev.length*100):null;
-  var tile=function(lbl,val,sub,ic){return '<div class="cl-tile"><span class="ms">'+ic+'</span><small>'+lbl+'</small><b>'+val+'</b><em>'+sub+'</em></div>';};
+  /* 2026-11-20: the number is the point; no icons on these */
+  var tile=function(lbl,val,sub,txt){return '<div class="cl-tile'+(txt?' txt':'')+'"><small>'+lbl+'</small><b>'+val+'</b><em>'+sub+'</em></div>';};
   /* last 30 days, one bar a day */
   var days=[];for(var i=29;i>=0;i--){var d0=new Date(now-i*DAY);d0.setHours(0,0,0,0);days.push({d:d0,n:0});}
   m30.forEach(function(c){var d=new Date(t(c));d.setHours(0,0,0,0);days.forEach(function(x){if(x.d.getTime()===d.getTime())x.n++;});});
@@ -45,6 +46,10 @@ function bpChkRender(rows,demo){
   var tools=count(function(c){return bpChkKind(c).label;}), zips=count(function(c){return c.zip||'';});
   var bands=[['bad','Needs attention now','#001530'],['warn','Needs attention soon','#0c6cea'],['mid','Keep an eye on it','#0661d9'],['good','Healthy','#16C79A']].map(function(bd){return [bd,rows.filter(function(c){return c.band===bd[0];}).length];});
   var bandBar=rows.length?'<div class="cl-stack">'+bands.filter(function(x){return x[1];}).map(function(x){return '<i style="flex:'+x[1]+';background:'+x[0][2]+'" title="'+x[0][1]+': '+x[1]+'"></i>';}).join('')+'</div><div class="cl-legend">'+bands.map(function(x){return '<span><i style="background:'+x[0][2]+'"></i>'+x[0][1]+' <b>'+x[1]+'</b></span>';}).join('')+'</div>':'<div class="bpx-mut" style="font-size:12.5px">No results yet.</div>';
+  var cnt=function(v){ v=Math.round(+v||0); return v+(v===1?' lead':' leads'); };
+  /* a circle holds four parts at most: the biggest three or four, then "Other" */
+  var fold=function(arr){ if(arr.length<=4) return arr.map(function(r){return {label:r[0],value:r[1]};}); var top=arr.slice(0,3).map(function(r){return {label:r[0],value:r[1]};}); top.push({label:'Other',value:arr.slice(3).reduce(function(t,r){return t+r[1];},0),other:true}); return top; };
+  var circle=function(title,lead,rws,empty){ if(!rws.length||!window.bpChart) return '<div class="cl-h"><b>'+title+'</b></div><div class="bpx-mut" style="font-size:12.5px">'+empty+'</div>'; var tot=rws.reduce(function(t,r){return t+r.value;},0); return bpChart.donut({title:title,lead:lead,rows:rws,fixed:true,fmt:cnt,centre:String(tot),centreNote:'leads',axis:title}); };
   var recent=rows.slice(0,8).map(function(c){
     var ck=bpChkKind(c), when=c.created_at?new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
     var col=c.band==='good'?'#16C79A':c.band==='mid'?'#0661d9':c.band==='warn'?'#0c6cea':'#001530';
@@ -52,16 +57,19 @@ function bpChkRender(rows,demo){
   }).join('');
   el.innerHTML=(demo?'<div class="cl-demo"><span class=ms>info</span> Sample numbers. Sign in to see your real calculator leads.</div>':'')
     +'<div class="cl-tiles">'
-      +tile('Leads, last 30 days',m30.length,delta==null?'from your calculators':(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'% vs the 30 before','calculate')
-      +tile('Left contact info',pct(withC,rows.length)+'%',withC+' of '+rows.length+' all time','contact_phone')
-      +tile('Urgent, last 30 days',urgent,'need work now or soon','priority_high')
-      +tile('Top tool',tools.length?bpEsc(tools[0][0]):'—',tools.length?tools[0][1]+' leads':'no leads yet','star')
+      +tile('Leads, last 30 days',m30.length,delta==null?'from your calculators':(delta>=0?'▲ ':'▼ ')+Math.abs(delta)+'% vs the 30 before')
+      +tile('Left contact info',pct(withC,rows.length)+'%',withC+' of '+rows.length+' all time')
+      +tile('Urgent, last 30 days',urgent,'need work now or soon')
+      +tile('Top tool',tools.length?bpEsc(tools[0][0]):'—',tools.length?tools[0][1]+' leads':'no leads yet',1)
     +'</div>'
-    +'<div class="cl-grid">'
-      +'<section class="cl-card cl-wide"><div class="cl-h"><b>Leads per day</b><span>last 30 days</span></div><div class="cl-bars">'+bars+'</div><div class="cl-axis"><span>'+days[0].d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span><span>Today</span></div></section>'
-      +'<section class="cl-card"><div class="cl-h"><b>Which tools bring leads</b></div>'+list(tools,'No leads yet.')+'</section>'
-      +'<section class="cl-card"><div class="cl-h"><b>Top ZIP codes</b></div>'+list(zips,'No ZIP codes yet.')+'</section>'
-      +'<section class="cl-card"><div class="cl-h"><b>How urgent</b></div>'+bandBar+'</section>'
+    /* 2026-11-20: a line for leads over time, circles for where they come from and how urgent */
+    +'<div class="cl-grid2">'
+      +'<section class="cl-card cl-chart">'+(window.bpChart?bpChart.area({title:'Leads per day',lead:'last 30 days',x:{label:'Day',values:days.map(function(x){return x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'});})},series:[{name:'Leads',values:days.map(function(x){return x.n;})}],fmt:cnt,fmtKind:'count',yFrom:0,yTo:Math.max(4,Math.ceil(mx/4)*4),height:190}):'')+'</section>'
+      +'<div class="cl-3">'
+        +'<section class="cl-card cl-chart">'+circle('Which tools bring leads','all time',fold(tools),'No leads yet.')+'</section>'
+        +'<section class="cl-card cl-chart">'+(rows.length&&window.bpChart?bpChart.donut({title:'How urgent',lead:'every calculator lead',rows:bands.map(function(x){return {label:x[0][1],value:x[1]};}),fixed:true,ramp:['#001530','#006fff','#8fbcff','#16C79A'],fmt:cnt,centre:String(rows.length),centreNote:'leads',axis:'Urgency'}):'<div class="cl-h"><b>How urgent</b></div><div class="bpx-mut" style="font-size:12.5px">No leads yet.</div>')+'</section>'
+        +'<section class="cl-card cl-chart">'+circle('Top ZIP codes','where they live',fold(zips),'No ZIP codes yet.')+'</section>'
+      +'</div>'
       +'<section class="cl-card"><div class="cl-h"><b>Latest leads</b><span>followed up automatically</span></div>'+(recent||'<div class="bpx-mut" style="font-size:12.5px">Nothing yet.</div>')+'</section>'
     +'</div>';
 }
@@ -99,6 +107,8 @@ function bpChkCss(){
    +'#bpx .cl-acts{display:flex;gap:8px;flex-wrap:wrap}#bpx .cl-acts .bpx-btn{width:auto;margin:0;gap:6px}#bpx .cl-acts .ms{font-size:17px}'
    +'#bpx .cl-demo{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#0e4792;background:#edf5ff;border:1px solid #aacefe;border-radius:10px;padding:8px 12px;margin-bottom:12px}#bpx .cl-demo .ms{font-size:18px}'
    +'#bpx .cl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}'
+   +'#bpx .cl-grid2{display:flex;flex-direction:column;gap:12px}#bpx .cl-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}#bpx .cl-chart{min-width:0}'
+   +'@media(max-width:1100px){#bpx .cl-3{grid-template-columns:minmax(0,1fr)}}'
    +'#bpx .cl-tile{background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;min-width:0}#bpx .cl-tile .ms{position:absolute;right:14px;top:14px;font-size:20px;color:#2457d6;background:#eef3ff;border-radius:8px;padding:5px}'
    +'#bpx .cl-tile small{display:block;font-size:12px;color:var(--mu);font-weight:600}#bpx .cl-tile b{display:block;font-size:24px;margin-top:6px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:30px}#bpx .cl-tile em{display:block;font-style:normal;font-size:12px;color:var(--mu);margin-top:2px}'
    +'#bpx .cl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#bpx .cl-wide{grid-column:1/-1}'
