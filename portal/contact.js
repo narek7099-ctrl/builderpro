@@ -115,10 +115,12 @@
     var first = String(c.name || '').trim().split(/\s+/)[0] || 'them';
 
     window.bpCtpMail = function () { if (window.bpNav) bpNav('email'); setTimeout(function () { if (window.bpMailCompose) bpMailCompose({ to: c.email, name: c.name || '' }); }, 250); };
-    var hero = '<section class="ctp-hero">'
-      + '<div class="ctp-band"></div>'
+    /* 2026-11-20: one plain card on top: who they are, how to reach them, and their numbers
+       in a line underneath (the coloured band and the separate number strip are gone) */
+    var fig = function (l, v, id) { return '<div><small>' + l + '</small><b' + (id ? ' id="' + id + '"' : '') + '>' + v + '</b></div>'; };
+    var hero = '<section class="ctp-hero ctp-hero2">'
       + '<div class="ctp-hbody">'
-      + '<div class="ctp-av">' + (window.bpAvatar ? bpAvatar(c.name || '?', 76) : '') + '</div>'
+      + '<div class="ctp-av">' + (window.bpAvatar ? bpAvatar(c.name || '?', 56) : '') + '</div>'
       + '<div class="ctp-who"><h2>' + esc(c.name || 'Unnamed contact') + '</h2>'
       + '<div class="ctp-meta"><span class="ctp-stage"><i></i>' + esc(stage[0]) + '</span>' + (added ? '<span class="ctp-since" title="' + esc(added) + '">' + esc(since(c.dateAdded)) + '</span>' : '') + '</div>'
       + (tags.length ? '<div class="ctp-tags">' + tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : '')
@@ -129,13 +131,10 @@
       + act('', 'mail', 'Email', !!c.email, false, 'bpCtpMail()')
       + act('', 'fact_check', 'New inspection', true, false, 'bpCtpInspect()')
       + act('', 'request_quote', 'Estimate', true, true, 'bpQuoteNew(\'' + c.id + '\')')
-      + '</div></div></section>';
-
-    var stats = '<div class="ctp-stats">'
-      + '<div><small>Jobs</small><b>' + jobs.length + '</b></div>'
-      + '<div><small>Estimated</small><b>' + (est ? money(est) : '—') + '</b></div>'
-      + '<div><small>Collected</small><b>' + (got ? money(got) : '—') + '</b></div>'
-      + '<div><small>Inspection reports</small><b id="ctp-insp-n">—</b></div></div>';
+      + '</div></div>'
+      + '<div class="ctp-figs">' + fig('Jobs', jobs.length) + fig('Estimated', est ? money(est) : '—') + fig('Collected', got ? money(got) : '—') + fig('Inspection reports', '—', 'ctp-insp-n') + '</div>'
+      + '</section>';
+    var stats = '';
 
     var pipe = '<section class="ctp-card ctp-pipe"><div class="ctp-ch"><b>Where ' + esc(first) + ' is</b><span>' + esc(stage[0]) + '</span></div><ol>'
       + STEPS.map(function (s, i) { return '<li class="' + (i < step ? 'done' : i === step ? 'now' : '') + '"><span class="ctp-dot"><span class="ms">' + (i < step ? 'check' : s[1]) + '</span></span><small>' + s[0] + '</small></li>'; }).join('')
@@ -144,8 +143,7 @@
     var info = '<section class="ctp-card"><div class="ctp-ch"><b>Contact details</b><button type="button" class="ctp-link" onclick="bpOpenEdit(\'' + c.id + '\')"><span class="ms">edit</span>Edit</button></div>'
       + row('call', 'Phone', c.phone ? '<a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a>' : '<span class="ctp-none">Not on file</span>', c.phone)
       + row('mail', 'Email', c.email ? '<a href="#" onclick="bpCtpMail();return false">' + esc(c.email) + '</a>' : '<span class="ctp-none">Not on file</span>', c.email)
-      + row('flag', 'Stage', '<span>' + esc(stage[0]) + '</span>')
-      + row('event', 'Added', '<span>' + (added || '—') + '</span>')
+      + (c.address1 || c.address ? row('location_on', 'Address', '<a href="https://maps.google.com/?q=' + encodeURIComponent(c.address1 || c.address) + '" target="_blank" rel="noopener">' + esc(c.address1 || c.address) + '</a>') : '')
       + '<div class="ctp-foot"><button type="button" class="ctp-del" onclick="bpOpenDelete(\'' + c.id + '\')"><span class="ms">delete</span>Delete contact</button></div></section>';
 
     var jobsCard = '<section class="ctp-card"><div class="ctp-ch"><b>Jobs</b>' + (jobs.length ? '<span>' + jobs.length + '</span>' : '') + '</div>'
